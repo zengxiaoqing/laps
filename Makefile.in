@@ -135,7 +135,7 @@ DATADIRS = log/qc \
        
 
 
-all:
+all: exe
 debug: debuglib
 
 localize: mkdirs
