@@ -112,6 +112,7 @@ c
        integer i4time_now_gg
        integer i4_validTime
        integer istatus
+       integer laps_cycle_time
        integer lvl_2d(2)
        integer n,nn,nd, len
        integer n_vars_req
@@ -128,6 +129,7 @@ c
        character*14 c_filetime
        character*9 wfo_fname13_to_fname9
        character*9 c_filename
+       character*9 c_fname_sys
        character*200 wsi_dir_path
        character*255 c_filespec
        character*200 c_filenames_proc(max_files)
@@ -147,6 +149,17 @@ c data from /public then we must fool the filename to still be 9 characters.
 c we do this by checking for "public" when the radar type is wfo.
 c
        i4time_cur = i4time_now_gg()
+       call get_systime(i4time_sys,c_fname_sys,istatus)
+       call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
+
+c this is designed to allow archive data runs!
+       call get_laps_cycle_time(laps_cycle_time,istatus)
+       if(i4time_cur-i4time_sys .gt. 2*laps_cycle_time)then
+          print*,'Set current time to contents of systime.dat'
+          c_fname_cur=c_fname_sys
+          i4time_cur=i4time_sys
+       endif
+
        c_fname_cur_temp = cvt_i4time_wfo_fname13(i4time_cur)
 
        if(c_raddat_type.eq.'wfo'.and.wsi_dir_path(2:7).ne.
@@ -169,7 +182,7 @@ c
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
        else
-          c_filespec=wsi_dir_path(1:n-1)//'*_hd'
+          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
        endif
        write(6,*)
        write(6,*)'Latest time for wsi data'
@@ -199,7 +212,7 @@ c
           if(c_raddat_type.eq.'wfo')then
              c_filespec=wsi_dir_path(1:n-1)//'*'
           else
-             c_filespec=wsi_dir_path(1:n-1)//'*_hd'
+             c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
           endif
           n=index(c_filespec,' ')
 
@@ -234,7 +247,7 @@ c
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
        else
-          c_filespec=wsi_dir_path(1:n-1)//'*_hd'
+          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
        endif
 
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
