@@ -14,16 +14,20 @@
  FILE_NUM3 = .FALSE.,
  MAKE_LAPS = .TRUE.,
  WRITE_TO_LAPSDIR = .TRUE.,
- MAKE_POINTS = .TRUE.,
  MAKE_V5D = .TRUE.,
  V5D_COMPRESS = 1,
- DO_SMOOTHING = .true.,
- GRIBSFC = .TRUE.,
- GRIBUA = .TRUE.,
+ DO_SMOOTHING = .FALSE.,
+ GRIBSFC = .FALSE.,
+ GRIBUA = .FALSE.,
  TABLE_VERSION = 2,
  CENTER_ID = 59,
  SUBCENTER_ID = 2, 
  PROCESS_ID = 1,
+ MAKE_POINTS = .true.,
+ POINT_TZ_UTCOFFSET = 0, 
+ POINT_TZ_LABEL = 'UTC',
+ POINT_TEMP_UNITS = 'F',
+ POINT_WINDSPD_UNITS = 'KTS',
 &END
 
 c 
@@ -90,3 +94,22 @@ c    files.  NOTE:  GRIB output uses FSL/LAPB (Center 59/Subcenter 2)
 c    custom GRIB table.  Contact shaw@fsl.noaa.gov if you need a copy
 c    of this GRIB table.  
 c
+c  MAKE_POINTS:  Set to true to use lfmpost_points.txt file to create
+c   tabular point forecasts.
+c
+c  POINT_TZ_UTCOFFSET:  Integer value to set the offset from UTC to 
+c  use when displaying valid times in the point forecast files. For
+c  example, if you wanted mountain standard time, you would set this
+c  to -7.  For UTC time, leave it set to 0.
+c
+c  POINT_TZ_LABEL:  Label for time zone in valid time column.  This
+c   is a 3-character string.  Default is "UTC".  For example, if you
+c   want Mountain Standard Time for the valid time column, set 
+c   this to "MST" and POINT_TZ_UTCOFFSET to -7.
+c
+c  POINT_TEMP_UNITS:  Units to use for temp and dewpoint in point
+c   forecast files.  Valid values are "F", "C", or "K".
+c
+c  POINT_WINDSPD_UNITS:  Sets the units for the windspeed values in
+c   the tabular point forecasts.  Valid values are "KTS", "MPH", or 
+c    "M/S"
