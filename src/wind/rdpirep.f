@@ -152,17 +152,21 @@ cdis
                     if(ext_in .eq. 'pin')then
 !                       Assume ACARS elev is geometric height MSL
                         rk = height_to_zcoord2(elev,heights_3d
-     1                              ,ni,nj,nk,i_grid,j_grid,istatus)
-                        if(istatus .ne. 1)return
+     1                       ,ni,nj,nk,i_grid,j_grid,istatus_rk)
+                        if(istatus_rk .ne. 1)then
+                            write(6,*)' WARNING: rejecting ACARS ',
+     1                      'apparently above top of domain ',elev
+                        endif
 
                     else ! cdw
                         rk = zcoord_of_pressure(pres)
+                        istatus_rk = 1
 
                     endif
 
                     k_grid = nint(rk)
 
-                    if(    .true.
+                    if(istatus_rk .eq. 1
      1             .and. k_grid .le. nk
      1             .and. k_grid .ge. 1    )then ! Pirep is in vertical domain
 

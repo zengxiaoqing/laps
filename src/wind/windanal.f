@@ -1079,10 +1079,10 @@ c  convert radar obs into u & v by using tangential component of first pass
         implicit none
 
 !       Threshold number of radar obs on a given level
-        integer*4 thresh_2_radarobs_lvl_unfltrd,thresh_4_radarobs_lvl_un
-     1fltrd
-        parameter (thresh_2_radarobs_lvl_unfltrd = 400)
-        parameter (thresh_4_radarobs_lvl_unfltrd = 800)
+        integer*4 thresh_2_radarobs_lvl_unfltrd
+     1           ,thresh_4_radarobs_lvl_unfltrd
+        parameter (thresh_2_radarobs_lvl_unfltrd = 300)
+        parameter (thresh_4_radarobs_lvl_unfltrd = 600)
 
         integer*4 n_radarobs_lvl_unfltrd, intvl_rad, imax, jmax
         real*4 vr_obs_unfltrd(imax,jmax)
@@ -1098,8 +1098,8 @@ c  convert radar obs into u & v by using tangential component of first pass
 !       Test against threshold for number of radar obs on a given level
 !       This logic is supposed to select a sparse subset of the radial
 !       velocities yet retain grid boxes that are isolated
-        if(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd)the
-     1n
+        if(n_radarobs_lvl_unfltrd .gt. thresh_4_radarobs_lvl_unfltrd
+     1                                                         )then
            ! Keep only every fourth ob.  Keep one ob out of every `quad'.
            intvl_rad = 4
            do j=1,jmax-1,2
@@ -1133,8 +1133,8 @@ c  convert radar obs into u & v by using tangential component of first pass
               enddo
            endif
 
-        elseif(n_radarobs_lvl_unfltrd .gt. thresh_2_radarobs_lvl_unfltr
-     1d)then
+        elseif(n_radarobs_lvl_unfltrd .gt. 
+     1         thresh_2_radarobs_lvl_unfltrd)then
            ! Keep every other ob.  Keep one ob out of every `pair'.
            intvl_rad = 2
            do j=1,jmax
