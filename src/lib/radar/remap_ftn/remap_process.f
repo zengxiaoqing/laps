@@ -45,6 +45,7 @@ c       Albers, Steve          1998     More flexibility added
 
 *********************** Declaration Section **************************
 c
+      include 'trigd.inc'
       implicit none
 c
 c     Input variables
@@ -94,7 +95,6 @@ c
 c
 c     Functions
 c
-      real sind
       real height_to_zcoord
       real height_of_level
 c

@@ -35,6 +35,7 @@ c
 c     PURPOSE:
 c        Generate look-up tables for radar remapping.
 c
+      include 'trigd.inc'
       implicit none
 c
       include 'remap_constants.dat'
@@ -42,6 +43,7 @@ c
 c
 c     Variables from LAPS domain file
 c
+
       integer NX_L,NY_L,NZ_L
       real*4 lat(NX_L,NY_L)
       real*4 lon(NX_L,NY_L)
@@ -58,7 +60,6 @@ c
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
       real slant_range,sl_range_m,ri,rj,dbz,z
-      real cosd
       character*4 c4_radarname
       character*150 static_dir,filename
       character*3 ext
