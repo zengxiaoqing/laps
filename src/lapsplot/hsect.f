@@ -111,7 +111,7 @@ cdis
 
         character*3 c_field
         character*2 c_metacode
-        character*4 c_type
+        character*4 c_type, c_type_i
         character*3 cstatic
         character*3 c_bkg
         character c19_label*19,c33_label*33,c_label*100
@@ -251,7 +251,9 @@ cdis
         real*4 cld_pres(KCLOUD)
 
         common /supmp1/ dummy,part
-        common /image/ n_image
+
+!       i_image: whether this particular plot is an image
+        common /image/ n_image, i_image 
 
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
 
@@ -330,10 +332,11 @@ c       include 'satellite_dims_lvd.inc'
         endif
 
 1200    write(6,11)
-11      format(//'  SELECT FIELD:  ',
-     1      /'     [wd,wb,wr,wf,bw] Wind'
-     1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
-     1      /'     [wo,co,bo,lo,fo] Anlyz/Cloud/Balance/Bkg/Fcst Omega'       
+11      format(//'  SELECT FIELD: (-i means append with "i" for image)',       
+     1      /'     [wd,wb-i,wr-i,wf,bw] Wind'
+     1      ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, BAL), '
+     1      /'     [wo,co,bo,lo-i,fo-i] '      
+     1      ,'Anlyz/Cloud/Balance/Bkg/Fcst Omega'      
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
@@ -346,14 +349,14 @@ c       include 'satellite_dims_lvd.inc'
      1      /10x,'[li,lw,he-i,pe-i,ne-i] li, li*w, helcty, CAPE, CIN,'
      1      /10x,'[s] Other Stability Indices'
      1      /
-     1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
-     1      ,',   [pt,pb] Theta, Blnc Theta'
-     1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,QBAL),'
+     1      /'     TEMP: [t,tb-i,tr-i,to,bt] (LAPS,LGA,FUA,OBS,BAL)'       
+     1      ,', [pt,pb] Theta, Bal Theta'
+     1      /'     HGTS: [ht,hb-i,hr-i,bh] (LAPS,LGA,FUA,BAL),'
      1      /'           [hh,bl-i,lf-i] Ht of Temp Sfc, PBL, Fire Wx')
 
         write(6,12)
  12     format(
-     1       /'     HUMIDITY: [br,fr,lq,rb] (lga;fua;lq3;bal)'
+     1       /'     HUMIDITY: [br-i,fr-i,lq,rb] (lga;fua;lq3;bal)'
      1       /'               [pw-i] Precipitable H2O'       
      1       /
      1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
@@ -377,8 +380,15 @@ c       include 'satellite_dims_lvd.inc'
         read(lun,16)c_type
  16     format(a4)
 
-!       c4_log = 'h '//c_type
-!       if(lun .eq. 5 .and. c_type .ne. 'q ')call logit(c4_log)
+        i_image = 0
+        c_type_i = c_type
+
+        call s_len(c_type,len_type)
+        if(c_type(len_type:len_type) .eq. 'i' 
+     1                  .and. c_type .ne. 'dii')then
+            i_image = 1
+            c_type_i = c_type(1:len_type-1)
+        endif
 
         if(c_type(1:2) .eq. 'di')then
             write(6,*)' Plotting difference field of last two entries'       
@@ -402,7 +412,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          ,r_missing_data)
 
                 call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
-     1                     ,n_image,scale)    
+     1                     ,n_image,scale,'hsect')    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -420,48 +430,48 @@ c       include 'satellite_dims_lvd.inc'
 
         igrid = 1
 
-        if(    c_type      .eq. 'wd' .or. c_type      .eq. 'wb'  ! Wind fields
-     1    .or. c_type(1:2) .eq. 'co' .or. c_type      .eq. 'wr'
-     1    .or. c_type      .eq. 'wf' .or. c_type      .eq. 'bw'
-     1    .or. c_type(1:2) .eq. 'bo' .or. c_type      .eq. 'lo'
-     1    .or. c_type(1:2) .eq. 'fo' .or. c_type(1:2) .eq. 'wo')then
+        if(    c_type_i      .eq. 'wd' .or. c_type_i      .eq. 'wb'  ! Wind fields
+     1    .or. c_type_i(1:2) .eq. 'co' .or. c_type_i      .eq. 'wr'
+     1    .or. c_type_i      .eq. 'wf' .or. c_type_i      .eq. 'bw'
+     1    .or. c_type_i(1:2) .eq. 'bo' .or. c_type_i      .eq. 'lo'
+     1    .or. c_type_i(1:2) .eq. 'fo' .or. c_type_i(1:2) .eq. 'wo')then       
 
-            if(c_type .eq. 'wd')then
+            if(c_type_i .eq. 'wd')then
                 ext = 'lw3'
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
-            elseif(c_type .eq. 'wb')then
+            elseif(c_type_i .eq. 'wb')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'lga'
 
-            elseif(c_type .eq. 'wr')then
+            elseif(c_type_i .eq. 'wr')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'fua'
 
-            elseif(c_type(1:2) .eq. 'co')then
+            elseif(c_type_i(1:2) .eq. 'co')then
                 ext = 'lco'
 
-            elseif(c_type(1:2) .eq. 'wo')then
+            elseif(c_type_i(1:2) .eq. 'wo')then
                 ext = 'lw3'
 
-            elseif(c_type .eq. 'lo')then
+            elseif(c_type_i .eq. 'lo')then
                 ext = 'lga'
 
-            elseif(c_type .eq. 'fo')then
+            elseif(c_type_i .eq. 'fo')then
                 ext = 'fua'
 
-            elseif(c_type .eq. 'wf')then
+            elseif(c_type_i .eq. 'wf')then
                 ext = 'lw3'
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-            elseif(c_type .eq. 'bw'.or.c_type.eq.'bo')then
+            elseif(c_type_i .eq. 'bw'.or.c_type_i.eq.'bo')then
                 ext = 'balance'
             endif
 
-            if(c_type.eq.'bw'.or.c_type.eq.'bo')then
+            if(c_type_i.eq.'bw'.or.c_type_i.eq.'bo')then
                call get_filespec(ext,1,c_filespec,istatus)
                ext='lw3'
                call s_len(c_filespec,ilen)
@@ -470,7 +480,7 @@ c       include 'satellite_dims_lvd.inc'
                call get_filespec(ext,2,c_filespec,istatus)
             endif
 
-            if(c_type .eq. 'wd')then
+            if(c_type_i .eq. 'wd')then
                 write(6,13)
 13              format(
      1    '     Enter Level in mb, -1 = steering, 0 = sfc',24x,'? ',$)
@@ -482,9 +492,9 @@ c       include 'satellite_dims_lvd.inc'
 
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
-            if(c_type.ne.'lo' .and. c_type .ne. 'fo' 
-     1                        .and. c_type .ne. 'wr'
-     1                        .and. c_type .ne. 'wb')then
+            if(c_type_i.ne.'lo' .and. c_type_i .ne. 'fo' 
+     1                          .and. c_type_i .ne. 'wr'
+     1                          .and. c_type_i .ne. 'wb')then
                write(6,*)
                write(6,*)'    Looking for laps wind data: ',ext(1:3)
                call get_file_time(c_filespec,i4time_ref,i4time_3dw)
@@ -496,11 +506,11 @@ c       include 'satellite_dims_lvd.inc'
 
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
-            if(c_type.eq.'bw' .or. c_type.eq.'bo')ext='balance'
+            if(c_type_i.eq.'bw' .or. c_type_i.eq.'bo')ext='balance'
 
-            if(c_type(1:2) .eq.'co' .or. c_type(1:2).eq.'bo' .or.
-     1         c_type(1:2) .eq.'lo' .or. c_type(1:2).eq.'fo' .or. 
-     1         c_type(1:2) .eq.'wo'                         )then
+            if(c_type_i(1:2) .eq.'co' .or. c_type_i(1:2).eq.'bo' .or.
+     1         c_type_i(1:2) .eq.'lo' .or. c_type_i(1:2).eq.'fo' .or. 
+     1         c_type_i(1:2) .eq.'wo'                         )then
                 c_field = 'w'
                 goto115
             endif
@@ -513,11 +523,11 @@ c       include 'satellite_dims_lvd.inc'
      1          '  Field [di,sp,u,v,vc (barbs), ob (obs)]',30x,'? ',$)
                     read(lun,15)c_field
 
-                    if(c_type .eq. 'wd')then
+                    if(c_type_i .eq. 'wd')then
                         ext = 'lwm'
-                    elseif(c_type .eq. 'wb')then
+                    elseif(c_type_i .eq. 'wb')then
                         ext = 'lgb'
-                    elseif(c_type .eq. 'wr')then
+                    elseif(c_type_i .eq. 'wr')then
                         ext = 'fsf'
                     endif
 
@@ -596,7 +606,7 @@ c       include 'satellite_dims_lvd.inc'
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,ext
      1                              ,NX_L,NY_L,fcst_hhmm,istatus)
 
-                      if(c_type .eq. 'wf')then
+                      if(c_type_i .eq. 'wf')then
 
 !                       Calculate wind difference vector (lw3 - model first guess)
                         var_2d = 'U3'
@@ -615,11 +625,11 @@ c       include 'satellite_dims_lvd.inc'
                         call add(field_3d(1,1,k_level),uv_2d(1,1,2),v_2d       
      1                                   ,NX_L,NY_L)      
 
-                      else ! c_type .ne. 'wf'
+                      else ! c_type_i .ne. 'wf'
                         call move(uv_2d(1,1,1),u_2d,NX_L,NY_L)
                         call move(uv_2d(1,1,2),v_2d,NX_L,NY_L)
 
-                      endif ! c_type .eq. 'wf'
+                      endif ! c_type_i .eq. 'wf'
  
                     endif ! c_field = 'w'
 
@@ -675,7 +685,11 @@ c       include 'satellite_dims_lvd.inc'
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field(1:2) .eq. 'sp')then
-                c19_label = ' Isotachs (kt)     '
+                c19_label = ' Isotachs (kt) '//ext(1:3)
+                if(c_type_i .eq. 'bw')then
+                    c19_label = c19_label(1:18)//'b'
+                endif
+
                 call mklabel33(k_mb,c19_label,c33_label)
 
                 if(k_level .gt. 0 .and. k_mb .le. 500)then
@@ -695,14 +709,16 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
             else if(c_field(1:1) .eq. 'u')then
-                if(c_type .eq. 'wf')then
+                if(c_type_i .eq. 'wf')then
                     c19_label = ' U  Diff        M/S'
-                elseif(c_type .eq. 'wb')then
+                elseif(c_type_i .eq. 'wb')then
                     c19_label = ' U  (lga)       M/S'
-                elseif(c_type .eq. 'wr')then
+                elseif(c_type_i .eq. 'wr')then
                     c19_label = ' U  (fua)       M/S'
-                elseif(c_type .eq. 'bw')then
+                elseif(c_type_i .eq. 'bw')then
                     c19_label = ' U  (bal)       M/S'
+                elseif(ext(1:3) .eq. 'lwm')then
+                    c19_label = ' U  (lwm)       M/S'
                 else
                     c19_label = ' U  (anal)      M/S'
                 endif
@@ -722,14 +738,16 @@ c       include 'satellite_dims_lvd.inc'
                 call move(u_2d,field_2d,NX_L,NY_L)
 
             else if(c_field .eq. 'v' .or. c_field .eq. 'vi')then
-                if(c_type .eq. 'wf')then
+                if(c_type_i .eq. 'wf')then
                     c19_label = ' V  Diff        M/S'
-                elseif(c_type .eq. 'wb')then
+                elseif(c_type_i .eq. 'wb')then
                     c19_label = ' V  (lga)       M/S'
-                elseif(c_type .eq. 'wr')then
+                elseif(c_type_i .eq. 'wr')then
                     c19_label = ' V  (fua)       M/S'
-                elseif(c_type .eq. 'bw')then
+                elseif(c_type_i .eq. 'bw')then
                     c19_label = ' V  (bal)       M/S'
+                elseif(ext(1:3) .eq. 'lwm')then
+                    c19_label = ' V  (lwm)       M/S'
                 else
                     c19_label = ' V  (anal)      M/S'
                 endif
@@ -750,16 +768,18 @@ c       include 'satellite_dims_lvd.inc'
                 call move(v_2d,field_2d,NX_L,NY_L)
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
-                if(c_type .eq. 'wf')then
+                if(c_type_i .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
-                elseif(c_type.eq.'wb'                       )then
+                elseif(c_type_i.eq.'wb'                       )then
                     c19_label = ' WIND lga '//fcst_hhmm//'   kt'
-                elseif(c_type.eq.'wr'                       )then
+                elseif(c_type_i.eq.'wr'                       )then
                     c19_label = ' WIND fua '//fcst_hhmm//'   kt'
-                elseif(c_type.eq.'bw'                       )then
+                elseif(c_type_i.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
                 elseif(c_field .eq. 'ob')then
                     c19_label = ' WIND  (obs)    kt'
+                elseif(ext(1:3) .eq. 'lwm')then
+                    c19_label = ' WIND  (lwm)    kt'
                 else
                     c19_label = ' WIND  (anl)    kt'
                 endif
@@ -795,7 +815,7 @@ c       include 'satellite_dims_lvd.inc'
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w' .or. c_field .eq. 'om')then ! Omega 
-                if(c_type(1:2) .eq. 'co')then
+                if(c_type_i(1:2) .eq. 'co')then
                     write(6,*)' Reading cloud omega'
                     var_2d = 'COM'
                     ext = 'lco'
@@ -807,7 +827,7 @@ c       include 'satellite_dims_lvd.inc'
 
                     i4_valid = i4time_nearest
 
-                elseif(c_type(1:2) .eq. 'wo')then
+                elseif(c_type_i(1:2) .eq. 'wo')then
                     write(6,*)' Reading lw3 omega'
                     var_2d = 'OM'
                     ext = 'lw3'
@@ -819,7 +839,7 @@ c       include 'satellite_dims_lvd.inc'
 
                     i4_valid = i4time_nearest
 
-                else if(c_type(1:2) .eq. 'bo')then
+                else if(c_type_i(1:2) .eq. 'bo')then
                     write(6,*)' Reading balanced omega'
                     var_2d = 'OM'
                     ext = 'lw3'
@@ -834,8 +854,8 @@ c       include 'satellite_dims_lvd.inc'
 
                     i4_valid = i4time_3dw
 
-                else if(c_type(1:2) .eq. 'lo' .or. 
-     1                  c_type(1:2) .eq. 'fo')then
+                else if(c_type_i(1:2) .eq. 'lo' .or. 
+     1                  c_type_i(1:2) .eq. 'fo')then
                     call input_background_info(
      1                              ext                     ! I
      1                             ,directory               ! O
@@ -871,7 +891,8 @@ c       include 'satellite_dims_lvd.inc'
                 cint = -1.0
                 chigh = 50.
                 clow = -50.
-                call plot_field_2d(i4_valid,c_type,w_2d,scale
+
+                call plot_field_2d(i4_valid,c_type_i,w_2d,scale
      1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -885,13 +906,13 @@ c       include 'satellite_dims_lvd.inc'
 
                 c19_label = ' DVRG (CPTD) 1e-5/s'
 
-                if(c_type(1:2) .eq. 'wf')then
+                if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' DIV  (diff) 1e-5/s'
-                elseif(c_type(1:2) .eq. 'wb')then
+                elseif(c_type_i(1:2) .eq. 'wb')then
                     c19_label = ' DIV  (lga)  1e-5/s'
-                elseif(c_type(1:2) .eq. 'wr')then
+                elseif(c_type_i(1:2) .eq. 'wr')then
                     c19_label = ' DIV  (fua)  1e-5/s'
-                elseif(c_type(1:2) .eq. 'bw')then
+                elseif(c_type_i(1:2) .eq. 'bw')then
                     c19_label = ' DIV  (bal)  1e-5/s'
                 else
                     c19_label = ' DIV  (anal) 1e-5/s'
@@ -903,22 +924,28 @@ c       include 'satellite_dims_lvd.inc'
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                               ,zoom,density,scale)
 
-                call plot_cont(field_2d,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,namelist_parms,
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(field_2d,scale,clow,chigh,cint,
+!    1               asc9_tim_3dw,namelist_parms,
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
             elseif(c_field .eq. 'vo')then ! Display Vorticity Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
      1                         ,.true.,r_missing_data)
 
-                if(c_type(1:2) .eq. 'wf')then
+                if(c_type_i(1:2) .eq. 'wf')then
                     c19_label = ' VORT (diff) 1e-5/s'
-                elseif(c_type(1:2) .eq. 'wb')then
+                elseif(c_type_i(1:2) .eq. 'wb')then
                     c19_label = ' VORT (lga)  1e-5/s'
-                elseif(c_type(1:2) .eq. 'wr')then
+                elseif(c_type_i(1:2) .eq. 'wr')then
                     c19_label = ' VORT (fua)  1e-5/s'
-                elseif(c_type(1:2) .eq. 'bw')then
+                elseif(c_type_i(1:2) .eq. 'bw')then
                     c19_label = ' VORT (bal)  1e-5/s'
                 else
                     c19_label = ' VORT (anal) 1e-5/s'
@@ -930,10 +957,17 @@ c       include 'satellite_dims_lvd.inc'
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                               ,zoom,density,scale)
 
-                call plot_cont(field_2d,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,namelist_parms,
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+!               call plot_cont(field_2d,scale,clow,chigh,cint,
+!    1               asc9_tim_3dw,namelist_parms,
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call plot_field_2d(i4time_3dw,c_type_i,field_2d,scale
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
+
 
             elseif(c_field .eq. 'va')then ! Vorticity Advection Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
@@ -1425,7 +1459,7 @@ c
 
              if(l_plot_image)then
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
-     1                      ,n_image,scale)
+     1                      ,n_image,scale,'hsect')
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -1667,7 +1701,7 @@ c
 
             if(c_type(3:3) .eq. 'i')then
                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
-     1                     ,n_image,scale)
+     1                     ,n_image,scale,'hsect')
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -1961,7 +1995,7 @@ c
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image,1e0)
+     1                         ,n_image,1e0,'hsect')
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -2009,7 +2043,7 @@ c
 
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image,1e0)
+     1                         ,n_image,1e0,'hsect')
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -2040,7 +2074,8 @@ c
 
                 else
                     call ccpfil(grid_ra_ref(1,1,k_level,1)
-     1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0)
+     1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0
+     1                         ,'hsect')
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -3256,7 +3291,7 @@ c
 
           else ! image plot
               call ccpfil(field_2d,NX_L,NY_L,clow,chigh,'cpe'
-     1                     ,n_image,scale)    
+     1                     ,n_image,scale,'hsect')    
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
               call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -3406,12 +3441,12 @@ c    1                ,field_3d,istatus)
               endif
             endif
 
-        elseif(c_type .eq. 'br'.or.c_type.eq.'fr')then
+        elseif(c_type_i .eq. 'br' .or. c_type_i .eq. 'fr')then
 c
 c J. Smart - 4/19/99. br is LAPS-lga either sh or rh (sh is converted to rh).
 c
             ext='lga'
-            if(c_type.eq.'fr')ext='fua'
+            if(c_type_i.eq.'fr')ext='fua'
 
             print*,'      plotting ',ext(1:3),' humidity data'
 
@@ -3530,27 +3565,33 @@ c                   cint = -1.
 
                     endif ! istat_rh / istat_sh
 
-                    call plot_cont(rh_2d,1e0
-     1                            ,clow,chigh,cint,asc9_tim_t
-     1                            ,namelist_parms,c33_label
-     1                            ,i_overlay,c_display
-     1                            ,lat,lon,jdot
-     1                            ,NX_L,NY_L,r_missing_data
-     1                            ,laps_cycle_time)
+!                   call plot_cont(rh_2d,1e0
+!    1                            ,clow,chigh,cint,asc9_tim_t
+!    1                            ,namelist_parms,c33_label
+!    1                            ,i_overlay,c_display
+!    1                            ,lat,lon,jdot
+!    1                            ,NX_L,NY_L,r_missing_data
+!    1                            ,laps_cycle_time)
+
+                    call plot_field_2d(i4_valid,c_type_i,rh_2d,1e0
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
                 endif ! plot RH
             endif ! True
 
-        elseif(c_type .eq. 'hb' .or. c_type .eq. 'tb' .or.
-     1         c_type .eq. 'hr' .or. c_type .eq. 'tr'     )then
+        elseif(c_type_i .eq. 'hb' .or. c_type_i .eq. 'tb' .or.
+     1         c_type_i .eq. 'hr' .or. c_type_i .eq. 'tr'     )then
             
-            if(c_type(1:1) .eq. 'h')then
+            if(c_type_i(1:1) .eq. 'h')then
                 var_2d = 'HT'
             else
                 var_2d = 'T3'
             endif
 
-            if(c_type(2:2) .eq. 'b')then
+            if(c_type_i(2:2) .eq. 'b')then
                 ext = 'lga'
             else
                 ext = 'fua'
@@ -3584,7 +3625,7 @@ c                   cint = -1.
             endif
 
 
-            if(c_type(1:1) .eq. 'h')then
+            if(c_type_i(1:1) .eq. 'h')then
                 scale = 10.
 
 !               call mklabel33(k_mb,' LAPS '//ext(1:3)//' Height dm'
@@ -3632,11 +3673,17 @@ c                   cint = -1.
 
             call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,scale,clow,chigh,cint
-     1                    ,asc9_tim_t,namelist_parms
-     1                    ,c33_label,i_overlay,c_display
-     1                    ,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint
+!    1                    ,asc9_tim_t,namelist_parms
+!    1                    ,c33_label,i_overlay,c_display
+!    1                    ,lat,lon,jdot
+!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4_valid,c_type_i,field_2d,scale
+     1                        ,namelist_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
             i4time_temp = i4_valid
 
@@ -3799,7 +3846,7 @@ c                   cint = -1.
 
             else ! image plot
                 call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
-     1                     ,n_image,1e-0)    
+     1                     ,n_image,1e-0,'hsect')    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -3853,7 +3900,7 @@ c                   cint = -1.
             else ! image plot
 !               call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
                 call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
-     1                     ,n_image,1e-0)    
+     1                     ,n_image,1e-0,'hsect')    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4006,7 +4053,7 @@ c                   cint = -1.
      1          /
      1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
      1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto,'
-     1                 /17x,'ptp,pdm,vnt,hah,ham,fwi,lwo,swo] ? ',$)       
+     1                 /13x,'ptp,pdm,vnt,hah,ham,fwi,lwo,swo,tpw] ? ',$)       
 
             endif
 
@@ -4072,6 +4119,11 @@ c                   cint = -1.
                 scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
                 units_2d = 'in'
 
+            elseif(var_2d .eq. 'TPW')then       
+!               scale = 10.     ! Convert from KG/M**2 (mm) to cm
+                scale = 1e-2    ! Convert from M (mm) to cm
+                units_2d = 'cm'
+
             else
                 scale = 1.
 
@@ -4126,45 +4178,48 @@ c                   cint = -1.
             else                  ! Surface background images
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
-     1                         ,n_image,scale) 
+     1                         ,n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
-     1                         ,n_image,scale) 
+     1                         ,n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'LWO')then
                     call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
-     1                         ,'linear',n_image,scale) 
+     1                         ,'linear',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'SWO')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
-     1                         ,'linear',n_image,scale) 
+     1                         ,'linear',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
 !    1                                 ,field_2d)
                     call ccpfil(field_2d,NX_L,NY_L,0.0,7200.
-     1                         ,'cpe',n_image,scale) 
+     1                         ,'cpe',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'NBE')then
                     call ccpfil(field_2d,NX_L,NY_L,-500.,+50.
-     1                         ,'cpe',n_image,scale) 
+     1                         ,'cpe',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'THE')then
                     call ccpfil(field_2d,NX_L,NY_L,250.,370.
-     1                         ,'hues',n_image,scale) 
+     1                         ,'hues',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'RH')then
                     call ccpfil(field_2d,NX_L,NY_L,220.,-40.
-     1                         ,'hues',n_image,scale) 
+     1                         ,'hues',n_image,scale,'hsect') 
+                elseif(var_2d .eq. 'TPW')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.,5.5
+     1                         ,'tpw',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'VNT')then
                     call ccpfil(field_2d,NX_L,NY_L,5000.,0.
-     1                         ,'spectral',n_image,scale) 
+     1                         ,'spectral',n_image,scale,'hsect') 
                 elseif(var_2d(1:2) .eq. 'HA')then
                     call ccpfil(field_2d,NX_L,NY_L,2.,6.
-     1                         ,'spectral',n_image,scale) 
+     1                         ,'spectral',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
-     1                         ,'spectral',n_image,scale) 
+     1                         ,'spectral',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'PTP')then
                     call ccpfil(field_2d,NX_L,NY_L,50000.,110000.
-     1                         ,'spectral',n_image,scale) 
+     1                         ,'spectral',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'PDM' .or. var_2d .eq. 'BLH')then       
                     call ccpfil(field_2d,NX_L,NY_L,0.,2400.
-     1                         ,'spectral',n_image,scale) 
+     1                         ,'spectral',n_image,scale,'hsect') 
                 elseif(var_2d(2:3) .eq. '01' .or.           ! Precip
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
@@ -4176,11 +4231,11 @@ c                   cint = -1.
                     call condition_precip(NX_L,NY_L,'pai',field_2d
      1                                   ,scale,.01)      
 
-                    call ccpfil(field_2d,NX_L,NY_L,0.,chigh*scale
-     1                         ,'acc',n_image,scale) 
+                    call ccpfil(field_2d,NX_L,NY_L,0.,chigh ! *scale
+     1                         ,'acc',n_image,scale,'hsect') 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
-     1                         ,n_image,scale) 
+     1                         ,n_image,scale,'hsect') 
                 endif
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4331,7 +4386,7 @@ c                   cint = -1.
             else ! image plot
 !               call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
                 call ccpfil(field_2d,NX_L,NY_L,0.,100.,'moist'
-     1                     ,n_image,1e-0)    
+     1                     ,n_image,1e-0,'hsect')    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4717,9 +4772,9 @@ c                   cint = -1.
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
 !               call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
-!    1                     ,n_image,1.)      
+!    1                     ,n_image,1.,'hsect')      
                 call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'spectral'
-     1                     ,n_image,1.)      
+     1                     ,n_image,1.,'hsect')      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4811,7 +4866,7 @@ c                   cint = -1.
 
             else
                 call ccpfil(field_2d,NX_L,NY_L,clow,chigh_img,'linear'
-     1                     ,n_image,1e0)       
+     1                     ,n_image,1e0,'hsect')       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -4892,7 +4947,7 @@ c                   cint = -1.
                 endif
 
                 call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,colortable     
-     1                     ,n_image,1e0)     
+     1                     ,n_image,1e0,'hsect')     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -4925,7 +4980,7 @@ c                   cint = -1.
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
-     1                                                       ,1e0)            
+     1                                              ,1e0,'hsect')            
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -4958,7 +5013,7 @@ c                   cint = -1.
                 write(6,*)' calling solid fill plot'
                 scale = 1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
-     1                     ,n_image,1e0)
+     1                     ,n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5015,7 +5070,7 @@ c             cint = .05
               if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
-     1                     ,n_image,1e0)
+     1                     ,n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5056,7 +5111,7 @@ c             if(cint.eq.0.0)cint=0.1
 
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
-     1                     ,n_image,1e0)
+     1                     ,n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5091,7 +5146,7 @@ c             if(cint.eq.0.0)cint=0.1
               if(cstatic .eq. 'tsi')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh
-     1               ,'hues',n_image,1e0)
+     1               ,'hues',n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5123,7 +5178,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image,1e0)
+     1                     ,'linear',n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5155,7 +5210,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image,1e0)
+     1                     ,'linear',n_image,1e0,'hsect')
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5978,6 +6033,7 @@ c             if(cint.eq.0.0)cint=0.1
         character*4 c4_grid
         character*5 c5_sect
         character*9 a9time
+        character*19 c_ul ! Max length of c_institution + 10
 
         common /image/ n_image
         common /icol_index/ icol_common
@@ -6031,7 +6087,6 @@ c             if(cint.eq.0.0)cint=0.1
 !       Top Label               
         iy = y_2 * 1024
 !       ix = 170 
-!       CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS',rsize,0,0)   
 
         if(c5_sect .eq. 'hsect')then
             ix = 70
@@ -6039,8 +6094,11 @@ c             if(cint.eq.0.0)cint=0.1
             ix = 90
         endif
 
-        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL LAPS '//c4_grid
-     1                                               ,rsize,0,-1.0)   
+        call s_len2(namelist_parms%c_institution,len_inst)
+        c_ul = namelist_parms%c_institution(1:len_inst)//' LAPS '
+     1         //c4_grid
+
+        CALL PCHIQU (cpux(ix),cpux(iy),c_ul,rsize,0,-1.0)   
 
 !       if(c5_sect .eq. 'sound')then
 !           call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
@@ -6335,7 +6393,8 @@ c             if(cint.eq.0.0)cint=0.1
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
 
-        common /image/ n_image
+!       i_image: whether this particular plot is an image
+        common /image/ n_image, i_image 
         common /zoom/  zoom, density
 
         c_type = c_type_in
@@ -6363,7 +6422,9 @@ c             if(cint.eq.0.0)cint=0.1
 
         call downcase(c_type,c_type)
 
-        if(c_type(len_type:len_type) .ne. 'i' .or. c_type .eq. 'hi')then       
+        if( (c_type(len_type:len_type)  .ne. 'i' .or. c_type  .eq. 'hi')       
+     1                          .AND. 
+     1                     i_image .eq. 0                          )then       
             write(6,*)' plot_field_2d - contour plot ',c_type
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -6398,8 +6459,8 @@ c             if(cint.eq.0.0)cint=0.1
             endif
 
             call ccpfil(field_2d,NX_L,NY_L
-     1                 ,clow_img*scale,chigh_img*scale      
-     1                 ,colortable,n_image,scale)    
+     1                 ,clow_img,chigh_img ! *scale      
+     1                 ,colortable,n_image,scale,'hsect')    
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
