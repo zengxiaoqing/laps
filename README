@@ -1917,8 +1917,10 @@ Inputs:
         'data/static/background.nl'.
 
 Outputs: (Feeds various analyses)
+<pre>
 	lga	grid	background model 3-D data analysis/forecast
 	lgb	grid	background model Sfc data analysis/forecast
+</pre>
 
 Source directory: The source code for this is in 'src/background'.
 
