@@ -81,7 +81,7 @@
 
         call s_len(dir_in,len_dir_in)
 
-        prof_subdirs(1) = '50mhz_null'
+        prof_subdirs(1) = '50mhz'
         prof_subdirs(2) = '915mhz'
         prof_subdirs(3) = 'minisodar'
 
