@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-	Subroutine Calc_Evap(
+       Subroutine Calc_Evap(imax,jmax,
      &                       Laps_u,
      &                       Laps_v,
      &                       Laps_T,
@@ -37,43 +37,41 @@ cdis
      &                       Laps_Evap,
      &                       IStatus)
 
-C	Subroutine to calculate the pan evaporation rates for the 
-C	Laps Grid. 10 km every Hour
-C	Uses the Assumption of Non Radiation Limiting as In pg 166
-C	Hydrology for Engineers  by Linsley, Kohler and Paulhus
-C	2/5/93
+C       Subroutine to calculate the pan evaporation rates for the 
+C       Laps Grid. 10 km every Hour
+C       Uses the Assumption of Non Radiation Limiting as In pg 166
+C       Hydrology for Engineers  by Linsley, Kohler and Paulhus
+C       2/5/93
 C
 
 
-      include 'lapsparms.for'
       integer*4 imax,jmax
-      parameter(imax=nx_l,jmax=ny_l)
-	Include 'soilm.inc'
+      Include 'soilm.inc'
 
-	Real 	Laps_u(Imax,Jmax)
-        Real    Laps_v(Imax,Jmax)
-        Real    Laps_T(Imax,Jmax)
-        Real    Laps_TD(Imax,Jmax)
-        Real    Laps_Evap(Imax,Jmax)
-        Real    Val1, Val2, Val3
-        Real    WindSpeed, TempDegF, DewPoint_DegF
-	Integer*4 IStatus
+      Real    Laps_u(Imax,Jmax)
+      Real    Laps_v(Imax,Jmax)
+      Real    Laps_T(Imax,Jmax)
+      Real    Laps_TD(Imax,Jmax)
+      Real    Laps_Evap(Imax,Jmax)
+      Real    Val1, Val2, Val3
+      Real    WindSpeed, TempDegF, DewPoint_DegF
+      Integer*4 IStatus
 
-	Do J = 1, Jmax
-	    Do I = 1, Imax
-	        WindSpeed = (Laps_u(I,J)**2 + Laps_v(I,J)**2)**0.5 !m/s
-		WindSpeed = WindSpeed * 53.6979     ! miles per day
-	        TempDegF = 1.8 * (Laps_T(I,J) - 273.15) + 32.0  !Deg F
-		DewPoint_DegF = 1.8 * (Laps_TD(I,J) - 273.15) + 32.0
-                Val1 = ( 0.0041 * TempDegF + 0.676) ** 8
-	        Val2 = ( 0.0041 * DewPoint_DegF + 0.676) ** 8
-		Val3 = (0.37 + 0.0041 * WindSpeed)
+      Do J = 1, Jmax
+        Do I = 1, Imax
+           WindSpeed = (Laps_u(I,J)**2 + Laps_v(I,J)**2)**0.5 !m/s
+           WindSpeed = WindSpeed * 53.6979     ! miles per day
+           TempDegF = 1.8 * (Laps_T(I,J) - 273.15) + 32.0  !Deg F
+           DewPoint_DegF = 1.8 * (Laps_TD(I,J) - 273.15) + 32.0
+           Val1 = ( 0.0041 * TempDegF + 0.676) ** 8
+           Val2 = ( 0.0041 * DewPoint_DegF + 0.676) ** 8
+           Val3 = (0.37 + 0.0041 * WindSpeed)
 
-		Laps_Evap(I,J) = (Val1 -Val2)**0.88 * Val3
-	    Enddo
-	Enddo
-        IStatus = 1
-c        Write(*,*) 'Completed Evaporation Calc'
+           Laps_Evap(I,J) = (Val1 -Val2)**0.88 * Val3
+        Enddo
+      Enddo
+      IStatus = 1
+c     Write(*,*) 'Completed Evaporation Calc'
 
-	Return
-	End
+      Return
+      End

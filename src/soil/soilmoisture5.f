@@ -29,22 +29,11 @@ cdis
 cdis 
 cdis 
 cdis 
-      Subroutine Soil_Moisture(Laps_u,
-     &                        Laps_v,
-     &                        Laps_T,
-     &                        Laps_TD,
-     &                        Laps_Rain,
-     &                        Laps_sc,
-     &                        Laps_IN,
-     &                        Laps_WFZ,
-     &                        Laps_MWF,
-     &                        Laps_MWF_pre,
-     &                        Laps_Wx,
-     &                        SoilType,
-     &                        GridDry,     !Inputs down to here
-     &                        Laps_Evap,
-     &                        Laps_SMC_3D,
-     &                        IStatus)
+      Subroutine Soil_Moisture(imax,jmax,
+     &           Laps_u,Laps_v,Laps_T,Laps_TD,
+     &           Laps_Rain,Laps_sc,Laps_IN,Laps_WFZ,
+     &           Laps_MWF,Laps_MWF_pre,Laps_Wx,SoilType,    !Inputs down to here
+     &           GridDry,Laps_Evap,Laps_SMC_3D,istatus)
 
 C     LAPS SoilMoisture Subroutine. Driver is program LSM (LAPS Soil Moisture).
 C     Original version implemented for FSL Demonstration PC Workstation by
@@ -53,9 +42,9 @@ C     2/8/93
       
 C     John Smart 12/1/93: Adapt the software to run in real time on the
 C     			  UNIX platform.  Set up LAPS standard I/O.
-      include 'lapsparms.for'
+c     John Smart 9/22/97: Dynamic array mods
+
       integer*4 imax,jmax
-      parameter(imax=nx_l,jmax=ny_l)
       Include 'soilm.inc'
 C
 C**** MODEL12 is a Soil Moisture Content model developed in June l986, and
@@ -67,8 +56,10 @@ C     Created by Groves.
 
       DIMENSION R(100)
       REAL 	KSAT,LAMDA,IN
+      real*4    rmiss
       DATA 	DAY,SUMR,IN,OLDWEA/4*0./
       INTEGER   Istatus
+      INTEGER   icycle_time
       LOGICAL 	Dry, GridDry
       INTEGER   SoilType(Imax,Jmax)
       REAL      Laps_u(Imax,Jmax)     !u-component
@@ -85,13 +76,22 @@ C     Created by Groves.
       REAL      Laps_Evap(Imax,Jmax)  !Amount of Evaporation (Calc within)
       REAL      Laps_SMC_3D(Imax,Jmax,3)!Three layer Soil Moisture Content
 
+      call get_laps_cycle_time(icycle_time,istat)
+      if(istat.ne.1)then
+         write(6,*)'Error getting laps cycle time'
+         write(6,*)'WARNING: Setting DELT = 1.0'
+         write(6,*)'Assuming cycle time = 3600 sec'
+         icycle_time = 3600
+      endif
+      DELT = float(icycle_time)/3600.
+
+      call get_r_missing_data(rmiss,istat)
+      if(istat.ne.1)goto 1000
+
       Write(*,*)'Calculating Pan Evaporation'
-      Call Calc_Evap(Laps_u,
-     &               Laps_v,
-     &               Laps_T,
-     &               Laps_TD,    !Input to here.
-     &               Laps_Evap,
-     &               IStatus)
+      Call Calc_Evap(imax,jmax,Laps_u,Laps_v,
+     &               Laps_T,Laps_TD,    !Input to here.
+     &               Laps_Evap,IStatus)
       If (IStatus.eq.1) Then
  	 Write(*,*)'Completed Calculating Evaporation'
       Else
@@ -114,6 +114,9 @@ C     Created by Groves.
         Z = Laps_WFZ(I,J)
 	THI = Laps_MWF(I,J)
         XTHI = Laps_MWF_pre(I,J)
+
+        if(IN .ne.rmiss.and.  Z .ne.rmiss.and.
+     &     THI.ne.rmiss.and.XTHI.ne.rmiss)then
 
         If((Laps_sc(i,j).lt.snowthres).or.(laps_sc(i,j).gt.1.e30))then
 
@@ -158,17 +161,19 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
 	  Laps_SMC_3D(I,J,2) = ths/ THSPER
 	  Laps_SMC_3D(I,J,3) = ths/ THSPER
 
-        end if
+        endif
+
+        endif
 
       Enddo
       Enddo	
       Write(*,*)' Completed SM Calculation for grid'
       istatus = 1
 C
-100   WRITE(*,*)'End of Simulation'
-
+100   WRITE(6,*)'End of Simulation'
+      goto 1000
 C
-      Return
+1000  Return
       END
 
 C ====================================================================

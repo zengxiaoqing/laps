@@ -29,23 +29,30 @@ cdis
 cdis 
 cdis 
 cdis 
-         subroutine readcsc(i4time,dir,cscnew)
+         subroutine readcsc(i4time,imax,jmax,cscnew)
 C
-         include 'lapsparms.for'
-         parameter(imax=nx_l,jmax=ny_l)
-c
+         integer*4  imax,jmax
+
          real*4 csc(imax,jmax),lcv(imax,jmax),csctot(imax,jmax)
          real*4 snow_total(imax,jmax)
          real*4 missval,cscnew(imax,jmax)
          integer*4 i4time
-         CHARACTER*50 DIR
-         CHARACTER*17 TIME
+         CHARACTER*24 TIME
 c         data missval/1.0e37/
-         missval=r_missing_data
 c
 c ************************************************************
-        i4time=i4time-48*3600
-c
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if(istatus.ne.1)then
+           write(6,*)'Error - get_laps_cycle_time'
+           return
+        endif
+        call get_r_missing_data(missval,istatus)
+        if(istatus.ne.1)then
+           write(6,*)'Error - get_r_missing_data'
+           return
+        endif
+        i4time=i4time-48*3600 !force 48 hours 
+c ************************************************************
 c first set csctot to all missing values
 c
          do i=1,imax
@@ -57,14 +64,15 @@ c
 c now loop through past 48 hours, looking only at csc files
 c
         icsc=0
-        do itime=1,49
+        ncycle_times=48*int(3600./float(laps_cycle_time))+1
+        do itime=1,ncycle_times
 c
-
            call cv_i4tim_asc_lp(i4time,time,istatus)
 c           if(time(13:14).eq.'13')goto 52
            write(6,101)time
 c
-	   CALL GETLAPSLCV(I4TIME,LCV,CSC,ISTATUS,DIR)
+	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
+     &ISTATUS)
 	   IF (ISTATUS .NE. 1) THEN
 	      WRITE(6,*) 'Error getting LAPS LCV at ',i4time
               write(6,*) 'Not using this lcv file'
@@ -79,7 +87,7 @@ c
            enddo
  522       continue
 c
-           i4time=i4time+3600
+           i4time=i4time+laps_cycle_time
         enddo
  101    format(1x,'First csc loop data search time: ',a17)
 c
@@ -92,9 +100,9 @@ c
            enddo
          endif
 c
-        i4time=i4time-3600
+        i4time=i4time-laps_cycle_time
 c
-        call analyze(csctot,cscnew,missval)
+        call analyze(csctot,cscnew,imax,jmax,missval)
 c
 c now loop through past 48 hours, looking for latest snow_total and
 c  latest csc obs. snow_total only applies to a point - it is not
@@ -102,7 +110,8 @@ c  spread horizontally. If there are then any later csc obs at that
 c  point, then the csctot point is set to the csc ob.
 c
         i4time=i4time-48*3600
-        do itime=1,49
+        ncycle_times=48*int(3600./float(laps_cycle_time))+1
+        do itime=1,ncycle_times
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
 c           if(time(13:14).eq.'13')goto 52
@@ -110,7 +119,8 @@ c           if(time(13:14).eq.'13')goto 52
 c
 c First get csc field again. Will not analyze - just use this to
 c   write over any previous time's snow_total obs.
-	   CALL GETLAPSLCV(I4TIME,LCV,CSC,ISTATUS,DIR)
+	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
+     &ISTATUS)
 	   IF (ISTATUS .NE. 1) THEN
 	      WRITE(6,*) 'Error getting LAPS LCV at ',i4time
               write(6,*) 'Not using this lcv file'
@@ -126,7 +136,8 @@ c   write over any previous time's snow_total obs.
 c
 c now get snow_total obs
 c
-	   CALL GETLAPSL1S(I4TIME,snow_total,ISTATUS,DIR)
+	   CALL GETLAPSL1S(I4TIME,snow_total,imax,jmax,1,
+     &ISTATUS)
 	   IF (ISTATUS .NE. 1) THEN
 	      WRITE(6,*) 'Error getting LAPS L1S at ',i4time
               write(6,*) 'Not using this l1s file'
@@ -145,10 +156,10 @@ c   if snowfall total between 1 and 2cm, then ramp snow cover 0.5 to 1.
            enddo     
  51        continue
 c
-           i4time=i4time+3600
+           i4time=i4time+laps_cycle_time
         enddo
  102    format(1x,'Second loop data search time: ',a17)
-          i4time=i4time-3600
+          i4time=i4time-laps_cycle_time
 c
 c        do j=jmax,1,-1
 c          write(6,76)j,(cscnew(i,j),i=1,18)
@@ -159,16 +170,19 @@ c
         end
 C-------------------------------------------------------------------------------
 C
-      SUBROUTINE GETLAPSLCV(I4TIME,LCV,CSC,ISTATUS,DIR)
+      SUBROUTINE GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
+     &ISTATUS)
 C
-         include 'lapsparms.for'
-         parameter(imax=nx_l,jmax=ny_l,kmax=2)
+      Integer*4 imax,jmax
+      Integer*4 kmax
+      parameter(kmax = 2)
 c
       INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
-      REAL*4 lcv(imax,jmax),csc(imax,jmax),readv(imax,jmax,kmax)		
+      REAL*4 lcv(imax,jmax),csc(imax,jmax)
+      Real*4 readv(imax,jmax,kmax)		
 C
-      CHARACTER*50 DIR,LDIR
+      CHARACTER*50 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
       CHARACTER*4 LVL_COORD(KMAX)
@@ -180,14 +194,8 @@ C
 	ERROR(1)=1
 	ERROR(2)=0
 C
-c        DO I=50,1,-1
-c          IF (DIR(I:I) .NE. ' ') GOTO 8
-c        ENDDO
-
         call get_directory('lcv',ldir,len)
 
-c8       LDIR=DIR(1:I)//'lcv/'
-c        print *,'ldir=',ldir
 	EXT='lcv'
 	VAR(1)='LCV'
 	VAR(2)='CSC'
@@ -232,16 +240,16 @@ C
 C
 C-------------------------------------------------------------------------------
 C
-      SUBROUTINE GETLAPSL1S(I4TIME,snow_total,ISTATUS,DIR)
+      SUBROUTINE GETLAPSL1S(I4TIME,snow_total,imax,jmax,kmax,
+     &ISTATUS)
 C
-         include 'lapsparms.for'
-         parameter(imax=nx_l,jmax=ny_l,kmax=1)
+      integer*4 imax,jmax,kmax
 c
       INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
       REAL*4 snow_total(imax,jmax),readv(imax,jmax,kmax)		
 C
-      CHARACTER*50 DIR,LDIR
+      CHARACTER*50 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
       CHARACTER*4 LVL_COORD(KMAX)
@@ -253,12 +261,8 @@ C
 	ERROR(1)=1
 	ERROR(2)=0
 C
-c        DO I=50,1,-1
-c          IF (DIR(I:I) .NE. ' ') GOTO 8
-c        ENDDO
         call get_directory('lls',ldir,len)
-c8       LDIR=DIR(1:I)//'l1s/'
-c        print *,'ldir=',ldir
+
 	EXT='L1S'
 	VAR(1)='STO'
 	LVL(1)=0
@@ -300,10 +304,11 @@ C
 C
 C
 C-------------------------------------------------------------------------------
-         subroutine analyze(csctot,cscnew,missval)
+         subroutine analyze(csctot,cscnew,imax,jmax,missval)
 C
-         include 'lapsparms.for'
-         parameter(imax=nx_l,jmax=ny_l,nboxes=100,nruns=5)
+         integer imax,jmax
+         integer nboxes, nruns
+         parameter(nboxes=100,nruns=5)
 c
          real csctot(imax,jmax),cscnew(imax,jmax)
          dimension iimin(nruns,nboxes),
@@ -427,12 +432,3 @@ c           enddo
 c
          return
          end
-
-
-
-
-
-
-
-
-

@@ -29,10 +29,29 @@ cdis
 cdis 
 cdis 
 cdis 
+      Program LSM5
+
+      implicit none
+
+      include   'lapsparms.cmn'
+      integer*4  istatus
+       
+      Call get_laps_config('nest7grid',IStatus)
+      if(istatus.eq.1)then
+        write(*,*)'LAPS Parameters obtained'
+      else
+        write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
+        write(*,*)'Terminating LAPS-LSM5. Soil Moisture'
+        stop
+      end if
+      call lsm5_sub(NX_L_CMN,NY_L_CMN)
+      stop
+      end
+
 c
 c ************************************************************************** 
 c
-      Program LSM5
+      subroutine LSM5_sub(imax,jmax)
 
 C     Program LAPS SoilMoisture Analysis
 C     Changed to enable gridded analysis and real time
@@ -42,9 +61,9 @@ C     2/8/93
 C     John Smart 12/1/93: Adapting to run in real time on the
 C     			  UNIX platform.  Set up LAPS standard I/O.
 C                         Enhanced modularity.
-      include 'lapsparms.for'
+C     J Smart    9/22/97  Adapt for dynamic array memory allocation
+C
       integer*4 imax,jmax
-      parameter(imax=nx_l,jmax=ny_l)
 
       Include 'soilm.inc'
 C
@@ -73,7 +92,7 @@ C     Created by Groves.
       REAL      Laps_Rain(Imax, Jmax) !Radar-estimated 1hr liq. precip
       REAL      Laps_SC(Imax,Jmax)    !Snow Cover; fractional  0.0 to 1.0.
       REAL      Laps_SC_pre(Imax,Jmax)!Previous Hour Snow Cover   " .
-c      REAL      Laps_SM(Imax,Jmax)    !Snow Melt, undefined currently
+c     REAL      Laps_SM(Imax,Jmax)    !Snow Melt, undefined currently
       REAL      Laps_SMC_3D(Imax,Jmax,3)!Three layer Soil Moisture Content
       REAL      soilm_field_cap(Imax,Jmax)!Field cap soil moistr (m**3/m**3)
       REAL      soilm_sat(Imax,Jmax) !Saturated soil moistr (m**3/m**3)
@@ -97,8 +116,7 @@ c laps lm2...variety of soil characteristic variables
       Character dir_2*50, ext2*31, var_2(7)*3, lvl_coord2(7)*4, 
      &          units2(7)*10, comment2(7)*125
       Character atime_smpre(25)*24
-      Character dir_3*50, fname*200
-      Character laps_dom_file*9
+      Character fname*200
 
       DATA	ext_s/'lsx'/
       DATA	ext_l/'l1s'/
@@ -125,7 +143,6 @@ c laps lm2...variety of soil characteristic variables
 c 
 c first read in current time
 c
-c      open(11, file='../sched/systime.dat',status='unknown')
       call get_directory('etc',fname,len)
       open(11, file=fname(1:len)//'systime.dat',status='unknown')
       read(11,*,err=999)i4time_smcur
@@ -133,22 +150,18 @@ c      open(11, file='../sched/systime.dat',status='unknown')
  22   format(1x,a9)
       close(11)
 c -------------------------
-c      i4time_smcur=1103558400
-c      ftime_smcur='943541600'
-c -------------------------
-c
 c open log file
 c
       call get_directory('log',fname,len)
-      open(6,file=fname(1:len)//'lsm.log.'//ftime_smcur(6:9),
-     1       status='unknown',err=998)      
+c     open(6,file=fname(1:len)//'lsm.log.'//ftime_smcur(6:9),
+c    1       status='unknown',err=998)      
       write(6,*)'file time: ',ftime_smcur,' i4time: ',i4time_smcur
 C**** Read soil description and simulation time step 
 
       call get_directory('lm1',dir_1,len)
 c      dir_1 = '../lapsprd/lm1/'
 
-      Call Soil_In5(SoilType,IStatus)   	! Get soil texture group
+      Call Soil_In5(imax,jmax,SoilType,IStatus)   	! Get soil texture group
       if(IStatus.ne.1)then
          write(6,*)'Soil Textures Obtained'
          write(6,*)'Soil type = ',SoilType(1,1)
@@ -157,16 +170,6 @@ c      dir_1 = '../lapsprd/lm1/'
          stop
       end if
 c
-      laps_dom_file=laps_domain_file
-      Call get_laps_config(laps_dom_file,IStatus)
-      if(IStatus.eq.1)then
-         write(6,*)'LAPS Parameters obtained'
-      Else
-         write(6,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-         write(6,*)'Terminating LAPS Soil Moisture'
-         stop
-      end if
-
 c  Get the current and previous i4time and ascii times. Allow for 4 previous
 c  times for the previous soil moisture product.  Mandatory to have 1 previous
 c  time so if the 4th previous time is the current time then the 5th is prev.
@@ -217,17 +220,18 @@ c       dir_s = '../lapsprd/lsx/'
        end do
 c
 c Get LAPS snow cover
-c
+c -------------------
        write(6,*)'Compute snow cover'
        write(6,*)
 
-c       dir_3 = '../lapsprd/'
        Call readcsc(i4time_smcur
-     &              ,dir_3
+     &              ,imax,jmax
      &              ,LAPS_SC)
+
        write(6,*)'Snow cover computed'
-       Write(6,*) '***************************************'
-       Write(6,*) 'Getting Field Cap and Saturated Soil Moisture'
+       Write(6,*)'***************************************'
+       Write(6,*)'Getting Field Cap and Saturated Soil Moisture'
+
        Do J = 1, Jmax
           Do I = 1, Imax
              ISOIL = SoilType(I,J)
@@ -335,21 +339,10 @@ c This concludes getting the initial data for the soil moisture model
 c ****************************************************************************
 c ********************** Soil Moisture Subroutine ****************************
 c
-       Call Soil_Moisture(Laps_u,
-     &                  Laps_v,
-     &                  Laps_T,
-     &                  Laps_TD,
-     &                  Laps_Rain,
-     &                  Laps_sc,
-     &                  Laps_IN,
-     &                  Laps_WFZ,
-     &                  Laps_MWF,
-     &                  Laps_MWF_pre,
-     &                  Laps_Wx,
-     &                  SoilType,
-     &                  GridDry,
-     &                  Laps_Evap,
-     &                  Laps_SMC_3D,
+       Call Soil_Moisture(imax,jmax,Laps_u,Laps_v,
+     &      Laps_T,Laps_TD,Laps_Rain,Laps_sc,
+     &      Laps_IN,Laps_WFZ,Laps_MWF,Laps_MWF_pre,
+     &      Laps_Wx,SoilType,GridDry,Laps_Evap,Laps_SMC_3D,
      &                  IStatus)
 c
 c Arrays Laps_IN, _WFZ, _MWF, _Wx return the new values of IN, WFZ, MWF and Wx
@@ -459,64 +452,3 @@ c
 c
        STOP
        END
-c
-c **************************************************************************
-c
-       subroutine lsm_qc_check(nx_l,ny_l,nz_l,
-     &                         data,r_low,r_up,istatus)
-c
-c routine determines if grid point has "bad" value. If so then the surrounding
-c points are used to derive a good value.  The routine does not consider soil
-c type boundaries at this time.
-c
-       implicit none
-
-       integer*4 nx_l,ny_l,nz_l
-       real*4 data(nx_l,ny_l,nz_l)
-       real*4 r_low,r_up
-       integer*4 istatus, i, j, k, icnt
-c
-       icnt = 0
-       istatus = 0       ! error return
-c
-       do k=1,nz_l
-       do j=1,ny_l
-       do i=1,nx_l
-         if(data(i,j,k).ge.r_low .and. data(i,j,k).le.r_up) go to 10
-         icnt = icnt - 1
-         if(i.gt.1 .and. i.lt.nx_l)then
-            if(j.gt.1 .and. j.lt.ny_l)then
-
-               data(i,j,k) = (data(i-1,j,k) + data(i+1,j,k) +
-     &                      data(i,j-1,k) + data(i,j+1,k) +
-     &                      data(i-1,j+1,k) + data(i+1,j+1,k) +
-     &                      data(i-1,j-1,k) + data(i+1,j-1,k))/8.0
-
-            elseif(j.eq.1)then
-               data(i,j,k)=data(i,2,k)
-            else
-               data(i,j,k)=data(i,ny_l-1,k)
-            end if
-
-         elseif(i.eq.1)then
-            data(i,j,k)=data(2,j,k)
-         else
-            data(i,j,k)=data(nx_l-1,j,k)
-         end if
-
-10       continue
-
-      enddo !i
-      enddo !j
-      enddo !k
-c
-      if(icnt .lt. 0) then
-        istatus = icnt
-      else
-        istatus = 1
-      endif
-c
-      return
-      end
-
-

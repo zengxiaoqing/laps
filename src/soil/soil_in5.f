@@ -34,29 +34,40 @@ C   Created 5/2/92
 C   Chandran Subramaniam
 C
 C
-	Subroutine Soil_In5(SoilType,IStatus) 
+      Subroutine Soil_In5(imax,jmax,SoilType,IStatus) 
 
-      include 'lapsparms.for'
+      include 'soilm.inc'
       integer*4 imax,jmax
-      parameter(imax=nx_l,jmax=ny_l)
-        include 'soilm.inc'
-        integer SoilType(Imax,Jmax)
-	Open(Unit = 2, File = 'Soils.dat', Status = 'Old',
-     1  Access = 'Sequential', Iostat = IERR, ERR = 664)
-	Do J = 1 , Jmax
-            Read(2,*) (SoilType(I,J), I = 1, Imax)
-        Enddo
-        Close(2)
-        Write(*,*) 'Read Soils Data'
-	IStatus = -1
-        Return
-664	WRite(*,*)'Using Default Soil Types'
-	Do J = 1 , Jmax
-            Do I = 1, Imax
-               SoilType(I,J) = 5
-            Enddo
-        Enddo
-	IStatus = -1
+      integer*4 nf
+      integer SoilType(imax,jmax)
+      character*150 c_dir
+      character*256 filename
 
-	Return
-	End
+      istatus = -1
+
+      call get_directory('static',c_dir,lend)
+      filename=c_dir(1:lend)//'soil/Soils.dat'
+
+      open(Unit = 2, File = filename, Status = 'Old',
+     1  Access = 'Sequential', Iostat = IERR, ERR = 664)
+
+      do J = 1 , Jmax
+         Read(2,*) (SoilType(I,J), I = 1, Imax)
+      enddo
+      close(2)
+
+      nf = index(filename,' ')-1
+      write(6,*) 'Got Soils Data from ',filename(1:nf)
+      istatus = 0
+      return
+
+664   write(*,*)'Using Default Soil Types'
+      do J = 1 , Jmax
+         do I = 1, Imax
+            soiltype(I,J) = 5
+         enddo
+      enddo
+      istatus = 0
+
+      Return
+      End

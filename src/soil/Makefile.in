@@ -50,7 +50,9 @@ RANLIB   = @RANLIB@
 SRC=soil_in5.f \
     soilmoisture5.f \
     calc_evap.f \
-    readcsc.f
+    readcsc.f \
+    stats.f \
+    lsm_qc.f
 
 MAIN=lsm5.f 
 
@@ -73,7 +75,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 #	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 #	rm -f *.o $*.f
 
-debug: clean $(ARCHIVE) $(MAIN)
+debug: clean
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
 
 install: exe
