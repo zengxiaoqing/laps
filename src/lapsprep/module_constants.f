@@ -42,4 +42,10 @@ MODULE constants
    REAL , PARAMETER :: radians_per_degree = pi / 180.
    REAL , PARAMETER :: rdry = 287.1  ! Dry air gas constant
    REAL , PARAMETER :: g = 9.81      ! Gravity
+
+   ! Microphysics constants for autoconversion of cloud liquid to
+   ! rain and ice to snow, in kg/m**3
+   REAL, PARAMETER :: autoconv_lwc2rai = 0.0005
+   REAL, PARAMETER :: autoconv_ice2sno = 0.0001
+
 END MODULE constants

@@ -459,6 +459,9 @@
       ! convert from concentration to mixing ratio.
 
       IF (MAXVAL(lwc) .LT. 99999.) THEN
+
+        ! For cloud liquid, limit max value to autoconv_lwc2rai
+        WHERE(lwc .GT. autoconv_lwc2rai) lwc = autoconv_lwc2rai
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
         IF (lwc2vapor_thresh .GT. 0.) THEN
           DO k=1,z3
@@ -517,6 +520,8 @@
       ENDIF
 
       IF (MAXVAL(ice) .LT. 99999.) THEN 
+        ! Limit ice to autoconversion threshold
+        WHERE(ice .GT. autoconv_ice2sno) ice = autoconv_ice2sno
         ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
       ELSE
         PRINT *, 'Ice (lwc/ice) appears to be missing, setting values to 0.0' 
