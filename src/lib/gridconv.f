@@ -746,11 +746,11 @@ c     J. Smart 11-19-98   Original Working Version
 c                         Basic equation set from
 c                         Map Projections Used by the U.S. Geological Survey
 c                         (Snyder, J.P. 1983 Geological Survey Bulletin - 1532)
-      implicit none
 c
       include 'trigd.inc'
+      implicit none
       integer np,n
-c
+ 
       real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       lli(np),llj(np),        !Lat-lon grid i,j
      .       nw(2),se(2),            !NW grid lat/lon; SE grid lat/lon
@@ -758,7 +758,7 @@ c
      .       dx,dy,
      .       r,
      .       pi,dg2rd
-c
+ 
       integer nx,ny,nz             !No. of LL domain grid points
       real*4 rlatc,rlonc           !Grid center lat, lon
       real*4 xmin,ymin,xmax,ymax
