@@ -6,37 +6,18 @@
 
 LAPSROOT=../../..
 
-
 include $(LAPSROOT)/src/include/makefile.inc
-
-
-
-
-
-
-
-
-
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
-
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
-
-
-OTHERLIBS = /usr/local/apps/netcdf-3.3.1/lib/libnetcdf.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
 EXE = gensfclut.exe
 
-
-
-
-
 SRC=build_sfc_static.f
-
 
 all: exe
 
