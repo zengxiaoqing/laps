@@ -145,7 +145,7 @@ cdis
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
-      logical  l_3d
+      logical  l_3d,l_not_struct
 
       real*4   rms_thresh                                              ! Input
       real*4   weight_bkg_const                                        ! Input
@@ -180,6 +180,7 @@ csms$serial(default=ignore)  begin
 csms$serial end
 
       l_3d = .true.
+      l_not_struct = .false.
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
 
@@ -487,11 +488,19 @@ csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
 
 csms$serial end
 
-      call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
+      call arrays_to_barnesobs      (imax,jmax,kmax                   ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,ncnt_total,weight_total          ! O
+     1                              ,istatus)                         ! O
+
+      call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
+!     call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
-     1        ,l_analyze,l_3d,rms_thresh,weight_bkg_const
+     1        ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 csms$serial(default=ignore)  begin              
@@ -593,11 +602,20 @@ csms$insert      stop
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-              call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes       
+              call arrays_to_barnesobs(imax,jmax,kmax                 ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,ncnt_total,weight_total          ! O
+     1                              ,istatus)                         ! O
+
+              call barnes_multivariate
+     1                             (varbuff,n_var,ncnt_total,obs_barnes
+!             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes       
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1           ,varobs_diff_spread
      1           ,wt_p_spread,fnorm,n_fnorm
-     1           ,l_analyze,l_3d,rms_thresh,weight_bkg_const
+     1           ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
      1           ,n_obs_lvl,istatus)
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
@@ -651,11 +669,19 @@ csms$insert      stop
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
+          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,ncnt_total,weight_total          ! O
+     1                              ,istatus)                         ! O
+
+          call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes       
+!         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1       ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
+     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
@@ -721,12 +747,20 @@ csms$insert      stop
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
+          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
+     1                              ,r_missing_data                   ! I
+     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,n_var,max_obs,obs_barnes         ! I/O
+     1                              ,ncnt_total,weight_total          ! O
+     1                              ,istatus)                         ! O
+
+          call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
+!         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1       ,imax,jmax,kmax
      1       ,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_3d,rms_thresh,weight_bkg_const
+     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
