@@ -1,0 +1,30 @@
+#! /bin/csh
+
+set STR1 = "$1"
+shift
+
+set STR2 = "$1"
+shift
+
+foreach i ($argv)
+
+	if (( -e "$i" ) && ( -f "$i" ) ) then
+
+		grep "$STR1" $i > fix.tmp
+
+                if ( -z fix.tmp ) then
+
+			rm fix.tmp
+
+		else
+
+			echo $i
+			sed -e "1,9999s?$STR1?$STR2?g" $i > fix.tmp
+
+			mv fix.tmp $i
+                        chmod +x $i
+		endif
+
+	endif
+
+end
