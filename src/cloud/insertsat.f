@@ -312,7 +312,7 @@ c
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
-     1     ,istat_39_add_a(i,j)                                           ! O
+     1     ,istat_39_add_a(i,j),istat_vis_added                           ! O
      1     ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                        ! I
      1     ,lstat_co2_a(i,j)                                              ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
@@ -533,7 +533,7 @@ c
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
-     1            ,istat_39_add_dum                                      ! O
+     1            ,istat_39_add_dum,istat_vis_added                      ! O
      1            ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                ! I
      1            ,lstat_co2_a(i,j)                                      ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
@@ -674,12 +674,12 @@ c
         return
         end
 
-        subroutine cloud_top( init_co2,i4time,tb8_k
+        subroutine cloud_top( init_co2,i4time,tb8_k                    ! I
      1  ,cloud_frac_co2                                                ! I
-     1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
-     1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
+     1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data       ! I
+     1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p       ! I
      1  ,istat_39, l_use_39                                            ! I
-     1  ,istat_39_add                                                  ! O
+     1  ,istat_39_add,istat_vis_added                                  ! O
      1  ,cloud_frac_vis,istat_vis                                      ! I
      1  ,lstat_co2                                                     ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
@@ -697,7 +697,7 @@ c
         parameter (zeros = 1.e-30)
 
 !       Argument list
-        integer*4 init_co2                      ! Input/Output
+        integer*4 init_co2                      ! Input
         integer*4 i4time                        ! Input
         real*4 tb8_k                            ! Input
         real*4 cloud_frac_vis                   ! Input (vis cloud building)
@@ -776,7 +776,12 @@ c
 
         endif
 
-        if(l_tb8 .OR. (l_use_39 .and. istat_39 .eq. 1))then ! get 11u cloud top
+        if(               l_tb8 
+     1                     .OR. 
+     1       (l_use_39 .and. istat_39 .eq. 1)
+     1                     .OR. 
+     1       (istat_vis .eq. 1 .and. cloud_frac_vis .ne. r_missing_data)       
+     1                                              )then ! get 11u cloud top
             cldtop_temp_k = tb8_k
 
 !           Correct the cloud top temperature for thin clouds using VIS data
@@ -825,6 +830,7 @@ c
         endif ! We will want to use a 11u determined cloud top
 
         istat_39_add = 0
+        istat_vis_added = 0
 
 !       Set variables depending on whether in Band 8 or CO2 mode
         if(lstat_co2)then ! Using CO2 method
@@ -848,6 +854,19 @@ c
             cldtop_m = cldtop_tb8_m
             sat_cover = 1.0 
             istat_39_add = 1
+
+        elseif( (.not. l_tb8) .AND. istat_vis .eq. 1 
+     1                        .AND. cloud_frac_vis .ne. r_missing_data        
+     1                        .AND. cldtop_tb8_m .ne. r_missing_data 
+     1                                                            ) then      
+
+!           Band 8 (11mm) threshold says no but visible says yes
+!           We did still get a valid Band 8 derived cloud top
+
+            l_cloud_present = .true.
+            cldtop_m = cldtop_tb8_m
+            sat_cover = cloud_frac_vis 
+            istat_vis_added = 1
 
         else                          ! Using Band 8 (11.2mm) data only
             l_cloud_present = l_tb8
