@@ -21,7 +21,7 @@
 #define LAT_LON_CORNERS_AREA 2
 #define CARTESIAN_CORNERS_AREA 3
 
-#define R_EARTH 6370
+#define R_EARTH 6371.2
 
 struct allgeoinfo {
    float xmin;
