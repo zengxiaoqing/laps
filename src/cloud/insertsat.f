@@ -49,11 +49,11 @@ c
      1  grid_spacing_m,surface_sao_buffer,                               ! I
 !    1  cloud_frac_vis_a,istat_vis,
      1  solar_alt,solar_ha,solar_dec,                                    ! I
-     1  cloud_frac_co2_a,                                                ! O
+     1  cloud_frac_co2_a,                                                ! I
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
      1  t_gnd_k,                                                         ! O
-     1  cldtop_m_co2,cldtop_m_tb8,cldtop_m,                              ! O
+     1  cldtop_co2_m,cldtop_tb8_m,cldtop_m,                              ! O
      1  istatus)                                                         ! O
 c
 c*************************************************************************
@@ -132,8 +132,8 @@ c
 !       Output
         real*4 t_gnd_k(imax,jmax)
         real*4 cldtop_m(imax,jmax)
-        real*4 cldtop_m_co2(imax,jmax)
-        real*4 cldtop_m_tb8(imax,jmax)
+        real*4 cldtop_co2_m(imax,jmax)
+        real*4 cldtop_tb8_m(imax,jmax)
         real*4 cloud_frac_co2_a(imax,jmax)
 
 !       Local
@@ -147,8 +147,8 @@ c
         character var*3,comment*125,units*10
 
         logical  l_tb8,l_cloud_present,l_use_39
-        logical l_co2
-        data l_co2 /.false./ ! Attempt to use co2 slicing method?
+        logical l_use_co2
+        data l_use_co2 /.false./ ! Attempt to use co2 slicing method?
 
         real*4 k_to_f
 
@@ -314,26 +314,27 @@ c
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
           call cloud_top( init_co2,i4time,tb8_k(i,j)
 !    1     ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_vis_a(i,j)
+     1     ,cloud_frac_co2_a(i,j)                                         ! I
      1     ,t_gnd_k,pres_sfc_pa
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
      1     ,istat_39_add_a(i,j)                                           ! O
-     1     ,l_co2                                                         ! I
-     1     ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2         ! O
-     1     ,cldtop_m_tb8(i,j),l_tb8                                       ! O
+     1     ,l_use_co2                                                     ! I
+     1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
+     1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
      1     ,cldtop_m(i,j),l_cloud_present                                 ! O
      1     ,sat_cover)                                                    ! O
 
-          if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 slicing method
+          if(l_use_co2 .and. istat_co2 .eq. 1)then ! Using CO2 slicing method
 
 !           Clear out those levels higher than what the satellite is showing
 !           with the co2 slicing method
 
             do k=kcld,1,-1
               if(cldcv(i,j,k) .gt. .04)then ! Efficiency test
-                if(cldtop_m_co2(i,j) .ne. r_missing_data)then
-                  if(cld_hts(k) .gt. cldtop_m_co2(i,j))then
+                if(cldtop_co2_m(i,j) .ne. r_missing_data)then
+                  if(cld_hts(k) .gt. cldtop_co2_m(i,j))then
                     cldcv(i,j,k) = default_clear_cover ! Include surface buffer?
                   endif
                 endif
@@ -528,16 +529,17 @@ c
 
               cldtop_m_avg = cldtop_m(i,j)
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
-!    1            ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
+!    1            ,cloud_frac_vis_a(i,j),istat_vis
+     1            ,cloud_frac_co2_a(i,j)                                 ! I
      1            ,t_gnd_k,pres_sfc_pa
      1            ,thresh_ir_diff1,topo(i,j),r_missing_data
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
      1            ,istat_39_add_dum                                      ! O
-     1            ,l_co2                                                 ! I
-     1            ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2 ! O
-     1            ,cldtop_m_tb8(i,j),l_tb8                               ! O
+     1            ,l_use_co2                                             ! I
+     1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
+     1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
      1            ,cldtop_m(i,j),l_cloud_present                         ! O
      1            ,sat_cover)                                            ! O
 
@@ -585,15 +587,25 @@ c
 !                     return
                   endif
                   cover = cover_new
-              endif ! l_co2
+              endif ! l_use_co2
 
             else ! Normal use of satellite data
               cover=sat_cover
 
+              if(cldtop_m(i,j) .eq. 0.           .or. 
+     1           abs(cldtop_m(i,j)) .gt. 100000.      )then
+                  write(6,*)' WARNING: cldtop_m(i,j) = ',cldtop_m(i,j)
+              endif
+
+              if(htbase_init .eq. 0.           .or. 
+     1           abs(htbase_init) .gt. 100000.      )then
+                  write(6,*)' WARNING: htbase_init = ',htbase_init
+              endif
+
 !             Locate SAO cloud base below satellite cloud top, modify
 !             satellite cloud base. Highest SAO ceiling within default thickness
 !             range of satellite layer is used.
-              do k=kcld,1,-1
+              do k=kcld-1,1,-1
 
                 if(       cld_hts(k) .ge. htbase_init
      1             .and.  cld_hts(k) .le. cldtop_m(i,j)      )then
@@ -623,6 +635,11 @@ c
 301         if(htbase .ne. htbase_init)then
 !                write(6,*)' Satellite ceiling reset by SAO',i,j,htbase
 !       1       ,htbase_init,cldtop_m(i,j)
+            endif
+
+            if(htbase      .eq. 0.           .or. 
+     1         abs(htbase) .gt. 100000.             )then
+                write(6,*)' WARNING: htbase = ',htbase
             endif
 
 !           Add satellite cloud to array
@@ -655,14 +672,15 @@ c
         end
 
         subroutine cloud_top( init_co2,i4time,tb8_k
-!    1  ,cloud_frac_vis,istat_vis,cloud_frac_co2
+!    1  ,cloud_frac_vis,istat_vis
+     1  ,cloud_frac_co2                                                ! I
      1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add                                                  ! O
-     1  ,l_co2                                                         ! I
-     1  ,n_valid_co2,n_missing_co2,cldtop_m_co2,istat_co2              ! O
-     1  ,cldtop_m_tb8,l_tb8                                            ! O
+     1  ,l_use_co2                                                     ! I
+     1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
+     1  ,cldtop_tb8_m,l_tb8                                            ! O
      1  ,cldtop_m,l_cloud_present                                      ! O
      1  ,sat_cover)                                                    ! O
 
@@ -692,10 +710,10 @@ c
         real*4 k_terrain                        ! Input
         real*4 laps_p(klaps)                    ! Input
         integer*4 n_valid_co2,n_missing_co2     ! Input/Output
-        real*4 cldtop_m_co2                     ! Output
-        logical l_co2,l_use_39                  ! Input
+        real*4 cldtop_co2_m                     ! Output
+        logical l_use_co2,l_use_39              ! Input
         integer istat_co2                       ! Output
-        real*4 cldtop_m_tb8                     ! Output
+        real*4 cldtop_tb8_m                     ! Output
         logical l_tb8                           ! Output
         real*4 cldtop_m                         ! Output
         logical l_cloud_present                 ! Output
@@ -705,7 +723,6 @@ c
 !       real*4 dum_3d(imax,jmax,klaps)          ! Local (Dummy array for Q)
         real*4 arg,frac_k,temp_above,cldtop_temp_k
         integer*4 kl
-!       real*4 ppcc(8)
 
 !       Function call
         real*4 k_to_f
@@ -715,90 +732,39 @@ c
         if(init_co2 .eq. 0)istatus_co2 = 0
         istatus_co2 = -3
 
-!       init_co2 is a flag telling whether it is the first time the routine
-!       is being called so data/array initialization or satellite data
-!       ingest can be performed.
-
-!       if(istatus_co2 .ne. -3)
-!       1       call co2slice (i,j,imax,jmax,klaps,i4time,init_co2,
-!       1       laps_p,temp_3d,t_gnd_k,pres_sfc_pa,dum_3d,
-!       1       ppcc, iipcld, iiacld, iitcld, iiflg, istatus_co2)
-
-c       input parameters
-
-!       integer i,j,imax,jmax,klaps,i4time,init ! coords and dimensions, time
-c       and init parameter.  init has the following meaning.
-c
-c       init = 0 this is the first call of the routine, it must get the grids
-c       init = 1 this is a subsequent call to the routine and therefore, it
-c                will skip getting the grids  -- furthermore, this module will
-c               affect changes in the value of init insofar as changing it
-c               from 0 to 1.  This module will not change the value from 1 to
-c               0.. that is up to the calling program.
-
-c       output parameters
-
-!       real ppcc(8) ! defined by co2 slicing code
-!       integer iipcld, iiacld, iitcld, istatus, iiflg
-
-c       iiflg is the co2 code's return status flag.  it is as follows..
-
-c       -2 = not enough channels to run the code for this point
-c       -1 = bad data encountered in the data. for this point
-c       0  = all has run ok
-
-c       in addition to the above nominal returns from the routine, we have
-c       added the following parameter
-
-c       -3 = data not available for this call ... do not call again for this
-c       time period...( this is to allow you to save resources and continue on
-c       in processing.)
-
-C                  IIPCLD = PRESSURE CLOUD TOP (MB)
-C                  IIACLD = CLOUD AMOUNT*EMISSIVITY (%)
-C                  IITCLD = CLOUD TOP TEMP (K) FROM PROFILE
-C                  PPCC(1) = CTP FOR RATIO 1 (3/5)
-C                  PPCC(2) = CTP FOR RATIO 2 (3/4)
-C                  PPCC(3) = CTP FOR RATIO 3 (4/5)
-C                  PPCC(4) = CTP FOR RATIO 4 (5/8)
-C                  PPCC(5) = CTP FOR WINDOW CHANNEL
-C                  PPCC(6) = NUMBER OF BEST CTP
-C                  PPCC(7) = EFFECTIVE CLOUD AMOUNT
-C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
-
 !       Convert CO2 cloud top from pressure to height
         if(istatus_co2 .eq. 0)then
             istat_co2 = 1
-            cldtop_p_co2 = iipcld * 100.
-            cldtop_z_co2 = zcoord_of_logpressure(cldtop_p_co2)
+            cldtop_co2_pa = iipcld * 100.
+            cldtop_co2_z = zcoord_of_logpressure(cldtop_co2_pa)
 
-            iarg = int(cldtop_z_co2)
-            frac = cldtop_z_co2 - float(iarg)
+            iarg = int(cldtop_co2_z)
+            frac = cldtop_co2_z - float(iarg)
             if(iarg .lt. klaps)then
-                cldtop_m_co2 = heights_3d(i,j,iarg) * (1.0 - frac) +
+                cldtop_co2_m = heights_3d(i,j,iarg) * (1.0 - frac) +
      1                 heights_3d(i,j,iarg+1) * frac
             else
-                cldtop_m_co2 = r_missing_data
+                cldtop_co2_m = r_missing_data
                 write(6,*)' WARNING, CO2 pressure is out of bounds '
      1                   ,iipcld
             endif
 
         else
             istat_co2 = 0
-            cldtop_m_co2 = r_missing_data
+            cldtop_co2_m = r_missing_data
 
         endif
 
-        if(cldtop_m_co2 .ne. r_missing_data)then
+        if(cldtop_co2_m .ne. r_missing_data)then
             n_valid_co2 = n_valid_co2 + 1
         else
             n_missing_co2 = n_missing_co2 + 1
-            cldtop_m_co2 = r_missing_data 
+            cldtop_co2_m = r_missing_data 
         endif
 
 !       This section finds the cloud top using Band 8 data and temperatures
 !       Estimate whether tb8_k - t < threshold
-        cldtop_m_tb8 = r_missing_data ! zeros
+        cldtop_tb8_m = r_missing_data ! zeros
         if(tb8_k - t_gnd_k(i,j) .lt. -thresh_ir_diff1) then ! probably clds
             l_tb8 = .true.
 
@@ -828,7 +794,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
      1                   (heights_3d(i,j,kl+1) - heights_3d(i,j,kl))
 
                     if(arg .ge. topo)then
-                        cldtop_m_tb8 = arg
+                        cldtop_tb8_m = arg
                     endif
 
                     if(j .eq. 29)then
@@ -837,7 +803,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
      1                      ' Cloud Top Below Ground - not used'
                         endif
 
-                        write(6,111,err=121)cldtop_m_tb8,cldtop_m_co2
+                        write(6,111,err=121)cldtop_tb8_m,cldtop_co2_m
 111                     format(1x,f10.0,1x,f10.0)
 
 121                     write(6,122,err=123)i,kl,frac_k
@@ -858,31 +824,31 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         istat_39_add = 0
 
 !       Set variables depending on whether in Band 8 or CO2 mode
-        if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
-            if(cldtop_m_co2 .ne. r_missing_data)then
+        if(l_use_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
+            if(cldtop_co2_m .ne. r_missing_data)then
                 l_cloud_present = .true.
             else
                 l_cloud_present = .false.
             endif
 
-            cldtop_m = cldtop_m_co2
-!           sat_cover = PPCC(7)
+            cldtop_m = cldtop_co2_m
+            sat_cover = cloud_frac_co2
 
         elseif( (.not. l_tb8) .AND. (l_use_39 .and. istat_39 .eq. 1) 
-     1                        .AND. cldtop_m_tb8 .ne. r_missing_data 
+     1                        .AND. cldtop_tb8_m .ne. r_missing_data 
      1                                                            ) then      
 
 !           Band 8 (11mm) threshold says no but 3.9 micron says yes
 !           We did still get a valid Band 8 derived cloud top
 
             l_cloud_present = .true.
-            cldtop_m = cldtop_m_tb8
+            cldtop_m = cldtop_tb8_m
             sat_cover = 1.0 
             istat_39_add = 1
 
         else                          ! Using Band 8 (11.2mm) data only
             l_cloud_present = l_tb8
-            cldtop_m = cldtop_m_tb8
+            cldtop_m = cldtop_tb8_m
             sat_cover = 1.0 
 
         endif
