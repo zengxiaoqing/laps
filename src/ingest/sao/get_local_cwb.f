@@ -36,8 +36,6 @@ c          'read_tmeso_stntbl'.
 c
 c       2. Code assumes that the reported precip is a 1-h amount.  
 c
-c	3. The 'priority' array is not used at this time.
-c
 c======================================================================
 c
 c
@@ -68,19 +66,18 @@ c
 c
 c.....  Local arrays
 c
-        real t_in(maxsta), td_in(maxsta), rh_in(maxsta)
-        real dd_in(maxsta), ff_in(maxsta)
-        real sfcp_in(maxsta), pcp_in(maxsta)
-	real lat_in(maxsta), lon_in(maxsta), elev_in(maxsta)
+        real t(maxsta), td(maxsta), rh(maxsta)
+        real dd(maxsta), ff(maxsta)
+        real sfcp(maxsta), pcp(maxsta)
+	real lats(maxsta), lons(maxsta), elev(maxsta)
 
-        real rtime_in(maxsta)
+        real rtime(maxsta)
 c
-        character stn_in(maxsta)*5
+        character stn(maxsta)*5
 c
 c.....  Stuff for the mesonet metadata.
 c
 	real lat_master(maxsta),lon_master(maxsta),elev_master(maxsta)
-	real priority(maxsta)
 c
 	character stn_master(maxsta)*5
 c
@@ -115,18 +112,18 @@ c
         call read_tmeso_stntbl(path_to_local_data,maxsta,badflag,
      &                         stn_master,
      &                         lat_master,lon_master,elev_master,
-     &                         priority,num_master,istatus)
+     &                         num_master,istatus)
 	if(istatus .ne. 1) go to 990
 c
 c.....  Get the mesonet data.
 c
-        call read_tmeso(path_to_local_data,maxsta,badflag,i4time,
-     &                  stn_in,rtime_in,
-     &                  t_in,td_in,rh_in,pcp_in,sfcp_in,dd_in,
-     &                  ff_in,num_in,istatus)
+        call read_tmeso_data(path_to_local_data,maxsta,badflag,i4time,       
+     &                  stn,rtime,
+     &                  t,td,rh,pcp,sfcp,dd,
+     &                  ff,num,istatus)
 c
 	if(istatus .ne. 1) go to 990
-	n_local_all = num_in
+	n_local_all = num
 c
 c.....  Match data with metadata for each station, then store
 c.....  the metadata in arrays.
@@ -137,13 +134,13 @@ c.....  For each station, search the master list.
 c
 	   do j=1,num_master
 c
-	      if(stn_in(i)(1:5) .eq. stn_master(j)(1:5)) then
+	      if(stn(i)(1:5) .eq. stn_master(j)(1:5)) then
 c
 c.....  Found one...store the location info.
 c
-		 lat_in(i) = lat_master(j)
-		 lon_in(i) = lon_master(j)
-		 elev_in(i) = elev_master(j)
+		 lats(i) = lat_master(j)
+		 lons(i) = lon_master(j)
+		 elev(i) = elev_master(j)
 c
 	      endif
 	   enddo !j
@@ -159,16 +156,16 @@ c
 	box_jdir = float(nj + ibox_points) !buffer on north
 c
 	do i=1,n_local_all
-	   if(lat_in(i) .lt. -90.) go to 125	
-	   call latlon_to_rlapsgrid(lat_in(i),lon_in(i),lat,lon,
+	   if(lats(i) .lt. -90.) go to 125	
+	   call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,
      &                              ni,nj,ri_loc,rj_loc,istatus)
 	   if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
 	   if(rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) go to 125
 c
 c.....  Elevation ok?
 c
-	   if(elev_in(i) .eq. badflag) go to 125
-	   if(elev_in(i).gt.5200. .or. elev_in(i).lt.-400.) go to 125
+	   if(elev(i) .eq. badflag) go to 125
+	   if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
 c.....  If you want to check the valid time, or if there are more than
 c.....  one report from this station, put that here.
@@ -219,12 +216,12 @@ c
 c
 c.....  Output the data to the storage arrays.
 c
-!    	  call s_len(stn_in(i), len)
-!         stations(nn)(1:len) = stn_in(i)(1:len)
+!    	  call s_len(stn(i), len)
+!         stations(nn)(1:len) = stn(i)(1:len)
 
- 	  call s_len(stn_in(i), len)
+ 	  call s_len(stn(i), len)
           if(len .ne. 0)then
-              stations(nn)(1:len) = stn_in(i)(1:len) ! station name
+              stations(nn)(1:len) = stn(i)(1:len) ! station name
           else
               write(6,*)' Warning in get_local_cwb: blank station name.'
      1                 ,' Assigning name ',i
@@ -240,22 +237,22 @@ c
 	  provider(nn)(1:11) = 'CWB        '
 	  wmoid(nn) = ibadflag
 c 
-	  store_1(nn,1) = lat_in(i)              ! station latitude
-	  store_1(nn,2) = lon_in(i)              ! station longitude
-	  store_1(nn,3) = elev_in(i)             ! station elevation (m)
-	  store_1(nn,4) = rtime_in(i)            ! observation time
+	  store_1(nn,1) = lats(i)                ! station latitude
+	  store_1(nn,2) = lons(i)                ! station longitude
+	  store_1(nn,3) = elev(i)                ! station elevation (m)
+	  store_1(nn,4) = rtime(i)               ! observation time
 c	
-	  store_2(nn,1) = t_in(i)                ! temperature (deg F)
-	  store_2(nn,1) = td_in(i)               ! dew point (deg F)
-	  store_2(nn,1) = rh_in(i)               ! Relative Humidity
+	  store_2(nn,1) = t(i)                   ! temperature (deg F)
+	  store_2(nn,1) = td(i)                  ! dew point (deg F)
+	  store_2(nn,1) = rh(i)                  ! Relative Humidity
 c
-          store_3(nn,1) = dd_in(i)               ! wind dir (deg)
-          store_3(nn,2) = ff_in(i)               ! wind speed (kt)
+          store_3(nn,1) = dd(i)                  ! wind dir (deg)
+          store_3(nn,2) = ff(i)                  ! wind speed (kt)
           store_3(nn,3) = badflag                ! wind gust dir (deg)
           store_3(nn,4) = badflag                ! wind gust speed (kt)
 c
           store_4(nn,1) = badflag                ! altimeter setting (mb)
-          store_4(nn,2) = sfcp_in(i)             ! station pressure (mb)
+          store_4(nn,2) = sfcp(i)                ! station pressure (mb)
           store_4(nn,3) = badflag                ! MSL pressure (mb)
           store_4(nn,4) = badflag                ! 3-h press change character
           store_4(nn,5) = badflag                ! 3-h press change (mb)
@@ -265,7 +262,7 @@ c
           store_5(nn,3) = badflag                ! soil/water temperature
           store_5(nn,4) = badflag                ! soil moisture
 c
-          store_6(nn,1) = pcp_in(i)              ! 1-h precipitation
+          store_6(nn,1) = pcp(i)                 ! 1-h precipitation
           store_6(nn,2) = badflag                ! 3-h precipitation
           store_6(nn,3) = badflag                ! 6-h precipitation
           store_6(nn,4) = badflag                ! 24-h precipitation
@@ -298,8 +295,99 @@ c
 
 c
 c
-        subroutine read_tmeso(infile,maxsta,badflag,i4time,stn,rtime,       
-     &                        t,td,rh,pcp,sfcp,dd,ff,num,istatus)
+        subroutine read_tmeso_stntbl(infile,maxsta,badflag,stn,
+     &                               lat,lon,elev,num,istatus)
+c
+c======================================================================
+c
+c     Routine to read station information for the CWB ASCII Mesonet 
+c	data.
+c     
+c     Original:  P. Stamus, NOAA/FSL  08 Sep 1999
+c     Changes:   S. Albers                            (New Format)
+c
+c======================================================================
+c
+        real lat(maxsta), lon(maxsta), elev(maxsta)
+c
+	integer stn_id
+c
+        character infile*(*), stn_name*5, stn(maxsta)*5
+c
+c
+c.....  Start here.  Fill the output with something, then open the 
+c.....	file to read.
+c
+	do i=1,maxsta
+	   lat(i) = badflag
+	   lon(i) = badflag
+	   elev(i) = badflag
+	   stn(i)(1:5) = '     '
+	enddo !i
+c
+        call s_len(infile,len_infile)
+        open(11,file=infile(1:len_infile)//'stn.table',status='old'
+     1                                                ,err=990)
+c
+        num = 0
+
+!       Skip header comments at the top of the file
+        do iread = 1,2
+            read(11,*,end=550,err=990)
+        enddo
+c
+c.....  This starts the station read loop.  Since we don't know how many 
+c.....  stations we have, read until we hit the end of file.
+c     
+ 500    continue
+c
+        read(11,900,end=550,err=990)stn_id,stn_name
+     1                             ,lat_deg,lat_min,lat_sec,alat_sec       
+     1                             ,lon_deg,lon_min,lon_sec,alon_sec
+     1                             ,elev_m
+ 900    format(3x,i2,1x,a5,14x                      ! name
+     1        ,i2,2x,i2,1x,i2,1x,f3.0,4x            ! lat
+     1        ,i3,2x,i2,1x,i2,1x,f3.0               ! lon
+     1        ,f12.0)                               ! elevation
+c
+c.....  Move station info to arrays for sending to calling routine.
+c
+        alat = float(lat_deg) + float(lat_min)/60. 
+     1                        + (float(lat_sec) + alat_sec) /3600.
+        alon = float(lon_deg) + float(lon_min)/60. 
+     1                        + (float(lon_sec) + alon_sec) /3600.
+
+	num = num + 1
+	stn(num) = stn_name(3:5)//'  '
+	lat(num) = alat
+	lon(num) = alon
+	elev(num) = elev_m
+c
+c.....  Go back for the next ob.
+c
+        go to 500
+c
+c.....  Hit end of file...that's it.
+c
+ 550    continue
+c
+        print *,' Found ', num
+     1         , ' mesonet stations in the station table.' 
+        istatus = 1
+        return
+c     
+ 990    continue
+c
+        print *,' ** ERROR reading mesonet station table'
+        istatus = 0
+        return
+c     
+	end
+
+c
+        subroutine read_tmeso_data(infile,maxsta,badflag,i4time,stn
+     1                            ,rtime,t,td,rh,pcp,sfcp,dd,ff,num
+     1                            ,istatus)
 c
 c======================================================================
 c
@@ -315,8 +403,10 @@ c
         real sfcp(maxsta), pcp(maxsta)
         real rtime(maxsta)
 c
-        character infile*(*), stn_id*5, stn(maxsta)*5, 
-     1            a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*11       
+        character infile*(*), stn_id*5, stn(maxsta)*5 
+     1           ,a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*21       
+     1           ,line*132, hhmm*4, cvt_i4time_wfo_fname13*13
+     1           ,a13time*13      
 c
 c
 c.....  Start here.  Fill the output arrays with something, then open
@@ -335,14 +425,14 @@ c
 	   ff(i) = badflag
 	enddo !i
 c
-        call make_fnam_lp(i4time,a9time,istatus)
-        if(istatus .ne. 1)go to 990
+        a13time = cvt_i4time_wfo_fname13(i4time)
 
-        a8time = a9_to_a8(a9time)
-        a6time = a8time(3:8)
-!       a6time = '050826'
+        filename = a13time(1:4)//'_'//a13time(5:6)             ! yyyy_mm
+     1                         //'_'//a13time(7:8)             ! dd
+     1                         //'_'//a13time(10:13)           ! hhmm
+     1                         //'_m.pri'
 
-        filename = 'MSO.m'//a6time
+        write(6,*)' Mesonet file ',filename
 
         call s_len(infile,len_infile)
         open(11,file=infile(1:len_infile)//filename,status='old'       
@@ -360,9 +450,14 @@ c.....  stations we have, read until we hit the end of file.
 c     
  500    continue
 c
-        read(11,900,end=550,err=990) idum,stn_id,iyr,imth,idy,ihr,imin, 
-     &                               ispd,idir,irh,isfcp,it,itd,iprecip
- 900    format(i2,1x,a5,5(1x,i2),1x,i3,1x,i2,1x,i3,1x,i4,2(1x,i3),1x,i5)
+        read(11,*,end=550,err=990) line
+
+        read(line,901,err=990)hhmm,stn_id
+ 901    format(a4,a5)
+
+        read(line(10:132),*,err=990)rspd,idir,rdum,rdum,rdum
+     1                                     ,rdum,rsfcp,rt,rtd
+
 c
 c.....  Check for valid date/time...if bad, toss this ob.
 c
@@ -387,22 +482,22 @@ c
            dd(num) = float(idir * 10)
         endif
 c
-        if(ispd .lt. 0) then
+        if(rspd .lt. 0) then
            ff(num) = badflag
         else
-           ff(num) = (float(ispd) * 0.1) * 1.94254 !conv m/s to kt
+           ff(num) = (rspd * 0.1) * 1.94254 !conv m/s to kt
         endif
 c
-        if(it .le. -90) then
+        if(rt .le. -90) then
            t(num) = badflag
         else
-           t(num) = (float(it) * 0.1) * 9/5 + 32 !conv C to F
+           t(num) = (rt * 0.1) * 9/5 + 32 !conv C to F
         endif
 c
-        if(itd .le. -90) then
+        if(rtd .le. -90) then
            td(num) = badflag
         else
-           td(num) = (float(itd) * 0.1) * 9/5 + 32 !conv C to F
+           td(num) = (rtd * 0.1) * 9/5 + 32 !conv C to F
         endif
 c
         if(irh .lt. 0) then
@@ -417,10 +512,10 @@ c
            pcp(num) = float(iprecip) * 0.1 * 0.03937 !conv mm to inch
         endif
 c
-        if(isfcp .le. 0) then
+        if(rsfcp .le. 0) then
            sfcp(num) = badflag
         else
-           ps = float(isfcp) * 0.1
+           ps = rsfcp * 0.1
            if(ps .lt. 500.) then
               ps = ps + 1000.
            endif
@@ -453,94 +548,6 @@ c
 c     
         end
 c
-c
-        subroutine read_tmeso_stntbl(infile,maxsta,badflag,stn,
-     &                               lat,lon,elev,prior,num,istatus)
-c
-c======================================================================
-c
-c     Routine to read station information for the CWB ASCII Mesonet 
-c	data.
-c     
-c     Original:  P. Stamus, NOAA/FSL  08 Sep 1999
-c     Changes:   S. Albers                            (New Format)
-c
-c======================================================================
-c
-        real lat(maxsta), lon(maxsta), elev(maxsta)
-        real prior(maxsta)
-c
-	integer stn_id
-c
-        character infile*(*), stn_name*5, stn(maxsta)*5
-c
-c
-c.....  Start here.  Fill the output with something, then open the 
-c.....	file to read.
-c
-	do i=1,maxsta
-	   lat(i) = badflag
-	   lon(i) = badflag
-	   elev(i) = badflag
-	   prior(i) = badflag
-	   stn(i)(1:5) = '     '
-	enddo !i
-c
-        call s_len(infile,len_infile)
-        open(11,file=infile(1:len_infile)//'stn.table',status='old'
-     1                                                ,err=990)
-c
-        num = 0
-
-!       Skip header comments at the top of the file
-        do iread = 1,2
-            read(11,*,end=550,err=990)
-        enddo
-c
-c.....  This starts the station read loop.  Since we don't know how many 
-c.....  stations we have, read until we hit the end of file.
-c     
- 500    continue
-c
-        read(11,900,end=550,err=990)stn_name,stn_id
-     1                             ,lat_deg,lat_min,alat_sec
-     1                             ,lon_deg,lon_min,alon_sec
-     1                             ,ielev,aprior 
- 900    format(a5,1x,i5,14x,f7.4,2x,f8.4,2x,i4,1x,f9.3)
-c
-c.....  Move station info to arrays for sending to calling routine.
-c
-        alat = float(lat_deg) + float(lat_min)/60. + alat_sec/3600.
-        alon = float(lon_deg) + float(lon_min)/60. + alon_sec/3600.
-
-	num = num + 1
-	stn(num) = stn_name(3:5)//'  '
-	lat(num) = alat
-	lon(num) = alon
-	elev(num) = float(ielev)
-	prior(num) = aprior
-c
-c.....  Go back for the next ob.
-c
-        go to 500
-c
-c.....  Hit end of file...that's it.
-c
- 550    continue
-c
-        print *,' Found ', num
-     1         , ' mesonet stations in the station table.' 
-        istatus = 1
-        return
-c     
- 990    continue
-c
-        print *,' ** ERROR reading mesonet station table'
-        istatus = 0
-        return
-c     
-	end
-
 
         subroutine get_box_size(box_size,istatus)
 

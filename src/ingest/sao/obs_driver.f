@@ -137,7 +137,6 @@ c
      1                           ,maxsta
      1                           ,istatus)
 c        
-        include 'surface_obs.inc'
         integer ni, nj, maxsta, maxobs 
 c
 	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
@@ -182,11 +181,19 @@ c
         data cnt/0/
 c 
 c
-c.....	Start here.  Check to see if this is an interactive run.
+c.....	Start here.  
+c
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
+
+c.....  Check to see if this is an interactive run.
 c
 	narg = iargc()
 cc      print *,' narg = ', narg
-c
+
 c.....  Get the time from the scheduler or from the user if interactive.
 c
 	if(narg .eq. 0) then
@@ -317,11 +324,6 @@ c
 	        data_file_m = 
      &	          path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
 c
-	        len_path = index(path_to_local_data,' ') - 1
-	        filename13=fname9_to_wfo_fname13(filename9(1:9))
-	        data_file_l = 
-     &	          path_to_local_data(1:len_path)//filename13
-c
  	        len_path = index(path_to_buoy_data,' ') - 1
 	        filename13=fname9_to_wfo_fname13(filename9(1:9))
 	        data_file_b = 
@@ -334,10 +336,6 @@ c
 
 	            len_path = index(path_to_METAR,' ') - 1
 	            data_file_m = path_to_METAR(1:len_path)//filename13       
-
-	            len_path = index(path_to_local_data,' ') - 1
-	            data_file_l = 
-     &                path_to_local_data(1:len_path) // filename13
 
 	            len_path = index(path_to_buoy_data,' ') - 1
 	            data_file_b = 
@@ -422,10 +420,12 @@ c
 c
 c.....  Call the routine that reads the mesonet data files, then get the data.
 c
-	print*,'Getting mesonet data ', data_file_l
+        write(6,*)
+	write(6,*)'Getting Mesonet Data...'
 c
         if(metar_format(1:len_metar_format) .ne. 'CWB')then ! LDAD Netcdf
-            call get_local_obs(maxobs,maxsta,i4time_sys,data_file_l,       
+            call get_local_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,

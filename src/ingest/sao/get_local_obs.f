@@ -31,7 +31,8 @@ cdis
 cdis 
 c
 c
-	subroutine get_local_obs(maxobs,maxsta,i4time,data_file,
+	subroutine get_local_obs(maxobs,maxsta,i4time,
+     &                      path_to_local_data,local_format,
      &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -65,7 +66,6 @@ c
 c*****************************************************************************
 c
 	include 'netcdf.inc'
-	include 'surface_obs.inc'
 c
 c.....  Read arrays.
 c
@@ -96,20 +96,31 @@ c
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*6, save_stn(maxobs)*6
-	character  data_file*(*), timech*9, time*4
+	character  timech*9, time*4
 	character  stations(maxsta)*20
 	character  pro(maxobs)*11, provider(maxsta)*11
 	character  wx(maxobs)*25, weather(maxsta)*25
 	character  reptype(maxsta)*6, atype(maxsta)*6
 	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
+        character*(*) path_to_local_data, local_format
+        character*13 filename13, cvt_i4time_wfo_fname13
+        character*150 data_file 
 c
 c.....  Start.
 c
-	ibadflag = int(badflag)
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_box_size(box_size,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -126,6 +137,12 @@ c
 c.....  Get the data from the NetCDF file.  First, open the file.
 c.....  If not there, return to obs_driver.
 c
+        call s_len(path_to_local_data,len_path)
+        filename13= cvt_i4time_wfo_fname13(i4time)
+ 	data_file = path_to_local_data(1:len_path)//filename13
+
+        write(6,*)' mesonet file = ',data_file(1:len_path+13)
+
 	nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
 	if(nf_status.ne.NF_NOERR) then
@@ -224,8 +241,8 @@ c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
 c
-           if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
-           call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
+           if(lats(i) .lt. -90.) go to 125   ! badflag (-99.9)...from nan ck
+           call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,       
      &                              ri_loc,rj_loc,istatus)
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
@@ -239,7 +256,7 @@ c
 c
 c.....  Elevation ok?
 c
-	   if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
+	   if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125       
 c
 c.....  Check to see if its in the desired time window.
 c
