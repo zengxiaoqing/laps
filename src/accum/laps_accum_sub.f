@@ -218,7 +218,7 @@ c read in laps lat/lon and topo
         endif
 
 !       Set rate threshold based on length of storm total so far 
-        rate_thresh = .0001
+        rate_thresh_mph = .0001                ! Meters per hour
         filename_start = comment_r(1:9)
 
         if(istatus_tot .eq. 1)then
@@ -237,19 +237,19 @@ c read in laps lat/lon and topo
         else ! Valid storm total start time in comment
             i4_prev_total = i4time_beg - i4time_start_tot
             if(i4_prev_total .gt. 48*3600)then
-                rate_thresh = .0015   
+                rate_thresh_mph = .100   
             endif
         endif
 
-        write(6,*)i4_prev_total/3600,' hour previous storm total,'       
-     1                              ,' rate_thresh = ',rate_thresh
+        write(6,*)i4_prev_total/3600,' hours for previous storm total,'       
+     1           ,' rate_thresh_mph = ',rate_thresh_mph
 
 !       Decide whether to reset Storm Total based on insignificant precip over
 !       current cycle time
         i_suff_pcp = 0
 
         precip_reset_thresh = 
-     1                  rate_thresh * float(ilaps_cycle_time) / 3600.
+     1      rate_thresh_mph * float(ilaps_cycle_time) / 3600.
 
         if(istatus_inc .eq. 1 .and. istatus_tot .eq. 1)then
             precip_max = 0.
@@ -261,13 +261,17 @@ c read in laps lat/lon and topo
                 endif
             enddo ! i
             enddo ! j
+
             write(6,*)' Max precip over domain = ',precip_max
+            write(6,*)' Threshold precip over domain = '
+     1               ,precip_reset_thresh
             if(i_suff_pcp .eq. 0)then
                 write(6,*)' Resetting due to insufficient precip'
             else
                 write(6,*)
      1          ' We have sufficient precip to continue storm total'
             endif
+
         endif
 
 
