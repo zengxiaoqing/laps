@@ -84,7 +84,7 @@ cdis
           do itimes = 1,max_times
               write(6,*)
               write(6,*)' Looping through radar/time # ',i_radar,itimes       
-              call remap_sub(i_radar,ext_dum,radar_subdir_dum       
+              call remap_sub(i_radar,itimes,ext_dum,radar_subdir_dum       
      1                      ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
           enddo ! itimes
 
@@ -92,7 +92,7 @@ cdis
 
  999  end
 
-      subroutine remap_sub(i_radar,laps_radar_ext
+      subroutine remap_sub(i_radar,itimes,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,NX_L,NY_L,NZ_L
      1                    ,istatus)
 
@@ -208,8 +208,10 @@ cdis
       endif
 
 !     call lut_gen FORTRAN routine 
-      call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
-     1                                          ,NX_L,NY_L,NZ_L)
+      if(itimes .eq. 1)then
+          call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
+     1                ,NX_L,NY_L,NZ_L)
+      endif
 
       I4_elapsed = ishow_timer()
 
