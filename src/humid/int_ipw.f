@@ -65,9 +65,12 @@ c     internal variables
 
 c     code
 c     modify data vector
-
       do k = 1,kk
-         if(data(k) /= mdf) then
+        d(k) = 0.0
+      enddo
+
+      do k = kstart,kk
+         if(data(k) < 1000. ) then
             if(data(k) >= 0.0) then
 
                if(p(k) > 700.) then
@@ -81,10 +84,10 @@ c     modify data vector
                endif
 
             else
-               d(k) = data(k)   !transfers negative missing data flag
+              d(k) =    0.0  !transfers negative missing data flag
             endif
          else
-            d(k) = data (k) ! data equals missing data flag transfer
+            d(k) = 0.0 ! data equals missing data flag transfer sum zero 
          endif
       enddo
       
@@ -94,7 +97,7 @@ c     integrate
       ipw = 0.0
 
       do k = kstart,kk-1
-         if(d(k) /= mdf) then   ! skip if missing data flag
+         if( abs(d(k)) < 1000. ) then   ! skip if missing data flag
             if(d(k) >= 0.0) then !skip if negative
                ipw = ipw + (d(k)+d(k+1))/2.*(p(k)-p(k+1))
             endif
@@ -107,7 +110,9 @@ c     change units of q ti g/kg
 
 c     add surface layer (already in g/kg)
 
-      ipw = ipw + (qs + d(kstart))/2. * (ps - p(kstart))
+      if (abs(qs) < 1000 .and. abs(ps) < 1500.) then ! assume sfc vals good
+         ipw = ipw + (qs + d(kstart))/2. * (ps - p(kstart))
+      endif
 
 c     convert from g/kg to cm
 
