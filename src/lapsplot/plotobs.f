@@ -760,7 +760,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          ,lat,lon,imax,jmax,size_temp
      1                          ,zoom,nobs_temp
      1                          ,icol_in,du_loc,wx
-     1                          ,iflag,iflag_cv,plot_parms)
+     1                          ,iflag,iflag_cv,namelist_parms
+     1                          ,plot_parms)
 
 
                 write(6,111,err=121)ri,rj,t_c,c8_obstype
