@@ -7,7 +7,7 @@
 
       integer nnxp,nnyp
       integer n_staggers
-      integer i,j,k
+      integer i,j,k,nc
 
       real    deltax,deltay
       real    mdlat,mdlon
@@ -32,11 +32,15 @@ c A-c staggers contained within these arrays.
       real    lats(nnxp,nnyp,n_staggers)
       real    lons(nnxp,nnyp,n_staggers)
 
+      character c_dataroot*255
+      character c10_grid_fname*10
+
       integer istatus
 
       print*,'calculate lat/lon at stagger grid points.'
 
       deltay=deltax
+
 
       call get_grid_center(mdlat,mdlon,istatus)
       if(istatus .ne. 1)then
@@ -50,6 +54,15 @@ c A-c staggers contained within these arrays.
          return
       endif
 
+c     call find_domain_name(c_dataroot,c10_grid_fname
+c    1,istatus)
+c     if(istatus .ne. 1)then
+c        write(6,*)' Error calling find_domain_name'
+c        return
+c     endif
+c     call s_len(c10_grid_fname,nc)
+
+
       do k=1,n_staggers
 
          if(k.eq.1)then
@@ -62,22 +75,26 @@ c           Get X/Y for lower left corner
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
      +,stagger_ns,xmn1,ymn1,xtn,ytn)
 c
-c Return to main the non-staggered x/y.
-            do i=1,nnxp
-               xtn_ret(i)=xtn(i)
-            enddo
-            do j=1,nnyp
-               ytn_ret(j)=ytn(j)
-            enddo
+c Return to main the non-staggered x/y for terrain analysis.
+            
+c           if(c10_grid_fname(1:nc).eq.'nest7grid')then
 
-         elseif(k.eq.2)then    !this is the B stagger (E-W stagger)
+               do i=1,nnxp
+                  xtn_ret(i)=xtn(i)
+               enddo
+               do j=1,nnyp
+                  ytn_ret(j)=ytn(j)
+               enddo
+c           endif
+
+         elseif(k.eq.2)then    !this is A-stagger (.5 E-W stagger) 
 
             stagger_ew=0.5*deltax
             stagger_ns=0
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
      +,stagger_ns,xmn1,ymn1,xtn,ytn)
 
-         elseif(k.eq.3)then !this is the C stagger (N-S stagger)
+         elseif(k.eq.3)then !this is the B-stagger (.5 N-S stagger)
 
             call get_grid_center(mdlat,mdlon,istatus)
             call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
@@ -86,6 +103,26 @@ c Return to main the non-staggered x/y.
             stagger_ns=0.5*deltay 
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
      +,stagger_ns,xmn1,ymn1,xtn,ytn) 
+
+         elseif(k.eq.4)then !this is the C-stagger (.5 both N-S and E-W)
+
+            call get_grid_center(mdlat,mdlon,istatus)
+            call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
+     +,xtn,ytn)
+            stagger_ew=0.5*deltax
+            stagger_ns=0.5*deltay
+            call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
+     +,stagger_ns,xmn1,ymn1,xtn,ytn)
+
+
+c           if(c10_grid_fname(1:nc).eq.'wrfsi')then
+c              do i=1,nnxp
+c                 xtn_ret(i)=xtn(i)
+c              enddo
+c              do j=1,nnyp
+c                 ytn_ret(j)=ytn(j)
+c              enddo
+c           endif
 
          endif
 C
@@ -299,6 +336,34 @@ c
       return
       end
 c
+c --------------------------------------------------------
+c
+      subroutine bilinear_interp(i,j,imax,jmax,array_2d,result)
+c
+c this used only for getting topography on the c-staggered grid
+
+      implicit none
+      integer i,j,imax,jmax
+      real*4 result
+      real*4 array_2d(imax,jmax)
+      real*4 Z1,Z2,Z3,Z4
+      real*4 fraci,fracj
+
+      fraci = 0.5
+      fracj = 0.5
+
+      Z1=array_2d(i  , j  )
+      Z2=array_2d(i-1, j  )
+      Z3=array_2d(i-1, j-1)
+      Z4=array_2d(i  , j-1)
+
+      result= Z1+(Z2-Z1)*fraci+(Z4-Z1)*fracj
+     1     - (Z2+Z4-Z3-Z1)*fraci*fracj
+
+      return
+      end
+
+c
 c--------------------------------------------------------
 c
       subroutine get_gridgen_var(nf,ngrids,var,comment)
@@ -334,51 +399,63 @@ c
          comment(10)='\0'
 
 
-      elseif(ngrids.eq.21)then
+      elseif(ngrids.eq.25)then
 
-         var(1)    = 'LAT'  ! non-staggered (A-grid) lats
-         var(2)    = 'LON'  ! non-staggered (A-grid) lons
-         var(3)    = 'LAB'  ! b-stagger (.5*deltax (e-w)) lats
-         var(4)    = 'LOB'  ! b-stagger (.5*deltax (e-w)) lons
-         var(5)    = 'LAC'  ! c-stagger (.5*deltay (n-s)) lats
-         var(6)    = 'LOC'  ! c-stagger (.5*deltay (n-s)) lons
-         var(7)    = 'AVG'  ! Topo (m) on A-grid
-         var(8)    = 'LDF'  ! Land Fraction
-         var(9)    = 'USE'  !
-         var(10)   = 'SPR'  ! Sin(projection rotation) from true
-         var(11)   = 'CPR'  ! Cos(projection rotation) from true
-         var(12)   = 'MFA'  ! Map factor A grid
-         var(13)   = 'MFB'  ! Map factor b-stagger grid
-         var(14)   = 'MFC'  ! Map factor c-stagger grid
-         var(15)   = 'CPH'  ! Horizontal component of coriolis parameter
-         var(16)   = 'CPV'  ! Vertical component of coriolis parameter
-         var(17)   = 'ALB'  ! Static (climatological) albedo
-         var(18)   = 'STD'  ! Standard Deviation of Elevation Data (m)
-         var(19)   = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
-         var(20)   = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
-         var(21)   = 'ZIN'
+         var(1)    = 'LAT'  ! non-staggered (Analysis-grid) lats
+         var(2)    = 'LON'  ! non-staggered (Analysis-grid) lons
+         var(3)    = 'LAA'  ! a-stagger (.5*deltax (e-w)) lats
+         var(4)    = 'LOA'  ! a-stagger (.5*deltax (e-w)) lons
+         var(5)    = 'LAB'  ! b-stagger (.5*deltay (n-s)) lats
+         var(6)    = 'LOB'  ! b-stagger (.5*deltay (n-s)) lons
+         var(7)    = 'LAC'  ! c-stagger (.5*deltax and .5*deltay) lats
+         var(8)    = 'LOC'  ! c-stagger (.5*deltay and .5*deltay) lons
+
+         var(9)    = 'AVG'  ! Topo (m) on Analysis-grid
+
+         var(10)   = 'LDF'  ! Land Fraction
+         var(11)   = 'USE'  !
+         var(12)   = 'SPR'  ! Sin(projection rotation) from true
+         var(13)   = 'CPR'  ! Cos(projection rotation) from true
+         var(14)   = 'MFL'  ! Map factor Analysis grid
+         var(15)   = 'MFA'  ! Map factor a-stagger grid
+         var(16)   = 'MFB'  ! Map factor b-stagger grid
+         var(17)   = 'MFC'  ! Map factor c-stagger grid
+         var(18)   = 'CPH'  ! Horizontal component of coriolis parameter
+         var(19)   = 'CPV'  ! Vertical component of coriolis parameter
+         var(20)   = 'ALB'  ! Static (climatological) albedo
+         var(21)   = 'STD'  ! Standard Deviation of Elevation Data (m)
+         var(22)   = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
+         var(23)   = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
+         var(24)   = 'AVC'  ! Topo (m) on c-stagger grid
+         var(25)   = 'ZIN'
 
          comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-         comment(3) = 'B-stagger grid latitudes \0'
-         comment(4) = 'B-stagger grid longitudes for WRF_SI \0'
-         comment(5) = 'C-stagger grid latitudes for WRF_SI \0'
-         comment(6) = 'C-stagger grid longitudes for WRF_SI \0'
-         comment(7) = 'Average terrain elevation (m) \0'
-         comment(8) = 'Land Fraction A-grid \0'
-         comment(9) = 'Land Use Categories \0'
-         comment(10)= 'Sin of projection rotation (rad) \0'
-         comment(11)= 'Cosine of projection rotation (rad) \0'
-         comment(12)= 'Map Factor A-grid \0'
-         comment(13)= 'Map Factor b-stagger grid \0'
-         comment(14)= 'Map Factor c-stagger grid \0'
-         comment(15)= 'Horizontal component coriolis parameter \0'
-         comment(16)= 'Vertical component coriolis parameter \0'
-         comment(17)= 'Static Albedo (%) valid only over water atm \0'
-         comment(18) = 'Standard Deviation of Elevation data (m)\0'
-         comment(19) = 'Mean longitudinal terrain slope (m/m)\0'
-         comment(20) = 'Mean latitudinal terrain slope (m/m)\0'
-         comment(21)= '\0'
+         comment(3) = 'a-stagger grid latitudes \0'
+         comment(4) = 'a-stagger grid longitudes for WRF_SI \0'
+         comment(5) = 'b-stagger grid latitudes for WRF_SI \0'
+         comment(6) = 'b-stagger grid longitudes for WRF_SI \0'
+         comment(7) = 'c-stagger grid latitudes for WRF_SI \0'
+         comment(8) = 'c-stagger grid longitudes for WRF_SI \0'
+
+         comment(9) = 'Average terrain elevation (m) \0'
+
+         comment(10)= 'Land Fraction A-grid \0'
+         comment(11)= 'Land Use Categories \0'
+         comment(12)= 'Sin of projection rotation (rad) \0'
+         comment(13)= 'Cosine of projection rotation (rad) \0'
+         comment(14)= 'Map Factor Analysis grid \0'
+         comment(15)= 'Map Factor a-stagger grid \0'
+         comment(16)= 'Map Factor b-stagger grid \0'
+         comment(17)= 'Map Factor c-stagger grid \0'
+         comment(18)= 'Horizontal component coriolis parameter \0'
+         comment(19)= 'Vertical component coriolis parameter \0'
+         comment(20)= 'Static Albedo (%) valid only over water atm \0'
+         comment(21) = 'Standard Deviation of Elevation data (m)\0'
+         comment(22) = 'Mean longitudinal terrain slope (m/m)\0'
+         comment(23) = 'Mean latitudinal terrain slope (m/m)\0'
+         comment(24) = 'Average terrain elevation (c-stagger) (m)\0'
+         comment(25)= '\0'
 
       endif
       return

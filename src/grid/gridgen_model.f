@@ -42,7 +42,7 @@ C*  projections have since been added.                                *
 c*                                                                    *
 C*********************************************************************
         integer n_staggers
-        parameter (n_staggers = 3)
+        parameter (n_staggers = 4)
         integer NX_L,NY_L
 
         write(6,*)
@@ -104,10 +104,10 @@ c       integer*4    ni,nj
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
 c
-c  either 7 (nest7gird) or 20 (wrfsi) used here but 18 needed in put_laps_static
+c  either 10 (nest7grid) or 25 (wrfsi)
 c
         integer*4    nf
-        parameter (nf = 21)
+        parameter (nf = 25)
         
         character*3   var(nf)
         character*125 comment(nf)
@@ -124,11 +124,12 @@ c
         character*180 static_dir 
         character*10  c10_grid_fname 
         character*6   c6_maproj
-        integer len,lf,lfn
+        integer len,lf,lfn,ns
         real*4 coriolis_parms(nnxp,nnyp,2)
         real*4 projrot_grid(nnxp,nnyp,2)
         real*4 r_map_factors(nnxp,nnyp,n_staggers)
         real*4 data(nnxp,nnyp,nf)
+        real*4 result
 c       equivalence(data(1,1,1),lat)
 c       equivalence(data(1,1,2),lon)
 c       equivalence(data(1,1,3),topt_out)
@@ -312,7 +313,9 @@ c calculate delta x and delta y using grid and map projection parameters
  
 c*********************************************************************
 c in arrays lats/lons, the first stagger is actually not staggered
-c but is the usual lat/lon values at non-staggered grid points.
+c but is the usual lat/lon values at non-staggered grid points. These
+c are used for the analysis (LAPS-nest7grid). For WRFSI, we use the
+c mass c-stagger (#4); staggered in both x and y. 
 
         call compute_latlon(nnxp,nnyp,n_staggers
      + ,deltax,xtn,ytn,lats,lons,istatus)
@@ -321,10 +324,14 @@ c but is the usual lat/lon values at non-staggered grid points.
            return
         endif
 
+        ns = 1
+
+c       if(c10_grid_fname(1:lf).eq.'wrfsi')ns=n_staggers
+
         do j=1,nnyp
         do i=1,nnxp
-           lat(i,j)=lats(i,j,1)
-           lon(i,j)=lons(i,j,1)
+           lat(i,j)=lats(i,j,ns)
+           lon(i,j)=lons(i,j,ns)
         enddo
         enddo
 
@@ -601,6 +608,21 @@ c
 
        endif ! iplttopo = 1
 
+c for now we'll bilinear interpolate to get the wrf topo
+c from the non-staggered topo
+       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+          do j=2,nnyp
+          do i=2,nnxp
+
+             adum(i,j)=r_missing_data
+             call bilinear_interp(i,j,nnxp,nnyp,topt_out,result)
+             adum(i-1,j-1)=result
+
+          enddo
+          enddo
+          where((adum.lt.0.01).and.(adum.gt.-0.01)) adum=0.0
+       endif 
+
        write(6,*)
        print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
        print *,'topt_10    =',topt_10(1,1),topt_10(nnxp,nnyp)
@@ -710,15 +732,18 @@ c
            call move(lons(1,1,2),data(1,1,4),nnxp,nnyp)    ! JS
            call move(lats(1,1,3),data(1,1,5),nnxp,nnyp)    ! JS
            call move(lons(1,1,3),data(1,1,6),nnxp,nnyp)    ! JS
-           call move(topt_out,data(1,1,7),nnxp,nnyp)       ! KWD
-           call move(topt_pctlfn,data(1,1,8),nnxp,nnyp)    ! KWD
-           call move(soil,data(1,1,9),nnxp,nnyp)           ! SA
+           call move(lats(1,1,4),data(1,1,7),nnxp,nnyp)    ! JS
+           call move(lons(1,1,4),data(1,1,8),nnxp,nnyp)    ! JS
+
+           call move(topt_out,data(1,1,9),nnxp,nnyp)       ! KWD
+           call move(topt_pctlfn,data(1,1,10),nnxp,nnyp)   ! KWD
+           call move(soil,data(1,1,11),nnxp,nnyp)           ! SA
 c
            call get_projrot_grid(nnxp,nnyp,lat,lon
      +,projrot_grid,istatus)
-           call move(projrot_grid(1,1,1),data(1,1,10)
+           call move(projrot_grid(1,1,1),data(1,1,12)
      +,nnxp,nnyp)
-           call move(projrot_grid(1,1,2),data(1,1,11)
+           call move(projrot_grid(1,1,2),data(1,1,13)
      +,nnxp,nnyp)
 c
            call get_map_factor_grid(nnxp,nnyp,n_staggers
@@ -727,26 +752,31 @@ c
               print*,'Error returned: get_maps_factor_grid'
               return
            endif
-           call move(r_map_factors(1,1,1),data(1,1,12)
+           call move(r_map_factors(1,1,1),data(1,1,14)
      +,nnxp,nnyp)
-           call move(r_map_factors(1,1,2),data(1,1,13)
+           call move(r_map_factors(1,1,2),data(1,1,15)
      +,nnxp,nnyp)
-           call move(r_map_factors(1,1,3),data(1,1,14)
+           call move(r_map_factors(1,1,3),data(1,1,16)
      +,nnxp,nnyp)
+           call move(r_map_factors(1,1,4),data(1,1,17)
+     +,nnxp,nnyp)
+
 c           
            call get_coriolis_components(nnxp,nnyp,lat
      +,coriolis_parms)
-           call move(coriolis_parms(1,1,1),data(1,1,15)
+           call move(coriolis_parms(1,1,1),data(1,1,18)
      +,nnxp,nnyp)
-           call move(coriolis_parms(1,1,2),data(1,1,16)
+           call move(coriolis_parms(1,1,2),data(1,1,19)
      +,nnxp,nnyp)
 
-           call move(static_albedo,data(1,1,17),nnxp,nnyp)
-           call move(topt_out_s,data(1,1,18),nnxp,nnyp)
-           call move(topt_out_ln,data(1,1,19),nnxp,nnyp)
-           call move(topt_out_lt,data(1,1,20),nnxp,nnyp)
+           call move(static_albedo,data(1,1,20),nnxp,nnyp)
+           call move(topt_out_s,data(1,1,21),nnxp,nnyp)
+           call move(topt_out_ln,data(1,1,22),nnxp,nnyp)
+           call move(topt_out_lt,data(1,1,23),nnxp,nnyp)
+           call move(adum,data(1,1,24),nnxp,nnyp)
 
-           ngrids=21
+
+           ngrids=25
            call get_gridgen_var(nf,ngrids,var,comment)
 
         else
@@ -891,7 +921,7 @@ C
      +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
       real xr,yr,rval,sh,sha,rh,rha,rhn,rht,shn,sht
       real shln,shlt,rhln,rhlt
-      real delta_ln(niq,njq),delta_lt(niq,njq)
+      real delta_ln(np,np),delta_lt(np,np)
       CHARACTER*180 OFN,TITLE3,TITLE3_last_read,TITLE3_last_inquire
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
@@ -1013,7 +1043,12 @@ c                 print *,'rlat,wlon1=',rlat,wlon1
                      endif ! iwrite
 
                      icnt = icnt + 1
-                     DATP(IP,JP) = 0. ! set to missing?
+c initialize these arrays as they may have some garbage in them
+c if we don't actually read in any data.
+
+                     DATP(IP,JP) = 0. ! set to missing? 
+                     DELTA_LN(IP,JP) = 0.
+                     DELTA_LT(IP,JP) = 0.
                      istat_files = 0
                      GO TO 20
                   ENDIF
@@ -1183,9 +1218,9 @@ c     stop
 
       DO 28 JR=1,N3
          DO 29 IR=1,N2
-
             XR=(XT(IR)-XQ1)/DELTAXQ+1.
             YR=(YT(JR)-YQ1)/DELTAYQ+1.
+
             CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
             DATR(IR,JR)=max(0.,RVAL)
             if( DATR(IR,JR).gt.30000. )then
@@ -1428,6 +1463,12 @@ C      read(unit_no,rec=1) idata
            data(countx,county)=float(idata(countx,nn2-county+1))
 c SG97 initial data (DEM format) starts in the lower-left corner;
 c SG97 this format is wrapped around to have upper-left corner as its start.
+c
+c JS00 some machines do not account for signed integers
+          if(data(countx,county).ge.15535.0)
+c    &print*,'x/y/val: ',countx,county,data(countx,county)
+     &data(countx,county)=data(countx,county)-65535
+
         enddo
       enddo
 ccc      close(unit_no)
