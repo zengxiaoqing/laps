@@ -95,6 +95,7 @@
     INTEGER                     :: fcsttime_prev
     INTEGER                     :: itot 
     INTEGER                     :: startbyte
+    REAL, PARAMETER             :: rmissing = 1.e36
     DATA amonths /'JAN','FEB','MAR','APR','MAY','JUN', &
                   'JUL','AUG','SEP','OCT','NOV','DEC'/
   
@@ -1027,160 +1028,168 @@
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Outgoing longwave radiation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = lwout(i,j+1)
+      IF (MAXVAL(lwout) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = lwout(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *, 'GRibbing LWOUT Min/Max = ',minval(fld),maxval(fld)
-      itype = 0
-      param =  212
-      leveltype = 8
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
-
+        print *, 'GRibbing LWOUT Min/Max = ',minval(fld),maxval(fld)
+        itype = 0
+        param =  212
+        leveltype = 8
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Outgoing shortwave radiation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = swout(i,j+1)
+      IF (MAXVAL(swout) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = swout(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *, 'Gribbing SWOUT Min/Max = ',minval(fld),maxval(fld)
-      itype = 0
-      param =  211
-      leveltype = 8
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
-
+        print *, 'Gribbing SWOUT Min/Max = ',minval(fld),maxval(fld)
+        itype = 0
+        param =  211
+        leveltype = 8
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Incoming shortwave radiation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = swdown(i,j+1)
+      IF (MAXVAL(swdown) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = swdown(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *, 'Gribbing SWDOWN Min/Max = ',minval(fld),maxval(fld)
-      itype = 0
-      param =  111
-      leveltype = 1
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
+        print *, 'Gribbing SWDOWN Min/Max = ',minval(fld),maxval(fld)
+        itype = 0
+        param =  111
+        leveltype = 1
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Incoming longwave radiation
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = lwdown(i,j+1)
+      IF (MAXVAL(lwdown) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = lwdown(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *, 'Gribbing LWDOWN Min/Max = ',minval(fld),maxval(fld)
-      itype = 0
-      param =  112
-      leveltype = 1
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
-
+        print *, 'Gribbing LWDOWN Min/Max = ',minval(fld),maxval(fld)
+        itype = 0
+        param =  112
+        leveltype = 1
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  Sensible Heat Flux
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = shflux(i,j+1)
+      IF (MAXVAL(shflux) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = shflux(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *, 'Gribbing SHF Min/Max =',minval(fld),maxval(fld)
-      itype = 0
-      param =  122
-      leveltype = 1
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
+        print *, 'Gribbing SHF Min/Max =',minval(fld),maxval(fld)
+        itype = 0
+        param =  122
+        leveltype = 1
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  Latent Heat Flux
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      DO j = 0,ny-1
-        DO i = 1,nx
-          fld(j*nx + i) = lhflux(i,j+1)
+      IF (MAXVAL(lhflux) .LT. rmissing) THEN
+        DO j = 0,ny-1
+          DO i = 1,nx
+            fld(j*nx + i) = lhflux(i,j+1)
+          ENDDO
         ENDDO
-      ENDDO
-      print *,'Gribbing LHF Min/Max = ',minval(fld),maxval(fld)
-      itype = 0
-      param =  121
-      leveltype = 1
-      level1 = 0
-      level2 = 0
-      timerange = 0
-      timeperiod1 = fcsttime_now
-      timeperiod2 = 0
-      scalep10 =  0
-      CALL make_id(table_version,center_id,subcenter_id,process_id, &
-                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
-                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
-                 scalep10,id)
-      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
-      nbytes = nbytes + itot
-      startbyte=nbytes+1
- 
+        print *,'Gribbing LHF Min/Max = ',minval(fld),maxval(fld)
+        itype = 0
+        param =  121
+        leveltype = 1
+        level1 = 0
+        level2 = 0
+        timerange = 0
+        timeperiod1 = fcsttime_now
+        timeperiod2 = 0
+        scalep10 =  0
+        CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                     param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+        CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+        nbytes = nbytes + itot
+        startbyte=nbytes+1
+      ENDIF 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  PBL Height
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
