@@ -125,13 +125,14 @@ C
       laps_dom_file = grid_fnam_common(1:lgfc)
 C 
 C
-C ****  call get_laps_config to read nest7grid.parms
+C ****  call get_laps_config to read nest7grid.parms or domain namelist
 C
       call get_laps_config(laps_dom_file,istatus)
       n_levels = nk_laps
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
       v_g = VERTICAL_GRID
+      call upcase(v_g,v_g)
 
       if (v_g .ne. 'PRESSURE') goto 920
 
@@ -164,7 +165,8 @@ C
       if (imax .ne. n7g_nx) then
         if (flag .ne. 1)
      1write (6,*) 
-     1'imax passed in does not match nest7grid.parms...write aborted.'
+     1'imax passed in does not match ','laps_dom_file'
+     1,'...write aborted.'
         istatus=error(2)
         return
       endif
@@ -172,7 +174,8 @@ C
       if (jmax .ne. n7g_ny) then
         if (flag .ne. 1)
      1write (6,*) 
-     1'jmax passed in does not match nest7grid.parms...write aborted.'
+     1'jmax passed in does not match, ',laps_dom_file
+     1,'...write aborted.'
         istatus=error(2)
         return
       endif
@@ -251,8 +254,13 @@ C
           write(6,*) 'write_laps ABORTED!'
           write(6,*) ' LAPS will currently only work on a PRESSURE'
      1,' vertical grid'
-          write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+          if (laps_dom_file(1:lgfc) .eq. 'nest7grid') then
+            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
      1,' in nest7grid.parms'
+          else
+            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1,' in ',laps_dom_file,'.nl'
+          endif
         ENDIF
         ISTATUS=ERROR(2)
         GOTO 999
@@ -408,6 +416,7 @@ C
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
       v_g = VERTICAL_GRID
+      call upcase(v_g,v_g)
 
       if (v_g .ne. 'PRESSURE') goto 920
 
@@ -437,17 +446,29 @@ C
       endif
  
       if (imax .ne. n7g_nx) then
-        if (flag .ne. 1)
-     1write (6,*) 
+        if (flag .ne. 1) then
+          if (laps_dom_file(1:lgfc) .eq. 'nest7grid') then
+            write (6,*) 
      1'imax passed in does not match nest7grid.parms...write aborted.'
+          else
+            write (6,*) 'imax passed in does not match '
+     1,laps_dom_file,'.nl...write aborted.'
+          endif
+        endif
         istatus=error(2)
         return
       endif
  
       if (jmax .ne. n7g_ny) then
-        if (flag .ne. 1)
-     1write (6,*) 
+        if (flag .ne. 1) then
+          if (laps_dom_file(1:lgfc) .eq. 'nest7grid') then
+            write (6,*) 
      1'jmax passed in does not match nest7grid.parms...write aborted.'
+          else
+            write (6,*) 'jmax passed in does not match '
+     1,laps_dom_file,'.nl...write aborted.'
+          endif
+        endif
         istatus=error(2)
         return
       endif
@@ -525,8 +546,13 @@ C
           write(6,*) 'write_laps ABORTED!'
           write(6,*) ' LAPS will currently only work on a PRESSURE'
      1,' vertical grid'
-          write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
-     1,' in nest7grid.parms'
+          if (laps_dom_file(1:lgfc) .eq. 'nest7grid') then
+            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1,' in nest7grid.parms' 
+          else
+            write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1,' in ', laps_dom_file, '.nl' 
+          endif
         ENDIF
         ISTATUS=ERROR(2)
         GOTO 999
