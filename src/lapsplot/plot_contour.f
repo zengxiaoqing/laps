@@ -421,9 +421,10 @@ C Orchid
 ! DarkViolet
       CALL GSCR(1, 35, 0.6, 0.0, 0.8)
 
-! Radar Vel Color Table
-      do icol = 100,110
-          ivel = 110 - icol
+! Radar Vel Color Table (about 20 values)
+      i_velcol_offset = 100
+      do icol = i_velcol_offset,i_velcol_offset+10
+          ivel = i_velcol_offset+10 - icol
           amp = float(ivel) / 10.
           amp_gry = 0.3
           amp_grn = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
@@ -431,8 +432,8 @@ C Orchid
 !         call GSCR(1,icol,0.,1.0,0.)
 !         write(6,*)' Setting color ' ,icol
       enddo
-      do icol = 111,120
-          ivel = icol - 110
+      do icol = i_velcol_offset+11,i_velcol_offset+20
+          ivel = icol - (i_velcol_offset+10)
           amp = float(ivel) / 10.
           amp_gry = 0.3
           amp_red = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
@@ -441,8 +442,9 @@ C Orchid
       enddo
 
 ! Radar Ref Color Table
+      i_refcol_offset = 180
       do idbz = 0,20
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz) / 20.
           amp_gry = 0.3
           amp_red = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
@@ -450,21 +452,21 @@ C Orchid
           call GSCR(1,icol,amp_red,amp_gry,amp_blu)
       enddo
       do idbz = 21,30
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz-20) / 10.
           amp_gry = 0.3
           amp_grn = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
           call GSCR(1,icol,0.,amp_grn,0.)
       enddo
       do idbz = 31,40
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz-30) / 10.
           amp_gry = 0.3
           amp_blu = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
           call GSCR(1,icol,0.,0.,amp_blu)
       enddo
       do idbz = 41,50
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz-40) / 10.
           amp_gry = 0.3
           amp_red = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
@@ -472,7 +474,7 @@ C Orchid
           call GSCR(1,icol,amp_red,amp_grn,0.)
       enddo
       do idbz = 51,60
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz-50) / 10.
           amp_gry = 0.3
           amp_red = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
@@ -480,7 +482,7 @@ C Orchid
           call GSCR(1,icol,amp_red,amp_grn,0.)
       enddo
       do idbz = 61,70
-          icol = 180 + idbz / 5
+          icol = i_refcol_offset + idbz / 5
           amp = float(idbz-60) / 10.
           amp_gry = 0.3
           amp_red = min(amp,1.0) * (1.0 - amp_gry) + amp_gry
