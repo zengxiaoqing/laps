@@ -16,11 +16,15 @@ c
 c
 c *** Netcdf arrays.
 c
-      real*4 htn(75,56,35,5),
-     .       tpn(75,56,38,5),
-     .       rhn(75,56,39,5),
-     .       uwn(75,56,41,5),
-     .       vwn(75,56,41,5),
+      integer nxbg, nybg, nzbg1,nzbg2, nzbg3, nzbg4, ntbg
+      parameter(nxbg=75,nybg=56,nzbg1=35,nzbg2=38,nzbg3=39)
+      parameter(nzbg4=40,ntbg=5)
+
+      real*4 htn(nxbg,nybg,nzbg1,ntbg),
+     .       tpn(nxbg,nybg,nzbg2,ntbg),
+     .       rhn(nxbg,nybg,nzbg3,ntbg),
+     .       uwn(nxbg,nybg,nzbg4,ntbg),
+     .       vwn(nxbg,nybg,nzbg4,ntbg),
      .       prn(19)
 c
       data prn/1000.,950.,900.,850.,800.,750.,700.,650.,600.,550.,
@@ -83,7 +87,7 @@ c         l=index(path,' ')-1
          ncid=ncopn(cdfname,ncnowrit,rcode)
          call ncinq(ncid,ndims,nvars,ngatts,recdim,rcode)
          call ncdinq(ncid,recdim,dummy,nrecs,rcode)
-         if (nrecs .lt. 5) then
+         if (nrecs .lt. ntbg) then
             print *,'Not enough records in netcdf file.'
             istatus=0
             return
@@ -100,6 +104,10 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
+     +      count(3).ne.nzbg1.or.count(4).ne.ntbg) then
+            goto 900
+         endif         
          call ncvgt(ncid,1,start,count,htn,rcode)
 c
 c ****** Statements to fill rhn.                           
@@ -112,6 +120,10 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
+     +      count(3).ne.nzbg3.or.count(4).ne.ntbg) then
+            goto 900
+         endif         
          call ncvgt(ncid,4,start,count,rhn,rcode)
 c
 c ****** Statements to fill tpn.                              
@@ -124,6 +136,10 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
+     +      count(3).ne.nzbg2.or.count(4).ne.ntbg) then
+            goto 900
+         endif         
          call ncvgt(ncid,7,start,count,tpn,rcode)
 c
 c ****** Statements to fill uwn.                           
@@ -136,6 +152,11 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
+     +      count(3).ne.nzbg4.or.count(4).ne.ntbg) then
+            goto 900
+         endif         
+
          call ncvgt(ncid,10,start,count,uwn,rcode)
 c
 c ****** Statements to fill vwn.                           
@@ -148,6 +169,10 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
+     +      count(3).ne.nzbg4.or.count(4).ne.ntbg) then
+            goto 900
+         endif         
          call ncvgt(ncid,13,start,count,vwn,rcode)
 c
 c *** Close netcdf file.
@@ -155,6 +180,7 @@ c
       call ncclos(ncid,rcode)
 c
       endif
+
 c
 c *** Fill ouput arrays.
 c *** Convert rh to sh.
@@ -177,8 +203,8 @@ c
       read(af,'(i4)') n
       n=n/3+1
       do k=1,19
-      do j=1,56
-      do i=1,75
+      do j=1,nybg
+      do i=1,nxbg
          ii=i+ip
          jj=j+jp
          kp1=k+1
@@ -199,6 +225,22 @@ c
       enddo
       enddo
       enddo
+
+cc      do jj=5,nybg
+cc        do ii=14,nxbg
+cc          if(uw(ii,jj,19).ge.msgflg .and. uw(ii,jj,18).lt.msgflg)
+cc     +   then
+cc            print*,'Filling top u level wind at ',ii,jj
+cc            uw(ii,jj,19) = uw(ii,jj,18)
+ccc          endif
+cc          if(vw(ii,jj,19).ge.msgflg .and. vw(ii,jj,18).lt.msgflg)
+cc     +   then
+cc            print*,'Filling top v level wind at ',ii,jj
+cc            vw(ii,jj,19) = vw(ii,jj,18)
+cc          endif
+cc
+cc        enddo
+cc      enddo
 c
 c *** Fill Lambert-conformal common block variables.
 c
@@ -227,5 +269,9 @@ c
 c
       oldfname=fname
       istatus=1
+      return
+ 900  print*,'ERROR: bad dimension specified in netcdf file'
+      print*, (count(i),i=1,4)
+      istatus=-1
       return
       end
