@@ -3,6 +3,6 @@
   balance  = .true., 
   adjust_rh = .true., 
   output_format = 'mm5','wrf','rams'
-  snow_thresh = 0.5,
+  snow_thresh = 1.0,
 /
   
