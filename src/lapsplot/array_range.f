@@ -8,7 +8,10 @@
 
        call array_range(a,ni,nj,rmin,rmax,r_missing_data)
 
-       range = (rmax-rmin) / scale
+       rmax = rmax / scale
+       rmin = rmin / scale
+
+       range = rmax-rmin
 
        if(range .gt. 2000)then
            cint = 400.

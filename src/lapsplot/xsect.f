@@ -353,13 +353,13 @@ c read in laps lat/lon and topo
         if(c80_domain(1:4) .eq. 'nest')then
             write(6,102)
 102         format(/
-     1 '    Type of Xsect ',
-     1  ' [we, sn, xxx (azimuth-true), arr (arrival gate)]   ? '$)
+     1  '    Type of Xsect ',
+     1  ' [we, sn, xxx (azimuth-true), arr (arrival gate)]   ? ',$)
         else
             write(6,103)
 103         format(/
      1 '    Type of Xsect ',
-     1  ' [we, sn, xxx (azimuth-true)]                       ? '$)
+     1  ' [we, sn, xxx (azimuth-true)]                       ? ',$)
         endif
 
         if(l_atms)write(6,*)' Reading X-sect type from lun = ',lun
@@ -389,7 +389,7 @@ c read in laps lat/lon and topo
      1gxy'/
      1        6x,' VORs:        kiw'/
      1        ' ',6x,'MESONET:     ',
-     1        'bou                                               ? '$)
+     1        'bou                                               ? ',$)
 
             else ! StormFest
                 write(6,1110)NY_L,NY_L/2+1,NY_L
@@ -472,7 +472,7 @@ c read in laps lat/lon and topo
      1gxy'/
      1        6x,' VORs:        kiw'/
      1        ' ',6x,'MESONET:     ',
-     1        'bou                                               ? '$)
+     1        'bou                                               ? ',$)
 
             else ! StormFest
                 write(6,1120)NX_L,NX_L/2+1,NX_L
@@ -551,7 +551,7 @@ c read in laps lat/lon and topo
      1gxy'/
      1        6x,' VORs:        kiw'/
      1        6x,' MESONET:     bou'/
-     1        ' ',5x,'                     OR I,J location:',27x,'? '$)
+     1        ' ',5x,'                     OR I,J location:',27x,'? ',$)       
 
             else ! Storm Fest
                 write(6,1130)
@@ -620,7 +620,7 @@ c read in laps lat/lon and topo
      1  /'           cv (cloud cover contours)'
      1  /'           rf (reflectivity-graphic), ri (ref-image)'
      1  /'           sh,rh (Specific/Relative Humidity)'
-     1  /' ',49x,'q (quit/display)]   ? '$)
+     1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
 

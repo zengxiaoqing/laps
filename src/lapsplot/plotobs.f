@@ -140,7 +140,7 @@ cdis
 !       Plot Radar Obs   *********************************************************************
 
         write(6,95)
-95      format(' Want Radial Velocities     [y,n,a,<RET>=y] ? '$)
+95      format(' Want Radial Velocities     [y,n,a,<RET>=y] ? ',$)
         if(l_ask_questions)read(lun_in,211)c_radial
 
         if(c_radial(1:1) .eq. 'n')goto205
@@ -153,7 +153,7 @@ cdis
             call cv_asc_i4time(asc9_tim,i4time_needed)
 
 !            write(6,110)
-!110         format(' Radar #',30x,'? '$)
+!110         format(' Radar #',30x,'? ',$)
 !            if(l_ask_questions)read(lun_in,*)i_radar
 
             if(i_radar .le. 9)then
@@ -211,7 +211,7 @@ cdis
 205     call cv_asc_i4time(asc9_tim,i4time)
 
         write(6,210)
-210     format(' Derived radar obs  [r, Ret = None]',30x,'? '$)    
+210     format(' Derived radar obs  [r, Ret = None]',30x,'? ',$)    
         if(l_ask_questions)read(lun_in,211)c_obs_type
 211     format(a1)
 
@@ -256,8 +256,8 @@ cdis
 
                 spd_kt = speed_ms / mspkt
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_radar)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_radar)
 
         else if(k_ob .gt. k_level)then
                 goto1300
@@ -355,8 +355,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 write(6,111)alat,alon,max(dir,-99.),spd_kt
 111             format(1x,2f8.1,4x,f7.0,f7.0,i4,f8.3)
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_vad)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,size_vad)
 
 
             endif
@@ -597,6 +597,77 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         close(32)
 
 1011    continue
+
+        return
+        end
+
+
+        subroutine plot_temp_obs(k_level,i4time,imax,jmax,kmax
+     1                          ,r_missing_data,lat,lon,topo)
+
+        character*3 ext
+        character*150 directory
+        character*13 filename13
+
+!       Plot Temperature Obs  ***********************************************
+
+!       size_temp = 8. * float(max(imax,jmax)) / 300.
+        size_temp = 3.33
+
+        write(6,*)
+        write(6,*)' Plot Temperature Obs, size_temp = ',size_temp
+
+        icol_in = 17
+        call setusv_dum(2hIN,17)
+
+        lun = 32
+        ext = 'tmg'
+        call get_directory(ext,directory,len_dir)
+        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
+     1  ,status='old',err=41)
+
+        td = r_missing_data
+        p = r_missing_data
+        dir = r_missing_data
+        spd_kt = r_missing_data
+        gust = r_missing_data
+
+        do while (.true.)
+            read(32,*,end=41)ri,rj,rk,t_k
+            ri = ri + 1.
+            rj = rj + 1.
+            rk = rk + 1.
+
+            k = nint(rk)
+            k_sfc = 2
+
+            if(k .eq. k_level                      .or.
+     1         k_level .eq. 0 .and. k .eq. k_sfc   .and.
+     1         t_k .ne. r_missing_data                    )then
+
+                t_c = t_k - 273.15
+
+!               spd_kt = SPEED_ms  / mspkt
+
+                iflag = 2
+
+                call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
+     1                          ,lat,lon,imax,jmax,size_temp,icol_in
+     1                          ,iflag)
+
+
+                write(6,111,err=121)ri,rj,t_c
+111             format(1x,3f8.1)
+121             continue
+
+            endif ! k .eq. k_level
+
+        enddo
+
+41      continue
+
+        close(32)
+
 
         return
         end
