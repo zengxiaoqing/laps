@@ -90,7 +90,7 @@ cdis
 
 !       Determine whether to use VIS / ALBEDO data
         if(.not. l_use_vis)then
-            write(6,*)' Warning: l_use_vis set to not use vis data'
+            write(6,*)' Note: l_use_vis set to not use vis data'
             istatus = 0
             return
         endif
@@ -107,8 +107,8 @@ cdis
      1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
         write(6,*)' istatus from vis_albedo data = ',istatus
         if(istatus .ne. 1 .and. istatus .ne. -1)then
-            write(6,*)' Warning: could not read vis_albedo - '
-     1               ,'return from get_vis'
+            write(6,*)' No VIS / ALBEDO available'
+            write(6,*)' return from get_vis'
             istatus = 0
             return
         endif
