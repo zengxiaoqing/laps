@@ -1192,7 +1192,7 @@ C       EW SLICES
 !       MORE ASCII PLOTS
         write(6,801)
 801     format('                            VISIBLE SATELLITE     ',
-     1            20x,'                Snow Cover')
+     1            20x,'      csc  (cycle)  Snow Cover')
         scale = 1.
         CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_snow_cycle,NX_L,NY_L
      1                 ,'HORZ CV',c1_name_array(:,:,1),KCLOUD,cld_hts
