@@ -13,7 +13,7 @@
 '',
 '',
  laps_radar_ext_a=
-'v02',
+'v01',
 'vrc',
 'vrc',
 '',
