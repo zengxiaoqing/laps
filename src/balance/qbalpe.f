@@ -715,7 +715,7 @@ c truth profile and compute an average analysis error
 
 c  create dropsond profiles for testing....comment out read pig,tmg
          call readpig(a9_time,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
-         if(istatus.eq.0.or.istatus.eq.-3)then
+         if(istatus.eq.-3)then
             print*,'Error returned: readpig.'
             print*,'Dropsonde analysis not performed.'
             goto 89
@@ -727,40 +727,44 @@ c  create dropsond profiles for testing....comment out read pig,tmg
      1 from analysis with gaussian error'
          endif
 
-c routine to create drop and rr arrays:
-         iii=382983
-         do k=1,nz
-            if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-               ii=rri(k)
-               jj=rrj(k)
-               if(istatus.eq.-1)then
-                  udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
-                  vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
+c routine to create drop and rr arrays when either pig or tmg
+c do not exist
+         if(istatus.ne.1)then
+            iii=382983
+            do k=1,nz
+               if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
+                  ii=rri(k)
+                  jj=rrj(k)
+                  if(istatus.eq.-1)then
+                     udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
+                     vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
+                  endif
+                  if(istatus.eq.-2)then
+                     tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
+                  endif
                endif
-               if(istatus.eq.-2)then
-                  tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
+            enddo
+            last_one=.true.
+            first_one=.true.
+            do k=1,nz
+               if(rri(k).ne.smsng.and.rrj(k).ne.smsng)then
+                  if(first_one)then
+                     k1=k
+                     first_one=.false.
+                  endif
                endif
-            endif
-         enddo
-         last_one=.true.
-         first_one=.true.
-         do k=1,nz
-          if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
-             if(first_one)then
-                k1=k
-                first_one=.false.
-             endif
-          endif
-          if(rri(k).eq.smsng .and. rrj(k).eq.smsng)then
-             if(.not.first_one.and.last_one)then
-                k2=k-1
-                last_one=.false.
-             endif
-          endif
-         enddo
+               if(rri(k).eq.smsng.and.rrj(k).eq.smsng)then
+                  if(.not.first_one.and.last_one)then
+                     k2=k-1
+                     last_one=.false.
+                  endif
+               endif
+            enddo
 c we should always do this?
-         if(k1.gt.1) tdrop(k1-1)=tdrop(k1)
-         if(k2.lt.nz)tdrop(k2+1)=tdrop(k2)
+            if(k1.gt.1) tdrop(k1-1)=tdrop(k1)
+            if(k2.lt.nz)tdrop(k2+1)=tdrop(k2)
+
+         endif
 
 c subr profile fills array erru(u),errub(v) with analysis error 
 c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
@@ -3085,18 +3089,21 @@ c
       logical lexist
       real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
      1,tt,uu,vv
-      
-      allocate(ri(3000),rj(3000),rk(3000))
-      allocate(dd(3000),ff(3000),tt(3000))
-      allocate(uu(3000),vv(3000))
 
-      istatus=1
+      integer mxz
+      parameter(mxz=300)
+      
+      allocate(ri(mxz),rj(mxz),rk(mxz))
+      allocate(dd(mxz),ff(mxz),tt(mxz))
+      allocate(uu(mxz),vv(mxz))
+
       call get_r_missing_data(smsng,istatus)
       if(istatus.ne.1)then
          print*,'Error: returned from get_r_missing_data'
          return
       endif
 
+      istatus=0
       rri=smsng
       rrj=smsng
 
@@ -3107,23 +3114,30 @@ c
       inquire(file=dum,exist=lexist)
       if(lexist)then
         open (11, file=dum,form='formatted',status='old',err=50) 
-        Do n=1,3000
+        Do n=1,mxz
          read(11,*,end=1) ri(n),rj(n),rk(n),dd(n),ff(n),dum1
          if(dum1.eq.'  ') go to 1
         enddo
         print*, 'Suspect read in the pig file'
-        istatus=0
-        deallocate(ri,rj,rk,dd,ff)
-        deallocate (uu,vv,tt)
-        return
-  1   nsave=n-1 
+        istatus=-1
+        goto 7
+
+1       nsave=n-1 
+        if(nsave.lt.2)then
+           print*,'No wind data in pig file'
+           istatus=-1
+           goto 7
+        endif
 c convert dd ff to u,v
         do n=1,nsave
         ang=rdpdg*(dd(n)-270.)
          uu(n)=ff(n)/.515*cos(ang)
          vv(n)=-ff(n)/.515*sin(ang)
         enddo
-
+c since dropsonde is reverse order, flip it.
+        if(rk(1).gt.rk(nsave))then
+           call flip_sonde(mxz,nsave,uu,vv,ri,rj,rk)
+        endif
 c now interpolate to the laps levels in rk space
         do k=1,nz
         rr=k
@@ -3149,15 +3163,16 @@ c now interpolate to the laps levels in rk space
         print*,'No pig file at this time'
         istatus=-1
       endif
+
 c now read the tmg file to get the dropsone temps
-      call get_directory('tmg',dum,len)
+7     call get_directory('tmg',dum,len)
       dum(len+1:len+13)=a9_time//'.tmg'
       nn=0
       inquire(file=dum,exist=lexist)
       if(lexist)then
 
        open (11, file=dum,form='formatted',status='old',err=50) 
-       Do n=1,3000
+       Do n=1,mxz
        read(11,*,end=2) aa,bb,cc,ee, dum1           
        if(dum1.eq.'  ') go to 2
        if(dum1.eq.'ACA') then    
@@ -3168,8 +3183,18 @@ c now read the tmg file to get the dropsone temps
         tt(nn)=ee  
        endif
        enddo
+c since dropsonde is reverse order, flip it.
+2      if(nn.lt.1)then
+          istatus = istatus-2
+          deallocate(ri,rj,rk,dd,ff,uu,vv,tt)
+          goto 49
+       endif
+       if(rk(1).gt.rk(nn))then
+          call flip_sonde(mxz,nn,uu,vv,ri,rj,rk)
+       endif
+
 c now interpolate to the laps levels in rk space
- 2     do k=1,nz
+       do k=1,nz
        rr=k
        do  n=1,nn-1
         iflag=0        
@@ -3188,13 +3213,44 @@ c now interpolate to the laps levels in rk space
       else
        print*,'No tmg file for this time'
        istatus=istatus-2
+       return
       endif
+
+      istatus = 1  !successful return with both pig and tmg data
+
       deallocate(ri,rj,rk,dd,ff)
       deallocate (uu,vv,tt)
+      return
 
-      goto 51
+49    print*,'No temp data in tmg file'
+      return
 50    print*,'Error opening file: ',dum(1:len+13)
-51    return
+      return
+      end
+c-------------------------------------------------------------------
+      subroutine flip_sonde(mxz,nk,uu,vv,ri,rj,rk)
+
+      implicit none
+     
+      integer mxz,nk,k
+      real uu(mxz),vv(mxz),ri(mxz),rj(mxz),rk(mxz)
+      real, allocatable, dimension(:) :: rii,rjj,rkk,u,v
+      
+      allocate(rii(mxz),rjj(mxz),rkk(mxz),u(mxz),v(mxz))
+      do k=1,nk
+         rii(nk-k+1)=ri(k)
+         rjj(nk-k+1)=rj(k)
+         rkk(nk-k+1)=rk(k)
+         u(nk-k+1)=uu(k)
+         v(nk-k+1)=uu(k)
+      enddo
+      ri=rii
+      rj=rjj
+      rk=rkk
+      uu=u
+      vv=v
+      deallocate(rii,rjj,rkk,u,v)
+      return
       end
 c-------------------------------------------------------------------
       subroutine profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw,obert
@@ -3265,6 +3321,8 @@ c recover variable profiles and put them in the error arrays
         jj=rrj(k)  
         aa=rri(k)-float(ii)
         bb=rrj(k)-float(jj)
+c these are interpolated (to dropsonde point)
+c  profiles of turbulence and analysis
         erru(1,6,k)=us(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +us(ii+1,jj,k)*aa*(1.-bb)+
      1   us(ii,jj+1,k)*bb*(1.-aa)+us(ii+1,jj+1,k)*aa*bb
@@ -3280,10 +3338,13 @@ c recover variable profiles and put them in the error arrays
         errt(1,6,k)=t(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +t(ii+1,jj,k)*aa*(1.-bb)+
      1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb
+c density
         errt(1,7,k)=p(k)/r/errt(1,6,k)          
+c specific humidity
         errt(1,8,k)=sh(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +sh(ii+1,jj,k)*aa*(1.-bb)+
      1   sh(ii,jj+1,k)*bb*(1.-aa)+sh(ii+1,jj+1,k)*aa*bb
+c height
         errt(1,5,k)=phi(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +phi(ii+1,jj,k)*aa*(1.-bb)+
      1   phi(ii,jj+1,k)*bb*(1.-aa)+phi(ii+1,jj+1,k)*aa*bb
@@ -3293,12 +3354,15 @@ c brute force method for now!
      1   +phi(ii+1,jj,k-1)*aa*(1.-bb)+
      1   phi(ii,jj+1,k-1)*bb*(1.-aa)+phi(ii+1,jj+1,k-1)*aa*bb
         endif
+c terrain
         zter=ter(ii,jj)*(1.-aa)*(1.-bb)
      1   +ter(ii+1,jj)*aa*(1.-bb)+
      1   ter(ii,jj+1)*bb*(1.-aa)+ter(ii+1,jj+1)*aa*bb
+c vertical motion w
         errw(1,5,k)=-r*errt(1,6,k)/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +om(ii+1,jj,k)*aa*(1.-bb)+
      1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)
+c turb vv
         errw(1,6,k)=(oms(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +oms(ii+1,jj,k)*aa*(1.-bb)+
      1   oms(ii,jj+1,k)*bb*(1.-aa)+oms(ii+1,jj+1,k)*aa*bb)
@@ -3306,10 +3370,11 @@ c brute force method for now!
        endif
       enddo ! on k
 
-      do n=4,nz ! these are the random estimates for the statistics
+      do n=4,nx ! these are the random estimates for the statistics
+c this creates nx-3 unique truth profiles: nx is used because it is the 
+c first dimension of the err arrays 
 c  do background errors first
        do k=1,nz
-c create truth profiles using guassian random numbers
 c       if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
 
            if(udrop(k).ne.smsng)ut(k)=udrop(k)+oberu*ffz(iii,20)
@@ -3320,7 +3385,8 @@ c       if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
 c       endif
        enddo 
 
-
+c for each truth profile compute error and store in the err arrays by
+c height level (k) and truth number (n)
        do k=1,nz
         if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
          ii=rri(k)
@@ -3345,7 +3411,7 @@ c       endif
 
       enddo! on n
 c now analysis errors with a different ensemble of truth estimates
-      do n=4,nz
+      do n=4,nx
        do k=1,nz
 c create truth profiles using guassian random numbers
         if(udrop(k).eq.smsng) go to 2
@@ -3353,6 +3419,7 @@ c create truth profiles using guassian random numbers
         vt(k)=vdrop(k)+oberu*ffz(iii,20)
         Tt(k)=tdrop(k)+obert*ffz(iii,20)
         Wt(k)=oberw*ffz(iii,20)
+c integrate hypsometric eqn to recover heights
         if(zter.lt.errt(1,5,k)) then! begin to integrate truth ht
          tave=.5*(Tt(k)+errt(1,8,k)/6.+Tt(k-1)+errt(1,8,k)/6.)! virt temp
          if(zter.gt.errt(1,5,k-1)) then
@@ -3378,6 +3445,7 @@ c create truth profiles using guassian random numbers
      1   v(ii,jj+1,k)*bb*(1.-aa)+v(ii+1,jj+1,k)*aa*bb-vt(k)
          aerrtt=t(ii,jj,k)*(1.-aa)*(1.-bb)+t(ii+1,jj,k)*aa*(1.-bb)+
      1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb ! temp at drop
+c convert omega errors to w errors
          errw(n,2,k)=-r*aerrt/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
      1   +om(ii+1,jj,k)*aa*(1.-bb)+
      1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)-wt(k)
@@ -3388,10 +3456,11 @@ c create truth profiles using guassian random numbers
          if(errt(1,5,k).gt.zter) then
           errt(n,4,k)=(errt(1,5,k)-pht(k))  ! ht error
          endif
-         errt(n,3,k)=g*p(k)/r/aerrtt*errt(n,4,k) ! pressure error                
+         errt(n,3,k)=g*p(k)/r/aerrtt*errt(n,4,k) ! pressure error from hts               
         endif
        enddo! on k
       enddo ! on n
+c now compute bias error by summing over all nx-4 scenarios
       do k=1,nz
        cnt=0
        sumbeu=0
@@ -3404,7 +3473,7 @@ c create truth profiles using guassian random numbers
        sumaew=0
        sumapp=0
        sumph=0.
-       do n=4,nz
+       do n=4,nx
         cnt=cnt+1.
         sumbeu=erru(n,1,k)+sumbeu
         sumbev=errv(n,1,k)+sumbev
@@ -3431,7 +3500,7 @@ c     bias estimates
           errw(1,1,k)=sumbew/cnt
           errw(1,2,k)=sumaew/cnt
           errt(1,3,k)=sumapp/cnt! pressure
-          errt(1,4,k)=sumph/cnt
+          errt(1,4,k)=sumph/cnt !height
        endif
       enddo ! on k
 c now compute variance
@@ -3447,7 +3516,7 @@ c now compute variance
        sumapp=0.
        sumph=0
        cnt=0.
-       do n=4,nz
+       do n=4,nx ! for all truth senarios
         cnt=cnt+1.
         sumbeu    =sumbeu+(erru(n,1,k)-erru(1,1,k))**2 !back error variance
         sumaeu    =sumaeu+(erru(n,2,k)-erru(1,2,k))**2 !analysis error variance
@@ -3459,6 +3528,7 @@ c now compute variance
         sumaew    =sumaew+(errw(n,2,k)-errw(1,2,k))**2
         sumapp    =sumapp+(errt(n,3,k)-errt(1,3,k))**2
         sumph     =sumph+(errt(n,4,k)-errt(1,4,k))**2
+c covariance calc err ( ,6, ) is the turb component
         erru(3,2,k)=(erru(n,2,k)-erru(1,2,k))*(erru(n,6,k)*ffz(iii,20))
      1    +erru(3,2,k)
         errv(3,2,k)=(errv(n,2,k)-errv(1,2,k))*(errv(n,6,k)*ffz(iii,20))

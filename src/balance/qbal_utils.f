@@ -465,10 +465,7 @@ c       analysis-D = analysis-A + (bkgd_lga-D - input_lga-A)
 c
 c    return bkgd_lga-D and analysis-D for qbalpe.
 c
-
-      print*,'************************'
-      print*,'Subroutine advance_grids'
-      print*,'************************'
+      print*,'  Subroutine advance_grids'
 
       call get_laps_cycle_time(laps_cycle_time,istatus)
       if(istatus.ne.1)then
@@ -483,16 +480,6 @@ c
      +,itime_inc,smooth_fields)
 
       call s_len(cmodels(1),lenm)
-
-      if(cmodels(1)(1:lenm).ne.'LAPS_FUA'.and.
-     .   cmodels(1)(1:lenm).ne.'MODEL_FUA')then
-         print*,' Error: analysis and background grids are'
-     .,' advanced in time only when background model is LAPS_FUA'
-     .,' or MODEL_FUA as specified in background.nl'
-            print*,' Current background: ',cmodels(1)(1:lenm)
-         istatus = 0
-         return
-      endif
 
       allocate (names(max_files),reject_names(max_files)
      .         ,bg_names(max_files))
