@@ -210,8 +210,6 @@ C   PRESSURE FOR DRY AIR.
 !       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
 !                                                            i.e. sfc
 
-        include 'lapsparms.inc' ! nothing
-
         real*4 t_sfc_k(ni,nj)
         real*4 td_sfc_k(ni,nj)
         real*4 p_sfc_pa(ni,nj)
@@ -448,8 +446,8 @@ C
 
 !       Steve Albers 1991
 
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2),V
-     1EL(20)
+        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
+     1              ,VEL(20)
      1 ,temdif(70),partem(70),pbe(70)
      #   ,DD85,FF85,DD50,FF50
         REAL LCL,nbe_min
@@ -458,7 +456,11 @@ C
         parameter (GAMMA = .009760) ! Dry Adiabatic Lapse Rate Deg/m
         DATA G/9.80665/
 
-        include 'lapsparms.inc' ! r_missing_data
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading r_missing_data: STOP'
+            stop
+        endif
 
         nbe_min=0.
         pos_area_max=0.
@@ -1302,12 +1304,10 @@ C   COMPUTE DEW POINT DEPRESSION.
         return
         end
 
-       subroutine li_laps(tc,td,pr,t500laps,i4time,imax,jmax,li,flag,ist
-     1atus)
+       subroutine li_laps(tc,td,pr,t500laps,i4time,imax,jmax,li,flag
+     !                   ,istatus)
 
 !      1991     Steve Albers
-
-       include 'lapsparms.inc' ! for r_missing_data
 
        real*4 tc(imax,jmax) ! Input T  in deg F
        real*4 td(imax,jmax) ! Input Td in deg F
@@ -1317,6 +1317,12 @@ C   COMPUTE DEW POINT DEPRESSION.
        real*4 t500laps(imax,jmax) ! Used Locally Only
 
        character*13 filename13
+
+       call get_r_missing_data(r_missing_data,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error reading r_missing_data'
+           return
+       endif
 
        call constant(li,r_missing_data,imax,jmax)
        call get_laps_cycle_time(laps_cycle_time,istatus)

@@ -66,8 +66,9 @@ cdis
 !       Added call to get_r_missing_data.  Pass r_missing_data to
 !       read_tsnd and analyze_tsnd.
 
-        integer*4 max_snd_grid
+        integer*4 max_snd_grid,max_obs
         parameter (max_snd_grid = 500)              ! Total number of profiles
+        parameter (max_obs = 100000)                ! # obs in data structure
 
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 temp_3d(ni,nj,nk)
@@ -85,6 +86,8 @@ cdis
         character*4 c4_obstype(max_snd_grid) 
 
         logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob
+
+        include 'tempobs.inc'
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -127,6 +130,8 @@ cdis
         endif
 
         n_good_tsnd = 0
+
+        n_obs = 0
 
         do i_tsnd = 1,n_tsnd
 
@@ -237,6 +242,25 @@ cdis
                 write(6,*)' Applying the TSND bias corrections'
                 l_good_tsnd(i_tsnd) = .true.
                 n_good_tsnd = n_good_tsnd + 1
+
+!               Add TSND to observation vector
+                do k = 1,nk
+                    if(bias_tsnd(i_tsnd,k) .ne. r_missing_data)then
+                        n_obs = n_obs + 1
+                        temp_obs(n_obs,i_ri) = igrid_tsnd(i_tsnd)
+                        temp_obs(n_obs,i_rj) = jgrid_tsnd(i_tsnd)
+                        temp_obs(n_obs,i_rk) = k
+                        temp_obs(n_obs,i_i) = igrid_tsnd(i_tsnd)
+                        temp_obs(n_obs,i_j) = jgrid_tsnd(i_tsnd)
+                        temp_obs(n_obs,i_k) = k
+                        temp_obs(n_obs,i_temp) = 
+     1                  temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
+     1                                      + bias_tsnd(i_tsnd,k)
+                        temp_obs(n_obs,i_wt) = wt_tsnd(i_tsnd,k)
+                        temp_obs(n_obs,i_bias) = bias_tsnd(i_tsnd,k)
+                    endif
+                enddo ! k
+
             else
                 write(6,*)' Not using TSND data due to QC problems'
                 write(6,*)' l_qc =      ',l_qc
@@ -255,9 +279,12 @@ cdis
 
         enddo ! i_tsnd
 
+!       Read ACARS Temps
+
         call analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd
      1      ,weight_bkg_const                                  ! Input
      1      ,grid_spacing_m,max_snd_grid                       ! Input
+     1      ,temp_obs,max_obs                                  ! Input
      1      ,r_missing_data                                    ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
@@ -274,6 +301,7 @@ cdis
         subroutine analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd     
      1      ,weight_bkg_const                                  ! Input
      1      ,grid_spacing_m,max_snd_grid                       ! Input
+     1      ,temp_obs,max_obs                                  ! Input
      1      ,r_missing_data                                    ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
 
@@ -298,6 +326,8 @@ cdis
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
 
         logical l_good_tsnd(max_snd_grid),l_analyze(nk)
+
+        include 'tempobs.inc'
 
         write(6,*)
         write(6,*)' Subroutine analyze_tsnd'
