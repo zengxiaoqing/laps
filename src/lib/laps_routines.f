@@ -2413,3 +2413,84 @@ c	15 May 1991 Birkenheuer
       return
       end
 c
+
+	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
+     &                          lapse_td,redpres,ref_lvl,badflag)
+c
+c
+c================================================================================
+c   This routine is designed to reduce the mesonet plains stations' pressure
+C   reports to the elevation of the Boulder mesonet station, namely 1612 m.  The
+C   hydrostatic equation is used to perform the reduction, with the assumption
+C   that the mean virtual temperature in the layer between the station in ques-
+C   tion and Boulder can approximated by the station virtual temperature.  This
+C   is a sufficient approximation for the mesonet plains stations below about
+C   7000 ft.  For the mountain and higher foothill stations (Estes Park,
+C   Rollinsville, Ward, Squaw Mountain, and Elbert), a different technique needs
+C   to be utilized in order to decently approximate the mean virtual temperature
+C   in the layer between the station and Boulder. Ideas to do this are 1) use
+C   the free air temperature from a Denver sounding, or 2) use the data from
+C   each higher station to construct a vertical profile of the data and iterate
+C   downward to Boulder.
+
+C	D. Baker	 2 Sep 83  Original version.
+C	J. Wakefield	 8 Jun 87  Changed ZBOU from 1609 to 1612 m.
+c	P. Stamus 	27 Jul 88  Change ranges for good data tests.
+c	P. Stamus	05 Dec 88  Added lapse rate for better computation
+c	 				of mean virtual temps.
+c			19 Jan 89  Fixed error with lapse rates (sheeze!)
+c			19 Dec 89  Change reduction to 1500 m.
+c			20 Jan 93  Version with variable reference level.
+c                       25 Aug 97  Changes for dynamic LAPS.
+c       P. Stamus       15 Nov 99  Change checks of incoming values so the
+c                                    AF can run over Mt. Everest and Antarctica.
+c
+c       Notes:  This routine may or may not be giving reasonable results over
+c               extreme areas (Tibet, Antarctica).  As noted above, there are
+c               questions about use of the std lapse rate to do these reductions.
+c               15 Nov 99
+c
+c================================================================================
+c
+	implicit none
+	real lapse_t, lapse_td, temp, dewp, pres, elev, redpres, ref_lvl
+	real badflag
+	real gor, ctv
+	parameter(gor=0.03414158,ctv=0.37803)
+	real dz, dz2, t_mean, td_mean, td, e, tkel, tv, esw
+!	DATA GOR,ZBOU,CTV/.03414158,1612.,.37803/
+!	data gor,ctv/.03414158,.37803/
+		!GOR= acceleration due to gravity divided by the dry air gas
+		!     constant (9.8/287.04)
+		!F2M= conversion from feet to meters
+		! *** zbou is now the standard (reduction) level 12-19-89 ***
+		!CTV= 1-EPS where EPS is the ratio of the molecular weight of
+		!     water to that of dry air.
+
+
+C** Check input values......good T, Td, & P needed to perform the reduction.
+cc	if(dewp.gt.temp .or. pres.le.620. .or. pres.gt.1080. .or.
+cc     &      temp.lt.-30. .or. temp.gt.120. .or. dewp.lt.-35. .or.
+cc     &      dewp.gt.90.) then
+	if(dewp.gt.temp .or. pres.le.275. .or. pres.gt.1150. .or.
+     &      temp.lt.-130. .or. temp.gt.150. .or. dewp.lt.-135. .or.
+     &      dewp.gt.100.) then
+	   print *,' Warning. Bad input to reduce_p routine.'
+	   redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
+	   return
+	endif
+
+	dz= elev - ref_lvl	!thickness (m) between station & reference lvl
+	dz2 = 0.5 * dz		! midway point in thickness (m)
+	t_mean = temp - (lapse_t * dz2)	! temp at midpoint (F)
+	td_mean = dewp - (lapse_td * dz2)	! dewpt at midpoint (F)
+	TD= 0.55556 * (td_mean - 32.)		! convert F to C
+	e= esw(td)		!saturation vapor pressure
+	tkel= 0.55556 * (t_mean - 32.) + 273.15	! convert F to K
+	tv= tkel/(1.-ctv*e/pres)	!virtual temperature
+
+	redpres= pres*exp(gor*(dz/tv))	!corrected pressure
+c
+	return
+	end
+c
