@@ -9,13 +9,16 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$qsubproj,$followup,$LAPS_SRC_ROOT,$webdir);
-my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT, # (required)
-                        "dataroot=s" => \$LAPS_DATA_ROOT,     # (required)
-                        "schedtime=s" => \$schedtime,         # e.g. 20,50 (optional)
-                        "numfiles=s" => \$numfiles,           # number of files to keep with purger (optional)
-                        "qsubproj=s" => \$qsubproj,           # qsub project (if qsub is being used)
-                        "followup=s" => \$followup);          # domain name for running followup_ncarg.com script (optional - FSL only)
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$REMOTE_DATA_ROOT,$schedtime,$numfiles,$qsubproj,$followup,$LAPS_SRC_ROOT,$webdir);
+my $result = GetOptions(
+   "installroot=s" => \$LAPSINSTALLROOT, # (required)
+   "dataroot=s" => \$LAPS_DATA_ROOT,     # (required)
+   "schedtime=s" => \$schedtime,         # e.g. 20,50 (optional)
+   "qsubproj=s" => \$qsubproj,           # qsub project (if qsub is being used)
+   "followup=s" => \$followup,           # domain name for running followup_ncarg.com script (optional - FSL only)
+   "remoteroot=s" => \$REMOTE_DATA_ROOT, # needed with followup on a remote machine
+   "numfiles=s" => \$numfiles            # number of files to keep with purger (optional, except needed with followup on a remote machine)
+                                         );          
 
 print "Starting cronfile.pl...\n";
 
@@ -68,7 +71,14 @@ if(-e "$LAPS_DATA_ROOT/cronfile"){
        if( /\@followup\@/ ){
            if(defined($followup)){
                $webdir="/usr/nfs/common/lapb/www";
-               s/\@followup\@/\; $webdir\/followup_ncarg.com $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $webdir\/followup_$followup\.log 2> $webdir\/followup_$followup\.err /;
+               if(-d "$webdir"){ # We're on gizmo, run followup_ncarg.com
+                   s/\@followup\@/\; $webdir\/followup_ncarg.com $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $webdir\/followup_$followup\.log 2> $webdir\/followup_$followup\.err /;
+
+               }else{            # We're on a remote machine, run followup_ncarg_remote.sh
+                   s/\@followup\@/\; $LAPSINSTALLROOT\/etc\/followup_ncarg_remote.sh $LAPS_DATA_ROOT $REMOTE_DATA_ROOT $followup $numfiles 1> $LAPS_DATA_ROOT\/followup_$followup\.log 2> $LAPS_DATA_ROOT\/followup_$followup\.err /;
+
+               }
+
            }else{
                s/\@followup\@/ /;
            }
