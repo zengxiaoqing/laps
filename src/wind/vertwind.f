@@ -37,7 +37,8 @@ cdis
 cdis   
 cdis
 
-        subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk         ! I
+        subroutine vert_wind(uanl,vanl                              ! I ! /O
+     1          ,u_sfc,v_sfc,ni,nj,nk                               ! I
      1          ,wanl                                               ! O
      1          ,topo,lat,lon,grid_spacing_m                        ! I
      1          ,rk_terrain,r_missing_data,l_grid_north             ! I
@@ -229,6 +230,8 @@ cdis
 
                 if(k .lt. k_terr)then !
                     wanl(i,j,k) = r_missing_data
+!                   uanl(i,j,k) = 0.
+!                   vanl(i,j,k) = 0.
 
                 elseif(k .eq. k_terr)then !
                     wsum(i,j)   = terrain_w(i,j)
