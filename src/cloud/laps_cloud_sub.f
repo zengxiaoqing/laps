@@ -111,7 +111,7 @@ cdis
 
         parameter       (thresh_cvr_smf = 0.65) ! Used to "binaryize" cloud cover
 
-        parameter       (default_clear_cover = .01)
+        parameter       (default_clear_cover = .001)
 
         real*4 thresh_cvr_base,thresh_cvr_top,thresh_cvr_ceiling
         parameter (thresh_cvr_base = 0.1)
