@@ -57,7 +57,7 @@ print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
 print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
 print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
 
-@profiletypes = qw(RASS RAOB DROPSND TOWER RADIOMTR);
+@profiletypes = qw(RASS RAOB DROPSND TOWER RADIOMTR GOES12);
 foreach $profiletype (@profiletypes) {
 # Print $profiletype (only if present)
   $i=0; $iprint=0; $ihead=0;
