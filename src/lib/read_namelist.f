@@ -78,7 +78,7 @@ cdoc  Reads static/sat_sounder.nl file.
 c
 c-----------------------------------------------------------
 c
-      subroutine get_balance_nl(lrunbal,gamo,delo,istatus)
+      subroutine get_balance_nl(lrunbal,istatus)
 c
 cdoc  Reads static/balance.nl file.
 
@@ -87,12 +87,11 @@ cdoc  Reads static/balance.nl file.
       integer    istatus
       integer    len_dir
       logical    lrunbal
-      real*4     gamo,delo
       character  nest7grid*150
 
       include   'grid_fname.cmn'       !grid_fnam_common
 
-      namelist /balance_nl/lrunbal,gamo,delo
+      namelist /balance_nl/lrunbal
 
       istatus = 0
 
@@ -204,8 +203,12 @@ c
 c --- OSSE namelist reader ---
 c
       subroutine get_osse_information(path_to_model,
+     1                                cmodel,
      1                                c_obs_types,
      1                                n_sim_obs,
+     1                                a9_time_init,
+     1                                a4_time_fcst,
+     1                                ifcst_intrvl,
      1                                istatus)
 c
 cdoc  Reads static/osse.nl file.
@@ -218,12 +221,17 @@ cdoc  Reads static/osse.nl file.
       integer        istatus
       integer        len_dir
       integer        i,n_sim_obs
+      integer        ifcst_intrvl
 
       character      nest7grid*150
       character      path_to_model*150
       character      c_obs_types(max_ob_types)*15
+      character      a9_time_init*9
+      character      a4_time_fcst*4
+      character      cmodel*3
 
-      namelist /osse_nl/path_to_model,c_obs_types
+      namelist /osse_nl/path_to_model,cmodel,c_obs_types,
+     1a9_time_init,a4_time_fcst,ifcst_intrvl
 
       istatus = 0
 
