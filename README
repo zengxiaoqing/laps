@@ -1888,7 +1888,8 @@ since 3 layers are routinely available from NESDIS.
    statistics, you can run a series of perl scripts located in
    '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind3d.pl', 'temp.pl', 
    'hum3d.pl', and 'cloud.pl'. These scripts operate mainly by distilling other
-   log file output.
+   log file output. The output from these scripts is also stored in the files
+   '$LAPS_DATA_ROOT/log/*.wgi.yydddhhmm'.   
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
