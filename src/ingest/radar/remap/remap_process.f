@@ -43,6 +43,7 @@ cdis
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
      :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
      :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
+     1         lat,lon,topo,                               !           (local)
      1         i_scan_mode,                                !           (input)
      :         Slant_ranges_m,                             !           (input)
      :         n_rays,                                     !           (input)
@@ -131,7 +132,6 @@ c
       character*150 dir
 
       character*9 a9time
-      character*4 fhh
       character*31 ext,ext_in
       character*3 var_a(max_fields)
       character*125 comment_a(max_fields)
@@ -159,18 +159,24 @@ c
 
       real*4 r_missing_data
 
-      real*4 lat(NX_L,NY_L)
-      real*4 lon(NX_L,NY_L)
-      real*4 topo(NX_L,NY_L)
+      real*4 lat(NX_L,NY_L)      
+      real*4 lon(NX_L,NY_L)      
+      real*4 topo(NX_L,NY_L)     
+      real*4 dum_2d(NX_L,NY_L)   ! Local
+      integer*4 k_eff(NX_L,NY_L) ! Local
 c
-      logical l_unfold, l_compress_output
+      logical l_unfold, l_compress_output, l_domain_read
+      save l_domain_read
+      data l_domain_read /.false./
 c 
-      real*4 avgvel,vel_nyquist,vel_value,ref_value
+      real*4 avgvel,vel_nyquist,vel_value,ref_value,lat_dum,lon_dum
       real*4 v_nyquist_tilt(max_tilts)
       real*4 v_nyquist_vol
-      real*4 gate_spacing_m_ret
+      real*4 gate_spacing_m_ret,grid_spacing_cen_m
+      real*4 height_grid,range_dum,range_new,azimuth,elevation_dum
+      real*4 height_guess
 c
-      integer i,j,k,k_low,ielev,igate_lut
+      integer i,j,k,k_low,ielev,igate_lut,iter
       integer nazi,iran
       integer num_sweeps,n_rays,n_gates,n_obs_vel,n_output_data,nf
       integer igate_max
@@ -257,9 +263,7 @@ c
         k_low = int(height_to_zcoord(rheight_radar,i_status))
         k_low = max(k_low,1)
 
-      END IF
-
-      I4_elapsed = ishow_timer()
+      END IF ! initialize for 1st scan
 
 c     Former location of 'read_data_88d' call
       IF (i_status_tilt .ne. 1) GO TO 998 ! abnormal return
@@ -268,13 +272,6 @@ c
 c
       write(6,*)' REMAP_PROCESS > vel_nyquist for this tilt = '
      :        ,i_tilt,vel_nyquist
-c
-c     Find elevation index in look up table
-c
-      ielev = nint((elevation_deg * LUT_ELEVS)/MAX_ELEV)
-      ielev = max(ielev,0)
-      ielev = min(ielev,LUT_ELEVS)
-      write(6,*)' REMAP_PROCESS > elev index = ',ielev
 c
 c     Compute max range from elevation angle
 c
@@ -294,6 +291,75 @@ c
  809  format
      :(' REMAP_PROCESS > i_scan_mode,n_gates,igate_max,elevation = '
      :                                                 ,i3,2i5,f5.1)
+
+!     Calculate effective range/height at grid point centers (done iteratively)
+      
+!     First read domain grid info if needed
+      if(.not. l_domain_read)then
+          call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
+     1                           ,dum_2d,grid_spacing_cen_m
+     1                           ,istatus)
+          if(istatus .ne. 1)return
+          l_domain_read = .true.
+      endif
+
+      I4_elapsed = ishow_timer()
+
+      write(6,*)' REMAP_PROCESS > calculate k_eff array'
+
+      height_guess = height_max
+
+      DO j = 1,NY_L
+      DO i = 1,NX_L
+!         Use guessed height to obtain initial range value
+          call latlon_to_radar(lat(i,j),lon(i,j),height_guess           ! I
+     1                        ,azimuth,range_new,elevation_dum          ! O
+     1                        ,rlat_radar,rlon_radar,rheight_radar)     ! I  
+
+          iter = 0
+
+          if(range_new .le. rmax)then
+
+            range_dum = r_missing_data
+
+!           Converge on height where radar beam hits the grid point
+            do while (abs(range_dum-range_new).gt.10. .and. iter.lt.10)          
+              range_dum = range_new
+
+!             Obtain height where radar beam hits grid point
+              call radar_to_latlon(lat_dum,lon_dum,height_grid          ! O
+     1                            ,azimuth,range_dum,elevation_deg      ! I
+     1                            ,rlat_radar,rlon_radar,rheight_radar) ! I
+
+!             Use corrected height to obtain more accurate range
+              call latlon_to_radar(lat(i,j),lon(i,j),height_grid        ! I
+     1                            ,azimuth,range_new,elevation_dum      ! O
+     1                            ,rlat_radar,rlon_radar,rheight_radar) ! I  
+
+              iter = iter + 1
+
+              height_guess = height_grid
+
+            enddo 
+
+            k_eff(i,j) = nint(height_to_zcoord(height_grid,i_status))
+
+          else
+            k_eff(i,j) = r_missing_data
+
+          endif
+
+      ENDDO
+      ENDDO
+
+      I4_elapsed = ishow_timer()
+c
+c     Find elevation index in look up table
+c
+      ielev = nint((elevation_deg * LUT_ELEVS)/MAX_ELEV)
+      ielev = max(ielev,0)
+      ielev = min(ielev,LUT_ELEVS)
+      write(6,*)' REMAP_PROCESS > elev index = ',ielev
 
       I4_elapsed = ishow_timer()
 
@@ -343,7 +409,13 @@ c
 
             i = azran_to_igrid_lut(nazi,iran)
             j = azran_to_jgrid_lut(nazi,iran)
-            k = gate_elev_to_z_lut(igate_lut,ielev)
+
+            if(k_eff(i,j) .ne. r_missing_data)then
+                k = k_eff(i,j)
+                k = gate_elev_to_z_lut(igate_lut,ielev)
+            else
+                k = gate_elev_to_z_lut(igate_lut,ielev)
+            endif
 
             IF (i .eq. 0 .OR. j.eq.0 .OR. k.eq.0 ) GO TO 180
 
