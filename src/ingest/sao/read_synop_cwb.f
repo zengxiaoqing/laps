@@ -14,7 +14,7 @@
 
       character*(*)  filename
       character(25)  prsWth(maxobs)
-      character(20)  path_to_local
+      character*(*)  path_to_local
       character(13)  cvt_i4time_wfo_fname13,a13time_eat
       character(9)   a9time
       character(8)   skyCvr(maxSkyCvr,maxobs)
