@@ -478,7 +478,7 @@ c
  910  format(1x,'Max:',g12.4,' @ ',i4,',',i4,2x,'Min:',g12.4,' @ ',
      &       i4,',',i4)
 c
-	write(6,920) z_max, z_min, range
+!       write(6,920) z_max, z_min, range
  920	format(1x,'Z-Max:',g12.4,2x,'Z-Min:',g12.4,2x,'Range:',g12.4)
 c
 c.... That's it.  Let's go home.
