@@ -1,8 +1,8 @@
 
        subroutine read_laps_compressed(i4time,dir,ext,
-     1                    iimax,jjmax,kkmax,kdim,
+     1                    iimax,jjmax,kdim,
      1                    var_req,lvl_req,lvl_coord_req,
-     1                    units_req,comment_req,data,istatus)
+     1                    units_req,comment_req,data_o,istatus)
 
 C**********************************************************************
 C
@@ -19,8 +19,12 @@ C
 C**********************************************************************
 C
 C
+
+      integer nf
+      parameter (nf=3)
+
       integer*4       i4time,              !INPUT I4time of data
-     1                iimax,jjmax,kkmax,   !INPUT # cols, # rows, # fields
+     1                iimax,jjmax,         !INPUT # cols, # rows
      1                kdim,                !INPUT K dimension of DATA array
      1                lvl_req(kdim),       !INPUT Requested levels
      1                istatus              !OUTPUT
@@ -29,9 +33,10 @@ C
       character*(*)   var_req(kdim)        !INPUT 3 letter ID of requested fields
       character*(*)   lvl_coord_req(kdim)  !OUTPUT Vertical coordinate of fields
       character*(*)   units_req(kdim)      !OUTPUT Units of requested fields
-      character*(*)   comment_req(kdim)    !OUTPUT Comments for requested fields
-      real*4        data(iimax,jjmax,kdim) !OUTPUT data
-      real*4        array(iimax*jjmax*kdim,2) !LOCAL Compressed array
+      character*(*)   comment_req(kdim*nf) !OUTPUT Comments for requested fields
+      real*4        data_o(iimax,jjmax,kdim)       !OUTPUT data
+      real*4        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
+      real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
 C
       integer*4 fn_length,
      1          i_reftime,              !UNIX time of data
@@ -96,13 +101,26 @@ C
       call open_lapsprd_file(lun,i4time,ext,istatus)
       if(istatus .ne. 1)goto 950
 
-      read(lun,*)kdim
+      read(lun,*)kkdim
 
-      do k = 1,kdim
+      if(kkdim .ne. kdim * nf)then
+          write(6,*)kkdim,kdim*nf
+          go to 980
+      endif
+
+      write(6,*)' Reading comments, length = ',comm_len
+      do k = 1,kkdim
           read(lun,*)comment_req(k)
+          write(6,*)comment_req(k)
       enddo ! k
 
       read(lun,*)n_cmprs
+
+      allocate(array(n_cmprs,2),STAT=istat_alloc)
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate array'
+          stop
+      endif
 
       icheck_sum = 0
 
@@ -114,10 +132,47 @@ C
 
       close(lun)
 
+      ngrids = iimax*jjmax*kdim*nf
+
       if(icheck_sum .ne. ngrids)then
           write(6,*)icheck_sum, ngrids
           go to 980
       endif
+
+!     Decode the data 
+      write(6,*)' Decoding the data'
+
+      n_cmprs_max = ngrids
+
+      call runlength_decode(ngrids,n_cmprs_max,n_cmprs,array    ! I
+     1                     ,data_l                              ! O
+     1                     ,istatus)                            ! O
+      deallocate(array)
+      if(istatus .ne. 1)goto 970
+
+!     Position the data into the proper 3-D array
+      if(var_req(1) .eq. 'REF')then
+          ifield = 1
+      elseif(var_req(1) .eq. 'VEL')then
+          ifield = 2
+      elseif(var_req(1) .eq. 'NYQ')then
+          ifield = 3
+      else
+          write(6,*)' ERROR: unknown variable requested ',var_req
+          goto930
+      endif
+
+      do k = 1,kdim
+!         Assign Level Coord?
+!         Assign Units?
+
+          do i = 1,imax
+          do j = 1,jmax
+              data_o(i,j,k) = data_l(i,j,k,ifield)
+          enddo ! j
+          enddo ! i
+
+      enddo ! k      
 C
 C ****  Return normally.
 C
@@ -137,7 +192,7 @@ C
         goto 999
 C
 970     if (flag .ne. 1)
-     1    write (6,*) 'Error retrieving data...read aborted.'
+     1    write (6,*) 'Error decoding data...read aborted.'
         istatus=error(2)
         goto 999
 C
@@ -159,47 +214,31 @@ C
         END
 
 
-        subroutine runlength_decode(ngrids,n_cmprs_max,data   ! I
-     1                             ,n_cmprs,array,istatus)    ! O
-
-!       Still needs to be reworked from original 'encode' routine
+        subroutine runlength_decode(ngrids,n_cmprs_max,n_cmprs,array    ! I
+     1                     ,data                                        ! O
+     1                     ,istatus)                                    ! O
 
         real*4 array(n_cmprs_max,2)
         real*4 data(ngrids)
 
 !       Setup for first point
-        n_cmprs = 0
-        i_count_same = 1
+        i_end = 0
 
-        do i = 2,ngrids-1
+        do i = 1,n_cmprs
+            i_start = i_end + 1
+            i_end = i_start + array(i,1) - 1
 
-            if(data(i) .eq. data(i-1))then    
-                i_count_same = i_count_same + 1
-            else
-                n_cmprs = n_cmprs + 1
-                array(n_cmprs,1) = i_count_same
-                array(n_cmprs,2) = data(i-1)
-                i_count_same = 1
-            endif
-
+            do ii = i_start,i_end
+                data(ii) = array(i,2)
+            enddo ! ii
         enddo ! i
 
-!       Take care of the last point
-        i = ngrids
-
-        if(data(i) .eq. data(i-1))then    
-            i_count_same = i_count_same + 1
-        else
-            i_count_same = 1
+        if(i_end .ne. ngrids)then
+            write(6,*)' Error in runlength_decode',i_end,ngrids
+            istatus = 0
+            return
         endif
 
-        n_cmprs = n_cmprs + 1
-        array(n_cmprs,1) = i_count_same
-        array(n_cmprs,2) = data(i)
-
-        write(6,*)' End of runlength_encode, number of pts = '
-     1           ,n_cmprs,ngrids       
-        write(6,*)' Compression ratio = ',float(n_cmprs)/float(ngrids)
-
+        istatus = 1
         return
         end
