@@ -18,16 +18,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
+# This script runs LAPS analyses. The default is for realtime operation.
 #
-
+# Command line arguments (optional)
+#
+# -t                   Run for archive time, specified by number of seconds since
+#                      Jan 1 1970 at 0000 UTC
+#             
+# -d                   Delay in hours (lag time or displaced real-time)
+#
+# -r -m NN             where "NN" is the number of files to be kept can control the
+#
+# second to last arg   $LAPS_ROOT, one level above bin directory
+#
+# last arg             $LAPS_DATA_ROOT, path to data directory
+#                      purger (see call to purger.pl)
+#
+              
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_r $opt_m);
+use vars qw($opt_d $opt_c $opt_t $opt_r $opt_m);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:rm:');
-
+getopts('d:c:t:rm:');
 
 my $initial_time = time();
 #
@@ -59,18 +73,21 @@ my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time_cmn');
 $cycle_time[0]=~/^(\d+),/;
 my $cycle_time = ($1>0)?$1:3600;
-
-
 $cycle_time = $opt_c if($opt_c>0);
+
 my $delay_time = 0;
 $delay_time = $opt_d if($opt_d > 0);
+
+my $archive_time = 0;
+$archive_time = $opt_t if($opt_t > 0);
+#print "$opt_t $archive_time\n";
 
 #
 #  The second argument is the time delay in hours to 
 #  set the systime.dat file, if you're data arrives more than 1 hour 
 #  behind it's valid time set this variable to delay the laps cycle.
 #
-&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time);
+&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 #
 # This sends the stdout to the run log file
 #
@@ -95,8 +112,6 @@ unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm"))
 open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
-
-
 
 my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
@@ -215,13 +230,26 @@ sub forksub{
 
 sub systime{
     use Time::Local;
-    my($DATAROOT,$delay,$cycle_time) = @_;
-    my $ctime = time - $delay*3600;
+    my($DATAROOT,$delay,$cycle_time,$archive_time) = @_;
+
+#   See if -t option was used to pass in archive time in calling routine
+    my $ctime = 0;    # Initial declaration outside the scope of the if test
+    if($archive_time > 0) {
+#       print "Archive data time is being set to a ctime of $archive_time...\n";
+        $ctime = $archive_time;
+    }else{
+#       print "Setting ctime based on clock time and delay of $delay in hours...\n";
+        $ctime = time - $delay*3600;
+    }
+
+#   print "ctime = $ctime\n";
+
     my($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
     my $yyyy = 1900+$year;
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
     $year= $year-100 if($year>99);
     $year='0'.$year if(length($year)<2);
+
 
 
 #
