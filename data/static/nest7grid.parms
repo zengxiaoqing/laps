@@ -89,9 +89,11 @@ c                   software testing at this time.
 c
 c c8_project_common - Depends on which "realization" of LAPS you are running.
 c                     This sends information to various programs on things
-c                     like file formats, filename conventions, etc.
-c                     Allowed values are 'NIMBUS', 'WFO', 'AFWA', 'CWB', 'RSA',
-c                     and 'AIRDROP'.
+c                     like file formats, filename conventions, etc. Most 
+c                     references to 'c8_project_common' are in the ingest
+c                     routines, though it also controls other specialized 
+c                     functions for 'AIRDROP'. Allowed values are 'NIMBUS', 
+c                     'WFO', 'AFWA', 'CWB', 'RSA', and 'AIRDROP'.
 c
 c radarext_3d_cmn - Determines input radar source for the cloud analysis.
 c                   Intermediate files used are already on the LAPS grid.
