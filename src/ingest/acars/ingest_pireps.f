@@ -66,7 +66,7 @@
 !     Open output PIN file
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
-          call open_lapsprd_file(11,i4time,ext(1:3),istatus)
+          call open_ext(31,i4time,ext(1:3),istatus)
           if(istatus .ne. 1)then
               write(6,*)' Error opening output file'
               go to 999
@@ -105,7 +105,7 @@
       enddo
 
 
-      close(11) ! Output PIN file
+!     close(11) ! Output PIN file
 
  999  continue
 

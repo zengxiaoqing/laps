@@ -1,11 +1,6 @@
 
       subroutine ingest_acars(istatus)
 
-!     Ken Dritz      15-Jul-1997        Added call to get_grid_dim_xy to get
-!                                       the values of NX_L, NY_L
-!     Ken Dritz      15-Jul-1997        Pass NX_L, NY_L to get_acars_data
-!     Steve Albers      Dec-1997        Call to 'open_lapsprd_file_append'
-
 !     Input file 
       character*170 filename_in
       character*9 a9_time
@@ -105,7 +100,7 @@
 !     Open output PIN file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
-          call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)       
+          call open_ext(31,i4time_sys,ext(1:3),istatus)       
       else
           write(6,*)' No raw data files identified:',' *.',ext_in
           goto999
@@ -169,7 +164,7 @@
           endif
       enddo
 
- 990  close(11) ! Output PIN file
+!990  close(11) ! Output PIN file
 
       go to 999
 
