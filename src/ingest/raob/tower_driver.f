@@ -200,7 +200,7 @@ c
      &                      provider, laps_cycle_time, jstatus)
 
 	if(jstatus .ne. 1) then
-	   print *, ' WARNING. Bad status return from GET_LOCAL_...'
+	   print *, ' jstatus=0 returned from get_local_towerobs...'
 	   print *,' '
 	endif
 

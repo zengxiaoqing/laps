@@ -199,8 +199,15 @@ c      ----------       examing data quality and changing units       ---------
 100   continue
 
       do 900 i= 1,inNum
-         write (11,*) wmoId(i), elevation(i), latitude(i), longitude(i),
-     ~                a9time(i), layerNum(i)
+!        write (11,*) wmoId(i), elevation(i), latitude(i), longitude(i),
+!    ~                a9time(i), layerNum(i)
+
+         write(6,511)
+     1             wmoId(i),layerNum(i)
+     1            ,latitude(i),longitude(i),elevation(i)
+     1            ,'     '             ! Station name (if known)       
+     1            ,a9time_raob,'RAOB'
+  511    format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
          do 900 j= 1,layerNum(i)
             write (11,*) height(i,j), pressure(i,j), temperature(i,j),

@@ -615,7 +615,7 @@ c
 c
  990     continue               ! no data available
          jstatus = 0
-         print *,' WARNING: No data available from GET_LOCAL_OBS'
+         print *,' No data available from GET_LOCAL_TOWEROBS'
          return
 c
          end
