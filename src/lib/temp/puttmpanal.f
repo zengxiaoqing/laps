@@ -112,7 +112,7 @@ cdis
         endif
 
         do k = 1,nk
-            height(k) = height_of_level(k)
+            height(k) = height_of_level(k)              ! Standard Atmosphere
         enddo
 
 !       Initialize diagnostic variables
@@ -269,7 +269,8 @@ cdis
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
             k_sfc = int(rk_sfc)
             if(k_sfc .lt. 1 .or. k_sfc .ge. nk)then
-                write(6,*)' Error, k_sfc/rk_sfc = ',k_sfc,rk_sfc
+                write(6,*)' Error, k_sfc/rk_sfc/p_sfc = '
+     1                    ,k_sfc,rk_sfc,pres_sfc_pa(i,j)
                 istatus = 0
                 return
             endif
@@ -350,8 +351,8 @@ cdis
 
             pres_top_pa = pres_sfc_pa(i,j) - blayer_thk_pres
 
-            height_top = psatoz(pres_top_pa      * .01)
-            height_sfc = psatoz(pres_sfc_pa(i,j) * .01)
+            height_top = psatoz(pres_top_pa      * .01)   ! Standard Atmosphere
+            height_sfc = psatoz(pres_sfc_pa(i,j) * .01)   ! Standard Atmosphere
 
             rk_top = zcoord_of_pressure(pres_top_pa)
             k_top = int(rk_top)
@@ -360,7 +361,8 @@ cdis
 
             do k = 1,k_top
 
-                frac_bias = (height_top - height(k)) / 
+!               A Standard Atmosphere calculation is probably sufficient
+                frac_bias = (height_top - height(k)) /    
      1                      (height_top - height_sfc)
 
 !               Potential mod for AFWA concerns - apply reverse ramp underground
