@@ -1764,7 +1764,8 @@ long *status;
             return;
           }
         }
-        else { /* file is there....open it */
+        else { /* file is there....10/14/97 write over it anyway*/
+          system(syscmd); /* added 10/14/97 */
           cdfid = ncopen(filename,NC_WRITE);
           if (cdfid == -1) {    /* error opening file */ 
             printf("File %s exists, but cannot be opened.\n",filename);
@@ -1775,12 +1776,13 @@ long *status;
           }
         }
 
+        free_file_var(syscmd, filename);
+
 /* set i_record to value returned by ncdiminq */
 
         if ((dim_id = ncdimid(cdfid,"record")) == (-1)) {
 	  *status = -2; /* error in file creation */ 
           ncclose(cdfid);
-          free_file_var(syscmd, filename);
           free(ext);
           return;
         }
@@ -1788,7 +1790,6 @@ long *status;
         if ((istatus = ncdiminq(cdfid,dim_id,(char *)0,(long *)&num_record)) == (-1)) {
 	  *status = -2; /* error in file creation */ 
           ncclose(cdfid);
-          free_file_var(syscmd, filename);
           free(ext);
           return;
         }
@@ -1801,7 +1802,6 @@ long *status;
             *status = -6;
             ncclose(cdfid);
             free(ext);
-            free_file_var(syscmd, filename);
             return; 
           }
         }
@@ -1818,7 +1818,6 @@ long *status;
                                         lc3_levels, lm1_levels);
         if (istatus == -1) {
           *status = -3;
-          free_file_var(syscmd, filename);
           free(ext);
           return;
         }
@@ -1869,7 +1868,6 @@ long *status;
         if (istatus == -1) {
 	  *status = -5; /* error writing out header */ 
           ncclose(cdfid);
-          free_file_var(syscmd, filename);
           free(ext);
           free_write_var(var, comment, asctime, comm_var, inv_var);
           return;
@@ -1911,7 +1909,6 @@ long *status;
             if (istatus == -1) {
 	      *status = -5; /* error writing out header */ 
               ncclose(cdfid);
-              free_file_var(syscmd, filename);
               free(ext);
               free_write_var(var, comment, asctime, comm_var, inv_var);
               return;
