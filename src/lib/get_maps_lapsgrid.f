@@ -54,23 +54,15 @@ cdis
 !                                ext_f, field_3d_maps, l_fill, field_3d_maps_1,
 !                                field_3d_maps_2
 !
+!       Feb 1999 John Smart    - Add subroutine get_modelfg_3d_sub which allows
+!                                specific model extension.
+!
 
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
-        character*3 var_2d
-        character*9 a9_time
-        character*13 a_filename
-
-        character*125 comment_2d
-        character*10 units_2d
-
-        character*31 ext,ext_a
-        character*150  directory
-        character*255 c_filespec
-
-        integer*4 MAX_FILES
-        parameter (MAX_FILES = 300)
-        character c_fnames(MAX_FILES)*180
+        character*3  var_2d
+        character*9  a9_time
+        character*31 ext_a
 
 !       ****************** RAMS SECTION ***************************************
 
@@ -95,103 +87,137 @@ cdis
             write(6,*)' Searching for model background valid at: '
      1                              ,a9_time,' ',ext_a(1:6),var_2d
 
+            call get_modelfg_3d_sub(i4time_needed,var_2d,ext_a
+     1                       ,imax,jmax,kmax,field_3d_laps,istatus)
+
+            if(istatus.eq.1)then
+               print*,'file obtained in get_modelfg_3d_sub - return'
+               return
+            endif
+
+         enddo
+
+         return
+         end
+
 !***************** START NEW SECTION ******************************************
+! Start subroutine
 
-            call get_directory(ext_a,directory,len_dir)
-            c_filespec = directory(1:len_dir)//'*.'//ext_a(1:3)
+        subroutine get_modelfg_3d_sub(i4time_needed,var_2d,ext_a
+     1                         ,imax,jmax,kmax,field_3d_laps,istatus)
+!
+!
+        real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
-!           Obtain list of analysis/forecast filenames
-            call Get_file_names(c_filespec,
-     1                          i_nbr_files_ret,
-     1                          c_fnames,
-     1                          max_files,
-     1                          istatus )
+        character*(*) var_2d
+        character*9 a9_time
+        character*13 a_filename
 
-!           Determine which file having the proper valid time has the
-!           most recent initialization time.
+        character*125 comment_2d
+        character*10 units_2d
 
-            i_best_file = 0
-            i4_fcst_time_min = 9999999
+        character*31 ext,ext_a
+        character*150  directory
+        character*255 c_filespec
 
-            do i=1,i_nbr_files_ret
-                call get_directory_length(c_fnames(i),lend)
-                call get_time_length(c_fnames(i),lenf)
-                a_filename = c_fnames(i)(lend+1:lenf)
-                call get_fcst_times(a_filename,i4_initial,i4_valid
+        integer*4 MAX_FILES
+        parameter (MAX_FILES = 300)
+        character c_fnames(MAX_FILES)*180
+
+
+        call get_directory(ext_a,directory,len_dir)
+        c_filespec = directory(1:len_dir)//'*.'//ext_a(1:3)
+
+!       Obtain list of analysis/forecast filenames
+        call Get_file_names(c_filespec,
+     1                      i_nbr_files_ret,
+     1                      c_fnames,
+     1                      max_files,
+     1                      istatus )
+
+!       Determine which file having the proper valid time has the
+!       most recent initialization time.
+
+        i_best_file = 0
+        i4_fcst_time_min = 9999999
+
+        do i=1,i_nbr_files_ret
+            call get_directory_length(c_fnames(i),lend)
+            call get_time_length(c_fnames(i),lenf)
+            a_filename = c_fnames(i)(lend+1:lenf)
+            call get_fcst_times(a_filename,i4_initial,i4_valid
      1                             ,i4_fn)
-                if(i4_valid .eq. i4time_needed)then
-                    i4_fcst_time = i4_valid - i4_initial
+            if(i4_valid .eq. i4time_needed)then
+               i4_fcst_time = i4_valid - i4_initial
 
-                    if(i4_fcst_time .lt. i4_fcst_time_min)then
-                        i4_fcst_time = i4_fcst_time_min
-                        i_best_file = i
+               if(i4_fcst_time .lt. i4_fcst_time_min)then
+                  i4_fcst_time = i4_fcst_time_min
+                  i_best_file = i
 
-                        ext = ext_a
+                  ext = ext_a
 
-                    endif ! Smallest forecast time?
-                endif ! Correct valid time
-            enddo ! i
+               endif ! Smallest forecast time?
+            endif ! Correct valid time
+        enddo ! i
 
 
-            if(i_best_file .gt. 0)then ! File for this ext exists with proper
+        if(i_best_file .gt. 0)then ! File for this ext exists with proper
                                        ! valid time.
-                i = i_best_file
-                a_filename = c_fnames(i)(lend+1:lenf)
+           i = i_best_file
+           a_filename = c_fnames(i)(lend+1:lenf)
 
-                write(6,*)' Found file for: ',c_fnames(i)(lend+1:lenf)
-     1                                            ,' ',ext(1:6),var_2d
+           write(6,*)' Found file for: ',c_fnames(i)(lend+1:lenf)
+     1                                       ,' ',ext(1:6),var_2d
 
-                call get_fcst_times(a_filename,i4_initial,i4_valid
-     1                             ,i4_fn)
+           call get_fcst_times(a_filename,i4_initial,i4_valid
+     1                        ,i4_fn)
 
-                if(lenf - lend .eq. 9)then
-                    call get_laps_3d(i4_fn,imax,jmax,kmax,ext,var_2d
-     1                      ,units_2d,comment_2d,field_3d_laps,istatus)
+           if(lenf - lend .eq. 9)then
+              call get_laps_3d(i4_fn,imax,jmax,kmax,ext,var_2d
+     1                ,units_2d,comment_2d,field_3d_laps,istatus)
 
-                elseif(lenf - lend .eq. 13)then
-                    call get_lapsdata_3d(i4_initial,i4_valid,imax
-     1                      ,jmax,kmax,ext,var_2d
-     1                      ,units_2d,comment_2d,field_3d_laps,istatus)
+           elseif(lenf - lend .eq. 13)then
+               call get_lapsdata_3d(i4_initial,i4_valid,imax
+     1                 ,jmax,kmax,ext,var_2d
+     1                 ,units_2d,comment_2d,field_3d_laps,istatus)
 
-                else
-                    write(6,*)' Error, illegal length of lga filename'
-     1                      ,lend,lenf
-                    istatus = 0
+           else
+               write(6,*)' Error, illegal length of lga filename'
+     1                 ,lend,lenf
+               istatus = 0
 
-                endif
+           endif
 
-                if(istatus .ne. 1)then
-                    write(6,*)'get_modelfg_3d: Error reading 3-D file'
-                else ! istatus = 1
-                    call qc_field_3d(var_2d,field_3d_laps
-     1                              ,imax,jmax,kmax,istatus)            
-                endif
+           if(istatus .ne. 1)then
+              write(6,*)'get_modelfg_3d_sub: Error reading 3-D file'
+           else ! istatus = 1
+               call qc_field_3d(var_2d,field_3d_laps
+     1                         ,imax,jmax,kmax,istatus)            
+           endif
 
-            else ! i_best_file = 0
-                write(6,*)' No file with proper valid time'
-                istatus = 0
+       else ! i_best_file = 0
+           write(6,*)' No file with proper valid time'
+           istatus = 0
 
-            endif
+       endif
 
-            if(istatus .eq. 1)then
-                write(6,*)' Successfully obtained: '
-     1                             ,c_fnames(i)(lend+1:lenf),' '
-     1                             ,ext(1:6),var_2d
-                write(6,*)' Exiting get_modelfg_3d'
-                write(6,*)
-                return
-            else
-                write(6,*)' No good ',ext_a(1:6),' files available.'          
-            endif
+       if(istatus .eq. 1)then
+          write(6,*)' Successfully obtained: '
+     1                        ,c_fnames(i)(lend+1:lenf),' '
+     1                        ,ext(1:6),var_2d
+          write(6,*)' Exiting get_modelfg_3d_sub'
+          write(6,*)
+          return
+       else
+          write(6,*)' No good ',ext_a(1:6),' files available.'          
+       endif
 
-        enddo ! isource
+       write(6,*)
+       write(6,*)' No Good Files: exiting get_modelfg_3d_sub'
 
-        write(6,*)
-        write(6,*)' No Good Files: exiting get_modelfg_3d'
-
-        istatus = 0
-        return
-        end
+       istatus = 0
+       return
+       end
 
 
         subroutine get_fcst_times(a_filename,i4_initial,i4_valid,

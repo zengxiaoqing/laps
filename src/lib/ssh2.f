@@ -72,9 +72,9 @@ c                   (mb)
 c       trap the obvious error conditions
 
         if (td .gt. t) then
-                print *, 'error condition, td cannot be greater than t'
-                ssh2 = 0.0
-                return
+           print *, 'error condition, td greater than t '
+           ssh2 = 0.0
+           return
         endif
 
         if (td .lt. -200. ) then
