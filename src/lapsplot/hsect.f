@@ -2823,7 +2823,7 @@ c
      1                                 VAR_2d,k_mb,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
      1                                 rh_2d,istat_rh)
-            if(istat_rh .eq. 0 .and. istat_sh .eq. 0)then
+            if(istat_rh .ne. 1 .and. istat_sh .ne. 1)then
                 print*,' RH/SH not obtained from ',ext(1:3)
                 print*,'no plotting of data for requested time period'
                 goto1200
@@ -2850,7 +2850,7 @@ c                   cint = -1.
      1                            ,r_missing_data,laps_cycle_time)
 
                 elseif(qtype .eq. 'r')then
-                    if(istat_rh .eq. 0 .and. istat_sh .eq. 1)then
+                    if(istat_rh .ne. 1 .and. istat_sh .eq. 1)then
 
                         write(6,1635)
 1635                    format(10x
@@ -3213,7 +3213,9 @@ c                   cint = -1.
 !           K to F
             do i = 1,NX_L
             do j = 1,NY_L
-                field_2d(i,j) = k_to_f(field_2d(i,j))
+                if(field_2d(i,j) .ne. r_missing_data)then
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                endif
             enddo ! j
             enddo ! i
 
@@ -3232,10 +3234,10 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1       asc9_tim_t,c33_label,i_overlay,c_display
-     1       ,lat,lon,jdot,
-     1       NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,1e-0,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+     1                    ,lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'td' .or. c_type .eq. 'df'
      1                          .or. c_type .eq. 'dc')then

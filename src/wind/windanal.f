@@ -92,6 +92,7 @@
       real*4, allocatable, dimension(:,:,:) :: vobs_diff               ! Local
       real*4, allocatable, dimension(:,:,:) :: upass1                  ! Local
       real*4, allocatable, dimension(:,:,:) :: vpass1                  ! Local
+      real*4, allocatable, dimension(:,:,:) :: pres_3d                 ! Local
 
       real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
 
@@ -214,6 +215,15 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
           write(6,*)' ERROR: Could not allocate vobs_diff'
           stop
       endif
+
+      allocate( pres_3d(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate pres_3d'
+          stop
+      endif
+
+      call get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
+      if(istatus .ne. 1)return
 
       do j=1,jmax
       do i=1,imax
@@ -398,7 +408,7 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
 !       Spread the difference ob vertically
         call spread_vert(uobs_diff,vobs_diff,l_3d,iwrite
      1          ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)
-     1          ,wt_p,wt_p_spread,i,j,imax,jmax,kmax,istatus)
+     1          ,wt_p,wt_p_spread,pres_3d,i,j,imax,jmax,kmax,istatus)
 
         if(istatus .ne. 1)return
 
@@ -407,6 +417,7 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
 
       deallocate(uobs_diff)
       deallocate(vobs_diff)
+      deallocate(pres_3d)
 
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'
@@ -1367,7 +1378,7 @@ csms$ignore end
 
 
       subroutine spread_vert(uobs_in,vobs_in,l_3d,iwrite,uobs_out
-     1                      ,vobs_out,wt_p,weights,i,j
+     1                      ,vobs_out,wt_p,weights,pres_3d,i,j
      1                      ,imax,jmax,kmax,istatus)
 
 !     Modified 7/94 S. Albers to allow better handling of variable
@@ -1382,6 +1393,7 @@ csms$ignore end
       real*4 vobs_out(imax,jmax,kmax)
       real*4 wt_p(imax,jmax,kmax)                      ! Input
       real*4 weights(imax,jmax,kmax)                   ! Output (spread)
+      real*4 pres_3d(imax,jmax,kmax)                   ! Input
 
       real*4 PRESSURE_INTERVAL_L
 
@@ -1410,9 +1422,14 @@ csms$ignore begin
 
       if(l_3d)then
           vert_rad_pirep = 0
-          vert_rad_sfc = 0
-          vert_rad_cdw = 0
-          vert_rad_prof = 0
+          vert_rad_sfc   = 0
+          vert_rad_cdw   = 0
+          vert_rad_prof  = 0
+
+          vert_rad_pirep_s = 0
+          vert_rad_cdw_s   = 0
+          vert_rad_sfc_s   = 0
+          vert_rad_prof_s  = 0
 
       else
           call get_vert_rads   (vert_rad_pirep,
@@ -1422,10 +1439,17 @@ csms$ignore begin
      1                          istatus)
           if(istatus .ne. 1)return
 
-      endif
+          call get_pressure_interval(PRESSURE_INTERVAL_L,istatus)
+          if(istatus .ne. 1)return
 
-      call get_pressure_interval(PRESSURE_INTERVAL_L,istatus)
-      if(istatus .ne. 1)return
+          iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points
+                                                     ! looped in the vertical
+          vert_rad_pirep_s = vert_rad_pirep * iscale
+          vert_rad_cdw_s   = vert_rad_cdw   * iscale
+          vert_rad_sfc_s   = vert_rad_sfc   * iscale
+          vert_rad_prof_s  = vert_rad_prof  * iscale
+
+      endif
 
 !     Initialize the obs_out columns
       do k = 1,kmax
@@ -1434,18 +1458,16 @@ csms$ignore begin
           weights(i,j,k) = wt_p(i,j,k)
       enddo ! k
 
-      iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points
-                                                 ! looped in the vertical
-      vert_rad_pirep_s = vert_rad_pirep * iscale
-      vert_rad_cdw_s  = vert_rad_cdw  * iscale
-      vert_rad_sfc_s   = vert_rad_sfc   * iscale
-      vert_rad_prof_s  = vert_rad_prof  * iscale
-
       do k = 1,kmax
           if(weights(i,j,k) .eq. weight_pirep)then ! Spread this pirep vertically
               do kk = max(1,k-vert_rad_pirep_s)
      1               ,min(kmax,k+vert_rad_pirep_s)
-                  dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
+                  if(l_3d)then
+                      if(k .ne. kk)stop
+                      dist_pa = 0.
+                  else
+                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
+                  endif
                   if(weights(i,j,kk) .eq. r_missing_data)then
                       weights(i,j,kk) = weight_pirep
      1                  * exp(-(dist_pa/r0_vert_pirep))
@@ -1463,7 +1485,12 @@ csms$ignore begin
           if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
               do kk = max(1,k-vert_rad_cdw_s)
      1               ,min(kmax,k+vert_rad_cdw_s)
-                  dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
+                  if(l_3d)then
+                      if(k .ne. kk)stop
+                      dist_pa = 0.
+                  else
+                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
+                  endif
                   if(weights(i,j,kk) .eq. r_missing_data)then
                       weights(i,j,kk) = weight_cdw
      1                          * exp(-(dist_pa/r0_vert_cdw))
@@ -1481,7 +1508,12 @@ csms$ignore begin
           if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
               do kk = max(1,k-vert_rad_sfc_s)
      1               ,min(kmax,k+vert_rad_sfc_s)
-                  dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
+                  if(l_3d)then
+                      if(k .ne. kk)stop
+                      dist_pa = 0.
+                  else
+                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
+                  endif
                   if(weights(i,j,kk) .eq. r_missing_data)then
                       weights(i,j,kk) = weight_sfc
      1                          * exp(-(dist_pa/r0_vert_sfc))
@@ -1503,7 +1535,12 @@ csms$ignore begin
               if(weights(i,j,kp1) .eq. r_missing_data)then
 
                 do kk = kp1,min(kmax,k+vert_rad_prof_s)
-                  dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
+                  if(l_3d)then
+                      if(k .ne. kk)stop
+                      dist_pa = 0.
+                  else
+                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
+                  endif
                   if(weights(i,j,kk) .eq. r_missing_data)then
                       weights(i,j,kk) = weight_prof
      1                          * exp(-(dist_pa/r0_vert_prof))
@@ -1524,7 +1561,12 @@ csms$ignore begin
               if(weights(i,j,km1) .eq. r_missing_data)then
 
                 do kk = km1,max(1,k-vert_rad_prof_s),-1
-                  dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
+                  if(l_3d)then
+                      if(k .ne. kk)stop
+                      dist_pa = 0.
+                  else
+                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
+                  endif
                   if(weights(i,j,kk) .eq. r_missing_data)then
                       weights(i,j,kk) = weight_prof
      1                          * exp(-(dist_pa/r0_vert_prof))

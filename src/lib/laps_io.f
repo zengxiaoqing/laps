@@ -713,7 +713,7 @@ cdoc    Writes a 3-D grid. Inputs include the extension and time.
 
         call get_directory(ext,directory,len_dir)
 
-        write(6,11)directory,ext(1:5),var_2d
+        write(6,11)directory(1:min(len_dir,50)),ext,var_2d
 11      format(' Writing 3d ',a50,1x,a5,1x,a3)
 
         do k = 1,nk
@@ -766,7 +766,7 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
         call get_directory(ext,directory,len_dir)
 
         do l = 1,nf
-            write(6,11)directory,ext(1:5),var_2d(l)
+            write(6,11)directory(1:min(len_dir,50)),ext,var_2d(l)       
 11          format(' Writing 3d ',a50,1x,a5,1x,a3)
         enddo ! l
 

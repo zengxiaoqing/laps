@@ -30,12 +30,23 @@ cdis
 cdis 
 
 !       Data flags for LAPS analysis
-        logical L_profiler
-     1  ,laps_rotate_winds,l_derived_output,l_3pass
+        logical L_profiler,l_derived_output,l_3pass
         parameter (L_profiler = .true.)
-        parameter (laps_rotate_winds = .false.)! True North Winds
         parameter (l_derived_output = .true.)
         parameter (l_3pass = .true.)
 
         logical L_correct_unfolding
         parameter (L_correct_unfolding = .true.)
+
+!       If this is true, then we rotate the first guess and obs arrays to
+!       Grid North U+V just prior to the call to 'laps_anl'. 
+!       The winds are rotated back to True North after the 'laps_anl' call 
+!       and before the LW3 file is written out (depending on l_grid_north_out).
+
+        logical l_grid_north
+        logical l_grid_north_bkg, l_grid_north_anal, l_grid_north_out       
+        parameter (l_grid_north      = .true.)
+        parameter (l_grid_north_bkg  = .true.)
+        parameter (l_grid_north_anal = .true.)
+        parameter (l_grid_north_out  = .true.)
+

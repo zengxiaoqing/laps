@@ -7,10 +7,6 @@
         real*4 hor_radius
         parameter (hor_radius = 35.)
 
-!       integer MAX_PR,MAX_PR_LEVELS
-!       parameter (MAX_PR = 1500)
-!       parameter (MAX_PR_LEVELS = 128)
-
 !       Weights in wind analysis
         real*4 weight_cdw
         parameter (weight_cdw = 0.04)      ! 5 m/s instrument error
@@ -32,16 +28,4 @@
 
         integer iradar_cycle_time
         parameter (iradar_cycle_time = 600)
-
-!       If this is true, then we rotate the first guess and obs arrays to
-!       Grid North U+V just prior to the call to 'laps_anl'. 
-!       The winds are rotated back to True North after the 'laps_anl' call 
-!       and before the LW3 file is written out (depending on l_grid_north_out).
-
-        logical l_grid_north
-        logical l_grid_north_bkg, l_grid_north_anal, l_grid_north_out       
-        parameter (l_grid_north      = .true.)
-        parameter (l_grid_north_bkg  = .true.)
-        parameter (l_grid_north_anal = .true.)
-        parameter (l_grid_north_out  = .true.)
 

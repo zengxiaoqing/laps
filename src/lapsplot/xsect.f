@@ -272,8 +272,6 @@ cdis
      1     -105.03,-104.76,-105.19,-104.64,-104.34, -97.60, -94.60,
      1      -97.43, -93.65, -98.32,-106.87/
 
-        character*80 c80_domain
-
 !       sizem = 1.0
         sizel = 2.0
 
@@ -388,7 +386,7 @@ c read in laps lat/lon and topo
             xlow = 1.
             xhigh = NX_L
 
-            if(c80_domain(1:4) .eq. 'nest')then
+            if(.true.)then
                 write(6,111)NY_L,NY_L/2+1,NY_L
 111             format(/'     N-S Location ',
      1        '[1 to ',i3,'; 1 = S Edge, '
@@ -471,7 +469,7 @@ c read in laps lat/lon and topo
             ylow = 1.
             yhigh = NY_L
 
-            if(c80_domain(1:4) .eq. 'nest')then
+            if(.true.)then
                 write(6,112)NX_L,NX_L/2+1,NX_L
 112             format(/'     E-W Location ',
      1        '[1 to ',i3,'; 1 = W Edge, '
@@ -553,7 +551,7 @@ c read in laps lat/lon and topo
         else ! Try to get an azimuth for the X-Sect
             read(c3_type,*,err=85)azi_xsect
 
-            if(c80_domain(1:4) .eq. 'nest')then
+            if(.true.)then
                 write(6,113)
 113             format(/'     Waypoint for X-Sect: '/
      1        6x,' CLASS:       wig,ftc,lov,elb,flg'/
