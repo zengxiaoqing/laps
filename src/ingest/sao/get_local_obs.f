@@ -198,10 +198,9 @@ c
 
             if(recnum .gt. maxobs-ix+1)then
                 write(6,*)
-     1              ' ERROR: exceeded array limits in get_local_obs'
+     1              ' ERROR: exceeded maxobs limits in get_local_obs'
                 go to 590
             endif
-
 c
 c.....  Call the read routine.
 c

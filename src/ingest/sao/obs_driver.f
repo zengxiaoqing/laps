@@ -467,8 +467,8 @@ c.....  Call the routine that reads the Buoy data files, then get
 c.....  the data.
 c
 c
-        call get_buoy_obs(maxobs,maxsta,i4time_sys,path_to_buoy_data,       
-     &                      metar_format,
+        call get_maritime_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_buoy_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -481,7 +481,7 @@ c
      &                      provider, jstatus)
 c
 	if(jstatus .ne. 1) then
-	   print *, ' WARNING. Bad status return from GET_BUOY_OBS'
+	   print *, ' WARNING. Bad status return from GET_MARITIME_OBS'       
 	   print *,' '
 	endif
 

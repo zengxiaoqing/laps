@@ -38,9 +38,8 @@ cdis
 cdis
 c
 c
-	subroutine get_buoy_obs(maxobs,maxsta,i4time_sys,
-     &                      path_to_buoy_data,
-     &                      buoy_format,
+	subroutine get_maritime_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_buoy_data,buoy_format,
      &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -229,14 +228,13 @@ c
 	           print *,'dim recNum'
 	        endif
 
-                n_maritime_pot = ix-1 + recNum 
-                if(n_maritime_pot .gt. maxobs)then
-                    write(6,*)' ERROR: exceeded maxobs limit'
-     1                       ,recNum,n_maritime_pot,maxobs
-                    stop
+                if(recnum .gt. maxobs-ix+1)then
+                    write(6,*)
+     1              ' ERROR: exceeded maxobs limits in get_maritime_obs'       
+                    go to 190
                 endif
 
-	        call read_buoy(nf_fid , recNum, iplat_type(ix),
+	        call read_maritime(nf_fid , recNum, iplat_type(ix),
      &             td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
      &             pcp1(ix), pcp24(ix), pcp6(ix),
      &             wx(ix), dp(ix), dpchar(ix),
@@ -247,7 +245,7 @@ c
 
  		if(istatus .ne. 1)then
                     write(6,*)
-     1              '     Warning: bad status return from READ_BUOY'       
+     1              '     Warning: bad status return from READ_MARITIME'
                     n_buoy_file = 0
                 else
                     n_buoy_file = recNum
@@ -313,7 +311,7 @@ c
 
                 ix = ix + n_buoy_file
 
-            enddo ! i4time_file
+590	    enddo		! i4time_file
 
 !           Ob times contained in each file
             i4_contains_early = 0 
@@ -491,7 +489,7 @@ c
  150	  nn = nn + 1
 
           if(nn .gt. maxsta)then
-              write(6,*)' ERROR: maxsta exceeded in get_buoy_obs '
+              write(6,*)' ERROR: maxsta exceeded in get_maritime_obs '       
      1                 ,nn,maxsta
               stop
           endif
@@ -745,7 +743,7 @@ c
 c
  990	 continue		! no data available
 	 jstatus = 0
-	 print *,' WARNING.  No data available from READ_BUOY.'
+	 print *,' No Maritime data available'
 	 return
 c
 	 end

@@ -38,7 +38,7 @@ cdis
 cdis
 c
 c
-      subroutine read_buoy(nf_fid , recNum, 
+      subroutine read_maritime(nf_fid , recNum, 
      +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
      +     latitude, longitude, precip1Hour, precip24Hour,
      +     precip6Hour, presWeather, pressChange3Hour,

@@ -245,6 +245,11 @@ c
 	           print *,'dim recNum'
 	        endif
 
+                if(recnum .gt. maxobs-ix+1)then
+                    write(6,*)
+     1              ' ERROR: exceeded maxobs limits in get_metar_obs'
+                    go to 590
+                endif
 c
 c.....          Call the read routine.
 c
@@ -269,7 +274,7 @@ c
 
                 ix = ix + n_metar_file
 
-            enddo ! i4time_file (in time window)
+ 590	    enddo             ! i4time_file (in time window)
 
             n_sao_all = ix - 1
             i4time_offset = 315619200
