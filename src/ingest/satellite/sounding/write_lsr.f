@@ -9,7 +9,9 @@
       integer i4time
       integer istatus
       integer i,j
+      integer ni
       integer len_lsr
+      integer lvl_lsr(nch)
 
       real*4 data(nxl,nyl,nch)
       real*4 wavelength(nch)
@@ -18,16 +20,18 @@
       character*10 units_lsr(nch)
       character*3 var_lsr(nch)
       character*4 lvl_coord_lsr(nch)
-      integer lvl_lsr(nch)
       character*150 dir_lsr
       character*31 ext_lsr
-      character*5  csatid
+      character*6  csatid
       character*2  c_num
       character*4  cw
 c ---------------------------------------
 c Output for LAPS lsr files as indicated.
 c
       call get_directory('lsr',dir_lsr,len_lsr)
+      ni=index(csatid,' ')-1
+      if(ni.le.0)ni=6
+      dir_lsr=dir_lsr(1:len_lsr)//csatid(1:ni)//'/'
       ext_lsr = 'lsr'
 c
       do i=1,nch

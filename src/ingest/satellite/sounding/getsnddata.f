@@ -2,12 +2,14 @@
      &                         c_sounding_path,
      &                         i4time_latest,
      &                         c_filename_sat,
+     &                         ires_x,ires_y,
      &                         nelems,nlines,nch,
      &                         i4snddata,
      &                         wavelength,
      &                         scalingBias,
      &                         scalingGain,
      &                         nw_pix,nw_line,
+     &                         se_pix,se_line,
      &                         ewCycles,
      &                         ewIncs,
      &                         nsCycles,
@@ -56,7 +58,7 @@ c                     Modify to accept both goes8 and goes9.
       character*9   c_filetime_sat
       character*9   c_filetime_lsr
       character*9   c_fname
-      character*5   csat_id
+      character*6   csat_id
 
       integer     i,j,k,n,jj
       integer     istatus
@@ -93,6 +95,8 @@ c     integer*4     i4time_sat(max_files)
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs
       Integer     nw_pix,nw_line
+      Integer     se_pix,se_line
+      Integer     ires_x,ires_y
 c
       Integer     i4snddata(nelems,nlines,nch)
       REAL*8        wavelength(nch)
@@ -108,6 +112,7 @@ c
       i4time_proc=i4time_now_gg()
 
       call get_directory('lsr',c_lsr_dir,lend)
+      c_lsr_dir=c_lsr_dir(1:lend)//'/'//csat_id//'/'
 
       n=index(c_sounding_path,' ')-1
       c_filename_sat=c_sounding_path(1:n)//'*_sdr'
@@ -117,14 +122,14 @@ c
       do i = 1,numoffiles
          j=index(c_filename(i),' ')-5
          jj=j-8
-         if(csat_id.eq.'goes8')then
+         if(csat_id.eq.'goes08')then
             if(c_filename(i)(j-1:j-1).eq.'4')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
                   i4time_latest = i4time
                endif
             endif
-         elseif(csat_id.eq.'goes9')then
+         elseif(csat_id.eq.'goes09')then
             if(c_filename(i)(j-1:j-1).eq.'0')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
@@ -222,13 +227,14 @@ c
      &                         scalingBias,
      &                         scalingGain,
      &                         nw_pix,nw_line,
+     &                         se_pix,se_line,
      &                         ewCycles,
      &                         ewIncs,
      &                         nsCycles,
      &                         nsIncs,
      &                         f_time,
      &                         lineTimeBeg,lineTimeEnd,
-     &                         imc,
+     &                         imc,ires_x,ires_y,
      &                         orbitAttitude,
      &                         ndimx,ndimy,ndimch,
      &                         istatus)

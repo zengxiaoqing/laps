@@ -27,9 +27,9 @@ c
       Integer START(10)
       Integer COUNT(10)
       Character*31 DUMMY
-      integer     i4val
-      integer     i2val(2)
-      equivalence   (i4val,i2val(1))
+c     integer     i4val
+c     integer     i2val(2)
+c     equivalence   (i4val,i2val(1))
 c
 C **************************************************************************
 c
@@ -145,15 +145,18 @@ c read line
             endif
 c
 c load line into the 3d output array
-c
-            i4val=0
+c No more need to use the equivalence to get sounder values. (1-14-98. JRS).
+c           i4val=0
             do i = 1,NDSIZE_X(j)
-               i2val(1)=0
-               i2val(2)=sounding_rec(i)
-               if(i4val .lt. 0)then
-                  i4dum = i4val
+c              i2val(1)=0
+c              i2val(2)=sounding_rec(i)
+c              if(i4val .lt. 0)then
+c                 i4dum = i4val
+c              endif
+               sounding(i,j,k) = sounding_rec(i)
+               if(sounding_rec(i).ge.0)then
+c                 sounding(i,j,k) = i4val
                endif
-               sounding(i,j,k) = i4val
             enddo
 
          enddo

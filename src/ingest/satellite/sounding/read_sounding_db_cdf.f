@@ -6,13 +6,15 @@
      &                               scalingGain,
      &                               northwest_sdr_pixel,
      &                               northwest_sdr_line,
+     &                               southeast_sdr_pixel,
+     &                               southeast_sdr_line,
      &                               eastWestCycles,
      &                               eastWestIncs,
      &                               northSouthCycles,
      &                               northSouthIncs,
      &                               frameStartTime,
      &                               lineTimeBegin,lineTimeEnd,
-     &                               imc,
+     &                               imc,ires_x,ires_y,
      &                               orbitAttitude,
      &                               ndsize_x,ndsize_y,ndsize_ch,
      &                               istatus)
@@ -45,6 +47,8 @@ c
 
       INTEGER   northwest_sdr_pixel
       INTEGER   northwest_sdr_line
+      INTEGER   southeast_sdr_pixel
+      INTEGER   southeast_sdr_line
       INTEGER   varid
       CHARACTER*1 imc                      (   4)
       REAL*4      imcEnableTime
@@ -52,6 +56,7 @@ c
       INTEGER   eastWestIncs                   
       INTEGER   northSouthCycles               
       INTEGER   northSouthIncs                 
+      Integer   ires_x,ires_y
       REAL*8      frameStartTime                 
       REAL*8      orbitAttitude            (336)
       Real*8      lineTimeBegin(jmax,nch)
@@ -112,7 +117,7 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   20  CONTINUE
-      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,wavelength)
+      RCODE=NF_GET_VARA_DOUBLE(NCID,varid,START,COUNT,wavelength)
 C
 C    statements to fill northwest_sdr_pixel            
 C
@@ -154,7 +159,7 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  70   CONTINUE
-      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,frameStartTime)
+      RCODE=NF_GET_VARA_DOUBLE(NCID,varid,START,COUNT,frameStartTime)
 C
 C    statements to fill imc                            
 C
@@ -196,7 +201,7 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  300  CONTINUE
-      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,eastWestCycles)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,eastWestCycles)
 C
 C    statements to fill eastWestIncs                   
 C
@@ -210,7 +215,7 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  310  CONTINUE
-      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,eastWestIncs)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,eastWestIncs)
 C
 C    statements to fill northSouthCycles               
 C
@@ -252,7 +257,7 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  340  CONTINUE
-      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,orbitAttitude)
+      RCODE=NF_GET_VARA_DOUBLE(NCID,varid,START,COUNT,orbitAttitude)
 c
 c new: 11-21-96. JRSmart. Retrieve scalinggain and scalingbias. These needed
 c to convert counts to useable brightness temps and radiances.
@@ -432,6 +437,60 @@ c
             lineTimeEnd(i,k) = ltrec(i)
          enddo
       enddo
+C
+C    statements to fill x_resolution and y_resolution
+C
+      rcode=NF_INQ_VARID(ncid,'x_resolution',varid)
+      if(rcode.ne.0) return
+      CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO  53 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+  53  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,ires_x)
+C
+      rcode=NF_INQ_VARID(ncid,'y_resolution',varid)
+      if(rcode.ne.0) return
+      CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO  54 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+  54  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,ires_y)
+C
+C    statements to fill southeast_sdr_pixel
+C
+      rcode=NF_INQ_VARID(ncid,'southeast_sdr_pixel',varid)
+      if(rcode.ne.0) return
+      CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO  80 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+  80  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,southeast_sdr_pixel)
+C
+C    statements to fill southeast_sdr_line
+C
+      rcode=NF_INQ_VARID(ncid,'southeast_sdr_line',varid)
+      if(rcode.ne.0) return
+      CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
+      LENSTR=1
+      DO  90 J=1,NVDIM
+      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
+      LENSTR=LENSTR*NDSIZE
+      START(J)=1
+      COUNT(J)=NDSIZE
+  90  CONTINUE
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,southeast_sdr_line)
 
       Return
       END

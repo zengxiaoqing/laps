@@ -4,13 +4,13 @@ c
 
       integer     max_sat
       integer     max_ch
-      parameter     (max_sat=2,max_ch=19)
+      parameter     (max_sat=4,max_ch=19)
       integer     n_elems(max_sat)
       integer     n_lines(max_sat)
       integer     ismsng
       
       real*4        r_channel_wavelengths(max_ch,max_sat)
-      character     c_sat_id(max_sat)*5
+      character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
       character     cmode*10
 
@@ -127,6 +127,7 @@ c
       Integer     ewCycles,ewIncs
       Integer     nsCycles,nsIncs
       Integer     nw_pix,nw_line
+      Integer     se_pix,se_line
       Integer     istatus
       Integer     iostatus
       Integer     mstatus
@@ -138,6 +139,7 @@ c
       Integer     imax,jmax
       Integer     i4time_data
       Integer     i4time_data_orig
+      Integer     ires_x,ires_y
       Integer     imaximum(n_channels)
       Integer     iminimum(n_channels)
       Integer     i2_missing_data
@@ -158,7 +160,7 @@ c
       character*150 dir_static
       Character     cmode*10
       Character     f9time*9
-      Character     c_sat_id*5
+      Character     c_sat_id*6
       Character     cid*2
 c =============================================================
 c
@@ -172,6 +174,7 @@ c
      &                         c_sounding_path,
      &                         i4time_data,
      &                         c_filename_sat,
+     &                         ires_x,ires_y, 
      &                         nelems,
      &                         nlines,
      &                         n_channels,
@@ -180,6 +183,7 @@ c
      &                         scalingBias,
      &                         scalingGain,
      &                         nw_pix,nw_line,
+     &                         se_pix,se_line,
      &                         ewCycles,
      &                         ewIncs,
      &                         nsCycles,
@@ -274,9 +278,11 @@ c
 c generate sounding db to laps remapping lut
 c
       write(6,*)'Compute sat-2-laps look-up-table'
-      call gen_gv8sndr_lut_lsr(c_filename_sat,nlines,nelems,r_sndr_res_k
-     &m,n_channels,nx_l,ny_l,lat,lon,r_llij_lut_ri,r_llij_lut_rj,
-     &istatus)
+      call gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,wavelength,
+     &ires_x,ires_y,r_sndr_res_km,nw_pix,nw_line,se_pix,se_line,
+     &ewCycles,ewIncs,nsCycles,nsIncs,
+     &f_time,orbitattitude,n_channels,nx_l,ny_l,
+     &lat,lon,r_llij_lut_ri,r_llij_lut_rj,istatus)
 
       if(istatus.eq.0)then
          write(6,*)'Sounder Nav computed'
