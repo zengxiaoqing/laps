@@ -1555,9 +1555,54 @@ c
 	call tagit('get_bkgwind_sfc', 19990611)
 c
 c
-c.....  Get the background data.  Try for a SFM forecast first.  If not
-c.....  available, try the LGB file.  If that's not there either, use a
-c.....  previous LAPS analysis.  If nothings available, print a warning.
+c.....  Get the background data.  Try for LWM file first. Next, try for an 
+c.....  SFM forecast.  If not available, try the LGB file.  If that's not there
+c.....  either, use a previous LAPS analysis.  If nothings available, print a 
+c.....  warning.
+c
+c.....	Try LWM (sfc interpolated from 3d)
+c
+	ilwm_loop = 1
+	print *,' Trying for LWM wind background '
+c	bkg_dir = '../lapsprd/lwm/'
+	call get_directory('lwm',bkg_dir,len)
+	bkg_ext = 'lwm'
+	i4time_bk = i4time_in
+	var_u = 'SU '
+	var_v = 'SV '
+c
+ 310	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
+	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
+c
+	if(istatus_u.ne.1 .or. istatus_v.ne.1) then
+	   if(ilwm_loop .gt. 0) then     ! give up
+	      print *,'  No LWM background available. '
+	      go to 400
+	   else
+	      ilwm_loop = ilwm_loop + 1
+	      i4time_bk = i4time_bk - laps_cycle_time
+	      go to 310
+	   endif
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found LWM backgrounds...checking fields.'
+	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
+	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
+	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,'  Problem with LWM background, check status = ', 
+     &            istatus_u, istatus_v
+	endif
+ 400	continue
+c
+c.....  Try SFM
 c
 	isfm_bk = 1
 	print *,' Trying for SFM background '
@@ -1626,10 +1671,10 @@ c
      &   '   Problem with SFM backgrounds, check status = ',
      &   istatus_u, istatus_v
 	endif
+ 200	continue
 c
 c.....  Try LGB.
 c
- 200	continue
 	var_u = 'USF'
 	var_v = 'VSF'
 	ilgb_bk = 1
@@ -1699,53 +1744,11 @@ c
      &    '  Problem with LGB backgrounds, check status = ', 
      &    istatus_u, istatus_v
 	endif
-c
-c.....	Try LWM (sfc interpolated from 3d)
-c
- 300	ilwm_bk = 1
-	ilwm_loop = 1
-	print *,' Trying for LWM wind background '
-c	bkg_dir = '../lapsprd/lwm/'
-	call get_directory('lwm',bkg_dir,len)
-	bkg_ext = 'lwm'
-	i4time_bk = i4time_prev
-	var_u = 'SU '
-	var_v = 'SV '
-c
- 310	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
-     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
-	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
-     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
-c
-	if(istatus_u.ne.1 .or. istatus_v.ne.1) then
-	   if(ilwm_loop .gt. 3) then     ! give up
-	      print *,'  No LWM background available. '
-	      ilwm_bk = 0
-	      go to 400
-	   else
-	      ilwm_loop = ilwm_loop + 1
-	      i4time_bk = i4time_bk - laps_cycle_time
-	      go to 310
-	   endif
-	endif
-c
-c.....  Check the field for NaN's and other bad stuff.
-c
-	print *,'  Found LWM backgrounds...checking fields.'
-	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
-	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
-	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
-	   bkg_status = 1
-	   bkg_time = i4time_bk
-	   return
-	else
-	   print *,'  Problem with LWM background, check status = ', 
-     &            istatus_u, istatus_v
-	endif
+ 300	continue
 c
 c.....	Try the previous LSX.
 c
- 400	ilaps_bk = 1
+        ilaps_bk = 1
 	ilaps_loop = 1
 	print *,' Trying for previous LSX background '
 c	bkg_dir = '../lapsprd/lsx/'
