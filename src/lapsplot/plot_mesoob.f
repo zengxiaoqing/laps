@@ -99,77 +99,103 @@ c
 
         call get_sfc_badflag(badflag,istatus)
 
-        call get_filespec('lso',2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time,i4time_lso)
-
-        if(i4time_lso .eq. 0)then
-            write(6,*)' No LSO files available for station plotting'
-            return
-        endif
-
-        call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
-
-        ext = 'lso'
-        call get_directory(ext,directory,len_dir) ! Returns top level directory
-        if(c_field(1:1) .eq. 'q')then ! LSO_QC file
+        if(c_field(1:2) .eq. 'mw')then ! Read Mesowx
+            ext = 'mesowx'
+            call get_directory(ext,directory,len_dir) ! Mesowx directory
             infile = 
-     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))//'_qc'    
+     1      directory(1:len_dir)//'lfmpost_points.txt'
 
-            ext_lso = 'lso_qc'
+            open(41,file=infile,status='unknown')
 
-        else ! Regular LSO file
-            infile = 
-     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))  
+            i = 1
+ 4          read(41,5,end=15)lat_s(i),lon_s(i)
+ 5          format(2x,1x,10x,1x,f8.0,f10.0)
 
-            ext_lso = 'lso'
+            i = i+1
 
-        endif
+            go to 4            
 
-        write(6,*)' Calling read_sfc_state...',ext_lso,asc_tim_9
+ 15         n_obs_b = i-1
 
-	call read_sfc_state(i4time,ext_lso,btime,n_obs_g,n_obs_b,
+        else ! Read LSO or LSO_QC 
+
+            call get_filespec('lso',2,c_filespec,istatus)
+            call get_file_time(c_filespec,i4time,i4time_lso)
+
+            if(i4time_lso .eq. 0)then
+                write(6,*)
+     1          ' No LSO files available for station plotting'       
+                return
+            endif
+
+            call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
+
+            ext = 'lso'
+            call get_directory(ext,directory,len_dir) ! Returns top level directory
+            if(c_field(1:1) .eq. 'q')then ! LSO_QC file
+                infile = 
+     1          directory(1:len_dir)//filename13(i4time_lso,ext(1:3))
+     1                              //'_qc'    
+
+                ext_lso = 'lso_qc'
+
+            else ! Regular LSO file
+                infile = 
+     1          directory(1:len_dir)//filename13(i4time_lso,ext(1:3))  
+
+                ext_lso = 'lso'
+
+            endif
+
+            write(6,*)' Calling read_sfc_state...',ext_lso,asc_tim_9
+
+	    call read_sfc_state(i4time,ext_lso,btime,n_obs_g,n_obs_b,
      &         stations_s,provider,lat_s,lon_s,elev_s,
      &         t_s,td_s,rh_s,dd_s,ff_s,
      &         alt,pstn,pmsl,maxstns,istatus)
 
-        write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+            write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
 
-        if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
-            write(6,*)' Calling read_surface_sa...',infile,atime
-            call read_surface_sa(infile,maxstns,atime,
-     &         n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
-     &         elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
-     &         alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
-     &         store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
+            if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
+                write(6,*)' Calling read_surface_sa...',infile,atime
+                call read_surface_sa(infile,maxstns,atime,
+     &             n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
+     &             elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,       
+     &             alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
+     &             store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
-        else                       ! QC case
-            if(n_obs_g .eq. 0)n_obs_g = n_obs_b         ! Bug recovery
+            else                       ! QC case
+                if(n_obs_g .eq. 0)n_obs_g = n_obs_b         ! Bug recovery
 
-        endif
-
-        write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
-
-        if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
-            write(6,*)' Too many stations, or no file present'
-            istatus = 0
-            return
-        endif
-
-        i_rh_convert = 0
-	do i=1,n_obs_b ! Preprocess the obs
-!           Convert RH to dewpoint if dewpoint is missing 
-            if(t_s(i) .ne. badflag .and. td_s(i) .eq. badflag 
-     1                             .and. rh_s(i) .ne. badflag )then
-                t_c = f_to_c(t_s(i))
-                dwpt_c = dwpt(t_c,rh_s(i))
-                td_s(i) = c_to_f(dwpt_c)
-                i_rh_convert = i_rh_convert + 1
             endif
-        enddo ! i
 
-        if(i_rh_convert .gt. 0)then
-            write(6,*)'# of dewpoints converted from RH = ',i_rh_convert       
-        endif
+            write(6,*)'     n_obs_b:',n_obs_b
+     1               ,'      n_obs_g:',n_obs_g       
+
+            if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
+                write(6,*)' Too many stations, or no file present'
+                istatus = 0
+                return
+            endif
+
+            i_rh_convert = 0
+	    do i=1,n_obs_b ! Preprocess the obs
+!               Convert RH to dewpoint if dewpoint is missing 
+                if(t_s(i) .ne. badflag .and. td_s(i) .eq. badflag 
+     1                                 .and. rh_s(i) .ne. badflag )then       
+                    t_c = f_to_c(t_s(i))
+                    dwpt_c = dwpt(t_c,rh_s(i))
+                    td_s(i) = c_to_f(dwpt_c)
+                    i_rh_convert = i_rh_convert + 1
+                endif
+            enddo ! i
+
+            if(i_rh_convert .gt. 0)then
+                write(6,*)'# of dewpoints converted from RH = '
+     1                   ,i_rh_convert       
+            endif
+
+        endif ! Mesowx or LSO
 
         size = 0.5
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)

@@ -341,6 +341,7 @@ c       include 'satellite_dims_lvd.inc'
      1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma,sp]'
      1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
+     1      /'          [st,mw] obs/mesowx locations'    
      1      /'          [bs] Sfc background/forecast'
      1      /10x,'[li,lw,he-i,pe-i,ne-i] li, li*w, helcty, CAPE, CIN,'
      1      /10x,'[s] Other Stability Indices'
@@ -1163,7 +1164,7 @@ c       include 'satellite_dims_lvd.inc'
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
-     1                          .or. c_type .eq. 'st'   
+     1                          .or. c_type .eq. 'st' ! Station Locations  
      1                          .or. c_type .eq. 'of' ! Air T,Td in F
      1                          .or. c_type .eq. 'oc' ! Air T,Td in C
      1                          .or. c_type .eq. 'os' ! Stations  
@@ -1176,6 +1177,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          .or. c_type .eq. 'qv' ! QC Sky Cover, Visib
      1                          .or. c_type .eq. 'qp' ! QC Precip
      1                          .or. c_type .eq. 'qg' ! QC Soil/Water T
+     1                          .or. c_type .eq. 'mw' ! MesoWx Points
      1                                                )then
 
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
@@ -1183,10 +1185,11 @@ c       include 'satellite_dims_lvd.inc'
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
             call make_fnam_lp(i4time_plot,a9time,istatus)
 
-            if(c_type(1:2) .eq. 'st')iflag = 0
-            if(c_type(2:2) .eq. 's' )iflag = 0
+            if(c_type(1:2) .eq. 'st')iflag = 0 ! Station Locations
+            if(c_type(2:2) .eq. 's' )iflag = 0 ! Station Locations
             if(c_type      .eq. 'ms')iflag = 1
             if(c_type(2:2) .ne. 's' )iflag = 2
+            if(c_type(1:2) .eq. 'mw')iflag = 0 ! MesoWx Points Locations
 
             c33_label = '                                 '
 
