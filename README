@@ -1579,7 +1579,7 @@ Sample Input/Output: Should be available in the test data case
  
 ------ 3.2.9 --------- RAOB + Satellite Sounding (SND) Ingest ----------------
 
-Process: (ingest_raob.exe) LAPS RAOBs
+Process: (ingest_sounding.exe) LAPS Soundings
 
 Author: Steve Albers (albers@fsl.noaa.gov)
 
