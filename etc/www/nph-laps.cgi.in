@@ -916,6 +916,21 @@ if($err == 0) {
                         printf LAPSPLOT "f\n"; 
                         printf LAPSPLOT "$source\n"; 
                         printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "TEMP" ){ 
+                        printf LAPSPLOT "ti\n";  
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "HT" ){ 
+                        printf LAPSPLOT "hti\n";  
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "ht" ){ 
+                        printf LAPSPLOT "ht\n";  
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
                     }elsif("$field" eq "REFLCT" ){ 
                         printf LAPSPLOT "ri\n"; 
                         printf LAPSPLOT "f\n"; 
@@ -1351,6 +1366,18 @@ if($err == 0) {
                         printf LAPSPLOT "$hhmm\n";
                     }elsif("$field" eq "temp" ) { 
                         printf LAPSPLOT "t\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "TEMP" ) { 
+                        printf LAPSPLOT "ti\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "ht" ) { 
+                        printf LAPSPLOT "ht\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "HT" ) { 
+                        printf LAPSPLOT "hti\n"; 
                         printf LAPSPLOT "b\n"; 
                         printf LAPSPLOT "$hhmm\n";
                     }elsif("$field" eq "u" ) { 
@@ -2006,6 +2033,12 @@ if($err == 0) {
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "TEMP" ){ 
                         printf LAPSPLOT "ti\n";  
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "HT" ){ 
+                        printf LAPSPLOT "hti\n";  
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "ht" ){ 
+                        printf LAPSPLOT "ht\n";  
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "theta" ){ 
                         printf LAPSPLOT "pt\n";  
