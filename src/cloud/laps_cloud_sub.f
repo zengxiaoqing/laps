@@ -1833,27 +1833,51 @@ C       EW SLICES
         subroutine qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
+        logical l_poss_extrap ! used to allow for edge effects from 'barnes_r5'
+
+        nskip_max = 4 ! 'See barnes_r5'
 
         do i = 1,NX_L
         do j = 1,NY_L
-        do k = 1,KCLOUD
-            call qc_clouds_0d(i,j,k,clouds_3d(i,j,k))
-        enddo ! k
+            if(NX_L-i .le. nskip_max .or. NY_L-j .le. nskip_max)then
+                l_poss_extrap = .true. ! Extrapolation edge effects possible
+            else
+                l_poss_extrap = .false.
+            endif
+
+            do k = 1,KCLOUD
+                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k)
+     1                           ,NX_L,NY_L,l_poss_extrap)
+            enddo ! k
         enddo ! j
         enddo ! i
 
         return
         end
 
-        subroutine qc_clouds_0d(i,j,k,clouds_3d)
+        subroutine qc_clouds_0d(i,j,k,clouds_3d
+     1                         ,NX_L,NY_L,l_poss_extrap)
 
         real*4 clouds_3d
+        logical l_poss_extrap ! used to allow for edge effects from 'barnes_r5'
 
-        if(clouds_3d .gt. 1.001)then
-            write(6,*)' Error, clouds_3d > 1',i,j,k,clouds_3d
-            stop
-        elseif(clouds_3d .gt. 1.0)then
-            write(6,*)' Warning, clouds_3d > 1',i,j,k,clouds_3d
+        if(clouds_3d .gt. 1.0)then 
+            if(.not. l_poss_extrap)then
+                if(clouds_3d .gt. 1.001)then
+                    write(6,*)' Error, clouds_3d > 1',i,j,k,clouds_3d
+                    stop
+                else ! just over 1.0 with no edge effect
+                    write(6,*)
+     1              ' Warning, clouds_3d > 1 - reset'
+     1              ,i,j,k,clouds_3d
+                    clouds_3d = 1.0
+                endif
+            else
+                write(6,*)
+     1          ' Warning, clouds_3d > 1 - reset for edge effect'
+     1          ,i,j,k,clouds_3d
+                clouds_3d = 1.0
+            endif
         endif
 
         return

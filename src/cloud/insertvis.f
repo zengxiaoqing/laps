@@ -145,7 +145,7 @@ cdis
             l_39_clr_2d = .false.
 
             do k = 1,nk
-                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k))
+                call qc_clouds_0d(i,j,k,clouds_3d(i,j,k),ni,nj,.false.)       
 
                 cloud_frac_in = clouds_3d(i,j,k)
 
