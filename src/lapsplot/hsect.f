@@ -602,7 +602,7 @@ c       include 'satellite_dims_lvd.inc'
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1                       '  Field [di,sp-i,u-i,v-i,om-i,dv,vo,va,vc'      
+     1                       '  Field [di,spi,ui,vi,om,dv,vo,va,vc'      
      1                      ,' (barbs), ob (obs))]'   
      1                                          ,11x,'? ',$)
                     read(lun,15)c_field
@@ -757,15 +757,19 @@ c       include 'satellite_dims_lvd.inc'
 
                 call mklabel33(k_mb,c19_label,c33_label)
 
-                if(k_level .gt. 0 .and. k_mb .le. 500)then
+                if(k_level .gt. 0 .and. k_mb .lt. 500)then
                     cint = 10.
+                    clow = 0.
+                    chigh = 200.
                 else
                     cint = 5.
+                    clow = 0.
+                    chigh = 100.
                 endif
 
                 scale = 1.0
-                call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
-     1                               ,zoom,density,scale)
+!               call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
+!    1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,spds,scale
      1                        ,namelist_parms
@@ -1039,8 +1043,13 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_mb,c19_label,c33_label)
 
                 scale = 1e-5
-                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                               ,zoom,density,scale)
+                
+                clow = -20.
+                chigh = +80.
+                cint = 5.
+
+!               call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+!    1                               ,zoom,density,scale)
 
 !               call plot_cont(field_2d,scale,clow,chigh,cint,
 !    1               asc9_tim_3dw,namelist_parms,
@@ -3812,8 +3821,24 @@ c                   cint = -1.
                 enddo ! j
                 enddo ! i
 
-                call contour_settings(field_2d,NX_L,NY_L
-     1                             ,clow,chigh,cint,zoom,density,scale)       
+                if(k_mb .lt. 500)then
+                    cint = 5.
+                    clow = -60.
+                    chigh = -30.
+                elseif(k_mb .eq. 500)then
+                    cint = 5.
+                    clow = -40.
+                    chigh = 0.
+                elseif(k_mb .eq. 700)then
+                    cint = 5.
+                    clow = -30.
+                    chigh = +30.
+                else
+                    call contour_settings(field_2d,NX_L,NY_L
+     1                                   ,clow,chigh,cint
+     1                                   ,zoom,density,scale)       
+                endif
+
 
             endif
 
