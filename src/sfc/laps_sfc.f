@@ -379,6 +379,7 @@ c
      &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
      &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &       lat,lon,ni,nj,nk,                                           ! I
      &       istatus)
         endif
 
