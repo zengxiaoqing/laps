@@ -15,6 +15,7 @@
      1            nlevels_obs_pr,                                   ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
+     1            grid_ra_vel,                                      ! I
      1            istatus_remap_pro,                                ! O
      1            istatus                )                          ! O
 
@@ -31,6 +32,7 @@
         dimension u_mdl_diff(NX_L,NY_L,NZ_L),v_mdl_diff(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 heights_1d(NZ_L)
+        real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
 
 !  ***  Read in Profiler Data  ********************************************
 
@@ -207,7 +209,7 @@
      1          ,istatus)                                               ! I
 
 !          Do a rough analysis of profile data for comparison with radial
-!          velocities
+!          velocities. Only one radar (#1) is used.
 
 !          It is questionable whether this routine actually passes in
 !          the nyquist velocity - or does anything else useful for that matter

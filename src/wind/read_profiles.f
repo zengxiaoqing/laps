@@ -221,15 +221,15 @@ c
       DO i_pr = n_profiles+1,max_pr
         read(12,511,err=530,end=550)
      1  ista,nlevels_in,
-     1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name
-  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5)
+     1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name,a9time_ob
+  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
         rcycles_pr(i_pr) = 0. ! Allow use of RAOBs regardless of age
 
         write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)
-     1                 ,lon_pr(i_pr)
-     1                 ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name
- 512    format(/' RAOB #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,i12)       
+     1             ,lon_pr(i_pr)
+     1             ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob     
+ 512    format(/' RAOB #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9)       
 
 
         n_good_levels = 0

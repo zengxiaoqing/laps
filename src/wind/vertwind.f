@@ -33,7 +33,7 @@ cdis
         subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk,wanl
      1          ,topo,lat,lon,grid_spacing_m,istatus
      1          ,r_missing_data
-     1          ,laps_rotate_winds,flu,flv,sigma,conv)
+     1          ,laps_rotate_winds)
 
 !      ~1990        Steve Albers  Orig version
 !       1997 Jun    Ken Dritz     Added ni and nj as dummy
