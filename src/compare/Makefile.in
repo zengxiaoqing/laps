@@ -1,86 +1,95 @@
-# Generated automatically from Makefile.in by configure.
 #
 #
 
-LAPSROOT = /usr/local/laps/newlaps
-DOMAIN   = ${prefix}/share
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
 
 # Specify Fortran, C, and loader options for default SUN configuration.
 
-CC=cc
+CC=@CC@
 
-CFLAGS= -Aa $(INC) 
+CFLAGS=@CFLAGS@ $(INC)  
 
-F77       = f77
+FC       = @FC@
 
 
-FFLAGS = +e +U77 +FPVZO -K $(INC) 
+FFLAGS = @FFLAGS@ $(INC)
 
 # Define pre-processor command line options for .F files.
 
-CPP = cc -P
+CPP = @CPP@
+CPPFLAGS=@CPPFLAGS@
 
 # Define include paths.
 
-INC = -I$(LAPSROOT)/src/include -I/usr/local/netcdf/include
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 
 # Define local library name, this houses the module's code
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
 
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
-
-
-OTHERLIBS = /usr/local/netcdf/lib/libnetcdf.a -lm
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 
 .SUFFIXES:
-.SUFFIXES: .o .c .f .a .exe
+.SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = compare.exe
-SRC = compare.f 
 
 
 # Define other variables 
 
-AR  = ar
-RANLIB   = ranlib
-INSTALL = $(LAPSROOT)/util/install-sh
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
 
-# Define all source code to be compiled 
+# Define all source code to be compiled and placed in local library.
 
+SRC=
+
+MAIN=compare.f
+
+
+
+LIB=
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 all: exe
 
-exe: $(EXE)
+exe: $(ARCHIVE) $(EXE)
 
-%.exe: %.f
-	$(FC) $(FFLAGS) $*.f $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-debug: $(SRC)
-	rm -f $(EXE) *.o;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+#$(EXE.F): $(MAIN) $(ARCHIVE)
+#	rm -f $*.f
+#	$(CPP) $(CPPFLAGS) $*.F 
+#	mv $*.i $*.f
+#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+#	rm -f *.o $*.f
+
+debug: clean $(ARCHIVE) $(MAIN)
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ -g'
 
 install: exe
-	@for file in $(EXE);\
-	  do \
-	  $(INSTALL) $$file $(LAPSROOT)/bin/$$file; \
-	done
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 
 clean:
-	rm -f $(EXE)  *.o *~ *#
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
 
 
 distclean: clean
 	rm -f Makefile
 
 
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
 
-
-
-
-
-
-
+%.o : %.F
 

@@ -1,15 +1,16 @@
       block data
 
+c     routine lapsgrid.f
+
+        include 'lapsparms.cmn'
+        data iflag_lapsparms_cmn /0/
+
 c     routine zs.f
 
         logical compute_bias_factor
         common/zs_comm/ compute_bias_factor
         data compute_bias_factor /.true./
 
-c     routine lapsgrid.f
-
-        include 'lapsparms.cmn'
-        data iflag_lapsparms_cmn /0/
 
 
 c     routine laps_thermo.f
@@ -33,11 +34,16 @@ c     routine supmap.f
         COMMON/SUPMPA/IIER
         COMMON/MAPCOL/MPCOL1,MPCOL2,MPCOL3,MPCOL4
         COMMON/MAPDAS/LDASH1,LDASH2,LDASH3,LDASH4
+c        DATA                    !Default line intensities and dash patterns
+c     1          MPCOL1,LDash1   /255,'1777'O/,  !Map lines
+c     2          MPCOL2,LDash2   /128,'1756'O/,  !Grid lines
+c     3          MPCOL3,LDash3   /192,'1777'O/,  !Limb lines
+c     4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
         DATA                    !Default line intensities and dash patterns
-     1          MPCOL1,LDash1   /255,'1777'O/,  !Map lines
-     2          MPCOL2,LDash2   /128,'1756'O/,  !Grid lines
-     3          MPCOL3,LDash3   /192,'1777'O/,  !Limb lines
-     4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
+     1          MPCOL1,LDash1   /255,1023/,  !Map lines
+     2          MPCOL2,LDash2   /128,1006/,  !Grid lines
+     3          MPCOL3,LDash3   /192,1023/,  !Limb lines
+     4          MPCOL4,LDash4   /255,1023/   !Perimeter
 
 
 c       COMMON/SUPMP1/PI,TOVPI,DTR,RTD,EPS,OV90,CON1,CON2,PART
@@ -55,7 +61,7 @@ c       COMMON/SUPMP4/IFST,IGO,IGOLD,ICROSS,IOUT,UOLD,VOLD
         DATA  TOVPI / 0.63661977236758/
         DATA   UOLD / 0.0 /
         DATA   VOLD / 0.0 /
-        DATA PART/1.0/          !SIZE OF PICTURE (90% OF SCREEN)
+        DATA PART   / 1.0 /          !SIZE OF PICTURE (90% OF SCREEN)
   
 c     routine xsect.f
         logical l_convert

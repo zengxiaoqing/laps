@@ -91,7 +91,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 #	rm -f *.o $*.f
 
 debug: clean 
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ -g' CFLAGS='@CFLAGS@ -g'
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g' CFLAGS='@CFLAGS@ $(INC) -g'
 
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)

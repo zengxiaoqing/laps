@@ -10,7 +10,7 @@ CC=@CC@
 
 CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
 CPPFLAGS = @CPPFLAGS@
-F77       = @FC@
+FC       = @FC@
 INSTALL = @INSTALL@
 
 FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
@@ -57,7 +57,7 @@ $(EXE): $(SRC)
 
 debug: $(SRC)
 	rm -f $(EXE) *.o;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@  $(INC) -g'
 
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)

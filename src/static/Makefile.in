@@ -10,7 +10,7 @@ CC=@CC@
 
 CFLAGS=@CFLAGS@ $(INC) 
 
-F77       = @FC@
+FC       = @FC@
 
 
 FFLAGS = @FFLAGS@ $(INC) 
@@ -59,7 +59,7 @@ exe: $(EXE)
 
 debug: $(SRC)
 	rm -f $(EXE) *.o;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
 
 install: exe
 	@for file in $(EXE);\

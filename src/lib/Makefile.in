@@ -11,7 +11,7 @@ CC=@CC@
 CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@
 KRCFLAGS=@KRCFLAGS@ $(INC)
 
-F77       = @FC@
+FC       = @FC@
 
 FFLAGS = @FFLAGS@ $(INC) @OPTIMIZE@
 
@@ -183,8 +183,8 @@ $(LIB): $(LIB)(readwritelaps.o static_routines.o) $(ARCHIVE)
 	$(RANLIB) $@
 
 debug: 
-	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='$(CFLAGS) -g' \
-        FFLAGS='$(FFLAGS) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g' \
+        FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
 
 install: lib
 

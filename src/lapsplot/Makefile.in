@@ -13,7 +13,7 @@ CFLAGS=@CFLAGS@ $(INC)
 FC       = ncargf77
 
 
-FFLAGS = @FFLAGS@ $(INC)
+FFLAGS = @FFLAGS@  $(INC)
 
 # Define pre-processor command line options for .F files.
 
@@ -97,8 +97,8 @@ $(EXE): $(ARCHIVE) $(MAIN)
 #	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 #	rm -f *.o $*.f
 
-debug: clean $(ARCHIVE) $(MAIN)
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='$(FFLAGS) -g'
+debug: clean 
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
 
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)

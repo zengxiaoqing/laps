@@ -60,7 +60,7 @@ exe: $(EXE)
 
 debug: $(SRC)
 	rm -f $(EXE) *.o;
-	$(MAKE) FFLAGS='$(FFLAGS) -g' CFLAGS='$(CFLAGS) -g'
+	$(MAKE) FFLAGS='@FFLAGS@ $(INC) -g' CFLAGS='@CFLAGS@ $(INC) -g'
 
 install: exe
 	@for file in $(EXE);\
