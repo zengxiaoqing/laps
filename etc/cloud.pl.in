@@ -120,11 +120,11 @@ print "\nSatellite (IR):\n";
 @greplines = grep /Returning S8A/, @lines;
 foreach (@greplines) {
   ($junk,@rest) = split;
-  print "  Using @rest ";
+  print "    Using @rest ";
   print "\n";
 }
 @greplines = grep /No S8A/, @lines;
-print " $greplines[0]";
+print "   $greplines[0]";
 @greplines = grep /required/, @lines;
 print "$greplines[0]";
 print "\n";
@@ -133,31 +133,31 @@ print "Satellite (Visible Albedo):\n";
 @greplines = grep /Returning ALB/, @lines;
 foreach (@greplines) {
   ($junk,@rest) = split;
-  print "  Using @rest ";
+  print "    Using @rest ";
   print "\n";
 }
 @greplines = grep /No VIS/, @lines;
-print " $greplines[0]";
+print "  $greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
-print "$greplines[0]";
+print "   $greplines[0]";
 @greplines = grep /l_use_vis set to not use vis data/, @lines;
-print " $greplines[0]";
+print "   $greplines[0]";
 print "\n";
 
 print "Satellite (3.9 micron - used for nighttime stratus):\n";
 @greplines = grep /Returning S3A/, @lines;
 foreach (@greplines) {
   ($junk,@rest) = split;
-  print "  Using @rest ";
+  print "    Using @rest ";
   print "\n";
 }
 @greplines = grep /No S3A/, @lines;
-print " $greplines[0]";
+print "   $greplines[0]";
 print "\n";
 
 print "Satellite (CO2-Slicing Cloud-tops):\n";
 @greplines = grep /CO2-Slicing data potentially used/, @lines;
-print "$greplines[0]";
+print "   $greplines[0]";
 print "\n";
 
 # Radar data
@@ -166,11 +166,11 @@ print "Radar:\n";
 #print "$greplines[0]\n";
 foreach (@greplines) {
   ($junk1,$junk2,@rest) = split;
-  print "  @rest ";
+  print "    @rest ";
   print "\n";
 }
 @greplines = grep /coverage/, @lines;
-print " $greplines[0]";
+print "   $greplines[0]";
 print "\n";
 
 # Surface metars (sfc.pl has a nicer way of printing these out)
