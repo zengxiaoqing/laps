@@ -1143,7 +1143,6 @@ c
 	subroutine get_background_sfc(i4time_in,var_in,bkg_ext,
      &                bkg_time,bkg_field,laps_cycle_time,ni,nj,
      &                bkg_status)
-
 c
 c
 c*****************************************************************************
@@ -1200,6 +1199,7 @@ c
 c
 c.....	Start here.  
 c
+	call tagit('get_background_sfc', 19990725)
 	bkg_status = 0
 	lvl_in = 0      ! surface level
 	fill_val = 1.e37
@@ -1421,7 +1421,6 @@ c
 c
 	subroutine get_bkgwind_sfc(i4time_in,bkg_ext,bkg_time,bkg_u,bkg_v,
      &                laps_cycle_time,ni,nj,bkg_status)
-
 c
 c
 c*****************************************************************************
@@ -1485,6 +1484,7 @@ c
 	var_v = 'V  '
 	print *,' '
 	print *,' Getting background wind data....'
+	call tagit('get_bkgwind_sfc', 19990611)
 c
 c
 c.....  Get the background data.  Try for a SFM forecast first.  If not
@@ -1790,5 +1790,27 @@ c..... That's all.
 c
       return
       end
-
-
+c
+c
+	subroutine tagit(name, code)
+c
+c*****************************************************************************
+c
+c       Routine to print a tracking code for the 'name' routine into the log.
+c
+c       Original:   P. Stamus, NOAA/FSL   04 Aug 1999
+c
+c       Notes:
+c
+c*****************************************************************************
+c
+	integer len
+	integer*4 code
+	character name*(*)
+c
+	call s_len(name, len)
+c
+	write(6,*) ' Welcome to ',name(1:len),';  tag: ',code
+c
+	return
+	end
