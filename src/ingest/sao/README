@@ -10,6 +10,8 @@ main                                      obs_driver.f
             read_metar                    read_metar.f           NIMBUS/WFO
             read_metar_cwb                read_metar_cwb.f       CWB/GTS
             read_synop_cwb                read_synop_cwb.f       CWB/GTS
+                read_synop_cwb_sub             "                 CWB/GTS
+                read_meso_cwb                  "                 CWB
   
         get_sao_obs_af                    get_metar_obs_af.f     metar/synop
             read_metar_af                 read_metar_af.f        AFWA
@@ -19,7 +21,7 @@ main                                      obs_driver.f
 
         get_local_cwb                     get_local_cwb.f        mesonet
             read_local_cwb                read_local_cwb.f       CWB
-                read_tmeso_stntbl                "
+                read_tmeso_stntbl                "                "
 
         get_buoy_obs                      get_maritime_obs.f     maritime obs
             read_maritime                 read_maritime.f        NIMBUS/WFO
