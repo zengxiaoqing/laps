@@ -35,8 +35,6 @@ cdis
 
 !       This routine can be used to read in a surface grid of known time
 
-        include 'lapsparms.inc'
-
         character*9 asc9_tim
         character*150 DIRECTORY
         character*31 EXT
@@ -48,6 +46,12 @@ cdis
         character*4 LVL_COORD_2d
 
         real*4 field_2d(imax,jmax)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_laps_2d: bad istatus, return'
+            return
+        endif
 
         call get_directory(ext,directory,len_dir)
 
@@ -92,8 +96,6 @@ cdis
 !       This routine can be used to read in a surface grid of known time
 !       by calling the new READ_LAPS routine
 
-        include 'lapsparms.inc'
-
         character*9 asc9_tim
         character*150 DIRECTORY
         character*31 EXT
@@ -105,6 +107,12 @@ cdis
         character*4 LVL_COORD_2d
 
         real*4 field_2d(imax,jmax)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_lapsdata_2d: bad istatus, return'
+            return
+        endif
 
         call get_directory(ext,directory,len_dir)
 
@@ -136,8 +144,6 @@ cdis
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc'
-
         character*9 asc9_tim
 
         character*150 DIRECTORY
@@ -153,6 +159,14 @@ cdis
 
         character*255 c_filespec
 
+        logical ltest_vertical_grid
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_laps_2dgrid: bad istatus, return'
+            return
+        endif
+
         call get_directory(ext,directory,len_dir)
 
         do i = 1,31
@@ -165,12 +179,17 @@ cdis
 
         if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
             if(ilevel .ne. 0)then
-                if(vertical_grid .eq. 'HEIGHT')then
+                if(ltest_vertical_grid('HEIGHT'))then
                     lvl_2d = zcoord_of_level(k)/10
                     lvl_coord_2d = 'MSL'
-                elseif(vertical_grid .eq. 'PRESSURE')then
+                elseif(ltest_vertical_grid('PRESSURE'))then
                     lvl_2d = ilevel
                     lvl_coord_2d = 'MB'
+                else
+                    write(6,*)' Error, vertical grid not supported,'
+     1                      ,' this routine supports PRESSURE or HEIGHT'       
+                    istatus = 0
+                    return
                 endif
 
             else
@@ -212,8 +231,6 @@ c
 !       Steve Albers            1990
 !           J Smart             1998
 
-        include 'lapsparms.inc'
-
         character*9 asc9_tim
 
         character*150 DIRECTORY
@@ -229,6 +246,14 @@ c
 
         character*255 c_filespec
 
+        logical ltest_vertical_grid
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_2dgrid_dname: bad istatus, return'
+            return
+        endif
+
         do i = 1,31
             if(ext(i:i) .eq. ' ')goto20
         enddo
@@ -240,12 +265,17 @@ c
 
         if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
             if(ilevel .ne. 0)then
-                if(vertical_grid .eq. 'HEIGHT')then
+                if(ltest_vertical_grid('HEIGHT'))then
                     lvl_2d = zcoord_of_level(k)/10
                     lvl_coord_2d = 'MSL'
-                elseif(vertical_grid .eq. 'PRESSURE')then
+                elseif(ltest_vertical_grid('PRESSURE'))then
                     lvl_2d = ilevel
                     lvl_coord_2d = 'MB'
+                else
+                    write(6,*)' Error, vertical grid not supported,'
+     1                      ,' this routine supports PRESSURE or HEIGHT'       
+                    istatus = 0
+                    return
                 endif
 
             else
@@ -294,8 +324,6 @@ c
 !       J Smart                 1998
 !       added lvd subdirectory flexibility. Only one 2d satellite field returned.
 
-        include 'lapsparms.inc'
-
         character*9 asc9_tim
 
         character*150 DIRECTORY
@@ -318,6 +346,14 @@ c
 
         include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
+
+        logical ltest_vertical_grid
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_laps_2dvar: bad istatus, return'
+            return
+        endif
 
         do i = 1,31
             if(ext(i:i) .eq. ' ')goto20
@@ -383,12 +419,17 @@ c
                 i_selected(i) = 1
 
                 if(ilevel .ne. 0)then
-                    if(vertical_grid .eq. 'HEIGHT')then
+                    if(ltest_vertical_grid('HEIGHT'))then
                         lvl_2d = zcoord_of_level(k)/10
                         lvl_coord_2d = 'MSL'
-                    elseif(vertical_grid .eq. 'PRESSURE')then
+                    elseif(ltest_vertical_grid('PRESSURE'))then
                         lvl_2d = ilevel
                         lvl_coord_2d = 'MB'
+                    else
+                        write(6,*)' Error, vertical grid not supported,'
+     1                      ,' this routine supports PRESSURE or HEIGHT'
+                        istatus = 0
+                        return
                     endif
 
                 else
@@ -446,8 +487,6 @@ c
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc'
-
         character*150 DIRECTORY
 cc        character*31 EXT
         character*(*) EXT, var_2d
@@ -463,6 +502,8 @@ cc        character*3 var_3d(kmax),var_2d
 
         character*9 asc9_tim
 
+        logical ltest_vertical_grid
+
         call get_directory(ext,directory,len_dir)
 
         call make_fnam_lp(i4time,asc9_tim,istatus)
@@ -472,12 +513,17 @@ cc        character*3 var_3d(kmax),var_2d
 
         do k = 1,kmax
             units_3d(k)   = units_2d
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'MB'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
 
             var_3d(k) = var_2d
@@ -509,8 +555,6 @@ cc        character*3 var_3d(kmax),var_2d
 
 !       Steve Albers            1990
 
-        include 'lapsparms.inc'
-
         character*150 DIRECTORY
         character*31 EXT
 
@@ -522,6 +566,8 @@ cc        character*3 var_3d(kmax),var_2d
 
         real*4 field_3d(imax,jmax,kmax)
 
+        logical ltest_vertical_grid
+
         call get_directory(ext,directory,len_dir)
 
         call s_len(ext,len)
@@ -530,13 +576,19 @@ cc        character*3 var_3d(kmax),var_2d
 
         do k = 1,kmax
             units_3d(k)   = units_2d
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'MB'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
+
 
             var_3d(k) = var_2d
 
@@ -568,8 +620,6 @@ cc        character*3 var_3d(kmax),var_2d
 !       field_3d            Output     3D grid
 
 !       Steve Albers            1990
-
-        include 'lapsparms.inc'
 
         character*150 DIRECTORY
         character*31 EXT
@@ -607,8 +657,6 @@ cc        character*3 var_3d(kmax),var_2d
         subroutine put_laps_2d(i4time,EXT,var_2d,units_2d,
      1                  comment_2d,imax,jmax,field_2d,istatus)
 
-!       include 'lapsparms.inc'
-
         character*150 DIRECTORY
 cc        character*31 EXT
         character*(*) EXT
@@ -640,7 +688,7 @@ cc        character*3 var_2d
         subroutine put_laps_3d(i4time,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,ni,nj,nk)
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
         character*150 DIRECTORY
         character*31 EXT
@@ -661,12 +709,17 @@ cc        character*3 var_2d
         do k = 1,nk
             units_3d(k)   = units_2d
             comment_3d(k) = comment_2d
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(k) = zcoord_of_level(k)/10
                 lvl_coord_3d(k) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(k) = 'HPA'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
 
             var_3d(k) = var_2d
@@ -683,7 +736,7 @@ cc        character*3 var_2d
         subroutine put_laps_multi_3d(i4time,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,ni,nj,nk,nf,istatus)
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
         character*150 DIRECTORY
         character*31 EXT
@@ -712,12 +765,17 @@ cc        character*3 var_2d
 
             units_3d(iscript_3d)   = units_2d(l)
             comment_3d(iscript_3d) = comment_2d(l)
-            if(vertical_grid .eq. 'HEIGHT')then
+            if(ltest_vertical_grid('HEIGHT'))then
                 lvl_3d(iscript_3d) = zcoord_of_level(k)/10
                 lvl_coord_3d(iscript_3d) = 'MSL'
-            elseif(vertical_grid .eq. 'PRESSURE')then
+            elseif(ltest_vertical_grid('PRESSURE'))then
                 lvl_3d(iscript_3d) = nint(zcoord_of_level(k))/100
                 lvl_coord_3d(iscript_3d) = 'HPA'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
             endif
 
             var_3d(iscript_3d) = var_2d(l)
@@ -738,8 +796,6 @@ cc        character*3 var_2d
 
         subroutine put_laps_multi_2d(i4time,EXT,var_a,units_a,
      1                          comment_a,field_2d,ni,nj,nf,istatus)
-
-        include 'lapsparms.inc'
 
         integer*4 MAX_FIELDS
         parameter (MAX_FIELDS = 10)
@@ -827,7 +883,8 @@ cc        character*3 var_2d
      1          ,status='unknown',err=998)
         go to 999
 
- 998    write(6,*)' Error in open_lapsprd_file: cannot open the file'       
+ 998    write(6,*)' Error in open_lapsprd_file: cannot open the product'
+     1            ,ext       
         istatus = 0
         return
 
@@ -859,7 +916,7 @@ cc        character*3 var_2d
         go to 999
 
  998    write(6,*)' Warning in open_lapsprd_file_read: '
-     1           ,'cannot open the file'     
+     1           ,'cannot open the product ',ext     
         istatus = 0
         return
 

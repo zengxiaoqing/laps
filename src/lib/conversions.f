@@ -61,11 +61,9 @@ cdis
         subroutine latlon_to_radar(lat_grid,lon_grid,height_grid
      1                  ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
-      include 'trigd.inc'
+        include 'trigd.inc'
 
         implicit real*4 (a-z)
-
-        include 'lapsparms.inc'
 
         if(rlat_radar .eq. 0.0)then
             write(6,*)' Warning, Radar Coords NOT Initialized'
@@ -142,21 +140,28 @@ c       1                       ,hor_dist,curvature
 
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
-            istatus = 0
+        logical ltest_vertical_grid
+
+        call get_laps_config('nest7grid',istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             return
-!           stop
         endif
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
 !           height_to_zcoord = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             pressure_pa = ztopsa(height_m) * 100.
             if(pressure_pa .eq. 9999900.)pressure_pa = 1e-2
             height_to_zcoord = (PRESSURE_0_L - pressure_pa)
      1                          / PRESSURE_INTERVAL_L
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
@@ -184,18 +189,19 @@ c       1                       ,hor_dist,curvature
 !       value of 'height_to_zcoord2' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
-        include 'lapsparms.inc'
 
         integer i,j,k,ni,nj,nk,kref,istatus
 
         real*4 heights_3d(ni,nj,nk)
 
+        logical ltest_vertical_grid
+
         istatus = 1
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_to_zcoord2 = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord2 = nk+1 ! Default value is off the grid
 
           ! Standard Atmosphere Guess + a cushion
@@ -242,6 +248,11 @@ c       1                       ,hor_dist,curvature
      1(1)',
      1             i3,2e11.4)
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
@@ -259,18 +270,19 @@ c       1                       ,hor_dist,curvature
 !       1994 Steve Albers
 
         implicit real*4 (a-z)
-        include 'lapsparms.inc'
 
         integer i,j,k,ni,nj,nk,kref,istatus
 
         real*4 heights_3d(ni,nj,nk)
 
+        logical ltest_vertical_grid
+
         istatus = 1
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_to_zcoord2_lin = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord2_lin = nk+1 ! Default value is off the grid
 
           ! Standard Atmosphere Guess + a cushion
@@ -313,6 +325,11 @@ c       1                       ,hor_dist,curvature
      1    ' Error: below domain in height_to_zcoord2_lin, kref,h,h(1)'
      1             ,i3,2e11.4)
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
@@ -333,19 +350,20 @@ c       1                       ,hor_dist,curvature
 !       value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
-        include 'lapsparms.inc'
 
         integer i,j,k,ni,nj,nk,kref,istatus
 
         real*4 heights_3d(ni,nj,nk)
         real*4 zcoords_1d(nk)
 
+        logical ltest_vertical_grid
+
         istatus = 1
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_to_zcoord3 = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord3 = nk+1 ! Default value is off the grid
 
           ! Standard Atmosphere Guess + a cushion
@@ -391,6 +409,11 @@ c       1                       ,hor_dist,curvature
      1(1)',
      1             i3,2e11.4)
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
@@ -411,19 +434,20 @@ c       1                       ,hor_dist,curvature
 !       value of 'height_to_zcoord4' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
-        include 'lapsparms.inc'
 
         integer i,j,k,ni,nj,nk,kref,istatus
 
         real*4 heights_3d(ni,nj,nk)
         real*4 zcoords_1d(nk)
 
+        logical ltest_vertical_grid
+
         istatus = 1
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_to_zcoord4 = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord4 = nk+1 ! Default value is off the grid
 
             heights_above = heights_3d(i,j,kref)
@@ -465,6 +489,11 @@ c       1                       ,hor_dist,curvature
      1(1)',
      1             i3,2e11.4)
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
@@ -478,15 +507,15 @@ c       1                       ,hor_dist,curvature
         implicit real*4 (a-z)
         integer i,j,k,ni,nj,nk
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
         real*4 heights_3d(ni,nj,nk)
         real*4 pressures_1d(nk)
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_to_zcoord2 = height_m / HEIGHT_INTERVAL
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_pressure = -999. ! Default value is off the grid
             do k = 1,nk-1
                 if(heights_3d(i,j,k+1) .ge. height_m .and.
@@ -502,6 +531,12 @@ c       1                       ,hor_dist,curvature
 
             enddo ! k
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
         endif
 
         return
@@ -511,15 +546,15 @@ c       1                       ,hor_dist,curvature
         subroutine pressure_to_height(pres_pa,heights_3d
      1                             ,ni,nj,nk,i,j,height_out,istatus)
 
-        include 'lapsparms.inc'
-
         real*4 heights_3d(ni,nj,nk)
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        logical ltest_vertical_grid
+
+        if(ltest_vertical_grid('HEIGHT'))then
             istatus = 0
             return
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             if(pres_pa .lt. pressure_of_level(nk) .or.
      1         pres_pa .gt. pressure_of_level(1)       )then
                 istatus = 0
@@ -551,6 +586,12 @@ c       1                       ,hor_dist,curvature
 
             endif ! rk is within domain
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
         endif
 
         istatus = 0
@@ -562,18 +603,25 @@ c       1                       ,hor_dist,curvature
 
         implicit real*4 (a-z)
 
-        integer*4 level
+        integer*4 level,istatus
 
-        include 'lapsparms.inc'
+        logical ltest_vertical_grid
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             height_of_level = HEIGHT_INTERVAL * level
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             height_of_level = psatoz(pressure_of_level(level) * .01)
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
 
         endif
 
+        istatus = 1
         return
         end
 
@@ -582,24 +630,35 @@ c       1                       ,hor_dist,curvature
 
         implicit real*4 (a-z)
 
-        integer*4 level
+        integer*4 level, istatus
 
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        logical ltest_vertical_grid
+
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
 !           zcoord_of_level = height_interval * level
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             zcoord_of_level = PRESSURE_0_L
      1                  - PRESSURE_INTERVAL_L * level
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
         endif
 
+        istatus = 1
         return
         end
 
@@ -608,18 +667,21 @@ c       1                       ,hor_dist,curvature
 
         implicit real*4 (a-z)
 
-        integer*4 level
+        integer*4 level, istatus
 
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
         pressure_of_level = PRESSURE_0_L
      1                  - PRESSURE_INTERVAL_L * level
 
+        istatus = 1
         return
         end
 
@@ -628,16 +690,21 @@ c       1                       ,hor_dist,curvature
 
         implicit real*4 (a-z)
 
+        integer istatus
+
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
         pressure_of_rlevel = PRESSURE_0_L
      1                  - PRESSURE_INTERVAL_L * rlevel
 
+        istatus = 1
         return
         end
 
@@ -648,19 +715,32 @@ c       1                       ,hor_dist,curvature
 
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+!       logical ltest_vertical_grid
+
+        integer istatus
+
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
-!       if    (vertical_grid .eq. 'HEIGHT')then
+!       if(ltest_vertical_grid('HEIGHT'))then
 
-!       elseif(vertical_grid .eq. 'PRESSURE')then
+!       elseif(ltest_vertical_grid('PRESSURE'))then
             zcoord_of_pressure =
      1  (PRESSURE_0_L - pres_pa) / PRESSURE_INTERVAL_L
 
+!       else
+!           write(6,*)' Error, vertical grid not supported,'
+!    1               ,' this routine supports PRESSURE or HEIGHT'
+!           istatus = 0
+!           return
+
 !       endif
 
+        istatus = 1
         return
         end
 
@@ -672,14 +752,20 @@ c       1                       ,hor_dist,curvature
 
         include 'lapsparms.cmn'
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        logical ltest_vertical_grid
+
+        integer istatus
+
+        call get_laps_config('nest7grid',istatus)
+
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
 
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             rz = (PRESSURE_0_L - pres_pa) / PRESSURE_INTERVAL_L
 
             pres_low  = pressure_of_level(int(rz))
@@ -689,8 +775,15 @@ c       1                       ,hor_dist,curvature
 
             zcoord_of_logpressure = int(rz) + frac
 
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
         endif
 
+        istatus = 1
         return
         end
 
@@ -701,8 +794,6 @@ c       1                       ,hor_dist,curvature
      1                       r_radar,
      1                       azimuth,
      1                       longitude)
-
-        include 'lapsparms.inc'
 
         real longitude
 
@@ -728,8 +819,6 @@ c       1                       ,hor_dist,curvature
      1                       r_radar,
      1                       azimuth)
 
-        include 'lapsparms.inc'
-
         call   uv_to_disp(u_true,
      1            v_true,
      1            di_true,
@@ -753,10 +842,10 @@ c       1                       ,hor_dist,curvature
 
         real longitude
 
-        include 'lapsparms.cmn'
+        call get_laps_config('nest7grid',istatus)
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -780,10 +869,8 @@ c       1                       ,hor_dist,curvature
      1                         t_radar,
      1                         r_radar,
      1                         azimuth)
-      include 'trigd.inc'
 
-
-        include 'lapsparms.inc'
+        include 'trigd.inc'
 
 !       real longitude
 
@@ -801,8 +888,6 @@ c       1                       ,hor_dist,curvature
      1                       v_grid,
      1                       azimuth,
      1                       longitude)
-
-        include 'lapsparms.inc'
 
         real longitude
 
@@ -828,8 +913,6 @@ c       1                       ,hor_dist,curvature
      1                       v_true,
      1                       azimuth)
 
-        include 'lapsparms.inc'
-
         call radar_to_disptrue( di_true,
      1                  speed,
      1                  t_radar,
@@ -851,8 +934,6 @@ c       1                       ,hor_dist,curvature
      1                         r_radar,
      1                         azimuth)
 
-
-        include 'lapsparms.inc'
 
 !       real longitude
 
@@ -876,10 +957,10 @@ c       1                       ,hor_dist,curvature
 
         real longitude
 
-        include 'lapsparms.cmn'
+        call get_laps_config('nest7grid',istatus)
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -901,10 +982,10 @@ c       1                       ,hor_dist,curvature
 
         real longitude
 
-        include 'lapsparms.cmn'
+        call get_laps_config('nest7grid',istatus)
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
@@ -927,10 +1008,10 @@ c       1                       ,hor_dist,curvature
 
         real longitude
 
-        include 'lapsparms.cmn'
+        call get_laps_config('nest7grid',istatus)
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not successfully called'       
             stop
         endif
 
