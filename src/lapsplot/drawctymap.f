@@ -43,6 +43,8 @@ c
       real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
      +       polat,polon,rrot
 
+      character*3 c3_time_zone
+
 c
       integer*4 jproj,jjlts,jgrid,jus,jdot,ier
 c
@@ -73,7 +75,9 @@ c
 
       domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom
 
-      call get_lapsplot_parms(latlon_int,continent_line_width,istatus)       
+      call get_lapsplot_parms(latlon_int,continent_line_width
+     1                       ,c3_time_zone,time_zone
+     1                       ,istatus)       
 
 !     Plot Counties
       if(jdot .eq. 1)then
@@ -149,15 +153,21 @@ c
 
  
        subroutine get_lapsplot_parms(latlon_int,continent_line_width
+     1                              ,c3_time_zone,time_zone
      1                              ,istatus)
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
+     1                       ,c3_time_zone,time_zone
  
        character*150 static_dir,filename
+       character*3 c3_time_zone
+       real*4 time_zone
 
 !      Set defaults
        latlon_int = 0
        continent_line_width = 1.0
+       c3_time_zone = 'UTC'
+       time_zone = 0.0
  
        call get_directory('static',static_dir,len_dir)
 
