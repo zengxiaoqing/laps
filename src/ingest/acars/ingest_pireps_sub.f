@@ -3,7 +3,7 @@
      1                                                     ,NX_L,NY_L
      1                                                     ,istatus)
 
-      character*70 filename
+      character*170 filename
 
 !.............................................................................
 
@@ -145,7 +145,7 @@ C
 
 !.............................................................................
 
-      character*70 filename
+      character*170 filename
       character*9 a9_timeObs,a9_recptTime 
       character*7 c7_skycover
       real*4 lat_a(NX_L,NY_L)

@@ -4,7 +4,7 @@
 !     Steve Albers      Dec-1997        
 
 !     Input file 
-      character*70 filename_in
+      character*170 filename_in
       character*9 a9_time
       character*150 dir_in
       character*255 c_filespec
@@ -65,9 +65,9 @@
      1                                      + lag_time_report
           
           if(i4times(i) .lt. i4time_file_earliest)then
-              write(6,*)' File is too early ',a9_time,i
+              write(6,*)' File is too early ',a9_time,' ',i
           elseif(i4times(i) .gt. i4time_file_latest)then
-              write(6,*)' File is too late ',a9_time,i
+              write(6,*)' File is too late ',a9_time,' ',i
           else
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in

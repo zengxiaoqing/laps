@@ -5,7 +5,7 @@
       parameter(max_paths=10)
 
 !     Input file 
-      character*70 filename_in
+      character*170 filename_in
       character*150 dir_in, path_to_cloud_drift(max_paths)
       character*20  cloud_drift_format(max_paths)
       character*255 c_filespec

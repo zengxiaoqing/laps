@@ -5,7 +5,7 @@
      1                        ,filename
      1                        ,istatus)
 
-      character*70 filename
+      character*170 filename
 
 !.............................................................................
 

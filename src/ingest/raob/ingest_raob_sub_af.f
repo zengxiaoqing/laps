@@ -20,7 +20,7 @@ C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 39
 C     ****VARIABLES FOR THIS NETCDF FILE****
 C
 
-      character*70 filename
+      character*170 filename
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)

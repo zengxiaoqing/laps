@@ -3,7 +3,7 @@
      1                                    ,NX_L,NY_L
      1                                    ,filename,istatus)
 
-      character*70 filename
+      character*170 filename
 
 !.............................................................................
 

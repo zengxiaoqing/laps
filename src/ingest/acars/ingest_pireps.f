@@ -7,7 +7,7 @@
 !     Ken Dritz     15-Jul-1997         Pass NX_L, NY_L to get_pirep_data
 
 !     Input file 
-      character*70 filename_in
+      character*170 filename_in
       character*9 a9_time
       character*180 dir_in
       character*255 c_filespec

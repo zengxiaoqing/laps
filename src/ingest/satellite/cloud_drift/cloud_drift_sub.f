@@ -7,7 +7,7 @@
 
 !.............................................................................
 
-      character*70 filename
+      character*170 filename
       character*10 a10_time
       character*9 a9_timeObs,a10_to_a9 
       character*6 a6_time
