@@ -31,32 +31,36 @@ cdis
 cdis 
 
         subroutine mean_wind(uanl,vanl,topo,imax,jmax,kmax
-     1                                  ,sum,usum,vsum,klow
      1                                  ,umean,vmean
      1                                  ,ustorm,vstorm,istatus)
 
-        include 'lapsparms.inc' ! for vertical_grid, r_missing_data
+        logical ltest_vertical_grid
 
-        real*4 umean(imax,jmax),vmean(imax,jmax)
-        real*4 ustorm(imax,jmax),vstorm(imax,jmax)
-        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
+        real*4 umean(imax,jmax),vmean(imax,jmax)                  ! Output
+        real*4 ustorm(imax,jmax),vstorm(imax,jmax)                ! Output
+        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
 
-        real*4 topo(imax,jmax)
+        real*4 topo(imax,jmax)                                    ! Input
 
-        real*4 sum(imax,jmax)
-        real*4 usum(imax,jmax)
-        real*4 vsum(imax,jmax)
-        integer*4 klow(imax,jmax)
+        real*4 sum(imax,jmax)                                     ! Local
+        real*4 usum(imax,jmax)                                    ! Local
+        real*4 vsum(imax,jmax)                                    ! Local
+        integer*4 klow(imax,jmax)                                 ! Local
 
-        if    (vertical_grid .eq. 'HEIGHT')then
+        if(ltest_vertical_grid('HEIGHT'))then
             khigh = nint(height_to_zcoord(5000.,istatus))
-
-        elseif(vertical_grid .eq. 'PRESSURE')then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             pres_mb = 300.
             pres_pa = pres_mb * 100.
             khigh = nint(zcoord_of_pressure(pres_pa))
-
+        else
+            write(6,*)' mean_wind: unknown vertical grid'
+            istatus = 0
+            return
         endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
 
         write(6,*)' Top level of mean wind computation = ',khigh
 
@@ -65,7 +69,7 @@ cdis
              klow(i,j) =
      1            max(nint(height_to_zcoord(topo(i,j),istatus)),1)
              if(istatus .ne. 1)then
-                 write(6,*)' Error in height_to_zcoord'
+                 write(6,*)' mean_wind: ERROR in height_to_zcoord'
                  return
              endif
              sum(i,j) = 0.
@@ -78,7 +82,7 @@ cdis
           do j = 1,jmax
             do i = 1,imax
               if(uanl(i,j,k) .ne. r_missing_data .and.
-     1         vanl(i,j,k) .ne. r_missing_data
+     1           vanl(i,j,k) .ne. r_missing_data
      1                        .and. k .ge. klow(i,j))then
                 sum(i,j) = sum(i,j) + 1.
                 usum(i,j) = usum(i,j) + uanl(i,j,k)

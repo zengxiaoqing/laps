@@ -30,104 +30,95 @@ cdis
 cdis 
 cdis 
 
-        subroutine helicity_laps(uanl,vanl,ustorm,vstorm,topo
-     1  ,u_rel_last ! Local
-     1  ,v_rel_last ! Local
-     1  ,area_sum    ! Local
-     1        ,klow        ! Local
-     1  ,imax,jmax,kmax,helicity,istatus)
-
-        include 'lapsparms.inc' ! for vert grid, r_missing_data
+        subroutine helicity_laps(uanl,vanl,ustorm,vstorm
+     1                          ,heights_3d,topo
+     1                          ,imax,jmax,kmax,helicity,istatus)       
 
         real*4 ustorm(imax,jmax),vstorm(imax,jmax)
+        real*4 usfc(imax,jmax),vsfc(imax,jmax)
         real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
         real*4 helicity(imax,jmax)
         real*4 topo(imax,jmax)
 
-!       Local
-        real*4 u_rel_last(imax,jmax)
-        real*4 v_rel_last(imax,jmax)
-        real*4 area_sum(imax,jmax)
-        integer*4 klow(imax,jmax)
+!       1998 Steve Albers - Overhauled
 
         icount_write = 0
 
-        write(6,*)' Computing Helicity'
-        hel_max = +1000.
-
-        if    (vertical_grid .eq. 'HEIGHT')then
-            khigh = nint(height_to_zcoord(5000.,istatus))
-
-        elseif(vertical_grid .eq. 'PRESSURE')then
-            pres_mb = 500.
-            pres_pa = pres_mb * 100.
-            khigh = nint(zcoord_of_pressure(pres_pa))
-
-        endif
-
-        write(6,*)' Top level of helicity computation = ',khigh
+        write(6,*)' Computing Helicity for 0-3 km AGL'
 
         do j = 1,jmax
-          do i = 1,imax
-             area_sum(i,j) = 0.
-             klow(i,j) = max(nint(height_to_zcoord(topo(i,j),istatus)),1
-     1)
-          enddo ! i
-        enddo ! j
+        do i = 1,imax
 
-        do k = 1,khigh
-          do j = 1,jmax
-            do i = 1,imax
-              if(uanl(i,j,k) .ne. r_missing_data .and.
-     1    vanl(i,j,k) .ne. r_missing_data      )then
+            area_sum = 0.
 
-!               Determine u & v relative to storm mean motion vector
-                u_rel = uanl(i,j,k) - ustorm(i,j)
-                v_rel = vanl(i,j,k) - vstorm(i,j)
+!           Layer is 0-3 km AGL, denoted from "sfc" to "top"
+            rksfc = height_to_zcoord2(topo(i,j)      ,heights_3d
+     1                               ,imax,jmax,kmax,i,j,istatus)
+            if(istatus .ne. 1)return
 
-                if(k .gt. klow(i,j))then
+            rktop = height_to_zcoord2(topo(i,j)+3000.,heights_3d
+     1                               ,imax,jmax,kmax,i,j,istatus)
+            if(istatus .ne. 1)return
 
-!                 Cross product of wind vectors on top and bottom of layer
-                  xprod = u_rel * v_rel_last(i,j) - v_rel * u_rel_last(i
-     1,j)
+!           Get storm relative wind at the sfc, using interpolated sfc wind
+            ksfc  = int(rksfc)
+            frack = rksfc - ksfc
+            u_sfc = uanl(i,j,ksfc)   * (1.-frack) 
+     1            + uanl(i,j,ksfc+1) * frack       
+            v_sfc = vanl(i,j,ksfc)   * (1.-frack) 
+     1            + vanl(i,j,ksfc+1) * frack
 
-!                 Incremental area of hodograph
-                  area = .5 * xprod
+            u_rel_l = u_sfc - ustorm(i,j)
+            v_rel_l = v_sfc - vstorm(i,j)
 
-!                 Total area of hodograph
-                  area_sum(i,j) = area_sum(i,j) + area
+            klow  = int(rksfc) + 1          ! 1st level above the sfc
+            khigh = int(rktop) + 1          ! 1st level above top of layer
+
+            do k = klow,khigh
+
+                if(k .lt. khigh)then
+!                   Get storm relative wind at this level
+                    u_rel_u = uanl(i,j,k) - ustorm(i,j)
+                    v_rel_u = vanl(i,j,k) - vstorm(i,j)
+
+                else ! k = khigh, use 3km agl values instead of this laps level
+                    frack = rktop - int(rktop)
+                    u_anl = uanl(i,j,k-1) * (1.-frack) 
+     1                    + uanl(i,j,k)   * frack
+                    v_anl = vanl(i,j,k-1) * (1.-frack) 
+     1                    + vanl(i,j,k)   * frack
+
+                    u_rel_u = u_anl - ustorm(i,j)
+                    v_rel_u = v_anl - vstorm(i,j)
 
                 endif
 
-                u_rel_last(i,j) = u_rel
-                v_rel_last(i,j) = v_rel
 
-              endif ! Missing Data
+!               Cross product of wind vectors on top and bottom of layer
+                xprod = u_rel_l * v_rel_u - v_rel_l * u_rel_u       
 
-            enddo ! j
+!               Incremental area of hodograph
+                area = .5 * xprod
 
-          enddo ! i
+!               Total area of hodograph
+                area_sum = area_sum + area
 
-        enddo ! k
+                u_rel_l = u_rel_u
+                v_rel_l = v_rel_u
 
-        do j = 1,jmax
-          do i = 1,imax
-             helicity(i,j) = area_sum(i,j) /
-     1      (zcoord_of_level(khigh) - zcoord_of_level(klow(i,j)))
+            enddo ! k
 
-             if(helicity(i,j) .lt. hel_max)then
-                 hel_max = helicity(i,j)
-                 if(icount_write .eq. icount_write / 10 * 10)then
-                     write(6,101)i,j,klow(i,j),khigh,
-     1          helicity(i,j),ustorm(i,j),(uanl(i,j,k),k=1,min(kmax,21))
-101                  format(/4i4,f10.5,f8.3/7e11.3/7e11.3/7e11.3)
-                 endif
-                 icount_write = icount_write + 1
-             endif
+            helicity(i,j) = area_sum * (-2.) 
 
-          enddo ! i
+            if(i .eq. 1 .and. j .eq. 1)then
+                write(6,101)i,j,klow,khigh,helicity(i,j),ustorm(i,j)
+     1                    ,(uanl(i,j,k),k=1,min(kmax,21))        
+101             format(/4i4,f10.5,f8.3/7e11.3/7e11.3/7e11.3)
+            endif
+
         enddo ! j
-
+        enddo ! i
 
         return
         end

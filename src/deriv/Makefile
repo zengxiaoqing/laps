@@ -46,5 +46,4 @@ install: exe
 clean:
 	rm -f $(EXE)  *.o *~ *#
 
-
 distclean: clean

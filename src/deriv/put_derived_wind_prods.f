@@ -220,8 +220,7 @@
 
 !       Get layer mean wind
         call mean_wind(uanl,vanl,topo,imax,jmax,kmax
-     1        ,dum1_2d,dum2_2d,dum3_2d,idum1_2d ! Local arrays in mean_wind
-     1        ,umean,vmean,ustorm,vstorm,istatus)
+     1                ,umean,vmean,ustorm,vstorm,istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' FATAL ERROR in MEAN_WIND ROUTINE'
@@ -266,8 +265,7 @@
 
 !           Move writing of LMR product to here with appropriate changes
 !           Write out LMR file
-            write(6,*)' Writing out LMR (or equiv) file for max reflecti
-     1vity'
+            write(6,*)' Writing out LMR file for max reflectivity'
             do ifcst = 0,n_fcst_radar
                 minutes_10 = (ilaps_cycle_time * ifcst) / 600
                 write(var_a(ifcst),101) 'R',minutes_10 
@@ -301,7 +299,7 @@ cc102                 format('R',i2)
 
         else
             write(6,*)
-     1       ' Not writing out Max Reflectivity LMR (or equiv) file'
+     1       ' Not writing out Max Reflectivity LMR file'
 
         endif
 
@@ -377,9 +375,9 @@ ccc202              format('H',i2)
 
 !           Write out Helicity field
             write(6,*)' Calculating Helicity'
-            call helicity_laps(uanl,vanl,ustorm,vstorm,topo
-     1          ,dum1_2d,dum2_2d,dum3_2d,idum1_2d    ! Local arrays in helicity
-     1          ,imax,jmax,kmax,helicity,istatus)
+            call helicity_laps(uanl,vanl,ustorm,vstorm
+     1                        ,heights_3d,topo        
+     1                        ,imax,jmax,kmax,helicity,istatus)
 
             if(istatus .eq. 1)then
                 ext = 'lhe'
