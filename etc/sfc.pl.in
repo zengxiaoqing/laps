@@ -48,9 +48,9 @@ if (defined $hr) {
        {$filename = $logdir."/".$logname.".log.".$hr;}
 }
 
-@greplines = `grep "Normal completion of LAPSVANL" $filename`;
-$nlines = @greplines;
-if ($nlines == 0) {print "Surface analysis is in progress...\n";}
+#@greplines = `grep "Normal completion of LAPSVANL" $filename`;
+#$nlines = @greplines;
+#if ($nlines == 0) {print "Surface analysis is in progress...\n";}
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
