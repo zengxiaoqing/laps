@@ -76,7 +76,7 @@ PROGRAM wfoprep
   INTEGER, ALLOCATABLE      :: i4times_avail_max(:)
   INTEGER, ALLOCATABLE      :: i4times_avail(:)
   INTEGER                   :: istatus
-  INTEGER                   :: k
+  INTEGER                   :: k,kk
   CHARACTER (LEN=13)        :: last_cycle_processed
   CHARACTER (LEN=13)        :: latest_cycle_wfo
 
@@ -88,8 +88,8 @@ PROGRAM wfoprep
   CHARACTER (LEN=256)       :: proclog
   INTEGER                   :: ta
   INTEGER                   :: t_id,ht_id,u_id,v_id,rh_id,msl_id
-  INTEGER                   :: nz_t,nz_ht,nz_u,nz_v,nz_rh,nz_msl
-  INTEGER                   :: np_t,np_ht,np_u,np_v,np_rh,np_msl
+  INTEGER                   :: nz_t,nz_ht,nz_u,nz_v,nz_rh,nz_rh,nz_msl
+  INTEGER                   :: np_t,np_ht,np_u,np_v,np_rh,np_rh_raw,np_msl
   LOGICAL                   :: havesfc_t,havesfc_ht,havesfc_u,havesfc_msl
   LOGICAL                   :: havesfc_v,havesfc_rh
   CHARACTER (LEN=10)        :: t_levels_c(maxl)
@@ -100,7 +100,7 @@ PROGRAM wfoprep
   CHARACTER (LEN=10)        :: msl_levels_c(maxl)
   REAL                      :: t_plevels(maxl)
   REAL                      :: ht_plevels(maxl)
-  REAL                      :: rh_plevels(maxl)
+  REAL                      :: rh_plevels(maxl),rh_plevels_raw(maxl)
   REAL                      :: u_plevels(maxl)
   REAL                      :: v_plevels(maxl)
   REAL                      :: msl_plevels(maxl)
@@ -137,6 +137,9 @@ PROGRAM wfoprep
   REAL, ALLOCATABLE         :: vsf(:,:),vsf1(:,:),vsf2(:,:)
   REAL, ALLOCATABLE         :: slp(:,:),slp1(:,:),slp2(:,:)
   REAL, ALLOCATABLE         :: topo(:,:)
+  REAL, ALLOCATABLE         :: data3d_temp(:,:,:)
+  LOGICAL                   :: fixvar1, fixvar2
+
   istatus = 1
   PRINT '(A)', 'Calling setup routine...'
   CALL setup_wfoprep(istatus)
@@ -207,21 +210,33 @@ PROGRAM wfoprep
     PRINT '(2A)', '    Searching for data file: ',TRIM(modelfile_wfo)
     INQUIRE(FILE=modelfile_wfo, EXIST=filefound)
     IF (.NOT. filefound) THEN
-      PRINT '(A)', '       NOT AVAILABLE...SKIPPING.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#############################'
+      PRINT '(A)', 'SKIPPING MODEL: NOT AVAILABLE'
+      PRINT '(A)', '#############################' 
+      PRINT '(A)', ' ' 
       CYCLE model_loop
     ENDIF
 
     ! Open the file
     CALL open_wfofile(modelfile_wfo,nfid,istatus)
     IF (istatus .NE. 1)THEN
-      PRINT *, 'Skipping due to problem opening file: ', TRIM(modelfile_wfo)
-      CYCLE model_loop
+      PRINT '(A)', ' '
+      PRINT '(A)', '#############################'
+      PRINT '(A)', 'SKIPPING MODEL: I/O ERROR'
+      PRINT '(A)', '#############################'
+      PRINT '(A)', ' '
+      CYCLE model_loop                          
     ENDIF
    
     ! Get grid/projection info
     CALL get_wfomodel_proj(nfid,model_name(m),proj,istatus)
     IF (istatus .NE. 1) THEN
-      PRINT *, 'Skipping due to problem getting projection info.'
+            PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: PROJ INFO PROBLEM'
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '     
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF
@@ -229,15 +244,19 @@ PROGRAM wfoprep
     ! Process time info
     CALL get_wfomodel_fcsttimes(nfid,ntimes,fcstsec,istatus)
     IF (istatus.NE.1) THEN
-      PRINT *, 'Problem getting time information.  Skipping.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: TIME INFO PROBLEM'
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '     
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF
     ALLOCATE(i4times_avail_max(ntimes))
     i4times_avail_max(1:ntimes) = i4time_cycle + fcstsec(1:ntimes)
     IF (i4time_last .GT. i4times_avail_max(ntimes)) THEN
-      PRINT *, 'This source does not support max_fcst length of ',max_fcst_len(m)
-      PRINT *, 'Resetting to ', (i4times_avail_max(ntimes)-i4time_cycle)/36
+      PRINT *, 'INFO: This source does not support max_fcst length of ',max_fcst_len(m)
+      PRINT *, 'INFO: Resetting to ', (i4times_avail_max(ntimes)-i4time_cycle)/36
       i4time_last = i4times_avail_max(ntimes)
     ELSE  
       ! Compute the ntimes_needed value, which reprenents the number
@@ -260,7 +279,11 @@ PROGRAM wfoprep
     CALL get_wfomodel_var_levels(nfid,'t         ',t_id, nz_t, t_levels_c, np_t, &
                   t_plevels,t_kbotp,t_ktopp, havesfc_t,t_ksfc,istatus)
     IF (istatus.NE.1)THEN
-      PRINT *,'No temperature data found.  Skipping this model.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO T DATA        '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '                  
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF
@@ -270,17 +293,25 @@ PROGRAM wfoprep
       CALL get_wfomodel_var_levels(nfid,'gh        ',ht_id, nz_ht, ht_levels_c, np_ht, &
                  ht_plevels,ht_kbotp,ht_ktopp, havesfc_ht, ht_ksfc,istatus)
       IF (istatus.NE.1)THEN
-        PRINT *,'No height data found for this 3d source. Skipping this model.'
+        PRINT '(A)', ' '
+        PRINT '(A)', '#################################'
+        PRINT '(A)', 'SKIPPING MODEL: NO Z DATA        '
+        PRINT '(A)', '#################################'
+        PRINT '(A)', ' '  
         CALL close_wfofile(nfid,istatus)
         CYCLE model_loop
       ENDIF                           
     ENDIF 
      
     ! Relative humidity
-    CALL get_wfomodel_var_levels(nfid,'rh        ',rh_id, nz_rh, rh_levels_c, np_rh, &
-                  rh_plevels,rh_kbotp,rh_ktopp, havesfc_rh,rh_ksfc,istatus)
+    CALL get_wfomodel_var_levels(nfid,'rh        ',rh_id, nz_rh, rh_levels_c, np_rh_raw, &
+                  rh_plevels_raw,rh_kbotp,rh_ktopp, havesfc_rh,rh_ksfc,istatus)
     IF (istatus.NE.1)THEN
-      PRINT *,'No relative humidity data found.  Skipping this model.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO RH DATA        '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '                    
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF                      
@@ -289,7 +320,11 @@ PROGRAM wfoprep
     CALL get_wfomodel_var_levels(nfid,'uw        ',u_id, nz_u, u_levels_c, np_u, &
                   u_plevels, u_kbotp,u_ktopp,havesfc_u,u_ksfc,istatus)
     IF (istatus.NE.1)THEN
-      PRINT *,'No u-component wind data found.  Skipping this model.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO U DATA        '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '        
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF                  
@@ -298,7 +333,11 @@ PROGRAM wfoprep
     CALL get_wfomodel_var_levels(nfid,'vw        ',v_id, nz_v, v_levels_c, np_v, &
                   v_plevels,v_kbotp,v_ktopp, havesfc_v,v_ksfc,istatus)
     IF (istatus.NE.1)THEN
-      PRINT *,'No v-component wind data found.  Skipping this model.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO V DATA        '
+      PRINT '(A)', '#################################'
+      PRINT '(A)', ' '   
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF     
@@ -321,7 +360,11 @@ PROGRAM wfoprep
           PRINT *, 'Using PMSL field'
           mslname = 'pmsl      '
         ELSE
-          PRINT *, 'No mean sea level pressure found!'
+          PRINT '(A)', ' '
+          PRINT '(A)', '#################################'
+          PRINT '(A)', 'SKIPPING MODEL: NO MSLP DATA        '
+          PRINT '(A)', '#################################'
+          PRINT '(A)', ' '  
           CALL close_wfofile(nfid,istatus)
           CYCLE model_loop
         ENDIF
@@ -337,7 +380,11 @@ PROGRAM wfoprep
     IF ( model_code(m) .GT. 1) THEN
       IF ( (np_t .NE. np_ht) .OR. (np_u .NE. np_ht) .OR. &
            (np_u .NE. np_ht) ) THEN
-         PRINT *, 'Mismatch in pressure levels between T,HT,U, and V.'
+         PRINT '(A)', ' '
+          PRINT '(A)', '####################################'
+          PRINT '(A)', 'SKIPPING MODEL: DIMENSION MISMATCHES'
+          PRINT '(A)', '####################################'
+          PRINT '(A)', ' '              
          DEALLOCATE(i4times_avail_max)
          CALL close_wfofile(nfid,istatus)
          CYCLE model_loop
@@ -360,7 +407,11 @@ PROGRAM wfoprep
     ALLOCATE(t_inv(nz_t,ntimes))
     CALL get_wfomodel_var_inv(nfid,'t         ',nz_t,ntimes,t_inv,istatus)
     IF (istatus .NE. 1) THEN
-      PRINT *, 'Problem getting T inventory.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO T INVENTORY      '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', ' ' 
       CALL close_wfofile(nfid,istatus)  
       CYCLE model_loop
     ENDIF
@@ -369,7 +420,11 @@ PROGRAM wfoprep
     ALLOCATE(u_inv(nz_u,ntimes))
     CALL get_wfomodel_var_inv(nfid,'uw        ',nz_u,ntimes,u_inv,istatus)
     IF (istatus .NE. 1) THEN
-      PRINT *, 'Problem getting U inventory.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO U INVENTORY      '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', ' '    
       CALL close_wfofile(nfid,istatus)  
       CYCLE model_loop
     ENDIF      
@@ -378,7 +433,11 @@ PROGRAM wfoprep
     ALLOCATE(v_inv(nz_v,ntimes))
     CALL get_wfomodel_var_inv(nfid,'vw        ',nz_v,ntimes,v_inv,istatus)
     IF (istatus .NE. 1) THEN
-      PRINT *, 'Problem getting V inventory.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO V INVENTORY      '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', ' '    
       CALL close_wfofile(nfid,istatus)  
       CYCLE model_loop
     ENDIF       
@@ -387,7 +446,11 @@ PROGRAM wfoprep
     ALLOCATE(rh_inv(nz_rh,ntimes))
     CALL get_wfomodel_var_inv(nfid,'rh        ',nz_rh,ntimes,rh_inv,istatus)
     IF (istatus .NE. 1) THEN
-      PRINT *, 'Problem getting RH inventory.'
+      PRINT '(A)', ' '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', 'SKIPPING MODEL: NO RH INVENTORY      '
+      PRINT '(A)', '####################################'
+      PRINT '(A)', ' '    
       CALL close_wfofile(nfid,istatus)  
       CYCLE model_loop
     ENDIF   
@@ -397,7 +460,11 @@ PROGRAM wfoprep
       ALLOCATE (ht_inv(nz_ht,ntimes))
       CALL get_wfomodel_var_inv(nfid,'gh        ',nz_ht,ntimes,ht_inv,istatus)
       IF (istatus .NE. 1) THEN
-        PRINT *, 'Problem getting HT inventory.'
+        PRINT '(A)', ' '
+        PRINT '(A)', '####################################'
+        PRINT '(A)', 'SKIPPING MODEL: NO Z INVENTORY      '
+        PRINT '(A)', '####################################'
+        PRINT '(A)', ' '    
         CALL close_wfofile(nfid,istatus)
         CYCLE model_loop
       ENDIF   
@@ -408,7 +475,11 @@ PROGRAM wfoprep
       ALLOCATE (msl_inv(nz_msl,ntimes))
       CALL get_wfomodel_var_inv(nfid,mslname,nz_msl,ntimes,msl_inv,istatus)
       IF (istatus .NE. 1) THEN
-        PRINT *, 'Problem getting MSLP inventory.'
+        PRINT '(A)', ' '
+        PRINT '(A)', '####################################'
+        PRINT '(A)', 'SKIPPING MODEL: NO MSLP INVENTORY      '
+        PRINT '(A)', '####################################'
+        PRINT '(A)', ' '   
         CALL close_wfofile(nfid,istatus)
         CYCLE model_loop
       ENDIF
@@ -429,21 +500,21 @@ PROGRAM wfoprep
 
         ! Check MSL pressure
         IF (.NOT.msl_inv(msl_ksfc,i)) THEN
-          PRINT *, 'Missing MSL for this time.',i
+          PRINT *, 'WARNING: Missing MSL for this time:',i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF
 
-        ! Check height field, requiring all levels to be present!
+        ! Check height field, requiring most levels to be present!
         goodlevs = 0
         htinvloop: DO k = ht_kbotp, ht_ktopp
           IF (ht_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  htinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_ht)
-        IF ((goodpct .LT. 1.0).OR.(.NOT.ht_inv(ht_kbotp,i)).OR.&
+        IF ((goodpct .LT. 0.5).OR.(.NOT.ht_inv(ht_kbotp,i)).OR.&
             (.NOT.ht_inv(ht_ktopp,i))) THEN
-          PRINT *, 'Time ',i,' Height inventory failed check:', &
-              ht_inv(ht_kbotp:ht_ktopp,i),ht_kbotp,ht_ktopp
+          PRINT *, 'WARNING: Height inventory failed vertical check:', &
+              goodpct, i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF
@@ -454,10 +525,10 @@ PROGRAM wfoprep
           IF (t_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  tinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_t)
-        IF ((goodpct .LT. 1.0).OR.(.NOT.t_inv(t_kbotp,i)).OR.&
+        IF ((goodpct .LT. 0.5).OR.(.NOT.t_inv(t_kbotp,i)).OR.&
             (.NOT.t_inv(t_ktopp,i))) THEN
-          PRINT *, 'Time ',i,' Temperature inventory failed check:', &
-              t_inv(t_kbotp:t_ktopp,i)
+          PRINT *, 'WARNING: Temperature inventory failed vertical check:', &
+              goodpct, i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF               
@@ -467,11 +538,11 @@ PROGRAM wfoprep
         rhinvloop: DO k = rh_kbotp, rh_ktopp
           IF (rh_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  rhinvloop
-        goodpct = FLOAT(goodlevs)/FLOAT(np_rh)
-        IF ((goodpct .LT. 1.0).OR.(.NOT.rh_inv(rh_kbotp,i)).OR.&
+        goodpct = FLOAT(goodlevs)/FLOAT(np_rh_raw)
+        IF ((goodpct .LT. 0.5).OR.(.NOT.rh_inv(rh_kbotp,i)).OR.&
             (.NOT.rh_inv(rh_ktopp,i))) THEN
-          PRINT *, 'Time ',i,' RH inventory failed check:', &
-              rh_inv(rh_kbotp:rh_ktopp,i)
+          PRINT *, 'WARNING: RH inventory failed vertical check:', &
+              goodpct, i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF                   
@@ -482,10 +553,10 @@ PROGRAM wfoprep
           IF (u_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  uinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_u)
-        IF ((goodpct .LT. 1.0).OR.(.NOT.u_inv(u_kbotp,i)).OR.&
+        IF ((goodpct .LT. 0.5).OR.(.NOT.u_inv(u_kbotp,i)).OR.&
             (.NOT.u_inv(u_ktopp,i))) THEN
-          PRINT *, 'Time ',i,' U inventory failed check:', &
-              u_inv(u_kbotp:u_ktopp,i)
+          PRINT *, 'WARNING: U inventory failed vertical check:', &
+              goodpct, i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF                
@@ -496,10 +567,10 @@ PROGRAM wfoprep
           IF (v_inv(k,i)) goodlevs = goodlevs + 1
         ENDDO  vinvloop
         goodpct = FLOAT(goodlevs)/FLOAT(np_v)
-        IF ((goodpct .LT. 1.0).OR.(.NOT.v_inv(v_kbotp,i)).OR.&
+        IF ((goodpct .LT. 0.5).OR.(.NOT.v_inv(v_kbotp,i)).OR.&
             (.NOT.v_inv(v_ktopp,i))) THEN
-          PRINT *, 'Time ',i,' V inventory failed check:', &
-              v_inv(v_kbotp:v_ktopp,i)
+          PRINT *, 'WARNING: V inventory failed vertical check:', &
+              goodpct,i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF 
@@ -510,25 +581,25 @@ PROGRAM wfoprep
         ! We need surface values
 
         IF (.NOT. t_inv(t_ksfc,i)) THEN
-          PRINT *, 'Missing surface T'
+          PRINT *, 'WARNING: Missing surface T', i
           goodtime_flag(i) = .false.
           CYCLE invloop 
         ENDIF
 
         IF (.NOT. u_inv(u_ksfc,i)) THEN
-          PRINT *, 'Missing surface U'
+          PRINT *, 'WARNING: Missing surface U', i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF    
 
         IF (.NOT. v_inv(u_ksfc,i)) THEN
-          PRINT *, 'Missing surface V'
+          PRINT *, 'WARNING: Missing surface V',i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF     
 
         IF (.NOT. rh_inv(rh_ksfc,i)) THEN
-          PRINT *, 'Missing surface RH'
+          PRINT *, 'WARNING: Missing surface RH',i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF     
@@ -540,9 +611,9 @@ PROGRAM wfoprep
       goodtime_flag(i) = .true.
     ENDDO invloop 
            
-    ! OK, now lets make sure that 80% ofthe time periods
+    ! OK, now lets make sure that 50% ofthe time periods
     ! passed the above check and that the first and last
-    ! times are avaible
+    ! times are available
     goodlevs = 0
     DO i = 1,ntimes_needed
       IF (goodtime_flag(i)) goodlevs = goodlevs + 1
@@ -550,11 +621,14 @@ PROGRAM wfoprep
     goodpct = FLOAT(goodlevs)/FLOAT(ntimes_needed)
     IF ( (goodpct .LT. 0.50).OR.(.NOT.goodtime_flag(1)).OR.&
          (.NOT.goodtime_flag(ntimes_needed)))THEN
-      PRINT *, 'Model run failed time inventory checks.  Skipping.'
+      PRINT *, ' '
+      PRINT *, '###################################################'
+      PRINT *, 'SKIPPING MODEL:  TIME INVENTORY CHECK FAILED'
       PRINT *, 'goodpct = ', goodpct
       PRINT *, 'goodtime_Flag(1) = ', goodtime_Flag(1)
       PRINT *, 'ntimes_needed = ', ntimes_needed
       PRINT *, 'goodtime_flag(ntimes_needed) =',goodtime_flag(ntimes_needed)
+      PRINT *, '###################################################'
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF
@@ -587,9 +661,9 @@ PROGRAM wfoprep
       ALLOCATE (t3d     (proj%nx,proj%ny,np_t) )
       ALLOCATE (t3d1    (proj%nx,proj%ny,np_t) )
       ALLOCATE (t3d2    (proj%nx,proj%ny,np_t) )
-      ALLOCATE (rh3d     (proj%nx,proj%ny,np_rh) )
-      ALLOCATE (rh3d1    (proj%nx,proj%ny,np_rh) )
-      ALLOCATE (rh3d2    (proj%nx,proj%ny,np_rh) ) 
+      ALLOCATE (rh3d     (proj%nx,proj%ny,np_rh_raw) )
+      ALLOCATE (rh3d1    (proj%nx,proj%ny,np_rh_raw) )
+      ALLOCATE (rh3d2    (proj%nx,proj%ny,np_rh_raw) ) 
       ALLOCATE (u3d     (proj%nx,proj%ny,np_u) )
       ALLOCATE (u3d1    (proj%nx,proj%ny,np_u) )
       ALLOCATE (u3d2    (proj%nx,proj%ny,np_u) )  
@@ -748,6 +822,201 @@ PROGRAM wfoprep
                               rh_ksfc,rh_ksfc,rhsf2,istatus)
         ENDIF                                                                                                                              
       ENDIF
+
+      ! Handle case where RH has fewer levels than
+      ! the other state variables (only applies if
+      ! we are obtaining upper air data (model_code >1)
+
+      ! If we are processing upper air data from this model,
+      ! then run through some cleanup to account for missing
+      ! levels. 
+      IF (model_code(m) .GT. 1) THEN
+
+        ! Handle case where RH has fewer levels than
+        ! the other state variables (only applies if
+        ! we are obtaining upper air data
+        np_rh = np_t
+        IF (np_rh_raw .LT. np_t) THEN
+          PRINT *, 'WARNING: Expanding RH'
+          ALLOCATE(data3d_temp(proj%nx,proj%ny,np_rh)) 
+          ! Do the rh3d1 array
+          data3d_temp(:,:,:) = rmissingval
+          rh1_zloop: DO k = 1,np_rh_raw
+            t1_zloop: DO kk = 1, np_rh
+              IF ( rh_plevels_raw(k).EQ.t_plevels(kk)) THEN
+                data3d_temp(:,:,kk) = rh3d1(:,:,k)
+                EXIT t1_zloop
+              ENDIF
+            ENDDO t1_zloop
+          ENDDO rh1_zloop
+
+          DEALLOCATE(rh3d1)
+          ALLOCATE(rh3d1(proj%nx,proj%ny,np_rh))
+          rh3d1(:,:,:) = data3d_temp(:,:,:)
+          
+          ! Fill in top level if not already filled
+          IF (MAXVAL(rh3d1(:,:,np_rh)) .EQ. rmissingval) THEN
+             rh3d1(:,:,np_rh) = 5.0  ! Very dry
+          ENDIF
+
+          ! Repeat for the rh3d2 array
+          data3d_temp(:,:,:) = rmissingval
+          rh2_zloop: DO k = 1,np_rh_raw
+            t2_zloop: DO kk = 1, np_rh
+              IF (rh_plevels_raw(k).EQ.t_plevels(kk)) THEN
+                data3d_temp(:,:,kk) = rh3d2(:,:,k)
+                EXIT t2_zloop
+              ENDIF
+            ENDDO t2_zloop
+          ENDDO rh2_zloop
+          DEALLOCATE(rh3d2)
+          ALLOCATE(rh3d2(proj%nx,proj%ny,np_rh))
+          rh3d2(:,:,:) = data3d_temp(:,:,:)
+
+          ! Fill in top level if not already filled
+          IF (MAXVAL(rh3d1(:,:,np_rh)) .EQ. rmissingval) THEN
+             rh3d1(:,:,np_rh) = 5.0  ! Very dry
+          ENDIF        
+
+          DEALLOCATE(data3d_temp)
+          rh_plevels(1:np_rh) = t_plevels(1:np_t) 
+        ENDIF
+
+        ! Clean up all 3D arrays to fill in any missing levels
+
+        ! Z3d
+        fixvar1 = .false.
+        fixvar2 = .false.
+        DO k = 1,np_ht
+          IF (.NOT. ht_inv(k,time_index(ta))) THEN
+            z3d1(:,:,k) = rmissingval
+            fixvar1 = .true.
+          ENDIF
+          IF (.NOT. ht_inv(k,time_index(ta+1))) THEN
+            z3d2(:,:,k) = rmissingval
+            fixvar2 = .true.
+          ENDIF  
+          IF (fixvar1) THEN
+            PRINT *, 'WARNING: Filling in missing levels for z3d1'
+            ! Call the fill routine to fill in for z3d1
+            CALL fill_missing_levs(proj%nx,proj%ny,ht_plevels, &
+                  z3d1,rmissingval,2)
+          ENDIF
+          IF (fixvar2) THEN
+            ! Call the vinterp routine to fill in for z3d2
+            PRINT *, 'WARNING: Filling in missing levels for z3d2'  
+            CALL fill_missing_levs(proj%nx,proj%ny,ht_plevels, &
+                  z3d2,rmissingval,2) 
+          ENDIF
+        ENDDO
+
+        ! t3d
+        fixvar1 = .false.
+        fixvar2 = .false.
+        DO k = 1,np_t
+          IF (.NOT. t_inv(k,time_index(ta))) THEN
+            t3d1(:,:,k) = rmissingval
+            fixvar1 = .true.
+          ENDIF
+          IF (.NOT. t_inv(k,time_index(ta+1))) THEN
+            t3d2(:,:,k) = rmissingval
+            fixvar2 = .true.
+          ENDIF
+          IF (fixvar1) THEN
+            ! Call the vinterp routine to fill in for t3d1
+            PRINT *, 'WARNING: Filling in missing levels for t3d1' 
+            CALL fill_missing_levs(proj%nx,proj%ny,t_plevels, &
+                  t3d1,rmissingval,2) 
+          ENDIF
+          IF (fixvar2) THEN
+            ! Call the vinterp routine to fill in for t3d2
+            PRINT *, 'WARNING: Filling in missing levels for t3d2' 
+            CALL fill_missing_levs(proj%nx,proj%ny,t_plevels, &
+                  t3d2,rmissingval,2) 
+          ENDIF
+        ENDDO 
+
+        ! u3d
+        fixvar1 = .false.
+        fixvar2 = .false.
+        DO k = 1,np_u
+          IF (.NOT. u_inv(k,time_index(ta))) THEN
+            u3d1(:,:,k) = rmissingval
+            fixvar1 = .true.
+          ENDIF
+          IF (.NOT. u_inv(k,time_index(ta+1))) THEN
+            u3d2(:,:,k) = rmissingval
+            fixvar2 = .true.
+          ENDIF
+          IF (fixvar1) THEN
+            ! Call the vinterp routine to fill in for u3d1
+            PRINT *, 'WARNING: Filling in missing levels for u3d1' 
+            CALL fill_missing_levs(proj%nx,proj%ny,u_plevels, &
+                  u3d1,rmissingval,1)
+          ENDIF
+          IF (fixvar2) THEN
+            ! Call the vinterp routine to fill in for u3d2
+            PRINT *, 'WARNING: Filling in missing levels for u3d2' 
+            CALL fill_missing_levs(proj%nx,proj%ny,u_plevels, &
+                  u3d2,rmissingval,1)  
+          ENDIF
+        ENDDO                         
+
+        ! v3d
+        fixvar1 = .false.
+        fixvar2 = .false.
+        DO k = 1,np_v
+          IF (.NOT. v_inv(k,time_index(ta))) THEN
+            v3d1(:,:,k) = rmissingval
+            fixvar1 = .true.
+          ENDIF
+          IF (.NOT. v_inv(k,time_index(ta+1))) THEN
+            v3d2(:,:,k) = rmissingval
+            fixvar2 = .true.
+          ENDIF
+          IF (fixvar1) THEN
+            ! Call the vinterp routine to fill in for v3d1  
+            PRINT *, 'WARNING: Filling in missing levels for v3d1' 
+            CALL fill_missing_levs(proj%nx,proj%ny,v_plevels, &
+                  v3d1,rmissingval,1)  
+          ENDIF
+          IF (fixvar2) THEN
+            ! Call the vinterp routine to fill in for v3d2
+            PRINT *, 'WARNING: Filling in missing levels for z3d2' 
+            CALL fill_missing_levs(proj%nx,proj%ny,v_plevels, &
+                  v3d2,rmissingval,1) 
+          ENDIF                   
+        ENDDO
+
+        ! rh3d
+        fixvar1 = .false.
+        fixvar2 = .false.
+        DO k = 1,np_rh
+          IF (.NOT. rh_inv(k,time_index(ta))) THEN
+            rh3d1(:,:,k) = rmissingval
+            fixvar1 = .true.
+          ENDIF
+          IF (.NOT. rh_inv(k,time_index(ta+1))) THEN
+            rh3d2(:,:,k) = rmissingval
+            fixvar2 = .true.
+          ENDIF
+          IF (fixvar1) THEN
+            ! Call the vinterp routine to fill in for rh3d1
+            PRINT *, 'WARNING: Filling in missing levels for rh3d1' 
+            CALL fill_missing_levs(proj%nx,proj%ny,rh_plevels, &
+                  rh3d1,rmissingval,1) 
+          ENDIF
+          IF (fixvar2) THEN
+            ! Call the vinterp routine to fill in for rh3d2
+            PRINT *, 'WARNING: Filling in missing levels for rh3d1' 
+            CALL fill_missing_levs(proj%nx,proj%ny,rh_plevels, &
+                  rh3d2,rmissingval,1) 
+          ENDIF
+        ENDDO           
+      ENDIF                  
+
+      ! Time to do time interpolation
+
       ! PRINT *, 'Using bounding i4times of ', i4time_valid1,i4time_valid2
       ! At this point, we have all of the data we need for two
       ! bounding times.  So interpolate to the desired time,
