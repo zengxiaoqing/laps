@@ -318,7 +318,7 @@
 
       logical l_fill_ht, l_snd2
 
-      l_snd2 = .false.
+      l_snd2 = .true.
 
       lun_in = 59
       mode = 1
@@ -351,7 +351,7 @@
      1                         ,istatus)                               ! O
 
       else
-          call read_snd_data2(lun_in,i4time_file,filename              ! I
+          call read_snd_data2(lun_in,i4time_file,filename_in           ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
      1                         ,heights_3d,l_fill_ht                   ! I
@@ -359,10 +359,10 @@
      1                         ,n_profiles                             ! I/O
      1                         ,elev_pr                                ! O
      1                         ,nlevels_obs_pr                         ! O
-     1                         ,c5_name,obstype                        ! O
-     1                         ,ob_pr_ht_obs,ob_pr_pr_obs              ! O
+     1                         ,c5_name,c8_obstype                     ! O
+     1                         ,height_m,pressure_mb                   ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
-     1                         ,ob_pr_t_obs,ob_pr_td_obs               ! O
+     1                         ,temp_c,dewpoint_c                      ! O
      1                         ,stalat_lvl,stalon_lvl,i4time_ob_pr_lvl ! O
      1                         ,istatus)                               ! O
       endif ! l_snd2
