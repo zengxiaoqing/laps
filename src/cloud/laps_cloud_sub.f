@@ -514,9 +514,9 @@ C READ IN RADAR DATA
         call get_filespec(radarext_3d_cloud(1:3),2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_radar)
 
-        if(abs(i4time - i4time_radar) .le. 1200)then
+!       if(abs(i4time - i4time_radar) .le. 1200)then
 
-            call read_multiradar_3dref(i4time_radar,                     ! I
+            call read_multiradar_3dref(i4time,                           ! I
      1                 .true.,ref_base,                                  ! I
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,                 ! I
      1                 lat,lon,topo,.true.,.true.,                       ! I
@@ -526,13 +526,13 @@ C READ IN RADAR DATA
      1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,  ! O  
      1                 istat_radar_3dref_a)                              ! O
 
-        else
-            write(6,*)'radar data outside time window'
-            n_ref_grids = 0
-            call constant_i(istat_radar_2dref_a,0,NX_L,NY_L)       
-            call constant_i(istat_radar_3dref_a,0,NX_L,NY_L)
+!       else
+!           write(6,*)'radar data outside time window'
+!           n_ref_grids = 0
+!           call constant_i(istat_radar_2dref_a,0,NX_L,NY_L)       
+!           call constant_i(istat_radar_3dref_a,0,NX_L,NY_L)
 
-        endif
+!       endif
 
 C READ IN AND INSERT SAO DATA
 !       Read in surface pressure

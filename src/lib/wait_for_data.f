@@ -37,7 +37,7 @@ cdis
                                           ! than this threshold age (Input)
      1               ,istatus)            ! Output
 
-!       Steve Albers FSL 1995
+!       Steve Albers FSL 1995, 2001
 
 !       Note all times are in seconds
 
@@ -49,6 +49,15 @@ cdis
 
 !       The c_filespec string should not have a particular file time within it.
 !       Valid examples of c_filespec are 'directory/*ext' and 'directory'.
+
+        logical l_waited
+
+        character*8 c8_project
+
+        call get_c8_project(c8_project,istatus)
+        if(istatus .eq. 0)return
+
+        l_waited = .false.
 
         i4time_start_wait = i4time_now_gg()
 
@@ -74,19 +83,24 @@ cdis
             i4_wait_sofar = i4time_current - i4time_start_wait
 
             if(i4_wait_sofar .lt. i4_total_wait)then
-                write(6,*)' Searching for more data, sleep ',i4_check_in
-     1terval
+                write(6,*)' Searching for more data, sleep '
+     1                   ,i4_check_interval
                 r4_check_interval = float(i4_check_interval)
                 call snooze_gg(r4_check_interval,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' ERROR in wait_for_data'
+                    write(6,*)' ERROR in wait_for_data from snooze'
                     return
                 endif
+   
+                l_waited = .true.
+
                 goto 10
+
             endif
 
         endif
 
+!       Assess the latest data age
         if(i4_data_age .eq. 0)then
             write(6,*)' Wait for data: Found the data'
             istatus = 1
@@ -100,6 +114,17 @@ cdis
         else
             write(6,*)' Wait for data: Never did find the data'
             istatus = 0
+        endif
+
+
+        if(istatus .eq. 1 .and. l_waited 
+     1                    .and. c8_project(1:3) .eq. 'WFO')then       
+            write(6,*)' Doing additional wait to allow full file update'      
+            call snooze_gg(60.0,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' ERROR in wait_for_data from snooze'
+                return
+            endif
         endif
 
         return

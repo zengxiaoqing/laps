@@ -1,6 +1,7 @@
 
         subroutine read_snd_data(lun,i4time_snd,ext                    ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
+     1                         ,lat,lon,imax,jmax,kmax                 ! I
      1                         ,n_profiles                             ! O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
      1                         ,c5_name,i4time_ob_pr,obstype           ! O
@@ -29,6 +30,9 @@ cdoc    Returns sounding data from the SND file
         character*8 obstype(MAX_PR)
         character*9 a9time_ob
         character ext*(*)
+
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
 
         istatus = 0
 
@@ -170,6 +174,7 @@ c
 
         subroutine read_snd_metadata(lun,i4time_snd,ext                ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
+     1                         ,lat,lon,imax,jmax,kmax                 ! I
      1                         ,n_profiles                             ! O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
      1                         ,c5_name,i4time_ob_pr,obstype           ! O
@@ -198,6 +203,9 @@ cdoc    Returns sounding metadata from the SND file
         character*8 obstype(MAX_PR)
         character*9 a9time_ob
         character ext*(*)
+
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
 
         istatus = 0
 

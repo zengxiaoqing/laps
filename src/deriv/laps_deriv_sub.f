@@ -603,11 +603,11 @@ c read in laps lat/lon and topo
      1              ' Rereading radar data to apply evaporation/fill'
 
 !               Get time of radar file of the indicated appropriate extension
-                call get_filespec(radarext_3d_cloud(1:3),2,c_filespec
-     1                                                    ,istatus)
-                call get_file_time(c_filespec,i4time,i4time_radar)
+!               call get_filespec(radarext_3d_cloud(1:3),2,c_filespec
+!    1                                                    ,istatus)
+!               call get_file_time(c_filespec,i4time,i4time_radar)
 
-                call read_radar_3dref(i4time_radar,
+                call read_radar_3dref(i4time, !          i4time_radar,
 !    1                 1200,i4time_radar,
      1                 .true.,ref_base,                                 ! I
      1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,

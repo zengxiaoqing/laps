@@ -827,7 +827,13 @@ cdoc  as well as various grid conversion routines.
 
 !...........................................................................
 
-      erad=6367000.
+      call get_earth_radius(erad,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)
+     1    ' Error calling get_earth_radius from check_domain'       
+          return
+      endif
+
       icen = ni/2+1
       jcen = nj/2+1
 
@@ -858,8 +864,6 @@ cdoc  as well as various grid conversion routines.
      1     ,dist_calc
 
 !...........................................................................
-
-      erad=6367000.
 
       call latlon_to_xy(lat(1,1),lon(1,1),erad,x1,y1)
       call latlon_to_xy(lat(2,1),lon(2,1),erad,x2,y2)

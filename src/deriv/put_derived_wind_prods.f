@@ -209,9 +209,9 @@ cdis
         i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
 
         call get_filespec(ext_radar,2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time_sys,i4time_radar)
+!       call get_file_time(c_filespec,i4time_sys,i4time_radar)
 
-        if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
+!       if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
 
             if(ext_radar .ne. 'vrc')then 
 
@@ -221,7 +221,7 @@ cdis
                     return
                 endif
 
-                call read_radar_3dref(i4time_radar,
+                call read_radar_3dref(i4time_sys,
      1                 .true.,ref_base,
      1                 NX_L,NY_L,NZ_L,ext_radar,
      1                 lat,lon,topo,.true.,.true.,
@@ -239,7 +239,7 @@ cdis
                 endif
 
             else ! ext_radar .ne. 'vrc'
-                call read_radar_2dref(i4time_radar,radar_name,
+                call read_radar_2dref(i4time_sys,radar_name,
      1                  NX_L,NY_L,
      1                  ref_max(1,1,0),istat_radar_2dref)
 
@@ -253,11 +253,11 @@ cdis
 
             endif ! radarext
 
-        else
-            write(6,*)' No radar data within time window ',ext_radar
-            istat_radar_2dref = 0
+!       else
+!           write(6,*)' No radar data within time window ',ext_radar
+!           istat_radar_2dref = 0
 
-        endif ! Data is within time window
+!       endif ! Data is within time window
 
 !       Calculate and write out Storm Steering Wind Field (ustorm, vstorm)
         write(6,*)

@@ -533,7 +533,9 @@ cdoc                            calls read_multiradar_3dref.
 !                               a quick and dirty vertical fill. Information
 !                               is passed back about which data is 2d and which
 !                               is 3d.
-
+!
+!       SA           Mar 2001   The 'all' option is now being tested that 
+!                               merges 3D (v01) and 2D (vrc) data.
 
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 heights_3d(imax,jmax,kmax)
@@ -566,6 +568,8 @@ cdoc                            calls read_multiradar_3dref.
         logical l_low_fill,l_high_fill,l_apply_map
 
         write(6,*)' Subroutine read_multiradar_3dref'
+
+        i4_tol = 1200
 
         istatus_2dref_a = 0
         istatus_3dref_a = 0

@@ -194,6 +194,7 @@ c
       lun = 12
       call read_snd_data(lun,i4time_snd,ext                             ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                    ! I
+     1                         ,lat,lon,imax,jmax,kmax                  ! I
      1                         ,n_profiles                              ! O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr    ! O
      1                         ,c5_name_a,i4time_ob_pr,obstype          ! O

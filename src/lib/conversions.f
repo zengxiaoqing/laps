@@ -755,11 +755,18 @@ cdoc    Works only for constant pressure levels.
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             call get_r_missing_data(r_missing_data,istatus)
-            
+
             rz = zcoord_of_pressure(pres_pa)
 
             if(rz .eq. r_missing_data)then
                 zcoord_of_logpressure = r_missing_data
+                return
+            endif
+
+            call get_laps_dimensions(nk,istatus)
+
+            if(rz .eq. float(nk))then
+                zcoord_of_logpressure = rz
                 return
             endif
 
@@ -847,7 +854,7 @@ cdoc    given the radar azimuth.
 cdoc    Convert U and V (grid north) to DIR and SPEED (true north),
 cdoc    given the longitude.
 
-        real longitude
+        real latitude, longitude
 
         call get_config(istatus)
 
@@ -860,7 +867,8 @@ cdoc    given the longitude.
 
         if(speed .gt. 0)then
             di_grid = atan3d(-u_grid,-v_grid)
-            di_true = di_grid + projrot_laps(longitude)
+            di_true = di_grid + projrot_latlon(latitude,longitude
+     1                                        ,istatus)
             di_true = mod(di_true+360.,360.)
         else
             di_true = 0.
@@ -975,7 +983,7 @@ cdoc    given the radar azimuth.
 
 cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
 
-        real longitude
+        real latitude, longitude
 
         call get_config(istatus)
 
@@ -984,7 +992,10 @@ cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
             stop
         endif
 
-        di_grid = di_true - projrot_laps(longitude)
+        latitude = -999. ! Since lat is not yet passed in
+
+        di_grid = di_true - projrot_latlon(latitude,longitude
+     1                                             ,istatus)
 
         call         disp_to_uv(di_grid,
      1                  speed,
@@ -1002,7 +1013,7 @@ cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
 
 cdoc    Convert wind vector from true north to grid north, given the longitude.
 
-        real longitude
+        real latitude, longitude
 
         call get_config(istatus)
 
@@ -1011,7 +1022,9 @@ cdoc    Convert wind vector from true north to grid north, given the longitude.
             stop
         endif
 
-        angle = projrot_laps(longitude)
+        latitude = -999. ! Since lat is not yet passed in
+
+        angle = projrot_latlon(latitude,longitude,istatus)
 
         call         rotate_vec(u_true,
      1                  v_true,
@@ -1030,7 +1043,7 @@ cdoc    Convert wind vector from true north to grid north, given the longitude.
 
 cdoc    Convert wind vector from grid north to true north, given the longitude
 
-        real longitude
+        real latitude, longitude
 
         call get_config(istatus)
 
@@ -1039,7 +1052,9 @@ cdoc    Convert wind vector from grid north to true north, given the longitude
             stop
         endif
 
-        angle = -projrot_laps(longitude)
+        latitude = -999. ! Since lat is not yet passed in
+
+        angle = -projrot_latlon(latitude,longitude,istatus)
 
 
         call         rotate_vec(u_grid,
