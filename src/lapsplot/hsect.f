@@ -772,21 +772,29 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(c_type_i.eq.'wb'                       )then
                     c19_label = ' WIND lga '//fcst_hhmm//'   kt'
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(c_type_i.eq.'wr'                       )then
-                    c19_label = ' WIND fua '//fcst_hhmm//'   kt'
+!                   c19_label = ' WIND fua '//fcst_hhmm//'   kt'
+                    c_model = ' '
+                    call mk_fcst_hlabel(k_mb,'Wind',fcst_hhmm
+     1                                 ,ext(1:3),'kt'
+     1                                 ,c_model,c_label)
                 elseif(c_type_i.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(c_field .eq. 'ob')then
                     c19_label = ' WIND  (obs)    kt'
+                    call mklabel33(k_mb,c19_label,c_label)
                 elseif(ext(1:3) .eq. 'lwm')then
                     c19_label = ' WIND  (lwm)    kt'
+                    call mklabel33(k_mb,c19_label,c_label)
                 else
                     c19_label = ' WIND  (anl)    kt'
+                    call mklabel33(k_mb,c19_label,c_label)
                 endif
-
-                call mklabel33(k_mb,c19_label,c33_label)
 
                 if(k_level .ne. 0)then
                     interval = (max(NX_L,NY_L) / 50) + 1
@@ -811,7 +819,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
      1               ,interval,asc9_tim_3dw,namelist_parms
-     1               ,c33_label,c_field,k_level,i_overlay,c_display       
+     1               ,c_label,c_field,k_level,i_overlay,c_display       
      1               ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1               ,grid_ra_ref_dum,grid_ra_vel_dum       
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
@@ -3530,13 +3538,11 @@ c                   cint = -1.
      1                            ,ext(1:3)
                         endif
 
+!                       call mklabel33(k_mb,' '//fcst_hhmm
+!    1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
 
-                        call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
-
-                        clow = 0.
-                        chigh = +100.
-                        cint = 10.
+                        comment_2d = 'rh'   ! for label
+                        units_2d = '%cptd'  ! for label
 
                         call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
 
@@ -3558,8 +3564,7 @@ c                   cint = -1.
                             goto1200
                         endif
 
-                        call mklabel33(k_mb,' '//fcst_hhmm
-     1                         //' '//ext(1:3)//' rh %     ',c33_label)
+                        units_2d = '%' ! for label
 
                     else
                         write(6,*)' RH/SH not obtained...'
@@ -3567,17 +3572,17 @@ c                   cint = -1.
 
                     endif ! istat_rh / istat_sh
 
-!                   call plot_cont(rh_2d,1e0
-!    1                            ,clow,chigh,cint,asc9_tim_t
-!    1                            ,namelist_parms,c33_label
-!    1                            ,i_overlay,c_display
-!    1                            ,lat,lon,jdot
-!    1                            ,NX_L,NY_L,r_missing_data
-!    1                            ,laps_cycle_time)
+                    call mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
+
+                    clow = 0.
+                    chigh = +100.
+                    cint = 10.
 
                     call plot_field_2d(i4_valid,c_type_i,rh_2d,1e0
      1                        ,namelist_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'moist')
 
@@ -5428,7 +5433,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine plot_barbs(u,v,lat,lon,topo,size,zoom,
      1  interval,asc_tim_9,namelist_parms,
-     1  c33_label,
+     1  c_label,
      1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,max_radars,       
 !    1  grid_ra_ref_dum,grid_ra_vel_dum,
      1  NX_L,NY_L,r_missing_data,
@@ -5436,7 +5441,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         include 'lapsplot.inc'
 
-        character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
+        character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
         real*4 u(NX_L,NY_L)
@@ -5456,8 +5461,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         logical l_obs
 
-        write(6,1505)c33_label,asc_tim_9
-1505    format(2x,a33,2x,a9)
+        write(6,1505)c_label,asc_tim_9
+1505    format(2x,a,2x,a9)
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
         call cv_i4tim_asc_lp(i4time_file,asc_tim_24,istatus)
@@ -5522,7 +5527,7 @@ c             if(cint.eq.0.0)cint=0.1
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
+                 call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
      1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
@@ -6140,7 +6145,8 @@ c             if(cint.eq.0.0)cint=0.1
 !       Field on Bottom Left
         ix = 100 ! 130
         iy = y_1 * 1024
-        CALL PCHIQU (cpux(ix),cpux(iy),c_label,rsize,0,-1.0)
+        CALL PCHIQU (cpux(ix),cpux(iy),c_label(1:len_label)
+     1              ,rsize,0,-1.0)      
 
 !       Time on Bottom Right
         if(c5_sect .eq. 'hsect')then
@@ -6496,6 +6502,56 @@ c             if(cint.eq.0.0)cint=0.1
             call s_len(string(i:i),len2)
             if(len2 .eq. 1)len_string = i
         enddo ! i
+
+        return
+        end
+
+        subroutine mk_fcst_hlabel(k_mb,comment_2d,fcst_hhmm_in
+     1                                ,ext
+     1                                ,units_2d
+     1                                ,c_model
+     1                                ,c_label)
+
+        character*(*) comment_2d,ext,units_2d,c_model,c_label
+
+        character*4 fcst_hhmm_in,fcst_hhmm
+
+        call s_len2(comment_2d,len_fcst)
+        call s_len2(units_2d,len_units)
+
+        if(ext .eq. 'lga')then
+            c_model = 'lga'
+        endif
+
+        call s_len2(c_model,len_model)
+        call upcase(c_model,c_model)
+
+        write(c_label,102)k_mb
+102     format(I5,' hPa ')
+
+        if(fcst_hhmm_in(3:4) .eq. '00')then
+            fcst_hhmm = fcst_hhmm_in(1:2)//'Hr '
+        else
+            fcst_hhmm = fcst_hhmm_in
+        endif
+
+        ist = 37
+
+        if(len_units .gt. 0)then
+            c_label(11:11+len_fcst+len_units+2) = comment_2d(1:len_fcst)
+     1                         //' ('//units_2d(1:len_units)//')'
+        else
+            c_label(11:11+len_fcst+len_units) = comment_2d(1:len_fcst)
+        endif
+
+        c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
+
+        if(len_model .gt. 0)then
+            c_label(ist+5:ist+11+len_model) = 
+     1                            c_model(1:len_model)//' Fcst'       
+        else
+            c_label(ist+5:ist+8) = 'Fcst'       
+        endif
 
         return
         end
