@@ -634,9 +634,15 @@ c
          do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
-                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
-     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
-               print*,'ERROR: Missing value flag detected: ',i,j,k
+                  if((abs(ht(i,j,k)) .gt. 100000.) .or.
+     +                 (tp(i,j,k) .gt. 1000.) .or.
+     +                 (tp(i,j,k) .le. 0.) .or.
+     +                 (abs(sh(i,j,k)) .gt. 1.) .or.
+     +                 (abs(uw(i,j,k)) .gt. 100.) .or.
+     +                 (abs(vw(i,j,k)) .gt. 100.) ) then
+c                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
+c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
+               print*,'ERROR: Missing or bad value detected: ',i,j,k
                print*,ht(i,j,k),tp(i,j,k),sh(i,j,k), uw(i,j,k),vw(i,j,k)
                lga_status = -nf
                return
@@ -851,7 +857,7 @@ c
      .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) then
             ext = 'lga'
             call get_directory(ext,outdir,len_dir) 
-            print*,outdir,ext
+            print*,outdir,ext,nz_laps
             call time_interp(outdir,ext,
      .           nx_laps,ny_laps,nz_laps,nz_laps*5,
      .           pr,laps_cycle_time,

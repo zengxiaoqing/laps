@@ -164,116 +164,6 @@ c
 c===============================================================================
 c
 
-      subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .     lat,lon,grx,gry,bgmodel)
-
-c
-      implicit none
-c
-      integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
-c
-      real*4 lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
-     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
-c
-      integer i,j,k
-c
-      character*2 gproj
-c_______________________________________________________________________________
-c
-c *** Determine location of LAPS grid point in background data i,j space.
-c
-      if (gproj .eq. 'PS') then
-         call latlon_2_psij(nx_laps*ny_laps,lat,lon,grx,gry)
-      elseif (gproj .eq. 'LC') then
-         call latlon_2_lcij(nx_laps*ny_laps,lat,lon,grx,gry)
-      elseif (gproj .eq. 'CE') then
-         call latlon_2_coneqij(nx_laps*ny_laps,lat,lon,grx,gry)
-      elseif (gproj .eq. 'LL') then
-         call latlon_2_llij(nx_laps*ny_laps,lat,lon,grx,gry)
-      endif
-c
-c *** Check that all LAPS grid points are within the background data coverage.
-c
-c
-c ****** Check for wrapping if a global data set.
-c
-      if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
-     .     bgmodel .eq. 8) then
-         do j=1,ny_laps
-            do i=1,nx_laps
-               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
-               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               if (gry(i,j) .lt. 1) then
-                  gry(i,j)=2.-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-               if (gry(i,j) .gt. ny_bg) then
-                  gry(i,j)=float(2*ny_bg)-gry(i,j)
-                  grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
-                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               endif
-            enddo
-         enddo
-c
-c ****** If not a global data set, then check that LAPS domain is fully
-c           within background domain.
-c
-      else
-         do j=1,ny_laps
-            do i=1,nx_laps
-
-               if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
-     .              gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
-          print*,'LAPS gridpoint outside of background data coverage.'
-                  print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
-                  print*,'   grx, gry:',grx(i,j),gry(i,j)
-                  stop 'init_hinterp'
-               endif
-            enddo
-         enddo
-      endif
-c
-      return
-      end
-
-      subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz,
-     .     grx,gry,fvi,flaps,bgmodel)
-
-c
-      implicit none
-c
-      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
-c
-c *** Input vertically interpolated field.
-c *** Output Laps field
-c
-      real*4 fvi(nx_bg,ny_bg,nz),
-     .       flaps(nx_laps,ny_laps,nz),
-     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
-c
-      integer i,j,k
-c
-c
-c *** Horizontally interpolate variable.
-c
-      do k=1,nz
-         do j=1,ny_laps
-            do i=1,nx_laps
-               call gdtost(fvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),flaps(i,j,k),bgmodel)
-            enddo
-         enddo
-      enddo
-c
-      return
-      end
-c
-c===============================================================================
-c
-
       subroutine time_interp(dir,ext,nx,ny,nz,kdim,pr,cycle_time,
      .                       time1,fcst1,time2,fcst2)
 c
@@ -365,8 +255,12 @@ c
                gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
 
                if(gridn(i,j,k) .gt. 1.e35) then
-                  print *,'Error in time_interp',
-     +                 i,j,k,grid1(i,j,k),grid2(i,j,k)
+                  print *,'SEVERE Error in time_interp',
+     +                 i,j,k,grid1(i,j,k),grid2(i,j,k),fcst1,fcst2
+                  call erase_file(time1,fcst1,dir,ext)
+                  call erase_file(time2,fcst2,dir,ext)
+
+                  stop
                endif
 
             enddo
@@ -389,5 +283,30 @@ c
       newfcst=newfcst-cycle_time
       if (newfcst .gt. fcst1) goto 10
 c
+      return
+      end
+      subroutine erase_file(inittime,validtime,dir,ext)
+      integer inittime,validtime, istatus, rename
+      character*(*) dir, ext
+      character*200 filename
+      character*13 fname
+
+      call make_fnam13_lp(inittime,validtime, fname, istatus)
+
+      print*,inittime,validtime, fname
+
+      call s_len(dir,len_dir)
+      if(dir(len_dir:len_dir) .ne. '/') then
+         dir(len_dir:len_dir)='/'
+         len_dir=len_dir+1
+      endif
+      write(filename,*) dir(1:len_dir)//fname//'.'
+      
+      istatus = rename(filename(1:len_dir+15)//ext(1:3)
+     +     ,filename(1:len_dir+15)//'bad')
+      
+      print*,'renamed ',filename(1:len_dir+15)//ext(1:3),
+     +     ' with istatus= ',istatus
+
       return
       end
