@@ -148,7 +148,7 @@ cdis
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
-      logical  l_not_struct,l_point_struct
+      logical  l_point_struct
 
       real*4   rms_thresh                                              ! Input
       real*4   weight_bkg_const                                        ! Input
@@ -180,7 +180,6 @@ csms$serial(default=ignore)  begin
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
 
-      l_not_struct = .false.
       l_point_struct = .false.
 
       rms_thresh_norm = rms_thresh_wind          
@@ -368,25 +367,21 @@ csms$>       rms_thresh , out>:default=ignore)  begin
                   if(wt_p(i,j,k) .eq. weight_pirep)then
                       n_qc_pirep_good = n_qc_pirep_good + 1
                       c3_string = 'Prp'
-                      n_good_thistype = n_qc_pirep_good
                   endif
 
                   if(wt_p(i,j,k) .eq. weight_cdw)then
                       n_qc_cdw_good  = n_qc_cdw_good + 1
                       c3_string = 'Cdw'
-                      n_good_thistype = n_qc_cdw_good
                   endif
 
                   if(wt_p(i,j,k) .eq. weight_sfc)then
                       n_qc_sfc_good   = n_qc_sfc_good + 1
                       c3_string = 'Sfc'
-                      n_good_thistype = n_qc_sfc_good
                   endif
 
                   if(wt_p(i,j,k) .eq. weight_prof)then
                       n_qc_prof_good  = n_qc_prof_good + 1
                       c3_string = 'Prf'
-                      n_good_thistype = n_qc_prof_good
                   endif
 
                   n_qc_total_good = n_qc_total_good + 1
@@ -464,6 +459,8 @@ csms$>       rms_thresh , out>:default=ignore)  begin
               v_diff = v - v_laps_bkg(i,j,k)
               speed_diff = sqrt(u_diff**2 + v_diff**2)
 
+!             speed_thresh = max(10.,0.2 * speed_bkg)
+
 !             Apply QC check to the OB against the background analysis
               if(
 !                Make sure we actually have a real reference background
@@ -522,6 +519,18 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
                   n_qc_total_bad = n_qc_total_bad + 1
 
+              else ! keep and write out the good OB
+
+                  n_qc_total_good = n_qc_total_good + 1
+
+!                 obs_barnes(n_qc_total_good) = obs_point(i_ob)
+
+                  if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then
+                      iwrite = 1
+                  else
+                      iwrite = 0
+                  endif
+
               endif
 
           enddo ! i_ob
@@ -579,7 +588,7 @@ csms$serial end
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1        ,varobs_diff_spread                                     ! O (aerr)
      1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
-     1        ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
+     1        ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
      1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
@@ -712,7 +721,7 @@ csms$serial end
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1           ,varobs_diff_spread                                  ! O (aerr)
      1           ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
-     1           ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
+     1           ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1           ,topo_dum,rland_frac_dum,1,1                            ! I
      1           ,n_obs_lvl,istatus)                                     ! O
 
@@ -801,7 +810,7 @@ csms$serial end
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
      1          ,varobs_diff_spread                                     ! O (aerr)
      1          ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
-     1          ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
+     1          ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
      1          ,n_obs_lvl,istatus)                                     ! O
 
@@ -901,7 +910,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,grid_spacing_m,rep_pres_intvl                           ! I
      1       ,varobs_diff_spread                                      ! O (aerr)
      1       ,wt_p_spread,fnorm_dum,n_fnorm_dum                       ! I
-     1       ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const  ! I
+     1       ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const       ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)                                      ! O
 
