@@ -340,8 +340,14 @@ c       write(6,*)' i = ',i
                 wb0_2d(i,j) = r_missing_data
             endif
 
-!           IF(i .eq. ni/2    .and. j .eq. nj/2)then
-            IF(i .eq. i/10*10 .and. j .eq. nj/2)then
+            iwarn = 0
+            if(nanf(wb0_2d(i,j)) .eq. 1)then
+                write(6,*)' Warning: HWB0 Nan ',i,j
+                iwarn = 1
+            endif
+
+            IF( (i .eq. i/10*10 .and. j .eq. nj/2) 
+     1                          .OR. iwarn .eq. 1    )then
 
                 write(6,*)
                 write(6,*)' Indices at:',i,j
