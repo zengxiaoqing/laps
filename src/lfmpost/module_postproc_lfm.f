@@ -1106,6 +1106,7 @@ CONTAINS
         CALL smooth(wsfc,nx,ny,1,smth)
       ENDDO
     ENDIF
+    below_ground(:,:) = 0.0
     CALL vinterp_3d(wsig,trap_bot_ind, trap_top_ind, &
                     weight_top_lin, below_ground, wprs, &
                     nx, ny, ksigh, kprs)
