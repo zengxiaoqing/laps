@@ -834,8 +834,8 @@ C INSERT RADAR DATA
 
         I4_elapsed = ishow_timer()
 
-C       INSERT VISIBLE SATELLITE DATA
-        if(istat_vis .eq. 1)then
+C       INSERT VISIBLE / 3.9u SATELLITE IN CLEARING STEP
+        if(istat_vis .eq. 1 .OR. (istat_t39 .eq. 1 .and. l_use_39) )then
             call insert_vis(i4time,clouds_3d,cld_hts
      1        ,topo,cloud_frac_vis_a,albedo,ihist_alb                 ! I
      1        ,istat_39_a,l_use_39                                    ! I
