@@ -56,10 +56,13 @@ c
      1      icend(2)
      
         integer*4 nelems,nlines
-	byte image(nelems,nlines)
+	integer*1 image(nelems,nlines)
   
         integer*2 i_value
-        byte      b_value(2)
+        integer*1 b_value(2) 
+
+        INTEGER*1 bad_data_byte
+        data bad_data_byte /-1/
         equivalence (i_value,b_value(1))
 
 	integer validTime,lines,elems
@@ -201,7 +204,7 @@ c                write(6,*) i, j, i_value
 
            else
               icount_bad=icount_bad+1
-              image(i,j) = 255
+              image(i,j) = bad_data_byte
            endif
         enddo
         enddo

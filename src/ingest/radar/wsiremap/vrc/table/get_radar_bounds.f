@@ -45,13 +45,13 @@ c
       include 'lapsparms.for'
 
       integer*4 lines,elements
+      integer*4 nx,ny
 
       real*4 lat(nx,ny)
       real*4 lon(nx,ny)
 
       integer*4 istart,iend,jstart,jend
       integer*4 nlines,nelements
-      integer*4 nx,ny
 
       real*4 dx,dy
       real*4 la1,lo1,Lov

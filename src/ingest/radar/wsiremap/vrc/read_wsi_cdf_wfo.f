@@ -45,7 +45,7 @@ c
         include 'netcdf.inc'
         include 'vrc.inc'
         character*128 dimname                   ! Must match NETCDF.INC's
-        integer ncopts,ncdid,ncvid
+        integer ncopts
         common/ncopts/ncopts                    ! NetCDF error handling flag.
 
         character*200 input_name
@@ -56,7 +56,7 @@ c
         parameter (nrecs=1)
      
         integer lines,elems
-	byte image(nelems,nlines,nrecs)
+	integer*1 image(nelems,nlines,nrecs)
 
         integer*4 bad_data_flag
         integer*4 imax_image_value
@@ -69,7 +69,8 @@ c
         character c_atvalue*80
 
         integer*2 i_value
-        byte      b_value(2)
+        integer*1      b_value(2), bad_data_byte
+        data bad_data_byte/-1/
         equivalence (i_value,b_value(1))
 
         real*4 Dx,Dy
@@ -213,7 +214,7 @@ c
 
            else
               icount_bad=icount_bad+1
-              image(i,j,1)=255
+              image(i,j,1)=bad_data_byte
            endif
         enddo
         enddo
