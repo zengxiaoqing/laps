@@ -115,15 +115,15 @@ c RTATOV variables
       real ym (nchan)          ! radiance data (btemp K)
 
 c dynamic dependent variables
-      real lt1(nz_l,1)  ! one location temp
-      real lq3(nz_l,1)  ! one location q
-      real psfc (nx_l, ny_l)
-      real t_surf (nx_l, ny_l)
-      real td_surf (nx_l, ny_l)
+c      real lt1(nz_l,1)  ! one location temp
+c      real lq3(nz_l,1)  ! one location q
+c      real psfc (nx_l, ny_l)
+c      real t_surf (nx_l, ny_l)
+c      real td_surf (nx_l, ny_l)
 
 
 c  cloud variables
-      real cld(nx_l,ny_l)
+c      real cld(nx_l,ny_l)
 
 
 
