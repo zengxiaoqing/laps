@@ -739,49 +739,64 @@ c===============================================================================
 c
       subroutine lat_lon_2_ceij
 c
-c routine to convert from cylindrical equidistant
-c to i/j
+c routine to convert from cylindrical equidistant to grid ri/rj
+c used for mapping the WSI radar data to laps.
 c
-ccc      implicit none
+c     J. Smart 11-19-98   Original Working Version
+c                         Basic equation set from
+c                         Map Projections Used by the U.S. Geological Survey
+c                         (Snyder, J.P. 1983 Geological Survey Bulletin - 1532)
+      implicit none
 c
       include 'trigd.inc'
       integer np,n
 c
       real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       lli(np),llj(np),        !Lat-lon grid i,j
-     .       diff,
-     .       phi_rad,
-     .       r
+     .       nw(2),se(2),            !NW grid lat/lon; SE grid lat/lon
+     .       diff,x,y,
+     .       dx,dy,
+     .       r,
+     .       pi,dg2rd
 c
       integer nx,ny,nz             !No. of LL domain grid points
-      real*4 lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
-      real*4 llj_orig
-      data r/6378388.0/
-      common /cegrid/nx,ny,nz,lat0,lon0,dlat,dlon
+      real*4 rlatc,rlonc           !Grid center lat, lon
+      real*4 xmin,ymin,xmax,ymax
+      real*4 coslatc
+      data r/6.3712e6/
+      common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
 c===============================================================================
 c
       entry latlon_2_ceij(np,glat,glon,lli,llj)
 c_______________________________________________________________________________
 c
+c Note: WSI grid (1,1) is NW corner. Adjustment made for rj using ny since
+c       equation set assumes y-axis is on equator.
+c
       pi=acos(-1.0)
-      deg2rad=pi/180.
-      deg2m=111100.
-      dy=dlat*deg2m
-      dx=dlon*deg2m
-      llj_orig=r*(lat0*deg2rad)/dy
-      lli_orig=r*(lon0*deg2rad)/dx
+      dg2rd=pi/180.
+
+      xmin=r*((nw(2)-rlonc)*dg2rd)*cosd(rlatc)
+      ymin=r*se(1)*dg2rd
+      xmax=r*((se(2)-rlonc)*dg2rd)*cosd(rlatc)
+      ymax=r*nw(1)*dg2rd
+
+      dx=(xmax-xmin)/(nx-1)
+      dy=(ymax-ymin)/(ny-1)
+
+      coslatc=cosd(rlatc)
       do n=1,np
-         diff=glon(n)-lon0
-         phi_rad=glat(n)*deg2rad
+         diff=glon(n)-rlonc
          if (diff .lt.-180.) diff=diff+360.
          if (diff .ge. 180.) diff=diff-360.
-         diff=diff*deg2rad
-         ri=r*(diff*(cosd(lat0)))/dx+1.
-         rj=llj_orig-((r*phi_rad)/dy)+1.
-         lli(n)=ri
-         llj(n)=rj
+         diff=diff*dg2rd
+         x=r*diff*coslatc
+         y=r*(glat(n)*dg2rd)
+         lli(n)=(x-xmin)/dx + 1.
+         llj(n)=float(ny)-((y-ymin)/dy) + 1.
       enddo
+
       return
       end
 c
