@@ -827,7 +827,7 @@ c
 c
 c
 	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
-     &                    rii,rjj,wt,ni,nj,mxstn)
+     &                    rii,rjj,wt,ni,nj,mxstn,istatus)
 c
 c***************************************************************************
 c
@@ -910,7 +910,14 @@ c
 	  numsta = numsta + 1
  12    enddo !ista
 c
-	gpmean(i,j) = amean / float(numsta)
+        if(numsta .eq. 0)then
+            write(6,*)' Aborting subroutine bkgwts, no obs in domain...'
+            istatus = 0
+            return
+        else
+   	    gpmean(i,j) = amean / float(numsta)
+        endif
+
 	if(gpmean(i,j) .lt. dist_min) then
 	  dist_min = gpmean(i,j)
 	  min_i = i
@@ -968,6 +975,7 @@ c
 	print *,' '
 	print *,' Normal completion of BKGWTS.'
 c
+        istatus = 1
 	return
 	end
 c

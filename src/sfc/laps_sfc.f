@@ -428,7 +428,7 @@ c
         call zero(wt, ni,nj)
         if(n_obs_b .gt. 0.)then
 	    call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
-     &                  rii,rjj,wt,ni,nj,mxstn)
+     &                  rii,rjj,wt,ni,nj,mxstn,istatus)
         endif
 c
 c.....  Zero the weights then get the background data.  Try for an FSF
