@@ -349,7 +349,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
      1       ,',vo,mr,mc,dv-i,ha,ma,sp]'
-     1       /'          [cs,vs,tw,fw-i,hi]'
+     1       /'          [cs,vs,tw,fw-i,hi-i]'
      1       /'          [of,oc,ov,os,op,qf,qc,qv,qs,qp] obs plots'       
      1       ,'  [bs] Sfc background'
      1       /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
@@ -1485,7 +1485,8 @@ c
 
             if(c_type .ne. 'rf')then ! Radar intermediate data files
 
-              if(.not. l_radar_read)then
+!             if(.not. l_radar_read)then
+              if(.true.)then
 
                 if(c_type .eq. 'ra')then ! Read data from vrc files
 
@@ -1609,7 +1610,7 @@ c
             elseif(c_type .eq. 'rd')then                 ! Vxx velocity
                 write(6,2022)
 2022            format(/'  [ve] Velocity Contours, '  
-     1                 ,' [vi] Velocity Image (no map)'
+     1                 ,' [vi] Velocity Image '
 !    1                 ,'[f1] 1 HR Fcst Max Reflectivity,'
      1                 /' ',61x,' [q] Quit ? ',$)
 
@@ -1733,7 +1734,13 @@ c
                 endif
 
             elseif(c_field(1:2) .eq. 'rf')then
-                call mklabel33(k_mb,'   Reflectivity    ',c33_label)
+                if(c_type .eq. 'rv')then
+                    c19_label = '  Reflectivity '//ext_radar(1:3)//' '
+                else
+                    c19_label = '  Reflectivity Anl '
+                endif
+
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(grid_ra_ref(1,1,k_level,1)
@@ -1779,6 +1786,14 @@ c
                 call plot_obs(k_level,.false.,asc9_tim,i_radar
      1          ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel(1,1,1,i_radar)
      1          ,lat,lon,topo,2)
+
+                n_image = n_image + 1
+
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label
+     1                                    ,asc9_tim_r,i_overlay,'hsect')       
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
                 i4time_hour = (i4time_radar+laps_cycle_time/2)
@@ -3514,7 +3529,7 @@ c                   cint = -1.
 
             endif
 
-        elseif(c_type .eq. 'hi')then
+        elseif(c_type(1:2) .eq. 'hi')then
             var_2d = 'HI'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -3531,25 +3546,34 @@ c                   cint = -1.
             enddo ! j
             enddo ! i
 
-            IF(istatus .ne. 1)THEN
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading Heat Index'
                 goto1200
             endif
 
             c33_label = 'LAPS Heat Index          (F)     '
 
-!           clow = +50.
-!           chigh = +150.
-!           cint = 5.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                        ,zoom,1.)       
+            scale = 1.
 
-            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+            clow = -20.
+            chigh = +125.
+            cint = 0.
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
-     1                    ,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+!    1                           ,zoom,scale)       
+
+!           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+
+!           call plot_cont(field_2d,1e-0,clow,chigh,cint
+!    1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+!    1                    ,lat,lon,jdot
+!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'mc')then
             var_2d = 'MRC'
@@ -4726,12 +4750,6 @@ c                   cint = -1.
      1  grid_ra_ref,grid_ra_vel,NX_L,NY_L,r_missing_data,
      1  laps_cycle_time,jdot)      
 
-!       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
-!       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
-!                                   as dummy arguments
-!       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to hardwire
-!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
-
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
@@ -5616,7 +5634,7 @@ c                   cint = -1.
 
         call s_len(c_type,len_type)
 
-        if(c_type(len_type:len_type) .ne. 'i')then
+        if(c_type(len_type:len_type) .ne. 'i' .or. c_type .eq. 'hi')then       
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                                                  ,zoom,scale)
