@@ -5,6 +5,7 @@
  SPLIT_OUTPUT = .TRUE.,
  MAX_WAIT_SEC = 900,
  REALTIME = .true.,
+ MAKE_DONEFILE = .true.,
  LEVELS_MB = 1100, 1050, 1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 
  REDP_LVL = 0.,
  PROC_BY_FILE_NUM = .FALSE.,
@@ -44,6 +45,9 @@ c  MAX_WAIT_SEC:  Number of seconds after which the code will
 c    abort if it doesn't find the expected output file.
 c  REALTIME:  If true, MAX_WAIT_SEC is used to wait for files
 c    to be created. 
+c  MAKE_DONEFILE: Logical to control whether or not .fsf.done
+c    and .fua.done files get created.  Only has an effect 
+c    if realtime = .true.
 c  LEVELS_MB:  Pressure levels (in descending pressure order,
 c    specified in mb) to which data will be interpolated.
 c  REDP_LVL:  Height in meters to which the LAPS reduced
