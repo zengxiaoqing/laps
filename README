@@ -96,6 +96,7 @@
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.4               Works using f77 but requires namelist 
                                        end delimiter be changed from / to $
+     DEC (Alpha)
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
@@ -565,7 +566,8 @@
 
      Model first guess (lga): 
            RUC grids are ftp'ed from NMC to FSL, then converted at FSL from 
-           GRIB to NetCDF. 
+           GRIB to NetCDF. This NetCDF file is the input for the LAPS ingest
+           process that writes "lga". 
 
            You might wish to check the following URLs on the WWW for...
 
@@ -577,11 +579,11 @@
 
            The conversion from GRIB to NetCDF is done by FSL's facility 
            division (NIMBUS). You may wish to contact them for more info. 
-           The Atlanta WFO has done this as well, John Snook (FSL) would have 
-           info on this.
-           The Seattle WFO (for a time) read this type of GRIB data and filled
-           the LAPS arrays directly in a modified lga process, bypassing the 
-           NetCDF step. 
+           The Atlanta, Sterling, and Seattle WFOs have followed a more direct
+           route, going from the RUC/Eta to the intermediate "lga" file,
+           bypassing the NetCDF file on the model grid. This includes RUC
+           on isobaric surfaces. Pete Stamus or John Snook (FSL) would have 
+           more info on this.
 
 
      Further information on specific LAPS ingest processes is found in Section
@@ -1196,9 +1198,10 @@ April 1996
    warnings. The errors are generally more significant.
    
    If you have any problems during the configure, install and localization
-   process, first check this README file and the FAQ available at
-   http://laps.fsl.noaa.gov/frd/laps/birk/LAPS_FACTS.htm. Also check the
-   release notes at http://laps.fsl.noaa.gov/software/release_notes.html.
+   process, first check this README file and the FAQ available at the
+   http://laps.fsl.noaa.gov/frd/laps/birk/LAPS_FACTS.htm URL. Also check the
+   release notes at the http://laps.fsl.noaa.gov/software/release_notes.html
+   URL.
    If you don't find the answer in these documents, send mail to 
    laps-bugs@fsl.noaa.gov   Include in your mail:
 <pre>
@@ -1280,7 +1283,7 @@ Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
 Inputs:
 	Model data in NetCDF (NIMBUS CDL) on the model's native grid.
 
-Outputs: (Feeds LZB, LC3)
+Outputs: (Feeds various analyses)
 	lga	grid	model data analysis/forecast
 
 ------ 3.2.2 -------------------- LVD ----------------------------------------
