@@ -122,7 +122,7 @@ foreach $exe (@LAPS_EXE){
 	print $t."WARNING: $exe not found\n";
     }
     my $cur_time = time();
-    if($cur_time-$initial_time>$cycle_time){
+    if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)){
 	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
 	print LOG "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
 	last;
