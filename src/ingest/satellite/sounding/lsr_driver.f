@@ -25,17 +25,6 @@ c
 
       cmode='noinstall'
 c
-c Subroutine reads static/lsr/lsr.parms files
-c
-c     call readwrite_lsr_parms(cmode,nlines_max,nelems_max,n_channels,
-c    &rdum,rdum,idum,idum,idum,idum,rdum,idum,idum,idum,
-c    &rdum,idum,idum,idum,idum,istatus)
-c     if(istatus.ne.1)then
-c        write(6,*)'Error returned from readwrite_ln3_parms'
-c        write(6,*)'Terminating'
-c        goto 1000
-c     endif
-c
 c get the number of satellites and channels from nest7grid.parms
 c
       call get_sat_sounder_info(n_sat,c_sat_id,n_channels,
