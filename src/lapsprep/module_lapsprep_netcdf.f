@@ -162,8 +162,7 @@ CONTAINS
 
   ! Build the output file name
  
-  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
-                  'cdf_laps'
+  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/cdf/LAPS'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(date_string,'(I4.4,"-",I2.2,"-",I2.2,"-",I2.2,I2.2)') &

@@ -114,13 +114,16 @@ CONTAINS
   ALLOCATE (p_pa (z3+1))
   ! Build the output file name
  
-  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
-                  'mm5_laps'
+  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/mm5/LAPS'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(hdate, '(I4.4,"-",I2.2,"-",I2.2,"_",I2.2,":",I2.2,":00.0000")') &
           valid_yyyy, valid_mm, valid_dd, valid_hh, valid_min
-  output_file_name = TRIM(output_prefix) // ':' // hdate(1:13)
+  IF (valid_mm .EQ. 0) THEN
+    output_file_name = TRIM(output_prefix) // ':' // hdate(1:13)
+  ELSE
+    output_file_name = TRIM(output_prefix) // ':' // hdate(1:16)
+  ENDIF
 
   !  Open the file for sequential, unformatted output
   OPEN ( FILE   = TRIM(output_file_name)    , &
