@@ -17,9 +17,11 @@ main                                           laps_sfc.f
         mdat_laps                              mdatlaps.f
             splie2                                  "
             splin2                                  "
+            put_thermo                              "
             procar                                  "
             set_boundary                            "
-                barnes_wide                    lapsvanl_sub.f
+                dynamic_wts                    lapsvanl_sub.f
+                barnes_wide                         "
         laps_vanl                              lapsvanl.f
             zero                                    
             get_modelfg_3d                          
@@ -47,7 +49,6 @@ main                                           laps_sfc.f
 .........................PLEASE IGNORE WHAT IS BELOW...........................
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
-mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
 mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
 mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
@@ -60,7 +61,6 @@ lapsvanl_sub.f:	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 lapsvanl_sub.f:	subroutine windconvert(uwind,vwind,direction,speed,
 lapsvanl_sub.f:        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,kcloud)
 lapsvanl_sub.f:        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
-lapsvanl_sub.f:	subroutine dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 lapsvanl_sub.f:	subroutine calc_beta(d,obs_error,beta)
 lapsvanl_sub.f:	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
 lapsvanl_sub.f:      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
