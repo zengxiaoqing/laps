@@ -125,6 +125,7 @@ c
      1                           ,itime_before,itime_after
      1                           ,maxobs
      1                           ,l_allow_empty_lso
+     1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,istatus)
         if(istatus .ne. 1)stop
 
@@ -145,6 +146,7 @@ c
      1                           ,itime_before,itime_after
      1                           ,maxsta
      1                           ,l_allow_empty_lso
+     1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,istatus)
 
         end
@@ -161,6 +163,7 @@ c
      1                           ,itime_before,itime_after
      1                           ,maxsta
      1                           ,l_allow_empty_lso
+     1                           ,local_obs_thresh, i4wait_local_obs_max
      1                           ,istatus)
 c        
         integer ni, nj, maxsta, maxobs 
@@ -414,7 +417,9 @@ c
      &                      store_3,store_3ea,store_4,store_4ea,
      &                      store_5,store_5ea,store_6,store_6ea,
      &                      store_7,store_cldht,store_cldamt,
-     &                      provider, laps_cycle_time, jstatus)
+     &                      provider, laps_cycle_time, 
+     &                      local_obs_thresh, i4wait_local_obs_max, 
+     &                      jstatus)       
 
         else
             call get_local_cwb(maxobs,maxsta,i4time_sys,
@@ -623,6 +628,7 @@ c
      1                         ,itime_before,itime_after
      1                         ,maxobs
      1                         ,l_allow_empty_lso
+     1                         ,local_obs_thresh, i4wait_local_obs_max
      1                         ,istatus)
 
        character*200 path_to_metar
@@ -642,9 +648,14 @@ c
      1                         ,itime_before,itime_after
      1                         ,l_allow_empty_lso
      1                         ,maxobs
- 
+     1                         ,local_obs_thresh
+     1                         ,i4wait_local_obs_max
+
        character*150 static_dir,filename
  
+       local_obs_thresh = 0 ! default value
+       i4wait_local_obs_max = 0   ! default value
+
        call get_directory('static',static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/obs_driver.nl'
