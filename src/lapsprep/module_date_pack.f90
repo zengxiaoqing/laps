@@ -694,8 +694,8 @@ CONTAINS
 
     IMPLICIT NONE
     INTEGER      :: century_year, month, day
-    INTEGER             	:: day_of_year
-    INTEGER			:: m
+    INTEGER      :: day_of_year
+    INTEGER      :: m
 
     days_in_month(2) = nfeb(century_year)           
     IF ( month .eq. 1) THEN
@@ -713,7 +713,7 @@ CONTAINS
   FUNCTION hms_to_wrf_time (hour,minute,second) RESULT (seconds_utc)
     IMPLICIT NONE
     INTEGER     :: hour, minute, second
-    REAL			:: seconds_utc
+    REAL        :: seconds_utc
     seconds_utc = FLOAT(hour*3600 + minute*60 + second)
   END FUNCTION hms_to_wrf_time     
 
@@ -722,9 +722,9 @@ CONTAINS
   
     IMPLICIT NONE
     INTEGER , INTENT(IN)  :: wrf_date
-    INTEGER , INTENT(OUT)		:: century_year
-    INTEGER,  INTENT(OUT)		:: month
-    INTEGER,  INTENT(OUT)		:: day
+    INTEGER , INTENT(OUT) :: century_year
+    INTEGER,  INTENT(OUT) :: month
+    INTEGER,  INTENT(OUT) :: day
     INTEGER :: day_of_year, m, total_days
 
     century_year = wrf_date/1000
@@ -746,8 +746,8 @@ CONTAINS
   SUBROUTINE wrf_time_to_hms(wrf_time, hour,minute,second)
     IMPLICIT NONE
     REAL, INTENT(IN)                    :: wrf_time
-    INTEGER, INTENT(OUT)		:: hour, minute, second
-    INTEGER				:: leftover_seconds
+    INTEGER, INTENT(OUT)                :: hour, minute, second
+    INTEGER                             :: leftover_seconds
     hour = FLOOR(wrf_time)/3600
     leftover_seconds = MOD(FLOOR(wrf_time),3600)
     minute = leftover_seconds/60           
@@ -758,8 +758,8 @@ CONTAINS
 
     IMPLICIT NONE
     INTEGER , INTENT(IN)              :: wrf_date
-    REAL ,    INTENT(IN)		:: wrf_time
-    CHARACTER (LEN=19), INTENT(OUT)	:: mm5_date
+    REAL ,    INTENT(IN)              :: wrf_time
+    CHARACTER (LEN=19), INTENT(OUT)   :: mm5_date
     INTEGER :: century_year, month, day, hour, minute, second
 
     CALL wrf_date_to_ymd(wrf_date,century_year,month,day)
@@ -774,8 +774,8 @@ CONTAINS
 
     IMPLICIT NONE
     CHARACTER (LEN=19), INTENT(IN)      :: mm5_date
-    INTEGER, INTENT(OUT)		:: wrf_date
-    REAL, INTENT(OUT)			:: wrf_time
+    INTEGER, INTENT(OUT)                :: wrf_date
+    REAL, INTENT(OUT)                   :: wrf_time
     INTEGER :: century_year, month, day, hour, minute, second
     INTEGER :: day_of_year
 
