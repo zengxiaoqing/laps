@@ -9,18 +9,17 @@
      ~                          dd, wgdd, ff, wgff, wmoId, badflag,
      ~                          num, istatusSynop )
 
-!     integer, parameter :: maxobs =   160
       integer, parameter :: maxSynop = 120
       integer, parameter :: maxMso =    40
 
       character*(*)  filename
-      character*25   prsWth(maxobs)
-      character*(*)  path_to_local
-      character*13   cvt_i4time_wfo_fname13,a13time_eat
-      character*9    a9time
-      character*8    skyCvr(maxSkyCvr,maxobs)
-      character*6    StnTp(maxobs), rptTp(maxobs)
-      character*5    stname(maxobs), stnNo(maxobs)
+      character(25)  prsWth(maxobs)
+      character(20)  path_to_local
+      character(13)  cvt_i4time_wfo_fname13,a13time_eat
+      character(9)   a9time
+      character(8)   skyCvr(maxSkyCvr,maxobs)
+      character(6)   StnTp(maxobs), rptTp(maxobs)
+      character(5)   stname(maxobs), stnNo(maxobs)
 
       integer  pcc(maxobs), wmoId(maxobs), flag
 
@@ -35,8 +34,8 @@
       real  vis(maxobs), dd(maxobs), wgdd(maxobs), wgff(maxobs)
       real  ff(maxobs), sr(maxobs), st(maxobs)
 
-      character*5   stnNoMso(maxMso)
-      character*3   rptTpMso(maxMso)
+      character(5)   stnNoMso(maxMso)
+      character(3)   rptTpMso(maxMso)
       integer  pccMso(maxMso)
 
       real  latsMso(maxMso), lonsMso(maxMso)
@@ -87,6 +86,7 @@
       
       istatusSynop= 0
       istatusMso=   0
+      num=          0
       numSynop=     0
       numMso=       0
 
@@ -170,6 +170,8 @@ c                    combine synop data and mesonet data
          endif
       enddo
 
+      num = k
+
       end
 
 
@@ -188,11 +190,11 @@ c                    combine synop data and mesonet data
       integer  maxSkyCover, recNum
 
       character*(*)  filename
-      character*6    autoStationType(recNum)
-      character*25   presWeather(recNum)
-      character*6    reportType(recNum)
-      character*8    skyCover(maxSkyCover,recNum)
-      character*5    stationName(recNum)
+      character(6)   autoStationType(recNum)
+      character(25)  presWeather(recNum)
+      character(6)   reportType(recNum)
+      character(8)   skyCover(maxSkyCover,recNum)
+      character(5)   stationName(recNum)
 
       integer  pressChangeChar(recNum), wmoId(recNum)
 
@@ -210,11 +212,11 @@ c                    combine synop data and mesonet data
 
       double precision  timeObs(recNum)
 
-      character*3   reportFlag(recNum)
-      character*2   yy(recNum), mo(recNum), dd(recNum)
-      character*2   hh(recNum), mn(recNum)
-      character*10  time(recNum)
-      character*9   a10_to_a9
+      character(3)   reportFlag(recNum)
+      character(2)   yy(recNum), mo(recNum), dd(recNum)
+      character(2)   hh(recNum), mn(recNum)
+      character(10)  time(recNum)
+      character(9)   a10_to_a9
 
       integer  windQua(recNum), seaLevelPressQua(recNum)
       integer  temperatureQua(recNum), dewpointQua(recNum)
@@ -855,7 +857,7 @@ c Match data with metadata for this station, then store the metadata in arrays.
       enddo 
 
       if ( imatch == 0 ) then
-         write(6,*) ' No station match ',stn_id
+         write(6,*) ' No station match ', cstn_id
       endif
  
 c     stname(num)= stn_id//'  '
@@ -885,20 +887,20 @@ c                                quality control
          t(num)= badflag
       else
          if ( rt > 50. )  rt= - (rt - 50.)
-         t(num)= rt +273.15                        ! degC -> degK
+         t(num)= rt +273.15                            ! degC -> degK
       endif
  
       if ( rtd <= -90 ) then
          td(num)= badflag
       else
          if ( rtd > 50. ) rtd= - (rtd - 50.)
-         td(num)= rtd +273.15                      ! degC -> degK
+         td(num)= rtd +273.15                          ! degC -> degK
       endif
  
       if ( idir > 36 .or. idir < 0 ) then
          dd(num)= badflag
       else
-         dd(num)= float(idir * 10)
+         dd(num)= float(idir * 10)                     ! unit : deg
       endif
  
       if ( rspd < 0 ) then
@@ -916,7 +918,7 @@ c                                quality control
       if ( iwgdd > 36 .or. iwgdd < 0 ) then
          wgdd(num)= badflag
       else
-         wgdd(num)= float(iwgdd * 10)
+         wgdd(num)= float(iwgdd * 10)                  ! unit : deg
       endif
  
       if ( rpcp < 0 ) then
@@ -934,13 +936,13 @@ c                                quality control
       if ( irh < 0 ) then
          rh(num)= badflag
       else
-         rh(num)= float(irh)
+         rh(num)= float(irh)                           ! unit : %
       endif
  
       if ( rst < 0 ) then
          st(num)= badflag
       else
-         st(num)= rst
+         st(num)= rst                                  ! degC -> degK
       endif
  
 c                          Go back for the next ob.
@@ -1049,6 +1051,11 @@ c                        Hit end of file...that's it.
       istatus= 1
       return
       
+ 980  write(6,*) ' Warning: could not open mesonet station file ',
+     ~           inpath
+      istatus= -1
+      return
+
  990  write(6,*) stn_id_in, stn_name_in,
      ~           lat_deg, lat_min, lat_sec, alat_sec,       
      ~           lon_deg, lon_min, lon_sec, alon_sec, elev_m
