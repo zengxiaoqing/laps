@@ -184,7 +184,7 @@ C     Read verify_raob.nl
 
       lun = 10
       call s_len(nl_dir,dir_len)
-      filename = nl_dir(1:dir_len)//'/verif_raob.nl'
+      filename = nl_dir(1:dir_len)//'/verif_raob.txt'
       open(lun,file=filename,status='old',err=900)
 
       l_eof = .false.
