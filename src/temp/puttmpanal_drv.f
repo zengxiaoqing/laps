@@ -99,12 +99,11 @@ cdis
         integer*4 iflag_write
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 sh_3d_dum(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L), pres_3d_mb(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 pres_sfc_pa(NX_L,NY_L)
-        real*4 pbl_top_pa(NX_L,NY_L)
+        real*4 pres_sfc_pa(NX_L,NY_L), pres_sfc_mb(NX_L,NY_L)
+        real*4 pbl_top_pa(NX_L,NY_L), pbl_top_mb(NX_L,NY_L)
         real*4 pbl_depth_m(NX_L,NY_L)
 
         real*4 lat(NX_L,NY_L)
@@ -116,6 +115,12 @@ cdis
         character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
+
+        parameter (MAX_FIELDS=2)
+        real*4 field_array(NX_L,NY_L,MAX_FIELDS)
+        character*125 comment_a(MAX_FIELDS)
+        character*10 units_a(MAX_FIELDS)
+        character*3 var_a(MAX_FIELDS)
 
 c read in LAPS_DOMAIN
         call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo
@@ -175,16 +180,21 @@ c read in LAPS_DOMAIN
 
 !  ******************** PBL SECTION ******************************************
 
-        if(.false. .and. istatus .eq. 1)then
+        if(.true. .and. istatus .eq. 1)then
             write(6,*)' Start PBL Section'
-            call ghbry (i4time_needed,pres_3d,pres_sfc_pa,temp_3d     ! I
-     1                 ,pbl_top_pa                                    ! O
+            pres_3d_mb  = pres_3d_pa / 100.
+            pres_sfc_mb = pres_sfc_pa / 100.
+
+            call ghbry (i4time_needed,pres_3d_mb,pres_sfc_mb,temp_3d  ! I
+     1                 ,pbl_top_mb                                    ! O
      1                 ,NX_L,NY_L,NZ_L                                ! I
      1                 ,istatus)                                      ! O
             if(istatus .ne. 1)then
                 write(6,*)' ERROR: on PBL istatus returned from ghbry'       
                 return
             endif
+
+            pbl_top_pa = pbl_top_mb * 100.
 
 !           Convert to PBL height AGL
 
@@ -209,6 +219,19 @@ c read in LAPS_DOMAIN
             enddo ! i
 
 !           Write PBL file
+            call move(pbl_top_pa ,field_array(1,1,1),NX_L,NY_L)
+            call move(pbl_depth_m,field_array(1,1,2),NX_L,NY_L)
+
+            ext = 'pbl'
+            var_a(1) = 'PTP'
+            var_a(2) = 'PDM'
+            units_a(1) = 'Pa'
+            units_a(2) = 'M'
+            comment_a(1) = 'PBL Top Pressure'
+            comment_a(2) = 'PBL Depth'
+            call put_laps_multi_2d(i4time_needed,ext,var_a,units_a
+     1                            ,comment_a,field_array,NX_L,NY_L
+     1                            ,2,istatus)
     
         else
             write(6,*)' No PBL calculation done for PBL file'
@@ -216,6 +239,8 @@ c read in LAPS_DOMAIN
         endif
 
 ! ************* NOTIFICATION STUFF *********************************************
+
+        I4_elapsed = ishow_timer()
 
         iprod_number(1) = 28261 ! LT1
         n_prods = 1
