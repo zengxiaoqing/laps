@@ -355,6 +355,10 @@ c     initialize total pw to laps missing data flag
                data (i,j,k) = -1e+30
             enddo
             tpw(i,j) = mdf
+            gvap_w(i,j) = 0.0
+            gvap_data(i,j) = 0.0
+            gps_data(i,j) = 0.0
+            gps_w(i,j) = 0.0
          enddo
       enddo
 
