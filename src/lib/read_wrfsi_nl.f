@@ -116,7 +116,7 @@
      +         ,moad_known_lat, moad_known_lon, moad_known_loc
      +         ,moad_stand_lats, moad_stand_lons 
      +         ,moad_delta_x, moad_delta_y
-     +         ,silavwt_parm, toptwvl_parm 
+     +         ,silavwt_parm_wrf, toptwvl_parm_wrf
 
 
       istatus = 0

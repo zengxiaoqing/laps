@@ -25,6 +25,7 @@ c       include 'wrf_dims.inc'
         integer      MAX_RADARS
         real*4       ref_base
         real*4       ref_base_useable
+        real*4       silavwt_parm,toptwvl_parm
         integer      maxstns
         integer      N_PIREP
         integer      vert_rad_meso
@@ -123,9 +124,6 @@ c
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
         c80_description = simulation_name_cmn
 
-        silavwt_parm_cmn = silavwt_parm
-        toptwvl_parm_cmn = toptwvl_parm
-
         path_to_raw_pirep_cmn = path_to_raw_pirep
         path_to_raw_rass_cmn = path_to_raw_rass
         path_to_raw_profiler_cmn = path_to_raw_profiler
@@ -146,12 +144,17 @@ c
            nx_l_cmn = nx_l
            ny_l_cmn = ny_l
            grid_spacing_m_cmn = grid_spacing_m
+           silavwt_parm_cmn = silavwt_parm
+           toptwvl_parm_cmn = toptwvl_parm
 
         else                                        ! this means that the grid dimensions for lapsparms.cmn
                                                     ! will be configured with the wrf h gridspec.
            nx_l_cmn = xdim(nest)
            ny_l_cmn = ydim(nest)
            grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
+           silavwt_parm_cmn = silavwt_parm_wrf
+           toptwvl_parm_cmn = toptwvl_parm_wrf
+
            
         endif
 
