@@ -165,10 +165,11 @@
      Please note that LAPS uses dynamic memory within the FORTRAN code in
      the form of automatic arrays. This implies that you will need a FORTRAN
      90 compiler, or at least an f77 compiler that has f90 extensions
-     allowing for automatic arrays. LAPS will not work on a strict f77 
-     compiler that does not allow automatic arrays. Conversely, we are using
-     only a subset of f90 constructs to help ensure compatability with f77
-     compilers. Check that the FORTRAN compiler is in your path.
+     allowing for automatic and allocatable arrays. LAPS will not work on a 
+     strict f77 compiler that does not allow automatic and allocatable arrays. 
+     Conversely, we are using only a subset of f90 constructs to help ensure 
+     some compatability with f77 compilers. Check that the FORTRAN compiler 
+     is in your path.
 
      For IBM/AIX platforms 'xlf' is recommended.
 
