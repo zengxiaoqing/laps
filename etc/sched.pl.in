@@ -330,11 +330,11 @@ foreach $exe (@LAPS_EXE){
                 if($opt_q){
                     print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
                 }elsif($opt_Q){ 
-                    print TFILE "#$ -pe $node_type $nodes_current\n";
-                    print TFILE "#$ -l h_rt=$cycle_time_min:00\n";
-                    print TFILE "#$ -A $opt_Q\n";
-                    print TFILE "#$ -S /bin/sh\n";
-                    print TFILE "#$ -cwd\n";
+                    print TFILE "#\$ -pe $node_type $nodes_current\n";
+                    print TFILE "#\$ -l h_rt=$cycle_time_min:00\n";
+                    print TFILE "#\$ -A $opt_Q\n";
+                    print TFILE "#\$ -S /bin/sh\n";
+                    print TFILE "#\$ -cwd\n";
                 }
 
                 print TFILE "  \n";
