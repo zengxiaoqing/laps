@@ -325,7 +325,7 @@ c
             ix = n_metar_cwb + 1
 
 !           Read Synop Obs
-            i4time_file = ( (i4time_sys+3600) /10800) * 10800
+            i4time_file = (i4time_sys/3600) * 3600
             call make_fnam_lp(i4time_file,a9time,istatus)
             a8time = a9_to_a8(a9time(1:9))
 
