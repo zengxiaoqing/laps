@@ -42,6 +42,7 @@ cdis
      1    ,NX_L,NY_L,NZ_L                                         ! Input
      1    ,max_radars,r_missing_data                              ! Input
      1    ,i4time_sys                                             ! Input
+     1    ,dbz_max_2d,istat_lps                                   ! Input
      1    ,uanl,vanl)                                             ! Output
 
 !       1997 Jun     Ken Dritz      Added NX_L, NY_L, NZ_L, and max_radars
@@ -69,6 +70,7 @@ cdis
      1        ,wanl_2d(imax,jmax)
         
         real*4 grid_ra_ref(imax,jmax,kmax)
+        real*4 dbz_max_2d(imax,jmax)
         real*4 heights_3d(imax,jmax,kmax)
 
 !       Stuff for SFC and MEAN winds
@@ -210,19 +212,20 @@ cdis
         i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
 
         call get_filespec(ext_radar,2,c_filespec,istatus)
-!       call get_file_time(c_filespec,i4time_sys,i4time_radar)
 
-!       if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
+        if(istat_lps .eq. 1)then
+            write(6,*)' passing in "dbz_max_2d" for "ref_max" array'
+            ref_max(:,:,0) = dbz_max_2d
+            istat_radar_2dref = 1 ! since we can now use the data
 
-            if(ext_radar .ne. 'vrc')then 
+        elseif(ext_radar .ne. 'vrc')then  ! original way to get column max ref
+            call get_ref_base(ref_base,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Error getting ref_base'
+                return
+            endif
 
-                call get_ref_base(ref_base,istatus)
-                if(istatus .ne. 1)then
-                    write(6,*)' Error getting ref_base'
-                    return
-                endif
-
-                call read_radar_3dref(i4time_sys,
+            call read_radar_3dref(i4time_sys,
      1                 .true.,ref_base,
      1                 NX_L,NY_L,NZ_L,ext_radar,
      1                 lat,lon,topo,.true.,.true.,
@@ -232,46 +235,40 @@ cdis
      1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
 
 
-                if(istat_radar_2dref .eq.  1 .or. 
-     1             istat_radar_2dref .eq. -1          )then
-                    write(6,*)' Call get_max_reflect'
+            if(istat_radar_2dref .eq.  1 .or. 
+     1         istat_radar_2dref .eq. -1          )then
+                write(6,*)' Call get_max_reflect'
 
-                    call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
-     1                                  ,ref_base,ref_max(1,1,0))
+                call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
+     1                              ,ref_base,ref_max(1,1,0))
 
-                    istat_radar_2dref = 1 ! since we can now use the data
+                istat_radar_2dref = 1 ! since we can now use the data
 
-                endif
+            endif
 
-            else ! ext_radar = 'vrc'
-                call read_radar_2dref(i4time_sys,radar_name,
+        else ! ext_radar = 'vrc' (and not lps)
+            call read_radar_2dref(i4time_sys,radar_name,
      1                  NX_L,NY_L,
      1                  ref_max(1,1,0),istat_radar_2dref)
 
-                if(istat_radar_2dref .eq. 1)then
-                    write(6,*)' Radar 2d ref data successfully read in'
-                elseif(istat_radar_2dref .eq. -1)then
-                    write(6,*)' Radar 2d ref: fill missing data'
-                    do i = 1,NX_L
-                    do j = 1,NY_L
-                        if(ref_max(i,j,0) .eq. r_missing_data)then
-                            ref_max(i,j,0) = ref_base
-                        endif
-                    enddo ! j
-                    enddo ! i
-                    istat_radar_2dref = 1 ! since we can now use the data
-                else
-                    write(6,*)' Radar 2d ref data NOT successfully'
-     1                       ,' read in'
-                endif
+            if(istat_radar_2dref .eq. 1)then
+                write(6,*)' Radar 2d ref data successfully read in'
+            elseif(istat_radar_2dref .eq. -1)then
+                write(6,*)' Radar 2d ref: fill missing data'
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    if(ref_max(i,j,0) .eq. r_missing_data)then
+                        ref_max(i,j,0) = ref_base
+                    endif
+                enddo ! j
+                enddo ! i
+                istat_radar_2dref = 1 ! since we can now use the data
+            else
+                write(6,*)' Radar 2d ref data NOT successfully'
+     1                   ,' read in'
+            endif
 
-            endif ! ext_radar
-
-!       else
-!           write(6,*)' No radar data within time window ',ext_radar
-!           istat_radar_2dref = 0
-
-!       endif ! Data is within time window
+        endif ! ext_radar
 
 !       Calculate and write out Storm Steering Wind Field (ustorm, vstorm)
 
