@@ -2,7 +2,8 @@
 c
       implicit none
 c
-      integer NX,NY,NZ,NRECS          !Background grid dimensions
+c     integer NX,NY,NZ,NRECS          !Background grid dimensions
+      integer NX,NY,NZ                !Background grid dimensions
 c
       real*4 esat,es
       common /estab/esat(15000:45000),es(15000:45000)
@@ -10,7 +11,8 @@ c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
       character*132 cmodel
-      integer i, filesfound, nf_fid, len
+c     integer i, filesfound, nf_fid, len
+      integer i, filesfound, len
       character*180 nl_file, laps_data_root
       integer bgfcnt, max_files, istat
       parameter (max_files=500)
@@ -164,16 +166,18 @@ c
       implicit none
       include 'netcdf.inc'
       integer NX, NY, NZ, i4time, i, j, bgtime
-      integer bgmodel, istatus, bgfcnt, k, len, filesfound
+c     integer bgmodel, istatus, bgfcnt, k, len, filesfound
+      integer bgmodel, istatus, bgfcnt, k, filesfound
       real sw(2), ne(2)
 
       character*(*) bgpath, bgfnames(bgfcnt), outdir
       character*132 fullname
       character*4 ext, gproj, af
       character*9 fname
-      character*13 fname13
+c     character*13 fname13
       integer nxbg, nybg, nzbg(5),ntbg 
-      real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ), 
+c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ), 
+      real ht( NX,  NY,  NZ), 
      +   ht_sfc( NX,  NY), p_sfc( NX,  NY), 
      +   rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
      +   th( NX,  NY,  NZ), th_sfc( NX,  NY), 

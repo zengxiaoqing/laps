@@ -25,9 +25,10 @@ C     .       ex(nx,ny,nz),     !LAPS 3d Exner function
      .       smr(nx,ny),       !LAPS surface mixing ratio (kg/kg)
      .       lat(nx,ny),
      .       lon(nx,ny),
-     .       lat0,lon0,        !LAPS polar stereo grid pole point
+c    .       lat0,lon0,        !LAPS polar stereo grid pole point
      .       pri(nz),
-     .       prbot,dpr, factor
+     .       factor
+c    .       prbot,dpr, factor
 c
       integer istatus,i,j,k
 c
@@ -88,7 +89,7 @@ c
       character*100 datadir
       character*10 units
       character*125 comment
-      character*3 sfcfields(6)
+c     character*3 sfcfields(6)
 c
 c *** Common block variables for Lambert-conformal grid.
 c
