@@ -618,7 +618,7 @@ c        end
 
       include 'lapsparms.cmn' ! c80_description
 
-      character*6 c80_description_ret
+      character*80 c80_description_ret
 
 !     This routine accesses the c80_description variable from the
 !     .parms file via the common block. Note the variable name in the
