@@ -329,7 +329,7 @@
 
      Place the tar file in the directory '/home_disk' or '/home_disk/src'.
      Untar the laps source code using a command like...
-     prompt> zcat laps-m-n-o.tar.gz | tar xf -
+     prompt> gzcat laps-m-n-o.tar.gz | tar xf -
  
      OR...
 
