@@ -27,7 +27,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
 
 EXE = lq3driver.x
 
-SRC=analq.f            lq3_driver1a.f     rsr.f \
+SRC=module_sfc_structure.f    analq.f            lq3_driver1a.f     rsr.f \
     glsp.f             sh2mr.f            tiros.f \
     func_o.f             glst.f             lsin.f             slv_laplc.f \
     glstd.f            mak_cld_grid.f     smooth_grid2.f \
@@ -41,7 +41,8 @@ SRC=analq.f            lq3_driver1a.f     rsr.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
     int_ipw.f          test_cloud.f \
     precip_water_profile.f                optrans.f \
-    bias_correction.f  snd_step.f         analz_snd.f       impact_assess.f 
+    bias_correction.f  snd_step.f         analz_snd.f       impact_assess.f \
+    make_optran_layers.f 
 
 MAIN=lq3driver.f
 

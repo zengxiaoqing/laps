@@ -37,7 +37,7 @@ cdis
 cdis
 cdis
 
-      subroutine lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
+      subroutine lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,p,glat,glon,mdf,ii,jj,kk,istatus)
 
 c     this routine is the laps surface interface for water vapor
@@ -66,11 +66,15 @@ c     this might cause some difference between this output and
 c     the workstation integrated soundings, but not the error of
 c     putting the data below ground.
 
+      use module_sfc_structure
+
       implicit none
 
 c     input variables
 
+
       integer i4time,istatus,ii,jj,kk
+      type(lbsi), intent(in out), dimension (ii,jj) :: sfc_data
       real p_3d (ii,jj,kk)
       real lt1dat (ii,jj,kk)    ! laps 3-d temp field
       real data (ii,jj,kk)
@@ -128,6 +132,12 @@ c     get required field variables
          write(6,*) 'NaN detected in var:t  routine:lsin.f'
          return
       endif
+
+      do i = 1,kk
+         do j = 1,jj
+            sfc_data(ii,jj)%sfc_temp = t(i,j)
+         enddo
+      enddo
       
       
       call glsp(i4time,p,ii,jj,istatus)
@@ -146,6 +156,7 @@ c     convert p to mb
       do j = 1,jj
          do i = 1,ii
             p(i,j) = p(i,j)*.01
+            sfc_data(i,j)%sfc_pres = p(i,j)
          enddo
       enddo
       

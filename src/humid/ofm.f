@@ -57,7 +57,12 @@ c   to setup OPTRAN for a particular satellite.  After doing such, either
 c   the imager or sounding instrument can be used with the software without
 c   further recompilation.  
       
+ 
+
+      USE module_sfc_structure
+
       Implicit None
+
       save
       
       Include '../include/Constants.inc'
@@ -75,6 +80,12 @@ c   further recompilation.
       integer jday, istatus
       logical first_call
       data first_call /.true./
+
+c     optran 90 variables
+
+      real, dimension (0:Nlevel,1)::  level_p,level_t, level_w, level_o
+      real, dimension (Nlevel,1)  ::  layer_p,layer_t, layer_w,layer_o
+      integer nk_90 ! optran 90 reduced nk counter
       
 c     climo variables
       real c_p (40)
@@ -122,7 +133,8 @@ c     goes sounder vnu goes imager vnu
       
       data vnu / 1345., 907., 832., 1425., 2420., 790., 1535.,
      1     1482., 935., 835.4/
-          
+
+
 c     ----------------------do ozone first call ----
 
       if (first_call) then
@@ -214,6 +226,30 @@ c     now at sfc or cloud top
 c0000000000000000000000
 c     end assembling vectors
 c00000000000000000000000
+
+cc insert here new code for OPTRAN 90 INTERFACE  dB  2002
+c upper level layer computations.
+
+      do i = 1,nk
+         level_p (i-1,1) = p(i)
+         level_t (i-1,1) = t(i,1)
+         level_w (i-1,1) = q(i,1)
+         level_o (i-1,1) = o(i)
+      enddo
+      nk_90 = nk - 1            ! (start counter at zero for layers)
+
+c     generate layers
+
+      call make_optran_layers ( level_t, level_w, level_o, 
+     1     layer_t, layer_w, layer_o, level_p,layer_p,
+     1     nk_90, istatus)
+
+c surface parameters
+
+      
+
+
+cc end insert new code
       
 c11111111111111111111
 c     begin using vectors

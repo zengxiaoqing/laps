@@ -1,3 +1,4 @@
+
 cdis   
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
@@ -34,7 +35,7 @@ cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
 cdis
 cdis
-cdis
+cdis 
 cdis
 cdis
 cdis
@@ -44,7 +45,7 @@ cdis
 cdis
       subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
 
-
+      USE module_sfc_structure
 
       implicit none
 
@@ -55,7 +56,9 @@ c     parameter variables
       integer ii,jj,kk
       real mdf
       integer lct
-      
+      type (lbsi), dimension(ii,jj) :: sfc_data
+
+     
       
       integer*4
      1     jstatus(3)
@@ -548,6 +551,15 @@ c     open file for laps temp data
          return
       endif
       
+c     fill new data structure surface data
+
+      do i = 1, ii
+         do j = 1,jj
+            sfc_data(i,j)%lat = lat(i,j)
+            sfc_data(i,j)%lon = lon(i,j)
+         enddo
+      enddo
+
       call check_nan3 (lt1dat,ii,jj,kk,istatus)
       if (istatus.ne.1) then
          write(6,*) 'NaN detected from lt1...ABORT'
@@ -706,7 +718,7 @@ c     ***   insert bl moisture
 
       print*, 'calling lsin'
 c     insert boundary layer data
-      call lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
+      call lsin (i4time,p_3d,sfc_data,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,ps,lat,lon,mdf,ii,jj,kk,istatus)
 
 c     check for supersaturation
