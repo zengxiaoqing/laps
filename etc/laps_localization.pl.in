@@ -160,20 +160,6 @@ print "gridgen_model.exe complete - building sfc lookup tables\n";
 run_sys::run_sys("$LAPSROOT/bin/gensfclut.exe");
 
 #
-# Generate new vrc lookup tables
-#
-
-if(-x "$LAPSROOT/bin/genvrclut.exe"){
-  print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
-  print "This could take an hour or more...\n" unless($sattype eq "wfo"); 
-  run_sys::run_sys("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
-}else{
-  print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
-  exit -1;
-}  
-
-
-#
 # Clean out any pre-existing radar remapper look-up tables
 #
 if(-d "$LAPS_DATA_ROOT/static/vxx"){
