@@ -31,8 +31,9 @@ cdis
 cdis
 
         subroutine get_radar_max_pd(i4time_beg,i4time_end,imax,jmax,kmax
-     1          ,lat,lon,topo,grid_ra_ref,dbz_2d
-     1                       ,radar_max,frac_sum,istatus)
+     1                             ,heights_3d,ext_radar
+     1                             ,lat,lon,topo
+     1                             ,radar_max,frac_sum,istatus)
 
 !       1992         Steve Albers
 !       1996 Feb     Steve Albers  Call read_radar_2dref for radar data
@@ -46,6 +47,7 @@ cdis
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
+        real*4 heights_3d(imax,jmax,kmax)
 
 !       Output
         real*4 radar_max(imax,jmax) ! M
@@ -62,7 +64,7 @@ cdis
 
         real*4 grid_ra_ref(imax,jmax,kmax)
 
-!       character*3 var_2d
+        character*3 ext_radar
         character*150  directory
         character*31  ext
 !       character*10  units_2d
@@ -141,18 +143,19 @@ c       rmax_so_far = 0.
 !101        format(' Time, Frac = ',a9,2x,f6.3)
 
             c255_radar_filename
-     1  = c_fnames(ifile)(1:lenf)//asc_tim_9//'.'//ext(1:3)
+     1      = c_fnames(ifile)(1:lenf)//asc_tim_9//'.'//ext(1:3)
 
             write(6,*)
 
-            if(.false.)then
+            if(ext_radar .ne. 'vrc')then
+              call read_radar_3dref(i4time_radar,.true.,
+     1                 imax,jmax,kmax,ext_radar,
+     1                 lat,lon,topo,.false.,.false.,
+     1                 heights_3d,
+     1                 grid_ra_ref,
+     1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
+     1                 n_ref_grids,istatus_2dref,istatus_3dref)       
 
-!             call read_radar_dumref(i4time_radar,.true.,
-!    1                 imax,jmax,kmax,ext,
-!    1                 lat,lon,topo,.false.,.false.,
-!    1                 grid_ra_ref,
-!    1                 rlat_radar,rlon_radar,rheight_radar,radar_name,
-!    1                 n_ref,istatus_2dref,istatus_3dref)
 
               if(istatus_2dref .eq. 0)then
                 write(6,*)' Error in reading radar data'
@@ -196,9 +199,8 @@ c         write(6,*)' Cycle to next file',rmax_so_far
         return
         end
 
-        subroutine get_fracs_radar(i4time_beg,i4time_end,max_radar_gap,i
-     1_nbr_files_ret
-     1          ,i4time_file,frac,frac_sum,istatus)
+        subroutine get_fracs_radar(i4time_beg,i4time_end,max_radar_gap
+     1          ,i_nbr_files_ret,i4time_file,frac,frac_sum,istatus)
 
         integer*4 MAX_FILES
         parameter (MAX_FILES = 3000)

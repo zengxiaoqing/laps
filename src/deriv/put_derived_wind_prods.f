@@ -29,6 +29,7 @@
      1        ,wanl_2d(imax,jmax)
         
         real*4 grid_ra_ref(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
 
 !       Stuff for SFC and MEAN winds
         real*4 umean(NX_L,NY_L),vmean(NX_L,NY_L)
@@ -66,17 +67,14 @@
         real*4 ref_curr_2d(NX_L,NY_L)
         real*4 ref_fcst_2d(NX_L,NY_L)
 
-
-!       Dummy arrays.f steer_grid
-!       real*4 dum4_2d(NX_L,NY_L)
-!       real*4 dum5_2d(NX_L,NY_L)
-!       real*4 dum6_2d(NX_L,NY_L)
-
         character*125 comment_2d,comment_a(0:10)
         character*10 units_2d,units_a(0:10)
         character*3 var_2d,var_a(0:10)
 
         character*31 ext
+
+        character*40 c_vars_req
+        character*100 c_values_req
 
         write(6,*)
         write(6,*)' Entering Derived Wind Fields Subroutine',i4time_sys       
@@ -141,41 +139,80 @@
             return
         endif
 
+        write(6,*)' Getting LT1 Heights' 
+        var_2d = 'HT' 
+        ext = 'lt1'
+
+        call get_laps_3d(i4time_sys
+     1                  ,NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,heights_3d,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: LAPS 3D Heights not available'       
+            return
+        endif
+
         write(6,*)
         write(6,*)' Reading reflectivity data'
+
+        c_vars_req = 'radarext_3d'
+
+        call get_static_info(c_vars_req,c_values_req,1,istatus)
+
+        if(istatus .eq. 1)then
+            ext_radar = c_values_req(1:3)
+        else
+            write(6,*)' Error getting radarext_3d'
+            return
+        endif
+
+        write(6,*)' ext_radar = ',ext_radar
+
         i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
 
-        if(.false.)then
-!           call get_multiradar_ref(i4time_sys,i4_tol,i4time_radar_a
-!     1    ,max_radars,n_radars,ext_radar,r_missing_data
-!     1    ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.false.
-!     1    ,grid_ra_ref
-!     1    ,n_ref_grids
-!     1    ,rlat_radar,rlon_radar,rheight_radar,radar_name
-!     1    ,istat_radar_2dref,istat_radar_3dref)
+        call get_filespec(ext_radar,2,c_filespec,istatus)
+        call get_file_time(c_filespec,i4time_sys,i4time_radar)
 
-        else
-            ext_radar = 'vrc'
-            call get_filespec(ext_radar,2,c_filespec,istatus)
-            call get_file_time(c_filespec,i4time_sys,i4time_radar)
-            if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
+        if(abs(i4time_radar - i4time_sys) .le. i4_tol)then
 
+            if(ext_radar .ne. 'vrc')then 
+
+                call read_radar_3dref(i4time_radar,
+     1                 .true.,
+     1                 NX_L,NY_L,NZ_L,ext_radar,
+     1                 lat,lon,topo,.true.,.true.,
+     1                 heights_3d,
+     1                 grid_ra_ref,
+     1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
+     1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
+
+
+                if(istat_radar_2dref .eq. 1)then
+                    write(6,*)' Call get_max_ref'
+
+                    call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L
+     1                              ,ref_max(1,1,0))
+                endif
+
+            else ! ext_radar .ne. 'vrc'
                 call read_radar_2dref(i4time_radar,radar_name,
      1                  NX_L,NY_L,
      1                  ref_max(1,1,0),istat_radar_2dref)
 
-            endif
 
+                if(istat_radar_2dref .eq. 1)then
+                    write(6,*)' Radar 2d ref data successfully read in'
+                else
+                    write(6,*)' Radar 2d ref data NOT successfully'
+     1                       ,' read in'
+                endif
 
-        endif
+            endif ! radarext
 
-
-        if(istat_radar_2dref .eq. 1)then
-            write(6,*)' Radar 2d ref data successfully read in'
         else
-            write(6,*)' Radar 2d ref data NOT successfully read in'
-        endif
+            write(6,*)' No radar data within time window ',ext_radar
+            istat_radar_2dref = 0
 
+        endif ! Data is within time window
 
 !       Calculate and write out Storm Steering Wind Field (ustorm, vstorm)
         write(6,*)
@@ -198,16 +235,13 @@
 
 !       Get storm motion from mean wind and tracking info
 !       call steer_grid(i4time_lapswind,imax,jmax,kmax
-!    1    ,dum1_2d,dum2_2d,dum3_2d,dum4_2d,grid_ra_veldum,grid_ra_ref,du
-!    1m5_2d
-!    1    ,dum6_2d
+!    1    ,dum1_2d,dum2_2d,dum3_2d,dum4_2d,grid_ra_veldum,grid_ra_ref
+!    1    ,dum5_2d,dum6_2d
 !    1    ,lat,lon,standard_latdum,standard_londum
 !    1                  ,iiilut,umean,vmean
 !    1                  ,ustorm,vstorm,istatus)
 
-
         I4_elapsed = ishow_timer()
-
 
         if(istat_radar_2dref.eq.1)then ! Get and advect the Reflectivity Stuff (LMR)
                                        ! Note: Ustorm and Vstorm need to be determined
@@ -215,15 +249,16 @@
             I4_elapsed = ishow_timer()
 
             do ifcst = 1,n_fcst_radar
-                write(6,*)' Generating advected max reflectivity for pd 
-     1',ifcst
+                write(6,*)
+     1            ' Generating advected max reflectivity for pd ',ifcst       
 
                 write(6,*)' Grid spacing (m) = ',grid_spacing_m
 
                 call advect(ustorm,vstorm,ref_max(1,1,0)
      1                  ,dum1_2d,grid_spacing_m,imax,jmax
-     1                       ,ref_max(1,1,ifcst)
-     1   ,float(ilaps_cycle_time*ifcst),1.0,lon,r_missing_data)
+     1                  ,ref_max(1,1,ifcst)
+     1                  ,float(ilaps_cycle_time*ifcst),1.0,lon
+     1                  ,r_missing_data)
 
             enddo ! i
 
@@ -271,12 +306,11 @@ cc102                 format('R',i2)
         endif
 
 !       Get and advect the Reflectivity History Stuff (LF1)
-!       Note: Input grid_ra_ref is wiped out here
         write(6,*)
         write(6,*)' Generating max reflectivity history analysis'
         call get_radar_max_pd(i4time_sys-ilaps_cycle_time
-     1          ,i4time_sys,imax,jmax,kmax
-     1          ,lat,lon,topo,grid_ra_ref,dum1_2d
+     1          ,i4time_sys,imax,jmax,kmax,heights_3d,ext_radar
+     1          ,lat,lon,topo
      1          ,ref_max(1,1,0),frac_sum,istat_radar_hist)
 
         if(istat_radar_hist.eq.1)then
@@ -289,7 +323,7 @@ cc102                 format('R',i2)
 
                 call advect(ustorm,vstorm,ref_max(1,1,0)
      1                  ,dum1_2d,grid_spacing_m,imax,jmax
-     1                       ,ref_max(1,1,ifcst)
+     1                  ,ref_max(1,1,ifcst)
      1         ,float(ilaps_cycle_time*ifcst),1.0,lon,r_missing_data)
 
             enddo ! i
@@ -297,8 +331,8 @@ cc102                 format('R',i2)
             I4_elapsed = ishow_timer()
 
 !           Write out LF1 file
-            write(6,*)' Writing out LF1 (or equiv) file for max reflecti
-     1vity history'
+            write(6,*)
+     1      ' Writing out LF1 file for max reflectivity history'
 
             do ifcst = 0,n_fcst_radar
                 minutes_10 = (ilaps_cycle_time * ifcst) / 600
@@ -306,16 +340,16 @@ cc102                 format('R',i2)
                 if(minutes_10 .lt. 10)then
 !                   write(var_a(ifcst),201)minutes_10
 !201                format('H0',i1)
-ccc                    var_a(ifcst) = 'H'
+ccc                 var_a(ifcst) = 'H'
                     write(comment_a(ifcst),211)minutes_10
-211                 format('LAPS Max Reflectivity History  ',i1,'0 Min F
-     1cst')
+211                 format('LAPS Max Reflectivity History  ',i1
+     1                    ,'0 Min Fcst')
                 else
-ccc                    write(var_a(ifcst),202)minutes_10
-ccc202                 format('H',i2)
+ccc                 write(var_a(ifcst),202)minutes_10
+ccc202              format('H',i2)
                     write(comment_a(ifcst),212)minutes_10
-212                 format('LAPS Max Reflectivity History ' ,i2,'0 Min F
-     1cst')
+212                 format('LAPS Max Reflectivity History ' ,i2
+     1                    ,'0 Min Fcst')
                 endif
                 units_a(ifcst) = 'DBZ'
             enddo
@@ -332,8 +366,9 @@ ccc202                 format('H',i2)
             istat_lf1 = istatus
 
         else
-            write(6,*)' Not writing out Max Reflectivity History LF1 (or
-     1 equiv) file'
+            write(6,*)
+     1      ' Not writing out Max Reflectivity History LF1 file'
+
         endif
 
 
@@ -343,11 +378,10 @@ ccc202                 format('H',i2)
 !           Write out Helicity field
             write(6,*)' Calculating Helicity'
             call helicity_laps(uanl,vanl,ustorm,vstorm,topo
-     1  ,dum1_2d,dum2_2d,dum3_2d,idum1_2d ! Local arrays in helicity
-     1  ,imax,jmax,kmax,helicity,istatus)
+     1          ,dum1_2d,dum2_2d,dum3_2d,idum1_2d    ! Local arrays in helicity
+     1          ,imax,jmax,kmax,helicity,istatus)
 
             if(istatus .eq. 1)then
-
                 ext = 'lhe'
 
                 var_a(0) = 'LHE'
@@ -434,7 +468,6 @@ ccc202                 format('H',i2)
 !           i4time_array(n_vrc) = i4time_radar
 !           j_status(n_vrc) = ss_normal
 !       endif
-
 
         if(istat_lhe .eq. 1)then
             i4time_array(n_lhe) = i4time_sys
