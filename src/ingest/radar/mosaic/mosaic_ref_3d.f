@@ -77,20 +77,20 @@ c
             do l = 1,i_ra_count
                l_valid = .false.
 
-               do k = 1,nz
+               do k = 1,nz ! Look for non-missing reflectivity in column
                   if(grid_ra_ref(i,j,k,l) .ne. r_missing_data)then        
                      l_valid = .true.
                   endif
                enddo ! k
 
-               ridist=abs(float(i)-ri(l))
-               rjdist=abs(float(j)-rj(l))
+               ridist = float(i)-ri(l)
+               rjdist = float(j)-rj(l)
 
-               rijdist=sqrt(ridist*ridist+rjdist+rjdist)
+               rijdist=sqrt(ridist*ridist + rjdist*rjdist)
 
-               if(rijdist.lt.r_min_dist .and. l_valid)then
+               if(rijdist .lt. r_min_dist .and. l_valid)then
                   lr=l
-                  r_min_dist=min(rijdist,r_min_dist)
+                  r_min_dist = rijdist
                endif
 
             enddo ! l
