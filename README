@@ -1399,7 +1399,7 @@ April 1996
    Check if output is being generated in the various 'lapsprd' subdirectories.
    A Web based monitor might be useful here. Examples of these are at:
 
-       "http://laps.fsl.noaa.gov/~jedwards/Laps_Monitor.cgi"
+       "http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi"
        "http://fics.fsl.noaa.gov/PRODS/LapsComparison.shtml"
 
    Check the log files in the 'log' directory for occurrences of errors and 
