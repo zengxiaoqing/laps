@@ -2574,9 +2574,9 @@ Inputs: (from PRO, PIN, LGA/FUA, CDW)       '*' = essential input
 	v01-v20 grid            3-D radar reflectivity/radial velocity 
 
 Outputs: (LW3 is main output)
-	pig	inter data	acars winds    (none of these four really have 
-	prg	inter data	profiler winds  to be part of the Wind Anlysis,
-	sag	inter data	SAOs             they are used for lapsplot 
+	pig	inter data	acars winds    (prior to QC, true north)
+	prg	inter data	profiler winds (prior to QC, true north)
+	sag	inter data	SAOs           (prior to QC, true north)
 	d01-d20 inter data (3d)	derived radar obs output)
 
 	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
