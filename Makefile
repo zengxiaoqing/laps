@@ -89,6 +89,7 @@ DATADIRS = log/qc \
            lapsprd/d20 \
            lapsprd/fsf \
            lapsprd/fua \
+           lapsprd/grid \
            lapsprd/l1s \
            lapsprd/lc3 \
            lapsprd/lcb \
@@ -134,6 +135,9 @@ DATADIRS = log/qc \
            lapsprd/lwc \
            lapsprd/lwm \
            lapsprd/msg \
+	   lapsprd/model/varfiles \
+	   lapsprd/model/output \
+	   lapsprd/model/sfc \
            lapsprd/pig \
            lapsprd/pin \
            lapsprd/prg \
@@ -181,8 +185,7 @@ DATADIRS = log/qc \
            lapsprd/v18 \
            lapsprd/v19 \
            lapsprd/vdr \
-           lapsprd/vrc \
-       
+           lapsprd/vrc 
 
 
 all: exe
@@ -224,6 +227,9 @@ debuglib:
 
 lapsplot: lib
 	cd src/lapsplot; $(MAKE)
+
+install_lapsplot: lib
+	cd src/lapsplot; $(MAKE) install
 
 
 install: mkdirs
