@@ -44,14 +44,14 @@ c
 !     DI = 50.
 !     polat=90.
 
-      rrot=0.
+!     rrot=0.
       pl1(1)=sw(1)
       pl2(1)=sw(2)
       pl3(1)=ne(1)
       pl4(1)=ne(2)
       jjlts=-2
       jgrid=0
-
+!     jgrid=1 ! Draw lat/lon lines
 
 !     Plot Counties
       jus=-4

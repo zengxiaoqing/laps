@@ -313,7 +313,7 @@ c       set up supmap for plot
 
         elseif(c6_maproj .eq. 'merctr')then
             jproj = 9
-            polat = std_lat2
+            polat = 0.
             polon = std_lon
             rrot  = 0.
             call maproj('ME',polat,polon,rrot)
