@@ -192,7 +192,7 @@ c from Brent Shaw pseudocode
       ctiletype=path_to_tile_data(lenp:lenp)
       if(ctiletype.eq.'V'.or.ctiletype.eq.'O'.or.
      1   ctiletype.eq.'U'.or.ctiletype.eq.'T'.or.
-     1   ctiletype.eq.'A'                        )then
+     1   ctiletype.eq.'A'.or.ctiletype.eq.'G')then
          print*,'tile type to process = ',ctiletype
       else
          print*,'Unknown tile type in proc_geodat_tiles'
@@ -482,6 +482,7 @@ c     endif
          max_val = 100.
 
       endif
+
       do ii=1,ncat
 
          def_val = amean(ii)

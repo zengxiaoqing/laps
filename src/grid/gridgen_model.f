@@ -808,10 +808,14 @@ c ----------------------------------------------------------------
         deallocate(GEODAT3D)
         allocate  (GEODAT3D(nnxp,nnyp,12))
 
-        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
-     +,adum,adum,path_to_green_frac,2.0,0.0,new_DEM,12
-     +,istatus_grn)
+c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+c    +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
+c    +,adum,adum,path_to_green_frac,2.0,0.0,new_DEM,12
+c    +,istatus_grn)
+
+        call proc_geodat(nnxp,nnyp,12,path_to_green_frac
+     +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
+     +,GEODAT3D,istatus_grn)
 
         if(istatus_grn.ne.1)then
          print*

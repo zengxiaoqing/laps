@@ -8,9 +8,13 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  $(UTILLIB) $(MODULESLIB)
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
+           $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a $(DBUTILLIB) $(DBMODULESLIB) 
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/utils/libdebugutil.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES: .o .c .f .a .F .i .exe
 
@@ -30,7 +34,7 @@ ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 all: exe
 
-exe: $(ARCHIVE) $(EXE)
+exe: $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
 	$(FC) $(MAIN) $(FFLAGS) $(FMOD) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@ 
