@@ -22,7 +22,7 @@ c
       integer  it
       integer  lun
       integer  iostat,iostatus
-      integer  nclen
+      integer  nclen,lenc
 
       logical  lopen,lext
 
@@ -64,10 +64,13 @@ c     real*4 rp_init
 c
       character*(*) path,cmodel
       character*9   fname
+      character*10  cfname10,a9_to_yr_a10_time
       character*4   af
       character*2   gproj
-      character*13  fname13_to_FA_filename,
-     .              cfname13,cFA_filename
+ 
+c     character*13  fname13_to_FA_filename,cfname13
+ 
+      character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
       character*132 origin,model,nav,grid,version
       character*255 filename,fname_index
@@ -177,8 +180,17 @@ c    +,istatus)
 
       elseif(bgmodel.eq.3)then
 
-         cfname13=fname//af
-         cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
+c        cfname13=fname//af
+c        cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
+
+         c3ext=c3_FA_ext(af) 
+         cfname10=a9_to_yr_a10_time(fname,istatus)
+         call s_len(cmodel,lenc)
+         if(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_NF')then
+            cFA_filename='nf'//cfname10(1:8)//fname(6:7)//'.'//c3ext
+         elseif(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_RE')then
+            cFA_filename='re'//cfname10//'.'//c3ext
+         endif
          call s_len(path,l)
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
@@ -187,7 +199,7 @@ c    +,istatus)
          open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=990)
 
-         call read_fa(lun,filename                      ! I
+         call read_fa(lun,filename,c3ext(1:2)           ! I
      .               ,nx,ny,nz                          ! I
      .               ,r_missing_data                    ! I
      .               ,prk                               ! O
@@ -250,17 +262,17 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
             print*,'WARNING: suspect 3d rh data (#/%): ',icm,pcnt
      &,' Bogus Q used for these points'
 
-         if(bgmodel.eq.3)then
-            do j=1,ny
-            do i=1,nx
-               mslp(i,j)=mslp(i,j)/100.   !hpa
-            enddo
-            enddo
          endif
 
-         endif
+c        if(bgmodel.eq.3)then
+c           do j=1,ny
+c           do i=1,nx
+c              mslp(i,j)=mslp(i,j)/100.   !hpa
+c           enddo
+c           enddo
+c        endif
 
-         if(bgmodel.eq.6)then
+         if(bgmodel.eq.6)then     !no sfc fields for FA model (bgmodel = 3)
  
             print*,'convert rh to Td - sfc: bgmodel: ',bgmodel
             icm=0

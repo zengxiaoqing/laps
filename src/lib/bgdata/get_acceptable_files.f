@@ -1,7 +1,7 @@
       subroutine get_acceptable_files(i4time_now,bgpath,bgmodel,names
      +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
-     +     ,bg_files,forecast_length,cmodel,NX,NY,NZ,rejected_files
-     +     ,rejected_cnt)
+     +     ,bg_files,forecast_length,cmodel,ntbg,NX,NY,NZ
+     +     ,rejected_files,rejected_cnt)
 
       implicit none
       include 'netcdf.inc'
@@ -11,7 +11,8 @@
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
      + , max_forecast_delta
-      integer ivaltimes(10), ntbg
+      integer ntbg
+      integer ivaltimes(ntbg)
       character*4   af,c4valtime,c4_FA_valtime
       character*3   c_fa_ext
       character*100 bg_names(max_files), fullname
@@ -95,7 +96,6 @@ C
                      
                      call get_sbn_model_id(names(i),cmodel,ivaltimes,
      +                    ntbg)
-
 
                      if(istatus.eq.0) then
                         print*,'Not enough records in file ',fname

@@ -1,11 +1,12 @@
-      subroutine get_sbn_model_id(filename,model,ivaltimes,mtbg)
+      subroutine get_sbn_model_id(filename,model,ivaltimes,ntbg)
+
       implicit none
       include 'netcdf.inc'
       character*(*) model
       character*(*) filename
-      integer ivaltimes(*)
-      integer nf_fid, nf_vid, nf_status, ntbg, mtbg
-      common /conus211/ ntbg
+      integer ntbg
+      integer ivaltimes(ntbg)
+      integer nf_fid,nf_vid,nf_status
 C
 C  Open netcdf File for reading
 C
@@ -14,18 +15,6 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ', filename
       endif
-
-      nf_status=NF_INQ_DIMID(nf_fid,'record',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-         print *, NF_STRERROR(nf_status)
-      endif
-
-      nf_status=NF_INQ_DIMLEN(nf_fid,nf_vid,ntbg)
-
-      if(nf_status.ne.NF_NOERR) then
-         print *, NF_STRERROR(nf_status)
-      endif
-      mtbg=ntbg
 
       nf_status = NF_INQ_VARID(nf_fid,'model',nf_vid)
       if(nf_status.ne.NF_NOERR) then
@@ -59,19 +48,24 @@ C
       return
       end
 
-      subroutine get_sbn_dims(path,fname,nxbg,nybg,nzbg,mtbg)
+      subroutine get_sbn_dims(path,fname13,nxbg,nybg,nzbg
+     +,n_valtimes)
+
       implicit none
       include 'netcdf.inc'
       integer slen, nf_status,nf_fid, i, istat
-      character*(*) path, fname
+      integer nf_vid
+      character*(*) path
       character*200 cdfname
-      integer nxbg,nybg,nzbg(5),ntbg , mtbg
+      integer nxbg,nybg,nzbg,ntbg,n_valtimes 
+      integer record
+
 C     integer ntp, nvdim, nvs, lenstr, ndsize
-      integer ntp, nvdim, nvs
-      character*31 dummy
-      integer id_fields(5), vdims(10)
-      data id_fields/1,4,7,10,13/
-      common /conus211/ntbg
+c     integer ntp, nvdim, nvs
+c     character*31 dummy
+c     integer id_fields(5), vdims(10)
+c     data id_fields/1,4,7,10,13/
+
       character*13 fname9_to_wfo_fname13, fname13
 C     Linda Wharton 10/27/98 removed several commented out lines:
 c        print *,'ndsize = ', ndsize
@@ -82,11 +76,6 @@ C
 C
 C  Open netcdf File for reading
 C
-C
-C  Open netcdf File for reading
-C
-      fname13=fname9_to_wfo_fname13(fname)
-
       call s_len(path,slen)
       cdfname=path(1:slen)//'/'//fname13
 
@@ -96,24 +85,88 @@ C
         print *,'NF_OPEN rucsbn'
       endif
 
-      mtbg=ntbg
+C
+C Get size of n_valtimes
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'n_valtimes',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim n_valtimes'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,n_valtimes)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim n_valtimes'
+      endif
+C
+C Get size of record
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'record',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim record'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,record)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim record'
+      endif
+C
+C Get size of x
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'x',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim x'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nxbg)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim x'
+      endif
+C
+C Get size of y
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'y',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim y'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nybg)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim y'
+      endif
+C
+C Get size of levels_19
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'levels_19',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim levels_19'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nzbg)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim levels_19'
+      endif
 
-cc      istat=NF_INQ_VARID(nf_fid,'valtimeMINUSreftime            ',i)
+      print*, 'nxbg/nybg/nzbg/n_valtimes = ',nxbg,nybg,nzbg,n_valtimes
 cc      istat=NF_GET_VARA_INT(nf_fid,i,1,ntbg,ivaltimes)
 cc      print *, ivaltimes
-      do i=1,5
-        call NCVINQ(nf_fid,id_fields(i),dummy,ntp,nvdim,vdims,nvs,istat)
+c     do i=1,5
+c       call NCVINQ(nf_fid,id_fields(i),dummy,ntp,nvdim,vdims,nvs,istat)
 
-        call NCDINQ(nf_fid,vdims(1),dummy,nxbg,nf_status)
-        call NCDINQ(nf_fid,vdims(2),dummy,nybg,nf_status)
-        call NCDINQ(nf_fid,vdims(3),dummy,nzbg(i),nf_status)
+c       call NCDINQ(nf_fid,vdims(1),dummy,nxbg,nf_status)
+c       call NCDINQ(nf_fid,vdims(2),dummy,nybg,nf_status)
+c       call NCDINQ(nf_fid,vdims(3),dummy,nzbg(i),nf_status)
 cc        call ncdinq(nf_fid,vdims(4),dummy,ntbg,nf_status)
         
 c        print*, 'ntp = ',ntp
 c        print*, 'nvdim = ',nvdim
 c        print*, 'vdims = ',vdims
 c        print*, 'nvs = ',nvs
-      enddo
+c     enddo
 c      stop
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
@@ -143,16 +196,12 @@ c     model_out=1  => lga
 c     model_out=2  => dprep
       integer nx,ny,nz
       integer nxbg,nybg,nzbg(5),ntbg
-      
-c
       integer rcode,ivaltimes(ntbg)
 c
 c *** Netcdf arrays.
 c
       integer nzbg1,nzbg2
       parameter(nzbg1=19,nzbg2=20)
-
-      
 
       real*4 htn(nxbg,nybg,nzbg1),
      .       rhn(nxbg,nybg,nzbg2),
@@ -221,7 +270,6 @@ ccc      if (fname .ne. oldfname) then
          model='ETA'
       endif
 
-
       istatus=0
       fname13=fname9_to_wfo_fname13(fname)
 
@@ -257,8 +305,8 @@ ccc      if (fname .ne. oldfname) then
       if(ivaltimes(n)/3600.ne.nn) then
 c        print*,'ERROR: No record valid at time ',nn,af
          print*,'ERROR: No record valid at requested time '
-      print*,'nn/af/n/ivaltimes(n) ',nn,' ',af,' ',n,
-     &' ',ivaltimes(n)
+      print*,'ntbg/nn/af/n/ivaltimes(n) ',ntbg,' ',nn,' ',af,
+     &' ',n,' ',ivaltimes(n)
 
          rcode= NF_CLOSE(ncid)
          goto 999
