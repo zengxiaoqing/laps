@@ -68,15 +68,33 @@ c     internal variables
       integer ptg_index
       character*512 const_file
       integer cf
+      character*9 filefound
+      character*120 extension
+      integer extension_index
+      integer time_diff         !time allowed for latency (sec)
+
+      time_diff = 3600*4        ! 4-hour latency allowed
 
       call s_len(path_to_gvap, ptg_index, istatus)
 
 c     reading goes 8
 
-      const_file = path_to_gvap(1:ptg_index)//'20'//filename
-     1     //'.tpwtext8'
+c     get most recent file in directory
+
+      call get_newest_file (filename, time_diff,
+     1     path_to_gvap,ptg_index,filefound,
+     1     extension, extension_index, istatus)
+
+      if(istatus.ne.1) then     !failure in getting file
+         return
+      endif
+
+      const_file = path_to_gvap(1:ptg_index)//'20'//filefound
+     1     //'.'//extension(1:extension_index)
 
       call s_len(const_file, cf, istatus)
+
+      write(6,*) 'opening file ',const_file(1:cf)
       
       open(22, file=const_file(1:cf),form='formatted',
      1     status='old',err = 668)

@@ -59,12 +59,7 @@ c     volitile arrays
 
       integer i,j
 
-      filename = filetime(1:7)//'20'
-
-      if (filename(6:7) .eq. '00' ) then !make exception for 00ut problem
-         filename = filename (1:5)//'0120'
-      endif
-
+      filename = filetime
 
       call read_gvap (filename, nstations, path_to_gvap,
      1     lat,lon, wt,w1,w2,w3, nn,
