@@ -341,3 +341,64 @@ sub write_namelist {
     print NLF "\n /\n";
     close NLF;
 }
+#
+#---------------------------------------------------------------------
+sub get_pressures {
+
+    my $LAPS_DATA_ROOT = shift(@_);
+    open(PRES,"$LAPS_DATA_ROOT/static/pressures.nl") or die "Can't open $LAPS_DATA_ROOT/static/pressures.nl";
+    my @plines = <PRES>;
+    close PRES;
+    my @pressures;
+    my $i=0;
+    my $l;
+    foreach (@plines){
+       if(!/\&/ && ! /\pressure/i  && !/\//){
+          $l=length($_);
+          @pressures[$i]=substr($_,1,$l-4);
+          $i++
+       }
+    }
+
+    return @pressures;
+}
+1;
+#$i=0;
+#foreach (@pressures){
+#   print "$_\n";
+#}
+#
+sub julian {
+    my($yr,$mo,$dy) = @_;
+
+    my($b,$g,$d,$e,$f,$today,$first_of_year);
+    $yr = ($yr < 70) ? ($yr + 2000) : ($yr + 1900);
+
+    # Use temporary vars to compute num of days since Oct 1, 1582 to today
+    $b = int ( ($mo - 14) / 12 );
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+
+    $today = $d + $e - $f + $dy - 2432076;
+
+    # Now compute number of days from Oct 1, 1582 to Jan 1, $yr
+    $mo = 1;
+    $dy = 1;
+    $b = int( ($mo - 14) / 12);
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+
+    $first_of_year = $d + $e - $f + $dy - 2432076;
+
+    # Julian day from 1st of year is $today-$first_of_year+1
+
+    $today - $first_of_year + 1;
+}
