@@ -198,6 +198,7 @@ cdis
         real*4 CVHZ(NX_L,NY_L)
         real*4 CVHZ1(NX_L,NY_L),CVEW1(NX_L,KCLOUD)
         real*4 cvr_max(NX_L,NY_L),CVEW2(NX_L,KCLOUD)
+        real*4 cvr_sao_max(NX_L,NY_L)
         real*4 cvr_snow_cycle(NX_L,NY_L)
         real*4 cvr_water_temp(NX_L,NY_L)
         real*4 cvr_snow(NX_L,NY_L)
@@ -828,10 +829,10 @@ C OUTPUT ARRAY in HORIZONTAL AND VERTICAL SLICES
 C       HORIZONTAL SLICES
 
         DO K=1,KCLOUD,5
-            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVHZ1,NX_L,NY_L,1,0,0,
-     1K,0,0)
-            CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,cvr_max,NX_L,NY_L,1,0,
-     10,K,0,0)
+            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVHZ1
+     1                ,NX_L,NY_L,1,0,0,K,0,0)
+            CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,cvr_max
+     1                ,NX_L,NY_L,1,0,0,K,0,0)
             write(6,401)k,cld_hts(k)
 401         format(4x,'Lvl',i4,f8.0,' m     Before Satellite/Radar',
      1            20x,'              After Satellite/Radar')
@@ -844,27 +845,27 @@ C       HORIZONTAL SLICES
 C       EW SLICES
         DO J=9,NY_L,10
 !       DO J=NY_L/2+1,NY_L/2+1
-            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVEW1,NX_L,KCLOUD,0,1,
-     10,0,J,0)
-            CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,CVEW2,NX_L,KCLOUD,0,1,
-     10,0,J,0)
+            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVEW1
+     1                ,NX_L,KCLOUD,0,1,0,0,J,0)
+            CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,CVEW2
+     1                ,NX_L,KCLOUD,0,1,0,0,J,0)
             write(6,501)j
 501         format(5x,'  J =',i4,10x,'  Before Satellite/Radar       ',
      1          21x,'           After Satellite/Radar')
 
             scale = 1.
-            CALL ARRAY_PLOT(CVEW1,cvew2,NX_L,KCLOUD,'VERT CV',c1_name_ar
-     1ray
-     1                                  ,KCLOUD,cld_hts,scale)
+            CALL ARRAY_PLOT(CVEW1,cvew2,NX_L,KCLOUD,'VERT CV'
+     1                     ,c1_name_array,KCLOUD,cld_hts,scale)
         ENDDO ! j
 
 !       Get Max Cloud Cover
         do j = 1,NY_L
         do i = 1,NX_L
-            cvhz1(i,j) = 0.
+            cvr_sao_max(i,j) = 0.
             cvr_max(i,j) = 0.
             do k = 1,KCLOUD
-                cvhz1(i,j) = max(cvhz1(i,j),cldcv_sao(i,j,k))
+                cvr_sao_max(i,j) = max(cvr_sao_max(i,j)
+     1                                ,cldcv_sao(i,j,k))   
                 cvr_max(i,j) = max(cvr_max(i,j),clouds_3d(i,j,k))
             enddo ! k
         enddo ! i
@@ -881,8 +882,8 @@ C       EW SLICES
 601     format('  Max Cloud Cover              SAO/PIREP           ',
      1            20x,'              Final Analysis')
         scale = 1.
-        CALL ARRAY_PLOT(CVHZ1,cvr_max,NX_L,NY_L,'HORZ CV',c1_name_array
-     1                                  ,KCLOUD,cld_hts,scale)
+        CALL ARRAY_PLOT(cvr_sao_max,cvr_max,NX_L,NY_L,'HORZ CV'
+     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
 
         write(6,701)
 701     format('  Max Cloud Cover           VISIBLE SATELLITE     ',
@@ -1038,7 +1039,7 @@ C       EW SLICES
         j_status(n_lps) = ss_normal
 
 
-        call compare_analysis_to_saos(NX_L,NY_L
+        call compare_analysis_to_saos(NX_L,NY_L,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD,n_cld_snd
      1  ,c_stations,lat_s,lon_s,elev_s,maxstns)
@@ -1853,6 +1854,10 @@ C       EW SLICES
         n_clear_pts = 0
         n_cld_pts = 0
 
+        n_snow = 0
+        n_nosnow = 0
+        n_missing = 0
+
         do i = 1,ni
         do j = 1,nj
 
@@ -1900,11 +1905,24 @@ C       EW SLICES
                 cvr_snow_cycle(i,j) = 0.
             endif
 
+!           Count various categories of CSC
+            if(cvr_snow_cycle(i,j) .ne. r_missing_data)then
+                if(cvr_snow_cycle(i,j) .gt. 0.1)then
+                    n_snow = n_snow + 1
+                else
+                    n_nosnow = n_nosnow + 1
+                endif
+            else
+                n_missing = n_missing + 1
+            endif
+
         enddo ! j
         enddo ! i
 
         write(6,*)' # csc/nocsc/clr/cld pts = ',n_csc_pts,n_no_csc_pts
      1                                       ,n_clear_pts,n_cld_pts
+        write(6,1)n_snow,n_nosnow,n_missing
+ 1      format('  # snow/nosnow/missing ',3i7)
 
         return
         end
@@ -2259,13 +2277,13 @@ C       EW SLICES
         return
         end
 
-        subroutine compare_analysis_to_saos(ni,nj
+        subroutine compare_analysis_to_saos(ni,nj,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data
      1  ,cld_snd,ista_snd,max_cld_snd,cld_hts,KCLOUD,n_cld_snd
      1  ,c_stations,lat_s,lon_s,elev_s,maxstns)
 
         real*4 cloud_frac_vis_a(ni,nj),tb8_k(ni,nj),t_gnd_k(ni,nj)
-     1                  ,t_sfc_k(ni,nj),cvr_max(ni,nj)
+     1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
 
         real*4 cld_snd(max_cld_snd,KCLOUD)
         integer*4 ista_snd(max_cld_snd)
@@ -2312,13 +2330,14 @@ C       EW SLICES
                 i_j = nint(rj)
 
                 if(i_i .ge. 3 .and. i_i .le. ni-2 .and.
-     1     i_j .ge. 3 .and. i_j .le. nj-2            )then
+     1             i_j .ge. 3 .and. i_j .le. nj-2            )then
 
                     if(iwrite .eq. iwrite/20*20)then
                         write(6,*)
-                        write(6,*)' Sta  VIS frac tb8_k  '
-     1                  //'t_gnd_k t_sfc_k  cvr_max  SAO  frac/ht'
-     1                  //'       9pt    25pt'
+                        write(6,*)'Sta  VIS frac tb8_k  '
+!    1                  //'t_gnd_k t_sfc_k  cvr_max  SAO  frac/ht'
+     1                  //'t_gnd_k t_sfc_k  cldsnd cv_sa_mx cvr_max '
+     1                  //'frac/ht      9pt    25pt'
                     endif
 
 !                   Calculate 9pt cover
@@ -2341,22 +2360,23 @@ C       EW SLICES
 
                     iwrite = iwrite + 1
 
-                    frac_max = -.999
+                    cld_snd_max = -.999
                     height_max = 0.
                     do k = 1,KCLOUD
                         if(cld_snd(isnd,k) .ne. r_missing_data)then
-                            frac_max = max(frac_max,cld_snd(isnd,k))
+                            cld_snd_max = max(cld_snd_max
+     1                                       ,cld_snd(isnd,k))
                             height_max = cld_hts(k)
                         endif
                     enddo ! k
 
-!                   frac_max = cvr_snd(isnd)
+!                   cld_snd_max = cvr_snd(isnd)
 
 !                   Flag significant discrepancies between SAOs and analysis
                     ht_12000 = elev_s(ista) + 12000./3.281 + 1.
                     c3_discrep = '   '
 
-                    if(cvr_max(i_i,i_j) - frac_max .le. -0.25)then
+                    if(cvr_max(i_i,i_j) - cld_snd_max .le. -0.25)then
                         if(cvr_max(i_i,i_j) .le. 0.1)then
                             c3_discrep = ' **'
                         else
@@ -2364,9 +2384,9 @@ C       EW SLICES
                         endif
                     endif
 
-                    if(cvr_max(i_i,i_j) - frac_max .ge. +0.25)then
+                    if(cvr_max(i_i,i_j) - cld_snd_max .ge. +0.25)then
                         if(height_max .gt. ht_12000)then
-                            if(frac_max .le. 0.1)then
+                            if(cld_snd_max .le. 0.1)then
                                c3_discrep = ' **'
                             else
                                c3_discrep = ' . '
@@ -2374,12 +2394,16 @@ C       EW SLICES
                         endif
                     endif
 
-                    if(cvr_max(i_i,i_j) - frac_max .ge. +0.50)then
+                    if(cvr_max(i_i,i_j) - cld_snd_max .ge. +0.50)then
                         if(height_max .gt. ht_12000)c3_discrep = ' **'
                     endif
 
-                    if(cvr_max(i_i,i_j) - frac_max .le. -0.50)then
+                    if(cvr_max(i_i,i_j) - cld_snd_max .le. -0.50)then
                         c3_discrep = ' **'
+                    endif
+
+                    if(cvr_sao_max(i_i,i_j) .lt. cld_snd_max - 0.1)then       
+                        c3_discrep = ' SS'
                     endif
 
                     icat1 = 1
@@ -2388,43 +2412,43 @@ C       EW SLICES
                     if(cvr_25pt .ge. 0.90)icat1 = 4
 
                     icat2 = 1
-                    if(frac_max .ge. 0.10)icat2 = 2
-                    if(frac_max .ge. 0.50)icat2 = 3
-                    if(frac_max .ge. 0.90)icat2 = 4
+                    if(cld_snd_max .ge. 0.10)icat2 = 2
+                    if(cld_snd_max .ge. 0.50)icat2 = 3
+                    if(cld_snd_max .ge. 0.90)icat2 = 4
 
                     if(icat1 .ne. icat2
-     1            .and. abs(frac_max - cvr_25pt) .gt. .10
-     1                      .AND.
-     1      (height_max .gt. ht_12000 .or. frac_max .eq. 1.00)
-     1                                                  )then
+     1            .and. abs(cld_snd_max - cvr_25pt) .gt. .10
+     1                              .AND.
+     1           (height_max .gt. ht_12000 .or. cld_snd_max .eq. 1.00)
+     1                                                             )then       
                         c1_c = 'C'
                     else
                         c1_c = ' '
                     endif
 
-                    if(abs(frac_max - 1.00) .lt. .01)then
+                    if(abs(cld_snd_max - 1.00) .lt. .01)then
                         n_ovc = n_ovc + 1
                         ovc_sum = ovc_sum + cvr_25pt
                     endif
 
                     if(height_max .gt. ht_12000)then
-                        if(abs(frac_max - .60) .lt. .01)then
+                        if(abs(cld_snd_max - .60) .lt. .01)then
                             n_tovc = n_tovc + 1
                             tovc_sum = tovc_sum + cvr_25pt
                         endif
-                        if(abs(frac_max - .25) .lt. .01)then
+                        if(abs(cld_snd_max - .25) .lt. .01)then
                             n_sct = n_sct + 1
                             sct_sum = sct_sum + cvr_25pt
                         endif
-                        if(abs(frac_max - .70) .lt. .01)then
+                        if(abs(cld_snd_max - .70) .lt. .01)then
                             n_bkn = n_bkn + 1
                             bkn_sum = bkn_sum + cvr_25pt
                         endif
-                        if(abs(frac_max - .15) .lt. .01)then
+                        if(abs(cld_snd_max - .15) .lt. .01)then
                             n_tsct = n_tsct + 1
                             tsct_sum = tsct_sum + cvr_25pt
                         endif
-                        if(abs(frac_max - .40) .lt. .01)then
+                        if(abs(cld_snd_max - .40) .lt. .01)then
                             n_tbkn = n_tbkn + 1
                             tbkn_sum = tbkn_sum + cvr_25pt
                         endif
@@ -2435,15 +2459,16 @@ C       EW SLICES
      1                           ,tb8_k(i_i,i_j)
      1                           ,t_gnd_k(i_i,i_j)
      1                           ,t_sfc_k(i_i,i_j)
+     1                           ,cld_snd_max
+     1                           ,cvr_sao_max(i_i,i_j)
      1                           ,cvr_max(i_i,i_j)
-     1                           ,frac_max
      1                           ,height_max
      1                           ,c3_discrep
      1                           ,cvr_9pt
      1                           ,cvr_25pt
      1                           ,c1_c
-1111                format(1x,a3,f8.2,3f8.1,2f8.2,f8.0,a3,f8.2,f7.2,1x,a
-     11)
+1111                format(1x,a3,f8.2,3f8.1,3f8.2,f8.0,a3,f8.2,f7.2
+     1                    ,1x,a1)
 
 1112            endif ! ob is in domain
               endif ! ista .ne. 0 (valid value)
