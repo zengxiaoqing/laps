@@ -153,8 +153,8 @@ c -------------------------
 c open log file
 c
       call get_directory('log',fname,len)
-c     open(6,file=fname(1:len)//'lsm.log.'//ftime_smcur(6:9),
-c    1       status='unknown',err=998)      
+      open(6,file=fname(1:len)//'lsm.log.'//ftime_smcur(6:9),
+     1       status='unknown',err=998)      
       write(6,*)'file time: ',ftime_smcur,' i4time: ',i4time_smcur
 C**** Read soil description and simulation time step 
 
