@@ -10,7 +10,7 @@
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
  IHOP_flag = 0,
- TIME_DIFF = 3600, 
+ TIME_DIFF = 9000,
  GPS_SWITCH = 1,
  SFC_MIX = 1,
  MOD_4DDA_1 = 0,
@@ -19,11 +19,9 @@
  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
- 
-
-# PATH_TO_GVAP8 = '/public/data/sat/nesdis/goes8/tpw/sfov_ihop/ascii/',
 /
 c   
+c# PATH_TO_GVAP8 = '/public/data/sat/nesdis/goes8/tpw/sfov_ihop/ascii/',
 c   This is a switch for the module  lq3.  The data are delivered in 
 c   default form.  It is up to the user to define these for their 
 c   particular applicaton.  Here are the definitions of the current 
