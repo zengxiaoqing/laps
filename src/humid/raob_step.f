@@ -114,6 +114,8 @@ c  dynamic dependent parameters
       real scale(kk, snd_tot)
       real weight (ii,jj, snd_tot)
       integer mask(ii,jj)
+      real climo_w(kk)
+      integer x_sum_save(kk)
 
 c  normal internal parameters
 
@@ -147,10 +149,20 @@ c  normal internal parameters
       integer x_sum
       real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
 
+c     climate model (for QC)
+
+      real center_lat
+      integer jday
+      real 
+     1     standard_press(40),
+     1     tempertur_guess(40),
+     1     mixratio_guess(40)
+
+
         
 c *** begin routine
 
-      write(6,*) '1.18; temperature QC, 10C criteria, 6.19.99'
+      write(6,*) '1.19; improved climo moisture QC check 6.29.99'
 
       pi = acos(-1.0)
       d2r = pi/180.
@@ -371,20 +383,6 @@ c     now check for enough raob data
          return
       endif
 
-c     for afwa and other very large domains where cutoff is encountered
-c     it is necessarey to get rid of discontinuities a bit.  
-c     this is skipped for the moment given the test for data in the
-c     domain... so far this step seems not to be needed.
-c
-c      do k = 1, isound
-c         do j =1,jj
-c            do i =1,ii
-c               mask(i,j) = 0
-c            enddo
-c         enddo
-c         mask(i_r(k), j_r(k)) = 1
-c         call slv_laplc (weight(1,1,k),mask,ii,jj)
-c      enddo
 
 c     *** interpolate q in the vertical at each raob location to the laps
 c     pressure levels
@@ -415,9 +413,9 @@ c     accept only valid raob data (temp must be > -40 c
 c     and +/- 3c temp check on laps background to raob temp)  DB 1.18 change
                if(  temt.lt.-40. ! raob is not effective .lt. -40c
      1              .or. 
-     1              abs(temt+273.-laps_t(i_r(is),j_r(is),k)).ge.3.!tight check
+     1              abs(temt+273.-laps_t(i_r(is),j_r(is),k)).ge. 3.0
      1              ) then  !qc failure on temp
-                  write(6,*) 'qc failure on temp, raob_step 1.18'
+                  write(6,*) 'qc failure on temp, raob_step 1.18 mod'
                   write(6,*) laps_pressure(k), temt,
      1                 abs(temt+273.-laps_t(i_r(is),j_r(is),k)), is
                   q_r(k,is) = rmd
@@ -508,10 +506,58 @@ c     the population.  here use 3*sigma criteria  (normal full population)
             ave(k) = rmd
             sdev(k) = rmd
          else
+            x_sum_save (k) = x_sum
             write (6,*) x_sum,ave(k),sdev(k),' level ',k
          endif
 
       enddo                     ! k
+
+c     new   QC check, data adjustment against climo values
+c     vsn 1.19
+
+c     call climo routine for middle latitude
+
+      center_lat = lat(ii/2,jj/2)
+      read (filename(3:5),44) jday
+ 44   format (i3)
+
+      call climate_sm(center_lat, jday, standard_press, tempertur_guess,
+     1    mixratio_guess, istatus)
+
+c     interpolate from climo coordinates to laps coords for w
+
+      do k = 1, kk  ! fill all laps levels from climo data
+         call locate(standard_press,40,laps_pressure(k),ks)
+         if(ks.eq.0  .or. ks.eq.40) then
+            climo_w(k) = rmd
+         else                   !interpolate
+            call interp(log(laps_pressure(k)),
+     1              log(standard_press(ks)),log(standard_press(ks+1)),
+     1              mixratio_guess(ks),mixratio_guess(ks+1),climo_w(k))
+         endif
+      enddo ! k
+
+c     mixing ratio and SH are close so we won't differentiate for this QC
+c     step
+     
+c     compute all ratios of clim_w(k) to diffs
+
+      do k = 1,kk
+         if( ave(k) .ne. rmd) then
+            write(6,*) (abs( ave(k))+3.*sdev(k)) / climo_w (k)*1.e-3
+     1           /x_sum_save(k) ,
+     1           laps_pressure(k)
+            if ((abs( ave(k))+3.*sdev(k)) / climo_w (k)*1.e-3
+     1           /x_sum_save(k) .gt. 0.5e-6) then ! reject criteria
+               write(6,*) 'Climo Q QC reject criteria met 1.19 ', k
+               ave(k) = rmd
+               sdev(k) = rmd
+            endif
+         endif
+      enddo
+
+
+
 
 c     compare computed diff values with QC thresholding... assign rmd if bad
 c     here use 2*sigma cutoff for addnl constraint.
