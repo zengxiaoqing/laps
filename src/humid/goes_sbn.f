@@ -703,9 +703,12 @@ c                  write (25, *) ch5(i,j), btemp(i,j,3)
 
 
                   do k = 1,3
-                     xi(k,k) = -.0001
-c                     x(k) = 1.0
+                  do k2 = 1,3
+                    xi(k,k2) = 0.0
+                     if(k.eq.k2)  xi(k,k) = -.0001
                   enddo
+                  enddo
+
 
 
 
