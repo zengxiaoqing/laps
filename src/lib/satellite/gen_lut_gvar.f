@@ -567,7 +567,7 @@ c
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &instr,r_img_res_m,istatus)
       else
-         r_img_res_m=5000.0
+         r_img_res_m=5000.0*decimat
       endif
 
       if(indx.eq.1)then
