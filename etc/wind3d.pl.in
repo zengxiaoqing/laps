@@ -148,20 +148,6 @@ print "   $greplines[0]";
 # Wind profiles, including VADs.
 
 foreach (@lines) {
-  if (/VAD/) {
-    @list = split;
-    if(@list == 12){
-        push(@vads,$list[9]);
-        push(@vadnums,$list[2]);
-    }
-    next; } 
-  if (/RAOB/) {
-    @list = split;
-    if(@list == 12){
-        push(@raobs,$list[9]);
-        push(@raobnums,$list[2]);
-    }
-    next; } 
   if (/DROPSND/) {
     @list = split;
     if(@list == 12){
@@ -184,32 +170,30 @@ foreach (@lines) {
 }
 print "\n";
 
-print "\nVADs:  ";
-#$nvads=@vads; $i=0;
-#while ($i < $nvads) {print "$vadnums[$i], $vads[$i] \n"; $i=$i+1;}
-$searchstring = "Remapping profile ";
+#Print VAD (only if present)
+$i=0; $iprint=0; $ihead=0;
 foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
-    foreach $item (@vadnums) {
-#     if ($profilenum eq $item) {print "$vads[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {print "$vads[$i] ";}
-      $i=$i+1; } } }
-print "\n";
+  if (/Remapping profile/ && /VAD/) {
+    @list = split;
+    if($ihead == 0){print "\nVADs: "; $ihead=1;}
+    print "$list[7] "; $iprint=$iprint+1;
+    if ($iprint > 11) {print "\n        "; $iprint=0;} 
+    $i=$i+1; 
+  }
+}
+if($iprint > 0){print "\n";}
 
+#Print RAOB
+$i=0; $iprint=0; $ihead=0;
 print "\nRAOBs:  ";
-#$nraobs=@raobs; $i=0;
-#while ($i < $nraobs) {print "$raobnums[$i], $raobs[$i] \n"; $i=$i+1;}
-$searchstring = "Remapping profile ";
 foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
-    foreach $item (@raobnums) {
-#     if ($profilenum eq $item) {print "$raobs[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {print "$raobs[$i] ";}
-      $i=$i+1; } } }
+  if (/Remapping profile/ && /RAOB/) {
+    @list = split;
+    print "$list[7] "; $iprint=$iprint+1;
+    if ($iprint > 11) {print "\n        "; $iprint=0;} 
+    $i=$i+1; 
+  }
+}
 print "\n";
 
 #Print DROPSND
@@ -227,7 +211,7 @@ foreach (@lines) {
       $i=$i+1; } } }
 if($i > 0){print "\n";}
 
-#Print TOWER
+#Print TOWER (only if present)
 $i=0; $iprint=0; $ihead=0;
 foreach (@lines) {
   if (/Remapping profile/ && /TOWER/) {
