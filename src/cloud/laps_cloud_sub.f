@@ -685,7 +685,7 @@ C READ IN SATELLITE DATA
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
      1       solar_alt,solar_ha,solar_dec,                              ! I
-     1       cloud_frac_co2_a,                                          ! O
+     1       lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,            ! I
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I
      1       cvr_snow,NX_L,NY_L,KCLOUD,NZ_L,r_missing_data,             ! I
