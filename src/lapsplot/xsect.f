@@ -1295,11 +1295,19 @@ c read in laps lat/lon and topo
               enddo ! i
             enddo ! k
 
-            clow = -100.
-            chigh = +1000.
-            cint = 2. / density
-
-            i_contour = 1
+            if(i_image .eq. 0)then
+!               clow = -100.
+!               chigh = +1000.
+!               cint = 2. / density
+                cint = -1. * 2. ** (-density)
+                i_contour = 1
+                i_contour = 1
+            else
+                cint = 10. 
+                clow = -40.
+                chigh = +40.
+                i_contour = -1
+            endif
 
             if       (c_prodtype .eq. 'N')then
                 c_label = 'LAPS Divergence  (Bal)   [1e-5/s]'
