@@ -126,7 +126,7 @@ c
          tss=float(sc(2,2))/float(sc(2,2)+sc(1,2))-float(sc(2,1))
      1        /float(sc(1,1)+sc(2,1))
       endif 
-      write(8,1000) pbot,pbok,pgot,pgok,csi,tss
+      write(*,1000) pbot,pbok,pgot,pgok,csi,tss
  1000 format(/1x,'Fraction of bad obs tossed/kept ',2f6.3/
      1     1x,'Fraction of good obs tossed/kept ',2f6.3/
      2     1x,'CSI = ',f6.3,'  TSS = ',f6.3)
@@ -289,14 +289,14 @@ c
 c     we've found a duplicate name
 c
                   stnb(l)(5:5)='1'
-                  write(8,1021) stnb(l)
+                  write(*,1021) stnb(l)
  1021             format(1x,'Station in master list renamed: ',a5)
                endif 
             endif
          enddo !l
          enddo !k
 c         do k=1,max
-c         write(8,1000) k,stna(k),lata(k),lona(k),stnb(k),latb(k),
+c         write(*,1000) k,stna(k),lata(k),lona(k),stnb(k),latb(k),
 c    1    lonb(k)
 c         enddo
  1000    format(1x,i3,1x,a5,1x,f8.3,1x,f8.3,1x,a5,1x,f8.3,1x,f8.3)
@@ -309,7 +309,7 @@ c         enddo
                      iflag=1    !the station is on the master list
                   else  
                      stna(k)(5:5)='1' ! diff station has a duplicate name 
-                     write(8,1020) stna(k)
+                     write(*,1020) stna(k)
  1020                format(1x,
      &                'Master/newlist duplicate:station renamed - ', a5)
                      go to 3 
@@ -486,8 +486,8 @@ c compute avg variable
                  sumwt=tab(iii)+sumwt
  3            enddo !on j
               if(sumwt.ne.0) t(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
-c              write(8,1000) stn(i), t(i)
-c 1000         format(1x,'Replaced missing ob at stn ',a5,1x,F8.3) 
+              write(*,1000) stn(i), t(i)
+ 1000         format(1x,'Replaced missing ob at stn ',a5,1x,F8.3) 
            endif 
         enddo !i
 c
@@ -644,7 +644,7 @@ c
            else
               if (abs(t(i)-ta(i)).gt.gross) then
                  qcstat(i)=10
-                 write(8,*) 'qcset:stn',i,t(i),
+                 write(*,*) 'qcset:stn',i,t(i),
      &                ' fails gross chk relative',' to estimate ',ta(i)
               endif
            endif 
@@ -833,7 +833,7 @@ c
            sumfo=sumfo/sumtotb
            sumoo=sumoo/sumtotb
         endif
-        write(8,1061) stdwr,sumwr,stdvr,sumvr,stdar,sumar,stdfo,
+        write(*,1061) stdwr,sumwr,stdvr,sumvr,stdar,sumar,stdfo,
      &       sumfo,stdoo,sumoo,stdco,sumco 
  1061   format(1x,'RMS/Bias errors for truth and observation estimates'/
      &       1x,'Model guess - truth RMS ',f8.3,' Bias ',f8.3/
@@ -842,12 +842,12 @@ c
      &       1x,'Model guess - obser RMS ',f8.3,' Bias ',f8.3/
      &       1x,'Obser guess - obser RMS ',f8.3,' Bias ',f8.3/
      &       1x,'Combin guess- obser RMS ',f8.3,' Bias ',f8.3)
-        write(8,*) 'RUNNING BIAS AND RMS BY VARIABLE' 
-        write(8,*) 'MODEL ',(tmb(nvar)/totb(nvar)),sqrt(tmr(nvar)/totr(
+        write(*,*) 'RUNNING BIAS AND RMS BY VARIABLE' 
+        write(*,*) 'MODEL ',(tmb(nvar)/totb(nvar)),sqrt(tmr(nvar)/totr(
      &                            nvar))
-        write(8,*) 'OBSER ',(tob(nvar)/totb(nvar)),sqrt(tor(nvar)/totr(
+        write(*,*) 'OBSER ',(tob(nvar)/totb(nvar)),sqrt(tor(nvar)/totr(
      &                            nvar))
-        write(8,*) 'COMBD ',(tcb(nvar)/totb(nvar)),sqrt(tcr(nvar)/totr(
+        write(*,*) 'COMBD ',(tcb(nvar)/totb(nvar)),sqrt(tcr(nvar)/totr(
      &                            nvar))
  1000   format(1x,'TRUE VALUES FOR TIME ',i4)
 c
@@ -866,16 +866,16 @@ c zero out scoring arraYs
         enddo !i
         call score(TdT,XT,Y,x,b,imax,scf,sca,scb,thresh,qcstat,m,
      &             badflag)
-        write(8,*) 'CONTINGECY TABLES FOR ERROR THRESHOLD OF ',thresh 
-        write(8,1008) scf(1,1), scf(1,2), scf(2,1),scf(2,2)
+        write(*,*) 'CONTINGECY TABLES FOR ERROR THRESHOLD OF ',thresh 
+        write(*,1008) scf(1,1), scf(1,2), scf(2,1),scf(2,2)
  1008   format(//1x,'QC EFFICIENCY FOR MD'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         call stats_qc(scf,2,2)
-        write(8,1010) scb(1,1), scb(1,2), scb(2,1),scb(2,2)
+        write(*,1010) scb(1,1), scb(1,2), scb(2,1),scb(2,2)
  1010   format(//1x,'QC EFFICIENCY FOR OB'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         call stats_qc(scb,2,2)
-        write(8,1009) sca(1,1), sca(1,2), sca(2,1),sca(2,2)
+        write(*,1009) sca(1,1), sca(1,2), sca(2,1),sca(2,2)
  1009   format(//1x,'QC EFFICIENCY FOR CM'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         do i=1,2
@@ -885,15 +885,15 @@ c zero out scoring arraYs
            scat(i,j)=scat(i,j)+sca(i,j)
         enddo !j
         enddo !i
-        write(8,1018) scft(1,1), scft(1,2), scft(2,1),scft(2,2)
+        write(*,1018) scft(1,1), scft(1,2), scft(2,1),scft(2,2)
  1018   format(//1x,'CUM QC EFFNCY FOR MD'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         call stats_qc(scft,2,2)
-        write(8,1020) scbt(1,1), scbt(1,2), scbt(2,1),scbt(2,2)
+        write(*,1020) scbt(1,1), scbt(1,2), scbt(2,1),scbt(2,2)
  1020   format(//1x,'CUM QC EFFNCY FOR OB'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         call stats_qc(scbt,2,2)
-        write(8,1019) scat(1,1), scat(1,2), scat(2,1),scat(2,2)
+        write(*,1019) scat(1,1), scat(1,2), scat(2,1),scat(2,2)
  1019   format(//1x,'CUM QC EFFNCY FOR CM'/14x,' GOOD OB    BAD OB'
      1       //1x,' KEPT     ',2I10//1x,' TOSSED   ',2I10)
         call stats_qc(scat,2,2)
