@@ -26,9 +26,8 @@
       character*100 c_values_req
 
 !     Define width of raob release time window centered on the SND filetime
+!     +/- 3 hr for AFGWC, +/- laps_cycle_time for NIMBUS
       integer i4_raob_window
-!     parameter (i4_raob_window = 86400)
-      parameter (i4_raob_window = 21600)
 
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval
@@ -105,9 +104,12 @@
 
           if(c8_project(1:6) .eq. 'NIMBUS')then
               filename_in = dir_in(1:len_dir_in)//a9_time//'0300o'
-          else
+              i4_raob_window = 2 * ilaps_cycle_time
+!             i4_raob_window = 60000  ! Temporary for testing
+          else ! AFGWC
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
      1                                            a8_time_orig(i)
+              i4_raob_window = 21600
           endif
 
 !         filename_in = 'test.nc                                 '
@@ -144,12 +146,14 @@
 !             Read from the NetCDF pirep file and write to the opened PIN file
               if(c8_project(1:6) .eq. 'NIMBUS')then
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
-     1                                      ,NX_L,NY_L
-     1                                      ,filename_in,istatus)
+     1                ,NX_L,NY_L
+     1                ,i4time_raob_earliest,i4time_raob_latest
+     1                ,filename_in,istatus)
               else
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
-     1                                      ,NX_L,NY_L
-     1                                      ,filename_in,istatus)
+     1                ,NX_L,NY_L
+     1                ,i4time_raob_earliest,i4time_raob_latest,a9time
+     1                ,filename_in,istatus)
               endif
           endif
       enddo

@@ -1,6 +1,7 @@
       subroutine get_raob_data(i4time_sys,ilaps_cycle_time,NX_L,NY_L
-     1                                                     ,filename
-     1                                                     ,istatus)
+     1                        ,i4time_raob_earliest,i4time_raob_latest       
+     1                        ,filename
+     1                        ,istatus)
 
 !     Ken Dritz     28-Jul-1997       Added NX_L, NY_L to dummy argument list.
 !     Ken Dritz     28-Jul-1997       Added call to get_r_missing_data.
@@ -67,6 +68,8 @@ C*************************************
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
+
+      character*9 a9time_syn, a9time_release, a9time_raob, a9time_sys
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -606,15 +609,17 @@ C
       do isnd = 1,n_snd
 
 !         QC and write out the sounding
+          i4time_raob = 0
 
           if(abs(reltime(isnd)) .lt. 1e10)then
-              i4time_release = int(sngl(reltime(isnd)))+315619200
+              i4time_release = idint(reltime(isnd))+315619200
           else
               i4time_release = 0
           endif
 
           if(abs(syntime(isnd)) .lt. 1e10)then
-              i4time_syn     = int(sngl(syntime(isnd)))+315619200
+              i4time_syn  = idint(syntime(isnd))+315619200
+              i4time_raob = i4time_syn
           else
               i4time_syn = 0
           endif
@@ -624,6 +629,15 @@ C
           write(6,*)
           write(6,*)' Raob #',isnd,i4time_sys,i4time_release,i4time_diff       
      1                         ,i4time_syn
+
+          call make_fnam_lp(i4time_sys    , a9time_sys    , istatus)
+          call make_fnam_lp(i4time_release, a9time_release, istatus)
+          call make_fnam_lp(i4time_syn    , a9time_syn    , istatus)
+          call make_fnam_lp(i4time_raob   , a9time_raob   , istatus)
+
+          write(6,*)' times - sys/release/syn/raob: '
+     1             ,a9time_sys,' ',a9time_release,' '
+     1             ,a9time_syn,' ',a9time_raob
 
           if(stalat(isnd) .ge. r_nc_missing_data)then
               write(6,*)' Missing first latitude',i
@@ -645,8 +659,18 @@ C
               goto 999
           endif
 
+          if(i4time_raob .ne. 0)then ! test window
+              if(i4time_raob .ge. i4time_raob_earliest .and.
+     1           i4time_raob .le. i4time_raob_latest)then
+                  write(6,*)' Inside time window'
+              else
+                  write(6,*)' Outside time window - reject'
+                  goto 999
+              endif
+          endif
+
           call sort_and_write(
-     1                        NREC,isnd,r_missing_data
+     1                        NREC,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -667,7 +691,7 @@ C
 
 
       subroutine sort_and_write(
-     1                        NREC,isnd,r_missing_data
+     1                        NREC,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -707,6 +731,8 @@ C
       REAL*4      tdout                          (NLVL_OUT)
       REAL*4      wdout                          (NLVL_OUT)
       REAL*4      wsout                          (NLVL_OUT)
+
+      character*9 a9time_raob
 
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
@@ -766,11 +792,13 @@ C
       write(6,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
+     1            ,a9time_raob
       write(11,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
      1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
+     1            ,a9time_raob
 
-  511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1)
+  511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9)
 
 
 !     Write out all sorted data for mandatory + sigw levels. 

@@ -1,6 +1,7 @@
       subroutine get_raob_data_af(i4time_sys,ilaps_cycle_time,NX_L,NY_L
-     1                                                     ,filename       
-     1                                                     ,istatus)
+     1     ,i4time_raob_earliest,i4time_raob_latest,a9time_file
+     1     ,filename       
+     1     ,istatus)
 
 !     Ken Dritz     28-Jul-1997       Added NX_L, NY_L to dummy argument list.
 !     Ken Dritz     28-Jul-1997       Added call to get_r_missing_data.
@@ -26,6 +27,7 @@ C
 
       character*5 c5_staid
       character*11 a11_raob_reltime,a11_pibal_reltime
+      character*9 a9time_raob, a9time_file
 
       call get_r_missing_data(r_missing_data,istatus)
       if (istatus .ne. 1) then
@@ -59,14 +61,18 @@ C
 
       staelev = 0.
 
+      write(6,*)' reltimes ',a11_raob_reltime,a11_pibal_reltime
+ 
+      a9time_raob = a9time_file
+
       write(6,511,err=997)
      1             iwmostanum,n_good_levels,stalat
-     1            ,stalon,staelev,c5_staid
+     1            ,stalon,staelev,c5_staid,a9time_raob
       write(11,511,err=997)
      1             iwmostanum,n_good_levels,stalat
-     1            ,stalon,staelev,c5_staid
+     1            ,stalon,staelev,c5_staid,a9time_raob
 
-  511 format(i12,i12,f11.4,f15.4,f15.0,1x,a5)
+  511 format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
 
       if(.true.)then ! Write out stuff for first level
