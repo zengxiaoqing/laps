@@ -6450,7 +6450,7 @@ c             if(cint.eq.0.0)cint=0.1
 !       icol = min(icol_in,35)
         icol = icol_in
 
-        write(6,*)' Color # ',icol,icol_in
+!       write(6,*)' Color # ',icol,icol_in
 
         call GSTXCI(icol)            
         call GSPLCI(icol)          
