@@ -30,8 +30,8 @@ cdis
 cdis 
 cdis 
       subroutine vinterp(nx,ny,nz_bg,nz_laps,prlaps,
-     .                   prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                   htvi,tpvi,shvi,uwvi,vwvi)
+     .                   prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg,
+     .                   htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 c
       implicit none
       include 'bgdata.inc'
@@ -45,7 +45,8 @@ c
      .       htbg(nx,ny,nz_bg),   !height (m)
      .       shbg(nx,ny,nz_bg),   !specific humidity (kg/kg)
      .       uwbg(nx,ny,nz_bg),   !u-wind (m/s)
-     .       vwbg(nx,ny,nz_bg)    !v-wind (m/s)
+     .       vwbg(nx,ny,nz_bg),   !v-wind (m/s)
+     .       wwbg(nx,ny,nz_bg)    !w-wind (omega [pa/s])
 c
 c *** Output vertically interpolated variables.
 c
@@ -53,7 +54,8 @@ c
      .       htvi(nx,ny,nz_laps), !height (m)
      .       shvi(nx,ny,nz_laps), !specific humidity (kg/kg)
      .       uwvi(nx,ny,nz_laps), !u-wind (m/s)
-     .       vwvi(nx,ny,nz_laps)  !v-wind (m/s)
+     .       vwvi(nx,ny,nz_laps), !v-wind (m/s)
+     .       wwvi(nx,ny,nz_laps)  !w-wind (omega [pa/s])
 c
       real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3
       real*4 datmsg,datmsg1,datmsg2
@@ -80,12 +82,14 @@ c
                         shvi(i,j,k)=shbg(i,j,1)
                         uwvi(i,j,k)=uwbg(i,j,1)
                         vwvi(i,j,k)=vwbg(i,j,1)
+                        wwvi(i,j,k)=wwbg(i,j,1)
                      else
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                         shvi(i,j,k)=missingflag
                         uwvi(i,j,k)=missingflag
                         vwvi(i,j,k)=missingflag
+                        wwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .lt. prbg(i,j,nz_bg)) then
@@ -99,12 +103,14 @@ c
                         shvi(i,j,k)=shbg(i,j,nz_bg)
                         uwvi(i,j,k)=uwbg(i,j,nz_bg)
                         vwvi(i,j,k)=vwbg(i,j,nz_bg)
+                        wwvi(i,j,k)=wwbg(i,j,nz_bg)
                      else
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                         shvi(i,j,k)=missingflag
                         uwvi(i,j,k)=missingflag
                         vwvi(i,j,k)=missingflag
+                        wwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .eq. prbg(i,j,kk)) then
@@ -116,12 +122,14 @@ c
                         shvi(i,j,k)=shbg(i,j,kk)
                         uwvi(i,j,k)=uwbg(i,j,kk)
                         vwvi(i,j,k)=vwbg(i,j,kk)
+                        wwvi(i,j,k)=wwbg(i,j,kk)
                      else
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                         shvi(i,j,k)=missingflag
                         uwvi(i,j,k)=missingflag
                         vwvi(i,j,k)=missingflag
+                        wwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
@@ -131,7 +139,7 @@ c
                      datmsg2 = max(htbg(i,j,kk+1),tpbg(i,j,kk+1),
      +                    shbg(i,j,kk+1),uwbg(i,j,kk+1),vwbg(i,j,kk+1))
                      if (datmsg1 .lt. missingflag.and.
-     .                   datmsg2.lt.missingflag)then
+     .                   datmsg2 .lt. missingflag)then
                         fact1=alog(prlaps(k)/prbg(i,j,kk))/
      .                       alog(prbg(i,j,kk+1)/prbg(i,j,kk))
                         fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
@@ -147,12 +155,15 @@ c
      .                       +(uwbg(i,j,kk+1)-uwbg(i,j,kk))*fact3
                         vwvi(i,j,k)=vwbg(i,j,kk)
      .                       +(vwbg(i,j,kk+1)-vwbg(i,j,kk))*fact3
+                        wwvi(i,j,k)=wwbg(i,j,kk)
+     .                       +(wwbg(i,j,kk+1)-wwbg(i,j,kk))*fact3
                      else
                         htvi(i,j,k)=missingflag
                         tpvi(i,j,k)=missingflag
                         shvi(i,j,k)=missingflag
                         uwvi(i,j,k)=missingflag
                         vwvi(i,j,k)=missingflag
+                        wwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   endif
@@ -217,6 +228,7 @@ c
             var(k,3)='SH '
             var(k,4)='U3 '
             var(k,5)='V3 '
+            var(k,6)='OM '
          enddo
       else
          do k=1,nz

@@ -1,5 +1,5 @@
       subroutine write_lga(nx_laps,ny_laps,nz_laps,bgtime,bgvalid,
-     .cmodel,missingflag,pr,ht,tp,sh,uw,vw,istatus)
+     .cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
 
       implicit none
 
@@ -16,7 +16,8 @@
      .        tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .        sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .        uw(nx_laps,ny_laps,nz_laps), !U-wind (m/s)
-     .        vw(nx_laps,ny_laps,nz_laps)  !V-wind (m/s)
+     .        vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
+     .        ww(nx_laps,ny_laps,nz_laps)  !W-wind (pa/s)
 
       character*256 outdir
       character*31  ext
@@ -133,6 +134,27 @@ c only need to do some of these once.
       call write_laps(bgtime,bgvalid,outdir,ext,
      .                nx_laps,ny_laps,nz_laps,nz_laps,var,
      .                ip,lvl_coord,units,comment,vw,istatus)
+      if (istatus .ne. 1) then
+          print *,'Error writing interpolated data to LAPS database.'
+          return
+      endif
+
+      do k=1,nz_laps                 ! u-component wind
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(uw(i,j,k) .ge. missingflag .and. warncnt.lt.100)
+     +              then
+               print*,'Missingflag at ',i,j,k,' in uw'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         var(k)='OM '
+         units(k)='pa/s'
+      enddo
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,nz_laps,var,
+     .                ip,lvl_coord,units,comment,ww,istatus)
       if (istatus .ne. 1) then
           print *,'Error writing interpolated data to LAPS database.'
           return
