@@ -3670,7 +3670,7 @@ Process surface:LSX  U    su       1  Surface wind u (grid north)
            	     PS   sp	   1  Station Pressure (terrain following)
 		     VOR  vor	   1  Vorticity
 		     MR   mr       1  Mixing Ratio  
-         	     MRC  mc       1  Moisture Convergence
+         	     MRC  mc       1  Moisture Flux Convergence
         	     DIV  d	   1  Divergence
 		     THA  pta      1  Potential Temp Advection
 		     MRA  ma       1  Moisture Advection
