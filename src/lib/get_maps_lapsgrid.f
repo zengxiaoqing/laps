@@ -255,7 +255,7 @@ c    1              ,field_3d_laps(1,1,1),istatus)
 
                   call get_2dgrid_dname(directory
      1         ,i4_fn,0,i4time_nearest,EXT,var_2d,units_2d
-     1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),1,istatus)
+     1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),0,istatus)
 
 
                 endif
