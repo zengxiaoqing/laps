@@ -36,7 +36,7 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine plot_grid_2d(interval,size,imax,jmax,lat,lon)
+        subroutine plot_grid_2d(imax,jmax,lat,lon)
 
 !       1997 Steve Albers
 
