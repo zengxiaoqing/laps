@@ -86,7 +86,7 @@ c
 	real*4  ht(6,maxobs), vis(maxobs), dp(maxobs)
 	real*4  pcp1(maxobs), pcp3(maxobs), pcp6(maxobs), pcp24(maxobs)
 	real*4  max24t(maxobs), min24t(maxobs), snowcvr(maxobs)
-        real    lat(ni,nj), lon(ni,nj)
+        real    lat(ni,nj), lon(ni,nj), k_to_f
 c
 	real*4  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
@@ -547,7 +547,7 @@ c
 	if(temp_k .eq. badflag) then          !t bad too?
 	   temp_f = badflag                   !          bag
 	else
-	   temp_f = ((temp_k - 273.16) * 9./5.) + 32.  ! K to F
+           temp_f = k_to_f(temp_k)
 	endif
 c
 	dewp_k = ttd(i)                        !set to dp_from_tenths
@@ -555,7 +555,7 @@ c
 	if(dewp_k .eq. badflag) then           !dp bad too?
 	   dewp_f = badflag                    !         bag
 	else
-	   dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.  ! K to F
+	   dewp_f = k_to_f(dewp_k)
 	endif
 c
 c..... Wind speed and direction
@@ -593,10 +593,10 @@ c
 	if(pcp24(i) .ne. badflag) pcp24(i) = pcp24(i) * 39.370079 ! m to in
 	if(snowcvr(i) .ne. badflag) snowcvr(i) = snowcvr(i) * 39.370079 ! m to in
 	if(max24t(i) .ne. badflag) then
-	   max24t(i) = ((max24t(i) - 273.16) * 9./5.) + 32. ! K to F
+	   max24t(i) = k_to_f(max24t(i))
 	endif
 	if(min24t(i) .ne. badflag) then
-	   min24t(i) = ((min24t(i) - 273.16) * 9./5.) + 32.  ! K to F
+	   min24t(i) = k_to_f(min24t(i))
 	endif
 c
 c
