@@ -115,7 +115,7 @@ c
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
-      save
+      save lfirst
 
       jstatus = -1
       cdtype=c_sat_types(jtype,isat)

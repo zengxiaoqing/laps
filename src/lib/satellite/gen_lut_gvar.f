@@ -131,7 +131,7 @@ c
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
-      save
+      save lfirst
 c
 c ---------------------------------------------------------
       istatus = 0

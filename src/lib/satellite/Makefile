@@ -21,7 +21,7 @@ DEBUGLIB = libdebugsatellite.a
 
 
 SRC=bcd_to_int.f \
-    bcdtoint.f \
+    bcdtoint.F \
     byteswp2.f \
     byteswp4.f \
     c_time_fnc.f \
@@ -73,3 +73,11 @@ clean:
 
 
 distclean: clean
+
+ifdef USECPP
+%.o : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+	$(FC) $(FFLAGS) -c $*.f
+endif
