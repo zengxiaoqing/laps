@@ -1,18 +1,19 @@
        subroutine laps_anl(uobs,vobs,n_radars,
      1        vr_obs_unfltrd,vr_nyq,v_nyquist_in
-     1       ,upass1,vpass1,varpass1,n_var
-     1       ,uanl,vanl,varanl
-     1       ,wt_p,wt_p_spread,weight_bkg_const
+     1       ,upass1,vpass1,varpass1                               ! Output
+     1       ,n_var                                                ! Input
+     1       ,uanl,vanl,varanl                                     ! Output
+     1       ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
      1       ,max_radars
      1       ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
-     1       ,u_laps_bkg,v_laps_bkg
-     1       ,r0_array_out,density_array_in,vr_obs_fltrd
-     1       ,uobs_diff,vobs_diff
-     1       ,uobs_diff_spread,vobs_diff_spread,varobs_diff_spread
+     1       ,u_laps_bkg,v_laps_bkg                                ! Input/Output
+!    1       ,r0_array_out,density_array_in,vr_obs_fltrd           ! Local
+!    1       ,uobs_diff,vobs_diff                                  ! Local
+!    1       ,uobs_diff_spread,vobs_diff_spread,varobs_diff_spread ! Local
      1       ,imax,jmax,kmax,lat,lon
      1       ,i4time,grid_spacing_m
      1       ,r_missing_data
-     1       ,n_obs_lvl,upass1_buf,vpass1_buf
+!    1       ,n_obs_lvl,upass1_buf,vpass1_buf                      ! Local
      1       ,l_good_multi_doppler_ob,l_analyze
      1       ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1       ,n_iter_wind
@@ -61,9 +62,6 @@
 !     Model background field
       real*4 u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
 
-      real*4    r0_array_out(imax,jmax)                            ! Local
-      real*4    density_array_in(imax,jmax)                        ! Local
-
 !     Arrays of lat and lon for each gridpoint
       real*4 lat(imax,jmax),lon(imax,jmax)                         ! Input
 
@@ -94,10 +92,13 @@
 
 !--------------------------------------------------------------------------------
 
+      real*4    r0_array_out(imax,jmax)                                ! Local
+      real*4    density_array_in(imax,jmax)                            ! Local
+
       real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
-      real*4 uobs_diff_spread(imax,jmax,kmax),vobs_diff_spread(imax,jmax
-     1,kmax)!Local
-      real*4 varobs_diff_spread(imax,jmax,kmax,n_var)               ! Equiv Abv
+      real*4 uobs_diff_spread(imax,jmax,kmax)                          ! Local
+      real*4 vobs_diff_spread(imax,jmax,kmax)                          ! Local
+      real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
 
       integer*4 n_obs_lvl(kmax)                                        ! Local
       real*4 upass1_buf(imax,jmax,kmax)                                ! Local

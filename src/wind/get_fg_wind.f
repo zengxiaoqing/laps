@@ -2,9 +2,9 @@
         subroutine get_fg_wind(
      1          i4time_lapswind,ilaps_cycle_time               ! Input
      1          ,NX_L,NY_L,NZ_L                                ! Input
-     1          ,u_mdl_prev,v_mdl_prev                         ! Local
+!    1          ,u_mdl_prev,v_mdl_prev                         ! Local
      1          ,u_mdl_curr,v_mdl_curr                         ! Local/Output
-     1          ,ext_fg,var_2d,units_2d,comment_2d             ! Local
+!    1          ,ext_fg,var_2d,units_2d,comment_2d             ! Local
      1          ,u_mdl_diff,v_mdl_diff                         ! Output
      1          ,u_laps_fg,v_laps_fg                           ! Output
      1          ,istatus                                       ! Output

@@ -3,12 +3,7 @@
      1    (imax,jmax,kmax                                         ! Input
      1    ,NX_L,NY_L,NZ_L                                         ! Input
      1    ,max_radars,r_missing_data                              ! Input
-     1    ,i4time_sys                                             ! Input
-     1    ,lat,lon,topo                                           ! Local
-     1    ,uanl,vanl                                              ! Local
-     1    ,wanl_2d                                                ! Local
-     1    ,umean,vmean                                            ! Local
-     1    ,grid_ra_ref)                                           ! Local
+     1    ,i4time_sys)                                            ! Input
 
 !       1997 Jun     Ken Dritz      Added NX_L, NY_L, NZ_L, and max_radars
 !                                   as dummy arguments, making arrays
@@ -16,10 +11,7 @@
 !                                   declared with those dimensions automatic.
 !                                   Also added r_missing_data as dummy
 !                                   argument.  (Resizability change)
-!       1997 Jun     Ken Dritz      Changed include of 'lapsparms.for' into
-!                                   include of 'laps_static_parameters.inc'.
 
-        include 'laps_static_parameters.inc'
         include 'windparms.inc'
 
 !       Housekeeping
@@ -46,7 +38,7 @@
 !       Stuff for reading radar reflectivity
         character*4 radar_name
         character*255 c_filespec
-        character*4 radar_name(max_radars)
+ccc        character*4 radar_name(max_radars)
         character*31 ext_radar
 
 !       Stuff for helicity
@@ -120,7 +112,7 @@
 
         I4_elapsed = ishow_timer()
 
-        call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo
+        call get_domain_laps(NX_L,NY_L,'nest7grid',lat,lon,topo
      1                                      ,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
