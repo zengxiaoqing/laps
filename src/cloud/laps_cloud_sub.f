@@ -944,7 +944,11 @@ C       EW SLICES
      1                       ,nint(cvr_sao_max(i-1,jj)*100)
      1                       ,nint(cvr_sao_max(i  ,jj)*100)
      1                       ,nint(cvr_sao_max(i+1,jj)*100)
- 511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5,4x,3i3)
+     1                       ,nint(cloud_frac_vis_a(i-1,jj)*100)
+     1                       ,nint(cloud_frac_vis_a(i  ,jj)*100)
+     1                       ,nint(cloud_frac_vis_a(i+1,jj)*100)
+ 511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5,4x,3i3
+     1                    ,4x,3i3)
  512            enddo ! jj
 
             endif ! cloud hole detected
