@@ -129,7 +129,6 @@ while ($mmm_end ne $months[$imoend])
        $imoend++;
 }
 
-#my %time_elem = (day, cmon, year4, hour, min, dmon, julian year2);
 my @cycle_time = &laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time",$DATA_ROOT);
 my $cycle_time = $cycle_time[0];
 print "cycle time (seconds): $cycle_time \n";
@@ -138,6 +137,8 @@ print "ending    month  = $months[$imoend]\n";
 
 # convert beg/end times to i4time since Jan. 1, 1970
 #--------------------------------------------------------
+$imobeg++;
+$imoend++;
 my $i4time70_beg=&laps_tools::date_to_i4time($year_beg,$imobeg,$dd_beg,$hour_beg,$min_beg,'0');
 my $i4time70_end=&laps_tools::date_to_i4time($year_end,$imoend,$dd_end,$hour_end,$min_end,'0');
 print "beginning/ending i4time70. $i4time70_beg, $i4time70_end\n";
@@ -168,33 +169,47 @@ my ($driver_incr, $driver_cycles, $i4time70_driver, $i4time70_wideband);
 my ($success, $new_casedate, $day_prev, $datatype);
 my $i4time70_driver_end;
 #
-# define and establish casedate link corresponding to the current run
+# define and establish casedate links corresponding to the current run
 #----------------------------------------------------------------------------
 $success = &mktmplinks($i4time70);
 if($success != 1){
    print "Failed to make /tmp links for ingest data\n";
    die;
 }
-#oh yea this. Make sure it has the correct permissions
 if(!-d "/tmp/time"){
-   mkdir "/tmp/time", 0777;
-}elsif(-W "/tmp/time"){
-   die " /tmp/time may not have correct permissions \n";
+   mkdir "/tmp/time", 0777 or die "Failed to make directory /tmp/time $!\n";
 }
+if(!-l "$DATA_ROOT/time/systime.dat"){
+  if(!-e "/tmp/time/systime.dat"){system("touch /tmp/time/systime.dat");}
+  system("ln -sf /tmp/time/systime.dat $DATA_ROOT/time/systime.dat");
+}
+# preserve the runtime.log file for each run separately for each machine
+if(!-d "/tmp/laps_casererun_log"){
+   mkdir "/tmp/laps_casererun_log", 0777;
+}
+if(-e "/tmp/laps_casererun_log/runtime.log"){
+  unlink "/tmp/laps_casererun_log/runtime.log";
+}elsif(-e "$DATA_ROOT/log/runtime.log"){
+  unlink "$DATA_ROOT/log/runtime.log";
+}
+system("ln -sf /tmp/laps_casererun_log/runtime.log $DATA_ROOT/log/runtime.log");
 
 #-------------------------
 # main loop for casererun
 #-------------------------
 
-$imobeg='0'.$imobeg while(length($imobeg)<2);
-$dd_beg='0'.$dd_beg while(length($dd_beg)<2);
+my $time_of_run = `date`;
+chomp $time_of_run;
+print "********************************************\n";
+print "Start Rerun: $time_of_run\n";
+print "********************************************\n";
 
 while ($i4time70<=$i4time70_end)
 {
      $i++;
      ($year,$mo,$dy,$hr,$mn,$sc)=&laps_tools::i4time_to_date($i4time70);
-     $mon=$months[$mo];
-     $mo++;
+     $mon=$months[$mo-1];
+#    $mo++;
      $mo='0'.$mo while(length($mo)<2);
      $hr='0'.$hr while(length($hr)<2);
      $dy='0'.$dy while(length($dy)<2);
@@ -209,24 +224,28 @@ while ($i4time70<=$i4time70_end)
         $dddm1 = $ddd - 1;
         $dddm1='0'.$dddm1 while(length($dddm1)<3);
         $dddm1='0'.$dddm1 while(length($dddm1)<3);
-        $purgewl = "$yr$dddm1".'12';
+        $purgewl = "$yr$dddm1".'18';
 
         $dddp1 = $ddd + 1;
         $dddp1='0'.$dddp1 while(length($dddp1)<3);
         $dddp1='0'.$dddp1 while(length($dddp1)<3);
-        $purgewh = "$yr$dddp1".'12';
+        $purgewh = "$yr$dddp1".'06';
 
 # purge_wideband first - not needed in the loop
 #-------------------------------------------------------
         $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
-        print "Running $command\n";
-        run_sys::run_sys($command);
+        if(-e $wideband_2_netcdf){
+           print "Running $command\n";
+           run_sys::run_sys($command);
+        }else{
+           print "Not purging wideband; Directory does not exist. $wideband_2_netcdf\n";
+        }
 
         $i4time70_wideband = $i4time70 - 2*$cycle_time;
         while ($i4time70_wideband <= $i4time70){
               ($yearw,$mow,$dyw,$hrw,$mnw,$scw) = &laps_tools::i4time_to_date($i4time70_wideband);
-               $monw=$months[$mow];
-               $mow++;
+               $monw=$months[$mow-1];
+#              $mow++;
                $dddw = &laps_tools::julian($yearw, $mow, $dyw);
                $dyw='0'.$dyw while(length($dyw)<2);
                $mow='0'.$mow while(length($mow)<2);
@@ -294,9 +313,9 @@ while ($i4time70<=$i4time70_end)
                 while ($i4time70_driver <= $i4time70)   #$k<$driver_cycles)
                 {
                      ($year2,$mo2,$dy2,$hr2,$mn2,$sc2) = &laps_tools::i4time_to_date($i4time70_driver);
-                     $mon2=$months[$mo2];
+                     $mon2=$months[$mo2-1];
                      $dy2='0'.$dy2 while(length($dy2)<2);
-                     $mo2++;
+#                    $mo2++;
                      $mo2='0'.$mo2 while(length($mo2)<2);
                      $hr2='0'.$hr2 while(length($hr2)<2);
                      $mn2='0'.$mn2 while(length($mn2)<2);
@@ -317,7 +336,7 @@ while ($i4time70<=$i4time70_end)
                      }
 
 #                    $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $DATA_ROOT/time/systime.dat";
-                     $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $/tmp/time/systime.dat";
+                     $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > /tmp/time/systime.dat";
                      run_sys::run_sys($com_ld);
 
                      $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
@@ -342,13 +361,15 @@ while ($i4time70<=$i4time70_end)
      print "\n";
      print "----------------------------------------\n";
      print "LAPS Cycle $i: Date: $dy-$mon-$yr-$hr$mn:$sc \n";
-     print "----------------------------------------\n\n";
+     print "----------------------------------------\n";
 
 # run laps sched
 #---------------
 
      if(defined $runsched)
      {
+        $time_of_run = `date`;
+        print "\n Start Sched: $time_of_run \n";
         $command="@PERL@ $INSTALL_ROOT/etc/sched.pl -A $dy-$mon-$year-$hr$mn $INSTALL_ROOT $DATA_ROOT";
         run_sys::run_sys($command);
      }
@@ -362,55 +383,122 @@ exit;
 sub mktmplinks
 {
 
-# define and establish casedate link corresponding to the current run
+# define and establish /tmp/casedate links corresponding to the current run
 #----------------------------------------------------------------------------
 
-  my $i4time70 = @_;
-  my  @day;
-  my  @mon;
+  my ($i4time70) = @_;
   my ($year,$month,$day,$hour,$min,$sec)=&laps_tools::i4time_to_date($i4time70);
 
-# this is not generic and only designed for IHOP 15May to 26Jun.
-  my ($i,$ii);
-  if($day == 1){
-   $day[0] = "31";
-   $day[1] = "01";
-   $day[2] = "02";
-   $mon[0] = "05";
-   $mon[1] = "06";
-   $mon[2] = "06";
-  }elsif($day == 31){
-   $day[0]  = "30";
-   $day[1]  = "31";
-   $day[2]  = "01";
-   $mon[0]  = "05";
-   $mon[1]  = "05";
-   $mon[2]  = "06";
-  }else{
-   $ii=0;
-   for ($i=$day-1;$i<=$day+1;$i++){
-
-#      if($i < 10){$day[$ii]="0".$i
-#      }else{
-#"0".$month;}
-       $day[$ii] = "$i";
-       $mon[$ii] = "0".$month while( length($month) < 2);
-       $ii++;
-   }
+  my @day;
+  my @mon;
+  my @njdaynoleap = (0,31,59,90,120,151,181,212,243,273,304,334);
+  my @njdayleap = (0,31,60,91,121,152,182,213,244,274,305,335);
+  my @njul_days = @njdaynoleap;
+  if($day == 29 && $month == 2){
+     @njul_days=@njdayleap;
   }
 
-  my @datatypes=qw(acars dropsonde fsl gpsmet grids laps ldad maritime metar pirep profiler radar raob sao sat);
-  my $datatype;
-  system("rm -rf /tmp/casedate");  # or die "Failed to remove /tmp/casedate $! \n";
+  my $jy = &laps_tools::get_julian_day($day,$month,$year); 
+
+#this section still requires year boundary work.
+  my ($ndays, $daynum);
+  my $i;
+  my $ii = 0;
+  my $monnum = $month-1;  #variable $monnum is 0-based value for array indexing
+  if($month>1 && $month<12){
+     $ndays = $njul_days[$monnum]-$njul_days[$monnum-1];
+     for ($i=$jy-1;$i<=$jy+1;$i++){
+
+          $daynum=$i-$njul_days[$monnum];
+
+          if($daynum <= 0){
+             $monnum--;
+             $daynum=$i-$njul_days[$monnum];
+          }elsif($daynum > $ndays){
+             $monnum++;
+             $daynum=$i-$njul_days[$monnum];
+          }
+          $monnum++;
+          if(length($daynum) < 2 ){
+             $day[$ii] = "0".$daynum;              # while(length($i)<2);
+          }else{
+             $day[$ii] = "$daynum";
+          }
+          if(length($monnum) < 2){
+             $mon[$ii] = "0".$monnum;         # while(length($month)<2);  !this while construct doesn't work
+          }else{
+             $mon[$ii] = "$monnum";
+          }
+
+          $ii++;
+
+     }
+  }else{
+     print "Sub mktmplinks in casererun.pl does not account for year boundaries\n";
+     die "Terminating\n";
+  }
+
+ my @datatypes=qw(acars/qc
+  dropsonde
+  gpsmet
+  ldad/mesonet
+  maritime
+  metar
+  pirep
+  profiler/rass/noaanet
+  profiler/wind/noaanet
+  profiler/rass/external
+  profiler/wind/external
+  radar/wsi/nowrad
+  raob
+  sao
+  sat/fsl-gs/goes8/raw/image/fsl-conus
+  sat/fsl-gs/goes8/raw/sounding/scan-area
+  sat/nesdis/goes8/wind/cloud-drift/ascii
+  sat/nesdis/goes8/cloudtop/sfov_ihop/ascii
+  sat/ssec/goes8/ascii);
+
+  my ($file,$datatype,$path);
+  system("rm -rf /tmp/casedate");
   mkdir "/tmp/casedate", 0777;
   foreach $datatype (@datatypes){
-          $i=0;
-          foreach (@day){
-                   system("mkdir -p /tmp/casedate/$datatype/$mon[$i]");
-                   if(-e "/data/ihop/$mon[$i]/$_/data/$datatype"){
-                      system("ln -sf /data/ihop/$mon[$i]/$_/data/$datatype  /tmp/casedate/$datatype/$mon[$i]/$_");#or die "cannot make sym link $!";
-                   }
-                   $i++;
+        $i=0;
+        if($datatype =~ /ascii$/){  # the satellite sfov data is not netcdf
+           $path=$datatype;
+        }else{
+           $path=$datatype."/netcdf";
+        }
+        foreach (@day){
+                 if(-e "/data/ihop/$mon[$i]/$_/data/$path" ){
+                    system("mkdir -p /tmp/casedate/data/$path");
+                    opendir(DATA_TYPE,"/data/ihop/$mon[$i]/$_/data/$path");
+                    my @files=grep /^\d\d/, readdir(DATA_TYPE);
+                    close (DATA_TYPE);
+                    print "Linking files in /data/ihop/$mon[$i]/$_/$path to /tmp/casedate/data \n";
+                    foreach $file (@files){
+                            $result=symlink "/data/ihop/$mon[$i]/$_/data/$path/$file", "/tmp/casedate/data/$path/$file";
+                    }
+                 }else{
+                    next;
+                 }
+                 $i++;
+        }
+ 
+  }
+
+# this section tests if the links established above are valid.
+  foreach $datatype (@datatypes){
+          if(-e "/tmp/casedate/data/$datatype"){
+                 if($datatype =~ /ascii$/){
+                    $datatype =~ s/ascii//;
+                 }
+                 $result = `ls -L /tmp/casedate/data/$datatype`;
+                 chomp;
+                 if($result != "netcdf" || $result != "ascii"){
+                    print "ERROR: Not valid link: /tmp/casedate/data/$datatype\n";
+                 }
+          }else{
+             print "WARNING:  No directory: /tmp/casedate/data/$datatype\n";
           }
   }
 
