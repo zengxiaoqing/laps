@@ -122,7 +122,7 @@ cdis
             p(i)= p(j)
             t(i)= t(j)
             dd(i)= dd(j)
-            ff(i)= dd(j)
+            ff(i)= ff(j)
          endif
       enddo 
       enddo 
