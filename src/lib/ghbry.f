@@ -144,106 +144,97 @@ c     this is the case, then things will be left alone
          enddo                  ! j
       enddo                     ! i
 
-                  
-         go to 444
-
-
 
 
 c     SKIP THIS SECTION OF OLD CODE
 c     section is for original boundary layer analysis (currently skipped over)
-      
-      do j = 1,jj
-         do i = 1,ii
-            do k = 2,kk-1  !note that n2(,,k) end points are not filled.
-               
-               n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (p_3d(i,j,k)/r) *
-     1              (
-     1              kkk*lt1dat(i,j,k)/p_3d(i,j,k)
-     1              -  ( lt1dat(i,j,k+1)-lt1dat(i,j,k-1) )
-     1              / ( p_3d(i,j,k+1) - p_3d(i,j,k-1) )
-     1              )
-               
-               
-            enddo               ! k
-         enddo
-      enddo
- 
-c     now decide where the "height of the boundary layer" is
-
-      do j = 1,jj
-         do i = 1,ii
-
-            y2 = 2.             ! number greater than zero for test below
-
-c     search upward for n2(k+1) being negative, then interpolate there
-
-            do k = 2,kk-2       ! avoid using n2(,,k) endpoints, (not filled)
-                  x1 = p_3d(i,j,k)
-                  y1 = n2(i,j,k)
-
-               if (pb(i,j) .ge. p_3d(i,j,k+1) 
-     1              .and. n2(i,j,k+1) .lt. 0.0) then
-
-                  x2 = p_3d(i,j,k+1)
-                  y2 = n2(i,j,k+1) 
-c     bail out of loop here to not affect regions above 1st inversion
-                  go to 111
-
-               endif
-               
-            enddo
-c     divert code here to not fall into section 111
-            go to 112
- 111        continue
-            
-            if (y2.lt.0.0)   then !actually found negative level
-c     this test prevents going to the top of the column w/o inversion
-c     should never happen, but this is safeguard.
-
-c     sun machines seem to have a problem when y2 and y1 are very close.
-c     to avoid this situation, such close numbers indicate that the 
-c     top of the boundary is very close to x1 so we assign this
-c     here,  if the difference is large enough, then we use the interp
-c     routine.
-
-c               write (6,*) 'TEMPP ', abs(y2-y1)
-
-               if (abs(y2-y1) .le. 1.e-6) then
-                  htby(i,j) = x1
-               else
-               
-c     interpolate in height space
-                  call interp( 0.,y1,y2,log(x1),log(x2),htby(i,j) )
-                  htby(i,j) = exp(htby(i,j))
-
-c     double safeguard on making sure htby is not below ground level.
-                  htby(i,j) = min (htby(i,j),pb(i,j))
-               endif
-
-c     check for runaway adjustment, assign to base value
-               if (htby(i,j).lt.pb(i,j)-400. ) then ! regard as too high
-                  write (6,*) 'i,j,htby(i,j), gt 400mb depth, adjust',
-     1                 ' to surface pressure - 400 mb', i,j,htby(i,j)
-                  htby(i,j) = pb(i,j)-400.
-               endif
-
-            endif
-               
- 112        continue
-            
-         enddo
-         
-      enddo
-      
+c      
+c      do j = 1,jj
+c         do i = 1,ii
+c            do k = 2,kk-1  !note that n2(,,k) end points are not filled.
+c               
+c               n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (p_3d(i,j,k)/r) *
+c     1              (
+c     1              kkk*lt1dat(i,j,k)/p_3d(i,j,k)
+c     1              -  ( lt1dat(i,j,k+1)-lt1dat(i,j,k-1) )
+c     1              / ( p_3d(i,j,k+1) - p_3d(i,j,k-1) )
+c     1              )
+c               
+c               
+c            enddo               ! k
+c         enddo
+c      enddo
+c 
+cc     now decide where the "height of the boundary layer" is
+c
+c      do j = 1,jj
+c         do i = 1,ii
+c
+c            y2 = 2.             ! number greater than zero for test below
+c
+cc     search upward for n2(k+1) being negative, then interpolate there
+c
+c            do k = 2,kk-2       ! avoid using n2(,,k) endpoints, (not filled)
+c                  x1 = p_3d(i,j,k)
+c                  y1 = n2(i,j,k)
+c
+c               if (pb(i,j) .ge. p_3d(i,j,k+1) 
+c     1              .and. n2(i,j,k+1) .lt. 0.0) then
+c
+c                  x2 = p_3d(i,j,k+1)
+c                  y2 = n2(i,j,k+1) 
+cc     bail out of loop here to not affect regions above 1st inversion
+c                  go to 111
+c
+c               endif
+c               
+c            enddo
+cc     divert code here to not fall into section 111
+c            go to 112
+c 111        continue
+c            
+c            if (y2.lt.0.0)   then !actually found negative level
+cc     this test prevents going to the top of the column w/o inversion
+cc     should never happen, but this is safeguard.
+c
+cc     sun machines seem to have a problem when y2 and y1 are very close.
+cc     to avoid this situation, such close numbers indicate that the 
+cc     top of the boundary is very close to x1 so we assign this
+cc     here,  if the difference is large enough, then we use the interp
+cc     routine.
+c
+cc               write (6,*) 'TEMPP ', abs(y2-y1)
+c
+c               if (abs(y2-y1) .le. 1.e-6) then
+c                  htby(i,j) = x1
+c               else
+c               
+cc     interpolate in height space
+c                  call interp( 0.,y1,y2,log(x1),log(x2),htby(i,j) )
+c                  htby(i,j) = exp(htby(i,j))
+c
+cc     double safeguard on making sure htby is not below ground level.
+c                  htby(i,j) = min (htby(i,j),pb(i,j))
+c               endif
+c
+cc     check for runaway adjustment, assign to base value
+c               if (htby(i,j).lt.pb(i,j)-400. ) then ! regard as too high
+c                  write (6,*) 'i,j,htby(i,j), gt 400mb depth, adjust',
+c     1                 ' to surface pressure - 400 mb', i,j,htby(i,j)
+c                  htby(i,j) = pb(i,j)-400.
+c               endif
+c
+c            endif
+c               
+c 112        continue
+c            
+c         enddo
+c         
+c      enddo
+c      
 c     write out the pbl pressure top
 C     END OF SKIPPED SECTION
 
-
-
-
-
- 444  continue ! skip over old code up to here
 
       pdepth = pb-htby
 c     put in check for below ground pressures (assign as sfc pressure)
