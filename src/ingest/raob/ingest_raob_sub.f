@@ -346,6 +346,9 @@ C
       REAL*4      wsSigW                         (sigWLevel,NREC)
 
       integer*4   indx(NLVL_OUT)  
+      character*9 a9time_out_sort                (NLVL_OUT)
+      REAL*4      latout_sort                    (NLVL_OUT)
+      REAL*4      lonout_sort                    (NLVL_OUT)
       REAL*4      prout                          (NLVL_OUT)
       REAL*4      prout_sort                     (NLVL_OUT)
       REAL*4      htout                          (NLVL_OUT)
@@ -603,63 +606,23 @@ C
 
       enddo ! i
 
-      if(.false.)then ! write out the sounding with original code
+      latout_sort = stalat(isnd)      ! assign entire array for this sounding
+      lonout_sort = stalon(isnd)      ! assign entire array for this sounding
+      a9time_out_sort = a9time_raob   ! assign entire array for this sounding
 
-          write(6,*)
-          write(6,511,err=998)
-     1             wmostanum(isnd),n_good_levels,stalat(isnd)
-     1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
-     1            ,a9time_raob,c8_obstype
-          write(11,511,err=998)
-     1             wmostanum(isnd),n_good_levels,stalat(isnd)
-     1            ,stalon(isnd),staelev(isnd),(staname(ic,isnd),ic=1,5)       
-     1            ,a9time_raob,c8_obstype
-
-  511     format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
-
-!         Write out all sorted data for mandatory + sigw + sigt levels. 
-!         T and Td are in deg C
-          do i = 1,n_good_levels
-              ilevel = indx(i)
-
-              write(c_line,*) htout(ilevel),prout(ilevel)
-     1              ,tpout_sort_c(i)
-     1              ,tdout_sort_c(i)
-     1              ,wdout(ilevel),wsout(ilevel),ilevel
-              write(6,521)c_line
-
-              write(c_line,*)htout(ilevel),prout(ilevel)
-     1              ,tpout_sort_c(i)
-     1              ,tdout_sort_c(i)
-     1              ,wdout(ilevel),wsout(ilevel) 
-              write(11,521)c_line
- 521          format(a)
-
-          enddo
-
-          go to 999
-
- 998      write(6,*)' Error writing out RAOB'
-
- 999      continue
-
-      else ! call write_snd for single sounding
-
-          call write_snd  (11                                     ! I
-     1                    ,1,maxlvl,1                             ! I
-     1                    ,wmostanum(isnd)                        ! I
-     1                    ,stalat(isnd),stalon(isnd),staelev(isnd)! I
-     1                    ,staname(1,isnd),a9time_raob,c8_obstype ! I
-     1                    ,n_good_levels                          ! I
-     1                    ,htout_sort                             ! I
-     1                    ,prout_sort                             ! I
-     1                    ,tpout_sort_c                           ! I
-     1                    ,tdout_sort_c                           ! I
-     1                    ,wdout_sort                             ! I
-     1                    ,wsout_sort                             ! I
-     1                    ,istatus)                               ! O
-
-      endif
+      call write_snd  (11                                         ! I
+     1                ,1,maxlvl,1                                 ! I
+     1                ,wmostanum(isnd)                            ! I
+     1                ,latout_sort,lonout_sort,staelev(isnd)      ! I
+     1                ,staname(1,isnd),a9time_out_sort,c8_obstype ! I
+     1                ,n_good_levels                              ! I
+     1                ,htout_sort                                 ! I
+     1                ,prout_sort                                 ! I
+     1                ,tpout_sort_c                               ! I
+     1                ,tdout_sort_c                               ! I
+     1                ,wdout_sort                                 ! I
+     1                ,wsout_sort                                 ! I
+     1                ,istatus)                                   ! O
 
       return
       end
