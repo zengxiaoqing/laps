@@ -36,10 +36,9 @@ cdis*/
 #include "netcdf.h"
 #include "grid_info.h"
 #include "laps_grid_def.h"
-
-/* Set to 1 for verbose debug info */
+#ifndef DEBUG
 #define DEBUG 0
-
+#endif
 #ifdef FORTRANUNDERSCORE
 #define cre_lw3 cre_lw3_
 #define cre_lh1 cre_lh1_
@@ -15581,8 +15580,9 @@ char *gname;
 	if(DEBUG==1) printf( "cdf_upd_linv: inventory variable name = %s\n", varname);
 	if ((i_varid = ncvarid (i_cdfid, varname)) == (-1))
 		return -1;
-	else
+	else{
 		if(DEBUG==1) printf( "cdf_upd_linv: varid = %d\n", i_varid);
+	}
 
 /* construct the arrays needed by the netcdf write routine */
 	start[0] = gdims->fctime_coord;
@@ -17650,9 +17650,9 @@ char *comm_ptr;
 /* write the grid to the netcdf file */
 	i_status = cdf_write_grid (i_cdfid, &dims, s_field, gptr,
 				   commnt, comm_ptr);
-	if (i_status == 0)
+	if (i_status == 0){
 		if(DEBUG==1) printf( "cdf_update_laps: cdf write ok\n",i_status);
-	else {
+	}else {
 		if(DEBUG==1) printf( "cdf_update_laps: error during cdf write\n",i_status);
 		return -1;		
 	}

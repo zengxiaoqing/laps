@@ -7,9 +7,9 @@
 #define SYSCMD "ncgen -o %s %s"
 #define LAT "lat"
 #define LON "lon"
-
+#ifndef DEBUG
 #define DEBUG 0
-
+#endif
 #ifdef FORTRANCAPS
 #define read_cdf_static READ_CDF_STATIC
 #define write_cdf_static WRITE_CDF_STATIC
@@ -125,10 +125,11 @@ char *comm_ptr;
 	  i_status = ncvarput (i_cdfid, i_comid, (const long *)start_c, 
                                (const long *)count_c, (void *)comm_ptr);
 	  
-	  if (i_status == (-1))
+	  if (i_status == (-1)){
 		if(DEBUG==1) printf( "cdf_update_stat: error during cdf write\n");
-	  else
+	  }else{
 		if(DEBUG==1) printf( "cdf_update_stat: cdf write ok\n");
+	  }
 	}
 
 	return i_status;
