@@ -1,7 +1,7 @@
 
         integer b_missing_cmn
         integer b_ref_cmn(MAX_REF_GATES,MAX_RAY_TILT)  
-        integer b_vel_cmn(MAX_REF_GATES,MAX_RAY_TILT)  
+        integer b_vel_cmn(MAX_VEL_GATES,MAX_RAY_TILT)  
 
         integer n_rays_cmn,i_tilt_cmn,n_ref_gates_cmn,n_vel_gates_cmn
         real*4 azim_cmn(MAX_RAY_TILT),elev_cmn,
