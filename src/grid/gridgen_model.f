@@ -125,7 +125,7 @@ C*********************************************************************
         icount_30 = 0
         icount_ramp = 0
 
-        call get_directory('static',static_dir,len)
+        call get_directory('static',static_dir,lens)
 
 c ipltgrid is 1 if you want to plot the grid itself
 c iplttopo is 1 if you want to plot the topography
@@ -313,10 +313,34 @@ c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
 
-!       We will end at this step given the showgrid option
+! We will end at this step given the showgrid or max/min lat lon
+! options.
         if(mode.eq.2) then
 	   call showgrid(lat,lon,nnxp,nnyp,grid_spacing_m,
      1	             c6_maproj,std_lat,std_lat2,std_lon,mdlat,mdlon)
+           return
+
+        elseif(mode.eq.3)then
+           print*,'get perimeter of grid'
+           call get_domain_perimeter_grid(nnxp,nnyp,'nest7grid'
+     1                  ,lat,lon
+     1                  ,1.0,rnorth,south,east,west,istatus)
+
+           rmxlat=rnorth
+           rmnlat=south
+           rmxlon=east
+           rmnlon=west
+           if(west.gt.east)then
+              rmxlon=west
+              rmnlon=east
+           endif
+           print*,'static dir = ',static_dir(1:lens)
+           open(10,file=static_dir(1:lens)//'/llbounds.dat'
+     +         ,status='unknown')
+
+           print*,'write llbounds.dat'
+           write(10,*)rmxlat,rmnlat,rmxlon,rmnlon
+           close(10)
 	   return
 	endif
 
