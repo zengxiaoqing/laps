@@ -1,4 +1,3 @@
-<pre>
 
      This LAPS README file is viewable on the WWW via the LAPB home 
      page at http://www.fsl.noaa.gov/frd-bin/LAPB.homepage.cgi   
@@ -67,7 +66,8 @@
             -----      2.1      Introduction  ------
 
      Untar the laps source code using a command like
-     $ zcat laps-m.n.tar.gz | tar xf -
+     $ zcat laps-m-n-o.tar.gz | tar xf -
+
      Go to the laps root directory and run 
      $ ./configure
 
@@ -87,6 +87,25 @@
      
      Data directories for laps can be specified at runtime and a single set of
      binaries can support several data directories.
+
+     The terrain data files now come in a seperate tar file from the
+     rest of the LAPS distribution.  This is file laps_terrain.tar.gz
+     This file should be installed relative to the installed data/static 
+     directory.  Only one set of topo data is required no matter how 
+     many data installations you are supporting, however, it is required
+     that you make a link from each data/static directory to the location 
+     of the terrain data set.  For example, if you install LAPS with 
+     --datadir=/usr/local/laps/data, a directory will be created called
+     /usr/local/laps/data/static .  If you untar the laps_terrain file in
+     that directory you will create a /usr/local/laps/data/static/model
+     directory with several subdirectories.  If at some point later you 
+     choose to create a new data structure in /usr/local/laps/data2 you 
+     need only make a symbolic link to the existing terrain files from
+     the new static directory.  
+     $ cd /usr/local/laps/data2/static
+     $ ln -s /usr/local/laps/data/static/model .
+     
+
 
      Supported platforms include
 
@@ -453,23 +472,56 @@
 
         2) Modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
 
-        3) Make sure that the 'c6_maproj' parameter is set to 'plrstr'.
-                Polar stereographic is currently the only fully supported
-                map projection. See the note below regarding limited support
-                for other projections.
+        3) c6_maproj:
+                Polar stereographic: 
+                    Set to 'plrstr'. Polar stereographic is currently the only 
+                    fully supported map projection. See the note below 
+                    regarding limited support for other projections.
 
-        4) Modify the 'standard_longitude' parameter. This defines the 
-                longitude which is straight up and down (parallel to the
-                y axis) in the map projection.
+                Lambert Conformal:
+                    Set to 'lambrt'. Limited support for now.
 
-        5) Modify the 'standard_latitude' parameter. This deals with 
-                with the latitude at which the grid resolution is exactly 
-                the nominal value (e.g. 10km). The default standard_latitude 
-                is 40 deg.
+                Mercator:
+                    Set to 'merctr'. Limited support for now.
 
-        6) Make sure that the 'standard_latitude2' parameter is set to +90. 
-                This defines the pole latitude of the polar stereographic 
-                projection (Earth's North Pole). 
+        4) standard_longitude:
+                Polar Stereographic:
+                    This defines the longitude which is straight up and down 
+                    (parallel to the "y" axis) in the map projection.
+
+                Lambert Conformal:
+                    This defines the longitude which is straight up and down 
+                    (parallel to the "y" axis) in the map projection.
+
+                Mercator:
+                    N/A
+
+        5) standard_latitude:
+                Polar Stereographic:
+                    This is the latitude at which the grid spacing is exactly 
+                    the nominal value (e.g. 10km). The default value is 40 deg.
+
+                Lambert:
+                    This is the latitude at which the grid spacing is exactly 
+                    the nominal value (e.g. 10km). 
+
+                Mercator:
+                    This is the latitude at which the grid spacing is exactly 
+                    the nominal value (e.g. 10km). 
+
+        6) standard_latitude2:
+                Polar Stereographic:
+                    This must be set to +90. and defines the pole latitude of 
+                    the polar stereographic projection (Earth's North Pole). 
+
+                Lambert:
+                    For a tangent lambert (e.g. CONUS), set this equal to
+                    the 'standard_latitude' parameter. For a secant 
+                    (two-latitude) lambert, set this to the second true 
+                    latitude.
+
+                Mercator:
+                    N/A
 
         7) Edit the file 'data/static/nest7grid.parms', if 
                 you want to modify the 'silavwt_parm' and 'toptwvl_parm' 
@@ -489,20 +541,18 @@
         your domain runs outside the 30" data, but will still be covered by 
         the 10' worldwide data.
 
-                          MAP PROJECTIONS
+                        MAP PROJECTION LIMITATIONS
 
-        Note that this program works only for a polar stereographic projection,
-   where the projection pole is located at the earth's north pole.
+     LAPS has only been partially run-time tested for projections other than 
+   Polar stereographic. Use Lambert and Mercator at your own risk for now.
 
-        The LAPS analyses can be additionally run with a tangent lambert 
-   projection, if you can supply your own substitute module (to 
-   gridgen_model.exe) that creates the 'static.nest7grid' file. 
+     'Lapsplot' works only for polar stereographic and tangent lambert
+   projections.
 
-        There is a map projection parameter currently in 'nest7grid.parms'. 
-   This has expanded functionality for the tangent lambert projection (if set
-   to 'lambrt'). The 'standard_latitude2' parameter sets the second latitude
-   of the projection. Further map projection functionality is in the works, 
-   please stay tuned.
+     The polar stereographic projection has a pole constrained to be at the
+   earth's north geographic pole. Setting the pole to the South Pole or
+   an arbitrary lat/lon (local stereographic) are future enhancements.
+
 
                        RESOLUTION OF DOMAIN: 
 
@@ -1702,4 +1752,3 @@ Process LVD:    LVD  S8W  s8w      1  GOES IR band-8 bright temp warmest pixel
                      S8A  s8a      1  GOES IR band-8 bright temp averaged
                      SCA  sca      1  GOES IR band-12 bright temp averaged
                      SCC  scc      1  GOES IR band-12 bright temp averaged
-</pre>
