@@ -1697,24 +1697,21 @@ between the valid forecast times for two of the set of input files.
 
 ------ 3.2.2.1   obs_driver.x --- 
 
-Process: (obs_driver.x) LAPS Surface Ingest
-     (author: Pete Stamus)
-     (description updated: 20 Dec 1999)
-
-<pre>
 LSO process - obs_driver.x - Ingest surface data
         (author: Pete Stamus)
 
+<pre>
+
 Input:
-	raw METAR data
-	raw LDAD mesonet data
-        raw Buoy/ship data
+	raw NetCDF METAR data
+	raw NetCDF LDAD mesonet data
+        raw NetCDF Buoy/ship data
 
 Output:
-         LSO	ascii	LAPS surface obs file: METAR, Mesonet and Buoy/ship obs.
-                        The format of this file may be gleaned from looking
-                        at the obs_driver code, or by looking at sample LSO 
-                        files in the test data case.
+         LSO	ascii	LAPS surface obs intermediate data file: METAR, Mesonet,
+                        and Buoy/ship obs. The format of this file may be 
+                        gleaned from looking at the obs_driver code, or by 
+                        looking at sample LSO files in the test data case.
 
 Sample Input/Output: May be available in the test data case.
 </pre>
@@ -1731,7 +1728,6 @@ the future.  The lat/lons are in decimal degrees.
 ------ 3.2.2.2   sfc_qc.exe --- 
 
 Process: (sfc_qc.exe) LAPS Surface Ingest
-     (author: Pete Stamus)
 
 <pre>
 LSO QC process - sfc_qc.exe - QC the ingest surface data
