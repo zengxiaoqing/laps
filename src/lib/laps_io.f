@@ -420,7 +420,7 @@ cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned
         real*4 field_2d(imax,jmax)
 
         integer max_files
-        parameter (max_files = 600)
+        parameter (max_files = 20000)
         character*255 c_filespec
         character*120 c_fnames(max_files)
         integer i4times(max_files)
@@ -1749,4 +1749,68 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 
         return
         end
-      
+c
+c ------------------------------------------------------------------------
+c This routine is used in get_maps_lapsgrid.f (subroutine get_modelfg_3d and
+c other related routines). Returns bgmodel name corresponding to the
+c setting of variable "cmodel" in lga namelist (background.nl).
+c
+      subroutine bgmodel_name(maxbgmodels,nbgm,bgmodelnames,istatus)
+
+      implicit none
+
+c     include 'bgdata.inc'
+
+      integer       maxbgmodels
+      character*256 bgpaths(maxbgmodels)
+      character*132 cmodel(maxbgmodels)
+      character*5   bgmodelnames(maxbgmodels)
+
+      integer bgmodels(maxbgmodels)
+      integer oldest_forecast
+      integer max_forecast_delta
+      integer forecast_length
+      integer itime_inc
+      integer nbgm
+      logical sfc_bkgd
+      logical use_analysis
+      logical smooth_fields
+
+      integer   istatus,i
+
+      call get_background_info(bgpaths,bgmodels
+     +,oldest_forecast,max_forecast_delta,forecast_length
+     +,use_analysis,cmodel,itime_inc,smooth_fields,sfc_bkgd)
+
+      nbgm=0
+      do i=1,maxbgmodels
+         if(cmodel(i).ne.' ')then
+            if(cmodel(i).eq.'RUC40_NATIVE'.or.
+     +         cmodel(i).eq.'RUC20_NATIVE')then
+               nbgm=nbgm+1
+               bgmodelnames(nbgm)='ruc'
+            endif
+            if(cmodel(i).eq.'ETA48_CONUS'.or.
+     +         cmodel(i).eq.'MesoEta_SBN')then
+               nbgm=nbgm+1
+               bgmodelnames(nbgm)='eta'
+            endif
+            if(cmodel(i).eq.'AVN_FSL_NETCDF'.or.
+     +         cmodel(i).eq.'AVN_SBN_CYLEQ')then
+               nbgm=nbgm+1
+               bgmodelnames(nbgm)='avn'
+            endif
+            if(cmodel(i).eq.'MODEL_FUA'.or.
+     +         cmodel(i).eq.'LAPS_FUA')then
+               nbgm=nbgm+1
+               bgmodelnames(nbgm)='fua'
+            endif
+            if(cmodel(i).eq.'CWB_20FA_LAMBERT_NF')then
+               nbgm=nbgm+1
+               bgmodelnames(nbgm)='nfs'
+            endif
+         endif
+      enddo
+
+      return
+      end

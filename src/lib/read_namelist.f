@@ -202,7 +202,7 @@ c -------------------------------------------------------------
 c
       subroutine get_background_info(bgpaths,bgmodels
      +,oldest_forecast,max_forecast_delta,forecast_length
-     +,use_analysis,cmodel,itime_inc,smooth_fields)
+     +,use_analysis,cmodel,itime_inc,smooth_fields,luse_sfc_bkgd)
 
 cdoc reads static/background.nl
 
@@ -217,11 +217,12 @@ cdoc reads static/background.nl
       integer oldest_forecast, max_forecast_delta
       integer forecast_length
       integer itime_inc
+      logical luse_sfc_bkgd
       logical use_analysis
       logical smooth_fields
       namelist /background_nl/bgpaths,bgmodels
      +,oldest_forecast,max_forecast_delta,forecast_length
-     +,use_analysis,cmodel,itime_inc,smooth_fields
+     +,use_analysis,cmodel,itime_inc,smooth_fields,luse_sfc_bkgd
 
       smooth_fields = .false.
       call get_directory(grid_fnam_common,nest7grid,len_dir)

@@ -21,6 +21,9 @@ c
 c      File type starting with the two characters 'nf' is now allowed since
 c      this represents the FA (Taiwan) filename type for the the FA model.
 c
+c      File type starting with 'gb' and 'gs' now allowed since this is Taiwan
+c      CWB global and tropical cyclone model backgrounds for lga (JS: 07/04)
+c
        implicit none
 
        include 'lapsparms.for'
@@ -28,7 +31,7 @@ c
        integer   max_numeric_char
        parameter(max_numeric_char = 10)
        integer   max_2letter_strings
-       parameter(max_2letter_strings = 3)
+       parameter(max_2letter_strings = 5)
        integer   max_files_filtered
        parameter(max_files_filtered=MAX_RADAR_FILES)
 
@@ -53,7 +56,7 @@ c
 
        data c_qualifying_numeric_char/'0','1','2','3','4','5'
      &,'6','7','8','9'/
-       data c_qualifying_2letter_string/'nf','re','te'/ 
+       data c_qualifying_2letter_string/'nf','re','te','gb','sb'/ 
 
        i_fnames_filtered = 0
        i_files_qualifying= 0

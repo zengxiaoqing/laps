@@ -77,13 +77,21 @@ cdis
         character*31 ext_a(maxbgmodels)
         character*31 subdir(maxbgmodels)
         character*9 fdda_model_source(maxbgmodels)
+        character*5 bgmodelnames(maxbgmodels)
+ 
+        integer     nbgm
 
-!       ****************** RAMS SECTION ***************************************
+!       ****************** Model Selection Section *********************
 
 !       RESTRICTIONS:
 
 !       1) No time interpolation is performed
 !       2) FDDA/LGA file must be available valid at i4time/i4time_needed
+
+        call bgmodel_name(maxbgmodels,nbgm,bgmodelnames,istatus)
+        do i=1,nbgm
+         print*,'bg model derived from from cmodel = ',bgmodelnames(i)
+        enddo
 
         if(kmax.eq.1)then
            c_bkgd_ext(1)='fsf'
@@ -105,6 +113,7 @@ cdis
         lgab=.false.
         if(n_fdda_models .eq. 0)then
            n_fdda_models = 1
+c          subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (needs mod) when lga subdirs is activated
            subdir(n_fdda_models)=c_bkgd_ext(2)
            ext_a(n_fdda_models) =c_bkgd_ext(2)
            lgab=.true.
@@ -130,9 +139,10 @@ c          lgab=.true.
            enddo
         endif
 c this part adds lga/b to the list since it isn't already  part of it.
-        if(.not.(lgab))then
+        if(.not.lgab)then
            if(n_fdda_models.lt.maxbgmodels)then
               n_fdda_models = n_fdda_models + 1
+c             subdir(n_fdda_models)=bgmodelnames(1:3) #replaces line below (needs mod) when lga subdirs is activated
               subdir(n_fdda_models)=c_bkgd_ext(2)
               ext_a(n_fdda_models) =c_bkgd_ext(2)
            else
@@ -185,7 +195,7 @@ c this part adds lga/b to the list since it isn't already  part of it.
         character*255 c_filespec
 
         integer*4 MAX_FILES
-        parameter (MAX_FILES = 300)
+        parameter (MAX_FILES = 20000)
         character c_fnames(MAX_FILES)*180
 
 
