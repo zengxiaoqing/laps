@@ -880,6 +880,20 @@ c read in laps lat/lon and topo
         endif ! istat_radar_3dref
 
         if(istat_radar_3dref .eq. 1)then
+          if(l_flag_bogus_w) then               ! Adan add
+!         Re-calculate cloud bogus omega within radar echo area
+!         Add by Adan
+            call get_radar_deriv(NX_L,NY_L,NZ_L,grid_spacing_cen_m,
+     1                           r_missing_data,
+     1                           radar_ref_3d,clouds_3d,cld_hts,
+     1                           temp_3d,heights_3d,pres_3d,
+     1                           ibase_array,itop_array,thresh_cvr,
+     1                           cldpcp_type_3d,w_3d,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad status return from get_radar_deriv'
+                return
+            endif
+           endif                           ! l_flag_bogus_w (Adan add)
 
             I4_elapsed = ishow_timer()
 
