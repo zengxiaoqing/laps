@@ -1,0 +1,31 @@
+#!@PERL@
+# @configure_input@
+
+$FXA_HOME = $ENV{FXA_HOME};
+$FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
+if (!defined $FXA_HOME) {print "Environment variable FXA_HOME is required.";}
+if (!defined $FXA_INGEST_SITE) {print "Environment variable FXA_INGEST_SITE is required.";}
+if (!defined $FXA_HOME || !defined $FXA_INGEST_SITE) {exit;}
+
+# Get the custom center point lat/lon from the command line.
+# If there are no arguments, relocalize to the default.  
+# mainScript.csh looks first for the custom center point file, 
+# and if it's not there it computes the default location and writes it to: 
+#   $FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/Laps_Center_Point.txt
+
+$custom_center_file = 
+  "$FXA_HOME/data/localization/$FXA_INGEST_SITE/$FXA_INGEST_SITE-Laps_Center_Point.txt";
+$orig_center_file =
+  "$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/Laps_Center_Point.txt";
+
+$custom_center_lat = shift; $custom_center_lon = shift;
+
+if (defined $custom_center_lat) {
+  open (CENTER,">$custom_center_file");
+  print CENTER "$custom_center_lat $custom_center_lon\n";
+  close CENTER;
+  open (CENTER,">$orig_center_file");
+  print CENTER "$custom_center_lat $custom_center_lon\n";
+  close CENTER;
+  }
+else {unlink $custom_center_file;}
