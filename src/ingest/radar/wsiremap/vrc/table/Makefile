@@ -21,21 +21,14 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
 
 EXE = genvrclut.exe
 
-SRC = gen_llij_lut_wfo.f \
-      gen_llij_lut_wsi.f
-
-MAIN=genvrclut.f
-
-LIB=libvrclut.a
-
-ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+SRC=genvrclut.f
 
 all: exe
 
 exe: $(ARCHIVE) $(EXE)
 
-$(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE): $(SRC)
+	$(FC) $(FFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
