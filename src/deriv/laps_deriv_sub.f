@@ -29,17 +29,19 @@ cdis
 cdis
 cdis
 
-        subroutine laps_cloud_deriv(i4time,
+        subroutine laps_deriv_sub(i4time,
      1                        NX_L,NY_L,
      1                        NZ_L,
      1                        N_PIREP,
      1                        maxstns,
      1                        max_cld_snd,
-     1                        i_diag,
      1                        n_prods,
      1                        iprod_number,
-     1                        isplit,
-     1                        j_status)
+     1                        temp_3d,
+     1                        heights_3d,
+     1                        pres_sfc_pa,
+     1                        t_sfc_k,
+     1                        j_status,istatus)
 
         integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
@@ -439,25 +441,6 @@ c read in laps lat/lon and topo
                 return
             endif
 
-!           Read in data (lt1 - temp_3d,heights_3d)
-            var = 'T3'
-            ext = 'lt1'
-            call get_laps_3d(i4time,NX_L,NY_L,NZ_L
-     1      ,ext,var,units,comment,temp_3d,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Error reading 3D Temp'
-                return
-            endif
-
-            var = 'HT'
-            ext = 'lt1'
-            call get_laps_3d(i4time,NX_L,NY_L,NZ_L
-     1      ,ext,var,units,comment,heights_3d,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Error reading 3D Heights'
-                return
-            endif
-
 !           Read in data (lps - radar_ref_3d)
             var = 'REF'
             ext = 'lps'
@@ -479,27 +462,6 @@ c read in laps lat/lon and topo
  510            format(23x,3i3)
 
             endif ! istatus_lps
-
-!           Read in surface pressure (lsx - pres_sfc_pa)
-            var = 'PS'
-            ext = 'lsx'
-            call get_laps_2d(i4time,ext,var,units,comment
-     1                  ,NX_L,NY_L,pres_sfc_pa,istatus)
-
-            if(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Sfc Pres Analysis - abort'
-                goto999
-            endif
-
-            var = 'T'
-            ext = 'lsx'
-            call get_laps_2d(i4time,ext,var,units,comment
-     1                  ,NX_L,NY_L,t_sfc_k,istatus)
-
-            if(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Sfc Temp Analysis - abort'
-                goto999
-            endif
 
             var = 'LCV'
             ext = 'lcv'
@@ -1112,7 +1074,7 @@ c read in laps lat/lon and topo
 
 
 !       Write out Cloud derived Omega field
-        var = 'COM' ! newvar = 'COM', oldvar = 'OM'
+        var = 'COM'
         ext = 'lco'
         units = 'PA/S'
         comment = 'LAPS Cloud Derived Omega'
@@ -1122,6 +1084,8 @@ c read in laps lat/lon and topo
 
         I4_elapsed = ishow_timer()
 
+        istatus = 1
+
 999     continue
 
         write(6,*)' Notifications'
@@ -1129,7 +1093,7 @@ c read in laps lat/lon and topo
             write(6,*)' ',exts(i),' ',j_status(i),' ',i
         enddo ! i
 
-        write(6,*)' End of Cloud Analysis Package'
+        write(6,*)' End of laps_deriv_sub'
 
         return
         end
