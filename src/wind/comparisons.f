@@ -313,7 +313,7 @@ C********************************************************************
      1                 ,rmsu,rmsv,rms      
 102         format(' BIAS/RMS between '
      1        ,a,' & ',a,' (n,biasu,biasv,biassp,rmsu,rmsv,rms) = '
-     1        ,i4,6f5.1)
+     1        ,i4,6f6.1)
         endif
 
         return
