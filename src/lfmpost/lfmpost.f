@@ -159,10 +159,7 @@ PROGRAM lfmpost
       CALL make_wrf_file_name(lfmprd_dir,domain_num,sim_minutes(t),data_file)
       INQUIRE(FILE=data_file,EXIST=file_ready)
       IF (.NOT.file_ready) THEN
-        CALL io_wait(data_file,max_wait_sec)
-      ENDIF
-      IF (realtime) THEN
-        CALL sleep(30)  ! To make sure it is really done!
+        CALL wrfio_wait(data_file,max_wait_sec)
       ENDIF
       CALL open_wrfnc(data_file,lun_data,status)
     ENDIF
