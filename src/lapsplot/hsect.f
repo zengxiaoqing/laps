@@ -5321,6 +5321,10 @@ c                   cint = -1.
 !       call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
         CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL',rsize,0,0)
 
+!       if(c5_sect .eq. 'sound')then
+!           call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
+!       endif
+
         call setusv_dum('  ',icol_save)
 
 !       Bottom label

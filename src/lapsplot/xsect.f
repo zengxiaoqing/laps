@@ -3384,7 +3384,7 @@ c
 
         write(6,1)
  1      format('  Product type: analysis [a], background [b]'
-     1        ,', balance [n], forecast [f] ? ',$)        
+     1        ,', balance [n], forecast [f], quit [q] ? ',$)        
 
         read(5,2)c_prodtype
  2      format(a)
@@ -3392,6 +3392,10 @@ c
         call upcase(c_prodtype,c_prodtype)
 
         if(c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N')then
+            return
+
+        elseif(c_prodtype .eq. 'Q')then
+            write(6,*)' Quitting'
             return
 
         else
