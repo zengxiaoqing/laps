@@ -136,6 +136,8 @@ c  normal internal parameters
         
 c *** begin routine
 
+      write(6,*) 'Checking for data zeros, 4/14/99'
+
       pi = acos(-1.0)
       d2r = pi/180.
       look_back_time = raob_lookback
@@ -382,6 +384,8 @@ c *** difference the raob data at each gridpoint location and height
      1           (data(i_r(is),j_r(is),k) .eq. rmd)
      1           .or.
      1           (q_r(k,is) .eq. rmd)
+     1           .or.
+     1           (data(i_r(is),j_r(is),k) .le. 0.0)
      1           ) then
 
                diff(k,is) = rmd
@@ -404,7 +408,7 @@ c     compute level mean and sigma
          x_sum = 0
          do i = 1,ii
             do j = 1,jj
-               if(data(i,j,k) .ne. rmd) then
+               if(data(i,j,k) .ne. rmd .or. data(i,j,k).gt. 0.0 ) then
                   x_sum=x_sum +1
                   x(x_sum) = data (i,j,k)
                endif
@@ -496,8 +500,18 @@ c     apply the computed weights and averages to the data point in question
 
 c             data(i,j,k) = data(i,j,k)*(scale_used-1.)*weight_avg 
 c     1                 + data (i,j,k)
-             data(i,j,k) = data(i,j,k)*(scale_used-1.)
+                  data(i,j,k) = data(i,j,k)*(scale_used-1.)
      1                 + data (i,j,k)
+
+                  call check_nan(data(i,j,k),istatus)
+                  if(istatus.eq.0) then ! nan detect
+                     write(6,*) 'Nan Detected during raob_step'
+                     write(6,*) 'data(i,j,k), i,j,k'
+                     write(6,*) data(i,j,k), i,j,k
+                     write(6,*) 'diff(k,is),is = 1,isound'
+                     write(6,*) (diff(k,is),is = 1,isound)
+                  endif
+                
 
                   if (data(i,j,k) .lt. 0.0) then
                      write(6,*) 'data zero scale_used, weight_avg, i,j'
