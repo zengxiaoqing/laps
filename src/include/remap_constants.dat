@@ -90,8 +90,7 @@ c
       parameter (ABS_VEL_MIN = 2.0)
       parameter (VEL_MIS_CHECK = 100.)
 
-      integer*4 REF_MIN,REF_MIS_CHECK,REF_GRIDS_CHECK
-      parameter (REF_MIN = 0.)
+      integer*4 REF_MIS_CHECK,REF_GRIDS_CHECK
       parameter (REF_MIS_CHECK = 100.)
       parameter (REF_GRIDS_CHECK = 0)
 
