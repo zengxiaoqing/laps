@@ -7,6 +7,7 @@
                        -----------------         
 
      1.0 ............  General LAPS info
+         1.1 ..............  LAPS Software Disclaimer
      2.0 ............  Installing and running the LAPS Ingest/Analysis code 
          2.1 ..............  UNIX System Requirements
          2.1.1 ..................  NetCDF library
@@ -88,7 +89,6 @@
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
 
-
 ----------------- 1.0  General LAPS info --------------------------------------
 
      Below is a description of the tar file containing the LAPS data ingest and
@@ -103,6 +103,41 @@
      importing a fresh tar file every few months or so. Please check the
      LAPS Software Page at 'http://laps.fsl.noaa.gov/cgi/LAPS_SOFTWARE.cgi'
      for information about recent releases.
+
+      ----------------  1.1   LAPS Software Disclaimer  ----------------
+
+     Open Source License/Disclaimer, Forecast Systems Laboratory
+     NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
+
+     This software is distributed under the Open Source Definition,
+     which may be found at http://www.opensource.org/osd.html.
+
+     In particular, redistribution and use in source and binary forms,
+     with or without modification, are permitted provided that the
+     following conditions are met:
+
+     - Redistributions of source code must retain this notice, this
+     list of conditions and the following disclaimer.
+
+     - Redistributions in binary form must provide access to this
+     notice, this list of conditions and the following disclaimer, and
+     the underlying source code.
+
+     - All modifications to this software must be clearly documented,
+     and are solely the responsibility of the agent making the
+     modifications.
+
+     - If significant modifications or enhancements are made to this
+     software, the FSL Software Policy Manager
+     (softwaremgr@fsl.noaa.gov) should be notified.
+
+     THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+     AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+     GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+     AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+     OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+     NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+     DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 
 ---------- 2.0 Installing and running the LAPS Ingest/Analysis code -----------
 
