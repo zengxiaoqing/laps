@@ -71,10 +71,6 @@ c       Parameter(nnxp=NX_L,nnyp=NY_L)
         character*3 swt,twt
         character*6 c6_maproj
 
-C*********************************************************************
-c set nnxp,nnyp,mdlat,deltax,deltay, and ngrids
-c       Data mdlat/39.32573/,mdlon/-104.24382/
-
 c********************************************************************
 c       Declarations for wrt_laps_static
         integer*4    ni,nj,nf
@@ -204,8 +200,7 @@ c calculate delta x and delta y using grid and map projection parameters
 
 
 c*********************************************************************
-
-        erad=6367000.
+c       Get X/Y for lower left corner
         CALL POLAR_GP(mdlat,mdlon,XMN,YMN,DELTAX,DELTAY,
      1  NNXP,NNYP)
 	DO 600 I=2,NNXP
@@ -218,32 +213,35 @@ C
  610	CONTINUE
         YMN(NNYP)=2*YMN(NNYP-1)-YMN(NNYP-2)
 C
-	   DO 650 I=2,NNXP
-	      XTN(I)=.5*(XMN(I)+XMN(I-1))
- 650	   CONTINUE
-	   XTN(1)=1.5*XMN(1)-.5*XMN(2)
+	DO 650 I=2,NNXP
+	   XTN(I)=.5*(XMN(I)+XMN(I-1))
+ 650	CONTINUE
+	XTN(1)=1.5*XMN(1)-.5*XMN(2)
 
-	   DO 660 J=2,NNYP
-	      YTN(J)=.5*(YMN(J)+YMN(J-1))
- 660	   CONTINUE
-	   YTN(1)=1.5*YMN(1)-.5*YMN(2)
+	DO 660 J=2,NNYP
+	   YTN(J)=.5*(YMN(J)+YMN(J-1))
+ 660	CONTINUE
+	YTN(1)=1.5*YMN(1)-.5*YMN(2)
 
 C*****************************************************************
 C*  Convert it to lat/lon using the library routines.            *
+        erad=6367000.
         
-           Do J = 1,nnyp
-	      Do I = 1,nnxp
-!	         call xytops(xtn(i),ytn(j),pla,plo,erad)
-!                call pstoge(pla,plo,lat(I,J),lon(I,J),90.,std_lon)           
+        Do J = 1,nnyp
+	   Do I = 1,nnxp
+!	      call xytops(xtn(i),ytn(j),pla,plo,erad)
+!             call pstoge(pla,plo,lat(I,J),lon(I,J),90.,std_lon)           
 
-                 call xy_to_latlon(xtn(i),ytn(j),erad ! ,90.,std_lon
+              call xy_to_latlon(xtn(i),ytn(j),erad ! ,90.,std_lon
      1                                          ,lat(I,J),lon(I,J))
 
-c              print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
-    	      enddo
-           enddo
-       print *,'lat,lon at 1,1 =',lat(1,1),lon(1,1)
-       print *,'lat,lon at nnxp,nnyp =',lat(nnxp,nnyp),lon(nnxp,nnyp)
+c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
+    	   enddo
+        enddo
+        print *,' lat,lon at 1,1 =',lat(1,1),lon(1,1)
+        print *,' lat,lon at nnxp,nnyp =',lat(nnxp,nnyp),lon(nnxp,nnyp)   
+
+        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,5,istat_chk)  
 c
 C*****************************************************************
 c calculate topography
@@ -689,11 +687,12 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   LB=INDEX(TITLE3,' ')-1
                   INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
                   IF(.NOT.L1)THEN
-                     if(icnt .le. 100 .or. icnt .eq. (icnt/200)*200)then       
+                     if(icnt .le. 100 .or. 
+     1                  icnt .eq. (icnt/1000)*1000 )then     
                         PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST '
      1                        ,icnt
-                        icnt = icnt + 1
                      endif ! icnt
+                     icnt = icnt + 1
                      DATP(IP,JP)=0. ! set to missing?
                      GO TO 20
                   ENDIF

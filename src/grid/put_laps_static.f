@@ -1,10 +1,10 @@
 
       subroutine put_laps_static(grid_spacing,model,comment,data
-     1                          ,imax,jmax, mkmax
+     1                          ,imax,jmax,mkmax
      1                          ,std_lat,std_lat2,std_lon      
      1                          ,c6_maproj,deltax,deltay)
  
-      integer*4 mkmax
+      integer*4 mkmax                   !This should be 8
 
       INTEGER*4	IMAX,		        !I4time of data
      1		JMAX,KMAX,	        !# cols, # rows, # fields
@@ -48,8 +48,6 @@ C
           data(i,j,5) = (20.0 - ((psa - 100.0) * 0.02))
       enddo ! j
       enddo ! i
-      
-      
 
       write(6,*) dir_out(1:len),len
       call wrt_laps_static (dir_out(1:len),laps_dom_file,imax,jmax,
