@@ -27,10 +27,11 @@ umask 000
 echo " "                                  
 echo "Running followup_ncarg.sh script" 
 echo "user = "`whoami` 
-echo "machine = "`uname -n`                                   
+echo "machine = "`uname -n` 
+echo "domain name ="$2                                  
 echo " "                                  
 
-$LAPS_ROOT/etc/wait_for_file.sh $LAPS_DATA_ROOT/log/sched.lock 50
+#$LAPS_ROOT/etc/wait_for_file.sh $LAPS_DATA_ROOT/log/sched.lock 50
 
 #LAPS WWW 2-D NCAR graphics products
 echo " "
@@ -43,31 +44,31 @@ date
 if test "$2" = "wiap"  
 then
     WINDOW=0.0:0.08:1.0:0.92
-    RESOLUTION=792x664
+    RESOLUTION=1056x885
 
-elif test "$2" = "mw-rt-rcsv"
+elif test "$2" = "cwis-rcsv"
 then
     WINDOW=0.0:0.08:1.0:0.92
-    RESOLUTION=792x664
+    RESOLUTION=1056x885
 
 elif test "$2" = "f3"
 then
     WINDOW=0.0:0.08:1.0:0.92
-    RESOLUTION=792x664
+    RESOLUTION=1056x885
 
 else
     WINDOW=0.0:0.0:1.0:1.0
-    RESOLUTION=664x664
+    RESOLUTION=885x885
 
 fi
 
 echo "WWW 2-D laps_gifs started" 
-echo $WEB_NFS
-echo $LAPS_DATA_ROOT
-echo $WEB_DATA
-echo $LAPS_ROOT
-echo $WINDOW
-echo $RESOLUTION
+echo "WEB_NFS="$WEB_NFS
+echo "LAPS_DATA_ROOT="$LAPS_DATA_ROOT
+echo "WEB_DATA="$WEB_DATA
+echo "LAPSROOT="$LAPS_ROOT
+echo "WINDOW="$WINDOW
+echo "RESOLUTION="$RESOLUTION
 mkdir -p $WEB_DATA 
 mkdir -p $WEB_DATA/anal2d
 AGE=+7 
