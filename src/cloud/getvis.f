@@ -147,8 +147,8 @@ cdis
             iscr_alb  = min(max(iscr_alb,-10),20)
             ihist_alb(iscr_alb) = ihist_alb(iscr_alb) + 1
 
-            if(sfc_albedo(i,j) .ne. r_missing_data)then
-                iscr_alb_sfc  = nint(sfc_albedo(i,j)*10.)
+            if(sfc_albedo_lwrb(i,j) .ne. r_missing_data)then
+                iscr_alb_sfc  = nint(sfc_albedo_lwrb(i,j)*10.)
                 iscr_alb_sfc  = min(max(iscr_alb_sfc,-10),20)
                 ihist_alb_sfc(iscr_alb_sfc) = 
      1          ihist_alb_sfc(iscr_alb_sfc) + 1
