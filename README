@@ -2053,6 +2053,9 @@ Inputs:
         equivalent. A description of how we obtain these Polar NetCDF files 
         for Level-II is at 'http://laps.fsl.noaa.gov/albers/remapper_raw.html'.
 
+        The polar NetCDF files are named according to 'yydddhhmm_elevxx' where 
+        'xx' is the tilt number.
+
         Note that narrowband data (e.g. WSR 88D Level-III RPG)
         can also be used as long as it is converted to the required polar 
         coordinate, NetCDF format. This is in fact being done for the AWIPS 4.2
@@ -2060,19 +2063,21 @@ Inputs:
         the 'etc/LapsRadar.pl' script running in the AWIPS environment. The 
         comment section at the top of this script explains how this 4 bit
         processing of reflectivity data works. 'etc/LapsRadar.pl' runs two 
-        executables, 'tfrNarrowband2netCDF' from AWIPS, and 
-        'remap_polar_netcdf.exe' from LAPS.
+        executables. The first executable 'tfrNarrowband2netCDF' from AWIPS, 
+        writes out the polar NetCDF files in the directory 
+        '$LAPS_DATA_ROOT/lapsprd/rdr/???/raw' where ??? is the radar number.
+        The second executable 'remap_polar_netcdf.exe' is run as part of LAPS.
 
 Outputs (LAPS intermediate files - depending on input parameters):
 <pre>
      v01         grids       3-D Radar reflectivity, velocity, and Nyquist vel
      v02           "                  "
-     rdr/xxx/vrc   "         2-D Radar reflectivity
+     rdr/???/vrc   "         2-D Radar reflectivity  (??? = radar number)
      vrc           "                  "
      etc. (for each radar)
 </pre>
 
-The outputs from this process, on the Cartesian LAPS grid,  are used by the 
+The outputs from this process, on the Cartesian LAPS grid, are used by the 
 LAPS wind analysis, and also potentially by cloud and precip accumulation 
 analyses. One output file is written per volume scan.
 
