@@ -64,7 +64,7 @@ SUBROUTINE WriteAnalysis(a,n)
 
   dxy = 5000.0
 
-  DO it=n(3),n(3)
+  DO it=n(3)-1,n(3)
 
      ! gridpoints/meter:
      mjohn = 1.0/SQRT(grid_spacingx)
@@ -101,8 +101,9 @@ SUBROUTINE WriteAnalysis(a,n)
                    data(1,1,n(4)+7),data(1,1,n(4)+8),nx,ny)
 
      ! Reduced Pressure Change:
-     data(1:nx,1:ny,11) = a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
-			  a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
+     data(1:nx,1:ny,11) = 0.0 
+	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3),6)- &
+	!a(1+nfic:n(1)-nfic,1+nfic:n(2)-nfic,n(3)-1,6)
      PRINT*,'Test PP: ',data(1:3,1,11)
 
      CALL write_laps_data(istarttime+(it-1)*laps_cycle_time, &
