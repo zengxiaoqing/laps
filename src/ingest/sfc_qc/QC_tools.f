@@ -274,34 +274,30 @@ c
 c This routine is designed to reduce the size of a station list by
 c removing stations with all missing data (t, td, dd, ff, pmsl, alt)
 c This should remove precip onlystations and those stations that
-c have perpetually missing data
+c have perpetually missing data. This will also remove stations
+c that have all blanks for a name as this will screw up subr reorder.
          real ta(m),tda(m),dda(m),ffa(m),lata(m),lona(m),eleva(m)
          real pstna(m),pmsla(m),alta(m)
          integer indexa(m), iholdx, ix
          character stna(m)*5,holdnam*5, ch*1
          character providera(m)*11, holdprov*11
          character reptypea(m)*6,  holdrep*6
+         holdnam='     '
 c for all stations
           k=0
     3     k=k+1
     2     if(k.gt.maxstaa) return
-          if(ta(k).ne.badflag) then
-           go to 3
-          endif
-          if(tda(k).ne.badflag) then
-           go to 3
-          endif
-          if(dda(k).ne.badflag) then
-           go to 3
-          endif
-          if(alta(k).ne.badflag) then
-           go to 3
-          endif
-          if(pmsla(k).ne.badflag) then
-           go to 3
-          endif
+          if(stna(k).eq.holdnam) then
+           print*, 'Stn ',k,' has no name...removing data'
+           go to 1
+          endif 
+          if(ta(k).ne.badflag) go to 3
+          if(tda(k).ne.badflag) go to 3
+          if(dda(k).ne.badflag) go to 3
+          if(alta(k).ne.badflag) go to 3
+          if(pmsla(k).ne.badflag) go to 3
            print*,stna(k),' has all missing data...removed from list'
-           do l=k,maxstaa
+    1      do l=k,maxstaa
             ta(l)=ta(l+1) 
             tda(l)=tda(l+1)
             dda(l)=dda(l+1)
@@ -355,7 +351,6 @@ c
          character providera(m)*11, providerb(m)*11, holdprov*11
          character reptypea(m)*6, reptypeb(m)*6, holdrep*6
 c
-         holdnam = '     '
          max=maxstaa
          if(maxstab.gt.max)max=maxstab
          if(maxstaa.eq.0) return
@@ -363,9 +358,11 @@ c
 c first check the master list to find duplicates
 c
          do k=1,maxstab
+         holdnam = '     '
          do l=1,maxstab
             if(k.ne.l.and.stnb(k).eq.stnb(l)) then
                if(latb(k).ne.latb(l).or.lonb(k).ne.lonb(l)) then
+                  print*, k,stnb(k),l,stnb(l)
 c
 c     we've found a duplicate name
 c
@@ -557,10 +554,10 @@ c estimate with +/- groserr added as limits
          endif
         enddo
         sum2=sqrt(sum2/cnt)
-        topg=sum+groserr
-        botg=sum-groserr
+        topg=sum+badthr*sum2
+        botg=sum-badthr*sum2
         if(onoff.eq.0) then
-         print*,'avg,stddev,low limit,high limit ',sum,sum2,bot,top
+         print*,'avg,stddev,low limit,high limit ',sum,sum2,botg,topg
         endif
         do i=1,maxsta
          if(t(i).eq.badflag) go to 1 

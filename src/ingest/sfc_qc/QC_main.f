@@ -239,8 +239,8 @@ c observation and model error assumptions
         moderrpm=1.5
         moderral=1.5
         grosst=20.
-        grosstd=25.
-        grossuv=20.
+        grosstd=35.
+        grossuv=40.
         grosspm=10.
         grossal=10.0
 c  offset for model operator (>> than ob-fg)
@@ -398,14 +398,16 @@ c
      &     solar_ea,sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_cldamt,
      &     store_cldht,m,jstatus)
 c
+           iflag=0
            if(jstatus .ne. 1) then
               print *,
-     &             ' No LSO data for (Hr-2). No Kalman QC for ',filename
-              stop
+     &             ' No LSO data for (Hr-2). '
+              iflag=1
            else
               print *,' Found LSO data (Hr-2) at ', atime
            endif
 c
+           if (iflag.eq.1) go to  234
            maxstab=n_obs_b
            do k=1,maxstab
               stnb(k)(1:5)=stations(k)(1:5)
@@ -417,6 +419,7 @@ c
 c
 c.....  Now get LSO data for 1 cycle ago.
 c
+  234      continue
            call read_surface_data(i4prev1,atime,n_obs_g,n_obs_b,time,
      &  wmoid,stations,providera,wx,reptypea,autostntype,lata,lona,
      &  eleva,ta,tda,rh,dda,ffa,ddg,ffg,alta,pstna,pmsla,delpch,delp,
@@ -431,10 +434,22 @@ c
               stop
            else
               print *,' Found LSO data for (Hr-1) at ', atime
-              
            endif
 c
            maxstaa=n_obs_b
+             if(iflag.eq.1) then ! bset for hr-2 was missing
+              write(6,*) 'Data for Hr-2 was missing so using Hr-1 only'
+              maxstab=maxstaa
+              call replace(ta,tb,m,1,m,1)
+              call replace(tda,tdb,m,1,m,1)
+              call replace(ffa,ffb,m,1,m,1)
+              call replace(dda,ddb,m,1,m,1)
+              call replace(pmsla,pmslb,m,1,m,1)
+              call replace(alta,altb,m,1,m,1)
+              call replace(lata,latb,m,1,m,1)
+              call replace(lona,lonb,m,1,m,1)
+              call replace(eleva,elevb,m,1,m,1)
+             endif
            pct=float(maxstaa)/float(maxstab)
            if(pct.lt.pctmin.or.maxstaa.lt.minobs) then
             print*, 'Frac of obs A/B is ',pct,' min frac is ',pctmin
@@ -446,6 +461,12 @@ c           stop
               stna(k)(1:5)=stations(k)(1:5)
               indexa(k) = k
            enddo !k
+           if(iflag.eq.1) then ! b set was missing so put stna -> stnb
+            do k=1,maxstaa
+              stnb(k)(1:5)=stna(k)(1:5)
+              indexb(k) = indexa(k)
+            enddo !k
+           endif
            print*, maxstaa, 'obs read for cycle '
 c trim data lists for both a and b data for those stations with all 
 c missing data
@@ -607,8 +628,11 @@ c
 
               
         ENDIF
-c read time of either monster or lso and convert hour to a real value, time
+c read time of either monster or lso and convert hour to a integer
+c need to add one since this atime is from an hour ago
         read(atime(12:14),1098) ihr
+        ihr=ihr+1
+        if(ihr.eq.24)ihr=0
         print*,'GMT hour is ',ihr 
  1098   format(i3)
         if(ihr.eq.0) ihr=24
