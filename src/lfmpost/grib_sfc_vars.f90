@@ -1087,7 +1087,7 @@
       print *, 'Gribbing SWDOWN Min/Max = ',minval(fld),maxval(fld)
       itype = 0
       param =  111
-      leveltype = 8
+      leveltype = 1
       level1 = 0
       level2 = 0
       timerange = 0
@@ -1113,7 +1113,7 @@
       print *, 'Gribbing LWDOWN Min/Max = ',minval(fld),maxval(fld)
       itype = 0
       param =  112
-      leveltype = 8
+      leveltype = 1
       level1 = 0
       level2 = 0
       timerange = 0
