@@ -89,6 +89,7 @@ c      ----------       examine data quality and change units       ---------
 100   enddo
 
       do 900 i= 1,inNum
+         call open_ext(11,i4time_sys,'cdw',istatus)
 900      write (11,*) latitude(i), longitude(i), pressure(i), 
      ~                windDir(i), windSpeed(i), a9timeObs(i)
 
