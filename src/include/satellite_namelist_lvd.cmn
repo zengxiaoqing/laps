@@ -1,6 +1,6 @@
       namelist /satellite_lvd_nl/
      +path_to_raw_sat,
-     +l_cell_afwa,l_national,
+     +l_cell_afwa,l_national,iskip_bilin,
      +isats,itypes,ichannels,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,

@@ -6,6 +6,7 @@
       integer i_delta_sat_t_sec
       integer i_msng_sat_flag(maxtype,maxsat)
       integer n_images
+      integer iskip_bilin
 
       character c_sat_id(maxsat)*6
       character c_sat_types(maxtype,maxsat)*3
@@ -63,7 +64,7 @@
       real*4  r_resolution_y_wv(maxtype,maxsat)
 
       common /lvd_namelist_cmn/
-     +l_cell_afwa,l_national,
+     +l_cell_afwa,l_national,iskip_bilin,
      +isats,itypes,ichannels,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
