@@ -4,11 +4,24 @@
                      ------------
 
 The lvd code is written to read a  block of satellite data for
-the laps domain and with dynamic memory. The lvd_sat_ingest.exe
+the laps domain. The software is dynamic and uses i/j start
+end values which are contained in satellite_lvd.nl.
+
+The lvd_sat_ingest.exe
 process requires mapping look-up-tables that are produced by
 genlvdlut.exe. The genlvdlut code is in subdirectory table. The
-satellite data block are defined by the start/end values in the
+satellite data blocks (for each channel)
+are defined by the start/end values in the
 namelist (static/satellite_lvd.nl).
+
+lvd no longer requires genlvdlut.exe to run during installation.
+The lut generation code has been incorporated into lvd_sat_ingest.exe.
+lvd_sat_ingest now checks if the luts exist or whether the existing
+lut is accurate for the data type to be processed.  The software in
+table still ports and is available for diagnostics.  The lut generation
+code is in lib/satellite. The localization script removes any lut's
+in static/lvd which forces lvd_sat_ingest to produce the lut's upon
+the first execution. 
 
 An enhancement in lvd is that if the lut's do not exist then
 they will automatically get generated. This was possible by putting
@@ -42,7 +55,7 @@ if ISATS = 1,0.
                       RAW Satellite Data
                      ------------------
 
-lvd accepts goes08 or goes09 satellite data in several formats: 
+lvd accepts goes08, goes09 and goes10 satellite data in several formats: 
 
     1. netcdf: (remapped fsl-conus [lambert] and raw gvar).
     2. wfo: also netcdf and lambert projection. Data from SBN.
@@ -57,13 +70,3 @@ ICHANNELS namelist variable to direct lvd_sat_ingest to the desired data.
 The 0's and 1's correspond to the ISATS, ITYPES settings so the user need
 not worry about all values depending on which satellites and which types
 the system is designed to read.
-
-
-                         Look-Up-Table
-                         -------------
-
-The luts are now generated internally by lvd. If an lut does not exist,
-then ALL of them are generated.
-If a parameter in the satellite_lvd.nl has changed then the luts are re-
-generated.  This code is still somewhat experimental but is functioning as
-expected as of 3-28-98.

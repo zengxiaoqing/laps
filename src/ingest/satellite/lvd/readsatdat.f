@@ -78,19 +78,19 @@ c
             if(csat_type.eq.'wfo')then
                n=index(c_dir_path(ispec),' ')-1
                c_wfo_fname = fname9_to_wfo_fname13(c_fname_data(i))
-               c1=c_dir_path(ispec)(1:n-12)
-               c2=c_dir_path(ispec)(n-8:n)
-               n1=index(c1,' ')-1
-               n2=index(c2,' ')-1
-               c_filename=c1(1:n1)//c_type(j,i)//c2(1:n2)//c_wfo_fname
-               nn=index(c_filename,' ')
-               write(6,*)'Reading: ',c_filename(1:nn)
+c              c1=c_dir_path(ispec)(1:n-12)
+c              c2=c_dir_path(ispec)(n-8:n)
+c              n1=index(c1,' ')-1
+c              n2=index(c2,' ')-1
+               c_filename=c_dir_path(ispec)(1:n)//c_wfo_fname
+               n=index(c_filename,' ')
+               write(6,*)'Reading: ',c_filename(1:n)
             else
                n=index(c_dir_path(1),' ')-1
                c_filename=c_dir_path(1)(1:n)//c_fname_data(i)//
      &'_'//c_type(j,i)
-               nn=index(c_filename,' ')
-               write(6,*)'Reading: ',c_filename(1:nn)
+               n=index(c_filename,' ')
+               write(6,*)'Reading: ',c_filename(1:n)
             endif
 
             if(ispec.ne.1.and.ispec.ne.3)then    !check for visible and water vapor

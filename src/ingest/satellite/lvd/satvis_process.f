@@ -119,6 +119,7 @@ c
 
        integer istatus_a
        integer istatus_l
+       integer istatus_m
        integer istatus_n
        integer istatus_v
        integer istatus_r
@@ -432,7 +433,11 @@ c
 
        call moment(albedo,imax*jmax,
      &             ave,adev,sdev,var,skew,curt,
-     &             istatus)
+     &             istatus_m)
+       if(istatus_m.ne.0)then
+          print*,'Error returned from subroutine moment'
+          goto 999
+       endif
 
        icnt=0
        do j=1,jmax

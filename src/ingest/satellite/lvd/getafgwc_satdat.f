@@ -11,6 +11,102 @@
      &                        istatus)
 c
 c
+c Note: if isat and jtype are both = 4, this indicates the
+c       processing of GMS satellite data from AFWA. These settings
+c       are defined in /data/static/satellite_lvd.nl.
+c
+       implicit none
+
+       include 'satellite_dims_lvd.inc'
+       include 'satellite_common_lvd.inc'
+
+       integer isat,jtype
+       integer ntm
+       integer nirelem
+       integer nirlines
+       integer nwvelem
+       integer nwvlines
+       integer nviselem
+       integer nvislines
+       integer nchannels
+       integer max_channels
+       integer max_files
+       integer i4time_data
+       integer i4time_current
+       integer istatus
+
+       logical lvis_flag
+
+       real image_11  (nirelem,nirlines)
+       real image_12  (nirelem,nirlines)
+       real image_39  (nirelem,nirlines)
+       real image_67  (nwvelem,nwvlines)
+       real image_vis (nviselem,nvislines)
+
+       character c_type(max_files)*3
+       character chtype(max_channels)*3
+
+       istatus = 0
+
+       if(isat.eq.4 .and. jtype.eq.4)then
+          call getgmsdata_afwa(isat,jtype,
+     &                         max_channels,nchannels,chtype,
+     &                         i4time_current,lvis_flag,
+     &                         nirlines, nirelem,
+     &                         nvislines,nviselem,
+     &                         nwvlines,nwvelem,
+     &                         ntm,max_files,c_type,
+     &                         image_11,image_vis,
+     &                         image_12,           !image_39,
+     &                         image_67,
+     &                         i4time_data,
+     &                         istatus)
+          if(istatus.ne.0)then
+             print*,'Error returned from getgmsdata_afwa'
+             istatus=1
+          endif
+
+       else
+
+          call getgoesdata_afwa(isat,jtype,
+     &                        max_channels,nchannels,chtype,
+     &                        i4time_current,lvis_flag,
+     &                        nirlines, nirelem,
+     &                        nvislines,nviselem,
+     &                        nwvlines,nwvelem,
+     &                        ntm,max_files,c_type,
+     &                        image_11,image_vis,
+     &                        image_12,image_39,image_67,
+     &                        i4time_data,
+     &                        istatus)
+          if(istatus.ne.0)then 
+             print*,'Error returned from getgoesdata_afwa'
+             istatus=1
+          endif
+
+       endif
+
+       return
+       end
+c
+c =====================================================================
+       subroutine getgoesdata_afwa(isat,jtype,
+     &                        max_channels,nchannels,chtype,
+     &                        i4time_current,lvis_flag,
+     &                        nirlines, nirelem,
+     &                        nvislines,nviselem,
+     &                        nwvlines,nwvelem,
+     &                        ntm,max_files,c_type,
+     &                        image_11,image_vis,
+     &                        image_12,image_39,image_67,
+     &                        i4time_data,
+     &                        istatus)
+c
+c Note: if isat and jtype are both = 4, then this indicates that
+c       we are dealing with GMS satellite data from AFWA. Since
+c       /data/static/satellite_lvd.nl will not change (other than
+c       to add another satellite), this will remain a hardwire situtation.
+c
        implicit none
 
        include 'satellite_dims_lvd.inc'
@@ -48,7 +144,6 @@ c
        integer istatus
        integer fstatus
        integer iostatus
-       integer istatus_gfn
 
        real image_11  (nirelem,nirlines) 
        real image_12  (nirelem,nirlines)
@@ -79,6 +174,7 @@ c
        character cfname*11
        character c_afwa_fname*11
        character cfilename*255
+
 c
 c first try for the ir data
 c
@@ -217,7 +313,7 @@ c
                i4time_data=i4time_data_int(1)
             else
                write(6,*)'Data too old'
-               istatus=0
+               istatus=1
             endif
          else
 
@@ -226,7 +322,7 @@ c
 
             if(i4time_diff1.gt.i_delta_sat_t_sec)then
                if(i4time_diff2.gt.i_delta_sat_t_sec)then
-                  istatus=0
+                  istatus=1
                   write(6,*)'N files = ',ntm, 'Data too old'
                else
                   ntm=ntm-1
@@ -245,7 +341,182 @@ c
          i4time_data=i4time_data_int(1)
       endif
 
-      if(ntm.gt.0)istatus = 1
+      istatus = 0  !successful return status
+1000  return
+      end
+c
+c ============================================================
+c
+      subroutine getgmsdata_afwa(isat,jtype,
+     &                        max_channels,nchannels,chtype,
+     &                        i4time_current,lvis_flag,
+     &                        nirlines, nirelem,
+     &                        nvislines,nviselem,
+     &                        nwvlines,nwvelem,
+     &                        ntm,max_files,c_type,
+     &                        image_11,image_vis,
+     &                        image_12,           !image_39,
+     &                        image_67,
+     &                        i4time_data,
+     &                        istatus)
+c
+c
+c
+      implicit none
 
+      include 'satellite_dims_lvd.inc'
+      include 'satellite_common_lvd.inc'
+
+      integer isat,jtype
+      integer i,j,nf,np
+      integer ierr
+      integer ntm
+      integer nirelem
+      integer nirlines
+      integer nwvelem
+      integer nwvlines
+      integer nviselem
+      integer nvislines
+      integer nchannels
+      integer max_channels
+      integer lvdindex,lstatus
+      integer lend,lenf
+      integer nfiles
+      integer npixgms,nlingms
+      integer max_files
+
+      integer i4time_current
+      integer i4time_data
+      integer i4time_latest_lvd
+
+      integer istatus
+      integer fstatus
+      integer iostatus
+
+      real image_11  (nirelem,nirlines)
+      real image_12  (nirelem,nirlines)
+c     real image_39  (nirelem,nirlines)
+      real image_67  (nwvelem,nwvlines)
+      real image_vis (nviselem,nvislines)
+
+      logical   lvis_flag
+
+      character c_type(max_files)*3
+      character chtype(max_channels)*3
+      character cfname_cur*9
+      character c_fname_data(max_channels)*9
+      character cfd*9
+      character cfiletime*9
+      character cjjjhhmm*7
+      character cjjjhr*5
+      character ct*3
+      character cpath*200
+      character c_afwa_fname*100
+      character cdir_lvd*150
+      character cfilenames(max_files)*255
+
+      print*,'This is just a test subroutine currently'
+
+c get latest lvd file in lvd directory
+
+      call get_directory('lvd',cdir_lvd,lend)
+      cdir_lvd=cdir_lvd(1:lend)//c_sat_id(isat)
+      call make_fnam_lp(i4time_current,cfname_cur,istatus)
+      call get_latest_file_time(cdir_lvd,cfiletime,istatus)
+      call i4time_fname_lp(cfiletime,i4time_latest_lvd,istatus)
+      cjjjhr=cfname_cur(3:7)
+
+      ntm=0
+
+      do i=1,nchannels
+
+        if(c_channel_types(i,jtype,isat).eq.'vis'.and.
+     +lvis_flag)goto 90
+
+        cpath=path_to_raw_sat(i,jtype,isat)
+        np=index(cpath,' ')-1
+        ct=c_channel_types(i,jtype,isat)
+        c_afwa_fname=cpath(1:np)//'GM5_'//cjjjhr//'*'//ct//'.unf'
+        np=index(c_afwa_fname,' ')-1
+        call get_file_names(c_afwa_fname,nfiles,cfilenames,
+     +max_files,istatus)
+
+        if(istatus.ne.0)then
+          print*,'Error status returned from get_file_names'
+          print*,'Error getting filename for: ',c_afwa_fname(1:np)
+          goto 1000
+        elseif(nfiles.gt.0)then
+          print*,'found ',nfiles,' matching ',c_afwa_fname(1:np)
+        else
+          print*,'No files found ',cpath(1:np)
+          goto 1000
+        endif
+
+        call lvd_file_specifier(ct,lvdindex,lstatus)
+        if(lstatus.ne.0)goto 1000
+c
+c build filename and check to see if this time has already been
+c processed. Assuming for the time being that nfiles should be = 1.
+c
+
+c       do j=1,nfiles
+
+          call get_directory_length(cfilenames(nfiles),lenf)
+          cjjjhhmm=cfilenames(nfiles)(lenf+5:lenf+11)
+          cfd=cfname_cur(1:2)//cjjjhhmm
+          call i4time_fname_lp(cfd,i4time_data,istatus)
+          if(istatus.ne.0)then
+            print*,'error returned from i4time_fname_lp'
+            return
+          endif
+
+          if(i4time_data .gt. i4time_latest_lvd)then
+c
+            print*,'opening ',cfilenames(nfiles)
+            open(111,file=cfilenames(nfiles),access='sequential',
+     +               form='unformatted',err=995,iostat=ierr)
+
+            read(111)npixgms,nlingms
+
+            goto(21,22,23,24,24)lvdindex
+21          if(npixgms.ne.nviselem.or.nlingms.ne.nvislines)goto 900
+            goto 29
+23          if(npixgms.ne.nwvelem.or.nlingms.ne.nwvlines)goto 900
+            goto 29
+24          if(npixgms.ne.nirelem.or.nlingms.ne.nirlines)goto 900
+
+22          print*,'Error: there shouldnt be 3.9u ir gms data'
+            goto 1000
+
+29          print*,'reading npix/nline gms ',npixgms,nlingms
+c
+            goto(10,1000,13,14,15)lvdindex
+10          read(111,err=88)image_vis
+            goto 19
+13          read(111,err=88)image_67
+            goto 19
+14          read(111,err=88)image_11
+            goto 19
+15          read(111,err=88)image_12
+
+19          close(111)
+            ntm=ntm+1
+            c_type(ntm)=chtype(i)
+            call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
+
+88          print*,'error reading file ',cfilenames(nfiles)(1:nf)
+          endif
+ 
+c       enddo
+
+90    print*,'lvis_flag set = true '
+      enddo
+c
+c might want to put wait for data functionality in here (or near here).
+c
+      goto 1000
+900   print*,'Error: Mismatch between elem/lines for gms data'
+      goto 1000
+995   print*,'Error: reading file ',cfilenames(nfiles)(1:nf)
 1000  return
       end

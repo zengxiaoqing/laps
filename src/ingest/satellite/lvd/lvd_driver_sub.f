@@ -232,8 +232,10 @@ c --------------------------------------------------------------------
       if(istatus.eq.1)then
 
          write(6,*)'LUT not obtained: ',csatid,'/',csattype
-         write(6,*)'Computing lut using genlvdlut_sub'
-         call genlvdlut_sub(nx_l,ny_l,gstatus)
+         write(6,*)'Computing lut using genlvdlut_lvd'
+c        call genlvdlut_sub(nx_l,ny_l,gstatus)
+         call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
+     +gstatus)
          if(gstatus.lt.0)then
             write(6,*)'Error generating LUT - terminating'
             goto 910
@@ -260,7 +262,8 @@ c --------------------------------------------------------------------
          if(l_lut_flag.and.istatus.eq.0)then
             write(6,*)'Found difference in nav parms',
      +' - rebuild the lut'
-            call genlvdlut_sub(nx_l,ny_l,gstatus)
+            call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
+     +gstatus)
             if(gstatus.lt.0)then
                write(6,*)'Error generating LUT - terminating'
                goto 910
@@ -377,7 +380,7 @@ c
      &                        i4time_data(nft),
      &                        istatus)
 
-         if(istatus.ne.1)then
+         if(istatus.ne.0)then
             write(6,*)'Did not get data for ',c_fname_cur
             goto 998
          endif 

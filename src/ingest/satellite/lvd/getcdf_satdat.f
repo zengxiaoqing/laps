@@ -528,7 +528,7 @@ c
 
       elseif(nft.eq.0)then
 
-         write(6,*)'No files found'
+         write(6,*)'No new satellite data files found'
          write(6,*)'Terminating lvd'
          istatus=-1
          goto 16
