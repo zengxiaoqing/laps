@@ -13,7 +13,7 @@ c
       integer i, filesfound, nf_fid, len
       character*180 nl_file, laps_data_root
       integer bgfcnt, max_files, istat
-      parameter (max_files=100)
+      parameter (max_files=500)
       character*200 bgfnames(max_files)
       integer maxdprepmodels, maxtimes
       parameter (maxdprepmodels=10)

@@ -65,19 +65,27 @@ c
       do k=1,nz
          p(1,1,k) = p(k,1,1)
       enddo
-
-
+      
       do k=1,nz
          do j=1,ny
             do i=1,nx
                p(i,j,k)=p(1,1,k)
+            enddo
+         enddo
+      enddo
+
+      
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx
+
 
                it=tp(i,j,k)*100
                it=min(45000,max(15000,it))
                xe=esat(it)
                mrsat=0.00622*xe/(p(i,j,k)-xe) !Assumes units of rh on next line is %
                rh(i,j,k)=rh(i,j,k)*mrsat
-               rh(i,j,k)=rh(i,j,k)/(1.+rh(i,j,k))
+
 
                factor=(1000./p(i,j,k))**kappa
                tp(i,j,k) = tp(i,j,k)*factor
@@ -86,6 +94,9 @@ c
             enddo
          enddo
       enddo
+      print*,(p(2,2,k),k=1,nz)
+
+
       do j=1,ny
          do i=1,nx
             p_sfc(i,j)=p_sfc(i,j)*0.01
