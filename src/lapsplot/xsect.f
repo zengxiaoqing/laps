@@ -2629,7 +2629,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !    1w
 !    1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
 c
-        character atime*24, infile*70
+        character atime*24, infile*255
         character directory*150,ext*31
 
         character*9 c9_string

@@ -565,7 +565,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 
 !       Plot MODEL winds  ***********************************************
-921     write(6,*)
+        write(6,*)
         write(6,*)' MODEL Winds'
 
         call setusv_dum(2hIN,203)

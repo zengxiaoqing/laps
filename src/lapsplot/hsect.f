@@ -75,7 +75,7 @@ cdis
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
-        character infile*70
+        character infile*255
 
         character i4_to_byte
 
@@ -333,7 +333,8 @@ c       include 'satellite_dims_lvd.inc'
      1       ,' [wb,wr,wf] (LGA/LGB, RAM/RSF, LAPS-BKG), '
      1       /'     [co] Cloud Omega,'
      1       ,' [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
-     1       ,' [ne] CIN'
+     1       ,' [ne] CIN' 
+     1       /'     [s] Other Stability Indices'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
@@ -761,10 +762,10 @@ c       include 'satellite_dims_lvd.inc'
 !               Read in LI data
                 var_2d = 'LI'
                 ext = 'lst'
-                call get_laps_2dgrid(i4time_3dw,laps_cycle_time,i4time_n
-     1earest,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,lifted,0,istatus)
+                call get_laps_2dgrid(i4time_3dw,laps_cycle_time
+     1                              ,i4time_nearest,ext,var_2d
+     1                              ,units_2d,comment_2d,NX_L,NY_L
+     1                              ,lifted,0,istatus)
 
                 if(istatus .ne. 1)then
                     write(6,*)' Error reading Lifted Index data'
@@ -823,6 +824,51 @@ c       include 'satellite_dims_lvd.inc'
      1          'LAPS    SFC Lifted Index     (K) ',i_overlay
      1          ,c_display,'nest7grid',lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif(c_type .eq. 's')then ! Read in LST data generically
+            ext = 'lst'
+
+            write(6,825)
+ 825        format(/'  SELECT FIELD (VAR_2D):  '
+     1       /
+     1       /'     LST (stability): [li,pbe,nbe,si,tt,k,lcl,wb0] ? ',$)       
+
+            read(lun,824)var_2d
+ 824        format(a)
+            call upcase(var_2d,var_2d)
+
+            level=0
+            call get_laps_2dgrid(i4time_ref,7200
+     1                          ,i4time_nearest
+     1                          ,ext,var_2d,units_2d,comment_2d
+     1                          ,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Stability Analysis ',var_2d
+                goto1200
+            endif
+
+            call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+
+            call s_len(units_2d,len_units)
+            if(len_units .gt. 0)then
+                c33_label = 'LAPS Stability '
+     1                      //var_2d(1:3)
+     1                      //'  ('//units_2d(1:len_units)//')'
+            else
+                c33_label = 'LAPS Stability Field      '
+     1                      //ext(1:3)//'/'//var_2d(1:3)
+            endif
+
+            scale = 1.
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                   ,scale)       
+
+            call plot_cont(field_2d,scale,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+     1                    ,'nest7grid',lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tw')then
             i4time_temp = i4time_ref / laps_cycle_time * laps_cycle_time
@@ -2094,23 +2140,24 @@ c
                 if(k_mb .eq. -1)then ! Get 3D Grid
                   if(c_type .ne. 'ci')then
                     call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,slwc_3d,istatus)
+     1                                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                            ,units_2d,comment_2d,slwc_3d,istatus)       
                   else
                     call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,cice_3d,istatus)
+     1                                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                            ,units_2d,comment_2d,cice_3d,istatus)
                   endif
 
                 else ! Get 2D horizontal slice from 3D Grid
                   if(c_type .ne. 'ci')then
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
-     1                  ext,var_2d
-     1            ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
+     1                                   ext,var_2d,units_2d,
+     1                                   comment_2d,NX_L,NY_L,slwc_2d,
+     1                                   k_mb,istatus)
                   else
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
-     1                  ext,var_2d
-     1            ,units_2d,comment_2d,NX_L,NY_L,cice_2d,k_mb,istatus)
+     1                                   ext,var_2d,units_2d,comment_2d,
+     1                                   NX_L,NY_L,cice_2d,k_mb,istatus)       
                   endif
 
                 endif
@@ -2127,29 +2174,39 @@ c
 
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
                if(c_type .ne. 'ci')then
-                 if(l_pregen)then
-                   call plot_cont(field_2d,1e-3,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
-                 else
-                   call plot_cont(slwc_3d(1,1,k_level),1e-3,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
-                 endif
+!                if(l_pregen)then
+                   call subcon(slwc_2d,1e-30,field_2d,NX_L,NY_L)
+                   call plot_cont(field_2d,1e-3,clow,chigh,cint
+     1                           ,asc9_tim_t,c33_label,i_overlay
+     1                           ,c_display,'nest7grid',lat,lon,jdot
+     1                           ,NX_L,NY_L,r_missing_data
+     1                           ,laps_cycle_time)
+!                else
+!                  call plot_cont(slwc_3d(1,1,k_level),1e-3
+!    1                           ,clow,chigh,cint,asc9_tim_t
+!    1                           ,c33_label,i_overlay,c_display
+!    1                           ,'nest7grid',lat,lon,jdot
+!    1                           ,NX_L,NY_L,r_missing_data
+!    1                           ,laps_cycle_time)
+!                endif
+
                else ! c_type .ne. 'ci'
-                 if(l_pregen)then
-                   call plot_cont(cice_2d,1e-3,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
-                 else
-                   call plot_cont(cice_3d(1,1,k_level),1e-3,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
-                 endif
+!                if(l_pregen)then
+                   call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
+                   call plot_cont(field_2d,1e-3,clow,chigh,cint
+     1                           ,asc9_tim_t,c33_label,i_overlay
+     1                           ,c_display,'nest7grid',lat,lon,jdot
+     1                           ,NX_L,NY_L,r_missing_data
+     1                           ,laps_cycle_time)
+!                else
+!                  call plot_cont(cice_3d(1,1,k_level),1e-3
+!    1                           ,clow,chigh,cint,asc9_tim_t
+!    1                           ,c33_label,i_overlay,c_display
+!    1                           ,'nest7grid',lat,lon,jdot
+!    1                           ,NX_L,NY_L,r_missing_data
+!    1                           ,laps_cycle_time)
+!                endif
+
                endif ! c_type
 
             else ! Find Maximum value in column
@@ -2190,8 +2247,8 @@ c
 
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,'     MVD     m^-6  ',c33_lab
-     1el)
+                    call mklabel33(k_level
+     1                            ,'     MVD     m^-6  ',c33_label)     
                 else
                     c33_label = 'LAPS Mean Volume Diameter  m^-6  '
                 endif
@@ -2202,8 +2259,8 @@ c
 
             elseif(c_type .eq. 'ic')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,'   Icing Index     ',c33_lab
-     1el)
+                    call mklabel33(k_level,'   Icing Index     '
+     1                            ,c33_label)
                 else
                     c33_label = '        LAPS Icing Index         '
                 endif
@@ -2240,7 +2297,8 @@ c
 
                 if(k_level .gt. 0)then ! Plot MVD on const pressure sfc
                    if(.true.)then
-                       call plot_cont(mvd_2d,0.9999e-6,
+                       call subcon(mvd_2d,1e-30,field_2d,NX_L,NY_L)
+                       call plot_cont(field_2d,0.9999e-6,
      1                   clow,chigh,cint,asc9_tim_t,c33_label,
      1                   i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -4716,7 +4774,7 @@ c             cint = -1.
         character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
 
 c
-        character atime*24, infile*70
+        character atime*24, infile*255
         character directory*150,ext*31
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
