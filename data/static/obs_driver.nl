@@ -18,9 +18,10 @@ c 'path_to_local_data' - Directory for local data
 c
 c 'path_to_buoy data' - Directory for buoy data
 c
-c 'metar_format' - Format of metar data. Valid values are 'FSL' and 'CWB'
+c 'metar_format' - Format of metar data. Valid values are listed as follows:
 c                  'FSL' denotes NetCDF format used by NIMBUS and AWIPS/WFO
 c                  'CWB' is Central Weather Bureau in Taiwan
+c                  'AFWA' is Air Force Weather Agency
 c
 c 'minutes_to_wait_for_metars' - Especially helpful on WFO
 c
