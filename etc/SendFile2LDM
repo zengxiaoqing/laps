@@ -147,8 +147,8 @@ then
     #----------------------------------------------------------------------
     # Send file to LDM local queue
     #----------------------------------------------------------------------
-    # command="fsl_pqinsert -v -f $feedType -k '"$fullKey"' $sourceName"
-    command="$pqinsertpath/fsl_pqinsert -v -f $feedType -k $fullKey $sourceName"
+    command="fsl_pqinsert -v -f $feedType -k '"$fullKey"' $sourceName"
+#    command="$pqinsertpath/fsl_pqinsert -v -f $feedType -k $fullKey $sourceName"
     echo $command | tee -a $logFile
     $command >> $logFile 2>&1
     if [ $? -ne 0 ]
