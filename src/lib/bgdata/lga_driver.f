@@ -46,6 +46,8 @@ c KML: END
 c
       implicit none
       include 'bgdata.inc'
+      real     badflag
+      include 'laps_sfc.inc'
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .        nx_bg  ,ny_bg,               !Background model grid dimensions
@@ -83,6 +85,7 @@ c sfc namelist stuff. for reduced pressure calc
       real    bad_mp,bad_th,bad_the
       real    bad_vis,bad_tb8
       real    thresh_t,thresh_td,thresh_mslp
+      real    rms_wind
 c
 c *** Background model grid data.
 c
@@ -384,9 +387,11 @@ c
       llapsfua=.false.
       if(bgmodel.eq.0)then
          if(cmodel(1:ic).eq.'MODEL_FUA'.or.
-     &      cmodel(1:ic).eq.'LAPS_FUA')then
+     &      cmodel(1:ic).eq.'LAPS_FUA' .or.
+     &      cmodel(1:ic).eq.'LAPS')then
             llapsfua=.true.
-            if(cmodel(1:ic).eq.'LAPS_FUA')then
+            if(cmodel(1:ic).eq.'LAPS_FUA'.or.
+     &         cmodel(1:ic).eq.'LAPS')then
 
                linterp = .false.
 
@@ -1032,7 +1037,8 @@ c
      1                     ,bad_t,bad_td,bad_u,bad_v,bad_p
      1                     ,bad_mp,bad_th,bad_the
      1                     ,bad_vis,bad_tb8
-     1                     ,thresh_t,thresh_td,thresh_mslp)
+     1                     ,thresh_t,thresh_td,thresh_mslp
+     1                     ,sfc_nl_parms,istatus)
 
            allocate (rp_lvl(nx_laps,ny_laps)
      1,rp_tp(nx_laps,ny_laps),rp_sh(nx_laps,ny_laps))
@@ -1118,29 +1124,32 @@ c
 c LAPS_FUA doesn't require interp but we still want to recompute
 c pr_sfc, tp_sfc and sh_sfc using high res terrain
 c
-           call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
+
+           if(cmodel.eq.'LAPS_FUA')then
+              call sfcbkgd_sfc(bgmodel,tp,sh,ht,ht_sfc
      &,td_sfc,tp_sfc,sh_sfc,topo,pr,nx_laps,ny_laps,nz_laps,pr_sfc)
-           call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+              call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
-           print *,' Td check (after call sfcbkgd - LAPS_FUA):'
-           print *,' Td greater than T at ',icnt,' points.'
-           if(icnt .gt. 0) then
-              print*,'Max diff = ',diff_mx,' at ',i_mx,',',j_mx
-              print*,'Min diff = ',diff_mn,' at ',i_mn,',',j_mn
+              print *,' Td check (after call sfcbkgd - LAPS_FUA):'
+              print *,' Td greater than T at ',icnt,' points.'
+              if(icnt .gt. 0) then
+                 print*,'Max diff = ',diff_mx,' at ',i_mx,',',j_mx
+                 print*,'Min diff = ',diff_mn,' at ',i_mn,',',j_mn
 c
 c fix sfc Td to not be greater than T at points determined above
 c
-              where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
-           endif
-
+                 where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
+              endif
 c
 c..... Do the winds
 c
-           call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+              call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
-           call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+              call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
+
+           endif !(cmodel .eq. 'LAPS_FUA')
 
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +                ,prbght, prbguv, prbgsh, prbgww )
@@ -1249,6 +1258,12 @@ c interp 2D fields
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
             endif
+         elseif(cmodel.eq.'LAPS')then
+c            if(i4time_bg_valid(i-1) .ge.i4time_now   .and.
+c    +          i4time_bg_valid(i)   .le.i4time_now  )then
+                print*,'Determine how to time interpolate'
+                print*,'and advance anal for t+1 cycle'
+c            endif
          else
             print*,'Time Interpolation Not Necessary!'
          endif

@@ -166,6 +166,7 @@ c        character gproj*2
 
       if(bgmodel.eq.0)then
         if(cmodel(1:lencm).eq.'LAPS_FUA'.or.
+     +     cmodel(1:lencm).eq.'LAPS'.or.
      +     cmodel(1:lencm).eq.'MODEL_FUA')then
 
            call get_directory_length(fullname,lend)
@@ -197,7 +198,7 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
             enddo
             enddo
 
-         else  ! cmodel = LAPS_FUA: Same domain!
+         elseif(cmodel.eq.'LAPS_FUA')then
 
            call get_grid_dim_xy(nx_l,ny_l,istatus)
 
@@ -380,7 +381,32 @@ c          prbg_sfc=prbg_sfc*100.
               print*,'Error 2D bkgd file (TER): ',directory(1:lend)
               return
            endif
+c
+c ---------------Read LAPS Analyses---------------------
+c
+         elseif(cmodel.eq.'LAPS')then
 
+           call get_laps_3d_analysis_data(i4_initial,nx_bg,ny_bg
+     +,nzbg_ht, htbg,tpbg,uwbg,vwbg,shbg,wwbg,istatus)
+
+           call get_laps_2d(i4_initial,'lsx','PS ',units_2d,comment_2d
+     +,nx_bg,ny_bg,prbg_sfc,istatus)
+           call get_laps_2d(i4_initial,'lsx','U  ',units_2d,comment_2d
+     +,nx_bg,ny_bg,uwbg_sfc,istatus)
+           call get_laps_2d(i4_initial,'lsx','V  ',units_2d,comment_2d
+     +,nx_bg,ny_bg,vwbg_sfc,istatus)
+           call get_laps_2d(i4_initial,'lsx','T  ',units_2d,comment_2d
+     +,nx_bg,ny_bg,tpbg_sfc,istatus)
+           call get_laps_2d(i4_initial,'lsx','TD ',units_2d,comment_2d
+     +,nx_bg,ny_bg,shbg_sfc,istatus)
+           call get_laps_2d(i4_initial,'lsx','MSL',units_2d,comment_2d
+     +,nx_bg,ny_bg,mslpbg,istatus)
+
+           if(istatus.ne.1)then
+              print*,'Error returned: read_laps_analysis'
+              return
+           endif
+           
          endif !MODEL_FUA?!
 
         endif

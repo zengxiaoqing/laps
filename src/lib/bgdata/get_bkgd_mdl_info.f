@@ -184,7 +184,8 @@ c        call s_len(grid_type,leng)
          centrallon=LoV
          Lat1=La2in
 
-       elseif(cmodel(1:nclen).eq.'LAPS_FUA')then
+       elseif(cmodel(1:nclen).eq.'LAPS_FUA'.or.
+     +        cmodel(1:nclen).eq.'LAPS') then
 
          call get_laps_dimensions(nzbg,istatus)
          call get_grid_dim_xy(nxbg,nybg,istatus)

@@ -41,9 +41,14 @@
       integer  i4timeinit(3000)
       integer  valid_time_1,valid_time_2
       integer  i4time_min_diff
+      integer  indx_for_best_init1
+      integer  indx_for_best_init2
       integer  indx_for_best_init
       integer  indx_for_best_fcst
+      integer  laps_cycle_time
       character*2 cwb_model_type
+      character*3 clapsdirs(4)
+      data        clapsdirs/'lsx','lt1','lw3','lq3'/
 
       character(len=256), allocatable :: bg_names(:)
       character(len=256), allocatable :: bgnames_tmp(:)
@@ -59,6 +64,8 @@ C
       print*, '-----------------------------'
       print*, 'get_acceptable_files: 2-27-04'
       print*, '-----------------------------'
+
+      call get_laps_cycle_time(laps_cycle_time,istatus)
 
       if(.not.allocated(bg_names))allocate(bg_names(max_files))
 
@@ -145,13 +152,13 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
          bg_files=nvt
 
-      else
+      elseif(cmodel.ne.'LAPS')then
 
          final_time = i4time_anal+3600*max(0,forecast_length)
          call get_file_times(cfilespec,max_files,names,itimes
      +,bg_files,istatus)
          if(istatus.ne.1)then
-            print*,'error status returned: get_file_names'
+            print*,'error status returned: get_file_times'
      +,' in get_acceptable_files'
             return
          endif
@@ -209,10 +216,34 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
             bg_files = nvaltimes-1
          endif
       
+      else
+         print*,'LAPS analysis selected as background'
+         print*,'Checking lapsprd/lt1 subdirectory'
+         cfilespec=bgpath(1:len)//'/lt1/*'
+         call get_file_times(cfilespec,max_files,names,itimes
+     +,bg_files,istatus)
+         if(istatus.ne.1)then
+            print*,'error status returned: get_file_times'
+     +,' in get_acceptable_files',cfilespec(1:len+6)
+            return
+         endif
+
+         do i=1,bg_files
+            call s_len(names(i),j)
+            call get_directory_length(names(i),lend)
+            bg_names(i)=names(i)(lend+1:lend+9)//'0000'
+         enddo         
+       
       endif
 
 c ok, if we do not want 0-hr fcst files (analysis files) then filter them.
 c ---------------------------------------------------------------------------
+      if(cmodel.eq.'LAPS' .and. (.not.use_analysis))then
+         print*,'Error in namelist variables'
+         print*,'use_analysis must = true when cmodel = LAPS'
+         return
+      endif
+
       ij=0
       if(bg_files .gt.0)then
          if(.not.use_analysis)then
@@ -262,7 +293,7 @@ c -------------------------------------------------------------------
             ifcst=ifcst+1
          else
             if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
-     +cmodel.eq.'MODEL_FUA')then
+     +cmodel.eq.'MODEL_FUA'.or.cmodel.eq.'LAPS')then
                fcst(ibkgd,ifcst)=bg_names(n)(10:11)
             else
                fcst(ibkgd,ifcst)=bg_names(n)(10:13)
@@ -291,11 +322,13 @@ c this section determines only the two fcsts bounding the analysis (i4time_anal)
 c -----------------------------------------------------------------------------------
       n=1
       indx_for_best_init=0
+      indx_for_best_init1=0
+      indx_for_best_init2=0
       indx_for_best_fcst=0
       i4time_min_diff=100000
       do while(n.le.ibkgd)
          if(i4timeinit(n).le.i4time_anal .and.
-     +      i4timeinit(n)+forecast_length*3600 .gt. i4time_anal)then   !let "forecast_length" window on init time qualify
+     +i4timeinit(n)+forecast_length*3600 .gt. i4time_anal)then   !let "forecast_length" window on init time qualify
 
             print*,'Found bkgd init that corresp to anal: ',bkgd(n)
             print*,'Num of fcst = ',ifcst_bkgd(n)
@@ -303,8 +336,10 @@ c ------------------------------------------------------------------------------
 c this separate (near identical section) is due to local model having ffff = hhmm format
 c whereas the second section below is ffff = hhhh.
 
-            if(bgmodel.eq.0.and.
-     +(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA'))then
+            if(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA')then
+
+c    +          (cmodel.eq.'LAPS'     ) )then   !all cmodel types with bgmodel = 0 need this switch.
+
                do jj=2,ifcst_bkgd(n)
                   af=fcst(n,jj-1)(1:2)
                   read(af,'(i2)',err=888) ihour
@@ -327,7 +362,7 @@ c whereas the second section below is ffff = hhhh.
                   endif
                enddo
 
-            else
+            elseif(cmodel.ne.'LAPS')then
 
              do jj=2,ifcst_bkgd(n)
                 af=fcst(n,jj-1)
@@ -348,10 +383,45 @@ c whereas the second section below is ffff = hhhh.
                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
                  print*
-              endif
+                endif
              enddo
-            endif
 
+            else  !must be LAPS
+
+             if(n.gt.1)then
+              valid_time_1=i4timeinit(n)
+              valid_time_2=i4timeinit(n-1)
+              if(valid_time_1.eq.i4time_anal)then
+               indx_for_best_init1=n
+               print*,'Found prev analysis corresp to current need'
+               print*,'Full name 1: ', bkgd(indx_for_best_init1)
+              endif
+              if(valid_time_2.eq.i4time_anal)then
+               indx_for_best_init2=n-1
+               print*,'Found prev analysis corresp to current need'
+               print*,'Full name 2: ', bkgd(indx_for_best_init2)
+              endif
+
+c            endif
+
+              if(indx_for_best_init2.eq.0.and.
+     +         indx_for_best_init1.eq.0)then
+               if(valid_time_1+laps_cycle_time.eq.i4time_anal)then
+                indx_for_best_init2=n
+                indx_for_best_init1=ibkgd+1
+                call i4time_fname_lp(names(i),i4time_fa,istatus)
+                call make_fnam_lp(valid_time_1+laps_cycle_time
+     +,bkgd(indx_for_best_init1),istatus)
+ 
+                print*,'Found analyses corresp to anal+cycle_time'
+                print*,'Full name 1: ', bkgd(indx_for_best_init1)
+                print*,'Full name 2: ', bkgd(indx_for_best_init2)
+               endif
+              endif
+
+             endif
+
+            endif
          endif
          n=n+1
       enddo
@@ -359,22 +429,43 @@ c whereas the second section below is ffff = hhhh.
 c
 c now restore the filename corresponding to the actual original "raw" file name 
 c -----------------------------------------------------------------------------
-      if(indx_for_best_init.ne.0.and.indx_for_best_fcst.ne.0)then
-         accepted_files = 2
-         names(2) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
+      if(cmodel.ne.'LAPS')then
+         if(indx_for_best_init.ne.0.and.indx_for_best_fcst.ne.0)then
+            accepted_files = 2
+            names(2) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
      +,indx_for_best_fcst)
-         names(1) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
+            names(1) = bkgd(indx_for_best_init)//fcst(indx_for_best_init
      +,indx_for_best_fcst+1)
-         print*,'Accepted file 1: ',TRIM(names(1))
-         print*,'Accepted file 2: ',TRIM(names(2))
-      else
-         print*,'!******************************************'
-         print*,'!*** WARNING: Did not find acceptable files'
-         print*,'!*** -------> Returning to main'
-         print*,'!******************************************'
-         accepted_files = 0
-         bg_files = 0
-         return
+            print*,'Accepted file 1: ',TRIM(names(1))
+            print*,'Accepted file 2: ',TRIM(names(2))
+         else
+            print*,'!******************************************'
+            print*,'!*** WARNING: Did not find acceptable files'
+            print*,'!*** -------> Returning to main'
+            print*,'!******************************************'
+            accepted_files = 0
+            bg_files = 0
+            return
+         endif
+
+      else  ! cmodel = LAPS 
+c At t = cycle time or t+1 cycle time we need to use previous analyses to
+c advance fields in lga.
+         if(indx_for_best_init1.ne.0.or.indx_for_best_init2.ne.0)then
+            accepted_files=2
+            names(2)=bkgd(indx_for_best_init2)
+            names(1)=bkgd(indx_for_best_init1)
+            print*,'Accepted file 1: ',TRIM(names(1))
+            print*,'Accepted file 2: ',TRIM(names(2))
+         else
+            print*,'!******************************************'
+            print*,'!*** WARNING: Did not find acceptable files'
+            print*,'!*** -------> Returning to main'
+            print*,'!******************************************'
+            accepted_files = 0
+            bg_files = 0
+            return
+         endif
       endif
 
 c     if(bg_len.gt.0.and.bg_len.le.13)then

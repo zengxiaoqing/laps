@@ -143,20 +143,42 @@ c only need to do some of these once.
           print *,'Error writing interpolated data to LAPS database.'
           return
       endif
-
-      do k=1,nz_laps                 ! u-component wind
-         do j=1,ny_laps
-         do i=1,nx_laps
-            if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.100)
+c
+c if LAPS is background then we'll allow writing missing ww data.
+c --------------------------------------------------------------
+      if(cmodel.eq.'LAPS')then
+         do k=1,nz_laps                 ! w-component wind
+            do j=1,ny_laps
+            do i=1,nx_laps
+             if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.50)
      +              then
-               print*,'Missingflag at ',i,j,k,' in uw'
+               print*,'Missingflag at ',i,j,k,' in ww'
                warncnt=warncnt+1
-            endif
+             endif
+            enddo
+            enddo
+            var(k)='OM '
+            units(k)='pa/s'
          enddo
+
+
+      else
+
+         do k=1,nz_laps                 ! w-component wind
+            do j=1,ny_laps
+            do i=1,nx_laps
+             if(ww(i,j,k) .ge. missingflag .and. warncnt.lt.100)
+     +              then
+               print*,'Missingflag at ',i,j,k,' in ww'
+               warncnt=warncnt+1
+             endif
+            enddo
+            enddo
+            var(k)='OM '
+            units(k)='pa/s'
          enddo
-         var(k)='OM '
-         units(k)='pa/s'
-      enddo
+      endif
+
       print*,'OM'
       call write_laps(bgtime,bgvalid,outdir,ext,
      .                nx_laps,ny_laps,nz_laps,nz_laps,var,
