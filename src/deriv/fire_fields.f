@@ -82,6 +82,7 @@ c**************new routine as adapted at FSL**************************
      1                          ,u_sfc                              ! I
      1                          ,v_sfc                              ! I
      1                          ,p_sfc_pa                           ! I
+     1                          ,r_missing_data                     ! I
      1                          ,fosberg_2d                         ! O
      1                          ,haines_mid_2d                      ! O
      1                          ,haines_hi_2d                       ! O
@@ -132,6 +133,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,u_sfc                              ! I
      1                           ,v_sfc                              ! I
      1                           ,p_sfc_pa                           ! I
+     1                           ,r_missing_data                     ! I
      1                           ,fosberg_2d                         ! O
      1                           ,haines_mid_2d                      ! O
      1                           ,haines_hi_2d                       ! O
@@ -169,8 +171,23 @@ c**************new routine as adapted at FSL**************************
        pres_3d_mb = pres_3d_pa / 100.
        call hainesindex(pres_3d_mb,temp_3d,td_3d,haines_mid_2d,ni,nj,nk       
      1                 ,850.,700.) 
+!      do i = 1,ni
+!      do j = 1,nj
+!          if(p_sfc_pa(i,j) .lt. 85000.)then
+!              haines_mid_2d(i,j) = r_missing_data
+!          endif
+!      enddo ! j
+!      enddo ! i
+
        call hainesindex(pres_3d_mb,temp_3d,td_3d,haines_hi_2d,ni,nj,nk
      1                 ,700.,500.) 
+!      do i = 1,ni
+!      do j = 1,nj
+!          if(p_sfc_pa(i,j) .lt. 70000.)then
+!              haines_hi_2d(i,j) = r_missing_data
+!          endif
+!      enddo ! j
+!      enddo ! i
 
 !      Calculate Fosberg Fireweather Index
        write(6,*)' Calculate Fosberg Fireweather Index'
