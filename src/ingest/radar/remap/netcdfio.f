@@ -147,7 +147,8 @@ c      Determine filename extension
 
            endif
 
-           write(6,*)' Output filespec = ',c_filespec
+           call s_len(c_filespec,lenspec)
+           write(6,*)' Output filespec = ',c_filespec(1:lenspec)
 
 !          Get i4times of output files 
            call get_file_times(c_filespec,max_files,c_fnames
@@ -177,10 +178,19 @@ c      Determine filename extension
                endif
 
            elseif(i_nbr_files_raw .ge. 2)then ! process earliest time
-               write(6,*)' Looking for earliest unprocessed input file'       
-               i4_earliest_window = i4time_sys - laps_cycle_time - 1800
+               i4_earliest_window = i4time_sys - laps_cycle_time - 1800       
+               call make_fnam_lp(i4_earliest_window,a9_time,istatus)
+
+               write(6,*)
+     1           ' Looking for earliest unprocessed input file back to '       
+     1           ,a9_time
 
                do i = i_nbr_files_raw-1,1,-1
+                   if(i .eq. i_nbr_files_raw-1)then ! Write latest raw filetime
+                       call make_fnam_lp(i4times_raw(i),a9_time,istatus)
+                       write(6,*)' Latest raw filetime = ',a9_time
+                   endif
+
                    l_output = .false.
                    do j = 1,i_nbr_lapsprd_files
                        if(i4times_raw(i) .eq. i4times_lapsprd(j))then
