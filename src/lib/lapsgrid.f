@@ -987,58 +987,6 @@ c        end
       stop
       end
 c
-      subroutine get_satellite_parameters(path_to_raw_sat_wfo_vis,
-     +              path_to_raw_sat_wfo_i39,
-     +              path_to_raw_sat_wfo_iwv,
-     +              path_to_raw_sat_wfo_i11,
-     +              path_to_raw_sat_wfo_i12,
-     +              path_to_raw_satellite_gvr,
-     +              path_to_raw_satellite_cdf,
-     +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
-     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
-     +       ,max_sat,max_sat_channel, max_images)
-
-      integer len_dir
-      character*150 nest7grid
-      character*200 path_to_raw_sat_wfo_vis,
-     +              path_to_raw_sat_wfo_i39,
-     +              path_to_raw_sat_wfo_iwv,
-     +              path_to_raw_sat_wfo_i11,
-     +              path_to_raw_sat_wfo_i12,
-     +              path_to_raw_satellite_gvr,
-     +              path_to_raw_satellite_cdf,
-     +              path_to_sat_sounding
-
-      integer i_delta_sat_t_sec,r_msng_sat_flag_cdf
-     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
-     +       ,max_sat,max_sat_channel, max_images
-      namelist /satellite_nl/ path_to_raw_sat_wfo_vis,
-     +                        path_to_raw_sat_wfo_i39,
-     +                        path_to_raw_sat_wfo_iwv,
-     +                        path_to_raw_sat_wfo_i11,
-     +                        path_to_raw_sat_wfo_i12,
-     +                        path_to_raw_satellite_gvr,
-     +                        path_to_raw_satellite_cdf,
-     +                        path_to_sat_sounding,
-     +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
-     +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
-     +       ,max_sat,max_sat_channel, max_images
-
-      call get_directory('nest7grid',nest7grid,len_dir)
-
-      nest7grid = nest7grid(1:len_dir)//'/satellite.nl'
-
-      open(1,file=nest7grid,status='old',err=900)
-      read(1,satellite_nl,err=901)
-      close(1)
-      return
- 900  print*,'error opening file ',nest7grid
-      stop
- 901  print*,'error reading satellite_nl in ',nest7grid
-      write(*,satellite_nl)
-      stop 
-      end 
-
       subroutine get_sat_sounder_info(n_sndr,c_sndr_id,
      +n_sndr_channels,path_to_sat_sounder,n_elems,n_lines,
      +channel_wavelength_u,imsng_sndr_pix,istatus)
