@@ -87,12 +87,19 @@ c.....	Write the station data.
 c
 	do k=1,n_obs_b
 c
+           call filter_string(stations(k))
+           call filter_string(provider(k))
+
 	   write(11,901) stations(k),           !station id
      &                   wmoid(k),              !WMO id number
      &                   provider(k),           !data provider
      &                   (store_1(k,i),i=1,3),  !lat, lon, elev
      &                   nint(store_1(k,4))     !obs time
 c
+          call filter_string(reptype(k))
+          call filter_string(autostntype(k))
+          call filter_string(wx(k))
+
 	  write(11,903)  reptype(k),            !station report type
      &                   autostntype(k),        !station type (manual/auto)
      &                   wx(k)                  !present weather
@@ -135,6 +142,7 @@ c.....	Write the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
+              call filter_string(store_cldamt(k,ii))
   	      write(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
 	    enddo !ii
 	  endif
