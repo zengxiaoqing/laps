@@ -120,6 +120,8 @@ c     what is the new file name length (same for all files)
 
       do i = 1,j                !for all files to be processed
 
+         write (6,*) 'processing data GOES data files ',j
+         write (6,*) 'filename is ',files_to_process(i)
          call process_goes_snd (path_to_data, path_len, 
      1        files_to_process(i),
      1        fname_len, ii,jj,
