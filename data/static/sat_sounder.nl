@@ -1,7 +1,7 @@
  &satellite_sounder_nl
  N_SNDR = 2,
- C_SNDR_ID = 'goes08','goes10',
- PATH_TO_SAT_SOUNDER = '/public/data/sat/fsl-gs/goes8/raw/sounding/scan-area/netcdf/',
+ C_SNDR_ID = 'goes12','goes10',
+ PATH_TO_SAT_SOUNDER = '/public/data/sat/fsl-gs/goes12/raw/sounding/scan-area/netcdf/',
                      '/public/data/sat/fsl-gs/goes10/raw/sounding/scan-area/netcdf/',
  N_SNDR_CHANNELS = 19,
  CHANNEL_WAVELENGTH_U = 00.67,03.74,03.98,04.13,04.45,04.52,04.57,06.51,07.02,
