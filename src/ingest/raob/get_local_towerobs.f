@@ -1,91 +1,52 @@
-cdis   
-cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
-cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-cdis    
-cdis    This software is distributed under the Open Source Definition,
-cdis    which may be found at http://www.opensource.org/osd.html.
-cdis    
-cdis    In particular, redistribution and use in source and binary forms,
-cdis    with or without modification, are permitted provided that the
-cdis    following conditions are met:
-cdis    
-cdis    - Redistributions of source code must retain this notice, this
-cdis    list of conditions and the following disclaimer.
-cdis    
-cdis    - Redistributions in binary form must provide access to this
-cdis    notice, this list of conditions and the following disclaimer, and
-cdis    the underlying source code.
-cdis    
-cdis    - All modifications to this software must be clearly documented,
-cdis    and are solely the responsibility of the agent making the
-cdis    modifications.
-cdis    
-cdis    - If significant modifications or enhancements are made to this
-cdis    software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis    
-cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-cdis   
-cdis
-cdis
-cdis   
-cdis
 c
         subroutine get_local_towerobs(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
-     &                 nn,n_obs_g,n_obs_b,stations,
-     &                 reptype,atype,weather,wmoid,
-     &                 store_1,store_2,store_2ea,
-     &                 store_3,store_3ea,
-!    &                 store_4,store_4ea,
-!    &                 store_5,store_5ea,store_6,store_6ea,
-!    &                 store_7,store_cldht,store_cldamt,
-     &                 provider, laps_cycle_time, jstatus)
+     &                 nobs,stations,
+     &                 reptype,atype,wmoid,
+     &                 laps_cycle_time, istatus)
 
-c
-	include 'netcdf.inc'
-
-        c2f(x) = c_to_f(x)
 c
 c.....  Input variables/arrays
 c
         integer maxobs ! raw data file
-        integer maxsta ! processed stations for LSO file
+        integer maxsta ! processed stations for SND file
+        integer maxlvls ! raw/processed stations for SND file
+
+        parameter (maxlvls=100)
+
         character*(*) path_to_local_data, local_format
 c
 c.....  Local variables/arrays
 c
         real    lat(ni,nj), lon(ni,nj)
-	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
+
+!       Obs arrays (raw files)
+	real*8  rh_time(maxobs), p_time(maxobs)
 	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
-	real*8  ff_time(maxobs)
+	real*8  ff_time(maxobs), timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
-        integer*4  i4time_ob_a(maxobs), before, after
+	character  pro(maxobs)*11
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
+
+        real*4  lvls_m(maxlvls,maxobs)
+
+!       Station arrays (snd file)
+        real*4  stalat(maxsta),stalon(maxsta),staelev(maxsta)
+        real*4  tsta_c(maxsta),tdsta_c(maxsta)
+        real*4  ddsta(maxsta),ffsta(maxsta)
+
+        integer*4  i4time_ob_a(maxobs), before, after
+        integer*4  i4_timeobs(maxobs)
+	character  provider(maxsta)*11
         logical l_dupe(maxobs)
 c
 c.....  Output arrays.
-c
-	real*4  store_1(maxsta,4), 
-     &          store_2(maxsta,3), store_2ea(maxsta,3),
-     &          store_3(maxsta,4), store_3ea(maxsta,2),
-     &          store_4(maxsta,5), store_4ea(maxsta,2),
-     &          store_5(maxsta,4), store_5ea(maxsta,4),
-     &          store_6(maxsta,5), store_6ea(maxsta,2),
-     &          store_7(maxsta,3),
-     &          store_cldht(maxsta,5)
 c
 	integer*4  wmoid(maxsta)
 	integer    rtime
@@ -94,19 +55,17 @@ c
 	character  stname(maxobs)*6, save_stn(maxobs)*6
 	character  timech*9, time*4
 	character  stations(maxsta)*20
-	character  pro(maxobs)*11, provider(maxsta)*11
-	character  wx(maxobs)*25, weather(maxsta)*25
 	character  reptype(maxsta)*6, atype(maxsta)*6
-	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
+	character  stn_type(maxobs)*11
         character*13 filename13, cvt_i4time_wfo_fname13
         character*150 data_file 
 c
 c.....  Start.
 c
 c
-c.....	Set jstatus flag for the local data to bad until we find otherwise.
+c.....	Set istatus flag for the local data to bad until we find otherwise.
 c
-	jstatus = -1
+	istatus = -1
 
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
@@ -128,8 +87,7 @@ c
 c
 c.....	Zero out the counters.
 c
-        n_obs_g = 0	        ! # of local obs in the laps grid
-        n_obs_b = 0	        ! # of local obs in the box
+        nobs = 0	        ! # of local obs in the laps grid
 c
 c.....  Get the data from the NetCDF file.  First, open the file.
 c.....  If not there, return to obs_driver.
@@ -158,141 +116,39 @@ c
             if(len_path .lt. 1)goto590
  	    data_file = path_to_local_data(1:len_path)//filename13
 
-            write(6,*)' mesonet file = ',data_file(1:len_path+13)
-
-	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
-
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *, data_file
-	       go to 590
-	    endif
-c
-c.....  Get the dimension of some of the variables.
-c
-c.....  "recNum"
-c
-	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
-	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
-
-            if(recnum .gt. maxobs-ix+1)then
-                write(6,*)
-     1              ' ERROR: exceeded array limits in get_local_obs'
-                go to 590
-            endif
-
+            write(6,*)' LDAD tower file = ',data_file(1:len_path+13)
 c
 c.....  Call the read routine.
 c
-	    call read_local(nf_fid, recNum, alt(ix),
-     &         pro(ix), td(ix), elev(ix), lats(ix), lons(ix),
-     &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
-     &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
-     &         stn_type(ix), t_time(ix), t(ix), vis(ix),
-     &         dd(ix), dd_time(ix), ddg(ix), ffg(ix), gust_time(ix), 
-     &         ff(ix), ff_time(ix), badflag, istatus)
+	    call read_local_tower(data_file, maxobs, maxlvls,     ! I
+     &         r_missing_data,                                    ! I
+     &         nobs, nlvls, lvls_m(1,ix),                         ! O
+     &         elev(ix), lats(ix), lons(ix),                      ! O
+     &         t(ix), td(ix), dd(ix), ff(ix),                     ! O
+     &         i4_timeobs(ix), stname(ix), wmoid(ix),             ! O
+     &         istatus)                                           ! O
  
 	    if(istatus .ne. 1)then
                 write(6,*)
-     1          '     Warning: bad status return from READ_LOCAL'       
+     1          '     Warning: bad status return from read_local_tower'       
                 n_local_file = 0
 
             else
-                n_local_file = recNum
+                n_local_file = nobs
                 write(6,*)'     n_local_file = ',n_local_file
 
             endif
 
             ix = ix + n_local_file
 
-590     enddo                  ! i4time_file
+590     enddo ! i4time_file
 
         n_local_all = ix - 1
         write(6,*)' n_local_all = ',n_local_all
 c
-c.....  First check the data coming from the NetCDF files.  There can be
-c.....  "FloatInf" (used as fill value) in some of the variables.  These
-c.....  are not handled the same by different operating systems.  For 
-c.....  example, IBM systems make "FloatInf" into "NaN" and store them that
-c.....  way in the file, which messes up other LAPS routines.  This code
-c.....  checks for "FloatInf" and sets the variable to 'badflag'.  If the
-c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
-c.....  we toss the whole ob since we can't be sure where it is.
-c
         max_write = 100
       
 c
-c..................................
-c.....	First QC loop over all the obs.
-c..................................
-c
-	do i=1,n_local_all
-           l_dupe(i) = .false.
-c
-c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
-c........  lat to badflag (-99.9), which causes the bounds check to think that
-c........  the ob is outside the LAPS domain.
-	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
-
-	   i4time_ob_a(i) = nint(timeobs(i)) + 315619200
-	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
-
-           call filter_string(stname(i))
-
-           do k = 1,i-1
-             if(       stname(i) .eq. stname(k) 
-     1                          .AND.
-     1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
-     1                                                           )then
-                 i_diff = abs(i4time_ob_a(i) - i4time_sys)
-                 k_diff = abs(i4time_ob_a(k) - i4time_sys)
-
-                 if(i_diff .ge. k_diff)then
-                     i_reject = i
-                 else
-                     i_reject = k
-                 endif
-
-                 write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)
-     1                     ,i_reject
- 51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
-     1                 ,1x,i6)
-
-                 lats(i_reject) = badflag ! test with this for now
-
-                 l_dupe(i_reject) = .true.
-             endif
-           enddo ! k
-c
-c
-	   if( nanf( rh_time(i)   ) .eq. 1 ) rh_time(i)   = ibadflag
-	   if( nanf( t_time(i)    ) .eq. 1 ) t_time(i)    = ibadflag
-	   if( nanf( p_time(i)    ) .eq. 1 ) p_time(i)    = ibadflag
-	   if( nanf( dd_time(i)   ) .eq. 1 ) dd_time(i)   = ibadflag
-	   if( nanf( ff_time(i)   ) .eq. 1 ) ff_time(i)   = ibadflag
-	   if( nanf( gust_time(i) ) .eq. 1 ) gust_time(i) = ibadflag
-c
-	   if( nanf( vis(i)  ) .eq. 1 ) vis(i)   = badflag
-	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
-	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
-	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
-	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
-	   if( nanf( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
-	   if( nanf( alt(i)  ) .eq. 1 ) alt(i)   = badflag
-c
-	enddo !i
 c
 c..................................
 c.....	Second QC loop over all the obs.
@@ -367,238 +223,25 @@ c
 	   icount = icount + 1
 	   save_stn(icount) = stname(i)  ! only one...save for checking
 c
- 150	   nn = nn + 1
+ 150	   nobs = nobs + 1
 
-           if(nn .gt. maxsta)then
+           if(nobs .gt. maxsta)then
               write(6,*)' ERROR in get_local_obs: increase maxsta '
-     1                 ,nn,maxsta
+     1                 ,nobs,maxsta
               stop
            endif
  
-           n_obs_b = n_obs_b + 1     !station is in the box
 c
 c.....  Check if its in the LAPS grid.
 c
            if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151 !off grid
            if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151 !off grid
-           n_obs_g = n_obs_g + 1  !on grid...count it
+           nobs = nobs + 1  !on grid...count it
  151	   continue
 c
 c.....	Figure out the cloud data.
 c.....     NOTE: Not currently reading cloud data from mesonets.
 c
-           kkk = 0               ! number of cloud layers
-c
-c
-c.....  Convert units for storage.  For those variables with a "change
-c.....  time", check to make sure the variable was observed within the
-c.....  last cycle (and that they're not just carrying an old ob for the 
-c.....  current time).
-c
-c.....  Temperature, dewpoint and RH.
-c
-	  temp_k = t(i) 
-	  if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
-	  if(t_time(i) .ge. 0.) then ! implies that it is not set to ibadflag
-	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
-		temp_k = badflag
-	     endif
-	  endif
-	  if(temp_k .le. badflag) then !t bad?
-	     temp_f = badflag	!then bag it
-	  else
-	     temp_f = ((temp_k - 273.16) * 9./5.) + 32. ! K to F
-	  endif
-c       
-	  dewp_k = td(i)
-	  if(dewp_k.lt.210. .or. dewp_k.gt.320.) dewp_k = badflag
-	  if(dewp_k .le. badflag) then !dp bad?
-	     dewp_f = badflag	       !then bag it
-	  else
-	     dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.	! K to F
-	  endif
-c
-	  rh_p = rh(i) 
-	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
-	  if(rh_time(i) .ge. 0.) then
-	     if( (timeobs(i) - rh_time(i)) .gt. laps_cycle_time) then
-		rh_p = badflag
-	     endif
-	  endif
-c
-c..... Wind speed and direction
-c
-	  dir = dd(i) 
-	  if(dir.lt.0. .or. dir.gt.360.) dir = badflag
-	  spd = ff(i)
-	  if(spd.lt.0 .or. spd.gt.100.) spd = badflag
-	  if(dd_time(i).ge.0. .and. ff_time(i).ge.0.) then
-	     if( ((timeobs(i) - dd_time(i)) .gt. laps_cycle_time) .or.
-     &           ((timeobs(i) - ff_time(i)) .gt. laps_cycle_time) ) then
-		dir = badflag
-		spd = badflag
-	     endif
-	  endif
-	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
-c
-	  dirgust = ddg(i)
-	  if(dirgust.lt.0. .or. dirgust.gt.360.) dirgust = badflag
-	  spdgust = ffg(i)
-	  if(spdgust.lt.0 .or. spdgust.gt.120.) spdgust = badflag
-	  if(gust_time(i) .ne. badflag) then
-	     if( (timeobs(i) - gust_time(i)) .gt. laps_cycle_time) then
-		dirgust = badflag
-		spdgust = badflag
-	     endif
-	  endif
-	  if(spdgust .ne. badflag) spdgust = 1.94254 * spdgust !m/s to kt
-c
-c..... Fill the expected accuracy arrays.  Values are based on information
-c..... in the 'Federal Meteorological Handbook No. 1' for the METARs, 
-c..... Appendix C (http://www.nws.noaa.gov/oso/oso1/oso12/fmh1/fmh1appc.htm)
-c..... Here however, we know that the local data has wide variations in 
-c..... quality, so for now we double the FMH-1 numbers.  Later, we may be
-c..... able to better define these numbers as we gain experience with the
-c..... different stations that the providers use.
-c
-c..... Note also that we convert the units in Appendix C to match what we're 
-c..... using here.
-c
-c..... Temperature (deg F)
-c
-	 fon = 9. / 5.  !ratio when converting C to F
-	 store_2ea(nn,1) = 10.0 * fon        ! start...we don't know what we have
-	 if(temp_f .ne. badflag) then
-	   if(temp_f.ge.c2f(-62.) .and. temp_f.le.c2f(-50.)) then       
-	      store_2ea(nn,1) = 2.2 * fon  ! conv to deg F
-	   elseif(temp_f.gt.c2f(-50.) .and. temp_f.lt.c2f(50.)) then
-	      store_2ea(nn,1) = 1.2 * fon  ! conv to deg F
-	   elseif(temp_f.ge.c2f(50.) .and. temp_f.le.c2f(54.)) then
-	      store_2ea(nn,1) = 2.2 * fon  ! conv to deg F
-	   endif
-	 endif
-c
-c..... Wind direction (deg) and speed (kts)
-c
-	 store_3ea(nn,1) = 15.0    ! deg 
-	 store_3ea(nn,2) = 10.0    ! kt
-	 if(ff(i) .ne. badflag) then
-	    if(ff(i).ge.1.0 .and. ff(i).lt.10.0) then
-	       store_3ea(nn,2) = 2.0          ! kt
-	    elseif(ff(i) .gt. 10.0) then
-	       store_3ea(nn,2) = ff(i) * 0.2  ! 20% of speed (kts)
-	    endif
-c
-	    if(ff(i) .ge. 5.0) then    ! dir check
-	       store_3ea(nn,1) = 10.0   ! deg
-	    endif
-	 endif
-c
-c..... Pressure and altimeter (mb)
-c
-	 store_4ea(nn,1) = 2.00            ! pressure (mb)
-	 store_4ea(nn,2) = 2.00            ! altimeter (mb)
-c
-c..... Visibility (miles).  For automated stations use a guess based 
-c..... on Table C-2 in Appendix C of FMH-1.  For manual stations, use
-c..... a guess based on the range between reportable values (e.g., for
-c..... reported visibility between 0 and 3/8th mile, set accuracy to 
-c..... 1/16th mile).  This isn't ideal, but its a start.
-c
-	 store_5ea(nn,1) = 10.00         ! Start with this (miles)
-	 if(vis(i) .ne. badflag) then
-	    if(vis(i) .lt. 2.0) then
-	       store_5ea(nn,1) = 0.50 ! miles
-	    elseif(vis(i).ge.2.0 .and. vis(i).lt.3.0) then
-	       store_5ea(nn,1) = 1.00 ! miles
-	    elseif(vis(i) .gt. 3.0) then
-	       store_5ea(nn,1) = 2.00 ! miles
-	    endif
-	 endif
-c
-c..... Other stuff.  
-c
-	 store_5ea(nn,2) = 0.0             ! solar radiation 
-	 store_5ea(nn,3) = 0.0             ! soil/water temperature
-	 store_5ea(nn,4) = 0.0             ! soil moisture
-c
-	 store_6ea(nn,1) = 0.0             ! precipitation (in)
-	 store_6ea(nn,2) = 0.0             ! snow cover (in) 
-c
-c
-c..... Output the data to the storage arrays
-c
-	 call s_len(stname(i), len)
-         if(len .ne. 0)then
-             stations(nn)(1:len) = stname(i)(1:len) ! station name
-         else
-             write(6,*)' Warning in get_local_obs: blank station name.'
-     1                ,' Assigning name ',i
-             write(stations(nn),101)i
- 101	     format(i5,15x)
-         endif
-c
-	 call s_len(pro(i), len)
-         if(len .ne. 0) then
-	     provider(nn)(1:len) = pro(i)(1:len)    ! data provider
-         endif
-c
-         call s_len(stn_type(i), len)
-         if(len .ne. 0) then
-            ilen = min(len, 6)
-            atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
-         endif
-c
-         weather(nn)(1:25) = wx(i)(1:25)        ! present weather
-         call filter_string(weather(nn))
-
-	 reptype(nn)(1:6) = 'LDAD  '            ! report type
-	 wmoid(nn) = ibadflag                   ! WMO ID
-c
-	 store_1(nn,1) = lats(i)                ! station latitude
-	 store_1(nn,2) = lons(i)                ! station longitude
-	 store_1(nn,3) = elev(i)                ! station elevation
-	 store_1(nn,4) = rtime                  ! observation time
-c
-	 store_2(nn,1) = temp_f                 ! temperature (deg f)
-	 store_2(nn,2) = dewp_f                 ! dew point (deg f) 
-	 store_2(nn,3) = rh_p                   ! Relative Humidity
-c
-	 store_3(nn,1) = dir                    ! wind dir (deg)
-	 store_3(nn,2) = spd                    ! wind speed (kt)
-	 store_3(nn,3) = dirgust                ! wind gust dir (deg)
-	 store_3(nn,4) = spdgust                ! wind gust speed (kt)
-c
-         store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
-!        store_4(nn,2) = stn_press              ! station pressure (mb)
-         store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-         store_4(nn,4) = badflag                ! 3-h press change character
-         store_4(nn,5) = badflag                ! 3-h press change (mb)
-c
-         store_5(nn,1) = vis(i)                 ! visibility (miles)
-         store_5(nn,2) = badflag                ! solar radiation 
-         store_5(nn,3) = badflag                ! soil/water temperature
-         store_5(nn,4) = badflag                ! soil moisture 
-c
-         store_6(nn,1) = badflag                ! 1-h precipitation
-         store_6(nn,2) = badflag                ! 3-h precipitation
-         store_6(nn,3) = badflag                ! 6-h precipitation
-         store_6(nn,4) = badflag                ! 24-h precipitation
-         store_6(nn,5) = badflag                ! snow cover
-c
-         store_7(nn,1) = float(kkk)             ! number of cloud layers
-         store_7(nn,2) = badflag                ! 24-h max temperature
-         store_7(nn,3) = badflag                ! 24-h min temperature
-c
-c.....	Store cloud info if we have any. 
-c
-	 if(kkk .gt. 0) then
-	   do ii=1,kkk
-	     store_cldht(nn,ii) = badflag  !ht(ii,i)
-	     store_cldamt(nn,ii)(1:1) = ' '
-	     store_cldamt(nn,ii)(2:4) = '   '  !cvr(ii,i)(1:3)
-	   enddo !ii
-	 endif
 c
 c
  125     continue
@@ -607,15 +250,45 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 print *,' Found ',n_obs_b,' local obs in the LAPS box'
-	 print *,' Found ',n_obs_g,' local obs in the LAPS grid'
-         print *,' '
-         jstatus = 1            ! everything's ok...
+c
+c.....  Call the routine to write the SND file.
+c
+
+        print *
+	print *,'  Appending SND file, # of obs (in grid) = ',nobs
+
+        call write_snd(    lun_out                         ! I
+     1                    ,maxsnd,maxlvl,nsnd              ! I
+     1                    ,iwmostanum                      ! I
+     1                    ,stalat,stalon,staelev           ! I
+     1                    ,c5_staid,a9time_ob,c8_obstype   ! I
+     1                    ,nlvl                            ! I
+     1                    ,height_m                        ! I
+     1                    ,pressure_pa                     ! I
+     1                    ,temp_c                          ! I
+     1                    ,dewpoint_c                      ! I
+     1                    ,dir_deg                         ! I
+     1                    ,spd_mps                         ! I
+     1                    ,istatus)                        ! O
+
+
+         istatus = 1            ! everything's ok...
          return
 c
  990     continue               ! no data available
-         jstatus = 0
+         istatus = 0
          print *,' No data available from GET_LOCAL_TOWEROBS'
          return
 c
+         end
+
+         subroutine read_local_tower(data_file, maxobs, maxlvls,  ! I
+     &         r_missing_data,                                    ! I
+     &         nobs, nlvls, lvls_m,                               ! O
+     &         elev, lats, lons,                                  ! O
+     &         t, td, dd, ff,                                     ! O
+     &         i4_timeobs, stname, wmoid,                         ! O
+     &         istatus)                                           ! O
+
+         return
          end
