@@ -736,48 +736,8 @@ c     Restore original color table
 
       endif
 
-      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc' 
-     1                              .or. colortable(1:3) .eq. 'lin')then       
 
-!         Other fractions
-          do frac = 0.25,0.75,0.50
-
-!             Plot Black Line
-              x1   = xlow + frac*xrange 
-              x2   = xlow + frac*xrange 
-              call setusv_dum(2hIN,0)
-
-              y1 = ylow
-              y2 = yhigh
-              call line(x1,y1,x2,y2)
-
-!             Plot Number
-              call setusv_dum(2hIN,7)  ! Yellow
-              rarg = scale_l + (scale_h-scale_l) * frac
-              if(log_scaling)then
-                  rlabel = (10.**(rarg)) / scale
-              else
-                  rlabel = rarg / scale
-              endif
-
-              if(rlabel .lt. 0.999)then
-                  write(ch_frac,3)rlabel
-              elseif( (rlabel .lt. 2.0 .or. rlabel .ne. nint(rlabel))
-     1                         .AND.   colortable .ne. 'haines'    )then       
-                  write(ch_frac,2)rlabel
-              else
-                  write(ch_frac,1)nint(rlabel)
-              endif
-
-              call left_justify(ch_frac)
-              call s_len(ch_frac,len_frac)
-
-              ixm = ixl + (ixh-ixl)*frac
-              CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
-     1                    ,rsize,0 , 0.0)       
-          enddo
-
-      elseif(l_loop)then ! plot additional numbers
+      if(l_loop)then ! plot additional numbers
 
 !         Set interval for writing numbers
           if(l_discrete)then
@@ -849,7 +809,55 @@ c     Restore original color table
 
               endif ! loop_count
           enddo ! rarg
-      endif
+
+      else
+
+!     elseif(colortable .eq. 'spectral' .or. colortable .eq. 'acc' 
+!    1                              .OR. 
+!    1       (colortable .eq. 'hues' .and. .not. l_loop)
+!    1                              .or. colortable(1:3) .eq. 'lin')then       
+
+!         Other fractions
+          do frac = 0.25,0.75,0.50
+
+!             Plot Black Line
+              x1   = xlow + frac*xrange 
+              x2   = xlow + frac*xrange 
+              call setusv_dum(2hIN,0)
+
+              y1 = ylow
+              y2 = yhigh
+              call line(x1,y1,x2,y2)
+
+!             Plot Number
+              call setusv_dum(2hIN,7)  ! Yellow
+              rarg = scale_l + (scale_h-scale_l) * frac
+              if(log_scaling)then
+                  rlabel = (10.**(rarg)) / scale
+              else
+                  rlabel = rarg / scale
+              endif
+
+              if(abs(rlabel) .lt. 0.999)then
+                  write(ch_frac,3)rlabel
+              elseif( (abs(rlabel) .lt. 2.0 
+     1                                   .or. rlabel .ne. nint(rlabel) )       
+     1                         .AND.   colortable .ne. 'haines'    )then       
+                  write(ch_frac,2)rlabel
+              else
+                  write(ch_frac,1)nint(rlabel)
+              endif
+
+              call left_justify(ch_frac)
+              call s_len(ch_frac,len_frac)
+
+              ixm = ixl + (ixh-ixl)*frac
+              CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
+     1                    ,rsize,0 , 0.0)       
+          enddo
+
+
+      endif ! l_loop
 
       return
       end 
