@@ -1,41 +1,3 @@
-cdis   
-cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
-cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-cdis    
-cdis    This software is distributed under the Open Source Definition,
-cdis    which may be found at http://www.opensource.org/osd.html.
-cdis    
-cdis    In particular, redistribution and use in source and binary forms,
-cdis    with or without modification, are permitted provided that the
-cdis    following conditions are met:
-cdis    
-cdis    - Redistributions of source code must retain this notice, this
-cdis    list of conditions and the following disclaimer.
-cdis    
-cdis    - Redistributions in binary form must provide access to this
-cdis    notice, this list of conditions and the following disclaimer, and
-cdis    the underlying source code.
-cdis    
-cdis    - All modifications to this software must be clearly documented,
-cdis    and are solely the responsibility of the agent making the
-cdis    modifications.
-cdis    
-cdis    - If significant modifications or enhancements are made to this
-cdis    software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis    
-cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-cdis   
-cdis
-cdis
-cdis   
-cdis
 
         subroutine get_uv_2d(i4time,k_level,uv_2d,ext,imax,jmax
      1                      ,fcst_hhmm,istatus)
@@ -137,6 +99,62 @@ cdis
             endif
 
         endif
+
+        return
+        end
+
+cdis
+
+        subroutine get_laps_multi_2d(i4time,EXT,var_2d,units_2d,
+     1                  comment_2d,imax,jmax,nf,field_2d,istatus)
+
+cdoc    Used to read in one or more surface grids with inputs of time and ext
+
+        character*9 asc9_tim
+        character*150 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_2d(nf)
+        character*10 units_2d(nf)
+        character*3 var_2d(nf)
+        integer*4 LVL_2d(nf)
+        character*4 LVL_COORD_2d(nf)
+
+        real*4 field_2d(imax,jmax,nf)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_laps_multi_2d: bad istatus, return'
+            return
+        endif
+
+        call get_directory(ext,directory,len_dir)
+
+        call make_fnam_lp(i4time,asc9_tim,istatus)
+
+        write(6,11)directory(1:45),asc9_tim,ext,var_2d
+11      format(' Reading 2d ',a,1x,a,1x,a,1x,a)
+
+        lvl_2d = 0
+        lvl_coord_2d = 'MSL'
+
+        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1  nf,nf,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
+     1                     COMMENT_2D,field_2d,ISTATUS)
+
+!       Check for missing data
+        do if = 1,nf
+        do j = 1,jmax
+        do i = 1,imax
+            if(istatus .eq. 1)then
+                if(field_2d(i,j,if) .eq. r_missing_data)then
+                    write(6,*)' Missing Data Value Detected in 2D Field'
+                    istatus = -1
+                endif
+            endif
+        enddo ! i
+        enddo ! j
+        enddo ! if
 
         return
         end
