@@ -425,10 +425,12 @@ cdis
  
        subroutine get_remap_parms(i_radar,n_radars_remap
      1            ,path_to_radar,laps_radar_ext
-     1            ,c3_radar_subdir,path_to_vrc,istatus)       
+     1            ,c3_radar_subdir,path_to_vrc,istatus) 
+
+       include 'radar_mosaic_dim.inc'      
 
        integer*4 MAX_RADARS_REMAP
-       parameter (MAX_RADARS_REMAP=10)
+       parameter (MAX_RADARS_REMAP=max_radars_mosaic)
 
        character*150 path_to_radar_a(MAX_RADARS_REMAP),path_to_vrc_nl       
        character*(*) path_to_radar,path_to_vrc
