@@ -28,6 +28,7 @@
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Radar ingest
          2.4 ..............  Running LAPS Analyses 
+         2.4.1 ..................  Purging Output Files
          2.5 ..............  Test data case
          2.5.1 ..................  Analysis Only Test
          2.5.2 ..................  Ingest + Analysis Test
@@ -650,6 +651,21 @@
      to the laps data directory structure; this path defaults to 
      '/fullpathto/laps/data' if not provided.
 
+               ----   2.4.1  Purging Output Files ---
+
+     The script '/etc/purger.pl' purges the 'lapsprd' output files and
+     is in turn run by the 'sched.pl'. There are default settings in place for
+     the number of files and age of files to be kept. These can be overridden
+     in three ways. 
+
+     1) The 'sched.pl' command line options '-r -m NN', where 
+        "NN" is the number of files to be kept can control the purger.
+
+     2) Overrides can be read in from '/data/static/purger.dat'. You can see 
+        the 'purger.pl' script to see how that information is used.
+ 
+     3) Simply edit the 'purger.pl' to change it accordingly.
+
                ---  2.5  Test data case  ---
 
      Tar files containing test data are available that contain successive runs
@@ -938,7 +954,7 @@
 
      The default value is 10000m. This is one of the items used in 
    constructing the static file (see above). To date, we have run LAPS with
-   resolutions ranging from 1000m to 36000m.
+   resolutions ranging from 1000m to 48000m.
 
 
                    ----  2.8.4 Terrain Databases ---
