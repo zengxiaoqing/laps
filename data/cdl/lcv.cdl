@@ -37,7 +37,7 @@ netcdf lcv {
             csc:lvl_coord="MSL";
 	    csc:LAPS_units="UNDIM";
                 	        
-        //	Cloud analysis implied snow cover 
+        //	Cloud analysis implied water temp
         float 
             cwt(record,z,y,x) ;
             cwt:navigation_dim = "nav";
@@ -49,6 +49,34 @@ netcdf lcv {
             cwt:LAPS_var = "CWT" ;
             cwt:lvl_coord = "MSL" ;
             cwt:LAPS_units = "UNDIM" ;
+
+        //	 satellite IR channel 4 b-temp: averaged
+	float                                  
+            s8a(record,z,y,x);
+            s8a:navigation_dim = "nav";
+            s8a:record = "valtime, reftime";
+            s8a:_FillValue = 1.e+37f;
+            s8a:long_name="IR channel 4 (11.2u) b-temp: averaged";
+            s8a:units="degrees Kelvin";
+            s8a:valid_range= 0.f, 400.f;
+            s8a:LAPS_var="S8A";
+            s8a:lvl_coord=" ";
+            s8a:LAPS_units="K";
+
+        //	satellite IR channel 2 b-temp: averaged
+	float                                  
+            s3a(record,z,y,x);
+            s3a:navigation_dim = "nav";
+            s3a:record = "valtime, reftime";
+            s3a:_FillValue = 1.e+37f;
+            s3a:long_name="IR channel 2 (3.9u) b-temp: averaged";
+            s3a:units="degrees Kelvin";
+            s3a:valid_range= 0.f, 400.f;
+            s3a:LAPS_var="S3A";
+            s3a:lvl_coord=" ";
+            s3a:LAPS_units="K";
+                	        
+
 
         //	LAPS variables
 
@@ -62,6 +90,8 @@ netcdf lcv {
             lcv_comment(record,z,namelen),
             csc_comment(record,z,namelen),
             cwt_comment(record,z,namelen),
+            s8a_comment(record,z,namelen),
+            s3a_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -78,6 +108,14 @@ netcdf lcv {
         short
             cwt_fcinv(record, z);
             cwt_fcinv:_FillValue= 0s;
+              	
+        short
+            s8a_fcinv(record, z);
+            s8a_fcinv:_FillValue= 0s;
+              	
+        short
+            s3a_fcinv(record, z);
+            s3a_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
