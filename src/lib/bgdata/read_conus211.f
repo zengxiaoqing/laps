@@ -1,7 +1,8 @@
       subroutine get_sbn_model_id(filename,model,ivaltimes,mtbg)
       implicit none
       include 'netcdf.inc'
-      character*(*) model, filename
+      character*(*) model
+      character*(*) filename
       integer ivaltimes(*)
       integer nf_fid, nf_vid, nf_status, ntbg, mtbg
       common /conus211/ ntbg
@@ -91,7 +92,7 @@ C
       nf_status = NF_OPEN(cdfname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN ', cdfname
+        print *,'NF_OPEN rucsbn'
       endif
 
       mtbg=ntbg
@@ -142,20 +143,24 @@ c
 c
       integer nx,ny,nz
       integer nxbg,nybg,nzbg(5),ntbg
+      
 c
       integer rcode,ivaltimes(ntbg)
 c
 c *** Netcdf arrays.
 c
-cc      integer nxbg, nybg, nzbg1,nzbg2, nzbg3, nzbg4, ntbg
-cc      parameter(nxbg=75,nybg=56,nzbg1=35,nzbg2=38,nzbg3=39)
-cc      parameter(nzbg4=40,ntbg=5)
+      integer nzbg1,nzbg2
+      parameter(nzbg1=19,nzbg2=20)
 
-      real*4 htn(nxbg,nybg,nzbg(1)),
-     .       rhn(nxbg,nybg,nzbg(2)),
-     .       tpn(nxbg,nybg,nzbg(3)),
-     .       uwn(nxbg,nybg,nzbg(4)),
-     .       vwn(nxbg,nybg,nzbg(5))
+      
+
+      real*4 htn(nxbg,nybg,nzbg1),
+     .       rhn(nxbg,nybg,nzbg2),
+     .       tpn(nxbg,nybg,nzbg2),
+     .       uwn(nxbg,nybg,nzbg2),
+     .       vwn(nxbg,nybg,nzbg2), 
+     .       mslpn(nxbg,nybg),
+     .       pr_sfcn(nxbg,nybg)
 
       real   pr_sfc(nx,ny),uw_sfc(nx,ny),vw_sfc(nx,ny)
      +     ,sh_sfc(nx,ny),tp_sfc(nx,ny),mslp(nx,ny)
@@ -215,8 +220,8 @@ ccc      if (fname .ne. oldfname) then
          model='ETA'
       endif
 
-      istatus=0
 
+      istatus=0
       fname13=fname9_to_wfo_fname13(fname)
 
       call s_len(path,slen)
@@ -247,6 +252,7 @@ ccc      if (fname .ne. oldfname) then
       enddo
       if(ivaltimes(n)/3600.ne.nn) then
          print*,'ERROR: No record valid at time ',nn,af
+         rcode= NF_CLOSE(ncid)
          goto 999
       endif
        
@@ -261,7 +267,7 @@ c
       start(2)=1
       count(2)=nybg
       start(3)=1
-      count(3)=19
+      count(3)=nzbg1
       start(4)=n
       count(4)=1
 
@@ -277,25 +283,13 @@ c
          start(2)=1
          count(2)=nybg
          start(3)=1
-         count(3)=20
+         count(3)=nzbg2
          start(4)=n
          count(4)=1
 
          call read_netcdf_real(ncid,'rh',nxbg*nybg*count(3),rhn,start
      +     ,count,rcode)
 
-
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=19
-         start(4)=n
-         count(4)=1
-
-         call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
-     +     ,count,rcode)
 
 c
 c ****** Statements to fill tpn.                              
@@ -305,7 +299,7 @@ c
          start(2)=1
          count(2)=nybg
          start(3)=1
-         count(3)=20
+         count(3)=nzbg2
          start(4)=n
          count(4)=1
 
@@ -321,7 +315,7 @@ c
          start(2)=1
          count(2)=nybg
          start(3)=1
-         count(3)=20
+         count(3)=nzbg2
          start(4)=n
          count(4)=1
 
@@ -337,20 +331,46 @@ c
          start(2)=1
          count(2)=nybg
          start(3)=1
-         count(3)=20
+         count(3)=nzbg2
          start(4)=n
          count(4)=1
 
          call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
      +     ,count,rcode)
-
-         
-
-         
+c
+c get sfc pressure field
+c
+         start(1)=1
+         count(1)=nxbg
+         start(2)=1
+         count(2)=nybg
+         start(3)=1
+         count(3)=1
+         start(4)=n
+         count(4)=1
+      
+         call read_netcdf_real(ncid,'p',nxbg*nybg,pr_sfcn,start
+     +     ,count,rcode)
 
 c
-ccc      endif
+c get mslp (this field name differs from one model to the other)
+c
+         if(model.eq.'ETA') then
+            call read_netcdf_real(ncid,'emsp',nxbg*nybg,mslpn
+     +           ,start,count,rcode)
+         else
+            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,mslpn
+     +           ,start,count,rcode)
+         endif
 
+
+
+c
+c *** Close netcdf file.
+c
+      rcode= NF_CLOSE(ncid)
+c
+ccc      endif
 
 c
 c *** Fill ouput arrays.
@@ -389,7 +409,12 @@ c
                jj=j+jp
                kp1=k+1
                if (htn(i,j,k) .gt. -1000. .and. 
-     .              htn(i,j,k) .lt. 99999.) then
+     .              htn(i,j,k) .lt. 99999. .and.
+     .              tpn(i,j,k) .gt. 0. .and.
+     .              tpn(i,j,k) .lt. missingflag .and. 
+     .              rhn(i,j,k) .lt. 200 .and.
+     .              uwn(i,j,k) .lt. 500 .and.
+     .              vwn(i,j,k) .lt. 500) then
                   ht(ii,jj,k)=htn(i,j,k)
                   tp(ii,jj,k)=tpn(i,j,kp1)
                   sh(ii,jj,k)=rhn(i,j,kp1)
@@ -414,56 +439,23 @@ c
         print*, 'No valid data found for',fname, af
       else
 
-c
-c get sfc pressure field
-c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=1
-         start(4)=n
-         count(4)=1
-      
-         call read_netcdf_real(ncid,'p',nxbg*nybg,htn,start
-     +     ,count,rcode)
-
-c
-c get mslp (this field name differs from one model to the other)
-c
-         if(model.eq.'ETA') then
-            call read_netcdf_real(ncid,'emsp',nxbg*nybg,htn(1,1,2)
-     +           ,0,0,rcode)
-         else
-            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,htn(1,1,2)
-     +           ,0,0,rcode)
-         endif
-
-
-
-c
-c *** Close netcdf file.
-c
-         rcode= NF_CLOSE(ncid)
          do j=1,nybg
             do i=1,nxbg
                ii=i+ip
                jj=j+jp
                if(tpn(i,j,1).lt.missingflag) then
-                  pr_sfc(ii,jj)=htn(i,j,1)
-                  mslp(ii,jj)=htn(i,j,2)
-
                   tp_sfc(ii,jj)=tpn(i,j,1)
                   sh_sfc(ii,jj)=rhn(i,j,1)
                   it=int(tp_sfc(ii,jj)*100)
                   it=min(45000,max(15000,it))
                   xe=esat(it)
-                  mrsat=0.00622*xe/(pr_sfc(ii,jj)*0.01-xe)
+                  mrsat=0.00622*xe/(pr_sfcn(i,j)*0.01-xe)
                   sh_sfc(ii,jj)=sh_sfc(ii,jj)*mrsat
                   sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
                   uw_sfc(ii,jj)=uwn(i,j,1)
                   vw_sfc(ii,jj)=vwn(i,j,1)
+                  mslp(ii,jj)=mslpn(i,j)
+                  pr_sfc(ii,jj)=pr_sfcn(i,j)
                   
                   istatus = 1
                endif
