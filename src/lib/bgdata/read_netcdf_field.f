@@ -1,8 +1,8 @@
       subroutine read_netcdf_real(nf_fid,fname,n1,f,istatus)
-      include 'netcdf.inc'
-      include 'bgdata.inc'
       implicit none
 
+      include 'netcdf.inc'
+      include 'bgdata.inc'
       integer n1,i, nf_fid, nf_vid,istatus,nf_status
       real f(n1) , nfmissing
       character*(*) fname

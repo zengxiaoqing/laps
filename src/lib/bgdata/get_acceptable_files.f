@@ -8,13 +8,12 @@
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
      + ,rejected_cnt
-      integer nxbg, nybg, nzbg(5),ntbg, ivaltimes(20)
+      integer valtimes(20)
       character*4   af
       character*100 bg_names(max_files), fullname
       integer nf_status, nf_vid, nf_fid, istatus
       logical use_analysis
-      character*13  fname13,fname9_to_wfo_fname13,file_list(2)
-      character*9   a9,fname,wfo_fname13_to_fname9
+      character*9   fname,wfo_fname13_to_fname9
       integer i4time_now, bgtime, bgtime2,previous_time, next_time, len
       integer bigint, ihour, n, accepted_files, final_time
       parameter(bigint=2000000000)

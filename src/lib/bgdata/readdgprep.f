@@ -5,7 +5,7 @@
 c
       implicit none
 c
-      integer   bgmodel,nx,ny,nz,nxf,nyf,nzf
+      integer   bgmodel,nx,ny,nz
      .         ,i,j,k,l,istatus
 c
       integer  it
@@ -21,7 +21,6 @@ c
 
       real*4 dummy(nx,ny)
 
-      real*4 xp
       real*4 mrsat
       real*4 esat,xe
       real*4 rp_init
