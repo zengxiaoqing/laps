@@ -203,10 +203,12 @@ c
 c.....  Namelist stuff
 c
 	integer use_lso_qc, skip_internal_qc, itheta
+        logical l_require_lso
 	character nl_file*256
 c
 	namelist /surface_analysis/ use_lso_qc,skip_internal_qc,
      1                              itheta, redp_lvl, del, gam, ak,       
+     1                              l_require_lso,
      1                              bad_t,bad_td,bad_u,bad_v,bad_p,
      1                              bad_mp,bad_th,bad_the,
      1                              bad_vis,bad_tb8      
@@ -356,7 +358,9 @@ c
      &       istatus)
 	endif
 c
-        if(istatus .ne. 1 .and. istatus .ne. -1)then
+        if( (istatus .ne. +1 .and. istatus .ne. -1) 
+     1                       .OR.
+     1      (istatus .eq. -1 .and. l_require_lso)     )then
             write(6,*)' bad istatus from read_surface_data..',istatus       
             stop
         endif
