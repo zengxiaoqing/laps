@@ -110,7 +110,7 @@
 
 !     call Archive II initialization routine  
 
-!     radar_init(src_ptr) 
+      call radar_init() 
 
       i_alt=389. 
       i_alt=get_altitude() 
