@@ -384,6 +384,8 @@ c       include 'satellite_dims_lvd.inc'
         c_type_i = c_type
 
         call s_len(c_type,len_type)
+        if(len_type .eq. 0)goto1200
+
         if(c_type(len_type:len_type) .eq. 'i' 
      1                  .and. c_type .ne. 'dii')then
             i_image = 1
@@ -534,7 +536,7 @@ c       include 'satellite_dims_lvd.inc'
                     if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'fsf')then       
                         call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_3dw            ! O
@@ -858,7 +860,7 @@ c       include 'satellite_dims_lvd.inc'
      1                  c_type_i(1:2) .eq. 'fo')then
                     call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_3dw              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_3dw            ! O
@@ -3135,16 +3137,16 @@ c
      1                    ,field_2d,k_mb,istatus)
 
                 elseif(c_prodtype .eq. 'F')then
-                    call get_lapsdata_2d(i4_initial,i4_valid
-     1                                  ,directory,var_2d
-     1                                  ,units_2d,comment_2d
-     1                                  ,NX_L,NY_L,field_2d
-     1                                  ,istatus)
+                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,k_mb,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 field_2d,istatus)
                     if(istatus .ne. 1)then
                         write(6,*)' Could not read forecast field'       
                         goto1200
                     endif
-                    c33_label(11:33) = ' FUA PTy '//var_2d(1:4)
+                    c33_label(11:33) = ' FUA     '//var_2d(1:4)
      1                                 //fcst_hhmm//'      '
 
                 else
@@ -3452,7 +3454,7 @@ c
 
             call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
@@ -3599,7 +3601,7 @@ c                   cint = -1.
 
             call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
@@ -4031,7 +4033,7 @@ c                   cint = -1.
 
             call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
@@ -4131,8 +4133,11 @@ c                   cint = -1.
 
             call s_len2(comment_2d,len_fcst)
             call s_len2(units_2d,len_units)
+            call s_len2(c_model,len_model)
 
-            ist = 39
+            call upcase(c_model,c_model)
+
+            ist = 37
 
             if(ext(1:3) .eq. 'fsf')then
                 len_fcst = min(len_fcst,30)
@@ -4140,10 +4145,14 @@ c                   cint = -1.
                     c_label = comment_2d(1:len_fcst)//' ('
      1                                       //units_2d(1:len_units)
      1                                       //')   '
-                    c_label(ist:ist+8) = fcst_hhmm(1:2)//'Hr Fcst'       
+                    c_label(ist:ist+5) = fcst_hhmm(1:2)//'Hr '
+                    c_label(ist+5:ist+11+len_model) = 
+     1                            c_model(1:len_model)//' Fcst'       
                 else
                     c_label = comment_2d(1:len_fcst)//' '
-                    c_label(ist:ist+8) = fcst_hhmm(1:4)//' Fcst'       
+                    c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
+                    c_label(ist+5:ist+11+len_model) = 
+     1                            c_model(1:len_model)//' Fcst'       
                 endif
             else ! lgb
                 len_fcst = 25 
@@ -6129,7 +6138,7 @@ c             if(cint.eq.0.0)cint=0.1
         rsize = .010 ! .011
 
 !       Field on Bottom Left
-        ix = 130
+        ix = 100 ! 130
         iy = y_1 * 1024
         CALL PCHIQU (cpux(ix),cpux(iy),c_label,rsize,0,-1.0)
 
@@ -6156,7 +6165,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
