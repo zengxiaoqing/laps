@@ -84,6 +84,7 @@ c
       Real*4        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
       Real*4        grid_ra_vel(nx_l,ny_l,nz_l,n_radars)
       Real*4        grid_mosaic_3dref(nx_l,ny_l,nz_l)
+      Real*4        grid_mosaic_2dref(nx_l,ny_l)
       Real*4        lat(nx_l,ny_l)
       Real*4        lon(nx_l,ny_l)
       Real*4        topo(nx_l,ny_l)
@@ -91,6 +92,7 @@ c
       Real*4        rlat_radar(n_radars)
       Real*4        rlon_radar(n_radars)
       Real*4        rheight_radar(n_radars)
+      Real*4        closest_radar_m(nx_l,ny_l)
 
       Real*4        zcoord_of_level
       Integer       lvl_3d(nz_l)
@@ -133,11 +135,11 @@ c
 c
 c vrc definitions
 c
-      character     dir_vrc*50
+!     character     dir_vrc*50
       character     ext_vrc*31
       character     comment_vrc*125
-      character     units_vrc*10
-      character     var_vrc*3
+      character*10  units_vrc(2)
+      character*3   var_vrc(2)
       character     lvl_coord_2d*4
 c
 c vrz definitions
@@ -171,6 +173,11 @@ c Start
 c
       istatus = 0
       l_low_level=.false.
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)go to 1000
+
+      closest_radar_m = r_missing_data ! Initialize as a placeholder
 c
 c get current time. Make the time window.
 c --------------------------------------------------------
@@ -379,7 +386,7 @@ c ----------------------------------------------------------
 
          call get_laps_rdr(nx_l,ny_l,nz_l,z,record,i_ra_count,
      &     c_ra_filename,c_radar_id,rlat_radar,rlon_radar,rheight_radar,
-     &     grid_ra_ref,istatus)
+     &     n_valid_radars,grid_ra_ref,istatus)
 
          if(istatus.ne.1)then
             call s_len(c_ra_filename(i),nc)
@@ -404,10 +411,11 @@ c this subroutine does not yet use imosaic_3d parameter.
      &                         rlat_radar,rlon_radar,rheight_radar,       ! I
      &                         topo,rheight_laps,grid_ra_ref,             ! I
      &                         imosaic_3d,                                ! I
-     &                         grid_mosaic_3dref,istatus)                 ! O
+     &                         grid_mosaic_2dref,grid_mosaic_3dref,       ! I/O
+     &                         closest_radar_m,istatus)                   ! O
          if(istatus .ne. 1)return
 
-      elseif(n_valid_radars .eq. 1)then
+      elseif(.false.)then
 
          print*,'Only 1 radar - no mosaic'
 
@@ -447,29 +455,43 @@ c
          if(cradars(i:i).eq.' ')cradars(i:i)='0'
       enddo
 c
-c vrc output. there should be a corresponding vrz output as well.
+c vrc output... 
 c
       if(imosaic_3d.eq.0.or.imosaic_3d.eq.2)then
          ext_vrc = 'vrc'
-         var_vrc = 'REF'
-         units_vrc = 'DBZ'
+
+         var_vrc(1) = 'REF'
+         var_vrc(2) = 'DIS'
+
+         units_vrc(1) = 'DBZ'
+         units_vrc(2) = 'M'
+
          read(cradars,*)n_radars
          comment_vrc='Radar mosaic. Type = '//c_mosaic_type//' '
      1               //cradars
-         call get_directory('vrc',path,lenp)
-         dir_vrc = path(1:lenp)
 
-         call write_laps_data(i4time_data,
-     &                     dir_vrc,
-     &                     ext_vrc,
-     &                     nx_l,ny_l,1,1,
-     &                     var_vrc,
-     &                     lvl_2d,
-     &                     lvl_coord_2d,
-     &                     units_vrc,
-     &                     comment_vrc,
-     &                     grid_mosaic_3dref(1,1,1),
-     &                     istatus)
+!        call get_directory('vrc',path,lenp)
+!        dir_vrc = path(1:lenp)
+
+!        call write_laps_data(i4time_data,
+!    &                     dir_vrc,
+!    &                     ext_vrc,
+!    &                     nx_l,ny_l,1,1,
+!    &                     var_vrc,
+!    &                     lvl_2d,
+!    &                     lvl_coord_2d,
+!    &                     units_vrc,
+!    &                     comment_vrc,
+!    &                     grid_mosaic_3dref(1,1,1),
+!    &                     istatus)
+
+         call move(grid_mosaic_2dref,grid_mosaic_3dref(1,1,1),NX_L,NY_L)       
+         call move(closest_radar_m,grid_mosaic_3dref(1,1,2),NX_L,NY_L)       
+
+         call put_laps_multi_2d(i4time_data,ext_vrc,var_vrc,units_vrc
+     1                         ,comment_vrc,grid_mosaic_3dref(1,1,1)
+     1                         ,NX_L,NY_L,2,istatus)
+
          if(istatus.eq.1)then
             write(*,*)'VRC file successfully written'
             call cv_i4tim_asc_lp(i4time_data,atime,istatus)
