@@ -134,7 +134,7 @@ c
       end
 c
 c
-      subroutine invert (a,n,np,y)  
+c      subroutine invert (a,n,np,y)  
 c
 c*********************************************************************
 c     Original: John McGinley, NOAA/FSL  Spring 1998
@@ -143,22 +143,22 @@ c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
 c*********************************************************************
 c
-      real a(np,np),y(np,np),d
-      integer np,indx(np),n,j,i
+c      real a(np,np),y(np,np),d
+c      integer np,indx(np),n,j,i
 c
-      do i=1,n
-         do j=1,n
-            y(i,j)=0.
-         enddo !j
-         y(i,i)=1.
-      enddo !i
-      call ludcmp(a,n,np,indx,d)  
-      do j=1,n
-         call lubksb(a,n,np,indx,y(1,j))  
-      enddo !j
-c
-      return
-      end
+c      do i=1,n
+c         do j=1,n
+c            y(i,j)=0.
+c         enddo !j
+c         y(i,i)=1.
+c      enddo !i
+c      call ludcmp(a,n,np,indx,d)  
+c      do j=1,n
+c         call lubksb(a,n,np,indx,y(1,j))  
+c      enddo !j
+cc
+c     return
+c      end
 c
 c
       subroutine avgerr(wr,WIT,B,c,W,dwt,imax,iav,m,it)
