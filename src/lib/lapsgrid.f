@@ -391,6 +391,8 @@ c        include 'lapsparms.cmn'
 c        data iflag_lapsparms_cmn /0/
 c        end
 
+!********* THE PORTION BELOW IS THE SAME IN OLDLAPS AND NEWLAPS **************
+
       subroutine get_standard_longitude(std_lon,istatus)
 
       include 'lapsparms.cmn' ! standard_longitude
@@ -540,6 +542,30 @@ c        end
       endif
 
       c8_project = c8_project_common
+
+      istatus = 1
+      return
+      end
+
+
+      subroutine get_c6_maproj(c6_maproj_ret,istatus)
+
+      include 'lapsparms.cmn' ! c6_maproj
+
+      character*6 c6_maproj_ret
+
+!     This routine accesses the c6_maproj variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      if(iflag_lapsparms_cmn .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not called'
+          istatus = 0
+          return
+!         stop
+      endif
+
+      c6_maproj_ret = c6_maproj
 
       istatus = 1
       return
