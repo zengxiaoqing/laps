@@ -33,11 +33,11 @@ cdis
      1          ,sao_i,sao_j,sao_k,sao_u
      1          ,sao_v,N_SAO,r_missing_data,rms)
 
-        integer sao_i(N_SAO) ! X sao coordinates
-        integer sao_j(N_SAO) ! Y sao coordinates
-        integer sao_k(N_SAO) ! Z sao coordinates
-        real    sao_u(N_SAO) ! u sao component
-        real    sao_v(N_SAO) ! v sao component
+        integer sao_i(N_SAO) ! X Sfc coordinates
+        integer sao_j(N_SAO) ! Y Sfc coordinates
+        integer sao_k(N_SAO) ! Z Sfc coordinates
+        real    sao_u(N_SAO) ! u Sfc component
+        real    sao_v(N_SAO) ! v Sfc component
 
         dimension u(ni,nj,nk),v(ni,nj,nk)
 
@@ -47,7 +47,7 @@ cdis
 
           write(6,2)
 2         format(/'        Comparing LAPS to Saos,   '/
-     1  1x,'   n   i   j   k       sao        ',
+     1  1x,'   n   i   j   k       Sfc        ',
      1          '  LAPS          diff ')
 
           do n = 1,n_sao_obs
@@ -94,7 +94,7 @@ cdis
 
           write(6 ,102)nobs,rmsu,rmsv,rms
           write(15 ,102)nobs,rmsu,rmsv,rms
-102       format(' RMS between LAPS & sao     (n,rmsu,rmsv,rms) = ',
+102       format(' RMS between LAPS & Sfc     (n,rmsu,rmsv,rms) = ',
      1     i4,3f5.1)
 
 
@@ -103,7 +103,7 @@ cdis
         end
 
         subroutine comp_laps_sao(u_3d,v_3d,ni,nj,nk
-     1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sao,r_missing_data
+     1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc,r_missing_data
      1  ,rms)
 
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
@@ -124,11 +124,11 @@ cdis
 
           do il = 1,ni
 
-!           if(grid_laps_wt(il,jl,nk/2) .eq. weight_sao)then ! for speed
+!           if(grid_laps_wt(il,jl,nk/2) .eq. weight_sfc)then ! for speed
 
               do k = 1,nk
 
-                if(grid_laps_wt(il,jl,k) .eq. weight_sao
+                if(grid_laps_wt(il,jl,k) .eq. weight_sfc
      1          .and. u_3d(il,jl,k) .ne. r_missing_data )then
                   nobs = nobs + 1
 

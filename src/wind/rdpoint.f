@@ -51,7 +51,7 @@ cdis
 !******************************************************************************
 !       LAPS Grid Dimensions
 
-        include 'windparms.inc' ! weight_pirep
+        include 'windparms.inc' ! weight_pirep, weight_cdw
 
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
@@ -169,9 +169,12 @@ cdis
      1                      'apparently above top of domain ',elev
                         endif
 
+                        weight_ob = weight_pirep
+
                     else ! cdw
                         rk = zcoord_of_pressure(pres)
                         istatus_rk = 1
+                        weight_ob = weight_cdw
 
                     endif
 
@@ -238,7 +241,7 @@ cdis
 
                         grid_laps_wt
      1  (point_i(n_point_obs),point_j(n_point_obs),point_k(n_point_obs))       
-     1  = weight_pirep
+     1  = weight_ob
 
                     endif ! In vertical bounds
 

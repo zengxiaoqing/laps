@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
         subroutine comp_maps_sao(u_bkg,v_bkg,ni,nj,nk
-     1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sao,r_missing_data
+     1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc,r_missing_data
      1  ,rms)
 
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
@@ -51,11 +51,11 @@ cdis
 
           do il = 1,ni
 
-!           if(grid_laps_wt(il,jl,nk/2) .eq. weight_sao)then ! for speed
+!           if(grid_laps_wt(il,jl,nk/2) .eq. weight_sfc)then ! for speed
 
               do k = 1,nk
 
-                if(grid_laps_wt(il,jl,k) .eq. weight_sao
+                if(grid_laps_wt(il,jl,k) .eq. weight_sfc
      1          .and. u_bkg(il,jl,k) .ne. r_missing_data )then
                   nobs = nobs + 1
 

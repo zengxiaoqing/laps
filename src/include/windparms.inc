@@ -12,11 +12,11 @@
 !       parameter (MAX_PR_LEVELS = 128)
 
 !       Weights in wind analysis
-        real*4 weight_meso
-        parameter (weight_meso = 1.03)
+        real*4 weight_cdw
+        parameter (weight_cdw = 1.03)
 
-        real*4 weight_sao
-        parameter (weight_sao = 1.0)
+        real*4 weight_sfc
+        parameter (weight_sfc = 1.0)
 
         real*4 weight_pirep
         parameter (weight_pirep = 1.02)

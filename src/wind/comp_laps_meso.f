@@ -46,7 +46,7 @@ cdis
           residualv = 0.
 
           write(6,2)
-2         format(/'        Comparing LAPS to Mesonet,'/
+2         format(/'        Comparing LAPS to CDW,'/
      1  1x,'   n   i   j   k       meso        ',
      1          '  LAPS          diff ')
 
@@ -75,7 +75,7 @@ cdis
 101                 format(1x,4i4,3(1x,2f6.1))
 
               else
-                write(6,*)' NO LAPS WINDS AT THIS MESONET LOCATION'
+                write(6,*)' NO LAPS WINDS AT THIS LOCATION'
 
               endif
 
@@ -94,7 +94,7 @@ cdis
 
           write(6 ,102)nobs,rmsu,rmsv,rms
           write(15 ,102)nobs,rmsu,rmsv,rms
-102       format(' RMS between LAPS & Mesonet (n,rmsu,rmsv,rms) = ',
+102       format(' RMS between LAPS & CDW (n,rmsu,rmsv,rms) = ',
      1     i4,3f5.1)
 
 

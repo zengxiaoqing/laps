@@ -14,7 +14,7 @@
      1     ,l_good_multi_doppler_ob,l_analyze
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1     ,n_iter_wind_in
-     1     ,weight_meso,weight_sao,weight_pirep,weight_prof,weight_radar     
+     1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar     
      1     ,istatus)
 
 !     This routine uses the inputted wind data and actually does the analysis
@@ -107,7 +107,7 @@
       logical  l_3d
 
 !     These are the weights of the various data types (filling the 3D array)
-      real*4 weight_meso,weight_sao,weight_pirep,weight_prof
+      real*4 weight_cdw,weight_sfc,weight_pirep,weight_prof
      1      ,weight_radar ! Input
 
       integer*4 istatus         ! (1 is good)                          ! Output
@@ -152,18 +152,18 @@
       write(6,91)
 91    format(1x,' Subtracting the background from the obs'
      1         ,' then spreading the obs vertically.'
-     1         /'       i    j   k  kk   udf   vdf     '
+     1         /'       i    j    k  kk   udf   vdf     '
      1         ,'uob   vob     ubg   vbg vcdf  wt')
 
       n_qc_pirep_bad = 0
-      n_qc_meso_bad = 0
-      n_qc_sao_bad = 0
+      n_qc_cdw_bad = 0
+      n_qc_sfc_bad = 0
       n_qc_prof_bad = 0
       n_qc_total_bad = 0
 
       n_qc_pirep_good = 0
-      n_qc_meso_good = 0
-      n_qc_sao_good = 0
+      n_qc_cdw_good = 0
+      n_qc_sfc_good = 0
       n_qc_prof_good = 0
       n_qc_total_good = 0
 
@@ -200,6 +200,10 @@
      1                       .OR. 
      1         (speed_diff .gt. 10. .and. wt_p(i,j,k) .eq. weight_pirep)
 
+!              Stricter QC check for Cloud Drift Winds
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. wt_p(i,j,k) .eq. weight_cdw)
+
 !              Stricter QC check for profilers
      1                       .OR. 
      1         (speed_diff .gt. 15. .and. wt_p(i,j,k) .eq. weight_prof)
@@ -220,11 +224,11 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-101                   format(' Prp QCed out - ',2i5,i3,3(2x,2f5.0)
+101                   format(' Prp QCed out - ',2i5,i4,1x,3(2x,2f5.0)
      1                                         ,f5.0,f5.2)
 
-                  elseif(wt_p(i,j,k) .eq. weight_meso)then
-                      n_qc_meso_bad = n_qc_meso_bad + 1
+                  elseif(wt_p(i,j,k) .eq. weight_cdw)then
+                      n_qc_cdw_bad = n_qc_cdw_bad + 1
                       write(6,111,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -234,11 +238,11 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-111                  format(' Mso QCed out - ',2i5,i3,3(2x,2f5.0)
+111                  format(' Cdw QCed out - ',2i5,i4,1x,3(2x,2f5.0)
      1                                        ,f5.0,f5.2)
 
-                  elseif(wt_p(i,j,k) .eq. weight_sao)then
-                      n_qc_sao_bad = n_qc_sao_bad + 1
+                  elseif(wt_p(i,j,k) .eq. weight_sfc)then
+                      n_qc_sfc_bad = n_qc_sfc_bad + 1
                       write(6,121,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -248,7 +252,7 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-121                  format(' Sao QCed out - ',2i5,i3,3(2x,2f5.0)
+121                  format(' Sfc QCed out - ',2i5,i4,1x,3(2x,2f5.0)
      1                                        ,f5.0,f5.2)
 
                   elseif(wt_p(i,j,k) .eq. weight_prof)then
@@ -262,7 +266,7 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-131                  format(' Prf QCed out - ',2i5,i3,3(2x,2f5.0)
+131                  format(' Prf QCed out - ',2i5,i4,1x,3(2x,2f5.0)
      1                                        ,f5.0,f5.2)
 
                   endif ! Type of OB to write out
@@ -281,16 +285,16 @@
                       n_good_thistype = n_qc_pirep_good
                   endif
 
-                  if(wt_p(i,j,k) .eq. weight_meso)then
-                      n_qc_meso_good  = n_qc_meso_good + 1
-                      c3_string = 'Mso'
-                      n_good_thistype = n_qc_meso_good
+                  if(wt_p(i,j,k) .eq. weight_cdw)then
+                      n_qc_cdw_good  = n_qc_cdw_good + 1
+                      c3_string = 'Cdw'
+                      n_good_thistype = n_qc_cdw_good
                   endif
 
-                  if(wt_p(i,j,k) .eq. weight_sao)then
-                      n_qc_sao_good   = n_qc_sao_good + 1
-                      c3_string = 'Sao'
-                      n_good_thistype = n_qc_sao_good
+                  if(wt_p(i,j,k) .eq. weight_sfc)then
+                      n_qc_sfc_good   = n_qc_sfc_good + 1
+                      c3_string = 'Sfc'
+                      n_good_thistype = n_qc_sfc_good
                   endif
 
                   if(wt_p(i,j,k) .eq. weight_prof)then
@@ -317,7 +321,7 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-201                   format(1x,a3,2i5,i3,3x,f6.1,f6.1,2(2x,2f6.1)
+201                   format(1x,a3,2i5,i4,4x,f6.1,f6.1,2(2x,2f6.1)
      1                         ,f5.1,f5.2)
 202                   continue
                   endif
@@ -359,20 +363,25 @@
 
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'       
-      write(6,601)n_qc_pirep_good,n_qc_pirep_bad       
- 601  format(' # of PIREPs GOOD/BAD QC = ',2i6)
+      write(6,601)n_qc_pirep_good,n_qc_pirep_bad
+     1           ,pct_rejected(n_qc_pirep_good,n_qc_pirep_bad)       
+ 601  format(' # of PIREPs GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)       
 
-      write(6,602)n_qc_meso_good,n_qc_meso_bad       
- 602  format(' # of MESOs  GOOD/BAD QC = ',2i6)
+      write(6,602)n_qc_cdw_good,n_qc_cdw_bad       
+     1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)       
+ 602  format(' # of CDWs   GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-      write(6,603)n_qc_sao_good,n_qc_sao_bad       
- 603  format(' # of SAOs   GOOD/BAD QC = ',2i6)
+      write(6,603)n_qc_sfc_good,n_qc_sfc_bad       
+     1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)       
+ 603  format(' # of SFC    GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
       write(6,604)n_qc_prof_good,n_qc_prof_bad       
- 604  format(' # of PROFs  GOOD/BAD QC = ',2i6)
+     1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)       
+ 604  format(' # of PROFs  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
       write(6,605)n_qc_total_good,n_qc_total_bad       
- 605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6)
+     1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)       
+ 605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
 !     Initialize fnorm array used in barnes_multivariate
       write(6,*)' Creating fnorm LUT'
@@ -1268,20 +1277,20 @@ c  convert radar obs into u & v by using tangential component of first pass
       real*4 PRESSURE_INTERVAL_L
 
       integer*4 vert_rad_pirep
-      integer*4 vert_rad_sao
-      integer*4 vert_rad_meso
+      integer*4 vert_rad_sfc
+      integer*4 vert_rad_cdw
       integer*4 vert_rad_prof
 
       logical l_3d
 
 !     Vertical radius of influence for each data source (pascals)
-      real*4 r0_vert_pirep,r0_vert_meso,r0_vert_sao,r0_vert_prof
+      real*4 r0_vert_pirep,r0_vert_cdw,r0_vert_sfc,r0_vert_prof
       parameter (r0_vert_pirep = 2500.)
-      parameter (r0_vert_meso  = 2500.)
-      parameter (r0_vert_sao   = 2500.)
+      parameter (r0_vert_cdw  = 2500.)
+      parameter (r0_vert_sfc   = 2500.)
       parameter (r0_vert_prof  = 2500.)
 
-      integer*4 vert_rad_pirep_s,vert_rad_meso_s,vert_rad_sao_s
+      integer*4 vert_rad_pirep_s,vert_rad_cdw_s,vert_rad_sfc_s
      1         ,vert_rad_prof_s
 
       call get_r_missing_data(r_missing_data, istatus)
@@ -1289,14 +1298,14 @@ c  convert radar obs into u & v by using tangential component of first pass
 
       if(l_3d)then
           vert_rad_pirep = 0
-          vert_rad_sao = 0
-          vert_rad_meso = 0
+          vert_rad_sfc = 0
+          vert_rad_cdw = 0
           vert_rad_prof = 0
 
       else
           call get_vert_rads   (vert_rad_pirep,
-     1                          vert_rad_sao,
-     1                          vert_rad_meso,
+     1                          vert_rad_sfc,
+     1                          vert_rad_cdw,
      1                          vert_rad_prof,
      1                          istatus)
           if(istatus .ne. 1)return
@@ -1316,8 +1325,8 @@ c  convert radar obs into u & v by using tangential component of first pass
       iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points 
                                                  ! looped in the vertical
       vert_rad_pirep_s = vert_rad_pirep * iscale
-      vert_rad_meso_s  = vert_rad_meso  * iscale
-      vert_rad_sao_s   = vert_rad_sao   * iscale
+      vert_rad_cdw_s  = vert_rad_cdw  * iscale
+      vert_rad_sfc_s   = vert_rad_sfc   * iscale
       vert_rad_prof_s  = vert_rad_prof  * iscale
 
       do k = 1,kmax
@@ -1334,43 +1343,43 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-101                   format(' Prp',2i5,2i3,2f6.1,f8.5)
+101                   format(' Prp',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
           endif
 
-          if(weights(i,j,k) .eq. weight_meso)then ! Spread this meso vertically
-              do kk = max(1,k-vert_rad_meso_s)
-     1               ,min(kmax,k+vert_rad_meso_s)
+          if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
+              do kk = max(1,k-vert_rad_cdw_s)
+     1               ,min(kmax,k+vert_rad_cdw_s)
                   dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
                   if(weights(i,j,kk) .eq. r_missing_data)then
-                      weights(i,j,kk) = weight_meso
-     1                          * exp(-(dist_pa/r0_vert_meso))
+                      weights(i,j,kk) = weight_cdw
+     1                          * exp(-(dist_pa/r0_vert_cdw))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,201)i,j,k,kk
      1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-201                   format(' Mso',2i5,2i3,2f6.1,f8.5)
+201                   format(' Cdw',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
           endif
 
-          if(weights(i,j,k) .eq. weight_sao)then ! Spread this sao vertically
-              do kk = max(1,k-vert_rad_sao_s)
-     1               ,min(kmax,k+vert_rad_sao_s)
+          if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
+              do kk = max(1,k-vert_rad_sfc_s)
+     1               ,min(kmax,k+vert_rad_sfc_s)
                   dist_pa = abs(k - kk) * PRESSURE_INTERVAL_L
                   if(weights(i,j,kk) .eq. r_missing_data)then
-                      weights(i,j,kk) = weight_sao
-     1                          * exp(-(dist_pa/r0_vert_sao))
+                      weights(i,j,kk) = weight_sfc
+     1                          * exp(-(dist_pa/r0_vert_sfc))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,301)i,j,k,kk
      1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-301                   format(' Sao',2i5,2i3,2f6.1,f8.5)
+301                   format(' Sfc',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
           endif
@@ -1392,7 +1401,7 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-401                   format(' Prf',2i5,2i3,2f6.1,f8.5)
+401                   format(' Prf',2i5,2i4,2f6.1,f8.5)
                   endif
                 enddo ! kk
 

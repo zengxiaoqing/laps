@@ -31,7 +31,7 @@ cdis
 cdis 
         subroutine rdsao(i4time,heights_3d
      1  ,N_SAO,maxstns
-     1  ,lat,lon,sao_i,sao_j,sao_k,sao_u,sao_v,n_sao_obs
+     1  ,lat,lon,sfc_i,sfc_j,sfc_k,sfc_u,sfc_v,n_sfc_obs
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
      1          ,ni,nj,nk,istatus)
 
@@ -43,18 +43,18 @@ cdis
 
 !       LAPS Grid Dimensions
 
-        include 'windparms.inc' ! weight_sao
+        include 'windparms.inc' ! weight_sfc
 
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
 
-!       SAO
+!       SFC
 
-        integer sao_i(N_SAO) ! X sao coordinates
-        integer sao_j(N_SAO) ! Y sao coordinates
-        integer sao_k(N_SAO) ! Z sao coordinates
-        real    sao_u(N_SAO) ! u sao component
-        real    sao_v(N_SAO) ! v sao component
+        integer sfc_i(N_SAO) ! X Sfc coordinates
+        integer sfc_j(N_SAO) ! Y Sfc coordinates
+        integer sfc_k(N_SAO) ! Z Sfc coordinates
+        real    sfc_u(N_SAO) ! u Sfc component
+        real    sfc_v(N_SAO) ! v Sfc component
 
 !       Laps Analysis Grids
         real grid_laps_wt(ni,nj,nk)
@@ -80,7 +80,7 @@ c
         character directory*250,ext*31
 
 !       Declarations for new read_surface routine
-!       New arrays.f reading in the SAO data from the LSO files
+!       New arrays.f reading in the SFC data from the LSO files
         real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
      1          ,store_hgt(maxstns,5)
         real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
@@ -92,7 +92,7 @@ c
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
 
 
-        n_sao_obs = 0
+        n_sfc_obs = 0
 
         ext = 'sag'
         call open_lapsprd_file(32,i4time,ext,istatus)
@@ -100,7 +100,7 @@ c
 
         call make_fnam_lp(i4time,asc_tim_9,istatus)
 
-        write(6,*)' Reading SAOs: Calling read_sfc ',asc_tim_9
+        write(6,*)' Reading SFC Obs: Calling read_sfc ',asc_tim_9
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
 
@@ -129,7 +129,7 @@ c
         endif
 
         if(n_sao_b .gt. N_SAO)then
-            write(6,*)' Too many SAO stations',n_sao_b,N_SAO
+            write(6,*)' Too many SFC stations',n_sao_b,N_SAO
             istatus = 0
             return
         endif
@@ -141,7 +141,7 @@ c
         endif
 
         write(6,12)
-12      format(/'             Mapping Sao Obs'
+12      format(/'             Mapping Sfc Obs'
      1      /'   n Sta   i   j  k     u      v'
      1      ,'       dd     ff      azi    ran ')
 
@@ -151,68 +151,68 @@ c
           if(dd_s(i) .ge. 0.0 .and.
      1       ff_s(i) .ge. 0.0       )then ! Note badflag = -99.9
 
-            n_sao_obs = n_sao_obs + 1
+            n_sfc_obs = n_sfc_obs + 1
 
             ff_s(i) = ff_s(i) * .518
 
             call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon,ni,nj
      1          ,ri,rj,istatus)
 
-            sao_i(n_sao_obs) = nint(ri)
-            sao_j(n_sao_obs) = nint(rj)
+            sfc_i(n_sfc_obs) = nint(ri)
+            sfc_j(n_sfc_obs) = nint(rj)
 
             call disp_to_uv(dd_s(i),ff_s(i)
-     1                     ,sao_u(n_sao_obs),sao_v(n_sao_obs))
+     1                     ,sfc_u(n_sfc_obs),sfc_v(n_sfc_obs))
 
 !           write(6,*)lat_s(i),lon_s(i),dd_s(i),ff_s(i),elev_s(i)
 
-! ***       Remap SAO observation to LAPS observation grid
+! ***       Remap SFC observation to LAPS observation grid
 !           In bounds?
-            if(  sao_i(n_sao_obs) .ge. 1 .and. sao_i(n_sao_obs) .le. ni
-     1     .and. sao_j(n_sao_obs) .ge. 1 .and. sao_j(n_sao_obs) .le. nj 
+            if(  sfc_i(n_sfc_obs) .ge. 1 .and. sfc_i(n_sfc_obs) .le. ni
+     1     .and. sfc_j(n_sfc_obs) .ge. 1 .and. sfc_j(n_sfc_obs) .le. nj 
      1                                                             )then       
 
                 rk = height_to_zcoord2(elev_s(i)
      1              ,heights_3d,ni,nj,nk
-     1              ,sao_i(n_sao_obs),sao_j(n_sao_obs),istatus)
+     1              ,sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),istatus)
                 if(istatus .ne. 1)then
                     write(6,*)
      1              ' Error: sfc ob is outside range of ht field'        
-                    write(6,*)rk,i,elev_s(i),sao_i(n_sao_obs),
-     1                                       sao_j(n_sao_obs),
-     1                        (heights_3d(sao_i(n_sao_obs)
-     1                                   ,sao_j(n_sao_obs),k),k=1,nk)       
+                    write(6,*)rk,i,elev_s(i),sfc_i(n_sfc_obs),
+     1                                       sfc_j(n_sfc_obs),
+     1                        (heights_3d(sfc_i(n_sfc_obs)
+     1                                   ,sfc_j(n_sfc_obs),k),k=1,nk)       
                     return
                 endif
 
-                sao_k(n_sao_obs) = nint(rk)
+                sfc_k(n_sfc_obs) = nint(rk)
 
 !               Fix for stations that are to low for the grid
-                if(sao_k(n_sao_obs) .eq. 0)sao_k(n_sao_obs) = 1
+                if(sfc_k(n_sfc_obs) .eq. 0)sfc_k(n_sfc_obs) = 1
 
                 write(32,*)ri-1.,rj-1.,rk-1.,dd_s(i),ff_s(i)
 
-                k = sao_k(n_sao_obs)
+                k = sfc_k(n_sfc_obs)
 
-                grid_laps_u(sao_i(n_sao_obs),sao_j(n_sao_obs),k)
-     1                          = sao_u(n_sao_obs)
+                grid_laps_u(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
+     1                          = sfc_u(n_sfc_obs)
 
-                grid_laps_v(sao_i(n_sao_obs),sao_j(n_sao_obs),k)
-     1                          = sao_v(n_sao_obs)
+                grid_laps_v(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
+     1                          = sfc_v(n_sfc_obs)
 
-                grid_laps_wt(sao_i(n_sao_obs),sao_j(n_sao_obs),k)
-     1                          = weight_sao
+                grid_laps_wt(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
+     1                          = weight_sfc
 
-                write(6,20)n_sao_obs,stations(i)(1:3),
-     1                     sao_i(n_sao_obs),
-     1                     sao_j(n_sao_obs),
-     1                     sao_k(n_sao_obs),
-     1                     sao_u(n_sao_obs),
-     1                     sao_v(n_sao_obs),
+                write(6,20)n_sfc_obs,stations(i)(1:3),
+     1                     sfc_i(n_sfc_obs),
+     1                     sfc_j(n_sfc_obs),
+     1                     sfc_k(n_sfc_obs),
+     1                     sfc_u(n_sfc_obs),
+     1                     sfc_v(n_sfc_obs),
      1                     dd_s(i),ff_s(i)
 
             else
-                write(6,20)n_sao_obs,stations(i)(1:3)
+                write(6,20)n_sfc_obs,stations(i)(1:3)
 
             endif ! In horizontal bounds
 
