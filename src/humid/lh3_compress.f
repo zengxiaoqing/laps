@@ -29,52 +29,53 @@ cdis
 cdis
 cdis
 cdis
-        subroutine lh3_compress (data,tdata,i4time,lvl,
-     1      ii,jj,kk,istatus)
-
-c       $log: lh3_compress.for,v $
-c revision 1.5  1996/03/05  21:11:36  birk
-c modified i/o interface to enable subhourly cycle
-c
-c revision 1.4  1995/09/13  21:35:52  birk
-c added disclaimer to files
-c
-c revision 1.3  1995/02/14  15:30:31  birk
-c modified the rh variable to rh3 to be compliant with the overall plan give all
-c fields unique variable names.
-c
-c revision 1.2  1994/10/24  17:28:22  birk
-c installed variable for missing data flag
-c
-c revision 1.1  1994/04/25  15:06:16  birk
-c initial revision
-c
-
-c       birkenheuer
-c
-c       5/15/91 put in test for -1e30 (removed counter and flags for less than
-c                       zero condition
+      subroutine lh3_compress (data,tdata,i4time,lvl,t_ref,
+     1     ii,jj,kk,istatus)
+      
+c     $log: lh3_compress.for,v $
+c     revision 1.5  1996/03/05  21:11:36  birk
+c     modified i/o interface to enable subhourly cycle
+c     
+c     revision 1.4  1995/09/13  21:35:52  birk
+c     added disclaimer to files
+c     
+c     revision 1.3  1995/02/14  15:30:31  birk
+c     modified the rh variable to rh3 to be compliant with the overall plan give all
+c     fields unique variable names.
+c     
+c     revision 1.2  1994/10/24  17:28:22  birk
+c     installed variable for missing data flag
+c     
+c     revision 1.1  1994/04/25  15:06:16  birk
+c     initial revision
+c     
+      
+c     birkenheuer
+c     
+c     5/15/91 put in test for -1e30 (removed counter and flags for less than
+c     zero condition
 c     1 /4/93  revised to put into normal write laps output
-c       note ::  the parameter list changed this iteration including the new
-c       variable lvl so the levels will not have to be recomputed.
-
-c       5/14/93: revised to include the improved call to moisture conversion
-c       routines to differentiate between ice and liquid phase in the analysis.
+c     note ::  the parameter list changed this iteration including the new
+c     variable lvl so the levels will not have to be recomputed.
+      
+c     5/14/93: revised to include the improved call to moisture conversion
+c     routines to differentiate between ice and liquid phase in the analysis.
 c
 c     1 0/28/93 put in the additions to enable rh wrt liq.  db
 
 
-        implicit none
+      implicit none
 
-c        include 'lapsparms.for'
-c        include 'parmtrs.inc'
+c     include 'lapsparms.for'
+c     include 'parmtrs.inc'
 
-c parameter variables
+c     parameter variables
 
       integer ii,jj,kk
 
       real data (ii,jj,kk)
       real tdata (ii,jj,kk)
+      real t_ref
       integer i4time
       integer lvl (kk)
       integer istatus
@@ -108,6 +109,7 @@ c internal variables
       data extlt1/'lt1'/
       data ext /'lq3'/
       data rhext /'lh3'/
+
 
       istatus = 0               ! bad
 
@@ -173,7 +175,7 @@ c     sition temperature for ice and liquid vapor reference.
      1                 data(i,j,k)*1000., 0.0)
                   rhdata_l(i,j,k) = 100.* make_rh ( float(lvl(k)),
      1                 tdata(i,j,k)-273.15,
-     1                 data(i,j,k)*1000.,-47.0)
+     1                 data(i,j,k)*1000.,t_ref)
 
                   if (rhdata(i,j,k) .lt. 0.0) then
                           sum = sum + 1

@@ -305,10 +305,12 @@ c
 	integer sfc_mix
         integer mod_4dda_1
         real    mod_4dda_factor
+        real    t_ref
         namelist /moisture_switch/ raob_switch,
      1       raob_lookback, goes_switch, cloud_switch
      1       ,tiros_switch, sounder_switch, sat_skip
-     1       ,gvap_switch, sfc_mix, mod_4dda_1,mod_4dda_factor
+     1       ,gvap_switch, sfc_mix, mod_4dda_1,mod_4dda_factor,
+     1       t_ref
 
         integer len
         character*200 cdomain
@@ -318,6 +320,8 @@ c
         data extlt1/'lt1'/
         data ext /'lq3'/
         data rhext /'lh3'/
+
+c        real eslo,esice
 
 
 
@@ -342,10 +346,23 @@ c                                                               routine
 c *** check to see if we are set up to do this at all
 c     this mode check enables this routine to run without using
 c     sounding data even if it is present.
+c
+c     perform test for rh
+c
+c        do i = 1,350
+c
+c           tempsh = esice(100. - float(i))/eslo(100.-float(i)) 
+
+c           write(6,*) 100.-float(i),tempsh
+
+c       enddo
+
+c       stop
+
 
 
 c
-c set namelist parameters to defaults (no satellite)
+c set namelist parameters to defaults 
         cloud_switch = 1
         raob_switch = 0
         raob_lookback = 0
@@ -357,12 +374,13 @@ c set namelist parameters to defaults (no satellite)
         sfc_mix = 0
         mod_4dda_1 = 0
         mod_4dda_factor = 0.02
+        t_ref = -47.0
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
-     1        status = 'old', err = 24)
+     1       status = 'old', err = 24)
 
-       read(23,moisture_switch,end=24)
+        read(23,moisture_switch,end=24)
 
 
         close (23)
@@ -432,691 +450,693 @@ c set namelist parameters to defaults (no satellite)
          write(6,*) 'Mod 4dda turned off ... nominal state'
       endif
 
+      write(6,*) 'T_ref is set to: ',t_ref
+
       
-c        initialize field to lq3 internal missing data flag.
-c        initialize total pw to laps missing data flag
+c     initialize field to lq3 internal missing data flag.
+c     initialize total pw to laps missing data flag
 
-        do i = 1,ii
-        do j = 1,jj
-        do k = 1,kk
-        data (i,j,k) = -1e+30
-        enddo
-        tpw(i,j) = mdf
-        enddo
-        enddo
+      do i = 1,ii
+         do j = 1,jj
+            do k = 1,kk
+               data (i,j,k) = -1e+30
+            enddo
+            tpw(i,j) = mdf
+         enddo
+      enddo
 
-        print*, 'running NEWLAPS Dynamicized Moisture' 
-
-
-
-        jstatus(1) = 0
-        jstatus(2) = 0   !%loc(rtsys_abort_prod)
-        jstatus(3) = 0
+      write(6,*) 'running NEW T_ref change' 
 
 
 
-        do k = 1,kk
-        lvllm(k) = nint( pressure_of_level(k)  * .01 )
-        enddo
+      jstatus(1) = 0
+      jstatus(2) = 0            !%loc(rtsys_abort_prod)
+      jstatus(3) = 0
 
 
-        do k = 1,kk
-        plevel(k) = float ( lvllm(k)  )
-        mlevel(k) = plevel(k)
-        enddo
 
-c       mark the maps gridpoints
+      do k = 1,kk
+         lvllm(k) = nint( pressure_of_level(k)  * .01 )
+      enddo
 
-        do j = 1,jj,(jj-1)/(jj-1)
-        do  i = 1,ii,(ii-1)/(ii-1)
 
-        mask (i,j) = 1
+      do k = 1,kk
+         plevel(k) = float ( lvllm(k)  )
+         mlevel(k) = plevel(k)
+      enddo
 
-        enddo
-        enddo
+c     mark the maps gridpoints
 
-c       translate the i4time into filename to be used for this run
-c       and store
+      do j = 1,jj,(jj-1)/(jj-1)
+         do  i = 1,ii,(ii-1)/(ii-1)
 
-        call make_fnam_lp (i4time,filename,istatus)
+            mask (i,j) = 1
 
-        savefilename = filename
+         enddo
+      enddo
 
-        write(6,*) 'FILENAME = ',filename
+c     translate the i4time into filename to be used for this run
+c     and store
 
-c       preserve the i4time
+      call make_fnam_lp (i4time,filename,istatus)
 
-        save_i4time = i4time
+      savefilename = filename
 
-c  get the rams first guess field (4dda code)
-c  construct rams background i4time and file name.
+      write(6,*) 'FILENAME = ',filename
+
+c     preserve the i4time
+
+      save_i4time = i4time
+
+c     get the rams first guess field (4dda code)
+c     construct rams background i4time and file name.
 
         
-c        rams_dir = '../lapsprd/ram/'
-        rams_ext = 'ram'
-        call get_directory('ram',rams_dir,len)
+c     rams_dir = '../lapsprd/ram/'
+      rams_ext = 'ram'
+      call get_directory('ram',rams_dir,len)
 
-        do i = 1,kk
-        ramsvar(i) = 'sh'
-        enddo
+      do i = 1,kk
+         ramsvar(i) = 'sh'
+      enddo
 
-c        go to 150  !bypass 4dda
+c     go to 150  !bypass 4dda
 
-        do i = 1, 48 ! try this for 48 hours
+      do i = 1, 48              ! try this for 48 hours
 
 
-c  attempt to get data from the ramsfile
+c     attempt to get data from the ramsfile
 
-        call read_laps ( save_i4time-3600*(i-1), save_i4time,
+         call read_laps ( save_i4time-3600*(i-1), save_i4time,
      1        rams_dir,rams_ext,
      1        ii,jj,kk,kk,
      1        ramsvar(1),lvllm,ramslvlcoord(1), ramsunits(1),
      1        ramscomments(1),data,istatus)
-
-        if (istatus.eq.1) then
-           write(6,*) 'Acquired RAMS data for 4DDA run'
-           call check_nan3(data,ii,jj,kk,istatus)
-           if(istatus.ne.1) then
-              write(6,*) 'NaN detected from rams...abort'
-              return
-           endif
-           go to 151            !skip the lga background, doing 4dda
-        endif
-
-        enddo
-
-        if (istatus.ne.1) go to 150
-
+         
+         if (istatus.eq.1) then
+            write(6,*) 'Acquired RAMS data for 4DDA run'
+            call check_nan3(data,ii,jj,kk,istatus)
+            if(istatus.ne.1) then
+               write(6,*) 'NaN detected from rams...abort'
+               return
+            endif
+            go to 151           !skip the lga background, doing 4dda
+         endif
+         
+      enddo
+      
+      if (istatus.ne.1) go to 150
+      
 c     get the background field for analysis
- 150    continue                ! go to this point if no rams background
-        write(6,*)  '4dda background data not avail... default to lga'
-        write(6,*)  'switching off 4DDA mode if on'
-        mod_4dda_1 = 0  !  switches 4dda "drying" to off
-        write(6,*)  'mod_4dda_1 = ', mod_4dda_1
+ 150  continue                  ! go to this point if no rams background
+      write(6,*)  '4dda background data not avail... default to lga'
+      write(6,*)  'switching off 4DDA mode if on'
+      mod_4dda_1 = 0            !  switches 4dda "drying" to off
+      write(6,*)  'mod_4dda_1 = ', mod_4dda_1
         
 
 c     first the rh data
-
-        desired_field = 'sh '
-
-        call get_maps_df (i4time,desired_field,maps_rh,
-     1                      ii,jj,kk,lct,istatus)
-
-        if(istatus.ne.1) then
-           print*, 'reading maps rh file failed'
-           return
-        endif
-
-
-        call check_nan3 (maps_rh,ii,jj,kk,istatus)
-        if (istatus.ne.1) then
-           write(6,*) 'NaN detected from RUC/MAPS...abort'
-           return
-        endif
-
-
-        i4time = save_i4time
-        filename = savefilename
-
+      
+      desired_field = 'sh '
+      
+      call get_maps_df (i4time,desired_field,maps_rh,
+     1     ii,jj,kk,lct,istatus)
+      
+      if(istatus.ne.1) then
+         print*, 'reading maps rh file failed'
+         return
+      endif
+      
+      
+      call check_nan3 (maps_rh,ii,jj,kk,istatus)
+      if (istatus.ne.1) then
+         write(6,*) 'NaN detected from RUC/MAPS...abort'
+         return
+      endif
+      
+      
+      i4time = save_i4time
+      filename = savefilename
+      
 c     specific humidity  (now contained in maps_rh variable) directly
-
-
-        do k = 1,kk
-           do j = 1,jj
-              do i = 1,ii
-
-                 data (i,j,k) = maps_rh(i,j,k)
-
-              enddo
-           enddo
-
-
-        enddo
-
- 151    continue    ! go here if using rams data as background
-
+      
+      
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
+               
+               data (i,j,k) = maps_rh(i,j,k)
+               
+            enddo
+         enddo
+         
+         
+      enddo
+      
+ 151  continue                  ! go here if using rams data as background
+      
 c     check for negative input and warn
-
-        do k = 1,kk
-           do j = 1,jj
-              do i = 1,ii
-
-                 if (data (i,j,k).lt.0.0) then
-                    write(6,*) 'neg. input found, data,i,j,k'
-                    write(6,*) data(i,j,k),i,j,k
-                    data(i,j,k) = 0.0
-                 endif
-
-              enddo
-           enddo
-
-
-        enddo
-
-
+      
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
+               
+               if (data (i,j,k).lt.0.0) then
+                  write(6,*) 'neg. input found, data,i,j,k'
+                  write(6,*) data(i,j,k),i,j,k
+                  data(i,j,k) = 0.0
+               endif
+               
+            enddo
+         enddo
+         
+         
+      enddo
+      
+      
 c     **** obtain lat lons for domain
-
-
-        grid_fnam_common = 'nest7grid' ! used in get_directory to modify
+      
+      
+      grid_fnam_common = 'nest7grid' ! used in get_directory to modify
                                 ! extension based on the grid domain
-        ext = 'nest7grid'
-
+      ext = 'nest7grid'
+      
 c     get the location of the static grid directory
-        call get_directory(ext,directory,len_dir)
-
-        var_2d='lat'
-        call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1       units_2d,comment_2d,
-     1       lat,rspacing_dum,istatus)
-        if(istatus .ne. 1)then
-           write(6,*)' error reading laps static-lat'
-           return
-        endif
-
-        var_2d='lon'
-        call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1       units_2d,comment_2d,
-     1       lon,rspacing_dum,istatus)
-        if(istatus .ne. 1)then
-           write(6,*)' error reading laps static-lon'
-           return
-        endif
-
-
-
-
+      call get_directory(ext,directory,len_dir)
+      
+      var_2d='lat'
+      call rd_laps_static (directory,ext,ii,jj,1,var_2d,
+     1     units_2d,comment_2d,
+     1     lat,rspacing_dum,istatus)
+      if(istatus .ne. 1)then
+         write(6,*)' error reading laps static-lat'
+         return
+      endif
+      
+      var_2d='lon'
+      call rd_laps_static (directory,ext,ii,jj,1,var_2d,
+     1     units_2d,comment_2d,
+     1     lon,rspacing_dum,istatus)
+      if(istatus .ne. 1)then
+         write(6,*)' error reading laps static-lon'
+         return
+      endif
+      
+      
+      
+      
 c     open file for laps temp data
-        do k = 1,kk
-           varlt1(k) = 't3 '
-        enddo
+      do k = 1,kk
+         varlt1(k) = 't3 '
+      enddo
+      
+      call read_laps (save_i4time,save_i4time,
+     1     dirlt1,
+     1     extlt1,
+     1     ii,jj,kk,kk,
+     1     varlt1,
+     1     lvllm,
+     1     lvl_coordlt1,
+     1     unitslt1,
+     1     commentlt1,
+     1     lt1dat,
+     1     t_istatus)
+      if (t_istatus.ne.1) then
+         print*, 'no lt1 quality control performed...'
+         print*, 'missing 3-d temp data'
+         write(6,*) 'ABORTING MOISTURE RUN...!!!'
+         istatus = 0            ! failure
+         return
+      endif
+      
+      call check_nan3 (lt1dat,ii,jj,kk,istatus)
+      if (istatus.ne.1) then
+         write(6,*) 'NaN detected from lt1...ABORT'
+         return
+      endif
+      
+      
+      
+      
+c     perform initialquality control check for supersaturation after ingest
+      write(6,*)  'perform qc for supersaturation'
+      counter = 0
+      do k = 1,kk
+         write (6,*)
+         write (6,*) 'Level ', k, '   ', plevel(k)
+         write (6,*)
+         
+         do j = jj,1,-1
+            do i = 1,ii
+               tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
+     1              lt1dat(i,j,k)-273.15, 0.0 )/1000.
+               
+               if ( data(i,j,k)/tempsh .ge. 1.0) then
+                  cdomain(i:i) = 'x'
+                  if(data(i,j,k)/tempsh .gt. 1.01) then
+                     cdomain(i:i) = 's'
+                  endif
+                  counter = counter + 1
+                  data(i,j,k) = tempsh
+               else
+                  write (cdomain(i:i),34) int(data(i,j,k)/tempsh*10.)
+ 34               format (i1)
+               endif
+            enddo
+            write(6,*) cdomain(1:ii)
+         enddo
+      enddo
+      
+      if(counter.gt.0) then
+         
+         write(6,*) ' '
+         write(6,*) 'Questionable INPUT DATA DETECTED'
+         write(6,*)  counter,' times.'
+         write(6,*) ' '
+      endif
+      
+      
+c     record total moisture
+      
+      do k = 1,kk
+         do i = 1,ii
+            do j = 1,jj
+               data_in(i,j,k) = data(i,j,k)
+            enddo
+         enddo
+      enddo
+      
+      
+c     ****  execute raob step if switch is on
+      
+      
+      if(raob_switch.eq.1) then
+         write (6,*) 'begin raob insertion'
+         call raob_step (i4time,data,plevel, raob_lookback,
+     1        lat,lon, ii,jj,kk)
+         
+         
+         write(6,*) 'Reporting effects of RAOB insertion'
+         
+         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         
+c     end report moisture change block
+         
+      else
+         write(6,*) 'the raob switch is off... raobs skipped'
+      endif
+      
+c     ****  get laps cloud data. used for cloud, bl, goes
+      
+      call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
+     1     lct,c_istatus)
+      
+      c_istatus = 0
+      if (i4time.eq.i4timep) c_istatus = 1
+      
+      call check_nan3 (cg,ii,jj,kk,istatus)
+      if (istatus.ne.1) then
+         write(6,*) 'NaN detected from Cloud Grid...ABORT'
+         return
+      endif
+      
 
-        call read_laps (save_i4time,save_i4time,
-     1        dirlt1,
-     1        extlt1,
-     1        ii,jj,kk,kk,
-     1        varlt1,
-     1        lvllm,
-     1        lvl_coordlt1,
-     1        unitslt1,
-     1        commentlt1,
-     1        lt1dat,
-     1        t_istatus)
-        if (t_istatus.ne.1) then
-        print*, 'no lt1 quality control performed...'
-        print*, 'missing 3-d temp data'
-        write(6,*) 'ABORTING MOISTURE RUN...!!!'
-        istatus = 0 ! failure
-        return
-        endif
 
-        call check_nan3 (lt1dat,ii,jj,kk,istatus)
-         if (istatus.ne.1) then
-               write(6,*) 'NaN detected from lt1...ABORT'
-               return
+c     ***   insert bl moisture
+
+      do k = 1,kk
+         do i = 1,ii
+            do j = 1,jj
+               data_pre_bound(i,j,k) = data(i,j,k)
+            enddo
+         enddo
+      enddo
+
+
+
+
+      print*, 'calling lsin'
+c     insert boundary layer data
+      call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
+     1     kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
+      
+      write(6,*) 'finished with routine lsin'
+      if( sfc_mix.eq.1)then
+         write(6,*) 'Lsin allowed to modify data field'
+         
+         write(6,*) 'Reporting effects of boundary layer effects'
+         
+         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         
+c     end report moisture change block
+         
+
+      else
+         write(6,*) 'Lsin and sfc mixing step skipped'
+         
+         do k = 1,kk
+            do i = 1,ii
+               do j = 1,jj
+                  data(i,j,k) = data_pre_bound(i,j,k)
+               enddo
+            enddo
+         enddo
+         
+         
+      endif
+
+
+
+c     make call to TIROS moisture insertion
+
+
+      if (tiros_switch .ne. 0) then
+
+         if(c_istatus.eq.1 .and. t_istatus.eq.1) then
+
+        
+            write (6,*) 'begin TIROS insertion step'
+      
+            call tiros (
+     1           data,          ! specific humidity g/g
+     1           lat,lon,       ! lat and longitude (deg)
+     1           i4time,        ! i4time of run (seconds)
+     1           plevel,        ! pressure hpa (laps vert grid)
+     1           cg,            ! cloud array
+     1           lt1dat,        ! lt1 (laps 3d temps)
+     1           14,            ! satellite number
+     1           ii,jj,kk       ! grid dimensions
+     1           )
+
+         else
+            
+            write(6,*)
+            write(6,*)
+            write(6,*)
+            write(6,*) 'tiros moisture insertion step skipped'
+            write(6,*) 'cloud or lt1 data not current'
+            write(6,*) 'cannot assume clear conditions or'
+            write(6,*) 'use alternate lt1.. this will create'
+            write(6,*) 'forward model problems....'
+            write(6,*) 'tiros moisture insertion step skipped'
+            write(6,*)
+            write(6,*)
+            write(6,*)
+
          endif
 
+      else
+
+         write(6,*) 'tiros switch is off... tiros step skipped...'
+         
+      endif
 
 
-
-c perform initialquality control check for supersaturation after ingest
-        print*, 'perform qc for supersaturation'
-        counter = 0
-        do k = 1,kk
-           write (6,*)
-           write (6,*) 'Level ', k, '   ', plevel(k)
-           write (6,*)
-
-           do j = jj,1,-1
-              do i = 1,ii
-                 tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1                lt1dat(i,j,k)-273.15, 0.0 )/1000.
-
-                 if ( data(i,j,k)/tempsh .ge. 1.0) then
-                    cdomain(i:i) = 'x'
-                    if(data(i,j,k)/tempsh .gt. 1.01) then
-                       cdomain(i:i) = 's'
-                    endif
-                    counter = counter + 1
-                    data(i,j,k) = tempsh
-                 else
-                    write (cdomain(i:i),34) int(data(i,j,k)/tempsh*10.)
- 34                 format (i1)
-                 endif
-              enddo
-              write(6,*) cdomain(1:ii)
-           enddo
-        enddo
-
-        if(counter.gt.0) then
-
-           write(6,*) ' '
-           write(6,*) 'Questionable INPUT DATA DETECTED'
-           write(6,*)  counter,' times.'
-           write(6,*) ' '
-        endif
+c     make call to goes moisture insertion
 
 
-c     record total moisture
+      if (goes_switch .ne. 0 ) then
 
-        do k = 1,kk
-           do i = 1,ii
-              do j = 1,jj
-                 data_in(i,j,k) = data(i,j,k)
-              enddo
-           enddo
-        enddo
+         if(c_istatus.eq.1 .and. t_istatus.eq.1) then
 
-
-c     ****  execute raob step if switch is on
-
-
-        if(raob_switch.eq.1) then
-           write (6,*) 'begin raob insertion'
-           call raob_step (i4time,data,plevel, raob_lookback,
-     1          lat,lon, ii,jj,kk)
-
-
-           write(6,*) 'Reporting effects of RAOB insertion'
-
-           call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
-c     end report moisture change block
-        
-        else
-           write(6,*) 'the raob switch is off... raobs skipped'
-        endif
-
-c ****  get laps cloud data. used for cloud, bl, goes
-
-        call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
-     1       lct,c_istatus)
-
-        c_istatus = 0
-        if (i4time.eq.i4timep) c_istatus = 1
-
-        call check_nan3 (cg,ii,jj,kk,istatus)
-        if (istatus.ne.1) then
-           write(6,*) 'NaN detected from Cloud Grid...ABORT'
-           return
-        endif
-
-
-
-c ***   insert bl moisture
-
-        do k = 1,kk
-           do i = 1,ii
-              do j = 1,jj
-                 data_pre_bound(i,j,k) = data(i,j,k)
-              enddo
-           enddo
-        enddo
-
-
-
-
-        print*, 'calling lsin'
-c     insert boundary layer data
-        call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
-     1       kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
-
-        print*, 'finished with routine lsin'
-        if( sfc_mix.eq.1)then
-           write(6,*) 'Lsin allowed to modify data field'
-
-           write(6,*) 'Reporting effects of boundary layer effects'
-
-           call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
+            write (6,*) 'begin goes insertion step'
+            call goes_sbn (
+     1           data,          ! 3-d specific humidity g/g
+     1           lat,lon,       ! 2-d lat and longitude
+     1           i4time,        ! i4time of run
+     1           plevel,        ! pressure mb
+     1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
+     1           lt1dat,        ! laps lt1 (3-d temps)
+     1           goes_switch,   ! goes switch and satellite number
+     1           sounder_switch, ! sounder switch, 0=imager,1=sndr
+     1           sat_skip,      ! normally 1 for full resolution
+     1           ii,jj,kk
+     1           )
+            
+            write (6,*) 'GOES step complete, effects logged.'
+            
+            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+            
+            
 c     end report moisture change block
         
 
-        else
-          write(6,*) 'Lsin and sfc mixing step skipped'
+         else
 
-        do k = 1,kk
-           do i = 1,ii
-              do j = 1,jj
-                 data(i,j,k) = data_pre_bound(i,j,k)
-              enddo
-           enddo
-        enddo
-
-
-        endif
-
-
-
-c make call to TIROS moisture insertion
-
-
-        if (tiros_switch .ne. 0) then
-
-           if(c_istatus.eq.1 .and. t_istatus.eq.1) then
-
-        
-              write (6,*) 'begin TIROS insertion step'
+            write(6,*)
+            write(6,*)
+            write(6,*)
+            write(6,*) 'goes moisture insertion step skipped'
+            write(6,*) 'cloud or lt1 data not current'
+            write(6,*) 'cannot assume clear conditions or'
+            write(6,*) 'use alternate lt1.. this will create'
+            write(6,*) 'forward model problems....'
+            write(6,*) 'goes moisture insertion step skipped'
+            write(6,*)
+            write(6,*)
+            write(6,*)
+            
+         endif
+         
+      else
+         
+         write(6,*) 'goes switch is off... goes step skipped...'
+         
+      endif
       
-              call tiros (
-     1             data,        ! specific humidity g/g
-     1             lat,lon,     ! lat and longitude (deg)
-     1             i4time,      ! i4time of run (seconds)
-     1             plevel,      ! pressure hpa (laps vert grid)
-     1             cg,          ! cloud array
-     1             lt1dat,      ! lt1 (laps 3d temps)
-     1             14,          ! satellite number
-     1             ii,jj,kk     ! grid dimensions
-     1             )
-
-           else
-
-              write(6,*)
-              write(6,*)
-              write(6,*)
-              write(6,*) 'tiros moisture insertion step skipped'
-              write(6,*) 'cloud or lt1 data not current'
-              write(6,*) 'cannot assume clear conditions or'
-              write(6,*) 'use alternate lt1.. this will create'
-              write(6,*) 'forward model problems....'
-              write(6,*) 'tiros moisture insertion step skipped'
-              write(6,*)
-              write(6,*)
-              write(6,*)
-
-           endif
-
-        else
-
-           write(6,*) 'tiros switch is off... tiros step skipped...'
-
-        endif
-
-
-c make call to goes moisture insertion
-
-
-        if (goes_switch .ne. 0 ) then
-
-           if(c_istatus.eq.1 .and. t_istatus.eq.1) then
-
-              write (6,*) 'begin goes insertion step'
-              call goes_sbn (
-     1             data,        ! 3-d specific humidity g/g
-     1             lat,lon,     ! 2-d lat and longitude
-     1             i4time,      ! i4time of run
-     1             plevel,      ! pressure mb
-     1             cg,          ! 3-e cloud field 0-1 (1=cloudy)
-     1             lt1dat,      ! laps lt1 (3-d temps)
-     1             goes_switch, ! goes switch and satellite number
-     1             sounder_switch, ! sounder switch, 0=imager,1=sndr
-     1             sat_skip,    ! normally 1 for full resolution
-     1             ii,jj,kk
-     1             )
-
-              write (6,*) 'GOES step complete, effects logged.'
-
-              call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
-
-c     end report moisture change block
-        
-
-           else
-
-              write(6,*)
-              write(6,*)
-              write(6,*)
-              write(6,*) 'goes moisture insertion step skipped'
-              write(6,*) 'cloud or lt1 data not current'
-              write(6,*) 'cannot assume clear conditions or'
-              write(6,*) 'use alternate lt1.. this will create'
-              write(6,*) 'forward model problems....'
-              write(6,*) 'goes moisture insertion step skipped'
-              write(6,*)
-              write(6,*)
-              write(6,*)
-
-           endif
-
-        else
-
-           write(6,*) 'goes switch is off... goes step skipped...'
-
-        endif
-
-
+      
 c     *** insert cloud moisture, this section now controled by a switch
 
-        if(cloud_switch.eq.0) then
-           write(6,*) ' '
-           write(6,*) 'Cloud switch  '
-           write(6,*) 'Skipping cloud moistening here'
-           write(6,*) ' '
-           write(6,*) ' '
-           c_istatus = 0        !force this to skip here
-        endif
-
-        if(c_istatus.ne.1 .or. i4time.ne.i4timep)then
-           c_istatus = 0
-           write(6,*) 'Cloud field not available for exact time'
-           write(6,*) 'assume ALL CLEAR values used'
-        else                    ! increase moisture based on cloud amount
-
-           write(6,*) 'Saturate in cloudy areas'
-           do k = 1,kk
-              do j = 1,jj
-                 do i = 1,ii
-
-                    if(cg(i,j,k) .gt. 0.1 .and. cg(i,j,k) .lt. 1.0) then
-c                                                         !cloudy
-
-                       tempsh = ssh2( float(lvllm(k)),
-     1                      lt1dat(i,j,k)-273.15,
-     1                      lt1dat(i,j,k)-273.15, 0.0 )/1000.
-                       data(i,j,k) = cg(i,j,k)* tempsh
-     1                      +(1.-cg(i,j,k))*data(i,j,k)
-
-                    elseif (cg(i,j,k).ge.1.0) then 
-c                                        ! still cloudy...put in for albers
-
-                       tempsh = ssh2( float(lvllm(k)) 
-     1                      ,lt1dat(i,j,k)-273.15,
-     1                      lt1dat(i,j,k)-273.15, 0.0 )/1000.
-                       data(i,j,k) = tempsh
-
-                    endif
-
-
-                 enddo
-              enddo
-           enddo
-
-           write (6,*) 'Reporting cloud effects on analysis'
-           call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
-
-
-
-        endif
-
-c gvap data insertion step (currently under test)
-
-        if (gvap_switch.eq.1) then
-
-           call process_gvap(ii,jj,gvap_data,tpw,
-     1          lat,lon,filename,istatus)
-
-           if(istatus.eq.1) then! apply gvap weights
-
-              do k = 1,kk
-                 do j = 1,jj
-                    do i = 1,ii
-                       if(data(i,j,k).ge.0.0) then
-                          data(i,j,k) = data(i,j,k) * gvap_data(i,j)
-     1                         + data(i,j,k)
-                       endif
-                    enddo
-                 enddo
-              enddo
-
-              write(6,*) 'Reporting changes from GVAP'
-
-              call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
-           else
-              write(6,*) 'gvap weights not applied, istatus = 0'
-           endif
+      if(cloud_switch.eq.0) then
+         write(6,*) ' '
+         write(6,*) 'Cloud switch  '
+         write(6,*) 'Skipping cloud moistening here'
+         write(6,*) ' '
+         write(6,*) ' '
+         c_istatus = 0          !force this to skip here
+      endif
+      
+      if(c_istatus.ne.1 .or. i4time.ne.i4timep)then
+         c_istatus = 0
+         write(6,*) 'Cloud field not available for exact time'
+         write(6,*) 'assume ALL CLEAR values used'
+      else                      ! increase moisture based on cloud amount
+         
+         write(6,*) 'Saturate in cloudy areas'
+         do k = 1,kk
+            do j = 1,jj
+               do i = 1,ii
+                  
+                  if(cg(i,j,k) .gt. 0.1 .and. cg(i,j,k) .lt. 1.0) then !cloudy
+                     
+                     tempsh = ssh2( float(lvllm(k)),
+     1                    lt1dat(i,j,k)-273.15,
+     1                    lt1dat(i,j,k)-273.15, 0.0 )/1000.
+                     data(i,j,k) = cg(i,j,k)* tempsh
+     1                    +(1.-cg(i,j,k))*data(i,j,k)
+                     
+                  elseif (cg(i,j,k).ge.1.0) then 
+c     ! still cloudy...put in for albers
+                     
+                     tempsh = ssh2( float(lvllm(k)) 
+     1                    ,lt1dat(i,j,k)-273.15,
+     1                    lt1dat(i,j,k)-273.15, 0.0 )/1000.
+                     data(i,j,k) = tempsh
+                     
+                  endif
+                  
+                  
+               enddo
+            enddo
+         enddo
+         
+         write (6,*) 'Reporting cloud effects on analysis'
+         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         
 
 
 
-
-           
-        endif
-
-
+      endif
+      
+c     gvap data insertion step (currently under test)
+      
+      if (gvap_switch.eq.1) then
+         
+         call process_gvap(ii,jj,gvap_data,tpw,
+     1        lat,lon,filename,istatus)
+         
+         if(istatus.eq.1) then  ! apply gvap weights
+            
+            do k = 1,kk
+               do j = 1,jj
+                  do i = 1,ii
+                     if(data(i,j,k).ge.0.0) then
+                        data(i,j,k) = data(i,j,k) * gvap_data(i,j)
+     1                       + data(i,j,k)
+                     endif
+                  enddo
+               enddo
+            enddo
+            
+            write(6,*) 'Reporting changes from GVAP'
+            
+            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+            
+         else
+            write(6,*) 'gvap weights not applied, istatus = 0'
+         endif
+         
+         
+         
+         
+         
+      endif
+      
+      
 c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
-
-        if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
-
-           do k=1,kk
-              factor=1.-(float(k)*mod_4dda_factor)
-              do j=1,jj
-                 do i=1,ii
-                    data(i,j,k)=data(i,j,k)*factor
-                 enddo
-              enddo
-           enddo
-
-           write(6,*) ' mod_4dda loop complete'
-
-           call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-
-        endif
-
-
-c repeat quality control check for supersaturation after pre-analysis
-        print*, 'perform qc for supersaturation'
-        counter = 0
-        do k = 1,kk
-           write(6,*) 'Level ',k, '    ', plevel(k)
-           do j = jj,1,-1
-              do i = 1,ii
-                 
-                 tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1                lt1dat(i,j,k)-273.15, 0.0 )/1000.
-                 
-                 if ( data(i,j,k)/tempsh .ge. 1.0) then
-                    cdomain(i:i) = 'x'
-                    if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
-                    counter = counter + 1
-                    data(i,j,k) = tempsh
-                 elseif (data(i,j,k) .lt. 0.0) then
-                    cdomain(i:i) = 'M'
-                    
-                 else
-                    write (cdomain(i:i),35) int(data(i,j,k)/tempsh*10.)
- 35                 format (i1)
-                    
-                 endif
-                 
-                 
-              enddo
-              write(6,*) cdomain(1:ii)
-           enddo
-        enddo
-        
-        if (counter.ne.0) then
-           write (6,*) 'supersaturation has been corrected, 
-     1          ',counter,' times.'
-        endif
-        
-        
+      
+      if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
+         
+         do k=1,kk
+            factor=1.-(float(k)*mod_4dda_factor)
+            do j=1,jj
+               do i=1,ii
+                  data(i,j,k)=data(i,j,k)*factor
+               enddo
+            enddo
+         enddo
+         
+         write(6,*) ' mod_4dda loop complete'
+         
+         call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+         
+      endif
+      
+      
+c     repeat quality control check for supersaturation after pre-analysis
+      write (6,*)  'perform qc for supersaturation'
+      counter = 0
+      do k = 1,kk
+         write(6,*) 'Level ',k, '    ', plevel(k)
+         do j = jj,1,-1
+            do i = 1,ii
+               
+               tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
+     1              lt1dat(i,j,k)-273.15, 0.0 )/1000.
+               
+               if ( data(i,j,k)/tempsh .ge. 1.0) then
+                  cdomain(i:i) = 'x'
+                  if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
+                  counter = counter + 1
+                  data(i,j,k) = tempsh
+               elseif (data(i,j,k) .lt. 0.0) then
+                  cdomain(i:i) = 'M'
+                  
+               else
+                  write (cdomain(i:i),35) int(data(i,j,k)/tempsh*10.)
+ 35               format (i1)
+                  
+               endif
+               
+               
+            enddo
+            write(6,*) cdomain(1:ii)
+         enddo
+      enddo
+      
+      if (counter.ne.0) then
+         write (6,*) 'supersaturation has been corrected, 
+     1        ',counter,' times.'
+      endif
+      
+      
 c     recompute tpw including clouds and supersat corrections
-        
-        call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
-        
+      
+      call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+      
 c     place the accepted missing data flag in output field
 c     sum over the entire grid for a total water sum value for 
 c     QC study.
-        
-        tempsh = 0.0
-        
-        do i = 1,ii
-           do j = 1,jj
-              do k = 1,kk
-                 
-                 if(data(i,j,k) .lt.0.0) then
-                    data(i,j,k) = mdf !  put in missing data flag if missing
-                 else
-                    tempsh = tempsh + data(i,j,k) ! sum if good data
-                 endif
-                 
-              enddo
-           enddo
-        enddo
-        
-        
-        
-        
+      
+      tempsh = 0.0
+      
+      do i = 1,ii
+         do j = 1,jj
+            do k = 1,kk
+               
+               if(data(i,j,k) .lt.0.0) then
+                  data(i,j,k) = mdf !  put in missing data flag if missing
+               else
+                  tempsh = tempsh + data(i,j,k) ! sum if good data
+               endif
+               
+            enddo
+         enddo
+      enddo
+      
+      
+      
+      
 c     log the amount of water vapor
-        
-        write (6,*) ' '
-        write (6,*) ' '
-        write (6,*) '***************************** '
-        write (6,*) 'Average water in volume (g/g)*10000'
-        write (6,*) tempsh/float(ii)/float(jj)/float(kk)*10000.
-        write (6,*) '***************************** '
-        write (6,*) ' '
-        write (6,*) ' '
-        
+      
+      write (6,*) ' '
+      write (6,*) ' '
+      write (6,*) '***************************** '
+      write (6,*) 'Average water in volume (g/g)*10000'
+      write (6,*) tempsh/float(ii)/float(jj)/float(kk)*10000.
+      write (6,*) '***************************** '
+      write (6,*) ' '
+      write (6,*) ' '
+      
 c     check for NaN values and Abort if found
-        
-        call check_nan3(data,ii,jj,kk,istatus)
-        if(istatus.ne.1) then
-           write(6,*) 'NaN values detected (sh array)... aborting'
-           return
-        endif
-        
-        call check_nan2(tpw,ii,jj,istatus)
-        if(istatus.ne.1) then
-           write(6,*) 'NaN values detected (tpw array)... aborting'
-           return
-        endif
-        
-        
+      
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN values detected (sh array)... aborting'
+         return
+      endif
+      
+      call check_nan2(tpw,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN values detected (tpw array)... aborting'
+         return
+      endif
+      
+      
 c     write final 3-d sh field to disk
-        commentline = 'maps with clouds and surface effects only'
-        call writefile (save_i4time,commentline,mlevel,data,
-     1       ii,jj,kk,istatus)
-        if(istatus.eq.1)        jstatus(1) = 1
-        
+      commentline = 'maps with clouds and surface effects only'
+      call writefile (save_i4time,commentline,mlevel,data,
+     1     ii,jj,kk,istatus)
+      if(istatus.eq.1)        jstatus(1) = 1
+      
 c     write total precipitable water field
-        call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
-        if(istatus.eq.1) jstatus(3) = 1
-        
-        
+      call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
+      if(istatus.eq.1) jstatus(3) = 1
+      
+      
 c     generate lh3 file (RH true, RH liquid)
-        if (t_istatus.eq.1) then
-           call lh3_compress(data,lt1dat,save_i4time,lvllm,
-     1          ii,jj,kk,istatus)
-           if(istatus.eq.1)        jstatus(2) = 1
-        else
-           print*, 'no lh3 or rh data produced...'
-           print*, 'no laps 3-d temp data avail'
-           jstatus(2) = 0
-        endif
-
-        write (6,*) 'Reporting overall changes to moisture'
-
-        call report_change (data_in, data, plevel,mdf,ii,jj,kk)
-        
-        return
-
- 24     write(6,*) 'error finding moisture switch file'
-        write(6,*) 'check to see it is under'
-        write(6,*) fname(1:len)//'moisture_switch.txt'
-        write(6,*) 'aborting'
-        
-        return
-
-        end
+      if (t_istatus.eq.1) then
+         call lh3_compress(data,lt1dat,save_i4time,lvllm,t_ref,
+     1        ii,jj,kk,istatus)
+         if(istatus.eq.1)        jstatus(2) = 1
+      else
+         print*, 'no lh3 or rh data produced...'
+         print*, 'no laps 3-d temp data avail'
+         jstatus(2) = 0
+      endif
+      
+      write (6,*) 'Reporting overall changes to moisture'
+      
+      call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+      
+      return
+      
+ 24   write(6,*) 'error finding moisture switch file'
+      write(6,*) 'check to see it is under'
+      write(6,*) fname(1:len)//'moisture_switch.txt'
+      write(6,*) 'aborting'
+      
+      return
+      
+      end
+      
