@@ -197,7 +197,7 @@ c
          call lvd_file_specifier(chtype,indx,lstatus)
          goto(5,6,6,6,6)indx
 
-5        ct='v'      !visible
+5        ct='i'      !visible
          goto 8
 6        ct='i'      !ir - either 3.9, 6.7, 11.2, or 12.0
 8        continue
@@ -236,11 +236,17 @@ c
          write(6,*)'GWC nw_vis_pix/nw_vis_line: ',nw_vis_pix,nw_vis_line
          write(6,*)
 
-         filename_cdf=cdir_path(1:n)//'*.oad'
+         filename_cdf=cdir_path(1:n)//'GOI_*_OA_01.DAT'
+         nf=index(filename_cdf,' ')-1
+         call get_file_names(filename_cdf,numoffiles,c_filenames
+     1        ,max_files,istatus)
 
-         call get_file_time(filename_cdf,i4time_cur,i4time_nearest)
+         if(istatus.eq.0.and.numoffiles.gt.0)then
 
-         if(i4time_nearest.eq.0)then
+         call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
+     &gstatus)
+         if(gstatus.ne.0)then
+            write(6,*)'Error in get_gwc_oa. Trying read_orb_att.'
             call get_directory('static',c_filespec,ld)
             c_filespec=c_filespec(1:ld)//'/lvd'
             ld=index(c_filespec, ' ')-1
@@ -251,18 +257,24 @@ c
                goto 900
             endif
          else
-            call make_fnam_lp(i4time_nearest,c_fname,istatus)
-            filename_cdf=cdir_path(1:n)//c_fname//'.oad'
-            write(6,*)'Using: ',filename_cdf(1:100)
-            call get_gwc_oa(filename_cdf,c_imc,orbitAttitude,336,
-     &gstatus)
-            if(gstatus.ne.0)then
-               write(6,*)'Error in get_gwc_oanda'
-               istatus=-1 
+c           call make_fnam_lp(i4time_nearest,c_fname,istatus)
+c           filename_cdf=cdir_path(1:n)//c_fname//'.oad'
+c           write(6,*)'Using: ',filename_cdf(1:100)
+            write(6,*)'Success in get_gwc_oanda'
+         endif
+
+         else
+            write(6,*)'No O&A files exist ',filename_cdf(1:nf)
+            call get_directory('static',c_filespec,ld)
+            c_filespec=c_filespec(1:ld)//'/lvd'
+            ld=index(c_filespec, ' ')-1
+            call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
+     &istatus)
+            if(istatus.ne.0)then
+               write(6,*)'O&A Data not obtained',c_filespec(1:ld)
                goto 900
             endif
          endif
-c
          frameStartTime=getftime()
 c
       endif
