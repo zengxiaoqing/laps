@@ -364,8 +364,8 @@ c       write(6,*)' i = ',i
 
                 ITMAX=NINT(TMAX)
 
-                WRITE(6,63,err=163)nint(K_INDEX),ITMAX,WATER
- 63             FORMAT(' K INDEX =',I4,16X,'TMAX =',I4,' F',12X
+                WRITE(6,63,err=163)K_INDEX,ITMAX,WATER
+ 63             FORMAT(' K INDEX =',f7.1,16X,'TMAX =',I4,' F',12X
      1                ,'PRECIP. WATER=',F5.2,' IN.')
  163            WRITE(6,*)
 C
