@@ -2571,7 +2571,9 @@ Author: Steve Albers (albers@fsl.noaa.gov)
         dealiasing and other quality control steps are done. If more than one 
         radar illuminates a given grid-point, a full wind-vector is constructed
         from a combination of the radial velocities and the preliminary 
-        non-radar analysis.
+        non-radar analysis. This is done via a "successive insertion" process,
+        beginning with the non-radar analysis, then followed with the radial
+        velocity from each radar in sequence.
 
         In the final step, for grid-points illuminated by a single radar, the 
         azimuthal component is estimated by using the results of the previous 
