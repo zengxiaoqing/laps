@@ -58,10 +58,17 @@ cdis
            write (6,*) 'Error getting vertical domain dimension'
            go to 999
         endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting r_missing_data'
+           go to 999
+        endif
           
         call laps_deriv(i4time,
      1                  NX_L,NY_L,
      1                  NZ_L,
+     1                  r_missing_data,
      1                  j_status)
 
 999     continue
@@ -71,6 +78,7 @@ cdis
         subroutine laps_deriv(i4time,
      1                  NX_L,NY_L,
      1                  NZ_L,
+     1                  r_missing_data,
      1                  j_status)
 
         integer j_status(20),iprod_number(20)
@@ -79,6 +87,8 @@ cdis
         real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
         real*4 td_3d_k(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
+        real*4 u_3d(NX_L,NY_L,NZ_L)
+        real*4 v_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
 
@@ -227,20 +237,29 @@ cdis
 
         endif
 
+!       If we need space we can deallocate rh_3d_pct here
+!       If we need space we can allocate u_3d, v_3d here
+
         write(6,*)
         write(6,*)' Calling put_derived_wind_prods'
         call put_derived_wind_prods(NX_L,NY_L,NZ_L           ! Input
      1          ,NX_L,NY_L,NZ_L                              ! Input (sic)
      1          ,max_radars_dum,r_missing_data               ! Input
-     1          ,i4time)                                     ! Input
+     1          ,i4time                                      ! Input
+     1          ,u_3d,v_3d)                                  ! Output
 
         write(6,*)
         if(istat_lst .eq. 1)then
-            write(6,*)' Calling cpt_fire_fields'
-            call cpt_fire_fields(NX_L,NY_L,NZ_L,pres_3d,temp_3d,td_3d_k  ! I
-     1                          ,istatus)                                ! O
+
+            write(6,*)' Calling fire_fields'
+            call fire_fields(NX_L,NY_L,NZ_L,temp_3d,td_3d_k          ! I
+     1                      ,u_3d,v_3d                               ! I
+     1                      ,r_missing_data,i4time                   ! I
+     1                      ,istatus)                                ! O
+
         else
-            write(6,*)' Skipping call to cpt_fire_fields'
+            write(6,*)' Skipping call to fire_fields'
+
         endif
 
  999    write(6,*)' End of subroutine laps_deriv'
