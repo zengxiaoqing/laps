@@ -43,6 +43,8 @@ cdis
      1                                   ,maxstns,c_field,zoom,atime
      1                                   ,c33_label,i_overlay)
 
+        include 'lapsplot.inc'
+
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 !       97-Aug-25     Steve Albers  Removed /read_sfc_cmn/.
@@ -224,8 +226,8 @@ c
             endif
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call write_label_lplot(ni,nj,c33_label,asc_tim_9,i_overlay
-     1                            ,'hsect')       
+            call write_label_lplot(ni,nj,c33_label,asc_tim_9
+     1                            ,namelist_parms,i_overlay,'hsect')       
 
         endif
 
