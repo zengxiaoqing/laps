@@ -77,6 +77,9 @@ csms$ignore begin
 !     This routine takes the data from all the radars and adds the derived
 !     radar obs into uobs_diff_spread and vobs_diff_spread
 
+      n_radarobs_tot_fltrd = 0
+      i_radar_reject = 0
+
       if(.not. l_multi_doppler_new)then ! original radar analysis method
 
 !       Loop through the radars
@@ -85,8 +88,6 @@ csms$ignore begin
 !         Begin Filtering Section
           write(6,*)' Filtering radar obs into superobs'
      1             ,rlat_radar(i_radar),rlon_radar(i_radar)
-          n_radarobs_tot_fltrd(i_radar) = 0
-          i_radar_reject(i_radar) = 0
 
           write(6,*)' LVL  # Obs  Intvl  # FLTR'
 
