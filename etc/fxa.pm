@@ -66,6 +66,7 @@ sub Set_logdir'fxa{ #'
 #       chomp($yymmdd);
         local(@gmtime) = gmtime;
         $gmtime[4]++;
+        $gmtime[5] -= 100 if($gmtime[5]>99);
         for($i=3;$i<=5;$i++){
           $gmtime[$i]="0".$gmtime[$i] if(length($gmtime[$i])<2);
         }
