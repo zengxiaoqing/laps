@@ -150,8 +150,8 @@ c                               not exactly match the LAPS analysis time.
         write(6,*)' i4time_rass_offset/rcycles = '
      1             ,i4time_rass_offset,rcycles
 
-        if(i4time_rass_offset .gt. i4_window_rass_file)then 
-            write(6,*)' RASS file is > 60 minutes from LAPS time'       
+        if(abs(i4time_rass_offset) .gt. i4_window_rass_file)then        
+            write(6,*)' RASS file/offset is > 60 minutes from LAPS time'    
             write(6,*)' Skipping the use of RASS'
             go to 590
         endif
