@@ -53,6 +53,7 @@ cc         all liquid water at -10 C to all ice at -30 C
 cc         as such the amount of ice is also calculated
 cc
 cc   --------------------------------------------------------------
+      real dz,rv,rair,grav,cp,rlvo,rlso,dlvdt,eso,c,a1,b1,c1,a2,b2,c2
       parameter( 
      +   dz=100.0
      +,  rv=461.5
