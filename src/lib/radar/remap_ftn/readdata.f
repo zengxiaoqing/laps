@@ -127,6 +127,8 @@ c
         slant_ranges_m(i) = float(i) * gate_spacing_m_ret
    50 CONTINUE
 
+!     call lgate_lut_gen()   ! (we can turn off this call from 'lut_gen')?
+
       write(6,815)
   815 format(' READ_DATA_88D > Loading arrays')
 
