@@ -96,7 +96,7 @@ print `date -u +%H:%M:%S`." Running lsm5\n";
 system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_LOG_PATH/lsm5.log.$hhmm 2>&1");
 
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
-print LOG "$0 completed at ".`date -u +%H:%M:%S`;
+print LOG `date -u`;
 close(LOG);
 
 
