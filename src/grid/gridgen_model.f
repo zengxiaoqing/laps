@@ -357,6 +357,7 @@ c mass c-stagger (#4); staggered in both x and y.
         if(c10_grid_fname(1:lf).eq.'wrfsi')ns=n_staggers
 
         print*,'ns [staggers array index] = ',ns
+        if(ns.ne.1)print*,' Using C-stagger grid definition '
 
 C*****************************************************************
 
@@ -389,7 +390,7 @@ C*****************************************************************
         elseif(mode.eq.3)then
            print*,'get perimeter of grid'
            call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_fname
-     1                  ,lat,lon
+     1                  ,lats(1,1,1),lons(1,1,1)
      1                  ,1.0,rnorth,south,east,west,istatus)
            print*,'static dir = ',static_dir(1:lens)
            open(10,file=static_dir(1:lens)//'/llbounds.dat'
@@ -407,63 +408,9 @@ C*****************************************************************
 
 c
 C*****************************************************************
-c calculate topography
+c calculate surface static fields
 c
        if(iplttopo.eq.1)then
-
-          write(6,*)
-          write(6,*)' Processing 30s soil type top layer data....'
-          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
-     +,deltax,deltay,soiltype_dom(1,1,1),soiltype_pct(1,1,1,1),adum
-     +,adum,PATH_TO_SOILTYPE_TOP_30S,toptwvl,silavwt,new_DEM,maxdatacat
-     +,istatus)
-
-          if(istatus.ne.1)then
-           print*,' Soil type data not processed'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
-             print*
-             print*,'----------------------------------------------'
-             print*,'          *** ERROR ***'
-             print*,'Static file not created... Error; no soil data'
-             print*,'----------------------------------------------'
-             print*
-             return
-           else
-             print*
-             print*,'----------------------------------------------'
-             print*,'            *** WARNING ***'
-             print*,'Soil top data not added to static file'
-             print*,'----------------------------------------------'
-             print*
-           endif
-          endif
-
-          write(6,*)
-          write(6,*)' Processing 30s soil type bottom layer data....'
-          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
-     +,deltax,deltay,soiltype_dom(1,1,2),soiltype_pct(1,1,1,2),adum
-     +,adum,PATH_TO_SOILTYPE_BOT_30S,toptwvl,silavwt,new_DEM,maxdatacat
-     +,istatus)
-
-          if(istatus.ne.1)then
-           print*,' Soil type data not processed'
-           if(c10_grid_fname(1:lf).eq.'wrfsi')then
-             print*
-             print*,'----------------------------------------------'
-             print*,'          *** ERROR ***'
-             print*,' Static file not created. Error; no soil data'
-             print*,'----------------------------------------------'
-             print*
-             return
-            else
-             print*
-             print*,'----------------------------------------------'
-             print*,'            *** WARNING ***'
-             print*,' Soil bottom data not added to static file'
-             print*,'----------------------------------------------'
-             print*
-            endif
-          endif
 
           write(6,*)
           write(6,*)' Processing 30s topo data....'
@@ -557,7 +504,23 @@ c
                    alat2n = nboundary - 0.1
 
 !                  Determine the southern boundary of the 30s data at this lon
-                   if(lons(i,j,1) .le. -108.)then         
+                   if    (lons(i,j,1) .le. -127.)then         
+                       sboundary = 49. 
+                   elseif(lons(i,j,1) .le. -126.)then         
+                       sboundary = 48. 
+                   elseif(lons(i,j,1) .le. -125.)then         
+                       sboundary = 40. 
+                   elseif(lons(i,j,1) .le. -124.)then         
+                       sboundary = 37. 
+                   elseif(lons(i,j,1) .le. -123.)then         
+                       sboundary = 36. 
+                   elseif(lons(i,j,1) .le. -122.)then         
+                       sboundary = 35. 
+                   elseif(lons(i,j,1) .le. -120.)then         
+                       sboundary = 33. 
+                   elseif(lons(i,j,1) .le. -118.)then     
+                       sboundary = 32. 
+                   elseif(lons(i,j,1) .le. -107.)then     
                        sboundary = 30. 
                    elseif(lons(i,j,1) .le. -103.)then     
                        sboundary = 28. 
@@ -750,11 +713,67 @@ c SG97  splot 'topography.dat'
         enddo
         close(666)
 c
-c  now lets use GEODAT to process the world 30s USGS landuse data
-c
-        write(6,*)
+        print*
+        print*,' Processing 30s soil type top layer data....'
+
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
+     +,deltax,deltay,soiltype_dom(1,1,1),soiltype_pct(1,1,1,1),adum
+     +,adum,PATH_TO_SOILTYPE_TOP_30S,toptwvl,silavwt,new_DEM,maxdatacat
+     +,istatus)
+
+        if(istatus.ne.1)then
+           print*,' Soil type data not processed'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+             print*
+             print*,'----------------------------------------------'
+             print*,'          *** ERROR ***'
+             print*,'Static file not created ... Error; no soil data'
+             print*,'----------------------------------------------'
+             print*
+             return
+           else
+             print*
+             print*,'-----------------------------------------------'
+             print*,'            *** WARNING ***'
+             print*,'Warning: Soil top data not added to static file'
+             print*,'-----------------------------------------------'
+             print*
+           endif
+           soiltype_dom(:,:,1)=r_missing_data
+        endif
+
+        print*
+        print*,' Processing 30s soil type bottom layer data....'
+
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
+     +,deltax,deltay,soiltype_dom(1,1,2),soiltype_pct(1,1,1,2),adum
+     +,adum,PATH_TO_SOILTYPE_BOT_30S,toptwvl,silavwt,new_DEM,maxdatacat
+     +,istatus)
+
+        if(istatus.ne.1)then
+           print*,' Soil type data not processed'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+             print*
+             print*,'----------------------------------------------'
+             print*,'          *** ERROR ***'
+             print*,' Static file not created. Error; no soil data'
+             print*,'----------------------------------------------'
+             print*
+             return
+            else
+             print*
+             print*,'------------------------------------------------'
+             print*,'            *** WARNING ***'
+             print*,'Warning:; Soil bot data not added to static file'
+             print*,'------------------------------------------------'
+             print*
+            endif
+            soiltype_dom(:,:,2)=r_missing_data
+        endif
+
+        print*
         print*,' Processing 30s landuse data....'
-        if(ns.ne.1)print*,' Using C-stagger grid definition '
+
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
      +,ytn(1,ns),deltax,deltay,LANDUSE_30S,LANDUSE_30S_PCT
      +,adum,adum,PATH_TO_LUSE_30S,TOPTWVL,SILAVWT,new_DEM
@@ -778,6 +797,7 @@ c
           print*,'----------------------------------------------'
           print*
          endif
+         landuse_30s=r_missing_data
         endif
 
 c
@@ -1065,7 +1085,7 @@ c      stop
       elseif(ofn(len-1:len-1).eq.'U' .or.
      &       ofn(len-1:len-1).eq.'H' .or.
      &       ofn(len-1:len-1).eq.'L' )then
-         print*,'processing topography data'
+         print*,'processing topography/landfrac data'
          cdatatype='topography'
       endif
 
