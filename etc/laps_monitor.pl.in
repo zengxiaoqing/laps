@@ -10,7 +10,7 @@
 
 select STDOUT; $|=1;
 $ENV{PATH}="";
-my(%lapsprds)=( "FSLD" =>   '/data/fxa2/fxa_local/laps/lapsprd',
+my(%lapsprds)=( "AWIPS" =>  '/data/fxa/laps/lapsprd',
                 "WFO30" =>  '/data/lapb/wfo/data/lapsprd',
                 "WFO5KM" => '/data/lapb/wfo5km/data/lapsprd', 
                 "TW/FSL" => '/data/lapb/tw/fsl/data/lapsprd',
@@ -18,7 +18,7 @@ my(%lapsprds)=( "FSLD" =>   '/data/fxa2/fxa_local/laps/lapsprd',
 
 # This defines the order of the sources in the table
 #
-my(@order) = qw(FSLD WFO30 WFO5KM TW/FSL TW/CWB);
+my(@order) = qw(AWIPS WFO30 WFO5KM TW/FSL TW/CWB);
 
 my(%min_age,$min_age,%max_age,$max_age,%files_per_hour,$fph,$model,%green,%yellow,%red,$dir,@filelist,$file,$age,$image,$time,$i);
 
