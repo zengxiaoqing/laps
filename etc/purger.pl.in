@@ -67,6 +67,10 @@ if($opt_r){
 # exceptions - overridden if $min_files==0
 #
 my $vxx_time = 0.08;
+my $vrc_time = 0.16;
+my(@radars) = qw(01 02 03 04 05 06 07 08 09 10 11 12 13 14 15);
+my $radar;
+my($dir);
 
 if($min_files>0){
     $clean_dirs{lga} = (0.5<$hist_time)?0.5:$hist_time;
@@ -82,20 +86,12 @@ if($min_files>0){
     $clean_dirs{lso} = 1.5;
     $clean_dirs{lwc} = 0.5;
 
-    $clean_dirs{v01} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v02} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v03} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v04} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v05} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v06} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v07} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v08} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v09} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v10} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v11} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-    $clean_dirs{v12} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
-
-    $clean_dirs{'rdr/001/raw'} = 0.08;
+    foreach $radar (@radars){
+        $dir="v$radar";
+        $clean_dirs{$dir} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+        $dir="rdr/0$radar/vrc";
+        $clean_dirs{$dir} = ($vrc_time<$hist_time)?$vrc_time:$hist_time;
+    }
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
     $clean_dirs{'lvd/goes09'} = (0.5<$hist_time)?0.5:$hist_time;;
@@ -142,7 +138,6 @@ foreach (@subdirs){
     $clean_dirs{$_} = $hist_time if(-d $_  && !$clean_dirs{$_});
 }
 
-my($dir);
 foreach $dir (keys(%clean_dirs)){
     my(@filelist,@listoffiles,$i,$j);
     opendir(DIR,$dir);
