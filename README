@@ -159,7 +159,8 @@
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.5               Requires f90
      DEC (Alpha)
-     LINUX (elf)                       
+     LINUX (Intel)                     pgf90 is suggested
+     LINUX (Alpha)                       
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
