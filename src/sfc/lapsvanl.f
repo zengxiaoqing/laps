@@ -487,15 +487,15 @@ c.....	Now call the solution algorithm for the tb8 data.
 c
 c	print *,'  Fill in tb8 field using smooth Barnes'
 c
-c	n_obs_var = 0
+	n_obs_var = 0
 c       fill_val = 1.e37
 c       smsng = 1.e37
 c	npass = 1
 c	rom2 = 0.005
 	call zero(tb8, imax,jmax)
 c	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-c       print *,' Got the weights'
 c	call barnes2(tb8,imax,jmax,tb81,smsng,mxstn,npass,fnorm)
+c       print *,' Got the weights'
 c	call check_field_2d(tb8,imax,jmax,fill_val,istatus)
 c	if(istatus .eq. 0) ibt = 0       !empty field
 c
@@ -516,8 +516,11 @@ cc	   call zero(tb8, imax,jmax)
 	if(back_t .ne. 1) bad_tm = bad_t * 2.
 	print *,' '
 	print *,'  At spline call for t'
-        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.3,imax,
-     &        jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(t,imax,jmax,t1,smsng,mxstn,npass,fnorm)
+cc        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.3,imax,
+cc     &        jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
 c
 c.....	Now call the solution algorithm for the dew point.
 c
@@ -530,16 +533,19 @@ c	beta_td = 3.0
 	print *,'  At spline call for td'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
-        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.3,
-     &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(td,imax,jmax,td1,smsng,mxstn,npass,fnorm)
+cc        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.3,
+cc     &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
 c.....	t and td backgrounds for a verification check).
 c
 	call add(t,tt,t,imax,jmax)
+	call add(t_bk,tt,t_bk,imax,jmax)
 	call add(td,ttd,td,imax,jmax)
 cc	call add(tb8,tt,tb8,imax,jmax)
-	call add(t_bk,tt,t_bk,imax,jmax)
 	call add(td_bk,ttd,td_bk,imax,jmax)
 c
 c.....	Check to make sure that td is not greater than t...1st time.
@@ -660,28 +666,43 @@ c
 	print *,'  At spline call for u'
 	bad_uw = bad_u
 	if(back_uv .ne. 1) bad_uw = bad_u * 2.
-	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.1,imax,jmax,
-     &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(u,imax,jmax,u1,smsng,mxstn,npass,fnorm)
+cc	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.1,imax,jmax,
+cc     &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
 	print *,'  At spline call for v'
 	bad_vw = bad_v
 	if(back_uv .ne. 1) bad_vw = bad_v * 2.
-	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.1,imax,jmax,
-     &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(v,imax,jmax,v1,smsng,mxstn,npass,fnorm)
+cc	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.1,imax,jmax,
+cc     &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
 	print *,'  At spline call for red_p'
 	bad_rp = bad_p
 	if(back_rp .ne. 1) bad_rp = bad_p * 2.
-	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.1,imax,
-     &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(rp,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
+cc	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.1,imax,
+cc     &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
 	print *,'  At spline call for msl p'
 	bad_mp = bad_p
 	if(back_mp .ne. 1) bad_mp = bad_p * 2.
-	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
-     &      .1,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(mslp,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
+cc	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
+cc     &      .1,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis
 	if(back_vis .ne. 1) bad_vs = bad_vis * 2.
-	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,10.,
-     &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
+	rom2 = 0.010
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(vis,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
+cc	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,10.,
+cc     &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
@@ -966,7 +987,6 @@ c	Get PBE and NBE - Make sure t_sfc_k(i,j) >= td_sfc_k(i,j)
      &  t_3d_k,ht_3d_m,p_1d_pa,topo,pbe_2d,nbe_2d)
 c
  888	continue
-
 c
 c.....	Now write out the grids to PROD_DEV.
 c
