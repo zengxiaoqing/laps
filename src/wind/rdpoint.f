@@ -320,6 +320,7 @@ cdis
                         obs_point(nobs_point)%weight = weight_ob
                         obs_point(nobs_point)%type   = ext_in
                         obs_point(nobs_point)%file   = ext_in
+                        obs_point(nobs_point)%i4time = i4time_ob
 
                     else  ! Out of vertical bounds
                       iwrite = 0
