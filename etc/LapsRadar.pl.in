@@ -265,7 +265,12 @@ if($fxa_sys!=0){
       }
     }
     close(LATLON);
-    
+
+    if($closest==''){
+      print "Error finding @currad in $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt\n";
+      exit;
+    }
+
     if (($homeRadar ne "none") && ($prevRadar ne "none")) {
       opendir(VXX,"$LAPS_DATA_ROOT/static/vxx") or die "Can't open $LAPS_DATA_ROOT/static/vxx\n";
       @oldrad = grep !/^\.\.?$/, readdir(VXX);  #skip . and ..
