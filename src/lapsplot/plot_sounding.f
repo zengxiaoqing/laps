@@ -254,6 +254,47 @@
      1                      ,td_2d,0,istat_sfc)
             if(istat_sfc .ne. 1)goto100
 
+        elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then ! Bkg or Fcst
+            write(6,*)' Look for Bkg/Fcst sfc fields'
+
+            call s_len(directory,len_dir)
+
+            if(c_prodtype .eq. 'B')then
+                directory = directory(1:len_dir)//'../lgb'
+            else ! for now this is hardwired to mm5
+                directory = directory(1:len_dir)//'../fsf/mm5'
+            endif
+
+            write(6,*)' Directory = ',directory
+
+            var_2d = 'PSF'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,pres_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+            var_2d = 'TSF'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,t_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
+
+            var_2d = 'DSF'
+            call get_lapsdata_2d(i4_initial,i4_valid
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d
+     1                              ,NX_L,NY_L
+     1                              ,td_2d
+     1                              ,istat_sfc)
+            if(istat_sfc .ne. 1)goto100
+
         else
             istat_sfc = 0
             go to 100
@@ -303,6 +344,15 @@
             x2 = skewt(float(it),y2)
             call line(x1,y1,x2,y2) 
         enddo ! it
+
+!       Plot theta scale
+!       do it = -80, nint(thigh_c), 10
+!           y1 = logp_bottom
+!           y2 = logp_top
+!           x1 = skewt(float(it),y1)
+!           x2 = skewt(float(it),y2)
+!           call line(x1,y1,x2,y2) ! or plot a curve?
+!       enddo ! it
 
 !       Plot Horizontal lines at 100mb intervals
         do ip = 100,1100,100
