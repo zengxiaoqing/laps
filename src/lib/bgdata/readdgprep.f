@@ -145,7 +145,7 @@ c_______________________________________________________________________________
 c
 c *** Open and read data file.
 c
-           print *,'Reading - ',filename(1:l)
+           print *,'Opening ',filename(1:l)
            open(lun,file=filename(1:l),status='old',
      .          form='unformatted',err=990)
            rewind(lun)
@@ -201,7 +201,7 @@ c       to covert the FA filename but currently is not.  J.Smart
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
 
-         print*,'Reading FA file: ',filename(1:l)
+         print*,'Opening FA file: ',filename(1:l)
          open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=990)
 

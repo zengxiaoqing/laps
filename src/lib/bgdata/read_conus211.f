@@ -1,10 +1,11 @@
-      subroutine get_sbn_model_id(filename,model,ivaltimes,ntbg
+      subroutine get_sbn_model_id(filename,cmodel,ivaltimes,ntbg
      &,istatus)
 
       implicit none
       include 'netcdf.inc'
-      character*(*) model
+      character*(*) cmodel
       character*(*) filename
+      character*132 model
       integer ntbg,istatus
       integer ivaltimes(ntbg)
       integer nf_fid,nf_vid,nf_status
@@ -49,6 +50,11 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
         return
+      endif
+
+      if(model(1:3).ne.cmodel(1:3))then
+         print*,'Mismatch between model and cmodel'
+         print*,model,cmodel
       endif
 
       istatus = 0
@@ -305,7 +311,7 @@ ccc      if (fname .ne. oldfname) then
       cdfname=path(1:slen)//'/'//fname13
       
       call s_len(cdfname,slen)
-      print*,'reading cdfname: ',cdfname(1:slen)
+      print*,'opening cdf file: ',cdfname(1:slen)
 
       rcode = NF_OPEN(cdfname,NF_NOWRITE,ncid)
       if(rcode.ne.NF_NOERR) then

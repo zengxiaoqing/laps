@@ -126,7 +126,6 @@ C
         print *,'NF_OPEN ', filename
         return
       endif
-      print*,'Reading - ',filename
 
 C
 C     Variable        NETCDF Long Name
