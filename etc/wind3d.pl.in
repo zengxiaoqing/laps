@@ -137,7 +137,7 @@ if ($found == 1) {
       if ($lapsi > 0) {push(@saos,$name); } }
     $i=$i+1; } }
 
-print "\nSAOs:  ";
+print "\nSfc:   ";
 $nsao = @saos;
 if ($nsao == 0) {print "none";}
 else {
@@ -168,6 +168,17 @@ else {print "none \n";}
 print "\nCloud-drift winds:  ";
 if ($found2 == 1) {print "$nclouddriftwinds \n";}
 else {print "none \n";}
+print "\n";
+
+# Observation QC
+print "Observation QC:\n";
+@greplines = grep /QC/, @lines;
+@greplines = grep /GOOD/, @greplines;
+print "@greplines[0]";
+print "@greplines[1]";
+print "@greplines[2]";
+print "@greplines[3]";
+print "@greplines[4]";
 print "\n";
 
 # RMS Ob-First Guess Grid differences
