@@ -29,11 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        subroutine get_maps_laps_4d(i4time,var_2d,imax,jmax,kmax
-     1  ,imaps,jmaps,field_3d_maps,field_3d_maps_1,field_3d_maps_2
-     1                          ,field_3d_laps,l_fill,istatus)
-
-        entry get_modelfg_3d(i4time,var_2d,imax,jmax,kmax
+        subroutine get_modelfg_3d(i4time,var_2d,imax,jmax,kmax
      1                          ,field_3d_laps,istatus)
 
 !       This routine reads the model background from RAMS or LGA/F and
