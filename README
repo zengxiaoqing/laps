@@ -997,16 +997,18 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                ---  2.5  Test data case  ---
 
      Tar files containing test data (called 'lapsdata*') are available that 
-     contain successive runs of laps data on the Colorado domain 
-     (intermediate files from the 'ingest' code plus outputs from the 
-     'analysis' code). Several consecutive analysis cycles are posted, one 
-     file per cycle. Included are the contents of the 'lapsprd', 'time', 
-     'static', and 'log' subdirectories under 'data' or $LAPS_DATA_ROOT. The 
-     log files are useful for diagnosing any differences in output you may 
-     observe. The contents of the various directories are outlined elsewhere  
-     in this README file. The data was created using the latest software 
-     release. Our users can download this data at 
-     'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
+     contain successive runs of laps data on the Colorado domain using the
+     namelist settings from the repository. The tar files include intermediate
+     files from the 'ingest' code plus outputs from the 'analysis' code. 
+     Several consecutive analysis cycles are posted, one file per cycle. 
+     Included are the contents of the 'lapsprd', 'time', 'static', and 'log' 
+     subdirectories under 'data' or $LAPS_DATA_ROOT. The log files are useful
+     for diagnosing any differences in output you may observe. The contents 
+     of the various directories are outlined elsewhere in this README file. 
+     The data was created using the latest software release. Our users can 
+     download this data at this URL:
+
+           'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the localization procedure, make sure the paths
      to the geography data are correct in 'data/static/nest7grid.parms'.
@@ -1022,7 +1024,8 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      prompt> perl sched.pl  -a sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
 
      One can also initiate individual executables (bin directory) listed in the
-     'sched.pl' to run on the test data. Note that $LAPS_DATA_ROOT needs to
+     'sched.pl' to run on the test data. This often helps in getting a better
+     match between your output and ours. Note that $LAPS_DATA_ROOT needs to
      be set as an environment variable when executables are run individually.
      The time of the run is specified in 'data/time/systime.dat'. This can be 
      modified if needed if you want to try a slightly different time from 
@@ -1031,13 +1034,15 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      Note that for any given process or set of processes, deviations from the 
      FSL output may be caused by differences in the inputs as well as machine 
      roundoff error. Most, but perhaps not all of the input data is supplied. 
-     Having all of the data history from 'lapsprd' may also be an issue; this 
-     may be less of a problem if you run laps for the latest hour of data that
-     is supplied. The history is then supplied from earlier 'lapsdata*/lapsprd'
-     output. Output differences can be tracked down by recompiling specific 
-     analyses with the '-g' option. This can be done by typing 'make debug' in t
-     he appropriate 'src' directories. Various debuggers can then be used such
-     as 'dbx'. Examination of the log files again is helpful.
+     One main area to check would be differences in available "raw" background
+     data files. Having all of the data history from 'lapsprd' may also be an
+     issue; this may be less of a problem if you run laps for the latest hour
+     of data that is supplied. The history is then supplied from earlier 
+     'lapsdata*/lapsprd' output. Output differences can be tracked down by 
+     recompiling specific analyses with the '-g' option. This can be done by 
+     typing 'make debug' in the appropriate 'src' directories. Various 
+     debuggers can then be used such as 'dbx'. Examination of the log files 
+     again is helpful.
 
                 ----  2.5.1  Analysis Only Test ---
 
@@ -1074,12 +1079,12 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      Note that the 'lapsdata*' tar files contain intermediate plus analysis
      output files only. The 'rawdata*' tar files supply much of the "raw" data
      that are inputted to the ingest processes. The times for the raw data 
-     match the 'lapsdata*' output approximately but not always exactly. In 
-     many cases, a user could independently generate the intermediate data 
-     files (ingest output) and could then compare them with ours. If other 
-     "raw" files are needed as they appear on FSL's NIMBUS system, they can 
-     be obtained directly from FSL's facility division at 
-     'http://www-fd.fsl.noaa.gov/'.
+     match the 'lapsdata*' output approximately but not always exactly
+     (one example being the raw background data files). In many cases, a user
+     could independently generate the intermediate data files (ingest output)
+     and could then compare them with ours. If other "raw" files are needed 
+     as they appear on FSL's NIMBUS system, they can be obtained directly from
+     FSL's facility division at 'http://www-fd.fsl.noaa.gov/'.
 
 ---------------- 2.6 ------ I/O of LAPS gridded files -------------------------
 
