@@ -159,6 +159,8 @@ c                               12-02-98  Remove slot for ceiling in output;
 c                                           reduce num_var by 1 (to 26). Also
 c                                           remove vis verification, added 
 c                                           verif of T, Td, P backgrounds.
+c                               01-14-99  Remove spline for tb8 (sat data).
+c                                           Add vis field ck. 
 c
 c*****************************************************************************
 cx
@@ -490,7 +492,7 @@ c       fill_val = 1.e37
 c       smsng = 1.e37
 c	npass = 1
 c	rom2 = 0.005
-c	call zero(tb8, imax,jmax)
+	call zero(tb8, imax,jmax)
 c	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 c       print *,' Got the weights'
 c	call barnes2(tb8,imax,jmax,tb81,smsng,mxstn,npass,fnorm)
@@ -507,7 +509,7 @@ c
 	name = 'NOPLOT'	
 	gamma = 5.
 	if(ibt .eq. 0) then	! data not there
-	   call zero(tb8, imax,jmax)
+cc	   call zero(tb8, imax,jmax)
 	   gamma = 0.
 	endif
 	bad_tm = bad_t
@@ -536,7 +538,7 @@ c.....	t and td backgrounds for a verification check).
 c
 	call add(t,tt,t,imax,jmax)
 	call add(td,ttd,td,imax,jmax)
-	call add(tb8,tt,tb8,imax,jmax)
+cc	call add(tb8,tt,tb8,imax,jmax)
 	call add(t_bk,tt,t_bk,imax,jmax)
 	call add(td_bk,ttd,td_bk,imax,jmax)
 c
@@ -871,6 +873,19 @@ c.....  Adjust visibility analysis.
 c
         call enhance_vis(i4time,vis,rh,topo,imax,jmax,kcloud)
 	call conv_miles2m(vis,vis,imax,jmax)	! conv miles to meters
+	vis_mx = -1.e25
+	vis_mn =  1.e25
+	do j=1,jmax
+	do i=1,imax
+	   if(vis(i,j) .gt. vis_mx) vis_mx = vis(i,j)
+	   if(vis(i,j) .lt. vis_mn) vis_mn = vis(i,j)
+	enddo !i
+	enddo !j
+	print *,' Vis check: Max, Min (meters)= ', vis_mx, vis_mn
+	if(vis_mx.ge.400000. .or. vis_mn.lt.0.) then
+	   print *,' Vis max or min out of range. Bag field.'
+	   call constant(vis,badflag,imax,jmax)
+	endif
 c
 c.....  Call the Fire index routine.
 c
