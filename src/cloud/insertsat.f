@@ -296,6 +296,7 @@ c
         n_no_sao1 = 0
         n_no_sao2 = 0
         n_no_sao3 = 0
+        n_no_sao_vis = 0
 
         nskip_max = 4 ! 'See barnes_r5'
 
@@ -535,7 +536,15 @@ c
               enddo ! jj
             endif
 
-201         if(ht_sao_base .eq. 1e30)then ! Satellite cloud but no SAO cloud
+201         if(      ht_sao_base           .eq. 1e30 
+     1         .and. istat_vis_potl_a(i,j) .eq. 1    )then ! VIS Sat but no SAO
+              n_no_sao_vis = n_no_sao_vis + 1
+
+!             Calculate/Utilize cloud top based on vis cover and tb8 temp
+              cover=sat_cover
+              htbase = max( topo(i,j), cldtop_m(i,j)-1000. )
+
+            elseif(ht_sao_base .eq. 1e30)then ! Satellite but no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
               cover=sat_cover
               htbase_init = ht_sao_base
@@ -684,7 +693,8 @@ c
 !       Write stats on CO2 and Band 8 (11.2mm) methods
         write(6,*)' n_valid_co2 = '  ,n_valid_co2
      1           ,' n_missing_co2 = ',n_missing_co2
-        write(6,*)' n_no_sao (1/2/3) = ',n_no_sao1,n_no_sao2,n_no_sao3
+        write(6,*)' n_no_sao (1/2/3/vis) = '
+     1             ,n_no_sao1,n_no_sao2,n_no_sao3,n_no_sao_vis
 
         I4_elapsed = ishow_timer()
 
@@ -820,11 +830,12 @@ c
      1       (istat_vis_potl .eq. 1 .and. 
      1        cloud_frac_vis .ne. r_missing_data)       
      1                                              )then ! get 11u cloud top
-            cldtop_temp_k = tb8_k
+            cldtop_temp_k_before = tb8_k
 
 !           Correct the cloud top temperature for thin clouds using VIS data
-!!!!!       call correct(tb8_k,tb8_cold_k,cloud_frac_vis
-!!!!!                   ,istat_vis_potl,cldtop_temp_k)
+            call correct_cldtop_t(tb8_k,t_gnd_k(i,j),cloud_frac_vis    ! I
+     1                           ,istat_vis_potl                       ! I
+     1                           ,cldtop_temp_k,istatus)               ! O
 
 !           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
             temp_above = temp_3d(i,j,klaps)
@@ -1539,6 +1550,27 @@ c
                 endif
             endif
         enddo
+
+        return
+        end
+
+        subroutine correct_cldtop_t(tb8_k,t_gnd_k,cloud_frac_vis         ! I
+     1                             ,istat_vis_potl                       ! I
+     1                             ,cldtop_temp_k,istatus)               ! O
+
+        cldtop_temp_k = tb8_k ! default value
+        istatus = 0
+
+!       Correct the cloud top temperature for thin clouds using VIS data
+        if(cloud_frac_vis .ge. 0. .and. cloud_frac_vis .le. 1.
+     1                            .and. istat_vis_potl .eq. 1)then
+            diff = tb8_k - t_gnd_k
+            if(diff .lt. 0.)then            
+                diff2 = diff * 1./cloud_frac_vis
+                cldtop_temp_k = t_gnd_k + diff2
+                istatus = 1                
+            endif
+        endif
 
         return
         end
