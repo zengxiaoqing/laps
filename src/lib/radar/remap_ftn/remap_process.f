@@ -6,6 +6,7 @@
      :         grid_ref,ngrids_ref,n_pot_ref,
      :         NX_L,NY_L,NZ_L,
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
+     :         path_to_vrc,                                ! Char      (input)
      :         i_product_i4time,                           ! Integer*4 (input)
      :         full_fname,                                 ! Character*91
      :         i4_fn_length,                               ! Integer*4 (output)
@@ -89,6 +90,7 @@ c
       character*125 comment_a(max_fields)
       character*10  units_a(max_fields)
       character*3 laps_radar_ext, c3_radar_subdir
+      character*(*) path_to_vrc
 
       integer*2 i2_fn_length
 
@@ -586,7 +588,7 @@ c
             call put_remap_vrc(i_product_i4time,comment_a(1)
      1                  ,rlat_radar,rlon_radar,rheight_radar
      1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
-     1                  ,c3_radar_subdir,istatus)   
+     1                  ,c3_radar_subdir,path_to_vrc,istatus)   
 
         endif
 
@@ -760,7 +762,7 @@ c            ext = 'v01'
         subroutine put_remap_vrc(i4time,comment_2d 
      1                         ,rlat_radar,rlon_radar,rheight_radar
      1                         ,field_3d,imax,jmax,kmax,c3_radar_subdir        
-     1                         ,istatus)
+     1                         ,path_to_vrc,istatus)
 
         character*7 c7_ext
 
@@ -784,6 +786,7 @@ c            ext = 'v01'
 
         character*8 radar_subdir
         character*3 c3_radar_subdir
+        character*(*) path_to_vrc
 
         write(6,*)' Subroutine put_remap_vrc'
 
@@ -807,14 +810,24 @@ c            ext = 'v01'
         var_2d = 'REF'
         units_2d = 'DBZ'
 
-        radar_subdir = c3_radar_subdir
-        write(6,*)' radar_init: radar_subdir = ',radar_subdir
+        write(6,*)'path_to_vrc = ',path_to_vrc
 
-        call get_directory('rdr',directory1,len_dir)
+        if(path_to_vrc .eq. 'rdr')then
+            radar_subdir = c3_radar_subdir
+            write(6,*)' radar_subdir = ',radar_subdir
 
-        directory = directory1(1:len_dir)//radar_subdir(1:3)//'/vrc/'  
+            call get_directory('rdr',directory1,len_dir1)
 
-        write(6,11)directory(1:len_dir+8),ext(1:5),var_2d
+            directory = directory1(1:len_dir1)//radar_subdir(1:3)
+     1                                        //'/vrc/'  
+            call s_len(directory,len_dir)
+
+        else ! 'lapsprd'
+            call get_directory('vrc',directory,len_dir)
+
+        endif            
+
+        write(6,11)directory(1:len_dir),ext(1:5),var_2d
 11      format(' Writing 2d ',a,1x,a5,1x,a3)
 
         lvl_2d = 0

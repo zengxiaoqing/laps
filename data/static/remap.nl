@@ -1,5 +1,6 @@
  &remap_nl
  n_radars_remap=2,
+ path_to_vrc_nl='rdr',
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kftg/netcdf',
 '/public/data/radar/wsr88d/wideband/kftg/netcdf',
@@ -34,6 +35,7 @@
 '',
 '',
  /
+
 c
 c 'n_radars_remap'   - Number of radars to loop through and process. For each
 c                      radar, one radar time will be processed. This time 
@@ -46,6 +48,15 @@ c                      parameter.
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of radar
 c                      tilts. 
+c
+c 'path_to_vrc_nl'   - Path used if we have 'vrc' output. Can be either 'rdr' 
+c                      or 'lapsprd'. If we're using the mosaicing program 
+c                      (needed if we have multiple radars), we can set this 
+c                      parameter to the desired value of 'rdr'. If we're not 
+c                      using the mosaicing program we set the parameter to 
+c                      'lapsprd' and the use of only one radar is implied. 
+c                      Additional radars would be overwriting in the same 
+c                      directory which is somewhat undesirable. 
 c 
 c 'c4_radarname_a'   - Name for each radar (4 characters).
 c

@@ -7,8 +7,9 @@
        integer max_files
        parameter(max_files=1000)
 
-       character*150 path_to_wideband,c_filespec,filename,directory
+       character*150 path_to_radar,c_filespec,filename,directory
      1              ,c_fnames(max_files)
+       character*15 path_to_vrc
        character*4 c4_radarname
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
@@ -21,8 +22,9 @@
 !      include 'remap_constants.dat' ! for debugging only
 !      include 'remap.cmn' ! for debugging only
 
-       call get_remap_parms(i_radar,n_radars_remap,path_to_wideband       
-     1                    ,c4_radarname,ext_out,c3_radar_subdir,istatus)       
+       call get_remap_parms(i_radar,n_radars_remap,path_to_radar       
+     1                    ,c4_radarname,ext_out,c3_radar_subdir
+     1                    ,path_to_vrc,istatus)       
 
 c
 c      Determine filename extension
@@ -49,11 +51,11 @@ c      Determine filename extension
        if(i_tilt_proc .eq. 1)then
            c2_tilt = '01'
 
-           call s_len(path_to_wideband,len_path)
+           call s_len(path_to_radar,len_path)
  
 !          Get i4time of 01 elevation file nearest to 15 minutes ago
            i4time_now = i4time_now_gg() 
-           c_filespec = path_to_wideband(1:len_path)//'/*_elev'//c2_tilt       
+           c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
 
            call get_file_times(c_filespec,max_files,c_fnames
      1                        ,i4times,i_nbr_files_out,istatus)
@@ -65,7 +67,7 @@ c      Determine filename extension
                call get_filespec(ext_out,1,c_filespec,istatus)
            else
                call get_directory('rdr',directory,len_dir)
-               c_filespec = directory//radar_subdir(1:3)
+               c_filespec = directory(1:len_dir)//radar_subdir(1:3)     
            endif
 
 
@@ -88,7 +90,7 @@ c      Determine filename extension
 
 !      Pull in housekeeping data from 1st tilt
 
-       filename = path_to_wideband(1:len_path)//'/'//a9_time//'_elev'
+       filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
      1            //c2_tilt
        write(6,*)' radar_init: we will read this file... '
        write(6,*)filename(1:len_path+20)
@@ -187,6 +189,7 @@ c      Determine filename extension
  
  
        function get_status()
+       integer get_status
  
        get_status = 0
        return

@@ -1,6 +1,8 @@
+      
+      program remap
 
-      character path_to_wideband*150, c4_radarname*4, ext_dum*3
-     1        , radar_subdir_dum*3
+      character path_to_radar*150, c4_radarname*4, ext_dum*3
+     1         ,radar_subdir_dum*3, path_to_vrc*15
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
@@ -16,21 +18,23 @@
 
 !     This first call returns only 'n_radars_remap'
       call get_remap_parms(0,n_radars_remap,path_to_radar
-     1                  ,c4_radarname,ext_dum,radar_subdir_dum,istatus)       
+     1       ,c4_radarname,ext_dum,radar_subdir_dum,path_to_vrc,istatus)       
 
       do i_radar = 1,n_radars_remap
           write(6,*)
           write(6,*)' Looping through radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
-     1                  ,c4_radarname,ext_dum,radar_subdir_dum,istatus)       
-          call remap_sub(i_radar,c4_radarname,ext_dum,radar_subdir_dum
-     1                  ,NX_L,NY_L,NZ_L,istatus)
+     1                  ,c4_radarname,ext_dum,radar_subdir_dum
+     1                  ,path_to_vrc,istatus)       
+          call remap_sub(i_radar,c4_radarname,ext_dum,radar_subdir_dum       
+     1                  ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
       enddo
 
  999  end
 
       subroutine remap_sub(i_radar,rname_ptr,laps_radar_ext
-     1                    ,c3_radar_subdir,NX_L,NY_L,NZ_L,istatus)
+     1                    ,c3_radar_subdir,path_to_vrc,NX_L,NY_L,NZ_L
+     1                    ,istatus)
 
       include 'remap.inc'
       include 'remap_dims.inc'
@@ -67,6 +71,7 @@
       real radar_alt
       character*4 rname_ptr
       character*3 laps_radar_ext, c3_radar_subdir
+      character*(*) path_to_vrc
 
 !     Misc Local variables
 
@@ -99,6 +104,7 @@
       integer get_azi
       integer get_nyquist
       integer get_data_field
+      integer get_status
 
 !     Beginning of Executable Code 
 !     Some initializations  
@@ -201,8 +207,8 @@
 ! Test for existence of velocity data.
 ! Do we also need to test for reflectivity data?   
 
-          if ( get_status(ref_index) .eq. GOOD_STATUS .or.
-     1         get_status(vel_index) .eq. GOOD_STATUS ) then
+          if ( get_status(ref_index) .eq. 0 .or.
+     1         get_status(vel_index) .eq. 0 ) then
             knt_bad_stat = 0 
             i_angle = get_fixed_angle() 
             i_scan = get_scan() 
@@ -324,7 +330,7 @@
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
      :            grid_ref,ngrids_ref,n_pot_ref,
      1            NX_L,NY_L,NZ_L,
-     1            laps_radar_ext,c3_radar_subdir,
+     1            laps_radar_ext,c3_radar_subdir,path_to_vrc,
      1            i4time_vol,full_fname,len_fname,
      1            i_num_finished_products,i_status) 
 
@@ -360,13 +366,13 @@
  
        subroutine get_remap_parms(i_radar,n_radars_remap
      1            ,path_to_radar,c4_radarname,laps_radar_ext
-     1            ,c3_radar_subdir,istatus)       
+     1            ,c3_radar_subdir,path_to_vrc,istatus)       
 
        integer*4 MAX_RADARS_REMAP
        parameter (MAX_RADARS_REMAP=10)
 
-       character*150 path_to_radar_a(MAX_RADARS_REMAP)
-       character*(*) path_to_radar
+       character*150 path_to_radar_a(MAX_RADARS_REMAP),path_to_vrc_nl       
+       character*(*) path_to_radar,path_to_vrc
 
        character*4 c4_radarname_a(MAX_RADARS_REMAP)
        character*4 c4_radarname
@@ -377,7 +383,7 @@
        character*3 c3_radar_subdir
 
        namelist /remap_nl/ n_radars_remap,path_to_radar_a,c4_radarname_a       
-     1                                   ,laps_radar_ext_a
+     1                    ,laps_radar_ext_a,path_to_vrc_nl      
        character*150 static_dir,filename
  
        call get_directory('nest7grid',static_dir,len_dir)
@@ -404,6 +410,9 @@
        c4_radarname   = c4_radarname_a(i_radar)
        laps_radar_ext = laps_radar_ext_a(i_radar)
 
+       length = min(len(path_to_vrc),len(path_to_vrc_nl))
+       path_to_vrc    = path_to_vrc_nl(1:length)
+
 !      Determine name of radar_subdir if any
        i_ext = 0
        do i = 1,i_radar
@@ -418,6 +427,7 @@
        write(6,*)' c4_radarname    = ',c4_radarname
        write(6,*)' laps_radar_ext  = ',laps_radar_ext
        write(6,*)' c3_radar_subdir = ',c3_radar_subdir
+       write(6,*)' path_to_vrc     = ',path_to_vrc
 
        istatus = 1
        return
