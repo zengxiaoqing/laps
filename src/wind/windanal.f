@@ -429,26 +429,23 @@
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
-      if(iter .eq. 1)then
-          write(6,*)' Allocating upass1,vpass1'
+      write(6,*)' Allocating upass1,vpass1'
 
-          allocate( upass1(imax,jmax,kmax), STAT=istat_alloc )
-          if(istat_alloc .ne. 0)then
-              write(6,*)' ERROR: Could not allocate upass1'
-     1                 ,istat_alloc,imax,jmax,kmax
-              stop
-          endif
-!         call maxminavIJK(upass1,imax,jmax,kmax)
+      allocate( upass1(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate upass1'
+     1             ,istat_alloc,imax,jmax,kmax
+          stop
+      endif
+!     call maxminavIJK(upass1,imax,jmax,kmax)
 
-          allocate( vpass1(imax,jmax,kmax), STAT=istat_alloc )
-          if(istat_alloc .ne. 0)then
-              write(6,*)' ERROR: Could not allocate vpass1'
-     1                 ,istat_alloc,imax,jmax,kmax
-              stop
-          endif
-!         call maxminavIJK(vpass1,imax,jmax,kmax)
-
-      endif ! iter = 1
+      allocate( vpass1(imax,jmax,kmax), STAT=istat_alloc )
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate vpass1'
+     1             ,istat_alloc,imax,jmax,kmax
+          stop
+      endif
+!     call maxminavIJK(vpass1,imax,jmax,kmax)
 
       call move_3d(varbuff(1,1,1,1),upass1,imax,jmax,kmax)
       call move_3d(varbuff(1,1,1,2),vpass1,imax,jmax,kmax)
@@ -742,11 +739,9 @@
           endif
       enddo ! k
 
-      enddo ! n_iter_wind
-
-      write(6,*)' Calling comparisons'
-
-      call comparisons(
+      if(iter .eq. n_iter_wind)then
+          write(6,*)' Calling comparisons'
+          call comparisons(
      1            upass1,vpass1,istat_radar_vel,max_radars,
      1            vr_obs_unfltrd,
      1            rlat_radar,rlon_radar,rheight_radar,
@@ -757,9 +752,13 @@
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,
      1            n_radars)
+      endif ! Last iteration
 
+      write(6,*)' Deallocate upass1, vpass1'
       deallocate(upass1)
       deallocate(vpass1)
+
+      enddo ! n_iter_wind
 
       istatus = 1
 
@@ -1504,30 +1503,3 @@ c  convert radar obs into u & v by using tangential component of first pass
       return
       end
       
-
-      subroutine maxminavIJK(fld,nx,ny,nlev)
-c
-      dimension fld(nx,ny,nlev)
-c
-      do l=1,nlev
-c
-      amax = -1.e30
-      amin = 1.e30
-      sum = 0.
-c
-      do i=1,nx
-      do j=1,ny
-      sum = sum + fld(i,j,l)
-      if(fld(i,j,l).ge.amax) amax = fld(i,j,l)
-      if(fld(i,j,l).le.amin) amin = fld(i,j,l)
-      enddo
-      enddo
-c
-      print*,'at level=',l,'  max=',amax,'  min=',amin
-      avfld = sum/float(nx*ny)
-      print*,' average=',avfld
-c
-      enddo
-c
-      return
-      end

@@ -1,6 +1,104 @@
 
 
 
+        subroutine compare_wind (
+     1                upass1,vpass1,istat_radar_vel,max_radars,cgrid,
+     1                grid_ra_vel,rlat_radar,rlon_radar,rheight_radar,
+     1                lat,lon,
+     1                ni,nj,nk,r_missing_data,
+     1                weight_pirep,weight_prof,weight_sfc,weight_cdw,       
+     1                grid_laps_u,grid_laps_v,grid_laps_wt,
+     1                n_radars)
+
+C****************************************************************************
+C
+C  Purpose: Provide a single point out of lapswind_anal to call
+C           diagnostic comparision routines.
+C
+C
+C  Inputs: upass1
+C          vpass1
+C          istat_radar_vel
+C          grid_ra_vel
+C          rlat_radar
+C          rlon_radar
+C          rheight_radar
+C          n_radars
+C
+C  outputs: None
+C
+C*********************************************************************
+
+C***************** Declarations **************************************
+
+        integer istat_radar_vel
+        integer l,n_radars,ni,nj,nk,max_radars
+
+        real*4 rlat_radar(max_radars),rlon_radar(max_radars)
+     1                     ,rheight_radar(max_radars)
+
+        real*4 lat(ni,nj),lon(ni,nj)
+
+        real*4 upass1(ni,nj,nk),vpass1(ni,nj,nk)
+        real*4 grid_ra_vel(ni,nj,nk,max_radars),r_missing_data
+        real*4 weight_pirep,weight_prof,weight_sfc,weight_cdw
+        real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
+     1                                          ,grid_laps_wt(ni,nj,nk)
+
+
+C********************************************************************
+
+        write(6,*)
+        write(6,*)'  Comparing LAPS First Pass to SFC Obs (passing QC)'       
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
+     1        ,'PS1 ','SFC ',r_missing_data,rms)
+
+        write(6,*)
+        write(6,*)'  Comparing LAPS First Pass to CDW Obs (passing QC)'       
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
+     1        ,'PS1 ','CDW ',r_missing_data,rms)
+
+        write(6,*)
+        write(6,*)'  Comparing LAPS First Pass to Profiler'
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
+     1        ,'PS1 ','PROF',r_missing_data,rms)
+
+        write(6,*)
+        write(6,*)'  Comparing LAPS First Pass to Pireps'
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
+     1        ,'PS1 ','PRP ',r_missing_data,rms)
+
+!       write(6,*)
+!       write(6,*)'  Comparing LAPS First Pass & Analysis'
+!       call comp_laps1_laps2(upass1,vpass1,uanl,vanl
+!    1                                  ,ni,nj,nk,rms_fg_laps)
+
+!       write(6,*)
+!       write(6,*)'  Comparing LAPS Analysis & MODEL'
+!       call comp_laps_maps(uanl,vanl,u_mdl_curr,v_mdl_curr,ni,nj,nk
+!    1             ,r_missing_data,rms_laps_maps)
+
+        do l = 1,n_radars
+
+            write(6,*)
+            write(6,*)'  Comparing LAPS First Pass to Radial Velocities'       
+     1                                                    ,' Radar #',l
+            if(istat_radar_vel .eq. 1)
+     1        call comp_laps_vr(grid_ra_vel(1,1,1,l),upass1,vpass1
+     1          ,ni,nj,nk,r_missing_data,rms_fg_vr
+     1          ,lat,lon,rlat_radar(l),rlon_radar(l),rheight_radar(l))
+
+        enddo ! l
+
+        return
+        end
+
+
+
         subroutine comparisons (
      1                upass1,vpass1,istat_radar_vel,max_radars,
      1                grid_ra_vel,rlat_radar,rlon_radar,rheight_radar,
