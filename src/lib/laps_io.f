@@ -986,7 +986,7 @@ cdoc    time.
         end
 
         subroutine put_laps_multi_2d(i4time,EXT,var_a,units_a,
-     1                          comment,field_2d,ni,nj,nf,istatus)
+     1                          comment_a,field_2d,ni,nj,nf,istatus)       
 
 cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
@@ -996,7 +996,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         character*150 DIRECTORY
         character*(*) EXT
 
-        character*125 comment_a(nf),comment
+        character*125 comment_a(nf) ! ,comment
         character*10 units_a(nf)
         character*3 var_a(nf)
         integer*4 LVL_2d(MAX_FIELDS)
@@ -1025,7 +1025,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         do l = 1,nf
             lvl_2d (l)= 0
             lvl_coord_2d(l) = 'MSL'
-            comment_a(l) = comment
+!           comment_a(l) = comment
         enddo ! l
 
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,ni,nj,
@@ -1654,7 +1654,7 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 
         character*255 c_filespec
 
-        logical ltest_vertical_grid
+        logical ltest_vertical_grid, l_is_vxx
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -1707,6 +1707,36 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
         comment_2d=comment_3d(1)
         units_2d=units_3d(1)
 
+        if( istatus .ne. 1 .and. l_is_vxx(EXT) )then
+            write(6,*)' Attempting compressed radar data read'
+!           call read_laps_compressed(i4time,directory,ext,imax,jmax
+!    1                               ,kmax,var_3d,lvl_3d,lvl_coord_3d
+!    1                               ,units_3d,comment_3d,field_3d
+!    1                               ,istatus)
+        endif
+
         return
         end
 
+        function l_is_vxx(ext)
+
+        character*(*) ext
+        logical l_is_vxx
+
+        l_is_vxx = .false.
+
+        if(ext(1:1) .ne. 'v')return
+        if(ext(2:2) .eq. '0')l_is_vxx = .true.
+        if(ext(2:2) .eq. '1')l_is_vxx = .true.
+        if(ext(2:2) .eq. '2')l_is_vxx = .true.
+        if(ext(2:2) .eq. '3')l_is_vxx = .true.
+        if(ext(2:2) .eq. '4')l_is_vxx = .true.
+        if(ext(2:2) .eq. '5')l_is_vxx = .true.
+        if(ext(2:2) .eq. '6')l_is_vxx = .true.
+        if(ext(2:2) .eq. '7')l_is_vxx = .true.
+        if(ext(2:2) .eq. '8')l_is_vxx = .true.
+        if(ext(2:2) .eq. '9')l_is_vxx = .true.
+
+        return
+        end
+      
