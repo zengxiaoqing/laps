@@ -17,6 +17,7 @@ c
 
       integer   bgmodel,nx,ny,nz
      .         ,i,j,k,l,istatus
+     .         ,icm
 c
       integer  it
       integer  lun
@@ -46,6 +47,10 @@ c     real*4 rp_init
       real*4 qsfc
       real*4 make_td
       real*4 make_ssh
+      real*4 ssh2
+      real*4 t_ref
+      real*4 pcnt
+      real*4 r_missing_data
 c
       character*(*) path
       character*9   fname
@@ -72,6 +77,10 @@ c and number of levels for each model variable in file.  (J. Smart 7-6-98).
 c
 c_______________________________________________________________________________
 c
+c Td or rh liq/ice phase temp thresh
+c ---------------------------------
+      t_ref=-47.0
+c
 c *** Open and read data index file.
 c
       call s_len(path,l)
@@ -88,6 +97,8 @@ c
             enddo
          endif
       enddo
+
+      call get_r_missing_data(r_missing_data,istatus)
 c
 c_______________________________________________________________________________
 c
@@ -137,16 +148,22 @@ c
       if(bgmodel.eq.6)then
 
          print*,'convert rh to q - 3D'
+         icm=0
          do k=1,nz
          do j=1,ny
          do i=1,nx
 
-            sh(i,j,k)=make_ssh(prk(k)
-     .                        ,tp(i,j,k)-273.15
-     .                        ,sh(i,j,k)/100.,-47.)*0.001
-
             pr(i,j,k)=prk(k)
+            if(sh(i,j,k).ne.0)then
+               sh(i,j,k)=make_ssh(prk(k)
+     .                        ,tp(i,j,k)-273.15
+     .                        ,sh(i,j,k)/100.,t_ref)*0.001
 
+            else
+               icm=icm+1
+               sh(i,j,k)=r_missing_data
+            endif
+               
 c           it=tp(i,j,k)*100
 c           it=min(45000,max(15000,it)) 
 c           xe=esat(it)
@@ -157,14 +174,27 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
          enddo
          enddo
          enddo
+
+         if(icm.gt.0)then
+            pcnt=float(icm)/float(nx*ny*nz)
+            print*,'WARNING: missing 3d AVN rh data ',icm
+         endif
  
          print*,'convert rh to Td - sfc'
+         icm=0
          do j=1,ny
          do i=1,nx
 
-            prsfc=pr_sfc(i,j)/100.
-            qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.,0.)
-            td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,-47.)+273.15
+            if(td_sfc(i,j).ne.0)then
+               prsfc=pr_sfc(i,j)/100.
+               qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
+     &,t_ref)
+               td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc,t_ref)
+     &+273.15
+            else
+               icm=icm+1
+               td_sfc(i,j)=r_missing_data
+            endif
 
 c           it=tp_sfc(i,j)*100
 c           it=min(45000,max(15000,it))
@@ -176,27 +206,63 @@ c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
          enddo
          enddo
 
+         if(icm.gt.0)then
+            pcnt=float(icm)/float(nx*ny)
+            print*,'WARNING: missing 2d AVN rh data ',icm,pcnt
+         endif
+
       elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
 c
 c *** Convert Td to sh and fill 3D pressure array.
 c
+         icm=0
          print*,'Convert Td to q - 3D'
          do k=1,nz
          do j=1,ny
          do i=1,nx
             pr(i,j,k)=prk(k)
             if (sh(i,j,k) .gt. -99999.) then
-               it=sh(i,j,k)*100
-               it=min(45000,max(15000,it))
-               xe=esat(it)
-               sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
-               sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
+               
+               sh(i,j,k)=ssh2(prk(k),tp(i,j,k)-273.15,sh(i,j,k)-273.15
+     &,t_ref)*0.001
+
+c              it=sh(i,j,k)*100
+c              it=min(45000,max(15000,it))
+c              xe=esat(it)
+c              sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
+c              sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
+
             else
+               sh(i,j,k)=r_missing_data
                if (pr(i,j,k) .lt. 300.) sh(i,j,k)=0.00001
+               icm=icm+1
             endif
          enddo
          enddo
          enddo
+         if(icm.gt.0)then
+            pcnt=float(icm)/float(nx*ny*nz)
+            print*,'WARNING: missing 3d NOGAPS Td data ',icm,
+     &pcnt
+         endif
+c
+c check for missing Td NOGAPS data.
+c
+         icm=0
+         do j=1,ny
+         do i=1,nx
+            if(td_sfc(i,j).eq.-99999.)then
+               icm=icm+1
+               td_sfc(i,j)=r_missing_data
+            endif
+         enddo
+         enddo
+         if(icm.gt.0)then
+            pcnt=float(icm)/float(nx*ny)
+            print*,'WARNING: missing 2d NOGAPS Td data ',icm
+     &,pcnt
+         endif
+
 
       endif
 c

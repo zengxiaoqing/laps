@@ -1,4 +1,4 @@
-      SUBROUTINE SFCPRS (bgmodel,t,q,height,tsfc,tdsfc,ter,p,
+      SUBROUTINE SFCBKGD(bgmodel,t,q,height,tsfc,tdsfc,ter,p,
      &IMX,JMX,KX,psfc)
 
 c inputs are from laps analyzed 2- 3d fields
@@ -43,6 +43,8 @@ c
       REAL       PSFC        ( IMX , JMX )
       REAL       TSFC        ( IMX , JMX )
       REAL       Q           ( IMX , JMX , KX )
+      REAL       rh3d        ( IMX , JMX , KX )
+      REAL       rh2d        ( IMX , JMX )
       REAL       tdsfc       ( imx,  jmx )
       REAL       T           ( IMX , JMX , KX )
       REAL       tbarv,dz,tvsfc,tvk,tbar
@@ -52,19 +54,40 @@ c
       REAL       TER         ( IMX , JMX )
       REAL       rterm
       REAL       ssh2
+      REAL       make_rh
       REAL       make_td
       REAL       make_ssh
       REAL       dzp,dtdz
-c     REAL       dpp,dp,pfrac,zfrac
-      REAL       plo,phi,pla,slope
+      REAL*8     dpp,dp,pfrac
+c     REAL*8     plo,phi,pla
       REAL       td1,td2
-c     REAL       td_sfc_logp,td_sfc_lapse
-      REAL       td_sfc_slope
+      REAL       td_sfc_lapse
+      REAL       t_ref,badflag
 c
 c if bgmodel = 6 or 8 then tdsfc is indeed td sfc
 c if bgmodel = 4      then tdsfc is rh
+c if bgmodel = 9      then no surface fields input. Compute all from 3d
+c                     fields. q3d used.
 c otherwise tdsfc is input with q
-c
+c 
+      t_ref=-47.0
+      if(bgmodel.eq.9)then
+         do k=1,kx
+            do j=1,jmx
+            do i=1,imx
+               rh3d(i,j,k)=make_rh(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
+     +,t_ref)*100.
+            enddo
+            enddo
+         enddo
+
+         badflag=0.
+         call interp_to_sfc(ter,rh3d,height,imx,jmx,kx,
+     &                      badflag,tdsfc)
+         call interp_to_sfc(ter,t,height,imx,jmx,kx,badflag,
+     &                      tsfc)
+      endif
+
       do j=1,jmx
       do i=1,imx
 
@@ -80,7 +103,6 @@ c
                tbar=(tsfc(i,j)+t(i,j,k))*0.5
                dz=height(i,j,k)-ter(i,j)
                p_sfc=p(k)*exp(G/(R*tbar)*dz)
-
 c
 c recompute psfc with moisture consideration. snook's orig code.
 c              it=tdsfc(i,j)*100.
@@ -92,10 +114,10 @@ c --------------------------------------------------
 
                if(bgmodel.eq.6.or.bgmodel.eq.8)then
                   qsfc=ssh2(p_sfc,tsfc(i,j)-273.15
-     &                          ,tdsfc(i,j)-273.15,-47.)*.001  !kg/kg
-               elseif(bgmodel.eq.4)then
+     &                     ,tdsfc(i,j)-273.15,t_ref)*.001  !kg/kg
+               elseif(bgmodel.eq.4.or.bgmodel.eq.9)then
                   qsfc=make_ssh(p_sfc,tsfc(i,j)-273.15
-     &                          ,tdsfc(i,j)/100.,-47.)*.001  !kg/kg
+     &                         ,tdsfc(i,j)/100.,t_ref)*.001  !kg/kg
                else 
                   qsfc=tdsfc(i,j)
                endif
@@ -106,42 +128,24 @@ c --------------------------------------------------
                p_sfc=(p(k)*exp(G/(R*tbarv)*dz))
 
                if(k.gt.1)then
-c
-                  plo=alog(p(k-1))
-                  phi=alog(p(k))
-                  pla=alog(p_sfc)
-                  slope=(plo-pla)/(plo-phi)
                   dzp=height(i,j,k)-height(i,j,k-1)
-c
-c currently using slope in Td calc as this gives an interpolated value
-c between the other two. However, the calc using pfrac is not far off,
-c and perhaps a bit cooler than the others.
-c
-c                 zfrac=dz/dzp
-c                 dpp=alog(p(k))-alog(p(k-1))
-c                 dp=alog(p(k))-alog(p_sfc)
-c                 pfrac=dp/dpp
-
                   dtdz=(t(i,j,k-1)-t(i,j,k))/dzp
                   t_sfc=t(i,j,k)+dtdz*dz
-
-c                 t_sfc=t(i,j,k)+(t(i,j,k)-t(i,j,k-1))*zfrac
-
                   td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
-     &,-47.)
+     &,t_ref)
                   td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
-     &,-47.)
-                  td_sfc_slope=td2-slope*(td1-td2)
-
-c                 td_sfc_logp=td2+(td2-td1)*pfrac
-c                 td_sfc_lapse=td2+((td1-td2)/dzp)*dz
-
-                  td_sfc=td_sfc_slope
+     &,t_ref)
+                  td_sfc_lapse=td2+((td1-td2)/dzp)*dz
+                  td_sfc=td_sfc_lapse
+               else
+                  t_sfc=t(i,j,k)
+                  td_sfc=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
+     &,t_ref)
                endif
 c 
 c recompute Td sfc using recomputed p and Tv
 c
-c              tdsfc(i,j)=make_td(p_sfc,tvsfc-273.15,qsfc*1000.,-47.)
+c              tdsfc(i,j)=make_td(p_sfc,tvsfc-273.15,qsfc*1000.,t_ref)
 c    &                    +273.15
 c
 c recompute sfc T with new sfc p. "devirtualize" and return dry T.
@@ -149,9 +153,7 @@ c
 c                 r_log_p = log(p_sfc/p(k))
 c                 rterm   = (2.*G*dz)/(R*r_log_p)
 c                 tvsfc   = rterm - tvk
-
 c              t_sfc   = tvsfc/(1.+0.608*qsfc)
-
 c                 r_log_p = log(p(k)/p_sfc)
 c                 tbarv   = -(G*dz/R)/r_log_p
 c                 tvsfc = tbarv*2.-tvk
@@ -160,6 +162,13 @@ c                 t_sfc   = tvsfc/(1.+0.608*qsfc)
                tsfc(i,j)=t_sfc               
                tdsfc(i,j)=td_sfc+273.15
                psfc(i,j)=p_sfc*100.      !return p units = pascals
+c
+c for testing purposes, we can temporarily use the model background moisture
+c variable for laps Td bckgrnd and compare if necessary.
+c              if(bgmodel.ne.6.and.bgmodel.ne.8)then
+c                 tdsfc(i,j)=make_td(p_sfc,t_sfc-273.15,qsfc*1000.,t_ref)
+c    &                       +273.15
+c              endif
 
             endif
             if(k.eq.kx)lfndz=.true.
