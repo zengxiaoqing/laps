@@ -187,6 +187,7 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
       endif
 
 c ok, if we do not want initial cond files (analysis files) then filter them.
+      ij=0
       if(.not.use_analysis)then
           allocate(bgnames_tmp(bg_files))
           call s_len(bg_names(1),j)
