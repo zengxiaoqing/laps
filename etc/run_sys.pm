@@ -35,7 +35,7 @@ sub run_sys{
 	exit unless($noexit);
     }elsif($rc > 0x80){
 	$rc >>= 8; 
-	print "ERROR: $sys returned non-zero exit status $rc\n";
+	print "STATUS: $sys returned non-zero exit status $rc\n";
         exit unless($noexit);
     }else{
 	print "ERROR: $sys ran with ";
