@@ -31,6 +31,7 @@
           real zoom
 
           integer contour_line_width
+          integer ncols
 
 	end type plot_type
 
