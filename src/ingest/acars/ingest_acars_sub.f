@@ -211,6 +211,10 @@ C
               if(l_debug)write(6,*)' wind speed is suspect - reject'
      1                              ,windSpeed(i)
 
+          elseif(int(windDir(i)).lt.0 .or. int(windDir(i)).gt.360)then     
+              if(l_debug)write(6,*)' wind direction is suspect - reject'       
+     1                              ,windDir(i)
+
           else ! write out valid wind
               if(l_debug)write(6 ,3)int(windDir(i)),windSpeed(i)
                          write(31,3)int(windDir(i)),windSpeed(i)
