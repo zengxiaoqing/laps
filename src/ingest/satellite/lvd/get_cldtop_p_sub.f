@@ -150,11 +150,11 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
      &,status='old')
 
         iobs=0
-        read(15,*)cheader
+        read(15,*,err=9)cheader
         do while (iobs.lt.max_ctp)
            iobs=iobs+1
-           read(15,*,end=20)lday(iobs),ltim(iobs),lat(iobs),lon(iobs)
-     +,ca(iobs),pct(iobs),tc(iobs)
+           read(15,*,end=20,err=99)lday(iobs),ltim(iobs),lat(iobs)
+     +,lon(iobs),ca(iobs),pct(iobs),tc(iobs)
            lon(iobs)=-1*lon(iobs)
         enddo
         if(iobs.eq.max_ctp)then
@@ -251,5 +251,13 @@ c make and save i4time
         print*,'no current cloud top p files: return to main'
         print*,'no data processed'
       endif
-      return
+      goto 1000
+
+9     print*,'Error reading cloud top p header'
+      istatus = 0
+      goto 1000
+99    print*,'Error reading cloud top p file'
+      istatus = 0
+
+1000  return
       end

@@ -1025,13 +1025,11 @@ c been mapped to the laps domain. AFWA's GMS so far.
          call check_for_new_ctp(iwindow_ctp,istatus_ctp)
 
          if(istatus_ctp.eq.1)then
+
             ext_ctp='ctp'
-            if(.not. objects_allocated)then
-               allocate (rlctp(nx_l,ny_l),rlca(nx_l,ny_l)
-     &                  ,rlct(nx_l,ny_l),ctp_data(nx_l,ny_l,4))
-               allocate (ri4time_ob(nx_l,ny_l))
-               objects_allocated = .true.
-            endif
+
+            allocate (rlctp(nx_l,ny_l),rlca(nx_l,ny_l),rlct(nx_l,ny_l)
+     &,ctp_data(nx_l,ny_l,4),ri4time_ob(nx_l,ny_l))
 
             print*,'calling read_cld_top_p'
 
@@ -1100,6 +1098,8 @@ c            print*,'path/filename out: ',dir_ctp
              endif
 
             endif
+
+            deallocate(rlctp,rlca,rlct,ctp_data,ri4time_ob)
 
          else
             print*,'No new cld top pressure files to process'
