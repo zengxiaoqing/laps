@@ -55,7 +55,7 @@ C
      1       ,iheight,pressure,temp,dewpoint
      1       ,iwind_ind,idir,ispd
  501  format(i7,1x,a5,6x,i8
-     1         ,4x,f6.2,4x,f6.2,2x,a11,2x,a11
+     1         ,4x,f6.2,3x,f7.2,2x,a11,2x,a11
      1         /3x,i9,3x,f9.0,2x,f10.0,2x,f10.0
      1         ,2x,i9,2x,i9,2x,i9)
 
