@@ -887,6 +887,8 @@ c     make call to goes moisture insertion
      1           p_3d,          ! pressure mb
      1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
      1           lt1dat,        ! laps lt1 (3-d temps)
+     1           mdf,
+     1           ps,qs,kstart,
      1           goes_switch,   ! goes switch and satellite number
      1           sounder_switch, ! sounder switch, 0=imager,1=sndr
      1           sat_skip,      ! normally 1 for full resolution

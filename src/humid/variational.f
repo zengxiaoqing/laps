@@ -49,6 +49,8 @@ cdis
      1     p_3d,                !pressure hpa (laps vert grid)
      1     cloud,               !cloud array
      1     t,                   ! lt1 (laps 3d temps)
+     1     mdf,
+     1     ps,qs,kstart,
      1     ngoes,               ! goes satellite number
      1     isnd,                ! sounder switch
      1     sat_skip,            ! normally 1 for full resolution
@@ -99,7 +101,7 @@ c     parameter list variables
       real sh(ii,jj,kk)
       real lat(ii,jj),lon(ii,jj)
       integer i4time
-      real t(ii,jj,kk),p_3d(ii,jj,kk)
+      real t(ii,jj,kk),p_3d(ii,jj,kk),mdf
       real cloud(ii,jj,kk)
       real gw1(ii,jj),gww1(ii,jj)
       real gw2(ii,jj),gww2(ii,jj)
@@ -109,6 +111,8 @@ c     parameter list variables
       integer ngoes
       integer isnd
       integer sat_skip
+      real ps(ii,jj), qs(ii,jj)
+      integer kstart(ii,jj)
 
 
 c internal variables
@@ -186,12 +190,26 @@ c   optran specific arrays for powell function calling
       real cost_lat
       real cost_theta
       integer cost_isnd
+
+      
       real bias_correction ! function
  
 
       common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
      1    cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
      1    cost_theta, cost_isnd
+
+      common /cost_gvap/cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight,
+     1     cost_gvap_istatus,cost_data,cost_kstart,cost_qs,
+     1     cost_ps, cost_p1d, cost_mdf
+      real cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight
+      integer cost_gvap_istatus
+      real cost_data(500)
+      integer cost_kstart
+      real cost_qs
+      real cost_ps
+      real cost_p1d(500)
+      real cost_mdf
 
       integer goes_number
 
@@ -654,12 +672,15 @@ c check for bad data in radiance_ob
 
 
 
-c fill powell common block with profile data for optran
+c fill powell common block with profile data for routine variational
 
                   do k = 1, kk
                      cost_p(k) = p_l(k,i,j)
                      cost_t_l(k) = t_l(k,i,j)
                      cost_mr_l(k) = mr_l (k,i,j)
+                     cost_p1d(k) = p_3d(i,j,k)
+
+                     cost_data(k) = sh(i,j,k)
                   enddo
                   cost_kk = kk
                   cost_tskin = tskin (i,j)
@@ -667,6 +688,19 @@ c fill powell common block with profile data for optran
                   cost_julian_day = julian_day
                   cost_lat = lat (i,j)
                   cost_theta = theta (i,j)
+
+                  cost_w1 = gw1(i,j)
+                  cost_w2 = gw2(i,j)
+                  cost_w3 = gw3(i,j)
+                  cost_weight = gww1(i,j)
+                  cost_gvap_p = gvap_p(i,j)
+                  cost_gvap_istatus = istatus_gvap
+                  cost_kstart = kstart (i,j)
+                  cost_qs = qs(i,j)
+                  cost_ps = ps (i,j)
+                  cost_mdf = mdf
+                  
+                  
 
                   if(cld(i,j).eq.0.) then
 c     don't match low atmosphere (use func, not func3)

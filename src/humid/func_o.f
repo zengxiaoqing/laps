@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -90,6 +90,19 @@ c     optran specific arrays for powell function calling
      1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
      1     cost_theta, cost_isnd
 
+      common /cost_gvap/cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight,
+     1     cost_gvap_istatus,cost_data,cost_kstart,cost_qs,
+     1     cost_ps, cost_p1d, cost_mdf
+      real cost_w1,cost_w2,cost_w3,cost_gvap_p,cost_weight
+      integer cost_gvap_istatus
+      real cost_data(500)
+      integer cost_kstart
+      real cost_qs
+      real cost_ps
+      real cost_p1d(500)
+      real cost_mdf
+
+      
 c     local analogs to common block variables for input to parameters
 
       integer kk
@@ -101,8 +114,10 @@ c     local analogs to common block variables for input to parameters
       integer julian_day
       real lat
       real theta
+      real lpw1,lpw2,lpw3
 
-c     local variables
+
+c     lcal variables
 
       integer i,j
       integer kan(18)
@@ -112,6 +127,7 @@ c     local variables
       data first_time /.true./
       integer lvl500, lvl700, lvl100
       real var_weights(7)       ! weights computing in func
+      real p1,p2,p3             !pressure tops for gvap layers
       
 c     externals
       
@@ -228,6 +244,38 @@ c     stability cost is identical for both imager and sounder
       do j = 1,3
          func = func + .1 * ((x(j) - 1.)**2 )
       enddo
+
+      if (cost_gvap_istatus .eq. 1) then
+c     test for weight of measurement
+         if(cost_weight.lt. 0.2 .or. cost_weight.eq.cost_mdf) then !skip this step
+            continue
+         else  ! process gvap
+c     integrate q for gvap layers
+c     determine sigma level pressure analogs
+            call sigma_to_p (0.1, cost_gvap_p, 0.9, p1)
+            call sigma_to_p (0.1, cost_gvap_p, 0.7, p2)
+            call sigma_to_p (0.1, cost_gvap_p, 0.3, p3)
+            call int_layerpw(x,cost_data,cost_kstart,
+     1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
+     1           cost_kk,cost_mdf)
+            write(6,*) 'TEMPORARY ', cost_gvap_p,
+     1           lpw1,cost_w1, lpw2,cost_w2, lpw3, cost_w3
+
+c     minimize with respect to layer gpw data
+
+c            func = func t + 
+c     1           + (lpw1-cost_w1)**2/cost_weight
+c     1           + (lpw2-cost_w3)**2/cost_weight
+c     1           + (lpw2-cost_w3)**2/cost_weight
+
+
+
+
+c     generate modfied cost function based on these layers
+            func = func
+         endif                  !weight function test
+      endif                     !data present test
+
 
       return
       end
