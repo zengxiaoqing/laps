@@ -53,6 +53,11 @@ cdoc    Convert a9_time (yydddhhmm) to a10_time (yyyyMMddhh)
         call get_systime_all(i4time_sys,a9_time_sys,anal_hr,
      1             anal_min,asctim_str,yr_jday,istatus)
 
+        if(istatus.ne.1)then
+           print*,'Error returned from get_systime_all'
+           return
+        endif
+
         a8_time=a9_to_a8(a9_time)
         ilen=len(asctim_str)
         a9_to_yr_a10_time=asctim_str(ilen-8:ilen-5)//a8_time(3:8)
@@ -275,12 +280,17 @@ c
       character*(*) cmodel
       character*3  c3_FA_ext,c3_ext
       integer      lenc
+      integer      istatus
 
       a9_string=fname13(1:9)
       a4_string=fname13(10:13)
 
 c     fname7=a9_to_a7_time(a9_string)
-      fname10=a9_to_yr_a10_time(a9_string)
+      fname10=a9_to_yr_a10_time(a9_string,istatus)
+      if(istatus.ne.1)then
+         print*,'Error in conversion: a9_to_yr_a10_time'
+         return
+      endif
       c3_ext=c3_FA_ext(a4_string)
       call s_len(cmodel,lenc)
       if(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_NF')then
