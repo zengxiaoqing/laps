@@ -345,6 +345,169 @@ c                           Sfc field
       return
       end
 
+      subroutine read_fa_nf ( lun, filename,                   ! I
+     .                        nx, ny, nz,                      ! I
+     .                        r_missing_data,                  ! I
+     .                        pressures_pa,                    ! O
+     .                        ht, tp, rh, uw, vw, ww,          ! O
+     .                        pss, tps, rhs, uws, vws,         ! O
+     .                        mslp,                            ! O
+     .                        istatus )                        ! O
+
+      parameter ( nlevel=11, nvar=6 )  ! nlevel=nz
+      parameter ( i_record=300 )
+
+      PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
+      BYTE      FGGE_BUF(MAX_BUF)
+      REAL*4    FDATA(MAX_PTS)
+ 
+      STRUCTURE /FGGE_HEAD/
+#ifdef alpha
+        INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#else
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
+#endif
+      END STRUCTURE
+      RECORD /FGGE_HEAD/HEADER
+
+      character*255 filename
+      real*4 r_missing_data    ! Missing data value
+ 
+c                   3D fields (pressure grid)
+      real*4 ht(nx,ny,nz),     ! nfs height (m)
+     .       tp(nx,ny,nz),     ! nfs temperature (K)
+     .       rh(nx,ny,nz),     ! nfs relative humidity (%)
+     .       uw(nx,ny,nz),     ! nfs u-wind (m/s)
+     .       vw(nx,ny,nz),     ! nfs v-wind (m/s)
+     .       ww(nx,ny,nz),     ! nfs w-wind (pa/s)
+     .       pressures_pa(nz)  ! nfs Pressures of each level (pa) 
+
+c                      2D fields (Sfc field)
+      real*4 pss(nx,ny),       ! nfs height (m)
+     .       tps(nx,ny),       ! nfs temperature (K)
+     .       rhs(nx,ny),       ! nfs relative humidity (%)
+     .       uws(nx,ny),       ! nfs u-wind (m/s)
+     .       vws(nx,ny)        ! nfs v-wind (m/s)
+      real*4 mslp(nx,ny)       ! nfs mean sea level presures (pa)
+
+      integer  c1(nlevel), e1(nlevel)
+      integer  var(nvar), prs
+
+      data c1  / 10000, 92500, 85000, 70000, 50000, 40000, 30000,
+     .           25000, 20000, 15000, 10000 /
+      data e1  / -1, 10*-2 /
+      data var  / 1001, 1016, 1048, 1049, 1040, 1088 /
+      data prs  / 1008 /
+
+      istatus= 0
+      n= 0
+
+      do 10 i= 1,nz
+10       pressures_pa(i)= c1(i) *10.**e1(i) *100.
+ 
+      CALL OPEN_FGGE_FILE(filename,ISTAT)
+      IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
+ 
+      do l= 1,i_record
+ 
+         CALL READ_FGGE_RECORD(FGGE_BUF,ISTAT)
+         if ( istat .ne. 0 )  exit
+ 
+         CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
+
+         if ( header.s1 .eq. 1 )  then
+            CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+            do 30 j= 1,ny
+            do 30 i= 1,nx
+30             mslp(i,j)= fdata( i +nx*(j-1) ) *100
+         endif
+
+         if ( header.s1 .eq. 2 )  then
+            if ( header.q .eq. prs    )  then
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               do 50 j= 1,ny
+               do 50 i= 1,nx
+50                pss(i,j)= fdata( i +nx*(j-1) )
+            endif
+
+            if ( header.q .eq. var(2) )  then
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               do 60 j= 1,ny
+               do 60 i= 1,nx
+60                tps(i,j)= fdata( i +nx*(j-1) )
+            endif
+
+            if ( header.q .eq. var(3) )  then
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               do 70 j= 1,ny
+               do 70 i= 1,nx
+70                uws(i,j)= fdata( i +nx*(j-1) )
+            endif
+
+            if ( header.q .eq. var(4) )  then
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               do 80 j= 1,ny
+               do 80 i= 1,nx
+80                vws(i,j)= fdata( i +nx*(j-1) )
+            endif
+
+            if ( header.q .eq. var(6) )  then
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               do 90 j= 1,ny
+               do 90 i= 1,nx
+90                rhs(i,j)= fdata( i +nx*(j-1) )
+            endif
+         endif
+
+         do k= 1,nz
+            if ( header.c1 .eq. c1(k) .and. header.e1 .eq. e1(k) ) then
+
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               if ( header.q .eq. var(1) )  then
+                  do 100 j= 1,ny
+                  do 100 i= 1,nx
+100                  ht(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var(2) )  then
+                  do 200 j= 1,ny
+                  do 200 i= 1,nx
+200                  tp(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var(3) )  then
+                  do 300 j= 1,ny
+                  do 300 i= 1,nx
+300                  uw(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var(4) )  then
+                  do 400 j= 1,ny
+                  do 400 i= 1,nx
+400                  vw(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var(5) )  then
+                  do 500 j= 1,ny
+                  do 500 i= 1,nx
+500                  ww(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var(6) )  then
+                  do 600 j= 1,ny
+                  do 600 i= 1,nx
+600                  rh(i,j,k)= fdata( i +nx*(j-1) )
+               endif
+ 
+            endif
+         enddo
+
+         n= n+1
+      enddo
+
+      write (6,*) 'read fgge data completely       record number= ', n
+      CALL CLOSE_FGGE_FILE(ISTAT)
+      istatus= 1
+
+      return
+      end
 
 
       SUBROUTINE read_FGGE_HEADER( nx, ny, nz,
@@ -628,8 +791,7 @@ C---------------------------------------------------------------------------
       END
 
 #else
-C
-cdoc  Dummy routine for other platforms
+cdoc  Below are dummy routines for other platforms
 
       subroutine read_fa(lun,filename                   ! I
      .               ,nx,ny,nz                          ! I
@@ -638,10 +800,24 @@ cdoc  Dummy routine for other platforms
      .               ,ht,tp,rh,uw,vw                    ! O
      .               ,mslp                              ! O
      .               ,istatus)                          ! O
-      x = 1.0
       write(6,*)' WARNING: routine read_fa not supported '
      1         ,'on this platform'
       istatus = 1 ! Failure
       RETURN
       END
+
+      subroutine read_fa_nf ( lun, filename,                   ! I
+     .                        nx, ny, nz,                      ! I
+     .                        r_missing_data,                  ! I
+     .                        pressures_pa,                    ! O
+     .                        ht, tp, rh, uw, vw, ww,          ! O
+     .                        pss, tps, rhs, uws, vws,         ! O
+     .                        mslp,                            ! O
+     .                        istatus )                        ! O
+      write(6,*)' WARNING: routine read_fa_nf not supported '
+     1         ,'on this platform'
+      istatus = 1 ! Failure
+      RETURN
+      END
+
 #endif

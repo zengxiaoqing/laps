@@ -52,7 +52,7 @@ my $initial_time = time();
 # be executed.
 #
 
-my @LAPS_EXE = qw(lga.exe obs_driver.x 
+my @LAPS_EXE = qw(lga.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
                   ingest_pro.exe

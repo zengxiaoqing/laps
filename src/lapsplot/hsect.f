@@ -227,6 +227,7 @@ cdis
         real*4 make_rh
 
         include 'laps_cloud.inc'
+        include 'bgdata.inc'
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
         real*4 cld_pres(KCLOUD)
@@ -243,6 +244,9 @@ cdis
         character asc9_tim_t*9
         character asc9_tim_n*9
         character c9_radarage*9
+
+        character*9   c_fdda_mdl_src(maxbgmodels)
+        character*10  cmds
 
 c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
@@ -261,6 +265,10 @@ c       include 'satellite_dims_lvd.inc'
         grid_fnam_common = 'nest7grid'  ! Used in get_directory to modify
                                       ! extension based on the grid domain
         ext = 'nest7grid'
+
+!       Get fdda_model_source from nest7grid.parms
+        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+
 
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
@@ -458,16 +466,17 @@ c       include 'satellite_dims_lvd.inc'
                     endif
 
                     if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'fsf')then       
-                        write(6,*)' Using ',ext(1:3),' file'
-
-                        call input_model_time(i4time_ref    ! I
+                        call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_3dw            ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
-     1                                                            )
-                        call get_directory(ext,directory,len_dir)
+     1                             ,istatus)                ! O
+                        if(istatus.ne.1)goto1200
 
                         level=0
 
@@ -485,6 +494,8 @@ c       include 'satellite_dims_lvd.inc'
      1                                 VAR_2d,level,LVL_COORD_2d,
      1                                 UNITS_2d,COMMENT_2d,
      1                                 u_2d,ISTATUS)
+
+                        if(istatus.ne.1)goto1200
 
                         if(ext(1:3) .eq. 'lgb')then
                             var_2d = 'VSF'
@@ -2712,10 +2723,19 @@ c
             if(c_type.eq.'fr')ext='fua'
 
             print*,'      plotting ',ext(1:3),' humidity data'
-            write(6,211)ext(1:3)
-            read(5,221)a13_time
 
-            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+            call input_model_time(i4time_ref              ! I
+     1                           ,laps_cycle_time         ! I
+     1                           ,asc9_tim_t              ! O
+     1                           ,fcst_hhmm               ! O
+     1                           ,i4_initial              ! O
+     1                           ,i4_valid                ! O
+     1                                                            )
+
+!           write(6,211)ext(1:3)
+!           read(5,221)a13_time
+
+!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
 
             write(6,1513)
             read(lun,*)k_level
@@ -2730,70 +2750,67 @@ c
             var_2d = 'SH '
             call get_modelfg_3d_sub(i4_valid,var_2d,ext
      1             ,nx_l,ny_l,nz_l,field_3d,istatus)             ! q_3d
+
             if(istatus.ne.1)then
-               print*,var_2d, ' not obtained from ',ext(1:3)
-               print*,'no plotting of data for requested time period'
+                print*,var_2d, ' not obtained from ',ext(1:3)
+                print*,'no plotting of data for requested time period'
+
             else
 
-            if(qtype.eq.'q')then
+                if(qtype.eq.'q')then
 
-              call mklabel33(k_level,' LGA Spec Hum (x1e3)'
-     1                      ,c33_label)
-              if(c_type.eq.'fr')then
-                 call mklabel33(k_level,' FUA Spec Hum (x1e3)'
-     1                         ,c33_label)
-              endif
+                    call mklabel33(k_level,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' Q  (x1e3)',c33_label)
 
-              clow = 0.
-              chigh = +40.
-              cint = 0.2
-c             cint = -1.
+                    clow = 0.
+                    chigh = +40.
+                    cint = 0.2
+c                   cint = -1.
 
-              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+                    call plot_cont(field_3d(1,1,k_level),1e-3
+     1                            ,clow,chigh,cint ! q_3d
+     1                            ,asc9_tim_t,c33_label,i_overlay
+     1                            ,c_display,'nest7grid'
+     1                            ,lat,lon,jdot,NX_L,NY_L
+     1                            ,r_missing_data,laps_cycle_time)
 
-              call plot_cont(field_3d(1,1,k_level),1e-3,clow,chigh,cint, ! q_3d
-     1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1             ,lat,lon,jdot,
-     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+                elseif(qtype .eq. 'r')then
 
-            elseif(qtype .eq. 'r')then
+                    write(6,1635)
+1635                format(10x,'input t_ref [deg C] ? ',$)
+                    read(5,*)t_ref
 
-              write(6,1635)
-1635          format(10x,'input t_ref [deg C] ? ',$)
-              read(5,*)t_ref
+                    var_2d = 'T3 '
+                    call get_modelfg_3d_sub(i4_valid,var_2d,ext
+     1                          ,nx_l,ny_l,nz_l,temp_3d,istatus)
+                    if(istatus.ne.1)then
+                        print*,var_2d, ' not obtained from ',ext(1:3)
+                    endif
 
-              var_2d = 'T3 '
-              call get_modelfg_3d_sub(i4_valid,var_2d,ext
-     1             ,nx_l,ny_l,nz_l,temp_3d,istatus)
-              if(istatus.ne.1)then
-                  print*,var_2d, ' not obtained from ',ext(1:3)
-              endif
 
-              call mklabel33(k_level,'  LGA rh (computed) (%) '
-     1                      ,c33_label)
-              if(c_type.eq.'fr')then
-                 call mklabel33(k_level,'  FUA rh (computed) (%) '
-     1                         ,c33_label)
-              endif
+                    call mklabel33(k_level,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
 
-              clow = 0.
-              chigh = +100.
-              cint = 10.
+                    clow = 0.
+                    chigh = +100.
+                    cint = 10.
 
-              call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+                    call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
 
-              do i = 1,NX_L
-              do j = 1,NY_L
-                field_3d(i,j,k_level)=make_rh(float(k_mb)
+                    do i = 1,NX_L
+                    do j = 1,NY_L
+                        field_3d(i,j,k_level)=make_rh(float(k_mb)
      1                         ,temp_3d(i,j,k_level)-273.15
      1                         ,field_3d(i,j,k_level)*1000.,t_ref)*100. ! q_3d
-              enddo ! j
-              enddo ! i
+                    enddo ! j
+                    enddo ! i
 
-              call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
-     1           asc9_tim_t,c33_label,i_overlay,
-     1           c_display,'nest7grid',lat,lon,jdot,
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+                    call plot_cont(field_3d(1,1,k_level),1e0
+     1                            ,clow,chigh,cint,asc9_tim_t
+     1                            ,c33_label,i_overlay,c_display
+     1                            ,'nest7grid',lat,lon,jdot
+     1                            ,NX_L,NY_L,r_missing_data
+     1                            ,laps_cycle_time)
 
               endif
             endif
@@ -4746,6 +4763,7 @@ c
         character*9 c9_string, asc_tim_9
         character*13 filename13
         character*2 c_field
+        character*3 c3_name
 
 !       Declarations for new read_surface routine
 !       New arrays for reading in the SAO data from the LSO files
@@ -4811,7 +4829,7 @@ c
         call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj))
 !       call setusv_dum(2HIN,11)
 
-        write(6,*)' Plotting Station locations'
+        write(6,*)' plot_station_locations... ',iflag
 !       Plot Stations
         do i = 1,n_obs_b ! num_sfc
             call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
@@ -4834,8 +4852,15 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
-                call pwrity (xsta, ysta-du*3.5, stations(i)(1:3)
-     1                    , 3, -1, 0, 0)
+                call s_len(stations(i),len_sta)
+
+                if(len_sta .ge. 3)then
+                    c3_name = stations(i)(len_sta-2:len_sta)
+                else
+                    c3_name = stations(i)
+                endif
+
+                call pwrity (xsta, ysta-du*3.5, c3_name, 3, -1, 0, 0)     
 
                 relsize = 1.1
 
@@ -4961,6 +4986,101 @@ c
 
         return
         end
+
+
+        subroutine input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_3dw            ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+        integer       maxbgmodels
+        parameter     (maxbgmodels=10)
+
+        integer       n_fdda_models
+        integer       l,len_dir,lfdda
+        integer       istatus
+        character*9   c_fdda_mdl_src(maxbgmodels)
+        character*(*) directory
+        character*(*) ext
+        character*20  c_model
+        character*10  cmds
+        character*1   cansw
+
+        character*4 fcst_hhmm
+        character*9 asc9_tim_t, a9time
+        character*13 a13_time
+
+        logical l_parse
+
+        write(6,*)' Subroutine background_directory...'
+
+        write(6,*)' Using ',ext(1:3),' file'
+
+        istatus = 0
+
+        call get_directory(ext,directory,len_dir)
+
+        if(l_parse(ext,'lga') .or. l_parse(ext,'lgb'))go to 900 ! use LGA/LGB
+
+!       Get fdda_model_source from nest7grid.parms
+        call get_fdda_model_source(c_fdda_mdl_src,n_fdda_models,istatus)
+ 
+        call s_len(directory,len_dir)
+        cansw='n'
+        l=1
+!       do while((cansw.eq.'n'.or.cansw.eq.'N').and.l.le.n_fdda_models)
+        do while(.false.)
+           if(l.ne.n_fdda_models)then
+              write(6,108)c_fdda_mdl_src(l)
+108   format(/'  Plot field for FDDA source -> ',a9,'[y/n]',25x,'? ',$)
+              read(5,*)cansw
+              if(cansw.eq.'y'.or.cansw.eq.'Y')then
+                 call s_len(c_fdda_mdl_src(l),lfdda)
+                 cmds=c_fdda_mdl_src(l)(1:lfdda)//'/'
+                 DIRECTORY=directory(1:len_dir)//cmds
+              endif
+              l=l+1
+           else
+              write(6,109)c_fdda_mdl_src(l)
+109   format(/'  Plotting field for FDDA source -> ',a9)
+              call s_len(c_fdda_mdl_src(l),lfdda)
+              cmds=c_fdda_mdl_src(l)(1:lfdda)//'/'
+              cansw='y'
+           endif
+        enddo
+        if(n_fdda_models.eq.0)then
+           print*,'fdda is not turned on in nest7grid.parms'
+           return 
+        endif
+
+        write(6,205)ext(1:3)
+ 205    format(/' Enter model [e.g. mm5] for ',a3,' file: ',$)
+
+        read(5,206)c_model
+ 206    format(a)
+
+        DIRECTORY=directory(1:len_dir)//cmds
+
+ 900    continue
+
+        call       input_model_time(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_t              ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                                                            )
+
+        istatus = 1
+        return
+        end
+
 
 
         subroutine input_model_time(i4time_ref              ! I
