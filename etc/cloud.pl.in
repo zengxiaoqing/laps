@@ -129,11 +129,16 @@ print "   $greplines[0]";
 print "\n";
 
 # Surface metars (sfc.pl has a nicer way of printing these out)
-print "METARS:\n";
+print "METARS:\n    ";
 @greplines = grep /   METAR  /, @lines;
+$iprint=0;
 foreach (@greplines) {
   ($name,@junk) = split;
-  if(@junk > 3){print "$name ";}
+  if(@junk > 3){
+      print "$name "; 
+      $iprint=$iprint+1;
+      if ($iprint > 17) {print "\n    "; $iprint=0;} 
+  }
 }
 print "\n";
 print "\n";
