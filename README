@@ -558,21 +558,14 @@
            on isobaric surfaces. Pete Stamus (FSL) would have 
            more info on this.
 
+     Further information on specific LAPS ingest processes for the various 
+     data sources is found in Section 3 of this README.
+
                        ----   2.3.1  Radar ingest ---
 
-     One of the first things to establish is whether your raw data is in
-     polar or Cartesian form. If polar, take a look at the "Polar Radar Data"
-     subsection in Section 3. NOWRAD / WSI (Cartesian) data is also covered in
-     Section 3.
-
-     More details about radar data usage in LAPS are on the World Wide Web at:
-     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
-     includes information on which types of radar data are processed via the
-     various intermediate data files.
-
      The following are intermediate files for various forms of radar
-     data. These may have already been pre-processed from "raw" data,
-     and are in Cartesian format on the LAPS grid.
+     data. These may have already been pre-processed (remapped) from "raw" 
+     data, and at this stage are in Cartesian format on the LAPS grid.
 
 <pre>
 
@@ -624,8 +617,15 @@
                                    well as echo tops (MSL).
 </pre>
 
-     Further information on specific LAPS ingest processes for radar and other
-     data sources is found in Section 3 of this README.
+     More details about radar data usage in LAPS are on the World Wide Web at:
+     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
+     includes information on which types of radar data are processed via the
+     various intermediate data files.
+
+     An important thing to establish is whether your raw data is in polar 
+     or Cartesian form. If polar, please take a look at the "Polar Radar Data"
+     subsection in Section 3. NOWRAD / WSI (Cartesian) data is covered 
+     separately within Section 3.
       
 
                ---  2.4  Running LAPS Analyses  ---
@@ -993,7 +993,7 @@
 <pre>
         1) silavwt_parm: 
 
-           Default value of 1. represents the use of silhouette terrain
+           Default value of 0. represents the use of silhouette terrain
            which is the maximum elevation in the local area. Useful range is
            between 0-1. A value of zero uses the average terrain instead of
            the maximum. Note that a value of 1. may reduce the apparent effect
@@ -1354,7 +1354,7 @@ Sample Output: Should be available in the test data case. The grids start with
                north.
 
 
-------- 3.2  ------------------  INGEST PROCESSES---------------------------
+------- 3.2  ------------------  Ingest Processes ---------------------------
 
 As mentioned above, a flow chart for the ingest processes may be found at
 'http://laps.fsl.noaa.gov/wharton/slide1.html'.
@@ -2341,13 +2341,9 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 
 Fcst Model:	RAM  U3   ru	  21  Fcst Model Wind u
 		     V3   rv	  21  Fcst Model Wind v
-		     OM	  rw	  21  Fcst Model Omega
 		     HT	  rz	  21  Fcst Model Height
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
-                     RH3  rh3     21  Fcst Model Relative Humidity
-                     LWC  lwc     21  Fcst Model Cloud liquid water
-                     ICE  ice     21  Fcst Model Cloud Ice
 		
 		RSF  U	  rus 	   1  Fcst Model Surface wind u
 	             V	  rvs 	   1  Fcst Model Surface wind v
