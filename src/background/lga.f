@@ -420,7 +420,6 @@ c     character*10  units(nz_laps)
       character*10  c_domain_name
       character*200 c_dataroot
       integer len_dir,ntime, nf
-      integer nxbg, nybg, nzbg(5),ntbg
 c
       data ntime/0/
       data ext/'lga'/
@@ -533,75 +532,16 @@ c this extra work.
          endif     
 
          call s_len(bgpath,i)
-c        fullname = bgpath(1:i)//'/'//bg_names(nf)
          fullname = bgpath(1:i)//'/'//fname_bg(nf)
-         if (bgmodel .eq. 1) then     ! Process 60 km RUC data
-            call read_ruc60_native(bgpath,fname_bg(nf),af_bg(nf),
-     .               nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .               gproj,istatus_prep)
- 
-         elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
-            call read_eta_conusC(fullname,nx_bg,ny_bg,nz_bg,
-     .                          htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg,
-     .                          htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
-     .                          uwbg_sfc,vwbg_sfc,mslpbg,
-     .                          istatus_prep)
-
-            if(istatus_prep.eq.0) then
-               call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,prbg,tpbg,shbg,
-     +              tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus_prep)
-            endif
 c
-         elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
+c new subroutine to read appropriate background model file.
+         call read_bgdata(nx_bg,ny_bg,nz_bg
+     +    ,bgpath,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
+     +    ,htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg
+     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +    ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus_prep)
 
-            ntbg=10 
-            fname13 = fname9_to_wfo_fname13(fname_bg(nf)(1:9))
-            call get_sbn_dims(bgpath,fname13,nxbg,nybg,nzbg,ntbg)
-
-            print*,'entering read_conus_211'
-            call read_conus_211(bgpath,fname_bg(nf)(1:9),af_bg(nf),
-     .           nx_bg,ny_bg,nz_bg, nxbg,nybg,nzbg,ntbg,
-     .           prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg,
-     .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
-     .           mslpbg,gproj,1,istatus_prep)
-c
-         elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
-
-            call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg,
-     +           mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg,istatus_prep)
-            if(istatus_prep.eq.0) then
-               print*,'Read complete: entering prep'
-               call lprep_ruc2_hybrid(nx_bg,ny_bg,nz_bg,htbg,prbg,shbg,
-     +              uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc,tpbg_sfc,prbg_sfc,
-     +              shbg_sfc,gproj)
-               print*,'Data prep complete'
-            else 
-              print*,'lprep_ruc not called'
-            endif
-c
-c ETA grib ingest currently disabled (J. Smart 9-4-98)
-c Also, NOGAPS 2.5 degree obsolete.
-c bgmodel 3 = FA (Taiwan). bgmodel 6 = NOGAPS1.0. bgmodel 8 = AVN 1.0 deg
-c
-         elseif (bgmodel .eq. 3 .or.
-     .           bgmodel .eq. 6 .or.
-     .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
-
-            call read_dgprep(bgmodel,cmodel,bgpath
-     .                  ,fname_bg(nf),af_bg(nf),nx_bg,ny_bg,nz_bg
-     .                  ,prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg
-     .                  ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .                  ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus_prep)
-
-         elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
-            call read_conus_nws(bgpath,fname_bg(nf),af_bg(nf),
-     .                 nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                 gproj,istatus_prep)
-c
-         endif
-         
          if (istatus_prep .ne. 0) then
-c            l=index(bgpath,' ')-1
 
             call s_len(fname_bg(nf),lf)
             call s_len(bgpath,l)
@@ -615,6 +555,7 @@ c            l=index(bgpath,' ')-1
             print *,'Process aborted for this file.'
             lga_status= -nf
             return
+ 
          endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
