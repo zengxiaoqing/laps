@@ -171,11 +171,15 @@ if(defined $ENV{FXA_DATA}){
 if( $CONFIG_DOMAIN eq "true" ) {
   if( $all_roots_equal eq "F" ){
 
-      print "Removing dataroot: $LAPS_DATA_ROOT\n";
       if( -e $LAPS_DATA_ROOT ){
           if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data"||
               $LAPS_DATA_ROOT ne "/data/lapb/parallel/laps/data"){
+              print "Removing dataroot: $LAPS_DATA_ROOT\n";
               system("rm -rf $LAPS_DATA_ROOT");
+          }else{
+              print "Currently this script will not remove this dataroot\n";
+              print "dataroot = $LAPS_DATA_ROOT\n";
+              exit;
           }
       } 
       if( !-e "$DATAROOT/$DOMAIN_NAME" ){
@@ -188,57 +192,77 @@ if( $CONFIG_DOMAIN eq "true" ) {
       print "Generate lapsdataroot directory structure\n";
       &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }else{
-      print "Script will not remove LAPS_DATA_ROOT when all-roots are equal with -c \n";
-      print "Reconsider your command line inputs\n";
+      print "Script will not remove LAPS_DATA_ROOT when all-roots are equal\n";
+      print "Reconsider your command line inputs ... do you really want -c ?\n";
       exit;}
 
 }else{
 
   if(-e $LAPS_DATA_ROOT ){
+
      if($all_roots_equal eq "F") {
         print "Save static and cdl subdirectories\n";
         rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
         rename ("$LAPS_DATA_ROOT/cdl","$LAPS_DATA_ROOT/cdl\_save");
         mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
         mkdir "$LAPS_DATA_ROOT/cdl", 0777 or die "Can't make $LAPS_DATA_ROOT/cdl $!\n";
+
      }else{
-        print "All lapsroots equal. Make datadirs as necessary\n";
-        &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+
+        print "All lapsroots equal.\n";
+        if(! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
+           print "Make data_rep. Save static and cdl\n";
+           mkdir "$DATAROOT/$DOMAIN_NAME/data_rep",0777 or die "Can't make $DATAROOT/$DOMAIN_NAME/data_rep $!\n";
+           system("cp -r $LAPS_DATA_ROOT/static $DATAROOT/$DOMAIN_NAME/data_rep/");
+           system("cp -r $LAPS_DATA_ROOT/cdl $DATAROOT/$DOMAIN_NAME/data_rep/");
+        }else{
+           print "data_rep exists. Copy data_rep/static and cdl into data\n";
+#          system("rm -rf $LAPS_DATA_ROOT/static"); system("rm -rf $LAPS_DATA_ROOT/cdl");
+           system("cp -rf $DATAROOT/$DOMAIN_NAME/data_rep/static $LAPS_DATA_ROOT/");
+           system("cp -rf $DATAROOT/$DOMAIN_NAME/data_rep/cdl $LAPS_DATA_ROOT/");
+        }
+
+        print "Make data_loc (localized data root)\n";
+
+        $LAPS_DATA_ROOT = "$DATAROOT/$DOMAIN_NAME/data_loc";
+
+        if(! -e $LAPS_DATA_ROOT){
+           mkdir $LAPS_DATA_ROOT, 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
+           &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+        }else{
+           system("rm -rf $LAPS_DATA_ROOT/static"); system("rm -rf $LAPS_DATA_ROOT/cdl");
+           mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
+           mkdir "$LAPS_DATA_ROOT/cdl", 0777 or die "Can't make $LAPS_DATA_ROOT/cdl $!\n";
+        }
      }
+
   }else{
      print "Making a new LAPS_DATA_ROOT.\n";
      mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/$DOMAIN_NAME $!\n";
      mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
      &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }
+
 }
 
 if( defined($LAPS_TEMPLATE) ){
     if( -e $LAPS_TEMPLATE ){
-       if( $all_roots_equal eq "F"){
-           print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
-           opendir(TEMPDIR, $LAPS_TEMPLATE);
-           my @filelist = readdir TEMPDIR;
-           closedir TEMPDIR;
-           foreach (@filelist){
-              if( ! /^\./){
-                 system("cp -p $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
-              }
+        print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
+        opendir(TEMPDIR, $LAPS_TEMPLATE);
+        my @filelist = readdir TEMPDIR;
+        closedir TEMPDIR;
+        foreach (@filelist){
+           if( ! /^\./){
+              system("cp -p $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
            }
-       }else{
-           print "Error: You cannot localize with a template when all LAPS_ROOTS are equal\n";
-           exit;
-# code below (not tested) will override the above termination and allow the localization!
-           print "Save static/cdl in tmpdata. Redefine LAPS_SRC and LAPS_DATA ROOTs.\n";
-           mkdir "$LAPS_SRC_ROOT/tmpdata", 0777 or die "Can't make $LAPS_SRC_ROOT/tmpdata $!\n";
-           system ("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/tmpdata/");
-           system ("mv $LAPS_SRC_ROOT/cdl $LAPS_SRC_ROOT/tmpdata/");
-           $LAPS_SRC_ROOT = $LAPS_SRC_ROOT."/tmpdata"; 
-           $LAPS_DATA_ROOT = $LAPS_DATA_ROOT."/tmpdata";
-       }
+        }
+
     }else{print "The template subdirectory you specified does not exist: $LAPS_TEMPLATE\n";
           print "Terminating.\n"; exit;}
-}else{print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";}
+
+}else{
+   print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";
+}
 
 if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
     print "Running $LAPSINSTALLROOT/etc/laps_localization.pl\n";
@@ -254,9 +278,17 @@ if( $opt_m ){
    system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/log/laps_localization.log");
 }
 
+if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
+    print "copy data_loc/static and data_loc/cdl to data\n";
+    system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/static  $DATAROOT/$DOMAIN_NAME/data/");
+    system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/cdl  $DATAROOT/$DOMAIN_NAME/data/");
+    system("cp $DATAROOT/$DOMAIN_NAME/data_loc/log/laps_localization.log $DATAROOT/$DOMAIN_NAME/data/log/.");
+    system("rm -rf $DATAROOT/$DOMAIN_NAME/data_loc");
+    $LAPS_DATA_ROOT = "$DATAROOT/$DOMAIN_NAME/data";
+}
 
 if( $opt_m ){
-    print "restoring gridgen files. Moving from  static_save  to  static \n";
+    print "restoring gridgen files. Move from  static_save  to  static \n";
     system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");
@@ -286,8 +318,11 @@ if($restore_files eq "false"){
    my $error_lines = grep /error/i,@loc;
    my $cannot_lines = grep /cannot/i,@loc;
 
-   if($error_lines gt 0){print "Lines with error found in laps_localization.log\n";
-                         $restore_files="true";}
+   if($error_lines gt 0){
+      print "Lines with error found in laps_localization.log\n";
+      print "Settting variable -- restore_files -- to true\n";
+      $restore_files="true";
+   }
    if($cannot_lines gt 0){print "Lines with cannot found in laps_localization.log\n";}
    if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in laps_localization.log\n";}
 
@@ -296,13 +331,14 @@ if($restore_files eq "false"){
 }
 
 if( $restore_files eq "true" ) {
+    print "error detected. save static and cdl to err\n";
     print "restoring saved static and cdl files\n";
     system("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/static\_err");
     system("mv $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_err");
-    system("mv $LAPS_DATA_ROOT/static\_save $LAPS_DATA_ROOT/static");
-    system("mv $LAPS_DATA_ROOT/cdl\_save    $LAPS_DATA_ROOT/cdl");
-    print "update lapsprd - synchronize with repository\n";
-    &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+    if( ! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
+       system("mv $LAPS_DATA_ROOT/static\_save $LAPS_DATA_ROOT/static");
+       system("mv $LAPS_DATA_ROOT/cdl\_save    $LAPS_DATA_ROOT/cdl");
+    }
 }
 
 if( -e "$LAPS_DATA_ROOT/static\_save"){
@@ -314,9 +350,9 @@ if( -e "$LAPS_DATA_ROOT/cdl\_save"){
     system("rm -rf $LAPS_DATA_ROOT/cdl\_save");
 }
 
-if( -e "$LAPS_DATA_ROOT\tmpdata"){
-    system("rm -rf $LAPS_DATA_ROOT/tmpdata");
-}
+print "update lapsprd - synchronize with repository\n";
+&laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+
 
 print "window_laps_rt complete\n";
 exit;
