@@ -303,7 +303,7 @@ c     radiance as the code might lend you to believe
          do i = 1, nlevel
             p(i) = cost_p(i)
             t_l(i) = cost_t_l(i)
-            mr_l(i) = cost_mr_l(i)
+c            mr_l(i) = cost_mr_l(i) ! insert to remove effect of radiance term
          enddo
          kk = cost_kk
          tskin = cost_tskin
@@ -340,15 +340,15 @@ c     conflict with cloud analysis
                func = func + ( btemp_ob(j) -
      1              tbest(kan(j)) )**2/2.
             enddo
-            func = func /2.25 !brightnessT variance (=1.5^2)
+            func = func /0.02 !brightnessT variance (=1.5^2)
 
          else                   ! IMAGER situation (only 3 channels)
             
             do j = 1,3          ! radiance _ob(1-3) is imager btemp
                func = func + ( btemp_ob(j) -
-     1              tbest(j+7) )**2
+     1              tbest(j+7) )**2/2.
             enddo
-            func = func /2.25 !brightnessT variance (=1.5^2)
+            func = func /0.02 !brightnessT variance (=1.5^2)
             
          endif
 
@@ -432,6 +432,7 @@ c     determine sigma level pressure analogs
             call sigma_to_p (0.1, cost_ps, 0.9, p1)
             call sigma_to_p (0.1, cost_ps, 0.7, p2)
             call sigma_to_p (0.1, cost_ps, 0.3, p3)
+
             call int_layerpw(x,cost_data,cost_kstart,
      1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)

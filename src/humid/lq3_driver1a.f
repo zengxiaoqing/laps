@@ -250,13 +250,13 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 3.8.5 successfully incorporates'
-      write (6,*) '1) OPTRAN90 for BOTH imager and sounder data'
-      write (6,*) '2) BOTH  Big and little endian formats'
-      write (6,*) '3) Initiated removal of old optran code'
-      write (6,*) '4) Removal of common block from .f90 modules'
+      write (6,*) 'Release 3.10.8 successfully incorporates'
+      write (6,*) '1) Fix to func_o.f in use of radiance data'
+      write (6,*) '2) OPTRAN90 for BOTH imager and sounder data'
+      write (6,*) '3) BOTH  Big and little endian formats'
+      write (6,*) '4) Initiated removal of old optran code'
+      write (6,*) '5) Removal of common block from .f90 modules'
       write (6,*) '   For HP applications'
-      write (6,*) '5) Initial hooks for generation of synthetic output'
 
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
