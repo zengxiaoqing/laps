@@ -85,7 +85,7 @@ C***Parameter list variables
 C***Local variables
         integer*4 maxlut
         real*4 rpd,radius_earth_m
-        Parameter       (maxlut=201,         ! largest array size allowed
+        Parameter       (maxlut=205,         ! largest array size allowed
      1          rpd=3.1415926536/180.,
      1          radius_earth_m = 6378137.)
 
