@@ -81,12 +81,16 @@ else {
   open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
   foreach (<BGMODEL>) {
     if (/cmodel (\w*)/) {$modelid = $1;}
-    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } }
+    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } 
+    if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } }
   $basename = $1 if ($pathname =~ /([^\/]*)$/);
   if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
     $runtime = $2/100;
     $fcsthr = $4;
     print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
+  elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
+    $runtime = $4;
+    print "Using grids from $modelid started at $runtime UTC \n"; }
   else {
     print "$modelid (Sorry -- can't decode model filename)\n"; } }
 
