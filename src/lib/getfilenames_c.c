@@ -41,6 +41,7 @@ This routine searches for files in the configured paths
 Author: Dan Birkenheuer 
 Date of development:   5/16/95
 mod 6/14/95 DB increased number of filenames to 3000
+mod 4/22/2002 DB increase number of filenames to 9000
 
 DISCLAMER:  Note that I am by background a FORTRAN programmer.  Therefore,
 though this routine is all "legal" C, it is probably written awkwardly in
@@ -56,10 +57,10 @@ matter)
 
 fileNames:
 an array of filenames in the calling routine defined in C as 
-char filnames[3000][256]; 
+char filnames[9000][256]; 
 or its FORTRAN equivalent:
-character*256 filenames(3000)
-the 3000 possible filenames is hardwired into this routine and therefore is
+character*256 filenames(9000)
+the 9000 possible filenames is hardwired into this routine and therefore is
 associated with the hardwire in the FORTRAN wrapper ment to go with this
 routine (one level above) and to be the FORTRAN interface to the rest of the
 FORTRAN world.  character*(*)  type dimensions are handled by this interface.
@@ -70,7 +71,7 @@ the number of valid files counted by this module.  Note this module will use
 logic to determine possible sub directories and NOT include them in the
 returned array of filenames.  Numfiles can be anything upon entry to this
 routine.  It will be returned as 0 if there are no files to report or a
-valid number up to 3000 counted files.
+valid number up to 9000 counted files.
 
 match_string:
 the file matching string allowed to only contain the * wildcard and one *per
@@ -188,28 +189,30 @@ int *status;
 
         Outputofread = readdir (WorkingDir);
  
-	for (i=0; i<3000 && ( Outputofread != (struct dirent *)NULL ) ;)
+	for (i=0; i<9000 && ( Outputofread != (struct dirent *)NULL ) ;)
 	{
-	if ( strcmp (Outputofread->d_name,".") == 0 )
-	        Outputofread = readdir (WorkingDir);
-	else if (  strcmp (Outputofread->d_name,"..") == 0 )
-	        Outputofread = readdir (WorkingDir);
+	  if(i >= 8900 )
+	    printf ("WARNING numfiles nearing limit in getfilenames_c.c");
+	  if ( strcmp (Outputofread->d_name,".") == 0 )
+	    Outputofread = readdir (WorkingDir);
+	  else if (  strcmp (Outputofread->d_name,"..") == 0 )
+	    Outputofread = readdir (WorkingDir);
 	
-	else
-	{
-	strcpy (testdirname,dirname);
-	strcat (testdirname,"/");
-	strcat(testdirname,Outputofread->d_name);
-	stat_status = stat (testdirname,&buf);
-	if (S_ISREG( buf.st_mode ) )
+	  else
+	    {
+	      strcpy (testdirname,dirname);
+	      strcat (testdirname,"/");
+	      strcat(testdirname,Outputofread->d_name);
+	      stat_status = stat (testdirname,&buf);
+	      if (S_ISREG( buf.st_mode ) )
 		{
-		strcpy (fileNames+(i*256) , Outputofread->d_name);
-		i++;
-	       	Outputofread = readdir (WorkingDir);
+		  strcpy (fileNames+(i*256) , Outputofread->d_name);
+		  i++;
+		  Outputofread = readdir (WorkingDir);
 		}
-	else
+	      else
 		Outputofread = readdir (WorkingDir);
-	}
+	    }
 	}
 
 	closedir (WorkingDir);

@@ -49,7 +49,7 @@ c
       character*(*) c_filenames(max_files)
       
       
-      character*256 file_names(3000)
+      character*256 file_names(9000)
       character*256 dirpath
       character*256 filter
       integer istatus,i,nc,nindx,status,nindx2
