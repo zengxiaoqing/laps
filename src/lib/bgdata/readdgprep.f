@@ -201,7 +201,6 @@ c       to covert the FA filename but currently is not.  J.Smart
      +,IOSTAT=IOSTATUS,err=990)
 
          if(cwb_type .eq. 're')then
-
             call read_fa(lun,filename                   ! I
      .               ,nx,ny,nz                          ! I
      .               ,r_missing_data                    ! I
@@ -211,11 +210,17 @@ c       to covert the FA filename but currently is not.  J.Smart
      .               ,istatus)                          ! O
 
             call qcmodel_sh(nx,ny,nz,sh)
-
          elseif (cwb_type.eq.'nf')then
-            print *,'not able to read nf model format yet'
-            return
-c           call read_fa_nf(omega, mix_rat_water, mixr)  !for example
+            print *,'read nf model with read_fa_nf' 
+            call read_fa_nf(lun,filename,              ! I
+     .                nx, ny, nz,                      ! I
+     .                r_missing_data,                  ! I
+     .                prk,                             ! O
+     .                ht, tp, sh, uw, vw, ww,          ! O
+     .                ht_sfc, tp_sfc, td_sfc,          ! O
+     .                uw_sfc, vw_sfc, mslp,            ! O
+     .                istatus )                        ! O
+            call qcmodel_sh(nx,ny,nz,sh)
          endif
 
       endif
@@ -445,10 +450,14 @@ c
          nx_ll=nx
          ny_ll=ny
          nz_ll=nz
-         lat0=-90.0
          lon0_ll=0.0
          dlat=1.0
          dlon=1.0
+         if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB')then
+            lat0 = -90.0
+         elseif(cmodel(1:nclen).eq.'AVN_FSL_NETCDF')then
+            lat0 =  90.0
+         endif
       elseif (bgmodel .eq. 7) then
          gproj='LC'
          nx_lc=nx

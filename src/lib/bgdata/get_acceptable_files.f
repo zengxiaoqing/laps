@@ -288,7 +288,7 @@ c     +     forecast_length,bg_files,n
           elseif(cmodel.eq.'CWB_20FA_LAMBERT_NF')then
              NX=145
              NY=139
-             NZ=16
+             NZ=11
           else
              print*,'Unknow type for bgmodel = ',bgmodel,
      +'and cmodel = ',cmodel(1:nc)
