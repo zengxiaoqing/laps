@@ -12,7 +12,7 @@
      1     ,r_missing_data
      1     ,l_good_multi_doppler_ob,l_analyze
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
-     1     ,n_iter_wind
+     1     ,n_iter_wind_in
      1     ,weight_meso,weight_sao,weight_pirep,weight_prof,weight_radar     
      1     ,istatus)
 
@@ -118,6 +118,12 @@
 !****************END DECLARATIONS *********************************************
 
       l_3d = .false.
+
+      if(l_3d)then
+          n_iter_wind = 1
+      else
+          n_iter_wind = n_iter_wind_in
+      endif
 
       do iter = 1,n_iter_wind
 
@@ -287,7 +293,7 @@
         enddo ! k
 
 !       Spread the difference ob vertically
-        call spread_vert(uobs_diff,vobs_diff
+        call spread_vert(uobs_diff,vobs_diff,l_3d
      1          ,uobs_diff_spread,vobs_diff_spread
      1          ,wt_p,wt_p_spread,i,j,imax,jmax,kmax,istatus)
 
@@ -1169,7 +1175,7 @@ c  convert radar obs into u & v by using tangential component of first pass
 
 
 
-      subroutine spread_vert(uobs_in,vobs_in,uobs_out,vobs_out,
+      subroutine spread_vert(uobs_in,vobs_in,l_3d,uobs_out,vobs_out,
      1      wt_p,weights,i,j,imax,jmax,kmax,istatus)
 
 !     Modified 7/94 S. Albers to allow better handling of variable
@@ -1192,6 +1198,8 @@ c  convert radar obs into u & v by using tangential component of first pass
       integer*4 vert_rad_meso
       integer*4 vert_rad_prof
 
+      logical l_3d
+
 !     Vertical radius of influence for each data source (pascals)
       real*4 r0_vert_pirep,r0_vert_meso,r0_vert_sao,r0_vert_prof
       parameter (r0_vert_pirep = 2500.)
@@ -1205,12 +1213,21 @@ c  convert radar obs into u & v by using tangential component of first pass
       call get_r_missing_data(r_missing_data, istatus)
       if(istatus .ne. 1)return
 
-      call get_vert_rads       (vert_rad_pirep,
+      if(l_3d)then
+          vert_rad_pirep = 0
+          vert_rad_sao = 0
+          vert_rad_meso = 0
+          vert_rad_prof = 0
+
+      else
+          call get_vert_rads   (vert_rad_pirep,
      1                          vert_rad_sao,
      1                          vert_rad_meso,
      1                          vert_rad_prof,
      1                          istatus)
-      if(istatus .ne. 1)return
+          if(istatus .ne. 1)return
+
+      endif
 
       call get_pressure_interval(PRESSURE_INTERVAL_L,istatus)
       if(istatus .ne. 1)return

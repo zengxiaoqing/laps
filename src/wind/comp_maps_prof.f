@@ -69,7 +69,7 @@ cdis
      1                       ,u_bkg(il,jl,k),v_bkg(il,jl,k)
      1                       ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)       
      1                       ,-diffu,-diffv
-101                   format(1x,3i4,3(2x,2f7.1))
+101                   format(1x,i5,3i4,3(2x,2f7.1))
                    endif
 
                 endif

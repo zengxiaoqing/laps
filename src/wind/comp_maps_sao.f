@@ -42,7 +42,8 @@ cdis
         residualv = 0.
 
         write(6,2)
-2       format(/'      Comparing Sao Velocities to Model Background'/
+2       format(
+     1  /'Comparing Sao Velocities (passing QC) to Model Background'/
      1  1x,'   i   j   k      SAO                Model Background '
      1     ,'diff')
 
@@ -90,7 +91,7 @@ cdis
 
         write(6 ,102)nobs,rmsu,rmsv,rms
         write(15 ,102)nobs,rmsu,rmsv,rms
-102     format(' RMS btwn Mdl Bkgrnd & SAO (n,rmsu,rmsv,rms) = ',
+102     format(' RMS btwn Model Bkg & SAO (n,rmsu,rmsv,rms) = ',
      1     i4,3f5.1)
 
         return
