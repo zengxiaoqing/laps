@@ -134,16 +134,17 @@ if ($arg2 == w) then
         endif
 
         if (! -e $LAPS_SRC_ROOT/data/static/background.nl || ! -e $LAPS_SRC_ROOT/data/static/nest7grid.parms) then
-            echo "Warning: namelists not available in LAPS_SRC_ROOT"
+            echo "Error: namelists not available in LAPS_SRC_ROOT"
+            exit
 
-            if (! -e $LAPS_DATA_ROOT/data/static/background.nl || ! -e $LAPS_DATA_ROOT/data/static/nest7grid.parms) then
-                echo "Error: namelists also not available in LAPS_DATA_ROOT, exit"
-                exit
-            endif
+#           if (! -e $LAPS_DATA_ROOT/data/static/background.nl || ! -e $LAPS_DATA_ROOT/data/static/nest7grid.parms) then
+#               echo "Error: namelists also not available in LAPS_DATA_ROOT, exit"
+#               exit
+#           endif
 
-            echo "Doing a precopy"
-            cp $LAPS_DATA_ROOT/static/*.nl    $LAPS_SRC_ROOT/data/static
-            cp $LAPS_DATA_ROOT/static/*.parms $LAPS_SRC_ROOT/data/static
+#           echo "Doing a precopy of namelists from $LAPS_DATA_ROOT to $LAPS_SRC_ROOT"
+#           cp $LAPS_DATA_ROOT/static/*.nl    $LAPS_SRC_ROOT/data/static
+#           cp $LAPS_DATA_ROOT/static/*.parms $LAPS_SRC_ROOT/data/static
         endif
 
         if (! -e $LAPS_SRC_ROOT/data/cdl/lga.cdl) then
