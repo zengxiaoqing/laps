@@ -183,6 +183,12 @@ cdis
 
             write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
+            if(n_obs_b .gt. maxsta .or. istatus .ne. 1)then
+                write(6,*)' Too many stations, or no file present'
+                istatus = 0
+                return
+            endif
+
             if(.true.)then
 	      call read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
      &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
@@ -196,8 +202,8 @@ cdis
 
             write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
-            if(n_obs_b .gt. maxsta .or. istatus .ne. 1)then
-                write(6,*)' Too many stations, or no file present'
+            if(n_obs_b .gt. maxsta)then
+                write(6,*)' Too many stations'
                 istatus = 0
                 return
             endif
@@ -245,7 +251,7 @@ cdis
      &        pcp1,pcp3,pcp6,pcp24,snow,       
      &        maxsta,jstatus)
             iflag_cv = 2
-        elseif(c_field(2:2) .eq. 'g')then ! Soil/Water Temp
+        elseif(c_field(2:2) .eq. 'g')then ! Soil/Water Temp & Solar Radiation
             iflag_cv = 3
         else
             iflag_cv = 0
@@ -270,10 +276,12 @@ cdis
                 c33_label = 'Sfc Obs      ('//c3_presob//' pres)'
             endif
 
-            if(iflag_cv .eq. 2)then
-                c33_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
-            elseif(iflag_cv .eq. 1)then
+            if(iflag_cv .eq. 1)then
                 c33_label(14:33) =  '          Ceil & Vis'
+            elseif(iflag_cv .eq. 2)then
+                c33_label(13:33) = '1Hr Pcp/Snw Dpth (in)'
+            elseif(iflag_cv .eq. 3)then
+                c33_label(14:33) =  '   Sfc T & Solar Rad'
             endif
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -416,17 +424,30 @@ cdis
 
                     endif
 
-                elseif(iflag_cv .eq. 3)then ! Soil/Water T
+                elseif(iflag_cv .eq. 3)then ! Soil/Water T (& solar radiation)
+                    iplotsta = 0
                     temp = sfct_s(i)
                     dewpoint = badflag
+                    pressure = badflag
 
                     if(temp .ne. badflag)then
-                        write(6,*)' Sfc T = ',temp
+                        write(6,*)' Sfc T = ',i,temp,c_staname
+                        iplotsta = 1
+                    endif
 
-!                       Plot Station Location
+                    if(solar_s(i) .ne. badflag .and.
+     1                 solar_s(i) .ge. 0.            )then
+                        write(6,*)' Solar Rad = ',i,solar_s(i),c_staname       
+                        pressure = solar_s(i)
+                        iplotsta = 1
+                    endif
+                  
+                    if(iplotsta .eq. 1)then
+!                       Plot name and Station Location
+                        CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
+     1                              charsize,ANGD,CNTR)
                         call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                         call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
-
                     endif
 
                 elseif(c_field(2:2) .ne. 'c')then ! Fahrenheit
@@ -642,13 +663,22 @@ c
             endif
  32         continue
 
-        elseif(iflag_cv .eq. 3)then ! Sfc T plot
+        elseif(iflag_cv .eq. 3)then ! Sfc T & Solar Radiation plot
 !           Plot Temperature       
             if(t.gt.-75. .and. t.lt.140.) then 
                write(t1,100,err=40) nint(t)
-!              call pwrity(u-du_t,v+dv,t1,3,jsize,0,0)
                CALL PCLOQU(u-du_t,v+dv,t1,charsize,ANGD,CNTR)
             endif
+
+!           Plot Solar Radiation (pressure variable)
+            if(p .gt. 0. .and. p .lt. 10000.) then
+               if(p .ge. 1000.) p = p - 1000.
+               ip = ifix( p )
+               write(p1,201,err=40) ip
+ 201           format(i3.3)
+               CALL PCLOQU(u+du_p,v+dv,p1,charsize,ANGD,CNTR)
+            endif
+
         endif
 c
  40     continue
