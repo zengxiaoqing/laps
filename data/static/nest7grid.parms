@@ -49,7 +49,7 @@
 
  i2_missing_data_cmn=-99,
  r_missing_data_cmn=+1e37,
- MAX_RADARS_CMN=3,        
+ MAX_RADARS_CMN=4,        
  ref_base_cmn=-10.,       
  ref_base_useable_cmn=0., 
  maxstns_cmn=900,         
