@@ -48,8 +48,8 @@ cdis
 
       integer NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
 
-      integer*4 iskip,n_fnorm
-!     parameter (iskip = 2)
+      integer*4 nskip,n_fnorm
+!     parameter (nskip = 2)
 
       integer*4 lowi_lut(imax)
       integer*4 lowj_lut(jmax)
@@ -79,22 +79,25 @@ cdis
           return
       endif 
 
-!     Obtain and/or iterate for value of iskip
-      iskip = nint(20000. / grid_spacing_m)
-      iskip = max(iskip,1)
+!     Obtain and/or iterate for value of nskip
+      nskip = nint(20000. / grid_spacing_m)
+      nskip = max(nskip,1)
 
-100   rden_ratio = ((float(imax)-1.)/float(iskip))
-      if(abs(rden_ratio - nint(rden_ratio))  .gt. .001)then
-          write(6,*)' Bad value of iskip'
-          if(iskip .gt. 1)then
-              iskip = iskip - 1
+100   rden_ratioi = ((float(imax)-1.)/float(nskip))
+      rden_ratioj = ((float(jmax)-1.)/float(nskip))
+
+      if(abs(rden_ratioi - nint(rden_ratioi))  .gt. .001
+     1  .or.(rden_ratioj - nint(rden_ratioj))  .gt. .001)then
+          write(6,*)' Bad value of nskip'
+          if(nskip .gt. 1)then
+              nskip = nskip - 1
               goto 100
-          elseif(iskip .eq. 1)then
+          elseif(nskip .eq. 1)then
               write(6,*)' Code error - stop'
               stop
           endif
       else
-          write(6,*)' Good value of iskip = ',iskip
+          write(6,*)' Good value of nskip = ',nskip
       endif
 
       if(l_perimeter)write(6,*)' Number of cloud soundings = ',n_cld_snd
@@ -106,8 +109,8 @@ cdis
 
       do iii = 1,n_fnorm
         bias_iii = 1e0
-        fnorm(iii) = (100.*bias_iii/float(iii)) ** (exponent_distance_wt
-     1 / 2.0)
+        fnorm(iii) = 
+     1        (100.*bias_iii/float(iii)) ** (exponent_distance_wt / 2.0)       
         if(fnorm(iii) .eq. 0. .and. iiizero .eq. 0)then
             iiizero = iii
             write(6,*)' WARNING: fnorm array reached zero, iii=',iiizero
@@ -205,12 +208,12 @@ cdis
       rr_max = (NX_DIM_LUT-1)**2 + (NY_DIM_LUT-1)**2
       iii_max = radm2 * 100. * rr_max + 1.
 
-      write(6,*)' radm2*100/iii_max/n_fnorm = ',radm2*100.,iii_max,n_fno
-     1rm
+      write(6,*)' radm2*100/iii_max/n_fnorm = '
+     1           ,radm2*100.,iii_max,n_fnorm
 
       if(iii_max .gt. n_fnorm)then
-          write(6,*)' iii_max is too large, increase n_fnorm',iii_max,n_
-     1fnorm
+          write(6,*)' iii_max is too large, increase n_fnorm'
+     1             ,iii_max,n_fnorm
           istatus = 0
           return
       endif
@@ -244,8 +247,8 @@ cdis
 !         height_level = height_of_level(k)
 
 !         Analyze every other grid point
-          do j=1,jmax,iskip
-          do i=1,imax,iskip
+          do j=1,jmax,nskip
+          do i=1,imax,nskip
             sum=0.
             sumwt=0.
             if(.not. l_perimeter)then
@@ -282,23 +285,23 @@ cdis
 
 !         Bilinearly interpolate to fill in rest of domain
           do i = 1,imax
-              lowi_lut(i) = (i-1)/iskip*iskip + 1
-              if(i .eq. imax)lowi_lut(i) = lowi_lut(i) - iskip
+              lowi_lut(i) = (i-1)/nskip*nskip + 1
+              if(i .eq. imax)lowi_lut(i) = lowi_lut(i) - nskip
           enddo ! i
           do j = 1,jmax
-              lowj_lut(j) = (j-1)/iskip*iskip + 1
-              if(j .eq. jmax)lowj_lut(j) = lowj_lut(j) - iskip
+              lowj_lut(j) = (j-1)/nskip*nskip + 1
+              if(j .eq. jmax)lowj_lut(j) = lowj_lut(j) - nskip
           enddo ! i
 
           do j=1,jmax
               jl = lowj_lut(j)
-              jh = jl + iskip
-              fracj = float(j-jl)/float(iskip)
+              jh = jl + nskip
+              fracj = float(j-jl)/float(nskip)
 
               do i=1,imax
                   il = lowi_lut(i)
-                  ih = il + iskip
-                  fraci = float(i-il)/float(iskip)
+                  ih = il + nskip
+                  fraci = float(i-il)/float(nskip)
 
                   Z1=t(il,jl,k)
                   Z2=t(ih,jl,k)

@@ -73,7 +73,7 @@ cdis
         character*3 lso_ext
         data lso_ext /'lso'/
 
-        logical l_dry, l_auto
+        logical l_dry, l_auto, l_parse
 
 !       Arrays for reading in the SAO data from the LSO files
         Real*4   elev(maxstns),t(maxstns),td(maxstns),dd(maxstns)
@@ -199,15 +199,19 @@ c place station at proper laps grid point
      1        .or. obstype(i)(1:5) .eq. 'TESTM' 
      1        .or. obstype(i)(1:5) .eq. 'SPECI' 
      1        .or. obstype(i)(1:5) .eq. 'TESTS' 
-     1                                          )then  ! New LSO file format
-              if(obstype(i)(8:8) .eq. 'A')then         ! Automated Station 
+     1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! New LSO file format
+
+              if(  obstype(i)(8:8) .eq. 'A'
+     1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! Automated Station 
                                                        ! (12000' limit)
                   l_auto = .true.
                   ht_defined = elev(i) + 12000./3.281
+
               else                                     ! Non-Automated
                   l_auto = .false.
                   ht_defined = 99999.
-              endif
+
+              endif ! Automated station
 
           else                                         ! Non-sanctioned cld type
               write(6,*)' WARNING, questionable obstype having '
@@ -253,6 +257,9 @@ c place station at proper laps grid point
 
           cvr_snd(n_cld_snd) = 0.
 
+!         Initialize summation layer calculation for this ob
+          call get_layer_cover(0.,cover,istatus)
+
           do l=1,n_cloud_layers_ret(i)
 
               cover = 0.
@@ -261,8 +268,8 @@ c place station at proper laps grid point
 
               if(ht_base .gt. ht_defined+1.)then
 
-                if(amt_ret(i,l) .ne. ' CLR' .AND.
-     1             amt_ret(i,l) .ne. ' SKC'      )then ! Clouds
+                if( (.not. l_parse(amt_ret(i,l),'CLR') ) .AND.
+     1              (.not. l_parse(amt_ret(i,l),'SKC') )      )then ! Clouds
 
                   if(.true.)then ! Allow a redefinition of ht_defined
                     write(6,*)' WARNING, inconsistent SAO data,'
@@ -307,10 +314,13 @@ c place station at proper laps grid point
 C CLOUDS ARE NOW IN MSL
 !             Fill in clear for entire column for METAR or up to ht_base for 
 !             AWOS or up to ht_base for VV.
-              if(amt_ret(i,l).eq.' CLR'    .or.
-     1           amt_ret(i,l).eq.' SKC'    .or.
+              if(l_parse(amt_ret(i,l),'CLR')    .or.
+     1           l_parse(amt_ret(i,l),'SKC')    .or.
      1           amt_ret(i,l).eq.'  VV'          )then
+
                   cover=.01
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   do k=1,nk
                       if(     cld_hts(k).le.ht_base
      1                  .and. cld_hts(k).le.ht_defined      )then
@@ -324,19 +334,24 @@ C CLOUDS ARE NOW IN MSL
      1                     ,' of domain up to '
      1                     ,nint(min(ht_base,ht_defined)),' meters'     
 
-                  if(.true.)then                              ! SKC is now used
-                      if(amt_ret(i,l) .eq. ' CLR' .and. 
+                  if(.true.)then                               ! SKC is now used
+                      if(l_parse(amt_ret(i,l),'CLR') .and. 
      1                                            .not. l_auto)then
                           write(6,*)' WARNING: CLR reported for '
      1                             ,'non-automated station'
-                      elseif(amt_ret(i,l) .eq. ' SKC' .and.          ! Converse
+                      elseif(l_parse(amt_ret(i,l),'SKC') .and. ! Converse
      1                                                  l_auto)then
                           write(6,*)' WARNING: SKC reported for '
      1                             ,'automated station'
                       endif ! CLR/SKC test
                   endif ! .true.
 
+                  if(n_cloud_layers_ret(i) .gt. 1)then
+                      write(6,*)' WARNING: CLR/SKC/VV in ob that'
+     1                         ,' has more than one layer'
+                  endif
 !                 go to 125 ! Loop to next station
+
               endif
 
 
@@ -357,8 +372,11 @@ C CLOUDS ARE NOW IN MSL
                   endif
               enddo
 
-              if(amt_ret(i,l).eq.' FEW')then
-                  cover=.125
+              if(l_parse(amt_ret(i,l),'FEW'))then
+                  summation_cover=.125
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -390,8 +408,11 @@ C CLOUDS ARE NOW IN MSL
                   enddo
               endif
 
-              if(amt_ret(i,l).eq.' SCT')then
-                  cover=.44
+              if(l_parse(amt_ret(i,l),'SCT'))then
+                  summation_cover=.44
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -423,8 +444,11 @@ C CLOUDS ARE NOW IN MSL
                   enddo
               endif
 
-              if(amt_ret(i,l).eq.'-BKN')then
-                  cover=.4 ! .5
+              if(l_parse(amt_ret(i,l),'-BKN'))then
+                  summation_cover=.4 ! .5
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -456,8 +480,11 @@ C CLOUDS ARE NOW IN MSL
                   enddo
               ENDIF
 
-              if(amt_ret(i,l).eq.' BKN')then
-                  cover=.75
+              if(l_parse(amt_ret(i,l),'BKN'))then
+                  summation_cover=.75
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
 
                   do k=1,nk
@@ -490,8 +517,11 @@ C CLOUDS ARE NOW IN MSL
                   enddo
               endif
 
-              if(amt_ret(i,l).eq.'-OVC')then
-                  cover=.6 ! .9
+              if(l_parse(amt_ret(i,l),'-OVC'))then
+                  summation_cover=.6 ! .9
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+1000.
                   do k=1,nk
 
@@ -523,8 +553,11 @@ C CLOUDS ARE NOW IN MSL
                   enddo
               ENDIF
 
-              if(amt_ret(i,l).eq.' OVC')then
-                  cover=1.00 
+              if(l_parse(amt_ret(i,l),'OVC'))then
+                  summation_cover=1.00 
+                  call get_layer_cover(summation_cover,cover,istatus)      
+                  if(istatus .ne. 1)goto125 ! go to next station
+
                   ht_top=ht_base+cld_thk(ht_base) ! 1500.
 
                   do k=1,nk
@@ -558,44 +591,51 @@ C CLOUDS ARE NOW IN MSL
 
 
 !             We should not hit this anymore
-              if(amt_ret(i,l).eq.'   X')then
+              if(l_parse(amt_ret(i,l),'X'))then
                   write(6,*)' Error: insertsao - stop X'
                   if(.true.)stop
 
-                  cover=1.00 
-                  ht_top=ht_base+cld_thk(ht_base) ! 1500.
+!                 summation_cover=1.00 
+!                 call get_layer_cover(summation_cover,cover,istatus)      
+!                 if(istatus .ne. 1)goto125 ! go to next station
 
-                  do k=1,nk
-                      if(cld_hts(k).ge.ht_base .and. 
-     1                   cld_hts(k).le.ht_top        )then
+!                 ht_top=ht_base+cld_thk(ht_base) ! 1500.
+
+!                 do k=1,nk
+!                     if(cld_hts(k).ge.ht_base .and. 
+!    1                   cld_hts(k).le.ht_top        )then
 
 !                         Search for model d(cldcv)/dz within cloud layer
-                          call modify_sounding(
-     1                         cld_snd,n_cld_snd,max_cld_snd
-     1                        ,cf_modelfg,t_modelfg,topo,t_sfc_k
-     1                        ,ilaps,jlaps,k,ni,nj,nk,cld_hts
-     1                        ,ht_base,ht_top,0,l_dry)
+!                         call modify_sounding(
+!    1                         cld_snd,n_cld_snd,max_cld_snd
+!    1                        ,cf_modelfg,t_modelfg,topo,t_sfc_k
+!    1                        ,ilaps,jlaps,k,ni,nj,nk,cld_hts
+!    1                        ,ht_base,ht_top,0,l_dry)
 
-                          if(.not. l_dry)then
-                              call spread2(
-     1                           cld_snd,wt_snd,i_snd,j_snd,n_cld_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
-                          endif
+!                         if(.not. l_dry)then
+!                             call spread2(
+!    1                           cld_snd,wt_snd,i_snd,j_snd,n_cld_snd
+!    1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+!                         endif
 
-                      else
+!                     else
 !                         Initialize the modify sounding routine
-                          call modify_sounding(
-     1                         cld_snd,n_cld_snd,max_cld_snd
-     1                        ,cf_modelfg,t_modelfg,topo,t_sfc_k
-     1                        ,ilaps,jlaps,k,ni,nj,nk,cld_hts
-     1                        ,ht_base,ht_top,1,l_dry)
+!                         call modify_sounding(
+!    1                         cld_snd,n_cld_snd,max_cld_snd
+!    1                        ,cf_modelfg,t_modelfg,topo,t_sfc_k
+!    1                        ,ilaps,jlaps,k,ni,nj,nk,cld_hts
+!    1                        ,ht_base,ht_top,1,l_dry)
 
-                      endif
-                  enddo
-              endif
+!                     endif
+!                 enddo
+              endif ! amt_ret
 
-              cvr_snd(n_cld_snd) = 1. - ((1. - cvr_snd(n_cld_snd)) * cov
-     1er)
+!             Calculate summation cover assuming obs are in layer cover
+!             cvr_snd(n_cld_snd) = 1. - ((1. - cvr_snd(n_cld_snd)) 
+!    1                           * cover)
+
+!             Obtain summation cover directly from obs
+              cvr_snd(n_cld_snd) = summation_cover
 
         enddo ! l (Cloud layer)
 
@@ -769,3 +809,82 @@ C CLOUDS ARE NOW IN MSL
         return
         end
 
+
+        subroutine get_layer_cover(summation_cover,layer_cover,istatus)        
+!                                         I             O         O
+
+        real layer_cover
+
+        save summation_cover_last
+
+!       Null the changes for testing
+        layer_cover = summation_cover 
+        istatus = 1
+        return
+
+        if(summation_cover .eq. 0.)then ! Initializing a new cloud ob
+            goto900
+        endif
+
+        if(summation_cover_last .ge. 1.)then
+            write(6,*)' ob ERROR, previous summation cover already OVC'       
+            write(6,*)summation_cover_last
+            istatus = 0
+            return
+        endif
+
+        layer_cover = (summation_cover - summation_cover_last)
+     1              / (1. - summation_cover_last)
+
+        if(layer_cover .le. 0.)then
+            if(layer_cover .lt. 0.)then
+                write(6,*)' WARNING: layer_cover < 0, decrease '
+     1                   ,'observed in summation cover: '
+     1                   ,summation_cover_last,summation_cover
+            endif
+
+            layer_cover = .125
+            write(6,*)' Setting layer_cover to minimum value of '
+     1               ,layer_cover 
+
+        endif
+
+        write(6,1)summation_cover,layer_cover
+ 1      format(' get_layer_cover: summation/layer ',2f8.3)
+
+ 900    summation_cover_last = summation_cover
+
+        istatus = 1
+        return
+        end
+
+        function l_parse(string1,string2)
+
+!       Determine whether string1 contains string2 as a subset
+
+        logical l_parse
+
+        character(*)string1,string2
+
+        integer slen1,slen2
+
+        len1 = len(string1)
+        len2 = len(string2)
+
+        call s_len(string1,slen1)
+        call s_len(string2,slen2)
+
+        l_parse = .false.
+
+        if(len2 .gt. len1)return
+
+        i_offset_max = len1-len2
+
+        do i = 0,i_offset_max
+            if(string1(i+1:i+len2) .eq. string2(1:len2))then
+                l_parse = .true.
+            endif ! match is found
+        enddo ! i             
+
+        return
+        end        

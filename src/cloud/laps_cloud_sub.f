@@ -674,9 +674,9 @@ C READ IN SATELLITE DATA
 
         I4_elapsed = ishow_timer()
 
-        istat_radar_2dref=0
-        istat_radar_3dref=0
-        istat_radar_3dref_orig=0
+        n_radar_2dref=0
+        n_radar_3dref=0
+        n_radar_3dref_orig=0
 
 C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
         write(6,*)' Three dimensionalizing radar data'
@@ -737,22 +737,43 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
                 endif ! Radar echo at this grid point
 
 !               We have three-dimensionalized this grid point
-                istat_radar_2dref = 1
-                istat_radar_3dref = 1
+                n_radar_2dref = n_radar_2dref + 1
+                n_radar_3dref = n_radar_3dref + 1
                 istat_radar_3dref_a(i,j) = 1
 
             elseif(istat_radar_2dref_a(i,j) .eq. 1 .and.
      1             istat_radar_3dref_a(i,j) .eq. 1       )then
 
 !               Grid point is already fully three dimensional
-                istat_radar_2dref = 1
-                istat_radar_3dref = 1
-                istat_radar_3dref_orig = 1
+                n_radar_2dref = n_radar_2dref + 1
+                n_radar_3dref = n_radar_3dref + 1
+                n_radar_3dref_orig = n_radar_3dref_orig + 1
 
             endif ! Is this grid point 2-d or 3-d?
 
         enddo ! i
         enddo ! j
+
+        if(n_radar_2dref .ge. 1)then
+            istat_radar_2dref = 1
+        else
+            istat_radar_2dref = 0
+        endif
+
+        if(n_radar_3dref .ge. 1)then
+            istat_radar_3dref = 1
+        else
+            istat_radar_3dref = 0
+        endif
+
+        if(n_radar_3dref_orig .ge. 1)then
+            istat_radar_3dref_orig = 1
+        else
+            istat_radar_3dref_orig = 0
+        endif
+
+        write(6,*)' n_radar 2dref/3dref_orig/3dref = ' 
+     1           ,n_radar_2dref,n_radar_3dref_orig,n_radar_3dref
 
         write(6,*)' istat_radar 2dref/3dref_orig/3dref = ' 
      1           ,istat_radar_2dref,istat_radar_3dref_orig
@@ -761,8 +782,6 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
         I4_elapsed = ishow_timer()
 
 C INSERT RADAR DATA
-        n_radar_3dref = istat_radar_3dref
-
         if(n_radar_3dref .gt. 0)then
             call get_max_ref(radar_ref_3d,NX_L,NY_L,NZ_L,dbz_max_2d)
 
@@ -1002,7 +1021,7 @@ C       EW SLICES
 !       This is where we will eventually split the routines, additional data
 !       is necessary for more derived fields
 
-        if(istat_radar_3dref .eq. 1)then ! Write out data (lps - radar_ref_3d)
+        if(n_radar_3dref .gt. 0)then ! Write out data (lps - radar_ref_3d)
             write(6,*)' Writing out 3D Radar Reflectivity field'
 
             var = 'REF'
@@ -1015,7 +1034,7 @@ C       EW SLICES
      1                                                ,NX_L,NY_L,NZ_L)
             j_status(n_lps) = ss_normal
 
-        endif ! istat_radar_3dref
+        endif ! n_radar_3dref
 
         call compare_analysis_to_saos(NX_L,NY_L,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data

@@ -433,7 +433,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                             cldcv(i,j,k) = band8_cover( tb8_k(i,j)
      1                          ,t_gnd_k(i,j),temp_grid_point)
                             if(cldcv(i,j,k) .gt. 1.0 .or.
-     1                 cldcv(i,j,k) .lt. 0.0       )then
+     1                         cldcv(i,j,k) .lt. 0.0       )then
                                 write(6,*)' ERROR--cover out of bounds'
                                 istatus = 0
                                 return
@@ -441,8 +441,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                         endif
                       else ! Band 8 nearly matches ground, clear it
 !                       Insure that "black (or grey) stratus" is not present
-                        temp_thresh = min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0
-     1)
+                        temp_thresh = 
+     1                            min(t_gnd_k(i,j),t_sfc_k(i,j)-10.0)       
                         if(temp_grid_point .lt. temp_thresh)then
 !                       if(temp_grid_point .lt. t_gnd_k(i,j))then
                             cldcv(i,j,k)=.01 ! not in inversion, clear it out
@@ -495,7 +495,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               do idelt_index = 1,nidelt
               ii = i + idelt(idelt_index)
                 if(ii .ge. 1 .and. ii .le. imax .and.
-     1     jj .ge. 1 .and. jj .le. jmax          )then
+     1             jj .ge. 1 .and. jj .le. jmax          )then
                     cldcv_above = cldcv_sao(ii,jj,kcld)
                     do k=kcld-1,1,-1
                       if(cldcv_sao(ii,jj,k) .le. thr_sao_cvr .and.
@@ -528,21 +528,22 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
 !             Calculate new cloud top and cover
               cldtop_m_old = cldtop_m(i,j)
-              call cloud_top( init_co2,i4time,tb8_cold_k(i,j)
-     1  ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
-     1  ,t_gnd_k,pres_sfc_pa,dum_3d
-     1        ,thresh2,topo(i,j),r_missing_data
-     1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p
-     1  ,n_valid_co2,n_missing_co2
-     1  ,cldtop_m_co2(i,j),l_co2,istat_co2
-     1  ,cldtop_m_tb8(i,j),l_tb8
-     1  ,cldtop_m(i,j),l_cloud_present
-!       1       ,cldtop_m_cold,l_cloud_present
-     1  ,sat_cover
+              call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
+     1            ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
+     1            ,t_gnd_k,pres_sfc_pa,dum_3d
+     1            ,thresh2,topo(i,j),r_missing_data
+     1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
+     1            ,k_terrain(i,j),laps_p
+     1            ,n_valid_co2,n_missing_co2
+     1            ,cldtop_m_co2(i,j),l_co2,istat_co2
+     1            ,cldtop_m_tb8(i,j),l_tb8
+     1            ,cldtop_m(i,j),l_cloud_present
+!    1            ,cldtop_m_cold,l_cloud_present
+     1            ,sat_cover
      1                                                          )
 !             Change to cover
-              cover = band8_cover(tb8_k(i,j),t_gnd_k(i,j),tb8_cold_k(i,j
-     1))
+              cover = 
+     1        band8_cover(tb8_k(i,j),t_gnd_k(i,j),tb8_cold_k(i,j))
 
               htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_def )
 
@@ -575,6 +576,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
                       write(6,*)' Error in correct_cover'
+                      write(6,*)cldtop_old,cldtop_m(i,j)
+     1                         ,(heights_3d(i,j,k),k=1,klaps)
                       return
                   endif
                   cover = cover_new
@@ -592,7 +595,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1             .and.  cld_hts(k) .le. cldtop_m(i,j)      )then
 
                   if(cldcv_sao(i_sao,j_sao,k)   .le. thr_sao_cvr .and.
-     1             cldcv_sao(i_sao,j_sao,k+1) .gt. thr_sao_cvr
+     1               cldcv_sao(i_sao,j_sao,k+1) .gt. thr_sao_cvr
      1                                       )then ! We have an SAO base
                     htbase = cld_hts(k+1)
 
@@ -770,8 +773,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
      1                 heights_3d(i,j,iarg+1) * frac
             else
                 cldtop_m_co2 = r_missing_data
-                write(6,*)' WARNING, CO2 pressure is out of bounds ',iip
-     1cld
+                write(6,*)' WARNING, CO2 pressure is out of bounds '
+     1                   ,iipcld
             endif
 
         else
@@ -805,13 +808,13 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             do kl = klaps-1,k_terrain,-1
 
                 if( (temp_3d(i,j,kl) - cldtop_temp_k) *
-     1            (temp_above      - cldtop_temp_k) .lt. 0.)then ! Crossing Pt
+     1              (temp_above      - cldtop_temp_k) .lt. 0.)then ! Crossing Pt
 
                     frac_k = (cldtop_temp_k - temp_3d(i,j,kl))
-     1                  /  (temp_above    - temp_3d(i,j,kl))
+     1                    /  (temp_above    - temp_3d(i,j,kl))
 
                     arg = heights_3d(i,j,kl) + frac_k *
-     1           (heights_3d(i,j,kl+1) - heights_3d(i,j,kl))
+     1                   (heights_3d(i,j,kl+1) - heights_3d(i,j,kl))
 
                     if(arg .ge. topo)then
                         cldtop_m_tb8 = arg
@@ -819,8 +822,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
                     if(j .eq. 29)then
                         if(arg .lt. topo)then
-                            write(6,*)' Cloud Top Below Ground - not use
-     1d'
+                            write(6,*)
+     1                      ' Cloud Top Below Ground - not used'
                         endif
 
                         write(6,111,err=121)cldtop_m_tb8,cldtop_m_co2
@@ -950,7 +953,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         iz_temp = int(z_temp)
         frac = z_temp - iz_temp
         temp_old = temp_3d(i,j,iz_temp)    * (1. - frac)
-     1        +  temp_3d(i,j,iz_temp+1)  * frac
+     1          +  temp_3d(i,j,iz_temp+1)  * frac
 
 !       Find Temperature of new cloud top
         z_temp = height_to_zcoord2(cldtop_new,heights_3d,imax,jmax,klaps
@@ -963,7 +966,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         iz_temp = int(z_temp)
         frac = z_temp - iz_temp
         temp_new = temp_3d(i,j,iz_temp)    * (1. - frac)
-     1        +  temp_3d(i,j,iz_temp+1)  * frac
+     1          +  temp_3d(i,j,iz_temp+1)  * frac
 
 !       This one utilizes a linear approximation to the sigma T**4 relationship
         cover_old = min(cover_in,1.0)
@@ -1219,16 +1222,18 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
                 else           ! Do one Newton iteration
                     frac = tdiff / (tdiff - tdiff_ref)
                     delta_cover = delta_cover
-     1          + frac * (delta_cover_ref - delta_cover)
+     1                  + frac * (delta_cover_ref - delta_cover)
 
                     call apply_correction(cldcv,i,j,imax,jmax
      1                        ,cldcv_1d,1,1,1,1,kcld,f,ilyr,delta_cover)
 
-                    call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,ima
-     1x,jmax
-     1          ,a_new,f_new,ilyr_new,cldcv_1d,cld_hts,t_gnd_k(i,j),heig
-     1hts_3d
-     1                            ,t_effective,nlyr_new,istatus)
+                    call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j
+     1                                       ,imax,jmax
+     1                                       ,a_new,f_new,ilyr_new
+     1                                       ,cldcv_1d,cld_hts
+     1                                       ,t_gnd_k(i,j),heights_3d       
+     1                                       ,t_effective,nlyr_new
+     1                                       ,istatus)
                     tdiff = tb8_k(i,j)-t_effective
                     n_iter = n_iter + 1
                 endif
@@ -1261,8 +1266,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         if(n_clear .gt. 0)then
             write(6,951,err=960)n_clear, tb8_g_clr_sum  /float(n_clear)
      1                 ,sqrt    (tb8_g_clr_sumsq/float(n_clear))
-951         format(/' Mean/RMS band 8/gnd  temp residual in clear skies 
-     1=  '
+951         format(/
+     1      ' Mean/RMS band 8/gnd  temp residual in clear skies =  '
      1                                                ,i5,2f9.3)
 960         write(6,961,err=970)n_clear, tb8_a_clr_sum  /float(n_clear)
      1                 ,sqrt    (tb8_a_clr_sumsq/float(n_clear))
@@ -1272,70 +1277,70 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 970     endif
 
         if(n_clear_ns .gt. 0)then
-            write(6,956,err=965)n_clear_ns,tb8_g_clr_ns_sum  /float(n_cl
-     1ear_ns)
+            write(6,956,err=965)n_clear_ns
+     1                         ,tb8_g_clr_ns_sum  /float(n_clear_ns)
      1                       ,sqrt(tb8_g_clr_ns_sumsq/float(n_clear_ns))
-956         format(/' Mean/RMS band 8/gnd temp resid in clear/nsnow skie
-     1s ='
+956         format(/
+     1      ' Mean/RMS band 8/gnd temp resid in clear/nsnow skies ='
      1                                                ,i5,2f9.3)
-965         write(6,966,err=975)n_clear_ns, tb8_a_clr_ns_sum  /float(n_c
-     1lear_ns)
+965         write(6,966,err=975)n_clear_ns
+     1                         ,tb8_a_clr_ns_sum  /float(n_clear_ns)
      1                       ,sqrt(tb8_a_clr_ns_sumsq/float(n_clear_ns))
-966         format(' Mean/RMS band 8/air temp resid in clear/nsnow skies
-     1 ='
+966         format(
+     1      ' Mean/RMS band 8/air temp resid in clear/nsnow skies ='
      1                                                ,i5,2f9.3)
 975     endif
 
         if(n_clear_sn .gt. 0)then
-            write(6,976,err=985)n_clear_sn,tb8_g_clr_sn_sum  /float(n_cl
-     1ear_sn)
+            write(6,976,err=985)n_clear_sn
+     1                         ,tb8_g_clr_sn_sum  /float(n_clear_sn)
      1                       ,sqrt(tb8_g_clr_sn_sumsq/float(n_clear_sn))
-976         format(/' Mean/RMS band 8/gnd temp resid in clear/snow skies
-     1 = '
+976         format(/
+     1      ' Mean/RMS band 8/gnd temp resid in clear/snow skies = '
      1                                                ,i5,2f9.3)
-985         write(6,986,err=995)n_clear_sn, tb8_a_clr_sn_sum  /float(n_c
-     1lear_sn)
+985         write(6,986,err=995)n_clear_sn
+     1                         ,tb8_a_clr_sn_sum  /float(n_clear_sn)
      1                       ,sqrt(tb8_a_clr_sn_sumsq/float(n_clear_sn))
-986         format(' Mean/RMS band 8/air temp resid in clear/snow skies 
-     1= '
+986         format(
+     1      ' Mean/RMS band 8/air temp resid in clear/snow skies = '
      1                                                ,i5,2f9.3)
 995     endif
 
         if(n_total .gt. 0)then
             write(6,971,err=980)n_total,sqrt(tdiff_sumsq/float(n_total))
-971         format(/' RMS  band 8/teff residual (bfr corr) in all  skies
-     1 = '
+971         format(/
+     1      ' RMS  band 8/teff residual (bfr corr) in all  skies = '
      1                                                ,i5, f9.3)
-980         write(6,981,err=990)n_total,sqrt(tdiff_corr_sumsq/float(n_to
-     1tal))
-981         format(' RMS  band 8/teff residual (aft corr) in all  skies 
-     1= '
+980         write(6,981,err=990)n_total
+     1                         ,sqrt(tdiff_corr_sumsq/float(n_total))
+981         format(
+     1      ' RMS  band 8/teff residual (aft corr) in all  skies = '
      1                                                ,i5, f9.3)
 990     endif
 
         if(n_cloudy .gt. 0)then
-            write(6,991,err=1000)n_cloudy,sqrt(tdiff_cld_sumsq/float(n_c
-     1loudy))
-991         format(' RMS  band 8/teff residual (bfr corr) in cldy skies 
-     1= '
+            write(6,991,err=1000)n_cloudy
+     1                          ,sqrt(tdiff_cld_sumsq/float(n_cloudy))
+991         format(
+     1      ' RMS  band 8/teff residual (bfr corr) in cldy skies = '
      1                                                ,i5, f9.3)
 1000        write(6,1001,err=1010)
      1              n_cloudy,sqrt(tdiff_corr_cld_sumsq/float(n_cloudy))
-1001        format(' RMS  band 8/teff residual (aft corr) in cldy skies 
-     1= '
+1001        format(
+     1      ' RMS  band 8/teff residual (aft corr) in cldy skies = '
      1                                                ,i5, f9.3)
 1010    endif
 
         if(n_correct .gt. 0)then
             write(6,1011,err=1020)
      1          n_correct,sqrt(tdiff_corr_sumsq3/float(n_correct))
-1011        format(/' RMS  band 8/teff resid (bfr corr - corrected pts) 
-     1 = '
+1011        format(/
+     1      ' RMS  band 8/teff resid (bfr corr - corrected pts)  = '
      1                                                ,i5, f9.3)
 1020        write(6,1021,err=1030)
      1          n_correct,sqrt(tdiff_corr_sumsq2/float(n_correct))
-1021        format(' RMS  band 8/teff resid (aft corr - corrected pts)  
-     1= '
+1021        format(
+     1      ' RMS  band 8/teff resid (aft corr - corrected pts)  = '
      1                                                ,i5, f9.3)
             write(6,*)' Total/Average # of iterations = ',n_iter,
      1                          float(n_iter)/float(n_correct)
@@ -1345,9 +1350,10 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         return
         end
 
-        subroutine cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,ni,nj,a,f
-     1,ilyr
-     1  ,cvr,cld_hts,t_gnd_k,heights_3d,t_effective,nlyr,istatus)
+        subroutine cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,ni,nj,a
+     1                                 ,f,ilyr,cvr,cld_hts,t_gnd_k
+     1                                 ,heights_3d,t_effective,nlyr
+     1                                 ,istatus)
 
         real*4 thresh_cvr
         parameter (thresh_cvr = 0.1)
@@ -1435,8 +1441,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
 
         subroutine apply_correction(cldcv_in,i_in,j_in,imax_in,jmax_in
-     1       ,cldcv_out,i_out,j_out,imax_out,jmax_out,kcld,f,ilyr,delta_
-     1cover)
+     1                             ,cldcv_out,i_out,j_out,imax_out
+     1                             ,jmax_out,kcld,f,ilyr,delta_cover)
 
         real*4 cldcv_in(imax_in,jmax_in,kcld)
         real*4 cldcv_out(imax_out,jmax_out,kcld)

@@ -247,7 +247,9 @@
 
             I4_elapsed = ishow_timer()
 
-            do ifcst = 1,n_fcst_radar
+            if(n_fcst_radar .gt. 0)then
+              index = n_fcst_radar
+              do ifcst = 1,index
                 write(6,*)
      1            ' Generating advected max reflectivity for pd ',ifcst       
 
@@ -259,7 +261,8 @@
      1                  ,float(ilaps_cycle_time*ifcst),1.0,lon
      1                  ,r_missing_data)
 
-            enddo ! i
+              enddo ! i
+            endif
 
             I4_elapsed = ishow_timer()
 
@@ -315,16 +318,20 @@ cc102                 format('R',i2)
 
             I4_elapsed = ishow_timer()
 
-            do ifcst = 1,n_fcst_radar
+            if(n_fcst_radar .gt. 0)then
+              index = n_fcst_radar
+              do ifcst = 1,index
                 write(6,*)
-     1     ' Generating advected max reflectivity history for pd',ifcst
+     1          ' Generating advected max reflectivity history for pd'       
+     1          ,ifcst
 
                 call advect(ustorm,vstorm,ref_max(1,1,0)
      1                  ,dum1_2d,grid_spacing_m,imax,jmax
      1                  ,ref_max(1,1,ifcst)
      1         ,float(ilaps_cycle_time*ifcst),1.0,lon,r_missing_data)
 
-            enddo ! i
+              enddo ! ifcst
+            endif
 
             I4_elapsed = ishow_timer()
 

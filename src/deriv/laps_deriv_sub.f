@@ -90,11 +90,6 @@ cdis
 !                               statement for max_cld_snd.
 !       1997 Jul 31 K. Dritz  - Changed LAPS_DOMAIN_FILE to 'nest7grid'.
 !       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
-!       1997 Aug 01 K. Dritz  - Compute NX_DIM_LUT, NY_DIM_LUT, and n_fnorm as
-!                               they were previously computed in barnes_r5.
-!       1997 Aug 01 K. Dritz  - Added NX_DIM_LUT, NY_DIM_LUT, IX_LOW, IX_HIGH,
-!                               IY_LOW, IY_HIGH, and n_fnorm as arguments in
-!                               call to barnes_r5.
 !       1997 Aug 01 K. Dritz  - Added maxstns, IX_LOW, IX_HIGH, IY_LOW, and
 !                               IY_HIGH as arguments in call to insert_sao.
 !       1997 Aug 01 K. Dritz  - Also now pass r_missing_data to barnes_r5.
@@ -330,20 +325,6 @@ cdis
 
         write(6,*)' Welcome to the LAPS gridded cloud analysis'
 
-        call get_i_perimeter(I_PERIMETER,istatus)
-        if (istatus .ne. 1) then
-           write (6,*) 'Error calling get_i_perimeter'
-           stop
-        endif
-
-        IX_LOW  = 1    - I_PERIMETER
-        IX_HIGH = NX_L + I_PERIMETER
-        IY_LOW  = 1    - I_PERIMETER
-        IY_HIGH = NY_L + I_PERIMETER
-
-        NX_DIM_LUT = NX_L + I_PERIMETER - 1
-        NY_DIM_LUT = NY_L + I_PERIMETER - 1
-
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_r_missing_data'
@@ -365,12 +346,6 @@ cdis
            write (6,*) 'Error getting ref_base'
            stop
         endif
-
-!     This should work out to be slightly larger than needed
-      n_fnorm =
-!       1     2   * (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
-     1      1.6 * ( (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
-
 
 c Determine the source of the radar data
         c_vars_req = 'radarext_3d'
@@ -707,16 +682,17 @@ c read in laps lat/lon and topo
             call get_laps_2d(i4time,ext,var,units,comment
      1                  ,NX_L,NY_L,td_sfc_k,istatus)
             if(istatus .ne. 1)then
-                write(6,*)' Error reading SFC TD - SFC Precip Type not c
-     1omputed'
+                write(6,*)
+     1          ' Error reading SFC TD - SFC Precip Type not computed'       
                 goto700
             endif
 
 
 !           Note that pres_sfc_pa was already read in above
-            call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k,cldpcp_
-     1type_3d
-     1               ,dbz_low_2d,i2_pcp_type_2d,NX_L,NY_L,NZ_L)
+            call get_sfc_preciptype(pres_sfc_pa,t_sfc_k,td_sfc_k
+     1                             ,cldpcp_type_3d
+     1                             ,dbz_low_2d,i2_pcp_type_2d
+     1                             ,NX_L,NY_L,NZ_L)
 
 !           Compute thresholded precip type
 
@@ -920,8 +896,8 @@ c read in laps lat/lon and topo
             istat_pty = 1
 
         else ! set SFC preciptype to missing
-            write(6,*)' No SFC preciptype calculated due to lack of rada
-     1r data'
+            write(6,*)
+     1      ' No SFC preciptype calculated due to lack of radar data'       
             do i = 1,NX_L
             do j = 1,NY_L
                 r_pcp_type_thresh_2d(i,j) = r_missing_data
@@ -1847,6 +1823,8 @@ c read in laps lat/lon and topo
 !       ICE PELLETS
         if(c1_pcp .eq. 'I')then
             call parse_wx_string(c8_wx,'PE',iparse,istatus)           
+            if(iparse .eq. 1)ipresent = 1
+            call parse_wx_string(c8_wx,'PL',iparse,istatus)           
             if(iparse .eq. 1)ipresent = 1
         endif
 
