@@ -15,7 +15,7 @@
  T_REF = -132.0,
  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
- PATH_TO_GPS = '/home/lapb/birk/GPS/'
+ PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
  
  /
 c   
