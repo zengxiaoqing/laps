@@ -2164,3 +2164,252 @@ c
 	return
 	end
 c
+c
+      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
+     &                  ni,nj,mxstn,x1a,x2a,y2a,ii,jj,
+     &                  field_ea,badflag)
+c
+c======================================================================
+c
+c     Routine to interpolate a field back to station locations, to 
+c     compare the analysis to the original obs.
+c
+c     Original: P.Stamus, NOAA/FSL  08-07-95
+c     Changes:  
+c               P.Stamus  08-14-95  Added mean.
+c                         08-25-97  Changes for dynamic LAPS
+c                         05-13-98  Added expected accuracy counts.
+c                         07-13-99  Change stn character arrays.
+c                                     Rm *4 from declarations.
+c                         11-15-99  Add writes to log file.
+c
+c     Notes:
+c
+c======================================================================
+c
+	integer ni,nj,mxstn
+	real field(ni,nj), ob(mxstn), interp_ob
+	real x1a(ni), x2a(nj), y2a(ni,nj)
+	integer ii(mxstn), jj(mxstn)
+	character title*(*), stn(mxstn)*20, stn_mx*5, stn_mn*5
+c
+c.... Start.
+c
+	num = 0
+	num_ea1 = 0
+	num_ea2 = 0
+	num_ea3 = 0
+	abs_diff = 0.
+	sum = 0.
+        sumsq = 0.
+	amean = 0.
+	rms = 0.
+	diff_mx = -1.e30
+	diff_mn = 1.e30
+	print *,' '
+	write(6,900) title
+	write(iunit,900) title
+ 900	format(/,2x,a,/'          sta      i   j       '
+     1        ,'grid      obs       diff')
+c
+	ea1 = field_ea
+	ea2 = field_ea * 2.
+	ea3 = field_ea * 3.
+c
+c....   Find the 2nd derivative table for use by the splines.
+c
+	call splie2(x1a,x2a,field,ni,nj,y2a)
+c
+c....   Now call the spline for each station in the grid.
+c
+	do i=1,n_obs_b
+	   if(ii(i).lt.1 .or. ii(i).gt.ni) go to 500
+	   if(jj(i).lt.1 .or. jj(i).gt.nj) go to 500
+	   aii = float(ii(i))
+	   ajj = float(jj(i))
+	   call splin2(x1a,x2a,field,y2a,ni,nj,aii,ajj,interp_ob)
+c
+	   if(ob(i) .le. badflag) then
+	      diff = badflag
+	   else
+	      diff = ob(i) - interp_ob 
+	      sum = diff + sum
+              sumsq = sumsq + diff**2
+	      adiff = abs(diff)
+	      abs_diff = abs_diff + adiff
+	      num = num + 1
+c
+	      if(adiff .gt. diff_mx) then
+		 diff_mx = adiff
+		 stn_mx = stn(i)(1:5)
+	      endif
+	      if(adiff .lt. diff_mn) then
+		 diff_mn = adiff
+		 stn_mn = stn(i)(1:5)
+	      endif
+c
+c.....  Count how many stns are within the exp accuracy (and multiples)
+c
+	      if(adiff .le. ea1) num_ea1 = num_ea1 + 1
+	      if(adiff .le. ea2) num_ea2 = num_ea2 + 1
+	      if(adiff .le. ea3) num_ea3 = num_ea3 + 1
+c
+	   endif
+c
+	   write(iunit,905) i, stn(i)(1:5), ii(i), jj(i), 
+     1                      interp_ob, ob(i), diff
+ 905	   format(5x,i4,1x,a5,1x,2i4,1x,3f10.2)
+c
+ 500	enddo !i
+c
+c.... Get the average diff over the obs.
+c     
+	ave_diff = badflag
+	amean = badflag
+	if(num .gt. 0) amean = sum / float(num)
+	if(num .gt. 0) ave_diff = abs_diff / float(num)
+	if(num .gt. 0 .and. sumsq .ge. 0.)rms = sqrt(sumsq / float(num))       
+
+	write(6,909) amean, num
+	write(iunit,909) amean, num
+ 909	format(/,'    Mean difference: ',f10.2,' over ',i4,' stations.')
+
+	write(6,910) ave_diff, num
+	write(iunit,910) ave_diff, num
+ 910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
+
+	write(6,915) rms, num
+	write(iunit,915) rms, num
+ 915	format(' RMS difference:     ',f10.2,' over ',i4,' stations.')
+
+	write(iunit,920) diff_mx, stn_mx
+ 920	format(' Maximum difference of ',f10.2,' at ',a5)
+
+	write(iunit,925) diff_mn, stn_mn
+ 925	format(' Minimum difference of ',f10.2,' at ',a5)
+
+	write(iunit, 930)
+ 930	format(' ')
+c
+	write(iunit, 950) field_ea
+ 950	format(' Number of obs within multiples of exp acc of ',f8.2)
+	percent = -1.
+	anum = float(num)
+	if(num .ne. 0) percent = (float(num_ea1) / anum) * 100.
+	write(iunit, 952) num_ea1, num, percent
+ 952	format(10x,'1x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
+	if(num .ne. 0) percent = (float(num_ea2) / anum) * 100.
+	write(iunit, 953) num_ea2, num, percent
+ 953	format(10x,'2x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')	
+	if(num .ne. 0) percent = (float(num_ea3) / anum) * 100.
+	write(iunit, 954) num_ea3, num, percent
+ 954	format(10x,'3x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
+	write(iunit, 930)
+	write(iunit, 930)
+	write(6, 931)
+	write(iunit, 931)
+ 931	format(1x,'===============================================')
+c
+	return
+	end
+c
+c
+c
+c
+      subroutine splie2(x1a,x2a,ya,m,n,y2a)
+
+c	15 May 1991  birkenheuer
+
+      dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*50),y2tmp(n*50)
+      do 13 j=1,m
+        do 11 k=1,n
+          ytmp(k)=ya(j,k)
+11      continue
+        call spline_db(x2a,ytmp,n,1.e30,1.e30,y2tmp)
+        do 12 k=1,n
+          y2a(j,k)=y2tmp(k)
+12      continue
+13    continue
+      return
+      end
+c
+c
+      subroutine splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
+
+c	15 May 1991 birkenheuer
+
+       dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*50),
+     &          y2tmp(n*50),yytmp(n*50)
+       do 12 j=1,m
+        do 11 k=1,n
+          ytmp(k)=ya(j,k)
+          y2tmp(k)=y2a(j,k)
+11      continue
+        call splint(x2a,ytmp,y2tmp,n,x2,yytmp(j))
+12     continue
+       call spline_db(x1a,yytmp,m,1.e30,1.e30,y2tmp)
+       call splint(x1a,yytmp,y2tmp,m,x1,y)
+       return
+       end
+c
+c
+      subroutine spline_db(x,y,n,yp1,ypn,y2)
+
+c	15 may 1991  birkenheuer
+
+      dimension x(n),y(n*50),y2(n*50),u(n*50)
+      if (yp1.gt..99e30) then
+        y2(1)=0.
+        u(1)=0.
+      else
+        y2(1)=-0.5
+        u(1)=(3./(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
+      endif
+      do 11 i=2,n-1
+        sig=(x(i)-x(i-1))/(x(i+1)-x(i-1))
+        p=sig*y2(i-1)+2.
+        y2(i)=(sig-1.)/p
+        u(i)=(6.*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))
+     1      /(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
+11    continue
+      if (ypn.gt..99e30) then   ! test for overflow condition
+        qn=0.
+        un=0.
+      else
+        qn=0.5
+        un=(3./(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
+      endif
+      y2(n)=(un-qn*u(n-1))/(qn*y2(n-1)+1.)
+      do 12 k=n-1,1,-1
+        y2(k)=y2(k)*y2(k+1)+u(k)
+12    continue
+      return
+      end
+c
+c
+      subroutine splint(xa,ya,y2a,n,x,y)
+
+
+c	15 May 1991 Birkenheuer
+
+      dimension xa(n),ya(n*50),y2a(n*50)
+      klo=1
+      khi=n
+1     if (khi-klo.gt.1) then
+        k=(khi+klo)/2
+        if(xa(k).gt.x)then
+          khi=k
+        else
+          klo=k
+        endif
+      goto 1
+      endif
+      h=xa(khi)-xa(klo)
+      if (h.eq.0.) pause 'bad xa input.'
+      a=(xa(khi)-x)/h
+      b=(x-xa(klo))/h
+      y=a*ya(klo)+b*ya(khi)+
+     1      ((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.
+      return
+      end
+c
