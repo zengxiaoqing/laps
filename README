@@ -33,7 +33,8 @@
          2.3.2 ..................  Radar ingest
          2.3.3 ..................  Surface Data
          2.3.4 ..................  Profiler / RASS
-         2.3.5 ..................  Other Data Sources
+         2.3.5 ..................  PIREPS & ACARS from aircraft
+         2.3.6 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
          2.4.1 ..................  Cron timing considerations
          2.4.2 ..................  Purging Output Files
@@ -918,7 +919,18 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
              ingest code would need modification to process it.
 </pre>                 
 
-                      ----   2.3.5  Other Data Sources ---
+                      ----   2.3.5  PIREPS & ACARS from aircraft ---
+
+     PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
+           cloud layers from voice pilot reports into intermediate "PIN" files.
+
+     ACARS (pin) - We are ingesting FSL NetCDF and AFWA databases for ACARS 
+           data to translate the automated aircraft observations. The wind, 
+           temperature and humidity obs are appended to our intermediate "PIN"
+           file. An equivalent NetCDF database is available (with some
+           restrictions) on the Web at http://acweb.fsl.noaa.gov.
+
+                      ----   2.3.6  Other Data Sources ---
 
      Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
            FSL in NetCDF or SBN data (also in netcdf). Ingest of Air Force 
@@ -937,14 +949,6 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            parameters for this ingest process. Only the moisture analysis is 
            using this product. Currently FSL /public sounder files in netCDF 
            format are processed.
-
-     PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
-           cloud layers from voice pilot reports into intermediate "PIN" files.
-
-     ACARS (pin) - We are ingesting FSL NetCDF and AFWA databases for ACARS 
-           data to translate the automated aircraft observations. The wind, 
-           temperature and humidity obs are appended to our intermediate "PIN"
-           file.
 
      Radar VAD Algorithm winds (pro)
            FSL NIMBUS database, from WSR-88D algorithm output.
