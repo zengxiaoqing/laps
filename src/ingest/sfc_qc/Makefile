@@ -16,7 +16,7 @@ DBLAPSLIBS = -Wl,-L$(LAPSROOT)/src/lib -ldebuglaps
 
 EXE = sfc_qc.exe
 
-SRC   = kalman.f         matrix_tools.f   test_qc.f     \
+SRC   = kalman.f         matrix_tools.f   \
         QC_tools.f       model_tools.f    write_qc.c    \
         write_tools.f    $(LAPSROOT)/src/sfc/mdatlaps.f \
         $(LAPSROOT)/src/sfc/laps_routines.f \
