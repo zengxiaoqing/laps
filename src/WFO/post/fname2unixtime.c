@@ -21,7 +21,7 @@
      2. YYJJJHHMMhhmm
      3. YYYYOODD_HHhh (wfo filename format as of 7/98)
 */
-long main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
        time_t refTime, validTime;
        char filename[100];
