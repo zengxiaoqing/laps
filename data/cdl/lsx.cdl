@@ -479,7 +479,7 @@ netcdf lsx {
         float 
             level(z);
             level:long_name="level of data";
-	    level:units = "hectopascals";
+	    level:units = "none";
                     	
         //      validtime of the grid 
 
