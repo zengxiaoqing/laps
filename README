@@ -2940,8 +2940,8 @@ Outputs:
                                 by the air density. 
 
 	lil     2d grid		Vertically integrated cloud liquid water content
-                                (lwc). This is the total cloud liquid in the
-                                column.
+                                (lwc). This is the total cloud liquid condensed
+                                in the column.
 
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
@@ -3362,7 +3362,7 @@ Process accum:	L1S  S01  s1hr     1  Snow Accum Cycle
 Process humid:  LQ3  SH   sh      21  Specific Humidity 
             	LH3  RH3  rh      21  Relative Humidity 
             	     RHL  rhl	  21  Relative Humidity with resp to liquid
-            	LH4  TPW  tpw      1  Integrated Total Precipitable Water
+            	LH4  TPW  tpw      1  Integrated Total Precipitable Water Vapor
 
 Process wind:   LW3  U3   u       21  Wind u (wrt GRID NORTH)
 		     V3   v       21  Wind v (wrt GRID EAST)
@@ -3447,8 +3447,8 @@ LAPS Fcst Model:
                      LCB  lcb      1  Fcst Model Cloud base
                      LCT  lct      1  Fcst Model Cloud top
                      MSL  msl      1  Fcst Model MSL pressure
-                     LIL  lil      1  Fcst Model Integrated liquid water
-                     TPW  tpw      1  Fcst Model Total precipitable water
+                     LIL  lil      1  Fcst Model Integrated cloud liquid water
+                     TPW  tpw      1  Fcst Model Total precipitable water vapor
                      R01  r01      1  Fcst Model Liquid accum cycle     
                      RTO  rto      1  Fcst Model Liquid accum storm total
                      S01  s01      1  Fcst Model Snow accum cycle     
@@ -3493,9 +3493,9 @@ Process lga.exe (background model):
 
                 LGB                   Sfc grids (winds are grid north)
 
-Process LH1: 	LH1  PW   pw	   1  Precipitable Water
+Process LH1: 	LH1  PW   pw	   1  Precipitable Water Vapor
 
-Process LH2: 	LH2  PW   lpw	   3  Layer Precipitable Water
+Process LH2: 	LH2  PW   lpw	   3  Layer Precipitable Water Vapor
 
 Process lvd_sat_ingest:
                      LVD  S8W  s8w 1  GOES IR band-8 bright temp warmest pixel
