@@ -52,23 +52,22 @@ c.....  J. Smart          Dec 1996          Modified the satdat2laps_ir for soun
 c
       implicit none
 
-      integer max_elem,max_line
-        integer imax,jmax
+      integer    max_elem,max_line
+      integer    imax,jmax
       parameter (max_elem = 15)
       parameter (max_line = 15)
-      integer line_dim,elem_dim
-        real*4    r_grid_ratio
+      integer    line_dim,elem_dim
+      real*4     r_grid_ratio
+      real*4     image_sndr(elem_dim,line_dim)
+      real*4     sc(imax,jmax)
+      real*4     sa(imax,jmax)
+      real*4     st(imax,jmax)
+      real*4 r_llij_lut_ri(imax,jmax)
+      real*4 r_llij_lut_rj(imax,jmax)
 
-      real image_sndr(elem_dim,line_dim)
-        real*4 sc(imax,jmax)
-      real*4 sa(imax,jmax)
-        real*4 st(imax,jmax)
-        real*4 r_llij_lut_ri(imax,jmax)
-        real*4 r_llij_lut_rj(imax,jmax)
-
-      real*4 line_mx,line_mn,elem_mx,elem_mn
-      real*4 t_array(max_elem*max_line)
-      real*4 wm, wc, btemp, tmean
+        real*4 line_mx,line_mn,elem_mx,elem_mn
+        real*4 t_array(max_elem*max_line)
+        real*4 wm, wc, btemp, tmean
         real*4 frac
 c       real*4 fraci,fracj
         real*4 pixsum 
@@ -78,7 +77,7 @@ c       real*4 fraci,fracj
         integer i,j,ii,jj
         integer istart,jstart
         integer iend,jend
-      integer npix, nwarm
+        integer npix, nwarm
         integer maxpix
         integer ipix
         integer istatus

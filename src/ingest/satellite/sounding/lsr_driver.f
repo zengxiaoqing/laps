@@ -23,7 +23,7 @@ c
       end if
 
 c
-c get the number of satellites and channels from nest7grid.parms
+c get the number of satellites and channels data/static/sat_sounder.nl
 c
       call get_sat_sounder_info(n_sat,c_sat_id,n_channels,
      &c_sounding_path,n_elems,n_lines,r_channel_wavelengths,
@@ -243,7 +243,7 @@ c
       grid_spacing_km=grid_spacing/1000.
 c
 c =================================================================
-c                       generate remapping lut
+c       generate satellite-to-laps remapping table
 c =================================================================
 c
       write(6,*)'Compute sat-2-laps look-up-table'
@@ -261,7 +261,7 @@ c
       endif
 c
 c ===================================================================
-c             compute count to radiance look up table
+c       compute count to radiance look up table
 c ===================================================================
 c
       call count_range(ndimx,ndimy,ndimch,nelems,nlines,n_channels,
@@ -289,36 +289,43 @@ c
 
       do k=1,n_channels
 
+        do j=1,ndimy
+        do i=1,ndimx(j)
+           sndr_rad(i,j,k)=r_missing_data
+        enddo
+        enddo
+
         icnt(k) = 0
         jcnt(k) = 0
         rsb=scalingBias(1,k)
         rsg=scalingGain(1,k)
 
-        write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
-        do j=1,ndimy
-        do i=1,ndimx(j)
+        if(rsg.gt.1.0e-10)then                     !vis channel rsg is small. no rad conversion.
 
-! temporary fix (abs) to eliminate negative values.
-           rcount=float( isndrdata(i,j,k) )
-           if(rcount.ge.imaximum(k).or.rcount.le.0.0)then  !this would include i2_missing_data (=-99)
-              icnt(k) = icnt(k) + 1
-              sndr_rad(i,j,k)=r_missing_data
-           else
-              sndr_rad(i,j,k)=(rcount-rsb)/rsg
-              jcnt(k) = jcnt(k) + 1
-           endif
+           write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
+           do j=1,ndimy
+           do i=1,ndimx(j)
 
-        enddo
-        enddo
+              rcount=float( isndrdata(i,j,k) )
+              if(rcount.ge.imaximum(k).or.rcount.le.0.0)then  !this would include i2_missing_data (=-99)
+                 icnt(k) = icnt(k) + 1
+              else
+                 sndr_rad(i,j,k)=(rcount-rsb)/rsg
+                 jcnt(k) = jcnt(k) + 1
+              endif
 
-        print*,'Ch ',k,' # not used (gt imax or < 0): ',icnt(k)
+           enddo
+           enddo
+
+           print*,'Ch ',k,' # not used (gt imax or < 0): ',icnt(k)
 c       print*,'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
 c       write(6,*)
 
+        endif
       enddo
 c 
 c ================================================================
-c          Determine representative time 11-14-97 (J.Smart)
+c          Determine representative time
 c ================================================================
 c
       rmintime=9999999999.
@@ -346,7 +353,7 @@ c
       endif
 c
 c ================================================================
-c                    remap to laps domain
+c        Remap to laps domain
 c ================================================================
 c
       r_grid_ratio = r_sndr_res_km/grid_spacing_km
