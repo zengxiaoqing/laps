@@ -35,6 +35,26 @@
 /*---------------------------------------------------------------------------*/
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 /*---------------------------------------------------------------------------*/
+#if defined (FORTRANUNDERSCORE)
+#   define open_fgge_file open_fgge_file_ 
+#   define read_fgge_record read_fgge_record_
+#   define decode_fgge_header decode_fgge_header_
+#   define decode_fgge_data decode_fgge_data_
+#   define close_fgge_file close_fgge_file_
+#   define print_fgge_header print_fgge_header_
+#   define print_fgge_data print_fgge_data_
+#elif defined (FORTRANDOUBLEUNDERSCORE)
+#   define open_fgge_file open_fgge_file__ 
+#   define read_fgge_record read_fgge_record__
+#   define decode_fgge_header decode_fgge_header__
+#   define decode_fgge_data decode_fgge_data__
+#   define close_fgge_file close_fgge_file__
+#   define print_fgge_header print_fgge_header__
+#   define print_fgge_data print_fgge_data__
+#endif
+/*---------------------------------------------------------------------------*/
+/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+/*---------------------------------------------------------------------------*/
 void swap32(char *b1,int size)
 { int	loc;
   char	tmp;
@@ -132,11 +152,11 @@ typedef struct fgge_head
     long NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3;
   } FGGE_HEAD ;
 /*---------------------------------------------------------------------------*/
-void open_fgge_file_(char *fgge_name, int *status);
-void read_fgge_record_(char *obuf, int *status);
-void decode_fgge_header_(char *ibuf, FGGE_HEAD *header,int *status);
-void decode_fgge_data_(char *ibuf, FGGE_HEAD *header, float *data, int *status);
-void close_fgge_file_(int *status);
+void open_fgge_file(char *fgge_name, int *status);
+void read_fgge_record(char *obuf, int *status);
+void decode_fgge_header(char *ibuf, FGGE_HEAD *header,int *status);
+void decode_fgge_data(char *ibuf, FGGE_HEAD *header, float *data, int *status);
+void close_fgge_file(int *status);
 float rtran_mia(long mia);
 void print_fgge_header(FGGE_HEAD *header);
 void print_fgge_data(FGGE_HEAD *header,float *data);
@@ -156,19 +176,19 @@ char *trim_blank(char *string)
   return( strbuf );
 }
 /*---------------------------------------------------------------------------*/
-void open_fgge_file_(char *fgge_name, int *status)
+void open_fgge_file(char *fgge_name, int *status)
 { *status = 0 ;
   if( (fgge_fptr=fopen(trim_blank(fgge_name), "r")) == (FILE *)NULL )
   { *status = -1 ;
     fprintf(stderr,"FGGE file open error : %s\n",fgge_name); }
 }
 /*---------------------------------------------------------------------------*/
-void close_fgge_file_(int *status)
+void close_fgge_file(int *status)
 { *status = 0 ;
   fclose(fgge_fptr);
 }
 /*---------------------------------------------------------------------------*/
-void read_fgge_record_(char *obuf, int *status)
+void read_fgge_record(char *obuf, int *status)
 { int  i,npts;
   long need_len,read_len;
   *status = 0 ;
@@ -193,7 +213,7 @@ void read_fgge_record_(char *obuf, int *status)
 #endif
 }
 /*---------------------------------------------------------------------------*/
-void decode_fgge_header_(char *ibuf, FGGE_HEAD *header, int *status)
+void decode_fgge_header(char *ibuf, FGGE_HEAD *header, int *status)
 {
   *status = 0 ;
   ;gbyte(ibuf,&header->Q ,  0,12);
@@ -250,7 +270,7 @@ float rtran_mia(long mia)
   return( rmia );
 }
 /*---------------------------------------------------------------------------*/
-void decode_fgge_data_(char *ibuf, FGGE_HEAD *header, float *data, int *status)
+void decode_fgge_data(char *ibuf, FGGE_HEAD *header, float *data, int *status)
 { float rmia,ddosn;
   int	i;
   *status = 0 ;
