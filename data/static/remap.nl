@@ -1,6 +1,7 @@
  &remap_nl
  n_radars_remap=7,
  path_to_vrc_nl='rdr',
+ ref_min=0.0,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kcys/netcdf',
@@ -47,3 +48,6 @@ c                      will be generated. For full volume data (e.g. wideband)
 c                      set this to 'v01', or 'v02', etc. For single tilt data
 c                      or if just a few low-level tilts are available
 c                      (e.g. WFO narrowband data), set this to 'vrc'.
+c
+c 'ref_min'          - Minimum threshold applied to reflectivity gates during
+c                      remapping step.
