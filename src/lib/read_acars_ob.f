@@ -1,6 +1,6 @@
 
         subroutine read_acars_ob(lun,c_obtype,xlat,xlon,elev,arg1,arg2       
-     1                                          ,asc9_tim_pirep,l_eof)
+     1                                   ,asc9_tim_pirep,iwrite,l_eof)       
 
         real*4 elev ! meters
         real*4 dd   ! degrees (99999. is missing)
@@ -24,7 +24,7 @@
 !           a9time = string(30:39)
             read(lun,151)asc9_tim_pirep,asc9_tim_rcvd
 151         format(1x,a9,2x,a9)
-            write(6,151)asc9_tim_pirep,asc9_tim_rcvd
+            if(iwrite .eq. 1)write(6,151)asc9_tim_pirep,asc9_tim_rcvd       
         endif
 
         if(string(2:4) .eq. 'Lat')then
@@ -36,7 +36,7 @@
             read(lun,202)idir_deg,ff
  202        format (1x, i3,7x, f6.1)
  220        format (' ', i3, ' deg @ ', f6.1, ' m/s')
-            write(6,220)idir_deg,ff
+            if(iwrite .eq. 1)write(6,220)idir_deg,ff
             dd = idir_deg
             arg1 = dd
             arg2 = ff

@@ -4,16 +4,11 @@
      1            NX_L,NY_L,NZ_L,                                   ! I
      1            r_missing_data,i2_missing_data,                   ! I
      1            i4time_lapswind,heights_3d,heights_1d,            ! I
-     1            lat_pr,lon_pr,                                    ! O
+     1            MAX_PR,MAX_PR_LEVELS,weight_prof,                 ! I
      1            lat,lon,                                          ! I
      1            u_mdl_diff,v_mdl_diff,                            ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! O
-     1            ob_pr_ht,                                         ! O
-     1            ob_pr_di, ob_pr_sp,                               ! O
-     1            ob_pr_u , ob_pr_v ,                               ! O
-     1            ob_pr_r , ob_pr_t ,                               ! O
-     1            nlevels_obs_pr,                                   ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
      1            grid_ra_vel,                                      ! I
@@ -27,7 +22,6 @@
 !                                    as dummy arguments.
 !       1997 Jun     Ken Dritz       Removed include of 'lapsparms.for'.
 
-        include 'windparms.inc'
         include 'get_wind_obs.inc'
 
         dimension u_mdl_diff(NX_L,NY_L,NZ_L),v_mdl_diff(NX_L,NY_L,NZ_L)
@@ -99,10 +93,8 @@
      1          ,sum_pr_u,sum_pr_v,sum_wt_pr,max_weights_pr        ! I
      1          ,weights_pr                                        ! L
      1          ,ob_pr_u,ob_pr_v                                   ! I
-     1          ,grid_pr_u,grid_pr_v,grid_pr_r                     ! L
      1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar ! I
      1          ,i2_missing_data                                   ! I
-     1          ,i_profiler_nearest                                ! L
      1          ,NX_L,NY_L,NZ_L,MAX_PR                             ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                      ! I
      1          ,r_missing_data,weight_prof                        ! I
@@ -204,9 +196,8 @@
      1          ,sum_pr_u,sum_pr_v,sum_wt_pr,max_weights_pr             ! I
      1          ,weights_pr                                             ! O
      1          ,ob_pr_u,ob_pr_v                                        ! I
-     1          ,grid_pr_u,grid_pr_v,grid_pr_r ! ,grid_pr_t             ! L
      1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar! I
-     1          ,i2_missing_data,i_profiler_nearest                     ! I/O
+     1          ,i2_missing_data                                        ! I
      1          ,ni,nj,nk,MAX_PR                                        ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                           ! I
      1          ,r_missing_data,weight_prof                             ! I/O
@@ -301,14 +292,14 @@
                            do j = 1,nj
                            do i = 1,ni
                              sum_pr_u(i,j,k) = sum_pr_u(i,j,k) +
-     1                  weights_pr(i,j) * ob_u
+     1                                         weights_pr(i,j) * ob_u
                              sum_pr_v(i,j,k) = sum_pr_v(i,j,k) +
-     1                  weights_pr(i,j) * ob_v
+     1                                         weights_pr(i,j) * ob_v
                              sum_wt_pr(i,j,k) = sum_wt_pr(i,j,k) +
-     1                  weights_pr(i,j)
+     1                                          weights_pr(i,j)
 
-                             if(weights_pr(i,j) .gt. max_weights_pr(i,j,
-     1k))then
+                             if(weights_pr(i,j) .gt. 
+     1                          max_weights_pr(i,j,k))then
                                  max_weights_pr(i,j,k) = weights_pr(i,j)
                                  i_profiler_nearest(i,j,k) = i_pr
                              endif
@@ -366,7 +357,6 @@
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
                 if(grid_pr_u(i,j,k) .ne. r_missing_data)then
-
                     call uvtrue_to_radar(grid_pr_u(i,j,k),
      1                           grid_pr_v(i,j,k),
      1                           dum_t, !            grid_pr_t(i,j,k),
@@ -374,13 +364,13 @@
      1                           azimuth,
      1                           lon(i,j))
 
-                else
-                    dum_t = r_missing_data
+                else ! grid_pr_u(i,j,k) = r_missing_data
                     grid_pr_r(i,j,k) = r_missing_data
-
 
                 endif
 
+              else
+                grid_pr_r(i,j,k) = r_missing_data
 
               endif ! efficiency check
 

@@ -250,6 +250,8 @@
 !  ***  Read in MODEL data   ********************************************
         do NT = NTMIN,NTMAX
 
+          if(NT .ne. 1)then
+
             write(6,*)' Reading u_mdl_bkg_4d, NT= ',NT
             var_2d = 'U3'
             call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
@@ -276,6 +278,23 @@
             endif
             write(6,*)'v_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT) = '
      1                ,v_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT)
+
+          else ! NT = 1
+
+!           Note that we can eventually read in the data for NT=1 directly
+!           after all obs data is processed "the right way" WRT time
+            do k = 1,NZ_L
+            do j = 1,NY_L
+            do i = 1,NX_L
+                u_mdl_bkg_4d(1,1,1,1) = 2. * u_mdl_bkg_4d(1,1,1,0) 
+     1                                -      u_mdl_bkg_4d(1,1,1,-1) 
+                v_mdl_bkg_4d(1,1,1,1) = 2. * v_mdl_bkg_4d(1,1,1,0) 
+     1                                -      v_mdl_bkg_4d(1,1,1,-1)    
+            enddo ! i
+            enddo ! j
+            enddo ! k
+
+          endif ! NT .ne. 1
 
         enddo ! NT
 

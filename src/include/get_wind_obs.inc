@@ -61,15 +61,10 @@ cdis
 
         real weights_pr(NX_L,NY_L)                                      
         real max_weights_pr(NX_L,NY_L,NZ_L)                             
-        integer i_profiler_nearest(NX_L,NY_L,NZ_L)                    
 
         real sum_pr_u (NX_L,NY_L,NZ_L)                                  
         real sum_pr_v (NX_L,NY_L,NZ_L)                                  
         real sum_wt_pr (NX_L,NY_L,NZ_L)                                 
-
-        real grid_pr_u(NX_L,NY_L,NZ_L) ! Barnes anal. Profiler (u)      
-        real grid_pr_v(NX_L,NY_L,NZ_L) ! Barnes anal. Profiler (v)      
-        real grid_pr_r(NX_L,NY_L,NZ_L) ! Barnes anal. Profiler (radial) 
 
 !       Laps Analysis Grids
         real grid_laps_wt(NX_L,NY_L,NZ_L)                               
@@ -78,11 +73,4 @@ cdis
 
 !       Data flags for LAPS analysis
         logical L_profiler
-     1  ,laps_rotate_winds,l_derived_output,l_3pass
         parameter (L_profiler = .true.)
-        parameter (laps_rotate_winds = .false.)! True North Winds
-        parameter (l_derived_output = .true.)
-        parameter (l_3pass = .true.)
-
-        logical L_correct_unfolding
-        parameter (L_correct_unfolding = .true.)

@@ -124,19 +124,25 @@ cdis
 
 10      i_qc = 1
 
+        if(n_pirep_obs .le. 500 .OR. 
+     1     n_pirep_obs - (n_pirep_obs/10)*10 .eq. 9)then       
+            iwrite2 = 1
+        else
+            iwrite2 = 0
+        endif
+
         if(ext_in .eq. 'pin')then
             call read_acars_ob(lun_in,'wind',xlat,xlon,elev,dd,ff
-     1                                          ,asc9_tim_pirep,l_eof)
+     1                                   ,asc9_tim_pirep,iwrite2,l_eof)       
             if(elev .eq. 0.)i_qc = 0
         else
             call read_laps_cdw_wind(lun_in,xlat,xlon,pres,dd,ff
-     1                                          ,asc9_tim_pirep,l_eof)
+     1                                           ,asc9_tim_pirep,l_eof)
         endif
 
         if(l_eof)goto900
 
         call cv_asc_i4time(asc9_tim_pirep,i4time_pirep)
-
 
         if(abs(i4time_pirep - i4time) .le. i4_window_pirep)then
 
@@ -186,7 +192,7 @@ cdis
                            return
                         endif
 
-                        if(n_pirep_obs .le. 1000 .OR. 
+                        if(n_pirep_obs .le. 500 .OR. 
      1                     n_pirep_obs .eq. (n_pirep_obs/10) * 10)then       
                             iwrite = 1
                         else
@@ -199,6 +205,18 @@ cdis
                         call disp_to_uv(dd,ff,u_temp,v_temp)
 
                         pirep_k(n_pirep_obs) = k_grid
+
+                        call get_time_term(u_mdl_bkg_4d,ni,nj,nk
+     1                                    ,NTMIN,NTMAX
+     1                                    ,i_grid,j_grid,k_grid
+     1                                    ,i4time,i4time_pirep
+     1                                    ,u_time_interp,u_diff,istatus)       
+
+                        call get_time_term(v_mdl_bkg_4d,ni,nj,nk
+     1                                    ,NTMIN,NTMAX
+     1                                    ,i_grid,j_grid,k_grid
+     1                                    ,i4time,i4time_pirep
+     1                                    ,v_time_interp,v_diff,istatus)       
 
                         u_diff = u_maps_inc(i_grid,j_grid,k_grid) 
      1                                                         * rcycles
@@ -238,7 +256,7 @@ cdis
      1                 pirep_u(n_pirep_obs),
      1                 pirep_v(n_pirep_obs),
      1                 dd,ff
-20                  format(i4,1x,3i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
+20                  format(i5,1x,3i4,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
 
                 else
                     if(iwrite .eq. 1)write(6,*)
@@ -300,3 +318,55 @@ cdis
 
         return
         end
+
+
+
+       subroutine get_time_term(field_4d,NX_L,NY_L,NZ_L,NTMIN,NTMAX
+     1                     ,i,j,k,i4time_sys,i4time_interp
+     1                     ,field_interp,field_diff
+     1                     ,istatus)
+
+!      Steve Albers 1999
+
+!      This routine does a time interpolation
+
+       real*4 field_4d(NX_L,NY_L,NZ_L,NTMIN:NTMAX)
+
+       call get_laps_cycle_time(laps_cycle_time,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' ERROR in get_time_term (laps_cycle_time)'
+           return
+       endif
+
+       rcycles = float(i4time_interp - i4time_sys)
+     1         / float(laps_cycle_time)
+
+       if(rcycles .gt. float(NTMAX))then
+           write(6,*)' Warning in get_time_term, rcycles = ',rcycles
+           rcycles = NTMAX
+           istatus = -1
+       endif
+
+       if(rcycles .lt. float(NTMIN))then
+           write(6,*)' Warning in get_time_term, rcycles = ',rcycles
+           rcycles = NTMIN
+           istatus = -1
+       endif
+
+       itlow = nint(rcycles - 0.5)
+       itlow = min(itlow,NTMAX-1)
+       itlow = max(itlow,NTMIN)
+
+       ithigh = itlow + 1
+
+       frac_t = rcycles - float(itlow)
+
+       field_interp = field_4d(i,j,k,itlow)  * (1.0 - frac_t)
+     1              + field_4d(i,j,k,ithigh) * frac_t
+
+       field_diff = field_interp - field_4d(i,j,k,0)
+
+       istatus = 1
+       return
+
+       end

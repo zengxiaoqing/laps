@@ -43,7 +43,7 @@ cdis
 
         write(6,2)
 2       format(/'      Comparing Profiler Velocities to LAPS'/
-     1  1x,'   i   j   k    profiler           laps             diff ')
+     1  6x,'   i   j   k    profiler           laps             diff ')
 
         do j = 1,nj
         do i = 1,ni
@@ -60,10 +60,13 @@ cdis
                 diffv = v(i,j,k) - grid_laps_v(i,j,k)
                 residualu = residualu + diffu ** 2
                 residualv = residualv + diffv ** 2
-                write(6,101)i,j,k
-     1          ,grid_laps_u(i,j,k),grid_laps_v(i,j,k),
+
+                if(nobs .le. 200 .OR. nobs .eq. (nobs/10) * 10)then
+                    write(6,101)nobs,i,j,k
+     1              ,grid_laps_u(i,j,k),grid_laps_v(i,j,k),
      1                  u(i,j,k),v(i,j,k),diffu,diffv
-101                 format(1x,3i4,3(2x,2f7.1))
+101                 format(1x,i5,3i4,3(2x,2f7.1))
+                endif
 
               endif
 

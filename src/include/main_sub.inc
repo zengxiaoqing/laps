@@ -34,23 +34,6 @@ cdis
         real*4 lon(NX_L,NY_L)                 
         real*4 topo(NX_L,NY_L)                
 
-!       Profiler Stuff
-        real lat_pr(MAX_PR)                   
-        real lon_pr(MAX_PR)                   
-
-
-!       Profiler Observations
-
-        integer nlevels_obs_pr(MAX_PR)        
-        real ob_pr_ht(MAX_PR,NZ_L)            
-        real ob_pr_di(MAX_PR,NZ_L)            
-        real ob_pr_sp(MAX_PR,NZ_L)            
-        real ob_pr_u (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
-        real ob_pr_v (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
-        real ob_pr_r (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
-        real ob_pr_t (MAX_PR,NZ_L) ! Vertically interpolated Profiler wind
-
-
 !       Mesonet
 
         integer meso_i(N_MESO) ! X mesonet coordinates                

@@ -42,9 +42,9 @@ cdis
         residualv = 0.
 
         write(6,2)
-2       format(/'      Comparing Profiler Velocities to Model Background
-     1'/
-     1  1x,'   i   j   k   Model Background         Profiler        '
+2       format(/
+     1   '      Comparing Profiler Velocities to Model Background'/
+     1  6x,'   i   j   k   Model Background         Profiler        '
      1     ,'diff')
 
         do jl = 1,nj
@@ -63,11 +63,14 @@ cdis
                   diffv = v_bkg(il,jl,k) - grid_laps_v(il,jl,k)
                   residualu = residualu + diffu ** 2
                   residualv = residualv + diffv ** 2
-                  write(6,101)il,jl,k
-     1          ,u_bkg(il,jl,k),v_bkg(il,jl,k)
-     1          ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)
-     1          ,-diffu,-diffv
-101               format(1x,3i4,3(2x,2f7.1))
+
+                   if(nobs .le. 200 .OR. nobs .eq. (nobs/10) * 10)then
+                      write(6,101)nobs,il,jl,k
+     1                       ,u_bkg(il,jl,k),v_bkg(il,jl,k)
+     1                       ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)       
+     1                       ,-diffu,-diffv
+101                   format(1x,3i4,3(2x,2f7.1))
+                   endif
 
                 endif
 
