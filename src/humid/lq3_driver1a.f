@@ -340,7 +340,7 @@ c     set namelist parameters to defaults
          write(6,*) 'Sounder switch off'
          write(6,*) 'Using IMAGER data only'
          
-         if (goes_switch.eq.12) then
+         if (goes_switch.eq.12 .or. goes_switch.eq.0) then
             
             if(endian.eq.1) then
                
@@ -411,7 +411,7 @@ c     set namelist parameters to defaults
          write(6,*) 'Sounder ON using Sounder data'
          write (6,*) 'setting sounder to goes:', goes_switch
 
-         if (goes_switch.eq.12) then
+         if (goes_switch.eq.12 .or. goes_switch.eq.0) then
 
             if(endian.eq.1) then
                
@@ -1069,88 +1069,81 @@ c     make call to TIROS moisture insertion
          
       endif
 
+
       call int_tpw (data,kstart,qs,ps,p_3d,tpw1,mdf,ii,jj,kk)
 
 
-c     make call to goes moisture insertion
+c     make call to variational solution, radiance no longer a prerequisite
 
 
-      if (goes_switch .ne. 0 ) then
-
-         if(c_istatus.eq.1 .and. t_istatus.eq.1) then
-
-            write (6,*) 'Begin variational assimilation'
-            call variational (
-     1           data,          ! 3-d specific humidity g/g
-     1           sfc_data,      ! struct surface data (type lbsi)
-     1           i4time,        ! i4time of run
-     1           p_3d,          ! pressure mb
-     1           cg,            ! 3-e cloud field 0-1 (1=cloudy)
-     1           c_istatus,     ! cloud istatus
-     1           sat,           ! saturated field
-     1           qadjust,       ! q increase needed for cloud formation
-     1           lt1dat,        ! laps lt1 (3-d temps)
-     1           mdf,
-     1           qs,kstart,
-     1           goes_switch,   ! goes switch and satellite number
-     1           sounder_switch, ! sounder switch, 0=imager,1=sndr
-     1           sat_skip,      ! normally 1 for full resolution
-     1           gw1,gw2,gw3,
-     1           gww1,gww2,gww3,
-     1           gvap_p,istatus_gvap,
-     1           gps_data,
-     1           gps_w,
-     1           istatus_gps,
-     1           q_snd,
-     1           weight_snd,
-     1           raob_switch,
-     1           ii,jj,kk
-     1           )
-            
-            write (6,*) 'GOES step complete, effects logged.'
-            
-            call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
-            
-            write(6,*) 'Reporting net change'
-            call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
-            
-            data_in = data
-            
+      if(c_istatus.eq.1 .and. t_istatus.eq.1) then
+         
+         write (6,*) 'Begin variational assimilation'
+         call variational (
+     1        data,             ! 3-d specific humidity g/g
+     1        sfc_data,         ! struct surface data (type lbsi)
+     1        i4time,           ! i4time of run
+     1        p_3d,             ! pressure mb
+     1        cg,               ! 3-e cloud field 0-1 (1=cloudy)
+     1        c_istatus,        ! cloud istatus
+     1        sat,              ! saturated field
+     1        qadjust,          ! q increase needed for cloud formation
+     1        lt1dat,           ! laps lt1 (3-d temps)
+     1        mdf,
+     1        qs,kstart,
+     1        goes_switch,      ! goes switch and satellite number
+     1        sounder_switch,   ! sounder switch, 0=imager,1=sndr
+     1        sat_skip,         ! normally 1 for full resolution
+     1        gw1,gw2,gw3,
+     1        gww1,gww2,gww3,
+     1        gvap_p,istatus_gvap,
+     1        gps_data,
+     1        gps_w,
+     1        istatus_gps,
+     1        q_snd,
+     1        weight_snd,
+     1        raob_switch,
+     1        ii,jj,kk
+     1        )
+         
+         write (6,*) 'GOES step complete, effects logged.'
+         
+         call report_change (data_in, data, p_3d,mdf,ii,jj,kk)
+         
+         write(6,*) 'Reporting net change'
+         call report_change (data_start, data, p_3d, mdf, ii,jj,kk)
+         
+         data_in = data
+         
 c     end report moisture change block
-        
-
-         else
-
-            write(6,*)
-            write(6,*)
-            write(6,*)
-            write(6,*) 'goes moisture insertion step skipped'
-            write(6,*) 'cloud or lt1 data not current'
-            write(6,*) 'cannot assume clear conditions or'
-            write(6,*) 'use alternate lt1.. this will create'
-            write(6,*) 'forward model problems....'
-            write(6,*) 'goes moisture insertion step skipped'
-            write(6,*)
-            write(6,*)
-            write(6,*)
-            
-         endif
+         
          
       else
          
-         write(6,*) 'goes switch is off... goes step skipped...'
+         write(6,*)
+         write(6,*)
+         write(6,*)
+         write(6,*) 'variational step skipped'
+         write(6,*) 'cloud or lt1 data not current'
+         write(6,*) 'cannot assume clear conditions or'
+         write(6,*) 'use alternate lt1.. this will create'
+         write(6,*) 'forward model problems....'
+         write(6,*) 'thus basically returning first guess'
+         write(6,*)
+         write(6,*)
+         write(6,*)
          
       endif
-
+      
 c     assess impact of system compared to GPS sites
-
+      
       call int_tpw (data,kstart,qs,ps,p_3d,tpw2,mdf,ii,jj,kk)
-
+      
       call impact_assess (data_start, data_in, tpw1,tpw2,
      1     ii,jj,kk,
      1     gps_data, gps_w, p_3d, mdf)
-
-
+      
+      
 c     *** insert cloud moisture, this section now controled by a switch
 
       if(cloud_switch.eq.0) then

@@ -310,6 +310,24 @@ c     misc variables
 
       cost_rad_istatus = 1      ! assume good
       goes_good = 1             ! assume good
+
+
+c     code change to handle situation where direct radiance assimilation
+c     is not desired.  Note here that ngoes comes into this routine 
+c     assigned as zero (0).  This test takes this situation and assigns
+c     cost_rad_istatus and goes_good to zero to insure that it not be used
+c     however, it was discovered that this code still needs to compute 
+c     synthetic radiances and to avoid a divide by zero, the FAKE assignment
+c     of ngoes to goes 12 is made here.  This fake assignment should be 
+c     goes 9 for asia if this is desired to run in that mode.  
+      if (ngoes == 0) then
+         cost_rad_istatus = 0
+         goes_good = 0
+         ngoes = 12 ! fake a satellite but don't use it in variational
+c                     adjustment
+      endif
+
+
       if (istatus_gps .eq. 1) write (6,*) 'GPS usage is a GO'
 
 c     check sat_skip for zero, if zero skip routine
