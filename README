@@ -3789,6 +3789,8 @@ LAPS Fcst Model:
                      LHE  lhe      1  Fcst Model Helicity
                      LI   li       1  Fcst Model Lifted index
                      HI   hi       1  Fcst Model Heat index
+                     SWO  swo      1  Fcst Model Outgoing Shortwave Radiation
+                     LWO  lwo      1  Fcst Model Outgoing Longwave Radiation
 
                 RSM  LSM  lsm     11  Fcst Model Soil Moisture
 
