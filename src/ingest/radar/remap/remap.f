@@ -86,6 +86,10 @@ cdis
               write(6,*)' Looping through radar/time # ',i_radar,itimes       
               call remap_sub(i_radar,itimes,ext_dum,radar_subdir_dum       
      1                      ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)' remap: istatus returned from remap_sub = '
+     1                                             ,istatus
+              endif
           enddo ! itimes
 
       enddo ! i_radar
@@ -108,7 +112,7 @@ cdis
 !     Variables used only in remap_process
       integer i_last_scan,i_first_scan
       integer i_tilt_proc_curr
-      integer i4time_vol,i_num_finished_products,i_status
+      integer i4time_vol,i_num_finished_products
 
 !     Variables used for data access and in fill_common 
    
@@ -200,8 +204,8 @@ cdis
       write(6,*)' Radar latitude (degrees): ',radar_lat  
       write(6,*)' Radar longitude (degrees): ',radar_lon  
 
-      if(radar_alt .eq. 0. .and. 
-     1   radar_lat .eq. 0. .and. radar_lon .eq. 0.)then
+      if(radar_alt .eq. 0. .or. 
+     1   radar_lat .eq. 0. .or. radar_lon .eq. 0.)then
           write(6,*)' ERROR: radar coords not initialized'
           istatus = 0
           return
@@ -281,7 +285,7 @@ cdis
               eleva = 0.01 * float(i_angle)
 
               call get_volume_time(i4time_vol)
-              call make_fnam_lp (i4time_vol,string_time,i_status) 
+              call make_fnam_lp (i4time_vol,string_time,istatus) 
 
               i_vcp=get_vcp() 
               write(6,*)'   VCP number for this volume: ',i_vcp
@@ -381,8 +385,8 @@ cdis
      1                                         , i_tilt_proc_curr  
 
               write(6,*)'  i_last, i_first ',i_last_scan,i_first_scan
-              write(6,*)'  i4time_vol, i_num,  i_status',
-     1                i4time_vol,i_num_finished_products,i_status
+              write(6,*)'  i4time_vol, i_num,  istatus',
+     1                i4time_vol,i_num_finished_products,istatus
 
               call remap_process(
      1            i_tilt_proc_curr,i_last_scan,i_first_scan,
@@ -391,8 +395,12 @@ cdis
      1            NX_L,NY_L,NZ_L,
      1            laps_radar_ext,c3_radar_subdir,path_to_vrc,
      1            i4time_vol,full_fname,len_fname,
-     1            i_num_finished_products,i_status) 
-
+     1            i_num_finished_products,istatus) 
+              if(istatus .ne. 1)then
+                  write(6,*)
+     1            ' remap_sub: remap_process returned istatus =',istatus     
+                  return
+              endif
 
               if(i_last_scan .eq. 1)then
                   write(6,*)' Volume completed, return from remap_sub'
