@@ -7,10 +7,10 @@ LAPS_DATA_ROOT=$1
 
 #Input domain name (e.g. fsld, t2)
 #WEB_DATA=/w3/lapb/domains/$2
-WEB_DATA=$LAPS_DATA_ROOT/www
+WEB_DATA=$LAPS_DATA_ROOT/lapsprd/www
 
 #Input LAPS_ROOT ($LAPSINSTALLROOT)
-LAPS_ROOT=$2
+LAPS_ROOT=$3
 
 WEB_NFS=$LAPS_ROOT/etc
 
@@ -45,7 +45,7 @@ then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=792x664
 
-elif test "$2" = "nos_nb"
+elif test "$2" = "rcsv"
 then
     WINDOW=0.0:0.08:1.0:0.92
     RESOLUTION=792x664
