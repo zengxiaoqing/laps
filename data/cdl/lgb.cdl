@@ -70,7 +70,7 @@ netcdf lgb {
  
         //	Background MSL pressure
 
-	float                                  
+	float
             slp(record,z,y,x);
             slp:navigation_dim = "nav";
             slp:record = "valtime, reftime";
@@ -84,7 +84,7 @@ netcdf lgb {
                 	        
         //	Background surface pressure
 
-	float                                  
+	float
             psf(record,z,y,x);
             psf:navigation_dim = "nav";
             psf:record = "valtime, reftime";
@@ -110,8 +110,20 @@ netcdf lgb {
             rsf:lvl_coord="AGL";
             rsf:LAPS_units="none";
 
+        //      Background (computed) reduced pressure
 
-
+        float
+            p(record,z,y,x);
+            p:navigation_dim = "nav";
+            p:record = "valtime, reftime";
+            p:_FillValue = 1.e+37f;
+            p:long_name="Reduced Pressure";
+            p:units="pascals";
+            p:valid_range= 0.f, 100000.f;
+            p:LAPS_var="P";
+            p:lvl_coord="MSL";
+            p:LAPS_units="PA";
+                                
         //	LAPS variables
 
         long
@@ -128,9 +140,9 @@ netcdf lgb {
             psf_comment(record,z,namelen),
             rsf_comment(record,z,namelen),
             slp_comment(record,z,namelen),
+            p_comment(record,z,namelen),
             asctime(record,namelen);
 
-			
         //	inventory variables
 
         short
@@ -154,7 +166,10 @@ netcdf lgb {
         short
             slp_fcinv(record, z);
             slp_fcinv:_FillValue= 0s;
-              	
+        short
+            p_fcinv(record, z);
+            p_fcinv:_FillValue= 0s;
+
         //	list of grid levels
 
         float 
