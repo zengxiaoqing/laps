@@ -276,8 +276,7 @@ c
          i4time_diff_min=100000.
          if(jsave.gt.0)then
           ntm=jsave
-          if(ntm.gt.1)then
-           do i=2,ntm
+          do i=2,ntm
             i4time_diff1=abs(i4time_data_int(i-1)-i4time_data_int(i))
             if(i4time_diff1.gt.600)then
                write(6,*)'Warning: Sat data not concurrent'
@@ -286,10 +285,7 @@ c
                i4time_diff_min = i4time_diff1
                i4time_data = i4time_data_int(i)
             endif
-           enddo
-          else
-           i4time_data=i4time_data_int(1)
-          endif
+          enddo
          else
           i4time_data=i4time_data_int(1)
          endif
