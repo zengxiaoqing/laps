@@ -252,10 +252,13 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         real*4 lcl_2d(ni,nj)
         real*4 wb0_2d(ni,nj)
         
+        include 'lapsparms.for'
+        integer*4 MXL
+        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
 
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
-     1  ,VEL(20)
-     1  ,temdif(70),partem(70),pbe(70)
+        COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
+     1  ,TDFCR(20,2),VEL(20)
+     1  ,temdif(MXL),partem(MXL),pbe(MXL)
      #  ,DD85,FF85,DD50,FF50
         REAL LCL,LI,K_INDEX
 
@@ -266,7 +269,7 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
         ISTAT = LIB$INIT_TIMER()
 
 !       Initialize pbe array
-        do i = 1,70
+        do i = 1,MXL
             pbe(i) = 0.
         enddo ! i
 
@@ -441,10 +444,14 @@ cdoc    Calculate a variety of stability indices from an input sounding
 
 !       Note that a surface parcel is currently used for the indices
 
-        DIMENSION Q(70),W(70),WB(70)
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
-     1              ,VEL(20),temdif(70),partem(70),pbe(70)
-     1              ,DD85,FF85,DD50,FF50
+        include 'lapsparms.for'
+        integer*4 MXL
+        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+
+        DIMENSION Q(MXL),W(MXL),WB(MXL)
+        COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
+     1              ,TDFCR(20,2),VEL(20),temdif(MXL),partem(MXL)
+     1              ,pbe(MXL),DD85,FF85,DD50,FF50
         REAL LI,K,LCL_AGL,LCL_PBE_MSL
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
@@ -659,10 +666,10 @@ C
 C
 C
 c        block data
-c        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
-c     1              ,VEL(20),temdif(70),partem(70),pbe(70)
+c        COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4),TDFCR(20,2)
+c     1              ,VEL(20),temdif(MXL),partem(MXL),pbe(MXL)
 c     #              ,DD85,FF85,DD50,FF50
-c        DATA PBE/70*0./
+c        DATA PBE/MXL*0./
 c        end
 C
 C
@@ -679,12 +686,16 @@ cdoc    Calculate a PBE/LCL related indices from an input sounding
 
 !       Steve Albers 1991
 
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
-     1              ,VEL(20)
-     1 ,temdif(70),partem(70),pbe(70)
-     #   ,DD85,FF85,DD50,FF50
+        include 'lapsparms.for'
+        integer*4 MXL
+        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+
+        COMMON/INDX/ P(MXL),T(MXL),TD(MXL),HT(MXL),PBECR(20,4)
+     1              ,TDFCR(20,2),VEL(20)
+     1              ,temdif(MXL),partem(MXL),pbe(MXL)
+     #              ,DD85,FF85,DD50,FF50
         REAL LCL,nbe_min
-        DIMENSION Q(70),DELTAH(70)
+        DIMENSION Q(MXL),DELTAH(MXL)
         real*4 GAMMA
         parameter (GAMMA = .009760) ! Dry Adiabatic Lapse Rate Deg/m
         DATA G/9.80665/
@@ -935,8 +946,12 @@ cdoc    Calculate boundary layer mean values from an input sounding
 
 !       Steve Albers 1991
 
+        include 'lapsparms.for'
+        integer*4 MXL
+        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+
         REAL INTLOG
-        DIMENSION P(70),T(70),Q(70)
+        DIMENSION P(MXL),T(MXL),Q(MXL)
         TVIRT(TT,QQ)=TT/(1.-QQ*.37803)
         THICK(P1,P2,TC,QQ)=ALOG(P1/P2)*TVIRT((TC+273.15),QQ)*.09604
 
@@ -1080,7 +1095,11 @@ cdoc    Interpolate any parameter from a pressure sounding to a specific pres
 
 !       Steve Albers 1991
 
-        DIMENSION P(70),PARAM(70)
+        include 'lapsparms.for'
+        integer*4 MXL
+        parameter (MXL=MXLVLS+1) ! number of 3D levels plus the sfc level
+
+        DIMENSION P(MXL),PARAM(MXL)
 
         if(p(1) .lt. pint)then
             write(6,*)' Error in ITPLV: p(1) < pint',p(1),pint
