@@ -102,6 +102,7 @@ c
       character*9 a9
       integer i4time_now,i4time_latest
       integer i4time_now_lga,i4time_now_gg
+      integer i4time_lga
       integer max_files,bg_files
       integer itime_inc
       integer itime
@@ -235,7 +236,6 @@ c to work with. get_acceptable_files is also used in dprep.f
 c
 c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
 
-
          print*,'Calling get_acceptable_files '
          print*,'bgpath:  ',bgpath(1:lbgp)
          print*,'bgmodel: ',bgmodel
@@ -256,6 +256,17 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
            no_infinite_loops=no_infinite_loops+1
            reject_cnt=reject_cnt+1
            if(i.eq.nbgmodels)lga_status = 0 
+
+         elseif(accepted_files.eq.0 .and. cmodel .eq. 'LAPS')then
+
+              print*,'Time interp previous LAPS analyses',
+     +'and write result for current and cycle_time+1 backgrounds'
+              print*,'Code not yet available'
+
+c             i4time_lga=i4time_now_lga+laps_cycle_time
+c             call advance_analyses(i4time_now_lga,i4time_lga,nx_laps
+c    +,ny_laps,nz_laps)
+c             print*,'Finished in advance_analyses'
 
          elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
 
