@@ -38,7 +38,6 @@
 !       Stuff for reading radar reflectivity
         character*4 radar_name
         character*255 c_filespec
-ccc        character*4 radar_name(max_radars)
         character*31 ext_radar
 
 !       Stuff for helicity

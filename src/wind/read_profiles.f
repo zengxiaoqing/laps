@@ -278,10 +278,10 @@ c
      1                        ob_pr_u_obs(isnd,n_good_levels),
      1                        ob_pr_v_obs(isnd,n_good_levels))
 
-d             write(6,311,err=312)ista,isnd
-d    1        ,ob_snd_ht_obs(isnd,level)
-d    1        ,ob_snd_t_obs(isnd,level)
-d311          format(1x,i6,i4,5f8.1)
+!             write(6,311,err=312)ista,isnd
+!    1        ,ob_snd_ht_obs(isnd,level)
+!    1        ,ob_snd_t_obs(isnd,level)
+!311          format(1x,i6,i4,5f8.1)
 
           endif ! Good data at the level
 

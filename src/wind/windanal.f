@@ -1,6 +1,7 @@
        subroutine laps_anl(uobs,vobs,n_radars,
      1        vr_obs_unfltrd,vr_nyq,v_nyquist_in
-     1       ,upass1,vpass1,varpass1                               ! Output
+     1       ,upass1,vpass1                                        ! Output
+!    1       ,varpass1                                             ! Local
      1       ,n_var                                                ! Input
      1       ,uanl,vanl,varanl                                     ! Output
      1       ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
