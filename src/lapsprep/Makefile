@@ -52,7 +52,7 @@ RM=rm -f
 			$(FC) -c $(FFLAGS) $(FREE) $*.f
 
 EXE=lapsprep.exe
-FSRC=lapsprep.f   
+FSRC=lapsprep.f lwc2vapor.f   
 
 FOBJS=$(FSRC:.f=.o)
 
