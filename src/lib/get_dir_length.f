@@ -338,3 +338,36 @@ C       string          char       I       string
         return
         end
 
+
+        function l_string_contains(string,substring,istatus)
+
+        logical l_string_contains
+
+        character*(*) string
+        character*(*) substring
+ 
+        l_string_contains = .false.
+
+        call s_len(string,len1)
+
+        call s_len(substring,len2)
+
+        if(len1 .ge. len2)then
+            i_search_end = len1 - len2 + 1
+
+            do i = 1,i_search_end
+                if(string(i:i+len2-1) .eq. substring(1:len2))then
+                    l_string_contains = .true.
+                endif
+            enddo ! i
+
+            istatus = 1
+            return
+
+        else
+            istatus = 0
+            return
+
+        endif
+
+        end

@@ -83,9 +83,10 @@ cdis
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
         real*4 tsnd (max_snd_grid,nk) ! Vertically interpolated TSND temp
         character*5 c5_name(max_snd_grid) 
-        character*4 c4_obstype(max_snd_grid) 
+        character*8 c8_obstype(max_snd_grid) 
 
         logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob,l_3d
+        logical l_string_contains
 
         include 'tempobs.inc'
 
@@ -115,7 +116,7 @@ cdis
      1                   lat,lon,                             ! Input
      1                   max_snd_grid,max_snd_obs,            ! Input
      1                   tsnd,                                ! Output
-     1                   c5_name,c4_obstype,                  ! Output
+     1                   c5_name,c8_obstype,                  ! Output
      1                   l_use_raob,l_3d,                     ! Input
      1                   i4time_raob_window,                  ! Input
 !    1                   t_maps_inc,                          ! Input
@@ -151,7 +152,7 @@ cdis
 !           Find Temperature bias for each level
             write(6,*)
             write(6,*)' Temperature bias, sounding # ',i_tsnd,'  '
-     1                ,c5_name(i_tsnd),'  ',c4_obstype(i_tsnd)       
+     1                ,c5_name(i_tsnd),'  ',c8_obstype(i_tsnd)       
             if(iwrite .eq. 1)write(6,*)
      1      '   k     Tobs        sh      tamb      tlaps      bias'
 
@@ -162,7 +163,8 @@ cdis
             do k = 1,nk
               if(tsnd(i_tsnd,k) .ne. r_missing_data)then
 
-                IF(c4_obstype(i_tsnd) .eq. 'RASS') THEN
+                IF(l_string_contains(c8_obstype(i_tsnd),'RASS',istatus)
+     1                                                            ) THEN       
 !                   Convert from virtual temperature to temperature
                     tvir = tsnd(i_tsnd,k)
                     sh = sh_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
@@ -189,7 +191,8 @@ cdis
                 endif
 
 !               This should discriminate the vertical velocity data (inactive)
-                IF(c4_obstype(i_tsnd) .eq. 'RASS') THEN
+                IF(l_string_contains(c8_obstype(i_tsnd),'RASS',istatus)
+     1                                                            ) THEN       
                     if(abs(tamb-267.7) .gt. 3.0)then
                         l_flag_vv = .false.
                     endif
@@ -208,24 +211,28 @@ cdis
                 endif
             enddo ! k
 
-!           Fill in lower parts of Bias field
-            if(k_lowest .ge. 2 .and. k_lowest .le. nk)then
-                if(c4_obstype(i_tsnd) .ne. 'SAT') THEN
-                    do k = 1,k_lowest-1
-                        bias_tsnd(i_tsnd,k) = bias_htlow(i_tsnd)
-                        wt_tsnd(i_tsnd,k) = 1.0
-                    enddo ! k
-                endif ! c4_obstype
-            endif
+            if(.not. l_3d)then
+!               Fill in lower parts of Bias field
+                if(k_lowest .ge. 2 .and. k_lowest .le. nk)then
+                    if(.not. l_string_contains(c8_obstype(i_tsnd),'SAT'
+     1                                                   ,istatus) )THEN       
+                        do k = 1,k_lowest-1
+                            bias_tsnd(i_tsnd,k) = bias_htlow(i_tsnd)
+                            wt_tsnd(i_tsnd,k) = 1.0
+                        enddo ! k
+                    endif ! c8_obstype
+                endif
 
-!           Add ramp above top of bias data
-            if(k_highest .ge. 1 .and. k_highest .le. nk-1)then
-                do k = k_highest+1,k_highest+1
-                    bias_tsnd(i_tsnd,k) = 
-     1              bias_tsnd(i_tsnd,k_highest) * 1.0
-                    wt_tsnd(i_tsnd,k) = .04
-                enddo ! k
-            endif
+!               Add ramp above top of bias data
+                if(k_highest .ge. 1 .and. k_highest .le. nk-1)then
+                    do k = k_highest+1,k_highest+1
+                        bias_tsnd(i_tsnd,k) = 
+     1                  bias_tsnd(i_tsnd,k_highest) * 1.0
+                        wt_tsnd(i_tsnd,k) = .04
+                    enddo ! k
+                endif
+
+            endif ! l_3d
 
             write(6,*)' Vertically blended bias field, old/new temps # '
      1                ,i_tsnd
@@ -334,29 +341,7 @@ cdis
         write(6,*)
         write(6,*)' Subroutine analyze_tsnd'
 
-        if(.false.)then ! Insert a single TSND
-          do i_tsnd = 1,n_tsnd
-            write(6,*)' Look at TSND # ',i_tsnd
-            if(l_good_tsnd(i_tsnd))then
-                write(6,*)' Potentially adding in the biases'
-     1          ,igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd)
-                if(i_tsnd .eq. 2)then
-                    write(6,*)' Actually adding in the biases'
-                    do k = 1,nk
-                        if(bias_tsnd(i_tsnd,k) .ne. r_missing_data)then
-                            do j = 1,nj
-                            do i = 1,ni
-                                temp_3d(i,j,k) = temp_3d(i,j,k) 
-     1                                         + bias_tsnd(i_tsnd,k)
-                            enddo ! i
-                            enddo ! j
-                        endif ! Bias is missing
-                    enddo ! k
-                endif
-            endif
-          enddo
-
-        else ! Use Barnes analysis routine (multi-TSND)
+        if(.true.)then ! Use Barnes analysis routine (multi-TSND)
 
           if(n_good_tsnd .gt. 0)then
              write(6,*)' # of TSND stations passing QC = ',n_good_tsnd

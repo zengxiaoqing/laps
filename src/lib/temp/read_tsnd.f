@@ -36,7 +36,7 @@ cdis
      1                   lat,lon,                                 ! Input
      1                   max_snd_grid,max_snd_obs,                ! Input
      1                   ob_pr_t,                                 ! Output
-     1                   c5_name,c4_obstype,                      ! Output
+     1                   c5_name,c8_obstype,                      ! Output
      1                   l_use_raob,l_3d,                         ! Input
      1                   i4_window_raob_file,                     ! Input
 !    1                   t_maps_inc,                              ! Input
@@ -82,7 +82,7 @@ c                               not exactly match the LAPS analysis time.
         real bias_htlow(max_snd_grid)
         real ob_pr_t (max_snd_grid,kmax) ! Vertically interpolated RASS temp
         character*5 c5_name(max_snd_grid) 
-        character*4 c4_obstype(max_snd_grid) 
+        character*8 c8_obstype(max_snd_grid) 
 
 !       Local arrays
         integer num_pr(max_snd_obs)
@@ -173,7 +173,7 @@ c                               not exactly match the LAPS analysis time.
      1                                       ,c5_name(i_pr),a9time
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9)
 
-            c4_obstype(i_pr) = 'RASS'
+            c8_obstype(i_pr) = 'RASS'
 
 !           Determine if rass is in the LAPS domain
 406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
@@ -259,7 +259,8 @@ c       1                ,t_diff
 
 !          ***  Interpolate LAPS to the LOWEST RASS level  ****
 
-                do level = 1,1
+                if(.not. l_3d)then
+                    level = 1
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
@@ -304,7 +305,7 @@ c       1                ,t_diff
 511                 format(1x,i6,2i4,f8.0,1x,f7.1,f6.1)
 
 512                 continue
-                enddo ! level
+                endif ! l_3d
 
             endif ! # levels > 0 (good rass)
 
@@ -367,7 +368,7 @@ c
      1                                        ,c5_name(i_pr),a9time
 801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
-            c4_obstype(i_pr) = 'RAOB'
+            c8_obstype(i_pr) = 'RAOB'
 
 !           Determine if sonde is in the LAPS domain
 706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
@@ -468,9 +469,11 @@ c       1                ,t_diff
 
                 level=1
 
-                t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
+                if(.not. l_3d)then
 
-                call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
+                    t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
+
+                    call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
      1                      t_interp_laps,p_interp_laps,
      1                      i_pr,
      1                      level,
@@ -480,20 +483,22 @@ c       1                ,t_diff
      1                      max_snd_obs,max_snd_levels,r_missing_data,       
      1                      temp_bkg_3d,heights_3d,pres_3d)
 
-                tamb = ob_pr_t_obs(i_pr,level) + t_diff
+                    tamb = ob_pr_t_obs(i_pr,level) + t_diff
 
-                bias_htlow(i_pr) = tamb - t_interp_laps
+                    bias_htlow(i_pr) = tamb - t_interp_laps
 
-                write(6,*)' TSonde-AMB= ',tamb
-                write(6,*)' TLAPS    = ',t_interp_laps
-                write(6,*)' Low bias = ',bias_htlow(i_pr)
+                    write(6,*)' TSonde-AMB= ',tamb
+                    write(6,*)' TLAPS    = ',t_interp_laps
+                    write(6,*)' Low bias = ',bias_htlow(i_pr)
 
-!d                   write(6,811,err=812)ista,i_pr,level
+!d                  write(6,811,err=812)ista,i_pr,level
 !d      1                ,ob_pr_t(i_pr,level)
 !d      1                ,t_diff
 811                 format(1x,i6,2i4,f8.0,1x,f7.1,f6.1)
 
 812                 continue
+
+                endif ! l_3d
 
             endif ! # levels > 0
 
