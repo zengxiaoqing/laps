@@ -113,11 +113,15 @@ c
 	  cntd = cntd + 1.
 10	continue
 c
-	hbar = sumh / cnt
+        if(cnt .gt. 0.0)then
+            hbar = sumh / cnt
+        else
+            hbar = 0.
+        endif
 
         if(hbar .eq. 0.)then
             write(6,*)' WARNING in mean_lapse: station elevations'
-     1               ,' and hbar = 0.'
+     1               ,' and/or hbar = 0.'
             write(6,*)' Skipping lapse rate regression'
             goto990
         endif
