@@ -1744,7 +1744,7 @@ Outputs:
                                     11:   Deciduous Broadleaf Forest
                                     12:   Deciduous Needleleaf Forest
                                     13:   Evergreen Broadleaf Forest
-                                    14:   Evergreen Needleleaf Fores
+                                    14:   Evergreen Needleleaf Forest
                                     15:   Mixed Forest
                                     16:   Water Bodies
                                     17:   Herbaceous Wetland
@@ -2927,8 +2927,6 @@ Outputs:
 
 	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
 	lmr	2d grid		2-D column max radar ref      
-	lf1	2d grid		2-D column max radar ref history (maximum 
-                                over time since the previous analysis cycle)
 </pre>
 Source directory: laps/src/deriv
 
@@ -3306,7 +3304,6 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
                      MU   mu       1  Mean wind u 
        		     MV   mv       1  Mean wind v
            	
-           	LF1  H    mxrh     1  Max Radar Reflectivity History
 		LIW  LIW  liw      1  log(LI*omega)
 		     W    w	   1  600mb omega
 
