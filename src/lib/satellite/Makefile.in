@@ -53,6 +53,7 @@ SRC=bcd_to_int.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
     genlvdlut_sub.f \
+    genlvdlut_lvd.f \
     get_attr_satellite.f \
     get_gwc_oa.f \
     getsat_boundary.f \
