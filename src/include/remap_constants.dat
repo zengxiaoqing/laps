@@ -82,8 +82,7 @@ c
       parameter (RV_STDV_LIM = 3.0)
       parameter (RV_VAR_LIM = RV_STDV_LIM * RV_STDV_LIM)
 
-      real*4 ABS_VEL_MIN,VEL_MIS_CHECK
-      parameter (ABS_VEL_MIN = 2.0)
+      real*4 VEL_MIS_CHECK
       parameter (VEL_MIS_CHECK = 100.)
 
       integer*4 REF_MIS_CHECK,REF_GRIDS_CHECK
@@ -93,3 +92,13 @@ c
       real*4 COVERAGE_MIN_REF, COVERAGE_MIN_VEL
       parameter (COVERAGE_MIN_REF = 0.4)
       parameter (COVERAGE_MIN_VEL = 0.4)
+
+
+      type namelist_type
+          sequence
+
+          real abs_vel_min
+
+      end type namelist_type
+
+      type (namelist_type) namelist_parms
