@@ -244,7 +244,10 @@ c
                 obs_point(nobs_point)%weight = weight_sfc
                 obs_point(nobs_point)%type   = 'sfc'
                 obs_point(nobs_point)%file   = 'lso'
-                obs_point(nobs_point)%i4time = obstime(n_sfc_obs)
+
+                call get_sfc_obtime(obstime(n_sfc_obs),i4time_ret
+     1                             ,istatus)     
+                obs_point(nobs_point)%i4time = i4time_ret
 
             else
                 write(6,20)n_sfc_obs,stations(i)(1:5)
@@ -270,6 +273,42 @@ c
 888     write(6,*)' Open error for SAG file'
         istatus = 0
         close(32)
+        return
+
+        end
+
+        subroutine get_sfc_obtime(int_obtime,i4time_ob,istatus)
+
+        character*9 a9time
+
+        call get_systime_i4(i4time_sys,istatus)
+        if(istatus .ne. 1)go to 900
+
+        call make_fnam_lp(i4time_sys,a9time,istatus)
+        if(istatus .ne. 1)go to 900
+
+        write(a9time(6:9),1,err=900)int_obtime
+ 1      format(i4.4)
+        
+        call i4time_fname_lp(a9time,i4time_ob,istatus)
+        if(istatus .ne. 1)return
+
+        if(i4time_ob .lt. (i4time_sys - 43200))then
+            i4time_ob = i4time_ob + 86400
+        elseif(i4time_ob .gt. (i4time_sys + 43200))then
+            i4time_ob = i4time_ob - 86400
+        endif            
+
+        if(abs(i4time_ob-i4time_sys) .gt. 43200)then
+            go to 900
+        endif
+
+        istatus = 1
+        return
+
+ 900    write(6,*)' Error in get_sfc_obtime, unresolved ob time'
+        i4time_ob = i4time_sys
+        istatus = 0
         return
 
         end
