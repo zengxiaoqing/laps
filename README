@@ -298,7 +298,7 @@
      LAPS implementation is working. The LAPB Branch does not have any other 
      plotting or visualization packages available for distribution with LAPS 
      at this time. Many users have interfaced LAPS with their own display 
-     software (e.g. VIS5D, AVS, GEMPAK). Feel free to post questions about 
+     software (e.g. VIS5D, AVS, IDL, GEMPAK). Feel free to post questions about
      these to the 'laps-users' bulletin board Web Page. NCAR graphics in no 
      way is essential to the successful running of LAPS to create output grids.
       
@@ -1110,6 +1110,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            parameters for this ingest process. Only the moisture analysis is 
            using this product. Currently FSL /public sounder files in netCDF 
            format are processed.
+
+     Satellite soundings (snd): The 'snd' file can support satellite soundings
+           though you probably will have to supply your own routine to convert
+           your raw data into the 'snd' format (mixed in with other types of
+           soundings). 
 
                       ----   2.3.8  GPS ---
 
@@ -2455,7 +2460,7 @@ Inputs:
         Satellite Soundings in AFWA format
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
-	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
+	snd	inter data (ASCII)              sounding temp, dewpoint, wind
 </pre>
 
 Source directory: laps/src/ingest/raob (contains a README file)
@@ -2468,7 +2473,7 @@ Sample Input/Output: May be available in the test data case. If not, the README
                                         
         Note: Sounding data is used if the observations lie in the time window
               centered on the analysis time. There are flags to toggle usage 
-              of the RAOB (i.e. snd) data in 'wind.nl', 'temp.nl' and 
+              of the sounding (i.e. snd) data in 'wind.nl', 'temp.nl' and 
               'moisture_switch.nl'.
 
 ------ 3.2.10 --------- LVD (Satellite Image + Cloud Top Pressure) ------------
@@ -2568,7 +2573,7 @@ Inputs: '*' = essential input
       * lga/fua grid            model data analysis/forecast
                                 needed for current and previous cycle times
 	pro     inter data      profiler, VAD, SODAR winds
-        snd     inter data      RAOB data including winds
+        snd     inter data      RAOB/Dropsonde data including winds
 	pin	inter data      ACARS Winds (using pressure altitude)
         cdw     inter data      cloud drift wind
       * lso     inter data      LAPS surface obs file (e.g. mesonet & METAR)
@@ -2696,7 +2701,14 @@ Output:
          T, Td, Wind, MSLP, Reduced P (reference height sfc), Surface P
 
          Fire Danger: 
-             Relates things like temp, humidity and wind to fire potential.
+             LAPS fire weather index is driven mainly by the surface fields
+             of current humidity, wind, and temperature. RH and wind have
+             the most weight with temperature having a lesser weight for
+             this index that ranges from 0 to 20. Snow cover, elevation, and 
+             land fraction are given secondary consideration. High
+             elevations, assumed to be above the treeline, are given a lower
+             maximum value of 10. This index was developed primarily by 
+             Matt Kelsch of FSL.
 
          Colorado Severe Storms Index: 
              Severe storm potential mostly geared to the Colorado area. This
@@ -2822,7 +2834,8 @@ Process: temp.exe - Temperature-Height analysis
 Inputs: (from LGA, LSX, FUA [if available], LRS)       '*' = essential input
       * lga/fua grid            model data analysis / forecast
 	lrs	inter data      RASS vertical temp profile 
-        snd     inter data      RAOB data including temperatures
+        snd     inter data      sounding temperatures (RAOB/Dropsonde/
+                                                       Satellite Sounding)
 	pin	inter data	ACARS Temperatures (using pressure altitude)
       * lsx     grid            LAPS surface data grids
 
@@ -2885,6 +2898,7 @@ Outputs:
                                    Units are meters AGL.
 
 	lcv     2d grid		column max cloud cover / snow cover
+                                satellite fields
 </pre>
 Source directory: laps/src/cloud
 
@@ -3339,7 +3353,7 @@ Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
         Cloud fields are now balanced with the other fields.
 <pre>
 Inputs: 
-      * lw3          3d grid       LAPS wind analysis
+      * lw3          3d grid       LAPS wind analysis (grid north)
       * lt1          3d grid       LAPS temperature analysis
       * lsx          2d grid       LAPS sfc station pressure (PS field)
       * lwc          3d grid       LAPS Cloud Liquid/Ice/Precip
@@ -3350,6 +3364,7 @@ Inputs:
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
         lw3          3d grid    in lapsprd/balance/lw3 (u3, v3 and om field)
+                                                       (grid north)
         lh3          3d grid    in lapsprd/balance/lh3 (rh field)
 </pre>
 Source directory: laps/src/balance
@@ -3570,6 +3585,9 @@ Process cloud:	LC3  LC3  camt    42  Fractional Cloud Cover (levels 1-42)
 
          	LCV  LCV  ccov     1  Cloud Cover
          	     CSC  csc      1  Cloud Analysis Implied Snow Cover
+                     ALB           1  LAPS derived albedo
+                     S3A           1  3.9u satellite data
+                     S8A           1  11u satellite data
 
         	LPS  REF  ref     21  LAPS Radar Reflectivity 
 
