@@ -225,7 +225,7 @@ c
      1comment
      1                  ,imax,jmax,sst_k,ilevel,istat_sst)
         if(istat_sst .ne. 1)then
-            write(6,*)' Warning: error reading sst_k'
+            write(6,*)' Warning: cannot read sst_k'
         endif
 
 

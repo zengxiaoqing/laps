@@ -182,7 +182,7 @@ c place station at proper laps grid point
 
           if(  ilaps .lt. IX_LOW .or. ilaps .gt. IX_HIGH
      1    .or. jlaps .lt. IY_LOW .or. jlaps .gt. IY_HIGH)then
-              write(6,*)' Warning, out of bounds ',c_stations(i)
+              write(6,*)' Note: out of bounds ',c_stations(i)
               goto 125
           endif
 

@@ -54,9 +54,17 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=laps_cloud.f      laps_cloud_sub.f \
-    insertvis.f
-
+SRC=array_plot.f \
+    barnes_r5.f \
+    insertpireps.f \
+    insertradar.f \
+    insertsao.f \
+    insertsat.f \
+    insertvis.f \
+    laps_cloud.f \
+    laps_cloud_sub.f \
+    slice.f \
+    spread.f 
 
 all: exe
 
@@ -88,6 +96,14 @@ distclean: clean
 
 
 
+array_plot.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+barnes_r5.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
+
+insertradar.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+insertsao.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+insertsat.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
 
 laps_cloud_sub.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
-
