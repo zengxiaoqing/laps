@@ -2,7 +2,7 @@
  RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 3600,
  RAOB_RADIUS = 45000.0,
- GOES_SWITCH = 8,
+ GOES_SWITCH = 12,
  CLOUD_SWITCH = 0,
  CLOUD_D = 0,
  SOUNDER_SWITCH = 1,
@@ -28,7 +28,7 @@ c   particular applicaton.  Here are the definitions of the current
 c   values used.
 c  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
-c  GOES_SWITCH = 8,  goes switch on/off assign sat
+c  GOES_SWITCH = 12,  goes switch on/off assign sat
 c  CLOUD_SWITCH = 1, cloud usage on/off
 c  CLOUD_D = 1, cloud field presence is mandated to produce output
 c  SOUNDER_SWITCH = 1,  sounder switch  on/off
