@@ -207,10 +207,10 @@ c
 
              end if  ! Enough data for num_lines .gt. 0
 
-d           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
-d              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
-d5555         format(1x,2i4,2f10.2,2i5,f10.2)
-d           endif
+cd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+cd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
+cd5555         format(1x,2i4,2f10.2,2i5,f10.2)
+cd           endif
 
    10     CONTINUE ! I,J
 

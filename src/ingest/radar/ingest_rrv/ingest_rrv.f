@@ -201,7 +201,7 @@ c        call check_v01_cdf(veld_v01(1,1,1,i),refd_v01,results,istatus)
 c
 c compute mapping look-up-table
 c -----------------------------
-      call genv01lut_sub(nx_l,ny_l,max_radars_rrv,
+      call genv01lut_sub(nx_l,ny_l,max_radars_rrv,radlat,radlon,
      &c_radar_name,radar_la1,radar_lo1,nxv01,nyv01,dxv01,dyv01,ri,rj,
      &istatus)
 c

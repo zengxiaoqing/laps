@@ -29,8 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine gen_llij_lut_v01(cid,nx,ny,lat,lon,la1,lo1,nx3,ny3,
-     &dx,dy,ri,rj,jstatus)
+       subroutine gen_llij_lut_v01(cid,radlat,radlon,
+     &nx,ny,lat,lon,la1,lo1,nx3,ny3,dx,dy,ri,rj,jstatus)
 c
 c
       implicit none
@@ -47,12 +47,12 @@ c
       real*4    u_orig,v_orig
       real*4    latin,lov
       real*4    pi
-      real*4    u1,v1
 
       real*4    ri1,rj1
       real*4    ri2,rj2
       real*4    ri3,rj3
       real*4    ri4,rj4
+      real*4    radri,radrj
 
       real*4    lapterm
       real*4    lovterm
@@ -61,14 +61,14 @@ c
       real*4    dxterm
       real*4    dyterm
       real*4    grid_spacing_deg
-      real*4    wdw_lat
-      real*4    wdw_lon
+      real*4    radlat
+      real*4    radlon
       real*4    rls,rle,res,ree
 
       real*4    ri(nx,ny)
       real*4    rj(nx,ny)
-      real*4    u(nx,ny)
-      real*4    v(nx,ny)
+      real*4    u
+      real*4    v
 
       integer*4 i,j,n
       integer*4 ii,jj
@@ -78,7 +78,8 @@ c
       integer*4 jstatus
       integer*4 nx3,ny3
 
-      logical   lwrite/.false./
+      logical   lwrite
+      data      lwrite/.false./
 
       character*200 table_path
       character*200 file
@@ -116,6 +117,7 @@ c ----------------------
       lap=25.00000
 
       write(6,*)'Parameters for ',cid
+      write(6,*)'Radar lat/lon  ',radlat,radlon
       write(6,*)'dx     ',dx
       write(6,*)'dy     ',dy
       write(6,*)'nx3    ',nx3
@@ -127,8 +129,11 @@ c ----------------------
       write(6,*)'lap    ',lap
 c
       if(la1.ne.0.0 .and. lo1.ne.0.0 .and.
-     &    dx.ne.0.0 .and.  dy.ne.0.0)then
+     &    dx.ne.0.0 .and.  dy.ne.0.0 .and.
+     &    radlat.ne.-999.99          .and.
+     &    radlon.ne.-999.99)then
 
+      nyv01=ny3
       dxterm = dx/1000.
       dyterm = dy/1000.
       call getdudv_lam(lov,lap,dxterm,dyterm,
@@ -143,32 +148,44 @@ c
       latterm=(lat(1,1)*pi)/180.
       lonterm=(lon(1,1)*pi)/180.
 
-      call getuv_lam (lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri1,rj1)
+      call getuv_lam (lapterm,lovterm,latterm,lonterm,u,v)
+      call uv_ij (ny3,u_orig,v_orig,du,dv,u,v,ri1,rj1)
+      rj1=nyv01-rj1
 
       latterm=(lat(nx,1)*pi)/180.
       lonterm=(lon(nx,1)*pi)/180.
 
-      call getuv_lam (lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri2,rj2)
+      call getuv_lam (lapterm,lovterm,latterm,lonterm,u,v)
+      call uv_ij (ny3,u_orig,v_orig,du,dv,u,v,ri2,rj2)
+      rj2=nyv01-rj2
 
       latterm=(lat(1,ny)*pi)/180.
       lonterm=(lon(1,ny)*pi)/180.
 
-      call getuv_lam (lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri3,rj3)
+      call getuv_lam (lapterm,lovterm,latterm,lonterm,u,v)
+      call uv_ij (ny3,u_orig,v_orig,du,dv,u,v,ri3,rj3)
+      rj3=nyv01-rj3
 
       latterm=(lat(nx,ny)*pi)/180.
       lonterm=(lon(nx,ny)*pi)/180.
 
-      call getuv_lam (lapterm,lovterm,latterm,lonterm,u1,v1)
-      call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri4,rj4)
+      call getuv_lam (lapterm,lovterm,latterm,lonterm,u,v)
+      call uv_ij (ny3,u_orig,v_orig,du,dv,u,v,ri4,rj4)
+      rj4=nyv01-rj4
+
+      latterm=(radlat*pi)/180.
+      lonterm=(radlon*pi)/180.
+
+      call getuv_lam (lapterm,lovterm,latterm,lonterm,u,v)
+      call uv_ij (ny3,u_orig,v_orig,du,dv,u,v,radri,radrj)
+c     radrj=nyv01-radrj
 c
-      write(6,*)'Sat ri/rj corners for domain'
+      write(6,*)'Radar ri/rj corners for domain'
       write(6,*)'ri1/rj1 (SW) ',ri1,rj1
       write(6,*)'ri2/rj2 (SE) ',ri2,rj2
       write(6,*)'ri3/rj3 (NW) ',ri3,rj3
       write(6,*)'ri4/rj4 (NE) ',ri4,rj4
+      write(6,*)'Radar ri/rj  ',radri,radrj
 c
 c first get uv in lambert grid
 c
@@ -176,17 +193,9 @@ c
       do i=1,nx
          latterm=(lat(i,j)*pi)/180.
          lonterm=(lon(i,j)*pi)/180.
-         call getuv_lam(lapterm,lovterm,latterm,lonterm,u(i,j),v(i,j))
-      enddo
-      enddo
-c
-c compute ri, rj look up tables for satellite data file (for each point in 
-c LAPS domain). This is absolute lut (relative to the full satellite data file).
-c
-      do j=1,ny
-      do i=1,nx
-         call uv_ij(ny3,u_orig,v_orig,du,dv,
-     &u(i,j),v(i,j),ri(i,j),rj(i,j))
+         call getuv_lam(lapterm,lovterm,latterm,lonterm,u,v)
+         call uv_ij(ny3,u_orig,v_orig,du,dv,u,v,ri(i,j),rj(i,j))
+         rj(i,j)=nyv01-rj(i,j)
       enddo
       enddo
 c

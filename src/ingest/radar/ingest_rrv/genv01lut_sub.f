@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine genv01lut_sub(nx_l,ny_l,max_radars,
+      subroutine genv01lut_sub(nx_l,ny_l,max_radars,radlat,radlon,
      &                      c_radar_name,radar_la1,radar_lo1,
      &                 nxv01,nyv01,dxv01,dyv01,ri,rj,istatus)
 c
@@ -48,6 +48,8 @@ c
       real*4    radar_la1(max_radars)
       real*4    radar_lo1(max_radars)
       real*4    dxv01,dyv01
+      real*4    radlat(max_radars)
+      real*4    radlon(max_radars)
 
       integer*4 i,j
       integer*4 istatus
@@ -91,9 +93,9 @@ c-----------------------------------------------------------------
 c
       do i = 1,max_radars
 
-         call gen_llij_lut_v01(c_radar_name(i),nx_l,ny_l,lat,lon,
-     &radar_la1(i),radar_lo1(i),nxv01,nyv01,dxv01,dyv01,
-     &ri(1,1,i),rj(1,1,i),istatus)
+         call gen_llij_lut_v01(c_radar_name(i),radlat(i),radlon(i),
+     &nx_l,ny_l,lat,lon,radar_la1(i),radar_lo1(i),nxv01,nyv01,
+     &dxv01,dyv01,ri(1,1,i),rj(1,1,i),istatus)
 
          if(istatus.eq.1)then
             write(6,*)'LUT generated ',c_radar_name(i)
