@@ -1369,7 +1369,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
     Edit the file 'data/static/nest7grid.parms'...
 <pre>
-        1) silavwt_parm: 
+        1) silavwt_parm_cmn: 
 
            Default value of 0. This parameter allows the potential use of 
            silhouette terrain which is the maximum elevation in the local area.
@@ -1377,11 +1377,11 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            average terrain instead of the maximum. Note that a value of 1 
            may reduce the apparent effect of filtering with 'toptwvl_parm'.
            
-        2) toptwvl_parm: 
+        2) toptwvl_parm_cmn: 
 
-           Default value is 4 represents 4 delta-x filtering of the terrain.
-           You can change this to alter the smoothness of the terrain. Higher
-           numbers mean smoother terrain.
+           For example, a value of 4 represents 4 delta-x filtering of the 
+           terrain. You can change this to alter the smoothness of the 
+           terrain. Higher numbers mean smoother terrain.
 </pre>
    
 --------- 2.8  ----- CHANGING THE VERTICAL DOMAIN------------------------------
