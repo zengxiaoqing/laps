@@ -9,7 +9,7 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
- IHOP_flag = 1,
+ IHOP_flag = 0,
  TIME_DIFF = 3600, 
  GPS_SWITCH = 1,
  SFC_MIX = 1,
