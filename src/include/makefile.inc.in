@@ -5,8 +5,8 @@ INSTALLROOT=@prefix@
 DATAROOT=@datadir@
 CC=@CC@
 
-CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@ 
-DBCFLAGS=@CFLAGS@ $(INC) -g -C -DDEBUG=1
+CFLAGS=@CFLAGS@  @OPTIMIZE@ 
+DBCFLAGS=@CFLAGS@ -g -C -DDEBUG=1
 
 FC       = @FC@
 #
@@ -19,7 +19,7 @@ DBFLAGS = @FFLAGS@ $(INC) -g -C
 # Define pre-processor command line options for .F files.
 
 CPP = @CPP@
-CPPFLAGS = @CPPFLAGS@
+CPPFLAGS = $(INC) @CPPFLAGS@
 @USECPP@
 # Define include paths.
 NETCDF=@NETCDF@
@@ -30,4 +30,18 @@ RANLIB   = @RANLIB@
 INSTALL=@INSTALL@
 PERL = @PERL@
 LIBPATHFLAG=-Wl,-L
+
+LAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -llaps
+DBLAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -ldebuglaps
+
+MTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -lmthermo
+DBMTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -ldebugmthermo
+
+UTILLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/util -lutil
+DBUTILLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/util -ldebugutil
+
+
+
+
+
 OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf  @OTHERLIBS@
