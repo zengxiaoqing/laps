@@ -14,11 +14,9 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
-           $(SRCROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(LAPSLIB) $(UTILLIB) $(MTHERMOLIB) $(BGDATALIB) 
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
-           $(SRCROOT)/src/lib/libdebuglaps.a  
+DBLIBS = $(DBLAPSLIB) $(DBUTILLIB) $(DBMTHERMOLIB) $(DBBGDATALIB)
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
@@ -43,7 +41,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
+	$(MAKE) LAPSLIBS='$(DBLIBS)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
 install: exe
@@ -61,6 +59,4 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
-
-
 
