@@ -34,7 +34,7 @@ cdis
 
 
       subroutine gen_btemps (kk,temp,pres,sfc_temp,sfc_pres,q,
-     1     jday,i4time,lat,lon,sat,c_path,t_path,tbest,radest)
+     1     jday,i4time,lat,lon,sat,tbest,radest)
 
 c     this module is to be used either by analysis or model input to generate
 c     synthetic btemps for model comparison to satellite imagery.
@@ -100,12 +100,10 @@ code--------------------------------------------------
       write (csat,23) sat
  23   format (i2)
 
-c     construct the full coefficient and transmittance path names
+c     construct the full coefficient and transmittance file names
 
-      sndr_coeff = c_path(1:len_trim(c_path))//
-     1     'sndr_g'//csat//'_spectral_coefficients_big'
-      sndr_trans = t_path(1:len_trim(t_path))//'sndr_g'//
-     1     csat//'_transmittance_coefficients_big'
+      sndr_coeff =  'sndr_g'//csat//'_spectral_coefficients_big'
+      sndr_trans =  'sndr_g'//csat//'_transmittance_coefficients_big'
 
       sndr_coeff_len = len_trim (sndr_coeff)
       sndr_trans_len = len_trim (sndr_trans)
