@@ -109,7 +109,7 @@ c  normal internal variables
 
 
 c       constants
-        save
+        save r, bad, g
         real
      1  r,!the gas constant for dry air
      1  bad,!bad data flag
