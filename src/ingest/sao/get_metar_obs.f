@@ -118,6 +118,7 @@ c
 c
         integer cnt
 	logical exists, l_parse
+        logical l_dupe_time(maxsta)
         data exists/.false./
         data cnt/0/
 c
@@ -131,6 +132,8 @@ c
 
         call get_box_size(box_size,istatus)
         if(istatus .ne. 1)return
+
+        l_dupe_time = .false.
 
 !       Initialize variables mainly used for CWB combined synop/local data
         ddg  = badflag
@@ -476,6 +479,18 @@ c
 	  do k=1,icount
 	     if(stname(i) .eq. save_stn(k))then
                  if(stname(i)(1:3) .ne. 'UNK')go to 125
+
+!                Alternatively set l_dupe_time based on abs(obstime-systime)
+                 i_diff = abs(nint(timeobs(i)) + i4time_offset 
+     1                                         - i4time_sys)
+                 k_diff = abs(nint(timeobs(k)) + i4time_offset 
+     1                                         - i4time_sys)
+                 if(i_diff .ge. k_diff)then
+                     i_reject = i
+                 else
+                     i_reject = k
+                 endif
+
              endif
 	  enddo	!k
 c
