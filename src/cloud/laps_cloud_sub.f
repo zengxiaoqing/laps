@@ -710,6 +710,7 @@ C READ IN SATELLITE DATA
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
+     1       cloud_frac_vis_a,istat_vis_a,                              ! I
      1       solar_alt,solar_ha,solar_dec,                              ! I
      1       lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,            ! I
      1       rlaps_land_frac,                                           ! I

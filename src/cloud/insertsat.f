@@ -47,7 +47,7 @@ c
      1  istat_39_add_a,                                                  ! O
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
-!    1  cloud_frac_vis_a,istat_vis,
+     1  cloud_frac_vis_a,istat_vis_a,                                    ! I
      1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
@@ -62,16 +62,8 @@ c       Routine to process satellite data for clouds and to modify the
 c       3d cloud cover array.
 c       Currently Band 8 (11.2 micron) brightness temps are used with a
 c       dummy call for the CO2 slicing method.
+c       Cloud building for VIS is under construction
 c
-c       1993        Steve Albers
-c       1995 Dec 12 Steve Albers   QC check added prior to call of subroutine
-c                                  rad_to_temp
-c       1996 Sep    Steve Albers   Fix QC check comparing cloud heights
-c                                  to heights_3d(i,j,klaps)
-!       1997 Aug 01 Ken Dritz      Changed NX_L to imax, NY_L to jmax, and
-!                                  NZ_L to klaps
-!       1997 Aug 01 Ken Dritz      Added r_missing_data as dummy argument
-!       1997 Aug 01 Ken Dritz      Removed include of lapsparms.for
 c
 c*************************************************************************
 c
@@ -117,7 +109,7 @@ c
         real*4 tb8_cold_k(imax,jmax)
         real*4 topo(imax,jmax)
         real*4 rlaps_land_frac(imax,jmax)
-!       real*4 cloud_frac_vis_a(imax,jmax)
+        real*4 cloud_frac_vis_a(imax,jmax)   ! Used for cloud building with vis
         real*4 solar_alt(imax,jmax)
         real*4 solar_ha(imax,jmax)
         real*4 temp_3d(imax,jmax,klaps)
@@ -130,6 +122,7 @@ c
 
         integer*4 istat_39_a(imax,jmax)
         integer*4 istat_39_add_a(imax,jmax)
+        integer*4 istat_vis_a(imax,jmax)     ! Used for cloud building with vis
 
 !       Output
         real*4 t_gnd_k(imax,jmax)
@@ -314,13 +307,13 @@ c
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
           call cloud_top( init_co2,i4time,tb8_k(i,j)
-!    1     ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_vis_a(i,j)
      1     ,cloud_frac_co2_a(i,j)                                         ! I
      1     ,t_gnd_k,pres_sfc_pa
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
      1     ,istat_39_add_a(i,j)                                           ! O
+     1     ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                        ! I
      1     ,lstat_co2_a(i,j)                                              ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
@@ -534,7 +527,6 @@ c
 
               cldtop_m_avg = cldtop_m(i,j)
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
-!    1            ,cloud_frac_vis_a(i,j),istat_vis
      1            ,cloud_frac_co2_a(i,j)                                 ! I
      1            ,t_gnd_k,pres_sfc_pa
      1            ,thresh_ir_diff1,topo(i,j),r_missing_data
@@ -542,6 +534,7 @@ c
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
      1            ,istat_39_add_dum                                      ! O
+     1            ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                ! I
      1            ,lstat_co2_a(i,j)                                      ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
@@ -682,12 +675,12 @@ c
         end
 
         subroutine cloud_top( init_co2,i4time,tb8_k
-!    1  ,cloud_frac_vis,istat_vis
      1  ,cloud_frac_co2                                                ! I
      1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add                                                  ! O
+     1  ,cloud_frac_vis,istat_vis                                      ! I
      1  ,lstat_co2                                                     ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
@@ -707,14 +700,14 @@ c
         integer*4 init_co2                      ! Input/Output
         integer*4 i4time                        ! Input
         real*4 tb8_k                            ! Input
-!       real*4 cloud_frac_vis                   ! Input
+        real*4 cloud_frac_vis                   ! Input (vis cloud building)
         integer*4 i,j,imax,jmax,klaps           ! Input
         real*4 t_gnd_k(imax,jmax)               ! Input
         real*4 pres_sfc_pa(imax,jmax)           ! Input
         real*4 thresh_ir_diff1                  ! Input
         real*4 topo                             ! Input
         real*4 r_missing_data                   ! Input
-!       integer*4 istat_vis                     ! Input
+        integer*4 istat_vis                     ! Input (vis cloud building)
         real*4 heights_3d(imax,jmax,klaps)      ! Input
         real*4 temp_3d(imax,jmax,klaps)         ! Input
         real*4 k_terrain                        ! Input
