@@ -51,7 +51,7 @@ cdis
 !       echoes. In other words, this code is more complex that it would
 !       otherwise be so that real-time speed is optimized.
 
-        integer*4 MAX_FILES
+        integer MAX_FILES
         parameter (MAX_FILES = 3000)
 
 !       Input
@@ -77,8 +77,8 @@ cdis
         real*4 rh_3d(imax,jmax,kmax)
         real*4 pressures_mb(kmax)
         logical l_mask(imax,jmax)
-        integer*2 i2_pcp_type_2d(imax,jmax)
-        integer*2 i2_cldpcp_type_3d(imax,jmax,kmax)
+        integer i2_pcp_type_2d(imax,jmax)
+        integer i2_cldpcp_type_3d(imax,jmax,kmax)
         integer ipcp_1d(kmax)
 
         real*4 grid_ra_ref(imax,jmax,kmax)
@@ -86,7 +86,7 @@ cdis
         real*4 grid_ra_nyq(imax,jmax,kmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
-        integer*4 i4time_file(MAX_FILES)
+        integer i4time_file(MAX_FILES)
         real*4 frac(MAX_FILES)
         character c_fnames(MAX_FILES)*80
 
@@ -99,7 +99,7 @@ cdis
         character*10  units_2d
         character*125 comment_2d
 
-        integer*4 iarg
+        integer iarg
 
         logical l_first_sfc_update_completed
 
@@ -616,12 +616,12 @@ cdis
 !                               to arrive at an integrated precipitation rate
 !                               over a specified time window
 
-        integer*4 MAX_FILES
+        integer MAX_FILES
         parameter (MAX_FILES = 3000)
 
         character*9 asc_tim_9
         real*4 frac(MAX_FILES)
-        integer*4 i4time_file(MAX_FILES)
+        integer i4time_file(MAX_FILES)
 
         i4_interval = i4time_end - i4time_beg
 

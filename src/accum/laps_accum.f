@@ -35,7 +35,7 @@ cdis
 !                                     NX_L, NY_L, NZ_L.
 !       1997 Jun        Ken Dritz     Now pass NX_L, NY_L, NZ_L to laps_accum.
 
-        integer*4 j_status(20),iprod_number(20),i4time_array(20)
+        integer j_status(20),iprod_number(20),i4time_array(20)
         character*9 a9_time
 
         call get_systime(i4time,a9_time,istatus)

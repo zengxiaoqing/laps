@@ -49,7 +49,7 @@ cdis
 !       1997 Jun        Ken Dritz     Changed include of lapsparms.for to
 !                                     include of laps_static_parameters.inc.
 
-        integer*4  ss_normal,rtsys_bad_prod,rtsys_no_data
+        integer  ss_normal,rtsys_bad_prod,rtsys_no_data
      1                                     ,rtsys_abort_prod
         parameter (ss_normal        =1, ! success
      1             rtsys_bad_prod   =2, ! inappropriate data, insufficient data
@@ -58,7 +58,7 @@ cdis
 
         include 'laps_static_parameters.inc'
 
-        integer*4 i4time,i_diag,n_prods
+        integer i4time,i_diag,n_prods
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -85,7 +85,7 @@ cdis
 
         character*80 c80_domain_file
 
-        integer*4 j_status(20),iprod_number(20)
+        integer j_status(20),iprod_number(20)
 
         character*40 c_vars_req
         character*100 c_values_req
@@ -296,7 +296,7 @@ c read in laps lat/lon and topo
      1                                          ,ilaps_cycle_time
      1                                                  ,istatus)
 
-        integer*4 nfields
+        integer nfields
         parameter (nfields = 4)
 
         character*(*) DIRECTORY
@@ -305,14 +305,14 @@ c read in laps lat/lon and topo
         character*125 comment_s,comment_r,comment_2d(nfields)
         character*10 units,units_2d(nfields)
         character*3 var,var_2d(nfields)
-        integer*4 LVL,LVL_2d(nfields)
+        integer LVL,LVL_2d(nfields)
         character*4 LVL_COORD,LVL_COORD_2d(nfields)
 
         real*4 field_2dsnow(imax,jmax,nfields)
 
         lend = len(directory)
         write(6,11)directory(1:lend),ext(1:5)
-11      format(' Writing 2d Snow/Precip ',a<lend>,1x,a5,1x,a3)
+11      format(' Writing 2d Snow/Precip ',a,1x,a5,1x,a3)
 
         lvl = 0
         lvl_coord = 'MSL'
