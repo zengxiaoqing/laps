@@ -444,6 +444,29 @@ C
      1                   ,2.75,0.9,0.7                ! Orange
      1                   ,3.0,0.9,0.7)                ! Red
 
+      elseif(colortable .eq. 'haines')then       
+          ncols = 40
+          call color_ramp(1,20*ncols/100
+     1                   ,IWKID,icol_offset
+     1                   ,0.6,0.7,0.4                 ! Violet
+     1                   ,0.6,0.7,0.4)                ! Violet
+          call color_ramp(20*ncols/100,40*ncols/100
+     1                   ,IWKID,icol_offset       
+     1                   ,1.0,0.85,0.55               ! Blue
+     1                   ,1.0,0.85,0.55)              ! Blue
+          call color_ramp(40*ncols/100,60*ncols/100
+     1                   ,IWKID,icol_offset
+     1                   ,2.0,0.4,0.4                 ! Green
+     1                   ,2.0,0.4,0.4)                ! Green
+          call color_ramp(60*ncols/100,80*ncols/100
+     1                   ,IWKID,icol_offset
+     1                   ,2.5,0.95,0.65               ! Yellow
+     1                   ,2.5,0.95,0.65)              ! Yellow
+          call color_ramp(80*ncols/100,ncols
+     1                   ,IWKID,icol_offset
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,3.0,0.9,0.7)                ! Red
+
       else
           write(6,*)' ERROR: Unknown color table ',colortable
 
