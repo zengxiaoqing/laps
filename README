@@ -147,6 +147,8 @@
      only a subset of f90 constructs to help ensure compatability with f77
      compilers. Check that the FORTRAN compiler is in your path.
 
+     For IBM/AIX platforms 'xlf' is recommended.
+
                     ---  2.1.6  Disk Space ---
 
      The disk space requirements for LAPS vary depending on the implementation.
@@ -197,13 +199,15 @@
 
      <pre>
      /machine_root
+         /raw_data
          /geog
          /laps-m-n-o.tar
-         /laps_root (laps-m-n-o)
+         /laps-m-n-o                                                (laps_root)
+             Makefile
              /src
                  /ingest
              /etc                    
-             /bin                    
+             /bin                                                 (executables)
              /data                   (=LAPS_DATA_ROOT, can be moved/duplicated)
                  /lapsprd
                      /product_list                                (laps output)
@@ -227,17 +231,18 @@
      /home_disk
          /src
              /laps-m-n-o.tar
-             /laps-m-n-o                               (laps_root subdirectory)
+             /laps-m-n-o                                            (laps_root)
+                 Makefile
                  /src                                             (source code)
                      /ingest
          /laps   ----------------->  soft linked to /data_disk/laps
 
      /data_disk
          /geog
-         /raw_testdata
+         /raw_data
          /laps                                        (--prefix in 'configure')
              /etc                                     
-             /bin                                    
+             /bin                                                 (executables)
              /data*                         (LAPS_DATA_ROOT, can be duplicated)
                  /lapsprd
                      /product_list                                (laps output)
@@ -296,6 +301,9 @@
      also makes it a bit easier to maintain your own local set of parameters 
      that are unique to your domain. 
 
+     For IBM/AIX platforms, you will want to override the default FORTRAN
+     compiler with 'xlf' using the option --fc=xlf.
+
                 --- 2.2.3   Ingest Software changes ---
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
@@ -315,8 +323,14 @@
 
      The next step is to build and install the executables, this can be done 
      by running... 
+
      $ cd (laps_root)
-     $ make install 1> make.out 2>&1 
+     $ make                  1> make.out 2>&1 
+     $ make install          1> make_install.out 2>&1 
+     $ make install_lapsplot 1> make_install_lapsplot.out 2>&1   
+
+     Lapsplot can be installed only if you have NCAR graphics.
+
      We recommend using Gnu Make Version 3.75 or later available via ftp from 
      any GNU site. 
 
