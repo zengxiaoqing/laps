@@ -486,8 +486,8 @@ c compute avg variable
                  sumwt=tab(iii)+sumwt
  3            enddo !on j
               if(sumwt.ne.0) t(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
-              write(8,1000) stn(i), t(i)
- 1000         format(1x,'Replaced missing ob at stn ',a5,1x,F8.3) 
+c              write(8,1000) stn(i), t(i)
+c 1000         format(1x,'Replaced missing ob at stn ',a5,1x,F8.3) 
            endif 
         enddo !i
 c

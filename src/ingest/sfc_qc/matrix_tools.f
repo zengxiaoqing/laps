@@ -390,17 +390,17 @@ c
 c
 c output results
 c
-      write(8,1000)  char
+      write(*,1000)  char
  1000 format(1x,'Diagnosis of matrix ',a3)
-      write (8,1001) dimx,dimn
+      write (*,1001) dimx,dimn
  1001 format(1x,'Max diagonal ',f10.3,' Min diagonal ',f10.3)
-      write (8,1002) sumd
+      write (*,1002) sumd
  1002 format(1x,'Avg diagonal ',f8.3)
-      write (8,1003) elmx,elmn
+      write (*,1003) elmx,elmn
  1003 format(1x,'Max non-diagonal ',f8.3,' Min non-diagonal ',f8.3)
-      write (8,1004) sume
+      write (*,1004) sume
  1004 format(1x,'Avg non-diagonal ',f8.3)
-      write (8,1005) sumea
+      write (*,1005) sumea
  1005 format(1x,'Avg abs non-diagonal ',f8.3)
 c
       return

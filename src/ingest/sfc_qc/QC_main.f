@@ -158,7 +158,8 @@ c
 c        
 c character arrys for file names, station names, time, wx symbols
 c
-	integer     i4prev1, i4prev2
+
+	integer     i4prev1, i4prev2, cycle
 	character*9 filename, fname1, fname2
         Character   atime*24, atime_cur*24, stn(m)*5, wx(m)*25
         character   stna(m)*5, stnb(m)*5
@@ -251,6 +252,9 @@ c
         endif
 c
  500    continue
+        call get_directory('lsq', dir_s, len)
+        monfile = dir_s(1:len) // 'monster.dat'
+
         IF(flagstart) THEN
 c
 c.....  No monster file, initilize error arrays
@@ -394,9 +398,8 @@ c
            icnt=1
 c
         ELSE
-           call get_directory('lsq', dir_s, len)
-           monfile = dir_s(1:len) // 'monster.dat'
-           call s_len(monfile, len)
+
+
            open(15,file=monfile(1:len),
      &         form='unformatted',status='old')
            read(15) atime_mon, i4time_mon
@@ -486,7 +489,7 @@ c
         call weights(mwt,dwt,ua,va,thetaa,lata,lona,
      &       cycle,maxstaa,m)
 c
-        write(8,*) 'Kalman for TEMP'
+        write(*,*) 'Kalman for TEMP'
 *****MODEL IS UNDER REVISION - ARGUEMENTS WILL CHANGE**********
         call model(F,dta,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
      &          ,maxstaa,m,ni,nj,timer,cycle,14.,4.,24.,6.)
@@ -497,7 +500,7 @@ c
         Call avgdiagerr(Vit,B,c,vV,maxstaa,ia,m,it-1)
 c  kalman....
         call kalman(dta,F,YTA,pt,it, w,vv,xt,xtt,maxstaa,m,atime)
-        write(8,*) 'Kalman for DEWPOINT'
+        write(*,*) 'Kalman for DEWPOINT'
         call model(F,dtda,tda,ua,va,thetaa,mwt,lata,lona,eleva
      1          ,maxstaa,m,ni,nj,timer,cycle,4.,2.,12.,18.)
 c
@@ -506,7 +509,7 @@ c
         Call avgdiagerr(witd,B,c,W,maxstaa,ia,m,it-1)
         Call avgdiagerr(Vitd,B,c,vV,maxstaa,ia,m,it-1)
         call kalman(dtda,F,YTDA,ptd,it,w,vv,xtd,xttd,maxstaa,m,atime)
-        write(8,*) 'Kalman for U-WIND'
+        write(*,*) 'Kalman for U-WIND'
         call model(F,dua,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
      1          ,maxstaa,m,ni,nj,timer,cycle,2.,0.,20.,6.)
 c
@@ -516,7 +519,7 @@ c
         Call avgdiagerr(Vitu,B,c,vV,maxstaa,ia,m,it-1)
 c  kalman....
         call kalman(dua,F,yua,pu,it, w,vv,xu,xtu,maxstaa,m,atime)       
-        write(8,*) 'Kalman for V-WIND'
+        write(*,*) 'Kalman for V-WIND'
         call model(F,dva,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
      1          ,maxstaa,m,ni,nj,timer,cycle,0.,0.,24.,6.)
 c
@@ -528,7 +531,7 @@ c
 c  kalman....
 c
         call kalman(dva,F,yva,pv,it, w,vv,xv,xtv,maxstaa,m,atime)
-        write(8,*) 'Kalman for PMSL'
+        write(*,*) 'Kalman for PMSL'
         call model(F,dpma,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
      1          ,maxstaa,m,ni,nj,timer,cycle,0.,3.,16.,16.)
 c
@@ -538,7 +541,7 @@ c
         Call avgdiagerr(Vitpm,B,c,vV,maxstaa,ia,m,it-1)
 c  kalman....
         call kalman(dpma,F,YpmslA,ppm,it, w,vv,xpm,xtpm,maxstaa,m,atime)
-        write(8,*) 'Kalman for ALSTG'
+        write(*,*) 'Kalman for ALSTG'
         call model(F,dalta,thetaa,ua,va,thetaa,mwt,lata,lona,eleva
      1          ,maxstaa,m,ni,nj,timer,cycle,0.,.1,24.,16.)
 c
@@ -579,7 +582,7 @@ c
            stn(k)(1:5)=stations(k)(1:5)
         enddo !k
         print*, maxsta,'obs read for cycle ',it
-        write(8,1066) atime
+        write(*,1066) atime
  1066   format(1x,a24)
         call reorder(t,td,dd,ff,lat,lon,elev,pstn,pmsl,alt,
      &          stn,provider,reptype,
@@ -590,7 +593,7 @@ c
 c redo the theta conversion, interpolation, and back to ta for new stns
 c
         call thet(ta,thetaa,maxstaa,eleva,m)
-        write(8,*) 'FILL after new  read'
+        write(*,*) 'FILL after new  read'
         call fill(stna,thetaa,lata,lona,eleva,thetaa,sl,
      &       maxstaa,m,8./1000.,-1./1000.)          
         call thet2T(ta,thetaa,maxstaa,eleva,m)
@@ -616,17 +619,17 @@ c
 
 
 
-        write(8,*) 'gross err T'
+        write(*,*) 'gross err T'
         call qcset(t,ta,qcstat,m,maxstaa,badflag,grosst)
-        write(8,*) 'gross err TD'
+        write(*,*) 'gross err TD'
         call qcset(td,tda,qcstatd,m,maxstaa,badflag,grosstd)
-        write(8,*) 'gross err U'
+        write(*,*) 'gross err U'
         call qcset(u,ua,qcstauv,m,maxstaa,badflag,grossuv)
-        write(8,*) 'gross err V'
+        write(*,*) 'gross err V'
         call qcset(v,va,qcstauv,m,maxstaa,badflag,grossuv)
-        write(8,*) 'gross err PMSL'
+        write(*,*) 'gross err PMSL'
         call qcset(pmsl,pmsla,qcstapm,m,maxstaa,badflag,grosspm)
-        write(8,*) 'gross err ALT'
+        write(*,*) 'gross err ALT'
         call qcset(alt,alta,qcstal,m,maxstaa,badflag,grossal)
 c     
 c find observed departure from background 
@@ -659,32 +662,32 @@ c
         call perturb(xtpm ,zot,xtpm ,maxstab,m,offset,off)      
         call perturb(xal,zot,xal,maxstab,m,offset,off)      
         call perturb(xtal ,zot,xtal,maxstab,m,offset,off)      
-        write(8,*) 'ERROR PROCESSING FOR T'
+        write(*,*) 'ERROR PROCESSING FOR T'
         call errorproc(dt,yta,xtt,xt,wr,vr,ar,maxstab,m,qcstat
      &          ,oberrt,badthr,atime,icnt,1)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wit,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vit,it)
-        write(8,*) 'ERROR PROCESSING FOR TD'
+        write(*,*) 'ERROR PROCESSING FOR TD'
         call errorproc(dtd,ytda,xttd,xtd,wr,vr,ar,maxstab,m,qcstatd  
      &          ,oberrtd,badthr,atime,icnt,2)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witd,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitd,it)
-        write(8,*) 'ERROR PROCESSING FOR U'
+        write(*,*) 'ERROR PROCESSING FOR U'
         call errorproc(du,yua,xtu,xu,wr,vr,ar,maxstab,m,qcstauv
      &          ,oberru,badthr,atime,icnt,3)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witu,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitu,it)
-        write(8,*) 'ERROR PROCESSING FOR v'
+        write(*,*) 'ERROR PROCESSING FOR v'
         call errorproc(dv,yva,xtv,xv,wr,vr,ar,maxstab,m,qcstauv  
      &          ,oberru,badthr,atime,icnt,4)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witv,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitv,it)
-        write(8,*) 'ERROR PROCESSING FOR PMSL'
+        write(*,*) 'ERROR PROCESSING FOR PMSL'
         call errorproc(dpm,ypmsla,xtpm,xpm,wr,vr,ar,maxstab,m,qcstapm
      &          ,oberrpm,badthr,atime,icnt,5)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,witpm,it)
         call writemon(vr,vr,vr,vr,vr,vr,1,maxstab,m,vitpm,it)
-        write(8,*) 'ERROR PROCESSING FOR ALSTG' 
+        write(*,*) 'ERROR PROCESSING FOR ALSTG' 
         call errorproc(dalt,yalta,xtal,xal,wr,vr,ar,maxstab,m,qcstal  
      &          ,oberral,badthr,atime,icnt,6)  
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstab,m,wital,it)
@@ -737,8 +740,8 @@ c
 c     
 c stage 2....latest buddy values 
 c
-        write(8,*) 'FILL for F series'
-        write(8,*) 't fill'
+        write(*,*) 'FILL for F series'
+        write(*,*) 't fill'
         call thet(tf,thetaf,maxstaa,eleva,m)
         call fillone(stna,thetaf,lata,lona,eleva,thetaf,sl,
      &       maxstaa,m,8./1000.,-1./1000.)          
@@ -746,19 +749,19 @@ c
 c
 c same thing for dewpoint and winds
 c
-        write(8,*) 'td fill'
+        write(*,*) 'td fill'
         call fillone(stna,tdf,lata,lona,eleva,thetaa,vl,
      &       maxstaa,m,15./1000.,-35./1000.)        
-        write(8,*) 'uf fill'
+        write(*,*) 'uf fill'
         call fillone(stna,uf,lata,lona,eleva,thetaa,vl,
      &          maxstaa,m,10./1000.,-10./1000.)        
-        write(8,*) 'vf fill'
+        write(*,*) 'vf fill'
         call fillone(stna,vf,lata,lona,eleva,thetaa,vl,
      &          maxstaa,m,10./1000.,-10./1000.)         
-        write(8,*) 'pmslf fill'
+        write(*,*) 'pmslf fill'
         call fillone(stna,pmslf,lata,lona,eleva,thetaa,vl,
      &          maxstaa,m,2./1000.,-2./1000.)        
-        write(8,*) 'altf fill'
+        write(*,*) 'altf fill'
         call fillone(stna,altf,lata,lona,eleva,thetaa,vl,
      &          maxstaa,m,2./1000.,-2./1000.)         
 c
@@ -769,20 +772,20 @@ c
            if(abs(tf(i)-t(i)).gt.badthr*oberrt) then
               qcstat(i)=qcstat(i)+100
               print*,'stn ',i,t(i),' fails buddy check temp ',tf(i)
-              write(8,*) 
+              write(*,*) 
      &             'stn ',i,t(i),' fails buddy check temp ',tf(i)
            endif
  70        if(td(i).eq.badflag) go to 71
            if(abs(tdf(i)-td(i)).gt.badthr*oberrtd) then 
               qcstatd(i)=qcstatd(i)+100
               print*,'stn ',i,td(i),' fails buddy check dewp ',tdf(i)
-              write(8,*) 
+              write(*,*) 
      &             'stn ',i,td(i),' fails buddy check dewp ',tdf(i)
            endif
  71        if(u(i).eq.badflag) go to 72
            if(abs(uf(i)-u(i)).gt.badthr*oberru) then
               qcstauv(i)=qcstauv(i)+100
-              write(8,*) 
+              write(*,*) 
      &             'stn ',i,u(i),' fails buddy check u-wind ',uf(i)
            endif
            uf(i)=u(i)
@@ -790,7 +793,7 @@ c
            if(abs(vf(i)-v(i)).gt.badthr*oberru) then 
               qcstauv(i)=qcstauv(i)+100
               print*,'stn ',i,v(i),' fails buddy check v-wind ',vf(i)
-              write(8,*) 
+              write(*,*) 
      &             'stn ',i,v(i),' fails buddy check v-wind ',vf(i)
            endif
  73        if(pmsl(i).eq.badflag) go to 74
@@ -798,7 +801,7 @@ c
               qcstapm(i)=qcstapm(i)+100
               print*,
      &             'stn ',i,pmsl(i),' fails buddy check pmsl ',pmslf(i)
-              write(8,*) 'stn ',i,pmsl(i),' fails buddy check pmsl ',
+              write(*,*) 'stn ',i,pmsl(i),' fails buddy check pmsl ',
      &             pmslf(i)
            endif
            pmslf(i)=pmsl(i)
@@ -807,7 +810,7 @@ c
               qcstal(i)=qcstal(i)+100
               print*,
      &             'stn ',i, alt(i),' fails buddy check pmsl ', altf(i)
-              write(8,*) 'stn ',i,alt (i),' fails buddy check pmsl ',
+              write(*,*) 'stn ',i,alt (i),' fails buddy check pmsl ',
      &             altf(i)
            endif
  75     enddo !i
@@ -958,9 +961,9 @@ c
         call writev(altc,maxstab,1,m,' OPTIMUM ALT ',atime,on,1000.)
         call writev(alte,maxstaa,1,m,' QCd ALT OBS    ',atime,
      &          on,1000.)
-        write (14,3004) atime,it
+        write (*,3004) atime,it
  3004   format (1x,a24,3x, 'it= ',i4)
-        write(14,3006) maxstaa
+        write(*,3006) maxstaa
  3006   format(1x,i3)
 c     
 c.....  Write out the NetCDF QC output file.  Convert units to
@@ -979,6 +982,7 @@ c
         ext_out = 'lsq'
         call get_directory('lsq', dir_out, len)
 c        
+
         call write_qc_cdf(i4time, dir_out, ext_out, m, maxstaa, 
      1       stn, provider, reptype, lat, lon, elev,
      1       qcstat,  t,    tb,    ta,    tc,    te,    tf,  
@@ -1008,6 +1012,9 @@ c
 c
 c.....  Write out the updated monster file.
 c
+
+        call s_len(monfile, len)
+        print*,'Writing file ',monfile(1:len)
         open(16,file=monfile(1:len),
      &         form='unformatted',status='unknown')
         write(16) atime_cur, i4time
@@ -1017,6 +1024,7 @@ c
         write(16) monster
         write(16) ta,tda,ua,va,pmsla,alta
         close(16)
+        print*,' complete'
 c
 c.....  Write out a "clean" LSO file.
 c

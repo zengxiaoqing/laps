@@ -142,7 +142,7 @@ c
       call addmv(II,E,A,-1.,imax,imax,m)
       call mvmult(A,PT,P,imax,imax,imax,m)
       do i=1,imax
-         write(8,*) 'i,x,xt,y,k,w,v ',i,x(i),xt(i),
+         write(*,*) 'i,x,xt,y,k,w,v ',i,x(i),xt(i),
      &              y(i),k(i,i),w(i,i),v(i,i)
       enddo !i
       call writev(P,imax,imax,m,'ANAL COV ERR',atime,off,0.)

@@ -43,9 +43,9 @@ c
             go to 1
          endif
       enddo !i
-    1 write(8,999) cs
+    1 write(*,999) cs
  999  format(//1x,a12)
-      write(8,1000) atime,iii, smax,smin
+      write(*,1000) atime,iii, smax,smin
  1000 format(13x,a24,' x 10**',i3,' Max: ',e10.4,'  Min: ',e10.4)
       do j=1,jmax
       do i=1,imax
@@ -56,19 +56,19 @@ c
       enddo !i
       enddo !j
       rms=sqrt(rms/cnt)                
-      write(8,1004) rms,sum,offset
+      write(*,1004) rms,sum,offset
  1004 format(1x,'RMS  = ',e12.4,' MEAN = ',e12.4,' OFFSET = ',e12.4)
  1001 format(1x,'transposed vector')
       if (jmax.eq.1) then
-         write (8,1001)
-         if(ONOFF.eq.1)write (8,1002) (ii(i,1),i=1,imax)
+         write (*,1001)
+         if(ONOFF.eq.1)write (*,1002) (ii(i,1),i=1,imax)
       else
          continue
          if(onoff.eq.1) then
             do i=1,imax
-               write(8,1005) i
+               write(*,1005) i
  1005          format(/i3)
-               write(8,1002) (j,ii(i,j),j=1,jmax)
+               write(*,1002) (j,ii(i,j),j=1,jmax)
             enddo !i
          endif
       endif
@@ -93,9 +93,9 @@ c
       character*72 cs,atime*24
       integer i
 c
-      write(8,1000) cs,atime
+      write(*,1000) cs,atime
  1000 format(//1x,a72)
-       write (8,1002) (a(i)  ,i=1,imax)
+       write (*,1002) (a(i)  ,i=1,imax)
  1002 format(10i7)
 c
       return
@@ -116,9 +116,9 @@ c
       character*5   a(m)
       character*14 cs,atime*24
 c
-      write(8,1000) cs,atime
+      write(*,1000) cs,atime
  1000 format(//1x,a14)
-       write (8,1002) (a(i)(1:5)  ,i=1,imax)
+       write (*,1002) (a(i)(1:5)  ,i=1,imax)
  1002 format(10(2x,a5))
 c
       return

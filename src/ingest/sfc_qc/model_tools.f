@@ -479,18 +479,18 @@ c           endif
 	   y(i)=sum0
 	   if(it.lt.26) go to 2
 c     if(abs(sum-sum0).lt.thresh)then 
-c           write(8,*) 'fft est stn ',i, ' of ',sum,' acptd ovr ',
+c           write(*,*) 'fft est stn ',i, ' of ',sum,' acptd ovr ',
 c    &       '2nd order interp  ',sum0,atime(1:17)
 c           y(i)= sum   
 c           else
 c           y(i)=sum0
-c           write(8,*) 'fft est stn ',i, ' of ',sum,' RJCTD FOR ',
+c           write(*,*) 'fft est stn ',i, ' of ',sum,' RJCTD FOR ',
 c    &       '2nd ordr  ',y(i),'  ',atime(1:17)
 c           endif
-	   write(9,*) 'i,fourier unfil, filt est',i,sum,sumf
-	   write(9,*) 'taylor series',sum0,monster(i,1,nv),
-     &           monster(i,2,nv),
-     &           monster(i,3,nv)
+c	   write(9,*) 'i,fourier unfil, filt est',i,sum,sumf
+c	   write(9,*) 'taylor series',sum0,monster(i,1,nv),
+c     &           monster(i,2,nv),
+c     &           monster(i,3,nv)
 	   y(i)=sum0		!ob guess set to taylor for the time being
  2	   continue
 	enddo !on i
