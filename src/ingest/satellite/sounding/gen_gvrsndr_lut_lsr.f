@@ -1,5 +1,5 @@
        Subroutine gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,
-     &wavelength,resolution_x,resolution_y,rsndr_res_m,start_pix,
+     &wavelength,resolution_x,resolution_y,rsndr_res_km,start_pix,
      &start_line,end_pix,end_line,ewCycles,ewIncs,nsCycles,nsIncs,
      &f_time,orbAt,nch,nxl,nyl,lat,lon,rpix,rline,istatus)
 c
@@ -25,6 +25,7 @@ c
       real*8        rp_div
       real*4        radtodeg
       real*4        rsndr_res_m
+      real*4        rsndr_res_km
       real*4        r_missing_data
       real*4        rnx,rny,rnp
       real*4        rpct_out
@@ -246,9 +247,15 @@ c
          i1=nxl/2
          j1=nyl/2
       endif
-      call compute_sat_res_m(rp_div,rl_div,
+
+      if(.true.)then
+         call compute_sat_res_m(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,instr,
      &rsndr_res_m,istatus)
+      else
+         rsndr_res_m=(resolution_y+resolution_x)/2.0 
+      endif
+      rsndr_res_km=rsndr_res_m/1000.
 
       istatus = 0
       goto 1000

@@ -12,7 +12,6 @@ c
       real*4        r_channel_wavelengths(max_ch,max_sat)
       character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
-      character     cmode*10
 
       Call get_laps_config('nest7grid',IStatus)
       if(istatus.eq.1)then
@@ -23,7 +22,6 @@ c
          stop
       end if
 
-      cmode='noinstall'
 c
 c get the number of satellites and channels from nest7grid.parms
 c
@@ -146,14 +144,14 @@ c
       character*3   var_ll(2)
       character*2   cch
       character*150 dir_static
-      Character     cmode*10
       Character     f9time*9
       Character     c_sat_id*6
       Character     cid*2
+c
 c =============================================================
-c
-c
-c get sndr data
+c =============================================================
+c                get sndr data
+c =============================================================
 c
       n=index(c_sounding_path,' ')-1
       write(*,*)'Data pathname: ',c_sounding_path(1:n)
@@ -216,29 +214,10 @@ c
          write(6,*)'Found all isndrdata good in set_missing_sndr'
       endif
 c
-c compute count to radiance look up table
+c =============================================================
+c                   get laps domain lat/lon
+c =============================================================
 c
-      call count_range(ndimx,ndimy,ndimch,nelems,nlines,n_channels,
-     &isndrdata,imaximum,iminimum,istatus)
-
-c     write(6,*)'Compute count2radiance lut'
-c     call count2radiance_lut(n_channels,nlines,maxcnt,scalingBias,
-c    &scalingGain,imaximum,iminimum,cnt2rad)
-c
-c
-      write(6,*)'Image motion Comp ',imc
-      write(6,*)'framsStartTime: ',f_time
-      write(6,*)'ew cycle/inc: ',ewCycles,ewIncs
-      write(6,*)'ns cycle/inc: ',nsCycles,nsIncs
-
-      write(6,*)'netCDF file properly read'
-      write(6,*)'nw pix/nw line :',nw_pix,nw_line
-      write(6,*)
-c
-c get laps domain lat/lon
-c
-c Definitions needed for acquiring LAPS latitude and longitude arrays.
-c -------------------------------------------------------------------
       call get_directory('static',dir_static,lend)
       var_ll(1) = 'LAT'
       var_ll(2) = 'LON'
@@ -263,7 +242,9 @@ c -------------------------------------------------------------------
       end if
       grid_spacing_km=grid_spacing/1000.
 c
-c generate sounding db to laps remapping lut
+c =================================================================
+c                       generate remapping lut
+c =================================================================
 c
       write(6,*)'Compute sat-2-laps look-up-table'
       call gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,wavelength,
@@ -279,7 +260,30 @@ c
          goto 1000
       endif
 c
-c Next is to scale the sounder counts to radiances.
+c ===================================================================
+c             compute count to radiance look up table
+c ===================================================================
+c
+      call count_range(ndimx,ndimy,ndimch,nelems,nlines,n_channels,
+     &isndrdata,imaximum,iminimum,istatus)
+
+c     write(6,*)'Compute count2radiance lut'
+c     call count2radiance_lut(n_channels,nlines,maxcnt,scalingBias,
+c    &scalingGain,imaximum,iminimum,cnt2rad)
+c
+c
+      write(6,*)'Image motion Comp ',imc
+      write(6,*)'framsStartTime: ',f_time
+      write(6,*)'ew cycle/inc: ',ewCycles,ewIncs
+      write(6,*)'ns cycle/inc: ',nsCycles,nsIncs
+
+      write(6,*)'netCDF file properly read'
+      write(6,*)'nw pix/nw line :',nw_pix,nw_line
+      write(6,*)
+c
+c ===================================================================
+c               scale sounder counts to radiances.
+c ===================================================================
 c
       call get_r_missing_data(r_missing_data,iostatus)
 
@@ -294,7 +298,8 @@ c
         do j=1,ndimy
         do i=1,ndimx(j)
 
-           rcount=float(isndrdata(i,j,k))
+! temporary fix (abs) to eliminate negative values.
+           rcount=float( isndrdata(i,j,k) )
            if(rcount.ge.imaximum(k).or.rcount.le.0.0)then  !this would include i2_missing_data (=-99)
               icnt(k) = icnt(k) + 1
               sndr_rad(i,j,k)=r_missing_data
@@ -306,14 +311,15 @@ c
         enddo
         enddo
 
-        write(6,*)'Channel ',k
-        write(6,*)'Points Not Used: gt imax or < 0: ',icnt(k)
-        write(6,*)'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
-        write(6,*)
+        print*,'Ch ',k,' # not used (gt imax or < 0): ',icnt(k)
+c       print*,'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
+c       write(6,*)
 
       enddo
 c 
-c Determine representative time 11-14-97 (J.Smart)
+c ================================================================
+c          Determine representative time 11-14-97 (J.Smart)
+c ================================================================
 c
       rmintime=9999999999.
       rmaxtime=0.
@@ -331,9 +337,17 @@ c
       enddo
       write(6,*)'max/min line times ',rmaxtime,rmintime
       i4time_data_orig=i4time_data
-      i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
+      if(rmaxtime.gt.0.0.and.rmintime.gt.0.0)then
+         i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
+      elseif(rmaxtime.gt.0.0)then
+         i4time_data=int(rmaxtime)+315619200
+      else
+         i4time_data=int(rmintime)+315619200
+      endif
 c
-c remap to laps domain
+c ================================================================
+c                    remap to laps domain
+c ================================================================
 c
       r_grid_ratio = r_sndr_res_km/grid_spacing_km
       write(6,*)'r grid ratio: ',r_grid_ratio

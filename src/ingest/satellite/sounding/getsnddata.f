@@ -238,6 +238,18 @@ c
      &                         orbitAttitude,
      &                         ndimx,ndimy,ndimch,
      &                         istatus)
+
+      do k=1,nch
+      do j=1,nlines
+      do i=1,nelems
+
+         if(i4snddata(i,j,k).lt.0)i4snddata(i,j,k)=
+     &i4snddata(i,j,k)+65535
+            
+      enddo
+      enddo
+      enddo
+
       itstatus=ishow_timer()
       write(6,*)'Elapsed time (sec): ',itstatus
 c
