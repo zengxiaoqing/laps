@@ -244,7 +244,7 @@ c
 	integer*4 kloud_s(mxstn),idp3_s(mxstn),obstime(mxstn)
 	integer*4 ii(mxstn), jj(mxstn)
 c
-	character infile_o*70,atime_s*24
+	character infile_o*70
 	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
 	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
 c
