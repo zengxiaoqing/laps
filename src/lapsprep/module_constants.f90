@@ -49,5 +49,5 @@ MODULE constants
    REAL, PARAMETER :: autoconv_ice2sno = 0.0001
    REAL, PARAMETER :: lwc_min = autoconv_lwc2rai*0.05
    REAL, PARAMETER :: ice_min = autoconv_ice2sno*0.05
-   REAL, PARAMETER :: lcp_min = 0.5
+   REAL, PARAMETER :: lcp_min = 0.6  ! Changed to be consistent with lq3
 END MODULE constants
