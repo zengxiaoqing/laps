@@ -257,7 +257,7 @@ foreach $exe (@LAPS_EXE){
 
         if($nodes_current > 1){
 #           print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
-            print TFILE "$sms_path/bin/smsRun $nodes_current /home/albers/schaffer/laps/src/wind/wind 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "$sms_path/bin/smsRun $nodes_current /projects/oplapb/builds_sms/laps/bin/wind.exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }

@@ -222,10 +222,8 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
           stop
       endif
 
-csms$serial(<pres_3d : out> : default=ignore) begin
       call get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
       if(istatus .ne. 1)return
-csms$serial end
 
       call get_rep_pres_intvl(pres_3d,imax,jmax,kmax,rep_pres_intvl
      1                       ,istatus)
@@ -446,25 +444,28 @@ csms$serial end
      1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)
  605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-!     Initialize fnorm array used in barnes_multivariate
-      write(6,*)' Creating fnorm LUT'
+      if(.not. l_3d)then ! we use fnorm_calc for l_3d case now
+!         Initialize fnorm array used in barnes_multivariate
+          write(6,*)' Creating fnorm LUT'
 
-!     When the distance = r0_norm, the fnorm is effectively 1
-      call get_fnorm_max(imax,jmax                                    ! I
+!         When the distance = r0_norm, the fnorm is effectively 1
+          call get_fnorm_max(imax,jmax                                ! I
      1                  ,r0_norm,r0_value_min_dum,fnorm_max_dum)      ! O
 
-      r0_norm_sq = r0_norm**2
-      exp_offset = 70.
-      expm80 = exp(-80.)
-      do iii = 0,n_fnorm
-          dist_norm_sq = (float(iii)/r0_norm_sq)
-          arg = dist_norm_sq - exp_offset
-          if(arg .le. 80.)then
-              fnorm(iii) = exp(-arg)
-          else
-              fnorm(iii) = expm80
-          endif
-      enddo
+          r0_norm_sq = r0_norm**2
+          exp_offset = 70.
+          expm80 = exp(-80.)
+          do iii = 0,n_fnorm
+              dist_norm_sq = (float(iii)/r0_norm_sq)
+              arg = dist_norm_sq - exp_offset
+              if(arg .le. 80.)then
+                  fnorm(iii) = exp(-arg)
+              else
+                  fnorm(iii) = expm80
+              endif
+          enddo
+
+      endif ! l_3d
 
       I4_elapsed = ishow_timer()
 

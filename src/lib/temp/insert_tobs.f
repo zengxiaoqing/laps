@@ -538,25 +538,28 @@ cdis
 
 !       ncnt_total = ncnt_total + ncnt
 
-!       Initialize fnorm array used in barnes_new
-        write(6,*)' Creating fnorm LUT'
+        if(.false.)then ! No longer needed since we have fnorm_calc/fnorm_lut
+!           Initialize fnorm array used in barnes_new
+            write(6,*)' Creating fnorm LUT'
 
-!       When the distance = r0_norm, the fnorm is effectively 1
-        call get_fnorm_max(ni,nj                                      ! I
+!           When the distance = r0_norm, the fnorm is effectively 1
+            call get_fnorm_max(ni,nj                                  ! I
      1                    ,r0_norm,r0_value_min_dum,fnorm_max_dum)    ! O
 
-        r0_norm_sq = r0_norm**2
-        exp_offset = 70.
-        expm80 = exp(-80.)
-        do iii = 0,n_fnorm
-            dist_norm_sq = (float(iii)/r0_norm_sq)
-            arg = dist_norm_sq - exp_offset
-            if(arg .le. 80.)then
-                fnorm(iii) = exp(-arg)
-            else
-                fnorm(iii) = expm80
-            endif
-        enddo
+            r0_norm_sq = r0_norm**2
+            exp_offset = 70.
+            expm80 = exp(-80.)
+            do iii = 0,n_fnorm
+                dist_norm_sq = (float(iii)/r0_norm_sq)
+                arg = dist_norm_sq - exp_offset
+                if(arg .le. 80.)then
+                    fnorm(iii) = exp(-arg)
+                else
+                    fnorm(iii) = expm80
+                endif
+            enddo
+
+        endif
 
         n_var = 1
 
