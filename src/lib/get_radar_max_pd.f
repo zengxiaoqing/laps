@@ -146,7 +146,7 @@ c       rmax_so_far = 0.
               call get_ref_base(ref_base,istatus)
               if(istatus .ne. 1)return
 
-              call read_radar_3dref(i4time_radar,.true.,ref_base
+              call read_radar_3dref(i4time_radar,.true.,ref_base,
      1                 imax,jmax,kmax,ext_radar,
      1                 lat,lon,topo,.false.,.false.,
      1                 heights_3d,

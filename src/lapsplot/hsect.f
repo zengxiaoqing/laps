@@ -66,6 +66,8 @@ cdis
         real*4 rlaps_land_frac(NX_L,NY_L)
         real*4 soil_type(NX_L,NY_L)
         real*4 static_albedo(NX_L,NY_L)
+        real*4 static_slpe_ln(NX_L,NY_L)
+        real*4 static_slpe_lt(NX_L,NY_L)
 
         character*1 c_display, qtype
         character*1 cansw
@@ -102,6 +104,7 @@ cdis
         character*2 c_field
         character*2 c_metacode
         character*3 c_type
+        character*3 cstatic
         character*3 c_bkg
         character c19_label*19,c33_label*33
 
@@ -190,9 +193,8 @@ cdis
         integer*4 iarg
 
         real*4 cloud_cvr(NX_L,NY_L)
-        real*4 cloud_ceil(NX_L,NY_L)
         real*4 cloud_low(NX_L,NY_L)
-        real*4 cloud_top(NX_L,NY_L)
+        real*4 cloud_2d(NX_L,NY_L)
 
         character*255 c_filespec_ra
         character*255 c_filespec_src
@@ -309,6 +311,18 @@ c       include 'satellite_dims_lvd.inc'
             write(6,*)' Warning: could not read LAPS static-albedo'
 !           return
         endif
+        var_2d='SLN'
+        call read_static_grid(nx_l,ny_l,var_2d,static_slpe_ln,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: could not read LAPS static-slope-lon'
+!           return
+        endif
+        var_2d='SLT'
+        call read_static_grid(nx_l,ny_l,var_2d,static_slpe_lt,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: could not read LAPS static-slope-lat'
+!           return
+        endif
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
@@ -341,13 +355,13 @@ c       include 'satellite_dims_lvd.inc'
      1       /'         [is] Integrated Cloud LWC  '
      1       /'         [mv] Mean Volume Drop Diam,   [ic] Icing Index,'       
      1       /'         [cc] Cld Ceiling (AGL),'
-     1       ,' [cb,ct-i] Cld Base/Top (MSL)'      
+     1       ,' [cb-i,ct-i] Cld Base/Top (MSL)'      
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
      1       /'         [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc] Snow Cvr'
      1       /
-     1       /'     [tn-i,lf,gr,so,al-i] Ter/LndFrac/Grid/Albedo'
+     1       /'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       , 'Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -1420,9 +1434,11 @@ c
 
                 write(6,*)
 
+                call get_ref_base(ref_base,istatus)
+
                 call read_radar_3dref(i4time_radar_a(i_radar),
-!    1               0,i4_dum
-     1               .true.,NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
+     1               .true.,ref_base,
+     1               NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
      1               lat,lon,topo,.true.,.true.,
      1               field_3d,
      1               grid_ra_ref,
@@ -3947,40 +3963,28 @@ c                   cint = -1.
      1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'cb' .or. c_type .eq. 'cc')then
+        elseif(c_type(1:2) .eq. 'cb' .or. c_type(1:2) .eq. 'ct' 
+     1                               .or. c_type .eq. 'cc')then
+            ext = 'lcb'
 
-            if(c_type .eq. 'cb')then ! Cloud Base
-                ext = 'lcb'
+            if(c_type(1:2) .eq. 'cb')then ! Cloud Base
                 var_2d = 'LCB'
-                call get_laps_2dgrid(i4time_ref,
-     1              laps_cycle_time*100,i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,cloud_ceil,0,istatus)
-
-                IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
-                    write(6,*)' Error Reading Cloud Base'
-                    goto1200
-                endif
-
                 c33_label = 'LAPS Cloud Base         m   MSL  '
                 clow = 0.
                 chigh = 10000.
+                chigh_img = 8000.
+                cint = 1000.
+
+            elseif(c_type(1:2) .eq. 'ct')then
+                var_2d = 'LCT'
+                c33_label = 'LAPS Cloud Top          m   MSL  '
+                clow = 0.
+                chigh = 20000.
+                chigh_img = 14000.
                 cint = 1000.
 
             elseif(c_type .eq. 'cc')then ! Cloud Ceiling
-
-                ext = 'lcb'
                 var_2d = 'CCE'
-                call get_laps_2dgrid(i4time_ref,
-     1              laps_cycle_time*100,i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,cloud_ceil,0,istatus)
-
-                IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
-                    write(6,*)' Error Reading Cloud Ceiling'
-                    goto1200
-                endif
-
                 c33_label = 'LAPS Cloud Ceiling      m   AGL  '
                 clow = 0.
                 chigh = 0.
@@ -3988,41 +3992,28 @@ c                   cint = -1.
 
             endif
 
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_nearest,ext,var_2d
+     1                          ,units_2d,comment_2d,NX_L,NY_L
+     1                          ,cloud_2d,0,istatus)
+
+            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
+                write(6,*)' Error Reading ',ext,var_2d
+                goto1200
+            endif
+
+
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-            call plot_cont(cloud_ceil,1e0,
+            if(c_type(3:3) .ne. 'i')then
+                call plot_cont(cloud_2d,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'ct' .or. c_type .eq. 'cti')then
-            var_2d = 'LCT'
-            ext = 'lcb'
-            call get_laps_2dgrid(i4time_ref,864000,i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,cloud_top,0,istatus)
-
-            IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
-                write(6,*)' Error Reading Cloud Top'
-                goto1200
-            endif
-
-            c33_label = 'LAPS Cloud Top          m   MSL  '
-
-            call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
-
-            if(c_type .eq. 'ct')then
-                clow = 0.
-                chigh = 20000.
-                cint = 1000.
-                call plot_cont(cloud_top,1e0,
-     1                     clow,chigh,cint,asc9_tim,c33_label,
-     1                     i_overlay,c_display,lat,lon,jdot,       
-     1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
-
             else
                 n_image = n_image + 1
-                call ccpfil(cloud_top,NX_L,NY_L,0.0,14000.,'linear')
+                call ccpfil(cloud_2d,NX_L,NY_L,clow,chigh_img,'linear')       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -4105,85 +4096,143 @@ c                   cint = -1.
 
             endif
 
-        elseif(c_type(1:2) .eq. 'tn')then
-            clow = -400.
-            chigh = +5000.
-            cint = +200.
-            c33_label = '                                 '
-            asc9_tim_t = '         '
+        elseif(c_type(1:2) .eq. 'gg')then
 
-            if(c_type .eq. 'tni')then
+           write(6,219)
+219        format(5x,'Select STATIC field:'
+     1/' [tn-i,lf,gr,so,al-i,sn-i,sl-i] Ter/LndFrac/Grid/Alb/slp ? ',$)
+           read(lun,*)cstatic
+
+           if(cstatic(1:2).eq.'tn')then
+              clow = -400.
+              chigh = +5000.
+              cint = +200.
+              c33_label = '                                 '
+              asc9_tim_t = '         '
+
+              if(c_type .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear')
                 n_image = n_image + 1
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
-            else
+              else
                 call plot_cont(topo,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
-            endif
+              endif
+              i4time_topo = 0
 
-            i4time_topo = 0
-
-        elseif(c_type .eq. 'gr')then
-            call plot_grid(i_overlay,c_display,lat,lon,
+           elseif(cstatic(1:2) .eq. 'gr')then
+               call plot_grid(i_overlay,c_display,lat,lon,
      1                     NX_L,NY_L,laps_cycle_time)
 
-        elseif(c_type .eq. 'lf')then
-            clow = .5
-            chigh = .5
-            cint = .5
-            c33_label = '                                 '
-            asc9_tim_t = '         '
-            call plot_cont(rlaps_land_frac,1e0,
+           elseif(cstatic(1:2) .eq. 'lf')then
+              clow = .5
+              chigh = .5
+              cint = .5
+              c33_label = '                                 '
+              asc9_tim_t = '         '
+              call plot_cont(rlaps_land_frac,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-            i4time_topo = 0
+              i4time_topo = 0
 
-        elseif(c_type .eq. 'so')then
-            clow = 0.
-            chigh = 20.
-            cint = 1.
-            c33_label = 'Soil Type                        '
-            asc9_tim_t = '         '
-            call plot_cont(soil_type,1e0,
+           elseif(cstatic(1:2) .eq. 'so')then
+              clow = 0.
+              chigh = 20.
+              cint = 1.
+              c33_label = 'Soil Type                        '
+              asc9_tim_t = '         '
+              call plot_cont(soil_type,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+              i4time_topo = 0
 
-            i4time_topo = 0
+           elseif(cstatic(1:2) .eq. 'al')then
+              clow = 0.
+              chigh = 1.0
+              cint = .05
+              c33_label = 'Static Albedo                    '
+              asc9_tim_t = '         '
 
-        elseif(c_type(1:2) .eq. 'al')then
-            clow = 0.
-            chigh = 1.0
-            cint = .05
-            c33_label = 'Static Albedo                    '
-            asc9_tim_t = '         '
-
-            if(c_type .eq. 'ali')then
+              if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_albedo,NX_L,NY_L,0.0,0.5,'linear')
                 n_image = n_image + 1
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
-            else
+              else
                 call plot_cont(static_albedo,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
-            endif
+              endif
+              i4time_topo = 0
 
-            i4time_topo = 0
+           elseif(cstatic(1:2) .eq. 'sn')then
+
+              print*,'plotting longitude-component:terrain slope'
+
+              clow = -1.
+              chigh = 1.0
+              cint = .025
+              c33_label = 'long-comp terrain slope                    '
+              asc9_tim_t = '         '
+
+              if(cstatic .eq. 'sni')then
+                write(6,*)' calling solid fill plot'
+                call get_mxmn_2d(NX_L,NY_L,static_slpe_ln,rmx2d
+     1,rmn2d)
+                call ccpfil(static_slpe_ln,NX_L,NY_L,rmn2d,rmx2d
+     1,'linear')
+                n_image = n_image + 1
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+              else
+                call plot_cont(static_slpe_ln,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
+              i4time_topo = 0
+
+           elseif(cstatic(1:2) .eq. 'sl')then
+
+              print*,'plotting latitude-component:terrain slope'
+              clow = -1.
+              chigh = 1.0
+              cint = .025
+              c33_label = 'lat-comp terrain slope                    '
+              asc9_tim_t = '         '
+
+              if(cstatic .eq. 'sli')then
+                write(6,*)' calling solid fill plot'
+                call get_mxmn_2d(NX_L,NY_L,static_slpe_lt,rmx2d
+     1,rmn2d)
+                call ccpfil(static_slpe_lt,NX_L,NY_L,rmn2d,rmx2d
+     1,'linear')
+                n_image = n_image + 1
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+              else
+                call plot_cont(static_slpe_lt,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
+              i4time_topo = 0
+
+           endif !cstatic
 
         elseif(c_type .eq. 'cf')then
-            call frame
-            close(8)
+           call frame
+           close(8)
 
         elseif(c_type .eq. 'q ')then
-            goto9000
+           goto9000
+
 
         endif ! c_field
 
@@ -4991,15 +5040,24 @@ c
 
 !       call setusv_dum(2HIN,11)
 
+        if(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
+            iflag_cv = 1
+        else
+            iflag_cv = 0
+        endif
+
         write(6,*)' plot_station_locations... ',iflag
 
         c3_presob = '   '
+
         if(iflag .ge. 1)then
-            write(6,13)
-13          format(' Select type of pressure ob [msl,alt,stn]'
-     1            ,4x,'default=none      ? ',$)
-            read(5,14)c3_presob
- 14         format(a)
+            if(iflag_cv .eq. 0)then
+                write(6,13)
+13              format(' Select type of pressure ob [msl,alt,stn]'
+     1                ,4x,'default=none      ? ',$)
+                read(5,14)c3_presob
+14              format(a)
+            endif
 
             if(c_field(1:1) .eq. 'q')then ! LSO_QC file
                 c33_label = 'Sfc QC Obs   ('//c3_presob//' pres)'
@@ -5035,9 +5093,6 @@ c
 
             if(iflag .ge. 1)then
 
-!             if(obstype(i) .eq. 'MESO' .or. iflag .eq. 2)then
-              if(.true.)then
-
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
                 call s_len(stations(i),len_sta)
@@ -5058,17 +5113,7 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,11)
 
-                if(c3_presob .eq. 'msl')then
-                    pressure = pmsl(i)
-                elseif(c3_presob .eq. 'alt')then
-                    pressure = alt(i)
-                elseif(c3_presob .eq. 'stn')then 
-                    pressure = pstn(i)
-                else
-                    pressure = r_missing_data
-                endif
-
-                if(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
+                if(iflag_cv .eq. 1)then ! Ceiling & Visibility
                     temp = badflag
                     if(vis_s(i) .ne. badflag)then
                         dewpoint = vis_s(i)
@@ -5096,14 +5141,26 @@ c
                     endif
                 endif
 
+                if(iflag_cv .eq. 0)then
+                    if(c3_presob .eq. 'msl')then
+                        pressure = pmsl(i)
+                    elseif(c3_presob .eq. 'alt')then
+                        pressure = alt(i)
+                    elseif(c3_presob .eq. 'stn')then 
+                        pressure = pstn(i)
+                    else
+                        pressure = r_missing_data
+                    endif
+
+                endif
+
                 call plot_mesoob(dd_s(i),ff_s(i),ffg_s(i)
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
-     1                 ,lat,lon,ni,nj,relsize,zoom,11,du2,iflag)
+     1                 ,lat,lon,ni,nj,relsize,zoom,11,du2
+     1                 ,iflag,iflag_cv)
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
-
-              endif
 
             else ! Write station location only
                 call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)

@@ -145,8 +145,8 @@ cdis
 
         if(c_radial(1:1) .eq. 'n')goto205
 
-        write(6,*)' Skipping call to height_of_level to get retheight'       
-!       retheight = height_of_level(k_level)
+        write(6,*)' Skipping call to ht_of_level to get retheight'       
+!       retheight = ht_of_level(k_level)
 
         c1_plottype = 'y'
 
@@ -678,9 +678,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 call setusv_dum(2hIN,icol_in)
 
+                iflag_cv = 0
+
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp,zoom
-     1                          ,icol_in,du_loc,iflag)
+     1                          ,icol_in,du_loc
+     1                          ,iflag,iflag_cv)
 
 
                 write(6,111,err=121)ri,rj,t_c,c8_obstype

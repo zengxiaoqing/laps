@@ -1,4 +1,5 @@
-      subroutine get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+
+      subroutine get_pres_3d_old(i4time,ni,nj,nk,pres_3d,istatus)
 
 cdoc  Returns a 3-D grid of pressures. This is useful if we have a non-uniform
 cdoc  pressure grid or other type of arbitrary vertical grid.
@@ -39,6 +40,84 @@ c     call get_laps_config('nest7grid',istatus)
       endif
       return
       end
+
+      subroutine get_pres_1d(i4time,nk,pres_1d_out,istatus)
+
+cdoc  Returns a 1-D grid of pressures. This is useful if we have a non-uniform
+cdoc  pressure grid. This does not support an arbitrary vertical grid.
+
+      include 'grid_fname.cmn'                          ! grid_fnam_common
+
+      integer nk       
+      real*4 pres_1d_out(nk)      
+
+      integer max_p
+      parameter (max_p=150) 
+
+      real*4 pressures(max_p)
+
+      namelist /pressures_nl/ pressures
+
+      character*150 static_dir,filename
+ 
+      call get_directory(grid_fnam_common,static_dir,len_dir)
+
+      filename = static_dir(1:len_dir)//'/pressures.nl'
+ 
+      open(1,file=filename,status='old',err=900)
+      read(1,pressures_nl,err=901)
+      close(1)
+
+      do k = 1,nk
+        pres_1d_out(k) = pressures(k)
+      enddo                  ! k
+
+      write(6,*)' Success in get_pres_1d'
+      istatus = 1
+      return
+
+  900 print*,'error opening file ',filename
+      istatus = 0
+      return
+
+  901 print*,'error reading pressures_nl in ',filename
+      write(*,pressures_nl)
+      istatus = 0
+      return
+
+      end      
+
+      subroutine get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+
+cdoc  Returns a 3-D grid of pressures. This is useful if we have a non-uniform
+cdoc  pressure grid or other type of arbitrary vertical grid.
+
+      integer ni,nj,nk       
+      real*4 pres_1d(nk)      
+      real*4 pres_3d(ni,nj,nk)      
+
+      call get_pres_1d(i4time,nk,pres_1d,istatus)
+
+      if(istatus .eq. 1)then
+         do k = 1,nk
+            do j = 1,nj
+            do i = 1,ni
+              pres_3d(i,j,k) = pres_1d(k)
+            enddo               ! i
+            enddo               ! j
+         enddo                  ! k
+
+         write(6,*)' Success in get_pres_3d'
+         return
+
+      else
+         write(6,*)' No Success in get_pres_3d'
+         return
+
+      endif
+
+      end
+      
 
       subroutine get_rep_pres_intvl(pres_3d,ni,nj,nk,rep_pres_intvl
      1                             ,istatus)

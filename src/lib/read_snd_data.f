@@ -117,6 +117,7 @@ cdoc    Returns sounding data from the SND file
 
               nlevels_obs_pr(i_pr) = n_good_levels
               ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
+              ob_pr_pr_obs(i_pr,n_good_levels) = pr_in
               ob_pr_di_obs(n_good_levels) = di_in
               ob_pr_sp_obs(n_good_levels) = sp_in
 
@@ -285,6 +286,7 @@ cdoc    Returns sounding metadata from the SND file
 
               nlevels_obs_pr(i_pr) = n_good_levels
               ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
+              ob_pr_pr_obs(i_pr,n_good_levels) = pr_in
               ob_pr_di_obs(n_good_levels) = di_in
               ob_pr_sp_obs(n_good_levels) = sp_in
 

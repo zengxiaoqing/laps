@@ -681,13 +681,13 @@ C READ IN SATELLITE DATA
             goto999
         endif
 
-!       write(6,*)' Cloud top (Band 8 vs. Final Analysis)'
+        write(6,*)' Cloud top (Band 8 vs. Satellite Analysis)'
         scale = .0001
-!       write(6,301)
+        write(6,301)
 301     format('  Cloud Top (km)             Band 8                ',
-     1            20x,'              Final Analysis')
-!       CALL ARRAY_PLOT(cldtop_m_tb8,cldtop_m,NX_L,NY_L,'HORZ CV',c1_name_array
-!       1                                       ,KCLOUD,cld_hts,scale)
+     1                 23x,'          Satellite Analysis')
+        CALL ARRAY_PLOT(cldtop_m_tb8,cldtop_m,NX_L,NY_L,'HORZ CV'
+     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
 
         I4_elapsed = ishow_timer()
 
@@ -1011,7 +1011,7 @@ C       EW SLICES
         do j = 1,NY_L
             if(cldtop_m(i,j)  .ne. r_missing_data .and.
      1         cvr_max(i,j)   .ge. 0.1                            )then       
-                plot_mask(i,j) = cldtop_m(i,j)               ! Set Band 8 mask
+                plot_mask(i,j) = cloud_top(i,j)            ! Set cloud top mask
             else
                 plot_mask(i,j) = r_missing_data
             endif

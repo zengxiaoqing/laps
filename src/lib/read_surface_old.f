@@ -315,8 +315,16 @@ c
         enddo
         
         if(index_first .gt. 1)then
-            string(1:len_string-index_first+1) 
+            index_last_out = len_string-index_first+1
+            string(1:index_last_out) 
      1                         = string(index_first:len_string)
+
+            if(index_last_out .lt. len_string)then
+                do j = index_last_out+1,len_string
+                    string(j:j) = ' '
+                enddo ! j
+            endif
+
         endif
 
         return
