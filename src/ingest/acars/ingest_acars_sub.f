@@ -56,6 +56,7 @@ C
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
      +     correctedFlag(recNum), dataDescriptor(recNum),
+     +     dataSource(recNum),
      +     errorType(recNum), interpolatedLL(recNum),
      +     interpolatedTime(recNum), missingInputMinutes,
      +     rollFlag(recNum), speedError(recNum), tempError(recNum),
@@ -83,8 +84,11 @@ C
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
+      logical l_use_tamdar, l_debug
 
 !............................................................................
+
+      l_use_tamdar = .true.
 
       if (c8_project(1:3) .eq. 'WFO' .or. 
      1    c8_project(1:3) .eq. 'RSA'      ) then     
@@ -97,9 +101,13 @@ C
      +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
      +     timeObs, timeReceived, destAirport, flight, maxDate, 
      +     minDate, origAirport, rptStation, tailNumber)
+
+         dataSource = 0
+
       else
         call read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
-     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     correctedFlag, dataDescriptor, dataSource,
+     +     errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
      +     speedError, tempError, waterVaporQC, windDirError, 
      +     windSpeedError, altitude, heading, latitude, longitude, 
@@ -107,6 +115,7 @@ C
      +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
      +     timeObs, timeReceived, destAirport, flight, maxDate, 
      +     minDate, origAirport, rptStation, tailNumber)
+
       endif
 C
 C The netcdf variables are filled - your code goes here
@@ -125,25 +134,37 @@ C
 
       do i = 1,num_acars
 
-          write(6,*)
-          write(6,*)' acars #',i,'  ',char(dataDescriptor(i))
-     1                               ,char(errorType(i))
+          if(i .le. 1000 .or. i .eq. ((i/10)*10) )then
+              l_debug = .true.
+          else
+              l_debug = .false.
+          endif
+
+          if(l_debug)write(6,*)
+          if(l_debug)write(6,*)' acars #',i,'  ',char(dataDescriptor(i))       
+     1                                          ,char(errorType(i))
+     1                                          ,dataSource(i)
 !         write(6,*)' location = '
 !    1             ,latitude(i),longitude(i),altitude(i)
 
+          if((.not. l_use_tamdar) .and. dataSource(i) .eq. 4)then
+              if(l_debug)write(6,*)' TAMDAR observation - reject'
+              goto 900
+          endif
 
           if(latitude(i) .le. rnorth .and. latitude(i)  .ge. south .and.
      1       longitude(i) .ge. west  .and. longitude(i) .le. east      
      1                                                             )then       
               continue
           else ! Outside lat/lon perimeter - reject
-              write(6,*)' lat/lon - reject'       
+              if(l_debug)write(6,*)' lat/lon - reject'       
 !    1                 ,latitude(i),longitude(i)
               goto 900
           endif
 
           if(altitude(i) .gt. 20000.)then
-              write(6,*)' Altitude is suspect - reject',altitude(i)
+              if(l_debug)write(6,*)' Altitude is suspect - reject'
+     1                            ,altitude(i)
               goto 900
           endif
 
@@ -152,7 +173,7 @@ C
               call c_time2fname(nint(timeObs(i)),a9_timeObs)
               call c_time2fname(nint(timereceived(i)),a9_recptTime)
           else
-              write(6,*)' Bad observation time - reject'       
+              if(l_debug)write(6,*)' Bad observation time - reject'       
      1                   ,timeObs(i),timereceived(i)
               goto 900
           endif
@@ -161,37 +182,38 @@ C
           call cv_asc_i4time(a9_timeObs,i4time_ob)
           i4_resid = abs(i4time_ob - i4time_sys)
           if(i4_resid .gt. i4_acars_window)then ! outside time window
-              write(6,*)' time - reject '
+              if(l_debug)write(6,*)' time - reject '
      1           ,a9_timeObs,i4_resid,i4_acars_window
               goto 900        
           endif
 
           call open_ext(31,i4time_sys,ext(1:3),istatus)       
 
-          write(6,1)a9_timeObs,a9_recptTime 
-          write(31,1)a9_timeObs,a9_recptTime 
+          if(l_debug)write(6,1)a9_timeObs,a9_recptTime 
+                     write(31,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
-          write(6,2)latitude(i),longitude(i),altitude(i)
-          write(31,2)latitude(i),longitude(i),altitude(i)
+          if(l_debug)write(6,2)latitude(i),longitude(i),altitude(i)
+          write(31,2)          latitude(i),longitude(i),altitude(i)
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
 !         Test for bad winds
           if(char(dataDescriptor(i)) .eq. 'X')then
             if(char(errorType(i)) .eq. 'W' .or. 
      1         char(errorType(i)) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject wind'
+              if(l_debug)write(6,*)' QC flag is bad - reject wind'
      1                 ,char(dataDescriptor(i)),char(errorType(i))
               goto 850
             endif
           endif
 
           if(abs(windSpeed(i)) .gt. 250.)then
-              write(6,*)' wind speed is suspect - reject',windSpeed(i)
+              if(l_debug)write(6,*)' wind speed is suspect - reject'
+     1                              ,windSpeed(i)
 
           else ! write out valid wind
-              write(6,3)int(windDir(i)),windSpeed(i)
-              write(31,3)int(windDir(i)),windSpeed(i)
+              if(l_debug)write(6 ,3)int(windDir(i)),windSpeed(i)
+                         write(31,3)int(windDir(i)),windSpeed(i)
  3            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
 
           endif
@@ -202,20 +224,20 @@ C
           if(char(dataDescriptor(i)) .eq. 'X')then
             if(char(errorType(i)) .eq. 'T' .or. 
      1         char(errorType(i)) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject temp'
+              if(l_debug)write(6,*)' QC flag is bad - reject temp'
      1                 ,char(dataDescriptor(i)),char(errorType(i))
               goto 860
             endif
           endif
 
           if(abs(temperature(i)) .lt. 400.)then
-              write(6,13)temperature(i)
-              write(31,13)temperature(i)
+              if(l_debug)write(6,13)temperature(i)
+                         write(31,13)temperature(i)
  13           format(' Temp:'/1x,f10.1)
        
           else
-              write(6,*)' Temperature is suspect - reject'
-     1                , temperature(i)
+              if(l_debug)write(6,*)' Temperature is suspect - reject'
+     1                             , temperature(i)
 
           endif
 
@@ -225,13 +247,14 @@ C
      1       downlinkedRH(i) .le. 1.00 .and.
      1       waterVaporQC(i) .le. 2    .and.
      1       waterVaporQC(i) .ge. 0             )then
-              write(6,23)downlinkedRH(i)
-              write(6,*)' RH QC value = ',waterVaporQC(i)
+              if(l_debug)write(6,23)downlinkedRH(i)
+              if(l_debug)write(6,*)' RH QC value = ',waterVaporQC(i)
               write(31,23)downlinkedRH(i)
  23           format(' RH:'/1x,f10.3)
 
           else
-              write(6,*)' RH rejected: ',downlinkedRH(i),waterVaporQC(i)
+              if(l_debug)write(6,*)' RH rejected: '
+     1                             ,downlinkedRH(i),waterVaporQC(i)
 
           endif
 
@@ -245,7 +268,8 @@ C
 C  Subroutine to read the file "ACARS data" 
 C
       subroutine read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
-     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     correctedFlag, dataDescriptor, dataSource,
+     +     errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
      +     speedError, tempError, waterVaporQC, windDirError, 
      +     windSpeedError, altitude, heading, latitude, longitude, 
@@ -258,6 +282,7 @@ C
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
      +     correctedFlag(recNum), dataDescriptor(recNum),
+     +     dataSource(recNum),
      +     errorType(recNum), interpolatedLL(recNum),
      +     interpolatedTime(recNum), missingInputMinutes,
      +     rollFlag(recNum), speedError(recNum), tempError(recNum),
@@ -492,6 +517,20 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dataDescriptor'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      dataSource"AWIPS-type data source"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'dataSource',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var dataSource'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,dataSource)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var dataSource'
       endif
 C
 C     Variable        NETCDF Long Name
