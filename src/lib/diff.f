@@ -46,3 +46,23 @@ c
 c
         return
         end
+c
+c
+        subroutine diff_3d(a,b,result,imax,jmax,kmax)
+c
+c.....  Routine to subtract array 'b' from array 'a' and put the
+c.....  result into array 'result' .
+c
+        real*4 a(imax,jmax,kmax), b(imax,jmax,kmax)
+     1                          , result(imax,jmax,kmax)
+c
+        do k=1,kmax
+        do j=1,jmax
+        do i=1,imax
+          result(i,j,k) = a(i,j,k) - b(i,j,k)
+        enddo !i
+        enddo !j
+        enddo !k
+c
+        return
+        end

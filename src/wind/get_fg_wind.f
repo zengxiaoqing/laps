@@ -254,7 +254,7 @@
 !  ***  Read in MODEL data   ********************************************
         do NT = NTMIN,NTMAX
 
-            write(6,*)' Reading u_mdl_bkg_4d ',NT
+            write(6,*)' Reading u_mdl_bkg_4d, NT= ',NT
             var_2d = 'U3'
             call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
      1          ,var_2d,NX_L,NY_L,NZ_L
@@ -268,7 +268,7 @@
      1                ,u_mdl_bkg_4d(NX_L/2+1,NY_L/2+1,1,NT)
 
 
-            write(6,*)' Reading v_mdl_bkg_4d ',NT
+            write(6,*)' Reading v_mdl_bkg_4d, NT= ',NT
             var_2d = 'V3'
             call get_modelfg_3d(i4time_lapswind+ilaps_cycle_time*NT      
      1          ,var_2d,NX_L,NY_L,NZ_L
