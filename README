@@ -1663,7 +1663,7 @@ to:
 
 Dan Birkenheuer
 NOAA/FSL
-birk@fsl.noaa.gov
+Daniel.L.Birkenheuer
 
 To model the atmosphere with OPTRAN, an atmosphere is formulated that
 extends to 0.1 hPa.  This is a composite of the normal LAPS analyzed
@@ -1767,7 +1767,7 @@ since 3 layers are routinely available from NESDIS.
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info documented in the file
    './src/ingest/satellite/lvd/README'. Please contact John Smart 
-   (smart@fsl.noaa.gov) for more details. 
+   (John.R.Smart@noaa.gov) for more details. 
 
 ------ 2.12 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
@@ -1875,7 +1875,7 @@ since 3 layers are routinely available from NESDIS.
 
 Package: gridgen_model.exe - Writes static file, run by localization script. 
                                  
-Contact: John Smart - smart@fsl.noaa.gov 
+Contact: John Smart - John.R.Smart@noaa.gov 
 
 Inputs:
 	Geography databases (topography, land fraction, landuse, soiltype top/bot)
@@ -2013,7 +2013,7 @@ As mentioned above, a flow chart for the ingest processes may be found at
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
 Package: lga.exe - ingest background model data 
-             (contact: John Smart - smart@fsl.noaa.gov).
+             (contact: John Smart - John.R.Smart@noaa.gov).
 
         LGA 	LAPS analysis grids from RUC or other analysis/forecast grids.
 
@@ -2208,7 +2208,7 @@ information.  This will be noted in the 'obs_driver.log' file.
 
 Process: remap_polar_netcdf.exe 
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 Every volume scan
 Initiation: Completion of volume scan
@@ -2267,7 +2267,7 @@ Sample Input/Output: May be available in the test data case.
 
 Process: VRC (vrc_driver.x) 
 
-Author John Smart (smart@fsl.noaa.gov)
+Author John Smart (John.R.Smart@noaa.gov)
 
 <pre>
 Inputs:
@@ -2298,7 +2298,7 @@ The output reflectivity is used by the cloud and precip accumulation analyses.
 
 Process: (mosaic_radar.exe) 
 
-Author Steve Albers (albers@fsl.noaa.gov) / John Smart (smart@fsl.noaa.gov)
+Author Steve Albers (Steve.Albers@noaa.gov) / John Smart (John.R.Smart@noaa.gov)
 
 <pre>
 Inputs:
@@ -2328,7 +2328,7 @@ Parameter namelist file: 'static/radar_mosaic.nl'
 
 Process: PRO (ingest_pro.exe) LAPS Wind Profile Ingest 
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs: (located in separate NetCDF directories)
@@ -2394,7 +2394,7 @@ After the header, the data entered for each level is as follows...
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 
 <pre>
@@ -2415,7 +2415,7 @@ Sample Input/Output: Should be available in the test data case.
 
 Process: (ingest_aircraft.exe) LAPS Pireps / ACARS
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs:
@@ -2447,7 +2447,7 @@ Sample Input/Output: Should be available in the test data case
 
 Process: (ingest_sounding.exe) LAPS Soundings
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs:
@@ -2480,7 +2480,7 @@ Sample Input/Output: May be available in the test data case. If not, the README
 
 LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
               grid.
-        (author: John Smart - smart@fsl.noaa.gov)
+        (author: John Smart - John.R.Smart@noaa.gov)
 
 Input:
  	 GOES or other satellite data
@@ -2501,7 +2501,7 @@ Source directory: laps/src/ingest/satellite/lvd (contains a README file)
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs:
@@ -2522,7 +2522,7 @@ Source directory: laps/src/ingest/satellite/cloud_drift
 
 Process: wind.exe - WIND analysis and related fields
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 	Generate a wind analysis using surface observations, profiler, cloud
         drift wind, and aircraft reports. VAD and SODAR can also be read in.
@@ -2854,7 +2854,7 @@ http://laps.fsl.noaa.gov/albers/laps/talks/temp/sld001.htm
 
 Process: cloud.exe - Cloud analysis package
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 	Several input analyses are combined with METARs of cloud layers. These 
         input analyses are the 3D temperature analysis,  a three-dimensional 
@@ -3125,7 +3125,7 @@ Reference: Birkenheuer, D. (1999): The effect of using digital
 
 Process: deriv.exe - Derived products
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
         These derived products are cloud, wind, stability, and fireweather 
         related.
@@ -3284,7 +3284,7 @@ http://laps.fsl.noaa.gov/albers/laps/talks/wind/sld007.htm
 
 Process: accum.exe - Snowfall/Liquid Equivalent Precipitation
 
-Author: Steve Albers (albers@fsl.noaa.gov)
+Author: Steve Albers (Steve.Albers@noaa.gov)
 
 	LAPS incremental/storm total snowfall/liquid equivalent accumulation.
 <pre>
@@ -3322,7 +3322,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
 Process: lsm5.exe - Soil Moisture
 
-Author: John Smart (smart@fsl.noaa.gov)
+Author: John Smart (John.R.Smart@noaa.gov)
 
 	LAPS soil moisture and snow cover
 <pre>
@@ -3347,7 +3347,7 @@ Source directory: laps/src/soil
 ------ 3.3.9 ---------------------BALANCE------------------------------------
 
 Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
-     (author: John McGinley/John Smart/John Snook - smart@fsl.noaa.gov)
+     (author: John McGinley/John Smart/John Snook - John.R.Smart@noaa.gov)
 
         LAPS quasi-geostrophic balance of height and wind with temp adjustment.
         Cloud fields are now balanced with the other fields.
@@ -3522,7 +3522,7 @@ Source directory: 'laps/src/lapsprep'
 -------  5.0 --  LAPS Output Variables and netCDF File Organization -----------
 
 LAPS Variables and netCDF File Organization
-        (author: Linda Wharton - wharton@fsl.noaa.gov)
+        (author: Linda Wharton - Linda.S.Wharton)
 
 LAPS output is written in NetCDF format as summarized below. Each file 
 extension goes into a separate directory under '$LAPS_DATA_ROOT/lapsprd/'.
