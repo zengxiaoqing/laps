@@ -22,6 +22,7 @@
          2.2.2 ..................  Running Configure
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
+               2.2.4.1 ............... Creating multiple data domains
          2.2.5 ..................  Untarring the geography databases
          2.2.6 ..................  Setting Runtime Parameters
          2.2.7 ..................  Running the Localization
@@ -314,7 +315,7 @@
      of disk space, this will vary depending on domain size and purge 
      interval (more on this later).  You can also separate the data 
      (read/write) from the binary executables, (i.e. /bin, /etc - read only) 
-     using the --datadir option. The use of the --prefix and/or --datadir 
+     using the --datadir option.  The use of the --prefix and --datadir 
      options is recommended to make it easier to add multiple domains and to 
      update your source code. 
 
@@ -371,6 +372,17 @@
      any GNU site. 
 
 
+                --- 2.2.4.1 Creating multiple data domains ---
+
+     If you intend to run multiple data domains you will want to use the 
+     --datadir option to configure when installing the first one 
+     (see 2.2.2 above).  Then, for each additional domain you wish to 
+     create, run 
+     make DATAROOT=/data_disk/laps mkdatadirs
+     where /data_disk/laps is replaced with a unique directory name.  
+     Then follow the setup and localization steps below.
+
+     
             ----   2.2.5  Untarring the geography databases  ---
 
      Next untar the 'laps_terrain.tar.gz' file anywhere that is convenient
@@ -401,19 +413,21 @@
      the localization. More details on 'nest7grid.parms' and other parameter 
      files are discussed in subsequent parts of Section 2. 
 
-     If you are working with a non-separated data directory (i.e. in 
-     'laps_root/data/static', you can simply edit the parameter files that
-     are already there to tailor LAPS for your domain.
+     In most cases, you can simply edit the parameter files that are already
+     there to tailor LAPS for your domain.
 
-     If you are working in a separated data directory, you need only to 
-     set up those runtime parameter files with parameters that are unique 
-     to the domain(s) (e.g. map projection parameters, data paths). The 
-     remaining parameters are automatically merged in from the 
-     'laps_root/data/static' directory tree by the localization script. 
+     If you are working in a separated data directory, you have the option
+     of setting up those runtime parameter files with only those parameters 
+     that are unique to the domain(s) (e.g. map projection parameters,
+     data paths). The remaining parameters are automatically merged in from
+     the 'laps_root/data/static' directory tree by the localization script. 
      As an example, 'nest7grid.parms' only needs to contain the subset of 
      parameters that are unique to your domain(s). The rest can be 
      omitted from the file; they are automatically added in as a result of 
      the merging operation performed within the localization (next step).
+     This "template" procedure provides an end result equivalent to that 
+     from the previous paragraph and is described to provide an alternative
+     method of modifying the parameters.
 
 
                 ----   2.2.7  Running the Localization ---
@@ -422,21 +436,15 @@
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
      other runtime parameter files. Other subdirectories under 'data' are 
      also created if they're not already there. Shown below is an example of 
-     running the localization for a particular laps domain. Note that 'make' 
-     will run the 'etc/laps_localization.pl' script as follows: 
+     running the localization for a particular laps domain. 
 
-     $ cd (laps_root)
-     $ make DATAROOT=/data/fxa/laps/data localize
+     $ cd (laps_root)/etc
+     $ perl laps_localization.pl --dataroot=/data/fxa/laps/data 
 
-     The localization involves several operations. This includes the creation
-     of the 'data' directory tree if needed. The parameter files are then 
+     The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
      in the 'cdl' files are also adjusted. Then several executable programs are
      run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
-
-     If you have multiple domains, 'make' can be run for each domain with
-     different values of 'DATAROOT'. 
-
 
                   ---  2.3    Raw data ingest   ---
 
@@ -1313,7 +1321,7 @@ April 1996
    is run according to the flow therein, the necessary inputs will be 
    available. 
 
-------- 3.1  ---------------  LOCALIZATION PROCESSES-----------------------
+------- 3.1  ---------------  Localization Processes-----------------------
 
 ------ 3.1.1 ------ Gridgen_model (static.nest7grid generation) ---------------
 
