@@ -73,8 +73,6 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
 
         character*6 staname
         character*1 submode
-        character*6 pltc2_name
-        data pltc2_name/'PLTC2 '/
 
         character*100 fnam_in
         character*80 dir_in
@@ -150,15 +148,6 @@ C
                 write(6,*)'bad set_error ',status
                 return
         endif
-C
-C       Open an output file.
-C
-        ext = 'pro'
-        call open_lapsprd_file(1,i4time,ext,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error opening product file',ext
-            return
-        endif
 
         outfile = filename13(i4time,'pro')
         asc9_tim = outfile(1:9)
@@ -214,7 +203,8 @@ C           Determine file format by looking at the file name convention
      1                         ,c_filenames,max_files,istatus)
             if(istatus .ne. 1 .or. numoffiles .eq. 0)then
                 write(6,*)' Error calling get_file_names'
-                stop
+                istatus = 0
+                return
             endif
             ipos = len_dir_in + 9
             c1_char = c_filenames(1)(ipos:ipos)
@@ -303,10 +293,17 @@ C       Errors -2 through -6 are from PROF_CDF routines and are explained in
 C       the documentation for each PROF_CDF routine.
 C
         if(status.ne.0)then
-            write(6,*)'bad open ',status
+            write(6,*)' Warning: bad open ',status
             return
         endif
-
+C
+C       Open an output file.
+        ext = 'pro'
+        call open_lapsprd_file(1,i4time,ext,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error opening product file',ext
+            return
+        endif
 
 !       Get the number of levels from the NetCDF file
         varid = NCDID(cdfid,'level',status)
@@ -315,7 +312,7 @@ C
         write(6,*)' # of levels = ',n_levels
 
         if(n_levels .gt. max_levels)then
-            write(6,*)' Too many levels in the data'
+            write(6,*)' Error: too many levels in the data'
             istatus = 0
             return
         endif
@@ -357,7 +354,7 @@ C
                 write(6,*)prof_name(ista),' not found'
                 goto 900
             else
-                write(6,*)'bad pressure read ',status
+                write(6,*)' Warning: bad pressure read ',status
                 return
             endif
         endif
@@ -367,7 +364,7 @@ C
         CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat,sta
      1tus)
         if(status.ne.0)then
-                write(6,*)'bad lat read ',status
+                write(6,*)' Warning: bad lat read ',status
                 return
         endif
         write(6,*)
@@ -376,7 +373,7 @@ C
         CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon,sta
      1tus)
         if(status.ne.0)then
-                write(6,*)'bad lon read ',status
+                write(6,*)' Warning: bad lon read ',status
                 return
         endif
         write(6,*)
@@ -390,7 +387,7 @@ C
             CALL PROF_CDF_READ
      1          (cdfid,prof_name(ista),0,'staElev',0,elev,status)
             if(status.ne.0)then
-                write(6,*)'bad elev read ',status
+                write(6,*)' Warning: bad elev read ',status
                 return
             endif
             write(6,*)
@@ -427,14 +424,14 @@ C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'uComponent',0,
      1                                             u,status)
             if(status.ne.0)then
-                write(6,*)'bad uComponent read ',status
+                write(6,*)' Warning: bad uComponent read ',status
                 return
             endif
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'vComponent',0,
      1                              v,status)
             if(status.ne.0)then
-                write(6,*)'bad vComponent read ',status
+                write(6,*)' Warning: bad vComponent read ',status
                 return
             endif
 C
@@ -444,7 +441,7 @@ C
                 CALL PROF_CDF_READ(cdfid,prof_name(ista),0
      $                     ,'uvQualityCode',0,c1_qc_flag,status)
                 if(status.ne.0)then
-                    write(6,*)'bad qualityCode read ',status
+                    write(6,*)' Warning: bad qualityCode read ',status       
                     return
                 endif
 
@@ -452,7 +449,7 @@ C
                 CALL PROF_CDF_READ(cdfid,prof_name(ista),0
      $                     ,'uvQualityCode',0,i4_qc_flag,status)
                 if(status.ne.0)then
-                    write(6,*)'bad qualityCode read ',status
+                    write(6,*)' Warning: bad qualityCode read ',status
                     return
                 endif
 
@@ -464,7 +461,7 @@ C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
      $                     level,status)
             if(status.ne.0)then
-                write(6,*)'bad level read ',status
+                write(6,*)' Warning: bad level read ',status
                 return
             endif
 C
@@ -566,7 +563,7 @@ C       a time.  The CDFID's are what indicate which file is which.
 C
         CALL PROF_CDF_CLOSE(cdfid,status)
         if(status.ne.0)then
-                write(6,*)'bad close ',status
+                write(6,*)' Warning: bad close ',status
         endif
 C
         return

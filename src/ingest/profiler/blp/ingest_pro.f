@@ -38,19 +38,8 @@ cdis
         call get_systime(i4time,a9_time,istatus)
         if(istatus .ne. 1)go to 999
 
-        if(i4time .eq. (i4time / 3600) * 3600)then
-            call get_grid_dim_xy(NX_L,NY_L,istatus)
-            if (istatus .ne. 1) then
-               write (6,*) 'Error getting horizontal domain dimensions'
-               go to 999
-            endif
-            call ingest_blppro(i4time,NX_L,NY_L,j_status)
-
-        else
-            call ingest_blppro(i4time,NX_L,NY_L,j_status)
-!           write(6,*)' Not on the hour, no blp profiler ingest run'    
-
-        endif
+        write(6,*)' This program no longer does anything, '
+     1           ,'it is being removed'
 
  999    continue
 

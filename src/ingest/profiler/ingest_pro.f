@@ -38,18 +38,25 @@ cdis
         call get_systime(i4time,a9_time,istatus)
         if(istatus .ne. 1)go to 999
 
+        call get_grid_dim_xy(NX_L,NY_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting horizontal domain dimensions'
+           go to 999
+        endif
+
         if(i4time .eq. (i4time / 3600) * 3600)then
-            call get_grid_dim_xy(NX_L,NY_L,istatus)
-            if (istatus .ne. 1) then
-               write (6,*) 'Error getting horizontal domain dimensions'
-               go to 999
-            endif
+            write(6,*)
+            write(6,*)' Running WPDN profiler ingest'
             call ingest_pro(i4time,NX_L,NY_L,j_status)
 
         else
-            write(6,*)' Not on the hour, no profiler ingest run'
+            write(6,*)' Not on the hour, no WPDN profiler ingest run'       
 
         endif
+
+        write(6,*)
+        write(6,*)' Running BLP profiler ingest'
+        call ingest_blppro(i4time,NX_L,NY_L,j_status)
 
  999    continue
 

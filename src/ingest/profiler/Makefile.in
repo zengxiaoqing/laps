@@ -45,7 +45,8 @@ INSTALL=@INSTALL@
 # Define all source code to be compiled and placed in local library.
 
 SRC=ingest_pro.f \
-    ingest_sub_pro.f
+    ingest_sub_pro.f \
+    blp/ingest_sub_blppro.f
 
 
 all: exe
