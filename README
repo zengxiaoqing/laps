@@ -1751,13 +1751,14 @@ since 3 layers are routinely available from NESDIS.
    To see how well LAPS is running, check if output files are being placed in 
    the various 'lapsprd' subdirectories. A graphical product monitor that can 
    help with this is available in 'etc/laps_monitor.pl'. This script may need 
-   some simple editing to suit your needs (e.g. to specify the $LAPS_DATA_ROOT).
-   The monitor script writes HTML output to 'stdout'. This HTML output, if 
-   routed to a file or hooked up to a Web server, can be viewed with a browser.
-   You can click on http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi
-   to see an example of the monitor output. Green means optimum product 
-   continuity, red means the product is failing to generate, yellow means it is
-   generating OK now but has failed in the past.
+   some simple editing to suit your needs (e.g. to specify the 
+   $LAPS_DATA_ROOT[s]). The monitor script writes HTML output to 'stdout'. This
+   HTML output, if routed to a file or hooked up to a Web server, can be viewed
+   with a browser. You can click on 
+   http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi to see an example of the 
+   monitor output. Green means optimum product continuity, red means the 
+   product is failing to generate, yellow means it is generating OK now but has
+   failed in the past.
 
    Check the log files in the 'log' directory for occurrences of the string
    'error' and 'warning'. The errors are generally more significant.
