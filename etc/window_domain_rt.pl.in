@@ -299,11 +299,12 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
 }
 
+my @filelist;
 if( defined($LAPS_TEMPLATE) ){
     if( -e $LAPS_TEMPLATE ){
         print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
         opendir(TEMPDIR, $LAPS_TEMPLATE);
-        my @filelist = readdir TEMPDIR;
+        @filelist = readdir TEMPDIR;
         closedir TEMPDIR;
         foreach (@filelist){
            if( ! /^\./){
@@ -419,9 +420,20 @@ if( $restore_files eq "true" ) {
     exit;
 }
 
+my $success;
 if( -e "$LAPS_DATA_ROOT/static\_save"){
     print "removing $LAPS_DATA_ROOT/static\_save\n";
-    system("rm -rf $LAPS_DATA_ROOT/static\_save");
+    $success=system("rm -rf $LAPS_DATA_ROOT/static\_save");
+    if($success != 0){
+       print "Failed to remove $LAPS_DATA_ROOT/static\_save\n";
+       opendir(TEMPDIR, "$LAPS_DATA_ROOT/static\_save");
+       my @filelist = readdir TEMPDIR;
+       closedir TEMPDIR;
+       foreach (@filelist){
+          print "$LAPS_DATA_ROOT/static/$_\n";
+       }
+
+    }
 }
 if( -e "$LAPS_DATA_ROOT/cdl\_save"){
     print "removing $LAPS_DATA_ROOT/cdl\_save\n";
