@@ -32,8 +32,12 @@ dnl guess arch if not set by user
 dnl
 AC_INIT_ARCH($arch)
 # AC_PROG_CC
-AC_CHECK_PROGS(CC, cc xlc xlC gcc,,$PATH)
 
+dnl guess c compiler if not set by user
+if ! test -n "$CC" 
+then
+  AC_CHECK_PROGS(CC, cc xlc xlC gcc,,$PATH)
+fi
 dnl
 dnl Find path to netcdf ***required by LAPS***
 dnl
@@ -50,6 +54,7 @@ dnl Find path to csh  ***required by LAPS***
 dnl
 AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
+
 dnl FFLAGS=" "
 dnl OPTIMIZE="-O"
 dnl CFLAGS=" "
@@ -72,10 +77,33 @@ then
   FFLAGS="-native -xl -i4 -fnonstd"
   OPTIMIZE="-O"
 fi
-
-AC_PROG_FC
+if !test "$FC"
+then
+  AC_PROG_FC
+fi
 AC_FC_CPP
 AC_FC_INC
+dnl 
+dnl override presets with user input if present
+if test -n "$user_cflags"
+then
+  CFLAGS="$user_cflags"
+fi
+if test -n "$user_cflags"
+then
+  CFLAGS="$user_cflags"
+fi
+if test -n "$user_fflags"
+then
+  FFLAGS="$user_fflags"
+fi
+
+if test -n "$user_optimize"
+then
+  OPTIMIZE="$user_optimize"
+fi
+
+
 if test $ac_fc_inc_val -eq 0
 then
   F77INC="util/f77inc.in"
@@ -195,6 +223,7 @@ AC_OUTPUT(src/lib/Makefile
           src/wind/Makefile
           src/WFO/post/Makefile
           util/Makefile
+          util/cronfile
           Makefile
           etc/run_lvd_driver.pl
           etc/run_vrc_driver.pl
@@ -203,8 +232,8 @@ AC_OUTPUT(src/lib/Makefile
           etc/sched.pl
 	  etc/laps_localization.pl
           etc/install_lvd.csh
-          etc/install_vrc.csh
-          etc/update_nav_file.csh)
+          etc/update_nav_file.csh
+          etc/wfo_post.pl)
 
 
 

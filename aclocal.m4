@@ -169,36 +169,23 @@ Configuration:
   --no-create             do not create output files
   --quiet, --silent       do not print \`checking...' messages
   --version               print the version of autoconf that created configure
+Compilers:
+  --cc=CC                 name of the C compiler to use [guessed]
+  --cflags=CFLAGS         options to the C compiler [preset based on arch]
+  --fc=f90                name of the Fortran compiler to use [guessed]
+  --fflags=FFLAGS         options to the Fortran compiler [preset based on arch]
+  --optimization=OPT      optimization options passed to both C and fortran compilers  
+  
 Directory and file names:
-  --prefix=PREFIX         install architecture-independent files in PREFIX
+  --prefix=PREFIX         install LAPS files in PREFIX
                           [$ac_default_prefix]
-  --exec-prefix=EPREFIX   install architecture-dependent files in EPREFIX
-                          [same as prefix]
-  --bindir=DIR            user executables in DIR [EPREFIX/bin]
-  --sbindir=DIR           system admin executables in DIR [EPREFIX/sbin]
-  --libexecdir=DIR        program executables in DIR [EPREFIX/libexec]
   --datadir=DIR           LAPS output data in DIR
                           [PREFIX/data]
-  --sysconfdir=DIR        read-only single-machine data in DIR [PREFIX/etc]
-  --sharedstatedir=DIR    modifiable architecture-independent data in DIR
-                          [PREFIX/com]
-  --localstatedir=DIR     modifiable single-machine data in DIR [PREFIX/var]
-  --libdir=DIR            object code libraries in DIR [EPREFIX/lib]
-  --includedir=DIR        C header files in DIR [PREFIX/include]
-  --oldincludedir=DIR     C header files for non-gcc in DIR [/usr/include]
-  --infodir=DIR           info documentation in DIR [PREFIX/info]
-  --mandir=DIR            man documentation in DIR [PREFIX/man]
-  --srcdir=DIR            find the sources in DIR [configure dir or ..]
-  --program-prefix=PREFIX prepend PREFIX to installed program names
-  --program-suffix=SUFFIX append SUFFIX to installed program names
-  --program-transform-name=PROGRAM
-                          run sed PROGRAM on installed program names
 EOF
     cat << EOF
 Host type:
   --arch=ARCH             configure for building on ARCH [guessed]
 Features and packages:
-  --ncargraphics=NCARG    path to ncar graphics package (optional) [guessed]
   --netcdf=NETCDF         path to netcdf package (required) [guessed]
 changequote([, ])dnl
 EOF
@@ -212,6 +199,25 @@ EOF
   -arch=* | --arch=* | --arc=* | --ar=* | --a=*)
     arch="$ac_optarg" ;;
   
+  -cc | --cc)
+    ac_prec=cc ;;
+  -cc=* | --cc=*)
+    CC="$ac_optarg" ;;
+
+  -cflags | --cflags | --cflag | --cfla | --cfl | --cf)
+    ac_prec=cflags ;;
+  -cflags=* | --cflags=* | --cflag=* | --cfla=* | --cfl=* | --cf=*)
+    user_cflags="$ac_optarg" ;;
+
+  -fc | --fc)
+    ac_prec=fc ;;
+  -fc=* | --fc=*)
+    FC="$ac_optarg" ;;
+
+  -fflags | --fflags | --fflag | --ffla | --ffl | --ff)
+    ac_prec=fflags ;;
+  -fflags=* | --fflags=* | --fflag=* | --ffla=* | --ffl=* | --ff=*)
+    user_flags="$ac_optarg" ;;
 
   -includedir | --includedir | --includedi | --included | --include \
   | --includ | --inclu | --incl | --inc)
@@ -272,6 +278,15 @@ EOF
   -no-recursion | --no-recursion | --no-recursio | --no-recursi \
   | --no-recurs | --no-recur | --no-recu | --no-rec | --no-re | --no-r)
     no_recursion=yes ;;
+
+  -optimization | --optimization | --optimizatio | --optimizati \
+  | --optimizat | --optimiza | --optimiz | --optimi | --optim \
+  | --opti | --opt | --op | --o)
+    ac_prev=optimization ;;
+  -optimization=* | --optimization=* | --optimizatio=* | --optimizati=* \
+  | --optimizat=* | --optimiza=* | --optimiz=* | --optimi=* | --optim=* \
+  | --opti=* | --opt=* | --op=* | --o=*)
+    user_optimize="$ac_optarg" ;;	
 
   -prefix | --prefix | --prefi | --pref | --pre | --pr | --p)
     ac_prev=prefix ;;
