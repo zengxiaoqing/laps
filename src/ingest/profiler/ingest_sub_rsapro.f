@@ -45,7 +45,7 @@
         include 'netcdf.inc'
         character*(MAXNCNAM) dimname 
 
-        character*13 filename13,outfile
+        character*13 a13_time,filename13,cvt_i4time_wfo_fname13,outfile       
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
@@ -76,9 +76,6 @@
             return
         endif
 
-        write(6,*)' return from ingest_rsapro'
-        return
-
         outfile = filename13(i4time_sys,'pro')
         asc9_tim = outfile(1:9)
 
@@ -98,10 +95,10 @@
 
 C       READ IN THE RAW PROFILER DATA
 
-!       call cvt_wfo_fname()
-!       fnam_in = dir_in(1:len_dir_in)//asc9_tim//'0100o'
+        a13_time = cvt_i4time_wfo_fname13(i4time_sys)
+        fnam_in = dir_in(1:len_dir_in)//a13_time
         call s_len(fnam_in,len_fnam_in)
-        write(6,*)fnam_in(1:len_fnam_in)
+        write(6,*)' file = ',fnam_in(1:len_fnam_in)
 
 !       call read_prof_rsa(fnam_in(1:len_fnam_in)                      ! I
 !     1                   ,MAX_PROFILES,MAX_LEVELS                     ! I
