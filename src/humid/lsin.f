@@ -71,8 +71,8 @@ c               putting the data below ground.
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 c input variables
 
@@ -95,10 +95,10 @@ c input variables
 c  internal variables with lapsparms.inc dependence
 
         real*4
-     1  t(igrid,jgrid),!surface temperature k
-     1  pu(igrid,jgrid),!pressure if top of boundary layer
-     1  td(igrid,jgrid),!dew point temperature of surf. k -> c
-     1  blsh(igrid,jgrid) !boundary layer specific humidity
+     1  t(ii,jj),!surface temperature k
+     1  pu(ii,jj),!pressure if top of boundary layer
+     1  td(ii,jj),!dew point temperature of surf. k -> c
+     1  blsh(ii,jj) !boundary layer specific humidity
 
 
 c  normal internal variables

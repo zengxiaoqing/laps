@@ -100,11 +100,11 @@ c  internal variables
       data rhext /'lh3'/
       integer len
 
-      call get_directory(extpw,dirpw,len)
-      call get_directory(ext3,dir3,len)
-      call get_directory(extlt1,dirlt1,len)
+c      call get_directory(extpw,dirpw,len)
+c      call get_directory(ext3,dir3,len)
+c      call get_directory(extlt1,dirlt1,len)
       call get_directory(ext,dir,len)
-      call get_directory(rhext,rhdir,len)
+c      call get_directory(rhext,rhdir,len)
 
 
         kmax = kk
@@ -127,6 +127,8 @@ c  internal variables
      1  comment,
      1  data,
      1  istatus)
+
+        print*, ext, istatus, dir(1:len), len
 
         if(istatus.ne.1) then
         istatus = 134316524
