@@ -1,0 +1,179 @@
+#! /bin/ksh -
+#------------------------------------------------------------------------------
+#  NOAA/ERL
+#  Forecast Systems Laboratory
+#  Facility Division
+#  NIMBUS Software
+#
+#  This software and its documentation are in the public domain and are
+#  furnished "as is".  The United States government, its instrumentalities,
+#  officers, employees, and agents make no warranty, express or implied,
+#  as to the usefulness of the software and documentation for any purpose.
+#  They assume no responsibility (1) for the use of the software and
+#  documentation; or (2) to provide technical support to users.
+#
+#  SendFile2LDM
+#
+#  This Korn shell script injects a file into a local LDM data queue using
+#  fsl_pqinsert.  Data file may optionally be compressed prior to distribution.
+#
+#  This script is intended to be run either manually or by the NIMBUS 
+#  Executioner.  Two arguments are required: key string and the full file
+#  name.  In addition, Unix compression and a logfile path may be specified.  
+#
+#  NOTE: When the Executioner is configured to run this script, -f
+#  must be given as the last argument.  The variable filename is passed in
+#  by the Executioner.
+#
+#  usage:  SendFile2LDM [-c] [-l logDir] [-t feedType] \
+#             -k keyPrefix [-d] [-D] -f sourceFileName
+#
+#  11/24/95  Bob Lipschutz     Version 1.1     Original version
+#   5/27/97  B.L.              Version 1.2     Added FEEDTYPE option
+#   9/17/97  Glen Pankow       Version 1.3     Now uses fsl_pqinsert instead of
+#                                              ldmsend; better key construction.
+#  11/03/97  Glen Pankow       Version 1.4     Quoting fix.
+#  11/07/97  Glen Pankow       Version 1.5     Backward-compatiblity fix.
+#------------------------------------------------------------------------------
+# $Id$
+
+#set -xv
+
+cmd=`basename $0`
+usage1="Usage: $cmd [-c (compress flag)] [-l logDir] [-t feedType] -k keyPrefix \\"
+usage2="\t\040\040\040[-d (current date)] [-D (date from sourceFileName)] -f sourceFileName"
+pqinsertpath="/awips/fxa/etc/new"
+
+#-----------------------------------
+# Sort out the command line options
+#-----------------------------------
+compressFlag=false
+feedType=FSL
+useCurrDate=0
+useFileDate=0
+while getopts cl:t:k:dDf: option
+do
+    case "$option"
+    in
+        c)      compressFlag=true;;
+        t)      feedType=$OPTARG;;
+        l)      logDir=$OPTARG;;
+        k)      keyPrefix=$OPTARG;;
+        d)      useCurrDate=1;;
+        D)      useFileDate=1;;
+        f)      sourceName=$OPTARG;;
+        \?)     echo $usage1
+                echo $usage2
+                exit 1;;
+    esac
+done
+
+if [ \( -z "$sourceName" \) -o \( -z "$keyPrefix" \)  ]
+then
+    echo "Missing arguments (-k and -f required)..."
+    echo $usage1
+    echo $usage2
+    exit 1
+fi   
+
+#------------------------------------------------------------------------------
+# Create logfile.  Cd to /tmp as well (in case we have to do compression).
+#------------------------------------------------------------------------------
+
+cd /tmp
+if [ -z "$logDir" ]
+then
+    logFile=/tmp/$cmd.$$
+else
+    time=`date +'%y%j%H%M'`
+    logFile=$logDir/$time.$$
+fi
+
+touch $logFile
+echo $0 $* | tee -a $logFile
+echo "     Start time: `date` " | tee -a $logFile
+
+
+#------------------------------------------------------------------------------
+# Grab file name from arguments
+#------------------------------------------------------------------------------
+fileName=`basename $sourceName`
+
+echo "Sending file" $sourceName to local queue | tee -a $logFile
+
+
+#------------------------------------------------------------------------------
+# Process the file... bail out if error
+#------------------------------------------------------------------------------
+if [ -f $sourceName ]
+then
+    #----------------------------------------------------------------------
+    # Do some compression if desired.
+    #----------------------------------------------------------------------
+    ls -la $sourceName | tee -a $logFile
+    if [ $compressFlag = true ]
+    then
+        echo "Compressing file... " | tee -a $logFile
+        fileName="$fileName.Z"
+        if [ -f $fileName ]
+        then
+            rm -f $fileName 
+        fi
+        compress -c -f $sourceName > $fileName
+        ls -la $fileName | tee -a $logFile
+        sourceName=$fileName
+    fi
+
+    #----------------------------------------------------------------------
+    # Construct the full LDM key
+    #----------------------------------------------------------------------
+    if [ $useCurrDate -eq 1 ]; then
+        # echo "using curr date"
+        timestamp=`date +'%Y%j%H%M'`
+        fullKey="$keyPrefix.$timestamp.*"
+    elif [ $useFileDate -eq 1 ]; then
+        # echo "using file name time date"
+        timestamp=`extractDate -srcFormat '%y%j%H%M' -outFormat '%Y%j%H%M' -source $sourceName`
+        if [ $? -ne 0 ]; then
+            timestamp=`date +'%Y%j%H%M'`
+        fi
+        fullKey="$keyPrefix.$timestamp.*"
+    else
+        # echo "using source file name"
+        fullKey="$keyPrefix.$fileName"
+    fi
+    # echo "fullKey =" $fullKey
+
+    #----------------------------------------------------------------------
+    # Send file to LDM local queue
+    #----------------------------------------------------------------------
+    # command="fsl_pqinsert -v -f $feedType -k '"$fullKey"' $sourceName"
+    command="$pqinsertpath/fsl_pqinsert -v -f $feedType -k $fullKey $sourceName"
+    echo $command | tee -a $logFile
+    $command >> $logFile 2>&1
+    if [ $? -ne 0 ]
+    then
+        echo "Error: unable to send file to local queue" | tee -a $logFile
+    fi
+
+else
+    echo "Error $?: file $sourceName not found" | tee -a $logFile
+fi
+
+
+#------------------------------------------------------------------------------
+# wrap up and quit.
+#------------------------------------------------------------------------------
+if [ $compressFlag = true ]
+then
+    rm -f $fileName
+fi
+
+# if [ -z "$logDir" ]
+# then
+#     rm -f $logFile
+# fi
+
+exit 0
+
+

@@ -1,0 +1,108 @@
+#!@PERL@
+# @configure_input@
+#
+# Copyright (C) 1999  James P. Edwards
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+use strict;
+use English;
+my $LAPSROOT=shift;
+my $LAPS_DATA_ROOT=shift ||
+    die "LAPSROOT and LAPS_DATA_ROOT are required inputs";
+require "$LAPSROOT/etc/run_sys.pm";
+require "$LAPSROOT/etc/fxa.pm";
+
+
+my $root = "$LAPS_DATA_ROOT/lapsprd";
+my $feed="FSL2";
+my $sendscript = "$LAPSROOT/etc/SendFile2LDM";
+my @fext=("fua","fsf");
+my $key = "LAPB.netCDF.B52.SFM.";
+
+
+if(`hostname` =~ /b52/){
+    if($LAPS_DATA_ROOT=~/data1/){
+	$key.="G1.";
+    }else{
+	$key.="G2.";
+    }
+}
+
+my $fxa_sys =  &Get_env'fxa; #'
+my($LAPS_LOG_PATH);
+if($fxa_sys!=0){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
+
+my $pid;
+if(-e "/tmp/lock.$0"){
+  open(LOCK,"/tmp/lock.$0");
+  $pid = <LOCK>;
+  close(LOCK);
+#
+# A lock file exists, if the pid is active stop, otherwise the 
+# lock file is bogus - overwrite it and continue.
+#
+  if(grep(/$pid/,`ps hr $pid`)){
+    die "ERROR: $0 already running with PID $pid";
+  }
+}
+open(LOCK,">/tmp/lock.$0");
+print LOCK $$;
+close(LOCK);
+
+foreach(@fext){
+    &sendfile($root,$_,$feed,$key.$_,$sendscript, $LAPS_LOG_PATH);
+}
+unlink "/tmp/lock.$0";
+
+exit;
+
+sub sendfile{
+  my($root,$fext,$feed,$key, $sendscript, $LAPS_LOG_PATH) = @_;
+#  my $key="LAPS.$fext";
+#  print "$root/$fext\n";
+  opendir(DDIR,"$root/$fext") || 
+    die "ERROR: Directory not found: $root/$fext";
+  my @flist = grep(/^\d{9,13}\.$fext/,readdir(DDIR));
+#  my @flist = readdir(DDIR);
+  closedir(DDIR);
+
+  my $tmpfile = "/tmp/sendLAPS$key";
+  my $prevtime = -M "$tmpfile";
+  print "Looking for files younger than $prevtime\n";
+  open(TMP,">$tmpfile") || 
+    die "Could not open $tmpfile to append";
+
+  foreach(@flist){
+#
+#  Only process files younger than the /tmp file
+#
+#    print TMP "$root/$fext/$_\n" if(-M "$root/$fext/$_" < $prevtime);
+    next if(-M "$root/$fext/$_" > $prevtime);
+    print "Found file $_\n"; 
+    
+    system("$sendscript -k $key -t $feed -l $LAPS_LOG_PATH -f $root/$fext/$_");
+    
+  }
+#  print TMP gmtime;
+  close(TMP);
+
+}
