@@ -66,8 +66,8 @@ MODULE wfoprep_wrf
   REAL, PARAMETER,PRIVATE    :: slp_level = 201300.0
   REAL, PARAMETER,PRIVATE    :: sfc_level = 200100.0
   PUBLIC output_wrf_basic, output_wrf_sfc
-  INTEGER, PARAMETER, PUBLIC   :: MM5MODE_NEW = 1
-  INTEGER, PARAMETER, PUBLIC   :: MM5MODE_APPEND = 2
+  INTEGER, PARAMETER, PUBLIC   :: WRFMODE_NEW = 1
+  INTEGER, PARAMETER, PUBLIC   :: WRFMODE_APPEND = 2
   CHARACTER(LEN=32)   :: source
   CHARACTER(LEN=8),PARAMETER    :: knownloc = 'SWCORNER'
   LOGICAL, PARAMETER            :: verbose = .false.
@@ -131,13 +131,13 @@ CONTAINS
 
      ! Open the file, using the mode dependency
      PRINT *, 'Opening file: ', TRIM(outfile)
-     IF (mode .EQ. MM5MODE_NEW) THEN
+     IF (mode .EQ. WRFMODE_NEW) THEN
        OPEN ( FILE   = TRIM(outfile)    , &
          UNIT   = output_unit        , &
          FORM   = 'UNFORMATTED' , &
          STATUS = 'REPLACE'     , &
          ACCESS = 'SEQUENTIAL'    )
-     ELSE IF (mode .EQ. MM5MODE_APPEND) THEN
+     ELSE IF (mode .EQ. WRFMODE_APPEND) THEN
        OPEN ( FILE   = TRIM(outfile)    , &
          UNIT   = output_unit        , &
          FORM   = 'UNFORMATTED' , &
@@ -145,7 +145,7 @@ CONTAINS
          ACCESS = 'SEQUENTIAL', &
          POSITION = 'APPEND'    ) 
      ELSE 
-       PRINT *, 'Uknown open mode for MM5v3 Output: ',mode
+       PRINT *, 'Uknown open mode for WRFSI Output: ',mode
        istatus = 0
        RETURN
      ENDIF
@@ -310,13 +310,13 @@ CONTAINS
   
     ! Open the file, using the mode dependency
     PRINT *, 'Opening file: ', TRIM(outfile)
-    IF (mode .EQ. MM5MODE_NEW) THEN
+    IF (mode .EQ. WRFMODE_NEW) THEN
       OPEN ( FILE   = TRIM(outfile)    , &
              UNIT   = output_unit        , &
              FORM   = 'UNFORMATTED' , &
              STATUS = 'REPLACE'     , &
              ACCESS = 'SEQUENTIAL'    )
-    ELSE IF (mode .EQ. MM5MODE_APPEND) THEN
+    ELSE IF (mode .EQ. WRFMODE_APPEND) THEN
       OPEN ( FILE   = TRIM(outfile)    , &
              UNIT   = output_unit        , &
              FORM   = 'UNFORMATTED' , &
@@ -324,7 +324,7 @@ CONTAINS
              ACCESS = 'SEQUENTIAL', &
              POSITION = 'APPEND'    )
     ELSE
-      PRINT *, 'Uknown open mode for MM5v3 Output: ',mode
+      PRINT *, 'Uknown open mode for WRFSI Output: ',mode
       istatus = 0
       RETURN
     ENDIF                  

@@ -828,18 +828,18 @@ PROGRAM wfoprep
                np_ht,np_t,np_u,np_v,np_rh, &
                ht_plevels, t_plevels, u_plevels, v_plevels, rh_plevels, &
                z3d, t3d, u3d, v3d, rh3d, slp, topo, &
-               ext_data_path, output_name(m),MM5MODE_NEW,istatus)
+               ext_data_path, output_name(m),WRFMODE_NEW,istatus)
           IF (model_code(m) .EQ. 3) THEN
             PRINT *, 'Writing WRF 2D state variables for i4time =',i4time_valid 
             CALL output_wrf_sfc(i4time_cycle,i4time_valid, proj, &
                tsf, usf, vsf, rhsf, &
-               ext_data_path, output_name(m),MM5MODE_APPEND,istatus)
+               ext_data_path, output_name(m),WRFMODE_APPEND,istatus)
           ENDIF
         ELSE
           PRINT *, 'Writing WRF 2D state variables for i4time =',i4time_valid 
           CALL output_wrf_sfc(i4time_cycle,i4time_valid, proj, &
                tsf, usf, vsf, rhsf,  &
-               ext_data_path, output_name(m), MM5MODE_NEW,istatus)
+               ext_data_path, output_name(m), WRFMODE_NEW,istatus)
         ENDIF                                                                   
       ELSE IF (output_format(1:4).EQ.'rams') THEN
         print *, 'rams output coming soon'
