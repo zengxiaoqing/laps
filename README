@@ -169,7 +169,7 @@
      12-24 hours worth of output data. A similar amount of space is needed
      for the raw input data.
 
-                    ---  2.1.7  Memory Etc. ---
+                    ---  2.1.7  Memory Etc. (ulimit) ---
 
      'ulimit' settings should be placed at 'unlimited' if possible. Memory
      requirements vary for LAPS. As a general guide, 128MB is needed and
