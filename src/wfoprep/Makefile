@@ -36,6 +36,12 @@
 SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
+LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
+           $(SRCROOT)/src/lib/liblaps.a
+
+
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a 
 
 RM=rm -f 
 
@@ -59,14 +65,13 @@ FMOD = module_wfoprep_setup.o  \
 
 all:			$(EXE)
 
-$(EXE):			$(FOBJS) $(FMOD)
-			$(FC) -o $@ $(FOBJS) $(FMOD) $(LAPSLIB) $(BGDATALIB) $(OTHERLIBS)
+$(EXE):			$(FOBJS) $(FMOD) $(LAPSLIBS)
+			$(FC) -o $@ $(FOBJS) $(FMOD) $(LAPSLIBS) $(OTHERLIBS)
 
 debug:	
 	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
- 	"LAPSLIBS	=	$(DBLAPSLIB)" 	\
-	"FFLAGS         =	$(DBFLAGS)"     \
-	"BGDATALIB      =       $(DBBGDATALIB)"	)
+ 	"LAPSLIBS	=	$(DBLAPSLIBS)" 	\
+	"FFLAGS         =	$(DBFLAGS)"
 
 wfoprep.o:		$(FMOD)
 
