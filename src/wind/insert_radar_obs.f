@@ -27,8 +27,13 @@
       real*4   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
       real*4   rheight_radar(max_radars)                             ! Input
       real*4   lat(imax,jmax),lon(imax,jmax)                         ! Input
+
+!     First pass analyzed winds (innovation analysis with non-radar data)
       real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)         ! Input
+
+!     Background winds
       real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
+
       real*4   uobs_diff_spread(imax,jmax,kmax)                      ! I/O
      1        ,vobs_diff_spread(imax,jmax,kmax)
       real*4   wt_p_radar(imax,jmax,kmax)                            ! I/O
@@ -266,9 +271,10 @@ csms$ignore begin
 
           do j = 1,jmax
           do i = 1,imax
-!             Assess which radars have data at this grid point
+
+!             Assess the radars that have data at this grid point
+              n_illuminated = 0
               do i_radar = 1,n_radars
-                  n_illuminated = 0
                   if(vr_obs_fltrd(i,j,i_radar) .ne. r_missing_data
      1                                                             )then       
                       n_illuminated = n_illuminated + 1
@@ -284,7 +290,10 @@ csms$ignore begin
 
               enddo ! i_radar
 
-              call multiwind_noz(u,v,rms,upass1(i,j,k),vpass1(i,j,k)
+              u_bkg_full = upass1(i,j,k) + u_laps_bkg(i,j,k)
+              v_bkg_full = vpass1(i,j,k) + v_laps_bkg(i,j,k)
+
+              call multiwind_noz(u,v,rms,u_bkg_full,v_bkg_full
      1                          ,x(i,j),y(i,j),heights_3d(i,j,k)
      1                          ,n_illuminated,xx2,yy2,ht,vr,rmsmax,ier)       
 
