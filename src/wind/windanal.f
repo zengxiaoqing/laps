@@ -1144,11 +1144,11 @@ csms$ignore begin
         enddo ! i
         enddo ! j
 
-        n_radarobs_tot_fltrd = n_radarobs_tot_fltrd + n_radarobs_lvl_flt
-     1rd
+        n_radarobs_tot_fltrd = n_radarobs_tot_fltrd 
+     1                       + n_radarobs_lvl_fltrd
 
-        write(6,501)k,n_radarobs_lvl_unfltrd,intvl_rad,n_radarobs_lvl_fl
-     1trd
+        write(6,501)k,n_radarobs_lvl_unfltrd,intvl_rad
+     1             ,n_radarobs_lvl_fltrd
 501     format(1x,i3,i6,i7,i9)
 
       enddo ! k
@@ -1166,11 +1166,12 @@ c  convert radar obs into u & v by using tangential component of first pass
       write(6,*)'  i   j   k    df    vr    fgr'
 
       if(l_derived_output)then
-          ext = 'd20'
-          if(i_radar .eq. 1)ext = 'd01'
-          if(i_radar .eq. 2)ext = 'd02'
-          if(i_radar .eq. 3)ext = 'd03'
-          if(i_radar .eq. 4)ext = 'd04'
+          if(i_radar .le. 99)then
+              write(ext,531)i_radar
+ 531          format('d',i2.2)
+          else
+              ext = 'dxx'
+          endif
           call open_lapsprd_file(61,i4time,ext,istatus)
       endif
 
