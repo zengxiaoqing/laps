@@ -87,7 +87,10 @@
 
      Supported UNIX platforms include
 <pre>
-     IBM rs6000      AIX3.25 and AIX4.
+     IBM rs6000      AIX3.25 and AIX4. NFS mounted disks should be mounted with
+                                       NFS version 2 instead of 3.
+                                       'ulimit' settings should be placed at
+                                       'unlimited' if possible.
      HP              HPUX 10.20
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.4               Works using f77 but requires namelist 
@@ -104,16 +107,16 @@
      'http://www.unidata.ucar.edu/packages/netcdf/'
      netcdf 3.3.1 or higher is required.
      Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
-     programs are in your path, so that 'configure' will find them and 
-     provide the laps package with the proper path.  You can also provide the 
-     path to netcdf to 'configure' by using the command line 
-     argument --netcdf=NETCDF 
+     programs are in your path (e.g. 'which ncdump'), so that 'configure' 
+     will find them and provide the laps package with the proper path. You 
+     can also provide the path to netcdf to 'configure' by using the command 
+     line argument --netcdf=NETCDF 
    
                       --- 2.1.2  Perl             ---
 
      The perl package is also required for laps, it is available 
      via internet at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.  
-     Perl 5.003 or higher is required.  
+     Perl 5.003 or higher is required. Check that 'perl' is in your path.
 
                       --- 2.1.3  make             ---
 
@@ -121,7 +124,7 @@
      This is available at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.
      Some vendor provided make utilities may also work, however if you find 
      you are having problems in this area please try installing and using gnu 
-     make.
+     make. Check that 'make' is in your path.
 
                     ---  2.1.4  C Compiler ---
 
@@ -130,7 +133,8 @@
      documentation for your compiler. Some platforms such as Solaris and HPUX 
      do not come with an ANSI compliant C compiler by default.  If you have 
      not purchased that additional product from the vendor, we recommend GNU C
-     available at 'ftp://prep.ai.mit.edu/pub/gnu'.
+     available at 'ftp://prep.ai.mit.edu/pub/gnu'. Check that the C compiler
+     is in your path.
 
                   ---  2.1.5  FORTRAN Compiler ---
 
@@ -140,7 +144,7 @@
      allowing for automatic arrays. LAPS will not work on a strict f77 
      compiler that does not allow automatic arrays. Conversely, we are using
      only a subset of f90 constructs to help ensure compatability with f77
-     compilers.
+     compilers. Check that the FORTRAN compiler is in your path.
 
    
             ---  2.1.6  Plotting / NCAR graphics library (optional)  ---
@@ -158,7 +162,11 @@
      and 'idt'.
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
-     graphics.
+     graphics. Certain environment variables such as $NCARG_PATH and 
+     $NCARG_ROOT may need to be set.
+
+     Lapsplot is built as a special option to make, simply type 
+     'make lapsplot'. It is not built with a plain run of 'make'.
 
      'Lapsplot' can be modified to show political boundaries outside of the 
      U.S. The following data files are relevant from the 'static/ncarg' 
@@ -174,9 +182,35 @@
 
      ------------- 2.2 Installation Procedure Summary ------------------
 
+     To introduce this section, here is a hierarchical listing of some primary 
+     directories and files in the laps tree. These are created/addressed in 
+     various portions of section 2.2 and beyond.
+
+     <pre>
+     /machine_root
+         /geog
+         /laps_root (laps-m-n-o)
+             /src
+                 /ingest
+             /etc
+             /bin
+             /data                  (=$LAPS_DATA_ROOT, can be moved/duplicated)
+                 /lapsprd
+                     /product_list
+                 /log
+                 /static
+                     /nest7grid.parms
+                     /*.nl
+                     /static.nest7grid                     (gridded topography)
+                 /time
+             /testdata                             (optional, can be relocated)
+                 /lapsprd
+                     /product_list
+     </pre>
 
             ----   2.2.1  Untarring the Source Code  ---
 
+     Place the tar file in a directory we can label as 'machine_root'.
      Untar the laps source code using a command like...
      $ zcat laps-m-n-o.tar.gz | tar xf -
  
@@ -234,10 +268,11 @@
                 ----   2.2.4  Running make ---
 
      The next step is to build and install the executables, this can be done 
-     by running 
+     by running... 
+     $ cd (laps_root)
      $ make install 1> make.out 2>&1 
-     from the top level directory.  We recommend using Gnu Make
-     Version 3.74 or later available via ftp from any GNU site. 
+     We recommend using Gnu Make Version 3.74 or later available via ftp from 
+     any GNU site. 
 
 
             ----   2.2.5  Untarring the geography databases  ---
@@ -260,35 +295,41 @@
 
                 --- 2.2.6   Setting Runtime Parameters ---
 
-     Runtime parameter changes (Sec 2.8) may be needed to specify the 
-     domain(s); this includes ingest data path names, grid dimension and
-     location and potentially other aspects of the data processing. 
-     These changes should be made prior to running the localization. The main 
-     parameter files are 'data/static/nest7grid.parms', 'data/static/*.nl', 
-     and 'data/static/*/*.parms'. These should be emplaced and/or modified 
-     within each 'dataroot' directory tree prior to running the localization. 
-     Details on the contents of the 'nest7grid.parms' file are discussed in 
-     subsequent sections. 
+     Runtime parameter changes may be needed to tailor LAPS for your
+     domain(s); this includes ingest and geography data path names, 
+     grid dimension, grid location, and potentially other aspects of the 
+     data processing. These changes should be made prior to running the 
+     localization. The parameter files are 'data/static/nest7grid.parms',
+     'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
+     and/or modified within each 'dataroot' directory tree prior to running 
+     the localization. More details on 'nest7grid.parms' and other parameter 
+     files are discussed in subsequent parts of Section 2. 
 
-     The user needs only to establish those runtime files/parameters that are 
-     unique to the domain (e.g. map projection parameters). The remaining 
-     parameters are automatically merged in from the 'src' directory tree by 
-     the localization script. As an example, you only need to set up the subset
-     of parameters in 'nest7grid.parms' that are unique to your domain. The
-     rest can be omitted from the file; they are automatically added in as
-     a result of the merging operation performed within the localization (see
-     next section). 
+     If you are working with a non-separated data directory (i.e. in 
+     'laps_root/data/static', you can simply edit the parameter files that
+     are already there to tailor LAPS for your domain.
+
+     If you are working in a separated data directory, you need only to 
+     set up those runtime parameter files with parameters that are unique 
+     to the domain(s) (e.g. map projection parameters, data paths). The 
+     remaining parameters are automatically merged in from the 
+     'laps_root/data/static' directory tree by the localization script. 
+     As an example, 'nest7grid.parms' only needs to contain the subset of 
+     parameters that are unique to your domain(s). The rest can be 
+     omitted from the file; they are automatically added in as a result of 
+     the merging operation performed within the localization (next step).
 
 
                 ----   2.2.7  Running the Localization ---
 
-     Finally you can create the static data files and look up tables specific 
+     Finally, you can create the static data files and look up tables specific 
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
      other runtime parameter files. Other subdirectories under 'data' are 
      also created if they're not already there. Shown below is an example of 
      running the localization for a particular laps domain. Note that 'make' 
      will run the 'etc/laps_localization.pl' script as follows: 
 
+     $ cd (laps_root)
      $ make DATAROOT=/data/fxa/laps/data localize
 
      If you have multiple domains, 'make' can be run for each domain with
@@ -519,6 +560,11 @@
      compare them with ours. If sample "raw" files are needed as they appear 
      on FSL's NIMBUS system, they can be obtained directly from FSL's facility
      division at 'http://www-fd.fsl.noaa.gov/'.
+
+     Any runtime errors can be tracked down by recompiling specific analyses
+     with the '-g' option. This can be done by typing 'make debug' in the
+     appropriate directories. Various debuggers can then be used such as
+     'dbx'.
 
                ---  2.6  Modifying Compiler Flags       ---
 
@@ -970,7 +1016,7 @@ April 1996
 
 ------ 2.15 -----Detecting and Reporting Installation Errors-------------------
 
-   To determine how well LAPS was installed, verify that all (34 at last check)
+   To determine how well LAPS was installed, verify that all (33 at last check)
    executables were built OK with no errors in the output of 'make'.
 
    Similarly, check the output of the localization script.
