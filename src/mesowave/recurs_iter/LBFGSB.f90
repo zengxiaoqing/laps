@@ -13,16 +13,11 @@
 INTEGER, PARAMETER :: msave=7
 INTEGER, PARAMETER :: mvar = mx*my*mt
 CHARACTER*60       :: ctask,csave
-DOUBLE PRECISION   :: wk(mvar*(2*msave+4)+ &
-                         12*msave*msave+12*msave)
-DOUBLE PRECISION   :: bdlow(mvar),bdupp(mvar)
+DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) :: &
+	wk,bdlow,bdupp
 DOUBLE PRECISION   :: factr,dsave(29)
-INTEGER            :: iprnt,nbund(mvar),iwrka(3*mvar),isbmn
-LOGICAL            :: isave(44),lsave(4)
-
-! Put them in a common block:
-COMMON /lbfgs/ctask,csave,wk,bdlow,bdupp, &
-              factr,dsave,iprnt,nbund,iwrka, &
-              isave,lsave,isbmn
+INTEGER            :: iprnt,isbmn,isave(44)
+INTEGER,ALLOCATABLE,DIMENSION(:) :: nbund,iwrka
+LOGICAL            :: lsave(4)
 
 !.....End of LBFGS_B declarations.
