@@ -499,7 +499,12 @@
      existence and number of underscores in the C routine names when called by
      FORTRAN routines. Fixes for this may include a combination of changing 
      the number of underscores in the C routines, changing the CPPFLAGS for 
-     LAPS, or changing the FFLAGS for LAPS.
+     LAPS, or changing the FFLAGS for LAPS. For example, with errors linking
+     to "nf" routines, you might rebuild the NetCDF C library with a different 
+     number of underscores and/or adjust the FFLAGS according to the man page 
+     in your FORTRAN compiler. Errors linking to other LAPS C routines could
+     be addressed with adjusting the CCPFLAGS (among FORTRANUNDERSCORE and 
+     FORTRANDOUBLEUNDERSCORE), or again the FFLAGS.
 
                 --- 2.2.3   Ingest Software changes ---
 
