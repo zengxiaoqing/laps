@@ -362,8 +362,12 @@
      prompt>./configure --fc=f90 --fflags="-Bstatic -fixed" -cc=cc
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
-     compiler with 'xlf' using the command line option --fc=xlf... 
-     prompt>./configure --fc=xlf 
+     compiler with 'xlf' using the command line option --fc=xlf with suggested 
+     flags as follows... 
+     prompt>./configure --fc=xlf --fflags=\'-O3 -qstrict \' --cflags=\'-O3 -qstrict\' 
+
+     For SGI platforms, certain flags may be needed. '-mips3' seems to help
+     on IRIX64 v6.2.
 
      A second method of modifying the flags is to edit 
      'src/include/makefile.inc'. If you find that the default compiler flags 
@@ -372,11 +376,7 @@
      running 'configure') in 'src/include/makefile.inc' as this will 
      automatically control the flags used throughout laps. If you find flags 
      that work for your platform and would like us to add them to the defaults
-     in 'configure' please let us know via e-mail. Additional examples are 
-     shown as follows...
-
-     For SGI platforms, certain flags may be needed. '-mips3' seems to help
-     on IRIX64 v6.2.
+     in 'configure' please let us know via e-mail. 
 
                 --- 2.2.3   Ingest Software changes ---
 
@@ -1803,24 +1803,6 @@ Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
 Outputs: (LW3 used by LBA)
 	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
 
-        lst     2d grids        CAPE, CIN, and LI are calculated by lifting
-                                a surface parcel taken from the LAPS surface
-                                T and Td fields, as well as LAPS surface
-                                (terrain following) pressure. LAPS 3-D 
-                                temperatures are also used.
-
-                                CAPE (Convective Available Potential Energy)
-                                    This is a net positive energy, so any
-                                    negative area is subtracted from the 
-                                    positive area.
-
-                                CIN  (Convective Inhibition)
-                                    Negative area in the sounding.
-
-                                LI   (Lifted Index)
-                                    Environmental minus parcel temperature at
-                                    500 mb. 
-
         tmg     inter data      temperature obs used for lapsplot plotting
 </pre>
 Source directory: laps/src/temp
@@ -2193,6 +2175,24 @@ Outputs:
                                 5 is mod   intermittent
                                 6 is heavy intermittent
 
+        lst     2d grids        CAPE, CIN, and LI are calculated by lifting
+                                a surface parcel taken from the LAPS surface
+                                T and Td fields, as well as LAPS surface
+                                (terrain following) pressure. LAPS 3-D 
+                                temperatures are also used.
+
+                                CAPE (Convective Available Potential Energy)
+                                    This is a net positive energy, so any
+                                    negative area is subtracted from the 
+                                    positive area.
+
+                                CIN  (Convective Inhibition)
+                                    Negative area in the sounding.
+
+                                LI   (Lifted Index)
+                                    Environmental minus parcel temperature at
+                                    500 mb. 
+
 	lwm	2d grid		interpolated surface winds
 
 	lhe	2d grid		Helicity (Storm Relative Environmental). This 
@@ -2356,10 +2356,6 @@ Process surface:LSX  U    su       1  Surface wind u
 
 Process temp:   LT1  T3   t	  21  Temperature
 		     HT   z       21  Height
-                LST
-		     LI   li       1  Lifted Index
-		     PBE  pbe      1  Positive Bouyant Energy
-		     NBE  nbe      1  Negative Bouyant Energy
 
 Process accum:	L1S  S01  s1hr     1  Snow Accum Cycle 
 		     STO  stot     1  Snow Accum Storm Tot 
@@ -2411,6 +2407,11 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 
           	LMT  LMT  etop     1  Max Echo Tops
           	     LLR  llr	   1  Low Level Reflectivity
+
+                LST
+		     LI   li       1  Lifted Index
+		     PBE  pbe      1  Positive Bouyant Energy
+		     NBE  nbe      1  Negative Bouyant Energy
 
                 LWM  SU   u        1  Surface wind u
                      SV   v        1  Surface wind v
