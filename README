@@ -196,6 +196,10 @@
      file can be displayed using other NCAR graphics utilities like 'ctrans'
      and 'idt'.
 
+     Lapsplot can be modified to show political boundaries outside of the U.S.
+     The following data files are relevant from the 'static/ncarg' directory: 
+     'continent.dat', 'uscounty.dat', and 'state_from_counties.dat'.
+
      Please note that lapsplot is provided to help you check out how your
      LAPS implementation is working. We do not have any other plotting or 
      visualization packages available with LAPS at this time.
