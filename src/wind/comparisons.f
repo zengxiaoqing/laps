@@ -165,9 +165,9 @@ C********************************************************************
 
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
         real*4 grid_laps_wt(ni,nj,nk)
-        dimension u_3d(ni,nj,nk),v_3d(ni,nj,nk) 
+        real*4 u_3d(ni,nj,nk),v_3d(ni,nj,nk) 
 
-        character*(*)c_grid,c_ob
+        character*4  c_grid,c_ob
         character*12 c_ob_loc
 
         logical l_point_struct
