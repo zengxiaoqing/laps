@@ -21,13 +21,12 @@
          2.11 .............  CHANGING THE CYCLE TIME 
          2.12 .............  SURFACE ANALYSIS CHANGES
          2.13 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.14 .............  VRC (NOWRAD/ETC RADAR INGEST) CHANGES
-         2.15 .............  LVD (SATELLITE INGEST) CHANGES
-         2.16 .............  OTHER RUNTIME PARAMETERS
+         2.14 .............  LVD (SATELLITE INGEST) CHANGES
+         2.15 .............  OTHER RUNTIME PARAMETERS
      3.0 ............  Description of LAPS Processes
          3.1 ..............  WATER VAPOR (HUMIDITY PROCESSING)
-         3.2 ..............  WSR 88-D RADAR REMAPPER
-         3.3 ..............  ADDITIONAL RADAR PREPROCESSING (VRC)
+         3.2 ..............  WSR 88-D WIDEBAND RADAR REMAPPER
+         3.3 ..............  WSI - NOWRAD RADAR PREPROCESSING (VRC)
          3.4 ..............  PROFILERS (PRO)
          3.5 ..............  RASSs (LRS)
          3.6 ..............  PIREPS/ACARS
@@ -263,12 +262,18 @@
                                    run on NSSL "RIDDS"/"RISC" Boxes.
 
                                  - each v## file has 3-d reflectivity,
-                                   velocity, and nyquist velocity for one radar.
+                                   velocity, and nyquist velocity for a radar.
                                    multiple v## files are allowed and are
                                    especially useful for velocity.
 
            (vrz)                 - 3-D reflectivity mosaic from multiple 
                                    radars (v## files).
+
+           (ln3)                 - Layer reflectivity and echo tops
+
+           More details about radar data usage in LAPS are on the World Wide 
+           Web at... 
+           'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'
 
      Satellite (lvd): GOES-8 groundstation feed, stored at FSL in NetCDF. 
            Also used is the NOAA/SBN data feed. Another option under 
@@ -796,34 +801,14 @@ April 1996
    radiometer data are forever lost.  For now treat this as orphan code, if
    ignored, it will not cause problems.
 
-
-
------- 2.14 --------VRC (NOWRAD/WSR-88D ETC RADAR INGEST) CHANGES--------------
-
-   Depending on where the raw radar data is coming from, you will want to
-   set the 'radarext_3d_cmn' and 'radarext_3d_accum_cmn' parameters in the 
-   'nest7grid.parms' file as follows:
- 
-   'vrz'     Use this if you have mosaiced 3-D reflectivity 'vrz' files
-             available. If you have vrc files with better areal coverage, 
-             use 'vrc' instead.
-
-   'v01'     Use this is you have 3-D v01 files available from a single radar.
-             If you have vrc files with better areal coverage, use 'vrc'
-             instead.
-
-   'vrc'     Use this when you only have 2-D 'vrc' radar files available.
-             This is the default value.
-
-
------- 2.15 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+------ 2.14 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info is in the README in 
    'source/ingest/satellite/goes8/lambert'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
------- 2.16 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.15 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' file to make sure all
    the runtime parameters are correct. Some parameters worth noting are:
@@ -1057,7 +1042,7 @@ SATELLITE ALGORITHM:
      release, the coefficient adjustment is limited to above 500 hPa
      only.
 
------- 3.2 -----------------RADAR REMAPPER------------------------------------
+------ 3.2 ----------WSR 88-D WIDEBAND RADAR REMAPPER------------------------
 
 Process: REMAP (author: Steve Albers/Keith Brewster - run on "RIDDS BOX")
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1067,6 +1052,8 @@ Initiation: Completion of volume scan
 
 Inputs:
 	Raw WSR-88D Radar Data (reflectivity and velocity in polar form)
+            OLDLAPS: Circular Buffer
+            NEWLAPS: Polar NetCDF files (one per volume)
 
 Outputs (LAPS intermediate files):
      v01    grids         3-D Radar reflectivity, velocity, and Nyquist vel
@@ -1132,16 +1119,16 @@ executables only being ported to another machine where the remapper is run.
 There is another version of the remapper that runs simulated data.
 To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
 
-The radar remapper is being run in the context of the Regional Radar Volume
-(RRV) Project. For more info please see the file './README_rrv', available
-by contacting Steve Albers (albers@fsl.noaa.gov).
+A description of how the remapper software functions including how the 'v01'
+file is produced may be found on the
+World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'
 
 ------ 3.3 ---------------------VRC--------------------------------------------
 
 Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
 
 Inputs:
-        Raw WSI NOWRAD reflectivity data
+        Raw WSI NOWRAD radar reflectivity data
         v01, v02, etc.                        3-D reflectivity  (proposed)
 
 Outputs (Intermediate data file):
