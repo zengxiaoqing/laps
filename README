@@ -51,7 +51,7 @@
          3.2 ..............  Ingest Processes
          3.2.1 ..................  LGA Model
          3.2.2 ..................  LVD 
-         3.2.3 ..................  Polar Radar Data (e.g. WSR 88-D Level-II, Level-III)
+         3.2.3 ..................  Polar Radar Data (e.g. WSR 88D Level II, Level III)
          3.2.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
          3.2.5 ..................  Radar Mosaic (Under development)
          3.2.6 ..................  PROFILER (PRO) Ingest
@@ -1325,7 +1325,7 @@ Sample Output: Should be available in the test data case. The grids start with
 
 ------- 3.2  ------------------  INGEST PROCESSES---------------------------
 
------- 3.2.1 -------------------- LGA ----------------------------------------
+------ 3.2.1 -------------------- LGA Model ---------------------------------
 
 Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
 
@@ -1350,7 +1350,7 @@ Output:
          LVD/"SATID"	grid	LAPS satellite data file
 			`	SATID currently can be either goes08 or goes09
 
------- 3.2.3 --- Polar Radar Data (e.g. WSR 88-D Level-II, Level-III) ---
+------ 3.2.3 --- Polar Radar Data (e.g. WSR 88D Level II, Level III) ---
 
 Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
 
@@ -1365,7 +1365,7 @@ Inputs:
         we obtain these Polar NetCDF files for Level-II is at 
         'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_raw.html'.
 
-        Note that narrowband data (e.g. WSR 88-D Level-III RPG)
+        Note that narrowband data (e.g. WSR 88D Level-III RPG)
         can also be used as long as 
         it is converted to the required polar coordinate, NetCDF format. 
         This is in fact being done for the AWIPS 4.2 implementation of LAPS for
@@ -1394,7 +1394,7 @@ Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
 Sample Input/Output: May be available in the test data case.
 
------- 3.2.4 ------------------ VRC -------------------------------------------
+------ 3.2.4 -------- WSI - NOWRAD RADAR PREPROCESSING (VRC) ----------------------------
 
 Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
 
@@ -1419,7 +1419,7 @@ the country.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.5 --------------- RADAR MOSAIC (under development) ----------------
+------ 3.2.5 --------------- Radar Mosaic (Under development) ----------------
 
 Process: (mosaic_radar.exe) Author John Smart (smart@fsl.noaa.gov)
 
@@ -1435,7 +1435,7 @@ Outputs (Intermediate data file):
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.6 ---------------- PROFILER (PRO) ---------------------------------
+------ 3.2.6 ---------------- PROFILER (PRO) Ingest ---------------------------------
 
 Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest 
                                   (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1458,7 +1458,7 @@ Source directory: laps/src/ingest/profiler
 Sample Input/Output: Should be available in the test data case.
 
  
------- 3.2.7 ---------------------- VAD ---------------------------------------
+------ 3.2.7 ---------------------- VAD (PRO) Ingest ---------------------------------------
 
 Process: (ingest_vad.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1474,7 +1474,7 @@ Outputs: (Feeds wind.exe)
               pro file.
 </pre>
  
------- 3.2.8 ----------------- RASS (LRS) ------------------------------------
+------ 3.2.8 ----------------- RASSs (LRS) Ingest ------------------------------------
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1493,7 +1493,7 @@ Source directory: laps/src/ingest/rass
 
 Sample Input/Output: Should be available in the test data case.
 
------- 3.2.9 ----------------- PIREPS/ACARS ----------------------------------
+------ 3.2.9 ----------------- PIREPS/ACARS Ingest ----------------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1510,7 +1510,7 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.10 ---------------------- RAOB -------------------------------------
+------ 3.2.10 ---------------------- RAOB (SND) Ingest -------------------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1543,7 +1543,7 @@ Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
 </pre>
                                         
------- 3.2.12 -------------- Surface data Ingest ------------------------------
+------ 3.2.12 -------------- Surface Data Ingest ------------------------------
 
 Process: (obs_driver.x) LAPS Surface Ingest
      (author: Pete Stamus - stamus@fsl.noaa.gov)
@@ -2134,7 +2134,7 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 ********************************************************************************
 ********************************************************************************
 
--------- 4.0 --  Porting code mods from LAPS users back to FSL: --------------
+-------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
    We would like to encourage suggestions from LAPS users on how to improve
    LAPS, both scientifically and in the software itself. In general, we should 
