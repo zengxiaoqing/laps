@@ -74,6 +74,7 @@ C
 
       call get_r_missing_data(r_missing_data,istatus)
 
+!     Adjust field values
       do i = 1,MREG
       do j = 1,NREG
           if(field_in(i,j) .eq. r_missing_data)then
@@ -92,8 +93,18 @@ C
 
           endif
 
-      enddo 
-      enddo
+!         Prevent overshoot beyond colortable (except for CAPE/CIN)
+          if(ZREG(i,j) .gt. scale_loc .and. 
+     1       colortable(1:3) .ne. 'cpe'     )then
+              ZREG(i,j) = scale_loc
+          endif
+
+          if(ZREG(i,j) .lt. 0.0      )then
+              ZREG(i,j) = 0.0
+          endif
+
+      enddo ! j
+      enddo ! i
 
       ireverse_colorbar = ireverse
 
@@ -112,7 +123,10 @@ C
 C Call Conpack color fill routine
 C      
       icol_offset = 40 ! Offset new colortable to preserve previous low end
+
+      LMAP=MREG*NREG*64 ! 16000000
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
+     1                               ,LMAP
      1                               ,colortable,ncols,icol_offset)      
 C      
 C Close frame
@@ -138,9 +152,10 @@ c     Call local colorbar routine
 
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
+     1                                ,LMAP
      1                                ,colortable,ncols,icol_offset)      
       
-      PARAMETER (LRWK=300000,LIWK=300000,LMAP=16000000,NWRK=300000
+      PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
      1          ,NOGRPS=5)       
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
       INTEGER MREG,NREG,IWRK(LIWK)
@@ -428,8 +443,12 @@ c     Restore original color table
 
 !     Right Edge
       if(abs(scale_h/scale) .ge. 1.0)then
-          write(ch_high,1)nint(scale_h/scale)
- 1        format(i8)
+          if(abs(scale_h/scale-float(nint(scale_h/scale))) .lt. .05)then       
+              write(ch_high,1)nint(scale_h/scale)
+ 1            format(i8)
+          else
+              write(ch_high,2)scale_h/scale
+          endif
       else
           write(ch_high,3)scale_h/scale
  3        format(f8.2)
@@ -441,8 +460,11 @@ c     Restore original color table
 
 !     Midpoint
       rmid = ((scale_l+scale_h) / scale)/2.0
-      if(abs(rmid) .gt. 1.0 .or. abs(scale_l/scale) .gt. 1.0
-     1                      .or. abs(scale_h/scale) .gt. 1.0)then
+      if( (abs(rmid) .gt. 1.0 .or. abs(scale_l/scale) .gt. 1.0
+     1                        .or. abs(scale_h/scale) .gt. 1.0 )
+     1                        .AND. 
+     1            abs(rmid-float(nint(rmid))) .lt. .05   
+     1                                                           )then       
           write(ch_mid,1)nint(rmid)
       elseif(abs(scale_h/scale) .ge. 1.0)then
           write(ch_mid,2)rmid
