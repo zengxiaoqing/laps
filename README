@@ -799,8 +799,18 @@
      If you want to test the localization procedure, make sure the paths
      to the geography data are correct in 'data/static/nest7grid.parms'.
 
-     You might initiate individual executables (bin directory) listed in the 
-     'sched.pl' to run for the test data. Note that $LAPS_DATA_ROOT needs to
+     When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
+     script will accept a -t command line argument. This forces the script
+     to run for the time you are inputting instead of the current realtime. 
+     The inputted value should be the number of seconds since 0000 UTC 
+     Jan 1, 1970. This is also the value found in line 2 of 
+     'data/time/c_time.dat'. An example is shown as follows; note that
+     'ssssssss' represents the ctime.
+
+     prompt> perl sched.pl  -t sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
+
+     One can also initiate individual executables (bin directory) listed in the
+     'sched.pl' to run on the test data. Note that $LAPS_DATA_ROOT needs to
      be set as an environment variable when executables are run individually.
      The time of the run is specified in 'data/time/systime.dat'. This can be 
      modified if needed if you want to try a slightly different time from 
@@ -816,11 +826,6 @@
      typing 'make debug' in the appropriate 'src' directories. Various 
      debuggers can then be used such as 'dbx'. Examination of the log files 
      again is helpful.
-
-     As a future enhancement, when running LAPS as a whole for the archived 
-     data, the 'etc/sched.pl' script will accept a -t command line argument. 
-     The value will be the number of seconds since 0000UTC Jan 1, 1970. This is
-     also the value found in line 2 of 'data/time/c_time.dat'. 
 
                 ----  2.5.1  Analysis Only Test ---
 
