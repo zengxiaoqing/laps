@@ -96,7 +96,7 @@ c internal variables
 
       character extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
         character
-     1  dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50
+     1  dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250
       real make_rh   !function
       external make_rh
       integer sum, sum2 ! QC parameters for neg humidity condition

@@ -148,6 +148,9 @@ c  normal internal parameters
       real rspacing_dum
       real rmd
       real W_cutoff             !weight cutoff
+      real x(ii*jj)
+      integer x_sum
+      real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
         
 c *** begin routine
 
@@ -342,6 +345,57 @@ c *** difference the raob data at each gridpoint location and height
          enddo
 
       enddo
+
+c     compute level mean and sigma
+
+      write(6,*) 'compting layer statistics'
+      
+      do k = 1,kk
+         x_sum = 0
+         do i = 1,ii
+            do j = 1,jj
+               if(data(i,j,k) .ne. rmd) then
+                  x_sum=x_sum +1
+                  x(x_sum) = data (i,j,k)
+               endif
+            enddo
+         enddo
+
+         call moment_b (x,x_sum,ave(k),adev(k),sdev(k),
+     1        var(k),skew(k),curt(k), istatus)
+
+         if (istatus.ne.1) then
+            write(6,*) 'not enough data for computing moments level ', k
+            ave(k) = rmd
+            sdev(k) = rmd
+         else
+            write (6,*) k,x_sum,ave(k),sdev(k)
+         endif
+
+      enddo
+
+c     compare computed diff values with QC thresholding... assign rmd if bad
+
+      do is=1,isound
+         do k = 1,kk
+
+            if(sdev(k).ne.rmd) then
+ 
+               if(abs(diff(k,is)) .le. 3.*sdev(k) ) then
+                  write(6,*) 'accepting ',k,is,diff(k,is)
+               elseif (diff(k,is) .lt. 0.0 
+     1                 .and. abs(diff(k,is)) .le. 5.*sdev(k) ) then
+                  write (6,*) 'accepting extreme negative value', 
+     1                 k,is,diff(k,is)
+               else
+                  write(6,*) 'tossing ',k,is, diff(k,is)
+                  diff(k,is) = rmd
+               endif
+            endif
+  
+         enddo
+      enddo
+
 
 c     *** analyze the field (barnes second pass to background)
 

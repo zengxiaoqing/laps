@@ -223,7 +223,7 @@ c        include 'setup.inc'
         real*4 lt1dat(ii,jj,kk)
 
         character
-     1        dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50,
+     1        dirlt1*250,dir*250,rhdir*250,dirpw*250,dir3*250,
      1        extlt1*31,ext*50,rhext*50,extpw*50,ext3*50,
      1        varlt1(kk)*3,
      1        lvl_coordlt1(kk)*4,
@@ -248,7 +248,7 @@ c rams stuff--------
      1        filename,savefilename,ramsfile
         character ramsvar(kk)*3, ramslvlcoord(kk)*4,
      1        ramsunits(kk)*10, ramscomments(kk)*125
-        character rams_dir*50, rams_ext*31
+        character rams_dir*250, rams_ext*31
 
 c ------------------
 

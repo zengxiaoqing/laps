@@ -67,7 +67,7 @@ c internal variables
         integer i,j, len
 
         character
-     1  tpdir*50,
+     1  tpdir*250,
      1  tpext*31,
      1  var(1)*3,
      1  lvl_coord(1)*4,

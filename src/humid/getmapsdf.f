@@ -74,8 +74,8 @@ c
         implicit        none
 c
         save
-        CHARACTER*50 DIRLMA
-        CHARACTER*50 DIRLMF
+        CHARACTER*250 DIRLMA
+        CHARACTER*250 DIRLMF
         CHARACTER*31 EXTLMA
         CHARACTER*31 EXTLMF
         integer len

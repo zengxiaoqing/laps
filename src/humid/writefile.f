@@ -89,7 +89,7 @@ c     internal variables
 
         integer kmax
         character
-     1       dir*50,
+     1       dir*250,
      1       extlt1*31,ext*50,rhext*50,extpw*50,ext3*50
         integer k
 
