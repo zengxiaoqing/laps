@@ -56,17 +56,27 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
 
       real*4 pressures(max_p)
 
+      integer*4 init
+      data init /0/
+
+      save init, pressures
+
       namelist /pressures_nl/ pressures
 
       character*150 static_dir,filename
- 
-      call get_directory(grid_fnam_common,static_dir,len_dir)
 
-      filename = static_dir(1:len_dir)//'/pressures.nl'
+      if(init .eq. 0)then
+          call get_directory(grid_fnam_common,static_dir,len_dir)
+
+          filename = static_dir(1:len_dir)//'/pressures.nl'
  
-      open(1,file=filename,status='old',err=900)
-      read(1,pressures_nl,err=901)
-      close(1)
+          open(1,file=filename,status='old',err=900)
+          read(1,pressures_nl,err=901)
+          close(1)
+
+          init = 1
+
+      endif ! init = 0
 
       do k = 1,nk
         if(pressures(k) .le. 0. .or. pressures(k) .gt. 150000.)goto902       
@@ -77,7 +87,7 @@ cdoc  pressure grid. This does not support an arbitrary vertical grid.
         if(pressures(k) .ge. pressures(k-1))goto902       
       enddo                  ! k
 
-      write(6,*)' Success in get_pres_1d'
+!     write(6,*)' Success in get_pres_1d'
       istatus = 1
       return
 

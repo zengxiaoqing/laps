@@ -379,95 +379,6 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
         end
 
 
-
-        function height_to_zcoord3_old(height_m,heights_3d,zcoords_1d       
-     1                                  ,ni,nj,nk,i,j,istatus)
-
-
-cdoc    Old routine being phased out. Do not call.
-cdoc    Note that this routine works with the real atmosphere.
-cdoc    The type of interpolation is similar to that in 'height_to_zcoord'.
-cdoc    When the vertical grid is pressure, the height is converted to
-cdoc    pressure, then the interpolation to the vertical grid is performed.
-cdoc    Thus if the height is midway between two LAPS levels in height space,
-cdoc    the value of 'height_to_zcoord3' will not have a fraction of 0.5.
-cdoc    If the pressure is midway between two LAPS levels, then the
-cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
-
-        implicit real*4 (a-z)
-
-        integer i,j,k,ni,nj,nk,kref,istatus
-
-        real*4 heights_3d(ni,nj,nk)
-        real*4 zcoords_1d(nk)
-
-        logical ltest_vertical_grid
-
-        istatus = 1
-
-        if(ltest_vertical_grid('HEIGHT'))then
-           print*, 'Call is obsolete, please report this message to '
-           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord3 = height_m / HEIGHT_INTERVAL
-
-        elseif(ltest_vertical_grid('PRESSURE'))then
-            height_to_zcoord3 = nk+1 ! Default value is off the grid
-
-          ! Standard Atmosphere Guess + a cushion
-            kref = min(int(height_to_zcoord((height_m+600.)*1.2,istatus)
-     1),nk)
-
-            heights_above = heights_3d(i,j,kref)
-
-            if(height_m .gt. heights_above)then
-                istatus = 0
-                goto999
-            endif
-
-            do k = kref-1,1,-1
-                if(heights_above     .ge. height_m .and.
-     1           heights_3d(i,j,k) .le. height_m         )then
-                    thickness = heights_above - heights_3d(i,j,k)
-                    fraction = (height_m - heights_3d(i,j,k))/thickness
-                    pressure_low  = zcoords_1d(k)
-                    pressure_high = zcoords_1d(k+1)
-                    diff_log_space = log(pressure_high/pressure_low)
-                    pressure = pressure_low * exp(diff_log_space*fractio
-     1n)
-                    height_to_zcoord3 = zcoord_of_pressure(pressure)
-
-!                   if(j .eq. 29)then
-!                       write(6,*)' height_to_zcoord3: kref,k,kref-k+1'
-!       1                                             ,kref,k,kref-k+1
-!                   endif
-
-                    goto999
-
-                endif
-
-                heights_above = heights_3d(i,j,k)
-
-            enddo ! k
-
-            istatus = 0
-            height_to_zcoord3_old = 0
-            write(6,101)kref,height_m,heights_3d(i,j,1)
-101         format('  Error: below domain in height_to_zcoord3, kref,h,h
-     1(1)',
-     1             i3,2e11.4)
-
-        else
-            write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
-            istatus = 0
-            return
-
-        endif
-
-999     return
-        end
-
-
         function height_to_pressure(height_m,heights_3d
      1                             ,pressures_1d,ni,nj,nk,i,j)
 
@@ -602,25 +513,12 @@ cdoc    Calculate the height of a given pressure level, using standard atmos.
         return
         end
 
-
         function zcoord_of_level(level)
 
-cdoc    Calculate zcoord (e.g. pressure) of a given level. Being phased out?
-
-        implicit real*4 (a-z)
-
-        integer*4 level, istatus
-
-        include 'lapsparms.cmn'
+cdoc    Calculate zcoord (e.g. pressure) of a given level. 
+cdoc    Works for variable pressure grid, phase out for arbitrary grid?
 
         logical ltest_vertical_grid
-
-        call get_config(istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
-        endif
 
         if(ltest_vertical_grid('HEIGHT'))then
            print*, 'Call is obsolete, please report this message to '
@@ -628,8 +526,7 @@ cdoc    Calculate zcoord (e.g. pressure) of a given level. Being phased out?
 !           zcoord_of_level = height_interval * level
 
         elseif(ltest_vertical_grid('PRESSURE'))then
-            zcoord_of_level = PRESSURE_0_L
-     1                  - PRESSURE_INTERVAL_L * level
+            zcoord_of_level = pressure_of_level(level)
 
         else
             write(6,*)' Error, vertical grid not supported,'
@@ -646,23 +543,28 @@ cdoc    Calculate zcoord (e.g. pressure) of a given level. Being phased out?
 
         function pressure_of_level(level)
 
-cdoc    Calculate pressure of a given integer level. Being phased out?
+cdoc    Calculate pressure of a given integer level. 
+cdoc    Works for variable pressure grid, phase out for arbitrary grid?
 
-        implicit real*4 (a-z)
+        real*4, allocatable, dimension(:) :: pres_1d
 
-        integer*4 level, istatus
+        integer*4 level, istatus, istat_alloc
 
-        include 'lapsparms.cmn'
+        call get_laps_dimensions(nk,istatus)
+        if(istatus .ne. 1)stop
 
-        call get_config(istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
+        allocate(pres_1d(nk), STAT=istat_alloc )
+        if(istat_alloc .ne. 0)then
+            write(6,*)' ERROR: Could not allocate pres_1d'
             stop
         endif
 
-        pressure_of_level = PRESSURE_0_L
-     1                  - PRESSURE_INTERVAL_L * level
+        call get_pres_1d(i4time,nk,pres_1d,istatus)
+        if(istatus .ne. 1)stop
+
+        pressure_of_level = pres_1d(level)
+
+        deallocate(pres_1d)
 
         istatus = 1
         return

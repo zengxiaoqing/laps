@@ -143,7 +143,7 @@ cdis
 
         real*4 sndr_po(19,NX_L,NY_L)
 
-        character*3 var_2d
+        character*4 var_2d
         character*150  directory
         character*31  ext
         character*10  units_2d
@@ -168,6 +168,7 @@ cdis
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 field_3d(NX_L,NY_L,NZ_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
 
         real*4 lifted(NX_L,NY_L)
         real*4 height_2d(NX_L,NY_L)
@@ -264,6 +265,8 @@ c       include 'satellite_dims_lvd.inc'
 
         icen = NX_L/2+1
         jcen = NY_L/2+1
+
+        call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
         i_overlay = 0
         n_image = 0
@@ -482,13 +485,7 @@ c       include 'satellite_dims_lvd.inc'
      1    '     Enter Level in mb, 0 = sfc',39x,'? ',$)
             endif
 
-            read(lun,*)k_level
-
-            k_mb = k_level
-
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             if(c_type.ne.'lo' .and. c_type .ne. 'wr'
      1                        .and. c_type .ne. 'wb')then
@@ -680,7 +677,7 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_field .eq. 'di')then
                 c19_label = ' Isogons   (deg)   '
-                call mklabel33(k_level,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
      1              c33_label,i_overlay,c_display,lat,lon,jdot,       
@@ -688,7 +685,7 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'sp')then
                 c19_label = ' Isotachs (kt)     '
-                call mklabel33(k_level,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 if(k_level .gt. 0 .and. k_mb .le. 500)then
                     cint = 10.
@@ -713,7 +710,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' U  (anal)      M/S'
                 endif
 
-                call mklabel33(k_level,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
@@ -734,7 +731,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' V  (anal)      M/S'
                 endif
 
-                call mklabel33(k_level,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,       
@@ -755,7 +752,7 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' WIND  (anl)    kt'
                 endif
 
-                call mklabel33(k_level,c19_label,c33_label)
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 if(k_level .ne. 0)then
                     interval = (max(NX_L,NY_L) / 50) + 1
@@ -787,7 +784,7 @@ c       include 'satellite_dims_lvd.inc'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest
      1                                  ,ext,var_2d,units_2d,comment_2d
      1                                  ,NX_L,NY_L,w_2d,k_mb,istatus)
-                    call mklabel33(k_level
+                    call mklabel33(k_mb
      1                     ,' Cloud Omega ubar/s',c33_label)       
 
                 elseif(c_type .eq. 'wo')then
@@ -797,7 +794,7 @@ c       include 'satellite_dims_lvd.inc'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
-                    call mklabel33(k_level
+                    call mklabel33(k_mb
      1                     ,' Anlyz Omega ubar/s',c33_label)       
 
                 else if(c_type .eq. 'bo')then
@@ -810,7 +807,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,laps_cycle_time*100,i4time_heights,ext,var_2d
      1              ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)       
 
-                    call mklabel33(k_level
+                    call mklabel33(k_mb
      1                     ,' Balnc Omega ubar/s',c33_label)       
 
                 else if(c_type .eq. 'lo')then
@@ -825,7 +822,7 @@ c       include 'satellite_dims_lvd.inc'
      1             ,COMMENT_2d,w_2d,ISTATUS)
 
                     call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)
-                    call mklabel33(k_level
+                    call mklabel33(k_mb
      1                     ,' Bkgd Omega ubar/s',c33_label)
 
                 endif
@@ -849,7 +846,7 @@ c       include 'satellite_dims_lvd.inc'
      1                         ,dum1_array,dum2_array
      1                         ,dum3_array,dum4_array,dummy_array
      1                         ,radar_array,.true.,r_missing_data)
-                call mklabel33(k_level,' DVRG (CPTD) 1e-5/s',c33_label)
+                call mklabel33(k_mb,' DVRG (CPTD) 1e-5/s',c33_label)
 
                 scale = 1e-5
 
@@ -1551,13 +1548,6 @@ c
      1      .or. c_field .eq. 'vi' .or. c_field .eq. 've')then
                 write(6,2021)
 2021            format('         Enter Level in mb ',45x,'? ',$)
-                read(lun,*)k_level
-
-                if(k_level .gt. 0)then
-                    k_level = 
-     1                     nint(zcoord_of_pressure(float(k_level*100)))       
-                endif
-
             endif
 
             if(c_field(1:2) .eq. 'mr')then ! Column Max Reflectivity data
@@ -1634,7 +1624,7 @@ c
                 endif
 
             elseif(c_field(1:2) .eq. 'rf')then
-                call mklabel33(k_level,'   Reflectivity    ',c33_label)
+                call mklabel33(k_mb,'   Reflectivity    ',c33_label)
 
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(grid_ra_ref(1,1,k_level,1)
@@ -1655,7 +1645,7 @@ c
                 endif
 
             elseif(c_field .eq. 've')then
-                call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
+                call mklabel33(k_mb,'  Radial Vel  (kt) ',c33_label)
 
                 write(6,2031)
 2031            format('         Enter Radar # (of ones available)  '
@@ -1672,7 +1662,7 @@ c
      1                        ,laps_cycle_time)                          
 
             elseif(c_field .eq. 'vi')then
-                call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
+                call mklabel33(k_mb,'  Radial Vel  (kt) ',c33_label)
 
                 write(6,2031)
                 read(lun,*)i_radar
@@ -2104,24 +2094,18 @@ c
 
         elseif( c_type .eq. 't'  .or. c_type .eq. 'pt'
      1     .or. c_type .eq. 'bt' .or. c_type .eq. 'pb')then
+
             write(6,1513)
 1513        format('     Enter Level in mb',48x,'? ',$)
-            read(lun,*)level_mb
-
-!           if(istatus .ne. 1)goto1200
-
-            if(level_mb .gt. 0)then
-                k_level = nint(zcoord_of_pressure(float(level_mb*100)))       
-!           else
-!               k_level = level_mb
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)     
 
             if(c_type .eq. 'pt')then
                 iflag_temp = 0 ! Returns Potential Temperature
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
-                call mklabel33(k_level,'  Potential Temp  K',c33_label)
+                call mklabel33(k_mb,'  Potential Temp  K'
+     1                        ,c33_label)      
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2134,7 +2118,8 @@ c
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
-                call mklabel33(k_level,'  Balanced Theta  K',c33_label)
+                call mklabel33(k_mb,'  Balanced Theta  K'
+     1                                 ,c33_label)   
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2144,7 +2129,7 @@ c
 
             elseif(c_type .eq. 't ')then
                 call get_temp_2d(i4time_ref,7200,i4time_nearest
-     1                          ,level_mb,NX_L,NY_L,temp_2d,istatus)
+     1                          ,k_mb,NX_L,NY_L,temp_2d,istatus)
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2152,7 +2137,8 @@ c
                 enddo ! j
                 enddo ! i
 
-                call mklabel33(k_level,' Temperature      C',c33_label)       
+                call mklabel33(k_mb,' Temperature      C'
+     1                        ,c33_label)       
 
             elseif(c_type.eq. 'bt')then
                 var_2d = 'T3'
@@ -2171,7 +2157,8 @@ c
                 enddo ! j
                 enddo ! i
 
-                call mklabel33(k_level,' Temp (Bal)       C',c33_label)
+                call mklabel33(k_mb,' Temp (Bal)       C'
+     1                        ,c33_label)
 
             endif
 
@@ -2266,12 +2253,8 @@ c
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
      1                          ,21x,'? ',$)
-            read(lun,*)k_level
-            k_mb = k_level
 
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
@@ -2285,7 +2268,7 @@ c
             if(c_type .eq. 'la')then
                 iflag_slwc = 1 ! Returns Adiabatic LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
      1          ' Adiabt LWC  g/m^3 ',c33_label)
                 else
                     c33_label = 'LAPS Maximum Adiabatic LWC g/m^3 '
@@ -2294,7 +2277,7 @@ c
             elseif(c_type .eq. 'lj')then
                 iflag_slwc = 2 ! Returns Adjusted LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
      1          ' Adjstd LWC  g/m^3 ',c33_label)
                 else
                     c33_label = 'LAPS Maximum Adjusted  LWC g/m^3 '
@@ -2303,7 +2286,7 @@ c
             elseif(c_type .eq. 'sj')then
                 iflag_slwc = 3 ! Returns Adjusted SLWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
      1          ' Adjstd SLWC g/m^3 ',c33_label)
                 else
                     c33_label = 'LAPS Maximum Adjusted SLWC g/m^3 '
@@ -2312,7 +2295,7 @@ c
             elseif(c_type .eq. 'ls')then
                 iflag_slwc = 13 ! Returns New Smith - Feddes LWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
 !    1                             ' Smt-Fed LWC g/m^3 ',c33_label)
      1                             ' Cloud LWC g/m^3   ',c33_label)
                 else
@@ -2323,7 +2306,7 @@ c
             elseif(c_type .eq. 'ci')then
                 iflag_slwc = 13 ! Returns Cloud Ice
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
 !    1                             ' Smt-Fed ICE g/m^3 ',c33_label)
      1                             ' Cloud ICE g/m^3   ',c33_label)
                 else
@@ -2333,7 +2316,7 @@ c
             elseif(c_type .eq. 'ss')then
                 iflag_slwc = 14 ! Returns Smith - Feddes SLWC
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,
+                    call mklabel33(k_mb,
      1                             'Smt-Fed SLWC g/m^3 ',c33_label)
                 else
 !                   c33_label = 'LAPS Max Smith-Feddes SLWC g/m^3 '
@@ -2437,18 +2420,13 @@ c
         elseif(c_type .eq. 'mv' .or. c_type .eq. 'ic')then
             write(6,1514)
 
-            read(lun,*)k_level
-            k_mb = k_level
-
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level
+                    call mklabel33(k_mb
      1                            ,'     MVD     m^-6  ',c33_label)     
                 else
                     c33_label = 'LAPS Mean Volume Diameter  m^-6  '
@@ -2460,7 +2438,7 @@ c
 
             elseif(c_type .eq. 'ic')then
                 if(k_level .gt. 0)then
-                    call mklabel33(k_level,'   Icing Index     '
+                    call mklabel33(k_mb,'   Icing Index     '
      1                            ,c33_label)
                 else
                     c33_label = '        LAPS Icing Index         '
@@ -2583,12 +2561,14 @@ c
             if(.true.)then ! Read 2D cloud type field
 
                 if(k_level .gt. 0)then ! Read from 3-D cloud type
-                   k_level =
-     1                   nint(zcoord_of_pressure(float(k_level*100)))
+                    pressure = float(k_level*100)
+                    k_level = nint(zcoord_of_field(pressure,pres_3d
+     1                            ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
+                    k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
                     ext = 'lty'
                     var_2d = 'CTY'
                     call mklabel33
-     1                    (k_level,'     Cloud Type    ',c33_label)
+     1                    (k_mb,'     Cloud Type    ',c33_label)
 
                 else                   ! Read from 2-D cloud type
                     ext = 'lct'
@@ -2637,7 +2617,7 @@ c
             k_mb = k_level
 
             if(k_level .gt. 0)then
-                call mklabel33(k_level,'    Precip Type    ',c33_label)
+                call mklabel33(k_mb,'    Precip Type    ',c33_label)
             elseif(k_level .eq.  0)then
                 c33_label = 'LAPS Sfc Precip Type   (nothresh)'
             elseif(k_level .eq. -1)then
@@ -2652,7 +2632,10 @@ c
             endif
 
             if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
+               pressure = float(k_level*100)
+               k_level = nint(zcoord_of_field(pressure,pres_3d
+     1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
+               k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
             endif
 
             i4time_pcp = i4time_ref/laps_cycle_time * laps_cycle_time
@@ -2821,10 +2804,7 @@ c
             print*,'You selected plotting of lq3 data '
 
             write(6,1513)
-            read(lun,*)k_level
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             write(6,1615)
 1615        format(10x,'plot rh or q [r/q]  ? ',$)
@@ -2843,7 +2823,7 @@ c
                  print*,'No plotting for the requested time period'
               else   
 
-              call mklabel33(k_level,' LAPS Spec Hum x1e3',c33_label)
+              call mklabel33(k_mb,' LAPS Spec Hum x1e3',c33_label)
 
               clow = 0.
               chigh = +40.
@@ -2869,12 +2849,12 @@ c             cint = -1.
               if(qtype .eq. '3')then
                  var_2d = 'RH3'
                  write(6,*)' Reading rh3 / ',var_2d
-                 call mklabel33(k_level,' LAPS RH     (rh3) %'
+                 call mklabel33(k_mb,' LAPS RH     (rh3) %'
      1                                 ,c33_label)     
               elseif(qtype .eq. 'l')then
                  var_2d = 'RHL'
                  write(6,*)' Reading rhl / ',var_2d
-                 call mklabel33(k_level,' LAPS RH     (liq) %'
+                 call mklabel33(k_mb,' LAPS RH     (liq) %'
      1                                 ,c33_label)     
               endif
 
@@ -2922,11 +2902,7 @@ c
             if(istatus.ne.1)goto1200
 
             write(6,1513)
-            read(lun,*)k_level
-            k_mb=k_level
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             write(6,1615)
             read(5,*)qtype
@@ -2955,7 +2931,7 @@ c
 
                 if(qtype.eq.'q' .and. istat_sh .eq. 1)then
 
-                    call mklabel33(k_level,' '//fcst_hhmm
+                    call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Q  (x1e3)',c33_label)
 
                     clow = 0.
@@ -2991,7 +2967,7 @@ c                   cint = -1.
                         endif
 
 
-                        call mklabel33(k_level,' '//fcst_hhmm
+                        call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' rh %cptd ',c33_label)
 
                         clow = 0.
@@ -3018,7 +2994,7 @@ c                   cint = -1.
                             goto1200
                         endif
 
-                        call mklabel33(k_level,' '//fcst_hhmm
+                        call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' rh %     ',c33_label)
 
                     else
@@ -3039,10 +3015,7 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'hy')then
             write(6,1513)
-            read(lun,*)k_level
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             iflag_temp = 1 ! Returns Ambient Temperature
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -3066,7 +3039,7 @@ c                   cint = -1.
      1          dum1_array,dum2_array,dum3_array,dum4_array,
      1                                  NX_L,NY_L,NZ_L,field_3d)
 
-            call mklabel33(k_level,' LAPS Heights    dm',c33_label)
+            call mklabel33(k_mb,' LAPS Heights    dm',c33_label)
 
             clow = 0.
             chigh = 0.
@@ -3108,12 +3081,10 @@ c                   cint = -1.
      1                             ,istatus)                ! O
             if(istatus.ne.1)goto1200
 
-            call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d,istatus)       
+!           call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d,istatus)       
 
             write(6,1513)
-            read(lun,*)k_mb
-            k_level = nint(zcoord_of_pressure(float(k_mb*100)))
-            k_mb    = nint(field_3d(icen,jcen,k_level) / 100.)
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT,
      1          NX_L,NY_L,1,1,       
@@ -3129,13 +3100,13 @@ c                   cint = -1.
             if(c_type(1:1) .eq. 'h')then
                 scale = 10.
 
-!               call mklabel33(k_level,' LAPS '//ext(1:3)//' Height dm'
+!               call mklabel33(k_mb,' LAPS '//ext(1:3)//' Height dm'
 !    1                        ,c33_label)
 
 !               call mklabel33(k_level,ext(1:3)//' '
 !    1                         //fcst_hhmm//' Fcst Ht dm',c33_label)
 
-                call mklabel33(k_level,' '//fcst_hhmm
+                call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Height dm',c33_label)
 
                 clow = 0.
@@ -3156,10 +3127,7 @@ c                   cint = -1.
                 endif
 
             else  
-!               call mklabel33(k_level,' LAPS '//ext(1:3)//' Temp    C'
-!    1                        ,c33_label)
-
-                call mklabel33(k_level,' '//fcst_hhmm
+                call mklabel33(k_mb,' '//fcst_hhmm
      1                         //' '//ext(1:3)//' Temp    C',c33_label)
 
                 scale = 1.
@@ -3186,8 +3154,7 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'to')then
             write(6,1513)
-            read(lun,*)k_mb
-            k_level = nint(zcoord_of_pressure(float(k_mb*100)))
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             if(i4time_temp .eq. 0)then
                 i4time_temp = (i4time_ref / laps_cycle_time) 
@@ -3199,9 +3166,7 @@ c                   cint = -1.
 
         elseif(c_type .eq. 'ht'.or. c_type .eq. 'bh')then
             write(6,1513)
-            read(lun,*)k_mb
-
-            k_level = nint(zcoord_of_pressure(float(k_mb*100)))
+            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
             var_2d = 'HT'
 
@@ -3215,14 +3180,14 @@ c                   cint = -1.
      1             ,ext,var_2d,units_2d,comment_2d
      1             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
-               call mklabel33(k_level,' Height  (Bal)   dm',c33_label)       
+               call mklabel33(k_mb,' Height  (Bal)   dm',c33_label)       
 
             else ! 'ht'
                call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                             ,i4time_heights
      1                             ,ext,var_2d,units_2d,comment_2d
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)       
-               call mklabel33(k_level,' Height          dm',c33_label)       
+               call mklabel33(k_mb,' Height          dm',c33_label)       
 
             endif
 
@@ -3537,9 +3502,9 @@ c                   cint = -1.
                 l_image = .false.
             endif
 
-            if(var_2d .eq. 'LCV')then
-                l_image = .true.
-            endif
+!           if(var_2d .eq. 'LCV')then
+!               l_image = .true.
+!           endif
 
             level=0
             CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
@@ -5067,10 +5032,12 @@ c                   cint = -1.
 !101             format('LAPS',I5,' km ',a19)
 
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
-                if(k_level .gt. 50)then ! k_level is given in pressure
-                    ipres = nint(zcoord_of_level(K_Level)/100.)
+                if(k_level .gt. 50)then ! k_level is given in pressure (mb)
+                    ipres = k_level
+
                 else                    ! k_level is level number
-                    ipres = nint(pressure_of_level(K_Level)/100.)
+                    ipres = nint(zcoord_of_level(k_level)/100.)
+
                 endif
 
                 write(c33_label,102)ipres,c19_label
@@ -5637,3 +5604,23 @@ c
 
         return
         end
+
+        subroutine input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
+
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
+
+        icen = NX_L/2
+        jcen = NY_L/2
+
+        read(lun,*)k_level
+        k_mb = k_level
+        if(k_level .gt. 0)then
+            pressure = float(k_level*100)
+            k_level = nint(zcoord_of_field(pressure,pres_3d
+     1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
+            k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
+        endif
+
+        return
+        end
+
