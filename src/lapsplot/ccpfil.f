@@ -522,6 +522,19 @@ c     Restore original color table
       CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
 !     Midpoint
+
+!     Plot Black Line
+      frac = 0.5
+      x1   = xlow + frac*xrange 
+      x2   = xlow + frac*xrange 
+      call setusv_dum(2hIN,0)
+
+      y1 = ylow
+      y2 = yhigh
+      call line(x1,y1,x2,y2)
+
+!     Plot Number
+      call setusv_dum(2hIN,7)  ! Yellow
       if(log_scaling)then
           rmid = (10.** ((scale_l+scale_h) / 2.0) ) / scale
       else
@@ -550,6 +563,17 @@ c     Restore original color table
 
 !     Other fractions
       do frac = 0.25,0.75,0.50
+!         Plot Black Line
+          x1   = xlow + frac*xrange 
+          x2   = xlow + frac*xrange 
+          call setusv_dum(2hIN,0)
+
+          y1 = ylow
+          y2 = yhigh
+          call line(x1,y1,x2,y2)
+
+!         Plot Number
+          call setusv_dum(2hIN,7)  ! Yellow
           rarg = scale_l + (scale_h-scale_l) * frac
           if(log_scaling)then
               rfrac = (10.**(rarg)) / scale
