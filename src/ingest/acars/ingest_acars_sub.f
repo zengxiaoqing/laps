@@ -159,7 +159,7 @@ C
           if(char(dataDescriptor(i)) .eq. 'X')then
             if(char(errorType(i)) .eq. 'W' .or. 
      1         char(errorType(i)) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject '
+              write(6,*)' QC flag is bad - reject wind'
      1                 ,char(dataDescriptor(i)),char(errorType(i))
               goto 850
             endif
@@ -175,7 +175,19 @@ C
 
           endif
 
- 850      if(abs(temperature(i)) .lt. 400.)then
+ 850      continue
+
+!         Test for bad temps
+          if(char(dataDescriptor(i)) .eq. 'X')then
+            if(char(errorType(i)) .eq. 'T' .or. 
+     1         char(errorType(i)) .eq. 'B'                         )then
+              write(6,*)' QC flag is bad - reject temp'
+     1                 ,char(dataDescriptor(i)),char(errorType(i))
+              goto 860
+            endif
+          endif
+
+          if(abs(temperature(i)) .lt. 400.)then
               write(6,13)temperature(i)
               write(11,13)temperature(i)
  13           format(' Temp:'/1x,f10.1)
@@ -185,6 +197,8 @@ C
      1                , temperature(i)
 
           endif
+
+ 860      continue
 
           if(waterVaporMR(i) .ge. 0. .and. 
      1       waterVaporMR(i) .le. 100.)then
