@@ -31,6 +31,7 @@ c
       equivalence (sqd(1),sqdep(1,1)),(taud(1),tauc(1,1))
       equivalence (sqw(1),sqdep(1,2)),(tauw(1),tauc(1,2))
       equivalence (sqo(1),sqdep(1,3)),(tauo(1),tauc(1,3))
+      save
       real fast_coef(30000)
       equivalence (fast_coef(1), coef(1,1,1,1) )
       character*8 cfile
