@@ -31,8 +31,8 @@ cdis
 cdis 
        program vrc_driver
        include 'lapsparms.cmn'
-
-       Call get_laps_config(laps_domain_file,IStatus)
+       
+       Call get_laps_config('nest7grid',IStatus)
        if(istatus.eq.1)then
          write(*,*)'LAPS Parameters obtained'
        else
