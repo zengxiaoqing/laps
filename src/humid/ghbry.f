@@ -69,7 +69,6 @@ c     the pressure occurs both in the numerator and denominator....therefore
 c     mb are sufficient units for pressure and the relationship
 c     1  mb = 1000 cgs units does not have to be applied.
       
-
 c     ------------begin exe last revised 10/26/99 db
       
       do j = 1,jj
@@ -138,12 +137,18 @@ c     interpolate in height space
 c     double safeguard on making sure htby is not below ground level.
                htby(i,j) = min (htby(i,j),pb(i,j))
 
+c     check for runaway adjusment, assign to base value
+               if (htby(i,j).lt. 550. ) then ! regard as too high
+                  write (6,*) 'i,j,htby(i,j), adjust ',i,j,htby(i,j)
+                  htby(i,j) = pb(i,j)
+               endif
+
             endif
-            
+               
  112        continue
             
          enddo
-
+         
       enddo
       
 c     write out the pbl pressure top
