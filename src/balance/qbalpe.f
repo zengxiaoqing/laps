@@ -181,7 +181,7 @@ c reduce geostrophic weight to 10% within dpbl of surface
            dpblf=dpbl*.9
            pdif=(ps(i,j)-p(k))
            if (pdif.le.dpbl) pdif=dpbl  
-           del(i,j,k)=abs(delo*(sin(lat(i,j))*(1.- dpblf/pdif)))
+           del(i,j,k)=abs(delo*(sind(lat(i,j))*(1.- dpblf/pdif)))
          enddo
       enddo
       enddo
@@ -253,7 +253,7 @@ c
 c
 c *** Get laps surface pressure.
 c
-      call get_laps_2d(sfcdir,sfctime,sfcext,nx,ny
+      call get_laps_2d_sfc(sfcdir,sfctime,sfcext,nx,ny
      .                ,1,13,ps,istatus)
       do j=1,ny
       do i=1,nx
