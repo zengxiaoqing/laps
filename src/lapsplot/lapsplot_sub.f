@@ -218,6 +218,8 @@ cdis
 
 999     continue
 
+        call sflush
+
         write(6,*)
         write(6,*)' closing GKS, look for your ./gmeta file'
         call CLSGKS
