@@ -30,8 +30,10 @@
 
         logical l_analyze(nk), l_3d, l_use_ob, l_boundary(ni,nj)
 
-        logical l_barnes_wide, l_struct
-        data l_struct /.false./        ! Using data structures?
+        logical l_barnes_wide 
+        logical l_struct_in, l_struct_out, l_not_struct_out
+        data l_struct_in  /.false./    ! Using data structures?
+        data l_struct_out /.true./     ! Using data structures?
         data l_barnes_wide /.true./    ! Using barnes_wide routine on boundary?
 
         integer*4  n_fnorm
@@ -58,7 +60,7 @@
 
         boundary_err = rinst_err
             
-        if(l_struct)then
+        if(l_struct_in)then
           if(l_barnes_wide)then
             do iob = 1,n_obs
                 if(obs_barnes(iob)%qc)then
@@ -89,7 +91,7 @@
             endif ! valid ob
           enddo ! iob
 
-        else ! .not. l_struct
+        else ! .not. l_struct_in
           do i = 1,ni
           do j = 1,nj
             l_use_ob = .true.
@@ -139,7 +141,7 @@
         write(6,*)'rms_thresh_norm,rms_thresh'
      1            ,rms_thresh_norm,rms_thresh      
 
-        l_3d = .true.          ! Use successive correction even though it's 2D
+        l_not_struct_out = .not. l_struct_out
         n_var = 1
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
@@ -149,7 +151,7 @@
      1                     ,ni,nj,nk,grid_spacing_cen_m           ! Inputs
      1                     ,rep_pres_intvl                        ! Input
      1                     ,to_2d,wt_2d,fnorm,n_fnorm             ! Inputs
-     1                     ,l_analyze,l_3d,rms_thresh             ! Input
+     1                     ,l_analyze,l_not_struct_out,rms_thresh ! Input
      1                     ,weight_bkg_const                      ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
 
