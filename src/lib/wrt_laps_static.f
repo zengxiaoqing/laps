@@ -28,8 +28,8 @@ C Local variables
 
       integer*4      i4time_now_gg, dom_len, map_len
       integer*4      origin_len, unixtime, nx_lp, ny_lp
-      integer*4      var_len, com_len, cdl_dir_len, model_len 
-      character*132  file_name, cdl_dir
+      integer*4      var_len, com_len, cdl_dir_len 
+      character*150  file_name, cdl_dir
       character*24   asctime
       character*30   map_projection
       
@@ -37,7 +37,7 @@ C Local variables
      1               ERROR(2),
      1               flag
 
-      integer*4      f_len, len_asc
+      integer*2      f_len
 
       COMMON         /PRT/flag
 
@@ -47,6 +47,7 @@ C Local variables
 C  BEGIN SUBROUTINE
 
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
+      if (status .eq. ERROR(2)) goto 990
 
       i4time = i4time_now_gg()
       call cv_i4tim_asc_lp(i4time,asctime,status)
@@ -54,13 +55,13 @@ C  BEGIN SUBROUTINE
 
 c get NX_L and NY_L from nest7grid.parms
       call get_grid_dim_xy(nx_lp, ny_lp, status)
-
+      if (status .ne. 1) goto 930
+        
       call s_len(laps_dom_file, dom_len)
       var_len = len(var(1))
       com_len = len(comment(1))
       origin_len = len(origin)
-      model_len = len(model)
-      len_asc = len(asctime)
+
       map_len = len(map_projection)
       map_projection = ' '
       if (map_proj .eq. 'plrstr') 
@@ -77,21 +78,14 @@ c get NX_L and NY_L from nest7grid.parms
       if (lov .lt. 0.0) lov = 360.0 + lov
      
       call get_directory('cdl',cdl_dir, cdl_dir_len)
-      
-      print*,'map_len ', map_len
 
-      file_name(132:132) = char(0)
-      cdl_dir(132:132) = char(0)
-      asctime(24:24) = char(0)
-      map_projection(30:30) = char(0)
-
-
-      call write_cdf_static(file_name,f_len,asctime,cdl_dir
-     1     ,cdl_dir_len,var,var_len,comment,com_len
-     1     ,laps_dom_file,dom_len,imax,jmax,n_grids
-     1     ,nx_lp,ny_lp,data,model,grid_spacing,dx
-     1     ,dy,lov,latin1,latin2,origin,origin_len
-     1     ,map_projection,map_len,unixtime, status)
+      call write_cdf_static(file_name,f_len,asctime,cdl_dir,
+     1                      cdl_dir_len,var,var_len,comment,
+     1                      com_len,laps_dom_file,dom_len,imax,
+     1                      jmax,n_grids,nx_lp,ny_lp,data,model,
+     1                      grid_spacing,dx,dy,lov,latin1,latin2,
+     1                      origin,origin_len,map_projection,
+     1                      map_len,unixtime, status)
 
       if (status .eq. -2) GOTO 940
       if (status .eq. -3) GOTO 950
@@ -105,6 +99,12 @@ C
 999   return
 C
 C ****  Error trapping.
+C
+930   if (flag .ne. 1)
+     1write(6,*) 
+     1'Error getting info from nest7grid.parms..write aborted.'
+      status = ERROR(2)
+      goto 999
 C
 940   if (flag .ne. 1)
      1write(6,*) 'Error opening file to be written to...write aborted.'
@@ -129,6 +129,13 @@ C
 980   if (flag .ne. 1)
      1write(6,*) 'x and y values in nest7grid.cdl do not match imax
      1and jmax in nest7grid.parms...write aborted.'
+      status = ERROR(2)
+      goto 999
+C
+990   if (flag .ne. 1) then
+        write(6,*) 'Length of dir+file-name is greater than 150 char.'
+        write(6,*) 'Static file cannot be accessed.'
+      endif
       status = ERROR(2)
       goto 999
 C

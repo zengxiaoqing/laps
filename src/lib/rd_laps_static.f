@@ -20,7 +20,7 @@ C Passed in variables
 
 C Local variables
 
-      character*91   file_name
+      character*150   file_name
       integer*4      var_len, com_len, unit_len,
      1               ERROR(3),
      1               no_laps_diag,
@@ -40,7 +40,8 @@ C Local variables
 C  BEGIN SUBROUTINE
 
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
-
+      if (status .eq. ERROR(2)) goto 980
+      
       var_len = len(var(1))
       com_len = len(comment(1))
       unit_len = len(units(1))
@@ -97,6 +98,14 @@ C
       status = ERROR(2)
       goto 999
 C
+980   if (flag .ne. 1) then
+        write(6,*) 'Length of dir+file-name is greater than 150 char.'
+        write(6,*) 'Static file cannot be accessed.'
+      endif
+      status = ERROR(2)
+      goto 999
+C
+
       end
 
 C########################################################################
@@ -126,7 +135,7 @@ C**********************************************************************
       character       laps_dom_file*(*)
       character*30    dn_laps_dom   !downcase of laps_dom_file
 
-      character*91    file_name
+      character*(*)    file_name
 
       ERROR(1)=1
       ERROR(2)=0
@@ -141,10 +150,19 @@ C ******  find end of laps_dom_file
 C
       call s_len(laps_dom_file,end_dom)
 C
+C ******  find end of file_name
+C
+      f_len = len(file_name)
+C
 C ****  make file_name
 C
-      file_name = dir(1:end_dir)//'static.'//dn_laps_dom(1:end_dom)
-      f_len = end_dir+7+end_dom
+      if (end_dir+end_dom+7 .gt. f_len) then
+        status = ERROR(2)
+        goto 999
+      else
+        file_name = dir(1:end_dir)//'static.'//dn_laps_dom(1:end_dom)
+        f_len = end_dir+7+end_dom
+      endif
 C
 C ****  Return normally.
 C
