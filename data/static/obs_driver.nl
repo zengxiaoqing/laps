@@ -18,9 +18,9 @@ c 'path_to_metar' - Directory for metar/synop data
 c
 c 'path_to_local_data' - Directory for local/mesonet or LDAD data
 c
-c 'path_to_buoy data' - Directory for buoy/ship (maritime) data
+c 'path_to_buoy_data' - Directory for buoy/ship (maritime) data
 c
-c 'path_to_gps data' - Directory for gps/profiler surface data in the event
+c 'path_to_gps_data' - Directory for gps/profiler surface data in the event
 c                      this is stored separately from LDAD
 c
 c 'metar_format' - A value of 'default' means that we are using the 
