@@ -9,6 +9,8 @@
  itime_before=900,
  itime_after=900,
  maxobs=80000,
+ i4wait_local_obs_max=0,
+ local_obs_thresh=0,
  l_allow_empty_lso=.false.,
  /
 
@@ -53,3 +55,8 @@ c
 c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
 c                       even if there are no obs. .false. means no LSO file
 c                       will be written when there are no obs.
+c
+c 'i4wait_local_obs_max' - number of seconds (since obs_driver.x started) to
+c                          wait for a sufficient number of LDAD local obs
+c
+c 'local_obs_thresh' - threshold number of LDAD local obs to trigger wait loop
