@@ -1,6 +1,6 @@
         function a10_to_a9(a10_time,istatus)
 
-!       Convert a10_time (yyMMddhhmm) to a9_time (yydddhhmm)
+cdoc    Convert a10_time (yyMMddhhmm) to a9_time (yydddhhmm)
 !       Steve Albers 1998
 
         character*10 a10_time
@@ -20,7 +20,7 @@
 
         function yr_a10_to_a9(a10_time)
 
-!       Convert a10_time (yyyyMMddhh) to a9_time (yydddhhmm)
+cdoc    Convert a10_time (yyyyMMddhh) to a9_time (yydddhhmm)
 !       John Smart 2000
 
         character*10 a10_time,yr_a10_to_a9
@@ -37,7 +37,7 @@
 
         function a9_to_yr_a10_time(a9_time,istatus)
 
-!       Convert a9_time (yydddhhmm) to a10_time (yyyyMMddhh)
+cdoc    Convert a9_time (yydddhhmm) to a10_time (yyyyMMddhh)
 !       John Smart 2000
 
         integer i4time_sys,ilen
@@ -65,7 +65,7 @@
 
         function a8_to_a9(a8_time)
 
-!       Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
+cdoc    Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
 !       Steve Albers 1998
 
         character*9 a8_to_a9
@@ -105,10 +105,10 @@
         end
 c
 c
-      function a9_to_a8(a9_time)
+        function a9_to_a8(a9_time)
 c
-c..... Routine to convert LAPS 'yyjjjhhmm' time to 'yymmddhh' time.
-c..... Corrected for Y2K.  P. Stamus, NOAA/FSL   Oct 1998
+cdoc  Routine to convert LAPS 'yyjjjhhmm' time to 'yymmddhh' time.
+c     Corrected for Y2K.  P. Stamus, NOAA/FSL   Oct 1998
 c
       character a9_time*9, a9_to_a8*8, a8*8
       integer imon_a(12), imon(12)
@@ -166,7 +166,7 @@ c
 
         function rsa13_to_a9(rsa13_time)
 
-!       Convert rsa13_time (yyyyjjjhhmmss) to a9_time (yyjjjhhmm)
+cdoc    Convert rsa13_time (yyyyjjjhhmmss) to a9_time (yyjjjhhmm)
 !       Steve Albers 1998
 
         character*13 rsa13_time
@@ -181,7 +181,7 @@ c
 
         function a9_to_rsa13(a9_time)
 
-!       Convert a9_time (yyjjjhhmm) to rsa13_time (yyyyjjjhhmmss)
+cdoc    Convert a9_time (yyjjjhhmm) to rsa13_time (yyyyjjjhhmmss)
 !       Steve Albers 1998
 
         character*9 a9_time
@@ -205,10 +205,11 @@ c----------------------------------------------------------------------------
       function a7_to_a9_time(a7_time)
 
 c
-c Routine takes FA (CWB) model intial time, as described below, and converts it
-c to 9 character ascii format for laps. Routines below this (make_fa_valtime,
-c a9_to_a7_time, make_fa_ext, and fname13_to_FA_filename) take the FA model
-c filename extension and convert it to a 4 character valid time, or vice versa.
+cdoc  Routine takes FA (CWB) model intial time, as described below, and converts
+cdoc  it to 9 character ascii format for laps. Routines below this 
+cdoc  (make_fa_valtime, a9_to_a7_time, make_fa_ext, and fname13_to_FA_filename)
+cdoc  take the FA model filename extension and convert it to a 4 character valid
+cdoc  time, or vice versa.
 c
 c===========================================================================
 cFA Model File description :

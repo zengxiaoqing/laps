@@ -460,7 +460,11 @@ c
 c..... Pressure...MSL and altimeter, 3-h pressure change
 c
 	if(alt(i)  .ne. badflag)  alt(i) =  alt(i) * 0.01   !Pa to mb
+        call sfc_climo_qc_r('alt_mb',alt(i))
+
 	if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01   !Pa to mb
+        call sfc_climo_qc_r('mslp_mb',mslp(i))
+
 	if(dp(i)   .ne. badflag)   dp(i) =   dp(i) * 0.01   !Pa to mb
 c
 c..... Visibility
@@ -682,3 +686,21 @@ c
 c
 	return
 	end
+
+
+        subroutine sfc_climo_qc_r(c_var,arg)
+
+        character(*) c_var
+
+!       call get_sfc_badflag(badflag,istatus)
+        badflag = -99.9
+        
+        if(c_var .eq. 'alt_mb' .or. c_var .eq. 'mslp_mb')then
+            if(abs(arg) .gt. 1500.)arg = badflag
+        else
+            write(6,*)' Warning: unknown variable in sfc_climo_qc_r'
+     1	             ,c_var
+        endif
+
+        return
+        end

@@ -205,28 +205,29 @@ c
                 call s_len(data_file,len_file)
                 write(6,*)' CWB Buoy Data: ',data_file(1:len_file)
 
-	        call read_buoy_cwb(data_file, recNum, iplat_type(ix),
+	        call read_buoy_cwb(data_file, maxSkyCover, recNum, 
+     &          iplat_type(ix),
      &          td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
-     &          pcp1(ix), pcp24(ix), pcp6(ix),
-     &          wx, dp(ix), dpchar(ix),
-     &          mslp(ix), sea_temp(ix), stname(ix), t(ix),
-     &          timeobs(ix), vis(ix), t_wet(ix), 
+     &          pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
+     &          wx, dp(ix), dpchar(ix), mslp(ix), sea_temp(ix), 
+     &          skyCover(1,ix), skyLayerBase(1,ix),
+     &          stname(ix), t(ix), timeobs(ix), vis(ix), t_wet(ix), 
      &          dd(ix), ffg(ix), ff(ix),             
      &          wmoid_in(ix), badflag, n_buoy_file, istatus)
 
 	        if(istatus .ne. 1)then
                     write(6,*)
-     1              ' Warning: bad status return from READ_BUOY_CWB'       
+     1              '     Warning: bad status return from READ_BUOY_CWB'       
                     n_buoy_file = 0
+                else
+                    write(6,*)'     n_buoy_file = ',n_buoy_file
                 endif
 
                 ix = ix + n_buoy_file
 
             enddo ! i4time_file
 
-            if(.false.)then
-
-              do i4time_file = i4time_file_b, i4time_file_a, 10800
+            do i4time_file = i4time_file_b, i4time_file_a, 10800
    	        call make_fnam_lp(i4time_file,a9time,istatus)
                 a8time = a9_to_a8(a9time(1:9))
 
@@ -249,15 +250,15 @@ c
 
 	        if(istatus .ne. 1)then
                     write(6,*)
-     1              ' Warning: bad status return from READ_SHIP_CWB'       
+     1              '     Warning: bad status return from READ_SHIP_CWB'       
                     n_ship_file = 0
+                else
+                    write(6,*)'     n_ship_file = ',n_ship_file
                 endif
 
                 ix = ix + n_ship_file
 
-              enddo ! i4time_file
-
-            endif ! .false.
+            enddo ! i4time_file
 
             n_maritime_all = ix - 1
             i4time_offset=0

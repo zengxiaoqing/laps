@@ -203,6 +203,8 @@ c
 	   i4time_sys = i4time_sys / laps_cycle_time * laps_cycle_time        
 	   call cv_i4tim_asc_lp(i4time_sys, atime, istatus) !find the atime
 	endif
+
+        write(6,*)' systime = ',filename9
 c
 	call get_directory('lso',outfile,len)
 	outfile = outfile(1:len)//filename9(1:9)//'.lso'
@@ -362,6 +364,9 @@ c
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
             continue
 
+        elseif(metar_format(1:len_metar_format) .eq. 'AFWA')then
+            continue
+
         else
             write(6,*)' ERROR, unknown metar format'
             stop
@@ -373,23 +378,42 @@ c.....  the data.
 c
 	print*,'Getting METAR data ', data_file_m
 c
-        call get_metar_obs(maxobs,maxsta,i4time_sys,
-     &                     path_to_metar,data_file_m,metar_format,   
-     &                     ick_metar_time,itime_before,itime_after,
-     &                     grid_east,grid_west,grid_north,grid_south,
-     &                     lat,lon,ni,nj,grid_spacing,
-     &                     nn,n_sao_g,n_sao_b,stations,
-     &                     reptype,atype,weather,wmoid,
-     &                     store_1,store_2,store_2ea,
-     &                     store_3,store_3ea,store_4,store_4ea,
-     &                     store_5,store_5ea,store_6,store_6ea,
-     &                     store_7,store_cldht,store_cldamt,
-     &                     provider, jstatus)
-c
-	if(jstatus .ne. 1) then
-	   print *, ' WARNING. Bad status return from GET_METAR_OBS'
-	   print *,' '
-	endif
+        if(metar_format(1:len_metar_format) .ne. 'AFWA')then
+           call get_metar_obs(maxobs,maxsta,i4time_sys,
+     &                        path_to_metar,data_file_m,metar_format,   
+     &                        ick_metar_time,itime_before,itime_after,
+     &                        grid_east,grid_west,grid_north,grid_south,       
+     &                        lat,lon,ni,nj,grid_spacing,
+     &                        nn,n_sao_g,n_sao_b,stations,
+     &                        reptype,atype,weather,wmoid,
+     &                        store_1,store_2,store_2ea,
+     &                        store_3,store_3ea,store_4,store_4ea,
+     &                        store_5,store_5ea,store_6,store_6ea,
+     &                        store_7,store_cldht,store_cldamt,
+     &                        provider, jstatus)
+	   if(jstatus .ne. 1) then
+	      print *, ' WARNING. Bad status return from GET_METAR_OBS'       
+	      print *,' '
+	   endif
+
+        else
+           call get_sao_obs_af(filename9,path_to_metar,maxsta,
+     &                        grid_east,grid_west,grid_north,grid_south,    
+     &                        nn,lat,lon,ni,nj,grid_spacing,
+     &                        n_sao_g,n_sao_b,stations,
+     &                        reptype,atype,weather,wmoid,
+     &                        store_1,store_2,store_2ea,
+     &                        store_3,store_3ea,store_4,store_4ea,
+     &                        store_5,store_5ea,store_6,store_6ea,
+     &                        store_7,store_cldht,store_cldamt,
+     &                        provider,jstatus)
+
+	   if(jstatus .ne. 1) then
+	      print *, ' WARNING. Bad status return from GET_SAO_OBS_AF'       
+	      print *,' '
+	   endif
+
+        endif
 
         if(nn .gt. maxsta)then
            write(6,*)' ERROR: nn > maxsta ',nn,maxsta

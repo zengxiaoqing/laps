@@ -114,7 +114,7 @@ c
 c
 c.....  Call the routine that reads the NetCDF SAO data files.
 c
-        call read_sao(filename,path_to_obs,n_sao_all,stname,
+        call read_sao_af(filename,path_to_obs,n_sao_all,stname,
      &                   lats,lons,elev,
      &                   timeobs,reptype_in,atype_in,
      &                   cvr,ht,vis,weather,
@@ -496,7 +496,7 @@ c
 c
  990	 continue		! no data available
 	 jstatus = 0
-	 print *,' ERROR.  No data available from READ_SAO.'
+	 print *,' ERROR.  No data available from READ_SAO_AF.'
 	 return
 c
 	 end

@@ -87,7 +87,7 @@ c
          weather(j) = '                                        '
          type(j) = '      '
          sname(j) = '     '
-         atype(n)(1:6) = 'UNK   '
+         atype(j)(1:6) = 'UNK   '
       enddo !j
 c
 c..... Open the data file.
@@ -234,28 +234,28 @@ c
 c
 c.....  Put cloud data into arrays ht(5,x), cover(5,x) 
 c
-      call get_cld_amt(cld1a, amt_out)
-      call get_cld_hts(cld1h, ht_out)
+      call get_cld_amt_af(cld1a, amt_out)
+      call get_cld_hts_af(cld1h, ht_out)
       cover(1,n)(1:3) = amt_out
       ht(1,n) = ht_out
 c
-      call get_cld_amt(cld2a, amt_out)
-      call get_cld_hts(cld2h, ht_out)
+      call get_cld_amt_af(cld2a, amt_out)
+      call get_cld_hts_af(cld2h, ht_out)
       cover(2,n)(1:3) = amt_out
       ht(2,n) = ht_out
 c
-      call get_cld_amt(cld3a, amt_out)
-      call get_cld_hts(cld3h, ht_out)
+      call get_cld_amt_af(cld3a, amt_out)
+      call get_cld_hts_af(cld3h, ht_out)
       cover(3,n)(1:3) = amt_out
       ht(3,n) = ht_out
 c
-      call get_cld_amt(cld4a, amt_out)
-      call get_cld_hts(cld4h, ht_out)
+      call get_cld_amt_af(cld4a, amt_out)
+      call get_cld_hts_af(cld4h, ht_out)
       cover(4,n)(1:3) = amt_out
       ht(4,n) = ht_out
 c
-      call get_cld_amt(cld5a, amt_out)
-      call get_cld_hts(cld5h, ht_out)
+      call get_cld_amt_af(cld5a, amt_out)
+      call get_cld_hts_af(cld5h, ht_out)
       cover(5,n)(1:3) = amt_out
       ht(5,n) = ht_out
 c

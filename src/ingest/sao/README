@@ -10,6 +10,9 @@ main                                           obs_driver.f
             read_metar                         read_metar.f 
             read_metar_cwb                     read_metar_cwb.f
             read_synop_cwb                     read_synop_cwb.f
+  
+        get_sao_obs_af                         get_metar_obs_af.f
+            read_metar_af                      read_metar_af.f
 
         get_local_obs                          get_local_obs.f 
             read_local                         read_local.f 

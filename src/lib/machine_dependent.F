@@ -31,6 +31,8 @@ cdis
 cdis 
         function i4_to_byte(i4_in)
 
+cdoc    Converts an integer to a byte (character) variable
+
         character i4_to_byte
 
         integer*4 i4_in,i4
@@ -46,6 +48,8 @@ cdis
         end
 
         function byte_to_i4(b_in)
+
+cdoc    Converts a byte (character) to an integer variable
 
         integer*4 i4,byte_to_i4
         character b_in
@@ -65,8 +69,8 @@ cdis
 !       write(6,*)i4,byte_to_i4
 
         return
-
         end
+
 #ifdef USE_TRIGD
       module trigd
          public
@@ -183,8 +187,15 @@ cdis
             end function datan2d
       end module
 
+cdoc  The above functions operate with the USE_TRIGD compiler directive.
+cdoc  This is normally set by configure via 'trigd.inc' and supplies degree 
+cdoc  based trig functions if they are not intrinsic.
+
 #endif
       subroutine open_append(lun,file,status,istat)
+
+cdoc  Opens a file for appending
+
       integer istat
       character*(*) file,status
 
@@ -215,7 +226,7 @@ cdis
       end
 #endif
 
-C Below are some Taiwan FGGE routines
+cdoc Below are some Taiwan FGGE routines
 
 #if defined(hpux) || defined(alpha)
       subroutine read_fa ( lun, filename,                   ! I
@@ -618,7 +629,7 @@ C---------------------------------------------------------------------------
 
 #else
 C
-C     Dummy routine for other platforms
+cdoc  Dummy routine for other platforms
 
       subroutine read_fa(lun,filename                   ! I
      .               ,nx,ny,nz                          ! I

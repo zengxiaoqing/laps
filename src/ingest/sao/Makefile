@@ -22,8 +22,10 @@ EXE = obs_driver.x
 
 SRC   = obs_driver_sub_af.f \
         get_metar_obs.f \
+        get_metar_obs_af.f \
         read_metar.f \
         read_metar_cwb.f \
+        read_metar_af.f \
         read_synop_cwb.f \
 	get_local_obs.f \
 	read_local.f \

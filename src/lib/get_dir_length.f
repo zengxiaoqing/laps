@@ -122,7 +122,7 @@ C
 
 C*********************************************************************
 C
-cdoc    This routines receives a fortran string, and
+cdoc    This routine receives a fortran string, and
 cdoc    returns the number of characters in the string
 cdoc    before the first "space" is encountered.  
 C       It considers ascii characters 33 to 126 to be valid
@@ -356,7 +356,7 @@ C       characters.
 
 C*********************************************************************
 C
-cdoc    This routines filters a fortran string of unprintable characters
+cdoc    This routine filters a fortran string of unprintable characters
 C
 C       Name            Type      I/O     Description
 C       ----            ---       --      -----------

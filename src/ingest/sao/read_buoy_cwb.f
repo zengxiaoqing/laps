@@ -1,30 +1,31 @@
-
-      subroutine read_buoy_cwb ( filename, recNum, 
+      subroutine read_buoy_cwb ( filename ,maxSkyCover, recNum,
      +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
-     +     latitude, longitude, precip1Hour, precip24Hour,
-     +     precip6Hour, presWeather, pressChange3Hour,
-     +     pressChangeChar, seaLevelPress, seaSurfaceTemp,
-     +     stationName, temperature, timeObs,
-     +     visibility, wetBulbTemperature, windDir, windGust,
-     +     windSpeed, wmoId, badflag, n, istatus )
+     +     latitude, longitude, precip1Hour, precip24Hour, precip3Hour,
+     +     precip6Hour, presWeather, pressChange3Hour, pressChangeChar,
+     +     seaLevelPress, seaSurfaceTemp, skyCover, skyLayerBase, 
+     +     stationName, temperature, timeObs, visibility, 
+     +     wetBulbTemperature, windDir, windGust, windSpeed, wmoId,
+     +     badflag, n, istatus )
  
       integer  recNum
 
       character*(*)  filename
       character*25   presWeather(recNum)
+      character*8    skyCover(maxSkyCover,recNum)
       character*8    stationName(recNum)
 
       integer  dataPlatformType(recNum), pressChangeChar(recNum)
       integer  wmoId(recNum)
 
-      real  dewpoint(recNum), elevation(recNum),
-     ~      equivWindSpeed10m(recNum), latitude(recNum),
-     ~      longitude(recNum), precip1Hour(recNum),
-     ~      precip24Hour(recNum), precip6Hour(recNum),
-     ~      pressChange3Hour(recNum), seaLevelPress(recNum),
-     ~      seaSurfaceTemp(recNum), temperature(recNum),
-     ~      visibility(recNum), wetBulbTemperature(recNum),
-     ~      windDir(recNum), windGust(recNum), windSpeed(recNum)
+      real  dewpoint(recNum), elevation(recNum)
+      real  equivWindSpeed10m(recNum), latitude(recNum)
+      real  longitude(recNum), precip1Hour(recNum)
+      real  precip24Hour(recNum), precip3Hour(recNum)
+      real  precip6Hour(recNum), pressChange3Hour(recNum)
+      real  seaLevelPress(recNum), seaSurfaceTemp(recNum)
+      real  skyLayerBase(maxSkyCover,recNum), temperature(recNum)
+      real  visibility(recNum), wetBulbTemperature(recNum)
+      real  windDir(recNum), windGust(recNum), windSpeed(recNum)
 
       double precision  timeObs(recNum)
 
@@ -110,6 +111,7 @@ c      ----------       examing data quality and changing units       ---------
                   dewpoint(j)= dewpoint(j) +273.15              ! degC -> degK
                 else
                   dewpoint(j)= badflag
+                  relaHumility(j)= badflag
                endif
          endif
 
@@ -132,6 +134,8 @@ c      ----------       examing data quality and changing units       ---------
 c               -------      dealing with lacking of data      -------
       do j= 1,n
          presWeather(j)= "UNK"
+         skyCover(1,j)= "UNK"
+         skyCover(2,j)= "UNK"
          stationName(j)= "UNK"
 
          pressChangeChar(j)= int(badflag)
@@ -141,15 +145,19 @@ c               -------      dealing with lacking of data      -------
          equivWindSpeed10m(j)= badflag
          precip1Hour(j)= badflag
          precip24Hour(j)= badflag
+         precip3Hour(j)= badflag 
          precip6Hour(j)= badflag 
+         skyLayerBase(1,j)= badflag 
+         skyLayerBase(2,j)= badflag 
          visibility(j)= badflag
          wetBulbTemperature(j)= badflag
          windGust(j)= badflag
       enddo
 
-*     go to 1000 
+      go to 1000 
 
-999   do j= 1,n
+999   write (6,*) ' Error reading buoy file'
+      do j= 1,n
          write(6,*) reportFlag(j), wmoId(j),latitude(j), longitude(j),
      ~              yy(j), mo(j), dd(j), hh(j), mn(j), logicRecNum(j)
          write(6,*) windDir(j), windSpeed(j), windQua(j),
