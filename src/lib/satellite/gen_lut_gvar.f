@@ -21,7 +21,6 @@ c
 
       real*4        xlat (nx_l+idx,ny_l+idx)
       real*4        xlon (nx_l+idx,ny_l+idx)
-
       real*4        rline (nx_l+idx,ny_l+idx)
       real*4        rpix  (nx_l+idx,ny_l+idx)
       real*4        rel_ri(nx_l+idx,ny_l+idx)
@@ -50,12 +49,16 @@ c
       real*4        rmetx,rmety
       real*4        golonsbp,golatsbp,goalpha
       real*4        grid_spacing_proj_m
+      real*4        grid_spacing_actual_m
       real*4        grid_spacing_m
       real*4        grid_spacing_km
+      real*4        gssum1,gssum2
+      real*4        gspace1,gspace2,gspace3,gspace4
       real*4        mdlat,mdlon
-      real*4        sat_res_km,erad
+      real*4        sat_res_m,erad
       real*4        deltax,deltay
       real*4        factor
+      real*4        r_ratio
       real*4        lat1,lat2,lon0
       real*4        r_missing_data
 
@@ -224,27 +227,53 @@ c get expanded domain lats/lons. Some of this code follows what
 c happens in gridgen_model.
 c
       if(xres.eq.0.0.or.yres.eq.0.0)then
-         xres=4.0
-         yres=4.0
+         xres=4.
+         yres=4.
          if(ct(1:nc).eq.'vis')then
-            xres=1.0
-            yres=1.0
+            xres=1.
+            yres=1.
          elseif(ct(1:nc).eq.'wv ')then
-            xres=8.0
-            yres=8.0
+            xres=8.
+            yres=8.
          endif
       endif
 
-      call get_grid_spacing(grid_spacing_m,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Error return from get_grid_spacing'     
-          return
-      endif
-      grid_spacing_km=grid_spacing_m/1000.
-      sat_res_km=(xres+yres)/2.0
+c     call get_grid_spacing(grid_spacing_m,istatus)
+c     if(istatus .ne. 1)then
+c         write(6,*)' Error return from get_grid_spacing'     
+c         return
+c     endif
+      do i=1,nx_l
+         call get_grid_spacing_actual(lat(i,1),lon(i,1)
+     1             ,grid_spacing_actual_m,istatus)
+         gssum1=gssum1+grid_spacing_actual_m
+         call get_grid_spacing_actual(lat(i,ny_l),lon(i,ny_l)
+     1             ,grid_spacing_actual_m,istatus)
+         gssum2=gssum2+grid_spacing_actual_m
+      enddo
+      gspace1=gssum1/nx_l
+      gspace2=gssum2/nx_l
 
-      expansion=nint(sat_res_km/grid_spacing_km)+1
+      gssum1=0
+      gssum2=0
+      do j=1,ny_l
+         call get_grid_spacing_actual(lat(1,j),lon(1,j)
+     1             ,grid_spacing_actual_m,istatus)
+         gssum1=gssum1+grid_spacing_actual_m
+         call get_grid_spacing_actual(lat(nx_l,j),lon(nx_l,j)
+     1             ,grid_spacing_actual_m,istatus)
+         gssum2=gssum1+grid_spacing_actual_m
+      enddo
+      gspace3=gssum1/ny_l
+      gspace4=gssum2/ny_l
+
+      grid_spacing_m=(gspace1+gspace2+gspace3+gspace4)/4.0
+      sat_res_m=((xres+yres)*1000.)/2.0
+
+      r_ratio=sat_res_m/grid_spacing_m
+      expansion=(nint(r_ratio)+1)*2
       if(expansion.lt.4)expansion = 4
+      if(expansion.gt.20)expansion=20
       nxe=nx_l+expansion
       nye=ny_l+expansion
 
@@ -307,22 +336,6 @@ c
          enddo
       enddo
 
-c     idx2=idx*2
-c     idx3=idx*3
-c     nxl=nx_l+idx
-c     nyl=ny_l+idx
-c     nxl2=nx_l+idx2
-c     nyl2=ny_l+idx2
-c     nxl3=nx_l+idx3
-c     nyl3=ny_l+idx3
-
-c     call expand_domain(nx_l,ny_l,lat,lon,nxl,nyl,xlat,xlon,
-c    +istatus)
-c     call expand_domain(nxl,nyl,xlat,xlon,nxl2,nyl2,xlat2,xlon2,
-c    +istatus)
-c     call expand_domain(nxl2,nyl2,xlat2,xlon2,nxl3,nyl3
-c    +,xlat3,xlon3,istatus)
-c
 c if the gvar image data file ever changes, for example, data thinning is
 c applied, then the following values should change as well. These now obtained
 c from gvar data files.
@@ -601,10 +614,9 @@ c
 c
 c adjust relative ri/rj for laps domain
 c
-      factor=mod(expansion,2)
-      ifactor=0.5+factor
-      ils=expansion/2+1
-      ile=expansion/2+ifactor
+      factor=expansion/2.
+      ils=int(factor)+1
+      ile=int(factor+0.5)
       jj = 0
       do j = ils,nye-ile
          jj = jj+1
