@@ -445,7 +445,7 @@ C
      1                   ,3.0,0.9,0.7)                ! Red
 
       elseif(colortable .eq. 'haines')then       
-          ncols = 40
+          ncols = 160
           call color_ramp(1,20*ncols/100
      1                   ,IWKID,icol_offset
      1                   ,0.6,0.7,0.4                 ! Violet
@@ -552,13 +552,14 @@ C
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
       character*5 c5_sect
-      logical log_scaling,l_loop
+      logical log_scaling,l_loop, l_discrete
 
       write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
 
       range = abs(scale_h - scale_l) / scale
 
       if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
+     1                     .or. colortable .eq. 'haines' ! HAH, HAM
      1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
@@ -568,6 +569,12 @@ C
       endif
 
       if(colortable(1:3) .eq. 'lin')l_loop = .false.
+
+      if(colortable .eq. 'haines')then
+          l_discrete = .true.
+      else
+          l_discrete = .false.
+      endif
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
@@ -624,52 +631,56 @@ c     Restore original color table
       rsize = .008
       iy = (y_2+.021) * 1024
 
-!     Left Edge
-      if(log_scaling)then
-          rlow = 0.
-      else
-          rlow = scale_l/scale
-      endif
+      if(.not. l_discrete)then
 
-      if(abs(rlow) .gt. 0.0 .and. 
-     1   abs(rlow) .le. 0.5                  )then
-          write(ch_low,3)rlow
-          call right_justify(ch_low)
-      else
-          write(ch_low, 1)nint(rlow)
-          call right_justify(ch_low)
-      endif
-
-!     ixl = 353 + nint(.05 * 1024.)
-      ixl = nint((xlow - .005) * 1024.)
-      CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
-
-!     Right Edge
-      if(log_scaling)then
-          rhigh = (10.**scale_h) / scale
-      else
-          rhigh = scale_h / scale
-      endif
-
-      if(abs(rhigh) .ge. 1.0)then
-          if(abs(rhigh-float(nint(rhigh))) .lt. .05)then       
-              write(ch_high,1)nint(rhigh)
- 1            format(i8)
+!         Left Edge
+          if(log_scaling)then
+              rlow = 0.
           else
-              write(ch_high,2)rhigh
+              rlow = scale_l/scale
           endif
-      else
-          write(ch_high,3)rhigh
- 3        format(f8.2)
-      endif
-      call left_justify(ch_high)
 
-      ixh = ixl + 525 ! 878
-      CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
+          if(abs(rlow) .gt. 0.0 .and. 
+     1       abs(rlow) .le. 0.5                  )then
+              write(ch_low,3)rlow
+              call right_justify(ch_low)
+          else
+              write(ch_low, 1)nint(rlow)
+              call right_justify(ch_low)
+          endif
 
-      if(.not. l_loop)then ! Plot Midpoint
+!         ixl = 353 + nint(.05 * 1024.)
+          ixl = nint((xlow - .005) * 1024.)
+          CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
 
-!         Plot Black Line
+!         Right Edge
+          if(log_scaling)then
+              rhigh = (10.**scale_h) / scale
+          else
+              rhigh = scale_h / scale
+          endif
+
+          if(abs(rhigh) .ge. 1.0)then
+              if(abs(rhigh-float(nint(rhigh))) .lt. .05 .or. 
+     1                                     colortable .eq. 'haines')then       
+                  write(ch_high,1)nint(rhigh)
+ 1                format(i8)
+              else
+                  write(ch_high,2)rhigh
+              endif
+          else
+              write(ch_high,3)rhigh
+ 3            format(f8.2)
+          endif
+          call left_justify(ch_high)
+
+          ixh = ixl + 525 ! 878
+          CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
+
+      endif ! l_discrete
+
+      if(.not. l_loop .and. .not. l_discrete)then ! Plot Midpoint
+
           frac = 0.5
           x1   = xlow + frac*xrange 
           x2   = xlow + frac*xrange 
@@ -707,11 +718,12 @@ c     Restore original color table
 
       endif
 
-      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc'
+      if(colortable .eq. 'spectral' .or. colortable .eq. 'acc' 
      1                              .or. colortable(1:3) .eq. 'lin')then       
 
 !         Other fractions
           do frac = 0.25,0.75,0.50
+
 !             Plot Black Line
               x1   = xlow + frac*xrange 
               x2   = xlow + frac*xrange 
@@ -732,7 +744,8 @@ c     Restore original color table
 
               if(rlabel .lt. 0.999)then
                   write(ch_frac,3)rlabel
-              elseif(rlabel .lt. 2.0 .or. rlabel .ne. nint(rlabel))then       
+              elseif( (rlabel .lt. 2.0 .or. rlabel .ne. nint(rlabel))
+     1                         .AND.   colortable .ne. 'haines'    )then       
                   write(ch_frac,2)rlabel
               else
                   write(ch_frac,1)nint(rlabel)
@@ -749,7 +762,9 @@ c     Restore original color table
       elseif(l_loop)then ! plot additional numbers
 
 !         Set interval for writing numbers
-          if(range .gt. 1000.)then
+          if(l_discrete)then
+              colorbar_int = 0.5
+          elseif(range .gt. 1000.)then
               colorbar_int = 1000.
           elseif(range .gt. 10.)then
               colorbar_int = 10.
@@ -763,8 +778,7 @@ c     Restore original color table
           ixl = 409
           ixh = 924
 
-          write(6,*)' Plotting colorbar for sfc t',scale_l,colorbar_int       
-     1             ,ixl,ixh                 
+          write(6,*)' Plotting colorbar',scale_l,colorbar_int,ixl,ixh          
 
           loop_count = 0
 
@@ -773,14 +787,15 @@ c     Restore original color table
 
               loop_count = loop_count + 1
 
-!             Plot Black Line
-              x1   = xlow + frac*xrange 
-              x2   = xlow + frac*xrange 
-              call setusv_dum(2hIN,0)
+              if(.not. l_discrete)then ! Plot Black Line 
+                  x1   = xlow + frac*xrange 
+                  x2   = xlow + frac*xrange 
+                  call setusv_dum(2hIN,0)
 
-              y1 = ylow
-              y2 = yhigh
-              call line(x1,y1,x2,y2)
+                  y1 = ylow
+                  y2 = yhigh
+                  call line(x1,y1,x2,y2)
+              endif
 
               if(loop_count .eq. (loop_count/1) * 1 )then ! number every line
 !                 Plot Number
@@ -803,8 +818,16 @@ c     Restore original color table
                   call s_len(ch_frac,len_frac)
 
                   ixm = ixl + (ixh-ixl)*frac
-                  CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
-     1                        ,rsize,0 , 0.0)       
+
+                  if(l_discrete)then
+                      if(rlabel .eq. float(nint(rlabel)))then
+                          CALL PCHIQU (cpux(ixm),cpux(iy)
+     1                        ,ch_frac(1:len_frac),rsize,0 , 0.0)       
+                      endif
+                  else
+                      CALL PCHIQU (cpux(ixm),cpux(iy)
+     1                    ,ch_frac(1:len_frac),rsize,0 , 0.0)       
+                  endif
 
               endif ! loop_count
           enddo ! rarg
