@@ -55,6 +55,9 @@
         integer maxstations_cmn, maxobs_cmn
         character*3 c_raddat_type
         character*80 c80_description
+        character*100 path_to_topt30s
+        character*100 path_to_topt10m
+        character*100 path_to_pctl10m
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
@@ -77,7 +80,9 @@
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
      1  ,maxstations_cmn,maxobs_cmn
-     1  ,c_raddat_type, c80_description
+     1  ,c_raddat_type, c80_description, path_to_topt30s
+     1  ,path_to_topt10m, path_to_pctl10m
+
 
 
       
