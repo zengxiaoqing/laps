@@ -264,6 +264,8 @@ c                                 2 Barnes calls. When no satellite data for HSM
 c                                 'a' weight set to zero.  Bkg added back into
 c                                 t, to, and s arrays on exit.
 c         P. Stamus     09-29-98  Calc std dev from just obs (not boundaries+obs)
+c                       01-28-99  Temp. replace spline section with Barnes. Fix
+c                                   boundary normalization.
 c
 c*******************************************************************************
 c
@@ -353,7 +355,38 @@ c
 	iflag = 0
 	print *,' std dev: ',std,', bad value: ',bad
 c
-c.....  eliminate bad data   
+c.....  Normalize the boundaries with respect to the bkg.
+c
+	do j=2,jmax-1 ! for i=1 and i=imax
+	   to(1,j) = to(1,j) - tb(1,j)
+	   to(imax,j) = to(imax,j) - tb(imax,j)
+	enddo !j
+c
+	do j=3,jmax-2 ! for i=2 and i=imax-1
+	   to(2,j) = to(2,j) - tb(2,j)
+	   to(imax-1,j) = to(imax-1,j) - tb(imax-1,j)
+	enddo !j
+c
+	do i=2,imax-1 ! for j=1 and j=jmax
+	   to(i,1) = to(i,1) - tb(i,1)
+	   to(i,jmax) = to(i,jmax) - tb(i,jmax)
+	enddo
+	do i=3,imax-2 ! for j=1 and j=jmax-1
+	   to(i,2) = to(i,2) - tb(i,2)
+	   to(i,jmax-1) = to(i,jmax-1) - tb(i,jmax-1)
+	enddo
+c
+	to(1,1) = to(1,1) - tb(1,1)  !corners
+	to(2,2) = to(2,2) - tb(2,2)
+	to(1,jmax) = to(1,jmax) - tb(1,jmax)
+	to(2,jmax-1) = to(2,jmax-1) - tb(2,jmax-1)
+	to(imax,1) = to(imax,1) - tb(imax,1)
+	to(imax-1,2) = to(imax-1,2) - tb(imax-1,2)
+	to(imax,jmax) = to(imax,jmax) - tb(imax,jmax)
+	to(imax-1,jmax-1) = to(imax-1,jmax-1) - tb(imax-1,jmax-1)
+c
+c.....  eliminate bad data from the interior while normalizing to
+c.....   the background
 c
 	do j=3,jmax-2
 	do i=3,imax-2
@@ -395,21 +428,33 @@ c
 c
 c.....  Set the weights for the spline.
 c
-	alf = 100.
-	beta = 3.
-	a =  5.
+	alf = 1.
+	beta = 100.
+	a =  0.
 	if(isat_flag .eq. 0) a = 0.
-	alf2a = (1./9.) * alf
+	alf2a = 0.0 !(1./9.) * alf
 c
 	write(6,9995) alf, beta, alf2a, a
  9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f10.4)
 c
 c.....  Now do the spline.
 c
+	rom2 = 0.025
+	npass = 1
+	mxstn = 0
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
+c	
+	go to 876
+c
 	iteration = .true.
+
+	itmax = 100
+
 	do it=1,itmax
 	  cormax = 0.
 	  if(iteration) then
+	print *,' it = ', it
 	     do j=3,jmax-2
 	     do i=3,imax-2
 		alfo = alf
@@ -460,6 +505,17 @@ c	write(6,1000) it,cormax
 	  endif
 	enddo !it
 c
+cc	do j=1,jmax
+cc	   do i=1,imax
+cc	      if(to(i,j) .ne. 0.) then
+cc		 write(6,7119) i,j,to(i,j)
+cc	      endif
+cc	   enddo
+cc	enddo
+
+ 7119	format(2i5,f10.2)
+c	return
+ 876	continue
 c
 c.....  Add backgrounds back to t, to, and s
 c
