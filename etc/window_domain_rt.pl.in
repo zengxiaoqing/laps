@@ -68,7 +68,8 @@ if(defined $opt_h){
 if(!defined $opt_w){die "\nYou must decide and use the -w command line input to
                            specify the type of localization desired. Two options:
                            1. -w laps
-                           2. -w wrfsi\n\n";}
+                           2. -w wrfsi
+                           3. -w wrfsi.rotlat\n\n";}
 
 my $domain_type = $opt_w;
 my ($LAPS_SRC_ROOT, $LAPSINSTALLROOT, $LAPS_DATA_ROOT, $DATAROOT, $DOMAIN_NAME);
@@ -85,7 +86,7 @@ if($domain_type eq "laps"){
    $LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $LAPSINSTALLROOT);
    $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT} && !defined $LAPS_DATA_ROOT);
    $logfile = "localize_domain.log";
-}elsif($domain_type eq "wrfsi"){
+}elsif($domain_type eq "wrfsi" || $domain_type eq "wrfsi.rotlat"){
    $LAPS_SRC_ROOT = $ENV{SOURCE_ROOT} if( $ENV{SOURCE_ROOT} && !defined $LAPS_SRC_ROOT);
    $LAPSINSTALLROOT = $ENV{INSTALLROOT} if( $ENV{INSTALLROOT} && !defined $LAPSINSTALLROOT);
    $LAPS_DATA_ROOT = $ENV{MOAD_DATAROOT} if( $ENV{MOAD_DATAROOT} && !defined $LAPS_DATA_ROOT);
@@ -93,7 +94,8 @@ if($domain_type eq "laps"){
    die "\nUnknown domain type entered with -w command line input: $domain_type.
           You have two options:
           1. -w laps
-          2. -w wrfsi\n\n";
+          2. -w wrfsi
+          3. -w wrfsi.rotlat\n\n";
 }
 
 if( !-d $LAPS_SRC_ROOT){
@@ -340,16 +342,15 @@ if( defined($LAPS_TEMPLATE) ){
 #                 }
                   print "Copy $LAPS_TEMPLATE/$_ directory to $LAPS_DATA_ROOT/static \n";
                   system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
-              }else{
+               }else{
                   print "Copy $LAPS_TEMPLATE/$_ file to $LAPS_DATA_ROOT/static \n";
                   system("cp -p  $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
-              }
+                  chmod 0664, "$LAPS_DATA_ROOT/static/$_";
+               }
             }
     }
     if(defined $opt_m){
        $success = &restorefiles("ggm");
-    }else{
-       $success = &restorefiles("static");
     }
 }else{
    print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";
@@ -369,13 +370,19 @@ my (@xdim, @ydim, @num_domains, @pieces);
 my @oldWRFSI_Files=qw(static.wrfsi topography.dat topo.dat corners.dat latlon2d.dat latlon.dat);
 if($domain_type eq "wrfsi")
 {
-   @num_domains = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$LAPS_DATA_ROOT);
-   if($#num_domains<=0 && $CONFIG_DOMAIN eq "false")
-   {
-      @num_domains = &laps_tools::get_nl_value("wrfsi.nl","num_domains","$LAPS_DATA_ROOT/static\_save","1");
+   if(-e "LAPS_DATA_ROOT/static/wrfsi.nl"){
+      @num_domains = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$LAPS_DATA_ROOT); 
+      if($#num_domains<=0 && $CONFIG_DOMAIN eq "false")
+      {
+         if($all_roots_equal eq "T"){
+            @num_domains = &laps_tools::get_nl_value("wrfsi.nl","num_domains","$LAPS_SRC_ROOT/data_rep/static","1");
+         }else{
+            @num_domains = &laps_tools::get_nl_value("wrfsi.nl","num_domains","$LAPS_DATA_ROOT/static\_save","1");
+         }
+      @xdim        = &laps_tools::get_nl_value("wrfsi.nl","xdim",$LAPS_DATA_ROOT);
+      @ydim        = &laps_tools::get_nl_value("wrfsi.nl","ydim",$LAPS_DATA_ROOT);
+      }
    }
-   @xdim        = &laps_tools::get_nl_value("wrfsi.nl","xdim",$LAPS_DATA_ROOT);
-   @ydim        = &laps_tools::get_nl_value("wrfsi.nl","ydim",$LAPS_DATA_ROOT);
    if($#xdim > 1)
    {
       &laps_tools::update_nl($LAPS_DATA_ROOT,"wrfsi.nl","xdim",$xdim[0]);
@@ -455,7 +462,7 @@ if($domain_type eq "wrfsi" && !defined $opt_m)
    $command = "$LAPSINSTALLROOT/bin/staticpost.exe > $LAPS_DATA_ROOT/log/staticpost.log";
    run_sys::run_sys($command);
    print "\n";
-   $command = "$LAPSINSTALLROOT/etc/sync_wrfnl.pl $ENV{MOAD_DATAROOT}";
+   $command = "@PERL@ $LAPSINSTALLROOT/etc/sync_wrfnl.pl $ENV{MOAD_DATAROOT}";
    run_sys::run_sys($command);
    print "\n";
    undef $ENV{MOAD_DATAROOT};
@@ -476,6 +483,11 @@ if($domain_type eq "laps")
    $staticfile[0]="static.nest7grid";
    $namelist  ="nest7grid.parms";
    $num_domains[0]=1;
+}
+elsif($domain_type eq "wrfsi.rotlat")
+{
+   $staticfile[0]="static.wrfsi.rotlat";
+   $namelist  ="wrfsi.nl";
 }
 else
 {
@@ -660,16 +672,20 @@ sub restorefiles
                     }
            }
     }
-    opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
-    @filelist = grep !/^\.\.?$/, readdir CDLDIR;
-    closedir CDLDIR;
-    foreach (@filelist)
-    {
-            if(/^wrfsi\.d(\d\d)/)
-            {
-               next if($1 > $num_domains[0])
-            }
-            `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+# commented 9-2-04 JS: We do not want to copy from "save" if nx,ny,nz have changed!
+    my $runthis = "false";
+    if($runthis eq "true"){
+       opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
+       @filelist = grep !/^\.\.?$/, readdir CDLDIR;
+       closedir CDLDIR;
+       foreach (@filelist)
+       {
+                if(/^wrfsi\.d(\d\d)/)
+                {
+                     next if($1 > $num_domains[0]);
+                     `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+                }
+       }
     }
     return 1;
 }
