@@ -20,9 +20,9 @@ c
 c
       smin=1.e25
       smax=-1.e25
-      sum=0
-      rms=0
-      cnt=0
+      sum=0.
+      rms=0.
+      cnt=0.
       do j=1,jmax
       do i=1,imax
          ii(i,j)=0 
@@ -42,9 +42,9 @@ c
             go to 1
          endif
       enddo !i
-    1 write(*,999) cs
+    1 write(6,999) cs
  999  format(//1x,a12)
-      write(*,1000) atime,iii, smax,smin
+      write(6,1000) atime,iii, smax,smin
  1000 format(13x,a24,' x 10**',i3,' Max: ',e10.4,'  Min: ',e10.4)
       do j=1,jmax
       do i=1,imax
@@ -55,19 +55,19 @@ c
       enddo !i
       enddo !j
       rms=sqrt(rms/cnt)                
-      write(*,1004) rms,sum,offset
+      write(6,1004) rms,sum,offset
  1004 format(1x,'RMS  = ',e12.4,' MEAN = ',e12.4,' OFFSET = ',e12.4)
  1001 format(1x,'transposed vector')
       if (jmax.eq.1) then
-         write (*,1001)
-         if(onoff.eq.1)write (*,1002) (ii(i,1),i=1,imax)
+         write(6,1001)
+         if(onoff.eq.1) write(6,1002) (ii(i,1),i=1,imax)
       else
          continue
          if(onoff.eq.1) then
             do i=1,imax
-               write(*,1005) i
+               write(6,1005) i
  1005          format(/i3)
-               write(*,1002) (j,ii(i,j),j=1,jmax)
+               write(6,1002) (j,ii(i,j),j=1,jmax)
             enddo !i
          endif
       endif
@@ -92,9 +92,9 @@ c
       character*72 cs,atime*24
       integer i
 c
-      write(*,1000) cs,atime
+      write(6,1000) cs,atime
  1000 format(//1x,a72)
-      write (*,1002) (a(i)  ,i=1,imax)
+      write(6,1002) (a(i)  ,i=1,imax)
  1002 format(10i7)
 c
       return
@@ -115,9 +115,9 @@ c
       character*5   a(m)
       character*14 cs,atime*24
 c
-      write(*,1000) cs,atime
+      write(6,1000) cs,atime
  1000 format(//1x,a14)
-      write (*,1002) (a(i)(1:5)  ,i=1,imax)
+      write(6,1002) (a(i)(1:5)  ,i=1,imax)
  1002 format(10(2x,a5))
 c
       return
@@ -125,7 +125,7 @@ c
 c
 c
        Subroutine writemon(ta,tda,ua,va,pmsla,alta,
-     &   nvar,maxsta,m,monster,it) 
+     &   nvar,maxsta,m,ncycles,monster,it) 
 c
 c*********************************************************************
 c     Subroutine puts the latest sets of obs into monster for
@@ -135,17 +135,16 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version.
 c
 c*********************************************************************
 c
        real ta(m),tda(m),ua(m),va(m),pmsla(m),alta(m)
-       real monster(m,m,nvar)
-c iterate it to count how many cycles are in monster, maximum is m
-       it=it+1
-       if(it.gt.m) it=m
+       real monster(m,ncycles,nvar)
 c
        do k=1,nvar
-          do l=m-1,1,-1
+          do l=ncycles-1,1,-1
              do i=1,maxsta
                 monster(i,l+1,k)=monster(i,l,k)
              enddo !i
@@ -168,7 +167,8 @@ c
 c
        return
        end
-
+c
+c
       subroutine write_qc_cdf(i4time_file, dir, ext, m, 
      1   num_sta, 
      1   stations, provider, reptype, lat, lon, elev,
