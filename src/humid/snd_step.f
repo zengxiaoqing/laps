@@ -52,6 +52,7 @@ cdis
      1     ii,jj,kk,            !laps grid dimensions I/
      1     q_snd,               !data output (q or sh) g/kg /O
      1     weight_field,        !weight field for this data for variational /O
+     1     raob_radius,         !radius of influence (meters)
      1     abort                !abort flag, 0= abort, 1= go I/O
      1     )
 
@@ -70,6 +71,7 @@ c     input parameters (defined above)
 
       integer i4time, ii,jj,kk, snd_lookback, abort
       real q_snd(ii,jj,kk), p_3d (ii,jj,kk)
+      real raob_radius
       real weight_field(ii,jj,kk)
       real lat(ii, jj), lon(ii, jj)
       real laps_t (ii,jj,kk)  ! laps temp field
@@ -349,6 +351,7 @@ c     3) generate a corresponding weight field for the variational step
      1     ll,
      1     nnn,
      1     nn,
+     1     raob_radius,
      1     lat,
      1     lon,
      1     p_3d,

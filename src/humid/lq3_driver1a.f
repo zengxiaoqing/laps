@@ -174,6 +174,7 @@ c     namelist data
 
       integer  raob_switch
       integer  raob_lookback
+      real raob_radius
       integer goes_switch
       integer cloud_switch
       integer cloud_d
@@ -189,7 +190,8 @@ c     namelist data
       integer gps_switch
       character*256 path_to_gvap8,path_to_gvap10,path_to_gps
       namelist /moisture_switch_nl/ raob_switch,
-     1     raob_lookback, goes_switch, cloud_switch, cloud_d
+     1     raob_lookback, 
+     1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
@@ -215,6 +217,7 @@ c     routine
       write (6,*) '1) Variational inclusion of .SND data'
       write (6,*) '2) Bug fix to GOES sounder radiances in'
       write (6,*) '   variational assimilation step'
+      write (6,*) '3) raob_radius now a name list parameter'
       write (6,*) ' '
 
       call get_directory(extpw,dirpw,len)
@@ -236,6 +239,7 @@ c     set namelist parameters to defaults
       cloud_d = 1
       raob_switch = 0
       raob_lookback = 0
+      raob_radius = 45000.0  ! meters (45km)
       goes_switch = 0
       sounder_switch = 0
       tiros_switch = 0
@@ -281,6 +285,7 @@ c     set namelist parameters to defaults
          write(6,*) 'raob switch off, ignoring raobs (.snd files)'
       else
          write (6,*) 'Raob switch on... will use raobs if present'
+         write (6,*) 'RAOB radius of influ set to..',raob_radius,' m'
       endif
       
       write(6,*) 'RAOB look back set to ', raob_lookback, 'seconds'
@@ -616,7 +621,8 @@ c     ****  execute raob step if switch is on
          write (6,*) 'begin raob insertion'
 
          call snd_step (i4time,p_3d,raob_lookback, lat,lon,
-     1        lt1dat, ii,jj,kk, q_snd,weight_snd, raob_switch)
+     1        lt1dat, ii,jj,kk, q_snd,weight_snd, 
+     1        raob_radius, raob_switch)
          
 c     ---  as of 12/07/01 snd_step has been replaced raob_step
 c     Raob_step will be removed in the near future.

@@ -43,6 +43,7 @@ cdis
 cdis
 cdis
       subroutine analz_snd (rh,ll_n,lat_s,lon_s,p_s,ll,nnn,nn,
+     1     raob_radius,
      1     lat,lon,p_3d,
      1     RH_fields,W_field,ii,jj,kk)
 
@@ -56,6 +57,7 @@ c     input variables
       integer nn                ! number of soundings
       real rh(ll,nnn)           ! snd rh by level and nnn soundings
       integer ll_n(nnn)         ! number of levels at each sounding
+      real raob_radius          ! radius of influence (meters)
       real lat_s(ll,nnn)        ! latitude of SND lvl data
       real lon_s(ll,nnn)        ! longitude of SND lvl data
       real p_s(ll,nnn)          ! pressure of SND data
@@ -180,7 +182,7 @@ c     next step is to distribute the data using existing routines
             call prep_grid (ii,jj,rh_fields(1,1,k),nnn,
      1           points(1,1,k),pn(k),istatus)
             call slv_laplc (rh_fields(1,1,k),mask(1,1,k),ii,jj)
-            r50 = 45.e+3       !45km spatial influence
+            r50 = raob_radius       ! spatial influence from namelist
             call weight_field (w_field(1,1,k), mask(1,1,k), ii,jj,
      1           r50, istatus)
 
