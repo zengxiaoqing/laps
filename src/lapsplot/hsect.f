@@ -850,9 +850,9 @@ cdis
 
                 var_2d = 'S8A'
                 call get_2dgrid_dname(directory
-     1          ,i4time_ref,10000,i4time_nearest
-     1          ,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+     1              ,i4time_ref,10000,i4time_nearest
+     1              ,ext,var_2d
+     1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
                 if(istatus .ne. 1)then
                     write(6,*)' Cant find VAS/S8A Analysis'
@@ -864,19 +864,22 @@ cdis
 
                 var_2d = 'ALB'
                 call get_2dgrid_dname(directory
-     1          ,i4time_ref,10000,i4time_nearest
-     1          ,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+     1              ,i4time_ref,10000,i4time_nearest
+     1              ,ext,var_2d
+     1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
                 if(istatus .ne. 1 .and. istatus .ne. -1)then
                     write(6,*)' Cant find ALB Analysis'
                     goto1200
                 endif
-                c33_label = 'LAPS VIS Cloud Fraction   -'//c_sat_id(k)
+!               c33_label = 'LAPS VIS Cloud Fraction   -'//c_sat_id(k)
+                c33_label = 'LAPS VIS Cld Frac (tenths) '//c_sat_id(k)
 
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    vas(i,j) = albedo_to_cloudfrac(vas(i,j))
+                    if(vas(i,j) .ne. r_missing_data)then
+                        vas(i,j) = albedo_to_cloudfrac(vas(i,j))
+                    endif
                 enddo 
                 enddo
 
@@ -927,33 +930,37 @@ cdis
                endif
 
                if(c_type .eq. 'v1' .or. c_type .eq. 'v2')then
-                do i = 1,NX_L
-                do j = 1,NY_L
-                 vas(i,j) = vas(i,j) - 273.15
-                enddo
-                enddo
-                clow = -80.
-                chigh = +40.
-                cint = 10.
+                   do i = 1,NX_L
+                   do j = 1,NY_L
+                       vas(i,j) = vas(i,j) - 273.15
+                   enddo
+                   enddo
+                   clow = -80.
+                   chigh = +40.
+                   cint = 10.
+                   scale = 1e0
                elseif(c_type .eq. 'v3')then
-                clow = -0.5
-                chigh = +1.5
-                cint = 0.2
+                   clow  =  -6.
+                   chigh = +16.
+                   cint = 2.0
+                   scale = 1e-1
                elseif(c_type .eq. 'v4')then
-                clow = 0.0
-                chigh = 256.
-                cint = 05.
+                   clow = 0.0
+                   chigh = 256.
+                   cint = 05.
+                   scale = 1e0
                elseif(c_type .eq. 'v5')then
-                clow = -8.0
-                chigh = 20.
-                cint = 4.
+                   clow = -8.0
+                   chigh = 20.
+                   cint = 4.
+                   scale = 1e0
                endif
 
                call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-               call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
-     1    c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+               call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+     1         c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1         NX_L,NY_L,r_missing_data,laps_cycle_time)
 
               endif
              endif
