@@ -30,8 +30,8 @@ cdis
 cdis 
 cdis 
       program lga
-c
       implicit none
+c
 c
 c------------------> BACKGROUND MODEL DESIGNATION <-----------------------------
 c
@@ -163,14 +163,14 @@ c         len = index(bgpaths(i),' ')
          print *,  ' '
          print *, nx_laps,ny_laps,nz_laps,prbot,delpr
          print *, laps_cycle_time
-         print *, lapsroot
+ccc         print *, lapsroot
          print *, laps_domain_file
          print *, nx_bg,ny_bg,nz_bg
 
 c
 c *** Read background model data directory paths from standard input.
 c
-         print *, 'bgpath ', bgpath
+         print *, 'bgpath ', bgpath(1:len)
 c
 c *** Read background model name for netcdf comment output only.
 c
@@ -309,7 +309,7 @@ c
       character*10  units(5*nz_laps)
       character*125 comment(5*nz_laps)
       character*12  cmodel
-       
+      integer*4 ncid       
       integer len_dir, ntime, last_time,next_time, nf
 c
       data msgflg/1.e30/
@@ -465,6 +465,17 @@ c
          if(ntime.eq.0) then
             ntime = bgtime
          endif   
+         if(bgmodel.eq.4) then         
+            call open_sbn_netcdf(bgpath,fname,ncid,5,istatus)
+            if(istatus.eq.0) then
+              print*,'Not enough records in file ',fname
+              istatus=0
+              ntime=0
+              goto 40
+            endif
+            call ncclos(ncid,istatus)
+
+         endif
 
          if(bgtime+ihour*3600.gt.i4time_now.and.
      +        bgtime+ihour*3600.lt.next_time) then
@@ -473,6 +484,14 @@ c
           endif
          if(bgtime+ihour*3600.le.i4time_now.and.
      +        bgtime+ihour*3600.gt.last_time) then
+c
+c Since the files are sorted from newest to oldest, if we have a previous
+c time but not a next time this run won't work - try an earlier run
+c
+            if(next_time.gt.bgtime+48*3600) then
+               ntime = 0
+               goto 40
+            endif
             last_time = bgtime+ihour*3600
             file_list(2) = bg_names(n)
           endif
@@ -651,6 +670,8 @@ c
             enddo
             enddo
          endif
+         
+
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
@@ -668,6 +689,7 @@ c
             if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
      .              uw(i,j,k),vw(i,j,k)) .ge. msgflg) then
                print *,'Missing value flag detected...Abort...',i,j,k
+               print*,ht(i,j,k),tp(i,j,k),sh(i,j,k), uw(i,j,k),vw(i,j,k)
                goto 80
             endif
             if (ht(i,j,k) .ne. ht(i,j,k) .or. 

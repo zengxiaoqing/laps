@@ -1,3 +1,39 @@
+      subroutine open_sbn_netcdf(path, fname, ncid
+     +                        , ntbg, istatus)  
+      implicit none
+      integer istatus
+      include 'netcdf.inc'
+      character*(*) path
+      character*13 fname13,fname9_to_wfo_fname13
+      character*9 fname
+      character*255 cdfname
+      character*31 dummy
+      integer*4 ncid, slen, ndims, nvars, recdim, nrecs,ngatts
+      integer*4 rcode, ntbg
+
+      if(len(path)+13.gt.len(cdfname)) then
+        print*,'path too long in open)sbn_netcdf'
+        stop
+      endif
+
+      fname13=fname9_to_wfo_fname13(fname)
+
+      call s_len(path,slen)
+      cdfname=path(1:slen)//'/'//fname13
+      print *,'Reading - ',cdfname(1:slen+14)
+      ncid=ncopn(cdfname,ncnowrit,rcode)
+      call ncinq(ncid,ndims,nvars,ngatts,recdim,rcode)
+      call ncdinq(ncid,recdim,dummy,nrecs,rcode)
+      if (nrecs .lt. ntbg) then
+         print *,'Not enough records in netcdf file.'
+         istatus=0
+         call ncclos(ncid,istatus)
+         return
+      endif
+      istatus = 1
+      return
+      end
+
       subroutine read_ruc60_conus(path,fname,af,nx,ny,nz,
      .                            pr,ht,tp,sh,uw,vw,gproj,istatus)
 
@@ -46,16 +82,13 @@ c
       integer*4 start(10),count(10)
       integer vdims(10) 
       integer ncid,ntp,nvdim,nvs,lenstr,ndsize
-      integer ndims,nvars,ngatts,recdim,nrecs
       character*31 dummy
 c
-      integer*4 i,j,k,l,n,ip,jp,ii,jj,kp1,it,istatus
+      integer*4 i,j,k,n,ip,jp,ii,jj,kp1,it,istatus
 c
       character*(*) path
       character*9   fname,oldfname
       character*4   af
-      character*13  fname13,fname9_to_wfo_fname13
-      character*255 cdfname
       character*2   gproj
 c
       real*4 msgflg
@@ -78,20 +111,9 @@ c
 c *** Open the netcdf file.
 c
       if (fname .ne. oldfname) then
-         fname13=fname9_to_wfo_fname13(fname)
-c         l=index(path,' ')-1
 
-         call s_len(path,l)
-         cdfname=path(1:l)//'/'//fname13
-         print *,'Reading - ',cdfname(1:l+14)
-         ncid=ncopn(cdfname,ncnowrit,rcode)
-         call ncinq(ncid,ndims,nvars,ngatts,recdim,rcode)
-         call ncdinq(ncid,recdim,dummy,nrecs,rcode)
-         if (nrecs .lt. ntbg) then
-            print *,'Not enough records in netcdf file.'
-            istatus=0
-            return
-         endif
+         call open_sbn_netcdf(path,fname,ncid,ntbg,rcode)
+         if(rcode.ne.1) return
 c
 c ****** Read netcdf data.
 c ****** Statements to fill htn.
@@ -202,6 +224,7 @@ c
       jp=4 
       read(af,'(i4)') n
       n=n/3+1
+      istatus=0
       do k=1,19
       do j=1,nybg
       do i=1,nxbg
@@ -221,11 +244,15 @@ c
             sh(ii,jj,k)=sh(ii,jj,k)/(1.+sh(ii,jj,k))
             uw(ii,jj,k)=uwn(i,j,kp1,n)
             vw(ii,jj,k)=vwn(i,j,kp1,n)
+            istatus = 1
          endif
       enddo
       enddo
       enddo
-
+      if(istatus .eq. 0) then
+        print*, 'No valid data found for',fname, af
+        return
+      endif
 cc      do jj=5,nybg
 cc        do ii=14,nxbg
 cc          if(uw(ii,jj,19).ge.msgflg .and. uw(ii,jj,18).lt.msgflg)

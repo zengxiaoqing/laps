@@ -55,6 +55,7 @@ c
      .       vwvi(nx,ny,nz_laps)  !v-wind (m/s)
 c
       real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3,msgflg
+      real*4 datmsg
       integer*4 i,j,k,kk
 c_______________________________________________________________________________
 c
@@ -64,8 +65,12 @@ c
          do j=1,ny
          do i=1,nx
           do kk=1,nz_bg
+
+
             if (prlaps(k) .gt. prbg(i,j,1)) then
-             if (htbg(i,j,1) .lt. msgflg) then
+              datmsg = max(htbg(i,j,1),tpbg(i,j,1),shbg(i,j,1),
+     +                  uwbg(i,j,1),vwbg(i,j,1))
+             if (datmsg .lt. msgflg) then
                fact2=14.642857*alog(prbg(i,j,1)*prilaps)
                tpvi(i,j,k)=tpbg(i,j,1)+(prlaps(k)-prbg(i,j,1))*0.056
                htvi(i,j,k)=htbg(i,j,1)+(tpvi(i,j,k)+tpbg(i,j,1))*fact2
@@ -81,7 +86,9 @@ c
              endif
              goto 10
             elseif (prlaps(k) .lt. prbg(i,j,nz_bg)) then
-             if (htbg(i,j,nz_bg) .lt. msgflg) then
+              datmsg = max(htbg(i,j,nz_bg),tpbg(i,j,nz_bg)
+     +          ,shbg(i,j,nz_bg),uwbg(i,j,nz_bg),vwbg(i,j,nz_bg))
+             if (datmsg .lt. msgflg) then
                fact2=29.285714*alog(prbg(i,j,nz_bg)*prilaps)
                tpvi(i,j,k)=tpbg(i,j,nz_bg)
                htvi(i,j,k)=htbg(i,j,nz_bg)+tpbg(i,j,nz_bg)*fact2
@@ -97,7 +104,9 @@ c
              endif
              goto 10
             elseif (prlaps(k) .eq. prbg(i,j,kk)) then
-             if (htbg(i,j,kk) .lt. msgflg) then
+              datmsg = max(htbg(i,j,kk),tpbg(i,j,kk),shbg(i,j,kk),
+     +                  uwbg(i,j,kk),vwbg(i,j,kk))
+             if (datmsg .lt. msgflg) then
                htvi(i,j,k)=htbg(i,j,kk)
                tpvi(i,j,k)=tpbg(i,j,kk)
                shvi(i,j,k)=shbg(i,j,kk)
@@ -113,7 +122,7 @@ c
              goto 10
             elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
      .              prlaps(k) .gt. prbg(i,j,kk+1)) then
-             if (htbg(i,j,kk) .lt. msgflg) then
+             if (datmsg .lt. msgflg) then
                fact1=alog(prlaps(k)/prbg(i,j,kk))/
      .               alog(prbg(i,j,kk+1)/prbg(i,j,kk))
                fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
