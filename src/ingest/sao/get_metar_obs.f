@@ -338,7 +338,8 @@ c
             path_to_local_cwb = path_to_metar(1:len_path)//'../loc/'
 
             call s_len(data_file,len_file)
-            write(6,*)' CWB Synop/Local Data: ',data_file(1:len_file)       
+            write(6,*)' CWB Synop/Local (via read_synop_cwb): '
+     1                ,data_file(1:len_file)       
 
             n_synop_cwb = 0
 
