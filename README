@@ -105,8 +105,9 @@
      To install in /usr/local/laps with data in /data/fxa/laps use
      $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
      
-     The data directory for running laps can be specified at runtime. A single 
-     set of binaries can support several data directories as described below. 
+     One or more alternate data directories for running laps can be specified 
+     at runtime, if desired. A single set of binaries can thus support several 
+     data directories as described below. 
 
                 --- 2.1.3   Ingest Software changes ---
 
