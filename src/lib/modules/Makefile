@@ -39,7 +39,7 @@ include $(SRCROOT)/src/include/makefile.inc
 
 RM=rm -f 
 
-.SUFFIXES:              .F .o
+.SUFFIXES:              .f .F .o
 
 LIB=libmodules.a
 DEBUGLIB=libdebugmodules.a
@@ -50,7 +50,13 @@ ARCHIVE = ar rv
 			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.F
 			$(ARCHIVE) $(LIB) $(<:.F=.o)
 
-FMOD = module_horiz_interp.o
+.f.o:
+			$(RM) $@
+			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f
+			$(ARCHIVE) $(LIB) $(<:.f=.o)
+
+
+FMOD = module_horiz_interp.o module_laps_static.o
 
 all:			lib
 
