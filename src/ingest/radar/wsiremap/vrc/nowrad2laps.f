@@ -61,6 +61,7 @@ ccc       include 'lapsparms.for'
        integer istatus
        integer status
        integer i_base_value,increment
+       integer lines,elems
 
 cccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -76,7 +77,7 @@ c
 
       if(c_radtype.eq.'wfo')then
          call read_wsi_cdf_wfo(filename,nlines,nelems,
-     1        Dx,Dy,valTime,image,istatus)
+     1lines,elems,Dx,Dy,valTime,image,istatus)
          if(istatus.ne.0)then
             write(6,*)'Error reading nowrad data'
             goto 14
@@ -86,8 +87,8 @@ c
 
       elseif(c_radtype.eq.'wsi')then
 
-           call read_wsi_cdf_wsi(filename,nlines,nelems,dlat,
-     1        dlon,lat2,lon1,validTime,Dx,Dy,image,status)
+           call read_wsi_cdf_wsi(filename,nlines,nelems,lines,
+     +elems,dlat,dlon,lat2,lon1,validTime,Dx,Dy,image,status)
            if(status.ne.0)then
               write(6,*)'Bad data detected'
               write(6,*)'Returning without data'
@@ -131,7 +132,7 @@ c
      &                  image,
      &                  r_llij_lut_ri,
      &                  r_llij_lut_rj,
-     &                  nlines,nelems, ! input array dimensions
+     &                  lines,elems, ! input array dimensions
      &                  rdbz,
      &                  istatus)
 

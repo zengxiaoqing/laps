@@ -29,8 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine read_wsi_cdf_wfo(input_name,lines,elems,
-     1        Dx,Dy,valtime,image,istatus)
+       subroutine read_wsi_cdf_wfo(input_name,nlines,nelems,
+     1ilines,ielems,Dx,Dy,valtime,image,istatus)
 c
 c       This routines reads the WSI NOWRAD netcdf files and
 c        converts the image value to values of 0-15.
@@ -43,7 +43,6 @@ c         modified to read conus-c nowrad netCDF data
 c
 c
         include 'netcdf.inc'
-        include 'vrc.inc'
         character*128 dimname                   ! Must match NETCDF.INC's
         common/ncopts/ncopts                    ! NetCDF error handling flag.
 
@@ -51,11 +50,8 @@ c
        
         integer varid,dimid,count(3),start(3)
         real*8 valtime
-c       integer nrecs
-c       parameter (nrecs=1)
      
-        integer lines,elems
-        integer image(nelems,nlines)   !,nrecs)
+        integer image(nelems,nlines)
 
         integer bad_data_flag
         integer imax_image_value
@@ -197,8 +193,8 @@ c
       icount_bad=0
       icount_out=0
 
-      do j=1,lines
-         do i=1,elems
+      do j=1,ilines
+         do i=1,ielems
             if(image(i,j).lt.0)then
                image(i,j)=127-image(i,j)
             else
@@ -236,8 +232,8 @@ c
 
 C  new C version of scan_adjust implemented 05-apr-96
 ccc      call c_scan_adjust(image,lines,elems,bad_data_flag)
-c     do j=1,lines
-c        do i=1,elems
+c     do j=1,ilines
+c        do i=1,ielems
 c           if(image(i,j).ne.bad_data_flag)
 c    +         image(i,j)=mod(image(i,j),16)
 cc     +           image(i,j)=modulo(image(i,j),16)
