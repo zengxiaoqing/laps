@@ -55,27 +55,27 @@ if(defined($numfiles)){
 }
 
 print "followup = $followup\n";
-if(defined($followup)){
-    print "adding followup\n";
 
-    $webdir="/usr/nfs/common/lapb/www";
+if(-e "$LAPS_DATA_ROOT/cronfile"){
+    open(IN,"$LAPS_DATA_ROOT/cronfile");
+    @lines= <IN>;
+    close IN;
 
-    if(-e "$LAPS_DATA_ROOT/cronfile"){
-        open(IN,"$LAPS_DATA_ROOT/cronfile");
-        @lines= <IN>;
-        close IN;
-
-        foreach (@lines) {
-           if( /\@followup\@/ ){
+    foreach (@lines) {
+       if( /\@followup\@/ ){
+           if(defined($followup)){
+               $webdir="/usr/nfs/common/lapb/www";
                s/\@followup\@/\; $webdir\/followup_ncarg.com $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $webdir\/followup_$followup\.log 2> $webdir\/followup_$followup\.err /;
+           }else{
+               s/\@followup\@/ /;
            }
-        }
-
-        open(OUT,">$LAPS_DATA_ROOT/cronfile");
-        foreach (@lines) {print OUT "$_";}
-        close OUT;
+       }
     }
 
+    open(OUT,">$LAPS_DATA_ROOT/cronfile");
+    foreach (@lines) {print OUT "$_";}
+    close OUT;
 }
+
 
 exit;
