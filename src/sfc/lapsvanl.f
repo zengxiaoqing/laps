@@ -155,6 +155,10 @@ c                               07-11-98  Added NaN checks on output.
 c                               09-25-98  Add bkg flags for each bkg variable.
 c	                        10-07-98  Range ck for pressures...until can
 c	                                    fix better.
+c                               12-02-98  Remove slot for ceiling in output;
+c                                           reduce num_var by 1 (to 26). Also
+c                                           remove vis verification, added 
+c                                           verif of T, Td, P backgrounds.
 c
 c*****************************************************************************
 cx
@@ -274,7 +278,7 @@ c
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
 c
-	parameter(num_var = 27)
+	parameter(num_var = 26)
 	real*4 data(ni,nj,num_var)
 	integer*4 imax,jmax,lvl(num_var)
 	character dir*256,ext*31,var(num_var)*3,lvl_coord(num_var)*4
@@ -512,12 +516,14 @@ c	beta_td = 3.0
         call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.3,
      &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
 c
-c.....	Convert the analysed perturbations back to t, td, and tb8 (don't
-c.....	bother with the t and td backgrounds since we're done with them).
+c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
+c.....	t and td backgrounds for a verification check).
 c
 	call add(t,tt,t,imax,jmax)
 	call add(td,ttd,td,imax,jmax)
 	call add(tb8,tt,tb8,imax,jmax)
+	call add(t_bk,tt,t_bk,imax,jmax)
+	call add(td_bk,ttd,td_bk,imax,jmax)
 c
 c.....	Check to make sure that td is not greater than t...1st time.
 c
@@ -935,14 +941,14 @@ c
 c.....	Now write out the grids to PROD_DEV.
 c
 	print *,' Saving primary fields.'
-	do i=1,27
+	do i=1,num_var
 	  lvl(i) = 0
 	  lvl_coord(i) = 'AGL'
 	enddo !i
 	lvl_coord(10) = 'MSL'
 	lvl_coord(26) = 'MSL'
 c
-        do i=1,27
+        do i=1,num_var
            write(comment(i),180) n_sao_g,n_sao_b,n_obs_g  
 c           write(comment(i)(50:52),180) n_sao_g
 c           write(comment(i)(54:56),180) n_sao_b
@@ -1032,6 +1038,11 @@ c
 	call check_field_2d(rh, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(    rh, data,  7, imax, jmax, num_var)
+c
+	var(8) = 'HI'		! Heat Index (K)
+	units(8) = 'K'
+	comment(8)= 'HEAT INDEX'
+	call move_2dto3d(    hi, data, 8, imax, jmax, num_var)
 c
 	print *,' -------------------------------'
 	print *,' MSL pressure (pa) :'
@@ -1184,11 +1195,6 @@ c
      &      'INDEX: 0-NONE, 5-SLGT, 10-MDT, 15-HI, 20-EXTREME'
 	call move_2dto3d(  fire, data, 26, imax, jmax, num_var)
 c
-	var(27) = 'HI'  ! Heat Index (K)
-	units(27) = 'K'
-	comment(27)= 'HEAT INDEX'
-	call move_2dto3d(    hi, data, 27, imax, jmax, num_var)
-c
 	print *,' ======================================================='
 c
 c.....  Now actually write the LSX file.
@@ -1218,40 +1224,56 @@ c
 	call verify(d1,t_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c	
+	title = 'Temperature background (deg F)'
+	ea = 1.00
+	call zero(d1,imax,jmax)
+	call move(t_bk,d1,imax,jmax)
+	call verify(d1,t_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c	
 	title = 'Dew Point (deg F)'
 	ea = 2.00
+	call zero(d1,imax,jmax)
 	call conv_k2f(td,d1,imax,jmax)
+	call verify(d1,td_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Dew Point background (deg F)'
+	ea = 2.00
+	call zero(d1,imax,jmax)
+	call move(td_bk,d1,imax,jmax)
 	call verify(d1,td_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	title = 'Wind Speed (kt)'
 	ea = 2.00
+	call zero(d1,imax,jmax)
 	call conv_ms2kt(spd,d1,imax,jmax)
+	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Wind Speed background (kt)'
+	ea = 2.00
+	call zero(d1,imax,jmax)
+	call windspeed(u_bk,v_bk,d1,imax,jmax)	! calc windspeed
+!	call conv_ms2kt(spd,d1,imax,jmax)
 	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	title = 'MSL pressure (mb)'   
 	ea = 0.68
+	call zero(d1,imax,jmax)
 	call move(mslp,d1,imax,jmax)
 	call multcon(d1,.01,imax,jmax)
 	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
-	title = 'Visibility (miles)'
-	ea = 1.00
-	call conv_m2miles(vis,d1,imax,jmax)
-	do i=1,n_obs_b            !conv to miles from log(miles)
-	   if(vis_s(i) .le. -1.5) then
-	      if(vis_s(i) .lt. -15.) then
-		 dums(i) = badflag
-	      else
-		 dums(i) = 0.
-	      endif
-	   else
-	      dums(i) = 10. ** (vis_s(i))
-	   endif
-	enddo !i
-	call verify(d1,dums,stn,n_obs_b,title,iunit,
+	title = 'MSL pressure background (mb)'   
+	ea = 0.68
+	call zero(d1,imax,jmax)
+	call move(mslp_bk,d1,imax,jmax)
+!	call multcon(d1,.01,imax,jmax)
+	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	close(iunit)
