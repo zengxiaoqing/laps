@@ -27,7 +27,7 @@ my $fileName=shift || die "WFO format filename required as second argument.\n";
 # copy to ds1-awc5
 $remotehost = "ds1-awc5";
 $remotePath = "/case/data/fxa/Grid/FSL/netCDF/LAPS_Grid/laps_f1";
-$jetPath = "/p10/usfsfire/f1/data/lapsprd/bigfile";
+$jetPath = "/p40/usfsfire/f1/data/lapsprd/bigfile";
 $cmd = "$scp $jetPath/$fileName $remotehost:$remotePath/$fileName";
 run_sys::run_sys($cmd);
 
