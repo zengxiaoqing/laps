@@ -392,6 +392,7 @@ c
 c
 	if(istatus .ne. 1)  then
  	   print *,' LGA 500 T not available.'
+	   call constant(t5,badflag,imax,jmax) 
 	   itheta5 = 0
 	else
 	   call move_3dto2d(dm1,13,t5,ni,nj,nk)  ! lvl 13 = 500 hPa
@@ -537,6 +538,8 @@ c
 c
 c
 	icnt_th = 0
+	dff_tmx = -9.e30
+	dff_tmn =  9.e30
 	do j=1,jmax
 	do i=1,imax
 	   torg_f = t(i,j)
@@ -553,7 +556,17 @@ c
 		t(i,j) = tnew_f
 		icnt_th = icnt_th + 1
 		dff_t = tnew_f - torg_f
-	 write(6,2244) i,j,theta_old,theta_c,torg_f,tnew_f,dff_t
+		if(dff_t .gt. dff_tmx) then
+		   dff_tmx = dff_t
+		   i_mx = i
+		   j_mx = j
+		endif
+		if(dff_t .lt. dff_tmn) then
+		   dff_tmn = dff_t
+		   i_mn = i
+		   j_mn = j
+		endif
+!	 write(6,2244) i,j,theta_old,theta_c,torg_f,tnew_f,dff_t
 	     endif
 	  endif
 	  theta(i,j) = theta_c                  ! sfc Th in C
@@ -564,7 +577,13 @@ c
  2244	format(' Adjusting sfc TH at ',2i4,/,'  Old/New TH(C): ',
      &         2f10.2,/,'  Old/New Sfc Temp(F): ',2f10.2,
      &         '   Difference: ',f10.2,/)
+	print *,' '
 	print *,' Changed sfc TH/temp at ',icnt_th,' points.'
+	if(icnt_th .gt. 0) then
+	   print *,'   Max change at ',i_mx,',',j_mx,': ',dff_tmx
+	   print *,'   Min change at ',i_mn,',',j_mn,': ',dff_tmn
+	endif
+	print *,' '
 c
 c.....	Check again (since we changed t) to make sure that td is not 
 c.....  greater than t, so thermo stuff won't blow up later.
@@ -1041,7 +1060,7 @@ c
 	var(26) = 'FWX'		! Fire threat index (integer)
 	units(26) = ' '
 	comment(26)(1:22)= 'LAPS FIRE THREAT INDEX'
-	comment(26)(62:120) = 
+	comment(26)(63:121) = 
      &      'INDEX: 0-NONE, 5-SLGT, 10-MDT, 15-HI, 20-EXTREME'
 	call move_2dto3d(  fire, data, 26, imax, jmax, num_var)
 c

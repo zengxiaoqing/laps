@@ -328,7 +328,7 @@ c
 !	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_temp,
 !     &                       lapse_td,pmsl_s(k),0.)	! MSL
 	  endif
-550	continue
+ 550	  continue
         enddo !k
 c
 c.....	Convert visibility to log( vis ) for the analysis.
@@ -337,24 +337,25 @@ c
 c
 c.....	READ IN THE BAND 8 BRIGHTNESS TEMPS (deg K)
 c
-	 ext_v = 'lvd'
-	 lvl_v(1) = 0
-	 var_v(1) = 'S8W'	! satellite...band 8, warm pixel (K)
+	ext_v = 'lvd'
+	lvl_v(1) = 0
+	var_v(1) = 'S8W'	! satellite...band 8, warm pixel (K)
 c
-	 call get_laps_2dvar(i4time,970,i4time_nearest,ext_v,var_v,
+	call get_laps_2dvar(i4time,970,i4time_nearest,ext_v,var_v,
      &        units_v,comment_v,imax,jmax,tb81,lvl_v,istatus)
 c
 	if(istatus .ne. 1) then
-	  write(6,962) atime
-962	  format(1x,' +++ Satellite data not available for the ',a24,
+	   write(6,962) atime
+ 962	   format(1x,' +++ Satellite data not available for the ',a24,
      &           ' analysis. +++')
-	go to 800
+	   call zero(tb81, imax,jmax)
+	   go to 800
 	endif
 	ibt = 1
 c
 c.....  READ IN any other data here
 c
-800	continue
+ 800	continue
 c
 c.....	Put the data on the grids.
 c
@@ -751,7 +752,7 @@ c
 
 c	15 May 1991  birkenheuer
 
-      dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*5),y2tmp(n*5)
+      dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*50),y2tmp(n*50)
       do 13 j=1,m
         do 11 k=1,n
           ytmp(k)=ya(j,k)
@@ -769,8 +770,8 @@ c
 
 c	15 May 1991 birkenheuer
 
-       dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*5),
-     &          y2tmp(n*5),yytmp(n*5)
+       dimension x1a(m),x2a(n),ya(m,n),y2a(m,n),ytmp(n*50),
+     &          y2tmp(n*50),yytmp(n*50)
        do 12 j=1,m
         do 11 k=1,n
           ytmp(k)=ya(j,k)
@@ -788,7 +789,7 @@ c
 
 c	15 may 1991  birkenheuer
 
-      dimension x(n),y(n*5),y2(n*5),u(n*5)
+      dimension x(n),y(n*50),y2(n*50),u(n*50)
       if (yp1.gt..99e30) then
         y2(1)=0.
         u(1)=0.
@@ -823,7 +824,7 @@ c
 
 c	15 May 1991 Birkenheuer
 
-      dimension xa(n),ya(n*5),y2a(n*5)
+      dimension xa(n),ya(n*50),y2a(n*50)
       klo=1
       khi=n
 1     if (khi-klo.gt.1) then
