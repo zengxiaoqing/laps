@@ -30,32 +30,46 @@ cdis
 cdis 
 cdis 
 	function precpw(td,p,n)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function computes total precipitable water precpw (cm) in a
 c   vertical column of air based upon sounding data at n levels:
 c	   td = dew point (celsius)
 c	   p = pressure (millibars)
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   calculations are done in cgs units.
+
 	dimension td(n),p(n)
+
 c   g = acceleration due to the earth's gravity (cm/s**2)
+
 	data g/980.616/
+
 c   initialize value of precipitable water
+
 	pw = 0.
 	nl = n-1
+
 c   calculate the mixing ratio at the lowest level.
+
 	wbot = wmr(p(1),td(1))
 	do 5 i=1,nl
 	wtop = wmr(p(i+1),td(i+1))
+
 c   calculate the layer-mean mixing ratio (g/kg).
+
 	w = 0.5*(wtop+wbot)
+
 c   make the mixing ratio dimensionless.
+
 	wl = .001*w
+
 c   calculate the specific humidity.
+
 	ql = wl/(wl+1.)
+
 c   the factor of 1000. below converts from millibars to dynes/cm**2.
+
 	dp = 1000.*(p(i)-p(i+1))
 	pw = pw+(ql/g)*dp
 	wbot = wtop

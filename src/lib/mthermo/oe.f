@@ -30,16 +30,27 @@ cdis
 cdis 
 cdis 
 	function oe(t,td,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns equivalent potential temperature oe (celsius)
 c   of a parcel of air given its temperature t (celsius), dew point
 c   td (celsius) and pressure p (millibars).
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   find the wet bulb temperature of the parcel.
+
 	atw = tw(t,td,p)
+
 c   find the equivalent potential temperature.
+
 	oe = os(atw,p)
 	return
 	end

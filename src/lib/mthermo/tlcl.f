@@ -30,23 +30,21 @@ cdis
 cdis 
 cdis 
 	function tlcl(t,td)
-c
 c   this function yields the temperature tlcl (celsius) of the lifting
 c   condensation level, given the temperature t (celsius) and the
-c   dew point td (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the formula used is n bolton, david,
+c   dew point td (celsius).  the formula used is in bolton, david,
 c   1980: "the computation of equivalent potential temperature,"
 c   monthly weather review, vol. 108, no. 7 (july), p. 1048, eq.(15).
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   convert from celsius to kelvin degrees.
-	tk = t+273.16
-	tdk = td+273.16
+
+	tk = t+273.15
+	tdk = td+273.15
 	a = 1./(tdk-56.)
 	b = alog(tk/tdk)/800.
 	tc = 1./(a+b)+56.
-	tlcl = tc-273.16
+	tlcl = tc-273.15
 	return
 	end

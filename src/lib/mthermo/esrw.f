@@ -30,24 +30,25 @@ cdis
 cdis 
 cdis 
 	function esrw(t)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the saturation vapor pressure over liquid
-c   water esrw (millibars) given the temperature t (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the formula used is due to richards, j.m., 1971: simple expression
+c   water esrw (millibars) given the temperature t (celsius). the
+c   formula used is due to richards, j.m., 1971: simple expression
 c   for the saturation vapour pressure of water in the range -50 to
 c   140c, british journal of applied physics, vol. 4, pp.l15-l18.
 c   the formula was quoted more recently by wigley, t.m.l.,1974:
 c   comments on 'a simple but accurate formula for the saturation
 c   vapor pressure over liquid water,' journal of applied meteorology,
 c   vol. 13, no. 5 (august) p.606.
-c
-	data cta,ts,ews/273.16,373.16,1013.25/
+
+	data cta,ts,ews/273.15,373.15,1013.25/
+
 c   cta = difference between kelvin and celsius temperature
 c   ts = temperature of the boiling point of water (k)
 c   ews = saturation vapor pressure over liquid water at 100c
+
 	data c1,     c2,     c3,     c4
      1	/ 13.3185,-1.9760,-0.6445,-0.1299 /
 	tk = t+cta

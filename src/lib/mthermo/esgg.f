@@ -30,28 +30,31 @@ cdis
 cdis 
 cdis 
 	function esgg(t)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the saturation vapor pressure over liquid
-c   water esgg (millibars) given the temperature t (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the formula used, due to goff and gratch, appears on p. 350 of the
+c   water esgg (millibars) given the temperature t (celsius). the
+c   formula used, due to goff and gratch, appears on p. 350 of the
 c   smithsonian meteorological tables, sixth revised edition, 1963,
 c   by roland list.
-c
-	data cta,ews,ts/273.16,1013.246,373.16/
+
+	data cta,ews,ts/273.15,1013.246,373.15/
+
 c   cta = difference between kelvin and celsius temperatures
 c   ews = saturation vapor pressure (mb) over liquid water at 100c
 c   ts = boiling point of water (k)
+
 	data c1,      c2,      c3,      c4,       c5,       c6
      1	/ 7.90298, 5.02808, 1.3816e-7, 11.344, 8.1328e-3, 3.49149 /
 	tk = t+cta
+
 c   goff-gratch formula
+
 	rhs = -c1*(ts/tk-1.)+c2*alog10(ts/tk)-c3*(10.**(c4*(1.-tk/ts))
      1	      -1.)+c5*(10.**(-c6*(ts/tk-1.))-1.)+alog10(ews)
 	esw = 10.**rhs
-	if (esw.lt.0.) esw = esw
+	if (esw.lt.0.) esw = 0.
 	esgg = esw
 	return
 	end

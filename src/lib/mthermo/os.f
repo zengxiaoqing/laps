@@ -30,19 +30,28 @@ cdis
 cdis 
 cdis 
 	function os(t,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the equivalent potential temperature os
 c   (celsius) for a parcel of air saturated at temperature t (celsius)
 c   and pressure p (millibars).
-c
-c	baker,schlatter	17-may-1982	original version
-c
 	data b/2.6518986/
 c   b is an empirical constant approximately equal to the latent heat
 c   of vaporization for water divided by the specific heat at constant
 c   pressure for dry air.
-	tk = t+273.16
+
+	tk = t+273.15
 	osk= tk*((1000./p)**.286)*(exp(b*w(t,p)/tk))
-	os= osk-273.16
+	os= osk-273.15
 	return
 	end

@@ -30,19 +30,29 @@ cdis
 cdis 
 cdis 
 	function tmr(w,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the temperature (celsius) on a mixing
 c   ratio line w (g/kg) at pressure p (mb). the formula is given in 
 c   table 1 on page 7 of stipanuk (1973).
 c
-c	baker,schlatter	17-may-1982	original version
-c
 c   initialize constants
+
 	data c1/.0498646455/,c2/2.4082965/,c3/7.07475/
 	data c4/38.9114/,c5/.0915/,c6/1.2035/
-c
+
 	x= alog10(w*p/(622.+w))
 	tmrk= 10.**(c1*x+c2)-c3+c4*((10.**(c5*x)-c6)**2.)
-	tmr= tmrk-273.16
+	tmr= tmrk-273.15
 	return
 	end

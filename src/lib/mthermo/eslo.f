@@ -30,17 +30,16 @@ cdis
 cdis 
 cdis 
 	function eslo(t)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the saturation vapor pressure over liquid
-c   water eslo (millibars) given the temperature t (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the formula is due to lowe, paul r.,1977: an approximating polynomial
+c   water eslo (millibars) given the temperature t (celsius). the
+c   formula is due to lowe, paul r.,1977: an approximating polynomial
 c   for the computation of saturation vapor pressure, journal of applied
 c   meteorology, vol 16, no. 1 (january), pp. 100-103.
-c
 c   the polynomial coefficients are a0 through a6.
+
 	data a0,a1,a2,a3,a4,a5,a6
      1  /6.107799961,     4.436518521e-01, 1.428945805e-02,
      2   2.650648471e-04, 3.031240396e-06, 2.034080948e-08,

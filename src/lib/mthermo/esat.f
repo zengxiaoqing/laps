@@ -30,18 +30,26 @@ cdis
 cdis 
 cdis 
 	function esat(t)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the saturation vapor pressure over
 c   water (mb) given the temperature (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   the algorithm is due to nordquist, w.s.,1973: "numerical approxima-
 c   tions of selected meteorlolgical parameters for cloud physics prob-
 c   lems," ecom-5475, atmospheric sciences laboratory, u.s. army
 c   electronics command, white sands missile range, new mexico 88002.
-c
-	tk = t+273.16
+
+	tk = t+273.15
 	p1 = 11.344-0.0303998*tk
 	p2 = 3.49149-1302.8844/tk
 	c1 = 23.832241-5.02808*alog10(tk)

@@ -30,15 +30,24 @@ cdis
 cdis 
 cdis 
 	function o(t,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns potential temperature (celsius) given
 c   temperature t (celsius) and pressure p (mb) by solving the poisson
 c   equation.
-c
-c	baker,schlatter	17-may-1982	original version
-c
-	tk= t+273.16
+
+	tk= t+273.15
 	ok= tk*((1000./p)**.286)
-	o= ok-273.16
+	o= ok-273.15
 	return
 	end

@@ -30,18 +30,21 @@ cdis
 cdis 
 cdis 
 	function tlcl1(t,td)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the temperature tlcl1 (celsius) of the lifting
 c   condensation level (lcl) given the initial temperature t (celsius)
 c   and dew point td (celsius) of a parcel of air.
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   eric smith at colorado state university has used the formula
 c   below, but its origin is unknown.
-	data cta/273.16/
+
+	data cta/273.15/
+
 c   cta = difference between kelvin and celsius temperature
+
 	tk = t+cta
+
 c   compute the parcel vapor pressure (mb).
 	es = eslo(td)
 	tlcl = 2840./(3.5*alog(tk)-alog(es)-4.805)+55.

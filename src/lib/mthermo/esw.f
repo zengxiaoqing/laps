@@ -30,20 +30,21 @@ cdis
 cdis 
 cdis 
 	function esw(t)
-c
+
 c   this function returns the saturation vapor pressure esw (millibars)
-c   over liquid water given the temperature t (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the polynomial approximation below is due to herman wobus, a mathematician who
+c   over liquid water given the temperature t (celsius). the polynomial
+c   approximation below is due to herman wobus, a mathematician who
 c   worked at the navy weather research facility, norfolk, virginia,
 c   but who is now retired. the coefficients of the polynomial were
 c   chosen to fit the values in table 94 on pp. 351-353 of the smith-
 c   sonian meteorological tables by roland list (6th edition). the
 c   approximation is valid for -50 < t < 100c.
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c
 c   es0 = saturation vapor ressure over liquid water at 0c
+
 	data es0/6.1078/
 	pol = 0.99999683       + t*(-0.90826951e-02 +
      1	   t*(0.78736169e-04   + t*(-0.61117958e-06 +

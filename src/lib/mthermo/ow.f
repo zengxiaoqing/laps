@@ -30,21 +30,32 @@ cdis
 cdis 
 cdis 
 	function ow(t,td,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the wet-bulb potential temperature ow
 c   (celsius) given the temperature t (celsius), dew point td
-c   (celsius), and pressure p (millibars).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the calculation for ow is very similar to that for wet bulb
-c   temperature.  see p.13 stipanuk (1973).
-c
+c   (celsius), and pressure p (millibars).  the calculation for ow is
+c   very similar to that for wet bulb temperature. see p.13 stipanuk (1973).
 c   find the wet bulb temperature of the parcel
+
 	atw = tw(t,td,p)
+
 c   find the equivalent potential temperature of the parcel.
+
 	aos= os(atw,p)
+
 c   find the wet-bulb potential temperature.
+
 	ow= tsa(aos,1000.)
 	return
 	end

@@ -30,25 +30,31 @@ cdis
 cdis 
 cdis 
 	function powt(t,p,td)
-c
+
 c   this function yields wet-bulb potential temperature powt
 c   (celsius), given the following input:
 c	   t = temperature (celsius)
 c	   p = pressure (millibars)
 c	   td = dew point (celsius)
-c
-c	baker,schlatter	17-may-1982	original version
-c
-	data cta,akap/273.16,0.28541/
-c	   cta = difference between kelvin and celsius temperatures
-c	   akap = (gas constant for dry air) / (specific heat at
-c		   constant pressure for dry air)
+
+c	baker, schlatter  17-may-1982	  original version.
+
+	data cta,akap/273.15,0.28541/
+
+c   cta = difference between kelvin and celsius temperatures
+c   akap = (gas constant for dry air) / (specific heat at
+c	   constant pressure for dry air)
 c   compute the potential temperature (celsius)
+
 	pt = (t+cta)*(1000./p)**akap-cta
+
 c   compute the lifting condensation level (lcl).
+
 	tc = tcon(t,td)
+
 c   for the origin of the following approximation, see the documen-
 c   tation for the wobus function.
+
 	powt = pt-wobf(pt)+wobf(tc)
 	return
 	end

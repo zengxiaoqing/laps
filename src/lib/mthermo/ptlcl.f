@@ -30,26 +30,26 @@ cdis
 cdis 
 cdis 
 	subroutine ptlcl(p,t,td,pc,tc)
-c
+
 c   this subroutine estimates the pressure pc (mb) and the temperature
 c   tc (celsius) at the lifted condensation level (lcl), given the
 c   initial pressure p (mb), temperature t (celsius) and dew point
 c   (celsius) of the parcel.  the approximation is that lines of 
 c   constant potential temperature and constant mixing ratio are
 c   straight on the skew t/log p chart.
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   teten's formula for saturation vapor pressure as a function of
 c   pressure was used in the derivation of the formula below.  for
 c   additional details, see math notes by t. schlatter dated 8 sep 81.
 c   t. schlatter, noaa/erl/profs program office, boulder, colorado,
 c   wrote this subroutine.
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   akap = (gas constant for dry air) / (specific heat at constant
 c	   pressure for dry air)
 c   cta = difference between kelvin and celsius temperatures
-	data akap,cta/0.28541,273.16/
+
+	data akap,cta/0.28541,273.15/
 	c1 = 4098.026/(td+237.3)**2
 	c2 = 1./(akap*(t+cta))
 	pc = p*exp(c1*c2*(t-td)/(c2-c1))

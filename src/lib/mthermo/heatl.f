@@ -30,27 +30,26 @@ cdis
 cdis 
 cdis 
 	function heatl(key,t)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the latent heat of
 c		evaporation/condensation         for key=1
 c		melting/freezing		 for key=2
 c		sublimation/deposition		 for key=3
 c   for water. the latent heat heatl (joules per kilogram) is a 
-c   function of temperature t (celsius).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c	the formulas are polynomial
+c   function of temperature t (celsius). the formulas are polynomial
 c   approximations to the values in table 92, p. 343 of the smithsonian
-c   meteorological talbes, sixth revised edition, i963 by roland list.
+c   meteorological tables, sixth revised edition, 1963 by roland list.
 c   the approximations were developed by eric smith at colorado state
 c   university.
 c   polynomial coefficients
+
 	data a0,a1,a2/ 3337118.5,-3642.8583, 2.1263947/
 	data b0,b1,b2/-1161004.0, 9002.2648,-12.931292/
 	data c0,c1,c2/ 2632536.8, 1726.9659,-3.6248111/
 	hltnt = 0.
-	tk = t+273.16
+	tk = t+273.15
 	if (key.eq.1) hltnt=a0+a1*tk+a2*tk*tk
 	if (key.eq.2) hltnt=b0+b1*tk+b2*tk*tk
 	if (key.eq.3) hltnt=c0+c1*tk+c2*tk*tk

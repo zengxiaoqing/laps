@@ -30,18 +30,25 @@ cdis
 cdis 
 cdis 
 	function tda(o,p)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the temperature tda (celsius) on a dry adiabat
-c   at pressure p (millibars).
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the dry adiabat is given by
+c   at pressure p (millibars). the dry adiabat is given by
 c   potential temperature o (celsius). the computation is based on
 c   poisson's equation.
-c
-	ok= o+273.16
+
+	ok= o+273.15
 	tdak= ok*((p*.001)**.286)
-	tda= tdak-273.16
+	tda= tdak-273.15
 	return
 	end

@@ -30,24 +30,26 @@ cdis
 cdis 
 cdis 
 	function pcon(p,t,tc)
-c
+
 c   this function returns the pressure pcon (mb) at the lifted condensa-
 c   tion level, given the initial pressure p (mb) and temperature t
-c   (celsius) of the parcel and the temperature tc (celsius) at the lcl.
-c
-c	baker,schlatter	17-may-1982	original version
-c
-c   the algorithm is exact.  it makes use of the formula for the
+c   (celsius) of the parcel and the temperature tc (celsius) at the 
+c   lcl. the algorithm is exact.  it makes use of the formula for the
 c   potential temperatures corresponding to t at p and tc at pcon.
 c   these two potential temperatures are equal.
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c
 	data akapi/3.5037/
+
 c   akapi = (specific heat at constant pressure for dry air) /
 c	    (gas constant for dry air)
-c
+
 c   convert t and tc to kelvin temperatures.
-	tk = t+273.16
-	tck = tc+273.16
+
+	tk = t+273.15
+	tck = tc+273.15
 	pcon = p*(tck/tk)**akapi
 	return
 	end

@@ -30,12 +30,20 @@ cdis
 cdis 
 cdis 
 	function z(pt,p,t,td,n)
-c
+
+c	g.s. stipanuk     1973      	  original version.
+c	reference stipanuk paper entitled:
+c            "algorithms for generating a skew-t, log p
+c	     diagram and computing selected meteorological
+c	     quantities."
+c	     atmospheric sciences laboratory
+c	     u.s. army electronics command
+c	     white sands missile range, new mexico 88002
+c	     33 pages
+c	baker, schlatter  17-may-1982	 
+
 c   this function returns the thickness of a layer bounded by pressure
 c   p(1) at the bottom and pressure pt at the top.
-c
-c	baker,schlatter	17-may-1982	original version
-c
 c   on input:
 c	p = pressure (mb).  note that p(i).gt.p(i+1).
 c	t = temperature (celsius)
@@ -44,12 +52,12 @@ c	n = number of levels in the sounding and the dimension of
 c	    p, t and td
 c   on output:
 c	z = geometric thickness of the layer (m)
-c
 c   the algorithm involves numerical integration of the hydrostatic
 c   equation from p(1) to pt. it is described on p.15 of stipanuk
 c   (1973).
-c
+
 	dimension t(1),p(1),td(1),tk(100)
+
 c	c1 = .001*(1./eps-1.) where eps = .62197 is the ratio of the
 c			      molecular weight of water to that of
 c			      dry air. the factor 1000. converts the
@@ -60,9 +68,10 @@ c		      (287 kg/joule/deg k) and g is the acceleration
 c		      due to the earth's gravity (9.8 m/s**2). the
 c		      factor of 2 is used in averaging two virtual
 c		      temperatures.
+
 	data c1/.0006078/,c2/14.64285/
 	do 5 i= 1,n
-	   tk(i)= t(i)+273.16
+	   tk(i)= t(i)+273.15
     5	continue
 	z= 0.0
 	if (pt.lt.p(n)) go to 20

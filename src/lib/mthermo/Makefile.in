@@ -39,20 +39,13 @@ RANLIB   = @RANLIB@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC= alcl_tg.f    esat_tg.f    heatl_tg.f   pcon_tg.f    tda_tg.f     tsa_tg.f\
-     ct.f         esgg.f       hum.f        powt.f       te.f         tv.f\
-     ct_tg.f      esgg_tg.f    hum_tg.f     powt_tg.f    te_tg.f      tv_tg.f\
-     dewpt.f      esice.f      o.f          precpw.f     thm.f        tw.f\
-     dewpt_tg.f   esice_tg.f   o_tg.f       precpw_tg.f  thm_tg.f     tw_tg.f\
-     dpt.f        esilo.f      oe.f         ptlcl.f      tlcl.f       w.f\
-     dpt_tg.f     esilo_tg.f   oe_tg.f      ptlcl_tg.f   tlcl1.f      w_tg.f\
-     dwpt.f       eslo.f       os.f         satlft.f     tlcl1_tg.f   wmr.f\
-     dwpt_tg.f    eslo_tg.f    os_tg.f      satlft_tg.f  tlcl_tg.f    wmr_tg.f\
-     ept.f        esrw.f       ow.f         ssh.f        tmlaps.f     wobf.f\
-     ept_tg.f     esrw_tg.f    ow_tg.f      ssh_tg.f     tmlaps_tg.f  wobf_tg.f\
-     es.f         esw.f        pccl.f       tcon.f       tmr.f        z.f\
-     es_tg.f      esw_tg.f     pccl_tg.f    tcon_tg.f    tmr_tg.f     z_tg.f\
-     esat.f       heatl.f      pcon.f       tda.f        tsa.f
+SRC= alcl.f     es.f       esrw.f     os.f       ptlcl.f    thm.f      tv.f   \
+     ct.f       esat.f     esw.f      ow.f       satlft.f   tlcl.f     tw.f   \
+     dewpt.f    esgg.f     heatl.f    pccl.f     ssh.f      tlcl1.f    w.f    \
+     dpt.f      esice.f    hum.f      pcon.f     tcon.f     tmlaps.f   wmr.f  \
+     dwpt.f     esilo.f    o.f        powt.f     tda.f      tmr.f      wobf.f \
+     ept.f      eslo.f     oe.f       precpw.f   te.f       tsa.f      z.f
+
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 DBARCHIVE = $(DEBUGLIB)($(addsuffix .o, $(basename $(SRC))))

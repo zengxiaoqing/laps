@@ -30,20 +30,24 @@ cdis
 cdis 
 cdis 
 	function tv(t,td,p)
-c
+
+c	baker, schlatter  17-may-1982	  original version.
+
 c   this function returns the virtual temperature tv (celsius) of
 c   a parcel of air at temperature t (celsius), dew point td
 c   (celsius), and pressure p (millibars). the equation appears
 c   in most standard meteorological texts.
-c
-c	baker,schlatter	17-may-1982	original version
-c
-	data cta,eps/273.16,0.62197/
+
+	data cta,eps/273.15,0.62197/
+
 c   cta = difference between kelvin and celsius temperatures.
 c   eps = ratio of the mean molecular weight of water (18.016 g/mole)
 c	  to that of dry air (28.966 g/mole)
+
 	tk = t+cta
+
 c   calculate the dimensionless mixing ratio.
+
 	w = .001*wmr(p,td)
 	tv = tk*(1.+w/eps)/(1.+w)-cta
 	return
