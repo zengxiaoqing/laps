@@ -32,7 +32,9 @@ cdis
 
         subroutine helicity_laps(uanl,vanl,ustorm,vstorm
      1                          ,heights_3d,topo
-     1                          ,imax,jmax,kmax,helicity,istatus)       
+     1                          ,imax,jmax,kmax,helicity,istatus)   
+
+cdoc    Calculate storm relative helicity over a 2-D grid    
 
         real*4 ustorm(imax,jmax),vstorm(imax,jmax)
         real*4 usfc(imax,jmax),vsfc(imax,jmax)
@@ -75,6 +77,15 @@ cdis
             klow  = int(rksfc) + 1          ! 1st level above the sfc
             khigh = int(rktop) + 1          ! 1st level above top of layer
 
+            if(i .eq. i/10*10 .and. j .eq. 42)then
+                iwrite = 1
+                write(6,*)
+                write(6,*)'i/j = ',i,j
+     1                   ,'u/vstorm = ',ustorm(i,j),vstorm(i,j)
+            else
+                iwrite = 0
+            endif
+
             do k = klow,khigh
 
                 if(k .lt. khigh)then
@@ -104,6 +115,12 @@ cdis
 !               Total area of hodograph
                 area_sum = area_sum + area
 
+                if(iwrite .eq. 1)then
+                    write(6,51)k,u_rel_l,v_rel_l,u_rel_u,v_rel_u
+     1                        ,area,area_sum
+ 51                 format(i6,6f11.2)
+                endif
+
                 u_rel_l = u_rel_u
                 v_rel_l = v_rel_u
 
@@ -111,10 +128,10 @@ cdis
 
             helicity(i,j) = area_sum * (-2.) 
 
-            if(i .eq. 1 .and. j .eq. 1)then
+            if(iwrite .eq. 1)then
                 write(6,101)i,j,klow,khigh,helicity(i,j),ustorm(i,j)
      1                    ,(uanl(i,j,k),k=1,min(kmax,21))        
-101             format(/4i4,f10.5,f8.3/7e11.3/7e11.3/7e11.3)
+101             format(4i4,f10.5,f8.3/7e11.3/7e11.3/7e11.3)
             endif
 
         enddo ! j

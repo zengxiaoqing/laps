@@ -40,9 +40,15 @@
 
           nlyr = 0
 
-          do k = kcld-1,1,-1
+          do k = kcld,1,-1
+             if(k .eq. kcld)then
+                 clouds_3d_u = 0.
+             else
+                 clouds_3d_u = clouds_3d(i,j,k+1)
+             endif
+
              if(clouds_3d(i,j,k)   .ge. thresh_thin_lwc_ice .and.
-     1          clouds_3d(i,j,k+1) .lt. thresh_thin_lwc_ice)then ! Top of layer
+     1          clouds_3d_u        .lt. thresh_thin_lwc_ice)then ! Top of layer
                 nlyr = nlyr + 1
                 a(nlyr) = clouds_3d(i,j,k)
                 ik(nlyr) = k
