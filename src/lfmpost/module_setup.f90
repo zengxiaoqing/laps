@@ -80,6 +80,7 @@ MODULE setup
   INTEGER                       :: v5d_compress
   CHARACTER(LEN=32)             :: model_name
   LOGICAL                       :: do_smoothing
+  LOGICAL                       :: use_model_pbl 
   LOGICAL                       :: gribsfc(10)
   LOGICAL                       :: gribua(10)
   INTEGER                       :: table_version
@@ -302,7 +303,7 @@ CONTAINS
              make_donefile,make_v5d, v5d_compress,max_wait_sec, do_smoothing, &
              gribsfc,gribua,table_version,center_id,subcenter_id,process_id, &
              make_points,point_tz_utcoffset,point_tz_label,point_windspd_units,&
-             point_temp_units, point_vent_units
+             point_temp_units, point_vent_units,use_model_pbl
 
     IF (lfmprd_dir(1:3).EQ. "   ") THEN
        namelist_file = "lfmpost.nl"
@@ -364,8 +365,9 @@ CONTAINS
     point_tz_label = 'UTC'
     point_temp_units = 'F'
     point_windspd_units = 'KTS'
-    point_vent_units = 'm^2/s'
-    READ(UNIT=nml_unit, NML=lfmpost_nl)
+    point_vent_units = 'M^2/S'
+    use_model_pbl = .true.
+   READ(UNIT=nml_unit, NML=lfmpost_nl)
     CLOSE (nml_unit)
 
     ! See if we have to have LAPS_DATA_ROOT
@@ -832,7 +834,7 @@ CONTAINS
             OPEN(FILE=outfile, UNIT=outunit, FORM='FORMATTED', &
                ACCESS='SEQUENTIAL')
             WRITE(outunit,'("****************************************", &
-                           &"****************************************")')
+                           &"******************************************************")')
             WRITE(outunit,&
               '("LOCATION: ",A,2x,"LAT: ",F8.4,2x,"LON: ",F9.4,2x, &
              &"I: ",F7.2,2x,"J: ",F7.2)') point%id, point%lat, &
@@ -849,16 +851,16 @@ CONTAINS
                & I2,2x,"MODEL ELEVATION: ",I4)') &
                  model_title,grid_spacing/1000.,cyclestr, domain_num, point%elevation
             WRITE(outunit,'("****************************************", &
-                           &"****************************************")')
+                           &"******************************************************")')
             WRITE(outunit, &
-     '("DATE       TIME  TMP DPT RH  WIND   CEI VIS  WEATHER  PRECP SNOW VENT   HM HH Fbg")')
+     '("DATE       TIME  TMP DPT RH  WIND   CEI VIS  WEATHER  PRECP SNOW VENT   PBLHT PBLWND HM HH Fbg")')
             WRITE(outunit, &
-     '(A3,8x,A3,3x,A1,3x,A1,3x,"%",3x,"Dg@",A3,1x,"hft mile",10x,"in",4x,"in",3x,A5)') & 
+     '(A3,8x,A3,3x,A1,3x,A1,3x,"%",3x,"Dg@",A3,1x,"hft mile",10x,"in",4x,"in",3x,A5,2x,"FtAGL",1x,"Dg@",A3)') & 
          point_tz_label, point_tz_label,point_temp_units,&
-         point_temp_units, point_windspd_units,point_vent_units
+         point_temp_units, point_windspd_units,point_vent_units,point_windspd_units
 
             WRITE(outunit, &
-     '("---------- ----- --- --- --- ------ --- ---- -------- ----- ---- ------ -- -- ---")')
+     '("---------- ----- --- --- --- ------ --- ---- -------- ----- ---- ------ ----- ------ -- -- ---")')
 
           ELSE
             PRINT *, 'Point location ',TRIM(point%id),' outside of domain!'

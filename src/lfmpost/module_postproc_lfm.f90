@@ -795,9 +795,20 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
                     'D   ', status)
      IF (status .NE. 0) lhflux(:,:) = 1.e37
 
-     CALL get_mm5_2d(current_lun, 'PBL HGT  ', time_to_proc, pblhgt, &
+     IF (use_model_pbl) THEN
+       PRINT *, 'Trying to obtain MM5 PBLHGT'
+       CALL get_mm5_2d(current_lun, 'PBL HGT  ', time_to_proc, pblhgt, &
                     'D   ', status)
-     IF ((status .NE. 0) .or. (maxval(pblhgt) .LE. 0))THEN
+       IF ((status .NE. 0) .or. (maxval(pblhgt) .LE. 0))THEN
+         PRINT *, '  MM5 PBLHGT not available, generating PBLHGT with LAPS algorithm'
+         CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
+         made_pbl = .true.
+       ELSE 
+         PRINT *, ' PBLHGT found and used'
+         made_pbl = .false.
+       ENDIF
+     ELSE
+       PRINT *, 'Using internally generated PBLHGT based on lfmpost.nl settings'
        CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
        made_pbl = .true.
      ENDIF

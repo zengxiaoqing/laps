@@ -112,6 +112,8 @@ PROGRAM lfmpost
   REAL                        :: ceiling_pt_r
   REAL                        :: u_pt_g
   REAL                        :: v_pt_g
+  REAL                        :: up_pt_g,vp_pt_g,vp_pt,up_pt,dirp_pt_r,spdp_pt_r,pbl_pt
+  INTEGER                     :: dirp_pt, spdp_pt 
   INTEGER                     :: t_v5d
   CHARACTER(LEN=255)          :: flagfile
   CHARACTER(LEN=9)            :: a9time
@@ -450,20 +452,32 @@ PROGRAM lfmpost
           td_pt = td_pt - 273.15
         ENDIF
         rh_pt = NINT(bint(point_rec(pt)%i,point_rec(pt)%j,rhsfc,nx,ny))
+
+        ! Do winds...now includes the mean pbl wind (variables that
+        ! have an extra p in their name are PBL values
         u_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,usfc,nx,ny)
         v_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,vsfc,nx,ny)
+        up_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,upbl,nx,ny)
+        vp_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,vpbl,nx,ny)
         CALL gridwind_to_truewind(londot(ip,jp),proj,u_pt_g,v_pt_g, &
                                   u_pt, v_pt)
+        CALL gridwind_to_truewind(londot(ip,jp),proj,up_pt_g,vp_pt_g, &
+                                  up_pt,vp_pt)
         CALL uv_to_disp(u_pt, v_pt, dir_pt_r, spd_pt_r)
+        CALL uv_to_disp(up_pt, vp_pt, dirp_pt_r, spdp_pt_r)
         dir_pt = NINT(dir_pt_r/10.)*10  ! Integer to nearest 10 degrees
-       
+        dirp_pt = NINT(dirp_pt_r/10.)*10.
+ 
         ! Convert wind speed
         IF (point_windspd_units .EQ. 'KTS') THEN
           spd_pt = NINT(spd_pt_r * 1.9425) ! Convert to knots
+          spdp_pt = NINT(spdp_pt_r * 1.9425)
         ELSEIF (point_windspd_units .EQ. 'MPH') THEN
           spd_pt = NINT(spd_pt_r * 2.2369)
+          spdp_pt = NINT(spdp_pt_r * 2.2369)
         ELSEIF (point_windspd_units .EQ. 'M/S') THEN
           spd_pt = NINT(spd_pt_r)
+          spdp_pt = NINT(spdp_pt_r)
         ENDIF
         vis_pt = bint(point_rec(pt)%i,point_rec(pt)%j,visibility,nx,ny) &
                  *0.00062317
@@ -514,12 +528,13 @@ PROGRAM lfmpost
         pcp_pt = bint(point_rec(pt)%i,point_rec(pt)%j,pcp_inc,nx,ny)*39.37
         snow_pt =bint(point_rec(pt)%i,point_rec(pt)%j,snow_inc,nx,ny)*39.37
 
-        vnt_pt  = vnt_index(ip,jp)
+        vnt_pt  = bint(point_rec(pt)%i,point_rec(pt)%j,vnt_index,nx,ny)
+        pbl_pt = bint(point_rec(pt)%i,point_rec(pt)%j,pblhgt,nx,ny) * 3.28
         IF (point_vent_units .EQ. 'KT-FT') vnt_pt = vnt_pt * 6.3774
         WRITE(point_rec(pt)%output_unit, &
-        '(A,3I4,1x,I3.3,"/",I2.2,1x,I3.3,1x,F4.1,1x,A,1x,F5.2,1x,F4.1,1x,I6,2I3,1x,I3)') &
+        '(A,3I4,1x,I3.3,"/",I2.2,1x,I3.3,1x,F4.1,1x,A,1x,F5.2,1x,F4.1,1x,I6,1x,I5,1x,I3.3,"/",I2.2,1x,I2,1x,I2,1x,I3)') &
            date_str,NINT(t_pt),NINT(td_pt),rh_pt,dir_pt,spd_pt,ceiling_pt,vis_pt,wx_pt, &
-           pcp_pt,snow_pt,NINT(vnt_pt),NINT(ham_index(ip,jp)), &
+           pcp_pt,snow_pt,NINT(vnt_pt),NINT(pbl_pt),dirp_pt,spdp_pt,NINT(ham_index(ip,jp)), &
            NINT(hah_index(ip,jp)),NINT(fwi_index(ip,jp))
    
         IF (t_pt .GT. point_rec(pt)%hi_temp)  THEN
