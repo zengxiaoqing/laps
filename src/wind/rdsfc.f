@@ -129,16 +129,10 @@ c
      1                        ,dd_s,ff_s,dd_ea,ff_ea,maxstns,istatus)
         endif
 
-100     write(6,*)'n_sao_b=',n_sao_b
+100     write(6,*)'n_obs_b=',n_obs_b
 
         if(n_obs_b .gt. maxstns)then
             write(6,*)' Too many stations',n_obs_b,maxstns
-            istatus = 0
-            return
-        endif
-
-        if(n_sao_b .gt. N_SFC)then
-            write(6,*)' Too many SFC stations',n_sao_b,N_SFC
             istatus = 0
             return
         endif
