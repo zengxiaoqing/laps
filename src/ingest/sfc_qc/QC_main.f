@@ -880,7 +880,7 @@ c ensure kalman values are missing for new stations
            do i=maxstab+1,maxstaa
             tf(i)=badflag
             tdf(i)=badflag
-            uf(i)=badlag
+            uf(i)=badflag
             vf(i)=badflag
             pmslf(i)=badflag
             altf(i)=badflag
