@@ -4706,7 +4706,8 @@ c                   cint = -1.
               if(cstatic .eq. 'lfi')then
                 write(6,*)' calling solid fill plot'
                 scale = 1.
-                call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image)
+                call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
+     1                     ,n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
 
