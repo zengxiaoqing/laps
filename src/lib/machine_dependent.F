@@ -228,7 +228,7 @@ cdoc  Opens a file for appending
 
 cdoc Below are some Taiwan FGGE routines
 
-#if defined(hpux) || defined(alpha)
+#if defined(hpux) || defined(alpha) || defined(linux)
       subroutine read_fa ( lun, filename,                   ! I
      .                     nx, ny, nz,                      ! I
      .                     r_missing_data,                  ! I
@@ -245,7 +245,7 @@ cdoc Below are some Taiwan FGGE routines
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
  
-      STRUCTURE /FGGE_HEAD/
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
@@ -253,8 +253,9 @@ cdoc Below are some Taiwan FGGE routines
         INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 
       character*255 filename
       real*4 r_missing_data    ! Missing data value
@@ -294,7 +295,7 @@ c                           Sfc field
  
          CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
 
-         if ( header.s1 .eq. 1 )  then
+         if ( header%s1 .eq. 1 )  then
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
             do 50 j= 1,ny
             do 50 i= 1,nx
@@ -302,30 +303,30 @@ c                           Sfc field
          endif
 
          do k= 1,nz
-            if ( header.c1 .eq. c1(k) .and. header.e1 .eq. e1(k) ) then
+            if ( header%c1 .eq. c1(k) .and. header%e1 .eq. e1(k) ) then
 
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
-               if ( header.q .eq. var1(1) )  then
+               if ( header%q .eq. var1(1) )  then
                   do 100 j= 1,ny
                   do 100 i= 1,nx
 100                  ht(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var1(2) )  then
+               elseif ( header%q .eq. var1(2) )  then
                   do 200 j= 1,ny
                   do 200 i= 1,nx
 200                  tp(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var1(3) )  then
+               elseif ( header%q .eq. var1(3) )  then
                   do 300 j= 1,ny
                   do 300 i= 1,nx
 300                  uw(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var1(4) )  then
+               elseif ( header%q .eq. var1(4) )  then
                   do 400 j= 1,ny
                   do 400 i= 1,nx
 400                  vw(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var1(5) )  then
+               elseif ( header%q .eq. var1(5) )  then
                   do 500 j= 1,ny
                   do 500 i= 1,nx
 500                  rh(i,j,k)= fdata( i +nx*(j-1) )
@@ -361,7 +362,7 @@ c                           Sfc field
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
  
-      STRUCTURE /FGGE_HEAD/
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
@@ -369,8 +370,9 @@ c                           Sfc field
         INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 
       character*255 filename
       real*4 r_missing_data    ! Missing data value
@@ -416,43 +418,43 @@ c                      2D fields (Sfc field)
  
          CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
 
-         if ( header.s1 .eq. 1 )  then
+         if ( header%s1 .eq. 1 )  then
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
             do 30 j= 1,ny
             do 30 i= 1,nx
 30             mslp(i,j)= fdata( i +nx*(j-1) ) *100
          endif
 
-         if ( header.s1 .eq. 2 )  then
-            if ( header.q .eq. prs    )  then
+         if ( header%s1 .eq. 2 )  then
+            if ( header%q .eq. prs    )  then
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
                do 50 j= 1,ny
                do 50 i= 1,nx
 50                pss(i,j)= fdata( i +nx*(j-1) )
             endif
 
-            if ( header.q .eq. var(2) )  then
+            if ( header%q .eq. var(2) )  then
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
                do 60 j= 1,ny
                do 60 i= 1,nx
 60                tps(i,j)= fdata( i +nx*(j-1) )
             endif
 
-            if ( header.q .eq. var(3) )  then
+            if ( header%q .eq. var(3) )  then
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
                do 70 j= 1,ny
                do 70 i= 1,nx
 70                uws(i,j)= fdata( i +nx*(j-1) )
             endif
 
-            if ( header.q .eq. var(4) )  then
+            if ( header%q .eq. var(4) )  then
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
                do 80 j= 1,ny
                do 80 i= 1,nx
 80                vws(i,j)= fdata( i +nx*(j-1) )
             endif
 
-            if ( header.q .eq. var(6) )  then
+            if ( header%q .eq. var(6) )  then
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
                do 90 j= 1,ny
                do 90 i= 1,nx
@@ -461,35 +463,35 @@ c                      2D fields (Sfc field)
          endif
 
          do k= 1,nz
-            if ( header.c1 .eq. c1(k) .and. header.e1 .eq. e1(k) ) then
+            if ( header%c1 .eq. c1(k) .and. header%e1 .eq. e1(k) ) then
 
                CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
-               if ( header.q .eq. var(1) )  then
+               if ( header%q .eq. var(1) )  then
                   do 100 j= 1,ny
                   do 100 i= 1,nx
 100                  ht(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var(2) )  then
+               elseif ( header%q .eq. var(2) )  then
                   do 200 j= 1,ny
                   do 200 i= 1,nx
 200                  tp(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var(3) )  then
+               elseif ( header%q .eq. var(3) )  then
                   do 300 j= 1,ny
                   do 300 i= 1,nx
 300                  uw(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var(4) )  then
+               elseif ( header%q .eq. var(4) )  then
                   do 400 j= 1,ny
                   do 400 i= 1,nx
 400                  vw(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var(5) )  then
+               elseif ( header%q .eq. var(5) )  then
                   do 500 j= 1,ny
                   do 500 i= 1,nx
 500                  ww(i,j,k)= fdata( i +nx*(j-1) )
 
-               elseif ( header.q .eq. var(6) )  then
+               elseif ( header%q .eq. var(6) )  then
                   do 600 j= 1,ny
                   do 600 i= 1,nx
 600                  rh(i,j,k)= fdata( i +nx*(j-1) )
@@ -521,16 +523,17 @@ c                      2D fields (Sfc field)
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
 
-      STRUCTURE /FGGE_HEAD/
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #else
-	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 
       real*4 ht(nx,ny,nz),     ! FA height (m)
      .       tp(nx,ny,nz),     ! FA temperature (K)
@@ -546,7 +549,7 @@ c                              Sfc field
       integer     var1(5)
       character*3 var2(5)
 
-      if ( header.s1 .eq. 1 )  then
+      if ( header%s1 .eq. 1 )  then
          CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
          do 10 j= 1,ny
          do 10 i= 1,nx
@@ -554,7 +557,7 @@ c                              Sfc field
       endif
 
       do k= 1,nz
-         if ( header.c1 .eq. c1(k)  .and.  header.e1 .eq. e1(k) )  then
+         if ( header%c1 .eq. c1(k)  .and.  header%e1 .eq. e1(k) )  then
             CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
             call read_fgge_data( nx, ny, nz,
      .                           ht, tp, uw, vw, rh, mslp, 
@@ -581,16 +584,17 @@ c                              Sfc field
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
 
-      STRUCTURE /FGGE_HEAD/
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #else
-	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 
 c       3D fields (pressure grid OR sigma grid. What are the level values?)
       real*4 ht(nx,ny,nz),     ! FA height (m)
@@ -606,31 +610,31 @@ c                              Sfc field
       integer     var1(5)
       character*3 var2(5)
 
-      if ( header.q .eq. var1(1) )  then
+      if ( header%q .eq. var1(1) )  then
          do 10 j= 1,ny
          do 10 i= 1,nx
             ht(i,j,k)= fdata( i +nx*(j-1) )
   10     continue
       
-      elseif ( header.q .eq. var1(2) )  then
+      elseif ( header%q .eq. var1(2) )  then
          do 20 j= 1,ny
          do 20 i= 1,nx
             tp(i,j,k)= fdata( i +nx*(j-1) )
   20     continue
 
-      elseif ( header.q .eq. var1(3) )  then
+      elseif ( header%q .eq. var1(3) )  then
          do 30 j= 1,ny
          do 30 i= 1,nx
             uw(i,j,k)= fdata( i +nx*(j-1) )
   30     continue
 
-      elseif ( header.q .eq. var1(4) )  then
+      elseif ( header%q .eq. var1(4) )  then
          do 40 j= 1,ny
          do 40 i= 1,nx
             vw(i,j,k)= fdata( i +nx*(j-1) )
   40     continue
 
-      elseif ( header.q .eq. var1(5) )  then
+      elseif ( header%q .eq. var1(5) )  then
          do 50 j= 1,ny
          do 50 i= 1,nx
             rh(i,j,k)= fdata( i +nx*(j-1) )
@@ -662,17 +666,18 @@ C-
       CHARACTER*1 FGGE_BUF(MAX_BUF)      
       REAL*4    FDATA(MAX_PTS)
       CHARACTER*1 ANS
-C
-      STRUCTURE /FGGE_HEAD/
+
+      TYPE FGGE_HEAD
 #ifdef alpha
-	INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #else
-	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 C
 c      FGGE_NAME = 'gf94031800m.;1'//CHAR(0)
 c      FGGE_NAME = '$1$DUA7:[NWPIIDAT]E4032012.;1'//CHAR(0)
@@ -699,7 +704,7 @@ C
 C
       CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
       IF( ISTAT .NE. 0 ) STOP 'decode_fgge_data error !!!'
-      CALL PRT_FGGE_DATA(HEADER,FDATA,HEADER.J)
+      CALL PRT_FGGE_DATA(HEADER,FDATA,HEADER%J)
 C
       WRITE(*,*) ' '
       WRITE(*,*) ' Read next ?'
@@ -714,74 +719,78 @@ C
       END
 C---------------------------------------------------------------------------
       SUBROUTINE PRT_FGGE_HEADER(HEADER)
-      STRUCTURE /FGGE_HEAD/
+
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #else
-	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
 
-      PRINT *,'HEADER.Q  : ',HEADER.Q		! DATA TYPE
-      PRINT *,'HEADER.S1 : ',HEADER.S1		! TYPE OF SURFACE 1
-      PRINT *,'HEADER.F1 : ',HEADER.F1		! FORECAST TAU
-      PRINT *,'HEADER.T  : ',HEADER.T		! SET TO 0 FOR FORECAST FIELD
-      PRINT *,'HEADER.C1 : ',HEADER.C1		! Pressure or Hight value
-      PRINT *,'HEADER.E1 : ',HEADER.E1		! exponential position for C1
-      PRINT *,'HEADER.M  : ',HEADER.M
-      PRINT *,'HEADER.X  : ',HEADER.X
-      PRINT *,'HEADER.S2 : ',HEADER.S2
-      PRINT *,'HEADER.F2 : ',HEADER.F2
-      PRINT *,'HEADER.N  : ',HEADER.N
-      PRINT *,'HEADER.C2 : ',HEADER.C2
-      PRINT *,'HEADER.E2 : ',HEADER.E2
-      PRINT *,'HEADER.CD : ',HEADER.CD
-      PRINT *,'HEADER.CM : ',HEADER.CM
-      PRINT *,'HEADER.KS : ',HEADER.KS
-      PRINT *,'HEADER.K  : ',HEADER.K
-      PRINT *,'HEADER.U1 : ',HEADER.U1
-      PRINT *,'HEADER.NW : ',HEADER.NW		!
-      PRINT *,'HEADER.JJ : ',HEADER.JJ		! YEAR
-      PRINT *,'HEADER.MM : ',HEADER.MM		! MONTH
-      PRINT *,'HEADER.YY : ',HEADER.YY		! DAY
-      PRINT *,'HEADER.GG : ',HEADER.GG		! HOUR
-      PRINT *,'HEADER.R  : ',HEADER.R
-      PRINT *,'HEADER.G  : ',HEADER.G
-      PRINT *,'HEADER.J  : ',HEADER.J		! TOTAL GRID POINTS
-      PRINT *,'HEADER.B  : ',HEADER.B		!
-      PRINT *,'HEADER.Z  : ',HEADER.Z
-      PRINT *,'HEADER.A  : ',HEADER.A		!
-      PRINT *,'HEADER.U2 : ',HEADER.U2
-      PRINT *,'HEADER.SN : ',HEADER.SN		!
-      PRINT *,'HEADER.MN : ',HEADER.MN		! FLAP ID
-      PRINT *,'HEADER.RT : ',HEADER.RT		! RECORD TYPE
-      PRINT *,'HEADER.DO : ',HEADER.DO		! DOMAIN ID
-      PRINT *,'HEADER.U3 : ',HEADER.U3		! Coding method
+
+      PRINT *,'HEADER.Q  : ',HEADER%Q		! DATA TYPE
+      PRINT *,'HEADER.S1 : ',HEADER%S1		! TYPE OF SURFACE 1
+      PRINT *,'HEADER.F1 : ',HEADER%F1		! FORECAST TAU
+      PRINT *,'HEADER.T  : ',HEADER%T		! SET TO 0 FOR FORECAST FIELD
+      PRINT *,'HEADER.C1 : ',HEADER%C1		! Pressure or Hight value
+      PRINT *,'HEADER.E1 : ',HEADER%E1		! exponential position for C1
+      PRINT *,'HEADER.M  : ',HEADER%M
+      PRINT *,'HEADER.X  : ',HEADER%X
+      PRINT *,'HEADER.S2 : ',HEADER%S2
+      PRINT *,'HEADER.F2 : ',HEADER%F2
+      PRINT *,'HEADER.N  : ',HEADER%N
+      PRINT *,'HEADER.C2 : ',HEADER%C2
+      PRINT *,'HEADER.E2 : ',HEADER%E2
+      PRINT *,'HEADER.CD : ',HEADER%CD
+      PRINT *,'HEADER.CM : ',HEADER%CM
+      PRINT *,'HEADER.KS : ',HEADER%KS
+      PRINT *,'HEADER.K  : ',HEADER%K
+      PRINT *,'HEADER.U1 : ',HEADER%U1
+      PRINT *,'HEADER.NW : ',HEADER%NW		!
+      PRINT *,'HEADER.JJ : ',HEADER%JJ		! YEAR
+      PRINT *,'HEADER.MM : ',HEADER%MM		! MONTH
+      PRINT *,'HEADER.YY : ',HEADER%YY		! DAY
+      PRINT *,'HEADER.GG : ',HEADER%GG		! HOUR
+      PRINT *,'HEADER.R  : ',HEADER%R
+      PRINT *,'HEADER.G  : ',HEADER%G
+      PRINT *,'HEADER.J  : ',HEADER%J		! TOTAL GRID POINTS
+      PRINT *,'HEADER.B  : ',HEADER%B		!
+      PRINT *,'HEADER.Z  : ',HEADER%Z
+      PRINT *,'HEADER.A  : ',HEADER%A		!
+      PRINT *,'HEADER.U2 : ',HEADER%U2
+      PRINT *,'HEADER.SN : ',HEADER%SN		!
+      PRINT *,'HEADER.MN : ',HEADER%MN		! FLAP ID
+      PRINT *,'HEADER.RT : ',HEADER%RT		! RECORD TYPE
+      PRINT *,'HEADER.DO : ',HEADER%DO		! DOMAIN ID
+      PRINT *,'HEADER.U3 : ',HEADER%U3		! Coding method
       RETURN
       END
 C---------------------------------------------------------------------------
       SUBROUTINE PRT_FGGE_DATA(HEADER,FDATA,N)
       REAL*4 FDATA(N)
-      STRUCTURE /FGGE_HEAD/
+
+      TYPE FGGE_HEAD
 #ifdef alpha
         INTEGER*8 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*8 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #else
-	INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
+        INTEGER*4 Q,S1,F1,T,C1,E1,M,X,S2,F2,N,C2,E2,CD,CM,KS,K,U1
         INTEGER*4 NW,JJ,MM,YY,GG,R,G,J,B,Z,A,U2,SN,MN,RT,DO,U3
 #endif
-      END STRUCTURE
-      RECORD /FGGE_HEAD/HEADER
+      END TYPE FGGE_HEAD
+      TYPE(FGGE_HEAD)::HEADER
+
 
       DO 10 I=1,100,5
       WRITE(*,'(4X,5F11.4)')
      *  FDATA(I),FDATA(I+1),FDATA(I+2),FDATA(I+3),FDATA(I+4)
    10 CONTINUE
       WRITE(*,'(/)')
-      DO 20 I=HEADER.J-99,HEADER.J,5
+      DO 20 I=HEADER%J-99,HEADER%J,5
       WRITE(*,'(4X,5F11.4)')
      *  FDATA(I),FDATA(I+1),FDATA(I+2),FDATA(I+3),FDATA(I+4)
    20 CONTINUE
