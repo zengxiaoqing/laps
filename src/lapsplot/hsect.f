@@ -220,6 +220,17 @@ cdis
         character*255 cfname
         character*2   cchan
 
+        include 'satellite_dims_lvd.inc'
+
+        character*15  clvdvars(maxchannel)
+        data clvdvars/'[SVS, SVN, ALB]',
+     1                '[S3A, S3C,    ]',
+     1                '[S4A, S4C,    ]',
+     1                '[S8A, S8W, S8C]',
+     1                '[SCA, SCC,    ]'/
+
+        logical lfndtyp
+
         logical lapsplot_pregen,l_precip_pregen,l_pregen,l_radar_read
         data lapsplot_pregen /.true./
 
@@ -250,7 +261,7 @@ cdis
         character asc9_tim_n*9
         character c9_radarage*9
 
-        include 'satellite_dims_lvd.inc'
+c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
 
         data mode_lwc/2/
@@ -352,8 +363,8 @@ cdis
      1       /'     [br,fr,lq] Humidity (LGA/RAM LAPS-BKG/lq3; q/rh) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
      1       ,'     [sc] Snow Cover    [tn,lf,gr,so] Ter/LndFrac/Grid, '
-     1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
-     1       ,'; Polar Orbiter'
+     1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
+     1       , 'Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
 
         read(lun,15)c_type
@@ -936,162 +947,184 @@ cdis
      1                   ,i_overlay,c_display,'nest7grid',lat,lon,jdot       
      1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'v1' .or. c_type .eq. 'v2'
-     1    .or. c_type .eq. 'v3' .or. c_type .eq. 'v4'
-     1    .or. c_type .eq. 'v5')then
-            write(6,*)
-            write(6,*)'    Looking for Laps LVD data:'
+        elseif(c_type .eq. 'lv'.or.c_type .eq. 'lr' )then
 
-            ext = 'lvd'
+         if(c_type .eq. 'lv' )then
 
-            call config_satellite_lvd(istatus)
-            if(istatus.ne.1)then
-               return
-            endif
+          ext = 'lvd'
 
-            do k=1,maxsat
-             if(isats(k).eq.1)then
-              write(6,114)c_sat_id(k)
-114           format(5x,'plot the data for ',a6,45x,' [y/n]? ',$)
-              read(lun,*)cansw
-              if(cansw.eq.'y'.or.cansw.eq.'Y')then
+          call config_satellite_lvd(istatus)
+          if(istatus.ne.1)then
+             return
+          endif
 
-               call get_directory(ext,directory,len_dir)
-               directory=directory(1:len_dir)//c_sat_id(k)//'/'
+          do k=1,maxsat
+           if(isats(k).eq.1)then
+            write(6,114)c_sat_id(k)
+114         format(5x,'plot the data for ',a6,45x,' [y/n]? ',$)
+            read(lun,*)cansw
+            if(cansw.eq.'y'.or.cansw.eq.'Y')then
 
-               if(c_type .eq. 'v1')then
+             call get_directory(ext,directory,len_dir)
+             directory=directory(1:len_dir)//c_sat_id(k)//'/'
+c
+c determine which channels have been processed for this satellite
+c
+             j=0
+             lfndtyp=.false.
+             do while(.not.lfndtyp.and.j.le.maxtype)
+              j=j+1
+              if(itypes(j,k).eq.1)then
+               ist=j
+               lfndtyp=.true.
+              endif
+             enddo
 
-                var_2d = 'S8W'
-                call get_2dgrid_dname(directory
-     1          ,i4time_ref,10000,i4time_nearest
-     1          ,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+             write(6,118)
+118         format(5x,'Select LVD field',5x,'(vis, 3.9, 6.7, 11.2, 12)'
+     1' [enter 1, 2, 3, 4, 5]? ',$)
+             read(lun,*)ilvd
 
-                if(istatus .eq. 0)then
-                    write(6,*)' Cant find S8W Analysis ',istatus
-                    goto1200
-                endif
-                c33_label = 'LAPS IR Skin Temps Deg C  -'//c_sat_id(k)
+             write(6,*)
+             write(6,*)'    Looking for Laps LVD data:'
+c
+             if(ichannels(ilvd,ist,k).eq.1)then
+              write(6,121)clvdvars(ilvd)
+121           format(5x,'Select 2D var name:',3x,a15,10x, $)
+              read(lun,*)var_2d
+              call upcase(var_2d,var_2d)
+             else
+              print*,'This channel was not processed'
+              goto 119
+             endif
 
-               elseif(c_type .eq. 'v2')then
+             call get_2dgrid_dname(directory
+     1     ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1     ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
-                var_2d = 'S8A'
-                call get_2dgrid_dname(directory
-     1              ,i4time_ref,10000,i4time_nearest
-     1              ,ext,var_2d
-     1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+             if(istatus .eq. 0)then
+              write(6,*)' Cant find ',var_2d,' Analysis ',istatus
+              goto1200
+             endif
 
-                if(istatus .eq. 0)then
-                    write(6,*)' Cant find VAS/S8A Analysis'
-                    goto1200
-                endif
-                c33_label = 'LAPS Ave 11.2 u     Deg C -'//c_sat_id(k)
+             if(ilvd.gt.1)then
+              c33_label='LAPS B-Temps (C): '//c_sat_id(k)//'/'//var_2d
+              do i = 1,NX_L
+              do j = 1,NY_L
+                 vas(i,j) = vas(i,j) - 273.15
+              enddo
+              enddo
+              clow = -80.
+              chigh = +40.
+              cint = 10.
+              scale = 1e0
+             elseif(var_2d.eq.'ALB')then
+              c33_label='LAPS Albedo '//c_sat_id(k)
+             elseif(var_2d.eq.'SVS')then
+              c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
+             else
+              c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+             endif
 
-               elseif(c_type .eq. 'v3')then
+             if(ilvd .eq. 1)then
+              if(var_2d.eq.'ALB')then
+               clow = 0.0
+               chigh = 1.
+               cint = 0.1
+               scale = 1e0
+              else
+               clow = 0.0
+               chigh = 256.
+               cint = 05.
+               scale = 1e0
+              endif
+             endif
 
-                var_2d = 'ALB'
-                call get_2dgrid_dname(directory
-     1              ,i4time_ref,10000,i4time_nearest
-     1              ,ext,var_2d
-     1              ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
-
-                if(istatus .eq. 0)then
-                    write(6,*)' Cant find ALB Analysis'
-                    goto1200
-                endif
-!               c33_label = 'LAPS VIS Cloud Fraction   -'//c_sat_id(k)
-                c33_label = 'LAPS VIS Cld Frac (tenths) '//c_sat_id(k)
-
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    if(vas(i,j) .ne. r_missing_data)then
-                        vas(i,j) = albedo_to_cloudfrac(vas(i,j))
-                    endif
-                enddo 
-                enddo
-
-               elseif(c_type .eq. 'v4')then
-
-                var_2d = 'SVS'
-                call get_2dgrid_dname(directory
-     1          ,i4time_ref,10000,i4time_nearest
-     1          ,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
-                if(istatus .eq. 0)then
-                    write(6,*)' Cant find VIS Analysis'
-                    goto1200
-                endif
-                c33_label = 'LAPS VIS (Unnormalized)   -'//c_sat_id(k)
-
-               elseif(c_type .eq. 'v5')then
-
-                var_2d = 'S8A'
-                call get_2dgrid_dname(directory
-     1          ,i4time_ref,10000,i4time_nearest
-     1          ,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
-                if(istatus .eq. 0)then
-                    write(6,*)' Cant find VAS/S8A Analysis'
-                    goto1200
-                endif
-                c33_label = 'LAPS SFC T - Band 8  (K)  -'//c_sat_id(k)
-
-!               Get sfc T to take the difference...
-                ext = 'lsx'
-                var_2d = 'T'
-                call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
-     1                ,ext,var_2d
-     1                ,units_2d,comment_2d,NX_L,NY_L,dum1_array,0,istatu
-     1s)
-                if(istatus .ne. 1)then
-                    write(6,*)' Cant find VAS/S8A Analysis'
-                    goto1200
-                endif
-
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    vas(i,j) = dum1_array(i,j) - vas(i,j)
-                enddo
-                enddo
-
-               endif
-
-               if(c_type .eq. 'v1' .or. c_type .eq. 'v2')then
-                   do i = 1,NX_L
-                   do j = 1,NY_L
-                       vas(i,j) = vas(i,j) - 273.15
-                   enddo
-                   enddo
-                   clow = -80.
-                   chigh = +40.
-                   cint = 10.
-                   scale = 1e0
-               elseif(c_type .eq. 'v3')then
-                   clow  =  -6.
-                   chigh = +16.
-                   cint = 2.0
-                   scale = 1e-1
-               elseif(c_type .eq. 'v4')then
-                   clow = 0.0
-                   chigh = 256.
-                   cint = 05.
-                   scale = 1e0
-               elseif(c_type .eq. 'v5')then
-                   clow = -8.0
-                   chigh = 20.
-                   cint = 4.
-                   scale = 1e0
-               endif
-
-               call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
-
-               call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+             call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
      1         c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1         NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-              endif
-             endif
-            enddo
+            endif !(cansw)
+           endif  !(isats)
+119       enddo   !(maxsat)
+
+         else     !(c_type='lr'?)
+
+          print*,' lsr plotting currently not available'
+
+         endif    !(c_type='lv'?)
+
+        elseif(c_type .eq. 'v3')then
+
+         var_2d = 'ALB'
+         call get_2dgrid_dname(directory
+     1        ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1        ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+
+         if(istatus .eq. 0)then
+            write(6,*)' Cant find ALB Analysis'
+            goto1200
+         endif
+!        c33_label = 'LAPS VIS Cloud Fraction   -'//c_sat_id(k)
+         c33_label = 'LAPS VIS Cld Frac (tenths) '//c_sat_id(k)
+         clow  =  -6.
+         chigh = +16.
+         cint = 2.0
+         scale = 1e-1
+
+         do i = 1,NX_L
+         do j = 1,NY_L
+          if(vas(i,j) .ne. r_missing_data)then
+             vas(i,j) = albedo_to_cloudfrac(vas(i,j))
+          endif
+         enddo
+         enddo
+         call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+
+         call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+     1        c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        elseif(c_type .eq. 'v5')then
+
+         var_2d = 'S8A'
+         call get_2dgrid_dname(directory
+     1       ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1       ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+         if(istatus .eq. 0)then
+            write(6,*)' Cant find VAS/S8A Analysis'
+            goto1200
+         endif
+         c33_label = 'LAPS SFC T - Band 8  (K)  -'//c_sat_id(k)
+         clow = -8.0
+         chigh = 20.
+         cint = 4.
+         scale = 1e0
+
+!  Get sfc T to take the difference...
+         ext = 'lsx'
+         var_2d = 'T'
+         call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1       ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L,dum1_array,0
+     1,istatus)
+         if(istatus .ne. 1)then
+            write(6,*)' Cant find VAS/S8A Analysis'
+            goto1200
+         endif
+
+         do i = 1,NX_L
+         do j = 1,NY_L
+           vas(i,j) = dum1_array(i,j) - vas(i,j)
+         enddo
+         enddo
+
+         call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+
+         call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+     1       c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1       NX_L,NY_L,r_missing_data,laps_cycle_time)
+
 
         elseif( c_type .eq. 'po' )then
 
@@ -2765,7 +2798,7 @@ c             cint = -1.
               do j = 1,NY_L
                 rh_3d(i,j,k_level)=make_rh(float(k_mb)
      1                               ,temp_3d(i,j,k_level)-273.15
-     1                               ,q_3d(i,j,k_level)*1000.,0.)*100.
+     1                               ,q_3d(i,j,k_level)*1000.,-100.)*100.
               enddo ! j
               enddo ! i
 
