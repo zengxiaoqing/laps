@@ -136,6 +136,32 @@ EOF
 ])
 
 
+AC_DEFUN(AC_F90_FUNC_TRIGD,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(For intrinsic degree based trig functions in $FC)
+	cat <<EOF > testtrigd.f
+	  program t_trigd
+	  real a
+	  a = sind(45.)
+	  print *, a
+	end
+EOF
+  /bin/rm -f testtrigd.out
+  $FC $FFLAGS testtrigd.f -o testtrigd > testtrigd.out 2>&1
+  if test $? != 0
+  then
+    AC_MSG_RESULT(no)
+    USE_TRIGD=1
+    FC_USE_TRIGD='      use trigd'
+  else
+    AC_MSG_RESULT(yes)
+    USE_TRIGD=0
+    FC_USE_TRIGD='C      use trigd'
+  fi
+  rm -f testtrigd*
+])
+
+
 AC_DEFUN(AC_FC_FUNC_GETENV,[
   AC_REQUIRE([AC_PROG_FC])dnl
   AC_MSG_CHECKING(For a getenv function in fortran)
@@ -148,7 +174,7 @@ AC_DEFUN(AC_FC_FUNC_GETENV,[
        print *,response
        end
 EOF
-/bin/rm -f genv.out
+/bin/rm -f testgenv.out
 $FC $FFLAGS testgetenv.f -o genv > testgenv.out 2>&1
 if test $? != 0
 then
