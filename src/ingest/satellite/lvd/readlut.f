@@ -252,6 +252,14 @@ c
             print*,'gwc header not read. No lut update'
          endif
 
+      elseif(c_sat_types(jtype,isat).eq.'gvr')then
+
+         if(resx.eq.0.0.or.resy.eq.0.0.or.
+     &      nlin.eq.0.0.or.npix.eq.0.0)then
+        
+            l_lut_flag = .true.
+         endif
+
       endif
 
 

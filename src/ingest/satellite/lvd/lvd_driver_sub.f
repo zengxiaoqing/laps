@@ -131,7 +131,6 @@ c                                     used for variable in include 'satellite_co
       logical   lsatqc
       logical   l_lut_flag
 
-      integer	iskip_bilin
       integer   i,j,k,l,n
       integer   ispec
       integer   nlf
@@ -485,7 +484,6 @@ c
 
       endif
 
-      iskip_bilin = 1
 c
 c ---------------------------------------------------
 c satellite range and sub-longitude (namelist items).

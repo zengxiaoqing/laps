@@ -117,6 +117,10 @@ c
 
         if(c_sat_id(k).ne.'gmssat')then
 
+c         if(nlinesvis.eq.0.and.nelemvis.eq.0)then
+c            nav_status=1
+c         endif
+
           if(nav_status.eq.0)then
             call check_nav_lut(nx_l,ny_l,maxchannel,nchannels,
      &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,
