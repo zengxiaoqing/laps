@@ -1993,13 +1993,14 @@ Outputs:
 	lwc     3d grids        Cloud liquid water content (LWC)
 	                        Cloud ice content (ICE)
 	                        Hydrometeor Concentration (PCN)
+	                        Rain Concentration        (RAI)
+	                        Snow Concentration        (SNO)
+	                        Precipitating Ice Conc.   (PIC)
 
-                                The above three are specific contents in
-                                grams/meter**3. These can be converted to
+                                The last four are specific contents in
+                                kilograms/meter**3. These can be converted to
                                 mixing ratio if desired by dividing through
-                                by the air density. In addition, rain/snow/etc
-                                contents can be derived by considering the
-                                precip type and concentration together.
+                                by the air density. 
 
 	lil     2d grid		integrated lwc
 
@@ -2258,6 +2259,9 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 		LWC  LWC  lwc     21  Cloud Liquid Water 
 		     ICE  ice	  21  Cloud Ice
 		     PCN  pcn     21  Hydrometeor Concentration
+		     RAI  rai     21  Rain Concentration
+		     SNO  sno     21  Snow Concentration
+		     PIC  pic     21  Precipitating Ice Concentration
 
            	LIL  LIL  ilw      1  Integrated Liquid Water
         	LCT  PTY  spt      1  Sfc Precip Type
