@@ -7,6 +7,7 @@
  del=3.24e6,
  gam=.0001,
  ak=1.e-6, 
+ bad_td=1.7,
  /
 c..... This is the namelist for the LAPS surface analysis
 c..... process (LSX).  Switches and similar things can go
