@@ -82,22 +82,15 @@ c determine if either the e or w bndry cross the dateline
      &        (lon(i-1,nj).gt.0.0.and.lon(i,nj).lt.0.0))
      &         lfnddateline=.true. 
         enddo
-c determine if either the n or s bndry cross the pole
+
         lfndpoles=.false.
         lfndpolen=.false.
-        do i=2,ni
-           if((lat(i-1,1).lt.0.0.and.lat(i,1).gt.0.0).or.
-     &        (lat(i-1,nj).lt.0.0.and.lat(i,nj).ge.0.0))
-     &        lfndpoles=.true.
-           if((lat(i-1,1).gt.0.0.and.lat(i,1).lt.0.0).or.
-     &       (lat(i-1,nj).gt.0.0.and.lat(i,nj).lt.0.0))
-     &        lfndpolen=.true.
-        enddo
-
+c cross the north pole?
         do j=2,nj
            if((lat(1,j-1).gt.0.0.and.lat(1,j).lt.0.0).or.
      &        (lat(ni,j-1).gt.0.0.and.lat(ni,j).lt.0.0))
      &        lfndpolen=.true.
+c cross the equator?
            if((lat(1,j-1).lt.0.0.and.lat(1,j).ge.0.0).or.
      &        (lat(ni,j-1).lt.0.0.and.lat(ni,j).ge.0.0))
      &        lfndpoles=.true.
