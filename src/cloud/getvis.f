@@ -67,7 +67,9 @@ cdis
         data lvd_ext /'lvd'/
 
         character var*3,comment*125,units*10
-        logical l_use_vis
+        logical l_use_vis, l_use_vis_add
+
+        l_use_vis_add = .false.
 
 !       Initialize histograms
         do i = -10,20
@@ -156,7 +158,8 @@ cdis
 !           Is there enough of a signal from the VIS to say a cloud is present?
             if(       cloud_frac_vis_a(i,j) .gt. 0.5 
      1          .and. sfc_albedo(i,j) .ne. r_missing_data
-     1          .and. sfc_albedo(i,j) .le. 0.3              )then
+     1          .and. sfc_albedo(i,j) .le. 0.3              
+     1          .and. l_use_vis_add                         )then
                 istat_vis_a(i,j) = 1
             endif
 
