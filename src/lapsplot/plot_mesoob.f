@@ -156,7 +156,7 @@ c
 	do i=1,n_obs_b ! Preprocess the obs
 !           Convert RH to dewpoint if dewpoint is missing 
             if(t_s(i) .ne. badflag .and. td_s(i) .eq. badflag 
-     1                             .and. rh_s(i) .ne. badflag)then
+     1                             .and. rh_s(i) .ne. badflag )then
                 t_c = f_to_c(t_s(i))
                 dwpt_c = dwpt(t_c,rh_s(i))
                 td_s(i) = c_to_f(dwpt_c)
@@ -277,7 +277,8 @@ c
 
 !               call pwrity(xsta, ysta-du*3.5, c3_name, 3, -1, 0, 0)     
 
-                if(iflag_cv .eq. 0)then ! Plot station name & Wx String
+                if(iflag_cv .eq. 0 .and. atype(i) .ne. 'CUM')then
+!                   Plot station name & Wx String
                     CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
      1                          charsize,ANGD,CNTR)
                     CALL PCLOQU(xsta+du2*1.1, ysta-du2*1.1, wx_s(i), 
@@ -408,12 +409,14 @@ c
 
                 endif
 
-                call plot_mesoob(w1,w2,w3
+                if(atype(i) .ne. 'CUM')then ! exclude CWB precip stations
+                    call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
      1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_g,11,du2
      1                 ,wx_s(i)
      1                 ,iflag,iflag_cv)
+                endif
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
 
