@@ -91,11 +91,14 @@ C
      1               cdl_path_len,
      1               stat_len,
      1               n_levels,
+     1               max_levels,	   !maximum vertical levels
      1               called_from,          !0=FORTRAN, 1=C
      1               append                !0=no, 1=yes
 C
+      parameter (max_levels=100)
       real*4         base,                 !bottom of LAPS levels
-     1               interval              !interval of LAPS levels
+     1               interval,             !interval of LAPS levels
+     1               cdl_levels(max_levels)
 C
       character*4    fcst_hh_mm
       character*9    gtime
@@ -118,6 +121,7 @@ C
 C ****  Specify laps domain name
 C
       laps_dom_file = 'nest7grid'
+C 
 C
 C ****  call get_laps_config to read nest7grid.parms
 C
@@ -127,6 +131,19 @@ C
       interval = PRESSURE_INTERVAL_L / 100.0
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
+
+C **** Special case where write_laps_data is called with fua or fsf extension
+      if (ext .eq. 'fua') then
+        j = base
+        do i = 1, n_levels
+          cdl_levels(i) = j 
+          j = j - interval
+        enddo
+      endif
+      if (ext .eq. 'fsf') then
+        n_levels = 1
+        cdl_levels(1) = 0
+      endif
 C
 C ****  Various checks on input data.
 C
@@ -205,8 +222,8 @@ C
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
-     1                   lvl, data,base,interval, n_levels, called_from, 
-     1                   append, istatus)
+     1                   lvl, data,base,interval, n_levels, cdl_levels,
+     1                   called_from,append, istatus) 
 C
       if (istatus .gt. 0) goto 980
       IF (istatus .eq. -2) goto 940
@@ -328,11 +345,14 @@ C
      1               cdl_path_len,
      1               stat_len,
      1               n_levels,
+     1               max_levels,	   !maximum vertical levels
      1               called_from,          !0=FORTRAN, 1=C
      1               append                !0=no, 1=yes
 C
+      parameter (max_levels=100)
       real*4         base,                 !bottom of LAPS levels
-     1               interval              !interval of LAPS levels
+     1               interval,             !interval of LAPS levels
+     1               cdl_levels(max_levels)
 C
       character*4    fcst_hh_mm
       character*9    gtime
@@ -364,6 +384,19 @@ C
       interval = PRESSURE_INTERVAL_L / 100.0
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
+
+C **** Special case where write_laps_data is called with fua or fsf extension
+      if (ext .eq. 'fua') then
+        j = base
+        do i = 1, n_levels
+          cdl_levels(i) = j
+          j = j - interval
+        enddo
+      endif
+      if (ext .eq. 'fsf') then
+        n_levels = 1
+        cdl_levels(1) = 0
+      endif
 C
 C ****  Various checks on input data.
 C
@@ -442,8 +475,8 @@ C
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
-     1                   lvl, data,base,interval, n_levels, called_from, 
-     1                   append, istatus)
+     1                   lvl, data,base,interval, n_levels, cdl_levels,
+     1                   called_from, append, istatus)
 C
       if (istatus .gt. 0) goto 980
       IF (istatus .eq. -2) goto 940

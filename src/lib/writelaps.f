@@ -80,7 +80,7 @@ C
      1               i_valtime,            !UNIX time of data
      1               fcst_sec,
      1               error(2),
-     1               i,n7g_nx, n7g_ny,
+     1               i,j,n7g_nx, n7g_ny,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -91,11 +91,14 @@ C
      1               cdl_path_len,
      1               stat_len,
      1               n_levels,
+     1               max_levels,
      1               called_from,          !0=FORTRAN, 1=C
      1               append                !0=no, 1=yes
 C
+      parameter (max_levels = 100)
       real*4         base,                 !bottom of LAPS levels
-     1               interval              !interval of LAPS levels
+     1               interval,             !interval of LAPS levels
+     1               cdl_levels(max_levels)
 C
       character*4    fcst_hh_mm
       character*9    gtime
@@ -127,6 +130,19 @@ C
       interval = PRESSURE_INTERVAL_L / 100.0
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
+
+C **** Special case where write_laps is called with fua or fsf extension
+      if (ext .eq. 'fua') then
+        j = base
+        do i = 1, n_levels
+          cdl_levels(i) = base
+          j = j + interval
+        enddo
+      endif
+      if (ext .eq. 'fsf') then
+        n_levels = 1
+        cdl_levels(1) = 0
+      endif
 
 C ****  Various checks on input data.
 C
@@ -203,7 +219,7 @@ C
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
-     1                   lvl, data,base,interval, n_levels, 
+     1                   lvl, data,base,interval, n_levels, cdl_levels,
      1                   called_from, append, istatus)
 C
       if (istatus .gt. 0) goto 980
