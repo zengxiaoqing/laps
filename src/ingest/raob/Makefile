@@ -25,6 +25,7 @@ SRC=ingest_sounding.f \
     ingest_raob_sub.f \
     ingest_raob_sub_af.f \
     ingest_raob_sub_cwb.f \
+    ingest_drpsnd.f \
     ingest_drpsnd_sub_cwb.f \
     ingest_satsnd.f \
     ingest_satsnd_af.f \
