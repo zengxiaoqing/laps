@@ -5,6 +5,7 @@
 !                (i.e. vertical_grid).
 
 
+        include 'bgdata.inc'
 
         integer    iflag_lapsparms_cmn
         real*4       PRESSURE_BOTTOM_L
@@ -38,11 +39,11 @@
         real*4 toptwvl_parm_cmn
         integer maxstations_cmn, maxobs_cmn
 
-        character*40 vertical_grid
-        character*50 c50_lowres_directory
-        character*6  c6_maproj
-        character*8  radarext_3d_cmn
-        character*8  radarext_3d_accum_cmn
+        character*40  vertical_grid
+        character*50  c50_lowres_directory
+        character*6   c6_maproj
+        character*8   radarext_3d_cmn
+        character*8   radarext_3d_accum_cmn
         character*200 path_to_raw_pirep_cmn
         character*200 path_to_raw_rass_cmn
         character*200 path_to_raw_profiler_cmn
@@ -55,9 +56,10 @@
         character*200 path_to_metar_data_cmn
         character*200 path_to_local_data_cmn
         character*200 path_to_buoy_data_cmn
-        character*8 c8_project_common
-        character*3 c_raddat_type
-        character*80 c80_description
+        character*9   fdda_model_source_cmn(maxbgmodels)
+        character*8   c8_project_common
+        character*3   c_raddat_type
+        character*80  c80_description
         character*200 path_to_topt30s
         character*200 path_to_topt10m
         character*200 path_to_pctl10m
@@ -87,6 +89,7 @@
      1  ,path_to_buoy_data_cmn,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
+     1  ,fdda_model_source_cmn
 
 
 
