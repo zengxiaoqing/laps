@@ -41,6 +41,7 @@ c       include 'wrf_dims.inc'
         character*9  fdda_model_source(10)  !models_max)
 
         include 'wrf_horzgrid.cmn'
+        include 'wrf_vgridspec.cmn'
         include 'wrf_sfcfiles.cmn'
         include 'wrf_projname.cmn'
         include 'wrf_rawdatapaths.cmn'
@@ -77,6 +78,12 @@ c       include 'wrf_laps_analysis.cmn'
         call read_wrfsi_rawdatapaths (istatus)
         if(istatus.ne.1)then
            print*,'error reading wrfsi_rawdatapaths'
+           return
+        endif
+
+        call read_wrfsi_vgridspec (istatus)
+        if(istatus.ne.1)then
+           print*,'error reading wrfsi_vgridspec'
            return
         endif
 
