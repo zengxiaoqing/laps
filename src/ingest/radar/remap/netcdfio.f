@@ -14,7 +14,7 @@
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
-       character*3 ext_out, ext_dum, c3_radar_subdir
+       character*3 ext_out, c3_radar_subdir
        character*8 radar_subdir
 
        include 'remap_dims.inc'
@@ -111,6 +111,8 @@ c      Determine filename extension
      1                               ,Z
      1                               ,V
      1                               ,resolutionV
+     1                               ,gateSizeV,gateSizeZ
+     1                               ,firstGateRangeV,firstGateRangeZ
      1                               ,MAX_VEL_GATES, MAX_REF_GATES
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
@@ -309,9 +311,19 @@ c      Determine filename extension
        end
  
  
-       function get_first_gate()
+       subroutine get_first_gate(index,first_gate_m,gate_spacing_m)
+
+       include 'remap_dims.inc'
+       include 'netcdfio_radar_common.inc'
  
-       get_first_gate = 0
+       if(index .eq. 1)then
+           first_gate_m = firstGateRangeZ
+           gate_spacing_m = gateSizeZ
+       elseif(index .eq. 2)then
+           first_gate_m = firstGateRangeV
+           gate_spacing_m = gateSizeV
+       endif
+
        return
        end
  

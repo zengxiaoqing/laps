@@ -54,7 +54,7 @@
    
       real*4 b_ref(MAX_REF_TILT)
       real*4 b_vel(MAX_VEL_TILT)
-      real*4 b_missing_data, i4_to_byte
+      real*4 b_missing_data
 
       real v_nyquist_ray_a(MAX_RAY_TILT)
       real azim(MAX_RAY_TILT)
@@ -75,9 +75,6 @@
 
 !     Misc Local variables
 
-      character sw
-      integer iyr, iday, imon, ihour, imin, isec ! time variables 
-      character source(80)
       character string_time(9)
       character full_fname(91)
       integer initial_ray                ! flag for first ray in volume 
@@ -85,8 +82,7 @@
       integer i_angle, past_angle
       integer past_scan, past_tilt
       integer len_fname
-      integer compr_on, xmit_on, write_and_exit
-      integer i_mode, i
+      integer write_and_exit
       integer i_vcp
       integer ref_ptr, vel_ptr
 
@@ -275,13 +271,9 @@
 
               if(VERBOSE .eq. 1)then
                 ng_ref = get_number_of_gates(ref_index) 
-                gsp_ref = get_first_gate(ref_index) 
+                call get_first_gate(ref_index,first_ref_m,gsp_ref) 
                 ng_vel = get_number_of_gates(vel_index) 
-                gsp_vel = get_first_gate(vel_index) 
-!               write(6,*)'  ref: Number of gates = %i,  first gate = %i\n",
-!                     ng_ref,gsp_ref) 
-!               write(6,*)'  vel: Number of gates = %i,  first gate = %i\n",
-!                     ng_vel,gsp_vel) 
+                call get_first_gate(vel_index,first_vel_m,gsp_vel) 
               endif
 
               io_stat = get_data_field(ref_index, b_ref(ref_ptr)
@@ -313,11 +305,19 @@
               if(VERBOSE .eq. 1)then
                 write(6,*)'  n_ref_gates, n_vel_gates ',
      1                       n_ref_gates, n_vel_gates  
+
+                write(6,*)'  first_ref_m, first_vel_m ',
+     1                       first_ref_m, first_vel_m  
+
+                write(6,*)'  gsp_ref,gsp_vel ',
+     1                       gsp_ref,gsp_vel  
+
               endif
 
               call fill_common(
      1               b_ref,b_vel,n_rays,i_tilt,
      1               n_ref_gates,n_vel_gates,
+!    1               first_ref_m,gsp_ref,first_vel_m,gsp_vel,
      1               azim,v_nyquist_ray_a,eleva,b_missing_data) 
 
 ! call the FORTRAN remapper module   

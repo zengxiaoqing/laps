@@ -13,6 +13,8 @@
      1                               ,Z  
      1                               ,V
      1                               ,resolutionV
+     1                               ,gateSizeV,gateSizeZ
+     1                               ,firstGateRangeV,firstGateRangeZ
      1                               ,V_bin_max, Z_bin_max, radial_max
      1                               ,istatus)
 

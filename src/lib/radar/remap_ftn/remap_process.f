@@ -126,7 +126,7 @@ c
       integer n_vel_grids_final,n_vel_grids_prelim
       integer n_ref_grids,n_ref_grids_qc_fail,nycor
       integer istatus,istatus_qc
-      integer init_timer,ishow_timer,i4_elapsed,istat
+      integer ishow_timer,i4_elapsed
       integer i_purge
 
       real vel_thr_rtau,rvel
@@ -592,7 +592,9 @@ c
 
         I4_elapsed = ishow_timer()
 
-        go to 900
+!       go to 900
+
+        if(.false.)then
 
 !       This code is disabled for now as we cannot get to this point
         call make_fnam_lp(i_product_i4time,gtime,istatus)
@@ -667,6 +669,8 @@ c            ext = 'v01'
          I4_elapsed = ishow_timer()
 
          i_num_finished_products = 1
+
+         endif ! .false.
 
 900      continue
 
@@ -761,8 +765,6 @@ c            ext = 'v01'
      1                         ,rlat_radar,rlon_radar,rheight_radar
      1                         ,field_3d,imax,jmax,kmax,c3_radar_subdir        
      1                         ,path_to_vrc,istatus)
-
-        character*7 c7_ext
 
 !       Stuff from 'put_laps_2d' except how do we handle radar subdir?
 

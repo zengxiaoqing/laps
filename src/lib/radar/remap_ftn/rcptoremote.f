@@ -38,7 +38,7 @@ cdis
       character*(*) destination_dir
       character*(*) destination_node
       character*200 command
-      character*200 remote_command
+!     character*200 remote_command
 
       character*9 gtime
       character*31 ext,ext_in

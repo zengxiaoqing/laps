@@ -120,7 +120,7 @@ cdis
 
         character*11 i4time_to_a11
         character*11 a11
-        character*9 a9_time
+!       character*9 a9_time
         character*24 asc_tim_vol
         character*3 c3_mon
 
