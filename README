@@ -182,9 +182,9 @@
    
                       --- 2.1.2  Perl             ---
 
-     The perl package is also required for laps, it is available 
-     via internet at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.  
-     Perl 5.003 or higher is required. Check that 'perl' is in your path.
+     The perl package is also required for laps, it is available via internet 
+     at any perl site such as 'http://www.perl.com'. Perl 5.003 or higher is 
+     required. Check that 'perl' is in your path (e.g. 'which perl').
 
                       --- 2.1.3  make             ---
 
@@ -213,15 +213,14 @@
                   ---  2.1.5  FORTRAN Compiler ---
 
      Please note that LAPS uses dynamic memory within the FORTRAN code in
-     the form of automatic and allocatable arrays. This implies that you will 
-     need a FORTRAN 90 compiler, or at least an f77 compiler that has f90 
-     extensions allowing for automatic and allocatable arrays. LAPS will not 
-     work on a strict f77 compiler that does not allow automatic and 
-     allocatable arrays. Check that the FORTRAN compiler is in your path.
+     the form of automatic and allocatable arrays, as well as other FORTRAN 90
+     constructs. This implies that you will need an 'f90' compiler or the
+     equivalent. LAPS will no longer work on most 'f77' compilers. Check that 
+     the FORTRAN compiler is in your path.
 
      For IBM/AIX platforms 'xlf' is recommended.
 
-     For Solaris & HP-UX platforms, 'f90' is needed.
+     For Solaris & HP-UX platforms, 'f90' works well.
 
      For Linux platforms (Intel chip), 'pgf90' is suggested.
 
@@ -355,7 +354,9 @@
      /home_disk/
          raw_data/                                     (optional raw test data)
          geog/
-             laps_terrain.tar
+             world_topo_30s
+             albedo_ncep
+             landuse_30s
          laps-m-n-o.tar
          laps-m-n-o/                          ($LAPS_SRC_ROOT=$LAPSINSTALLROOT)
              Makefile
@@ -399,7 +400,9 @@
 
      /data_disk/
          geog/
-             laps_terrain.tar
+             world_topo_30s
+             albedo_ncep
+             landuse_30s
          raw_data/                                     (optional raw test data)
          laps/                     
              data*/                        ($LAPS_DATA_ROOT, can be duplicated)
@@ -909,7 +912,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      that any other models specified in background.nl will work.  LAPS
      developers will expand the list backgrounds in upcoming releases.
 
-     RUC grids are ftp'ed from NMC to FSL, then converted at FSL from 
+     RUC grids are ftp'ed from NCEP to FSL, then converted at FSL from 
      GRIB to NetCDF. This NetCDF file is the input for the LAPS ingest
      process that writes "lga". 
 
@@ -3505,8 +3508,8 @@ Source directory: 'laps/src/lapsprep'
    to insure compatability as well as to preserve ongoing code developments 
    by FSL and various LAPS users. Prior to making the mods, a LAPS user 
    should "check out" a well defined set of modules from the latest LAPS 
-   release (or developmental code from the parallel side of 'peaks.fsl'). This 
-   is done in close coordination with the FSL code author(s), listed in
+   release (or developmental code from the FSL in-house "parallel" side). 
+   This is done in close coordination with the FSL code author(s), listed in
    Section 3. The user can then modify that portion of the code while we 
    temporarily suspend FSL development on that set of modules. The modified 
    code can then be ported back to FSL (along with a log of the code mods 
