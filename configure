@@ -2853,7 +2853,6 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
-	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/putFile_fire1.pl
@@ -2979,7 +2978,6 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
-	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/putFile_fire1.pl
