@@ -93,24 +93,18 @@ my $c8_project = uc @c8_project[0];
 #
 
 my @LAPS_EXE;
-my @LAPS_VERIF;
-my @WHAT_GOT_IN;
 my $wgi_log;
-
-@WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
 if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(obs_driver.x lga.exe 
                   sfc_qc.exe 
                   laps_sfc.x);
-    @WHAT_GOT_IN = qw(sfc);
 
 }elsif(defined $opt_K){ # Kalman only
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave
-    @LAPS_EXE = ("obs_driver\.x", "lga\.exe", "sfc_qc\.exe", $opt_M);
-    @WHAT_GOT_IN = qw(rcsv);
+    @LAPS_EXE = qw(obs_driver.x, lga.exe, sfc_qc.exe, $opt_M);
 
 }elsif($c8_project eq "AIRDROP"){
     @LAPS_EXE = qw(lga.exe
@@ -136,7 +130,8 @@ if(defined $opt_s){ # "surface only"
 }
 
 if(defined $opt_v){
-   @LAPS_VERIF = qw(gen_verif_prof.exe gen_verif_raob.exe);
+   push(@LAPS_EXE,"gen_verif_prof.exe");
+   push(@LAPS_EXE,"gen_verif_raob.exe");
 }
 
 require "$LAPSROOT/etc/fxa.pm";
@@ -261,7 +256,7 @@ my($exenext);
 my($execount);
 my($scriptcount);
 my($scriptnext);
-my($wgi_script);
+my($wgi_script_name);
 my($command);
 my($nodes_last);
 my($nodes_current);
@@ -283,6 +278,7 @@ foreach $exe (@LAPS_EXE){
     opendir(LOCKDIR,"$LAPS_LOCK_PATH");
     @locks = grep /^\.locklaps/, readdir(LOCKDIR);
     closedir(LOCKDIR);
+    $wgi_script_name = $1 if($exe =~ /^(\S+)\./);
 
     foreach(@locks){
 	$_ =~ /^\.locklaps\.(\d+)$/;
@@ -327,32 +323,13 @@ foreach $exe (@LAPS_EXE){
             print $t." Running $exe\n";
             my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
             &forksub($sys,$lockfile);
-        }else{
-	    print $t."WARNING: $exe not found\n";
-        }
-
-        if($execount == $nexe){
-            foreach $wgi_script (@WHAT_GOT_IN){
-                print $t." Running what-got-in script $wgi_script.pl\n";
-                if ($wgi_script eq "rcsv") {
-                    $wgi_log = "sfc";
-                }else{
-                    $wgi_log = $wgi_script;
-                }
-                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1";
+            if(-e "$LAPSROOT/etc/$wgi_script_name\.pl"){
+                print $t." Running what-got-in script $wgi_script_name.pl\n";
+                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script_name.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1";
                 &forksub($sys,$lockfile);
             }
-            foreach $verifexe (@LAPS_VERIF){
-                $log = $verifexe;
-                $log =~ s/\..*$/\.log\.$yyjjjhhmm/;
-                if(-x "$LAPSROOT/bin/$verifexe"){
-                    print $t." Running $verifexe\n";
-                    my $sys="$LAPSROOT/bin/$verifexe 1> $LAPS_LOG_PATH/$log 2>&1";
-                    &forksub($sys,$lockfile);
-                }else{
-                    print $t."WARNING: $verifexe not found\n";
-                }
-            }
+        }else{
+	    print $t."WARNING: executable $exe not found\n";
         }
 
     }else{ # -q or -Q option
@@ -421,6 +398,7 @@ foreach $exe (@LAPS_EXE){
 
                 print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
                 print TFILE "  \n";
+
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
 #               print TFILE "echo 'Running (from qsub_wait) $LAPSROOT/bin/$exe' >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
@@ -431,29 +409,21 @@ foreach $exe (@LAPS_EXE){
         print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
 
-        if($execount == $nexe){ # Add perl commands to run wfo_post & what-got-in scripts into TFILE
+        if($execount == $nexe){ # Add wfo_post into TFILE as necessary
 
             if($opt_w){ # Bigfile option within qsub environment
                 print TFILE "@PERL@ $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1\n";
-            }
-
-            foreach $wgi_script (@WHAT_GOT_IN){
-                if ($wgi_script eq "rcsv") {
-                    $wgi_log = "sfc";
-                }else{
-                    $wgi_log = $wgi_script;
-                }
-                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1\n";
-            }
-            if($#LAPS_VERIF > 0){
-                print "WARNING! Verification executables requested (-v). Script not ready to run these\n";
             }
         }
 
         if($nodes_current > 1){
             print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/../../builds_sms/laps/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print "WARNING: wgi script not running for executable $exe\n";
         }else{
             print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            if(-e "$LAPSROOT/etc/$wgi_script_name.pl"){
+               print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script_name.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script_name.wgi.$yyjjjhhmm 2>&1\n";
+            }
         }
        
         if($execount == $nexe){ # Last on the list
