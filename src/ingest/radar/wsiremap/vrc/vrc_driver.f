@@ -93,6 +93,8 @@ c
 
        character*4 lvl_coord_2d(2)
 
+       logical     l_archive
+
        real*4 lat(nx_l,ny_l)
        real*4 lon(nx_l,ny_l)
        real*4 rdbz(nx_l,ny_l)
@@ -137,6 +139,7 @@ c
      
        data lvl_2d/0,0/
 
+       l_archive = .false.
 c
 c get vrc runtime parameters
 c
@@ -158,6 +161,7 @@ c this is designed to allow archive data runs!
           print*,'Set current time to contents of systime.dat'
           c_fname_cur=c_fname_sys
           i4time_cur=i4time_sys
+          l_archive = .true.
        endif
 
        c_fname_cur_temp = cvt_i4time_wfo_fname13(i4time_cur)
@@ -181,8 +185,10 @@ c
 c
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
-       else
+       elseif(.not.l_archive)then
           c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
+       else
+          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
        endif
        write(6,*)
        write(6,*)'Latest time for wsi data'
@@ -209,11 +215,15 @@ c
           i4time_latest_vrc = i4time_latest_vrc + 900
 
           n=index(wsi_dir_path,' ')
+
           if(c_raddat_type.eq.'wfo')then
              c_filespec=wsi_dir_path(1:n-1)//'*'
-          else
+          elseif(.not.l_archive)then
              c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
+          else
+             c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
           endif
+
           n=index(c_filespec,' ')
 
           write(6,*)'Directory_wait: ',c_filespec(1:n)
@@ -246,8 +256,10 @@ c
        n=index(wsi_dir_path,' ')
        if(c_raddat_type.eq.'wfo')then
           c_filespec=wsi_dir_path(1:n-1)//'*'
-       else
+       elseif(.not.l_archive)then
           c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:7)//'*_hd'
+       else
+          c_filespec=wsi_dir_path(1:n-1)//c_fname_cur(1:8)//'*_hd'
        endif
 
        call get_latest_file_time(c_filespec,i4time_latest_wsi)
