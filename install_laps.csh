@@ -91,15 +91,11 @@ if ($arg1 == p) then
             mv bin  $LAPSINSTALLROOT
         endif
 
-        if (-e etc) then
-            echo "Moving $LAPS_SRC_ROOT/etc directory to $LAPSINSTALLROOT"
-            mv etc  $LAPSINSTALLROOT
-        endif
+        echo "Copying $LAPS_SRC_ROOT/etc directory to $LAPSINSTALLROOT"
+        cp -r etc  $LAPSINSTALLROOT
 
-        if (-e util) then
-            echo "Moving $LAPS_SRC_ROOT/util directory to $LAPSINSTALLROOT"
-            mv util  $LAPSINSTALLROOT
-        endif
+        echo "Copying $LAPS_SRC_ROOT/util directory to $LAPSINSTALLROOT"
+        cp -r util  $LAPSINSTALLROOT
     endif
 
 else
