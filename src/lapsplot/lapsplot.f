@@ -119,7 +119,7 @@ cdis
 
             else ! set up supmap for plot
                 call lapsplot_setup(ni,nj,lat,lon,jdot_in
-     1                             ,namelist_parms)      
+     1                             ,namelist_parms,plot_parms)      
 
             endif
 
@@ -171,7 +171,8 @@ cdis
         end
 
 
-        subroutine lapsplot_setup(ni,nj,lat,lon,jdot_in,namelist_parms)       
+        subroutine lapsplot_setup(ni,nj,lat,lon,jdot_in
+     1                           ,namelist_parms,plot_parms)       
 
 !       implicit none
 
