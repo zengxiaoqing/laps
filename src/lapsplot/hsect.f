@@ -341,8 +341,8 @@ c       include 'satellite_dims_lvd.inc'
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd,wb,wr,wf,bw] Wind'
      1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
-     1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'        
-     1       /'     [ra/rf] Radar Data,  [rx] Max Radar'
+     1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'       
+     1       /'     [ra/rf] Radar Interm./Anal. Data,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df,dc,ws,vv,hu,ta,th,te,vo'  
@@ -811,14 +811,26 @@ c       include 'satellite_dims_lvd.inc'
      1                     ,' Balnc Omega ubar/s',c33_label)       
 
                 else if(c_type .eq. 'lo')then
+                    call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_3dw              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_3dw            ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+                   if(istatus.ne.1)goto1200
+
                    write(6,211)ext(1:3)
-                   read(5,221)a13_time
-                   call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
-                   call get_directory(ext,directory,lend)
+!                  read(5,221)a13_time
+!                  call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+!                  call get_directory(ext,directory,lend)
                    var_2d = 'OM'
 
-                   CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L
-     1             ,NY_L,1,1,VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d
+                   CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
+     1             ,NX_L,NY_L,1,1,VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d
      1             ,COMMENT_2d,w_2d,ISTATUS)
 
                     call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)
@@ -1427,7 +1439,7 @@ c
                 i4time_get = i4time_ref
             endif
 
-            if(c_type .ne. 'rf')then
+            if(c_type .ne. 'rf')then ! Radar intermediate data files
 
               if(.not. l_radar_read)then
 
@@ -1444,6 +1456,8 @@ c
                     write(6,*)' Error locating height field'
                     return
                   endif
+
+                  write(6,*)' Calling get_radar_ref...'
 
                   call get_radar_ref(i4time_get,100000,i4time_radar,mode
      1            ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
@@ -1474,33 +1488,35 @@ c
                     return
                   endif
 
+                  i4time_radar = i4time_radar_a(i_radar)
+
                 endif ! c_type .ne. 'rd'
 
-!               Ask which radar number (extension)
-                write(6,*)
-                write(6,2026)
-2026            format('         Enter Radar # (for reflectivity)  '
-     1                                                     ,27x,'? ',$)
-                read(lun,*)i_radar
 
-                write(6,*)' Reading reflectivity data from radar '
+                if(.false.)then
+!                   Ask which radar number (extension)
+                    write(6,*)
+                    write(6,2026)
+2026                format('         Enter Radar # (for reflectivity)'      
+     1                                                     ,29x,'? ',$)       
+                    read(lun,*)i_radar
+
+                    write(6,*)' Reading reflectivity data from radar '
      1                                                       ,i_radar
 
-!               Obtain radar time (call get_file_time - ala put_derived_wind)
-
-!               Obtain height field
-                ext = 'lt1'
-                var_2d = 'HT'
-                call get_laps_3dgrid(
-     1                   i4time_radar_a(i_radar),1000000,i4time_ht,
+!                   Obtain height field
+                    ext = 'lt1'
+                    var_2d = 'HT'
+                    call get_laps_3dgrid(
+     1                   i4time_radar,1000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,field_3d,istatus)
 
-                write(6,*)
+                    write(6,*)
 
-                call get_ref_base(ref_base,istatus)
+                    call get_ref_base(ref_base,istatus)
 
-                call read_radar_3dref(i4time_radar_a(i_radar),
+                    call read_radar_3dref(i4time_radar,
      1               .true.,ref_base,
      1               NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
      1               lat,lon,topo,.true.,.true.,
@@ -1509,7 +1525,7 @@ c
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
      1               n_ref_grids,istat_radar_2dref,istat_radar_3dref)
 
-                     i4time_radar = i4time_radar_a(i_radar)
+                  endif
 
               endif ! l_radar_read
 
@@ -1548,12 +1564,13 @@ c
      1      .or. c_field .eq. 'vi' .or. c_field .eq. 've')then
                 write(6,2021)
 2021            format('         Enter Level in mb ',45x,'? ',$)
+                call input_level(lun,k_level,k_mb,pres_3d
+     1                          ,NX_L,NY_L,NZ_L)       
             endif
 
             if(c_field(1:2) .eq. 'mr')then ! Column Max Reflectivity data
-!               if(lapsplot_pregen)then
-                if(.true.)then
-                    write(6,*)' Getting pregenerated radar data file'
+                if(c_type .eq. 'rf')then
+                    write(6,*)' Getting analyzed lmr file'
                     var_2d = 'R'
                     ext = 'lmr'
 !                   i4time_hour = (i4time_radar+laps_cycle_time/2)
@@ -1563,9 +1580,13 @@ c
      1                                  ,NX_L,NY_L,radar_array,0
      1                                  ,istatus)
 
-                else
+                    c33_label = 'LAPS Col. Max Reflectivity (lmr) '    
+
+                else ! c_type .eq. 'ra'?
+                    write(6,*)' Calling get_max_ref'
                     call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L
      1                              ,radar_array)
+                    c33_label = 'LAPS Col. Max Ref (intermediate) '    
 
                 endif
 
@@ -1574,7 +1595,7 @@ c
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
-     1               asc9_tim_r,'LAPS  Column Max Reflectivity    ',
+     1               asc9_tim_r,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
@@ -1591,6 +1612,8 @@ c
             elseif(c_field(1:2) .eq. 'lr')then ! Low Lvl Reflectivity data
                 i4time_hour = (i4time_radar+laps_cycle_time/2)
      1                          /laps_cycle_time * laps_cycle_time
+
+                write(6,*)' Getting analysed llr field'
 
                 var_2d = 'LLR'
                 ext = 'lmt'
@@ -2149,7 +2172,7 @@ c
                 call get_2dgrid_dname(directory
      1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
      1           ,ext,var_2d,units_2d,comment_2d
-     1           ,NX_L,NY_L,field_2d,level_mb,istatus)       
+     1           ,NX_L,NY_L,field_2d,k_mb,istatus)       
 
                 do i = 1,NX_L
                 do j = 1,NY_L
@@ -2562,7 +2585,7 @@ c
 
                 if(k_level .gt. 0)then ! Read from 3-D cloud type
                     pressure = float(k_level*100)
-                    k_level = nint(zcoord_of_field(pressure,pres_3d
+                    k_level = nint(rlevel_of_field(pressure,pres_3d
      1                            ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
                     k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
                     ext = 'lty'
@@ -2633,7 +2656,7 @@ c
 
             if(k_level .gt. 0)then
                pressure = float(k_level*100)
-               k_level = nint(zcoord_of_field(pressure,pres_3d
+               k_level = nint(rlevel_of_field(pressure,pres_3d
      1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
                k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
             endif
@@ -2729,10 +2752,10 @@ c
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'pe' .or. c_type .eq. 'ne')then
+        elseif(c_type(1:2) .eq. 'pe' .or. c_type(1:2) .eq. 'ne')then        
           ext = 'lst'
 
-          if(c_type .eq. 'pe')then
+          if(c_type(1:2) .eq. 'pe')then
               var_2d = 'PBE'
 
               call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
@@ -2754,7 +2777,7 @@ c
           scale = 1.
           call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
 
-          if(c_type .eq. 'pe')then
+          if(c_type(1:2) .eq. 'pe')then
 !             Change flag value 
               do i = 1,NX_L
               do j = 1,NY_L
@@ -2767,12 +2790,13 @@ c
               clow = 0.
               chigh = 8000.
               cint = +400.
-              call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t,
-     1                       c33_label,i_overlay,c_display,
-     1                       lat,lon,jdot,
-     1                       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-          elseif(c_type .eq. 'ne')then
+!             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t,
+!    1                       c33_label,i_overlay,c_display,
+!    1                       lat,lon,jdot,
+!    1                       NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+          elseif(c_type(1:2) .eq. 'ne')then
 !             Change flag value (for now)
               do i = 1,NX_L
               do j = 1,NY_L
@@ -2788,11 +2812,35 @@ c
               clow = -500 !   0.
               chigh = 0.  !   0.
               cint = 50.  ! -10.
-              call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
-     1                      ,c33_label,i_overlay,c_display
-     1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
-     1                      ,laps_cycle_time)
+
+!             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
+!    1                      ,c33_label,i_overlay,c_display
+!    1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
+!    1                      ,laps_cycle_time)
+
           endif
+
+
+          if(c_type(3:3) .ne. 'i')then ! contour plot
+!             call contour_settings(field_2d,NX_L,NY_L
+!    1                               ,clow,chigh,cint,zoom,1.)       
+
+              call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t       
+     1           ,c33_label,i_overlay,c_display
+     1           ,lat,lon,jdot
+     1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+          else ! image plot
+              call ccpfil(field_2d,NX_L,NY_L,clow,chigh,'cpe'
+     1                     ,n_image)    
+              call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+              call setusv_dum(2hIN,7)
+              call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+              call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+          endif ! image plot
+
 c
 c J. Smart - 4/19/99. Updated moisture plotting. In addition, added two
 c                     more switches for lga/fua plotting.
@@ -5616,7 +5664,7 @@ c
         k_mb = k_level
         if(k_level .gt. 0)then
             pressure = float(k_level*100)
-            k_level = nint(zcoord_of_field(pressure,pres_3d
+            k_level = nint(rlevel_of_field(pressure,pres_3d
      1                       ,NX_L,NY_L,NZ_L,icen,jcen,istatus))
             k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
         endif

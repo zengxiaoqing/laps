@@ -156,6 +156,9 @@ cdoc    value of height_to_zcoord will have a fraction of 0.5.
             return
         endif
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
         if(ltest_vertical_grid('HEIGHT'))then
            print*, 'Call is obsolete, please report this message to '
            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
@@ -164,8 +167,12 @@ cdoc    value of height_to_zcoord will have a fraction of 0.5.
         elseif(ltest_vertical_grid('PRESSURE'))then
             pressure_pa = ztopsa(height_m) * 100.
             if(pressure_pa .eq. 9999900.)pressure_pa = 1e-2
-            height_to_zcoord = (PRESSURE_0_L - pressure_pa)
-     1                          / PRESSURE_INTERVAL_L
+            height_to_zcoord = zcoord_of_pressure(pressure_pa)
+
+            if(height_to_zcoord .eq. r_missing_data)then
+                istatus = 0
+                height_to_zcoord = 0.
+            endif
 
         else
             write(6,*)' Error, vertical grid not supported,'
@@ -486,6 +493,7 @@ cdoc    Convert Pressure to Height, using a 3-D Height field for reference
         function height_of_level(level)
 
 cdoc    Calculate the height of a given pressure level, using standard atmos.
+cdoc    Works only for constant pressure levels
 
         implicit real*4 (a-z)
 
@@ -516,7 +524,7 @@ cdoc    Calculate the height of a given pressure level, using standard atmos.
         function zcoord_of_level(level)
 
 cdoc    Calculate zcoord (e.g. pressure) of a given level. 
-cdoc    Works for variable pressure grid, phase out for arbitrary grid?
+cdoc    Works only for constant pressure levels
 
         logical ltest_vertical_grid
 
@@ -544,7 +552,7 @@ cdoc    Works for variable pressure grid, phase out for arbitrary grid?
         function pressure_of_level(level)
 
 cdoc    Calculate pressure of a given integer level. 
-cdoc    Works for variable pressure grid, phase out for arbitrary grid?
+cdoc    Works only for constant pressure levels
 
         real*4, allocatable, dimension(:) :: pres_1d
 
@@ -573,29 +581,28 @@ cdoc    Works for variable pressure grid, phase out for arbitrary grid?
 
         function pressure_of_rlevel(rlevel)
 
-cdoc    Obtain pressure of a given real (fractional) level. Being phased out?
+cdoc    Obtain pressure of a given real (fractional) level. 
+cdoc    Works only for constant pressure levels
 
-        implicit real*4 (a-z)
+        call get_laps_dimensions(nk,istatus)
+        if(istatus .ne. 1)stop
 
-        integer istatus
+        l1 = int(rlevel)
+        if(l1 .eq. nk)l1 = l1-1
+        l2 = int(rlevel)+1
+        frac = rlevel - l1
 
-        include 'lapsparms.cmn'
+        pres1 = pressure_of_level(l1)
+        pres2 = pressure_of_level(l2)
 
-        call get_config(istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
-        endif
-
-        pressure_of_rlevel = PRESSURE_0_L
-     1                  - PRESSURE_INTERVAL_L * rlevel
+        pressure_of_rlevel = pres1 * (1. - frac) + pres2 * frac
 
         istatus = 1
         return
         end
 
-        function zcoord_of_field(value,field_3d,ni,nj,nk,i,j,istatus)       
+
+        function rlevel_of_field(value,field_3d,ni,nj,nk,i,j,istatus)       
 
 cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
@@ -613,7 +620,7 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
         if(ltest_vertical_grid('HEIGHT'))then
             print*, 'Call is obsolete, please report this message to '       
             print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!           zcoord_of_field = value / HEIGHT_INTERVAL
+!           rlevel_of_field = value / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             if(field_3d(i,j,nk) .gt. field_3d(i,j,1))then
@@ -624,22 +631,22 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
                 isign = -1
             endif
 
-            zcoord_of_field = nk+1 ! Default value is off the grid
+            rlevel_of_field = nk+1 ! Default value is off the grid
 
             k = k_ref
 
             if((value - field_3d(i,j,nk)) * rsign .gt. 0.)then
-                zcoord_of_field = nk+1 
+                rlevel_of_field = nk+1 
 !               write(6,101)kref,value,field_3d(i,j,nk)
-!101            format('  Note: above domain in zcoord_of_field,'       
+!101            format('  Note: above domain in rlevel_of_field,'       
 !    1                ,' kref,h,h(nk)',i3,2e11.4)
                 istatus = 0
                 return
 
             elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
-                zcoord_of_field = 0
+                rlevel_of_field = 0
                 write(6,102)kref,value,field_3d(i,j,1)
-102             format('  Warning: below domain in zcoord_of_field,'
+102             format('  Warning: below domain in rlevel_of_field,'
      1                ,' kref,h,h(1)',i3,2e11.4)
                 istatus = 0
                 return
@@ -652,7 +659,7 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
                     thickness = field_3d(i,j,k+1) - field_3d(i,j,k)
                     fraction = (value - field_3d(i,j,k))/thickness
 
-                    zcoord_of_field = k + fraction
+                    rlevel_of_field = k + fraction
 
                     goto999
 
@@ -666,8 +673,8 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
             enddo ! iter
 
-            zcoord_of_field = 0
-            write(6,*)' Error, iteration limit in zcoord_of_field'
+            rlevel_of_field = 0
+            write(6,*)' Error, iteration limit in rlevel_of_field'
             istatus = 0
             return
 
@@ -690,38 +697,53 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
 cdoc    Convert pressure to a real (fractional) level. Being phased out?
 
-        implicit real*4 (a-z)
+        real*4, allocatable, dimension(:) :: pres_1d
 
-        include 'lapsparms.cmn'
-
-!       logical ltest_vertical_grid
-
-        integer istatus
-
-        call get_config(istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
-        endif
+        integer*4 level, istatus, istat_alloc
 
 !       if(ltest_vertical_grid('HEIGHT'))then
 
 !       elseif(ltest_vertical_grid('PRESSURE'))then
-            zcoord_of_pressure =
-     1  (PRESSURE_0_L - pres_pa) / PRESSURE_INTERVAL_L
 
-!       else
-!           write(6,*)' Error, vertical grid not supported,'
-!    1               ,' this routine supports PRESSURE or HEIGHT'
-!           istatus = 0
-!           return
+        if(.true.)then
+            call get_laps_dimensions(nk,istatus)
+            if(istatus .ne. 1)stop
 
-!       endif
+            allocate(pres_1d(nk), STAT=istat_alloc )
+            if(istat_alloc .ne. 0)then
+                write(6,*)' ERROR: Could not allocate pres_1d'
+                stop
+            endif
+
+            call get_pres_1d(i4time,nk,pres_1d,istatus)
+            if(istatus .ne. 1)stop
+
+            arg = rlevel_of_field(pres_pa,pres_1d,1,1,nk,1,1,istatus)       
+
+            if(istatus .ne. 1)then
+                call get_r_missing_data(r_missing_data,istatus)
+                if(istatus .ne. 1)stop
+                zcoord_of_pressure = r_missing_data
+
+            else
+                zcoord_of_pressure = arg
+
+            endif    
+
+            deallocate(pres_1d)
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
+        endif
 
         istatus = 1
         return
         end
+
 
         function zcoord_of_logpressure(pres_pa)
 

@@ -102,6 +102,9 @@ cdis
 
         write(6,*)' Welcome to subroutine put_temp_anal'
 
+        icen = ni/2
+        jcen = nj/2
+
         call get_temp_parms(l_use_raob,l_adjust_heights,weight_bkg_const
      1                     ,rms_thresh,pres_mix_thresh,max_snd_grid
      1                     ,max_obs,istatus)
@@ -256,12 +259,18 @@ cdis
                 pres_mix_top = pres_3d(i,j,nk)
             endif
 
-            rk_mix = zcoord_of_pressure(pres_mix_top)
+            rk_mix = rlevel_of_field(pres_mix_top
+     1                              ,pres_3d,ni,nj,nk,i,j,istatus)
+            if(istatus .ne. 1)return
+
             k_mix  = int(rk_mix)
             frac_k_mix = rk_mix - k_mix
 
 !           Find Temp at Top of Boundary Lyr According to Upper Level Anal
-            rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
+            rk_sfc = rlevel_of_field(pres_sfc_pa(i,j)
+     1                              ,pres_3d,ni,nj,nk,i,j,istatus)
+            if(istatus .ne. 1)return
+
             k_sfc = int(rk_sfc)
             if(k_sfc .lt. 1 .or. k_sfc .ge. nk)then
                 write(6,*)' Error, k_sfc/rk_sfc/p_sfc = '
@@ -349,7 +358,10 @@ cdis
             height_top = psatoz(pres_top_pa      * .01)   ! Standard Atmosphere
             height_sfc = psatoz(pres_sfc_pa(i,j) * .01)   ! Standard Atmosphere
 
-            rk_top = zcoord_of_pressure(pres_top_pa)
+            rk_top = rlevel_of_field(pres_top_pa
+     1                              ,pres_3d,ni,nj,nk,i,j,istatus)
+            if(istatus .ne. 1)return
+
             k_top = int(rk_top)
 
             sfc_bias = temp_sfc_eff - temp_sfc_intrpl
@@ -515,7 +527,10 @@ c       1                               j_diff_thmax,k_diff_thmax
         diffmax = 0.
         do i = 1,ni
         do j = 1,nj
-            rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
+            rk_sfc = rlevel_of_field(pres_sfc_pa(i,j)
+     1                              ,pres_3d,ni,nj,nk,i,j,istatus)
+            if(istatus .ne. 1)return
+
             k_sfc = int(rk_sfc)
             frac_k_sfc = rk_sfc - k_sfc
             temp_sfc_intrpl = 
@@ -563,7 +578,11 @@ c       1                               j_diff_thmax,k_diff_thmax
 !       Height Analysis
         write(6,*)
         if(l_adjust_heights)then ! Store model fg 500 heights
-            k_ref = nint(zcoord_of_pressure(50000.))
+            arg = rlevel_of_field(50000.
+     1                           ,pres_3d,ni,nj,nk,icen,jcen,istatus)
+            if(istatus .ne. 1)return
+            k_ref = nint(arg)
+
             write(6,*)' Storing bkg ht level ',k_ref
             do i = 1,ni
             do j = 1,nj

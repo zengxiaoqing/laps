@@ -155,7 +155,7 @@ cdoc  there are more levels in the boundary layer.
 
       free_atmos_pres = max(70000.,pres_3d(i,j,nk-1))
 
-      free_atmos_zcoord = zcoord_of_field(free_atmos_pres,pres_3d
+      free_atmos_zcoord = rlevel_of_field(free_atmos_pres,pres_3d
      1                                   ,ni,nj,nk,i,j,istatus)
       if(istatus .ne. 1)return
 

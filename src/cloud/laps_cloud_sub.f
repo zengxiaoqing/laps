@@ -190,7 +190,7 @@ cdis
         real*4 cldcv_sao(NX_L,NY_L,KCLOUD)
         real*4 cld_pres_1d(KCLOUD)
         real*4 pressures_pa(NZ_L)
-        real*4 clouds_3d_pres(NX_L,NY_L,NZ_L)
+!       real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 wtcldcv(NX_L,NY_L,KCLOUD)
 
         real*4 CVHZ(NX_L,NY_L)
@@ -928,9 +928,9 @@ C       EW SLICES
 
 !       Write out Cloud Field
         do k=1,KCLOUD
-            cld_pres_1d(k) = pressure_of_rlevel(
-     1          height_to_zcoord2(cld_hts(k),heights_3d
-     1               ,NX_L,NY_L,NZ_L,NX_L/2,NY_L/2,istatus)   )
+            rlevel = height_to_zcoord2(cld_hts(k),heights_3d
+     1                   ,NX_L,NY_L,NZ_L,NX_L/2,NY_L/2,istatus)   
+            cld_pres_1d(k) = pressure_of_rlevel(rlevel)
             write(6,102)k,cld_pres_1d(k),istatus
 102         format(1x,i3,f10.1,i2)
         enddo ! k

@@ -248,7 +248,7 @@ cdis
         character*4 c4_string
         character*7 c7_string
         character*24 asc_tim_24
-        character*9 asc_tim_9,a9time,c9_string
+        character*9 a9time,c9_string
         character*20 c20_sta
         integer*4 ity
 
@@ -751,6 +751,7 @@ c read in laps lat/lon and topo
                     endif
 
                     call make_fnam_lp(i4time_3dw,a9time,istatus)
+                    write(6,*)' a9time = ',a9time
 
                 elseif(c_field .eq. 'w ' .or. c_field .eq. 'om')then ! Omega
                     write(6,*)' Reading Omega/W'
@@ -804,7 +805,7 @@ c read in laps lat/lon and topo
             if       (c_wind .eq. 'b')then
                 c33_label = 'LAPS Wind (Balanced)       knots '
             else ! if(c_wind .eq. 'k')then
-                c33_label = 'LAPS Wind                  knots '
+                c33_label = 'LAPS Wind (Analyzed)       knots '
             endif
 
 
@@ -878,7 +879,7 @@ c read in laps lat/lon and topo
             else   if(c_wind .eq. 'c')then
                 c33_label = 'LAPS Omega (cloud)         ubar/s'
             else ! if(c_wind .eq. 'k')then
-                c33_label = 'LAPS Omega (lw3)           ubar/s'
+                c33_label = 'LAPS Omega (analyzed)      ubar/s'
             endif
 
         elseif(c_field .eq. 'w ' )then
@@ -980,7 +981,12 @@ c read in laps lat/lon and topo
             chigh = +1000.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS  U        Vert X-Sect  (kt) '
+
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS  U    (balanced)       (kt) '
+            else
+                c33_label = 'LAPS  U    (analyzed)       (kt) '
+            endif
 
         elseif(c_field .eq. 'v ' )then
             call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
@@ -1002,7 +1008,12 @@ c read in laps lat/lon and topo
             chigh = +1000.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS  V        Vert X-Sect  (kt) '
+
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS  V    (balanced)       (kt) '
+            else
+                c33_label = 'LAPS  V    (analyzed)       (kt) '
+            endif
 
         elseif(c_field .eq. 'sp' )then
             call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
@@ -1032,7 +1043,7 @@ c read in laps lat/lon and topo
             if       (c_wind .eq. 'b')then
                 c33_label = 'LAPS Isotachs (Balanced)   knots '
             else ! if(c_wind .eq. 'k')then
-                c33_label = 'LAPS Isotachs              knots '
+                c33_label = 'LAPS Isotachs (Analyzed)   knots '
             endif
 
         elseif(c_field .eq. 'di' )then
@@ -1061,7 +1072,7 @@ c read in laps lat/lon and topo
             if       (c_wind .eq. 'b')then
                 c33_label = 'LAPS Isogons (Balanced)    knots '
             else ! if(c_wind .eq. 'k')then
-                c33_label = 'LAPS Isogons               knots '
+                c33_label = 'LAPS Isogons (Analysis)    knots '
             endif
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'

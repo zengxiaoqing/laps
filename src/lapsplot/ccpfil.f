@@ -177,7 +177,8 @@ C
               call GSCR(IWKID, i, rintens, rintens, rintens)
           enddo ! i
 
-      elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref')then       
+      elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
+     1                              .or. colortable .eq. 'cpe')then       
           ncols = 50
           call color_ramp(1,ncols/8,IWKID
      1                   ,0.5,0.15,0.6                 ! Pink
@@ -199,6 +200,12 @@ C
               do i = 1,3
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
+
+          elseif(colortable .eq. 'cpe')then
+              do i = 1,2
+                  call GSCR(IWKID, i, 0., 0., 0.)
+              enddo 
+
           endif
 
       else
