@@ -25,7 +25,7 @@
 #
 use strict;
 use Getopt::Long;
-my($LAPSROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$quiet,$sattype,$satid);
+my($LAPSROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$quiet,$sattype,$satid,$no_ggm);
 
 my $result = GetOptions("lapsroot=s" => \$LAPSROOT,
 			"dataroot=s" => \$LAPS_DATA_ROOT,
