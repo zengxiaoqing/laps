@@ -214,7 +214,8 @@ exe: lib
 	  do \
 	  echo " ";\
 	  echo Making Laps in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) all ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -224,7 +225,8 @@ lib:
 	  do \
 	  echo " ";\
 	  echo Making Laps in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) all ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -234,7 +236,8 @@ debuglib:
 	  do \
 	  echo " ";\
 	  echo Making Laps in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) debug ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -262,7 +265,8 @@ install: mkdirs
 	  do \
 	  echo " ";\
 	  echo Making Laps in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) install ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -297,7 +301,8 @@ clean:
 	  do \
 	  echo " ";\
 	  echo Making LAPS clean in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) clean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -307,7 +312,8 @@ realclean: clean
 	  do \
 	  echo " ";\
 	  echo Making LAPS clean in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) clean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -317,7 +323,8 @@ distclean: realclean cleandirs
 	  do \
 	  echo " ";\
 	  echo Making LAPS distclean in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) distclean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
@@ -341,7 +348,8 @@ links:
 	  do \
 	  echo " ";\
 	  echo Making LAPS links in directory $$dir ;\
-	  (cd $$dir; \
+	  (cd $$dir; if [ $$? != 0 ] ; then \
+	        echo "Exit status from cd $$dir was $$?" ; exit 1 ; fi ;\
 	  $(MAKE) links ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
