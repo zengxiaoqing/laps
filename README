@@ -774,6 +774,13 @@
 Major Updates (from most recent to oldest mods)
 Last updated: October 1996 by Daniel Birkenheuer
 
+February 1997:
+
+  The moisture_switch.txt file was refashioned to a NAMELIST called
+  moisture_switch.nl.  This files contents are basically the same as 
+  the .txt file except with a slight change in format.  It can be hand
+  edited to configure the operation of the moisture analysis if needed.
+
 April 1997:
 
   On the 15th of April an upgrade to enable the moisture analysis to
@@ -1470,7 +1477,7 @@ Code organization:
 
 Control file:
 
-   ./data/static/moisture_switch.txt
+   ./data/static/moisture_switch.nl
 
    Is an ASCII file intended for easy editing and control of the moisture
    modules activities.  The first record controls usage of RAOB data
