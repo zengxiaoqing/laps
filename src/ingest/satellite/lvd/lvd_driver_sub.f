@@ -366,26 +366,26 @@ c
             call lvd_file_specifier(c_type(i,j),ispec,istat)
 
             if(ispec.eq.2)then
-               call genbtemplut(csatid,ispec,rcal,r39_cnt_to_btemp_lut
-     &                         ,istatus)
+               call genbtemplut(csatid,csattype,ispec,rcal,
+     &                          r39_cnt_to_btemp_lut,istatus)
                if(istatus.ne.1)then
                   write(6,*)'Error computing 39 lut'
                endif
             elseif(ispec.eq.3)then
-               call genbtemplut(csatid,ispec,rcal,r67_cnt_to_btemp_lut
-     &                         ,istatus)
+               call genbtemplut(csatid,csattype,ispec,rcal,
+     &                          r67_cnt_to_btemp_lut,istatus)
                if(istatus.ne.1)then
                   write(6,*)'Error computing 67 lut'
                endif
             elseif(ispec.eq.4)then
-               call genbtemplut(csatid,ispec,rcal,ir_cnt_to_btemp_lut
-     &                         ,istatus)
+               call genbtemplut(csatid,csattype,ispec,rcal,
+     &                          ir_cnt_to_btemp_lut,istatus)
                if(istatus.ne.1)then
                   write(6,*)'Error computing ir lut'
                endif
             elseif(ispec.eq.5)then
-               call genbtemplut(csatid,ispec,rcal,r12_cnt_to_btemp_lut
-     &                         ,istatus)
+               call genbtemplut(csatid,csattype,ispec,rcal,
+     &                          r12_cnt_to_btemp_lut,istatus)
                if(istatus.ne.1)then
                   write(6,*)'Error computing 12 lut'
                endif

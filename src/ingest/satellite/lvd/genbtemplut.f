@@ -1,4 +1,4 @@
-      subroutine genbtemplut(cstype,chid,rcal,cnt2btemp,
+      subroutine genbtemplut(cstype,ctype,chid,rcal,cnt2btemp,
      &istatus)
 c
 c
@@ -6,6 +6,7 @@ c
       implicit none
 c
       character*(*) cstype
+      character*(*) ctype
       integer chid,i
       integer istatus
       real*4  a,b,spc,rad,rcal
@@ -32,27 +33,32 @@ c
             cnt2btemp(i)=b/(alog(rad)-a)
          enddo
 
-      else
+      elseif(ctype.eq.'cdf'.and.chid.eq.3)then   !this is the fsl-conus /public switch
+                                                 !channel 3 has different enhancement curve.
+         do i=0,255
+            cnt2btemp(i) = (1348.925 - float(i) ) / 5.1417
+         enddo
 
-         if(chid.eq.3.or.chid.eq.4.or.chid.eq.5)then
-            do i=0,180
-               cnt2btemp(i)=(660.0-float(i))/2.0
-            enddo
-            do i=181,255
-               cnt2btemp(i)=420.0-float(i)
-            enddo
+      elseif(chid.ne.2)then                      !WFO switch; channels 3,4, and 5 have same
+                                                 !enhancement curve atm (10-27-99).
+         do i=0,180
+            cnt2btemp(i)=(660.0-float(i))/2.0
+         enddo
+         do i=181,255
+            cnt2btemp(i)=420.0-float(i)
+         enddo
 
-         elseif(chid.eq.2)then
-
-            do i=0,183
-               cnt2btemp(i)=(660.4-float(i))/2.0
-            enddo
-            do i=184,216
-               cnt2btemp(i)=421.7-float(i)
-            enddo
-            do i=217,255
-               cnt2btemp(i)=0.0
-            enddo
+      elseif(chid.eq.2)then                      !channel 2 (3.9u) has different enchancement
+                                                 !curve than the other ir channels.
+         do i=0,183
+            cnt2btemp(i)=(660.4-float(i))/2.0
+         enddo
+         do i=184,216
+            cnt2btemp(i)=421.7-float(i)
+         enddo
+         do i=217,255
+            cnt2btemp(i)=0.0
+         enddo
 c
 c commented out the separate wv btemp calc. Now the same as ch 4 and 5.
 c 10-21-99.
@@ -69,15 +75,14 @@ c
 c new as of 10-3-96.
 c              cnt2btemp(i) = (1348.925 - float(i) ) / 5.1417
 c           enddo
+c
+      else
 
-         else
-
-            write(6,*)'Channel # error, it doesnt exist'
-            istatus=0
-
-         endif
+         write(6,*)'Channel # error, it doesnt exist'
+         istatus=0
 
       endif
+
 c
 c test output of cnt2btemp table
 c
