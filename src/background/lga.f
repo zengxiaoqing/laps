@@ -444,7 +444,7 @@ c
             endif
          elseif (bgmodel .eq. 3 .or. 
      .           bgmodel .eq. 8) then ! Process NOGAPS data
-            call read_nogaps(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+            call read_nogaps(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                       prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                       gproj,istatus)
  
