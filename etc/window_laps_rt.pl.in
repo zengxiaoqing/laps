@@ -34,27 +34,40 @@ umask 002;
 #
 # -----------------------------------------------------------------------------
 
-my $LAPS_SRC_ROOT ; my $LAPSINSTALLROOT; my $LAPS_DATA_ROOT;
-
-$LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT});
-$LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT});
-$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT});
+my ($LAPS_SRC_ROOT, $LAPSINSTALLROOT, $LAPS_DATA_ROOT, $DATAROOT, $DOMAIN_NAME);
 
 $LAPS_SRC_ROOT = $opt_s if( $opt_s);
 $LAPSINSTALLROOT = $opt_i if( $opt_i);
 $LAPS_DATA_ROOT = $opt_d if( $opt_d);
 
+$LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT} && !defined $LAPS_SRC_ROOT);
+$LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $LAPSINSTALLROOT);
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT} && !defined $LAPS_DATA_ROOT);
+
 $LAPSINSTALLROOT=$LAPS_SRC_ROOT if(! defined($LAPSINSTALLROOT));
 
-my $all_roots_equal = 0;
+my $all_roots_equal = "F";
 if(! defined($LAPS_DATA_ROOT) ){$LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data";
    if($LAPS_SRC_ROOT eq $LAPSINSTALLROOT){
-      $all_roots_equal = 1;
-      print "WARNING: All lapsroots are equal\n";}
+      $all_roots_equal = "T";
+      print "WARNING: All lapsroots are equal\n";
+   }
 }
 
-my $LAPS_TEMPLATE;
-my $CONFIG_DOMAIN;
+require "$LAPSINSTALLROOT/etc/laps_tools.pm";
+$DOMAIN_NAME = &laps_tools::laps_domain_name($LAPS_DATA_ROOT);
+$DATAROOT = &laps_tools::laps_data_root($LAPS_DATA_ROOT);
+
+if($LAPS_SRC_ROOT eq $LAPSINSTALLROOT && $all_roots_equal ne "T"){
+   my $strlen=length($DATAROOT);
+   $DATAROOT = substr($DATAROOT,0,$strlen-1) if(substr($DATAROOT,$strlen,$strlen) eq "/");
+   if("$DATAROOT"."$DOMAIN_NAME" eq $LAPS_SRC_ROOT){
+      $all_roots_equal = "T";
+      print "WARNING: All lapsroots are equal\n";
+   }
+}
+
+my ($LAPS_TEMPLATE, $CONFIG_DOMAIN);
 
 if($opt_t){
    $LAPS_TEMPLATE = $opt_t;
@@ -69,11 +82,11 @@ if($opt_c){
    $CONFIG_DOMAIN = "f";
 }
 
-print "Laps Src Root = $LAPS_SRC_ROOT\n";
-print "Install_Root = $LAPSINSTALLROOT \n";
+print "Laps Src Root  = $LAPS_SRC_ROOT\n";
+print "Install_Root   = $LAPSINSTALLROOT \n";
 print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
-print "Laps Template = $LAPS_TEMPLATE \n";
-print "Config Domain = $CONFIG_DOMAIN \n";
+print "Laps Template  = $LAPS_TEMPLATE \n";
+print "Config Domain  = $CONFIG_DOMAIN \n";
 
 # WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_DATA/laps_data) before removing it.
 #                 softlink data to laps_data appropriately.
@@ -86,10 +99,8 @@ if(-d $FXA_DATA && ! -d "$FXA_DATA/laps_data"){
    system("ln -s $FXA_DATA/laps_data data");
 }
 
-require "$LAPSINSTALLROOT/etc/laps_tools.pm";
-
 if( $CONFIG_DOMAIN eq "t" ) {
-  if( $all_roots_equal == 0){
+  if( $all_roots_equal eq "F" ){
 
       print "Removing dataroot: $LAPS_DATA_ROOT\n";
       if( -e $LAPS_DATA_ROOT ){
@@ -101,10 +112,12 @@ if( $CONFIG_DOMAIN eq "t" ) {
       print "Generate lapsdataroot directory structure\n";
       &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }else{
-      print "Script will not remove LAPS_DATA_ROOT when SRC=INSTALL=DATA\n";}
+      print "Script will not remove LAPS_DATA_ROOT when all-roots are equal and -c = t\n";
+      print "Reconsider your command line inputs\n";
+      exit;}
 }else{
   if(-e $LAPS_DATA_ROOT ){
-     if($all_roots_equal != 1 ) {
+     if($all_roots_equal eq "F") {
         print "Keep lapsprd and log subdirectories\n";
         system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
         rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
@@ -116,8 +129,6 @@ if( $CONFIG_DOMAIN eq "t" ) {
      }
   }else{
      print "Making a new LAPS_DATA_ROOT.\n";
-     my $DOMAIN_NAME = &laps_tools::laps_domain_name($LAPS_DATA_ROOT);
-     my $DATAROOT = &laps_tools::laps_data_root($LAPS_DATA_ROOT);
      mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/DOMAIN_NAME $!\n";
      mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
      &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
@@ -127,8 +138,13 @@ if( $CONFIG_DOMAIN eq "t" ) {
 if( defined($LAPS_TEMPLATE) ){
     if( -e $LAPS_TEMPLATE ){
        print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
-       system("cp $LAPS_TEMPLATE/nest7grid.parms $LAPS_DATA_ROOT/static/");
-       system("cp $LAPS_TEMPLATE/*.nl $LAPS_DATA_ROOT/static/");
+       opendir(DIR, $LAPS_TEMPLATE);
+       my @filelist = readdir DIR;
+       foreach (@filelist){
+            if( ! /^\./){
+               system("cp $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static/");
+            }
+       }
     }else{print "The template subdirectory you specified does not exist: $LAPS_TEMPLATE\n";
           print "Terminating.\n"; exit;}
 }else{print "No template subdirectory. All roots equal: $all_roots_equal.\n";}
