@@ -442,11 +442,12 @@ c
 c	Changes: 11-01-91  Changes for new LAPS grids.
 c                07-20-94  New version.    S. Albers
 c                08-25-97  Changes for dynamic LAPS.   P. Stamus
+c                09-30-98  Housekeeping.
 c
 c*************************************************************************
 c
 	integer imax, jmax, i, j
-	real*4 t(imax,jmax), tb8(imax,jmax), lapse_t
+	real*4 t(imax,jmax), tb8(imax,jmax)
         real*4 lat(imax,jmax), lon(imax,jmax), topo(imax,jmax)
 c
         real*4 cvr_snow(imax,jmax), t_gnd_k(imax,jmax)  !work arrays
@@ -455,12 +456,12 @@ c
 c
 	call zero(t_est,imax,jmax)
 
-	do 11 j=1,jmax
-	do 11 i=1,imax
-	  terr = topo(i,j)
-          t_est(i,j) = t(i,j)
-11	continue
-
+	do j=1,jmax
+	do i=1,imax
+	   terr = topo(i,j)
+	   t_est(i,j) = t(i,j)
+	enddo !i
+	enddo !j
 
         call get_ground_temperature(i4time,laps_cycle_time
      &                    ,imax,jmax,lat,lon,r_missing_data
@@ -469,16 +470,17 @@ c
 
 !       Call the ground temperature routine
 
-	do 21 j=1,jmax
-	do 21 i=1,imax
+	do j=1,jmax
+	do i=1,imax
 
-	  if(tb8(i,j).ne.smsng .and. tb8(i,j).ne.0.) then
-!           t_compare = t_est(i,j)
-            t_compare = t_gnd_k(i,j)
-	    dtb8(i,j) = tb8(i,j) - t_compare
-	  endif
+	   if(tb8(i,j).ne.smsng .and. tb8(i,j).ne.0.) then
+c             t_compare = t_est(i,j)
+	      t_compare = t_gnd_k(i,j)
+	      dtb8(i,j) = tb8(i,j) - t_compare
+	   endif
 
-21	continue
+	enddo !i
+	enddo !j
 c
 c.....  Now use the std dev data to check the Band 8 data for clouds.
 c
@@ -493,19 +495,19 @@ c
 	do i=1,imax
 
 !         Estimate whether tb8 - t < -1.5 * stdt
-	  if(dtb8(i,j) .lt. -thresh1) then	             ! probably clds
-
+	   if(dtb8(i,j) .lt. -thresh1) then ! probably clds
+	      
 c.....	set the point and surrounding points to zero...clouds.
-	    tb8(i,j) = 0.                         ! Set to zero as a cloud flag
-	  call extract(tb8,imax,jmax,i,j,7,7)
-	    icnt = icnt + 1
-
+	      tb8(i,j) = 0.	! Set to zero as a cloud flag
+	      call extract(tb8,imax,jmax,i,j,7,7)
+	      icnt = icnt + 1
           endif
-
 	enddo	! on i
 	enddo	! on j
+c
 	write(6,951) icnt, thresh1
 951	format(1x,i6,' points removed for thresh = ',f8.1)
+c
 	return
 	end
 c
@@ -1145,6 +1147,9 @@ c
 c     Original: 06-10-98  (from "stats.f").  P.A. Stamus, NOAA/FSL
 c     Changes:  09-24-98  P.A. Stamus, NOAA/FSL
 c                  Added zero to missing field check.
+c               10-02-98  P.A. Stamus, NOAA/FSL
+c                  Added check for fill_val to max/min/ave calcs.
+c
 c
 c========================================================================
 c
@@ -1165,7 +1170,7 @@ c
       var = 0.
       amax = -1.e25
       amin =  1.e25
-      pts = float(ni * nj)
+      pts = 0
 c
 c..... Check the field for NaN's
 c
@@ -1193,18 +1198,21 @@ c..... Calculate the means and range.
 c
       do j=1,nj
       do i=1,ni
-         if(x(i,j) .lt. amin) then
-            amin = x(i,j)
-            imin = i
-            jmin = j
-         endif
-         if(x(i,j) .gt. amax) then
-            amax = x(i,j)
-            imax = i
-            jmax = j
-         endif
-         sum = sum + x(i,j)
-         sum_a = sum_a + abs(x(i,j))
+	 if(x(i,j) .ne. fill_val) then
+	    pts = pts + 1
+	    if(x(i,j) .lt. amin) then
+	       amin = x(i,j)
+	       imin = i
+	       jmin = j
+	    endif
+	    if(x(i,j) .gt. amax) then
+	       amax = x(i,j)
+	       imax = i
+	       jmax = j
+	    endif
+	    sum = sum + x(i,j)
+	    sum_a = sum_a + abs(x(i,j))
+	 endif
       enddo !i
       enddo !j
 c
@@ -1214,17 +1222,21 @@ c
 c
 c..... Now calculate the variance, stdev, etc.
 c
+      pts = 0
       do j=1,nj
       do i=1,ni
-         dif = x(i,j) - amean
-         dif2 = dif * dif
-         sum_v = sum_v + dif2
+	 if(x(i,j) .ne. fill_val) then
+	    pts = pts + 1
+	    dif = x(i,j) - amean
+	    dif2 = dif * dif
+	    sum_v = sum_v + dif2
+	 endif
       enddo !i
       enddo !j
 c
       var = 0.0
       st_dev = -99.9
-      if(pts .ne. 1) var = sum_v / (pts - 1)
+      if(pts .gt. 1) var = sum_v / (pts - 1)
       if (var .gt. 0.0) st_dev = sqrt( var )
 c
 c..... Write out some stat info.
@@ -1310,6 +1322,7 @@ c	History:
 c		P. Stamus, NOAA/FSL 
 c                   06-16-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
+c                   09-30-98  Housekeeping.
 c
 c
 c       Notes:
@@ -1340,7 +1353,7 @@ c
 	integer*4 max_files
 	parameter(max_files = 300)
 	character fnames(max_files)*80
-	character dir*150, ext*31, filespec*255, filename13*13
+	character filespec*255, filename13*13
 c
 c
 c.....	Start here.  
@@ -1582,6 +1595,7 @@ c	History:
 c		P. Stamus, NOAA/FSL 
 c                   07-10-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
+c                   09-30-98  Housekeeping.
 c
 c
 c       Notes:
@@ -1605,13 +1619,13 @@ c
 	integer*4 i4time_in, lvl_in, bkg_time, bkg_status
 c
 	character bkg_ext*31, var_u*3, var_v*3
-	character bkg_dir*256, filename*9
+	character bkg_dir*256
 	character units*10, lvlc*4, comment*125
 c
 	integer*4 max_files
 	parameter(max_files = 300)
 	character fnames(max_files)*80
-	character dir*150, ext*31, filespec*255, filename13*13
+	character filespec*255, filename13*13
 c
 c.....	Start here.  
 c
