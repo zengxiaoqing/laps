@@ -203,7 +203,7 @@ C   PRESSURE FOR DRY AIR.
 
 
         subroutine laps_be(ni,nj,nk
-     1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,ht_3d_m,p_1d_pa,topo
+     1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,ht_3d_m,p_1d_pa_dum,topo       
      1                  ,pbe_2d,nbe_2d)
 
 !       1991    Steve Albers
@@ -220,6 +220,7 @@ C   PRESSURE FOR DRY AIR.
         real*4 ht_3d_m(ni,nj,nk)
         real*4 p_1d_pa(nk)
         real*4 p_1d_mb(nk)                   ! Local
+        real*4 pres_3d(ni,nj,nk)             ! Local
         real*4 pbe_2d(ni,nj)
         real*4 nbe_2d(ni,nj)
 
@@ -234,14 +235,21 @@ C   PRESSURE FOR DRY AIR.
      1           my_show_timer
 
         ISTAT = LIB$INIT_TIMER()
-C
-        do k = 1,nk
-            p_1d_mb(k) = p_1d_pa(k) / 100.
-        enddo ! k
+
+        call get_systime_i4(i4time,istatus)
+        if(istatus .ne. 1)stop
+
+        call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+        if(istatus .ne. 1)stop
 
         do i = 1,ni
 c       write(6,*)' i = ',i
         do j = 1,nj
+        
+            do k = 1,nk
+                p_1d_pa(k) = pres_3d(i,j,k)
+                p_1d_mb(k) = p_1d_pa(k) / 100.
+            enddo ! k
 
             do k = 1,nk
                 if(p_1d_pa(k) .lt. p_sfc_pa(i,j))then ! First level above sfc
@@ -796,11 +804,9 @@ C
 
 !       Steve Albers 1991
 
-        REAL LCL,KAPPA
         ES(X)=6.1078+X*(.443652+X*(.014289+X*(2.65065E-4+X*
      1 (3.03124E-6+X*(2.034081E-8+X*(6.13682E-11))))))
         DATA EPSILN/.62197/,GAMMAI/102.4596/        ! Lapse Rate m/deg
-        KAPPA=.28613105*(1.-.23*W)
 
         TLCL = TD - (0.212 + 0.001571 * TD - 0.000436 * TC) * (TC - TD)
         PLCL=P*ES(TLCL)/ES(TD)
@@ -1396,8 +1402,6 @@ C   COMPUTE DEW POINT DEPRESSION.
       end
 
         function func_li(t_c,td_c,psta_mb,t500_c,r_missing_data)
-
-        real*4 li
 
         td_in = min(td_c,t_c)
 

@@ -106,6 +106,10 @@ cdis
         real*4 li(NX_L,NY_L)
         real*4 t500laps(NX_L,NY_L)
         real*4 p_1d_pa(NZ_L) ! This should eventually be pres_3d
+        character*10 units_2d_a(3)
+        character*125 comment_2d_a(3)
+        character*3 var_2d_a(3)
+        real*4 out_multi_2d(NX_L,NY_L,3)
 
         character*31 EXT
 
@@ -208,7 +212,16 @@ c read in LAPS_DOMAIN
             call li_laps(temp_sfc_k,td_sfc_k,pres_sfc_mb,t500laps ! Local?
      1                  ,i4time_needed,NX_L,NY_L,li,flag,istatus)
 
-!           call put_laps_multi_2d()
+!           call move
+
+!           add var arrays
+
+            call put_laps_multi_2d(i4time_needed,var_2d_a,units_2d_a
+     1                            ,comment_2d_a,out_multi_2d,NX_L,NY_L,3    
+     1                            ,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' LST output error'
+            endif
 
         endif ! .false.
 
