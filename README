@@ -2563,21 +2563,26 @@ Author: Steve Albers (albers@fsl.noaa.gov)
         Other               30 m/s
 </pre>
 
-        The first step analyzes the non-radar data and background using
-        a successive correction technique.
+        The wind analysis is done in three steps. The first step analyzes the 
+        non-radar data with the background wind field using a multiple 
+        iteration successive correction technique.
 
-	In an optional second step, any multiple-Doppler radial velocities are
-        mixed in. Radial velocities are taken from the Doppler radars after 
-        dealiasing and other quality control steps are done. If more than one 
-        radar illuminates a given grid-point, a full wind-vector is constructed
-        from a combination of the radial velocities and the preliminary 
-        non-radar analysis. This is done via a "successive insertion" process,
-        beginning with the non-radar analysis, then followed with the radial
-        velocity from each radar in sequence.
+        For the second step, the first step results are used as the background.
+        The data used includes non-radar data; any grid-points with multiple-
+        Doppler radial velocities are also mixed in. Radial velocities are 
+        taken from the Doppler radars after dealiasing and other quality 
+        control steps are done. If two or more radars illuminate a given 
+        grid-point, a full wind-vector is constructed from a combination of 
+        the radial velocities and the preliminary non-radar analysis. This is 
+        done via a "successive insertion" process, beginning with the 
+        background (non-radar analysis), then followed with the radial velocity
+        from each radar in sequence.
 
-        In the final step, for grid-points illuminated by a single radar, the 
-        azimuthal component is estimated by using the results of the previous 
-        step (i.e. non-radar data and/or multi-radar data).
+        For the final step the background field comes from the result of
+        the second step. All point data is now used, including grid-points 
+        illuminated by only a single radar. The tangential component for each
+        radar observation is estimated by using the background from the 
+        previous step (i.e. non-radar data and/or multi-radar data).
 
         The omega field is calculated by kinematically integrating the 
         horizontal wind divergence. The lower boundary condition is specified
