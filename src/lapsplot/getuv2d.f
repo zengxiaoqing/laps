@@ -96,7 +96,7 @@ cdis
 
             call input_background_info(
      1                              ext                     ! I
-     1                             ,directory               ! O
+     1                             ,directory,c_model       ! O
      1                             ,i4time                  ! I
      1                             ,laps_cycle_time         ! I
      1                             ,a9time                  ! O
