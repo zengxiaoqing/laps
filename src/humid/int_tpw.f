@@ -93,26 +93,6 @@ c     fill vertical specific arrays
          enddo                  !i
       enddo                     !j
 
-
-c     commented out relic code replaced by int_ipw.f
-c     integrate q
-c            tpw(i,j) = 0.0
-c            do k = kstart(i,j),kk-1
-c               tpw(i,j) = tpw(i,j) + ( data(i,j,k)+data(i,j,k+1) )/2. 
-c     1              * (p_3d(i,j,k)-p_3d(i,j,k+1))
-c            enddo
-c     change units of q to g/kg
-c            tpw(i,j) = tpw(i,j) *1.e3 
-c     add surface layer (already in g/kg)
-c            tpw(i,j) = tpw(i,j)
-c     1           + ( qs(i,j) + data(i,j,kstart(i,j)) *1.e3 ) /2.
-c     1           * (ps(i,j)-p_3d(i,j,kstart(i,j)) )
-c     comvert g/kg to cm
-c            tpw(i,j) = tpw(i,j) / 100. / 9.8
-c            
-c         enddo
-c      enddo
-      
       return
       
       end
