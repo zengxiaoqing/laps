@@ -767,16 +767,20 @@ c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
 
 
 
-                  if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
-     1                 .and. abs(abs(x(1))-1.) .lt. .1 .and.
-     1                  iter(i,j) .gt. 1 ) then
+                  if (       cld(i,j) .eq. 0.
+     1                 .and. iter(i,j) .lt. 50
+     1                 .and. abs(abs(x(1))-1.) .lt. .1
+     1                 .and. iter(i,j) .gt. 1 
+     1                 .and. abs(x(3)).ne.0.0
+     1                 .and. abs(x(3)).ne.0.0) then 
                      factor(i,j)  = abs(x(3))
                      factor2(i,j) = abs(x(2))
                   elseif (cld(i,j).gt.0.)then
                      write(6,*) '  .... coordinate rejected, cloudy'
                   else
                      write(6,*) i,j, '  .... coordinate rejected', 
-     1                    abs(x(1)),iter(i,j), cld(i,j)
+     1                    abs(x(1)),abs(x(2)),abs(x(3)),
+     1                    iter(i,j), cld(i,j)
 
                      failures = failures + 1
 
@@ -803,7 +807,7 @@ c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
 
 
 c  modify original lq3 file with new factors for comparison tests.
-c modify lq3 only in clear areas as defined by lc3.
+c  modify lq3 only in clear areas as defined by lc3.
 
 
 c  analyze top level adjustments.
