@@ -8,6 +8,7 @@
 static char a2io[] = "%W%	%G%";
 #endif	/* LINT */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>

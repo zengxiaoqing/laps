@@ -41,6 +41,7 @@ cdis*/
 static char read_88d_a2_id[] = "@(#)read88da2.c	2.2	2/14/95";
 #endif	/* LINT */
 
+#include <config.h>
 #include <stdio.h>
 #include <strings.h>
 #include "merge.h"

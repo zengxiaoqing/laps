@@ -41,6 +41,7 @@ cdis*/
 static char precip[] = "@(#)precip.c	2.2	2/14/95";
 #endif	/* LINT */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
