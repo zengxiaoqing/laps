@@ -52,6 +52,26 @@ EXEDIRS = src/accum \
 DATADIRS = log/qc \
            static \
            time \
+           lapsprd/d01 \
+           lapsprd/d02 \
+           lapsprd/d03 \
+           lapsprd/d04 \
+           lapsprd/d05 \
+           lapsprd/d06 \
+           lapsprd/d07 \
+           lapsprd/d08 \
+           lapsprd/d09 \
+           lapsprd/d10 \
+           lapsprd/d11 \
+           lapsprd/d12 \
+           lapsprd/d13 \
+           lapsprd/d14 \
+           lapsprd/d15 \
+           lapsprd/d16 \
+           lapsprd/d17 \
+           lapsprd/d18 \
+           lapsprd/d19 \
+           lapsprd/d20 \
            lapsprd/l1s \
            lapsprd/lc3 \
            lapsprd/lcb \
@@ -90,7 +110,29 @@ DATADIRS = log/qc \
            lapsprd/prg \
            lapsprd/pro \
            lapsprd/sag \
-           lapsprd/vrc
+           lapsprd/snd \
+           lapsprd/v01 \
+           lapsprd/v02 \
+           lapsprd/v03 \
+           lapsprd/v04 \
+           lapsprd/v05 \
+           lapsprd/v06 \
+           lapsprd/v07 \
+           lapsprd/v08 \
+           lapsprd/v09 \
+           lapsprd/v10 \
+           lapsprd/v11 \
+           lapsprd/v12 \
+           lapsprd/v13 \
+           lapsprd/v14 \
+           lapsprd/v15 \
+           lapsprd/v16 \
+           lapsprd/v17 \
+           lapsprd/v18 \
+           lapsprd/v19 \
+           lapsprd/vdr \
+           lapsprd/vrc \
+       
 
 
 all:
