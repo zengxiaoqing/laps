@@ -232,10 +232,12 @@ C
                 rms = 1.0
 
                 do i = 1,level
-                    if(windDir(i,i_pr_cl) .ge. 0.   .and.
-     1                 windDir(i,i_pr_cl) .le. 360. .and.
-     1                 wdQcFlag(i,i_pr_cl) .eq. 0   .and.
-     1                 wsQcFlag(i,i_pr_cl) .eq. 0        )then ! Good QC
+                    if(windDir(i,i_pr_cl) .ge. 0    .and.
+     1                 windDir(i,i_pr_cl) .le. 360  .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. 1   .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. 2   .and.
+     1                 wsQcFlag(i,i_pr_cl) .ne. 1   .and.
+     1                 wsQcFlag(i,i_pr_cl) .ne. 2        )then ! Good QC
                         n_good_levels = n_good_levels + 1
                         ht_out(n_good_levels) = levels(i,i_pr_cl)
                         di_out(n_good_levels) = windDir(i,i_pr_cl)
@@ -270,7 +272,15 @@ C
                 iqc = 1
 
                 do i = 1,level
-                    if(tempQcFlag(i,i_pr_cl) .eq. 0)then ! Good QC
+                    if(
+!    1                 tempQcFlag(i,i_pr_cl) .ne. 1 
+!    1                            .and.
+!    1                 tempQcFlag(i,i_pr_cl) .ne. 2       
+!    1                            .and.
+     1                 temperature(i,i_pr_cl) .gt. 200.
+     1                            .and.
+     1                 temperature(i,i_pr_cl) .lt. 400.
+     1                                                   )then ! Good QC
                         n_good_levels = n_good_levels + 1
                         ht_out(n_good_levels) = levels(i,i_pr_cl)
                         temp_out(n_good_levels) = temperature(i,i_pr_cl)
