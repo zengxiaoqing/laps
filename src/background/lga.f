@@ -535,8 +535,13 @@ c this extra work.
 
          call s_len(bgpath,i)
          fullname = bgpath(1:i)//'/'//fname_bg(nf)
+         call s_len(fullname,i)
 c
 c new subroutine to read appropriate background model file.
+c
+         print*
+         print*,'Reading - ',fullname(1:i)
+         print*
          call read_bgdata(nx_bg,ny_bg,nz_bg
      +    ,bgpath,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
      +    ,htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg
