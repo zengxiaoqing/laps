@@ -95,6 +95,7 @@ c                                   sfc data, LGS grids. Bag stations.in
 c                       08-27-97  Changes for dynamic LAPS.
 c                       09-24-98  If missing background, do a smooth Barnes
 c                                   so something is there.
+c                       09-30-98  Housekeeping.
 c
 c	Notes:
 c
@@ -121,7 +122,7 @@ c
 c.....	Stuff for satellite data.
 c
 	integer*4 lvl_v(1)
-	character var_v(1)*3, units_v(1)*10, lvl_coord_v(1)*4
+	character var_v(1)*3, units_v(1)*10
 	character comment_v(1)*125, ext_v*31
 c
 c.....  Stuff for intermediate grids (old LGS file)

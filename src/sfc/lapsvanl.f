@@ -35,7 +35,7 @@ c
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
+     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, sp_bk, vis_bk, 
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
@@ -162,8 +162,8 @@ c
 	parameter(roi = 20)	  !radius of influence for Barnes 
 	parameter( 	          !QC parameters: # of standard deviations 
      &            bad_p  = 5.0,		! for reduced pressure
-     &            bad_t  = 5.0,		! for temperature
-     &            bad_td = 5.0,		! for dewpoint
+     &            bad_t  = 3.0,		! for temperature
+     &            bad_td = 4.0,		! for dewpoint
      &            bad_u  = 4.0,		! for u-wind
      &            bad_v  = 4.0,		! for v-wind
      &            bad_th = 3.5,		! for theta
@@ -229,7 +229,7 @@ c.....	Grids for the background fields.
 c
         real*4 u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
         real*4 wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
-        real*4 rp_bk(ni,nj), mslp_bk(ni,nj)
+        real*4 rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
         real*4 wt_rp(ni,nj), wt_mslp(ni,nj)
         real*4 vis_bk(ni,nj), wt_vis(ni,nj)
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
@@ -414,9 +414,12 @@ c.....  Calculate the terrain est temps and pressure.
 c
 	do j=1,jmax
 	do i=1,imax
-	   ter = elev1(i,j)     ! departures at stn elev
-	   dz = ter - h7(i,j)
 c
+c.....    Departures of obs at stn elevations
+c
+	   ter = elev1(i,j)     ! departures at stn elev
+c
+	   dz = ter - h7(i,j)
 	   if(t1(i,j) .ne. 0.) then
 	      tts = t7(i,j) + (lapse_t * dz)
 	      t1(i,j) = t1(i,j) - tts
@@ -426,7 +429,19 @@ c
 	      td1(i,j) = td1(i,j) - ttds
 	   endif
 c
+c.....    Departures of other stuff on laps topo
+c
 	   ter = topo(i,j)     ! departures on laps topo
+c
+	   dz = ter - hbar     ! calc a sfc pressure
+	   tbar = a_t + (lapse_t * (hbar + (dz * .5)))
+	   tbar = (tbar - 32.) * fon + 273.15 ! conv F to K
+	   psfc(i,j) = pbar * exp(-dz * gor / tbar)
+c
+c.....    Using laps sfc p and background model sfc p,  
+c.....    move background temps from background model 
+c.....    terrain to laps terrain.  Use Poisson's eqn.
+c
 	   dz = ter - h7(i,j)
 	   tt(i,j) = t7(i,j) + (lapse_t * dz)   
 	   ttd(i,j) = td7(i,j) + (lapse_td * dz)	
@@ -434,16 +449,14 @@ c
 	      tb81(i,j) = tb81(i,j) - tt(i,j)
 	   endif
 	   if(t_bk(i,j) .ne. 0.) then
-	      t_bk(i,j) = t_bk(i,j) - tt(i,j)
+	      t_bk_ltopo = t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
+	      diff_tbk = t_bk_ltopo - t_bk(i,j)
+	      t_bk(i,j) = t_bk_ltopo - tt(i,j)
 	   endif
 	   if(td_bk(i,j) .ne. 0.) then
 	      td_bk(i,j) = td_bk(i,j) - ttd(i,j)
 	   endif
 c
-	   dz = ter - hbar     ! calc a sfc pressure
-	   tbar = a_t + (lapse_t * (hbar + (dz * .5)))
-	   tbar = (tbar - 32.) * fon + 273.15 ! conv F to K
-	   psfc(i,j) = pbar * exp(-dz * gor / tbar)
 	enddo !i
 	enddo !j
 c
@@ -872,7 +885,7 @@ c
         LT1_write_flag = 0     ! flag for writing the LT1 file: 1-yes,0-no
 c
 	call move(t,d1,imax,jmax)     ! move temps into dummy array
-c
+c       
 	call put_temp_anal(i4time,imax,jmax,kmax,
      &                 ht_3d_m,                                     !3d hts - returned
      &                 lat,lon,topo,
@@ -1187,9 +1200,11 @@ c
 	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
-	title = 'MSL pressure (mb)'   !d2 has msl p in mb from above
+	title = 'MSL pressure (mb)'   
 	ea = 0.68
-	call verify(d2,mslp_s,stn,n_obs_b,title,iunit,
+	call move(mslp,d1,imax,jmax)
+	call multcon(d1,.01,imax,jmax)
+	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	title = 'Visibility (miles)'

@@ -263,6 +263,7 @@ c                                 a solution difference from 1st guess.  Removed
 c                                 2 Barnes calls. When no satellite data for HSM,
 c                                 'a' weight set to zero.  Bkg added back into
 c                                 t, to, and s arrays on exit.
+c         P. Stamus     09-29-98  Calc std dev from just obs (not boundaries+obs)
 c
 c*******************************************************************************
 c
@@ -286,6 +287,7 @@ c
 	cormax = 1.
 	beta = 0.
 	call move(s_in, s, imax, jmax)
+	call zero(t, imax,jmax)
 c
 c.....	first guess use barnes
 c
@@ -321,10 +323,10 @@ c
 	sum1 = 0.
 	icnt = 0
 c
-c.....	Compute standard deviation
+c.....	Compute standard deviation of the obs
 c
-	do j=1,jmax
-	do i=1,imax
+	do j=3,jmax-2
+	do i=3,imax-2
 	  if(to(i,j) .eq. 0.) go to 99
 	  sum = sum + ((to(i,j) - tb(i,j)) ** 2)
 	  cnt = cnt + 1.
@@ -353,8 +355,8 @@ c
 c
 c.....  eliminate bad data   
 c
-	do j=1,jmax
-	do i=1,imax
+	do j=3,jmax-2
+	do i=3,imax-2
 	  if(to(i,j) .eq. 0.) go to 98
 	  diff = to(i,j) - tb(i,j)
 	  if(abs(diff) .lt. bad) then
@@ -384,7 +386,6 @@ c
 	isat_flag = 0
 	do j=1,jmax
 	do i=1,imax
-	   t(i,j) = 0.
 	   if(s(i,j) .ne. 0.) then
 	      isat_flag = 1
 	      s(i,j) = s(i,j) - tb(i,j) !diff from background
@@ -396,7 +397,7 @@ c.....  Set the weights for the spline.
 c
 	alf = 100.
 	beta = 75.
-	a = 10.
+	a = 50.
 	if(isat_flag .eq. 0) a = 0
 	alf2a = (1./9.) * alf
 c

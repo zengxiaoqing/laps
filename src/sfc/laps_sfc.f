@@ -95,6 +95,7 @@ c                                           until can remove weight code (new
 c                                           spline doesn't use).
 c                               09-24-98  Carry background flags for each var.
 c                                           Rm ceil QC check.
+c                               09-30-98  Housekeeping.
 c
 c       Notes:
 c
@@ -110,7 +111,6 @@ c*****************************************************************************
 c
 	include 'laps_sfc.inc'
 c
-	real make_td
 	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
 	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
 	real*4 grid_spacing
@@ -571,7 +571,7 @@ c
      &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stn, n_obs_b, n_sao_b, n_sao_g,
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
+     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
