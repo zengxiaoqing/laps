@@ -13,7 +13,7 @@ LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
            $(SRCROOT)/src/lib/modules/libmodules.a
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
-             $(SRCROOT)/src/lib/utils/libdebugutil.a \
+             $(SRCROOT)/src/lib/util/libdebugutil.a \
              $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 .SUFFIXES: .o .c .f .a .F .i .exe
