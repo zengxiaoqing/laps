@@ -346,16 +346,15 @@ c.....  boundaries.
 
 c
         if(l_barnes_wide)then
-            ilow = 3
-            ihigh = imax-2
-            jlow = 3
-            jhigh = jmax-2
+            i_boundary = 2
         else
-            ilow = 1
-            ihigh = imax
-            jlow = 1
-            jhigh = jmax
+            i_boundary = 0
         endif
+
+        ilow = i_boundary + 1
+        ihigh = imax-i_boundary 
+        jlow = i_boundary + 1
+        jhigh = jmax-i_boundary
 
         n_obs_var = 0
         if(l_barnes_wide)l_boundary = .true. ! f90 assignment
@@ -1018,7 +1017,7 @@ c
 	    enddo !n
 	    if(sumwt2 .eq. 0.) then
 	      if(ipass .eq. 1) then
-		print *,' barneswide wierd loop...........'
+		print *,' barneswide weird loop...........'
 	        sum2 = 0.
 	        sumwt2 = 0.
 	        do n=1,ncnt
