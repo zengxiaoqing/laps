@@ -81,7 +81,6 @@ main                                            ingest_sounding.f
         get_raob_data_af                        ingest_raob_sub_af.f 
         get_raob_data_cwb                       ingest_raob_sub_cwb.f
         get_raob_data_rtamps                    ingest_raob_sub_rtamps.f (new)
-        get_raob_data_wfo                       ingest_raob_sub_wfo.f    (new)
     ingest_satsnd                               ingest_satsnd.f
         get_satsnd_afwa                         ingest_satsnd_afwa.f
     tower_driver_sub                            tower_driver.f
