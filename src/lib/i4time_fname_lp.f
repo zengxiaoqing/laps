@@ -32,8 +32,8 @@ cdis
 C
         SUBROUTINE i4time_fname_lp (FNAME_IN, I4TIME, ISTATUS)
 C
-C       This routine converts several different file name types (i.e. yydddhhmm)
-C       into the corresponding I4 time.
+cdoc    This routine converts several different file name types (i.e. yydddhhmm)
+cdoc    into the corresponding I4 time.
 C
 C       ON INPUT
 C          FILE_NAME - The file name including the directory path if wanted.
@@ -48,6 +48,7 @@ C
         CHARACTER*9 a7_to_a9_time,yr_a10_to_a9
         CHARACTER*9 FILE_NAME
         CHARACTER*(*) FNAME_IN
+        CHARACTER*256 FNAME_BUF
         CHARACTER*20 c20_type
         INTEGER*4 I4TIME, ISTATUS
 C
@@ -58,6 +59,7 @@ C================================================================
 C
 C       Check the length of FILE_NAME to be sure that it is valid.
 C 
+        FNAME_BUF = FNAME_IN
         call get_filetime_type(fname_in,c20_type,leni,lent)
 
         if(c20_type .eq. 'yyjjjhhmm')then                   ! NIMBUS/LAPS type
@@ -82,6 +84,7 @@ C
            write(6,*)'i4time_fname_lp: unable to convert to i4time',
      1'    type = ',c20_type
            istatus = 0
+           FNAME_IN = FNAME_BUF
            return
         endif
 C
@@ -157,8 +160,8 @@ C
         SUBROUTINE CV_JUL_MMDD_LP (JULIAN_DAY, YEAR, MONTH, DAY, ISTATUS
      1)
 C
-C       This routine converts from day of year (Julian days) to month and 
-C       day in integer format.
+cdoc    This routine converts from day of year (Julian days) to month and 
+cdoc    day in integer format.
 C
 C       ON INPUT
 C          JULIAN_DAY - The Day of Year (Julian date) to be converted.
@@ -221,12 +224,12 @@ C
         END
 
 C
-        FUNCTION I4TIME_INT_LP (NYEAR,NMONTH,NDAY,NHOUR,NMIN,NSEC,ISTATU
-     1S)
+        FUNCTION I4TIME_INT_LP (NYEAR,NMONTH,NDAY,NHOUR,NMIN,NSEC
+     1                         ,ISTATUS)
 C
-C       I4TIME_INT_LP RETURNS I4 TIME (# OF SECONDS SINCE 00:00 01-JAN-60)
-C         GIVEN A 6 INTEGERS CONTAINING YEAR, MONTH, DAY, HOUR,
-C         MINUTE, SECOND
+cdoc    I4TIME_INT_LP RETURNS I4 TIME (# OF SECONDS SINCE 00:00 01-JAN-60)
+cdoc    GIVEN A 6 INTEGERS CONTAINING YEAR, MONTH, DAY, HOUR,
+cdoc    MINUTE, SECOND
 C
 C================================================================
 C

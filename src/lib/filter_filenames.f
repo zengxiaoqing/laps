@@ -6,8 +6,8 @@
      1                           istatus)
 c
 c JSmart  9-9-96
-c       Routine takes the result of get_file_names and filters
-c       it for certain filename types. It tests the first two characters
+cdoc    Routine takes the result of 'get_file_names' and filters
+cdoc    it for certain filename types. It tests the first two characters
 c       to determine if they are allowed in i4time_fname_lp. A
 c       filename of allowable types qualifies. If not then
 c       i_nbr_files_in is reduced and this filename type is discarded from
@@ -26,7 +26,7 @@ c
        integer*4 max_numeric_char
        parameter(max_numeric_char = 10)
        integer*4 max_2letter_strings
-       parameter(max_2letter_strings = 2)
+       parameter(max_2letter_strings = 3)
        integer*4 max_files_filtered
        parameter(max_files_filtered=3000)
 
@@ -49,7 +49,7 @@ c
 
        data c_qualifying_numeric_char/'0','1','2','3','4','5'
      &,'6','7','8','9'/
-       data c_qualifying_2letter_string/'nf','re'/ 
+       data c_qualifying_2letter_string/'nf','re','te'/ 
 
        i_fnames_filtered = 0
        i_files_qualifying= 0

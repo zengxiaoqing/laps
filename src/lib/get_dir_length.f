@@ -35,8 +35,8 @@ C
 C
 C********************************************************************
 C
-C       This routine takes as input a full path filename and returns an
-C       index that points at the end of the directory portion of the pathname.
+cdoc    This routine takes as input a full path filename and returns an
+cdoc    index that points at the end of the directory portion of the pathname.
 C       Simple-minded algorithm just searches backwards for the first
 C       occurance of a `/' (for UNIX) or a `]' (for VMS).
 C
@@ -78,8 +78,8 @@ C
 C
 C********************************************************************
 C
-C       This routine takes as input a full path filename and returns an
-C       index that points at the end of the filetime portion of the pathname.
+cdoc    This routine takes as input a full path filename and returns an
+cdoc    index that points at the end of the filetime portion of the pathname.
 C       Simple-minded algorithm just searches backwards for the first
 C       occurance of a `.'.
 C
@@ -122,10 +122,10 @@ C
 
 C*********************************************************************
 C
-C       This routines receives a fortran string, and
-C       returns the number of characters in the string
-C       before the first "space" is encountered.  It
-C       considers ascii characters 33 to 126 to be valid
+cdoc    This routines receives a fortran string, and
+cdoc    returns the number of characters in the string
+cdoc    before the first "space" is encountered.  
+C       It considers ascii characters 33 to 126 to be valid
 C       characters, and ascii 0 to 32, and 127 to be "space"
 C       characters.
 C
@@ -164,8 +164,8 @@ C
 C
 C********************************************************************
 C
-C       This routine takes as input a full path filename and returns
-C       the length of the filename portion of the path.
+cdoc    This routine takes as input a full path filename and returns
+cdoc    the length of the filename portion of the path.
 C       Simple-minded algorithm just searches backwards for the first
 C       occurance of a `/'. The number of characters searched up to
 C       that point indicates the filename length.
@@ -209,8 +209,8 @@ C
 C
 C*********************************************************************
 C
-C       This routine takes as input a full path filename and returns
-C       the length of the file time length portion of the path.
+cdoc    This routine takes as input a full path filename and returns
+cdoc    the length of the file time length portion of the path.
 C       Simple-minded algorithm uses other simple minded algorithms
 C       found in this file to determine the length of the time portion
 C       of the character string.
@@ -247,8 +247,8 @@ C
 C
 C*********************************************************************
 C
-C       This routine takes as input a full path filename and returns
-C       the length and type of the file time length portion of the path.
+cdoc    This routine takes as input a full path filename and returns
+cdoc    the length and type of the file time length portion of the path.
 C       Simple-minded algorithm uses other simple minded algorithms
 C       found in this file to determine the length and type of the time portion
 C       of the character string.
@@ -318,6 +318,15 @@ c              return
             endif
            endif
 
+           if(lenf .eq. 16)then
+            if(c_fname(lend+1:lend+4) .eq. 'temp')then
+               c20_type = 'yymmddhh'                              ! CWB raob
+               leni = lend+4
+               lent=8
+               return
+            endif
+           endif
+
            if(lenf .ge. 9)then ! assume 9 chars for time portion of filename
               c20_type = 'yyjjjhhmm'                             ! NIMBUS/LAPS
               leni = lend
@@ -347,7 +356,7 @@ C       characters.
 
 C*********************************************************************
 C
-C       This routines filters a fortran string of unprintable characters
+cdoc    This routines filters a fortran string of unprintable characters
 C
 C       Name            Type      I/O     Description
 C       ----            ---       --      -----------
@@ -375,6 +384,8 @@ C       string          char       I       string
 
 
         function l_string_contains(string,substring,istatus)
+
+cdoc    Returns boolean on whether 'string' contains 'substring'
 
         logical l_string_contains
 
@@ -410,7 +421,8 @@ C       string          char       I       string
 
         function l_parse(string1,string2)
 
-!       Determine whether string1 contains string2 as a subset
+cdoc    Returns boolean on whether 'string1' contains 'string2'
+cdoc    Similar to 'l_string_contains'
 
         logical l_parse
 

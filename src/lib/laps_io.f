@@ -1361,7 +1361,7 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 !       directory_in        Input      Slash at end is optional
 !       i4time              Input      Desired i4time
 !       imax,jmax,kmax      Input      LAPS grid dimensions
-!       ext                 Input      3 character file extension
+!       ext                 Input      file extension
 !       var_2d              Input      Which Variable do you want?
 !       units_2d            Output     Units of data
 !       Comment_2d          Output     Comment block
@@ -1371,11 +1371,11 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 
         character*(*) DIRECTORY_IN
         character*255 DIRECTORY
-        character*(*) EXT
+        character*(*) EXT, var_2d
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
-        character*3 var_3d(kmax),var_2d
+        character*3 var_3d(kmax)
         integer*4 LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 

@@ -65,4 +65,8 @@ c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
+c
+c c8_project_common - Depends on which "realization" of LAPS you are running.
+c                     Allowed values are 'NIMBUS', 'WFOADV', 'AFGWC', 'RSA',
+c                     'CWB'.
 

@@ -78,7 +78,8 @@ main                                                     ingest_sounding.f
             main_sub                                     ingest_raob_sub.f
                 read_netcdf                              ingest_raob_sub.f
                 sort_and_write                           ingest_raob_sub.f
-        get_raob_data_af                                 ingest_raob_sub_af.f        
+        get_raob_data_af                                 ingest_raob_sub_af.f 
+        get_raob_data_cwb                                ingest_raob_sub_cwb.f 
     ingest_satsnd                                        ingest_satsnd.f
         get_satsnd_afwa                                  ingest_satsnd_afwa.f
 

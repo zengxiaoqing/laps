@@ -32,8 +32,8 @@ cdis
 C
         SUBROUTINE make_fnam_lp (I4TIME, FILE_NAME, ISTATUS)
 C
-C       make_fnam_lp CONSTRUCTS THE FILE NAME STRING 'yyjjjhhmm' FOR
-C       THE TIME CORRESPONDING TO I4TIME.
+cdoc    make_fnam_lp CONSTRUCTS THE FILE NAME STRING 'yyjjjhhmm' FOR
+cdoc    THE TIME CORRESPONDING TO I4TIME.
 C
 C================================================================
 C
@@ -86,7 +86,7 @@ C
         SUBROUTINE CV_I4TIM_INT_LP (I4TIME,NYEAR,NMONTH,NDAY,NHOUR,
      1                     NMIN,NSEC,ISTATUS)
 C
-C       CV_I4TIM_INT_LP CONVERTS I4 TIME TO SIX INTEGERS
+cdoc    CV_I4TIM_INT_LP CONVERTS I4 TIME TO SIX INTEGERS
 C
 C================================================================
 C
@@ -168,8 +168,12 @@ C
         NSEC = LFTOVR
         RETURN
         END
+
       subroutine make_fnam13_lp(initial_i4time,forecast_time,filename,
      +     status)
+
+cdoc  Converts initial time and forecast time to a 13 character filename
+
       integer initial_i4time, forecast_time, status
       character*13 filename
 
