@@ -242,19 +242,21 @@ char *fname;
 **************************************************************************/
 #ifdef __STDC__
 int cdf_wrt_hdr_stat(int cdf_id, fint4 *n_grids, float *grid_spacing,
-                     char *asctime, char *model, fint4 *nx, fint4 *ny,
+                     char *asctime, int asc_len, char *model, 
+                     fint4 *nx, fint4 *ny,
                      float *dx, float *dy, float *la1, float *lo1, 
                      float *lov, float *latin1, float *latin2, 
                      char *origin, char *map_proj, double unixtime,
                      fint4 *status)
 #else
-int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, model, nx, 
+int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, asc_len,model, nx, 
                      ny, dx, dy, la1, lo1, lov, latin1, latin2, origin, 
                      map_proj, unixtime, status)
 int cdf_id; 
 fint4 *n_grids; 
 float *grid_spacing;
 char *asctime; 
+int asc_len; 
 char *model; 
 fint4 *nx; 
 fint4 *ny;
@@ -310,7 +312,8 @@ fint4 *status;
     start[0] = 0;
 
 /* store asctime */
-    edges[0] = strlen(asctime);
+    if(DEBUG==1) printf("cdf_wrt_hdr_stat: C asc_len %d\n",asc_len);
+    edges[0] = asc_len;
 
 
     if ((i_varid = ncvarid (cdf_id, "asctime")) == (-1)) {
@@ -480,7 +483,7 @@ fint4 *status;
 *		none
 *****************************************************************************/
 #ifdef __STDC__
-void write_cdf_static(char *filname, fint4 *s_length, char *f_asctime,
+void write_cdf_static(char *filname, fint4 *s_length, char *f_asctime, fint4 *f_asc_len,
                       char *f_cdl_dir, fint4 *cdl_len, char *f_var, fint4 *var_len,
                       char *f_comment, fint4 *com_len, char *f_ldf,
                       fint4 *ldf_len, fint4 *imax, fint4 *jmax, fint4 *n_grids,
@@ -490,7 +493,7 @@ void write_cdf_static(char *filname, fint4 *s_length, char *f_asctime,
                       fint4 *origin_len, char *f_map_proj, fint4 *map_len, 
                       fint4 *unixtime, fint4 *status)
 #else
-void write_cdf_static(filname, s_length, f_asctime, f_cdl_dir, cdl_len,
+void write_cdf_static(filname, s_length, f_asctime, f_asc_len, f_cdl_dir, cdl_len,
                       f_var, var_len, f_comment, com_len, f_ldf, ldf_len,
                       imax, jmax, n_grids, nx_lp, ny_lp, data, f_model, 
                       grid_spacing, dx, dy, lov, latin1, latin2, f_origin, 
@@ -499,6 +502,7 @@ void write_cdf_static(filname, s_length, f_asctime, f_cdl_dir, cdl_len,
 char *filname;
 fint4 *s_length;
 char *f_asctime;
+fint4 *f_asc_len;
 char *f_cdl_dir;
 fint4 *cdl_len;
 char *f_var;
@@ -550,7 +554,7 @@ fint4 *status;
 	comm_var = malloc((c_var_len+8) * sizeof(char));
         mod_len = strlen(f_model);
 	model = malloc(((mod_len)+1) * sizeof(char));
-        asc_len = strlen(f_asctime);
+        asc_len = *f_asc_len;
 	asctime = malloc(((asc_len)+1) * sizeof(char));
         map_proj = malloc(((*map_len)+1) * sizeof(char));
         origin = malloc(((*origin_len)+1) * sizeof(char));
@@ -650,7 +654,7 @@ fint4 *status;
 /* write header info to output file */
         d_unixtime = (double)*unixtime;
         hdr_status = cdf_wrt_hdr_stat(out_file, n_grids, grid_spacing, 
-                                      asctime, model, imax, jmax, dx, dy, 
+                                      asctime, asc_len,model, imax, jmax, dx, dy, 
                                       &la1, &lo1, lov, latin1, latin2, 
                                       origin, map_proj,d_unixtime, status);
         if (hdr_status != 0) {

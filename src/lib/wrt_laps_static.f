@@ -28,7 +28,7 @@ C Local variables
 
       integer*4      i4time_now_gg, dom_len, map_len
       integer*4      origin_len, unixtime, nx_lp, ny_lp
-      integer*4      var_len, com_len, cdl_dir_len 
+      integer*4      var_len, com_len, cdl_dir_len , asc_len
       character*150  file_name, cdl_dir
       character*24   asctime
       character*30   map_projection
@@ -57,6 +57,7 @@ c get NX_L and NY_L from nest7grid.parms
       call get_grid_dim_xy(nx_lp, ny_lp, status)
       if (status .ne. 1) goto 930
         
+      asc_len = len(asctime)
       call s_len(laps_dom_file, dom_len)
       var_len = len(var(1))
       com_len = len(comment(1))
@@ -79,7 +80,8 @@ c get NX_L and NY_L from nest7grid.parms
      
       call get_directory('cdl',cdl_dir, cdl_dir_len)
 
-      call write_cdf_static(file_name,f_len,asctime,cdl_dir,
+      call write_cdf_static(file_name,f_len,asctime,asc_len,
+     1                      cdl_dir,
      1                      cdl_dir_len,var,var_len,comment,
      1                      com_len,laps_dom_file,dom_len,imax,
      1                      jmax,n_grids,nx_lp,ny_lp,data,model,
