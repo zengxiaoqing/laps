@@ -112,7 +112,7 @@ c
 c
 c	print *,' Calculating the solution for streamfunction'
 	call zero(phi,imax,jmax)
-	call leib(phi,ter,100,.1,imax,jmax,z,b,c,z,z,dx,dy,1.)
+	call leib(phi,ter,100,.1,imax,jmax,z,b,c,z,z,dx,dy)
 c
 c.....	Adjust the winds.
 c
@@ -180,12 +180,17 @@ c
 c
 c
 	subroutine leib(sol,force,itmax,erf,imax,jmax,a,b,c,d,e,
-     &                   dx,dy,dz)
+     &                   dx,dy)
 c
+c.....  Relaxation routine.
+c.....  Changes:  P. Stamus, NOAA/FSL  13 Aug 1999
+c.....                 Cleaned up, added tagit routine.
+c       
 	real sol(imax,jmax),force(imax,jmax),a(imax,jmax)
 	real b(imax,jmax),c(imax,jmax),d(imax,jmax),e(imax,jmax)
 	real dx(imax,jmax), dy(imax,jmax)
 c
+	call tagit('leib', 19990813)
 	ovr = 1.
 	reslmm = 0.
 	erb = 0.
@@ -244,8 +249,9 @@ c
 	end
 c
 c
-	subroutine spline(t,to,tb,alf,alf2,beta,a,s_in,cormax,err,imax,
-     &                    jmax,roi,bad_mult,imiss,mxstn,obs_error,name)
+	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
+     &                    cormax,err,imax,jmax,roi,bad_mult,imiss,
+     &                    mxstn,obs_error,name)
 c
 c*******************************************************************************
 c	LAPS spline routine...based on one by J. McGinley.
@@ -268,11 +274,13 @@ c                       01-28-99  Temp. replace spline section with Barnes. Fix
 c                                   boundary normalization.
 c                       07-24-99  Turn spline back on, rm Barnes.  Adj weights.
 c                                   Turn satellite back on.
+c                       08-13-99  Change call to allow diff alf/alf2a/beta/a for
+c                                   diff variables.  Rm alf2 as array.
 c
 c*******************************************************************************
 c
 	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
-	real RESS(1000), tb(imax,jmax) , alf2(imax,jmax)
+	real RESS(1000), tb(imax,jmax) !, alf2(imax,jmax)
 c
 	real fnorm(0:imax-1,0:jmax-1)
 c	real alf2o(imax,jmax)  !work array
@@ -283,15 +291,14 @@ c
 !	write(9,910)
 !910	format(' in spline routine')
 
-	call tagit('spline', 19990724)
+	call tagit('spline', 19990813)
 	imiss = 0
 	ovr = 1.4
 	iflag = 0
-	itmax = 100	! max number of iterations
+	itmax = 1000	! max number of iterations
 	zeros = 1.e-30
 	smsng = 1.e37
 	cormax = 1.
-	beta = 0.
 	call move(s_in, s, imax, jmax)
 	call zero(t, imax,jmax)
 c
@@ -392,12 +399,16 @@ c
 c.....  eliminate bad data from the interior while normalizing to
 c.....   the background
 c
+	sumdif = 0.
+	numdif = 0
 	do j=3,jmax-2
 	do i=3,imax-2
 	  if(to(i,j) .eq. 0.) go to 98
 	  diff = to(i,j) - tb(i,j)
 	  if(abs(diff) .lt. bad) then
 	     to(i,j) = diff
+	     sumdif = sumdif + diff
+	     numdif = numdif + 1
 	  else
 	     iflag = 1
 	     write(6,1099) i,j,to(i,j), diff
@@ -410,7 +421,11 @@ c
 	enddo !j
  1099	format(1x,'bad data at i,j ',2i5,': value ',e12.4,', diff ',e12.4)
 c
-	if(n_obs_var .gt. 0) then
+	print *,' '
+	if(numdif .ne. n_obs_var) then
+	   print *,' Hmmmm...numdif= ',numdif,' ; n_obs_var= ',n_obs_var
+	endif
+	if(n_obs_var.gt.0 .and. numdif.gt.0) then
 	   print *,
      &       ' Observations in data array after spline QC: ',n_obs_var
 	else
@@ -418,6 +433,20 @@ c
 	   return
 	endif
 c
+c.....  Have obs, so set starting field so spline converges faster.
+c
+	amean_start = sumdif / numdif
+	print *,' Using mean of ', amean_start, ' to start analysis.'
+	call constant(t, amean_start, imax,jmax)
+c
+cc	print *,' Using smooth Barnes to start the analysis.'
+cc	rom2 = 0.005
+cc	npass = 1
+cc	idum = 0
+cc	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	call barnes2(t,imax,jmax,to,smsng,idum,npass,fnorm)
+cc	print *,' Done.'
+c       
 c.....  Ensure that HSM weights are zero if there is no HSM field
 c
 	isat_flag = 0
@@ -432,28 +461,18 @@ c
 c
 c.....  Set the weights for the spline.
 c
-	alf = 10000.       !wt on obs
-	alf2a = 10.        !wt on background
-	beta = 100.
-	a =  50.            !wt on gradients
+	alf = alf_in
+	alf2a = alf2a_in
+	beta = beta_in
+	a = a_in
 	if(isat_flag .eq. 0) a = 0.
 c
 	write(6,9995) alf, beta, alf2a, a
- 9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f10.4)
+ 9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f12.4)
 c
 c.....  Now do the spline.
 c
-	rom2 = 0.025
-	npass = 2
-	idum = 0
-cc	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	call barnes2(t,imax,jmax,to,smsng,idum,npass,fnorm)
-c	
-cc	go to 876
-c
 	iteration = .true.
-
-	itmax = 500
 
 	do it=1,itmax
 	  cormax = 0.
@@ -518,7 +537,9 @@ cc	   enddo
 cc	enddo
 
  7119	format(2i5,f10.2)
-c	return
+
+cc	return
+
  876	continue
 c
 c.....  Add backgrounds back to t, to, and s
