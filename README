@@ -686,7 +686,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl localize_domain.pl --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT 
+     prompt> perl localize_domain.pl --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --which_type = 'laps'
 
                     --- 2.2.6.2 Localization Method 2 ---
 
