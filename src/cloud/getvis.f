@@ -216,8 +216,6 @@ cdis
 
         call get_static_field_interp('albedo',i4time,ni,nj
      1                               ,static_albedo,istat_sfc_alb)       
-        if(istat_sfc_alb.eq.0 .or. istat_sfc_alb.eq.1)istat_sfc_alb=1 
-
         if(istat_sfc_alb .ne. 1)then ! Read sfc albedo from fixed database
             write(6,*)' Monthly Albedo Data N/A, look for fixed data'
             var = 'ALB'
