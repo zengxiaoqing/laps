@@ -255,7 +255,10 @@
      and beyond. 
 
      Various "root" directories are mentioned in the form of environment 
-     variables for easy reference. The three main environment variables are:
+     variables. These can optionally be set to make it easier to follow the 
+     instructions below more literally. The installation scripts can be run
+     without setting these variables if you'd like to enter the associated
+     paths directly.
  
      $LAPS_SRC_ROOT - The full path of the LAPS tar file / source code.
 
