@@ -602,22 +602,20 @@
      each of the domain(s). These generally include map projection parameters,
      data paths, etc. The remaining fixed parameters will be automatically 
      merged in from the '$LAPS_SRC_ROOT/data/static' directory tree by the 
-     localization script. As an example, 'nest7grid.parms' only needs to 
+     localization scripts. As an example, 'nest7grid.parms' only needs to 
      contain the subset of parameters that are unique to your domain(s). 
      The rest can be omitted from the file; they will automatically be added in
      as a result of the merging operation performed within the localization 
-     (next step). This "template" procedure provides an end result equivalent 
-     to that from the previous paragraph and is described to provide an 
-     alternative method of modifying the parameters. Templates can be a time 
-     saver, especially if you are managing parameters in multiple windows and 
-     are performing frequent software updates. Templates are normally 
-     maintained in a location independent of the LAPS distribution (e.g. see 
-     the template directory in the tree diagram above). They tend to contain 
-     parameters dependent on the local implementation and relatively independent
-     of software updates. The template files should be copied into 
-     '$LAPS_DATA_ROOT/data/static' prior to running the localization. This
-     can be done manually or via the 'window_laps_rt.pl' script (described 
-     later).
+     (next step). This "template" procedure provides a result equivalent 
+     to that from Localization Method #1 and provides an alternative method of
+     modifying the parameters. Templates can be a time saver, especially if 
+     you are managing parameters in multiple windows and are performing 
+     frequent software updates. Templates are normally maintained in a 
+     location independent of the LAPS distribution (e.g. see the template 
+     directory in the tree diagrams above). They generally contain parameters 
+     dependent on the local implementation and relatively independent of 
+     software updates. Once you set up the template directory you'll be
+     ready to run the 'window_laps_rt.pl' script.
 
                         LOCALIZING with 'window_laps_rt.pl'
 
@@ -631,21 +629,23 @@
      variables as necessary depending on user needs.  The -t command-line input
      specifies the TEMPLATE directory and the script saves the log/lapsprd 
      history when no '-c' is supplied in the command line, or completely 
-     removes $LAPS_DATA_ROOT if '-c' is supplied. The window script is used by
-     the LAPS GUI when configuring or reconfiguring localizations. Window 
+     removes $LAPS_DATA_ROOT if '-c' is supplied. The window script can be
+     run manually when configuring or reconfiguring localizations. Window 
      copies the template namelist subsets (partial nest7grid.parms or *.nl's) 
      into a new "static" subdirectory which, in turn, are merged with the full 
      namelists by laps_localization.pl. Recall that $LAPSINSTALLROOT contains 
-     bin/ and etc/ which $LAPS_SRC_ROOT constains the untarred namelists.  If 
-     $LAPS_SRC_ROOT does not exist then a data/ subdirectory containing static/
-     and cdl/ must exist for use by 'laps_localization.pl' (ie., $LAPS_SRC_ROOT =
-     $LAPSINSTALLROOT). Even though it is possible to have $LAPS_SRC_ROOT/data = 
-     $LAPSINSTALLROOT/data = $LAPS_DATA_ROOT, this is not recommended since it 
-     does not allow multiple localizations. Templates always ensure that 
-     specific namelist modifications are merged with the untarred full 
-     namelists. Templates always ensure that specifics to a localization are 
-     merged into new software ports and new namelist variables (available with
-     new software) are merged into existing localizations.  
+     bin/ and etc/ which $LAPS_SRC_ROOT contains the untarred namelists.  
+
+     In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
+     containing static/ and cdl/ must be available for use by 
+     'laps_localization.pl' (i.e. $LAPS_SRC_ROOT = $LAPSINSTALLROOT). Even 
+     though it is possible to have $LAPS_SRC_ROOT/data = $LAPSINSTALLROOT/data
+     = $LAPS_DATA_ROOT, this is not recommended since it does not allow multiple 
+     localizations. Templates will ensure that specific namelist modifications
+     are merged with the untarred full namelists. Templates also ensure that 
+     specifics to a localization are merged into new software ports and new 
+     namelist variables (available with new software) are merged into existing 
+     localizations.  
 
 
      Examples:
@@ -672,11 +672,18 @@ c) window_laps_rt.pl -t "full path to template directory"
    result: similar to a) but namelist specifics are copied to $LAPS_DATA_ROOT/
            static and merged with full namelists in $LAPSINSTALLROOT.
 
+d) window_laps_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT -d $LAPS_DATA_ROOT
+                     -t "full path to template directory"
+
+   result: similar to c) except all required information is provided on the
+           command line. Window will use the command line info instead of 
+           getting the paths from the environment.
+
 setenv LAPS_SRC_ROOT /awips/laps
 setenv LAPSINSTALLROOT /data/fxa/laps_data
 setenv LAPS_DATA_ROOT /data/fxa/laps
 
-d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
+e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
   
    result: Specific AWIPS relocalization command for lapstools GUI. GUI writes
            user input to laps_template/ (subset namelists; eg., nest7grid.parms);
