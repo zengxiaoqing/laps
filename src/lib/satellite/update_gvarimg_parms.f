@@ -332,6 +332,8 @@ c
      &centerlon,rlat,rlon,rlatnxny,rlonnxny,rlatdxdy,rlondxdy,
      &dx,dy,nx,ny,istatus)
 
+      include 'netcdf.inc'
+
       character*(*) cpath
       character     cfname_sat*200
       character     fname9_to_wfo_fname13*13
@@ -376,19 +378,25 @@ c
 c
 c read header of current 11u gvarimage
 c
+      lenf=index(cfname_sat,' ')-1
+      print*,'opening ',cfname_sat(1:lenf)
+      nf_status = NF_OPEN(cfname_sat,NF_NOWRITE,nf_fid)
+
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',cfname_sat(1:lenf)
+        istatus=-1
+        goto 900
+      endif
+
       write(6,*)'calling get_attribute_wfo ',chtype(1:nn)
-      call get_attribute_wfo(cfname_sat,centerlat,centerlon,rlat,
+      call get_attribute_wfo(nf_fid,centerlat,centerlon,rlat,
      &rlon,rlatnxny,rlonnxny,rlatdxdy,rlondxdy,dx,dy,nx,ny,lstatus)
+
       if(lstatus .lt. 0)then
          write(6,*)'No attributes returned: get_attribute_wfo ',chtype
      &(1:nn)
          goto 900
-
-c     elseif(lstatus.gt.0)then
-c        print*,'No attributes returned from get_attribute_wfo'
-c        istatus=1
-c        goto 900
-
       endif
 
       istatus = 0

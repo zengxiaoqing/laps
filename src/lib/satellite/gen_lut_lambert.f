@@ -328,9 +328,10 @@ c use original lambert software for fsl-conus in FSL's /public
 c
 c get new i/j start/end values for this domain
 c
-      call get_sat_boundary(nx,ny,ny3mx,nx3mx,ri,rj,
-     &linestart,lineend,elemstart,elemend,
+      call get_sat_boundary(nx,ny,nx,ny,0,nx3mx,ny3mx,
+     &ri,rj,linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
+
       if(istatus.ne.1)then
          write(6,*)'WARNING: Laps domain outside sat data cover!'
       endif

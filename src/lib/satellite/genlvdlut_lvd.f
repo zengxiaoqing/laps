@@ -41,6 +41,7 @@ c     real*4    topo(nx_l,ny_l)    !is not used.
 
       integer istatus
       integer it,js,lc
+      integer jxd                  !amount of domain expansion needed for lut
 c
 c dimensions for lat/lon
 c

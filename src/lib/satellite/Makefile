@@ -40,6 +40,7 @@ SRC=bcdtoint.F \
     rdgvarimg_cdf_header.f \
     read_gwc_header_sub.f \
     read_orb_att.f \
+    readnet.f \
     rewrite_satellite_lvd_nl.f \
     satsublatlon.f \
     stats.f \

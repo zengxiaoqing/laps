@@ -11,12 +11,9 @@ c
       Integer     kchl
 
       Integer       idx
-      parameter    (idx=2)
+      parameter    (idx=20)
 
-      Integer       idx2
-      Integer       nxl,nyl
-      Integer       nxl2,nyl2
-
+      Integer       nxe,nye
       Integer       nx,ny
 c
       real*4        lat(nx_l,ny_l)
@@ -25,26 +22,26 @@ c
       real*4        xlat (nx_l+idx,ny_l+idx)
       real*4        xlon (nx_l+idx,ny_l+idx)
 
-      real*4        xlat2 (nx_l+2*idx,ny_l+2*idx)
-      real*4        xlon2 (nx_l+2*idx,ny_l+2*idx)
-      real*4        rline (nx_l+2*idx,ny_l+2*idx)
-      real*4        rpix  (nx_l+2*idx,ny_l+2*idx)
-      real*4        rel_ri(nx_l+2*idx,ny_l+2*idx)
-      real*4        rel_rj(nx_l+2*idx,ny_l+2*idx)
-      real*4        rl_abs(nx_l+2*idx,ny_l+2*idx)
-      real*4        rp_abs(nx_l+2*idx,ny_l+2*idx)
+      real*4        rline (nx_l+idx,ny_l+idx)
+      real*4        rpix  (nx_l+idx,ny_l+idx)
+      real*4        rel_ri(nx_l+idx,ny_l+idx)
+      real*4        rel_rj(nx_l+idx,ny_l+idx)
+      real*4        rl_abs(nx_l+idx,ny_l+idx)
+      real*4        rp_abs(nx_l+idx,ny_l+idx)
 
       real*4        ri_laps(nx_l,ny_l)
       real*4        rj_laps(nx_l,ny_l)
 
+      real*4        xmn(nx_l+idx),ymn(ny_l+idx)
+      real*4        xtn(nx_l+idx),ytn(ny_l+idx)
+
       real*8        pi
-      real*8        rl_div
-      real*8        rp_div
-      real*8        radtodeg
-      real*8        degtorad
+      real*8        rl_div, rp_div
+      real*8        radtodeg, degtorad
       real*4        r4lat,r4lon
       real*4        r_img_res_m
       real*4        rls,rle,res,ree
+      real*4        jdx,jdy
       real*4        r_thin
       real*4        nwpixabs,nwlinabs
       real*4        nepixabs,nelinabs
@@ -52,17 +49,22 @@ c
       real*4        sepixabs,selinabs
       real*4        rmetx,rmety
       real*4        golonsbp,golatsbp,goalpha
+      real*4        grid_spacing_proj_m
+      real*4        grid_spacing_m
+      real*4        grid_spacing_km
+      real*4        mdlat,mdlon
+      real*4        sat_res_km,erad
+      real*4        deltax,deltay
+      real*4        factor
+      real*4        lat1,lat2,lon0
       real*4        r_missing_data
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
-      real*8        RL
-      real*8        RP
+      real*8        RL, RP
       Real*8        orbAt(336)
       Real*4        time_50,time50
-      Real*8        t50_8
-      Real*8        t
-      Real*8        f_time
+      Real*8        t50_8, t, f_time
       Real*8        SatSubLAT,SatSubLON
 c
       Integer     start_line
@@ -77,9 +79,9 @@ c
       Integer     ustatus
       Integer     wstatus
       Integer     IERR
+      Integer     expansion,ifactor
       Integer     instr
       Integer     i,j,ii,jj
-c     Integer     n1,n2,nn,nc
       Integer     n,n1,n2,nc,nl
       Integer     ils,ile
       Integer     nsCycles,nsIncs
@@ -125,6 +127,7 @@ c     Character     cmode*10
       character     c_imc(4)*1
       character     ct*3,csattype*3,cty*3
       Character     image_type*2
+      character     c6_maproj_ret*6
 c
 c The technique used here is to make a slightly larger domain
 c (1 grid point larger on each side) and use this to compute
@@ -217,18 +220,108 @@ c
          endif
       endif
 c
-c get expanded domain lats/lons
+c get expanded domain lats/lons. Some of this code follows what
+c happens in gridgen_model.
 c
-      idx2=idx*2
-      nxl=nx_l+idx
-      nyl=ny_l+idx
-      nxl2=nx_l+idx2
-      nyl2=ny_l+idx2
+      if(xres.eq.0.0.or.yres.eq.0.0)then
+         xres=4.0
+         yres=4.0
+         if(ct(1:nc).eq.'vis')then
+            xres=1.0
+            yres=1.0
+         elseif(ct(1:nc).eq.'wv ')then
+            xres=8.0
+            yres=8.0
+         endif
+      endif
 
-      call expand_domain(nx_l,ny_l,lat,lon,nxl,nyl,xlat,xlon,
-     +istatus)
-      call expand_domain(nxl,nyl,xlat,xlon,nxl2,nyl2,xlat2,xlon2,
-     +istatus)
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error return from get_grid_spacing'     
+          return
+      endif
+      grid_spacing_km=grid_spacing_m/1000.
+      sat_res_km=(xres+yres)/2.0
+
+      expansion=nint(sat_res_km/grid_spacing_km)+1
+      if(expansion.lt.4)expansion = 4
+      nxe=nx_l+expansion
+      nye=ny_l+expansion
+
+      call get_grid_center(mdlat,mdlon,istatus)
+      if(istatus .ne. 1)then
+         write(6,*)' Error calling laps routine'
+         return
+      endif
+      write(6,*)' grid_center = ',mdlat,mdlon
+
+      call get_c6_maproj(c6_maproj_ret,istatus)
+      if(istatus .ne. 1)then
+         print*,'Error return from get_c6_maproj'
+         return
+      endif
+      call downcase(c6_maproj_ret,c6_maproj_ret) 
+
+      call get_standard_latitudes(lat1,lat2,istatus)
+      call get_standard_longitude(lon0,istatus)
+
+      if(c6_maproj_ret .eq. 'plrstr')then
+         call get_ps_parms(lat1,lat2,grid_spacing_m,lon0
+     1                       ,grid_spacing_proj_m)
+
+         deltax = grid_spacing_proj_m
+
+      else
+         deltax = grid_spacing_m
+      endif
+
+      deltay=deltax
+      call POLAR_GP(mdlat,mdlon,XMN,YMN,deltax,deltay,nxe,nye)
+
+      do i=2,nxe
+         xmn(i)=xmn(i-1)+deltax
+      enddo
+      xmn(nxe)=2*xmn(nxe-1)-xmn(nxe-2)
+      do j=2,nye
+         ymn(j)=ymn(j-1)+deltay
+      enddo
+      ymn(nye)=2*ymn(nye-1)-ymn(nye-2)
+      do i=2,nxe
+         xtn(i)=.5*(xmn(i)+xmn(i-1))
+      enddo
+      xtn(1)=1.5*xmn(1)-.5*xmn(2)
+      do j=2,nye
+         ytn(j)=.5*(ymn(j)+ymn(j-1))
+      enddo
+      ytn(1)=1.5*ymn(1)-.5*ymn(2)
+
+      call get_earth_radius(erad,istatus)
+      if(istatus .ne. 1)then
+         write(6,*)' Error calling get_earth_radius'
+         return
+      endif
+
+      do j=1,nye
+         do i=1,nxe
+            call xy_to_latlon(xtn(i),ytn(j),erad,xlat(i,j),xlon(i,j))
+         enddo
+      enddo
+
+c     idx2=idx*2
+c     idx3=idx*3
+c     nxl=nx_l+idx
+c     nyl=ny_l+idx
+c     nxl2=nx_l+idx2
+c     nyl2=ny_l+idx2
+c     nxl3=nx_l+idx3
+c     nyl3=ny_l+idx3
+
+c     call expand_domain(nx_l,ny_l,lat,lon,nxl,nyl,xlat,xlon,
+c    +istatus)
+c     call expand_domain(nxl,nyl,xlat,xlon,nxl2,nyl2,xlat2,xlon2,
+c    +istatus)
+c     call expand_domain(nxl2,nyl2,xlat2,xlon2,nxl3,nyl3
+c    +,xlat3,xlon3,istatus)
 c
 c if the gvar image data file ever changes, for example, data thinning is
 c applied, then the following values should change as well. These now obtained
@@ -284,17 +377,17 @@ c
         cstatus = 0
         npoints_out = 0
 
-        do j=1,nyl2
-        do i=1,nxl2
+        do j=1,nye
+        do i=1,nxe
  
-          r8lat=xlat2(i,j)*degtorad
-          r8lon=xlon2(i,j)*degtorad
+          r8lat=xlat(i,j)*degtorad
+          r8lon=xlon(i,j)*degtorad
 
           call GPOINT(r8lat,r8lon,ELEV,SCAN,IERR)
           if(IERR.ne.0)then
 
 c           write(6,*)'Error computing Elev/Scan in GPOINT from'
-c           write(6,*)'Lat/Lon ', xlat2(i,j),xlon2(i,j)
+c           write(6,*)'Lat/Lon ', xlat(i,j),xlon(i,j)
              rline(i,j)=-2.
              rpix(i,j)=-2.
              cstatus=cstatus-1
@@ -308,15 +401,15 @@ c save corners
                 swpixabs=RP
                 swlinabs=RL
              endif
-             if(i.eq.1.and.j.eq.nyl)then
+             if(i.eq.1.and.j.eq.nye)then
                nwpixabs=RP
                nwlinabs=RL
              endif
-             if(i.eq.nxl.and.j.eq.1)then
+             if(i.eq.nxe.and.j.eq.1)then
                 sepixabs=RP
                 selinabs=RL
              endif
-             if(i.eq.nxl.and.j.eq.nyl)then
+             if(i.eq.nxe.and.j.eq.nye)then
                 nepixabs=RP
                 nelinabs=RL
              endif
@@ -363,15 +456,15 @@ c
         radtodeg=180.d0/pi
         degtorad=pi/180.
 
-        do j=1,nyl2
-        do i=1,nxl2
+        do j=1,nye
+        do i=1,nxe
 
           call fc01_conv_pts_el_to_met_1(golonsbp,
      &                        stoppix,fsci,
      &                        strtline,decimat,
      &                        cty,
-     &                        xlat2(i,j),
-     &                        xlon2(i,j),
+     &                        xlat(i,j),
+     &                        xlon(i,j),
      &                        rmetx,
      &                        rmety,
      &                        istatus)
@@ -387,14 +480,14 @@ c
         enddo
         enddo
 
-        print*,'lat/lon/x/y (1,1) = ',xlat2(1,1),xlon2(1,1),
+        print*,'lat/lon/x/y (1,1) = ',xlat(1,1),xlon(1,1),
      .rpix(1,1),rline(1,1)
-        print*,'lat/lon/x/y (nx,1) = ',xlat2(nxl2,1),xlon2(nxl2,1),
-     .rpix(nxl2,1),rline(nxl2,1)
-        print*,'lat/lon/x/y (1,ny) = ',xlat2(1,nyl2),xlon2(1,nyl2),
-     .rpix(1,nyl2),rline(1,nyl2)
-        print*,'lat/lon/x/y (nx,ny) = ',xlat2(nxl2,nyl2),
-     .xlon2(nxl2,nyl2),rpix(nxl2,nyl2),rline(nxl2,nyl2)
+        print*,'lat/lon/x/y (nx,1) = ',xlat(nxe,1),xlon(nxe,1),
+     .rpix(nxe,1),rline(nxe,1)
+        print*,'lat/lon/x/y (1,ny) = ',xlat(1,nye),xlon(1,nye),
+     .rpix(1,nye),rline(1,nye)
+        print*,'lat/lon/x/y (nx,ny) = ',xlat(nxe,nye),xlon(nxe,nye)
+     .,rpix(nxe,nye),rline(nxe,nye)
 
       endif
 
@@ -402,8 +495,8 @@ c
 
          print*,'Absolute Satellite Pix/Line Coords:'
          print*,'-----------------------------------'
-         do j = 1,ny_l,10
-         do i = 1,nx_l,10
+         do j = 1,nye,10
+         do i = 1,nxe,10
             write(6,*)'i,j,ri,rj: ',i,j,rpix(i,j),rline(i,j)
          enddo
          enddo
@@ -442,8 +535,8 @@ c
 c
 c compute relative lut
 c
-      call get_sat_boundary(nxl2,nyl2,ny,nx,rpix,rline,
-     &linestart,lineend,elemstart,elemend,
+      call get_sat_boundary(nx_l,ny_l,nxe,nye,idx,ny,nx
+     &,rpix,rline,linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
       if(istatus.ne.1)then
          write(6,*)'Note: Laps domain outside satellite data!'
@@ -487,8 +580,8 @@ c
 
       nijout = 0
       lpoint =.true.
-      do j = 1,nyl2
-      do i = 1,nxl2
+      do j = 1,nye
+      do i = 1,nxe
          if(rpix(i,j).ne.r_missing_data.and.
      &rline(i,j).ne.r_missing_data)then
             rel_ri(i,j) = rpix(i,j)  - res
@@ -508,13 +601,15 @@ c
 c
 c adjust relative ri/rj for laps domain
 c
-      ils=idx2/2+1
-      ile=idx2/2
+      factor=mod(expansion,2)
+      ifactor=0.5+factor
+      ils=expansion/2+1
+      ile=expansion/2+ifactor
       jj = 0
-      do j = ils,nyl2-ile
+      do j = ils,nye-ile
          jj = jj+1
          ii = 0
-         do i = ils,nxl2-ile
+         do i = ils,nxe-ile
             ii = ii+1
             ri_laps(ii,jj) = rel_ri(i,j)
             rj_laps(ii,jj) = rel_rj(i,j)
@@ -639,3 +734,44 @@ c
 
 1000  return
       end
+
+c -------------------
+
+       SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
+C
+      include 'trigd.inc'
+       REAL*4 LAT,LON,X,Y,DX,DY,
+     1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
+     1        XDIF,YDIF
+C
+       INTEGER*4 NX,NY
+C
+       RAD=3.141592654/180.
+
+       call get_earth_radius(erad,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling get_earth_radius'
+           stop
+       endif
+
+       TLAT=90.0
+       call get_standard_longitude(std_lon,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling laps routine'
+           stop
+       endif
+       TLON=std_lon
+C
+C      CALL GETOPS(PLAT,PLON,LAT,LON,TLAT,TLON)
+C      CALL PSTOXY(XDIF,YDIF,PLAT,PLON,ERAD)
+
+C      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
+       call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
+
+C
+       X=XDIF+(1.-FLOAT(NX)/2.)*DX
+       Y=YDIF+(1.-FLOAT(NY)/2.)*DY
+C
+       RETURN
+C
+       END

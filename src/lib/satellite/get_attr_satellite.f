@@ -1,16 +1,15 @@
-      subroutine get_attribute_wfo(filename,centralLat,centralLon,
+      subroutine get_attribute_wfo(nf_fid,centralLat,centralLon,
      &rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,
      &istatus)
 C
 C  Open netcdf File for reading
 C
-      character filename*(*)
       character dummy*31
       integer   istatus
       integer   dim_id
       integer   nx,ny
       integer   rcode
-c     integer   ncid
+      integer   nf_fid
       integer   lenf
       integer   nf_status
       real      centralLat
@@ -25,16 +24,16 @@ c     integer   ncid
 
       include 'netcdf.inc'
 
-      lenf=index(filename,' ')-1
-      print*,'opening ',filename(1:lenf)
-      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+c     lenf=index(filename,' ')-1
+c     print*,'opening ',filename(1:lenf)
+c     nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
 
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN ',filename(1:lenf)
-        istatus=-1
-        goto 100
-      endif
+c     if(nf_status.ne.NF_NOERR) then
+c       print *, NF_STRERROR(nf_status)
+c       print *,'NF_OPEN ',filename(1:lenf)
+c       istatus=-1
+c       goto 100
+c     endif
 C
 C Get centralLat
 C

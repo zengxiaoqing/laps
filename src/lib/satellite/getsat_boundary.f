@@ -1,11 +1,12 @@
-      subroutine get_sat_boundary(nx,ny,max_lines,max_elems,
-     &r_llij_lut_ri,r_llij_lut_rj,
+      subroutine get_sat_boundary(nxl,nyl,nx,ny,idx
+     &,max_lines,max_elems,r_llij_lut_ri,r_llij_lut_rj,
      &ilinestart,ilineend,ielemstart,ielemend,
      &rlinestart,rlineend,relemstart,relemend,istatus)
 
       implicit none
 
-      integer nx,ny
+      integer nx,ny,idx
+      integer nxl,nyl
       integer max_lines
       integer max_elems
       integer ilinestart
@@ -17,8 +18,8 @@ c     integer*4 i_grid_spacing_2
 c     integer*4 jstatus
 
 c     real*4 grid_spacing
-      real*4 r_llij_lut_ri(nx,ny)
-      real*4 r_llij_lut_rj(nx,ny)
+      real*4 r_llij_lut_ri(nxl+idx,nyl+idx)
+      real*4 r_llij_lut_rj(nxl+idx,nyl+idx)
       real*4 rlinestart
       real*4 rlineend
       real*4 relemstart
