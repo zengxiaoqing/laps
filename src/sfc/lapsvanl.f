@@ -153,6 +153,8 @@ c                               11-06-97  New puttmp call;rm some work arrays.
 c                               05-12-98  Added MSL press verification.
 c                               07-11-98  Added NaN checks on output.
 c                               09-25-98  Add bkg flags for each bkg variable.
+c	                        10-07-98  Range ck for pressures...until can
+c	                                    fix better.
 c
 c*****************************************************************************
 cx
@@ -973,6 +975,16 @@ c
  181	format(i4)
 	comment(3)(5:23) = ' M REDUCED PRESSURE'
 	call check_field_2d(p_a, imax,jmax,fill_val,istatus)
+	do j=1,jmax
+	do i=1,imax
+	  if(p_a(i,j).lt.800. .or. p_a(i,j).gt.1050.) then
+	     istatus = 0
+	     print *,' Value out of range at ',i,j
+	     go to 1181
+	  endif
+	enddo !i
+	enddo !j
+1181    continue
 	if(istatus .eq. 1)
      &     call move_2dto3d(   p_a, data,  3, imax, jmax, num_var)
 c
@@ -1008,17 +1020,22 @@ c
 	if(istatus .eq. 1)
      &     call move_2dto3d(    rh, data,  7, imax, jmax, num_var)
 c
-cc	var(8) = 'CCE'		! ceiling ht. msl (m)
-cc	units(8) = 'M'
-cc	call check_field_2d(ceil, imax,jmax,fill_val,istatus)
-cc	call move_2dto3d(  ceil, data,  8, imax, jmax, num_var)
-c
 	print *,' -------------------------------'
 	print *,' MSL pressure (pa) :'
 	var(9) = 'MSL'		! MSL pressure (Pa)
 	units(9) = 'PA'
 	comment(9) = 'MSL PRESSURE'
 	call check_field_2d(mslp, imax,jmax,fill_val,istatus)
+	do j=1,jmax
+	do i=1,imax
+	  if(mslp(i,j).lt.900. .or. mslp(i,j).gt.1100.) then
+	     istatus = 0
+	     print *,' Value out of range at ',i,j
+	     go to 1182
+	  endif
+	enddo !i
+	enddo !j
+1182    continue
 	if(istatus .eq. 1)
      &     call move_2dto3d(  mslp, data,  9, imax, jmax, num_var)
 c
