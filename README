@@ -120,7 +120,7 @@
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
-     'laps_localization.pl', especially if one is using ingest data formats 
+     'etc/laps_localization.pl', especially if one is using ingest data formats 
      other than "standard" ones used at FSL. After becoming familiar with 
      the changes needed for your implementation, it is recommended that you 
      develop a method to save the hand edited files in a "safe" place 
@@ -157,6 +157,7 @@
      The land fraction database is required for the 'land_10m' subdirectory
      and is included in the 'laps_terrain.tar.gz' file.
 
+
                 --- 2.1.6   Setting Runtime Parameters ---
 
      Runtime parameter changes (Sec 2.8) may be needed to specify the 
@@ -165,9 +166,9 @@
      These changes should be made prior to running the localization. The main 
      parameter files are 'data/static/nest7grid.parms', 'data/static/*.nl', 
      and 'data/static/*/*.parms'. These should be emplaced and/or modified 
-     within each 'dataroot' directory tree prior to running 
-     'laps_localization. pl'. Details on the contents of the 'nest7grid.parms' 
-     file are discussed in subsequent sections. 
+     within each 'dataroot' directory tree prior to running the localization. 
+     Details on the contents of the 'nest7grid.parms' file are discussed in 
+     subsequent sections. 
 
      The user needs only to establish those runtime files/parameters that are 
      unique to the domain (e.g. map projection parameters). The remaining 
@@ -175,7 +176,8 @@
      the localization script. As an example, you only need to set up the subset
      of parameters in 'nest7grid.parms' that are unique to your domain. The
      rest can be omitted from the file; they are automatically added in as
-     a result of the merging operation performed within the localization. 
+     a result of the merging operation performed within the localization (see
+     next section). 
 
 
                 ----   2.1.7  Running the Localization ---
@@ -184,14 +186,14 @@
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
      other runtime parameter files. Other subdirectories under 'data' are 
      also created if they're not already there. Shown below is an example of 
-     running the localization for a particular laps domain. 
-
-     If you have multiple domains, this script can be run for each domain with
-     different values of 'lapsroot'. You may need to create a subdirectory tree
-     under your new 'dataroot' directory, you can do this by running 'make' 
-     prior to running the localization.
+     running the localization for a particular laps domain. Note that 'make' 
+     will run the 'etc/laps_localization.pl' script. 
 
      $ make DATAROOT=/data/fxa/laps/data localize
+
+     If you have multiple domains, 'make' can be run for each domain with
+     different values of 'DATAROOT'. 
+
 
       ----------------  2.2   UNIX System Requirements  ----------------
 
