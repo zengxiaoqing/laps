@@ -45,7 +45,7 @@ SRC   = mdatlaps.f \
 	laps_routines.f \
 	qc_data.f 
 
-MAIN=laps_sfc.f $(LAPSROOT)/src/lib/block_data.f
+MAIN=laps_sfc.f 
 
 
 
