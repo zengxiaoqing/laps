@@ -261,9 +261,8 @@ c     +     forecast_length,bg_files,n
       else if(bgmodel.eq.3) then
          NX = 91
          NY = 91
-         NZ = 14   !this is a guess 11-15-99
-
-         cmodel = 'FA Model'            
+         NZ = 16
+         cmodel = 'FA Model (20km)'            
       else if(bgmodel.eq.4) then
          NX = 93
          NY = 65
