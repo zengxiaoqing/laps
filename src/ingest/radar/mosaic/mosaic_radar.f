@@ -34,7 +34,7 @@ c namelist items
      & n_radars_narrowband,
      & istatus)      
     
-      if(n_radars_wideband .ne. 0 .and. n_radars_narrowband .eq. 0)then       
+      if(n_radars_wideband .ne. 0)then       
           write(6,*)' Wideband scenario'
 
           if(n_radars_wideband .eq. -1)then
@@ -48,46 +48,66 @@ c namelist items
           c_radar_mosaic='vxx'
 
 !         Set c_radar_ext
+!         Duplicate code section
+
+          if(n_radars .gt. max_radars_mosaic)then
+              print*,'the namelist item n_radars exceeds',
+     +               'the maximum number of radars allowed'
+              print*,'Aborting ','n_radars = ',n_radars,' max = ',
+     +               max_radars_mosaic
+              goto 1000
+          endif
+
+          print*,'Process parameters'
+          print*,'Mosaic type: ',c_radar_mosaic
+          print*,'N radars to mosaic: ',n_radars
+          write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
+50        format(1x,a,10(:,a3,1x))
+ 
+          call mosaic_radar_sub(nx_l_cmn,ny_l_cmn,nk_laps,
+     1         max_radars_mosaic,
+     1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
+     1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
+     1         imosaic_3d,istatus)
+ 
+          if(istatus.ne.1)then
+             print*,'Error in mosaic_radar_sub'
+          endif
 
       endif
 
-      if(n_radars_wideband .eq. 0 .and. n_radars_narrowband .ne. 0)then       
+      if(n_radars_narrowband .ne. 0)then       
           write(6,*)' Narrowband scenario'
           n_radars = n_radars_narrowband
           c_radar_mosaic='rdr'
 
 !         Set c_radar_ext
+!         Duplicate code section
 
-      endif
+          if(n_radars .gt. max_radars_mosaic)then
+              print*,'the namelist item n_radars exceeds',
+     +               'the maximum number of radars allowed'
+              print*,'Aborting ','n_radars = ',n_radars,' max = ',
+     +               max_radars_mosaic
+              goto 1000
+          endif
 
-      if(n_radars_wideband .ne. 0 .and. n_radars_narrowband .ne. 0)then       
-          write(6,*)' Wideband + Narrowband option not yet supported'
-          goto 1000
-      endif
-
-      if(n_radars .gt. max_radars_mosaic)then
-          print*,'the namelist item n_radars exceeds',
-     +           'the maximum number of radars allowed'
-          print*,'Aborting ','n_radars = ',n_radars,' max = ',
-     +           max_radars_mosaic
-          goto 1000
-      endif
-
-      print*,'Process parameters'
-      print*,'Mosaic type: ',c_radar_mosaic
-      print*,'N radars to mosaic: ',n_radars
-      write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
-50    format(1x,a,10(:,a3,1x))
+          print*,'Process parameters'
+          print*,'Mosaic type: ',c_radar_mosaic
+          print*,'N radars to mosaic: ',n_radars
+          write(6,50)'Radar extensions: ',(c_radar_ext(i),i=1,n_radars)
+!50       format(1x,a,10(:,a3,1x))
  
-      call mosaic_radar_sub(nx_l_cmn,ny_l_cmn,nk_laps,max_radars_mosaic,
-     1     n_radars,c_radar_ext,c_radar_mosaic,i_window,
-     1     r_missing_data,laps_cycle_time,mosaic_cycle_time,
-     1     imosaic_3d,istatus)
+          call mosaic_radar_sub(nx_l_cmn,ny_l_cmn,nk_laps,
+     1         max_radars_mosaic,
+     1         n_radars,c_radar_ext,c_radar_mosaic,i_window,
+     1         r_missing_data,laps_cycle_time,mosaic_cycle_time,
+     1         imosaic_3d,istatus)
  
-      if(istatus.ne.1)then
-         print*,'Error in vrc_vxx_driver_sub'
-      else
-         print*,'Finished '
+          if(istatus.ne.1)then
+             print*,'Error in mosaic_radar_sub'
+          endif
+
       endif
 
 1000  stop
@@ -161,9 +181,9 @@ c
       Integer       i4time_diff
       Integer       i4time_window_beg
       Integer       i4time_window_end
-      Integer       i_ra_i4time(n_radars)
       Integer       i4timefile_vxx(maxfiles,n_radars)
       Integer       i4timefile_proc(maxfiles,n_radars)
+      Integer       i4_file_closest(n_radars)
       Integer       i4time_nearest
 c
 c vrc definitions
@@ -297,23 +317,6 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
           i4time_window_beg = i4time_mos-i_window_size
           i4time_window_end = i4time_mos+i_window_size
 
-
-c
-c need additional set of code here to examine vrc/vrz subdirectories
-c to determine if the data found has already been processed.
-c
-c ------- additional code here ---------
-c
-c reorganize the directory results. Also need to count the number of mosaics
-c needed. That is, if there is more than one file per radar then we will
-c have n_mosaics > 1. Furthermore, we need to keep track of which files
-c from the n_radars are mosaiced. This would be a nearest in time type
-c of categorization. We will need another parameter -> used to threshold
-c which files can be mosaiced. This parameter should be a function of the
-c number of radars to be mosaiced (possibly).
-c
-          min_i4time=1999999999
-          max_i4time=0
           found_data=.false.
           do i=1,n_radars
               first_time=.true.
@@ -325,36 +328,38 @@ c
                       found_data=.true.
                       first_time=.false.
                       i_ra_count=i_ra_count+1
-                      c_ra_filename(i_ra_count) = c_filename_vxx(l,i)
                       c_ra_ext(i_ra_count) = c_radar_ext(i)
-                      i_ra_i4time(i_ra_count) = i4timefile_vxx(l,i)
+
+                      c_ra_filename(i_ra_count) = c_filename_vxx(l,i)
+                      i4_file_closest(i_ra_count) = i4timefile_vxx(l,i)
+                      i4_diff_min = abs(i4timefile_vxx(l,i)-i4time_mos)       
                       call make_fnam_lp(i4timefile_vxx(l,i),
      &                                  c_ra_ftime(i_ra_count),istatus)      
-                      min_i4time = min(min_i4time,
-     &                                 i_ra_i4time(i_ra_count))
-                      max_i4time = max(max_i4time,
-     &                                 i_ra_i4time(i_ra_count))
+
                     else   ! this switch= if more than one file for same radar 
-                           ! within window. Take lastest
-c if files are already time ordered then the latest time will be loaded into array c_ra_filename.
-c                     i_ra_count=i_ra_count+1
-                      c_ra_filename(i_ra_count)=c_filename_vxx(l,i)
-                      c_ra_ext(i_ra_count)=c_radar_ext(i)
-                      i_ra_i4time(i_ra_count)=i4timefile_vxx(l,i)
-                      min_i4time = min(min_i4time,
-     &                                 i_ra_i4time(i_ra_count))
-                      max_i4time = max(max_i4time,
-     &                                 i_ra_i4time(i_ra_count))
+                           ! within window. Determine closest
+                      i4_diff = abs(i4timefile_vxx(l,i)-i4time_mos)
+                      if(i4_diff .lt. i4_diff_min)then
+                        c_ra_filename(i_ra_count)=c_filename_vxx(l,i)
+                        i4_file_closest(i_ra_count)=i4timefile_vxx(l,i)      
+                        i4_diff_min = i4_diff
+                        call make_fnam_lp(i4timefile_vxx(l,i),
+     &                                  c_ra_ftime(i_ra_count),istatus)      
+                      endif
+
                     endif ! first_time
+
                   endif ! in time window
+
               enddo ! file
+
               write(6,*)c_radar_ext(i), ' found radar = ', 
      1                  .not. first_time       
           enddo ! radar
 
           if(.not.found_data)then
              write(6,*)'No files in any vxx directories'
-             write(6,*)'No data to process'
+             write(6,*)'No data to process for this time'
              goto 895
           endif
 c
@@ -365,7 +370,7 @@ c
              call make_fnam_lp(i4time_data,c_ftime_data,istatus)
              do i=1,i_ra_count
                 print*,'Radar Info: ',i,' ',c_ra_ext(i),' '
-     1                ,i_ra_i4time(i),' ',c_ra_ftime(i)
+     1                ,i4_file_closest(i_ra_count),c_ra_ftime(i)
              enddo
              print*,'Data filetime: ',c_ftime_data
           elseif(i_ra_count.eq.1)then
