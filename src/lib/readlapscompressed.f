@@ -102,7 +102,7 @@ C
 C **** read in compressed file
 C
       lun = 65
-      call open_lapsprd_file(lun,i4time,ext,istatus)
+      call open_lapsprd_file_read(lun,i4time,ext,istatus)
       if(istatus .ne. 1)goto 950
 
       read(lun,*)kkdim
