@@ -846,7 +846,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      ! making albedo an output variable in the WRF registry) and
      ! divide it back out.
      CALL get_wrfnc_2d(current_lun,'ALBEDO','A',nx,ny,1,albedo,status)
-     IF (status .NE. 0) THEN
+     IF (status .EQ. 0) THEN
        ! make sure destaggering did not create values outside the range
        WHERE (albedo .LT. 0.) albedo = 0.
        WHERE (albedo .GT. 1.0) albedo = 1.0
