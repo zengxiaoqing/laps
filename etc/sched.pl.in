@@ -197,13 +197,18 @@ my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
-my($LAPS_LOG_PATH);
+my($LAPS_LOG_PATH,$LAPS_LOCK_PATH);
 if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
 
+if( ((defined $opt_A)or(defined $opt_a))and(-e "/tmp/laps_casererun_log")){
+    $LAPS_LOCK_PATH="/tmp/laps_casererun_log";
+}else{
+    $LAPS_LOCK_PATH=$LAPS_LOG_PATH;
+}
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
@@ -216,9 +221,9 @@ open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
 
-my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
+my $lockfile = "$LAPS_LOCK_PATH/\.locklaps\.$$";
 
-my $sched_lockfile = "$LAPS_LOG_PATH/sched\.lock";
+my $sched_lockfile = "$LAPS_LOCK_PATH/sched\.lock";
 system("touch $sched_lockfile");
 
 system("uname -ns");
@@ -262,7 +267,7 @@ print "Number of executables = $nexe\n";
 foreach $exe (@LAPS_EXE){
 
     my(@locks);
-    opendir(LOCKDIR,"$LAPS_LOG_PATH");
+    opendir(LOCKDIR,"$LAPS_LOCK_PATH");
     @locks = grep /^\.locklaps/, readdir(LOCKDIR);
     closedir(LOCKDIR);
 
@@ -293,7 +298,7 @@ foreach $exe (@LAPS_EXE){
 # Kill the child
 #
 	kill -9,$cid if($cid>0);
-	unlink "$LAPS_LOG_PATH/$_";
+	unlink "$LAPS_LOCK_PATH/$_";
     }
 
 
