@@ -579,6 +579,7 @@ CONTAINS
      CALL get_wrfnc_2d(luninit, "HGT","A",nx,ny,1,terdot,status)  
      CALL close_wrfnc(luninit)
     ENDIF
+
     ! Use the map_set routine to set up the projection information structure
     SELECT CASE(projection)
       CASE ('LAMBERT CONFORMAL               ')

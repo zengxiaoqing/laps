@@ -486,6 +486,16 @@ CONTAINS
     nlevels(varindex) = 1
     varindex = varindex + 1
 
+    ! Mean U wind in PBL
+    varname(varindex) = 'U_PBL     '
+    nlevels(varindex) = 1
+    varindex = varindex + 1
+
+    ! Mean V wind in PBL
+    varname(varindex) = 'V_PBL     '
+    nlevels(varindex) = 1
+    varindex = varindex + 1
+
     ! Ground Temp
     varname(varindex) = 'T_GND     '
     nlevels(varindex) = 1
@@ -519,7 +529,7 @@ CONTAINS
                   snow_inc,snow_tot,pcptype_sfc,thetasfc,thetaesfc, &
                   cape,cin,liftedind,srhel,refl_sfc,max_refl,echo_tops, &
                   heatind,visibility,snowcover,lwout,swout,shflux,lhflux, &
-                  pblhgt,ground_t)     
+                  pblhgt,upbl, vpbl, ground_t)     
 
   ! Subroutine to output the above variables into the already created
   ! vis5d file.  Note that the variables must be output in the same order
@@ -588,6 +598,8 @@ CONTAINS
     REAL                    :: shflux(nx,ny)
     REAL                    :: lhflux(nx,ny)
     REAL                    :: pblhgt(nx,ny)
+    REAL                    :: upbl(nx,ny)
+    REAL                    :: vpbl(nx,ny)
     REAL                    :: ground_t(nx,ny)
 
     ! Local variables
@@ -994,6 +1006,18 @@ CONTAINS
 
     CALL post2v5d(pblhgt,nx,ny,1,data2d)
     PRINT '(2A)', 'V5DOUT: Writing pblhgt as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data2d)
+    varindex = varindex + 1
+
+    CALL post2v5d(upbl,nx,ny,1,data2d)
+    PRINT '(2A)', 'V5DOUT: Writing upbl as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data2d)
+    varindex = varindex + 1
+
+    CALL post2v5d(vpbl,nx,ny,1,data2d)
+    PRINT '(2A)', 'V5DOUT: Writing vpbl as varname: ',&
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data2d)
     varindex = varindex + 1

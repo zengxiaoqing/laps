@@ -194,6 +194,8 @@ PROGRAM lfmpost
     ALLOCATE ( uprs         ( nx , ny , kprs ) )
     ALLOCATE ( vsfc         ( nx , ny ) )
     ALLOCATE ( vprs         ( nx , ny , kprs ) )
+    ALLOCATE ( upbl         ( nx , ny ) )
+    ALLOCATE ( vpbl         ( nx , ny ) )
     ALLOCATE ( wsfc         ( nx , ny ) )
     ALLOCATE ( clwmrsfc       ( nx , ny ) )
     ALLOCATE ( icemrsfc       ( nx , ny ) )
@@ -320,7 +322,7 @@ PROGRAM lfmpost
                             cldamt,ceiling,echo_tops,max_refl,refl_sfc, &
                             pcptype_sfc,srhel,liftedind,heatind,visibility,&
                             terdot,lwout,swout,shflux,lhflux,pblhgt,ground_t,&
-                            vnt_index,ham_index,hah_index,fwi_index,&
+                            upbl, vpbl, vnt_index,ham_index,hah_index,fwi_index,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
                             laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
                             write_to_lapsdir,model_name)
@@ -416,7 +418,7 @@ PROGRAM lfmpost
                   snow_inc,snow_tot,pcptype_sfc,thetasfc,thetaesfc, &
                   cape,cin,liftedind,srhel,refl_sfc,max_refl,echo_tops, &
                   heatind,visibility,snowcover,lwout,swout,shflux,lhflux, &
-                  pblhgt, ground_t)
+                  pblhgt, upbl, vpbl, ground_t)
       IF (t .EQ. num_times_to_proc) CALL v5dend
    
     ENDIF
@@ -570,6 +572,8 @@ PROGRAM lfmpost
     DEALLOCATE ( usfc )
     DEALLOCATE ( uprs )
     DEALLOCATE ( vsfc )
+    DEALLOCATE ( upbl )
+    DEALLOCATE ( vpbl )
     DEALLOCATE ( vprs )
     DEALLOCATE ( wsfc )
     DEALLOCATE ( wprs )

@@ -100,6 +100,8 @@ MODULE postproc_lfm
   REAL, ALLOCATABLE, PUBLIC  :: tdsfc              ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: usfc               ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: vsfc               ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: upbl               ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: vpbl               ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: wsfc               ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: rhsfc              ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: cldbase            ( : , : )
@@ -1172,7 +1174,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     PRINT *, 'Min/Max Helicity: ', MINVAL(srhel), MAXVAL(srhel)
 
     ! Compute ventilation index
-    CALL ventilation(usig,vsig,zsig,pblhgt,terdot,nx,ny,ksigh,vnt_index)
+    CALL ventilation(usig,vsig,zsig,pblhgt,terdot,nx,ny,ksigh,upbl,vpbl,vnt_index)
     PRINT *, 'Min/Max Ventilation : ', MINVAL(vnt_index), MAXVAL(vnt_index)    
     DEALLOCATE (usig)
     DEALLOCATE (vsig)

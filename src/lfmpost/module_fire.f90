@@ -43,7 +43,8 @@ MODULE fire
 
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE ventilation(usig,vsig,zsig,pblhgt,topo,nx,ny,nz,vent_ind)
+  SUBROUTINE ventilation(usig,vsig,zsig,pblhgt,topo,nx,ny,nz, &
+                         upbl, vpbl, vent_ind)
   
     IMPLICIT NONE
     INTEGER, INTENT(IN)    :: nx
@@ -54,6 +55,8 @@ CONTAINS
     REAL, INTENT(IN)       :: zsig(nx,ny,nz)  ! Z on sigma
     REAL, INTENT(IN)       :: pblhgt(nx,ny)
     REAL, INTENT(IN)       :: topo(nx,ny)
+    REAL, INTENT(OUT)      :: upbl(nx,ny)
+    REAL, INTENT(OUT)      :: vpbl(nx,ny)
     REAL, INTENT(OUT)      :: vent_ind(nx,ny)
 
     INTEGER                :: i,j,k, nbl
@@ -90,16 +93,21 @@ CONTAINS
             
             ! Multiply mean speed by PBL depth to get index
             vent_ind(i,j) = pblhgt(i,j) * spmean
-
+            upbl(i,j) = umean
+            vpbl(i,j) = vmean
           ELSE
             ! PBL height is lower than the lowest model level...use
             ! lowest model wind
             spmean = SQRT(usig(i,j,1)**2 + vsig(i,j,1)**2)
             vent_ind(i,j) = pblhgt(i,j) * spmean
+            upbl(i,j) = usig(i,j,1)
+            vpbl(i,j) = vsig(i,j,1)
           ENDIF
         ELSE
           PRINT *, 'WARNING:  PBL Height <=0 in ventilation index'
           vent_ind(i,j) = 0.
+          upbl(i,j) = 0.
+          vpbl(i,j) = 0.
         ENDIF
       ENDDO
     ENDDO
@@ -131,7 +139,7 @@ CONTAINS
       DO i = 1 , nx
       
         IF (p3d_mb(i,j,1) .lt. pmbbot) THEN
-          haines2d(i,j) = 1e37  !missing
+          haines2d(i,j) = 1e37  ! Cannot be computed
         ELSE
     
           DO k = 2, nz

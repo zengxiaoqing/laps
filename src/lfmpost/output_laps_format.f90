@@ -39,7 +39,7 @@
                                   s01, sto, th, the, pbe, nbe, lcv, cce, lmt, &
                                   lmr, llr, spt, lhe, li, hi, vis, terdot, &
                                   lwout,swout,shflux,lhflux,pblhgt,ground_t,&
-                                  vnt,ham,hah,fwi, &
+                                  upb, vpb, vnt,ham,hah,fwi, &
                                   press_levels, &
                                   lfmprd_dir, laps_data_root, domnum, &
                                   laps_reftime, laps_valtime, nx, ny, nz, &
@@ -129,6 +129,8 @@
     REAL, INTENT(IN)                :: lhflux( nx , ny )
     REAL, INTENT(IN)                :: pblhgt( nx , ny )
     REAL, INTENT(IN)                :: ground_t( nx , ny )
+    REAL, INTENT(IN)                :: upb ( nx , ny )
+    REAL, INTENT(IN)                :: vpb ( nx , ny )
     REAL, INTENT(IN)                :: vnt   ( nx , ny )
     REAL, INTENT(IN)                :: ham   ( nx , ny )
     REAL, INTENT(IN)                :: hah   ( nx , ny )
@@ -146,7 +148,7 @@
     ! Locals
     CHARACTER(LEN=2)             :: domnum_str
     INTEGER, PARAMETER           :: nvar3d = 16 ! Equals # of 3d arrays above!
-    INTEGER, PARAMETER           :: nvar2d = 42 ! # of 2d arrays above!
+    INTEGER, PARAMETER           :: nvar2d = 44 ! # of 2d arrays above!
     REAL, ALLOCATABLE               :: laps_data ( : , : , : )
     INTEGER, ALLOCATABLE            :: levels ( : )
     CHARACTER(LEN=3),ALLOCATABLE    :: varname (: )
@@ -563,6 +565,16 @@
     laps_data(:,:,startind) = ground_t
     varname(startind) = 'TGD'
     varcomment(startind) = 'Ground Temperature        '
+
+    startind = startind + 1
+    laps_data(:,:,startind) = upb
+    varname(startind) = 'UPB'
+    varcomment(startind) = 'U-component Wind in PBL    '
+
+    startind = startind + 1
+    laps_data(:,:,startind) = vpb
+    varname(startind) = 'VPB'
+    varcomment(startind) = 'V-component Wind in PBL    '
 
     startind = startind + 1
     laps_data(:,:,startind) = vnt
