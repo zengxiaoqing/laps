@@ -48,7 +48,7 @@
 '/data/lapb/import/lapsdat/sat/afgwc/goes09/              ',
 
  IFLAG_LVD_COMMON= 1,
- ISATS=1,1,
+ ISATS=1,0,
  ITYPES=0,0,1,0,
 0,1,0,0,
  ICHANNELS=1,1,1,1,1,
