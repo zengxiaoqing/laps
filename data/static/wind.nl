@@ -3,7 +3,7 @@
  l_use_cdw=.true.,
  l_use_radial_vel=.true.,
  weight_bkg_const_wind=5e28,
- rms_thresh_wind=0.5,
+ rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
  /
