@@ -163,9 +163,7 @@ C INTERPOLATE FROM THE GRID TO THE STATION LOCATION
       real*4    r0_array_out(imax,jmax)
 
       real*4    density_array_in(imax,jmax)
-!     real*4    wt_lut(-(NX_L-1):(NX_L-1),-(NY_L-1):(NY_L-1))
-      real*4    wt_lut(-(NX_L_MAX-1):(NX_L_MAX-1),-(NY_L_MAX-1):(NY_L_MA
-     1X-1))
+      real*4    wt_lut(-(imax-1):(imax-1),-(jmax-1):(jmax-1))
 
       istatus = 0
 

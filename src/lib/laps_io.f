@@ -347,11 +347,11 @@ cdis
         character*150 DIRECTORY
         character*31 EXT
 
-        character*125 comment_3d(NZ_L_MAX),comment_2d
-        character*10 units_3d(NZ_L_MAX),units_2d
-        character*3 var_3d(NZ_L_MAX),var_2d
-        integer*4 LVL_3d(NZ_L_MAX)
-        character*4 LVL_COORD_3d(NZ_L_MAX)
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax),var_2d
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
 
         real*4 field_3d(imax,jmax,kmax)
 
@@ -408,11 +408,11 @@ cdis
         character*150 DIRECTORY
         character*31 EXT
 
-        character*125 comment_3d(NZ_L_MAX),comment_2d
-        character*10 units_3d(NZ_L_MAX),units_2d
-        character*3 var_3d(NZ_L_MAX),var_2d
-        integer*4 LVL_3d(NZ_L_MAX)
-        character*4 LVL_COORD_3d(NZ_L_MAX)
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax),var_2d
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
 
         real*4 field_3d(imax,jmax,kmax)
 
@@ -537,11 +537,11 @@ cdis
         character*150 DIRECTORY
         character*31 EXT
 
-        character*125 comment_3d(NZ_L_MAX),comment_2d
-        character*10 units_3d(NZ_L_MAX),units_2d
-        character*3 var_3d(NZ_L_MAX),var_2d
-        integer*4 LVL_3d(NZ_L_MAX)
-        character*4 LVL_COORD_3d(NZ_L_MAX)
+        character*125 comment_3d(nk),comment_2d
+        character*10 units_3d(nk),units_2d
+        character*3 var_3d(nk),var_2d
+        integer*4 LVL_3d(nk)
+        character*4 LVL_COORD_3d(nk)
 
         real*4 field_3d(ni,nj,nk)
 
@@ -577,28 +577,18 @@ cdis
 
         include 'lapsparms.inc'
 
-        integer*4 MAX_FIELDS,MAX_DIM_3D
-        parameter (MAX_FIELDS = 10)
-
-        parameter (MAX_DIM_3D = MAX_FIELDS * NZ_L_MAX)
-
-
         character*150 DIRECTORY
         character*31 EXT
 
-        character*125 comment_3d(MAX_DIM_3D),comment_2d(nf)
-        character*10 units_3d(MAX_DIM_3D),units_2d(nf)
-        character*3 var_3d(MAX_DIM_3D),var_2d(nf)
-        integer*4 LVL_3d(MAX_DIM_3D)
-        character*4 LVL_COORD_3d(MAX_DIM_3D)
+        character*125 comment_3d(nk*nf),comment_2d(nf)
+        character*10 units_3d(nk*nf),units_2d(nf)
+        character*3 var_3d(nk*nf),var_2d(nf)
+        integer*4 LVL_3d(nk*nf)
+        character*4 LVL_COORD_3d(nk*nf)
 
         real*4 field_3d(ni,nj,nk,nf)
 
         istatus = 0
-
-        if(nf .gt. MAX_FIELDS)then
-            write(6,*)' Too many fields in put_laps_multi_3d'
-        endif
 
         call get_directory(ext,directory,len_dir)
 

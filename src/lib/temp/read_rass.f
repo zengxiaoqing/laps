@@ -34,7 +34,7 @@ cdis
      1                   lat_pr,lon_pr,
      1                   lat,lon,
      1                   ob_pr_t,
-!       1                        t_maps_inc,
+!    1                   t_maps_inc,
      1                   bias_htlow,
      1                   n_rass,
      1                   ilaps_cycle_time,
@@ -65,7 +65,7 @@ cdis
         integer num_pr(max_rs)
 
         real bias_htlow(max_rs)
-        real ob_pr_t (max_rs,NZ_L_MAX) ! Vertically interpolated RASS temp
+        real ob_pr_t (max_rs,kmax) ! Local, Vertically interpolated RASS temp
         real ob_pr_ht_obs(max_rs,max_rs_levels)
         real ob_pr_t_obs(max_rs,max_rs_levels)
 

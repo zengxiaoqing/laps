@@ -54,7 +54,7 @@ cdis
         real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        integer*4 isum_ref_2d(NX_L_MAX,NY_L_MAX) ! Local array
+        integer*4 isum_ref_2d(ni,nj)             ! Local array
 
         logical l_low_fill,l_high_fill,l_test
 
@@ -280,7 +280,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         real*4 height_3d(ni,nj,nk)               ! Input
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        integer*4 isum_ref_2d(NX_L_MAX,NY_L_MAX) ! Local array
+        integer*4 isum_ref_2d(ni,nj)             ! Local array
 
         logical l_low_fill,l_high_fill,l_test
 

@@ -6,11 +6,6 @@
 
 !       LAPS Grid Dimensions
 
-        integer*4 NX_L_MAX,NY_L_MAX,NZ_L_MAX
-        parameter (NX_L_MAX = 241) ! Used for Local Arrays, must be >= NX_L
-        parameter (NY_L_MAX = 241) ! Used for Local Arrays, must be >= NY_L
-        parameter (NZ_L_MAX = 41)  ! Used for Local Arrays, must be >= NZ_L
-
 !       parameter VERTICAL_GRID = 'HEIGHT'
 
         character*8  VERTICAL_GRID

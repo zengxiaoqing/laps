@@ -553,12 +553,6 @@ cdis
 
 !...........................................................................
 
-      call check_grid_dimensions(ni,nj,istat_dim)
-
-      istatus = istatus * istat_dim
-
-!...........................................................................
-
       erad=6367000.
       icen = ni/2+1
       jcen = nj/2+1
@@ -593,26 +587,6 @@ cdis
 
       return
       end
-
-      subroutine check_grid_dimensions(ni,nj,istatus)
-
-      include 'lapsparms.inc'
-
-      istatus = 1
-
-      if(ni .gt. NX_L_MAX)then
-          write(6,*)' ERROR: ni > NX_L_MAX', ni, NX_L_MAX
-          istatus = 0
-      endif
-
-      if(nj .gt. NY_L_MAX)then
-          write(6,*)' ERROR: nj > NY_L_MAX', nj, NY_L_MAX
-          istatus = 0
-      endif
-
-      return
-      end
-
 
       subroutine lambert_parms(slat1,slat2,n_out,s_out,rconst_out)
 
