@@ -552,18 +552,35 @@ c
 	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
 	endif
 c
-c.....	Fill in the boundary of each field with values from the
-c.....  background.
+c.....	Fill in the boundary of each field.
 c
-	  call back_bounds(u1,imax,jmax,u_bk,badflag)
-	  call back_bounds(v1,imax,jmax,v_bk,badflag)
-	  call back_bounds(t1,imax,jmax,t_bk,badflag)
-	  call back_bounds(td1,imax,jmax,td_bk,badflag)
-	  call back_bounds(rp1,imax,jmax,rp_bk,badflag)
-	  call back_bounds(sp1,imax,jmax,stnp_bk,badflag)
-	  call back_bounds(mslp1,imax,jmax,mslp_bk,badflag)
-	  call back_bounds(vis1,imax,jmax,vis_bk,badflag)
-	  call back_bounds(elev1,imax,jmax,topo,badflag)
+	print *,' Boundary for    U:'
+	call set_boundary(u1,imax,jmax,ii,jj,uu,u_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for    V:'
+	call set_boundary(v1,imax,jmax,ii,jj,vv,v_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for    T:'
+	call set_boundary(t1,imax,jmax,ii,jj,t_s,t_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for   TD:'
+	call set_boundary(td1,imax,jmax,ii,jj,td_s,td_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for REDP:'
+	call set_boundary(rp1,imax,jmax,ii,jj,pred_s,rp_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for STNP:'
+	call set_boundary(sp1,imax,jmax,ii,jj,pstn_s,stnp_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for MSLP:'
+	call set_boundary(mslp1,imax,jmax,ii,jj,pmsl_s,mslp_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for  VIS:'
+	call set_boundary(vis1,imax,jmax,ii,jj,vis_s,vis_bk,n_obs_b,
+     &                    badflag,mxstn)
+	print *,' Boundary for ELEV:'
+	call set_boundary(elev1,imax,jmax,ii,jj,elev_s,topo,n_obs_b,
+     &                    badflag,mxstn)
 c
 c.....	Check the brightness temperatures for clouds.
 c
@@ -728,19 +745,27 @@ c
         Subroutine procar(a,imax,jmax,b,imax1,jmax1,iproc)
         real*4 a(imax,jmax),b(imax1,jmax1)
         do 2 j=1,jmax
-        jj=j
-        if(jmax.gt.jmax1) jj=jmax1
-        do 2 i=1,imax
-        ii=i
-        if(imax.gt.imax1) ii=imax1
-        if(b(ii,jj)) 3,4,3
-    3   a(i,j)=a(i,j)*b(ii,jj)**iproc 
-        GO TO 2
+	   jj=j
+	   if(jmax.gt.jmax1) jj=jmax1
+	   do 2 i=1,imax
+	      ii=i
+	      if(imax.gt.imax1) ii=imax1
+c
+	      if(b(ii,jj) .ne. 0.) then !3,4,3
+		 if(iproc .eq. -1) then
+ 		    a(i,j) = a(i,j) / b(ii,jj)
+		 elseif(iproc .eq. 1) then
+ 3		    a(i,j) = a(i,j) * b(ii,jj)
+		 endif
+	      endif
+c
+	      GO TO 2
 !    4   A(I,J)=0.
-4	continue
-    2   CONTINUE    
-        return  
-        end
+ 4	      continue
+ 2	CONTINUE 
+c   
+	return  
+	end
 c
 c
 	subroutine fill_bounds(x,imax,jmax,ii,jj,x_ob,
@@ -957,3 +982,89 @@ c	15 May 1991 Birkenheuer
      1      ((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.
       return
       end
+c
+c
+	subroutine set_boundary(x,imax,jmax,ii,jj,x_ob,x_bk,n_obs_b,
+     &                          badflag,mxstn)
+c
+c======================================================================
+c
+c       Routine to fill the boundaries of the grid for a variable.
+c       First, we try a Barnes analysis of observations near the
+c       boundary, both inside and out.  If there aren't enough obs,
+c       we fall back to using the background field.  This routine
+c       fills 2 points all the way around the grid (the spline needs
+c       this).
+c
+c       Orginal:  P. Stamus  NOAA/FSL  7 Jan 1999 (from fill_bounds
+c                                                   and back_bounds).
+c       Changes:  
+c
+c======================================================================
+c
+	real*4 x(imax,jmax)                ! array to fill boundarys
+	real*4 x_bk(imax,jmax)             ! array with background field
+	real*4 x_ob(mxstn)                 ! array of observations
+	real*4 fnorm(0:imax-1,0:jmax-1)    ! Barnes weights
+	real*4 dum(imax,jmax)              ! work array
+c
+	integer ii(mxstn), jj(mxstn)       ! obs location (in gridpts)
+c
+	npass = 1
+	call zero(dum,imax,jmax)
+c
+c.....	First, try the wide-area Barnes, filling the dum array.
+c
+	rom2 = 0.005
+	call dynamic_wts(imax,jmax,0,rom2,d,fnorm)
+	call barnes_wide(dum,imax,jmax,ii,jj,x_ob,n_obs_b,badflag,
+     &                   mxstn,npass,fnorm,istatus)
+c
+c.....	Copy the boundaries from the dummy array to the main array.
+c
+	if(istatus .eq. 1) then
+	   print *,' Filling boundary using Barnes.'
+c
+	   do i=1,imax
+	      do j=1,2
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
+	      enddo !j
+	      do j=jmax-1,jmax
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
+	      enddo !j
+	   enddo !i
+	   do j=1,jmax
+	      do i=1,2
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
+	      enddo !i
+	      do i=imax-1,imax
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = dum(i,j)
+	      enddo !i
+	   enddo !j
+c
+	else
+	   print *,' Problem calculating boundary. Using background.'
+c
+	   do i=1,imax
+	      do j=1,2
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
+	      enddo !j
+	      do j=jmax-1,jmax
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
+	      enddo !j
+	   enddo !i
+	   do j=1,jmax
+	      do i=1,2
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
+	      enddo !i
+	      do i=imax-1,imax
+		 if(x(i,j).eq.0. .or. x(i,j).eq.badflag) x(i,j) = x_bk(i,j)
+	      enddo !i
+	   enddo !j
+c
+	endif
+c
+c....   That's it.
+c
+	return
+	end
