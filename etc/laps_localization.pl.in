@@ -117,6 +117,10 @@ my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
 
 foreach(@cdl_list){
+#
+# DO not edit the model output cdl files, the user must currently edit these by hand.
+#
+    next if/^f/;
     open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
     my @cdl = <CDL>;
     close(CDL);
