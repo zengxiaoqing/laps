@@ -555,13 +555,13 @@
      bin/ and etc/ which $LAPS_SRC_ROOT constains the untarred namelists.  If 
      $LAPS_SRC_ROOT does not exist then a data/ subdirectory containing static/
      and cdl/ must exist for use by laps_localization.pl (ie., $LAPS_SRC_ROOT =
-     $LAPSINSTALLROOT). Even though it is possible to have $LAPS_SRC_ROOT = 
-     $LAPSINSTALLROOT = $LAPS_DATA_ROOT, this is not recommended since it does 
-     not allow multiple localizations. Templates always ensure that specific 
-     namelist modifications are merged with the untarred full namelists.  
-     Templates always ensure that specifics to a localization are merged into 
-     new software ports and new namelist variables (available with new software)
-     are merged into existing localizations.  
+     $LAPSINSTALLROOT). Even though it is possible to have $LAPS_SRC_ROOT/data = 
+     $LAPSINSTALLROOT/data = $LAPS_DATA_ROOT, this is not recommended since it 
+     does not allow multiple localizations. Templates always ensure that 
+     specific namelist modifications are merged with the untarred full 
+     namelists. Templates always ensure that specifics to a localization are 
+     merged into new software ports and new namelist variables (available with
+     new software) are merged into existing localizations.  
 
 
      Examples:
