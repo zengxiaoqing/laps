@@ -34,5 +34,9 @@ c       RADAR
         integer*4  MAX_RADAR_FILES
         parameter (MAX_RADAR_FILES = 20000)     
 
+c       Background
+        integer*4  MAX_BACKGROUND_FILES
+        parameter (MAX_BACKGROUND_FILES = 2000)     
+
 
 
