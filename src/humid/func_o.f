@@ -450,7 +450,7 @@ c     numerator of the J function.
 
 c     max_func_gvap is in cm (above) now divide by cm error to make
 c     dimensionless
-            max_func_gvap = max_func_gvap / 0.327 ! from SFOV worst case 
+            max_func_gvap = max_func_gvap / (0.327)**2 ! from SFOV worst case 
             func = func + max_func_gvap
 
          endif                  !weight function test
