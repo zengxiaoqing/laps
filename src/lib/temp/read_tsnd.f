@@ -30,7 +30,8 @@ cdis
 cdis 
 cdis 
 
-        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,sh_3d, ! Input
+        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,       ! Input
+     1                   sh_3d,pres_3d,                           ! Input
      1                   lat_pr,lon_pr,                           ! Input
      1                   lat,lon,                                 ! Input
      1                   ob_pr_t,                                 ! Output
@@ -90,6 +91,7 @@ c                               not exactly match the LAPS analysis time.
         real*4 heights_3d(imax,jmax,kmax)
         real*4 temp_3d(imax,jmax,kmax)
         real*4 sh_3d(imax,jmax,kmax)
+        real*4 pres_3d(imax,jmax,kmax)
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
 
@@ -252,7 +254,7 @@ c       1                ,t_diff
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,
      1                         max_snd,max_snd_levels,r_missing_data,     
-     1                         temp_3d,heights_3d)
+     1                         temp_3d,heights_3d,pres_3d)
 
                     call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
      1                         sh_interp_laps,p_interp_laps,
@@ -262,7 +264,7 @@ c       1                ,t_diff
      1                         lat_pr,lon_pr,i_ob,j_ob,
      1                         imax,jmax,kmax,
      1                         max_snd,max_snd_levels,r_missing_data,
-     1                         sh_3d,heights_3d)
+     1                         sh_3d,heights_3d,pres_3d)
 
                     tvir = ob_pr_t_obs(i_pr,level) + t_diff
                     p_pa = p_interp_laps
@@ -453,7 +455,7 @@ c       1                ,t_diff
      1                      lat_pr,lon_pr,i_ob,j_ob,
      1                      imax,jmax,kmax,
      1                      max_snd,max_snd_levels,r_missing_data,
-     1                      temp_3d,heights_3d)
+     1                      temp_3d,heights_3d,pres_3d)
 
                 tamb = ob_pr_t_obs(i_pr,level) + t_diff
 

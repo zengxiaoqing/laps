@@ -58,22 +58,24 @@ cdis
 
           if(i_obs .gt. 1)then
 
-            if(ob_pr_ht_obs(i_pr,i_obs-1) .le. heights_3d(i_ob,j_ob,leve
-     1l) .and.
-     1       ob_pr_ht_obs(i_pr,i_obs  ) .ge. heights_3d(i_ob,j_ob,level)
-     1 )then
+            if(ob_pr_ht_obs(i_pr,i_obs-1) .le. 
+     1                                       heights_3d(i_ob,j_ob,level) 
+     1                                .AND.
+     1       ob_pr_ht_obs(i_pr,i_obs  )   .ge. 
+     1                                       heights_3d(i_ob,j_ob,level)
+     1                                                             )then
 
                 h_lower  = ob_pr_ht_obs(i_pr,i_obs-1)
                 h_upper  = ob_pr_ht_obs(i_pr,i_obs  )
 
                 height_diff = h_upper - h_lower
 
-                fracl = (h_upper - heights_3d(i_ob,j_ob,level)) / height
-     1_diff
+                fracl = (h_upper - heights_3d(i_ob,j_ob,level)) 
+     1                 / height_diff
                 frach = 1.0 - fracl
 
                 t_interp = ob_pr_t_obs(i_pr,i_obs)   * frach
-     1           +       ob_pr_t_obs(i_pr,i_obs-1) * fracl
+     1                   + ob_pr_t_obs(i_pr,i_obs-1) * fracl
 
 !               Correct for the time lag
                 t_interp = t_interp + t_diff
@@ -95,7 +97,7 @@ cdis
      1                             lat_pr,lon_pr,i_ob,j_ob,
      1                             ni,nj,nk,
      1                             max_rs,max_rs_levels,r_missing_data,
-     1                             temp_3d,heights_3d)
+     1                             temp_3d,heights_3d,pres_3d)
 
 !       Profiler Stuff
         real lat_pr(max_rs)
@@ -108,33 +110,34 @@ cdis
 
         real*4 heights_3d(ni,nj,nk)
         real*4 temp_3d(ni,nj,nk)
+        real*4 pres_3d(ni,nj,nk)
 
         t_interp = r_missing_data
 
 !  ***  Interpolate the LAPS temps to the input RASS heights *******
         do k_laps = 2,nk
 
-            if( heights_3d(i_ob,j_ob,k_laps-1) .le. ob_pr_ht_obs(i_pr,k_
-     1rass)
-     1                       .and.
-     1        heights_3d(i_ob,j_ob,k_laps)   .ge. ob_pr_ht_obs(i_pr,k_ra
-     1ss)
-     1                                                           )then
+            if( heights_3d(i_ob,j_ob,k_laps-1) .le. 
+     1                                         ob_pr_ht_obs(i_pr,k_rass)
+     1                                    .AND.
+     1          heights_3d(i_ob,j_ob,k_laps)   .ge. 
+     1                                         ob_pr_ht_obs(i_pr,k_rass)
+     1                                                             )then
 
                 h_lower = heights_3d(i_ob,j_ob,k_laps-1)
                 h_upper = heights_3d(i_ob,j_ob,k_laps)
 
                 height_diff = h_upper - h_lower
 
-                fracl = (h_upper - ob_pr_ht_obs(i_pr,k_rass)) / height_d
-     1iff
+                fracl = (h_upper - ob_pr_ht_obs(i_pr,k_rass)) 
+     1                 / height_diff
                 frach = 1.0 - fracl
 
                 t_interp = temp_3d(i_ob,j_ob,k_laps)   * frach
-     1             +     temp_3d(i_ob,j_ob,k_laps-1) * fracl
+     1                   + temp_3d(i_ob,j_ob,k_laps-1) * fracl
 
-                p_interp = pressure_of_level(k_laps)   * frach
-     1             +     pressure_of_level(k_laps-1) * fracl
+                p_interp = pres_3d(i_ob,j_ob,k_laps)   * frach
+     1                   + pres_3d(i_ob,j_ob,k_laps-1) * fracl
 
              endif
 

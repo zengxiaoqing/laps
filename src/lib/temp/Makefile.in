@@ -41,7 +41,7 @@ RANLIB   = @RANLIB@
 # Define all source code to be compiled and placed in local library.
 
 SRC=insert_tsnd.f   puttmpanal.f    read_tsnd.f \
-    interp_rass.f   read_rass.f    adjust_heights.f
+    interp_rass.f   adjust_heights.f
 
 
 

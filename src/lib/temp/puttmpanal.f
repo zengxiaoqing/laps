@@ -75,6 +75,7 @@ cdis
         real*4 output_4d(ni,nj,nk,2)
 
         real*4 sh_3d(ni,nj,nk)     ! Local
+        real*4 pres_3d(ni,nj,nk)   ! Local
         real*4 temp_sfc_k(ni,nj)   ! Input
         real*4 pres_sfc_pa(ni,nj)  ! Input
         real*4 theta(nk)
@@ -221,33 +222,34 @@ cdis
         write(6,*) ' i4_filename = ', i4_filename
         write(6,*) ' asc9_tim = ', asc9_tim
 
-        call insert_tsnd(i4time_needed   ! Input
-     1               ,lat,lon            ! Input
-     1               ,heights_3d         ! Input
-     1               ,sh_3d              ! Input
-     1               ,temp_3d            ! Input/Output
-     1               ,ilaps_cycle_time   ! Input
-     1               ,l_use_raob         ! Input
-     1               ,i4time_raob_window ! Input
-     1               ,ni,nj,nk           ! Input
-     1               ,grid_spacing_m     ! Input
-     1               ,istatus)           ! Output
+        call get_pres_3d(i4time_needed,ni,nj,nk,pres_3d,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: Bad status returned from get_pres_3d'       
+            return
+        endif
 
+        call insert_tsnd(i4time_needed      ! Input
+     1                  ,lat,lon            ! Input
+     1                  ,heights_3d         ! Input
+     1                  ,sh_3d              ! Input
+     1                  ,pres_3d            ! Input
+     1                  ,temp_3d            ! Input/Output
+     1                  ,ilaps_cycle_time   ! Input
+     1                  ,l_use_raob         ! Input
+     1                  ,i4time_raob_window ! Input
+     1                  ,ni,nj,nk           ! Input
+     1                  ,grid_spacing_m     ! Input
+     1                  ,istatus)           ! Output
         if(istatus .ne. 1)then
             write(6,*)' Warning: Bad status returned from insert_tsnd'       
             return
         endif
 
 !       Insert Surface Temp at Lowest Levels
-        blayer_thk_pres = 5000. ! 7500.
-        pres_intvl = pressure_of_level(1) - pressure_of_level(2)
-
-!       This quantity limits the correction from LAPS surface data when we
-!       are below the ground so things don't get too out of hand.
-        frac_bias_max = (pres_intvl + blayer_thk_pres) / blayer_thk_pres
+        blayer_thk_pres = 5000. 
 
         write(6,*)' Inserting Surface Data in Lower Levels'
-     1             ,blayer_thk_pres,frac_bias_max
+     1             ,blayer_thk_pres
 
         do i = 1,ni
         do j = 1,nj
@@ -255,6 +257,18 @@ cdis
 !           Find Temp at Top of Boundary Lyr According to Upper Level Anal
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
             k_sfc = int(rk_sfc)
+            if(k_sfc .lt. 1)then
+                write(6,*)' Error, k_sfc = ',k_sfc
+                istatus = 0
+                return
+            endif
+
+            pres_intvl = pres_3d(i,j,k_sfc) - pres_3d(i,j,k_sfc+1)
+
+!           This quantity limits the correction from LAPS surface data when we
+!           are below the ground so things don't get too out of hand.
+            frac_bias_max = (pres_intvl + blayer_thk_pres) 
+     1                     / blayer_thk_pres
 
 !           QC Check (Compare MODEL Temps to LAPS Sfc Temp)
 !           For this check, interpolation in P space is sufficient
@@ -313,7 +327,7 @@ cdis
             k_sfc = max(k_sfc,1)
             frac_k_sfc = rk_sfc - k_sfc
             temp_sfc_intrpl = temp_3d(i,j,k_sfc  ) * (1.0 - frac_k_sfc)
-     1              + temp_3d(i,j,k_sfc+1) *        frac_k_sfc
+     1                      + temp_3d(i,j,k_sfc+1) *        frac_k_sfc
 
             sfc_bias = temp_sfc_eff - temp_sfc_intrpl
 

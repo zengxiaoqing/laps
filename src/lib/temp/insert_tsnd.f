@@ -34,6 +34,7 @@ cdis
      1               ,lat,lon                       ! Input
      1               ,heights_3d                    ! Input
      1               ,sh_3d                         ! Input
+     1               ,pres_3d                       ! Input
      1               ,temp_3d                       ! Input/Output
      1               ,ilaps_cycle_time              ! Input
      1               ,l_use_raob                    ! Input
@@ -72,6 +73,7 @@ cdis
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 temp_3d(ni,nj,nk)
         real*4 sh_3d(ni,nj,nk)
+        real*4 pres_3d(ni,nj,nk)
         real*4 wt_3d(ni,nj,nk)
         real*4 bias_obs_3d(ni,nj,nk)
         real*4 heights_3d(ni,nj,nk)
@@ -113,7 +115,8 @@ cdis
 
 !       Read in TSND and Temperature sonde data
 
-        call read_tsnd(i4time,heights_3d,temp_3d,sh_3d, ! Input
+        call read_tsnd(i4time,heights_3d,       ! Input
+     1                   temp_3d,sh_3d,pres_3d, ! Input
      1                   lat_tsnd,lon_tsnd,     ! Input
      1                   lat,lon,               ! Input
      1                   tsnd,                  ! Output
@@ -157,7 +160,8 @@ cdis
 !                   Convert from virtual temperature to temperature (inactive)
                     tvir = tsnd(i_tsnd,k)
                     sh = sh_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
-                    p_pa = pressure_of_level(k)
+                    p_pa = 
+     1                 pres_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)    
                     tamb = devirt_sh(tvir,sh,p_pa)
                 ELSE
                     sh = 0.
