@@ -42,7 +42,7 @@
 #
 # -K                   Runs just the executables for the Kalman filter
 #
-# -n                   Node type to be used with -q (default=comp)
+# -n                   Node type to be used with -q (default=ncomp)
 #
 # -w                   Option for creating the WFO big file when LAPS is 
 #                      running outside of the WFO environment.
@@ -189,7 +189,7 @@ if(defined $opt_p){
    &laps_tools::update_nl($LAPS_DATA_ROOT,"balance.nl","ADV_ANAL_BY_T_MIN",$opt_p);
 }
 
-my $node_type = "comp";
+my $node_type = "ncomp";
 
 #
 #  - The second argument is the time delay in hours to 
