@@ -2,8 +2,9 @@
 
 # routine to localize satellite usage
 
+# define Constants.inc
 
-
+ln -s ../../../src/include/Constants.inc
 
 if ($1 == 8) then
 
@@ -30,8 +31,5 @@ a.out
 cat g10_dry_control_file.dat GOES10_IMAGER_DRY_CONTROL_FILE.DAT >! Dry_Control_File.dat
 cat g10_wet_control_file.dat GOES10_IMAGER_WET_CONTROL_FILE.DAT >! Wet_Control_File.dat
 cat g10_ozo_control_file.dat GOES10_IMAGER_OZO_CONTROL_FILE.DAT >! Ozo_Control_File.dat
-
-
-
 
 endif
