@@ -82,6 +82,7 @@ main                                        ingest_sounding.f
         get_raob_data_af                    ingest_raob_sub_af.f 
         get_raob_data_cwb                   ingest_raob_sub_cwb.f
         get_raob_data_rtamps                ingest_raob_sub_rtamps.f (under const)
+    ingest_drpsnd                           ingest_drpsnd.f         (under const)
         get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f (under const)
     ingest_satsnd                           ingest_satsnd.f
         get_satsnd_afwa                     ingest_satsnd_afwa.f
