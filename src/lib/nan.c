@@ -53,7 +53,17 @@ typedef union
 } dnan; 
 
 #ifdef rs6000
-#define IsNANorINF(X)  (((dnan *)&(X))->nan_parts.exponent == 0x7f8 || ((dnan *)&(X))->nan_parts.exponent == 0x7fc)
+/*#  define NAN1 0x7f8
+#  define NAN2 0x7fc
+#  define NAN3 0x7ff
+#  define IsNANorINF(X)  ((((dnan *)&(X))->nan_parts.exponent == NAN1) || (((dnan *)&(X))->nan_parts.exponent == NAN2) || (((dnan *)&(X))->nan_parts.exponent == NAN3))
+*/
+#include <fp.h>
+#define IsNANorINF(X) (!finite((double) *x))
+#endif
+#ifdef alpha
+#include <math.h>
+#define IsNANorINF(X) (!finite((double) *x))
 #endif
 #ifdef hpux 
 #define IsNANorINF(X)  (((dnan *)&(X))->nan_parts.exponent == 0x7f8 || ((dnan *)&(X))->nan_parts.exponent == 0x7fa)
@@ -78,14 +88,14 @@ typedef union
 
 int nan(float *x)
 {
-  /*
+  /*  
   printf("%e %d %x\n",*x, IsNANorINF(*x),((dnan *)&(*x))->nan_parts.exponent );
 #ifdef IRIX
   if(IsNANorINF(*x)){
         printf("fp class: %d\n",fp_class_f(*x));
   }
 #endif
-  */
+*/
   return(IsNANorINF(*x));
 }
 
