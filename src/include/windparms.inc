@@ -8,7 +8,7 @@
         parameter (hor_radius = 35.)
 
         integer*4 MAX_PR,MAX_PR_LEVELS
-        parameter (MAX_PR = 30)
+        parameter (MAX_PR = 300)
         parameter (MAX_PR_LEVELS = 128)
 
 !       Weights in wind analysis
