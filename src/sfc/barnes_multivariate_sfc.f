@@ -162,9 +162,13 @@
         logical l_analyze(nk), l_use_ob, l_boundary(ni,nj)
 
         logical l_barnes_wide          ! Use 'barnes_wide' routine on boundary?
+!       data l_barnes_wide /.true./    
+
         logical l_struct_in,l_struct_out,l_not_struct_out ! Use data structures?
         data l_struct_out /.true./     ! Use data structures?
-!       data l_barnes_wide /.true./    
+
+        logical limit_analysis_increment
+        data limit_analysis_increment /.true./
 
         integer*4  n_fnorm
         dimension fnorm(0:n_fnorm)
@@ -287,6 +291,27 @@
         call stats(t_2d,ni,nj)
 
         write(6,*)' Limit of allowed increment should be ',bad
+
+        if(limit_analysis_increment)then
+            n_limited = 0
+            do i = 1,ni
+            do j = 1,nj
+                if(t_2d(i,j) .lt. -bad)then
+                    t_2d(i,j) = -bad
+                    n_limited = n_limited + 1
+                endif
+
+                if(t_2d(i,j) .gt. +bad)then
+                    t_2d(i,j) = +bad
+                    n_limited = n_limited + 1
+                endif
+            enddo ! j
+            enddo ! i
+
+            write(6,*)' Number of points with increment limited = '
+     1               ,n_limited
+
+        endif
 
         return
         end
