@@ -535,7 +535,7 @@ c ****  execute raob step if switch is on
 
 c    open file for laps temp data
         do k = 1,kk
-        varlt1(k) = 't  '
+        varlt1(k) = 't3 '
         enddo
 
         call read_laps (save_i4time,save_i4time,
