@@ -22,7 +22,10 @@ sub Get_env'fxa{ #'
     open(FXA,"$fxa_env_file") || return 0;
     @fxaenv = <FXA>;
     close(FXA);
-    $fxa_env_file.=".".`hostname`;
+    my $host = `hostname`;
+    $host =~ s/(^[^\.]+)\./$1/;
+    $fxa_env_file.=".".$host;
+    
     chomp($fxa_env_name);
     open(FXA,"$fxa_env_file");
     push(@fxaenv,<FXA>);
