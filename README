@@ -679,55 +679,17 @@
      run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
 
      Below are two mainly equivalent procedures for localizing LAPS to set
-     up one or more domains. The first is our original method for localization.
-     The second is a newer, more efficient (and highly recommended) method 
-     using domain "template" directories. You'll want to use either Method 1 or 
+     up one or more domains. The first is a newer, more efficient (and highly 
+     recommended) method using domain "template" directories. The second is our
+     original method for localization. You'll want to use either Method 1 or 
      Method 2 but not both.
 
-                        --- 2.2.6.1 Localization Method 1 ---
+                    --- 2.2.6.1 Localization Method 1 ---
 
-     For each domain you wish to create, run... 
-
-     prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl makedatadirs.pl --srcroot=$LAPS_SRC_ROOT --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --system_type=laps
-
-     where the path name $LAPS_DATA_ROOT must be named differently for each 
-     data domain if there is more than one. Recall that each domain can be set
-     up in a separate subdirectory under '/data_disk/laps'. Next, follow the 
-     setup and localization steps below.
-
-     The order of the command line arguments is important, but only the
-     first one is required. If for example a $LAPS_DATA_ROOT is not supplied, 
-     the dataroot tree location will default to where the LAPS binaries are 
-     installed via configure. Thus, the default value of $LAPS_DATA_ROOT is 
-     '$LAPSINSTALLROOT/data'.
-
-     The runtime parameters should be emplaced and/or modified within 
-     each $LAPS_DATA_ROOT directory tree prior to running the localization. 
-     More details on 'nest7grid.parms' and other parameter files are 
-     discussed in subsequent parts of Section 2. 
-
-     As one option you can edit the parameter files that are in 
-     '$LAPS_SRC_ROOT/data/static' and tailor them for your domain. If you have
-     '$LAPS_DATA_ROOT' different from '$LAPS_SRC_ROOT/data/static', then a
-     good alternative may be to copy any parameter files you need to edit into 
-     '$LAPS_DATA_ROOT/static' from '$LAPS_SRC_ROOT/data/static'.
-
-     Finally, you can create the static data files and look up tables specific 
-     to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
-     other runtime parameter files. Shown below is an example of running the 
-     localization for a particular laps domain. This should be repeated 
-     (with a unique dataroot) for each domain if there is more than one. 
-
-     prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl localize_domain.pl --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --which_type = 'laps'
-
-                    --- 2.2.6.2 Localization Method 2 ---
-
-     The second method is especially useful if you are using a separated
+     The first method is especially useful if you are using a separated
      data tree and/or multiple domains. It is also recommended if you are 
      doing repeated software updates. Once you learn this method it can save
-     a lot of time and errors that may occur in the course of using Method 1.
+     a lot of time and errors that may occur in the course of using Method 2.
 
                          SETTING RUNTIME PARAMETERS
 
@@ -845,6 +807,48 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            $LAPS_DATA_ROOT; localize_domain.pl merges $LAPSINSTALLROOT/ and
            regenerates static.nest7grid.
 </pre>
+
+                        --- 2.2.6.2 Localization Method 2 ---
+
+     This method is included partly for historical reasons and can be useful
+     if you haven't yet learned how to use template directories and/or the
+     separated $LAPS_DATA_ROOT (see method 1).
+
+     For each domain you wish to create, run... 
+
+     prompt> cd $LAPSINSTALLROOT/etc
+     prompt> perl makedatadirs.pl --srcroot=$LAPS_SRC_ROOT --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --system_type=laps
+
+     where the path name $LAPS_DATA_ROOT must be named differently for each 
+     data domain if there is more than one. Recall that each domain can be set
+     up in a separate subdirectory under '/data_disk/laps'. Next, follow the 
+     setup and localization steps below.
+
+     The order of the command line arguments is important, but only the
+     first one is required. If for example a $LAPS_DATA_ROOT is not supplied, 
+     the dataroot tree location will default to where the LAPS binaries are 
+     installed via configure. Thus, the default value of $LAPS_DATA_ROOT is 
+     '$LAPSINSTALLROOT/data'.
+
+     The runtime parameters should be emplaced and/or modified within 
+     each $LAPS_DATA_ROOT directory tree prior to running the localization. 
+     More details on 'nest7grid.parms' and other parameter files are 
+     discussed in subsequent parts of Section 2. 
+
+     As one option you can edit the parameter files that are in 
+     '$LAPS_SRC_ROOT/data/static' and tailor them for your domain. If you have
+     '$LAPS_DATA_ROOT' different from '$LAPS_SRC_ROOT/data/static', then a
+     good alternative may be to copy any parameter files you need to edit into 
+     '$LAPS_DATA_ROOT/static' from '$LAPS_SRC_ROOT/data/static'.
+
+     Finally, you can create the static data files and look up tables specific 
+     to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
+     other runtime parameter files. Shown below is an example of running the 
+     localization for a particular laps domain. This should be repeated 
+     (with a unique dataroot) for each domain if there is more than one. 
+
+     prompt> cd $LAPSINSTALLROOT/etc
+     prompt> perl localize_domain.pl --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --which_type = 'laps'
 
                   ---  2.3    Raw data ingest   ---
 
