@@ -613,9 +613,6 @@ C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
         endif
         I4_elapsed = ishow_timer()
 
-!       Cloud cover QC check
-        call qc_clouds_3d(clouds_3d,NX_L,NY_L,KCLOUD)
-
 C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
         if(l_use_co2_mode1)then
             call insert_co2ctp(i4time,cld_hts,heights_3d                  ! I
