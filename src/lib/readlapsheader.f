@@ -86,7 +86,7 @@ C
 C
         REAL*4          MSG_FLAG
 C
-        CHARACTER*50    DIR             ! Input Directory to read data from
+        CHARACTER*150   DIR             ! Input Directory to read data from
         CHARACTER*31    EXT             ! Input File name ext (up to 31 chars)
         CHARACTER*31    EXT_I           !INPUT input file name ext
         CHARACTER*3     VAR(200)       ! Output Variables
