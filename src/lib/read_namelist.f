@@ -152,17 +152,18 @@ c
 c -------------------------------------------------------------
 c
       subroutine get_background_info(bgpaths,bgmodels
-     +     ,oldest_forecast,max_forecast_delta,use_analysis)
+     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel)
       implicit none
-      integer maxbgmodels
-      parameter (maxbgmodels=10)
+
+      include 'bgdata.inc'
       character*150 nest7grid
       character*256 bgpaths(maxbgmodels)
+      character*132 cmodel(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
       integer oldest_forecast, max_forecast_delta
       logical use_analysis
       namelist /background_nl/bgpaths,bgmodels
-     +         ,oldest_forecast,max_forecast_delta,use_analysis
+     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
 
       max_forecast_delta=6
       oldest_forecast=18
