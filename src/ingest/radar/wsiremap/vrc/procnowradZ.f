@@ -82,7 +82,7 @@ c
       integer ipix
       integer istatus
       integer qcstatus
-      integer fcount
+      integer fcount,icnt_out
       integer bad_data_flag
 
       istatus = -1
@@ -114,11 +114,13 @@ c
          write(6,*)'Grid ratio .le. 0.5' !0.75'
          write(6,*)'Use pixel avg to get dbz'
 
+         icnt_out = 0
+
          DO J=1,JMAX
          DO I=1,IMAX
 
-            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
-     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+c           if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
+c    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 
 c
 c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
@@ -136,11 +138,12 @@ c****************************************************************************
 
                if(istart.le.0 .or. jstart.le.0 .or.
      &            iend.gt.nelem .or. jend.gt.nline)then
-                  write(*,*)'insufficient data for lat/lon sector'
-                  write(*,1020)i,j
- 1020             format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
-                  write(6,1021)elem_mx,elem_mn,line_mx,line_mn
- 1021             format(1x,'elem mx/mn  line mx/mn ',4f7.1)
+                  icnt_out=icnt_out+1
+c                 write(*,*)'insufficient data for lat/lon sector'
+c                 write(*,1020)i,j
+c1020             format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+c                 write(6,1021)elem_mx,elem_mn,line_mx,line_mn
+c1021             format(1x,'elem mx/mn  line mx/mn ',4f7.1)
                else
 c
 c **** FIND PIXELS AROUND GRID POINT
@@ -208,7 +211,7 @@ cccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 cccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
 cccd           endif
 
-            endif            !r_llij's = r_missing_data
+c           endif            !r_llij's = r_missing_data
 
          enddo
          enddo
@@ -216,6 +219,8 @@ cccd           endif
          write(6,*)'Max num WSI pix for avg: ',maxpix
          write(6,*)'Number of LAPS gridpoints missing',
      &              fcount
+         write(6,*)'Number of grid points without data for ',
+     &'this domain: ',icnt_out
 
       else
 c       ---------------------------------------
@@ -240,8 +245,8 @@ c
          DO J=1,JMAX
          DO I=1,IMAX
 
-            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
-     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+c           if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
+c    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses ref_base if out of bounds.
@@ -260,7 +265,8 @@ c              else
 c                 laps_dbz(i,j) = ref_base
 
                endif
-            endif
+
+c           endif
 
          enddo
          enddo
