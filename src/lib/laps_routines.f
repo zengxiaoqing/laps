@@ -1275,6 +1275,8 @@ c
 c
 c*****************************************************************************
 c
+        include 'lapsparms.for' ! MAX_BACKGROUND_FILES
+
 	integer ni,nj
 	real bkg_field(ni,nj)
 	real bkg_field_dum(ni,nj)
@@ -1286,7 +1288,7 @@ c
 	character units*10, lvlc*4, comment*125
 c
 	integer max_files
-	parameter(max_files = 300)
+	parameter(max_files = MAX_BACKGROUND_FILES)
 	character fnames(max_files)*256
 	character filespec*255, filename13*13
 c
@@ -1585,6 +1587,8 @@ c
 c
 c*****************************************************************************
 c
+        include 'lapsparms.for' ! MAX_BACKGROUND_FILES
+
 	integer ni,nj
 	real bkg_u(ni,nj), bkg_v(ni,nj)
 c
@@ -1595,7 +1599,7 @@ c
 	character units*10, lvlc*4, comment*125
 c
 	integer max_files
-	parameter(max_files = 300)
+	parameter(max_files = MAX_BACKGROUND_FILES)
 	character fnames(max_files)*256
 	character filespec*255, filename13*13
 c
@@ -2272,7 +2276,7 @@ c
 
 	write(6,909) amean, num
 	write(iunit,909) amean, num
- 909	format(/,'    Mean difference: ',f10.2,' over ',i4,' stations.')
+ 909	format(/,' Mean difference:    ',f10.2,' over ',i4,' stations.')       
 
 	write(6,910) ave_diff, num
 	write(iunit,910) ave_diff, num
