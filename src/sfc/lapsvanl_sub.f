@@ -277,10 +277,9 @@ c
 !          on mean of observation increments.
 !
 !       2) Start spline with incremental field as analyzed by 
-!          'barnes_multivariate' routine. Coding is in progress.
+!          'barnes_multivariate' routine. 
 !
 !       3) Use barnes_multivariate routine as complete substitute to spline.
-!          Not yet coded.
 
         analysis_mode = 2
 
@@ -438,7 +437,7 @@ c
      1             , amean_start, ' to start analysis.'
 	    call constant(t, amean_start, imax,jmax)
 
-        elseif(analysis_mode .eq. 2)then
+        elseif(analysis_mode .ge. 2)then
             write(6,*)' Calling barnes_multivariate_sfc to start spline'       
 
             call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
@@ -476,90 +475,98 @@ c
 	   endif
 	enddo !i
 	enddo !j
-c
-c.....  Set the weights for the spline.
-c
-c  We need parity with respect to obs and filtering. Since number
-c of obs can change depending on varialbe ajust alf accordingly
-c so that it is repersentative of the inverse of observation
-c error**2 times the number of working gridpoints divided by the number of ob
-c points so that the term is roughly comprable to the beta term
-	alf = beta_in*(imax-4)*(jmax-4)/n_obs_var
-	alf2a = alf2a_in
-	beta = beta_in
-	a = a_in
-	if(isat_flag .eq. 0) a = 0.
-c
-	write(6,9995) alf, beta, alf2a, a
- 9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f12.4)
-c
-c.....  Now do the spline.
-c
-	iteration = .true.
 
-	do it=1,itmax
-	  cormax = 0.
-	  if(iteration) then
-c	print *,' it = ', it
-	     do j=3,jmax-2
-	     do i=3,imax-2
-		alfo = alf
-		alf2o = alf2a
-		ao = a
+        if(analysis_mode .le. 2)then
 c
-		if(to(i,j) .eq. 0.) alfo = 0.
-		if(s(i,j).eq.0. .or. s(i-1,j).eq.0. .or. s(i+1,j).eq.0.
-     &             .or. s(i,j-1).eq.0. .or. s(i,j+1).eq.0.) then
-		   ao = 0.
-		   sxx = 0.
-		   syy = 0.
-		else
-		   sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
-		   syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
-		endif
+c.....      Set the weights for the spline.
 c
-		dtxx = t(i+1,j) + t(i-1,j) - 2. * t(i,j)
-		dtyy = t(i,j+1) + t(i,j-1) - 2. * t(i,j)
-		d4t = 20. * t(i,j) 
-     &            - 8. * (t(i+1,j) + t(i,j+1) + t(i-1,j) + t(i,j-1))
-     &            + 2.*(t(i+1,j+1)+t(i+1,j-1) + t(i-1,j+1) + t(i-1,j-1))
-     &            + (t(i+2,j) + t(i-2,j) + t(i,j+2) + t(i,j-2))
-		d2t = dtxx + dtyy
-		dtx = (t(i+1,j) - t(i-1,j)) * .5
-		dty = (t(i,j+1) - t(i,j-1)) * .5
+c           We need parity with respect to obs and filtering. Since number
+c           of obs can change depending on varialbe ajust alf accordingly
+c           so that it is repersentative of the inverse of observation
+c           error**2 times the number of working gridpoints divided by the 
+c           number of ob points so that the term is roughly comprable to the 
+c           beta term
+	    alf = beta_in*(imax-4)*(jmax-4)/n_obs_var
+	    alf2a = alf2a_in
+	    beta = beta_in
+	    a = a_in
+	    if(isat_flag .eq. 0) a = 0.
+c
+	    write(6,9995) alf, beta, alf2a, a
+ 9995	    format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f12.4)       
+c
+c.....      Now do the spline.
+c
+	    iteration = .true.
+
+	    do it=1,itmax
+	      cormax = 0.
+	      if(iteration) then
+c	         print *,' it = ', it
+	         do j=3,jmax-2
+	         do i=3,imax-2
+		    alfo = alf
+		    alf2o = alf2a
+		    ao = a
+c
+		    if(to(i,j) .eq. 0.) alfo = 0.
+		    if(s(i,j).eq.0. .or. s(i-1,j).eq.0. 
+     &                              .or. s(i+1,j).eq.0.
+     &                 .or. s(i,j-1).eq.0. .or. s(i,j+1).eq.0.) then       
+		       ao = 0.
+		       sxx = 0.
+		       syy = 0.
+		    else
+		       sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
+		       syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
+		    endif
+c
+		    dtxx = t(i+1,j) + t(i-1,j) - 2. * t(i,j)
+		    dtyy = t(i,j+1) + t(i,j-1) - 2. * t(i,j)
+		    d4t = 20. * t(i,j) 
+     &                - 8. * (t(i+1,j) + t(i,j+1) + t(i-1,j) + t(i,j-1))
+     &                + 2.*(t(i+1,j+1)+t(i+1,j-1) 
+     &                + t(i-1,j+1) + t(i-1,j-1))
+     &                + (t(i+2,j) + t(i-2,j) + t(i,j+2) + t(i,j-2))
+		    d2t = dtxx + dtyy
+		    dtx = (t(i+1,j) - t(i-1,j)) * .5
+		    dty = (t(i,j+1) - t(i,j-1)) * .5
 c       
-		res = d4t - ao * (d2t - sxx - syy) / beta
-     &               + alfo/beta * (t(i,j) - to(i,j)) ! stations
-     &               + alf2o/beta * t(i,j)            ! background
-		cortm = 20. + ao*4./beta + alfo/beta + alf2o/beta
-		tcor = abs(res / cortm)
-		t(i,j) = t(i,j) - res / cortm * ovr
-		if(tcor .le. cormax) go to 5
-		cormax = tcor
-		ress(it) = tcor
-c	write(6,1010) i,j,res,cortm,tcor
-c1010	format(1x,2i5,3e12.4)
-c	write(6,1009)beta,d4t,d2t,dtxy,dtx,dty,gam,sxx,syy,sxy,sx,sy
- 5		continue
-	     enddo !i
-	     enddo !j
+		    res = d4t - ao * (d2t - sxx - syy) / beta
+     &                   + alfo/beta * (t(i,j) - to(i,j)) ! stations
+     &                   + alf2o/beta * t(i,j)            ! background
+		    cortm = 20. + ao*4./beta + alfo/beta + alf2o/beta
+		    tcor = abs(res / cortm)
+		    t(i,j) = t(i,j) - res / cortm * ovr
+		    if(tcor .le. cormax) go to 5
+		    cormax = tcor
+		    ress(it) = tcor
+c	            write(6,1010) i,j,res,cortm,tcor
+c1010	            format(1x,2i5,3e12.4)
+c	            write(6,1009)beta,d4t,d2t,dtxy,dtx,dty,gam,sxx
+c    1                          ,syy,sxy,sx,sy
+ 5		    continue
+	         enddo !i
+	         enddo !j
 c
-c	write(6,1000) it,cormax
-	     if(cormax .lt. err) iteration = .false.
-	     corhold = cormax
-	     ithold = it
-	  endif
-	enddo !it
+c	         write(6,1000) it,cormax
+	         if(cormax .lt. err) iteration = .false.
+	         corhold = cormax
+	         ithold = it
+	      endif ! iteration
+	    enddo !it
 c
-cc	do j=1,jmax
-cc	   do i=1,imax
-cc	      if(to(i,j) .ne. 0.) then
-cc		 write(6,7119) i,j,to(i,j)
-cc	      endif
-cc	   enddo
-cc	enddo
+cc	    do j=1,jmax
+cc	       do i=1,imax
+cc	          if(to(i,j) .ne. 0.) then
+cc		     write(6,7119) i,j,to(i,j)
+cc	          endif
+cc	       enddo
+cc	    enddo
 
- 7119	format(2i5,f10.2)
+ 7119	    format(2i5,f10.2)
+
+        endif ! Do the spline
 
 cc	return
 

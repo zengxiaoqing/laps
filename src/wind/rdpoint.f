@@ -294,8 +294,8 @@ cdis
 
 100     goto10
 
-900     write(6,*)' End of RDPOINT ',ext_in,' file
-     1           , Cumulative # obs = ',n_point_obs
+900     write(6,*)' End of RDPOINT ',ext_in,' file: '
+     1           ,'Cumulative # obs = ',n_point_obs
 
         close(lun_in)
         close(lun_pig)
