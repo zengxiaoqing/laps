@@ -60,6 +60,9 @@ c
 c
 c     ------------------------- BEGIN ---------------------------------
 
+        albedo_min=1.0
+        albedo_max=0.0
+
         write(6,*)' Subroutine vis2albedo:'
 c
 c       write(6,28)
