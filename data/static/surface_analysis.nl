@@ -70,7 +70,7 @@ c      parameters can be added to this namelist to override the default values
 c      set in the code...
 c
 c       QC parms: # of standard deviations 
-c       bad_p  = 3.0 	        ! for reduced pressure
+c       bad_p  = 2.5 	        ! for reduced pressure
 c       bad_mp = 4.0 	        ! for MSL pressure
 c       bad_t  = 2.5 	        ! for temperature
 c       bad_td = 2.0 	        ! for dewpoint
