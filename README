@@ -1155,8 +1155,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      0000 UTC Jan 1, 1970. As an example, this value is generated in line 2 of 
      '$LAPS_DATA_ROOT/time/c_time.dat'. Line 1 of 
      '$LAPS_DATA_ROOT/time/systime.dat' is similar except that it is offset by
-     +31536000 seconds. Best results are obtained when using a time near or
-     just after the midpoint of the raw data tarfile times.
+     +31536000 seconds. Best results are obtained when using a time at or
+     near the latest raw data tarfile times.
 
      One can also initiate individual executables (bin directory) listed in the
      'sched.pl' to run on the test data. This often helps in getting a better
@@ -1165,7 +1165,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      The time of the run is specified in '$LAPS_DATA_ROOT/time/systime.dat'. 
      This can be modified if needed if you want to try a slightly different 
      time from the one supplied. To do this, interactively run the script
-     '$LAPSINSTALLROOT/etc/systime.pl' and write the numerical output to
+     '$LAPSINSTALLROOT/etc/systime.pl' and write the standard output to
      '$LAPS_DATA_ROOT/time/systime.dat'.
 
      Note that for any given process or set of processes, deviations from the 
