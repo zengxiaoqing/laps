@@ -549,6 +549,7 @@ cdoc                            calls read_multiradar_3dref.
         real*4 heights_3d(imax,jmax,kmax)
         real*4 radar_2dref(imax,jmax)
         real*4 closest_vxx(imax,jmax)
+        real*4 closest_vrc(imax,jmax)
 
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
@@ -733,17 +734,28 @@ cdoc                            calls read_multiradar_3dref.
         if(radarext(1:3) .eq. 'vrc' .or. radarext(1:3) .eq. 'all')then       
 50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
 
-            var_2d = 'REF'
             readext = 'vrc'
+            var_2d = 'REF'
             call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,readext
      1                          ,var_2d,units_2d,comment_2d,imax,jmax
      1                          ,radar_2dref,0,istatus_vrc)
 
             write(6,*)' istatus_vrc = ',istatus_vrc
 
-            closest_vrc = 180000.  ! This can later be made into an array
-
             if(istatus_vrc .eq. 1 .or. istatus_vrc .eq. -1)then       
+                var_2d = 'DIS'
+                call get_laps_2d(i4_ret,readext
+     1                          ,var_2d,units_2d,comment_2d,imax,jmax      
+     1                          ,closest_vrc,istatus_dis)
+
+                closest_vrc = 180000. ! This can be activated by commenting out
+
+                if(istatus_dis .ne. 1)then
+                    write(6,*)' ERROR in get_radar: istatus_dis = '
+     1                       ,istatus_dis
+                    goto900
+                endif
+
                 if(l_parse(comment_2d,'WSI'))then
                     radar_name = 'WSI '
                     write(6,*)' Read radar ',radar_name
@@ -771,7 +783,9 @@ cdoc                            calls read_multiradar_3dref.
 
 !                       Set distant 3D radar points to msg to select NOWRAD/vrc
                         if(closest_vxx(i,j) .ne. r_missing_data
-     1               .and. closest_vxx(i,j) .gt. closest_vrc )then       
+!    1               .and. closest_vxx(i,j) .gt. 
+!    1                                    closest_vrc(i,j) + 5000.)then       
+     1               .and. closest_vxx(i,j) .gt. closest_vrc(i,j) )then       
                             istatus_3dref_a(i,j) = 0
                         endif
 
