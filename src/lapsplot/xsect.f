@@ -294,6 +294,9 @@ cdis
         vymin2 = .50 - (.50-vymin) * 1.25
         vymax2 = .50 + (vymax-.50) * 1.25
 
+!       vymin3 = .50 - (.50-vymin) * 1.20
+!       vymax3 = .50 + (vymax-.50) * 1.20
+
         if(vymin .eq. .10)then
 !           iyl_remap = 13
 !           iyh_remap = 8
@@ -692,19 +695,19 @@ c read in laps lat/lon and topo
                 call plot_cont(field_vert_diff,scale,clow,chigh,cint,
      1               asc9_tim_3dw,       
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
-     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call array_range(field_vert_diff,NX_L,NY_L,rmin,rmax
+                call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
      1                          ,r_missing_data)
 
-                call ccpfil(field_vert_diff,NX_L,NY_L,rmin,rmax,'hues'
+                call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax,'hues'
      1                     ,n_image)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
      1                                                    ,i_overlay)
-                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+                call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
 
             endif
 
@@ -2221,11 +2224,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         call set(0., 1., vymin2, vymax2, 0.,1.,0.,1.,1)
 
 !       Write bottom label
-        if(i_label_overlay .le. 1)then
-            ity = 35
-            call pwrity(cpux(320),cpux(ity),c33_label,33,1,0,0)
-            call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
-        endif
+!       if(i_label_overlay .le. 1)then
+!           ity = 35
+!           call pwrity(cpux(320),cpux(ity),c33_label,33,1,0,0)
+!           call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
+!       endif
+
+        call write_label_lplot(100,94,c33_label,a9time,i_label_overlay)       
 
         if(i_map .eq. 0)then
 
@@ -2295,7 +2300,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 
 !           Put in lat/lon of endpoints
-            x = rleft
+            x = rleft-1.0
             y = bottom - r_height * .03
             write(c7_string,2017)lat_1d(1)
             call pwrity (x, y, c7_string, 7, 0, 0, 0)
@@ -2303,7 +2308,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             write(c7_string,2017)lon_1d(1)
             call pwrity (x, y, c7_string, 7, 0, 0, 0)
 
-            x = right
+            x = right+1.0
             y = bottom - r_height * .03
             write(c7_string,2017)lat_1d(NX_C)
             call pwrity (x, y, c7_string, 7, 0, 0, 0)
@@ -2473,9 +2478,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                                  / float(NZ_C-ibottom) + 1.
 
                         c2_cloud_type = c2_cloud_types(i_cloud_type)
-                        call upcase(c2_cloud_type,c2_cloud_type)
+!                       call upcase(c2_cloud_type,c2_cloud_type)
                         write(6,*)i_cloud_type,c2_cloud_type,x,y
-                        call pwrity (x, y, c2_cloud_type, 2, 0, 0, 0)
+!                       call pwrity (x, y, c2_cloud_type, 2, 0, 0, 0)
+                        CALL PCMEQU(x, y, c2_cloud_type,.0063,0,0)       
                     endif
 
                 enddo ! k
@@ -2603,11 +2609,11 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1             , bottom - r_height/8., top   + r_height/8. ,1)
 
            x = pos_sta
-           write(6,*)'     Labelling ',c3_sta,pos_sta
+           write(6,*)'     Labeling ',c3_sta,pos_sta
 
-           call line(x,bottom,x,bottom - .015 * r_height)
+           call line(x,bottom,x,bottom - .004 * r_height)
 
-           y = bottom - .025 * r_height
+           y = bottom - .010 * r_height
            call upcase(c3_type,c3_type)
 
            if(l_arrival_gate)then
@@ -2618,8 +2624,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
 2039       format(1x,a3,'-',a3)
 
-!          call pwrity ((x+1.75), y, c9_string, 9, 0, 0, 0)
-           call pwrity ((x+0.15), y, c9_string, 9, 0, 0, 0)
+!          call pwrity ((x+0.15), y, c9_string, 9, 0, 0, 0)
+           call pcmequ ((x+0.15), y, c9_string, .0050, 0, 0)
 
            if(.not. l_atms)then
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
@@ -2646,7 +2652,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                i4time_label = i4time_ref/laps_cycle_time*laps_cycle_time
      1                                          -laps_cycle_time
 
-               y = bottom - .025 * r_height
+               y = bottom - .015 * r_height
 
                call label_other_stations(i4time_label,standard_longitude       
      1                                  ,y,xsta,lat,lon,NX_L,NY_L
@@ -3220,15 +3226,19 @@ c
                         write(c9_string,2038)nint(ran*10.)
      1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
 2038                    format(i2,a2,a3)
-                        call pwrity ((stapos+0.6), y, c9_string
-     1                                                  , 9, 0, 0, 0)
+!                       call pwrity ((stapos+0.6), y, c9_string
+!    1                                                  , 9, 0, 0, 0)
+                        call pcmequ ((stapos+0.8), y, c9_string
+     1                               , .0060, 0, 0)
                     else
                         write(c9_string,2039)nint(ran*10.)
      1                    ,icompass(i_cardinal_pt),stations(i)(1:3)
 2039                    format(i2,a2,' ',a3)
 
-                        call pwrity ((stapos+.15), y, c9_string
-     1                                                  , 9, 0, 0, 0)
+!                       call pwrity ((stapos+.15), y, c9_string
+!    1                                                  , 9, 0, 0, 0)
+                        call pcmequ ((stapos+.35), y, c9_string
+     1                               , .0060, 0, 0)
                     endif
 
 
@@ -3238,7 +3248,7 @@ c
 11                  format(i4,2f6.1,f6.3,f6.1,1x,a3,4f6.1,1x,a9,i2)
 
                     call line(stapos,bottom,stapos
-     1                       ,bottom - .015 * r_height)
+     1                       ,bottom - .012 * r_height)
 !                   write(6,*) ' Call line',stapos,bottom,r_height
 
                 endif

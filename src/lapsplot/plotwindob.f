@@ -342,3 +342,39 @@ c
  
         return
         end
+
+        subroutine plot_circle_fill(u,v,radius,frac)
+
+        DATA DEGRAD/.01745329/
+
+        if(frac .lt. 0.10)return
+        
+        if(frac .ge. 0.10 .and. frac .le. 0.50)then
+!           Add straight line
+            call line(u,v-radius,u,v+radius)
+        endif
+
+        if(frac .gt. .50 .and. frac .lt. 0.9375)then ! BKN
+!           Overcast
+            do iaz = -20,+20,40
+                az = float(iaz) * DEGRAD
+                x1 = u + radius * sin(az)
+                y1 = v - radius * cos(az)
+                x2 = u + radius * sin(az)
+                y2 = v + radius * cos(az)
+                call line(x1,y1,x2,y2)
+            enddo
+        endif
+
+
+        if(frac .ge. 0.9375)then ! Overcast - fill full circle
+            do iaz = 0,270,90
+                az = float(iaz) * DEGRAD
+                x = u + radius * sin(az)
+                y = v + radius * cos(az)
+                call line(u,v,x,y)
+            enddo
+        endif
+
+        return
+        end

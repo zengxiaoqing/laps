@@ -5202,7 +5202,7 @@ c
         character*2 c_field
         character*3 c3_name, c3_presob
 
-!       Declarations for 'read_surface_old' call
+!       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
         real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
      1          ,store_hgt(maxstns,5)
@@ -5214,6 +5214,8 @@ c
         Character   obstype(maxstns)*8
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
 
+        character reptype(maxstns)*6, atype(maxstns)*6
+
 !       Declarations for 'read_sfc_precip' call
 	real*4 pcp1(maxstns), pcp3(maxstns), pcp6(maxstns)
 	real*4 pcp24(maxstns)
@@ -5221,6 +5223,8 @@ c
 	character filetime*9, infile*256, btime*24
 	character stations_s(maxstns)*20, provider(maxstns)*11
 	character dum*132
+
+        logical l_parse
 
         call get_filespec('lso',2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_lso)
@@ -5248,15 +5252,21 @@ c
 
         endif
 
-        call read_surface_old(infile,maxstns,atime,n_meso_g,
-     &           n_meso_pos,
-     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
-     &           n_obs_g,n_obs_pos_g,
-     &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
+!       call read_surface_old(infile,maxstns,atime,n_meso_g,
+!    &           n_meso_pos,
+!    &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
+!    &           n_obs_g,n_obs_pos_g,
+!    &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
+!    &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
+!    &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
+!    &           store_emv,
+!    &           store_amt,store_hgt,vis_s,obstime,istatus)
+
+        call read_surface_sa(infile,maxstns,atime,
+     &           n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
      &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
      &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
-     &           store_emv,
-     &           store_amt,store_hgt,vis_s,obstime,istatus)
+     &           store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
 100     write(6,*)'     n_obs_b',n_obs_b
 
@@ -5341,6 +5351,10 @@ c
 
             if(iflag .ge. 1)then
 
+                w1 = dd_s(i)
+                w2 = ff_s(i)
+                w3 = ffg_s(i)
+
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
                 call s_len(stations(i),len_sta)
@@ -5354,8 +5368,11 @@ c
                 charsize = .0040 / zoom_eff
 
 !               call pwrity(xsta, ysta-du*3.5, c3_name, 3, -1, 0, 0)     
-                CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
-     1                      charsize,ANGD,CNTR)
+
+                if(iflag_cv .ne. 1)then
+                    CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+     1                          charsize,ANGD,CNTR)
+                endif
 
                 relsize = 1.1
 
@@ -5373,14 +5390,43 @@ c
                     pressure = r_missing_data
 
                 elseif(iflag_cv .eq. 1)then ! Ceiling & Visibility
-                    temp = badflag
                     if(vis_s(i) .ne. badflag)then
                         dewpoint = vis_s(i)
                     else
                         dewpoint = badflag
                     endif
 
-                    pressure = r_missing_data
+                    nlyr = kloud(i)
+
+                    if(nlyr .ge. 1)then
+                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+     1                              charsize,ANGD,CNTR)
+                    endif
+
+                    pressure = float(nlyr)        ! number of cloud layers
+                    w1       = store_hgt(i,1)     ! height of 1st layer
+                    if(nlyr .ge. 2)w2 = store_hgt(i,2)      ! 2nd layer
+                    if(nlyr .ge. 3)w3 = store_hgt(i,3)      ! 3rd layer
+
+                    if(nlyr .ge. 1)then                    
+                        if(l_parse(store_amt(i,nlyr),'CLR'))then
+                            temp = 0.0
+                        elseif(l_parse(store_amt(i,nlyr),'SKC'))then
+                            temp = 0.0
+                        elseif(l_parse(store_amt(i,nlyr),'FEW'))then
+                            temp = 0.1
+                        elseif(l_parse(store_amt(i,nlyr),'SCT'))then
+                            temp = 0.3
+                        elseif(l_parse(store_amt(i,nlyr),'BKN'))then
+                            temp = 0.7
+                        elseif(l_parse(store_amt(i,nlyr),'OVC'))then
+                            temp = 1.0
+                        else
+                            write(6,*)' Unrecognized cloud fraction'
+     1                               ,store_amt(i,nlyr)
+                            temp = 0.0
+                        endif
+                    endif
 
                 elseif(c_field(2:2) .ne. 'c')then ! Fahrenheit
                     temp = t_s(i)
@@ -5413,7 +5459,7 @@ c
 
                 endif
 
-                call plot_mesoob(dd_s(i),ff_s(i),ffg_s(i)
+                call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
      1                 ,lat,lon,ni,nj,relsize,zoom,11,du2
@@ -5540,19 +5586,19 @@ c
         if(jsize_b .eq. 2)then
             y_1 = y_1 - .025 - .035 * float(i_label-1)
         else
-            y_1 = y_1 - rsize_b*.0045 - rsize_b*.007
+            y_1 = y_1 - rsize_b*.0045 - rsize_b*.0075 ! .0072
      1                              * float(i_label-1)
         endif
 
-        rsize = .011
+        rsize = .010 ! .011
 
 !       ix = 320
-        ix = 120
+        ix = 130
         iy = y_1 * 1024
 !       call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
         CALL PCHIQU (cpux(ix),cpux(iy),c33_label,rsize,0,-1.0)
 
-        ix = 710
+        ix = 705
         iy = y_1 * 1024
 !       call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
         CALL PCHIQU (cpux(ix),cpux(iy),asc_tim_24(1:17),rsize,0,-1.0)

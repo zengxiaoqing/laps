@@ -144,9 +144,16 @@ c
             endif           
 
         elseif(iflag_cv .eq. 1)then ! C&V plot
-            call plot_circle(u,v,du*0.8)
+!           Plot outer circle (use p for the number of layers?)
+            if(p .ge. 1.0)then
+                call plot_circle(u,v,du*0.8) 
 
-!           Plot Visibility
+!               Plot cloud cover (using t to hold the variable)
+                call plot_circle_fill(u,v,du*0.8,t)
+
+            endif ! number of layers
+
+!           Plot Visibility (using td to hold the variable)
             if(td.gt.-75. .and. td.lt.100.) then
                write(td1,100,err=31) nint(td)
                call left_justify(td1)
