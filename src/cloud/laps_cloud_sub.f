@@ -384,7 +384,9 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
+        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a
+     1                      ,i4_sat_window,i4_sat_window_offset
+     1                      ,istatus)
         if(istatus .ne. 1)then
             write(6,*)' laps_cloud_sub: Error getting cloud parms'
             stop
@@ -644,12 +646,14 @@ C READ IN SATELLITE DATA
         enddo
 
         call get_vis(i4time,solar_alt,l_use_vis                          ! I
+     1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis)                                          ! I
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
+     1       i4_sat_window,i4_sat_window_offset,                        ! I
      1       tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
      1       solar_alt,solar_ha,solar_dec,                              ! I
      1       cloud_frac_co2_a,                                          ! O

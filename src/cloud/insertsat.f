@@ -33,6 +33,7 @@ c
 c
         subroutine insert_sat(i4time,cldcv,cldcv_sao,cld_hts,rlat,rlon,
      1  pct_req_lvd_s8a,default_clear_cover,                             ! I
+     1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
 !    1  cloud_frac_vis_a,istat_vis,
      1  solar_alt,solar_ha,solar_dec,                                    ! I
@@ -178,8 +179,9 @@ c
         ext = lvd_ext
         var = 'S8A'
         ilevel = 0
-        call get_laps_2dvar(i4time-60,970,i4time_nearest,EXT,var,units
-     1                      ,comment,imax,jmax,tb8_k,ilevel,istatus)
+        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
+     1                     ,i4time_nearest,EXT,var,units
+     1                     ,comment,imax,jmax,tb8_k,ilevel,istatus)
         if(istatus .ne. 1)then
             if(pct_req_lvd_s8a .gt. 0.)then
                 write(6,*)

@@ -31,6 +31,7 @@ cdis
 cdis
 
         subroutine get_vis(i4time,solar_alt,l_use_vis              ! Input
+     1                    ,i4_sat_window,i4_sat_window_offset      ! Input
      1                    ,cloud_frac_vis_a,albedo,ihist_alb       ! Output
      1                    ,ni,nj,nk,r_missing_data                 ! Input
      1                    ,istatus)                                ! Output
@@ -85,8 +86,9 @@ cdis
         ext = lvd_ext
         var = 'ALB'
         ilevel = 0
-        call get_laps_2dvar(i4time-60,970,i4time_nearest,EXT,var,units
-     1                          ,comment,ni,nj,albedo,ilevel,istatus)
+        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window
+     1                     ,i4time_nearest,EXT,var,units
+     1                     ,comment,ni,nj,albedo,ilevel,istatus)
         write(6,*)' istatus from albedo data = ',istatus
         if(istatus .ne. 1 .and. istatus .ne. -1)then
             write(6,*)' Warning: could not read albedo - '
