@@ -94,6 +94,8 @@ c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
+      istatus=0
+
       call lvd_file_specifier(chtype,ispec,istat)
       goto(10,12,11,12,12)ispec
 10    istart=i_start_vis(jtype,isat)
@@ -210,6 +212,7 @@ C     END DO
 
 C     CLOSE(9)
 
+      istatus = 1
       goto 1000
 
 99    Write(6,*)'Error Reading GWC file'

@@ -71,7 +71,7 @@ c
          goto 1000
       endif
       call read_gwc_header(c_filename(1:n),STRPIX,STRSCNL,STPPIX,
-     +    STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH,
+     +    STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH, 
      +   GOALPHA,STRBDY1,STRBDY2,STPBDY1,STPBDY2,BEPIXFC,BESCNFC,
      +   FSCI,DECIMAT,istatus)
       if(istatus.eq.0)then
@@ -81,20 +81,24 @@ c
          goto 1000
       endif
 
-      write(c_filetime(1:7),111)reqobstm
-111   format(i7)
-      do i=1,7
-         if(c_filetime(i:i).eq.' ')then
-            c_filetime(i:i)='0'
-         endif
-      enddo
-      call make_fnam_lp(i4time_current,cfname,istatus)
-      c_yr = cfname(1:2)
-      c_jday = c_filetime(1:3)
-      c_hhmm = c_filetime(4:7)
-      c_filetime=c_yr//c_jday//c_hhmm
+c     write(c_filetime(1:7),111)reqobstm
+c111   format(i7)
+c     do i=1,7
+c        if(c_filetime(i:i).eq.' ')then
+c           c_filetime(i:i)='0'
+c        endif
+c     enddo
+c     call make_fnam_lp(i4time_current,cfname,istatus)
+c     c_yr = cfname(1:2)
+c     c_jday = c_filetime(1:3)
+c     c_hhmm = c_filetime(4:7)
+c     c_filetime=c_yr//c_jday//c_hhmm
+c     call cv_asc_i4time(c_filetime,i4time_data)
 
-      call cv_asc_i4time(c_filetime,i4time_data)
+c
+c put check in here for latest file time in lvd subdirectory.
+c
+      i4time_data=reqobstm
 
       i4time_diff = 0  !i4time_current-i4time_data    <---- Don't forget to un-comment.
       if(i4time_diff.gt.i_delta_t)then
@@ -122,10 +126,8 @@ c
          write(6,*)'Got gwc satellite data'
       else
          write(6,*)'Error reading gwc sat data - Process_SDHS_sub'
-         goto 1000
       endif
 
-      istatus = 1
       goto 1000
 
 902   write(6,*)'Returning without new data'
