@@ -66,12 +66,13 @@ c
       Integer     i1,j1
       Integer     x_step
       Integer     y_step
+      Integer     xres,yres
       Integer     cstatus
       Integer     istatus
       Integer     ustatus
       Integer     wstatus
       Integer     IERR
-      Integer     INSTR
+      Integer     instr
       Integer     i,j,ii,jj
       Integer     n1,n2,nn,nc
       Integer     ils,ile
@@ -174,17 +175,14 @@ c
      &                         csattype,
      &             c_channel_types(kchl,jtype,isat),
      &             path_to_raw_sat(kchl,jtype,isat),
-     &                         ewCycles,
-     &                         ewIncs,
-     &                         nsCycles,
-     &                         nsIncs,
+     &                         ewCycles,ewIncs,
+     &                         nsCycles,nsIncs,
      &                         f_time,
      &                         c_imc,
-     &                         start_pix,
-     &                         start_line,
+     &                         xres,yres,
+     &                         start_pix,start_line,
      &                         orbAt,
-     &                         SatSubLAT,
-     &                         SatSubLON,
+     &                         SatSubLAT,SatSubLON,
      &                         decimat,
      &                         nx,ny,
      &                         ustatus)
@@ -192,6 +190,7 @@ c
       if(ustatus.ne.0)then
          if(ustatus.eq.1)then
             print*,'GVAR parameters not obtained cannot proceed'
+            istatus =-1
             goto 1000
          else
             goto 901
@@ -244,7 +243,7 @@ c
          rl_div = y_step
       endif
 
-      INSTR=1          !1=Imager, 2=Sounder
+      instr=1          !1=Imager, 2=Sounder
       pi=3.141592653589793
       radtodeg=180.d0/pi
 
@@ -253,7 +252,7 @@ c
       t50_8=time_50
       t = f_time /60. + 7305. * 24. * 60.
 
-      call SETCON(INSTR,nsCycles,nsIncs,ewCycles,ewIncs)
+      call SETCON(instr,nsCycles,nsIncs,ewCycles,ewIncs)
       call LMODEL(t,t50_8,OrbAt,imc,SatSubLAT,SatSubLON)
 
       write(6,*)'Sat Subpoint lat (deg) ',SatSubLAT*radtodeg
@@ -280,7 +279,7 @@ c           write(6,*)'Lat/Lon ', xlat2(i,j),xlon2(i,j)
 
          else
 
-            call EVSC2L(INSTR,ELEV,SCAN,RL,RP)
+            call EVSC2L(instr,ELEV,SCAN,RL,RP)
 
 c save corners
             if(i.eq.1.and.j.eq.1)then
@@ -463,9 +462,9 @@ c compute image resolution in meters. This done with the original line/pix
 c values since we use gimloc here.
 c ------------------------------------------------------------------------
 c
-      call compute_gvarimage_resolution(rp_div,rl_div,
+      call compute_sat_res_m(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
-     &r_img_res_m,istatus)
+     &instr,r_img_res_m,istatus)
 
       goto(71,72,73,72,72)indx
 
@@ -473,8 +472,8 @@ c
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
-         r_resolution_x_vis(jtype,isat) = r_img_res_m
-         r_resolution_y_vis(jtype,isat) = r_img_res_m
+         r_resolution_x_vis(jtype,isat) = r_img_res_m  !float(xres)
+         r_resolution_y_vis(jtype,isat) = r_img_res_m  !float(yres)
          n_pixels_vis(jtype,isat) = nx
          n_lines_vis(jtype,isat)  = ny
 
@@ -484,8 +483,8 @@ c
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
-         r_resolution_x_ir(jtype,isat) = r_img_res_m
-         r_resolution_y_ir(jtype,isat) = r_img_res_m
+         r_resolution_x_ir(jtype,isat) = r_img_res_m  !float(xres)
+         r_resolution_y_ir(jtype,isat) = r_img_res_m  !float(yres)
          n_pixels_ir(jtype,isat) = nx
          n_lines_ir(jtype,isat)  = ny
 
@@ -495,8 +494,8 @@ c
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
-         r_resolution_x_wv(jtype,isat) = r_img_res_m
-         r_resolution_y_wv(jtype,isat) = r_img_res_m
+         r_resolution_x_wv(jtype,isat) = r_img_res_m  !float(xres)
+         r_resolution_y_wv(jtype,isat) = r_img_res_m  !float(yres)
          n_pixels_wv(jtype,isat) = nx
          n_lines_wv(jtype,isat)  = ny
 

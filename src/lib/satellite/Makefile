@@ -36,7 +36,7 @@ SRC=bcd_to_int.f \
     cnvtint.f \
     cnvtvxfl.f \
     cnvvxdb.f \
-    cmpsatres_m.f \
+    cmpsatres.f \
     expand_domain.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \

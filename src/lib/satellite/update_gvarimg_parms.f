@@ -6,7 +6,7 @@
      &                        nsCycles,
      &                        nsIncs,
      &                        frameStartTime,
-     &                        imc,
+     &                        imc,x_res,y_res,
      &                        nw_vis_pix,
      &                        nw_vis_line,
      &                        orbitAttitude,
