@@ -1,0 +1,56 @@
+#!/bin/csh -x
+
+# routine to localize satellite usage
+
+#define current working directory
+
+echo " "
+echo "Starting routine to localize optran"
+echo " "
+echo " Path to static is"
+
+set Path_to_static = $2
+echo $Path_to_static
+echo " "
+
+echo "Path to exe is"
+set Path_to_exe = $1
+echo $Path_to_exe
+echo " "
+
+#set current working dirctory to static/optranlib
+cd $Path_to_static/optranlib
+
+# get goes satellite number from moisture_switch.nl, store in GOES_NUMBER
+cat $Path_to_static/moisture_switch.nl | grep GOES_SWITCH | grep -v c >! /tmp/scratch.txt
+set GOES_NUMBER = `awk  '{print substr($3,1,length($3)-1)}' /tmp/scratch.txt`
+
+
+echo "GOES_NUMBER found is: "$GOES_NUMBER
+# process goes 8
+if ($GOES_NUMBER == 8) then
+
+echo "processing for "$GOES_NUMBER
+
+cat g08coef.dat GOES8_IMAGER_ASCII_COEFF.DAT >! coef.dat
+
+$Path_to_exe/binary_coeff.x
+
+cat g08_dry_control_file.dat GOES8_IMAGER_DRY_CONTROL_FILE.DAT >! Dry_Control_File.dat
+cat g08_wet_control_file.dat GOES8_IMAGER_WET_CONTROL_FILE.DAT >! Wet_Control_File.dat
+cat g08_ozo_control_file.dat GOES8_IMAGER_OZO_CONTROL_FILE.DAT >! Ozo_Control_File.dat
+
+# process goes 10
+else if ($GOES_NUMBER == 10) then
+
+echo "processing for "$GOES_NUMBER
+
+cat g10coef.dat GOES10_IMAGER_ASCII_COEFF.DAT >! coef.dat
+
+$Path_to_exe/binary_coeff.x
+
+cat g10_dry_control_file.dat GOES10_IMAGER_DRY_CONTROL_FILE.DAT >! Dry_Control_File.dat
+cat g10_wet_control_file.dat GOES10_IMAGER_WET_CONTROL_FILE.DAT >! Wet_Control_File.dat
+cat g10_ozo_control_file.dat GOES10_IMAGER_OZO_CONTROL_FILE.DAT >! Ozo_Control_File.dat
+
+endif
