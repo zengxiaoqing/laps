@@ -786,27 +786,34 @@ c truth profile and compute an average analysis error
 
          call get_wind_parms(l_dum,l_dum,l_dum
      1,rdum,rdum,rdum,rdum,max_pr,idum,idum,istatus)
-
+c
+c ---------------------------------------------------------------------------
+c nsnd = the max number of profiles (soundings); used for array dimensioning
+c        purposes.
+c n_snd= the number of soundings found in the ingest files. For "pin", this
+c        is always one while for "snd" 1 <= n_snd <= max_pr, and n_snd is 
+c        returned from routine readprg.
+c ---------------------------------------------------------------------------
+c
          if(cpads_type.eq.'pin')then
             nsnd=1
-            mxz=500
+            n_snd=1
          else
             nsnd=max_pr
-            mxz=nz
          endif
 
-         allocate(udrop(nsnd,mxz),udropc(mxz)
-     &           ,vdrop(nsnd,mxz),vdropc(mxz)
-     &           ,tdrop(nsnd,mxz),tdropc(mxz)
-     &           ,rri(nsnd,mxz),rrj(nsnd,mxz),rrk(nsnd,mxz)
-     &           ,rrit(nsnd,mxz),rrjt(nsnd,mxz),rrkt(nsnd,mxz)
-     &           ,rrii(nsnd,mxz),rrjj(nsnd,mxz)
-     &           ,rric(mxz),rrjc(mxz))
+         allocate(udrop(nsnd,nz),udropc(nz)
+     &           ,vdrop(nsnd,nz),vdropc(nz)
+     &           ,tdrop(nsnd,nz),tdropc(nz)
+     &           ,rri(nsnd,nz),rrj(nsnd,nz),rrk(nsnd,nz)
+     &           ,rrit(nsnd,nz),rrjt(nsnd,nz),rrkt(nsnd,nz)
+     &           ,rrii(nsnd,nz),rrjj(nsnd,nz)
+     &           ,rric(nz),rrjc(nz))
 
          if(cpads_type.eq.'pin')then
 
             call readpig(a9_time,nx,ny,nz,lat,lon
-     1,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,mxz,istatus)
+     1,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,istatus)
 
          elseif(cpads_type.eq.'snd')then
 
@@ -886,8 +893,8 @@ c
       sumu=0
       sumv=0
       print*,'k rri rrj, udrop, vdrop, u and v at drop point'
-      icount=0
       do l=1,n_snd
+       icount=0
        do k=1,nz
         if(rri(l,k).eq.smsng.or.rrj(l,k).eq.smsng)then
          icount=icount+1
@@ -946,34 +953,44 @@ c
         endif
        enddo 
 1112   format (1x,i3,8f6.2)
-       print*,' snond ',l, 'ballistic u v diff ',sumu,sumv
+       print*,' sonde ',l, 'ballistic u v diff ',sumu,sumv
       enddo ! on l for each sonde
 
 c -----------------------------------------------------------------
 c routine to find closest sonde to cneter of grid (drop point) for
-c error estimation
-      cx=nx/2+.5 
-      cy=ny/2+.5
-      do k=1,mxz
-       ddmin=1.e30
-       lmin=0
-       do l=1,n_snd
-        if(rri(l,k).ne.smsng.and.rrj(l,k).ne.smsng) then      
-         dd=(cx-rri(l,k))**2+(cy-rrj(l,k))**2
-         if(dd.lt.ddmin) then
-          lmin=l
-          ddmin=dd
-         endif
-        endif
-       enddo 
-       if(lmin.ne.0) then
-        udropc(k)=udrop(lmin,k)
-        vdropc(k)=vdrop(lmin,k)
-        tdropc(k)=tdrop(lmin,k)
-        rric(k)=rri(lmin,k)
-        rrjc(k)=rrj(lmin,k)
-       endif
-      enddo ! on k all levels
+c error estimation, when more than one sounding
+
+      if(n_snd.gt.1)then
+         cx=nx/2+.5 
+         cy=ny/2+.5
+         do k=1,nz
+          ddmin=1.e30
+          lmin=0
+          do l=1,n_snd
+           if(rri(l,k).ne.smsng.and.rrj(l,k).ne.smsng) then
+             dd=(cx-rri(l,k))**2+(cy-rrj(l,k))**2
+             if(dd.lt.ddmin) then
+                lmin=l
+                ddmin=dd
+             endif
+           endif
+          enddo 
+          if(lmin.ne.0) then
+             udropc(k)=udrop(lmin,k)
+             vdropc(k)=vdrop(lmin,k)
+             tdropc(k)=tdrop(lmin,k)
+             rric(k)=rri(lmin,k)
+             rrjc(k)=rrj(lmin,k)
+          endif
+         enddo ! on k all levels
+      else
+         rric=rri(1,:)
+         rrjc=rrj(1,:)
+         udropc=udrop(1,:)
+         vdropc=vdrop(1,:)
+         tdropc=tdrop(1,:)
+      endif
+c
 c subr profile fills array erru(u),errub(v) with analysis error 
 c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
 c and model error
@@ -3565,7 +3582,7 @@ c     return
       end
 c-------------------------------------------------------------------
       subroutine readpig(a9_time,nx,ny,nz,lat,lon
-     &,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,mxz,istatus)
+     &,udrop,vdrop,tdrop,rri,rrj,rrit,rrjt,istatus)
 
 c this subroutine reads the .pig and .tmg files to recover observed  
 c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
@@ -3588,6 +3605,7 @@ c
       real lat(nx,ny),lon(nx,ny)
 
       integer mxz
+      parameter (mxz=500)
       
       allocate(ri(mxz),rj(mxz),rk(mxz))
       allocate(dd(mxz),ff(mxz),tt(mxz))
@@ -3728,7 +3746,7 @@ c since dropsonde is reverse order, flip it.
          return
        endif
        if(rk(1).gt.rk(nn))then
-          call flip_sonde(mxz,nn,uu,vv,ri,rj,rk)
+          call flip_sonde(nz,nn,uu,vv,ri,rj,rk)
        endif
 
 c now interpolate to the laps levels in rk space
@@ -3868,7 +3886,6 @@ c      print*,'over function sm st ', sm(mmg+1), st(mmg+1)
       endif
       if(mmg.ge.4) print*, 'not set up for four+ distributions'
 
-         
 c generate gaussian random number
       icnt=0
       slast=0
@@ -3883,13 +3900,14 @@ c generate gaussian random number
        rat=ep-ep1
        cat=alog(ran1(iii))
 c      print*,'xo,ep,ep1,rat,cat,iii', icnt+1,xo,ep,ep1,rat,cat,iii
+       icnt=icnt+1
        if(cat.lt.rat) then
         rm=xo+sm(mmg+1)
+c       print*,'Normal run rejection method. cnt= ',icnt
         return
        else
-        icnt=icnt+1
         if(icnt.eq.100) then
-         print*,'rejection method problems: set rm to consensus mean'
+c        print*,'Problem run rejection method: set to mean. cnt= ',icnt
          rm=sm(mmg+1)
          return
         endif
