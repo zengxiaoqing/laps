@@ -2167,7 +2167,7 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	GOES 8/9 cloud drift winds in ASCII format
+	GOES 8/9 cloud drift winds in NESDIS (ASCII) format
         AFWA format also allowed.
 
 Parameter namelist file: 'static/cloud_drift.nl'
