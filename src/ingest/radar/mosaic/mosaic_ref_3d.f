@@ -26,6 +26,7 @@ c
       Real*4    rheight_radar(maxradars)
       Real*4    ri(maxradars)
       Real*4    rj(maxradars)
+      real*4    dist_radar_m(maxradars)
 
       Logical   l_low_level
       Logical   found_height
@@ -71,7 +72,7 @@ c
          do j = 1,ny
          do i = 1,nx
 
-            r_min_dist = sqrt(float(nx*nx+ny*ny))
+            r_min_dist_m = sqrt(float(nx*nx+ny*ny))*grid_spacing_cen_m       
 c
 c find the valid radar with the minimum distance to the grid point in question.
 c
@@ -91,10 +92,12 @@ c
 
                rijdist=sqrt(ridist*ridist + rjdist*rjdist)
 
-               if(rijdist .lt. r_min_dist .and. l_valid)then
+               dist_radar_m(l) = rijdist * grid_spacing_cen_m
+
+               if(dist_radar_m(l) .lt. r_min_dist_m .and. l_valid)then       
                   lr=l
-                  r_min_dist = rijdist
-                  closest_radar_m(i,j) = r_min_dist*grid_spacing_cen_m       
+                  r_min_dist_m = dist_radar_m(l)
+                  closest_radar_m(i,j) = r_min_dist_m       
                endif
 
             enddo ! l
