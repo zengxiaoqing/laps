@@ -245,15 +245,15 @@ C
 
 
           write(6,1)a9_timeObs,a9_recptTime 
-          write(11,1)a9_timeObs,a9_recptTime 
+          write(31,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
           write(6,2)lat(1,i),lon(1,i),altitude
-          write(11,2)lat(1,i),lon(1,i),altitude
+          write(31,2)lat(1,i),lon(1,i),altitude
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
           write(6,33)
-          write(11,33)
+          write(31,33)
  33       format(' Cloud layer')
 
 !         Write out cloud base/top in feet and cloud amount in eighths
@@ -288,7 +288,7 @@ C
 
 !             if(istatus .eq. 1)then
 !                 write(6,*)' Above layer written to PIN file'
-                  write(11,3)rbase,rtop,ieighths
+                  write(31,3)rbase,rtop,ieighths
 !             endif
 
           enddo ! ilyr
