@@ -1118,9 +1118,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            http://www-sdd.fsl.noaa.gov/MADIS/
 
      Dropsondes (snd):
-           A Dropsonde ingest module is currently being developed for the
-           CWB database. We may include modules for other databases in the 
-           future, such as NIMBUS, WFO/AWIPS, and AVAPS.          
+           A Dropsonde ingest module has been developed for the CWB database. 
+           Under current development is an ingest module for AVAPS. We may 
+           include modules for other databases in the future, such as NIMBUS
+           or WFO/AWIPS.          
 
                       ----   2.3.7  Satellite ---
 
@@ -2519,7 +2520,7 @@ Inputs:
 
         Satellite Soundings in AFWA format
 
-        Dropsonde (may need software changes to integrate this in)
+        Dropsonde (AVAPS or CWB format)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              sounding temp, dewpoint, wind
