@@ -70,7 +70,7 @@ my @LAPS_EXE;
 
 if($opt_s){ # "surface only"
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x 
+                  ingest_pro.exe obs_driver.x sfc_qc.exe 
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
 		  wind.exe 
@@ -79,7 +79,7 @@ if($opt_s){ # "surface only"
 
 }else{      # Full product set
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x 
+                  ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
 		  wind.exe 
@@ -124,7 +124,7 @@ my $node_type = "comp";
 #  set the systime.dat file, if you're data arrives more than 1 hour 
 #  behind it's valid time set this variable to delay the laps cycle.
 #
-&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
+my $yyjjjhhmm=&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 #
 # This sends the stdout to the run log file
 #
@@ -230,7 +230,7 @@ foreach $exe (@LAPS_EXE){
         if($exe eq "qbalpe.exe"){
             foreach $wgi_script (@WHAT_GOT_IN){
                 print $t." Running what-got-in script $wgi_script.pl\n";
-                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi 2>&1";
+                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1";
                 &forksub($sys,$lockfile);
             }
         }
@@ -309,7 +309,7 @@ foreach $exe (@LAPS_EXE){
 
         if($exe eq "qbalpe.exe"){ # Add perl commands to run what-got-in scripts into TFILE
             foreach $wgi_script (@WHAT_GOT_IN){
-                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi 2>&1\n";
+                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1\n";
             }
         }
 
@@ -450,6 +450,8 @@ sub systime{
     my $jjj = &laps_tools::julian($year,$mon+1,$mday);
 
     $jjj="0".$jjj while(length($jjj)< 3);
+
+    my $yyjjjhhmm = "$year$jjj$hour$min";
       
     open(TFILE,">$DATAROOT/time/c_time.dat");
     print TFILE " $year$jjj$hour$min\n";
@@ -464,6 +466,8 @@ sub systime{
     print TFILE "$mday-$MON[$mon]-$yyyy $hour$min\n";
     print TFILE "$year$jjj\n";
     close(TFILE);
+
+    return ($yyjjjhhmm);
 }
 
 
