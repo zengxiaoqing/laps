@@ -11,7 +11,7 @@ c
         integer maxobs ! raw stations in NetCDF files
         integer maxsta ! processed stations for SND file 
 
-        parameter (maxlvls=50)
+        parameter (maxlvls=10)
         parameter (maxobs=10000) ! Raw stations in NetCDf files
 
         character*(*) path_to_local_data, local_format
@@ -45,6 +45,8 @@ c
         real*4     temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
         real*4     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
 	character  stname(maxobs)*6
+
+        logical    l_closest_time(maxobs)
 c
 c.....  Output arrays.
 c
@@ -60,9 +62,7 @@ c
         real*4     temp_c_s(maxsta,maxlvls)
         real*4     dewpoint_c_s(maxsta,maxlvls)      
         real*4     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
-	character  stname_s(maxsta)*6
-
-        logical    l_closest_time(maxsta)
+	character  stname_s(maxsta)*5
 
 c.....  Unknown vars.
 	character  save_stn(maxsta)*6
@@ -144,12 +144,12 @@ c
 	    call read_local_tower(data_file,len_path+13,          ! I 
      &         maxobs, maxlvls,                                   ! I
      &         r_missing_data,                                    ! I
-     &         nsnd_file, nlvl, lvls_m(1,ix),                     ! O
+     &         nsnd_file, nlvl(ix), lvls_m(1,ix),                 ! O
      &         staelev(ix), stalat(ix), stalon(ix),               ! O
      &         temp_c(ix,1), dewpoint_c(ix,1),                    ! O
      &         height_m(ix,1),                                    ! O
 c    &         pressure_mb(ix,1),                                 ! O
-c    &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
+     &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
      &         a9time_ob(ix), stname(ix), wmoid(ix),              ! O
      &         istatus)                                           ! O
  
@@ -189,7 +189,7 @@ c
             do j = 1,nsnd_all
                 if(wmoid(j) .eq. wmoid(i))then
 !                   Calculate time of station j
-!                   call i4tim_fnam_lp(a9time_ob(j),i4time_j,istatus)
+                    call i4time_fname_lp(a9time_ob(j),i4time_j,istatus)
                     i4_diff = abs(i4time_j - i4time_sys)
                     if(i4_diff .lt. i4_closest)then
                         j_closest = j
@@ -200,6 +200,7 @@ c
 
             if(i .eq. j_closest)then
                 l_closest_time(i) = .true.
+                write(6,*)' Closest time: ',i,nlvl(i),a9time_ob(i)
             else
                 l_closest_time(i) = .false.
             endif
@@ -210,7 +211,8 @@ c
 
         nsta = 0
         do i = 1,nsnd_all
-            if(nlvl(i) .gt. 0 .and. nlvl(i) .le. maxlvls)then 
+            if(nlvl(i) .gt. 0 .and. nlvl(i) .le. maxlvls 
+     1                        .and. l_closest_time(i)     )then 
 
 !               Valid sounding - use for output
                 nsta = nsta + 1
@@ -220,7 +222,7 @@ c
                 stalat_s(nsta,:) = stalat(i)           
                 stalon_s(nsta,:) = stalon(i)           
                 staelev_s(nsta) = staelev(i)           
-                stname_s(nsta) = stname(i)(1:6)           
+                stname_s(nsta) = stname(i)(1:5)           
 
                 wmoid_s(nsta) = wmoid(i)           
                 a9time_ob_s(nsta,:) = a9time_ob(i)           
@@ -308,7 +310,8 @@ c
      &         nobs, nlvl, lvls_m,                                ! O
      &         staelev, stalat, stalon,                           ! O
      &         temp_c, dewpoint_c, height_m,                      ! O
-c    &         pressure_pa, dir_deg, spd_mps                      ! O
+c    &         pressure_pa,                                       ! O 
+     &         dir_deg, spd_mps,                                  ! O
      &         a9time_ob, stname, wmoid,                          ! O
      &         istatus)                                           ! O
 
@@ -389,6 +392,9 @@ c     read dim level -> nlvls
         print *, NF_STRERROR(nf_status)
         print *,'Error reading dim level'
       endif
+
+c LW
+      print *, 'nlvls / nobs ',nlvls,' / ',nobs
 
 c     verify nlvls .lt. maxlvls
       if (nlvls .gt. maxlvls) then
@@ -486,6 +492,9 @@ c     read var longitude(recNum) -> stalon(maxobs)
         istatus = 0
         return
       endif 
+
+c LW
+      print *, 'b4 read levels: nlvls / nobs ',nlvls,' / ',nobs
 
 c     read var levels(recNum,level) -> lvls_m(maxlvls,maxobs)
       start(1) = 1
@@ -652,12 +661,16 @@ c     read _fillValue for windDir
       lev_set = 0
       do obno = 1, nobs
 
-        if(obno .le. 100)then
+        if(obno .le. 50
+     1     .or. (obno .eq. (obno/100 * 100) )     
+     1     .or. (obno .ge. 1700 .and. obno .le. 1800)      
+     1                                                 )then
             id = 1
         else
             id = 0
         endif
 
+        if(id.eq.1)write(6,*)
         if(id.eq.1)write(6,*)' SA: obno,stalat,stalon,staelev'
      1                 ,obno,stalat(obno),stalon(obno),staelev(obno)       
 
@@ -702,7 +715,7 @@ c       read var stationName(obno,staNamLen) -> stationName
 
 c       truncate stname(obno)  
         call left_justify(stationName)
-        stname(obno)  = stationName(1:6)
+        stname(obno) = stationName(1:6)
 
 c       read var stationId(recNum,providerIDLen) -> c_staid 
         count(1) = pi_len 
@@ -760,13 +773,15 @@ c       convert string to iwmostanum(maxobs) (cvt S to 0 and N to 1)
         if(id.eq.1)write(6,*) 'LW c_staid wmoid >',c_staid(1:lensta),
      1'<  >',wmoid(obno),'<'
         
-        if(id.eq.1)print *,'LW obno nobs nlvls ',obno,nobs,nlvls
+        if(id.eq.1)print *,'LW obno nobs nlvls a9time staname'
+     1            ,obno,nobs,nlvls,a9time_ob(obno),' ',stationName(1:20)       
+     1            ,' ',stname(obno)
 
         lvl = 1
         do while ((lvl.le.nlvls).and.(lev_set.eq.0))
 
           if(id.eq.1)print *, 'LW levels_fill lvls_m ',
-     1levels_fill, lvls_m(lvl,obno)
+     1               levels_fill, lvls_m(lvl,obno)
 
           if(lvls_m(lvl,obno) .ne. levels_fill)then
 
@@ -807,7 +822,7 @@ c           Convert temp_k to temp_c
               endif
             endif
 
-      if(id.eq.1)
+            if(id.eq.1)
      1      write(6,*) 'LW temp_k temp_c',temp_k,'   ',temp_c(obno,lvl)
 
 c           read var relHumidity(recNum,level) -> rh
@@ -829,8 +844,8 @@ c           Convert rh to dewpoint
               endif
             endif
 
-      if(id.eq.1)
-     1  write(6,*) 'LW rh_pct dpt_c ',rh_pct,'   ',dewpoint_c(obno,lvl)       
+            if(id.eq.1)write(6,*)'LW rh_pct dpt_c ',rh_pct,'   '
+     1                ,dewpoint_c(obno,lvl)       
 
 c           read var windSpeed(recNum,level) -> ws
             nf_status = NF_GET_VAR1_REAL(nf_fid,ws_id,index_2,ws)
