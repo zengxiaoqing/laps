@@ -263,7 +263,8 @@ cdis
 
         integer*4 istat_39_a(NX_L,NY_L)
         integer*4 istat_39_add_a(NX_L,NY_L)
-        integer*4 istat_vis_a(NX_L,NY_L)
+        integer*4 istat_vis_potl_a(NX_L,NY_L)
+        integer*4 istat_vis_added_a(NX_L,NY_L)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
 
@@ -697,7 +698,7 @@ C READ IN SATELLITE DATA
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
-     1              ,istat_vis_a,istat_vis)                              ! O
+     1              ,istat_vis_potl_a,istat_vis)                         ! O
 
         call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data
      1                   ,NX_L,NY_L,istat_39_a)
@@ -710,7 +711,8 @@ C READ IN SATELLITE DATA
      1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
-     1       cloud_frac_vis_a,istat_vis_a,                              ! I
+     1       cloud_frac_vis_a,istat_vis_potl_a,                         ! I
+     1       istat_vis_added_a,                                         ! O
      1       solar_alt,solar_ha,solar_dec,                              ! I
      1       lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,            ! I
      1       rlaps_land_frac,                                           ! I
