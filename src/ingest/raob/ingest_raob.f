@@ -202,7 +202,8 @@
               write(6,*)
 
 !             Read from the raw file and write to the opened SND file
-              if(c8_raob_format(1:6) .eq. 'NIMBUS')then
+              if(c8_raob_format(1:6) .eq. 'NIMBUS' .or.
+     1           c8_raob_format(1:3) .eq. 'WFO'         )then
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest
