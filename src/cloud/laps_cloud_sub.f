@@ -142,11 +142,14 @@ cdis
         logical l_use_vis_partial, l_use_39
         logical l_use_co2_mode1, l_use_co2_mode2
         logical l_evap_radar
+        logical l_trust_narrowband ! should narrowband be trusted (i.e. not 
+                                   ! QC'd out) in the absence of other data?
 
         logical lstat_co2_a(NX_L,NY_L)
 
         data l_packed_output /.false./
         data l_evap_radar /.false./
+        data l_trust_narrowband /.false./ ! overriden to .true. for NOWRAD
 
         logical l_sao_lso
         data l_sao_lso /.true./ ! Do things the new way?
@@ -543,8 +546,16 @@ C READ IN RADAR DATA
      1                 heights_3d,                                       ! I
      1                 radar_ref_3d,                                     ! O
      1                 rlat_radar,rlon_radar,rheight_radar,radar_name,   ! O
+     1                 iqc_2dref,                                        ! O
      1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,  ! O  
      1                 istat_radar_3dref_a)                              ! O
+
+            if(iqc_2dref .eq. 1)then
+                write(6,*)' Good quality 2d radar (e.g. NOWRAD)'
+                l_trust_narrowband = .true.
+            else
+                write(6,*)' Lesser quality 2d radar (e.g. narrowband)'      
+            endif
 
 !       else
 !           write(6,*)'radar data outside time window'
@@ -791,7 +802,6 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
                             endif
                            goto150
                         endif
-
                     enddo ! k
 
 !                   Add third dimension to radar echo
@@ -807,19 +817,25 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
                         k_cloud_top = max(k_ref,k_cloud_top)
                     else
-                        k_cloud_top = k_ref
+                        if(l_trust_narrowband)then
+                            k_cloud_top = k_ref
+                        else
+                            k_cloud_top = 1 ! Will set radar to no echo
+                        endif
                     endif
 
                     do k = NZ_L,k_cloud_top,-1
-                        radar_ref_3d(i,j,k) = -10.
+                        radar_ref_3d(i,j,k) = ref_base
                     enddo ! k
 
                 endif ! Radar echo at this grid point
 
+!               if(k_cloud_top .gt. 1)then
 !               We have three-dimensionalized this grid point
                 n_radar_2dref = n_radar_2dref + 1
                 n_radar_3dref = n_radar_3dref + 1
                 istat_radar_3dref_a(i,j) = 1
+!               endif
 
             elseif(istat_radar_2dref_a(i,j) .eq. 1 .and.
      1             istat_radar_3dref_a(i,j) .eq. 1       )then
