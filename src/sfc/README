@@ -8,6 +8,8 @@ main                                           laps_sfc.f
            dev_ck                                   "
            bkg_chk                                  "
         mdat_laps                              mdatlaps.f
+            procar                                  "
+            set_boundary                            "
         laps_vanl                              lapsvanl.f
             zero                                    
             get_modelfg_3d                          
@@ -33,14 +35,11 @@ mdatlaps.f:	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
 mdatlaps.f:c			03-12-90  Subroutine version.
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
-mdatlaps.f:        Subroutine procar(a,imax,jmax,b,imax1,jmax1,iproc)
-mdatlaps.f:	subroutine fill_bounds(x,imax,jmax,ii,jj,x_ob,
 mdatlaps.f:	subroutine back_bounds(x,imax,jmax,dum,badflag)
 mdatlaps.f:      subroutine splie2(x1a,x2a,ya,m,n,y2a)
 mdatlaps.f:      subroutine splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
 mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
 mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
-mdatlaps.f:	subroutine set_boundary(x,imax,jmax,ii,jj,x_ob,x_bk,n_obs_b,
 lapsvanl.f:	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
 lapsvanl.f:c				03-14-90  Subroutine version.
 lapsvanl.f:c                               09-10-96  Subroutine Channel corrected
