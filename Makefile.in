@@ -103,6 +103,13 @@ DATADIRS = log/qc \
            lapsprd/lrp \
            lapsprd/lrs \
            lapsprd/lso \
+           lapsprd/lsr \
+           lapsprd/lsr/dmsp01 \
+           lapsprd/lsr/dmsp02 \
+           lapsprd/lsr/goes08 \
+           lapsprd/lsr/goes09 \
+           lapsprd/lsr/tros12 \
+           lapsprd/lsr/tros14 \
            lapsprd/lsx \
            lapsprd/lt1 \
            lapsprd/lty \
