@@ -6,7 +6,7 @@
  model_delay =  4,4,4,
  max_fcst_len = 36, 36, 36
  output_freq = 1, 1, 1,
- output_format = 'mm5',
+ output_type = 'mm5',
  output_name = 'ETA211','ETA212','ETA215'
  min_vert_frac = 0.8,
  min_time_frac = 0.8,
@@ -46,7 +46,7 @@
 !               between those 6-hourly output times to one-hourly
 !               output.
 !
-! output_format:  One entry.  String value that specifies which
+! output_type:  One entry.  String value that specifies which
 !                 modeling system to produce output for.
 !                 'mm5':  Support MM5v3 Regridder intermediate format.
 !                 'wrf':  Support WRF SI gribprep intermediate format.
