@@ -164,7 +164,7 @@ c    1                 ,num,istatus)                                     ! O
 
 	    if(istatus .ne. 1)then
                 write(6,*)
-     1          '     Warning: bad status return from READ_LOCAL'       
+     1          '     Warning: bad status return from READ_LOCAL_CWB'       
                 n_local_file = 0
 
             else
@@ -176,13 +176,15 @@ c    1                 ,num,istatus)                                     ! O
 c           ix = ix + n_local_file
 
         enddo ! i4time_file
+
+!       This might make the lines shorter when reading with 'vi'
         write(*,*)inpath,maxobs,badflag,ibadflag
-     ~                            ,i4time_sys,stname
-     ~                            ,lats,lons,elev                      ! O
-     ~                            ,i4time_ob_a,t,td,rh,pcp             ! O
-     ~                            ,stnp,mslp,dd,ff                     ! O
-     ~                            ,wgdd,wgff,pcc,pc,sr,st              ! O
-     ~                            ,num,istatus                         ! O
+        write(*,*)i4time_sys,stname
+        write(*,*)lats,lons,elev                      ! O
+        write(*,*)i4time_ob_a,t,td,rh,pcp             ! O
+        write(*,*)stnp,mslp,dd,ff                     ! O
+        write(*,*)wgdd,wgff,pcc,pc,sr,st              ! O
+        write(*,*)num,istatus                         ! O
 
 
 c       n_local_all = ix - 1
@@ -378,7 +380,7 @@ c
          store_4(nn,1) = badflag                ! altimeter setting (mb)
          store_4(nn,2) = stnp(i)                ! station pressure (mb)
          store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-         store_4(nn,4) = badflag                ! 3-h press change character
+         store_4(nn,4) = pcc(i)                 ! 3-h press change character
          store_4(nn,5) = pc(i)                  ! 3-h press change (mb)
 c
          store_5(nn,1) = badflag                ! visibility (miles)
@@ -389,7 +391,7 @@ c
          store_6(nn,1) = pcp1hr(i)              ! 1-h precipitation
          store_6(nn,2) = pcp3hr(i)              ! 3-h precipitation
          store_6(nn,3) = pcp6hr(i)              ! 6-h precipitation
-         store_6(nn,4) = badflag                ! 24-h precipitation
+         store_6(nn,4) = pcp24hr(i)             ! 24-h precipitation
          store_6(nn,5) = badflag                ! snow cover
 c
          store_7(nn,1) = float(kkk)             ! number of cloud layers
