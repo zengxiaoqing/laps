@@ -33,6 +33,8 @@ cdis
         SUBROUTINE FFLXC(NI,NJ,M,SCALE,uh,vh,field,flxcnv,lat,lon 
      1  ,flu,flv,sigma,r_missing_data)
 
+cdoc    Calculates convergence given a wind field rotated to the map projection
+
 !       Original Version S. Albers                                      1986
 !       Made more general                                               1989
 !       Made even more general (Adjustable Dims)                        1991
@@ -134,9 +136,9 @@ C
 
 !       Steve Albers
 
-!       Sigma is defined to be one when we are located in the intersection
-!       of the projection plane and the earth's surface. It varies from unity
-!       elsewhere.
+cdoc    Sigma (map factor) is defined to be one when we are located in the 
+cdoc    intersection of the projection plane and the earth's surface. It varies
+cdoc    from unity elsewhere.
 
 !       Equations from Principles of Meteorological Analysis, Walter Saucier
 !       Pages 32,33

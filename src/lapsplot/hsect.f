@@ -222,7 +222,7 @@ cdis
         real*4 rh_2d(NX_L,NY_L)
         real*4 sh_2d(NX_L,NY_L)
 
-        real*4 k_to_f
+        real*4 k_to_f, k_to_c
         real*4 make_rh
 
         include 'laps_cloud.inc'
@@ -329,8 +329,9 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
-     1       /'     SFC: [p,pm,ps,tt,td,ws,vv,hu,ta,th,te,vo,mr,mc,dv'       
-     1       ,',ha,ma,sp,cs,vs,tw,fw,hi]'
+     1       /'     SFC: [p,pm,ps,tf,tc,df,dc,ws,vv,hu,ta,th,te,vo,mr'       
+     1       ,',mc,dv,ha,ma,sp]'
+     1       /'          [cs,vs,tw,fw,hi]'
      1       /'          [ob,st,oq,sq] obs plot/station locations'
 !    1       /'          [ob,st] obs plot/station locations'
      1       ,'  [bs] Sfc background'
@@ -345,7 +346,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,'  [ls] Smith - Feddes Cloud LWC'
      1       /'     [is] Smith - Feddes Integrated Cloud LWC  '
      1       /'     [mv] Mean Volume Drop Diam,   [ic] Icing Index,'
-     1       ,' [tc,tp] Cloud/Precip Type'
+     1       ,' [cy,py] Cloud/Precip Type'
      1       /
      1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'       
      1       ,',  [ct] Highest Cld Top'
@@ -941,7 +942,7 @@ c       include 'satellite_dims_lvd.inc'
 !           Read in surface dewpoint data
             var_2d = 'TD'
             ext = 'lsx'
-            call get_laps_2d(i4time_ref,
+            call get_laps_2d(i4time_temp,
      1                       ext,var_2d,units_2d,comment_2d,
      1                       NX_L,NY_L,td_2d,istatus)
 
@@ -953,7 +954,7 @@ c       include 'satellite_dims_lvd.inc'
 !           Read in surface pressure data
             var_2d = 'PS'
             ext = 'lsx'
-            call get_laps_2d(i4time_ref,
+            call get_laps_2d(i4time_temp,
      1                       ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                       ,pres_2d,istatus)
 
@@ -2384,7 +2385,7 @@ c
 
             endif ! c_type
 
-        elseif(c_type .eq. 'tc')then
+        elseif(c_type .eq. 'cy')then
 1524        write(6,1517)
 1517        format('     Enter Lvl (mb); OR [0] 2D cldtyp'
 !    1          ,' [-1] low cloud,'
@@ -2447,7 +2448,7 @@ c
             endif ! k_level .eq. 0
 
 
-        elseif(c_type .eq. 'tp')then
+        elseif(c_type .eq. 'tp' .or. c_type .eq. 'py')then
 1624        write(6,1617)
 1617        format('     Enter Level in mb; [0] for surface,'
      1          ,' OR [-1] for sfc thresholded: ','? ',$)
@@ -3100,7 +3101,8 @@ c                   cint = -1.
      1           ,lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'tt')then
+        elseif(c_type .eq. 'tt' .or. c_type .eq. 'tf'
+     1                          .or. c_type .eq. 'tc')then
             var_2d = 'T'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -3108,19 +3110,26 @@ c                   cint = -1.
      1                          ,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
-!           K to F
-            do i = 1,NX_L
-            do j = 1,NY_L
-                field_2d(i,j) = k_to_f(field_2d(i,j))
-            enddo ! j
-            enddo ! i
+            if(c_type .ne. 'tc')then
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Temperature     (F)     '
+            else
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Temperature     (C)     '
+            endif
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface Temps'
                 goto1200
             endif
-
-            c33_label = 'LAPS Sfc Temperature     (F)     '
 
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
@@ -3165,7 +3174,8 @@ c                   cint = -1.
      1       ,lat,lon,jdot,
      1       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'td')then
+        elseif(c_type .eq. 'td' .or. c_type .eq. 'df'
+     1                          .or. c_type .eq. 'dc')then
             var_2d = 'TD'
             ext = 'lsx'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -3173,19 +3183,27 @@ c                   cint = -1.
      1             ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
-!           K to F
-            do i = 1,NX_L
-            do j = 1,NY_L
-                field_2d(i,j) = k_to_f(field_2d(i,j))
-            enddo ! j
-            enddo ! i
-
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface Td'
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Dew Point       (F)     '
+            if(c_type .ne. 'dc')then
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Dew Point       (F)     '
+            else
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(field_2d(i,j))
+                enddo ! j
+                enddo ! i
+                c33_label = 'LAPS Sfc Dew Point       (C)     '
+            endif
+
 
 !           clow = -50.
 !           chigh = +120.
@@ -3905,8 +3923,8 @@ c                   cint = -1.
 
             call plot_cont(cloud_ceil,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ct')then
             var_2d = 'LCT'

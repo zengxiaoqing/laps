@@ -2089,13 +2089,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                abs(u_vert(i,k)) .lt. 1e6      )then
                         x1 = i
                         y1 = (k-ibottom) * float(NX_C-1)
-     1                                       / float(NZ_C-ibottom) + 1.
+     1                                   / float(NZ_C-ibottom) + 1.
                         call uv_to_disp(u_vert(i,k),
-     1                          v_vert(i,k),
-     1                          dir,
-     1                          spd_ms)
-                        if(dir .gt. -400. .and. k .ge. int(rk_terrain))t
-     1hen
+     1                                  v_vert(i,k),
+     1                                  dir,
+     1                                  spd_ms)
+                        if(dir .gt. -400. .and. 
+     1                       k .ge. int(rk_terrain))then
                             call barbs(spd_ms/mspkt,dir,x1,y1,du,rot
      1                                  ,-1e10,+1e10,-1e10,+1e10)
                         endif
