@@ -770,6 +770,7 @@ c
         character*31 EXT
 
         character*125 comment_2d
+        character*125 comments_2d(2)
         character*10 units(2)
         character*3 vars(2)
 
@@ -841,6 +842,9 @@ c
         
         lvl_coord_2d(1) = 'MSL'
         lvl_coord_2d(2) = 'MSL'
+
+        comments_2d(1) = comment_2d
+        comments_2d(2) = comment_2d
 
         write(6,*)'path_to_vrc = ',path_to_vrc
 
