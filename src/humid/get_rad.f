@@ -294,11 +294,11 @@ c end platteville
      +        cbh    (2, *),
      +        cth    (2, *)
 
-      real    elevation,
-     +        longitude,
-     +        latitude
+c      real    elevation,
+c     +        longitude,
+c     +        latitude
 
-      character*6 type, site
+c      character*6 type, site
 
       character*(*) header
 
@@ -347,13 +347,13 @@ ccc   error reading data file.
      +        points,
      +        ierror
 
-      real elevation,
-     +     longitude,
-     +     latitude
+c      real elevation,
+c     +     longitude,
+c     +     latitude
 
       character*(*) header
 
-      character*6 type, site
+c      character*6 type, site
 
 
 c     ... read header information ...

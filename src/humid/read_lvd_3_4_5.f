@@ -59,7 +59,7 @@ c parameter variables
         character*4     lvl_coord(1)
         character*10    units(1)
         character*125   comment(1)
-        integer len
+c        integer len
 
         integer i,j
 

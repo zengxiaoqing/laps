@@ -47,9 +47,9 @@ c ported to the unix environment 1 oct 1993
 
 
         real data_anal(igrid,jgrid)
-        integer i,j
+
         real finc
-        integer pn
+
 
 
 

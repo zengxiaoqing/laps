@@ -200,14 +200,14 @@ c     parameter variables
      1        ramsi4time
 
         real
-     1        ssh2,   !function
-     1        make_ssh !function type
+     1        ssh2   !function
+c     1        make_ssh !function type
 
 
         real*4
      1        data(ii,jj,kk),
      1        tpw(ii,jj),
-     1        tempsh,rhc
+     1        tempsh
 
         integer kstart (ii,jj)
         real qs(ii,jj)
@@ -254,7 +254,6 @@ c ------------------
 
         real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
         real diff_data(ii*jj)
-        integer counter_d
         real ave,adev,sdev,var,skew,curt
 
 
@@ -264,7 +263,7 @@ c ------------------
         integer*4
      1        i,j,k
 
-        integer*4 counter, counter1
+        integer*4 counter
 
         integer*4 lvllm(kk)
 
@@ -282,8 +281,8 @@ c       external rtsys_no_data, rtsys_abort_prod
         integer*4 mlevel(kk)
 
 
-        real mean_rh_background  !used in rh/cloud computation
-        real make_rh !function call
+
+
         real pressure_of_level  !function call
 
         integer  raob_switch
