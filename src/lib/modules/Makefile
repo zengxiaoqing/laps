@@ -65,5 +65,8 @@ debug:
  	"LIB	=	$(DEBUGLIB)" 	\
 	"FFLAGS =	$(DBFLAGS)" 	)
 
+install: lib
+
+
 clean:
 			$(RM) $(FMOD) *.a core *.mod
