@@ -27,26 +27,24 @@
 c
 c =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 c
-      subroutine get_sat_sounder_info(n_sndr,c_sndr_id,
-     +n_sndr_channels,path_to_sat_sounder,n_elems,n_lines,
-     +channel_wavelength_u,imsng_sndr_pix,istatus)
+      subroutine get_sat_sounder_info(n_sndr,
+     +c_sndr_id,n_sndr_channels,path_to_sat_sounder,n_elems,
+     +n_lines,channel_wavelength_u,imsng_sndr_pix,istatus)
 
-      integer maxsndr
-      integer maxch
-      parameter (maxsndr=4,maxch=19)
+      include 'lsr_dims.inc'
 
       integer len_dir
       integer n_sndr
       integer n_sndr_channels
-      integer n_elems(maxsndr)
-      integer n_lines(maxsndr)
+      integer n_elems(max_sat)
+      integer n_lines(max_sat)
       integer imsng_sndr_pix
       integer istatus
-      character*6   c_sndr_id(maxsndr)
+      character*6   c_sndr_id(max_sat)
       character*150 nest7grid
-      character*200 path_to_sat_sounder(maxsndr)
+      character*200 path_to_sat_sounder(max_sat)
 
-      real*4 channel_wavelength_u(maxch,maxsndr)
+      real*4 channel_wavelength_u(max_ch,max_sat)
 
       namelist /satellite_sounder_nl/ n_sndr,c_sndr_id,path_to_sat_sound
      +er,n_elems,n_lines,n_sndr_channels,channel_wavelength_u,imsng_sndr
@@ -108,4 +106,45 @@ c
       write(*,balance_nl)
       stop
       end
+c
+c ---------------------------------------------------------
+c
+      subroutine mosaic_radar_nl(c_radar_mosaic_type,n_radars,
+     & c_radar_ext,i_window,imosaic,istatus)
+c
+      implicit none
 
+      include    'radar_mosaic_dim.inc'
+
+      integer    istatus
+      integer    len_dir
+      integer    n_radars
+      integer    i_window
+      integer    imosaic
+      character  c_radar_mosaic_type*3
+      character  c_radar_ext(max_radars_mosaic)*3
+      character  nest7grid*150
+
+      namelist /radar_mosaic_nl/c_radar_mosaic_type,n_radars,
+     & c_radar_ext,i_window,imosaic
+
+      istatus = 0
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+      if(nest7grid(len_dir:len_dir).ne.'/') then
+        len_dir=len_dir+1
+        nest7grid(len_dir:len_dir)='/'
+      endif
+
+      nest7grid = nest7grid(1:len_dir)//'radar_mosaic.nl'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,radar_mosaic_nl,err=901)
+      close(1)
+      return
+900   print*,'error opening file ',nest7grid
+      stop
+901   print*,'error reading radar_mosaic.nl in ',nest7grid
+      write(*,radar_mosaic_nl)
+      stop
+      end
