@@ -285,7 +285,7 @@ c
         ifld = 7
         thresh = 30.
 
-        call bkg_chk(iback_t,c_field,ifld,thresh,pmsl_s
+        call bkg_chk(iback_t,c_field,ifld,thresh,t_s
      1              ,ii,jj,t_bk_f,rely,badflag,n_obs_curr
      1              ,stn,mxstn,ni,nj,istatus)
 
