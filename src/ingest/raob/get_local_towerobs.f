@@ -9,7 +9,7 @@ c.....  Input variables/arrays
 c
         integer maxlvls ! raw/processed stations for SND file
         integer maxobs ! raw stations in NetCDF files
-        integer maxsta ! processed stations for SND file
+        integer maxsta ! processed stations for SND file 
 
         parameter (maxlvls=100)
         parameter (maxobs=1000) ! Raw stations in NetCDf files
