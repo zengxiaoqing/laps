@@ -34,9 +34,9 @@ c
 	program laps_sfc
 c
         include 'lapsparms.cmn'
-        include 'grid_fname.cmn'
+!       include 'grid_fname.cmn'
 
-	character laps_domain*9
+	character laps_domain*9, c_dum*200
 c
 	call get_config(istatus)
 	if(istatus .ne. 1) then
@@ -44,7 +44,8 @@ c
 	   stop
 	endif
 c
-	laps_domain = grid_fnam_common
+        call find_domain_name(c_dum,laps_domain,istatus)
+!	laps_domain = grid_fnam_common
 	call laps_sfc_sub(nx_l_cmn,ny_l_cmn,nk_laps,maxstns_cmn,
      &                    laps_cycle_time_cmn,grid_spacing_m_cmn,
      &                    laps_domain)
