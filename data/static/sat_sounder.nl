@@ -1,6 +1,6 @@
  &satellite_sounder_nl
  n_sndr=2,
- c_sndr_id='goes8','goes9',
+ c_sndr_id='goes08','goes09',
  path_to_sat_sounder='/public/data/sat/fsl-gs/goes8/raw/sounding/scan-area/netcdf/',
                      '/public/data/sat/fsl-gs/goes9/raw/sounding/scan-area/netcdf/',
  n_elems=322,192
