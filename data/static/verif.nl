@@ -1,7 +1,7 @@
  &verif_nl
  TYPE_OBS = 'R',
  PATH_TO_RAW_PROFILER = '/public/data/profiler/wind/noaanet/netcdf/',
- PATH_TO_RAW_RAOB = '/public/data/raob/netcdf/',
+ PATH_TO_RAW_SOUNDING = '/public/data/raob/netcdf/',
  RAOB_PROCESS_LAG = 7200,
  RAOB_PROCESS_LAG_BAL = 7200,
  VERIF_OUTPUT_DIR = 'noBal','Bal','Bkgd',
