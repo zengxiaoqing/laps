@@ -38,8 +38,6 @@
 
       iopen = 0
 
-      c8_project = 'nimbus'
-
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
 
@@ -56,7 +54,7 @@
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
       else
           write(6,*)' Error getting laps_cycle_time'
-          stop
+          go to 999
       endif
 
 !     Get List of input /public NetCDF files
@@ -72,12 +70,15 @@
 
       call s_len(dir_in,len_dir_in)
 
-      if(c8_project(1:6) .eq. 'nimbus')then
-          c_filespec = dir_in(1:len_dir_in)//'*0300o'
-          call get_file_times(c_filespec,max_files,c_fnames
+      c8_project = 'NIMBUS'
+      c_filespec = dir_in(1:len_dir_in)//'*0300o'
+      call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
-      else
+      if(i_nbr_files_ret .eq. 0)then
+          write(6,*)' No files found in NIMBUS filename format'
+          c8_project = 'AFGWC'
+          c_filespec = dir_in(1:len_dir_in)//'raob.*'
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                      ,max_files,istatus)
 
@@ -98,12 +99,13 @@
 
       endif
 
-!     Loop through /public NetCDF files and choose ones in time window
-      write(6,*)' # of files on /public = ',i_nbr_files_ret
+!     Loop through raob files and choose ones in time window
+      write(6,*)' # of files using filename format ',c8_project,' = '          
+     1                                              ,i_nbr_files_ret
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
 
-          if(c8_project(1:6) .eq. 'nimbus')then
+          if(c8_project(1:6) .eq. 'NIMBUS')then
               filename_in = dir_in(1:len_dir_in)//a9_time//'0300o'
           else
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
@@ -133,19 +135,12 @@
                   ext = 'snd'
                   call get_directory(ext,directory,len_dir)
 
-                  if(c8_project(1:6) .eq. 'nimbus')then
-                      filename_out = directory(1:len_dir)
+                  filename_out = directory(1:len_dir)
      1                            //filename13(i4time_sys,ext(1:3))     
-                  else
-!                     Experimental 'snd_af' directory
-                      filename_out = directory(1:len_dir-1)
-     1                  //'_af/'
-     1                  //filename13(i4time_sys,ext(1:3))     
-                  endif
 
                   write(6,*)
                   write(6,*)' Output file ',filename_out
-                  open(11,file=filename_out,status='unknown',err=999)
+                  open(11,file=filename_out,status='unknown',err=998)
                   iopen = 1
               endif
 
@@ -155,7 +150,7 @@
               write(6,*)
 
 !             Read from the NetCDF pirep file and write to the opened PIN file
-              if(c8_project(1:6) .eq. 'nimbus')then
+              if(c8_project(1:6) .eq. 'NIMBUS')then
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
      1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
@@ -169,6 +164,10 @@
 
 
       close(11) ! Output PIN file
+
+      go to 999
+
+ 998  write(6,*)' Error opening output sounding file: ',filename_out       
 
  999  continue
 
