@@ -2070,7 +2070,8 @@ fint4 *status;
           }
         }
         else { /* file is there...*/
-          if ((strncmp(ext,"lga",3) == 0) || (strncmp(ext,"lgb",3) == 0)) { /* allow multiple writes to file */
+          if ((strncmp(ext,"lga",3) == 0) || (strncmp(ext,"lgb",3) == 0) ||
+              (strncmp(ext,"fua",3) == 0) || (strncmp(ext,"fsf",3) == 0)) { /* allow multiple writes to file */
             *called_from = 2;
           }
           else { /* 10/14/97 for write_laps_data with no append, write over it anyway */
