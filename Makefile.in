@@ -5,11 +5,10 @@ INSTALLROOT=@prefix@
 DATAROOT=@datadir@
 INSTALL=@INSTALL@
 
-#
-# Some f77 compilers (SUN) don't recognize the -I command line option 
-# for fortran include statements F77INC will create links to the proper include
-# directories
-#
+LINK=$(LAPSROOT)/util/link.pl
+CWD = $(shell pwd)
+
+MACHDEP = config.status config.cache Makefile src/include/config.h
 
 LIBDIRS = src/lib \
           src/lib/blas \
@@ -36,6 +35,7 @@ EXEDIRS = src/accum \
           src/ingest/profiler \
           src/ingest/profiler/blp \
           src/ingest/radar/remap \
+          src/ingest/radar/vad \
           src/ingest/radar/wsiremap/vrc \
           src/ingest/radar/wsiremap/vrc/table \
           src/ingest/raob \
@@ -58,6 +58,7 @@ DATADIRS = log/qc \
            static \
            time \
            cdl \
+           lapsprd/cdw \
            lapsprd/d01 \
            lapsprd/d02 \
            lapsprd/d03 \
@@ -213,8 +214,8 @@ mkdirs:
 	  done
 
 clean:
-	rm -f *~ *# *.o 
-	cd src/include; rm -f *~ *# *.o 
+	$(RM) *~ *# *.o 
+	cd src/include; $(RM) *~ *# *.o 
 	@for dir in $(EXEDIRS);\
 	  do \
 	  echo " ";\
@@ -243,7 +244,7 @@ distclean: realclean cleandirs
 	  $(MAKE) distclean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
-	rm -fr config.cache Makefile bin log 
+	$(RM) -r config.cache Makefile bin log 
 
 cleandirs:
 	@for dir in $(DATADIRS) ;\
@@ -251,10 +252,20 @@ cleandirs:
 	  echo " ";\
 	  echo Removing Laps data directory $(LAPSROOT)/$$dir ;\
 	  (cd $(LAPSROOT); \
-	   rm -fr $$dir ; if [ $$? != 0 ] ; then \
+	   $(RM) -r $$dir ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from rm was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
+links:
+	$(LINK) $(CWD) $(LAPSROOT) $(INSTALLROOT)/lib $(MACHDEP)
+	@for dir in $(LIBDIRS) $(EXEDIRS);\
+	  do \
+	  echo " ";\
+	  echo Making LAPS links in directory $$dir ;\
+	  (cd $$dir; \
+	  $(MAKE) links ; if [ $$? != 0 ] ; then \
+	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
+	  done
 
 
 
