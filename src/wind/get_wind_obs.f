@@ -49,6 +49,7 @@ cdis
      1            NTMIN,NTMAX,                                      ! I
      1            u_laps_fg,v_laps_fg,                              ! O
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! I/O
+     1            max_obs,obs_point,nobs_point,                     ! I/O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            istat_radar_vel,n_vel_grids,                      ! I
      1            grid_ra_vel,                                      ! I
@@ -61,6 +62,9 @@ cdis
 !       1997 Jun     Ken Dritz       Added r_missing_data and i2_missing_data
 !                                    as dummy arguments.
 !       1997 Jun     Ken Dritz       Removed include of 'lapsparms.for'.
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
                                                    
@@ -164,6 +168,7 @@ cdis
         call remap_profiler(
      1           ob_pr_u,ob_pr_v                                  ! I
      1          ,grid_laps_u,grid_laps_v,grid_laps_wt             ! I/O
+     1          ,max_obs,obs_point,nobs_point                     ! I/O
      1          ,lat,lon                                          ! I
      1          ,NX_L,NY_L,NZ_L,MAX_PR                            ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                     ! I
@@ -209,6 +214,7 @@ cdis
      1            ,lat,lon,r_missing_data                                ! I
      1            ,n_sfc_obs                                             ! O
      1            ,grid_laps_wt,grid_laps_u,grid_laps_v                  ! I/O
+     1            ,max_obs,obs_point,nobs_point                          ! I/O
      1            ,NX_L,NY_L,NZ_L                                        ! I
      1            ,istatus)                                              ! O
         if(istatus .ne. 1)then
@@ -235,6 +241,7 @@ cdis
      1  ,lat,lon
 !    1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v                          ! I/O
+     1  ,max_obs,obs_point,nobs_point                                  ! I/O
      1  ,istatus)                                                      ! O
 
         if(istatus .ne. 1)then
@@ -259,6 +266,7 @@ cdis
      1      ,lat,lon
 !    1      ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
      1      ,grid_laps_wt,grid_laps_u,grid_laps_v                      ! I/O
+     1      ,max_obs,obs_point,nobs_point                              ! I/O
      1      ,istatus)                                                  ! O
 
             if(istatus .ne. 1)then
@@ -280,6 +288,7 @@ cdis
         subroutine remap_profiler(
      1           ob_pr_u,ob_pr_v                                     ! I
      1          ,grid_laps_u,grid_laps_v,grid_laps_wt                ! I/O
+     1          ,max_obs,obs_point,nobs_point                        ! I/O
      1          ,lat,lon                                             ! I
      1          ,ni,nj,nk,MAX_PR                                     ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr                        ! I
@@ -288,8 +297,11 @@ cdis
      1          ,l_profiler                                          ! I
      1          ,istatus)                                            ! O
 
-!          Perform horizontal remapping of profile obs onto LAPS grid
-!          They have already been vertically remapped
+!       Perform horizontal remapping of profile obs onto LAPS grid
+!       They have already been vertically remapped
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_point(max_obs)                           
 
 !       Profile Observations
 

@@ -41,10 +41,14 @@ cdis
      1  ,lat,lon,r_missing_data                                         ! I
      1  ,n_sfc_obs                                                      ! O
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v                           ! I/O
+     1  ,max_obs,obs_point,nobs_point                                   ! I/O
      1  ,ni,nj,nk                                                       ! I
      1  ,istatus)                                                       ! O
 
 !****************************************************************************
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
 
