@@ -17,7 +17,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
 
 EXE = qbalpe.exe
 
-SRC= laps.f writeballaps.f getqbalpe_parms.f
+SRC= laps.f writeballaps.f 
 
 MAIN=qbalpe.f 
 
