@@ -112,14 +112,14 @@ char *comm_ptr;
 		return -1;
 
 /* write the grid to the netcdf file */
-	i_status = ncvarput (i_cdfid, i_varid, start, count, gptr);
+	i_status = ncvarput (i_cdfid, i_varid,(const long *) start,(const long *) count,(void *) gptr);
 	
 	if (i_status == (-1)) {
 		log_diag (1, "cdf_update_stat: error during cdf write\n");
 		return -1;
 	}
 	else {
-	  i_status = ncvarput (i_cdfid, i_comid, start_c, count_c, comm_ptr);
+	  i_status = ncvarput (i_cdfid, i_comid,(const long *) start_c,(const long *) count_c,(void *) comm_ptr);
 	  
 	  if (i_status == (-1))
 		log_diag (1, "cdf_update_stat: error during cdf write\n");
@@ -172,14 +172,14 @@ char *fname;
 #endif
 
 {
-        free(prefix);
-        free(comm_var); 
-	free(model);
-	free(asctime);
-	free(var);
-	free(comment);
-        free(units);
-	free(fname);
+        if(prefix != NULL) free(prefix);
+        if(comm_var != NULL) free(comm_var); 
+	if (model != NULL) free(model);
+	if(asctime != NULL) free(asctime);
+	if(var != NULL) free(var);
+	if(comment != NULL) free(comment);
+        if(units != NULL) free(units);
+	if(fname != NULL) free(fname);
         return;
 }
 /*************************************************************************
@@ -283,50 +283,41 @@ long *status;
     long start[1], edges[1];
     long start_map[2], edges_map[2];
     short nx_in, ny_in;
-
+    long zero=0L;
 /* store n_grids */
     if ((i_varid = ncvarid (cdf_id, "n_grids")) == (-1)) {
       *status = -5;	/* returns "error writing header" */
       return;
     }
-#ifdef __alpha
-    ncvarput1(cdf_id, i_varid, (long *)0, (void *)n_grids);
-#else
-    ncvarput1(cdf_id, i_varid, (int *)0, (void *)n_grids);
-#endif
+
+    ncvarput1(cdf_id, i_varid, (const long*) &zero, (void *)n_grids);
+
 
 /* store imax */
     if ((i_varid = ncvarid (cdf_id, "imax")) == (-1)) {
       *status = -5;	/* returns "error writing header" */
       return;
     }
-#ifdef __alpha
-    ncvarput1(cdf_id, i_varid, (long *)0, (void *)nx);
-#else
-    ncvarput1(cdf_id, i_varid, (int *)0, (void *)nx);
-#endif
+
+    ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)nx);
+
 
 /* store jmax */
     if ((i_varid = ncvarid (cdf_id, "jmax")) == (-1)) {
       *status = -5;	/* returns "error writing header" */
       return;
     }
-#ifdef __alpha
-    ncvarput1(cdf_id, i_varid, (long *)0, (void *)ny);
-#else
-    ncvarput1(cdf_id, i_varid, (int *)0, (void *)ny);
-#endif
+    ncvarput1(cdf_id, i_varid, (const long *) &zero, (void *)ny);
+
 
   /* store grid_spacing */
     if ((i_varid = ncvarid (cdf_id, "grid_spacing")) == (-1)) {
       *status = -5;	/* returns "error writing header" */
       return;
     }
-#ifdef __alpha
-    ncvarput1(cdf_id, i_varid, (long *)0, (void *)grid_spacing);
-#else
-    ncvarput1(cdf_id, i_varid, (int *)0, (void *)grid_spacing);
-#endif
+
+    ncvarput1(cdf_id, i_varid, (const long *)&zero, (void *)grid_spacing);
+
       
     start[0] = 0;
 
@@ -336,7 +327,7 @@ long *status;
       *status = -5;	/* returns "error writing header" */
       return;
     }
-    ncvarput(cdf_id, i_varid, start, edges, (void *)asctime);
+    ncvarput(cdf_id, i_varid,(const long *) start,(const long *) edges, (void *)asctime);
  
   /* store model */
     edges[0] = strlen(model);
@@ -495,7 +486,7 @@ void write_cdf_static(char *filname, short *s_length, char *f_asctime,
 #else
 void write_cdf_static(char *filname, short *s_length, char *f_asctime,
                       char *f_cdl_dir, long *cdl_len, char *f_var, long *var_len,
-                      char *f_comment, long *comm_len, char *f_ldf,
+                      char *f_comment, long *com_len, char *f_ldf,
                       long *ldf_len, long *imax, long *jmax, long *n_grids,
                       long *nx_lp, long *ny_lp, float *data, char *f_model, 
                       float *grid_spacing, float *dx, float *dy, float *lov, 
@@ -659,7 +650,7 @@ long *status;
         if (out_file == -1) {
           *status = -2; /* error in file creation */
           free_static_malloc(prefix, comm_var, model, asctime, var, 
-                             comment, fname);
+                             comment, NULL, fname);
           return;
         }
 
@@ -675,7 +666,7 @@ long *status;
         {
           *status = -6; /* nest7grid.cdl & nest7grid.parms disagree */
           free_static_malloc(prefix, comm_var, model, asctime, var, 
-                             comment, fname);
+                             comment, NULL, fname);
           return;
         }
 
@@ -713,7 +704,7 @@ long *status;
         if (hdr_status != 0) {
           *status = hdr_status;
           free_static_malloc(prefix, comm_var, model, asctime, var,
-                             comment, fname);
+                             comment, NULL, fname);
           return;
         }
 
@@ -730,7 +721,7 @@ long *status;
           }
           else {
             istat = cdf_update_stat(out_file,i_varid, prefix,
-               	 		    (data + (i*(*imax)*(*jmax))),
+               	 		    (char *)(data + (i*(*imax)*(*jmax))),
                 	 	    comm_var,p_com);
             if (istat == -1) {
               *status = -4;
@@ -817,7 +808,7 @@ int c_unit_len;
         start[3] = 0;
 
 /* read the grid from the netcdf file */
-	i_status = ncvarget (i_cdfid, i_varid, start, count, gptr);
+	i_status = ncvarget (i_cdfid, i_varid,(const long*) start,(const long *) count, (void *)gptr);
 
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving data %s grid.\n", 
@@ -850,7 +841,7 @@ int c_unit_len;
 	count_c[0] = 1;
 	count_c[1] = 1;
 	count_c[2] = c_com_len;
-	i_status = ncvarget (i_cdfid, i_varid, start_c, count_c, cptr);
+	i_status = ncvarget (i_cdfid, i_varid,(const long *) start_c,(const long *) count_c,(void *) cptr);
 
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving comment.\n");
@@ -934,7 +925,7 @@ float *grid_spacing_n;
 		return -1;
 
 /* read the var from the netcdf file */
-	i_status = ncvarget1 (i_cdfid, i_varid, mindex, imaxn);
+	i_status = ncvarget1 (i_cdfid, i_varid,(const long *) mindex, imaxn);
 	if (i_status == (-1))
 	   return -1;
 
@@ -944,7 +935,7 @@ float *grid_spacing_n;
 		return -1;
 
 /* read the var from the netcdf file */
-	i_status = ncvarget1 (i_cdfid, i_varid, mindex, jmaxn);
+	i_status = ncvarget1 (i_cdfid, i_varid,(const long *) mindex, jmaxn);
 	if (i_status == (-1))
 	   return -1;
 
@@ -954,7 +945,7 @@ float *grid_spacing_n;
 		return -1;
 
 /* read the var from the netcdf file */
-	i_status = ncvarget1 (i_cdfid, i_varid, mindex, n_grids_n);
+	i_status = ncvarget1 (i_cdfid, i_varid,(const long *) mindex, n_grids_n);
 	if (i_status == (-1))
 	   return -1;
 
@@ -965,7 +956,7 @@ float *grid_spacing_n;
 		return -1;
 
 /* read the var from the netcdf file */
-	i_status = ncvarget1 (i_cdfid, i_varid, mindex, grid_spacing_n);
+	i_status = ncvarget1 (i_cdfid, i_varid,(const long *) mindex, grid_spacing_n);
 	if (i_status == (-1))
 	   return -1;
 
@@ -1078,7 +1069,7 @@ long *status;
 #else
 	long imaxn, jmaxn, n_grids_n;
 #endif
-	
+
 /* turn off the error handling done by the netCDF routines */
         ncopts = NC_VERBOSE;
 
@@ -1091,7 +1082,6 @@ long *status;
         c_unit_len = *unit_len + 1;
         units = malloc(c_unit_len * (*n_grids) * sizeof(char));
         fname = malloc(((*s_length)+1) * sizeof(char));
-
 
 /* null out arrays for units,comment before using   */
 /* convert fortran string f_var to c string var and downcase */
@@ -1114,7 +1104,7 @@ long *status;
 	cdfid = open_cdf(NC_NOWRITE,fname,no_laps_diag);
 	if (cdfid == -1) {
 		*status = -1;	/* error opening file */
-                free_static_malloc(prefix, comm_var, model, asctime, 
+                free_static_malloc(prefix, NULL, NULL, NULL,
                                    var, comment, units, fname);
 		return;
 	}
@@ -1125,14 +1115,14 @@ long *status;
 	if (istat == -1) {
 	   *status = -5;
 	   ncclose(cdfid);
-           free_static_malloc(prefix, comm_var, model, asctime, 
+           free_static_malloc(prefix, NULL, NULL, NULL, 
                               var, comment, units, fname);
 	   return;
 	}
 	if (imaxn > *imax || jmaxn > *jmax ) {
 	   *status = -3;
 	   ncclose(cdfid);
-           free_static_malloc(prefix, comm_var, model, asctime, 
+           free_static_malloc(prefix,  NULL, NULL, NULL,  
                               var, comment, units, fname);
 	   return;
 	}
@@ -1189,7 +1179,7 @@ long *status;
           }
         }
 
-        free_static_malloc(prefix, comm_var, model, asctime, 
+        free_static_malloc(prefix, NULL, NULL, NULL, 
                            var, comment, units, fname);
         *status = unconv_var;
         return;
