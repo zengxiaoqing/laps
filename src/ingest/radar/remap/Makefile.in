@@ -79,7 +79,7 @@ distclean: clean
 
 
 
-get_tilt_netcdf.f:  $(LAPSROOT)/src/include/netcdf.inc@F77INC@
+get_tilt_netcdf.f:  @NETCDFINC@/netcdf.inc 
 
 netcdfio.f:  $(LAPSROOT)/src/include/remap_dims.inc $(LAPSROOT)/src/include/netcdfio_radar_common.inc@F77INC@
 
