@@ -60,11 +60,10 @@
       real*4  r_resolution_x_wv(maxtype,maxsat)
       real*4  r_resolution_y_wv(maxtype,maxsat)
 
-      common /lvd_namelist_cmn/path_to_raw_sat,
-     +iflag_lvd_common,isats,itypes,ichannels,
+      common /lvd_namelist_cmn/iflag_lvd_common,
+     +isats,itypes,ichannels,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
-     +c_sat_id, c_sat_types,c_channel_types,
      +r_sat_sub_lat, r_sat_sub_lon,
      +r_la1, r_lo1,
      +r_resolution_x_vis,r_resolution_y_vis,r_resolution_x_ir,
@@ -83,4 +82,5 @@
      +i_nsCycles,i_nsIncs,
      +i_nwline_vis,i_nwline_ir,i_nwline_wv,
      +i_nwpix_vis,i_nwpix_ir,i_nwpix_wv,
-     +imc
+     +imc,path_to_raw_sat,
+     +c_sat_id,c_sat_types,c_channel_types
