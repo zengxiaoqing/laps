@@ -65,10 +65,9 @@ use File::Copy 'cp';
 
 cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
 
-$sys = "$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0";
+$sys = "/bin/csh -c \'$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0\'";
 print "running $sys\n";
-
-system $sys;
+system("$sys");
 
 
 
