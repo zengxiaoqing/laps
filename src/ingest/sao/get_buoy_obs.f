@@ -39,7 +39,7 @@ cdis
 c
 c
 	subroutine get_buoy_obs(maxobs,maxsta,i4time_sys,
-     &                      path_to_buoy_data,data_file,
+     &                      path_to_buoy_data,
      &                      buoy_format,
      &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
@@ -112,7 +112,8 @@ c
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*8, save_stn(maxobs)*8
-	character  data_file*(*), a9time*9, a8time*8, a9_to_a8*8, time*4       
+	character  data_file*150, a9time*9, a8time*8, a9_to_a8*8, time*4       
+	character  filename13*13, fname9_to_wfo_fname13*13
 	character  stations(maxsta)*20, provider(maxsta)*11
 	character  weather(maxobs)*25, wx(maxsta)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
@@ -150,49 +151,112 @@ c
 
         call s_len(buoy_format, len_buoy_format)
         if(buoy_format(1:len_buoy_format) .ne. 'CWB')then ! FSL NetCDF format
-c
-c.....      Get the data from the NetCDF file.  First, open the file.
-c.....      If not there, return.
-c
-	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+            ix = 1
 
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *, data_file
-               go to 990
-	    endif
-c
-c.....      Get the dimension of some of the variables.
-c
-c.....      "recNum"
-c
-	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
-	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	    if(nf_status.ne.NF_NOERR) then
-	       print *, NF_STRERROR(nf_status)
-	       print *,'dim recNum'
-	    endif
+!           Ob times contained in each file
+            if(buoy_format(1:len_buoy_format) .eq. 'NIMBUS')then 
+                i4_contains_early = 0 
+                i4_contains_late = 3600
+                i4_file_interval = 3600
 
-	    call read_buoy(nf_fid , recNum, iplat_type,
-     &         td, elev, equivspd, lats, lons, 
-     &         pcp1, pcp24, pcp6,
-     &         wx, dp, dpchar,
-     &         mslp, sea_temp, stname, t,
-     &         timeobs, vis, t_wet, dd, ffg, ff,
-     &         badflag, istatus)
+            elseif(buoy_format(1:len_buoy_format) .eq. 'WFO')then 
+                i4_contains_early = 0 
+                i4_contains_late = 3600
+                i4_file_interval = 3600
 
+            else
+                write(6,*)' ERROR: unknown buoy format ',buoy_format     
+                istatus = 0
+                return
+
+            endif
+
+            call get_filetime_range(i4time_before,i4time_after                
+     1                             ,i4_contains_early,i4_contains_late       
+     1                             ,i4_file_interval                         
+     1                             ,i4time_file_b,i4time_file_a)              
+
+            do i4time_file = i4time_file_b, i4time_file_a
+     1                     , i4_file_interval
+
+                call make_fnam_lp(i4time_file,a9time,istatus)
+
+                if(buoy_format(1:len_buoy_format) .eq. 'NIMBUS')then
+                    len_path = index(path_to_buoy_data,' ') - 1
+	            data_file = path_to_buoy_data(1:len_path)
+     1                            //a9time// '0100o'
+
+                elseif(buoy_format(1:len_buoy_format) .eq. 'WFO')then
+                    filename13=fname9_to_wfo_fname13(a9time)       
+
+                    len_path = index(path_to_buoy_data,' ') - 1
+                    data_file = 
+     &                    path_to_buoy_data(1:len_path) // filename13
+
+                else
+                    write(6,*)' ERROR: unknown buoy format ',buoy_format     
+                    istatus = 0
+                    return
+
+                endif
+
+                print*,'Getting buoy/ship data ', data_file
+c
+c.....          Get the data from the NetCDF file.  First, open the file.
+c.....          If not there, return.
+c
+	        nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *, data_file
+                   n_buoy_file=0
+                   go to 190
+	        endif
+c
+c.....          Get the dimension of some of the variables.
+c
+c.....          "recNum"
+c
+	        nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim recNum'
+	        endif
+	        nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	        if(nf_status.ne.NF_NOERR) then
+	           print *, NF_STRERROR(nf_status)
+	           print *,'dim recNum'
+	        endif
+
+	        call read_buoy(nf_fid , recNum, iplat_type(ix),
+     &             td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
+     &             pcp1(ix), pcp24(ix), pcp6(ix),
+     &             wx(ix), dp(ix), dpchar(ix),
+     &             mslp(ix), sea_temp(ix), stname(ix), t(ix),
+     &             timeobs(ix), vis(ix), t_wet(ix), 
+     &             dd(ix), ffg(ix), ff(ix),
+     &             badflag, istatus)
+
+ 		if(istatus .ne. 1)then
+                    write(6,*)
+     1              '     Warning: bad status return from READ_BUOY'       
+                    n_buoy_file = 0
+                else
+                    n_buoy_file = recNum
+                    write(6,*)'     n_buoy_file = ',n_buoy_file
+                endif
+
+                ix = ix + n_buoy_file
+
+ 190	    enddo ! i4time_file
+
+	    n_maritime_all = ix - 1
             i4time_offset=315619200
 
-            do i = 1,recnum
+            do i = 1,n_maritime_all
                 wmoid_in(i) = ibadflag
             enddo ! i
-
-	    if(istatus .ne. 1) go to 990
-	    n_maritime_all = recNum
 c
         else ! Read buoy/ship obs in CWB format
 
@@ -201,13 +265,15 @@ c
 !           Ob times contained in each file
             i4_contains_early = 7200 
             i4_contains_late = 3600
+            i4_file_interval = 10800
 
             call get_filetime_range(i4time_before,i4time_after                
      1                             ,i4_contains_early,i4_contains_late       
-     1                             ,10800                                     
+     1                             ,i4_file_interval                         
      1                             ,i4time_file_b,i4time_file_a)              
 
-            do i4time_file = i4time_file_b, i4time_file_a, 10800
+            do i4time_file = i4time_file_b, i4time_file_a
+     1                     , i4_file_interval
    	        call make_fnam_lp(i4time_file,a9time,istatus)
                 a8time = a9_to_a8(a9time(1:9))
 
@@ -245,13 +311,15 @@ c
 !           Ob times contained in each file
             i4_contains_early = 0 
             i4_contains_late = 0
+            i4_file_interval = 10800
 
             call get_filetime_range(i4time_before,i4time_after                
      1                             ,i4_contains_early,i4_contains_late       
-     1                             ,10800                                     
+     1                             ,i4_file_interval                           
      1                             ,i4time_file_b,i4time_file_a)              
 
-            do i4time_file = i4time_file_b, i4time_file_a, 10800
+            do i4time_file = i4time_file_b, i4time_file_a
+     1                     , i4_file_interval
    	        call make_fnam_lp(i4time_file,a9time,istatus)
                 a8time = a9_to_a8(a9time(1:9))
 

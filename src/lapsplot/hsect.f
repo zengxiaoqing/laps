@@ -1558,7 +1558,8 @@ c
                     call get_ref_base(ref_base,istatus)
 
                     call read_radar_3dref(i4time_get,
-     1               .true.,ref_base,
+!    1               .true.,ref_base,
+     1               .true.,r_missing_data,
      1               NX_L,NY_L,NZ_L,ext_radar,
      1               lat,lon,topo,.true.,.true.,
      1               field_3d,
@@ -1578,17 +1579,33 @@ c
 
             endif
 
-2015        write(6,2020)
-2020        format(/'  [ve] Velocity Contours, '  
-     1             ,' [vi] Velocity Image (no map)'
-     1             /'  [rf-i] Reflectivity Data, '
-     1             /'  [mr-i] Column Max Ref, [mt] Max Tops,'       
-     1             /'  [lr-i] Low Lvl Ref, '
-     1             ,'[f1] 1 HR Fcst Max Reflectivity,'
-     1             /' ',61x,' [q] Quit ? ',$)
+            if(c_type .eq. 'rv')then                     ! Vxx reflectivity
+                write(6,2021)
+2021            format(/'  [rf-i] Reflectivity Data, '
+     1                 /'  [mr-i] Column Max Ref'       
+     1                 /' ',61x,' [q] Quit ? ',$)
+
+            elseif(c_type .eq. 'rd')then                 ! Vxx velocity
+                write(6,2022)
+2022            format(/'  [ve] Velocity Contours, '  
+     1                 ,' [vi] Velocity Image (no map)'
+!    1                 ,'[f1] 1 HR Fcst Max Reflectivity,'
+     1                 /' ',61x,' [q] Quit ? ',$)
+
+            else                                         ! Non Vxx reflectivity
+                write(6,2023)
+2023            format(/'  [rf-i] Reflectivity Data, '
+     1                 /'  [mr-i] Column Max Ref, [mt] Max Tops,'       
+     1                 /'  [lr-i] Low Lvl Ref, '
+     1                 ,'[f1] 1 HR Fcst Max Reflectivity,'
+     1                 /' ',61x,' [q] Quit ? ',$)
+
+            endif
+
+
             read(lun,824)c_field
 
-            if(      c_type .eq. 'rf' .or. c_type .eq. 'rv'
+            if(      c_type .eq. 'rf' 
      1         .and. c_field(1:2) .ne. 'mr'
      1         .and. c_field(1:2) .ne. 'lr')then
 !             Obtain LPS reflectivity field
@@ -1604,10 +1621,10 @@ c
 
             endif
 
-            if(  c_field(1:2) .eq. 'rf' 
-     1      .or. c_field .eq. 'vi' .or. c_field .eq. 've')then
-                write(6,2021)
-2021            format('         Enter Level in mb ',45x,'? ',$)
+            if(  c_field(1:2) .eq. 'rf' .or. c_field(1:2) .eq. 'rv' 
+     1      .or. c_field(1:2) .eq. 'vi' .or. c_field(1:2) .eq. 've')then       
+                write(6,2025)
+2025            format('         Enter Level in mb ',45x,'? ',$)
                 call input_level(lun,k_level,k_mb,pres_3d
      1                          ,NX_L,NY_L,NZ_L)       
             endif
@@ -1628,8 +1645,8 @@ c
 
                 else ! c_type .eq. 'ra'?
                     write(6,*)' Calling get_max_ref'
-                    call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L
-     1                              ,radar_array)
+                    call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
+     1                                  ,r_missing_data,radar_array)
                     c33_label = 'LAPS Col. Max Ref (intermediate) '    
 
                 endif
@@ -2838,7 +2855,7 @@ c
 
               c33_label = 'LAPS CAPE                (J/KG)  '
               clow = 0.
-              chigh = 8000.
+              chigh = 7200.
               cint = +400.
 
 !             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t,
@@ -2862,6 +2879,10 @@ c
                       else
                           field_2d(i,j) = +0.1
                       endif
+
+                  elseif(field_2d(i,j) .lt. -500.)then
+                      field_2d(i,j) = -500.                      
+
                   endif
 
               enddo ! j
@@ -2869,7 +2890,7 @@ c
 
               c33_label = 'LAPS CIN                 (J/KG)  '
               clow = -500  !   0.
-              chigh = +50 !   0.
+              chigh = 50.  !  50.
               cint =  50.  ! -10.
 
 !             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
@@ -3398,7 +3419,7 @@ c                   cint = -1.
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,-20.,100.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
      1                     ,n_image)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -3450,7 +3471,7 @@ c                   cint = -1.
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,-20.,100.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
      1                     ,n_image)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -3689,7 +3710,7 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image) 
                 elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
-                    call ccpfil(field_2d,NX_L,NY_L,-20.0,100.0,'hues'
+                    call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
      1                         ,n_image) 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
@@ -3840,7 +3861,7 @@ c                   cint = -1.
      1                        ,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,100.,-20.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
      1                     ,n_image)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4772,8 +4793,8 @@ c                   cint = -1.
                 if(c_field .eq. 'ob')then
                     call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltyp
      1e)
-                    write(6,2031)
-2031                format('         Enter Radar #   ',45x,'? ',$)
+                    write(6,2041)
+2041                format('         Enter Radar #   ',45x,'? ',$)
                     read(5,*)i_radar
 
                     call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'

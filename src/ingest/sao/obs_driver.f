@@ -184,7 +184,7 @@ c
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
 	character  filename9*9, filename13*13, a9time_metar_file*9
         character  fname9_to_wfo_fname13*13
-	character  data_file_m*150, data_file_l*150, data_file_b*150
+	character  data_file_m*150, data_file_l*150 
 c
         character*200 path_to_metar
         character*200 path_to_local_data
@@ -323,7 +323,6 @@ c.....  Figure out if the data files are there, paths, etc.
 c
         data_file_m = ' '
         data_file_l = ' '
-        data_file_b = ' '
 
         call s_len(metar_format,len_metar_format)
 
@@ -345,19 +344,11 @@ c
 	        data_file_m = path_to_METAR(1:len_path)
      1                        //a9time_metar_file// '0100o'       
 c        
-                len_path = index(path_to_buoy_data,' ') - 1
-	        data_file_b = path_to_buoy_data(1:len_path)
-     1                        //a9time_metar_file// '0100o'
-
             elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
                 filename13=fname9_to_wfo_fname13(a9time_metar_file)       
 
                 len_path = index(path_to_METAR,' ') - 1
                 data_file_m = path_to_METAR(1:len_path)//filename13       
-
-                len_path = index(path_to_buoy_data,' ') - 1
-                data_file_b = 
-     &                path_to_buoy_data(1:len_path) // filename13
 
             else
                 write(6,*)' ERROR: unknown metar format ',metar_format  
@@ -475,11 +466,9 @@ c
 c.....  Call the routine that reads the Buoy data files, then get
 c.....  the data.
 c
-cc	data_file_b = '/data/fxa/point/maritime/netcdf/' // filename13
-	print*,'Getting buoy/ship data ', data_file_b
 c
         call get_buoy_obs(maxobs,maxsta,i4time_sys,path_to_buoy_data,       
-     &                      data_file_b,metar_format,
+     &                      metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,

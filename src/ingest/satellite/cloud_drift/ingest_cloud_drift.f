@@ -64,7 +64,14 @@
               stop
           endif
 
-          c_filespec = dir_in(1:len_dir_in)
+          if(cloud_drift_format(ipath) .eq. 'CWB_SATOB')then
+              c_filespec = dir_in(1:len_dir_in)//'/satob*.dat'
+          elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
+              c_filespec = dir_in(1:len_dir_in)//'/hdsw*.dat'
+          else
+              c_filespec = dir_in(1:len_dir_in)
+          endif
+
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                       ,max_files,istatus)
 

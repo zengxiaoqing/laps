@@ -70,6 +70,16 @@ C
       scale = scale_h - scale_l
       call addcon(field_in,-scale_l,ZREG,MREG,NREG)
 
+      call get_r_missing_data(r_missing_data,istatus)
+
+      do i = 1,MREG
+      do j = 1,NREG
+          if(field_in(i,j) .eq. r_missing_data)then
+              ZREG(i,j) = scale * 0.96
+          endif
+      enddo 
+      enddo
+
 C      
 C Get data array
 C
@@ -184,34 +194,42 @@ C
 
       elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
      1                              .or. colortable .eq. 'cpe')then       
-          ncols = 50
-          call color_ramp(1,ncols/8,IWKID
+          ncols1 = 50
+          ncols = 60
+          call color_ramp(1,ncols1/8,IWKID
      1                   ,0.5,0.15,0.6                 ! Pink
      1                   ,0.5,0.5,0.7)                ! Violet
-          call color_ramp(ncols/8,59*ncols/120,IWKID
+          call color_ramp(ncols1/8,59*ncols1/120,IWKID
      1                   ,0.5,0.5,0.7                 ! Violet
      1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(59*ncols/120,73*ncols/120,IWKID
+          call color_ramp(59*ncols1/120,73*ncols1/120,IWKID
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(73*ncols/120,90*ncols/100,IWKID
+          call color_ramp(73*ncols1/120,90*ncols1/100,IWKID
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(90*ncols/100,ncols,IWKID
+          call color_ramp(90*ncols1/100,ncols1,IWKID
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.2)                ! Hot
+          call color_ramp(100*ncols1/100,ncols,IWKID
+     1                   ,3.0,0.9,0.2                 ! White
+     1                   ,3.0,0.15,0.6)               ! Hot
 
           if(colortable .eq. 'ref')then
               do i = 1,3
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
 
-              call GSCR(IWKID, ncols, 0.3, 0.3, 0.3)
+              do i = ncols,ncols
+                  call GSCR(IWKID, i, 0.3, 0.3, 0.3)
+              enddo
 
           elseif(colortable .eq. 'cpe')then
               do i = 1,2
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
+
+              ncols = 48
 
 !             call GSCR(IWKID, ncols, 0.3, 0.3, 0.3)
 
