@@ -70,9 +70,9 @@ c
      &            extreme_thrsh_70=0.10,
      &            n_data_types=6)
 
-       character*100 dir_ln3
+       character*150 dir_ln3
        character*31 ext_ln3
-       character*100 dir_static
+       character*150 dir_static
 
        character*125 comment_ll(2)
        character*125 comment_ln3(n_data_types)
