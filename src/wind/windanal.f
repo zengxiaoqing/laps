@@ -478,29 +478,29 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 !              Stricter QC check for pireps
      1                       .OR. 
      1         (speed_diff .gt. 10. .and. 
-     1                              obs_point(i_ob)%type .eq. 'pin')        
+     1                              obs_point(i_ob)%file .eq. 'pin')        
 
 !              Stricter QC check for Cloud Drift Winds
      1                       .OR. 
      1         (speed_diff .gt. 10. .and. 
-     1                              obs_point(i_ob)%type .eq. 'cdw')        
+     1                              obs_point(i_ob)%file .eq. 'cdw')        
 
 !              Stricter QC check for profilers
      1                       .OR. 
      1         (speed_diff .gt. 22. .and. 
-     1                              obs_point(i_ob)%type .eq. 'prof')        
+     1                              obs_point(i_ob)%file .eq. 'pro')        
      1                                                                 )
 
      1                                                          )then
 
 !                 Throw out the ob
-                  if(obs_point(i_ob)%type .eq. 'pin')then
+                  if(obs_point(i_ob)%file .eq. 'pin')then
                       n_qc_acrft_bad = n_qc_acrft_bad + 1
-                  elseif(obs_point(i_ob)%type .eq. 'cdw')then
+                  elseif(obs_point(i_ob)%file .eq. 'cdw')then
                       n_qc_cdw_bad = n_qc_cdw_bad + 1
-                  elseif(obs_point(i_ob)%type .eq. 'sfc')then
+                  elseif(obs_point(i_ob)%file .eq. 'lso')then
                       n_qc_sfc_bad = n_qc_sfc_bad + 1
-                  elseif(obs_point(i_ob)%type .eq. 'prof')then
+                  elseif(obs_point(i_ob)%file .eq. 'pro')then
                       n_qc_prof_bad = n_qc_prof_bad + 1
                   endif
 
@@ -521,22 +521,22 @@ csms$>       rms_thresh , out>:default=ignore)  begin
                   n_qc_total_bad = n_qc_total_bad + 1
 
               else ! keep and write out the good OB
-                  if(obs_point(i_ob)%type .eq. 'pin')then
+                  if(obs_point(i_ob)%file .eq. 'pin')then
                       n_qc_acrft_good = n_qc_acrft_good + 1
                       c3_string = 'Prp'
                   endif
 
-                  if(obs_point(i_ob)%type .eq. 'cdw')then
+                  if(obs_point(i_ob)%file .eq. 'cdw')then
                       n_qc_cdw_good  = n_qc_cdw_good + 1
                       c3_string = 'Cdw'
                   endif
 
-                  if(obs_point(i_ob)%type .eq. 'sfc')then
+                  if(obs_point(i_ob)%file .eq. 'lso')then
                       n_qc_sfc_good   = n_qc_sfc_good + 1
                       c3_string = 'Sfc'
                   endif
 
-                  if(obs_point(i_ob)%type .eq. 'prof')then
+                  if(obs_point(i_ob)%file .eq. 'pro')then
                       n_qc_prof_good  = n_qc_prof_good + 1
                       c3_string = 'Prf'
                   endif
