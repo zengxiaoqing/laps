@@ -203,7 +203,7 @@ c                   write(6,*)' khigh = ',kk
                         if(cld_hts(kk) .gt. cloud_base_buf(i,j)
 !    1                                .and. .not. l_unresolved(i,j)
      1                                                           )then
-                            cldcv(i,j,kk) = 1.2
+                            cldcv(i,j,kk) = 1.0
                             insert_count_lvl = insert_count_lvl + 1
                             insert_count_tot = insert_count_tot + 1
                         else ! Radar Echo below cloud base
