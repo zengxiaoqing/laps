@@ -11,13 +11,6 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 KRCFLAGS=-g $(INC)
 
-
-
-
-
-
-
-
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
