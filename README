@@ -2800,8 +2800,8 @@ Note that more info on the units of the fields, etc. are contained in the
                 File LAPS CDF    Num
 		Ext  Var  Var    Lvl  Field
 
-Process surface:LSX  U    su       1  Surface wind u 
-       		     V    sv       1  Surface wind v
+Process surface:LSX  U    su       1  Surface wind u (grid north)
+       		     V    sv       1  Surface wind v (grid north)
         	     P    fp       1  1500m Pressure
             	     T    st       1  Temp 
 		     TD   std      1  Dewpt Temp
@@ -2906,14 +2906,14 @@ Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		     MWF  mwf      1  Soil Moisture content Wetting Front
 
 LAPS Fcst Model:
-                RAM  U3   ru	  21  Fcst Model Wind u
-		     V3   rv	  21  Fcst Model Wind v
+                RAM  U3   ru	  21  Fcst Model Wind u (true north)
+		     V3   rv	  21  Fcst Model Wind v (true north)
 		     HT	  rz	  21  Fcst Model Height
 		     T3	  rt	  21  Fcst Model Temperature
 		     SH	  rsh	  21  Fcst Model Specific Humidity
 		
-		RSF  U	  rus 	   1  Fcst Model Surface wind u
-	             V	  rvs 	   1  Fcst Model Surface wind v
+		RSF  U	  rus 	   1  Fcst Model Surface wind u (true north)
+	             V	  rvs 	   1  Fcst Model Surface wind v (true north)
 		     T	  rts 	   1  Fcst Model Surface Temperature
 		     P	  rps 	   1  Fcst Model 1500m pressure
 		     TD	  rtd 	   1  Fcst Model Dewpoint                 
@@ -2958,14 +2958,15 @@ Process remap:  V01  REF  refd    21  Radar reflectivity
                       V12, V13, V14, V15, V16, V17, V18, V19, V20 same format
 
 Process lga.exe (background model):
-                LGA  HT   ht      21  MAPS isentrop height interp to LAPS 
+                LGA  HT   ht      21  Model isentrop height interp to LAPS 
                                       isobaric
-                     T3   t       21  MAPS isentrop temp interp to LAPS isobaric
-                     SH   sh      21  MAPS specific humidity
-                     U3   u       21  MAPS u wind component
-                     V3   v       21  MAPS v wind component
+                     T3   t       21  Model isentrop temp interp to LAPS isobaric
+                     SH   sh      21  Model specific humidity
+                     U3   u       21  Model u wind component (true north)
+                     V3   v       21  Model v wind component (true north)
 
                 LGB                   Sfc grids
+                                      (winds are true north)
 
 Process LH1: 	LH1  PW   pw	   1  Precipitable Water
 
