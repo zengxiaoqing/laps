@@ -33,7 +33,7 @@ c
 c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
      &     itheta,redp_lvl,
-     &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,grid_spacing, 
+     &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, sp_bk, vis_bk, 
@@ -212,7 +212,7 @@ c.....	LAPS lat/lon and terrain grids, and Coriolis.
 c
 	integer istatus
         real grid_spacing
-	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj), ldf(ni,nj)
 	real fo(ni,nj), fo2(ni,nj), akk(ni,nj), pbl_top(ni,nj)
 c
 c.....  Stuff for intermediate grids (old LGS file)
@@ -1007,8 +1007,8 @@ c
 	   isnow = 0
 	endif
 c
-	call lp_fire_danger(imax,jmax,rh,t,spd,d1,d2,topo,ismoist,isnow,
-     &                                            fire,istatus)
+	call lp_fire_danger(imax,jmax,rh,t,spd,d1,d2,topo,ldf,ismoist,
+     &                                            isnow,fire,istatus)
 	print *,' Fire: ',ismoist, isnow, istatus
 	print *,' '
 c

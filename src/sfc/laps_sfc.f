@@ -122,7 +122,7 @@ c          the future.
 c
 c*****************************************************************************
 c
-	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj), ldf(ni,nj)
 	real x1a(ni), x2a(nj), y2a(ni,nj)
 	real grid_spacing
 c
@@ -295,6 +295,9 @@ c
 	var_s = 'AVG'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      topo ,grid_spacing,istatus)
+	var_s = 'LDF'
+        call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
+     &                      ldf  ,grid_spacing,istatus)
 c
 c.....  Read in the obs and calculate a weight based on distance to each
 c.....  station.
@@ -709,7 +712,7 @@ c.....	directory (machine dependent) and has the extension '.lsx'.
 c
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
      &     itheta,redp_lvl,laps_cycle_time,
-     &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
+     &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 

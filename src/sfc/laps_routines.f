@@ -567,7 +567,7 @@ c
 c
 c
 	subroutine lp_fire_danger (ni,nj,lp_10krh,lp_10kt,lp_10kws,
-     &                             soil_moist,snow_cover,topo,
+     &                             soil_moist,snow_cover,topo,ldf,
      &                        ismoist,isnow,lp_fire_index,i_status)
 c
 c++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -602,7 +602,7 @@ c
 	integer ni,nj
 	real lp_10krh(ni,nj), lp_10kt(ni,nj), lp_10kws(ni,nj)
 	real snow_cover(ni,nj), soil_moist(ni,nj), topo(ni,nj)
-	real lp_fire_index(ni,nj)
+	real lp_fire_index(ni,nj), ldf(ni,nj)
 c
 	integer i_lp,	j_lp, i_rh, i_temp, i_wspeed, i_soil,
      &            i_status
@@ -734,6 +734,10 @@ c.....  Check for index below zero.
 	    if (lp_fire_index(i_lp,j_lp) .lt. 0.0) then
 	        lp_fire_index(i_lp,j_lp) = 0.0
 	    endif
+
+c.....  Apply land fraction as a mask
+            lp_fire_index(i_lp,j_lp) 
+     1    = lp_fire_index(i_lp,j_lp) * ldf(i_lp,j_lp)
 
 	  enddo !i_lp
 	enddo!j_lp
@@ -1432,6 +1436,10 @@ c
 	print *,'  Found LGB background at ',filename13,
      &          '...checking field.'
 	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
+
+!       Call new 'get_modelfg_2d' routine
+!       call get_modelfg_2d(i4time_bk,var(2),ni,nj,bkg_field,istatus)       
+
 	if(istatus .eq. 1) then
 	   bkg_status = 1
 	   bkg_time = i4time_bk
