@@ -578,7 +578,7 @@ C
 
       elseif(colortable .eq. 'omega')then       
           if(.not. l_discrete)then
-              ncols = 60
+              ncols = 59
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
