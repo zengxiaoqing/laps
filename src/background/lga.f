@@ -645,8 +645,8 @@ c
      +                 (tp(i,j,k) .gt. 1000.) .or.
      +                 (tp(i,j,k) .le. 0.) .or.
      +                 (abs(sh(i,j,k)) .gt. 1.) .or.
-     +                 (abs(uw(i,j,k)) .gt. 100.) .or.
-     +                 (abs(vw(i,j,k)) .gt. 100.) ) then
+     +                 (abs(uw(i,j,k)) .gt. 150.) .or.
+     +                 (abs(vw(i,j,k)) .gt. 150.) ) then
 
 c                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
 c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
