@@ -989,13 +989,20 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      The best timing of the cron is often related to the arrival time
      of the raw surface observations. For example, if most of the surface
      data arrives within 20 minutes of the observation time, then running
-     the cron 20 minutes after the 'systime' would be optimum. 
+     the cron 20 minutes after the 'systime' would be optimum. The time window
+     for acceptance of surface stations in the LSO file can be controlled
+     by runtime parameters in 'obs_driver.nl'.
 
      Once we get the 'sfc_qc.exe' Kalman module operating in LAPS, we may be 
      able to recommend running LAPS earlier. In that future mode, LAPS would
      process each most recent observation available and project ahead if
      needed any observations that did not yet arrive for the current 
      'systime'.
+
+     In most cases, the data cutoff time window for 3D observations is
+     +/-laps_cycle_time/2 or +/-laps_cycle_time. For example an hourly
+     LAPS cycle accepts RAOB data from a +/-60 minute time window and
+     ACARS from a +/-30 minute window.
 
                ----   2.4.2  Purging Output Files ---
 
