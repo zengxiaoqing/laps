@@ -42,10 +42,11 @@
          3.1.3 ..................  WSR 88-D WIDEBAND RADAR REMAPPER
          3.1.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
          3.1.5 ..................  PROFILERS (PRO) Ingest
-         3.1.6 ..................  RASSs (LRS) Ingest
-         3.1.7 ..................  PIREPS/ACARS Ingest
-         3.1.8 ..................  RAOB (SND) Ingest
-         3.1.9 ..................  VAD (PRO) Ingest
+         3.1.6 ..................  VAD (PRO) Ingest
+         3.1.7 ..................  RASSs (LRS) Ingest
+         3.1.8 ..................  PIREPS/ACARS Ingest
+         3.1.9 ..................  RAOB (SND) Ingest
+         3.1.10 .................  Cloud Drift Wind (CDW) Ingest
          3.2 ..............  Analysis Processes
          3.2.1 ..................  WIND
          3.2.2 ..................  SFC (LSX) 
@@ -997,85 +998,35 @@ Output:
 
 ------ 3.1.3 ----------WSR 88D WIDEBAND RADAR REMAPPER------------------------
 
-Process: REMAP (author: Steve Albers/Keith Brewster - run on "RIDDS BOX")
-     (author: Steve Albers - albers@fsl.noaa.gov)
+Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
 
 Every volume scan
 Initiation: Completion of volume scan
 
 Inputs:
-	Raw WSR-88D Radar Data (reflectivity and velocity in polar form)
-            OLDLAPS: Circular Buffer
-            NEWLAPS: Polar NetCDF files (one per volume)
+	Raw WSR-88D Radar Data (reflectivity and velocity in polar NetCDF 
+        format - one per volume)
 
 Outputs (LAPS intermediate files):
 <pre>
-     v01    grids         3-D Radar reflectivity, velocity, and Nyquist vel
-     v02      "                                  "
+     v01         grids       3-D Radar reflectivity, velocity, and Nyquist vel
+     v02           "                                  "
+     rdr/xxx/vrc   "         2-D Radar reflectivity
      etc. (for each radar)
 </pre>
-Source directory: Must be obtained separately from LAPS. This software runs
-                  on SUNOS and uses 'oldlaps' software conventions. The
-                  input is the wide-band data stored in memory as a 
-                  "circular buffer".
 
-                  "Under Construction" is a 'newlaps' version of this remapper
-                  that utilizes wide-band data stored in NetCDF files as input.
+Source directory: The radar remapper utilizes wide-band data stored in NetCDF 
+                  files as input. Narrow band data can also be used as input
+                  if it can be reformatted to look like wide-band data.
                   The source code for this is in 'src/ingest/radar/remap'.
 
-This 'oldlaps' version runs on special hardware that is connected to the 88D 
-radar. The source code in the LAPS source directory contains the upper level
-cartesian remapping routines. These must be linked with the lower level 
-routines running on the actual RIDDS box to access the raw wideband radar
-data. This hardware is currently being developed by NSSL (contact Mike Jain), 
-and is being fielded on a number of WSR 88-D radars by several people at FSL 
-(including Woody Roberts and Steve Albers). Please see the following
-references from the LAPB home page, (Albers 1995; Brewster et al, 1995;
-Roberts et al, 1995). 
+The outputs from this process are used by the LAPS wind analysis, and also
+potentially by cloud and precip accumulation analyses.
 
-The outputs from this process are currently used by the LAPS wind analysis.
-We may expand this to the cloud and precip accumulation analyses in the
-future (these currently use NOWRAD 'vrc' 2-D radar files).
-
-To build the remapping software on the RIDDS machine, a special section
-of the 'install_laps' script is invoked using a special version of the
-LAPS tar file. One still untars and runs 'install_laps' as normal, but only
-the remapper gets built. When running the remapper, files such as v01, v02,
-etc. are produced depending on which radar is being used. 
-
-To run the remapper software do 'cd nest7grid/exe; ./remapcrt.exe'; 
-the correct LAPS static file must be present (a normal occurrence when LAPS is 
-installed). The remapcrt.exe executable runs continuously, no scheduler is 
-involved. There is a set of environment variables that control such things as 
-data compression and transmission options. There is also a method to ftp the 
-files automatically, but this is more of a kludge and you'll need to contact 
-the author for the gory details.
-<pre>
-     Variable:            Contents         
-     ---------            --------
-     RADARNAME            'KFTG' for example                         [required]
-     LAPS_USER            Username for rcp command                   [optional]
-     LAPS_DEST            Destination machine directory name for rcp command
-                                                                     [optional]
-     LAPS_REMOTE          Node name for rcp command                  [optional]
-     LAPS_COMPRESS        'gzip' or 'compress'                       [optional]
-     LAPS_EXT             Set output extension if you have more than one radar 
-                                                                     [optional]
-     LAPS_PURGE           Valid values are non-negative integers. A value 
-                          of '0' disables the purger. Positive integers will
-                          purge the output file directory keeping that number
-                          of files present.
-</pre>
-Normally the remapper is compiled and run on the same machine. However, a
-procedure is being tested to allow compilation to occur on one machine with
-executables only being ported to another machine where the remapper is run.
-
-There is another version of the remapper that runs simulated data.
-To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
-
-A description of how the remapper software functions including how the 'v01'
-file is produced may be found on the
-World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'
+When running the remapper, files such as v01, v02, vrc, etc. are produced 
+depending on which radar is being used and on the input parameters. 
+A further description of how the remapper software functions may be found on 
+the World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'.
 
 ------ 3.1.4 -------------------VRC--------------------------------------------
 <pre>
@@ -1109,7 +1060,22 @@ Source directory: laps/nest7grid/source/ingest/profiler
 
 Sample Output: Should be available in the test data case.
 
------- 3.1.6 ------------------RASS (LRS)-------------------------------------
+ 
+------ 3.1.6 -----------------------VAD----------------------------------------
+
+Process: (ingest_vad.exe) LAPS RAOBs
+     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Inputs:
+	VADs in NetCDF format
+
+Outputs: (Feeds wind.exe)
+	pro	inter data	VAD wind
+                                        
+        Note: This is one of several processes that write to build up the
+              pro file.
+ 
+------ 3.1.7 ------------------RASS (LRS)-------------------------------------
 
 Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1126,7 +1092,7 @@ Source directory: laps/nest7grid/source/ingest/rass
 
 Sample Output: Should be available in the test data case.
 
------- 3.1.7 ------------------PIREPS/ACARS-----------------------------------
+------ 3.1.8 ------------------PIREPS/ACARS-----------------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1140,7 +1106,7 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 Sample Output: Should be available in the test data case
 
  
------- 3.1.8 -----------------------RAOB--------------------------------------
+------ 3.1.9 -----------------------RAOB--------------------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1156,21 +1122,19 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
               help (due to raobs being relatively old). This can be done by
               using a dummy path name for the raw raob data in 
               'nest7grid.parms'.
- 
------- 3.1.9 -----------------------VAD----------------------------------------
 
-Process: (ingest_vad.exe) LAPS RAOBs
+------ 3.1.10 ----------Cloud Drift Wind (CDW) Ingest--------------------------
+
+Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
      (author: Steve Albers - albers@fsl.noaa.gov)
 
 Inputs:
-	VADs in NetCDF format
+	GOES 8/9 cloud drift winds in ASCII format
 
 Outputs: (Feeds wind.exe)
-	pro	inter data	VAD wind
+	cdw	inter data	Satellte cloud drift winds
                                         
-        Note: This is one of several processes that write to build up the
-              pro file.
- 
+
 ------- 3.2  -------------  ANALYSIS PROCESSES --------------------------------
 
 ------ 3.2.1 ---------------------WIND-----------------------------------------
@@ -1193,15 +1157,14 @@ Process: wind.exe - WIND analysis and related fields
 Auxiliary functions:
 	write out graphical products
 		
-Inputs: (from PRO, PIN, LGA/RAM, LSX, LT1)       '*' = essential input
+Inputs: (from PRO, PIN, LGA/RAM, CDW)       '*' = essential input
       * lga/ram grid            model data analysis/forecast
                                 needed for current and previous cycle times
 	pro     inter data      profiler winds
         snd     inter data      RAOB data including winds
 	pin	inter data      pireps/clouds
+        cdw     inter data      cloud drift wind
       * lso     inter data      LAPS surface obs file: mesonet & SAO
-	lsx	grid		LAPS surface data grids
-        lt1     grid            LAPS heights
 
         (remapped from raw radar data)
 	v01-v20 grid            3-D radar reflectivity/radial velocity 
