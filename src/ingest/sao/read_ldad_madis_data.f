@@ -1,62 +1,65 @@
+
 C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
-      subroutine read_ldadmadis_netcdf(nf_fid, QCcheckNum, maxSensor, 
-     +     recNum, filterSetNum, firstOverflow, globalInventory, 
-     +     nStaticIds, numPST, numericWMOid, precipIntensity, 
-     +     precipRateQCA, precipRateQCR, precipType, pressChangeChar, 
-     +     altimeter, dewpoint, elevation, latitude, longitude, 
-     +     meanWeightedTemperature, precipAccum, precipRate, 
-     +     pressChange3Hour, rawPrecip, relHumidity, relHumidityQCD, 
-     +     seaLevelPressure, seaLevelPressureQCD, soilMoisture, 
-     +     soilTemperature, solarRadiation, stationPressure, 
-     +     temperature, visibility, windDir, windDirMax, windGust, 
-     +     windSpeed, observationTime, receivedTime, reportTime, 
-     +     altimeterDD, dataProvider, dewpointDD, precipAccumDD, 
-     +     precipRateDD, pressChange3HourDD, providerId, 
-     +     relHumidityDD, seaLevelPressureDD, staticIds, stationId, 
-     +     stationName, stationPressureDD, stationType, 
-     +     temperatureDD, test1, visibilityDD, windDirDD, windSpeedDD)
+      subroutine read_ldadmadis_netcdf(nf_fid, maxSensor, recNum, 
+     +     filterSetNum, firstOverflow, globalInventory, nStaticIds, 
+     +     numPST, numericWMOid, precipIntensity, precipType, 
+     +     pressChangeChar, altimeter, dewpoint, elevation, latitude, 
+     +     longitude, meanWeightedTemperature, precipAccum, 
+     +     precipRate, pressChange3Hour, rawPrecip, relHumidity, 
+     +     seaLevelPressure, soilMoisture, soilTemperature, 
+     +     solarRadiation, stationPressure, temperature, visibility, 
+     +     windDir, windDirMax, windGust, windSpeed, observationTime, 
+     +     receivedTime, reportTime, rhChangeTime, 
+     +     stationPressChangeTime, tempChangeTime, windDirChangeTime, 
+     +     windGustChangeTime, windSpeedChangeTime, altimeterDD, 
+     +     dataProvider, dewpointDD, precipAccumDD, precipRateDD, 
+     +     pressChange3HourDD, providerId, relHumidityDD, 
+     +     seaLevelPressureDD, staticIds, stationId, stationName, 
+     +     stationPressureDD, stationType, temperatureDD, test1, 
+     +     visibilityDD, windDirDD, windSpeedDD)
 C
       include 'netcdf.inc'
-      integer QCcheckNum, maxSensor, recNum,nf_fid, nf_vid, nf_status
+      integer maxSensor, recNum,nf_fid, nf_vid, nf_status
       integer filterSetNum, firstOverflow, globalInventory,
      +     nStaticIds, numPST, numericWMOid(recNum), precipIntensity(
-     +     maxSensor, recNum), precipRateQCA(recNum),
-     +     precipRateQCR(recNum), precipType( maxSensor, recNum),
+     +     maxSensor, recNum), precipType( maxSensor, recNum),
      +     pressChangeChar(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
      +     precipRate(recNum), pressChange3Hour(recNum),
-     +     rawPrecip(recNum), relHumidity(recNum), relHumidityQCD(
-     +     QCcheckNum, recNum), seaLevelPressure(recNum),
-     +     seaLevelPressureQCD( QCcheckNum, recNum),
-     +     soilMoisture(recNum), soilTemperature(recNum),
-     +     solarRadiation(recNum), stationPressure(recNum),
-     +     temperature(recNum), visibility(recNum), windDir(recNum),
-     +     windDirMax(recNum), windGust(recNum), windSpeed(recNum)
+     +     rawPrecip(recNum), relHumidity(recNum),
+     +     seaLevelPressure(recNum), soilMoisture(recNum),
+     +     soilTemperature(recNum), solarRadiation(recNum),
+     +     stationPressure(recNum), temperature(recNum),
+     +     visibility(recNum), windDir(recNum), windDirMax(recNum),
+     +     windGust(recNum), windSpeed(recNum)
       double precision observationTime(recNum), receivedTime(recNum),
-     +     reportTime(recNum)
-      character pressChange3HourDD(recNum)
+     +     reportTime(recNum), rhChangeTime(recNum),
+     +     stationPressChangeTime(recNum), tempChangeTime(recNum),
+     +     windDirChangeTime(recNum), windGustChangeTime(recNum),
+     +     windSpeedChangeTime(recNum)
       character windDirDD(recNum)
-      character relHumidityDD(recNum)
-      character dewpointDD(recNum)
-      character temperatureDD(recNum)
-      character stationPressureDD(recNum)
-      character precipAccumDD(recNum)
       character*11 stationType(recNum)
       character*51 test1(recNum)
-      character visibilityDD(recNum)
-      character*51 stationName(recNum)
-      character*12 providerId(recNum)
-      character*6 stationId(recNum)
       character*24 staticIds
       character windSpeedDD(recNum)
+      character relHumidityDD(recNum)
+      character stationPressureDD(recNum)
       character altimeterDD(recNum)
-      character*11 dataProvider(recNum)
+      character pressChange3HourDD(recNum)
       character precipRateDD(recNum)
+      character*11 dataProvider(recNum)
+      character dewpointDD(recNum)
+      character*6 stationId(recNum)
       character seaLevelPressureDD(recNum)
+      character visibilityDD(recNum)
+      character precipAccumDD(recNum)
+      character*51 stationName(recNum)
+      character*12 providerId(recNum)
+      character temperatureDD(recNum)
 
 
 C   Variables of type REAL
@@ -238,22 +241,6 @@ C
       call ck_array_real(relHumidity,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
-C      relHumidityQCD"relative humidity QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCD'
-      endif
-      call ck_array_real(relHumidityQCD,recNum,filval,badflag)
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,relHumidityQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCD'
-      endif
-      call ck_array_real(relHumidityQCD,recNum,misval,badflag)
-C
-C     Variable        NETCDF Long Name
 C      seaLevelPressure"sea level pressure"
 C
       nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressure',nf_vid)
@@ -268,22 +255,6 @@ C
         print *,'in var seaLevelPressure'
       endif
       call ck_array_real(seaLevelPressure,recNum,misval,badflag)
-C
-C     Variable        NETCDF Long Name
-C      seaLevelPressureQCD"sea level pressure QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCD'
-      endif
-      call ck_array_real(seaLevelPressureQCD,recNum,filval,badflag)
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,seaLevelPressureQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCD'
-      endif
-      call ck_array_real(seaLevelPressureQCD,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      soilMoisture "Soil moisture"
@@ -547,34 +518,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      precipRateQCA"precip rate QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipRateQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipRateQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      precipRateQCR"precip rate QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipRateQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipRateQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      precipType   "precipitation type"
 C
       nf_status=NF_INQ_VARID(nf_fid,'precipType',nf_vid)
@@ -645,6 +588,90 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var reportTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rhChangeTime "relative humidity time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'rhChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rhChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,rhChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rhChangeTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      stationPressChangeTime"station press time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'stationPressChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var stationPressChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,stationPressChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var stationPressChangeTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tempChangeTime"temperature time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'tempChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tempChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,tempChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tempChangeTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windDirChangeTime"wind direction time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'windDirChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDirChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windDirChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDirChangeTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windGustChangeTime"wind gust time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'windGustChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windGustChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windGustChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windGustChangeTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windSpeedChangeTime"wind speed time of last change"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'windSpeedChangeTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeedChangeTime'
+      endif
+      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windSpeedChangeTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeedChangeTime'
       endif
 
 
