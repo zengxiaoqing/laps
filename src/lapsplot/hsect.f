@@ -183,8 +183,7 @@ cdis
 
 !       real*4 slwc_int(NX_L,NY_L)
         real*4 column_max(NX_L,NY_L)
-        character pcp_type_2d(NX_L,NY_L)
-        character b_array(NX_L,NY_L)
+        integer*4 i_array(NX_L,NY_L)
 
         real*4 field2_2d(NX_L,NY_L)
         real*4 cice_2d(NX_L,NY_L)
@@ -3009,16 +3008,14 @@ c
 
                 call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
 
-!               Convert from real to byte
+!               Convert from real to integer
                 do i = 1,NX_L
                 do j = 1,NY_L
-!                   Convert to byte
-                    b_array(i,j) = i4_to_byte(int(field_2d(i,j)))
+                    i_array(i,j) = int(field_2d(i,j))
                 enddo ! i
                 enddo ! j
 
-
-                call plot_cldpcp_type(b_array
+                call plot_cldpcp_type(i_array
      1                ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
      1                ,lat,lon,idum1_array
      1                ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -3131,15 +3128,14 @@ c
 
             endif ! k_level
 
-!           Convert from real to byte
+!           Convert from real to integer
             do i = 1,NX_L
             do j = 1,NY_L
-                iarg = field_2d(i,j) * 16 ! Code into left 4 bits
-                pcp_type_2d(i,j) = i4_to_byte(iarg)
+                i_array(i,j) = field_2d(i,j)
             enddo ! i
             enddo ! j
 
-            call plot_cldpcp_type(pcp_type_2d
+            call plot_cldpcp_type(i_array
      1             ,asc9_tim,c33_label,c_type,k,i_overlay,c_display  
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -5532,7 +5528,7 @@ c             if(cint.eq.0.0)cint=0.1
 990     return
         end
 
-        subroutine plot_cldpcp_type(cldpcp_type_2d
+        subroutine plot_cldpcp_type(icldpcp_type_2d
      1     ,asc_tim_9,c33_label,c_field,k_level,i_overlay,c_display
      1     ,lat,lon,ifield_2d
      1     ,NX_L,NY_L,laps_cycle_time,jdot)
@@ -5544,7 +5540,7 @@ c             if(cint.eq.0.0)cint=0.1
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
 
-        character cldpcp_type_2d(NX_L,NY_L)
+        integer*4 icldpcp_type_2d(NX_L,NY_L)
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
         integer*4 ifield_2d(NX_L,NY_L)
@@ -5584,9 +5580,9 @@ c             if(cint.eq.0.0)cint=0.1
 
             interval = 2
 
-            call plot_types_2d(cldpcp_type_2d,interval,size,c_field,.fal
-     1se.
-     1                                  ,NX_L,NY_L,lat,lon,ifield_2d)
+            call plot_types_2d(icldpcp_type_2d,interval,size,c_field
+     1                        ,.false.
+     1                        ,NX_L,NY_L,lat,lon,ifield_2d)
             goto990
         else
             c_metacode = 'c'
@@ -5647,8 +5643,8 @@ c             if(cint.eq.0.0)cint=0.1
                 endif
 
                 size = 1.0
-                call plot_types_2d(cldpcp_type_2d,interval,size,c_field,
-     1                       .true.,NX_L,NY_L,lat,lon,ifield_2d)
+                call plot_types_2d(icldpcp_type_2d,interval,size,c_field      
+     1                            ,.true.,NX_L,NY_L,lat,lon,ifield_2d)
 !               call frame
 
             endif

@@ -36,11 +36,11 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine plot_types_2d(cldpcp_type_2d,interval,size,c2_field,l
-     1_meta
-     1                                  ,imax,jmax,lat,lon,ifield_2d)
+        subroutine plot_types_2d(icldpcp_type_2d,interval,size
+     1                          ,c2_field,l_meta
+     1                          ,imax,jmax,lat,lon,ifield_2d)
 
-        character cldpcp_type_2d(imax,jmax)
+        integer*4 icldpcp_type_2d(imax,jmax)
         integer*4 ifield_2d(imax,jmax)
 
         logical l_meta
@@ -72,12 +72,13 @@ cdis
 !       Pull out relavant bits
         do i = 1,imax
         do j = 1,jmax
-           barg = cldpcp_type_2d(i,j)
-           iarg = byte_to_i4(barg)
+!          barg = cldpcp_type_2d(i,j)
+!          iarg = byte_to_i4(barg)
+           iarg = icldpcp_type_2d(i,j)
            if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
-               ifield_2d(i,j) = iarg - iarg/16*16
+               ifield_2d(i,j) = iarg ! - iarg/16*16
            elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
-               ifield_2d(i,j) = iarg/16
+               ifield_2d(i,j) = iarg ! /16
            endif
         enddo ! j
         enddo ! i
