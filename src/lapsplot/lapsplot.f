@@ -350,6 +350,8 @@ c       set up supmap for plot
             jdot = 0
         endif
 
+        call MAPSET('CO',PLM1,PLM2,PLM3,PLM4)
+
         call draw_county_map(PLM3,PLM4,jproj,polat,polon,rrot,jdot
      1                      ,icol_sta,icol_cou,ni,nj)
 
@@ -360,8 +362,6 @@ c       set up supmap for plot
 !       elseif(map_mode .eq. 2)then
 !           call setusv_dum(2HIN,7)
 !       endif
-
-        call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
 
         call MAPINT
 !       if(IFRAME .eq. 1)call MAPLOT
