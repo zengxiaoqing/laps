@@ -532,7 +532,7 @@ CONTAINS
     REAL                 :: lat1,lon1,stdlon,dx_m,dy_m
     CHARACTER(LEN=255)   :: wrfinitfile
     INTEGER              :: luninit
-
+    LOGICAL              :: fileready
     ALLOCATE (latdot (nx,ny))
     ALLOCATE (londot (nx,ny))
     ALLOCATE (terdot (nx,ny))
@@ -572,6 +572,12 @@ CONTAINS
      ! Get the terrain height
 !     CALL get_wrfsi_static_2d(moad_dataroot, 'avg', terdot)
      wrfinitfile = TRIM(moad_dataroot)//'/wrfprd/wrfinput_d01'
+     INQUIRE(FILE=wrfinitfile,EXIST=fileready)
+     IF (.NOT.fileready) THEN
+       CALL wrfio_wait(wrfinitfile,max_wait_sec)
+     ELSE
+       IF (realtime) CALL sleep(60)
+     ENDIF
      CALL open_wrfnc(wrfinitfile,luninit,status)
      IF (status .NE. 0) THEN
        PRINT *, 'WRF Input File not found: ', TRIM(wrfinitfile)
