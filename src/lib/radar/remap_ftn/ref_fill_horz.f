@@ -140,10 +140,10 @@
                     z_ave = z_sum / float(n_neighbors)
                     dbz_ave = alog10(z_ave) * 10.  ! Currently just a test
                     
-                    if(ref_fill .ge. ref_base)then ! QC flags probably not in 
+!                   if(ref_fill .ge. ref_base)then ! QC flags probably not in 
                                                    ! the mix?
                         l_fill = .true. ! Improves coverage if always .true.
-                    endif
+!                   endif
                 endif
 
 !               Fill into buffer array?
