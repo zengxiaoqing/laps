@@ -462,13 +462,27 @@ c Routine to convert NETCDF data base (bytes) to NOWRAD scaled
 c integers.
 c ============================================================
 
-      subroutine cvt_wsi_nowrad(ctype,elems,lines,image,istatus)
+      subroutine cvt_wsi_nowrad(ctype,elems,lines,image
+     +,nsites_present,present_site_loc_i,present_site_loc_j
+     +,nsites_absent,absent_site_loc_i,absent_site_loc_j
+     +,max_sites,istatus)
 c
 c
       implicit none
 
       integer elems,lines
       integer image(elems,lines)
+
+      integer max_sites
+
+      integer nsites_present
+      real    present_site_loc_i(max_sites)
+      real    present_site_loc_j(max_sites)
+
+      integer nsites_absent
+      real    absent_site_loc_i(max_sites)
+      real    absent_site_loc_j(max_sites)
+
       integer istatus
       integer imax_image_value,imin_image_value,i,j
       integer icount_out, icount_bad
@@ -525,12 +539,23 @@ c
 C       new C version of scan_adjust implemented 05-apr-96
 ccc      call c_scan_adjust(image,lines,elems,bad_data_flag)
 
+      nsites_present=0
+      nsites_absent =0
       if(ctype.eq.'wsi')then
          do j=1,lines
          do i=1,elems
-            if(image(i,j).ne.bad_data_flag)
-     +         image(i,j)=mod(image(i,j),16)
-cc     +           image(i,j)=modulo(image(i,j),16)
+            if(image(i,j).ne.bad_data_flag)then
+               if(image(i,j).gt.15.and.image(i,j).lt.32)then
+                  nsites_present=nsites_present+1
+                  present_site_loc_i(nsites_present)=float(i)
+                  present_site_loc_j(nsites_present)=float(j)
+               elseif(image(i,j).ge.32 .and.image(i,j).lt.48)then
+                  nsites_absent=nsites_absent+1
+                  absent_site_loc_i(nsites_absent)=float(i)
+                  absent_site_loc_j(nsites_absent)=float(j)
+               endif
+               image(i,j)=mod(image(i,j),16)
+            endif
          enddo
          enddo
       endif
