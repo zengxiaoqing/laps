@@ -123,8 +123,9 @@ c
       include 'satellite_common_lvd.inc'
 
       logical     lpoint
-      logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
+      logical     lfirst(maxtype,maxsat)              !4 types x 4 sats (5-26-98)
       data lfirst /.false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
       save

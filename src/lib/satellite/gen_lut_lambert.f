@@ -112,6 +112,7 @@ c
       logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
       data lfirst /.false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
       save
 
