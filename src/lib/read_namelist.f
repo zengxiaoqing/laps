@@ -32,8 +32,8 @@ c
 c =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 c
       subroutine get_sat_sounder_info(n_sndr,
-     +c_sndr_id,n_sndr_channels,path_to_sat_sounder,n_elems,
-     +n_lines,channel_wavelength_u,imsng_sndr_pix,pct_req_lsr,
+     +c_sndr_id,n_sndr_channels,path_to_sat_sounder,
+     +channel_wavelength_u,imsng_sndr_pix,pct_req_lsr,
      +istatus)
 c
 cdoc  Reads static/sat_sounder.nl file.
@@ -44,8 +44,6 @@ cdoc  Reads static/sat_sounder.nl file.
       integer len_dir
       integer n_sndr
       integer n_sndr_channels
-      integer n_elems(max_sat)
-      integer n_lines(max_sat)
       integer imsng_sndr_pix
       integer istatus
       character*6   c_sndr_id(max_sat)
@@ -56,7 +54,7 @@ cdoc  Reads static/sat_sounder.nl file.
       real*4 pct_req_lsr
 
       namelist /satellite_sounder_nl/ n_sndr,c_sndr_id,path_to_sat_sound
-     +er,n_elems,n_lines,n_sndr_channels,channel_wavelength_u,imsng_sndr
+     +er,n_sndr_channels,channel_wavelength_u,imsng_sndr
      +_pix,pct_req_lsr
 
       call get_directory(grid_fnam_common,nest7grid,len_dir)
@@ -207,6 +205,7 @@ c
      1                                cmodel,
      1                                c_obs_types,
      1                                n_sim_obs,
+     1                                c_simob_fnames,
      1                                a9_time_init,
      1                                a4_time_fcst,
      1                                ifcst_intrvl,
@@ -217,14 +216,15 @@ cdoc  Reads static/osse.nl file.
 
       implicit none
 
-      include 'osse.inc'
       include 'grid_fname.cmn'                 !grid_fnam_common
+      include 'osse.inc'
 
       integer        istatus
       integer        len_dir
       integer        i,n_sim_obs
       integer        ifcst_intrvl
       integer        isim_time_hr
+      integer        n_simfiles
 
       integer        nsimobs
       data           nsimobs/0/
@@ -232,13 +232,15 @@ cdoc  Reads static/osse.nl file.
 
       character      nest7grid*150
       character      path_to_model*150
-      character      c_obs_types(max_ob_types)*15
+      character      c_obs_types(maxobtype)*15
+      character      c_simob_fnames(nsimfiles)*50
       character      a9_time_init*9
       character      a4_time_fcst*4
       character      cmodel*10
 
-      namelist /osse_nl/path_to_model,cmodel,c_obs_types,
-     1a9_time_init,a4_time_fcst,ifcst_intrvl,isim_time_hr
+      namelist /osse_nl/path_to_model,cmodel,c_obs_types
+     1,c_simob_fnames,a9_time_init,a4_time_fcst,ifcst_intrvl
+     1,isim_time_hr
 
       istatus = 0
 
@@ -249,9 +251,13 @@ cdoc  Reads static/osse.nl file.
       endif
 
 
-      do i = 1,max_ob_types
+      do i = 1,maxobtype
          c_obs_types(i) = ' '
       enddo
+      do i = 1,nsimfiles
+         c_simob_fnames(i) = ' '
+      enddo
+
 
       nest7grid = nest7grid(1:len_dir)//'osse.nl'
       print*,'nest7grid = ',nest7grid(1:len_dir+7)
@@ -261,7 +267,7 @@ cdoc  Reads static/osse.nl file.
       close(1)
 
       if(nsimobs.eq.0)then
-         do i = 1,max_ob_types
+         do i = 1,maxobtype
             if(c_obs_types(i).ne.' ')then
                n_sim_obs = n_sim_obs + 1
             endif
