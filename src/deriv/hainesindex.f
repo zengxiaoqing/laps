@@ -8,8 +8,8 @@
       dimension tmk(miy,mjx,mkzh), tdk(miy,mjx,mkzh), prs(miy,mjx,mkzh),
      &          haines(miy,mjx)
 
-       do j = 1, mjx-1
-       do i = 1, miy-1
+       do j = 1, mjx ! -1
+       do i = 1, miy ! -1
          
          if( prs(i,j,1) .lt. prsb ) then
             haines(i,j) = 0.

@@ -24,8 +24,8 @@
 C      debug = .true.   ! Debug mode
       debug = .false.   ! Production mode
 
-      do 200 j = 1, mjx-1
-      do 100 i = 1, miy-1
+      do 200 j = 1, mjx ! -1
+      do 100 i = 1, miy ! -1
 
         if(.false.)then ! original Seattle code with sigma coordinate inputs
 
