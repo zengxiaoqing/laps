@@ -448,7 +448,7 @@ netcdf fsf {
             hi_comment(record,z,namelen),
             vis_comment(record,z,namelen),
             fd_comment(record,z,namelen),
-            ter_comment(record,z.namelen),
+            ter_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
