@@ -294,6 +294,7 @@
                  Makefile
                  src/                                             (source code)
                      ingest/
+             template                                     (template parameters)
          laps/   ----------------->  soft linked to /data_disk/laps/
 
      /data_disk/
@@ -501,9 +502,10 @@
      method of modifying the parameters. Templates can be a time saver, 
      especially if you are managing parameters in multiple windows and are
      performing frequent software updates. Templates are normally maintained
-     by the user independent of the LAPS distribution. They tend to contain
-     parameters dependent on the local implementation and relatively 
-     independent of software updates.
+     by the user independent of the LAPS distribution (e.g. see the template
+     directory in the tree diagram above). They tend to contain parameters 
+     dependent on the local implementation and relatively independent of 
+     software updates.
 
 
                 ----   2.2.7  Running the Localization ---
