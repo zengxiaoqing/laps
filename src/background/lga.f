@@ -127,6 +127,7 @@ c
       integer forecast_length
       logical use_analysis, use_systime
       logical time_plus_one,time_minus_one
+      logical smooth_fields
 c_______________________________________________________________________________
 c
 c Read information from static/nest7grid.parms
@@ -140,7 +141,7 @@ c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime_inc)
+     +,itime_inc,smooth_fields)
 
       nbgmodels=0
       do i=1,maxbgmodels
@@ -264,7 +265,7 @@ c
            call lga_driver(nx_laps,ny_laps,nz_laps,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
-     .          i4time_now_lga, lga_status)
+     .          i4time_now_lga, smooth_fields,lga_status)
 
 c
 c these constructs force t-1 and t+1 cycle time background generation.
