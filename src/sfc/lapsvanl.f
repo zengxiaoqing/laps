@@ -287,8 +287,6 @@ c
 	character var_fire*3, com_fire*125, units_fire*10, ext_f*31
 	character var_lga*3, ext_lga*31, laps_domain*9
 c
-	character*80 grid_fnam_common
-	common/ grid_fnam_cmn / grid_fnam_common
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
 c
@@ -305,7 +303,6 @@ c
         rms_thresh_norm = 1.0    ! used for barnes_multivariate
 	zcon = 0.
 	ibt = 1      !assume have sat data...code cks later.
-	grid_fnam_common = laps_domain
 	jstatus(3) = -1		 ! start w/this until changed
 	pi = 4. * atan(1.)
 	imax = ni
