@@ -753,15 +753,16 @@ c
  
       real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       lli(np),llj(np),        !Lat-lon grid i,j
-     .       nw(2),se(2),            !NW grid lat/lon; SE grid lat/lon
-     .       diff,x,y,
-     .       dx,dy,
-     .       r,
-     .       pi,dg2rd
+     .       nw(2),se(2)             !NW grid lat/lon; SE grid lat/lon
+
+      double precision     diff,x,y
+     .                    ,xmin,ymin
+     .                    ,xmax,ymax
+     .                    ,pi,dg2rd
+      real*4 dx,dy,r
  
       integer nx,ny,nz             !No. of LL domain grid points
       real*4 rlatc,rlonc           !Grid center lat, lon
-      real*4 xmin,ymin,xmax,ymax
       real*4 coslatc
       data r/6.3712e6/             !this earth radius is = to that in lapsgrid.f
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
@@ -1144,8 +1145,10 @@ c
 c_______________________________________________________________________________
 c
       iy1=int(stay)-1
+      if(stay.lt.1.0)iy1=1.0
       iy2=iy1+3
       ix1=int(stax)-1
+      if(stax.lt.1.0)ix1=1.0
       ix2=ix1+3
       staval=missingflag
       fiym2=float(iy1)-1
@@ -1161,6 +1164,7 @@ c
             if (i .lt. 1) i=i+ix
             if (i .gt. ix) i=i-ix
          endif
+
          ii=ii+1
          if (i .ge. 1 .and. i .le. ix) then 
             jj=0
@@ -1184,6 +1188,7 @@ c
                      if (i .gt. ix) i=i-ix
                   endif
                endif
+
                jj=jj+1
                if (j .ge. 1 .and. j .le. iy) then
                   r(jj)=ab(i,j)
