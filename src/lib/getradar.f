@@ -62,6 +62,9 @@ cdoc
 cdoc    read_nowrad_3dref
 cdoc        now called from read_multiradar_3dref
 cdoc
+cdoc    read_vrz_3dref
+cdoc        now called from read_multiradar_3dref
+cdoc
 cdoc
 !       1996 Aug    S. Albers FSL
 
@@ -563,7 +566,7 @@ cdoc                            calls read_multiradar_3dref.
         integer*4 istatus_3dref_a(imax,jmax)
 
         character*3 var_2d
-        character*31  ext
+        character*31  readext
         character*10  units_2d
         character*125 comment_2d
 
@@ -609,29 +612,66 @@ cdoc                            calls read_multiradar_3dref.
      1     radarext(1:2) .eq. 'v9' .or.
      1     radarext(1:3) .eq. 'vrz' .or.
      1     radarext(1:3) .eq. 'all' )then     ! Read Doppler 3-D radar ref data
-                                              ! from NetCDF VXX/VRZ files
+                                              ! from NetCDF VXX or VRZ file
 
             write(6,*)' Reading Reflectivity Data from 3D file '
      1                                                 ,radarext
 
             if(radarext(1:3) .ne. 'all')then
-                ext = radarext
+                readext = radarext
             else
-                ext = 'v01' ! change this to 'vrz' when it becomes available
+                readext = 'vrz' ! change this to 'vrz' when it is available
             endif
 
 !           Read Reflectivity
             var_2d = 'REF'
-            call get_laps_3dgrid(i4time_radar,i4_tol,i4_ret
-     1                    ,imax,jmax,kmax,ext,var_2d
-     1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+            if(readext(1:3) .ne. 'vrz')then ! read vxx file
+                call get_laps_3dgrid(i4time_radar,i4_tol,i4_ret
+     1                              ,imax,jmax,kmax,readext,var_2d
+     1                              ,units_2d,comment_2d,grid_ra_ref
+     1                              ,istatus)
+
+            else                            ! read vrz file
+                call get_max_radars(max_radars,istatus)
+                if(istatus .ne. 1)return
+
+                call read_vrz_3dref(i4time_radar                     ! I
+     1                             ,imax,jmax,kmax,max_radars        ! I
+     1                             ,readext,var_2d                   ! I
+     1                             ,lat,lon,topo                     ! I
+     1                             ,grid_ra_ref                      ! O
+     1                             ,closest_vxx                      ! O
+     1                             ,istatus)                         ! O
+ 
+            endif
 
             if(istatus .eq. 1)then
-                if(radarext(1:3) .ne. 'vrz')then
+                if(readext(1:3) .ne. 'vrz')then ! vxx
                     read(comment_2d,558)
      1                             rlat_radar,rlon_radar,rheight_radar       
      1                            ,n_ref_grids,radar_name
 558                 format(2f9.3,f8.0,i7,a4)
+
+                    if(l_low_fill .or. l_high_fill)then
+                        call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
+     1                          ,l_low_fill,l_high_fill,lat,lon,topo
+     1                          ,heights_3d
+     1                          ,rlat_radar,rlon_radar,rheight_radar
+     1                          ,istatus_rfill)
+
+                        if(istatus_rfill .eq. 1)then
+                            write(6,*)' Reflectivity data filled in'
+                        else
+                            write(6,*)' Reflectivity data fill error'
+                        endif
+
+                    else
+                        write(6,*)' Reflectivity not filled in'
+
+                    endif ! vert_fill
+
+                    write(6,*)' Read radar ',radar_name,' Volume'
 
                 else ! vrz mosaic
                     n_ref_grids = 0
@@ -642,26 +682,6 @@ cdoc                            calls read_multiradar_3dref.
 
                 endif
 
-                write(6,*)' Read radar ',radar_name,' Volume'
-
-                if(l_low_fill .or. l_high_fill)then
-                    call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
-     1                          ,l_low_fill,l_high_fill,lat,lon,topo
-     1                          ,heights_3d
-     1                          ,rlat_radar,rlon_radar,rheight_radar
-     1                          ,istatus_rfill)
-
-                    if(istatus_rfill .eq. 1)then
-                        write(6,*)' Reflectivity data filled in'
-                    else
-                        write(6,*)' Reflectivity data fill error'
-                    endif
-
-                else
-                    write(6,*)' Reflectivity not filled in'
-
-                endif
- 
                 if(.false.)then
                     call ref_fill_horz(grid_ra_ref,imax,jmax,kmax
      1                ,lat,lon,rlat_radar,rlon_radar,rheight_radar
@@ -688,13 +708,11 @@ cdoc                            calls read_multiradar_3dref.
                             istatus_2dref_a(i,j) = 1
                             istatus_3dref_a(i,j) = 1
 
-                            if(radarext(1:3) .ne. 'vrz')then
+                            if(readext(1:3) .ne. 'vrz')then ! vxx radar case
                                 call latlon_to_radar(
-     1                          lat(i,j),lon(i,j),topo(i,j)
-     1                         ,azimuth,closest_vxx(i,j),elev
-     1                         ,rlat_radar,rlon_radar,rheight_radar)       
-                            else
-                                closest_vxx(i,j) = 180000.! default value
+     1                              lat(i,j),lon(i,j),topo(i,j)
+     1                             ,azimuth,closest_vxx(i,j),elev
+     1                             ,rlat_radar,rlon_radar,rheight_radar)       
                             endif
 
                         endif
@@ -706,7 +724,7 @@ cdoc                            calls read_multiradar_3dref.
 
             else
                 write(6,*)' Radar reflectivity data cannot be read in: '       
-     1                    ,ext
+     1                    ,readext
 
             endif ! Success as reflectivity
 
@@ -716,9 +734,9 @@ cdoc                            calls read_multiradar_3dref.
 50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
 
             var_2d = 'REF'
-            ext = 'vrc'
-            call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,ext,var_2d
-     1                          ,units_2d,comment_2d,imax,jmax
+            readext = 'vrc'
+            call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,readext
+     1                          ,var_2d,units_2d,comment_2d,imax,jmax
      1                          ,radar_2dref,0,istatus_vrc)
 
             write(6,*)' istatus_vrc = ',istatus_vrc
@@ -1216,6 +1234,141 @@ cdoc                            calls read_multiradar_3dref.
 
         istatus_2dref_a = 1
         istatus_3dref_a = 0
+
+        return
+        end
+
+
+        subroutine read_vrz_3dref(i4time_radar                      ! I
+     1                           ,imax,jmax,kmax,max_radars         ! I
+     1                           ,ext,var_2d                        ! I
+     1                           ,lat,lon,topo                      ! I
+     1                           ,ref_3d                            ! O
+     1                           ,closest_vxx                       ! O
+     1                           ,istatus)                          ! O
+
+        character*(*) EXT, var_2d
+
+        real*4 ref_3d(imax,jmax,kmax)
+        real*4 closest_vxx(imax,jmax)
+
+        real*4 rlat_radar(max_radars)
+        real*4 rlon_radar(max_radars)
+        real*4 rheight_radar(max_radars)
+
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
+        real*4 topo(imax,jmax)
+
+        character c_radar_id(max_radars)*4
+        character*9 asc9_tim
+        character*150 directory
+
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax)
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
+
+        logical ltest_vertical_grid
+
+        write(6,*)' Subroutine read_vrz_3dref'
+
+        call get_directory(ext,directory,len_dir)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' read_vrz_3dref: bad istatus, return'
+            return
+        endif
+
+        call s_len(ext,len_ext)
+
+        call make_fnam_lp(i4time_radar,asc9_tim,istatus)
+
+        len_high = max(45,len_dir)
+        len_low = len_high - 44
+
+        write(6,11)directory(len_low:len_high),asc9_tim,ext,var_2d
+11      format('  read_vrz_3dref: ',a,1x,a,1x,a,1x,a)
+
+        do k = 1,kmax
+            units_3d(k)   = units_2d
+            if(ltest_vertical_grid('HEIGHT'))then
+                lvl_3d(k) = zcoord_of_level(k)/10
+                lvl_coord_3d(k) = 'MSL'
+            elseif(ltest_vertical_grid('PRESSURE'))then
+                lvl_3d(k) = nint(zcoord_of_level(k))/100
+                lvl_coord_3d(k) = 'MB'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
+            endif
+
+            var_3d(k) = var_2d
+
+        enddo ! k
+
+        CALL READ_LAPS_DATA(i4time_radar,DIRECTORY,EXT,imax,jmax,
+     1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1                     COMMENT_3D,ref_3d,ISTATUS)
+        if(istatus .ne. 1)return
+
+!       Read radar info from comments
+        read(comment_3d(1),101)n_radars
+ 101    format(25x,i3)
+
+        write(6,*)' n_radars/max_radars = ',n_radars,max_radars
+
+        do i_radar = 1,n_radars
+            ii = i_radar + 1
+            if(ii .le. kmax)then
+                read(comment_3d(ii),1)rlat_radar(i_radar)
+     1                               ,rlon_radar(i_radar)
+     1                               ,rheight_radar(i_radar)
+     1                               ,n_ref
+     1                               ,c_radar_id(i_radar)
+1               format(2f9.3,f8.0,i7,a4)
+
+                write(6,*)' Read radar ',c_radar_id(i_radar)
+     1                   ,' Volume (via 3d-mosaic)'
+
+            else
+                write(6,*)
+     1          ' Error: too many radars for comment output'
+                istatus = 0
+                return
+
+            endif
+
+        enddo ! i_radar
+
+!       Create closest radar array (assumes lat/lon projection) 
+        do j=1,jmax
+        do i=1,imax
+           distmin=r_missing_data
+           do k=1,n_radars
+
+              if(.false.)then
+                  rlatdif=(lat(i,j)-rlat_radar(k))*111100.      !m
+                  rlondif=(lon(i,j)-rlon_radar(k))*111100.
+                  dist=sqrt(rlatdif*rlatdif + rlondif*rlondif)
+
+              else
+                  call latlon_to_radar(
+     1                             lat(i,j),lon(i,j),topo(i,j)
+     1                            ,azimuth,dist,elev
+     1                            ,rlat_radar(k),rlon_radar(k)
+     1                            ,rheight_radar(k))       
+              endif
+
+              if(dist.lt.distmin)distmin=dist
+           enddo
+           closest_vxx(i,j)=distmin
+        enddo
+        enddo
 
         return
         end
