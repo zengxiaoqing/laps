@@ -160,6 +160,8 @@ cdis
 !       real*4 omega_3d(NX_L,NY_L,NZ_L)
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
+        real*4 grid_ra_ref_dum(1,1,1,1)
+        real*4 grid_ra_vel_dum(1,1,1,1)
         real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 field_3d(NX_L,NY_L,NZ_L)
         real*4 pres_3d(NX_L,NY_L,NZ_L)
@@ -784,7 +786,8 @@ c       include 'satellite_dims_lvd.inc'
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
      1               ,interval,asc9_tim_3dw
      1               ,c33_label,c_field,k_level,i_overlay,c_display       
-     1               ,NX_L,NY_L,NZ_L,MAX_RADARS,grid_ra_ref,grid_ra_vel       
+     1               ,NX_L,NY_L,NZ_L,MAX_RADARS
+!    1               ,grid_ra_ref_dum,grid_ra_vel_dum       
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w' .or. c_field .eq. 'om')then ! Omega 
@@ -3862,7 +3865,7 @@ c                   cint = -1.
      1                     ,asc9_tim_t,c33_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
-     1                     ,grid_ra_ref,grid_ra_vel
+!    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
      1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
      1                     ,jdot)
 
@@ -5146,7 +5149,8 @@ c    1,istatus)
      1  interval,asc_tim_9,
      1  c33_label,
      1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,max_radars,       
-     1  grid_ra_ref,grid_ra_vel,NX_L,NY_L,r_missing_data,
+!    1  grid_ra_ref_dum,grid_ra_vel_dum,
+     1  NX_L,NY_L,r_missing_data,
      1  laps_cycle_time,jdot)      
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
