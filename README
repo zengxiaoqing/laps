@@ -30,7 +30,8 @@
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Model Background (lga/lgb)
          2.3.2 ..................  Radar ingest
-         2.3.3 ..................  Other Data Sources
+         2.3.3 ..................  Surface Data
+         2.3.4 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
          2.4.1 ..................  Purging Output Files
          2.5 ..............  Test data case
@@ -773,7 +774,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      subsection in Section 3. NOWRAD / WSI (Cartesian) data is covered 
      separately within Section 3.
       
-                       ----   2.3.3  Other Data Sources ---
+                       ----   2.3.3  Surface Data ---
 
      Sfc Obs (lso): FSL uses this data in FSL's NIMBUS NetCDF format as input.
            The FSL code is in the '.../src/ingest/sao' directory, and
@@ -783,8 +784,9 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            formats to be able to output the ASCII LSO file. Paths to the data 
            are set in the 'surface_obs.inc' file. Looking at the routines in 
            the '.../src/ingest/sao' directory should provide enough 
-           information to get you started.  Direct questions about surface 
-           data to Pete Stamus (stamus@fsl.noaa.gov).
+           information to get you started.  
+      
+                      ----   2.3.4  Other Data Sources ---
 
      Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
            FSL in NetCDF or SBN data (also in netcdf). Ingest of Air Force 
