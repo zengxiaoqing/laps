@@ -30,11 +30,24 @@ netcdf lfr {
             ham:record = "valtime, reftime";
             ham:_FillValue = 1.e+37f;
             ham:long_name = "mid-level haines index" ;
-            ham:units = "meters/second" ;
+            ham:units = "none" ;
             ham:valid_range = 0.f, 6.0f ;
             ham:LAPS_var = "HAM" ;
             ham:lvl_coord = "MSL" ;
             ham:LAPS_units = "NONE" ;
+                	        
+        //	high-level haines index
+        float 
+            hah(record,z,y,x) ;
+            hah:navigation_dim = "nav";
+            hah:record = "valtime, reftime";
+            hah:_FillValue = 1.e+37f;
+            hah:long_name = "high-level haines index" ;
+            hah:units = "none" ;
+            hah:valid_range = 0.f, 6.0f ;
+            hah:LAPS_var = "HAH" ;
+            hah:lvl_coord = "MSL" ;
+            hah:LAPS_units = "NONE" ;
 
         //	Fosberg fire weather index
         float 
@@ -60,6 +73,7 @@ netcdf lfr {
         char
             vnt_comment(record,z,namelen),
             ham_comment(record,z,namelen),
+            hah_comment(record,z,namelen),
             fwi_comment(record,z,namelen),
             asctime(record,namelen);
 
@@ -73,6 +87,10 @@ netcdf lfr {
         short
             ham_fcinv(record, z);
             ham_fcinv:_FillValue= 0s;
+              	
+        short
+            hah_fcinv(record, z);
+            hah_fcinv:_FillValue= 0s;
               	
         short
             fwi_fcinv(record, z);
