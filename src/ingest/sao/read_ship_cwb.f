@@ -76,7 +76,7 @@
 10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2 )
 20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
-30    format ( f3.1, i1, x, i2, f3.1, i1, x, f4.1, 10x, f4.1, i1, 3x,
+30    format ( f3.1, i1, 1x, i2, f3.1, i1, 1x, f4.1, 10x, f4.1, i1, 3x,
      ~         f3.0 )
 40    format ( a2, 2x, f2.0, 14x, f4.1 )
 50    format ( 16x, f4.1, i1 )

@@ -303,7 +303,7 @@ c
 
         call s_len(metar_format,len_metar_format)
 
-        if(    metar_format(1:len_metar_format) .eq. 'NIMBUS' ! Not yet used
+        if(    metar_format(1:len_metar_format) .eq. 'NIMBUS'
      1    .or. metar_format(1:len_metar_format) .eq. 'WFO'        )then
 
 !           Select the hourly METAR file best suited to our obs time window
@@ -318,13 +318,12 @@ c
 
             if(metar_format(1:len_metar_format) .eq. 'NIMBUS')then
                 len_path = index(path_to_METAR,' ') - 1
-	        data_file_m = 
-     &	          path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
+	        data_file_m = path_to_METAR(1:len_path)
+     1                        //a9time_metar_file// '0100o'       
 c        
                 len_path = index(path_to_buoy_data,' ') - 1
-	        filename13=fname9_to_wfo_fname13(filename9(1:9))
-	        data_file_b = 
-     &	          path_to_buoy_data(1:len_path)//filename13  
+	        data_file_b = path_to_buoy_data(1:len_path)
+     1                        //a9time_metar_file// '0100o'
 
             elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
                 filename13=fname9_to_wfo_fname13(a9time_metar_file)       
@@ -572,7 +571,7 @@ c
 
         write(6,*)
         write(6,*)' # of stations reporting altimeter         ',nalt
-        write(6,*)' # of stations reporting station pressure  ',nalt
+        write(6,*)' # of stations reporting station pressure  ',nstp
         write(6,*)' # of stations reporting MSL pressure      ',nmsl
         write(6,*)' # of stations reporting altimeter and MSLP'
      1                                                 ,nalt_and_msl    

@@ -87,7 +87,7 @@ c      ------   give initial values to avoid data stack problem  ------
 10    format ( a3, i5, f4.0, 2f5.2, 2x, 5a2 )
 20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
-30    format ( f3.1, i1, x, i2, f3.1, i1, 3(x, f4.1), 8x, f3.0 )
+30    format ( f3.1, i1, 1x, i2, f3.1, i1, 3(1x, f4.1), 8x, f3.0 )
 40    format ( a2, 2x, f2.0, 14x, f4.1 )
 
 c      ----------       examing data quality and changing units       ---------

@@ -357,7 +357,7 @@ c
 	enddo !i
 c
         call s_len(inpath,len_inpath)
-        open(11,file=inpath(1:len_inpath)//'stn.table',status='old'
+        open(11,file=inpath(1:len_inpath)//'stn-table',status='old'
      1                                                ,err=990)
 c
         num = 0
