@@ -2026,3 +2026,141 @@ c
 
         return
         end
+
+c
+c
+c
+	subroutine meso_anl(u,v,p,t,td,theta,dx,dy,q,qcon,qadv,
+     &                      thadv,tadv,ni,nj)
+c
+c*******************************************************************************
+c
+c	Routine to calculate derived quantities from the LAPS surface 
+c	analysis.  From the Meso program written by Mark Jackson...derived 
+c	from AFOS MESO sometime during fall of 1988.....?????
+c
+c	Input units:  u, v  -- m/s          Output:  q           -- g/kg
+c	              p     -- mb                    qcon, qadv  -- g/kg/s
+c	              theta -- K                     tadv, thadv -- K/s
+c	              t, td -- K
+c
+c	Changes:
+c		P. A. Stamus	04-21-89  Changed for use in lapsvanl.
+c				05-02-89  VORT calc in main program.
+c				05-08-89  Working version...really.
+c				05-11-89  Add Moisture advect. calc.
+c				04-16-90  Added temp adv.
+c				10-30-90  Added boundary routine.
+c				04-10-91  Bugs, bugs, bugs....sign/unit errs.
+c                               11-15-99  Clean up mix ratio calc (QC check).
+c
+c*****************************************************************************
+c
+	real dx(ni,nj), dy(ni,nj)
+c
+	real p(ni,nj), td(ni,nj), u(ni,nj), v(ni,nj), thadv(ni,nj)
+	real qcon(ni,nj), q(ni,nj), theta(ni,nj), qadv(ni,nj)
+	real t(ni,nj), tadv(ni,nj)
+c
+	integer qbad
+c
+c
+c.....	Calculate mixing ratio.
+c.....	Units:  g / kg
+c
+	qbad = 0  !q ok
+	do j=1,nj
+	do i=1,ni
+	   tdp = td(i,j) - 273.15          ! convert K to C
+	   tl = (7.5 * tdp) / (237.3 + tdp)
+	   e = 6.11 * 10. ** tl
+	   if(p(i,j).le.0.0 .or. p(i,j).eq.e) then
+	      write(6,990) i,j,p(i,j)
+	      q(i,j) = badflag
+	      qbad = 1                     !have a bad q field
+	   else
+	      drprs = 1. / (p(i,j) - e)    !invert to avoid further divisions.
+	      q(i,j) = 622. * e * drprs	   !mixing ratio using (0.622*1000) for g/kg.
+	   endif	
+	enddo !i
+	enddo !j
+990	format(1x,' ERROR. Bad pressure in mixing ratio calc at point ',
+     &         2i5,'-- pressure: ',f12.4,' calculated e: ',f12.4)
+c
+c.....	Compute moisture flux convergence on the laps grid.
+c.....	Units:  g / kg / sec
+c
+	if(qbad .eq. 1) then
+	   call constant(qcon, badflag, ni,nj)
+	   go to 30
+	endif
+	do j=2,nj-1
+	do i=2,ni-1
+	  ddx1 = ((q(i,j-1) + q(i,j)) * .5) * u(i,j-1)
+	  ddx2 = ((q(i-1,j) + q(i-1,j-1)) * .5) * u(i-1,j-1)
+	  ddx = (ddx1 - ddx2) / dx(i,j)
+	  ddy1 = ((q(i-1,j) + q(i,j)) * .5) * v(i-1,j)
+	  ddy2 = ((q(i,j-1) + q(i-1,j-1)) * .5) * v(i-1,j-1)
+	  ddy = (ddy1 - ddy2) / dy(i,j)
+	  qcon(i,j) = - ddx - ddy
+	enddo !i
+	enddo !j
+	call bounds(qcon,ni,nj)
+ 30	continue
+c
+c.....	Compute Theta advection on the laps grid.
+c.....	Units:  deg K / sec
+c
+	do 40 j=2,nj-1
+	do 40 i=2,ni-1
+	  dth1 = (theta(i,j) - theta(i-1,j)) / dx(i,j)
+	  dth2 = (theta(i,j-1) - theta(i-1,j-1)) / dx(i,j)
+	  dtdx = (u(i,j-1) + u(i-1,j-1)) * (dth1 + dth2) * .25
+	  dth3 = (theta(i,j) - theta(i,j-1)) / dy(i,j)
+	  dth4 = (theta(i-1,j) - theta(i-1,j-1)) / dy(i,j)
+	  dtdy = (v(i-1,j) + v(i-1,j-1)) * (dth3 + dth4) * .25
+	  thadv(i,j) = - dtdx - dtdy   ! deg K/sec
+40	continue
+	call bounds(thadv,ni,nj)
+c
+c.....	Compute temperature advection.
+c.....	Units:  deg K / sec
+c
+	do 45 j=2,nj-1
+	do 45 i=2,ni-1
+	  dth1 = (t(i,j) - t(i-1,j)) / dx(i,j)
+	  dth2 = (t(i,j-1) - t(i-1,j-1)) / dx(i,j)
+	  dtdx = (u(i,j-1) + u(i-1,j-1)) * (dth1 + dth2) * .25
+	  dth3 = (t(i,j) - t(i,j-1)) / dy(i,j)
+	  dth4 = (t(i-1,j) - t(i-1,j-1)) / dy(i,j)
+	  dtdy = (v(i-1,j) + v(i-1,j-1)) * (dth3 + dth4) * .25
+	  tadv(i,j) = - dtdx - dtdy     ! deg K/sec
+45	continue
+	call bounds(tadv,ni,nj)
+c
+c.....	Compute Moisture advection on the laps grid.
+c.....	Units:  g / kg / sec
+c
+	if(qbad .eq. 1) then
+	   call constant(qadv, badflag, ni,nj)
+	   go to 50
+	endif
+	do j=2,nj-1
+	do i=2,ni-1
+	  dqa1 = (q(i,j) - q(i-1,j)) / dx(i,j)
+	  dqa2 = (q(i,j-1) - q(i-1,j-1)) / dx(i,j)
+	  dqdx = (u(i,j-1) + u(i-1,j-1)) * (dqa1 + dqa2) * .25
+	  dqa3 = (q(i,j) - q(i,j-1)) / dy(i,j)
+	  dqa4 = (q(i-1,j) - q(i-1,j-1)) / dy(i,j)
+	  dqdy = (v(i-1,j) + v(i-1,j-1)) * (dqa3 + dqa4) * .25
+	  qadv(i,j) = - dqdx - dqdy     ! g/kg/sec
+	enddo !i
+	enddo !j
+	call bounds(qadv,ni,nj)
+ 50	continue
+c
+c.....	Send the fields back to the main program.
+c
+	return
+	end
+c
