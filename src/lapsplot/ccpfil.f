@@ -189,7 +189,8 @@ c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
       call colorbar(MREG, NREG, ncols, ireverse_colorbar, log_scaling,
-     1              scale_l, scale_h, colortable, scale,icol_offset)
+     1              scale_l, scale_h, colortable, scale,icol_offset,
+     1              c5_sect)
 
       jdot = 1
       
@@ -498,10 +499,11 @@ C
 
       subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
-     1                   ,colortable,scale,icol_offset)
+     1                   ,colortable,scale,icol_offset,c5_sect)
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
+      character*5 c5_sect
       logical log_scaling,l_loop
 
       write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
@@ -522,6 +524,11 @@ C
 
       xlow =  0.40 ! 0.35
       xhigh = xlow + 0.50
+
+      if(c5_sect .eq. 'xsect')then
+          y_2 = 0.81
+      endif
+
       ylow =  y_2 + .01
       yhigh = y_2 + .03
 
