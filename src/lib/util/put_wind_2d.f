@@ -33,7 +33,7 @@ cdis
         subroutine put_wind_2d(i4time,DIRECTORY,EXT,var,units,
      1                  comment,wind_2d,imax,jmax,istatus)
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment,comment_2d(2)

@@ -285,8 +285,8 @@
         enddo ! k
 
 !       Spread the difference ob vertically
-        call spread_vert(uobs_diff,vobs_diff,uobs_diff_spread,vobs_diff_
-     1spread
+        call spread_vert(uobs_diff,vobs_diff
+     1          ,uobs_diff_spread,vobs_diff_spread
      1          ,wt_p,wt_p_spread,i,j,imax,jmax,kmax,istatus)
 
         if(istatus .ne. 1)return
@@ -1222,7 +1222,8 @@ c  convert radar obs into u & v by using tangential component of first pass
           weights(i,j,k) = wt_p(i,j,k)
       enddo ! k
 
-      iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points looped in the vertical
+      iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points 
+                                                 ! looped in the vertical
       vert_rad_pirep_s = vert_rad_pirep * iscale
       vert_rad_meso_s  = vert_rad_meso  * iscale
       vert_rad_sao_s   = vert_rad_sao   * iscale
@@ -1238,9 +1239,9 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                  * exp(-(dist_pa/r0_vert_pirep))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,101)i,j,k,kk,uobs_out(i,j,kk),vobs_out(i,j
-     1,kk)
-     1                                                  ,weights(i,j,kk)
+                      write(6,101)i,j,k,kk,uobs_out(i,j,kk)
+     1                           ,vobs_out(i,j,kk)
+     1                           ,weights(i,j,kk)
 101                   format(' Prp',2i4,2i3,2f6.1,f8.5)
                   endif
               enddo
@@ -1255,9 +1256,9 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_meso))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,201)i,j,k,kk,uobs_out(i,j,kk),vobs_out(i,j
-     1,kk)
-     1                                                  ,weights(i,j,kk)
+                      write(6,201)i,j,k,kk,uobs_out(i,j,kk)
+     1                           ,vobs_out(i,j,kk)
+     1                           ,weights(i,j,kk)
 201                   format(' Mso',2i4,2i3,2f6.1,f8.5)
                   endif
               enddo
@@ -1272,9 +1273,9 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_sao))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,301)i,j,k,kk,uobs_out(i,j,kk),vobs_out(i,j
-     1,kk)
-     1                                                  ,weights(i,j,kk)
+                      write(6,301)i,j,k,kk,uobs_out(i,j,kk)
+     1                           ,vobs_out(i,j,kk)
+     1                           ,weights(i,j,kk)
 301                   format(' Sao',2i4,2i3,2f6.1,f8.5)
                   endif
               enddo
@@ -1293,9 +1294,9 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,401)i,j,k,kk,uobs_out(i,j,kk),vobs_out(i,j
-     1,kk)
-     1                                                  ,weights(i,j,kk)
+                      write(6,401)i,j,k,kk,uobs_out(i,j,kk)
+     1                           ,vobs_out(i,j,kk)
+     1                           ,weights(i,j,kk)
 401                   format(' Prf',2i4,2i3,2f6.1,f8.5)
                   endif
                 enddo ! kk
@@ -1313,9 +1314,9 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,401)i,j,k,kk,uobs_out(i,j,kk),vobs_out(i,j
-     1,kk)
-     1                                                  ,weights(i,j,kk)
+                      write(6,401)i,j,k,kk,uobs_out(i,j,kk)
+     1                           ,vobs_out(i,j,kk)
+     1                           ,weights(i,j,kk)
                   endif
                 enddo ! kk
 
@@ -1334,11 +1335,11 @@ c  convert radar obs into u & v by using tangential component of first pass
 !     .parms file via the common block. Note the variable name in the
 !     argument list is different in the calling routine
 
-      if(iflag_lapsparms_cmn .ne. 1)then
-          write(6,*)' ERROR, get_laps_config not called'
-          istatus = 0
+      call get_laps_config('nest7grid',istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
           return
-!         stop
       endif
 
       pressure_interval = PRESSURE_INTERVAL_L

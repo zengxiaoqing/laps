@@ -159,7 +159,7 @@ c       character time*35,cm_filename*34,ca_filespec*255
 
 c       character*9 asc9_tim_cent,asc9_htim_wind,asc9_prev,asc9_tim
 c       character*125 var_2d
-c       character*50  directory
+c       character*150 directory
 c       character*10  units_2d
 c       character*125 comment_2d
 c       character*24 asc_time_run

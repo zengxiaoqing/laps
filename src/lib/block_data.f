@@ -1,9 +1,9 @@
       block data
 
-c     routine lapsgrid.f
+!     routine lapsgrid.f
 
-        include 'lapsparms.cmn'
-        data iflag_lapsparms_cmn /0/
+!        include 'lapsparms.cmn'
+!        data iflag_lapsparms_cmn /0/
 
 c     routine laps_thermo.f
 
