@@ -128,7 +128,7 @@ my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 require "$LAPSROOT/etc/fxa.pm";
 
 my $fxa_sys = 0;
-if (! $opt_l && ! $ENV{LAPS_DATA_ROOT}){
+if (! $opt_l ){
   $fxa_sys =  &Get_env'fxa; #'
 }
 $ENV{PATH}.=":@NETCDF@/bin";
