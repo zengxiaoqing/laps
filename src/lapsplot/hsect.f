@@ -688,6 +688,7 @@ c       include 'satellite_dims_lvd.inc'
      1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,spds,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -712,6 +713,7 @@ c       include 'satellite_dims_lvd.inc'
      1                               ,zoom,density,scale)
 
                 call plot_field_2d(i4time_3dw,c_field,u_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -739,6 +741,7 @@ c       include 'satellite_dims_lvd.inc'
 
 
                 call plot_field_2d(i4time_3dw,c_field,v_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -784,7 +787,7 @@ c       include 'satellite_dims_lvd.inc'
                 endif
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
-     1               ,interval,asc9_tim_3dw
+     1               ,interval,asc9_tim_3dw,namelist_parms
      1               ,c33_label,c_field,k_level,i_overlay,c_display       
      1               ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1               ,grid_ra_ref_dum,grid_ra_vel_dum       
@@ -868,6 +871,7 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = 50.
                 clow = -50.
                 call plot_field_2d(i4_valid,c_type,w_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -1234,6 +1238,7 @@ c       include 'satellite_dims_lvd.inc'
 
             scale = 1.
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -1304,6 +1309,7 @@ c       include 'satellite_dims_lvd.inc'
             c33_label = comment_2d(1:26)//' '//units_2d(1:6)
 
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'spectral')
@@ -2444,6 +2450,7 @@ c
      1                           ,abs(cint))
 
             call plot_field_2d(i4time_accum,c_type,accum_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'acc')
@@ -3018,7 +3025,8 @@ c
                 enddo ! j
 
                 call plot_cldpcp_type(i_array
-     1                ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
+     1                ,asc9_tim,namelist_parms
+     1                ,c33_label,c_type,k,i_overlay,c_display
      1                ,lat,lon,idum1_array
      1                ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -3138,7 +3146,8 @@ c
             enddo ! j
 
             call plot_cldpcp_type(i_array
-     1             ,asc9_tim,c33_label,c_type,k,i_overlay,c_display  
+     1             ,asc9_tim,namelist_parms
+     1             ,c33_label,c_type,k,i_overlay,c_display  
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -3382,6 +3391,7 @@ c    1                ,field_3d,istatus)
                 chigh = -40.
                 cint = 10.
                 call plot_field_2d(i4time_heights,c_type
+     1                        ,namelist_parms
      1                        ,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -3690,6 +3700,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
             call plot_field_2d(i4time_heights,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -3717,6 +3728,7 @@ c                   cint = -1.
 !           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -3875,6 +3887,7 @@ c                   cint = -1.
             cint = 0.
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -3949,7 +3962,8 @@ c                   cint = -1.
             endif
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
-     1                     ,asc9_tim_t,c33_label,c_field,k_level
+     1                     ,asc9_tim_t,namelist_parms
+     1                     ,c33_label,c_field,k_level
      1                     ,i_overlay,c_display
      1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
 !    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
@@ -4377,6 +4391,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -4454,6 +4469,7 @@ c                   cint = -1.
      1                           ,zoom,density,scale)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,chigh,clow,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
@@ -4555,6 +4571,7 @@ c                   cint = -1.
             scale = 1.
 
             call plot_field_2d(i4time_pw,c_type,spds,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -4591,6 +4608,7 @@ c                   cint = -1.
 
             scale = 1.
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
@@ -4714,6 +4732,7 @@ c                   cint = -1.
             scale=0.1
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'linear')
@@ -5320,7 +5339,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine plot_barbs(u,v,lat,lon,topo,size,zoom,
-     1  interval,asc_tim_9,
+     1  interval,asc_tim_9,namelist_parms,
      1  c33_label,
      1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,max_radars,       
 !    1  grid_ra_ref_dum,grid_ra_vel_dum,
@@ -5564,7 +5583,8 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
         subroutine plot_cldpcp_type(icldpcp_type_2d
-     1     ,asc_tim_9,c33_label,c_field,k_level,i_overlay,c_display
+     1     ,asc_tim_9,namelist_parms
+     1     ,c33_label,c_field,k_level,i_overlay,c_display
      1     ,lat,lon,ifield_2d
      1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
@@ -5933,8 +5953,8 @@ c             if(cint.eq.0.0)cint=0.1
         common /image/ n_image
         common /icol_index/ icol_common
 
-        namelist_parms%time_zone = 0.
-        namelist_parms%c3_time_zone = 'UTC'
+!       namelist_parms%time_zone = 0.
+!       namelist_parms%c3_time_zone = 'UTC'
 
 !       call upcase(c_label,c_label)
 
@@ -6263,6 +6283,7 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine plot_field_2d(i4time,c_type_in,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow_in,chigh_in,cint_in
      1                        ,c_label,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
