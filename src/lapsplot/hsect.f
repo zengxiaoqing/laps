@@ -644,8 +644,13 @@ cdis
      1                         ,radar_array,r_missing_data)
                 call mklabel33(k_level,' DVRGNC  1e-5 s(-1)',c33_label)
 
-                call plot_cont(div,1e-5,0.,0.,0.,asc9_tim_3dw,
-     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,        
+                scale = 1e-5
+
+                call contour_settings(div,NX_L,NY_L,clow,chigh,cint
+     1                                                        ,scale)
+
+                call plot_cont(div,scale,clow,chigh,cint,asc9_tim_3dw,
+     1           c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             endif

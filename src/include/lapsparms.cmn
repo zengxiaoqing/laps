@@ -43,25 +43,25 @@
         character*6  c6_maproj
         character*8  radarext_3d_cmn
         character*8  radarext_3d_accum_cmn
-        character*100 path_to_raw_pirep_cmn
-        character*100 path_to_raw_rass_cmn
-        character*100 path_to_raw_profiler_cmn
-        character*100 path_to_raw_blprass_cmn
-        character*100 path_to_raw_blpprofiler_cmn
-        character*100 path_to_wsi_2d_radar_cmn
-        character*100 path_to_wsi_3d_radar_cmn
-        character*100 path_to_qc_acars_cmn
-        character*100 path_to_raw_raob_cmn
-        character*100 path_to_metar_data_cmn
-        character*100 path_to_local_data_cmn
-        character*100 path_to_buoy_data_cmn
+        character*200 path_to_raw_pirep_cmn
+        character*200 path_to_raw_rass_cmn
+        character*200 path_to_raw_profiler_cmn
+        character*200 path_to_raw_blprass_cmn
+        character*200 path_to_raw_blpprofiler_cmn
+        character*200 path_to_wsi_2d_radar_cmn
+        character*200 path_to_wsi_3d_radar_cmn
+        character*200 path_to_qc_acars_cmn
+        character*200 path_to_raw_raob_cmn
+        character*200 path_to_metar_data_cmn
+        character*200 path_to_local_data_cmn
+        character*200 path_to_buoy_data_cmn
         character*8 c8_project_common
         character*3 c_raddat_type
         character*80 c80_description
-        character*100 path_to_topt30s
-        character*100 path_to_topt10m
-        character*100 path_to_pctl10m
-        character*100 path_to_soil2m
+        character*200 path_to_topt30s
+        character*200 path_to_topt10m
+        character*200 path_to_pctl10m
+        character*200 path_to_soil2m
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L

@@ -730,12 +730,12 @@ c    2          MPCOL2,LDash2   /128,'1756'O/,  !Grid lines
 c    3          MPCOL3,LDash3   /192,'1777'O/,  !Limb lines
 c    4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
 
-        character       supmap_dir*80
+        character       supmap_dir*150
         integer*4       lsdir
 
       DIMENSION SPLAT(2)
       REAL MAXLAT,MINLAT,MAXLON,MINLON,MIDLAT,MIDLON
-        CHARACTER*80 NAMFIL
+      CHARACTER*180 NAMFIL
       DATA   SINLMB,COSLMB /0.017452406, 0.99984765/
       DATA FLOORC / 10000. /
 

@@ -4,7 +4,7 @@
 
 !      Returns half-width of observation time window in seconds
 
-       character(*) c_obstype
+       character*(*) c_obstype
 
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then
@@ -25,7 +25,7 @@
 
 !      Returns half-width of observation time window in seconds
 
-       character(*) c_obstype
+       character*(*) c_obstype
 
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then

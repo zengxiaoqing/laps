@@ -70,7 +70,7 @@ cdis
 
         integer*4 MAX_FILES
         parameter (MAX_FILES = 300)
-        character c_fnames(MAX_FILES)*80
+        character c_fnames(MAX_FILES)*180
 
 !       ****************** RAMS SECTION ***************************************
 

@@ -51,18 +51,44 @@ cdis
         real*4 uanl_grid(ni,nj),vanl_grid(ni,nj)
         real*4 div(ni,nj)
 
-        PHI0 = standard_latitude
+        character*6 c6_maproj
 
-        grid_spacing_m = sqrt(
-     1                 (  lat(1,2) - lat(1,1)                  )**2
-     1               + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2
-     1                                  )    * 111317. ! Grid spacing m
-        m = 1.0 / grid_spacing_m
+!       grid_spacing_m = sqrt(
+!    1                 (  lat(1,2) - lat(1,1)                  )**2
+!    1               + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2
+!    1                                  )    * 111317. ! Grid spacing m
+
+        call get_standard_latitudes(slat1,slat2,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        call get_grid_spacing(grid_spacing_m,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        if(c6_maproj .eq. 'plrstr')then
+            call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                 ,grid_spacing_proj_m)
+        else
+            grid_spacing_proj_m = grid_spacing_m
+        endif
+
+        write(6,*)' Grid spacings (m) = ',grid_spacing_m
+     1                                   ,grid_spacing_proj_m
+
+        m = 1.0 / grid_spacing_proj_m
 
         do j = 1,nj
         do i = 1,ni
-            uanl(i,j) = 0.
-            vanl(i,j) = 500.0
+!           uanl(i,j) = 0.
+!           vanl(i,j) = 500.0
             one(i,j) = 1.0
             call uvtrue_to_uvgrid(uanl(i,j),vanl(i,j)
      1          ,uanl_grid(i,j),vanl_grid(i,j),lon(i,j))

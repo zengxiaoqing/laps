@@ -32,8 +32,6 @@ cdis
 
         subroutine get_maxtops(grid_ra_ref,imax,jmax,kmax,rmax_tops_m)
 
-        include 'lapsparms.inc'
-
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 rmax_tops_m(imax,jmax)
 

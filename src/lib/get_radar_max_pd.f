@@ -38,8 +38,6 @@ cdis
 !       1992         Steve Albers
 !       1996 Feb     Steve Albers  Call read_radar_2dref for radar data
 
-        include 'lapsparms.inc'
-
         integer*4 MAX_FILES
         parameter (MAX_FILES = 3000)
 
