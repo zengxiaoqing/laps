@@ -25,4 +25,4 @@ c                     'laps_cycle_time'. If set to zero, then the mosaic
 c                     defaults to once per laps cycle.
 c
 c  imosaic_3d: = 0 for vrc output only; =1 for vrz output only; =2 for both.
-c              This applies mainly for wideband radar inputs.
+c              Option 2 is being developed and may not yet be functional.
