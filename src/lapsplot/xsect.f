@@ -40,7 +40,7 @@ cdis
         subroutine xsect(c_display,i4time_ref,lun,l_atms
      1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C
      1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns
-     1                  ,density,namelist_parms)
+     1                  ,density,plot_parms,namelist_parms)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -738,11 +738,7 @@ c read in laps lat/lon and topo
 !               call contour_settings(field_vert_diff,NX_C,NZ_C
 !    1                               ,clow,chigh,cint
 !    1                               ,zoom,density,scale)      
-
-!               call plot_cont(field_vert_diff,scale,clow,chigh,cint,
-!    1               asc9_tim_3dw,namelist_parms,       
-!    1               c_label,i_overlay,c_display,lat,lon,jdot,
-!    1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
+!               call plot_cont()
 
 !           else ! image plot
 !               call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
@@ -2595,7 +2591,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                         write(6,*)' calling contour line plot'
                         call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,clow,chigh,cint,-1,0,-1848,0)
+     1                             ,clow,chigh,cint,plot_parms
+     1                             ,-1,0,-1848,0)
 
                     else ! image plot
                         write(6,*)' calling solid fill plot',cint       
@@ -2674,14 +2671,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 cmax = max(abs(rmin),abs(rmax))
 
                 call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,0.,0.,cint,-1,0,-1848,0)
+     1                             ,0.,0.,cint,plot_parms,-1,0,-1848,0)       
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
                     if(cvalue .ge. abs(cint) .and. cvalue .le. cmax)then       
                         cint_in = 2 * cvalue
                         call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,-cvalue,cvalue,cint_in,-1,0,-1848,0)       
+     1                             ,-cvalue,cvalue,cint_in,plot_parms
+     1                             ,-1,0,-1848,0)       
                     endif
                 enddo ! i
  
