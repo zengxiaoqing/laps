@@ -77,12 +77,15 @@ dnl Find path to csh  ***required by LAPS***
 dnl
 AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
-
+if test "$GCC" = "yes"
+then
+  OTHERLIBS="$OTHERLIBS -lgcc"
+fi
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
-  OTHERLIBS="-lm"
+  OTHERLIBS="$OTHERLIBS -lm"
   KRCFLAGS="$CFLAGS"
   CFLAGS="$CFLAGS -Aa"
   CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
