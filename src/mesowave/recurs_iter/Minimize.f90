@@ -1,25 +1,30 @@
-SUBROUTINE Minimize(id)
+SUBROUTINE Minimize(id,ds)
 
 !*********************************************************
 !  This routine minimizes the cost function derived from
 !  a surface analysis using recursive filter.
 !
 !  HISTORY: JAN. 2004 by YUANFU XIE.
+!           Sep. 2004 by YUANFU XIE penalizing div.
 !*********************************************************
 
   IMPLICIT NONE
 
   INTEGER, INTENT(IN) :: id
+  REAL,    INTENT(IN) :: ds(2)
 
   ! LBFGS_B variables:
   INCLUDE 'LBFGSB.f90'
 
   ! Local variables:
-  INTEGER          :: itr,nvar
+  INTEGER          :: itr,nvar,idp
   ! Adjoint variables:
   DOUBLE PRECISION :: f,adf,dv(mvar),g(mvar)
-  REAL             :: ada(mx,my,mt),rv(mvar)
+  REAL             :: ada(mx,my,mt,2),rv(mvar)
   
+  ! Unified u/v analysis:
+  idp = id
+  IF (id .EQ. 201) idp = id+1
 
   ! Start LBFGS_B
   ctask = 'START'
@@ -30,8 +35,8 @@ SUBROUTINE Minimize(id)
 
   ! Initial:
   itr = 0
-  nvar = n(1)*n(2)*n(3)
-  rv(1:nvar) = RESHAPE(a(1:n(1),1:n(2),1:n(3),id),(/nvar/))
+  nvar = n(1)*n(2)*n(3)*(idp-id+1)
+  rv(1:nvar) = RESHAPE(a(1:n(1),1:n(2),1:n(3),id:idp),(/nvar/))
   dv(1:nvar) = rv(1:nvar)
 
   ! Looping:
@@ -41,8 +46,8 @@ SUBROUTINE Minimize(id)
 
   ! Transfer a vector to a grid:
   rv(1:nvar) = dv(1:nvar)
-  a(1:n(1),1:n(2),1:n(3),id) = RESHAPE(rv(1:nvar), &
-                               (/n(1),n(2),n(3)/))
+  a(1:n(1),1:n(2),1:n(3),id:idp) = RESHAPE(rv(1:nvar), &
+                               (/n(1),n(2),n(3),idp-id+1/))
   ! Exit if succeed:
   IF (ctask(1:11) .EQ. 'CONVERGENCE') GOTO 2
 
@@ -50,14 +55,22 @@ SUBROUTINE Minimize(id)
   IF (ctask(1:2) .EQ. 'FG') THEN
 
      ! Function value:
-     CALL functn(f,a(1,1,1,id),l,n,id,np,al)
+     IF ((id .NE. 201) .AND. (id .NE. 301)) THEN
+        CALL functn(f,a(1,1,1,id),l,n,id,np,al)
+     ELSE
+        ! CALL functndiv(f,a(1,1,1,id),l,n,ds,id,np,al)
+     ENDIF
 
      ! Gradient value:
      adf = 1.0d0
      ada = 0.0
-     CALL adfunctn( a(1,1,1,id), l, n, id, np, al, adf, ada )
+     IF (id .NE. 201) THEN
+        CALL adfunctn( a(1,1,1,id), l, n, id, np, al, adf, ada )
+     ELSE
+	! CALL adfunctndiv( a(1,1,1,id), l, n, ds, id, np, al, adf, ada )
+     ENDIF
 
-     rv(1:nvar) = RESHAPE(ada(1:n(1),1:n(2),1:n(3)), (/ nvar /))
+     rv(1:nvar) = RESHAPE(ada(1:n(1),1:n(2),1:n(3),id:idp), (/ nvar /))
      g(1:nvar) = rv(1:nvar)
 
   ENDIF
@@ -82,5 +95,7 @@ SUBROUTINE Minimize(id)
 
   ! Convert to analysis:
   CALL RF3D(a(1,1,1,id),l,n,al(1,id),np(1,id))
+  IF (id .EQ. 201) &
+     CALL RF3D(a(1,1,1,idp),l,n,al(1,idp),np(1,idp))
   
 END SUBROUTINE Minimize
