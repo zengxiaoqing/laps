@@ -280,7 +280,7 @@ cdis
                         obs_point(nobs_point)%value(1) = u_temp - u_diff       
                         obs_point(nobs_point)%value(2) = v_temp - v_diff       
                         obs_point(nobs_point)%weight = weight_ob
-                        obs_point(nobs_point)%type   = 'pirep'
+                        obs_point(nobs_point)%type   = ext_in
 
                     endif ! In vertical bounds
 
