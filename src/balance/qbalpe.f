@@ -72,7 +72,7 @@ c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,u_true,v_true
      .      ,dpp
 
-      real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog
+      real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
 
@@ -291,7 +291,8 @@ c a steep slope will reduce tau so that appropriate terrain induced vertical
 c motions will result. The height scale of the atm and brunt vaisala freq
 c will control how quickly
 c the terrain induced vertical motion will vertically penetrate.
-c
+c For the current application we will use the background omega to determine
+c an appropriate tau value.
       sumdt=0.
       sumdz=0.
       sumf=0.
@@ -302,10 +303,14 @@ c
       sumv2=0.
 
 c set the resolvable scale based on data nyquist inteval=4 spacing
-      sldata=2.*200000.!assume a mean 200km between upper air obs
+c this should be automated to be computed by the actual number of obs/area
+c guess number of obs over grid, put in sldata for now.
+      sldata=200.!number of good upper air obs
+      sldata=4.*sqrt(float((nx-1)*(ny-1))*dx(nx/2,ny/2)**2/sldata)
+
 
 c set model scale - a low end wave resolvable by the grid
-      sl=8.*dx(nx/2,ny/2)
+      sl=4.*dx(nx/2,ny/2)
 
       fo=14.52e-5   !2*omega
 
@@ -356,9 +361,6 @@ c           erru(i,j,k)=(1.5*(1.+float(k-1)*.25))**(-2)
             errub(i,j,k)=(1.5*(1.+float(k-1)*.3))**(-2)
             errphi(i,j,k)=(15.*(1.+float(k-1)*.1)*g)**(-2)
             errphib(i,j,k)=(30.*(1.+float(k-1)*.1)*g)**(-2)
-c simulated cloud
-c           sk=(i-nx/2)**2+(k-nz/2)**2+(j-ny/2)**2       
-c           omo(i,j,k)=-1.*exp(-sk/100.)
 c
 c vertical motions in clear areas come in as the missing data parameter.
 c replace missing cloud vv's with background vv's. Unless there is cloud
@@ -383,8 +385,6 @@ c we seek to replicate the background vertical motions
          kfij=kf(i,j)
          ksij=ks(i,j)
          dpp=p(ksij)-p(kfij)
-         ro(i,j)=sqrt(sumv2)/(sumf*sldata)  ! rossby number for dynamic adjustment
-         if (ro(i,j).gt.1) ro(i,j)=1. 
 c scale tau as of 1/(omega)**2 where omega is the background rms omega              
          tau(i,j)= 1./sumom2 
 
@@ -392,21 +392,23 @@ c scale tau as of 1/(omega)**2 where omega is the background rms omega
       enddo
       enddo
 c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
+      rod=sqrt(sumv2)/(sumf*sldata)
       rog=sqrt(sumv2)/(sumf*sl)
       if(rog.gt.1.) rog=1.
-      delo=100.*sl**2/sumv2**2/rog**2           
+      if(rod.gt.1.) rod=1.
+      delo=100.*sl**2/sumv2**2/rod**2           
 c
 c print these arrays now.
       print*,'/dthet/thet/dz/den/N/V/f/delo/tau:' 
-     &,sumdt,sumt,sumdz,sumr,den,sqrt(sumv2),sumf,delo,tau(1,1)
-      print*,'Omegab,Froude Num/Rossby Num,aspectP/X:',sqrt(sumom2),
-     &    (sumr*sumdz/sqrt(sumv2)),ro(1,1) ,(dpp/dx(nx/2,ny/2))
+     &,sumdt,sumt,sumdz,den,sumr,sqrt(sumv2),sumf,delo,tau(1,1)
+      print*,'Omegab,Froude Num/DataRossby Num,aspectP/X:',sqrt(sumom2),
+     &    (sumr*sumdz/sqrt(sumv2)),rod ,(dpp/dx(nx/2,ny/2))
       
 c
 c *** Compute non-linear terms (nu,nv) and execute mass/wind balance.
 c *** Do for lmax iterations.
 c
-      lmax=2 
+      lmax=1 
 
 c put lapsphi into phi, lapsu into u, etc
       phi = lapsphi
@@ -416,13 +418,6 @@ c put lapsphi into phi, lapsu into u, etc
       om  = omo
       sh  = lapssh
 
-c     call move_3d(lapsphi,phi,nx,ny,nz)
-c     call move_3d(lapsu,u,nx,ny,nz)     
-c     call move_3d(lapsv,v,nx,ny,nz)    
-c     call move_3d(lapstemp,t,nx,ny,nz)
-c     call move_3d(omo,om,nx,ny,nz)
-c     call move_3d(lapssh,sh,nx,ny,nz)
-c
 c
       if(larray_diag)then
          print*
@@ -479,36 +474,15 @@ c     call zero3d(oms,nx,ny,nz)
       call terbnd(us,vs,oms,nx,ny,nz,ps,p,bnd)
       call terbnd(ubs,vbs,ombs,nx,ny,nz,ps,p,bnd)
 c
-c ****** Compute non-linear terms (nu,nv) from observed field.
-c
-      call nonlin(nu,nv,us,vs,ubs,vbs,oms,ombs
-     .           ,nx,ny,nz,dx,dy,dp,dt,bnd,rog)
-      call frict(fu,fv,ubs,vbs,us,vs,p,ps,ts
-     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
 
-c
-c ****** Compute momentum residual from obs fields over whole domain.
-
-      itstatus=init_timer()
-
-      call momres(us,vs,phis,nu,nv,fu,fv,wb,delo
-     .           ,nx,ny,nz,lat,dx,dy,ps,p)
-
-      if(.false.)then
-         write(9)nx,ny,nz
-         write(9)wb
-      endif
-
-      itstatus=ishow_timer()
-      print*,'Elapsed time - momres (sec): ',itstatus
 c
 c ****** Execute mass/wind balance.
-c
+c  set maximum relaxation correction for phi in GPM
       err=1.0
 c returns staggered grids of full fields u,v,phi
 
       call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs,
-     .         rog,delo,tau,itmax,err,erru,errphi,errub,errphib
+     .       ts,rod,delo,tau,itmax,err,erru,errphi,errub,errphib
      .           ,nu,nv,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 
       if(larray_diag)then
@@ -525,13 +499,6 @@ c returns staggered grids of full fields u,v,phi
       endif
 
 c
-      call momres(u,v,phi,nu,nv,fu,fv,wb,delo
-     &,nx,ny,nz,lat,dx,dy,ps,p)
-
-      if(.false.)then
-         write(19)nx,ny,nz
-         write(19)wb
-      endif
 c
 c *** destagger and Write out new laps fields.
 c
@@ -593,17 +560,7 @@ c  liquid (and associated heating/cooling) in the very first time
 c  step.  No good.
 
 
-c     do k = 1, nz
-c     do j = 1, ny
-c     do i = 1, nx
-c       if(lapslwc(i,j,k).gt.0. .AND.
-c    .     lapsrh(i,j,k).lt.100.)
-c    .          lapsrh(i,j,k)=100.
-c     enddo
-c     enddo
-c     enddo
-
-c  This section replaces the above section to adjust the moisture
+c  This section updates a previous section to adjust the moisture
 c  using specific humidity so moisture between the unbalanced and
 c  balance analysis is better conserved.  B. Shaw, Sep 01
 
@@ -641,17 +598,17 @@ c     New section added by to replicate the values of u/v at
 c     from the lowest p-level still above ground to all levels
 c     below ground  (B. Shaw, 12 Apr 02) 
 
-      do j = 1,ny
-        do i = 1, nx
-          findsfclev:  do k = 1,nz
-            IF (phi(i,j,k) .GT. ter(i,j)) EXIT findsfclev
-          enddo findsfclev
-          IF (k .gt. 1) THEN
-            u(i,j,1:k-1) = u(i,j,k)
-            v(i,j,1:k-1) = v(i,j,k)
-          ENDIF
-        enddo
-      enddo
+c     do j = 1,ny
+c       do i = 1, nx
+c         findsfclev:  do k = 1,nz
+c           IF (phi(i,j,k) .GT. ter(i,j)) EXIT findsfclev
+c         enddo findsfclev
+c         IF (k .gt. 1) THEN
+c           u(i,j,1:k-1) = u(i,j,k)
+c           v(i,j,1:k-1) = v(i,j,k)
+c         ENDIF
+c       enddo
+c     enddo
 
       call write_bal_laps(masstime,phi,u,v,t,om,lapsrh,lapssh
      .                   ,nx,ny,nz
@@ -793,8 +750,8 @@ c
 c===============================================================================
 c
 c
-      subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,
-     .   rog,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
+      subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,tmp,
+     .   rod,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
      .     ,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 c
 c *** Balcon executes the mass/wind balance computations as described
@@ -835,7 +792,7 @@ c
      .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
-     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,nu(nx,ny,nz),nv(nx,ny,nz),tmp(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,ps(nx,ny),p(nz)
@@ -845,7 +802,7 @@ c
 
       real*4 err,rdpdg,bnd,g,fo,r,re,ovr
      .      ,ang,f,cotmax,sin1,fs,cos1,beta
-     .      ,a,bb,cortmt,rog
+     .      ,a,bb,cortmt,rod
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
@@ -857,7 +814,7 @@ c
      .      ,term7,term8,term9,term10,term11
      .      ,euoay,euoax,snv,snu,dfvdy,dfudx
      .      ,eueub,fob,foax,foay
-     .      ,fu2,fv2,fuangu,fvangv
+     .      ,fu2,fv2,fuangu,fvangv,dt
 
 c 2d arrays now (JS 2-20-01)
       real*4 tau(nx,ny)
@@ -865,9 +822,9 @@ c 2d arrays now (JS 2-20-01)
 c these are used for diagnostics
       integer nf
       parameter (nf=10)
-      real*4  data(nf)
+      real*4  data(nf),fmax,sum
       real*4  fldmax(nf,nz),fldmin(nf,nz)
-      integer fldmxi(nf,nz),fldmxj(nf,nz)
+      integer fldmxi(nf,nz),fldmxj(nf,nz),ismx,jsmx,ksmx
       integer fldmni(nf,nz),fldmnj(nf,nz)
 
       integer   itstatus
@@ -940,9 +897,6 @@ c wind error must be defined at the geopotential stagger points
       enddo
       enddo
 
-      call diagnose(to,nx,ny,nz,26,3,7,7,'INPUT    GEOPOTENTIALS')
-      call diagnose(uo,nx,ny,nz,26,3,7,7,'INPUT    U-COMPONENT  ')
-      call diagnose(vo,nx,ny,nz,26,3,7,7,'INPUT    V-COMPONENT  ')
 c analz with input fields prior to balcon iterations on lmax
       call analzo(to,to,uo,uo,vo,vo,omo,omo
      .                ,nu,nv,fu,fv,delo,tau
@@ -958,9 +912,24 @@ c owing to an artifact of coding the t array is phi
       do l=1,lmax
 
 
+
        write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
        print*,'-----------------------------------------------------'
 c      write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+c  set convergence error for relaxation of lamda...set erf to desired 
+c  accuracy of wind
+       erf=.01 !m/sec
+       erf=erf*dx(nx/2,ny/2)
+c apply continuity to input winds
+       call leib_sub(nx,ny,nz,erf,tau,erru
+     .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
+     . omo,om,omb,l,lmax)
+
+c move adjusted fields to observation fields 
+       call move_3d(u,uo,nx,ny,nz)
+       call move_3d(v,vo,nx,ny,nz)
+       call move_3d(om,omo,nx,ny,nz)
+c convert input observed fields to perturbations 
        do j=1,ny
         do i=1,nx
          do k=1,nz
@@ -979,12 +948,18 @@ c                      boundary values(zero perturbation)
         enddo
        enddo 
 
+      call frict(fu,fv,ub,vb,uo,vo,p,ps,tmp
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
+      call nonlin(nu,nv,uo,vo,ub,vb,om,omb
+     .           ,nx,ny,nz,dx,dy,dp,dt,bnd,rod)
 c *** Compute new phi (t array) using relaxation on eqn. (2).
 c        beta*dldx term is dropped to eliminate coupling with lambda eqn.
 c
+       fmax=-1.e30
        do 1 it=1,itmax
 
          cotmax=0.
+         sum=0.
          do 2 j=2,nym1
           do 2 i=2,nxm1
             
@@ -1053,9 +1028,15 @@ c
                t(i,j,k)=tt-cot*ovr
                cotmax=amax1(cotmax,abs(cot))
                if (it .eq. 1) cotma1=cotmax
-
+               sum=sum+abs(force)
+               if(abs(force).gt.fmax) then
+                ismx=i
+                jsmx=j
+                ksmx=k
+                fmax=force
+               endif
 2          continue
-c        write(6,1000) it,itt,cotmax,ovr,cotma1
+c        write(6,1000) it,cotmax,ovr,cotma1
          ittr=ittr+1
          cotm5=cotmax
 c
@@ -1069,20 +1050,30 @@ c
 15       if (cotmax .lt. err) goto 12
          if (it .ne. 1) goto 1
          cotm0=cotm5
-1000     format(1x,'PHI SOLVER: it = ',i4,' max correction for '
-     &          ,a4,' = ',e12.3
+1000     format(1x,'PHI SOLVER: it = ',i4,' max correction '
+     &          ,' = ',e12.3
      .         ,'ovr =  ',e12.4/1x
      .         ,'first iteration max correction was ',e12.4)
 
 1      continue  !this is the itmax loop
 
+
        itstatus=ishow_timer()
        print*,' ---------------------------------------------'
        print*,'Elapsed time after itmax loop (sec): ',itstatus
        print*,' ---------------------------------------------'
-12     write(6,1000) it,itt,cotmax,ovr,cotma1
+12     write(6,1000) it,cotmax,ovr,cotma1
+       print*, 'forcing function max '
+       print*, 'max ',fmax, ' at ijk ',ismx,jsmx,ksmx
+       print*, 'forcing fcn abs average ', sum/float(it*(kf-ks+1)*
+     &       (nym1-1)*(nxm1-1)) 
+   
+      call diagnose(to,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT GEOPOTENTIALS')
+      call diagnose(uo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT U-COMPONENT  ')
+      call diagnose(vo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT V-COMPONENT  ')
+      call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx,7,'INPUT OMEGA')
 
-c     write(9,1000) it,itt,cotmax,ovr,cotma1
+c     write(9,1000) it,cotmax,ovr,cotma1
 c     erf=0.
 c
 c *** Compute new u, v, omega using eqns. (4), (5), (6) with new phi and
@@ -1143,8 +1134,15 @@ c
           else
            v(i,j,k)=bnd
           endif
-         enddo
-        enddo
+         enddo !on i
+        enddo ! on j
+c   don't change wind on west (u) or south (v) bndry
+          do j=1,ny
+           u(1,j,k)=uo(1,j,k)
+          enddo
+          do i=1,nx
+           v(i,1,k)=vo(i,1,k)
+          enddo
         if(larray_diag)then
            print*
            print*,'Calling array diagnosis: ',k,p(k)
@@ -1156,16 +1154,17 @@ c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
            call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
         endif
 
-       enddo
+       enddo ! on k
 
        if(larray_diag)then
           call printmxmn(8,nf,nz,p,fldmax,fldmin
      &               ,fldmxi,fldmxj,fldmni,fldmnj)
        endif
 c 
-       call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED PERTURB PHIS ')
-       call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-PERTURB    ')
-       call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-PERTURB    ')
+       call diagnose(t,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED PERT PHIS')
+       call diagnose(u,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED U-PERTUR ')
+       call diagnose(v,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED V-PERTUR ')
+       call diagnose(omo,nx,ny,nz,ismx,jsmx,ksmx,7,'BALANCED OMEGA')       
 
        if(larray_diag)then
         do k=1,nz
@@ -1174,9 +1173,10 @@ c
           print*,'-------------------------------'
           call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
           call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
-c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
-c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
           call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
+          call array_diagnosis(om(1,1,k),nx,ny,' omega    ')
+c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
+c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
         enddo
        endif
 
@@ -1194,24 +1194,29 @@ c Restore full winds and heights by adding back in background
          enddo
          enddo
        enddo
-       erf=100.
 
-       call leib_sub(nx,ny,nz,erf,tau,delo,erru
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb
-     .,om,omo,omb,nu,nv,fu,fv,l,lmax)
 
        itstatus=ishow_timer()
        print*,'------------------------------------------'
        print*,'Elapsed time (after leib_sub) sec: ',itstatus
        print*,'------------------------------------------'
 
-c move adjusted fields to observation-driven fields for next iteration
-       call move_3d(t,to,nx,ny,nz)
-       call move_3d(u,uo,nx,ny,nz)
-       call move_3d(v,vo,nx,ny,nz)
-       call move_3d(om,omo,nx,ny,nz)
 
       enddo ! on lmax
+
+c apply continuity to final winds...done with backgrounds use ub,vb,omb
+       call leib_sub(nx,ny,nz,erf,tau,erru
+     .,lat,dx,dy,ps,p,dp,u,ub,v,vb,
+     . om,omb,omb,l,lmax)
+c evaluate dynamic balance and continuity
+      call analzo(t,to,ub,uo,vb,vo,omb,omo
+     .                ,nu,nv,fu,fv,delo,tau
+     .                ,nx,ny,nz
+     .                ,lat,dx,dy,ps,p,dp,l,lmax)
+c move adjusted fields (uo,vo,omo) to solution fields 
+       call move_3d(ub,u,nx,ny,nz)
+       call move_3d(vb,v,nx,ny,nz)
+       call move_3d(omb,om,nx,ny,nz)
       print*,'------------------------------------------------'
       itstatus=ishow_timer()
       print*,'Elapsed time end of balcon loop (sec): ',itstatus
@@ -1227,9 +1232,9 @@ c move adjusted fields to observation-driven fields for next iteration
 c
 c ---------------------------------------------------------------
 c
-      subroutine leib_sub(nx,ny,nz,erf,tau,delo,erru
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb
-     .,om,omo,omb,nu,nv,fu,fv,l,lmax)
+      subroutine leib_sub(nx,ny,nz,erf,tau,erru
+     .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
+     . omo,om,omb,l,lmax)
 
       implicit none
 
@@ -1237,23 +1242,19 @@ c
       integer nxm1,nym1,nzm1
       integer i,j,k,ks,l,lmax
 
-      real*4 t(nx,ny,nz),to(nx,ny,nz)
-     .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
-     .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
+      real*4      u(nx,ny,nz),uo(nx,ny,nz)
+     .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
-     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,fu(nx,ny,nz),fv(nx,ny,nz),erru(nx,ny,nz)
+     .      ,erru(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
 
-      real*4 ang,rdpdg,sin1,dldx,dldy,dldp
-     .,a,f,fo,fs,erf,delo,bnd
+      real*4 dldx,dldy,dldp,sum,cnt
+     .,a,erf,bnd
       real*4 tau(nx,ny)
 
       real, allocatable, dimension(:,:,:) :: slam,f3,h
 
-      fo=14.52e-5   !2*omega
-      rdpdg=3.141592654/180.
       bnd=1.e-30
 
 c
@@ -1271,49 +1272,56 @@ c
 c
 c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
 c
-      call fthree(f3,uo,vo,omo,ub,vb,omb,delo,nu,nv,h,erru,tau,
-     .   fu,fv,nx,ny,nz,lat,dx,dy,dp)
+      call fthree(f3,uo,vo,omo,omb,h,erru,tau,
+     .   nx,ny,nz,lat,dx,dy,dp)
 c
 c ****** Perform 3-d relaxation.
 c
-      erf=.1
       call leibp3(slam,f3,200,erf,h
      .  ,nx,ny,nz,dx,dy,ps,p,dp)
 c
 c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
-c
+co
+      sum=0
+      cnt=0
       do k=1,nz
       ks=1
       if(k.eq.nz) ks=0
       do j=1,nym1
       do i=1,nxm1
 
-         ang=(lat(i,j))*rdpdg
-         sin1=sin(ang)
-         f=fo*sin1
-         fs=f*f
-c commemnted 01-02-01
-         a=(2.5*erru(i,j,k)+fs*delo)
+         a=2.*erru(i,j,k)
          dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+ks)
          dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
          dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
-         if (u(i,j,k) .ne. bnd) u(i,j,k)=u(i,j,k)+.5*dldx/a
-         if (v(i,j,k) .ne. bnd) v(i,j,k)=v(i,j,k)+.5*dldy/a
+         if (u(i,j,k) .ne. bnd) u(i,j,k)=uo(i,j,k)+.5*dldx/a
+         if (v(i,j,k) .ne. bnd) v(i,j,k)=vo(i,j,k)+.5*dldy/a
          if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+
      &     .5*dldp/tau(i,j)
+       sum=sum+(u(i,j,k)-uo(i,j,k))**2+(v(i,j,k)-vo(i,j,k))**2
+       cnt=cnt+1.
       enddo
       enddo
+      do i=1,nx
+         a=2.*erru(i,ny,k)
+         dldp=(slam(i,ny,k)-slam(i,ny,k+1))/dp(k+ks)
+         dldy=(slam(i+1,ny+1,k+1)-slam(i+1,ny,k+1))/dy(i,ny)
+         if (v(i,ny,k) .ne. bnd) v(i,ny,k)=vo(i,ny,k)+.5*dldy/a
+         if (omo(i,ny,k).ne.bnd) om(i,ny,k)=omo(i,ny,k)+
+     &     .5*dldp/tau(i,ny)
       enddo
-      call diagnose(slam,nx+1,ny+1,nz+1,27,5,8,8,'LAMDA ')
-      call diagnose(u,nx,ny,nz,26,3,7,7,'CONTIN U-COMPONENT  ')
-      call diagnose(v,nx,ny,nz,26,3,7,7,'CONTIN V-COMPONENT  ')
-      call diagnose(om,nx,ny,nz,27,4,7,7,'CONTIN OMEGA    ')
-      call diagnose(om,nx,ny,nz,27,4,8,7,'CONTIN OMEGA    ')
-      call analz(t,to,u,uo,v,vo,om,omo
-     .                ,slam,f3,nu,nv,fu,fv,delo,tau
-     .                ,nx,ny,nz
-     .                ,lat,dx,dy,ps,p,dp,l,lmax)
-
+      do j=1,ny
+         a=2.*erru(nx,j,k)
+         dldp=(slam(nx,j,k)-slam(nx,j,k+1))/dp(k+ks)
+         dldx=(slam(nx+1,j+1,k+1)-slam(nx,j+1,k+1))/dx(nx,j)
+         if (u(nx,j,k) .ne. bnd) u(nx,j,k)=uo(nx,j,k)+.5*dldx/a
+         if (omo(nx,j,k).ne.bnd) om(nx,j,k)=omo(nx,j,k)+
+     &     .5*dldp/tau(nx,j)
+      enddo
+      enddo
+c   print out rms vector adjustment
+      print*, 'RMS Vector adjustment after continuity applied ' 
+      print*, sqrt(sum/cnt)
 
       deallocate (slam,f3,h)
 
@@ -1347,7 +1355,7 @@ c
      .      ,ps(nx,ny),p(nz),dp(nz)
      .      ,delo,rdpdg,fo,bnd
      .      ,conmax,sumom,cont,con,sumu,sumv,sumt,thermu,thermv
-     .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc
+     .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc,sumf,sumn
      .      ,ang,sin1,f,nvv,nuu,dtdx,dtdy,dudx,dvdy,domdp
      .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
      .      ,ures,vres
@@ -1387,6 +1395,8 @@ c        write(9,4000) k,p(k+1)/100.
          tgpph=0.
          tgpc=0.
          iflag=0
+         sumf=0
+         sumn=0
 
          do j=2,nym2
          do i=2,nxm2
@@ -1436,6 +1446,8 @@ c        write(9,4000) k,p(k+1)/100.
                uuu=(u(i,j-1,k-1)+u(i-1,j-1,k-1))*.5
                vvv=(v(i-1,j,k-1)+v(i-1,j-1,k-1))*.5
                sumww=uuu**2+vvv**2+sumww
+               sumf=fuu**2+fvv**2+sumf
+               sumn=nuu**2+nvv**2+sumn
                tgpc=tgpc+1.
                if (abs(con) .ge. conmax) then
                   conmax=abs(con)
@@ -1458,6 +1470,8 @@ c        write(9,4000) k,p(k+1)/100.
          if (tgpv .ne. 0) thermv=sqrt(thermv/tgpv)
          if (tgpc .ne. 0.) cont=sqrt(cont/tgpc)
          if (tgpc .ne. 0.) sumww=sqrt(sumww/tgpc)
+         if (tgpc .ne. 0.) sumf =sqrt(sumf/tgpc)
+         if (tgpc .ne. 0.) sumn =sqrt(sumn/tgpc)
          if (tgpu .ne. 0) resu=sqrt(resu/tgpu)
          if (tgpv .ne. 0) resv=sqrt(resv/tgpv)
          write(6,1002) sumww
@@ -1467,7 +1481,8 @@ c        write(9,1002) sumww
 
 c took tau out of this write 2-20-01 (JS)
          write(6,1001) sumt,delo,sumu,sumv,
-     .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
+     .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv,
+     .             sumf,sumn
 
 c        write(9,1001) sumt,delo,sumu,sumv,
 c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
@@ -1483,7 +1498,9 @@ c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
      . /1x,' rms cont eqn error:   ',e12.5
      . /1x,' rms ageostrophic wind:',2e12.5
      . /1x,' implied rossby number:',f6.3 
-     . /1x,' momentum resids-u and v eqn:',2e12.4)
+     . /1x,' momentum resids-u and v eqn:',2e12.4
+     . /1x,' rms friction vector        :',2e12.4 
+     . /1x,' rms nonlinear term value   :',2e12.4)
 c
       return
       end
@@ -1752,7 +1769,8 @@ c
       subroutine frict(fu,fv,ub,vb,u,v,p,ps,t
      .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
 c
-c *** Frict computes frictional acceleration in the near the terrain surface
+c *** Frict computes frictional acceleration in the first layer
+c     near the terrain surface
 c     using the parameterization from Haltner Ch. 10.
 c     Frict is computed from the perturbed u, v grids
 c
@@ -1825,59 +1843,51 @@ c     hzdf=50000.!m2/sec ! this value in haltiner is suspected to be too large
       do i=2,nxm1
          dauvdp=(sqrt(u(i,j,k-1)**2+v(i,j,k-1)**2)-
      &           sqrt(u(i,j,k+1)**2+v(i,j,k+1)**2))/ddp(k)
-c        dauvbdp=(sqrt(ub(i,j,k-1)**2+vb(i,j,k-1)**2)-
-c    &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/ddp(k)
          absuv=sqrt(u(i,j,k)**2+v(i,j,k)**2)
-c        absuvb=sqrt(ub(i,j,k)**2+vb(i,j,k)**2)
          if(u(i,j,k).eq.bnd) then
-          fu(i,j,k)=0.
          else
           d2udx=(u(i+1,j,k)+u(i-1,j,k)-2.*u(i,j,k))/dx2(i,j)
           d2udy=(u(i,j+1,k)+u(i,j-1,k)-2.*u(i,j,k))/dy2(i,j)
           d2udp=4.*(u(i,j,k+1)+u(i,j,k-1)-2.*u(i,j,k))/ddp2(k)
-c         d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx2(i,j)
-c         d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy2(i,j)
-c         d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/ddp2(k)
           gdtudp=0.
           if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k))then! we're near sfc
            den=p(k+1)/r/t(i,j,k+1)
-           dudp=(u(i,j,k-1)-u(i,j,k+1))/ddp(k)
-c          dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/ddp(k)
-           gdtudp=den*cd*grav*(dudp*absuv+dauvdp*u(i,j,k))
-c    &        -dubdp*absuvb-dauvbdp*ub(i,j,k))
+           gdtudp=den*cd*grav*abs(u(i,j,k))*u(i,j,k)/dp(k)       
            gdtudp_save(i,j)=gdtudp
           endif
           fu(i,j,k)=hzdf*(d2udx+d2udy)
      &         +eddf*d2udp-gdtudp
          endif
          if(v(i,j,k).eq.bnd) then
-          fv(i,j,k)=0.
          else
           d2vdx=(v(i+1,j,k)+v(i-1,j,k)-2.*v(i,j,k))/dx2(i,j)
           d2vdy=(v(i,j+1,k)+v(i,j-1,k)-2.*v(i,j,k))/dy2(i,j)
           d2vdp=4.*(v(i,j,k+1)+v(i,j,k-1)-2.*v(i,j,k))/ddp2(k)
-c         d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx2(i,j)
-c         d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy2(i,j)
-c         d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/ddp2(k)
           gdtvdp=0.
           if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k)) then! we're near sfc
            den=p(k+1)/r/t(i,j,k+1)
-           dvdp=(v(i,j,k-1)-v(i,j,k+1))/ddp(k)
-           davdp=(abs(v(i,j,k-1))-abs(v(i,j,k+1)))/ddp(k)
-           dvbdp=(vb(i,j,k-1)-vb(i,j,k+1))/ddp(k)
-c          davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/ddp(k)
-           gdtvdp=den*cd*grav*(dvdp*absuv+dauvdp*v(i,j,k))
+           gdtvdp=den*cd*grav*abs(v(i,j,k))*v(i,j,k)/dp(k)      
            gdtvdp_save(i,j)=gdtvdp
-           if(abs(gdtvdp).gt.0.5)then
-              print*,'abs(gdtvdp) > 0.5 :', gdtvdp
-              print*,'den/dvdp/absuv/dauvdp/absuvb/dvbdp/dauvbdp'
-              print*,den,dvdp,absuv,dauvdp,absuvb,dvbdp,dauvbdp
-           endif
           endif
           fv(i,j,k)=hzdf*(d2vdx+d2vdy)
      &              +eddf*d2vdp-gdtvdp
          endif
       enddo
+      enddo
+      enddo
+c fill friction arrays
+      do k=2,nzm1
+      do j=1,ny
+       fu(1,j,k)=fu(2,j,k)
+       fu(nx,j,k)=fu(nxm1,j,k)
+       fv(1,j,k)=fv(2,j,k)
+       fv(nx,j,k)=fv(nxm1,j,k)
+      enddo
+      do i=1,nx
+       fu(i,ny,k)=fu(i,nym1,k)
+       fu(i,1,k)=fu(i,2,k)
+       fv(i,ny,k)=fv(i,nym1,k)
+       fv(i,1,k)=fv(i,2,k)
       enddo
       enddo
 c
@@ -1905,27 +1915,6 @@ c
          print*,'WARNING: max gdtvpd > 1.0'
       endif
 
-c     do j=1,ny,2
-c        print*,'j ',j
-c        print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,j)
-c    &,' ',gdtvdp_save(i,j),': ',i=1,nx,2)
-c     enddo
-
-c     print*,'j = 1'
-c     print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,1)
-c    &,' ',gdtvdp_save(i,1),': ',i=1,nx,2)
-c     print*
-c     print*,'j = ',ny
-c     print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,ny)
-c    &,' ',gdtvdp_save(i,ny),': ',i=1,nx,2)
-c     print*
-c     print*,'i = 1'
-c     print*,'j/gdtudp/gdtvdp ',(j,' ',gdtudp_save(1,j)
-c    &,' ',gdtvdp_save(1,j),': ',j=1,ny,2)
-c     print*
-c     print*,'i = ',nx
-c     print*,'j/gdtudp/gdtvdp ',(j,' ',gdtudp_save(nx,j)
-c    &,' ',gdtvdp_save(nx,j),': ',j=1,ny,2)
 
 
       return
@@ -1933,14 +1922,14 @@ c    &,' ',gdtvdp_save(nx,j),': ',j=1,ny,2)
 c===============================================================================
 c
       subroutine nonlin(nu,nv,u,v,ub,vb,om,omb
-     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd,rog)
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd,rod)
 c
 c *** Nonlin computes the non-linear terms (nu,nv) from staggered input.
 c     The non linear terms are linearized with a background/perturbation
 c     combination. The eularian time terms are assumed to be zero.
 c     The non-linear terms nu,nv, are computed on the 
 c     u, v grids, respectively. The nonlin term is scaled by the rossby number
-c     rog
+c     rod - the length scale is that defined by data resolvability 
 c
       implicit none
 c
@@ -1957,7 +1946,7 @@ c
      .      ,dudp,dvdp,dudt,dvdt
      .      ,dvbdy,dubdp,dvbdp,dudby
      .      ,dubdx,dvbdx,dubdy
-     .      ,omu,ombu,omv,ombv,vvu,uuv,vvbu,uubv,rog
+     .      ,omu,ombu,omv,ombv,vvu,uuv,vvbu,uubv,rod
 c_______________________________________________________________________________
 c
 c
@@ -1967,16 +1956,7 @@ c
       nzm1=nz-1
       call zero3d(nu,nx,ny,nz)
       call zero3d(nv,nx,ny,nz)
-c create perturbations in the u,v,om variables
-      do k=1,nz
-       do j=1,ny
-        do i=1,nx
-         if(u(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)-ub(i,j,k)
-         if(v(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)-vb(i,j,k)
-         if(om(i,j,k).ne.bnd) om(i,j,k)=om(i,j,k)-omb(i,j,k)
-        enddo
-       enddo  
-      enddo 
+c the u,v,om variables are perturbations
       do k=2,nzm1
       do j=2,nym1
       do i=2,nxm1
@@ -1997,7 +1977,7 @@ c create perturbations in the u,v,om variables
           dudp=(u(i,j,k+1)-u(i,j,k-1))/(dp(k)+dp(k+1))
           dudt=0.
           nu(i,j,k)=(dudt+ub(i,j,k)*dudx+vvbu*dudy+ombu*dudp
-     &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp)*rog
+     &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp)*rod
          endif
          if(v(i,j,k).eq.bnd) then
           nv(i,j,k)=0.
@@ -2016,29 +1996,34 @@ c create perturbations in the u,v,om variables
           dvdp=(v(i,j,k+1)-v(i,j,k-1))/(dp(k)+dp(k+1))
           dvdt=0.           
           nv(i,j,k)=(dvdt+uubv*dvdx+vb(i,j,k)*dvdy+ombv*dvdp
-     &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp)*rog
+     &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp)*rod
          endif
       enddo
       enddo
       enddo
-c make winds whole again
-      do k=1,nz
-       do j=1,ny
-        do i=1,nx
-         if(u(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)+ub(i,j,k)
-         if(v(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)+vb(i,j,k)
-         if(om(i,j,k).ne.bnd) om(i,j,k)=om(i,j,k)+omb(i,j,k)
-        enddo
-       enddo  
-      enddo 
+c fill nonlinear arrays near boundaries, don't want big gradients.
+      do k=2,nzm1
+      do j=1,ny
+       nu(1,j,k)=nu(2,j,k)
+       nu(nx,j,k)=nu(nxm1,j,k)
+       nv(1,j,k)=nv(2,j,k)
+       nv(nx,j,k)=nv(nxm1,j,k)
+      enddo
+      do i=1,nx
+       nu(i,ny,k)=nu(i,nym1,k)
+       nu(i,1,k)=nu(i,2,k)
+       nv(i,ny,k)=nv(i,nym1,k)
+       nv(i,1,k)=nv(i,2,k)
+      enddo
+      enddo
 c
       return
       end
 c
 c===============================================================================
 c
-      subroutine fthree(f3,u,v,om,ub,vb,omb,delo,nu,nv,h,erru,tau
-     .,fu,fv,nx,ny,nz,lat,dx,dy,dp)
+      subroutine fthree(f3,u,v,om,omb,h,erru,tau
+     .,nx,ny,nz,lat,dx,dy,dp)
 c
 c *** Fthree computes a/tau (h) and rhs terms in eqn. (3).
 c
@@ -2051,48 +2036,30 @@ c
      .      ,erru(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz),lat(nx,ny)
-     .      ,ub(nx,ny,nz),vb(nx,ny,nz),omb(nx,ny,nz)
-     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,omb(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,delo,fo,rdpdg,dpp,f,aa,dxx,dyy
-     .      ,dnudy,dnvdx,cont,formax
-     .      ,dfudy,dfvdx
+     .      ,dpp,aa,dxx,dyy
+     .      ,cont,formax
       real*4 tau(nx,ny)
 c_______________________________________________________________________________
 c
       print *,'fthree'
-      fo=14.52e-5   !2*omega
-      rdpdg=3.141592654/180.
       formax=0.
       do k=2,nz
          dpp=dp(k)
          do j=2,ny
          do i=2,nx
-            f=sin(lat(i,j)*rdpdg)*fo
             js=1
             if (j .eq. 2) js=0
             dyy=dy(i,j)*float(js+1)
             is=1
             if (i .eq. 2) is=0
-            aa=2.5*erru(i,j,k)+f*f*delo
             dxx=dx(i,j)*float(is+1)
-            dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
-     .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
-            dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
-     .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
-            dfudy=(fu(i,j,k-1)+fu(i-1,j,k-1)
-     .            -fu(i,j-js-1,k-1)-fu(i-1,j-js-1,k-1))/dyy*.25
-            dfvdx=(fv(i,j,k-1)+fv(i,j-1,k-1)
-     .            -fv(i-is-1,j,k-1)-fv(i-is-1,j-1,k-1))/dxx*.25
-            h(i,j,k)=aa/(tau(i,j))
+            h(i,j,k)=erru(i,j,k)/(tau(i,j))
             f3(i,j,k)=-2.*erru(i,j,k)*
      &    ((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
      .    +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j))
-     .    -2.*aa*(om(i,j,k-1)-om(i,j,k))/dpp
-     &    +2.*(erru(i,j,k)-aa)*((ub(i,j-1,k-1)-ub(i-1,j-1,k-1))/dx(i,j)
-     .    +(vb(i-1,j,k-1)-vb(i-1,j-1,k-1))/dy(i,j))
-     .    +2.*f*delo*(dnvdx-dnudy)+2.*f*delo*(dfudy-dfvdx)      
+     .    -h(i,j,k)*(om(i,j,k-1)-om(i,j,k))/dpp
            if (abs(f3(i,j,k)) .ge. formax) then
                formax=abs(f3(i,j,k))
             endif
@@ -2418,12 +2385,18 @@ c omega is already on the staggered horizontal mesh
       else! de-stagger
 
 c horizontal destagger
-c re compute hydrostatic virtual t from adjusted phis 
+c re compute hydrostatic virtual t from staggered adjusted phis 
+c use a second-order scheme
        do k=2,nz-1
         do j=1,ny
          do i=1,nx
-          ts(i,j,k)=(phis(i,j,k)-phis(i,j,k-1))/
-     &                              (alog(p(k)/p(k+1))*r)
+          fo=(phis(i,j,k)-phis(i,j,k-1))/
+     &                              alog(p(k)/p(k+1))
+          so=0.
+          if(k+2.le.nz.and.k.ge.3) 
+     &    so=.5*((phis(i,j,k+1)-phis(i,j,k-1))/alog(p(k)/p(k+2))-
+     &         (phis(i,j,k)-phis(i,j,k-2))/alog(p(k-1)/p(k+1)))
+         ts(i,j,k)=(fo-so)/r          
          enddo
         enddo
        enddo
