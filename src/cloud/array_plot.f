@@ -37,6 +37,7 @@ cdis
 !     1997 Aug 01 K. Dritz  - Changed NX_L to imax and NY_L to jmax
 !     1997 Aug 01 K. Dritz  - Removed include of lapsparms.for
 !     1997 Oct    S. Albers - Make plots work with variable domain sizes.
+
       integer imax, jmax
       real a(imax,jmax),b(imax,jmax)
       integer ia(imax,jmax)
@@ -45,6 +46,12 @@ cdis
       real*4 cld_hts(kmax)
       CHARACTER NAME*10
       character*1 c1_cov(0:13)
+
+      integer max_plot
+      parameter(max_plot=65)
+      character c_mxp_a*(max_plot)
+      character c_mxp_b*(max_plot)
+
       data c1_cov
      1   /'.','1','2','3','4','5','6','7','8','9','#','*',')','.'/
 
@@ -90,8 +97,8 @@ c find max and min
 
       nplot = (ihigh - 1) / iskip + 1
 
-      if(nplot .gt. 65)then ! Prevent lines from getting too long
-          nplot = 65
+      if(nplot .gt. max_plot)then ! Prevent lines from getting too long
+          nplot = max_plot
           ihigh = 1 + (nplot-1) * iskip
       endif
 
@@ -127,19 +134,32 @@ c find max and min
       if(NAME(1:4) .eq. 'VERT')then     ! Vertical Section
           do j = jmax,1,-2
               iarg = nint(cld_hts(j))
-              write(6,1001)iarg,
-     1                     (c1a_array(i,j),i=1,ihigh,iskip),
-     1                     (c1b_array(i,j),i=1,ihigh,iskip)
-cc 1001         FORMAT(1X,i6,2x,<nplot>A1,4x,<nplot>A1)
- 1001         FORMAT(1X,i6,2x,65A1,4x,65A1)
+
+              do i1 = 1,max_plot
+                  i2 = 1 + (i1-1) * iskip
+                  if(i2 .le. ihigh)then
+                      c_mxp_a(i1:i1) = c1a_array(i2,j)
+                      c_mxp_b(i1:i1) = c1b_array(i2,j)
+                  endif
+              enddo ! i1
+
+              write(6,1001)iarg,c_mxp_a(1:nplot),c_mxp_b(1:nplot)
+ 1001         FORMAT(1X,i6,2x,a,4x,a)
           enddo ! j
 
       elseif(NAME(1:4) .eq. 'HORZ')then ! Horizontal array plot
           do j = jmax,1,-jskip
-              write(6,1002)(c1a_array(i,j),i=1,ihigh,iskip),
-     1                     (c1b_array(i,j),i=1,ihigh,iskip)
-ccc 1002         FORMAT(1X,<nplot>A1,<nspace>x,<nplot>A1)
- 1002         FORMAT(1X,65A1,1x,65A1)
+
+              do i1 = 1,max_plot
+                  i2 = 1 + (i1-1) * iskip
+                  if(i2 .le. ihigh)then
+                      c_mxp_a(i1:i1) = c1a_array(i2,j)
+                      c_mxp_b(i1:i1) = c1b_array(i2,j)
+                  endif
+              enddo ! i1
+
+              write(6,1002)c_mxp_a(1:nplot),c_mxp_b(1:nplot)
+ 1002         FORMAT(1X,a,3x,a)
           enddo ! j
 
       endif
