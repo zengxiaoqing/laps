@@ -30,16 +30,19 @@ main                                           laps_sfc.f
             spline (t,td)                      lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
             add                               
-            spline (u,v)                       lapsvanl_sub.f
+            spline (u,v,red_p,mslp)            lapsvanl_sub.f
+                barnes_multivariate_sfc        barnes_multivariate_sfc.f
+            pstn_anal                          laps_routines.f
+            spline (vis)                       lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
             barnes_multivariate_sfc_jacket          "
                 barnes_multivariate_sfc             "
-            nonlin                                  "
+            nonlin                             laps_routines.f
             frict                                   "
             leib                                    "
-            spline (mslp)                      lapsvanl_sub.f
-            pstn_anal                          laps_routines.f
-            lp_fire_danger                          "
+            stats                                   "
+            vortdiv                                 
+            lp_fire_danger                     laps_routines.f
             heat_index                              "
             verify                             lapsvanl_sub.f
                 splie2                         mdatlaps.f
