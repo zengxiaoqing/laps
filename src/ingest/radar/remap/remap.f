@@ -521,12 +521,13 @@ cdis
 
        character*3 c3_radar_subdir
 
-       logical l_line_ref_qc,l_hybrid_first_gate
+       logical l_line_ref_qc,l_hybrid_first_gate,l_unfold
 
        namelist /remap_nl/ n_radars_remap,max_times,path_to_radar_a ! ,c4_radarname_a
      1                    ,laps_radar_ext_a,path_to_vrc_nl
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
      1                    ,abs_vel_min,l_line_ref_qc,l_hybrid_first_gate       
+     1                    ,l_unfold
        character*150 static_dir,filename
 
        call get_directory('nest7grid',static_dir,len_dir)
@@ -584,10 +585,12 @@ cdis
        write(6,*)' abs_vel_min     = ',abs_vel_min
        write(6,*)' l_line_ref_qc   = ',l_line_ref_qc
        write(6,*)' l_hybrid_first_gate = ',l_hybrid_first_gate
+       write(6,*)' l_unfold        = ',l_unfold
 
        namelist_parms%abs_vel_min = abs_vel_min
        namelist_parms%l_line_ref_qc = l_line_ref_qc 
        namelist_parms%l_hybrid_first_gate = l_hybrid_first_gate
+       namelist_parms%l_unfold = l_unfold
 
        istatus = 1
        return

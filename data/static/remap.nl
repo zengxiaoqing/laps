@@ -9,6 +9,7 @@
  abs_vel_min=2.0,
  l_line_ref_qc=.false.,
  l_hybrid_first_gate=.false.,
+ l_unfold=.false.,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
 '/public/data/radar/wsr88d/wideband/kcys/netcdf',
@@ -82,3 +83,8 @@ c 'l_hybrid_first_gate - Flag to mask out gates near the radar for low tilts
 c                        to emulate what happens with the hybrid reflectivity
 c                        scan
 c                      
+c 'l_unfold'         - Perform unfolding on the polar NetCDF data right after
+c                      it is read in. The Nyquist velocity will then be set
+c                      to 'r_missing_data' to prevent further unfolding of the
+c                      Cartesian data.
+
