@@ -3,8 +3,8 @@
  max_times=3,
  path_to_vrc_nl='rdr',
  ref_min=0.0,
- min_ref_samples=4,
- min_vel_samples=4,
+ min_ref_samples=-1,
+ min_vel_samples=-1,
  dgr=1.1,
  path_to_radar_a=
 '/public/data/radar/wsr88d/wideband/kama/netcdf',
@@ -60,9 +60,11 @@ c                      remapping step.
 c
 c 'min_ref_samples'  - Minimum number of valid reflectivity gates needed
 c                      within a LAPS grid volume to do the averaging
+c                      -1 defaults to letting the software make the choice
 c
 c 'min_vel_samples'  - Minimum number of valid velocity gates needed
 c                      within a LAPS grid volume to do the averaging
+c                      -1 defaults to letting the software make the choice
 c
 c 'dgr'              - Maximum gap in degrees of azimuth upon which the 
 c                      horizontal reflectivity averaging is performed
