@@ -343,7 +343,7 @@ c
 c
 c
 c.....  Now, back to the analysis.
-c.....	Convert altimeters to station pressure.
+c.....	Convert altimeters to station pressure. Original sta pres is ignored.
 c
  415	do j=1,n_obs_b
 	  if(alt_s(j) .le. badflag) then
@@ -364,6 +364,9 @@ c
         lapse_t = -.01167
         lapse_td = -.007
 c
+c       We are now leaving all the original pmsl_s obs in place, regardless
+c       of whether pstn_s (i.e. alt_s) obs are present or not.
+c
 	sum_diffp = 0.
 	num_diffp = 0
 	print *,' '
@@ -373,7 +376,7 @@ c
 	  if(pstn_s(k).le.badflag .or. t_s(k).le.badflag 
      &                           .or. td_s(k).le.badflag) then
 	    pred_s(k) = badflag
-	    pmsl_s(k) = badflag
+!           pmsl_s(k) = badflag
 	  else
 	    call reduce_p(t_s(k),td_s(k),pstn_s(k),elev_s(k),lapse_t,
      &                       lapse_td,pred_s(k),redp_lvl,badflag)  ! 1500 m for CO

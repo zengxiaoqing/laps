@@ -760,6 +760,11 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
 c
+        if(back_mp .eq. 1. .and. back_sp .eq. 1 .and. .false.)then
+            write(6,*)' Updating psfc field using mslp/mslp_bk'
+            call pstn_anal(mslp_bk,mslp,imax,jmax,sp_bk,psfc)
+        endif
+c
 	print *,' '
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis

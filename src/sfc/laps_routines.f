@@ -1886,3 +1886,38 @@ c
 c
 	return
 	end
+
+        subroutine pstn_anal(mslp_bk,mslp,ni,nj,stnp_bk,stnp)
+
+!       This routine solves for the 'stnp' analysis by assuming that ratio
+!       stnp/stnp_bk is equal to mslp/mslp_bk. This provides an indirect
+!       way to get the observations to modify the STNP background to
+!       come up with a STNP analysis. We are thus feeding off of any MSLP obs
+!       that contributed to the MSLP analysis.
+
+        real*4 mslp_bk(ni,nj)                                    ! I
+        real*4 mslp(ni,nj)                                       ! I
+        
+        real*4 stnp_bk(ni,nj)                                    ! I
+        real*4 stnp(ni,nj)                                       ! I/O
+
+        call get_r_missing_data(r_missing_data,istatus)
+
+        do i = 1,ni
+        do j = 1,nj
+            if(       mslp_bk(ni,nj) .ne. r_missing_data       
+     1          .and. mslp(ni,nj)    .ne. r_missing_data              
+     1          .and. stnp_bk(ni,nj) .ne. r_missing_data   )then
+
+                stnp(i,j) = ( mslp(i,j) / mslp_bk(i,j) ) * stnp_bk(i,j)       
+
+            else
+                stnp(i,j) = stnp_bk(i,j)
+
+            endif
+      
+        enddo ! j
+        enddo ! i
+
+        return
+        end

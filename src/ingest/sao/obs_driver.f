@@ -554,6 +554,7 @@ c
         nalt = 0
         nstp = 0
         nmsl = 0
+        nmsl_only = 0
         nalt_and_msl = 0
         nalt_or_msl = 0
         do i = 1,n_obs_b
@@ -565,6 +566,11 @@ c
             endif
             if(store_4(i,3) .ne. badflag)then
                 nmsl = nmsl+1
+            endif
+            if(store_4(i,3) .ne. badflag .and.
+     1         store_4(i,1) .eq. badflag .and.                         
+     1         store_4(i,2) .eq. badflag            )then
+                nmsl_only = nmsl_only+1
             endif
             if(store_4(i,1) .ne. badflag .and. 
      1         store_4(i,3) .ne. badflag            )then
@@ -580,6 +586,8 @@ c
         write(6,*)' # of stations reporting altimeter         ',nalt
         write(6,*)' # of stations reporting station pressure  ',nstp
         write(6,*)' # of stations reporting MSL pressure      ',nmsl
+        write(6,*)' # of stations reporting MSL pressure only '
+     1                                                 ,nmsl_only     
         write(6,*)' # of stations reporting altimeter and MSLP'
      1                                                 ,nalt_and_msl    
         write(6,*)' # of stations reporting altimeter or MSLP '
