@@ -9,8 +9,8 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
- IHOP_flag = 0,
- TIME_DIFF = 70800, 
+ IHOP_flag = 1,
+ TIME_DIFF = 3600, 
  GPS_SWITCH = 1,
  SFC_MIX = 1,
  MOD_4DDA_1 = 0,
@@ -21,6 +21,7 @@
  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
  
 
+# PATH_TO_GVAP8 = '/public/data/sat/nesdis/goes8/tpw/sfov_ihop/ascii/',
 /
 c   
 c   This is a switch for the module  lq3.  The data are delivered in 
