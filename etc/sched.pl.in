@@ -41,6 +41,8 @@
 #
 # -s                   runs surface (all LSX variables) and 3-D wind analyses only
 #
+# -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -49,11 +51,12 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w $opt_s);
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w $opt_s
+            $opt_l);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:qws');
+getopts('d:c:a:rm:t:e:qwsl');
 
 my $initial_time = time();
 #
@@ -124,12 +127,11 @@ my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
 my($LAPS_LOG_PATH);
-if($fxa_sys!=0){
+if(($fxa_sys!=0)and(! $opt_l)){
     $LAPS_LOG_PATH = &Set_logdir'fxa; #'
 }else{
     $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
 }
-
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
@@ -233,7 +235,7 @@ foreach $exe (@LAPS_EXE){
 
                 if($execount > 1){ # after start
                     print TFILE "  \n";
-                    print TFILE "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
+                    print TFILE "qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
@@ -285,7 +287,7 @@ foreach $exe (@LAPS_EXE){
             close(TFILE);
 
             chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-            $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_1.sh";
+            $command = "qsub $LAPS_LOG_PATH/run_qsub_1.sh";
             print "Executing $command\n";
             system("$command");
 
@@ -327,7 +329,7 @@ if($fxa_sys!=0 || $opt_w){
         $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
     }
 
-#   system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
+#   system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 
     &forksub($sys,$lockfile);
 
