@@ -127,7 +127,6 @@ c
 	integer*4 i4time
 	integer jstatus(20)		! 20 is standard for prodgen drivers
 	integer narg, iargc
-	integer use_kalman              ! Flag for LSO/LSO_QC selection
 c
 	character atime*24, filename*9, filename_last*9
 	character infile_last*256
