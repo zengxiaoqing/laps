@@ -832,3 +832,28 @@ c
       return
       end
 c
+
+
+      subroutine get_pressure_interval(pressure_interval,istatus)
+
+      include 'lapsparms.cmn' ! PRESSURE_INTERVAL_L
+
+!     This routine accesses the pressure_interval variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list is different in the calling routine
+
+!     The result 'pressure_interval' has real meaning only when we are
+!     using a uniform 'PRESSURE' grid.
+
+      call get_laps_config('nest7grid',istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
+      endif
+
+      pressure_interval = PRESSURE_INTERVAL_L
+
+      return
+      end
+

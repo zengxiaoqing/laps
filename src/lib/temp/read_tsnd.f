@@ -170,10 +170,8 @@ c                               not exactly match the LAPS analysis time.
 
             read(12,401,err=406,end=500)
      1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                                       ,c5_name(i_pr),a9time
-401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9)
-
-            c8_obstype(i_pr) = 'RASS'
+     1                     ,c5_name(i_pr),a9time,c8_obstype(i_pr)
+401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9,1x,a8)
 
 !           Determine if rass is in the LAPS domain
 406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
@@ -365,10 +363,8 @@ c
 
             read(12,801,err=706,end=800)
      1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                                        ,c5_name(i_pr),a9time
-801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
-
-            c8_obstype(i_pr) = 'RAOB'
+     1          ,c5_name(i_pr),a9time,c8_obstype(i_pr)
+801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 !           Determine if sonde is in the LAPS domain
 706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
