@@ -29,8 +29,9 @@ cdis
 cdis
 cdis
 cdis
-      subroutine read_gvap (filename, nstations, lat,lon, wt,w1,w2,w3,
-     1 nn, istatus)
+      subroutine read_gvap (filename, nstations, path_to_gvap,
+     1     lat,lon, wt,w1,w2,w3,
+     1     nn, istatus)
 
 c     routine to read goes watervapor for system testing
 c     author Dan Birkenheuer
@@ -51,7 +52,8 @@ c
 
 c     input variables
       character*9 filename
-      integer nstations,nn,istatus,idummy
+      integer nstations,nn,istatus,idummy,idummy2
+      character*256 path_to_gvap
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)
@@ -63,15 +65,25 @@ c     internal variables
 
       integer i
       real dummy
+      integer ptg_index
+      character*512 const_file
+      integer cf
+
+      call s_len(path_to_gvap, ptg_index, istatus)
 
 c     reading goes 8
+
+      const_file = path_to_gvap(1:ptg_index)//'20'//filename
+     1     //'.tpwtext8'
+
+      call s_len(const_file, cf, istatus)
       
-      open(22, file='/data/rapb/taiwan/goeswv/'//filename//'.wv8',form=
-     1 'formatted',status='old',err = 668)
-      read(22,*,end=668,err=668)   ! first header line is ignored
+      open(22, file=const_file(1:cf),form='formatted',
+     1     status='old',err = 668)
+      read(22,*,end=668,err=668) ! first header line is ignored
       do i = 1,nstations
-         read(22,*,end=665,err=665) idummy,lat(i),lon(i),
-     1              idummy,idummy,wt(i), w1(i),w2(i),w3(i)
+         read(22,*,end=665,err=665) idummy,idummy,lat(i),lon(i),
+     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i)
 
       enddo
 
@@ -80,7 +92,7 @@ c     reading goes 8
       if (nn .eq. 0) go to 666
       write(6,*) nn, ' number of records read GOES 8'
       istatus = 1
-c      write(6,*) (wt(i),i=1,nn)
+c     write(6,*) (wt(i),i=1,nn)
 
       go to 669
 
@@ -93,12 +105,12 @@ c     reading goes 10
 
       filename = filename(1:7)//'24'
 
-      open (23, file='/data/rapb/taiwan/goeswv/'//filename//'.wv10',
+      open (23, file=path_to_gvap(1:ptg_index)//'20'//filename//'.wv10',
      1     form='formatted',status='old',err = 666)
-      read(23,*,end=666,err=666)   ! first header line is ignored
+      read(23,*,end=666,err=666) ! first header line is ignored
       do i = nn,nstations
          read(23,*,end=667,err=667) idummy,lat(i),lon(i),
-     1              idummy,idummy,wt(i), w1(i),w2(i),w3(i)
+     1        idummy,idummy,wt(i), w1(i),w2(i),w3(i)
 
       enddo
 
