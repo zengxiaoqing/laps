@@ -234,7 +234,7 @@ c**************new routine as adapted at FSL**************************
 !      Calculate Critical Fire Weather Index.
 !         (RH<15% and speed>20mph for any 3 consecutive hours during the
 !          past 24 hours)
-       write(6,*)' Calculate Critical Fireweather Index'
+       write(6,*)' Calculate Critical Fireweather Index',i4time
        call critical_fwi(rh_sfc,u_sfc,v_sfc                               ! I
      1                  ,ni,nj,i4time                                     ! I
      1                  ,cfwi)                                            ! O
@@ -418,7 +418,8 @@ c**************new routine as adapted at FSL**************************
 
           else
 
-             pi4time = i4time - (float(n-1)*3600)
+             pi4time = i4time - (n-1)*3600
+             print *,'critical_fwi: i4time, pi4time',i4time,pi4time
 
              ext = 'lsx'
 
