@@ -105,6 +105,7 @@ PROGRAM lfmpost
   REAL                        :: vis_pt
   REAL                        :: pcp_pt
   REAL                        :: snow_pt
+  REAL                        :: vnt_pt
   CHARACTER(LEN=16)           :: date_str
   CHARACTER(LEN=8)            :: wx_pt
   REAL, EXTERNAL              :: bint
@@ -502,10 +503,12 @@ PROGRAM lfmpost
         pcp_pt = bint(point_rec(pt)%i,point_rec(pt)%j,pcp_inc,nx,ny)*39.37
         snow_pt =bint(point_rec(pt)%i,point_rec(pt)%j,snow_inc,nx,ny)*39.37
 
+        vnt_pt  = vnt_index(ip,jp)
+        IF (point_vent_units .EQ. 'KT-FT') vnt_pt = vnt_pt * 6.3774
         WRITE(point_rec(pt)%output_unit, &
-        '(A,3I4,1x,I3.3,"/",I2.2,1x,I3.3,1x,F4.1,1x,A,1x,F5.2,1x,F4.1,1x,I5,2I3,1x,I3)') &
+        '(A,3I4,1x,I3.3,"/",I2.2,1x,I3.3,1x,F4.1,1x,A,1x,F5.2,1x,F4.1,1x,I6,2I3,1x,I3)') &
            date_str,NINT(t_pt),NINT(td_pt),rh_pt,dir_pt,spd_pt,ceiling_pt,vis_pt,wx_pt, &
-           pcp_pt,snow_pt,NINT(vnt_index(ip,jp)),NINT(ham_index(ip,jp)), &
+           pcp_pt,snow_pt,NINT(vnt_pt),NINT(ham_index(ip,jp)), &
            NINT(hah_index(ip,jp)),NINT(fwi_index(ip,jp))
    
         IF (t_pt .GT. point_rec(pt)%hi_temp)  THEN
