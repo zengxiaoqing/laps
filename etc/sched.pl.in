@@ -126,7 +126,10 @@ my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
 require "$LAPSROOT/etc/fxa.pm";
 
-my $fxa_sys =  &Get_env'fxa; #'
+my $fxa_sys = 0;
+if (! $opt_l && ! $ENV{LAPS_DATA_ROOT}){
+  $fxa_sys =  &Get_env'fxa; #'
+}
 $ENV{PATH}.=":@NETCDF@/bin";
 
 my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time_cmn');
