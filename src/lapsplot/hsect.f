@@ -3766,7 +3766,8 @@ c                   cint = -1.
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
+!               call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
      1                     ,n_image,1e-0)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -5815,7 +5816,7 @@ c             if(cint.eq.0.0)cint=0.1
         common /image/ n_image
         common /icol_index/ icol_common
 
-        call upcase(c33_label,c33_label)
+!       call upcase(c33_label,c33_label)
 
         if(a9time .ne. '         ')then
             call i4time_fname_lp(a9time,I4time_lbl,istatus)       
