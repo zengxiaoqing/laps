@@ -85,12 +85,12 @@ cdis
         character*5 c5_name(max_snd_grid) 
         character*8 c8_obstype(max_snd_grid) 
 
-        logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob,l_3d
+        logical l_qc,l_flag_vv,l_good_tsnd(max_snd_grid),l_use_raob,l_3d  
         logical l_string_contains
 
         include 'tempobs.inc'
 
-        l_3d = .false.
+        l_3d = .true.
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
