@@ -6256,7 +6256,7 @@ c             if(cint.eq.0.0)cint=0.1
                 write(6,*)' Calling plot_station_locations: 5 '
      1                   ,iflag,c_metacode       
                 call plot_station_locations(i4time_file,lat,lon
-     1                      ,NX_L,NY_L,iflag,maxstns,c_field,zoom
+     1                      ,NX_L,NY_L,NZ_L,iflag,maxstns,c_field,zoom
      1                      ,namelist_parms,plot_parms
      1                      ,asc_tim_24,c_label,i_overlay)       
             endif
