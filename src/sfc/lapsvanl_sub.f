@@ -268,6 +268,7 @@ c	real alf2o(imax,jmax)  !work array
 c
 	character name*10
 	logical iteration
+        logical l_boundary(imax,jmax)
 
         integer analysis_mode
 c
@@ -302,13 +303,19 @@ c
 c
 c.....  Count the number of observations in the field (not counting the 
 c.....  boundaries.
+
 c
 	n_obs_var = 0
+
+        l_boundary = .true. ! f90 assignment
+
 	do j=3,jmax-2
 	do i=3,imax-2
+          l_boundary(i,j) = .false.
 	  if(to(i,j) .ne. 0.) n_obs_var = n_obs_var + 1
 	enddo !i
 	enddo !j
+
 	if(n_obs_var .eq. 0) then
 	  print *,'  WARNING.  No observations found in data array. '
 	  imiss = 1
@@ -360,60 +367,42 @@ c
 	iflag = 0
 	print *,' std dev: ',std,', bad value: ',bad
 c
-c.....  Normalize the boundaries with respect to the bkg.
-c
-	do j=2,jmax-1 ! for i=1 and i=imax
-	   to(1,j) = to(1,j) - tb(1,j)
-	   to(imax,j) = to(imax,j) - tb(imax,j)
-	enddo !j
-c
-	do j=3,jmax-2 ! for i=2 and i=imax-1
-	   to(2,j) = to(2,j) - tb(2,j)
-	   to(imax-1,j) = to(imax-1,j) - tb(imax-1,j)
-	enddo !j
-c
-	do i=2,imax-1 ! for j=1 and j=jmax
-	   to(i,1) = to(i,1) - tb(i,1)
-	   to(i,jmax) = to(i,jmax) - tb(i,jmax)
-	enddo
-	do i=3,imax-2 ! for j=1 and j=jmax-1
-	   to(i,2) = to(i,2) - tb(i,2)
-	   to(i,jmax-1) = to(i,jmax-1) - tb(i,jmax-1)
-	enddo
-c
-	to(1,1) = to(1,1) - tb(1,1)  !corners
-	to(2,2) = to(2,2) - tb(2,2)
-	to(1,jmax) = to(1,jmax) - tb(1,jmax)
-	to(2,jmax-1) = to(2,jmax-1) - tb(2,jmax-1)
-	to(imax,1) = to(imax,1) - tb(imax,1)
-	to(imax-1,2) = to(imax-1,2) - tb(imax-1,2)
-	to(imax,jmax) = to(imax,jmax) - tb(imax,jmax)
-	to(imax-1,jmax-1) = to(imax-1,jmax-1) - tb(imax-1,jmax-1)
-c
-c.....  eliminate bad data from the interior while normalizing to
-c.....   the background
+c.....  Normalize the obs with respect to the bkg.
 c
 	sumdif = 0.
 	numdif = 0
-	do j=3,jmax-2
-	do i=3,imax-2
-	  if(to(i,j) .eq. 0.) go to 98
-	  diff = to(i,j) - tb(i,j)
-	  if(abs(diff) .lt. bad) then
-	     to(i,j) = diff
-	     sumdif = sumdif + diff
-	     numdif = numdif + 1
-	  else
-	     iflag = 1
-	     write(6,1099) i,j,to(i,j), diff
-	     to(i,j) = 0.
-	     if(i.ne.1 .and. i.ne.imax .and. j.ne.1 .and. j.ne.jmax)
-     &         n_obs_var = n_obs_var - 1
-	  endif
- 98	  continue 
-        enddo !i
-	enddo !j
- 1099	format(1x,'bad data at i,j ',2i5,': value ',e12.4,', diff ',e12.4)
+
+        do j = 1,jmax
+        do i = 1,imax
+           if(l_boundary(i,j))then ! Normalize boundary ob
+	       to(i,j) = to(i,j) - tb(i,j)
+
+           else ! eliminate bad data from the interior while normalizing to
+                ! the background
+
+	       if(to(i,j) .eq. 0.) go to 98
+	       diff = to(i,j) - tb(i,j)
+	       if(abs(diff) .lt. bad) then
+	           to(i,j) = diff
+	           sumdif = sumdif + diff
+	           numdif = numdif + 1
+	       else
+	           iflag = 1
+	           write(6,1099) i,j,to(i,j), diff
+	           to(i,j) = 0.
+	           n_obs_var = n_obs_var - 1
+	       endif
+
+ 98	       continue 
+ 1099	       format(1x,'bad data at i,j ',2i5,': value ',e12.4
+     1               ,', diff ',e12.4)
+
+           endif ! Boundary point
+
+        enddo ! j
+        enddo ! i
+
+
 c
 	print *,' '
 	if(numdif .ne. n_obs_var) then
@@ -507,6 +496,7 @@ c
      1                                    ,rinst_err                ! Input
      1                                    ,weight_bkg_const         ! Input
      1                                    ,n_fnorm                  ! Input
+     1                                    ,l_boundary               ! Input
      1                                    ,t                        ! Output
      1                                    ,istatus)                 ! Output
         endif
@@ -524,8 +514,8 @@ c
 c.....      Set the weights for the spline.
 c
 c           We need parity with respect to obs and filtering. Since number
-c           of obs can change depending on varialbe ajust alf accordingly
-c           so that it is repersentative of the inverse of observation
+c           of obs can change depending on variable adjust alf accordingly
+c           so that it is representative of the inverse of observation
 c           error**2 times the number of working gridpoints divided by the 
 c           number of ob points so that the term is roughly comprable to the 
 c           beta term

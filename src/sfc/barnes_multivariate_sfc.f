@@ -6,6 +6,7 @@
      1                   ,rinst_err                              ! Input
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
+     1                   ,l_boundary                             ! Input
      1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
 
@@ -22,7 +23,7 @@
         real*4 wt_2d(ni,nj)
         integer*4 n_obs_lvl
 
-        logical l_analyze(nk),l_3d
+        logical l_analyze(nk), l_3d, l_use_ob, l_boundary(ni,nj)
 
         integer*4  n_fnorm
 
@@ -37,7 +38,7 @@
         ISTAT = INIT_TIMER()
 
         call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
-        if(istatus .ne. 1)stop
+        if(istatus .ne. 1)return
 
         l_analyze = .false.             ! array set
         wt_2d = 0.                      ! array set
@@ -46,17 +47,34 @@
 
         sumsq_inst = 0.
         n_obs_valid = 0
+        ibound = 0
+        iskip_bound = 1 ! How far to skip between boundary obs that get used.
+                        ! 1 means use all boundary obs, 2 means use every
+                        ! other boundary ob, 3 means use every 3rd boundary ob.
+
+        boundary_err = rinst_err
             
         do i = 1,ni
         do j = 1,nj
-            if(to_2d_in(i,j) .ne. 0.0)then
-                wt_2d(i,j) = 1.0 / rinst_err**2
+            l_use_ob = .true.
+
+!           Determine if point would represent a boundary ob that gets skipped
+            if(l_boundary(i,j))then
+                ibound = ibound + 1
+                if(ibound .ne. (ibound/iskip_bound)*iskip_bound )then
+                    l_use_ob = .false.
+                endif
+            endif
+
+            if(to_2d_in(i,j) .ne. 0.0 .and. l_use_ob)then
+                wt_2d(i,j) = 1.0 / rinst_err**2 ! Set differently for boundary?
                 sumsq_inst = sumsq_inst + 1./wt_2d(i,j)
                 n_obs_valid = n_obs_valid + 1
                 to_2d(i,j) = to_2d_in(i,j)
             else
                 to_2d(i,j) = r_missing_data
             endif
+
         enddo ! j
         enddo ! i
 
