@@ -43,8 +43,17 @@ cdis
         character*9 a9_time
         character*8 c8_project
 
-        call get_systime(i4time,a9_time,istatus)
-        if(istatus .ne. 1)go to 999
+        call GETENV('LAPS_A9TIME',a9_time)
+        call s_len(a9_time,ilen)
+
+        if(ilen .eq. 9)then
+            write(6,*)' systime (from env) = ',a9_time
+            call i4time_fname_lp(a9_time,i4time,istatus)
+        else
+            call get_systime(i4time,a9_time,istatus)
+            if(istatus .ne. 1)go to 999
+            write(6,*)' systime = ',a9_time
+        endif
 
         call get_grid_dim_xy(NX_L,NY_L,istatus)
         if (istatus .ne. 1) then
