@@ -94,6 +94,9 @@ cdis
         if(ext_in .eq. 'pin')then
             call open_lapsprd_file(lun_pig,i4time,ext,istatus)
             if(istatus .ne. 1)go to 888
+        else ! append
+            call open_lapsprd_file_append(lun_pig,i4time,ext,istatus)       
+            if(istatus .ne. 1)go to 888
         endif
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
@@ -104,28 +107,37 @@ cdis
             return
         endif
 
-        i4time_pirep_thr = min(nint(ilaps_cycle_time*2.00),3600)
-        write(6,*)' i4time_pirep_thr = ',i4time_pirep_thr
+        call get_windob_time_window(i4_window_pirep)
+        write(6,*)' i4_window_pirep = ',i4_window_pirep
 
         write(6,*)
         write(6,*)'             Reading Pirep Obs: ',ext_in
         write(6,*)
      1  '   n   i  j  k    u      v       dd     ff      azi    ran '
 
-10      call read_laps_pirep_wind(lun_in,xlat,xlon,elev,dd,ff
+10      i_qc = 1
+
+        if(ext_in .eq. 'pin')then
+            call read_laps_pirep_wind(lun_in,xlat,xlon,elev,dd,ff
      1                                          ,asc9_tim_pirep,l_eof)
+            if(elev .eq. 0.)i_qc = 0
+        else
+            call read_laps_cdw_wind(lun_in,xlat,xlon,pres,dd,ff
+     1                                          ,asc9_tim_pirep,l_eof)
+        endif
+
         if(l_eof)goto900
 
         call cv_asc_i4time(asc9_tim_pirep,i4time_pirep)
 
 
-        if(abs(i4time_pirep - i4time) .lt. i4time_pirep_thr)then
+        if(abs(i4time_pirep - i4time) .le. i4_window_pirep)then
 
             rcycles = float(i4time - i4time_pirep) 
      1              / float(ilaps_cycle_time)
 
 !           Climo QC check
-            if(dd .lt. 500.)then
+            if(dd .lt. 500. .and. i_qc .eq. 1)then
 
                 call latlon_to_rlapsgrid(xlat,xlon,lat,lon,ni,nj
      1                                  ,ri,rj,istatus)
@@ -137,9 +149,16 @@ cdis
 
 !                   Pirep is in horizontal domain
 
-                    rk = height_to_zcoord2(elev,heights_3d
-     1                          ,ni,nj,nk,i_grid,j_grid,istatus)
-                    if(istatus .ne. 1)return
+                    if(ext_in .eq. 'pin')then
+!                       Assume ACARS elev is geometric height MSL
+                        rk = height_to_zcoord2(elev,heights_3d
+     1                              ,ni,nj,nk,i_grid,j_grid,istatus)
+                        if(istatus .ne. 1)return
+
+                    else ! cdw
+                        rk = zcoord_of_pressure(pres)
+
+                    endif
 
                     k_grid = nint(rk)
 
@@ -159,8 +178,7 @@ cdis
                         pirep_i(n_pirep_obs) = i_grid
                         pirep_j(n_pirep_obs) = j_grid
 
-                        if(elev .gt. 0.)call disp_to_uv(dd,ff,u_temp
-     1                                                       ,v_temp)
+                        call disp_to_uv(dd,ff,u_temp,v_temp)
 
                         pirep_k(n_pirep_obs) = k_grid
 
@@ -174,9 +192,9 @@ cdis
 
                         write(lun_pig,*)ri-1.,rj-1.,rk-1.,dd,ff
 
-                        write(6,101)xlat,xlon,dd,ff,elev
+                        write(6,101)xlat,xlon,dd,ff,rk
      1          ,u_temp,v_temp,pirep_u(n_pirep_obs),pirep_v(n_pirep_obs)
-101                     format(2f8.2,2f8.1,f8.0,4f8.2)
+101                     format(2f8.2,2f8.1,f8.1,4f8.2)
 
 !                 ***   Remap pirep observation to LAPS observation grid
 
@@ -254,12 +272,12 @@ cdis
 
         l_eof = .false.
 
-!100     read(lun,895,err=100,end=900)xlat,xlon,elev,dd,ff,asc9_tim_pirep
-! 895    FORMAT(2F8.2,f8.0,1X,'ddff',F7.0,F7.0,'  t',F8.1,2a10)
+100     read(lun,895,err=100,end=900)xlat,xlon,pres,dd,ff,asc9_tim_pirep       
+895     FORMAT(f8.3,f10.3,f8.0,f6.0,f6.1,2x,a9)
 
         return
 
- 900     l_eof = .true.
+ 900    l_eof = .true.
 
         return
         end
