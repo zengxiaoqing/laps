@@ -60,6 +60,7 @@ c                     09-30-98  Housekeeping changes.
 c	              12-03-98  Increase dir_s to 256 characters.
 c                     06-21-99  Pass lat/lon, grid size and grid spacing
 c                                 to get_ routines to calculate box size.
+c                     09-20-99  Add blacklist test (on KFCS w/known bad P).
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -338,6 +339,16 @@ c.....  Count up the obs.
 c
 	n_obs_g = n_sao_g + n_local_g + n_buoy_g
 	n_obs_b = nn
+c
+c.....  Put blacklist stuff here...test for now.
+c
+	do i=1,n_obs_b
+	   if(stations(i)(1:4) .eq. 'KFCS') then
+	      store_4(i,1) = badflag  ! altimeter
+	      store_4(i,2) = badflag  ! station pressure
+	      store_4(i,3) = badflag  ! MSL pressure
+	   endif
+	enddo !i
 c
 c.....  Call the routine to write the LSO file.
 c
