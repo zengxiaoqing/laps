@@ -472,7 +472,7 @@ c.....  READ IN any other data here
 c
  800	continue
 c
-c.....	Put the data on the grids.
+c.....	Put the data on the grids - accumulate sums.
 c
 c.....	Winds:
 c
@@ -516,6 +516,7 @@ c
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Now find the values at the gridpts.
+c       Divide by the weights to average multiple obs on a gridpoint if needed
 c
         write(6,1010) icnt_t
 1010	FORMAT(1X,'DATA SET 1 INITIALIZED WITH ',I6,' OBSERVATIONS')
