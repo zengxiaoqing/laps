@@ -240,6 +240,19 @@ netcdf static {
             cpv:valid_range= 0.f, 0.0001f;
             cpv:LAPS_units="none";
 
+        //      albedo climo
+
+        float
+            alb(record,z,y,x);
+            alb:navigation_dim = "nav";
+            alb:record = "valtime, reftime";
+            alb:_FillValue = 1.e+37f;
+            alb:long_name="albedo climatology";
+            alb:units="none";
+            alb:valid_range= 0.f, 1.f;
+            alb:LAPS_units="none";
+
+
         //	LAPS variables
 
         long
@@ -270,6 +283,7 @@ netcdf static {
             mfc_comment(record,z,namelen),
             cph_comment(record,z,namelen),
             cpv_comment(record,z,namelen),
+            alb_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
