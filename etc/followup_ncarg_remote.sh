@@ -22,6 +22,7 @@ tar cvf - time/systime.dat \
           static/ncarg/uscounty.dat \
           static/ncarg/state_from_counties.dat \
           static/ncarg/continent_minus_us.dat \
+          static/www \
           lapsprd/pro/$a9time.pro \
           lapsprd/lso/$a9time.lso \
           lapsprd/lso/$a9time.lso_qc \
