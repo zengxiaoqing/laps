@@ -1871,7 +1871,9 @@ c
 
             elseif(c_field(1:2) .eq. 'rf')then
                 if(c_type .eq. 'rv')then
-                    c19_label = '  Reflectivity '//ext_radar(1:3)//' '
+                    c19_label = 'Reflectivity '//ext_radar(1:3)//' '
+                    c19_label = ' Ref (dBZ) '//radar_name(1:4)//' '
+     1                                       //ext_radar(1:3)
                 else
                     c19_label = '  Reflectivity Anl '
                 endif
