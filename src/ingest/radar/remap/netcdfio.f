@@ -53,7 +53,7 @@ cdis
        integer*4 i4times_raw(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
        character*3 laps_radar_ext, c3_radar_subdir
-       character*8 radar_subdir
+       character*8 radar_subdir, c8_fname_format
        logical l_multi_tilt,l_exist,l_output
        character*13 a9_to_rsa13
 
@@ -78,10 +78,14 @@ cdis
        endif
 
        call get_systime_i4(i4time_sys,istatus)
-       if(istatus .ne. 1)return   
+       if(istatus .ne. 1)then ! use wall clock time if systime is not available
+           i4time_sys = i4time_now_gg()
+       endif
 
        call get_laps_cycle_time(laps_cycle_time,istatus)   
        if(istatus .ne. 1)return   
+
+       c8_fname_format = 'UNKNOWN'
 c
 c      Determine filename extension
        write(6,*)' radar_init: laps_ext = ',laps_radar_ext
@@ -109,7 +113,7 @@ c      Determine filename extension
  
 !          Get filecount of 02 elevation raw files
            c2_tilt = '02'
-           c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
+           c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
            call get_file_names(c_filespec,i_nbr_files_raw,c_fnames
      1                        ,max_files,istatus)
            if(istatus .ne. 1)then
@@ -128,7 +132,7 @@ c      Determine filename extension
  
 !          Get i4times of 01 elevation raw files
            c2_tilt = '01'
-           c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
+           c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
            call get_file_times(c_filespec,max_files,c_fnames
      1                        ,i4times_raw,i_nbr_files_raw,istatus)
 
@@ -230,9 +234,10 @@ c      Determine filename extension
 
        i_skip = 0
 
-!      Test existence of raw input 'yyjjjhhmm_elevtt' file
- 200   call check_input_file(path_to_radar,a9_time,i_tilt_proc,filename       
-     1                      ,l_exist)       
+!      Test existence of raw 'yyjjjhhmm_elevtt / yyyymmdd_hhmm.elevtt' input
+ 200   call check_input_file(path_to_radar,a9_time,i_tilt_proc      ! I
+     1                      ,c8_fname_format                        ! I
+     1                      ,filename,l_exist)                      ! O     
 
        if(l_exist)then
            call get_tilt_netcdf_data(filename
@@ -617,8 +622,9 @@ c      Determine filename extension
        end
  
  
-       subroutine check_input_file(path_to_radar,a9_time,i_tilt
-     1                            ,filename,l_exist)       
+       subroutine check_input_file(path_to_radar,a9_time,i_tilt           ! I
+     1                            ,c8_fname_format                        ! I/O
+     1                            ,filename,l_exist)                      ! O
 
        logical l_exist
 
@@ -626,6 +632,11 @@ c      Determine filename extension
        character*(*) filename
        character*2 c2_tilt
        character*9 a9_time
+       character*8 c8_fname_format
+       character*13 a13_time, fname9_to_wfo_fname13
+
+!      Determine type of filename (if not yet known) and test for existence
+!      of radar file for given time/tilt
 
        if(i_tilt .lt. 10)then
            write(c2_tilt,101)i_tilt
@@ -636,11 +647,34 @@ c      Determine filename extension
        endif
 
        call s_len(path_to_radar,len_path)
-       filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
-     1            //c2_tilt
 
-!      Test existence of yyjjjhhmm file
-       inquire(file=filename,exist=l_exist)
+       if(c8_fname_format .eq. 'UNKNOWN')then
+           write(6,*)'check_input_file: resolving filename format'
+       endif
+
+       if(c8_fname_format .eq. 'NIMBUS' .or. 
+     1    c8_fname_format .eq. 'UNKNOWN')then
+           filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
+     1                //c2_tilt
+
+!          Test existence of radar file
+           inquire(file=filename,exist=l_exist)
+
+           if(l_exist)c8_fname_format = 'NIMBUS'
+       endif
+
+       if(c8_fname_format .eq. 'WFO' .or. 
+     1    c8_fname_format .eq. 'UNKNOWN')then
+           a13_time = fname9_to_wfo_fname13(a9_time)
+           filename = path_to_radar(1:len_path)//'/'//a13_time//'.elev'
+     1                //c2_tilt
+
+!          Test existence of radar file
+           inquire(file=filename,exist=l_exist)
+
+           if(l_exist)c8_fname_format = 'WFO'
+       endif
+
 
        call s_len(filename,len_file)
        write(6,*)' check_input_file: ',filename(1:len_file),' ',l_exist       
