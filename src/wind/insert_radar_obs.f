@@ -270,8 +270,8 @@ csms$ignore begin
                   endif
               enddo ! i_radar
 
-              call multiwind(u,v,rms,u0,v0,x,y,height
-     1                      ,n_illuminated,xx,yy,ht,vr,rmsmax,ier)
+              call multiwind_noz(u,v,rms,u0,v0,x,y,height
+     1                          ,n_illuminated,xx,yy,ht,vr,rmsmax,ier)       
 
           enddo ! i
           enddo ! j
