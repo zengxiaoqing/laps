@@ -151,7 +151,8 @@ C
       write(lun,*)kdim
 
       do k = 1,kdim
-          write(lun,*)comment(k)
+          write(lun,1)comment(k)
+1         format(a)
       enddo ! k
 
       write(lun,*)n_cmprs
