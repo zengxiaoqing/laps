@@ -503,7 +503,7 @@
                   ! so we need to convert this rate to kg/kg
 
                   lwc_limit = autoconv_lwc2rai/rho(i,j,k)
-                  WHERE(lwc .GT. lwc_limit) lwc = lwc_limit
+                  lwc(i,j,k) = MIN(lwc(i,j,k),lwc_limit)      
 
                 ENDIF
               ENDDO
