@@ -312,8 +312,10 @@ cdis
             ixh_remap = nint(float(NX_P-1) * .0630)
 !           iyl_remap = nint(float(NX_P) * .174)
 !           iyh_remap = nint(float(NX_P) * .162)
-            iyl_remap = nint(float(NX_P-1) * .175)
-            iyh_remap = nint(float(NX_P-1) * .175)
+!           iyl_remap = nint(float(NX_P-1) * .175)
+!           iyh_remap = nint(float(NX_P-1) * .175)
+            iyl_remap = nint(float(NX_P-1) * .190)
+            iyh_remap = nint(float(NX_P-1) * .165)
         else
             write(6,*)' Error, invalid vymin ',vymin
         endif
@@ -650,7 +652,7 @@ c read in laps lat/lon and topo
 
 100    write(6,95)
 95     format(
-     1  /'  Field:  [WIND: di,sp,u,v,om,vo,va,vc (barbs)'
+     1  /'  Field:  [WIND: di,sp,u,v,om,dv,vo,va,vc (barbs)'
      1  /
      1  /'           TEMP: [t,pt,tb,pb] (T, Theta, T Blnc, Theta Blnc)'       
      1  /
@@ -689,6 +691,13 @@ c read in laps lat/lon and topo
         write(6,*)' Generating Cross Section'
 
         i_image = 0
+
+        call s_len(c_field,len_field)
+        
+        if(c_field(len_field:len_field) .eq. 'i' 
+     1                    .and. c_field .ne. 'dii')then
+            i_image = 1
+        endif
 
         call interp_2d(lat,lat_1d,xlow,xhigh,ylow,yhigh,
      1                 NX_L,NY_L,NX_C,r_missing_data)
@@ -810,7 +819,7 @@ c read in laps lat/lon and topo
                 write(6,*)' Looking for 3D wind data: ',ext_wind(1:10)
      1                   ,' ',ext,c_field,c_wind
 
-                if(c_field .ne. 'w ' .and. c_field .ne. 'om')then ! Non-omega
+                if(c_field .ne. 'w ' .and. c_field(1:2) .ne. 'om')then ! Non-omega
                     write(6,*)' Reading U/V'
                     if(c_prodtype .eq. 'N')then
                         directory = directory(1:len_dir)//'lw3'
@@ -856,30 +865,12 @@ c read in laps lat/lon and topo
                     call make_fnam_lp(i4time_3dw,a9time,istatus)
                     write(6,*)' a9time = ',a9time
 
-                elseif(c_field .eq. 'w ' .or. c_field .eq. 'om')then ! Omega
+                elseif(c_field .eq. 'w ' .or. 
+     1                 c_field(1:2) .eq. 'om')then ! Omega
                     write(6,*)' Reading Omega/W ',c_wind,c_prodtype
-                    call get_file_time(c_filespec,i4time_ref,i4time_3dw)
 
-                    if(c_wind .eq. 'c')then
-                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
-     1                                  ,field_3d,ext_wind,istatus)
-
-                    elseif(c_prodtype .eq. 'A')then
-                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
-     1                                  ,field_3d,ext_wind,istatus)
-
-                    elseif(c_prodtype .eq. 'N')then
-                        directory = directory(1:len_dir)//'lw3'
-                        ext = 'lw3'
-                        var_2d = 'OM'
-
-                        call get_3dgrid_dname(directory
-     1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
-     1                  ,ext,var_2d,units_2d
-     1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
-
-                    elseif(c_prodtype .eq. 'B' .or. 
-     1                     c_prodtype .eq. 'F')then
+                    if(c_prodtype .eq. 'B' .or. 
+     1                 c_prodtype .eq. 'F')then ! c_prodtype
                         var_2d = 'OM'
                         call get_lapsdata_3d(i4_initial,i4_valid
      1                              ,NX_L,NY_L,NZ_L       
@@ -887,10 +878,34 @@ c read in laps lat/lon and topo
      1                              ,units_2d,comment_2d,field_3d
      1                              ,istatus)
 
-                    endif
+                        call make_fnam_lp(i4_valid,a9time,istatus)
 
-                    call make_fnam_lp(i4time_3dw,a9time,istatus)
+                    else 
+                        call get_file_time(c_filespec
+     1                                    ,i4time_ref,i4time_3dw)
 
+                        if(c_wind .eq. 'c')then
+                            call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                      ,field_3d,ext_wind,istatus)  
+
+                        elseif(c_prodtype .eq. 'A')then
+                            call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                      ,field_3d,ext_wind,istatus)
+
+                        elseif(c_prodtype .eq. 'N')then
+                            directory = directory(1:len_dir)//'lw3'
+                            ext = 'lw3'
+                            var_2d = 'OM'
+
+                            call get_3dgrid_dname(directory
+     1                      ,i4time_ref,laps_cycle_time*10000,i4time_3dw       
+     1                      ,ext,var_2d,units_2d
+     1                      ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
+                        endif
+
+                        call make_fnam_lp(i4time_3dw,a9time,istatus)
+
+                    endif ! c_prodtype
                 endif
             endif
 !           l_wind_read = .true.
@@ -927,7 +942,7 @@ c read in laps lat/lon and topo
             endif
 
 
-        elseif(c_field .eq. 'om' )then
+        elseif(c_field(1:2) .eq. 'om' )then
 
             if(ext_wind .eq. 'lco')then ! Cloud Omega
 
@@ -962,8 +977,6 @@ c read in laps lat/lon and topo
                 enddo ! i
                 enddo ! k
 
-                cint = -1.
-
             else ! Not LCO field
                 call interp_3d(field_3d,field_vert
      1                        ,xlow,xhigh,ylow,yhigh
@@ -986,11 +999,16 @@ c read in laps lat/lon and topo
                 enddo ! i
                 enddo ! k
 
-                cint = -1.
-
             endif ! LCO field
 
-            i_contour = 1
+
+            if(i_image .eq. 0)then
+                cint = -1.
+                i_contour = 1
+            else
+                cint = 0.
+                i_contour = -1
+            endif
 
             if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Omega (balanced)      ubar/s'
@@ -1634,7 +1652,7 @@ c read in laps lat/lon and topo
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
+     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
 !           Blank out the edges external to the X-section
@@ -2528,10 +2546,12 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call set(vxmin, vxmax, vymin, vymax
      1             , rleft, right, bottom, top,1)
 
-            mini = icolors(i_graphics_overlay)
-            maxi = icolors(i_graphics_overlay)
+!           mini = icolors(i_graphics_overlay)   ! is this effective?
+!           maxi = icolors(i_graphics_overlay)   ! is this effective?
 
-            call setusv_dum(2hIN,icolors(i_graphics_overlay)) ! Is this effective?
+            if(i_contour .eq. 1)then
+                call setusv_dum(2hIN,icolors(i_graphics_overlay)) 
+            endif
 
             vmax = -1e30
             vmin = 1e30
@@ -2565,30 +2585,29 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                   call set(.20, .80, .20, .80
 !    1                     , 1., 61., 1., 21. ,1)
 
-
-!        subroutine remap_field_2d(nx_in,ixlow_in,ixhigh_in
-!     1                           ,ny_in,iylow_in,iyhigh_in
-!     1                           ,nx_out,ixlow_out,ixhigh_out
-!     1                           ,ny_out,iylow_out,iyhigh_out
-!     1                           ,field_in,field_out,r_missing_data)
-
                     call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
-     1                           ,field_vert,field_vert3,r_missing_data)
+     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
+     1                           ,field_vert,field_vert3,r_missing_data)       
 
 
                     if(i_contour .eq. 1)then
-
-                        call conrec_line
-!    1                  (field_vert3(1,ibottom),NX_P,NX_P,NX_P
-     1                  (field_vert3,NX_P,NX_P,NX_P
+                        write(6,*)' calling contour line plot'
+                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,-1,0,-1848,0)
 
-                    else
-                        write(6,*)' calling solid fill cloud plot'
+                    else ! image plot
+                        write(6,*)' calling solid fill cloud plot',cint       
+
+                        if(cint .eq. 0.)then
+                            call array_range(field_vert3,NX_P,NX_P
+     1                                      ,rmin,rmax,r_missing_data)
+                            clow = rmin
+                            chigh = rmax
+                        endif
+
                         call ccpfil(field_vert3,NX_P,NX_P,clow,chigh
      1                              ,'hues',n_image,scale)       
 
@@ -2615,12 +2634,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 enddo ! i
 
               else
+                write(6,*)' logarithmic contour line plot'
                 call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
      1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
-     1                           ,field_vert,field_vert3,r_missing_data)
+     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
+     1                           ,field_vert,field_vert3,r_missing_data)       
 
 
                 call array_range(field_vert3,NX_P,NX_P,rmin,rmax
@@ -2628,20 +2648,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 cmax = max(abs(rmin),abs(rmax))
 
-                call conrec_line
-     1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+                call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,0.,0.,cint,-1,0,-1848,0)
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
                     if(cvalue .ge. abs(cint) .and. cvalue .le. cmax)then       
                         cint_in = 2 * cvalue
-                        call conrec_line
-     1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,-cvalue,cvalue,cint_in,-1,0,-1848,0)       
-!                       call conrec_line
-!    1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
-!    1                             ,-cvalue,-cvalue,cint,-1,0,-1848,0)
                     endif
                 enddo ! i
  
