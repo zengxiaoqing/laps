@@ -197,7 +197,7 @@
     laps_data(:,:,startind:stopind) = ht
     varname(startind:stopind) = 'HT '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast geopotential height in meters'
+    varcomment(startind:stopind) = 'Geopotential Height                   '
 
     ! U-wind in m/s
     startind=stopind+1
@@ -205,7 +205,7 @@
     laps_data(:,:,startind:stopind) = u3
     varname(startind:stopind) = 'U3 '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast U wind component in m/s'
+    varcomment(startind:stopind) = 'U-component Wind                '
     
     ! V-wind in m/s
     startind=stopind+1
@@ -213,7 +213,7 @@
     laps_data(:,:,startind:stopind) = v3
     varname(startind:stopind) = 'V3 '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast V wind component in m/s'
+    varcomment(startind:stopind) = 'V-component wind                '
 
     ! W in m/s
     startind=stopind+1
@@ -221,7 +221,7 @@
     laps_data(:,:,startind:stopind) = w3
     varname(startind:stopind) = 'W3 '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast W wind component in m/s'
+    varcomment(startind:stopind) = 'Vertical Velocity               '
 
     ! Omega in Pa/s
     startind=stopind+1
@@ -229,7 +229,7 @@
     laps_data(:,:,startind:stopind) = om
     varname(startind:stopind) = 'OM '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast W wind component in Pa/s'
+    varcomment(startind:stopind) = 'Pressure Vertical Velocity       '
 
     ! Temperature in K
     startind=stopind+1
@@ -237,7 +237,7 @@
     laps_data(:,:,startind:stopind) = t3
     varname(startind:stopind) = 'T3 '   
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast temperature in K'
+    varcomment(startind:stopind) = 'Temperature              '
 
     ! Specific humidity in kg/kg
     startind=stopind+1
@@ -245,7 +245,7 @@
     laps_data(:,:,startind:stopind) = sh
     varname(startind:stopind) = 'SH '
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast specific humidity in kg/kg'
+    varcomment(startind:stopind) = 'Specific Humidity                  '
  
     ! Relative humidity wrt liquid in %
     startind=stopind+1
@@ -253,7 +253,7 @@
     laps_data(:,:,startind:stopind) = rh3
     varname(startind:stopind) = 'RH3'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast relative humidity wrt liquid in %'
+    varcomment(startind:stopind) = 'Relative Humidity    .                    '
 
     ! Cloud liquid content in kg/m2
     startind=stopind+1
@@ -261,7 +261,7 @@
     laps_data(:,:,startind:stopind) = lwc
     varname(startind:stopind) = 'LWC'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast cloud liquid content in kg/m2'
+    varcomment(startind:stopind) = 'Cloud Liquid Water                    '
 
     ! Cloud ice content in kg/m2
     startind=stopind+1
@@ -269,7 +269,7 @@
     laps_data(:,:,startind:stopind) = ice
     varname(startind:stopind) = 'ICE'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast cloud ice content in kg/m2'
+    varcomment(startind:stopind) = 'Cloud Ice                          '
 
     ! Rain water content in kg/m2
     startind=stopind+1
@@ -277,7 +277,7 @@
     laps_data(:,:,startind:stopind) = rai
     varname(startind:stopind) = 'RAI'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast rain content in kg/m2'
+    varcomment(startind:stopind) = 'Rain Concentration            '
 
     ! Snow content in kg/m2
     startind=stopind+1
@@ -285,7 +285,7 @@
     laps_data(:,:,startind:stopind) = sno
     varname(startind:stopind) = 'SNO'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast snow content in kg/m2'
+    varcomment(startind:stopind) = 'Snow Concentration            '
 
     ! Graupel content in kg/m2
     startind=stopind+1
@@ -293,7 +293,7 @@
     laps_data(:,:,startind:stopind) = pic
     varname(startind:stopind) = 'PIC'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast graupel content in kg/m2'
+    varcomment(startind:stopind) = 'Graupel Concentration            '
 
     ! Reflectivity in dBZ
     startind=stopind+1
@@ -301,7 +301,7 @@
     laps_data(:,:,startind:stopind) = ref
     varname(startind:stopind) = 'REF'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast radar reflectivity in dBZ'
+    varcomment(startind:stopind) = 'Sim. Radar Reflectivity           '
  
     ! Coded precipitation type
     startind=stopind+1
@@ -309,7 +309,7 @@
     laps_data(:,:,startind:stopind) = pty
     varname(startind:stopind) = 'PTY'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast precip type in coded values'
+    varcomment(startind:stopind) = 'Precip. Type                        '
 
     ! Turbulent Kinetic Energy
     startind=stopind+1
@@ -317,7 +317,7 @@
     laps_data(:,:,startind:stopind) = tke
     varname(startind:stopind) = 'TKE'
     levels(startind:stopind) = NINT(press_levels)
-    varcomment(startind:stopind) = 'Forecast turbulent kinetic energy   '
+    varcomment(startind:stopind) = 'Turbulent Kinetic Energy            '
 
     ! Write out the 3D stuff using LAPS library routine
     IF (.NOT. write_to_lapsdir) THEN
@@ -376,193 +376,193 @@
     startind = 1 
     laps_data(:,:,startind) = u
     varname(startind) = 'USF'
-    varcomment(startind) = 'Fcst U-Component Wind           '
+    varcomment(startind) = 'Sfc U-Component Wind            '
     
     startind = startind + 1
     laps_data(:,:,startind) = v
     varname(startind) = 'VSF'
-    varcomment(startind) = 'Fcst V-Component Wind           '
+    varcomment(startind) = 'Sfc V-Component Wind            '
 
     startind = startind + 1
     laps_data(:,:,startind) = w
     varname(startind) = 'WSF'
-    varcomment(startind) = 'Forecast W wind component in m/s'
+    varcomment(startind) = 'Sfc Vertical Velocity           '
 
     startind = startind + 1
     laps_data(:,:,startind) = t
     varname(startind) = 'TSF'
-    varcomment(startind) = 'Forecast temperature in K'
+    varcomment(startind) = 'Sfc Temperature          '
 
     startind = startind + 1
     laps_data(:,:,startind) = td
     varname(startind) = 'DSF'
-    varcomment(startind) = 'Forecast dewpoint temperature in K'
+    varcomment(startind) = 'Sfc Dewpoint Temperature          '
 
     startind = startind + 1
     laps_data(:,:,startind) = rh
     varname(startind) = 'RH '
-    varcomment(startind) = 'Forecast relative humidity wrt liquid in %'
+    varcomment(startind) = 'Sfc Relative Humidity                     '
 
     startind = startind + 1
     laps_data(:,:,startind) = lcb
     varname(startind) = 'LCB'
-    varcomment(startind) = 'Forecast cloud base in m above sea-level'
+    varcomment(startind) = 'Cloud Base ASL                          '
 
     startind = startind + 1
     laps_data(:,:,startind) = lct
     varname(startind) = 'LCT'
-    varcomment(startind) = 'Forecast cloud top in m above sea-level'
+    varcomment(startind) = 'Cloud Top ASL                          '
 
     startind = startind + 1
     laps_data(:,:,startind) = msl
     varname(startind) = 'SLP'
-    varcomment(startind) = 'Forecast mean sea-level pressure in Pa'
+    varcomment(startind) = 'Sea-level Pressure                    '
 
     startind = startind + 1
     laps_data(:,:,startind) = p
     varname(startind) = 'P  '
-    varcomment(startind) = 'Forecast reduced pressure in Pa'
+    varcomment(startind) = 'Reduced Pressure               '
 
     startind = startind + 1
     laps_data(:,:,startind) = ps
     varname(startind) = 'PSF'
-    varcomment(startind) = 'Forecast surface pressure in Pa'
+    varcomment(startind) = 'Surface Pressure               '
 
     startind = startind + 1
     laps_data(:,:,startind) = lil
     varname(startind) = 'LIL'
-    varcomment(startind) = 'Forecast integrated liquid water depth in mm'
+    varcomment(startind) = 'Integrated Liquid Water                     '
 
     startind = startind + 1
     laps_data(:,:,startind) = tpw
     varname(startind) = 'TPW'
-    varcomment(startind) = 'Forecast total precipitable water depth in mm'
+    varcomment(startind) = 'Total Precipitable Water                     '
 
     startind = startind + 1
     laps_data(:,:,startind) = r01
     varname(startind) = 'R01'
-    varcomment(startind) = 'Forecast incremental liquid precip in m'
+    varcomment(startind) = 'Incremental Tot. Liq. Precip           '
 
     startind = startind + 1
     laps_data(:,:,startind) = rto
     varname(startind) = 'RTO'
-    varcomment(startind) = 'Forecast total accum liquid precip in m'
+    varcomment(startind) = 'Run-total Liq. Precip Accum            '
 
     startind = startind + 1
     laps_data(:,:,startind) = s01
     varname(startind) = 'S01'
-    varcomment(startind) = 'Forecast incremental snow depth in m'
+    varcomment(startind) = 'Incremental Snow Depth              '
 
     startind = startind + 1
     laps_data(:,:,startind) = sto
     varname(startind) = 'STO'
-    varcomment(startind) = 'Forecast total accum snow depth in m'
+    varcomment(startind) = 'Run-total Snow Accum                '
 
     startind = startind + 1
     laps_data(:,:,startind) = th
     varname(startind) = 'TH '
-    varcomment(startind) = 'Forecast potential temperature in K'
+    varcomment(startind) = 'Sfc Potential Temperature          '
 
     startind = startind + 1
     laps_data(:,:,startind) = the
     varname(startind) = 'THE'
-    varcomment(startind) = 'Forecast equivalent potential temperature in K'
+    varcomment(startind) = 'Sfc Equiv. Potential Temperature              '
 
     startind = startind + 1
     laps_data(:,:,startind) = pbe
     varname(startind) = 'PBE'
-    varcomment(startind) = 'Forecast CAPE in J/kg'
+    varcomment(startind) = 'CAPE                 '
 
     startind = startind + 1
     laps_data(:,:,startind) = nbe
     varname(startind) = 'NBE'
-    varcomment(startind) = 'Forecast CIN in J/kg'
+    varcomment(startind) = 'CIN                 '
 
     startind = startind + 1
     laps_data(:,:,startind) = lcv
     varname(startind) = 'LCV'
-    varcomment(startind) = 'Forecast cloud fraction.  Note the model ' //&
-                           'currently only uses 0 or 1!'
+    varcomment(startind) = 'Cloud Fraction                          ' 
+
     startind = startind + 1
     laps_data(:,:,startind) = cce
     varname(startind) = 'CCE'
-    varcomment(startind) = 'Forecast cloud ceiling in m AGL'
+    varcomment(startind) = 'Cloud Ceiling AGL              '
 
 
     startind = startind + 1
     laps_data(:,:,startind) = lmt
     varname(startind) = 'LMT'
-    varcomment(startind) = 'Forecast radar echo tops in m above sea-level'
+    varcomment(startind) = 'Sim. Radar Echo Tops                         '
 
     startind = startind + 1
     laps_data(:,:,startind) = lmr
     varname(startind) = 'LMR'
-    varcomment(startind) = 'Forecast column max reflectivity in dBZ'
+    varcomment(startind) = 'Sim. Composite Reflectivity            '
 
     startind = startind + 1
     laps_data(:,:,startind) = llr
     varname(startind) = 'LLR'
-    varcomment(startind) = 'Forecast low-level reflectivity in dBZ'
+    varcomment(startind) = 'Sim. Sfc. Reflectivity                '
 
     startind = startind + 1
     laps_data(:,:,startind) = spt
     varname(startind) = 'SPT'
-    varcomment(startind) = 'Forecast precip type using coded values'
+    varcomment(startind) = 'Sfc Precip. Type                       '
 
     startind = startind + 1
     laps_data(:,:,startind) = lhe
     varname(startind) = 'LHE'
-    varcomment(startind) = 'Forecast storm-relative helicity in m2/s2'
+    varcomment(startind) = 'Storm Relative Helicity                  '
 
     startind = startind + 1
     laps_data(:,:,startind) = li
     varname(startind) = 'LI '
-    varcomment(startind) = 'Forecast lifted index in K'
+    varcomment(startind) = 'Lifted Index              '
 
     startind = startind + 1
     laps_data(:,:,startind) = hi
     varname(startind) = 'HI '
-    varcomment(startind) = 'Forecast heat index in K'
+    varcomment(startind) = 'Heat Index              '
 
     startind = startind + 1
     laps_data(:,:,startind) = vis
     varname(startind) = 'VIS'
-    varcomment(startind) = 'Forecast visibility in m'
+    varcomment(startind) = 'Sfc. Visibility              '
 
     startind = startind + 1
     laps_data(:,:,startind) = terdot
     varname(startind) = 'TER'
-    varcomment(startind) = 'Model background terrain'
+    varcomment(startind) = 'Model Terrain           '
 
     startind = startind + 1
     laps_data(:,:,startind) = lwout
     varname(startind) = 'LWO'
-    varcomment(startind) = 'Forecast Outgoing LW Radiation'
+    varcomment(startind) = 'Outgoing LW Radiation         '
 
     startind = startind + 1
     laps_data(:,:,startind) = swout  
     varname(startind) = 'SWO'
-    varcomment(startind) = 'Forecast Outgoing SW Radiation'
+    varcomment(startind) = 'Outgoing SW Radiation         '
 
     startind = startind + 1
     laps_data(:,:,startind) = shflux 
     varname(startind) = 'SHF'
-    varcomment(startind) = 'Forecast Sensible Heat Flux'
+    varcomment(startind) = 'Sensible Heat Flux            '
 
     startind = startind + 1
     laps_data(:,:,startind) = lhflux 
     varname(startind) = 'LHF'
-    varcomment(startind) = 'Forecast Latent Heat Flux'
+    varcomment(startind) = 'Latent Heat Flux          '
 
     startind = startind + 1
     laps_data(:,:,startind) = pblhgt 
     varname(startind) = 'BLH'
-    varcomment(startind) = 'Forecast Boundary Layer Depth '
+    varcomment(startind) = 'Boundary Layer Depth         '
 
     startind = startind + 1
     laps_data(:,:,startind) = ground_t
     varname(startind) = 'TGD'
-    varcomment(startind) = 'Forecast Ground Temperature'
+    varcomment(startind) = 'Ground Temperature        '
 
     startind = startind + 1
     laps_data(:,:,startind) = vnt
@@ -582,7 +582,7 @@
     startind = startind + 1
     laps_data(:,:,startind) = fwi
     varname(startind) = 'FWI'
-    varcomment(startind) = 'Fosberg Fire Wx Index      '
+    varcomment(startind) = 'Fosberg Fire Wx Index     '
 
     IF (.NOT. write_to_lapsdir) THEN
       output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fsf/' 
