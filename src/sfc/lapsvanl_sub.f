@@ -535,7 +535,7 @@ c
 
         write(6,*)' Num sat tb8 points = ',num_sat_bkg
 
-        if(num_sat_bkg .gt. 0)then
+        if(num_sat_bkg .gt. 1)then
             rmean = sum_sat_bkg   / float(num_sat_bkg)
             rms   = sqrt(sumsq_sat_bkg / float(num_sat_bkg))
             rms_abm = sqrt(rms**2 - rmean**2)
@@ -545,7 +545,7 @@ c
 
             write(6,*)' Num of sat/obs comparisons = ',num_sat_obs
 
-            if(num_sat_obs .gt. 0)then
+            if(num_sat_obs .gt. 1)then
                 rmean = sum_sat_obs   / float(num_sat_obs)
                 rms   = sqrt(sumsq_sat_obs / float(num_sat_obs))
                 rms_abm = sqrt(rms**2 - rmean**2)
