@@ -58,7 +58,8 @@ c                                      Figure box size in gridpoint space from
 c                                      user-defined size (deg) and grid_spacing.
 c                          10-19-99  Added checks on each variable when doing
 c                                      units conversion.
-c                          01-11-00  Fixed check on ob time (overall).                      
+c                          01-11-00  Fixed check on ob time (overall), and 
+c                                      check on time for individual variables.
 c
 c*****************************************************************************
 c
@@ -273,14 +274,14 @@ c
 c
 c.....  Convert units for storage.  For those variables with a "change
 c.....  time", check to make sure the variable was observed within the
-c.....  last cycle (and that they're just carrying an old ob for the 
+c.....  last cycle (and that they're not just carrying an old ob for the 
 c.....  current time).
 c
 c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = t(i) 
 	  if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
-	  if(t_time(i) .ne. badflag) then
+	  if(t_time(i) .ge. 0.) then
 	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
 		temp_k = badflag
 	     endif
@@ -301,7 +302,7 @@ c
 c
 	  rh_p = rh(i) 
 	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
-	  if(rh_time(i) .ne. badflag) then
+	  if(rh_time(i) .ge. 0.) then
 	     if( (timeobs(i) - rh_time(i)) .gt. laps_cycle_time) then
 		rh_p = badflag
 	     endif
@@ -313,7 +314,7 @@ c
 	  if(dir.lt.0. .or. dir.gt.360.) dir = badflag
 	  spd = ff(i)
 	  if(spd.lt.0 .or. spd.gt.100.) spd = badflag
-	  if(dd_time(i).ne.badflag .and. ff_time(i).ne.badflag) then
+	  if(dd_time(i).ge.0. .and. ff_time(i).ge.0.) then
 	     if( ((timeobs(i) - dd_time(i)) .gt. laps_cycle_time) .or.
      &           ((timeobs(i) - ff_time(i)) .gt. laps_cycle_time) ) then
 		dir = badflag
@@ -338,7 +339,7 @@ c..... Pressure...Station pressure, MSL and altimeter
 c
 	  stn_press = stnp(i)
 	  if(stn_press.lt.40000. .or. stn_press.gt.120000.) stn_press = badflag
-	  if(p_time(i) .ne. badflag) then
+	  if(p_time(i) .ge. 0.) then
 	     if( (timeobs(i) - p_time(i)) .gt. laps_cycle_time ) then
 		stn_press = badflag
 	     endif
