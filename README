@@ -51,6 +51,7 @@
          3.2.9 ..................  PIREPS/ACARS Ingest
          3.2.10 .................  RAOB (SND) Ingest
          3.2.11 .................  Cloud Drift Wind (CDW) Ingest
+         3.2.12 .................  Surface Data Ingest
          3.3 ..............  Analysis Processes
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -312,16 +313,16 @@
      the './data/static/nest7grid.parms' files and can be set accordingly at 
      runtime.
 
-     Sfc Obs (lso): FSL uses this data in FSL's NetCDF format as input.
+     Sfc Obs (lso): FSL uses this data in FSL's NIMBUS NetCDF format as input.
            The FSL code is in the '.../src/ingest/sao' directory, and
            includes routines to read and format different surface data
-           (METAR, mesonet, buoy).  Outside users will need to write 
-           the necessary routines to read their data formats and pass
-           the data in arrays to the calling routines in the expected form.
-           Paths to the data are set in the 'surface_obs.inc' file.
-           Looking at the routines in the '.../src/ingest/sao' directory
-           should provide enough information to get you started.  Direct
-           questions about surface data to Pete Stamus (stamus@fsl.noaa.gov).
+           (METAR, local data, buoy [under development]).  Outside users will 
+           need to modify/write the necessary routines to read their data 
+           formats to be able to output the ASCII LSO file. Paths to the data 
+           are set in the 'surface_obs.inc' file. Looking at the routines in 
+           the '.../src/ingest/sao' directory should provide enough 
+           information to get you started.  Direct questions about surface 
+           data to Pete Stamus (stamus@fsl.noaa.gov).
 <pre>
      Radar: The following are intermediate files for various forms of radar
             data.
@@ -1227,7 +1228,7 @@ Inputs:
 	RAOBs in NetCDF format
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
-	snd	inter data	RAOB temp, dewpoint, wind
+	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
 </pre>
                                         
         Note: If you have good profiler or rass data, you may want to disable
@@ -1246,7 +1247,21 @@ Inputs:
 	GOES 8/9 cloud drift winds in ASCII format
 
 Outputs: (Feeds wind.exe)
-	cdw	inter data	Satellte cloud drift winds
+	cdw	intermediate data (ASCII)       Satellte cloud drift winds
+</pre>
+                                        
+------ 3.2.12 ---------------Surface data Ingest-------------------------------
+
+Process: (obs_driver.x) LAPS Surface Ingest
+     (author: Pete Stamus - stamus@fsl.noaa.gov)
+
+<pre>
+Inputs:
+	Surface METARS and local data in NetCDF (NIMBUS) format
+
+Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
+
+	lso     intermediate data (ASCII) 
 </pre>
                                         
 
