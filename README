@@ -1796,7 +1796,8 @@ since 3 layers are routinely available from NESDIS.
 ------ 3.1.1 ------ Gridgen_model (static.nest7grid generation) ---------------
 
 Package: gridgen_model.exe - Writes static file, run by localization script. 
-                                 (contact: John  Smart  - smart@fsl.noaa.gov)
+                                 
+Contact: John Smart - smart@fsl.noaa.gov 
 
 Inputs:
 	Geography databases (topography, land fraction, landuse, soiltype top/bot)
