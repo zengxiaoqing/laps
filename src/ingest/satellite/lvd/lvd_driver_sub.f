@@ -838,10 +838,13 @@ c ----------  GMS SATELLITE SWITCH -------
      &                      l_national,iskip_bilin,
      &                      visraw,visnorm,albedo,
      &                      istatus_vis)
+c
+c *** istatus_v() is < 0. Determine if we have enough vis data.
+c
+               good_vis_data_thresh=(nx_l*ny_l)*0.1000
+               if( (nx_l*ny_l+istatus_vis(1)).gt.
+     &              good_vis_data_thresh)then
 
-               good_vis_data_thresh=(nx_l*ny_l)*0.3333
-
-               if(abs(istatus_vis(1)).lt.good_vis_data_thresh)then
                   nlf=nlf+1
                   call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
                   var_lvd(nlf) = 'SVS'       ! satellite, visible
@@ -849,7 +852,9 @@ c ----------  GMS SATELLITE SWITCH -------
                   units_lvd(nlf) = 'COUNTS'
                endif
 
-               if(abs(istatus_vis(2)).lt.good_vis_data_thresh)then
+               if( (nx_l*ny_l+istatus_vis(2)).gt.
+     &              good_vis_data_thresh)then
+
                   nlf=nlf+1
                   call move(visnorm,laps_data(1,1,nlf),nx_l,ny_l)
                   var_lvd(nlf) = 'SVN'       ! satellite, visible, normalized
@@ -857,7 +862,9 @@ c ----------  GMS SATELLITE SWITCH -------
                   units_lvd(nlf) = 'COUNTS'
                endif
 
-               if(abs(istatus_vis(3)).lt.good_vis_data_thresh)then
+               if( (nx_l*ny_l+istatus_vis(3)) .gt.
+     &             good_vis_data_thresh)then
+
                   nlf=nlf+1
                   call move(albedo,laps_data(1,1,nlf),nx_l,ny_l)
                   var_lvd(nlf) = 'ALB'       ! albedo

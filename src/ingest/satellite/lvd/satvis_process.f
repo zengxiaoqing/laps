@@ -316,7 +316,7 @@ c for goes8 - make it look like goes7
                endif
              enddo
              enddo
-          elseif(c_sat_id.eq.'goes09')then
+          elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
@@ -359,7 +359,7 @@ c for goes8 - make it look like goes7
                 endif
              enddo
              enddo
-          elseif(c_sat_id.eq.'goes09')then
+          elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
              write(6,*)'GVAR GOES-9 Vis data'
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
