@@ -45,16 +45,14 @@ main                                           laps_sfc.f
             meso_anl                           lib/laps_routines.f
             lp_fire_danger                          "
             heat_index                              "
-            verify                             lapsvanl_sub.f
-                splie2                         mdatlaps.f
+            verify                                  "
+                splie2                              "
                 splin2                              "
 
 
 .........................PLEASE IGNORE WHAT IS BELOW...........................
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
-mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
-mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
 lapsvanl_sub.f:	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
 lapsvanl_sub.f:	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
