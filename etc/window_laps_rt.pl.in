@@ -144,29 +144,43 @@ if( -e "$LAPS_DATA_ROOT/cdl\_err" ){
 #                 softlink data to laps_data appropriately (make "repository" data subdirectory..
 #                 otherwise: test if softlink has been broken re-establish it.
 if( defined $ENV{FXA_DATA} &&  $all_roots_equal eq "F" ) {
-   my $FXA_DATA = $ENV{FXA_DATA};
-   my $curdir = getcwd();
-   chdir "$FXA_DATA/laps";
-   my $FXA_LOCAL_DATA = getcwd();
-   chdir "$curdir";
-   chomp $FXA_LOCAL_DATA;
-   my $slen=length($FXA_LOCAL_DATA);
-   $FXA_LOCAL_DATA = substr($FXA_LOCAL_DATA,0,$slen-5);
+
+   my $FXA_DATA = $ENV{FXA_LOCAL_DATA};
    my $LAPS_HOME = $ENV{"LAPS_HOME"};
+
+#test if first time "data" and link need to be established
    if( ! -d "$FXA_LOCAL_DATA/laps_data"){
        mkdir "$FXA_LOCAL_DATA/laps_data", 0777 or die "Can't make directory $FXA_LOCAL_DATA/laps_data";
        system("cp -pr $LAPS_DATA_ROOT/static $FXA_LOCAL_DATA/laps_data/.");
        system("cp -pr $LAPS_DATA_ROOT/cdl $FXA_LOCAL_DATA/laps_data/.");
        system("rm -f $FXA_LOCAL_DATA/laps_data/static/lvd/goes-llij\*.lut");
+       system("rm -f $LAPS_HOME/data") if( -e "$LAPS_HOME/data");
        system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
-   }elsif(-e "$LAPS_HOME/data" && ! -l "$LAPS_HOME/data" ){
-       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
-       if( -e "$LAPS_HOME/data" ){system("rm -rf $LAPS_HOME/data");}
-       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+
+#test if "repository" (link) exists
    }elsif(!-e "$LAPS_HOME/data" ){
        print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
        system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+
+
+#test if link directory exists but link is broken
+   }elsif(!-l "$LAPS_HOME/data" ){
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_LOCAL_DATA/laps_data \n";
+       if(-e "$LAPS_HOME/data" ){system("rm -rf $LAPS_HOME/data");}
+       system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+
+#test if link exists but is the wrong name (this has happened but not sure how)
+   }else{
+       my $linkname = $LAPS_HOME."/data";
+       my $datalink = readlink $linkname;
+       my @filename = split '/',$datalink;
+       $linkname = @filename[$#filename];
+       if ($linkname ne "laps_data"){
+          system("rm -rf $LAPS_HOME/data");
+          system("ln -s $FXA_LOCAL_DATA/laps_data $LAPS_HOME/data");
+       }
    }
+
    $LAPS_DATA_ROOT = $FXA_LOCAL_DATA."/laps";
 }
 
@@ -256,7 +270,8 @@ if( defined($LAPS_TEMPLATE) ){
         closedir TEMPDIR;
         foreach (@filelist){
            if( ! /^\./){
-              system("cp -p $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
+              print "Copy $LAPS_TEMPLATE/$_ to $LAPS_DATA_ROOT/static \n";
+              system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
            }
         }
 
@@ -346,6 +361,12 @@ if( $restore_files eq "true" ) {
        system("mv $LAPS_DATA_ROOT/static\_save $LAPS_DATA_ROOT/static");
        system("mv $LAPS_DATA_ROOT/cdl\_save    $LAPS_DATA_ROOT/cdl");
     }
+
+    if(!-e "$LAPS_DATA_ROOT/static"){
+       mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make directory $LAPS_DATA_ROOT/static";
+    }
+    system("cp -p $DATAROOT/laps_data/static/nest7grid.parms $LAPS_DATA_ROOT/static/");
+    system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
 }
 
 if( -e "$LAPS_DATA_ROOT/static\_save"){
