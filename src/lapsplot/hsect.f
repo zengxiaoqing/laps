@@ -2064,7 +2064,10 @@ c
                         l_high_fill = .false.                        
                     endif
 
+                    i4_tol = 1200
+
                     call read_radar_3dref(i4time_radar,
+     1               i4_tol,i4_ret,                                   ! I/O
 !    1               .true.,ref_base,
      1               .true.,r_missing_data,
      1               NX_L,NY_L,NZ_L,ext_radar,
@@ -2993,15 +2996,10 @@ c
                 call get_directory(ext,directory,len_dir)
 
                 if(k_mb .eq. -1)then ! Get 3D Grid
-                  if(c_type_i .ne. 'ci')then
-                    call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
-     1                                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                            ,units_2d,comment_2d,field_3d,istatus) ! slwc_3d
-                  else
-                    call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,
-     1                                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                            ,units_2d,comment_2d,field_3d,istatus) ! cice_3d
-                  endif
+                    call get_laps_3dgrid(i4time_ref,86400,i4time_cloud,       
+     1                                   NX_L,NY_L,NZ_L,ext,var_2d,
+     1                                   units_2d,comment_2d,field_3d,
+     1                                   istatus) 
 
                 else ! Get 2D horizontal slice from 3D Grid
                   if(c_type_i .ne. 'ci')then
@@ -3018,6 +3016,8 @@ c
                 endif
 
             elseif(c_prodtype .eq. 'F')then
+!               call get_lapsdata_2d if k_mb .ne. -1?
+
                 call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
      1                              ,directory,var_2d
      1                              ,units_2d,comment_2d,grid_ra_ref
@@ -3777,7 +3777,9 @@ c                   cint = -1.
                     chigh = +100.
                     cint = 10.
 
-                    call plot_field_2d(i4_valid,c_type_i,rh_2d,1e0
+                    field_2d = rh_2d ! supports diff option better
+
+                    call plot_field_2d(i4_valid,c_type_i,field_2d,1e0       
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
