@@ -86,20 +86,29 @@ C***************** Declarations **************************************
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
      1                                          ,grid_laps_wt(ni,nj,nk)
 
+        integer max_obstypes
+        parameter (max_obstypes=10)
+
         character*4 cgrid
-        character*12 c_obstype_a(4)
+        character*12 c_obstype_a(max_obstypes)
         logical l_parse, l_point_struct
 
 C********************************************************************
 
         write(6,*)' Subroutine compare_wind...',cgrid
 
+!       call get_obstypes      (obs_barnes,max_obs,ncnt_total        ! I
+!    1                         ,c_obstype_a,max_obstypes,n_obstypes  ! I/O
+!    1                         ,istatus)                             ! O
+!       if(istatus .ne. 1)stop
+
+        n_obstypes = 4
         c_obstype_a(1) = 'SFC '
         c_obstype_a(2) = 'PROF'
         c_obstype_a(3) = 'PIN '
         c_obstype_a(4) = 'CDW '
 
-        do i_obstype = 1,4
+        do i_obstype = 1,n_obstypes
             call s_len(c_obstype_a(i_obstype),len_obstype)
             write(6,*)
             if(l_parse(cgrid,'FG'))then
@@ -302,3 +311,53 @@ C********************************************************************
 
         end
 
+
+        subroutine get_obstypes(obs_barnes,max_obs,ncnt_total
+     1                         ,c_obstype_a,max_obstypes,n_obstypes
+     1                         ,istatus)
+
+        include 'barnesob.inc'
+        type (barnesob) obs_barnes(max_obs)      
+
+        character*12 c_obstype_a(max_obstypes)
+
+        logical l_match_found
+
+        n_obstypes = 0
+
+        if(ncnt_total .eq. 0)then
+            return
+        endif        
+
+        n_obstypes = 1
+        c_obstype_a(1) = obs_barnes(1)%type
+
+        if(ncnt_total .ge. 2)then
+            do i = 1,ncnt_total
+                l_match_found = .false.
+                do j = 1,n_obstypes
+                    if(obs_barnes(i)%type .eq. c_obstype_a(j))then
+                        l_match_found = .true.
+                    endif
+                enddo ! j
+                if(.not. l_match_found)then
+                    n_obstypes = n_obstypes + 1
+                    if(n_obstypes .gt. max_obstypes)then
+                        write(6,*)' ERROR: too many obstypes'
+                        istatus = 0
+                        return
+                    endif
+                    c_obstype_a(n_obstypes) = obs_barnes(i)%type
+                endif
+            enddo ! i
+        endif
+
+        write(6,*)' Subroutine get_obstypes, obstypes found...'
+        do j = 1,n_obstypes
+            write(6,*)j,c_obstype_a(j)
+        enddo ! j
+
+        istatus = 1
+
+        return
+        end 
