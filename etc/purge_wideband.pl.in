@@ -1,0 +1,85 @@
+#!@PERL@
+# @configure_input@
+use strict;
+use English;
+
+my($wideband_root,$file,$radar,$radardir,@files,@radars);
+my($yydddhh,$yydddhh_low,$yydddhh_high,$keep);
+
+
+my $usage_msg = 
+"purge_wideband.pl -- Specify lower and upper time limits to keep & widebandroot. \n
+     Example: purge_wideband.pl 0216000 0216113 /data/lapb/ihop_work/raw/wsr88d/wideband";
+
+# Get command line arguments.
+
+my $nargs = @ARGV;
+my ($model, $window);
+if ($nargs == 3) {
+ $yydddhh_low  = $ARGV[0]; 
+ $yydddhh_high = $ARGV[1]; 
+ $wideband_root = $ARGV[2]; 
+} else {die "$usage_msg\n";
+}
+
+chdir $wideband_root || die "Could not cd to $wideband_root";
+
+#$wideband_root = "/data/lapb/ihop_work/raw/wsr88d/wideband";
+
+opendir(WIDEBAND_ROOT,$wideband_root);
+my(@files) = readdir(WIDEBAND_ROOT);
+closedir(WIDEBAND_ROOT);
+
+#print "Radar files: @files\n\n";
+
+# Screen for only the directories
+foreach $file (@files){
+#   print "Testing file: $file\n";
+    if(-e "$wideband_root/$file/netcdf"){
+        push(@radars,$file)
+    }
+}
+
+print "Radar directories: @radars\n\n";
+
+foreach $radar (@radars){
+    $radardir = "$wideband_root/$radar/netcdf";
+    chdir $radardir || die "Could not cd to $radardir";
+    print "Testing radar directory: $radardir\n";
+
+    opendir(RADAR,'.');
+    @files = grep(/\d\d\d\d/, readdir(RADAR));
+    closedir(RADAR);
+
+#   $yydddhh_low = "0216007";
+#   $yydddhh_high = "0216008";
+
+    foreach $file (@files){
+        print "Radar file: $file";
+
+        $keep = 0;
+
+#       Loop through hours we will keep
+        for $yydddhh ("$yydddhh_low".."$yydddhh_high"){
+
+#           print "\nTest match to $yydddhh";
+
+            if($file =~ /^$yydddhh/){
+#           if($file =~ /02/){
+                print " match found keep $yydddhh";
+                $keep = 1;
+            }
+
+
+        }
+        if($keep == 0){
+            print " delete file ";
+            system("rm -f $file") ;
+        }
+        print "\n";
+    }
+}
+
+exit;
+
+
