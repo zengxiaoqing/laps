@@ -404,23 +404,25 @@ c-------------------------------------------------------------------------------
         return
         end             !det_mix_rat_sm
 
-        real function sat_pt_sm(press, temp)
-c
-c               14-may-84       added from csu vas code
-c                               (not on u. of w. source tape)
-        real*4  press(1),          !pressure
-     1  temp(1),           !temperature
-     1  mix_ratio(1)       !mixing ratio
+      real function sat_pt_sm(press, temp)
+c     
+c     14-may-84       added from csu vas code
+c     (not on u. of w. source tape)
+      real*4  press(1),         !pressure
+     1     temp(1),             !temperature
+     1     depression(1),
+     1     mix_ratio(1)         !mixing ratio
 c-------------------------------------------------------------------------------
-
-        call det_mix_rat_sm(press,temp,0.,      !calculate mixing ratio
-     1              mix_ratio,1)
-        sat_pt_sm=mix_ratio(1)
-c
-c               14-may-84       return added
-c
-        return
-        end
+      
+      depression(1) = 0.
+      call det_mix_rat_sm(press,temp,depression, !calculate mixing ratio
+     1     mix_ratio,1)
+      sat_pt_sm=mix_ratio(1)
+c     
+c     14-may-84       return added
+c     
+      return
+      end
 
         real function vpice_sm(temp)
 c
