@@ -320,6 +320,7 @@ c
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
       real prbot, delpr
+      real lon0,lat1,lat2
 
       character*(*) lapsroot
      +             ,laps_domain_file
@@ -385,7 +386,8 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
-     .          htave,tpave,shave,uwave,vwave
+     .          htave,tpave,shave,uwave,vwave,
+     .          std_lon,std_lat1,std_lat2
 c
       integer   ct,
      .          ihour,imin,
@@ -409,6 +411,7 @@ c
       character*256 names(max_files)
       character*256 fname_bg(max_files)
       character*13  fname13,fname9_to_wfo_fname13
+      character*6   c6_maproj
       character*2   gproj
       character*256 fullname,outdir
       character*31  ext
@@ -438,8 +441,11 @@ c
           print*,'Error returned: find_domain_name'
           return
       endif
-      call get_laps_lat_lon(outdir(1:len_dir),'nest7grid',
-     .                      nx_laps,ny_laps,lat,lon,topo,istatus)
+      call get_laps_domain(nx_laps,ny_laps,c_domain_name
+     +,lat,lon,topo,istatus)
+
+c     call get_laps_lat_lon(outdir(1:len_dir),'nest7grid',
+c    .                      nx_laps,ny_laps,lat,lon,topo,istatus)
 
       if (istatus.lt.1)print *,'Error reading lat, lon, topo data.'
 c
@@ -539,7 +545,8 @@ c new subroutine to read appropriate background model file.
      +    ,bgpath,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
      +    ,htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus_prep)
+     +    ,uwbg_sfc,vwbg_sfc,mslpbg
+     +    ,gproj,lon0,lat1,lat2,istatus_prep)
 
          if (istatus_prep .ne. 0) then
 
@@ -834,6 +841,24 @@ c
          endif
       enddo
       enddo
+c
+c the wind components are still on the native grid projection;
+c rotate them to the LAPS (output) domain as necessary.
+
+      print*
+
+      if(.true.)then
+         call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
+     +,gproj,lon0,lat1,lat2,uw,vw,uw_sfc,vw_sfc,istatus)
+      else
+         print*,'Not rotating u/v'
+      endif
+
+      if(istatus.ne.1)then
+         print*,'Error in rotate_background_uv '
+         return
+      endif
+
 c
 c Write LGA
 c ---------
