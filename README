@@ -2431,7 +2431,7 @@ Inputs: (located in separate NetCDF directories)
         SODAR data in NetCDF format (AWIPS/LDAD CDL).
 
 Output: (feeds wind)
-	pro	inter data	wind profile direction and speed (ASCII)
+	pro   inter data   wind profile direction and speed (ASCII-true North)
 </pre>
 
 Source directory: laps/src/ingest/profiler
@@ -2670,7 +2670,7 @@ Auxiliary functions:
 Inputs: '*' = essential input
       * lga/fua grid            model data analysis/forecast
                                 needed for current and previous cycle times
-	pro     inter data      profiler, VAD, SODAR winds
+	pro     inter data      profiler, VAD, SODAR winds (all true north)
         snd     inter data      RAOB/Dropsonde data including winds
 	pin	inter data      ACARS Winds (using pressure altitude)
         cdw     inter data      cloud drift wind
