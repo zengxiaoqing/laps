@@ -107,9 +107,25 @@ c     get required field variables
       
       call glst(i4time,t,ii,jj,istatus)
       if(istatus.ne.1) return
+
+      call check_nan2 (t,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:t  routine:lsin.f'
+         return
+      endif
+      
       
       call glsp(i4time,p,ii,jj,istatus)
       if(istatus.ne.1) return
+
+      call check_nan2 (p,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:p  routine:lsin.f'
+         return
+      endif
+      
       
 c     convert p to mb
       
@@ -121,10 +137,26 @@ c     convert p to mb
       
       call glstd(i4time,td,ii,jj,istatus)
       if(istatus.ne.1) return
+
+      call check_nan2 (td,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:td  routine:lsin.f'
+         return
+      endif
+      
       
       call ghbry (i4time,plevel,p,lt1dat,pu,ii,jj,kk,
      1     istatus)
       if(istatus.ne.1) return
+
+      call check_nan2(pu,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:pu  routine:lsin.f'
+         return
+      endif
+      
       
       istatus = 0               ! begin with bad istatus
       
@@ -143,6 +175,14 @@ c     convert td to c then compute surface specific h.
             
          enddo
       enddo
+
+      call check_nan2 (qs,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:qs  routine:lsin.f'
+         return
+      endif
+      
       
 c     write surface data in at the bottom of the column
 c     define kstart (k index of bottom of the column)
@@ -167,6 +207,23 @@ c     jump out of loop
  2001       continue
          enddo
       enddo
+
+      call check_nan3 (data,ii,jj,kk,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:data  routine:lsin.f'
+         return
+      endif
+
+      call check_nan3 (cg,ii,jj,kk,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:cg  routine:lsin.f'
+         write(6,*) 'detected after boundary layer adjust'
+         return
+      endif
+      
+      
       
 c     compute the total precipitable water and bias correct total 3-d field to
 c     radiometer data

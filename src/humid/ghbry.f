@@ -153,6 +153,12 @@ c     check for runaway adjusment, assign to base value
       enddo
       
 c     write out the pbl pressure top
+
+      call check_nan2 (htby,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN values in var:htby routine:ghbry.f'
+         return
+      endif
       
       call gen_bl_file (i4time,htby,ii,jj,istatus)
       

@@ -447,6 +447,12 @@ c     get the location of the static grid directory
          write(6,*)' error reading laps static-lat'
          return
       endif
+
+      call check_nan2 (lat,ii,jj,istatus)
+      if (istatus.ne.1) then
+         write(6,*) 'NaNs in lat file  abort'
+         return
+      endif
       
       var_2d='lon'
       call rd_laps_static (directory,ext,ii,jj,1,var_2d,
@@ -457,7 +463,11 @@ c     get the location of the static grid directory
          return
       endif
       
-      
+      call check_nan2 (lon,ii,jj,istatus)
+      if (istatus.ne.1) then
+         write(6,*) 'NaNs in lon file  abort'
+         return
+      endif      
       
       
 c     open file for laps temp data

@@ -137,6 +137,20 @@ c     check integrity
             
          enddo
       enddo
+
+      call check_nan2(ph,ii,jj,istatus)
+
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:ph  routine:analq.f'
+         return
+      endif
+
+      call check_nan2(qk,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:qk  routine:analq.f'
+         return
+      endif
+      
       
 c     ----------  mixing step
       
@@ -197,6 +211,14 @@ c     0.11982929 <-->  5% at 25 hpa
 
          enddo
       enddo
+
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'NaN detected in var:data  routine:analq.f'
+         write(6,*) 'check after frac computation'
+         return
+      endif
+      
       
 c     ---------- end mixing step
 
@@ -205,9 +227,9 @@ c     note that qs  has units of g/kg
 c     now obtain the radiometer tpw units of cm or gm/cm**2
 
       call get_rad(i4time,pw,plat,plon,npts,istatus)
-
+      
       if (istatus.eq.1) then
-
+         
          do i = 1,npts
             plon(i) = -plon(i)
          enddo
@@ -231,99 +253,118 @@ c     that it is "true"
                irad = ix(i)
                jrad = jy(i)
                bias = tpw_point - tpw(irad,jrad)
-
+               
             else
                
                if (abs(pw(i) - tpw(ix(i),jy(i)) ) .lt.abs(bias)) then
-               
-               tpw_point = pw(i)
-               irad = ix(i)
-               jrad = jy(i)
-               bias = tpw_point - tpw(irad,jrad)
+                  
+                  tpw_point = pw(i)
+                  irad = ix(i)
+                  jrad = jy(i)
+                  bias = tpw_point - tpw(irad,jrad)
+                  
+               endif
                
             endif
             
-         endif
+         enddo
          
-      enddo
-
 c     now begins a loop to converge the bias correction and integrate the
 c     moisture.  the surface
 c     sh from td is not changed since we have faith in this value.
 c     the values aloft are however changed interatively to agree with
 c     an integral of tpw.  this loop also improves the tpw.
 c     note: this loop does not mix water from the surface up or down
-      
+         
 c     mod for version 6.0  2.2.93  db
 c     check vertical column over radiometer and do not scale if cloudy
-      
-      cgsum = 0.
-      k = 1
-
-      do while (plevel(k).gt.600) ! integrate cloud in lower trop
-         cgsum=cgsum+cg(irad,jrad,k)
-         k = k+1
-      enddo
-
-      if(cgsum .gt. 0.6) then   ! cloudy over radiometer
-         print*, 'clouds analyzed over radiometer scaling step bypassed'
-         bias = 0.005           ! bias is assigned this value for tracking
-      endif
-      
-c     the value of bias will cause the code to branch at this point
-      
-      do while (abs(bias) .gt. 0.01 )
          
-c     integrate the tpw field
+         cgsum = 0.
+         k = 1
          
-         call int_tpw (data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
-         
-c     compute the bias at the radiometer site
-         
-         bias = tpw_point - tpw(irad,jrad)
-
-c     record first iteration bias (bias_one) to monitor the process
-
-         if (bias_one.eq.-500.) bias_one = bias
-         bias_correction = tpw_point/tpw(irad,jrad)
-         print*, bias_correction, 'factor', bias , 'bias'
-         
-c     apply the bias change at upper levels only
-         
-         do k = 1,kk
-            do j = 1,jj
-               do i = 1,ii
-                  if(data(i,j,k) .gt. 0.0 )
-     1                 data(i,j,k) = data(i,j,k) * bias_correction
-               enddo
-            enddo
+         do while (plevel(k).gt.600) ! integrate cloud in lower trop
+            cgsum=cgsum+cg(irad,jrad,k)
+            k = k+1
          enddo
          
-c     repeat the integration of tpw
+         if(cgsum .gt. 0.6) then ! cloudy over radiometer
+            write(6,*) 'clds over radiometer scaling bypassed'
+            bias = 0.005        ! bias is assigned this value for tracking
+         endif
          
+c     the value of bias will cause the code to branch at this point
+         
+         do while (abs(bias) .gt. 0.01 )
+            
+c     integrate the tpw field
+            
+            call int_tpw (data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+            
+c     compute the bias at the radiometer site
+            
+            bias = tpw_point - tpw(irad,jrad)
+            
+c     record first iteration bias (bias_one) to monitor the process
+            
+            if (bias_one.eq.-500.) bias_one = bias
+            bias_correction = tpw_point/tpw(irad,jrad)
+            print*, bias_correction, 'factor', bias , 'bias'
+            
+c     apply the bias change at upper levels only
+            
+            do k = 1,kk
+               do j = 1,jj
+                  do i = 1,ii
+                     if(data(i,j,k) .gt. 0.0 )
+     1                    data(i,j,k) = data(i,j,k) * bias_correction
+                  enddo
+               enddo
+            enddo
+            
+c     repeat the integration of tpw
+            
 c     increment loop-counter to prevent run-away situation experienced
 c     1 0/11/94 db
+            
+            loop_counter = loop_counter+1
+            if (loop_counter.gt.15) go to 123
+            
+         enddo                  !  (while)
          
-         loop_counter = loop_counter+1
-         if (loop_counter.gt.15) go to 123
+ 123     continue               ! bailout for loop counter
          
-      enddo                     !  (while)
-      
- 123  continue                  ! bailout for loop counter
-      
 c     at this point tpw has been integrated
 c     at this point data array has been modified.
-      
+         
       else
          
 c     the routine goes here if there are no radiometer data avail
 c     integrate the tpw field one pass and beleive it to be good
          
-         print*, 'no radiometer data avail...no bias correction to tpw'
+         write(6,*) 'radiometer un-avail, no bias correction to tpw'
+         write (6,*) 'computing ipw from laps field for later comps'
          
          call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+
+         call check_nan2(tpw,ii,jj,istatus)
+         if(istatus.ne.1) then
+            write(6,*) 'NaN detected in var:tpw  routine:analq.f'
+            return
+         endif
+      
          
       endif
       
       return
       end
+
+
+
+
+
+
+
+
+
+
+
