@@ -138,7 +138,8 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_vis_add, l_use_39
+        logical l_packed_output, l_use_vis, l_use_vis_add 
+        logical l_use_vis_partial, l_use_39
         logical l_use_co2_mode1, l_use_co2_mode2
         logical l_evap_radar
 
@@ -391,7 +392,7 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_vis_add
+        call get_cloud_parms(l_use_vis,l_use_vis_add,l_use_vis_partial       
      1                      ,l_use_39,latency_co2
      1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
@@ -694,7 +695,8 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
-        call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add,lat        ! I
+        call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add            ! I
+     1              ,l_use_vis_partial,lat                               ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,rlaps_land_frac                                     ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
@@ -702,8 +704,9 @@ C READ IN SATELLITE DATA
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis_potl_a,istat_vis)                         ! O
 
-        call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data
-     1                   ,NX_L,NY_L,istat_39_a)
+        call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data           ! I
+     1                   ,rlaps_land_frac,NX_L,NY_L                      ! I
+     1                   ,istat_39_a)                                    ! O
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
