@@ -19,7 +19,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
 
 EXE = qbalpe.exe
 
-SRC= laps.f writeballaps.f 
+SRC= lapsio.f writeballaps.f 
 
 MAIN=qbalpe.f 
 

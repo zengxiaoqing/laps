@@ -20,7 +20,7 @@ c
           go to 999
       endif
 
-      call qbalpe(nx,ny,nz)
+      call qbalpe_stag(nx,ny,nz)
 c
 
 999   print*,'Done'
@@ -29,7 +29,10 @@ c
 c
 c===============================================================================
 c
-      subroutine qbalpe(nx,ny,nz)
+      subroutine qbalpe_stag(nx,ny,nz)
+c  This subroutine reinstates the staggering in the 
+c balance package.  This is critical for maximum 
+c accuracy and adjustment potential
 c
       include 'trigd.inc'
       implicit none
@@ -41,71 +44,70 @@ c
      .      ,lat(nx,ny),lon(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
-     .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0
-     .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0-dt
+     .      ,phib(nx,ny,nz),tb(nx,ny,nz)
+     .      ,ub(nx,ny,nz),vb(nx,ny,nz),rhb(nx,ny,nz)
+     .      ,phibs(nx,ny,nz),tbs(nx,ny,nz)
+     .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),rhbs(nx,ny,nz)
+     .      ,phis(nx,ny,nz),ts(nx,ny,nz)
+     .      ,us(nx,ny,nz),vs(nx,ny,nz),rhs(nx,ny,nz)
+     .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt
+     .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
      .      ,lapsrh(nx,ny,nz)
      .      ,dir(nx,ny),spd(nx,ny)
-     .      ,temp(nx,ny,nz)
+     .      ,lapstemp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
      .      ,laps3d(nx,ny,nz,2)
-     .      ,om(nx,ny,nz)
+
+      real*4 om(nx,ny,nz),omb(nx,ny,nz)
      .      ,omo(nx,ny,nz),oms(nx,ny,nz)
+     .      ,ombs(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,uo(nx,ny,nz)
-     .      ,vo(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,xx(nx,ny,nz),xxx(nx,ny,nz)
      .      ,wb(nx,ny,nz)
-     .      ,wr1(nx,ny,nz),wr2(nx,ny,nz),wr3(nx,ny,nz)
-     .      ,re,rdpdg,po,cappa,gam(nz),dppp(nz)
-     .      ,delo,gamo,del(nx,ny,nz),tau,dt
-     .      ,err,grid_spacing_actual_m
+     .      ,re,rdpdg,po,cappa
+     .      ,delo,del(nx,ny,nz),tau,dt
+     .      ,gamo
+     .      ,erru(nx,ny,nz),errub(nx,ny,nz)
+     .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
+
+     .      ,grid_spacing_actual_m
+     .      ,aaa(nx,ny,nz),bbb(nx,ny,nz)
      .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
      .      ,u_true,v_true
+
+      real*4 g,sumdt,omsubs,sk,terscl,bnd,ff,fo,err
+     .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl,ro
 c
-      integer*4 ip(nz),icon,itmax,lmax
+      integer*4 ip(nz),itmax,lmax
      .         ,masstime,windtime,sfctime,omtime
      .         ,i,j,k,ll,istatus
+     .         ,ks,kf
 
       integer*4 lend
       integer*4 lends
-      integer*4 lendt
-      integer*4 lendw
-      integer*4 lendrh
 c
       logical lrunbal
-      logical lstagger
-      logical lnon_linear
 
-      character*255 staticdir,tempdir,winddir,sfcdir,rhdir
+      character*255 staticdir,sfcdir
       character*125 comment
-      character*31  staticext,tempext,windext,sfcext
-      character*31  rhext
+      character*31  staticext,sfcext
       character*10  units
       character*9   a9_time
 c
-c     data p/1100.,1050.,1000., 950., 900., 850., 800.
-c    .      , 750., 700., 650., 600., 550., 500., 450.
-c    .      , 400., 350., 300., 250., 200., 150., 100./
-c     data dp/0.,20*50./
 c_______________________________________________________________________________
 c
       include 'lapsparms.cmn'
       
-      call get_balance_nl(lrunbal,lstagger,icon,gamo,delo,tau
-     1,lnon_linear,istatus)
+      call get_balance_nl(lrunbal,gamo,delo,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
       endif
-
       print*,'lrunbal = ',lrunbal
-      print*,'lstagger = ',lstagger
-      print*,'icon = ',icon
       print*,'gamo = ',gamo
       print*,'delo = ',delo
-      print*,'tau  = ',tau
-      print*,'lnon_linear = ',lnon_linear
 c
 c switch to run balance package or not
 c
@@ -117,8 +119,10 @@ c
 
       if(vertical_grid.eq.'PRESSURE')THEN!Pressure in mb
          do i=1,nz
-          p(i)=pressure_bottom_l/100.-((i-1)*(pressure_interval_l/100.))
-          if(i.gt.1)dp(i)=pressure_interval_l/100.
+          p(i)=pressure_bottom_l-((i-1)*(pressure_interval_l))
+          if(i.gt.1)dp(i)=pressure_interval_l
+          ip(i)=int(p(i))
+
          enddo
       else
          print*,'vertical grid is not PRESSURE ',vertical_grid
@@ -126,41 +130,19 @@ c
       endif
 
       staticext='nest7grid'
-      rhext='lh3'
-      tempext='lt1'
-      windext='lw3'
       sfcext='lsx'
       call get_directory(staticext,staticdir,lend)
-      call get_directory(tempext,tempdir,lendt)
-      call get_directory(windext,winddir,lendw)
       call get_directory(sfcext,sfcdir,lends)
-      call get_directory(rhext,rhdir,lendrh)
 
       re=6371220.
       rdpdg=3.141592654/180.
-      po=p(1)
       cappa=287.053/1004.686
+      g=9.80665
+      bnd=1.e-30 !value of winds on the terrain face 
       itmax=200  !max iterations for relaxation
-c
-c some words on gamo.  gamo is the mid-atmospheric ratio between the
-c rms wind adjustment and rms geopotential adjustment.  As you go up
-c in height you would want greater potential adjustments of phi relative
-c to wind, simply because error in Phi increases upward.    The standard
-c ratio for equal adjustment of both winds and height is 1. x 10**-2
-c For 10 times more adjustment in phi use .01 x 10**-2.  These numbers are
-c related to expected observaional and analysis error of the lt1 and lw3 
-c fields. 
-c
-      do k=1,nz
-         gam(k)=gamo
-         dppp(k)=dp(k)*100.
-         ip(k)=int(p(k))
-      enddo
 c
 c *** Get times of mass, wind and surface data.
 c
-c     call gettime(masstime)
-
       call get_systime(masstime,a9_time,istatus)
       if(istatus .ne. 1)go to 999
 c
@@ -176,7 +158,6 @@ c
          print *,'Error getting laps lat, lons.'
          stop
       endif
-      rdpdg=3.14159/180.
 c
       do j=1,ny
       do i=1,nx
@@ -185,71 +166,33 @@ c
          dx(i,j)=grid_spacing_actual_m
          dy(i,j)=dx(i,j)
          
-         do k=1,nz
-c reduce geostrophic weight to 10% within dpbl of surface 
-           dpbl=100.
-           dpblf=dpbl*.9
-           pdif=(ps(i,j)-p(k))
-           if (pdif.le.dpbl) pdif=dpbl  
-           del(i,j,k)=abs(delo*(sind(lat(i,j))*(1.- dpblf/pdif)))
-         enddo
       enddo
       enddo
+c *** Get LGA fields
+      call get_modelfg_3d(masstime,'U3 ',nx,ny,nz,ub,istatus)
+      call get_modelfg_3d(masstime,'V3 ',nx,ny,nz,vb,istatus)
+      call get_modelfg_3d(masstime,'T3 ',nx,ny,nz,tb,istatus)
+      call get_modelfg_3d(masstime,'HT ',nx,ny,nz,phib,istatus)
+      call get_modelfg_3d(masstime,'SH ',nx,ny,nz,rhb,istatus)
+      call get_modelfg_3d(masstime,'OM ',nx,ny,nz,omb,istatus)
 c
-c *** Get laps heights.
+c *** Get laps analysis grids.
 c
-      call get_laps_3d(masstime,nx,ny,nz
-     1  ,tempext,'ht',units,comment,lapsphi,istatus)
-
+      call get_laps_analysis_data(masstime,nx,ny,nz
+     +,lapsphi,lapstemp,lapsu,lapsv,lapsrh,omo,istatus)
+c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
-         print *,'Error getting LAPS height data...Abort.'
+         print *,'Error getting LAPS analysis data...Abort.'
          stop
       endif
-c
-c *** Get laps temps
-c
-      call get_laps_3d(masstime,nx,ny,nz
-     1  ,tempext,'t3',units,comment,temp,istatus)
 
-      if (istatus .ne. 1) then
-         print *,'Error getting LAPS temp data...Abort.'
-         stop
-      endif
-c
-c *** Get laps rel hum
-c
-      call get_laps_3d(masstime,nx,ny,nz
-     1  ,rhext,'rh3',units,comment,lapsrh,istatus)
-
-      if(istatus .ne. 1)then
-         print*,'Error getting LAPS rh  data ... Abort.'
-         stop
-      endif
-c
-c *** Get laps wind data.
-c        Read t=t0 first, then read t=t0-dt.
 c *** Not considering non-linear terms for now, so no need to read t0-dt. 
-c
 c     call get_laps_wind(winddir,windtime,windext,nx,ny,nz
 c    .                  ,lapsuo,lapsvo,istatus)
 
-      call get_laps_3d(masstime,nx,ny,nz
-     1  ,windext,'u3',units,comment,lapsu,istatus)
+      write(6,*)' Rotating u/v to grid north...LAPS winds are true N'
+      write(6,*)' Converting laps and background ht fields to GPM   '
 
-      if (istatus .ne. 1) then
-         print *,'Error getting LAPS time 0 u3 data...Abort.'
-         stop
-      endif
-
-      call get_laps_3d(masstime,nx,ny,nz
-     1  ,windext,'v3',units,comment,lapsv,istatus)
-
-      if (istatus .ne. 1) then
-         print *,'Error getting LAPS time 0 v3 data...Abort.'
-         stop
-      endif
-
-      write(6,*)' Rotating u/v to grid north'
       do k = 1, nz
       do j = 1, ny
       do i = 1, nx
@@ -259,6 +202,14 @@ c    .                  ,lapsuo,lapsvo,istatus)
      1           ,lon(i,j)           )
          lapsu(i,j,k) = u_grid                    
          lapsv(i,j,k) = v_grid                    
+         lapsphi(i,j,k)=lapsphi(i,j,k)*g
+         call uvtrue_to_uvgrid(
+     1             ub(i,j,k),vb(i,j,k)
+     1            ,u_grid   ,v_grid
+     1            ,lon(i,j)          )
+         ub(i,j,k)=u_grid
+         vb(i,j,k)=v_grid
+         phib(i,j,k)=phib(i,j,k)*g
       enddo
       enddo
       enddo
@@ -273,90 +224,156 @@ c
 c
 c *** Get laps surface pressure.
 c
-      call get_laps_2d_sfc(sfcdir,sfctime,sfcext,nx,ny
-     .                ,1,13,ps,istatus)
+      call get_laps_2d(masstime,sfcext,'PS ',units,
+     1                  comment,nx,ny,ps,istatus)
+
+      sl=1200000. ! four times the average data spacing
+      fo=14.52e-5   !2*omega
+      terscl=3000.
+      ks=6
+      kf=14
       do j=1,ny
       do i=1,nx
-         ps(i,j)=ps(i,j)*0.01
+c all pressure is in pascals
+c set dynamic weight del using lat and surface pressure
+c some comments about analysis constants delo and tau
+c delo is the inverse square of the expected balance residual. This is
+c a specified parameter that is constant over the grid
+c tau controls the mass distribution of any continuity adjustments.
+c if tau is large mass adjustment occurs over shallow layers
+c tau is based on scaling = scale ht**2 Brunt-Vaisala Freq**4/
+c   (density**2 gravity**2 mean velocity **2 f**2)
+c scale ht is based on cloud depth for cloud adjustment/and or terrain ht
+c a best guess is 3000m which works for terrain and clouds in most places
+c To represent the  layer of the atm we are considering 850 to 500mb
+         
+           sumdt=sumdt+(lapstemp(i,j,kf)*(100000./p(kf))**cappa 
+     &                - lapstemp(i,j,ks)*(100000./p(ks))**cappa)
+           sumdz=sumdz+(lapsphi(i,j,kf)-lapsphi(i,j,ks))/g
+           ff = fo*sind(lat(i,j))
+           sumf=sumf+ff
+         do k=ks,kf
+           sumt=sumt+(lapstemp(i,j,k)*(100000./p(k))**cappa)
+           sumr=sumr+p(k)/287.04/lapstemp(i,j,k)
+           sumv2=sumv2+(lapsu(i,j,k)**2+lapsv(i,j,k)**2)
+         enddo
+c error terms are the inverse sq error; right now with no
+c horizontal stucture. Only vertical error allowed for now.
+         do k=1,nz
+            erru(i,j,k)=(1.0*(1.+float(k-1)*.10))**(-2)
+c           erru(i,j,k)=(1.5*(1.+float(k-1)*.25))**(-2)
+            errub(i,j,k)=(1.5*(1.+float(k-1)*.3))**(-2)
+            errphi(i,j,k)=(15.*(1.+float(k-1)*.1)*g)**(-2)
+            errphib(i,j,k)=(30.*(1.+float(k-1)*.1)*g)**(-2)
+c simulated cloud
+c           sk=(i-nx/2)**2+(k-nz/2)**2+(j-ny/2)**2       
+c           omo(i,j,k)=-1.*exp(-sk/100.)
+c
+c replace missing cloud vv's with background vv's.
+            if(abs(omo(i,j,k)).gt.100.)omo(i,j,k)=omb(i,j,k)
+         enddo
       enddo
       enddo
-c
-c *** Read maps qg omega.
-c
-c     call get_maps_qgom(omtime,omo,istatus)
+      snxny=float(nx*ny)
+      sk=float(kf-ks+1)
+      sumt=sumt/snxny/sk
+      sumdt=sumdt/snxny
+      sumdz=sumdz/snxny
+      sumf=sumf/snxny
+      sumv2=sumv2/snxny/sk
+      sumr=sumr/snxny/sk
+      ro=sqrt(sumv2)/(sumf*cl)  ! rossby number for dynamic adjustment
+      tau=terscl**2*(g*sumdt/sumt/sumdz)**2/(sumr**2*g**2*sumv2*sumf**2)
+      print*,'dthet/thet/dz/den/V/f/tau,ro: ',sumdt,sumt,sumdz,sumr,
+     &     sqrt(sumv2),sumf,tau,ro
+      if (ro.gt.1) ro=1. 
 c
 c *** Compute non-linear terms (nu,nv) and execute mass/wind balance.
 c *** Do for lmax iterations.
 c
-      lmax=1
-      if(icon.eq.1)lmax=2
-      do ll=1,lmax
+      lmax=3 
 c
-         do k=1,nz
-         do j=1,ny
-         do i=1,nx
-            phi(i,j,k)=lapsphi(i,j,k)
-            u(i,j,k)=lapsu(i,j,k)   !t=t0-dt
-            v(i,j,k)=lapsv(i,j,k)   !t=t0-dt
-            uo(i,j,k)=u(i,j,k)      !t=t0
-            vo(i,j,k)=v(i,j,k)      !t=t0
-            xx(i,j,k)=phi(i,j,k)
-            xxx(i,j,k)=u(i,j,k)
-            t(i,j,k)=v(i,j,k)
-            rh(i,j,k)=lapsrh(i,j,k)
-         enddo
-         enddo
-         enddo
+      call move_3d(lapsphi,phi,nx,ny,nz)
+      call move_3d(lapsu,u,nx,ny,nz)     
+      call move_3d(lapsv,v,nx,ny,nz)    
+      call move_3d(lapstemp,t,nx,ny,nz)
+      call move_3d(omo,om,nx,ny,nz)
+      call move_3d(lapsrh,rh,nx,ny,nz)
+c
 c stagger the LAPS grids to prepare for balancing
 c
-         if(lstagger) call balstagger(xxx,t,omo,xx,temp,
-     &nx,ny,nz,wr1,wr2,wr3,p,1)
+c laps analysis grids first.
+      call balstagger(u,v,phi,t,rh,om,us,vs,
+     &phis,ts,rhs,oms,nx,ny,nz,p,ps,1) 
+c
+c background grids second.
+      call balstagger(ub,vb,phib,tb,rhb,omb,ubs,vbs,
+     &phibs,tbs,rhbs,ombs,nx,ny,nz,p,ps,1) 
+   
+      call move_3d(phis,phi,nx,ny,nz)
+      call move_3d(us,u,nx,ny,nz)
+      call move_3d(vs,v,nx,ny,nz)
+      call move_3d(oms,om,nx,ny,nz)
+      call move_3d(rhs,rh,nx,ny,nz)
+      call move_3d(ts,t,nx,ny,nz) 
+c
+c use these constructs if cloud and backgnd vv's don't exist
+c     call zero3d(om,nx,ny,nz)
+c     call zero3d(ombs,nx,ny,nz)
+c     call zero3d(oms,nx,ny,nz)
 
-         call terbnd(xxx,t,omo,nx,ny,nz,ps,p)
-         if (ll .eq. 1) then
-            do k=1,nz
-            do j=1,ny
-            do i=1,nx
-               oms(i,j,k)=omo(i,j,k)
-            enddo
-            enddo
-            enddo
-         endif
+      call terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
+      call terbnd(us,vs,oms,nx,ny,nz,ps,p,bnd)
+      call terbnd(ubs,vbs,ombs,nx,ny,nz,ps,p,bnd)
 c
-c ****** Compute non-linear terms (nu,nv).
+c ****** Compute non-linear terms (nu,nv) from observed field.
 c
-         if(lnon_linear) call nonlin(nu,nv,uo,vo,u,v,oms
-     .              ,nx,ny,nz,dx,dy,dppp,dt)
+      call nonlin(nu,nv,us,vs,ubs,vbs,oms,ombs
+     .           ,nx,ny,nz,dx,dy,dp,dt,bnd)
+      call frict(fu,fv,ubs,vbs,us,vs,p,ps,ts
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
+
 c
-c ****** Compute momentum residual over whole domain.
-c
-         if (ll .eq. 1) call momres(xxx,t,phi,nu,nv,wb,0.
-     .                             ,nx,ny,nz,lat,dx,dy,ps,p)
+c ****** Compute momentum residual from obs fields over whole domain.
+
+      call momres(us,vs,phis,nu,nv,fu,fv,wb,delo
+     .           ,nx,ny,nz,lat,dx,dy,ps,p)
 c
 c ****** Execute mass/wind balance.
 c
-         err=.1
-         call balcon(xx,xxx,t,omo,phi,u,v,oms,del,tau,itmax,err
-     .              ,nu,nv,icon,nx,ny,nz,lat,dx,dy,ps,p,dp,gam)
-c
-      enddo
+      err=1.0
+c returns staggered grids of full fields u,v,phi
 
-      call momres(u,v,phi,nu,nv,wb,delo,nx,ny,nz,lat,dx,dy,ps,p)
+      call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs,
+     .         ro,delo,tau,itmax,err,erru,errphi,errub,errphib
+     .           ,nu,nv,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
+
+c
+      call momres(u,v,phi,nu,nv,fu,fv,wb,delo,nx,ny,nz,lat,dx,dy,ps,p)
 c
 c *** destagger and Write out new laps fields.
 c
-      if(lstagger) then
-         call balstagger(u,v,oms,phi,temp,
-     &                   nx,ny,nz,wr1,wr2,wr3,p,-1)
-       else
+c the non-staggered grids must be input with intact boundaries from background 
 
-c will give non-staggered temps from new balanced phis
+      call balstagger(ub,vb,phib,tb,
+     & rhb,omb,u,v,phi,t,rh,om,nx,ny,nz,p,ps,-1) 
+c
+c   Prior to applying boundary subroutine put non-staggered grids back into
+c   u,v,om,t,rh,phi.
 
-         call phigns(phi,temp,rh,nx,ny,nz,0,p,-1)
-      endif
+      call move_3d(phib,phi,nx,ny,nz)
+      call move_3d(ub,u,nx,ny,nz)
+      call move_3d(vb,v,nx,ny,nz)
+      call move_3d(tb,t,nx,ny,nz)
+      call move_3d(omb,om,nx,ny,nz)
+      call move_3d(rhb,rh,nx,ny,nz)
 
-      write(6,*)' Rotating balanced u/v to true north'
+      call get_laps_2d(masstime,sfcext,'PS ',units,
+     1                  comment,nx,ny,ps,istatus)
+
+      write(6,*)' Rotating balanced u/v to true north...phis back to m'
       do k = 1, nz
+       ip(k)=ip(k)/100
       do j = 1, ny
       do i = 1, nx
          call uvgrid_to_uvtrue(
@@ -365,29 +382,32 @@ c will give non-staggered temps from new balanced phis
      1           ,lon(i,j)           )
          u(i,j,k) = u_true
          v(i,j,k) = v_true
+         phi(i,j,k)=phi(i,j,k)/g
       enddo
       enddo
       enddo
 
 
 c
-      call write_bal_laps(masstime,phi,u,v,temp,oms,nx,ny,nz
+      call write_bal_laps(masstime,phi,u,v,t,om,nx,ny,nz
      .                   ,ip,istatus)
       if(istatus.ne.1)then
          write(6,*)'error writing balance fields'
          return
       endif
 
-999   return
+ 999  return
       end
 
 c
 c===============================================================================
 c
-      subroutine momres(u,v,phi,nu,nv,wa,del
+      subroutine momres(u,v,phi,nu,nv,fu,fv,wa,delo
      .                 ,nx,ny,nz,lat,dx,dy,ps,p)
 c
-c *** Momres computes momentum residual for whole domain.
+c *** Momres computes momentum residual for whole domain for the staggered
+c grid. Each momentum residual (u component, v component) is computed on the 
+c  u and v grids respectively
 c
       implicit none
 c
@@ -398,17 +418,18 @@ c
       real*4 u(nx,ny,nz),v(nx,ny,nz)
      .      ,phi(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,wa(nx,ny,nz),wb(nx,ny,nz)
-     .      ,wc(nx,ny,nz),wd(nx,ny)
+     .      ,wc(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz)
-     .      ,del,g,rdpdg,fo,bnd,cnt,sum,ang,sin1,f
-     .      ,nvv,nuu,errms
+     .      ,delo,g,rdpdg,fo,bnd,cnt,sum,ang,sin1,f
+     .      ,nvv,nuu,errms,fuu,fvv
 c_______________________________________________________________________________
 c
       print *,'momres'
       g=9.80665
-      rdpdg=3.141592654/360.
+      rdpdg=3.141592654/180.
       fo=14.52e-5   !2*omega
       bnd=1.e-30
       nxm1=nx-1
@@ -419,11 +440,6 @@ c
       call zero3d(wa,nx,ny,nz)
       call zero3d(wb,nx,ny,nz)
       call zero3d(wc,nx,ny,nz)
-      do j=1,ny
-      do i=1,nx
-         wd(i,j)=0
-      enddo
-      enddo
       do j=2,nym1
       do i=2,nxm1
          ang=(lat(i,j)+lat(i,j+1))*rdpdg
@@ -431,25 +447,28 @@ c
          f=fo*sin1
          do k=1,nz
             ks=1
-            if (k .eq. nz) ks=0
             nvv=(nv(i,j,k)+nv(i,j+1,k)
      .          +nv(i-1,j+1,k)+nv(i-1,j,k))*.25
             nuu=(nu(i,j,k)+nu(i+1,j,k)
      .          +nu(i,j-1,k)+nu(i+1,j-1,k))*.25  
-c           if (k .eq. 13) wd(i,j)=sqrt(nvv**2+nuu**2)
+            fvv=(fv(i,j,k)+fv(i,j+1,k)
+     .          +fv(i-1,j+1,k)+fv(i-1,j,k))*.25
+            fuu=(fu(i,j,k)+fu(i+1,j,k)
+     .          +fu(i,j-1,k)+fu(i+1,j-1,k))*.25  
             if (u(i,j,k) .ne. bnd)
      .          wc(i,j,k)=f*u(i,j,k)+g/dy(i,j)
-     .                   *(phi(i,j+1,k)-phi(i,j,k))+nvv
+     .                   *(phi(i,j+1,k)-phi(i,j,k))+nvv-fvv
             if (v(i,j,k) .ne. bnd)
      .          wb(i,j,k)=-f*v(i,j,k)+g/dx(i,j)
-     .                   *(phi(i+1,j,k)-phi(i,j,k))+nuu
+     .                   *(phi(i+1,j,k)-phi(i,j,k))+nuu-fuu
          enddo
       enddo
       enddo
       do k=1,nzm1
       do j=2,nym1
       do i=2,nxm1
-         if (ps(i,j) .gt. p(k+ks)) then
+         if (ps(i,j) .gt. p(k+1)) then !compute rms geostrophic departure
+c                                 on the non-vert staggered std grid
             wa(i,j,k)=sqrt((wc(i-1,j-1,k)+wc(i,j-1,k))**2*.25
      .                    +(wb(i-1,j,k)+wb(i-1,j-1,k))**2*.25)
             sum=wa(i,j,k)**2+sum
@@ -458,171 +477,88 @@ c           if (k .eq. 13) wd(i,j)=sqrt(nvv**2+nuu**2)
       enddo
       enddo
       enddo
-c     call prt(wd,sc,ci,nx,ny,1,nz,4hnon ,4hlin )                 
-c     do 6 k=3,nz,8                                                   
-c     call prt(wa,sc,ci,nx,ny,k,nz,4hmom ,4hres )                 
-c    6 continue                                                          
+      write(2) wa,delo
       errms=sqrt(sum/cnt)
-      write(6,1000) errms,del
-1000  format(1x,'momentum residual for domain ',e12.4,' del= ',e12.4)
+      write(6,1000) errms,delo
+1000  format(1x,'BEFORE/AFTER BALCON.....MOMENTUM RESIDUAL FOR DOMAIN '
+     &     ,e12.4,' delo= ',e12.4)
       return
       end
 c
 c===============================================================================
 c
-      subroutine omega(om,u,v,t,vort,absvort
-     .                ,dx,dy,lat,p,dppp,ps,nx,ny,nz)
 c
-      implicit none
-c
-      integer*4 nx,ny,nz,nzm1,i,j,k
-c
-      real*4 dx(nx,ny),dy(nx,ny),dppp(nz)
-     .      ,lat(nx,ny),p(nz),ps(nx,ny)
-     .      ,u(nx,ny,nz),v(nx,ny,nz)
-     .      ,t(nx,ny,nz)
-     .      ,vort(nx,ny,nz),absvort(nx,ny,nz)
-     .      ,om(nx,ny,nz)
-     .      ,a(nx,ny),b(nx,ny)
-     .      ,c(nx,ny),f(nx,ny)
-     .      ,xxx(nx,ny,nz),xxxx(nx,ny,nz)
-     .      ,xxxxx(nx,ny,nz)
-     .      ,re,r,cappa,g,rdpdg,fo,stab,delp
-     .      ,ang,cos1,sin1,tbar,denbar
-     .      ,potm5,potm15
-     .      ,beta,dd,twolam,twoa,cee
-c_______________________________________________________________________________
-c                                           
-      print *,'omega'
-      re=6371000.
-      r=287.053
-      cappa=287.053/1004.686
-      g=9.80665
-      rdpdg=3.141592654/180.
-      fo=14.52e-5   !2*omega
-      stab=0.
-      nzm1=nz-1
-      call zero3d(om,nx,ny,nz)
-      call zero3d(xxxxx,nx,ny,nz)
-      call zero3d(xxxx,nx,ny,nz)
-      call zero3d(xxx,nx,ny,nz)
-      call zero3d(vort,nx,ny,nz)
-      delp=(p(5)-p(13))*100.
-      do j=1,ny
-      do i=1,nx
-         ang=lat(i,j)*rdpdg
-         cos1=cos(ang)
-         sin1=sin(ang)
-         tbar=(t(i,j,13)+t(i,j,5))/2.
-         denbar=100.*(p(5)+p(13))/r/tbar/2.
-         potm5=t(i,j,5)*(1000./p(5))**cappa
-         potm15=t(i,j,13)*(1000./p(13))**cappa
-         stab=(alog(potm15)-alog(potm5))/denbar/delp+stab
-         f(i,j)=(fo*sin1)                             
-         b(i,j)=0.
-         c(i,j)=-sin1/cos1/re
-         do k=1,nz
-            if(i.eq.1.or.j.eq.1) then
-               om(i,j,k)=0.
-               absvort(i,j,k)=f(i,j)
-            else
-               xxxx(i,j,k)=(-u(i-1,j-1,k)+u(i,j-1,k))/dx(i,j)
-     .                    -(v(i-1,j,k)-v(i-1,j-1,k))/dy(i,j)
-               xxx(i,j,k)=(v(i,j,k)-v(i-1,j,k))/dx(i,j)
-     .                   +(u(i,j,k)-u(i,j-1,k))/dy(i,j)
-               vort(i,j,k)=(v(i,j,k)-v(i-1,j,k))/dx(i,j)
-     .                    -(u(i,j,k)-u(i,j-1,k))/dy(i,j)
-               absvort(i,j,k)=f(i,j)+vort(i,j,k)
-            endif
-         enddo
-      enddo
-      enddo
-      stab=stab/(float(nx)*float(ny))
-      write(6,1001) stab
-1001  format(1x,' stability is ',e12.4)
-      do j=1,ny
-      do i=1,nx
-         a(i,j)=f(i,j)**2/stab
-      enddo
-      enddo
-      do k=2,nzm1
-      do j=2,ny
-      do i=2,nx
-         ang=lat(i,j)*rdpdg
-         cos1=cos(ang)
-         beta=fo*cos1*rdpdg/dy(i,j)
-         dd=sqrt(dx(i,j)**2+dy(i,j)**2)
-         twolam=(xxxx(i,j,k)+xxxx(i,j,k-1))/2.*(xxx(i,j,k-1)+
-     .           xxx(i,j-1,k-1)+xxx(i-1,j-1,k-1)+xxx(i-1,j,k-1)-
-     .           (xxx(i,j,k)+xxx(i,j-1,k)+xxx(i-1,j-1,k)+xxx(i-1,j,k)))/
-     .           4./dppp(k)+               
-     .           (xxxx(i,j,k)-xxxx(i,j,k-1))/2.*(xxx(i,j,k-1)+
-     .           xxx(i,j-1,k-1)+xxx(i-1,j-1,k-1)+xxx(i-1,j,k-1)+
-     .           (xxx(i,j,k)+xxx(i,j-1,k)+xxx(i-1,j-1,k)+xxx(i-1,j,k)))/
-     .           4./dppp(k)
-         twoa=r/f(i,j)/((p(k)+p(k-1))/2.)/100.*
-     .         ((t(i-1,j,k)-t(i,j-1,k))/dd*
-     .         (-vort(i-1,j-1,k-1)-vort(i-1,j-1,k)+
-     .         vort(i,j,k)+vort(i,j,k-1))/dd-(t(i,j,k)-t(i-1,j-1,k))/dd*
-     .         (vort(i-1,j,k-1)+vort(i-1,j,k)-vort(i,j-1,k)-
-     .         vort(i,j-1,k-1))/dd)
-         cee=(-v(i-1,j,k)+v(i-1,j,k-1)-v(i-1,j-1,k)+v(i,j,k-1))/
-     .         dppp(k)/2.*beta
-         xxxxx(i,j,k)=f(i,j)/stab*(twoa-twolam+cee)
-         if (i .eq. 14 .and. j .eq. 11) 
-     .      write(6,1999) xxxxx(i,j,k),f(i,j),twoa,twolam,cee
-1999     format(1x,5e12.4)
-      enddo
-      enddo
-      enddo
-      call leib(om,xxxxx,40,1.e-5,nx,ny,nz,ps,p
-     .         ,a,b,c,b,b,dx,dy,dppp,0)
-      return
-      end
-c
-c===============================================================================
-c
-      subroutine balcon(to,uo,vo,omo,t,u,v,om,del,tau,itmax,err,nu,nv
-     .                 ,icon,nx,ny,nz,lat,dx,dy,ps,p,dp,gam)
+      subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,
+     .   ro,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
+     .     ,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 c
 c *** Balcon executes the mass/wind balance computations as described
-c        mcginley (Meteor and Appl Phys, 1987).  A new
+c        mcginley (Meteor and Appl Phys, 1987) except that
+c        this scheme operates on perturbations from background "b"
+c        fields. The dynamic constraint is formulated from this 
+c        perturbation field. The constraint equation is
+c          du'/dt= -ro*nonlin'-d phi'/dx +fv' + friction' 
+c        ro is a measure of how well the observation field determines
+c        non linear structure. ro is similar to the rossby number
+c        V/fL where L is the resolved wavelength and V is a representative
+c        velocity.  If obs were everywhere ro =1;
+c        very sparse obs ro ~ 0. If data doesn't support it the 
+c        adjustment perturbation will be geostrophic.
+c        Both o and b fields arrive staggered .  A perturbation is 
+c        computed prior to the dynamic balance.  A new
 c        geopotential(t) is computed using relaxation on eqn. (2).  New
 c        u, v and omega winds are computed using eqns. (4), (5) and (6)
 c        with the new geopotential and neglecting the lagrange multiplier
-c        term.  If icon is zero, balcon returns.  Otherwise, the
+c        term.  Next the        
 c        lagrange multiplier is computed using 3-d relaxation on eqn. (3).
 c        U, v and omega are adjusted by adding the lagrange multiplier
 c        term with the new lagrange multiplier.
+c        the u,v,t are the balanced output arrays
+c        The unique aspect of this analysis is that background model error is
+c        specified explicitly over the entire grid as determined from 
+c        verification stats. The observed error is an array that takes into
+c        account both observation error and interpolation error.
+c        omo is the cloud consistent vertical motion
+
 c
       implicit none
 c
       integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
-     .         ,itmax,icon,ks,kf,ittr
-     .         ,ibnd(nx,ny,nz)
-     .         ,i,j,k,is,ip,js,jp,kp,it,itt
+     .         ,itmax,lmax,ks,kf,ittr
+     .         ,i,j,k,l,is,ip,js,jp,kp,it,itt
      .         ,icnt,iwpt,istatus
      .         ,ucnt,vcnt,uwpt,vwpt
 c
-      real*4 t(nx,ny,nz),to(nx,ny,nz)
-     .      ,u(nx,ny,nz),uo(nx,ny,nz)
-     .      ,v(nx,ny,nz),vo(nx,ny,nz)
-     .      ,om(nx,ny,nz),omo(nx,ny,nz)
+      real*4 t(nx,ny,nz),to(nx,ny,nz),tb(nx,ny,nz)
+     .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
+     .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
+     .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,ps(nx,ny),p(nz),gam(nz)
-     .      ,lat(nx,ny),slam(nx,ny,nz)
-     .      ,h(nx,ny,nz),f3(nx,ny,nz)
-     .      ,bndx(nx,ny,nz),bndy(nx,ny,nz)
-     .      ,del(nx,ny,nz),tau,err,rdpdg,bnd,g,fo,r,re,ovr
+     .      ,ps(nx,ny),p(nz)
+     .      ,lat(nx,ny)
+     .      ,bndx(nx,ny,nz),bndy(nx,ny,nz),ff(nx,ny)
+     .      ,aaa(nx,ny,nz),bbb(nx,ny,nz),ccc(nx,ny)
+     .      ,erru(nx,ny,nz),errph(nx,ny,nz)
+     .      ,errub(nx,ny,nz),errphb(nx,ny,nz)
+
+      real*4 tau,err,rdpdg,bnd,g,fo,r,re,ovr
      .      ,dy2,dys,ang,f,cotmax,sin1,fs,cos1,beta
-     .      ,a,bb,term1,term2,term3,term4,dx2,dxs,cortmt
-     .      ,dudy,dvdx,dnudx,dnvdy,snv,tt,uot,vot,tot
+     .      ,a,bb,dx2,dxs,cortmt,ro
+     .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
      .      ,dldp,dldx,dldy,tsum,r_missing_data
-     .      ,usum,vsum
+     .      ,usum,vsum,dxx,dyy,delo,fuu,fvv
+     .      ,angu,angv,dyu,dxv
+
+      real*4 term1,term2,term3,term4,term5,term6
+     .      ,term7,term8,term9,term10,term11
+     .      ,euoay,euoax,snv,snu,dfvdy,dfudx
+     .      ,eueub,fob,fy,fx,ffx,ffy,foax,foay
+     .      ,fu2,fv2,fuangu,fvangv
 
       real*4 ttmp(nx,ny,nz)
       real*4 utmp(nx,ny,nz)
@@ -644,87 +580,114 @@ c
       re=6371220.
       ovr=1.        !over-relaxation factor
       ittr=0
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         ibnd(i,j,k)=0
-      enddo
-      enddo
-      enddo
-      do k=1,nz
-         kp=1
-         if (k .eq. nz) kp=0
-         do j=1,ny
-            js=1
-            jp=1
-            if (j .eq. 1) js=0
-            if (j .eq. ny) jp=0
-            do i=1,nx
-               is=1
-               ip=1
-               if (i .eq. 1) is=0
-               if (i .eq. nx) ip=0
-               to(i,j,k)=to(i,j,k)*g
-               t(i,j,k)=t(i,j,k)*g
-               if (ps(i,j) .le. p(k+kp)) then!turn on terrain switch
-                  ibnd(i,j,k)=1
-                  ibnd(i+ip,j+jp,k)=1
-                  ibnd(i,j+jp,k)=1
-                  ibnd(i+ip,j,k)=1
-               endif
-            enddo
-         enddo
-      enddo
+c create perturbations
+c owing to an artifact of coding the t array is phi
+      do l=1,lmax
+      write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+c     write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+       do j=1,ny
+        js=1
+        if(j.eq.ny) js=0
+        do i=1,nx
+         if(i.eq.nx) is=0
+         ang=(lat(i+is,j+js)+lat(i,j+js)+lat(i,j)+lat(i+is,j))*rdpdg*.25
+         ff(i,j)=fo*sin(ang)
+         do k=1,nz
+         to(i,j,k)=to(i,j,k)-tb(i,j,k)!background an obs are in GPM
+         t(i,j,k)=0. !put bacground grid in solution grid to establish
+c                                boundary values(zero perturbation)
+         if(ub(i,j,k).ne.bnd) uo(i,j,k)=uo(i,j,k)-ub(i,j,k)
+         if(vb(i,j,k).ne.bnd) vo(i,j,k)=vo(i,j,k)-vb(i,j,k)
+         u(i,j,k)=uo(i,j,k)
+         v(i,j,k)=vo(i,j,k)
+c wind error must be defined at the geopotential stagger points
+         aaa(i,j,k)=erru(i,j,k)+errub(i,j,k)+ff(i,j)**2*delo
+         bbb(i,j,k)=(erru(i,j,k)+errub(i,j,k))/aaa(i,j,k)
+        enddo
+       enddo
+      enddo 
 c *** Compute new phi (t array) using relaxation on eqn. (2).
 c        beta*dldx term is dropped to eliminate coupling with lambda eqn.
 c
       do 1 it=1,itmax
          cotmax=0.
-c        if(icon.eq.1) call prt(t,sc,ci,nx,ny,4,nz,4hgepo,4h    )
          do 2 j=2,nym1
-         do 2 i=2,nxm1
-            ang=(lat(i,j-1)+lat(i,j))/2.*rdpdg
-            sin1=sin(ang)
-            f=fo*sin1
-            fs=f*f
-            cos1=cos(ang)
-            beta=fo*cos1/re
-            dx2=dx(i,j)*2.
-            dxs=dx(i,j)*dx(i,j)
-            dy2=dy(i,j)*2.
-            dys=dy(i,j)*dy(i,j)
-            do 2 k=ks,kf
-               a=(1.+fs*del(i,j,k))
-               bb=(2.*f*beta*del(i,j,k))/a
-               term1=beta
-               term2=-f
-               term3=-tan(ang)/re-bb
-               term4=-gam(k)/del(i,j,k)*a
-               cortmt=-2./dxs-2./dys+term4
-               dudy=(uo(i,j,k)-uo(i,j-1,k))/dy(i,j)
-               dvdx=(vo(i,j,k)-vo(i-1,j,k))/dx(i,j)
+          do 2 i=2,nxm1
+            
+           dxx=(dx(i,j)+dx(i,j+1)+dx(i+1,j)+dx(i+1,j+1))*.25
+           dx2=dxx*2.
+           dxs=dxx*dxx
+           dyy=(dy(i,j)+dy(i,j+1)+dy(i+1,j)+dy(i+1,j+1))*.25
+           dy2=dyy*2.
+           dys=dyy*dyy        
+           fx=(ff(i+1,j)-ff(i-1,j))/dx2
+           fy=(ff(i,j+1)-ff(i,j-1))/dy2
+           ffx=ff(i,j)*fx
+           ffy=ff(i,j)*fy
+           do 2 k=ks,kf
+               if(k.ne.kf)then
+               if(ps(i,j).lt.p(k+1)) then 
+                term1=0.
+                term2=0.
+                term3=0.
+                force=0.
+                goto 25
+               endif
+               endif
+               eueub=erru(i,j,k)+errub(i,j,k)
+               fob=ff(i,j)/bbb(i,j,k) 
+               foax=(ff(i+1,j)/aaa(i+1,j,k)-ff(i-1,j)/aaa(i-1,j,k))/dx2
+               foay=(ff(i,j+1)/aaa(i,j+1,k)-ff(i,j-1)/aaa(i,j-1,k))/dx2
+               euoax=(erru(i+1,j,k)/aaa(i+1,j,k)-erru(i-1,j,k)/
+     &                       aaa(i-1,j,k))/dx2
+               euoay=(erru(i,j+1,k)/aaa(i,j+1,k)-erru(i,j-1,k)/
+     &                       aaa(i,j-1,k))/dy2
+               term1=delo*(-fob*foax-ffx/eueub)
+               term2=delo*(-fob*foay-ffy/eueub)
+               term3=-(errph(i,j,k)+errphb(i,j,k))/(bbb(i,j,k)*delo)
+               term4=-errph(i,j,k)/(bbb(i,j,k)*delo)
+               term5=-fob*euoay-fy*erru(i,j,k)/eueub
+               term6= fob*euoax+fx*erru(i,j,k)/eueub
+               term7=ff(i,j)*erru(i,j,k)/eueub
+               term8=delo*(fob*foax+ffx/eueub)
+               term9=delo*(fob*foay+ffy/eueub)
+               term10=-term8
+               term11=-term9
+               dudy=(uo(i,j,k)-uo(i,j-1,k))/dyy
+               dvdx=(vo(i,j,k)-vo(i-1,j,k))/dxx
+               dfudx=(fu(i+1,j,k)-fu(i-1,j,k)
+     .               +fu(i+1,j-1,k)-fu(i-1,j-1,k))*.5/dx2
+               dfvdy=(fv(i,j+1,k)-fv(i,j-1,k)
+     .               +fv(i-1,j+1,k)-fv(i-1,j-1,k))*.5/dy2
                dnudx=(nu(i+1,j,k)-nu(i-1,j,k)
      .               +nu(i+1,j-1,k)-nu(i-1,j-1,k))*.5/dx2
                dnvdy=(nv(i,j+1,k)-nv(i,j-1,k)
      .               +nv(i-1,j+1,k)-nv(i-1,j-1,k))*.5/dy2
                snv=(nv(i-1,j,k)+nv(i,j,k))*.5
-               tt=t(i,j,k)
+               snu=(nu(i,j-1,k)+nu(i,j,k))*.5
+               fuu=(fu(i-1,j,k)+fu(i,j,k))*.5
+               fvv=(fv(i-1,j,k)+fv(i,j,k))*.5
                dtdy=(t(i,j+1,k)-t(i,j-1,k))/dy2
-               uot=(uo(i,j,k)+uo(i,j-1,k))*.5
+               dtdx=(t(i+1,j,k)-t(i-1,j,k))/dx2
                tot=to(i,j,k)
+               uot=(uo(i-1,j,k)+uo(i-1,j-1,k))*.5
+               vot=(vo(i,j-1,k)+vo(i-1,j-1,k))*.5
+               force=term4*tot+term5*uot+term6*vot+term7*(dvdx-dudy)
+     &            +ro*(term8*snu+term9*snv)+term10*fuu+term11*fvv
+     &                -ro*(dnudx+dnvdy)+dfudx+dfvdy
+25              tt=t(i,j,k)
                dt2dx2=(t(i+1,j,k)+t(i-1,j,k)-2.*tt)/dxs
                dt2dy2=(t(i,j+1,k)+t(i,j-1,k)-tt*2.)/dys
-               slap=dt2dx2+dt2dy2+dtdy*term3+term4*(tt)
-               force=-(term4*(-tot)+uot*term1+
-     .                term2*(dvdx-dudy)+dnudx+dnvdy-bb*snv)
+               slap=dt2dx2+dt2dy2+dtdx*term1+dtdy*term2+term3*tt
                rest=slap-force
+               cortmt=-2./dxs-2./dys+term3
                cot=rest/cortmt
                t(i,j,k)=tt-cot*ovr
                cotmax=amax1(cotmax,abs(cot))
                if (it .eq. 1) cotma1=cotmax
 2          continue
 c        write(6,1000) it,itt,cotmax,ovr,cotma1
-5        ittr=ittr+1
+         ittr=ittr+1
          cotm5=cotmax
 c
 c ****** Recompute over-relaxation factor every fifth iteration.
@@ -737,506 +700,209 @@ c
 15       if (cotmax .lt. err) goto 12
          if (it .ne. 1) goto 1
          cotm0=cotm5
-1000     format(1x,'it = ',i4,' max correction for ',a4,' = ',e12.3
+1000     format(1x,'PHI SOLVER: it = ',i4,' max correction for '
+     &          ,a4,' = ',e12.3
      .         ,'ovr =  ',e12.4/1x
      .         ,'first iteration max correction was ',e12.4)
 1     continue
 12    write(6,1000) it,itt,cotmax,ovr,cotma1
+c     write(9,1000) it,itt,cotmax,ovr,cotma1
 c     erf=0.
-c     if(icon.eq.1)call prt(t,sc,ci,nx,ny,4,nz,4hgeo,4hpot)
-c69      call zero3d(slam,nx,ny,nz)
 c
 c *** Compute new u, v, omega using eqns. (4), (5), (6) with new phi and
 c        without the lagrange multiplier terms.
 c
-      do k=1,nzm1
+      do k=1,nz
+      do j=1,ny-1
+         if (j .eq.1) js=0
+      do i=1,nx-1
+         if (i.eq.1) is=0
+         angu=(lat(i+1,j)+lat(i,j))*.5*rdpdg
+         angv=(lat(i,j+1)+lat(i,j))*.5*rdpdg
+         dyu=(dy(i+1,j)+dy(i,j))*.5
+         dxv=(dx(i+1,j)+dx(i,j))*.5
+         fuangu=fo*sin(angu)
+         fvangv=fo*sin(angv)
+         dtdx=(t(i+1,j,k)-t(i,j,k))/dxv
+         dtdy=(t(i,j+1,k)-t(i,j,k))/dyu
+         uot=uo(i,j,k)
+         vot=vo(i,j,k)
+         fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-is,j+1,k)+fv(i-is,j,k))*.25
+         fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-js,k)+fu(i,j-js,k))*.25
+         nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-is,j+1,k)+nv(i-is,j,k))*.25
+         nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))*.25
+         if (uot .ne. bnd) then
+           fu2=(fuangu*fuangu)
+           u(i,j,k)=(uot*erru(i,j,k)-f*delo*(ro*nvv-fvv+dtdy))
+     &                        /aaa(i,j,k)      
+          else 
+           u(i,j,k)=bnd
+         endif
+         if ( vot .ne. bnd) then
+           fv2=(fvangv*fvangv)
+           v(i,j,k)=(vot*erru(i,j,k)+f*delo*(ro*nuu-fuu+dtdx))
+     &                              /aaa(i,j,k)       
+          else
+           v(i,j,k)=bnd
+         endif
+      enddo
+      enddo
+      enddo
+c 
+c Restore full winds and heights by adding back in background
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
+       if(ub(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)+ub(i,j,k)
+       if(ub(i,j,k).ne.bnd) uo(i,j,k)=uo(i,j,k)+ub(i,j,k)
+       if(vb(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)+vb(i,j,k)
+       if(vb(i,j,k).ne.bnd) vo(i,j,k)=vo(i,j,k)+vb(i,j,k)
+       t(i,j,k)=t(i,j,k)+tb(i,j,k)
+       to(i,j,k)=to(i,j,k)+tb(i,j,k)
+      enddo
+      enddo
+      enddo
+
+      erf=100.
+
+      call leib_sub(nx,ny,nz,erf,tau,delo
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,vo,v,om,omo,nu,nv,fu,fv)
+
+c move adjusted fields to observation-driven fields for next iteration
+      call move_3d(t,to,nx,ny,nz)
+      call move_3d(u,uo,nx,ny,nz)
+      call move_3d(v,vo,nx,ny,nz)
+      call move_3d(om,omo,nx,ny,nz)
+      enddo ! on lmax
+
+      return
+      end
+c
+c ---------------------------------------------------------------
+c
+      subroutine leib_sub(nx,ny,nz,erf,tau,delo
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,vo,v,om,omo,nu,nv,fu,fv)
+
+      implicit none
+
+      integer nx,ny,nz
+      integer nxm1,nym1,nzm1
+      integer i,j,k,ks
+
+      real*4 t(nx,ny,nz),to(nx,ny,nz)
+     .      ,u(nx,ny,nz),uo(nx,ny,nz)
+     .      ,v(nx,ny,nz),vo(nx,ny,nz)
+     .      ,om(nx,ny,nz),omo(nx,ny,nz)
+     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,h(nx+1,ny+1,nz+1)
+     .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
+     .      ,ps(nx,ny),p(nz),dp(nz)
+     .      ,slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
+
+      real*4 ang,rdpdg,sin1,dldx,dldy,dldp
+     .,a,f,fo,fs,erf,tau,delo,bnd
+
+      fo=14.52e-5   !2*omega
+      rdpdg=3.141592654/180.
+      bnd=1.e-30
+
+c
+c *** Compute lagrange multiplier (slam) using 3-d relaxtion on eqn. (3).
+c
+      nxm1=nx-1
+      nym1=ny-1
+      nzm1=nz-1
+
+      call zero3d(slam,nx+1,ny+1,nz+1)
+      call zero3d(h,nx+1,ny+1,nz+1)
+c
+c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
+c
+      call fthree(f3,u,v,omo,delo,nu,nv,h,tau,
+     .   nx+1,ny+1,nz+1,nx,ny,nz,lat,dx,dy,dp)
+c
+c ****** Perform 3-d relaxation.
+c
+      erf=.1
+      call leibp3(slam,f3,200,erf,h
+     .              ,nx,ny,nz,dx,dy,ps,p,dp)
+c
+c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
+c
+      do k=1,nz
+      ks=1
+      if(k.eq.nz) ks=0
       do j=1,nym1
-      do i=1,nxm1                                                  
-         js=1
-         if (j .eq. 1) js=0
+      do i=1,nxm1
          ang=(lat(i,j))*rdpdg
          sin1=sin(ang)
          f=fo*sin1
          fs=f*f
-         a=1.+fs*del(i,j,k) 
-         is=1
-         if (i .eq. 1) is=0
-         dtdx=(t(i+1,j,k)-t(i,j,k))/dx(i,j)
-         dtdy=(t(i,j+1,k)-t(i,j,k))/dy(i,j)
-         uot=uo(i,j,k)
-         vot=vo(i,j,k)
-         nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-is,j+1,k)+nv(i-is,j,k))/4.
-         nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))/4.
-c the solution wind will be from lw3 if the wind is near the bndry
-c since u and v were from lw3 on entry to balcon
-         if (uot .ne. bnd) then
-            u(i,j,k)=(uot-f*del(i,j,k)*(nvv+dtdy))/a
-          else 
-            if(ps(i,j).lt.p(k)) u(i,j,k)=bnd
-         endif
-         if (vot .ne. bnd) then
-            v(i,j,k)=(vot+f*del(i,j,k)*(nuu+dtdx))/a
-          else
-            if (ps(i,j).lt.p(k)) v(i,j,k)=bnd
-         endif
+         a=1.+fs*delo
+         dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+ks)
+         dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
+         dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
+         if (u(i,j,k) .ne. bnd) u(i,j,k)=u(i,j,k)+.5*dldx/a
+         if (v(i,j,k) .ne. bnd) v(i,j,k)=v(i,j,k)+.5*dldy/a
+         if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+.5*dldp/tau
       enddo
       enddo
       enddo
-c
-c *** Compute lagrange multiplier (slam) using 3-d relaxtion on eqn. (3).
-c
-      if (icon .ne. 0) then
-         call zero3d(slam,nx,ny,nz)
-         call zero3d(h,nx,ny,nz)
-c
-c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
-c
-         call fthree(f3,u,v,omo,del,nu,nv,h,tau
-     .              ,nx,ny,nz,lat,dx,dy,dp)
-         if (icon .eq. 1) call analz(to,to,uo,uo,vo,vo,omo,omo
-     .                   ,slam,f3,nu,nv,ibnd,del,tau
-     .                   ,nx,ny,nz
-     .                   ,lat,dx,dy,ps,p,dp,gam)
-c
-c ****** Perform 3-d relaxation.
-c
-         erf=.1
-         call leibp3(slam,f3,200,erf,h
-     .              ,nx,ny,nz,dx,dy,ps,p,dp)
-c        call prt(f3,sc,ci,nx,ny,5,nz,4hforc ,4hng  )
-c        call prt(slam,sc,ci,nx,ny,5,nz,4hlamd ,4ha   )
-c
-c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
-c
-         do k=1,nzm1
-         do j=1,nym1
-         do i=1,nxm1
-            ang=(lat(i,j))*rdpdg                                  
-            sin1=sin(ang)
-            f=fo*sin1
-            fs=f*f
-            dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+1)*.01
-            dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
-            dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
-            if (u(i,j,k) .ne. bnd) u(i,j,k)=u(i,j,k)+.5*dldx/a
-            if (v(i,j,k) .ne. bnd) v(i,j,k)=v(i,j,k)+.5*dldy/a
-            if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+.5*dldp/tau
-         enddo
-         enddo
-         enddo
-      endif
-      if (icon .eq. 1) call analz(t,to,u,uo,v,vo,om,omo
-     .                ,slam,f3,nu,nv,ibnd,del,tau
+
+      call analz(t,to,u,uo,v,vo,om,omo
+     .                ,slam,f3,nu,nv,fu,fv,delo,tau
      .                ,nx,ny,nz
-     .                ,lat,dx,dy,ps,p,dp,gam)
-c     if (icon .eq. 1) call prt(om,sc,ci,nx,ny,4,nz,4h om ,4h    )   
-c     if (icon .eq. 1) call prt(om,sc,ci,nx,ny,8,nz,4h om ,4h    )   
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         t(i,j,k)=t(i,j,k)/g
-         ttmp(i,j,k)=t(i,j,k)
-         utmp(i,j,k)=u(i,j,k)
-         vtmp(i,j,k)=v(i,j,k)
-      enddo
-      enddo
-      enddo
-c
-c insure that we don't have boundary pressure gradients due to
-c boundary terrain/pressure intersections. Also check u/v components
-c on the boundary.
-c
-      call get_r_missing_data(r_missing_data,istatus)
+     .                ,lat,dx,dy,ps,p,dp)
 
-      do k=1,nz-1
-c w/e sides
-         do j=1,ny
-            if(ps(1,j).le.p(k+1)) then 
-               t(1,j,k)=r_missing_data
-               u(1,j,k)=r_missing_data
-               v(1,j,k)=r_missing_data
-            endif
-            if(ps(nx,j).le.p(k+1))then
-               t(nx,j,k)=r_missing_data
-               u(nx,j,k)=r_missing_data
-               v(nx,j,k)=r_missing_data
-            endif
-         enddo
-c s/n sides
-         do i=1,nx
-            if(ps(i,1).le.p(k+1)) then
-               t(i,1,k)=r_missing_data
-               u(i,1,k)=r_missing_data
-               v(i,1,k)=r_missing_data
-            endif
-            if(ps(i,ny).le.p(k+1))then
-               t(i,ny,k)=r_missing_data
-               u(i,ny,k)=r_missing_data
-               v(i,ny,k)=r_missing_data
-            endif
-         enddo
-      enddo
-c
-      do k=1,nz-1
-c western boundary
-         iwpt=0
-         do j=1,ny
-            if(t(1,j,k).eq.r_missing_data)then
-               tsum=0.0
-               usum=0.0
-               vsum=0.0
-               icnt=0
-               ucnt=0
-               vcnt=0
-               jp=1
-               if(j.eq.ny.or.j.eq.1)jp=0
-               if(ps(1,j+jp).gt.p(k))then
-                  if(t(1,j+jp,k).ne.r_missing_data)then
-                     tsum=t(1,j+jp,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(1,j+jp,k).ne.r_missing_data)then
-                     usum=u(1,j+jp,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(1,j+jp,k).ne.r_missing_data)then
-                     vsum=v(1,j+jp,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(1,j-jp).gt.p(k))then
-                  if(t(1,j-jp,k).ne.r_missing_data)then
-                     tsum=t(1,j-jp,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(1,j-jp,k).ne.r_missing_data)then
-                     usum=u(1,j-jp,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(1,j-jp,k).ne.r_missing_data)then
-                     vsum=v(1,j-jp,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(2,j).gt.p(k))then
-                  if(t(2,j,k).ne.r_missing_data)then
-                     tsum=t(2,j,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(2,j,k).ne.r_missing_data)then
-                     usum=u(2,j,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(2,j,k).ne.r_missing_data)then
-                     vsum=v(2,j,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
 
-               if(icnt.gt.0)then
-                  t(1,j,k)=tsum/float(icnt)
-               else
-                  t(1,j,k)=ttmp(1,j,k)
-                  iwpt=iwpt+1
-               endif
-               if(ucnt.gt.0)then
-                  u(1,j,k)=usum/float(ucnt)
-               else
-                  u(1,j,k)=utmp(1,j,k)
-                  uwpt=uwpt+1
-               endif
-               if(vcnt.gt.0)then
-                  v(1,j,k)=vsum/float(vcnt)
-               else
-                  v(1,j,k)=vtmp(1,j,k)
-                  vwpt=vwpt+1
-               endif
-            endif
-         enddo
-c        print*,'no hgt pts on western bndry for avg = ',iwpt
-c        print*,'no u pts on western bndry for avg = ',uwpt
-c        print*,'no v pts on western bndry for avg = ',vwpt
-c eastern boundary
-         iwpt=0
-         uwpt=0
-         vwpt=0
-         do j=1,ny
-            if(t(nx,j,k).eq.r_missing_data)then
-               tsum=0.0
-               usum=0.0
-               vsum=0.0
-               icnt=0
-               ucnt=0
-               vcnt=0
-               jp=1
-               if(j.eq.ny.or.j.eq.1)jp=0
-               if(ps(nx,j+jp).gt.p(k))then
-                  if(t(nx,j+jp,k).ne.r_missing_data)then
-                     tsum=t(nx,j+jp,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(nx,j+jp,k).ne.r_missing_data)then
-                     usum=u(nx,j+jp,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(nx,j+jp,k).ne.r_missing_data)then
-                     vsum=v(nx,j+jp,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(nx,j-jp).gt.p(k))then
-                  if(t(nx,j-jp,k).ne.r_missing_data)then
-                     tsum=t(nx,j-jp,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(nx,j-jp,k).ne.r_missing_data)then
-                     usum=u(nx,j-jp,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(nx,j-jp,k).ne.r_missing_data)then
-                     vsum=v(nx,j-jp,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(nx-1,j).gt.p(k))then
-                  if(t(nx-1,j,k).ne.r_missing_data)then
-                     tsum=t(nx-1,j,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(nx-1,j,k).ne.r_missing_data)then
-                     usum=u(nx-1,j,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(nx-1,j,k).ne.r_missing_data)then
-                     vsum=v(nx-1,j,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-
-               if(icnt.gt.0)then
-                  t(nx,j,k)=tsum/float(icnt)
-               else
-                  t(nx,j,k)=ttmp(nx,j,k)
-                  iwpt=iwpt+1
-               endif
-               if(ucnt.gt.0)then
-                  u(nx,j,k)=usum/float(ucnt)
-               else
-                  u(nx,j,k)=utmp(nx,j,k)
-                  uwpt=uwpt+1
-               endif
-               if(vcnt.gt.0)then
-                  v(nx,j,k)=vsum/float(vcnt)
-               else
-                  v(nx,j,k)=vtmp(nx,j,k)
-                  vwpt=vwpt+1
-               endif
-            endif
-         enddo
-c        print*,'no pts on eastern bndry for avg = ',iwpt
-c        print*,'no u pts on eastern bndry for avg = ',uwpt
-c        print*,'no v pts on eastern bndry for avg = ',vwpt
-c southern boundary
-         iwpt=0
-         do i=1,nx
-            if(t(i,1,k).eq.r_missing_data)then
-               tsum=0.0
-               usum=0.0
-               vsum=0.0
-               icnt=0
-               ucnt=0
-               vcnt=0
-               ip=1
-               if(i.eq.nx.or.i.eq.1)ip=0
-               if(ps(i+ip,1).gt.p(k))then
-                  if(t(i+ip,1,k).ne.r_missing_data)then
-                     tsum=t(i+ip,1,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i+ip,1,k).ne.r_missing_data)then
-                     usum=u(i+ip,1,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i+ip,1,k).ne.r_missing_data)then
-                     vsum=v(i+ip,1,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(i-ip,1).gt.p(k))then
-                  if(t(i-ip,1,k).ne.r_missing_data)then
-                     tsum=t(i-ip,1,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i-ip,1,k).ne.r_missing_data)then
-                     usum=u(i-ip,1,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i-ip,1,k).ne.r_missing_data)then
-                     vsum=v(i-ip,1,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(i,2).gt.p(k))then
-                  if(t(i,2,k).ne.r_missing_data)then
-                     tsum=t(i,2,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i,2,k).ne.r_missing_data)then
-                     usum=u(i,2,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i,2,k).ne.r_missing_data)then
-                     vsum=v(i,2,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-
-               if(icnt.gt.0)then
-                  t(i,1,k)=tsum/float(icnt)
-               else
-                  t(i,1,k)=ttmp(i,1,k)
-                  iwpt=iwpt+1
-               endif
-               if(ucnt.gt.0)then
-                  u(i,1,k)=usum/float(ucnt)
-               else
-                  u(i,1,k)=utmp(i,1,k)
-                  uwpt=uwpt+1
-               endif
-               if(vcnt.gt.0)then
-                  v(i,1,k)=vsum/float(vcnt)
-               else
-                  v(i,1,k)=vtmp(i,1,k)
-                  vwpt=vwpt+1
-               endif
-            endif
-         enddo
-c        print*,'no hgt pts on southern bndry for avg = ',iwpt
-c        print*,'no u pts on southern bndry for avg = ',uwpt
-c        print*,'no v pts on southern bndry for avg = ',vwpt
-c northern boundary
-         iwpt=0
-         uwpt=0
-         vwpt=0
-         do i=1,nx
-            if(t(i,ny,k).eq.r_missing_data)then
-               tsum=0.0
-               usum=0.0
-               vsum=0.0
-               icnt=0
-               ucnt=0
-               vcnt=0
-               ip=1
-               if(i.eq.nx.or.i.eq.1)ip=0
-               if(ps(i+ip,ny).ge.p(k))then
-                  if(t(i+ip,ny,k).ne.r_missing_data)then
-                     tsum=t(i+ip,ny,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i+ip,ny,k).ne.r_missing_data)then
-                     usum=u(i+ip,ny,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i+ip,ny,k).ne.r_missing_data)then
-                     vsum=v(i+ip,ny,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(i-ip,ny).ge.p(k))then
-                  if(t(i-ip,1,k).ne.r_missing_data)then
-                     tsum=t(i-ip,ny,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i-ip,1,k).ne.r_missing_data)then
-                     usum=t(i-ip,ny,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i-ip,1,k).ne.r_missing_data)then
-                     vsum=t(i-ip,ny,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(ps(i,ny-1).ge.p(k))then
-                  if(t(i,ny-1,k).ne.r_missing_data)then
-                     tsum=t(i,ny-1,k)+tsum
-                     icnt=icnt+1
-                  endif
-                  if(u(i,ny-1,k).ne.r_missing_data)then
-                     usum=u(i,ny-1,k)+usum
-                     ucnt=ucnt+1
-                  endif
-                  if(v(i,ny-1,k).ne.r_missing_data)then
-                     vsum=v(i,ny-1,k)+vsum
-                     vcnt=vcnt+1
-                  endif
-               endif
-               if(icnt.gt.0)then
-                  t(i,ny,k)=tsum/float(icnt)
-               else
-                  t(i,ny,k)=ttmp(i,ny,k)
-                  iwpt=iwpt+1
-               endif
-               if(ucnt.gt.0)then
-                  u(i,ny,k)=usum/float(ucnt)
-               else
-                  u(i,ny,k)=utmp(i,ny,k)
-                  uwpt=uwpt+1
-               endif
-               if(vcnt.gt.0)then
-                  v(i,ny,k)=vsum/float(vcnt)
-               else
-                  v(i,ny,k)=vtmp(i,ny,k)
-                  vwpt=vwpt+1
-               endif
-            endif
-         enddo
-c        print*,'no hgt pts on northern bndry for avg = ',iwpt
-c        print*,'no u pts on northern bndry for avg = ',uwpt
-c        print*,'no v pts on northern bndry for avg = ',vwpt
-c        print*,'--------------------------------------'
-c        print*
-      enddo
-c
       return
       end
 c
-c===============================================================================
+c ---------------------------------------------------------------
 c
-      subroutine analz(t,to,u,uo,v,vo,om,omo,slam,f3,nu,nv,ibnd,del,tau
-     .                ,nx,ny,nz,lat,dx,dy,ps,p,dp,gam)
+      subroutine analz(t,to,u,uo,v,vo,om,omo,slam,f3,nu,nv,fu,fv,
+     .               delo,tau ,nx,ny,nz,lat,dx,dy,ps,p,dp)
 c
+c     analz is a diagnostic routine that looks at geostrophic residual
+c     maxima, continuity residual maxs.  It computes the rms terms in the 
+c     variational formalism
       implicit none
 c
       integer   nx,ny,nz
-     .         ,ibnd(nx,ny,nz)
      .         ,nzm1,nxm2,nym2
      .         ,isv,jsv,ksv
-     .         ,i,j,k
+     .         ,i,j,k,iflag
 c
       real*4 t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz)
-     .      ,slam(nx,ny,nz),f3(nx,ny,nz)
+     .      ,slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
-     .      ,ps(nx,ny),p(nz),dp(nz),gam(nz)
-     .      ,del(nx,ny,nz),tau,rdpdg,fo,bnd
+     .      ,ps(nx,ny),p(nz),dp(nz)
+     .      ,delo,tau,rdpdg,fo,bnd
      .      ,conmax,sumom,cont,con,sumu,sumv,sumt,thermu,thermv
      .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc
      .      ,ang,sin1,f,nvv,nuu,dtdx,dtdy,dudx,dvdy,domdp
-     .      ,uot,vot,tot,uuu,vvv,contm
+     .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
 c_______________________________________________________________________________
 c
+c     write(9,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
+      write(6,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
+
       nzm1=nz-1
       nxm2=nx-2
       nym2=ny-2
       rdpdg=3.141592654/180.
       fo=14.52e-5   !2*omega
       bnd=1.e-30
-      do k=1,nzm1
-         write(6,4000) k,p(k+1)
-4000     format(1x,'Level ',i4,'   ',f5.0,' mb')
+      do k=2,nzm1
+         write(6,4000) k,p(k+1)/100.
+c        write(9,4000) k,p(k+1)/100.
+4000     format(1x,'----------Level ',i4,'   ',f5.0,' mb---------')
          conmax=0
          sumom=0
          cont=0
@@ -1252,39 +918,41 @@ c
          tgpv=0.
          tgpph=0.
          tgpc=0.
+         iflag=0
          do j=2,nym2
          do i=2,nxm2
+         dxx=(dx(i-1,j-1)+dx(i,j-1)+dx(i-1,j)+dx(i,j))*.25
+         dyy=(dy(i-1,j-1)+dy(i,j-1)+dy(i-1,j)+dy(i,j))*.25
+          if(ps(i,j).gt.p(k)) then
             ang=(lat(i,j))*rdpdg
             sin1=sin(ang)
             f=fo*sin1
+            fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-1,j+1,k)+fv(i-1,j,k))/4.
+            fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-1,k)+fu(i,j-1,k))/4.
             nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-1,j+1,k)+nv(i-1,j,k))/4.
             nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-1,k)+nu(i,j-1,k))/4.
             dtdx=(t(i+1,j,k)-t(i,j,k))/dx(i,j)
             dtdy=(t(i,j+1,k)-t(i,j,k))/dy(i,j)
-            if (k .ne. 1) then
-               dudx=(u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
-               dvdy=(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j)
-               domdp=(om(i,j,k-1)-om(i,j,k))/dp(k)*.01
-            endif
+               dudx=(u(i,j-1,k-1)-u(i-1,j-1,k-1))/dxx
+               dvdy=(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dyy    
+               domdp=(om(i,j,k-1)-om(i,j,k))/dp(k)
             uot=uo(i,j,k)
             vot=vo(i,j,k)
             tot=to(i,j,k)
             if (uot .ne. bnd) then
                thermu=(u(i,j,k)+dtdy/f)**2+thermu
                sumu=sumu+(u(i,j,k)-uot)**2
-               resv=(f*u(i,j,k)+dtdy+nvv)**2+resv
+               resv=(f*u(i,j,k)+dtdy+nvv-fvv)**2+resv
                tgpu=tgpu+1.
             endif
             if (vot .ne. bnd) then
                thermv=(v(i,j,k)-dtdx/f)**2+thermv
                sumv=sumv+(v(i,j,k)-vot)**2
-               resu=resu+(-f*v(i,j,k)+dtdx+nuu)**2
+               resu=resu+(-f*v(i,j,k)+dtdx+nuu-fuu)**2
                tgpv=tgpv+1.
             endif
-            if (ibnd(i,j,k) .ne. 1) then
                sumt=sumt+(t(i,j,k)-tot)**2
                tgpph=tgpph+1.
-            endif
             if (ps(i,j) .gt. p(k)) then
                cont=(dudx+dvdy+domdp)**2+cont
                con=dudx+dvdy+domdp
@@ -1299,8 +967,10 @@ c
                   isv=i
                   jsv=j
                   ksv=k
+                  iflag=1
                endif
             endif
+          endif!on below ground check
          enddo
          enddo
          if (tgpu .ne. 0) sumu=sqrt(sumu/tgpu)
@@ -1314,29 +984,38 @@ c
          if (tgpu .ne. 0) resu=sqrt(resu/tgpu)
          if (tgpv .ne. 0) resv=sqrt(resv/tgpv)
          write(6,1002) sumww
+c        write(9,1002) sumww
 1002     format(1x,' rms wind speed:',e12.4)
          if (sumww .ne. 0.) sumww=sqrt(thermu**2+thermv**2)/sumww
-c
-c commented out write statment (J.Smart). This has to do with parameter del which is
-c                                         now a 3-d array.
 
-c        write(6,1001) sumt,del,sumu,gam(k),sumv,
-c    .             tau,sumom,cont,thermu,thermv,sumww,resu,resv
-c        if (k .ne. 1) write(6,1009)
+         write(6,1001) sumt,delo,sumu,sumv,
+     .             sumom,tau,cont,thermu,thermv,sumww,resu,resv
+
+c        write(9,1001) sumt,delo,sumu,sumv,
+c    .             sumom,tau,cont,thermu,thermv,sumww,resu,resv
+
+         if (iflag.eq. 1) write(6,1009)
+     .      isv,jsv,ksv,contm,f3(isv,jsv,ksv),slam(isv,jsv,ksv),
+     .      slam(isv+1,jsv,ksv),slam(isv-1,jsv,ksv),slam(isv,jsv+1,ksv),
+     .      slam(isv,jsv-1,ksv),slam(isv,jsv,ksv+1),slam(isv,jsv,ksv-1),
+     .      dx(isv,jsv),dy(isv,jsv),dp(ksv),
+     .      u(isv,jsv-1,ksv-1),u(isv-1,jsv-1,ksv-1),v(isv-1,jsv,ksv-1),
+     .      v(isv-1,jsv-1,ksv-1),om(isv,jsv,ksv),om(isv,jsv,ksv-1)
+c        if (iflag.eq. 1) write(9,1009)
 c    .      isv,jsv,ksv,contm,f3(isv,jsv,ksv),slam(isv,jsv,ksv),
 c    .      slam(isv+1,jsv,ksv),slam(isv-1,jsv,ksv),slam(isv,jsv+1,ksv),
 c    .      slam(isv,jsv-1,ksv),slam(isv,jsv,ksv+1),slam(isv,jsv,ksv-1),
 c    .      dx(isv,jsv),dy(isv,jsv),dp(ksv),
 c    .      u(isv,jsv-1,ksv-1),u(isv-1,jsv-1,ksv-1),v(isv-1,jsv,ksv-1),
 c    .      v(isv-1,jsv-1,ksv-1),om(isv,jsv,ksv),om(isv,jsv,ksv-1)
+
       enddo
 1009  format(1x,'relax ',3i4/1x,'con f3 l ',3e12.4/1x,'lijk ',6e12.4/1x,
      .       ' d x y p ',3e12.4/1x,'uuvvoo ',6e12.4)
-1001  format(1x,' rms error for each term in functional and del,gam,tau'
-     . /1x,'    phi-phio:',e12.5,'   del:',e12.5,
-     . /1x,'    u-uo:    ',e12.5,'   gam:',e12.5,
-     . /1x,'    v-vo:    ',e12.5,'   tau:',e12.5,
-     . /1x,'    om-omo:  ',e12.5
+1001  format(1x,' rms error for each term in functional and del,tau'
+     . /1x,'    phi-phio:',e12.5,'   delo:',e12.5,
+     . /1x,'    u-uo:    ',e12.5,'   v-vo:',e12.5,
+     . /1x,'    om-omo:  ',e12.5,'   tau:',e12.5,
      . /1x,' rms cont eqn error:   ',e12.5
      . /1x,' rms ageostrophic wind:',2e12.5
      . /1x,' implied rossby number:',f6.3 
@@ -1347,11 +1026,11 @@ c
 c
 c===============================================================================
 c
-      subroutine terbnd(u,v,om,nx,ny,nz,ps,p)
+      subroutine terbnd(u,v,om,nx,ny,nz,ps,p,bnd)
 c  terrain boundary sets velocity component to 1.e-30 on terrain 
-c  faces and in the interior of terrain.  this rountine has
-c been modified for the AFWA implementation.  It does not use 
-c the original stagger associated with the mcginley(1987) paper
+c  faces and in the interior of terrain.  
+c  The input variables are on the staggered (mcginley1987) grid
+
       implicit none
 c
       integer   nx,ny,nz,nzm1,i,j,k
@@ -1364,7 +1043,6 @@ c
      .      ,bnd
 c_______________________________________________________________________________
 c
-      bnd=1.e-30
       nym1=ny-1
       nxm1=nx-1
       nzm1=nz-1
@@ -1372,18 +1050,13 @@ c
       do i=2,nxm1
          om(i,j,1)=bnd
          do k=2,nzm1
-            if (ps(i,j) .le. p(k)) then
-c                u(i-1,j-1,k-1)=bnd
-c                u(i,j-1,k-1)=bnd
-c                v(i-1,j-1,k-1)=bnd
-c                v(i-1,j,k-1)=bnd
-c  These are AFWA changes
-                 u(i,j,k)=bnd
-                 u(i+1,j,k)=bnd
-                 v(i,j,k)=bnd
-                 v(i,j+1,k)=bnd
-                 om(i,j,k-1)=bnd
-                 om(i,j,k)=bnd
+            if (ps(i,j) .le. p(k)) then ! point is below ground
+                u(i-1,j-1,k-1)=bnd
+                u(i,j-1,k-1)=bnd
+                v(i-1,j-1,k-1)=bnd
+                v(i-1,j,k-1)=bnd
+                om(i,j,k)=bnd
+                om(i,j,k-1)=bnd
             endif
          enddo
       enddo
@@ -1392,15 +1065,13 @@ c
       do k=2,nz
          do j=1,ny
             if(ps(1,j) .le. p(k)) then
-c  These are AFWA changes
-               u(1,j,k)=bnd
-               v(1,j,k)=bnd
+               u(1,j,k-1)=bnd
                om(1,j,k)=bnd
                om(1,j,k-1)=bnd
             endif
             if(ps(nx,j) .le. p(k)) then
-               u(nx,j,k)=bnd
-               v(nx,j,k)=bnd
+               u(nx,j,k-1)=bnd
+               u(nxm1,j,k-1)=bnd
                om(nx,j,k)=bnd
                om(nx,j,k-1)=bnd
             endif
@@ -1408,15 +1079,13 @@ c  These are AFWA changes
 
          do i=1,nx
             if(ps(i,1) .le. p(k)) then
-c  These are AFWA changes
-               u(i,1,k)=bnd
-               v(i,1,k)=bnd
+               v(i,1,k-1)=bnd
                om(i,1,k)=bnd
                om(i,1,k-1)=bnd
             endif
             if(ps(i,ny) .le. p(k)) then
-               u(i,ny,k)=bnd
-               v(i,ny,k)=bnd
+               v(i,ny,k-1)=bnd
+               v(i,nym1,k-1)=bnd
                om(i,ny,k)=bnd
                om(i,ny,k-1)=bnd
             endif
@@ -1427,12 +1096,121 @@ c  These are AFWA changes
 c
 c===============================================================================
 c
-      subroutine nonlin(nu,nv,uo,vo,u,v,om
-     .                 ,nx,ny,nz,dx,dy,dp,dt)
+      subroutine frict(fu,fv,ub,vb,u,v,p,ps,t
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
 c
-c *** Nonlin computes the non-linear terms (nu,nv).
-c *** For now, nonlin assumes a non-staggered grid and uses a backwards
-c        time difference.
+c *** Frict computes frictional acceleration in the near the terrain surface
+c     using the parameterization from Haltner Ch. 10.
+c     Frict is computed from the perturbed u, v grids
+c
+      implicit none
+c
+      integer   nx,ny,nz
+     .         ,nxm1,nym1,nzm1
+     .         ,i,j,k
+c
+      real*4 fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,ub(nx,ny,nz),vb(nx,ny,nz) 
+     .      ,u(nx,ny,nz),v(nx,ny,nz),t(nx,ny,nz),bnd  
+     .      ,dx(nx,ny),dy(nx,ny),dp(nz),ps(nx,ny),p(nz)
+     .      ,dt,dudx,dvdy,dudy,dvdx
+     .      ,dudp,dvdp,dudt,dvdt
+
+      real*4 gdtvdp,gdtudp,daudp,davdp
+     .      ,daubdp,davbdp,dubdp,dvbdp
+     .      ,d2vbdx,d2vbdy,d2ubdx,d2ubdy
+     .      ,d2vdx,d2vdy,d2udx,d2udy,dauvdp,dauvbdp
+     .      ,d2udp,d2vdp,d2ubdp,d2vbdp,absuv,absuvb
+     .      ,hzdf,eddf,hdfz
+     .      ,grav,r,den,cd
+c_______________________________________________________________________________
+c
+c
+      print *,'frictn'
+c compute difference in frictional component between rawcomponent and 
+c background. Fu-Fub, Fv-Fvb
+c constnts
+      grav=9.808!m/sec2
+      r=287.04!gas const
+      hdfz=50000.!m2/sec
+      eddf=.002!mb2/sec
+      cd=.0025 !non dim
+      nxm1=nx-1
+      nym1=ny-1
+      nzm1=nz-1
+      call zero3d(fu,nx,ny,nz)
+      call zero3d(fv,nx,ny,nz)
+      do k=2,nzm1
+      do j=2,nym1
+      do i=2,nxm1
+         dauvdp=(sqrt(u(i,j,k-1)**2+v(i,j,k-1)**2)-
+     &           sqrt(u(i,j,k+1)**2+v(i,j,k+1)**2))/(dp(k)+dp(k+1))
+         dauvbdp=(sqrt(ub(i,j,k-1)**2+vb(i,j,k-1)**2)-
+     &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/(dp(k)+dp(k+1))
+         absuv=sqrt(u(i,j,k)**2+v(i,j,k)**2)
+         absuvb=sqrt(ub(i,j,k)**2+vb(i,j,k)**2)
+         if(u(i,j,k).eq.bnd) then
+          fu(i,j,k)=0.
+         else
+          d2udx=(u(i+1,j,k)+u(i-1,j,k)-2.*u(i,j,k))/dx(i,j)**2
+          d2udy=(u(i,j+1,k)+u(i,j-1,k)-2.*u(i,j,k))/dy(i,j)**2
+          d2udp=4.*(u(i,j,k+1)+u(i,j,k-1)-2.*u(i,j,k))/
+     &          (dp(k)+dp(k+1))**2
+          d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx(i,j)**2
+          d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy(i,j)**2
+          d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/
+     &          (dp(k)+dp(k+1))**2
+          gdtudp=0.
+          if(ps(i,j).gt.p(k).and.(ps(i,j)-p(k)).le.dp(k)) then! we're near sfc
+           den=p(k)/r/t(i,j,k+1)
+           dudp=(u(i,j,k-1)-u(i,j,k+1))/(dp(k)+dp(k+1))
+           dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/(dp(k)+dp(k+1))
+           gdtudp=den*cd*grav*(dudp*absuv+dauvdp*u(i,j,k)
+     &        -dubdp*absuvb-dauvbdp*ub(i,j,k))
+          endif
+          fu(i,j,k)=hzdf*(d2udx+d2udy-d2ubdx-d2ubdy)
+     &         +eddf*(d2udp-d2ubdp)-gdtudp
+         endif
+         if(v(i,j,k).eq.bnd) then
+          fv(i,j,k)=0.
+         else
+          d2vdx=(v(i+1,j,k)+v(i-1,j,k)-2.*v(i,j,k))/dx(i,j)**2
+          d2vdy=(v(i,j+1,k)+v(i,j-1,k)-2.*v(i,j,k))/dy(i,j)**2
+          d2vdp=4.*(v(i,j,k+1)+v(i,j,k-1)-2.*v(i,j,k))/
+     &                   (dp(k)+dp(k+1))**2
+          d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx(i,j)**2
+          d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy(i,j)**2
+          d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/
+     &                   (dp(k)+dp(k+1))**2
+          gdtvdp=0.
+          if(ps(i,j).gt.p(k).and.(ps(i,j)-p(k)).le.dp(k)) then! we're near sfc
+           den=p(k)/r/t(i,j,k+1)
+           dvdp=(v(i,j,k-1)-v(i,j,k+1))/(dp(k)+dp(k+1))
+           davdp=(abs(v(i,j,k-1))-abs(v(i,j,k+1)))/(dp(k)+dp(k+1))
+           dvbdp=(vb(i,j,k-1)-vb(i,j,k+1))/(dp(k)+dp(k+1))
+           davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/(dp(k)+dp(k+1))
+           gdtvdp=den*cd*grav*(dvdp*absuv+dauvdp*v(i,j,k)
+     &             -dvbdp*absuvb-dauvbdp*vb(i,j,k))
+          endif
+          fv(i,j,k)=hzdf*(d2vdx+d2vdy-d2vbdx-d2vbdy)
+     &              +eddf*(d2vdp-d2vbdp)-gdtvdp           
+         endif
+      enddo
+      enddo
+      enddo
+c
+      return
+      end
+c===============================================================================
+c
+      subroutine nonlin(nu,nv,u,v,ub,vb,om,omb
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
+c
+c *** Nonlin computes the non-linear terms (nu,nv) from staggered input.
+c     The non linear terms are linearized with a background/perturbation
+c     combination. The eularian time terms are assumed to be zero.
+c     The non-linear terms nu,nv, are computed on the 
+c     u, v grids, respectively
 c
       implicit none
 c
@@ -1441,15 +1219,17 @@ c
      .         ,i,j,k
 c
       real*4 nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,uo(nx,ny,nz),vo(nx,ny,nz)   !time=t
-     .      ,u(nx,ny,nz),v(nx,ny,nz)     !time=t-dt
-     .      ,om(nx,ny,nz)
-     .      ,dx(nx,ny),dy(nx,ny),dp(nz)
+     .      ,u(nx,ny,nz),v(nx,ny,nz)     !time=t
+     .      ,ub(nx,ny,nz),vb(nx,ny,nz)     !time=t
+     .      ,om(nx,ny,nz),omb(nx,ny,nz)
+     .      ,dx(nx,ny),dy(nx,ny),dp(nz),bnd
      .      ,dt,dudx,dvdy,dudy,dvdx
      .      ,dudp,dvdp,dudt,dvdt
+     .      ,dvbdy,dubdp,dvbdp,dudby
+     .      ,dubdx,dvbdx,dubdy
+     .      ,omu,ombu,omv,ombv,vvu,uuv,vvbu,uubv
 c_______________________________________________________________________________
 c
-c *** A 1 2 1 time filter is applied over all gradient terms (not used now...).
 c
       print *,'nonlin'
       nxm1=nx-1
@@ -1457,47 +1237,92 @@ c
       nzm1=nz-1
       call zero3d(nu,nx,ny,nz)
       call zero3d(nv,nx,ny,nz)
+c create perturbations in the u,v,om variables
+      do k=1,nz
+       do j=1,ny
+        do i=1,nx
+         if(u(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)-ub(i,j,k)
+         if(v(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)-vb(i,j,k)
+         if(om(i,j,k).ne.bnd) om(i,j,k)=om(i,j,k)-omb(i,j,k)
+        enddo
+       enddo  
+      enddo 
       do k=2,nzm1
       do j=2,nym1
       do i=2,nxm1
-         dudx=(uo(i+1,j,k)-uo(i-1,j,k))/(2.*dx(i,j))
-         dvdx=(vo(i+1,j,k)-vo(i-1,j,k))/(2.*dx(i,j))
-         dudy=(uo(i,j+1,k)-uo(i,j-1,k))/(2.*dy(i,j))
-         dvdy=(vo(i,j+1,k)-vo(i,j-1,k))/(2.*dy(i,j))
-         dudp=(uo(i,j,k+1)-uo(i,j,k-1))/(dp(k)+dp(k+1))
-         dvdp=(vo(i,j,k+1)-vo(i,j,k-1))/(dp(k)+dp(k+1))
-         dudt=(uo(i,j,k)-u(i,j,k))/dt
-         dvdt=(vo(i,j,k)-v(i,j,k))/dt
-         nu(i,j,k)=dudt+uo(i,j,k)*dudx+vo(i,j,k)*dudy+om(i,j,k)*dudp
-         nv(i,j,k)=dvdt+uo(i,j,k)*dvdx+vo(i,j,k)*dvdy+om(i,j,k)*dvdp
-         if (i .eq. 7 .and. j .eq. 12 .and. k .eq. 12) write(6,1000)
-     .       dudt,dudx,dudy,dudp,dvdt,dvdx,dvdy,dvdp
-1000      format(1x,'nonlin ',7e12.4/1x,7e12.4)
+         if(u(i,j,k).eq.bnd) then
+          nu(i,j,k)=0.
+         else
+          ombu=(omb(i+1,j+1,k+1)+omb(i,j+1,k+1)+omb(i+1,j+1,k)+
+     &            omb(i,j+1,k))*.25
+          omu=(om(i+1,j+1,k+1)+om(i,j+1,k+1)+om(i+1,j+1,k)+
+     &            om(i,j+1,k))*.25
+          omu=(om(i+1,j+1,k+1)+om(i,j+1,k+1)+om(i+1,j+1,k)+
+     &            om(i,j+1,k))*.25
+          vvu=(v(i-1,j+1,k)+v(i,j+1,k)+v(i-1,j,k)+v(i,j,k))*.25
+          vvbu=(vb(i-1,j+1,k)+vb(i,j+1,k)+vb(i-1,j,k)+vb(i,j,k))*.25
+          dubdx=(ub(i+1,j,k)-ub(i-1,j,k))/(2.*dx(i,j))
+          dudx=(u(i+1,j,k)-u(i-1,j,k))/(2.*dx(i,j))
+          dubdy=(ub(i,j+1,k)-ub(i,j-1,k))/(2.*dy(i,j))
+          dudy=(u(i,j+1,k)-u(i,j-1,k))/(2.*dy(i,j))
+          dubdp=(ub(i,j,k+1)-ub(i,j,k-1))/(dp(k)+dp(k+1))
+          dudp=(u(i,j,k+1)-u(i,j,k-1))/(dp(k)+dp(k+1))
+          dudt=0.
+          nu(i,j,k)=dudt+ub(i,j,k)*dudx+vvbu*dudy+ombu*dudp
+     &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp
+         endif
+         if(v(i,j,k).eq.bnd) then
+          nv(i,j,k)=0.
+         else 
+          ombv=(omb(i+1,j+1,k+1)+omb(i+1,j,k+1)+omb(i+1,j,k)+
+     &            omb(i+1,j+1,k))*.25
+          uuv=(u(i,j,k)+u(i+1,j,k)+u(i,j-1,k)+u(i+1,j-1,k))*.25
+          uubv=(ub(i,j,k)+ub(i+1,j,k)+ub(i,j-1,k)+ub(i+1,j-1,k))*.25
+          dvbdx=(vb(i+1,j,k)-vb(i-1,j,k))/(2.*dx(i,j))
+          dvdx=(v(i+1,j,k)-v(i-1,j,k))/(2.*dx(i,j))
+          dvbdy=(vb(i,j+1,k)-vb(i,j-1,k))/(2.*dy(i,j))
+          dvdy=(v(i,j+1,k)-v(i,j-1,k))/(2.*dy(i,j))
+          dvbdp=(vb(i,j,k+1)-vb(i,j,k-1))/(dp(k)+dp(k+1))
+          dvdp=(v(i,j,k+1)-v(i,j,k-1))/(dp(k)+dp(k+1))
+          dvdt=0.           
+          nv(i,j,k)=dvdt+uubv*dvdx+vb(i,j,k)*dvdy+ombv*dvdp
+     &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp
+         endif
       enddo
       enddo
       enddo
+c make winds whole again
+      do k=1,nz
+       do j=1,ny
+        do i=1,nx
+         if(u(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)+ub(i,j,k)
+         if(v(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)+vb(i,j,k)
+         if(om(i,j,k).ne.bnd) om(i,j,k)=om(i,j,k)+omb(i,j,k)
+        enddo
+       enddo  
+      enddo 
 c
       return
       end
 c
 c===============================================================================
 c
-      subroutine fthree(f3,u,v,om,del,nu,nv,h,tau
-     .                 ,nx,ny,nz,lat,dx,dy,dp)
+      subroutine fthree(f3,u,v,om,delo,nu,nv,h,tau
+     .,nxp1,nyp1,nzp1,nx,ny,nz,lat,dx,dy,dp)
 c
 c *** Fthree computes a/tau (h) and rhs terms in eqn. (3).
 c
       implicit none
 c
-      integer   nx,ny,nz
+      integer   nx,ny,nz,nzp1,nxp1,nyp1
      .         ,i,j,k,is,js,ks
 c
-      real*4 f3(nx,ny,nz),h(nx,ny,nz)
+      real*4 f3(nxp1,nyp1,nzp1),h(nxp1,nyp1,nzp1)
      .      ,u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz),lat(nx,ny)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,del(nx,ny,nz),tau,fo,rdpdg,dpp,f,aa,dxx,dyy
+     .      ,delo,tau,fo,rdpdg,dpp,f,aa,dxx,dyy
      .      ,dnudy,dnvdx,cont,formax
 c_______________________________________________________________________________
 c
@@ -1506,13 +1331,11 @@ c
       rdpdg=3.141592654/180.
       formax=0.
       do k=2,nz
-         ks=1
-         if (k .eq. 1) ks=0
-         dpp=dp(k)*100.
+         dpp=dp(k)
          do j=2,ny
          do i=2,nx
             f=sin(lat(i,j)*rdpdg)*fo
-            aa=1.+f*f*del(i,j,k) 
+            aa=1.+f*f*delo 
             js=1
             if (j .eq. 2) js=0
             dyy=dy(i,j)*float(js+1)
@@ -1521,22 +1344,14 @@ c
             if (i .eq. 2) is=0
             dxx=dx(i,j)*float(is+1)
             dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
-     .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dy(i,j)*.25
+     .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
             dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
-     .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dx(i,j)*.25
+     .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
             cont=((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
      .           +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j)
      .           +(om(i,j,k-1)-om(i,j,k))/dpp)*aa
-            f3(i,j,k)=-2.*cont
+            f3(i,j,k)=-2.*cont! remove this term test +2.*f*delo*(dnvdx-dnudy)
             if (abs(f3(i,j,k)) .ge. formax) then
-c              write(6,3004) i,j,k,cont,dnvdx,dnudy,
-c    .                       dxx,dyy,nu(i,j,k),nv(i,j,k)  
-3004           format(1x,3i4,8e12.4)
-c              write(6,3004) i,j,k,nu(i,j,k-ks)
-c    .                      ,nu(i-is,j,k-ks),nu(i,j-js-1,k-ks)
-c    .                      ,nu(i-is,j-js-1,k-ks),nv(i,j,k-ks)
-c    .                      ,nv(i,j-js,k-ks),nv(i-is-1,j,k-ks)
-c    .                      ,nv(i-is-1,j-js,k-ks)
                formax=abs(f3(i,j,k))
             endif
          enddo
@@ -1557,11 +1372,12 @@ c
 c
       integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
-     .         ,ittr
+     .         ,ittr,is,js
      .         ,i,j,k,it,itmax,ia
 c
-      real*4 sol(nx,ny,nz),force(nx,ny,nz)
-     .      ,h(nx,ny,nz)
+      real*4 sol(nx+1,ny+1,nz+1)
+     .      ,force(nx+1,ny+1,nz+1)
+     .      ,h(nx+1,ny+1,nz+1)
      .      ,dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
      .      ,erf,si,sj,sk
@@ -1572,10 +1388,10 @@ c
 c_______________________________________________________________________________
 c
 c *** Relaxer solver...eqn must be.......                                 
-c        sxx+syy+a*szz+b*sxz+c*syz+d*sxy+e*sx+f*sy+g*sz+h*s-force=0   
+c        sxx+syy+h*szz-force=0   
 c
       print *,'leibp3'
-      ovr=1.
+      ovr=1.0
       erb=0.
       si=1.
       sj=1.
@@ -1593,56 +1409,40 @@ c
          ermm=0.
          ia=0
          corlm=0.
-         do j=2,nym1
-         do i=2,nxm1
-            dx2=dx(i,j)*2.
+         do j=2,ny
+         js=1
+         if(j.eq.ny)js=0
+         do i=2,nx
+            is=1
+            if(i.eq.nx) is=0
             dx1s=dx(i,j)*dx(i,j)
-            dy2=dy(i,j)*2.
             dy1s=dy(i,j)*dy(i,j)
-            do 2 k=2,nzm1
-            dz=dp(k)*100.
-            dz2=dz*2.
+            do 2 k=2,nz
+            dz=dp(k)
             dz1s=dz*dz
-            if (ps(i,j)-p(k)) 2,2,20
-20          aa=h(i,j,k)
-            cortm=-2.*si/dx1s-2.*sj/dy1s-aa*2.*sk/dz1s+hh
-                  res=(sol(i+1,j,k)+sol(i-1,j,k))/dx1s*si+
-     .           (sol(i,j+1,k)+sol(i,j-1,k))/dy1s*sj+
-     .           (sol(i,j,k+1)+sol(i,j,k-1))/dz1s*sk*
-     .           aa+cortm*sol(i,j,k)-force(i,j,k)
-            if (ps(i+1,j)-p(k)) 100,101,101
-100             res=res+(-sol(i+1,j,k)+sol(i,j,k))/dx1s
-            cortm=cortm+1./dx1s
-101             if (ps(i,j+1)-p(k)) 102,103,103
-102             res=res+(-sol(i,j+1,k)+sol(i,j,k))/dy1s
-            cortm=cortm+1./dy1s
-103             if (ps(i-1,j)-p(k)) 104,105,105
-104             res=res+(-sol(i-1,j,k)+sol(i,j,k))/dx1s
-            cortm=cortm+1./dx1s
-105             if (ps(i,j-1)-p(k)) 106,107,107
-106             res=res+(-sol(i,j-1,k)+sol(i,j,k))/dy1s
-            cortm=cortm+1./dy1s
-107             if (ps(i,j)-p(k-1)) 108,109,109
-108             res=res-(sol(i,j,k-1)-sol(i,j,k))*aa/dz1s
-            cortm=cortm+aa/dz1s
-109             continue
+            if (ps(i,j).lt.p(k)) go to 2 
+            aa=h(i,j,k)
+            if(ps(i+is,j).lt.p(k)) sol(i+1,j,k)=sol(i,j,k)
+            if(ps(i-1 ,j).lt.p(k)) sol(i-1,j,k)=sol(i,j,k)
+            if(ps(i,j+js).lt.p(k)) sol(i,j+1,k)=sol(i,j,k)
+            if(ps(i,j-1).lt.p(k)) sol(i,j-1,k)=sol(i,j,k)
+            if(ps(i,j).lt.p(k-1)) sol(i,j,k-1)=sol(i,j,k)
+            cortm=-2./dx1s-2./dy1s-aa*2./dz1s
+                  res=(sol(i+1,j,k)+sol(i-1,j,k))/dx1s+
+     .           (sol(i,j+1,k)+sol(i,j-1,k))/dy1s+
+     .           aa*(sol(i,j,k+1)+sol(i,j,k-1))/dz1s
+     .           +cortm*sol(i,j,k)-force(i,j,k)
             cor=res/cortm
             corb=5.*erf+1.
             if (it .ne. 1) corb=cor/corlmm
             if (abs(corb) .gt. erf) ia=1
             if (abs(cor) .gt. corlm) corlm=abs(cor)
-c            if(i.eq.14.and.k.eq.4) write(6,3004) 
-c      1         j,sol(i,j,k),force(i,j,k),res,cor,aa,cortm,
-c      2         sol(i+1,j,k),sol(i-1,j,k),sol(i,j+1,k),sol(i,j-1,k),
-c      3         sol(i,j,k+1),sol(i,j,k-1)
-3004             format(1x,'relax ',i3,6e12.4/1x,6e12.4)
             sol(i,j,k)=sol(i,j,k)-cor*ovr
 2            continue
          enddo
          enddo
-c        write(6,1200) ((sol(i,11,22-k),i=6,8),k=1,21)
          reslm=corlm*cortm
-c        write(6,1001) it,reslm,corlm,corlmm,erb
+c         write(6,1001) it,reslm,corlm,corlmm,erb
 1200     format(1x,3e12.5)
          erb=amax1(ermm,ertm)
 5        ittr=ittr+1
@@ -1657,11 +1457,14 @@ c        write(6,1001) it,reslm,corlm,corlmm,erb
             corlmm=corlm
             cor0=corlmm
          endif
-      enddo
-      reslm=corlm*cortm
+         if(corlm.lt.erf) go to 20
+      enddo! on it
+20    reslm=corlm*cortm
       write(6,1001) it,reslm,corlm,corlmm,erb
       write(6,1002) ovr
-1002       format(1x,'ovr rlxtn const at fnl ittr = ',e10.4)
+c     write(9,1001) it,reslm,corlm,corlmm,erb
+c     write(9,1002) ovr
+1002       format(1x,'LIEBP3:ovr rlxtn const at fnl ittr = ',e10.4)
 1001       format(1x,'iterations= ',i4,' max residual= ',e10.3,
      .    ' max correction= ',e10.3, ' first iter max cor= ',e10.3,
      .    'max bndry error= ',e10.3)
@@ -1797,17 +1600,24 @@ c
 c
 c===============================================================================
 c
-      Subroutine balstagger(u,v,om,phi,t,nx,ny,nz,
-     &                      wr1,wr2,wr3,p,idstag)
+      Subroutine balstagger(u,v,phi,t,rh,om,
+     &  us,vs,phis,ts,rhs,oms,
+     &nx,ny,nz,p,ps,idstag)
 c
 c  This routine takes a standard LAPS field with all variables at
 c  each grid point and produces the E-stagger appropriate for applying
-c  the dynamic balancing in qbalpe.f  idstag > 0 staggers (LAPS -> stagger)
-c  idstag < 0 destaggers (stagger -> LAPS)
+c  the dynamic balancing in qbalpe.f   or vice versa
+c  idstag > 0 staggers (LAPS -> stagger)
+c  idstag < 0 destaggers (stagger -> LAPS). For this latter process
+c  the non staggered input grids must be the original gridded laps fields
+c  to ensure that the boundaries are consistent with lga backgrounds.  The 
+c  destaggering will only process interior grid points on the laps mesh
 
-      real u(nx,ny,nz),v(nx,ny,nz),om(nx,ny,nz),t(nx,ny,nz), 
-     &phi(nx,ny,nz),wr1(nx,ny,nz),wr2(nx,ny,nz),wr3(nx,ny,nz)
-     &,p(nz)
+      realu(nx,ny,nz),v(nx,ny,nz),om(nx,ny,nz),t(nx,ny,nz),  
+     &us(nx,ny,nz),vs(nx,ny,nz),oms(nx,ny,nz),ts(nx,ny,nz),  
+     &phi(nx,ny,nz),wr(nx+1,ny+1,nz+1,6),ps(nx,ny)
+     &,p(nz),phis(nx,ny,nz),
+     &rhs(nx,ny,nz),rh(nx,ny,nz)
 
 c  gas const
       r=287.04
@@ -1825,42 +1635,52 @@ c omega is shifted one-half in vertical
 c t is shifted likewise
 c phi is shifted upward one level like winds
 c level nz will be the same as laps for all fields
-
-       do k=1,nz-1
         do j=1,ny
          do i=1,nx
-          u(i,j,k)=u(i,j,k+1)
-          v(i,j,k)=v(i,j,k+1)
-          t(i,j,k)=(t(i,j,k)+t(i,j,k+1))*.5
-          om(i,j,k)=(om(i,j,k)+om(i,j,k+1))*.5
+          do k=1,nz-1
+          wr(i,j,k,1) = u(i,j,k+1) 
+          wr(i,j,k,2)=v(i,j,k+1)
+          wr(i,j,k,3)=(om(i,j,k)+om(i,j,k+1))*.5
+          wr(i,j,k,4)=(t(i,j,k)+t(i,j,k+1))*.5
+          wr(i,j,k,5)=(rh(i,j,k)+rh(i,j,k+1))*.5
+          wr(i,j,k,6)=phi(i,j,k+1) 
          enddo
         enddo
        enddo
 
 c horzizontal stagger
-
-       do k=1,nz
-        do j=1,ny-1
-         do i=1,nx-1
-          u(i,j,k)=(u(i+1,j+1,k)+u(i,j+1,k))*.5
-          v(i,j,k)=(v(i+1,j+1,k)+v(i+1,j,k))*.5
-          t(i,j,k)=(t(i,j,k)+t(i+1,j+1,k)+t(i,j+1,k)+t(i+1,j,k))*.25
-c omega is already on the standard horizontal mesh
+c extrapolate to fill north row and east column
+c 2nd order taylor series is used
+c rest of variables
+       do kk=1,6
+        do k=1,nz
+         do i=1,nx
+          wr(i,ny+1,k,kk)=3.*wr(i,ny,k,kk)-3.*wr(i,ny-1,k,kk)
+     &                     +wr(i,ny-2,k,kk)
          enddo
+         do j=1,ny
+          wr(nx+1,j,k,kk)=3.*wr(nx,j,k,kk)-3.*wr(nx-1,j,k,kk)
+     &                      +wr(nx-2,j,k,kk)
+         enddo
+          wr(nx+1,ny+1,k,kk)=3.*wr(nx,ny,k,kk)-3.*wr(nx-1,ny-1,k,kk)
+     &                      +wr(nx-2,ny-2,k,kk)
         enddo
-       enddo
-c re integrate phi hydrostatically from staggered t using phi 1 from LAPS
-       do k=1,nz-1
+       enddo 
+c now do horizontal interpolation to staggered grid
+       do k=1,nz
         do j=1,ny
          do i=1,nx
-          phi(i,j,k)=phi(i,j,k)+r*t(i,j,k)*alog(p(k)/p(k+1))/g
+          us(i,j,k)=(wr(i+1,j+1,k,1)+wr(i,j+1,k,1))*.5
+          vs(i,j,k)=(wr(i+1,j+1,k,2)+wr(i+1,j,k,2))*.5
+          ts(i,j,k)=(wr(i,j,k,4)+wr(i+1,j+1,k,4)+wr(i,j+1,k,4)
+     %                 +wr(i+1,j,k,4))*.25
+          rhs(i,j,k)=(wr(i,j,k,5)+wr(i+1,j+1,k,5)+wr(i,j+1,k,5)
+     %                 +wr(i+1,j,k,5))*.25
+          phis(i,j,k)=(wr(i,j,k,6)+wr(i+1,j+1,k,6)+wr(i,j+1,k,6)
+     %                 +wr(i+1,j,k,6))*.25
+          oms(i,j,k)=wr(i,j,k,3)
+c omega is already on the staggered horizontal mesh
          enddo
-        enddo
-       enddo
-c for level nz 
-       do j=1,ny
-        do i=1,nx
-          phi(i,j,nz)=phi(i,j,nz)+r*t(i,j,nz)*alog(p(nz-1)/p(nz))/g
         enddo
        enddo
        
@@ -1868,256 +1688,107 @@ c for level nz
 
       else! de-stagger
 
-c we begin by writing level 1 staggered into the laps level 1; use work arrays
-c winds first
-       do j=1,ny
-        do i=1,nx
-         wr1(i,j,1)=u(i,j,1)
-         wr2(i,j,1)=v(i,j,1)
-         wr3(i,j,1)=om(i,j,1)
-        enddo
-       enddo
 c horizontal destagger
-
-       do k=2,nz
-        do j=2,ny
-         do i=2,nx
-          wr1(i,j,k)=(u(i,j-1,k-1)+u(i-1,j-1,k-1))*.5
-          wr2(i,j,k)=(v(i-1,j,k-1)+v(i-1,j-1,k-1))*.5
-          wr3(i,j,k)=(om(i,j,k)+om(i,j,k-1))*.5
-         enddo
-        enddo
-       enddo
-
-c now some of the boundary rows and columns
-
-       do k=2,nz
-        wr1(1,1,k)=u(1,1,k-1)
-        wr2(1,1,k)=v(1,1,k-1)
-        wr3(1,1,k)=(om(1,1,k-1)+om(1,1,k))*.5
-        do i=2,nx
-         wr1(i,1,k)=wr1(i,2,k)
-         wr2(i,1,k)=v(i-1,1,k-1)
-         wr3(i,1,k)=(om(i,1,k)+om(i,1,k-1))*.5
-        enddo
-        do j=2,ny
-         wr1(1,j,k)=u(1,j-1,k-1)
-         wr2(1,j,k)=wr2(2,j,k)
-         wr3(1,j,k)=(om(1,j,k)+om(1,j,k-1))*.5
-        enddo
-       enddo ! on k
-
-c transfer over to u,v,om arrays
-
-       do k=1,nz
+c re compute hydrostatic virtual t from adjusted phis 
+       do k=2,nz-1
         do j=1,ny
          do i=1,nx
-          u(i,j,k)=wr1(i,j,k)
-          v(i,j,k)=wr2(i,j,k)
-          om(i,j,k)=wr3(i,j,k)
+          ts(i,j,k)=(phis(i,j,k)-phis(i,j,k-1))/
+     &                              (alog(p(k)/p(k+1))*r)
          enddo
         enddo
        enddo
- 
-c now geopotential
 
-       do k=2,nz
-        do j=2,ny
-         do i=2,nx
-          wr3(i,j,k)=(phi(i-1,j-1,k-1)+phi(i,j-1,k-1)
-     &               +phi(i-1,j,k-1)+phi(i,j,k-1))*.25
-          wr2(i,j,k)=(t(i-1,j-1,k-1)+t(i,j-1,k-1)
-     &               +t(i-1,j,k-1)+t(i,j,k))*.25
-         enddo
-        enddo
-       enddo
-       do k=2,nz
-        wr3(1,1,k)=phi(1,1,k-1)
-        wr2(1,1,k)=t(1,1,k-1)
-       enddo
-       do k=2,nz
-        do j=2,ny
-         wr3(1,j,k)=(phi(1,j,k-1)+phi(1,j-1,k-1))*.5
-         wr2(1,j,k)=(t(i,1,k-1)+t(i,1,k-1))*.5
-        enddo
-        do i=2,nx
-         wr3(i,1,k)=(phi(i,1,k-1)+phi(i,1,k-1))*.5
-         wr2(i,1,k)=(t(i,1,k-1)+t(i,1,k-1))*.5
-        enddo
-       enddo
-       do j=1,ny
+       tdd=-50.!lowest possible temp for esw calculation
+c put background values in stagged temp arrays at top and btm.
+        do j=1,ny
         do i=1,nx
-         wr3(i,j,1)=wr3(i,j,2)+r*wr2(i,j,2)*alog(p(2)/p(1))/g
-         wr2(i,j,1)=wr2(i,j,2)
+          ts(i,j,1)=t(i,j,1)
+          ts(i,j,nz)=t(i,j,nz)
         enddo
-       enddo
-c call phig to compute temps from heights on the native laps grid
-c temps will sill be staggered and must be destaggered below
-       call phig(wr3,wr2,nx,ny,nz,0,p,-1)
+        enddo
        do k=2,nz
-        do j=1,ny
-         do i=1,nx
-          wr2(i,j,k)=(wr2(i,j,k)+wr2(i,j,k-1))*.5
+        do j=2,ny
+         do i=2,nx
+          u(i,j,k)=(us(i,j-1,k-1)+us(i-1,j-1,k-1))*.5
+          v(i,j,k)=(vs(i-1,j,k-1)+vs(i-1,j-1,k-1))*.5
+          om(i,j,k)=(oms(i,j,k)+oms(i,j,k-1))*.5
+          rh(i,j,k)=(rhs(i-1,j-1,k-1)+rhs(i,j-1,k-1)+
+     &               rhs(i-1,j,k-1)+rhs(i,j,k-1)+
+     &               rhs(i-1,j-1,k)+rhs(i,j-1,k)+
+     &               rhs(i-1,j,k-1)+rhs(i,j,k))*.125
+          phi(i,j,k)=(phis(i-1,j-1,k-1)+phis(i,j-1,k-1)+
+     &               phis(i-1,j,k-1)+phis(i,j,k-1))*.25
+          t(i,j,k)=(ts(i-1,j-1,k-1)+ts(i,j-1,k-1)+
+     &               ts(i-1,j,k-1)+ts(i,j,k-1)+
+     &               ts(i-1,j-1,k)+ts(i,j-1,k)+
+     &               ts(i-1,j,k)+ts(i,j,k))*.125
+c  devirtualize temperature
+          tdm=dwpt(t(i,j,k)-273.16,rh(i,j,k))
+          tvkm=tv(t(i,j,k)-273.16,tdm,p(k)/100.)
+          tvkd=tv(t(i,j,k)-273.16,tdd,p(k)/100.)
+          t(i,j,k)=t(i,j,k)-(tvkm-tvkd)
          enddo
         enddo
        enddo
-
+c final step is bring temps in line with heights on the west and
+c south boundaries: use taylor extrapolation
+c north and east boundaries for omega
        do k=1,nz
-        do j=1,ny
-         do i=1,nx
-          phi(i,j,k)=wr3(i,j,k)
-          t(i,j,k)=wr2(i,j,k)
-         enddo
+        do j=2,ny
+         if(ps(1,j).ge.p(k)) then
+          u(1,j,k)=3.*u(2,j,k)-3.*u(3,j,k)+u(4,j,k)
+          v(1,j,k)=3.*v(2,j,k)-3.*v(3,j,k)+v(4,j,k)
+          om(1,j,k)=3.*om(2,j,k)-3.*om(3,j,k)+om(4,j,k)
+         else
+          u(1,j,k)=bnd
+          v(1,j,k)=bnd
+          om(1,j,k)=bnd
+         endif
+         if(ps(nx,j).ge.p(k)) then
+          om(nx,j,k)=3.*om(nx-1,j,k)-3.*om(nx-2,j,k)+om(nx-3,j,k)
+         else
+          om(nx,j,k)=bnd
+         endif
+         t(1,j,k)=3.*t(2,j,k)-3.*t(3,j,k)+t(4,j,k)
+         phi(1,j,k)=3.*phi(2,j,k)-3.*phi(3,j,k)+phi(4,j,k)
+         rh(1,j,k)=3.*rh(2,j,k)-3.*rh(3,j,k)+rh(4,j,k)
         enddo
-       enddo
-
-      endif
+        do i=2,nx
+         if(ps(i,1).ge.p(k)) then
+          u(i,1,k)=3.*u(i,2,k)-3.*u(i,3,k)+u(i,4,k)
+          v(i,1,k)=3.*v(i,2,k)-3.*v(i,3,k)+v(i,4,k)
+          om(i,1,k)=3.*om(i,2,k)-3.*om(i,3,k)+om(i,4,k)
+         else
+          u(i,1,k)=bnd
+          v(i,1,k)=bnd
+          om(i,1,k)=bnd
+         endif
+         if(ps(i,ny).ge.p(k)) then
+          om(i,ny,k)=3.*om(i,ny-1,k)-3.*om(i,ny-2,k)+om(i,ny-3,k)
+         else
+          om(i,ny,k)=bnd
+         endif
+         t(i,1,k)=3.*t(i,2,k)-3.*t(i,3,k)+t(i,4,k)
+         phi(i,1,k)=3.*phi(i,2,k)-3.*phi(i,3,k)+phi(i,4,k)
+         rh(i,1,k)=3.*rh(i,2,k)-3.*rh(i,3,k)+rh(i,4,k)
+        enddo
+         if(ps(1,1).ge.p(k)) then
+          u(1,1,k)=3.*u(2,2,k)-3.*u(3,3,k)+u(4,4,k)
+          v(1,1,k)=3.*v(2,2,k)-3.*v(3,3,k)+v(4,4,k)
+          om(1,1,k)=3.*om(2,2,k)-3.*om(3,3,k)+om(4,4,k)
+         else
+          u(1,1,k)=bnd
+          v(1,1,k)=bnd
+          om(1,1,k)=bnd
+         endif
+         t(1,1,k)=3.*t(2,2,k)-3.*t(3,3,k)+t(4,4,k)
+         phi(1,1,k)=3.*phi(2,2,k)-3.*phi(3,3,k)+phi(4,4,k)
+         rh(1,1,k)=3.*rh(2,2,k)-3.*rh(3,3,k)+rh(4,4,k)
+       enddo 
+      endif ! destagger
 
       return
       end
 
-c
-      subroutine phig(phi,t,nx,ny,nz,itshif,p,ittop)
-c
-c *** phig computes heights from temps or vice versa for
-c        ittop equal to 1 and -1 respectively.
-c
-      implicit none
-c
-      integer*4 nx,ny,nz
-     .         ,itshif,ittop
-     .         ,i,j,k
-c
-      real*4 phi(nx,ny,nz),t(nx,ny,nz)
-     .      ,p(nz)
-     .      ,z(50),r,g,rog,gor,ddz,ddzi
-c
-      parameter (r=287.053,g=9.80665,rog=r/g,gor=g/r)
-c_______________________________________________________________________________
-c
-      do k=1,nz
-         z(k)=alog(p(1)/p(k))
-      enddo
-c
-c *** Only for data that has no temps at lvl 1 (1025mb).
-c 
-      if (itshif .ne. 0) then
-         do j=1,ny
-         do i=1,nx
-            t(i,j,1)=t(i,j,2)*2.-t(i,j,3)
-         enddo
-         enddo
-      endif
-c
-c *** Scheme assumes 1000mb ht is correct.
-c
-      if (ittop .eq. 1) then
-         do k=2,nz
-            ddz=z(k)-z(k-1)
-            do j=1,ny
-            do i=1,nx
-               phi(i,j,k)=(t(i,j,k))*rog*ddz+phi(i,j,k-1)
-            enddo
-            enddo
-         enddo
-      elseif (ittop .eq. -1) then
-         do k=2,nz
-            ddzi=1./(z(k)-z(k-1))
-            do j=1,ny
-            do i=1,nx
-               t(i,j,k)=gor*(phi(i,j,k)-phi(i,j,k-1))*ddzi
-            enddo
-            enddo
-         enddo
-      endif
-c
-      return
-      end
-c
-      subroutine phigns(phi,t,rh,nx,ny,nz,itshif,p,ittop)
-c
-c *** This is the version of phig for the AFWA implementation. 
-c
-c *** phig computes heights from temps or vice versa for
-c        ittop equal to 1 and -1 respectively.
-c
-c     Smart/McGinley 10-98: Added de-virtualization of recovered
-c                           temps.
-c
-      implicit none
-c
-      integer*4 nx,ny,nz
-     .         ,itshif,ittop
-     .         ,i,j,k
-c
-      real*4 phi(nx,ny,nz),t(nx,ny,nz),rh(nx,ny,nz)
-     .      ,p(nz)
-     .      ,z(50),r,g,rog,gor,ddz,ddzi,ddzj
-
-      real*4 tvk1,tvk2,td,dwpt,tv
-      real*4 tvkd,tvkm,tdm,tdd
-c
-      parameter (r=287.053,g=9.80665,rog=r/g,gor=g/r)
-c_______________________________________________________________________________
-c
-      do k=1,nz
-         z(k)=alog(p(1)/p(k))
-      enddo
-c
-c *** Only for data that has no temps at lvl 1 (1025mb).
-c 
-      if (itshif .ne. 0) then
-         do j=1,ny
-         do i=1,nx
-            t(i,j,1)=t(i,j,2)*2.-t(i,j,3)
-         enddo
-         enddo
-      endif
-c
-c *** Scheme assumes 1100mb ht is correct.
-c *** Assume input t is dry when recovering phi.
-c *** Temp recovery is dry.
-c
-      if (ittop .eq. 1) then
-
-         do j=1,ny
-         do i=1,nx
-
-             td=dwpt(t(i,j,1)-273.15,rh(i,j,1))
-             tvk1=tv(t(i,j,1)-273.15,td,p(1))
-             do k=2,nz
-                td=dwpt(t(i,j,k)-273.15,rh(i,j,k))
-                tvk2=tv(t(i,j,k)-273.15,td,p(k))
-                ddz=z(k)-z(k-1)
-                phi(i,j,k)=.5*(tvk2+tvk1)*rog*ddz+phi(i,j,k-1)
-                tvk1=tvk2
-             enddo
-
-         enddo
-         enddo
-
-      elseif (ittop .eq. -1) then
-
-c scheme returns input temps at k=1 and nz
-         tdd=-50.                               !lowest possible Td for esw routine
-         do k=2,nz-1 
-            ddzi=1./(z(k)-z(k-1))
-            ddzj=1./(z(k+1)-z(k))
-            do j=1,ny
-            do i=1,nx
-               t(i,j,k)=.5*gor*(phi(i,j,k)-phi(i,j,k-1))*ddzi+
-     &                   .5*gor*(phi(i,j,k+1)-phi(i,j,k))*ddzj
-               tdm=dwpt(t(i,j,k)-273.15,rh(i,j,k))
-               tvkm=tv(t(i,j,k)-273.15,tdm,p(k))
-               tvkd=tv(t(i,j,k)-273.15,tdd,p(k))
-               t(i,j,k)=t(i,j,k)-(tvkm-tvkd)
-
-            enddo
-            enddo
-         enddo
-      endif
-c
-      return
-      end
-c
      
