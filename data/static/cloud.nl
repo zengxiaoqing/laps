@@ -1,5 +1,6 @@
  &cloud_nl
  l_use_vis=.true.,
+ l_use_vis_partial=.true.,
  l_use_vis_add=.false.,
  l_use_39=.true.,
  latency_co2=4000,
@@ -11,6 +12,12 @@
 c CLOUD PARAMETERS
 c
 c l_use_vis - flag for whether to use visible satellite data
+c
+c l_use_vis_partial - flag for whether to use visible satellite data even
+c                     if it covers just part of the domain
+c
+c l_use_vis_add - flag for whether to use visible satellite data for cloud
+c                 building (instead of just cloud clearing)
 c
 c l_use_39 - flag for whether to use 3.9 micron satellite data, the
 c            default is .true. This is still somewhat experimental, so this
