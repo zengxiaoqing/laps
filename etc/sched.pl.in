@@ -23,7 +23,7 @@
 use strict;
 use Getopt::Std;
 my($opt_o);
-getopt();
+getopt('o');
 
 umask 002;
 my $cycle_time = 3600;
