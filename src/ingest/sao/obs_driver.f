@@ -61,6 +61,7 @@ c	              12-03-98  Increase dir_s to 256 characters.
 c                     06-21-99  Pass lat/lon, grid size and grid spacing
 c                                 to get_ routines to calculate box size.
 c                     09-20-99  Add blacklist test (on KFCS w/known bad P).
+c                     11-10-99  Upgrade blacklist code.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -89,8 +90,8 @@ c
         include 'surface_obs.inc'
         integer ni, nj, maxsta, maxobs 
 c
-	real*4  lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real*4  store_1(maxsta,4), 
+	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real    store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
@@ -99,8 +100,10 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-        integer*4  wmoid(maxobs), jstatus, grid_spacing 
+        integer    wmoid(maxobs), jstatus, grid_spacing 
         integer    dpchar(maxobs), narg, iargc
+	integer    num_varb(maxobs), max_bvar
+	parameter  (max_bvar=20)  !max number of variables to blacklist
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxobs)*25 
@@ -111,6 +114,8 @@ c
 	character  filename9*9, filename13*13
         character  fname9_to_wfo_fname13*13
 	character  data_file_m*150, data_file_l*150, data_file_b*150
+	character  dir_b*256, black_path*256, stations_b(maxsta)*20
+	character  var_b(maxobs,max_bvar)*3 
 c
         character* (*) path_to_metar
         character* (*) path_to_local_data
@@ -145,9 +150,9 @@ c
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
 c
-        call get_directory('lso',outfile,len)
+	call get_directory('lso',outfile,len)
 	outfile = outfile(1:len)//filename9(1:9)//'.lso'
-cc      outfile = filename9(1:9)//'.lso'
+cc	outfile = filename9(1:9)//'.lso'
 c
 c.....	Get the LAPS lat/lon and topo data here so we can pass them to the 
 c.....	routines that need them.
@@ -340,18 +345,128 @@ c
 	n_obs_g = n_sao_g + n_local_g + n_buoy_g
 	n_obs_b = nn
 c
-c.....  Put blacklist stuff here...test for now.
+c.....  Check for a blacklist file.  If one exists, read it
+c.....  and flag the variables listed for each blacklist station
+c.....  as bad.  Otherwise, skip over this section and write what
+c.....  we have.
 c
-	do i=1,n_obs_b
-	   if(stations(i)(1:4) .eq. 'KFCS') then
-	      store_4(i,1) = badflag  ! altimeter
-	      store_4(i,2) = badflag  ! station pressure
-	      store_4(i,3) = badflag  ! MSL pressure
-	   endif
+	call get_directory('static',dir_b,len)
+	black_path = dir_b(1:len) // 'Blacklist.dat'
+cc	black_path = './Blacklist.dat'
+	call s_len(black_path, len)
+c
+	print *,' '
+	print *,'  Looking for blacklist file...'
+        INQUIRE(FILE=black_path(1:len), EXIST=exists)
+        if( .not. exists ) then
+	   print *,'    No blacklist file found.'
+	   go to 505		!no blacklist file...skip this stuff
+	endif
+	print *,'  Found one.  Checking blacklist file.'
+c
+c.....  Have blacklist file...read it.
+c
+	open(11, file=black_path, status='unknown')
+	read(11,901) num_black
+ 901	format(1x,i5)
+c
+	do i=1,num_black
+	   read(11,903) stations_b(i), num_varb(i), 
+     &                  (var_b(i,j), j=1,max_bvar)
 	enddo !i
+ 903	format(1x,a20,2x,i3,<max_bvar>(2x,a3))
+c
+c.....  Have blacklist info.  Now flag the var_b's at each station_b as bad.
+c
+	do ibl=1,num_black  !loop over the blacklist stations
+
+	   do i=1,n_obs_b  !loop over all stations
+
+	      if(stations(i) .eq. stations_b(ibl)) then  !found a match
+
+		 do j=1,num_varb(ibl)
+
+		    if( var_b(ibl,j) .eq. 'ALL' ) then
+		       store_2(i,1) = badflag ! temperature
+		       store_2(i,2) = badflag ! dew point
+		       store_2(i,3) = badflag ! relative humidity
+		       store_3(i,1) = badflag ! wind dir
+		       store_3(i,2) = badflag ! wind speed
+		       store_3(i,3) = badflag ! wind gust dir
+		       store_3(i,4) = badflag ! wind gust speed
+		       store_4(i,1) = badflag ! altimeter
+		       store_4(i,2) = badflag ! station pressure
+		       store_4(i,3) = badflag ! MSL pressure
+		       store_5(i,1) = badflag ! visibility
+		       store_5(i,2) = badflag ! solar
+		       store_5(i,3) = badflag ! soil/water temp
+		       store_5(i,4) = badflag ! soil moisture
+		       store_6(i,1) = badflag !  1-h precip
+		       store_6(i,2) = badflag !  3-h precip
+		       store_6(i,3) = badflag !  6-h precip
+		       store_6(i,4) = badflag ! 12-h precip
+		       store_6(i,5) = badflag ! snow depth
+		       store_7(i,1) = 0       ! clouds (set num cld layers to 0)
+c
+		    elseif( var_b(ibl,j) .eq. 'TMP' ) then
+		       store_2(i,1) = badflag ! temperature
+		    elseif( var_b(ibl,j) .eq. 'DEW' ) then
+		       store_2(i,2) = badflag ! dew point
+		    elseif( var_b(ibl,j) .eq. 'HUM' ) then
+		       store_2(i,3) = badflag ! relative humidity
+c
+		    elseif( var_b(ibl,j) .eq. 'WND' ) then
+		       store_3(i,1) = badflag ! wind dir
+		       store_3(i,2) = badflag ! wind speed
+		       store_3(i,3) = badflag ! wind gust dir
+		       store_3(i,4) = badflag ! wind gust speed
+c
+		    elseif( var_b(ibl,j) .eq. 'ALT' ) then
+		       store_4(i,1) = badflag ! altimeter
+		    elseif( var_b(ibl,j) .eq. 'STP' ) then
+		       store_4(i,2) = badflag ! station pressure
+		    elseif( var_b(ibl,j) .eq. 'MSL' ) then
+		       store_4(i,3) = badflag ! MSL pressure
+c
+		    elseif( var_b(ibl,j) .eq. 'VIS' ) then
+		       store_5(i,1) = badflag ! visibility
+		    elseif( var_b(ibl,j) .eq. 'SOL' ) then
+		       store_5(i,2) = badflag ! solar
+		    elseif( var_b(ibl,j) .eq. 'SWT' ) then
+		       store_5(i,3) = badflag ! soil/water temp
+		    elseif( var_b(ibl,j) .eq. 'SWM' ) then
+		       store_5(i,4) = badflag ! soil moisture
+c
+		    elseif( var_b(ibl,j) .eq. 'PCP' ) then
+		       store_6(i,1) = badflag !  1-h precip
+		       store_6(i,2) = badflag !  3-h precip
+		       store_6(i,3) = badflag !  6-h precip
+		       store_6(i,4) = badflag ! 12-h precip
+		    elseif( var_b(ibl,j) .eq. 'SNW' ) then
+		       store_6(i,5) = badflag ! snow depth
+c
+		    elseif( var_b(ibl,j) .eq. 'CLD' ) then
+		       store_7(i,1) = 0       ! clouds (set num cld layers to 0)
+c
+		    else
+		       print *,' '
+		       print *,' WARNING. Invalid blacklist variable: ',
+     &                   var_b(ibl,j),' for station ',stations_b(ibl)
+
+		    endif
+c
+		 enddo !j
+	      endif
+	   enddo !i
+	enddo !ibl
 c
 c.....  Call the routine to write the LSO file.
 c
+c
+	print *,' '
+	print *,'  Done with blacklisting.'
+ 505	continue
+	print *,'  Writing LSO file.'
 c
         call write_surface_obs(atime,outfile,n_obs_g,
      &    n_obs_b,wmoid,stations,provider,weather,reptype,atype,
@@ -363,14 +478,6 @@ c.....	That's about it...let's go home.
 c
 	stop 'Normal completion of OBS_DRIVER'
 	end
-
-
-
-
-
-
-
-
 
 
 
