@@ -10,6 +10,7 @@ c     input variables
       integer ii,jj,istatus
       real data_out(ii,jj),tpw(ii,jj)
       real glat(ii,jj), glon(ii,jj)
+      integer i4time
 
       integer nstations,nn
       parameter (nstations = 9000)
@@ -27,6 +28,10 @@ c     volitile arrays
       integer i,j
 
       filename = filetime(1:7)//'20'
+
+      if (filename(6:7) .eq. '00' ) then !make exception for 00ut problem
+         filename = filename (1:5)//'0120'
+      endif
 
 
       call read_gvap (filename, nstations, lat,lon, wt,w1,w2,w3, nn,
