@@ -314,9 +314,11 @@ cdis
         end
 
  
-       subroutine get_deriv_parms(mode_evap,istatus)
+       subroutine get_deriv_parms(mode_evap,l_bogus_radar_w,istatus)
 
-       namelist /deriv_nl/ mode_evap
+       logical l_bogus_radar_w
+
+       namelist /deriv_nl/ mode_evap, l_bogus_radar_w
  
        character*150 static_dir,filename
  
