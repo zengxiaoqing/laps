@@ -14,6 +14,14 @@ cp $LAPS_SRC_ROOT/src/include/directives.inc .
 
 foreach filename (*.f)
     setenv file `echo $filename | cut -f 1 -d .`
+
+#   Restore original files so we can optionally run this script multiple times 
+    if (-e $file.f.orig) then
+        cp $file.f.orig $file.f
+    else
+        cp $file.f $file.f.orig
+    endif
+
     setenv nsms `grep -i csms $file.f | wc -l`
     echo "$file.f $nsms"
 
