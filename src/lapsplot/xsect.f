@@ -1002,11 +1002,24 @@ c read in laps lat/lon and topo
             if(c_field .eq. 'ri')goto1500 ! Skip next part
 
             if(.not. l_radar_read)then
+!               Obtain height field
+                ext = 'lt1'
+                var_2d = 'HT'
+                call get_laps_3dgrid(
+     1                   i4time_get,10000000,i4time_ht,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,heights_3d,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Error locating height field'
+                    go to 100
+                endif
+
                 call get_radar_ref(i4time_get,2000,i4time_radar,1
-     1          ,1,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
-     1          ,grid_ra_ref,n_ref
-     1    ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
-     1                                  ,istat_3dref)
+     1            ,1,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
+     1            ,heights_3d
+     1            ,grid_ra_ref,n_ref
+     1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
+     1            ,istat_3dref)
 
                 if(istat_2dref .le. 0)goto 100
 

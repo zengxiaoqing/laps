@@ -96,14 +96,6 @@ cdis
         integer*2 ibase_array(NX_L,NY_L)
         integer*2 itop_array(NX_L,NY_L)
 
-!       For reading in radar data
-        real*4 dummy_array(NX_L,NY_L)
-        real*4 radar_array(NX_L,NY_L)
-        real*4 radar_array_adv(NX_L,NY_L)
-
-        integer*4 n_vel_grids(MAX_RADARS)
-        integer*4 i4time_radar_a(MAX_RADARS)
-
         character*2 c_field,c_metacode,c_type
 
         character*33 c33_label
@@ -135,8 +127,6 @@ cdis
 
         real*4 sndr_po(19,NX_L,NY_L)
 
-        character*4 radar_name
-
         character*3 var_2d
         character*150  directory
         character*31  ext
@@ -144,7 +134,18 @@ cdis
         character*125 comment_2d
         character*9 comment_a,comment_b
 
-        character*31 ext_radar(MAX_RADARS)
+!       For reading in radar data
+        real*4 dummy_array(NX_L,NY_L)
+        real*4 radar_array(NX_L,NY_L)
+        real*4 radar_array_adv(NX_L,NY_L)
+
+        real*4 v_nyquist_in_a(MAX_RADARS)
+        real*4 rlat_radar_a(MAX_RADARS), rlon_radar_a(MAX_RADARS) 
+        real*4 rheight_radar_a(MAX_RADARS)
+        integer*4 i4time_radar_a(MAX_RADARS)
+        integer*4 n_vel_grids_a(MAX_RADARS)
+        character*4 radar_name,radar_name_a(MAX_RADARS)
+        character*31 ext_radar_a(MAX_RADARS)
 
         real*4 u_3d(NX_L,NY_L,NZ_L) ! WRT True North
         real*4 v_3d(NX_L,NY_L,NZ_L) ! WRT True North
@@ -995,32 +996,45 @@ cdis
 
               if(c_type .ne. 'rd')then ! Read data from vrc files
 
+!               Obtain height field
+                ext = 'lt1'
+                var_2d = 'HT'
+                call get_laps_3dgrid(
+     1                   i4time_get,10000000,i4time_ht,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,heights_3d,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Error locating height field'
+                    return
+                endif
+
                 call get_radar_ref(i4time_get,100000,i4time_radar,mode
-     1          ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
-     1    ,grid_ra_ref,n_ref
-     1    ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
-     1    ,istat_3dref)
+     1            ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
+     1            ,heights_3d
+     1            ,grid_ra_ref,n_ref
+     1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
+     1            ,istat_3dref)
 
               else ! 'rd' option: read data from v01, v02, etc.
 
                 write(6,*)' Reading velocity data from the radars'
 
                 call get_multiradar_vel(
-     1          i4time_get,100000000,i4time_radar_a
-     1         ,max_radars,n_radars,ext_radar,r_missing_data
-     1         ,.true.,NX_L,NY_L,NZ_L
-     1         ,grid_ra_vel,grid_ra_nyq,v_nyquist_in
-     1         ,n_vel_grids
-     1         ,rlat_radar,rlon_radar,rheight_radar,radar_name
-     1         ,istat_radar_vel,istat_radar_nyq)
+     1            i4time_get,100000000,i4time_radar_a
+     1           ,max_radars,n_radars,ext_radar_a,r_missing_data
+     1           ,.true.,NX_L,NY_L,NZ_L
+     1           ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a
+     1           ,n_vel_grids_a
+     1           ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a       
+     1           ,istat_radar_vel,istat_radar_nyq)
 
                 if(istat_radar_vel .eq. 1)then
                   write(6,*)' Radar 3d vel data successfully read in'
-     1                       ,(n_vel_grids(i),i=1,n_radars)
+     1                       ,(n_vel_grids_a(i),i=1,n_radars)
                 else
                   write(6,*)' Radar 3d vel data NOT successfully read in
      1'
-     1                       ,(n_vel_grids(i),i=1,n_radars)
+     1                       ,(n_vel_grids_a(i),i=1,n_radars)
                   return
                 endif
 
@@ -1041,13 +1055,15 @@ cdis
                 ext = 'lt1'
                 var_2d = 'HT'
                 call get_laps_3dgrid(
-     1                   i4time_radar_a(i_radar),86400,i4time_ht,
+     1                   i4time_radar_a(i_radar),1000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,heights_3d,istatus)
 
+                write(6,*)
+
                 call read_radar_3dref(i4time_radar_a(i_radar),
 !    1               0,i4_dum
-     1               .true.,NX_L,NY_L,NZ_L,ext_radar(i_radar),
+     1               .true.,NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
      1               lat,lon,topo,.true.,.true.,
      1               heights_3d,
      1               grid_ra_ref,
