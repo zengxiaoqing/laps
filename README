@@ -877,7 +877,11 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            read their data formats to be able to output the ASCII LSO file. 
            Paths to the data are set in the 'obs_driver.nl' file. Looking at 
            the routines in the '.../src/ingest/sao' directory should provide 
-           enough information to get you started on any needed modifications.  
+           enough information to get you started on any needed modifications.
+
+           Mesonet (LDAD/local) data over much of the U.S. is also available 
+           with some restrictions. Please contact Patty Miller at
+           miller@fsl.noaa.gov for more information.   
       
                       ----   2.3.4  Profiler / RASS ---
 
