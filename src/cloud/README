@@ -9,9 +9,10 @@ main
             modify_sounding
             get_layer_cover
             spread2
-        insert_pireps
-            spread2
-        barnes_r5
+        insert_pireps                                    insertpireps.f
+            spread2                                      spread.f
+        insert_co2ctp                                    insert_co2ctp.f
+        barnes_r5                                        barnes_r5.f
         GET_SAT_DATA (read 3.9 micron)                   get_sat_data.f
         get_vis      (read vis data)                     getvis.f
             get_sfc_albedo
