@@ -172,14 +172,19 @@ echo "Generating PBL Product"; date -u
 setenv prod pbl
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# PBL
-echo "Generating Ventilation Index"; date -u
+# Ventilation Index & PBL Mean Wind
+echo "Generating Ventilation Index & PBL Mean Wind"; date -u
 setenv prod vnt
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# PBL
+# Haines Mid
 echo "Mid-Level Haines Index"; date -u
 setenv prod ham
+$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+# Haines High
+echo "High-Level Haines Index"; date -u
+setenv prod hah
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
 # X-sect
