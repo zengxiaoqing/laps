@@ -19,7 +19,8 @@ lsx  fwx   z  fd       levels_1   SFC 0
 lsx  mrc   z  mcon     levels_1   SFC 0
 lsx  tha   z  pta      levels_1   SFC 0
 lsx  css   z  cssi     levels_1   SFC 0
-lt1  ht    z  gh       levels_21  MB  0
+lsx  fwx   z  fd       levels_1   SFC 0
+lt1  ht    z  gh       levels_23  MB  0
 lt1  t3    z  t        levels_22  MB  0
 lps  ref   z  rr       levels_21  MB  0
 lcb  lcb   z  cb       levels_1   SFC 0
@@ -40,7 +41,12 @@ lmt  lmt   z  mret     levels_1   SFC 0
 lmt  llr   z  llr      levels_1   SFC 0
 lty  pty   z  ptyp     levels_21  MB  0
 lty  cty   z  ctyp     levels_21  MB  0
+lst  si    z  shwlt    levels_1   MB  850
 lst  li    z  sli      levels_1   SFC 0
+lst  tt    z  ttot     levels_1   EA  0
+lst  k     z  ki       levels_1   EA  0
+lst  lcl   z  gh       levels_23  LCL 0
+lst  wb0   z  gh       levels_23  TW0 0
 lst  pbe   z  pbe      levels_1   SFC 0
 lst  nbe   z  nbe      levels_1   SFC 0
 lhe  lhe   z  heli     levels_1   SFC 0
