@@ -96,9 +96,9 @@ c        bgmodels = 5 ---> RUC (40 km native grid)
 c
  &background_nl
  bgpaths='/public/data/grids/ruc/60km_nat_hybb/netcdf',
-         '/public/data/grids/maps/60km_nat_hybb/netcdf',
+         '/public/data/grids/maps/40km_fsl-conus_hybb/netcdf',
          '/public/data/grids/eta/48km_nat_isobaric/netcdf',
- bgmodels=1,1,2,
+ bgmodels=1,5,2,
  /
 
 
