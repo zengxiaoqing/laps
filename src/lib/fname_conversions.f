@@ -1,4 +1,3 @@
-
         function a10_to_a9(a10_time,istatus)
 
 !       Convert a10_time (yyMMddhhmm) to a9_time (yydddhhmm)
@@ -13,6 +12,48 @@
         a9_time = a9_time(1:7)//a10_time(9:10)
 
         a10_to_a9 = a9_time
+
+        istatus = 1
+
+        return
+        end
+
+        function yr_a10_to_a9(a10_time)
+
+!       Convert a10_time (yyyyMMddhh) to a9_time (yydddhhmm)
+!       John Smart 2000
+
+        character*10 a10_time,yr_a10_to_a9
+        character*10 new_a10_time
+        character*9 a10_to_a9, a9_time
+
+        new_a10_time=a10_time(3:10)//'00'         !warning: always assuming 00 minutes
+        a9_time = a10_to_a9(new_a10_time,istatus)
+
+        yr_a10_to_a9 = a9_time
+
+        return
+        end
+
+        function a9_to_yr_a10_time(a9_time,istatus)
+
+!       Convert a9_time (yydddhhmm) to a10_time (yyyyMMddhh)
+!       John Smart 2000
+
+        integer i4time_sys
+
+        character*10 a9_to_yr_a10_time
+        character*9  a9_time, a9_time_sys
+        character*8  a8_time,a9_to_a8
+        character*5  yr_jday
+        character*16 asctim_str
+        character*2  anal_hr,anal_min
+
+        call get_systime_all(i4time_sys,a9_time_sys,anal_hr,
+     1             anal_min,asctim_str,yr_jday,istatus)
+
+        a8_time=a9_to_a8(a9_time_sys)
+        a9_to_yr_a10_time=asctim_str(8:11)//a8_time(3:8)
 
         istatus = 1
 
@@ -225,8 +266,8 @@ c
 
       character*13 fname13
       character*13 fname13_to_FA_filename
+      character*10 fname10,a9_to_yr_a10_time
       character*9  a9_string
-      character*7  fname7,a9_to_a7_time
       character*4  a4_string
       character*(*) cmodel
       character*3  c3_FA_ext,c3_ext
@@ -235,13 +276,14 @@ c
       a9_string=fname13(1:9)
       a4_string=fname13(10:13)
 
-      fname7=a9_to_a7_time(a9_string)
+c     fname7=a9_to_a7_time(a9_string)
+      fname10=a9_to_yr_a10_time(a9_string)
       c3_ext=c3_FA_ext(a4_string)
       call s_len(cmodel,lenc)
       if(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_NF')then
-         fname13_to_FA_filename='nf'//fname7//'.'//c3_ext
+         fname13_to_FA_filename='nf'//fname10//'.'//c3_ext
       elseif(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_RE')then
-         fname13_to_FA_filename='re'//fname7//'.'//c3_ext
+         fname13_to_FA_filename='re'//fname10//'.'//c3_ext
       endif
 
       return

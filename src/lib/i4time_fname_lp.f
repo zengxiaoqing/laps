@@ -45,7 +45,7 @@ C
 C================================================================
 C
         CHARACTER*9 wfo_fname13_to_fname9, rsa13_to_a9, a8_to_a9
-        CHARACTER*9 a7_to_a9_time
+        CHARACTER*9 a7_to_a9_time,yr_a10_to_a9
         CHARACTER*9 FILE_NAME
         CHARACTER*(*) FNAME_IN
         CHARACTER*20 c20_type
@@ -74,6 +74,10 @@ C
 
         elseif(c20_type .eq. 'ymmddhh')then               ! Taiwan FA Model
            file_name = a7_to_a9_time(fname_in(leni+1:leni+lent))
+
+        elseif(c20_type .eq. 'yyyymmddhh')then
+           file_name = yr_a10_to_a9(fname_in(leni+1:leni+lent))
+
         else                                                ! Unrecognized type
            write(6,*)'i4time_fname_lp: unable to convert to i4time',
      1'    type = ',c20_type

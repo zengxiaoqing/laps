@@ -291,12 +291,15 @@ c initialize
                leni = lend+5
                lent=8
                return
-            elseif(c_fname(lend+1:lend+2) .eq. 'nf' .or.
-     +             c_fname(lend+1:lend+2) .eq. 're' )then         ! Taiwan FA model
-               c20_type = 'ymmddhh'
-               leni = lend+2
-               lent = 7
-               return
+c
+c - repositioned to "lenf .ge. 13" switch below. J.Smart 3-20-00 
+c           elseif(c_fname(lend+1:lend+2) .eq. 'nf'  )            !.or.
+c     +             c_fname(lend+1:lend+2) .eq. 're' )then         ! Taiwan FA model
+c              c20_type = 'ymmddhh'
+c              leni = lend+2
+c              lent = 7
+c              return
+
             endif
            endif
 
@@ -305,6 +308,11 @@ c initialize
                c20_type = 'yyyymmdd_hhmm'                         ! WFO type
                leni = lend
                lent=13
+               return
+            elseif(c_fname(lend+1:lend+2) .eq. 'nf')then
+               c20_type = 'yyyymmddhh'                            !Taiwan/CWB FA model
+               leni = lend+2
+               lent = 10
                return
             endif
            endif
