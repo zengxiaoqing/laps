@@ -14,9 +14,10 @@ main                                           laps_sfc.f
             mean_lapse                         laps_routines.f
             mean_pressure                           "
             spline (t,td)                      lapsvanl_sub.f
-            spline (td)                             "
-            add  
+                barnes_multivariate_sfc        barnes_multivariate_sfc.f
+            add                               
             spline (u,v)                       lapsvanl_sub.f
+                barnes_multivariate_sfc        barnes_multivariate_sfc.f
             nonlin                                  "
             frict                                   "
             leib                                    "
