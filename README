@@ -2782,7 +2782,7 @@ Inputs:
          LM2    Snow cover (for fire wx calc)
 
 Output: 
-         LSX    LAPS surface data grids (23 2-d fields packed in one file)
+         LSX    LAPS surface data grids (24 2-d fields packed in one file)
 
                 Includes various fields such as...
 
