@@ -75,8 +75,8 @@
          3.2.7 ..................  RASSs (LRS) Ingest
          3.2.8 ..................  PIREPS/ACARS Ingest
          3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
-         3.2.10 .................  Cloud Drift Wind (CDW) Ingest
-         3.2.11 .................. LVD (Satellite Image / Cloud-top Pres)
+         3.2.10 .................. LVD (Satellite Image + Cloud Top Pressure)
+         3.2.11 .................  Cloud Drift Wind (CDW) Ingest
          3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -2468,7 +2468,28 @@ Sample Input/Output: May be available in the test data case. If not, the README
               of the RAOB (i.e. snd) data in 'wind.nl', 'temp.nl' and 
               'moisture_switch.nl'.
 
------- 3.2.10 --------- Cloud Drift Wind (CDW) Ingest -------------------------
+------ 3.2.10 --------- LVD (Satellite Image + Cloud Top Pressure) ------------
+
+LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
+              grid.
+        (author: John Smart - smart@fsl.noaa.gov)
+
+Input:
+ 	 GOES 8, GOES 9 or other satellite data
+
+<pre>
+Output:
+         LVD/'SATID'	grid	LAPS satellite data file
+				SATID (e.g. goes08 or goes09)
+</pre>
+
+         CTP            grid    Cloud-top pressure information 
+
+Parameter namelist file: 'static/satellite_lvd.nl'
+
+Source directory: laps/src/ingest/satellite/lvd (contains a README file)
+
+------ 3.2.11 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
 
@@ -2481,30 +2502,11 @@ Inputs:
 
 Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
-
-Source directory: laps/src/ingest/satellite/cloud_drift
-
-Parameter namelist file: 'static/cloud_drift.nl'
 </pre>
 
------- 3.2.11 ------- LVD (Satellite Image / Cloud-top Pres) ------------------
+Parameter namelist file: 'static/cloud_drift.nl'
 
-LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
-              grid.
-        (author: John Smart - smart@fsl.noaa.gov)
-
-Input:
- 	 GOES 8, GOES 9 or other satellite data
-
-Output:
-         LVD/"SATID"	grid	LAPS satellite data file
-			`	SATID (e.g. goes08 or goes09)
-
-         CTP            grid    Cloud-top pressure information 
-
-Parameter namelist file: 'static/satellite_lvd.nl'
-
-Source directory: laps/src/ingest/satellite/lvd (contains a README file)
+Source directory: laps/src/ingest/satellite/cloud_drift
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
