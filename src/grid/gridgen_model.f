@@ -756,7 +756,7 @@ C
       CHARACTER*180 OFN,TITLE3
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
-      LOGICAL L1,L2,dem_data
+      LOGICAL L1,L2,dem_data,l_string_contains
       data icnt/0/
       save icnt
 C
@@ -823,11 +823,47 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   LB=INDEX(TITLE3,' ')-1
                   INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
                   IF(.NOT.L1)THEN
-                     if(icnt .le. 100 .or. 
-     1                  icnt .eq. (icnt/1000)*1000 )then     
-                        PRINT*, ' WARNING: ',TITLE3(1:LB)
-     1                        ,' DOES NOT EXIST ',icnt
-                     endif ! icnt
+                     iwrite = 0
+
+                     if(icnt .le. 100)then ! Reduce the output
+                         iwrite=1
+
+                     elseif(icnt .le. 1000)then
+                         if(icnt .eq. (icnt/100)*100)iwrite=1
+
+                     elseif(icnt .le. 10000)then
+                         if(icnt .eq. (icnt/1000)*1000)iwrite=1
+
+                     elseif(icnt .le. 100000)then
+                         if(icnt .eq. (icnt/10000)*10000)iwrite=1
+
+                     else
+                         if(icnt .eq. (icnt/100000)*100000)iwrite=1
+
+                     endif
+
+                     if(iwrite .eq. 1)then
+                        if(l_string_contains(TITLE3(1:LB),
+     1                                       'world_topo_30s',
+     1                                       istatus)             )then       
+                           PRINT*, ' ERROR: ',TITLE3(1:LB)
+     1                            ,' DOES NOT EXIST ',icnt
+
+                        elseif(l_string_contains(TITLE3(1:LB),
+     1                                           'topo_30s',
+     1                                       istatus)             )then       
+                           PRINT*, ' topo_30s file ',TITLE3(1:LB)
+     1                            ,' does not exist, using topo_10m '
+     1                            ,icnt
+
+                        else ! Generic warning message
+                           PRINT*, ' WARNING: ',TITLE3(1:LB)
+     1                            ,' DOES NOT EXIST ',icnt
+
+                        endif
+
+                     endif ! iwrite
+
                      icnt = icnt + 1
                      DATP(IP,JP) = 0. ! set to missing?
                      istat_files = 0
