@@ -59,7 +59,8 @@
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
      1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
-
+     1              ,a9time_ob(isnd,lvl)
+     1              ,stalat(isnd,lvl),stalon(isnd,lvl)
           call s_len2(c_line,len_line)
           write(lun_out,521)c_line(1:len_line)
   521     format(a)
