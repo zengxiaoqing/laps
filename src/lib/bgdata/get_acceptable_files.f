@@ -1,6 +1,6 @@
 
       subroutine get_acceptable_files(i4time_anal,bgpath,bgmodel,names
-     +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
+     +     ,max_files,use_analysis
      +     ,bg_files,accepted_files,forecast_length,cmodel,NX,NY,NZ
      +     ,rejected_files,rejected_cnt)
 
@@ -13,9 +13,8 @@
       character*256 names(max_files)
       character*256 rejected_files(max_files)
       character*132 cmodel
-      integer oldest_forecast, bg_files,forecast_length
+      integer bg_files,forecast_length
       integer i, j, k, kk, ij, jj,l,nclen
-      integer max_forecast_delta
       integer ntbg,nvt
       parameter (ntbg=100)
       integer ivaltimes(ntbg)
@@ -117,7 +116,6 @@ c     elseif(bgmodel.eq.3)then
 
          nvt=0
          final_time=i4time_anal+3600*max(0,forecast_length)
-c        final_time=i4time_anal+3600*max(0,oldest_forecast)
          call get_file_times(cfilespec,max_files,names,itimes
      +,bg_files,istatus)
          if(istatus.ne.1)then
