@@ -56,6 +56,38 @@ c     report moisture change
 c     this is a generic loop that can be place about anywhere in the
 c     module to help track changes in moisture from any stage
 c     this block is planned for a future suboutine.
+
+      write(6,*) 'precheck data in report'
+      call check_nan3(data_in,ii,jj,kk,istatus)
+      if(istatus.ne.1)then 
+         write(6,*) 'NaN in var:data_in routine:report_change'
+         return
+      endif
+
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1)then 
+         write(6,*) 'NaN in var:data routine:report_change'
+         return
+      endif     
+
+      call check_nan1(plevel,kk,istatus)
+      if(istatus.ne.1)then 
+         write(6,*) 'NaN in var:plevel routine:report_change'
+         return
+      endif
+
+      call check_nan (mdf, istatus)
+      if(istatus.ne.1)then 
+         write(6,*) 'NaN in var:mdf routine:report_change'
+         return
+      endif     
+      write(6,*) 'data_in, data, plevel, mdf check okay'
+
+ 
+
+
+
+       
         
         write(6,*)
         write(6,*)

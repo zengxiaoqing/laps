@@ -141,7 +141,7 @@ c     test NaN values coming out of data_out and data_weights
          write (6,*) 'NaN detected in data_out in analz_gvap.f'
          return
       endif
-      call check_nan2 (data_out,ii,jj,istatus)
+      call check_nan2 (data_weights,ii,jj,istatus)
       if (istatus.ne.1) then 
          write (6,*) 'NaN detected in data_weights in analz_gvap.f'
          return

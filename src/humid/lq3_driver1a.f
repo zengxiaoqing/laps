@@ -514,7 +514,7 @@ c     perform initialquality control check for supersaturation after ingest
          do j = jj,1,-1
             do i = 1,ii
                tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1              lt1dat(i,j,k)-273.15, 0.0 )/1000.
+     1              lt1dat(i,j,k)-273.15, t_ref )/1000.
                
                if ( data(i,j,k)/tempsh .ge. 1.0) then
                   cdomain(i:i) = 'x'
@@ -539,6 +539,16 @@ c     perform initialquality control check for supersaturation after ingest
          write(6,*)  counter,' times.'
          write(6,*) ' '
       endif
+
+c     initial check for computed nans
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'initial data corrupt after checking for'
+         write(6,*) 'supsaturation... hosed before beginning'
+         write(6,*) 'var:data  routine:lq3driver1a.f'
+         return
+      endif
+
       
       
 c     record total moisture
@@ -608,6 +618,20 @@ c     ***   insert bl moisture
 c     insert boundary layer data
       call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
+
+c     check fields after lsin call
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1) then
+         write (6,*) 'Nan generated in lsin'
+         write (6,*) 'var:data  routine:lq3driver1a.f'
+         return
+      endif
+      call check_nan2(tpw,ii,jj,istatus)
+      if(istatus.ne.1) then 
+         write(6,*) 'Nan generated in lsin'
+         write(6,*) 'var:tpw   routine:lq3driver1a.f'
+         return
+      endif
       
       write(6,*) 'finished with routine lsin'
       if( sfc_mix.eq.1)then
@@ -637,6 +661,7 @@ c     end report moisture change block
             do i = 1,ii
                do j = 1,jj
                   data(i,j,k) = data_pre_bound(i,j,k)
+                  data_in(i,j,k) = data(i,j,k)
                enddo
             enddo
          enddo
@@ -670,6 +695,13 @@ c     gvap data insertion step
      1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
 
       endif
+
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'Failed in nan prior to adjust'
+         write(6,*) 'var:data  routine lq3driver'
+         return
+      endif
          
       if(istatus_gps.eq.1 .or. istatus_gvap.eq.1) then ! apply gvap and/or gps 
 
@@ -685,9 +717,56 @@ c     gvap data insertion step
      1                 *(data(i,j,k) *gps_data(i,j))
      1                 + data(i,j,k)
                endif
+               call check_nan(data(i,j,k), istatus)
+               if (istatus.ne.1) then ! nan generated in computation
+c                  write(6,*) 'Correcting Nan value, var:data',i,j,k
+                  data(i,j,k) = data_in(i,j,k)
+               endif
             enddo
          enddo
       enddo
+
+
+c     CHECKING PROCESS OUTPUT
+
+      call check_nan2(gvap_w,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'Failed in nan after adjust'
+         write(6,*) 'var:gvap_w  routine lq3driver'
+         return
+      endif
+         
+
+      call check_nan2(gps_w,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'Failed in nan after adjust'
+         write(6,*) 'var:gps_w  routine lq3driver'
+         return
+      endif
+         
+
+      call check_nan2(gps_data,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'Failed in nan after adjust'
+         write(6,*) 'var:gps_data  routine lq3driver'
+         return
+      endif
+         
+
+      call check_nan2(gvap_data,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'Failed in nan after adjust'
+         write(6,*) 'var:gsp_data  routine lq3driver'
+         return
+      endif
+         
+
+      call check_nan3(data,ii,jj,kk,istatus)
+      if(istatus.ne.1)then
+         write(6,*) 'Nan report from TPW processing'
+         write(6,*) 'var:data  routine lq3driver1a.f'
+         return
+      endif
       
       write(6,*) 'Reporting changes from TPW data types'
       
@@ -841,7 +920,27 @@ c     *** insert cloud moisture, this section now controled by a switch
       else                      ! increase moisture based on cloud amount
          
          write(6,*) 'Saturate in cloudy areas'
+
+         call check_nan3(cg,ii,jj,kk,istatus)
+         if(istatus.ne.1)then
+            write(6,*) 'Nan in cg data prior to saturation'
+            return
+         endif
+         call check_nan3(lt1dat,ii,jj,kk,istatus)
+         if(istatus.ne.1) then
+            write(6,*) 'NaN in lt1dat prior to saturation'
+            return
+         endif
+
+         call check_nan3(data,ii,jj,kk,istatus)
+         if(istatus.ne.1)then
+            write(6,*) 'Nan in data prior to saturation'
+            return
+         endif
+
+
          do k = 1,kk
+            write(6,*) lvllm(k),'checking lvllm prior to sat'
             do j = 1,jj
                do i = 1,ii
                   
@@ -849,7 +948,7 @@ c     *** insert cloud moisture, this section now controled by a switch
                      
                      tempsh = ssh2( float(lvllm(k)),
      1                    lt1dat(i,j,k)-273.15,
-     1                    lt1dat(i,j,k)-273.15, 0.0 )/1000.
+     1                    lt1dat(i,j,k)-273.15, t_ref )/1000.
                      data(i,j,k) = cg(i,j,k)* tempsh
      1                    +(1.-cg(i,j,k))*data(i,j,k)
                      
@@ -858,7 +957,7 @@ c     ! still cloudy...put in for albers
                      
                      tempsh = ssh2( float(lvllm(k)) 
      1                    ,lt1dat(i,j,k)-273.15,
-     1                    lt1dat(i,j,k)-273.15, 0.0 )/1000.
+     1                    lt1dat(i,j,k)-273.15, t_ref )/1000.
                      data(i,j,k) = tempsh
                      
                   endif
@@ -867,6 +966,13 @@ c     ! still cloudy...put in for albers
                enddo
             enddo
          enddo
+
+         call check_nan3(data,ii,jj,kk,istatus)
+         if(istatus.ne.1)then
+            write(6,*) 'Nan in data AFTER call to saturation'
+            return
+         endif
+
          
          write (6,*) 'Reporting cloud effects on analysis'
          call report_change (data_in, data, plevel,mdf,ii,jj,kk)
@@ -914,7 +1020,7 @@ c     repeat quality control check for supersaturation after pre-analysis
             do i = 1,ii
                
                tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1              lt1dat(i,j,k)-273.15, 0.0 )/1000.
+     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
                
                if ( data(i,j,k)/tempsh .ge. 1.0) then
                   cdomain(i:i) = 'x'

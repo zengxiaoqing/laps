@@ -113,6 +113,13 @@ c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).
 
       endif
 
+      call check_nan2(data_out,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'data_out corrupted by tpw divide??'
+         write(6,*) 'Nan detected var:data_out  routine:process_gvap.f'
+         return
+      endif
+
 c     data_out is now a fractional adjustment (weighted)
 c     data_weights is how much of that fraction should be applied
 c     convert data_out to incremental weighted adjustment

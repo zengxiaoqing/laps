@@ -108,6 +108,13 @@ c     convert data_out to incremental weighted adjustment
          enddo
       enddo
 
+      call check_nan2(data_out,ii,jj,istatus)
+      if(istatus.ne.1) then
+         write(6,*) 'data_out corrupted in processing gps data '
+         write(6,*) 'var:data_out     routine:process_gps.v'
+         return
+      endif
+
       istatus = 1
 
       return
