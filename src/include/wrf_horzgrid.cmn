@@ -4,11 +4,13 @@
 
       integer num_domains
       integer num_staggers_wrf
-      integer xdim(10), ydim(10)
-      integer parent_id(10)
-      integer ratio_to_parent(10)
-      integer domain_origin_parent_x(10)
-      integer domain_origin_parent_y(10)
+      integer xdim, ydim
+      integer parent_id(99)
+      integer ratio_to_parent(99)
+      integer domain_origin_lli(99)
+      integer domain_origin_llj(99)
+      integer domain_origin_uri(99)
+      integer domain_origin_urj(99)
       integer i2_missing_data
       
       real moad_known_lat(10), moad_known_lon(10),
@@ -25,8 +27,8 @@
      + xdim, ydim,moad_known_lat, moad_known_lon
      +,num_domains ,num_staggers_wrf, parent_id
      +,ratio_to_parent
-     +,domain_origin_parent_x
-     +,domain_origin_parent_y
+     +,domain_origin_lli,domain_origin_llj
+     +,domain_origin_uri,domain_origin_urj
      +,moad_stand_lats, moad_stand_lons
      +,moad_delta_x, moad_delta_y
      +,moad_known_loc,stagger_type,map_proj_name,latlon_grid
