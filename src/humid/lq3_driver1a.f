@@ -185,8 +185,6 @@ c     real eslo,esice
 c----------------------code   ------------------
 c     initialize laps field
       
-      write (6,*) 'version 1.32; 7/8/99; increase cloud thresh (.6)'
-      
 c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
@@ -196,10 +194,8 @@ c     routine
       call get_directory(ext,dir,len)
       call get_directory(rhext,rhdir,len)
 
-c      grid_fnam_common = 'nest7grid'
       call get_laps_config(grid_fnam_common,istatus)
 
-c      call get_laps_config('nest7grid',istatus)
       if(istatus .ne. 1)then
          write(6,*)' error in get_laps_config'
          return
@@ -702,25 +698,27 @@ c     gvap data insertion step
       do k = 1,kk
          do j = 1,jj
             do i = 1,ii
-               if(data(i,j,k).ge.0.0 .and. 
-     1              (gvap_w(i,j)+gps_w(i,j)) .ne. 0.0 ) then
-                  data(i,j,k) = 
-     1                 gvap_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
-     1                 *(data(i,j,k) * gvap_data(i,j))
-     1                 +
-     1                 gps_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
-     1                 *(data(i,j,k) *gps_data(i,j))
-     1                 + data(i,j,k)
+               if(plevel(k) .lt. 800.0) then !only apply above 800 hpa
+                  if(data(i,j,k).ge.0.0 .and. 
+     1                 (gvap_w(i,j)+gps_w(i,j)) .ne. 0.0 ) then
+                     data(i,j,k) = 
+     1                    gvap_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
+     1                    *(data(i,j,k) * gvap_data(i,j))
+     1                    +
+     1                    gps_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
+     1                    *(data(i,j,k) *gps_data(i,j))
+     1                    + data(i,j,k)
+                  endif
                endif
                call check_nan(data(i,j,k), istatus)
                if (istatus.ne.1) then ! nan generated in computation
-c                  write(6,*) 'Correcting Nan value, var:data',i,j,k
+c     write(6,*) 'Correcting Nan value, var:data',i,j,k
                   data(i,j,k) = data_in(i,j,k)
                endif
             enddo
          enddo
       enddo
-
+      
 
 c     CHECKING PROCESS OUTPUT
 

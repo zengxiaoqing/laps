@@ -61,7 +61,7 @@ c     of cpu time when run without optimization.
       character*200 fname
       integer len
 
-      grid_fnam_common = 'nest7grid'
+c      grid_fnam_common = 'nest7grid'
       call get_laps_config(grid_fnam_common,istatus)
 c     call get_laps_config('nest7grid',istatus)
       
