@@ -299,6 +299,14 @@ c
            print*,'*** Unable to proceed. Please fix your enviroment'
            print*,'---------------------------------------------------'
            print*
+
+           print*,'len_root_laps = ',len_root_laps
+           if(len_root_laps.gt.0)print*,'LAPS generic dataroot',
+     +generic_data_root_laps(1:len_root_laps)
+           print*,'len_root_wrfsi = ',len_root_wrfsi
+           if(len_root_wrfsi.gt.0)print*,'MOAD generic dataroot',
+     +generic_data_root_wrfsi(1:len_root_wrfsi)
+
            return
         endif
 
