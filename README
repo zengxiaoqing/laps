@@ -1353,7 +1353,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
 --------- 2.10 ------SURFACE ANALYSIS CHANGES---------------------------------
 
-	Updated: Feb 2000  
+	Updated: Mar 2000  
 
    PRESSURE REDUCTION
 
@@ -1371,11 +1371,11 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
    SURFACE THETA CHECK	
 
-     1. In 'src/include/laps_sfc.inc', set the 'itheta' flag for the surface 
-        theta check.  This check adjusts the surface potential temperatures so
-	they are not greater than the potential temperature at an upper 
-	level.  Set this variable equal to the desired upper level (or if
-	you don't want to do this check):
+     1. In the 'data/static/surface_analysis.nl' namelist file, set the 
+        'itheta' flag for the surface theta check.  This check adjusts the 
+        surface potential temperatures so they are not greater than the 
+        potential temperature at an upper level.  Set this variable equal to 
+        the desired upper level (or if you don't want to do this check):
 
 	                0 = No sfc theta check done
 	                7 = Use 700 mb level
