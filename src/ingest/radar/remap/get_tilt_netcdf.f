@@ -19,7 +19,7 @@
      1                               ,istatus)
 
 !     Argument List
-      character*70 filename
+      character*(*) filename
       character*5  radarName
       integer V_bin_max, Z_bin_max, radial_max
       integer V(V_bin_max,radial_max), Z(Z_bin_max,radial_max)
