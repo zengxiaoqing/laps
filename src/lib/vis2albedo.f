@@ -152,7 +152,7 @@ c
 
         function cloudfrac_to_albedo(cloud_frac_vis)
 
-        cloudfrac_to_albedo = (cloud_frac_vis + .87808) / 4.28719
+        cloudfrac_to_albedo = (cloud_frac_vis + .87808) / 4.18719
 
         return
         end
