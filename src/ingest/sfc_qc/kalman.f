@@ -1,6 +1,5 @@
 c
-c
-      subroutine kalman(F,dta,Y,p,it,w,v,x,xt,imax,m,atime)
+      subroutine kalman(F,dta,Y,p,it,w,v,x,xt,imax,m,atime,stn)
 c
 c*********************************************************************
 c
@@ -23,7 +22,7 @@ c
       Real w(m,m),v(m,m)
       real dta(m),UU(m,m),VV(m,m)
       integer sca(2,2),scb(2,2),scf(2,2),on,off
-      character atime*(*)
+      character atime*(*),stn(m)*5
 c
 c Initialize arrays
 c
@@ -33,10 +32,14 @@ c
 c
 c     fill initial matrix values
 c
-      call zero(II, imax,imax)
-      call zero( H, imax,imax)
-      call zero(ZZ, imax,imax)
-      call zero(PT, imax,imax)
+      call zero(II, m,m)
+      call zero( H, m,m)
+      call zero(ZZ, m,m)
+      call zero(PT, m,m)
+      call zero(A, m,m)
+      call zero(E, m,m)
+      call zero(HT,m,m)
+      
 c
       do i=1,2
       do j=1,2
@@ -74,7 +77,7 @@ c
       call mvmult(F,P,A,imax,imax,imax,m)
       call mvmult(A,FT,PT,imax,imax,imax,m)
       call addmv(PT,W,PT,imax,imax,m)
-c     call writev(PT,imax,imax,m,'   PT       ',atime,off,0.)
+      call writev(PT,imax,imax,m,'   PT       ',atime,off,0.)
 c
 c K=PTH/(HPTHT+V)
 c
@@ -82,8 +85,15 @@ c
       call trans(H,HT,imax,imax,m)
       Call mvmult(A,HT,E,imax,imax,imax,m)
       call addmv(E,V,ZZ,imax,imax,m)
-c     call writev(ZZ,imax,imax,m,'HPTHT+V 2INV',atime,off,0.)
-      call matrixanal(ZZ,imax,imax,m, ' A ')
+      call writev(ZZ,imax,imax,m,'HPTHT+V 2INV',atime,off ,0.)
+      idiag=0
+      call matrixanal(ZZ,imax,imax,m,idiag, ' HPTHT+V  ')
+      if(idiag.eq.1) then 
+       call fastinv(ZZ,imax,imax,m)
+       call mvmult(PT,H,A,imax,imax,imax,m)
+       call mvmult(A,ZZ,K,imax,imax,imax,m)
+       go to 34
+      endif
       call trans(ZZ,A,imax,imax,m)
       call replace(A,UU,imax,imax,m,m)
       call svdcmp(UU,imax,imax,m,m,B,VV,m)
@@ -123,7 +133,7 @@ c
       call trans(ZZ,A ,imax,imax,m)
 c     call writev(D,imax,imax,m,'PT TRANS    ',atime,off,0.)
 c     call writev(A,imax,imax,m,'AT INVERTED ',atime,off,0.)
-      call writev(K,imax,imax,m,'KALMAN GAIN ',atime,off,0.)
+ 34   call writev(K,imax,imax,m,'KALMAN GAIN ',atime,off,0.)
 c
 c.....  Estimate obs loop
 c
@@ -141,10 +151,13 @@ c
       call mvmult(A,PT,P,imax,imax,imax,m)
 c
       sum = 0.
+      write(6,2000) 
+ 2000 format(1x,' Stn Indx',' Kalman X ',' Forecast ',' Observatn'
+     &,' KalmGn','     W    ','     V    ')
       do i=1,imax
-         write(6,1098) 'i,x,xt,y,k,w,v ',i,X(i)-10000.,XT(i)-10000.,
+         write(6,1098) stn(i),i,X(i)-10000.,XT(i)-10000.,
      &              Y(i)-10000.,K(i,i),w(i,i),v(i,i)
- 1098 format(1x,a15,i3,3f10.3,f7.4,2f10.3)
+ 1098 format(1x,a5,i4,3f10.3,f7.4,2f10.3)
          sum=sum+K(i,i)
       enddo !i
       print*, 'MEAN KALMAN ',sum/float(imax)
@@ -181,7 +194,7 @@ c
          sum=0.
          sum1=0.
          if(mwt(i,i).eq.1.) then
-             print*,'Station ',i,' is lonely: set buddy trend to 0'
+             print*,'Station ',i,' is isolated: set buddy trend to 0'
              sum=0.
           else
             do j = 1,imax

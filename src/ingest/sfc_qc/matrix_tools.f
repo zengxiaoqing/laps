@@ -163,6 +163,21 @@ c
       return
       end
 c
+      subroutine fastinv(A,imax,jmax,m)
+      real A(m,m)      
+c     This inverts a matrix that is diagonal only
+      if(imax.ne.jmax) print*,'matrix in fast invert is not square'
+      print*,'Matrix to be inverted is diagonal...using fast invert'
+      do j=1,jmax
+        if(A(j,j).eq.0) then
+         print*,' zero element in fast matrix inversion at ',j,j
+         A(j,j)=1.e-30
+        endif
+        A(j,j)=1/A(j,j)
+      enddo
+      return
+      end
+ 
 c
       subroutine avgerr(wr,wit,B,c,W,dwt,imax,iav,m,it)
 c
@@ -283,7 +298,7 @@ c
       end
 c
 c
-      subroutine matrixanal(a,imax,jmax,m,char)
+      subroutine matrixanal(a,imax,jmax,m,idiag,char)
 c
 c*********************************************************************
 c     Original: John McGinley, NOAA/FSL  Spring 1998
@@ -293,7 +308,7 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c*********************************************************************
 c
       real a(m,m)     
-      character char*3
+      character char*10
 c
       dimx=-1.e20
       dimn=1.e20
@@ -333,7 +348,7 @@ c
 c output results
 c
       write(6,1000)  char
- 1000 format(1x,'Diagnosis of matrix ',a3)
+ 1000 format(1x,'Diagnosis of matrix ',a10)
       write (6,1001) dimx,dimn
  1001 format(1x,'Max diagonal ',f8.3,' Min diagonal ',f8.3)
       write (6,1002) sumd
@@ -345,6 +360,8 @@ c
       write (6,1005) sumea
  1005 format(1x,'Avg abs non-diagonal ',f8.3)
 c
+c flag matrix if it is purely diagonal
+      if(elmx.eq.0..and.elmn.eq.0.) idiag=1
       return
       end
 c

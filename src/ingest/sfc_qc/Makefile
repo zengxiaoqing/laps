@@ -16,7 +16,7 @@ EXE = sfc_qc.exe
 
 SRC   = kalman.f    matrix_tools.f   \
         QC_tools.f       model_tools.f    write_qc.c    \
-        write_tools.f     lapsvanl_sub.f  
+        write_tools.f     
 
 
 MAIN=QC_main.f

@@ -168,6 +168,44 @@ c
        return
        end
 c
+       Subroutine writeqc(qta,qtda,qua,qva,qpmsla,qalta,
+     &   nvar,maxsta,m,ncycles,qmonster,it) 
+c
+c*********************************************************************
+c     Subroutine puts the latest sets of obs into monster for
+c     fourier processing.
+c
+c     Original: John McGinley, NOAA/FSL  Spring 1998
+c     Changes:
+c       24 Aug 1998  Peter Stamus, NOAA/FSL
+c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       14 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version.
+c
+c*********************************************************************
+c
+       integer qta(m),qtda(m),qua(m),qva(m),qpmsla(m),qalta(m)
+       integer qmonster(m,ncycles,nvar)
+c
+       do k=1,nvar
+          do l=ncycles-1,1,-1
+             do i=1,maxsta
+                qmonster(i,l+1,k)=qmonster(i,l,k)
+             enddo !i
+          enddo !l
+       enddo !k
+          do i=1,maxsta
+             qmonster(i,1,1)=qta(i)
+             qmonster(i,1,2)=qtda(i)
+             qmonster(i,1,3)=qua(i)
+             qmonster(i,1,4)=qva(i)  
+             qmonster(i,1,5)=qpmsla(i)
+             qmonster(i,1,6)=qalta(i)
+          enddo !i
+c
+       return
+       end
+c
 c
       subroutine write_qc_cdf(i4time_file, dir, ext, m, 
      1   num_sta, 
