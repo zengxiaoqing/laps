@@ -1,4 +1,5 @@
-       subroutine dualwind(u,v,x,y,ht,vr1,vr2,x1,y1,x2,y2,ht1,ht2,ier)
+       subroutine dualwind_noz
+     1          (u,v,x,y,ht,vr1,vr2,x1,y1,x2,y2,ht1,ht2,ier)     
 c***********************************************************************
 c description      : To derive Dual-Doppler wind from radar radial
 c                    velocity at constant height.
