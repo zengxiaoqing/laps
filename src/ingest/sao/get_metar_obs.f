@@ -217,7 +217,7 @@ cc	  auto = atype(i)(1:5)
 
 	  obstype(nn) = '        '
 	  obstype(nn)(1:5) = reptype(i)(1:5)
-	  if(atype(i)(1:1) .ne. ' ') obstype(nn)(8:8) = 'A'
+	  if(atype(i)(1:1) .eq. 'A') obstype(nn)(8:8) = 'A'
 	  if(atype(i)(3:3) .eq. '1') obstype(nn)(7:7) = '1'
 	  if(atype(i)(3:3) .eq. '2') obstype(nn)(7:7) = '2'
 c
