@@ -309,37 +309,48 @@ c
 c
 c.....	Figure out the cloud data.
 c
-	  kkk = 0               ! number of cloud layers
+	  k_layers = 0               ! number of cloud layers
 c
 	  if(cvr(1,i)(1:1) .eq. ' ') then
-	     kkk = 0
+	     k_layers = 0
 	  else
 	     do k=1,5
-		if(cvr(k,i)(1:1) .ne. ' ') kkk = kkk + 1
+		if(cvr(k,i)(1:1) .ne. ' ') k_layers = k_layers + 1       
 	     enddo !k
 	  endif
 c
-	  if(kkk .eq. 0) then	! no cloud data...probably AMOS station
-	    go to 126		! skip rest of cloud stuff
+	  if(k_layers .eq. 0) then   ! no cloud data...probably AMOS station
+	    go to 126		     ! skip rest of cloud stuff
 	  endif
-	  do ii=1,kkk
+
+          iihigh = k_layers
+
+	  do ii=1,iihigh
 	    if(ht(ii,i) .gt. 25000.0) ht(ii,i) = badflag
 c
 	    if(cvr(ii,i)(1:3) .eq. 'SKC') then
-	       ht(ii,i) = 22500.0
+	       ht(ii,i) = 22500.0    ! Manual Ob
+	    elseif(cvr(ii,i)(1:3) .eq. 'CLR') then
+	       ht(ii,i) = 3657.4     ! Automatic Ob
+            else                     ! Check for bad height
+               if(ht(ii,i) .gt. 17000.0) then
+                   write(6,*)' WARNING in get_metar_obs: '      
+     1                      ,' reject cloud ob, height = '
+     1                      ,ht(ii,i),stname(i)
+                   ht(ii,i) = badflag
+                   k_layers = 0
+               endif
 	    endif
-c
-	    if(cvr(ii,i)(1:3) .eq. 'CLR') then
-	       ht(ii,i) = 3657.4
-	    endif
+
 	  enddo !ii
+
  126	  continue
 c
 c.....	Check cloud info for very high heights...set to max if greater.
 c.....	Also convert agl cloud heights to msl by adding elevation.
 c
-	if(kkk .gt. 0) then
-	  do ii=1,kkk
+	if(k_layers .gt. 0) then
+	  do ii=1,k_layers
 	    if(ht(ii,i) .ge. 0.) then
 	      ht(ii,i) = ht(ii,i) + elev(i)		! conv agl to msl
 	      if(ht(ii,i) .gt. 22500.) ht(ii,i) = 22500.
@@ -560,14 +571,14 @@ c
 	 store_6(nn,4) = pcp24(i)               ! 24-h precipitation
 	 store_6(nn,5) = snowcvr(i)             ! snow cover
 c
-	 store_7(nn,1) = float(kkk)             ! number of cloud layers
+	 store_7(nn,1) = float(k_layers)        ! number of cloud layers
 	 store_7(nn,2) = max24t(i)              ! 24-h max temperature
 	 store_7(nn,3) = min24t(i)              ! 24-h min temperature
 c
 c.....	Store cloud info if we have any. 
 c
-	 if(kkk .gt. 0) then
-	   do ii=1,kkk
+	 if(k_layers .gt. 0) then
+	   do ii=1,k_layers
 	     store_cldht(nn,ii) = ht(ii,i)
 	     store_cldamt(nn,ii)(1:1) = ' '
 	     store_cldamt(nn,ii)(2:4) = cvr(ii,i)(1:3)

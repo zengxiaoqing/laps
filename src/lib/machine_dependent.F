@@ -218,7 +218,7 @@ cdis
 C Below are some Taiwan FGGE routines
 
 #if defined(hpux) || defined(alpha)
-      subroutine read_fa ( lun, filename,                   ! I
+      subroutine read_fa ( lun, filename, xx,               ! I
      .                     nx, ny, nz,                      ! I
      .                     r_missing_data,                  ! I
      .                     pressures_pa,                    ! O
@@ -226,7 +226,6 @@ C Below are some Taiwan FGGE routines
      .                     mslp,                            ! O
      .                     istatus)                         ! O
 
-      parameter ( i_record=86 )
       parameter ( nlevel=16, nvar=5 )  ! nlevel=nz
 
       PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
@@ -246,6 +245,7 @@ C Below are some Taiwan FGGE routines
       RECORD /FGGE_HEAD/HEADER
 
       character*255 filename
+      character*2   xx
       real*4 r_missing_data    ! Missing data value
  
 c     3D fields (pressure grid OR sigma grid. What are the level values?)
@@ -274,6 +274,12 @@ c                           Sfc field
       CALL OPEN_FGGE_FILE(filename,ISTAT)
       IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
  
+      if ( xx .eq. '00' )  then
+         i_record= 82
+      else
+         i_record= 86
+      endif
+
       do l= 1,i_record
  
          CALL READ_FGGE_RECORD(FGGE_BUF,ISTAT)

@@ -34,40 +34,18 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
 #   (i.e. a substitution for section 2.2.2 in the README)
 
     echo "Configuring precompiled scripts in $LAPSINSTALLROOT/etc"
-    cd $LAPSINSTALLROOT/etc
-
-#   Edit PERL paths
-
-#   setenv OLDPERL      /usr/local/bin/perl
-#   fix_net $OLDPERL    $NEWPERL   *.pl 
-   
-#   setenv OLDPERL      /usr/local/apps/perl5/bin/perl
-#   fix_net $OLDPERL    $NEWPERL   *.pl 
-
-#   setenv OLDPERL      /usr/local/perl5/bin/perl
-#   fix_net $OLDPERL    $NEWPERL   *.pl 
-
-#   setenv OLDPERL      /usr/local/perl/bin/perl
-#   grep $OLDPERL       *.pl
-#   fix_net $OLDPERL    $NEWPERL   *.pl 
-
-#   setenv OLDPERL      /usr/nfs/bin/perl
-#   grep $OLDPERL       *.pl
-#   fix_net $OLDPERL    $NEWPERL   *.pl 
+    cd $LAPS_SRC_ROOT
 
     setenv NEWNETCDF    /usr/local/netcdf
 
-#   Edit NetCDF paths
-#   setenv OLDNETCDF    /usr/local/apps/netcdf/bin
-#   fix_net $OLDNETCDF   $NEWNETCDF                 *.pl *.pm; echo " "
-
-    foreach file (*.pl)
+#   Edit paths
+    foreach file (etc/*.pl util/cronfile)
         if (-e $file.in) then
             cp $file.in $file
             $LAPS_SRC_ROOT/util/fix_net @PERL@                   $NEWPERL            $file
             $LAPS_SRC_ROOT/util/fix_net @NETCDF@                 $NEWNETCDF          $file
             $LAPS_SRC_ROOT/util/fix_net @prefix@                 $LAPSINSTALLROOT    $file
-            $LAPS_SRC_ROOT/util/fix_net @datadir@                $LAPS_DATA_ROOT     $file
+#           $LAPS_SRC_ROOT/util/fix_net @datadir@                $LAPS_DATA_ROOT     $file
             $LAPS_SRC_ROOT/util/fix_net @top_srcdir@             $LAPS_SRC_ROOT      $file
             $LAPS_SRC_ROOT/util/fix_net @CSH@                    /bin/csh            $file
 
@@ -76,6 +54,8 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
 
         endif
     end
+
+    $LAPS_SRC_ROOT/util/fix_net .environs  .youll_never_find_this_file fxa.pm
 
 #   This section does what "make install" would normally do on a precompiled tar file,
 #   (i.e. a substitution for section 2.2.4 in the README)
@@ -98,6 +78,8 @@ if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
         echo "Copying $LAPS_SRC_ROOT/util directory to $LAPSINSTALLROOT"
         cp -r util  $LAPSINSTALLROOT
     endif
+
+    chmod -R g+w $LAPSINSTALLROOT
 
 else
     echo "Skipping configure/install step for precompiled tar file"
@@ -181,10 +163,10 @@ if ($6 != p) then
 #   Now we can edit the cronfile (README section 2.4)
     echo " "
     echo "Setting up a cronfile in $LAPS_DATA_ROOT/cronfile..."
-    cp $LAPSINSTALLROOT/util/cronfile.in $LAPS_DATA_ROOT/cronfile
+    cp $LAPSINSTALLROOT/util/cronfile     $LAPS_DATA_ROOT/cronfile
     cd $LAPS_DATA_ROOT
-    $LAPS_SRC_ROOT/util/fix_net @PERL@    $NEWPERL         cronfile
-    $LAPS_SRC_ROOT/util/fix_net @prefix@  $LAPSINSTALLROOT cronfile
+#   $LAPS_SRC_ROOT/util/fix_net @PERL@    $NEWPERL         cronfile
+#   $LAPS_SRC_ROOT/util/fix_net @prefix@  $LAPSINSTALLROOT cronfile
     $LAPS_SRC_ROOT/util/fix_net @datadir@ $LAPS_DATA_ROOT  cronfile
 
 else

@@ -308,7 +308,7 @@ c
         real rtime(maxsta)
 c
         character infile*(*), stn_id*5, stn(maxsta)*5, 
-     1            a9_to_a8*8, a9time*9, a6time*6, filename*11
+     1            a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*11       
 c
 c
 c.....  Start here.  Fill the output arrays with something, then open
@@ -330,7 +330,8 @@ c
         call make_fnam_lp(i4time,a9time,istatus)
         if(istatus .ne. 1)go to 990
 
-        a6time = a9_to_a8(a9time)(3:8)
+        a8time = a9_to_a8(a9time)
+        a6time = a8time(3:8)
 !       a6time = '050826'
 
         filename = 'MSO.m'//a6time
