@@ -2939,7 +2939,7 @@ c
             endif ! k_level .eq. 0
 
 
-        elseif(c_type .eq. 'tp' .or. c_type .eq. 'py')then
+        elseif(c_type .eq. 'tp' .or. c_type .eq. 'py')then ! Precip Type
 1624        write(6,1617)
 1617        format('     Enter Level in mb; [0] for surface,'
      1          ,' OR [-1] for sfc thresholded: ','? ',$)
@@ -2949,10 +2949,13 @@ c
 
             if(k_level .gt. 0)then
                 call mklabel33(k_mb,'    Precip Type    ',c33_label)
+                ndim=3
             elseif(k_level .eq.  0)then
                 c33_label = 'LAPS Sfc Precip Type   (nothresh)'
+                ndim=2
             elseif(k_level .eq. -1)then
                 c33_label = 'LAPS Sfc Precip Type   (thresh)  '
+                ndim=2
             endif
 
             if(k_level .eq. -1)then
@@ -2973,9 +2976,20 @@ c
 
             l_precip_pregen = .true.
 
-            if(k_level .gt. 0)then ! Plot Precip Type on const pressure sfc
-                if(l_precip_pregen)then ! Read pregenerated field
+            call input_product_info(i4time_pcp              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,ndim                    ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,asc9_tim                ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
+            if(k_level .gt. 0)then ! Plot Precip Type on const pressure sfc
+                if(c_prodtype .eq. 'A')then
                     write(6,*)' Reading pregenerated precip type field'
                     ext = 'lty'
                     call get_laps_2dgrid(i4time_pcp,laps_cycle_time
@@ -2983,28 +2997,28 @@ c
      1                    ,units_2d,comment_2d,NX_L,NY_L
      1                    ,field_2d,k_mb,istatus)
 
-!                   Convert from real to byte
-                    do i = 1,NX_L
-                    do j = 1,NY_L
-!                       Convert to integer
-                        iarg = int(field_2d(i,j)) * 16
-!                       Convert to byte
-                        pcp_type_2d(i,j) = i4_to_byte(iarg)
-                    enddo ! i
-                    enddo ! j
+                elseif(c_prodtype .eq. 'F')then
+                    call get_lapsdata_2d(i4_initial,i4_valid
+     1                                  ,directory,var_2d
+     1                                  ,units_2d,comment_2d
+     1                                  ,NX_L,NY_L,field_2d
+     1                                  ,istatus)
+                    if(istatus .ne. 1)then
+                        write(6,*)' Could not read forecast field'       
+                        goto1200
+                    endif
+                    c33_label(11:33) = ' FUA PTy '//var_2d(1:4)
+     1                                 //fcst_hhmm//'      '
 
-                    call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
-
-                    call plot_cldpcp_type(pcp_type_2d
-     1              ,asc9_tim,c33_label,c_type,k_level,i_overlay
-     1              ,c_display,lat,lon,idum1_array
-     1              ,NX_L,NY_L,laps_cycle_time,jdot)
+                else
+                    write(6,*)' Not yet supported'
+                    go to 1200
 
                 endif
 
             elseif(k_level .eq. 0)then ! Extract Surface Precip Type Field
 
-                if(l_precip_pregen)then
+                if(c_prodtype .eq. 'A')then
 
                   ! Read SFC precip type from lty field
                     write(6,*)
@@ -3017,27 +3031,29 @@ c
      1                                  ,i4time_temp,
      1                      ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,field_2d,0,istatus)
-
                     if(istatus .ne. 1)goto1200
+                    call make_fnam_lp(i4time_pcp,asc9_tim,istatus)
 
-                    call make_fnam_lp(i4time_temp,asc9_tim,istatus)
+                else
+                    write(6,*)' Not yet supported'
+                    go to 1200
 
-!                   Convert from real to byte
-                    do i = 1,NX_L
-                    do j = 1,NY_L
-                        iarg = field_2d(i,j) * 16 ! Code into left 4 bits
-                        pcp_type_2d(i,j) = i4_to_byte(iarg)
-                    enddo ! i
-                    enddo ! j
+                endif ! c_prodtype
 
-                endif ! l_precip_pregen
+            endif ! k_level
 
-                call plot_cldpcp_type(pcp_type_2d
+!           Convert from real to byte
+            do i = 1,NX_L
+            do j = 1,NY_L
+                iarg = field_2d(i,j) * 16 ! Code into left 4 bits
+                pcp_type_2d(i,j) = i4_to_byte(iarg)
+            enddo ! i
+            enddo ! j
+
+            call plot_cldpcp_type(pcp_type_2d
      1             ,asc9_tim,c33_label,c_type,k,i_overlay,c_display  
      1             ,lat,lon,idum1_array
      1             ,NX_L,NY_L,laps_cycle_time,jdot)
-
-            endif ! k_level
 
         elseif(c_type .eq. 'ia' .or. c_type .eq. 'ij'
      1                          .or. c_type .eq. 'is')then
@@ -3977,6 +3993,7 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
      1                         ,'linear',n_image,scale) 
                 elseif(var_2d .eq. 'PBE')then
+!                   call condition_cape(NX_L,NY_L,'pei',field_2d)
                     call ccpfil(field_2d,NX_L,NY_L,0.0,7200.
      1                         ,'cpe',n_image,scale) 
                 elseif(var_2d .eq. 'NBE')then
