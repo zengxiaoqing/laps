@@ -73,10 +73,9 @@ cdis
             write(6,*)' Return from BLP (NIMBUS) local profiler ingest'
         else
             write(6,*)
-            write(6,*)' Running RSA/LDAD local profiler ingest - '
-     1               ,'not yet functioning'
+            write(6,*)' Running RSA/LDAD local wind profile ingest '
             call ingest_rsapro(i4time,NX_L,NY_L,j_status)
-            write(6,*)' Return from RSA/LDAD local profiler ingest'
+            write(6,*)' Return from RSA/LDAD local wind profile ingest'
         endif
 
         write(6,*)
