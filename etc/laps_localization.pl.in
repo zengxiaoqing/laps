@@ -46,7 +46,9 @@ $FXA_DATA = $ENV{"FXA_DATA"};
 
 if(-d $FXA_DATA){
   print "Localizing for WFO $ENV{FXA_INGEST_SITE}\n";
-  
+  if($compile eq "compile"){
+      system("cp $LAPS_SRC_ROOT/data/static/nest7grid.parms.wfo $LAPS_DATA_ROOT/static/nest7grid.parms");
+  }  
   $satid = &wfo_localization($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA);
   $sattype = "wfo";
 }else{  
@@ -167,7 +169,7 @@ if($sattype eq 'wfo' && $compile eq 'compile'){
 #
 if(-x "$LAPSROOT/bin/genvrclut.exe"){
   print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
-  print "This could take an hour or more...\n"; 
+  print "This could take an hour or more...\n" unless($sattype eq "wfo"); 
   system("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
 }else{
   print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
