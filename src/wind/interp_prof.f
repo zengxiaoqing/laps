@@ -40,11 +40,10 @@ cdis
         subroutine interp_prof(ob_pr_ht_obs,ob_pr_u_obs,ob_pr_v_obs, ! I
      1                             u_diff       , v_diff,            ! I
      1                             u_interp     , v_interp,          ! O
-     1                             r_interp     , t_interp,          ! O
      1                             di_interp    , sp_interp,         ! O
      1                             i_pr,ht,level,nlevels_obs_pr,     ! I
      1                             lat_pr,lon_pr,i_ob,j_ob,          ! I
-     1                             azimuth,r_missing_data,           ! I
+     1                             r_missing_data,                   ! I
      1                             heights_3d,ni,nj,nk,              ! I
      1                             MAX_PR,MAX_PR_LEVELS,             ! I
      1                             n_vel_grids,istatus)              ! I/O
@@ -63,8 +62,6 @@ cdis
 
         u_interp = r_missing_data
         v_interp = r_missing_data
-        r_interp = r_missing_data
-        t_interp = r_missing_data
         di_interp = r_missing_data
         sp_interp = r_missing_data
 
@@ -103,18 +100,6 @@ cdis
      1                           di_interp,
      1                           sp_interp)
 
-                if(n_vel_grids .gt. 0)then
-
-!                  Calculate radial and tangential velocity
-
-                   call uvtrue_to_radar( u_interp,
-     1                           v_interp,
-     1                           t_interp,
-     1                           r_interp,
-     1                           azimuth)
-
-                endif ! Radar data is present
-
              endif
           endif
 
@@ -141,22 +126,10 @@ cdis
                 v_interp = v_interp + v_diff
 
 !               Calculate direction and speed
-                call uv_to_disp(         u_interp,
+                call uv_to_disp( u_interp,
      1                           v_interp,
      1                           di_interp,
      1                           sp_interp)
-
-                if(n_vel_grids .gt. 0)then
-
-!                  Calculate radial and tangential velocity
-
-                   call uvtrue_to_radar( u_interp,
-     1                           v_interp,
-     1                           t_interp,
-     1                           r_interp,
-     1                           azimuth)
-
-              endif ! Radar data is present
 
         endif
 
@@ -184,22 +157,10 @@ cdis
                 v_interp = v_interp + v_diff
 
 !               Calculate direction and speed
-                call uv_to_disp(         u_interp,
+                call uv_to_disp( u_interp,
      1                           v_interp,
      1                           di_interp,
      1                           sp_interp)
-
-            if(n_vel_grids .gt. 0)then
-
-!               Calculate radial and tangential velocity
-
-                call uvtrue_to_radar(    u_interp,
-     1                           v_interp,
-     1                           t_interp,
-     1                           r_interp,
-     1                           azimuth)
-
-             endif
 
         endif
 
