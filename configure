@@ -1321,7 +1321,7 @@ else
   fi
 
 fi
-echo "$ac_t""fc_tmp = $fc_tmp" 1>&6  
+
 
 
 rm -f cpptest.* cpptest
@@ -2831,6 +2831,7 @@ ac_given_srcdir=$srcdir
 trap 'rm -fr `echo "src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
+	  etc/LapsRadar.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
@@ -2930,6 +2931,7 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
+	  etc/LapsRadar.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl

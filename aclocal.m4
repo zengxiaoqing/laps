@@ -559,6 +559,47 @@ CPPFLAGS="$CPPFLAGS -D$arch"
 
 ])
 
+dnl
+dnl AC_PROG_GENERIC(PROGROOT, exename, libname, incname)
+dnl
+AC_DEFUN(AC_PROG_GENERIC,
+[
+
+exename=$2
+
+if test -z "[$]$1"
+then
+  AC_PATH_PROGS($1, $exename, ,$5)
+  if test -n "[$]$1"
+  then
+    $1=`echo "[$]$1" | sed "s/\/bin\/$exename//"`;
+  fi
+fi
+PROGLIB="[$]$1/lib"
+PROGINC="[$]$1/include"
+
+for ac_file in $3
+do
+echo "here $PROGLIB/$ac_file"
+if test -f "$PROGLIB/$ac_file"
+then
+  AC_MSG_RESULT(Found $ac_file library in $PROGLIB)
+fi
+done
+for ac_file in $4
+do
+if test -f "$PROGINC/$ac_file"
+then
+  AC_MSG_RESULT(Found $ac_file header in $PROGINC)
+fi
+done
+
+if test -z "[$]$1"
+then
+  AC_MSG_ERROR(\n\nCannot find directory containing $exename in $PATH )
+fi
+])
+
 dnl AC_PROG_NETCDF(PATH_TO_NETCDF)
 AC_DEFUN(AC_PROG_NETCDF,
 [
@@ -635,6 +676,7 @@ AC_DEFUN(AC_QUERY_USER,
       $1=$ac_query_user
     fi
 ])
+
 
 dnl The name of shell var CACHE-ID must contain `_cv_' in order to get saved.
 dnl AC_CACHE_UPDATE(CACHE-ID, COMMANDS-TO-SET-IT)

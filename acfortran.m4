@@ -1,8 +1,9 @@
 dnl
 dnl tests specific to fortran and it's interface to C
+dnl AC_PROG_FC(additional_fortran_compilers)
 dnl
 AC_DEFUN(AC_PROG_FC,[
-AC_CHECK_PROGS(FC, f90 xlf90 xlf f77  gf77,,$PATH)
+AC_CHECK_PROGS(FC,$1 f90 xlf90 xlf f77  gf77,,$PATH)
 test -z "$FC" && AC_MSG_ERROR([no acceptable fortran found in \$PATH])
 cat >conftest.f <<EOF
           program main
@@ -27,6 +28,54 @@ else
 fi
 rm -f conftest* 
 AC_SUBST(FC)
+])
+
+AC_DEFUN(AC_FC_MPI,[
+  AC_REQUIRE([AC_PROG_FC])
+  AC_MSG_CHECKING(how to compile with mpi)
+  cat << EOF > mpitest.f
+	program mpitest
+        include 'mpif.h'
+        call mpi_init
+        end
+EOF
+/bin/rm -f mpitest.out
+$FC $FFLAGS $MPIINC $MPILIB mpitest.f -o mpitest > mpitest.out 2>&1
+if test $? != 0
+then
+  dnl
+  dnl Maybe we only need to link the library
+  dnl 
+  /bin/rm -f mpitest.out
+  $FC $FFLAGS $MPIINC $MPILIB mpitest.f -lmpi -o mpitest > mpitest.out 2>&1
+  if test $? != 0
+  then
+    dnl Lets try to find mpirun then
+    AC_PROG_GENERIC(MPI,mpirun, libmpi.a libmpi.so, mpif)
+    if test -z "$MPI"
+    then
+      AC_MSG_ERROR(Could not identify mpi)
+    else
+      /bin/rm -f mpitest.out
+      $FC $FFLAGS mpitest.f $MPIINC $MPILIB -I$MPI/include -L$MPI/lib -lmpi -o mpitest > mpitest.out 2>&1
+      if test $? != 0
+      then
+        AC_MSG_ERROR(Could not compile test program with mpi in $MPI)
+      else
+	AC_MSG_RESULT(Adding -I$MPI/include to MPIINC and  -L$MPI/lib -lmpi to MPILIB)
+        MPILIB="$MPILIB  -L$MPI/lib -lmpi"
+        MPIINC="$MPIINC -I$MPI/include"
+      fi
+    fi      
+  else
+    MPILIB="$MPILIB -lmpi"
+    AC_MSG_RESULT(Adding -lmpi to MPILIB)
+  fi
+else
+  AC_MSG_RESULT(No special requirments)
+fi
+AC_SUBST(MPIINC)
+AC_SUBST(MPILIB)
 ])
 
 AC_DEFUN(AC_FC_FUNC_ALLOC,[
@@ -60,7 +109,7 @@ rm -f testalloc.*
 AC_DEFUN(AC_FC_BYTE_UNSIGNED,[
   AC_REQUIRE([AC_PROG_FC])dnl
   AC_MSG_CHECKING(to see if $FC recognizes type byte as unsigned)
-  /bin/rm -f testbyte*
+  rm -f testbyte*
   cat << EOF > testbyte.f
        program testbyte
        byte a
@@ -68,7 +117,6 @@ AC_DEFUN(AC_FC_BYTE_UNSIGNED,[
        print *, a
        end
 EOF
-/bin/rm -f testbyte.out
 $FC $FFLAGS testbyte.f -o testbyte > testbyte.out 2>&1
 if test $? != 0
 then
@@ -79,6 +127,7 @@ else
   FC_BYTE_MISSING=255
   HAVE_FC_BYTE=1
 fi
+rm -f testbyte*
 ])
 
 
@@ -159,6 +208,50 @@ EOF
     FC_USE_TRIGD='C      use trigd'
   fi
   rm -f testtrigd*
+])
+
+AC_DEFUN(AC_FC_FUNC_NCARGFC,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(how to compile with ncar graphics)
+  AC_PATH_PROGS(NCARGFC,ncargf77)
+  if test "$NCARGFC"  
+  then
+        cat <<EOF > testncarg_sub.f
+          subroutine tncarg_sub
+          real xplot, py1
+          CALL FRSTPT(XPLOT,PY1)
+          return
+          end
+EOF
+	cat <<EOF > testncarg.f
+	  program t_ncarg
+	  real a
+	  call opngks
+          call tncarg_sub
+	  call clsgks
+	end
+EOF
+  /bin/rm -f testncarg.out
+  $FC $FFLAGS -c testncarg_sub.f 1>  testncarg_sub.out 2>&1
+  if test $? = 0 
+  then
+    $NCARGFC $FFLAGS testncarg.f testncarg_sub.o -o testncarg > testncarg.out 2>&1
+  fi
+  if test $? = 0
+  then
+    AC_MSG_RESULT("It appears that ncarg will work as is.")
+  else
+    AC_MSG_RESULT("\n $NCARGFC will not compile a test prog as is.  Try running ncargf90.pl before you compile")
+    NCARGFC="ncargf90"
+  fi
+  rm -f testncarg*
+
+  fi
+  if test -z "$NCARGFC"
+  then
+    AC_MSG_WARN(Could not find NCAR Graphics. If you wish to use this package you must have the environment variable NCARG_ROOT set and the ncargf77 program in your path)
+    NCARGFC="$FC"
+  fi
 ])
 
 
@@ -317,9 +410,10 @@ dnl
 AC_DEFUN(AC_FC_CPP,[
   AC_REQUIRE([AC_PROG_FC])dnl
   AC_REQUIRE([AC_PROG_CC])dnl
+  rm -f cpptest.* cpptest
   cat > cpptest.F << EOF
        program cpptest
-       int a
+       integer a
        a=-1
 #if defined(CPPTEST)
        a=0
@@ -330,19 +424,33 @@ EOF
 dnl
 dnl We want to make sure we get a clean fortran output from cpp
 dnl
-rm -f cpptest.* cpptest
-CPP="$CC -P"
-$CPP $CPPFLAGS -DCPPTEST cpptest.F 1>/dev/null 2>&1
-if test -s cpptest.i
+
+CPP="$FC $FFLAGS"
+$CPP $CPPFLAGS -DCPPTEST cpptest.F -o cpptest 1>/dev/null 2>&1
+if test -x cpptest
 then
-  mv cpptest.i cpptest.f
-  $FC $FFLAGS cpptest.f -o cpptest 1>/dev/null 2>&1
-  if test -x cpptest
+  fc_tmp=`cpptest`
+  USECPP=''
+else
+  AC_MSG_WARN($FC $FFLAGS does not seem to handle cpp flags)
+  CPP="$CC -P"
+  $CPP $CPPFLAGS -DCPPTEST cpptest.F 1>/dev/null 2>&1
+  if test -s cpptest.i
   then
-    fc_tmp=`cpptest`
+    mv cpptest.i cpptest.f
+    $FC $FFLAGS cpptest.f -o cpptest 1>/dev/null 2>&1
+    if test -x cpptest
+    then
+      fc_tmp=`cpptest`
+    fi
+    AC_MSG_RESULT($CPP $CPPFLAGS seems to work)  
+    USECPP='USECPP=1'
   fi
-  AC_MSG_RESULT(f)  
+
 fi
+
+
+AC_SUBST(USECPP)
 rm -f cpptest.* cpptest
 ])
 
