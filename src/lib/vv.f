@@ -60,9 +60,9 @@ cdis
 
         ! Values below are the max VVs expected on a 10km grid for a 
         ! cloud 10km deep
-        data vv_to_height_ratio_Cu /4.0/       
-        data vv_to_height_ratio_Sc /0.5/      
-        data vv_for_St /.05/                  
+        data vv_to_height_ratio_Cu /1.0/  ! Changed from 4.0 on 10 Apr 03 BLS   
+        data vv_to_height_ratio_Sc /0.1/  ! Changed from 0.5 on 10 Apr 03 BLS
+        data vv_for_St /.02/              ! Changed from 0.05 on 10 Apr 03 BLS
 
         Real*4 ratio, vv, Parabolic_vv_profile
 
