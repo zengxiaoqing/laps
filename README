@@ -1157,6 +1157,12 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            Vandenberg Space Centers and comes into NetCDF format via 
            AWIPS/LDAD.
 
+     Met Tower data (snd) - This is treated in a similar manner to RAOBs
+           and can be processed by LAPS ingest to appear in the SND file.
+           This is available as part of the RSA project at Kennedy and
+           Vandenberg Space Centers and comes into NetCDF format via 
+           AWIPS/LDAD.
+
      Satellite derived soundings (snd):
            AFWA database format. Previously used at FSL but not currently.
 
@@ -3325,6 +3331,7 @@ Outputs:
                                 VNT  (Ventilation Index)
                                 UPB  (PBL Mean U Wind Component [grid-east])
                                 VPB  (PBL Mean V Wind Component [grid-north])
+                                CWI  (Critical Fire Weather Index)
 </pre>
 Source directory: laps/src/deriv
 
@@ -3710,6 +3717,7 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
                      VNT  vnt      1  Ventilation Index
                      UPB  upb      1  PBL Mean Wind U-component (grid north)
                      VPB  vpb      1  PBL Mean Wind V-component (grid east)
+                     CWI  cwi      1  Critical Fire Weather Index
 
 Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		LM2  CIV  civ      1  Cumulative Infiltration Volume
