@@ -189,6 +189,18 @@ netcdf fua {
             pty:lvl_coord = "HPA" ;
             pty:LAPS_units = " " ;
 
+        //      LAPS Fcst Turbulent Kinetic Energy         //
+        //      bigfile name =     
+        float
+            tke(record,z,y,x) ;
+            tke:_FillValue = 1.e+37f;
+            tke:long_name = "LAPS TKE          " ;
+            tke:units = "J/kg" ;
+            tke:valid_range = -10000.f, 10000.f ;
+            tke:LAPS_var = "TKE" ;
+            tke:lvl_coord = "HPA" ;
+            tke:LAPS_units = "J/kg" ;
+
                 	        
         //	LAPS variables
 
@@ -214,6 +226,7 @@ netcdf fua {
             pic_comment(record,z,namelen),
             ref_comment(record,z,namelen),
             pty_comment(record,z,namelen),
+            tke_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -278,6 +291,10 @@ netcdf fua {
         short
             pty_fcinv(record, z);
             pty_fcinv:_FillValue= 0s;
+
+        short
+            tke_fcinv(record,z);
+            tke_fcinv:_FillValue = 0s;
 
         //	list of grid levels
 
