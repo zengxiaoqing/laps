@@ -138,7 +138,7 @@ netcdf lm1 {
     data:
 
         earth_shape     = "spherical radius";
-        grid_name       = "LAPS lsm file - soil moisture";
+        grid_name       = "LAPS lm1 file - soil moisture";
         process_name    = "LAPS - Local Analysis and Prediction System";
         x_dim           = "x";
         y_dim           = "y";
