@@ -1,6 +1,6 @@
  &lfmpost_nl
  DOMAIN_NUM = 1,
- MODEL_NAME = 'mm5hot'
+ LFM_NAME = 'mm5hot'
  KEEP_FDDA = .FALSE., 
  SPLIT_OUTPUT = .TRUE.,
  MAX_WAIT_SEC = 600,
@@ -13,6 +13,7 @@
  FILE_NUM_INC = 1,
  FILE_NUM3 = .FALSE.,
  MAKE_LAPS = .TRUE.,
+ WRITE_TO_LAPSDIR = .TRUE.,
  MAKE_POINTS = .TRUE.,
  MAKE_V5D = .TRUE.,
  V5D_COMPRESS = 1,
@@ -63,6 +64,10 @@ c  FILE_NUM3:  Set to true if using MM5 split output that has a
 c    3-digit number sequence.
 c  
 c  MAKE_LAPS:  Causes fsf/fua to be output
+c
+c  WRITE_TO_LAPSDIR:  If set to true, the fsf/fua data files will
+c   be written to LAPS_DATA_ROOT/fxx/model_name.  If false, they
+c   will be written to MODEL_DATA_ROOT/xxxprd/dxx/fxx
 c
 c  MAKE_POINTS:  Set to true to use lfmpost_points.txt file to create
 c   tabular point forecasts.
