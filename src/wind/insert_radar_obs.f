@@ -61,7 +61,7 @@
 
       save l_first_call
 
-      data l_multi_doppler_new /.false./ ! Flag for new CWB routine
+      data l_multi_doppler_new /.true./ ! Flag for new CWB routine
       data l_first_call /.true./ ! Flag for new CWB routine
 
       if(l_first_call)then
