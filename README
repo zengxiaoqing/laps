@@ -1344,7 +1344,7 @@ April 1996
    The applicable compiler versions (often a -v or -V option to the compiler)
    The entire output of configure 
    The entire output of make (standard output + error output)
-   The entire output of laps_localization.pl (i.e. make localize)
+   The entire output of laps_localization.pl 
 </pre>
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
