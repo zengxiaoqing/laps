@@ -39,6 +39,7 @@ cdis
 
         character*150 DIRECTORY
         character*31 EXT
+        character*20 c_model
 
         character*125 comment_2d(2)
         character*10 units_2d(2)
@@ -82,7 +83,23 @@ cdis
         enddo ! k
 
         if(ext(1:3) .eq. 'lga' .or. ext(1:3) .eq. 'fua')then
-            write(6,*)' Enter yydddhhmmHHMM for ',ext(1:3),' file'
+            if(ext(1:3) .eq. 'fua')then
+                write(6,205)ext(1:3)
+ 205            format(/'  Enter model [e.g. mm5] for ',a3,' file: ',$)       
+
+                read(5,206)c_model
+ 206            format(a)
+
+                call get_directory(ext,directory,len_dir)
+                call s_len(c_model,len_model)
+                directory = directory(1:len_dir)//c_model(1:len_model)
+     1                                          //'/'
+
+            endif
+
+            write(6,211)ext(1:3)
+ 211        format(/'  Enter yydddhhmmHHMM for ',a3,' file: ',$)
+
             read(5,1)a13_time
  1          format(a13)
             call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
@@ -92,12 +109,15 @@ cdis
      1          uv_2d,ISTATUS)
             IF(ISTATUS .ne. 1)THEN
                 write(6,*)
-     1      ' Sorry, file has not yet been generated this hour'
+     1          ' Sorry, file has not yet been generated this hour'
                 stop
             else
                 write(6,*)
-     1    ' 2d - LAPS U and V analysis successfully read in',lvl_2d(1)        
+     1          ' 2d - LAPS U and V analysis successfully read in'
+     1          ,lvl_2d(1)        
             endif
+
+            i4time = i4_valid
 
         else
 

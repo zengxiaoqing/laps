@@ -70,12 +70,13 @@ cdis
         character*1 cansw
         character*13 filename,a13_time
         character*3 c3_site
-        character*4 c4_string
+        character*4 c4_string,fcst_hhmm
         character*5 c5_string
         character*4 c4_log
         character*7 c7_string
         character*9 c9_string,a9_start,a9_end
         character infile*255
+        character*20 c_model
 
         character i4_to_byte
 
@@ -441,7 +442,7 @@ c       include 'satellite_dims_lvd.inc'
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
 
-            if(c_type.ne.'lo')then
+            if(c_type.ne.'lo' .and. c_type .ne. 'wr')then
                write(6,*)
                write(6,*)'    Looking for laps wind data: ',ext(1:3)
                call get_file_time(c_filespec,i4time_ref,i4time_3dw)
@@ -546,6 +547,10 @@ c       include 'satellite_dims_lvd.inc'
                       write(6,*)' Calling get_uv_2d for ',ext
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,
      1                                          ext,NX_L,NY_L,istatus)
+
+                      write(6,*)' Initial time = ',asc9_tim_3dw
+                      call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)      
+                      write(6,*)' Valid time = ',asc9_tim_3dw
 
                       if(c_type .eq. 'wf')then
 
@@ -2959,11 +2964,23 @@ c             cint = -1.
 
             if(c_type(2:2) .eq. 'b')then
                 ext = 'lga'
+                call get_directory(ext,directory,len_dir)
+
             else
                 ext = 'fua'
-            endif
 
-            call get_directory(ext,directory,len_dir)
+                write(6,205)ext(1:3)
+ 205            format(/' Enter model [e.g. mm5] for ',a3,' file: ',$)       
+
+                read(5,206)c_model
+ 206            format(a)
+
+                call get_directory(ext,directory,len_dir)
+                call s_len(c_model,len_model)
+                directory = directory(1:len_dir)//c_model(1:len_model)
+     1                                          //'/'
+
+            endif
 
             write(6,211)ext(1:3)
  211        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
@@ -2971,9 +2988,24 @@ c             cint = -1.
             read(5,221)a13_time
  221        format(a13)
 
-            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+            call s_len(a13_time,len_time)
 
-            call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
+            if(len_time .eq. 13)then
+                call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+                call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d
+     1                          ,istatus)
+                fcst_hhmm = a13_time(10:13)
+
+            elseif(len_time .eq. 4)then
+                write(6,*)' Try again, len_time = ',len_time
+                fcst_hhmm = a13_time(1:4)
+                goto1200
+
+            else
+                write(6,*)' Try again, len_time = ',len_time
+                goto1200
+
+            endif
 
             write(6,1513)
             read(lun,*)k_mb
@@ -2998,8 +3030,14 @@ c             cint = -1.
             if(c_type(1:1) .eq. 'h')then
                 scale = 10.
 
-                call mklabel33(k_level,' LAPS '//ext(1:3)//' Height dm'
-     1                        ,c33_label)
+!               call mklabel33(k_level,' LAPS '//ext(1:3)//' Height dm'
+!    1                        ,c33_label)
+
+!               call mklabel33(k_level,ext(1:3)//' '
+!    1                         //fcst_hhmm//' Fcst Ht dm',c33_label)
+
+                call mklabel33(k_level,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' Height dm',c33_label)
 
                 clow = 0.
                 chigh = 0.
@@ -5004,23 +5042,33 @@ c
 
         call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
-!       Top label
-        y_2 = y_2 + .025
+        jsize_t = 2 
 
-!       Bottom label
-        y_1 = y_1 - .025 - .035 * float(i_overlay-1)
+!       Top label
+        y_2 = y_2 + .0225 ! .025
 
         ix = 115
         iy = y_2 * 1024
-        call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,2,0,0)
+        call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
+
+!       Bottom label
+        jsize_b = 1 ! [valid range is 0-2]
+        rsize_b = jsize_b + 2.
+
+        if(jsize_b .eq. 2)then
+            y_1 = y_1 - .025 - .035 * float(i_overlay-1)
+        else
+            y_1 = y_1 - rsize_b*.0045 - rsize_b*.007
+     1                              * float(i_overlay-1)
+        endif
 
         ix = 320
         iy = y_1 * 1024
-        call pwrity(cpux(ix),cpux(iy),c33_label,33,2,0,0)
+        call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
 
         ix = 800
         iy = y_1 * 1024
-        call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,2,0,0)
+        call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
 
 
         return

@@ -161,6 +161,8 @@ c
 c
 	if(istatus .ne. 1) go to 990
 	n_local_all = recNum
+
+        write(6,*)' n_local_all = ',n_local_all
 c
 c.....  First check the data coming from the NetCDF file.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
@@ -171,6 +173,8 @@ c.....  checks for "FloatInf" and sets the variable to 'badflag'.  If the
 c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
 c.....  we toss the whole ob since we can't be sure where it is.
 c
+        max_write = 100
+      
 	do i=1,n_local_all
 c
 c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
@@ -223,8 +227,15 @@ c
            if(lats(i) .lt. -90.) go to 125   !badflag (-99.9)...from nan ck
            call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,
      &                              ri_loc,rj_loc,istatus)
-           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir) go to 125
-           if(rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) go to 125
+           if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
+     1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
+               if(i .le. max_write)then
+                   write(6,81,err=125)i,wmoid(i),stname(i)
+     1                               ,nint(ri_loc),nint(rj_loc)
+ 81                format(i6,i7,1x,a8,' out of box ',2i12)
+               endif
+               go to 125
+           endif
 c
 c.....  Elevation ok?
 c
@@ -233,7 +244,16 @@ c
 c.....  Check to see if its in the desired time window.
 c
 	   itime60 = nint(timeobs(i)) + 315619200
-	   if(itime60.lt.before .or. itime60.gt.after) go to 125
+	   if(itime60 .lt. before 
+     1   .or. itime60 .gt. after) then
+               if(i .le. max_write)then
+                   write(6,91,err=125)i,wmoid(i),stname(i)
+     1                               ,itime60,before
+     1                               ,after
+ 91		   format(i6,i7,1x,a8,' out of time',3i12)
+               endif
+               go to 125
+           endif
 c
 c.....  Right time, right location...
 
