@@ -2,6 +2,8 @@
  l_use_raob=.true.,
  l_use_cdw=.true.,
  l_use_radial_vel=.true.,
+ thresh_2_radarobs_lvl_unfltrd=300,
+ thresh_4_radarobs_lvl_unfltrd=600,
  weight_bkg_const_wind=5e28,
  rms_thresh_wind=1.0,
  max_pr=1500,
@@ -19,6 +21,12 @@ c              the cdw file.
 c
 c l_use_radial_vel - flag to determine whether to utilize Doppler radial 
 c                    velocity data
+c
+c thresh_2_radarobs_lvl_unfltrd - threshold number of Doppler obs per level
+c                                 for subsampling by factor of 2
+c
+c thresh_4_radarobs_lvl_unfltrd - threshold number of Doppler obs per level
+c                                 for subsampling by factor of 4
 c
 c weight_bkg_const_wind - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
