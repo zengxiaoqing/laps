@@ -450,6 +450,11 @@ cdis
 !       Jun 16 1997             Ken Dritz
 !       Added r_missing_data as dummy argument.
 
+        integer*4 max_obs_b
+        parameter (max_obs_b = 40000)       
+        include 'barnesob.inc'
+        type (barnesob) obs_barnes(max_obs_b)                           
+
         logical l_good_tsnd(max_snd),l_struct
         real*4 bias_tsnd(max_snd,nk)
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
@@ -565,7 +570,7 @@ cdis
 
         call barnes_multivariate(
      1                      bias_3d                         ! Outputs
-     1                     ,n_var                           ! Input
+     1                     ,n_var,max_obs_b,obs_barnes      ! Input
      1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
      1                     ,rep_pres_intvl                  ! Input
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs

@@ -74,6 +74,11 @@ cdis
 
 !********************ARGUMENT LIST********************************************
 
+      integer*4 max_obs
+      parameter (max_obs = 40000)       
+      include 'barnesob.inc'
+      type (barnesob) obs_barnes(max_obs)                           
+
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
 
@@ -482,7 +487,7 @@ csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
 
 csms$serial end
 
-      call barnes_multivariate(varbuff,n_var
+      call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
@@ -588,7 +593,7 @@ csms$insert      stop
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-              call barnes_multivariate(varbuff,n_var
+              call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes       
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1           ,varobs_diff_spread
      1           ,wt_p_spread,fnorm,n_fnorm
@@ -646,7 +651,7 @@ csms$insert      stop
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call barnes_multivariate(varbuff,n_var
+          call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1       ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
@@ -716,7 +721,8 @@ csms$insert      stop
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call barnes_multivariate(varbuff,n_var,imax,jmax,kmax
+          call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
+     1       ,imax,jmax,kmax
      1       ,grid_spacing_m,rep_pres_intvl
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
