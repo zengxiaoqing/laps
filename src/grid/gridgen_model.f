@@ -488,6 +488,7 @@ C
 !          Call frame
 !	   Call clsgks
 
+        call s_len(static_dir,len)
         open(10,file=static_dir(1:len)//'latlon.dat'
      +         ,status='unknown',form='unformatted')
         open(11,file=static_dir(1:len)//'topo.dat'
