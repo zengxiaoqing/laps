@@ -43,12 +43,18 @@ $ENV{LAPS_DATA_ROOT} = $LAPS_DATA_ROOT;
 
 $FXA_DATA = $ENV{"FXA_DATA"};
 
+unless(-d "$LAPS_DATA_ROOT"){
+    die "You must run make install or otherwise create directory $LAPS_DATA_ROOT";
+}
+unless(-d "$LAPS_DATA_ROOT/static/model"){
+    die "You must install the LAPS terrain files in $LAPS_DATA_ROOT/static/model";
+}
+
+
 
 if(-d $FXA_DATA){
   print "Localizing for WFO $ENV{FXA_INGEST_SITE}\n";
-  if($compile eq "compile"){
-      system("cp $LAPS_SRC_ROOT/data/static/nest7grid.parms.wfo $LAPS_DATA_ROOT/static/nest7grid.parms");
-  }  
+
   $satid = &wfo_localization($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA);
   $sattype = "wfo";
 }else{  
@@ -155,8 +161,8 @@ if($sattype eq 'wfo' && $compile eq 'compile'){
   close (SCHED);
   unless(grep(/wfo_post/,@sched)>0){
     open(SCHED,">>$LAPSROOT/etc/sched.pl");
-    print SCHED "print \"\nRunning wfo post processing\n\";\n";
-    print SCHED "system(\"\@PERL\@ \$LAPSROOT/wfo_post.pl \$LAPSROOT \$LAPS_DATA_ROOT 1>\$LAPS_DATA_ROOT/log/wfo_post.log.\$hhmm 2>&1\");\n";
+    print SCHED "print LOG \`date -u +%H:%M:%S\`.\"\\nRunning wfo post processing\\n\";\n";
+    print SCHED "system(\". $ENV{FXA_HOME}/readenv.sh; @PERL@ \$LAPSROOT/etc/wfo_post.pl \$LAPSROOT \$LAPS_DATA_ROOT 1>\$LAPS_DATA_ROOT/log/wfo_post.log.\$hhmm 2>&1\");\n";
     close(SCHED);
   }
   chdir("$LAPS_SRC_ROOT/src/WFO/post");      
@@ -176,6 +182,12 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
   exit -1;
 }  
 
+#
+# finally initialize the systime.dat file
+#
+
+system("$LAPSROOT/bin/systime.exe");
+
 print "$0 complete\n";
 
 
@@ -194,7 +206,7 @@ sub wfo_localization{
 
   #First file:  the static parameters file.
 
-  $srctemplate = "$LAPS_SRC_ROOT/data/static/nest7grid.parms.wfo";
+  $srctemplate = "$LAPS_SRC_ROOT/data/static/nest7grid.parms";
     
   $outfile = "$LAPS_DATA_ROOT/static/nest7grid.parms";
 

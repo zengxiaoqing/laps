@@ -26,6 +26,8 @@ $TRANS_TBL="$LAPS_DATA_ROOT/static/public_laps2wfo.tbl";
 $LAPSTIME="$LAPS_DATA_ROOT/time/systime.dat";
 $CDL_PATH="$FXA_DATA/Grid/FSL/CDL";
 
+
+
 #Export environment variables for use in xfer_laps.
 %ENV = (
        "XFR_HOME",    $XFR_HOME,
@@ -38,9 +40,13 @@ $CDL_PATH="$FXA_DATA/Grid/FSL/CDL";
 
 open(LAPSTIME,$LAPSTIME) or die "Can't open $LAPSTIME";
 ($filetime,$dummy,$utc_hour,$utc_min) = <LAPSTIME>;
-
 close(LAPSTIME);
 chomp($filetime); chomp($utc_hour); chomp($utc_min);
+
+
+
+
+
 $filetime =~ s/ *//;  #fortran write may have added leading spaces
 $filetime= $filetime - 315619200;
 
