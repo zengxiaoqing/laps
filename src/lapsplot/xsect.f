@@ -39,7 +39,8 @@ cdis
 
         subroutine xsect(c_display,i4time_ref,lun,l_atms
      1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C
-     1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns)
+     1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns
+     1                  ,namelist_parms)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -63,6 +64,8 @@ cdis
 !       97-Aug-25     Steve Albers  Removed /lapsplot_cmn1/
 !       97-Aug-25     Steve Albers  Removed /lapsplot_cmn2/
 !       97-Aug-25     Steve Albers  Removed equivalence of pcp_type_3d,rh_3d.
+
+        include 'lapsplot.inc'
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
@@ -705,7 +708,7 @@ c read in laps lat/lon and topo
      1                               ,clow,chigh,cint,zoom,1.,scale)
 
                 call plot_cont(field_vert_diff,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,       
+     1               asc9_tim_3dw,namelist_parms,       
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
 
@@ -718,7 +721,7 @@ c read in laps lat/lon and topo
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'xsect')
+     1                                ,namelist_parms,i_overlay,'xsect')       
                 call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
 
             endif
@@ -2385,8 +2388,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
 !       endif
 
-        call write_label_lplot(100,94,c33_label,a9time,i_label_overlay
-     1                        ,'xsect')       
+        call write_label_lplot(100,94,c33_label,a9time,namelist_parms
+     1                        ,i_label_overlay,'xsect')       
 
         if(i_map .eq. 0)then
 
