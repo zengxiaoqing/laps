@@ -1720,7 +1720,8 @@ Package: gridgen_model.exe - Writes static file, run by localization script.
                                            John  Smart  - smart@fsl.noaa.gov).
 
 Inputs:
-	Geography databases (topography, land fraction)
+	Geography databases (topography, land fraction, landuse, soiltype top/bot)
+                             files are typically in 1deg or 10deg tiles.
         static/nest7grid.parms
 
 <pre>
@@ -1728,12 +1729,12 @@ Outputs:
 	static/static.nest7grid   NetCDF grid   geography data mapped to LAPS 
                                                 grid
                                    
-                                    'LAT'       latitude in degrees
-                                    'LON'       longitude in degrees
-                                    'AVE'       mean elevation MSL
-                                    'LDF'       land fraction (0=water,1=land)
-                                    'USE'       usgs 30s (24 vegetation categories)
-                                                landuse data (currently dominant category
+                                   'LAT'       latitude in degrees
+                                   'LON'       longitude in degrees
+                                   'AVE'       mean elevation MSL
+                                   'LDF'       land fraction (0=water,1=land)
+                                   'USE'       usgs 30s (24 vegetation categories)
+                                               landuse data (currently dominant category
                                                               for each grid point).
 
                                      1:   Urban and Built-Up Land
@@ -1760,6 +1761,28 @@ Outputs:
                                     22:   Mixed Tundra
                                     23:   Bare Ground Tundra
                                     24:   Snow or Ice
+
+                                   'STL'    Soil type - top layer (0-30cm)
+                                   'SBL'    Soil type - bottom layer (30-90cm)
+                                          (currently dominant category for each grid pt)
+
+                           FAO/WMO 16-category soil texture:
+                                     1          SAND
+                                     2          LOAMY SAND
+                                     3          SANDY LOAM
+                                     4          SILT LOAM
+                                     5          SILT
+                                     6          LOAM
+                                     7          SANDY CLAY LOAM
+                                     8          SILTY CLAY LOAM
+                                     9          CLAY LOAM
+                                    10          SANDY CLAY
+                                    11          SILTY CLAY
+                                    12          CLAY
+                                    13          ORGANIC MATERIALS
+                                    14          WATER
+                                    15          BEDROCK
+                                    16          OTHER (land-ice)
 
         static/latlon.dat         Binary grid   latitude
                                                 longitude
@@ -3418,5 +3441,4 @@ gridgen_model.exe: creates file 'static.nest7grid'
                      ENV           1  Unused
                      ZIN           1  Z coordinate - used for plotting in AVS
                      LDF           1  Land Fraction (0=water,1=land)
-                     USE           1  Soil Type (under development)
-
+                     USE           1  Landuse
