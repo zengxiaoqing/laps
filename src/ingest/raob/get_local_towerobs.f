@@ -63,6 +63,11 @@ c
         real*4     dewpoint_c_s(maxsta,maxlvls)      
         real*4     dir_deg_s(maxsta,maxlvls),spd_mps_s(maxsta,maxlvls)       
 	character  stname_s(maxsta)*5
+        integer    tempQcFlag(maxlvls,maxobs)
+        integer    prsQcFlag(maxlvls,maxobs)
+        integer    rhQcFlag(maxlvls,maxobs)
+        integer    wsQcFlag(maxlvls,maxobs)
+        integer    wdQcFlag(maxlvls,maxobs)
 
 c.....  Unknown vars.
 	character  save_stn(maxsta)*6
@@ -148,8 +153,10 @@ c
      &         staelev(ix), stalat(ix), stalon(ix),               ! O
      &         temp_c(ix,1), dewpoint_c(ix,1),                    ! O
      &         height_m(ix,1),                                    ! O
-c    &         pressure_mb(ix,1),                                 ! O
      &         dir_deg(ix,1), spd_mps(ix,1),                      ! O
+c    &         pressure_mb(ix,1), prsQcFlag(ix,1),                ! O
+     &         tempQcFlag(ix,1), rhQcFlag(ix,1),                  ! O
+     &         wsQcFlag(ix,1), wdQcFlag(ix,1),                    ! O
      &         a9time_ob(ix), stname(ix), wmoid(ix),              ! O
      &         istatus)                                           ! O
  
@@ -233,12 +240,28 @@ c
 
                 do il = 1,nlvl_s(nsta)
                     height_m_s(nsta,il) = lvls_m(il,i) + staelev_s(nsta)       
-                    temp_c_s(nsta,il) = temp_c(i,il)           
-                    dewpoint_c_s(nsta,il) = dewpoint_c(i,il)           
-                    dir_deg_s(nsta,il) = dir_deg(i,il)           
-                    spd_mps_s(nsta,il) = spd_mps(i,il)           
-                enddo
 
+                    if(iqc_rsa(tempQcFlag(nsta,il)) .ne. -1)then
+                        temp_c_s(nsta,il) = temp_c(i,il)           
+                    else
+                        temp_c_s(nsta,il) = r_missing_data
+                    endif
+
+                    if(iqc_rsa(rhQcFlag(nsta,il)) .ne. -1)then
+                        dewpoint_c_s(nsta,il) = dewpoint_c(i,il)           
+                    else
+                        dewpoint_c_s(nsta,il) = r_missing_data
+                    endif
+
+                    if(iqc_rsa(wdQcFlag(nsta,il)) .ne. -1 .and.
+     1                 iqc_rsa(wsQcFlag(nsta,il)) .ne. -1      )then
+                        dir_deg_s(nsta,il) = dir_deg(i,il)           
+                        spd_mps_s(nsta,il) = spd_mps(i,il)           
+                    else
+                        dir_deg_s(nsta,il) = r_missing_data
+                        spd_mps_s(nsta,il) = r_missing_data
+                    endif
+                enddo
 
                 go to 1600 
 
@@ -291,8 +314,9 @@ c
      &         nobs, nlvl, lvls_m,                                ! O
      &         staelev, stalat, stalon,                           ! O
      &         temp_c, dewpoint_c, height_m,                      ! O
-c    &         pressure_pa,                                       ! O 
      &         dir_deg, spd_mps,                                  ! O
+c    &         pressure_pa, prsQcFlag,                            ! O 
+     &         tempQcFlag, rhQcFlag, wsQcFlag, wdQcFlag,          ! O
      &         a9time_ob, stname, wmoid,                          ! O
      &         istatus)                                           ! O
 
@@ -307,9 +331,13 @@ c    &         pressure_pa,                                       ! O
       real*4        staelev(maxobs)
       real*4        stalat(maxobs),stalon(maxobs)
       real*4        dd(maxlvls,maxobs), ff(maxlvls,maxobs)
-      integer       wdQcFlag(maxlvls,maxobs)
       real*4        temp_k, rh_pct,stationP,ws,wd
-      integer       tempQcFlag,prsQcFlag,rhQcFlag,wsQcFlag
+      integer       tempQcFlag(maxlvls,maxobs)
+      integer       prsQcFlag(maxlvls,maxobs)
+      integer       rhQcFlag(maxlvls,maxobs)
+      integer       wsQcFlag(maxlvls,maxobs)
+      integer       wdQcFlag(maxlvls,maxobs)
+      integer       tempQF, prsQF, rhQF, wsQF, wdQF
       real*4        height_m(maxobs,maxlvls)
       real*4        pressure_pa(maxobs,maxlvls)      
       real*4        temp_c(maxobs,maxlvls), dewpoint_c(maxobs,maxlvls)
@@ -832,11 +860,14 @@ c           read stationPressure
             endif 
 
 c           read prsQcFlag
-            nf_status=NF_GET_VAR1_REAL(nf_fid,spQc_id,index_1,prsQcFlag)
+            nf_status=NF_GET_VAR1_REAL(nf_fid,spQc_id,index_1,prsQF)
             if(nf_status.ne.NF_NOERR) then
               print *, NF_STRERROR(nf_status)
               print *,'reading var prsQcFlag'
             endif 
+
+c           write prsQcFlag
+            prsQcFlag(obno,lvl) = prsQF
 
             if(id.eq.1)write(6,*) 'LW o l stationP ',obno,lvl,stationP       
 
@@ -857,11 +888,14 @@ c           read var temperature(recNum,lvl) -> temp
 
 c           read var tempQcFlag(recNum,lvl) -> tempQcFlag
             nf_status = NF_GET_VAR1_REAL(nf_fid,tempQc_id,index_2,
-     1                                   tempQcFlag)
+     1                                   tempQF)
             if(nf_status.ne.NF_NOERR) then
               print *, NF_STRERROR(nf_status)
               print *,'reading var tempQcflag'
             endif 
+
+c           write tempQcFlag
+            tempQcFlag(obno,lvl) = tempQF
 
 c           Convert temp_k to temp_c
             if ((temp_k .eq. -9999.).or.(temp_k .eq. t_fill)) then
@@ -885,11 +919,14 @@ c           read var relHumidity(recNum,level) -> rh
             endif 
 
 c           read var rhQcFlag(recNum,level) -> rhQcFlag
-            nf_status=NF_GET_VAR1_REAL(nf_fid,rhQc_id,index_2,rhQcFlag)
+            nf_status=NF_GET_VAR1_REAL(nf_fid,rhQc_id,index_2,rhQF)
             if(nf_status.ne.NF_NOERR) then
               print *, NF_STRERROR(nf_status)
               print *,'reading var rhQcFlag'
             endif 
+
+c           write rhQcFlag
+            rhQcFlag(obno,lvl) = rhQF
 
 c           Convert rh to dewpoint
             if ((rh_pct .eq. -9999.).or.(rh_pct .eq. rh_fill)) then
@@ -914,11 +951,14 @@ c           read var windSpeed(recNum,level) -> ws
             endif 
 
 c           read var wsQcFlag(recNum,level) -> wsQcFlag
-            nf_status=NF_GET_VAR1_REAL(nf_fid,wsQc_id,index_2,wsQcFlag)
+            nf_status=NF_GET_VAR1_REAL(nf_fid,wsQc_id,index_2,wsQF)
             if(nf_status.ne.NF_NOERR) then
               print *, NF_STRERROR(nf_status)
               print *,'reading var wsQcFlag'
             endif 
+
+c           write wsQcFlag
+            wsQcFlag(obno,lvl) = wsQF
 
             if ((ws .eq. -9999.).or.(ws .eq. ws_fill)) then
               spd_mps(obno,lvl) = r_missing_data
@@ -940,11 +980,14 @@ c           read var windDir(recNum,level) -> dd(lvl,obno)
             endif 
 
 c           read var wdQcFlag(recNum,level) -> wdQcFlag(lvl,obno)
-            nf_status=NF_GET_VAR1_REAL(nf_fid,wdQc_id,index_2,wdQcFlag)
+            nf_status=NF_GET_VAR1_REAL(nf_fid,wdQc_id,index_2,wdQF)
             if(nf_status.ne.NF_NOERR) then
               print *, NF_STRERROR(nf_status)
               print *,'reading var wdQcFlag'
             endif 
+
+c           write wdQcFlag
+            wdQcFlag(obno,lvl) = wdQF
 
             if ((wd .eq. -9999.).or.(wd .eq. wd_fill)) then
               dir_deg(obno,lvl) = r_missing_data
