@@ -16,6 +16,7 @@ PROGRAM MAIN
 
   ! Local variable:
   INTEGER :: id
+  REAL    :: ds(2)
 
   CALL LapsInfo
   CALL LSO_Data
@@ -27,13 +28,17 @@ PROGRAM MAIN
   CALL Grid2Obs
 
   !CALL Minimize
+  ds(1) = grid_spacingx
+  ds(2) = grid_spacingy
   DO id=1,n(4)
-     CALL Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
-     PRINT*,'Variable ',id,' has been analyzed'
+     IF (id .NE. 301) THEN  ! 3 means no analysis for v
+        CALL Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
+        PRINT*,'Variable ',id,' has been analyzed'
+     ENDIF
   ENDDO
 
   ! CALL Writeout
-  CALL Writeout
+  ! CALL Writeout
   CALL WriteAnalysis(s(1:n(1),1:n(2),1:n(3),1:n(4)),n)
 
 END PROGRAM MAIN
