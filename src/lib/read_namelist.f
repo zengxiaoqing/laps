@@ -112,6 +112,45 @@ cdoc  Reads static/balance.nl file.
       stop
       end
 c
+c-----------------------------------------------------------
+c
+      subroutine get_sfcqc_nl(lrunqc,istatus)
+c
+cdoc  Reads static/balance.nl file.
+
+      implicit none
+
+      integer    istatus
+      integer    len_dir
+      logical    lrunqc
+      character  nest7grid*150
+
+      include   'grid_fname.cmn'       !grid_fnam_common
+
+      namelist /sfc_qc_nl/lrunqc
+
+      istatus = 0
+
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
+      if(nest7grid(len_dir:len_dir).ne.'/') then
+        len_dir=len_dir+1
+        nest7grid(len_dir:len_dir)='/'
+      endif
+
+      nest7grid = nest7grid(1:len_dir)//'sfc_qc.nl'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,sfc_qc_nl,err=901)
+      close(1)
+      istatus = 1
+      return
+900   print*,'error opening file ',nest7grid
+      stop
+901   print*,'error reading sfc_qc.nl in ',nest7grid
+      write(*,sfc_qc_nl)
+      stop
+      end
+c
 c ---------------------------------------------------------
 c
       subroutine mosaic_radar_nl(c_radar_mosaic_type,n_radars,
