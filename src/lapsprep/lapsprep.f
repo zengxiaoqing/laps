@@ -55,7 +55,9 @@
     USE constants
     USE setup
     USE laps_static
-    USE lapsprep_output
+    USE lapsprep_mm5
+    USE lapsprep_wrf
+    USE lapsprep_rams
 
     ! Variable Declarations
 
@@ -76,8 +78,9 @@
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, & 
                                              virtual_t, rho
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, d2d 
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snodep, d2d 
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
+    REAL , PARAMETER                       :: tiny = 1.0e-20
     
     ! Miscellaneous local variables
                                         
@@ -121,7 +124,6 @@
 
     PRINT '(A)', 'Starting Loop for each LAPS file'
     file_loop : DO loop = 1 , num_ext
-
       !  If this is a microphysical species but not doing 
       !  a hotstart, then cycle over this file.
 
@@ -132,23 +134,27 @@
 
       !  Build the input file name.   the input file.
 
-      IF ((TRIM(ext(loop)) .NE. 'lw3' ).OR. &
-          (TRIM(ext(loop)) .NE. 'lt1' )) THEN
+      IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. &
+          (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
+          (TRIM(ext(loop)) .NE. 'lh3' )) THEN
         input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
             TRIM(ext(loop))
       ELSE
         IF (balance) THEN
-          input_laps_file = TRIM(laps_data_root) //'/lapsprd/balance/' // &
+          IF ( ( (TRIM(ext(loop)) .EQ. 'lh3').AND.(adjust_rh) ).OR. &
+               (TRIM(ext(loop)) .NE. 'lh3') )THEN
+            input_laps_file = TRIM(laps_data_root) //'/lapsprd/balance/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
             TRIM(ext(loop))
-        ELSE
-          input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
-            TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
-            TRIM(ext(loop))
+          ELSE
+            input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
+              TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
+              TRIM(ext(loop))
+          ENDIF
         ENDIF
       ENDIF
-      
+      PRINT *, 'Opening: ', input_laps_file
       ! Open the netcdf file and get the vertical dimension
 
       cdfid = NCOPN ( TRIM(input_laps_file) , NCNOWRIT , rcode )
@@ -156,7 +162,8 @@
       zid = NCDID ( cdfid , 'z' , rcode )
       CALL NCDINQ ( cdfid , zid , dum , z , rcode )
 
-      IF ( ext(loop) .EQ. 'lsx' ) THEN
+      IF ( ( ext(loop) .EQ. 'lsx' ) .OR. &
+           ( ext(loop) .EQ. 'l1s' ) ) THEN
          z2 = z
       ELSE
          z3 = z
@@ -186,6 +193,7 @@
         ALLOCATE ( virtual_t ( x , y , z3 ) )
         ALLOCATE ( sh ( x , y , z ) )
         ALLOCATE ( mr ( x , y , z ) )
+        ALLOCATE ( snodep ( x , y ) )
 
       END IF
 
@@ -260,6 +268,21 @@
           END IF
 
         END DO var_lsx
+      ELSE IF ( ext(loop) .EQ. 'l1s' ) THEN
+
+        var_l1s : DO var_loop = 1 , num_cdf_var(loop)
+
+          !  Get the variable ID.
+
+          vid = NCVID ( cdfid , TRIM(cdf_var_name(var_loop,loop)) , rcode )
+          start = (/ 1 , 1 , 1 , 1 /)
+          count = (/ x , y , 1 , 1 /)
+
+          IF      ( cdf_var_name(var_loop,loop) .EQ. 'sto' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , snodep        , rcode )
+          END IF
+
+        END DO var_l1s                             
         
       ELSE IF ( ext(loop) .EQ. 'lt1' ) THEN
 
@@ -355,6 +378,18 @@
       ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
       pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
     ENDIF
+
+    ! Clean up the arrays before output
+
+    WHERE(ABS(u) .LT. tiny) u = 0.0
+    WHERE(ABS(v) .LT. tiny) v = 0.0
+    WHERE(rh .lt. tiny) rh = 0.0
+    WHERE(lwc .lt. tiny) lwc = 0.0
+    WHERE(rai .LT. tiny) rai = 0.0
+    WHERE(sno .LT. tiny) sno = 0.0
+    WHERE(ice .LT. tiny) ice = 0.0
+    WHERE(pic .LT. tiny) pic = 0.0
+    
     ! Now it is time to output these arrays.  The arrays are ordered
     !  as (x,y,z).  The origin is the southwest corner at the top of the 
     ! atmosphere for the 3d arrays, where the last layer (z3+1) contains    
@@ -363,15 +398,15 @@
 
     select_output: SELECT CASE (output_format)
       CASE ('mm5 ')
-        CALL output_pregrid_v3(p, t, ht, u, v, rh, slp, &
-                              lwc, rai, sno, ice, pic)
+        CALL output_pregrid_format(p, t, ht, u, v, rh, slp, &
+                            lwc, rai, sno, ice, pic,snodep)
 
       CASE ('wrf ')
-        PRINT '(A)', 'Support for WRF coming soon...check back later!'
+        CALL output_gribprep_format(p, t, ht, u, v, rh, slp, psfc,&
+                             lwc, rai, sno, ice, pic,snodep)
      
       CASE ('rams') 
-        PRINT '(A)', 'Support for RAMS (Ralph 2) coming soon...check back later!'
- 
+        CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snodep)
       CASE ('sfm ')
         PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 

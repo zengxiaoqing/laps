@@ -1,10 +1,21 @@
 MODULE laps_static
 
   IMPLICIT NONE
-  INTEGER :: x, y, z2, z3
-  REAL    :: la1, lo1, dx, dy, lov, latin1, latin2
-  REAL, ALLOCATABLE :: topo(:,:)
-  CHARACTER (LEN=132) grid_type
+  INTEGER                     :: x              ! X-dimension of grid
+  INTEGER                     :: y              ! Y-dimension of grid
+  INTEGER                     :: z2             ! Z-dimension of 2-d grids
+  INTEGER                     :: z3             ! Z-dimension of 3-d press
+  REAL                        :: la1            ! SW Corner Lat
+  REAL                        :: lo1            ! SE Corner Lon
+  REAL                        :: la2            ! NE Corner Lat
+  REAL                        :: lo2            ! NE Corner Lon
+  REAL                        :: dx             ! X-direction grid spacing
+  REAL                        :: dy             ! Y-direction grid spacing
+  REAL                        :: lov            ! Orientation Longitude
+  REAL                        :: latin1         ! Standard Lat 1
+  REAL                        :: latin2         ! Standard Lat 2
+  REAL, ALLOCATABLE           :: topo(:,:)      ! LAPS Topographic height
+  CHARACTER (LEN=132)         :: grid_type      ! Map projection type
 
 CONTAINS
 
@@ -19,6 +30,7 @@ CONTAINS
     INTEGER :: cdfid, rcode,xid,yid,vid
     INTEGER, DIMENSION(2) :: startc, countc
     INTEGER, DIMENSION(4) :: start, count
+    REAL, ALLOCATABLE     :: lats(:,:), lons(:,:)
     INCLUDE "netcdf.inc"
 
     static_file = TRIM(laps_data_root)//'/static/static.nest7grid'
@@ -41,22 +53,31 @@ CONTAINS
     vid = NCVID ( cdfid , 'grid_type' , rcode )
     CALL NCVGTC ( cdfid , vid , startc , countc , grid_type , 132 , rcode ) 
 
-    ! Get the various projection parameters
+    ! Get the corner points by reading lat/lon array
+    ALLOCATE ( lats (x,y) )
+    ALLOCATE ( lons (x,y) )
+    vid = NCVID (cdfid, 'lat', rcode)
+    start = (/ 1 , 1 , 1 , 1 /)
+    count = (/ x , y , 1 , 1 /)
+    CALL NCVGT ( cdfid , vid , start , count , lats, rcode ) 
+    vid = NCVID (cdfid, 'lon', rcode)
+    start = (/ 1 , 1 , 1 , 1 /)
+    count = (/ x , y , 1 , 1 /)
+    CALL NCVGT ( cdfid , vid , start , count , lons, rcode ) 
+    la1 = lats(1,1)
+    lo1 = lons(1,1)
+    la2 = lats(x,y)
+    lo2 = lons(x,y)
+    IF (lo1 .gt. 180) lo1 = lo1 - 360.
+    IF (lo2 .gt. 180) lo2 = lo2 - 360.
+    IF (la1 .gt. 270) la1 = la1 - 360.
+    IF (la2 .gt. 270) la2 = la2 - 360.
+    DEALLOCATE (lats)
+    DEALLOCATE (lons)
+    print '(A,2F10.2)', 'SW Corner Lat/Lon = ', la1, lo1
+    print '(A,2F10.2)', 'NE Corner Lat/Lon = ', la2, lo2
 
-    vid = NCVID ( cdfid , 'La1' , rcode )
-    CALL NCVGT1 ( cdfid , vid , 1 , la1 , rcode )
-    IF ( la1 .GT. 270 ) THEN
-      PRINT '(A,F9.4,A,F9.4,A)', &
-         'Weird lower left corner latitude in LAPS data: ',la1, &
-         '.  Replacing it with ',la1-360,'.'
-      la1=la1-360
-    END IF  
-
-    vid = NCVID ( cdfid , 'Lo1' , rcode )
-    CALL NCVGT1 ( cdfid , vid , 1 , lo1 , rcode )
-    IF ( lo1 .GT. 180 ) THEN
-      lo1 = lo1 - 360
-    END IF
+    ! Get other projection parameters
 
     vid = NCVID ( cdfid , 'Dx' , rcode )
     CALL NCVGT1 ( cdfid , vid , 1 , dx , rcode )

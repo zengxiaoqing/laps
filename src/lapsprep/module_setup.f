@@ -11,7 +11,7 @@ MODULE setup
 
    ! Namelist items
 
-   LOGICAL            :: hotstart,balance
+   LOGICAL            :: hotstart,balance,adjust_rh
    CHARACTER (LEN=4)  :: output_format
    CHARACTER (LEN=256):: output_prefix
   
@@ -25,11 +25,11 @@ MODULE setup
    !  each file.  These are hard-coded for now, but we may put this
    !  into lapsprep.nl in the future.
 
-   INTEGER , PARAMETER :: num_ext = 7
+   INTEGER , PARAMETER :: num_ext = 8
    CHARACTER(LEN=3),DIMENSION(num_ext) :: ext = (/ 'lh3' , 'lt1' , &
                                                    'lw3' , 'lwc',  &
                                                    'lq3' , 'lsx',  &
-                                                   'lsx' /)
+                                                   'lsx' , 'l1s' /)
 
    CHARACTER(LEN=3),DIMENSION(5,num_ext) :: cdf_var_name = RESHAPE ( &
                            (/ 'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
@@ -38,10 +38,11 @@ MODULE setup
                               'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
                               'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'u  ' , 'v  ' , 't  ' , 'rh ' , 'xxx' , &
-                              'ps ',  'msl' , 'xxx' , 'xxx' , 'xxx' /) , &
+                              'ps ',  'msl' , 'xxx' , 'xxx' , 'xxx' , &
+                              'sto' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/ 1,2 ,2,5,1,4,2 /) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/ 1,2 ,2,5,1,4,2,1 /) 
 
 CONTAINS
 
@@ -51,8 +52,9 @@ CONTAINS
 
       INTEGER :: ioerror, nml_unit
 
-      NAMELIST /lapsprep_nl/ hotstart           , &
+      NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
+                         adjust_rh         , &
                          output_format   
 
       nml_unit = 77
