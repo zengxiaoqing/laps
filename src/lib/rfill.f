@@ -399,9 +399,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 !               Assess neighbors to see if we should fill in this grid point
                 if(   ngrids(i,j)   .ge. 1 
      !                         .AND. 
-     1               (ref_3d(i,j,k) .eq. ref_base
-     1                          .or.
-     1                ref_3d(i,j,k) .eq. r_missing_data)      )then       
+     1                ref_3d(i,j,k) .eq. r_missing_data       )then       
                     ref_sum = 0.
                     iil = i-1
                     jjl = j-1
@@ -410,8 +408,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
                     do ii = iil,iih
                     do jj = jjl,jjh
-                        if(ref_3d(ii,jj,k) .ne. ref_base
-     1               .and. ref_3d(ii,jj,k) .ne. r_missing_data   )then
+                        if(ref_3d(ii,jj,k) .ne. r_missing_data   )then
                             n_neighbors = n_neighbors + 1
                             ref_sum = ref_sum + ref_3d(ii,jj,k)
                             if(n_add_lvl .le. 20)then
