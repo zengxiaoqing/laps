@@ -57,43 +57,93 @@ C -----------------------------------------------------------
         real r_buffer
         real*4 lat(ni,nj),lon(ni,nj)
         character*(*) LAPS_DOMAIN_FILE
-        logical lfnddlw,lfnddle
-        logical lfndpln,lfndpls
+        logical lfnddateline
+        logical lfndgrenwich
+        logical lfndpolen
+        logical lfndpoles
 
 c determine if either the e or w bndry cross the dateline
-        lfnddle=.false.
-        lfnddlw=.false.
+        lfnddateline=.false.
+        lfndgrenwich=.false.
         do j=2,nj
-           if((lon(1,j-1).lt.0.0.and.lon(1,j).gt.0.0).or.
-     &        (lon(1,j-1).gt.0.0.and.lon(1,j).lt.0.0))
-     &lfnddlw=.true.
-           if((lon(ni,j-1).lt.0.0.and.lon(ni,j).gt.0.0).or.
-     &        (lon(ni,j-1).gt.0.0.and.lon(ni,j).lt.0.0))
-     &lfnddle=.true. 
-        enddo
-c determine if either the n or s bndry cross the pole
-        lfndpls=.false.
-        lfndpln=.false.
-        do i=2,ni
-           if(lat(i-1,1).lt.0.0.and.lat(i,1).gt.0.0)
-     &lfndpls=.true.
-           if(lat(i-1,nj).gt.0.0.and.lat(i,nj).lt.0.0)
-     &lfndpln=.true.
+           if((lon(1,j-1).lt.0.0.and.lon(1,j).ge.0.0).or.
+     &        (lon(1,j-1).ge.0.0.and.lon(1,j).lt.0.0))
+     &         lfnddateline=.true.
+           if((lon(ni,j-1).lt.0.0.and.lon(ni,j).ge.0.0).or.
+     &        (lon(ni,j-1).ge.0.0.and.lon(ni,j).lt.0.0))
+     &         lfndgrenwich=.true. 
         enddo
 
+        do i=2,ni
+           if((lon(i-1,1).lt.0.0.and.lon(i,1).gt.0.0).or.
+     &        (lon(i-1,nj).lt.0.0.and.lon(i,nj).gt.0.0))
+     &         lfndgrenwich=.true.
+           if((lon(i-1,1).gt.0.0.and.lon(i,1).lt.0.0).or.
+     &        (lon(i-1,nj).gt.0.0.and.lon(i,nj).lt.0.0))
+     &         lfnddateline=.true. 
+        enddo
+c determine if either the n or s bndry cross the pole
+        lfndpoles=.false.
+        lfndpolen=.false.
+        do i=2,ni
+           if((lat(i-1,1).lt.0.0.and.lat(i,1).gt.0.0).or.
+     &        (lat(i-1,nj).lt.0.0.and.lat(i,nj).ge.0.0))
+     &        lfndpoles=.true.
+           if((lat(i-1,1).gt.0.0.and.lat(i,1).lt.0.0).or.
+     &       (lat(i-1,nj).gt.0.0.and.lat(i,nj).lt.0.0))
+     &        lfndpolen=.true.
+        enddo
+
+        do j=2,nj
+           if((lat(1,j-1).gt.0.0.and.lat(1,j).lt.0.0).or.
+     &        (lat(ni,j-1).gt.0.0.and.lat(ni,j).lt.0.0))
+     &        lfndpolen=.true.
+           if((lat(1,j-1).lt.0.0.and.lat(1,j).ge.0.0).or.
+     &        (lat(ni,j-1).lt.0.0.and.lat(ni,j).ge.0.0))
+     &        lfndpoles=.true.
+        enddo
 c first pass: assume no dateline or pole boundaries
         rnorth = -90.
         south  = +90.
         west = +1000.
         east = -1000.
         do i = 1,ni
-           rnorth = max(rnorth,lat(i,nj))
-           south  = min(south ,lat(i,1))
+           do j=1,nj
+               rnorth = max(rnorth,lat(i,j))
+               south  = min(south ,lat(i,j))
+               east   = max(east  ,lon(i,j))
+               west   = min(west  ,lon(i,j))
+           enddo
         enddo
-        do j = 1,nj
-           east   = max(east  ,lon(ni,j))
-           west   = min(west  ,lon(1,j))
-        enddo ! j
+c
+c do we have a boundary to deal with?
+        
+        if(lfnddateline)then      !dateline: want west the min positive lon
+           west = +1000.          !          want east the max negative lon
+           east = -1000.
+           do j=1,nj
+              if(lon(1,j).gt.0.0)
+     &        west = min(west,lon(1,j))
+              if(lon(ni,j).lt.0.0)
+     &        east = max(east,lon(ni,j))
+           enddo
+        elseif(lfndgrenwich)then  !Greenwich: we are set to go:
+       
+        endif
+
+        if(lfndpolen)then
+           rnorth=+90.
+           do i=1,ni
+              rnorth=min(rnorth,lat(i,nj))
+           enddo
+        endif
+
+        if(lfndpoles)then
+           south=-90.
+           do i=1,ni
+              south=max(south,lat(i,1))
+           enddo
+        endif
 c
 c don't add buffer if too close to the dateline or pole boundary
         if(90.-rnorth.gt.r_buffer)then
@@ -108,39 +158,6 @@ c don't add buffer if too close to the dateline or pole boundary
         if(west+180.gt.r_buffer)then
            west   = west   - r_buffer
         endif
-
-c do we have a boundary to deal with?
-        
-        if(lfnddlw)then      !dateline: want the min positive lon
-           west = +1000.
-           do j=1,nj
-              if(lon(1,j).gt.0.0)
-     &        west = min(west,lon(1,j))
-           enddo
-        endif
-
-        if(lfnddle)then      !dateline: want the min negative lon
-           east = +1000.
-           do j=1,nj
-              if(lon(ni,j).lt.0.0)
-     &        east = min(east,lon(ni,j))
-           enddo
-        endif
-
-        if(lfndpln)then
-           rnorth=+90.
-           do i=1,ni
-              rnorth=min(rnorth,lat(i,nj))
-           enddo
-        endif
-
-        if(lfndpls)then
-           south=-90.
-           do i=1,ni
-              south=max(south,lat(i,1))
-           enddo
-        endif
-
 
 c       rnorth = min(rnorth, +90.)
 c       south  = max(south , -90.)
