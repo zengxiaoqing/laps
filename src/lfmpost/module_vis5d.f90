@@ -129,8 +129,8 @@ CONTAINS
 
     IF (TRIM(projection).EQ.'LAMBERT CONFORMAL') THEN
       v5d_proj = 2
-      v5d_proj_args(1) = proj%truelat1
-      v5d_proj_args(2) = proj%truelat2
+      v5d_proj_args(1) = proj%truelat2
+      v5d_proj_args(2) = proj%truelat1
       v5d_proj_args(3) = float(ny)-proj%polej
       v5d_proj_args(4) = proj%polei
       v5d_proj_args(5) = -proj%stdlon
