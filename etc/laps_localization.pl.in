@@ -159,10 +159,6 @@ print "gridgen_model.exe complete - building sfc lookup tables\n";
 
 run_sys::run_sys("$LAPSROOT/bin/gensfclut.exe");
 
-run_sys::run_sys("$LAPSROOT/bin/genln3_bounds.exe");
-
-print "genln3_bounds.exe complete - built WSI-NEXRAD start/end bounds\n";
-
 #
 # Generate new vrc lookup tables
 #
