@@ -175,6 +175,7 @@ cdis
 !       equivalence (slwc_int,column_max)
 
         real*4 slwc_2d(NX_L,NY_L)
+        real*4 cice_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
 !       equivalence (slwc_2d,field_2d)
 
@@ -1948,12 +1949,6 @@ cdis
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
-            if(lapsplot_pregen)then
-                l_pregen = .false.
-            else
-                l_pregen = .false.
-            endif
-
             if(c_type .eq. 'mv')then
                 if(k_level .gt. 0)then
                     call mklabel33(k_level,'     MVD     m^-6  ',c33_lab
@@ -1961,6 +1956,10 @@ cdis
                 else
                     c33_label = 'LAPS Mean Volume Diameter  m^-6  '
                 endif
+
+                write(6,*)' Getting pregenerated LMD file'
+                var_2d = 'LMD'
+                ext = 'lmd'
 
             elseif(c_type .eq. 'ic')then
                 if(k_level .gt. 0)then
@@ -1970,75 +1969,28 @@ cdis
                     c33_label = '        LAPS Icing Index         '
                 endif
 
-            endif
-
-
-            if(l_pregen)then
                 write(6,*)' Getting pregenerated LRP file'
                 var_2d = 'LRP'
                 ext = 'lrp'
 
-                if(k_mb .eq. -1)then ! Get 3D Grid
-                    call get_laps_3dgrid(i4time_ref,10000000,i4time_clou
-     1d,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,slwc_3d,istatus)
+            endif ! c_type .eq. 'ic'
 
-                else ! Get 2D horizontal slice from 3D Grid
-                    call get_laps_2dgrid(i4time_ref,10000000,i4time_clou
-     1d,
-     1                  ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
+            if(k_mb .eq. -1)then ! Get 3D Grid
+                call get_laps_3dgrid(i4time_ref,10000000
+     1                                  ,i4time_cloud
+     1                                  ,NX_L,NY_L,NZ_L,ext,var_2d
+     1                                  ,units_2d,comment_2d,slwc_3d
+     1                                  ,istatus)
 
-                endif
+            else ! Get 2D horizontal slice from 3D Grid
+                call get_laps_2dgrid(i4time_ref,10000000
+     1                                  ,i4time_cloud
+     1                                  ,ext,var_2d
+     1                                  ,units_2d,comment_2d,NX_L
+     1                                  ,NY_L,field_2d,k_mb,istatus)
 
-            else ! Calculate on the Fly
-            endif ! (c_type .eq. 'ic')
+            endif
 
-
-!               Read in SFC pressure
-                i4time_tol = 10000000
-                var_2d = 'PS'
-                ext = 'lsx'
-                call get_laps_2dgrid(i4time_lwc,i4time_tol,i4time_neares
-     1t,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
-                IF(istatus .ne. 1)THEN
-                    write(6,*)' Error Reading Surface Pressure Analysis'
-                endif
-
-                write(6,*)' Getting laps hydrostatic heights'
-                call get_heights_hydrostatic(temp_3d,pres_2d,topo,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_L,NY_L,NZ_L,heights_3d)
-
-                if(c_type .eq. 'mv')then
-                    iflag_slwc = 0
-                    iflag_mvd = .true.
-                    iflag_icing_index = .false.
-                elseif(c_type .eq. 'ic')then
-                    iflag_slwc = 13
-                    iflag_mvd = .false.
-                    iflag_icing_index = .true.
-                endif
-                iflag_cloud_type = .false.
-                iflag_bogus_w = .false.
-!               iflag_snow_potential = .false.
-
-                call get_cloud_deriv(NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
-     1                          temp_3d,rh_3d,heights_3d,
-     1                          istat_3dref,grid_ra_ref,
-     1                          l_mask,ibase_array,itop_array,
-     1                          iflag_slwc,slwc_3d,cice_3d,
-     1                          iflag_cloud_type,cldpcp_type_3d,
-     1                          iflag_mvd,mvd_3d,
-     1                          iflag_icing_index,icing_index_3d,
-     1                          iflag_bogus_w,omega_3d,istatus)
-!    1                          iflag_snow_potential,snow_2d,lwc_res_3d)
-                if(istatus .ne. 1)goto1200
-
-            endif ! L_pregen
 
             call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
 
@@ -2048,16 +2000,16 @@ cdis
                 cint = 2.
 
                 if(k_level .gt. 0)then ! Plot MVD on const pressure sfc
-                   if(l_pregen)then
+                   if(.true.)then
                        call plot_cont(mvd_2d,0.9999e-6,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                   clow,chigh,cint,asc9_tim_t,c33_label,
+     1                   i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    else
                        call plot_cont(mvd_3d(1,1,k_level),0.9999e-6,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                   clow,chigh,cint,asc9_tim_t,c33_label,
+     1                   i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    endif
 
                 else ! Find Maximum value in column
@@ -2065,48 +2017,36 @@ cdis
                    do i = 1,NX_L
                        column_max(i,j) = -1e-30
                        do k = 1,NZ_L
-                           column_max(i,j) = max(column_max(i,j),mvd_3d(
-     1i,j,k))
+                           column_max(i,j) = max(column_max(i,j)
+     1                                          ,mvd_3d(i,j,k))
                        enddo ! k
                    enddo ! i
                    enddo ! j
+
                    call plot_cont(column_max,0.9999e-6,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 endif
 
             elseif(c_type .eq. 'ic')then
                 clow = 0.
-                chigh = 1. ! 10.
+                chigh = 10.
                 cint = 1.0
 
-                if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
-                   if(l_pregen)then
+                if(k_level .gt. 0)then ! Plot on const pressure sfc
+                   if(.true.)then
                        call plot_cont(field_2d,1e0,clow,chigh,cint
-     1                               ,asc9_tim_t
-     1         ,c33_label,i_overlay,c_display,'nest7grid',
-     1                              lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
-
-                   else ! Calculated on the Fly
-                       do j = 1,NY_L
-                       do i = 1,NX_L
-                           field_2d(i,j) = icing_index_3d(i,j,k_level)
-                       enddo ! i
-                       enddo ! j
-
-                       call plot_cont(field_2d,1e0,clow,chigh,cint
-     1                               ,asc9_tim_t,c33_label,i_overlay
-     1                               ,c_display,'nest7grid',lat,lon,jdot
-     1                               ,NX_L,NY_L,r_missing_data
-     1                               ,laps_cycle_time)
+     1                      ,asc9_tim_t
+     1                      ,c33_label,i_overlay,c_display
+     1                      ,'nest7grid',lat,lon,jdot
+     1                      ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                    endif
 
                 else ! Find Maximum value in column
-                   if(l_pregen)then
+                   if(.true.)then
                        do j = 1,NY_L
                        do i = 1,NX_L
                            column_max(i,j) = -1e-30
@@ -2116,46 +2056,56 @@ cdis
                            enddo ! k
                        enddo ! i
                        enddo ! j
-
-                   else ! Calculated on the fly
-                       do j = 1,NY_L
-                       do i = 1,NX_L
-                           column_max(i,j) = -1e-30
-                           do k = 1,NZ_L
-                               barg = icing_index_3d(i,j,k)
-                               if(iarg .gt. 0)column_max(i,j)
-     1                          = max(column_max(i,j),float(iarg))
-                           enddo ! k
-                       enddo ! i
-                       enddo ! j
-
                    endif
 
                    call plot_cont(column_max,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                  clow,chigh,cint,asc9_tim_t,c33_label,
+     1                  i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1                  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 endif ! k_level
+
+            endif ! c_type
 
         elseif(c_type .eq. 'tc')then
 1524        write(6,1517)
 1517        format('     Enter Lvl (mb); OR [0] 2D cldtyp'
-     1          ,' [-1] low cloud,'
-     1          ,' [-2] high cloud',' ? '$)
+!    1          ,' [-1] low cloud,'
+!    1          ,' [-2] high cloud'
+     1          ,' ? '$)
 
 1525        read(lun,*)k_level
             k_mb = k_level
 
-            if(k_level .eq. 0)then ! Read 2D cloud type field
-                var_2d = 'SCT'
-                ext = 'lct'
+            if(k_level .lt. 0)then
+                write(6,*)' Try Again'
+                goto1524
+            endif
+
+            if(.true.)then ! Read 2D cloud type field
+
+                if(k_level .gt. 0)then ! Read from 3-D cloud type
+                   k_level =
+     1                   nint(zcoord_of_pressure(float(k_level*100)))
+                    ext = 'lty'
+                    var_2d = 'CTY'
+                    call mklabel33
+     1                    (k_level,'     Cloud Type    ',c33_label)
+
+                else                   ! Read from 2-D cloud type
+                    ext = 'lct'
+                    var_2d = 'SCT'
+                    c33_label = '      LAPS    2-D Cloud Type     '
+
+                endif
+
+
                 call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1            ,i4time_cloud,ext,var_2d
      1            ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
 
                 IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
-                    write(6,*)' Error reading 2-D cloud type'
+                    write(6,*)' Error reading cloud type'
                     goto 1200
                 endif
 
@@ -2171,123 +2121,12 @@ cdis
                 enddo ! j
 
 
-                c33_label = '      LAPS    2-D Cloud Type     '
                 call plot_cldpcp_type(b_array
-     1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
+     1                ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
+     1                ,lat,lon,idum1_array,'nest7grid'
+     1                ,NX_L,NY_L,laps_cycle_time,jdot)
 
             else ! OLD ARCHAIC CODE
-
-                if(k_level .lt. -2)then
-                    write(6,*)' Try Again'
-                    goto1524
-                endif
-
-                if(k_level .gt. 0)then
-                   k_level =
-     1                   nint(zcoord_of_pressure(float(k_level*100)))
-                endif
-
-                i4time_lwc = i4time_ref/laps_cycle_time
-     1                                * laps_cycle_time
-
-                if(k_level .gt. 0)then
-                    call mklabel33
-     1                    (k_level,'     Cloud Type    ',c33_label)
-                elseif(k_level .eq. -1)then
-                    c33_label = '      LAPS Lowest Cloud Type     '
-                elseif(k_level .eq. -2)then
-                    c33_label = '      LAPS Highest Cloud Type    '
-                endif
-
-                iflag_temp = 1 ! Returns Ambient Temp (K)
-                call get_temp_3d(i4time_lwc,i4time_nearest,iflag_temp
-     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!               if(istatus .ne. 1)goto1200
-
-                ext = 'lc3'
-                call get_clouds_3dgrid(i4time_lwc,i4time_cloud,NX_L,NY_L
-     1                  ,KCLOUD
-     1                  ,ext,b_dum,clouds_3d,cld_hts,cld_pres,istatus)
-
-!               Read in SFC pressure
-                i4time_tol = 10000000
-                var_2d = 'PS'
-                ext = 'lsx'
-                call get_laps_2dgrid(i4time_lwc,i4time_tol,
-     1              i4time_nearest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
-                IF(istatus .ne. 1)THEN
-                    write(6,*)' Error Reading Surface Pressure Analysis'
-                endif
-
-                write(6,*)' Getting laps hydrostatic heights'
-                call get_heights_hydrostatic(temp_3d,pres_2d,topo,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_L,NY_L,NZ_L,heights_3d)
-
-                iflag_slwc = 0
-                iflag_mvd = .false.
-                iflag_icing_index = .false.
-                iflag_cloud_type = .true.
-                iflag_bogus_w = .false.
-!               iflag_snow_potential = .false.
-
-                call get_cloud_deriv(NX_L,NY_L,NZ_L,clouds_3d,cld_hts,
-     1                          temp_3d,rh_3d,heights_3d,
-     1                          istat_3dref,grid_ra_ref,
-     1                          l_mask,ibase_array,itop_array,
-     1                          iflag_slwc,slwc_3d,cice_3d,
-     1                          iflag_cloud_type,cldpcp_type_3d,
-     1                          iflag_mvd,mvd_3d,
-     1                          iflag_icing_index,icing_index_3d,
-     1                          iflag_bogus_w,omega_3d,istatus)
-!       1                       iflag_snow_potential,snow_2d,lwc_res_3d)
-                if(istatus .ne. 1)goto1200
-
-                call make_fnam_lp(i4time_cloud,asc9_tim,istatus)
-
-                if(k_level .gt. 0)then ! Plot Cloud Type on const pressure sfc
-                call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
-     1     ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
-
-                elseif(k_level .eq. -1)then ! Find lowest cloud in column
-                    do j = 1,NY_L
-                    do i = 1,NX_L
-                        b_array(i,j) = 0
-                        do k = NZ_L,1,-1
-                            if(cldpcp_type_3d(i,j,k) .ne. 0)then
-                                b_array(i,j) = cldpcp_type_3d(i,j,k)
-                            endif
-                        enddo ! k
-                    enddo ! i
-                    enddo ! j
-                    call plot_cldpcp_type(b_array
-     1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
-
-                elseif(k_level .eq. -2)then ! Find highest cloud in column
-                    do j = 1,NY_L
-                    do i = 1,NX_L
-                        b_array(i,j) = 0
-                        do k = 1,NZ_L
-                            if(cldpcp_type_3d(i,j,k) .ne. 0)then
-                                b_array(i,j) = cldpcp_type_3d(i,j,k)
-                            endif
-                        enddo ! k
-                    enddo ! i
-                    enddo ! j
-                    call plot_cldpcp_type(b_array
-     1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
-
-                endif ! k_level
 
             endif ! k_level .eq. 0
 

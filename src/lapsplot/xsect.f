@@ -278,7 +278,7 @@ cdis
 !           call OPNGKS
         endif
 
-        lapsplot_pregen = .false.
+        lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
         call get_laps_domain(NX_L,NY_L,'nest7grid',lat,lon,topo,ist
@@ -1546,7 +1546,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
-            if(.true.)then ! Calculate on the Fly
+            if(.false.)then ! Calculate on the Fly
                 iflag_temp = 1 ! Returns Ambient Temp (K)
                 call get_temp_3d(i4time_lwc,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
@@ -1605,6 +1605,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
                 if(istatus .ne. 1)goto100
 
+            else
+                write(6,*)' Reading pregenerated MVD'
+                var_2d = 'LMD'
+                ext =    'lmd'
+                call get_laps_3dgrid(i4time_lwc,86400,i4time_cloud,
+     1          NX_L,NY_L,NZ_L,ext,var_2d
+     1          ,units_2d,comment_2d,pcp_type_3d,istatus)
+
+                call interp_3dn(pcp_type_3d,field_vert,xlow,xhigh
+     1                         ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
             endif ! (Read Pregenerated File)
 
