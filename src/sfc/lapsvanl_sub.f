@@ -276,6 +276,8 @@ c                       07-24-99  Turn spline back on, rm Barnes.  Adj weights.
 c                                   Turn satellite back on.
 c                       08-13-99  Change call to allow diff alf/alf2a/beta/a for
 c                                   diff variables.  Rm alf2 as array.
+c                       11-23-99  Put background (tb) into output (t) array if
+c                                   no obs or all obs bad in data array (to).
 c
 c*******************************************************************************
 c
@@ -291,7 +293,7 @@ c
 !	write(9,910)
 !910	format(' in spline routine')
 
-	call tagit('spline', 19990813)
+	call tagit('spline', 19991123)
 	imiss = 0
 	ovr = 1.4
 	iflag = 0
@@ -316,16 +318,16 @@ c
 	enddo !i
 	enddo !j
 	if(n_obs_var .eq. 0) then
-	  print *,' +++ In SPLINE: All zeros in data array. +++'
+	  print *,'  WARNING.  No observations found in data array. '
 	  imiss = 1
-	  return
+	  go to 950
 	else
-	   print *,' Observations in data array: ', n_obs_var
+	   print *,'  Observations in data array: ', n_obs_var
 	endif
 c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
 	  write(9,912)
- 912	  format(' data passed into spline:')
+ 912	  format('  data passed into spline:')
 	endif
 c
 c.....	Data check algorithm and computation of difference 
@@ -348,15 +350,15 @@ c
 	enddo !j
 c
 	if(cnt .eq. 0.) then
-	  print *, ' +++ In SPLINE: all zeros in data array. +++'
-	  return
+	  print *,'  WARNING.  Zero observations found in data array. '
+	  go to 950
 	else
 	  std = sqrt(sum / cnt)
 	endif
 	if(std .eq. 0.) then
-	  write(6,927) t(21,21)
- 927	  format(1x,'++ Uniform input to spline routine with value: ',
-     &           e12.4,' ++')
+	  write(6,927) 
+ 927	  format(1x,'  WARNING. Standard Deviation is zero.',
+     &           ' Observations equal backgroud at all locations.')
 	  std = zeros
 	endif
 c
@@ -429,8 +431,9 @@ c
 	   print *,
      &       ' Observations in data array after spline QC: ',n_obs_var
 	else
-	   print *,' No obs in data array.  Returning.'
-	   return
+	   print *,
+     &       '  WARNING. No observations in data array after QC check.'
+	   go to 950
 	endif
 c
 c.....  Have obs, so set starting field so spline converges faster.
@@ -561,8 +564,17 @@ c
 	if(cormax.lt.err .and. it.eq.1) return
  3	continue
 c       
+c.....  That's all.
+c
 !	print *,' leaving spline'
 	return
+c
+ 950	continue
+	print *,
+     &  '    No observations available. Setting analysis to background.'
+	call move(tb, t, imax, jmax)
+	return
+c
 	end
 c
 c
@@ -588,6 +600,7 @@ c				05-11-89  Add Moisture advect. calc.
 c				04-16-90  Added temp adv.
 c				10-30-90  Added boundary routine.
 c				04-10-91  Bugs, bugs, bugs....sign/unit errs.
+c                               11-15-99  Clean up mix ratio calc (QC check).
 c
 c*****************************************************************************
 c
@@ -597,29 +610,40 @@ c
 	real qcon(ni,nj), q(ni,nj), theta(ni,nj), qadv(ni,nj)
 	real t(ni,nj), tadv(ni,nj)
 c
+	integer qbad
+c
 c
 c.....	Calculate mixing ratio.
 c.....	Units:  g / kg
 c
-	do 10 j = 1,nj
-	do 10 i = 1,ni
-	  tdp = td(i,j) - 273.15                  ! convert K to C
-	  tl = (7.5 * tdp) / (237.3 + tdp)
-	  e = 6.11 * 10. ** tl
-	  drprs = 1. / (p(i,j) - e)   !invert to avoid further divisions.
-	  if(p(i,j) .le. 0.0) then
-!	    write(6,990) i,j,p(i,j)
-	    drprs = 1. / (p(i-1,j-1) - e)
-	  endif	
- 	  q(i,j) = 622. * e * drprs  !mixing ratio using (0.622*1000) for g/kg.
-10	continue
-990	format(1x,'Point ',2i4,' has a pressure of ',e12.4)
+	qbad = 0  !q ok
+	do j=1,nj
+	do i=1,ni
+	   tdp = td(i,j) - 273.15          ! convert K to C
+	   tl = (7.5 * tdp) / (237.3 + tdp)
+	   e = 6.11 * 10. ** tl
+	   if(p(i,j).le.0.0 .or. p(i,j).eq.e) then
+	      write(6,990) i,j,p(i,j)
+	      q(i,j) = badflag
+	      qbad = 1                     !have a bad q field
+	   else
+	      drprs = 1. / (p(i,j) - e)    !invert to avoid further divisions.
+	      q(i,j) = 622. * e * drprs	   !mixing ratio using (0.622*1000) for g/kg.
+	   endif	
+	enddo !i
+	enddo !j
+990	format(1x,' ERROR. Bad pressure in mixing ratio calc at point ',
+     &         2i5,'-- pressure: ',f12.4,' calculated e: ',f12.4)
 c
 c.....	Compute moisture flux convergence on the laps grid.
 c.....	Units:  g / kg / sec
 c
-	do 30 j=2,nj-1
-	do 30 i=2,ni-1
+	if(qbad .eq. 1) then
+	   call constant(qcon, badflag, ni,nj)
+	   go to 30
+	endif
+	do j=2,nj-1
+	do i=2,ni-1
 	  ddx1 = ((q(i,j-1) + q(i,j)) * .5) * u(i,j-1)
 	  ddx2 = ((q(i-1,j) + q(i-1,j-1)) * .5) * u(i-1,j-1)
 	  ddx = (ddx1 - ddx2) / dx(i,j)
@@ -627,8 +651,10 @@ c
 	  ddy2 = ((q(i,j-1) + q(i-1,j-1)) * .5) * v(i-1,j-1)
 	  ddy = (ddy1 - ddy2) / dy(i,j)
 	  qcon(i,j) = - ddx - ddy
-30	continue
+	enddo !i
+	enddo !j
 	call bounds(qcon,ni,nj)
+ 30	continue
 c
 c.....	Compute Theta advection on the laps grid.
 c.....	Units:  deg K / sec
@@ -663,8 +689,12 @@ c
 c.....	Compute Moisture advection on the laps grid.
 c.....	Units:  g / kg / sec
 c
-	do 50 j=2,nj-1
-	do 50 i=2,ni-1
+	if(qbad .eq. 1) then
+	   call constant(qadv, badflag, ni,nj)
+	   go to 50
+	endif
+	do j=2,nj-1
+	do i=2,ni-1
 	  dqa1 = (q(i,j) - q(i-1,j)) / dx(i,j)
 	  dqa2 = (q(i,j-1) - q(i-1,j-1)) / dx(i,j)
 	  dqdx = (u(i,j-1) + u(i-1,j-1)) * (dqa1 + dqa2) * .25
@@ -672,8 +702,10 @@ c
 	  dqa4 = (q(i-1,j) - q(i-1,j-1)) / dy(i,j)
 	  dqdy = (v(i-1,j) + v(i-1,j-1)) * (dqa3 + dqa4) * .25
 	  qadv(i,j) = - dqdx - dqdy     ! g/kg/sec
-50	continue
+	enddo !i
+	enddo !j
 	call bounds(qadv,ni,nj)
+ 50	continue
 c
 c.....	Send the fields back to the main program.
 c
@@ -1358,6 +1390,13 @@ c			19 Jan 89  Fixed error with lapse rates (sheeze!)
 c			19 Dec 89  Change reduction to 1500 m.
 c			20 Jan 93  Version with variable reference level.
 c                       25 Aug 97  Changes for dynamic LAPS.
+c       P. Stamus       15 Nov 99  Change checks of incoming values so the
+c                                    AF can run over Mt. Everest and Antarctica.
+c
+c       Notes:  This routine may or may not be giving reasonable results over
+c               extreme areas (Tibet, Antarctica).  As noted above, there are
+c               questions about use of the std lapse rate to do these reductions.
+c               15 Nov 99
 c
 c================================================================================
 c
@@ -1378,11 +1417,15 @@ c
 
 
 C** Check input values......good T, Td, & P needed to perform the reduction.
-	if(dewp.gt.temp .or. pres.le.620. .or. pres.gt.1080. .or.
-     &      temp.lt.-30. .or. temp.gt.120. .or. dewp.lt.-35. .or.
-     &      dewp.gt.90.) then
-	 redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
-	 return
+cc	if(dewp.gt.temp .or. pres.le.620. .or. pres.gt.1080. .or.
+cc     &      temp.lt.-30. .or. temp.gt.120. .or. dewp.lt.-35. .or.
+cc     &      dewp.gt.90.) then
+	if(dewp.gt.temp .or. pres.le.275. .or. pres.gt.1150. .or.
+     &      temp.lt.-130. .or. temp.gt.150. .or. dewp.lt.-135. .or.
+     &      dewp.gt.100.) then
+	   print *,' Warning. Bad input to reduce_p routine.'
+	   redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
+	   return
 	endif
 
 	dz= elev - ref_lvl	!thickness (m) between station & reference lvl
@@ -1415,6 +1458,7 @@ c                         08-25-97  Changes for dynamic LAPS
 c                         05-13-98  Added expected accuracy counts.
 c                         07-13-99  Change stn character arrays.
 c                                     Rm *4 from declarations.
+c                         11-15-99  Add writes to log file.
 c
 c     Notes:
 c
@@ -1437,8 +1481,10 @@ c
 	amean = 0.
 	diff_mx = -1.e30
 	diff_mn = 1.e30
+	print *,' '
+	write(6,900) title
 	write(iunit,900) title
- 900	format(/,/,2x,a40,/)
+ 900	format(/,2x,a40,/)
 c
 	ea1 = field_ea
 	ea2 = field_ea * 2.
@@ -1494,8 +1540,10 @@ c
 	amean = badflag
 	if(num .ne. 0) amean = sum / float(num)
 	if(num .ne. 0) ave_diff = abs_diff / float(num)
+	write(6,909) amean, num
 	write(iunit,909) amean, num
  909	format(/,'    Mean difference: ',f10.2,' over ',i4,' stations.')
+	write(6,910) ave_diff, num
 	write(iunit,910) ave_diff, num
  910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
 	write(iunit,920) diff_mx, stn_mx
@@ -1520,6 +1568,7 @@ c
  954	format(10x,'3x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
 	write(iunit, 930)
 	write(iunit, 930)
+	write(6, 931)
 	write(iunit, 931)
  931	format(1x,'===============================================')
 c
