@@ -1562,6 +1562,21 @@ C   TECHNICAL MEMORANDUM WBTM EDL 10, U.S. DEPARTMENT OF COMMERCE,
 C   ENVIRONMENTAL SCIENCE SERVICES ADMINISTRATION, WEATHER BUREAU,
 C   OFFICE OF SYSTEMS DEVELOPMENT, EQUIPMENT DEVELOPMENT LABORATORY,
 C   SILVER SPRING, MD (OCTOBER), PAGE 9 AND PAGE II-4, LINE 460.
+
+C   This has been updated to test for out of bounds values (2004 Steve Albers)
+
+        if(rh .lt. 0. .or. rh .gt. 100.)then
+            call get_r_missing_data(r_missing_data,istatus)
+            DWPT_laps = r_missing_data
+            return
+        endif
+
+        if(t .lt. -100. .or. t .gt. +100.)then
+            call get_r_missing_data(r_missing_data,istatus)
+            DWPT_laps = r_missing_data
+            return
+        endif
+
         X = 1.-0.01*RH
 C   COMPUTE DEW POINT DEPRESSION.
         DPD =(14.55+0.114*T)*X+((2.5+0.007*T)*X)**3+(15.9+0.117*T)*X**14
