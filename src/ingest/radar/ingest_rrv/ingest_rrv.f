@@ -148,6 +148,7 @@ c     enddo
 
       write(*,*)
       write(*,*)'Find new rrv filenames'
+      nradars_proc=0
       n=index(path_to_raw_rrv,' ')-1
       do i=1,max_radars
          cfname=path_to_raw_rrv(1:n)//c_radar_name(i)

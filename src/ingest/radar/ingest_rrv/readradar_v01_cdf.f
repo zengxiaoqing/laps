@@ -13,10 +13,13 @@ c
       character       cref_com(nzv01)*126
       character       cnyq_com(nzv01)*126
       character*(*)   filename
+
+      include 'netcdf.inc'
 C
 C  Open netcdf File for reading
 C
       n=index(filename,' ')-1
+      print*,'Open netCDF file',filename(1:n)
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -190,7 +193,8 @@ C      model
       endif
 C
 C     Variable        NETCDF Long Name
-C      nyqd_comment         nf_status = NF_INQ_VARID(nf_fid,'nyqd_comment',nf_vid)
+C      nyqd_comment
+       nf_status = NF_INQ_VARID(nf_fid,'nyqd_comment',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var nyqd_comment'
@@ -401,7 +405,8 @@ C
 C     Variable        NETCDF Long Name
 C      nyqd         "3D radar nyquist velocity" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'nyqd',nf_vid)
+      print*,'Read nyqd'
+      nf_status = NF_INQ_VARID(nf_fid,'nyqd',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var nyqd'
@@ -415,7 +420,8 @@ C
 C     Variable        NETCDF Long Name
 C      refd         "3D radar" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'refd',nf_vid)
+      print*,'Read refd'
+      nf_status = NF_INQ_VARID(nf_fid,'refd',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var refd'
@@ -429,7 +435,8 @@ C
 C     Variable        NETCDF Long Name
 C      veld         "3D radar" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'veld',nf_vid)
+      print*,'Read veld'
+      nf_status = NF_INQ_VARID(nf_fid,'veld',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var veld'
