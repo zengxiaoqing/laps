@@ -35,7 +35,7 @@ cdis
      1                       ,ext_in                                ! I
 !    1                       ,u_maps_inc,v_maps_inc                 ! I
      1                       ,ni,nj,nk                              ! I
-     1                       ,lat,lon                               ! I
+     1                       ,lat,lon,r_missing_data                ! I
      1                       ,temp_obs,max_obs,n_obs                ! I/O
      1                       ,istatus)                              ! O
 
@@ -109,12 +109,13 @@ cdis
         write(6,*)
         write(6,*)'             Reading ACARS Obs: ',ext_in
         write(6,*)
-     1  '   n   i  j  k   temp    '
+     1  '   n   i  j  k   T-Raw  T-grid  bias  '
 
 10      i_qc = 1
 
         if(n_acars_read .le. 200)then
             iwrite = 1
+            write(6,*)
         else
             iwrite = 0
         endif
@@ -193,18 +194,15 @@ cdis
      1                             elev,temp_ob,                         ! I
      1                             t_diff,temp_bkg_3d,                   ! I
      1                             t_interp,                             ! O
-     1                             1,iwrite,level,.true.,                ! I
+     1                             1,iwrite,k_grid,.true.,               ! I
      1                             1,                                    ! I
      1                             lat_pr,lon_pr,i_grid,j_grid,          ! I
      1                             ni,nj,nk,                             ! I
      1                             1,1,r_missing_data,                   ! I
      1                             heights_3d)                           ! I
 
-                        write(lun_tmg,*)ri-1.,rj-1.,rk-1.,t_interp
-
-                        write(6,101)xlat,xlon,dd,ff,rk
-     1                             ,t_buff,acars_temp(n_acars_obs)
-101                     format(2f8.2,2f8.1,f8.1,3f8.2)
+                        write(lun_tmg,*)ri-1.,rj-1.,k_grid-1,t_interp
+     1                                 ,'ACARS'
 
 !                       Calculate observation bias
                         bias = t_interp - 
@@ -234,13 +232,16 @@ cdis
                         endif
 
 
+                        write(6,20,err=21)n_acars_obs
+     1                                   ,i_grid,j_grid,k_grid       
+     1                                   ,temp_ob,t_interp,bias
+20                      format(i5,1x,3i4,2x,3f7.1)
+21                      continue
+
+                    else
+                        write(6,*)' WARNING: Out of vertical Bounds'       
+
                     endif ! In vertical bounds
-
-
-                    write(6,20,err=21)n_acars_obs,i_grid,j_grid,k_grid       
-     1                        ,temp_ob,t_interp
-20                  format(i5,1x,3i4,2x,2f7.1)
-21                  continue
 
                 else
                     write(6,*)' Out of horizontal bounds',i_grid,j_grid        

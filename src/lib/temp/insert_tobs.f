@@ -327,7 +327,7 @@ cdis
      1                       ,'pin'                                 ! I
 !    1                       ,u_maps_inc,v_maps_inc                 ! I
      1                       ,ni,nj,nk                              ! I
-     1                       ,lat,lon                               ! I
+     1                       ,lat,lon,r_missing_data                ! I
      1                       ,temp_obs,max_obs,n_obs                ! I/O
      1                       ,istatus)                              ! O
 
