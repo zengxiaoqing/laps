@@ -32,9 +32,13 @@ cdis
 
         subroutine bilinear_laps(ri,rj,imax,jmax,array_2d,result)
 
-        include 'lapsparms.inc' ! for r_missing_data
-
         real*4 array_2d(imax,jmax)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in bilinear_laps: STOP'
+            stop
+        endif
 
         i = int(ri)
         if(i .eq. imax)i=i-1
@@ -53,7 +57,7 @@ cdis
             Z3=array_2d(i+1, j+1)
             Z4=array_2d(i  , j+1)
 
-            if(    z1 .ne. r_missing_data
+            if(  z1 .ne. r_missing_data
      1     .and. z2 .ne. r_missing_data
      1     .and. z3 .ne. r_missing_data
      1     .and. z4 .ne. r_missing_data)then
@@ -77,9 +81,13 @@ cdis
         subroutine bilinear_interp_extrap(ri,rj,imax,jmax
      1                                   ,array_2d,result,istatus)
 
-        include 'lapsparms.inc' ! for r_missing_data
-
         real*4 array_2d(imax,jmax)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in bilinear_laps_extrap'
+            return
+        endif
 
         j = nint(rj)
         i = nint(ri)

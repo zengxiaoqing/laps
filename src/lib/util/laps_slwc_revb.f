@@ -120,6 +120,9 @@ c
 c
 c     Set I_STATUS1 = F if 0 < cld top < -20 C (for stratus).
 c
+!     We are defining GT here since it is not defined above.
+!     This test might not be set up properly.
+      GT = 0.
       If(GT.GE.0..OR.CTT.lt.-20.) I_STATUS1=0
 c
       TK=T0+273.15

@@ -166,8 +166,6 @@ c    1orms)
      1                  ,iob,job,obs,wt_ob,background_field
      1                                  ,iiilut,anal)
 
-      include 'lapsparms.inc' ! for r_missing_data
-
       real*4 exponent_distance_wt,background_weight
       parameter (exponent_distance_wt = 5.0)
       parameter (background_weight = 1.0)
@@ -184,6 +182,12 @@ c    1orms)
       real*4 iiilut(-ni:ni,-nj:nj)
 
       write(6,*)' Barnes_r5th called'
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error in barnes_r5th: STOP'
+          stop
+      endif
 
       do iii = 1,n_fnorm
         fnorm(iii) = (100./float(iii)) ** (exponent_distance_wt / 2.0)
