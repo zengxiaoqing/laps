@@ -43,6 +43,7 @@ C       S. Albers          May 97       No longer using 0 as missing data
 C                                       value. Added error trapping when
 C                                       Emission angle < 0.
 C       S. Albers          Jun 97       Error handling for 'iskip_bilin'
+C       J. Smart           Mar 99       Put Emission angle code in subroutine.
 
 C Argument      I/O       Type                    Description
 C --------      ---       ----    ------------------------------------------------
@@ -84,13 +85,12 @@ C***Parameter list variables
 
 C***Local variables
         integer*4 maxlut
-        real*4 rpd,radius_earth_m
-        Parameter       (maxlut=205,         ! largest array size allowed
-     1          rpd=3.1415926536/180.,
-     1          radius_earth_m = 6378137.)
+        real*4 rpd
+        Parameter   (maxlut=205,         ! largest array size allowed
+     1          rpd=3.1415926536/180.)
 
         Real*8  TX,TY,TZ,RX,RY,RZ,
-     1          SATX,SATY,SATZ,R8Phase_angle_r,R8Emission_angle_r,
+     1          SATX,SATY,SATZ,R8Phase_angle_r,
      1          R8_ref_angle_r,
      1          stx_n,sty_n,stz_n,arg_dum,
      1          tx_n,ty_n,tz_n,
@@ -180,9 +180,9 @@ C***Fill the solar brightness and phase angle arrays
           img_i(ilut) = i
 
 C   Compute equatorial coordinates of point on sfc of earth
-          TX = cosd(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
-          TY = sind(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
-          TZ = sind(lat(i,j))                  * radius_earth_m / au_m
+C         TX = cosd(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
+C         TY = sind(lon(i,j)) * cosd(lat(i,j)) * radius_earth_m / au_m
+C         TZ = sind(lat(i,j))                  * radius_earth_m / au_m
 
           call solar_position(lat(i,j),lon(i,j),i4time,solar_alt_d
      1                                  ,solar_dec_d,hr_angle_d)
@@ -195,16 +195,20 @@ C   Reduce and limit correction at terminator
           solar_factor(ilut,jlut)=log(sind(solar_alt_d)/normfac)
 
 C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
-          Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
-     1                            ,R8Emission_angle_r)
-          Emission_angle_d = 90. - R8Emission_angle_r / rpd
+ 
+          call sat_angular_alt(sat_radius,lat(i,j),lon(i,j)
+     .,SATX,SATY,SATZ,TX,TY,TZ,Emission_angle_d,istatus)
+
+C         Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
+C    1                            ,R8Emission_angle_r)
+C         Emission_angle_d = 90. - R8Emission_angle_r / rpd
 
           if(Emission_angle_d .lt. 0.)then
-              Emission_angle_d = 0.
               istatus = 0
 
-              if(iwrite .le. 1)then
-                If(image(i,j) .ne. r_missing_data)then ! valid image data
+              if(image(i,j) .ne. r_missing_data)then ! valid image data
+
+                if(iwrite .le. 1)then
                   write(6,*)
      1            ' Warning, Emission_angle_d =', Emission_angle_d
                   write(6,*)
@@ -214,9 +218,17 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
                   write(6,*)'i,j,lat(i,j),lon(i,j),sublat_d,sublon_d'        
                   write(6,*)i,j,lat(i,j),lon(i,j),sublat_d,sublon_d
                   iwrite = iwrite + 1
-                endif ! valid image pixel intensity
-              endif ! iwrite .le. 1
+                  Emission_angle_d = 0.0
+                else ! iwrite .le. 1
+                  write(6,*)
+     1'Warning, Emission_angle_d < 0 (i/j/lat/lon/E): ',i,j,lat(i,j)
+     1,lon(i,j),Emission_angle_d
+                  iwrite=iwrite+1
+                  Emission_angle_d = 0.0
+                endif
 
+              endif ! valid image pixel intensity
+ 
           endif ! emission angle < 0 (looking beyond the limb)
 
 C   Compute Phase Angle
@@ -282,6 +294,10 @@ C   Compute Specular Reflection Angle
          EndDo
         EndDo
 
+        if(iwrite.gt.0)then
+           write(6,*)'Warning: found ',iwrite,' pts with Emission',
+     +' angle < 0.0'
+        endif
         write(lun,*)' Normalization Lookup Tables complete'
 
 C***Apply the solar brightness normalization to the image
@@ -395,5 +411,48 @@ C-------------------------------------------------------------------------------
 	return
 	end
 
+c-----------------------------------------------------------------------
+c=======================================================================
 
+      subroutine sat_angular_alt(sat_radius,lat,lon
+     .,SATX,SATY,SATZ,TX,TY,TZ,Emission_angle_d,istatus)
+c
+c computes satellite altitude (degrees above horizon) for
+c a given earth lat/lon. Code taken from src/lib/normalize.f
+c by Albers, S.
+c
+c code put in subroutine for use in lvd satellite ingest for
+c determining the polar extent of useable satellite data.
+c Smart, J. 3/10/99
+c
+      Implicit None
 
+      integer  i,j,istatus
+ 
+      real*4     rpd,radius_earth_m
+      Parameter (rpd = 3.1415926536/180.,
+     1           radius_earth_m = 6378137.)
+
+      real*4  lat,lon
+      real*4  sat_radius,au_m
+
+      real*8  TX,TY,TZ,
+     1        SATX,SATY,SATZ,
+     1        R8Emission_angle_r
+
+      real*4  Emission_angle_d
+
+c================================================================
+        au_m = 149000000.
+C   Compute equatorial coordinates of point on sfc of earth
+        TX = cosd(lon) * cosd(lat) * radius_earth_m / au_m
+        TY = sind(lon) * cosd(lat) * radius_earth_m / au_m
+        TZ = sind(lat)                  * radius_earth_m / au_m
+
+C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
+        Call AngleVectors(SATX-TX,SATY-TY,SATZ-TZ,TX,TY,TZ
+     1                            ,R8Emission_angle_r)
+        Emission_angle_d = 90. - R8Emission_angle_r / rpd
+
+        return
+        end
