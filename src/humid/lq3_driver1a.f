@@ -523,7 +523,11 @@ c  attempt to get data from the ramsfile
 
 c     get the background field for analysis
  150    continue                ! go to this point if no rams background
-        print*, '4dda background data not avail... default to lga'
+        write(6,*)  '4dda background data not avail... default to lga'
+        write(6,*)  'switching off 4DDA mode if on'
+        mod_4dda_1 = 0  !  switches 4dda "drying" to off
+        write(6,*)  'mod_4dda_1 = ', mod_4dda_1
+        
 
 c     first the rh data
 
@@ -704,10 +708,65 @@ c     ****  execute raob step if switch is on
            write (6,*) 'begin raob insertion'
            call raob_step (i4time,data,plevel, raob_lookback,
      1          lat,lon, ii,jj,kk)
+
+
+           write(6,*) 'Reporting effects of RAOB insertion'
+
+
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
+        do k = 1,kk
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .gt. 0.0) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
+
+c     end report moisture change block
+        
         else
            write(6,*) 'the raob switch is off... raobs skipped'
         endif
 
+        write(6,*) 'reporting raob insertion impact'
 
 
 c ****  get laps cloud data. used for cloud, bl, goes
@@ -747,6 +806,59 @@ c     insert boundary layer data
         print*, 'finished with routine lsin'
        if( sfc_mix.eq.1)then
           write(6,*) 'Lsin allowed to modify data field'
+
+          write(6,*) 'Reporting effects of boundary layer effects'
+
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
+        do k = 1,kk
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .gt. 0.0) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
+
+c     end report moisture change block
+        
+
         else
           write(6,*) 'Lsin and sfc mixing step skipped'
 
@@ -829,6 +941,58 @@ c make call to goes moisture insertion
      1             ii,jj,kk
      1             )
 
+              write (6,*) 'GOES step complete, effects logged.'
+
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
+        do k = 1,kk
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .gt. 0.0) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
+
+c     end report moisture change block
+        
+
            else
 
               write(6,*)
@@ -899,6 +1063,59 @@ c                                        ! still cloudy...put in for albers
               enddo
            enddo
 
+           write (6,*) 'Reporting cloud effects on analysis'
+
+
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
+        do k = 1,kk
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .gt. 0.0) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
+
+c     end report moisture change block
+        
+
 
         endif
 
@@ -928,54 +1145,6 @@ c gvap data insertion step (currently under test)
         endif
 
 
-
-
-
-
-c repeat quality control check for supersaturation after pre-analysis
-        print*, 'perform qc for supersaturation'
-        counter = 0
-        do k = 1,kk
-        write(6,*) 'Level ',k, '    ', plevel(k)
-        do j = jj,1,-1
-        do i = 1,ii
-
-        tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
-
-        if ( data(i,j,k)/tempsh .ge. 1.0) then
-            cdomain(i:i) = 'x'
-            if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
-            counter = counter + 1
-            data(i,j,k) = tempsh
-        elseif (data(i,j,k) .lt. 0.0) then
-               cdomain(i:i) = 'M'
-
-        else
-               write (cdomain(i:i),35) int(data(i,j,k)/tempsh*10.)
-35             format (i1)
-
-        endif
-
-
-        enddo
-        write(6,*) cdomain(1:ii)
-        enddo
-        enddo
-
-        if (counter.ne.0) then
-        write (6,*) 'supersaturation has been corrected, 
-     1   ',counter,' times.'
-        endif
-
-
-c       recompute tpw including clouds and supersat corrections
-
-        call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
-
-
-1234    continue  ! goes here if no 3-d temp data...also skips b.l. stuff
-
 c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
 
         if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
@@ -988,35 +1157,130 @@ c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
                  enddo
               enddo
            enddo
+
+           write(6,*) ' mod_4dda loop complete'
+
+
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
+        do k = 1,kk
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .gt. 0.0) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
+
+c     end report moisture change block
+        
    
 
         endif
 
-c       place the accepted missing data flag in output field
-c       sum over the entire grid for a total water sum value for 
-c       QC study.
 
-        tempsh = 0.0
-
-        do i = 1,ii
-        do j = 1,jj
+c repeat quality control check for supersaturation after pre-analysis
+        print*, 'perform qc for supersaturation'
+        counter = 0
         do k = 1,kk
-
-        if(data(i,j,k) .lt.0.0) then
-          data(i,j,k) = mdf  !  put in missing data flag if missing
-        else
-          tempsh = tempsh + data(i,j,k) ! sum if good data
+           write(6,*) 'Level ',k, '    ', plevel(k)
+           do j = jj,1,-1
+              do i = 1,ii
+                 
+                 tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
+     1                lt1dat(i,j,k)-273.15, 0.0 )/1000.
+                 
+                 if ( data(i,j,k)/tempsh .ge. 1.0) then
+                    cdomain(i:i) = 'x'
+                    if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
+                    counter = counter + 1
+                    data(i,j,k) = tempsh
+                 elseif (data(i,j,k) .lt. 0.0) then
+                    cdomain(i:i) = 'M'
+                    
+                 else
+                    write (cdomain(i:i),35) int(data(i,j,k)/tempsh*10.)
+ 35                 format (i1)
+                    
+                 endif
+                 
+                 
+              enddo
+              write(6,*) cdomain(1:ii)
+           enddo
+        enddo
+        
+        if (counter.ne.0) then
+           write (6,*) 'supersaturation has been corrected, 
+     1          ',counter,' times.'
         endif
-
+        
+        
+c     recompute tpw including clouds and supersat corrections
+        
+        call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+        
+c     place the accepted missing data flag in output field
+c     sum over the entire grid for a total water sum value for 
+c     QC study.
+        
+        tempsh = 0.0
+        
+        do i = 1,ii
+           do j = 1,jj
+              do k = 1,kk
+                 
+                 if(data(i,j,k) .lt.0.0) then
+                    data(i,j,k) = mdf !  put in missing data flag if missing
+                 else
+                    tempsh = tempsh + data(i,j,k) ! sum if good data
+                 endif
+                 
+              enddo
+           enddo
         enddo
-        enddo
-        enddo
-
-
-
-
-c       log the amount of water vapor
-
+        
+        
+        
+        
+c     log the amount of water vapor
+        
         write (6,*) ' '
         write (6,*) ' '
         write (6,*) '***************************** '
@@ -1025,97 +1289,103 @@ c       log the amount of water vapor
         write (6,*) '***************************** '
         write (6,*) ' '
         write (6,*) ' '
-
-c check for NaN values and Abort if found
-
+        
+c     check for NaN values and Abort if found
+        
         call check_nan3(data,ii,jj,kk,istatus)
-          if(istatus.ne.1) then
-            write(6,*) 'NaN values detected (sh array)... aborting'
-            return
-          endif
-
+        if(istatus.ne.1) then
+           write(6,*) 'NaN values detected (sh array)... aborting'
+           return
+        endif
+        
         call check_nan2(tpw,ii,jj,istatus)
-          if(istatus.ne.1) then
-            write(6,*) 'NaN values detected (tpw array)... aborting'
-            return
-          endif
-
-
-c       write final 3-d sh field to disk
+        if(istatus.ne.1) then
+           write(6,*) 'NaN values detected (tpw array)... aborting'
+           return
+        endif
+        
+        
+c     write final 3-d sh field to disk
         commentline = 'maps with clouds and surface effects only'
         call writefile (save_i4time,commentline,mlevel,data,
-     1                   ii,jj,kk,istatus)
+     1       ii,jj,kk,istatus)
         if(istatus.eq.1)        jstatus(1) = 1
-
-c       write total precipitable water field
+        
+c     write total precipitable water field
         call write_lh4 (save_i4time,tpw,bias_one,ii,jj,istatus)
         if(istatus.eq.1) jstatus(3) = 1
-
-
-c       generate lh3 file (RH true, RH liquid)
+        
+        
+c     generate lh3 file (RH true, RH liquid)
         if (t_istatus.eq.1) then
-        call lh3_compress(data,lt1dat,save_i4time,lvllm,
-     1       ii,jj,kk,istatus)
-        if(istatus.eq.1)        jstatus(2) = 1
+           call lh3_compress(data,lt1dat,save_i4time,lvllm,
+     1          ii,jj,kk,istatus)
+           if(istatus.eq.1)        jstatus(2) = 1
         else
-        print*, 'no lh3 or rh data produced...'
-        print*, 'no laps 3-d temp data avail'
-        jstatus(2) = 0
+           print*, 'no lh3 or rh data produced...'
+           print*, 'no laps 3-d temp data avail'
+           jstatus(2) = 0
         endif
-
-
-
-c record total moisture
-
-      write(6,*)
-      write(6,*)
-
-       write(6,*) 'Delta moisture stats:'
-       write(6,*) 'Avg = Average difference (g/g) Q'
-       write(6,*) 'Std Dev = +/- difference (g/g) Q'
-
+        
+        
+        
+c     report moisture change
+c     this is a generic loop that can be place about anywhere in the
+c     module to help track changes in moisture from any stage
+c     this block is planned for a future suboutine.
+        
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Delta moisture stats:'
+        write(6,*) 'Avg = Average difference (g/g) Q'
+        write(6,*) 'Std Dev = +/- difference (g/g) Q'
+        
         do k = 1,kk
-        delta_moisture(k) = 0.0
-        avg_moisture(k) = 0.0
-        counter = 0
-        do i = 1,ii
-        do j = 1,jj
-        if( data(i,j,k) .ne. mdf) then
-        counter = counter+1
-        diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
-        delta_moisture(k) = diff_data(counter) + delta_moisture(k)
-        avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
-      endif
-      enddo
-      enddo
-      if(avg_moisture(k).ne.0) then
-         delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
-         call moment_b (diff_data,counter,ave,adev,sdev,
-     1        var,skew,curt,istatus)
-         write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
-      endif
-         
-      enddo
-      write(6,*)
-      write(6,*)
+           delta_moisture(k) = 0.0
+           avg_moisture(k) = 0.0
+           counter = 0
+           do i = 1,ii
+              do j = 1,jj
+                 if( data(i,j,k) .ne. mdf) then
+                    counter = counter+1
+                    diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+                    delta_moisture(k) = 
+     1                   diff_data(counter) + delta_moisture(k)
+                    avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
+                 endif
+              enddo
+           enddo
+           if(avg_moisture(k).ne.0) then
+              delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+              call moment_b (diff_data,counter,ave,adev,sdev,
+     1             var,skew,curt,istatus)
+              write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+           endif
+           
+        enddo
+        write(6,*)
+        write(6,*)
+        
+        write(6,*) 'Relative moisture change % each level'
+        write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+        
+        do k = 1,kk
+           write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+        enddo
+        write(6,*)
+        write(6,*)
 
-      write(6,*) 'Relative moisture change % each level'
-      write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+c     end report moisture change block
+        
+        
+        return
 
-      do k = 1,kk
-         write(6,*)plevel(k), delta_moisture(k)*100.,'%'
-      enddo
-      write(6,*)
-      write(6,*)
-
-
-      return
-
-24      write(6,*) 'error finding moisture switch file'
+ 24     write(6,*) 'error finding moisture switch file'
         write(6,*) 'check to see it is under'
         write(6,*) fname(1:len)//'moisture_switch.txt'
         write(6,*) 'aborting'
-
+        
         return
 
         end
