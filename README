@@ -147,16 +147,11 @@
      a revision control system such as CVS.  This strategy would make it easier 
      to update your implementation of LAPS with the latest laps.tar.gz file 
      from FSL, while minimizing the hassle involved with LAPS modifications 
-     for your local domain. Examples of such files (described below) possibly
-     worth saving include the following:
-
-              src/include/lapsparms.for
-              data/static/nest7grid.parms
-              src/include/laps_grid_def.h
-              data/static/nest7grid.cdl
+     for your local domain. One such file (described below) possibly worth 
+     saving is 'data/static/nest7grid.parms'.
 
      One caution here is that you might want to check for any updates FSL has 
-     made in these files.
+     made in this file.
 
      Note that the namelist format for 'nest7grid.parms' works on most 
      platforms. On the IBM/AIX however, you may need to set an environment
@@ -439,8 +434,8 @@
 
      3. Edit the file './data/static/nest7grid.cdl' to modify
 	the domain size from the Colorado (61x61) to your domain size.
-	This should be consistent with the values of NX_L and NY_L in
-	src/include/lapsparms.for. 
+	This should be consistent with the horizontal grid dimensions in
+                                   './data/static/nest7grid.parms'. 
 
         Three sets of variables need to be modified in nest7grid.cdl:
         a) x and y in the dimensions area should be set to match NX_L
@@ -593,18 +588,17 @@
      To do this, perform the following between untarring the tar file and
     compiling 
 
-     1. Edit 'src/include/lapsparms.for' 
+     1. Check 'src/include/lapsparms.inc'. 
 
-        Change the parameter NZ_L to be the number of vertical levels. Make
-        sure it is <= NZ_L_MAX. If NZ_L_MAX needs to
-        be changed, it must also then be changed in another file, namely 
-        'src/include/lapsparms.inc'. Note that NZ_L counts upward from bottom to 
-        top.
+        NZ_L_MAX is the maximum allowed dimensions for LAPS.
+        If your dynamic adjustment of the dimensions will exceed these values,
+        then 'lapsparms.inc' should be modified at compile time (before
+        running make).. 
 
      2. Edit 'data/static/nest7grid.parms'
        
-        Change the parameter 'nk_laps' to be equal to the new NZ_L 
-        (number of vertical levels).
+        Change the parameter 'nk_laps' to be equal to the (number of vertical 
+        levels).
 
      3. readwritelaps.c in the library needs to be changed. Explicit mention of
         the number of levels occurs in quite a few places (default = 21).
@@ -636,13 +630,10 @@
 
 -------- 2.11 ----- CHANGING THE CYCLE TIME -----------------------------------
 
-      The default cycle time is 60 minutes. To change this, do the following
+      The default cycle time is 60 minutes. To change this, do the following.
    between untarring the tar file and compiling
-
-     1. Edit 'src/include/lapsparms.for' to change the parameter
-        'laps_cycle_time'.
  
-     2. Edit runtime parameter file 'data/static/nest7grid.parms' 
+     1. Edit runtime parameter file 'data/static/nest7grid.parms' 
         to change the value of 'laps_cycle_time'.
 
 --------- 2.12 ------SURFACE ANALYSIS CHANGES---------------------------------
