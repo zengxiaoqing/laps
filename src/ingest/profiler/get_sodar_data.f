@@ -169,12 +169,21 @@ C
 
       do iob = 1,recNum
           call convert_array(levels(:,iob),height_m,level
-     1                      ,'none',r_missing_data,istatus)
+     1                      ,'reverse',r_missing_data,istatus)
 
           call addcon_miss(height_m,elevation(iob),height_m,level,1)
 
           call convert_array_i2r(windDir(:,iob),dir_deg,level
      1                      ,'none',r_missing_data,istatus)
+          call apply_qc_rsa(wdQcFlag(:,iob),dir_deg,level)
+          call convert_array(dir_deg,dir_deg,level
+     1                      ,'reverse',r_missing_data,istatus)
+
+          call convert_array(windSpeed(:,iob),spd_mps,level
+     1                      ,'none',r_missing_data,istatus)
+          call apply_qc_rsa(wsQcFlag(:,iob),spd_mps,level)
+          call convert_array(spd_mps,spd_mps,level
+     1                      ,'reverse',r_missing_data,istatus)
 
           l_closest_time = l_closest_time_i(iwmostanum,a9time_ob_r
      1                                     ,recNum,iob,i4time_sys
@@ -193,7 +202,7 @@ C
      +                      ,level
      +                      ,height_m
      +                      ,dir_deg
-     +                      ,windSpeed(:,iob)
+     +                      ,spd_mps
      +                      ,istatus)
           endif ! valid profile
 
