@@ -423,8 +423,7 @@
      of the 'data' directory tree if needed. The parameter files are then 
      merged/updated with the repository versions if needed. The dimensions
      in the 'cdl' files are also adjusted. Then several executable programs are
-     run including 'gridgen_model.exe', 'gensfclut.exe', and 'genvrclut.exe' 
-     as per section 3.1.
+     run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
 
      If you have multiple domains, 'make' can be run for each domain with
      different values of 'DATAROOT'. 
@@ -1415,7 +1414,11 @@ that are labeled "_hd" (15 min freq). They also send out an "_hf"
 (5 min freq) file.  We use hd because WSI hand edits these for
 ground clutter. The hf files are not edited. The hd and hf files
 are composites of "low-level" elevation scans from the 88D's around
-the country.
+the country.  The vrc_driver.x also maps from conus to laps domain
+for the wfo data set.  The map transformation software is found in
+lib/gridconv, lib/nav, and lib/radar/wsi_ingest. The switch to use
+wsi versus wfo in variable c_raddat_type in nest7grid.parms. Pathway
+to data is variable path_to_wsi_2d_radar_cmn in nest7grid.parms.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
@@ -1987,8 +1990,23 @@ Inputs:                                          '*' = essential input
 
 Outputs: 
 	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
-	lwc     3d grid         liquid water content (LWC)
+
+	lty     3d grid         3D cloud & precip type (CTY,PTY) 
+                                    threshold for cloud cover in CTY is 0.65.
+
+	lwc     3d grids        Cloud liquid water content (LWC)
+	                        Cloud ice content (ICE)
+	                        Hydrometeor Concentration (PCN)
+
+                                The above three are specific contents in
+                                grams/meter**3. These can be converted to
+                                mixing ratio if desired by dividing through
+                                by the air density. In addition, rain/snow/etc
+                                contents can be derived by considering the
+                                precip type and concentration together.
+
 	lil     2d grid		integrated lwc
+
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
                                        0 - No Precip         
@@ -2044,9 +2062,6 @@ Outputs:
                                 4 is light intermittent
                                 5 is mod   intermittent
                                 6 is heavy intermittent
-
-	lty     3d grid         3D cloud & precip type (CTY,PTY) 
-                                    threshold for cloud cover in CTY is 0.65.
 
 	lwm	2d grid		interpolated surface winds
 
