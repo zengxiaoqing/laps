@@ -85,7 +85,7 @@ c    .      ,wb(nx,ny,nz)
       real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
-     .      ,ffz
+     .      ,ffz,sumu,sumv
 
       real*4 smsng
       real*4 rstats(7)
@@ -101,8 +101,8 @@ c
      .         ,npass
      .         ,i4time_sys
      .         ,i4time_airdrop
-     .         ,i,j,k,ll,istatus
-     .         ,ii,jj,iii
+     .         ,i,j,k,kk,ll,istatus
+     .         ,ii,jj,iii,icount
 
       integer   itstatus
       integer   init_timer
@@ -114,12 +114,13 @@ c
       integer   lenm
       integer   adv_anal_by_t_min
       integer   k1,k2
+      integer   kfirst,klast
       integer   ij
 c
       logical lrunbal
       logical lrotate/.false./
       logical larray_diag/.false./
-      logical first_one,last_one
+      logical frstone,lastone
 
       character*255 staticdir,sfcdir
 c     character*255 generic_data_root
@@ -138,7 +139,7 @@ c    Added by B. Shaw, 4 Sep 01
       real*4 ubias,vbias,urms,vrms,oberr
 c    Arrays for Airdrop application
       real, allocatable, dimension(:) :: udrop,vdrop,tdrop,rri,rrj,
-     &    rrit,rrjt
+     &    rrit,rrjt,rrii,rrjj
 c_______________________________________________________________________________
 c
       call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
@@ -603,6 +604,9 @@ c  the bs arrays are used as dummy arrays to go from stagger to non staggered
      & shbs,ombs,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
 c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
+
+      if(.false.)then
+
 c     write out input laps vs balanced laps at center grid point
       print*,'Output u and Input u and diff after balance and destagger'
       do k=1,nz
@@ -625,6 +629,8 @@ c     write out input laps vs balanced laps at center grid point
      &        ,phibs(nx/2,ny/2,k)-lapsphi(nx/2,ny/2,k)
       enddo
  1111 format(1x,3f9.2)
+
+      endif
       deallocate(lapsphi,lapsu,lapsv,omo)
 c adjust surface temps to account for poor phi estimates below ground 
       call sfctempadj(tb,lapstemp,p,ps,nx,ny,nz,npass)  
@@ -779,7 +785,7 @@ c     simple solution is to read from .pig and tmg files, then create a
 c truth profile and compute an average analysis error
 
          allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz)
-     &   , rrit(nz),rrjt(nz))
+     &   , rrit(nz),rrjt(nz),rrii(nz),rrjj(nz))
 
 c  create dropsond profiles for testing....comment out read pig,tmg
          call readpig(a9_time,nx,ny,lat,lon
@@ -837,57 +843,109 @@ c (if they exist) otherwise, the center of the grid and
 c gaussian noise will be applied: 3 m/s for wind, 1C for temp
 c this will allow a variance to be provided above dropsonde levels
 c
- 99      slastu=0
-         slastv=0
-         slastt=0 
-         do k=1,nz
-          if(rri(k).eq.smsng.or.rrj(k).eq.smsng)then
-             ii=nx/2
-             jj=ny/2
-             rri(k)=float(ii)
-             rrj(k)=float(jj)
-          else
-             ii=nint(rri(k))
-             jj=nint(rrj(k))
-          endif
-          slastu=ffz(iii,20,cor,slastu)
-          slastv=ffz(iii,20,cor,slastv)
-          slastt=ffz(iii,20,cor,slastt)
- 
-          if(udrop(k).eq.smsng) udrop(k)=u(ii,jj,k)+slastu*3.  
-          if(vdrop(k).eq.smsng) vdrop(k)=v(ii,jj,k)+slastv*3.  
-          if(tdrop(k).eq.smsng) tdrop(k)=t(ii,jj,k)+slastt*1.  
-         enddo 
+99    slastu=0
+      slastv=0
+      slastt=0 
+      sumu=0
+      sumv=0
+      print*,'k rri rrj, udrop, vdrop, u and v at drop point'
+      icount=0
+      do k=1,nz
+         if(rri(k).eq.smsng.or.rrj(k).eq.smsng)then
+            icount=icount+1
+         endif
+      enddo
 
+      if(icount.ne.nz)then
+         frstone=.true.
+         lastone=.true.
+         do k=1,nz
+          if(rri(k).ne.smsng)then
+             if(frstone)then
+                frstone=.false.
+                kfirst=k
+                if(k.gt.1)then
+                   do kk=1,k-1
+                      rri(kk)=rri(k)
+                      rrj(kk)=rrj(k)
+                   enddo
+                endif
+             endif
+          elseif(.not.frstone)then
+             if(lastone)then
+                lastone=.false.
+                klast=k-1
+                rri(k)=rri(klast)
+                rrj(k)=rrj(klast)
+             else
+                rri(k)=rri(klast)
+                rrj(k)=rrj(klast)
+             endif
+          endif
+         enddo
+      else
+         rri(1:nz)=float(nx)/2.
+         rrj(1:nz)=float(ny)/2.
+      endif
+
+      do k=1,nz
+         ii=nint(rri(k))
+         jj=nint(rrj(k))
+
+         if(udrop(k).eq.smsng.or.vdrop(k).eq.smsng)then
+            slastu=ffz(iii,20,cor,slastu)
+            slastv=ffz(iii,20,cor,slastv)
+ 
+            udrop(k)=u(ii,jj,k)+slastu*3.  
+            vdrop(k)=v(ii,jj,k)+slastv*3.  
+         endif
+         if(tdrop(k).eq.smsng)then
+            slastt=ffz(iii,20,cor,slastt)
+            tdrop(k)=t(ii,jj,k)+slastt*1.  
+         endif
+
+         if(.false.)then
+           write(6,1112) k,rri(k),rrj(k),udrop(k),vdrop(k),
+     &     u(50,16,k),v(50,16,k),u(50,16,k)-udrop(k),v(50,16,k)-
+     &     vdrop(k)
+           if(rri(k).ne.50) sumu=u(50,16,k)-udrop(k)+sumu!only sum over sonde
+           if(rri(k).ne.50) sumv=v(50,16,k)-vdrop(k)+sumv
+         endif
+      enddo 
+1112  format (1x,i3,8f6.2)
+
+      print*,' ballistic u v diff ',sumu,sumv
 
 c subr profile fills array erru(u),errub(v) with analysis error 
 c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
 c and model error
-         call read_wind3d_wgi(rstats,istatus)
-         if(istatus .ne. 1)then
-            print*,'Using u/v model errors from climo estimates:'
-            moderu=3.
-            moderv=3.
-            modert=1.0
-         else
-            print*,'Using u/v model errors from wind analysis:'
-            moderu=rstats(6)
-            moderv=rstats(7)
-            modert=1.0
-         endif
-         print*,'u/v model error = ',moderu,moderv
-         oberu=1.
-         obert=.5
-         oberw=.05
+      call read_wind3d_wgi(rstats,istatus)
+      if(istatus .ne. 1)then
+         print*,'Using u/v model errors from climo estimates:'
+         moderu=3.
+         moderv=3.
+         modert=1.0
+      else
+         print*,'Using u/v model errors from wind analysis:'
+         moderu=rstats(6)
+         moderv=rstats(7)
+         modert=1.0
+      endif
+      print*,'u/v model error = ',moderu,moderv
+      oberu=1.
+      obert=.5
+      oberw=.05
+
 c  compute TKE
 c  the s arrays are used to hold the turbulent components of u,v, and w
-         call turb(u,v,om,t,phi,p,us,vs,oms,ts,ter,nx,ny,nz)
 
-         print*
-         print*,'Calling subroutine profile. '
-         print*
+      call turb(u,v,om,t,phi,p,us,vs,oms,ts,ter,nx,ny,nz)
 
-         call profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw
+      print*
+      print*,'Calling subroutine profile. '
+      print*
+
+      call profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw
      &,obert,moderu,moderv,modert,erru,errv,errw ,errt,u,v,om,
      & lapssh,us,vs,oms,t,phi,ub,vb,omb,tb,p
      &,ter,zter,nx,ny,nz,i4time_sys)
@@ -1863,17 +1921,18 @@ c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
      . /1x,' rms nonlinear term value   :',2e12.4)
 c Write out sample vertical profiles of u, uo, v, vo, phi phio
 c in center of grid
+      if(.false.)then
       Print*, ' U component in middle of grid: adjusted, non adjusted'
      &          ,' dif output - input'
       Do k=1,nz
-       write(6,1111) u(nx/2,ny/2,k), uo(nx/2,ny/2,k)
-     &     ,u(nx/2,ny/2,k)-uo(nx/2,ny/2,k)
+       write(6,1111) u(50,16,k), uo(50,16,k)
+     &     ,u(50,16,k)-uo(50,16,k)
       enddo
       Print*, ' V component in middle of grid: adjusted, non adjusted'
      &          ,' dif output - input'
       Do k=1,nz
-       write(6,1111) v(nx/2,ny/2,k), vo(nx/2,ny/2,k)
-     &     ,v(nx/2,ny/2,k)-vo(nx/2,ny/2,k)
+       write(6,1111) v(50,16,k), vo(50,16,k)
+     &     ,v(50,16,k)-vo(50,16,k)
       enddo
       Print*, ' Geopotentialin middle of grid: adjusted, non adjusted'
      &          ,' dif output - input'
@@ -1882,6 +1941,8 @@ c in center of grid
      &     ,t(nx/2,ny/2,k)-to(nx/2,ny/2,k)
       enddo 
  1111 format (1x, 3f8.1)
+
+      endif
 c
       return
       end
@@ -3225,7 +3286,7 @@ c
 c Note: only one profile is allowed atm. arrays udrop, vdrop, tdrop
 c       must be 2d to allow more than 1.
 c
-      Character*80 dum
+      Character*180 dum
       Character*9 a9_time
       Character*3 dum1
       integer len,istatus
@@ -3264,6 +3325,10 @@ c preset all dropsonde output to missing
         open (11, file=dum,form='formatted',status='old',err=50) 
         Do n=1,mxz
          read(11,*,end=1) ri(n),rj(n),rk(n),dd(n),ff(n),dum1
+c change from (0,0,0) origin to (1,1,1) grid origin system.
+         ri(n)=ri(n)+1
+         rj(n)=rj(n)+1
+         rk(n)=rk(n)+1
          if(dum1.eq.'  ') go to 1
         enddo
         print*, 'Suspect read in the pig file'
@@ -3326,6 +3391,10 @@ c
                  vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
                  rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
                  rrj(k)=rj(n)*(1.-aa)+rj(n+1)*aa
+             print*, 'k ri rj rkn rkn+1   ',k,ri(n),rj(n),rk(n),rk(n+1)
+             print*, 'udrop,uu(n),uu(n+1) ',udrop(k),uu(n),uu(n+1) 
+             print*, 'vdrop,vv(n),vv(n+1) ',vdrop(k),vv(n),vv(n+1) 
+                 
                  iflag=1
                  go to 3
               endif

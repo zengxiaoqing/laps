@@ -588,11 +588,13 @@ c
         Do while (.not.found_line)
          read(11,100,end=1)dum1
          if(dum1(1:21).eq.'Obs minus First Guess')then
-            read(11,*,err=1)
-            read(11,*,err=1)
-            read(11,*,err=1)
-            read(11,100,err=1)dum1
-            found_line=.true.
+            read(11,*,err=1)  !this one to read the column labels
+            do while (.not.found_line)
+               read(11,100,err=1)dum1
+               if(dum1(1:6).eq."   PIN")then
+                  found_line=.true.
+               endif
+            enddo
          endif
         enddo
       else
