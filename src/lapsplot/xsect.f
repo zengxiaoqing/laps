@@ -731,29 +731,9 @@ c read in laps lat/lon and topo
             c_label = 'difference field'
 
             scale = 1.
+            cint = 0.
 
             i_contour = 1
-
-!           if(c_field(4:4) .ne. 'i')then ! contour plot
-!               call contour_settings(field_vert_diff,NX_C,NZ_C
-!    1                               ,clow,chigh,cint
-!    1                               ,zoom,density,scale)      
-!               call plot_cont()
-
-!           else ! image plot
-!               call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
-!    1                          ,r_missing_data)
-
-!               call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax
-!    1                     ,colortable
-!    1                     ,n_image,scale,'xsect',namelist_parms)    
-!               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-!               call setusv_dum(2hIN,7)
-!               call write_label_lplot(NX_C,NZ_C,c_label,asc9_tim_t
-!    1                                ,namelist_parms,i_overlay,'xsect')       
-!               call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
-
-!           endif
 
         else
             if(igrid .eq. 1)then
@@ -1764,8 +1744,6 @@ c read in laps lat/lon and topo
             chigh = 1.0
             cint = 0.1
             scale = 1e0
-!           call ccpfil(field_vert3,NX_P,NX_P,clow,chigh,colortable
-!    1                 ,n_image,scale,'xsect',namelist_parms)     
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
@@ -2595,19 +2573,21 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                             ,-1,0,-1848,0)
 
                     else ! image plot
-                        write(6,*)' calling solid fill plot',cint       
-
                         call set(0.10,0.90,0.05,0.95
      1                          ,0.10,0.90,0.05,0.95,1) ! Orig
 
 !                       call set(x_1,x_2,y_1,y_2,0.15,0.85,0.15,0.85,1) ! New
 
                         if(cint .eq. 0.)then
+                            write(6,*)' cint = 0, calling array_range'
                             call array_range(field_vert3,NX_P,NX_P
      1                                      ,rmin,rmax,r_missing_data)
                             clow = rmin
                             chigh = rmax
                         endif
+
+                        write(6,*)' calling solid fill plot'
+     1                           ,clow,chigh,cint       
 
 !                       Blank out the edges external to the X-section
 !                       write(6,*)' Blackening the edges'
@@ -2624,14 +2604,14 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                             ,clow,chigh
 !    1                             ,'cpe',n_image,scale,'xsect'
      1                             ,colortable,n_image,scale,'xsect'
-     1                             ,namelist_parms)       
+     1                             ,plot_parms,namelist_parms)       
 
 !                       This method may avoid the artifacts
 !                       call ccpfil(field_vert(1,ibottom),NX_C
 !    1                             ,(NZ_C-ibottom+1)
 !    1                             ,clow,chigh
 !    1                             ,colortable,n_image,scale,'xsect'
-!    1                             ,namelist_parms)       
+!    1                             ,plot_parms,namelist_parms)       
 
                     endif
 
