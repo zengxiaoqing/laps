@@ -178,6 +178,8 @@ c
             stop
         endif
 
+c determine cld top p data spacing
+
         call get_r_missing_data(r_missing_data,istatus)
 
         rlctp=r_missing_data
@@ -196,8 +198,14 @@ c
 
          if(jstatus .eq. 1)then
 
+c           call gdtost(pct(ii),1,1,ri,rj,rlctp(i,j),0)
+c           call gdtost(float(ca(ii))/100.(ii),1,1,ri,rj
+c    &,rlca(i,j),0)
+c           call gdtost(tc(ii),1,1,ri,rj,rlct(i,j),0)
+
             i = nint(ri)
             j = nint(rj)
+
             rlctp(i,j)=pct(ii)
             rlca(i,j)=float(ca(ii))/100.
             rlct(i,j)=tc(ii)

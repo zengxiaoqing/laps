@@ -153,7 +153,6 @@ c
       logical   lvis_flag
       logical   lsatqc
       logical   l_lut_flag
-      logical   objects_allocated
 
       integer   i,j,k,l,n
       integer   ispec
@@ -219,8 +218,6 @@ c ----------------------------- START -------------------------------------
 c
       itstatus=init_timer()
       itstatus=ishow_timer()
-
-      objects_allocated = .false.  !used for NIMBUS cloud_top_pressure processing
 
       do i=1,nimages
          call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
