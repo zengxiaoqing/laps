@@ -121,7 +121,7 @@ cdis
             if(l_waited)then
                 r_additional_wait = 60.
             else
-                r_additional_wait = 30.
+                r_additional_wait = 50.
             endif
 
             write(6,*)' Doing wait to allow full file update: '

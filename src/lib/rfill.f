@@ -301,19 +301,19 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' rfill: Error reading r_missing_data'
+            write(6,*)' ref_fill_vert: Error reading r_missing_data'       
             return
         endif
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' rfill: Error reading ref_base'
+            write(6,*)' ref_fill_vert: Error reading ref_base'
             return
         endif
 
 !       Set missing values to ref_base for internal processing
-        write(6,*)' ref_fill_vert: Setting r_missing_data values to '
-     1             ,ref_base
+!       write(6,*)' ref_fill_vert: Setting r_missing_data values to '
+!    1             ,ref_base
 
         do k = 1,nk
         do j = 1,nj
@@ -352,7 +352,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         if(l_low_fill)then
           if(lat(1,1) .eq. 0. .or. lon(1,1)  .eq. 0.
      1                        .or. topo(1,1) .eq. r_missing_data)then
-            write(6,*)' Error in RFILL, lat/lon/topo has invalid value'
+            write(6,*)' Error in ref_fill_vert:'
+     1               ,' lat/lon/topo has invalid value'
             istatus = 0
             return
           endif
@@ -589,7 +590,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' rfill: Error reading r_missing_data'
+            write(6,*)' ref_fill_horz: Error reading r_missing_data'
             return
         endif
 

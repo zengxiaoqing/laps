@@ -464,23 +464,28 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
       write(6,*)' QC info for non-radar data (after remapping to grid)'
       write(6,601)n_qc_pirep_good,n_qc_pirep_bad
      1           ,pct_rejected(n_qc_pirep_good,n_qc_pirep_bad)
- 601  format(' # of PIREPs GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
+ 601  format(' # of PIREPs     GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
 
       write(6,602)n_qc_cdw_good,n_qc_cdw_bad
      1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)
- 602  format(' # of CDWs   GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
+ 602  format(' # of CDWs       GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
 
       write(6,603)n_qc_sfc_good,n_qc_sfc_bad
      1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)
- 603  format(' # of SFC    GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
+ 603  format(' # of SFC        GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
 
       write(6,604)n_qc_prof_good,n_qc_prof_bad
      1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)
- 604  format(' # of PROFs  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
+ 604  format(' # of PROFs      GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)
 
       write(6,605)n_qc_total_good,n_qc_total_bad
      1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)
- 605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
+ 605  format(/' # of Non-Radar  GOOD/BAD QC = ',2i6,7x
+     1       ,'% rejected = ',f6.1)
 
       if(.not. l_3d)then ! we use fnorm_calc for l_3d case now
 !         Initialize fnorm array used in barnes_multivariate

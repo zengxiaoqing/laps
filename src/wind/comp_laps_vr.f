@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
         subroutine comp_laps_vr(grid_ra_vel,u,v,ni,nj,nk,r_missing_data
-     1  ,rms,lat,lon,rlat_radar,rlon_radar,rheight_radar)
+     1  ,cgrid,rms,lat,lon,rlat_radar,rlon_radar,rheight_radar)
 
 
         real*4 grid_ra_vel(ni,nj,nk)
@@ -45,8 +45,11 @@ cdis
         real*4 lat(ni,nj),lon(ni,nj)
         real lat_grid,lon_grid
 
+        character*(*) cgrid
+
         nobs = 0
         residual = 0.
+        bias_sum = 0.
 
         write(6,2)
 2       format(/'      Comparing Radial Velocities to LAPS'/
@@ -73,6 +76,7 @@ cdis
 
                 diff = r_radar - grid_ra_vel(i,j,k)
                 residual = residual + diff ** 2
+                bias_sum = bias_sum + diff
                 if(float(nobs)/40. .eq. nobs/40)then
                     write(6,101)i,j,k,grid_ra_vel(i,j,k),r_radar,
      1                  diff
@@ -87,12 +91,15 @@ cdis
 
         if(nobs .gt. 0)then
             rms = sqrt(residual/nobs)
+            bias = bias_sum / nobs
         else
             rms = 0.
+            bias = 0.
         endif
 
-        write(6,*)' RMS between radial velocities & LAPS = ',nobs,rms
-        write(15,*)' RMS between radial velocities & LAPS = ',nobs,rms
+        write(6,102)cgrid,nobs,bias,rms
+ 102    format(' BIAS/RMS between radial velocities & ',a,' = '
+     1        ,i4,' . . ',f6.1,' . . ',f6.1)
 
         return
 

@@ -2,13 +2,13 @@
 
 setenv $LAPS_SRC_ROOT $1
 setenv srcdir $2
+setenv SMS $3
 
 echo "begin prebuild_sms.csh..."
 
 cd $LAPS_SRC_ROOT/$srcdir
 pwd
 
-setenv SMS /home/schaffer/sms.steve
 
 cp $LAPS_SRC_ROOT/src/include/directives.inc .
 

@@ -83,7 +83,7 @@ C***************** Declarations **************************************
         real*4 grid_laps_u(ni,nj,nk),grid_laps_v(ni,nj,nk)
      1                                          ,grid_laps_wt(ni,nj,nk)
 
-        character(*) cgrid
+        character*(*) cgrid
 
 C********************************************************************
 
@@ -129,7 +129,7 @@ C********************************************************************
      1                                                    ,' Radar #',l
             if(istat_radar_vel .eq. 1)
      1        call comp_laps_vr(grid_ra_vel(1,1,1,l),upass1,vpass1
-     1          ,ni,nj,nk,r_missing_data,rms_fg_vr
+     1          ,ni,nj,nk,r_missing_data,cgrid,rms_fg_vr
      1          ,lat,lon,rlat_radar(l),rlon_radar(l),rheight_radar(l))
 
         enddo ! l

@@ -203,7 +203,7 @@ foreach (@greplines) {
   @list=split;
   $src=$list[2]; $good=$list[6]; $bad=$list[7]; $pct=$list[11];
   print "$src:  $good good, $bad bad, $pct\% rejected\n";
-  $nlines=$nlines+1; if ($nlines==5) {last;}
+  $nlines=$nlines+1; if ($nlines==6) {last;}
   }
  }
 print "\n";

@@ -925,6 +925,8 @@ cdoc  as well as various grid conversion routines.
       subroutine get_grid_spacing_actual(rlat,rlon
      1                                  ,grid_spacing_actual_m,istatus)
 
+cdoc  Calculate actual grid spacing at any given lat/lon location
+
       character*6 c6_maproj
 
       call get_standard_latitudes(slat1,slat2,istatus)
@@ -962,6 +964,20 @@ cdoc  as well as various grid conversion routines.
 
       return
       end
+
+
+        subroutine get_grid_spacing_cen(grid_spacing_cen_m,istatus)
+
+cdoc    Calculate actual grid spacing at the center of the domain
+
+        call get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
+        if(istatus .ne. 1)return
+
+        call get_grid_spacing_actual(grid_cen_lat,grid_cen_lon
+     1                              ,grid_spacing_cen_m,istatus)
+
+        return
+        end
 
 
       subroutine get_ps_parms(slat1,slat2,grid_spacing_m                ! I

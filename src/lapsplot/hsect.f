@@ -373,7 +373,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,' [cb-i,ct-i] Cld Base/Top (MSL)'      
      1       /'         [cv/cg] Cloud Cover (2-D)'
      1       ,' [cy,py] Cloud/Precip Type'
-     1       /'         [sa/pa] Snow/Pcp Accum,'
+     1       /'         [sa-i/pa-i] Snow/Pcp Accum,'
      1       ,' [sc-i] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
@@ -1873,8 +1873,8 @@ c
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif( c_type .eq. 'sa' .or. c_type .eq. 'pa' )then
-            if(c_type .eq. 'sa')then
+        elseif( c_type(1:2) .eq. 'sa' .or. c_type(1:2) .eq. 'pa' )then       
+            if(c_type(1:2) .eq. 'sa')then
                 write(6,1321)
 1321            format('     ','Enter # of Hours of Snow Accumulation,',
      1          ' [-99 for Storm Total]     ','? ',$)
@@ -1921,7 +1921,7 @@ c
 !               encode(7,2017,c7_string)min(num_hr_accum,999)
                 write(c7_string,2017)min(num_hr_accum,999)
 2017            format(i4,' Hr')
-                if(c_type .eq. 'sa')then
+                if(c_type(1:2) .eq. 'sa')then
                     c33_label = 'LAPS Stm Tot Snow Acc (in)'//c7_string
                 else
                     c33_label = 'LAPS Stm Tot Prcp Acc (in)'//c7_string
@@ -2038,7 +2038,7 @@ c
 !    1       ' Getting Entire Time Span of Accumulation from Radar Data,
 !    1 etc.'
 
-!                   if(c_type .eq. 'sa')then
+!                   if(c_type(1:2) .eq. 'sa')then
 !                       call move(snow_2d,accum_2d,NX_L,NY_L)
 !                   else
 !                       call move(precip_2d,accum_2d,NX_L,NY_L)
@@ -2050,7 +2050,7 @@ c
                 write(c9_string,2029)r_hours
 2029            format(f5.1,' Hr ')
 
-                if(c_type .eq. 'sa')then
+                if(c_type(1:2) .eq. 'sa')then
                     c33_label = 'LAPS '//c9_string//' Snow Accum  (in)
      1'
                 else
@@ -2066,27 +2066,28 @@ c
 
             scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
 
+            clow = 0.
 
-            if(c_type .eq. 'pa')then
+            if(c_type(1:2) .eq. 'pa')then
                 if(abs(r_hours) .gt. 1.0)then
                     cint = -0.05
                 else
                     cint = -0.01
                 endif
-                chigh = 50.
+                chigh = 10.
             else ! 'sa'
                 if(abs(r_hours) .gt. 1.0)then
-                    cint = -0.2
+                    cint = -0.5
                 else
-                    cint = -0.1
+                    cint = -0.5
                 endif
-                chigh = 200.
+                chigh = 20.
             endif
 
 !           Eliminate "minor" maxima
             do j = 1,NY_L
             do i = 1,NX_L
-                if(c_type .eq. 'pa')then
+                if(c_type(1:2) .eq. 'pa')then
                     if(accum_2d(i,j)/scale .lt. 0.005)then
                         accum_2d(i,j) = 0.0
                     endif
@@ -2104,10 +2105,16 @@ c
             enddo ! i
             enddo ! j
 
-            call plot_cont(accum_2d,scale,
-     1             0.,chigh,cint,asc9_tim_r,c33_label,
-     1             i_overlay,c_display,lat,lon,jdot,
-     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(accum_2d,scale,
+!    1             0.,chigh,cint,asc9_tim_r,c33_label,
+!    1             i_overlay,c_display,lat,lon,jdot,
+!    1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_accum,c_type,accum_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'ref')
+
 
         elseif( c_type .eq. 'rx')then
             write(6,1311)
@@ -3965,10 +3972,9 @@ c                   cint = -1.
      1                                                  ,zoom,scale)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
-     1                        ,chigh,clow,cint,asc9_tim_t,c33_label
+     1                        ,chigh,clow,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time
-     1                        ,'linear')
+     1                        ,NX_L,NY_L,r_missing_data,'linear')
 
         elseif(c_type .eq. 'ha')then ! Theta Advection
             var_2d = 'THA'
@@ -4143,7 +4149,7 @@ c                   cint = -1.
      1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
-                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'cpe'
+                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'ref'
      1                     ,n_image)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4583,8 +4589,8 @@ c                   cint = -1.
             c_metacode = 'c '
             i_overlay = 1
 
-            i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
-!       1                                            -laps_cycle_time
+!           i4time_plot = i4time_file/laps_cycle_time*laps_cycle_time
+!!      1                                            -laps_cycle_time
             call setusv_dum(2hIN,34)
 
             iflag = 0
@@ -5741,13 +5747,12 @@ c
 
 
         subroutine plot_field_2d(i4time,c_type,field_2d,scale
-     1                        ,clow_in,chigh_in,cint,asc9_tim_t
+     1                        ,clow_in,chigh_in,cint
      1                        ,c33_label,i_overlay,c_display,lat,lon
-     1                        ,jdot,NX_L,NY_L,r_missing_data
-     1                        ,laps_cycle_time,colortable)
+     1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
 
         character*(*) c_type, c33_label, c_display, colortable
-     1              , asc9_tim_t
+        character*9 asc9_tim_t
 
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)

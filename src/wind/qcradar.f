@@ -234,8 +234,11 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
       n_radarobs_tot_unfltrd = icount_good_qc
 
       write(6,*)' # of Velocities Unfolded = ',icount_unfld
-      write(6,*)' # of RADAR GOOD/BAD QC = ',icount_good_qc
-     1                                      ,icount_bad_qc
+      write(6,604)icount_good_qc,icount_bad_qc
+     1           ,pct_rejected(icount_good_qc,icount_bad_qc)
+ 604  format(' # of RADAR      GOOD/BAD QC = ',2i6,7x
+     1      ,'% rejected = ',f6.1)       
+
       write(6,*)' # of Output (unfiltered) Radar obs = '
      1                                      ,n_radarobs_tot_unfltrd       
 
