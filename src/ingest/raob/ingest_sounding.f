@@ -119,17 +119,20 @@
        i4time_rad = (i4time_sys/3600) * 3600
  900   filename13 = cvt_i4time_wfo_fname13(i4time_rad)
        call s_len(path_to_raw_radiometer,len_path)
-       call get_radiometer_data(i4time_rad,laps_cycle_time,ni,nj
-     1                         ,i4time_sys - 855/2 ! Radiometer cycle time / 2
-     1                         ,i4time_sys + 855/2 ! Radiometer cycle time / 2
-     1                         ,path_to_raw_radiometer(1:len_path)
+       if(len_path .gt. 0)then
+           call get_radiometer_data(i4time_rad,laps_cycle_time,ni,nj
+     1                             ,i4time_sys - 855/2 ! Radiomtr cyc time / 2
+     1                             ,i4time_sys + 855/2 ! Radiomtr cyc time / 2
+     1                             ,path_to_raw_radiometer(1:len_path)
      1                                           //'/'//filename13
-     1                         ,lun_out,istatus)
-       if(istatus .ne. 1 .and. i4time_sys - i4time_rad .lt. 3600)then
-           write(6,*)' Trying radiometer for an hour earlier'
-           i4time_rad = i4time_rad - 3600
-           go to 900
-       endif
+     1                             ,lun_out,istatus)
+           if(istatus .ne. 1 .and. i4time_sys - i4time_rad .lt. 3600
+     1                                                           )then      
+               write(6,*)' Trying radiometer for an hour earlier'
+               i4time_rad = i4time_rad - 3600
+               go to 900
+           endif
+       endif ! len_path > 0
 
        close(lun_out) ! Output SND file
 
