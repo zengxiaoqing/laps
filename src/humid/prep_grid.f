@@ -31,101 +31,122 @@ cdis
 cdis
 
 
-        subroutine prep_grid(m,n,data,pn_max,points,pn)
+      subroutine prep_grid(m,n,data,pn_max,points,pn,istatus)
 
-c       $log: prep_grid.for,v $
-c revision 1.1  1996/08/30  20:48:53  birk
-c initial revision
+c     $log: prep_grid.for,v $
+c     revision 1.1  1996/08/30  20:48:53  birk
+c     initial revision
 c
 
-        implicit none
+      implicit none
 
-        integer m,n,pn,pn_max
+      integer m,n,pn,pn_max,istatus
 
-        real points(pn_max,3),data(m,n),weight_t,dist,weight
-
-
-        integer i,j,k
+      real points(pn_max,3),data(m,n),weight_t,dist,weight
 
 
-        do i = 1,m,m-1
-        do j = 1,n
+      integer i,j,k
+
+      istatus = 0
+
+c     i perimeter set
+
+      do i = 1,m,m-1
+         do j = 1,n
 
 
-        weight_t = 0.0
-        data(i,j) = 0.0
+            weight_t = 0.0
+            data(i,j) = 0.0
 
 
-        do k = 1,pn
+            do k = 1,pn
 
-                if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
-                        data(i,j) = points(k,1)
-                        go to 22
-                elseif (points(k,2) .ne. 0) then
+               if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
+                  data(i,j) = points(k,1)
+                  go to 22
+               elseif (points(k,2) .ne. 0) then
+                  
+                  dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
+                  weight = 1./dist
+                  data(i,j) = data(i,j) + weight*points(k,1)
+                  weight_t = weight_t + weight
+                  
+                  
+               endif
+               
+            enddo               !k
+            
+            if(weight_t.ne.0.) then
+               data(i,j) = data(i,j) / weight_t
+            else
+               write(6,*) 'error in divide'
+            endif
+            
+ 22         continue
+            
+         enddo                  !j
+      enddo                     !k
+      
+      
+      if(weight_t.eq.0.) then 
+         istatus = 1
+         write(6,*) 'returning from prep_grid.f on istatus 0'
+         return
+      endif
 
-                dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
-                weight = 1./dist
-                data(i,j) = data(i,j) + weight*points(k,1)
-                weight_t = weight_t + weight
+c     j perimeter set
+      
 
+      do i = 1,m
+         do j = 1,n,n-1
+            
+            
+            weight_t = 0.0
+            data(i,j) = 0.0
+            
+            
+            do k = 1,pn
+               
+               if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
+                  data(i,j) = points(k,1)
+                  go to 23
+               elseif (points(k,2).ne.0) then
+                  
+                  dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
+                  weight = 1./dist
+                  data(i,j) = data(i,j) + weight*points(k,1)
+                  weight_t = weight_t + weight
+                  
+                  
+               endif
+               
+            enddo               !k
+            
+            if(weight_t.ne.0.) then
+               data(i,j) = data(i,j) / weight_t
+            else
+               write (6,*) 'error in divide'
+            endif
+            
+ 23         continue
+              
+         enddo                  !j
+      enddo                     !k
+      
+      
+      if(weight_t.eq.0.) then 
+         istatus = 1
+         write(6,*) 'returning from prep_grid.f on istatus 0'
+         return
+      endif
 
-                endif
+      istatus = 1
 
-        enddo !k
-
-        if(weight_t.ne.0.) then
-        data(i,j) = data(i,j) / weight_t
-        else
-        write(6,*) 'error in divide'
-        endif
-
-22      continue
-
-        enddo !j
-        enddo !k
-
-
-
-        do i = 1,m
-        do j = 1,n,n-1
-
-
-        weight_t = 0.0
-        data(i,j) = 0.0
-
-
-        do k = 1,pn
-
-                if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
-                        data(i,j) = points(k,1)
-                        go to 23
-                elseif (points(k,2).ne.0) then
-
-                dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
-                weight = 1./dist
-                data(i,j) = data(i,j) + weight*points(k,1)
-                weight_t = weight_t + weight
-
-
-                endif
-
-        enddo !k
-
-        if(weight_t.ne.0.) then
-        data(i,j) = data(i,j) / weight_t
-        else
-        write (6,*) 'error in divide'
-        endif
-
-23      continue
-
-        enddo !j
-        enddo !k
+      return
+      end
+      
 
 
 
 
-
-        return
-        end
 

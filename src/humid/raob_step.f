@@ -148,6 +148,7 @@ c  normal internal parameters
       real x(snd_tot)
       integer x_sum
       real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
+      integer satsnd_counter, raob_counter
 
 c     climate model (for QC)
 
@@ -167,6 +168,8 @@ c *** begin routine
       pi = acos(-1.0)
       d2r = pi/180.
       look_back_time = raob_lookback
+      satsnd_counter = 0
+      raob_counter = 0
       maxfiles = 200
       do j = 1,jj
          do i = 1,ii
@@ -269,7 +272,8 @@ c     reject on time condition (one hour lookback)
                write(6,*) 'rejecting on time bounds', r_filename(isound)
                isound = isound -1 !reject -- out of time bounds
             else
-               write(6,*) 'accepting.. ', r_filename(isound)
+               write(6,*) 'accepting.. ', r_filename(isound),
+     1              snd_type(isound)
                                 !COMMENTING OUT RAOB SPECIFIC
                                 !1.21 MOD  8/6/99 BEGIN TEST D.B.
 c     test for non-RAOB type sounding
@@ -460,11 +464,22 @@ c *** difference the raob data at each gridpoint location and height
 
                diff(k,is) = q_r(k,is) - data(i_r(is),j_r(is),k)
                scale(k,is) = q_r(k,is)/data(i_r(is),j_r(is),k)
+
+               if(snd_type(is).eq.'SATSND') then
+                  satsnd_counter = satsnd_counter+1
+               elseif(snd_type(is).eq.'RAOB')then
+                  raob_counter = raob_counter +1
+               endif
+                  
             endif
 
          enddo
 
       enddo
+
+      write(6,*) 'number sat sounding layers considered, ',
+     1     satsnd_counter
+      write(6,*) 'number raob sounding layers considered, ',raob_counter
 
 c     compute level mean and sigma  modified from original... now examines
 c     bias data (diff variable)
