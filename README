@@ -38,6 +38,7 @@
          2.7 ..............  CHANGING THE HORIZONTAL DOMAIN
          2.7.1 ..................  Number of Grid Points
          2.7.2 ..................  Location of Domain (Map projections)
+               2.7.2.1 ............... MAP PROJECTION FUNCTIONALITY/LIMITATIONS
          2.7.3 ..................  Domain Resolution 
          2.7.4 ..................  Terrain Databases
          2.7.5 ..................  Terrain Smoothing/Filtering  
@@ -991,7 +992,7 @@
         your domain runs outside the available 30" data, and should still be 
         covered by the 10' worldwide data, if available.
 
-                MAP PROJECTION FUNCTIONALITY / LIMITATIONS
+          ----  2.7.2.1 MAP PROJECTION FUNCTIONALITY/LIMITATIONS  ---
 
      LAPS runs with the polar stereographic, lambert, and mercator projections.
    Please let us know if you encounter any problems.
@@ -1003,10 +1004,14 @@
    possible future enhancement. A test local stereographic domain gave an 
    error of 2km in the grid points; the test code works in cases where the 
    projection pole coincides with the center of the domain. Further 
-   improvement of this may include converting library subroutines 'GETOPS' 
-   and possibly 'PSTOGE' to double precision. The projection rotation routine 
-   'projrot_laps' also has some approximations when local stereographic is 
-   used.
+   improvement of this may include more fully converting library subroutines 
+   'GETOPS' and (possibly) 'PSTOGE' to double precision. 
+
+     The projection rotation routine 'projrot_laps' also has some 
+   approximations when local stereographic is used. These need to be checked
+   for their validity and refined if needed. Cases of interest include a 
+   projection pole point at the domain center, as well as offset from the
+   center.
 
                    ----  2.7.3 Domain Resolution  ---
 
