@@ -23,8 +23,8 @@ all: exe
 
 exe: $(EXE)
 
-%.exe: $(SRC)
-	$(CC) $(CFLAGS) $(SRC)  $(OTHERLIBS) -o $@
+$(EXE): $(SRC)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC)  $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
