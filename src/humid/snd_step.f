@@ -281,7 +281,7 @@ c     reject on time condition (one hour lookback)
          if(r_filename .ne. filename) then ! examine closer
             call i4time_fname_lp (r_filename, raob_i4time_chk, 
      1           istatus)
-            if (abs(raob_i4time - raob_i4time_chk) .gt. 3600) then ! over 1hr
+            if (abs(raob_i4time-raob_i4time_chk).gt.snd_lookback)then ! over limit
                write(6,*) 'rejecting on time bounds', r_filename
                n = n - 1 !reject -- out of time bounds
             else
