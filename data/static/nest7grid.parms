@@ -42,10 +42,6 @@
 
  path_to_raw_satellite_cdf_cmn='/public/data/sat/fsl-conus/gs/netcdf/',
 
- path_to_ruc_cmn='/public/data/grids/ruc/60km_nat_hybb/netcdf/',
-
- path_to_ngm_cmn='NULL',
-
  path_to_wsi_2d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/',
 
  path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/',
@@ -86,9 +82,26 @@
  toptwvl_parm_cmn=4.,     
  maxstations_cmn=6000,
  maxobs_cmn=6000,  
- laps_background_model_cmn=1,
  c8_project_common='NIMBUS',
  /  
+c
+c bgpaths is a list of paths to background models in order of preference
+c bgmodels describes the model type of the files found in each path
+c allowable values are:
+c        bgmodels = 1 ---> RUC (60 km native grid)
+c        bgmodels = 2 ---> ETA (48 km conus-c grid)
+c        bgmodels = 3 ---> NOGAPS
+c        bgmodels = 4 ---> RUC (60 km conus-c grid)
+c        bgmodels = 5 ---> RUC (40 km native grid)
+c
+ &background_nl
+ bgpaths='/public/data/grids/ruc/60km_nat_hybb/netcdf',
+         '/public/data/grids/maps/60km_nat_hybb/netcdf',
+         '/public/data/grids/eta/48km_nat_isobaric/netcdf',
+ bgmodels=1,1,2,
+ /
+
+
 
 
 
