@@ -1347,12 +1347,14 @@ csms$ignore end
       real*4   vr_obs_fltrd(imax,jmax,kmax)
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
-      logical  l_grid_north
+      logical  l_grid_north, l_dual_doppler
 
       integer*4 thresh_2_radarobs_lvl_unfltrd
      1         ,thresh_4_radarobs_lvl_unfltrd
 
       character*31 ext
+
+      data l_dual_doppler /.false./
 
 csms$ignore begin
       write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad
