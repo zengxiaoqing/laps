@@ -177,6 +177,8 @@ c
 
 !           write(6,*)lat_s(i),lon_s(i),dd_s(i),ff_s(i),elev_s(i)
 
+            call left_justify(stations(i))
+
 ! ***       Remap SFC observation to LAPS observation grid
 !           In bounds?
             if(  sfc_i(n_sfc_obs) .ge. 1 .and. sfc_i(n_sfc_obs) .le. ni
