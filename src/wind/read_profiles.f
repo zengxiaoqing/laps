@@ -116,14 +116,12 @@ c                             time of the current LAPS analysis time.
         call open_lapsprd_file_read(12,i4time_prof,ext,istatus)
         if(istatus .ne. 1)go to 420
 
-        call get_windob_time_window('PROFILER',i4_window_prof,istatus)       
-
         do i_pr = 1,max_pr
 
             read(12,401,err=430,end=450)
      1         ista,nlevels_obs_pr(i_pr),lat_pr(i_pr),lon_pr(i_pr)
-     1         ,elev_pr(i_pr),c5_name,a9time_ob
-401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9)
+     1         ,elev_pr(i_pr),c5_name,a9time_ob,obstype(i_pr)
+401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,1x,3x,a9,1x,a8)
 
             if(nlevels_obs_pr(i_pr) .gt. MAX_PR_LEVELS)then
                 write(6,*)' ERROR: too many profiler (.pro) levels '
@@ -131,7 +129,7 @@ c                             time of the current LAPS analysis time.
                 goto430
             endif
 
-            obstype(i_pr) = 'PROFILER'
+!           obstype(i_pr) = 'PROFILER'
 
             call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
             i4time_ob_pr(i_pr) = i4time_ob
@@ -143,7 +141,9 @@ c                             time of the current LAPS analysis time.
             write(6,407)i_pr,ista,nlevels_obs_pr(i_pr),lat_pr(i_pr)
      1                 ,lon_pr(i_pr)
      1                 ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob       
-407         format(/' Profile #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,3x,a9)
+     1                 ,obstype(i_pr)
+407         format(/' Profile #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,3x,a9
+     1                          ,1x,a8)
 
             do level = 1,nlevels_obs_pr(i_pr)
 
@@ -178,7 +178,7 @@ c                             time of the current LAPS analysis time.
 c
 c       Profiler reading error handling
 c
-  420   write(6,*) ' Error opening PRO file'
+  420   write(6,*) ' Warning, could not open PRO file'
         n_profiles=0
         GO TO 500
 
@@ -206,8 +206,6 @@ c
           go to 600
       endif
 
-      call get_windob_time_window('RAOB',i4_window_raob,istatus)
-
       i4time_raob_file_window = 0
 
       ext = 'snd'
@@ -233,24 +231,31 @@ c
       endif
 
       DO i_pr = n_profiles+1,max_pr
-        read(12,511,err=530,end=550)
-     1  ista,nlevels_in,
-     1  lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),c5_name,a9time_ob
-  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9)
 
-        obstype(i_pr) = 'RAOB'
+        if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
+            iwrite = 1
+        else
+            iwrite = 0
+        endif
+
+        read(12,511,err=530,end=550)ista,nlevels_in,
+     1       lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr),
+     1       c5_name,a9time_ob,obstype(i_pr)
+  511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
+
+!       obstype(i_pr) = 'RAOB'
 
         call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
         i4time_ob_pr(i_pr) = i4time_ob
 
         rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
-        rcycles_pr(i_pr) = max(min(rcycsnd,1.0),-1.0)
+        rcycles_pr(i_pr) = rcycsnd ! max(min(rcycsnd,1.0),-1.0)
 
-        write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)
+        if(iwrite .eq. 1)write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)       
      1             ,lon_pr(i_pr)
-     1             ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob     
- 512    format(/' RAOB #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9)       
-
+     1             ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob
+     1             ,obstype(i_pr)     
+ 512    format(/' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
 
         n_good_levels = 0
 
@@ -279,7 +284,8 @@ c
      1                     ,imax,jmax,kmax,i_ob,j_ob,ht_buff,istatus)
                   if(istatus .ne. 1)goto505
                   ht_in = ht_buff
-                  write(6,*)' Pressure was given, height was derived:'
+                  if(iwrite .eq. 1)
+     1            write(6,*)' Pressure was given, height was derived:'       
      1                     ,pr_in,ht_in
               endif
           endif
@@ -354,6 +360,12 @@ c     Process all wind profiles.  Interpolate heights to LAPS levels.
 c
       DO i_pr=1,n_profiles
 
+            if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
+                iwrite = 1
+            else
+                iwrite = 0
+            endif
+
 !           Determine if profile is in the LAPS domain
 
             call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
@@ -363,30 +375,28 @@ c
             j_ob = nint(rj)
             if(i_ob .ge. 1 .and. i_ob .le. imax .and.
      1         j_ob .ge. 1 .and. j_ob .le. jmax      )then
-                write(6,*)'Profile  # ',i_pr,' In Bounds - Doing '
+                if(iwrite .eq. 1)
+     1             write(6,*)'Profile  # ',i_pr,' In Bounds - Doing '       
      1                   ,'Vertical Interpolation'
             else
-                write(6,*)'Profile  # ',i_pr,' Out of Domain Bounds'       
+                if(iwrite .eq. 1)
+     1             write(6,*)'Profile  # ',i_pr,' Out of Domain Bounds'       
                 nlevels_obs_pr(i_pr)=0 ! This effectively throws out the profile
             endif
 
-            if(obstype(i_pr) .eq. 'PROFILER')then
-                rcyc_thresh = float(i4_window_prof)
-     1                      /float(ilaps_cycle_time)
-            elseif(obstype(i_pr) .eq. 'RAOB')then
-                rcyc_thresh = float(i4_window_raob)
-     1                      /float(ilaps_cycle_time)
-            else
-                write(6,*)' Warning: unknown obstype'
-                rcyc_thresh = 1.0
-            endif
+            call get_windob_time_window(obstype(i_pr),i4_window_ob
+     1                                               ,istatus)
+
+            rcyc_thresh = float(i4_window_ob)
+     1                   /float(ilaps_cycle_time)
 
             rcyc_thresh = min(1.0,rcyc_thresh)
 
 !           Determine if profile was obtained close enough in time....
             if(abs(rcycles_pr(i_pr)) .gt. rcyc_thresh)then
-                write(6,*)'Profile  # ',i_pr,' Out of time bounds:'
-     1                                      ,rcycles_pr(i_pr)
+                if(iwrite .eq. 1)
+     1             write(6,*)'Profile  # ',i_pr,' Out of time bounds:'       
+     1                                    ,rcycles_pr(i_pr)
                 nlevels_obs_pr(i_pr)=0 ! This effectively throws out the profile
             endif
 

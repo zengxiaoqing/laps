@@ -871,34 +871,3 @@ C CLOUDS ARE NOW IN MSL
         istatus = 1
         return
         end
-
-        function l_parse(string1,string2)
-
-!       Determine whether string1 contains string2 as a subset
-
-        logical l_parse
-
-        character*(*) string1,string2
-
-!       integer slen1,slen2
-
-        len1 = len(string1)
-        len2 = len(string2)
-
-!       call s_len(string1,slen1)
-!       call s_len(string2,slen2)
-
-        l_parse = .false.
-
-        if(len2 .gt. len1)return
-
-        i_offset_max = len1-len2
-
-        do i = 0,i_offset_max
-            if(string1(i+1:i+len2) .eq. string2(1:len2))then
-                l_parse = .true.
-            endif ! match is found
-        enddo ! i             
-
-        return
-        end        

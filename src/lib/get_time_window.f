@@ -6,6 +6,8 @@
 
        character*(*) c_obstype
 
+       logical l_parse
+
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then
            write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
@@ -16,8 +18,12 @@
 
        i4_window_ob = ilaps_cycle_time
 
-       if(c_obstype .eq. 'ACARS')i4_window_ob = ilaps_cycle_time / 2     
-       if(c_obstype .eq. 'VAD')  i4_window_ob = 1800    
+
+!      The parse routine should help to handle blanks OK, hopefully it won't
+!      get fooled by "look alike" obstypes.
+
+       if(l_parse(c_obstype,'ACARS'))i4_window_ob = ilaps_cycle_time / 2     
+       if(l_parse(c_obstype,'VAD'))  i4_window_ob = 1800    
 
        return
        end
@@ -30,6 +36,8 @@
 
        character*(*) c_obstype
 
+       logical l_parse
+
        call get_laps_cycle_time(ilaps_cycle_time,istatus)
        if(istatus .eq. 1)then
            write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
@@ -40,7 +48,10 @@
 
        i4_window_ob = ilaps_cycle_time
 
-       if(c_obstype .eq. 'ACARS')i4_window_ob = ilaps_cycle_time / 2     
+!      The parse routine should help to handle blanks OK, hopefully it won't
+!      get fooled by "look alike" obstypes.
+
+       if(l_parse(c_obstype,'ACARS'))i4_window_ob = ilaps_cycle_time / 2     
 
        return
        end
