@@ -19,3 +19,12 @@
 	end type namelist_type
 
         type (namelist_type) namelist_parms
+
+	type plot_type
+          sequence
+
+          integer contour_line_width
+
+	end type plot_type
+
+        type (plot_type) plot_parms
