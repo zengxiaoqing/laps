@@ -2779,11 +2779,8 @@ trap 'rm -fr `echo "src/lib/Makefile
           util/Makefile
           util/cronfile
           Makefile
-          etc/run_lvd_driver.pl
-          etc/run_lsr_driver.pl
-          etc/run_vrc_driver.pl
+          etc/laps_driver.pl
           etc/purger.pl
-          etc/lga.pl
           etc/sched.pl
 	  etc/laps_localization.pl
           etc/install_lvd.csh
@@ -2927,11 +2924,8 @@ CONFIG_FILES=\${CONFIG_FILES-"src/lib/Makefile
           util/Makefile
           util/cronfile
           Makefile
-          etc/run_lvd_driver.pl
-          etc/run_lsr_driver.pl
-          etc/run_vrc_driver.pl
+          etc/laps_driver.pl
           etc/purger.pl
-          etc/lga.pl
           etc/sched.pl
 	  etc/laps_localization.pl
           etc/install_lvd.csh
