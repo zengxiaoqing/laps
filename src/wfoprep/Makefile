@@ -36,9 +36,9 @@
 SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
+
 LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
            $(SRCROOT)/src/lib/liblaps.a
-
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
              $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a 
@@ -69,9 +69,9 @@ $(EXE):			$(FOBJS) $(FMOD) $(LAPSLIBS)
 			$(FC) -o $@ $(FOBJS) $(FMOD) $(LAPSLIBS) $(OTHERLIBS)
 
 debug:	
-	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
- 	"LAPSLIBS	=	$(DBLAPSLIBS)" 	\
-	"FFLAGS         =	$(DBFLAGS)"
+	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) \
+	"LAPSLIBS	=	$(DBLAPSLIBS)" \
+	"FFLAGS         =	$(DBFLAGS)")
 
 wfoprep.o:		$(FMOD)
 
@@ -88,4 +88,4 @@ clean:
 			$(RM) *.ctmi
 
 install:	$(EXE) 
-		$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)  
+		$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
