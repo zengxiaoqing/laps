@@ -240,6 +240,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,path_to_buoy_data_cmn,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
+     1  ,fdda_model_source
 
 
         if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
@@ -857,6 +858,29 @@ c
       return
       end
 
+      subroutine get_pressure_bottom(pressure_bottom,istatus)
+
+      include 'lapsparms.cmn' ! PRESSURE_BOTTOM_L
+
+!     This routine accesses the pressure_bottom variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list is different in the calling routine
+
+!     The result 'pressure_bottom' has real meaning only when we are
+!     using a uniform 'PRESSURE' grid.
+
+      call get_laps_config('nest7grid',istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      pressure_bottom = PRESSURE_BOTTOM_L
+
+      return
+      end
+
 
       subroutine get_earth_radius(erad,istatus)
 
@@ -866,3 +890,33 @@ c
 
       return
       end
+
+      subroutine get_fdda_model_source(fdda_model_source,max_models
+     1,n_fdda_models,istatus)
+
+      include 'lapsparms.cmn' ! FDDA_MODEL_SOURCE_CMN
+      character*(*) fdda_model_source(max_models)
+      integer n_fdda_models,istatus
+
+!     This routine accesses the fdda_model_source variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list is different in the calling routine
+
+      call get_laps_config('nest7grid',istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      n_fdda_models = 0
+      do i=1,max_models
+         if(fdda_model_source_cmn(i).ne. ' ')then
+            n_fdda_models=n_fdda_models+1
+            fdda_model_source(n_fdda_models)=fdda_model_source_cmn(i)
+         endif
+      enddo
+
+      return
+      end
+
