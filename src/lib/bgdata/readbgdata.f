@@ -159,8 +159,6 @@ c        character gproj*2
         if(cmodel(1:lencm).eq.'LAPS_FUA'.or.
      +     cmodel(1:lencm).eq.'MODEL_FUA')then
 
-           print*,'Reading fua/fsf'
-
            call get_directory_length(fullname,lend)
            directory=fullname(1:lend)
            call cv_asc_i4time(fullname(lend+1:lend+9),i4_initial)
@@ -171,17 +169,28 @@ c        character gproj*2
 
 c the following subroutine should also work for different
 c domain fua/fsf but we'll try the get_lapsdata stuff first.
-c        call read_fua_cdf(fullname, x, y, z, 
-c    +     ht, pr, om, sh, t3, u3, v3,
-c    +     istatus)
-c        do j=1,ny_bg
-c        do i=1,nx_bg
-c           prbght(i,j,:)=pr(:)
-c           prbgsh(i,j,:)=pr(:)
-c           prbguv(i,j,:)=pr(:)
-c           prbgww(i,j,:)=pr(:)
-c        enddo
-c        enddo
+
+         if(cmodel(1:lencm).eq.'MODEL_FUA')then
+
+            call read_fuafsf_cdf(fullname
+     +,nx_bg, ny_bg, nzbg_ht
+     +,htbg, pr, wwbg, shbg, tpbg, uwbg, vwbg
+     +,uwbg_sfc, vwbg_sfc, tpbg_sfc, shbg_sfc
+     +,prbg_sfc, mslpbg, htbg_sfc, istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned: read_fuafsf_cdf'
+               return
+            endif
+            do j=1,ny_bg
+            do i=1,nx_bg
+               prbght(i,j,:)=pr(:)
+               prbgsh(i,j,:)=pr(:)
+               prbguv(i,j,:)=pr(:)
+               prbgww(i,j,:)=pr(:)
+            enddo
+            enddo
+
+         else
 
 c        call get_modelfg_2d(i4_valid,'USF',nx_bg,ny_bg,uwbg_sfc
 c    .,istatus)
@@ -247,29 +256,49 @@ c upper air
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_uv,directory,'U3 '
      1            ,units_2d,comment_2d,uwbg,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 3D bkgd file (U3): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_uv,directory,'V3 '
      1            ,units_2d,comment_2d,vwbg,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 3D bkgd file (V3): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ht,directory,'T3 '
      1            ,units_2d,comment_2d,tpbg,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 3D bkgd file (T3): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ht,directory,'HT '
      1            ,units_2d,comment_2d,htbg,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 3D bkgd file (HT): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_sh,directory,'SH '
      1            ,units_2d,comment_2d,shbg,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 3D bkgd file (SH): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ww,directory,'OM '
      1            ,units_2d,comment_2d,wwbg,istatus)
 
            if(istatus.ne.1)then
-              print*,'No 3D background files: ',directory(1:lend)
+              print*,'Error 3D bkgd file (OM): ',directory(1:lend)
               return
            endif
 c sfc data
@@ -292,42 +321,62 @@ c sfc data
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'PSF',units_2d,comment_2d,nx_bg,ny_bg,prbg_sfc
      1            ,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 2D bkgd file (PSF): ',directory(1:lend)
+              return
+           endif
+
+c          prbg_sfc=prbg_sfc*100.
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'TSF',units_2d,comment_2d,nx_bg,ny_bg,tpbg_sfc
      1            ,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 2D bkgd file (TSF): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'SLP',units_2d,comment_2d,nx_bg,ny_bg,mslpbg
      1            ,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 2D bkgd file (SLP): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'DSF',units_2d,comment_2d,nx_bg,ny_bg,shbg_sfc
      1            ,istatus)
-
            if(istatus.ne.1)then
-              print*,'No Sfc background data: ',directory(1:lend)
+              print*,'Error 2D bkgd file (DSF): ',directory(1:lend)
               return
            endif
-
-           prbg_sfc=prbg_sfc*100.
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'USF',units_2d,comment_2d,nx_bg,ny_bg,uwbg_sfc
      1            ,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 2D bkgd file (USF): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'VSF',units_2d,comment_2d,nx_bg,ny_bg,vwbg_sfc
      1            ,istatus)
+           if(istatus.ne.1)then
+              print*,'Error 2D bkgd file (VSF): ',directory(1:lend)
+              return
+           endif
 
            call get_lapsdata_2d(i4_initial,i4_valid,directory
      1            ,'TER',units_2d,comment_2d,nx_bg,ny_bg,htbg_sfc
      1            ,istatus)
-
            if(istatus.ne.1)then
-              print*,'No Sfc background data: ',directory(1:lend)
+              print*,'Error 2D bkgd file (TER): ',directory(1:lend)
               return
            endif
+
+         endif !MODEL_FUA?!
 
         endif
 
@@ -512,23 +561,5 @@ c
          print*,'Error with background model data in read_bgdata'
       endif
 
-      return
-      end
-c------------------------------------------
-
-      subroutine swap_array_k(a1,nx,ny,nz)
-c
-      implicit none
-      integer nx,ny,nz,k
-      real  a1(nx,ny,nz)
-      real, allocatable:: a2(:,:,:)
-
-      allocate (a2(nx,ny,nz))
-
-      do k=1,nz
-         a2(:,:,k)=a1(:,:,nz-k+1)
-      enddo
-      a1=a2
-      deallocate (a2)
       return
       end

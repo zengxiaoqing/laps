@@ -363,6 +363,7 @@ c
      &      cmodel(1:ic).eq.'LAPS_FUA')then
             llapsfua=.true.
             if(cmodel(1:ic).eq.'LAPS_FUA')then
+
                linterp = .false.
 
                print*,'*************************************'
@@ -1020,7 +1021,7 @@ c rotate them to the LAPS (output) domain as necessary.
            deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
      +                ,vwbg_sfc,tpbg_sfc,mslpbg)
 
-         endif !(llapsfua)
+         endif !(linterp)
 c
 c Write LGA
 c ---------

@@ -156,9 +156,12 @@ c    &istatus)
 c        call get_horiz_grid_spec(generic_data_root)
 c        call s_len(grid_type,leng)
 
+         call s_len(projname,leng)
+
          if(projname(1:5).eq. 'polar')gproj='PS'
-         if(projname(1:17).eq.'lambert conformal')gproj='LC'
+         if(projname(12:18).eq.'lambert')gproj='LC'
          if(projname(1:8).eq. 'mercator')gproj='MC'
+         if(projname(1:14).eq.'secant lambert')gproj='LC'
 
          if(Lo1.gt.180)Lo1=Lo1-360
          if(Lo2.gt.180)Lo2=Lo2-360

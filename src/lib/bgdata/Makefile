@@ -25,7 +25,7 @@ SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
      getdims_lapsprd.f   lga_driver.f                                  \
      lga_interp.f        lprep_eta_conusc.f     lprep_ruc2_pub.f       \
      readavnpublic.f     readbgdata.f           readeta48_pub.f        \
-     readconusnws.f      readruc2_pub.f                                \
+     readconusnws.f      readruc2_pub.f         read_fuafsf.f          \
      read_netcdf_field.f read_sbn_grids.f       readdgprep.f           \
      readnogaps.f        readruc60native.f      rdmodelindex.f         \
      sfcbkgd.f           tcbogus.f              writelgalgb.f
