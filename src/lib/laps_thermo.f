@@ -30,181 +30,148 @@ cdis
 cdis
 cdis
 
-        subroutine get_tw_approx_2d(t_k,td_k,p_pa,ni,nj,tw_k)
+        subroutine put_stability(
+     1           i4time_needed                   ! Input
+     1          ,NX_L,NY_L,NZ_L                  ! Input
+     1          ,heights_3d                      ! Input
+     1          ,topo                            ! Input
+     1          ,laps_cycle_time                 ! Input
+     1          ,temp_3d                         ! Input
+     1          ,sh_3d                           ! Input
+     1          ,temp_sfc_k                      ! Input
+     1          ,pres_sfc_pa                     ! Input
+     1          ,istatus)                        ! Output
 
-!       Steve Albers 1991
+!       Arrays passed in
+        real*4 temp_3d(NX_L,NY_L,NZ_L)
+        real*4 sh_3d(NX_L,NY_L,NZ_L)
+        real*4 heights_3d(NX_L,NY_L,NZ_L)
+        real*4 temp_sfc_k(NX_L,NY_L)
+        real*4 pres_sfc_pa(NX_L,NY_L)
+        real*4 topo(NX_L,NY_L)
 
-!       This routine is fast but only accurate near 0 degrees C (273K)
+!       Local declarations for stability 
+        real*4 td_3d_k(NX_L,NY_L,NZ_L)
+        real*4 t_sfc_f(NX_L,NY_L)
+        real*4 td_sfc_k(NX_L,NY_L)
+        real*4 td_sfc_f(NX_L,NY_L)
+        real*4 pbe_2d(NX_L,NY_L)
+        real*4 nbe_2d(NX_L,NY_L)
+        real*4 si_2d(NX_L,NY_L)
+        real*4 tt_2d(NX_L,NY_L)
+        real*4 k_2d(NX_L,NY_L)
+        real*4 lcl_2d(NX_L,NY_L)
+        real*4 pres_sfc_mb(NX_L,NY_L)
+        real*4 li(NX_L,NY_L)
+        real*4 t500laps(NX_L,NY_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
+        character*10 units_2d_a(3)
+        character*125 comment_2d_a(3)
+        character*3 var_2d_a(3)
+        real*4 out_multi_2d(NX_L,NY_L,3)
 
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
+        character*31 EXT
 
-        const = alog(0.5)
+        character*3 var_2d
+        character*10  units_2d
+        character*125 comment_2d
 
-        if(t_k(1,1) .eq. 0. .or. td_k(1,1) .eq. 0.)then
-            write(6,*)' Bad input data to get_tw_approx_2d'
+        real*4 k_to_f
+
+!       Read in surface dewpoint data
+        var_2d = 'TD'
+        ext = 'lsx'
+        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2
+     1                      ,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L       
+     1                      ,td_sfc_k,0,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' LAPS Sfc Dewpoint not available'
+            write(6,*)' Abort put_stability routine'
             return
         endif
 
-        do j = 1,nj
-        do i = 1,ni
-            t_f =  t_k(i,j)  * 1.8 - 459.67
-            td_f = td_k(i,j) * 1.8 - 459.67
-            tmid_f = 0.5 * (t_f + td_f)
-            depress50 = 13.4 + tmid_f * 0.1
-            rh = 0.5 ** ((t_f - td_f)/depress50)
-            start = 240. - (t_k(i,j) - 240.) / 6.
-            ratio = (t_k(i,j) - start)/100. * 
-     1                                   (1.0 + 0.9 * (1.0 - sqrt(rh)))        
-            dtw_dtd = ratio  ! (t = td)
-            drh_dtd = const / depress50 ! (t = td)
-            dtw_drh = dtw_dtd / drh_dtd
-            tw_f = t_f - (rh - 1.0) * dtw_drh
-            tw_k(i,j) = (tw_f + 459.67) / 1.8
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
+        call get_pres_3d(i4time_needed,NX_L,NY_L,NZ_L,pres_3d,istatus)       
+        if(istatus .ne. 1)return
+
+!       Convert SH to Td
+        do k = 1,NZ_L
+        do j = 1,NY_L
+        do i = 1,NX_L
+            if(sh_3d(i,j,k) .ne. r_missing_data)then
+!               ew = pres_3d(i,j,k)/100. * sh_3d(i,j,k)
+!               td_c = dpt(ew)                        ! Check valid input range
+
+!               td_c = make_td(pres_3d(i,j,k)/100.
+!    1                        ,temp_3d(i,j,k)-273.15
+!    1                        ,sh_3d(i,j,k)*1000.
+!    1                        ,-100.)
+
+                td_3d_k(i,j,k) = temp_3d(i,j,k)       ! Temporary Placeholder
+
+            endif
+
         enddo ! i
         enddo ! j
+        enddo ! k            
 
-        return
-        end
+        call laps_be(NX_L,NY_L,NZ_L
+     1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
+     1              ,temp_3d,td_3d_k,heights_3d,topo   
+     1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d)
 
+!       Fill pres_sfc_mb
+        call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
+        call multcon(pres_sfc_mb,.01,NX_L,NY_L)
 
-        subroutine get_tw_2d(t_k,td_k,p_pa,ni,nj,tw_k)
-
-!       Steve Albers 1991
-!       WARNING: This routine may not work because it calls tw_fast
-
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
-
-        do j = 1,nj
-        do i = 1,ni
-            tw_k(i,j) = 
-     1      tw_fast(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
-     1                                                     + 273.15
-        enddo ! i
+!       Convert T, Td to F
+        do i = 1,NX_L
+        do j = 1,NY_L
+            t_sfc_f(i,j)  = k_to_f(temp_sfc_k(i,j))
+            td_sfc_f(i,j) = k_to_f(td_sfc_k(i,j))
         enddo ! j
-
-        return
-        end
-
-        subroutine get_tw_2d_orig(t_k,td_k,p_pa,ni,nj,tw_k)
-
-!       Steve Albers 1991
-
-        real*4 t_k(ni,nj)     ! Input
-        real*4 td_k(ni,nj)    ! Input
-        real*4 p_pa(ni,nj)    ! Input
-        real*4 tw_k(ni,nj)    ! Output
-
-        do j = 1,nj
-        do i = 1,ni
-            tw_k(i,j) = 
-     1      tw(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
-     1                                                     + 273.15
         enddo ! i
-        enddo ! j
+
+        flag = 0.0
+        call li_laps(t_sfc_f,td_sfc_f,pres_sfc_mb,t500laps ! Local?
+     1              ,i4time_needed,NX_L,NY_L,li,flag,istatus)
+
+!       call move
+        call move(pbe_2d,out_multi_2d(1,1,1),NX_L,NY_L)
+        call move(nbe_2d,out_multi_2d(1,1,2),NX_L,NY_L)
+        call move(li,out_multi_2d(1,1,3),NX_L,NY_L)
+
+!       add var arrays
+        ext = 'lst'
+
+        var_2d_a(1) = 'PBE'
+        var_2d_a(2) = 'NBE'
+        var_2d_a(3) = 'LI'
+
+        units_2d_a(1) = 'J/KG'
+        units_2d_a(2) = 'J/KG'
+        units_2d_a(3) = 'K'
+
+        call put_laps_multi_2d(i4time_needed,ext,var_2d_a,units_2d_a
+     1                        ,comment_2d_a,out_multi_2d,NX_L,NY_L,3    
+     1                        ,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' LST output error'
+        else
+            write(6,*)' Successfully wrote LST'
+        endif
 
         return
+
         end
-
-        FUNCTION TW_fast(T,TD,P)
-C
-!       WARNING: This routine may not work because it calls TSA_fast
-C
-C   THIS FUNCTION RETURNS THE WET-BULB TEMPERATURE TW (CELSIUS)
-C   GIVEN THE TEMPERATURE T (CELSIUS), DEW POINT TD (CELSIUS)
-C   AND PRESSURE P (MB).  SEE P.13 IN STIPANUK (1973), REFERENCED
-C   ABOVE, FOR A DESCRIPTION OF THE TECHNIQUE.
-C
-C       BAKER,SCHLATTER 17-MAY-1982     Original version
-C
-C   DETERMINE THE MIXING RATIO LINE THRU TD AND P.
-        AW = W_fast(TD,P)
-C
-C   DETERMINE THE DRY ADIABAT THRU T AND P.
-        AO = O(T,P)
-        PI = P
-C
-C   ITERATE TO LOCATE PRESSURE PI AT THE INTERSECTION OF THE TWO
-C   CURVES .  PI HAS BEEN SET TO P FOR THE INITIAL GUESS.
-        DO 4 I= 1,10
-           X= .02*(TMR(AW,PI)-TDA(AO,PI))
-           IF (ABS(X).LT.0.01) GO TO 5
- 4         PI= PI*(2.**(X))
-C   FIND THE TEMPERATURE ON THE DRY ADIABAT AO AT PRESSURE PI.
- 5      TI= TDA(AO,PI)
-C
-C   THE INTERSECTION HAS BEEN LOCATED...NOW, FIND A SATURATION
-C   ADIABAT THRU THIS POINT. FUNCTION OS RETURNS THE EQUIVALENT
-C   POTENTIAL TEMPERATURE (K) OF A PARCEL SATURATED AT TEMPERATURE
-C   TI AND PRESSURE PI.
-        AOS= OS_fast(TI+273.15,PI)-273.15
-C   FUNCTION TSA RETURNS THE WET-BULB TEMPERATURE (C) OF A PARCEL AT
-C   PRESSURE P WHOSE EQUIVALENT POTENTIAL TEMPERATURE IS AOS.
-        TW_fast = TSA_fast(AOS,P)
-        RETURN
-        END
-
-        FUNCTION W_fast(T,P) ! Saturation mixing ratio wrt water
-C
-C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
-C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
-C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
-C
-C       BAKER,SCHLATTER 17-MAY-1982     Original version
-C       Albers                 1992     modified for laps
-C
-        X= ESLO(T)
-        W_fast= 622.*X/(P-X)
-        RETURN
-        END
-
-        FUNCTION Wice_fast(T,P) ! Saturation mixing ratio wrt ice
-C
-C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
-C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
-C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
-C
-C       BAKER,SCHLATTER 17-MAY-1982     Original version
-C       Albers                 1993     modified for laps
-C
-        X= ESILO(T)
-        Wice_fast= 622.*X/(P-X)
-        RETURN
-        END
-
-        FUNCTION OS_fast(TK,P)
-C
-C   THIS FUNCTION RETURNS THE EQUIVALENT POTENTIAL TEMPERATURE OS
-C   (K) FOR A PARCEL OF AIR SATURATED AT TEMPERATURE T (K)
-C   AND PRESSURE P (MILLIBARS).
-C
-C       BAKER,SCHLATTER 17-MAY-1982     Original version
-C
-        DATA B/2.6518986/
-C   B IS AN EMPIRICAL CONSTANT APPROXIMATELY EQUAL TO THE LATENT HEAT
-C   OF VAPORIZATION FOR WATER DIVIDED BY THE SPECIFIC HEAT AT CONSTANT
-C   PRESSURE FOR DRY AIR.
-        TC = TK - 273.15
-
-!       From W routine
-        X= ESLO(TC)
-        W= 622.*X/(P-X)
-
-        OS_fast= TK*((1000./P)**.286)*(EXP(B*W/TK))
-
-        RETURN
-        END
-
 
 
         subroutine laps_be(ni,nj,nk
      1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
-     1                  ,pbe_2d,nbe_2d)
+     1                  ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d)
 
 !       1991    Steve Albers
 !       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
@@ -419,8 +386,8 @@ C  CALCULATE SHOWALTER INDEX
  	    CALL ITPLV(P,TD,NLEVEL,850.,TDMN85,IO)                    
  	    THETAE=THAE(TMAN85,TDMN85,850.)                           
  	    CALL MSAD5(TP500,500.,THETAE,25.,20.,SLOPE,I1,I2,IA,0)    
- 	    IF(WREQ50.LT.WMEAN)GOTO50                                 
- 	    RH=WMEAN/WREQ50                                           
+!	    IF(WREQ50.LT.WMEAN)GOTO50                                 
+!	    RH=WMEAN/WREQ50                                           
  50	    SI=TMAN50-TP500                                           
 
 C                                                                         
@@ -1717,3 +1684,174 @@ c       write(6,*)' tsa_fast: i,t,err= ',i,tsa_fast,x
         RETURN
         END
 c
+
+        subroutine get_tw_approx_2d(t_k,td_k,p_pa,ni,nj,tw_k)
+
+!       Steve Albers 1991
+
+!       This routine is fast but only accurate near 0 degrees C (273K)
+
+        real*4 t_k(ni,nj)     ! Input
+        real*4 td_k(ni,nj)    ! Input
+        real*4 p_pa(ni,nj)    ! Input
+        real*4 tw_k(ni,nj)    ! Output
+
+        const = alog(0.5)
+
+        if(t_k(1,1) .eq. 0. .or. td_k(1,1) .eq. 0.)then
+            write(6,*)' Bad input data to get_tw_approx_2d'
+            return
+        endif
+
+        do j = 1,nj
+        do i = 1,ni
+            t_f =  t_k(i,j)  * 1.8 - 459.67
+            td_f = td_k(i,j) * 1.8 - 459.67
+            tmid_f = 0.5 * (t_f + td_f)
+            depress50 = 13.4 + tmid_f * 0.1
+            rh = 0.5 ** ((t_f - td_f)/depress50)
+            start = 240. - (t_k(i,j) - 240.) / 6.
+            ratio = (t_k(i,j) - start)/100. * 
+     1                                   (1.0 + 0.9 * (1.0 - sqrt(rh)))        
+            dtw_dtd = ratio  ! (t = td)
+            drh_dtd = const / depress50 ! (t = td)
+            dtw_drh = dtw_dtd / drh_dtd
+            tw_f = t_f - (rh - 1.0) * dtw_drh
+            tw_k(i,j) = (tw_f + 459.67) / 1.8
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+
+        subroutine get_tw_2d(t_k,td_k,p_pa,ni,nj,tw_k)
+
+!       Steve Albers 1991
+!       WARNING: This routine may not work because it calls tw_fast
+
+        real*4 t_k(ni,nj)     ! Input
+        real*4 td_k(ni,nj)    ! Input
+        real*4 p_pa(ni,nj)    ! Input
+        real*4 tw_k(ni,nj)    ! Output
+
+        do j = 1,nj
+        do i = 1,ni
+            tw_k(i,j) = 
+     1      tw_fast(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
+     1                                                     + 273.15
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+        subroutine get_tw_2d_orig(t_k,td_k,p_pa,ni,nj,tw_k)
+
+!       Steve Albers 1991
+
+        real*4 t_k(ni,nj)     ! Input
+        real*4 td_k(ni,nj)    ! Input
+        real*4 p_pa(ni,nj)    ! Input
+        real*4 tw_k(ni,nj)    ! Output
+
+        do j = 1,nj
+        do i = 1,ni
+            tw_k(i,j) = 
+     1      tw(t_k(i,j)-273.15,td_k(i,j)-273.15,p_pa(i,j)*.01)
+     1                                                     + 273.15
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+        FUNCTION TW_fast(T,TD,P)
+C
+!       WARNING: This routine may not work because it calls TSA_fast
+C
+C   THIS FUNCTION RETURNS THE WET-BULB TEMPERATURE TW (CELSIUS)
+C   GIVEN THE TEMPERATURE T (CELSIUS), DEW POINT TD (CELSIUS)
+C   AND PRESSURE P (MB).  SEE P.13 IN STIPANUK (1973), REFERENCED
+C   ABOVE, FOR A DESCRIPTION OF THE TECHNIQUE.
+C
+C       BAKER,SCHLATTER 17-MAY-1982     Original version
+C
+C   DETERMINE THE MIXING RATIO LINE THRU TD AND P.
+        AW = W_fast(TD,P)
+C
+C   DETERMINE THE DRY ADIABAT THRU T AND P.
+        AO = O(T,P)
+        PI = P
+C
+C   ITERATE TO LOCATE PRESSURE PI AT THE INTERSECTION OF THE TWO
+C   CURVES .  PI HAS BEEN SET TO P FOR THE INITIAL GUESS.
+        DO 4 I= 1,10
+           X= .02*(TMR(AW,PI)-TDA(AO,PI))
+           IF (ABS(X).LT.0.01) GO TO 5
+ 4         PI= PI*(2.**(X))
+C   FIND THE TEMPERATURE ON THE DRY ADIABAT AO AT PRESSURE PI.
+ 5      TI= TDA(AO,PI)
+C
+C   THE INTERSECTION HAS BEEN LOCATED...NOW, FIND A SATURATION
+C   ADIABAT THRU THIS POINT. FUNCTION OS RETURNS THE EQUIVALENT
+C   POTENTIAL TEMPERATURE (K) OF A PARCEL SATURATED AT TEMPERATURE
+C   TI AND PRESSURE PI.
+        AOS= OS_fast(TI+273.15,PI)-273.15
+C   FUNCTION TSA RETURNS THE WET-BULB TEMPERATURE (C) OF A PARCEL AT
+C   PRESSURE P WHOSE EQUIVALENT POTENTIAL TEMPERATURE IS AOS.
+        TW_fast = TSA_fast(AOS,P)
+        RETURN
+        END
+
+        FUNCTION W_fast(T,P) ! Saturation mixing ratio wrt water
+C
+C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
+C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
+C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+C
+C       BAKER,SCHLATTER 17-MAY-1982     Original version
+C       Albers                 1992     modified for laps
+C
+        X= ESLO(T)
+        W_fast= 622.*X/(P-X)
+        RETURN
+        END
+
+        FUNCTION Wice_fast(T,P) ! Saturation mixing ratio wrt ice
+C
+C   THIS FUNCTION RETURNS THE MIXING RATIO (GRAMS OF WATER VAPOR PER
+C   KILOGRAM OF DRY AIR) GIVEN THE TEMPERATURE T (CELSIUS) AND PRESSURE
+C   (MILLIBARS). THE FORMULA IS QUOTED IN MOST METEOROLOGICAL TEXTS.
+C
+C       BAKER,SCHLATTER 17-MAY-1982     Original version
+C       Albers                 1993     modified for laps
+C
+        X= ESILO(T)
+        Wice_fast= 622.*X/(P-X)
+        RETURN
+        END
+
+        FUNCTION OS_fast(TK,P)
+C
+C   THIS FUNCTION RETURNS THE EQUIVALENT POTENTIAL TEMPERATURE OS
+C   (K) FOR A PARCEL OF AIR SATURATED AT TEMPERATURE T (K)
+C   AND PRESSURE P (MILLIBARS).
+C
+C       BAKER,SCHLATTER 17-MAY-1982     Original version
+C
+        DATA B/2.6518986/
+C   B IS AN EMPIRICAL CONSTANT APPROXIMATELY EQUAL TO THE LATENT HEAT
+C   OF VAPORIZATION FOR WATER DIVIDED BY THE SPECIFIC HEAT AT CONSTANT
+C   PRESSURE FOR DRY AIR.
+        TC = TK - 273.15
+
+!       From W routine
+        X= ESLO(TC)
+        W= 622.*X/(P-X)
+
+        OS_fast= TK*((1000./P)**.286)*(EXP(B*W/TK))
+
+        RETURN
+        END
+
