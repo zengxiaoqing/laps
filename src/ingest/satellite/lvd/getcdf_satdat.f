@@ -267,7 +267,7 @@ c
 c all satellite channels are in files within same directory.
 c assume j=1 represents this for the minimum # of channels to process.
 c
-         pathname=path_to_raw_sat(1)(1:in(1))//c_fname_in(1:5)//'*'
+         pathname=path_to_raw_sat(1)(1:in(1))//c_fname_in(1:7)//'*'
          n=index(pathname,' ')
          write(*,*)'Data pathname: ',pathname(1:n-1)
 c

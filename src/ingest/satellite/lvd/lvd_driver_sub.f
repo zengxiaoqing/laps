@@ -92,6 +92,7 @@ c                                     used for variable in include 'satellite_co
       character*6 csatid
       character*6 csat  !this one used for cld top p path
       character*9 c_fname_cur
+      character*9 c_fname_sys
       character*9 c_fname
       character*9 fname_ctp
       character*50 c_gridfname
@@ -190,6 +191,7 @@ c
       integer i4time_cur
       integer i4time_now
       integer i4time_now_gg
+      integer i4time_sys
       integer i_delta_t
       integer i4time_data(max_files)
       integer i4time_ctp_data
@@ -242,13 +244,18 @@ c a few seconds to allow any data just before top of hour to have a chance
 c at being processed now.  Only do this for real time runs
 c ---------------------------------------------------------------------
       i4time_now = i4time_now_gg()
+      call get_systime(i4time_sys,c_fname_sys,istatus)
       call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
       call get_laps_cycle_time(laps_cycle_time,istatus)
       if(i4time_now-i4time_cur .lt. 2*laps_cycle_time)then
-         if(c_fname_cur(6:9).eq.'0000')then
+         if(c_fname_sys(6:9).eq.'0000')then
             print*
             print*,'Adjusting time for beginning of new day'
             print*
+
+c the following only works for WFO Jacksonville hourly sat ingest
+c           i4time_cur=i4time_cur-(i4time_now-i4time_sys)-15
+
             i4time_cur=i4time_cur-15
             call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
          endif
