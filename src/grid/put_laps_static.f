@@ -56,10 +56,10 @@ C
       endif
       laps_dom_file = c10_grid_fname(1:len_fname)
 
-! for LAPS, AVG data is elem 3, otherwise 7.
+! for LAPS, AVG data is elem 3, otherwise 9 (for WRFSI).
 
       avgelem=3
-      if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=7
+      if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=9
 
 !     Do zin calc (note this is last [kmax] element in data array)
       do i = 1,imax

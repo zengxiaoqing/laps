@@ -18,7 +18,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a
 EXE = gridgen_model.exe
 
 SRC   = put_laps_static.f showgrid.f \
-        bcd_file.c create_bcd_bkgnd.c setsup.c \
+        create_bcd_bkgnd.c setsup.c \
         gridgen_utils.f getarealim.c xy_to_ll.c ll_to_xy.c 
 
 MAIN=gridgen_model.f 
