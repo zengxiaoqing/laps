@@ -41,9 +41,9 @@ foreach $file (@filenames) {
     $filename = $file;
     $age_of_newest = $age; } }
 
-$tail = `tail -1 $filename`;
-if ($tail !~ /No stability calculation done for LST file/) {
-  print "Temperature analysis is in progress...\n";}
+#$tail = `tail -1 $filename`;
+#if ($tail !~ /No stability calculation done for LST file/) {
+#  print "Temperature analysis is in progress...\n";}
 
 # This is a bit more kosher...
 if (defined $hr) { 

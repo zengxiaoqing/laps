@@ -41,9 +41,9 @@ foreach $file (@filenames) {
     $filename = $file;
     $age_of_newest = $age; } }
 
-$tail = `tail -1 $filename`;
-if ($tail !~ /End of LAPS Wind Analysis/) {
-  print "Wind analysis is in progress...\n";}
+#$tail = `tail -1 $filename`;
+#if ($tail !~ /End of LAPS Wind Analysis/) {
+#  print "Wind analysis is in progress...\n";}
 
 # This is a bit more kosher...
 if (defined $hr) { 
