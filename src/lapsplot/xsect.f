@@ -69,9 +69,7 @@ cdis
         include 'laps_cloud.inc'
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
-        byte b_dum(NX_L,NY_L,KCLOUD)
 
-!       common/lapsplot_cmn2/clouds_3d,b_dum
         common/lapsplot_omega/l_convert
 
         logical l_sta,l_convert,lapsplot_pregen,l_atms,l_pregen,l_arriva
@@ -210,17 +208,14 @@ cdis
         real*4 field_vert(NX_C,NZ_C)
         real*4 field_vert2(NX_C,NZ_C)
         real*4 w_2d(NX_C,NZ_C)
-        byte cldpcp_type_2d(NX_C,NZ_C)
+        character cldpcp_type_2d(NX_C,NZ_C)
         real*4 mvd_2d(NX_C,NZ_C)
-!       real*4 lwc_res_2d(NX_C,NZ_C)
-        byte icing_index_2d(NX_C,NZ_C)
+        integer icing_index_2d(NX_C,NZ_C)
         real*4 terrain_vert(NX_C,NZ_C)
         real*4 terrain_vert1d(NX_C)
         real*4 lon_vert(NX_C)
 
         integer*4 iarg
-        byte barg
-        equivalence(barg,iarg)
 
         real*4 mspkt /.518/
 

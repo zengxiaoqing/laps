@@ -1809,7 +1809,7 @@ c*******************************************************************************
         integer*4       ic, ib, iw
 
         integer*4       iword, ichr
-        byte            ibyte(4)
+        character       ibyte(4)
         equivalence     (ibyte(1), iword)
 
 
@@ -1826,7 +1826,7 @@ c*******************************************************************************
             end if
 
             ic       = ic + 1
-            ichr     = ibyte(ib)
+            ichr     = byte_to_i4(ibyte(ib))
             str(ic:) = char (ichr)
 
         end do

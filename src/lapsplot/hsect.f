@@ -76,7 +76,7 @@ cdis
         character*9 c9_string,a9_start,a9_end
         character infile*70
 
-        byte i4_to_byte
+        character i4_to_byte
 
         real*4 clow/-200./,chigh/+400/,cint_ref/10./
 
@@ -171,14 +171,12 @@ cdis
 
 !       real*4 slwc_int(NX_L,NY_L)
         real*4 column_max(NX_L,NY_L)
-        byte pcp_type_2d(NX_L,NY_L)
-        byte b_array(NX_L,NY_L)
-!       equivalence (slwc_int,column_max)
+        character pcp_type_2d(NX_L,NY_L)
+        character b_array(NX_L,NY_L)
 
         real*4 slwc_2d(NX_L,NY_L)
         real*4 cice_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
-!       equivalence (slwc_2d,field_2d)
 
         real*4 snow_2d(NX_L,NY_L)
         real*4 snow_2d_buf(NX_L,NY_L)
@@ -195,21 +193,13 @@ cdis
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 td_sfc_k(NX_L,NY_L)
         real*4 pres_sta_pa(NX_L,NY_L)
-!       real*4 tw_sfc_k(NX_L,NY_L)
         logical l_mask(NX_L,NY_L)
-!       byte pcp_type_2d(NX_L,NY_L)
-!       byte cldpcp_type_3d(NX_L,NY_L,NZ_L)
         integer ipcp_1d(NZ_L)
 
 
-        byte cldpcp_type_3d(NX_L,NY_L,NZ_L)
-        byte cloud_type_2d(NX_L,NY_L)
+        character cldpcp_type_3d(NX_L,NY_L,NZ_L)
         real*4 mvd_3d(NX_L,NY_L,NZ_L)
-!       real*4 lwc_res_3d(NX_L,NY_L,NZ_L)
-        byte icing_index_3d(NX_L,NY_L,NZ_L)
-        byte barg
         integer*4 iarg
-        equivalence(iarg,barg)
 
         real*4 cloud_cvr(NX_L,NY_L)
         real*4 cloud_ceil(NX_L,NY_L)
@@ -240,7 +230,6 @@ cdis
         include 'laps_cloud.inc'
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
-        byte   b_dum(NX_L,NY_L,KCLOUD)
         real*4 cld_pres(KCLOUD)
 
         character*80 grid_fnam_common
@@ -249,8 +238,6 @@ cdis
 !       common/lapsplot_cmn1/heights_3d,slwc_3d,cice_3d,q_3d,rh_3d,temp_
 !    13d,
 !    1              u_3d,v_3d,omega_3d,grid_ra_ref,grid_ra_vel
-
-!       common/lapsplot_cmn2/clouds_3d,b_dum
 
         common /supmp1/ dummy,part
 
@@ -2132,8 +2119,7 @@ cdis
                 do i = 1,NX_L
                 do j = 1,NY_L
 !                   Convert to byte
-!                   pcp_type_2d(i,j) = i4_to_byte(iarg)
-                    b_array(i,j) = int(field_2d(i,j))
+                    b_array(i,j) = i4_to_byte(int(field_2d(i,j)))
                 enddo ! i
                 enddo ! j
 
@@ -3914,13 +3900,12 @@ cdis
         character c_field*2,c_display*1
         character*(*) c_file
 
-        byte cldpcp_type_2d(NX_L,NY_L)
+        character cldpcp_type_2d(NX_L,NY_L)
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
         integer*4 ifield_2d(NX_L,NY_L)
 
         integer*4 iarg
-        equivalence(iarg,barg)
 
         integer*4 ity/35/,ily/1010/,istatus
 
@@ -4048,7 +4033,6 @@ cdis
         real*4 lon(NX_L,NY_L)
 
         integer*4 iarg
-        equivalence(iarg,barg)
 
         integer*4 ity/35/,ily/1010/,istatus
 

@@ -33,7 +33,7 @@ cdis
      1_meta
      1                                  ,imax,jmax,lat,lon,ifield_2d)
 
-        byte cldpcp_type_2d(imax,jmax)
+        character cldpcp_type_2d(imax,jmax)
         integer*4 ifield_2d(imax,jmax)
 
         logical l_meta
@@ -41,7 +41,7 @@ cdis
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
 
-        byte barg
+        character barg
         integer*4 iarg,byte_to_i4
 
         character*2 c2_field,c2_type
