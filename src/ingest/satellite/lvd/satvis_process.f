@@ -64,6 +64,8 @@ c          "          10-21-96       Incorporated new normalize brightness proce
 c				     account for vis data that has been pre-normalized (ie., gvar fsl-conus)
 c          "          03-07-97      New normalize brightness routine that accounts for missing data.
 c          "          03-12-97      Added c_sat_id to argument list. This directs the normalization procedure.
+c          "          07-06-99      Added emission_angle_d as output from normalize_brightness and input
+c                                   to vis_2_albedo.
 c
 c       Notes:
 c       This program processes vis satellite data from ISPAN database
@@ -91,6 +93,7 @@ c
        real*4 albedo(ni,nj)
        real*4 phase_angle_d(ni,nj)
        real*4 specular_ref_angle_d(ni,nj)
+       real*4 emission_angle_d(ni,nj)
        real*4 rland_frac(ni,nj)
 c 
 c..... LAPS lat/lon files.
@@ -228,7 +231,7 @@ c have been normalized with l_national = .true.
           call normalize_brightness(i4time,lat,lon,laps_vis_norm
      &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin
      &,r_missing_data,6,i_dir,phase_angle_d,specular_ref_angle_d
-     &,istatus_n)
+     &,emission_angle_d,istatus_n)
 c
           if(istatus_n .ne. 1) then
              write(*,*)'+++WARNING+++ Bad status returned from
@@ -245,7 +248,7 @@ c
           do i=1,imax
 c
 c save the unnormalized counts.
-c Note: this raw vis data now looks like raw goes-7 counts and we must reverse the stretch.
+c Note: this raw vis data now looks like raw goes-7 counts; we must reverse the stretch.
 c
              if(laps_vis_norm(i,j).ne.r_missing_data)then
                call stretch(0., 255., 0., 303.57, laps_vis_norm(i,j))  !reverse the stretch 
@@ -260,47 +263,6 @@ c laps_vis_norm is now ready for local normalization
  
           write(6,*)
           i_dir = 1
-c
-c compute differences between the two difference normalizations
-c
-c         diffsum = 0
-c         diffsum_abs = 0
-c         icnt = 0
-c         maxdiff = -255
-c         mindiff = 255
-c         do j=1,jmax
-c         do i=1,imax
-
-c            if(laps_vis_norm_natl(i,j).ne.r_missing_data.and.
-c    &laps_vis_norm(i,j).ne.r_missing_data)then
-c            difference=laps_vis_norm_natl(i,j)-laps_vis_norm(i,j)
-c            diffsum = difference + diffsum
-c            diffsum_abs = abs(difference) + diffsum_abs
-c            icnt = icnt + 1
-c            if(difference.gt.maxdiff)then
-c               maxdiff=difference
-c               imx=i
-c               jmx=j
-c            endif
-c            if(difference.lt.mindiff)then
-c               mindiff=difference
-c               imn=i
-c               jmn=j
-c            endif
-c            endif
-c
-c         enddo
-c         enddo
-
-c         meandiff = diffsum/icnt
-c         meanabsdiff = diffsum_abs/icnt
-
-c         write(6,*)'========================================='
-c         write(6,*)'Mean difference (natl-local): ',meandiff
-c         write(6,*)'Mean absolute difference: ',meanabsdiff
-c         write(6,*)'Max difference: ',maxdiff,' i/j ',imx,jmx
-c         write(6,*)'Min difference: ',mindiff,' i/j ',imn,jmn
-c         write(6,*)'========================================='
 c
 c================================================
 c WFO Switch
@@ -343,8 +305,8 @@ c=======================================
 c GVAR Switch
 c
        elseif(c_sat_type.eq.'gvr'.or.c_sat_type.eq.'gwc')then
+          write(6,*)'GVAR Visible data: ',c_sat_id
           if(c_sat_id.eq.'goes08')then
-             write(6,*)'GVAR GOES-8 Vis data'
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
@@ -355,7 +317,6 @@ c for goes8 - make it look like goes7
              enddo
              enddo
           elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
-             write(6,*)'GVAR ',c_sat_id,' Vis data'
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
@@ -383,7 +344,7 @@ c =============================================
      &             sublat_d,sublon_d,
      &             range_m,l_national,iskip_bilin,
      &             r_missing_data,6,i_dir,phase_angle_d,
-     &             specular_ref_angle_d,
+     &             specular_ref_angle_d,emission_angle_d,
      &             istatus_n)
        if(istatus_n .ne. 1) then
           write(*,*)'+++WARNING+++ Bad status returned from
@@ -408,7 +369,7 @@ c =============================================
      1units_2d,comment_2d,
      1rland_frac,rspacing_dum,istatus_l)
        if(istatus_l .ne. 1)then
-           write(6,*)' Error reading LAPS static-ldf'
+           write(6,*)' Error reading LAPS static-land frac'
            return
        endif
 
@@ -420,6 +381,7 @@ c =============================================
      &                    r_missing_data,
      &                    phase_angle_d,
      &                    specular_ref_angle_d,
+     &                    emission_angle_d,
      &                    rland_frac,
      &                    albedo,
      &                    albedo_min,
@@ -453,18 +415,20 @@ c
        icnt=0
        do j=1,jmax
        do i=1,imax
-          if(albedo(i,j)-ave.gt.3.0*sdev)then
-             icnt=icnt+1
-             isave=i
-             jsave=j
-          endif
-          if(albedo(i,j).eq.albedo_max)then
-             ismax=i
-             jsmax=j
-          endif
-          if(albedo(i,j).eq.albedo_min)then
-             ismin=i
-             jsmin=j
+          if(albedo(i,j).ne.r_missing_data)then
+           if(albedo(i,j)-ave.gt.3.0*sdev)then
+              icnt=icnt+1
+              isave=i
+              jsave=j
+           endif
+           if(albedo(i,j).eq.albedo_max)then
+              ismax=i
+              jsmax=j
+           endif
+           if(albedo(i,j).eq.albedo_min)then
+              ismin=i
+              jsmin=j
+           endif
           endif
        enddo
        enddo
@@ -486,8 +450,8 @@ c
           print*,'  i/j/count of min albedo ',ismin,jsmin,
      &laps_vis_norm(ismin,jsmin)
        else
-          print*,'All albedo < 3 standard dev'
-          print*,'No max/min output'
+          print*,'All albedo < 3 standard dev of ave'
+          print*,'No max/min output in satvis_process'
        endif
 
        goto 999
