@@ -42,7 +42,6 @@ SRC	= machine_dependent.F \
           atan3.f \
           atan3d.f \
           barnes_multivariate.f \
-          barnes_univariate.f \
           bilinear_interp.f \
           block_data.f \
           c_time2fname.c \

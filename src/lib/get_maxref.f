@@ -39,8 +39,6 @@ cdis
 !       Steve Albers            1990
 !       Steve Albers            1994     Test for missing data values
 
-        include 'lapsparms.inc'
-
         real*4 grid_ra_ref(imax,jmax,kmax)      ! Input 3D Array
         real*4 radar_array(imax,jmax)           ! Output 2D Array
 
@@ -50,6 +48,17 @@ cdis
      1   write(6,*)' Projecting maximum reflectivity onto horizontal sur
      1face'
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in get_max_ref, STOP'
+            stop
+        endif
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in get_max_ref, STOP'
+            stop
+        endif
 
 !       Initialize Radar Array
         do j = 1,jmax

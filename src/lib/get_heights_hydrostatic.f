@@ -46,10 +46,6 @@ cdis
 !           1996        Steve Albers    Expanded 'esat_lut' array from -100C
 !                                       to the colder value of -120
 
-        include 'lapsparms.inc' ! obsolete
-
-c       EXTERNAL        LIB$SHOW_TIMER
-
         real*4 esat_lut(-120:+100)
 
         real*4 temp_3d_k(ni,nj,nk)

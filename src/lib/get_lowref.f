@@ -29,18 +29,22 @@ cdis
 cdis
 cdis
 cdis
-        subroutine get_low_ref(z_3d_in,pres_sfc_pa,ni,nj,nk,radar_2d_out
-     1)
+        subroutine get_low_ref(z_3d_in,pres_sfc_pa,ni,nj,nk
+     1                        ,radar_2d_out)
 
 !       Steve Albers            1990
-
-        include 'lapsparms.inc'
 
         real*4 z_3d_in(ni,nj,nk)
         real*4 radar_2d_out(ni,nj)
         real*4 pres_sfc_pa(ni,nj)
 
         write(6,*)' Converting from 3D Z field to Low Level Z field'
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error in get_low_ref, STOP'
+            stop
+        endif
 
         n_low_pts = 0
 
