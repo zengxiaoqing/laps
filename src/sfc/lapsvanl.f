@@ -731,9 +731,16 @@ c
 	alf = 10000.
 	alf2a = 0.
 	beta = 100.
+C
+C TH: 29 November 2002 Begin hack.
+C We set 'name' to be 'PRESSURE' so the spline routine lnows how to set
+C the mask_sea flag.
+C
+        name = 'PRESSURE'
 	call spline(rp,rp1,rp_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,
      &        jmax,rms_thresh_norm,bad_rp,imiss,mxstn,obs_error_redp,
      &        name,topo,ldf)     
+	name = 'NOPLOT'	
 c
 	print *,' '
 	print *,'  At spline call for msl p (mb)'
@@ -741,13 +748,18 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	alf = 10000.
 	alf2a = 0.
 	beta = 100.
+        name = 'PRESSURE'
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
      &      err,imax,jmax,rms_thresh_norm,bad_mp,imiss,mxstn,
      &      obs_error_mslp,name,topo,ldf)
+C
+C TH: End hack.
+C
 c
 !       Call routine to check pres arrays and adjust psfc based on mslp/mslp_bk
         call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
      1                ,sp_bk,psfc)       
+	name = 'NOPLOT'	
 
 	print *,' '
 	print *,'  At spline call for visibility (log)'
