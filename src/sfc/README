@@ -1,4 +1,10 @@
 
+             TREE DIAGRAM for laps_sfc.x modules
+             ___________________________________
+
+
+Subroutine Name                                File Name
+...............                                .........
 
 main                                           laps_sfc.f
     laps_sfc_sub                                    "
@@ -20,6 +26,8 @@ main                                           laps_sfc.f
             add                               
             spline (u,v)                       lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
+            barnes_multivariate_sfc_jacket          "
+                barnes_multivariate_sfc             "
             nonlin                                  "
             frict                                   "
             leib                                    "
@@ -29,22 +37,17 @@ main                                           laps_sfc.f
             heat_index                              "
             verify                             lapsvanl_sub.f
 
-..............................................................................
+
+.........................PLEASE IGNORE WHAT IS BELOW...........................
 
 mdatlaps.f:	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
 mdatlaps.f:c			03-12-90  Subroutine version.
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
-mdatlaps.f:	subroutine back_bounds(x,imax,jmax,dum,badflag)
 mdatlaps.f:      subroutine splie2(x1a,x2a,ya,m,n,y2a)
 mdatlaps.f:      subroutine splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
 mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
 mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
-lapsvanl.f:	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-lapsvanl.f:c				03-14-90  Subroutine version.
-lapsvanl.f:c                               09-10-96  Subroutine Channel corrected
-lapsvanl.f:c                                           constants passed to subroutines.
-lapsvanl.f:c.....	Grids for variables derived by the MESO_ANL subroutine.
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
 lapsvanl_sub.f:	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
 lapsvanl_sub.f:	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
@@ -76,4 +79,3 @@ laps_routines.f:	subroutine checknan_1d(x,ni,nan_flag)
 laps_routines.f:	subroutine checknan_2d(x,ni,nj,nan_flag)
 laps_routines.f:	subroutine checknan_3d(x,ni,nj,nk,nan_flag)
 laps_routines.f:      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
-laps_routines.f:	subroutine tagit(name, code)
