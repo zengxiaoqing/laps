@@ -659,8 +659,9 @@ csms$serial(default=ignore)  begin
 
               I4_elapsed = ishow_timer()
 
-              write(6,*)' Calling barnes with only multi-doppler obs '
-     1                 ,'creating an intermediate analysis'
+              write(6,401)icount_radar_total
+ 401          format(1x,' Analyzing with ',i5
+     1                 ,' multi-doppler grid points')     
 
               call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
               call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
