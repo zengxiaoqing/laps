@@ -10,7 +10,7 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(BGDATALIB) $(UTILLIB) $(LAPSLIB) $(MTHERMOLIB) 
 
-DBLAPSLIBS = $(DBBGDATALIB) $(DBUTILLIB) $(DBLAPSLIB) $(DBMTHERMOLIB) 
+DBLAPSLIBS = $(DBBGDATALIB) $(DBLAPSLIB) $(DBUTILLIB) $(DBMTHERMOLIB) 
 
 
 .SUFFIXES:
@@ -18,7 +18,7 @@ DBLAPSLIBS = $(DBBGDATALIB) $(DBUTILLIB) $(DBLAPSLIB) $(DBMTHERMOLIB)
 
 EXE = lga.exe
 
-SRC=lga_interp.f  lga_util.f  writelgalgb.f
+SRC=lga_interp.f  writelgalgb.f
 
 MAIN=lga.f
 

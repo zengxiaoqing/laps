@@ -32,6 +32,13 @@ cdis
       program lga
       implicit none
       include 'bgdata.inc'
+
+c eventually put these parameters into bgdata.inc
+      integer mxvars,mxlvls
+      parameter(mxvars=10,mxlvls=100)
+
+      character*10 cvars(mxvars)
+      integer      levels(mxlvls,mxvars)
 c
 c
 c------------------> BACKGROUND MODEL DESIGNATION <-----------------------------
@@ -50,7 +57,6 @@ c        bgmodel = 8 ---> NOGAPS (1.0 deg)
 c        bgmodel = 9 ---> NWS Conus (RUC, ETA, NGM, AVN)
 c
 c
-      integer bgmodel
 c
 c------------------> GRID DIMENSION SPECIFICATION <-----------------------------
 c
@@ -65,12 +71,11 @@ c        bgmodel defined above.
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
-     .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
+     .          nx_bg,ny_bg,nz_bg,
      .          lga_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
       integer   np
 c
-      character*255 lapsroot                 !LAPS root path
 c
 c------------------> BACKGROUND GRID DATA PATH <--------------------------------
 c
@@ -79,15 +84,21 @@ c *** Read from standard input.
 c *** Each line contains the background data directory path for each
 c        corresponding bgmodel defined above.
 c
-      character*256 bgpath
       character*256 cfilespec
+
+      character*2   gproj
+      real          dlat,dlon
+      real          Lat0,Lat1,Lon0
+      real          sw(2),ne(2)
 
 c
 c  This is the max number of paths allowed in nest7grid.parms
 c  and should match the value in lib/lapsgrid.f 
 c 
       character*256 bgpaths(maxbgmodels)
-      integer bgmodels(maxbgmodels), bglen
+      character*256 bgpath
+      integer bgmodels(maxbgmodels)
+      integer bgmodel
       integer istatus
  
       character*13 cvt_i4time_wfo_fname13
@@ -99,10 +110,11 @@ c
       integer itime_inc
       parameter (max_files=900)
       character*256 names(max_files)
-      character*256 reject_files(max_files)
+      character*256 reject_names(max_files)
       integer reject_cnt
-      data reject_cnt/0/
-      integer ntbg
+      integer accepted_files
+      integer lbgp
+      integer nbgmodels
       integer idum,jdum,kdum
 c
 c-------------------------------------------------------------------------------
@@ -113,16 +125,18 @@ c
 c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
-      character*31  laps_domain_file
-      character*132 cmodel(maxbgmodels)
+      character*132 cmodels(maxbgmodels)
+      character*132 cmodel
       character*255 cfname
       integer oldest_forecast, max_forecast_delta
+      integer forecast_length
       logical use_analysis, use_systime
       logical time_plus_one,time_minus_one
 c_______________________________________________________________________________
 c
 c Read information from static/nest7grid.parms
 
+      print *,'istatus ',istatus
       call get_grid_dim_xy(nx_laps,ny_laps,istatus)
       call get_laps_dimensions(nz_laps,istatus)
       call get_laps_cycle_time(laps_cycle_time,istatus)
@@ -130,7 +144,15 @@ c
 c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels,oldest_forecast
-     +,max_forecast_delta,use_analysis,cmodel,itime_inc)
+     +,max_forecast_delta,forecast_length,use_analysis,cmodels
+     +,itime_inc)
+
+      nbgmodels=0
+      do i=1,maxbgmodels
+         if(index(bgpaths(i),' ').ne.0)then
+            nbgmodels=nbgmodels+1
+         endif
+      enddo
 
 c
 c *** Initialize esat table.
@@ -160,81 +182,101 @@ c
 
 
       bg_files=0
-      i=0
-      lga_status = 0 
+      i=1
+      bgmodel = bgmodels(i)
+      bgpath =  bgpaths(i)
+      call s_len(bgpath,lbgp)
+      cmodel =  cmodels(i)
+      lga_status = -99 
+
+      reject_cnt=0
+      bg_files=0
 
       no_infinite_loops=0
-      do while(lga_status.le.0 .and. i.le.maxbgmodels
-     +     .and. no_infinite_loops.lt.30)
-         no_infinite_loops=no_infinite_loops+1
+      do while((lga_status.le.0 .and. i.le.nbgmodels)
+     +         .and. (no_infinite_loops.le.nbgmodels))
+
+
          print *,'HERE:',lga_status, i, bg_files,reject_cnt
-         if(bg_files.le.reject_cnt) then
-            i=i+1 
+
+         if(reject_cnt.gt.bg_files )then    !.and. bg_files.gt.0) then
+            i=i+1
             bgmodel = bgmodels(i)
-            if(bgmodel .eq. 0) goto 965
             bgpath =  bgpaths(i)
-            call s_len(bgpath,bglen)
-            if(bgmodel .eq. 4)then
-               cfilespec=bgpath(1:bglen)//'/*'
-               call get_latest_file_time(cfilespec,i4time_latest)
-               cfname = cvt_i4time_wfo_fname13(i4time_latest)
-               call get_sbn_dims(bgpath,cfname,idum,jdum,kdum
-     .,ntbg)
-            endif
+            cmodel =  cmodels(i)
+            reject_cnt = 0
          endif
+
          if (bgmodel .lt. 1 .or. bgmodel .gt. maxbgmodels) then
-            print*,'Bad model specification in LGA, bgmodel =',bgmodel
-            print*,'   LGA process aborted...'
+            print*
+            print*,' Cannot proceed with model specification in LGA'
+            print*,' Check bgpaths in static/background.nl'
+            print*,' LGA process aborted...'
             stop
          endif
 
+c
+c this commented subroutine is under development to replace
+c get_acceptable_files.  At the moment get_acceptable_files
+c is still doing the job even though it is difficult software
+c to work with. get_acceptable_files is also used in dprep.f 
+c
+c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
+
+
+         print*,'Calling get_acceptable_files '
+         print*,'bgpath:  ',bgpath(1:lbgp)
+         print*,'bgmodel: ',bgmodel
+         print*
+
          call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,0,cmodel(i),ntbg
-     +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
+     +        ,use_analysis,bg_files,accepted_files,forecast_length
+     +        ,cmodel,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
 
 
-        if(bg_files.eq.0) then
-           print*,'No Acceptable files found for model: ',bgpath,
-     +          bgmodel 
-           lga_status = 0
+        if(accepted_files.eq.0.and.bg_files.eq.0) then
+
+           print*,'No Acceptable files found for background model:'
+           print*,'bgpath =  ',bgpath(1:lbgp)
+           print*,'bgmodel = ',bgmodel 
+
+           no_infinite_loops=no_infinite_loops+1
+           reject_cnt=reject_cnt+1
+           if(i.eq.nbgmodels)lga_status = 0 
+
+c             if(bg_files.eq.0)then
+c                lga_status = 1
+c             endif
+
+        elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
+
+              reject_cnt=reject_cnt+1
+
         else
 
-           print *, 'bgmodel is set to ', bgmodel
            print *, ' '
            print *, 'Input Parameters'
            print *, '----------------'
-           print *, ' Analysis dimensions: '
+           print *
+           print *, ' Analysis setup: '
            print *, nx_laps,ny_laps,nz_laps
            print *, laps_cycle_time
            print *
-           print *, ' Background dimensions: '
-           print *, nx_bg,ny_bg,nz_bg
-           print *, 'bgpath ', bgpath(1:bglen)
-           print *, 'cmodel ',cmodel(i)
-           print *
- 970       continue
 c
 c *** Call lga driver.
 c
            call lga_driver(nx_laps,ny_laps,nz_laps,
-     .          laps_cycle_time,lapsroot,laps_domain_file,
-     .          bgmodel,bgpath,names,cmodel(i),max_files,bg_files,
-     .          nx_bg, ny_bg, nz_bg, i4time_now_lga, lga_status)
+     .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
+     .          reject_names,names,max_files,accepted_files,
+     .          i4time_now_lga, mxvars,mxlvls,lga_status)
 
-           if(lga_status.lt.0) then
-              do l = 1,bg_files
-                 reject_cnt=reject_cnt+1
-                 reject_files(reject_cnt)=names(l)       ! (-lga_status), name was names(-lga_status)
-              enddo
-              bg_files = 0                               ! reset the counter
-           endif
 c
 c these constructs force t-1 and t+1 cycle time background generation.
 c these should be removed when lga runs outside sched.pl
 c
            if(lga_status.eq.1.and.time_minus_one)then
-              lga_status = 0
+              lga_status = -99 
               i4time_now_lga = i4time_now-laps_cycle_time
               time_minus_one = .false.
               print*
@@ -243,7 +285,7 @@ c
            endif
 
            if(lga_status.eq.1.and.time_plus_one)then
-              lga_status = 0
+              lga_status = -99
               i4time_now_lga = i4time_now + laps_cycle_time
               time_plus_one = .false.
               print*
@@ -254,7 +296,7 @@ c
         endif
         
       enddo
-      if(no_infinite_loops.gt.oldest_forecast) then
+      if(no_infinite_loops.gt.nbgmodels) then
          print*,'ERROR: LGA infinite loop condition found'
       endif
 c
@@ -291,7 +333,7 @@ c
 960   continue
       print *,'Error reading background data directory paths.'
       stop
- 965  continue
+965   continue
       print *,'No acceptable background model found.'
       
 c
@@ -300,61 +342,107 @@ c
 c===============================================================================
 c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,
-     .     laps_cycle_time,lapsroot,laps_domain_file,
-     .     bgmodel,bgpath,bg_names,cmodel,max_files,bg_files,
-     .     nx_bg,ny_bg,nz_bg,i4time_now, lga_status)
+     .     laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
+     .     reject_names,bg_names,max_files,accepted_files,
+     .     i4time_now,mxvars,mxlvls,lga_status)
 
 c
       implicit none
       include 'bgdata.inc'
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
-     .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
-     .          max_files, lga_status,
-     .          laps_cycle_time,
-     .          bgmodel,nbg
-      integer icnt
+     .        nx_bg  ,ny_bg,               !Background model grid dimensions
+     .        nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
+     .        max_files, lga_status,
+     .        laps_cycle_time,
+     .        bgmodel,nbg,
+     .        mxvars,mxlvls
+
+      integer   ishow_timer
+      integer   init_timer
+      integer   itstatus(10)
+      integer   icnt
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
-      real lon0,lat1,lat2
 
-      character*(*) lapsroot
-     +             ,laps_domain_file
-     +             ,bgpath
-     +             ,bg_names(max_files)
-     +             ,cmodel
+      real Lon0,Lat0,Lat1,dlat,dlon
+      real sw(2),ne(2)
+      real cenlat,cenlon
+      real dx,dy
+
+c     common /lcgrid/nx_bg,ny_bg,nzbg_ht,lat0,lat1,lon0,sw,ne
+c     common /llgrid/nx_bg,ny_bg,nzbg_ht,lat0,lon0,dlat,dlon
+c     common /cegrid/nx_bg,ny_bg,nzbg_ht,nw,se,lat0,lon0
+
+      character*256 bgpath
+      character*256 bg_names(max_files)
+      character*256 reject_names(max_files)
+      character*132 cmodel
       
       integer warncnt
       
 c
 c *** Background model grid data.
 c
-      real*4    prbg(nx_bg,ny_bg,nz_bg),     !Pressure (mb)
-     .          htbg(nx_bg,ny_bg,nz_bg),     !Height (m)
-     .          tpbg(nx_bg,ny_bg,nz_bg),     !Temperature (K)
-     .          shbg(nx_bg,ny_bg,nz_bg),     !Specific humidity (kg/kg)
-     .          uwbg(nx_bg,ny_bg,nz_bg),     !U-wind (m/s)
-     .          vwbg(nx_bg,ny_bg,nz_bg),     !V-wind (m/s)
-     .          mslpbg(nx_bg,ny_bg),         !mslp  (mb)
-     .          wwbg(nx_bg,ny_bg,nz_bg),     !W-wind (pa/s)
-     .          htbg_sfc(nx_bg,ny_bg),
-     .          prbg_sfc(nx_bg,ny_bg), 
-     .          shbg_sfc(nx_bg,ny_bg), 
-     .          uwbg_sfc(nx_bg,ny_bg), 
-     .          vwbg_sfc(nx_bg,ny_bg), 
-     .          tpbg_sfc(nx_bg,ny_bg)
+c
+c *** sfc background arrays.
+c
+      real, allocatable  :: prbg_sfc(:,:)
+      real, allocatable  :: uwbg_sfc(:,:)
+      real, allocatable  :: vwbg_sfc(:,:)
+      real, allocatable  :: shbg_sfc(:,:)
+      real, allocatable  :: tpbg_sfc(:,:)
+      real, allocatable  :: htbg_sfc(:,:)
+      real, allocatable  :: mslpbg(:,:)
+c
+c *** 3D background arrays.
+c
+      real, allocatable  :: prbght(:,:,:)
+      real, allocatable  :: prbgsh(:,:,:)
+      real, allocatable  :: prbguv(:,:,:)
+      real, allocatable  :: prbgww(:,:,:)
+      real, allocatable  :: htbg(:,:,:)
+      real, allocatable  :: tpbg(:,:,:)
+      real, allocatable  :: shbg(:,:,:)
+      real, allocatable  :: uwbg(:,:,:)
+      real, allocatable  :: vwbg(:,:,:)
+      real, allocatable  :: wwbg(:,:,:)
 
+c     real*4    prbg(nx_bg,ny_bg,nz_bg),     !Pressure (mb)
+c    .          htbg(nx_bg,ny_bg,nz_bg),     !Height (m)
+c    .          tpbg(nx_bg,ny_bg,nz_bg),     !Temperature (K)
+c    .          shbg(nx_bg,ny_bg,nz_bg),     !Specific humidity (kg/kg)
+c    .          uwbg(nx_bg,ny_bg,nz_bg),     !U-wind (m/s)
+c    .          vwbg(nx_bg,ny_bg,nz_bg),     !V-wind (m/s)
+c    .          mslpbg(nx_bg,ny_bg),         !mslp  (mb)
+c    .          wwbg(nx_bg,ny_bg,nz_bg),     !W-wind (pa/s)
+c    .          htbg_sfc(nx_bg,ny_bg),
+c    .          prbg_sfc(nx_bg,ny_bg), 
+c    .          shbg_sfc(nx_bg,ny_bg), 
+c    .          uwbg_sfc(nx_bg,ny_bg), 
+c    .          vwbg_sfc(nx_bg,ny_bg), 
+c    .          tpbg_sfc(nx_bg,ny_bg)
 
 c
 c *** Background data vertically interpolated to LAPS isobaric levels.
 c
-      real*4    htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
-     .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
-     .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
-     .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
-     .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
-     .          wwvi(nx_bg,ny_bg,nz_laps)    !W-wind (pa/s)
-      integer msgpt(nx_bg,ny_bg)
+      real, allocatable :: htvi(:,:,:)
+      real, allocatable :: tpvi(:,:,:)
+      real, allocatable :: shvi(:,:,:)
+      real, allocatable :: uwvi(:,:,:)
+      real, allocatable :: vwvi(:,:,:)
+      real, allocatable :: wwvi(:,:,:)
+
+      integer, allocatable :: msgpt(:,:)
+
+c     real      htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
+c    .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
+c    .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
+c    .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
+c    .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
+c    .          wwvi(nx_bg,ny_bg,nz_laps)    !W-wind (pa/s)
+
+c     integer msgpt(nx_bg,ny_bg)
 c
 c *** Background data interpolated to LAPS grid.
 c
@@ -382,15 +470,14 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
-     .          htave,tpave,shave,uwave,vwave,
-     .          std_lon,std_lat1,std_lat2
+     .          htave,tpave,shave,uwave,vwave
 c
-      integer   ct,
+      integer   ct,  reject_cnt,
      .          ihour,imin,
+     .          i4time_now,
      .          lga_files,lga_times(max_files),
      .          lga_valid,
-     .          i4time_lga_valid(max_files),i4time_now,
-     .          bg_times(max_files),bg_files,
+     .          bg_times(max_files),accepted_files, bglen,
      .          i4time_bg_valid(max_files),
      .          bg_valid(max_files),
      .          valid_bg(max_files),time_bg(max_files),
@@ -406,7 +493,12 @@ c
       character*256 lga_names(max_files)
       character*256 names(max_files)
       character*256 fname_bg(max_files)
+
       character*13  fname13,fname9_to_wfo_fname13
+      character*13  cvt_fname13_to_wfo_fname13
+      character*13  cvt_wfo_fname13_to_fname13
+      character*9   wfo_fname13_to_fname9
+
       character*6   c6_maproj
       character*2   gproj
       character*256 fullname,outdir
@@ -418,10 +510,58 @@ c     character*10  units(nz_laps)
       character*4   af_bg(max_files)
       character*10  c_domain_name
       character*200 c_dataroot
+      character*200 cfname
       integer len_dir,ntime, nf
 c
       data ntime/0/
       data ext/'lga'/
+
+      interface
+c
+         subroutine read_bgdata(mxlvls,nx_bg,ny_bg
+     +,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,ctype
+     +,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
+     +,prbght,prbgsh,prbguv,prbgww
+     +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
+     +,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+c
+         real  :: prbg_sfc(:,:)
+         real  :: uwbg_sfc(:,:)
+         real  :: vwbg_sfc(:,:)
+         real  :: shbg_sfc(:,:)
+         real  :: tpbg_sfc(:,:)
+         real  :: htbg_sfc(:,:)
+         real  ::   mslpbg(:,:)
+c
+         real  :: prbght(:,:,:)
+         real  :: prbgsh(:,:,:)
+         real  :: prbguv(:,:,:)
+         real  :: prbgww(:,:,:)
+         real  :: htbg(:,:,:)
+         real  :: tpbg(:,:,:)
+         real  :: shbg(:,:,:)
+         real  :: uwbg(:,:,:)
+         real  :: vwbg(:,:,:)
+         real  :: wwbg(:,:,:)
+
+         character*4   af_bg
+         character*5   ctype
+         character*132 cmodel
+         character*256 bgpath
+         character*256 fname_bg
+         character*256 fullname
+         integer       bgmodel
+         integer       mxlvls
+         integer       nx_bg
+         integer       ny_bg
+         integer       nzbg_ht
+         integer       nzbg_sh
+         integer       nzbg_uv
+         integer       nzbg_ww
+         integer       istatus
+         end subroutine
+      end interface
 
       warncnt=0 
 c_______________________________________________________________________________
@@ -430,6 +570,38 @@ c
       print *,'in lga_sub'
       lga_status=0
 
+      call s_len(bgpath,bglen)
+      if(bgpath(bglen:bglen).ne.'/')then
+         bglen=bglen+1
+         bgpath(bglen:bglen)='/'
+      endif
+      cfname=bgpath(1:bglen)//bg_names(1)
+
+
+      call get_bkgd_mdl_info(bgmodel,cmodel,cfname
+     &,mxvars,mxlvls,nx_bg,ny_bg,nzbg_ht,nzbg_sh,nzbg_uv
+     &,nzbg_ww ,gproj,dlat,dlon,cenlat,cenlon,dx,dy
+     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+
+      if(istatus.ne.1)then
+         print*,'Error getting background model information'
+         return
+      endif
+
+      call init_gridconv_cmn(gproj,nx_bg,ny_bg,nzbg_ht
+     &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
+     &,sw(1),sw(2),ne(1),ne(2),istatus)
+
+      print *
+      print *, ' Background information: '
+      print *, '-------------------------'
+      print *, 'nx/ny:           ',nx_bg,ny_bg
+      print *, 'nz(ht,sh,uv,ww): ',nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
+      print *, 'bgpath:          ',bgpath(1:bglen)
+      print *, 'bgmodel:         ',bgmodel
+      print *, 'cmodel:          ',cmodel
+      print *
+
       call get_directory('static',outdir,len_dir)    
 
       call find_domain_name(c_dataroot,c_domain_name,istatus)
@@ -437,6 +609,7 @@ c
           print*,'Error returned: find_domain_name'
           return
       endif
+
       call get_laps_domain(nx_laps,ny_laps,c_domain_name
      +,lat,lon,topo,istatus)
       if (istatus.lt.1)then
@@ -462,7 +635,8 @@ c
       do j=1,max_files
          names(j)=bg_names(j)
       enddo
-      do j=1,bg_files
+
+      do j=1,accepted_files
          call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
          read(bg_names(j)(12:13),'(i2)')ihour
          bg_valid(j)=ihour*3600
@@ -472,35 +646,70 @@ c
       call get_directory('lga',lgapath,ldl)
       call get_file_times(lgapath,max_files,lga_names
      1                      ,lga_times,nlga,istatus)
+
       if(nlga.gt.0)then
          k=1
          do while (k.le.nlga)
 
             read(lga_names(k)(ldl+10:ldl+11),'(i2)')ihour
             read(lga_names(k)(ldl+12:ldl+13),'(i2)')imin
+
             lga_valid=ihour*3600+imin*60
 
-            do j=1,bg_files
+            do j=1,accepted_files
+
                if(bg_times(j).eq.lga_times(k).and.
-     1            bg_valid(j).eq.lga_valid)then
+     .            bg_valid(j).eq.lga_valid)      then
+c
+c ok, since we've processed it, lets add it to the reject list
+c
+
+c                 reject_cnt=reject_cnt+1
+c                 reject_names(reject_cnt)=names(j)
                   names(j)=' '
+
+c                 print*,'reject_cnt/reject_names'
+c                 print*,'cnt/time: ',reject_cnt
+c    +,reject_names(reject_cnt)
+
                endif
             enddo
             k=k+1
          enddo
       endif
-      nbg=0
-      do j=1,bg_files
-         if(names(j).ne.' ')then
-            nbg = nbg+1
-            fname_bg(nbg)=bg_names(j)
-            af_bg(nbg)=bg_names(j)(10:13)
-            time_bg(nbg)=bg_times(j)
-            valid_bg(nbg)=bg_valid(j)
-         endif
-      enddo
 
-      if(nbg.eq.0)print*,'No new model background to process'
+      nbg=0
+      do 33 j=1,accepted_files
+
+         if(names(j).ne.' ')then
+
+          do k=1,reject_cnt
+           if(reject_names(k).eq.names(j))goto 33 !then
+c             names(j)=' '
+c          endif
+
+          enddo
+
+          nbg = nbg+1
+          if(bgmodel.eq.4)then
+             fname_bg(nbg)=
+     1 cvt_fname13_to_wfo_fname13(bg_names(j)(1:13))
+          else
+             fname_bg(nbg)=bg_names(j)
+          endif
+
+          af_bg(nbg)=bg_names(j)(10:13)
+          time_bg(nbg)=bg_times(j)
+          valid_bg(nbg)=bg_valid(j)
+
+         endif
+
+33    continue
+
+      if(nbg.eq.0)then
+         print*,'No new model background to process'
+         lga_status = 1
+      endif
 c
 c ****** Read background model data.
 c
@@ -509,68 +718,153 @@ c
 c Removal of this loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-         if(.false.) then
-            do i=1,lga_files
-               if (fname_bg(nf) .eq. lga_names(i)(1:9) .and.
-     .              af_bg(nf)(3:4) .eq. lga_names(i)(10:11)) then
+       call s_len(cmodel,ic)
+       if(.false.) then
+        do i=1,lga_files
+         if (fname_bg(nf) .eq. lga_names(i)(1:9) .and.
+     .     af_bg(nf)(3:4) .eq. lga_names(i)(10:11)) then
                   
-                  print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf)
-                  call get_lga_source(nx_laps,ny_laps,nz_laps
+           print *,i,lga_names(i),':',fname_bg(nf),':',af_bg(nf)
+           call get_lga_source(nx_laps,ny_laps,nz_laps
      +                 ,fname_bg(nf),af_bg(nf),comment(1))
-                  call s_len(cmodel,ic)
 
-                  if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
-                     print *,'LGA file exists, not making one. ' 
-     +                    ,lga_names(i)
-                     lga_status=1
-                     goto 80
-                  else
-                     print *,'Overwritting LGA file ',lga_names(i)
-     +                    ,'from model ',comment(1)(1:i),' with a new '
-     +                    ,'one from model ',cmodel(1:ic)
-                  endif
-               endif
-            enddo          
-         endif     
-
-         call s_len(bgpath,i)
-         fullname = bgpath(1:i)//'/'//fname_bg(nf)
-         call s_len(fullname,i)
-c
-c new subroutine to read appropriate background model file.
-c
-         print*
-         print*,'Reading - ',fullname(1:i)
-         print*
-         call read_bgdata(nx_bg,ny_bg,nz_bg
-     +    ,bgpath,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
-     +    ,htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg
-     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg
-     +    ,gproj,lon0,lat1,lat2,istatus_prep)
-
-         if (istatus_prep .ne. 0) then
-
-            call s_len(fname_bg(nf),lf)
-            call s_len(bgpath,l)
-            if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
-               fname13=fname_bg(nf)(1:lf)//af_bg(nf)
-            elseif (bgmodel .eq. 4) then
-               fname13=fname9_to_wfo_fname13(fname_bg(nf))
-            endif
-            print *,'Error reading background model data for: ',
-     .         bgpath(1:l)//'/'//fname13
-            print *,'Process aborted for this file.'
-            lga_status= -nf
-            return
- 
+           if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
+              print *,'LGA file exists, not making one. ',lga_names(i)
+c             lga_status=1
+           else
+              print *,'Overwritting LGA file ',lga_names(i)
+     +             ,'from model ',comment(1)(1:i),' with a new '
+     +             ,'one from model ',cmodel(1:ic)
+           endif
          endif
+        enddo          
+       endif     
+
+       fullname = bgpath(1:bglen)//'/'//fname_bg(nf)
+       call s_len(fullname,i)
+c
+       print*
+       print*,'Reading - ',fullname(1:i)
+       print*
+
+
+
+       allocate (htbg(nx_bg,ny_bg,nzbg_ht))
+
+
+       if(cmodel(1:ic).eq.'AVN_SBN_CYLEQ')then
+          allocate (tpbg(nx_bg,ny_bg,nzbg_uv))
+       else
+          allocate (tpbg(nx_bg,ny_bg,nzbg_sh))
+       endif
+
+       allocate (shbg(nx_bg,ny_bg,nzbg_sh))
+       allocate (uwbg(nx_bg,ny_bg,nzbg_uv))
+       allocate (vwbg(nx_bg,ny_bg,nzbg_uv))
+       allocate (wwbg(nx_bg,ny_bg,nzbg_ww))
+       allocate (prbght(nx_bg,ny_bg,nzbg_ht))
+       allocate (prbguv(nx_bg,ny_bg,nzbg_uv))
+       allocate (prbgsh(nx_bg,ny_bg,nzbg_sh))
+       allocate (prbgww(nx_bg,ny_bg,nzbg_ww))
+
+       allocate (htbg_sfc(nx_bg,ny_bg))
+       allocate (prbg_sfc(nx_bg,ny_bg))
+       allocate (shbg_sfc(nx_bg,ny_bg))
+       allocate (uwbg_sfc(nx_bg,ny_bg))
+       allocate (vwbg_sfc(nx_bg,ny_bg))
+       allocate (tpbg_sfc(nx_bg,ny_bg))
+       allocate (mslpbg(nx_bg,ny_bg))
+
+       call read_bgdata(mxlvls,nx_bg,ny_bg
+     +    ,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,'lapsb',bgpath
+     +    ,fname_bg(nf),af_bg(nf),fullname,cmodel,bgmodel
+     +    ,prbght,prbgsh,prbguv,prbgww
+     +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
+     +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep)
+
+       if (istatus_prep .ne. 0) then
+
+c           call s_len(fname_bg(nf),lf)
+c           call s_len(bgpath,l)
+c           if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
+c              fname13=fname_bg(nf)(1:lf)//af_bg(nf)
+c           elseif (bgmodel .eq. 4) then
+c              fname13=fname9_to_wfo_fname13(fname_bg(nf))
+c           endif
+
+          print *,'Background model data not returned from ',
+     .'read_bgdata: ',bgpath(1:bglen)//fname_bg(nf)
+          print *,'Process aborted for this file.'
+
+c         convert to wfo if necessary
+
+          print*
+          print*,'Updating reject information: '
+
+          if(bgmodel.eq.4)then
+             print*,'WFO Update'
+             fname13=wfo_fname13_to_fname9(fname_bg(nf))
+             fname13=fname13(1:9)//af_bg(nf)
+             do ii=1,accepted_files
+                if(fname13.eq.bg_names(ii))then
+                   reject_cnt=reject_cnt+1
+                   reject_names(reject_cnt)=bg_names(ii)
+                   print*,'reject_cnt/reject_names'
+                   print*,'cnt/time: ',reject_cnt
+     +,reject_names(reject_cnt)
+
+                endif
+             enddo
+          else
+             print*
+             do ii=1,nbg
+                if(fname_bg(nf).eq.bg_names(ii))then
+                   reject_cnt=reject_cnt+1
+                   reject_names(reject_cnt)=bg_names(ii)
+
+                   print*,'reject_cnt/reject_names'
+                   print*,'cnt/time: ',reject_cnt
+     +,reject_names(reject_cnt)
+                endif
+             enddo
+          endif
+          lga_status= -nf
+
+          deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+     +,prbght, prbguv, prbgsh, prbgww, htbg_sfc, prbg_sfc
+     +,shbg_sfc, uwbg_sfc, vwbg_sfc, tpbg_sfc, mslpbg)
+
+ 
+       else   !processing the file
+
+c        endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
-         call vinterp(nx_bg,ny_bg,nz_bg,nz_laps,pr,
-     .                prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg,
-     .                htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+         itstatus(1)=init_timer()
+
+         allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
+     .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
+     .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
+     .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
+     .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
+     .          wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
+
+
+         call vinterp(nz_laps,nx_bg,ny_bg
+     .       ,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
+     .       ,pr,prbght,prbgsh,prbguv,prbgww
+     .       ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .       ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+
+         itstatus(1)=ishow_timer()
+         print*,' Vinterp elapsed time (sec): ',itstatus(1)
+
+         deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+     +,prbght, prbguv, prbgsh, prbgww )
+
+         allocate (msgpt(nx_bg,ny_bg))
 c
 c ****** Run 2dx filter on vertically interpolated fields.
 c ****** Only run filter on sh up to 300 mb, since the filter may
@@ -666,8 +960,11 @@ c
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
+         print*
+         itstatus(2)=init_timer()
+
          call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
-     .        lat,lon,grx,gry,bgmodel)
+     .        lat,lon,grx,gry,bgmodel,cmodel)
 
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
@@ -682,10 +979,21 @@ c
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,wwvi,ww,bgmodel)
 
+         itstatus(2)=ishow_timer()
+         print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
+         print*
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
 c
+         deallocate(htvi,   !Height (m)
+     .              tpvi,   !Temperature (K)
+     .              shvi,   !Specific humidity (kg/kg)
+     .              uwvi,   !U-wind (m/s)
+     .              vwvi,   !V-wind (m/s)
+     .              wwvi,   !W-wind (pa/s)
+     .              msgpt)
+
          do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
@@ -704,8 +1012,26 @@ c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
                print*,'ERROR: Missing or bad value detected: ',i,j,k
                print*,'ht/tp/sh/uw/vw/ww: ',ht(i,j,k),tp(i,j,k)
      +                  ,sh(i,j,k), uw(i,j,k),vw(i,j,k),ww(i,j,k)
-                       lga_status = -nf
-                       return
+
+                     reject_cnt=reject_cnt+1
+                     reject_names(reject_cnt)=bg_names(ii)
+
+                     print*,'reject_cnt/reject_names'
+                     print*,'cnt/time: ',reject_cnt
+     +,reject_names(reject_cnt)
+
+                     lga_status = -nf
+
+                     deallocate (htbg_sfc
+     +                          ,prbg_sfc
+     +                          ,shbg_sfc
+     +                          ,uwbg_sfc
+     +                          ,vwbg_sfc
+     +                          ,tpbg_sfc
+     +                          ,mslpbg)
+
+                     return
+
                   endif
 c-----------------------------------
 cc            if (ht(i,j,k) .ne. ht(i,j,k) .or. 
@@ -722,50 +1048,52 @@ c-----------------------------------
             enddo
          enddo
 c
-      call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array ht'
-         lga_status = -nf
-         return
-      endif
+         call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array ht'
+            lga_status = -nf
+            return
+         endif
 c
-      call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array tp'
-         lga_status = -nf
-         return
-      endif
+         call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array tp'
+            lga_status = -nf
+            return
+         endif
 c
-      call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array sh'
-         lga_status = -nf
-         return
-      endif
+         call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array sh'
+            lga_status = -nf
+            return
+         endif
 c
-      call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array uw'
-         lga_status = -nf
-         return
-      endif
+         call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+           print *,' ERROR: NaN found in array uw'
+           lga_status = -nf
+           return
+         endif
 c
-      call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array vw'
-         lga_status = -nf
-         return
-      endif
-      call checknan_3d(ww,nx_laps,ny_laps,nz_laps,nan_flag)
-      if(nan_flag .ne. 1) then
-         print *,' ERROR: NaN found in array vw'
-         lga_status = -nf
-         return
-      endif
+         call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+           print *,' ERROR: NaN found in array vw'
+           lga_status = -nf
+           return
+         endif
+         call checknan_3d(ww,nx_laps,ny_laps,nz_laps,nan_flag)
+         if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array vw'
+            lga_status = -nf
+            return
+         endif
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
-      if(bgmodel.ne.1.and.bgmodel.ne.9)then
+        itstatus(3)=init_timer()
+
+        if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
      .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
@@ -796,85 +1124,98 @@ c
             print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 
          endif
-      endif
+        endif
+
+        deallocate (htbg_sfc)
+        deallocate (prbg_sfc)
+        deallocate (shbg_sfc)
+        deallocate (uwbg_sfc)
+        deallocate (vwbg_sfc)
+        deallocate (tpbg_sfc)
+        deallocate (mslpbg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c
-      call sfcbkgd(bgmodel, tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
+        call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
 
-      call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+        call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,diff_mx,diff_mn)
 
-      print *,' Dewpoint check (after call sfcbkgd):'
-      print *,'     Dewpt greater than temp at ',icnt,' points.'
-      if(icnt .gt. 0) then
+        print *,' Dewpoint check (after call sfcbkgd):'
+        print *,'     Dewpt greater than temp at ',icnt,' points.'
+        if(icnt .gt. 0) then
 
          print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
          print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 
-      endif
+        endif
 c
 c..... Do the winds
 c
-      call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+        call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
-      call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+        call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
-      do k=1,nz_laps
+        do k=1,nz_laps
          do j=1,ny_laps
-         do i=1,nx_laps
+          do i=1,nx_laps
             shsat=ssh2(pr(k),tp(i,j,k)-273.15,
      .             tp(i,j,k)-273.15,-47.0)*0.001
             sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
+          enddo
          enddo
-         enddo
-      enddo
+        enddo
 c
-      do j=1,ny_laps
-      do i=1,nx_laps
+        do j=1,ny_laps
+        do i=1,nx_laps
          if(sh_sfc(i,j).gt.tp_sfc(i,j))then
             sh_sfc(i,j)=tp_sfc(i,j)
          endif
-      enddo
-      enddo
+        enddo
+        enddo
+
+        itstatus(3)=ishow_timer()
+        print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
+        print*
 c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
-      print*
 
-      if(.true.)then
+        if(.true.)then
          call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
-     +,gproj,lon0,lat1,lat2,uw,vw,uw_sfc,vw_sfc,istatus)
-      else
+     +,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
+        else
          print*,'Not rotating u/v'
-      endif
+        endif
 
-      if(istatus.ne.1)then
+        if(istatus.ne.1)then
          print*,'Error in rotate_background_uv '
          return
-      endif
+        endif
 
 c
 c Write LGA
 c ---------
-      bgvalid=time_bg(nf)+valid_bg(nf)
-      call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
+        itstatus(4)=init_timer()
+
+        bgvalid=time_bg(nf)+valid_bg(nf)
+        call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
      .bgvalid,cmodel,missingflag,pr,ht,tp,sh,uw,vw,ww,istatus)
-      if(istatus.ne.1)then
+        if(istatus.ne.1)then
          print*,'Error writing lga - returning to main'
          return
-      endif
+        endif
 c         
 c Write LGB
 c ---------
 
-      if(bgmodel.ne.7)then
+        if(bgmodel.ne.7)then
  
          do j=1,ny_laps
          do i=1,nx_laps
@@ -898,27 +1239,34 @@ c              sfcgrid(i,j,kk+4)=missingflag
             return
          endif
 
-      endif
+         itstatus(4)=ishow_timer()
+         print*,'Elapsed time - write grids (sec): ',itstatus(4)
+         print*
 
-      lga_status = 1
+        endif
+
+        lga_status = 1
 c
-80    continue
+       endif !if the background file was properly read in in read_bgdata
 
       enddo  !Main loop through two model backgrounds
 
 c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
-      do i=1,nbg
-         call s_len(bg_names(i),j)
-         print*,'bg_name: ',i,bg_names(i)(1:j)
-      enddo
+      if(lga_status.eq.1)then
+       itstatus(5)=init_timer()
+       do i=1,nbg
+          call s_len(bg_names(i),j)
+          print*,'bg_name: ',i,bg_names(i)(1:j)
+       enddo
 c
 c *** Determine if new file needs to (can) be created and perform
 c        linear time interpolation.
-      if(bg_files.gt.1)then
-         i=bg_files
-         print*,i,bg_files,bg_times(i),bg_times(i-1),
+c
+       i=accepted_files
+       if(accepted_files.gt.1)then
+         print*,i,bg_times(i),bg_times(i-1),
      +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
      +     i4time_bg_valid(i),i4time_bg_valid(i-1)
 
@@ -947,17 +1295,44 @@ c interp 2D fields
      +           i4time_now,bg_times(i-1),bg_valid(i-1),
      +           bg_times(i  ),bg_valid(i  ))
             endif
-            lga_status = 1
          else
             print*,'Time Interpolation Not Necessary!'
-            lga_status = 1
          endif
 
-      else
-         print*,'No time interp when bg_files < 2'
+         itstatus(5)=ishow_timer()
+         print*,'Elapsed time - interp grids (sec): ',itstatus(5)
          print*
-         lga_status=1
+
+       elseif(accepted_files.eq.1)then
+
+c code isn't ready to go yet.
+c        if(i4time_bg_valid(i).gt.i4time_now)then
+c           do k=1,nlga
+c              lgadiff=i4time_bg_valid(i)-lga_times(k)
+c           enddo
+c        endif 
+
+         print*,'Determine if existing lga plus the new one ',
+     .          'can be used for time interpolation'
+         print*
+         print*,'Software does not exist yet. You lose.'
+
+       else
+         print*,'No time interp when accepted_files = 0'
+         print*
+       endif
+
+      elseif(lga_status.eq.0 .and. nbg.eq.0)then
+       print*,'bkgd files already exists; no new ones to proc'
+c      lga_status = 1
+      else
+       print*,'No time interp when bad data found'
+       print*
       endif
+
+      print*,'Total time elapsed lga: '
+      print*,'(sec) :',itstatus(1)+itstatus(2)+itstatus(3)
+     &+itstatus(4)+itstatus(5)
 
       return
       end
