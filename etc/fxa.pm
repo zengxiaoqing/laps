@@ -36,19 +36,22 @@ sub Get_env'fxa{ #'
         $evar = $1;
         $eval = $2;
 
-        $eval =~ s/\$\{/\$/g;
+	$eval =~ s/\$$evar/$ENV{$evar}/g;
+	$eval =~ s/\$\{$evar\}/$ENV{$evar}/g;
+
+       $eval =~ s/\$\{/\$/g;
         $eval =~ s/\}//g;
 
-        if($evar eq "PATH"){
-          my @paths=split(':',$ENV{PATH}) ;
-          $eval='';
-         foreach(@paths){
-	    $eval.="$_:" unless($eval=~/\:$_\:/);
-         }
-        }
         $ENV{$evar} = $eval;
     }
     close(FXA);
+    foreach(keys %ENV){
+	while($ENV{$_} =~ /\$([^\:\s\/]+)/){
+	  my $sub = $1;
+#          print "$_ $sub $ENV{$sub}\n";
+	  $ENV{$_} =~ s/\$$sub/$ENV{$sub}/;
+        }
+    }
     return 1;
 }
 
