@@ -96,6 +96,7 @@ c                       08-27-97  Changes for dynamic LAPS.
 c                       09-24-98  If missing background, do a smooth Barnes
 c                                   so something is there.
 c                       09-30-98  Housekeeping.
+c                       01-28-99  Rm smooth Barnes for missing bkgs.
 c
 c	Notes:
 c
@@ -479,77 +480,85 @@ c
         fill_val = 1.e37
         smsng = 1.e37
 	npass = 1
+	rom2 = 0.005
 	if(back_t .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No T background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(t_bk,imax,jmax,t1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(t_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No T background. Setting to zero for now.'
+cc     & ' **WARNING. No T background. Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(t_bk,imax,jmax,t1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(t_bk,imax,jmax,fill_val,istatus)
+	   call zero(t_bk, imax,jmax)
 	endif
 c
 	if(back_td .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No Td background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(td_bk,imax,jmax,td1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No Td background. Setting to zero for now.'
+cc     & ' **WARNING. No Td background. Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(td_bk,imax,jmax,td1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
+	   call zero(td_bk, imax,jmax)
 	endif
 c
 	if(back_uv .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(u_bk,imax,jmax,u1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(u_bk,imax,jmax,fill_val,istatus)
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(v_bk,imax,jmax,v1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(v_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No wind background. Setting to zero.'
+cc     & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(u_bk,imax,jmax,u1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(u_bk,imax,jmax,fill_val,istatus)
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(v_bk,imax,jmax,v1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(v_bk,imax,jmax,fill_val,istatus)
+	   call zero(u_bk, imax,jmax)
+	   call zero(v_bk, imax,jmax)
 	endif
 c
 	if(back_sp .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No sfc P background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(stnp_bk,imax,jmax,sp1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(stnp_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No sfc P background. Setting to zero.'
+cc     & ' **WARNING. No sfc P background. Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(stnp_bk,imax,jmax,sp1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(stnp_bk,imax,jmax,fill_val,istatus)
+	   call zero(stnp_bk, imax,jmax)
 	endif
 c
 	if(back_rp .ne. 1) then
 	   print *,' '
 	   print *, ' **WARNING. No reduced P background.',
-     &              ' Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(rp_bk,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
+     &              ' Setting to zero.'
+cc     &              ' Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(rp_bk,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
+	   call zero(rp_bk, imax,jmax)
 	endif
 c
 	if(back_mp .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No MSL P background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(mslp_bk,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No MSL P background. Setting to zero.'
+cc     & ' **WARNING. No MSL P background. Using smooth Barnes anl of obs'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(mslp_bk,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
+	   call zero(mslp_bk, imax,jmax)
 	endif
 c
 	if(back_vis .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No Vis background. Using smooth Barnes anl of obs'
-	   rom2 = 0.005
-	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	   call barnes2(vis_bk,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
-	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
+     & ' **WARNING. No VIS background. Setting to zero.'
+cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+cc	   call barnes2(vis_bk,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
+cc	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
+	   call zero(vis_bk, imax,jmax)
 	endif
 c
 c.....	Fill in the boundary of each field.
