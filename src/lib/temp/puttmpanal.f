@@ -270,6 +270,8 @@ cdis
 !       Set up stuff for mixed layer top
         iwarn = 0
         diff_temp_max = 0.
+        i_max_diff = 0
+        j_max_diff = 0
         sum_pres = 0.
 
         do i = 1,ni
@@ -359,8 +361,12 @@ cdis
                 if(temp_sfc_now .gt. temp_sfc_intrpl)then 
                     temp_sfc_eff = temp_sfc_intrpl
                     diff_temp = temp_sfc_now - temp_sfc_eff
-                    diff_temp_max = max(diff_temp,diff_temp_max)
-                    iwarn = 1
+                    if(diff_temp .gt. diff_temp_max)then
+                        diff_temp_max = diff_temp
+                        i_max_diff = i
+                        j_max_diff = j
+                    endif
+                    if(diff_temp .gt. 2.0)iwarn = 1
                 endif                        
 
             else                                         ! sfc below mix top
@@ -369,8 +375,12 @@ cdis
                 if(theta_now_sfc .gt. theta_max_sfc)then 
                     temp_sfc_eff = TDA_K(theta_max_sfc,pres_sfc_pa(i,j))
                     diff_temp = temp_sfc_now - temp_sfc_eff
-                    diff_temp_max = max(diff_temp,diff_temp_max)
-                    iwarn = 1
+                    if(diff_temp .gt. diff_temp_max)then
+                        diff_temp_max = diff_temp
+                        i_max_diff = i
+                        j_max_diff = j
+                    endif
+                    if(diff_temp .gt. 2.0)iwarn = 1
                 endif                        
 
             endif                                        ! sfc above mix top?
@@ -548,10 +558,12 @@ c       1                               j_diff_thmax,k_diff_thmax
             write(6,*)' WARNING: sfc temps had to be reduced to be'
      1               ,' within adiabatic/3d tolerances,'
      1               ,' max reduction = ',diff_temp_max
+     1               ,' at ',i_max_diff,j_max_diff
         else
             write(6,*)' Input sfc temps were adiabatically/3D'
      1               ,' consistent with other data within tolerances,'
      1               ,' max reduction = ',diff_temp_max
+     1               ,' at ',i_max_diff,j_max_diff
         endif
 
 !       Double Check 3D Temps against Sfc Temps
