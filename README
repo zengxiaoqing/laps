@@ -542,9 +542,15 @@
      data files. Note that LAPS will still run even if some of the data sources
      are withheld, albeit in degraded fashion. 
 
-     The pathnames for most of the ingest data sources are assigned within
-     the './data/static/nest7grid.parms' files and can be set accordingly at 
-     runtime.
+     The pathnames for the ingest data sources are assigned within the 
+     './data/static/nest7grid.parms' and other '*.nl' files and can be set 
+     accordingly at runtime. Doing a grep for 'path' in these files will
+     give you a quick listing of the relevant parameters.
+
+     Unless otherwise specified, the time window for data in the
+     intermediate data files should be '+/- laps_cycle_time_cmn'. 
+     The time window for data in the raw data files is more variable and is 
+     generally specified within the raw data (e.g. in the CDL).
 
      Further information on specific LAPS ingest processes for the various 
      data sources is found in Section 3 of this README.
@@ -1450,7 +1456,7 @@ As mentioned above, a flow chart for the ingest processes may be found at
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
 Package: lga.exe - ingest background model data 
-             (contact: Jim Edwards - jedwards@fsl.noaa.gov).
+             (contact: John Smart - smart@fsl.noaa.gov).
 
         LGA 	LAPS analysis grids from RUC or other analysis/forecast grids.
 
@@ -1461,6 +1467,16 @@ Outputs: (Feeds various analyses)
 	lga	grid	background model 3-D data analysis/forecast
 	lgb	grid	background model Sfc data analysis/forecast
 
+Source directory: The source code for this is in 'src/background'.
+
+Library directory: Associated library modules are in 'src/lib/bgdata'.
+
+Sample Input/Output: May be available in the test data case.
+
+This software currently supports nearly 10 different models. If additional
+models are required, then software mods may be needed, potentially a new 
+source file added to 'src/lib/bgdata/read*.f'. A key variable that 
+relates to which model you're using is 'bgmodel'.
 
 ------ 3.2.2 -------------------- LVD ----------------------------------------
 
