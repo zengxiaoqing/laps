@@ -88,16 +88,17 @@ if(-d $FXA_DATA){
 #
 # first get the info from nest7grid.parms
 open(PARMS,"$LAPS_DATA_ROOT/static/nest7grid.parms");
-my($xdim,$ydim);
+my($xdim,$ydim,$zdim);
 while(<PARMS>){
     $xdim = $1 if(/^\s+NX_L_CMN\s*=\s*(\d+),/i);
     $ydim = $1 if(/^\s+NY_L_CMN\s*=\s*(\d+),/i);
+    $zdim = $1 if(/^\s+nk_laps\s*=\s*(\d+),/i);
 }
 close(PARMS);
 
-if($xdim <=0 || $ydim <= 0){
+if($xdim <=0 || $ydim <= 0 || $zdim<=0){
   print "$0: Error Reading grid size from $LAPS_DATA_ROOT/static/nest7grid.parms\n";
-  print "nx=$xdim ny=$ydim\n";
+  print "nx=$xdim ny=$ydim nz=$zdim\n";
   exit -1;
 }
 
@@ -122,10 +123,16 @@ foreach(@cdl_list){
 
     open(CDL,">$LAPS_DATA_ROOT/cdl/$_");
     foreach(@cdl){
-	if(/^\s+x\s*=/){
-	    print CDL "      x = $xdim,\n" ;
-	}elsif(/^\s+y\s*=/){
-	    print CDL "      y = $ydim,\n" ;
+	if(/^(\s+)x\s*=/){
+	    print CDL "$1x = $xdim,\n" ;
+	}elsif(/^(\s+)y\s*=/){
+	    print CDL "$1y = $ydim,\n" ;
+	}elsif(/^(\s+)z\s*=\s*(\d+)/){
+	    if($2>1){
+		print CDL "$1z = $zdim,\n" ;
+	    }else{
+		print CDL $_ ;
+	    }
 	}else{
 	    print CDL $_;
 	}
