@@ -122,3 +122,15 @@ c VAD ingest (ingest_vad.exe)
  path_to_vad='/public/data/radar/vad/netcdf',
  $end
 
+
+c Cloud Drift ingest (ingest_cloud_drift.exe)
+ &cloud_drift_nl
+ path_to_cloud_drift='/data/lapb/import/lapsdat/cloud_drift',
+ $end
+
+
+c Retrievals ingest (ingest_retrievals.exe)
+ &retrievals_nl
+ path_to_retrievals='/data/lapb/import/lapsdat/retrievals',
+ $end
+
