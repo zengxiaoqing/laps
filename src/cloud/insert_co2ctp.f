@@ -185,6 +185,16 @@ c
                         endif
                     endif
 
+!                   Fill in clear sky above cloud layer
+                    if(cld_hts(k) .ge. ctop_m                 )then      
+                        call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                              ,n_cld_snd,max_cld_snd
+     1                              ,kcloud,i,j,k,cover,1.)
+                        if(n_cloud .le. 10)then
+                            write(6,*)' Fill in k = ',k,cover,cld_hts(k)       
+                        endif
+                    endif
+
                 enddo ! K cld_hts
 
             endif ! CO2 measurement at this grid point
