@@ -344,8 +344,8 @@ c       include 'satellite_dims_lvd.inc'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
      1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,wp,vv,hu-i,ta'         
-     1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma,sp]'
-     1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
+     1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma]'
+     1      /'          [sp,cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
      1      /'          [st,mw] obs/mesowx locations'    
      1      /'          [bs] Sfc background/forecast'
@@ -489,11 +489,11 @@ c       include 'satellite_dims_lvd.inc'
             if(c_type_i .eq. 'wd')then
                 write(6,13)
 13              format(
-     1    '     Enter Level in mb, -1 = steering, 0 = sfc',24x,'? ',$)
+     1    '     Enter Level in mb, -1 = mean, 0 = sfc',24x,'? ',$)
             else
                 write(6,14)
 14              format(
-     1    '     Enter Level in mb, 0 = sfc',39x,'? ',$)
+     1    '     Enter Level in mb, -1 = pbl mean, 0 = sfc',20x,'? ',$)
             endif
 
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
@@ -641,23 +641,77 @@ c       include 'satellite_dims_lvd.inc'
 
                 endif
 
-            elseif(k_level .eq. -1)then ! Read mean winds from 3d grids
+            elseif(k_level .eq. -1)then ! Read mean winds from 2d grids
 
-                write(6,*)' Getting pregenerated mean wind file'
+                if(c_type_i .eq. 'wd')then
+                    ext = 'lwm'
+                elseif(c_type_i .eq. 'wb')then
+                    ext = 'lgb'
+                elseif(c_type_i .eq. 'wr')then
+                    ext = 'fsf'
+                endif
 
-                ext = 'lwm'
-                call get_directory(ext,directory,len_dir)
-                var_2d = 'MU'
-                call get_laps_2d(i4time_3dw,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
-                var_2d = 'MV'
-                call get_laps_2d(i4time_3dw,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
+                if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'fsf')then       
+                    call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory,c_model       ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_3dw            ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+                    if(istatus.ne.1)goto1200
+
+                    level=0
+
+                    var_2d = 'UPB'
+
+                    write(6,*)' Reading PBL wind data from: '
+     1                            ,ext(1:3),' ',var_2d
+
+                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,level,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 u_2d,ISTATUS)
+
+                    if(istatus.ne.1)goto1200
+
+                    var_2d = 'VPB'
+
+                    write(6,*)' Reading PBL wind data from: '
+     1                            ,ext(1:3),' ',var_2d
+
+                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,
+     1                                 EXT,NX_L,NY_L,1,1,       
+     1                                 VAR_2d,level,LVL_COORD_2d,
+     1                                 UNITS_2d,COMMENT_2d,
+     1                                 v_2d,ISTATUS)
+
+                    i4time_3dw = i4_valid
+                    write(6,*)' Valid time = ',asc9_tim_3dw
+
+                else ! ext = lwm
+                    write(6,*)' Getting lwm mean wind file'
+
+                    ext = 'lwm'
+                    call get_directory(ext,directory,len_dir)
+                    var_2d = 'MU'
+                    call get_laps_2d(i4time_3dw,ext,var_2d
+     1              ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
+                    var_2d = 'MV'
+                    call get_laps_2d(i4time_3dw,ext,var_2d
+     1              ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
+
+                endif ! ext
 
                 write(6,104)
-104             format(/'  Field [di,sp,u,v,vc (barbs)]   ',25x,'? ',$)       
+104             format(/'  Field [di,sp,u,v,vc (barbs)]   ',25x,'? ',$)
                 read(lun,15)c_field
-            endif
+
+            endif ! k_level
 
 !  ***      Display Wind Data  ******************************************************
 
@@ -777,15 +831,27 @@ c       include 'satellite_dims_lvd.inc'
                 if(c_type_i .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
                     call mklabel33(k_mb,c19_label,c_label)
-                elseif(c_type_i.eq.'wb'                       )then
+
+                elseif(c_type_i.eq.'wb')then
                     c19_label = ' WIND lga '//fcst_hhmm//'   kt'
                     call mklabel33(k_mb,c19_label,c_label)
-                elseif(c_type_i.eq.'wr'                       )then
-!                   c19_label = ' WIND fua '//fcst_hhmm//'   kt'
-                    c_model = ' '
-                    call mk_fcst_hlabel(k_mb,'Wind',fcst_hhmm
+
+                elseif(c_type_i.eq.'wr')then
+                    if(k_level .eq. -1)then
+                        call mk_fcst_hlabel(k_mb,'PBL Mean Wind'
+     1                                 ,fcst_hhmm     
      1                                 ,ext(1:3),'kt'
      1                                 ,c_model,c_label)
+                    elseif(k_level .eq. 0)then
+                        call mk_fcst_hlabel(k_mb,'Sfc Wind',fcst_hhmm
+     1                                 ,ext(1:3),'kt'
+     1                                 ,c_model,c_label)
+                    else
+                        call mk_fcst_hlabel(k_mb,'Wind',fcst_hhmm
+     1                                 ,ext(1:3),'kt'
+     1                                 ,c_model,c_label)
+                    endif
+
                 elseif(c_type_i.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
                     call mklabel33(k_mb,c19_label,c_label)
@@ -6596,6 +6662,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         character*4 fcst_hhmm_in,fcst_hhmm
 
+        c_label = ' '
+
         call s_len2(comment_2d,len_fcst)
         call s_len2(units_2d,len_units)
 
@@ -6606,8 +6674,10 @@ c             if(cint.eq.0.0)cint=0.1
         call s_len2(c_model,len_model)
         call upcase(c_model,c_model)
 
-        write(c_label,102)k_mb
-102     format(I5,' hPa ')
+        if(k_mb .gt. 0)then
+            write(c_label,102)k_mb
+102         format(I5,' hPa ')
+        endif
 
         if(fcst_hhmm_in(3:4) .eq. '00')then
             fcst_hhmm = fcst_hhmm_in(1:2)//'Hr '
