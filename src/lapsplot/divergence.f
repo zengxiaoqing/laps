@@ -33,8 +33,10 @@ cdis
         subroutine divergence(uanl,vanl,div,lat,lon,ni,nj
      1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid,r_missing_data)
 
+!      ~90            Steve Albers  Original Version
 !       97-Aug-17     Ken Dritz     Added r_missing_data as dummy argument
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
+!       97-Oct        Steve Albers  Add lon in call to fflxc.
 
         real m ! Grid points per meter
 
@@ -66,7 +68,7 @@ cdis
         enddo ! j
 
         call FFLXC(ni,nj,M,PHI0,SCALE
-     1  ,uanl_grid,vanl_grid,one,div,lat
+     1  ,uanl_grid,vanl_grid,one,div,lat,lon
      1  ,dum1,dum2,dum3,r_missing_data)
 
         do j = 1,nj

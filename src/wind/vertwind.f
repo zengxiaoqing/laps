@@ -33,8 +33,9 @@ cdis
         subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk,wanl
      1          ,topo,lat,lon,grid_spacing_m,istatus
      1          ,NX_L_MAX,NY_L_MAX,r_missing_data
-     1                  ,laps_rotate_winds,flu,flv,sigma,conv)
+     1          ,laps_rotate_winds,flu,flv,sigma,conv)
 
+!      ~1990        Steve Albers  Orig version
 !       1997 Jun    Ken Dritz     Added NX_L_MAX and NY_L_MAX as dummy
 !                                 arguments, thus making wsum and one and
 !                                 several other arrays automatic.
@@ -42,7 +43,8 @@ cdis
 !                                 of by DATA statements.
 !       1997 Jun    Ken Dritz     Added r_missing_data as dummy argument.
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
-!                              
+!       1997 Oct    Steve Albers  Pass lon to fflxc. Misc Cleanup.
+
         real m ! Grid points per meter
 
         real*4 wsum(NX_L_MAX,NY_L_MAX)
@@ -69,8 +71,8 @@ cdis
         real*4 flv(ni,nj)
         real*4 sigma(ni,nj)
 
-        real*4 u_sfc_grid(NX_L_MAX,NY_L_MAX),v_sfc_grid(NX_L_MAX,NY_L_MA
-     1X)
+        real*4 u_sfc_grid(NX_L_MAX,NY_L_MAX),
+     1         v_sfc_grid(NX_L_MAX,NY_L_MAX)
         real*4 beta_factor(NX_L_MAX,NY_L_MAX)
 
         real*4 radius_earth
@@ -117,13 +119,13 @@ cdis
           do j=1,nj
           do i=1,ni
             if(u_sfc(i,j) .ne. r_missing_data
-     1                  .and. v_sfc(i,j) .ne. r_missing_data)then
+     1                   .and. v_sfc(i,j) .ne. r_missing_data)then
 
                 call uvtrue_to_uvgrid(u_sfc(i,j),
      1                              v_sfc(i,j),
      1                              u_sfc_grid(i,j),
-     1                        v_sfc_grid(i,j),
-     1                        lon(i,j))
+     1                              v_sfc_grid(i,j),
+     1                              lon(i,j))
 
             endif
 
@@ -148,7 +150,7 @@ cdis
         do i=2,imaxm1
 
 !           Units of dterdx are pascals/meter
-            dterdx=(topo_pa(i+1,j) - topo_pa(i-1,j)) * .5/grid_spacing_m
+            dterdx=(topo_pa(i+1,j) - topo_pa(i-1,j)) * .5/grid_spacing_m       
             dterdy=(topo_pa(i,j+1) - topo_pa(i,j-1)) * .5/grid_spacing_m
 
 !           Units of ubar,vbar are m/s
@@ -164,18 +166,18 @@ cdis
 !       Fill in edges
         do i = 1,ni
             terrain_w(i,   1) = terrain_w(i,     2)
-            terrain_w(i,nj) = terrain_w(i,jmaxm1)
+            terrain_w(i,nj)   = terrain_w(i,jmaxm1)
         enddo ! i
 
         do j = 1,nj
             terrain_w(1,   j) = terrain_w(2,     j)
-            terrain_w(ni,j) = terrain_w(imaxm1,j)
+            terrain_w(ni,j)   = terrain_w(imaxm1,j)
         enddo ! j
 
         do j = 1,nj
         do i = 1,ni
-            k_terrain(i,j) = max(nint(height_to_zcoord(topo(i,j),istatus
-     1)),1)
+            k_terrain(i,j) = 
+     1          max(nint(height_to_zcoord(topo(i,j),istatus)),1)
 
             if(istatus .ne. 1)then
                 write(6,*)' Bad istatus returned from height_to_zcoord'
@@ -192,11 +194,11 @@ cdis
 
         do k = 1,nk
             call FFLXC(ni,nj,M,PHI0,SCALE
-     1  ,uanl(1,1,k),vanl(1,1,k),one,conv,lat
-     1  ,flu,flv,sigma,r_missing_data)
+     1                ,uanl(1,1,k),vanl(1,1,k),one,conv,lat,lon
+     1                ,flu,flv,sigma,r_missing_data)
 
             if(k.gt.1)z_interval
-     1  = abs(zcoord_of_level(k) - zcoord_of_level(k-1))
+     1              = abs(zcoord_of_level(k) - zcoord_of_level(k-1))        
 
             do j = 1,nj
             do i = 1,ni
@@ -208,13 +210,13 @@ cdis
 
                 elseif(k .eq. k_terr)then !
                     wsum(i,j)   = terrain_w(i,j)
-     1   - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval
+     1       - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval
                     wanl(i,j,k) = wsum(i,j)
 
 
                 else ! k .gt. k_terr
                     wsum(i,j)   = wsum(i,j)
-     1   - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval
+     1       - (conv(i,j) + vanl(i,j,k) * beta_factor(i,j)) * z_interval       
                     wanl(i,j,k) = wsum(i,j)
 
                 endif
@@ -231,7 +233,7 @@ cdis
 
                 if(j .eq. 29 .and. k .le. 7 .and. i .eq. 29)then
                     write(6,111)i,j,k,terrain_w(i,j)
-     1          ,conv(i,j),wanl(i,j,k),beta_factor(i,j)*vanl(i,j,k)
+     1              ,conv(i,j),wanl(i,j,k),beta_factor(i,j)*vanl(i,j,k)       
 111                 format(3i3,4e12.3)
                 endif
 
