@@ -218,7 +218,7 @@ c
       y_step=1.0
       if(csattype.eq.'gwc')then
          if(ct(1:nc).eq.'vis')then
-            x_step=float(decimat)*2.0   !the *2.0 is because afgwc only returns every other pixel!
+            x_step=float(decimat)*2.0   ! *2.0 because afwa returns every other pixel!
             y_step=float(decimat)
          elseif(ct(1:nc).eq.'wv ')then
             x_step=float(decimat)*2.0
@@ -392,8 +392,8 @@ c
       do i = 1,nxl2
          if(rpix(i,j).ne.r_missing_data.and.
      &rline(i,j).ne.r_missing_data)then
-            rel_ri(i,j) = rpix(i,j)  - res  !float(elemstart)
-            rel_rj(i,j) = rline(i,j) - rls  !float(linestart)
+            rel_ri(i,j) = rpix(i,j)  - res
+            rel_rj(i,j) = rline(i,j) - rls 
             if(lpoint)then
                i1=i
                j1=j

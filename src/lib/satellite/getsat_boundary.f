@@ -59,6 +59,7 @@ c
       if(ilinestart.lt.0)then
          write(6,*)'WARNING: LAPS exceeds nrthrn Sat bndry!'
          print*,'linestart = ',ilinestart
+         rlinestart=0.0
          istatus = 0
       endif
       if(ilineend.gt.max_lines)then
@@ -69,6 +70,7 @@ c
       if(ielemstart.lt.0)then
          write(6,*)'WARNING: LAPS exceeds westrn Sat bndry!'
          print*,'elemstart = ',ielemstart
+         relemstart=0.0
          istatus = 0
       endif
       if(ielemend.gt.max_elems)then
@@ -78,7 +80,7 @@ c
       endif
 
       if(istatus.eq.0)then
-         print*,'setting lut values outside of domain to missing'
+         print*,'set lut values outside boundary to missing'
          call get_r_missing_data(r_missing_data,istatus)
          do j=1,ny
          do i=1,nx

@@ -30,18 +30,18 @@ cdis
 cdis 
 cdis 
        subroutine gen_lut_lambert(isat,jtype,kchl,
-     &nx_l,ny_l,xlat,xlon,jstatus)
+     &nx_l,ny_l,lat,lon,jstatus)
 c
 c
       implicit none
 
       integer   nx_l,ny_l
 
-      real*4    xlat(nx_l,ny_l)
-      real*4    xlon(nx_l,ny_l)   ! laps lat/lon data  -  input
+      real*4    lat(nx_l,ny_l)
+      real*4    lon(nx_l,ny_l)   ! laps lat/lon data  -  input
 
-      real*4    lat(nx_l+2,ny_l+2)
-      real*4    lon(nx_l+2,ny_l+2) !expanded domain lats/lons
+      real*4    xlat(nx_l+2,ny_l+2)
+      real*4    xlon(nx_l+2,ny_l+2) !expanded domain lats/lons
  
       real*4    dx,dy
       real*4    du,dv
@@ -256,7 +256,7 @@ c
       ny=ny_l+2
       pi = acos(-1.0)
  
-      call expand_domain(nx_l,ny_l,xlat,xlon,nx,ny,lat,lon,
+      call expand_domain(nx_l,ny_l,lat,lon,nx,ny,xlat,xlon,
      &istatus)
 c
 c build the absolute lut for the slightly larger domain
@@ -272,26 +272,26 @@ c
 
       lapterm=(rlap*pi)/180.
       lovterm=(rlov*pi)/180.
-      latterm=(lat(1,1)*pi)/180.
-      lonterm=(lon(1,1)*pi)/180.
+      latterm=(xlat(1,1)*pi)/180.
+      lonterm=(xlon(1,1)*pi)/180.
 
       call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
       call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri1,rj1)
 
-      latterm=(lat(nx,1)*pi)/180.
-      lonterm=(lon(nx,1)*pi)/180.
+      latterm=(xlat(nx,1)*pi)/180.
+      lonterm=(xlon(nx,1)*pi)/180.
 
       call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
       call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri2,rj2)
 
-      latterm=(lat(1,ny)*pi)/180.
-      lonterm=(lon(1,ny)*pi)/180.
+      latterm=(xlat(1,ny)*pi)/180.
+      lonterm=(xlon(1,ny)*pi)/180.
 
       call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
       call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri3,rj3)
 
-      latterm=(lat(nx,ny)*pi)/180.
-      lonterm=(lon(nx,ny)*pi)/180.
+      latterm=(xlat(nx,ny)*pi)/180.
+      lonterm=(xlon(nx,ny)*pi)/180.
 
       call getuv_lam(lapterm,lovterm,latterm,lonterm,u1,v1)
       call uv_ij (ny3,u_orig,v_orig,du,dv,u1,v1,ri4,rj4)
@@ -308,8 +308,8 @@ c LAPS domain). This is absolute lut (relative to the full satellite data file).
 c
       do j = 1, ny
       do i = 1, nx
-         latterm=(lat(i,j)*pi)/180.
-         lonterm=(lon(i,j)*pi)/180.
+         latterm=(xlat(i,j)*pi)/180.
+         lonterm=(xlon(i,j)*pi)/180.
          call getuv_lam(lapterm,lovterm,latterm,lonterm,u,v)
          call uv_ij(ny3,u_orig,v_orig,du,dv,u,v,ri(i,j),rj(i,j))
       enddo
@@ -331,8 +331,8 @@ c the laps domain.
 c
       do j = 1,ny
       do i = 1,nx
-         rel_ri(i,j) = ri(i,j) - res + 1.
-         rel_rj(i,j) = rj(i,j) - rls + 1.
+         rel_ri(i,j) = ri(i,j) - res ! + 1.
+         rel_rj(i,j) = rj(i,j) - rls ! + 1.
       enddo
       enddo
 c
