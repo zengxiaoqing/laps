@@ -1241,18 +1241,16 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      '$LAPS_DATA_ROOT/static/nest7grid.parms'.
 
      When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
-     script will accept a '-a' command line argument. This forces the script
+     script will accept a '-A' command line argument. This forces the script
      to run for the time you are inputting instead of the current time. 
      An example call is shown as follows...
 
-     prompt> perl sched.pl  -a ssssssss $LAPSINSTALLROOT $LAPS_DATA_ROOT
+     prompt> perl sched.pl  -A dd-mmm-yyyy-hhmm $LAPSINSTALLROOT $LAPS_DATA_ROOT
 
-     ...where the inputted 'ssssssss' value is the number of seconds since 
-     0000 UTC Jan 1, 1970. As an example, this value is generated in line 2 of 
-     '$LAPS_DATA_ROOT/time/c_time.dat'. Line 1 of 
-     '$LAPS_DATA_ROOT/time/systime.dat' is similar except that it is offset by
-     +31536000 seconds. Best results are obtained when using a time at or
-     near the latest raw data tarfile times.
+     ...where the inputted 'dd-mmm-yyyy-hhmm' value is the date (for example
+     28-Aug-2002-1200). This date can be inferred from the contents of
+     '$LAPS_DATA_ROOT/time/systime.dat'. Best results are obtained when using 
+     a time at or near the latest raw data tarfile times.
 
      One can also initiate individual executables (bin directory) listed in the
      'sched.pl' to run on the test data. This often helps in getting a better
