@@ -844,9 +844,12 @@ c
                   grid(i,j,kk+5) = pr_sfc(i,j)
                   grid(i,j,kk+6) = mslp(i,j)
 
-                  grid(i,j,kk+7) = make_td(pr_sfc(i,j)/100.,
+                  if(pr_sfc(i,j) .lt. missingflag) then
+                     grid(i,j,kk+7) = make_td(pr_sfc(i,j)/100.,
      +                 tp_sfc(i,j)-273.15,sh_sfc(i,j)*1000.0,0.0)+273.15
-
+                  else
+                     grid(i,j,kk+7) = missingflag
+                  endif
 
                enddo
             enddo
