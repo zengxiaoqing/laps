@@ -197,7 +197,6 @@ c
 
       bgmodel = bgmodels(i)
       bgpath =  bgpaths(i)
-      call s_len(bgpath,lbgp)
       cmodel =  cmodels(i)
       lga_status = -99 
 
@@ -237,7 +236,7 @@ c
 c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
 
          print*,'Calling get_acceptable_files '
-         print*,'bgpath:  ',bgpath(1:lbgp)
+         print*,'bgpath:  ',TRIM(bgpath)
          print*,'bgmodel: ',bgmodel
          print*
 
@@ -250,7 +249,7 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
          if(accepted_files.eq.0.and.bg_files.eq.0) then
 
            print*,'No Acceptable files found for background model:'
-           print*,'bgpath =  ',bgpath(1:lbgp)
+           print*,'bgpath =  ',TRIM(bgpath)
            print*,'bgmodel = ',bgmodel 
 
            no_infinite_loops=no_infinite_loops+1
@@ -285,8 +284,8 @@ c             print*,'Finished in advance_analyses'
 
            if(luse_sfc_bkgd.and.cmodel.ne.'ETA48_CONUS')then
               print*,'Error: Inconsistency Found'
-              print*,'Error: You must have namelist parameters '
-              print*,'luse_sfc_bkgd=true and cmodel eq to ETA48_CONUS'
+              print*,'Error: If you set namelist parameter luse_sfc_'
+              print*,'bkgd=true then cmodel must eq to ETA48_CONUS'
               stop
            endif
 c
@@ -305,7 +304,6 @@ c
            if(lga_status.eq.1.and.ltime(itime_inc))then
 c             lga_status = -99 
               ltime(itime_inc) = .false.
-              print*,'----------------------------------------------'
               if(itime_inc.lt.0)then
                  print*,'Completed time-minus-one cycle time interp'
               elseif(itime_inc.eq.0)then
@@ -313,7 +311,6 @@ c             lga_status = -99
               else
                  print*,'Completed time-plus-one cycle time interp'
               endif
-              print*,'----------------------------------------------'
            endif
            print*
 
