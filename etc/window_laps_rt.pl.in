@@ -58,12 +58,25 @@ require "$LAPSINSTALLROOT/etc/laps_tools.pm";
 $DOMAIN_NAME = &laps_tools::laps_domain_name($LAPS_DATA_ROOT);
 $DATAROOT = &laps_tools::laps_data_root($LAPS_DATA_ROOT);
 
+print "\n";
+
 if($LAPS_SRC_ROOT eq $LAPSINSTALLROOT && $all_roots_equal ne "T"){
    my $strlen=length($DATAROOT);
    $DATAROOT = substr($DATAROOT,0,$strlen-1) if(substr($DATAROOT,$strlen,$strlen) eq "/");
    if("$DATAROOT"."$DOMAIN_NAME" eq $LAPS_SRC_ROOT){
       $all_roots_equal = "T";
       print "WARNING: All lapsroots are equal\n";
+   }
+}
+
+if($all_roots_equal eq "T"){
+   if($LAPS_SRC_ROOT eq "/usr/nfs/common/lapb/parallel/laps"){
+      print "Re-localizing FSL-LAPS development area is not allowed\n";
+      print "\n";
+      print "Laps Src Root  = $LAPS_SRC_ROOT\n";
+      print "Install_Root   = $LAPSINSTALLROOT \n";
+      print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
+      exit;
    }
 }
 
@@ -115,7 +128,9 @@ if( $CONFIG_DOMAIN eq "t" ) {
       print "Script will not remove LAPS_DATA_ROOT when all-roots are equal and -c = t\n";
       print "Reconsider your command line inputs\n";
       exit;}
+
 }else{
+
   if(-e $LAPS_DATA_ROOT ){
      if($all_roots_equal eq "F") {
         print "Keep lapsprd and log subdirectories\n";
@@ -137,13 +152,25 @@ if( $CONFIG_DOMAIN eq "t" ) {
 
 if( defined($LAPS_TEMPLATE) ){
     if( -e $LAPS_TEMPLATE ){
-       print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
-       opendir(DIR, $LAPS_TEMPLATE);
-       my @filelist = readdir DIR;
-       foreach (@filelist){
-            if( ! /^\./){
-               system("cp $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static/");
-            }
+       if( $all_roots_equal eq "F"){
+           print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
+           opendir(DIR, $LAPS_TEMPLATE);
+           my @filelist = readdir DIR;
+           foreach (@filelist){
+              if( ! /^\./){
+                 system("cp $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static/");
+              }
+           }
+       }else{
+           print "Error: You cannot localize with a template when all LAPS_ROOTS are equal\n";
+           exit;
+# code below (not tested) will override the above termination and allow the localization!
+           print "Save static/cdl in tmpdata. Redefine LAPS_SRC and LAPS_DATA ROOTs.\n";
+           mkdir "$LAPS_SRC_ROOT/tmpdata", 0777 or die "Can't make $LAPS_SRC_ROOT/tmpdata $!\n";
+           system ("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/tmpdata/");
+           system ("mv $LAPS_SRC_ROOT/cdl $LAPS_SRC_ROOT/tmpdata/");
+           $LAPS_SRC_ROOT = $LAPS_SRC_ROOT."/tmpdata"; 
+           $LAPS_DATA_ROOT = $LAPS_DATA_ROOT."/tmpdata";
        }
     }else{print "The template subdirectory you specified does not exist: $LAPS_TEMPLATE\n";
           print "Terminating.\n"; exit;}
@@ -176,8 +203,6 @@ if($error_lines gt 0){print "Lines with error found in laps_localization.log\n";
 if($cannot_lines gt 0){print "Lines with cannot found in laps_localization.log\n";}
 if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in laps_localization.log\n";}
 
-#if($warning_lines gt 0){print "Lines with warning found in laps_localization.log\n";}
-
 system ("tail -1               $LAPS_DATA_ROOT/laps_localization.log");
 system ("ls -l                 $LAPS_DATA_ROOT/laps_localization.log");
 
@@ -196,5 +221,9 @@ if( -e "$LAPS_DATA_ROOT\_save" ) {
 }elsif ( -e "$LAPS_DATA_ROOT/laps_localization.log"){
     system("mv $LAPS_DATA_ROOT/laps_localization.log $LAPS_DATA_ROOT/log/.");
 }
+if( -e "$LAPS_DATA_ROOT\tmpdata"){
+    system("rm -rf $LAPS_DATA_ROOT/tmpdata");
+}
+
 print "window_laps_rt complete\n";
 exit;
