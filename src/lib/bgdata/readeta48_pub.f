@@ -6,6 +6,8 @@
 C
 C  Open netcdf File for reading
 C
+      print*,'filename =',filename
+
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -108,8 +110,8 @@ C
 C  Subroutine to read the file "ETA 48 km AWIPS Regional CONUS " 
 C
       subroutine read_eta_conusc(fname , NX,NY,NZ, ht, p, t, uw, vw,
-     +     rh, ht_sfc, p_sfc, rh_sfc, t_sfc, uw_sfc, vw_sfc, mslp
-     +     ,istatus)
+     +     rh, pvv, ht_sfc, p_sfc, rh_sfc, t_sfc, uw_sfc, vw_sfc,
+     +     mslp,istatus)
 
       include 'netcdf.inc'
 C     integer NX,NY,NZ, nf_fid, nf_vid, nf_status, k
@@ -120,7 +122,8 @@ C     integer NX,NY,NZ, nf_fid, nf_vid, nf_status, k
      +     rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
      +     t( NX,  NY,  NZ),  t_sfc( NX,  NY), 
      +     uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
-     +     vw( NX,  NY,  NZ), vw_sfc( NX,  NY), tmp(nz)
+     +     vw( NX,  NY,  NZ), vw_sfc( NX,  NY), tmp(nz),
+     +     pvv(NX,  NY,  NZ)
       integer nxny,nxnynz
       logical reverse_fields
       data reverse_fields/.false./
@@ -224,6 +227,20 @@ C
 
 
       if(reverse_fields) call swap_array(nxny,nz,vw)
+C
+C     Variable        NETCDF Long Name
+C      pvv           "pressure vertical velocity"
+C
+      call read_netcdf_real(nf_fid,'pvv',nxnynz,pvv,0,0,nf_status)
+      if(nf_status.lt.-0.5*nxnynz) then
+         print*, 'A substantial portion of the w-wind field is missing'
+         print*, 'ABORTING file processing for eta file ',fname
+         istatus=0
+         return
+      endif
+
+      if(reverse_fields) call swap_array(nxny,nz,pvv)
+
 C
 C     Variable        NETCDF Long Name
 C      MSLP         "ETA mean sea level pressure" 

@@ -187,7 +187,7 @@ c      stop
 C
 C
       subroutine read_conus_211(path,fname,af,nx,ny,nz,
-     .     nxbg,nybg,nzbg,ntbg,pr,ht,tp,sh,uw,vw,
+     .     nxbg,nybg,nzbg,ntbg,pr,ht,tp,sh,uw,vw,ww,
      .     pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp
      .     ,gproj,model_out,istatus)
 
@@ -216,6 +216,7 @@ c
      .       tpn(nxbg,nybg,nzbg2),
      .       uwn(nxbg,nybg,nzbg2),
      .       vwn(nxbg,nybg,nzbg2), 
+     .       wwn(nxbg,nybg,nzbg1),
      .       mslpn(nxbg,nybg),
      .       pr_sfcn(nxbg,nybg)
 
@@ -234,7 +235,8 @@ c
      .       tp(nx,ny,nz),
      .       sh(nx,ny,nz),
      .       uw(nx,ny,nz),
-     .       vw(nx,ny,nz)
+     .       vw(nx,ny,nz),
+     .       ww(nx,ny,nz)
 c
       real*4 lci(nx,ny),lcj(nx,ny),
      .       lat(nx,ny),lon(nx,ny),
@@ -402,6 +404,24 @@ c
          call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
      +     ,count,rcode)
 c
+c ****** Statements to fill wwn.
+c
+         if(model.eq.'ETA')then
+            start(1)=1
+            count(1)=nxbg
+            start(2)=1
+            count(2)=nybg
+            start(3)=1
+            count(3)=nzbg1
+            start(4)=n
+            count(4)=1
+
+            call read_netcdf_real(ncid,'pvv',nxbg*nybg*count(3),wwn
+     +      ,start,count,rcode)
+
+         endif
+
+c
 c get sfc pressure field
 c
          start(1)=1
@@ -449,6 +469,7 @@ c
          sh(i,j,k)=missingflag
          uw(i,j,k)=missingflag
          vw(i,j,k)=missingflag
+         ww(i,j,k)=missingflag
       enddo
       enddo
       enddo
@@ -490,6 +511,7 @@ c
                   sh(ii,jj,k)=sh(ii,jj,k)/(1.+sh(ii,jj,k))
                   uw(ii,jj,k)=uwn(i,j,kp1)
                   vw(ii,jj,k)=vwn(i,j,kp1)
+                  ww(ii,jj,k)=wwn(i,j,k)
                   istatus = 1
                endif
             enddo

@@ -99,7 +99,7 @@ C  Subroutine to read the file "Global 26 layer spectral Aviation Model"
 C
       subroutine read_avn_netcdf(fname, numIsoLevel, record, x, y, 
      +     version, ACCS, GH, GH_S, P, PMSL, PW, RH, T, T_2M, T_S,
-     +     uW, vW, RH_2M, isoLevel, reftime, valtime, grid, model,
+     +     uW, vW, wW, RH_2M, isoLevel, reftime, valtime, grid, model,
      +     nav, origin, istatus)
 C
       include 'netcdf.inc'
@@ -111,7 +111,7 @@ C
      +     record), T( x,  y,  numIsoLevel, record), T_S( x,  y,
      +     record), T_2M( x,  y, record), uW( x,  y,  numIsoLevel,
      +     record), vW( x,  y, numIsoLevel, record), RH_2M( x, y,
-     +     record)
+     +     record), wW( x,  y, numIsoLevel, record)
       double precision isoLevel(numIsoLevel), reftime(record),
      +     valtime(record)
       character*132 origin
@@ -340,6 +340,22 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var RH_2M'
+        return
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wW           "pressure vertical velocity"
+
+      nf_status = NF_INQ_VARID(nf_fid,'PVV',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var PVV (pres vert velocity)'
+        return
+      endif
+      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wW'
         return
       endif
 C

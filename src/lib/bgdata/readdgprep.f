@@ -1,5 +1,5 @@
       subroutine read_dgprep(bgmodel,cmodel,path,fname,af,nx,ny,nz
-     .                      ,pr,ht,tp,sh,uw,vw
+     .                      ,pr,ht,tp,sh,uw,vw,ww
      .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
      .                      ,uw_sfc,vw_sfc,mslp
      .                      ,gproj,istatus)
@@ -18,6 +18,7 @@ c
       integer   bgmodel,nx,ny,nz
      .         ,i,j,k,l,n,istatus
      .         ,icm(nz),icm_sfc
+     .         ,icn3d
 c
       real*4   shsum(nz),sumtot,sumsfctd
       real*4   shavg
@@ -33,6 +34,7 @@ c
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg) 
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
+     .      ,ww(nx,ny,nz)      !w-wind (pa/s)  !currently not available for AVN, NOGAPS, FA
      .      ,pr(nx,ny,nz)      !pressures (mb)
      .      ,pw(nx,ny,nz)      !precip h2o for /public AVN
      .      ,prk(nz)
@@ -58,11 +60,12 @@ c     real*4 rp_init
       real*4 qsfc
       real*4 make_td
       real*4 make_ssh
+      real*4 r_bogus_sh
       real*4 ssh2
       real*4 t_ref
       real*4 pcnt
       real*4 r_missing_data
-      real*4 r_miss_sh
+      real*4 rfill
 c
       character*(*) path,cmodel
       character*9   fname
@@ -99,7 +102,8 @@ c
 c Td or rh liq/ice phase temp thresh
 c ---------------------------------
       t_ref=-132.0
-      r_miss_sh = -99999.
+      rfill = -99999.
+      r_bogus_sh = 1.0e-6
       istatus = 0
 c
       call get_r_missing_data(r_missing_data,istatus)
@@ -171,7 +175,7 @@ c    +,istatus)
 
                call read_avn_netcdf(filename, nz, 1, nx, ny,
      +     version, ACCS, ht , ht_sfc, pr_sfc, mslp, pw, sh, tp,
-     +     tp_sfc, sfc_dummy, uw, vw, td_sfc, isoLevel,
+     +     tp_sfc, sfc_dummy, uw, vw, ww, td_sfc, isoLevel,
      +     reftime, valtime, grid, model, nav, origin, istatus)
 
                call qcmodel_sh(nx,ny,1,td_sfc)  !td_sfc actually = RH for AVN.
@@ -252,9 +256,12 @@ c
                shsum(k)=shsum(k)+sh(i,j,k)
             else
                icm(k)=icm(k)+1
-               sh(i,j,k)=r_miss_sh
+               sh(i,j,k)=rfill
             endif
-               
+
+            if(cmodel(1:nclen).ne.'AVN_FSL_NETCDF'.or.
+     +ww(i,j,k).eq.rfill)ww(i,j,k)=0.0
+
 c           it=tp(i,j,k)*100
 c           it=min(45000,max(15000,it)) 
 c           xe=esat(it)
@@ -291,7 +298,7 @@ c        endif
      &,t_ref)+273.15
                   sumsfctd=sumsfctd+td_sfc(i,j)
                else
-                  td_sfc(i,j)=r_miss_sh
+                  td_sfc(i,j)=rfill
 c                 td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
 c    &,bogus_sh,t_ref)+273.15
                   icm_sfc=icm_sfc+1
@@ -333,9 +340,12 @@ c              sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
 c              sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
 
             else
-               sh(i,j,k)=r_miss_sh
+               sh(i,j,k)=rfill
                icm(k)=icm(k)+1
             endif
+
+            ww(i,j,k)=r_missing_data
+
           enddo
           enddo
          enddo
@@ -348,7 +358,7 @@ c
          do i=1,nx
             if(td_sfc(i,j).eq.-99999.)then
                icm_sfc=icm_sfc+1
-               td_sfc(i,j)=r_miss_sh
+               td_sfc(i,j)=rfill
             else
                sumsfctd=sumsfctd+td_sfc(i,j)
             endif
@@ -359,23 +369,31 @@ c
 c
 c check for and fill missing sh with computed avg for that level
 c
-      sumtot = 0
+      sumtot = 0.0
+      icn3d = 0
       do k=1,nz
          if(icm(k).gt.0.and.icm(k).lt.nx*ny)then
             shavg=shsum(k)/(nx*ny-icm(k))
             do j=1,ny
             do i=1,nx
-               if(sh(i,j,k).eq.r_miss_sh)sh(i,j,k)=shavg
+               if(sh(i,j,k).eq.rfill)sh(i,j,k)=shavg
             enddo
             enddo
             sumtot=shsum(k)+sumtot
+            icn3d=icm(k)+icn3d
+         elseif(icm(k).eq.nx*ny)then
+            do j=1,ny
+            do i=1,nx
+               if(sh(i,j,k).eq.rfill)sh(i,j,k)=r_bogus_sh
+            enddo
+            enddo
          endif
       enddo
 
-      if(sumtot.gt.0)then
+      if(sumtot.gt.0.0.and.icn3d.ne.nx*ny*nz)then
          print*,'Missing background 3D moisture filled with '
      &,'average of good points'
-         print*,'#/% 3D points filled: ',sumtot,sumtot/(nx*ny*nz)
+         print*,'#/% 3D points filled: ',icn3d,icn3d/(nx*ny*nz)
       endif
 
       if(bgmodel.eq.6.or.bgmodel.eq.8)then
@@ -383,7 +401,7 @@ c
             shavg=sumsfctd/(nx*ny-icm_sfc)
             do j=1,ny
             do i=1,nx
-               if(td_sfc(i,j).eq.r_miss_sh)td_sfc(i,j)=shavg
+               if(td_sfc(i,j).eq.rfill)td_sfc(i,j)=shavg
             enddo
             enddo
          endif
@@ -391,7 +409,7 @@ c
       if(icm_sfc.gt.0)then
          print*,'Missing background 2D moisture filled with '
      &,'average of good points (Td avg = ',shavg,').'
-         print*,'#/% 2D points filled: ',icm_sfc,icm_sfc/(nx*ny*nz)
+         print*,'#/% 2D points filled: ',icm_sfc,icm_sfc/(nx*ny)
       endif
 
 c

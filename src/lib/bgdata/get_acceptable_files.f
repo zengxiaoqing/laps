@@ -4,7 +4,9 @@
      +     ,rejected_files,rejected_cnt)
 
       implicit none
+
       include 'netcdf.inc'
+
       integer bgmodel
       integer max_files, NX,NY,NZ,rejected_cnt
       character*(*) names(max_files), cmodel, bgpath
@@ -16,19 +18,20 @@
       character*4   af,c4valtime,c4_FA_valtime
       character*3   c_fa_ext
       character*100 bg_names(max_files), fullname
-C     integer nf_status, nf_vid, nf_fid, istatus
       integer istatus
       integer i4time_fa
       logical use_analysis
       character*9   fname,wfo_fname13_to_fname9,fname9
       integer i4time_now,bgtime,bgtime2,previous_time,next_time,len
-      integer bigint, ihour, n, accepted_files, final_time
+      integer lenf
+      integer bigint, ihour, n, accepted_files, final_time, lend
       parameter(bigint=2000000000)
       logical print_message
       data print_message/.true./
-      integer nlapsprds,lens,lentodot
+      integer nlapsprds,lens,lentodot,nc
       integer record
       character*3 lapsprds(4)
+      character*2 cwb_model_type
       parameter (nlapsprds=4)
       data lapsprds/'lq3','lt1','lsx','lw3'/
 
@@ -40,6 +43,10 @@ C to >= i4time_now+forecast_length
 C      
       previous_time = 0
       call s_len(bgpath,len)
+      if(bgpath(len:len).ne.'/')then
+         len=len+1
+         bgpath(len:len)='/'
+      endif
 
       do bg_files=1,max_files
          do i=1,100
@@ -60,6 +67,9 @@ C
 
       elseif(bgmodel.eq.3)then
 
+         call s_len(cmodel,nc)
+         cwb_model_type = cmodel(nc-1:nc)
+         call downcase(cwb_model_type,cwb_model_type)
          next_time=bigint
          final_time=i4time_now+3600*max(0,forecast_length)
          call get_file_names(bgpath,bg_files,names,max_files,istatus)
@@ -70,13 +80,16 @@ C
          endif
 
          do i=1,bg_files
-            call i4time_fname_lp(names(i),i4time_fa,istatus)
-            call make_fnam_lp(i4time_fa,fname9,istatus)
+            call get_directory_length(names(i),lend)
             call s_len(names(i),lens)
-            lentodot=index(names(i),'.')
-            c_fa_ext=names(i)(lentodot+1:lens)
-            c4valtime=c4_FA_valtime(c_fa_ext)
-            bg_names(i)=fname9//c4valtime
+            if(names(i)(lend+1:lend+2).eq.cwb_model_type)then
+               call i4time_fname_lp(names(i),i4time_fa,istatus)
+               call make_fnam_lp(i4time_fa,fname9,istatus)
+               lentodot=index(names(i),'.')
+               c_fa_ext=names(i)(lentodot+1:lens)
+               c4valtime=c4_FA_valtime(c_fa_ext)
+               bg_names(i)=fname9//c4valtime
+            endif
          enddo
 
       else
@@ -243,7 +256,7 @@ c     +     forecast_length,bg_files,n
 
 
       if (previous_time.eq.0 .or. next_time.eq.bigint) then
-        print*, 'not enough files:',previous_time,next_time 
+        print*, 'Did not find two files:',previous_time,next_time
       endif
 
 
@@ -254,50 +267,73 @@ c     +     forecast_length,bg_files,n
 
       bg_files = accepted_files
 
-      fullname=bgpath(1:len)//'/'//names(1)
-      if(bgmodel.eq.0) then
-         call get_laps_dimensions(nz,istatus)
-         call get_grid_dim_xy(nx,ny,istatus)
-      else if(bgmodel.eq.1) then
-         NX = 81
-         NY = 62
-         NZ = 25        
-      else if(bgmodel.eq.2) then
-         call get_eta48_dims(fullname,NX,NY,NZ,istatus)
-      else if(bgmodel.eq.3) then
-         NX = 91
-         NY = 91
-         NZ = 16
-      else if(bgmodel.eq.4) then
-         NX = 93
-         NY = 65
-         NZ = 19        
-      else if(bgmodel.eq.5) then
-         call get_ruc2_dims(fullname,NX,NY,NZ,istatus)
+      if(accepted_files.gt.0)then
+
+       call get_fname_length(names(1),lenf)
+       fullname=bgpath(1:len)//names(1)(1:lenf)
+       if(bgmodel.eq.0) then
+          call get_laps_dimensions(nz,istatus)
+          call get_grid_dim_xy(nx,ny,istatus)
+       else if(bgmodel.eq.1) then
+          NX = 81
+          NY = 62
+          NZ = 25        
+       else if(bgmodel.eq.2) then
+          call get_eta48_dims(fullname,NX,NY,NZ,istatus)
+       else if(bgmodel.eq.3) then
+          if(cmodel.eq.'CWB_20FA_LAMBERT_RE')then
+             NX = 91
+             NY = 91
+             NZ = 16
+          elseif(cmodel.eq.'CWB_20FA_LAMBERT_NF')then
+             NX=191
+             NY=127
+             NZ=16
+          else
+             print*,'Unknow type for bgmodel = ',bgmodel,
+     +'and cmodel = ',cmodel(1:nc)
+          endif
+       else if(bgmodel.eq.4) then
+          NX = 93
+          NY = 65
+          NZ = 19        
+       else if(bgmodel.eq.5) then
+          call get_ruc2_dims(fullname,NX,NY,NZ,istatus)
+
 c     NX = 151
 c     NY = 113
 c     NZ = 40   
-         print*, NX,NY,NZ    
-      else if(bgmodel.eq.6) then
-         if(cmodel .eq. 'AVN_FSL_NETCDF')then
-            call readavnpublicdims(fullname,NX,NY,NZ,record,istatus)
-            if(istatus .ne. 0)print*,'Error reading AVN public dims'
-         else         !this switch for AVN AFWA DEGRIB
-            NX = 360
-            NY = 181
-            NZ = 26 
-         endif
-      else if(bgmodel.eq.7) then
-         NX = 185
-         NY = 129
-         NZ = 42
-      else if(bgmodel.eq.8) then
-         NX = 360
-         NY = 181
-         NZ = 16        
-      else if(bgmodel.eq.9) then
-         call get_conus_dims(fullname,NX,NY,NZ)
-         print *,'nws:',NX,NY,NZ
+          print*, NX,NY,NZ    
+       else if(bgmodel.eq.6.or.bgmodel.eq.8) then
+          if(cmodel .eq. 'AVN_FSL_NETCDF')then
+             call readavnpublicdims(fullname,NX,NY,NZ,record,istatus)
+             if(istatus .ne. 0)then
+                print*,'Error reading AVN public dims'
+                return
+             else
+                print *,'AVN_FSL_NETCDF Dimensions from file',
+     &' ',fullname(1:len+lenf+1),NX,NY,NZ
+             endif
+          elseif(cmodel.eq.'AVN_AFWA_DEGRIB')then         !this switch for AVN AFWA DEGRIB
+             NX = 360
+             NY = 181
+             NZ = 26 
+          else
+             NX = 360
+             NY = 181
+             NZ = 16
+          endif
+       else if(bgmodel.eq.7) then
+          NX = 185
+          NY = 129
+          NZ = 42
+       else if(bgmodel.eq.9) then
+          call get_conus_dims(fullname,NX,NY,NZ)
+          print *,'nws:',NX,NY,NZ
+       endif
+
+      else
+       print*,'Names array is empty. Cannot set nx/ny/nz'
       endif
       
       return 
