@@ -330,7 +330,7 @@ c
 c ============================================================
 c
       subroutine get_laps_analysis_data(i4time,nx,ny,nz
-     +,phi,t,u,v,rh,omo,lwc,istatus)
+     +,phi,t,u,v,sh,omo,lwc,istatus)
 c
       implicit none
 
@@ -341,21 +341,21 @@ c
       integer   lends
       integer   lendt
       integer   lendw
-      integer   lendrh
+      integer   lendsh
       integer   lendlwc
-
+      integer   i,j,k
       real*4  phi(nx,ny,nz),t(nx,ny,nz)
-     .       ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
+     .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
      .       ,omo(nx,ny,nz),lwc(nx,ny,nz)
 
 
-      character*255 tempdir,winddir,sfcdir,rhdir,lcodir,lwcdir
+      character*255 tempdir,winddir,sfcdir,shdir,lcodir,lwcdir
       character*125 comment
-      character*31  tempext,windext,sfcext,rhext,lcoext,lwcext
+      character*31  tempext,windext,sfcext,shext,lcoext,lwcext
       character*10  units
+      logical found_lowest
 
-
-      rhext='lh3'
+      shext='lq3'
       tempext='lt1'
       windext='lw3'
       sfcext='lsx'
@@ -365,7 +365,7 @@ c
       call get_directory(tempext,tempdir,lendt)
       call get_directory(windext,winddir,lendw)
       call get_directory(sfcext,sfcdir,lends)
-      call get_directory(rhext,rhdir,lendrh)
+      call get_directory(shext,shdir,lendsh)
       call get_directory(lcoext,lcodir,lendlco)
       call get_directory(lwcext,lwcdir,lendlwc)
 
@@ -387,15 +387,47 @@ c
          return
       endif
 c
-c *** Get laps rel hum
+c *** Get laps spec humidity
 c
       call get_laps_3d(i4time,nx,ny,nz
-     1  ,rhext,'rhl',units,comment,rh,istatus)
+     1  ,shext,'sh ',units,comment,sh,istatus)
 
       if(istatus .ne. 1)then
-         print*,'Error getting LAPS rh  data ... Abort.'
+         print*,'Error getting LAPS sh  data ... Abort.'
          return
       endif
+C    The specific humidity field uses the missing value
+c    for below ground points, so we need to fill those in by
+c    replicating the lowest valid value downward (upward in array
+c    space).
+
+      DO j = 1, ny
+        DO i = 1, nx
+          k = 1
+          found_lowest = .false.
+      
+          DO WHILE (.NOT. found_lowest) 
+            IF (sh(i,j,k) .lt. 1.e37) THEN
+              found_lowest = .true.
+              sh(i,j,1:k) = sh(i,j,k)
+            ELSE
+              k = k + 1
+              IF (k .ge. nz) THEN
+                PRINT *, 'No valid SH found in column!'
+                PRINT *, 'I/J = ', i,j
+                STOP
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+
+c    Make sure we got it right!
+c      print *, 'Min/Max/Center values of SH:'  
+c      DO k = 1, nz
+c        print *, minval(sh(:,:,k)),maxval(sh(:,:,k)),
+c     +           sh(nx/2,ny/2,k)
+c      ENDDO
 c
 c *** Get laps cloud omega
 c

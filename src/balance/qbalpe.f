@@ -40,16 +40,16 @@ c
      .      ,p(nz),pstag(nz),ps(nx,ny),ter(nx,ny)
      .      ,lat(nx,ny),lon(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
-     .      ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
+     .      ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
      .      ,phib(nx,ny,nz),tb(nx,ny,nz)
-     .      ,ub(nx,ny,nz),vb(nx,ny,nz),rhb(nx,ny,nz)
+     .      ,ub(nx,ny,nz),vb(nx,ny,nz),shb(nx,ny,nz)
      .      ,phibs(nx,ny,nz),tbs(nx,ny,nz)
-     .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),rhbs(nx,ny,nz)
+     .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),shbs(nx,ny,nz)
      .      ,phis(nx,ny,nz),ts(nx,ny,nz)
-     .      ,us(nx,ny,nz),vs(nx,ny,nz),rhs(nx,ny,nz)
+     .      ,us(nx,ny,nz),vs(nx,ny,nz),shs(nx,ny,nz)
 c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
-     .      ,lapsrh(nx,ny,nz),lapslwc(nx,ny,nz)
+     .      ,lapssh(nx,ny,nz),lapslwc(nx,ny,nz)
      .      ,lapstemp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
 
@@ -87,6 +87,10 @@ c
       integer   itmax,lmax
      .         ,masstime,windtime,sfctime,omtime
      .         ,i,j,k,ll,istatus
+
+      integer   itstatus
+      integer   init_timer
+      integer   ishow_timer
      
       integer   lend
       integer   lends
@@ -103,7 +107,11 @@ c
       character*31  staticext,sfcext
       character*10  units
       character*9   a9_time
-c
+
+c    Added by B. Shaw, 4 Sep 01
+      real*4, allocatable :: lapsrh(:,:,:)
+      real*4, external :: ssh, make_rh
+      real*4 shsat
 c_______________________________________________________________________________
 c
       call get_balance_nl(lrunbal,istatus)
@@ -186,13 +194,25 @@ c *** Get LGA fields
       call get_modelfg_3d(masstime,'V3 ',nx,ny,nz,vb,istatus)
       call get_modelfg_3d(masstime,'T3 ',nx,ny,nz,tb,istatus)
       call get_modelfg_3d(masstime,'HT ',nx,ny,nz,phib,istatus)
-      call get_modelfg_3d(masstime,'SH ',nx,ny,nz,rhb,istatus)
+      call get_modelfg_3d(masstime,'SH ',nx,ny,nz,shb,istatus)
       call get_modelfg_3d(masstime,'OM ',nx,ny,nz,omb,istatus)
+
+c convert background sh to rh
+c  COMMENTED OUT...Now do everything in specific humidity
+c     do k=1,nz
+c        do j=1,ny
+c        do i=1,nx
+c           rhb(i,j,k)=make_rh(p(k)/100.,tb(i,j,k)-273.15
+c    .,rhb(i,j,k)*1000.,-132.)*100.
+c        enddo
+c        enddo
+c     enddo
+
 c
 c *** Get laps analysis grids.
 c
       call get_laps_analysis_data(masstime,nx,ny,nz
-     +,lapsphi,lapstemp,lapsu,lapsv,lapsrh,omo,lapslwc,istatus)
+     +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,lapslwc,istatus)
 c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
          print *,'Error getting LAPS analysis data...Abort.'
@@ -385,7 +405,7 @@ c put lapsphi into phi, lapsu into u, etc
       call move_3d(lapsv,v,nx,ny,nz)    
       call move_3d(lapstemp,t,nx,ny,nz)
       call move_3d(omo,om,nx,ny,nz)
-      call move_3d(lapsrh,rh,nx,ny,nz)
+      call move_3d(lapssh,sh,nx,ny,nz)
 c
 c
       if(larray_diag)then
@@ -404,8 +424,8 @@ c
 c stagger the LAPS grids to prepare for balancing
 c
 c laps analysis grids first.
-      call balstagger(u,v,phi,t,rh,om,us,vs,
-     &phis,ts,rhs,oms,nx,ny,nz,p,ps,1) 
+      call balstagger(u,v,phi,t,sh,om,us,vs,
+     &phis,ts,shs,oms,nx,ny,nz,p,ps,1) 
 
       if(larray_diag)then
          print*
@@ -423,15 +443,15 @@ c laps analysis grids first.
 
 c
 c background grids second.
-      call balstagger(ub,vb,phib,tb,rhb,omb,ubs,vbs,
-     &phibs,tbs,rhbs,ombs,nx,ny,nz,p,ps,1) 
+      call balstagger(ub,vb,phib,tb,shb,omb,ubs,vbs,
+     &phibs,tbs,shbs,ombs,nx,ny,nz,p,ps,1) 
    
 c put phis into phi, us into u ... ie., put staggered arrays into non-staggered.
       call move_3d(phis,phi,nx,ny,nz)
       call move_3d(us,u,nx,ny,nz)
       call move_3d(vs,v,nx,ny,nz)
       call move_3d(oms,om,nx,ny,nz)
-      call move_3d(rhs,rh,nx,ny,nz)
+      call move_3d(shs,sh,nx,ny,nz)
       call move_3d(ts,t,nx,ny,nz) 
 c
 c use these constructs if cloud and backgnd vv's don't exist
@@ -453,8 +473,18 @@ c
 c
 c ****** Compute momentum residual from obs fields over whole domain.
 
+      itstatus=init_timer()
+
       call momres(us,vs,phis,nu,nv,fu,fv,wb,delo
      .           ,nx,ny,nz,lat,dx,dy,ps,p)
+
+      if(.false.)then
+         write(9)nx,ny,nz
+         write(9)wb
+      endif
+
+      itstatus=ishow_timer()
+      print*,'Elapsed time - momres (sec): ',itstatus
 c
 c ****** Execute mass/wind balance.
 c
@@ -481,23 +511,28 @@ c returns staggered grids of full fields u,v,phi
 c
       call momres(u,v,phi,nu,nv,fu,fv,wb,delo
      &,nx,ny,nz,lat,dx,dy,ps,p)
+
+      if(.false.)then
+         write(19)nx,ny,nz
+         write(19)wb
+      endif
 c
 c *** destagger and Write out new laps fields.
 c
 c the non-staggered grids must be input with intact boundaries from background 
 
       call balstagger(ub,vb,phib,tb,
-     & rhb,omb,u,v,phi,t,rh,om,nx,ny,nz,p,ps,-1) 
+     & shb,omb,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
 c
 c   Prior to applying boundary subroutine put non-staggered grids back into
-c   u,v,om,t,rh,phi.
+c   u,v,om,t,sh,phi.
 
       call move_3d(phib,phi,nx,ny,nz)
       call move_3d(ub,u,nx,ny,nz)
       call move_3d(vb,v,nx,ny,nz)
       call move_3d(tb,t,nx,ny,nz)
       call move_3d(omb,om,nx,ny,nz)
-      call move_3d(rhb,rh,nx,ny,nz)
+      call move_3d(shb,sh,nx,ny,nz)
 
       call get_laps_2d(masstime,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
@@ -542,24 +577,58 @@ c  liquid (and associated heating/cooling) in the very first time
 c  step.  No good.
 
 
+c     do k = 1, nz
+c     do j = 1, ny
+c     do i = 1, nx
+c       if(lapslwc(i,j,k).gt.0. .AND.
+c    .     lapsrh(i,j,k).lt.100.)
+c    .          lapsrh(i,j,k)=100.
+c     enddo
+c     enddo
+c     enddo
+
+c  This section replaces the above section to adjust the moisture
+c  using specific humidity so moisture between the unbalanced and
+c  balance analysis is better conserved.  B. Shaw, Sep 01
+
+      allocate (lapsrh(nx,ny,nz))
       do k = 1, nz
       do j = 1, ny
       do i = 1, nx
-        if(lapslwc(i,j,k).gt.0. .AND.
-     .        rh(i,j,k).lt.100.)
-     .                rh(i,j,k)=100.
-      enddo
-      enddo
-      enddo
+c         
+c       Compute the saturation specific humidity
 
+        shsat = ssh(p(k)*0.01,t(i,j,k)-273.15)*0.001
+
+c       Ensure the specfic humidity does not exceed
+c       the saturation value for this temperature
+
+        lapssh(i,j,k) = MIN(shsat,lapssh(i,j,k))
 c
-      call write_bal_laps(masstime,phi,u,v,t,om,rh,nx,ny,nz
+c       If cloud water is present, set the sh equal
+c       to the saturation value
+
+        if (lapslwc(i,j,k).gt.0.) lapssh(i,j,k)=shsat
+
+c       Finally, rediagnose RH wrt liquid from the 
+c       modified sh field
+
+        lapsrh(i,j,k) = make_rh(p(k)*0.01,t(i,j,k)-273.15
+     .                    ,lapssh(i,j,k)*1000.,-132.)*100.         
+        lapsrh(i,j,k) = MIN(lapsrh(i,j,k),100.)
+        lapsrh(i,j,k) = MAX(lapsrh(i,j,k),1.0)
+      enddo
+      enddo
+      enddo     
+c
+      call write_bal_laps(masstime,phi,u,v,t,om,lapsrh,lapssh
+     .                   ,nx,ny,nz
      .                   ,p,istatus)
       if(istatus.ne.1)then
          write(6,*)'error writing balance fields'
          return
       endif
-
+      deallocate(lapsrh)
  999  return
       end
 
@@ -623,6 +692,8 @@ c
      .          +fv(i-1,j+1,k)+fv(i-1,j,k))*.25
             fuu=(fu(i,j,k)+fu(i+1,j,k)
      .          +fu(i,j-1,k)+fu(i+1,j-1,k))*.25  
+            wb(i,j,k)=0.
+            wc(i,j,k)=0.
             if (u(i,j,k) .ne. bnd)
      .          wc(i,j,k)=f*u(i,j,k)+g/dy(i,j)
      .                   *(phi(i,j+1,k)-phi(i,j,k))+nvv-fvv
@@ -650,6 +721,7 @@ c                                 on the non-vert staggered std grid
 
 c commented JS 01-16-01
 c     write(2) wa,delo
+      
       errms=sqrt(sum/cnt)
       write(6,1000) errms,delo
 1000  format(1x,'BEFORE/AFTER BALCON...MOMENTUM RESIDUAL FOR DOMAIN'
@@ -665,7 +737,7 @@ c     write(2) wa,delo
       integer i,j,k
       character*(*) title
       print*,title,' at level ',kk
-      write(9,1002) title,' at level ',kk
+c     write(9,1002) title,' at level ',kk
  1002 format(1x,a25,a10,i3)
       jnorth=jj+ispan/2+1
       if(jnorth.gt.ny) jnorth=ny
@@ -676,11 +748,11 @@ c     write(2) wa,delo
       iwest=ii+ispan/2+1
       if(iwest.gt.nx)iwest=nx 
       do j=jnorth,jsouth,-1
-       write(9,1001)  j,ieast,iwest
+c      write(9,1001)  j,ieast,iwest
  1001  format(1x,3i8)
        print*,j,ieast,iwest
        write(6,1000) (a(i,j,kk),i=ieast,iwest)
-       write(9,1000) (a(i,j,kk),i=ieast,iwest)
+c      write(9,1000) (a(i,j,kk),i=ieast,iwest)
  1000  format(1x,7e11.5)
       enddo
       return
@@ -771,6 +843,10 @@ c these are used for diagnostics
       integer fldmxi(nf,nz),fldmxj(nf,nz)
       integer fldmni(nf,nz),fldmnj(nf,nz)
 
+      integer   itstatus
+      integer   init_timer
+      integer   ishow_timer
+
       logical larray_diag/.false./
 
       real, allocatable, dimension(:,:,:) :: aaa,bbb
@@ -837,12 +913,24 @@ c wind error must be defined at the geopotential stagger points
       enddo
       enddo
 
-        call diagnose(to,nx,ny,nz,26,3,7,7,'INPUT    GEOPOTENTIALS')
-        call diagnose(uo,nx,ny,nz,26,3,7,7,'INPUT    U-COMPONENT  ')
-        call diagnose(vo,nx,ny,nz,26,3,7,7,'INPUT    V-COMPONENT  ')
+      call diagnose(to,nx,ny,nz,26,3,7,7,'INPUT    GEOPOTENTIALS')
+      call diagnose(uo,nx,ny,nz,26,3,7,7,'INPUT    U-COMPONENT  ')
+      call diagnose(vo,nx,ny,nz,26,3,7,7,'INPUT    V-COMPONENT  ')
+c analz with input fields prior to balcon iterations on lmax
+      call analzo(to,to,uo,uo,vo,vo,omo,omo
+     .                ,nu,nv,fu,fv,delo,tau
+     .                ,nx,ny,nz
+     .                ,lat,dx,dy,ps,p,dp,l,lmax)
+
 c create perturbations
 c owing to an artifact of coding the t array is phi
+      print*,'initialize timer'
+      itstatus=init_timer()
+      print*,'-------------------------'
+
       do l=1,lmax
+
+
        write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
        print*,'-----------------------------------------------------'
 c      write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
@@ -961,6 +1049,10 @@ c
 
 1      continue  !this is the itmax loop
 
+       itstatus=ishow_timer()
+       print*,' ---------------------------------------------'
+       print*,'Elapsed time after itmax loop (sec): ',itstatus
+       print*,' ---------------------------------------------'
 12     write(6,1000) it,itt,cotmax,ovr,cotma1
 
 c     write(9,1000) it,itt,cotmax,ovr,cotma1
@@ -1039,14 +1131,16 @@ c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
 
        enddo
 
-       call printmxmn(8,nf,nz,p,fldmax,fldmin
-     &,fldmxi,fldmxj,fldmni,fldmnj)
+       if(larray_diag)then
+          call printmxmn(8,nf,nz,p,fldmax,fldmin
+     &               ,fldmxi,fldmxj,fldmni,fldmnj)
+       endif
 c 
+       call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED PERTURB PHIS ')
+       call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-PERTURB    ')
+       call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-PERTURB    ')
 
-        call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED PERTURB PHIS ')
-        call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-PERTURB    ')
-        call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-PERTURB    ')
-       if(.true.)then
+       if(larray_diag)then
         do k=1,nz
           print*
           print*,'Calling perturb  array diagnosis: ',k,p(k)
@@ -1076,15 +1170,25 @@ c Restore full winds and heights by adding back in background
        erf=100.
 
        call leib_sub(nx,ny,nz,erf,tau,delo,erru
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb,om,omo,omb,nu,nv,fu,fv)
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb
+     .,om,omo,omb,nu,nv,fu,fv,l,lmax)
 
+       itstatus=ishow_timer()
+       print*,'------------------------------------------'
+       print*,'Elapsed time (after leib_sub) sec: ',itstatus
+       print*,'------------------------------------------'
 
 c move adjusted fields to observation-driven fields for next iteration
        call move_3d(t,to,nx,ny,nz)
        call move_3d(u,uo,nx,ny,nz)
        call move_3d(v,vo,nx,ny,nz)
        call move_3d(om,omo,nx,ny,nz)
+
       enddo ! on lmax
+      print*,'------------------------------------------------'
+      itstatus=ishow_timer()
+      print*,'Elapsed time end of balcon loop (sec): ',itstatus
+      print*,'------------------------------------------------'
 
       deallocate (aaa,bbb)
       deallocate (dxx,dx2,dxs,dyy,dy2,dys
@@ -1097,13 +1201,14 @@ c
 c ---------------------------------------------------------------
 c
       subroutine leib_sub(nx,ny,nz,erf,tau,delo,erru
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb,om,omo,omb,nu,nv,fu,fv)
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb
+     .,om,omo,omb,nu,nv,fu,fv,l,lmax)
 
       implicit none
 
       integer nx,ny,nz
       integer nxm1,nym1,nzm1
-      integer i,j,k,ks
+      integer i,j,k,ks,l,lmax
 
       real*4 t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
@@ -1180,7 +1285,7 @@ c commemnted 01-02-01
       call analz(t,to,u,uo,v,vo,om,omo
      .                ,slam,f3,nu,nv,fu,fv,delo,tau
      .                ,nx,ny,nz
-     .                ,lat,dx,dy,ps,p,dp)
+     .                ,lat,dx,dy,ps,p,dp,l,lmax)
 
 
       deallocate (slam,f3,h)
@@ -1190,24 +1295,25 @@ c commemnted 01-02-01
 c
 c ---------------------------------------------------------------
 c
-      subroutine analz(t,to,u,uo,v,vo,om,omo,slam,f3,nu,nv,fu,fv,
-     .               delo,tau ,nx,ny,nz,lat,dx,dy,ps,p,dp)
+      subroutine analzo(t,to,u,uo,v,vo,om,omo,nu,nv,fu,fv,
+     .               delo,tau ,nx,ny,nz,lat,dx,dy,ps,p,dp,l,lmax)
 c
-c     analz is a diagnostic routine that looks at geostrophic residual
+c     analzo is a diagnostic routine that looks at geostrophic residual
 c     maxima, continuity residual maxs.  It computes the rms terms in the 
 c     variational formalism
+
       implicit none
 c
       integer   nx,ny,nz
      .         ,nzm1,nxm2,nym2
      .         ,isv,jsv,ksv
      .         ,i,j,k,iflag
+     .         ,l,lmax,istatus
 c
       real*4 t(nx,ny,nz),to(nx,ny,nz)
      .      ,u(nx,ny,nz),uo(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz)
-     .      ,slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
@@ -1217,8 +1323,11 @@ c
      .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc
      .      ,ang,sin1,f,nvv,nuu,dtdx,dtdy,dudx,dvdy,domdp
      .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
+     .      ,ures,vres
 
       real*4 tau(nx,ny)
+      real*4 r_missing_data
+
 c_______________________________________________________________________________
 c
 c     write(9,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
@@ -1230,6 +1339,7 @@ c     write(9,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
       rdpdg=3.141592654/180.
       fo=14.52e-5   !2*omega
       bnd=1.e-30
+
       do k=2,nzm1
          write(6,4000) k,p(k+1)/100.
 c        write(9,4000) k,p(k+1)/100.
@@ -1250,11 +1360,14 @@ c        write(9,4000) k,p(k+1)/100.
          tgpph=0.
          tgpc=0.
          iflag=0
+
          do j=2,nym2
          do i=2,nxm2
+
          dxx=(dx(i-1,j-1)+dx(i,j-1)+dx(i-1,j)+dx(i,j))*.25
          dyy=(dy(i-1,j-1)+dy(i,j-1)+dy(i-1,j)+dy(i,j))*.25
-          if(ps(i,j).gt.p(k)) then
+         if(ps(i,j).gt.p(k+1)) then
+
             ang=(lat(i,j))*rdpdg
             sin1=sin(ang)
             f=fo*sin1
@@ -1264,26 +1377,199 @@ c        write(9,4000) k,p(k+1)/100.
             nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-1,k)+nu(i,j-1,k))/4.
             dtdx=(t(i+1,j,k)-t(i,j,k))/dx(i,j)
             dtdy=(t(i,j+1,k)-t(i,j,k))/dy(i,j)
-               dudx=(u(i,j-1,k-1)-u(i-1,j-1,k-1))/dxx
-               dvdy=(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dyy    
-               domdp=(om(i,j,k-1)-om(i,j,k))/dp(k)
+            dudx=(u(i,j-1,k-1)-u(i-1,j-1,k-1))/dxx
+            dvdy=(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dyy    
+            domdp=(om(i,j,k-1)-om(i,j,k))/dp(k)
             uot=uo(i,j,k)
             vot=vo(i,j,k)
             tot=to(i,j,k)
+
             if (uot .ne. bnd) then
                thermu=(u(i,j,k)+dtdy/f)**2+thermu
                sumu=sumu+(u(i,j,k)-uot)**2
-               resv=(f*u(i,j,k)+dtdy+nvv-fvv)**2+resv
+               vres=(f*u(i,j,k)+dtdy+nvv-fvv)**2
+               resv=vres+resv
                tgpu=tgpu+1.
             endif
             if (vot .ne. bnd) then
                thermv=(v(i,j,k)-dtdx/f)**2+thermv
                sumv=sumv+(v(i,j,k)-vot)**2
-               resu=resu+(-f*v(i,j,k)+dtdx+nuu-fuu)**2
+               ures=(-f*v(i,j,k)+dtdx+nuu-fuu)**2
+               resu=resu+ures
                tgpv=tgpv+1.
             endif
-               sumt=sumt+(t(i,j,k)-tot)**2
-               tgpph=tgpph+1.
+
+            sumt=sumt+(t(i,j,k)-tot)**2
+            tgpph=tgpph+1.
+
+            if (ps(i,j) .gt. p(k+1)) then
+               cont=(dudx+dvdy+domdp)**2+cont
+               con=dudx+dvdy+domdp
+               sumom=(om(i,j,k)-omo(i,j,k))**2+sumom
+               uuu=(u(i,j-1,k-1)+u(i-1,j-1,k-1))*.5
+               vvv=(v(i-1,j,k-1)+v(i-1,j-1,k-1))*.5
+               sumww=uuu**2+vvv**2+sumww
+               tgpc=tgpc+1.
+               if (abs(con) .ge. conmax) then
+                  conmax=abs(con)
+                  contm=con
+                  isv=i
+                  jsv=j
+                  ksv=k
+                  iflag=1
+               endif
+            endif
+         endif!on below ground check
+         enddo
+         enddo
+
+         if (tgpu .ne. 0) sumu=sqrt(sumu/tgpu)
+         if (tgpv .ne. 0) sumv=sqrt(sumv/tgpv)
+         if (tgpph .ne. 0) sumt=sqrt(sumt/tgpph)
+         if (tgpu .ne. 0) sumom=sqrt(sumom/tgpu)
+         if (tgpu .ne. 0) thermu=sqrt(thermu/tgpu)
+         if (tgpv .ne. 0) thermv=sqrt(thermv/tgpv)
+         if (tgpc .ne. 0.) cont=sqrt(cont/tgpc)
+         if (tgpc .ne. 0.) sumww=sqrt(sumww/tgpc)
+         if (tgpu .ne. 0) resu=sqrt(resu/tgpu)
+         if (tgpv .ne. 0) resv=sqrt(resv/tgpv)
+         write(6,1002) sumww
+c        write(9,1002) sumww
+1002     format(1x,' rms wind speed:',e12.4)
+         if (sumww .ne. 0.) sumww=sqrt(thermu**2+thermv**2)/sumww
+
+c took tau out of this write 2-20-01 (JS)
+         write(6,1001) sumt,delo,sumu,sumv,
+     .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
+
+c        write(9,1001) sumt,delo,sumu,sumv,
+c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
+
+      enddo
+
+1009  format(1x,'relax ',3i4/1x,'con f3 l ',3e12.4/1x,'lijk ',6e12.4/1x,
+     .       ' d x y p ',3e12.4/1x,'uuvvoo ',6e12.4)
+1001  format(1x,' rms error for each term in functional and del,tau'
+     . /1x,'    phi-phio:',e12.5,'   delo:',e12.5,
+     . /1x,'    u-uo:    ',e12.5,'   v-vo:',e12.5,
+     . /1x,'    om-omo:  ',e12.5,',  !!!tau:',e12.5,
+     . /1x,' rms cont eqn error:   ',e12.5
+     . /1x,' rms ageostrophic wind:',2e12.5
+     . /1x,' implied rossby number:',f6.3 
+     . /1x,' momentum resids-u and v eqn:',2e12.4)
+c
+      return
+      end
+c
+c===============================================================================
+      subroutine analz(t,to,u,uo,v,vo,om,omo,slam,f3,nu,nv,fu,fv,
+     .               delo,tau ,nx,ny,nz,lat,dx,dy,ps,p,dp,l,lmax)
+c
+c     analz is a diagnostic routine that looks at geostrophic residual
+c     maxima, continuity residual maxs.  It computes the rms terms in the 
+c     variational formalism
+
+      implicit none
+c
+      integer   nx,ny,nz
+     .         ,nzm1,nxm2,nym2
+     .         ,isv,jsv,ksv
+     .         ,i,j,k,iflag
+     .         ,l,lmax,istatus
+c
+      real*4 t(nx,ny,nz),to(nx,ny,nz)
+     .      ,u(nx,ny,nz),uo(nx,ny,nz)
+     .      ,v(nx,ny,nz),vo(nx,ny,nz)
+     .      ,om(nx,ny,nz),omo(nx,ny,nz)
+     .      ,slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
+     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
+     .      ,ps(nx,ny),p(nz),dp(nz)
+     .      ,delo,rdpdg,fo,bnd
+     .      ,conmax,sumom,cont,con,sumu,sumv,sumt,thermu,thermv
+     .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc
+     .      ,ang,sin1,f,nvv,nuu,dtdx,dtdy,dudx,dvdy,domdp
+     .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
+     .      ,ures,vres
+
+      real*4 tau(nx,ny)
+      real*4 r_missing_data
+
+c_______________________________________________________________________________
+c
+c     write(9,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
+      write(6,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
+
+      nzm1=nz-1
+      nxm2=nx-2
+      nym2=ny-2
+      rdpdg=3.141592654/180.
+      fo=14.52e-5   !2*omega
+      bnd=1.e-30
+
+      do k=2,nzm1
+         write(6,4000) k,p(k+1)/100.
+c        write(9,4000) k,p(k+1)/100.
+4000     format(1x,'----------Level ',i4,'   ',f5.0,' mb---------')
+         conmax=0
+         sumom=0
+         cont=0
+         sumu=0.
+         sumv=0.
+         sumt=0.
+         thermu=0.
+         thermv=0.
+         sumww=0.
+         resu=0.
+         resv=0.
+         tgpu=0.
+         tgpv=0.
+         tgpph=0.
+         tgpc=0.
+         iflag=0
+
+         do j=2,nym2
+         do i=2,nxm2
+
+         dxx=(dx(i-1,j-1)+dx(i,j-1)+dx(i-1,j)+dx(i,j))*.25
+         dyy=(dy(i-1,j-1)+dy(i,j-1)+dy(i-1,j)+dy(i,j))*.25
+         if(ps(i,j).gt.p(k)) then
+
+            ang=(lat(i,j))*rdpdg
+            sin1=sin(ang)
+            f=fo*sin1
+            fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-1,j+1,k)+fv(i-1,j,k))/4.
+            fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-1,k)+fu(i,j-1,k))/4.
+            nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-1,j+1,k)+nv(i-1,j,k))/4.
+            nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-1,k)+nu(i,j-1,k))/4.
+            dtdx=(t(i+1,j,k)-t(i,j,k))/dx(i,j)
+            dtdy=(t(i,j+1,k)-t(i,j,k))/dy(i,j)
+            dudx=(u(i,j-1,k-1)-u(i-1,j-1,k-1))/dxx
+            dvdy=(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dyy    
+            domdp=(om(i,j,k-1)-om(i,j,k))/dp(k)
+            uot=uo(i,j,k)
+            vot=vo(i,j,k)
+            tot=to(i,j,k)
+
+            if (uot .ne. bnd) then
+               thermu=(u(i,j,k)+dtdy/f)**2+thermu
+               sumu=sumu+(u(i,j,k)-uot)**2
+               vres=(f*u(i,j,k)+dtdy+nvv-fvv)**2
+               resv=vres+resv
+               tgpu=tgpu+1.
+            endif
+            if (vot .ne. bnd) then
+               thermv=(v(i,j,k)-dtdx/f)**2+thermv
+               sumv=sumv+(v(i,j,k)-vot)**2
+               ures=(-f*v(i,j,k)+dtdx+nuu-fuu)**2
+               resu=resu+ures
+               tgpv=tgpv+1.
+            endif
+
+            sumt=sumt+(t(i,j,k)-tot)**2
+            tgpph=tgpph+1.
+
             if (ps(i,j) .gt. p(k)) then
                cont=(dudx+dvdy+domdp)**2+cont
                con=dudx+dvdy+domdp
@@ -1301,9 +1587,10 @@ c        write(9,4000) k,p(k+1)/100.
                   iflag=1
                endif
             endif
-          endif!on below ground check
+         endif!on below ground check
          enddo
          enddo
+
          if (tgpu .ne. 0) sumu=sqrt(sumu/tgpu)
          if (tgpv .ne. 0) sumv=sqrt(sumv/tgpv)
          if (tgpph .ne. 0) sumt=sqrt(sumt/tgpph)
@@ -1342,6 +1629,7 @@ c    .      u(isv,jsv-1,ksv-1),u(isv-1,jsv-1,ksv-1),v(isv-1,jsv,ksv-1),
 c    .      v(isv-1,jsv-1,ksv-1),om(isv,jsv,ksv),om(isv,jsv,ksv-1)
 
       enddo
+
 1009  format(1x,'relax ',3i4/1x,'con f3 l ',3e12.4/1x,'lijk ',6e12.4/1x,
      .       ' d x y p ',3e12.4/1x,'uuvvoo ',6e12.4)
 1001  format(1x,' rms error for each term in functional and del,tau'
@@ -2004,8 +2292,8 @@ c
 c
 c===============================================================================
 c
-      Subroutine balstagger(u,v,phi,t,rh,om,
-     &  us,vs,phis,ts,rhs,oms,
+      Subroutine balstagger(u,v,phi,t,sh,om,
+     &  us,vs,phis,ts,shs,oms,
      &nx,ny,nz,p,ps,idstag)
 c
 c  This routine takes a standard LAPS field with all variables at
@@ -2021,8 +2309,9 @@ c  destaggering will only process interior grid points on the laps mesh
      &us(nx,ny,nz),vs(nx,ny,nz),oms(nx,ny,nz),ts(nx,ny,nz),  
      &phi(nx,ny,nz),ps(nx,ny)
      &,p(nz),phis(nx,ny,nz),
-     &rhs(nx,ny,nz),rh(nx,ny,nz)
+     &shs(nx,ny,nz),sh(nx,ny,nz)
 
+      real w   ! Mixing ratio, added by B. Shaw, Sep 01
       real, allocatable, dimension(:,:,:,:) :: wr
 
 c wind on terrain face
@@ -2052,7 +2341,7 @@ c level nz will be the same as laps for all fields
           wr(i,j,k,2)=v(i,j,k+1)
           wr(i,j,k,3)=(om(i,j,k)+om(i,j,k+1))*.5
           wr(i,j,k,4)=(t(i,j,k)+t(i,j,k+1))*.5
-          wr(i,j,k,5)=(rh(i,j,k)+rh(i,j,k+1))*.5
+          wr(i,j,k,5)=(sh(i,j,k)+sh(i,j,k+1))*.5
           wr(i,j,k,6)=phi(i,j,k+1) 
          enddo
         enddo
@@ -2084,7 +2373,7 @@ c now do horizontal interpolation to staggered grid
           vs(i,j,k)=(wr(i+1,j+1,k,2)+wr(i+1,j,k,2))*.5
           ts(i,j,k)=(wr(i,j,k,4)+wr(i+1,j+1,k,4)+wr(i,j+1,k,4)
      %                 +wr(i+1,j,k,4))*.25
-          rhs(i,j,k)=(wr(i,j,k,5)+wr(i+1,j+1,k,5)+wr(i,j+1,k,5)
+          shs(i,j,k)=(wr(i,j,k,5)+wr(i+1,j+1,k,5)+wr(i,j+1,k,5)
      %                 +wr(i+1,j,k,5))*.25
           phis(i,j,k)=(wr(i,j,k,6)+wr(i+1,j+1,k,6)+wr(i,j+1,k,6)
      %                 +wr(i+1,j,k,6))*.25
@@ -2126,10 +2415,10 @@ c put background values in stagged temp arrays at top and btm.
           u(i,j,k)=(us(i,j-1,k-1)+us(i-1,j-1,k-1))*.5
           v(i,j,k)=(vs(i-1,j,k-1)+vs(i-1,j-1,k-1))*.5
           om(i,j,k)=(oms(i,j,k)+oms(i,j,k-1))*.5
-          rh(i,j,k)=(rhs(i-1,j-1,k-1)+rhs(i,j-1,k-1)+
-     &               rhs(i-1,j,k-1)+rhs(i,j,k-1)+
-     &               rhs(i-1,j-1,k)+rhs(i,j-1,k)+
-     &               rhs(i-1,j,k-1)+rhs(i,j,k))*.125
+          sh(i,j,k)=(shs(i-1,j-1,k-1)+shs(i,j-1,k-1)+
+     &               shs(i-1,j,k-1)+shs(i,j,k-1)+
+     &               shs(i-1,j-1,k)+shs(i,j-1,k)+
+     &               shs(i-1,j,k-1)+shs(i,j,k))*.125
           phi(i,j,k)=(phis(i-1,j-1,k-1)+phis(i,j-1,k-1)+
      &               phis(i-1,j,k-1)+phis(i,j,k-1))*.25
           t(i,j,k)=(ts(i-1,j-1,k-1)+ts(i,j-1,k-1)+
@@ -2137,10 +2426,19 @@ c put background values in stagged temp arrays at top and btm.
      &               ts(i-1,j-1,k)+ts(i,j-1,k)+
      &               ts(i-1,j,k)+ts(i,j,k))*.125
 c  devirtualize temperature
-          tdm=dwpt(t(i,j,k)-273.16,rh(i,j,k))
-          tvkm=tv(t(i,j,k)-273.16,tdm,p(k)/100.)
-          tvkd=tv(t(i,j,k)-273.16,tdd,p(k)/100.)
-          t(i,j,k)=t(i,j,k)-(tvkm-tvkd)
+
+c  New method simply inverts the conventional virtual
+c  temperature formula (Tv=T*(1.+0.61w), where
+c  w is the mixing ratio) to get T from Tv
+c  using the specific humidity.
+
+          w = sh(i,j,k)/(1.-sh(i,j,k))
+          t(i,j,k) = t(i,j,k)/(1.+0.61*w)
+
+c         tdm=dwpt(t(i,j,k)-273.16,sh(i,j,k))
+c         tvkm=tv(t(i,j,k)-273.16,tdm,p(k)/100.)
+c         tvkd=tv(t(i,j,k)-273.16,tdd,p(k)/100.)
+c         t(i,j,k)=t(i,j,k)-(tvkm-tvkd)
          enddo
         enddo
        enddo
@@ -2175,7 +2473,7 @@ c north and east boundaries for omega
 
          call destagger_y(1,nx,ny,nz,t,j,k,bnd,p)
          call destagger_y(1,nx,ny,nz,phi,j,k,bnd,p)
-         call destagger_y(1,nx,ny,nz,rh,j,k,bnd,p)
+         call destagger_y(1,nx,ny,nz,sh,j,k,bnd,p)
 
         enddo
 
@@ -2206,7 +2504,7 @@ c north and east boundaries for omega
 
          call destagger_x(1,nx,ny,nz,t,i,k,bnd,p)
          call destagger_x(1,nx,ny,nz,phi,i,k,bnd,p)
-         call destagger_x(1,nx,ny,nz,rh,i,k,bnd,p)
+         call destagger_x(1,nx,ny,nz,sh,i,k,bnd,p)
 
         enddo
 
@@ -2226,7 +2524,7 @@ c north and east boundaries for omega
 
         call destagger_c(nx,ny,nz,t,k,bnd,p)
         call destagger_c(nx,ny,nz,phi,k,bnd,p)
-        call destagger_c(nx,ny,nz,rh,k,bnd,p)
+        call destagger_c(nx,ny,nz,sh,k,bnd,p)
 
        enddo 
       endif ! destagger

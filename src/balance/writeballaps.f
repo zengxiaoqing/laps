@@ -1,5 +1,5 @@
         subroutine write_bal_laps(i4time,phi,u,v,temp,om,rh
-     .  ,imax,jmax,kmax,p,istatus)
+     .  ,sh,imax,jmax,kmax,p,istatus)
 C
        IMPLICIT       NONE
 C
@@ -20,6 +20,7 @@ C
      1              temp(imax,jmax,kmax),
      1              bal(imax,jmax,kmax*3),
      1              rh(imax,jmax,kmax),
+     1              sh(imax,jmax,kmax),
      1              p(kmax)
 C
        character*150   dir
@@ -133,7 +134,7 @@ C
               RETURN
        ENDIF
 c
-c  And finally the rh.
+c  Next, the rh.
 c
        EXT='lh3'
        dir=directory(1:lend)//'balance/'//ext(1:3)//'/'
@@ -155,6 +156,29 @@ c
               ISTATUS=0
               RETURN
        ENDIF
+c
+c  Finally, the specific humidity
+c
+       EXT='lq3'
+       dir=directory(1:lend)//'balance/'//ext(1:3)//'/'
+       DO K=1,KMAX
+              VAR(K)='SH '
+              LVL(K)=IP(K)
+              LVL_COORD(K)='MB  ' 
+              UNITS(K)='kg/kg'
+              COMMENT(K)='Cloud liquid balanced specific humidity.'
+       ENDDO
+
+       write(6,*)' Writing grids ',ext(1:3),' ',fname9
+
+       call write_laps_data(i4time,dir,ext,imax,jmax
+     +,kmax,kmax,var,lvl,lvl_coord,units,comment,sh,istatus)
+
+       IF (ISTATUS.ne.1) THEN
+              PRINT*,'Error writing balanced sh data.'
+              ISTATUS=0
+              RETURN
+       ENDIF                        
 C
        ISTATUS=1
        RETURN
