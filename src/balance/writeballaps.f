@@ -1,5 +1,5 @@
         subroutine write_bal_laps(i4time,phi,u,v,temp,om,rh
-     .  ,imax,jmax,kmax,ip,istatus)
+     .  ,imax,jmax,kmax,p,istatus)
 C
        IMPLICIT       NONE
 C
@@ -19,7 +19,8 @@ C
      1              OM(IMAX,JMAX,KMAX),
      1              temp(imax,jmax,kmax),
      1              bal(imax,jmax,kmax*3),
-     1              rh(imax,jmax,kmax)
+     1              rh(imax,jmax,kmax),
+     1              p(kmax)
 C
        character*150   dir
        character*150   directory
@@ -42,6 +43,7 @@ c
         dir=directory(1:lend)//'balance/'//ext(1:3)//'/'
 C
         DO K=1,KMAX
+                IP(K)=int(p(k)/100.)
                 VAR(K)='U3 '
                 LVL(K)=IP(K)
                 LVL_COORD(K)='MB  '

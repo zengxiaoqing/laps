@@ -37,7 +37,7 @@ c
       integer   nx,ny,nz
 c
       real*4 dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,p(nz),ps(nx,ny),ter(nx,ny)
+     .      ,p(nz),pstag(nz),ps(nx,ny),ter(nx,ny)
      .      ,lat(nx,ny),lon(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
@@ -47,39 +47,33 @@ c
      .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),rhbs(nx,ny,nz)
      .      ,phis(nx,ny,nz),ts(nx,ny,nz)
      .      ,us(nx,ny,nz),vs(nx,ny,nz),rhs(nx,ny,nz)
-     .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt
+c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
      .      ,lapsrh(nx,ny,nz),lapslwc(nx,ny,nz)
-     .      ,dir(nx,ny),spd(nx,ny)
      .      ,lapstemp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
-     .      ,laps3d(nx,ny,nz,2)
 
       real*4 om(nx,ny,nz),omb(nx,ny,nz)
      .      ,omo(nx,ny,nz),oms(nx,ny,nz)
      .      ,ombs(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
-     .      ,xx(nx,ny,nz),xxx(nx,ny,nz)
      .      ,wb(nx,ny,nz)
      .      ,re,rdpdg,po,cappa
-     .      ,delo,del(nx,ny,nz),tau,dt
+     .      ,delo,tau,dt
      .      ,gamo
      .      ,erru(nx,ny,nz),errub(nx,ny,nz)
      .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
 
-     .      ,grid_spacing_actual_m
-     .      ,aaa(nx,ny,nz),bbb(nx,ny,nz)
+      real*4 grid_spacing_actual_m
      .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
      .      ,u_true,v_true
-     .      ,pressure_interval_l
-     .      ,pressure_bottom_l
 
       real*4 g,sumdt,omsubs,sk,terscl,bnd,ff,fo,err
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl,ro
 c
-      integer   ip(nz),itmax,lmax
+      integer   itmax,lmax
      .         ,masstime,windtime,sfctime,omtime
      .         ,i,j,k,ll,istatus
      .         ,ks,kf
@@ -90,7 +84,7 @@ c
 c
       logical lrunbal
       logical lrotate/.false./
-      logical lrh_adj/.false./
+      logical larray_diag/.false./
 
       character*255 staticdir,sfcdir
       character*255 generic_data_root
@@ -119,17 +113,24 @@ c
          print*,'Balance Package not running '
          goto 999
       endif
-
-      call get_pressure_interval(pressure_interval_l,istatus)
-      call get_pressure_bottom(pressure_bottom_l,istatus)
+c
+c *** Get times of mass, wind and surface data.
+c
+      call get_systime(masstime,a9_time,istatus)
+      if(istatus .ne. 1)go to 999
+c
+c get pressures and determine pressure intervals.
+c
+      call get_pres_1d(masstime,nz,p,istatus)
       call get_vertical_grid(vertical_grid,istatus)
+
       call s_len(vertical_grid,lenvg)
       if(vertical_grid(1:lenvg).eq.'PRESSURE')THEN!Pressure in pa
-         do i=1,nz
-          p(i)=pressure_bottom_l-((i-1)*(pressure_interval_l))
-          if(i.gt.1)dp(i)=pressure_interval_l
-          ip(i)=int(p(i))
+         do i=2,nz
+          dp(i)=p(i-1)-p(i)
+          pstag(i-1)=p(i-1)-dp(i)*0.5
          enddo
+c        print*,(p(i),dp(i),i=1,nz)
       else
          print*,'vertical grid is not PRESSURE ',vertical_grid
          goto 999
@@ -146,11 +147,6 @@ c
       g=9.80665
       bnd=1.e-30 !value of winds on the terrain face 
       itmax=200  !max iterations for relaxation
-c
-c *** Get times of mass, wind and surface data.
-c
-      call get_systime(masstime,a9_time,istatus)
-      if(istatus .ne. 1)go to 999
 c
       windtime=(masstime+1800)/3600*3600
       sfctime=windtime
@@ -315,7 +311,7 @@ c *** Compute non-linear terms (nu,nv) and execute mass/wind balance.
 c *** Do for lmax iterations.
 c
       lmax=3 
-c
+c put lapsphi into phi, lapsu into u, etc
       call move_3d(lapsphi,phi,nx,ny,nz)
       call move_3d(lapsu,u,nx,ny,nz)     
       call move_3d(lapsv,v,nx,ny,nz)    
@@ -323,16 +319,46 @@ c
       call move_3d(omo,om,nx,ny,nz)
       call move_3d(lapsrh,rh,nx,ny,nz)
 c
+c
+      if(larray_diag)then
+         print*
+         print*,'Before balstagger - analysis u/v'
+         print*
+         do k=1,nz
+            print*
+            print*,'Calling array diagnosis: ',k,' ',p(k)
+            print*,'---------------------------------------'
+            call array_diagnosis(u(1,1,k),nx,ny,'u-comp    ')
+            call array_diagnosis(v(1,1,k),nx,ny,'v-comp    ')
+         enddo
+      endif
+c
 c stagger the LAPS grids to prepare for balancing
 c
 c laps analysis grids first.
       call balstagger(u,v,phi,t,rh,om,us,vs,
      &phis,ts,rhs,oms,nx,ny,nz,p,ps,1) 
+
+      if(larray_diag)then
+         print*
+         print*,'After balstagger - analysis u/v'
+         print*
+         do k=1,nz
+            print*
+            print*,'Calling array diagnosis: ',k,' ',p(k)
+            print*,'---------------------------------------'
+            call array_diagnosis(us(1,1,k),nx,ny,'u-comp    ')
+            call array_diagnosis(vs(1,1,k),nx,ny,'v-comp    ')
+         enddo
+      endif
+
+
 c
 c background grids second.
       call balstagger(ub,vb,phib,tb,rhb,omb,ubs,vbs,
      &phibs,tbs,rhbs,ombs,nx,ny,nz,p,ps,1) 
    
+c put phis into phi, us into u ... ie., put staggered arrays into non-staggered.
       call move_3d(phis,phi,nx,ny,nz)
       call move_3d(us,u,nx,ny,nz)
       call move_3d(vs,v,nx,ny,nz)
@@ -371,6 +397,19 @@ c returns staggered grids of full fields u,v,phi
      .         ro,delo,tau,itmax,err,erru,errphi,errub,errphib
      .           ,nu,nv,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 
+      if(larray_diag)then
+         print*
+         print*,'After balcon'
+         print*
+         do k=1,nz
+            print*
+            print*,'Calling array diagnosis: ',k,p(k)
+            print*,'-------------------------------'
+            call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
+            call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
+         enddo
+      endif
+
 c
       call momres(u,v,phi,nu,nv,fu,fv,wb,delo,nx,ny,nz,lat,dx,dy,ps,p)
 c
@@ -399,7 +438,6 @@ c   u,v,om,t,rh,phi.
          print*,'rotate u/v back to true north'
          print*,'Put geopotential hgt back to m'
          do k = 1, nz
-            ip(k)=ip(k)/100
             do j = 1, ny
             do i = 1, nx
                call uvgrid_to_uvtrue(
@@ -418,7 +456,6 @@ c   u,v,om,t,rh,phi.
 
          print*,'Put geopotential hgt back to m'
          do k = 1, nz
-            ip(k)=ip(k)/100
             do j = 1, ny
             do i = 1, nx
                phi(i,j,k)=phi(i,j,k)/g
@@ -435,23 +472,20 @@ c  That would cause erroneous evaporation of production of cloud
 c  liquid (and associated heating/cooling) in the very first time 
 c  step.  No good.
 
-      if(lrh_adj)then
 
-         do k = 1, nz
-         do j = 1, ny
-         do i = 1, nx
-           if(lapslwc(i,j,k).gt.0. .AND.
+      do k = 1, nz
+      do j = 1, ny
+      do i = 1, nx
+        if(lapslwc(i,j,k).gt.0. .AND.
      .        lapslwc(i,j,k).lt.100.)
      .                rh(i,j,k)=100.
-         enddo
-         enddo
-         enddo
-
-      endif
+      enddo
+      enddo
+      enddo
 
 c
       call write_bal_laps(masstime,phi,u,v,t,om,rh,nx,ny,nz
-     .                   ,ip,istatus)
+     .                   ,p,istatus)
       if(istatus.ne.1)then
          write(6,*)'error writing balance fields'
          return
@@ -480,12 +514,13 @@ c
      .      ,phi(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
-     .      ,wa(nx,ny,nz),wb(nx,ny,nz)
-     .      ,wc(nx,ny,nz)
+     .      ,wa(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz)
      .      ,delo,g,rdpdg,fo,bnd,cnt,sum,ang,sin1,f
      .      ,nvv,nuu,errms,fuu,fvv
+
+      real, allocatable, dimension(:,:,:) :: wb,wc
 c_______________________________________________________________________________
 c
       print *,'momres'
@@ -498,6 +533,9 @@ c
       nzm1=nz-1
       cnt=0.
       sum=0.
+
+      allocate (wb(nx,ny,nz),wc(nx,ny,nz))
+
       call zero3d(wa,nx,ny,nz)
       call zero3d(wb,nx,ny,nz)
       call zero3d(wc,nx,ny,nz)
@@ -538,14 +576,47 @@ c                                 on the non-vert staggered std grid
       enddo
       enddo
       enddo
-      write(2) wa,delo
+
+      deallocate (wb,wc)
+
+c commented JS 01-16-01
+c     write(2) wa,delo
       errms=sqrt(sum/cnt)
       write(6,1000) errms,delo
 1000  format(1x,'BEFORE/AFTER BALCON.....MOMENTUM RESIDUAL FOR DOMAIN '
      &     ,e12.4,' delo= ',e12.4)
       return
       end
-c
+      subroutine diagnose(a,nx,ny,nz,ii,jj,kk,ispan,title)
+      implicit none
+      real a(nx,ny,nz)
+      integer nx,ny,nz
+      integer ii,jj,kk
+      integer ispan,ieast,iwest,jnorth,jsouth
+      integer i,j,k
+      character*(*) title
+      print*,title,' at level ',kk
+      write(9,1002) title,' at level ',kk
+ 1002 format(1x,a25,a10,i3)
+      jnorth=jj+ispan/2+1
+      if(jnorth.gt.ny) jnorth=ny
+      jsouth=jj-ispan/2+1
+      if(jsouth.lt.1) jsouth=1
+      ieast=ii-ispan/2+1
+      if(ieast.lt.1) ieast=1
+      iwest=ii+ispan/2+1
+      if(iwest.gt.nx)iwest=nx 
+      do j=jnorth,jsouth,-1
+       write(9,1001)  j,ieast,iwest
+ 1001  format(1x,3i8)
+       print*,j,ieast,iwest
+       write(6,1000) (a(i,j,kk),i=ieast,iwest)
+       write(9,1000) (a(i,j,kk),i=ieast,iwest)
+ 1000  format(1x,7e11.5)
+      enddo
+      return
+      end
+c     
 c===============================================================================
 c
 c
@@ -599,31 +670,41 @@ c
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,ps(nx,ny),p(nz)
-     .      ,lat(nx,ny)
-     .      ,bndx(nx,ny,nz),bndy(nx,ny,nz),ff(nx,ny)
-     .      ,aaa(nx,ny,nz),bbb(nx,ny,nz),ccc(nx,ny)
+     .      ,lat(nx,ny),ff(nx,ny)
      .      ,erru(nx,ny,nz),errph(nx,ny,nz)
      .      ,errub(nx,ny,nz),errphb(nx,ny,nz)
 
       real*4 tau,err,rdpdg,bnd,g,fo,r,re,ovr
-     .      ,dy2,dys,ang,f,cotmax,sin1,fs,cos1,beta
-     .      ,a,bb,dx2,dxs,cortmt,ro
+     .      ,ang,f,cotmax,sin1,fs,cos1,beta
+     .      ,a,bb,cortmt,ro
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
      .      ,dldp,dldx,dldy,tsum,r_missing_data
-     .      ,usum,vsum,dxx,dyy,delo,fuu,fvv
+     .      ,usum,vsum,delo,fuu,fvv
      .      ,angu,angv,dyu,dxv
 
       real*4 term1,term2,term3,term4,term5,term6
      .      ,term7,term8,term9,term10,term11
      .      ,euoay,euoax,snv,snu,dfvdy,dfudx
-     .      ,eueub,fob,fy,fx,ffx,ffy,foax,foay
+     .      ,eueub,fob,foax,foay
      .      ,fu2,fv2,fuangu,fvangv
 
-      real*4 ttmp(nx,ny,nz)
-      real*4 utmp(nx,ny,nz)
-      real*4 vtmp(nx,ny,nz)
+c these are used for diagnostics
+      integer nf
+      parameter (nf=10)
+      real*4  data(nf)
+      real*4  fldmax(nf,nz),fldmin(nf,nz)
+      integer fldmxi(nf,nz),fldmxj(nf,nz)
+      integer fldmni(nf,nz),fldmnj(nf,nz)
+
+      logical larray_diag/.false./
+
+      real, allocatable, dimension(:,:,:) :: aaa,bbb
+      real, allocatable, dimension(:,:) :: dxx,dx2,dxs
+      real, allocatable, dimension(:,:) :: dyy,dy2,dys
+      real, allocatable, dimension(:,:) :: fx,ffx
+      real, allocatable, dimension(:,:) :: fy,ffy
 
 c_______________________________________________________________________________
 c
@@ -641,51 +722,98 @@ c
       re=6371220.
       ovr=1.        !over-relaxation factor
       ittr=0
-c create perturbations
-c owing to an artifact of coding the t array is phi
-      do l=1,lmax
-      write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
-c     write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+
+      allocate (aaa(nx,ny,nz),bbb(nx,ny,nz))
+c
+c only need these calculations once
+c
+      do k=1,nz
        do j=1,ny
         js=1
         if(j.eq.ny) js=0
         do i=1,nx
+         is=1
          if(i.eq.nx) is=0
          ang=(lat(i+is,j+js)+lat(i,j+js)+lat(i,j)+lat(i+is,j))*rdpdg*.25
          ff(i,j)=fo*sin(ang)
-         do k=1,nz
-         to(i,j,k)=to(i,j,k)-tb(i,j,k)!background an obs are in GPM
-         t(i,j,k)=0. !put bacground grid in solution grid to establish
-c                                boundary values(zero perturbation)
-         if(ub(i,j,k).ne.bnd) uo(i,j,k)=uo(i,j,k)-ub(i,j,k)
-         if(vb(i,j,k).ne.bnd) vo(i,j,k)=vo(i,j,k)-vb(i,j,k)
-         u(i,j,k)=uo(i,j,k)
-         v(i,j,k)=vo(i,j,k)
 c wind error must be defined at the geopotential stagger points
          aaa(i,j,k)=erru(i,j,k)+errub(i,j,k)+ff(i,j)**2*delo
          bbb(i,j,k)=(erru(i,j,k)+errub(i,j,k))/aaa(i,j,k)
         enddo
        enddo
-      enddo 
+      enddo
+
+      allocate (dxx(nx,ny),dx2(nx,ny),dxs(nx,ny),
+     1          dyy(nx,ny),dy2(nx,ny),dys(nx,ny),
+     1 fx(nx,ny),fy(nx,ny),ffx(nx,ny),ffy(nx,ny))
+
+      do j=2,nym1
+      do i=2,nxm1
+         dxx(i,j)=(dx(i,j)+dx(i,j+1)+dx(i+1,j)+dx(i+1,j+1))
+     &*.25
+         dx2(i,j)=dxx(i,j)*2.
+         dxs(i,j)=dxx(i,j)*dxx(i,j)
+         dyy(i,j)=(dy(i,j)+dy(i,j+1)+dy(i+1,j)+dy(i+1,j+1))
+     &*.25
+         dy2(i,j)=dyy(i,j)*2.
+         dys(i,j)=dyy(i,j)*dyy(i,j)
+         fx(i,j)=(ff(i+1,j)-ff(i-1,j))/dx2(i,j)
+         fy(i,j)=(ff(i,j+1)-ff(i,j-1))/dy2(i,j)
+         ffx(i,j)=ff(i,j)*fx(i,j)
+         ffy(i,j)=ff(i,j)*fy(i,j)
+      enddo
+      enddo
+
+        call diagnose(to,nx,ny,nz,26,3,7,7,'INPUT    GEOPOTENTIALS')
+        call diagnose(uo,nx,ny,nz,26,3,7,7,'INPUT    U-COMPONENT  ')
+        call diagnose(vo,nx,ny,nz,26,3,7,7,'INPUT    V-COMPONENT  ')
+c create perturbations
+c owing to an artifact of coding the t array is phi
+      do l=1,lmax
+       write(6,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+       print*,'-----------------------------------------------------'
+c      write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
+       do j=1,ny
+        do i=1,nx
+         do k=1,nz
+          to(i,j,k)=to(i,j,k)-tb(i,j,k)!background an obs are in GPM
+          t(i,j,k)=0. !put background grid in solution grid to establish
+c                      boundary values(zero perturbation)
+          if(ub(i,j,k).ne.bnd)then
+             uo(i,j,k)=uo(i,j,k)-ub(i,j,k)
+             u(i,j,k)=0.0
+          endif
+          if(vb(i,j,k).ne.bnd)then
+             vo(i,j,k)=vo(i,j,k)-vb(i,j,k)
+             v(i,j,k)=0.0
+          endif
+         enddo
+        enddo
+       enddo 
+
 c *** Compute new phi (t array) using relaxation on eqn. (2).
 c        beta*dldx term is dropped to eliminate coupling with lambda eqn.
 c
-      do 1 it=1,itmax
+       do 1 it=1,itmax
+
          cotmax=0.
          do 2 j=2,nym1
           do 2 i=2,nxm1
             
-           dxx=(dx(i,j)+dx(i,j+1)+dx(i+1,j)+dx(i+1,j+1))*.25
-           dx2=dxx*2.
-           dxs=dxx*dxx
-           dyy=(dy(i,j)+dy(i,j+1)+dy(i+1,j)+dy(i+1,j+1))*.25
-           dy2=dyy*2.
-           dys=dyy*dyy        
-           fx=(ff(i+1,j)-ff(i-1,j))/dx2
-           fy=(ff(i,j+1)-ff(i,j-1))/dy2
-           ffx=ff(i,j)*fx
-           ffy=ff(i,j)*fy
+c commented by JS 01-16-01 (calcs only needed once)
+c          dxx(i,j)=(dx(i,j)+dx(i,j+1)+dx(i+1,j)+dx(i+1,j+1))*.25
+c          dx2(i,j)=dxx(i,j)*2.
+c          dxs(i,j)=dxx(i,j)*dxx(i,j)
+c          dyy(i,j)=(dy(i,j)+dy(i,j+1)+dy(i+1,j)+dy(i+1,j+1))*.25
+c          dy2(i,j)=dyy(i,j)*2.
+c          dys(i,j)=dyy(i,j)*dyy(i,j) 
+c          fx(i,j)=(ff(i+1,j)-ff(i-1,j))/dx2
+c          fy(i,j)=(ff(i,j+1)-ff(i,j-1))/dy2
+c          ffx(i,j)=ff(i,j)*fx(i,j)
+c          ffy(i,j)=ff(i,j)*fy(i,j)
+
            do 2 k=ks,kf
+
                if(k.ne.kf)then
                if(ps(i,j).lt.p(k+1)) then 
                 term1=0.
@@ -697,39 +825,41 @@ c
                endif
                eueub=erru(i,j,k)+errub(i,j,k)
                fob=ff(i,j)/bbb(i,j,k) 
-               foax=(ff(i+1,j)/aaa(i+1,j,k)-ff(i-1,j)/aaa(i-1,j,k))/dx2
-               foay=(ff(i,j+1)/aaa(i,j+1,k)-ff(i,j-1)/aaa(i,j-1,k))/dx2
+               foax=(ff(i+1,j)/aaa(i+1,j,k)-ff(i-1,j)/aaa(i-1,j,k))
+     &              /dx2(i,j)
+               foay=(ff(i,j+1)/aaa(i,j+1,k)-ff(i,j-1)/aaa(i,j-1,k))
+     &              /dy2(i,j)
                euoax=(erru(i+1,j,k)/aaa(i+1,j,k)-erru(i-1,j,k)/
-     &                       aaa(i-1,j,k))/dx2
+     &                       aaa(i-1,j,k))/dx2(i,j)
                euoay=(erru(i,j+1,k)/aaa(i,j+1,k)-erru(i,j-1,k)/
-     &                       aaa(i,j-1,k))/dy2
-               term1=delo*(-fob*foax-ffx/eueub)
-               term2=delo*(-fob*foay-ffy/eueub)
+     &                       aaa(i,j-1,k))/dy2(i,j)
+               term1=delo*(-fob*foax-ffx(i,j)/eueub)
+               term2=delo*(-fob*foay-ffy(i,j)/eueub)
                term3=-(errph(i,j,k)+errphb(i,j,k))/(bbb(i,j,k)*delo)
                term4=-errph(i,j,k)/(bbb(i,j,k)*delo)
-               term5=-fob*euoay-fy*erru(i,j,k)/eueub
-               term6= fob*euoax+fx*erru(i,j,k)/eueub
+               term5=-fob*euoay-fy(i,j)*erru(i,j,k)/eueub
+               term6= fob*euoax+fx(i,j)*erru(i,j,k)/eueub
                term7=ff(i,j)*erru(i,j,k)/eueub
-               term8=delo*(fob*foax+ffx/eueub)
-               term9=delo*(fob*foay+ffy/eueub)
-               term10=-term8
-               term11=-term9
-               dudy=(uo(i,j,k)-uo(i,j-1,k))/dyy
-               dvdx=(vo(i,j,k)-vo(i-1,j,k))/dxx
+               term8=-term1                       !delo*(fob*foax+ffx/eueub)
+               term9=-term2                       !delo*(fob*foay+ffy/eueub)
+               term10=term1
+               term11=term2
+               dudy=(uo(i,j,k)-uo(i,j-1,k))/dyy(i,j)
+               dvdx=(vo(i,j,k)-vo(i-1,j,k))/dxx(i,j)
                dfudx=(fu(i+1,j,k)-fu(i-1,j,k)
-     .               +fu(i+1,j-1,k)-fu(i-1,j-1,k))*.5/dx2
+     .               +fu(i+1,j-1,k)-fu(i-1,j-1,k))*.5/dx2(i,j)
                dfvdy=(fv(i,j+1,k)-fv(i,j-1,k)
-     .               +fv(i-1,j+1,k)-fv(i-1,j-1,k))*.5/dy2
+     .               +fv(i-1,j+1,k)-fv(i-1,j-1,k))*.5/dy2(i,j)
                dnudx=(nu(i+1,j,k)-nu(i-1,j,k)
-     .               +nu(i+1,j-1,k)-nu(i-1,j-1,k))*.5/dx2
+     .               +nu(i+1,j-1,k)-nu(i-1,j-1,k))*.5/dx2(i,j)
                dnvdy=(nv(i,j+1,k)-nv(i,j-1,k)
-     .               +nv(i-1,j+1,k)-nv(i-1,j-1,k))*.5/dy2
+     .               +nv(i-1,j+1,k)-nv(i-1,j-1,k))*.5/dy2(i,j)
                snv=(nv(i-1,j,k)+nv(i,j,k))*.5
                snu=(nu(i,j-1,k)+nu(i,j,k))*.5
                fuu=(fu(i-1,j,k)+fu(i,j,k))*.5
                fvv=(fv(i-1,j,k)+fv(i,j,k))*.5
-               dtdy=(t(i,j+1,k)-t(i,j-1,k))/dy2
-               dtdx=(t(i+1,j,k)-t(i-1,j,k))/dx2
+               dtdy=(t(i,j+1,k)-t(i,j-1,k))/dy2(i,j)
+               dtdx=(t(i+1,j,k)-t(i-1,j,k))/dx2(i,j)
                tot=to(i,j,k)
                uot=(uo(i-1,j,k)+uo(i-1,j-1,k))*.5
                vot=(vo(i,j-1,k)+vo(i-1,j-1,k))*.5
@@ -737,15 +867,16 @@ c
      &            +ro*(term8*snu+term9*snv)+term10*fuu+term11*fvv
      &                -ro*(dnudx+dnvdy)+dfudx+dfvdy
 25              tt=t(i,j,k)
-               dt2dx2=(t(i+1,j,k)+t(i-1,j,k)-2.*tt)/dxs
-               dt2dy2=(t(i,j+1,k)+t(i,j-1,k)-tt*2.)/dys
+               dt2dx2=(t(i+1,j,k)+t(i-1,j,k)-2.*tt)/dxs(i,j)
+               dt2dy2=(t(i,j+1,k)+t(i,j-1,k)-tt*2.)/dys(i,j)
                slap=dt2dx2+dt2dy2+dtdx*term1+dtdy*term2+term3*tt
                rest=slap-force
-               cortmt=-2./dxs-2./dys+term3
+               cortmt=-2./dxs(i,j)-2./dys(i,j)+term3
                cot=rest/cortmt
                t(i,j,k)=tt-cot*ovr
                cotmax=amax1(cotmax,abs(cot))
                if (it .eq. 1) cotma1=cotmax
+
 2          continue
 c        write(6,1000) it,itt,cotmax,ovr,cotma1
          ittr=ittr+1
@@ -765,76 +896,138 @@ c
      &          ,a4,' = ',e12.3
      .         ,'ovr =  ',e12.4/1x
      .         ,'first iteration max correction was ',e12.4)
-1     continue
-12    write(6,1000) it,itt,cotmax,ovr,cotma1
+
+1      continue  !this is the itmax loop
+
+12     write(6,1000) it,itt,cotmax,ovr,cotma1
+
 c     write(9,1000) it,itt,cotmax,ovr,cotma1
 c     erf=0.
 c
 c *** Compute new u, v, omega using eqns. (4), (5), (6) with new phi and
 c        without the lagrange multiplier terms.
 c
-      do k=1,nz
-      do j=1,ny-1
+       call initmxmn(nf,nz
+     &,fldmax,fldmin,fldmxi,fldmxj,fldmni,fldmnj)
+
+       do k=1,nz
+        do j=1,ny-1
+         js = 1
          if (j .eq.1) js=0
-      do i=1,nx-1
-         if (i.eq.1) is=0
-         angu=(lat(i+1,j)+lat(i,j))*.5*rdpdg
-         angv=(lat(i,j+1)+lat(i,j))*.5*rdpdg
-         dyu=(dy(i+1,j)+dy(i,j))*.5
-         dxv=(dx(i+1,j)+dx(i,j))*.5
-         fuangu=fo*sin(angu)
-         fvangv=fo*sin(angv)
-         dtdx=(t(i+1,j,k)-t(i,j,k))/dxv
-         dtdy=(t(i,j+1,k)-t(i,j,k))/dyu
-         uot=uo(i,j,k)
-         vot=vo(i,j,k)
-         fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-is,j+1,k)+fv(i-is,j,k))*.25
-         fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-js,k)+fu(i,j-js,k))*.25
-         nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-is,j+1,k)+nv(i-is,j,k))*.25
-         nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))*.25
-         if (uot .ne. bnd) then
+         do i=1,nx-1
+          is = 1
+          if (i.eq.1) is=0
+          angu=(lat(i+1,j)+lat(i,j))*.5*rdpdg
+          angv=(lat(i,j+1)+lat(i,j))*.5*rdpdg
+          dyu=(dy(i+1,j)+dy(i,j))*.5
+          dxv=(dx(i+1,j)+dx(i,j))*.5
+          fuangu=fo*sin(angu)
+          fvangv=fo*sin(angv)
+          dtdx=(t(i+1,j,k)-t(i,j,k))/dxv
+          dtdy=(t(i,j+1,k)-t(i,j,k))/dyu
+          uot=uo(i,j,k)
+          vot=vo(i,j,k)
+          fvv=(fv(i,j,k)+fv(i,j+1,k)+fv(i-is,j+1,k)+fv(i-is,j,k))*.25
+          fuu=(fu(i,j,k)+fu(i+1,j,k)+fu(i+1,j-js,k)+fu(i,j-js,k))*.25
+          nvv=(nv(i,j,k)+nv(i,j+1,k)+nv(i-is,j+1,k)+nv(i-is,j,k))*.25
+          nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))*.25
+          if (uot .ne. bnd) then
            fu2=(fuangu*fuangu)
            u(i,j,k)=(uot*erru(i,j,k)-fuangu*delo*(ro*nvv-fvv+dtdy))
      &                        /aaa(i,j,k)      
+
+           data(1)=nvv
+           data(2)=fvv
+           data(3)=dtdy
+           data(4)=erru(i,j,k)
+
+           call savemxmninfo(1,4,nf,nz,data,i,j,k
+     &,fldmax,fldmin,fldmxi,fldmxj,fldmni,fldmnj)
+
           else 
            u(i,j,k)=bnd
-         endif
-         if ( vot .ne. bnd) then
+          endif
+          if ( vot .ne. bnd) then
            fv2=(fvangv*fvangv)
            v(i,j,k)=(vot*erru(i,j,k)+fvangv*delo*(ro*nuu-fuu+dtdx))
      &                              /aaa(i,j,k)       
+
+           data(5)=nuu
+           data(6)=fuu
+           data(7)=dtdx
+           data(8)=erru(i,j,k)
+           call savemxmninfo(5,8,nf,nz,data,i,j,k
+     &,fldmax,fldmin,fldmxi,fldmxj,fldmni,fldmnj)
+
           else
            v(i,j,k)=bnd
-         endif
-      enddo
-      enddo
-      enddo
+          endif
+         enddo
+        enddo
+        if(larray_diag)then
+           print*
+           print*,'Calling array diagnosis: ',k,p(k)
+           print*,'-------------------------------'
+           call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
+           call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
+c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
+c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
+           call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
+        endif
+
+       enddo
+
+       call printmxmn(8,nf,nz,p,fldmax,fldmin
+     &,fldmxi,fldmxj,fldmni,fldmnj)
 c 
 c Restore full winds and heights by adding back in background
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-       if(ub(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)+ub(i,j,k)
-       if(ub(i,j,k).ne.bnd) uo(i,j,k)=uo(i,j,k)+ub(i,j,k)
-       if(vb(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)+vb(i,j,k)
-       if(vb(i,j,k).ne.bnd) vo(i,j,k)=vo(i,j,k)+vb(i,j,k)
-       t(i,j,k)=t(i,j,k)+tb(i,j,k)
-       to(i,j,k)=to(i,j,k)+tb(i,j,k)
-      enddo
-      enddo
-      enddo
+       do k=1,nz
+          do j=1,ny
+          do i=1,nx
+           if(ub(i,j,k).ne.bnd) u(i,j,k)=u(i,j,k)+ub(i,j,k)
+           if(ub(i,j,k).ne.bnd) uo(i,j,k)=uo(i,j,k)+ub(i,j,k)
+           if(vb(i,j,k).ne.bnd) v(i,j,k)=v(i,j,k)+vb(i,j,k)
+           if(vb(i,j,k).ne.bnd) vo(i,j,k)=vo(i,j,k)+vb(i,j,k)
+           t(i,j,k)=t(i,j,k)+tb(i,j,k)
+           to(i,j,k)=to(i,j,k)+tb(i,j,k)
+         enddo
+         enddo
+       enddo
 
-      erf=100.
+        call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED GEOPOTENTIALS')
+        call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-COMPONENT  ')
+        call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-COMPONENT  ')
+       if(.true.)then
+        do k=1,nz
+          print*
+          print*,'Calling array diagnosis: ',k,p(k)
+          print*,'-------------------------------'
+          call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
+          call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
+c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
+c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
+          call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
+        enddo
+       endif
 
-      call leib_sub(nx,ny,nz,erf,tau,delo
+
+       erf=100.
+
+       call leib_sub(nx,ny,nz,erf,tau,delo
      .,lat,dx,dy,ps,p,dp,t,to,uo,u,vo,v,om,omo,nu,nv,fu,fv)
 
 c move adjusted fields to observation-driven fields for next iteration
-      call move_3d(t,to,nx,ny,nz)
-      call move_3d(u,uo,nx,ny,nz)
-      call move_3d(v,vo,nx,ny,nz)
-      call move_3d(om,omo,nx,ny,nz)
+       call move_3d(t,to,nx,ny,nz)
+       call move_3d(u,uo,nx,ny,nz)
+       call move_3d(v,vo,nx,ny,nz)
+       call move_3d(om,omo,nx,ny,nz)
+
       enddo ! on lmax
+
+      deallocate (aaa,bbb)
+      deallocate (dxx,dx2,dxs,dyy,dy2,dys
+     1,fx,fy,ffx,ffy)
+
 
       return
       end
@@ -856,13 +1049,13 @@ c
      .      ,om(nx,ny,nz),omo(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
-     .      ,h(nx+1,ny+1,nz+1)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
-     .      ,slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
 
       real*4 ang,rdpdg,sin1,dldx,dldy,dldp
      .,a,f,fo,fs,erf,tau,delo,bnd
+
+      real, allocatable, dimension(:,:,:) :: slam,f3,h
 
       fo=14.52e-5   !2*omega
       rdpdg=3.141592654/180.
@@ -875,19 +1068,22 @@ c
       nym1=ny-1
       nzm1=nz-1
 
+      allocate (slam(nx+1,ny+1,nz+1),f3(nx+1,ny+1,nz+1)
+     .      ,h(nx+1,ny+1,nz+1))
+
       call zero3d(slam,nx+1,ny+1,nz+1)
       call zero3d(h,nx+1,ny+1,nz+1)
 c
 c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
 c
       call fthree(f3,u,v,omo,delo,nu,nv,h,tau,
-     .   nx+1,ny+1,nz+1,nx,ny,nz,lat,dx,dy,dp)
+     .   nx,ny,nz,lat,dx,dy,dp)
 c
 c ****** Perform 3-d relaxation.
 c
       erf=.1
       call leibp3(slam,f3,200,erf,h
-     .              ,nx,ny,nz,dx,dy,ps,p,dp)
+     .  ,nx,ny,nz,dx,dy,ps,p,dp)
 c
 c ****** Compute new u, v, omega by adding the lagrange multiplier terms.
 c
@@ -896,11 +1092,14 @@ c
       if(k.eq.nz) ks=0
       do j=1,nym1
       do i=1,nxm1
-         ang=(lat(i,j))*rdpdg
-         sin1=sin(ang)
-         f=fo*sin1
-         fs=f*f
-         a=1.+fs*delo
+
+c        ang=(lat(i,j))*rdpdg
+c        sin1=sin(ang)
+c        f=fo*sin1
+c        fs=f*f
+c        a=1.+fs*delo
+c commemnted 01-02-01
+         a=1.0
          dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+ks)
          dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
          dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
@@ -910,12 +1109,18 @@ c
       enddo
       enddo
       enddo
-
+      call diagnose(slam,nx+1,ny+1,nz+1,27,5,8,8,'LAMDA ')
+      call diagnose(u,nx,ny,nz,26,3,7,7,'CONTIN U-COMPONENT  ')
+      call diagnose(v,nx,ny,nz,26,3,7,7,'CONTIN V-COMPONENT  ')
+      call diagnose(om,nx,ny,nz,27,4,7,7,'CONTIN OMEGA    ')
+      call diagnose(om,nx,ny,nz,27,4,8,7,'CONTIN OMEGA    ')
       call analz(t,to,u,uo,v,vo,om,omo
      .                ,slam,f3,nu,nv,fu,fv,delo,tau
      .                ,nx,ny,nz
      .                ,lat,dx,dy,ps,p,dp)
 
+
+      deallocate (slam,f3,h)
 
       return
       end
@@ -1126,11 +1331,14 @@ c
       do k=2,nz
          do j=1,ny
             if(ps(1,j) .le. p(k)) then
-               u(1,j,k-1)=bnd
+c              u(1,j-1,k-1)=bnd   !commented out JS 01-17-01
+               u(1,j,k-1)=bnd     !added this
                om(1,j,k)=bnd
                om(1,j,k-1)=bnd
             endif
             if(ps(nx,j) .le. p(k)) then
+c              u(nx,j-1,k-1)=bnd
+c              u(nxm1,j-1,k-1)=bnd !commented JS 01-17-01
                u(nx,j,k-1)=bnd
                u(nxm1,j,k-1)=bnd
                om(nx,j,k)=bnd
@@ -1140,11 +1348,14 @@ c
 
          do i=1,nx
             if(ps(i,1) .le. p(k)) then
+c              v(i-1,1,k-1)=bnd
                v(i,1,k-1)=bnd
                om(i,1,k)=bnd
                om(i,1,k-1)=bnd
             endif
             if(ps(i,ny) .le. p(k)) then
+c              v(i-1,ny,k-1)=bnd    !commented JS 01-17-01
+c              v(i-1,nym1,k-1)=bnd
                v(i,ny,k-1)=bnd
                v(i,nym1,k-1)=bnd
                om(i,ny,k)=bnd
@@ -1169,21 +1380,29 @@ c
       integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,i,j,k
+     .         ,imx,jmx,imn,jmn
 c
       real*4 fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,ub(nx,ny,nz),vb(nx,ny,nz) 
      .      ,u(nx,ny,nz),v(nx,ny,nz),t(nx,ny,nz),bnd  
      .      ,dx(nx,ny),dy(nx,ny),dp(nz),ps(nx,ny),p(nz)
+     .      ,ddp(nz),ddp2(nz)
      .      ,dt,dudx,dvdy,dudy,dvdx
      .      ,dudp,dvdp,dudt,dvdt
+     .      ,rmx2d,rmn2d
 
-      real*4 gdtvdp,gdtudp,daudp,davdp
+      real*4 gdtvdp_save(nx,ny),gdtudp_save(nx,ny)
+      real*4 gdtvdp,gdtudp
+
+      real   daudp,davdp
      .      ,daubdp,davbdp,dubdp,dvbdp
      .      ,d2vbdx,d2vbdy,d2ubdx,d2ubdy
      .      ,d2vdx,d2vdy,d2udx,d2udy,dauvdp,dauvbdp
      .      ,d2udp,d2vdp,d2ubdp,d2vbdp,absuv,absuvb
      .      ,hzdf,eddf
      .      ,grav,r,den,cd
+
+      real, allocatable, dimension(:,:) :: dx2,dy2
 c_______________________________________________________________________________
 c
 c
@@ -1201,33 +1420,50 @@ c constnts
       nzm1=nz-1
       call zero3d(fu,nx,ny,nz)
       call zero3d(fv,nx,ny,nz)
+
+      allocate (dx2(nx,ny))
+      allocate (dy2(nx,ny))
+
+      do j=1,ny
+      do i=1,nx
+         dx2(i,j)=dx(i,j)*dx(i,j)
+         dy2(i,j)=dy(i,j)*dy(i,j)
+         gdtudp_save(i,j)=0.
+         gdtvdp_save(i,j)=0.
+      enddo
+      enddo
+
+      do k=2,nzm1
+         ddp(k)=dp(k)+dp(k+1)
+         ddp2(k)=ddp(k)*ddp(k)
+      enddo
+
       do k=2,nzm1
       do j=2,nym1
       do i=2,nxm1
          dauvdp=(sqrt(u(i,j,k-1)**2+v(i,j,k-1)**2)-
-     &           sqrt(u(i,j,k+1)**2+v(i,j,k+1)**2))/(dp(k)+dp(k+1))
+     &           sqrt(u(i,j,k+1)**2+v(i,j,k+1)**2))/ddp(k)
          dauvbdp=(sqrt(ub(i,j,k-1)**2+vb(i,j,k-1)**2)-
-     &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/(dp(k)+dp(k+1))
+     &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/ddp(k)
          absuv=sqrt(u(i,j,k)**2+v(i,j,k)**2)
          absuvb=sqrt(ub(i,j,k)**2+vb(i,j,k)**2)
          if(u(i,j,k).eq.bnd) then
           fu(i,j,k)=0.
          else
-          d2udx=(u(i+1,j,k)+u(i-1,j,k)-2.*u(i,j,k))/dx(i,j)**2
-          d2udy=(u(i,j+1,k)+u(i,j-1,k)-2.*u(i,j,k))/dy(i,j)**2
-          d2udp=4.*(u(i,j,k+1)+u(i,j,k-1)-2.*u(i,j,k))/
-     &          (dp(k)+dp(k+1))**2
-          d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx(i,j)**2
-          d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy(i,j)**2
-          d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/
-     &          (dp(k)+dp(k+1))**2
+          d2udx=(u(i+1,j,k)+u(i-1,j,k)-2.*u(i,j,k))/dx2(i,j)
+          d2udy=(u(i,j+1,k)+u(i,j-1,k)-2.*u(i,j,k))/dy2(i,j)
+          d2udp=4.*(u(i,j,k+1)+u(i,j,k-1)-2.*u(i,j,k))/ddp2(k)
+          d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx2(i,j)
+          d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy2(i,j)
+          d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/ddp2(k)
           gdtudp=0.
-          if(ps(i,j).gt.p(k).and.(ps(i,j)-p(k)).le.dp(k)) then! we're near sfc
-           den=p(k)/r/t(i,j,k+1)
-           dudp=(u(i,j,k-1)-u(i,j,k+1))/(dp(k)+dp(k+1))
-           dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/(dp(k)+dp(k+1))
+          if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k))then! we're near sfc
+           den=p(k+1)/r/t(i,j,k+1)
+           dudp=(u(i,j,k-1)-u(i,j,k+1))/ddp(k)
+           dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/ddp(k)
            gdtudp=den*cd*grav*(dudp*absuv+dauvdp*u(i,j,k)
      &        -dubdp*absuvb-dauvbdp*ub(i,j,k))
+           gdtudp_save(i,j)=gdtudp
           endif
           fu(i,j,k)=hzdf*(d2udx+d2udy-d2ubdx-d2ubdy)
      &         +eddf*(d2udp-d2ubdp)-gdtudp
@@ -1235,31 +1471,82 @@ c constnts
          if(v(i,j,k).eq.bnd) then
           fv(i,j,k)=0.
          else
-          d2vdx=(v(i+1,j,k)+v(i-1,j,k)-2.*v(i,j,k))/dx(i,j)**2
-          d2vdy=(v(i,j+1,k)+v(i,j-1,k)-2.*v(i,j,k))/dy(i,j)**2
-          d2vdp=4.*(v(i,j,k+1)+v(i,j,k-1)-2.*v(i,j,k))/
-     &                   (dp(k)+dp(k+1))**2
-          d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx(i,j)**2
-          d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy(i,j)**2
-          d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/
-     &                   (dp(k)+dp(k+1))**2
+          d2vdx=(v(i+1,j,k)+v(i-1,j,k)-2.*v(i,j,k))/dx2(i,j)
+          d2vdy=(v(i,j+1,k)+v(i,j-1,k)-2.*v(i,j,k))/dy2(i,j)
+          d2vdp=4.*(v(i,j,k+1)+v(i,j,k-1)-2.*v(i,j,k))/ddp2(k)
+          d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx2(i,j)
+          d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy2(i,j)
+          d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/ddp2(k)
           gdtvdp=0.
-          if(ps(i,j).gt.p(k).and.(ps(i,j)-p(k)).le.dp(k)) then! we're near sfc
-           den=p(k)/r/t(i,j,k+1)
-           dvdp=(v(i,j,k-1)-v(i,j,k+1))/(dp(k)+dp(k+1))
-           davdp=(abs(v(i,j,k-1))-abs(v(i,j,k+1)))/(dp(k)+dp(k+1))
-           dvbdp=(vb(i,j,k-1)-vb(i,j,k+1))/(dp(k)+dp(k+1))
-           davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/(dp(k)+dp(k+1))
+          if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k)) then! we're near sfc
+           den=p(k+1)/r/t(i,j,k+1)
+           dvdp=(v(i,j,k-1)-v(i,j,k+1))/ddp(k)
+           davdp=(abs(v(i,j,k-1))-abs(v(i,j,k+1)))/ddp(k)
+           dvbdp=(vb(i,j,k-1)-vb(i,j,k+1))/ddp(k)
+           davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/ddp(k)
            gdtvdp=den*cd*grav*(dvdp*absuv+dauvdp*v(i,j,k)
      &             -dvbdp*absuvb-dauvbdp*vb(i,j,k))
+           gdtvdp_save(i,j)=gdtvdp
+           if(abs(gdtvdp).gt.0.5)then
+              print*,'abs(gdtvdp) > 0.5 :', gdtvdp
+              print*,'den/dvdp/absuv/dauvdp/absuvb/dvbdp/dauvbdp'
+              print*,den,dvdp,absuv,dauvdp,absuvb,dvbdp,dauvbdp
+           endif
           endif
           fv(i,j,k)=hzdf*(d2vdx+d2vdy-d2vbdx-d2vbdy)
-     &              +eddf*(d2vdp-d2vbdp)-gdtvdp           
+     &              +eddf*(d2vdp-d2vbdp)-gdtvdp
          endif
       enddo
       enddo
       enddo
 c
+      deallocate (dx2)
+      deallocate (dy2)
+
+      print*,'gdtvdp and gdtudp diagnostics'
+      print*,'-----------------------------'
+
+      call get_mxmn_2d(nx,ny,gdtudp_save,rmx2d,rmn2d
+     &,imx,jmx,imn,jmn)
+      print*,'max/min gdtudp i/j = ',rmx2d,imx,jmx,
+     &rmn2d,imn,jmn
+
+      if(rmx2d.gt. 1.0)then
+         print*,'WARNING: max gdtupd > 1.0'
+      endif
+
+      call get_mxmn_2d(nx,ny,gdtvdp_save,rmx2d,rmn2d
+     &,imx,jmx,imn,jmn)
+      print*,'max/min gdtvdp i/j = ',rmx2d,imx,jmx,
+     &rmn2d,imn,jmn
+
+      if(rmx2d .gt. 1.0)then
+         print*,'WARNING: max gdtvpd > 1.0'
+      endif
+
+c     do j=1,ny,2
+c        print*,'j ',j
+c        print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,j)
+c    &,' ',gdtvdp_save(i,j),': ',i=1,nx,2)
+c     enddo
+
+c     print*,'j = 1'
+c     print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,1)
+c    &,' ',gdtvdp_save(i,1),': ',i=1,nx,2)
+c     print*
+c     print*,'j = ',ny
+c     print*,'i/gdtudp/gdtvdp ',(i,' ',gdtudp_save(i,ny)
+c    &,' ',gdtvdp_save(i,ny),': ',i=1,nx,2)
+c     print*
+c     print*,'i = 1'
+c     print*,'j/gdtudp/gdtvdp ',(j,' ',gdtudp_save(1,j)
+c    &,' ',gdtvdp_save(1,j),': ',j=1,ny,2)
+c     print*
+c     print*,'i = ',nx
+c     print*,'j/gdtudp/gdtvdp ',(j,' ',gdtudp_save(nx,j)
+c    &,' ',gdtvdp_save(nx,j),': ',j=1,ny,2)
+
+
       return
       end
 c===============================================================================
@@ -1369,7 +1656,7 @@ c
 c===============================================================================
 c
       subroutine fthree(f3,u,v,om,delo,nu,nv,h,tau
-     .,nxp1,nyp1,nzp1,nx,ny,nz,lat,dx,dy,dp)
+     .,nx,ny,nz,lat,dx,dy,dp)
 c
 c *** Fthree computes a/tau (h) and rhs terms in eqn. (3).
 c
@@ -1378,7 +1665,7 @@ c
       integer   nx,ny,nz,nzp1,nxp1,nyp1
      .         ,i,j,k,is,js,ks
 c
-      real*4 f3(nxp1,nyp1,nzp1),h(nxp1,nyp1,nzp1)
+      real*4 f3(nx+1,ny+1,nz+1),h(nx+1,ny+1,nz+1)
      .      ,u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz),lat(nx,ny)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
@@ -1395,19 +1682,22 @@ c
          dpp=dp(k)
          do j=2,ny
          do i=2,nx
-            f=sin(lat(i,j)*rdpdg)*fo
-            aa=1.+f*f*delo 
+c           f=sin(lat(i,j)*rdpdg)*fo
+c           aa=1.+f*f*delo 
+            aa=1.0
             js=1
             if (j .eq. 2) js=0
             dyy=dy(i,j)*float(js+1)
             h(i,j,k)=aa/tau
             is=1
             if (i .eq. 2) is=0
-            dxx=dx(i,j)*float(is+1)
-            dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
-     .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
-            dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
-     .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
+
+c           dxx=dx(i,j)*float(is+1)
+c           dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
+c    .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
+c           dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
+c    .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
+
             cont=((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
      .           +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j)
      .           +(om(i,j,k-1)-om(i,j,k))/dpp)*aa
@@ -1652,11 +1942,14 @@ c  the non staggered input grids must be the original gridded laps fields
 c  to ensure that the boundaries are consistent with lga backgrounds.  The 
 c  destaggering will only process interior grid points on the laps mesh
 
-      realu(nx,ny,nz),v(nx,ny,nz),om(nx,ny,nz),t(nx,ny,nz),  
+      real u(nx,ny,nz),v(nx,ny,nz),om(nx,ny,nz),t(nx,ny,nz),  
      &us(nx,ny,nz),vs(nx,ny,nz),oms(nx,ny,nz),ts(nx,ny,nz),  
-     &phi(nx,ny,nz),wr(nx+1,ny+1,nz+1,6),ps(nx,ny)
+     &phi(nx,ny,nz),ps(nx,ny)
      &,p(nz),phis(nx,ny,nz),
      &rhs(nx,ny,nz),rh(nx,ny,nz)
+
+      real, allocatable, dimension(:,:,:,:) :: wr
+
 c wind on terrain face
       bnd=1.e-30
 c  gas const
@@ -1669,16 +1962,18 @@ c  gravity
       endif
       if(idstag.gt.0) then
 
+        allocate (wr(nx+1,ny+1,nz,6))
+
 c set vertical stagger first
 c first wind level for balcon is second level in LAPS
 c omega is shifted one-half in vertical
 c t is shifted likewise
 c phi is shifted upward one level like winds
 c level nz will be the same as laps for all fields
-        do j=1,ny
-         do i=1,nx
-          do k=1,nz-1
-          wr(i,j,k,1) = u(i,j,k+1) 
+       do j=1,ny
+        do i=1,nx
+         do k=1,nz-1
+          wr(i,j,k,1)=u(i,j,k+1) 
           wr(i,j,k,2)=v(i,j,k+1)
           wr(i,j,k,3)=(om(i,j,k)+om(i,j,k+1))*.5
           wr(i,j,k,4)=(t(i,j,k)+t(i,j,k+1))*.5
@@ -1723,6 +2018,8 @@ c omega is already on the staggered horizontal mesh
          enddo
         enddo
        enddo
+
+       deallocate (wr)
        
        return
 
@@ -1740,13 +2037,14 @@ c re compute hydrostatic virtual t from adjusted phis
        enddo
 
        tdd=-50.!lowest possible temp for esw calculation
+
 c put background values in stagged temp arrays at top and btm.
-        do j=1,ny
+       do j=1,ny
         do i=1,nx
           ts(i,j,1)=t(i,j,1)
           ts(i,j,nz)=t(i,j,nz)
         enddo
-        enddo
+       enddo
        do k=2,nz
         do j=2,ny
          do i=2,nx
@@ -1813,22 +2111,122 @@ c north and east boundaries for omega
          phi(i,1,k)=3.*phi(i,2,k)-3.*phi(i,3,k)+phi(i,4,k)
          rh(i,1,k)=3.*rh(i,2,k)-3.*rh(i,3,k)+rh(i,4,k)
         enddo
-         if(ps(1,1).ge.p(k)) then
+        if(ps(1,1).ge.p(k)) then
           u(1,1,k)=3.*u(2,2,k)-3.*u(3,3,k)+u(4,4,k)
           v(1,1,k)=3.*v(2,2,k)-3.*v(3,3,k)+v(4,4,k)
           om(1,1,k)=3.*om(2,2,k)-3.*om(3,3,k)+om(4,4,k)
-         else
+        else
           u(1,1,k)=bnd
           v(1,1,k)=bnd
           om(1,1,k)=bnd
-         endif
-         t(1,1,k)=3.*t(2,2,k)-3.*t(3,3,k)+t(4,4,k)
-         phi(1,1,k)=3.*phi(2,2,k)-3.*phi(3,3,k)+phi(4,4,k)
-         rh(1,1,k)=3.*rh(2,2,k)-3.*rh(3,3,k)+rh(4,4,k)
+        endif
+        t(1,1,k)=3.*t(2,2,k)-3.*t(3,3,k)+t(4,4,k)
+        phi(1,1,k)=3.*phi(2,2,k)-3.*phi(3,3,k)+phi(4,4,k)
+        rh(1,1,k)=3.*rh(2,2,k)-3.*rh(3,3,k)+rh(4,4,k)
        enddo 
       endif ! destagger
 
       return
       end
+c--------------------------------------------------
+      subroutine savemxmninfo(is,ie,nf,nz,data,in,jn,kn,
+     &fldmx,fldmn,fldmxi,fldmxj,fldmni,fldmnj)
 
-     
+      implicit none
+
+      integer in,jn,kn,is,ie,nf,m,nz
+      real    fldmx(nf,nz),fldmn(nf,nz)
+      real    data(nf)
+      integer fldmxi(nf,nz),fldmxj(nf,nz)
+      integer fldmni(nf,nz),fldmnj(nf,nz)
+
+      do m=is,ie
+         if(data(m).gt.fldmx(m,kn))then
+            fldmx(m,kn)=data(m)
+            fldmxi(m,kn)=in
+            fldmxj(m,kn)=jn
+         endif
+         if(data(m).lt.fldmn(m,kn))then
+            fldmn(m,kn)=data(m)
+            fldmni(m,kn)=in
+            fldmnj(m,kn)=jn
+         endif
+      enddo
+
+      return
+      end
+
+      subroutine initmxmn(nf,nz
+     &,fldmax,fldmin,fldmxi,fldmxj,fldmni,fldmnj)
+
+      implicit none
+
+      integer nx,ny,nz,k,l,nf
+
+      real fldmax(nf,nz)
+      real fldmin(nf,nz)
+      integer fldmxi(nf,nz),fldmxj(nf,nz)
+      integer fldmni(nf,nz),fldmnj(nf,nz)
+
+      integer istatus
+      real    r_missing_data
+
+      call get_r_missing_data(r_missing_data,istatus)
+      call get_grid_dim_xy(nx,ny,istatus)
+
+      do k=1,nz
+      do l=1,nf
+
+         fldmax(l,k)=-r_missing_data-1.
+         fldmin(l,k)=r_missing_data
+         fldmni(l,k)=nx+1
+         fldmnj(l,k)=ny+1
+         fldmxi(l,k)=nx+1
+         fldmxj(l,k)=ny+1
+
+      enddo
+      enddo
+      return
+      end
+
+      subroutine printmxmn(n,nf,nz,p,fldmax,fldmin
+     &,fldmxi,fldmxj,fldmni,fldmnj)
+
+      implicit none
+
+      integer nf, nz
+      integer i,k,n
+      real    fldmax(nf,nz)
+      real    fldmin(nf,nz)
+      real    p(nz)
+      integer fldmxi(nf,nz)
+      integer fldmxj(nf,nz)
+      integer fldmni(nf,nz)
+      integer fldmnj(nf,nz)
+
+
+      print*,'max/min info'
+
+      do k=1,nz
+         print*
+         print*,'  ========================'
+         print*,'  level ',k, 'p = ',p(k)
+         print*,'  ========================'
+         print*,'/   nvv   /   fvv   /',
+     &'    dtdy   /   erru   /   nuu   /',
+     &'    fuu    /   dtdx   /   erru  /'
+         print*,'-------------------------'
+     &,'-------------------------------------'
+     &,'-------------------------------------'
+         print*,'              Maxima'
+         print*,'              ======'
+         write(6,10)(fldmax(i,k),i=1,n)
+         print*,'              Minima'
+         print*,'              ======'
+         write(6,10)(fldmin(i,k),i=1,n)
+      enddo
+10    format(1x,8(e10.3,1x))
+
+      return
+      end
+
