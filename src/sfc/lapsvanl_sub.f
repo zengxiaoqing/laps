@@ -230,7 +230,7 @@ c
 c
 	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
      &                    cormax,err,imax,jmax,rms_thresh_norm,bad_mult,
-     &                    imiss,mxstn,obs_error,name)
+     &                    imiss,mxstn,obs_error,name,topo,ldf)
 c
 c*******************************************************************************
 c	LAPS spline routine...based on one by J. McGinley.
@@ -274,6 +274,7 @@ c
 
 	real t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
 	real RESS(1000), tb(imax,jmax) !, alf2(imax,jmax)
+        real topo(imax,jmax),ldf(imax,jmax)
 c
 	real fnorm(0:imax-1,0:jmax-1)
 c	real alf2o(imax,jmax)  !work array
@@ -580,6 +581,7 @@ c
      1                                ,n_fnorm                      ! Input
      1                                ,l_boundary,.true.,.false.    ! Input
      1                                ,n_valid_obs,obs_barnes       ! Input
+     1                                ,topo,ldf                     ! Input
      1                                ,t                            ! Output
      1                                ,istatus)                     ! Output
         endif
