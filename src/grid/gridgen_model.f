@@ -283,7 +283,12 @@ C
 
 C*****************************************************************
 C*  Convert it to lat/lon using the library routines.            *
-        erad=6367000.
+
+        call get_earth_radius(erad,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling get_earth_radius'
+            return
+        endif
         
         Do J = 1,nnyp
 	   Do I = 1,nnxp
@@ -296,14 +301,19 @@ C*  Convert it to lat/lon using the library routines.            *
 c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
     	   enddo
         enddo
-        print *,' lat,lon at 1,1 =',lat(1,1),lon(1,1)               
-        print *,' lat,lon at ',nnxp,',',nnyp,' ='
-     1         ,lat(nnxp,nnyp),lon(nnxp,nnyp)   
+
+        write(6,*)
+        write(6,*)'Corner points...'
+        write(6,701,err=702)1,1,      lat(1,1),      lon(1,1)
+        write(6,701,err=702)nnxp,1,   lat(nnxp,1),   lon(nnxp,1)   
+        write(6,701,err=702)1,nnyp,   lat(1,nnyp),   lon(1,nnyp)   
+        write(6,701,err=702)nnxp,nnyp,lat(nnxp,nnyp),lon(nnxp,nnyp)   
+ 701    format(' lat/lon at ',i5,',',i5,' =',2f12.5)
+ 702    continue
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
 
-
-        
+!       We will end at this step given the showgrid option
         if(mode.eq.2) then
 	   call showgrid(lat,lon,nnxp,nnyp,grid_spacing_m,
      1	             c6_maproj,std_lat,std_lat2,std_lon,mdlat,mdlon)
@@ -992,7 +1002,13 @@ C
        INTEGER*4 NX,NY
 C
        RAD=3.141592654/180.
-       ERAD=6367000.
+
+       call get_earth_radius(erad,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling get_earth_radius'
+           stop
+       endif
+
        TLAT=90.0
        call get_standard_longitude(std_lon,istatus)
        if(istatus .ne. 1)then

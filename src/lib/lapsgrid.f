@@ -857,3 +857,12 @@ c
       return
       end
 
+
+      subroutine get_earth_radius(erad,istatus)
+
+      erad = 6367000.
+
+      istatus = 1
+
+      return
+      end
