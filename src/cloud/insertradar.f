@@ -46,9 +46,28 @@ cdis
      1         ,heights_3d                                           ! I
      1         ,istatus)                                             ! O
 
-!       Insert radar data into cloud grid
+!       Insert radar data into cloud grid and reconcile cloud/radar fields.
 
-!       Feb 1992        Steve Albers
+!       For wideband radar, echoes can be added in as cloud if the echo top 
+!       is >2000m AGL and the echo is located above an existing "nominal" 
+!       cloud base. The nominal cloud base is taken (if present) from the 
+!       pre-existing cloud field, either at the horizontal grid location 
+!       in question or from a neighboring grid point that has existing cloud.
+
+!       If the echo top is below 2000m AGL, or no pre-existing cloud-base 
+!       is found, no cloud is added and the echo is blanked out.
+
+!       Narrowband radar is treated similarly, except that the echo top
+!       threshold does not apply. Instead, this subroutine will be actively
+!       adding clouds (between the pre-existing cloud layers) only for 
+!       "trusted" narrowband radars such as NOWRAD. For other narrowband 
+!       radars, the radar is blanked out if there is no pre-existing cloud 
+!       in the calling routine 'laps_cloud_sub'.
+
+!       Further reconciling of radar and satellite/cloud information is done 
+!       later on in subroutine 'insert_vis'.
+
+!       1992 - 2003        Steve Albers
 
         real*4 temp_3d(ni,nj,nk)
         real*4 heights_3d(ni,nj,nk)
