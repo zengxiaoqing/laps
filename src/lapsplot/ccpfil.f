@@ -379,16 +379,16 @@ C
 
       elseif(colortable .eq. 'moist')then
           ncols = 60
-          call color_ramp(1,11,IWKID,icol_offset
+          call color_ramp(1,12,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! Dark Hot
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(11,18,IWKID,icol_offset
+          call color_ramp(12,17,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,2.75,0.9,0.7)               ! Orange
-          call color_ramp(18,28,IWKID,icol_offset
+          call color_ramp(17,30,IWKID,icol_offset
      1                   ,2.75,0.9,0.7                ! Orange
      1                   ,2.5,0.95,0.65)              ! Yellow
-          call color_ramp(28,47,IWKID,icol_offset
+          call color_ramp(30,47,IWKID,icol_offset
      1                   ,2.5,0.95,0.65               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(47,60,IWKID,icol_offset       
