@@ -121,6 +121,7 @@ C
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
       real*4 ht_out(200),di_out(200),sp_out(200)
+      integer assetId_ref
 !............................................................................
 
       call read_ldad_prof_netcdf(nf_fid, level, maxStaticIds, 
@@ -145,71 +146,63 @@ C
           return
       endif
 
-      write(6,*)' # of prof = ',nStaticIds
+      write(6,*)' # of profilers = ',nStaticIds
       write(6,*)' # of records = ',recnum
 
-      i_pr = 0
-
       do i_sta = 1,nStaticIds
+        i_pr_ref = lastRecord(i_sta) + 1
+        assetId_ref = assetId(i_pr_ref)
 
-        i_pr_l = i_pr + 1
-        i_pr_h = lastRecord(i_sta)
-
-        if(i_pr_h .lt. i_pr_l)then
-            write(6,*)' Error in metadata ',i_pr_l,i_pr_h
-            istatus = 0
-            return
-        else
-            write(6,*)' Station / records ',i_sta,i_pr_l,i_pr_h
-        endif
+        write(6,*)' Looping for profiler ',i_sta,staticIds(i_sta)
+        write(6,*)' Station / last record ',i_sta,i_pr_ref,assetId_ref         
 
         i4_resid_closest = 999999
 
-        do irec = i_pr_l,i_pr_h
+        do irec = 1,recnum
 
-          i_pr = i_pr + 1
+          if(assetId(irec) .eq. assetId_ref)then
 
-          write(6,*)
-          write(6,*)' Looping for profiler ',staticIds(i_sta),i_pr
+              rlat = latitude(irec)
+              rlon = longitude(irec)
 
-          rlat = latitude(irec)
-          rlon = longitude(irec)
+              if(rlat .le. rnorth .and. rlat .ge. south .and.
+     1           rlon .ge. west   .and. rlon .le. east            )then        
 
-          if(rlat .le. rnorth .and. rlat .ge. south .and.
-     1       rlon .ge. west   .and. rlon .le. east            )then
+                  write(6,*)staticIds(i_sta),' is in box'
 
-              write(6,*)staticIds(i_sta),' is in box'
+                  elev = elevation(irec)
 
-              elev = elevation(irec)
+                  write(6,*)staticIds(i_sta)
 
-              write(6,*)staticIds(i_sta)
+!                 Convert u_std, v_std to rms
 
-!             Convert u_std, v_std to rms
+                  write(6,*)
 
-              write(6,*)
+                  if(abs(observationTime(irec))      .lt. 3d9)then
+                      call c_time2fname(nint(observationTime(irec))
+     1                                        ,a9_timeObs)
+                  else
+                      write(6,*)' Bad observation time - reject'       
+     1                           ,observationTime(irec)
+                      goto 900
+                  endif
 
-              if(abs(observationTime(irec))      .lt. 3d9)then
-                  call c_time2fname(nint(observationTime(irec))
-     1                                    ,a9_timeObs)
-              else
-                  write(6,*)' Bad observation time - reject'       
-     1                       ,observationTime(i_pr)
-                  goto 900
-              endif
+                  call cv_asc_i4time(a9_timeObs,i4time_ob)
+                  i4_resid = abs(i4time_ob - i4time_sys)
+                  if(i4_resid .lt. i4_resid_closest)then
+                      i4_resid_closest = i4_resid
+                      i_pr_cl = irec
+                      a9_closest = a9_timeobs
+                  endif
+                  write(6,*)'i4_resid/closest = '
+     1                      ,i4_resid,i4_resid_closest       
 
-              call cv_asc_i4time(a9_timeObs,i4time_ob)
-              i4_resid = abs(i4time_ob - i4time_sys)
-              if(i4_resid .lt. i4_resid_closest)then
-                  i4_resid_closest = i4_resid
-                  i_pr_cl = i_pr
-                  a9_closest = a9_timeobs
-              endif
-              write(6,*)'i4_resid/closest = ',i4_resid,i4_resid_closest       
+              else !
+                  write(6,*)staticIds(i_sta),' is outside of domain'
 
-          else !
-              write(6,*)staticIds(i_sta),' is outside of domain'
+              endif ! in box
 
-          endif ! in box
+          endif ! correct asset ID
 
         enddo ! irec 
 
@@ -219,6 +212,7 @@ C
         
         else
             if(ext(1:3) .eq. 'pro')lun=1
+            if(ext(1:3) .eq. 'lrs')lun=1
 C
 C           Open intermediate output file.
 C
@@ -228,11 +222,15 @@ C
                 goto980
             endif
 
+            a9time_ob = a9_closest
+
+            n_good_levels = 0
+
+            call filter_string(stationId(i_pr_cl))
+
             if(ext(1:3) .eq. 'pro')then
 
                 rms = 1.0
-
-                n_good_levels = 0
 
                 do i = 1,level
                     if(windDir(i,i_pr_cl) .ge. 0.   .and.
@@ -244,17 +242,15 @@ C
                     endif
                 enddo ! i
 
-                a9time_ob = a9_closest
-
-                write(6,401)staticIds(i_sta)(1:6)
+                write(6,401)assetId_ref
      1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,staticIds(i_sta)(1:6)
+     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
      1                     ,a9time_ob,'PROFILER'
-                write(lun,401)staticIds(i_sta)(1:6)
+                write(lun,401)assetId_ref
      1                     ,n_good_levels
-     1                     ,rlat,rlon,elev,staticIds(i_sta)(1:6)
+     1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:6)
      1                     ,a9time_ob,'PROFILER'
-401             format(a12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
+401             format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,301,err=303)ht_out(i)
@@ -266,6 +262,8 @@ C
 301                 format(1x,f6.0,f6.0,2f6.1)
 303                 continue
                 enddo ! i
+
+            elseif(ext(1:3) .eq. 'lrs')then
 
             endif ! ext
 
