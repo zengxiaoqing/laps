@@ -29,6 +29,7 @@
         integer  MAX_RADARS_CMN
         real*4 ref_base_cmn
         real*4 ref_base_useable_cmn
+        real*4 r_hybrid_first_gate_cmn
         integer  maxstns_cmn
         integer  N_PIREP_CMN
         integer vert_rad_meso_cmn
@@ -39,7 +40,9 @@
         real*4 toptwvl_parm_cmn
         integer maxstations_cmn, maxobs_cmn
         integer num_domains_cmn
-        integer i_orig_cmn, j_orig_cmn
+        integer lli_orig_cmn, llj_orig_cmn
+        integer uri_orig_cmn, urj_orig_cmn
+        integer parent_id_cmn,ratio_to_parent_cmn
 
 !       integer   num_staggers
 
@@ -86,7 +89,8 @@
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
-     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
+     1  ,ref_base_cmn,ref_base_useable_cmn,r_hybrid_first_gate_cmn
+     1  ,maxstns_cmn,N_PIREP_CMN
      1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn
@@ -107,4 +111,6 @@
      1  ,path_to_soiltemp1deg,path_to_albedo,path_to_sst
      1  ,path_to_maxsnoalb,path_to_islope
      1  ,fdda_model_source_cmn
-     1  ,num_domains_cmn,i_orig_cmn,j_orig_cmn
+     1  ,num_domains_cmn,lli_orig_cmn,llj_orig_cmn
+     1  ,uri_orig_cmn,urj_orig_cmn, parent_id_cmn
+     1  ,ratio_to_parent_cmn
