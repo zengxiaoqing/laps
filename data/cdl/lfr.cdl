@@ -1,0 +1,181 @@
+netcdf lfr {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	ventilation index
+
+	float                                  
+            vnt(record,z,y,x);
+            vnt:navigation_dim = "nav";
+            vnt:record = "valtime, reftime";
+            vnt:_FillValue = 1.e+37f;
+            vnt:long_name="ventilation index";
+            vnt:units="meters**2 / second";
+            vnt:valid_range= 0.f, 10000.f;
+            vnt:LAPS_var="HAH";
+            vnt:lvl_coord="MSL ";
+	    vnt:LAPS_units="M**2/S";
+                	        
+        //	mid-level haines index
+        float 
+            ham(record,z,y,x) ;
+            ham:navigation_dim = "nav";
+            ham:record = "valtime, reftime";
+            ham:_FillValue = 1.e+37f;
+            ham:long_name = "mid-level haines index" ;
+            ham:units = "meters/second" ;
+            ham:valid_range = 0.f, 6.0f ;
+            ham:LAPS_var = "HAM" ;
+            ham:lvl_coord = "MSL" ;
+            ham:LAPS_units = "NONE" ;
+
+        //	Fosberg fire weather index
+        float 
+            fwi(record,z,y,x) ;
+            fwi:navigation_dim = "nav";
+            fwi:record = "valtime, reftime";
+            fwi:_FillValue = 1.e+37f;
+            fwi:long_name = "fire weather index" ;
+            fwi:units = "none" ;
+            fwi:valid_range = 0.f, 100.0f ;
+            fwi:LAPS_var = "FWI" ;
+            fwi:lvl_coord = "MSL" ;
+            fwi:LAPS_units = "NONE" ;
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            vnt_comment(record,z,namelen),
+            ham_comment(record,z,namelen),
+            fwi_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            vnt_fcinv(record, z);
+            vnt_fcinv:_FillValue= 0s;
+              	
+        short
+            ham_fcinv(record, z);
+            ham_fcinv:_FillValue= 0s;
+              	
+        short
+            fwi_fcinv(record, z);
+            fwi_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lfr file - fire weather";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lfr file - fire weather";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
