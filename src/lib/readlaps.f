@@ -95,7 +95,7 @@ C
 C
       character*4       fcst_hh_mm
       character*9       gtime
-      character*128     file_name
+      character*150     file_name
 C
       common            /prt/flag
 C
@@ -121,6 +121,8 @@ C
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
      1                  file_name,fn_length,istatus)
+      if (istatus .eq. error(2)) goto 930
+
 
       i_reftime = reftime - 315619200
       i_valtime = valtime - 315619200
@@ -161,6 +163,11 @@ C
 999     return
 C
 C ****  Error trapping.
+C
+930     if (flag .ne. 1)
+     1    write (6,*) 'file_name variable too short...read aborted.'
+        istatus=error(2)
+        goto 999
 C
 950     if (flag .ne. 1)
      1    write (6,*) 'Error opening netCDF file...read aborted.'
