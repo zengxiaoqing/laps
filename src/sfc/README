@@ -8,7 +8,7 @@ Subroutine Name                                File Name
 
 main                                           laps_sfc.f
     laps_sfc_sub                                    "
-        bkgwts                                 laps_routines.f
+        bkgwts                                 lib/laps_routines.f
         get_bkgwind_sfc                             "
         get_background_sfc                          "
         qcdata                                 qc_data.f
@@ -25,24 +25,24 @@ main                                           laps_sfc.f
         laps_vanl                              lapsvanl.f
             zero                                    
             get_modelfg_3d                          
-            mean_lapse                         laps_routines.f
+            mean_lapse                         lib/laps_routines.f
             mean_pressure                           "
             spline (t,td)                      lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
             add                               
             spline (u,v,red_p,mslp)            lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
-            pstn_anal                          laps_routines.f
+            pstn_anal                          lib/laps_routines.f
             spline (vis)                       lapsvanl_sub.f
                 barnes_multivariate_sfc        barnes_multivariate_sfc.f
             barnes_multivariate_sfc_jacket          "
                 barnes_multivariate_sfc             "
-            nonlin                             laps_routines.f
+            nonlin                             lib/laps_routines.f
             frict                                   "
             leib                                    "
             stats                                   "
             vortdiv                                 
-            lp_fire_danger                     laps_routines.f
+            lp_fire_danger                     lib/laps_routines.f
             heat_index                              "
             verify                             lapsvanl_sub.f
                 splie2                         mdatlaps.f
