@@ -142,13 +142,16 @@ int *status;
     char testdirname [512];
     struct stat buf;
     int stat_status;
-    int i, i2;
+    int i, i2, numgood;
     regex_t preg;
     int cflags;
     char pattern [256];
     int regcomp_ret;
     regmatch_t pmatch[10];
     size_t nmatch;
+
+    struct dirent **namelist;
+
 #ifdef __STDC__
     int regcomp( regex_t *preg, const char *pattern, int cflags);
     int regexc ( const regex_t *preg, const char *string, size_t nmatch,
@@ -173,6 +176,43 @@ int *status;
 	nstrncpy ( (char *) match, match_string, 255);
 	match_length = strlen ( match );
 
+        *numfiles = scandir(dirname, &namelist,0,alphasort);
+        if (*numfiles < 0) {
+          printf("Warning from scandir - No files returned\n");
+	  *numfiles=0;
+	  *status = 0;
+          return;
+        } else {
+          if( *numfiles > 20000) {
+	    printf("Not all files are returned...exceeds 20000 limit.\n"); 
+            printf("Num of  files = %d\n",*numfiles);
+/*          free namelist entries from 20000 to end of namelist */
+            for (i=20000; i < *numfiles; i++) {
+              free(namelist[i]);          
+            }
+            *numfiles = 20000;
+          }
+          numgood = 0;
+          for (i = 0; i < *numfiles; i++) {
+	    if ( strcmp (namelist[i]->d_name,".") == 0 ) {}
+	    else if ( strcmp (namelist[i]->d_name,"..") == 0 ) {}
+	    else {
+	      strcpy (testdirname,dirname);
+	      strcat (testdirname,"/");
+	      strcat(testdirname,namelist[i]->d_name);
+	      stat_status = stat (testdirname,&buf);
+	      if (S_ISREG( buf.st_mode ) ) {
+	        strcpy (fileNames+(numgood*256) , namelist[i]->d_name);
+		numgood++;
+      	      } 
+	    }
+            free(namelist[i]);
+          }
+        }
+        free(namelist);
+	*numfiles = numgood;
+
+/*  Commented to ....
 	WorkingDir = opendir( (char *) dirname);
 
 	if ( WorkingDir == (DIR *)NULL )
@@ -182,10 +222,9 @@ int *status;
 	return;
 	}
 
-
-/*******************
+*******************
 	read  the directory's files, ignore subdirectories
-*******************/
+*******************
 
 
         Outputofread = readdir (WorkingDir);
@@ -217,8 +256,9 @@ int *status;
 	}
 
 	closedir (WorkingDir);
+ ... here  */
 
-	*numfiles = i;
+	
 
 /*******************
 	recast the matching string into the regular expression matching pattn
@@ -291,7 +331,7 @@ int *status;
 *******************/
 
 	i2 = 0;
-	for (i=0; i< *numfiles; i++ )
+	for (i=0; i< numgood; i++ )
 	{
 	regcomp_ret = regexec(&preg, fileNames+i*256, nmatch, pmatch, REG_EXTENDED);
 	if (regcomp_ret == 0)
