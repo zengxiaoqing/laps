@@ -95,6 +95,10 @@ c     foreach n element of wt, determine its location in ii,jj space
          call  latlon_to_rlapsgrid(lat(n),lon(n),glat,glon,ii,jj,
      1        ri,rj, istatus)
 
+         if (istatus.eq.0) then
+            write (6,*) 'gvap point out of domain ', ri,ii,rj,jj
+         endif
+
          if (istatus.eq.1 .and. wt(n) .gt. 0.0) then
             ncount = ncount + 1
             i = nint (ri)
