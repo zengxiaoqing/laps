@@ -3615,19 +3615,19 @@ Parameter namelist file: 'static/lapsprep.nl'
 
 Source directory: 'laps/src/lapsprep'
 
-   Please contact the author for additional information
-
 ------ 3.4.2 --------------WFOPREP------------------------------------------
 
 Process: wfoprep.exe - Processes AWIPS/WFO large-scale model forecast files 
                        into formats that can be used as lateral boundary
                        conditions to initialize a local forecast model 
-                       (e.g., MM5, RAMS, WRF). The input files come from
+                       (e.g., MM5, RAMS [SMF], WRF). The input files come from
                        the SBN and are in NetCDF format.
    
      (author: Brent Shaw)
 
      This an optional program that can be used in the AWIPS/WFO environment.
+     In other environments you'll want to use a different program to generate 
+     lateral boundary conditions.
 
 Parameter namelist file: 'static/wfoprep.nl'
 
