@@ -268,33 +268,43 @@ C       1998          Steve Albers
         call get_directory_length(c_fname,lend)
         lenf = len_fname - lend
 
-        if(lenf .ge. 13 .and. c_fname(lend+9:lend+9) .eq. '_')then
-           c20_type = 'yyyymmdd_hhmm'                         ! WFO type
-           leni = lend
-           lent=13
+        if(lenf .eq. 20)then
+            if(c_fname(lend+14:lend+14) .eq. '_')then
+               c20_type = 'yyyyjjjhhmmss'                         ! RSA radar type
+               leni = lend
+               lent=13
+               return
+            endif
+        endif
 
-        elseif(lenf .eq. 20 .and. c_fname(lend+14:lend+14) .eq. '_')then   
-           c20_type = 'yyyyjjjhhmmss'                         ! RSA radar type
-           leni = lend
-           lent=13
+        if(lenf .eq. 13)then
+           if(c_fname(lend+1:lend+5) .eq. 'raob.')then
+              c20_type = 'yymmddhh'                              ! AFWA raob
+              leni = lend+5
+              lent=8
+              return
+            endif
+        endif
 
-        elseif(lenf .eq. 13 .and. c_fname(lend+1:lend+5) .eq. 'raob.'
-     1                                                             )then   
-           c20_type = 'yymmddhh'                              ! AFWA raob
-           leni = lend+5
-           lent=8
+        if(lenf .ge. 13)then
+           if(c_fname(lend+9:lend+9) .eq. '_')then
+              c20_type = 'yyyymmdd_hhmm'                         ! WFO type
+              leni = lend
+              lent=13
+              return
+           endif
+        endif
 
-        elseif(lenf .ge. 9)then ! assume 9 chars for time portion of filename
+        if(lenf .ge. 9)then ! assume 9 chars for time portion of filename
            c20_type = 'yyjjjhhmm'                             ! NIMBUS/LAPS
            leni = lend
            lent=9
-
-        else
-           c20_type = 'unknown'
-           leni = lend
-           lent = lenf
-
+           return
         endif
+
+        c20_type = 'unknown'
+        leni = lend
+        lent = lenf
 
 !       write(6,*)'Time portion of string = ',c20_type
 !    1                                       ,c_fname(leni+1:leni+lent)
