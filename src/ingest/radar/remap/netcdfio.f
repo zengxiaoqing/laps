@@ -472,13 +472,43 @@ c      Determine filename extension
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
+
+       call get_r_missing_data(r_missing_data,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling get_r_missing_data'
+           stop
+       endif
  
        if(index .eq. 1)then
-           first_gate_m = firstGateRangeZ * 1000.
-           gate_spacing_m = gateSizeZ * 1000.
+           if(firstGateRangeZ .ne. r_missing_data)then
+               first_gate_m = firstGateRangeZ * 1000.
+           else
+               write(6,*)' Error: firstGateRangeZ has missing value'
+               stop
+           endif
+
+           if(gateSizeZ .ne. r_missing_data)then
+               gate_spacing_m = gateSizeZ * 1000.
+           else
+               write(6,*)' Error: gateSizeZ has missing value'
+               stop
+           endif
+
        elseif(index .eq. 2)then
-           first_gate_m = firstGateRangeV * 1000.
-           gate_spacing_m = gateSizeV * 1000.
+           if(firstGateRangeV .ne. r_missing_data)then
+               first_gate_m = firstGateRangeV * 1000.
+           else
+               write(6,*)' Error: firstGateRangeV has missing value'
+               stop
+           endif
+
+           if(gateSizeV .ne. r_missing_data)then
+               gate_spacing_m = gateSizeV * 1000.
+           else
+               write(6,*)' Error: gateSizeV has missing value'
+               stop
+           endif
+
        endif
 
        return
