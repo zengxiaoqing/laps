@@ -40,7 +40,7 @@ cdis
      1         ,temp_3d,temp_sfc_k,grid_spacing_m,ni,nj,nk,kcloud
      1         ,cloud_base,ref_base                                  ! I
      1         ,topo,r_missing_data                                  ! I
-     1         ,grid_ra_ref,dbz_max_2d
+     1         ,grid_ra_ref,dbz_max_2d                               ! I/O
      1         ,vis_radar_thresh_dbz                                 ! I
      1         ,l_unresolved                                         ! O
      1         ,heights_3d                                           ! I
@@ -71,7 +71,7 @@ cdis
         real*4     thresh_cvr
         parameter (thresh_cvr = 0.20)
 
-        logical l_below_base
+        logical l_below_base, l_inserted
         logical l_unresolved(ni,nj)
 
 !       Calculate Cloud Bases
@@ -100,9 +100,12 @@ cdis
         icount_below = 0
         isearch_base = 0
         insert_count_tot = 0
+        iwrite_inserted = 0
 
         isearch_radius = nint(120000. / grid_spacing_m)
         intvl = max((isearch_radius / 4),1)
+
+        echo_agl_thr = 2000.
 
         write(6,*)' isearch_radius/intvl = ',isearch_radius,intvl
 
@@ -147,6 +150,8 @@ c                   write(6,*)' khigh = ',kk
 500         do i = 1,ni
             do j = 1,nj
 
+                l_inserted = .false.
+
                 if(temp_3d(i,j,k) .lt. 278.)then
                     ref_thresh = 0.0
                 else
@@ -184,7 +189,8 @@ c                   write(6,*)' khigh = ',kk
                             enddo ! jj
 
                             if(cloud_base_buf(i,j) .lt. echo_top(i,j)
-     1                          .AND. echo_top_agl(i,j) .gt. 1000.)then       
+     1                                       .AND. 
+     1                         echo_top_agl(i,j) .gt. echo_agl_thr)then       
 
                               isearch_base = isearch_base + 1
                               if(isearch_base .lt. 50)then ! limit log output
@@ -198,9 +204,9 @@ c                   write(6,*)' khigh = ',kk
 
                             else ! Potentially Unresolved base
                                 if(cloud_base(i,j) 
-     1                                      .eq. unlimited_ceiling  ! No clds
+     1                                      .eq. unlimited_ceiling    ! No clds
      1                                      .OR.
-     1                             echo_top_agl(i,j) .lt. 1000.     ! Gnd Clut
+     1                             echo_top_agl(i,j) .lt. echo_agl_thr! Gnd Clut
      1                                                             )then       
 
 !                                   We will want to reconcile cloud/radar
@@ -233,11 +239,12 @@ c                   write(6,*)' khigh = ',kk
                     do kk = klow,khigh
 !                       Insert radar if we are above cloud base
                         if(cld_hts(kk) .gt. cloud_base_buf(i,j)
-!    1                                .and. .not. l_unresolved(i,j)
+     1                                .and. .not. l_unresolved(i,j)
      1                                                           )then
                             cldcv(i,j,kk) = 1.0
                             insert_count_lvl = insert_count_lvl + 1
                             insert_count_tot = insert_count_tot + 1
+                            l_inserted = .true.
                         else ! Radar Echo below cloud base
                             l_below_base = .true.
                         endif
@@ -256,12 +263,18 @@ c                   write(6,*)' khigh = ',kk
 
                 endif ! Reflectivity > thresh
 
+                if(l_inserted .and. iwrite_inserted .le. 200)then
+                    write(6,591)i,j,k,l_unresolved(i,j)
+591                 format(' Inserted radar',2i4,i3,l2)
+                    iwrite_inserted = iwrite_inserted + 1
+                endif
+
             enddo ! j
             enddo ! i
 
-            write(6,591)k,klow,khigh
+            write(6,592)k,klow,khigh
      1          ,icount_radar_lvl,insert_count_lvl,insert_count_tot
-591         format(' Inserted radar',3i4,3i8)
+592         format(' Inserted radar',3i3,3i8)
 
 600         continue
         enddo ! k
@@ -272,7 +285,7 @@ c                   write(6,*)' khigh = ',kk
         do i = 1,ni
         do j = 1,nj
             if(echo_top(i,j) .ne. r_missing_data)then
-                if(echo_top_agl(i,j) .lt. 1000. .and. 
+                if(echo_top_agl(i,j) .lt. echo_agl_thr .and. 
      1             .not. l_unresolved(i,j)       )then
 !                   Should we set these to unresolved here or better yet above?
                     write(6,610)i,j       
@@ -287,7 +300,9 @@ c                   write(6,*)' khigh = ',kk
 
             if(l_unresolved(i,j))then
 
-!               Reconcile radar and satellite
+!               Reconcile radar and satellite 
+!               (Block out "unresolved" radar echoes)
+
                 if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
 !                   Blank out radar
                     write(6,601)i,j,dbz_max_2d(i,j)
@@ -307,10 +322,11 @@ c                   write(6,*)' khigh = ',kk
 
 !                   This situation is undesirable because we want to
 !                   avoid cases where the radar reflectivity is high
-!                   but there are no analyzed (SAO/IR) clouds at this point in
-!                   the analysis. We should check as to why there were no
-!                   clouds analyzed. For now we blank out the radar, but we
-!                   could also create a cloud at the radar echo location.
+!                   but is "unresolved" (e.g. analyzed (SAO/IR) clouds at 
+!                   this point in) the analysis. We should check as to why 
+!                   it is unresolved (e.g. no clouds analyzed). For now we 
+!                   blank out the radar, but we could also create a cloud at 
+!                   the radar echo location.
 
                     write(6,602)i,j,dbz_max_2d(i,j)
      1                         ,nint(echo_top_agl(i,j))       
