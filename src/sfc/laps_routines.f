@@ -289,6 +289,10 @@ c
 c       Orginal:  P. Stamus NOAA/FSL c.1990
 c       Changes:
 c
+c       Changed by Steve Albers in 2003 as it seems to me that the major
+c       (non-staggered) grid can best be emplaced by each thermo ob by 
+c       allowing a rounding up to occur.
+c
 c======================================================================
 c
 	real lat_s(mxsta), lon_s(mxsta)
@@ -299,8 +303,8 @@ c
 	do ista=1,numsta
           call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon,
      &       ni,nj,rii(ista),rjj(ista),istatus)
-	  ii(ista) = rii(ista)
-	  jj(ista) = rjj(ista)
+	  ii(ista) = nint(rii(ista))
+	  jj(ista) = nint(rjj(ista))
 	enddo !ista
 c
 	return
