@@ -15,6 +15,8 @@ c     Routine to read the NetCDF Maritime observation files at FSL.
 c     Code created with 'xgennet.pl' by J. Edwards, NOAA/FSL.
 c     
 c     Original:  P. Stamus, NOAA/FSL  26 Aug 1998
+c     Changes:
+c	P. Stamus, NOAA/FSL  04 Aug 1999  Changed NF_NOERROR to NF_NOERR.
 c
 c**********************************************************************
 c
@@ -84,7 +86,7 @@ C
         print *,'in NF_GET_VAR_ dataPlatformType '
       endif
         nf_status = NF_GET_ATT_INT(nf_fid,nf_vid,'_FillValue',ifilval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var dataPlatformType'
       endif
@@ -107,7 +109,7 @@ C
         print *,'in NF_GET_VAR_ pressChangeChar '
       endif
         nf_status = NF_GET_ATT_INT(nf_fid,nf_vid,'_FillValue',ifilval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var pressChangeChar'
       endif
@@ -130,7 +132,7 @@ C
         print *,'in NF_GET_VAR_ dewpoint '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var dewpoint'
       endif
@@ -150,7 +152,7 @@ C
         print *,'in NF_GET_VAR_ elevation '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in var elevation'
       endif
@@ -170,7 +172,7 @@ C
         print *,'in NF_GET_VAR_ equivWindSpeed10m '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in var equivWindSpeed10m'
       endif
@@ -190,7 +192,7 @@ C
         print *,'in NF_GET_VAR_ latitude '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var latitude' 
       endif
@@ -210,7 +212,7 @@ C
         print *,'in NF_GET_VAR_ longitude '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var longitude' 
       endif
@@ -230,7 +232,7 @@ C
         print *,'in NF_GET_VAR_ precip1Hour '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var precip1Hour'
       endif
@@ -250,7 +252,7 @@ C
         print *,'in NF_GET_VAR_ precip24Hour '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var precip24Hour'
       endif
@@ -270,7 +272,7 @@ C
         print *,'in NF_GET_VAR_ precip6Hour '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var precip6Hour'
       endif
@@ -290,7 +292,7 @@ C
         print *,'in NF_GET_VAR_ pressChange3Hour '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var pressChange3Hour'
       endif
@@ -310,7 +312,7 @@ C
         print *,'in NF_GET_VAR_ seaLevelPress '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var seaLevelPress'
       endif
@@ -330,7 +332,7 @@ C
         print *,'in NF_GET_VAR_ seaSurfaceTemp '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var seaSurfaceTemp'
       endif
@@ -350,7 +352,7 @@ C
         print *,'in NF_GET_VAR_ temperature '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var temperature'
       endif
@@ -370,7 +372,7 @@ C
         print *,'in NF_GET_VAR_ visibility '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var visibility'
       endif
@@ -390,7 +392,7 @@ C
         print *,'in NF_GET_VAR_ wetBulbTemperature '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var wetBulbTemperature'
       endif
@@ -410,7 +412,7 @@ C
         print *,'in NF_GET_VAR_ windDir '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var windDir'
       endif
@@ -430,7 +432,7 @@ C
         print *,'in NF_GET_VAR_ windGust '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var windGust'
       endif
@@ -450,7 +452,7 @@ C
         print *,'in NF_GET_VAR_ windSpeed '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var windSpeed'
       endif
@@ -470,7 +472,7 @@ C
         print *,'in NF_GET_VAR_ timeObs '
       endif
        nf_status = NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'_FillValue',dfilval)
-      if(nf_status .ne. NF_NOERROR) then
+      if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var timeObs'
       endif
