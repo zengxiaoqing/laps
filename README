@@ -2378,7 +2378,15 @@ Author: Steve Albers (albers@fsl.noaa.gov)
         are applied to the aircraft/cloud-drift wind reports when they are 
         taken before or after the nominal analysis time. The quality control 
         rejects any observations deviating from the background by more than a 
-        threshold (~10 m/s). 
+        threshold depending on observation type as in the following table. 
+
+<pre>
+        ACARS               10 m/s
+        Cloud-Drift winds   10 m/s
+        Profiler            22 m/s
+        Doppler Radar       12 m/s
+        Other               30 m/s
+</pre>
 
 	In a second step, the Doppler radial velocities are mixed in.  The 
         azimuthal component is estimated by using the results of the first 
