@@ -41,7 +41,8 @@ cdis
 
         subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag
      1                                   ,maxsta,c_field,zoom
-     1                                   ,namelist_parms,atime
+     1                                   ,namelist_parms,plot_parms
+     1                                   ,atime_s
      1                                   ,c33_label,i_overlay)
 
         include 'lapsplot.inc'
@@ -57,7 +58,7 @@ cdis
 
         real*4 lat(ni,nj),lon(ni,nj)
 
-        character atime*24, c33_label*33
+        character c33_label*33
         character directory*150,ext*31,ext_lso*6
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
@@ -67,17 +68,14 @@ cdis
 
 !       Declarations for 'read_sfc_state' call
         real*4 pr_s(maxsta), sr_s(maxsta)
-        real*4 sfct_s(maxsta)
         character c3_stations_a(maxsta)*3, c8_wx_a(maxsta)*8
 
 !       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
         real*4   ceil(maxsta),lowcld(maxsta),cover_a(maxsta)
-     1          ,vis(maxsta),rad(maxsta)
+     1          ,vis(maxsta)
 
-        Integer*4   kloud(maxsta),idp3(maxsta)
-
-        Character store_emv(maxsta,5)*1 ! ,store_amt(maxsta,5)*4
+        Integer*4   kloud(maxsta)
 
         character atype(maxsta)*6
 
@@ -168,13 +166,12 @@ cdis
             write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
             if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
-                write(6,*)' Calling read_surface_sa...',infile,atime
-                call read_surface_sa(infile,maxsta,atime,n_obs_g,
-     &             n_obs_b,c3_stations_a,reptype,atype,lat_s,lon_s,      
-     &             elev_s,c8_wx_a,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn_s,      
-     &             pmsl_s,alt_s,kloud,ceil,lowcld,cover_a,
-     &             rad,sfct_s,idp3,           
-     &             store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
+!               write(6,*)' Calling read_surface_sa...',infile,atime_s
+!               call read_surface_sa(infile,maxsta,atime_s,n_obs_g, ! Not needed
+!    &             n_obs_b,c3_stations_a,reptype,atype,     ! Not needed
+!    &             lat_s,lon_s,elev_s,c8_wx_a,t_s,td_s,     ! Not needed
+!    &             kloud,ceil,lowcld,cover_a,               ! Not needed
+!    &             store_amt,store_hgt,obstime,istatus)     ! Not needed
 
             else                       ! QC case
                 if(n_obs_g .eq. 0)n_obs_g = n_obs_b         ! Bug recovery
@@ -231,11 +228,17 @@ cdis
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
         du = float(ni) / 300.
 
-        zoom_eff = zoom / 3.0
+        obs_size = plot_parms%contour_line_width
 
 !       At zoom=1-3, make the obs plot larger if there are few obs
-        if(zoom_eff .lt. 1.0 .and. n_obs_g .gt. 30)then
-            zoom_eff = 1.0
+        if(zoom .lt. 3.0)then
+            if(n_obs_g .gt. 30)then
+                zoom_eff = 1.0 / obs_size ! smaller obs (depending on obs_size)
+            else
+                zoom_eff = zoom / 3.0     ! larger obs
+            endif
+        else
+            zoom_eff = zoom / 3.0         ! larger obs
         endif
 
         du2 = du / zoom_eff
@@ -298,7 +301,7 @@ cdis
 
 !       Plot Stations
         do i = 1,n_obs_b ! num_sfc
-            wx_s(i) = c8_wx_a(i)
+!           wx_s(i) = c8_wx_a(i)
 
             call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
      1                          ,ni,nj,xsta,ysta,istatus)
@@ -336,7 +339,7 @@ cdis
 
                 charsize = .0040 / zoom_eff
 
-                if(iflag_cv .eq. 0 .and. atype(i) .ne. 'CUM')then
+                if(iflag_cv .eq. 0 .and. autostntype(i) .ne. 'CUM')then       
 !                   Plot station name & Wx String
                     CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                          charsize,ANGD,CNTR)
@@ -355,7 +358,7 @@ cdis
                         dewpoint = badflag
                     endif
 
-                    nlyr = kloud(i)
+                    nlyr = kloud_s(i)
 
                     if(nlyr .ge. 1)then
                         CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
@@ -426,7 +429,7 @@ cdis
 
                 elseif(iflag_cv .eq. 3)then ! Soil/Water T (& solar radiation)
                     iplotsta = 0
-                    temp = sfct_s(i)
+                    temp = sfct(i)
                     dewpoint = badflag
                     pressure = badflag
 
@@ -481,13 +484,13 @@ cdis
 
                 endif
 
-                if(atype(i) .ne. 'CUM')then ! exclude CWB precip stations
+                if(autostntype(i) .ne. 'CUM')then ! exclude CWB precip stations
                     call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
      1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_g,11,du2
      1                 ,wx_s(i)
-     1                 ,iflag,iflag_cv)
+     1                 ,iflag,iflag_cv,plot_parms)
                 endif
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
@@ -506,11 +509,11 @@ cdis
 
         if(iflag .eq. 1)then ! special mesonet label 
             call setusv_dum(2hIN,2)
-            call cv_i4tim_asc_lp(i4time,atime,istatus)
-            atime = atime(1:14)//atime(16:17)//' '
+            call cv_i4tim_asc_lp(i4time,atime_s,istatus)
+            atime_s = atime_s(1:14)//atime_s(16:17)//' '
             ix = 590
             iy = 270
-            call pwrity(cpux(ix),cpux(iy),atime(1:17),17,-1,0,-1)
+            call pwrity(cpux(ix),cpux(iy),atime_s(1:17),17,-1,0,-1)
         endif
 
         call sflush
@@ -522,9 +525,12 @@ c
 c
         subroutine plot_mesoob(dir,spd,gust,t,td,p,ri,rj
      1                        ,lat,lon,imax,jmax,relsize_in,zoom,nobs
-     1                        ,icol_in,du2,wx,iflag,iflag_cv)
+     1                        ,icol_in,du2,wx,iflag,iflag_cv
+     1                        ,plot_parms)
 
         include 'lapsparms.cmn'
+
+        include 'lapsplot.inc'
 
         real*4 lat(imax,jmax),lon(imax,jmax)
         character*3 t1,td1,p1
@@ -535,11 +541,17 @@ c
 !       write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
  1234   format(1x,4i5,4e12.4,i4)
 
-        zoom_eff = zoom / 3.0
+        obs_size = plot_parms%contour_line_width
 
 !       At zoom=1-3, make the obs plot larger if there are few obs
-        if(zoom_eff .lt. 1.0 .and. nobs .gt. 30)then
-            zoom_eff = 1.0
+        if(zoom .lt. 3.0)then
+            if(nobs .gt. 30)then
+                zoom_eff = 1.0 / obs_size ! smaller obs (depending on obs_size)
+            else
+                zoom_eff = zoom / 3.0     ! larger obs
+            endif
+        else
+            zoom_eff = zoom / 3.0         ! larger obs
         endif
 
         relsize = relsize_in / zoom_eff
@@ -548,7 +560,8 @@ c
 
         jsize = nint(0.4 * relsize) - 1
 
-        write(6,*)' relsize,du_b,jsize,zoom = ',relsize,du_b,jsize,zoom       
+        write(6,*)' relsize,du_b,jsize,zoom,obs_size,zoom_eff = '
+     1             ,relsize,du_b,jsize,zoom,obs_size,zoom_eff
 
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
@@ -672,10 +685,16 @@ c
 
 !           Plot Solar Radiation (pressure variable)
             if(p .gt. 0. .and. p .lt. 10000.) then
-               if(p .ge. 1000.) p = p - 1000.
-               ip = ifix( p )
-               write(p1,201,err=40) ip
- 201           format(i3.3)
+               if(p .ge. 1000.)then
+                   p = p - 1000.
+                   ip = ifix( p )
+                   write(p1,201,err=40) ip
+ 201               format(i3.3)
+               else
+                   ip = ifix( p )
+                   write(p1,202,err=40) ip
+ 202               format(i3)
+               endif
                CALL PCLOQU(u+du_p,v+dv,p1,charsize,ANGD,CNTR)
             endif
 
