@@ -421,8 +421,11 @@ cdoc    Called from lapsplot
                     return
                 endif
 
-                call read_radar_3dref(i4time_radar,l_apply_map,       ! I
-     1               ref_base,                                        ! I
+                i4_tol = 1200
+
+                call read_radar_3dref(i4time_radar,                   ! I
+     1               i4_tol,i4_ret,                                   ! I/O
+     1               l_apply_map,ref_base,                            ! I
      1               imax,jmax,kmax,radarext,                         ! I
      1               lat,lon,topo,l_low_fill,l_high_fill,             ! I
      1               heights_3d,                                      ! I
@@ -439,7 +442,7 @@ cdoc    Called from lapsplot
 
 
         subroutine read_radar_3dref(i4time_radar,                        ! I
-!    1   i4_tol,i4_ret,
+     1   i4_tol,i4_ret,                                                  ! I/O
      1   l_apply_map,ref_missing,                                        ! I
      1   imax,jmax,kmax,radarext,                                        ! I
      1   lat,lon,topo,l_low_fill,l_high_fill,                            ! I
@@ -499,8 +502,6 @@ cdoc                            calls read_multiradar_3dref.
             n_3dref = 0
             goto900
         endif
-
-        i4_tol = 1200
 
         call read_multiradar_3dref(i4time_radar,
      1   i4_tol,i4_ret,
