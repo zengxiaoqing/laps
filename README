@@ -2677,6 +2677,12 @@ and straight observations are used for visibility. The temperature and dewpoint
 observations are also corrected for deviations of the station elevation from
 the LAPS terrain. Standard lapse rates are applied to this elevation difference.
 
+A land fraction term is factored into the weighting whenever the observation
+and grid point are on either sides of a 0.01 land fraction threshold. This
+helps prevent situations such as heating over the land having undue effects
+over the water areas. This weight is applied mainly
+to the T, Td, U, and V fields.
+
 For pressure analysis, three fields are computed including reduced pressure (P)
 at reference height 'redp_lvl', surface pressure (PS), and mean sea level 
 pressure (MSL). Background pressure fields come from the LGB or FSF files. 
