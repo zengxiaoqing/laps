@@ -40,7 +40,7 @@ cdis
         subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
      1                           NZ_L, MAX_RADARS, L_RADARS,
      1                           r_missing_data,
-     1                           laps_cycle_time,zoom)
+     1                           laps_cycle_time,zoom,density)
 
 !       1995        Steve Albers         Original Version
 !       1995 Dec 8  Steve Albers         Automated pressure range
@@ -384,7 +384,7 @@ c       include 'satellite_dims_lvd.inc'
 
             if(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d_diff,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,scale)
+     1               ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field_2d_diff,scale,clow,chigh,cint,
      1               asc9_tim_3dw,       
@@ -679,7 +679,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1.0
                 call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
 
 !               call plot_cont(spds,scale,clow,chigh,cint,asc9_tim_3dw,
 !    1               c33_label,i_overlay,c_display,lat,lon,jdot,       
@@ -707,7 +707,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1.0
                 call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
 
 !               call plot_cont(u_2d,1e0,clow,chigh,cint,asc9_tim_3dw,
 !    1               c33_label,i_overlay,c_display,lat,lon,jdot,
@@ -737,7 +737,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1.0
                 call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
 
 
 !               call plot_cont(v_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
@@ -906,7 +906,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
 
                 call plot_cont(field_2d,scale,clow,chigh,cint,
      1               asc9_tim_3dw,
@@ -931,7 +931,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
 
                 call plot_cont(field_2d,scale,clow,chigh,cint,
      1               asc9_tim_3dw,
@@ -948,7 +948,7 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1e-9
                 call contour_settings(field2_2d,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,scale)
+     1                           ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field2_2d,scale,clow,chigh,cint,
      1               asc9_tim_3dw,
@@ -1100,7 +1100,7 @@ c       include 'satellite_dims_lvd.inc'
 
             scale = 1.
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                   ,zoom,scale)       
+     1                           ,zoom,density,scale)       
 
             call plot_cont(field_2d,scale,clow,chigh,cint
      1                    ,asc9_tim_t,c33_label,i_overlay,c_display
@@ -2522,7 +2522,7 @@ c
 
             scale = 1.
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                   ,zoom,scale)
+     1                           ,zoom,density,scale)
 
             call plot_cont(field_2d,scale,clow,chigh,cint,
      1                     asc9_tim_t,c33_label,
@@ -3165,7 +3165,7 @@ c
 
           if(c_type(3:3) .ne. 'i')then ! contour plot
 !             call contour_settings(field_2d,NX_L,NY_L
-!    1                               ,clow,chigh,cint,zoom,1.)       
+!    1                               ,clow,chigh,cint,zoom,density,1.)       
 
               call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t       
      1           ,c33_label,i_overlay,c_display
@@ -3540,7 +3540,7 @@ c                   cint = -1.
                 enddo ! i
 
                 call contour_settings(field_2d,NX_L,NY_L
-     1                             ,clow,chigh,cint,zoom,scale)       
+     1                             ,clow,chigh,cint,zoom,density,scale)       
 
             endif
 
@@ -3706,7 +3706,7 @@ c                   cint = -1.
 
             if(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,1.)       
+     1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t       
      1           ,c33_label,i_overlay,c_display
@@ -3758,7 +3758,7 @@ c                   cint = -1.
 
             if(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,1.)       
+     1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint
      1               ,asc9_tim_t,c33_label,i_overlay,c_display
@@ -3992,7 +3992,7 @@ c                   cint = -1.
 
             if(.not. l_image)then ! Surface background contours
                 call contour_settings(field_2d,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,scale)       
+     1                            ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field_2d,scale,clow,chigh,cint
      1                        ,asc9_tim,c33_label,i_overlay,c_display
@@ -4087,7 +4087,8 @@ c                   cint = -1.
 
             pres_high_mb = pres_high_pa / scale
             pres_low_mb  = pres_low_pa / scale
-            range = ((pres_high_pa - pres_low_pa) / scale) / sqrt(zoom)       
+            range = ((pres_high_pa - pres_low_pa) / scale) 
+     1                                / (sqrt(zoom) * density)
 
             if(range .gt. 30.)then
                 cint = 4.
@@ -4126,7 +4127,7 @@ c                   cint = -1.
             scale = 100.
 
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                           ,zoom,scale)
+     1                           ,zoom,density,scale)
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -4179,7 +4180,7 @@ c                   cint = -1.
 
             if(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d,NX_L,NY_L
-     1                               ,clow,chigh,cint,zoom,1.)       
+     1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint
      1                        ,asc9_tim_t,c33_label,i_overlay,c_display        
@@ -4349,7 +4350,7 @@ c                   cint = -1.
 
             scale = 1e-5
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                                                  ,zoom,scale)
+     1                           ,zoom,density,scale)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,chigh,clow,cint,c33_label
@@ -4446,7 +4447,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call contour_settings(spds,NX_L,NY_L
-     1                           ,clow,chigh,cint,zoom,1.)       
+     1                           ,clow,chigh,cint,zoom,density,1.)       
 
             scale = 1.
 
@@ -4487,7 +4488,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call contour_settings(field_2d,NX_L,NY_L
-     1                           ,clow,chigh,cint,zoom,1.)       
+     1                           ,clow,chigh,cint,zoom,density,1.)       
 
 !           call plot_cont(field_2d,1.,clow,chigh,cint,
 !    1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
@@ -6090,7 +6091,7 @@ c             if(cint.eq.0.0)cint=0.1
         real*4 lon(NX_L,NY_L)
 
         common /image/ n_image
-        common /zoom/  zoom
+        common /zoom/  zoom, density
 
         c_type = c_type_in
 
@@ -6121,7 +6122,7 @@ c             if(cint.eq.0.0)cint=0.1
             write(6,*)' plot_field_2d - contour plot ',c_type
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
-     1                                                  ,zoom,scale)
+     1                               ,zoom,density,scale)
             else
                 cint = cint_in
                 chigh = chigh + 5. * cint ! Add 5 extra contours

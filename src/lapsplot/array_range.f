@@ -38,7 +38,8 @@ cdis
 cdis
 
 
-       subroutine contour_settings(a,ni,nj,clow,chigh,cint,zoom,scale)       
+       subroutine contour_settings(a,ni,nj,clow,chigh,cint,zoom,density
+     1                            ,scale)       
 
        real*4 a(ni,nj)
 
@@ -58,7 +59,7 @@ cdis
        rmax = rmax / scale
        rmin = rmin / scale
 
-       range = (rmax-rmin) / sqrt(zoom)
+       range = (rmax-rmin) / (sqrt(zoom) * density)
 
        if(range .gt. 2000)then
            cint = 400.

@@ -702,7 +702,7 @@ c read in laps lat/lon and topo
 
             if(c_field(4:4) .ne. 'i')then ! contour plot
                 call contour_settings(field_vert_diff,NX_C,NZ_C
-     1                               ,clow,chigh,cint,zoom,scale)
+     1                               ,clow,chigh,cint,zoom,1.,scale)
 
                 call plot_cont(field_vert_diff,scale,clow,chigh,cint,
      1               asc9_tim_3dw,       

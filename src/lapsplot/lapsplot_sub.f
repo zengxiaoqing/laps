@@ -64,7 +64,7 @@ cdis
 
         Common/RamTDims/NXMin,NXMax,NYMin,NYMax
 
-        common /zoom/ zoom
+        common /zoom/ zoom,density
 
 
         include 'lapsparms.cmn'
@@ -168,11 +168,12 @@ cdis
 
             if(c_section .eq. 'hz')then
                 write(6,101)
- 101            format('    Zoom/Density (for sfc wind barbs)'
+ 101            format('    Zoom,Density (for sfc wind barbs)'
      1                ,28x,'     ? ',$)
-                read(lun,*)zoom
+                read(lun,*)zoom,density
             else
                 zoom = 1.0
+                density = 1.0
             endif
 
             if(MAX_RADARS .ge. 1)then
@@ -183,7 +184,7 @@ cdis
 
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
-     1                         laps_cycle_time,zoom)
+     1                         laps_cycle_time,zoom,density)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
