@@ -2,28 +2,35 @@
       subroutine hainesindex(prs,tmk,tdk,haines,miy,mjx,mkzh,prsb,prst)
       include 'comconst'
 
+!     Note that this version differs from the Seattle version to account
+!     for flipped vertical coordinates
+
       dimension tmk(miy,mjx,mkzh), tdk(miy,mjx,mkzh), prs(miy,mjx,mkzh),
      &          haines(miy,mjx)
 
        do j = 1, mjx-1
        do i = 1, miy-1
          
-         if( prs(i,j,mkzh) .lt. prsb ) then
+         if( prs(i,j,1) .lt. prsb ) then
             haines(i,j) = 0.
          else
-            do k = 1, mkzh
-              if( prs(i,j,k).gt.prst .and. prs(i,j,k-1).le.prst ) then
-                 tmkt = tmk(i,j,k-1) + (tmk(i,j,k)-tmk(i,j,k-1)) *
-     &                  (log(prst)-log(prs(i,j,k-1))) /
-     &                  (log(prs(i,j,k))-log(prs(i,j,k-1)))
+            do k = 2, mkzh
+
+              kk  = mkzh+1 - k     ! Account for flipped vertical coordinates
+              km1 = kk + 1         ! Account for flipped vertical coordinates
+
+              if( prs(i,j,kk).gt.prst .and. prs(i,j,km1).le.prst ) then       
+                 tmkt = tmk(i,j,km1) + (tmk(i,j,kk)-tmk(i,j,km1)) *
+     &                  (log(prst)-log(prs(i,j,km1))) /
+     &                  (log(prs(i,j,kk))-log(prs(i,j,km1)))
               endif
-              if( prs(i,j,k).gt.prsb .and. prs(i,j,k-1).le.prsb ) then
-                 tmkb = tmk(i,j,k-1) + (tmk(i,j,k)-tmk(i,j,k-1)) *
-     &                  (log(prsb)-log(prs(i,j,k-1))) /
-     &                  (log(prs(i,j,k))-log(prs(i,j,k-1)))
-                 tdkb = tdk(i,j,k-1) + (tdk(i,j,k)-tdk(i,j,k-1)) *
-     &                  (log(prsb)-log(prs(i,j,k-1))) /
-     &                  (log(prs(i,j,k))-log(prs(i,j,k-1)))
+              if( prs(i,j,kk).gt.prsb .and. prs(i,j,km1).le.prsb ) then
+                 tmkb = tmk(i,j,km1) + (tmk(i,j,kk)-tmk(i,j,km1)) *
+     &                  (log(prsb)-log(prs(i,j,km1))) /
+     &                  (log(prs(i,j,kk))-log(prs(i,j,km1)))
+                 tdkb = tdk(i,j,km1) + (tdk(i,j,kk)-tdk(i,j,km1)) *
+     &                  (log(prsb)-log(prs(i,j,km1))) /
+     &                  (log(prs(i,j,kk))-log(prs(i,j,km1)))
               endif
             enddo
 
