@@ -155,7 +155,13 @@ c     figure iterations to go back 48 hours
 
         write(6,*) 'laps cycle time is, ', laps_cycle_time
     
-        iter = 48. / ( float(laps_cycle_time)/3600. )
+        iter = 72
+
+        if(laps_cycle_time.lt.3600) then
+           write(6,*) 'will look back ',iter*laps_cycle_time,' seconds'
+        else
+           write(6,*) 'will look back ',iter*3600,' seconds'
+        endif
 
         write(6,*) 'iterations to attempt = ',iter
 
