@@ -91,7 +91,7 @@ cdis
 
 !     Variables used only in remap_process
       integer i_last_scan,i_first_scan
-      integer i_tilt_proc
+      integer i_tilt_proc_curr
       integer i4time_vol,i_num_finished_products,i_status
 
 !     Variables used for data access and in fill_common 
@@ -156,31 +156,9 @@ cdis
       n_ref_gates = MAX_REF_GATES
       b_missing_data = 255.
 
-!     strtm_ptr = string_time
-!     fnm_ptr = full_fname
-!     ref0_ptr= b_ref
-!     vel0_ptr= b_vel
-!     azi0_ptr= azim
-!     nyq0_ptr= v_nyquist_ray_a
+      i_tilt_proc_curr = 1
 
-!     radar_lat=&radar_lat 
-!     radar_lon=&radar_lon 
-!     radar_alt=&radar_alt 
-
-
-!     Get Radar name environment variable 
-!     call getenv('RADARNAME',rname_ptr) 
-
-!     if (rname_ptr .eq. ' ')then
-!       write(6,*)' Could not evaluate RADARNAME environment variable.'
-!       write(6,*)' Set the 4-character radar name before running remap'       
-!       call exit(1) 
-!     endif
-
-!     call Archive II initialization routine  
-      i_tilt_proc = 1
-
-      call radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)
+      call radar_init(i_radar,i_tilt_proc_curr,i_last_scan,istatus)
       if(istatus .ne. 1)then
           write(6,*)' remap_sub: istatus returned from radar_init ='
      1              ,istatus      
@@ -340,7 +318,7 @@ cdis
               if( i_angle .lt. past_angle .or. i_scan .ne. past_scan )
      1             i_last_scan = 1
 
-! call the FORTRAN routine to fill up the common data area   
+! call FILL_COMMON to fill up the common data area for current tilt   
 
               write(6,*)'  Calling fill_common, i_angle, past_angle ',
      1                                          i_angle, past_angle
@@ -366,23 +344,23 @@ cdis
      1               first_ref_m,gsp_ref,first_vel_m,gsp_vel,
      1               azim,v_nyquist_ray_a,eleva,b_missing_data) 
 
-! call the FORTRAN remapper module   
-!             Read next tilt
-              i_tilt_proc_new = i_tilt_proc + 1
-              call radar_init(i_radar,i_tilt_proc_new,i_last_scan
-     1                                               ,istatus)
+! call RADAR_INIT to assess the current tilt (first/last) and read next tilt
+              i_tilt_proc_next = i_tilt_proc_curr + 1
+              call radar_init(i_radar,i_tilt_proc_next,i_last_scan
+     1                                                ,istatus)
 
+! call REMAP_PROCESS with the current tilt
               write(6,*)'  Calling remap_process past_tilt '
      1                                         , past_tilt  
-              write(6,*)'  Calling remap_process i_tilt_proc '
-     1                                         , i_tilt_proc  
+              write(6,*)'  Calling remap_process i_tilt_proc_curr '
+     1                                         , i_tilt_proc_curr  
 
               write(6,*)'  i_last, i_first ',i_last_scan,i_first_scan
               write(6,*)'  i4time_vol, i_num,  i_status',
      1                i4time_vol,i_num_finished_products,i_status
 
               call remap_process(
-     1            i_tilt_proc,i_last_scan,i_first_scan,
+     1            i_tilt_proc_curr,i_last_scan,i_first_scan,
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
      :            grid_ref,ngrids_ref,n_pot_ref,
      1            NX_L,NY_L,NZ_L,
@@ -397,14 +375,14 @@ cdis
                   return
               endif
 
-              i_tilt_proc = i_tilt_proc_new
+              i_tilt_proc_curr = i_tilt_proc_next
               i_first_scan = 0
 
               if( i_angle .lt. past_angle .or. 
      1            i_scan  .ne. past_scan ) then 
                 write(6,*)' Reset to beginning of volume'
                 i_first_scan = 1
-                i_tilt_proc = 0  
+                i_tilt_proc_curr = 0  
                 past_angle= i_angle 
               endif
 
