@@ -1709,7 +1709,7 @@ c
                   write(6,*)' Reading velocity data from the radars'
 
                   if(ialloc_vel .eq. 0)then ! allocate 4D radar arrays
-                      allocate(grid_ra_vel(imax,jmax,kmax,max_radars)       
+                      allocate(grid_ra_vel(NX_L,NY_L,NZ_L,max_radars)       
      1                        ,STAT=istat_alloc)
                       if(istat_alloc .ne. 0)then
                           write(6,*)
@@ -1717,7 +1717,7 @@ c
                           stop
                       endif
 
-                      allocate(grid_ra_nyq(imax,jmax,kmax,max_radars)       
+                      allocate(grid_ra_nyq(NX_L,NY_L,NZ_L,max_radars)       
      1                        ,STAT=istat_alloc)
                       if(istat_alloc .ne. 0)then
                           write(6,*)
@@ -3122,7 +3122,8 @@ c
           call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
 
           if(c_type(1:2) .eq. 'pe')then
-              call condition_cape(NX_L,NY_L,c_type,field_2d)
+              call condition_cape(NX_L,NY_L,c_type,r_missing_data
+     1                           ,field_2d)
 
               c33_label = 'CAPE                (J/KG)       '
               clow = 0.
@@ -4012,7 +4013,8 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
      1                         ,'linear',n_image,scale) 
                 elseif(var_2d .eq. 'PBE')then
-!                   call condition_cape(NX_L,NY_L,'pei',field_2d)
+!                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
+!    1                                 ,field_2d)
                     call ccpfil(field_2d,NX_L,NY_L,0.0,7200.
      1                         ,'cpe',n_image,scale) 
                 elseif(var_2d .eq. 'NBE')then

@@ -148,7 +148,8 @@ cdis
         return
         end
 
-        subroutine condition_cape(NX_L,NY_L,c_type,field_2d)
+        subroutine condition_cape(NX_L,NY_L,c_type,r_missing_data
+     1                           ,field_2d)
 
         real*4 field_2d(NX_L,NY_L), image_cutoff
         character*(*)c_type
