@@ -14,7 +14,8 @@
          2.1.3 ..................  make
          2.1.4 ..................  C Compiler
          2.1.5 ..................  FORTRAN Compiler
-         2.1.6 ..................  Plotting / NCAR graphics library (optional)
+         2.1.6 ..................  Disk Space
+         2.1.7 ..................  Plotting / NCAR graphics library (optional)
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
@@ -146,8 +147,15 @@
      only a subset of f90 constructs to help ensure compatability with f77
      compilers. Check that the FORTRAN compiler is in your path.
 
+                    ---  2.1.6  Disk Space ---
+
+     The disk space requirements for LAPS vary depending on the implementation.
+     As a general guide, 10MB would be needed for source code. About 30MB are 
+     needed for executable binaries. 500MB to 1GB are typically needed for 
+     12-24 hours worth of output data. A similar amount of space is needed
+     for the raw input data.
    
-            ---  2.1.6  Plotting / NCAR graphics library (optional)  ---
+            ---  2.1.7  Plotting / NCAR graphics library (optional)  ---
 
      To build the lapsplot process, access to an NCAR graphics library is 
      needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
@@ -183,20 +191,22 @@
      ------------- 2.2 Installation Procedure Summary ------------------
 
      To introduce this section, here is a hierarchical listing of some primary 
-     directories and files in the laps tree. These are created/addressed in 
-     various portions of section 2.2 and beyond.
+     directories and files in the laps tree. The default LAPS structure is
+     shown. These are created/addressed in various portions of section 2.2 
+     and beyond.
 
      <pre>
      /machine_root
          /geog
+         /laps-m-n-o.tar
          /laps_root (laps-m-n-o)
              /src
                  /ingest
-             /etc
-             /bin
-             /data                  (=$LAPS_DATA_ROOT, can be moved/duplicated)
+             /etc                    
+             /bin                    
+             /data                   (=LAPS_DATA_ROOT, can be moved/duplicated)
                  /lapsprd
-                     /product_list
+                     /product_list                                (laps output)
                  /log
                  /static
                      /nest7grid.parms
@@ -207,6 +217,42 @@
                  /lapsprd
                      /product_list
      </pre>
+
+     In many UNIX environments, large data files are stored on a "data" disk 
+     and the source code is stored on a smaller "home" disk. Below is a
+     typical laps directory structure for that setup. The soft link allows
+     most things to be referenced from either disk.
+
+     <pre>
+     /home_disk
+         /src
+             /laps-m-n-o.tar
+             /laps-m-n-o                               (laps_root subdirectory)
+                 /src                                             (source code)
+                     /ingest
+         /laps   ----------------->  soft linked to /data_disk/laps
+
+     /data_disk
+         /geog
+         /raw_testdata
+         /laps                                        (--prefix in 'configure')
+             /etc                                     
+             /bin                                    
+             /data*                         (LAPS_DATA_ROOT, can be duplicated)
+                 /lapsprd
+                     /product_list                                (laps output)
+                 /log
+                 /static
+                     /nest7grid.parms
+                     /*.nl
+                     /static.nest7grid                     (gridded topography)
+                 /time
+
+             /testdata                             (optional, can be relocated)
+                 /lapsprd
+                     /product_list
+     </pre>
+
 
             ----   2.2.1  Untarring the Source Code  ---
 
@@ -271,7 +317,7 @@
      by running... 
      $ cd (laps_root)
      $ make install 1> make.out 2>&1 
-     We recommend using Gnu Make Version 3.74 or later available via ftp from 
+     We recommend using Gnu Make Version 3.75 or later available via ftp from 
      any GNU site. 
 
 
