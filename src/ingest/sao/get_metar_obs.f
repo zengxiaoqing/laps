@@ -467,54 +467,87 @@ c.....  Right time, right location...
  	  call make_fnam_lp(i4time_ob,timech,istatus)
 	  time = timech(6:9)
 	  read(time,*) rtime
+
+!         write(6,*)'debug ',i,stname(i),timech
 c
 c.....  Check if station is reported more than once this
 c.....  time period.
 c
-          i_reject = 0
+          istn_reject = 0
+          istn_keep = i
 
-	  if(jfirst .eq. 1) then ! first station in dataset
-	     icount = 1
+	  if(jfirst .eq. 1) then ! initialize with first station in dataset
+	     isaved_sta = 1
 	     save_stn(1) = stname(i)
 	     jfirst = 0
 
+             nn = nn + 1
+             np = nn 
+
           else ! all subsequent stations
+             if(isaved_sta .eq. i)then ! this violates assumed logic of code
+                 write(6,*)'ERROR isaved_sta = i',i
+                 stop
+             endif
+
 !            Do duplication check unless station names are 'UNK'
-	     do k=1,icount
+	     do k=1,isaved_sta
 	        if(stname(i) .eq. save_stn(k))then
-                   if(stname(i)(1:3) .ne. 'UNK')go to 125
+                   if(stname(i)(1:3) .ne. 'UNK')then
 
-                   i4time_ob_k = nint(timeobs(k)) + i4time_offset
+!                      i4time_ob_k = nint(timeobs(k)) + i4time_offset
+                       int_obtime = store_1(k,4)
+                       call get_sfc_obtime(int_obtime,i4time_sys
+     1                                    ,i4time_ob_k,istatus)
+                       if(istatus .ne. 1)then
+                           write(6,*)
+     1                            ' ERROR returned from get_sfc_obtime'       
+                           return
+                       endif
 
-!                  Alternatively set l_dupe_time based on abs(obstime-systime)
-                   i_diff = abs(i4time_ob   - i4time_sys)
-                   k_diff = abs(i4time_ob_k - i4time_sys)
+!                      Alternatively set l_dupe_time based on abs(obstime-systime)
+                       i_diff = abs(i4time_ob   - i4time_sys)
+                       k_diff = abs(i4time_ob_k - i4time_sys)
 
-                   if(i_diff .gt. k_diff)then
-                      i_reject = i
-                   else
-                      i_reject = k
+                       if(i_diff .ge. k_diff)then
+                          istn_reject = i ! current METAR isn't closer to systime
+                          istn_keep   = k 
+                       else
+                          istn_reject = k ! current METAR is closer to systime
+                          istn_keep   = i 
+                       endif
+
+                       write(6,*)' Dupe METAR at ',stname(i),timech,i,k
+     1                          ,i_diff,k_diff,istn_keep,istn_reject
+
+                       l_dupe_time(i) = .true.
+
                    endif
-
-                   write(6,*)' Dupe METAR at ',stname(i),timech,i,k
-     1                                        ,i_diff,k_diff,i_reject      
-
                 endif
 	     enddo ! k
 c
-	     icount = icount + 1
-	     save_stn(icount) = stname(i) ! only one...save for checking
-c
-          endif
+             if(l_dupe_time(i))then
+                 if(istn_keep .eq. i)then 
+                    np = istn_reject
+                    write(6,*)' Backfill METAR at closer time '
+     1                        ,stname(i),i,istn_keep,np
 
-          if(i_reject .ne. i)then ! normal situation
-  	     nn = nn + 1
+                 else ! skip processing of duplicate station
+                    go to 125
 
-             np = nn ! this can be set differently depending on i_reject
-          else                    ! multiple station rpt (at different time)
-             np = k
-             write(6,*)' Backfill METAR at closer time',i,k,np,stname(i)       
-          endif
+                 endif
+
+             else ! not flagged as dupe
+                 isaved_sta = isaved_sta + 1
+	         save_stn(isaved_sta) = stname(i) ! only one...save for checking
+
+                 nn = nn + 1
+                 np = nn 
+!                write(6,*)' Advancing isaved_sta/np to ',isaved_sta,np       
+
+             endif
+
+          endif ! first station
 
           if(np .gt. maxsta)then
               write(6,*)' ERROR in get_metar_obs: increase maxsta '
@@ -791,6 +824,8 @@ c
 c
 c..... Output the data to the storage arrays
 c
+!        write(6,*)' Saving station ',i,np,stname(i),rtime
+
 	 call s_len(stname(i), len)
 	 stations(np)(1:len) = stname(i)(1:len) ! station name
 c
@@ -857,6 +892,8 @@ c
 c
 c
   125	 continue
+
+         write(6,*)' n_sao_all/np = ',n_sao_all,np
 c
 c
 c.....  That's it...lets go home.
