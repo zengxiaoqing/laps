@@ -991,13 +991,14 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
-     PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
-           cloud layers from voice pilot reports into intermediate "PIN" files.
+     PIREPS (pin) - We are ingesting FSL NIMBUS (NetCDF) pirep files to 
+           translate the cloud layers from voice pilot reports into 
+           intermediate "PIN" files.
 
-     ACARS (pin) - We are ingesting FSL NetCDF and AFWA databases for ACARS 
-           data to translate the automated aircraft observations. The wind, 
-           temperature and humidity obs are appended to our intermediate "PIN"
-           file. An equivalent NetCDF database is available (with some
+     ACARS (pin) - We are ingesting FSL NIMBUS (NetCDF) and AFWA databases for
+           ACARS data to translate the automated aircraft observations. The 
+           wind, temperature and humidity obs are appended to our intermediate 
+           "PIN" file. An equivalent NetCDF database is available (with some
            restrictions) on the Web at http://acweb.fsl.noaa.gov.
 
                       ----   2.3.6  RAOBs ---
