@@ -56,14 +56,19 @@ C
       endif
       laps_dom_file = c10_grid_fname(1:len_fname)
 
-! for LAPS, AVG data is elem 3, otherwise 7.
+c     var(1)    = 'LAT'
+c     var(2)    = 'LON'
+c     var(3)    = 'AVG'
+c     var(4)    = 'LDF'
+c     var(5)    = 'USE' ! Actually, this is soil type
+c     var(kmax) = 'ZIN'
       avgelem=3
       if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=7
 
 !     Do zin calc (note this is last [kmax] element in data array)
       do i = 1,imax
       do j = 1,jmax
-          psa = ztopsa(data(i,j,avgelem)) 
+          psa = ztopsa(data(i,j,avgelem)) ! This is the AVG data (3rd element)
           data(i,j,zinelem) = (20.0 - ((psa - 100.0) * 0.02))
       enddo ! j
       enddo ! i
