@@ -344,8 +344,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [wd,wb,wr,wf,bw] Wind'
      1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
      1       /'     [wo,co,bo,lo,fo] Anlyz/Cloud/Balance/Bkg/Fcst Omega'       
-     1       /'     [ra/rf] Radar Interm./Anal. Data,  [rx] Max Radar'
-     1       /'     [rv/rd] Radar Interm. Doppler Ref-Vel (v01-v02...)'       
+     1       /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
+     1       /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
      1       ,',vo,mr,mc,dv-i,ha,ma,sp]'
@@ -1489,26 +1489,47 @@ c
 
                 if(c_type .eq. 'ra')then ! Read data from vrc files
 
-!                 Obtain height field
-                  ext = 'lt1'
-                  var_2d = 'HT'
-                  call get_laps_3dgrid(
+                  if(.false.)then
+!                     Obtain height field
+                      ext = 'lt1'
+                      var_2d = 'HT'
+                      call get_laps_3dgrid(
      1                   i4time_get,10000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,field_3d,istatus)
-                  if(istatus .ne. 1)then
-                    write(6,*)' Error locating height field'
-                    return
+                      if(istatus .ne. 1)then
+                        write(6,*)' Error locating height field'
+                        return
+                      endif
+
+                      call get_radar_ref(i4time_get,100000,i4time_radar
+     1                ,mode
+     1                ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.       
+     1                ,field_3d
+     1                ,grid_ra_ref,n_ref
+     1                ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
+     1                ,istat_3dref)
                   endif
 
-                  write(6,*)' Calling get_radar_ref...'
+                  ext = 'vrc'
+                  call get_filespec(ext,2,c_filespec,istatus)
+                  call get_file_time(c_filespec,i4time_get,i4time_radar)       
 
-                  call get_radar_ref(i4time_get,100000,i4time_radar,mode
-     1            ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
-     1            ,field_3d
-     1            ,grid_ra_ref,n_ref
-     1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
-     1            ,istat_3dref)
+                  write(6,*)' Calling read_radar_2dref...'
+                  call read_radar_2dref(i4time_radar,radar_name
+     1                                 ,NX_L,NY_L,field_2d,istat_2dref)       
+
+                  write(6,*)' istat_2dref = ',istat_2dref
+
+                  call get_ref_base(ref_base,istatus)
+
+                  do i = 1,NX_L
+                  do j = 1,NY_L
+                      if(field_2d(i,j) .eq. r_missing_data)then
+                          field_2d(i,j) = ref_base
+                      endif
+                  enddo ! j
+                  enddo ! i
 
                 elseif(c_type .eq. 'rd')then ! read data from v01, v02, etc.
 
@@ -1643,7 +1664,11 @@ c
 
                     c33_label = 'LAPS Col. Max Reflectivity (lmr) '    
 
-                else ! c_type .eq. 'ra'?
+                elseif(c_type .eq. 'ra')then
+                    radar_array = field_2d
+                    c33_label = 'LAPS Col. Max Ref (intermediate) '    
+
+                else
                     write(6,*)' Calling get_max_ref'
                     call get_max_reflect(grid_ra_ref,NX_L,NY_L,NZ_L
      1                                  ,r_missing_data,radar_array)
