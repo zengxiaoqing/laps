@@ -94,7 +94,6 @@ c                                     used for variable in include 'satellite_co
       character*9 c_fname
       character*10 cmode
       character*255 cname
-      character*255 filename_sat
 
       real image_vis (n_vis_elem,n_vis_lines,nimages) 
       real image_ir  (n_ir_elem,n_ir_lines,nimages)
@@ -139,7 +138,6 @@ c                                     used for variable in include 'satellite_co
       integer   nlf
       integer   nlf_prev
       integer   in
-      integer   i_delta_t
 c
       real*4      vis_cnt_to_cnt_lut(0:1023)
       real*4      ir_cnt_to_btemp_lut(0:1023) !this one is 11u
@@ -165,7 +163,7 @@ c
       character*3 var_lvd(n_lvd_fields_max)
       character*4 lvl_coord_lvd(n_lvd_fields_max)
       integer lvl_lvd(n_lvd_fields_max)
-      character*50 dir_lvd
+      character*150 dir_lvd
       character*31 ext_lvd
 
       real*4 grid_spacing_laps_m
@@ -178,13 +176,12 @@ c
       integer i4time_now_gg
       integer i4time_data(max_files)
       integer istat
+      integer gstatus
       integer istatus
       integer istatus_vis(3)
       integer itstatus
       integer lvd_status
       integer nft,ntm(max_files)
-      integer istart,jstart
-      integer iend,jend
 
       include 'satellite_common_lvd.inc'
 c
@@ -296,29 +293,31 @@ c  only possible to have one time for ascii files (nft=1); however, the number o
 c  matches for this time (ntm) >= 0 depending on the result in getascii_satdat.
 
          nft=1
-         call getascii_satdat(i4time_cur,lvis_flag,
-     &                        nchannels,chtype,
-     &                        n_ir_lines, n_ir_elem,
-     &                        n_vis_lines,n_vis_elem,
-     &                        n_wv_lines,n_wv_elem,
-     &                        path_to_raw_sat(1,jtype,isat), 
-     &                        ntm(nft),c_type(1,1),maxchannel,
-     &                        image_ir(1,1,1),
-     &                        image_vis(1,1,1),
-     &                        image_12(1,1,1),
-     &                        image_39(1,1,1),
-     &                        image_67(1,1,1),
-     &                        i4time_data(nft),
-     &                        r_image_res_m(1,1),
-     &                        istatus)
+         write(6,*)'ascii satellite data ingest currently disabled'
 
-         if(istatus .eq. 1)then
-            found_data = .true.
-         else
-            write(6,*)'Failure getting satellite data for'
-            write(6,*)c_fname_cur
-            goto 998
-         end if
+c        call getascii_satdat(i4time_cur,lvis_flag,
+c    &                        nchannels,chtype,
+c    &                        n_ir_lines, n_ir_elem,
+c    &                        n_vis_lines,n_vis_elem,
+c    &                        n_wv_lines,n_wv_elem,
+c    &                        path_to_raw_sat(1,jtype,isat), 
+c    &                        ntm(nft),c_type(1,1),maxchannel,
+c    &                        image_ir(1,1,1),
+c    &                        image_vis(1,1,1),
+c    &                        image_12(1,1,1),
+c    &                        image_39(1,1,1),
+c    &                        image_67(1,1,1),
+c    &                        i4time_data(nft),
+c    &                        r_image_res_m(1,1),
+c    &                        istatus)
+
+c        if(istatus .eq. 1)then
+c           found_data = .true.
+c        else
+c           write(6,*)'Failure getting satellite data for'
+c           write(6,*)c_fname_cur
+c           goto 998
+c        end if
 c
 c 5-15-97: JSmart added gwc satdat switch
 c
@@ -363,6 +362,50 @@ c
          enddo
 
       endif
+c
+c Read look-up table for mapping lat/lon data pixels to real i/j pairs
+c ----------------------------------------------------------------------
+c
+      call readlut(csatid,csattype,maxchannels,
+     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+
+      if(istatus.eq.1)then
+         write(6,*)'LUT apparently not available: ',csatid,'/',csattype
+         write(6,*)'Computing lut using genlvdlut_sub'
+         call genlvdlut_sub(nx_l,ny_l,gstatus)
+         if(gstatus.lt.0)then
+            write(6,*)'Error generating LUT - terminating'
+            goto 910
+         else
+            write(6,*)'**********************************'
+            write(6,*)
+            call readlut(csatid,csattype,maxchannels,
+     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+            if(istatus.lt.0)then
+               write(6,*)'Error reading new luts - terminating'
+               goto 909
+            endif
+         endif
+      elseif(istatus.lt.0)then
+         write(6,*)'Error in readlut'
+         goto 909
+      else
+         write(6,*)'Got the mapping look-up-tables '
+c
+c add additional code (maybe subroutine) here to check if current lut
+c needs to be recomputed. 
+c
+c     A. For public and wfo data types:
+c        1. compare the namelist navigation parameters (r_la1 and r_lo1)
+c           to the values within a current satellite file. This requires
+c           a routine to get the relevant parameters from the netCDF header.
+c
+c     B. For public and AFWA gvar data:
+c        1. compare the relevant namelist values to those available from
+c           the file header (sat sub lat/lon, etc).
+
+      endif
+      write(6,*)
 c
 c Compute look-up table for converting ir counts to brightness temp (Tb).
 c ----------------------------------------------------------------------
@@ -426,45 +469,6 @@ c           call count2radiance_lut(n_vis_lines,scalingBias,
 c    &scalingGain,cnt2rad(1,i))
 
       endif
-c
-c Read look-up table for mapping lat/lon data pixels to real i/j pairs
-c ----------------------------------------------------------------------
-c
-c Possible to compute new LUT with current Orbit/Attitude for
-c GVAR, otherwise use existing LUT.
-c
-      if( (.false.).and.(csattype.eq.'gvr'))then
-
-c        ns=index(path_to_raw_sat(1,jtype,isat),' ')-1
-c        do i=1,nft
-c           call make_fnam_lp(i4time_data(i),c_fname,istatus)
-c           do j=1,ntm(i)
-
-c           filename_sat=sat_dir_path(1)(1:ns)//c_fname
-c           call gen_gvarimage_lut(maxsat,max_ch,nx_l,ny_l,
-c    &      cmode,cid,csat_type,c_type(j,i),filename_sat,
-c    &      lat,lon,istatus)
-
-c           if(istatus .ne. 1)then
-c              write(6,*)'Error in gen_gvarimage_lut'
-c              goto 16
-c           endif
-c        enddo
-c        enddo
-
-      endif
-c
-c Get the mapping look-up-tables.
-c
-      call readlut(csatid,csattype,maxchannels,
-     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-      if(istatus.lt.0)then
-         write(6,*)'Error readlut'
-         goto 109
-      else
-         write(6,*)'Got the mapping look-up-tables '
-      endif
-      write(6,*)
 c
 c check for and fill-in for any missing data in current images
 c While in theory this check could work for ascii files, it is disabled
@@ -901,16 +905,10 @@ c
  99   write(6,*)'Error opening count LUT: terminating. NO LVD'
       goto 16
 
-109   write(6,*)'Error opening ll/ij look up table'
+909   write(6,*)'Error opening ll/ij look up table'
       goto 16
 
-897   write(6,*)'Error getting static info'
-      goto 16
-
-898   write(6,*)'Error getting path for data'
-      goto 16
-
-899   write(6,*)'Error reading pathname for data'
+910   write(6,*)'Error computing new mapping lut'
       goto 16
 
 998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),

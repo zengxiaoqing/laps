@@ -83,6 +83,7 @@ c
       goto 1000
 
 101   write(6,*)'Error opening file ',file(1:n)
+      istatus = 1
 
 1000  return
       end

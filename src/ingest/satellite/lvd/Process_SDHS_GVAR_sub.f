@@ -43,7 +43,7 @@ C**********************************************************************
       INTEGER WIDTH      !Number of Cells in Width of image
       INTEGER DEPTH      !Number of Cells in Depth of image
 
-      PARAMETER (HEADER_SIZE = 128*2) 
+      PARAMETER (HEADER_SIZE = 126) 
       PARAMETER (CELL_WIDTH = 256)
       PARAMETER (CELL_DEPTH = 64)
       PARAMETER (PIXELS_PER_CELL = CELL_WIDTH*CELL_DEPTH)
@@ -61,6 +61,7 @@ c     Parameter (imagelen_wv=nlines_wv_max*nelem_wv_max)
       INTEGER CELL_COLUMN !The column number of a cell
 c     INTEGER*4 XS         !Pixels in width of image
 c     INTEGER*4 YS         !Scanlines depth of image
+
       integer HEADER(HEADER_SIZE)!array used to read over the header
       INTEGER IOSTATUS   !I/O status variable
       Integer istatus    !Return status
@@ -85,7 +86,7 @@ c     INTEGER*2,DIMENSION(:,:),ALLOCATABLE:: IMAGE
 c static case: JSmart 5-12-97
 c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
 
-      character      IMAGEB(nlfi*nefi)
+      character      IMAGEB(nlfi*nefi)*1
       Integer        Image_data(nefi,nlfi)
 
       real           IMAGE(nelem,nlines)
@@ -127,7 +128,7 @@ C Original constructs:
 C     XS =WIDTH*CELL_WIDTH
 C     YS = DEPTH*CELL_DEPTH
 C     SIZE = YS*XS+HEADER_SIZE
-      SIZE = nlfi*nefi+HEADER_SIZE
+      SIZE = nlfi*nefi+HEADER_SIZE*4
 C
 C**********************************************************************
 C  Open the file that contains the GVAR header and pixel data.  The
@@ -137,7 +138,6 @@ C**********************************************************************
       nf=index(filename,' ')-1
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
      & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= SIZE)
-
       READ (8,REC=1,ERR=99)HEADER,IMAGEB
 
       imagelen=nlines*nelem/4
@@ -152,7 +152,7 @@ C**********************************************************************
          ii=0
       do i=istart,iend
          ii=ii+1
-         image(ii,jj)=float(image_data(i,j))
+         image(ii,jj)=float(image_data(i,j))*4.0
       enddo
       enddo
 
@@ -213,7 +213,7 @@ C     CLOSE(9)
 
 99    Write(6,*)'Error Reading GWC file'
       Write(6,*)'Filename = ',filename(1:nf)
-
+      stop 
 100   IF (IOSTATUS .NE. 0)THEN
         PRINT *, 'ERROR READING ',FILENAME, ' IO status is', 
      &  IOSTATUS
