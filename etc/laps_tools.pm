@@ -292,7 +292,7 @@ sub mkdatadirs{
      (@datadirs) = qw (cdl lapsprd log log/qc static time);
      (@lapsprddirs) = qw (l1s lc3 lcb lco lcp lct lcv 
 lf1 lga lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
-lpbl lps lq3 lrp lrs lso lsx lt1 lty 
+lpbl lps lq3 lrp lrs lso lsx lt1 lty lfr
 lvd lvd/goes08 lvd/goes10 lvd/meteos lvd/gmssat lw3 lwc lwm 
 ctp msg pig pin prg pro sag vrc vrz snd 
 v01 v02 v03 v04 v05 v06 v07 v08 v09 v10 v11 v12 
