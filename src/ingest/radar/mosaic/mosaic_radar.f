@@ -455,6 +455,9 @@ c ----------------------------------------------------------
              var_2d = 'REF'
              ilevel = 0
 
+             n_valid_radars = 0 ! being reset for each radar time
+                                ! needed (as input) only in this IF block
+
              do i = 1,i_ra_count
                 path=path_rdr(1:lprdr)//c_ra_ext(i)//'/vrc/'
                 grid_ra_ref(:,:,:,i) = r_missing_data  ! Initialize this 3D ref
