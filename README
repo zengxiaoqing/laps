@@ -187,7 +187,7 @@
      other runtime parameter files. Other subdirectories under 'data' are 
      also created if they're not already there. Shown below is an example of 
      running the localization for a particular laps domain. Note that 'make' 
-     will run the 'etc/laps_localization.pl' script. 
+     will run the 'etc/laps_localization.pl' script as follows: 
 
      $ make DATAROOT=/data/fxa/laps/data localize
 
@@ -539,29 +539,16 @@
 
 -------------- 2.8   CHANGING THE HORIZONTAL DOMAIN---------------------------
 
-                        NUMBER OF GRID POINTS
-
      Laps will allow you to change the horizontal domain after compilation
      and before the running of the localization script. Below is a list of 
-     the relevant files that need to be changed.
+     the relevant changes.
 
-     1. Adjust the horizontal dimensions in 
-                                   './data/static/nest7grid.parms'.
+                        NUMBER OF GRID POINTS
 
-     2. Edit the file './data/static/nest7grid.cdl' to modify
-	the domain size from the Colorado (61x61) to your domain size.
-	This should be consistent with the horizontal grid dimensions in
-                                   './data/static/nest7grid.parms'. 
+     Adjust the horizontal dimensions (NX_L, NY_L) in 
+                                              './data/static/nest7grid.parms'.
 
-        Three sets of variables need to be modified in 'nest7grid.cdl':
-<pre> 
-        a) x and y in the dimensions area should be set to match NX_L
-           and NY_L.
-        b) NX and Ny in the data area should be set to match NX_L
-           and NY_L.
-        c) imax and jmax in the LAPS data area should be set to match
-           NX_L and NY_L.
-</pre>
+
      NOTE: The file './data/static/nest7grid.cdl' is now automatically edited
            by ./etc/laps_localization.pl using the values found in 
            './data/static/nest7grid.parms'.
