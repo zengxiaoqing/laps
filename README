@@ -2607,7 +2607,7 @@ Outputs: (LW3 is main output)
 </pre>                                        
 Source directory: laps/src/wind (contains a README file)
 
-Parameter namelist file: 'static/wind.nl'
+Parameter namelist files: 'static/wind.nl', static/nest7grid.parms 
 
 Further description and reference is at:
 
