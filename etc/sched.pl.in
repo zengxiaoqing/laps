@@ -71,12 +71,31 @@ if($fxa_sys!=0){
 }
 
 
-    open(SAVEOUT,">&STDOUT");
-    open(SAVEERR,">&STDERR");
-    open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
-    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-    select(STDERR); $| = 1;
-    select(STDOUT); $| = 1;
+open(SAVEOUT,">&STDOUT");
+open(SAVEERR,">&STDERR");
+open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm") || die "Can't redirect stdout";
+open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+select(STDERR); $| = 1;
+select(STDOUT); $| = 1;
+
+
+my(@locks);
+opendir(LOCKDIR,"$LAPS_LOG_PATH");
+@locks = grep /^\.locklaps/, readdir(LOCKDIR);
+closedir(LOCKDIR);
+
+
+foreach(@locks){
+    $_ =~ /^\.locklaps\.(\d+)$/;
+    my $jpid = $1;
+    print "WARNING Found LOCK file for sched.pl with pid $jpid - killing previous job\n";
+    kill 9,$jpid;
+    unlink "$LAPS_LOG_PATH/$_";
+}
+
+my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
+open(LOCK,">$lockfile");
+close(LOCK);
 
 
 
@@ -113,6 +132,7 @@ if($fxa_sys!=0){
     system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 }
 
+unlink "$lockfile";
 
 sub systime{
     use Time::Local;

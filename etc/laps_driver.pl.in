@@ -81,12 +81,12 @@ select(STDOUT); $| = 1;
 
 my(@locks);
 opendir(LOCKDIR,"$LAPS_LOG_PATH");
-@locks = grep /^\.\#$exe/, readdir(LOCKDIR);
+@locks = grep /^\.lock$exe/, readdir(LOCKDIR);
 closedir(LOCKDIR);
 
 
 foreach(@locks){
-    $_ =~ /^\.lock$exe(\d+)$/;
+    $_ =~ /^\.lock$exe\.(\d+)$/;
     my $jpid = $1;
     print "WARNING Found LOCK file for $exe with pid $jpid - killing previous job\n";
     kill 9,$jpid;
