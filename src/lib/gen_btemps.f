@@ -44,8 +44,8 @@ c     synthetic btemps for model comparison to satellite imagery.
 
       integer kk                !number of vertical levels in the call 
                                 !including surface.  
-                                !note the organization of profiles is 1=top
-                                !kk = surface
+                                !note the organization of profiles is 1=surface
+                                !kk = top
       real temp(kk)             !level temp in K
       real pres(kk)             !level pressure in hPa
       real sfc_temp, sfc_pres   !surface temp and pressure (K, hPa)
