@@ -705,20 +705,36 @@ c
 c
       integer nx,ny,nz             !No. of LL domain grid points
       real*4 lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
-      common /llgrid/nx,ny,nz,lat0,lon0,dlat,dlon
+      character*1 cgrddef
+      common /llgrid/nx,ny,nz,lat0,lon0,dlat,dlon,cgrddef
 c
 c===============================================================================
 c
       entry latlon_2_llij(np,glat,glon,lli,llj)
 c_______________________________________________________________________________
 c
-      do n=1,np
-         diff=glon(n)-lon0
-         if (diff .lt. 0.) diff=diff+360.
-         if (diff .ge. 360.) diff=diff-360.
-         lli(n)=diff/dlon+1.
-         llj(n)=(lat0-glat(n))/dlat+1.  !mod 7-6-00 JSmart orig: glat(n)-lat0
-      enddo
+      if(cgrddef.eq.'S')then
+         do n=1,np
+            diff=glon(n)-lon0
+            if (diff .lt. 0.) diff=diff+360.
+            if (diff .ge. 360.) diff=diff-360.
+            lli(n)=diff/dlon+1.
+            llj(n)=(glat(n)-lat0)/dlat+1.
+         enddo
+      elseif(cgrddef.eq.'N')then
+         do n=1,np
+            diff=glon(n)-lon0
+            if (diff .lt. 0.) diff=diff+360.
+            if (diff .ge. 360.) diff=diff-360.
+            lli(n)=diff/dlon+1.
+            llj(n)=(lat0-glat(n))/dlat+1.
+         enddo
+
+      else
+         print*,'you must specify whether the standard
+     .           lat is Southern or Northern boundary'
+      endif
+
       return
 c
 c===============================================================================
@@ -726,6 +742,7 @@ c
       entry llij_2_latlon(np,lli,llj,glat,glon)
 c_______________________________________________________________________________
 c
+c Note: if lat0=northern boundary of ll grid set dlat=-dlat
       do n=1,np
          glon(n)=(lli(n)-1.)*dlon+lon0
          glat(n)=(llj(n)-1.)*dlat+lat0
@@ -913,13 +930,14 @@ c===============================================================================
 c
       subroutine init_gridconv_cmn(gproj,nxbg,nybg,nzbg
      &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
-     &,sw1,sw2,ne1,ne2,istatus)
+     &,sw1,sw2,ne1,ne2,cgrddef,istatus)
 c
 c JS 4-01
 c
       implicit none
 
       character*(*)  gproj
+      character*(*)  cgrddef
       integer        istatus
       integer        nxbg,nybg,nzbg
       real           dlat,dlon
@@ -934,8 +952,9 @@ c *** Common block variables for lat-lon grid.
 c
       integer   nx_ll,ny_ll,nz_ll
       real*4    lat0_ll,lon0_ll,d_lat,d_lon
+      character*1 cgrddef_ll
       common /llgrid/nx_ll,ny_ll,nz_ll,lat0_ll,lon0_ll
-     &,d_lat,d_lon
+     &,d_lat,d_lon,cgrddef_ll
 c
 c *** Common block variables for lambert-conformal grid.
 c
@@ -969,10 +988,11 @@ c
          nx_ll=nxbg
          ny_ll=nybg
          nz_ll=nzbg
-         lat0_ll=sw1
+         lat0_ll=lat0
          lon0_ll=lon0
          d_lat=dlat
          d_lon=dlon
+         cgrddef_ll=cgrddef
          return
       endif
 
