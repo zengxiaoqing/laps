@@ -85,46 +85,46 @@ c
         endif
 	do k=1,n_obs_b
 c
-	   read(11,901)  stations(k),              !station id
-     &                   wmoid(k),                 !WMO id number
-     &                   provider(k),              !data provider
-     &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   time(k)		   !obs time
+	   read(11,901)  stations(k),            !station id
+     &                   wmoid(k),               !WMO id number
+     &                   provider(k),            !data provider
+     &                   lat(k), lon(k), elev(k),!lat, lon, elev
+     &                   time(k)		 !obs time
 c
-	  read(11,903)   reptype(k),               !station report type
-     &                   autostntype(k),           !station type (manual/auto)
-     &                   wx(k)                     !present weather
+	  read(11,903)   reptype(k),             !station report type
+     &                   autostntype(k),         !station type (manual/auto)
+     &                   wx(k)                   !present weather
 c
-	  read(11,905)   t(k), t_ea(k),            !temp, temp expected accuracy
-     &                   td(k), td_ea(k),          !dew point, dew point exp. accuracy
-     &                   rh(k), rh_ea(k)           !Rel hum, rh expected accuracy
+	  read(11,905)   t(k), t_ea(k),          !temp, temp expected accuracy (Deg F)
+     &                   td(k), td_ea(k),        !dew point, dew point exp. accuracy (Deg F)
+     &                   rh(k), rh_ea(k)         !Rel hum, rh expected accuracy (%)
 c
-	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed (kt)
-     &                   ddg(k), ffg(k),           !wind gust dir, wind gust speed
-     &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
+	  read(11,907)   dd(k), ff(k),           !wind dir (deg), wind speed (kt)
+     &                   ddg(k), ffg(k),         !wind gust dir, wind gust speed
+     &                   dd_ea(k), ff_ea(k)      !dir expected accuracy, spd exp accuracy
 c
-	  read(11,909)   alt(k),                   !altimeter
-     &                   stnp(k),                  !station pressure
-     &                   mslp(k),                  !MSL pressure
-     &                   delpch(k),                !3-h press change character
-     &                   delp(k),                  !3-h pressure change
-     &                   p_ea(k), alt_ea(k)        !pressure exp accuracy, alt exp accuracy
+	  read(11,909)   alt(k),                 !altimeter (mb)
+     &                   stnp(k),                !station pressure (mb)
+     &                   mslp(k),                !MSL pressure (mb)
+     &                   delpch(k),              !3-h press change character
+     &                   delp(k),                !3-h pressure change (mb)
+     &                   p_ea(k), alt_ea(k)      !pressure exp accuracy, alt exp accuracy
 c
-	  read(11,911)   vis(k), vis_ea(k),        !visibility, vis exp accuracy
-     &                   solar(k), solar_ea(k),    !solar, solar exp accuracy
-     &                   sfct(k), sfct_ea(k),      !soil/water temp, soil/water temp exp accuracy
-     &                   sfcm(k), sfcm_ea(k)       !soil moist, soil moist temp exp accuracy
+	  read(11,911)   vis(k), vis_ea(k),      !visibility, vis exp accuracy
+     &                   solar(k), solar_ea(k),  !solar, solar exp accuracy
+     &                   sfct(k), sfct_ea(k),    !soil/water temp, soil/water temp exp accuracy
+     &                   sfcm(k), sfcm_ea(k)     !soil moist, soil moist temp exp accuracy
 c
-	  read(11,913)   pcp1(k),                  !1-h precipitation
-     &                   pcp3(k),                  !3-h precipitation
-     &                   pcp6(k),                  !6-h precipitation
-     &                   pcp24(k),                 !24-h precipitation
-     &                   snow(k),                  !snow depth
-     &                   pcp_ea(k), snow_ea(k)     !precip and snow exp accuracy
+	  read(11,913)   pcp1(k),                !1-h precipitation
+     &                   pcp3(k),                !3-h precipitation
+     &                   pcp6(k),                !6-h precipitation
+     &                   pcp24(k),               !24-h precipitation
+     &                   snow(k),                !snow depth
+     &                   pcp_ea(k), snow_ea(k)   !precip and snow exp accuracy
 c
-	  read(11,915)  kkk_s(k),                  !num cld layers 
-     &                  max24t(k),                 !24-h max temperature
-     &                  min24t(k)                  !24-h min temperature
+	  read(11,915)  kkk_s(k),                !num cld layers 
+     &                  max24t(k),               !24-h max temperature (Deg F)
+     &                  min24t(k)                !24-h min temperature (Deg F)
 c
 c.....	Read the cloud data if we have any.
 c
