@@ -126,7 +126,7 @@ c The missing data flag is r_missing_data!
 c First examine the previous image for missing data.
 c Get missing satellite data value.
 c
-            call  set_missing_sat(csat_type,c_type,
+            call  set_missing_sat(csat_id,csat_type,c_type,
      &               image_prev,n_elems,n_lines,
      &               smsng,r_missing_data,
      &               istatus)

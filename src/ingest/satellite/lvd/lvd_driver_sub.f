@@ -493,7 +493,7 @@ c
      &   image_ir,image_39,image_12,image_67,image_vis,
      &   r_image_status)
 
-      elseif(csatid.ne.'gmssat')then
+      else         !  if(csatid.ne.'gmssat')then
 
          write(6,*)'TEST = skipping satfill section'
          write(6,*)'==============================='
@@ -501,7 +501,7 @@ c
          write(6,*)'Not using fill routine '
          write(6,*)'Only use set_missing_flag '
 
-         call set_missing_flag(csattype,n_ir_elem,n_ir_lines,
+         call set_missing_flag(csatid,csattype,n_ir_elem,n_ir_lines,
      &             n_vis_elem,n_vis_lines,n_wv_elem,n_wv_lines,
      &             nft,ntm,c_type,smsng,maxchannels,nimages,
      &             image_ir,image_39,image_12,image_67,image_vis,

@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine set_missing_sat(csat_type,chtype,
+      subroutine set_missing_sat(csatid,csattype,chtype,
      &       image_in,nx,ny,smsng,r_missing_data,istatus)
 c
 c
@@ -58,8 +58,9 @@ c
       real*4    smsng
       real*4    r_missing_data
       real*4    rlow,rhigh
-      character csat_type*3
-      character chtype*3
+      character csattype*(*)
+      character chtype*(*)
+      character csatid*(*)
       character cid*2
       character path*100
       character cname*255
@@ -75,27 +76,26 @@ c the test is different depending on the value of smsng (satellite missing).
 c the missing satellite data values are defined in data/static/satellite_lvd.nl
 c
       rlow=0.0
-      rhigh=smsng
-      if(csat_type.eq.'gvr'.or.csat_type.eq.'gwc')then
-         rhigh = 1023.
-         if(chtype.eq.'4u ')rlow=69.
-         if(chtype.eq.'wv ')rlow=30.
-         if(chtype.eq.'11u'.or.chtype.eq.'12u')rlow=16.
-         if(chtype.eq.'vis')rlow=28.
+      if(smsng.gt.0.0)then
+         rhigh=smsng
+      else
+         rhigh=255.
+      endif
 
-c        if(csat_type.eq.'gwc'.and.chtype.eq.'vis')then
-c           rhigh = 255.0
-c           rlow = 0.0
-c        elseif(csat_type.eq.'gvr'.and.chtype.eq.'vis')then
-c           rlow = 28.0
-c        endif
-
+      if(csatid.ne.'gmssat')then
+         if(csattype.eq.'gvr'.or.csattype.eq.'gwc')then
+            rhigh = 1023.
+            if(chtype.eq.'4u ')rlow=69.
+            if(chtype.eq.'wv ')rlow=30.
+            if(chtype.eq.'11u'.or.chtype.eq.'12u')rlow=16.
+            if(chtype.eq.'vis')rlow=28.
+         endif
       endif
 
       istat_status=0
       imiss_status=0
 
-c     if(csat_type.eq.'gwc')then
+c     if(csattype.eq.'gwc')then
 c        call setmsng_gwc(rlow,rhigh,smsng,nx,ny,image_in,
 c    &r_missing_data,imiss_status)
 c        print*,'N msng found in setmsng_gwc: ',imiss_status
@@ -159,6 +159,7 @@ c
      &        image_in(i,1).gt.rhigh)then
 
             image_temp(i,1)=r_missing_data
+            imiss_status=imiss_status-1
          else
             image_temp(i,1)=image_in(i,1)
          endif
@@ -168,6 +169,7 @@ c
      &        image_in(i,jbnd).gt.rhigh)then
 
             image_temp(i,jbnd)=r_missing_data
+            imiss_status=imiss_status-1
          else
             image_temp(i,jbnd)=image_in(i,jbnd)
          endif
@@ -178,6 +180,7 @@ c
      &        image_in(1,j).gt.rhigh)then
 
             image_temp(1,j)=r_missing_data
+            imiss_status=imiss_status-1
          else
             image_temp(1,j)=image_in(1,j)
          endif
@@ -187,6 +190,7 @@ c
      &        image_in(ibnd,j).gt.rhigh)then
 
             image_temp(ibnd,j)=r_missing_data
+            imiss_status=imiss_status-1
          else
             image_temp(ibnd,j)=image_in(ibnd,j)
          endif
@@ -197,8 +201,8 @@ c
          image_in(i,j)=image_temp(i,j)
       enddo
       enddo
-      write(6,*)'   # reset due to r_missing: ',imiss_status
-      write(6,*)'   # reset due to statistic: ',istat_status
+      write(6,*)'   # reset to r_missing: ',imiss_status
+      write(6,*)'   # reset to average  : ',istat_status
       istatus=imiss_status+istat_status
 
 1000  return

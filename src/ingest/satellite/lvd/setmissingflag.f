@@ -1,4 +1,4 @@
-      subroutine set_missing_flag(csat_type,nir_elem,nir_lines,
+      subroutine set_missing_flag(csatid,csat_type,nir_elem,nir_lines,
      &                   nvis_elem,nvis_lines,nwv_elem,nwv_lines,
      &                   nft,ntm,c_type,smsng,maxchannels,nimages,
      &                   image_ir,image_39,image_12,image_67,
@@ -12,8 +12,9 @@ c
       integer    maxchannels
       integer    nimages
 
-      character*3 c_type(maxchannels,nimages)
-      character*3 csat_type
+      character*3   c_type(maxchannels,nimages)
+      character*3   csat_type
+      character*(*) csatid
 
       integer    nwv_elem,nwv_lines
       integer    nir_elem,nir_lines
@@ -75,7 +76,7 @@ c
 
             if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
 
-               call set_missing_sat(csat_type,c_type(j,i),
+               call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_ir,
      &               nir_elem,nir_lines,
      &               smsng,r_missing_data,
@@ -86,7 +87,7 @@ c
 
             elseif(ispec.eq.3)then
 
-               call set_missing_sat(csat_type,c_type(j,i),
+               call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_wv,
      &               nwv_elem,nwv_lines,
      &               smsng,r_missing_data,
@@ -97,7 +98,7 @@ c
 
             else    !must be the vis data
 
-               call set_missing_sat(csat_type,c_type(j,i),
+               call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_vis,
      &               nvis_elem,nvis_lines,
      &               smsng,r_missing_data,

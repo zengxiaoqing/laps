@@ -64,7 +64,7 @@ c
             goto(1,2,3,4,5)ispec
 
 c -------------------------------------------
-2           call set_missing_sat(csat_type,c_type(j,i),
+2           call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_39(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,istatus)
 
@@ -89,7 +89,7 @@ c -------------------------------------------
 
             goto 6
 c -------------------------------------------
-4           call set_missing_sat(csat_type,c_type(j,i),
+4           call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_ir(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -115,7 +115,7 @@ c -------------------------------------------
 
             goto 6
 c -------------------------------------------
-5           call set_missing_sat(csat_type,c_type(j,i),
+5           call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_12(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -141,7 +141,7 @@ c -------------------------------------------
 
             goto 6
 c -------------------------------------------
-3           call set_missing_sat(csat_type,c_type(j,i),
+3           call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_67(1,1,i),nwv_elem,nwv_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -168,7 +168,7 @@ c -------------------------------------------
             goto 6
 c -------------------------------------------
 1           c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
-            call set_missing_sat(csat_type,c_type(j,i),
+            call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
      &               smsng,r_missing_data,
      &               istatus)

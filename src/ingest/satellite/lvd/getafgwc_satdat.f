@@ -406,6 +406,7 @@ c
       character c_afwa_fname*100
       character cdir_lvd*150
       character cfilenames(max_files)*255
+      character cname*100
 
       print*,'Subroutine getgmsdata'
 
@@ -421,17 +422,20 @@ c get latest lvd file in lvd directory
 
       if(nfiles.gt.0)then
          call get_directory_length(cfilenames(nfiles),lenf)
-         call get_latest_file_time(cfilenames(nfiles)(1:lenf),cfiletime)
+         cname=cfilenames(nfiles)(1:lenf)//cfname_cur(1:5)//'*'
+         call s_len(cname,lenf)
+         call get_latest_file_time(cname,cfiletime)
          call i4time_fname_lp(cfiletime,i4time_latest_lvd,istatus)
       else
          i4time_latest_lvd=0
       endif
 
-      cjjjhr=cfname_cur(3:7)
+c     cjjjhr=cfname_cur(3:7)
       ntm=0
  
 c hardwire for testing
-      cjjjhr='19607'
+c     cjjjhr='19607'
+c     cjjjhr='15614'
 
       do i=1,nchannels
 
@@ -440,7 +444,8 @@ c hardwire for testing
         cpath=path_to_raw_sat(i,jtype,isat)
         np=index(cpath,' ')-1
         ct=chtype(i)
-        c_afwa_fname=cpath(1:np)//'GM5_'//cjjjhr//'*'//ct//'.unf'
+c       c_afwa_fname=cpath(1:np)//'GM5_'//cjjjhr//'*'//ct//'.unf'
+        c_afwa_fname=cpath(1:np)//'GM5_'//'*'//ct//'.unf'
         np=index(c_afwa_fname,' ')-1
         call get_file_names(c_afwa_fname,nfiles,cfilenames,
      +max_files,istatus)
@@ -451,6 +456,8 @@ c hardwire for testing
           goto 1000
         elseif(nfiles.gt.0)then
           print*,'found ',nfiles,' matching ',c_afwa_fname(1:np)
+          call s_len(cfilenames(nfiles),lenf)
+          cjjjhr=cfilenames(nfiles)(lenf-19:lenf-13)
         else
           print*,'No files found ',cpath(1:np)
           goto 1000

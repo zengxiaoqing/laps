@@ -51,8 +51,8 @@ c                                          as function of input/output ratio
        Implicit none
 
        Integer max_elem,max_line
-       parameter (max_elem = 15)
-       parameter (max_line = 15)
+       parameter (max_elem = 100)
+       parameter (max_line = 100)
 
        Integer imax, jmax
        Integer line_dim, elem_dim
