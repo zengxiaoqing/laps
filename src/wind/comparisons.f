@@ -182,8 +182,10 @@ C********************************************************************
         write(6,*)'Comparing ',c_ob,' Wind Obs (passing QC) to '
      1                       ,c_grid,' Grid'
         write(6,2)c_ob,c_grid
-2       format(1x,'   i   j   k      ',a,' Ob          '
-     1                                ,a,' Analysis     diff')
+!2      format(1x,'   i   j   k      ',a,' Ob          '
+!     1                               ,a,' Analysis     diff')
+2       format(1x,'   i   j   k      ',a,' Ob (Struct)    Ob (array)'
+     1                                ,a,' Analysis        diff')       
 
         if(l_point_struct)then
            c_ob_loc = c_ob
@@ -221,9 +223,10 @@ C********************************************************************
                       write(6,101)il,jl,k
      1                ,obs_barnes(iob)%valuef(1)
      1                ,obs_barnes(iob)%valuef(2)       
+     1                ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)
      1                ,u_3d(il,jl,k),v_3d(il,jl,k)
      1                ,diffu,diffv
-101                   format(1x,3i4,3(2x,2f7.1))
+101                   format(1x,3i4,4(2x,2f7.1))
                   endif
 
               endif ! obstype match
