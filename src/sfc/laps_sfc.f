@@ -96,6 +96,7 @@ c                                           spline doesn't use).
 c                               09-24-98  Carry background flags for each var.
 c                                           Rm ceil QC check.
 c                               09-30-98  Housekeeping.
+c                               12-02-98  Remove status check for LT1.
 c
 c       Notes:
 c
@@ -579,9 +580,6 @@ c
 c
 	if(jstatus(3) .ne. 1) then
 	  print *,' From LAPS_VANL: Error Return.' 
-	endif
-	if(jstatus(4) .ne. 1) then
-	  print *,' From LAPS_VANL LT1:  Error Return.' 
 	endif
 c
 c.....	That's about it...let's go home.
