@@ -48,7 +48,7 @@ cdis
      1          ,rheight_radar                              ! Input
      1          ,upass1,vpass1  ! 1st pass anal             ! Input
      1          ,u_laps_bkg,v_laps_bkg                      ! Input
-     1          ,v_nyquist_2,unfolding_thresh               ! Input
+     1          ,v_nyquist_global                           ! Input
      1          ,l_correct_unfolding,l_grid_north           ! Input
      1          ,istatus                                    ! Input/Output
      1                                                          )
@@ -61,6 +61,10 @@ cdis
 
       logical l_correct_unfolding,l_grid_north
 
+      parameter (unf_nyq_frac = 0.7)
+
+      write(6,*)' Global Nyquist variable = ',v_nyquist_global
+
       write(6,*)' LVL  # Obs  Intvl  # QC'
 
       write(6,*)' Also applying QC and dealiasing'
@@ -71,6 +75,18 @@ cdis
       icount_unfld = 0
       icount_good_qc = 0
       icount_bad_qc = 0
+
+      if(v_nyquist_global .ne. r_missing_data
+     1   .and. v_nyquist_global .lt. 200.
+     1   .and. v_nyquist_global .gt. 1.0 ) then
+          v_nyquist_2 = 2. * v_nyquist_global
+          uf_thresh = v_nyquist_global * unf_nyq_frac 
+          v_nyq = v_nyquist_global
+      else
+          v_nyquist_2 = r_missing_data
+          v_nyq = r_missing_data
+      endif
+
 
       do k=1,kmax
         height_k = height_of_level(k)
@@ -132,45 +148,21 @@ cdis
 !                                   less than about 2.7 V Nyquist
 !
                 if(v_nyquist_2 .ne. r_missing_data)then ! Use global Nyquist vel
-                  if(abs(abs(diff_radial)-v_nyquist_2) 
-     1                                        .lt. unfolding_thresh)then       
-c                   call latlon_to_radar(lat(i,j),lon(i,j),height_k
-c    1                  ,azimuth,slant_range,elev
-c    1                  ,rlat_radar,rlon_radar,rheight_radar)
+                    v_nyq_2 = v_nyquist_2
+                    v_nyq = v_nyquist_global
+                elseif(vr_nyq(i,j,k) .ne. r_missing_data)then
+                    v_nyq_2 = 2. * vr_nyq(i,j,k)
+                    v_nyq = vr_nyq(i,j,k)
+                else
+                    v_nyq_2 = r_missing_data
+                    v_nyq = r_missing_data
+                endif
 
-                    velold = vr_obs(i,j,k)
+                if(v_nyq .ne. r_missing_data)then
+                  if (v_nyq .gt. 0.) THEN  ! Valid Nyquist vel
+                    uf_thresh = unf_nyq_frac * v_nyq
 
-!                   Adjust the velocity value
-                    if(L_correct_unfolding)then
-                        r_nyquist_number = nint(diff_radial/v_nyquist_2)
-                        diff_radial = diff_radial
-     1                                  - r_nyquist_number * v_nyquist_2
-                        vr_obs(i,j,k) = vr_obs(i,j,k)
-     1                                  + r_nyquist_number * v_nyquist_2
-                        icount_unfld=icount_unfld+1
-
-                        if(icount_unfld .le. 50)then
-                            write(6,102)i,j,k
-     1                                  ,r_pass1
-     1                                  ,velold
-     1                                  ,vr_obs(i,j,k)
-     1                                  ,diff_radial
-     1                                  ,nint(azimuth)
-     1                                  ,nint(slant_range/1000.)
-     1                                  ,elev
-                        endif ! icount_unfld < 50
-                    endif ! L_correct_unfolding
-
-102                 format(1x,'Folding at'
-     1            ,i3,i3,i3,' vp,vr,vrnw',3f6.1,' df',f6.1
-     1            ,' azran=',i3,'/',i3,' el=',f4.1)
-
-                  endif ! Data appears folded
-
-                else ! Invalid global Nyquist velocity, try gridpoint Nyquist
-                  if (vr_nyq(i,j,k) .gt. 0.) THEN  ! Valid gridpoint Nyquist vel
-                    v_nyq_2=2.*vr_nyq(i,j,k)
-                    uf_thresh = 0.7 * vr_nyq(i,j,k)
+!                   Test if we could benefit from a single de-aliasing
                     if(abs(abs(diff_radial)-v_nyq_2).lt.uf_thresh)then
 c                     call latlon_to_radar(lat(i,j),lon(i,j),height_k
 c    1                  ,azimuth,slant_range,elev
@@ -196,11 +188,15 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
      1                                  ,nint(azimuth)
      1                                  ,nint(slant_range/1000.)
      1                                  ,elev
+102                         format(1x,'Folding at'
+     1                        ,i3,i3,i3,' vp,vr,vrnw',3f6.1,' df',f6.1       
+     1                        ,' azran=',i3,'/',i3,' el=',f4.1)
+
                         endif ! icount_unfld < 50
                       endif ! L_correct_unfolding
                     endif ! Less than unfolding thresh
-                  endif ! Valid gridpoint Nyquist vel
-                endif ! We have a valid global nyquist velocity for the radar
+                  endif ! Nyquist vel > 0
+                endif ! non-missing nyquist velocity 
 
 !               QC check for radar (current threshold is 12 m/s)
                 if(abs(diff_radial) .lt. 12.)then
