@@ -1157,9 +1157,9 @@ c     modify lq3 field low  level
 
 c     fill field_display_btemps with missing data flag where not zero
 
-c      where (field_display_btemps == 0.0)
-c         field_display_btemps = mdf
-c      endwhere
+      where (field_display_btemps < 1.0e-7 )
+         field_display_btemps = mdf
+      endwhere
       
       
       
