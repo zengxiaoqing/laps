@@ -37,7 +37,9 @@ cdis
 cdis   
 cdis
         subroutine rdpoint(i4time,heights_3d                           ! I
-     1  ,N_POINT,n_point_obs,ext_in                                    ! I
+     1  ,N_POINT                                                       ! I
+     1  ,n_point_obs                                                   ! I/O
+     1  ,ext_in                                                        ! I
      1  ,ni,nj,nk                                                      ! I
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon                                                       ! I
@@ -321,7 +323,9 @@ cdis
 
         return
 
-999     write(6,*)' No point ob data present'
+999     write(6,*)' No point ob data present for ',ext_in
+        write(6,*)' End of RDPOINT ',ext_in,' file: '
+     1           ,'Cumulative # obs = ',n_point_obs
         istatus = 1
         return
 
