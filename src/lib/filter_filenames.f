@@ -22,7 +22,7 @@ c
        implicit none
 
        integer*4 max_char
-       parameter(max_char = 9)
+       parameter(max_char = 10)
        integer*4 max_files_filtered
        parameter(max_files_filtered=3000)
 
@@ -42,7 +42,7 @@ c
        character*1   c_qualifying_char(max_char)
        character*255 c_fnames_filtered(max_files_filtered)
 
-       data c_qualifying_char/'1','2','3','4','5','6','7','8','9'/
+       data c_qualifying_char/'0','1','2','3','4','5','6','7','8','9'/ 
 
        i_fnames_filtered = 0
        i_files_qualifying= 0
@@ -87,6 +87,6 @@ c         write(6,*)'No filenames have been filtered'
        enddo
        i_nbr_files_out = i_files_qualifying
 
-       istatus=0
+       istatus=1
        return
        end

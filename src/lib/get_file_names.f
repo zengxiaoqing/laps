@@ -135,6 +135,8 @@ c       sort data
         integer istatus                 ! Output
         character*(*) names(number)     ! Input/Output
 
+        integer i4time(number)          ! Local
+        character*13 asc_time           ! Local
         character*500 names_buf         ! Local
         logical l_switch                ! Local
 
@@ -143,19 +145,58 @@ c       sort data
 !       alternatives include a "tree" sort or various C sorting utilities.
 !       WARNING: Input names must be <= 500 characters in length.
 
-!       Steve Albers    June 1995
+!       Steve Albers    June 1995       Original Version
+!       Steve Albers    July 1998       Fix for Y2K problem
+
+        if(number .eq. 0)then
+            istatus = 1
+            return
+        endif
+
+        n_non_numeric = 0
+
+!       Set up array of i4times for the files, 0 is used for non-numeric files
+        call get_directory_length(names(1),lenf)
+
+        do i = 1,number
+            names_buf = names(i)
+            call filter_non_numeric_fnames(names_buf,1,num_out,1
+     1                                    ,istatus)      
+            if(istatus .ne. 1)then
+                write(6,*)' sort_fn: error status returned from '
+     1                   ,'filter_non_numeric_fnames'
+                return
+            endif
+
+            if(num_out .eq. 1)then ! Calculate i4time(i)
+                call get_filetime_length(names(i),lent)
+                asc_time = names(i)(lenf+1:lenf+lent)
+                call i4time_fname_lp(asc_time,i4time(i),istatus)
+            else
+                i4time(i) = 0      ! File is non-numeric and has no i4time
+                n_non_numeric = n_non_numeric + 1
+            endif
+
+        enddo ! i
 
 10      l_switch = .false.
 
         do i=1,number-1
 
 !           Compare two names
-            if(names(i) .gt. names(i+1))then
+            if( (i4time(i) .gt. i4time(i+1) ) .OR.
+     1          (i4time(i) .eq. i4time(i+1) .and. 
+     1           names(i)  .gt. names(i+1)  )      )then
 
 !               Switch the names
                 names_buf = names(i)
                 names(i) = names(i+1)
                 names(i+1) = names_buf
+
+                i4time_buf = i4time(i)
+                i4time(i) = i4time(i+1)
+                i4time(i+1) = i4time_buf
+
                 l_switch = .true.
 
             endif
@@ -166,7 +207,8 @@ c       sort data
 !           write(6,*)' Sort_fn: switched one or more names'
             go to 10
         else
-            write(6,*)' Sort_fn: names all sorted'
+            write(6,*)' Sort_fn: names sorted,'
+     1               ,' non_numeric/total = ',n_non_numeric,number
         endif
 
         istatus = 1
