@@ -229,7 +229,7 @@ cdoc  Reads static/osse.nl file.
       character      c_obs_types(max_ob_types)*15
       character      a9_time_init*9
       character      a4_time_fcst*4
-      character      cmodel*3
+      character      cmodel*10
 
       namelist /osse_nl/path_to_model,cmodel,c_obs_types,
      1a9_time_init,a4_time_fcst,ifcst_intrvl
