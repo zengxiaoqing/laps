@@ -1407,10 +1407,10 @@ then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "solaris"
   then
-	FFLAGS="$FFLAGS -fixed -M\$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -fixed -M\$(SRCROOT)/src/lib"
 	CPP="/usr/ucb/cc -P"
 else
-	FFLAGS="$FFLAGS -I\$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -I\$(SRCROOT)/src/lib"
 fi
 fi
 
@@ -1698,7 +1698,7 @@ else
 fi
 
 # AC_PROG_INSTALL
-INSTALL='$(LAPSROOT)/util/install-sh'
+INSTALL='$(SRCROOT)/util/install-sh'
 
 
 
