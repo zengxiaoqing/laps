@@ -1262,8 +1262,14 @@ Inputs:
 Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
 
 	lso     intermediate data (ASCII) 
+
 </pre>
-                                        
+
+Source directory: laps/src/ingest/sao
+
+The data within the ASCII format is fairly self explanatory if you look at our
+'obs_driver' code. The lat/lon info (as in the rest of LAPS) is in decimal 
+degrees.                                        
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
