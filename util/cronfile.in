@@ -3,4 +3,5 @@
 08,14,23,29,38,45,53,59 * * * *  @PERL@ @prefix@/etc/laps_driver.pl lvd_sat_ingest.exe     @prefix@ @datadir@
 22,30                   * * * *  @PERL@ @prefix@/etc/laps_driver.pl lsr_driver.exe         @prefix@ @datadir@
 00,05,10,15,20,25,30,45 * * * *  @PERL@ @prefix@/etc/laps_driver.pl ingest_rrv.exe         @prefix@ @datadir@
+02,12,22,32,42,52       * * * *  @PERL@ @perfix@/etc/laps_driver.pl ln3_driver.exe         @prefix@ @datadir@ 
 12                      * * * *  @PERL@ @prefix@/etc/laps_driver.pl remap_polar_netcdf.exe @prefix@ @datadir@
