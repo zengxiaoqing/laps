@@ -8,6 +8,7 @@
           real ri
           real rj
           real elev_diff
+          real ldf
           integer i
           integer j
 	end type sfcob
