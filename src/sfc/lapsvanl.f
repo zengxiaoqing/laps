@@ -362,7 +362,7 @@ c
 	   dy(i,j) = grid_spacing_actual_m
 	   dx(i,j) = grid_spacing_actual_m
            if(del .gt. 0.)then ! we will not divide by zero
-	       a(i,j) = -(1. + fo2(i,j) * del) * gam * rho2 / del
+	       a(i,j) = - gam * rho2 / del
            endif
 	enddo !i
 	enddo !j
@@ -856,7 +856,7 @@ c
      &         fu(i-1,j-1))/ dx(i,j) + (fv(i,j+1) - fv(i,j-1) + 
      &         fv(i-1,j+1) - fv(i-1,j-1)) / dy(i,j)) * .25
 	    f(i,j) = rho * (-ddiva + fo(i,j) * vort(i,j)) +
-     &         a(i,j) * rp(i,j) - rho * anonlinterm -
+     &         a(i,j) * rp(i,j) - rho * anonlinterm + 
      &         rho * frictterm
 	    f(imax,j) = f(imax-1,j)
 	    f(i,jmax) = f(i,jmax-1)
@@ -879,12 +879,12 @@ c
 	    dpdx = (p_a(i+1,j) - p_a(i,j)) / dx(i,j)
 	    dvdtnf= (dv(i,j)+dv(i,j+1)+dv(i-1,j+1)+dv(i-1,j))/4./dt
      &             +(nv(i,j)+nv(i,j+1)+nv(i-1,j+1)+nv(i-1,j))*.25
-     &             +(fv(i,j)+fv(i,j+1)+fv(i-1,j+1)+fv(i-1,j))*.25
+     &             -(fv(i,j)+fv(i,j+1)+fv(i-1,j+1)+fv(i-1,j))*.25
 	    u_a(i,j) = (u(i,j) - del * fo(i,j)*(dvdtnf + dpdy / rho)) /
      &                 (1. + del * fo2(i,j))
 	    dudtnf= (du(i,j)+du(i+1,j)+du(i+1,j-1)+du(i,j-1))/4./dt
      &             +(nu(i,j)+nu(i+1,j)+nu(i+1,j-1)+nu(i,j-1))*.25
-     &             +(fu(i,j)+fu(i+1,j)+fu(i+1,j-1)+fu(i,j-1))*.25
+     &             -(fu(i,j)+fu(i+1,j)+fu(i+1,j-1)+fu(i,j-1))*.25
             v_a(i,j) = (v(i,j) + del * fo(i,j)*(dudtnf + dpdx / rho)) /
      &                 (1. + del * fo2(i,j))
 	  enddo !i

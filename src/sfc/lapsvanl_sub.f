@@ -464,7 +464,12 @@ c
 c
 c.....  Set the weights for the spline.
 c
-	alf = alf_in
+c  We need parity with respect to obs and filtering. Since number
+c of obs can change depending on varialbe ajust alf accordingly
+c so that it is repersentative of the inverse of observation
+c error**2 times the number of working gridpoints divided by the number of ob
+c points so that the term is roughly comprable to the beta term
+	alf = beta_in*(imax-4)*(jmax-4)/n_obs_var
 	alf2a = alf2a_in
 	beta = beta_in
 	a = a_in
