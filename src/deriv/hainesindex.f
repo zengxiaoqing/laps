@@ -35,7 +35,7 @@
             enddo
 
             deltat = tmkb - tmkt
-            dpdep  = tmkb - (tdkb+273.15) 
+            dpdep  = tmkb - tdkb
 
             if( nint(prsb) .eq. 700 ) then    ! hainh
                if( deltat .le. 17.5 ) then
