@@ -222,8 +222,10 @@ csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
           stop
       endif
 
+csms$serial(<pres_3d : out> : default=ignore) begin
       call get_pres_3d(i4time,imax,jmax,kmax,pres_3d,istatus)
       if(istatus .ne. 1)return
+csms$serial end
 
       call get_rep_pres_intvl(pres_3d,imax,jmax,kmax,rep_pres_intvl
      1                       ,istatus)
