@@ -23,195 +23,162 @@ cdis    the modifications.  if significant modifications or enhancements
 cdis    are made to this software, the fsl software policy manager
 cdis    (softwaremgr@fsl.noaa.gov) should be notified.
 cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-        subroutine lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
-     1  kstart,qs,p,glat,glon,ii,jj,kk,istatus)
 
-c       $log: lsin.for,v $
-c revision 1.2  1995/09/13  21:36:14  birk
-c added disclaimer to files
-c
-c revision 1.1  1994/04/25  15:02:56  birk
-c initial revision
-c
+      subroutine lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
+     1     kstart,qs,p,glat,glon,ii,jj,kk,istatus)
 
-c       this routine is the laps surface interface for water vapor
-c       its function is to get the relevant boundary layer moisture
-c       and insert it properly into the data array.
-c       one other function of this routine is to establish the bounds
-c       of the bottom of the column
-
-c       updated analysis september 21 1993 -- modified the treatment of the
-c       surface level.  moved the surface moisture to the immediate laps level
-c       above the surface.   this was done because workstation plotting
-c       software would not recognize the extra moisture below ground for
-c       asthetic reasons.  also the workstation total precipitable water comp-
-c       utation did not match the one made in this code for that saem reason
-c
-c       the new arrangement of code does the following.
-
-c       basically we prepare all for a call to int_tpw
-c       we leave the boundary layer mixing process to analq along with
-c       radiometer adjustment.
-
+c     this routine is the laps surface interface for water vapor
+c     its function is to get the relevant boundary layer moisture
+c     and insert it properly into the data array.
+c     one other function of this routine is to establish the bounds
+c     of the bottom of the column
+      
+c     updated analysis september 21 1993 -- modified the treatment of the
+c     surface level.  moved the surface moisture to the immediate laps level
+c     above the surface.   this was done because workstation plotting
+c     software would not recognize the extra moisture below ground for
+c     asthetic reasons.  also the workstation total precipitable water comp-
+c     utation did not match the one made in this code for that saem reason
+c     
+c     the new arrangement of code does the following.
+      
+c     basically we prepare all for a call to int_tpw
+c     we leave the boundary layer mixing process to analq along with
+c     radiometer adjustment.
+      
 c     1 ) puts qs (surface q) at the plevel above ps (surface pressure)
-c       2) does not write any data below ground
-c       3) maintains an integral from the true surface ps for tpw
-c               this might cause some difference between this output and
-c               the workstation integrated soundings, but not the error of
-c               putting the data below ground.
+c     2) does not write any data below ground
+c     3) maintains an integral from the true surface ps for tpw
+c     this might cause some difference between this output and
+c     the workstation integrated soundings, but not the error of
+c     putting the data below ground.
 
+      implicit none
 
-
-
-        implicit none
-
-c        include 'lapsparms.for'
-c        include 'parmtrs.inc'
-
-c input variables
-
-
+c     input variables
 
       integer i4time,istatus,ii,jj,kk
       real plevel (kk)
-      real lt1dat (ii,jj,kk) ! laps 3-d temp field
+      real lt1dat (ii,jj,kk)    ! laps 3-d temp field
       real data (ii,jj,kk)
       real cg (ii,jj,kk)
       real tpw (ii,jj)
       real bias_one
       integer kstart (ii,jj)
       real qs (ii,jj)
-      real p (ii,jj)         !surface pressure (topo level)
+      real p (ii,jj)            !surface pressure (topo level)
       real glat (ii,jj)
       real glon (ii,jj)
-
-
-c  internal variables with lapsparms.inc dependence
-
-        real*4
-     1  t(ii,jj),!surface temperature k
-     1  pu(ii,jj),!pressure if top of boundary layer
-     1  td(ii,jj),!dew point temperature of surf. k -> c
-     1  blsh(ii,jj) !boundary layer specific humidity
-
-
-c  normal internal variables
-
-        integer*4
-     1  i,j,k
-
-
-
-c       constants
-        save r, bad, g
-        real
-     1  r,!the gas constant for dry air
-     1  bad,!bad data flag
-     1  g! the acceleration of gravity near the surface of the earth
-
-        data r /287.04/
-        data g /9.80665/
-        data bad/-1e30/
-
-c       function names
-
-        real*4 ssh2  ! type the funciton ssh2
-
-c       special notes:   td will be converted to c for call to ssh
-c                        p will be converted to mb for comparison to vert coord
-
+      
+c     internal variables with lapsparms.inc dependence
+      
+      real
+     1     t(ii,jj),            !surface temperature k
+     1     pu(ii,jj),           !pressure if top of boundary layer
+     1     td(ii,jj),           !dew point temperature of surf. k -> c
+     1     blsh(ii,jj)          !boundary layer specific humidity
+      
+c     normal internal variables
+      
+      integer
+     1     i,j,k
+      
+c     constants
+      save r, bad, g
+      real
+     1     r,                   !the gas constant for dry air
+     1     bad,                 !bad data flag
+     1     g                    !the acceleration of gravity
+      
+      data r /287.04/
+      data g /9.80665/
+      data bad/-1e30/
+      
+c     function names
+      
+      real ssh2                 ! type the funciton ssh2
+      
+c     special notes:   td will be converted to c for call to ssh
+c     p will be converted to mb for comparison to vert coord
+      
 c-------------------------------code-----------------------------
-
-
-c       get required field variables
-
-        call glst(i4time,t,ii,jj,istatus)
-        if(istatus.ne.1) return
-
-
-        call glsp(i4time,p,ii,jj,istatus)
-        if(istatus.ne.1) return
-
-c       convert p to mb
-
-        do j = 1,jj
-        do i = 1,ii
-        p(i,j) = p(i,j)*.01
-        enddo
-        enddo
-
-        call glstd(i4time,td,ii,jj,istatus)
-        if(istatus.ne.1) return
-
-        call ghbry (i4time,plevel,p,lt1dat,pu,ii,jj,kk,
-     1                  istatus)
-        if(istatus.ne.1) return
-
-        istatus = 0 ! begin with bad istatus
-
-
-
-c       convert td to c then compute surface specific h.
-
-        do j = 1,jj
-        do i = 1,ii
-
-        td(i,j) = td(i,j) - 273.15
-        t(i,j) = t(i,j) -273.15
-
-        qs (i,j) = ssh2 (p(i,j),t(i,j),
-     1  td(i,j),0.0)  ! qs is gm/kg
-
-        blsh(i,j) = qs(i,j) *1e-3 ! blsh is gm/gm
-
-        enddo
-        enddo
-
-c       write surface data in at the bottom of the column
-c       define kstart (k index of bottom of the column)
-
-        do j = 1,jj
-        do i = 1,ii
-        do k = 1,kk
-
-        if (p(i,j).lt. plevel(k)) then ! plevel is underground
-                data(i,j,k) = bad
-                cg(i,j,k) = 0.0 ! no clouds under ground
-        else
-                data(i,j,k) = blsh(i,j) ! assign boundary layer sh (gm/gm)
-c                                       to the bottom level of the column
-c               define kstart
-                kstart(i,j) = k
-c               jump out of loop
-                go to 2001
-        endif
-
-        enddo
-2001    continue
-        enddo
-        enddo
-
-
-c compute the total precipitable water and bias correct total 3-d field to
-c radiometer data
-
-        print*, 'call routine analq'
-        call analq(i4time,plevel,p,t,pu,td,data,cg,tpw,bias_one,kstart,
-     1              qs, glat,glon,ii,jj,kk)
-
-        print*, 'done with routine analq'
-
-
-        istatus = 1
-
-        return
-
-        end
-
-
+      
+c     get required field variables
+      
+      call glst(i4time,t,ii,jj,istatus)
+      if(istatus.ne.1) return
+      
+      call glsp(i4time,p,ii,jj,istatus)
+      if(istatus.ne.1) return
+      
+c     convert p to mb
+      
+      do j = 1,jj
+         do i = 1,ii
+            p(i,j) = p(i,j)*.01
+         enddo
+      enddo
+      
+      call glstd(i4time,td,ii,jj,istatus)
+      if(istatus.ne.1) return
+      
+      call ghbry (i4time,plevel,p,lt1dat,pu,ii,jj,kk,
+     1     istatus)
+      if(istatus.ne.1) return
+      
+      istatus = 0               ! begin with bad istatus
+      
+c     convert td to c then compute surface specific h.
+      
+      do j = 1,jj
+         do i = 1,ii
+            
+            td(i,j) = td(i,j) - 273.15
+            t(i,j)  = t(i,j)  - 273.15
+            
+            qs (i,j) = ssh2 (p(i,j),t(i,j),
+     1           td(i,j),0.0)   ! qs is gm/kg
+            
+            blsh(i,j) = qs(i,j) *1e-3 ! blsh is gm/gm
+            
+         enddo
+      enddo
+      
+c     write surface data in at the bottom of the column
+c     define kstart (k index of bottom of the column)
+      
+      do j = 1,jj
+         do i = 1,ii
+            do k = 1,kk
+               
+               if (p(i,j).lt. plevel(k)) then ! plevel is underground
+                  data(i,j,k) = bad
+                  cg(i,j,k)   = 0.0 ! no clouds under ground
+               else
+                  data(i,j,k) = blsh(i,j) ! assign boundary layer sh (gm/gm)
+c     to the bottom level of the column
+c     define kstart
+                  kstart(i,j) = k
+c     jump out of loop
+                  go to 2001
+               endif
+               
+            enddo
+ 2001       continue
+         enddo
+      enddo
+      
+c     compute the total precipitable water and bias correct total 3-d field to
+c     radiometer data
+      
+      print*, 'call routine analq'
+      call analq(i4time,plevel,p,t,pu,td,data,cg,tpw,bias_one,kstart,
+     1     qs, glat,glon,ii,jj,kk)
+      
+      print*, 'done with routine analq'
+      
+      istatus = 1
+      
+      return
+      
+      end
