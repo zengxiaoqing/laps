@@ -21,7 +21,7 @@
  i_delta_sat_t_sec_cmn=1500,         
 
  l_highres=.false.,                  
- I_PERIMETER_CMN=0,                  
+ I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
  r_msng_sat_flag_cdf_cmn=255.,       
