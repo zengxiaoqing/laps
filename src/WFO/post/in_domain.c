@@ -23,17 +23,22 @@ int main(int argc, char *argv[])
 
 /* get LAPS_DATA_ROOT environment variable */
           strcpy(dataroot,getenv("LAPS_DATA_ROOT"));
+/*        fprintf(stdout,"dataroot = %s\n",dataroot);                */
           slen = strlen(dataroot); 
           if (slen > 0) {
 
 /* read netCDF file static.nest7grid LAT and LON, x and y dimensions */
-            strncpy(fname,dataroot,slen);
+/*          strncpy(fname,dataroot,slen);                            */
+            strcpy(fname,dataroot);
+/*          fprintf(stdout,"fname = %s\n",fname);                    */
             strcat(fname,"/static/static.nest7grid");
+/*          fprintf(stdout,"full fname = %s\n",fname);               */
 
             if( access(fname, F_OK) != 0 ) {
               fprintf(stdout,"The LAPS static file %s does not exist\n",fname);
               status = 0;
               fprintf(stdout,"%d\n",status);
+              fprintf(stdout,"%d\n",slen);
               return;
             }
 
