@@ -19,7 +19,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
 
 EXE = ln3_driver.exe
 
-SRC = nowradwsi2laps.f \
+SRC = nexradwsi2laps.f \
      wait_for_radar.f \
      checkradardata.f
 
