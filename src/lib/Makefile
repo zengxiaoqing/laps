@@ -56,6 +56,7 @@ SRC	= machine_dependent.F \
           filename13.f \
           filter_filenames.f \
           fname_conversions.f \
+          gen_bl_file.f \
           get_cloud_deriv.f \
           get_dir_length.f \
           get_directory.f \
@@ -79,6 +80,7 @@ SRC	= machine_dependent.F \
           gettmp3d.f \
           getuv3d.f \
           getw3d.f \
+          ghbry.f \
           gridconv.f \
           ground_temp.f \
           hum.f \
