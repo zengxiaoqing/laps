@@ -8,7 +8,7 @@ main                                           laps_sfc.f
            dev_ck                                   "
            bkg_chk                                  "
         mdat_laps                              mdatlaps.f
-        lapsvanl                               lapsvanl.f
+        laps_vanl                              lapsvanl.f
             zero                                    
             get_modelfg_3d                          
             mean_lapse                         laps_routines.f
@@ -25,7 +25,7 @@ main                                           laps_sfc.f
             pstn_anal                          laps_routines.f
             lp_fire_danger                          "
             heat_index                              "
-            verify                                  "
+            verify                             lapsvanl_sub.f
 
 ..............................................................................
 
