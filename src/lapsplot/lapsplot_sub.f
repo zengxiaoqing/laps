@@ -39,19 +39,7 @@ cdis
 
         subroutine lapsplot_3d()
 
-!       97-Aug-14     Ken Dritz     Added calls to get_grid_dim_xy,
-!                                   get_laps_dimensions, and get_max_radars
-!       97-Aug-14     Ken Dritz     Added call to get_r_missing_data
-!       97-Aug-14     Ken Dritz     Added call to get_maxstns
-!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L, MAX_RADARS,
-!                                   r_missing_data, laps_cycle_time, and
-!                                   maxstns to lapswind_plot
-!       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, NZ_L to xsect
-!       97-Aug-14     Ken Dritz     Pass 61 to dummy argument NX_C of xsect
-!                                   and NZ_L to dummy argument NZ_C of xsect
-!       97-Aug-14     Ken Dritz     Pass r_missing_data, laps_cycle_time
-!                                   to xsect
-!       97-Aug-14     Ken Dritz     Pass maxstns to xsect
+        include 'lapsplot.inc'
 
         character*1 c_display
         integer*4 SYS$TRNLOG,ASKI4T
@@ -145,6 +133,8 @@ cdis
             call OPNGKS
         endif
 
+        call get_lapsplot_parms(namelist_parms,istatus)       
+
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
      1        ,'   (Const Pressure Level or SFC)'
@@ -184,7 +174,8 @@ cdis
 
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
-     1                         laps_cycle_time,zoom,density)
+     1                         laps_cycle_time,zoom,density,
+     1                         namelist_parms)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
@@ -198,11 +189,13 @@ cdis
 
             call xsect(c_display,i4time_ref,lun,l_atms
      1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,NXSECT       
-     1                ,r_missing_data,laps_cycle_time,maxstns)
+     1                ,r_missing_data,laps_cycle_time,maxstns
+     1                ,namelist_parms)
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
-     1                        ,r_missing_data,laps_cycle_time,maxstns)       
+     1                        ,r_missing_data,laps_cycle_time,maxstns
+     1                        ,namelist_parms)       
 
         endif ! c_section
 
