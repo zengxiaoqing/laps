@@ -75,7 +75,9 @@ c *** Open the netcdf file.
 c
       if (fname .ne. oldfname) then
          fname13=fname9_to_wfo_fname13(fname)
-         l=index(path,' ')-1
+c         l=index(path,' ')-1
+
+         call s_len(path,l)
          cdfname=path(1:l)//'/'//fname13
          print *,'Reading - ',cdfname(1:l+14)
          ncid=ncopn(cdfname,ncnowrit,rcode)

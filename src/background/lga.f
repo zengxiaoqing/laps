@@ -62,8 +62,9 @@ c        bgmodel defined above.
 c
       integer*4 nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
-     .          nx_bg  ,ny_bg  ,nz_bg        !Background model grid dimensions
-c
+     .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
+     .          lga_status                      !status returned from lga_driver
+c                                            ! 1=good 0=bad
       real*4    prbot,delpr                  !LAPS bottom and delta pressures
 c
       character*255 lapsroot                 !LAPS root path
@@ -76,20 +77,31 @@ c *** Read from standard input.
 c *** Each line contains the background data directory path for each
 c        corresponding bgmodel defined above.
 c
-      character*255 bgpath
+      character*150 bgpath
+
+c
+c  This is the max number of paths allowed in nest7grid.parms
+c  and should match the value in lib/lapsgrid.f 
+c 
+      integer maxbgmodels
+      parameter (maxbgmodels=4)
+      character*150 bgpaths(maxbgmodels)
+      integer bgmodels(maxbgmodels), len
 c
 c-------------------------------------------------------------------------------
 c
 c *** Comments used in writing netcdf files only.
 c
-      integer istat
+      integer istat, i
       character*12 cmodel
       include 'lapsparms.cmn'
 c_______________________________________________________________________________
 c
 c Read background model from nest7grid.parms
       laps_domain_file = 'nest7grid'
-      istat = index(laps_domain_file,' ')-1
+c      istat = index(laps_domain_file,' ')-1
+
+      call s_len(laps_domain_file,istat)
       call get_laps_config(laps_domain_file(1:istat),istat)
       nx_laps = NX_L_CMN
       ny_laps = NY_L_CMN
@@ -97,78 +109,90 @@ c Read background model from nest7grid.parms
       prbot = PRESSURE_BOTTOM_L/100.
       delpr = PRESSURE_INTERVAL_L/100.
       laps_cycle_time = laps_cycle_time_cmn
-      bgmodel = laps_background_model_cmn
-c this line will be changed shortly
-      bgpath = path_to_ruc_cmn
 
-      if(bgmodel.eq.1) then
-	nx_bg = 81
-        ny_bg = 62
-        nz_bg = 25        
-        cmodel = 'RUC60_NATIVE'   
-      else if(bgmodel.eq.2) then
-	nx_bg = 93
-        ny_bg = 65
-        nz_bg = 19        
-        cmodel = 'ETA48_CONUS'        
-      else if(bgmodel.eq.3) then
-	nx_bg = 144
-        ny_bg = 73
-        nz_bg = 16        
-        cmodel = 'RUC60_NATIVE'   	   
-      else if(bgmodel.eq.4) then
-	nx_bg = 93
-        ny_bg = 65
-        nz_bg = 19        
-        cmodel = 'RUC60_NATIVE'   	   
-      else if(bgmodel.eq.5) then
-	nx_bg = 151
-        ny_bg = 113
-        nz_bg = 40       
-        cmodel = 'RUC40_NATIVE'   	   
-      endif
+      i=1
 
+      call get_background_info(150,bgpaths,bgmodels) 
 
-      if (bgmodel .lt. 1 .or. bgmodel .gt. nbgmodel) then
-         print *,'Bad model specification in LGA, bgmodel =',bgmodel
-         print *,'   LGA process aborted...'
-         stop
-      endif
+      do while(lga_status.eq.0 .and. i.le.nbgmodel)
+         bgmodel = bgmodels(i)
+         if(bgmodel .eq. 0) goto 965
+c         len = index(bgpaths(i),' ')
 
-      print *, 'bgmodel is set to ', bgmodel
+         call s_len(bgpaths(i),len)
+         bgpath(1:len) =  bgpaths(i)
+          
+         if(bgmodel.eq.1) then
+            nx_bg = 81
+            ny_bg = 62
+            nz_bg = 25        
+            cmodel = 'RUC60_NATIVE'   
+         else if(bgmodel.eq.2) then
+            nx_bg = 93
+            ny_bg = 65
+            nz_bg = 19        
+            cmodel = 'ETA48_CONUS'        
+         else if(bgmodel.eq.3) then
+            nx_bg = 144
+            ny_bg = 73
+            nz_bg = 16        
+            cmodel = 'RUC60_NATIVE'   	   
+         else if(bgmodel.eq.4) then
+            nx_bg = 93
+            ny_bg = 65
+            nz_bg = 19        
+            cmodel = 'RUC60_NATIVE'   	   
+         else if(bgmodel.eq.5) then
+            nx_bg = 151
+            ny_bg = 113
+            nz_bg = 40       
+            cmodel = 'RUC40_NATIVE'   	   
+         endif
+         
 
-      print *, ' '
-      print *, 'input paramters'
-      print *,  ' '
-      print *, nx_laps,ny_laps,nz_laps,prbot,delpr
-      print *, laps_cycle_time
-      print *, lapsroot
-      print *, laps_domain_file
-      print *, nx_bg,ny_bg,nz_bg
+         if (bgmodel .lt. 1 .or. bgmodel .gt. nbgmodel) then
+            print *,'Bad model specification in LGA, bgmodel =',bgmodel
+            print *,'   LGA process aborted...'
+            stop
+         endif
+
+         print *, 'bgmodel is set to ', bgmodel
+
+         print *, ' '
+         print *, 'input parameters'
+         print *,  ' '
+         print *, nx_laps,ny_laps,nz_laps,prbot,delpr
+         print *, laps_cycle_time
+         print *, lapsroot
+         print *, laps_domain_file
+         print *, nx_bg,ny_bg,nz_bg
 
 c
 c *** Read background model data directory paths from standard input.
 c
-      print *, 'bgpath ', bgpath
+         print *, 'bgpath ', bgpath
 c
 c *** Read background model name for netcdf comment output only.
 c
-      print *, 'cmodel ',cmodel
-970   continue
+         print *, 'cmodel ',cmodel
+ 970     continue
 c
 c *** Initialize esat table.
 c
-      call esat_init
+         call esat_init
 c
 c *** Call lga driver.
 c
 
-      call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
-     .       laps_cycle_time,lapsroot,laps_domain_file,
-     .       bgmodel,bgpath,cmodel,
-     .       nx_bg,ny_bg,nz_bg)
+         call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
+     .        laps_cycle_time,lapsroot,laps_domain_file,
+     .        bgmodel,bgpath,cmodel,
+     .        nx_bg,ny_bg,nz_bg, lga_status)
+         i=i+1 
+      enddo
 
 c
+      if(lga_status.eq.0) goto 965
       print *,'LGA...Normal completion.'
       stop
 c
@@ -201,6 +225,9 @@ c
 960   continue
       print *,'Error reading background data directory paths.'
       stop
+ 965  continue
+      print *,'No acceptable background model found.'
+      
 c
       end
 c
@@ -209,14 +236,14 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .       laps_cycle_time,lapsroot,laps_domain_file,
      .       bgmodel,bgpath,cmodel,
-     .       nx_bg,ny_bg,nz_bg)
+     .       nx_bg,ny_bg,nz_bg, lga_status)
 
 c
       implicit none
 c
       integer*4 nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
-     .          max_files
+     .          max_files, lga_status
 c
       parameter (max_files=2000)
 
@@ -271,10 +298,10 @@ c
       character*100 bg_names(max_files)
       character*100 lga_names(max_files)
       character*100 names(max_files)
-      character*13  fname13,fname9_to_wfo_fname13
-      character*9   fname,wfo_fname13_to_fname9
+      character*13  fname13,fname9_to_wfo_fname13,file_list(2)
+      character*9   a9,fname,wfo_fname13_to_fname9
       character*2   gproj
-      character*50  outdir
+      character*150  outdir
       character*31  ext
       character*3   var(5*nz_laps)
       character*4   af
@@ -282,13 +309,17 @@ c
       character*10  units(5*nz_laps)
       character*125 comment(5*nz_laps)
       character*12  cmodel
-      integer len_dir
+       
+      integer len_dir, ntime, last_time,next_time, nf
 c
       data msgflg/1.e30/
+      data ntime/0/
+      data last_time/0/
+      data next_time/2000000000/
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
-
+      lga_status=0
       call get_directory('static',outdir,len_dir)    
 
       call get_laps_lat_lon(outdir(1:len_dir),laps_domain_file,
@@ -301,7 +332,7 @@ c
 c *** Specify model path, extension for write laps routine.
 c
 
-      l=index(lapsroot,' ')-1
+c      l=index(lapsroot,' ')-1
 c      ll=index(laps_domain_file,' ')-1
 c      outdir=lapsroot(1:l)//'/'//laps_domain_file(1:ll)//'/lapsprd/lga/'
       call get_directory('lga',outdir,len_dir)
@@ -319,9 +350,15 @@ c
       ct4=0
       call get_file_names(bgpath,bg_files,names,max_files,istatus)
       if (istatus .ne. 1) print *,'Error in get_file_names.'
+
       print *,'Number of bg_files found:',bg_files
+
+
       do i=1,bg_files
-         j=index(names(i),' ')-14
+c         j=index(names(i),' ')-14
+
+         call s_len(names(i),j)
+         j=j-13
          if (j .ge. 0) then
             if (names(i)(j+1:j+1) .eq. '1' .or. 
      .          names(i)(j+1:j+1) .eq. '9') then
@@ -340,39 +377,58 @@ c
          endif
       enddo
       bg_files=ct4
+      print *,'Number of bg_files found:',bg_files,ct4
 c
 c *** Get .lga file names.
 c
-c      lgapath=lapsroot(1:l)//'/'//laps_domain_file(1:ll)//
-c     .        '/lapsprd/lga/*.lga'
       lgapath=outdir(1:len_dir)//'/*.lga'
       call get_file_names(lgapath,lga_files,lga_names,max_files,istatus)
       do i=1,lga_files
-         j=index(lga_names(i),' ')-18
+c         j=index(lga_names(i),' ')-18
+         call s_len(lga_names(i),j)
+         j=j-17
+ 
          if (j .ge. 0) lga_names(i)=lga_names(i)(j+1:j+13)
       enddo
 c
 c *** Get current time from systime.dat
 c
-      call get_directory('etc',lapsroot,l)
-      open(1,file=lapsroot(1:l)//'systime.dat',status='old',err=900)
-      read(1,*) i4time_now
-      close(1)
+      call get_systime(i4time_now,a9,istatus)
+c      call get_directory('time',lapsroot,l)
+c      open(1,file=lapsroot(1:l)//'systime.dat',status='old',err=900)
+c      read(1,*) i4time_now
+c      close(1)
 c
 c *** Create new lga file if it does not already exist.
 c
       do n=bg_files,1,-1
-         do i=1,lga_files
-            if (bg_names(n)(1:9) .eq. lga_names(i)(1:9) .and.
-     .          bg_names(n)(12:13) .eq. lga_names(i)(10:11)) then
-                  print *,'LGA file exists, not making one.'
-                  goto 40
-            endif
-         enddo
+c         do i=1,lga_files
+c            if (bg_names(n)(1:9) .eq. lga_names(i)(1:9) .and.
+c     .          bg_names(n)(12:13) .eq. lga_names(i)(10:11)) then
+c                  print *,'LGA file exists, not making one.'
+c                  goto 40
+c            endif
+c         enddo
          fname=bg_names(n)(1:9)
          call i4time_fname_lp(fname,bgtime,istatus)
          af=bg_names(n)(10:13)
          read(af,'(i4)') ihour
+
+c
+c *** File names are returned sorted from newest to oldest ***
+c     process only the newest which is at least as old as the laps time
+c
+      
+         if(bgtime.gt.i4time_now) then
+           print*,
+     +      'Background model newer than requested LAPS - skipping'
+           goto 40
+         endif  
+         if(ntime.gt.bgtime) then
+c           print*,'Background older than latest available - skipping'
+           goto 40
+         endif
+            
 c
 c ****** Do NOT process model fcst if fcst is greater than 12 hours.
 c
@@ -406,18 +462,67 @@ c
             print *,'Model fcst valid time is not a LAPS time.'
             goto 40
          endif
+         if(ntime.eq.0) then
+            ntime = bgtime
+         endif   
+
+         if(bgtime+ihour*3600.gt.i4time_now.and.
+     +        bgtime+ihour*3600.lt.next_time) then
+            next_time = bgtime+ihour*3600
+            file_list(1) = bg_names(n)
+          endif
+         if(bgtime+ihour*3600.le.i4time_now.and.
+     +        bgtime+ihour*3600.gt.last_time) then
+            last_time = bgtime+ihour*3600
+            file_list(2) = bg_names(n)
+          endif
+40       continue
+
+      enddo
 c
 c ****** Read background model data.
 c
+      if (last_time.eq.0 .or. next_time.eq.2000000000) then
+        print*, 'not enough files:',last_time,next_time 
+        lga_status = 0
+        return        
+      endif
+
+      do nf=1,2
+         fname = file_list(nf)(1:9)
+         af = file_list(nf)(10:13)
+         call i4time_fname_lp(fname,bgtime,istatus)
+
+         do i=1,lga_files
+            if (fname .eq. lga_names(i)(1:9) .and.
+     .          af(3:4) .eq. lga_names(i)(10:11)) then
+               call get_lga_source(nx_laps,ny_laps,nz_laps
+     +              ,fname,af,comment(1))
+               call s_len(cmodel,i)
+               if(cmodel(1:i) .eq. comment(1)(1:i)) then
+                  print *,'LGA file exists, not making one.' 
+                  lga_status=1
+                  goto 80
+               else
+                  print *,'Overwritting LGA file ',lga_names(i)
+     +            ,'from model ',comment(1)(1:i),' with a new one'
+     +            ,' from model ',cmodel(1:i)
+               endif
+            endif
+               
+         enddo
+
+
          if (bgmodel .eq. 1) then     ! Process 60 km RUC data
             call read_ruc60_native(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                             prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                             gproj,istatus)
  
          elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
+            print *, 'eta48 code disabled'
 c           call read_eta48_conus(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-c    .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
-c    .                            gproj,istatus)
+c     .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
+c     .                            gproj,istatus)
 c
          elseif (bgmodel .eq. 3) then ! Process NOGAPS data
             call read_nogaps(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
@@ -436,7 +541,9 @@ c
 c
          endif
          if (istatus .ne. 1) then
-            l=index(bgpath,' ')-1
+c            l=index(bgpath,' ')-1
+
+            call s_len(bgpath,l)
             if (bgmodel .gt. 1 .and. bgmodel .lt. 3) then
                fname13=fname//af
             elseif (bgmodel .eq. 4) then
@@ -445,7 +552,7 @@ c
             print *,'Error reading background model data for: ',
      .         bgpath(1:l)//'/'//fname13
             print *,'Process aborted for this file.'
-            goto 40
+            goto 80
          endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
@@ -560,7 +667,7 @@ c
             if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
      .              uw(i,j,k),vw(i,j,k)) .ge. msgflg) then
                print *,'Missing value flag detected...Abort...',i,j,k
-               goto 40
+               goto 80
             endif
             if (ht(i,j,k) .ne. ht(i,j,k) .or. 
      .          tp(i,j,k) .ne. tp(i,j,k) .or.
@@ -568,7 +675,7 @@ c
      .          uw(i,j,k) .ne. uw(i,j,k) .or.
      .          vw(i,j,k) .ne. vw(i,j,k)) then
                print *,'NaN detected...Abort...',i,j,k
-               goto 40
+               goto 80
             endif
          enddo
          enddo
@@ -589,7 +696,9 @@ c
 c
 c ****** Fill grid for LAPS write routine.
 c
-         i=index(cmodel,' ')-1
+c         i=index(cmodel,' ')-1
+
+         call s_len(cmodel,i)
          do k=1,nz_laps                 ! Height
             do j=1,ny_laps
             do i=1,nx_laps
@@ -668,12 +777,18 @@ c
          call write_laps(bgtime,bgvalid,outdir,ext,
      .                   nx_laps,ny_laps,nz_laps*5,nz_laps*5,var,
      .                   ip,lvl_coord,units,comment,grid,istatus)
-
-         if (istatus .ne. 1) 
-     .      print *,'Error writing interpolated data to LAPS database.'
+         
+         if (istatus .eq. 1) then
+            lga_status = 1
+         else
+           print *,'Error writing interpolated data to LAPS database.'
+         endif
 c
-40       continue
+ 80      continue
       enddo
+
+      if(lga_status.eq.0) return
+
 c
 c-------------------------------------------------------------------------------
 c *** Backfill any missing file times using linear interpolation
@@ -687,7 +802,10 @@ c
 c *** Convert file names to i4times and sort into one array.
 c
       do i=1,lga_files
-         j=index(lga_names(i),' ')-18
+c         j=index(lga_names(i),' ')-18
+
+         call s_len(lga_names(i),j)
+         j=j-17
          if (j .ge. 0) then
             call i4time_fname_lp(lga_names(i)(j+1:j+9),
      .                           lga_times(i),istatus)
@@ -702,13 +820,14 @@ c        linear interpolation.
 c
       do i=lga_files,2,-1
          if (lga_times(i) .eq. lga_times(i-1) .and.
-     .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) 
-     .          call time_interp(outdir,ext,
-     .                           nx_laps,ny_laps,nz_laps,
-     .                           pr,laps_cycle_time,
-     .                           lga_times(i-1),lga_valid(i-1),
-     .                           lga_times(i  ),lga_valid(i  ))
-
+     .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) then
+            print*,outdir,ext
+            call time_interp(outdir,ext,
+     .           nx_laps,ny_laps,nz_laps,
+     .           pr,laps_cycle_time,
+     .           lga_times(i-1),lga_valid(i-1),
+     .           lga_times(i  ),lga_valid(i  ))
+         endif
 
       enddo
 c
@@ -719,4 +838,21 @@ c
 900   print *,'Could not find systime.dat.'
       stop
 c
+      end
+
+      subroutine get_lga_source(nx,ny,nz,fname,af,source)
+      character*9 fname
+      character*4 af
+      character*10 dumb1
+      character*125 comment
+      character*12 source
+      integer ihour, bgtime, nx,ny,nz
+      real dumb2(nx,ny,nz)
+
+      call i4time_fname_lp(fname,bgtime,istatus)
+      read(af,'(i4)') ihour
+      call get_lapsdata_3d(bgtime,bgtime+ihour*3600,nx,ny,
+     +        nz,'lga','HT ',dumb1,comment,dumb2,istatus)
+      source = comment(1:12)
+      return
       end

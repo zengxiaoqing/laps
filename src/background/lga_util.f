@@ -29,13 +29,17 @@ c
 c *** Create netcdf file name and check for existence.
 c
       ldir=dir
-      len=index(ldir,' ')-1
+c      len=index(ldir,' ')-1
+
+      call s_len(ldir,len)
       if (ldir(len:len) .ne. '/') then
          ldir(len+1:len+1)='/'
          len=len+1
       endif
       lext=ext
-      elen=index(lext,' ')-1
+c      elen=index(lext,' ')-1
+
+      call s_len(lext,elen)
       inquire(file=ldir(1:len)//'static.'//lext(1:elen),exist=exists)
       if (.not. exists) then
          print *,' *** LAPS static file does not exist:  ',

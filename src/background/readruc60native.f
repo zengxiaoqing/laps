@@ -75,6 +75,7 @@ c
       character*4   af
       character*255 cdfname
       character*2   gproj
+      
 c
 c *** Common block variables for polar-stereographic grid.
 c
@@ -86,7 +87,8 @@ c_______________________________________________________________________________
 c      
 c *** Open the netcdf file.
 c
-      l=index(path,' ')-1
+c      l=index(path,' ')-1
+      call s_len(path,l)
       cdfname=path(1:l)//'/'//fname//af
       print *,'Reading - ',cdfname(1:l+14)
       ncid=ncopn(cdfname,ncnowrit,rcode)

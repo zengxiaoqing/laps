@@ -65,7 +65,7 @@ c
       integer ndims,nvars,ngatts,recdim,nrecs
       character*31 dummy
 c
-      integer*4 i,j,k,l,istatus
+      integer*4 i,j,k,l,istatus, string_space
 c
       character*(*) path
       character*9   fname
@@ -83,7 +83,8 @@ c_______________________________________________________________________________
 c      
 c *** Open the netcdf file.
 c
-      l=index(path,' ')-1
+c      l=index(path,' ')-1
+      l=string_space(path)-1
       cdfname=path(1:l)//'/'//fname//af
       print *,'Reading - ',cdfname(1:l+14)
       ncid=ncopn(cdfname,ncnowrit,rcode)

@@ -256,8 +256,8 @@ c
      .       grid2(nx,ny,nz*5),
      .       gridn(nx,ny,nz*5)
 c
-      character*50  dir
-      character*31  ext
+      character*(*)  dir
+      character*(*)  ext
       character*3   var(5*nz)
       character*4   lvl_coord(5*nz)
       character*10  units(5*nz)

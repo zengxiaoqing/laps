@@ -53,7 +53,9 @@ c
 c
 c *** Open nogaps file.
 c
-      l=index(path//' ',' ')-1
+c      l=index(path//' ',' ')-1
+
+      call s_len(path,l)
       filename=path(1:l)//'/'//fname//af
       l=l+14
       print *,'Reading - ',filename(1:l)
