@@ -376,12 +376,12 @@
     startind = 1 
     laps_data(:,:,startind) = u
     varname(startind) = 'USF'
-    varcomment(startind) = 'Forecast U wind component in m/s'
+    varcomment(startind) = 'Fcst U-Component Wind           '
     
     startind = startind + 1
     laps_data(:,:,startind) = v
     varname(startind) = 'VSF'
-    varcomment(startind) = 'Forecast V wind component in m/s'
+    varcomment(startind) = 'Fcst V-Component Wind           '
 
     startind = startind + 1
     laps_data(:,:,startind) = w
@@ -557,7 +557,7 @@
     startind = startind + 1
     laps_data(:,:,startind) = pblhgt 
     varname(startind) = 'BLH'
-    varcomment(startind) = 'Forecast Boundary Layer Height'
+    varcomment(startind) = 'Forecast Boundary Layer Depth '
 
     startind = startind + 1
     laps_data(:,:,startind) = ground_t
@@ -567,7 +567,7 @@
     startind = startind + 1
     laps_data(:,:,startind) = vnt
     varname(startind) = 'VNT'
-    varcomment(startind) = 'ventilation index          '
+    varcomment(startind) = 'Ventilation Index          '
 
     startind = startind + 1
     laps_data(:,:,startind) = ham
@@ -582,7 +582,7 @@
     startind = startind + 1
     laps_data(:,:,startind) = fwi
     varname(startind) = 'FWI'
-    varcomment(startind) = 'Forsberg Fire Wx Index     '
+    varcomment(startind) = 'Fosberg Fire Wx Index      '
 
     IF (.NOT. write_to_lapsdir) THEN
       output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fsf/' 
