@@ -242,28 +242,28 @@ print "\n";
 
 print "Obs minus First Guess, before QC (m/s):\n";
 @greplines = grep /BIAS\/RMS/, @lines;
-$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS";
+$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS"; $ubias="U Bias"; $vbias="V Bias"; $urms="RMS U"; $vrms="RMS V";
 write;
 foreach (@greplines) {
  if (/FG/) {
   @list = split; $src = $list[2];
   ($label,$statstring) = split /\=/, $_ ;
-  ($dummy0,$nobs,$dummy2,$dummy3,$speedbias,$dummy5,$dummy6,$vecrms) = split /\s+/, $statstring;
+  ($dummy0,$nobs,$ubias,$vbias,$speedbias,$urms,$vrms,$vecrms) = split /\s+/, $statstring;
   write;
   }  }
 
 print "\nObs minus LAPS Analysis, after QC, radar is unfiltered (m/s):\n";
-$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS";
+$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS"; $ubias="U Bias"; $vbias="V Bias"; $urms="RMS U"; $vrms="RMS V";
 write;
 foreach (@greplines) {
  if (/LAPS/) {
   @list = split; $src = $list[2];
   ($label,$statstring) = split /\=/, $_ ;
-  ($dummy0,$nobs,$dummy2,$dummy3,$speedbias,$dummy5,$dummy6,$vecrms) = split /\s+/, $statstring;
+  ($dummy0,$nobs,$ubias,$vbias,$speedbias,$urms,$vrms,$vecrms) = split /\s+/, $statstring;
   write;
   }  }
 
 format STDOUT =
-  @|||||  @|||||  @|||||||||||  @|||||||||||
-$src, $nobs, $speedbias, $vecrms
+  @|||||  @|||||  @|||||||||  @||||||||| @|||||||| @|||||||| @|||||||| @||||||||
+$src, $nobs, $speedbias, $vecrms, $ubias, $vbias, $urms, $vrms
 .
