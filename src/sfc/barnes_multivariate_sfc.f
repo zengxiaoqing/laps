@@ -38,6 +38,8 @@
 
         call get_sfcob_field(obs,mxstn,'tgd',ob_full,istatus)
 
+        call get_systime_i4(i4time_sys,istatus) ! temporary while no time wt
+
         n_obs = 0
         do i = 1,mxstn
             n_obs = n_obs + 1
@@ -49,6 +51,7 @@
 
             obs_barnes(i)%k = 1
             obs_barnes(i)%weight = 1. / rinst_err**2
+            obs_barnes(i)%i4time = i4time_sys ! no time weight for now
 
             obs_barnes(i)%ldf = obs(i)%ldf
 C
@@ -199,6 +202,8 @@ C
         call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)return
 
+        call get_systime_i4(i4time_sys,istatus) ! temporary while no time wt
+
         l_analyze = .false.             ! array set
         wt_2d = 0.                      ! array set
 
@@ -242,6 +247,8 @@ C
                 obs_barnes_valid(n_obs_valid)%k = obs_barnes(iob)%k
                 obs_barnes_valid(n_obs_valid)%weight 
      1                                        = obs_barnes(iob)%weight
+                obs_barnes_valid(n_obs_valid)%i4time
+     1                                        = obs_barnes(iob)%i4time
                 obs_barnes_valid(n_obs_valid)%value(1) 
      1                                        = obs_barnes(iob)%value(1)
                 sumsq_inst = sumsq_inst 
@@ -287,6 +294,7 @@ C
                 obs_barnes_valid(n_obs_valid)%j = j
                 obs_barnes_valid(n_obs_valid)%k = 1
                 obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2
+                obs_barnes_valid(n_obs_valid)%i4time = i4time_sys ! no time wt
                 obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
                 obs_barnes_valid(n_obs_valid)%elev = topo(i,j)
                 obs_barnes_valid(n_obs_valid)%ldf = ldf(i,j)
