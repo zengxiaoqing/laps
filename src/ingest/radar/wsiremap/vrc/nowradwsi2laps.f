@@ -72,6 +72,9 @@ c confines.
       real*4 ri(imax,jmax)
       real*4 rj(imax,jmax)
       real*4 distmin,dist
+      real*4 rdistmax
+      real*4 xgrddismx
+      real*4 ygrddismx
       real*4 grid_spacing_m
       real*4 dlat,dlon
       real*4 LoV, Latin, La1,La2,Lo1,Lo2
@@ -79,6 +82,10 @@ c confines.
       real*4 nw(2),se(2)
       real*4 pi,rad2dg,rii,rjj
       real*4 r_missing_data
+      real*4 heigth_mean_grid
+      real*4 height_mean
+      real*4 height_sum
+      real*4 ridis,rjdis
 
       integer image_to_dbz(0:15)
       integer validTime
@@ -205,42 +212,93 @@ c and compute/save the minimum distance to radar.
 c----------------------------------------------------
       call get_r_missing_data(r_missing_data,istatus)
       call  read_static_grid(imax,jmax,'AVG',height_grid,istatus)
-      nradars_dom=0
+
       if(ctype.eq.'wsi')then
+
+         height_sum=0
+         do j=1,jmax
+         do i=1,imax
+            height_sum=height_sum+height_grid(i,j)
+         enddo
+         enddo
+         height_mean_grid=height_sum/(imax*jmax)
+         nradars_tot=0
+         rdistmax=480000.
+         xgrddismx=imax+rdistmax/grid_spacing_m
+         ygrddismx=jmax+rdistmax/grid_spacing_m
+         height_sum=0.0
+
+         print*,'num of grid points for search x: ',xgrddismx
+         print*,'num of grid points for search y: ',ygrddismx
+
          do i=1,nsites_present
+
            call latlon_to_rlapsgrid(present_site_lat(i),
      &                              present_site_lon(i),
      &                              lat,lon,            !LAPS lat/lon arrays
      &                              imax,jmax,          !LAPS horiz domain
      &                              rii,rjj,            !Output: real i,j, scalars
      &                              jstatus)
-           if(jstatus .eq. 1)then
-              nradars_dom = nradars_dom + 1
-              radar_lat(nradars_dom)=present_site_lat(i)
-              radar_lon(nradars_dom)=present_site_lon(i)
-              call bilinear_interp_extrap(rii,rjj,imax,jmax
+
+           ridis=abs(rii)
+           rjdis=abs(rjj)
+
+           if(ridis.le. xgrddismx .and. rjdis .le. ygrddismx)then
+
+              nradars_tot = nradars_tot + 1
+              radar_lat(nradars_tot)=present_site_lat(i)
+              radar_lon(nradars_tot)=present_site_lon(i)
+
+              if( (rii.gt.0.0  .and.  rii.lt.imax) .and.
+     &            (rjj.gt.0.0  .and.  rjj.lt.jmax)  )then
+
+                 call bilinear_interp_extrap(rii,rjj,imax,jmax
      &                    ,height_grid,result,istatus)
 
-c             call bilinear_laps(rii,rjj,imax,jmax,height_grid
-c    &                          ,result)
+                 height_sum=height_sum+result
 
-              radar_elev(nradars_dom)=result
+                 radar_elev(nradars_tot)=result
+                 nradars_in=nradars_in+1
+
+              else
+                 radar_elev(nradars_tot)=r_missing_data
+              endif
+
            endif
+
         enddo
+
+        if(nradars_in.gt.0)then
+           print*
+           print*,'Found ',nradars_in,' in this domain'
+           height_mean=height_sum/nradars_in
+        else
+           print*
+           print*,'Interesting! No radars in domain'
+           print*,'set mean radar height to mean grid elev'
+           print*,' = ',height_mean_grid
+           height_mean = height_mean_grid
+        endif
         print*
-        print*,'Found ',nradars_dom,' radars in domain'
+        print*,'Found ',nradars_tot,' to consider in min dist array'
+        print*,'Mean height of radars = ',height_mean
         print*
+
+        where(radar_elev.eq.r_missing_data)radar_elev=height_mean_grid
+        
         print*,'Determine nearest radar distance array'
+        print*
 
         do j=1,jmax
         do i=1,imax
 
            distmin=r_missing_data
-           do k=1,nradars_dom
+           do k=1,nradars_tot
               if(radar_elev(k).lt.10000.)then
                 call latlon_to_radar(lat(i,j),lon(i,j),height_grid(i,j)
      1,azimuth,slant_range,elev,radar_lat(k),radar_lon(k),radar_elev(k))     
-                if(slant_range.lt.distmin)distmin=slant_range
+                if(slant_range.lt.distmin.and.slant_range.lt.rdistmax)
+     &             distmin=slant_range
               endif
            enddo
            radar_dist_min(i,j)=distmin
