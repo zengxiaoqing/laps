@@ -866,7 +866,7 @@
                     This is the latitude at which the grid spacing is exactly 
                     the nominal value ('grid_spacing_m_cmn' e.g. 10km). 
 
-                    This parameter is often set to +/-90 degrees to match
+                    This parameter is usually set to +/-90 degrees to match
                     the latitude of the projection pole ('standard_latitude2'),
                     given that the projection pole is at one of earth's 
                     geographic poles. The actual grid spacing (measured on   
@@ -875,13 +875,15 @@
                     located within your domain. For domains distant from the 
                     projection pole, the actual grid spacing inside the domain
                     becomes noticeably less. The value of 'grid_spacing_m_cmn'
-                    can be increased to compensate.
+                    can be increased to compensate. The projection plane is
+                    tangent to the earth's surface.
                     
                     When the projection pole is at a geographic pole, 
                     'standard_latitude' can be set to values other than +/-90.
                     The 'grid_spacing_m_cmn' parameter then represents the 
                     true grid spacing (measured on the earth's surface) at a 
-                    latitude of 'standard_latitude'. 
+                    latitude of 'standard_latitude'. The projection plane
+                    is secant to the earth's surface. 
                      
                     Consider the angle 'psi' which is the angular distance from
                     the pole of the projection. 'phi' = 90 - 'psi'. The map
@@ -974,11 +976,12 @@
 
      Setting the pole to an arbitrary lat/lon (local stereographic) is a
    possible future enhancement. A test local stereographic domain gave an 
-   error of 2km in the grid points, at least in a case where the projection
-   pole coincides with the center of the domain. Further improvement of this 
-   may include converting library subroutines 'GETOPS' and possibly 'PSTOGE' 
-   to double precision. The projection rotation routine 'projrot_laps' also 
-   has some approximations when local stereographic is used.
+   error of 2km in the grid points; the test code works in cases where the 
+   projection pole coincides with the center of the domain. Further 
+   improvement of this may include converting library subroutines 'GETOPS' 
+   and possibly 'PSTOGE' to double precision. The projection rotation routine 
+   'projrot_laps' also has some approximations when local stereographic is 
+   used.
 
                    ----  2.8.3 Domain Resolution  ---
 
