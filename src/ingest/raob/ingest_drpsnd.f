@@ -146,8 +146,8 @@
 
           elseif(c8_drpsnd_format(1:5) .eq. 'SND')then
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'.snd'       
-              i4_contains_early = 0
-              i4_contains_late  = 0
+              i4_contains_early = 1800
+              i4_contains_late  = 1800
 
           elseif(c8_drpsnd_format(1:3) .eq. 'WFO')then
               filename13 = cvt_i4time_wfo_fname13(i4times(i))
@@ -180,7 +180,7 @@
 
 !         filename_in = 'test.nc                                 '
 
-!         Define limits of DROPSONDE release times we are interested in
+!         Define limits of DROPSONDE data times we are interested in
           i4time_drpsnd_latest =   i4time_sys + i4_drpsnd_window 
           i4time_drpsnd_earliest = i4time_sys - i4_drpsnd_window 
 
@@ -239,6 +239,9 @@
                   write(6,*)' calling combine_snd_file...'       
 
                   call combine_snd_file(i4times(i),i4time_sys
+     1                                 ,i4time_drpsnd_earliest
+     1                                 ,i4time_drpsnd_latest
+     1                                 ,filename_in
      1                                 ,NX_L,NY_L,NZ_L
      1                                 ,lun_out,istatus)
 
@@ -275,7 +278,10 @@
       return
       end
 
-      subroutine combine_snd_file(i4time_file,i4time_sys,ni,nj,nk
+      subroutine combine_snd_file(i4time_file,i4time_sys
+     1                           ,i4time_drpsnd_earliest
+     1                           ,i4time_drpsnd_latest
+     1                           ,filename_in,ni,nj,nk
      1                           ,lun_out,istatus)       
 
       integer MAX_PR, MAX_PR_LEVELS
@@ -284,10 +290,11 @@
 
       integer nlevels_obs_pr(MAX_PR)
       integer i4time_ob_pr(MAX_PR)
+      integer i4time_ob_pr_lvl(MAX_PR,MAX_PR_LEVELS)
       integer iwmostanum(MAX_PR)
 
-      real stalat(MAX_PR)
-      real stalon(MAX_PR)
+      real stalat(MAX_PR),stalat_lvl(MAX_PR,MAX_PR_LEVELS)
+      real stalon(MAX_PR),stalon_lvl(MAX_PR,MAX_PR_LEVELS)
       real staelev(MAX_PR)
 
       real height_m(MAX_PR,MAX_PR_LEVELS)
@@ -300,12 +307,18 @@
       real dewpoint_c(MAX_PR,MAX_PR_LEVELS)
 
       real*4 heights_3d(ni,nj,nk)
+      real lat(ni,nj)
+      real lon(ni,nj)
 
       character*5 c5_name(MAX_PR)
       character*8 c8_obstype(MAX_PR)
-      character*9 a9time_ob(MAX_PR)
+      character*9 a9time_ob(MAX_PR),a9time_ob_lvl(MAX_PR,MAX_PR_LEVELS)       
 
-      logical l_fill_ht
+      character*(*) filename_in
+
+      logical l_fill_ht, l_snd2
+
+      l_snd2 = .false.
 
       lun_in = 59
       mode = 1
@@ -315,22 +328,45 @@
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)return
       heights_3d = r_missing_data
+      lat = r_missing_data
+      lon = r_missing_data
 
       staelev = -999. ! missing value for Dropsondes
 
-!     Call Read Routine for input SND file
-      call read_snd_data(lun_in,i4time_file,'SND'                      ! I
+      write(6,*)' Call read_snd_data for ',filename_in
+
+      if(.not. l_snd2)then
+!         Call Read Routine for input SND file
+          call read_snd_data(lun_in,i4time_file,filename_in            ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
-     1                         ,stalat,stalon,imax,jmax,kmax           ! I
+     1                         ,lat,lon,imax,jmax,kmax                 ! I
      1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
-     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
+     1                         ,nlevels_obs_pr,stalat,stalon,staelev   ! O
      1                         ,c5_name,i4time_ob_pr,c8_obstype        ! O
      1                         ,height_m,pressure_mb                   ! O
      1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
      1                         ,temp_c,dewpoint_c                      ! O
      1                         ,istatus)                               ! O
+
+      else
+          call read_snd_data2(lun_in,i4time_file,filename              ! I
+     1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
+     1                         ,lat,lon,imax,jmax,kmax                 ! I
+     1                         ,heights_3d,l_fill_ht                   ! I
+     1                         ,mode                                   ! I
+     1                         ,n_profiles                             ! I/O
+     1                         ,elev_pr                                ! O
+     1                         ,nlevels_obs_pr                         ! O
+     1                         ,c5_name,obstype                        ! O
+     1                         ,ob_pr_ht_obs,ob_pr_pr_obs              ! O
+     1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
+     1                         ,ob_pr_t_obs,ob_pr_td_obs               ! O
+     1                         ,stalat_lvl,stalon_lvl,i4time_ob_pr_lvl ! O
+     1                         ,istatus)                               ! O
+      endif ! l_snd2
+
       if(istatus .ne. 1)then
           write(6,*)' WARNING: Bad istatus from read_snd_data, '
      1             ,'abort execution of combine_snd'
@@ -338,6 +374,7 @@
       endif
 
       do i = 1,n_profiles
+
           do j = 1,nlevels_obs_pr(i)
               if(ob_pr_u_obs(i,j) .ne. r_missing_data .and.
      1           ob_pr_v_obs(i,j) .ne. r_missing_data       )then
@@ -348,36 +385,90 @@
                   spd_mps(i,j) = r_missing_data
               endif
 
+              if(.not. l_snd2)then
+                  call make_fnam_lp(i4time_ob_pr(i),a9time_ob_lvl(i,j)
+     1                             ,istatus)       
+              else
+                  call make_fnam_lp(i4time_ob_pr_lvl(i,j)
+     1                             ,a9time_ob_lvl(i,j),istatus)       
+              endif
+
+              if(istatus .ne. 1)then
+                  write(6,*)' error in i4time ',i4time_ob_pr(i)
+                  return
+              endif
+
+              if(.not. l_snd2)then
+                  stalat_lvl(i,j) = stalat(i)
+                  stalon_lvl(i,j) = stalon(i)
+              endif
+
           enddo ! j
 
-          call make_fnam_lp(i4time_ob_pr(i),a9time_ob(i),istatus)
-          if(istatus .ne. 1)then
-              write(6,*)' error in i4time ',i4time_ob_pr(i)
-              return
-          endif
+!         Determine effective sounding time (closest level to systime)
+          call get_closest_a9time(i4time_sys,a9time_ob_lvl(i,:)
+     1                           ,i4time_closest,nlevels_obs_pr(i)
+     1                           ,istatus)
+
+          i4time_diff = abs(i4time_sys - i4time_closest)
+
+          if(i4time_closest .ge. i4time_drpsnd_earliest .and.
+     1       i4time_closest .le. i4time_drpsnd_latest         )then
+
+              write(6,*)' i/i4time_diff = ',i,i4time_diff
+     1                 ,' inside time bounds'
+
+!             Call Write Routine to append this sounding to output SND file
+              call open_ext(lun_out,i4time_sys,'snd',istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)
+     1                 ' Could not open output SND file with open_ext'   
+                  return
+              endif
+
+              call write_snd(lun_out                        ! I
+     1                    ,1,MAX_PR_LEVELS,1                ! I
+     1                    ,iwmostanum(i)                    ! I
+     1                    ,stalat_lvl(i,:),stalon_lvl(i,:)  ! I
+     1                    ,staelev(i)                       ! I
+     1                    ,c5_name(i),a9time_ob_lvl(i,:)    ! I
+     1                    ,c8_obstype(i)                    ! I
+     1                    ,nlevels_obs_pr(i)                ! I
+     1                    ,height_m(i,:)                    ! I
+     1                    ,pressure_mb(i,:)                 ! I
+     1                    ,temp_c(i,:)                      ! I
+     1                    ,dewpoint_c(i,:)                  ! I
+     1                    ,dir_deg(i,:)                     ! I
+     1                    ,spd_mps(i,:)                     ! I
+     1                    ,istatus)                         ! O
+
+          else
+              write(6,*)' i/i4time_diff = ',i,i4time_diff
+     1                 ,' outside time bounds'
+
+          endif ! write out this sounding
 
       enddo ! i
 
-      call open_ext(lun_out,i4time_sys,'snd',istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Could not open output SND file with open_ext'
-          return
-      endif
+      return
+      end
 
-!     Call Write Routine to append to output SND file
-      call write_snd(lun_out                               ! I
-     1                    ,MAX_PR,MAX_PR_LEVELS,n_profiles ! I
-     1                    ,iwmostanum                      ! I
-     1                    ,stalat,stalon,staelev           ! I
-     1                    ,c5_name,a9time_ob,c8_obstype    ! I
-     1                    ,nlevels_obs_pr                  ! I
-     1                    ,height_m                        ! I
-     1                    ,pressure_mb                     ! I
-     1                    ,temp_c                          ! I
-     1                    ,dewpoint_c                      ! I
-     1                    ,dir_deg                         ! I
-     1                    ,spd_mps                         ! I
-     1                    ,istatus)                        ! O
+      subroutine get_closest_a9time(i4time_ref,a9times,i4time_closest
+     1                             ,ntimes,istatus)
+
+      character*9 a9times(ntimes)
+
+      i4_min_diff = 99999
+      i4time_closest = 99999
+
+      do i = 1,ntimes
+          call i4time_fname_lp(a9times(i),i4time_i,istatus) 
+          i4_diff = abs(i4time_i - i4time_ref)
+          if(i4_diff .lt. i4_min_diff)then
+              i4_min_diff = i4_diff
+              i4time_closest = i4time_i
+          endif
+      enddo ! i      
 
       return
       end
