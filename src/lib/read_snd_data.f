@@ -78,6 +78,8 @@ cdoc    Returns sounding data from the SND file
 
         n_good_levels = 0
 
+        ht_prev = -9999.
+
         DO level = 1,nlevels_in
 
           read(lun,*,err=515)ht_in,pr_in,t_in,td_in,di_in,sp_in ! (sp = m/s)
@@ -120,6 +122,15 @@ cdoc    Returns sounding data from the SND file
      1                     ,i_pr,n_good_levels,MAX_PR_LEVELS
                   goto515
               endif
+
+              if(ht_in .le. ht_prev)then
+                  write(6,*)
+     1              ' ERROR: sounding (.snd) ht levels out of sequence '      
+     1                     ,i_pr,n_good_levels,ht_prev,ht_in
+                  goto515
+              endif
+
+              ht_prev = ht_in
 
               nlevels_obs_pr(i_pr) = n_good_levels
               ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
