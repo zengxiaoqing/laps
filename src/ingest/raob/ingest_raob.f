@@ -137,7 +137,7 @@
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
 !             i4_raob_window = 60000  ! Temporary for testing
               i4_contains_early = 10800
-              i4_contains_late  = 0
+              i4_contains_late  = 3600
 
           elseif(c8_raob_format(1:3) .eq. 'WFO')then
               filename13 = cvt_i4time_wfo_fname13(i4times(i))
