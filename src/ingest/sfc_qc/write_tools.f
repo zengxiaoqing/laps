@@ -11,10 +11,9 @@ c          Make code dynamic, housekeeping changes, for use in LAPS.
 c
 c*********************************************************************
 c
-      parameter(im=500,jm=500)
       parameter (badflag = -99.9)
       real a(m,m)
-      integer ii(im,jm)   ,onoff,m 
+      integer ii(m,m)   ,onoff,m 
       real smax,smin,s,sum,rms
       character*12 cs,atime*24
       integer i,j
@@ -61,7 +60,7 @@ c
  1001 format(1x,'transposed vector')
       if (jmax.eq.1) then
          write (*,1001)
-         if(ONOFF.eq.1)write (*,1002) (ii(i,1),i=1,imax)
+         if(onoff.eq.1)write (*,1002) (ii(i,1),i=1,imax)
       else
          continue
          if(onoff.eq.1) then
@@ -95,7 +94,7 @@ c
 c
       write(*,1000) cs,atime
  1000 format(//1x,a72)
-       write (*,1002) (a(i)  ,i=1,imax)
+      write (*,1002) (a(i)  ,i=1,imax)
  1002 format(10i7)
 c
       return
@@ -118,7 +117,7 @@ c
 c
       write(*,1000) cs,atime
  1000 format(//1x,a14)
-       write (*,1002) (a(i)(1:5)  ,i=1,imax)
+      write (*,1002) (a(i)(1:5)  ,i=1,imax)
  1002 format(10(2x,a5))
 c
       return
@@ -126,7 +125,7 @@ c
 c
 c
        Subroutine writemon(ta,tda,ua,va,pmsla,alta,
-     &   nvar,maxsta,m,monster,itm1) 
+     &   nvar,maxsta,m,monster,it) 
 c
 c*********************************************************************
 c     Subroutine puts the latest sets of obs into monster for
@@ -141,6 +140,9 @@ c*********************************************************************
 c
        real ta(m),tda(m),ua(m),va(m),pmsla(m),alta(m)
        real monster(m,m,nvar)
+c iterate it to count how many cycles are in monster, maximum is m
+       it=it+1
+       if(it.gt.m) it=m
 c
        do k=1,nvar
           do l=m-1,1,-1
