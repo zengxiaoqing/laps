@@ -177,9 +177,10 @@ c load block for known i-j start/end locations
       real    r_image(nelems,nlines)
       real    r_imagedata(nelems,nlines)
       real    r_imagetmp(nxt,nyt)
-      real    rmsngdata/0.0/
+      real    rmsngdata
       real    r_missing_data
 
+      rmsngdata = 0.0
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus.ne.1)then
          print*,'Error getting r_missing_data'
