@@ -2,10 +2,14 @@
 #include "geoLib.h"
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 int pipe=0;
 #define min(a,b) (a<b)?a:b
 #define max(a,b) (a>b)?a:b
+#ifdef FORTRANUNDERSCORE
+#define create_bcd_bkgnd create_bcd_bkgnd_
+#endif
 
 FILE * dopen(char * fileName)
 {
