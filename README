@@ -2673,7 +2673,12 @@ Parameter namelist file: 'static/surface_analysis.nl'
         There is an additional check for all analyzed fields (except visibility) 
         within the 'spline' routine that rejects stations deviating from the 
         background by more than a threshold number of standard deviations of 
-        the observation increments.
+        the observation increments. This threshold can be independently 
+        adjusted (i.e. tightened or loosened) for each field via the 
+        'surface_analysis.nl' namelist. If you see any bulls-eyes in the 
+        surface analysis that you don't believe, try contacting Steve Albers 
+        at FSL for more information on making these quality control namelist
+        adjustments.
 
         The experimental Kalman QC package 'sfc_qc.exe' (outlined in 3.2.2.2) 
         compares the observations temporally and fills in predicted values for 
