@@ -282,6 +282,8 @@ csms$ignore begin
      1                          ,n_illuminated,xx2,yy2,ht,vr,rmsmax,ier)       
 
               if(ier .eq. 0)then
+                  n_radars_used = n_illuminated
+
 !                 Subtract background from radar ob to get difference radar ob
                   uobs_diff_spread(i,j,k) = u - u_laps_bkg(i,j,k)
                   vobs_diff_spread(i,j,k) = v - v_laps_bkg(i,j,k)
@@ -301,6 +303,10 @@ csms$ignore begin
                   if(n_radars_used .ge. 2 .and. mode .eq. 2)then
                       l_good_multi_doppler_ob(i,j,k) = .true.
                   endif
+              
+              else
+                  n_radars_used = 0
+          
               endif
 
           enddo ! i
