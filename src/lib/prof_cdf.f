@@ -710,7 +710,8 @@ C
         include 'prof_cdf_common.inc'
  
 C
-        character*21 error_text/'NetCDF file not open.'/
+        character*21 error_text
+        data error_text/'NetCDF file not open.'/
         integer i,j
 C
         do i = 1, 4

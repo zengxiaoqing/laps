@@ -35,13 +35,14 @@ cdis
 
 !       1992                            Steve Albers
 
+        integer*4 imax,jmax            ! Input Array dimensions
         real*4 u(imax,jmax),v(imax,jmax) ! Input Wind field (WRT True North)
         real*4 lon(imax,jmax)          ! Input Longitude field
         real*4 array_in(imax,jmax)     ! Input Field to be advected
         real*4 array_out(imax,jmax)    ! Output Field to be advected
 
         real*4 array_buf(imax,jmax)    ! Dummy Array
-        integer*4 imax,jmax            ! Input Array dimensions
+
         real*4 time                    ! Input Seconds for advection
         real*4 frac                    ! Input scaling factor (normally 1.0)
 

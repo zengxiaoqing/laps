@@ -47,7 +47,6 @@ C Azimuth        I      R*4     Target azimuth in degrees.
 C TLat,TLon      O      R*4     Location of target (deg).
 C Status         O      I*4     Standard system status.
 
-        Implicit        None
 
         real*8           km_per_Deg
         Parameter       (km_per_Deg=111.12d0)   !km per degree of latitude

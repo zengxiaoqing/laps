@@ -640,13 +640,13 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
         integer*4 i4time                        ! Input
         real*4 tb8_k                            ! Input
         real*4 cloud_frac_vis                   ! Input
+        integer*4 i,j,imax,jmax,klaps           ! Input
         real*4 t_gnd_k(imax,jmax)               ! Input
         real*4 pres_sfc_pa(imax,jmax)           ! Input
         real*4 dum_3d(imax,jmax,klaps)          ! Input (Dummy array for Q)
         real*4 thresh2                          ! Input
         real*4 topo                             ! Input
         real*4 r_missing_data                   ! Input
-        integer*4 i,j,imax,jmax,klaps           ! Input
         integer*4 istat_vis                     ! Input
         real*4 heights_3d(imax,jmax,klaps)      ! Input
         real*4 temp_3d(imax,jmax,klaps)         ! Input

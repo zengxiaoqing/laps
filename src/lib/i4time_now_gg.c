@@ -30,20 +30,16 @@ cdis
 cdis 
 cdis*/
 #include <config.h>
-#ifdef sun
-#include <sys/stdtypes.h>
-#endif
 
 #ifdef hpux
 #include <sys/timeb.h>
 #endif
 
-#ifdef sgi
-#include <time.h>
-#endif
 
-#ifdef cray
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#else
+#include <time.h>
 #endif
 
 #include <stdio.h>

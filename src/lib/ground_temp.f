@@ -42,12 +42,12 @@ cdis
         character var*3,comment*125,ext*31,units*10
 
 
+        integer*4 imax,jmax         ! input
         integer*4 i4time            ! input
         integer*4 laps_cycle_time   ! input
         real*4 lat(imax,jmax)       ! input
         real*4 lon(imax,jmax)       ! input
         real*4 r_missing_data       ! input
-        integer*4 imax,jmax         ! input
         real*4 t_sfc_k(imax,jmax)   ! input
         real*4 t_gnd_k(imax,jmax)   ! output
         real*4 cvr_snow(imax,jmax)  ! local
