@@ -201,6 +201,8 @@ select(STDOUT); $| = 1;
 
 my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
+system("uname -ns");
+
 my $t=gmtime(); 
 my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
 
