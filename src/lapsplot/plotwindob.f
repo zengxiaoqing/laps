@@ -84,10 +84,12 @@ cdis
       end
 
 
-      subroutine plot_vr(i,j,vel,imax,jmax,c1_plottype
-     1                ,alat_radar,alon_radar)
+      subroutine plot_vr(i,j,vel,imax,jmax,c1_plottype)
 
       character*1 c1_plottype
+
+      save init
+      data init/0/
 
 !     call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 !     write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
@@ -109,7 +111,15 @@ cdis
       if(.true.)then
 
       call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-      call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+
+      if(init .eq. 0)then ! avoid multiple calls for efficiency
+          call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax),1)
+          call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
+          write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
+1234      format(1x,4i5,4e12.4,i4)
+          init = 1
+      endif
+
       u = i
       v = j
       du = 1.
