@@ -22,7 +22,7 @@
       integer    i4time_fcst
       integer    lend,lens,lenw
       integer    hh,mm,hhmm
-      integer    i,lun
+      integer    i,ii,lun
       integer    adv_anal_by_t_min
       logical    lexist,lrunbal,lfndch
       
@@ -52,7 +52,7 @@ c        print*,'Error returned: get_systime'
 c        return
 c     endif
 
-      cfilespec=clogdir(1:lend)//'wind3d.wgi.'//a9_time
+      cfilespec=clogdir(1:lend)//'wind.wgi.'//a9_time
 
       call s_len(cfilespec,lens)
       inquire(file=cfilespec,exist=lexist)
@@ -62,6 +62,13 @@ c     endif
      +err=990)
          do i=1,7
             read(lun,100)cline_wgi(1:100)
+            call downcase(cline_wgi,cline_wgi)
+            if(cline_wgi(7:16).eq."determine")
+     .      then
+               istatus = 0
+               print*,'Warning: bkgd not determined in ',cfilespec
+               return
+            endif
          enddo
 100      format(100a)
          lfndch=.false.
@@ -103,6 +110,7 @@ c first, check to be sure a model background was determined in wgi
       istatus=1
       return  
 995   print*,'Error converting a9 time string'
+      print*,'a9time = ',a9time_init
       return
 990   print*,'Error opening file ',cfilespec(1:lens)
       return
