@@ -45,16 +45,10 @@ C
       real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
 C
       integer*4 fn_length,
-     1          i_reftime,              !UNIX time of data
-     1          i_valtime,              !UNIX time of data
      1          flag,                   !Print flag (1 = off)
      1          error(3),
-     1          called_from,
-     1          var_len,
      1          comm_len,
-     1          ext_len,
-     1          lvl_coord_len,
-     1          units_len
+     1          ext_len
   
 C
       character*4       fcst_hh_mm
@@ -81,29 +75,26 @@ C
 
       call s_len(ext, ext_len)
 
-      fcst_hh_mm = '0000'
-
-      call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
-     1                  file_name,fn_length,istatus)
-      if (istatus .eq. error(2)) goto 930
-C
 C **** get actual reftime from gtime...
 C
-      i_reftime = i4time - 315619200
-      i_valtime = i_reftime
-
-      called_from = 0   !called from FORTRAN
-
-      var_len = len(var_req(1))
       comm_len = len(comment_req_o(1))
-      lvl_coord_len = len(lvl_coord_req(1))
-      units_len = len(units_req_o(1))
 C
 C **** read in compressed file
 C
       lun = 65
-      call open_lapsprd_file_read(lun,i4time,ext,istatus)
-      if(istatus .ne. 1)goto 950
+
+      if(.false.)then ! old way
+          call open_lapsprd_file_read(lun,i4time,ext,istatus)
+          if(istatus .ne. 1)goto 950
+      else            ! new way using 'dir'
+          fcst_hh_mm = '0000'
+
+          call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
+     1                      file_name,fn_length,istatus)
+          if (istatus .eq. error(2)) goto 930
+
+          open(lun,file=file_name(1:fn_length),status='old',err=950)
+      endif
 
       read(lun,*)kkdim
 
