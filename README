@@ -241,7 +241,7 @@
      plotting program, thus NCAR graphics is optional. You might wish to check
      the following World Wide Web location for more info...
 
-                   http://ngwww.ucar.edu:7777/
+                   http://ngwww.ucar.edu
 
      The 'lapsplot.exe' executable is an interactive program that reads in
      the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
