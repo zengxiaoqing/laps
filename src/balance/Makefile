@@ -23,7 +23,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
 
 EXE = qbalpe.exe
 
-SRC= lapsio.f writeballaps.f qbal_utils.f
+SRC= lapsio.f writeballaps.f qbal_utils.f profile.f
 
 MAIN=qbalpe.f 
 

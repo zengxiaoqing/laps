@@ -556,3 +556,104 @@ c return backgrounds at i4time_sys_drop.
       
       return
       end
+c
+c-------------------------------------------------------
+c
+      subroutine read_wind3d_wgi(rstats,istatus)
+
+      implicit  none
+
+      character a9_time*9
+      character directory*255
+      character filename*255
+      character logdir*255
+      character dum1*255
+      character var(20)*20
+      integer   cnt,vnum,vnumi
+      integer   i,is,ie,len,istatus,i4time_sys
+      logical   found_line,lexist
+      real      rstats(7)
+
+      call get_directory('log',logdir,len)
+      call get_systime(i4time_sys,a9_time,istatus)
+      if(istatus.ne.1)return
+
+      filename=logdir(1:len)//'/wind3d.wgi.'//a9_time
+      call s_len(filename,len)
+      print*,'filename = ',filename(1:len)
+      inquire(file=filename,exist=lexist)
+      found_line=.false.
+      if(lexist)then
+        open (11, file=filename,form='formatted',status='old',err=50) 
+        Do while (.not.found_line)
+         read(11,100,end=1)dum1
+         if(dum1(1:21).eq.'Obs minus First Guess')then
+            read(11,*,err=1)
+            read(11,*,err=1)
+            read(11,*,err=1)
+            read(11,100,err=1)dum1
+            found_line=.true.
+         endif
+        enddo
+      else
+        print*,'file not found: ',filename(1:len)
+        istatus = 0
+        return
+      endif
+100   format(a)
+
+      i=255
+      do while (i.gt.0)
+         i=i-1
+         if(dum1(i:i).ne.' ')then
+            ie=i
+            i=0
+         endif
+      enddo
+
+      var=' '
+      i=7
+      do while (i.ne.0)
+         if(dum1(i:i).ne.' ')then
+            is=i
+            i=0
+         else
+            i=i+1
+         endif
+      enddo
+
+      dum1=dum1(is:ie)
+      ie=ie-is+1
+      vnumi=0
+      vnum=1
+      cnt=0
+      do i=1,ie
+         if(dum1(i:i) .ne. ' ')then
+            cnt=cnt+1
+            if(vnum.ne.vnumi)vnumi=vnumi+1
+            var(vnumi)(cnt:cnt)=dum1(i:i)
+         else
+            cnt=0
+            if(vnum.eq.vnumi)vnum=vnum+1
+         endif
+      enddo
+
+c     do i=1,vnumi
+c        print*,'wgi num ',i,' = ',var(i)
+c     enddo
+
+      do i=1,vnumi
+         read(var(i),'(f6.2)')rstats(i)
+      enddo
+
+c     do i=1,vnumi
+c        print*,'wgi num ',i,' = ',var(i)
+c     enddo
+
+      return
+
+50    print*, 'Error opening file: ',filename
+1     print*, 'Suspect read in the wgi file'
+      istatus=0
+      return
+      end
