@@ -105,6 +105,7 @@ c                               12-01-99  Rotate bkg winds to grid north.
 c                               12-17-99  Add option to use either LSO or the
 c                                           Kalman estimate LSO_QC.
 c                               01-23-00  Make that option readable via namelist.
+c                               01-26-00  Skip qcdata call if using LSO_QC.
 c
 c
 c       Notes:
@@ -195,16 +196,16 @@ c
 c
 c.....  Namelist stuff
 c
-	integer use_lso_qc
+	integer use_lso_qc, skip_internal_qc
 	character nl_file*256
 c
-	namelist /surface_analysis/ use_lso_qc
+	namelist /surface_analysis/ use_lso_qc, skip_internal_qc
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
 c*************************************************************
 c
-	call tagit('laps_sfc',20000123)
+	call tagit('laps_sfc',20000126)
 	narg = iargc()
 cc	print *,' narg = ', narg
 c
@@ -251,7 +252,8 @@ c
 c.....  Set the namelist variables to their defaults.  If there's a problem reading
 c.....  the namelist, at least we can continue.
 c
-	use_lso_qc = 0   !use normal LSO
+	use_lso_qc = 0        !use normal LSO
+	skip_internal_qc = 0  !use internal QC routine
 c
 c.....  Read the namelist and get that info, then get the LAPS lat/lon and topo 
 c.....  data so we can pass them to the routines that need them. 
@@ -549,10 +551,15 @@ c
 c
 c.....	QC the surface data.
 c
-	if(iskip .gt. 0) then  !check QC flag
-	   print *, ' **  omit qc of data  **  '
-	   goto 521
+	if(use_lso_qc .eq. 1) then        !data already qc'd
+	   print *,' ** Using pre-QCd data...skipping LSX QC step.'
+	   go to 521
 	endif
+	if(skip_internal_qc .eq. 1) then  !skip QC routine
+	   print *, ' **  Skipping LSX internal QC routine **  '
+	   go to 521
+	endif
+c
 	call get_directory('lso', infile_last, len)
 	infile_last = infile_last(1:len) // filename_last // '.lso'
 c
