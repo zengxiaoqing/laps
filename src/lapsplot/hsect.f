@@ -4052,47 +4052,62 @@ c                   cint = -1.
                 do j = 1,NY_L
                     if(tunits .ne. 'c' .or. l_image)then
                         field_2d(i,j) = k_to_f(field_2d(i,j))
+                        units_2d = 'Deg F'
                     else
                         field_2d(i,j) = k_to_c(field_2d(i,j))
+                        units_2d = 'Deg C'
                     endif
                 enddo ! j
                 enddo ! i
+
 
                 scale = 1.
 
             elseif(var_2d .eq. 'PS'  .or. var_2d .eq. 'PSF'
      1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
                 scale = 100.
+                units_2d = 'hPa'
 
             elseif(var_2d(2:3) .eq. '01' .or. var_2d(2:3) .eq. 'TO')then       
                 scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
+                units_2d = 'in'
 
             else
                 scale = 1.
 
             endif
 
-            len_fcst = 30
+            call s_len2(comment_2d,len_fcst)
+            call s_len2(units_2d,len_units)
+
+            ist = 39
 
             if(ext(1:3) .eq. 'fsf')then
+                len_fcst = min(len_fcst,30)
                 if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:len_fcst)//' '
-     1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
+                    c_label = comment_2d(1:len_fcst)//' ('
+     1                                       //units_2d(1:len_units)
+     1                                       //')   '
+                    c_label(ist:ist+8) = fcst_hhmm(1:2)//'Hr Fcst'       
                 else
                     c_label = comment_2d(1:len_fcst)//' '
-     1                                       //fcst_hhmm(1:4)//' Fcst'
+                    c_label(ist:ist+8) = fcst_hhmm(1:4)//' Fcst'       
                 endif
             else ! lgb
+                len_fcst = 25 
                 if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:len_fcst-5)
+                    c_label = comment_2d(1:len_fcst)
      1                      //' '//var_2d(1:3)//' '
-     1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
+                    c_label(ist:ist+8) = fcst_hhmm(1:2)//'Hr Fcst'       
                 else
-                    c_label = comment_2d(1:len_fcst-5)
+                    c_label = comment_2d(1:len_fcst)
      1                      //' '//var_2d(1:3)//' '
-     1                                       //fcst_hhmm(1:4)//' Fcst'
+                    c_label(ist:ist+8) = fcst_hhmm(1:4)//' Fcst'       
                 endif
+
             endif
+
+            write(6,*)' c_label = ',c_label
 
             call make_fnam_lp(i4_valid,asc9_tim,istatus)
 
@@ -5972,6 +5987,13 @@ c             if(cint.eq.0.0)cint=0.1
 
 !       call upcase(c_label,c_label)
 
+        call s_len2(c_label,len_label)
+        do i = 1,len_label
+            if(c_label(i:i) .eq. ':')then
+                c_label(i:i) = ' '
+            endif
+        enddo ! i
+
         if(a9time .ne. '         ')then
             call i4time_fname_lp(a9time,i4time_lbl,istatus)       
             i4time_lbl = i4time_lbl+nint(namelist_parms%time_zone*3600)      
@@ -6385,6 +6407,25 @@ c             if(cint.eq.0.0)cint=0.1
             call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
         endif ! image plot
+
+        return
+        end
+
+        subroutine s_len2(string,len_string)
+
+!       This routine finds the length of the string counting intermediate
+!       blanks
+
+        character*(*) string
+
+        len1 = len(string)
+
+        len_string = 0
+
+        do i = 1,len1
+            call s_len(string(i:i),len2)
+            if(len2 .eq. 1)len_string = i
+        enddo ! i
 
         return
         end
