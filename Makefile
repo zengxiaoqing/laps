@@ -109,7 +109,6 @@ DATADIRS = log/qc \
            lapsprd/lmr \
            lapsprd/lmt \
            lapsprd/ln3 \
-           lapsprd/lpbl \
            lapsprd/lps \
            lapsprd/lq3 \
            lapsprd/lrp \
@@ -129,7 +128,7 @@ DATADIRS = log/qc \
            lapsprd/lt1 \
            lapsprd/lty \
            lapsprd/lvd/goes08 \
-           lapsprd/lvd/goes09 \
+           lapsprd/lvd/meteos \
            lapsprd/lvd/goes10 \
            lapsprd/lvd/gmssat \
            lapsprd/lw3 \
