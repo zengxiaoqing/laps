@@ -415,9 +415,8 @@ C
 
       subroutine xy_to_uv(x,y,erad,u,v)
 
-!     This routine appears valid for polar stereo, need to test for others
-
       character*6 c6_maproj
+      real*4 n 
 
       call get_c6_maproj(c6_maproj,istatus)
       if(istatus .ne. 1)then
@@ -429,9 +428,17 @@ C
           u = x / (2. * erad)
           v = y / (2. * erad)
 
-      elseif(c6_maproj .eq. 'lambrt')then ! Try validating this on CONUS grid
-          u = x / erad
-          v = y / erad
+      elseif(c6_maproj .eq. 'lambrt')then 
+          call get_standard_latitudes(slat1,slat2,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' xy_to_uv: Error obtaining standard lats'
+              stop
+          endif
+
+          call lambert_parms(slat1,slat2,n,s,rconst)
+
+          u = x / (erad * rconst)
+          v = y / (erad * rconst)
 
       elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
           u = x / erad
@@ -449,13 +456,12 @@ C
 
       subroutine uv_to_xy(u,v,erad,x,y)
 
-!     This routine appears valid for polar stereo, need to test for others
-
       character*6 c6_maproj
+      real*4 n 
 
       call get_c6_maproj(c6_maproj,istatus)
       if(istatus .ne. 1)then
-          write(6,*)' xy_to_uv: Error obtaining c6_maproj'
+          write(6,*)' uv_to_xy: Error obtaining c6_maproj'
           stop
       endif
 
@@ -463,9 +469,17 @@ C
           x = u * 2. * erad
           y = v * 2. * erad
 
-      elseif(c6_maproj .eq. 'lambrt')then ! Try validating this on CONUS grid
-          x = u * erad
-          y = v * erad
+      elseif(c6_maproj .eq. 'lambrt')then 
+          call get_standard_latitudes(slat1,slat2,istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' uv_to_xy: Error obtaining standard lats'
+              stop
+          endif
+
+          call lambert_parms(slat1,slat2,n,s,rconst)
+
+          u = x * (erad * rconst)
+          v = y * (erad * rconst)
 
       elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
           x = u * erad

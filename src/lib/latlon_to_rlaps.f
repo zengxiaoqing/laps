@@ -222,18 +222,7 @@ cdis
 !       Difference between two angles, result is between -180. and +180.
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
-        if(slat1 .ge. 0)then
-            s = +1.
-        else
-            s = -1.
-        endif
-
-        if(slat1 .eq. slat2)then ! tangent lambert
-            n = cosd(90.-slat1)
-        else                     ! two standard latitudes
-            n = alog(cosd(slat1)/cosd(slat2))/
-     1          alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
-        endif
+        call lambert_parms(slat1,slat2,n,s,rconst)
 
         r = (tand(45.-s*rlat/2.))**n
         u =    r*sind(n*angdif(rlon,slon))
@@ -356,18 +345,7 @@ c
 
         real*4 n
 
-        if(slat1 .ge. 0)then
-            s = +1.
-        else
-            s = -1.
-        endif
-
-        if(slat1 .eq. slat2)then   ! tangent lambert
-            n = cosd(90.-slat1)
-        else                       ! two standard latitudes
-            n = alog(cosd(slat1)/cosd(slat2))/
-     1          alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
-        endif
+        call lambert_parms(slat1,slat2,n,s,rconst)
 
         rlon=slon+atand(-s*u/v)/n
         rlat=(90.- 2.*atand((-v/cosd(n*(rlon-slon)))**(1./n)))/s      
@@ -443,8 +421,8 @@ c
                         init = 1
                     endif
 
-                    n = cosd(90.-polat)
-                    projrot_laps = n * angdif(standard_longitude,rlon)     
+                    rn = cosd(90.-polat)
+                    projrot_laps = rn * angdif(standard_longitude,rlon)      
 
                 elseif(.true.)then
                     if(init .eq. 0)then
@@ -470,20 +448,9 @@ c
             slat1 = standard_latitude
             slat2 = standard_latitude2
 
-            if(slat1 .ge. 0)then
-                s = +1.
-            else
-                s = -1.
-            endif
+            call lambert_parms(slat1,slat2,n,s,rconst)
 
-            if(slat1 .eq. slat2)then        ! tangent lambert
-                n = cosd(90.-slat1)
-            else                            ! two standard latitudes
-                n = alog(cosd(slat1)/cosd(slat2))/
-     1              alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
-            endif
-
-            projrot_laps = n * angdif(standard_longitude,rlon)
+            projrot_laps = n * s * angdif(standard_longitude,rlon)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
             projrot_laps = 0.
@@ -652,3 +619,43 @@ c
       return
       end
 
+
+      subroutine lambert_parms(slat1,slat2,n_out,s_out,rconst_out)
+
+      real*4 n,n_out
+
+!     We only have to do the calculations once since the inputs are constants
+      data init/0/
+      save init,n,s,rconst 
+
+      if(init .eq. 0)then ! Calculate saved variables
+          if(slat1 .ge. 0)then
+              s = +1.
+          else
+              s = -1.
+          endif
+
+          colat1 = 90. - s * slat1
+          colat2 = 90. - s * slat2
+
+          if(slat1 .eq. slat2)then ! tangent lambert
+              n = cosd(90.-s*slat1)
+              rconst =  s *  tand(colat1)    / tand(colat1/2.)**n
+
+          else                     ! two standard latitudes
+              n = alog(cosd(slat1)/cosd(slat2))/
+     1            alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
+              rconst =      (sind(colat1)/n) / tand(colat1/2.)**n
+
+          endif
+
+          init = 1
+
+      endif
+
+      n_out = n
+      s_out = s
+      rconst_out = rconst
+
+      return
+      end
