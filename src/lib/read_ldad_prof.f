@@ -235,7 +235,12 @@ C
 
                 rms = 1.0
 
+                write(6,*)'i/windDir/wdQcFlag/wsQcFlag, i_pr_cl='
+     1                                                 ,i_pr_cl     
+
                 do i = 1,level
+                    write(6,*)i,windDir(i,i_pr_cl)
+     1                         ,wdQcFlag(i,i_pr_cl),wsQcFlag(i,i_pr_cl)       
                     if(windDir(i,i_pr_cl) .ge. 0      .and.
      1                 windDir(i,i_pr_cl) .le. 360    .and.
      1                 iqc_rsa(wdQcFlag(i,i_pr_cl)) .ne. -1 .and.       
