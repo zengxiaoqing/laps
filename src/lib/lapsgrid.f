@@ -326,13 +326,13 @@ c
 
 
 c use the "grid namelist" to load lapsparms.cmn with appropriate values.
-        if(grid_fnam_common(1:len_grid_fnam).eq.'nest7grid')then
+        if(grid_fnam_common(1:9).eq.'nest7grid')then
            call get_laps_config_sub(grid_fnam_common,istatus)
            if(istatus.ne.1)then
               print*,'Error returned from get_laps_config_sub'
               return
            endif
-        elseif(grid_fnam_common(1:len_grid_fnam).eq.'wrfsi')then
+        elseif(grid_fnam_common(1:5).eq.'wrfsi')then
            call get_wrfsi_config(istatus)
            if(istatus.ne.1)then
               print*,'Error returned from get_wrfsi_config'
@@ -1512,8 +1512,8 @@ c--------------------------------------------------------------
       if(grid_fnam_common(1:nf).eq.'nest7grid')then
          istag=1
       else
-!        STAGGER_TYPE='A-c'             !hardwire testing for now
-         STAGGER_TYPE='a'
+         STAGGER_TYPE='A-c'             !hardwire testing for now
+!        STAGGER_TYPE='a'
          call s_len(STAGGER_TYPE,ls)
          if(ls.eq.0 .or. ls.gt.4)then
             print*,'Error detected in STAGGER_TYPE variable'
