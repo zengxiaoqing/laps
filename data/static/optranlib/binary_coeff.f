@@ -1,47 +1,24 @@
 	implicit none
-c	include 'constants.inc'
-********      Constants for program processing     ********************
+	include 'Constants.inc'
 
-	Integer Natm
-	Parameter (Natm = 32)	! number of dependent atmospheres
-	Integer Nlevel
-	Parameter (Nlevel = 42) ! number of levels
-	Integer Nw
-	Parameter (Nw = 300)	! number of standard water levels (-1)
-	Integer Nangle
-	Parameter (Nangle = 6)	! number of look angles
-	Integer Nchan
-	Parameter (Nchan = 24)	! number of channels 
-
-	Integer Nwet
-	Parameter (Nwet = 5)   ! = number of predictors
-	Integer Ndry
-	Parameter (Ndry = 5)   ! = number of predictors
-	Integer NOzo
-	Parameter (NOzo = 5)   ! = number of predictors
-
-	Integer MaxLevel
-	Parameter (MaxLevel = 42) ! max # levels in pressure space
-
-********              End Constants                *********************
-
-	Real Bw(Nwet+1,Nw,Nchan)
-	Real Bd(Ndry+1,Nw,Nchan)
-	Real Bo(Nozo+1,Nw,Nchan)
+	Real*8 Bw(Nwet+1,Nw,Nchan)
+	Real*8 Bd(Ndry+1,Nw,Nchan)
+	Real*8 Bo(Nozo+1,Nw,Nchan)
 
 	Integer i,j,k,Ichan
 
-	Open(12,file='TOVS_NOAA14_COEFF.DAT;1',
-     &		form='formatted',status='old')
-	Open(42,file='Noaa14_wet_coeff.dat',
-     &          form='unformatted',status='unknown')
-	Open(43,file='Noaa14_dry_coeff.dat',
-     &          form='unformatted',status='unknown')
-	Open(44,file='Noaa14_ozo_coeff.dat',
-     &          form='unformatted',status='unknown')
+	Open(12,file='g08coef.dat',
+     &		form='formatted')
+	Open(42,file='wet_coeff.dat',
+     &          form='unformatted')
+	Open(43,file='dry_coeff.dat',
+     &          form='unformatted')
+	Open(44,file='ozo_coeff.dat',
+     &          form='unformatted')
 
 	Do Ichan = 1 , Nchan
 1200     Format(i4,6e20.12)
+
 	 do i = 1 , Nw
 	  Read(12,1200) k,(Bd(j,i,Ichan),j=1,Ndry+1)
 	 EndDo
@@ -61,6 +38,7 @@ c	include 'constants.inc'
 	Close(42)
 	Close(43)
 	Close(44)
+
 
 	Stop
 	end
