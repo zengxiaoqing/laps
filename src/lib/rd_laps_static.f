@@ -27,7 +27,7 @@ C Local variables
      1               no_laps_diag,
      1               flag
 
-      integer*2      f_len
+      integer*4      f_len
 
       logical        l_some_missing
 
@@ -122,7 +122,7 @@ C**********************************************************************
      1          i, j,
      1          status
 
-      integer*2 f_len,length
+      integer*4 f_len,length
 
       character       dir*(*)       !Directory to read data from
       character       laps_dom_file*(*)
