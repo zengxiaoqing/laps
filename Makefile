@@ -34,7 +34,6 @@ EXEDIRS = src/accum \
           src/balance \
           src/cloud \
           src/deriv \
-	  src/dprep \
           src/grid \
           src/humid \
           src/humid/optran_setup \
