@@ -36,7 +36,19 @@ INSTALL=@INSTALL@
 PERL = @PERL@
 LIBPATHFLAG=@LIBPATHFLAG@
 
+LAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -llaps
+DBLAPSLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib -ldebuglaps
+
+BGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -lbgdata
+DBBGDATALIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/bgdata -ldebugbgdata
+
 GRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -lgrib
 DBGRIBLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/grib -ldebuggrib
+
+MTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -lmthermo
+DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
+
+UTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -lutil
+DBUTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -ldebugutil
 
 OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf  @OTHERLIBS@
