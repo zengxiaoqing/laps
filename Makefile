@@ -25,7 +25,8 @@ LIBDIRS = src/lib \
           src/lib/radar/remap_ftn \
           src/lib/satellite \
           src/lib/temp   \
-          src/lib/util  
+          src/lib/util  \
+          src/lib/wsi_ingest
 
 EXEDIRS = src/accum \
           src/background \
@@ -41,6 +42,8 @@ EXEDIRS = src/accum \
           src/ingest/radar/ingest_rrv \
           src/ingest/radar/remap \
           src/ingest/radar/vad \
+          src/ingest/radar/wsiremap/ln3 \
+          src/ingest/radar/wsiremap/ln3/boundary \
           src/ingest/radar/wsiremap/vrc \
           src/ingest/radar/wsiremap/vrc/table \
           src/ingest/raob \
@@ -109,6 +112,7 @@ DATADIRS = log/qc \
            lapsprd/lmd \
            lapsprd/lmr \
            lapsprd/lmt \
+           lapsprd/ln3 \
            lapsprd/lpbl \
            lapsprd/lps \
            lapsprd/lq3 \
