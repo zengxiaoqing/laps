@@ -784,6 +784,8 @@ April 1996
 
    c8_project_common - Depends on which "realization" of LAPS you are running.
                        Allowed values are 'NIMBUS', 'WFOADV', 'AFGWC'.
+                       This is currently used by the WPDN wind profiler ingest
+                       software.
 
 *******************************************************************************
 **********  3.0 DESCRIPTION OF LAPS PROCESSES  ********************************

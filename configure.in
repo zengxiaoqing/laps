@@ -193,6 +193,8 @@ AC_OUTPUT(src/lib/Makefile
           src/static/Makefile
           src/temp/Makefile
           src/wind/Makefile
+          src/WFO/post/Makefile
+          util/Makefile
           Makefile
           etc/run_lvd_driver.pl
           etc/run_vrc_driver.pl
