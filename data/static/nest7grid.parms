@@ -55,7 +55,7 @@
  silavwt_parm_cmn=0.,     
  toptwvl_parm_cmn=2.,     
  c8_project_common='NIMBUS', 
- fdda_model_source_cmn=' ',
+ fdda_model_source_cmn='',
  /
 c OVERALL LAPS PARAMETERS
 c
@@ -69,4 +69,11 @@ c                   software testing at this time.
 c
 c c8_project_common - Depends on which "realization" of LAPS you are running.
 c                     Allowed values are 'NIMBUS', 'WFO', 'AFWA', 'CWB'.
-
+c
+c ref_base_cmn - Reflectivity dbZ value assigned to areas with no echoes.
+c
+c ref_base_useable_cmn - Threshold dbZ used to filter out low reflectivities 
+c                        thus acting as a ground clutter and noise filter.
+c                        Areas with reflectivities < 'ref_base_useable_cmn'
+c                        are generally reset to 'ref_base_cmn' (no echo 
+c                        value).

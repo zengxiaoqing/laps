@@ -1,33 +1,40 @@
-cdis    Forecast Systems Laboratory
-cdis    NOAA/OAR/ERL/FSL
-cdis    325 Broadway
-cdis    Boulder, CO     80303
-cdis
-cdis    Forecast Research Division
-cdis    Local Analysis and Prediction Branch
-cdis    LAPS
-cdis
-cdis    This software and its documentation are in the public domain and
-cdis    are furnished "as is."  The United States government, its
-cdis    instrumentalities, officers, employees, and agents make no
-cdis    warranty, express or implied, as to the usefulness of the software
-cdis    and documentation for any purpose.  They assume no responsibility
-cdis    (1) for the use of the software and documentation; or (2) to provide
-cdis     technical support to users.
-cdis
-cdis    Permission to use, copy, modify, and distribute this software is
-cdis    hereby granted, provided that the entire disclaimer notice appears
-cdis    in all copies.  All modifications to this software must be clearly
-cdis    documented, and are solely the responsibility of the agent making
-cdis    the modifications.  If significant modifications or enhancements
-cdis    are made to this software, the FSL Software Policy Manager
+cdis   
+cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
+cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
+cdis    
+cdis    This software is distributed under the Open Source Definition,
+cdis    which may be found at http://www.opensource.org/osd.html.
+cdis    
+cdis    In particular, redistribution and use in source and binary forms,
+cdis    with or without modification, are permitted provided that the
+cdis    following conditions are met:
+cdis    
+cdis    - Redistributions of source code must retain this notice, this
+cdis    list of conditions and the following disclaimer.
+cdis    
+cdis    - Redistributions in binary form must provide access to this
+cdis    notice, this list of conditions and the following disclaimer, and
+cdis    the underlying source code.
+cdis    
+cdis    - All modifications to this software must be clearly documented,
+cdis    and are solely the responsibility of the agent making the
+cdis    modifications.
+cdis    
+cdis    - If significant modifications or enhancements are made to this
+cdis    software, the FSL Software Policy Manager
 cdis    (softwaremgr@fsl.noaa.gov) should be notified.
+cdis    
+cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
+cdis   
 cdis
 cdis
-cdis
-cdis
-cdis
-cdis
+cdis   
 cdis
 
         subroutine lapsplot_3d()

@@ -1,31 +1,40 @@
-cdis    Forecast Systems Laboratory
-cdis    NOAA/OAR/ERL/FSL
-cdis    325 Broadway cdis    Boulder, CO     80303 
-cdis 
-cdis    Forecast Research Division cdis    Local Analysis and Prediction Branch 
-cdis    LAPS
-cdis
-cdis    This software and its documentation are in the public domain and
-cdis    are furnished "as is."  The United States government, its
-cdis    instrumentalities, officers, employees, and agents make no
-cdis    warranty, express or implied, as to the usefulness of the software
-cdis    and documentation for any purpose.  They assume no responsibility
-cdis    (1) for the use of the software and documentation; or (2) to provide
-cdis     technical support to users.
-cdis
-cdis    Permission to use, copy, modify, and distribute this software is
-cdis    hereby granted, provided that the entire disclaimer notice appears
-cdis    in all copies.  All modifications to this software must be clearly
-cdis    documented, and are solely the responsibility of the agent making
-cdis    the modifications.  If significant modifications or enhancements
-cdis    are made to this software, the FSL Software Policy Manager
+cdis   
+cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
+cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
+cdis    
+cdis    This software is distributed under the Open Source Definition,
+cdis    which may be found at http://www.opensource.org/osd.html.
+cdis    
+cdis    In particular, redistribution and use in source and binary forms,
+cdis    with or without modification, are permitted provided that the
+cdis    following conditions are met:
+cdis    
+cdis    - Redistributions of source code must retain this notice, this
+cdis    list of conditions and the following disclaimer.
+cdis    
+cdis    - Redistributions in binary form must provide access to this
+cdis    notice, this list of conditions and the following disclaimer, and
+cdis    the underlying source code.
+cdis    
+cdis    - All modifications to this software must be clearly documented,
+cdis    and are solely the responsibility of the agent making the
+cdis    modifications.
+cdis    
+cdis    - If significant modifications or enhancements are made to this
+cdis    software, the FSL Software Policy Manager
 cdis    (softwaremgr@fsl.noaa.gov) should be notified.
+cdis    
+cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
+cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
+cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
+cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
+cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
+cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
+cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
+cdis   
 cdis
 cdis
-cdis
-cdis
-cdis
-cdis
+cdis   
 cdis
 
         subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
@@ -329,7 +338,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [wd,wb,wr,wf,bw] Wind'
      1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
      1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'        
-     1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
+     1       /'     [ra/rp] Radar Data,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df,dc,ws,vv,hu,ta,th,te,vo'  
@@ -1346,15 +1355,15 @@ c
 21        continue
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
-     1    .or.  c_type .eq. 'rr'
+     1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rp'
      1    .or.  c_type .eq. 'rd'                          )then
 
             if(c_type .eq. 'ra')mode = 1
             if(c_type .eq. 'gc')mode = 2
 
             i4time_tmp1 = (i4time_ref)/laps_cycle_time * laps_cycle_time
-            i4time_tmp2 = (i4time_ref-2400)/laps_cycle_time * laps_cycle
-     1_time
+            i4time_tmp2 = (i4time_ref-2400)/laps_cycle_time 
+     1                  * laps_cycle_time
 
             if(c_type .eq. 'rr')then
                 if(i4time_ref .ne. i4time_tmp1)then
@@ -1366,52 +1375,54 @@ c
                 i4time_get = i4time_ref
             endif
 
-2010        if(.not. l_radar_read)then
+            if(c_type .ne. 'rp')then
 
-              if(c_type .ne. 'rd')then ! Read data from vrc files
+              if(.not. l_radar_read)then
 
-!               Obtain height field
-                ext = 'lt1'
-                var_2d = 'HT'
-                call get_laps_3dgrid(
+                if(c_type .ne. 'rd')then ! Read data from vrc files
+
+!                 Obtain height field
+                  ext = 'lt1'
+                  var_2d = 'HT'
+                  call get_laps_3dgrid(
      1                   i4time_get,10000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,field_3d,istatus)
-                if(istatus .ne. 1)then
+                  if(istatus .ne. 1)then
                     write(6,*)' Error locating height field'
                     return
-                endif
+                  endif
 
-                call get_radar_ref(i4time_get,100000,i4time_radar,mode
+                  call get_radar_ref(i4time_get,100000,i4time_radar,mode
      1            ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
      1            ,field_3d
      1            ,grid_ra_ref,n_ref
      1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
      1            ,istat_3dref)
 
-              else ! 'rd' option: read data from v01, v02, etc.
+                else ! 'rd' option: read data from v01, v02, etc.
 
-                write(6,*)' Reading velocity data from the radars'
+                  write(6,*)' Reading velocity data from the radars'
 
-                call get_multiradar_vel(
+                  call get_multiradar_vel(
      1            i4time_get,100000000,i4time_radar_a
      1           ,max_radars,n_radars,ext_radar_a,r_missing_data
      1           ,.true.,NX_L,NY_L,NZ_L
      1           ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a
      1           ,n_vel_grids_a
-     1           ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a       
+     1           ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a      
      1           ,istat_radar_vel,istat_radar_nyq)
 
-                if(istat_radar_vel .eq. 1)then
-                  write(6,*)' Radar 3d vel data successfully read in'
+                  if(istat_radar_vel .eq. 1)then
+                    write(6,*)' Radar 3d vel data successfully read in'       
      1                       ,(n_vel_grids_a(i),i=1,n_radars)
-                else
-                  write(6,*)' Radar 3d vel data NOT successfully read in
-     1'
+                  else
+                    write(6,*)' Radar 3d vel data NOT successfully read'     
      1                       ,(n_vel_grids_a(i),i=1,n_radars)
-                  return
-                endif
+                    return
+                  endif
 
+                endif ! c_type .ne. 'rd'
 
 !               Ask which radar number (extension)
                 write(6,*)
@@ -1448,10 +1459,12 @@ c
 
                      i4time_radar = i4time_radar_a(i_radar)
 
-              endif
+              endif ! l_radar_read
+
+              l_radar_read = .true.
 
               call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
-              l_radar_read = .true.
+
             endif
 
 2015        write(6,2020)
@@ -1463,6 +1476,20 @@ c
      1             ,'[f1] 1 HR Fcst Max Reflectivity,'
      1             /' ',61x,' [q] Quit ? ',$)
             read(lun,15)c_field
+
+            if(c_type .eq. 'rp' .and. c_field .ne. 'lr')then
+!             Obtain LPR reflectivity field
+              write(6,*)' Reading LPS radar volume reflectivity'
+              ext = 'lps'
+              var_2d = 'REF'
+              call get_laps_3dgrid(
+     1                   i4time_get,1000000,i4time_radar,
+     1                   NX_L,NY_L,NZ_L,ext,var_2d
+     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+              call make_fnam_lp(i4time_radar,asc9_tim_r,istatus)
+
+            endif
 
             if(  c_field .eq. 'rf' 
      1      .or. c_field .eq. 'vi' .or. c_field .eq. 've')then
@@ -1477,7 +1504,7 @@ c
 
             endif
 
-            if(c_field .eq. 'mr')then ! Reflectivity data
+            if(c_field .eq. 'mr')then ! Column Max Reflectivity data
 
 !               if(lapsplot_pregen)then
                 if(.true.)then
