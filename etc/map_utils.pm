@@ -317,6 +317,8 @@ sub map_set_sub($$$$$$$$$) {
     if ($truelat1 > $truelat2) {
        ${proj{truelat1}} = $truelat2;
        ${proj{truelat2}} = $truelat1;
+       $truelat1 = ${proj{truelat1}};
+       $truelat2 = ${proj{truelat2}};
     } 
     # Set cone factor 
     ${proj{cone}} = lc_cone(${proj{truelat1}},${proj{truelat2}});
