@@ -263,8 +263,7 @@
      file can be displayed using other NCAR graphics utilities like 'ctrans'
      and 'idt'. The 'gmeta' file can be converted into a GIF/JPEG file
      for web display by using 'ctrans' in conjunction with 'netpbm' or another
-     similar method. We are starting to put some of our web related scripts
-     (for analyses) into the repository such as 'etc/www/followup_ncarg.sh'.
+     similar method. 
 
      'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
      graphics. The environment variable $NCARG_ROOT should be set when
@@ -292,6 +291,12 @@
      format. These would need to be converted manually prior to using 
      'lapsplot', if your machine is expecting little_endian. We will consider 
      automating this in the future. 
+
+     We are starting to put some of our web related scripts (for analyses) 
+     into the repository such as 'etc/www/followup_ncarg.sh'. Web products
+     are defined with some configuration files in 'static/www/lapsplot.*'.
+     Color tables are specified in 'static/www/*.lut'. Other user definable
+     parameters are located in 'static/lapsplot.nl'.
 
      To run lapsplot you can do the following...
 
