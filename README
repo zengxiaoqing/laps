@@ -737,7 +737,9 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      You may note the following data sources used at FSL. These data sources
      are what the FSL ingest code is tailored to for producing intermediate
      data files. Note that LAPS will still run even if some of the data sources
-     are withheld, albeit in degraded fashion. 
+     are withheld, albeit in degraded fashion. A minimum dataset of model 
+     background and surface observations is generally needed to get reasonable 
+     results.
 
      The pathnames for the ingest data sources are assigned within the 
      './data/static/nest7grid.parms' and other '*.nl' files and can be set 
