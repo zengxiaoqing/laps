@@ -438,7 +438,8 @@
      working with on-site. This goes along with the second directory tree
      diagram shown above in Section 2.0.
 
-     For example, to install laps in directory '/usr/local/laps' use... 
+     For example, to install laps in directory '/usr/local/laps' (i.e.
+     $LAPSINSTALLROOT) use... 
      prompt> ./configure --prefix=/usr/local/laps
      
      One or more data directories for running laps can be specified 
@@ -450,7 +451,7 @@
      an $ARCH environment variable or by using --arch. The allowed values for 
      'arch' include 'aix', 'hpux', etc.
 
-     For more information on passing in command line flags to 'configure' run 
+     For more information on passing in command line flags to 'configure' run...
      prompt> ./configure --help
 
                ---  2.2.2.1  Modifying Compiler Flags       ---
