@@ -1,24 +1,28 @@
 
-      subroutine check_for_new_ctp(itime_ctp_window,istatus)
+      subroutine check_for_new_ctp(itime_ctp_window,istatus_ctp)
 
       implicit none
       character*200  cdir_ctp
       character*9    a9_systime
       integer        itime_ctp_window
       integer        istatus
+      integer        istatus_ctp
       integer        i4time_latest
+      integer        i4timedif
       integer        i4time_sys
       integer        ldctp
 
 
+      istatus_ctp=0
       call get_directory('ctp',cdir_ctp,ldctp)
       cdir_ctp=cdir_ctp(1:ldctp)//'*'
       call get_latest_file_time(cdir_ctp,i4time_latest)
       call get_systime(i4time_sys,a9_systime,istatus)
-      if(i4time_sys-i4time_latest.gt.itime_ctp_window)then
-         istatus=1
-      else
-         istatus=0
+      i4timedif=i4time_sys-i4time_latest   !if negative then maybe a case rerun
+      if(i4timedif.gt.0)then
+         if(i4timedif.gt.itime_ctp_window)then
+            istatus_ctp=1
+         endif
       endif
       return
       end
