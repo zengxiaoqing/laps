@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <netcdf.h>
 #include "fill_bigfile.h"
 
 /* Usage: This program expects that the following environment variables are set:
@@ -65,7 +66,7 @@ main(int argc, char *argv[])
 
          if (argc == 2) {  /* process exactly one file defined by fcstRunTime */
 	   strcpy(fcstRunTime,argv[1]);
-           filenameToUnixtime(&unix_filetime, &unix_fcsttime, fcstRunTime);
+           filenameToUnixtime((time_t *) &unix_filetime, &unix_fcsttime, fcstRunTime);
 
            xfr_status = processFill(fcstRunTime, unix_filetime, 
                                     unix_fcsttime, numElements, paramInfo);
@@ -128,7 +129,7 @@ main(int argc, char *argv[])
                  if (fn_dot != NULL) {
                    *fn_dot = '\0'; /* get rid of file extension */
                  }
-                 filenameToUnixtime(&unix_filetime,&unix_fcsttime,fcstRunTime);
+                 filenameToUnixtime((time_t *) &unix_filetime,&unix_fcsttime,fcstRunTime);
                  if (unix_filetime == l_closestEnt) {
                    xfr_status = processFill(fcstRunTime, unix_filetime, 
                                             unix_fcsttime, numElements, paramInfo);
@@ -139,4 +140,5 @@ main(int argc, char *argv[])
            }
          }
        }
+       exit (0);
 }

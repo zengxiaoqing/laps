@@ -1,9 +1,11 @@
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <netcdf.h>
 #include "fill_bigfile.h"
 
 main()
@@ -70,4 +72,5 @@ main()
            }
          }
        }
+       exit (0);
 }
