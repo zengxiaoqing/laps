@@ -120,5 +120,7 @@ cdis
         enddo ! j
         enddo ! i
 
+        istatus = 1
+
         return
         end

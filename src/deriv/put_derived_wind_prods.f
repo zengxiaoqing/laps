@@ -402,7 +402,10 @@ ccc202              format('H',i2)
      1          ,units_a,comment_a,out_lhe_3d,NX_L,NY_L,3,istatus)
                  istat_lhe = istatus
 
-            endif
+            else
+                write(6,*)' WARNING: LHE not written out'
+
+            endif ! istatus
 
         endif
 
@@ -460,12 +463,6 @@ ccc202              format('H',i2)
             endif
 
         endif
-
-!       Set notification arrays.f derived wind products
-!       if(istat_radar_2dref .eq. 1)then ! Set notification arrays for VRC file
-!           i4time_array(n_vrc) = i4time_radar
-!           j_status(n_vrc) = ss_normal
-!       endif
 
         if(istat_lhe .eq. 1)then
             i4time_array(n_lhe) = i4time_sys
