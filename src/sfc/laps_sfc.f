@@ -33,16 +33,18 @@ c
 c
 	program laps_sfc
 c
-	include 'lapsparms.cmn'
+        include 'lapsparms.cmn'
+        include 'grid_fname.cmn'
+
 	character laps_domain*9
 c
-	laps_domain = 'nest7grid'
-	call get_laps_config(laps_domain,istatus)
+	call get_config(istatus)
 	if(istatus .ne. 1) then
 	   write(6,*) 'LAPS_SFC: ERROR getting domain dimensions'
 	   stop
 	endif
 c
+	laps_domain = grid_fnam_common
 	call laps_sfc_sub(nx_l_cmn,ny_l_cmn,nk_laps,maxstns_cmn,
      &                    laps_cycle_time_cmn,grid_spacing_m_cmn,
      &                    laps_domain)
@@ -119,8 +121,6 @@ c          not currently used.  They are included because they might be in
 c          the future.
 c
 c*****************************************************************************
-c
-	include 'laps_sfc.inc'
 c
 	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
 	real x1a(ni), x2a(nj), y2a(ni,nj)
@@ -200,13 +200,14 @@ c
 	character nl_file*256
 c
 	namelist /surface_analysis/ use_lso_qc,skip_internal_qc
-     1                             ,itheta, del, gam, ak
+     1                             ,itheta, redp_lvl, del, gam, ak       
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
 c*************************************************************
 c
 	call tagit('laps_sfc',20000126)
+        call get_sfc_badflag(badflag,istatus)
 	narg = iargc()
 cc	print *,' narg = ', narg
 c

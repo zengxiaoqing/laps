@@ -1,0 +1,76 @@
+
+
+main                                           laps_sfc.f
+    laps_sfc_sub                                    "
+        get_bkgwind_sfc                        laps_routines.f
+        get_background_sfc                          "
+        qcdata                                 qc_data.f
+           bkg_chk                                  "
+        mdat_laps                              mdatlaps.f
+        lapsvanl                               lapsvanl.f
+            zero                                    
+            get_modelfg_3d                          
+            mean_lapse                         laps_routines.f
+            mean_pressure                           "
+            spline (t,td)                      lapsvanl_sub.f
+            spline (td)                             "
+            add                                     
+            spline (u,v)                       lapsvanl_sub.f
+            nonlin                                  "
+            frict                                   "
+            leib                                    "
+            lp_fire_danger                          "
+            heat_index                              "
+            verify                                  "
+
+..............................................................................
+
+mdatlaps.f:	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
+mdatlaps.f:c			03-12-90  Subroutine version.
+mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
+mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
+mdatlaps.f:        Subroutine procar(a,imax,jmax,b,imax1,jmax1,iproc)
+mdatlaps.f:	subroutine fill_bounds(x,imax,jmax,ii,jj,x_ob,
+mdatlaps.f:	subroutine back_bounds(x,imax,jmax,dum,badflag)
+mdatlaps.f:      subroutine splie2(x1a,x2a,ya,m,n,y2a)
+mdatlaps.f:      subroutine splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
+mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
+mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
+mdatlaps.f:	subroutine set_boundary(x,imax,jmax,ii,jj,x_ob,x_bk,n_obs_b,
+lapsvanl.f:	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
+lapsvanl.f:c				03-14-90  Subroutine version.
+lapsvanl.f:c                               09-10-96  Subroutine Channel corrected
+lapsvanl.f:c                                           constants passed to subroutines.
+lapsvanl.f:c.....	Grids for variables derived by the MESO_ANL subroutine.
+lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
+lapsvanl_sub.f:	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
+lapsvanl_sub.f:	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
+lapsvanl_sub.f:	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
+lapsvanl_sub.f:	subroutine meso_anl(u,v,p,t,td,theta,dx,dy,q,qcon,qadv,
+lapsvanl_sub.f:	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
+lapsvanl_sub.f:	subroutine barnes_wide(t,imax,jmax,ii,jj,t_ob,numsta,smsng,
+lapsvanl_sub.f:	subroutine bounds(x,imax,jmax)
+lapsvanl_sub.f:	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
+lapsvanl_sub.f:	subroutine windconvert(uwind,vwind,direction,speed,
+lapsvanl_sub.f:        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,kcloud)
+lapsvanl_sub.f:        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
+lapsvanl_sub.f:	subroutine dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+lapsvanl_sub.f:	subroutine calc_beta(d,obs_error,beta)
+lapsvanl_sub.f:	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
+lapsvanl_sub.f:      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
+
+laps_routines.f:c	Changes:	07-20-88	Changed from subroutine to function.
+laps_routines.f:	subroutine find_ij(lat_s,lon_s,lat,lon,numsta,mxsta,
+laps_routines.f:	subroutine extract(a,imax,jmax,i,j,ix,jy)
+laps_routines.f:	subroutine decompwind_gm(dd,ff,ucomp,vcomp,status)
+laps_routines.f:      subroutine stats(x,ni,nj)
+laps_routines.f:	subroutine clouds(imax,jmax,topo,t,smsng,tb8,
+laps_routines.f:	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
+laps_routines.f:      subroutine aplot(field, ni, nj)
+laps_routines.f:       subroutine check_field_2d(x,ni,nj,fill_val,istatus)
+laps_routines.f:	subroutine checknan_pt(x,nan_flag)
+laps_routines.f:	subroutine checknan_1d(x,ni,nan_flag)
+laps_routines.f:	subroutine checknan_2d(x,ni,nj,nan_flag)
+laps_routines.f:	subroutine checknan_3d(x,ni,nj,nk,nan_flag)
+laps_routines.f:      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
+laps_routines.f:	subroutine tagit(name, code)
