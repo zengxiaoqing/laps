@@ -2465,7 +2465,7 @@ similar to the 3-D wind and temperature analyses (see those sections and their
 web references). Observation increments are used for T, Td, U, V, MSL, P, PS 
 and straight observations are used for visibility. The temperature and dewpoint
 observations are also corrected for deviations of the station elevation from
-the LAPS terrain.
+the LAPS terrain. Standard lapse rates are applied to this elevation difference.
 
 For pressure analysis, three fields are computed including reduced pressure (P)
 at reference level 'redp_lvl', surface pressure (PS), and mean sea level 
