@@ -63,10 +63,12 @@ cdis
 
         real*4 model_q_3d(ni,nj,klaps)       ! Local
 
-        real*4 model_lwc_3d(ni,nj,klaps)     ! Local
-        real*4 model_ice_3d(ni,nj,klaps)     ! Local
+        real*4 model_lwc_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
+        real*4 model_ice_3d(ni,nj,klaps)     ! Local (units are mixing ratio)
 
         real*4 make_rh,lwc_modelfg,ice_modelfg
+
+        real*4 icethresh, liqthresh
 
         character*31 ext
         character*3 var_2d
@@ -131,8 +133,21 @@ cdis
                 return
             endif
 
-        endif ! Good status for MODEL data
+        else ! We are using model LWC/ICE fields
+            call get_grid_spacing_cen(grid_spacing_cen_m,istatus)
+            if(istatus .ne. 1)return
 
+            IF(grid_spacing_cen_m .LE. 10000.)THEN  ! Grid spacing in meters
+                icethresh  = 0.000005 ! These are in kg kg{-1} (mixing ratio)
+                snowthresh = 0.000003
+                liqthresh  = 0.000003
+            ELSE
+                icethresh  = 0.000005
+                snowthresh = 0.000025
+                liqthresh  = 0.000025
+            ENDIF
+
+        endif ! Status for MODEL data
 
 !       Remap to cloud height grid and convert to cloud cover
         t_ref = 0.
@@ -148,7 +163,6 @@ cdis
      1                  ,ni,nj,klaps,i,j,istat_z)
 
                 if(istat_z .ne. 1)then
-
 !                   We're OK if cloud height grid is above pressure grid
                     if(cld_hts(k) .le. heights_3d(i,j,klaps))then
                         write(6,*)' Error: Bad status from '
@@ -177,13 +191,6 @@ cdis
                 go to 1000
             endif
 
-!           Find the model temp at this location in the cloud height grid
-            t_modelfg(i,j,k) =  temp_3d(i,j,iz_laps)    * (1. - frac)
-     1                       +  temp_3d(i,j,iz_laps+1)  * frac
-
-            t_modelfg_c = t_modelfg(i,j,k) - 273.15
-
-
             if(istat_lwc .eq. 1 .and. istat_lwc .eq. 1)then
                 lwc_modelfg =  model_lwc_3d(i,j,iz_laps)   * (1. - frac)
      1                      +  model_lwc_3d(i,j,iz_laps+1)       * frac
@@ -191,8 +198,8 @@ cdis
                 ice_modelfg =  model_ice_3d(i,j,iz_laps)   * (1. - frac)
      1                      +  model_ice_3d(i,j,iz_laps+1)       * frac
 
-                condensate_fg = lwc_modelfg + ice_modelfg
-                if(condensate_fg .gt. 0.)then
+                if(lwc_modelfg .ge. liqthresh .or. 
+     1             ice_modelfg .ge. icethresh        )then
                     cf_modelfg(i,j,k) = 1.
                     i_condensate = i_condensate + 1
                 else
@@ -200,6 +207,12 @@ cdis
                 endif
 
             elseif(istat_sh .eq. 1)then
+!               Find the model temp at this location in the cloud height grid
+                t_modelfg(i,j,k) =  temp_3d(i,j,iz_laps)   * (1. - frac)      
+     1                           +  temp_3d(i,j,iz_laps+1) * frac
+
+                t_modelfg_c = t_modelfg(i,j,k) - 273.15
+
 !               Find the model sh at this location in the cloud height grid
                 q_modelfg =  model_q_3d(i,j,iz_laps)    * (1. - frac)       
      1                    +  model_q_3d(i,j,iz_laps+1)  * frac

@@ -3383,8 +3383,8 @@ c
         write(6,*)' Subroutine input_product_info...'
 
         write(6,1)
- 1      format('  Product type: analysis [a], background [b]'
-     1        ,', balance [n], forecast [f], quit [q] ? ',$)        
+ 1      format('  Product type: analysis [a], bkgnd [b]'
+     1        ,', balance [n], fcst [f], quit [q] ? ',$)        
 
         read(5,2)c_prodtype
  2      format(a)
