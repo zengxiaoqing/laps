@@ -16,6 +16,7 @@ main                                           laps_sfc.f
         mdat_laps                              mdatlaps.f
             procar                                  "
             set_boundary                            "
+                barnes_wide                    lapsvanl_sub.f
         laps_vanl                              lapsvanl.f
             zero                                    
             get_modelfg_3d                          
@@ -40,8 +41,6 @@ main                                           laps_sfc.f
 
 .........................PLEASE IGNORE WHAT IS BELOW...........................
 
-mdatlaps.f:	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
-mdatlaps.f:c			03-12-90  Subroutine version.
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
 mdatlaps.f:      subroutine splie2(x1a,x2a,ya,m,n,y2a)
@@ -51,10 +50,8 @@ mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
 lapsvanl_sub.f:	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
 lapsvanl_sub.f:	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
-lapsvanl_sub.f:	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
 lapsvanl_sub.f:	subroutine meso_anl(u,v,p,t,td,theta,dx,dy,q,qcon,qadv,
 lapsvanl_sub.f:	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
-lapsvanl_sub.f:	subroutine barnes_wide(t,imax,jmax,ii,jj,t_ob,numsta,smsng,
 lapsvanl_sub.f:	subroutine bounds(x,imax,jmax)
 lapsvanl_sub.f:	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 lapsvanl_sub.f:	subroutine windconvert(uwind,vwind,direction,speed,
