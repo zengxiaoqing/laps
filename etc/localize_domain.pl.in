@@ -24,23 +24,28 @@
 #                    Switch must have a value (like 't' or 'y' or '1') such
 #                    that it is defined. If no_ggm is defined laps_localization
 #                    only updates namelists and cdl files.
-#
-# J. Smart: 6-25-01: Modified script to be more generic and adaptable to the
+#   "     : 6-25-01: Modified script to be more generic and adaptable to the
 #                    WRFSI domain localization; thus, renamed script to
 #                    localize_domain.pl.in ... -w switch to distinguish which
 #                    localization (laps or wrfsi).
+#   "     : 6-01-03: Added q_sub project name command line input, qspn. Directive
+#                    to use laps_driver.pl and submit gridgen_model to compute
+#                    node as necessary. Added construct to prevent buffering output.
 use strict;
 use Getopt::Long;
-my($INSTALL_ROOT,$DATA_ROOT,$SOURCE_ROOT,$WHICH_TYPE,$quiet,$sattype,$satid,$no_ggm);
+my($INSTALL_ROOT,$DATA_ROOT,$SOURCE_ROOT,$WHICH_TYPE,$flush_buffer);
+my($quiet,$sattype,$satid,$no_ggm);
+my $qspn;
 
 my $result = GetOptions("install_root=s" => \$INSTALL_ROOT,
+                        "qspn=s" => \$qspn,
                         "which_type=s" => \$WHICH_TYPE,
 			"dataroot=s" => \$DATA_ROOT,
 			"srcroot=s"  => \$SOURCE_ROOT,
-			"quiet" => \$quiet, 
 			"sattype=s" => \$sattype,
 			"satid=s" => \$satid,
                         "no_ggm=s" => \$no_ggm,
+			"quiet" => \$quiet, 
 			"help" => \&help_sub,
 			"<>" => \&help_sub);
 
@@ -54,11 +59,28 @@ sub help_sub{
     print "   --satid    = g8/g12 or g10 (guessed based on -100.0W)\n";
     print "   --no_ggm   = if defined then localization does not run gridgen_model\n";
     print "   --quiet    = Do not query user for verification\n";
+    print "   --qspn P   = run gridgen_model.exe using laps_driver.pl -q $qspn; P = project name\n";
     print "   --help     = print this message and exit\n";
     exit;
 }
 
 umask 002;
+my $q_sub;
+if(defined $qspn){
+   print "using qsub: qsub project name = $qspn\n";
+   if(defined $ENV{HOSTTYPE}){
+      if( substr($ENV{HOSTTYPE},0,4) eq "i386"){
+         $q_sub="Q";
+      }elsif( substr($ENV{HOSTTYPE},0,5) eq "alpha"){
+         $q_sub="q";
+      }else{print "ERROR: not able to determine HOSTTYPE for q sub\n";
+            print "Abort\n";
+            exit;}
+   }
+}
+
+#flush buffer; ie., prevent buffering of output
+$|=1;
 
 my $thisdir = 'pwd';
 chomp($thisdir);
@@ -228,12 +250,23 @@ foreach(@cdl_list){
 # run gridgen model if necessary
 #
 
+my $command;
 if( !defined $no_ggm ){
+    if(defined $qspn && $q_sub eq "q"){
+       $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -q $qspn -n rt gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+    }elsif(defined $qspn && $q_sub eq "Q"){
+       $command = "@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -Q $qspn -n comp gridgen_model.exe $INSTALL_ROOT $DATA_ROOT";
+    }else{
+       $command = "$INSTALL_ROOT/bin/gridgen_model.exe";
+    }
 
-    run_sys::run_sys("$INSTALL_ROOT/bin/gridgen_model.exe");	
-    print "gridgen_model.exe complete - building sfc lookup tables\n";
+    print "command = $command \n";
+    run_sys::run_sys($command);
+    print "gridgen_model.exe finished\n";
 
-    if($WHICH_TYPE eq "laps"){run_sys::run_sys("$INSTALL_ROOT/bin/gensfclut.exe");
+    if($WHICH_TYPE eq "laps"){
+       print "build sfc lookup tables\n";
+       run_sys::run_sys("$INSTALL_ROOT/bin/gensfclut.exe");
        print "gensfclut.exe complete \n";
     }
 
