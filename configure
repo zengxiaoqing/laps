@@ -2855,10 +2855,11 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/localize_domain.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
+          etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
-          etc/rcsv.pl
+          etc/recurs_iter.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
@@ -2984,10 +2985,11 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/localize_domain.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
+          etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
-          etc/rcsv.pl
+          etc/recurs_iter.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
