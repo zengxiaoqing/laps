@@ -60,6 +60,7 @@
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
          3.3.6 ..................  DERIV
          3.3.7 ..................  ACCUM 
+         3.3.8 ..................  BALANCE
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
 
@@ -1815,6 +1816,24 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
+------ 3.3.8 ---------------------BALANCE---------------------------------------
+
+Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
+     (author: John McGinley/John Snook/John Smart - smart@fsl.noaa.gov)
+
+        LAPS quasi-geostrophic balance of height and wind with temp adjustment.
+<pre>
+Inputs: (from LT1, LW3 processes)
+      * lw3          grid       LAPS 3-d wind analysis
+      * lt1          grid       LAPS 3-d temperature analysis
+
+Outputs:
+        lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
+        lw3          3d grid    in lapsprd/balance/lw3 (u3, v3 and om field)
+</pre>
+Source directory: laps/src/balance
+Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
+                  off meaning that the ported software does not run qbalpe.exe.
 ********************************************************************************
 ********************************************************************************
 
