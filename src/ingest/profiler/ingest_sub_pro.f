@@ -205,6 +205,7 @@ C
 
         call s_len(dir_in,len_dir_in)
 
+!       Determine whether we are using /public or WFO Advanced filenames...
         if(.false.)then
             call get_c8_project(c8_project,istatus)
             if (istatus .ne. 1) then
@@ -234,23 +235,23 @@ C           Determine file format by looking at the file name convention
 
         endif
 
-C       Wait for the data
-
-!       Determine whether we are using /public or WFO Advanced filenames...
         if(c8_project(1:6) .eq. 'NIMBUS')then
             write(6,*)' Assumming /public filename format'
         else
             write(6,*)' Assumming WFO filename format'
         endif
 
+!       Do we want hourly or 6 minute profiler data?
         if(c8_project(1:6) .eq. 'NIMBUS')then
-!           if(laps_cycle_time .le. 1800)then
-            if(.false.)then
+            if(laps_cycle_time .le. 1800)then
+!           if(.true.)then
                 c5_data_interval = '0006o'
                 lag_time = 180
+                write(6,*)' Using 6 minute data'
             else
                 c5_data_interval = '0100o'
                 lag_time = 1800
+                write(6,*)' Using hourly data'
             endif
             c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
         else ! WFO
@@ -259,6 +260,7 @@ C       Wait for the data
 
         write(6,*)c_filespec(1:80)
 
+C       Wait for the data
         i4time_desired = i4time
         i4_check_interval = 10
         i4_thresh_age = 3600
