@@ -331,26 +331,18 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,l_highres,l_pad1,l_pad2,l_pad3
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn
-     1  ,i_delta_sat_t_sec_cmn,r_msng_sat_flag_cdf_cmn
      1  ,radarext_3d_cmn,radarext_3d_accum_cmn
      1  ,path_to_raw_pirep_cmn
      1  ,path_to_raw_rass_cmn,path_to_raw_profiler_cmn
      1  ,path_to_raw_blprass_cmn,path_to_raw_blpprofiler_cmn
-     1  ,path_to_raw_satellite_cdf_cmn,path_to_raw_satellite_gvr_cmn
-     1  ,path_to_ruc_cmn,path_to_ngm_cmn
      1  ,path_to_wsi_2d_radar_cmn,path_to_wsi_3d_radar_cmn
      1  ,path_to_qc_acars_cmn,path_to_raw_raob_cmn
      1  ,path_to_metar_data_cmn,path_to_local_data_cmn
-     1  ,r_msng_sat_flag_gvr_cmn,r_msng_sat_flag_asc_cmn
-     1  ,path_to_raw_sat_wfo_vis_cmn,path_to_raw_sat_wfo_i39_cmn
-     1  ,path_to_raw_sat_wfo_iwv_cmn,path_to_raw_sat_wfo_i11_cmn
-     1  ,path_to_raw_sat_wfo_i12_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
      1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
      1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
-     1  ,laps_background_model_cmn
      1  ,maxstations_cmn,maxobs_cmn
      1  ,c_raddat_type, c80_description
 
@@ -375,7 +367,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         inquire(unit=92,read=a8)
         print*, a8
         read(92,lapsparms_nl,err=910)
-         print *,'here ',iflag_lapsparms_cmn
+ccc         print *,'here ',iflag_lapsparms_cmn
 
 1       format(a)
 2       format(a6)
@@ -981,6 +973,7 @@ c        end
  901  print*,'error reading background_nl in ',nest7grid
       stop
       end
+c
       subroutine get_satellite_parameters(path_to_raw_sat_wfo_vis,
      +              path_to_raw_sat_wfo_i39,
      +              path_to_raw_sat_wfo_iwv,
@@ -1000,7 +993,8 @@ c        end
      +              path_to_raw_sat_wfo_i11,
      +              path_to_raw_sat_wfo_i12,
      +              path_to_raw_satellite_gvr,
-     +              path_to_raw_satellite_cdf
+     +              path_to_raw_satellite_cdf,
+     +              path_to_sat_sounding
 
       integer i_delta_sat_t_sec,r_msng_sat_flag_cdf
      +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
@@ -1012,6 +1006,7 @@ c        end
      +                        path_to_raw_sat_wfo_i12,
      +                        path_to_raw_satellite_gvr,
      +                        path_to_raw_satellite_cdf,
+     +                        path_to_sat_sounding,
      +       i_delta_sat_t_sec,r_msng_sat_flag_cdf
      +       ,r_msng_sat_flag_gvr,r_msng_sat_flag_asc
      +       ,max_sat,max_sat_channel, max_images
@@ -1028,5 +1023,49 @@ c        end
       stop
  901  print*,'error reading satellite_nl in ',nest7grid
       write(*,satellite_nl)
+      stop 
+      end 
+
+      subroutine get_sat_sounder_info(n_sndr,c_sndr_id,
+     +n_sndr_channels,path_to_sat_sounder,n_elems,n_lines,
+     +channel_wavelength_u,imsng_sndr_pix,istatus)
+
+      integer maxsndr
+      integer maxch
+      parameter (maxsndr=4,maxch=19)
+
+      integer len_dir
+      integer n_sndr
+      integer n_sndr_channels
+      integer n_elems(maxsndr)
+      integer n_lines(maxsndr)
+      integer imsng_sndr_pix
+      integer istatus
+
+      character*150 nest7grid
+      character*200 path_to_sat_sounder(maxsndr)
+      character*5   c_sndr_id(maxsndr)
+
+      real*4 channel_wavelength_u(maxch,maxsndr)
+
+c-----------------------------------------------------------------------
+      namelist /satellite_sounder_nl/ n_sndr,c_sndr_id,path_to_sat_sound
+     +er,n_elems,n_lines,n_sndr_channels,channel_wavelength_u,imsng_sndr
+     +_pix
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+
+      nest7grid = nest7grid(1:len_dir)//'/nest7grid.parms'
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,satellite_sounder_nl,err=901)
+      close(1)
+
+      istatus = 1
+      return
+ 900  print*,'error opening file ',nest7grid
       stop
+ 901  print*,'error reading satellite_sounder_nl in ',nest7grid
+      write(*,satellite_sounder_nl)
+      stop 
       end 
