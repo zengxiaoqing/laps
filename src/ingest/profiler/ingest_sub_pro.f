@@ -203,7 +203,7 @@ C
             return
         endif
 
-        call s_len(dir_in,len_dir_in)
+        call s_len(dir_in,len_dir_in) ! Slash should be on the end of dir_in
 
 !       Determine whether we are using /public or WFO Advanced filenames...
         if(.false.)then
@@ -223,7 +223,7 @@ C           Determine file format by looking at the file name convention
                 write(6,*)' Error calling get_file_names'
                 stop
             endif
-            ipos = len_dir_in + 10
+            ipos = len_dir_in + 9
             c1_char = c_filenames(1)(ipos:ipos)
             if(c1_char .eq. '_')then
                 c8_project = 'WFO' 
