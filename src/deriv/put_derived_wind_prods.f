@@ -247,9 +247,18 @@ cdis
      1                  NX_L,NY_L,
      1                  ref_max(1,1,0),istat_radar_2dref)
 
-
                 if(istat_radar_2dref .eq. 1)then
                     write(6,*)' Radar 2d ref data successfully read in'
+                elseif(istat_radar_2dref .eq. -1)then
+                    write(6,*)' Radar 2d ref: fill missing data'
+                    do i = 1,NX_L
+                    do j = 1,NY_L
+                        if(ref_max(i,j,0) .eq. r_missing_data)then
+                            ref_max(i,j,0) = ref_base
+                        endif
+                    enddo ! j
+                    enddo ! i
+                    istat_radar_2dref = 1 ! since we can now use the data
                 else
                     write(6,*)' Radar 2d ref data NOT successfully'
      1                       ,' read in'
