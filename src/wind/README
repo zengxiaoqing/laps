@@ -21,6 +21,7 @@ program laps_wind                              main.f
                 get_time_term                  get_time_term.f
         get_fnorm_max
         laps_anl                               windanal.f
+            compare_wind                       comparisons.f
             qc_radar_obs                       qcradar.f
             insert_derived_radar_obs           windanal.f
             make_derived_radar_obs                "
@@ -29,7 +30,7 @@ program laps_wind                              main.f
             get_inst_err                          "
             barnes_multivariate
                 barnes_multivariate_sub
-        comparisons                            comparisons.f
+            compare_wind                       comparisons.f
         wind_post_process                      main_sub.f
             put_laps_multi_2d                      
             vert_wind                          vertwind.f
