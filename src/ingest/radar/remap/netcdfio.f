@@ -1,18 +1,19 @@
 
  
-       subroutine radar_init(i_tilt_proc,i_last_scan)       
+       subroutine radar_init(i_radar,i_tilt_proc,i_last_scan)       
 !                                 I           O     
  
-! Open/Read Polar NetCDF file for the proper time
+!      Open/Read Polar NetCDF file for the proper time
        integer max_files
        parameter(max_files=1000)
 
        character*150 path_to_wideband,c_filespec,filename,directory
      1              ,c_fnames(max_files)
+       character*4 c4_radarname
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
-       character*3 ext_out
+       character*3 ext_out, ext_dum, c3_radar_subdir
        character*8 radar_subdir
 
        include 'remap_dims.inc'
@@ -49,7 +50,8 @@ c      Determine filename extension
            c2_tilt = '01'
 
 !          Get path to file
-           call get_remap_parms(path_to_wideband,istatus)
+           call get_remap_parms(i_radar,n_radars_remap,path_to_wideband       
+     1                    ,c4_radarname,ext_dum,c3_radar_subdir,istatus)       
            call s_len(path_to_wideband,len_path)
  
 !          Get i4time of 01 elevation file nearest to 15 minutes ago
@@ -134,36 +136,6 @@ c      Determine filename extension
       
        return
        end
- 
-       subroutine get_remap_parms(path_to_wideband,istatus)
-
-       character*150 path_to_wideband           
-       namelist /remap_nl/ path_to_wideband
- 
-       character*150 static_dir,filename
- 
-       call get_directory('nest7grid',static_dir,len_dir)
-
-       filename = static_dir(1:len_dir)//'/remap.nl'
- 
-       open(1,file=filename,status='old',err=900)
-       read(1,remap_nl,err=901)
-       close(1)
-
-       istatus = 1
-       return
-
-  900  print*,'error opening file ',filename
-       istatus = 0
-       return
-
-  901  print*,'error reading remap_nl in ',filename
-       write(*,remap_nl)
-       istatus = 0
-       return
-
-       end
-
  
        function get_altitude()
        integer get_altitude          ! Site altitude (meters)

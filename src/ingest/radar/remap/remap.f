@@ -1,4 +1,7 @@
 
+      character path_to_wideband*150, c4_radarname*4, ext_dum*3
+     1        , radar_subdir_dum*3
+       
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
           write (6,*) 'Error getting horizontal domain dimensions'
@@ -11,11 +14,16 @@
           go to 999
       endif
 
-      call remap_sub(NX_L,NY_L,NZ_L,istatus)
+      call get_remap_parms(0,n_radars_remap,path_to_radar
+     1                  ,c4_radarname,ext_dum,radar_subdir_dum,istatus)       
+
+      do i_radar = 1,n_radars_remap
+          call remap_sub(i_radar,NX_L,NY_L,NZ_L,istatus)
+      enddo
 
  999  end
 
-      subroutine remap_sub(NX_L,NY_L,NZ_L,istatus)
+      subroutine remap_sub(i_radar,NX_L,NY_L,NZ_L,istatus)
 
       include 'remap.inc'
       include 'remap_dims.inc'
@@ -119,7 +127,7 @@
 !     call Archive II initialization routine  
       i_tilt_proc = 1
 
-      call radar_init(i_tilt_proc,i_last_scan)
+      call radar_init(i_radar,i_tilt_proc,i_last_scan)
 
       i_first_scan = 1
 
@@ -294,7 +302,7 @@
 ! call the FORTRAN remapper module   
 !             Read next tilt
               i_tilt_proc_new = i_tilt_proc + 1
-              call radar_init(i_tilt_proc_new,i_last_scan)
+              call radar_init(i_radar,i_tilt_proc_new,i_last_scan)
 
               write(6,*)'  Calling remap_process past_tilt '
      1                                         , past_tilt  
@@ -340,3 +348,80 @@
       enddo       ! close infinite while loop    (increment tilt)
 
       end
+
+ 
+       subroutine get_remap_parms(i_radar,n_radars_remap
+     1            ,path_to_radar,c4_radarname,laps_radar_ext
+     1            ,c3_radar_subdir,istatus)       
+
+       integer*4 MAX_RADARS_REMAP
+       parameter (MAX_RADARS_REMAP=10)
+
+       character*150 path_to_radar_a(MAX_RADARS_REMAP)
+       character*(*) path_to_radar
+
+       character*4 c4_radarname_a(MAX_RADARS_REMAP)
+       character*4 c4_radarname
+
+       character*4 laps_radar_ext_a(MAX_RADARS_REMAP)
+       character*4 laps_radar_ext
+
+       character*3 c3_radar_subdir
+
+       namelist /remap_nl/ n_radars_remap,path_to_radar_a,c4_radarname_a       
+     1                                   ,laps_radar_ext_a
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/remap.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,remap_nl,err=901)
+       close(1)
+
+       if(i_radar .eq. 0)then
+           return
+       endif
+
+       if(i_radar .gt. n_radars_remap .or. 
+     1                 n_radars_remap .gt. MAX_RADARS_REMAP)then       
+           write(6,*)' ERROR: too many radars in get_remap_parms'
+     1              ,i_radar,n_radars_remap,MAX_RADARS_REMAP
+           istatus = 0
+           return
+       endif
+
+       path_to_radar  = path_to_radar_a(i_radar)
+       c4_radarname   = c4_radarname_a(i_radar)
+       laps_radar_ext = laps_radar_ext_a(i_radar)
+
+!      Determine name of radar_subdir if any
+       i_ext = 0
+       do i = 1,i_radar
+           if(laps_radar_ext_a(i_radar) .eq. 'vrc')then
+               i_ext = i_ext + 1
+           endif
+       enddo ! i
+
+       write(c3_radar_subdir,801)i_ext
+ 801   format(i3.3)
+
+       write(6,*)' c4_radarname    = ',c4_radarname
+       write(6,*)' laps_radar_ext  = ',laps_radar_ext
+       write(6,*)' c3_radar_subdir = ',c3_radar_subdir
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading remap_nl in ',filename
+       write(*,remap_nl)
+       istatus = 0
+       return
+
+       end
+
