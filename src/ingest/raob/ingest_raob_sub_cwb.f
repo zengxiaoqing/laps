@@ -25,9 +25,11 @@
       integer recNum, inNum, jumpNum, logicRecNum
       integer d(12), wmoIdDummy, dupliStation
 
-      real latitude_out(levelNum)
-      real longitude_out(levelNum)
-      character*9 a9time_out(levelNum)
+      real latitude_out(loopNum,levelNum)
+      real longitude_out(loopNum,levelNum)
+      character*9 a9time_out(loopNum,levelNum)
+      character c8_obstype(loopNum)*8
+      character c5_staid(loopNum)*5
 
       data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
       data  dupliStation / 58968 /
@@ -221,23 +223,27 @@ c      format f15.0 in snd files
 !    ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
 !900   continue
 
-      latitude_out = latitude(i)
-      longitude_out = longitude(i)
-      a9time_out = a9time(i)
+      do 900 i= 1,inNum
+          latitude_out(i,:) = latitude(i)
+          longitude_out(i,:) = longitude(i)
+          a9time_out(i,:) = a9time(i)
+          c8_obstype(i) = 'RAOB    '
+          c5_staid(i) = '     '
+900   continue
 
 !     Call write_snd routine
       call write_snd(      11                                 ! I
-     1                    ,1,layerNum(i),1                    ! I
-     1                    ,wmoId(i)                           ! I
+     1                    ,loopNum,levelNum,inNum             ! I
+     1                    ,wmoId                              ! I
      1                    ,latitude_out,longitude_out,staelev ! I
-     1                    ,'     ',a9time_ob,'RAOB    '       ! I
-     1                    ,layerNum(i)                        ! I
-     1                    ,height(i,:)                        ! I
-     1                    ,pressure(i,:)                      ! I
-     1                    ,temperature(i,:)                   ! I
-     1                    ,dewpoint(i,:)                      ! I
-     1                    ,windDir(i,:)                       ! I
-     1                    ,windSpeed(i,:)                     ! I
+     1                    ,c5_staid,a9time_ob,c8_obstype      ! I
+     1                    ,layerNum                           ! I
+     1                    ,height                             ! I
+     1                    ,pressure                           ! I
+     1                    ,temperature                        ! I
+     1                    ,dewpoint                           ! I
+     1                    ,windDir                            ! I
+     1                    ,windSpeed                          ! I
      1                    ,istatus)                           ! O
 
       write (6,*) ' found', inNum, 
