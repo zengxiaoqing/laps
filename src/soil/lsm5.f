@@ -43,8 +43,9 @@ C     John Smart 12/1/93: Adapting to run in real time on the
 C     			  UNIX platform.  Set up LAPS standard I/O.
 C                         Enhanced modularity.
       include 'lapsparms.for'
-      parameter(imax=nx_l,jmax=ny_l)
       integer*4 imax,jmax
+      parameter(imax=nx_l,jmax=ny_l)
+
       Include 'soilm.inc'
 C
 C**** MODEL12 is a Soil Moisture Content model developed in June l986, and

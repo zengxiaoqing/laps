@@ -10,7 +10,7 @@ CC=@CC@
 
 CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
 
-F77       = @FC@
+FC       = @FC@
 
 
 FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
