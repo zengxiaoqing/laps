@@ -40,7 +40,6 @@
  path_to_wsi_2d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/'
  path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nexrad/netcdf/',
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
- path_to_raw_raob_cmn='/public/data/raob/netcdf/',
 
  path_to_metar_data_cmn='/public/data/metar/netcdf/',
  path_to_local_data_cmn='/public/data/ldad/mesonet/netcdf/',

@@ -1,8 +1,7 @@
 
-!     Ken Dritz     28-Jul-1997         Added call to get_grid_dim_xy to
-!                                       get the values of NX_L, NY_L.
-!     Ken Dritz     28-Jul-1997         Pass the values of NX_L and NY_L to
-!                                       get_raob_data and get_raob_data_af.
+      subroutine ingest_raob(path_to_raw_raob)
+
+!     Steve Albers FSL   1999       Original Version
 
 !     Input file 
       character*200 filename_in
@@ -23,7 +22,7 @@
       integer*4       len_dir
 
       character*40 c_vars_req
-      character*180 c_values_req
+      character*(*) path_to_raw_raob
 
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval
@@ -50,28 +49,19 @@
           go to 999
       endif
 
-!     Get List of input /public NetCDF files
-      c_vars_req = 'path_to_raw_raob'
-      call get_static_info(c_vars_req,c_values_req,1,istatus)
-      if(istatus .eq. 1)then
-          write(6,*)c_vars_req(1:30),' = ',c_values_req
-          dir_in = c_values_req
-      else
-          write(6,*)' Error getting ',c_vars_req
-          goto 999
-      endif
+      dir_in = path_to_raw_raob
 
       call s_len(dir_in,len_dir_in)
 
       c8_project = 'NIMBUS'
-      c_filespec = dir_in(1:len_dir_in)//'*0300o'
+      c_filespec = dir_in(1:len_dir_in)//'/*0300o'
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
       if(i_nbr_files_ret .eq. 0)then
           write(6,*)' No files found in NIMBUS filename format'
           c8_project = 'AFGWC'
-          c_filespec = dir_in(1:len_dir_in)//'raob.*'
+          c_filespec = dir_in(1:len_dir_in)//'/raob.*'
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                      ,max_files,istatus)
 
@@ -108,7 +98,7 @@
           call make_fnam_lp(i4times(i),a9_time,istatus)
 
           if(c8_project(1:6) .eq. 'NIMBUS')then
-              filename_in = dir_in(1:len_dir_in)//a9_time//'0300o'
+              filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
 !             i4_raob_window = 60000  ! Temporary for testing
               i4_raob_lag = 10800
           else ! AFGWC
@@ -185,7 +175,8 @@
 
  999  continue
 
-      write(6,*)' End of raob ingest program'
+      write(6,*)' End of raob ingest routine'
 
+      return
       end
  

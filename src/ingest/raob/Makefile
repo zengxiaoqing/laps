@@ -17,7 +17,12 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 
 EXE = ingest_raob.exe
 
-SRC=ingest_raob.f      ingest_raob_sub.f   ingest_raob_sub_af.f 
+SRC=ingest_sounding.f \
+    ingest_raob.f \
+    ingest_raob_sub.f \
+    ingest_raob_sub_af.f \
+    ingest_satsnd.f \
+    ingest_satsnd_af.f
 
 all: exe
 
