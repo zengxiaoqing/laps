@@ -348,11 +348,12 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
         real*4 ref_2d_buf(ni,nj)
         real*4 radar_dist(ni,nj)
-        integer ngrids(ni,nj)
+        integer ngrids(ni,nj), ngrids_max
+
+        parameter (ngrids_max = 10)
+        real*4 weight_a(-ngrids_max:+ngrids_max,-ngrids_max:+ngrids_max)
 
         write(6,*)' Subroutine ref_fill_horz...'
-
-        neighbor_thresh = 5 ! 4
 
 !       Obtain grid spacing
         call get_grid_spacing(grid_spacing_m,istatus)
@@ -375,6 +376,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         endif
 
 !       Calculate radar distance array
+        dgr = 1.1 ! maximum number of deg allowed between radials
         do i = 1,ni
         do j = 1,nj
             call latlon_to_radar(lat(i,j),lon(i,j),0.,
@@ -383,7 +385,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
             radar_dist(i,j) = slant_range
 
 !           Determine number of gridpoints in potential gaps = f(radar_dist)
-            ngrids(i,j) = radar_dist(i,j) / 57. / grid_spacing_m
+            ngrids(i,j) = radar_dist(i,j) * (dgr / 57.) / grid_spacing_m       
 
         enddo ! j
         enddo ! i
@@ -392,29 +394,37 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
             call move(ref_3d(1,1,k),ref_2d_buf,ni,nj) ! Initialize Buffer Array
             n_add_lvl = 0
 
-            do i = 2,ni-1
-            do j = 2,nj-1
-                n_neighbors = 0
+            do i = 1,ni
+            do j = 1,nj
+                n_neighbors     = 0
+                n_neighbors_pot = 0
 
 !               Assess neighbors to see if we should fill in this grid point
                 if(   ngrids(i,j)   .ge. 1 
      !                         .AND. 
      1                ref_3d(i,j,k) .eq. r_missing_data       )then       
+
                     ref_sum = 0.
-                    iil = i-1
-                    jjl = j-1
-                    iih = i+1
-                    jjh = j+1
+                    wt_sum = 0.
+
+                    weight = 1.0
+
+                    iil = max(i-ngrids(i,j),1)
+                    jjl = max(j-ngrids(i,j),1)
+                    iih = min(i+ngrids(i,j),ni)
+                    jjh = min(j+ngrids(i,j),nj)
 
                     do ii = iil,iih
                     do jj = jjl,jjh
+                        n_neighbors_pot = n_neighbors_pot + 1
                         if(ref_3d(ii,jj,k) .ne. r_missing_data   )then
                             n_neighbors = n_neighbors + 1
-                            ref_sum = ref_sum + ref_3d(ii,jj,k)
+                            ref_sum = ref_sum + ref_3d(ii,jj,k) * weight       
+                            wt_sum = wt_sum + weight
                             if(n_add_lvl .le. 20)then
-                                write(6,10)i,j,n_neighbors
+                                write(6,10)i,j,ngrids(i,j),n_neighbors       
      1                                    ,ii,jj,ref_3d(ii,jj,k)
- 10                             format(2i5,' neighbor ',i3,2i5,f9.1)
+ 10                             format(2i5,' neighbor ',2i3,2i5,f9.1)
                             endif
                         endif
 
@@ -423,17 +433,32 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
                 endif
 
+                if(ngrids(i,j) .le. 1)then
+                    neighbor_thresh = 1
+                else
+                    neighbor_thresh = 1
+                endif
+
 !               Fill into buffer array?
                 if(n_neighbors .ge. neighbor_thresh)then 
                     ref_fill = ref_sum / float(n_neighbors)
                     ref_2d_buf(i,j) = ref_fill ! ref_3d(i,j,k) (test disable)
                     n_add_lvl = n_add_lvl + 1
                     if(n_add_lvl .le. 20)then
-                        write(6,*)i,j,n_neighbors, ref_fill
+                        write(6,*)i,j,ngrids(i,j),n_neighbors
+     1                           ,n_neighbors_pot,ref_fill
                     endif
-                else
+
+                else          ! do not fill in this grid point
                     ref_2d_buf(i,j) = ref_3d(i,j,k) ! ref_base
-                endif
+                    if(n_add_lvl .le. 20 
+     1                           .and. n_neighbors     .gt. 0
+     1                           .and. n_neighbors_pot .gt. 0)then
+                        write(6,*)i,j,ngrids(i,j),n_neighbors
+     1                           ,n_neighbors_pot,' not filled'
+                    endif
+
+                endif         ! enough neighbors to fill in a grid point
 
             enddo ! j
             enddo ! i
