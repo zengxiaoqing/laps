@@ -31,7 +31,8 @@ SRC   = obs_driver_sub_af.f \
         get_buoy_obs.f \
 	read_buoy.f \
 	read_buoy_cwb.f \
-        write_surface_obs.f
+        get_gps_obs.f \
+        read_gps.f
 
 MAIN=obs_driver.f 
 

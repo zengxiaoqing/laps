@@ -75,6 +75,7 @@ c
         character*200 path_to_metar
         character*200 path_to_local_data
         character*200 path_to_buoy_data
+        character*200 path_to_gps_data
         character*8   metar_format
 
         include 'lapsparms.cmn'
@@ -88,6 +89,7 @@ c
      1                            path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
+     1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,maxsta
@@ -99,6 +101,7 @@ c
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
+     1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,maxsta
@@ -111,6 +114,7 @@ c
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
+     1                           ,path_to_gps_data
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,maxsta
@@ -151,6 +155,7 @@ c
         character*200 path_to_metar
         character*200 path_to_local_data
         character*200 path_to_buoy_data
+        character*200 path_to_gps_data
         character*8   metar_format
         character*8   a9_to_a8, a8_time
 c
@@ -230,6 +235,8 @@ c
 	n_local_b = 0
 	n_buoy_g = 0
 	n_buoy_b = 0
+	n_gps_g = 0
+	n_gps_b = 0
 c
 	do i=1,maxsta
 	   stations(i) = '                    '
@@ -410,9 +417,34 @@ c
 	   print *,' '
 	endif
 c
+c.....  Call the routine that reads the GPS data files, then get
+c.....  the data.
+c
+        if(.false.)then
+	    print*,'Getting GPS data ', data_file_b
+c
+            call get_gps_obs(maxobs,maxsta,i4time,data_file_b,
+     &                      metar_format,
+     &                      grid_east,grid_west,grid_north,grid_south,       
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_gps_g,n_gps_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, jstatus)
+c
+	    if(jstatus .ne. 1) then
+	       print *, ' WARNING. Bad status return from GET_GPS_OBS'
+	       print *,' '
+	    endif
+
+        endif
+c
 c.....  Count up the obs.
 c
-	n_obs_g = n_sao_g + n_local_g + n_buoy_g
+	n_obs_g = n_sao_g + n_local_g + n_buoy_g + n_gps_g
 	n_obs_b = nn
 c
 c.....  Check for a blacklist file.  If one exists, read it
@@ -555,6 +587,7 @@ c
        subroutine get_obs_driver_parms(path_to_metar
      1                         ,path_to_local_data
      1                         ,path_to_buoy_data
+     1                         ,path_to_gps_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,maxsta
@@ -563,12 +596,14 @@ c
        character*200 path_to_metar
        character*200 path_to_local_data
        character*200 path_to_buoy_data
+       character*200 path_to_gps_data
        character*8   metar_format
        integer       minutes_to_wait_for_metars
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
      1                         ,path_to_buoy_data
+     1                         ,path_to_gps_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,maxsta

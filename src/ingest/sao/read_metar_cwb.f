@@ -36,18 +36,15 @@
       real  windSpeed(recNum)
       real  badflag
 
-      integer   recNumm
-      parameter ( recNumm=200 )
-
-      integer windQua(recNumm), windGustQua(recNumm)
-      integer temperatureQua(recNumm), dewpointQua(recNumm)
-      integer altimeterQua(recNumm)
+      integer windQua(recNum), windGustQua(recNum)
+      integer temperatureQua(recNum), dewpointQua(recNum)
+      integer altimeterQua(recNum)
       integer i, j, n, i4time
 
       character*(*) filename
-      character*2   yy(recNumm), m1(recNumm), dd(recNumm)
-      character*2   hh(recNumm), m2(recNumm)
-      character*10  time(recNumm)
+      character*2   yy(recNum), m1(recNum), dd(recNum)
+      character*2   hh(recNum), m2(recNum)
+      character*10  time(recNum)
       character*9   a10_to_a9
 
       integer    stnNum, len_dir
@@ -135,8 +132,12 @@ c      ----------       examing data quality and changing units       ---------
          if ( skyCover(i,j) .eq. '-99' )  skyCover(i,j)= '   '
          if ( skyLayerBase(i,j) .eq. -9999. )  then
                skyLayerBase(i,j)= badflag
-            else
-               skyLayerBase(i,j)= skyLayerBase(i,j) *30    ! unit: m
+         elseif ( skyLayerBase(i,j) .eq. 0. )  then
+               skyLayerBase(i,j)= 15.
+         elseif ( skyLayerBase(i,j) .gt. 100. )  then
+               skyLayerBase(i,j)= skyLayerBase(i,j) *300.       ! unit: m
+         else
+               skyLayerBase(i,j)= skyLayerBase(i,j) *30.
          endif
 30    continue
 

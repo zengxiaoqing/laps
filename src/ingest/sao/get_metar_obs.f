@@ -173,6 +173,8 @@ c
 	    if(istatus .ne. 1) go to 990
 	    n_sao_all = recNum
 
+            i4time_offset = 315619200
+
         else ! Read CWB Metar and Synop Obs
             recNum=150
             maxSkyCover=10
@@ -202,6 +204,8 @@ c
 
             n_sao_all = n_metar_cwb + n_synop_cwb
             if(n_sao_all .le. 0) go to 990
+
+            i4time_offset = 0
 
         endif
 c
@@ -290,7 +294,7 @@ c
 c.....  Check to see if its in the desired time window (if the flag
 c.....  says to check this).
 c
-	  itime60 = nint(timeobs(i)) + 315619200
+	  itime60 = nint(timeobs(i)) + i4time_offset
 c
 	  if(ick_METAR_time .eq. 1) then
 	    if(itime60.lt.before .or. itime60.gt.after) go to 125
