@@ -116,7 +116,18 @@ if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
   print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
 } 
 
-print "\nSFC temperature analysis was blended in at lower boundary\n";
+#Print TOWER (only if present)
+$i=0; $iprint=0; $ihead=0;
+foreach (@lines) {
+  if (/Temperature bias/ && /TOWER/) {
+    @list = split;
+    if($ihead == 0){print "\nTOWERs: "; $ihead=1;}
+    print "$list[5] "; $iprint=$iprint+1;
+    if ($iprint > 11) {print "\n        "; $iprint=0;} 
+    $i=$i+1; 
+  }
+}
+if($iprint > 0){print "\n";}
 
 print "\nQC (Soundings, RASS):\n";
 @greplines = grep /QC/, @lines;
@@ -129,6 +140,9 @@ print "@greplines[3]";
 print "@greplines[4]";
 print "@greplines[5]";
 
+print "\nSFC temperature analysis was blended in at lower boundary\n";
+
 print "\n";
 @greplines = grep /Error/, @lines;
 print "@greplines";
+
