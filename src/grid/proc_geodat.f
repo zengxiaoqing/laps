@@ -63,7 +63,7 @@ c-----------------------------------------------
 
 
       subroutine proc_geodat(nx_dom,ny_dom,ncat
-     1,path_to_tile_data,ext_dom_lats,ext_dom_lons,lmask_out
+     1,path_to_tile_data,dom_lats_in,dom_lons_in,lmask_out
      1,geodat,istatus)
 !    1,cat_pct)
 !
@@ -110,10 +110,8 @@ c-----------------------------------------------
       integer ilon,ilat
       integer method
 
-      real    ext_dom_lats(nx_dom,ny_dom)
-      real    ext_dom_lons(nx_dom,ny_dom)
-      real    dom_lats(nx_dom,ny_dom)
-      real    dom_lons(nx_dom,ny_dom)
+      real    dom_lats_in(nx_dom,ny_dom)
+      real    dom_lons_in(nx_dom,ny_dom)
       real    grx(nx_dom,ny_dom)
       real    gry(nx_dom,ny_dom)
 
@@ -128,6 +126,7 @@ c-----------------------------------------------
       real,    allocatable :: raw_data(:,:,:)
       real,    allocatable :: data_proc(:,:,:)
       real,    allocatable :: lmask_src(:,:)
+      real,    allocatable,   dimension(:,:)::dom_lats,dom_lons
 
       real    geodat(nx_dom,ny_dom,ncat)
       real    lmask_out(nx_dom,ny_dom)
@@ -188,17 +187,17 @@ c from Brent Shaw pseudocode
 
 !LSM Field Processing for "Many-to-one" aggregation
 
+      print*,'Start proc_geodat'
 
-!Define Model Grid - nx,ny, projection, etc.
-
-      dom_lats(:,:) = ext_dom_lats(:,:)
-      dom_lons(:,:) = ext_dom_lons(:,:)
+      allocate (dom_lats(nx_dom,ny_dom),dom_lons(nx_dom,ny_dom))
+      dom_lats=dom_lats_in
+      dom_lons=dom_lons_in
 
 ! TH: 8 Aug 2002 Now we may need to adjust the longitude values in 
 ! dom_lons so that they are always monotonically increasing, even if 
 ! we have the bad fortune to cross the date line.
-      DO ii=1,ny_dom
-         DO jj=1,(nx_dom - 1)
+      DO jj=1,ny_dom-1
+         DO ii=1,nx_dom
             IF ((dom_lons(ii,jj+1) - dom_lons(ii,jj)) < -180.) THEN
                dom_lons(ii,jj+1) = dom_lons(ii,jj+1) + 360.
             ELSE IF ((dom_lons(ii,jj+1) - dom_lons(ii,jj)) > 180.) THEN
@@ -209,12 +208,12 @@ c from Brent Shaw pseudocode
 ! TH: 8 Aug 2002 We also have to cope with spastic grids that have
 ! "horizontal" date lines (where we might cross the date line by
 ! moving up and down the grid rather than left and right).
-      DO ii=1,nx_dom
-         DO jj=1,(ny_dom - 1)
-            IF ((dom_lons(jj+1,ii) - dom_lons(jj,ii)) < -180.) THEN
-               dom_lons(jj+1,ii) = dom_lons(jj+1,ii) + 360.
-            ELSE IF ((dom_lons(jj+1,ii) - dom_lons(jj,ii)) > 180.) THEN
-               dom_lons(jj+1,ii) = dom_lons(jj+1,ii) - 360.
+      DO jj=1,ny_dom
+         DO ii=1,nx_dom-1
+            IF ((dom_lons(ii+1,jj) - dom_lons(ii,jj)) < -180.) THEN
+               dom_lons(ii+1,jj) = dom_lons(ii+1,jj) + 360.
+            ELSE IF ((dom_lons(ii+1,jj) - dom_lons(ii,jj)) > 180.) THEN
+               dom_lons(ii+1,jj) = dom_lons(ii+1,jj) - 360.
             END IF
          END DO
       END DO
@@ -297,6 +296,8 @@ c from Brent Shaw pseudocode
       max_lat =  max(-89.9999,min(89.9999,max_lat)+ rsoff)
       min_lon =  max(-359.9999,min(359.9999,min_lon + rwoff))
       max_lon =  max(-359.9999,min(359.9999,max_lon + rwoff))
+
+      deallocate(dom_lats,dom_lons)
 
 !  Compute a list of tiles needed to fulfill lat/lon range just computed
 
@@ -484,7 +485,7 @@ c      print*,'itx/ity ',itx,ity
       print*,'initializing hinterp grx/gry arrays'
 
       call init_hinterp(nxst,nyst,nx_dom,ny_dom,'LL',
-     .dom_lats,dom_lons,grx,gry,1,'     ')
+     .dom_lats_in,dom_lons_in,grx,gry,1,'     ')
 
       print*,'grid rx/ry computed'
       print*,'SW: grx/gry    1,1: ',grx(1,1),gry(1,1)
@@ -578,8 +579,8 @@ c     endif
 
 ! Use lat/lon to ij to find wheter this tile point is in our domain
 
-!        call latlon_to_rlapsgrid(raw_lat,raw_lon,dom_lats
-!    &                ,dom_lons,nx_dom,ny_dom,ri,rj,istatus)
+!        call latlon_to_rlapsgrid(raw_lat,raw_lon,dom_lats_in
+!    &                ,dom_lons_in,nx_dom,ny_dom,ri,rj,istatus)
 !        dom_i = NINT(ri)
 !        dom_j = NINT(rj)
 !        IF( (dom_i .GE. 1).AND.(dom_i .LE. nx_dom).AND.

@@ -211,7 +211,12 @@ c add 12 for albedo month 1 - 12.
            ngrids=26+12
         endif
 
-        allocate (data(nnxp,nnyp,ngrids))
+        allocate (data(nnxp,nnyp,ngrids),stat=istat)
+        if(istat.ne.0)then
+           print*,'Error allocating data object: array data ',istat
+           print*,'Terminating: Maybe not enough memory'
+           stop
+        endif
 
         model = 'MODEL 4 delta x smoothed filter\0'
 
@@ -796,13 +801,23 @@ c ----------------------------------------------------------------
         print*
 
         deallocate(GEODAT3D)
-        allocate  (GEODAT3D(nnxp,nnyp,12))
+        allocate  (GEODAT3D(nnxp,nnyp,12),stat=istat)
+        if(istat.ne.0)then
+           print*,'Error allocating data object GEODAT3D ',istat
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+              print*,'Terminating: Maybe not enough memory'
+              stop
+           else
+              print*,'Continue without greenness fraction'         
+           endif
+        endif
 
 c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
 c    +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
 c    +,adum,adum,path_to_green_frac,2.0,0.0,new_DEM,12
 c    +,istatus_grn)
 
+        print*,'Calling proc_geodat'
         call proc_geodat(nnxp,nnyp,12,path_to_green_frac
      +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
      +,GEODAT3D,istatus_grn)
@@ -834,6 +849,7 @@ c    +,istatus_grn)
            data(:,:,ing+j)=GEODAT3D(:,:,j)
         enddo
 
+44      continue
 c ------------------------------------------------------------------
         print*
 c       print*,' Calling GEODAT: Processing 1 degree soiltemp data.'
