@@ -45,7 +45,6 @@ c
         include 'netcdf.inc'
         include 'vrc.inc'
         character*128 dimname                   ! Must match NETCDF.INC's
-        integer ncopts
         common/ncopts/ncopts                    ! NetCDF error handling flag.
 
         character*200 input_name
@@ -56,20 +55,20 @@ c
         parameter (nrecs=1)
      
         integer lines,elems
-	integer*1 image(nelems,nlines,nrecs)
+        integer image(nelems,nlines,nrecs)
 
-        integer*4 bad_data_flag
-        integer*4 imax_image_value
-        integer*4 imin_image_value
+        integer bad_data_flag
+        integer imax_image_value
+        integer imin_image_value
 
-	integer ilines,ielems
+        integer ilines,ielems
         integer istatus,cdfid
         integer attlen
 
         character c_atvalue*80
 
-        integer*2 i_value
-        integer*1      b_value(2), bad_data_byte
+        integer i_value
+        integer      b_value(2), bad_data_byte
         data bad_data_byte/-1/
         equivalence (i_value,b_value(1))
 
@@ -77,9 +76,9 @@ c
  
         istatus = 0
         bad_data_flag=255
-        call ncpopt(0)
+        call NCPOPT(0)
 
-        cdfid =  NCOPN(input_name,NC_NOWRITE,istatus)
+        istatus=NF_OPEN(input_name,NC_NOWRITE,cdfid)
         if (istatus .ne. 0)then
             write(*,*)' Error in opening netcdf file'
             write(*,*)' ...file not found.' 
@@ -122,38 +121,38 @@ c
         start(3) = 1
         count(3) = 1
 
-        varid = NCVID(cdfid,'image',istatus) 
+        istatus=NF_INQ_VARID(cdfid,'image',varid)
         if(istatus.ne.0)then
            write(6,*)'Error getting varid - image'
            return
         endif
-        CALL NCVGT(cdfid,varid,start,count,image,istatus)
+        istatus=NF_GET_VARA_INT(cdfid,varid,start,count,image)
         if(istatus.ne.0)then
            write(6,*)'Error reading variable - image'
            return
         endif
 
-        varid = NCVID(cdfid,'valtime',istatus)
+        istatus=NF_INQ_VARID(cdfid,'valtime',varid)
         if(istatus.ne.0)then
-           varid = NCVID(cdfid,'validTime',istatus)
+           istatus=NF_INQ_VARID(cdfid,'validTime',varid)
            if(istatus.ne.0)then
               write(6,*)'Error getting varid - valtime'
               return
            endif
         endif
-        CALL NCVGT1(cdfid,varid,1,valtime,istatus)
+           istatus=NF_GET_VAR1_REAL(cdfid,varid,1,valtime)
         if(istatus.ne.0)then
            write(6,*)'Error reading variable - valtime'
            return
         endif
 
-        varid = NCVID(cdfid,'Dx',istatus)
+        istatus=NF_INQ_VARID(cdfid,'Dx',varid)
         if(istatus.ne.0)then
            write(6,*)'Error getting varid - Dx'
            return
         endif
 
-        CALL NCVGT1(cdfid,varid,1,Dx,istatus)
+        istatus=NF_GET_VAR1_REAL(cdfid,varid,1,Dx)
         if(istatus.ne.0)then
            write(6,*)'Error reading variable - Dx'
            return
@@ -167,12 +166,12 @@ c
         endif
 
   
-        varid = NCVID(cdfid,'Dy',istatus)
+        istatus=NF_INQ_VARID(cdfid,'Dy',varid)
         if(istatus.ne.0)then
            write(6,*)'Error getting varid - Dy'
            return
         endif
-        CALL NCVGT1(cdfid,varid,1,Dy,istatus)
+        istatus=NF_GET_VAR1_REAL(cdfid,varid,1,Dy)
         if(istatus.ne.0)then
            write(6,*)'Error reading variable - Dy'
            return
@@ -191,7 +190,7 @@ c
         endif
 
           Write(*,*)' closing netcdf file'
-           CALL NCCLOS(cdfid,istatus) 
+           istatus= NF_CLOSE(cdfid)
 c
 c for wfo data we must first rescale the values back to the original
 c wsi form to properly convert to dbz.
@@ -201,7 +200,7 @@ c
         icount_bad=0
         b_value(1)=0
         do j=1,ilines
-        do i=1,ielems
+           do i=1,ielems
            b_value(2) = image(i,j,1)
            if(i_value .gt. imax_image_value) imax_image_value = i_value
            if(i_value .lt. imin_image_value) imin_image_value = i_value

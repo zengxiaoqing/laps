@@ -56,18 +56,18 @@ ccc       include 'lapsparms.for'
        real*4 grid_spacing_m
        real*8 valTime
 
-       integer*4 image_to_dbz(0:15)
-       integer*4 validTime
-       integer*4 istatus
-       integer*4 status
-       integer*4 i_base_value,increment
+       integer image_to_dbz(0:15)
+       integer validTime
+       integer istatus
+       integer status
+       integer i_base_value,increment
 
 cccccccccccccccccccccccccccccccccccccccccccccccccc
 
        character filename*200
        character c_radtype*3
 
-       byte image(nelems,nlines)
+       integer image(nelems,nlines)
 c
 c ***************************************************************************
 c ************************** GET NOWRAD DATA ********************************

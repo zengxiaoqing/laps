@@ -78,17 +78,17 @@ ccc       include 'lapsparms.for'
        real*4 percent_extreme_47
        real*4 percent_extreme_70
 
-       integer*4 i4time_cur
-       integer*4 i4time_latest_diff
-       integer*4 i4time_data
-       integer*4 i4time_latest_vrc
-       integer*4 i4time_latest_wsi
-       integer*4 i4time_now_gg
-       integer*4 i4_validTime
-       integer*4 istatus
-       integer*4 lvl_2d
-       integer*4 n,nn,nd, len
-       integer*4 n_vars_req
+       integer i4time_cur
+       integer i4time_latest_diff
+       integer i4time_data
+       integer i4time_latest_vrc
+       integer i4time_latest_wsi
+       integer i4time_now_gg
+       integer i4_validTime
+       integer istatus
+       integer lvl_2d
+       integer n,nn,nd, len
+       integer n_vars_req
 
        character*100 c_values_req
        character*40  c_vars_req

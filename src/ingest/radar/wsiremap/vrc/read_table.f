@@ -39,21 +39,21 @@ cdis
         integer istatus
         character*(*) table_path
 
-	istatus = 0
+      istatus = 0
 
- 	open(unit=12,file=table_path,form='unformatted',status='old'
+       open(unit=12,file=table_path,form='unformatted',status='old'
      +       ,err=23)
 
-	read(12,err=23,end=23) lat
-	read(12,err=23,end=23) lon
-	read(12,err=23,end=23) ri
-	read(12,err=23,end=23) rj
+      read(12,err=23,end=23) lat
+      read(12,err=23,end=23) lon
+      read(12,err=23,end=23) ri
+      read(12,err=23,end=23) rj
 
-	close (12)
+      close (12)
 
-	istatus = 1
+      istatus = 1
 
-	return
- 23	print *,'Could not open vrc look up table',table_path
+      return
+ 23      print *,'Could not open vrc look up table',table_path
         stop 'read_table.f'
-	end
+      end

@@ -6,10 +6,10 @@ c
 
 ccc      include 'lapsparms.for'
 
-      integer*4 nx,ny
-      integer*4 istatus
-      integer*4 n
-      integer*4 i,n1,n2
+      integer nx,ny
+      integer istatus
+      integer n
+      integer i,n1,n2
 
       real*4    ri(nx,ny)
       real*4    rj(nx,ny)

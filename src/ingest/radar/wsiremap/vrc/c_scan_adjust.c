@@ -1,3 +1,14 @@
+#include <config.h>
+#include <stdio.h>
+
+#if(SIZEOF_SHORT==4)
+#define fint4 short
+#elif(SIZEOF_INT==4)
+#define fint4 int
+#elif(SIZEOF_LONG==4)
+#define fint4 long
+#endif
+
 #ifdef FORTRANUNDERSCORE
 #define c_scan_adjust c_scan_adjust_
 #endif
@@ -8,20 +19,13 @@
 #define c_scan_adjust C_SCAN_ADJUST
 #endif
 
-#ifdef __STDC__
-void c_scan_adjust(unsigned char *ByteArray, long *lines, long *elem, long *miss)
-#else
-void c_scan_adjust(ByteArray, lines, elem, miss)
-unsigned char *ByteArray; 
-long *lines; 
-long *elem;
-long *miss;
-#endif
+
+void c_scan_adjust(fint4 *ByteArray, long *lines, long *elem, long *miss)
 {
 	int i,j, tot_elem;
         unsigned char *ptr;
 
-        ptr = ByteArray;
+        ptr = (unsigned char *) ByteArray;
         tot_elem = ((*lines)*(*elem));
         for (i = 0; i < tot_elem; i++) {
           switch ((int)*ptr)

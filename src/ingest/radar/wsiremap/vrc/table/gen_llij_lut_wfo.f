@@ -33,8 +33,6 @@ cdis
 c
       implicit none
 
-ccc      include 'lapsparms.for'
-
       integer*4 imax,jmax
 
       real*4    lat(imax,jmax)
