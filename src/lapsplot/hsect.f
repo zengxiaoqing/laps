@@ -328,10 +328,10 @@ c       include 'satellite_dims_lvd.inc'
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd] Wind (LW3/LWM),'
-     1       ,' [wb,wr,wf,bw] (LGA/LGB, RAM/RSF, LAPS-BKG, QBAL), '
-     1       /'     [co,bo,lo] Cloud/Balance/Background Omega,'
-     1       ,' [lw] li*w, [li,he,pe,ne] li, helcty, CAPE, CIN'
-     1       /'     [s] Other Stability Indices'
+     1       ,' [wb,wr,wf,bw] (LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
+     1       /'     [co,bo,lo] Cloud/Balance/Background Omega'
+     1       /'     [lw] li*w, [li,he,pe,ne] li, helcty, CAPE, CIN,'
+     1       ,' [s] Other Stability Indices'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
@@ -341,9 +341,9 @@ c       include 'satellite_dims_lvd.inc'
 !    1       /'          [ob,st] obs plot/station locations'
      1       ,'  [bs] Sfc background'
      1       /
-     1       /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,RAM,OBS,QBAL)'      
+     1       /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1       ,',   [pt,pb] Theta, Blnc Theta'
-     1       /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,RAM,Hydrstc,QBAL),'
+     1       /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,FUA,Hydrstc,QBAL),'
      1       /'           [hh] Height of Const Temp Sfc')
 
         write(6,12)
@@ -357,7 +357,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,',  [ct] Highest Cld Top'
      1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
      1       /
-     1       /'     [br,fr,lq] Humidity (lga;ram;lq3: [q or rh]) '
+     1       /'     [br,fr,lq] Humidity (lga;fua;lq3: [q or rh]) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc] Snow Cover,  [tn,lf,gr,so] Ter/LndFrac/Grid, '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
@@ -392,7 +392,7 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_type .eq. 'wr')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
-                ext = 'ram'
+                ext = 'fua'
 
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
@@ -467,10 +467,10 @@ c       include 'satellite_dims_lvd.inc'
                     elseif(c_type .eq. 'wb')then
                         ext = 'lgb'
                     elseif(c_type .eq. 'wr')then
-                        ext = 'rsf'
+                        ext = 'fsf'
                     endif
 
-                    if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'rsf')then       
+                    if(ext(1:3) .eq. 'lgb' .or. ext(1:3) .eq. 'fsf')then       
                         write(6,211)ext(1:3)
                         read(5,221)a13_time
 
@@ -543,6 +543,7 @@ c       include 'satellite_dims_lvd.inc'
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
                     if(c_field .ne. 'w ')then
+                      write(6,*)' Calling get_uv_2d for ',ext
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,
      1                                          ext,NX_L,NY_L,istatus)
 
@@ -642,7 +643,7 @@ c       include 'satellite_dims_lvd.inc'
                 elseif(c_type .eq. 'wb')then
                     c19_label = ' U (lga) - Comp'
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' U (ram) - Comp'
+                    c19_label = ' U (fua) - Comp'
                 elseif(c_type .eq. 'bw')then
                     c19_label = ' U - Comp (bal)'
                 else
@@ -661,7 +662,7 @@ c       include 'satellite_dims_lvd.inc'
                 elseif(c_type .eq. 'wb')then
                     c19_label = ' V (lga) - Comp '
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' V (ram) - Comp '
+                    c19_label = ' V (fua) - Comp '
                 elseif(c_type .eq. 'bw')then
                     c19_label = ' V - Comp (bal)'
                 else
@@ -676,8 +677,11 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
-                elseif(c_type.eq.'wb' .or. c_type.eq.'wr'.or.
-     1                 c_type.eq.'bw'                       )then
+                elseif(c_type.eq.'wb'                       )then
+                    c19_label = ' WIND  (lga)    kt'
+                elseif(c_type.eq.'wr'                       )then
+                    c19_label = ' WIND  (fua)    kt'
+                elseif(c_type.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
                 else
                     c19_label = ' WIND  (anl)    kt'
@@ -2608,43 +2612,38 @@ c
                         goto1200
                     endif
 
-                    call get_sfc_preciptype(pres_2d,temp_2d,td_2d,cldpcp
-     1_type_3d
-     1                                  ,pcp_type_2d,NX_L,NY_L,NZ_L)
+                    call get_sfc_preciptype(pres_2d,temp_2d,td_2d
+     1                                     ,cldpcp_type_3d
+     1                                     ,pcp_type_2d,NX_L,NY_L,NZ_L)       
 
 !                   call make_fnam_lp(i4time_pcp,asc9_tim,istatus)
 
                 endif ! l_precip_pregen
 
                 call plot_cldpcp_type(pcp_type_2d
-     1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
-     1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
+     1             ,asc9_tim,c33_label,c_type,k,i_overlay,c_display  
+     1             ,lat,lon,idum1_array,'nest7grid'
+     1             ,NX_L,NY_L,laps_cycle_time,jdot)
 
             endif ! k_level
 
         elseif(c_type .eq. 'ia' .or. c_type .eq. 'ij'
      1                          .or. c_type .eq. 'is')then
 
-          if(.false.)then
+          ext = 'lil'
+          var_2d = 'LIL'
+          call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
+     1                         ext,var_2d,units_2d,comment_2d,
+     1                         NX_L,NY_L,column_max,0,istatus)
 
-          else
-            ext = 'lil'
-            var_2d = 'LIL'
-            call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
-     1                  ext,var_2d
-     1            ,units_2d,comment_2d,NX_L,NY_L,column_max,0,istatus)
-
-            call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
-            c33_label = 'LAPS Integrated Smith-Fed LWC mm '
-
-          endif ! false
+          call make_fnam_lp(i4time_cloud,asc9_tim_t,istatus)
+          c33_label = 'LAPS Integrated LWC         (mm) '
 
           clow = 0.
           chigh = +0.
           cint = -0.1
 
-          call plot_cont(column_max,1e3,
+          call plot_cont(column_max,1e-3,
      1          clow,chigh,cint,asc9_tim_t,c33_label,
      1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2713,7 +2712,7 @@ c
           endif
 c
 c J. Smart - 4/19/99. Updated moisture plotting. In addition, added two
-c                     more switches for lga/ram plotting.
+c                     more switches for lga/fua plotting.
 c
         elseif(c_type .eq. 'lq')then
 c
@@ -2812,7 +2811,7 @@ c
 c J. Smart - 4/19/99. br is LAPS-lga either sh or rh (sh is converted to rh).
 c
             ext='lga'
-            if(c_type.eq.'fr')ext='ram'
+            if(c_type.eq.'fr')ext='fua'
 
             print*,'      plotting ',ext(1:3),' humidity data'
             write(6,211)ext(1:3)
@@ -2843,7 +2842,7 @@ c
               call mklabel33(k_level,' LGA Spec Hum (x1e3)'
      1                      ,c33_label)
               if(c_type.eq.'fr')then
-                 call mklabel33(k_level,' RAM Spec Hum (x1e3)'
+                 call mklabel33(k_level,' FUA Spec Hum (x1e3)'
      1                         ,c33_label)
               endif
 
@@ -2875,7 +2874,7 @@ c             cint = -1.
               call mklabel33(k_level,'  LGA rh (computed) (%) '
      1                      ,c33_label)
               if(c_type.eq.'fr')then
-                 call mklabel33(k_level,'  RAM rh (computed) (%) '
+                 call mklabel33(k_level,'  FUA rh (computed) (%) '
      1                         ,c33_label)
               endif
 
@@ -2961,7 +2960,7 @@ c             cint = -1.
             if(c_type(2:2) .eq. 'b')then
                 ext = 'lga'
             else
-                ext = 'ram'
+                ext = 'fua'
             endif
 
             call get_directory(ext,directory,len_dir)
@@ -2991,7 +2990,7 @@ c             cint = -1.
 !    1                                     ,field_2d,k_mb,istatus)
 
             IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Background Analysis ',var_2d
+                write(6,*)' Error Reading Grid ',var_2d,' ',ext,istatus
                 goto1200
             endif
 
@@ -3321,7 +3320,7 @@ c             cint = -1.
 
         elseif(c_type .eq. 'bs')then ! surface backgrounds
             write(6,711)
- 711        format('   Background extension [lgb,rsf]',5x,'? ',$)
+ 711        format('   Background extension [lgb,fsf]',5x,'? ',$)
             read(lun,712)ext
  712        format(a3)
 
@@ -3342,7 +3341,7 @@ c             cint = -1.
             endif
  723        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
-     1       /'     SFC: [usf,vsf,psf,tsf,dsf,rsf,slp] ? ',$)
+     1       /'     SFC: [usf,vsf,psf,tsf,dsf,fsf,slp] ? ',$)
  725        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
      1       /'     SFC: [u,v,ps,t,td,rh,msl] ? ',$)
@@ -3357,7 +3356,7 @@ c             cint = -1.
      1          field_2d,ISTATUS)
 
             IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Background Analysis ',var_2d
+                write(6,*)' Error Reading Grid ',var_2d,' ',ext,istatus       
                 goto1200
             endif
 

@@ -37,30 +37,28 @@ C
 C      This file contains the following FORTRAN subroutines:
 C            read_laps
 C
-C      The read_laps subroutine reads the following FORTRAN
-C      subroutines from the readlapsdata.f file:
+C      The read_laps routine reads the following FORTRAN
+C      routines from the readlapsdata.f file:
 C            make_fcst_time
 C            cvt_fname_v3
 C
-C      The read_laps subroutine calls the following C function
+C      The read_laps routine calls the following C function
 C      from the rwl_v3.c file:
 C            read_cdf_v3
 C
 C**********************************************************************
-C
-C      Subroutine READ_LAPS
 C
 C      Author:    Linda Wharton
 C      Modified:  To accept netCDF ver. 2 data files  1/93 Linda Wharton
 C                 To accept valtime & reftime  2/96 Linda Wharton
 C                 To accept netCDF ver. 3 data files  9/97 Linda Wharton 
 C
-C      Reads data requested by arrays VAR_REQ and LVL_REQ for the
-C      I4TIME, DIR and EXT specified.  Returns LVL_COORD-REQ,
-C      UNITS_REQ, COMMENT_REQ, DATA AND ISTATUS
-C      REFTIME is the time of the model run.
-C      VALTIME is the valid time of the data.
-C      For analysis, valtime = reftime.
+cdoc   Reads data requested by arrays VAR_REQ and LVL_REQ for the
+cdoc   I4TIME, DIR and EXT specified.  Returns LVL_COORD-REQ,
+cdoc   UNITS_REQ, COMMENT_REQ, DATA AND ISTATUS
+cdoc   REFTIME is the time of the model run.
+cdoc   VALTIME is the valid time of the data.
+cdoc   For analysis, valtime = reftime.
 C
 C**********************************************************************
 C
@@ -170,7 +168,8 @@ C
         goto 999
 C
 950     if (flag .ne. 1)
-     1    write (6,*) 'Error opening netCDF file...read aborted.'
+     1    write (6,*) 'Error opening netCDF file...read aborted...'
+     1               ,file_name
         istatus=error(2)
         goto 999
 C

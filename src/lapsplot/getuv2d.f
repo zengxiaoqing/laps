@@ -81,7 +81,7 @@ cdis
 
         enddo ! k
 
-        if(ext(1:3) .eq. 'lga' .or. ext(1:3) .eq. 'ram')then
+        if(ext(1:3) .eq. 'lga' .or. ext(1:3) .eq. 'fua')then
             write(6,*)' Enter yydddhhmmHHMM for ',ext(1:3),' file'
             read(5,1)a13_time
  1          format(a13)

@@ -247,13 +247,3 @@ c
         return
         end
 
-
-        subroutine get_sfc_badflag(badflag_out,istatus)
-
-        include 'laps_sfc.inc'
-
-        badflag_out = badflag
-
-        istatus = 1
-        return
-        end

@@ -576,7 +576,7 @@ c read in laps lat/lon and topo
 
         var = 'LIL'
         ext = 'lil'
-        units = 'G/M**2'
+        units = 'M'
         comment = 'no comment'
         call put_laps_2d(i4time,ext,var,units,comment
      1  ,NX_L,NY_L,slwc_int,istatus)

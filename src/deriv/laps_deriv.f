@@ -101,7 +101,7 @@ cdis
 
 !       Read data for laps_deriv_sub and put_stability calls
 
-!       Read lt1 - temp_3d,heights_3d
+!       Read LT1 - temp_3d
         var_2d = 'T3'
         ext = 'lt1'
         call get_laps_3d(i4time,NX_L,NY_L,NZ_L
@@ -110,11 +110,22 @@ cdis
             write(6,*)' Error reading 3D Temp'
             return
         endif
+        call qc_field_3d('T3',temp_3d,NX_L,NY_L,NZ_L,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading 3D Temp'
+            return
+        endif
 
+!       Read LT1 - heights_3d
         var_2d = 'HT'
         ext = 'lt1'
         call get_laps_3d(i4time,NX_L,NY_L,NZ_L
      1      ,ext,var_2d,units_2d,comment_2d,heights_3d,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading 3D Heights'
+            return
+        endif
+        call qc_field_3d('HT',heights_3d,NX_L,NY_L,NZ_L,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading 3D Heights'
             return
@@ -126,7 +137,12 @@ cdis
         call get_laps_3d(i4time,NX_L,NY_L,NZ_L
      1      ,ext,var_2d,units_2d,comment_2d,rh_3d_pct,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error reading 3D RH'
+            write(6,*)' Error reading 3D RH (lh3/RHL)'
+            return
+        endif
+        call qc_field_3d('RHL',rh_3d_pct,NX_L,NY_L,NZ_L,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading 3D RH (lh3/RHL)'
             return
         endif
 

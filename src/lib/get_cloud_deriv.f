@@ -41,8 +41,8 @@ cdis
      1                          l_flag_bogus_w,omega_3d,istatus)
 
 !       Steve Albers
-!       This routine calculates SLWC, Cloud Type, MVD, and Icing Index
-!       This routine also does the Cloud Bogussed Omega and the Snow Potential.
+cdoc    This routine calculates SLWC, Cloud Type, MVD, and Icing Index
+cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !       These have been combined to make more efficient use of looping through
 !       large arrays.
 !       The input flags can be adjusted to allow only some of these to be returned
@@ -557,6 +557,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 !       1997    Steve Albers - Allow for supercooled precip generation
 !                            - Misc streamlining of logic
 
+cdoc    Compute 3D Precip Type given profiles of T, RH, Reflectivity
 !       This program modifies the most significant 4 bits of the integer
 !       array by inserting multiples of 16.
 
@@ -778,12 +779,14 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 !       Steve Albers 1991
 
+cdoc    Compute Sfc Precip Type, given both sfc and 3D fields
+
         real*4 pres_2d(ni,nj)             ! Input
         real*4 t_sfc_k(ni,nj)             ! Input
         real*4 td_sfc_k(ni,nj)            ! Input
-        integer cldpcp_type_3d(ni,nj,nk)! Input
+        integer cldpcp_type_3d(ni,nj,nk)  ! Input
         real*4 dbz_2d(ni,nj)              ! Input (Low Level reflectivity)
-        integer pcp_type_2d(ni,nj)      ! Output
+        integer pcp_type_2d(ni,nj)        ! Output
                                        ! Leftmost 4 bits contain the precip type
 
         integer*4 iarg
@@ -905,6 +908,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1                       ,heights_1d,temp_1d,pressures_pa
      1                       ,iflag_slwc,zero,slwc_1d)
 
+cdoc    Determine cloud liquid profile within a given cloud layer
+
         real*4 temp_1d(nk)
         real*4 heights_1d(nk)
         real*4 pressures_pa(nk)
@@ -979,19 +984,22 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine integrate_slwc(slwc,imax,jmax,kmax,slwc_int)
 
-        real*4 slwc(imax,jmax,kmax)
-        real*4 slwc_int(imax,jmax) ! Output in g/m**2 (~10**-3 mm or microns)
-        real*4 depth(kmax)         ! Local
+cdoc    Integrates cloud liquid through the column
+
+        real*4 slwc(imax,jmax,kmax) ! Input in g/m**3
+        real*4 slwc_int(imax,jmax)  ! Output in m (metric tons of water / m**2)
+        real*4 depth(kmax)          ! Local
 
         do k = 1,kmax-1
-            depth(k) = height_of_level(k+1) - height_of_level(k)
+            depth(k) = height_of_level(k+1) - height_of_level(k) ! meters
         enddo ! k
 
         do j = 1,jmax
         do i = 1,imax
             slwc_int(i,j) = 0.
             do k = 1,kmax-1
-                slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5
+                                                         ! convert units
+                slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5 * 1e-6 
                 slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)
             enddo ! k
         enddo ! i
@@ -1002,7 +1010,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine get_mvd(itype,rmvd)
 
-!       rmvd        Output Mean Volume Diameter in microns
+cdoc    rmvd        Output Mean Volume Diameter in microns, given cloud type
 
 !                                                 ! no cloud
         IF(itype.EQ.0) THEN
@@ -1040,6 +1048,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine get_cloudtype(temp_k,d_thetae_dz
      1                          ,cbase_m,ctop_m,itype,c2_type)
+
+cdoc    Determine Cloud Type, given temperature and stability d(theta(e))/dz
 
         character*2 c2_type,c2_cloudtypes(10)
 
@@ -1107,7 +1117,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         subroutine get_stability(nk,temp_1d,heights_1d,pressures_mb
      1                           ,kbottom,ktop,d_thetae_dz_1d)
 
-!       This routine returns stability at a given level given 1D array inputs
+cdoc    This routine returns stability at a given level given 1D array inputs
+cdoc    Saturation is assumed and d(theta(e))/dz is returned
 
         real*4 temp_1d(nk)                  ! Input
         real*4 heights_1d(nk)               ! Input
@@ -1140,7 +1151,7 @@ c
 c     this version 2.0 dated 30 Dec 1991
 c       m. politovich, rap, ncar
 c       "dammit jim, I'm a scientist, not a programmer!"
-c-----subroutine to calculate icing severity index
+cdoc  routine to calculate icing severity index
 c
 c     input:  slw     liquid water content in g/m3
 c             temp    temperature in deg C
@@ -1230,8 +1241,8 @@ c
 
       function wb_melting_threshold(t_c,dbz)
 
-!     This function calculates the wet-bulb threshold for melting snow into
-!     rain as a function of dbz and t_c.
+cdoc  This function calculates the wet-bulb threshold for melting snow into
+cdoc  rain as a function of dbz and t_c.
 
       wb_melting_threshold = 1.3  ! Units are C
 
@@ -1244,6 +1255,8 @@ c
      1                                     t_sfc_k,
      1                                     td_sfc_k,
      1                                     istat_radar_3dref)
+
+cdoc    Correct precip type for snow drying in sub-cloud layer based on sfc rh
 
         r_pcp_type_thresh_2d = r_pcp_type_2d
 

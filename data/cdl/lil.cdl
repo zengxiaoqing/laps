@@ -17,11 +17,11 @@ netcdf lil {
             lil:record = "valtime, reftime";
             lil:_FillValue = 1.e+37f;
             lil:long_name="integrated liquid water";
-            lil:units="grams/meter**2";
+            lil:units="meters";
             lil:valid_range= 0.f, 100.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="MSL";
-	    lil:LAPS_units="G/M**2";
+	    lil:LAPS_units="M";
                 	        
         //	LAPS variables
 

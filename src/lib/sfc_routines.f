@@ -150,3 +150,25 @@ c
 	return
 	include 'lso_formats.inc'
 	end
+
+        subroutine get_sfc_badflag(badflag_out,istatus)
+
+cdoc    Returns "badflag" used in surface code
+
+        include 'laps_sfc.inc'
+
+        badflag_out = badflag
+
+        istatus = 1
+        return
+        end
+
+        subroutine get_ibadflag(ibadflag,istatus)
+
+cdoc    Returns "ibadflag" used in surface code
+
+        ibadflag = -99
+        istatus = 1
+
+        return
+        end
