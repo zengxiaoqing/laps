@@ -32,6 +32,7 @@ c fifth satellite (goes12)
       C_SAT_TYPES(4,5)='gwc'
 c sixth satllite (goes09)
       C_SAT_TYPES(1,6)='gvr'
+      C_SAT_TYPES(3,6)='cdf'
 
 c ----
 c goes08 (first satellite type)
@@ -140,6 +141,12 @@ c     format type 1 (gvr)
       C_CHANNEL_TYPES(3,1,6)='wv '
       C_CHANNEL_TYPES(4,1,6)='11u'
       C_CHANNEL_TYPES(5,1,6)='12u'
+c format type 3 (cdf)
+      C_CHANNEL_TYPES(1,3,6)='vis'
+      C_CHANNEL_TYPES(2,3,6)='4u '
+      C_CHANNEL_TYPES(3,3,6)='wv '
+      C_CHANNEL_TYPES(4,3,6)='11u'
+      C_CHANNEL_TYPES(5,3,6)='12u'
 
 c everything from here down should eventually be removed
 c and obtained automatically from the input (netCDF) file.
@@ -162,6 +169,7 @@ c type wfo and cdf for goes08, goes10, and goes12
       R_LATIN(2,5)=25.00000 !goes12/wfo
       R_LATIN(3,1)=25.00000 !goes08/cdf
       R_LATIN(3,5)=25.00000 !goes12/cdf
+      R_LATIN(3,6)=25.00000 !goes09/cdf
       R_LAP(2,1)=25.00000   !goes08/wfo
       R_LAP(2,3)=25.00000   !goes10/wfo
       R_LAP(2,5)=25.00000   !goes12/wfo
@@ -171,6 +179,7 @@ c type wfo and cdf for goes08, goes10, and goes12
       R_LOV(2,3)=-95.00000  !goes10/wfo
       R_LOV(2,5)=-95.00000  !goes12/wfo
       R_LOV(3,1)=-95.00000  !goes08/cdf
+      R_LOV(3,6)=+120.00000  !goes08/cdf
 
 c type gvr and gwc for goes08 and goes10. (Soon add goes09 and goes12)
 c                                          but only for gvr [no gwc])
@@ -207,30 +216,30 @@ c                                          but only for gvr [no gwc])
 
       I_NWLINE_VIS(1,1)=3084
       I_NWLINE_VIS(1,3)=3060
-      I_NWLINE_VIS(1,5)=3080
+      I_NWLINE_VIS(1,5)=2960
       I_NWLINE_VIS(4,1)=2984
  
       I_NWLINE_IR(1,1)=3080
       I_NWLINE_IR(1,3)=3056
-      I_NWLINE_IR(1,5)=3080
+      I_NWLINE_IR(1,5)=2960
       I_NWLINE_IR(4,1)=2984
 
       I_NWLINE_WV(1,1)=3080
       I_NWLINE_WV(1,3)=3056
-      I_NWLINE_WV(1,5)=3080
+      I_NWLINE_WV(1,5)=2960
       I_NWLINE_WV(4,1)=2984
 c ------------------------------
       I_NWPIX_VIS(1,1)=9050
       I_NWPIX_VIS(1,3)=10696
-      I_NWPIX_VIS(1,5)=9050
+      I_NWPIX_VIS(1,5)=9450
       I_NWPIX_VIS(4,1)=9248
 
       I_NWPIX_IR(1,1)=9050
       I_NWPIX_IR(1,3)=10696
-      I_NWPIX_IR(1,5)=10696
+      I_NWPIX_IR(1,5)=9450
       I_NWPIX_IR(4,1)=9248
 
       I_NWPIX_WV(1,1)=9050
       I_NWPIX_WV(1,3)=13500
-      I_NWPIX_WV(1,5)=9050
+      I_NWPIX_WV(1,5)=9450
       I_NWPIX_WV(4,1)=9248
