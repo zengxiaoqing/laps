@@ -864,22 +864,33 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         endif ! We will want to use a 11u determined cloud top
 
 !       Set variables depending on whether in Band 8 or CO2 mode
-!       if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
-!           if(cldtop_m_co2 .ne. r_missing_data)then
-!               l_cloud_present = .true.
-!           else
-!               l_cloud_present = .false.
-!           endif
+        if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
+            if(cldtop_m_co2 .ne. r_missing_data)then
+                l_cloud_present = .true.
+            else
+                l_cloud_present = .false.
+            endif
 
-!           cldtop_m = cldtop_m_co2
+            cldtop_m = cldtop_m_co2
 !           sat_cover = PPCC(7)
 
-!       else                                 ! Using Band 8 (11.2mm) data
+        elseif( (.not. l_tb8) .AND. (l_use_39 .and. istat_39 .eq. 1) 
+     1                        .AND. cldtop_m_tb8 .ne. r_missing_data 
+     1                                                            ) then      
+
+!           Band 8 (11mm) threshold says no but 3.9 micron says yes
+!           We did still get a valid Band 8 derived cloud top
+
+            l_cloud_present = .true.
+            cldtop_m = cldtop_m_tb8
+            sat_cover = 1.0 
+
+        else                          ! Using Band 8 (11.2mm) data only
             l_cloud_present = l_tb8
             cldtop_m = cldtop_m_tb8
-            sat_cover = 1.0 ! 1.1
+            sat_cover = 1.0 
 
-!       endif
+        endif
 
         return
         end
@@ -1012,6 +1023,13 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         r_cld = temp_to_rad(t_cld)
 
         band8_cover = (r_sat - r_sfc) / (r_cld - r_sfc)
+
+        if(band8_cover .gt. 1.0)then
+            write(6,*)' WARNING: resetting band8_cover down to 1.0'
+            write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
+     1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
+            band8_cover = 1.0 
+        endif
 
         return
         end

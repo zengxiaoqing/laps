@@ -281,14 +281,12 @@ cdis
 
             do k = 1,nk
                 if(clouds_3d(i,j,k) .gt. 1.0)then
-!                   cloud_frac_in = 1.0
-                    cloud_frac_in = clouds_3d(i,j,k)
                     write(6,*)' Error, clouds_3d > 1'
      1                       ,i,j,k,clouds_3d(i,j,k)
                     stop
-                else
-                    cloud_frac_in = clouds_3d(i,j,k)
                 endif
+
+                cloud_frac_in = clouds_3d(i,j,k)
 
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 if(cld_hts(k) .gt. topo(i,j) + surface_sao_buffer)then
@@ -297,8 +295,7 @@ cdis
                     cushion = 0.0
                 endif
 
-!               if(cloud_frac_in - cloud_frac_uprb .gt. cushion)then
-                if(clouds_3d(i,j,k) - cloud_frac_uprb .gt. cushion)then     
+                if(cloud_frac_in - cloud_frac_uprb .gt. cushion)then
                    cloud_frac_out = cloud_frac_uprb
 
 !                  Determine if we need to reconcile VIS with radar
@@ -445,7 +442,7 @@ cdis
 
         write(6,*)
         write(6,101)pct_use_vis
- 101    format(' Visible albedo data used over ',f6.2,'% of domain'       
+ 101    format(' Visible albedo data used over ',f6.2,'% of domain')       
         write(6,*)' N_MISSING_ALBEDO = ',n_missing_albedo
         write(6,*)' N_MISSING_UPRB = ',n_missing_uprb
         write(6,*)' N_VIS_MOD = ',n_vis_mod

@@ -57,7 +57,7 @@ c
         var = 'S8A'
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
-     1                     ,i4time_nearest,EXT,var,units
+     1                     ,i4time_s8a,EXT,var,units
      1                     ,comment,imax,jmax,s8a_k,ilevel,istat_s8a)
         if(istat_s8a .ne. 1)then
             write(6,*)' No S8A data available'
@@ -97,7 +97,7 @@ c
         ext = lvd_ext
         var = 'S3A'
         ilevel = 0
-        call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window       
+        call get_laps_2dvar(i4time_s8a,0       
      1                     ,i4time_nearest,EXT,var,units
      1                     ,comment,imax,jmax,s3a_k,ilevel,istat_s3a)
         if(istat_s3a .ne. 1)then
