@@ -139,7 +139,7 @@ c
 c.....  climatological extreme test            
 c                 
 	write(60,*) ' # of stns available: ',
-     &                         n_obs_b, n_obs_b_l, n_obs_pos_b
+     &                         n_obs_b, n_obs_b_l, n_obs_pos_b_l
 	if(n_obs_b.le.0 .or. n_obs_b_l.le.0) then
 	 write(60,*) ' No data for current and/or previous hr..Abort QC'      
 	 return
