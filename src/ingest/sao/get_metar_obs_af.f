@@ -72,8 +72,6 @@ c                                      user-defined size (deg) and grid_spacing.
 c
 c*****************************************************************************
 c
-	include 'surface_obs.inc'
-c
 	real*4  timeobs(maxsta)
 	real*4  lats(maxsta), lons(maxsta), elev(maxsta)
 	real*4  t(maxsta), td(maxsta), dd(maxsta), ff(maxsta)
@@ -106,11 +104,17 @@ c
 c.....	Set jstatus flag for the sao data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
 c.....  average number of gridpoints based on the grid spacing.
 c
+        call get_box_size(box_size,istatus)
+        if(istatus .ne. 1)return
+
 	box_length = box_size * 111.137 !km/deg lat (close enough for lon)
 	ibox_points = box_length / (grid_spacing / 1000.) !in km
 c

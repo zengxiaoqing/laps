@@ -74,7 +74,6 @@ c
 c*****************************************************************************
 c
 	include 'netcdf.inc'
-	include 'surface_obs.inc'
 c
 c.....  Read arrays.
 c
@@ -130,11 +129,17 @@ c
 
         call get_ibadflag(ibadflag,istatus)
         if(istatus .ne. 1)return
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
 c.....  average number of gridpoints based on the grid spacing.
 c
+        call get_box_size(box_size,istatus)
+        if(istatus .ne. 1)return
+
         box_length = box_size * 111.137 !km/deg lat (close enough for lon)
         ibox_points = box_length / (grid_spacing / 1000.)  !in km
 c
