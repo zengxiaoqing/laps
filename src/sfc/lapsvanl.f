@@ -188,7 +188,7 @@ c
      &            bad_p  = 3.0,		! for reduced pressure
      &            bad_mp = 4.0,		! for MSL pressure
      &            bad_t  = 3.0,		! for temperature
-     &            bad_td = 3.0,		! for dewpoint
+     &            bad_td = 2.5,		! for dewpoint
      &            bad_u  = 4.0,		! for u-wind
      &            bad_v  = 4.0,		! for v-wind
      &            bad_th = 3.5,		! for theta
