@@ -501,6 +501,7 @@ csms$serial end
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
      1        ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1        ,topo_dum,rland_frac_dum,1,1                            ! I
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 csms$serial(default=ignore)  begin              
@@ -615,6 +616,7 @@ csms$serial end
      1           ,varobs_diff_spread
      1           ,wt_p_spread,fnorm,n_fnorm
      1           ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1           ,topo_dum,rland_frac_dum,1,1                         ! I
      1           ,n_obs_lvl,istatus)
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
@@ -681,6 +683,7 @@ csms$serial end
      1          ,varobs_diff_spread
      1          ,wt_p_spread,fnorm,n_fnorm
      1          ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1          ,topo_dum,rland_frac_dum,1,1                            ! I
      1          ,n_obs_lvl,istatus)
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
@@ -763,6 +766,7 @@ csms$serial end
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)

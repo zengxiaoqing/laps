@@ -570,6 +570,7 @@ cdis
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm   ! Inputs
      1                     ,l_analyze,l_not_struct,rms_thresh ! Input
      1                     ,weight_bkg_const                  ! Input
+     1                     ,topo_dum,rland_frac_dum,1,1       ! Input
      1                     ,n_obs_lvl,istatus)                ! Outputs
 
         return
