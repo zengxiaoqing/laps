@@ -33,13 +33,20 @@ cdis
 
         subroutine cpt_pcp_cnc(ref_3d,temp_3d,cldpcp_type_3d  ! Input
      1                                  ,ni,nj,nk     ! Input
-     1                                  ,rate_3d      ! Local
-     1                                  ,pcp_cnc_3d)  ! Output (kg/m^3)
+     1                                  ,pcp_cnc_3d   ! Output (kg/m^3)
+     1                                  ,rai_cnc_3d   ! Output (rain)
+     1                                  ,sno_cnc_3d   ! Output (snow)
+     1                                  ,pic_cnc_3d)  ! Output (precip ice)
 
         real*4 temp_3d(ni,nj,nk)
         real*4 ref_3d(ni,nj,nk)
         integer cldpcp_type_3d(ni,nj,nk)
+
         real*4 pcp_cnc_3d(ni,nj,nk)
+        real*4 rai_cnc_3d(ni,nj,nk)
+        real*4 sno_cnc_3d(ni,nj,nk)
+        real*4 pic_cnc_3d(ni,nj,nk)
+
         real*4 rate_3d(ni,nj,nk)
 
 !       Get 3D precip rates one layer at a time with ZR routine
@@ -57,9 +64,32 @@ cdis
      1                                                  ,fall_velocity)
                 call cpt_concentration(rate_3d(i,j,k),fall_velocity
      1                                          ,pcp_cnc_3d(i,j,k))
-            else
+
+                if(ipcp_type .eq. 1 .or. ipcp_type .eq. 3)then     ! rain or zr
+                    rai_cnc_3d(i,j,k) = pcp_cnc_3d(i,j,k)
+                    sno_cnc_3d(i,j,k) = 0.
+                    pic_cnc_3d(i,j,k) = 0.
+
+                elseif(ipcp_type .eq. 2)then                       ! snow
+                    rai_cnc_3d(i,j,k) = 0.
+                    sno_cnc_3d(i,j,k) = pcp_cnc_3d(i,j,k)
+                    pic_cnc_3d(i,j,k) = 0.
+
+                elseif(ipcp_type .eq. 4 .or. ipcp_type .eq. 5)then ! IP or Hail
+                    rai_cnc_3d(i,j,k) = 0.
+                    sno_cnc_3d(i,j,k) = 0.
+                    pic_cnc_3d(i,j,k) = pcp_cnc_3d(i,j,k)
+
+                endif ! ipcp_type
+
+            else  ! ipcp_type = 0
                 pcp_cnc_3d(i,j,k) = 0.
-            endif
+                rai_cnc_3d(i,j,k) = 0.
+                sno_cnc_3d(i,j,k) = 0.
+                pic_cnc_3d(i,j,k) = 0.
+
+            endif ! ipcp_type .ne. 0
+
         enddo ! k
         enddo ! i
         enddo ! j

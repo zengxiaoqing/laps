@@ -202,8 +202,6 @@ cdis
         character*4 radar_name
         character*31 radarext_3d_cloud
         real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
-        real*4 dum_3d(NX_L,NY_L,NZ_L)
-       
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
         real*4 mvd_3d(NX_L,NY_L,NZ_L)
@@ -220,7 +218,11 @@ cdis
 
         real*4 slwc(NX_L,NY_L,NZ_L),slwc_int(NX_L,NY_L)
         real*4 cice(NX_L,NY_L,NZ_L)
+
         real*4 pcpcnc(NX_L,NY_L,NZ_L)
+        real*4 raicnc(NX_L,NY_L,NZ_L)
+        real*4 snocnc(NX_L,NY_L,NZ_L)
+        real*4 piccnc(NX_L,NY_L,NZ_L)
 
 !       real*4 snow_2d(NX_L,NY_L)
 
@@ -916,8 +918,10 @@ c read in laps lat/lon and topo
 !           Calculate 3D Precip Concentration in kg/m**3
             call cpt_pcp_cnc(radar_ref_3d,temp_3d,cldpcp_type_3d    ! Input
      1                                  ,NX_L,NY_L,NZ_L     ! Input
-     1                                  ,dum_3d             ! Local
-     1                                  ,pcpcnc)            ! Output
+     1                                  ,pcpcnc             ! Output
+     1                                  ,raicnc             ! Output
+     1                                  ,snocnc             ! Output
+     1                                  ,piccnc)            ! Output
 
             I4_elapsed = ishow_timer()
 
