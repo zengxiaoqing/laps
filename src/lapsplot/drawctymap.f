@@ -44,8 +44,6 @@ c
       real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
      +       polat,polon,rrot
 
-      character*3 c3_time_zone
-
 c
       integer*4 jproj,jjlts,jgrid,jus,jdot,ier
 c
@@ -88,7 +86,7 @@ c
       if(domsize .le. 2500e3)then
           write(6,*)' Plotting Counties'
           call setusv_dum(2HIN,icol_cou)
-          jgrid=latlon_int                        ! Draw lat/lon lines?
+          jgrid=namelist_parms%latlon_int        ! Draw lat/lon lines?
 
           if(mode_supmap .eq. 1)then
               jus=-4
@@ -130,7 +128,7 @@ c
       call setusv_dum(2HIN,icol_sta)
 
       jgrid=0                                ! Do not draw lat/lon lines
-      call GSLWSC(continent_line_width)
+      call GSLWSC(namelist_parms%continent_line_width)
 
       if(mode_supmap .eq. 1)then
           jus=-1
@@ -163,10 +161,10 @@ c
        real*4 time_zone
 
 !      Set defaults
-       namelist_parms%latlon_int = 0
-       namelist_parms%continent_line_width = 1.0
-       namelist_parms%c3_time_zone = 'UTC'
-       namelist_parms%time_zone = 0.0
+       latlon_int = 0
+       continent_line_width = 1.0
+       c3_time_zone = 'UTC'
+       time_zone = 0.0
  
        call get_directory('static',static_dir,len_dir)
 
@@ -178,6 +176,12 @@ c
 
        print*,'success reading lapsplot_nl in ',filename
        write(*,lapsplot_nl)
+
+!      Set namelist structure
+       namelist_parms%latlon_int = latlon_int
+       namelist_parms%continent_line_width = continent_line_width
+       namelist_parms%c3_time_zone = c3_time_zone
+       namelist_parms%time_zone = time_zone
 
        istatus = 1
        return
