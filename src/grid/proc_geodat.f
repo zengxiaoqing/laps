@@ -103,6 +103,7 @@ c-----------------------------------------------
       integer icat
 
       integer istatus
+      integer istat
 
       integer nx_tile,ny_tile
       integer dom_i,dom_j
@@ -189,7 +190,9 @@ c from Brent Shaw pseudocode
 
       print*,'Start proc_geodat'
 
-      allocate (dom_lats(nx_dom,ny_dom),dom_lons(nx_dom,ny_dom))
+      if(.not. allocated(dom_lats))then
+          allocate(dom_lats(nx_dom,ny_dom),dom_lons(nx_dom,ny_dom))
+      endif
       dom_lats=dom_lats_in
       dom_lons=dom_lons_in
 
@@ -436,7 +439,12 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
            CALL READ_DEM(29,cfname,no,no,1,4,raw_data)
            dem_data=.true.
        elseif( (ctiletype.eq.'G').or.(ctiletype.eq.'A') )then      ! greenfrac/albedo
-           CALL READ_DEM_G(29,cfname,no,no,1,ncat,1,1,4,raw_data)
+           CALL READ_DEM_G(29,cfname,no,no,1,ncat,1,1,4,raw_data
+     1,istat)
+           if(istat.ne.0)then
+              print*,'Error returned: proc_geodat: READ_DEM_G'
+              return
+           endif
            dem_data=.true.
        elseif( ctiletype.eq.'T' )then      ! soiltemp
            CALL READ_DEM(29,cfname,no,no,2,2,raw_data)

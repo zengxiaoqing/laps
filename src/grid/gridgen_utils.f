@@ -621,12 +621,13 @@ ccc	 close(unit_no)
 c ********************************************************************
 
         subroutine read_dem_g(unit_no,unit_name,nn1,nn2,nn3,nn4
-     &,nofr,i1,i2,data)
+     &,nofr,i1,i2,data,istat)
 
         implicit none
         integer  countx,county,countz
         integer  unit_no,nn1,nn2,nn3,nn4,nofr
         integer  len, i1, i2
+        integer  istat
 
         real     data(nn1,nn2,nn3,nn4)
         integer, allocatable ::  idata(:,:,:)
@@ -642,7 +643,11 @@ C       read(unit_no,rec=1) idata
 
         call s_len(unit_name,len)
         print*,'allocate idata in read_dem_g'
-        allocate (idata(nn4,nn1,nn2))
+        allocate (idata(nn4,nn1,nn2),stat=istat)
+        if(istat.ne.0)then
+           print*,'unable to allocate idata array: read_dem_g'
+           return
+        endif
         call read_binary_field(idata,i1,i2,nn1*nn2*nn4,unit_name,len)
 
         if(nn1.ne.1250 .and. nn2.ne.1250)then

@@ -534,9 +534,13 @@ c
           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
      +,ytn(1,1),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
      +,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
-     +,istatus)
+     +,istatus_30s)
 
-          print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
+          if(istatus_30s .ne. 1)then
+           print*,'WARNING: File(s) missing for 30s terrain data'
+          else
+           print *,'topt_30    =',topt_30(1,1),topt_30(nnxp,nnyp)
+          endif
 
           if (.not.new_DEM) then
 
@@ -554,24 +558,40 @@ c
             CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,1)
      +,ytn(1,1),deltax,deltay,TOPT_10,TOPT_10_S,TOPT_10_LN
      +,TOPT_10_LT,PATH_TO_TOPT10M,TOPTWVL,SILAVWT,new_DEM,1
-     +,istatus)
+     +,istatus_10m)
+            if(istatus_10m .ne. 1)then
+             print*,'WARNING: File(s) missing for 10m terrain data'
+            endif
 
             print *,'topt_10    =',topt_10(1,1),topt_10(nnxp,nnyp)
-
             print*
-            print*,'blending 10min and 30sec terrain data'
-
-            call blend_topo(nnxp,nnyp,lats(1,1,1),lons(1,1,1)
+            if(istatus_30s .eq.1 .and. istatus_10m.eq.1)then
+               print*,'blending 10min and 30sec terrain data'
+               call blend_topo(nnxp,nnyp,lats(1,1,1),lons(1,1,1)
      1,topt_10,topt_10_s,topt_10_ln,topt_10_lt
      1,topt_30,topt_30_s,topt_30_ln,topt_30_lt
      1,topt_out,topt_out_s,topt_out_ln,topt_out_lt)
 
+            else
+
+               print*,'only one terrain data set available'
+               print*,'not able to blend 10m and 30s terrain'
+
+            endif
             deallocate (topt_10,
      1                  topt_10_s,
      1                  topt_10_ln,
      1                  topt_10_lt)
 
           else ! new_DEM, go with 30s topo data
+
+             if(istatus_30s .ne. 1)then
+                print*,'********* ERROR ***********'
+                print*,'File(s) missing for 30s terrain data'
+                print*,'Static file not created.......ERROR'
+                return
+             endif
+
 
              do j=1,nnyp
              do i=1,nnxp
@@ -792,6 +812,8 @@ c landmask for laps
            data(:,:,5)=GEODAT2D   !landuse for laps
            data(:,:,ilndmsk)=1.
            where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
+c          where(data(:,:,5) .eq. 16. .and. data(:,:,4).lt.0.5)
+c    &           data(:,:,4) = 0.0    !for laps landfrac
         endif
 
 c ----------------------------------------------------------------
@@ -1453,7 +1475,11 @@ c
                     elseif( (ofn(len-1:len).eq.'G').or.
      .                      (ofn(len-1:len).eq.'A') )then      ! greenfrac/albedo
                       CALL READ_DEM_G(29,TITLE3(1:LB),no,no,mof,lcat
-     .                     ,nofr, 1,4, DATO)
+     .                     ,nofr, 1,4, DATO,istat)
+                         if(istat.ne.0)then
+                            print*,'Error returned from READ_DEM_G'
+                            return
+                         endif
                          dem_data=.true.
                     elseif( (ofn(len-1:len).eq.'T') )then      ! soiltemp
                       CALL READ_DEM(29,TITLE3(1:LB),no,no,2,2,
