@@ -194,7 +194,7 @@ c
  975	   format(
      &    ' Hours to go back for time-tendencies (1..6)[1]: ',$)
 	   read(5,976) ih, ihours
- 976	   format(2i)
+ 976	   format('2i')
 	   if(ih .eq. 0) ihours = 1
 	   if(ihours .eq. 0) then
 	      print *, ' Will skip backgrounds.'
