@@ -7,7 +7,7 @@
       integer n1,i, nf_fid, nf_vid,istatus,nf_status
       integer start(10),count(10)
       real f(n1) , nfmissing
-      character*4 fname
+      character*(*) fname
 
       istatus=0
       nf_status = NF_INQ_VARID(nf_fid,fname,nf_vid)
@@ -29,9 +29,12 @@
         return
       endif
 
-      nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',nfmissing)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
+      if(fname.ne.'isoLevel')then
+         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue'
+     .,nfmissing)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+         endif
       endif
       do i=1,n1
          if(f(i).eq.nfmissing) then

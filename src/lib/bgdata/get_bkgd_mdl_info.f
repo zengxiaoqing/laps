@@ -1,5 +1,5 @@
       subroutine get_bkgd_mdl_info(bgmodel,cmodel,fullname
-     &,mxvars,mxlvls,nx,ny,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
+     &,nx,ny,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
      &,Lat0,Lat1,Lon0,sw,ne,istatus)
 c
@@ -7,9 +7,8 @@ c JSmart 04-2001
 c
       implicit none
 
-      include 'bgdata.inc'
+c     include 'bgdata.inc'
 
-      integer       mxvars,mxlvls
 
       character*200 fullname
       character*132 cmodel
@@ -19,10 +18,10 @@ c
       character*4   cf
       
       integer       i,j
-      integer       nvars
       integer       istatus
       integer       nx,ny
       integer       nzbg_ht
+      integer       nzbg_tp
       integer       nzbg_sh
       integer       nzbg_uv
       integer       nzbg_ww
@@ -31,8 +30,6 @@ c
       integer       bgmodel
       integer       record
       integer       n_valtimes
-      integer       idims(mxlvls,mxvars)
-      integer       levels(mxlvls,mxvars)
 
       real          Lat1,Lat2
       real          Lat0,Lon0
@@ -47,6 +44,52 @@ c
       real          dx,dy
       real          rotation
 
+      interface
+        subroutine get_attribute_sbn(cdfname,centralLat,centralLon,
+     &rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy,nx,ny,
+     &rotation,istatus)
+          character cdfname*200
+          integer   nx,ny
+          real      centralLat
+          real      centralLon
+          real      rlat00
+          real      rlon00
+          real      dx,dy
+          real      latNxNy
+          real      lonNxNy
+          real      latdxdy
+          real      londxdy
+          real      rotation
+        end subroutine
+
+        subroutine get_sbn_dims(cdfname,cmodel
+     +,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     +,n_valtimes,istatus)
+          character*132 cmodel
+          character*200 cdfname
+          integer nxbg,nybg
+          integer nzbg_ht
+          integer nzbg_tp
+          integer nzbg_sh
+          integer nzbg_uv
+          integer nzbg_ww
+          integer n_valtimes 
+          integer istatus
+        end subroutine
+
+        subroutine readavnpublicdims(fname,x,y,numIsoLevel,record,
+     +istatus)
+          character*200 fname
+          integer       numIsoLevel
+          integer       record, x, y
+          integer       nf_fid, nf_vid, nf_status
+          integer       istatus
+        end subroutine
+
+      end interface
+
+
+      print*,'Here: get_bkgd_mdl_info'
       istatus=1
       call s_len(fullname,lenfn)
       call s_len(cmodel,nclen)
@@ -60,9 +103,10 @@ c ----------
          if(istatus.eq.1)then
             gproj='LC'
             nzbg_ht=nz
+            nzbg_tp=nz
             nzbg_sh=nz
             nzbg_uv=nz
-            nzbg_ww=nz  !double check this ... its good!
+            nzbg_ww=nz
             sw(1)=La1
             sw(2)=Lo1
             ne(1)=La2
@@ -90,8 +134,8 @@ c ----------------
             goto 1000
          endif
 
-         call get_sbn_dims(fullname,cmodel,mxvars,mxlvls
-     +,nvars,nx,ny,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
+         call get_sbn_dims(fullname,cmodel
+     +,nx,ny,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      +,n_valtimes,istatus)
 
          if(istatus.ne. 1)then
@@ -100,9 +144,10 @@ c ----------------
 	    return
          endif
 
+         print*,'call get_attribute_sbn'
          call get_attribute_sbn(fullname,centralLat
-     +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy
-     +,dx,dy,nx,ny,rotation,istatus)
+     +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy
+     +,londxdy,dx,dy,nx,ny,rotation,istatus)
 
          if(istatus.ne. 1)then
             print*,'Error: get_attribute_sbn'
@@ -112,14 +157,24 @@ c ----------------
 
          if(cmodel(1:nclen).eq.'RUC40_NATIVE'.or.
      .      cmodel(1:nclen).eq.'ETA48_CONUS')then
+
             gproj='LC'
+            nzbg_tp=nzbg_tp-1
+            nzbg_uv=nzbg_uv-1
+            nzbg_sh=nzbg_sh-1
 
          elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
 
 c for global AVN, nav code expects grid 1,1 in nw corner
+            print*,'set return variables'
             rlat00 =-1.*rlat00
             latNxNY=-1.*latNxNy
             gproj='LE'
+            nzbg_tp=nzbg_tp-2
+            nzbg_uv=nzbg_uv-2
+            nzbg_sh=nzbg_sh-2
+            print*,'var set ',rlat00,latnxny,gproj,
+     .nzbg_tp,nzbg_uv,nzbg_sh
          else
             print*,'Unknown SBN model type: cmodel = ',cmodel
          endif
@@ -136,7 +191,14 @@ c        dy=dy*1000.
          ne(1)=latNxNy
          ne(2)=lonNxNy
 
-         goto 1000
+         print*,'Ok, done. dlat/dlon/sw/ne '
+         print*,dlat
+         print*,dlon
+         print*,sw(1),sw(2)
+         print*,ne(1),ne(2)
+         print*,'nzbght/tp/sh/uv/ww'
+         print*,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+
 
       endif
 
@@ -148,6 +210,7 @@ c ----------
      &              ,Lat0,Lat1,Lon0,La1,Lo1,La2,Lo2,istatus)
          if(istatus.eq.1)then
             nzbg_ht=nz
+            nzbg_tp=nz
             nzbg_sh=nz
             nzbg_uv=nz
             nzbg_ww=nz
@@ -171,6 +234,7 @@ c ----------
      +,istatus)
          if(istatus.eq.1)then
             nzbg_ht=nz
+            nzbg_tp=nz
             nzbg_sh=nz
             nzbg_uv=nz
             nzbg_ww=nz
@@ -194,6 +258,7 @@ c --------------------
          ny=181
          nz=26
          nzbg_ht=nz
+         nzbg_tp=nz
          nzbg_sh=nz
          nzbg_uv=nz
          nzbg_ww=nz
@@ -213,6 +278,7 @@ c -----------------------
          ny    = 91
          nz    = 16
          nzbg_ht=nz
+         nzbg_tp=nz
          nzbg_sh=nz
          nzbg_uv=nz
          nzbg_ww=nz
@@ -232,6 +298,7 @@ c -----------------------
          ny   = 139
          nz   = 11
          nzbg_ht=nz
+         nzbg_tp=nz
          nzbg_sh=nz
          nzbg_uv=nz
          nzbg_ww=nz	 !double check this!
@@ -246,8 +313,11 @@ c -----------------------
          goto 1000
       endif
 
-      print*,'get_bkgd_mdl_info not yet working for: '
-     &,'   ',bgmodel,cmodel(1:nclen)
+c     print*,'get_bkgd_mdl_info not yet working for: '
+c    &,'   ',bgmodel,cmodel(1:nclen)
+      print*,'done in get_bkgd_mdl_info'
+      print*,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+ 
 
 1000  return
       end

@@ -26,6 +26,7 @@ C
 
       include 'netcdf.inc'
 
+      print*,'In get_attribute_sbn'
       istatus = -1
 
       call s_len(cdfname,lenp)

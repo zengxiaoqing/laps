@@ -1,5 +1,5 @@
-      subroutine read_bgdata(mxlvls,nx_bg,ny_bg,
-     +	   nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,ctype
+      subroutine read_bgdata(nx_bg,ny_bg,
+     +	   nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,ctype
      +    ,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg, tpbg,uwbg,vwbg,shbg,wwbg
@@ -11,33 +11,32 @@
       integer nx_bg
       integer ny_bg
       integer nzbg_ht
+      integer nzbg_tp
       integer nzbg_sh
       integer nzbg_uv
       integer nzbg_ww
-      integer mxlvls
       integer bgmodel
       integer ntbg
       integer k
       integer lencm
       integer ivaltimes(100)
       integer istatus
-
 c
 c *** Background model grid data.
 c
-      real, intent(out) :: prbght(nx_bg,ny_bg,nzbg_ht)     !Pressure (mb) ht and temp
-      real, intent(out) :: prbgsh(nx_bg,ny_bg,nzbg_sh)     !Pressure (mb) q
-      real, intent(out) :: prbguv(nx_bg,ny_bg,nzbg_uv)     !Pressure (mb) u- v-components
-      real, intent(out) :: prbgww(nx_bg,ny_bg,nzbg_ww)     !Pressure (mb) omega
+      real, intent(out) :: prbght(nx_bg,ny_bg,nzbg_ht) !Pressure (mb) ht and temp
+      real, intent(out) :: prbgsh(nx_bg,ny_bg,nzbg_sh) !Pressure (mb) q
+      real, intent(out) :: prbguv(nx_bg,ny_bg,nzbg_uv) !Pressure (mb) u- v-components
+      real, intent(out) :: prbgww(nx_bg,ny_bg,nzbg_ww) !Pressure (mb) omega
 
-      real, intent(out) :: htbg(nx_bg,ny_bg,nzbg_ht)     !Height (m)
-      real, intent(out) :: tpbg(nx_bg,ny_bg,nzbg_ht)     !Temperature (K)
-      real, intent(out) :: shbg(nx_bg,ny_bg,nzbg_sh)     !Specific humidity (kg/kg)
-      real, intent(out) :: uwbg(nx_bg,ny_bg,nzbg_uv)     !U-wind (m/s)
-      real, intent(out) :: vwbg(nx_bg,ny_bg,nzbg_uv)     !V-wind (m/s)
-      real, intent(out) :: wwbg(nx_bg,ny_bg,nzbg_ww)     !W-wind (pa/s)
+      real, intent(out) :: htbg(nx_bg,ny_bg,nzbg_ht)   !Height (m)
+      real, intent(out) :: tpbg(nx_bg,ny_bg,nzbg_tp)   !Temperature (K)
+      real, intent(out) :: shbg(nx_bg,ny_bg,nzbg_sh)   !Specific humidity (kg/kg)
+      real, intent(out) :: uwbg(nx_bg,ny_bg,nzbg_uv)   !U-wind (m/s)
+      real, intent(out) :: vwbg(nx_bg,ny_bg,nzbg_uv)   !V-wind (m/s)
+      real, intent(out) :: wwbg(nx_bg,ny_bg,nzbg_ww)   !W-wind (pa/s)
 
-      real, intent(out) :: mslpbg(nx_bg,ny_bg)     !mslp  (mb)
+      real, intent(out) :: mslpbg(nx_bg,ny_bg)         !mslp  (mb)
       real, intent(out) :: htbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: prbg_sfc(nx_bg,ny_bg)
       real, intent(out) :: shbg_sfc(nx_bg,ny_bg)
@@ -61,7 +60,7 @@ c
       interface
 
          subroutine read_sbn_grids(cdfname,af,cmodel,
-     .mxlvls,nxbg,nybg,nzbght,nzbgsh,nzbguv,nzbgww,
+     .nxbg,nybg,nzbght,nzbgtp,nzbgsh,nzbguv,nzbgww,
      .prbght,prbgsh,prbguv,prbgww,
      .ht,tp,sh,uw,vw,ww,
      .ht_sfc,pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp,
@@ -80,7 +79,7 @@ c
          real  :: prbguv(nxbg,nybg,nzbguv)
          real  :: prbgww(nxbg,nybg,nzbgww)
          real  ::     ht(nxbg,nybg,nzbght)
-         real  ::     tp(nxbg,nybg,nzbght)
+         real  ::     tp(nxbg,nybg,nzbgtp)
          real  ::     sh(nxbg,nybg,nzbgsh)
          real  ::     uw(nxbg,nybg,nzbguv)
          real  ::     vw(nxbg,nybg,nzbguv)
@@ -90,7 +89,6 @@ c
          character*132 cmodel
          character*5   ctype
          character*4   af
-         integer       mxlvls
          integer       nxbg
          integer       nybg
          integer       nzbght
@@ -102,11 +100,11 @@ c
          end subroutine
 
          subroutine read_dgprep(bgmodel,cmodel,path,fname,af
-     .                    ,nx,ny,nz
-     .                    ,pr,ht,tp,sh,uw,vw,ww
-     .                    ,ht_sfc,pr_sfc,td_sfc,tp_sfc
-     .                    ,uw_sfc,vw_sfc,mslp
-     .                    ,gproj,lon0,lat1,lat2,istatus)
+     .   ,nx,ny,nz
+     .   ,pr,ht,tp,sh,uw,vw,ww
+     .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc
+     .   ,uw_sfc,vw_sfc,mslp
+     .   ,gproj,lon0,lat1,lat2,istatus)
 
          integer bgmodel
          integer nx,ny,nz
@@ -149,19 +147,18 @@ c
          print*,'this is temporary and will be added soon'
 
       elseif (bgmodel .eq. 1) then     ! Process 60 km RUC data
-          call read_ruc60_native(bgpath,fname_bg,af_bg,nx_bg,ny_bg,
-     .               nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
-     .               prbght,htbg,tpbg,shbg,uwbg,vwbg,gproj,lon0,istatus)
+
+          call read_ruc60_native(bgpath,fname_bg,af_bg,nx_bg,ny_bg
+     .,nzbg_ht,prbght,htbg,tpbg,shbg,uwbg,vwbg,gproj,lon0,istatus)
 
       elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
 c
 c for now all fields have 3D dimension of nzbg_ht
 c
-          call read_eta_conusC(fullname,nx_bg,ny_bg,nzbg_ht,
-     .               htbg,prbght,tpbg,uwbg,vwbg,shbg,wwbg,
-     .               htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
-     .               uwbg_sfc,vwbg_sfc,mslpbg,
-     .               istatus)
+          call read_eta_conusC(fullname,nx_bg,ny_bg,nzbg_ht
+     .,htbg,prbght,tpbg,uwbg,vwbg,shbg,wwbg
+     .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
           if(istatus.ne.0)goto 99
 
@@ -180,33 +177,33 @@ c convert rh to sh.
 c
       elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
 
-          call read_sbn_grids(fullname,af_bg,cmodel,mxlvls,
-     .         nx_bg,ny_bg,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
-     .         prbght,prbgsh,prbguv,prbgww,
-     .         htbg,tpbg,shbg,uwbg,vwbg,wwbg,
-     .         htbg_sfc,prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,
-     .         tpbg_sfc,mslpbg,ctype,istatus)
+          call read_sbn_grids(fullname,af_bg,cmodel
+     .,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     .,prbght,prbgsh,prbguv,prbgww
+     .,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .,htbg_sfc,prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc
+     .,tpbg_sfc,mslpbg,ctype,istatus)
 
           if(istatus.ne.0)goto 99
 
 c original nz allows reading of sfc variables (ie., 2m and 10m)
 c but now decrement nz since arrays only contain 3d info.
 
-          if(cmodel(1:lencm).eq.'RUC40_NATIVE')then
-             nzbg_sh=nzbg_sh-1
-             nzbg_uv=nzbg_uv-1
-          elseif(cmodel(1:lencm).eq.'ETA48_CONUS')then
-             nzbg_sh=nzbg_sh-1
-             nzbg_uv=nzbg_uv-1
-          elseif(cmodel(1:lencm).eq.'AVN_SBN_CYLEQ')then
-             nzbg_sh=nzbg_sh-2
-             nzbg_uv=nzbg_uv-2
-          endif
+c         if(cmodel(1:lencm).eq.'RUC40_NATIVE')then
+c            nzbg_sh=nzbg_sh-1
+c            nzbg_uv=nzbg_uv-1
+c         elseif(cmodel(1:lencm).eq.'ETA48_CONUS')then
+c            nzbg_sh=nzbg_sh-1
+c            nzbg_uv=nzbg_uv-1
+c         elseif(cmodel(1:lencm).eq.'AVN_SBN_CYLEQ')then
+c            nzbg_sh=nzbg_sh-2
+c            nzbg_uv=nzbg_uv-2
+c         endif
  
       elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
 
-          call read_ruc2_hybb(fullname,nx_bg,ny_bg,nzbg_ht,
-     +         mslpbg,htbg,prbght,shbg,uwbg,vwbg,tpbg,wwbg,istatus)
+          call read_ruc2_hybb(fullname,nx_bg,ny_bg,nzbg_ht
+     +,mslpbg,htbg,prbght,shbg,uwbg,vwbg,tpbg,wwbg,istatus)
 
           if(istatus.ne.0)goto 99 
 
@@ -235,11 +232,11 @@ c
      .        bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
 
              call read_dgprep(bgmodel,cmodel,bgpath
-     .                 ,fname_bg,af_bg,nx_bg,ny_bg,nzbg_ht
-     .                 ,prbght,htbg,tpbg,shbg,uwbg,vwbg,wwbg
-     .                 ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .                 ,uwbg_sfc,vwbg_sfc,mslpbg
-     .                 ,gproj,lon0,lat1,lat2,istatus)
+     .,fname_bg,af_bg,nx_bg,ny_bg,nzbg_ht
+     .,prbght,htbg,tpbg,shbg,uwbg,vwbg,wwbg
+     .,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     .,uwbg_sfc,vwbg_sfc,mslpbg
+     .,gproj,lon0,lat1,lat2,istatus)
 
              if(istatus.ne.0)goto 99
 
@@ -248,10 +245,11 @@ c
              prbgww=prbght
 
       elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
-             call read_conus_nws(bgpath,fname_bg,af_bg,
-     .               nx_bg,ny_bg,nzbg_ht,prbght
-     .              ,htbg,tpbg,shbg,uwbg,vwbg,
-     .               gproj,lon0,lat1,lat2,istatus)
+
+             call read_conus_nws(bgpath,fname_bg,af_bg
+     .,nx_bg,ny_bg,nzbg_ht,prbght
+     .,htbg,tpbg,shbg,uwbg,vwbg
+     .,gproj,lon0,lat1,lat2,istatus)
 c
       endif
 

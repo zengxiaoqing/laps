@@ -62,25 +62,23 @@ C
       return
       end
 
-      subroutine get_sbn_dims(cdfname,cmodel,mxvars,mxlvls
-     +,nvars,nxbg,nybg,nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww
-     +,n_valtimes,istatus)
+      subroutine get_sbn_dims(cdfname,cmodel
+     +,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv
+     +,nzbg_ww,n_valtimes,istatus)
 
       implicit none
       include 'netcdf.inc'
       integer slen, nf_status,nf_fid, i, istat
       integer nf_vid
-      integer mxlvls
-      integer mxvars
       character*132 cmodel
       character*200 cdfname
 
       integer nxbg,nybg
       integer nzbg_ht
+      integer nzbg_tp
       integer nzbg_sh
       integer nzbg_uv
       integer nzbg_ww
-      integer ntbg
       integer n_valtimes 
       integer record
       integer nvars
@@ -97,10 +95,10 @@ c     data id_fields/1,4,7,10,13/
       integer ncid,itype,ndims
       integer j,k,kk,lc,nclen,lenc
       integer dimlen
-      character*10 cvars(mxvars)
+      character*10 cvars(10)
 
-      integer dimids(mxlvls)
-      integer idims(mxlvls,mxvars)
+      integer dimids(10)
+      integer idims(10,10)
       integer nattr
       integer nf_attid,nf_attnum
       character*13 fname9_to_wfo_fname13, fname13
@@ -114,8 +112,6 @@ C
 C Get size of n_valtimes
 C
 
-      print*,'Here: get_sbn_dims'
-
       call get_nvaltimes(cdfname,n_valtimes,ivaltimes,istatus)
       if(istatus.ne.1) then
          print *,'Error: get_nvaltimes '
@@ -125,9 +121,6 @@ C
 C
 C  Open netcdf File for reading
 C
-
-      print*,'cdfname = ',cdfname(1:slen)
-
       nf_status = NF_OPEN(cdfname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -195,6 +188,8 @@ C
          cvars(8)='mmsp'
       elseif(cmodel(1:nclen).eq.'ETA48_CONUS')then
          cvars(8)='emsp'
+      elseif(cmodel(1:nclen).eq.'AVN_SBN_CYLEQ')then
+         cvars(8)='pmsl'
       endif
 
       do i=1,nvars
@@ -227,6 +222,8 @@ c        endif
             nxbg = idims(1,i)
             nybg = idims(2,i)
             nzbg_ht=idims(3,i)
+         elseif(cvars(i).eq.'t')then
+            nzbg_tp=idims(3,i)
          elseif(cvars(i).eq.'rh')then
             nzbg_sh=idims(3,i)
          elseif(cvars(i).eq.'uw')then
@@ -245,7 +242,6 @@ c        endif
       endif
 
       istatus = 1
-c     print*,'Done in get_sbn_dims'
       return 
       end
 
@@ -259,7 +255,7 @@ c     print*,'Done in get_sbn_dims'
       integer       nvaltimes
       integer       ivaltimes(100)
       integer       istatus
-      character*(*) cdfname
+      character*200 cdfname
 
 c     logical       l2
 
@@ -317,18 +313,17 @@ c     if(.not.l2)then
 C
 C ------------------------------------------------------------
       subroutine read_sbn_grids(cdfname,af,cmodel,
-     .   mxlvls,nxbg,nybg,nzbght,nzbgsh,nzbguv,nzbgww,
-     .   prbght,prbgsh,prbguv,prbgww,
-     .   ht,tp,sh,uw,vw,ww,
-     .   ht_sfc,pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp,
-     .   ctype,istatus)
+     .nxbg,nybg,nzbght,nzbgtp,nzbgsh,nzbguv,nzbgww,
+     .prbght,prbgsh,prbguv,prbgww,
+     .ht,tp,sh,uw,vw,ww,
+     .ht_sfc,pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp,
+     .ctype,istatus)
 c
       implicit none
 c
       include 'netcdf.inc'
       include 'bgdata.inc'
 
-      integer mxlvls
 c     integer ncid, lenstr, ntp, nvdim, nvs, ndsize
       integer model_out
       integer ncid
@@ -341,6 +336,7 @@ c     model_out=2  => dprep
 
       integer nxbg,nybg
       integer nzbght
+      integer nzbgtp
       integer nzbgsh
       integer nzbguv
       integer nzbgww
@@ -366,35 +362,36 @@ c
       real, intent(out)  :: prbguv(nxbg,nybg,nzbguv)
       real, intent(out)  :: prbgww(nxbg,nybg,nzbgww)
       real, intent(out)  ::     ht(nxbg,nybg,nzbght)
-      real, intent(out)  ::     tp(nxbg,nybg,nzbguv)           !nzbgsh) -> mod needed for AVN 
+      real, intent(out)  ::     tp(nxbg,nybg,nzbgtp)
       real, intent(out)  ::     sh(nxbg,nybg,nzbgsh)
       real, intent(out)  ::     uw(nxbg,nybg,nzbguv)
       real, intent(out)  ::     vw(nxbg,nybg,nzbguv)
       real, intent(out)  ::     ww(nxbg,nybg,nzbgww)
 c
-      real, allocatable ::  prbg_ht(:)
-      real, allocatable ::  prbg_sh(:)
-      real, allocatable ::  prbg_uv(:)
-      real, allocatable ::  prbg_ww(:)
+      real ::  prbg_ht(100)
+      real ::  prbg_sh(100)
+      real ::  prbg_uv(100)
+      real ::  prbg_ww(100)
 
 c in the near future this array will be used to read
 c the sbn grids so that we avoid some inconsistencies
 c with array allocations in the vertical interpolation.
-c     real, allocatable ::  data(:,:,:)
+
+      real, allocatable ::  data(:,:,:)
 
       integer start(10),count(10)
  
-      integer i,j,k,n,ip,jp,ii,jj,it
+      integer i,j,k,n,ip,jp,ii,jj,it,kk
       integer istatus,slen,lent
-      integer lskip,kpsk
-      integer ibdcnt
+      integer kskp
+      integer ibdht,ibdtp,ibduv,ibdsh,ibdww
 c
       character*9   fname,oldfname,model
       character*5   ctype
       character*4   af
       character*4   cvar
       character*2   gproj
-      character*256 cdfname
+      character*200 cdfname
       character*132 cmodel
 c
       real*4 xe,mrsat
@@ -416,9 +413,8 @@ ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
 c
       interface
-        subroutine get_prbg(nf_fid,mxlvls,nlvls,cvar,cmodel
+        subroutine get_prbg(nf_fid,nlvls,cvar,cmodel
      +,pr_levels_bg)
-          integer        mxlvls
           integer        nf_fid
           integer        nlvls
           character*4    cvar
@@ -502,14 +498,20 @@ c
          print*
       endif
 
-      if(.not.allocated(prbg_ht))allocate(prbg_ht(mxlvls))
-      if(.not.allocated(prbg_sh))allocate(prbg_sh(mxlvls))
-      if(.not.allocated(prbg_uv))allocate(prbg_uv(mxlvls))
-      if(.not.allocated(prbg_ww))allocate(prbg_ww(mxlvls))
+c     if(.not.allocated(prbg_ht))allocate(prbg_ht(mxlvls))
+c     if(.not.allocated(prbg_sh))allocate(prbg_sh(mxlvls))
+c     if(.not.allocated(prbg_uv))allocate(prbg_uv(mxlvls))
+c     if(.not.allocated(prbg_ww))allocate(prbg_ww(mxlvls))
+
+      allocate (data(nxbg,nybg,100))       !<-- overkill but ok for now.
 c
 c ****** Read netcdf data.
 c ****** Statements to fill ht.
 c
+
+      kskp=1
+      if(cmodel.eq.'AVN_SBN_CYLEQ')kskp=2
+
 
       start(1)=1
       count(1)=nxbg
@@ -522,7 +524,7 @@ c
 
       print*,'read ht'
       cvar='gh'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),ht,start
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
      +     ,count,rcode)
       if(rcode.ne.NF_NOERR) then
          if(rcode.gt.-61)then
@@ -534,46 +536,17 @@ c
          print*
          return
       endif
+
+      do k=1,nzbght
+         ht(:,:,k)=data(:,:,k)
+      enddo
+
+      ht_sfc = ht(:,:,1)
 c
 c get the pressures for this variable
 c
       cvar='gh'
-      call get_prbg(ncid,mxlvls,nzbght,cvar,cmodel,prbg_ht)
-
-c
-c ****** Statements to fill rh.                           
-c
-
-      start(1)=1
-      count(1)=nxbg
-      start(2)=1
-      count(2)=nybg
-      start(3)=1
-      count(3)=nzbgsh
-      start(4)=n
-      count(4)=1
-
-      print*,'read rh'
-      cvar='rh'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),sh,start
-     +     ,count,rcode)
-
-      if(rcode.ne.NF_NOERR) then
-         if(rcode.gt.-61)then
-            print *, NF_STRERROR(rcode)
-            print *,'in NF_GET_VAR (rh): ',cmodel
-         else
-            print *,'Missing RH data detected: return'
-         endif
-         print*
-         return
-
-      endif
-c
-c get the pressures for this variable
-c
-      call get_prbg(ncid,mxlvls,nzbgsh,cvar,cmodel,prbg_sh)
-
+      call get_prbg(ncid,nzbght,cvar,cmodel,prbg_ht)
 c
 c ****** Statements to fill tp.
 c
@@ -582,19 +555,13 @@ c
       start(2)=1
       count(2)=nybg
       start(3)=1
-
-      if(cmodel.eq.'AVN_SBN_CYLEQ')then
-         count(3)=nzbguv
-      else
-         count(3)=nzbgsh
-      endif
-
+      count(3)=nzbgtp+kskp
       start(4)=n
       count(4)=1
 
       print*,'read tp'
       cvar='t'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),tp,start
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
      +     ,count,rcode)
 
       if(rcode.ne.NF_NOERR) then
@@ -607,6 +574,51 @@ c
          print*
          return
       endif
+
+      tp_sfc = data(:,:,1)
+      k=0
+      do kk=kskp+1,nzbgtp+kskp
+         k=k+1
+         tp(:,:,k)=data(:,:,kk) 
+      enddo
+c
+c ****** Statements to fill rh.                           
+c
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=nzbgsh+kskp
+      start(4)=n
+      count(4)=1
+
+      print*,'read rh'
+      cvar='rh'
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
+     +     ,count,rcode)
+
+      if(rcode.ne.NF_NOERR) then
+         if(rcode.gt.-61)then
+            print *, NF_STRERROR(rcode)
+            print *,'in NF_GET_VAR (rh): ',cmodel
+         else
+            print *,'Missing RH data detected: return'
+         endif
+         print*
+         return
+      endif
+      sh_sfc = data(:,:,1)
+      k=0
+      do kk=kskp+1,nzbgsh+kskp
+         k=k+1
+         sh(:,:,k)=data(:,:,kk)
+      enddo
+
+c
+c get the pressures for this variable
+c
+      call get_prbg(ncid,nzbgsh,cvar,cmodel,prbg_sh)
 c
 c ****** Statements to fill uw. 
 c
@@ -615,13 +627,13 @@ c
       start(2)=1
       count(2)=nybg
       start(3)=1
-      count(3)=nzbguv
+      count(3)=nzbguv+kskp
       start(4)=n
       count(4)=1
 
       print*,'read uw'
       cvar='uw'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),uw,start
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
      +     ,count,rcode)
 
       if(rcode.ne.NF_NOERR) then
@@ -634,10 +646,18 @@ c
          print*
          return
       endif
+
+      uw_sfc = data(:,:,1)
+      k=0
+      do kk=kskp+1,nzbguv+kskp
+         k=k+1
+         uw(:,:,k)=data(:,:,kk)
+      enddo
+
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,mxlvls,nzbguv,cvar,cmodel,prbg_uv)
+      call get_prbg(ncid,nzbguv,cvar,cmodel,prbg_uv)
 
 c
 c ****** Statements to fill vw.                           
@@ -647,13 +667,13 @@ c
       start(2)=1
       count(2)=nybg
       start(3)=1
-      count(3)=nzbguv
+      count(3)=nzbguv+kskp
       start(4)=n
       count(4)=1
 
       print*,'read vw'
       cvar='vw'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),vw,start
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data,start
      +     ,count,rcode)
 
       if(rcode.ne.NF_NOERR) then
@@ -666,6 +686,12 @@ c
          print*
          return
       endif
+      vw_sfc = data(:,:,1)
+      k=0
+      do kk=kskp+1,nzbgsh+kskp
+         k=k+1
+         vw(:,:,k)=data(:,:,kk)
+      enddo
 c
 c ****** Statements to fill ww.
 c
@@ -680,7 +706,7 @@ c
 
       print*,'read ww'
       cvar='pvv'
-      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),ww
+      call read_netcdf_real(ncid,cvar,nxbg*nybg*count(3),data
      +  ,start,count,rcode)
 
       if(rcode.ne.NF_NOERR) then
@@ -692,11 +718,16 @@ c
          endif
          print*
       endif
-
+      do k=1,nzbgww
+         ww(:,:,k)=data(:,:,k)
+      enddo
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,mxlvls,nzbgww,cvar,cmodel,prbg_ww)
+      call get_prbg(ncid,nzbgww,cvar,cmodel,prbg_ww)
+
+
+      deallocate (data)
 
 c
 c get sfc pressure field
@@ -815,30 +846,7 @@ c
       enddo
       enddo
 
-      deallocate (prbg_ht,prbg_sh,prbg_uv,prbg_ww)
-c
-c use routine 'sfcprs' (in lga.f) to compute
-c laps terrain adjusted sfc p, T and Td.
-c
-
-      print*,'load sfc arrays'
-
-      ibdcnt=0
-      do j=1,nybg
-      do i=1,nxbg
-         if(tp(i,j,1).lt.missingflag.and.
-     .tp(i,j,1).gt.150.)             then
-            vw_sfc(i,j)=vw(i,j,1)
-            uw_sfc(i,j)=uw(i,j,1)
-            tp_sfc(i,j)=tp(i,j,1)
-            sh_sfc(i,j)=sh(i,j,1)
-            ht_sfc(i,j)=ht(i,j,1)
-         else
-            ibdcnt=ibdcnt+1
-         endif
-      enddo
-      enddo
-
+c     deallocate (prbg_ht,prbg_sh,prbg_uv,prbg_ww)
 c for laps-lgb
 
       call s_len(ctype,lent)
@@ -847,7 +855,8 @@ c for laps-lgb
 
       if(ctype(1:lent).eq.'lapsb')then
 
-         ibdcnt=0
+         ibdtp=0
+         ibduv=0
          do j=1,nybg
          do i=1,nxbg
             if(tp_sfc(i,j).lt.missingflag.and.
@@ -862,78 +871,69 @@ c
               sh_sfc(i,j)=sh_sfc(i,j)*mrsat
               sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))
             else
-              ibdcnt=ibdcnt+1
+              ibdtp=ibdtp+1
+            endif
+            if(uw_sfc(i,j).gt.500..or.vw_sfc(i,j).gt.500.)then
+              ibduv=ibduv+1
             endif
          enddo
          enddo
 
       endif
 
-
-      if(ibdcnt.gt.0)then
-         print*,'Found bad surface data'
+      if(ibdtp.gt.0.or.ibduv.gt.0)then
+         print*,'Found bad sfc data (tp/uv) ',ibdtp,ibduv
          return
       endif
 
-      if(cmodel.eq.'AVN_SBN_CYLEQ')then
-         nzsbn=nzbght     !SBN AVN uses 10 pressure levels
-         lskip=2
-      else
-         nzsbn=nzbgsh-1
-         lskip=1
-      endif
 
+      ibdht=0
+      ibdtp=0
+      ibduv=0
       do i=1,nxbg
       do j=1,nybg
 
-         do k=1,nzsbn              
-            kpsk=k+lskip
-            if (
-     .          ht(i,j,k)   .lt. 99999.       .and.
-     .          tp(i,j,kpsk) .gt. 100.        .and.
-     .          tp(i,j,kpsk) .lt. missingflag .and. 
-     .          abs(uw(i,j,kpsk)) .lt. 500    .and.
-     .          abs(vw(i,j,kpsk)) .lt. 500)   then
-
-                   tp(i,j,k)=tp(i,j,kpsk)
-                   uw(i,j,k)=uw(i,j,kpsk)
-                   vw(i,j,k)=vw(i,j,kpsk)
-            else
-
-                ibdcnt=ibdcnt+1
-
+         do k=1,nzbght              
+            if (ht(i,j,k) .ge. 99999.)then
+                ibdht=ibdht+1
+            endif
+         enddo
+         do k=1,nzbgtp
+            if(tp(i,j,k).lt.100.or.tp(i,j,k).ge.missingflag)then
+               ibdtp=ibdtp+1
+            endif
+         enddo
+         do k=1,nzbguv
+            if(abs(uw(i,j,k)).ge. 500. .or.
+     .         abs(vw(i,j,k)).ge. 500.)then
+                ibduv=ibduv+1
             endif
          enddo
       enddo
       enddo
 
-      if(ibdcnt.gt.0)then
-         print*,'Found bad (ht,t,u or v) 3d data'
+      if(ibdht.gt.0.or.ibdtp.gt.0.or.ibduv.gt.0)then
+         print*,'Found bad 3d data (ht/t/uv) ',ibdht,ibdtp,ibduv
          print*,'Return to read_bgdata'
          return
       endif
 
-      if(cmodel.eq.'AVN_SBN_CYLEQ')then
-         nzsbn=nzbgsh-2
-      endif
-
-
+      ibdsh=0
       if(ctype(1:lent).eq.'lapsb')then
          do i=1,nxbg
          do j=1,nybg
-         do k=1,nzsbn
-            kpsk=k+lskip
-            if (sh(i,j,kpsk) .lt. 200)then
+         do k=1,nzbgsh
+            if (sh(i,j,k) .lt. 200)then
 
                    it=tp(i,j,k)*100
                    it=min(45000,max(15000,it))
                    xe=esat(it)
                    mrsat=0.00622*xe/(prbgsh(i,j,k)-xe)
-                   sh(i,j,k)=sh(i,j,kpsk)*mrsat
+                   sh(i,j,k)=sh(i,j,k)*mrsat
                    sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
 
             else
-                   ibdcnt=ibdcnt+1
+                   ibdsh=ibdsh+1
             endif
          enddo
          enddo
@@ -941,8 +941,8 @@ c
 
       endif
 
-      if(ibdcnt.gt.0)then
-         print*,'Found bad rh 3d data'
+      if(ibdsh.gt.0)then
+         print*,'Found bad rh 3d data',ibdsh
          print*,'Return to read_bgdata'
          return
       endif
@@ -986,12 +986,11 @@ c     endif
 
 c -----------------------------------------------------------
 
-      subroutine get_prbg(nf_fid,mxlvls,nlvls,cvar,cmodel
+      subroutine get_prbg(nf_fid,nlvls,cvar,cmodel
      +,pr_levels_bg)
 
       implicit none
 
-      integer mxlvls
       integer nf_fid
       integer nf_vid
       integer nf_status
@@ -1002,12 +1001,12 @@ c -----------------------------------------------------------
      
       character      cvar*4
       character      cmodel*132
-      character      clvln10(mxlvls)*10
-      character      clvln11(mxlvls)*11
+      character      clvln10(100)*10
+      character      clvln11(100)*11
       character      cnewvar*10
       character      ctmp*10
  
-      real, intent(out) :: pr_levels_bg(:)
+      real pr_levels_bg(100)
 
       include 'netcdf.inc'
 

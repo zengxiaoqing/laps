@@ -2,8 +2,11 @@
      +istatus)
 
       include 'netcdf.inc'
-      integer numIsoLevel, record, x, y,nf_fid, nf_vid, nf_status
-      character*(*) fname
+      integer       numIsoLevel
+      integer       record, x, y
+      integer       nf_fid, nf_vid, nf_status
+      integer       istatus
+      character*200 fname
 C
       istatus=0
 C
