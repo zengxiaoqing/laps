@@ -196,7 +196,7 @@ c     routine
       call get_directory(ext,dir,len)
       call get_directory(rhext,rhdir,len)
 
-      grid_fnam_common = 'nest7grid'
+c      grid_fnam_common = 'nest7grid'
       call get_laps_config(grid_fnam_common,istatus)
 
 c      call get_laps_config('nest7grid',istatus)

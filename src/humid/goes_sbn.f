@@ -238,7 +238,7 @@ c     constants
       
 c     set laps grid
 
-      grid_fnam_common = 'nest7grid'
+c      grid_fnam_common = 'nest7grid'
       call get_laps_config(grid_fnam_common,istatus)
  
 c      grid_name = 'nest7grid'
