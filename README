@@ -1068,27 +1068,28 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
-     PIREPS (pin) - We are ingesting FSL NIMBUS (NetCDF) pirep files to 
-           translate the cloud layers from voice pilot reports into 
+     PIREPS (pin) - We are ingesting FSL NIMBUS and WFO/AWIPS (NetCDF) pirep 
+           files to translate the cloud layers from voice pilot reports into 
            intermediate "PIN" files.
 
-     ACARS (pin) - We are ingesting FSL NIMBUS (NetCDF) and AFWA databases for
-           ACARS data to translate the automated aircraft observations. The 
-           wind, temperature and humidity obs are appended to our intermediate 
-           "PIN" file. An equivalent NetCDF database is available (with some
-           restrictions) on the Web at http://acweb.fsl.noaa.gov.
+     ACARS (pin) - We are ingesting FSL NIMBUS, WFO/AWIPS (NetCDF) and AFWA 
+           databases for ACARS data to translate the automated aircraft 
+           observations. The wind, temperature and humidity obs are appended 
+           to our intermediate "PIN" file. A NIMBUS equivalent NetCDF database 
+           is available (with some restrictions) on the Web at 
+           http://acweb.fsl.noaa.gov.
 
                       ----   2.3.6  RAOB/Dropsonde ---
 
      RAOBs (snd):
-           FSL NIMBUS, WFO/AWIPS (except that a few software changes are 
-           currently being developed and tested for the different WFO CDL), 
-           CWB, or AFWA databases. These are available in real-time from FSL 
-           with some restrictions. This data, in 'WFO/AWIPS' NetCDF format, is
-           distributed via FSL's MADIS project at 
+           FSL NIMBUS, WFO/AWIPS, CWB, or AFWA databases. These are available 
+           in real-time from FSL with some restrictions. RAOB data in 
+           'WFO/AWIPS' NetCDF format is distributed via FSL's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
-           In most cases, dropsondes can be combined with the raw RAOB data.
+           In most cases, dropsondes can be combined with the raw RAOB data
+           or combined by adding modules to LAPS ingest for merging in the 
+           'snd' file.
 
                       ----   2.3.7  Satellite ---
 
@@ -2420,11 +2421,15 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 <pre>
 Inputs:
 	Aircraft voice pireps (cloud layer reports) 
-            NetCDF files using FSL-NIMBUS CDLs
+            NetCDF files using FSL-NIMBUS or WFO/AWIPS CDLs
 
         ACARS data 
-            NetCDF files using FSL-NIMBUS CDLs (uses pressure altitude)
-            Hourly NetCDF filename convention is 'yydddhh00q.cdf'
+            NetCDF files using FSL-NIMBUS CDLs 
+                Uses pressure altitude
+                Hourly NetCDF filename convention is 'yydddhh00q.cdf'
+
+            NetCDF files using WFO/AWIPS CDLs
+                Uses pressure altitude
 
             AFWA ASCII format also allowed for ACARS
 
@@ -2451,13 +2456,14 @@ Author: Steve Albers (Steve.Albers@noaa.gov)
 
 <pre>
 Inputs:
-	RAOB/Dropsonde in various formats:
+	RAOB in various formats:
                                  (FSL-NIMBUS CDL - NetCDF)
-                                 (WFO/AWIPS - except that software changes may
-                                  be needed to address some CDL differences)
+                                 (WFO/AWIPS CDL - NetCDF)
                                  (AFWA and CWB ASCII formats also allowed)
 
         Satellite Soundings in AFWA format
+
+        Dropsonde (may need software changes to integrate this in)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              sounding temp, dewpoint, wind
@@ -3560,6 +3566,9 @@ Process surface:LSX  U    su       1  Surface wind u (grid north)
 Process temp:   LT1  T3   t	  21  Temperature
 		     HT   z       21  Height
 
+                PBL  PTP  ptp      1  Boundary Layer Top (pressure)
+                     PDM  pdm      1  Boundary Layer Depth (in meters)
+
 Process accum:	L1S  S01  s1hr     1  Snow Accum Cycle 
 		     STO  stot     1  Snow Accum Storm Tot 
           	     R01  pc	   1  Liq Accum Cycle 
@@ -3630,6 +3639,11 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 		     W    w	   1  600mb omega
 
 		LMR  R    mxrf     1  Max Radar Reflectivity
+
+                LFR  HAH  hah      1  High Level Haines Index
+                     HAM  ham      1  Mid Level Haines Index
+                     FWI  fwi      1  Fosberg Fireweather Index
+                     VNT  vnt      1  Ventilation Index
 
 Process soil:   LM1  LSM  lsm      3  Soil Moisture
 		LM2  CIV  civ      1  Cumulative Infiltration Volume
