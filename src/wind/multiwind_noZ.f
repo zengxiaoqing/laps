@@ -1,4 +1,4 @@
-       subroutine multiwind_noz(u,v,rms,u0,v0,x,y,height
+       subroutine multiwind_noZ(u,v,rms,u0,v0,x,y,height
      1                     ,n,xx,yy,ht,vr,rmsmax,ier)
 c***********************************************************************
 c description      : To derive horizontal wind from multi-radar radial
@@ -14,26 +14,26 @@ c                                      rms=sqrt( (u-u0)**2 + (v-v0)**2 )
 c    I     u0,v0            real       initial guess (or model wind) horizontal wind
 c                                      in unit of m/s.
 c    I     x,y              real       the (x,y) coordinate at the wind position.
-c                                      in unit of km.
+c                                      in unit of meter.
 c    I     height           real       the height at the wind position 
-c                                      in unit of km.
+c                                      in unit of meter.
 c    I     n                integer    number of input radar data. (maximum number, n=4 )
-c    I     xx(n)            real array the x-coordinate of radar center in unit of km.
-c    I     yy(n)            real array the y-coordinate of radar center in unit of km.
-c    I     ht(n)            real array the height of radar antena in unit of km.
+c    I     xx(n)            real array the x-coordinate of radar center in unit of meter.
+c    I     yy(n)            real array the y-coordinate of radar center in unit of meter.
+c    I     ht(n)            real array the height of radar antena in unit of meter.
 c    I     vr(n)            real array the radial velocity observed by radar in unit of m/s.
 c    I     rmsmax           real       the maximum value of root mean square error relative
 c                                      to initial guess wind in unit of m/s.
-c                                      If the rms of multi-radar (n>2) wind is greater than rmsmax,
-c                                         the final computed horizontal wind is obtained 
-c                                         by the single radar method.
+c                                      If the rms of multi-radar (n>2) wind is greater than 
+c                                      rmsmax, the final computed horizontal wind is obtained 
+c                                      by the single radar method.
 c    O     ier              integer    =0, success message.
 c                                      =1, n < 1, or n > 4.
-c                                      =2, ht() > height or ht() > 20km.
-c                                      =3, sqrt( (x-xx())**2+(y-yy())**2 ) < 1.
+c                                      =2, ht() > height or ht() > 30000 meters.
+c                                      =3, sqrt( (x-xx())**2+(y-yy())**2 ) < 1. meter.
 c
 c Date :
-c   Mar. 15, 2004 (S.-M. Deng)
+c   May. 14, 2004 (S.-M. Deng)
 c***********************************************************************
 
       dimension xx(n),yy(n),ht(n),vr(n),xa(4),yb(4),d(4),vh(4)
@@ -48,7 +48,7 @@ c*  To check input data.
           return
       endif
       do i=1,n
-         if( (ht(i).gt.height).or.(ht(i).gt.20.) )then
+         if( (ht(i).gt.height).or.(ht(i).gt.30000.) )then
              ier=2
              return
          endif
@@ -57,7 +57,7 @@ c*  To check input data.
          xa(i)=x-xx(i)
          yb(i)=y-yy(i)
          d(i)=sqrt( xa(i)**2+yb(i)**2 )
-         if( d(i).lt.1 )then
+         if( d(i).lt.1.0 )then
              ier=3
              return
          endif
