@@ -382,7 +382,7 @@
                  Makefile
                  src/                                             (source code)
                      ingest/
-             template                                     (template parameters)
+             template                                    ($TEMPLATE parameters)
 
      /data_disk/
          geog/
@@ -566,9 +566,10 @@
      run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
 
      Below are two mainly equivalent procedures for localizing LAPS to set
-     up one or more domains. The first is our original method for localization. .
-     The second is a newer more efficient method using "template" directories.
-     Only one of these are necessary to follow.
+     up one or more domains. The first is our original method for localization.
+     The second is a newer, more efficient (and highly recommended) method 
+     using "template" directories. You'll want to use either Method 1 or 
+     Method 2 but not both.
 
                         --- 2.2.6.1 Localization Method 1 ---
 
@@ -609,36 +610,51 @@
 
      The second method is especially useful if you are using a separated
      data tree and/or multiple domains. It is also recommended if you are 
-     performing frequent software updates.
+     doing repeated software updates. Once you learn this method it can save
+     a lot of time and errors that may occur in the course of using Method 1.
 
                          SETTING RUNTIME PARAMETERS
 
      If you are working in a separated data directory (e.g. using the
-     second tree shown above), you have the option of setting up those runtime
-     parameter files with only those parameters that need to be changed for 
-     each of the domain(s). These generally include map projection parameters,
-     data paths, etc. The remaining fixed parameters will be automatically 
-     merged in from the '$LAPS_SRC_ROOT/data/static' directory tree by the 
-     localization scripts. As an example, 'nest7grid.parms' only needs to 
-     contain the subset of parameters that are unique to your domain(s). 
-     The rest can be omitted from the file; they will automatically be added in
-     as a result of the merging operation performed within the localization 
+     second tree shown above), you can set up a copy of the runtime
+     parameter files (for each window) in a new directory (called $TEMPLATE) 
+     with a reduced parameter subset. The $TEMPLATE directory namelist files 
+     should contain only those parameters that need to be changed for each of 
+     the domain(s) from the settings in the repository, 
+     $LAPS_SRC_ROOT/data/static. The remaining unchanged parameters should be 
+     omitted from the $TEMPLATE versions. The modified $TEMPLATE parameters
+     generally include map projection settings, data paths, etc. The remaining
+     fixed parameters will later be automatically merged in from the 
+     '$LAPS_SRC_ROOT/data/static' directory tree by the localization scripts
      (next step). This "template" procedure provides a result equivalent 
      to that from Localization Method #1 and provides an alternative method of
-     modifying the parameters. Templates can be a time saver, especially if 
-     you are managing parameters in multiple windows and are performing 
-     frequent software updates. Templates are normally maintained in a 
+     modifying the parameters. Templates are normally maintained in a 
      location independent of the LAPS distribution (e.g. see the template 
-     directory in the tree diagrams above). They generally contain parameters 
+     directory in the tree diagrams above). In general, they contain parameters 
      dependent on the local implementation and relatively independent of 
-     software updates. Once you set up the template directory you'll be
-     ready to run the 'window_laps_rt.pl' script.
+     software updates. Once you set up the template directory you'll be ready 
+     to run the 'window_domain_rt.pl' script. Here is an example illustrating 
+     the namelist merging process that is done during the localization...
 
-                        LOCALIZING with 'window_laps_rt.pl'
+<pre>
+        template           repository tar file             localized result
+        ________           ___________________             ________________
+
+    $TEMPLATE/vad.nl  $LAPS_SRC_ROOT/data/static/vad.nl $LAPS_DATA_ROOT/static/vad.nl
+    ................  ................................. .............................
+
+                                  a=1                           a=1
+         b=5                      b=2                           b=5
+                                  c=3                           c=3
+         d=6                      d=4                           d=6
+
+</pre>
+
+                        LOCALIZING with 'window_domain_rt.pl'
 
      Generating new localizations, reconfiguring existing localizations, and 
      reconfiguring existing localizations without removing lapsprd or log 
-     information is made easier with the perl script 'etc/window_laps_rt.pl' 
+     information is made easier with the perl script 'etc/window_domain_rt.pl' 
      ("window" hereafter). The window script makes use of namelist templates 
      that specifically define a users localizations.  The script uses 
      environment variables $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, 
@@ -646,12 +662,13 @@
      variables as necessary depending on user needs.  The -t command-line input
      specifies the TEMPLATE directory and the script saves the log/lapsprd 
      history when no '-c' is supplied in the command line, or completely 
-     removes $LAPS_DATA_ROOT if '-c' is supplied. The window script can be
-     run manually when configuring or reconfiguring localizations. Window 
-     copies the template namelist subsets (partial nest7grid.parms or *.nl's) 
-     into a new "static" subdirectory which, in turn, are merged with the full 
-     namelists by laps_localization.pl. Recall that $LAPSINSTALLROOT contains 
-     bin/ and etc/ which $LAPS_SRC_ROOT contains the untarred namelists.  
+     removes $LAPS_DATA_ROOT if '-c' is supplied. The '-w laps' is always
+     required. The window script can be run manually when configuring or 
+     reconfiguring localizations. Window copies the template namelist subsets 
+     (partial nest7grid.parms or *.nl's) into a new "static" subdirectory which,
+     in turn, are merged with the full namelists by laps_localization.pl. Recall
+     that $LAPSINSTALLROOT contains bin/ and etc/ which $LAPS_SRC_ROOT contains
+     the untarred namelists.  
 
      In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
      containing static/ and cdl/ must be available for use by 
@@ -672,25 +689,25 @@ setenv LAPS_SRC_ROOT /usr/nfs/common/lapb/operational/laps
 setenv LAPSINSTALLROOT /usr/nfs/lapb/operational/laps
 setenv LAPS_DATA_ROOT "any existing LAPS_DATA_ROOT" 
 
-a) window_laps_rt.pl:   
+a) window_domain_rt.pl -w laps:   
 
    result: lapsprd and log saved; operational namelists and cdl's are copied
            into $LAPS_DATA_ROOT/static; $LAPSINSTALLROOT/bin/gridgen_model.exe
            runs to regenerate static.nest7grid. "Saved" lapsprd and log are
            restored into $LAPS_DATA_ROOT.
   
-b) window_laps_rt.pl -c:
+b) window_domain_rt.pl -c -w laps:
   
    result: same as a) although lapsprd and log are removed and regenerated by
            "etc/makedatadirs.pm"
   
-c) window_laps_rt.pl -t "full path to template directory"
+c) window_domain_rt.pl -t "full path to template directory" -w laps
   
    result: similar to a) but namelist specifics are copied to $LAPS_DATA_ROOT/
            static and merged with full namelists in $LAPSINSTALLROOT.
 
-d) window_laps_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT -d $LAPS_DATA_ROOT
-                     -t "full path to template directory"
+d) window_domain_rt.pl -s $LAPS_SRC_ROOT -i $LAPSINSTALLROOT -d $LAPS_DATA_ROOT
+                     -t "full path to template directory" -w laps
 
    result: similar to c) except all required information is provided on the
            command line. Window will use the command line info instead of 
@@ -700,14 +717,16 @@ setenv LAPS_SRC_ROOT /awips/laps
 setenv LAPSINSTALLROOT /data/fxa/laps_data
 setenv LAPS_DATA_ROOT /data/fxa/laps
 
-e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
+e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
+                       -i /awips/laps -c -w laps
   
    result: Specific AWIPS relocalization command for lapstools GUI. GUI writes
-           user input to laps_template/ (subset namelists; eg., nest7grid.parms);
-           $LAPS_DATA_ROOT/static and cdl/ are moved to laps_data/; $LAPS_DATA_ROOT
-           is removed; new $LAPS_DATA_ROOT is generated and subdirectory structure
-           created by "etc/makedatadirs.pm"; laps_template namelist are copied to 
-           new $LAPS_DATA_ROOT; laps_localization.pl merges $LAPSINSTALLROOT/ and
+           user input to laps_template/ (subset namelists; eg., 
+           nest7grid.parms); $LAPS_DATA_ROOT/static and cdl/ are moved to 
+           laps_data/; $LAPS_DATA_ROOT is removed; new $LAPS_DATA_ROOT is 
+           generated and subdirectory structure created by 
+           "etc/makedatadirs.pm"; laps_template namelist are copied to new 
+           $LAPS_DATA_ROOT; laps_localization.pl merges $LAPSINSTALLROOT/ and
            regenerates static.nest7grid.
 </pre>
 
@@ -1206,7 +1225,7 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      the relevant changes.
 
      The dimensions and location of the horizontal domain can be changed at 
-     run time. Prior to running 'window_laps_rt.pl', set the following 
+     run time. Prior to running 'window_domain_rt.pl', set the following 
      parameters in 'data/static/nest7grid.parms' or in the corresponding 
      template directory (needed only if you are outside the default Colorado 
      domain). This script in turn runs 'gridgen_model.exe' and other programs.
