@@ -96,7 +96,15 @@ MODULE setup
   CHARACTER(LEN=24),ALLOCATABLE :: times_to_proc(:)
   INTEGER,ALLOCATABLE           :: sim_tstep(:)
   CHARACTER(LEN=24), PARAMETER  :: static_date='1900-01-01_00:00:00.0000'
-  
+ 
+  ! New stuff related to formatting of point forecast files
+
+  CHARACTER(LEN=24),ALLOCATABLE :: point_times(:)
+  CHARACTER (LEN=3)             :: point_tz_label
+  INTEGER                       :: point_tz_utcoffset
+  CHARACTER (LEN=3)             :: point_windspd_units
+  CHARACTER (LEN=1)             :: point_temp_units 
+
   ! Model domain configuration info
   INTEGER                       :: nx
   INTEGER                       :: ny
@@ -276,8 +284,10 @@ CONTAINS
     NAMELIST /lfmpost_nl/ domain_num, keep_fdda, split_output, levels_mb,&
         redp_lvl,lfm_name , proc_by_file_num, start_file_num, stop_file_num, &
              file_num_inc, file_num3, make_laps,realtime, write_to_lapsdir, &
-             make_v5d, make_points, v5d_compress,max_wait_sec, do_smoothing, &
-             gribsfc,gribua, table_version, center_id, subcenter_id, process_id
+             make_v5d, v5d_compress,max_wait_sec, do_smoothing, &
+             gribsfc,gribua,table_version,center_id,subcenter_id,process_id, &
+             make_points,point_tz_utcoffset,point_tz_label,point_windspd_units,&
+             point_temp_units
 
     IF (lfmprd_dir(1:3).EQ. "   ") THEN
        namelist_file = "lfmpost.nl"
@@ -334,7 +344,11 @@ CONTAINS
     subcenter_id = 2 ! LAPB
     process_id = 0
     write_to_lapsdir = .false.
-  
+    point_tz_utcoffset = 0
+    point_tz_label = 'UTC'
+    point_temp_units = 'F'
+    point_windspd_units = 'KTS'
+ 
     READ(UNIT=nml_unit, NML=lfmpost_nl)
     CLOSE (nml_unit)
     ! Count up number of levels requested.  They must be in monotonically 
@@ -361,6 +375,45 @@ CONTAINS
       PRINT '(A,F9.1,A)', 'Level: ', prslvl(k), 'Pa'
     ENDDO
     model_name =lfm_name
+
+    ! Check point settings 
+    IF (make_points) THEN
+      ! Timezone stuff
+      IF( (point_tz_utcoffset .LT. -12).OR.&
+          (point_tz_utcoffset .GT.  12)) THEN
+        PRINT *, 'Bad POINT_TZ_UTCOFFSET specified for points: ', &
+            point_tz_utcoffset
+        STOP
+      ENDIF
+
+      ! Temp Units
+      IF ((point_temp_units .EQ. 'F').OR.(point_temp_units.EQ.'f'))THEN
+        point_temp_units = 'F'
+      ELSEIF((point_temp_units .EQ. 'C').OR.(point_temp_units.EQ.'c'))THEN
+        point_temp_units = 'C'
+      ELSEIF((point_temp_units .EQ. 'K').OR.(point_temp_units.EQ.'k'))THEN
+        point_temp_units = 'K'
+      ELSE
+        PRINT *, 'Bad POINT_TEMP_UNITS:', point_temp_units
+        STOP
+      ENDIF
+  
+      ! Wind units
+      IF ((point_windspd_units(1:1).EQ. 'K').OR.&
+          (point_windspd_units(1:1).EQ. 'k') ) THEN
+         point_windspd_units = 'KTS'
+      ELSEIF ((point_windspd_units(1:3).EQ. 'MPH').OR.&
+          (point_windspd_units(1:3).EQ. 'mph') ) THEN
+         point_windspd_units = 'MPH'
+      ELSEIF ((point_windspd_units(1:3).EQ. 'M/S').OR.&
+         (point_windspd_units(1:3).EQ. 'm/s') ) THEN
+         point_windspd_units = 'M/S'
+      ELSE
+        PRINT *, 'Bad POINT_WINDSPD_UNITS:', point_windspd_units
+        STOP
+      ENDIF
+    ENDIF
+
   END SUBROUTINE read_namelist
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE time_setup(lun_data)
@@ -645,8 +698,9 @@ CONTAINS
     REAL                     :: elevation
     REAL, EXTERNAL           :: bint
     CHARACTER(LEN=3)         :: domnum_str
-    INTEGER                  :: nestpt
- 
+    INTEGER                  :: nestpt, i
+    CHARACTER(LEN=13)        :: odate,ndate 
+    CHARACTER(LEN=24)        :: tempdate
     status = 0
     num_points = 0
     pointfile = TRIM(lfmprd_dir) // '/../static/lfmpost_points.txt'
@@ -729,12 +783,14 @@ CONTAINS
             WRITE(outunit, '("****************************************&
                            &****************************************")')
             WRITE(outunit, &
-     '("DATE       TIME  TEMP   DEWPT  RH  WIND   CEI VIS   WEATHER  PRECP SNOW")')
+     '("DATE       TIME  TEMP   DEWPT  RH  WIND    CEI VIS   WEATHER  PRECP SNOW  Fsbrg")')
             WRITE(outunit, &
-     '("UTC        UTC   F      F      %   DEG/KT hft miles          in    in  ")')
+     '(A3,"        ",A3,"   ",A1,"      ",A1,"      %   Deg@",A3," hft miles          in    in    Fire")') & 
+         point_tz_label, point_tz_label,point_temp_units,&
+         point_temp_units, point_windspd_units
 
             WRITE(outunit, &
-     '("---------- ----- ------ ------ --- ------ --- ----- -------- ----- -----")')
+     '("---------- ----- ------ ------ --- ------- --- ----- -------- ----- ----- -----")')
 
           ELSE
             PRINT *, 'Point location ',TRIM(point%id),' outside of domain!'
@@ -750,7 +806,21 @@ CONTAINS
         DEALLOCATE(points_temp)
         status = 0
       ENDIF
-    ENDIF  
+    ENDIF 
+
+    ! Set up point times time zone offset
+    ALLOCATE(point_times(num_times_to_proc))
+    IF (point_tz_utcoffset .EQ. 0) THEN
+      point_times = times_to_proc
+    ELSE
+      DO i = 1, num_times_to_proc
+        tempdate = times_to_proc(i)
+        odate = tempdate(1:13)
+        CALL geth_newdate(ndate,odate,point_tz_utcoffset)
+        tempdate(1:13) = ndate
+        point_times(i) = tempdate
+      ENDDO
+    ENDIF
     RETURN
   END SUBROUTINE init_points
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

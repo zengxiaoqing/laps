@@ -421,16 +421,22 @@ PROGRAM lfmpost
     ENDIF
 
     IF (make_points) THEN
-      CALL split_date_char(times_to_proc(t),year,month,day,hour,minute,second)
+      CALL split_date_char(point_times(t),year,month,day,hour,minute,second)
       WRITE(date_str, '(I2.2,"/",I2.2,"/",I4.4,1x,I2.2,":",I2.2)') month, &
         day, year,hour,minute
       point_loop: DO pt = 1, num_points
         ip = NINT(point_rec(pt)%i)
         jp = NINT(point_rec(pt)%j)
         t_pt = bint(point_rec(pt)%i, point_rec(pt)%j,tsfc,nx,ny)
-        t_pt = (t_pt-273.15)*9./5.+32. ! Convert to F
         td_pt = bint(point_rec(pt)%i,point_rec(pt)%j,tdsfc,nx,ny)
-        td_pt =(td_pt-273.15)*9./5.+32.
+        ! Convert T/Td units
+        IF (point_temp_units .EQ. 'F') THEN
+          t_pt = (t_pt-273.15)*9./5.+32.
+          td_pt =(td_pt-273.15)*9./5.+32.
+        ELSEIF (point_temp_units .EQ. 'C') THEN
+          t_pt = t_pt - 273.15
+          td_pt = td_pt - 273.15
+        ENDIF
         rh_pt = NINT(bint(point_rec(pt)%i,point_rec(pt)%j,rhsfc,nx,ny))
         u_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,usfc,nx,ny)
         v_pt_g = bint(point_rec(pt)%i,point_rec(pt)%j,vsfc,nx,ny)
@@ -438,7 +444,15 @@ PROGRAM lfmpost
                                   u_pt, v_pt)
         CALL uv_to_disp(u_pt, v_pt, dir_pt_r, spd_pt_r)
         dir_pt = NINT(dir_pt_r/10.)*10  ! Integer to nearest 10 degrees
-        spd_pt = NINT(spd_pt_r * 1.9425) ! Convert to knots
+       
+        ! Convert wind speed
+        IF (point_windspd_units .EQ. 'KTS') THEN
+          spd_pt = NINT(spd_pt_r * 1.9425) ! Convert to knots
+        ELSEIF (point_windspd_units .EQ. 'MPH') THEN
+          spd_pt = NINT(spd_pt_r * 2.2369)
+        ELSEIF (point_windspd_units .EQ. 'M/S') THEN
+          spd_pt = NINT(spd_pt_r)
+        ENDIF
         vis_pt = bint(point_rec(pt)%i,point_rec(pt)%j,visibility,nx,ny) &
                  *0.00062317
         cld_pt = bint(point_rec(pt)%i,point_rec(pt)%j,cldamt,nx,ny)
@@ -489,9 +503,9 @@ PROGRAM lfmpost
         snow_pt =bint(point_rec(pt)%i,point_rec(pt)%j,snow_inc,nx,ny)*39.37
 
         WRITE(point_rec(pt)%output_unit, &
-        '(A,2F7.1,1x,I3,1x,I3.3,"/",I2.2,1x,I3.3,1x,F5.2,1x,A,2F6.2)') &
+        '(A,2F7.1,1x,I3,1x,I4.3,"/",I2.2,1x,I3.3,1x,F5.2,1x,A,2F6.2,1x,F5.1)') &
         date_str,t_pt,td_pt,rh_pt,dir_pt,spd_pt,ceiling_pt,vis_pt,wx_pt, &
-        pcp_pt,snow_pt
+        pcp_pt,snow_pt,fwi_index(ip,jp)
    
         IF (t_pt .GT. point_rec(pt)%hi_temp)  THEN
            point_rec(pt)%hi_temp = t_pt
