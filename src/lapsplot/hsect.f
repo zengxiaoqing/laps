@@ -3578,15 +3578,12 @@ c    1                ,field_3d,istatus)
                 call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
                 scale = 1e0
-                clow = 220.
-                chigh = -40.
-                cint = 10.
                 call plot_field_2d(i4time_heights,c_type
      1                        ,field_2d,scale
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
               endif
             endif
@@ -4892,8 +4889,12 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call contour_settings(spds,NX_L,NY_L
-     1                           ,clow,chigh,cint,zoom,density,1.)       
+!           call contour_settings(spds,NX_L,NY_L
+!    1                           ,clow,chigh,cint,zoom,density,1.)       
+          
+            clow = 0.
+            chigh = 50.
+            cint = 0.
 
             scale = 1.
 
