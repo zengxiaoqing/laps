@@ -349,10 +349,11 @@ cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
 cc      oldfname=fname
       istatus=1
-      if(istatus.ne.1) then
- 900     print*,'ERROR: bad dimension specified in netcdf file'
-         print*, (count(i),i=1,4)
-         istatus=-1
-      endif
+      return
+
+ 900  print*,'ERROR: bad dimension specified in netcdf file'
+      print*, (count(i),i=1,4)
+      istatus=-1
+      
       return
       end
