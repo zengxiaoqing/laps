@@ -662,6 +662,68 @@ cdis
         write(6,*)' Final snow_accum(im,jm) = ',snow_accum(im,jm)
         write(6,*)' Final precip_accum(im,jm) = ',precip_accum(im,jm)
 
+!       Compare to gauge values
+        if(.true.)then
+            call get_maxstns(maxsta,istatus)
+            call compare_gauge_values(i4time_end,imax,jmax,maxsta  ! I
+     1                               ,r_missing_data               ! I
+     1                               ,lat,lon,precip_accum)        ! I
+        endif
+
+        return
+        end
+
+        subroutine compare_gauge_values(i4time,ni,nj,maxsta        ! I
+     1                                 ,r_missing_data             ! I
+     1                                 ,lat,lon,precip_accum)      ! I
+
+
+!       Write out comparison of LAPS accumulation to gauge values where
+!       measurements of both exist. Zero values are allowed though non-missing
+!       values are required for both gridded and gauge values.
+
+        include 'read_sfc.inc'
+
+        real*4 precip_accum(ni,nj) ! M
+        real*4 lat(ni,nj)
+        real*4 lon(ni,nj)
+
+        write(6,*)
+        write(6,*)' Subroutine compare_gauge_values...'
+
+        call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
+     &           stations,provider,lat_s,lon_s,elev_s,
+     &           pcp1,pcp3,pcp6,pcp24,
+     &           snow,maxsta,jstatus)
+
+!       Loop through obs and write out precip values
+        do iob = 1,n_obs_g
+
+!           Obtain LAPS i,j at ob location
+            call latlon_to_rlapsgrid(lat_s(iob),lon_s(iob),lat,lon
+     1                              ,ni,nj,ri,rj
+     1                              ,istatus)
+            if(istatus.ne.1)goto20
+
+            ilaps = nint(ri)
+            jlaps = nint(rj)
+
+            if(ilaps .ge. 1 .and. ilaps .le. ni .and. 
+     1         jlaps .ge. 1 .and. jlaps .le. nj      )then
+
+                pcp_laps = precip_accum(ilaps,jlaps) * ft_per_m * 12.       
+
+                if(pcp1(iob) .ge. 0. .and. 
+     1             pcp_laps .ne. r_missing_data        )then
+                    write(6,11)iob,pcp1(iob),pcp_laps
+11                  format(i4,2f8.2)             
+                endif
+            endif
+
+20          continue
+
+        enddo ! iob
+
         return
         end
 
