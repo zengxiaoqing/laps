@@ -56,6 +56,8 @@ C
       endif
       laps_dom_file = c10_grid_fname(1:len_fname)
 
+! for LAPS, AVG data is elem 3, otherwise 7.
+
       avgelem=3
       if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=7
 

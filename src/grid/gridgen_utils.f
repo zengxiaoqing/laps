@@ -309,7 +309,7 @@ c
       character*(*)  var(nf)
       character*(*)  comment(nf)
 
-      if(ngrids.eq.7)then
+      if(ngrids.eq.10)then
 
          var(1)    = 'LAT'
          var(2)    = 'LON'
@@ -317,16 +317,24 @@ c
          var(4)    = 'LDF'
          var(5)    = 'USE'
          var(6)    = 'ALB'
-         var(7)    = 'ZIN'
+         var(7)    = 'STD'
+         var(8)    = 'SLN'
+         var(9)    = 'SLT'
+         var(10)   = 'ZIN'
 
          comment(1) = 'Lat: From MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Lon: From MODEL by J. Snook/ S. Albers 1-95\0'
          comment(3) = 'Average terrain elevation (m) \0'
          comment(4) = 'Land Fraction \0'
          comment(5) = 'Soil Type (Missing) \0'
-         comment(6) = 'Clear Sky Albedo - fixed at .4 over water\0'
+         comment(6) = 'Clear Sky Albedo - fixed at .04 over water\0'
+         comment(7) = 'Standard Deviation of Elevation data (m)\0'
+         comment(8) = 'Mean longitudinal terrain slope (m/m)\0'
+         comment(9) = 'Mean latitudinal terrain slope (m/m)\0'
+         comment(10)='\0'
 
-      elseif(ngrids.eq.18)then
+
+      elseif(ngrids.eq.21)then
 
          var(1)    = 'LAT'  ! non-staggered (A-grid) lats
          var(2)    = 'LON'  ! non-staggered (A-grid) lons
@@ -345,7 +353,10 @@ c
          var(15)   = 'CPH'  ! Horizontal component of coriolis parameter
          var(16)   = 'CPV'  ! Vertical component of coriolis parameter
          var(17)   = 'ALB'  ! Static (climatological) albedo
-         var(18)   = 'ZIN'
+         var(18)   = 'STD'  ! Standard Deviation of Elevation Data (m)
+         var(19)   = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
+         var(20)   = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
+         var(21)   = 'ZIN'
 
          comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
@@ -364,7 +375,10 @@ c
          comment(15)= 'Horizontal component coriolis parameter \0'
          comment(16)= 'Vertical component coriolis parameter \0'
          comment(17)= 'Static Albedo (%) valid only over water atm \0'
-         comment(18)= '\0'
+         comment(18) = 'Standard Deviation of Elevation data (m)\0'
+         comment(19) = 'Mean longitudinal terrain slope (m/m)\0'
+         comment(20) = 'Mean latitudinal terrain slope (m/m)\0'
+         comment(21)= '\0'
 
       endif
       return

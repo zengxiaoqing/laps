@@ -77,9 +77,19 @@ C*********************************************************************
 	Real lat(nnxp,nnyp),lon(nnxp,nnyp)
         Real sw(2),nw(2),ne(2),se(2)               ! ,pla,plo
         real  nboundary
+        real  adum(nnxp,nnyp)
         real  topt_30(nnxp,nnyp)
+        real  topt_30_s(nnxp,nnyp)
         real  topt_10(nnxp,nnyp)
+        real  topt_10_s(nnxp,nnyp)
+        real  topt_10_ln(nnxp,nnyp)
+        real  topt_10_lt(nnxp,nnyp)
+        real  topt_30_ln(nnxp,nnyp)
+        real  topt_30_lt(nnxp,nnyp)
         real  topt_out(nnxp,nnyp)
+        real  topt_out_s(nnxp,nnyp)
+        real  topt_out_ln(nnxp,nnyp)
+        real  topt_out_lt(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
         real  soil(nnxp,nnyp)
         real  static_albedo(nnxp,nnyp)
@@ -97,7 +107,7 @@ c
 c  either 7 (nest7gird) or 20 (wrfsi) used here but 18 needed in put_laps_static
 c
         integer*4    nf
-        parameter (nf = 20)
+        parameter (nf = 21)
         
         character*3   var(nf)
         character*125 comment(nf)
@@ -331,6 +341,11 @@ C*****************************************************************
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1
      + ,istat_chk)  
+        if(istat_chk.ne.1)then
+           print*,'Error returned from check_domain'
+           istatus = istat_chk
+           return
+        endif
 
 ! We will end at this step given the showgrid or max/min lat lon
 ! options.
@@ -341,7 +356,7 @@ C*****************************************************************
 
         elseif(mode.eq.3)then
            print*,'get perimeter of grid'
-           call get_domain_perimeter_grid(nnxp,nnyp,'nest7grid'
+           call get_domain_perimeter_grid(nnxp,nnyp,c10_grid_fname
      1                  ,lat,lon
      1                  ,1.0,rnorth,south,east,west,istatus)
            print*,'static dir = ',static_dir(1:lens)
@@ -368,8 +383,8 @@ c
                write(6,*)
                write(6,*)' Processing 2m soil type data....'
                CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +                    ,deltax,deltay,soil,PATH_TO_SOIL2M,1.,0.       
-     +                    ,new_DEM,istatus)
+     +  ,deltax,deltay,soil,adum,adum,adum,PATH_TO_SOIL2M,1.,0.       
+     +  ,new_DEM,istatus)
 
                if(istatus .ne. 1)then
                    write(6,*)' Warning: '
@@ -385,22 +400,23 @@ c
 
            write(6,*)
            write(6,*)' Processing 30s topo data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_30,PATH_TO_TOPT30S,TOPTWVL,SILAVWT
-     +         ,new_DEM,istatus)
+           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
+     +,deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN,TOPT_30_LT
+     + ,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,istatus)
 
            if (.not.new_DEM) then
              write(6,*)
              write(6,*)' Processing 10m topo data....'
-             CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_10,PATH_TO_TOPT10M,TOPTWVL,SILAVWT
-     +         ,new_DEM,istatus)
+             CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
+     +,deltax,deltay,TOPT_10,TOPT_10_S,TOPT_10_LN,TOPT_10_LT
+     + ,PATH_TO_TOPT10M,TOPTWVL,SILAVWT,new_DEM,istatus)
            endif
 
            write(6,*)
            write(6,*)' Processing 10m land data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,1.,0.
+           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
+     +       ,deltax,deltay,TOPT_PCTLFN,adum,adum,adum
+     +        ,PATH_TO_PCTL10M,1.,0.
      +         ,new_DEM,istatus)
 
            if(istatus .ne. 1)then
@@ -425,6 +441,9 @@ c
 
 !                  Use 10 min data
                    topt_out(i,j) = topt_10(i,j)
+                   topt_out_s(i,j)=topt_10_s(i,j)
+                   topt_out_ln(i,j)=topt_10_ln(i,j)
+                   topt_out_lt(i,j)=topt_10_lt(i,j)
                    icount_10 = icount_10 + 1
 
                else ! Use 30s data, except ramp to 10m if near data boundary
@@ -479,6 +498,9 @@ c
 
                    if  (  lat(i,j) .ge. alat2n)then    ! Use 10m data
                        topt_out(i,j) = topt_10(i,j)
+                       topt_out_s(i,j)=topt_10_s(i,j)
+                       topt_out_ln(i,j)=topt_10_ln(i,j)
+                       topt_out_lt(i,j)=topt_10_lt(i,j)
                        icount_10 = icount_10 + 1
 
                    elseif(lat(i,j) .ge. alat1n .and. 
@@ -490,6 +512,12 @@ c
                        frac10 = (lat(i,j) - alat1n) / width
                        topt_out(i,j) = topt_10(i,j) * frac10 
      1                               + topt_30(i,j) * (1. - frac10)
+                       topt_out_s(i,j) = topt_10_s(i,j) * frac10
+     1                               + topt_30_s(i,j) * (1. - frac10)
+                       topt_out_ln(i,j) = topt_10_ln(i,j) * frac10
+     1                               + topt_30_ln(i,j) * (1. - frac10)
+                       topt_out_lt(i,j) = topt_10_lt(i,j) * frac10
+     1                               + topt_30_lt(i,j) * (1. - frac10)
                        icount_ramp = icount_ramp + 1
 
                        if(icount_ramp .eq. (icount_ramp/5) * 5 )then       
@@ -506,6 +534,9 @@ c
                    elseif(lat(i,j) .ge. alat1s .and. 
      1                    lat(i,j) .le. alat1n)then
                        topt_out(i,j) = topt_30(i,j)
+                       topt_out_s(i,j)=topt_30_s(i,j)
+                       topt_out_ln(i,j)=topt_30_ln(i,j)
+                       topt_out_lt(i,j)=topt_30_lt(i,j)
                        icount_30 = icount_30 + 1       ! Use 30s data
 
                    elseif(lat(i,j) .ge. alat2s .and. 
@@ -515,8 +546,14 @@ c
 
                        width = alat1s - alat2s
                        frac10 = (alat1s - lat(i,j)) / width
-                       topt_out(i,j) = topt_10(i,j) * frac10 
+                       topt_out(i,j) = topt_10(i,j) * frac10
      1                               + topt_30(i,j) * (1. - frac10)
+                       topt_out_s(i,j) = topt_10_s(i,j) * frac10 
+     1                               + topt_30_s(i,j) * (1. - frac10)
+                       topt_out_ln(i,j) = topt_10_ln(i,j) * frac10
+     1                               + topt_30_ln(i,j) * (1. - frac10)
+                       topt_out_lt(i,j) = topt_10_lt(i,j) * frac10
+     1                               + topt_30_lt(i,j) * (1. - frac10)
                        icount_ramp = icount_ramp + 1
 
                        if(icount_ramp .eq. (icount_ramp/5) * 5 )then       
@@ -532,6 +569,9 @@ c
 
                    elseif(lat(i,j) .le. alat2s)then    
                        topt_out(i,j) = topt_10(i,j)    ! Use 10m data
+                       topt_out_s(i,j)=topt_10_s(i,j)
+                       topt_out_ln(i,j)=topt_10_ln(i,j)
+                       topt_out_lt(i,j)=topt_10_lt(i,j)
                        icount_10 = icount_10 + 1
 
                    else
@@ -550,6 +590,9 @@ c
              do j=1,nnyp
              do i=1,nnxp
                topt_out(i,j)=topt_30(i,j)
+               topt_out_s(i,j)=topt_30_s(i,j)
+               topt_out_ln(i,j)=topt_30_ln(i,j)
+               topt_out_lt(i,j)=topt_30_lt(i,j)
              enddo
              enddo
              icount_30=nnyp*nnxp
@@ -699,8 +742,11 @@ c
      +,nnxp,nnyp)
 
            call move(static_albedo,data(1,1,17),nnxp,nnyp)
+           call move(topt_out_s,data(1,1,18),nnxp,nnyp)
+           call move(topt_out_ln,data(1,1,19),nnxp,nnyp)
+           call move(topt_out_lt,data(1,1,20),nnxp,nnyp)
 
-           ngrids=18
+           ngrids=21
            call get_gridgen_var(nf,ngrids,var,comment)
 
         else
@@ -711,7 +757,10 @@ c
            call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
            call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
            call move(static_albedo,data(1,1,6),nnxp,nnyp)  ! JS
-           ngrids=7
+           call move(topt_out_s,data(1,1,7),nnxp,nnyp)     ! JS
+           call move(topt_out_ln,data(1,1,8),nnxp,nnyp)    ! JS
+           call move(topt_out_lt,data(1,1,9),nnxp,nnyp)    ! JS 
+           ngrids=10
            call get_gridgen_var(nf,ngrids,var,comment)
  
         endif
@@ -748,8 +797,9 @@ c
 	return
 	End
 
-      SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay,
-     1  DATR,OFN,WVLN,SILWT,which_data,istat_files)
+      SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay
+     1 ,DATR,DATS,DATLN,DATLT,OFN,WVLN,SILWT,which_data
+     1 ,istat_files)
       include 'trigd.inc'
       implicit none
       integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
@@ -759,6 +809,9 @@ c
       real vctr1(n23),
      1 vctr21(n23),erad,rlat,wlon1,deltax,deltay,wvln,silwt
       real DATR(N2,N3)
+      real DATS(N2,N3)
+      real DATLN(N2,N3)
+      real DATLT(N2,N3)
 c      PARAMETER(IODIM=59000)
 c SG97 iodim increased, to be able to read larger blocks of data
       PARAMETER(IODIM=5800000)
@@ -814,7 +867,7 @@ C
       endif
       CALL SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,90.,std_lon,ERAD
      +            ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +            ,ISBEGO,IWBEGO,DATO,VT3DA,DATR
+     +            ,ISBEGO,IWBEGO,DATO,VT3DA,DATR,DATS,DATLN,DATLT
      +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data,istat_files)       
       RETURN
       END
@@ -825,15 +878,20 @@ C     ******************************************************************
 C
       SUBROUTINE SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,RLAT,WLON1,ERAD
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +          ,ISBEGO,IWBEGO,DATO,DATP,DATR,ISO,IWO
+     +          ,ISBEGO,IWBEGO,DATO,DATP,DATR,DATS,DATLN,DATLT,ISO,IWO
      +          ,OFN,WVLN,SILWT,dem_data,istat_files)
       real dato(no,no,mof)
-      real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3)
+      real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3),DATQS(NIQ,NJQ),
+     +     DATSM(NIQ,NJQ),DATSMX(NIQ,NJQ),
+     +     DATS(N2,N3),DATSLN(NIQ,NJQ),DATSLT(NIQ,NJQ),
+     +     DATLN(N2,N3),DATLT(N2,N3)
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
      +     erad,deltallo,deltaxp,deltayp,deltaxq,deltayq,
      +     wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,glatp,               ! pla,plo,
      +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
-      real xr,yr,rval,sh,sha,rh,rha
+      real xr,yr,rval,sh,sha,rh,rha,rhn,rht,shn,sht
+      real shln,shlt,rhln,rhlt
+      real delta_ln(niq,njq),delta_lt(niq,njq)
       CHARACTER*180 OFN,TITLE3,TITLE3_last_read,TITLE3_last_inquire
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
@@ -1042,63 +1100,116 @@ C
      +                             +WJO2*DATO(IO1,JO2,JOFR))
      +                       +WIO2*(WJO1*DATO(IO2,JO1,JOFR)
      +                             +WJO2*DATO(IO2,JO2,JOFR))
+
+!S & W-facing slopes > 0.
+                  DELTA_LN(IP,JP)=
+     .           ((DATO(IO2,JO1,JOFR)-DATO(IO1,JO1,JOFR))+
+     .            (DATO(IO2,JO2,JOFR)-DATO(IO1,JO2,JOFR)))*.5
+
+                  DELTA_LT(IP,JP)=
+     .           ((DATO(IO1,JO2,JOFR)-DATO(IO1,JO1,JOFR))+
+     .            (DATO(IO2,JO2,JOFR)-DATO(IO2,JO1,JOFR)))*.5
+
 20               CONTINUE
 18             continue ! IP
 17           continue ! JP
-C
+
 !           Calculate average and silhouette terrain, then apply SILWT weight
             SHA=0.
             RHA=0.
+            RHLN=0.
+            RHLT=0.
+            shmax=0.
 
             DO 22 JP=1,NP
                SH=0.
                RH=0.
+               RHN=0.
+               RHT=0.
                DO 23 IP=1,NP
 !                 Test for missing - then go to 16?
                   SH=max(SH,DATP(IP,JP)) 
                   RH=RH+DATP(IP,JP)
+                  RHN=RHN+DELTA_LN(IP,JP)
+                  RHT=RHT+DELTA_LT(IP,JP)
 23             continue ! IP
 
                SHA=SHA+SH/(2.*FLOAT(NP))
                RHA=RHA+RH
-
+               RHLN=RHLN+RHN
+               RHLT=RHLT+RHT
+               SHMAX=max(SHMAX,SH)
 22          continue ! JP
-
+ 
             RHA=RHA/FLOAT(NP*NP)
-
+            RMS=0.0
             DO 24 IP=1,NP ! The reason for this second SHA loop is unclear
-               SH=0.
+c              SH=0.      ! It is now used for std dev of terrain
                DO 25 JP=1,NP
-                  SH=max(SH,DATP(IP,JP))
+c                 SH=max(SH,DATP(IP,JP))
+                  RMS=RMS+((DATP(IP,JP)-RHA)*(DATP(IP,JP)-RHA))
 25             continue ! JP
 
-               SHA=SHA+SH/(2.*FLOAT(NP))
+c              SHA=SHA+SH/(2.*FLOAT(NP))
 
 24          continue ! IP
 
+            DATQS(IQ,JQ)=SQRT(RMS/FLOAT(NP*NP))
             DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
+            DATSM(IQ,JQ)=RHA                           !mean value of points used for IQ,JQ
+            DATSMX(IQ,JQ)=SHMAX                        !max value from points used for IQ,JQ
+            DATSLN(IQ,JQ)=RHLN/FLOAT(NP*NP)/DELTAXP
+            DATSLT(IQ,JQ)=RHLT/FLOAT(NP*NP)/DELTAYP
 
 c           print *,'datq=',datq(iq,jq)
 
 16      continue ! IQ
-
 15    continue ! JQ
 
       print *,'after 15'
 c     stop
-C
+ 
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
-      print *,'datq=',datq(1,1),datq(niq,njq)
-      DO 26 JR=1,N3
-         DO 27 IR=1,N2
+      print*
+      print*,'Before GDTOST2'
+      print*,'--------------'
+      print*,'datq(1,1)/(niq,njq)= ',datq(1,1),datq(niq,njq)
+      print*,'datqs(1,1)/(niq,njq)= ',datqs(1,1),datqs(niq,njq)
+      print*,'datsln(1,1)/(niq,njq)= ',datsln(1,1),datsln(niq,njq)
+      print*,'datslt(1,1)/(niq,njq)= ',datslt(1,1),datslt(niq,njq)
+      print*,'Mean/Max topo at IQ,JQ (1,1)/(niq,njq): '
+     +,datsm(1,1),datsmx(1,1),datsm(niq,njq),datsmx(niq,njq)
+
+      DO 28 JR=1,N3
+         DO 29 IR=1,N2
+
             XR=(XT(IR)-XQ1)/DELTAXQ+1.
             YR=(YT(JR)-YQ1)/DELTAYQ+1.
             CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
             DATR(IR,JR)=max(0.,RVAL)
- 27        continue
- 26     continue
-      print *,'datr=',datr(1,1),datr(N2,N3)
+            if( DATR(IR,JR).gt.30000. )then
+                print*,'Warning: value out of bounds'
+            endif    
+
+            CALL GDTOST2(DATQS,NIQ,NJQ,XR,YR,RVAL)
+            DATS(IR,JR)=max(0.,RVAL)
+
+            CALL GDTOST2(DATSLN,NIQ,NJQ,XR,YR,RVAL)
+            DATLN(IR,JR)=RVAL
+            CALL GDTOST2(DATSLT,NIQ,NJQ,XR,YR,RVAL)
+            DATLT(IR,JR)=RVAL
+
+ 29      CONTINUE
+ 28   CONTINUE
+
+      print*,'After GDTOST2'
+      print*,'-------------'
+      print*,'datr(1,1)/(n2,n3)= ',datr(1,1),datr(N2,N3)
+      print*,'dats(1,1)/(n2,n3)= ',dats(1,1),dats(n2,n3)
+      print*,'datln(1,1)/(n2,n3)= ',datln(1,1),datln(n2,n3)
+      print*,'datlt(1,1)/(n2,n3)= ',datlt(1,1),datlt(n2,n3)
+
       RETURN
       END
 
