@@ -255,6 +255,10 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
                 elseif(ltest_vertical_grid('PRESSURE'))then
                     lvl_2d = ilevel
                     lvl_coord_2d = 'MB'
+                elseif(var_2d .eq. 'LSM' .and. ilevel .ge. -3 
+     1                                   .and. ilevel .le. -1)then
+                    lvl_2d = ilevel
+                    lvl_coord_2d = 'HPA'
                 else
                     write(6,*)' Error, vertical grid not supported,'
      1                      ,' this routine supports PRESSURE or HEIGHT'       
