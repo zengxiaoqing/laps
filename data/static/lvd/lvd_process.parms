@@ -7,7 +7,7 @@ goes8
 # number of satellite data sources:
 1
 # satellite data types (for source location, lut generation):
-cdf
+gvr
 # channel types - the number of entries must match n_channels in lvd.parms:
 5
 vis
