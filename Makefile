@@ -201,7 +201,7 @@ prebuild:
 
 
 localize: mkdatadirs
-	/usr/nfs/bin/perl $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
+	$(PERL) $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
                --dataroot=$(DATAROOT) --srcroot=$(LAPSROOT)
 
 exe: lib
