@@ -281,7 +281,8 @@ c       include 'satellite_dims_lvd.inc'
         icen = NX_L/2+1
         jcen = NY_L/2+1
 
-        c_vnt_units = 'ft-kt' ! pass in from namelist later on
+!       c_vnt_units = 'FT-KT' ! pass in from namelist later on
+        c_vnt_units = namelist_parms%c_vnt_units
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
@@ -1342,7 +1343,7 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = 2400.
                 cint = 0.
             elseif(var_2d(1:3) .eq. 'VNT')then
-                if(c_vnt_units .eq. 'ft-kt')then
+                if(c_vnt_units .eq. 'FT-KT')then
                     clow = 30000.
                     scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
                                                     ! FT-KT (inverse)
@@ -4145,11 +4146,15 @@ c                   cint = -1.
                 units_2d = 'cm'
 
             elseif(var_2d .eq. 'VNT')then 
-                if(c_vnt_units .eq. 'ft-kt')then
+                if(c_vnt_units .eq. 'FT-KT')then
                     scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
                                                     ! FT-KT (inverse)
-                    units_2d = 'ft-kt'
+                    units_2d = 'FT-KT'
                 endif
+
+            elseif(units_2d(1:4) .eq. 'NONE')then
+                units_2d = '          '
+                scale = 1.
 
             else
                 scale = 1.
@@ -4240,7 +4245,7 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.,5.5
      1                         ,'tpw',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'VNT')then
-                    if(c_vnt_units .eq. 'ft-kt')then
+                    if(c_vnt_units .eq. 'FT-KT')then
                         call ccpfil(field_2d,NX_L,NY_L,30000.,0.
      1                             ,'spectral',n_image,scale,'hsect') 
                     else
