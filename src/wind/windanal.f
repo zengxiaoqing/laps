@@ -78,8 +78,8 @@ cdis
       integer*4 max_obs
 !     parameter (max_obs = 40000)       
       include 'barnesob.inc'
-      type (barnesob_qc) obs_point(max_obs)                           
-      type (barnesob)    obs_barnes(max_obs)                           
+      type (barnesob) obs_point(max_obs)                           
+      type (barnesob) obs_barnes(max_obs)                           
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -523,7 +523,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
                   n_qc_total_good = n_qc_total_good + 1
 
-!                 obs_barnes(n_qc_total_good) = obs_point(i_ob)
+                  obs_barnes(n_qc_total_good) = obs_point(i_ob)
 
                   if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then
                       iwrite = 1
@@ -570,18 +570,32 @@ csms$>       rms_thresh , out>:default=ignore)  begin
           l_analyze(k) = .true.
       enddo ! k
 
-      call get_inst_err(imax,jmax,kmax,r_missing_data                 ! I
-     1                 ,wt_p,rms_thresh_norm                          ! I
-     1                 ,rms_inst,rms_thresh)                          ! O
-
 csms$serial end
 
-      call arrays_to_barnesobs      (imax,jmax,kmax                   ! I
+      if(l_point_struct)then
+          call get_inst_err2(r_missing_data                           ! I
+     1                      ,obs_barnes,max_obs,n_qc_total_good       ! I
+     1                      ,rms_thresh_norm                          ! I
+     1                      ,rms_inst,rms_thresh)                     ! O
+     
+      else
+!         call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
+!    1                     ,wt_p,rms_thresh_norm                      ! I
+!    1                     ,rms_inst,rms_thresh)                      ! O
+
+          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p          ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+
+          call get_inst_err2(r_missing_data                           ! I
+     1                      ,obs_barnes,max_obs,n_qc_total_good       ! I
+     1                      ,rms_thresh_norm                          ! I
+     1                      ,rms_inst,rms_thresh)                     ! O
+     
+      endif
 
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_barnes                            ! I
@@ -1570,10 +1584,10 @@ csms$ignore end
 
 
       subroutine get_inst_err(imax,jmax,kmax,r_missing_data        ! I
-     1                       ,wt_p_spread,rms_thresh_norm          ! I
+     1                       ,wt_p,rms_thresh_norm                 ! I
      1                       ,rms_inst,rms_thresh)                 ! O
 
-      real*4    wt_p_spread(imax,jmax,kmax)                        ! Input
+      real*4    wt_p(imax,jmax,kmax)                               ! Input
 
 csms$ignore begin
 
@@ -1586,12 +1600,54 @@ csms$ignore begin
       do i = 1,imax
       do j = 1,jmax
       do k = 1,kmax
-          if(wt_p_spread(i,j,k) .ne. r_missing_data)then
+          if(wt_p(i,j,k) .ne. r_missing_data)then
               n_obs_total = n_obs_total + 1
-              wt_p_inv_total = wt_p_inv_total + 1.0 / wt_p_spread(i,j,k)
+              wt_p_inv_total = wt_p_inv_total + 1.0 / wt_p(i,j,k)
           endif
       enddo ! k
       enddo ! j
+      enddo ! i
+
+      if(n_obs_total .gt. 0)then
+          wt_p_inv_ave = wt_p_inv_total / float(n_obs_total)
+          rms_inst = sqrt(wt_p_inv_ave)
+      else
+          wt_p_inv_ave = 0.
+          rms_inst = 0.
+      endif
+
+      rms_thresh = rms_inst * rms_thresh_norm
+
+      write(6,*)' n_obs_total = ',n_obs_total
+      write(6,*)' wt_p_inv_total,wt_p_inv_ave = '
+     1           ,wt_p_inv_total,wt_p_inv_ave
+      write(6,*)' rms_inst, rms_thresh = ',rms_inst,rms_thresh
+csms$ignore end
+
+      return
+      end
+
+
+      subroutine get_inst_err2(r_missing_data                       ! I
+     1                        ,obs_barnes,max_obs,nobs_barnes       ! I
+     1                        ,rms_thresh_norm                      ! I
+     1                        ,rms_inst,rms_thresh)                 ! O
+
+      integer*4 max_obs
+      include 'barnesob.inc'
+      type (barnesob) obs_barnes(max_obs)                           
+
+csms$ignore begin
+
+      write(6,*)
+      write(6,*)' subroutine get_inst_err2...'
+
+      n_obs_total = 0
+      wt_p_inv_total = 0.
+
+      do i = 1,nobs_barnes
+          n_obs_total = n_obs_total + 1
+          wt_p_inv_total = wt_p_inv_total + 1.0 / obs_barnes(i)%weight       
       enddo ! i
 
       if(n_obs_total .gt. 0)then
