@@ -409,6 +409,7 @@ c
 	jstatus = 1
 	return
 999     continue
+        print *,'Could not open file: ',infile
 	print *,' ++ ERROR opening LSO file in READ_SURFACE_DATA ++'
         jstatus = -1
 	return
