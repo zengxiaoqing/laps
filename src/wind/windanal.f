@@ -81,9 +81,9 @@ cdis
 !     parameter (max_obs = 40000)       
       include 'barnesob.inc'
       type (barnesob) obs_point(max_obs)      ! Full Wind Obs  - Non-radar data
-      type (barnesob) obs_point_diff(max_obs) ! Difference Obs - Non-radar data
-      type (barnesob) obs_barnes(max_obs)     ! Difference Obs - All Data
-      type (barnesob) obs_radar(max_obs)      ! Difference Obs - Radar data
+      type (barnesob) obs_point_qced(max_obs) ! QC'd Obs       - Non-radar data
+      type (barnesob) obs_radar(max_obs)      ! Full Wind Obs  - Radar data
+      type (barnesob) obs_barnes(max_obs)     ! Full Wind Obs  - All Data
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -544,9 +544,9 @@ csms$>       rms_thresh , out>:default=ignore)  begin
                   n_qc_total_good = n_qc_total_good + 1
 
 !                 Assign data structure element (using difference ob)
-                  obs_point_diff(n_qc_total_good) = obs_point(i_ob)
-                  obs_point_diff(n_qc_total_good)%value(1) = u_diff
-                  obs_point_diff(n_qc_total_good)%value(2) = v_diff
+                  obs_point_qced(n_qc_total_good) = obs_point(i_ob)
+                  obs_point_qced(n_qc_total_good)%value(1) = u_diff
+                  obs_point_qced(n_qc_total_good)%value(2) = v_diff
 
                   if(n_qc_total_good .le. 500 .OR. 
      1               n_qc_total_good .eq. (n_qc_total_good/10)*10)then
@@ -564,7 +564,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1                  ,u_laps_bkg(i,j,k)
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
-     1                  ,obs_point_diff(n_qc_total_good)%weight
+     1                  ,obs_point_qced(n_qc_total_good)%weight
 302                   continue
                   endif
 
@@ -611,7 +611,7 @@ csms$serial end
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p          ! I
-     1                              ,n_var,max_obs,obs_point_diff     ! I/O
+     1                              ,n_var,max_obs,obs_point_qced     ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
 
@@ -623,12 +623,12 @@ csms$serial end
       endif
 
       call get_inst_err2(r_missing_data                               ! I
-     1                  ,obs_point_diff,max_obs,n_qc_total_good       ! I
+     1                  ,obs_point_qced,max_obs,n_qc_total_good       ! I
      1                  ,rms_thresh_norm                              ! I
      1                  ,rms_inst,rms_thresh)                         ! O
 
       call barnes_multivariate(varbuff                                ! O
-     1        ,n_var,ncnt_total,obs_point_diff                        ! I
+     1        ,n_var,ncnt_total,obs_point_qced                        ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1        ,varobs_diff_spread                                     ! O (aerr)
      1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
@@ -697,6 +697,10 @@ csms$serial(default=ignore)  begin
           l_analyze(k) = .false.
       enddo ! k
 
+!     Fill 'obs_barnes' at this point in case there is no radar data
+      obs_barnes = obs_point_qced
+      ncnt_total = n_qc_total_good
+
 csms$serial end
 
       if(n_radars .le. 1 .or. .not. l_3pass)then ! Single Doppler (or no radar) Option
@@ -761,10 +765,10 @@ csms$serial end
      1                              ,ncnt_radar,weight_radar          ! O
      1                              ,istatus)                         ! O
 
-!                 Combine radar and non-radar data structures
-                  obs_barnes = obs_point_diff
+!                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
+!                 data structures into new structure (obs_barnes)
+                  obs_barnes = obs_point_qced
                   ncnt_total = n_qc_total_good
-
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
                       obs_barnes(ncnt_total) = obs_radar(i)
@@ -874,10 +878,10 @@ csms$serial end
      1                              ,ncnt_radar,weight_radar          ! O
      1                              ,istatus)                         ! O
 
-!                 Combine radar and non-radar data structures
-                  obs_barnes = obs_point_diff
+!                 Combine radar (obs_radar) and non-radar (obs_point_qced) 
+!                 data structures into new structure (obs_barnes)
+                  obs_barnes = obs_point_qced
                   ncnt_total = n_qc_total_good
-
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
                       obs_barnes(ncnt_total) = obs_radar(i)
@@ -998,8 +1002,9 @@ csms$insert      print *, 'got to 10 processor=',me
      1                              ,ncnt_radar,weight_radar          ! O
      1                              ,istatus)                         ! O
 
-!             Combine radar and non-radar data structures
-              obs_barnes = obs_point_diff
+!             Combine radar (obs_radar) and non-radar (obs_point_qced) 
+!             data structures into new structure (obs_barnes)
+              obs_barnes = obs_point_qced
               ncnt_total = n_qc_total_good
 
               do i = 1,ncnt_radar
