@@ -99,6 +99,8 @@ c
 
           real abs_vel_min
 
+          logical l_line_ref_qc
+
       end type namelist_type
 
       type (namelist_type) namelist_parms
