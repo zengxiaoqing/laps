@@ -227,7 +227,22 @@ c      Determine filename extension
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
 
-       get_longitude = -abs(nint(siteLon*100000))
+       character*8 c8_project
+
+!      call get_c8_project(c8_project,istatus)
+!      if(istatus .ne. 1)then
+!          write(6,*)' Error, no c8_project'
+!          stop
+!      endif
+
+!      if(c8_project(1:3) .ne. 'CWB')then
+
+       if(.false.)then
+           get_longitude = -abs(nint(siteLon*100000))
+       else
+           get_longitude =      nint(siteLon*100000)
+       endif
+
        return
        end
 
