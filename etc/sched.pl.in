@@ -27,7 +27,7 @@
 #             
 # -d                   Delay in hours (lag time or displaced real-time)
 #
-# -r -m NN             where "NN" is the (default) maximum number of files 
+# -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
 # second to last arg   $LAPS_ROOT, one level above bin directory
