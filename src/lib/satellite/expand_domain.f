@@ -32,6 +32,7 @@ cdis
        subroutine expand_domain(imax,jmax,xlat,xlon,kmax,lmax,lat,lon,
      &istatus)
 c
+      include 'trigd.inc'
       implicit none
 
       integer imax,jmax
@@ -44,7 +45,6 @@ c
       real*4    g_space_deg
       real*4    wdw_lat_ns
       real*4    wdw_lon_ns
-      real cosd
       integer i,j
       integer ii,jj
       integer nxl,nyl

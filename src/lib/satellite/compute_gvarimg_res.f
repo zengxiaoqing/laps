@@ -3,6 +3,7 @@
      &rpix,rline,start_pix,start_line,r_img_res_m,istatus)
 c
 c
+      include 'trigd.inc'
       implicit none
 
       Real*8        rlat8_1,rlat8_2,rlat8_3
@@ -26,7 +27,6 @@ c
       Integer     ierr
       Integer     start_line
       Integer     start_pix
-      real        cosd
 c --------------------------------------------
 c start
 c
