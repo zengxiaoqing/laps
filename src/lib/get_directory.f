@@ -52,8 +52,9 @@ cdis
         common / grid_fnam_cmn / grid_fnam_common
         character *201 laps_data_root, directory
 
-
-        len_dir = index(grid_fnam_common,'/',.true.)
+        call get_directory_length(grid_fnam_common,len_dir)
+cc      
+cc        len_dir = index(grid_fnam_common,'/',.true.)
         if(len_dir.gt.0) then
            grid_fnam='nest7grid'
            laps_data_root=grid_fnam_common
