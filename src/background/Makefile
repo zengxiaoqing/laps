@@ -25,9 +25,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
 
 EXE = lga.exe
 
-SRC= writelgalgb.f
-
-MAIN=lga.f
+SRC=lga.f
 
 LIB=liblga.a
 
@@ -37,8 +35,8 @@ all: exe
 
 exe: $(ARCHIVE) $(EXE)
 
-$(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE): $(ARCHIVE) $(SRC)
+	$(FC) $(SRC) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
