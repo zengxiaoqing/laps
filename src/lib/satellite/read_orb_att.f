@@ -19,9 +19,10 @@ C
       subroutine read_orb_att(c_filespec,csatid, num_att, orb_att,
      &istatus)
       include 'netcdf.inc'
-      integer num_att, nf_fid, nf_vid, nf_status
+c     integer num_att, nf_fid, nf_vid, nf_status
+      integer num_att, nf_fid, nf_status
       character*6 csatid
-      character*7 sat_name
+c     character*7 sat_name
       character*(*) c_filespec
       character*255 cfname
       double precision orb_att(num_att)

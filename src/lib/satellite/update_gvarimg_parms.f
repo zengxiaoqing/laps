@@ -25,9 +25,9 @@ c
       Integer   max_files
       parameter   (max_files = 500)
 
-      Integer   i
-      Integer   max_sat
-      Integer   max_channels
+c     Integer   i
+c     Integer   max_sat
+c     Integer   max_channels
 
       INTEGER   nw_vis_pix
       INTEGER   nw_vis_line
@@ -57,7 +57,7 @@ c
       INTEGER   nsIncs                 
       Integer   x_res,y_res
       Integer   imci4
-      Integer   nch
+c     Integer   nch
 
       logical   l_cell_afwa
 
@@ -70,34 +70,35 @@ c
       Integer   ld
       Integer   numoffiles
       Integer   nn,nf
-      Integer   nsat
-      Integer   n,ns,nc
+c     Integer   nsat
+c     Integer   n,ns,nc
+      Integer   n
       Integer   istatus
       Integer   gstatus
       Integer   lstatus
       Integer   nx,ny
-      Integer   lend
-      Integer   nstypes
-      Integer   indx
-      Integer   idum
+c     Integer   lend
+c     Integer   nstypes
+c     Integer   indx
+c     Integer   idum
 
-      character*100 dir
+c     character*100 dir
       character*150 c_filespec
       character*255 filename_cdf
       character*200 cdir_path
       character*255 fname_sat
       character*255 c_filenames(max_files)
-      character*200 cdum
+c     character*200 cdum
       character     cfname*11
       character     c_afwa_fname*11
-      character*10  cmode
+c     character*10  cmode
       character*9   c_fname_cur
       character*9   c_fname
       character*3   chtype
       character*3   cstype
       character*6   cd6
       character*2   image_type
-      character*1   ct
+c     character*1   ct
 c
 c ========================================================
 c

@@ -43,7 +43,7 @@ cc      character*2 SPARE1     !Spare
       INTEGER STPSCNL    !Stop Scanline 
       integer irdttop(2)
       integer irdtbot(2)
-      integer n 
+c     integer n 
 cc    CHARACTER*6 SATID  !Satellite Identification
 cc    CHARACTER*2 ORGDATTP !Data Type
       INTEGER REQOBSTM   !Requested Observation Time
@@ -144,7 +144,7 @@ cc      REAL*4 PMA           !Pitch Misalignment Angle
       character cfname1*9
       character cfname2*9
 
-      real*8    r8time
+c     real*8    r8time
 
       integer   byteswp2, byteswp4
       character input(1024)*1 !just read it all and sort it later!
