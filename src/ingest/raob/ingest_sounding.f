@@ -25,23 +25,23 @@
        if(c8_project .ne. 'RSA')then
            c8_raob_format = c8_project
            write(6,*)
-           write(6,*)' Call ingest_raob'
+           write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format)
 
            c8_raob_format = c8_project
            write(6,*)
-           write(6,*)' Call ingest_drpsnd'
+           write(6,*)' Call ingest_drpsnd, format=',c8_raob_format
            call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
 
        else ! RSA project
            c8_raob_format = 'WFO'
            write(6,*)
-           write(6,*)' Call ingest_raob'
+           write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format)
 
            c8_raob_format = 'RSA'
            write(6,*)
-           write(6,*)' Call ingest_local_raob (not yet supported)'
+           write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_local_raob,c8_raob_format)
 
            write(6,*)
