@@ -1013,14 +1013,14 @@ c       include 'satellite_dims_lvd.inc'
 
                 scale = 1e-1
                 cint = -1.0
-                chigh = 50.
-                clow = -50.
+                chigh = 40.
+                clow = -40.
 
                 call plot_field_2d(i4_valid,c_type_i,w_2d,scale
      1                        ,namelist_parms,plot_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'spectralr')       
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')       
 
                 call move(w_2d,field_2d,NX_L,NY_L)
 
