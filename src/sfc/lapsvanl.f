@@ -1113,9 +1113,9 @@ c
 	call check_field_2d(mslp, imax,jmax,fill_val,istatus)
 	do j=1,jmax
 	do i=1,imax
-	  if(mslp(i,j).lt.90000. .or. mslp(i,j).gt.110000.) then
+	  if(mslp(i,j).lt.85000. .or. mslp(i,j).gt.110000.) then
 	     istatus = 0
-	     print *,' Value out of range at ',i,j
+             write(6,*)' ERROR: mslp out of range at ',i,j,mslp(i,j)       
 	     go to 1182
 	  endif
 	enddo !i
