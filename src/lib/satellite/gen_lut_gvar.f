@@ -115,8 +115,9 @@ c
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
-      logical     lfirst(maxsat)
-      data lfirst /.false./
+      logical     lfirst(maxtype,maxsat)              !4 types x 2 sats (3-16-98)
+      data lfirst /.false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false./
       save
 c
 c ---------------------------------------------------------
@@ -136,13 +137,13 @@ c ---------------------------------------------------------
          lineend_orig   = j_end_vis(jtype,isat)
          goto 65
 
-62       if(.not.lfirst(isat))then
+62       if(.not.lfirst(jtype,isat))then
             ct='ir'
             elemstart_orig = i_start_ir(jtype,isat)
             elemend_orig   = i_end_ir(jtype,isat)
             linestart_orig = j_start_ir(jtype,isat)
             lineend_orig   = j_end_ir(jtype,isat)
-            lfirst(isat)=.true.
+            lfirst(jtype,isat)=.true.
          else
             goto 1000
             istatus = 1
