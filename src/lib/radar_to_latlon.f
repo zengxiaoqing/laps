@@ -38,6 +38,7 @@ cdis
         include 'trigd.inc'
         implicit real*4 (a-z)
 
+
         if(rlat_radar .eq. 0.0)then
             write(6,*)' Warning, Radar Coords NOT Initialized'
         endif
@@ -79,8 +80,21 @@ cdis
      1                  ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
+cdoc    Calculate radar echo location given radar location and az/ran/elev 
+cdoc    of radar echo
+
         include 'trigd.inc'
         implicit real*4 (a-z)
+
+        real*4 rlat_radar             ! I    (Degrees)
+        real*4 rlon_radar             ! I    (Degrees)
+        real*4 rheight_radar          ! I    (Meters)
+        real*4 azimuth                ! I    (Degrees)
+        real*4 slant_range            ! I    (Meters)
+        real*4 elev                   ! I    (Degrees)
+        real*4 lat_grid               ! O    (Degrees)
+        real*4 lon_grid               ! O    (Degrees)
+        real*4 height_grid            ! O    (Meters)
 
         if(rlat_radar .eq. 0.0)then
             write(6,*)' Warning, Radar Coords NOT Initialized'
