@@ -16,6 +16,8 @@
       parameter(max_files = 3000)
       character*255 c_fnames(max_files)
       integer i4times(max_files)
+      character*8 c8_project
+      character*13 filename13, cvt_i4time_wfo_fname13
 
 !     Output file
       character*31    ext
@@ -34,6 +36,12 @@
           go to 999
       endif
 
+      call get_c8_project(c8_project,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting c8_project'
+          go to 999
+      endif
+
       lag_time_report = 3600
 
 !     Get path to input files (/public NetCDF format)
@@ -47,30 +55,42 @@
           return
       endif
 
-      ext_in = 'cdf'
+      if(c8_project .eq. 'NIMBUS')then
+          ext_in = 'cdf'
+          call s_len(dir_in,len_dir_in)
+          c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
 
-      call s_len(dir_in,len_dir_in)
-      c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
+!         Wait for latest input data (only for NIMBUS format)
+          i4time_now = i4time_now_gg()
+          i4_hour = (i4time_now/3600) * 3600        ! i4time at the top of the hour
+          minutes_now = (i4time_now - i4_hour) / 60
 
-!     Wait for latest input data (only for NIMBUS format)
-      i4time_now = i4time_now_gg()
-      i4_hour = (i4time_now/3600) * 3600        ! i4time at the top of the hour
-      minutes_now = (i4time_now - i4_hour) / 60
+          if(minutes_now .ge. 19 .and. minutes_now .lt. 22)then
+              i4time_desired = i4_hour
+              i4_check_interval = 10
+              i4time_stop_waiting = i4_hour + 22*60
+              i4_total_wait = min(i4time_stop_waiting - i4time_now, 120)
+              i4_thresh_age = 3600
 
-      if(minutes_now .ge. 19 .and. minutes_now .lt. 22)then
-          i4time_desired = i4_hour
-          i4_check_interval = 10
-          i4time_stop_waiting = i4_hour + 22*60
-          i4_total_wait = min(i4time_stop_waiting - i4time_now, 120)
-          i4_thresh_age = 3600
+              call wait_for_data(c_filespec,i4time_desired
+     1                   ,i4_check_interval,i4_total_wait
+     1                   ,i4_thresh_age       ! Only loop through the waiting
+                                              ! if data is younger than this
+                                              ! threshold
+     1                   ,istatus)
+          endif ! within time range to wait for data
 
-          call wait_for_data(c_filespec,i4time_desired
-     1               ,i4_check_interval,i4_total_wait
-     1               ,i4_thresh_age       ! Only loop through the waiting
-                                          ! if data is younger than this
-                                          ! threshold
-     1               ,istatus)
-      endif ! within time range to wait for data
+      elseif(c8_project .eq. 'AFWA')then
+          ext_in = 'ac'
+          call s_len(dir_in,len_dir_in)
+          c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
+
+      else ! Create filespec for WFO format
+          ext_in = 'wfo'
+          call s_len(dir_in,len_dir_in)
+          c_filespec = dir_in(1:len_dir_in)
+
+      endif
 
 !     Get list of files
       call get_file_times(c_filespec,max_files,c_fnames
@@ -78,8 +98,6 @@
 
       if(i_nbr_files_ret .eq. 0)then
           write(6,*)' No raw *.cdf files (NIMBUS), trying *.ac (AFWA)'       
-          ext_in = 'ac'
-          c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
           call get_file_times(c_filespec,max_files,c_fnames
      1                          ,i4times,i_nbr_files_ret,istatus)
       endif
@@ -126,7 +144,16 @@
 !                 Write to the opened PIN file
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
+     1                                      ,c8_project
      1                                      ,filename_in,istatus)
+              elseif(ext_in .eq. 'wfo')then ! WFO NetCDF
+!                 Read from the ACARS file 
+!                 Write to the opened PIN file
+                  filename13 = cvt_i4time_wfo_fname13(i4times(i))
+                  call get_acars_data(i4time_sys,i4_acars_window
+     1                                      ,NX_L,NY_L
+     1                                      ,c8_project
+     1                                      ,filename13,status)
               elseif(ext_in .eq. 'ac')then ! AFWA ASCII
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
