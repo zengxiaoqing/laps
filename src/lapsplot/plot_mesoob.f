@@ -450,6 +450,10 @@ c
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
 
             else ! Write station location only
+                if(c_field(1:2) .eq. 'mw')then ! Set Mesowx Red Color
+                    call setusv_dum(2hIN,3)
+                endif
+
                 call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                 call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
 
