@@ -129,6 +129,16 @@ C           READ IN THE RAW PROFILER DATA
 !     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
 !     1                   ,i4_mid_window_pr,istatus)                   ! O
 
+                    i4time_earliest = i4time_sys - i4_prof_window
+                    i4time_latest   = i4time_sys + i4_prof_window
+
+!                   call get_sodar_data
+!    +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L        ! I
+!    +                   ,i4time_earliest,i4time_latest                ! I
+!    +                   ,fnam_in(1:len_fnam_in)                       ! I
+!    +                   ,lun_out                                      ! I
+!    +                   ,istatus)                                     ! O
+
                 endif ! idir
 
                 if(istatus.ne.1)then
