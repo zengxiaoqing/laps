@@ -723,10 +723,11 @@ c
 c this function allows variable amounts of smoothing of
 c the land fraction data depending on grid spacing
 c
-        iter=min(10,int(8000./deltax)+1)
+        iter=min(10,int(8000./deltax))
         
         print*,'Filter land fraction with 2dx ',iter
         do k=1,iter
+           print*,'Calling filter_2dx'
            call filter_2dx(GEODAT2D,nnxp,nnyp,1, 0.5)
            call filter_2dx(GEODAT2D,nnxp,nnyp,1,-0.5)
         enddo
