@@ -1171,11 +1171,8 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                                                                 
 
                     Note that the 'Dx' and 'Dy' values that appear in the 
-                    'static.nest7grid' file header are valid at the projection
-                    pole. This differs from the convention used in 
-                    'nest7grid.parms' (and internally in LAPS) where the 
-                    'grid_spacing_m_cmn' parameter value is valid at the 
-                    'standard_latitude'.
+                    'static.nest7grid' should equal the value of
+                    'grid_spacing_m_cmn'.
                          
                 Lambert:
                     This is the latitude at which the grid spacing is exactly 
