@@ -1654,7 +1654,7 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 
         character*255 c_filespec
 
-        logical ltest_vertical_grid, l_is_vxx
+        logical ltest_vertical_grid, l_is_vxx, l_compress_radar
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -1700,20 +1700,24 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
 
         enddo ! k
 
-        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
-     1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
-     1                     COMMENT_3D,field_3d,ISTATUS)
+        call get_l_compress_radar(l_compress_radar,istatus)
+        if(istatus .ne. 1)return
+
+        if(l_is_vxx(EXT) .and. l_compress_radar)then
+            write(6,*)' Attempting compressed radar data read'
+            call read_laps_compressed(i4time,directory,ext,imax,jmax
+     1                               ,kmax,var_3d,lvl_3d,lvl_coord_3d       
+     1                               ,units_3d,comment_3d,field_3d
+     1                               ,istatus)
+        else ! normal NetCDF read
+            CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1          kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1          COMMENT_3D,field_3d,ISTATUS)
+
+        endif
 
         comment_2d=comment_3d(1)
         units_2d=units_3d(1)
-
-        if( istatus .ne. 1 .and. l_is_vxx(EXT) )then
-            write(6,*)' Attempting compressed radar data read'
-!           call read_laps_compressed(i4time,directory,ext,imax,jmax
-!    1                               ,kmax,var_3d,lvl_3d,lvl_coord_3d
-!    1                               ,units_3d,comment_3d,field_3d
-!    1                               ,istatus)
-        endif
 
         return
         end
