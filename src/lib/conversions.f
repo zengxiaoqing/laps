@@ -905,12 +905,13 @@ cdoc    given the radar azimuth.
      1                               u_grid,    ! O
      1                               v_grid,    ! O
      1                               azimuth,   ! I
+     1                               latitude,  ! I
      1                               longitude) ! I
 
 cdoc    Convert Tangential and Radial velocity to U and V (grid north),
 cdoc    given the radar azimuth and geographic longitude.
 
-        real longitude
+        real latitude, longitude
 
         call radar_to_disptrue(di_true,
      1                         speed,
