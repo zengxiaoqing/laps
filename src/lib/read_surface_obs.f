@@ -287,6 +287,10 @@ c
 c	Changes:
 c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
 c                          05-01-98  Added soil moisture variables.
+c               J. Edwards 09-16-98  moved all format definitions to 
+c                                    src/include/lso_formats.inc
+c                                    changed 909 definition to allow for 
+c                                    missing data
 c
 c*****************************************************************************
 c
@@ -334,14 +338,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -352,22 +355,18 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   time(k)		   !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
 	  read(11,903)   reptype(k),               !station report type
      &                   autostntype(k),           !station type (manual/auto)
      &                   wx(k)                     !present weather
- 903	  format(5x,a10,2x,a10,2x,a30)
 c
 	  read(11,905)   t(k), t_ea(k),            !temp, temp expected accuracy
      &                   td(k), td_ea(k),          !dew point, dew point exp. accuracy
      &                   rh(k), rh_ea(k)           !Rel hum, rh expected accuracy
- 905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
 c
 	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
      &                   ddg(k), ffg(k),           !wind gust dir, wind gust speed
      &                   dd_ea(k), ff_ea(k)        !dir expected accuracy, spd exp accuracy
- 907	  format(5x,4(f8.1,2x),2(f6.2,2x))
 c
 	  read(11,909)   alt(k),                   !altimeter
      &                   stnp(k),                  !station pressure
@@ -375,13 +374,11 @@ c
      &                   delpch(k),                !3-h press change character
      &                   delp(k),                  !3-h pressure change
      &                   p_ea(k), alt_ea(k)        !pressure exp accuracy, alt exp accuracy
- 909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f6.2,2x,f6.2,2x,f6.2)
 c
 	  read(11,911)   vis(k), vis_ea(k),        !visibility, vis exp accuracy
      &                   solar(k), solar_ea(k),    !solar, solar exp accuracy
      &                   sfct(k), sfct_ea(k),      !soil/water temp, soil/water temp exp accuracy
      &                   sfcm(k), sfcm_ea(k)       !soil moist, soil moist temp exp accuracy
- 911	  format(5x,f8.0,2x,f6.3,2x,f8.0,2x,f6.1,2x,4f8.2)
 c
 	  read(11,913)   pcp1(k),                  !1-h precipitation
      &                   pcp3(k),                  !3-h precipitation
@@ -389,12 +386,10 @@ c
      &                   pcp24(k),                 !24-h precipitation
      &                   snow(k),                  !snow depth
      &                   pcp_ea(k), snow_ea(k)     !precip and snow exp accuracy
- 913	  format(5x,4(f8.2,2x),f6.1,2x,f8.2,2x,f4.1)
 c
 	  read(11,915)  kkk_s(k),                  !num cld layers 
      &                  max24t(k),                 !24-h max temperature
      &                  min24t(k)                  !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
@@ -403,7 +398,6 @@ c
   	      read(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
 	    enddo !ii
 	  endif
- 917	  format(10x,a8,2x,f8.0)
 c
 	enddo !k
 c
@@ -414,6 +408,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SURFACE_DATA ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -447,14 +446,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -465,31 +463,28 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   idummy        		   !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum                       
- 903	  format(a132)
+	  read(11,919) dum                       
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-	      read(11,903) dum
+	      read(11,919) dum
 	    enddo !ii
 	  endif
 c
@@ -502,6 +497,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_METADATA ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -517,6 +517,10 @@ c       passed back to the calling routine in 1-d arrays.
 c
 c	Changes:
 c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
+c               J. Edwards 09-16-98  moved all format definitions to 
+c                                    src/include/lso_formats.inc
+c                                    changed 909 definition to allow for 
+c                                    missing data
 c
 c*****************************************************************************
 c
@@ -542,14 +546,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -560,20 +563,16 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   dummy                     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum   
- 903	  format(a132) 
+	  read(11,919) dum   
 c
 	  read(11,905)   t(k), dummy,              !temp, temp expected accuracy
      &                   td(k), dummy,             !dew point, dew point exp. accuracy
      &                   dummy, dummy              !Rel hum, rh expected accuracy
- 905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
 c
 	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
      &                   dummy, dummy,             !wind gust dir, wind gust speed
      &                   dummy, dummy              !dir expected accuracy, spd exp accuracy
- 907	  format(5x,4(f8.1,2x),2(f6.2,2x))
 c
 	  read(11,909)   alt(k),                   !altimeter
      &                   stnp(k),                  !station pressure
@@ -581,22 +580,20 @@ c
      &                   dummy,                    !3-h press change character
      &                   dummy,                    !3-h pressure change
      &                   dummy, dummy              !pressure exp accuracy, alt exp accuracy
- 909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f6.2,2x,f6.2,2x,f6.2)
 c
-	  read(11,903)   dum   
+	  read(11,919) dum   
 c
-	  read(11,903)   dum   
+	  read(11,919) dum   
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-  	      read(11,903) dum                     !layer cloud amount and height
+  	      read(11,919) dum                     !layer cloud amount and height
 	    enddo !ii
 	  endif
 c
@@ -609,6 +606,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_STATE ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -644,14 +646,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -662,34 +663,30 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   dummy                     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum
- 903	  format(a132)
+	  read(11,919) dum
 c
 	  read(11,905)   t(k), dummy,              !temp, temp expected accuracy
      &                   dummy, dummy,             !dew point, dew point exp. accuracy
      &                   dummy, dummy              !Rel hum, rh expected accuracy
- 905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-  	      read(11,903) dum                     !layer cloud amount and height
+  	      read(11,919) dum                     !layer cloud amount and height
 	    enddo !ii
 	  endif
 c
@@ -702,6 +699,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_TEMP ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -736,14 +738,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -754,34 +755,30 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   dummy                     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum
- 903	  format(a132)
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
      &                   dummy, dummy,             !wind gust dir, wind gust speed
      &                   dummy, dummy              !dir expected accuracy, spd exp accuracy
- 907	  format(5x,4(f8.1,2x),2(f6.2,2x))
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-  	      read(11,903) dum
+  	      read(11,919) dum
 	    enddo !ii
 	  endif
 c
@@ -794,6 +791,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_WIND ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -807,6 +809,10 @@ c       data.   The data is passed back to the calling routine in 1-d arrays.
 c
 c	Changes:
 c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
+c               J. Edwards 09-16-98  moved all format definitions to 
+c                                    src/include/lso_formats.inc
+c                                    changed 909 definition to allow for 
+c                                    missing data
 c
 c*****************************************************************************
 c
@@ -828,14 +834,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -846,14 +851,12 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   dummy                     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum
- 903	  format(a132)
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,909)   alt(k),                   !altimeter
      &                   stnp(k),                  !station pressure
@@ -861,22 +864,20 @@ c
      &                   dummy,                    !3-h press change character
      &                   dummy,                    !3-h pressure change
      &                   dummy, dummy              !pressure exp accuracy, alt exp accuracy
- 909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f6.2,2x,f6.2,2x,f6.2)
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-  	      read(11,903) dum
+  	      read(11,919) dum
 	    enddo !ii
 	  endif
 c
@@ -889,6 +890,11 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+999     continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_PRESS ++'
+        jstatus = -1
+	return
+        include 'lso_formats.inc'
 	end
 c
 c
@@ -903,6 +909,10 @@ c       data.   The data is passed back to the calling routine in 1-d arrays.
 c
 c	Changes:
 c		P. Stamus  04-13-98  Original version (from write_surface_LS2).
+c               J. Edwards 09-16-98  moved all format definitions to 
+c                                    src/include/lso_formats.inc
+c                                    changed 909 definition to allow for 
+c                                    missing data
 c
 c*****************************************************************************
 c
@@ -924,14 +934,13 @@ c
 	call get_directory('lso', infile, len)
 	infile = infile(1:len) // filetime(1:9) // '.lso'
 c
-	open(11,file=infile,status='unknown')
+	open(11,file=infile,status='old',err=999)
 c
 c.....	Read the header.
 c
 	read(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Read the station data.
 c
@@ -942,18 +951,16 @@ c
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
      &                   dummy                     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
-	  read(11,903)   dum
- 903	  format(a132)
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
-	  read(11,903)   dum
+	  read(11,919) dum
 c
 	  read(11,913)   pcp1(k),                  !1-h precipitation
      &                   pcp3(k),                  !3-h precipitation
@@ -961,18 +968,16 @@ c
      &                   pcp24(k),                 !24-h precipitation
      &                   snow(k),                  !snow depth
      &                   dummy, dummy              !precip and snow exp accuracy
- 913	  format(5x,4(f8.2,2x),f6.1,2x,f8.2,2x,f4.1)
 c
 	  read(11,915)  kkk_s,                     !num cld layers 
      &                  dummy,                     !24-h max temperature
      &                  dummy                      !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Read the cloud data if we have any.
 c
 	  if(kkk_s .gt. 0) then
 	    do ii=1,kkk_s
-  	      read(11,903) dum
+  	      read(11,919) dum
 	    enddo !ii
 	  endif
 c
@@ -985,4 +990,9 @@ c..... End of data reading.  Let's go home...
 c
 	jstatus = 1
 	return
+ 999    continue
+	print *,' ++ ERROR opening LSO file in READ_SFC_PRECIP ++'
+        jstatus 	= -1
+	return
+        include 'lso_formats.inc'
 	end
