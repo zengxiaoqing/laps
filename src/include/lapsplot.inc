@@ -9,6 +9,7 @@
           real time_zone
 
           integer latlon_int
+          integer mode_supmap
 
           character*3 c3_time_zone
           character*9 c_institution
