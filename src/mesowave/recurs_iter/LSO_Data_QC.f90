@@ -3,7 +3,7 @@ SUBROUTINE LSO_Data
 !==========================================================
 !  This routine reads the LSO from LAPS.
 !
-!  HISTORY: MAY. 2004 by YAUNFU XIE.
+!  HISTORY: MAY. 2004 by YUANFU XIE.
 !==========================================================
 
   IMPLICIT NONE
@@ -81,8 +81,6 @@ SUBROUTINE LSO_Data
        laps_cycle_time,badflag,olaps,wght,olat,olon, &
        otime,istarttime,nx,ny,bkgd)
 
-  print*,'Bkground: ',bkgd(1,1,1:ncycles,1)
-
   ! Debug: PRINT*,'Max: ',maxstations,laps_cycle_time
   ! Debug: PRINT*,'OBS: ',olaps(1:6,1),lat(1,1),lon(1,1)
   ! Debug: PRINT*,'OBS: ',olaps(1:6,2),lat(nx,ny),lon(nx,ny)
@@ -117,14 +115,6 @@ SUBROUTINE LSO_Data
 	      PRINT*,'LSO_Data: too many obs!'
 	      STOP
 	   ENDIF
-
-IF (nobs .EQ. 1) THEN
-   PRINT*,'LAT/LON of the first obs: ',olat(ilaps),olon(ilaps)
-ENDIF
-IF ((ivar .EQ. 1) .AND. (ABS(olat(ilaps)-30.22000) .LT. 1.0e-3) &
-                  .AND. (ABS(olon(ilaps)+96.37000) .LT. 1.0e-3)) THEN
-   PRINT*,'Time at this station: ',otime(ilaps),nobs,olaps(1,ilaps)
-ENDIF
 
 	   ! Separating hours and minutes:
 	   hour = otime(ilaps)/100
@@ -165,13 +155,15 @@ ENDIF
   PRINT*,'MAX TIME: ',maxtime/3600,MOD(maxtime,3600)/60
   PRINT*,'MIN TIME: ',mintime/3600,MOD(mintime,3600)/60
   IF ((maxtime-mintime)/3600 .GT. 3) THEN
-     PRINT*,'LSO_Data_QC: it is hard coded to run the analysis less than 3 hour! Check your data'
+     PRINT*,'LSO_Data_QC: it is hard coded to run'
+     PRINT*,' the analysis less than 3 hour!'
      STOP
   ENDIF
 
   PRINT*,'Total number of OBS: ',nobs
 
   ! QC:
+  ! 1. Find out number of different stations and identical ones:
   nsts = 0
   DO iobs=1,nobs
      DO i=1,iobs-1
@@ -243,10 +235,10 @@ ENDIF
   PRINT*,'Spacing: ',d
 
   ! WRITE surface.dat for testing:
-  OPEN(unit=10,file='surface.dat',form='formatted')
+  ! OPEN(unit=10,file='surface.dat',form='formatted')
 
   ! Domain info:
-  WRITE(10,*) dm(1,1),dm(2,1),dm(1,2),dm(2,2),dm(1,3),dm(2,3)
+  ! WRITE(10,*) dm(1,1),dm(2,1),dm(1,2),dm(2,2),dm(1,3),dm(2,3)
   vmx = -1000.0
   vmm = 1000.0
   DO ilaps=1,nobs
@@ -261,11 +253,11 @@ ENDIF
 	   imm = ilaps
         ENDIF
      ENDIF
-     WRITE(10,1) vid(ilaps),o(1:4,ilaps),w(ilaps)
+     ! WRITE(10,1) vid(ilaps),o(1:4,ilaps),w(ilaps)
 
   ENDDO
 1 FORMAT(i2,5e14.6)
-  CLOSE(10)
+  ! CLOSE(10)
   PRINT*,'MAX/MIN U obs: ',vmx,vmm,imx,imm,w(imm)
 
   PRINT*,'Time interval: ',MINVAL(o(4,1:nobs)),MAXVAL(o(4,1:nobs))
