@@ -92,6 +92,7 @@ SRC	= machine_dependent.F \
           interp.f \
           interpolate_3dfield.f \
           laps_io.f \
+          laps_routines.f \
           laps_thermo.f \
           lapsgrid.f \
           latlon_to_rlaps.f \
