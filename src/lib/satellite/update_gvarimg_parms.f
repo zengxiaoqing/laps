@@ -14,7 +14,6 @@
      &                        SatSubLON,
      &                        decimat,
      &                        nx,ny,
-     &                        image_width,image_depth,
      &                        istatus)
 c
 c Program reads the netcdf gvarimage satellite data file header
@@ -265,15 +264,6 @@ c
 101   write(6,*)'Error getting ri/rj luts'
       goto 900
 
-902   write(6,*)'error opening file'
-      goto 900
-
-994   write(6,*)'Unable to open gwc_wd file'
-      goto 900
-
-995   write(6,*)'update_gvar_parmfile terminating'
-      goto 900
-
 996   write(6,*)'error in rd_gvarimg_cdf_header: terminating'
       istatus = 1
       goto 900
@@ -286,9 +276,6 @@ c
 
 999   write(6,*)'error in satsublatlon'
       istatus = 1
-      goto 900
-
-898   write(6,*)'Error getting pathway for sat data'
       goto 900
 
 899   write(6,*)'Parmfile not updated'

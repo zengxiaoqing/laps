@@ -1,4 +1,3 @@
-
       subroutine rewrite_satellite_lvd_nl(istatus)
 c
 c This routine writes the satellite namelist ( static/satellite_lvd.nl),
@@ -58,36 +57,25 @@ c    &i=1,maxchannel),j=1,maxtype),k=1,maxsat)
       write(lun,11,err=950)(r_sat_sub_lat(i),i=1,maxsat)
       write(lun,12,err=950)(r_sat_sub_lon(i),i=1,maxsat)
 
-c     write(lun,13,err=950)((r_resolution_x_vis(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,14,err=950)((r_resolution_y_vis(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,15,err=950)((r_resolution_x_ir(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,16,err=950)((r_resolution_y_ir(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,17,err=950)((r_resolution_x_wv(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,18,err=950)((r_resolution_y_wv(i,j),i=1,maxtype),
-c    &j=1,maxsat)
+      write(lun,13,err=950)((r_resolution_x_vis(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,14,err=950)((r_resolution_y_vis(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,15,err=950)((r_resolution_x_ir(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,16,err=950)((r_resolution_y_ir(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,17,err=950)((r_resolution_x_wv(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,18,err=950)((r_resolution_y_wv(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,20,err=950)((r_lo1(i,j),i=1,maxtype),j=1,maxsat)
+      write(lun,21,err=950)((r_la1(i,j),i=1,maxtype),j=1,maxsat)
+
 c     write(lun,19,err=950)((r_latin(i,j),i=1,maxtype),j=1,maxsat)
-c     write(lun,20,err=950)((r_lo1(i,j),i=1,maxtype),j=1,maxsat)
-c     write(lun,21,err=950)((r_la1(i,j),i=1,maxtype),j=1,maxsat)
 c     write(lun,22,err=950)((r_lap(i,j),i=1,maxtype),j=1,maxsat)
 c     write(lun,23,err=950)((r_lov(i,j),i=1,maxtype),j=1,maxsat)
 
-      write(lun,24,err=950)((image_width_ir(i,j),i=1,maxtype),
-     &j=1,maxsat)
-      write(lun,25,err=950)((image_depth_ir(i,j),i=1,maxtype),
-     &j=1,maxsat)
-      write(lun,26,err=950)((image_width_vis(i,j),i=1,maxtype),
-     &j=1,maxsat)
-      write(lun,27,err=950)((image_depth_vis(i,j),i=1,maxtype),
-     &j=1,maxsat)
-      write(lun,28,err=950)((image_width_wv(i,j),i=1,maxtype),
-     &j=1,maxsat)
-      write(lun,29,err=950)((image_depth_wv(i,j),i=1,maxtype),
-     &j=1,maxsat)
       write(lun,30,err=950)((i_start_vis(i,j),i=1,maxtype),
      &j=1,maxsat)
       write(lun,31,err=950)((i_end_vis(i,j),i=1,maxtype),
@@ -113,18 +101,19 @@ c     write(lun,23,err=950)((r_lov(i,j),i=1,maxtype),j=1,maxsat)
       write(lun,41,err=950)((j_end_wv(i,j),i=1,maxtype),
      &j=1,maxsat)
 
-c     write(lun,42,err=950)((n_pixels_vis(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,43,err=950)((n_lines_vis(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,44,err=950)((n_pixels_ir(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,45,err=950)((n_lines_ir(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,46,err=950)((n_pixels_wv(i,j),i=1,maxtype),
-c    &j=1,maxsat)
-c     write(lun,47,err=950)((n_lines_wv(i,j),i=1,maxtype),
-c    &j=1,maxsat)
+      write(lun,42,err=950)((n_pixels_vis(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,43,err=950)((n_lines_vis(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,44,err=950)((n_pixels_ir(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,45,err=950)((n_lines_ir(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,46,err=950)((n_pixels_wv(i,j),i=1,maxtype),
+     &j=1,maxsat)
+      write(lun,47,err=950)((n_lines_wv(i,j),i=1,maxtype),
+     &j=1,maxsat)
+
 c     write(lun,48,err=950)((i_ewCycles(i,j),i=1,maxtype),
 c    &j=1,maxsat)
 c     write(lun,49,err=950)((i_ewIncs(i,j),i=1,maxtype),
@@ -145,8 +134,8 @@ c     write(lun,56,err=950)((i_nwpix_ir(i,j),i=1,maxtype),
 c    &j=1,maxsat)
 c     write(lun,57,err=950)((i_nwpix_wv(i,j),i=1,maxtype),
 c    &j=1,maxsat)
-c     write(lun,58,err=950)imc
 
+      write(lun,58,err=950)(imc(j),j=1,maxsat)
       write(lun,59,err=950)
 
 
@@ -162,25 +151,20 @@ c     write(lun,58,err=950)imc
 8     format(1x,'C_SAT_ID=',2("'",a,"',"))          !maxsat = 2
 9     format(1x,'C_SAT_TYPES=',4("'",a,"',"))
 10    format(1x,'C_CHANNEL_TYPES=',5("'",a,"',"))   !channel x type x sat
-11    format(1x,'R_SAT_SUB_LAT=',8(f10.5,","))      !all the rest are maxtype x maxsat
-12    format(1x,'R_SAT_SUB_LON=',8(f10.5,","))
-13    format(1x,'R_RESOLUTION_X_VIS=',8(f10.5,','))
-14    format(1x,'R_RESOLUTION_Y_VIS=',8(f10.5,','))
-15    format(1x,'R_RESOLUTION_X_IR=',8(f10.5,','))
-16    format(1x,'R_RESOLUTION_Y_IR=',8(f10.5,','))
-17    format(1x,'R_RESOLUTION_X_WV=',8(f10.5,','))
-18    format(1x,'R_RESOLUTION_Y_WV=',8(f10.5,','))
+11    format(1x,'R_SAT_SUB_LAT=',2(f10.5,","))      !all the rest are maxtype x maxsat
+12    format(1x,'R_SAT_SUB_LON=',2(f10.5,","))
+13    format(1x,'R_RESOLUTION_X_VIS=',4(f10.4,','))
+14    format(1x,'R_RESOLUTION_Y_VIS=',4(f10.4,','))
+15    format(1x,'R_RESOLUTION_X_IR=',4(f10.4,','))
+16    format(1x,'R_RESOLUTION_Y_IR=',4(f10.4,','))
+17    format(1x,'R_RESOLUTION_X_WV=',4(f10.4,','))
+18    format(1x,'R_RESOLUTION_Y_WV=',4(f10.4,','))
 19    format(1x,'R_LATIN=',8(f10.5,','))
-20    format(1x,'R_LO1=',8(f10.5,','))
-21    format(1x,'R_LA1=',8(f10.5,','))
+20    format(1x,'R_LO1=',4(f10.5,','))
+21    format(1x,'R_LA1=',4(f10.5,','))
 22    format(1x,'R_LAP=',8(f10.5,','))
 23    format(1x,'R_LOV=',8(f10.5,','))
-24    format(1x,'IMAGE_WIDTH_IR=',8(i5,','))
-25    format(1x,'IMAGE_DEPTH_IR=',8(i5,','))
-26    format(1x,'IMAGE_WIDTH_VIS=',8(i5,','))
-27    format(1x,'IMAGE_DEPTH_VIS=',8(i5,','))
-28    format(1x,'IMAGE_WIDTH_WV=',8(i5,','))
-29    format(1x,'IMAGE_DEPTH_WV=',8(i5,','))
+
 30    format(1x,'I_START_VIS=',8(i5,','))
 31    format(1x,'I_END_VIS=',8(i5,','))
 32    format(1x,'J_START_VIS=',8(i5,','))
@@ -209,7 +193,7 @@ c     write(lun,58,err=950)imc
 55    format(1x,'I_NWPIX_VIS=',8(i5,','))
 56    format(1x,'I_NWPIX_IR=',8(i5,','))
 57    format(1x,'I_NWPIX_WV=',8(i5,','))
-58    format(1x,'IMC=',i4,",")
+58    format(1x,'IMC=',2(i4,","))
 59    format(1x,"/")
       close(lun)
       istatus=1
@@ -217,6 +201,6 @@ c     write(lun,58,err=950)imc
 
  900  print*,'error opening file ',nest7grid
       return
- 950  print*,'error writing satellite_lvd_nl in ',nest7grid
+ 950  print*,'error writing satellite_lvd.nl in ',nest7grid
       return
       end

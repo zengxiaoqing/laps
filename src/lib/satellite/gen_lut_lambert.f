@@ -362,8 +362,6 @@ c
          goto 1000
       endif
 
-      r_la1(jtype,isat) = rla1
-      r_lo1(jtype,isat) = rlo1
       r_lap(jtype,isat) = rlap
       r_lov(jtype,isat) = rlov
       r_latin(jtype,isat) = rlatin
@@ -374,6 +372,12 @@ c
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
+         r_la1(jtype,isat) = rla1
+         r_lo1(jtype,isat) = rlo1
+         r_resolution_x_vis(jtype,isat) = dx
+         r_resolution_y_vis(jtype,isat) = dy
+         n_pixels_vis(jtype,isat) = nx3mx
+         n_lines_vis(jtype,isat)  = ny3mx
 
          goto 75
 
@@ -381,6 +385,12 @@ c
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
+         r_la1(jtype,isat) = rla1
+         r_lo1(jtype,isat) = rlo1
+         r_resolution_x_ir(jtype,isat) = dx
+         r_resolution_y_ir(jtype,isat) = dy
+         n_pixels_ir(jtype,isat) = nx3mx
+         n_lines_ir(jtype,isat)  = ny3mx
 
          goto 75
 
@@ -388,6 +398,12 @@ c
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
+         r_la1(jtype,isat) = rla1
+         r_lo1(jtype,isat) = rlo1
+         r_resolution_x_wv(jtype,isat) = dx
+         r_resolution_y_wv(jtype,isat) = dy
+         n_pixels_wv(jtype,isat) = nx3mx
+         n_lines_wv(jtype,isat)  = ny3mx
 
 75    continue
 c

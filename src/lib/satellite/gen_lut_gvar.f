@@ -56,8 +56,6 @@ c
       Integer     start_line
       Integer     start_pix
       Integer     decimat
-      Integer     imagedepth
-      Integer     imagewidth
       Integer     i1,j1
       Integer     x_step
       Integer     y_step
@@ -177,7 +175,6 @@ c
      &                         SatSubLON,
      &                         decimat,
      &                         nx,ny,
-     &                         imagewidth,imagedepth,
      &                         ustatus)
 
       if(ustatus.ne.0)then
@@ -441,27 +438,30 @@ c
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &r_img_res_m,istatus)
 
+      r_sat_sub_lat(isat) = SatSubLAT
+      r_sat_sub_lon(isat) = SatSubLON
+
       goto(71,72,73,72,72)indx
 
 71       i_start_vis(jtype,isat)= elemstart
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
-         image_depth_vis(jtype,isat) = imagedepth
-         image_width_vis(jtype,isat) = imagewidth
-         r_sat_sub_lat(isat) = SatSubLAT
-         r_sat_sub_lon(isat) = SatSubLON
-         
+         r_resolution_x_vis(jtype,isat) = r_img_res_m
+         r_resolution_y_vis(jtype,isat) = r_img_res_m
+         n_pixels_vis(jtype,isat) = nx
+         n_lines_vis(jtype,isat)  = ny
+
          goto 75
 
 72       i_start_ir(jtype,isat) = elemstart
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
-         image_depth_ir(jtype,isat) = imagedepth
-         image_width_ir(jtype,isat) = imagewidth
-         r_sat_sub_lat(isat) = SatSubLAT
-         r_sat_sub_lon(isat) = SatSubLON
+         r_resolution_x_ir(jtype,isat) = r_img_res_m
+         r_resolution_y_ir(jtype,isat) = r_img_res_m
+         n_pixels_ir(jtype,isat) = nx
+         n_lines_ir(jtype,isat)  = ny
 
          goto 75
 
@@ -469,10 +469,10 @@ c
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
-         image_depth_wv(jtype,isat) = imagedepth
-         image_width_wv(jtype,isat) = imagewidth
-         r_sat_sub_lat(isat) = SatSubLAT
-         r_sat_sub_lon(isat) = SatSubLON
+         r_resolution_x_wv(jtype,isat) = r_img_res_m
+         r_resolution_y_wv(jtype,isat) = r_img_res_m
+         n_pixels_wv(jtype,isat) = nx
+         n_lines_wv(jtype,isat)  = ny
 
 75    continue
  
