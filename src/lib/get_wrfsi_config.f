@@ -130,6 +130,7 @@ c
         path_to_topt30s=topo_30s
         path_to_pctl10m=pctland_10m
         path_to_soil2m = '/null'
+        path_to_landuse30s = veg_landuse_30s
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
         c80_description = simulation_name_cmn
