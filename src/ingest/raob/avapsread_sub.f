@@ -35,9 +35,12 @@
         character*130 line
 
         character*9 a9time_a(maxlvl), a9time_ob
+        character*5 c5_staid
         character*(*)  filename
 
         logical l_parse
+
+        i_snd_out = 0
 
         lun = 1
         open ( lun, file=filename, status='old', err=1000 )
@@ -54,7 +57,7 @@
 
 40      do i=1,nh
           read (lun,99,end=1000) header_line(i)
-          print*, header_line(i)
+          print*, i,header_line(i)(1:120)
 99        format (a)
         enddo
 
@@ -67,6 +70,14 @@
  2      read (lun,99,end=105)line(1:20)
         if(l_parse(line,'Data') .and. l_parse(line,'Type'))then
             write(6,*)' New Sounding Detected - backspace lun'
+            backspace lun
+            go to 105
+
+        elseif(l_parse(line,'Project') .and. l_parse(line,'ID'))then
+            write(6,*)' New Sounding Detected - backspace lun'
+            write(6,*)' WARNING: already reading second header line'
+            write(6,*)'          an extra backspace will be done'
+            backspace lun
             backspace lun
             go to 105
 
@@ -201,6 +212,10 @@ c
 200     lat_a = lat_s
         lon_a = lon_s
 
+        i_snd_out = i_snd_out + 1
+        write(c5_staid,201)i_snd_out
+201     format('AVP',i2.2)
+
         call write_snd    (lun_out                         ! I
      1                    ,1,lvl_out,1                     ! I
      1                    ,iwmostanum                      ! I
@@ -216,7 +231,6 @@ c
      1                    ,istatus)                        ! O
 
         write(6,*)' Looping back to look for rest of new sounding'
-        nh = 14
         go to 40
 
 1000    write(6,*)' End of file reached'
