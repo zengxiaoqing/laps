@@ -1,0 +1,11 @@
+!Variables in vgridspec section of wrfsi.nl. File
+
+      character*8 verticalcoord, vstagger_type
+      real levels(200), vertical_increment
+      real moad_nz, vertical_stretch
+      integer max_vertical_inc
+
+      common /wrf_vgrid_cmn/ verticalcoord
+     +,vstagger_type, moad_nz, levels
+     +,vertical_increment,max_vertical_inc
+     +,vertical_stretch
