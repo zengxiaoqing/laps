@@ -356,8 +356,8 @@ cdis
                                 obs_point(nobs_point)%i = i_ob
                                 obs_point(nobs_point)%j = j_ob
                                 obs_point(nobs_point)%k = k
-                                obs_point(nobs_point)%value(1) = ob_u
-                                obs_point(nobs_point)%value(2) = ob_v
+                                obs_point(nobs_point)%valuef(1) = ob_u
+                                obs_point(nobs_point)%valuef(2) = ob_v
                                 obs_point(nobs_point)%weight = 
      1                                                weight_prof       
                                 obs_point(nobs_point)%type = 'prof'      
