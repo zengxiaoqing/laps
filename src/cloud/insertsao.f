@@ -73,7 +73,7 @@ cdis
         character*3 lso_ext
         data lso_ext /'lso'/
 
-        logical l_dry, l_auto, l_parse
+        logical l_dry, l_parse
 
 !       Arrays for reading in the SAO data from the LSO files
         Real*4   elev(maxstns),t(maxstns),td(maxstns),dd(maxstns)
@@ -90,6 +90,8 @@ c
      1             ,obstype(maxstns)*8
      1             ,wx(maxstns)*8
         character   store_emv(maxstns,5)*1,amt_ret(maxstns,5)*4
+
+        character*8 c8_project
 
 !       Arrays for inserting the cloud data into the LAPS grid
         real*4 cldcv(ni,nj,nk)
@@ -161,10 +163,17 @@ c
 
         n_analyzed = 0
 
+        call get_c8_project(c8_project,istatus)
+        if(istatus .ne. 1)return
+
 !       Loop through the stations
         do i=1,num_sao
 
           call filter_string(obstype(i))
+
+          if(l_parse(c8_project,'AFGWC'))then
+              obstype(i)=obstype(i)(1:7)//'U'
+          endif
 
 !         Determine whether we want to analyze cloud layers from this station
           if(obstype(i)(1:4) .eq. 'MESO')goto125
@@ -202,13 +211,18 @@ c place station at proper laps grid point
      1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! New LSO file format
 
               if(  obstype(i)(8:8) .eq. 'A'
-     1        .or. obstype(i)(8:8) .eq. 'U' )then      ! Automated Station 
-                                                       ! (12000' limit) or UNK
-                  l_auto = .true.
+     1        .or. obstype(i)(8:8) .eq. 'U' )then      ! use 12000' limit
+
+                  if(obstype(i)(8:8) .eq. 'A')then     ! Automated station
+                      i_auto = 1                       
+                  else                                 ! Indeterminate
+                      i_auto = 0
+                  endif
+
                   ht_defined = elev(i) + 12000./3.281
 
               else                                     ! Non-Automated
-                  l_auto = .false.
+                  i_auto = -1
                   ht_defined = 99999.
 
               endif ! Automated station
@@ -336,14 +350,17 @@ C CLOUDS ARE NOW IN MSL
 
                   if(.true.)then                               ! SKC is now used
                       if(l_parse(amt_ret(i,l),'CLR') .and. 
-     1                                            .not. l_auto)then
+     1                                            i_auto .eq. -1)then       
                           write(6,*)' WARNING: CLR reported for '
      1                             ,'non-automated station'
+
                       elseif(l_parse(amt_ret(i,l),'SKC') .and. ! Converse
-     1                                                  l_auto)then
+     1                                            i_auto .eq. +1)then
                           write(6,*)' WARNING: SKC reported for '
      1                             ,'automated station'
+
                       endif ! CLR/SKC test
+
                   endif ! .true.
 
                   if(n_cloud_layers_ret(i) .gt. 1)then
@@ -866,13 +883,13 @@ C CLOUDS ARE NOW IN MSL
 
         character*(*) string1,string2
 
-        integer slen1,slen2
+!       integer slen1,slen2
 
         len1 = len(string1)
         len2 = len(string2)
 
-        call s_len(string1,slen1)
-        call s_len(string2,slen2)
+!       call s_len(string1,slen1)
+!       call s_len(string2,slen2)
 
         l_parse = .false.
 
