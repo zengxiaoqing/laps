@@ -119,19 +119,19 @@ if ($GOES_NUMBER == 8) {
   system("cat g09_ozo_control_file.dat GOES9_IMAGER_OZO_CONTROL_FILE.DAT > Ozo_Control_File.dat");
   print "$Path_to_static/optranlib/Ozo_Control_File.dat has been generated.\n";
 
-# process goes 12  ! treat as goes 10 at this time 4/9/03
+# process goes 12
 } elsif ($GOES_NUMBER == 12) {
 
-  system("mv goes12_ascii_coeff.dat coef.dat");
+  system("cp goes12_ascii_coeff.dat coef.dat");
   print "$Path_to_static/optranlib/coef.dat has been generated.\n";
 
   system("$Path_to_exe/binary_coeff.x");
 
-  system("mv dry_control_file_12.dat Dry_Control_File.dat");
+  system("cp dry_control_file_12.dat Dry_Control_File.dat");
   print "$Path_to_static/optranlib/Dry_Control_File.dat has been generated.\n";
-  system("mv wet_control_file_12.dat Wet_Control_File.dat");
+  system("cp wet_control_file_12.dat Wet_Control_File.dat");
   print "$Path_to_static/optranlib/Wet_Control_File.dat has been generated.\n";
-  system("mv ozo_control_file_12.dat Ozo_Control_File.dat");
+  system("cp ozo_control_file_12.dat Ozo_Control_File.dat");
   print "$Path_to_static/optranlib/Ozo_Control_File.dat has been generated.\n";
 
 } else {
