@@ -22,8 +22,9 @@
         integer j_status(20),i4time_array(20)
         character*3 exts(20)
 
-!       Input Variables
+!       Array Variables
         real*4 lat(imax,jmax),lon(imax,jmax),topo(imax,jmax)
+        real*4 rland_frac(imax,jmax)
 
         real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)
      1        ,wanl_2d(imax,jmax)
@@ -108,7 +109,7 @@
 
         I4_elapsed = ishow_timer()
 
-        call get_domain_laps(NX_L,NY_L,'nest7grid',lat,lon,topo
+        call get_laps_domain_95(NX_L,NY_L,lat,lon,topo,rland_frac
      1                                      ,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'

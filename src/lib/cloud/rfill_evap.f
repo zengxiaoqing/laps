@@ -31,7 +31,7 @@ cdis
 cdis
         subroutine rfill_evap(ref_3d,ni,nj,nk,l_low_fill,l_high_fill
      1  ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
-     1  ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus,ref_base)
+     1  ,temp_3d,rh_3d_pct,cldpcp_type_3d,heights_3d,istatus,ref_base)       
 
 !       This Routine Fills in the gaps in a 3D radar volume that has been
 !       stored as a sparse array. A linear interpolation in the vertical
@@ -55,11 +55,11 @@ cdis
         real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
         real*4 temp_3d(ni,nj,nk)                 ! Input 3D temp grid
         real*4 rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
-!       real*4 heights_1d(nk)                    ! Input
-        integer cldpcp_type_3d(ni,nj,nk)       ! Input 3D pcp type grid
+        real*4 heights_3d(ni,nj,nk)              ! Input 
+        integer cldpcp_type_3d(ni,nj,nk)         ! Input 3D pcp type grid
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
-        integer isum_ref_2d(ni,nj)             ! Local array
+        integer isum_ref_2d(ni,nj)               ! Local array
         real*4 heights_1d(nk)                    ! Local array
 
         logical l_low_fill,l_high_fill,l_test
@@ -210,8 +210,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                 endif
 
                 if(k_bottom .gt. k_topo)then ! Echo above ground
-
-                    height_bottom = height_of_level(k_bottom)
+                    height_bottom = heights_3d(i,j,k_bottom)
 
                     call latlon_to_radar(lat(i,j),lon(i,j),height_bottom
      1                  ,azimuth,slant_range,elev_bottom

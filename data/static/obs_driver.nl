@@ -3,6 +3,7 @@
  path_to_local_data='/public/data/ldad/mesonet/netcdf/',
  path_to_buoy_data='/public/data/maritime/netcdf/',
  path_to_gps_data='/public/data/gpsmet/netcdf/',
+ metar_format='default',
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
  itime_before=900,

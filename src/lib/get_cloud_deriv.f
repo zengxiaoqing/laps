@@ -982,22 +982,21 @@ cdoc    Determine cloud liquid profile within a given cloud layer
         return
         end
 
-        subroutine integrate_slwc(slwc,imax,jmax,kmax,slwc_int)
+        subroutine integrate_slwc(slwc,heights_3d,imax,jmax,kmax
+     1                           ,slwc_int)            
 
 cdoc    Integrates cloud liquid through the column
 
-        real*4 slwc(imax,jmax,kmax) ! Input in g/m**3
+        real*4 slwc(imax,jmax,kmax)       ! Input in g/m**3
+        real*4 heights_3d(imax,jmax,kmax) ! Input 
         real*4 slwc_int(imax,jmax)  ! Output in m (metric tons of water / m**2)
         real*4 depth(kmax)          ! Local
-
-        do k = 1,kmax-1
-            depth(k) = height_of_level(k+1) - height_of_level(k) ! meters
-        enddo ! k
 
         do j = 1,jmax
         do i = 1,imax
             slwc_int(i,j) = 0.
             do k = 1,kmax-1
+                depth(k) = heights_3d(i,j,k+1) - heights_3d(i,j,k) ! meters
                                                          ! convert units
                 slwc_ave = (slwc(i,j,k) + slwc(i,j,k+1)) * 0.5 * 1e-6 
                 slwc_int(i,j) = slwc_int(i,j) + slwc_ave * depth(k)

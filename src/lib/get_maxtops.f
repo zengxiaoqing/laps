@@ -30,10 +30,12 @@ cdis
 cdis
 cdis
 
-        subroutine get_maxtops(grid_ra_ref,imax,jmax,kmax,rmax_tops_m)
+        subroutine get_maxtops(grid_ra_ref,heights_3d
+     1                        ,imax,jmax,kmax,rmax_tops_m)
 
-        real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 rmax_tops_m(imax,jmax)
+        real*4 grid_ra_ref(imax,jmax,kmax)             ! I
+        real*4 heights_3d(imax,jmax,kmax)              ! I
+        real*4 rmax_tops_m(imax,jmax)                  ! O
 
         highest_top = 0.
         rf_thr = 0.
@@ -47,19 +49,19 @@ cdis
             k_grid = 0.
             do k = 1,kmax-1
                 if(grid_ra_ref(i,j,k)   .ge. rf_thr .and.
-     1           grid_ra_ref(i,j,k+1) .lt. rf_thr)then
+     1             grid_ra_ref(i,j,k+1) .lt. rf_thr)then
                     k_grid = k
                     frac_k = (rf_thr - grid_ra_ref(i,j,k))
      1             / (grid_ra_ref(i,j,k+1) - grid_ra_ref(i,j,k))
                 endif
             enddo
 
-!           Convert from Grid Level to KM
+!           Convert from Grid Level to Height
             if(k_grid .gt. 0.)then
-                height_low  = height_of_level(k_grid)
-                height_high = height_of_level(k_grid+1)
-                rmax_tops_m(i,j) = height_low * (1. - frac_k)
-     1                         + height_high * frac_k
+                height_low  = heights_3d(i,j,k_grid)
+                height_high = heights_3d(i,j,k_grid+1)
+                rmax_tops_m(i,j) = height_low  * (1. - frac_k)
+     1                           + height_high * frac_k
             endif
 
             highest_top = max(highest_top,rmax_tops_m(i,j))

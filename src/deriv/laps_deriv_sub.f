@@ -91,7 +91,6 @@ cdis
 !       1997 Jul 31 K. Dritz  - Added N_PIREP, maxstns, and max_cld_snd as
 !                               dummy arguments.  Removed the PARAMETER
 !                               statement for max_cld_snd.
-!       1997 Jul 31 K. Dritz  - Changed LAPS_DOMAIN_FILE to 'nest7grid'.
 !       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
 !       1997 Aug 01 K. Dritz  - Added maxstns, IX_LOW, IX_HIGH, IY_LOW, and
 !                               IY_HIGH as arguments in call to insert_sao.
@@ -574,7 +573,7 @@ c read in laps lat/lon and topo
 !       Calculate and Write Integrated LWC
         write(6,*)
         write(6,*)' Calculating Integrated LWC'
-        call integrate_slwc(slwc,NX_L,NY_L,NZ_L,slwc_int)
+        call integrate_slwc(slwc,heights_3d,NX_L,NY_L,NZ_L,slwc_int)
 
         var = 'LIL'
         ext = 'lil'
@@ -613,10 +612,11 @@ c read in laps lat/lon and topo
                 I4_elapsed = ishow_timer()
 
 !               Apply evaporation subroutine
-                call rfill_evap(radar_ref_3d,NX_L,NY_L,NZ_L,.true.,.true
-     1.
+                call rfill_evap(radar_ref_3d,NX_L,NY_L,NZ_L
+     1          ,.true.,.true.
      1          ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
-     1          ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus,ref_base)
+     1          ,temp_3d,rh_3d_pct,cldpcp_type_3d,heights_3d,istatus
+     1          ,ref_base)
 
                 I4_elapsed = ishow_timer()
 
@@ -628,7 +628,8 @@ c read in laps lat/lon and topo
 
             write(6,*)' Getting Max Tops'
 
-            call get_maxtops(radar_ref_3d,NX_L,NY_L,NZ_L,ref_mt_2d)
+            call get_maxtops(radar_ref_3d,heights_3d,NX_L,NY_L,NZ_L
+     1                      ,ref_mt_2d)
 
 !           Get LAPS reflectivities at the surface (or immediately above it)
             write(6,*)' Getting Low Level Reflectivity'

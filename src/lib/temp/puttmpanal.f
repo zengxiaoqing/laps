@@ -75,7 +75,6 @@ cdis
         real*4 temp_sfc_k(ni,nj)   ! Input
         real*4 pres_sfc_pa(ni,nj)  ! Input
         real*4 theta(nk)
-        real*4 height(nk)
 
         real*4 bkg_500(ni,nj)
 
@@ -110,10 +109,6 @@ cdis
             write(6,*)' Error: Bad status return from put_temp_anal'
             return
         endif
-
-        do k = 1,nk
-            height(k) = height_of_level(k)              ! Standard Atmosphere
-        enddo
 
 !       Initialize diagnostic variables
         diff_thmax = 0.
@@ -360,9 +355,10 @@ cdis
             sfc_bias = temp_sfc_eff - temp_sfc_intrpl
 
             do k = 1,k_top
+                height_k = psatoz(pres_3d(i,j,k) * .01)   ! Standard Atmosphere
 
 !               A Standard Atmosphere calculation is probably sufficient
-                frac_bias = (height_top - height(k)) /    
+                frac_bias = (height_top - height_k) /    
      1                      (height_top - height_sfc)
 
 !               Potential mod for AFWA concerns - apply reverse ramp underground
