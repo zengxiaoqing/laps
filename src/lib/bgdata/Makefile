@@ -20,14 +20,15 @@ DEBUGLIB = libdebugbgdata.a
 
 
 
-SRC= bkgd_stn_interp.f   bkgd_util.f            get_acceptable_files.f \
-     get_bkgd_mdl_info.f get_attr_sbn.f         es_table.f             \
+SRC= bkgd_stn_interp.f   bkgd_util.f            es_table.f             \
+     get_acceptable_files.f get_bkgd_mdl_info.f get_attr_sbn.f         \
+     getdims_lapsprd.f   lga_driver.f                                  \
      lga_interp.f        lprep_eta_conusc.f     lprep_ruc2_pub.f       \
      readavnpublic.f     readbgdata.f           readeta48_pub.f        \
      readconusnws.f      readruc2_pub.f                                \
      read_netcdf_field.f read_sbn_grids.f       readdgprep.f           \
-     readnogaps.f        readruc60native.f      es_table.f             \
-     rdmodelindex.f      sfcbkgd.f 
+     readnogaps.f        readruc60native.f      rdmodelindex.f         \
+     sfcbkgd.f           writelgalgb.f
 
 
 ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))

@@ -165,7 +165,7 @@ c
           dz=height(i,j,k)-ter
           psfc=p(k)*exp(G/(R*tbar)*dz)
 
-          if(bgm.eq.6.or.bgm.eq.8)then      !Td
+          if(bgm.eq.0.or.bgm.eq.6.or.bgm.eq.8)then      !Td
              qsfc=ssh2(psfc,tsfc-273.15
      &                  ,tdsfc-273.15,t_ref)*.001  !kg/kg
 

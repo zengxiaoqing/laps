@@ -18,7 +18,7 @@
       integer nzbg_ww
       integer bgmodel
       integer ntbg,nzbg
-      integer i,j,k
+      integer i,j,k,l
       integer lencm,lend
       integer ivaltimes(100)
       integer i4_initial
@@ -53,6 +53,8 @@ c
       real, intent(out) :: tpbg_sfc(nx_bg,ny_bg)
 
       real      lon0,lat1,lat2
+      real      ssh2
+      real      r_missing_data
 
       character*256   bgpath
       character*256   fname_bg
@@ -116,8 +118,6 @@ c
      .   ,ht_sfc,pr_sfc,td_sfc,tp_sfc
      .   ,uw_sfc,vw_sfc,mslp,istatus)
 
-c     .   ,gproj,lon0,lat1,lat2,istatus)
-
          integer bgmodel
          integer nx,ny,nz
          integer istatus
@@ -153,137 +153,181 @@ c        character gproj*2
 
       call s_len(cmodel,lencm)
 
+      call get_r_missing_data(r_missing_data,istatus)
+
       if(bgmodel.eq.0)then
+        if(cmodel(1:lencm).eq.'LAPS_FUA'.or.
+     +     cmodel(1:lencm).eq.'MODEL_FUA')then
 
-        print*,'Reading fua/fsf'
+           print*,'Reading fua/fsf'
 
-        call get_directory_length(fullname,lend)
-        directory=fullname(1:lend)
-        call cv_asc_i4time(fullname(lend+1:lend+9),i4_initial)
-        read(af_bg,100)i4hr
+           call get_directory_length(fullname,lend)
+           directory=fullname(1:lend)
+           call cv_asc_i4time(fullname(lend+1:lend+9),i4_initial)
+           read(af_bg,100)i4hr
 100     format(i4.4)
+           i4_valid=i4_initial+i4hr/100*3600
 
-        i4_valid=i4_initial+i4hr/100*3600
 
-        if(cmodel(1:lencm).eq.'LAPS_FUA')then
+c the following subroutine should also work for different
+c domain fua/fsf but we'll try the get_lapsdata stuff first.
+c        call read_fua_cdf(fullname, x, y, z, 
+c    +     ht, pr, om, sh, t3, u3, v3,
+c    +     istatus)
+c        do j=1,ny_bg
+c        do i=1,nx_bg
+c           prbght(i,j,:)=pr(:)
+c           prbgsh(i,j,:)=pr(:)
+c           prbguv(i,j,:)=pr(:)
+c           prbgww(i,j,:)=pr(:)
+c        enddo
+c        enddo
 
-         call get_modelfg_3d(i4_valid,'U3 ',nx_bg,ny_bg,nzbg_uv
-     .,uwbg,istatus)
-         call get_modelfg_3d(i4_valid,'V3 ',nx_bg,ny_bg,nzbg_uv
-     .,vwbg,istatus)
-         call get_modelfg_3d(i4_valid,'T3 ',nx_bg,ny_bg,nzbg_ht
-     .,tpbg,istatus)
-         call get_modelfg_3d(i4_valid,'HT ',nx_bg,ny_bg,nzbg_ht
-     .,htbg,istatus)
-         call get_modelfg_3d(i4_valid,'SH ',nx_bg,ny_bg,nzbg_sh
-     .,shbg,istatus)
-         call get_modelfg_3d(i4_valid,'OM ',nx_bg,ny_bg,nzbg_ww
-     .,wwbg,istatus)
+c        call get_modelfg_2d(i4_valid,'USF',nx_bg,ny_bg,uwbg_sfc
+c    .,istatus)
+c        call get_modelfg_2d(i4_valid,'VSF',nx_bg,ny_bg,vwbg_sfc
+c    .,istatus)
+c        call get_modelfg_2d(i4_valid,'TSF',nx_bg,ny_bg,tpbg_sfc
+c    .,istatus)
+c        call get_modelfg_2d(i4_valid,'DSF',nx_bg,ny_bg,shbg_sfc
+c    .,istatus)
+c        call get_modelfg_2d(i4_valid,'SLP',nx_bg,ny_bg,mslpbg
+c    .,istatus)
+c        call get_modelfg_2d(i4_valid,'PSF',nx_bg,ny_bg,prbg_sfc
+c    .,istatus)
+c       elseif(cmodel.eq.'MODEL_FUA')then
 
-c     print*,'get pressures from pressure.nl'
-         call get_pres_1d(i4time,nzbg_ht,pr,istatus)
-         do k = 1,nzbg_ht
-            pr(k)=pr(k)/100.
-            do j=1,ny_bg
-            do i=1,nx_bg
-               prbght(i,j,k)=pr(k)
-               prbgsh(i,j,k)=pr(k)
-               prbguv(i,j,k)=pr(k)
-               prbgww(i,j,k)=pr(k)
-            enddo
-            enddo
-         enddo
+           call s_len(fullname,lend)
+           fullname=fullname(1:lend)//".fua"
+           nf_status = NF_OPEN(fullname,NF_NOWRITE,nf_fid)
+           if(nf_status.ne.NF_NOERR) then
+              print *, NF_STRERROR(nf_status)
+              print *,'NF_OPEN ', fullname
+              return
+           endif
 
-         call get_modelfg_2d(i4_valid,'USF',nx_bg,ny_bg,uwbg_sfc
-     .,istatus)
-         call get_modelfg_2d(i4_valid,'VSF',nx_bg,ny_bg,vwbg_sfc
-     .,istatus)
-         call get_modelfg_2d(i4_valid,'TSF',nx_bg,ny_bg,tpbg_sfc
-     .,istatus)
-         call get_modelfg_2d(i4_valid,'DSF',nx_bg,ny_bg,shbg_sfc
-     .,istatus)
-         call get_modelfg_2d(i4_valid,'SLP',nx_bg,ny_bg,mslpbg
-     .,istatus)
-         call get_modelfg_2d(i4_valid,'PSF',nx_bg,ny_bg,prbg_sfc
-     .,istatus)
+c        nf_status=NF_INQ_VARID(nf_fid,'z',nf_vid)
+c        if(nf_status.ne.NF_NOERR) then
+c           print *, NF_STRERROR(nf_status)
+c           print *,'in NF_GET_VAR_ model '
+c           return
+c        endif
+c        nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nzbg)
+c        if(nf_status.ne.NF_NOERR) then
+c           print *, NF_STRERROR(nf_status)
+c           print *,'dim n_valtimes'
+c           return
+c        endif
 
-        elseif(cmodel.eq.'MODEL_FUA')then
+           nf_status=NF_INQ_VARID(nf_fid,'level',nf_vid)
+           if(nf_status.ne.NF_NOERR) then
+              print *, NF_STRERROR(nf_status)
+              print *,'in NF_GET_VAR_ model '
+              return
+           endif
+           nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,pr)
+           if(nf_status.ne.NF_NOERR) then
+              print *, NF_STRERROR(nf_status)
+              print *,'in NF_GET_VAR_ model '
+              return
+           endif
 
-         nf_status = NF_OPEN(fullname,NF_NOWRITE,nf_fid)
-         if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status)
-            print *,'NF_OPEN ', fullname
-            return
-         endif
-         nf_status=NF_INQ_VARID(nf_fid,'z',nf_vid)
-         if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status)
-            print *,'in NF_GET_VAR_ model '
-            return
-         endif
-         nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nzbg)
-         if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status)
-            print *,'dim n_valtimes'
-            return
-         endif
-         nf_status=NF_INQ_VARID(nf_fid,'levels',nf_vid)
-         if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status)
-            print *,'in NF_GET_VAR_ model '
-            return
-         endif
-         nf_status=NF_GET_VARA_INT(nf_fid,nf_vid,1,nzbg_ht,pr)
-         if(nf_status.ne.NF_NOERR) then
-            print *, NF_STRERROR(nf_status)
-            print *,'in NF_GET_VAR_ model '
-            return
-         endif
-
-         do k = 1,nzbg_ht
-            do j=1,ny_bg
-            do i=1,nx_bg
-               prbght(i,j,k)=pr(k)
-               prbgsh(i,j,k)=pr(k)
-               prbguv(i,j,k)=pr(k)
-               prbgww(i,j,k)=pr(k)
-            enddo
-            enddo
-         enddo
+           do k = 1,nzbg_ht
+           do j=1,ny_bg
+           do i=1,nx_bg
+              prbght(i,j,k)=pr(nzbg_ht-k+1)
+              prbgsh(i,j,k)=pr(nzbg_ht-k+1)
+              prbguv(i,j,k)=pr(nzbg_ht-k+1)
+              prbgww(i,j,k)=pr(nzbg_ht-k+1)
+           enddo
+           enddo
+           enddo
 
 c upper air
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_uv,directory,'U3 '
      1            ,units_2d,comment_2d,uwbg,istatus)
 
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_uv,directory,'V3 '
      1            ,units_2d,comment_2d,vwbg,istatus)
 
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ht,directory,'T3 '
      1            ,units_2d,comment_2d,tpbg,istatus)
 
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ht,directory,'HT '
      1            ,units_2d,comment_2d,htbg,istatus)
 
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_sh,directory,'SH '
      1            ,units_2d,comment_2d,shbg,istatus)
 
-         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+           call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
      1            ,ny_bg,nzbg_ww,directory,'OM '
      1            ,units_2d,comment_2d,wwbg,istatus)
 
+           if(istatus.ne.1)then
+              print*,'No 3D background files: ',directory(1:lend)
+              return
+           endif
 c sfc data
-         call get_lapsdata_2d(i4time,i4_valid,directory,'SLP'
-     1            ,units_2d,comment_2d,nx_bg,ny_bg,mslpbg
+           search_dir: do l=lend,1,-1
+              if(directory(l:l).eq.'f')then
+                 if(directory(l:l+2).eq.'fua')then
+                    exit search_dir
+                 endif
+              endif
+           enddo search_dir
+
+           if(l.le.1)then
+              print*,'Unable to determine location of fua in'
+              print*,'directory string for fsf. Return with no data'
+              return
+           endif
+
+           directory(l:l+2)='fsf'
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'PSF',units_2d,comment_2d,nx_bg,ny_bg,prbg_sfc
      1            ,istatus)
 
-         call get_lapsdata_2d(i4time,i4_valid,directory,'DSF'
-     1            ,units_2d,comment_2d,nx_bg,ny_bg,shbg_sfc
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'TSF',units_2d,comment_2d,nx_bg,ny_bg,tpbg_sfc
      1            ,istatus)
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'SLP',units_2d,comment_2d,nx_bg,ny_bg,mslpbg
+     1            ,istatus)
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'DSF',units_2d,comment_2d,nx_bg,ny_bg,shbg_sfc
+     1            ,istatus)
+
+           if(istatus.ne.1)then
+              print*,'No Sfc background data: ',directory(1:lend)
+              return
+           endif
+
+           prbg_sfc=prbg_sfc*100.
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'USF',units_2d,comment_2d,nx_bg,ny_bg,uwbg_sfc
+     1            ,istatus)
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'VSF',units_2d,comment_2d,nx_bg,ny_bg,vwbg_sfc
+     1            ,istatus)
+
+           call get_lapsdata_2d(i4_initial,i4_valid,directory
+     1            ,'TER',units_2d,comment_2d,nx_bg,ny_bg,htbg_sfc
+     1            ,istatus)
+
+           if(istatus.ne.1)then
+              print*,'No Sfc background data: ',directory(1:lend)
+              return
+           endif
 
         endif
 
@@ -316,7 +360,7 @@ c convert rh to sh.
           prbguv=prbght
           prbgww=prbght
 c
-      elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
+      elseif (bgmodel .eq. 4) then
 
           call read_sbn_grids(fullname,af_bg,cmodel
      .,nx_bg,ny_bg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
@@ -468,5 +512,23 @@ c
          print*,'Error with background model data in read_bgdata'
       endif
 
+      return
+      end
+c------------------------------------------
+
+      subroutine swap_array_k(a1,nx,ny,nz)
+c
+      implicit none
+      integer nx,ny,nz,k
+      real  a1(nx,ny,nz)
+      real, allocatable:: a2(:,:,:)
+
+      allocate (a2(nx,ny,nz))
+
+      do k=1,nz
+         a2(:,:,k)=a1(:,:,nz-k+1)
+      enddo
+      a1=a2
+      deallocate (a2)
       return
       end

@@ -34,9 +34,10 @@ c     USE laps_static
       integer       n_valtimes
 
       real          Lat0,Lat1
-      real          Lon0
+      real          Lon0,Lov
       real          La1in,La2in
       real          Lo1in,Lo2in
+      real          La1,Lo1,La2,Lo2
       real          dlat,dlon
       real          sw(2),ne(2)
       real          latdxdy,londxdy
@@ -113,42 +114,90 @@ c     USE laps_static
           integer       istatus
         end subroutine
 
+        subroutine read_lapsprd_attr(fullname,
+     +Dx, Dy, La1, Lo1, Latin1, Latin2, LoV, 
+     +grid_type, La2,Lo2, istatus)
+          integer istatus
+          real Dx, Dy, La1, La2, Lo1, Lo2, LoV
+          real Latin1, Latin2
+          character*30 grid_type
+          character*(*) fullname
+        end subroutine
+
       end interface
 
 
       print*,'Here: get_bkgd_mdl_info'
+      print*,'cmodel = ',cmodel(1:nclen)
+      print*,'-----------------------'
       istatus=1
       call s_len(fullname,lenfn)
       call s_len(cmodel,nclen)
 
       if(bgmodel.eq.0)then 
-c      if(cmodel(1:nclen).eq.'LAPS_FUA')
-c    &then
+       if(cmodel(1:nclen).eq.'MODEL_FUA')then
+          fullname=fullname(1:lenfn)//".fua"
+          call getdims_lapsprd(fullname,nxbg,nybg,nzbg,istatus)
+          if(istatus.ne.1)then
+             print*,'error returned: getdims_lapsprd'
+             return
+          endif
+          call read_lapsprd_attr(fullname, 
+     +     dxbg, dybg, La1, Lo1, La1in, La2in, LoV,
+     +     projname, La2,Lo2, istatus)
+          if(istatus.ne.1)then
+             print*,'error returned: read_lapsprd_attr'
+             return
+          endif
+
+c this code gets domain info from an existing "static" file
 c        call find_domain_name(generic_data_root,grid_fnam_common,
 c    &istatus)
 c        call get_horiz_grid_spec(generic_data_root)
 c        call s_len(grid_type,leng)
-c        if(grid_type(1:5).eq. 'polar')gproj='PS'
-c        if(grid_type(1:17).eq.'lambert conformal')gproj='LC'
-c        if(grid_type(1:8).eq. 'mercator')gproj='MC'
-         
-c        nxbg=x
-c        nybg=y
-c        nzbg_ht=nk
-c        nzbg_tp=nk
-c        nzbg_sh=nk
-c        nzbg_uv=nk
-c        nzbg_ww=nk
-c        sw(1)=la1
-c        sw(2)=lo1
-c        ne(1)=la2
-c        ne(2)=lo2
-c        Lon0=lov
-c        Lat0=latin1
-c        Lat1=latin2
-c      elseif(cmodel(1:nclen).eq.'MODEL_FUA')then
-c        call get_fua_dims()
-c      endif
+
+         if(projname(1:5).eq. 'polar')gproj='PS'
+         if(projname(1:17).eq.'lambert conformal')gproj='LC'
+         if(projname(1:8).eq. 'mercator')gproj='MC'
+
+         if(Lo1.gt.180)Lo1=Lo1-360
+         if(Lo2.gt.180)Lo2=Lo2-360
+         if(LoV.gt.180)LoV=LoV-360
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+         sw(1)=La1
+         sw(2)=Lo1
+         ne(1)=La2
+         ne(2)=Lo2
+         Lon0=LoV
+         Lat0=La1in
+         centrallat=La1in
+         centrallon=LoV
+         Lat1=La2in
+
+       elseif(cmodel(1:nclen).eq.'LAPS_FUA')then
+
+         call get_laps_dimensions(nzbg,istatus)
+         call get_grid_dim_xy(nxbg,nybg,istatus)
+
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+
+         return
+
+       elseif(cmodel(1:nclen).eq.'LAPS')then
+
+         print*,'Error: lga currently not able to use LAPS'
+         print*,'analysis for background ... not tested'
+         return
+
+       endif
 
       endif
 c ETA Public
@@ -390,10 +439,6 @@ c        lon0_lc=lon0
 c        dlat=1.0
 c        dlon=1.0
 c     endif
-
-
-c     print*,'done in get_bkgd_mdl_info'
-c     print*,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
 
       return
       end

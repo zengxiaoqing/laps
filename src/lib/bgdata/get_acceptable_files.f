@@ -70,7 +70,8 @@ C
          enddo
       enddo
 
-      if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA') then
+      if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA'.and.
+     +   cmodel.ne.'MODEL_FUA')then
          do i=max(0,forecast_length),0,-1
             bg_files=bg_files+1
             call make_fnam_lp(i4time_now+3600*i
@@ -208,8 +209,8 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
                   fname=bg_names(n)(1:9)
                   af=bg_names(n)(10:13)
                   read(af,'(i4)',err=888) ihour
-                  if(bgmodel.eq.0.and.cmodel.eq.'LAPS_FUA')
-     +               ihour=ihour/100
+                  if(bgmodel.eq.0.and.cmodel.eq.'LAPS_FUA'.or.
+     +               cmodel.eq.'MODEL_FUA')ihour=ihour/100
 	    else
 	       print*,'Ignoring weird filename ',bg_names(n)(1:bg_len)
 	    endif 
