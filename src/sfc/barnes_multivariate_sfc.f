@@ -7,9 +7,16 @@
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary                             ! Input
+     1                   ,n_obs,obs_barnes                       ! Input
      1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
 
+        integer*4 max_obs
+        parameter (max_obs = 40000)       
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_barnes(max_obs)
+        type (barnesob)    obs_barnes_valid(max_obs)
 
         integer nk
         parameter (nk=1)
@@ -18,20 +25,17 @@
         real*4 to_2d_in(ni,nj)                          ! Observations
         real*4 to_2d(ni,nj)                             ! Observations
 
-        logical l_struct
-
         real*4 wt_2d(ni,nj)
         integer*4 n_obs_lvl
 
         logical l_analyze(nk), l_3d, l_use_ob, l_boundary(ni,nj)
 
+        logical l_barnes_wide, l_struct
+        data l_struct /.false./        ! Using data structures?
+        data l_barnes_wide /.true./    ! Using barnes_wide routine on boundary?
+
         integer*4  n_fnorm
-
-        data l_struct /.true./
-
         dimension fnorm(0:n_fnorm)
-
-!       include 'tempobs.inc'
 
         write(6,*)' Subroutine Barnes_univariate_sfc'
 
@@ -54,15 +58,49 @@
 
         boundary_err = rinst_err
             
-        do i = 1,ni
-        do j = 1,nj
+        if(l_struct)then
+          if(l_barnes_wide)then
+            do iob = 1,n_obs
+                if(obs_barnes(iob)%qc)then
+                    i = obs_barnes(iob)%i
+                    j = obs_barnes(iob)%j              
+                    if(l_boundary(i,j))then
+                        ibound = ibound + 1
+                        if(ibound .ne. (ibound/iskip_bound)*iskip_bound
+     1                                                            )then        
+                            l_use_ob = .false.
+                        endif
+                    endif
+                endif
+            enddo ! iob
+          endif ! l_barnes_wide
+
+!         Place valid obs from obs_barnes into obs_barnes_valid
+          do iob = 1,n_obs
+            if(obs_barnes(iob)%qc)then
+                n_obs_valid = n_obs_valid + 1
+                obs_barnes_valid(n_obs_valid)%i = obs_barnes(iob)%i
+                obs_barnes_valid(n_obs_valid)%j = obs_barnes(iob)%j
+                obs_barnes_valid(n_obs_valid)%k = obs_barnes(iob)%k
+                obs_barnes_valid(n_obs_valid)%weight 
+     1                                        = obs_barnes(iob)%weight       
+                obs_barnes_valid(n_obs_valid)%value(1) 
+     1                                        = obs_barnes(iob)%value(1)       
+            endif ! valid ob
+          enddo ! iob
+
+        else ! .not. l_struct
+          do i = 1,ni
+          do j = 1,nj
             l_use_ob = .true.
 
 !           Determine if point would represent a boundary ob that gets skipped
-            if(l_boundary(i,j))then
-                ibound = ibound + 1
-                if(ibound .ne. (ibound/iskip_bound)*iskip_bound )then
-                    l_use_ob = .false.
+            if(l_barnes_wide)then
+                if(l_boundary(i,j))then
+                    ibound = ibound + 1
+                    if(ibound .ne. (ibound/iskip_bound)*iskip_bound)then       
+                        l_use_ob = .false.
+                    endif
                 endif
             endif
 
@@ -71,12 +109,21 @@
                 sumsq_inst = sumsq_inst + 1./wt_2d(i,j)
                 n_obs_valid = n_obs_valid + 1
                 to_2d(i,j) = to_2d_in(i,j)
+
+!               Fill data structure element
+                obs_barnes_valid(n_obs_valid)%i = i
+                obs_barnes_valid(n_obs_valid)%j = j
+                obs_barnes_valid(n_obs_valid)%k = 1
+                obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2       
+                obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
+
             else
                 to_2d(i,j) = r_missing_data
             endif
 
-        enddo ! j
-        enddo ! i
+          enddo ! j
+          enddo ! i
+        endif
 
         if(n_obs_valid .gt. 0)then
             rms_inst = sqrt(sumsq_inst/float(n_obs_valid))
@@ -97,14 +144,14 @@
         rep_pres_intvl = 5000. ! Hardwire should work for a 2-D analysis
 
         call barnes_multivariate(
-     1                      t_2d                            ! Outputs
-     1                     ,n_var                           ! Input
-     1                     ,ni,nj,nk,grid_spacing_cen_m     ! Inputs
-     1                     ,rep_pres_intvl                  ! Input
-     1                     ,to_2d,wt_2d,fnorm,n_fnorm       ! Inputs
-     1                     ,l_analyze,l_3d,rms_thresh       ! Input
-     1                     ,weight_bkg_const                ! Input
-     1                     ,n_obs_lvl,istatus)              ! Outputs
+     1                      t_2d                                  ! Outputs
+     1                     ,n_var ! ,n_obs_valid,obs_barnes_valid ! Input
+     1                     ,ni,nj,nk,grid_spacing_cen_m           ! Inputs
+     1                     ,rep_pres_intvl                        ! Input
+     1                     ,to_2d,wt_2d,fnorm,n_fnorm             ! Inputs
+     1                     ,l_analyze,l_3d,rms_thresh             ! Input
+     1                     ,weight_bkg_const                      ! Input
+     1                     ,n_obs_lvl,istatus)                    ! Outputs
 
         return
         end
