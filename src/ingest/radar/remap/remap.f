@@ -413,6 +413,30 @@ cdis
      1        '  Calling remap_process: past_tilt/i_tilt_proc_curr',
      1                                  past_tilt,i_tilt_proc_curr
 
+              call get_grid_spacing_cen(grid_spacing_m, i_status)
+              if(i_status .ne. 1)then
+                  write(6,*)' Error in obtaining grid_spacing_m'
+                  return
+              endif
+
+              if(min_ref_samples .eq. -1)then
+                  if(grid_spacing_m .le. 3500.)then
+                      min_ref_samples = 1
+                  else
+                      min_ref_samples = 4
+                  endif
+              endif
+
+              if(min_vel_samples .eq. -1)then
+                  if(grid_spacing_m .le. 3500.)then
+                      min_vel_samples = 1
+                  else
+                      min_vel_samples = 4
+                  endif
+              endif
+
+              write(6,*)' min_samples ref/vel = ',min_ref_samples
+     1                                           ,min_vel_samples
               write(6,*)'  i_last, i_first ',i_last_scan,i_first_scan
               write(6,*)'  i4time_vol, i_num,  istatus',
      1                i4time_vol,i_num_finished_products,istatus
