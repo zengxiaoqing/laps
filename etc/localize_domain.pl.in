@@ -27,7 +27,8 @@
 #
 # J. Smart: 6-25-01: Modified script to be more generic and adaptable to the
 #                    WRFSI domain localization; thus, renamed script to
-#                    localize_domain.pl.in
+#                    localize_domain.pl.in ... -w switch to distinguish which
+#                    localization (laps or wrfsi).
 use strict;
 use Getopt::Long;
 my($INSTALL_ROOT,$DATA_ROOT,$SOURCE_ROOT,$WHICH_TYPE,$quiet,$sattype,$satid,$no_ggm);
@@ -45,9 +46,9 @@ my $result = GetOptions("install_root=s" => \$INSTALL_ROOT,
 
 sub help_sub{
     print "$0 command line options (default values)\n";
-    print "   --install_root = Root directory of the installed laps binaries (@prefix@)\n";
-    print "   --dataroot = Root directory of the installed laps data (@prefix@/data)\n";
-    print "   --srcroot  = Root directory of the laps source code    (@top_srcdir@)\n";
+    print "   --install_root = Root directory of the installed binaries (@prefix@)\n";
+    print "   --dataroot = Root directory of the installed data (@prefix@/data)\n";
+    print "   --srcroot  = Root directory of the source code    (@top_srcdir@)\n";
     print "   --which_type = Specifies localization for either LAPS or WRFSI\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
     print "   --satid    = g8 or g10 (guessed based on -100.0W)\n";
@@ -130,7 +131,7 @@ if(-d $FXA_DATA){
 open(PARMS,"$DATA_ROOT/static/$namelist");
 my($xdim,$ydim,$zdim,$varx,$vary,$varz);
 if($namelist eq "wrfsi.nl"){
-   $varx="xdim";$vary="ydim";$varz="num_levels";
+   $varx="xdim";$vary="ydim";$varz="levels";
 }else{
    $varx="NX_L_CMN";$vary="NY_L_CMN";$varz="NK_LAPS";
 }
@@ -142,6 +143,7 @@ while(<PARMS>){
     $zdim = $1 if(/^\s+$varz\s*=\s*(\d+),/i);
 }
 close(PARMS);
+$zdim = 1 if ($namelist eq "wrfsi.nl");
 
 if($xdim <=0 || $ydim <= 0 || $zdim<=0){
   print "$0: Error Reading grid size from $DATA_ROOT/static/$namelist\n";
