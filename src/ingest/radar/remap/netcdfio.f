@@ -208,6 +208,8 @@ c      Determine filename extension
                
            write(6,*)' # of output files = ',i_nbr_lapsprd_files
            
+           I4_elapsed = ishow_timer()
+
            i4time_process = 0
 
            if(l_realtime)then
@@ -611,48 +613,16 @@ c      Determine filename extension
 
        if(index .eq. 1)then ! reflectivity
            do i = 1,n_gates
-               data(i) = Z(n_ptr + (i-1))
-
-!              Convert from signed to unsigned
-               if(data(i) .gt. 127.) then
-                   print *, 'error in Reflectivity: ',i,data(i)
-                   stop
-               endif
-               if(data(i) .lt. 0.) then
-                   data(i) = 256. + data(i)
-               endif
-
-               if(data(i) .ne. b_missing_data)then ! Scale
-                   data(i) = (data(i) - 2.)/2.0 - 32.
-               endif
-
+               call counts_to_dbz(Z(n_ptr + (i-1))                       ! I
+     1                           ,b_missing_data                         ! I
+     1                           ,data(i))                               ! O
            enddo
 
        elseif(index .eq. 2)then ! velocity
            do i = 1,n_gates
-               data(i) = V(n_ptr + (i-1))
-
-!              Convert from signed to unsigned
-               if(data(i) .gt. 127.) then
-                   print *, 'error in Velocity: ',i,data(i)
-                   stop
-               endif
-               if(data(i) .lt. 0.) then
-                   data(i) = 256. + data(i)
-               endif
-
-               if(data(i) .eq. 1. .or. data(i) .eq. 0.)then 
-                   data(i) = b_missing_data  ! Invalid Measurement
-               endif
-
-               if(resolutionV .eq. 0.)then ! QC Check
-                   data(i) = b_missing_data
-               endif
-
-               if(data(i) .ne. b_missing_data)then ! Scale valid V
-                   data(i) = (data(i) - 129.) * resolutionV
-               endif
-
+               call counts_to_vel(V(n_ptr + (i-1))                       ! I
+     1                           ,b_missing_data,resolutionV             ! I
+     1                           ,data(i))                               ! O
            enddo
 
        endif
@@ -661,7 +631,73 @@ c      Determine filename extension
        return
        end
  
- 
+       subroutine counts_to_dbz(zcounts,b_missing_data                   ! I
+     1                         ,dbz)                                     ! O
+
+!      Convert integer Z count value to dbz
+
+       integer zcounts
+       real*4 dbz,dbz_hold,b_missing_data                         
+
+       dbz_hold = zcounts
+
+!      Convert from signed to unsigned
+       if(dbz_hold .gt. 127.) then
+           print *, 'error in Reflectivity: ',dbz_hold
+           stop
+       endif
+
+       if(dbz_hold .lt. 0.) then
+           dbz_hold = 256. + dbz_hold
+       endif
+
+       if(dbz_hold .ne. b_missing_data)then ! Scale
+           dbz_hold = (dbz_hold - 2.)/2.0 - 32.
+       endif
+
+       dbz = dbz_hold
+
+       return
+       end
+
+
+       subroutine counts_to_vel(vcounts,b_missing_data,resolutionV        ! I
+     1                         ,vel_ms)                                   ! O
+
+!      Convert integer V count value to radial velocity (meters/sec)
+
+       integer vcounts
+       real*4 vel_ms,vel_hold,b_missing_data                         
+
+       vel_hold = vcounts
+
+!      Convert from signed to unsigned
+       if(vel_hold .gt. 127.) then
+           print *, 'error in Velocity: ',vel_hold
+           stop
+       endif
+
+       if(vel_hold .lt. 0.) then
+           vel_hold = 256. + vel_hold
+       endif
+
+       if(vel_hold .eq. 1. .or. vel_hold .eq. 0.)then 
+           vel_hold = b_missing_data  ! Invalid Measurement
+       endif
+
+       if(resolutionV .eq. 0.)then ! QC Check
+           vel_hold = b_missing_data
+       endif
+
+       if(vel_hold .ne. b_missing_data)then ! Scale valid V
+           vel_hold = (vel_hold - 129.) * resolutionV
+       endif
+
+       vel_ms = vel_hold
+   
+       return
+       end
+
        function cvt_fname_data()
  
        cvt_fname_data = 0
