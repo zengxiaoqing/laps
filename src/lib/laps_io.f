@@ -1260,11 +1260,12 @@ c
         character csatid(maxsat)*6   !satellite id's returned from routine
 
         integer   i4time_first
-        data      i4time_first/0/
-        save      i4time_first
+c       data      i4time_first/0/
+c       save      i4time_first
 
         istatus=1   !data was found
         nsats=0
+        i4time_first=0
         do i=1,maxsat
            if(isats(i).eq.1)then
               call get_laps_lvd(c_sat_id(i),
@@ -1293,6 +1294,7 @@ c
               if(i4timedata(i).eq.i4time_first)then
                  call make_fnam_lp(i4timedata(i),asc9_tim,istatus)
                  call move(field_2d_lvd(1,1,i),field_2d,imax,jmax)
+                 i4time_nearest=i4timedata(i)
                  write(6,*)'Returning ',var_2d,' for ',csatid(i),
      &' ',asc9_tim
                  return
@@ -1305,6 +1307,7 @@ c
               i4time_min=abs(i4timedata(i)-i4time_sys)
               if(i4time_min.lt.min_i4time)then
                  imn=i
+                 min_i4time=i4time_min
               endif
            enddo
 
@@ -1312,6 +1315,7 @@ c
               i4time_first=i4timedata(imn)
               call make_fnam_lp(i4timedata(imn),asc9_tim,istatus)
               call move(field_2d_lvd(1,1,imn),field_2d,imax,jmax)
+              i4time_nearest=i4timedata(imn)
               write(6,*)'Returning ',var_2d,' for ',csatid(imn),
      &' ',asc9_tim
               return
@@ -1321,6 +1325,7 @@ c default
               i4time_first=i4timedata(1)
               call make_fnam_lp(i4time_first,asc9_tim,istatus)
               call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
+              i4time_nearest=i4timedata(1)
               write(6,*)'Returning ',var_2d,' for ',csatid(1),
      &' ',asc9_tim
               return
@@ -1330,6 +1335,7 @@ c default
            i4time_first=i4timedata(1)
            call make_fnam_lp(i4time_first,asc9_tim,istatus)
            call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
+           i4time_nearest=i4timedata(1)
            write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
            return
         elseif(nsats.le.0)then
