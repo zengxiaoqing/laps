@@ -261,8 +261,8 @@ c     also compute weighting function for all locations for given raob
 
                r = acos (r)
 
-               if (r.ge.0.5) then
-                  weight(i,j,k) =  0.2662467082E-43
+               if (r .ge. 0.48) then
+                  weight(i,j,k) = exp ( -1.*(.48 * 6371)**2/101131. ) 
                else
                   weight(i,j,k) = exp ( -1.*(r * 6371)**2/101131. ) 
 c     lam = 600 km
