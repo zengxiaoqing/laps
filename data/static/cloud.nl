@@ -1,7 +1,7 @@
  &cloud_nl
  l_use_vis=.true.,
  l_use_vis_partial=.true.,
- l_use_vis_add=.false.,
+ l_use_vis_add=.true.,
  l_use_39=.true.,
  latency_co2=4000,
  pct_req_lvd_s8a=0.,
