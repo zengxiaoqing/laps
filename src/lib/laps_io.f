@@ -1779,7 +1779,7 @@ c     include 'bgdata.inc'
       integer   istatus,i
 
       call get_background_info(bgpaths,bgmodels
-     +,oldest_forecast,max_forecast_delta,forecast_length
+     +,forecast_length
      +,use_analysis,cmodel,itime_inc,smooth_fields,sfc_bkgd)
 
       nbgm=0
