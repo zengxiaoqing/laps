@@ -841,7 +841,7 @@ cdis
         character*125 comment_3D(N_3D_FIELDS)
         character*10 units_3D(N_3D_FIELDS)
         character*3 var_3D(N_3D_FIELDS)
-        character*3 EXT
+        character*(*) EXT
 
         write(6,*)' Subroutine put_laps_3d_multi...'
 
