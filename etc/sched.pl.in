@@ -22,7 +22,7 @@
 
 use strict;
 use English;
-use vars qw($opt_d $opt_c);
+use vars qw($opt_d $opt_c $opt_r $opt_m);
 use Getopt::Std;
 
 umask 002;
@@ -99,7 +99,12 @@ my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
 
 my $t=gmtime(); print $t." Running purger\n";
-system("$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl -r -m 30 $LAPS_DATA_ROOT/lapsprd");
+my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
+$sys .= "-r " if($opt_r);
+$sys .= "-m $opt_m " if($opt_m);
+$sys .= " $LAPS_DATA_ROOT/lapsprd";
+
+system($sys);
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 my($exe);
 foreach $exe (@LAPS_EXE){

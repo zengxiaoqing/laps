@@ -40,27 +40,43 @@ if($opt_r){
     $min_files = ($opt_m)?$opt_m:0;
 }else{
     $hist_time = ($opt_t)?$opt_t:1.5;
-    $clean_dirs{lga} = 0.5;
-    $clean_dirs{lgb} = 0.5;
-    $clean_dirs{ram} = 0.75;
-    $clean_dirs{rsf} = 0.75;
-    $clean_dirs{lcv} = 2.1;
-    $clean_dirs{l1s} = 2.1;
-    $clean_dirs{lm2} = 1.5;
-    $clean_dirs{v01} = 0.125;
-    $clean_dirs{v02} = 0.125;
-    $clean_dirs{v03} = 0.125;
-    $clean_dirs{v04} = 0.125;
-    $clean_dirs{dprep} = 0.25;
-    $clean_dirs{'model/output'} = 0.25;
-    $clean_dirs{'model/varfiles'} = 0.25;
-    $clean_dirs{'../log'} = 30.0;
 #
 # Don't ever completely empty the directories 
 #
 
     $min_files = ($opt_m)?$opt_m:5;
 }
+#
+# exceptions - overridden if $min_files==0
+#
+if($min_files>0){
+    $clean_dirs{lga} = 0.5;
+    $clean_dirs{lgb} = 0.5;
+    $clean_dirs{ram} = 0.75;
+    $clean_dirs{rsf} = 0.75;
+
+    $clean_dirs{lcv} = 2.1;
+    $clean_dirs{l1s} = 2.1;
+    $clean_dirs{lm2} = 1.5;
+
+    $clean_dirs{v01} = 0.125;
+    $clean_dirs{v02} = 0.125;
+    $clean_dirs{v03} = 0.125;
+    $clean_dirs{v04} = 0.125;
+
+    $clean_dirs{'lvd/goes08'} = 0.25;
+    $clean_dirs{'lvd/goes09'} = 0.25;
+    $clean_dirs{'lvd/goes10'} = 0.25;
+    $clean_dirs{'lvd/gmssat'} = 0.25;
+
+    $clean_dirs{dprep} = 0.25;
+    $clean_dirs{'model/output'} = 0.25;
+    $clean_dirs{'model/varfiles'} = 0.25;
+    $clean_dirs{'../log'} = 30.0;
+}
+
+
+
 print "Running $0 for data in $DATAROOT default purge time is $hist_time days \n";
 print "Leave a minimum of $min_files in each directory\n";
 

@@ -55,6 +55,9 @@ $LAPSROOT="@prefix@" unless($LAPSROOT);
 $LAPS_DATA_ROOT = "@datadir@" unless($LAPS_DATA_ROOT);
 $ENV{LAPS_DATA_ROOT} = $LAPS_DATA_ROOT;
 
+require "$LAPSROOT/etc/run_sys.pm";
+
+
 my $FXA_DATA = $ENV{"FXA_DATA"};
 
 if(-d "$LAPS_SRC_ROOT/data"){
@@ -69,7 +72,7 @@ if(-d "$LAPS_SRC_ROOT/data"){
 	}
         my $sys ="cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT";
         print $sys;
-	system $sys;
+	run_sys $sys;
     }
     &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
 
@@ -107,7 +110,7 @@ if($xdim <=0 || $ydim <= 0 || $zdim<=0){
 #
 unless(-d "$LAPS_DATA_ROOT/cdl"){
     if(-d "$LAPS_SRC_ROOT/data/cdl") {
-	system("cp -r $LAPS_SRC_ROOT/data/cdl $LAPS_DATA_ROOT/cdl");
+	run_sys("cp -r $LAPS_SRC_ROOT/data/cdl $LAPS_DATA_ROOT/cdl");
     }else{
 	die "Could not find or create cdl directory in $LAPS_DATA_ROOT/cdl";
     }
@@ -145,11 +148,11 @@ foreach(@cdl_list){
 }
 
 
-system("$LAPSROOT/bin/gridgen_model.exe");	
+run_sys("$LAPSROOT/bin/gridgen_model.exe");	
 
 print "gridgen_model.exe complete - building sfc lookup tables\n";
 
-system("$LAPSROOT/bin/gensfclut.exe");
+run_sys("$LAPSROOT/bin/gensfclut.exe");
 
 #
 # Generate new vrc lookup tables
@@ -158,7 +161,7 @@ system("$LAPSROOT/bin/gensfclut.exe");
 if(-x "$LAPSROOT/bin/genvrclut.exe"){
   print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
   print "This could take an hour or more...\n" unless($sattype eq "wfo"); 
-  system("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
+  run_sys("$LAPSROOT/bin/genvrclut.exe 1> $LAPS_DATA_ROOT/log/genvrclut.log 2>&1");
 }else{
   print "$0 Failed to make genvrclut.exe, check $LAPS_SRC_ROOT/src/ingest/radar/wsiremap/vrc/table/make.out\n";
   exit -1;
@@ -169,15 +172,16 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
 # Clean out any pre-existing radar remapper look-up tables
 #
 print "cleaning out static/vxx directory of any old luts\n";
-system("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
+run_sys("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
 print "cleaning out static/lvd directory of any old luts\n";
-system("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
+run_sys("rm -f $LAPS_DATA_ROOT/static/lvd/*.lut");
 
 #
 # finally initialize the systime.dat file
 #
-system("$LAPSROOT/bin/systime.exe");
+run_sys("$LAPSROOT/bin/systime.exe");
 print "$0 complete\n";
+
 
 sub update_nl{
     my($srcroot,$dataroot) = @_;
@@ -193,26 +197,46 @@ sub update_nl{
     my @nl = grep(/\.nl$/,readdir(TDIR));
     closedir(TDIR);
     push(@nl,"nest7grid.parms");
-    my $nl_file;
+
     my %nl_vals;
+    my(%comments);
+    my $nl_file;
+
     foreach $nl_file (@nl){
+	print "First pass of namelist parser $nl_file\n";
 	open(FILE,"$dataroot/static/$nl_file");
-	
-	my $var;
-	while(<FILE>){
-	    if(/^\s*(\S+)\s*=\s*(.*)$/){
+	my @template = <FILE>;
+	close(FILE);
+
+	my $var='';
+	my $mark=0;
+	my $line;
+	foreach $line (@template){
+	    if($line =~ /^\s*\&/){
+		$mark=1;
+		next;
+	    }elsif($line =~ /^\s*\//){
+		$mark=2;
+		next;
+	    }elsif($line =~ /^[!cC]/){
+		$comments{$nl_file} .= $line;
+		$mark=3;
+		next;
+	    }elsif($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
 		$var = $1;
                 $var =~ tr/a-z/A-Z/;
 		$nl_vals{$var} = $2;
-	    }elsif(/^(\s*[^&\/].*)$/ && $var ne ''){
+		next;
+	    }elsif($line =~ /^(.*)$/){
 		$nl_vals{$var} .= "\n$1";
-	    }elsif(/^\s*[&\/]/){
+	    }
+	    if($mark>0){
 		$var = '';
+		$mark=0;
 	    }
 	}
-        
-	close(FILE);
-        system("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
+
+        run_sys("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
     }
     
     opendir(TDIR,"$srcroot/static");
@@ -224,10 +248,23 @@ sub update_nl{
 	open(INFILE,"$srcroot/static/$nl_file");
 	my @infile = <INFILE>;
 	close(INFILE);
+	
+	print "merging $srcroot/static/$nl_file into $dataroot/static/$nl_file\n";
 	open(OUTFILE,">$dataroot/static/$nl_file") or die "Could not open $dataroot/static/$nl_file to write";
-        my($var, $val);
-	foreach(@infile){
-	    if(/^\s*(\S+)\s*=\s*(.*)$/){
+        my($var, $val, $line, $eon);
+
+ 	my @comments = split("\n",$comments{$nl_file});
+
+	foreach $line (@infile){
+            next if($line eq "\n");
+#            print ">$line< ".length($line)."\n";
+	    if($line =~ /^\s*\//){
+		print "End of namelist found\n";
+		$eon = 1;
+		next;
+	    }
+	    
+	    if($line =~ /^\s*(\S+)\s*=\s*(.*)$/){
 		$var = $1;
                 
                 $var =~ tr/a-z/A-Z/;
@@ -236,19 +273,35 @@ sub update_nl{
 #                    print "Found $var = $val\n";
 		    $val = $nl_vals{$var};
 		}
+                $val =~ s/\n$//;
 		print OUTFILE " $var = $val\n";
 		next;
-            }elsif(/^[!cC]/){
-		;
-	    }elsif(/^(\s*[^&\/].*)$/ && exists $nl_vals{$var}){
+            }elsif($line =~ /^[!cC]/){
+		chomp($line);
+		my $tmpline = $line;
+		$tmpline =~ s/[(\[\]\\\/\(\)\!\$\^)]/\$1/g;
+                next if(grep(/$tmpline/,@comments)>0);
+		push(@comments,$line);
+		next;
+#		print OUTFILE $line;		;
+            }elsif($line =~ /^\s*&/){
+		print OUTFILE $line;
+		next;
+	    }elsif(($line =~ /^(\s*[^&\/].*)$/) && exists $nl_vals{$var}){
 		next;
 	    }
-	    print OUTFILE $_;
+	    print OUTFILE $line;
+
+	}
+	print OUTFILE " \/\n";
+	foreach(@comments){
+	    print OUTFILE "$_\n";
 	}
 	close(OUTFILE);
     }
 
 }
+
 
 sub safe_cp{
     my($indir,$outdir) = @_;
@@ -267,13 +320,13 @@ sub safe_cp{
 		&safe_cp("$indir/$file","$outdir/$file");
 	    }else{
                 print "Copying Directory $indir/$file to $outdir/$file\n";
-		system("cp -r $indir/$file $outdir/$file");
+		run_sys("cp -r $indir/$file $outdir/$file");
 	    }
 	    next;
 	}
 	next if(-e "$outdir/$file");
         print "Copying file $indir/$file to $outdir/$file\n";
-	system("cp $indir/$file $outdir/$file");
+	run_sys("cp $indir/$file $outdir/$file");
     }	
 }
 

@@ -10,8 +10,11 @@ use strict;
 my $timeout=60;
 my $LAPSROOT=shift;
 my $LAPS_DATA_ROOT=shift;
+use lib "$LAPSROOT/etc";
+use run_sys;
+use Get_env'fxa; #'
+#require "$LAPSROOT/etc/fxa.pm";
 
-require "$LAPSROOT/etc/fxa.pm";
 my $fxa_sys =  &Get_env'fxa; #'
 my($LAPS_LOG_PATH);
 if($fxa_sys!=0){
