@@ -327,8 +327,13 @@ if( defined($LAPS_TEMPLATE) ){
         closedir TEMPDIR;
         foreach (@filelist){
            if( ! /^\./ && ! /dataroot/ && ! /domain/ ){
-              print "Copy $LAPS_TEMPLATE/$_ to $LAPS_DATA_ROOT/static \n";
-              system("cp -r $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
+              if(-d "$LAPS_TEMPLATE/$_"){
+                  print "Copy $LAPS_TEMPLATE/$_ directory to $LAPS_DATA_ROOT/static \n";
+                  system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
+              }else{
+                  print "Copy $LAPS_TEMPLATE/$_ file to $LAPS_DATA_ROOT/static \n";
+                  system("cp -p  $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
+              }
            }
         }
 
