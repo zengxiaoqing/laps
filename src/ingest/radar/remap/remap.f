@@ -58,16 +58,20 @@ cdis
       call get_remap_parms(0,n_radars_remap,path_to_radar
      1       ,ext_dum,radar_subdir_dum,path_to_vrc,istatus)       
 
+      max_times = 2
+
       do i_radar = 1,n_radars_remap
-          write(6,*)
-          write(6,*)' Looping through radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
      1                  ,ext_dum,radar_subdir_dum
      1                  ,path_to_vrc,istatus)       
-          do itimes = 1,1
+
+          do itimes = 1,max_times
+              write(6,*)
+              write(6,*)' Looping through radar/time # ',i_radar,itimes       
               call remap_sub(i_radar,ext_dum,radar_subdir_dum       
      1                      ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
           enddo ! itimes
+
       enddo ! i_radar
 
  999  end
