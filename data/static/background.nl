@@ -24,7 +24,7 @@ c bgmodels describes the model type for the files found in each path
 c          this variable works in conjunction with cmodel as indicated.
 c 
 c allowable values are:    (cmodel)
-c        bgmodels = 0 ----> FUA_LAPS,FUA_MODEL,LAPS
+c        bgmodels = 0 ----> LAPS_FUA,MODEL_FUA,LAPS
 c                          (LAPS not tested)
 c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
