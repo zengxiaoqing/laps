@@ -846,13 +846,14 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      through private companies like Alden. 
 
      The conversion from GRIB to NetCDF is done outside of LAPS by FSL's 
-     Facility division (NIMBUS). Having the CDL should mostly be sufficient 
-     along with general knowledge of NetCDF for writing out the data. Beyond 
-     that, you may wish to contact the Facility Division for more info (given
-     that some type of funding arrangement with them exists). The Atlanta, 
-     Sterling, and Seattle WFOs have followed a more direct route, going from
-     the RUC/Eta to the intermediate "lga" file, bypassing the NetCDF file on 
-     the model grid. This includes RUC on isobaric surfaces. 
+     Information and Technology Services (ITS) division (in the NIMBUS system).
+     Having the CDL should mostly be sufficient along with general knowledge 
+     of NetCDF for writing out the data. Beyond that, you may wish to contact 
+     the ITS division for more info (given that some type of funding 
+     arrangement with them exists). The Atlanta, Sterling, and Seattle WFOs 
+     have followed a more direct route, going from the RUC/Eta to the 
+     intermediate "lga" file, bypassing the NetCDF file on the model grid. 
+     This includes RUC on isobaric surfaces. 
 
                        ----   2.3.2  Radar ingest ---
 
