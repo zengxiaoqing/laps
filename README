@@ -1735,12 +1735,19 @@ Source directory: laps/src/ingest/sao
 
 Parameter files: obs_driver.nl
 
-The LSO file is fairly self explanatory...the comments in the 
-'write_surface_obs' routine detail everything.  The expected accuracies are 
-based on "offical" NWS numbers where possible.  For LDAD observations, they're
-just a best guess, since no one really knows how good the obs are.  These 
-expected accuracies will be used in the quality control routines sometime in 
-the future.  The lat/lons are in decimal degrees.
+The LSO file is fairly self explanatory. The easiest way to see what
+goes where is to look at the routine 'read_surface_data' in the file 
+'src/lib/read_surface_obs.f', and the corresponding format statements in the 
+file 'src/include/lso_formats.inc'.
+
+The routines are pretty well commented, and should be enough to tell you what 
+you need to know if you want to make a decoder that outputs an LSO-type 
+formatted file directly. 
+
+The expected accuracies are based on "offical" NWS numbers where possible.  
+For LDAD observations, they're just a best guess, since no one really knows 
+how good the obs are.  These expected accuracies will be used in the quality 
+control routines sometime in the future.  The lat/lons are in decimal degrees.
 
 ------ 3.2.2.2   sfc_qc.exe --- 
 
