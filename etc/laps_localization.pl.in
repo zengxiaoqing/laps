@@ -129,10 +129,13 @@ my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
 
 foreach(@cdl_list){
-#
+# The next line was commented out on 11 Jan 01 to more closely couple LAPS and any
+#   model using the files fua.cdl and fsf.cdl  fua.cdl and fsf.cdl will now be
+#   edited to match the LAPS x and y dimensions each time laps_localization.pl is run.
+#  \/ The following line no longer applies  \/  11 Jan 01
 # DO not edit the model output cdl files, the user must currently edit these by hand.
 #
-    next if/^f/;
+#   next if/^f/;
     open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
     my @cdl = <CDL>;
     close(CDL);
