@@ -65,7 +65,7 @@ C*********************************************************************
 
         logical exist,new_DEM
 
-        integer nnxp,nnyp
+        integer nnxp,nnyp,mode
 
 	Real mdlat,mdlon
 	Real xmn(nnxp),ymn(nnyp)
@@ -170,6 +170,7 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         iplttopo=1
 
 C*********************************************************************
+        call get_gridnl(mode) 
 
 c calculate delta x and delta y using grid and map projection parameters
         call get_standard_latitudes(std_lat,std_lat2,istatus)
@@ -300,6 +301,14 @@ c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
      1         ,lat(nnxp,nnyp),lon(nnxp,nnyp)   
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
+
+
+        
+        if(mode.eq.2) then
+	   call showgrid(lat,lon,nnxp,nnyp,grid_spacing_m,
+     1	             c6_maproj,std_lat,std_lat2,std_lon,mdlat,mdlon)
+	   return
+	endif
 
         write(6,*)'deltax = ',deltax
 

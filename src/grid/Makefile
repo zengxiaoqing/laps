@@ -13,18 +13,26 @@ LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
 
 .SUFFIXES:
-.SUFFIXES: .o .c .f .a
+.SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = gridgen_model.exe
 
-SRC=gridgen_model.f put_laps_static.f
+SRC   = put_laps_static.f showgrid.f \
+        bcd_file.c create_bcd_bkgnd.c setsup.c \
+        getarealim.c xy_to_ll.c ll_to_xy.c 
+
+MAIN=gridgen_model.f 
+
+LIB=libgrid.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
 
 all: exe
 
-exe: $(EXE)
+exe: $(ARCHIVE) $(EXE)
 
-$(EXE): $(SRC)
-	$(FC) $(FFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
@@ -36,7 +44,30 @@ install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 
 clean:
-	rm -f $(EXE)  *.o *~ *#
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
 
 
 distclean: clean
+
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+
+%.o : %.F
+
+
+getgrid: getgrid.o
+	$(FC) $@.o $(LAPSLIBS) -o $@
+
+
+
+
+
+
+
+
+
+
+
+
