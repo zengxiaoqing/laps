@@ -396,7 +396,7 @@ c
      &,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
       print *, 'bgpath:             ',bgpath(1:bglen)
       print *, 'bgmodel:            ',bgmodel
-      print *, 'cmodel:             ',cmodel
+      print *, 'cmodel:             ',cmodel(1:ic)
       print *
 
       call get_directory('static',outdir,len_dir)    

@@ -129,7 +129,7 @@ c     USE laps_static
 
       print*,'Here: get_bkgd_mdl_info'
       call s_len(cmodel,nclen)
-      print*,'cmodel = ',cmodel(1:nclen)
+      print*,'cmodel = ',TRIM(cmodel)
       print*,'-----------------------'
       istatus=1
       call s_len(fullname,lenfn)
