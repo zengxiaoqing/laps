@@ -36,7 +36,7 @@
 #
 # -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
 #
-# -n                   Node type to be used with -q (default=comp)
+# -n                   Node type to be used with -q (default=ncomp)
 #
 # -e  e1,e2,...        Environment variables (if any) to pass into the executable
 #
@@ -191,7 +191,7 @@ my $lockfile = "$LAPS_LOCK_PATH/\.lock$exe\.$$";
 
 my $command;
 my $t;
-my $node_type = "comp";
+my $node_type = "ncomp";
 
 if($opt_q || $opt_Q){
     if($opt_n){
@@ -206,7 +206,7 @@ if($opt_q || $opt_Q){
         print TFILE "#PBS -lnodes=1:$node_type,walltime=20:00 -A $opt_q\n";
     }elsif($opt_Q){ 
         print TFILE "#\$ -pe $node_type 1\n";
-        print TFILE "#\$ -l h_rt=0:20:00\n";
+        print TFILE "#\$ -l h_rt=00:20:00\n";
         print TFILE "#\$ -A $opt_Q\n";
         print TFILE "#\$ -S /bin/sh\n";
         print TFILE "#\$ -cwd\n";
