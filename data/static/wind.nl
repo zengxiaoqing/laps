@@ -5,6 +5,7 @@
  thresh_2_radarobs_lvl_unfltrd=300,
  thresh_4_radarobs_lvl_unfltrd=600,
  weight_bkg_const_wind=5e28,
+ weight_radar=0.25,
  rms_thresh_wind=1.0,
  max_pr=1500,
  max_pr_levels=300,
@@ -31,7 +32,10 @@ c
 c weight_bkg_const_wind - Weight for Model Background. 
 c                         Recommended values: 0. < value <= 1e+30.
 c                         This controls how quickly the output values match the
-c                         background if far from obs. 
+c                         background if far from obs.
+c
+c weight_radar - weight for derived Doppler wind obs - equivalent to 1/err**2
+c                where 'err' is the assumed radial velocity error in m/s. 
 c
 c rms_thresh_wind - Threshold for rms fit of analysis to obs (non-dimensional).
 c                   Values are normalized relative to RMS instrument error of 
