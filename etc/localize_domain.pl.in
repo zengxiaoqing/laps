@@ -561,7 +561,7 @@ sub static_parms_to_cdl{
       run_sys::run_sys($sys,1);
    }
    open(NAV,"$LAPS_DATA_ROOT/log/nav.dat");
-   my @nav_stuff = <NAV>;
+   @nav_stuff = <NAV>;
    close NAV;
    unlink "$LAPS_DATA_ROOT/log/nav.dat";
 
