@@ -939,7 +939,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            The surface data, including all the types mentioned above, over much
            of the U.S. is available in realtime from FSL with some restrictions. 
            This data is in 'WFO/AWIPS' NetCDF format. Please contact Patty 
-           Miller at miller@fsl.noaa.gov for more information.   
+           Miller at miller@fsl.noaa.gov for more information on the MADIS
+           data distribution project.   
       
                       ----   2.3.4  Profiler / RASS ---
 
@@ -984,7 +985,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            The profiler data is also available via another route from FSL with
            some restrictions. This data is in 'WFO/AWIPS' NetCDF format. 
            Please contact Patty Miller at miller@fsl.noaa.gov for more 
-           information.   
+           information on the MADIS data distribution project.   
 
 
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
@@ -1004,7 +1005,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
            These are available in real-time from FSL with some restrictions. 
            The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
-           Patty Miller at miller@fsl.noaa.gov for more information.   
+           Patty Miller at miller@fsl.noaa.gov for more information on the
+           MADIS data distribution project.   
 
                       ----   2.3.7  Other Data Sources ---
 
@@ -1027,13 +1029,17 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            format are processed.
 
      Radar VAD Algorithm winds (pro)
-           FSL NIMBUS database, from WSR-88D algorithm output.
+           FSL NIMBUS database, from WSR-88D algorithm output. FSL obtains
+           this from NCEP and does not presently redistribute it.
 
      SODAR data (pro) - This is treated in a similar manner to wind profilers 
            and can be processed by LAPS ingest to appear in the PRO file.
+           This is available as part of the RSA project at Kennedy and
+           Vandenberg Space Centers and comes into NetCDF format via 
+           AWIPS/LDAD.
 
      Satellite derived soundings (snd):
-           AFWA database format. 
+           AFWA database format. Previously used at FSL but not currently.
 
      Cloud Drift Winds (cdw):
            We are ingesting the ASCII satellite cloud-drift wind files
