@@ -1630,23 +1630,15 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      To do this, perform the following between untarring the tar file and
      compiling
 
-     1. Edit 'data/static/nest7grid.parms'
-
-        Change the parameter PRESSURE_BOTTOM_L to be the pressure in
-        pascals of the lowest laps level (default is 110000 pa).
-
-        Change the parameter PRESSURE_INTERVAL_L to be the vertical
-        pressure resolution desired (default is 5000pa). 
-
-     2. Edit 'data/static/pressures.nl'
+     1. Edit 'data/static/pressures.nl'
 
         Update the list of pressures so that it is consistent with the
         other vertical grid parameters mentioned above.
- 
+
      Note that the vertical grid uses pressure coordinates and that the 
-     vertical pressure interval must be uniform between levels. Of course, the 
+     vertical pressure interval can vary between levels. Of course, the 
      top pressure should be greater than zero mb. The bottom level should 
-     extend below the terrain and the observations.
+     extend below the terrain and below the observations.
 
 -------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 
