@@ -50,7 +50,13 @@ main                                           laps_sfc.f
                 splin2                              "
 
 
-.........................PLEASE IGNORE WHAT IS BELOW...........................
+.........................PLEASE IGNORE THE INTERNAL NOTES BELOW.....................
+
+If 'barnes_multivariate_sfc_jacket' is called the stddev QC ob flagging
+is performed within that routine.
+
+If 'spline' is called the stddev QC ob flagging is performed in the 'spline'
+routine.
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
