@@ -238,15 +238,9 @@ C
                 do i = 1,level
                     if(windDir(i,i_pr_cl) .ge. 0      .and.
      1                 windDir(i,i_pr_cl) .le. 360    .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. 1     .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. 2     .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. 4     .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. -9999 .and.
-     1                 wsQcFlag(i,i_pr_cl) .ne. 1     .and.
-     1                 wsQcFlag(i,i_pr_cl) .ne. 2     .and.   
-     1                 wsQcFlag(i,i_pr_cl) .ne. 4     .and.   
-     1                 wsQcFlag(i,i_pr_cl) .ne. -9999 
-     1                                                      )then ! Good QC
+     1                 iqc_rsa(wdQcFlag(i,i_pr_cl)) .ne. -1 .and.       
+     1                 iqc_rsa(wsQcFlag(i,i_pr_cl)) .ne. -1     
+     1                                                          )then ! Good QC
                         n_good_levels = n_good_levels + 1
                         ht_out(n_good_levels) = levels(i,i_pr_cl)
                         di_out(n_good_levels) = windDir(i,i_pr_cl)
@@ -286,14 +280,7 @@ C
                 iqc = 1
 
                 do i = 1,level
-                    if(
-     1                 tempQcFlag(i,i_pr_cl) .ne. 1 
-     1                            .and.
-     1                 tempQcFlag(i,i_pr_cl) .ne. 2       
-     1                            .and.
-     1                 tempQcFlag(i,i_pr_cl) .ne. 4       
-     1                            .and.
-     1                 tempQcFlag(i,i_pr_cl) .ne. -9999       
+                    if(iqc_rsa(tempQcFlag(i,i_pr_cl)) .ne. -1
      1                            .and.
      1                 temperature(i,i_pr_cl) .gt. 200.
      1                            .and.
@@ -828,6 +815,38 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
       endif
+
+      return
+      end
+
+
+      function iqc_rsa(iflag)
+
+!     Possible Outputs
+!     -1 Bad Data
+!      0 Unknown quality or unknown input flag
+!     +1 Good Data
+
+      iqc_rsa = 0
+
+      if(iflag .eq.     0)iqc_rsa = +1 ! OK
+      if(iflag .eq.     1)iqc_rsa = -1 ! Out of range
+      if(iflag .eq.     2)iqc_rsa = -1 ! Questionable
+      if(iflag .eq.     3)iqc_rsa =  0 ! Not tested
+      if(iflag .eq.     4)iqc_rsa = -1 ! Missing Data
+      if(iflag .eq.     5)iqc_rsa = +1 ! MFFG Auto Mode Algorithm good data
+      if(iflag .eq.     6)iqc_rsa = +1 ! MFFG Manual Mode Algorithm good data 
+                                       ! Operator no action 
+      if(iflag .eq.     7)iqc_rsa = -1 ! MFFG Auto Mode Algorithm bad data
+      if(iflag .eq.     8)iqc_rsa = -1 ! MFFG Auto Mode Algorithm bad data
+                                       ! Operator no action 
+      if(iflag .eq.     9)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    10)iqc_rsa = -1 ! MFFG Manual Mode Algorithm good data
+                                       ! Operator flagged as bad data
+      if(iflag .eq.    11)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    12)iqc_rsa = -1 ! MFFG Manual Mode Algorithm bad data 
+                                       ! Operator flagged as bad data
+      if(iflag .eq. -9999)iqc_rsa = -1 ! Missing Data
 
       return
       end
