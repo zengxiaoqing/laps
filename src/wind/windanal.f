@@ -6,7 +6,7 @@
      1     ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
      1     ,max_radars
      1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
-     1     ,u_laps_bkg,v_laps_bkg                                ! Input/Output
+     1     ,u_laps_bkg,v_laps_bkg                                ! Input/Local
      1     ,imax,jmax,kmax,lat,lon
      1     ,i4time,grid_spacing_m
      1     ,r_missing_data

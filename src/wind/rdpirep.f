@@ -32,10 +32,11 @@ cdis
         subroutine rdpirep(i4time,heights_3d
      1  ,N_PIREP,n_pirep_obs,ext_in
      1  ,u_maps_inc,v_maps_inc,ni,nj,nk
+     1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon
      1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
-     1                                                  ,istatus)
+     1  ,istatus)
 
 !      ~1990        Steve Albers  Original Version
 !       Modified 2/1993 by Steve Albers to fix check on pirep being in the
@@ -74,6 +75,9 @@ cdis
         real*4 heights_3d(ni,nj,nk)
         real*4 u_maps_inc(ni,nj,nk)
         real*4 v_maps_inc(ni,nj,nk)
+
+        dimension u_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
+        dimension v_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
 
         character*9 asc9_tim_pirep
         character ext*31, ext_in*3
