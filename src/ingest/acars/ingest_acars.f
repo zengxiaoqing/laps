@@ -13,7 +13,7 @@
       integer i4times(max_files)
       character*8 c8_project
       character*13 filename13, cvt_i4time_wfo_fname13
-      logical l_use_tamdar
+      logical l_use_tamdar ! applies to non-WFO, non_RSA runs
 
 !     Output file
       character*31    ext
@@ -150,6 +150,7 @@
      1                                      ,NX_L,NY_L
      1                                      ,c8_project
      1                                      ,ext
+     1                                      ,l_use_tamdar
      1                                      ,filename_in,istatus)
               elseif(ext_in .eq. 'wfo')then ! WFO NetCDF
 !                 Read from the ACARS file 
@@ -159,6 +160,7 @@
      1                                      ,NX_L,NY_L
      1                                      ,c8_project
      1                                      ,ext
+     1                                      ,l_use_tamdar
      1                                      ,filename_in,status)
               elseif(ext_in .eq. 'ac')then ! AFWA ASCII
 !                 Read from the ACARS file 
