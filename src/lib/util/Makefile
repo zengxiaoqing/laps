@@ -31,7 +31,7 @@ DEBUGLIB = libdebugutil.a
 SRC=bilinear_laps.f   helicity.f        interp2sfc.f      put_wind_2d.f\
     trilinear_laps.f  cpt_liw.f         laps_slwc_revb.f  steer_grid.f\
     windcnvrt.f       degfrom.f         meanwind.f        storm_cent_rt.f\
-    xytomet.f
+    xytomet.f         windfields.f
 
 
 

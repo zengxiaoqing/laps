@@ -143,10 +143,10 @@ c
         read(11,801,end=550,err=990) line
  801    format(a)
 
-!       Find first dash
-        do i = 132,1,-1
+!       Find first dash in time portion (two spaces before last dash in string)
+        do i = 1,132
             if(line(i:i) .eq. '-')then
-                idash = i
+                idash = i-3
             endif
         enddo ! i
 
@@ -298,12 +298,14 @@ c
         if(rt .le. -90) then
            t(num) = badflag
         else
+           if(rt .gt. 50.)rt = - (rt - 50.)
            t(num) = c_to_f(rt) 
         endif
 c
         if(rtd .le. -90) then
            td(num) = badflag
         else
+           if(rtd .gt. 50.)rtd = - (rtd - 50.)
            td(num) = c_to_f(rtd) 
         endif
 c
