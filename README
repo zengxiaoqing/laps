@@ -3287,20 +3287,22 @@ Outputs:
 	lwm	2d grid		interpolated surface winds (U and V - grid N)
 
 	lhe	2d grid		Helicity (Storm Relative Environmental). This 
-                                is integrated from the sfc to 3-km AGL. It
+                                is integrated from the sfc to 3km AGL. It
                                 is numerically equal to -2. times the hodograph
                                 area.
 
-                                A calculated storm motion vector is used. First
-                                a layer from the sfc to 300mb is used to 
-                                calculate the mean wind. A shear vector through
-                                the sfc-300mb layer is also calculated. The 
-                                storm motion is assumed to equal the mean wind 
-                                + .15 times the shear vector (rotated for a 
-                                right mover by a 90 degree angle with respect
-                                to the shear vector).
+                                A calculated storm motion vector is used 
+                                according to the Bunkers method used by the
+                                National Weather Service. First a layer from 
+                                the sfc to 6km AGL is used to calculate the 
+                                mean wind. A shear vector through the sfc-6km 
+                                layer is also calculated. The storm motion 
+                                vector is assumed to equal the mean wind vector
+                                plus a vector with a magnitude of 7.5 m/s and 
+                                a direction 90 degrees to the right of the 
+                                shear vector.
 
-                                Mean Winds (sfc - 300mb layer)
+                                Mean Winds (sfc - 6km layer)
 
 	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
 
