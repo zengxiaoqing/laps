@@ -89,6 +89,7 @@ c                               03-26-97  Add ability to do interactive runs.
 c                                         (Removes need for 'laps_sfci')
 c                                         Remove equivs.
 c                               09-11-97  Changes for dynamic LAPS.
+c                               01-20-98  Move wt calcs to correct place.
 c
 c       Notes:
 c
@@ -182,13 +183,6 @@ c
 c
 	   call get_systime(i4time,filename,istatus)
 c
-cc	   open(11,file='../sched/systime.dat',status='unknown')
-cc	   read (11,21) i4time
-cc 21	   format(1x,i11)
-cc	   read (11,22) filename 
-cc 22	   format (1x,a9)
-cc	   close(11)
-c
 	else
 c
  970	   write(6,973)
@@ -251,12 +245,62 @@ c
 	  if(lon(1,j) .lt. grid_west) grid_west = lon(1,j)
 	enddo !j
 c
+c.....  Read in the obs and calculate a weight based on distance to each
+c.....  station.
+c
+c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
+c.....	                          and the pressure variable. cld hts are msl.
+c
+c 	infile1 = '../lapsprd/lso/'//filename//'.lso' 
+	call get_directory('lso',infile1,len)
+	infile1 = infile1(1:len) // filename(1:9) // '.lso'
+c
+	write(6,305) infile1
+ 305	format(' Getting surface data from: ',a70)
+	call read_surface_obs(infile1,mxstn,atime_s,n_meso_g,
+     &   n_meso_pos,n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
+     &   n_obs_pos_g,n_obs_b,n_obs_pos_b,stn,obstype,lat_s,lon_s,elev_s,
+     &   wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn_s,pmsl_s,alt_s,
+     &   kloud_s,hgt_ceil,hgt_low,cover_s,solar_s,idp3_s,store_emv,
+     &   store_amt,store_hgt,vis_s,obstime,istatus)
+c
+	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
+	  jstatus(1) = 0
+	  stop 'No sfc obs from LSO'
+	endif
+c
+	print *,' '
+	write(6,320) atime_s,n_sao_g,n_sao_b,n_obs_b
+320	format(' LSO data vaild time: ',a24,' Num obs: ',3i6)
+c
+	if(n_sao_b .lt. 10) then
+	   jstatus(1) = -2
+	   print *,' Insufficient number of surface observations'
+	   print *,' for a clean analysis.  Stopping.'
+	   stop 
+	endif
+	print *,' '
+c
+c.....	Find the i,j location of each station, then calculate the
+c.....  background weights (based on station density).
+c
+	call find_ij(lat_s,lon_s,lat,lon,n_obs_b,mxstn,
+     &               ni,nj,ii,jj,rii,rjj)
+c
+        do ista=1,n_obs_b
+           write(6,999) ista,stn(ista),rii(ista),rjj(ista)
+        enddo !ista
+ 999    format(i4,': ',a3,' is at i,j: ',f5.1,',',f5.1)
+c
+        call zero(wt, ni,nj)
+	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
+     &              rii,rjj,wt,ni,nj,mxstn)
+c
 c.....  Zero the weights then get the background data.  Try for a RAMS 
 c.....  forecast first, then the surface winds from the 3d analysis, then
 c.....  a previous LAPS analysis.  If RAMS or the 3d wind are missing just 
 c.....  use LAPS.  If both LAPS and RAMS are missing, print a warning.
 c
-        call zero(wt, ni,nj)
         call zero(wt_u, ni,nj)
         call zero(wt_v, ni,nj)
         call zero(wt_t, ni,nj)
@@ -487,39 +531,6 @@ c
 c
  600	continue
 c
-c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
-c.....	                          and the pressure variable. cld hts are msl.
-c
-c 	infile1 = '../lapsprd/lso/'//filename//'.lso' 
-	call get_directory('lso',infile1,len)
-	infile1 = infile1(1:len) // filename(1:9) // '.lso'
-c
-	write(6,305) infile1
- 305	format(' Getting surface data from: ',a70)
-	call read_surface_obs(infile1,mxstn,atime_s,n_meso_g,
-     &   n_meso_pos,n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
-     &   n_obs_pos_g,n_obs_b,n_obs_pos_b,stn,obstype,lat_s,lon_s,elev_s,
-     &   wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn_s,pmsl_s,alt_s,
-     &   kloud_s,hgt_ceil,hgt_low,cover_s,solar_s,idp3_s,store_emv,
-     &   store_amt,store_hgt,vis_s,obstime,istatus)
-c
-	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
-	  jstatus(1) = 0
-	  stop 'No sfc obs from LSO'
-	endif
-c
-	print *,' '
-	write(6,320) atime_s,n_sao_g,n_sao_b,n_obs_b
-320	format(' LSO data vaild time: ',a24,' Num obs: ',3i6)
-c
-	if(n_sao_b .lt. 10) then
-	   jstatus(1) = -2
-	   print *,' Insufficient number of surface observations'
-	   print *,' for a clean analysis.  Stopping.'
-	   stop 
-	endif
-	print *,' '
-c
 c.....	QC the surface data.
 c
 	if(iskip .gt. 0) then  !check QC flag
@@ -610,20 +621,6 @@ c
  128	enddo  !mm
  521	continue                          
 c
-c.....	Find the i,j location of each station, then calculate the
-c.....  background weights (based on station density).
-c
-	call find_ij(lat_s,lon_s,lat,lon,n_obs_b,mxstn,
-     &               ni,nj,ii,jj,rii,rjj)
-c
-        do ista=1,n_obs_b
-           write(6,999) ista,stn(ista),rii(ista),rjj(ista)
-        enddo !ista
- 999    format(i4,': ',a3,' is at i,j: ',f5.1,',',f5.1)
-c
-	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
-     &              rii,rjj,wt,ni,nj,mxstn)
-c
 c.....  Set up arrays for the verify routine.
 c
 	do i=1,ni
@@ -645,10 +642,6 @@ c
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
      &     jstatus)
 c
-cc	call mdat_laps(i4time,atime,infile1,dir_v,ext_v,outfile1,
-cc     &       outfile2,ihours,del,gam,ak,lat,lon,grid_east,grid_west,
-cc     &       grid_north,grid_south,topo,std_lon,jstatus)
-c
 	if(jstatus(1) .ne. 1) then
 	   print *,' From MDAT_LAPS:  Error Return.  Stop.'
 	   stop 
@@ -668,9 +661,6 @@ c
      &        ilaps_bk, irams_bk,
      &        u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
      &        x1a,x2a,y2a,ii,jj,jstatus)
-c
-cc	call laps_vanl(i4time,infile1,dir_in,ext_in,dir,ext,ihours,dt,
-cc     &         del,gam,ak,lat,lon,topo,grid_spacing,jstatus)
 c
 	if(jstatus(3) .ne. 1) then
 	  print *,' From LAPS_VANL: Error Return.' 
