@@ -887,11 +887,12 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            format are processed.
 
      PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
-           cloud layers from voice pireps into intermediate "PIN" files.
+           cloud layers from voice pilot reports into intermediate "PIN" files.
 
      ACARS (pin) - We are ingesting FSL NetCDF and AFWA databases for ACARS 
-           data to translate the wind, temperature and humidity obs and 
-           append them to our intermediate "PIN" file.
+           data to translate the automated aircraft observations. The wind, 
+           temperature and humidity obs are appended to our intermediate "PIN"
+           file.
 
      Radar VAD Algorithm winds (pro)
            FSL NIMBUS database, from WSR-88D algorithm output.
