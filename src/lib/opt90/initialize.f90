@@ -266,16 +266,18 @@ CONTAINS
     transmittance_coefficient_file = 'transmittance_coefficients'
 
     IF ( PRESENT( tau_file ) ) &
-      transmittance_coefficient_file = TRIM( ADJUSTL( tau_file ) )
+      transmittance_coefficient_file = tau_file(1:len_trim(tau_file))
 
     IF ( PRESENT( path ) ) &
-      transmittance_coefficient_file = TRIM( ADJUSTL( path ) ) // &
-                                       TRIM( transmittance_coefficient_file )
+      transmittance_coefficient_file = path(1:len_trim(path)) // &
+                                       transmittance_coefficient_file
 
 
     ! -- Read the data file
-    error_status = read_tau_coefficients( TRIM( transmittance_coefficient_file ), &
-                                          message_log = message_log               )
+    error_status = read_tau_coefficients( &
+         transmittance_coefficient_file(1:len_trim(transmittance_coefficient_file)) , &
+         message_log = message_log        &
+         )
 
     IF ( error_status /= SUCCESS ) THEN
       CALL display_message( ROUTINE_NAME, &
@@ -295,15 +297,16 @@ CONTAINS
     spectral_coefficient_file = 'spectral_coefficients'
 
     IF ( PRESENT( spectral_file ) ) &
-      spectral_coefficient_file = TRIM( ADJUSTL( spectral_file ) )
+      spectral_coefficient_file = spectral_file(1:len_trim(spectral_file))
 
     IF ( PRESENT( path ) ) &
-      spectral_coefficient_file = TRIM( ADJUSTL( path ) ) // &
-                                  TRIM( spectral_coefficient_file )
+      spectral_coefficient_file = path(1:len_trim(path)) // &
+                                  spectral_coefficient_file
 
 
     ! -- Read the data file
-    error_status = read_spectral_coefficients( TRIM( spectral_coefficient_file ), &
+    error_status = read_spectral_coefficients( &
+          spectral_coefficient_file(1:len_trim(spectral_coefficient_file)), &
                                                message_log = message_log          )
 
     IF ( error_status /= SUCCESS ) THEN
@@ -474,6 +477,10 @@ END MODULE initialize
 ! $State$
 !
 ! $Log$
+! Revision 1.1  2002/11/15 15:21:31  birk
+! Added to cvs mainly to see how this compiles on other platforms, it currently
+! seems to compile on the IBM
+!
 ! Revision 1.6  2001/08/31 21:17:25  paulv
 ! - Add TAU_FILE, SPECTRAL_FILE, and PATH optional arguments to INITIALIZE_RTM
 !   to allow users to specify alternate file names and locations.
