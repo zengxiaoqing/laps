@@ -95,13 +95,13 @@ cdis
                     if(t39_diff .gt. +0.0 .and. t39_diff .lt. +2.5
      1                          .AND. tb8_c .gt. 0.    
      1                          .AND. rlaps_land_frac(i,j) .gt. 0.5)then ! land
-                        istat_39_a(i,j) = -1                  ! Warm - no cloud
+                        istat_39_a(i,j) = 0 ! -1              ! Warm - no cloud?
                     endif
 
                     if(t39_diff .gt. +0.0 .and. t39_diff .lt. +2.5
      1                          .AND. tb8_c .gt. 0.    
      1                          .AND. rlaps_land_frac(i,j) .lt. 0.5)then ! sea
-                        istat_39_a(i,j) = -1                  ! Warm - no cloud
+                        istat_39_a(i,j) = 0 ! -1              ! Warm - no cloud?
                     endif
 
                 else ! Sun above horizon or possibly cold cloud top: ambiguous
