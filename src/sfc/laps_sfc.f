@@ -157,7 +157,7 @@ c
 
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), t_ea(mxstn), max24t(mxstn), min24t(mxstn)
-        real td_s(mxstn), td_ea(mxstn), rh(mxstn), rh_ea(mxstn)
+        real td_s(mxstn), td_ea(mxstn), rh_s(mxstn), rh_ea(mxstn)
 
         real dd_s(mxstn), ddg_s(mxstn), dd_ea(mxstn)
         real ff_s(mxstn), ffg_s(mxstn), ff_ea(mxstn)
@@ -339,7 +339,7 @@ c
 	if(use_lso_qc .ne. 1) then
 	   call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b,      !regular LSO
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
-     &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
+     &       lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
      &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
@@ -348,7 +348,7 @@ c
 	else
 	   call read_surface_dataqc(i4time,atime_s,n_obs_g,n_obs_b,    !QC'd LSO
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
-     &       lat_s,lon_s,elev_s,t_s,td_s,rh,dd_s,ff_s,ddg_s,ffg_s,
+     &       lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
      &       alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
@@ -360,11 +360,6 @@ c
             write(6,*)' bad istatus from read_surface_data..',istatus       
             stop
         endif
-
-	do i=1,n_obs_b ! Put obs into data structure 
-            obs(i)%sfct_f = sfct(i)
-            obs(i)%t_ea_f = t_ea(i)
-        enddo ! i
 
 	print *,' '
 	write(6,320) use,atime_s,n_obs_g,n_obs_b
@@ -380,12 +375,31 @@ c
 	   stn3(i)(1:3) = '   '
 	enddo !i
 c
-	do i=1,n_obs_b ! Rearrange station strings
-           stn20 = stations(i)
-           call right_justify(stn20)
-	   stn3(i) = stn20(18:20)
-           call left_justify(stations(i))
-	enddo !i
+        i_rh_convert = 0
+	do i=1,n_obs_b ! Preprocess the obs
+!           Rearrange station strings
+            stn20 = stations(i)
+            call right_justify(stn20)
+            stn3(i) = stn20(18:20)
+            call left_justify(stations(i))
+
+!           Convert RH to dewpoint if dewpoint is missing 
+            if(t_s(i) .ne. badflag .and. td_s(i) .eq. badflag 
+     1                             .and. rh_s(i) .ne. badflag)then
+                t_c = f_to_c(t_s(i))
+                dwpt_c = dwpt(t_c,rh_s(i))
+                td_s(i) = c_to_f(dwpt_c)
+                i_rh_convert = i_rh_convert + 1
+            endif
+
+!           Put obs into data structure 
+            obs(i)%sfct_f = sfct(i)
+            obs(i)%t_ea_f = t_ea(i)
+        enddo ! i
+
+        if(i_rh_convert .gt. 0)then
+            write(6,*)'# of dewpoints converted from RH = ',i_rh_convert       
+        endif
 c
 c.....	Find the i,j location of each station, then calculate the
 c.....  background weights (based on station density).
