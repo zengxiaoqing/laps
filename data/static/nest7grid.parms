@@ -57,7 +57,7 @@
  toptwvl_parm_cmn=2.,     
  silavwt_parm_cmn=0.,     
  c8_project_common='NIMBUS', 
- fdda_model_source_cmn='mm5hot','lga','mm5',
+ fdda_model_source_cmn='lga','mm5hot','mm5',
  /
 c OVERALL LAPS PARAMETERS
 c
