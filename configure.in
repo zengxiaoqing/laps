@@ -247,8 +247,6 @@ AC_OUTPUT(src/lib/Makefile
           etc/purger.pl
           etc/sched.pl
 	  etc/laps_localization.pl
-          etc/install_lvd.csh
-          etc/update_nav_file.csh
           etc/wfo_post.pl)
 
 

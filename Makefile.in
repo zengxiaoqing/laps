@@ -175,8 +175,9 @@ DATADIRS = log/qc \
 all: exe
 debug: debuglib
 
-localize: mkdirs
-	@PERL@ $(LAPSROOT)/etc/laps_localization.pl $(INSTALLROOT) $(DATAROOT)
+localize: mkdatadirs
+	@PERL@ $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
+               --dataroot=$(DATAROOT) --srcroot=$(LAPSROOT)
 
 exe: lib
 	@for dir in $(EXEDIRS) ;\
@@ -218,23 +219,28 @@ install: mkdirs
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
-mkdirs:
+mkdirs: mkdatadirs
 	if [ ! -d  $(INSTALLROOT) ] ; then  \
 	mkdir -p $(INSTALLROOT) ; fi 
-	if [ ! -d $(DATAROOT) ] ; then  \
-	cp -r $(LAPSROOT)/data $(DATAROOT) ; fi 
 	if [ ! -d $(INSTALLROOT)/util ] ; then  \
 	cp -r  $(LAPSROOT)/util $(INSTALLROOT)/util ; fi 
 	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
 	cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; fi
+
+mkdatadirs :
+	if [ ! -d $(DATAROOT) ] ; then  \
+	cp -r $(LAPSROOT)/data $(DATAROOT) ; fi 
 	@for dir in $(DATADIRS) ;\
 	  do \
-	  echo " ";\
-	  echo Creating Laps data directory $(DATAROOT)/$$dir ;\
-	  (cd $(DATAROOT); \
-	  mkdir -p $$dir ; if [ $$? != 0 ] ; then \
-	        echo "Exit status from mkdir was $$?" ; exit 1 ; fi ;) ;\
-	  done
+	  if [ ! -d $(DATAROOT)/$$dir ] ; then  \
+	    echo Creating Laps data directory $(DATAROOT)/$$dir ;\
+	    (cd $(DATAROOT); \
+	    mkdir -p $$dir ; if [ $$? != 0 ] ; then \
+	          echo "Exit status from mkdir was $$?" ; exit 1 ; fi ;) ;\
+	    fi ; done ; 
+
+
+
 
 clean:
 	$(RM) *~ *# *.o 
