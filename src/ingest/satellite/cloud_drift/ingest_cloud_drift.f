@@ -41,7 +41,9 @@
 
       i_open = 0
 
-      i4_window = 7200
+      call get_windob_time_window('CDW',i4_window,istatus)
+      if(istatus .ne. 1)stop
+
       lag_time_report = 1800
 
       call get_cloud_drift_parms(n_paths_drift,path_to_cloud_drift

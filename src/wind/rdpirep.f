@@ -96,9 +96,27 @@ cdis
         if(ext_in .eq. 'pin')then
             call open_lapsprd_file(lun_pig,i4time,ext,istatus)
             if(istatus .ne. 1)go to 888
+
+            call get_windob_time_window('PIREP',i4_window_pirep,istatus)
+            if(istatus .eq. 1)then
+                write(6,*)' i4_window_pirep = ',i4_window_pirep
+            else
+                write(6,*)' Error getting i4_window_pirep'
+                return
+            endif
+
         else ! append
             call open_lapsprd_file_append(lun_pig,i4time,ext,istatus)       
             if(istatus .ne. 1)go to 888
+
+            call get_windob_time_window('CDW',i4_window_pirep,istatus)
+            if(istatus .eq. 1)then
+                write(6,*)' i4_window_pirep = ',i4_window_pirep
+            else
+                write(6,*)' Error getting i4_window_pirep'
+                return
+            endif
+
         endif
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
@@ -106,14 +124,6 @@ cdis
             write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
         else
             write(6,*)' Error getting laps_cycle_time'
-            return
-        endif
-
-        call get_windob_time_window('PIREP',i4_window_pirep,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' i4_window_pirep = ',i4_window_pirep
-        else
-            write(6,*)' Error getting i4_window_pirep'
             return
         endif
 
