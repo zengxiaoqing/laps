@@ -81,7 +81,7 @@ c
 c
 c.....  Local variables/arrays
 c
-        real    lat(ni,nj), lon(ni,nj)
+        real    lat(ni,nj), lon(ni,nj), k_to_f
 	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
 	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
 	real*8  ff_time(maxobs)
@@ -410,7 +410,6 @@ c
 c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = t(i) 
-	  if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
 	  if(t_time(i) .ge. 0.) then ! implies that it is not set to ibadflag
 	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
 		temp_k = badflag
@@ -419,15 +418,16 @@ c
 	  if(temp_k .le. badflag) then !t bad?
 	     temp_f = badflag	!then bag it
 	  else
-	     temp_f = ((temp_k - 273.16) * 9./5.) + 32. ! K to F
+             temp_f = k_to_f(temp_k)
 	  endif
+          call sfc_climo_qc_r('t_f',temp_f)
 c       
 	  dewp_k = td(i)
-	  if(dewp_k.lt.210. .or. dewp_k.gt.320.) dewp_k = badflag
+          call sfc_climo_qc_r('td_k',dewp_k)
 	  if(dewp_k .le. badflag) then !dp bad?
 	     dewp_f = badflag	       !then bag it
 	  else
-	     dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.	! K to F
+	     dewp_f = k_to_f(dewp_k)
 	  endif
 c
 	  rh_p = rh(i) 
