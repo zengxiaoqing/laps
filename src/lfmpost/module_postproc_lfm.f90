@@ -478,22 +478,24 @@ CONTAINS
         ENDDO
       ENDDO
  
-    ELSEIF (mtype.EQ.'wrf') THEN
+    ELSEIF (mtype(1:3).EQ.'wrf') THEN
       ! Get pressure on sigma...we do this by getting the base state
       ! and perturbation pressures and adding them together
       ALLOCATE(pbase(nx,ny,ksigh))
       ALLOCATE(ppsig(nx,ny,ksigh))
+print *, 'here1'
       CALL get_wrfnc_3d(current_lun, "PB","A",nx,ny,ksigh,1,pbase,status)
       IF (status.NE.0) THEN
         PRINT *, 'Could not properly obtain WRF base state pressure.'
         CALL ABORT
       ENDIF
+print *, 'here2'
       CALL get_wrfnc_3d(current_lun, "P", "A",nx,ny,ksigh,1,ppsig,status)
       IF (status.NE.0) THEN
         PRINT *, 'Could not properly obtain WRF perturbation pressure.'
         CALL ABORT
       ENDIF
-
+print *, 'here3'
       psig = pbase+ppsig
       DEALLOCATE(pbase)
       DEALLOCATE(ppsig) 
@@ -502,7 +504,7 @@ CONTAINS
           CALL SMOOTH(psig,nx,ny,ksigh,smth)
         ENDDO
       ENDIF
-
+  print *, 'here4'
       ! Get theta on sigma
       CALL get_wrfnc_3d(current_lun, "T","A",nx,ny,ksigh,1,thetasig,status)
       IF (status.NE.0) THEN
@@ -527,7 +529,7 @@ CONTAINS
           CALL SMOOTH(mrsig,nx,ny,ksigh,smth)
         ENDDO
       ENDIF
-
+  print *,'here3'
       ! Compute temperature on sigma
       tsig = thetasig/ ( (100000./psig)**kappa) 
  
@@ -656,7 +658,7 @@ CONTAINS
       CALL get_mm5_2d(current_lun, 'T2       ', time_to_proc, tsfc, &
                       'D   ', status)
 
-    ELSEIF(mtype.EQ.'wrf')THEN
+    ELSEIF(mtype(1:3).EQ.'wrf')THEN
    
        ! Get TH2 and convert to temperature if non-zero
        CALL get_wrfnc_2d(current_lun,'TH2','A',nx,ny,1,tsfc,status)
@@ -674,7 +676,7 @@ CONTAINS
       CALL get_mm5_2d(current_lun, 'Q2       ', time_to_proc, mrsfc, &
                       'D   ', status)
 
-    ELSEIF(mtype.EQ.'wrf')THEN
+    ELSEIF(mtype(1:3).EQ.'wrf')THEN
    
        ! Get Q2
       CALL get_wrfnc_2d(current_lun,'Q2','A',nx,ny,1,mrsfc,status)
@@ -721,7 +723,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
           dtdz = ( tsig(i,j,2) - tsig(i,j,1) ) / &
                  ( zsig(i,j,2) - zsig(i,j,1) ) 
           tsfc(i,j) = tsig(i,j,1) - dtdz*dz
-          IF (mtype .EQ. 'wrf') THEN
+          IF (mtype(1:3) .EQ. 'wrf') THEN
             thetasfc(i,j) = potential_temp(tsfc(i,j),psfc(i,j))
           ENDIF
         ENDDO
@@ -746,7 +748,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
        ! Compute sfc dewpoint
        tdsfc(i,j) = dewpt(tsfc(i,j),rhsfc(i,j)*0.01)
 
-       IF (mtype.NE.'wrf') THEN
+       IF (mtype(1:3).NE.'wrf') THEN
          ! Compute theta at the surface
          thetasfc(i,j) =  potential_temp(tsfc(i,j),psfc(i,j))
        ENDIF
@@ -831,7 +833,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
                     'D   ', status)
      IF (status .NE. 0) ground_t(:,:) = 1.e37
    
-   ELSEIF(mtype.EQ.'wrf') THEN
+   ELSEIF(mtype(1:3).EQ.'wrf') THEN
      lwout(:,:) = 1.e37
      swout(:,:) = 1.e37
      lwdown(:,:) = 1.e37
@@ -1086,6 +1088,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     REAL, ALLOCATABLE       :: wsigf( : , : , : )
     REAL, ALLOCATABLE       :: below_ground ( : , : )
     REAL, ALLOCATABLE       :: tkesig(:,:,:)
+    REAL, ALLOCATABLE       :: tkesigcomp(:,:,:)
     INTEGER                 :: status
     REAL                    :: recipdx, dudy, dvdx
 
@@ -1095,7 +1098,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype.EQ.'mm5') THEN
       CALL get_mm5_3d(current_lun, 'U        ', time_to_proc, usig, &
                       'D    ', status)
-    ELSEIF(mtype.EQ.'wrf')THEN
+    ELSEIF(mtype(1:3).EQ.'wrf')THEN
       ! Get/destagger WRF u wind
      CALL get_wrfnc_3d(current_lun,'U','A',nx,ny,ksigh,1,usig,status)
 
@@ -1116,7 +1119,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype.EQ.'mm5')THEN
       CALL get_mm5_2d(current_lun, 'U10      ', time_to_proc, usfc, &
                       'D   ', status)
-    ELSEIF(mtype.EQ.'wrf')THEN
+    ELSEIF(mtype(1:3).EQ.'wrf')THEN
       ! Get WRF U10 
       CALL get_wrfnc_2d(current_lun,'U10','A',nx,ny,1,usfc,status)
     ENDIF
@@ -1142,7 +1145,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype .EQ. 'mm5') THEN
       CALL get_mm5_3d(current_lun, 'V        ', time_to_proc, vsig, &
                       'D    ', status)
-    ELSEIF(mtype .EQ. 'wrf') THEN
+    ELSEIF(mtype(1:3) .EQ. 'wrf') THEN
 
       ! Get WRF V
       CALL get_wrfnc_3d(current_lun,'V','A',nx,ny,ksigh,1,vsig,status)
@@ -1163,7 +1166,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype.EQ.'mm5')THEN
       CALL get_mm5_2d(current_lun, 'V10      ', time_to_proc, vsfc, &
                       'D   ', status)
-    ELSEIF(mtype .EQ. 'wrf') THEN
+    ELSEIF(mtype(1:3) .EQ. 'wrf') THEN
       ! Get WRF V10
       CALL get_wrfnc_2d(current_lun,'V10','A',nx,ny,1,vsfc,status)
     ENDIF
@@ -1190,7 +1193,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype .EQ. 'mm5') THEN
       CALL get_mm5_3d(current_lun, 'W        ', time_to_proc, wsigf, &
                       'D    ', status)
-    ELSEIF (mtype .EQ. 'wrf') THEN
+    ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
       ! Get WRF W on full layers
       CALL get_wrfnc_3d(current_lun,'W','A',nx,ny,ksigf,1,wsigf,status)
     ENDIF
@@ -1228,9 +1231,14 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     ! Compute ventilation index
     CALL ventilation(usig,vsig,zsig,pblhgt,terdot,nx,ny,ksigh,upbl,vpbl,vnt_index)
     PRINT *, 'Min/Max Ventilation : ', MINVAL(vnt_index), MAXVAL(vnt_index)    
+ 
+    ! Compute TKE
+    ALLOCATE(tkesigcomp(nx,ny,ksigh))  
+    CALL compute_tke(psig,tsig,usig,vsig,zsig,terdot,nx,ny,ksigh,tkesigcomp)
+    PRINT '(A,2F10.3)','Min/Max TKE computed from DTF3: ', &
+       MINVAL(tkesigcomp),MAXVAL(tkesigcomp)
     DEALLOCATE (usig)
     DEALLOCATE (vsig)
-
     ! Get TKE
     PRINT *, 'Getting TKE....'
     ALLOCATE(tkesig(nx,ny,ksigh))
@@ -1238,18 +1246,20 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype .EQ. 'mm5') THEN
       CALL get_mm5_3d(current_lun, 'TKE      ', time_to_proc, tkesig, &
                       'D    ', status)
-    ELSEIF (mtype .EQ. 'wrf') THEN
+    ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
       CALL get_wrfnc_3d(current_lun,'TKE_MYJ','A',nx,ny,ksigf,1,tkesig,status)
     ENDIF
-    IF (status .EQ. 0) THEN
-      PRINT *, 'Vertically interpolating TKE'
-      CALL vinterp_3d(tkesig,trap_bot_ind,trap_top_ind,&
-                      weight_top_lin, below_ground, tkeprs, &
-                      nx,ny,ksigh,kprs)
+    IF (status .NE. 0) THEN
+       tkesig = tkesigcomp
     ELSE
-      PRINT *, 'Setting TKE = 0.0 everywhere'
-      tkeprs = 0.0
+      PRINT '(A,2F10.3)', 'Min/Max TKE from model output: ', &
+         MINVAL(tkesig),MAXVAL(tkesig)
     ENDIF
+    DEALLOCATE(tkesigcomp)
+    PRINT *, 'Vertically interpolating TKE'
+    CALL vinterp_3d(tkesig,trap_bot_ind,trap_top_ind,&
+                    weight_top_lin, below_ground, tkeprs, &
+                    nx,ny,ksigh,kprs)
     DEALLOCATE(tkesig)
     DEALLOCATE(below_ground)
     
@@ -1272,7 +1282,6 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
          ENDDO
        ENDDO
     ENDIF
-    
     RETURN
  
   END SUBROUTINE interp_winds 
@@ -1314,10 +1323,10 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
 
     ! Cloud liquid and rain water
     IF (clwflag) THEN
-      IF (mtype .EQ. 'mm5') THEN
+      IF (mtype(1:3) .EQ. 'mm5') THEN
         CALL get_mm5_3d(current_lun, 'CLW      ', time_to_proc, cldliqmr_sig,&
                       'D    ', status)
-      ELSEIF(mtype.EQ.'wrf') THEN
+      ELSEIF(mtype(1:3).EQ.'wrf') THEN
         CALL get_wrfnc_3d(current_lun,'QCLOUD','A',nx,ny,ksigh,1,cldliqmr_sig,&
                           status)
       ENDIF
@@ -1331,7 +1340,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
       IF (mtype .EQ. 'mm5') THEN 
         CALL get_mm5_3d(current_lun, 'RNW      ', time_to_proc, rainmr_sig,&
                       'D    ', status)
-      ELSEIF (mtype .EQ. 'wrf') THEN
+      ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
          CALL get_wrfnc_3d(current_lun,'QRAIN','A',nx,ny,ksigh,1,rainmr_sig,&
                           status)
       ENDIF
@@ -1354,7 +1363,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
       IF (mtype .EQ. 'mm5')THEN
         CALL get_mm5_3d(current_lun, 'ICE      ', time_to_proc, cldicemr_sig,&
                       'D    ', status)
-      ELSEIF(mtype.eq.'wrf') THEN
+      ELSEIF(mtype(1:3).eq.'wrf') THEN
         CALL get_wrfnc_3d(current_lun,'QICE','A',nx,ny,ksigh,1,cldicemr_sig,&
                           status)
       ENDIF
@@ -1368,7 +1377,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
       IF (mtype .EQ. 'mm5') THEN  
         CALL get_mm5_3d(current_lun, 'SNOW     ', time_to_proc, snowmr_sig,&
                       'D    ', status)
-      ELSEIF (mtype .EQ. 'wrf') THEN
+      ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
          CALL get_wrfnc_3d(current_lun,'QSNOW','A',nx,ny,ksigh,1,snowmr_sig,&
                           status)
       ENDIF
@@ -1391,7 +1400,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
       IF (mtype.EQ.'mm5') THEN
         CALL get_mm5_3d(current_lun, 'GRAUPEL  ', time_to_proc, graupelmr_sig,&
                       'D    ', status)
-      ELSEIF(mtype .EQ. 'wrf') THEN
+      ELSEIF(mtype(1:3) .EQ. 'wrf') THEN
         CALL  get_wrfnc_3d(current_lun,'QGRAUP','A',nx,ny,ksigh,1, &
                           graupelmr_sig,status)
       ENDIF
@@ -1616,7 +1625,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype .EQ. 'mm5') THEN
       CALL get_mm5_2d(current_lun, 'RAIN CON ', time_to_proc, raincon, &
                       'D   ', status)
-    ELSEIF(mtype .EQ. 'wrf') THEN
+    ELSEIF(mtype(1:3) .EQ. 'wrf') THEN
       CALL get_wrfnc_2d(current_lun,'RAINC','A',nx,ny,1,raincon,status)
       ! Convert to cm
       raincon = raincon * 0.1
@@ -1630,7 +1639,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
     IF (mtype .EQ. 'mm5') THEN
       CALL get_mm5_2d(current_lun, 'RAIN NON ', time_to_proc, rainnon, &
                       'D   ', status)
-    ELSEIF (mtype .EQ. 'wrf') THEN
+    ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
       CALL get_wrfnc_2d(current_lun,'RAINNC','A',nx,ny,1,rainnon,status)
       ! Convert to cm
       rainnon = rainnon * 0.1
@@ -1646,7 +1655,7 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
       IF (mtype .EQ. 'mm5') THEN
          CALL get_mm5_2d(current_lun, 'SNOWCOVR ', time_to_proc, snowcover, &
                       'D   ', status)
-      ELSEIF(mtype.EQ.'wrf') THEN
+      ELSEIF(mtype(1:3).EQ.'wrf') THEN
          CALL get_wrfnc_2d(current_lun,'ACSNOW','A',nx,ny,1,snowcover,status)
       ENDIF
       IF (status.NE.0) THEN

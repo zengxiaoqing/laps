@@ -57,7 +57,7 @@ FSRC=lfmpost.f90 bint.f90 clouds.f90 integrated_liquid.f90 reflectivity.f90 \
      met_functions.f90 interp_press_to_z.f90 model_pblhgt.f90 \
      snowfall.f90 wintprec.f90 helicity.f90 capecin.f90 the2t.f90 \
      output_laps_format.f90 smooth.f90 grib_sfc_vars.f90 grib_ua_vars.f90 \
-     get_file_unit.f90
+     get_file_unit.f90 tke.f90
 
 CSRC = v5d.c binio.c
 
@@ -89,7 +89,7 @@ lfmpost.o:		module_setup.o \
        			module_vis5d.o
 
 
-module_postproc_lfm.o:	module_constants.o module_setup.o module_fire.o
+module_postproc_lfm.o:	module_constants.o module_setup.o module_fire.o tke.f90
 
 met_functions.o:	module_constants.o
  

@@ -43,9 +43,7 @@
     ! is done using formulae from Kessler (1969) and 
     ! Rogers and Yau (1989).  
     !
-    ! Adapted from USAF Weather Agency routine.  In the original
-    ! version, cloud ice was used for the ice component.  In this
-    ! version, we only include precipitating ice (graupel)
+    ! Adapted from USAF Weather Agency routine.  
     !
     !  Brent Shaw, NOAA Forecast System Lab, Dec 2000
     !

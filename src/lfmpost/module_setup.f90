@@ -38,13 +38,14 @@ MODULE setup
 
   USE mm5v3_io
   USE wrfsi_static
-  USE wrfv1_netcdf
+  USE wrf_netcdf
   USE time_utils
   USE map_utils
   ! Contains routines for reading model setup
 
   IMPLICIT NONE
-
+  
+  INTEGER, PARAMETER            :: max_domains = 10
   ! File/path names
   CHARACTER(LEN=1)              :: domain_num_str
   CHARACTER(LEN=2)              :: domain_num_str2
@@ -73,20 +74,20 @@ MODULE setup
   INTEGER                       :: stop_file_num
   INTEGER                       :: file_num_inc
   LOGICAL                       :: file_num3
-  LOGICAL                       :: make_laps(10)
-  LOGICAL                       :: write_to_lapsdir(10)
-  LOGICAL                       :: make_v5d(10)
-  LOGICAL                       :: make_points(10)
+  LOGICAL                       :: make_laps(max_domains)
+  LOGICAL                       :: write_to_lapsdir(max_domains)
+  LOGICAL                       :: make_v5d(max_domains)
+  LOGICAL                       :: make_points(max_domains)
   INTEGER                       :: v5d_compress
   CHARACTER(LEN=32)             :: model_name
   LOGICAL                       :: do_smoothing
   LOGICAL                       :: use_model_pbl 
-  LOGICAL                       :: gribsfc(10)
-  LOGICAL                       :: gribua(10)
+  LOGICAL                       :: gribsfc(max_domains)
+  LOGICAL                       :: gribua(max_domains)
   INTEGER                       :: table_version
   INTEGER                       :: center_id
   INTEGER                       :: subcenter_id
-  INTEGER                       :: process_id(10)
+  INTEGER                       :: process_id(max_domains)
 
   ! Time information
   INTEGER                       :: num_times_avail
@@ -198,6 +199,8 @@ CONTAINS
     ENDIF
     IF ((mtype .EQ. 'WRF       ').OR.(mtype .EQ. 'wrf       ')) THEN
       mtype = 'wrf       '
+    ELSEIF ((mtype .EQ. 'WRF2      ').OR.(mtype .EQ. 'wrf2      ')) THEN
+      mtype = 'wrf2      '
     ELSEIF ((mtype .EQ. 'MM5       ').OR.(mtype .EQ. 'mm5       ')) THEN
       mtype = 'mm5       '
     ELSE
@@ -256,9 +259,17 @@ CONTAINS
       CLOSE (lun_data)
       CLOSE (lun_terrain)
     
-    ELSEIF(mtype .eq. 'wrf') THEN
+    ELSEIF(mtype(1:3) .eq. 'wrf') THEN
       ! Set up WRF model
-      CALL make_wrf_file_name(lfmprd_dir, domain_num,0,data_file)
+      print *, 'Setting up times for ', mtype
+      IF (mtype .EQ. 'wrf') THEN
+        CALL make_wrf_file_name(lfmprd_dir, domain_num,0,data_file)
+        CALL wrf_time_setup
+      ELSEIF(mtype .EQ. 'wrf2') THEN
+        CALL wrf2_time_setup
+        CALL make_wrf2_file_name(lfmprd_dir, domain_num, &
+            times_to_proc(1), data_file)
+      ENDIF
       print *, 'Initial WRF file: ', TRIM(data_file)
       INQUIRE(FILE=data_file,EXIST=file_ready)
       IF (.NOT.file_ready) THEN
@@ -267,7 +278,6 @@ CONTAINS
         IF (realtime) CALL sleep(60)
       ENDIF
       CALL open_wrfnc(data_file,lun_data,status)
-      CALL wrf_time_setup
       CALL model_setup(lun_data,lun_terrain)
       CLOSE(lun_data)
 
@@ -283,7 +293,7 @@ CONTAINS
         PRINT '(A,I3)', 'Points initialized: ', num_points
       ENDIF
     ENDIF
-
+    print *, 'Ended setup_lfmpost'
   END SUBROUTINE setup_lfmpost
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE read_namelist
@@ -295,7 +305,7 @@ CONTAINS
     REAL                        :: levels_mb(max_levels)
     LOGICAL                     :: used
     CHARACTER(LEN=255)          :: namelist_file    
-    CHARACTER(LEN=32)           :: lfm_name(10)
+    CHARACTER(LEN=32)           :: lfm_name(max_domains)
 
     NAMELIST /lfmpost_nl/ num_domains, keep_fdda, split_output, levels_mb,&
         redp_lvl,lfm_name , proc_by_file_num, start_file_num, stop_file_num, &
@@ -569,12 +579,12 @@ CONTAINS
       lat1 = latdot(1,1)
       lon1 = londot(1,1) 
       stdlon = proj_cent_lon
-    ELSEIF (mtype .eq. 'wrf') THEN
+    ELSEIF (mtype(1:3) .eq. 'wrf') THEN
      
      ! Use routines in module wrfsi_static to read from static.wrfsi
-     CALL get_wrfsi_static_dims(moad_dataroot, nx,ny)
-     CALL get_wrfsi_static_proj(moad_dataroot, projection, lat1,lon1, &
-                                dx_m,dy_m, stdlon, truelat1, truelat2)
+     CALL get_wrfsi_static_dims(moad_dataroot,domain_num, nx,ny)
+     CALL get_wrfsi_static_proj(moad_dataroot,domain_num, &
+          projection, lat1,lon1,dx_m,dy_m, stdlon, truelat1,truelat2)
      IF (dx_m .ne. dy_m) THEN
        PRINT *, 'WRF dx != dy...not ready for this!',dx_m,dy_m
        STOP
@@ -586,11 +596,13 @@ CONTAINS
      ALLOCATE (terdot (nx,ny))
  
      ! Get the lat/lon for the non-staggered grid
-     CALL get_wrfsi_static_latlon(moad_dataroot,'N',latdot,londot)
+     CALL get_wrfsi_static_latlon(moad_dataroot,domain_num,'N',&
+            latdot,londot)
     
      ! Get the terrain height
 !     CALL get_wrfsi_static_2d(moad_dataroot, 'avg', terdot)
-     wrfinitfile = TRIM(moad_dataroot)//'/wrfprd/wrfinput_d01'
+     wrfinitfile = TRIM(moad_dataroot)//'/wrfprd/wrfinput_d'//&
+         domain_num_str2
      INQUIRE(FILE=wrfinitfile,EXIST=fileready)
      IF (.NOT.fileready) THEN
        CALL wrfio_wait(wrfinitfile,max_wait_sec)
@@ -628,9 +640,9 @@ CONTAINS
                      mapfac_d,'D   ',status)
         CALL get_mm5_2d(lun_terrain,'CORIOLIS ',static_date, &
                      coriolis,'D   ',status)
-      ELSEIF (mtype .eq. 'wrf') THEN
-        CALL get_wrfsi_static_2d(moad_dataroot, 'mfl', mapfac_d)
-        CALL get_wrfsi_static_2d(moad_dataroot, 'cph', coriolis)
+      ELSEIF (mtype(1:3) .eq. 'wrf') THEN
+        CALL get_wrfsi_static_2d(moad_dataroot,domain_num, 'mfl', mapfac_d)
+        CALL get_wrfsi_static_2d(moad_dataroot,domain_num, 'cph', coriolis)
       ENDIF
 
     ENDIF
@@ -693,9 +705,14 @@ CONTAINS
       ENDDO
       PRINT '(I4,4x,F8.6)', ksigf, sigmaf(ksigf)
       PRINT *, ' ' 
-    ELSEIF (mtype .eq. 'wrf') THEN
-      CALL get_wrf_misc(lun_data,ksigh,ksigf,ptop, clwflag, iceflag, &
+    ELSEIF (mtype(1:3) .eq. 'wrf') THEN
+      IF (mtype .EQ. 'wrf') THEN
+        CALL get_wrf_misc(lun_data,ksigh,ksigf,ptop, clwflag, iceflag, &
                         graupelflag)
+      ELSEIF(mtype .EQ. 'wrf2') THEN
+        CALL get_wrf2_misc(lun_data,ksigh,ksigf,ptop,clwflag, iceflag, &
+                        graupelflag)
+      ENDIF
       ALLOCATE(sigmah(ksigh))
       ALLOCATE(sigmaf(ksigf))
       CALL get_wrf_1d(lun_data, 'ZNU',sigmah,status)
@@ -1000,5 +1017,99 @@ CONTAINS
     
 
   END SUBROUTINE wrf_time_setup
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE wrf2_time_setup
+ 
+    ! This subroutine sets up list of times to process for WRFV2.  It
+    ! requires a special "wrftimes.nl" file to be in the
+    ! MOAD_DATAROOT/wrfprd area.  This namelist is a subset of the
+    ! time control items from the standard WRFv2 namelist.input file
+    
+    IMPLICIT NONE
+    
+    ! Namelist entries
+    INTEGER,DIMENSION(max_domains) :: start_year,   end_year
+    INTEGER,DIMENSION(max_domains) :: start_month,  end_month
+    INTEGER,DIMENSION(max_domains) :: start_day,   end_day
+    INTEGER,DIMENSION(max_domains) :: start_hour,   end_hour
+    INTEGER,DIMENSION(max_domains) :: start_minute, end_minute
+    INTEGER,DIMENSION(max_domains) :: start_second, end_second
+    INTEGER,DIMENSION(max_domains) :: history_interval
+    INTEGER,DIMENSION(max_domains) :: frames_per_outfile
+
+    ! Others
+    INTEGER,PARAMETER  :: max_times = 500
+    CHARACTER(LEN=24), ALLOCATABLE  :: possible_times(:)
+    CHARACTER(LEN=24) :: hdate, hdate_beg, hdate_end,hdate_new
+    CHARACTER(LEN=255)              :: wrftimesnl
+    INTEGER  :: first_time_index, unit ,status
+
+    NAMELIST /wrftimes/ &
+      start_year, start_month, start_day, &
+      start_hour, start_minute, start_second, &
+      end_year, end_month, end_day, end_hour, end_minute, &
+      end_second, history_interval, frames_per_outfile
+
+    ! Initialization of some namelist variables that might
+    ! not be present.
+    start_minute(:) = 0
+    start_second(:) = 0
+    end_minute(:)   = 0
+    end_second(:)   = 0
+    history_interval(:) = -1
+    frames_per_outfile(:) = 1
+
+    wrftimesnl = TRIM(moad_dataroot)//'/wrfprd/wrftimes.nl'
+
+    ! Get a unit number
+    CALL get_file_unit(unit)
+    OPEN (UNIT=unit, FILE=TRIM(wrftimesnl), FORM='FORMATTED', &
+          STATUS='OLD',IOSTAT=status)
+    IF (status.NE.0) THEN
+      PRINT *, 'Error opening namelist file (',TRIM(wrftimesnl),'):',&
+         status
+      CALL ABORT
+    ENDIF
+    READ(unit, NML=wrftimes)
+
+    IF (frames_per_outfile(domain_num) .NE. 1) THEN
+       print *, 'FRAMES_PER_OUTFILE MUST = 1 for LFMPOST!'
+       STOP
+    ENDIF
+
+    ALLOCATE(possible_times(max_times))
+    num_times_to_proc = 1
+    WRITE(hdate,50) &
+        start_year(domain_num),start_month(domain_num),start_day(domain_num),&
+        start_hour(domain_num),start_minute(domain_num), &
+        start_second(domain_num) 
+50  FORMAT(I4.4,"-",I2.2,"-",I2.2,"_",I2.2,":",I2.2,":",I2.2,".0000")
+    possible_times(1) = hdate
+    WRITE(hdate_end,50) end_year(domain_num), end_month(domain_num), &
+      end_day(domain_num), end_hour(domain_num), end_minute(domain_num), &
+      end_second(domain_num) 
+    DO WHILE (hdate .LE. hdate_end)
+      CALL geth_newdate(hdate,hdate(1:16),history_interval(domain_num))
+      IF (hdate .LE. hdate_end) THEN
+        num_times_to_proc = num_times_to_proc+1
+        IF (num_times_to_proc .GT. max_times) THEN 
+          print *, 'Exceeded maximum input times!'
+          STOP 
+        ENDIF
+        possible_times(num_times_to_proc) = hdate
+      ENDIF
+    ENDDO
+    ALLOCATE(times_to_proc(num_times_to_proc))
+    times_to_proc(:) = possible_times(1:num_times_to_proc)
+    DEALLOCATE(possible_times)
+
+    ! For now, hardcode to process all available times
+    num_times_avail = num_times_to_proc
+    start_time_index = 1
+    stop_time_index = num_times_to_proc
+    time_index_inc = 1
+    cycle_date = times_to_proc(1)
+    RETURN
+  END SUBROUTINE wrf2_time_setup    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END MODULE setup

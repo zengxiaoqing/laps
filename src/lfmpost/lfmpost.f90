@@ -50,7 +50,7 @@ PROGRAM lfmpost
 
   USE setup
   USE mm5v3_io
-  USE wrfv1_netcdf
+  USE wrf_netcdf
   USE postproc_lfm
   USE constants
   USE time_utils
@@ -158,8 +158,13 @@ PROGRAM lfmpost
         CALL open_mm5v3(data_file,lun_data,status)
       ENDIF
 
-    ELSEIF(mtype.EQ.'wrf') THEN
-      CALL make_wrf_file_name(lfmprd_dir,domain_num,sim_tstep(t),data_file)
+    ELSEIF(mtype(1:3).EQ.'wrf') THEN
+      IF (mtype .EQ. 'wrf') THEN
+        CALL make_wrf_file_name(lfmprd_dir,domain_num,sim_tstep(t),data_file)
+      ELSEIF(mtype.EQ.'wrf2') THEN
+        CALL make_wrf2_file_name(lfmprd_dir,domain_num,times_to_proc(t), &
+              data_file) 
+      ENDIF
       INQUIRE(FILE=data_file,EXIST=file_ready)
       IF (.NOT.file_ready) THEN
         CALL wrfio_wait(data_file,max_wait_sec)
@@ -262,7 +267,7 @@ PROGRAM lfmpost
     CALL process_one_lfm(lun_data,current_time)
     IF (mtype .EQ. 'mm5') THEN
       IF (split_output) CLOSE (lun_data)
-    ELSEIF (mtype .EQ. 'wrf') THEN
+    ELSEIF (mtype(1:3) .EQ. 'wrf') THEN
       IF (split_output) CALL close_wrfnc(lun_data)
     ENDIF 
 
@@ -355,8 +360,13 @@ PROGRAM lfmpost
       ENDIF
       CALL make_fnam_lp(laps_reftime,a9time,istatus)
       CALL make_fcst_time(laps_valtime,laps_reftime,fcst_hhmm,istatus) 
-      gribfile = gribdir(1:gdir_len) // '/' //a9time//'00'//fcst_hhmm(1:2) &
-                           //'.grib'
+      IF (fcst_hhmm(3:4) .EQ. "00") THEN
+        gribfile = gribdir(1:gdir_len) // '/' //a9time//'00'//fcst_hhmm(1:2) &
+                             //'.grib'
+      ELSE
+        gribfile = gribdir(1:gdir_len) // '/' //a9time//'00'//fcst_hhmm //'.grib'
+      ENDIF
+
       CALL s_len(gribfile, gfile_len)
       print *, 'Opening ', gribfile(1:gfile_len)
       CALL open_grib_c(gribfile,funit)
