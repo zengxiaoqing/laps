@@ -5,7 +5,7 @@
 
 
                        TABLE OF CONTENTS  
-                       -----------------   
+                       -----------------         
 
      1.0 ............  General LAPS info
      2.0 ............  Installing the LAPS Ingest/Analysis code 
@@ -105,23 +105,19 @@
      from the top level directory.  We recommend using Gnu Make
      Version 3.74 or later available via ftp from any GNU site. 
 
-     Finally the script ./etc/laps_localization.pl will create some
-     look up tables and modify certain files based on 
-
- 
-
------ Needs updated -------
+     Finally the script ./etc/laps_localization.pl will create the
+     static data files and look up tables specific to the domain you
+     have defined in data/static/nest7grid.parms, below are details on
+     the contents of the nest7grid.parms file.
 
 
      In this file, a number of potential manual changes to the code are 
-     outlined prior to running 'install_laps', especially if one is on a 
-     domain other than the default Colorado domain. After becoming familiar 
-     with the changes needed for your domain, it is recommended that you 
-     develop a method to save the hand edited files in a "safe" place outside 
-     of the laps directory. The relevant files could then be copied into place 
-     by a local script run prior to the 'install_laps' script. As part of this
-     procedure, a 'sed' script may be useful for automatically editing 
-     particular parameters within a file. This strategy would make it easier 
+     outlined prior to running make and 'laps_localization.pl',especially 
+     if one is on a domain other than the default Colorado domain. After 
+     becoming familiar with the changes needed for your domain, it is recommended 
+     that you develop a method to save the hand edited files in a
+     "safe" place outside of the laps directory structure, or by using
+     a revision control system such as CVS.  This strategy would make it easier 
      to update your implementation of LAPS with the latest laps.tar.gz file 
      from FSL, while minimizing the hassle involved with LAPS modifications 
      for your local domain. Examples of such files (described below) possibly
@@ -130,41 +126,35 @@
               src/include/lapsparms.for
               data/static/nest7grid.parms
               src/include/laps_grid_def.h
-              nest7grid/static/nest7grid.cdl
-              install_laps
+              data/static/nest7grid.cdl
+
 
      One caution here is that you might want to check for any updates FSL has 
-     made in the files that need to be hand edited.
+     made in these files.
 
-     An iteration for updating your LAPS code might look as follows:
-
-     Step 1) Copy new laps.tar.gz file into an EMPTY directory (called 'laps').
-
-     Step 2) 'gunzip' and untar the laps.tar.gz file
-
-     Step 3) If first iteration: Make hand changes to code 
-                                 Save hand changes in a separate directory
-                                                      (outside of 'laps')
-
-             If later iteration: Copy in (and double check) previously made 
-                                 changes
-
-     Step 4) Run install_laps
-
-     Note that 'install_laps' should not be run twice in succession. It should
-     always be run on a freshly untarred set of code (except for files copied
-     in by hand).
 
                   --- 2.2   NetCDF library   ---
  
-     You will generally want to edit the line in the install_laps script 
-     for your machine that soft links to the netcdf library. Simply search for 
-     'netcdf.a', 'netcdf.h', 'netcdf.inc', and 'netcdf/bin' in install_laps 
-     and make the appropriate substitutions. It is assummed that you have 
-     access to a netcdf library. If not, you can freely download it from the 
-     WWW at http://www.unidata.ucar.edu/packages/netcdf/index.html.
-     
+     The NetCDF package is required for laps, it is available via internet at 
+     http://www.unidata.ucar.edu/packages/netcdf/
+     If netCDF is properly installed and the ncdump and ncgen programs are in your path
+     ./configure will find them and provide the laps package with the
+     proper path.  You can also provide the path to netcdf to ./configure by using the
+     command line argument --netcdf=NETCDF 
+   
+                  --- 2.2a  Perl   ---
 
+     The perl package is also required for laps, it is available via internet at
+     any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  
+
+                  --- 2.2b  make   ---
+
+     Laps Makefiles work best by using gnu make.  This is available at 
+     any gnu site such as ftp://prep.ai.mit.edu/pub/gnu.  Some vendor
+     provided make utilities may also work, however if you find you are
+     having problems in this area please try installing and using gnu make.
+
+   
             ---  2.3  Plotting / NCAR graphics library (optional)  ---
 
      To build the lapsplot process, access to an NCAR graphics library is 
@@ -183,7 +173,6 @@
      LAPS implementation is working. We do not have any other plotting or 
      visualization packages available with LAPS at this time.
 
-
                ---  2.4    Raw data ingest   ---
 
      There is a layer of raw data ingest code that may have to be modified
@@ -197,11 +186,9 @@
 
      The default LAPS ingest code obtains raw data in NetCDF format from 
      the FSL NIMBUS system, then outputs the LAPS "intermediate" data files. 
-     Doing a 'grep ingest install_laps | grep echo' shows the executables 
-     associated with each raw data source. Most ingest code is located in the
-     nest7grid/source/ingest directory. When NetCDf format is used for the
-     raw data, a cdl file for the raw data is often included in the
-     source code directory.
+     Most ingest code is located under the src/ingest directory. When NetCDf 
+     format is used for the raw data, a cdl file for the raw data is often 
+     included in the source code directory.
   
      Depending on the data source, you may generally prefer one of two choices:
          1) Modify LAPS ingest code to accept your own raw data format. 
@@ -216,19 +203,19 @@
      are withheld, albeit in degraded fashion. 
 
      The pathnames for most of the ingest data sources are assigned within
-     the 'nest7grid.parms' files and can be set accordingly at runtime.
+     the './data/static/nest7grid.parms' files and can be set accordingly at runtime.
 
      Our long range plans are to hopefully make the ingest code compatable
      with NOAAport data.
 
      Sfc Obs (lso): FSL uses this data in FSL's NetCDF format as input.
-           The FSL code is in the '.../source/ingest/sao' directory, and
+           The FSL code is in the '.../src/ingest/sao' directory, and
            includes routines to read and format different surface data
            (METAR, mesonet, buoy).  Outside users will need to write 
            the necessary routines to read their data formats and pass
            the data in arrays to the calling routines in the expected form.
            Paths to the data are set in the 'surface_obs.inc' file.
-           Looking at the routines in the '.../source/ingest/sao' directory
+           Looking at the routines in the '.../src/ingest/sao' directory
            should provide enough information to get you started.  Direct
            questions about surface data to Pete Stamus (stamus@fsl.noaa.gov).
 
@@ -285,147 +272,79 @@
 
                ---  2.5  Running LAPS Analyses  ---
 
-     A sample crontab file is located in 'sched/lapscron_sample' that runs
-     several LAPS processes. 
+     There are several scripts in the ./etc directory designed to run laps under 
+     cron.  You cron should look similar to :
 
-     Once each hour (or other cycle time), the main sched/schedule.com runs.
-     As an example, at FSL, we run the schedule.com hourly at :21 after the 
-     top of the hour. Note the use of a command line argument to pass in the 
-     LAPS path as in this example: 'sched/schedule.com /laps/nest7grid'.
+20 * * * * /fullpathto/perl /fullpathto/laps/etc/sched.pl /fullpathto/laps
+50 * * * * /fullpathto/perl /fullpathto/laps/etc/lga.pl /fullpathto/laps
+03,19,34,49 * * * * /fullpathto/perl /fullpathto/laps/etc/run_vrc_driver.pl /fullpathto/laps/
+08,14,23,29,38,45,53,59 * * * * /fullpathto/perl /fullpathto/laps/etc/run_lvd_driver.pl /fullpathto/laps/
 
-     The 'lapscron_sample' file also runs several ingest processes separately
-     from the 'schedule.com'. For example, the background model ingest (lga) 
-     is nominally run at :18 and :48 after. The satellite ingest (lvd) is run 
+
+     Once each hour (or other cycle time), the main ./etc/sched.pl runs.
+     As an example, at FSL, we run the sched.pl hourly at :20 after the 
+     top of the hour.  On many unix systems jobs run in cron do not have access 
+     to the environment defined by the user, instead they use a system default 
+     environment defined in /etc/profile, thus perl may not be in the path. 
+     Specifying the full path to perl in your cron insures that this will not 
+     be a problem.  Each of these scripts requires the path to laps as a command line 
+     argument, a second optional argument specifies the path to the laps data directory 
+     structure - this path defaults to /fullpathto/laps/data if not provided.
+
+     In the above cron example several ingest processes are run separately
+     from the 'sched.pl'. For example, the background model ingest (lga) 
+     is nominally run at :50 after. The satellite ingest (lvd) is run 
      at ~6 minute intervals. NOWRAD Radar ingest (vrc), is run at ~10 minute 
      intervals.
      
-     By inspecting the 'schedule.com' file which runs everything else (the 
-     first item in the 'lapscron_sample' file), you can see the various 
-     executables that are run in a certain order. You might want to modify the
-     'schedule.com' file for your needs.
+     By inspecting the 'sched.pl' file which runs everything else , you can 
+     see the various executables that are run in a certain order. You might 
+     want to modify the 'sched.pl' file for your needs.
 
                ---  2.6  Test data case  ---
 
      A tar file containing test data is available that contains a 5 hour
      run of laps data (intermediate files from the 'ingest' code plus outputs
-     from the 'analysis' code). The schedule.com was run each hour from 1000 
+     from the 'analysis' code). The sched.pl was run each hour from 1000 
      UTC through 1400 UTC for a particular date. A few files of "data history" 
      are included as well from 0900 UTC. This is the contents of the 
-     'nest7grid/lapsprd' and 'nest7grid/log' directories from an FSL machine. 
+     'data/lapsprd' and 'data/log' directories from an FSL machine. 
      The contents of the various directories are outlined below in this README 
      file. The data was created with the latest software release. Our users 
      can download this data at 
      http://www.fsl.noaa.gov/frd-bin/LAPSDATA.tarfile.cgi.
 
      If you want to test the 'analysis' code only, you might initiate
-     the 'schedule.com' to run for the test data at 1000 UTC (as indicated
-     by the 'systime.dat') for the date
+     the 'sched.pl' to run for the test data at 1000 UTC (as indicated
+     by the './data/time/systime.dat') for the date
      supplied, making sure any outputs from the 1000 UTC analyses are not 
      present. Only the 'ingest' outputs from 1000 UTC and the analysis 'data 
      history' output products from 0900 UTC should then be present. You may 
-     also want to remove the ingest processes from the schedule.com for this 
+     also want to commnet the ingest processes from the sched.pl for this 
      test, since the ingest outputs are already present.
 
      When running LAPS for archived data in this manner, the 
-     'sched/systime.dat' should be updated manually by the user, instead of
-     by the 'sched/schedule.com' script (that uses wall clock time). To help
+     'data/time/systime.dat' should be updated manually by the user, instead of
+     by the 'etc/sched.pl' script (that uses wall clock time). To help
      accomplish this, comment out the 'systime.exe' entry in the 
-     'schedule.com'.  
+     'sched.pl'.  
 
                ---  2.7  F77 Compiler Flags       ---
 
-     The 'install_laps' script automatically modifies the compilation 
+     The './configure' script automatically modifies the compilation 
      flags by modifying the Makefiles according to what type of platform
      you are on. Hopefully the flags will work OK on your particular
-     platform. The sed_Makefile* script can be modified if you want to 
-     change the flags from the default set. For your information, here are 
-     some of the more important flags we use on the various machines.
+     platform. If you want to change the flags from the default set, you 
+     can provide command line arguments to either the ./configure script or
+     to the Makefile.  For more information on flags to configure run 
+     './configure --help'
 
-       SUN-OS: 
-
-         -native   Generate code for the best floating-point hardware
-                   available on the machine you are compiling on.
-
-
-         -xl       Extended Language. Where source  could  be  either
-                   VMS  FORTRAN or standard, interpret as VMS FORTRAN
-                   . These ambiguous features are: Unformatted record
-                   size in bytes, VMS-style logical file names, quote
-                   (")   character   introducing   octal   constants,
-                   backslash    (\)    character   within   character
-                   constants, and a nonstandard form of the PARAMETER
-                   statement.
-
-         -O2       Do basic local and global optimization.   This
-                   level  usually  gives  minimum code size.  The
-                   details are: induction  variable  elimination,
-                   local    and   global   common   subexpression
-                   elimination,  algebraic  simplification,  copy
-                   propagation,   constant   propagation,   loop-
-                   invariant optimization,  register  allocation,
-                   basic    block    merging,    tail   recursion
-                   elimination, dead code elimination, tail  call
-                   elimination, and complex expression expansion.
-                   Do not use -O2 unless -O3 results in excessive
-                   compilation  time,  running out of swap space,
-                   or excessively large code size.
-
-
-         -O3       Besides what -O2  does,  this  also  optimizes
-                   references   and   definitions   of   external
-                   variables.
-
-         -g        Produce additional symbol  table  information  for
-                   dbx(1)  or dbxtool(1).  Also, pass the -lg flag to
-                   ld(1).  For separate compile and  link  steps:  if
-                   you compile with -g , then be sure to link with -g.
-                   The -g overrides -O.
-
-
-       HP-UX:
-
-         -O        Perform level 1 and level 2 optimization.
-
-         +O1       Perform level 1 optimization.
-
-                   Normally, the sed.Makefile_hp will use the -O option,
-                   on some compilers, you might want to use the 
-                   sed.Makefile_hp_alternate script that invokes the +O1.
-
-         -g        Generate additional information needed by the
-                   symbolic debugger xdb (see xdb(1)).  This option
-                   is incompatible with optimization.  -g overrides
-                   the -s option, regardless of the order in which
-                   they are encountered on the command line.
-
-         +e        Enable ``other-vendor'' compatibility mode for
-                   importing non-HP code.  This is equivalent to
-                   specifying all the +E options (except +E4).  It is
-                   also the same as specifying the $NOSTANDARD
-                   directive at the beginning of the program file.
-                   This option turns on the -K option.
-
-         +es       Allow more than 72 characters on a single source
-                   line (Extended Source).
-
-
-         +U77      /usr/lib/libU77.a - library referred to by +U77 that is 
-                   hopefully installed on your machine.
-
-         -K        Automatically SAVE all local variables in all
-                   subprograms.  This option forces static storage
-                   for these variables in order to provide a
-                   convenient path for importing FORTRAN 66 and
-                   FORTRAN 77 programs that were written to depend on
-                   static allocation of memory (that is, variables
-                   retaining their values between invocations of
-                   their containing program units).  This option has
-                   two side-effects:
-
-                      +  All non-initialized variables are initialized
-                         to zero.
-                      +  The DATA statement can appear among executable
-                         statements.
+     If you find that the default compiler flags don't work for your
+     platform or that your platform has no default, you'll need to experiment 
+     to find the right set of flags.  Experiment in the src/lib/Makefile 
+     typically flags which work in that directory will work elsewhere in laps.
+     If you find flags that work for your platform and would like us to add them
+     to the defaults in configure please let us know via e-mail.
 
 
 ---------------- 2.8 ------ I/O of LAPS gridded files-------------------------
@@ -440,30 +359,31 @@
         lib/readlapsdata.f for the arguments.
 
      3. Highest (and easiest) level - get_laps_3d or get_laps_2d. The source
-        is contained in lib/laps_io.f. The various grids available are
+        is contained in src/lib/laps_io.f. The various grids available are
         listed later in this README file under the heading "NetCDF organization"
 
      To link to the reading routines, you will want to link to:
 
-     laps/lib/lapslib.a
-     laps/lib/netcdf/netcdf.a
+     laps/src/lib/liblaps.a
+     libnetcdf.a
 
 
 -------------- 2.9   CHANGING THE HORIZONTAL DOMAIN---------------------------
 
    NUMBER OF GRID POINTS:
 
-     To do this, perform the following between untarring the tar file and
-   running install_laps.
-
+     Laps will soon allow you to change the horizontal domain at runtime, however
+     at this release you are still required to edit a few files before compiling 
+     (the make step).
+ 
      1. Edit src/include/lapsparms.for 
 
         Change the parameters NX_L, NY_L to be the number of grid points
         (default is 61 x 61). Make sure they are <= NX_L_MAX and NY_L_MAX. 
 
         If NX_L_MAX and NY_L_MAX need to be changed, they must also then be 
-        changed in another file, namely 'laps/lib/lapsparms.inc'. Note that 
-        'laps/lib/lapsparms.inc' file has different contents (basically a 
+        changed in another file, namely 'src/include/lapsparms.inc'. Note that 
+        'src/include/lapsparms.inc' file has different contents (basically a 
         subset of) the 'src/include/lapsparms.for' file. 
 
         Note also that NX_L is the dimension counting from W to E. NY_L is the 
@@ -471,7 +391,7 @@
 
      2. Adjust the horizontal dimensions in 'src/include/laps_grid_def.h'.
 
-     3. Edit the file 'laps/nest7grid/static/nest7grid.cdl' to modify
+     3. Edit the file './data/static/nest7grid.cdl' to modify
 	the domain size from the Colorado (61x61) to your domain size.
 	This should be consistent with the values of NX_L and NY_L in
 	src/include/lapsparms.for. 
@@ -484,17 +404,23 @@
         c) imax and jmax in the LAPS data area should be set to match
            NX_L and NY_L.
 
+     NOTE: The file './data/static/nest7grid.cdl' is now automatically edited
+           by ./etc/laps_localization.pl using the values found in 
+           './data/static/nest7grid.parms'
+
+
      4. Adjust the horizontal dimensions in 
-                                   'laps/nest7grid/static/nest7grid.parms'.
+                                   './data/static/nest7grid.parms'.
 
    LOCATION OF DOMAIN (STATIC FILE, etc.):
 
-     To do this, perform the following between untarring the tar file and
-   running install_laps. 
 
-        The STATIC FILE, 'static.nest7grid', is automatically built during the
-        execution of 'install_laps'. The code to do this is still somewhat
-        under development. Steve Albers (albers@fsl.noaa.gov) can try to offer 
+     The location of the horizontal domain can now be changed at run time. 
+     Simply change the lat/lon values in 'data/static/nest7grid.parms'
+     and run the './etc/laps_localization.pl' script.  See the note below 
+     regarding changing the projection of laps.
+
+        Steve Albers (albers@fsl.noaa.gov) can try to offer 
         help on this if you're stuck. The code currently works best if you 
         are working within the continental United States. Some mods may 
         occasionally be required to make it work elsewhere in the world. 
@@ -509,16 +435,17 @@
         b) If you are in the vicinity of a land border of the Continental 
            United States (e.g. Southern Canada or Northern Mexico).
 
-        The 'gridgen_model.f' program utilizes two terrain data sets (included
-        within the tar file). One is a worldwide 10' dataset, the other is 
-        30" data and covers the continental U.S. The software automatically 
+        The './src/grid/gridgen_model.f' program utilizes two terrain data sets 
+        (distributed as a seperate tar file available from the laps www site). 
+        One is a worldwide 10' dataset, the other is 30" data and
+        covers the continental U.S.  The software automatically 
         chooses the higher resolution data if it covers the domain of interest,
         otherwise it defaults to the lower resolution data. A ~0.2 degree wide
         transition zone is used for blending at the boundary between the
         two datasets. If for some reason you need to change this strategy, you
         would want to modify 'gridgen_model.f'.
 
-        Prior to running install_laps, perform the following steps
+        Prior to running laps_localization.pl, perform the following steps
         (needed only if you are outside the default Colorado domain).
 
         Step 1) Edit the file 'data/static/nest7grid.parms' to
@@ -545,9 +472,9 @@
                 parameters.  The default values are 1. and 4., respectively. 
                 These parameters control the terrain silhouette weighting and 
                 the terrain smoothing, respectively. The value "4." here 
-                implies 4 delta-x smoothing.
+                implies 4 delta-x smoothing.  This step requires recompiling!
 
-        Step 6) Within the file 'laps/nest7grid/static/nest7grid.cdl',
+        Step 6) Within the file 'laps/data/static/nest7grid.cdl',
                 navigation variables in the data section should be modified
                 for completeness, but will not affect the output if they are not
                 modified.  They are:
@@ -562,8 +489,9 @@
                 LoV - the standard longitude which is true north.  The same 
                       rules for negative longitudes apply as in Lo1.
 
-        When you run install_laps, the NetCDF static file will be automatically
-        generated (we hope). If you see the following error message: 
+        When you run ./etc/laps_localization.pl, the NetCDF static 
+        file will be automatically generated (we hope). 
+        If you see the following error message: 
 
         FILE../static/model/topo_30s/U50N119W DOES NOT EXIST
 
@@ -595,14 +523,14 @@
    NUMBER OF LEVELS:
 
      To do this, perform the following between untarring the tar file and
-   running install_laps. 
+    compiling 
 
      1. Edit 'src/include/lapsparms.for' 
 
         Change the parameter NZ_L to be the number of vertical levels. Make
         sure it is <= NZ_L_MAX. If NZ_L_MAX needs to
         be changed, it must also then be changed in another file, namely 
-        'laps/lib/lapsparms.inc'. Note that NZ_L counts upward from bottom to 
+        'src/include/lapsparms.inc'. Note that NZ_L counts upward from bottom to 
         top.
 
      2. Edit 'data/static/nest7grid.parms'
@@ -620,7 +548,7 @@
    PRESSURE OF THE LEVELS (and vertical resolution):
 
      To do this, perform the following between untarring the tar file and
-   running install_laps.
+     compiling
 
      1. Edit 'data/static/nest7grid.parms'
 
@@ -641,21 +569,13 @@
 -------- 2.11 ----- CHANGING THE CYCLE TIME -----------------------------------
 
       The default cycle time is 60 minutes. To change this, do the following
-   between untarring the tar file and running 'install_laps'. 
+   between untarring the tar file and compiling
 
      1. Edit 'src/include/lapsparms.for' to change the parameter
         'laps_cycle_time'.
  
      2. Edit runtime parameter file 'data/static/nest7grid.parms' 
         to change the value of 'laps_cycle_time'.
-
-     3. There are "at" scripts for two ingest processes (lvd/satellite and
-        vrc/radar) that may or may not need modification. They are located in
-        sched/submit_lvd_at.script and sched/submit_vrc_at.script. For LVD, 
-        check out the README in 'source/ingest/satellite/goes8/lambert'.       
-        A README is also under development for VRC. Please contact John Smart 
-        (smart@fsl.noaa.gov) for the latest details.
-        
 
 --------- 2.12 ------SURFACE ANALYSIS CHANGES---------------------------------
 
@@ -673,7 +593,7 @@
 	analysis uses: 'pbl_top.dat' and 'drag_coef.dat'
 
         Note that 'build_sfc_static.x' is run *after* the 'static.nest7grid'
-	file (located in '.../nest7grid/static' and containing latitude, 
+	file (located in '.../data/static' and containing latitude, 
 	longitude, and elevation for the domain) is created for your location.
 
      2. In 'build_sfc_static', the friction parameter has been configured
@@ -767,7 +687,7 @@ August 1996:
    having to do anything to the code itself.  If you wish to run this code,
    you will need LVD files (LAPS satellite data files).  In addition you
    need to verify the SECOND record of the ASCII file
-   ./nest7grid/static/moisture_switch.txt contains the numeral 8 or 9.  The
+   ./data/static/moisture_switch.txt contains the numeral 8 or 9.  The
    numeral 8 signifies to use the GOES-8 coefficients in the forward model,
    a numeral 9 will cause the software to use the GOES-9 coefficients in
    the forward model.  It is currently imperative for the user to set this
@@ -799,7 +719,7 @@ June 1996
    want them to be present in the data directory (possibly for some other
    application) you can avoid using them in the moisture code by modifying
    the file:
-   ./nest7grid/static/moisture_switch.txt
+   ./data/static/moisture_switch.txt
 
    The first record of this ASCII file is used for the RAOB data inclusion.
    The file itself is documented internally following the second record.
@@ -911,7 +831,7 @@ Code organization:
 
 Control file:
 
-   ./nest7grid/static/moisture_switch.txt
+   ./data/static/moisture_switch.txt
 
    Is an ASCII file intended for easy editing and control of the moisture
    modules activities.  The first record controls usage of RAOB data
