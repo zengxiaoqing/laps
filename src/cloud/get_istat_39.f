@@ -38,7 +38,8 @@ cdis
 cdis
 
         subroutine get_istat_39(t39_k,tb8_k,solar_alt
-     1                         ,r_missing_data,ni,nj,istat_39_a)
+     1                         ,rlaps_land_frac,r_missing_data,ni,nj
+     1                         ,istat_39_a)
 
 !       This routine returns the status of stratus cloud detection for each 
 !       grid point (containing liquid water).
@@ -52,6 +53,7 @@ cdis
         real*4    t39_k(ni,nj)
         real*4    tb8_k(ni,nj)
         real*4    solar_alt(ni,nj)
+        real*4    rlaps_land_frac(ni,nj)
         integer*4 istat_39_a(ni,nj)
         integer*4 icount(-1:+1)
 
@@ -76,30 +78,33 @@ cdis
      1                     .AND.
      1             solar_alt(i,j) .lt. 0.        )then
 
-                    if(t39_k(i,j) - tb8_k(i,j) .lt. -3.)then ! Sufficient diff
+                    t39_diff = t39_k(i,j) - tb8_k(i,j)
+
+                    istat_39_a(i,j) = 0                       ! Indeterminate
+
+                    if(t39_diff .le. -2.5)then ! Sufficient diff
                         istat_39_a(i,j) = +1
 
-                        if(icount(1) .le. 20)then            ! Log output
+                        if(icount(1) .le. 20)then             ! Log output
                             write(6,11)i,j,t39_c,tb8_c,t39_c-tb8_c
  11                         format(' Stratus present t39/tb8/df: '
      1                            ,2i5,3f8.1)
                         endif 
+                    endif
 
-                    else                                     ! Insuff diff
-                        if(tb8_c .gt. 0.)then
-                            istat_39_a(i,j) = -1             ! Warm - no cloud
-                        else
-                            istat_39_a(i,j) = 0
-                        endif
+                    if(t39_diff .gt. -2.5 .and. t39_diff .lt. +2.5
+     1                          .AND. tb8_c .gt. 0.    
+     1                          .AND. rlaps_land_frac(i,j) .gt. 0.5)then       
+                        istat_39_a(i,j) = -1                  ! Warm - no cloud
                     endif
 
                 else ! Sun above horizon or possibly cold cloud top: ambiguous
-                    istat_39_a(i,j) = 0
+                    istat_39_a(i,j) = 0 ! Indeterminate
 
                 endif
 
             else ! we have missing data
-                istat_39_a(i,j) = 0
+                istat_39_a(i,j) = 0     ! Indeterminate
 
             endif
 
