@@ -344,8 +344,9 @@ c
             stop
         endif
 
-	do i=1,n_obs_b ! Put obs into data structure (for sfct)
-            obs(i)%sfct_k = sfct(i)
+	do i=1,n_obs_b ! Put obs into data structure 
+            obs(i)%sfct_f = sfct(i)
+            obs(i)%t_ea_f = t_ea(i)
         enddo ! i
 
 	print *,' '
@@ -374,7 +375,15 @@ c
 	call find_ij(lat_s,lon_s,lat,lon,n_obs_b,mxstn,
      &               ni,nj,ii,jj,rii,rjj)
 c
+        call get_r_missing_data(r_missing_data,istatus)
+
         do ista=1,n_obs_b ! Write station info including elevation
+                          ! Insert info into obs data structure
+           obs(ista)%ri = rii(ista)
+           obs(ista)%rj = rjj(ista)
+           obs(ista)%i = ii(ista)
+           obs(ista)%j = jj(ista)
+
            if(       ii(ista) .ge. 1 .and. ii(ista) .le. ni
      1         .and. jj(ista) .ge. 1 .and. jj(ista) .le. nj )then ! in domain
 
@@ -384,9 +393,13 @@ c
      &                    ,elev_s(ista),topo(ii(ista),jj(ista))
      &                    ,elev_diff
 
+               obs(ista)%elev_diff = elev_diff
+
            else
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
      &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)
+
+               obs(ista)%elev_diff = r_missing_data
 
            endif
 
@@ -567,7 +580,7 @@ c
 	   call make_fnam_lp(i4time,back,istatus)
 	   write(6,*) 'Read successful for ',var_req
 	   call move(wt, wt_tgd, ni,nj)
-	   call conv_k2f(tgd_bk,tgd_bk,ni,nj) ! conv K to deg F
+!          call conv_k2f(tgd_bk,tgd_bk,ni,nj) ! conv K to deg F
 	   back_tgd = 1
 	else
 	   print *,'     No background available for ',var_req
@@ -734,7 +747,7 @@ c                                v  in kt
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
+     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
