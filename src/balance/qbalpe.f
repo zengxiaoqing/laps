@@ -60,24 +60,34 @@ c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,wb(nx,ny,nz)
      .      ,re,rdpdg,po,cappa
-     .      ,delo,tau,dt
+     .      ,delo,dt
      .      ,gamo
      .      ,erru(nx,ny,nz),errub(nx,ny,nz)
      .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
 
       real*4 grid_spacing_actual_m
+     .      ,grid_spacing_cen_m
      .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
      .      ,u_true,v_true
+     .      ,dpp
 
-      real*4 g,sumdt,omsubs,sk,terscl,bnd,ff,fo,err
-     .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl,ro
+      real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog
+     .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
+     .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
+
+c made 2d 2-20-01 JS.
+      real*4 terscl(nx,ny)
+      real*4 tau(nx,ny)
+      real*4 ro(nx,ny)
+      integer ks(nx,ny)
+      integer kf(nx,ny)
+      integer ksij,kfij
 c
       integer   itmax,lmax
      .         ,masstime,windtime,sfctime,omtime
      .         ,i,j,k,ll,istatus
-     .         ,ks,kf
-
+     
       integer   lend
       integer   lends
       integer   lenvg
@@ -96,14 +106,11 @@ c
 c
 c_______________________________________________________________________________
 c
-      call get_balance_nl(lrunbal,gamo,delo,istatus)
+      call get_balance_nl(lrunbal,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
          stop
       endif
-      print*,'lrunbal = ',lrunbal
-      print*,'gamo = ',gamo
-      print*,'delo = ',delo
       print*,'lrotate = ',lrotate
 c
 c switch to run balance package or not
@@ -154,8 +161,12 @@ c
 c
 c *** Get laps grid lat, lons and grid spacings.
 c
-      call get_laps_lat_lon(staticdir,staticext
-     .                     ,nx,ny,lat,lon,istatus)
+c     call get_laps_lat_lon(staticdir,staticext
+c    .                     ,nx,ny,lat,lon,istatus)
+
+      call get_domain_laps(nx,ny,staticext,lat,lon,ter
+     1                    ,grid_spacing_cen_m,istatus)
+
       if (istatus .ne. 1) then
          print *,'Error getting laps lat, lons.'
          stop
@@ -238,42 +249,75 @@ c     enddo
 c
 c *** Get laps surface elevations.
 c
-      call get_laps_sfc_elev(staticdir,staticext,nx,ny
-     .                      ,ter,istatus)
+c     call get_laps_sfc_elev(staticdir,staticext,nx,ny
+c    .                      ,ter,istatus)
 c
 c *** Get laps surface pressure.
 c
       call get_laps_2d(masstime,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
-
-      sl=1200000. ! four times the average data spacing
-      fo=14.52e-5   !2*omega
-      terscl=3000.
-      ks=6
-      kf=14
-      do j=1,ny
-      do i=1,nx
+c
 c all pressure is in pascals
 c set dynamic weight del using lat and surface pressure
 c some comments about analysis constants delo and tau
-c delo is the inverse square of the expected balance residual. This is
+c delo is 100 x the inverse square of the expected balance residual. This is
 c a specified parameter that is constant over the grid
 c tau controls the mass distribution of any continuity adjustments.
+c See paper mcGinley 1984, Contibutions to AtmosPhysicsvol 57 p527-535
 c if tau is large mass adjustment occurs over shallow layers
-c tau is based on scaling = scale ht**2 Brunt-Vaisala Freq**4/
-c   (density**2 gravity**2 mean velocity **2 f**2)
-c scale ht is based on cloud depth for cloud adjustment/and or terrain ht
-c a best guess is 3000m which works for terrain and clouds in most places
-c To represent the  layer of the atm we are considering 850 to 500mb
+c tau is based on scaling = griddist**2 Brunt-Vaisala Freq**4*atmheight scale**4
+c / ( pressureheight of mtn**2 mean velocity **2 f**2)
+c a steep slope will reduce tau so that appropriate terrain induced vertical
+c motions will result. The height scale of the atm and brunt vaisala freq
+c will control how quickly
+c the terrain induced vertical motion will vertically penetrate.
+c
+      sumdt=0.
+      sumdz=0.
+      sumf=0.
+      sumt=0.
+      den=0.
+      sumom2=0.
+      sumr=0.
+      sumv2=0.
+
+c set the resolvable scale based on data nyquist inteval=4 spacing
+      sldata=2.*200000.!assume a mean 200km between upper air obs
+
+c set model scale - a low end wave resolvable by the grid
+      sl=8.*dx(nx/2,ny/2)
+
+      fo=14.52e-5   !2*omega
+
+      if(.false.)then
+         call terrain_scale_vartau(nx,ny,nz,ter,lapsphi
+     &,ks,kf,terscl)
+      else
+         ks(1,1)=6
+         kf(1,1)=11
+         call terrain_scale(nx,ny,ter,terscl(1,1))
+      endif
+
+      print*,'terrain scale = ',terscl(1,1)
+
+      do i=1,nx
+      do j=1,ny
+
+         terscl(i,j)=terscl(1,1)   !make it constant over domain for now.
+         ks(i,j)=ks(1,1)
+         kf(i,j)=kf(1,1)
          
-           sumdt=sumdt+(lapstemp(i,j,kf)*(100000./p(kf))**cappa 
-     &                - lapstemp(i,j,ks)*(100000./p(ks))**cappa)
-           sumdz=sumdz+(lapsphi(i,j,kf)-lapsphi(i,j,ks))/g
-           ff = fo*sind(lat(i,j))
-           sumf=sumf+ff
-         do k=ks,kf
+         kfij=kf(i,j)
+         ksij=ks(i,j)
+         sumdt=sumdt+(lapstemp(i,j,kfij)*(100000./p(kfij)
+     & )**cappa - lapstemp(i,j,ksij)*(100000./p(ksij))**cappa)
+         sumdz=sumdz+(lapsphi(i,j,kfij)-lapsphi(i,j,ksij))/g
+         ff = fo*sind(lat(i,j))
+         sumf=sumf+ff
+         do k=ksij,kfij
            sumt=sumt+(lapstemp(i,j,k)*(100000./p(k))**cappa)
-           sumr=sumr+p(k)/287.04/lapstemp(i,j,k)
+           den =den +p(k)/287.04/lapstemp(i,j,k)
+           sumom2=sumom2+omb(i,j,k)**2
            sumv2=sumv2+(lapsu(i,j,k)**2+lapsv(i,j,k)**2)
          enddo
 c error terms are the inverse sq error; right now with no
@@ -288,29 +332,53 @@ c simulated cloud
 c           sk=(i-nx/2)**2+(k-nz/2)**2+(j-ny/2)**2       
 c           omo(i,j,k)=-1.*exp(-sk/100.)
 c
-c replace missing cloud vv's with background vv's.
+c vertical motions in clear areas come in as the missing data parameter.
+c replace missing cloud vv's with background vv's. Unless there is cloud
+c we seek to replicate the background vertical motions
             if(abs(omo(i,j,k)).gt.100.)omo(i,j,k)=omb(i,j,k)
          enddo
       enddo
       enddo
+
       snxny=float(nx*ny)
-      sk=float(kf-ks+1)
+      sk=float(kfij-ksij+1)
       sumt=sumt/snxny/sk
       sumdt=sumdt/snxny
       sumdz=sumdz/snxny
       sumf=sumf/snxny
       sumv2=sumv2/snxny/sk
-      sumr=sumr/snxny/sk
-      ro=sqrt(sumv2)/(sumf*sl)  ! rossby number for dynamic adjustment
-      tau=terscl**2*(g*sumdt/sumt/sumdz)**2/(sumr**2*g**2*sumv2*sumf**2)
-      print*,'dthet/thet/dz/den/V/f/tau,ro: ',sumdt,sumt,sumdz,sumr,
-     &     sqrt(sumv2),sumf,tau,ro
-      if (ro.gt.1) ro=1. 
+      den=den/snxny/sk
+      sumom2=sumom2/snxny/sk
+      sumr=sqrt(g*sumdt/sumt/sumdz)
+      do j=1,ny
+      do i=1,nx
+         kfij=kf(i,j)
+         ksij=ks(i,j)
+         dpp=p(ksij)-p(kfij)
+         ro(i,j)=sqrt(sumv2)/(sumf*sldata)  ! rossby number for dynamic adjustment
+         if (ro(i,j).gt.1) ro(i,j)=1. 
+c scale tau as of 1/(.1*omega)**2 where omega is ro*terscl*g*rho*velocity/wavelen      
+         tau(i,j)= 100.*sl**2/(ro(i,j)*den*g*terscl(i,j))**2/sumv2
+
+
+      enddo
+      enddo
+c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
+      rog=sqrt(sumv2)/(sumf*sl)
+      delo=sl**2*100./sumv2/rog**2           
+c
+c print these arrays now.
+      print*,'/dthet/thet/dz/den/N/V/f/delo/tau:' 
+     &,sumdt,sumt,sumdz,sumr,den,sqrt(sumv2),sumf,delo,tau(1,1)
+      print*,'Omegab,Froude Num/Rossby Num,aspectP/X:',sqrt(sumom2),
+     &    (sumr*sumdz/sqrt(sumv2)),ro(1,1) ,(dpp/dx(nx/2,ny/2))
+      
 c
 c *** Compute non-linear terms (nu,nv) and execute mass/wind balance.
 c *** Do for lmax iterations.
 c
-      lmax=3 
+      lmax=2 
+
 c put lapsphi into phi, lapsu into u, etc
       call move_3d(lapsphi,phi,nx,ny,nz)
       call move_3d(lapsu,u,nx,ny,nz)     
@@ -411,7 +479,8 @@ c returns staggered grids of full fields u,v,phi
       endif
 
 c
-      call momres(u,v,phi,nu,nv,fu,fv,wb,delo,nx,ny,nz,lat,dx,dy,ps,p)
+      call momres(u,v,phi,nu,nv,fu,fv,wb,delo
+     &,nx,ny,nz,lat,dx,dy,ps,p)
 c
 c *** destagger and Write out new laps fields.
 c
@@ -583,14 +652,14 @@ c commented JS 01-16-01
 c     write(2) wa,delo
       errms=sqrt(sum/cnt)
       write(6,1000) errms,delo
-1000  format(1x,'BEFORE/AFTER BALCON.....MOMENTUM RESIDUAL FOR DOMAIN '
+1000  format(1x,'BEFORE/AFTER BALCON...MOMENTUM RESIDUAL FOR DOMAIN'
      &     ,e12.4,' delo= ',e12.4)
       return
       end
       subroutine diagnose(a,nx,ny,nz,ii,jj,kk,ispan,title)
       implicit none
-      real a(nx,ny,nz)
       integer nx,ny,nz
+      real a(nx,ny,nz)
       integer ii,jj,kk
       integer ispan,ieast,iwest,jnorth,jsouth
       integer i,j,k
@@ -674,9 +743,9 @@ c
      .      ,erru(nx,ny,nz),errph(nx,ny,nz)
      .      ,errub(nx,ny,nz),errphb(nx,ny,nz)
 
-      real*4 tau,err,rdpdg,bnd,g,fo,r,re,ovr
+      real*4 err,rdpdg,bnd,g,fo,r,re,ovr
      .      ,ang,f,cotmax,sin1,fs,cos1,beta
-     .      ,a,bb,cortmt,ro
+     .      ,a,bb,cortmt
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
@@ -689,6 +758,10 @@ c
      .      ,euoay,euoax,snv,snu,dfvdy,dfudx
      .      ,eueub,fob,foax,foay
      .      ,fu2,fv2,fuangu,fvangv
+
+c 2d arrays now (JS 2-20-01)
+      real*4 tau(nx,ny)
+      real*4 ro(nx,ny)
 
 c these are used for diagnostics
       integer nf
@@ -776,7 +849,7 @@ c      write(9,*) '|||||||||BALCON ITERATION NUMBER ',l,' ||||||||||'
        do j=1,ny
         do i=1,nx
          do k=1,nz
-          to(i,j,k)=to(i,j,k)-tb(i,j,k)!background an obs are in GPM
+          to(i,j,k)=to(i,j,k)-tb(i,j,k)!background and obs are in GPM
           t(i,j,k)=0. !put background grid in solution grid to establish
 c                      boundary values(zero perturbation)
           if(ub(i,j,k).ne.bnd)then
@@ -800,17 +873,6 @@ c
          do 2 j=2,nym1
           do 2 i=2,nxm1
             
-c commented by JS 01-16-01 (calcs only needed once)
-c          dxx(i,j)=(dx(i,j)+dx(i,j+1)+dx(i+1,j)+dx(i+1,j+1))*.25
-c          dx2(i,j)=dxx(i,j)*2.
-c          dxs(i,j)=dxx(i,j)*dxx(i,j)
-c          dyy(i,j)=(dy(i,j)+dy(i,j+1)+dy(i+1,j)+dy(i+1,j+1))*.25
-c          dy2(i,j)=dyy(i,j)*2.
-c          dys(i,j)=dyy(i,j)*dyy(i,j) 
-c          fx(i,j)=(ff(i+1,j)-ff(i-1,j))/dx2
-c          fy(i,j)=(ff(i,j+1)-ff(i,j-1))/dy2
-c          ffx(i,j)=ff(i,j)*fx(i,j)
-c          ffy(i,j)=ff(i,j)*fy(i,j)
 
            do 2 k=ks,kf
 
@@ -864,8 +926,8 @@ c          ffy(i,j)=ff(i,j)*fy(i,j)
                uot=(uo(i-1,j,k)+uo(i-1,j-1,k))*.5
                vot=(vo(i,j-1,k)+vo(i-1,j-1,k))*.5
                force=term4*tot+term5*uot+term6*vot+term7*(dvdx-dudy)
-     &            +ro*(term8*snu+term9*snv)+term10*fuu+term11*fvv
-     &                -ro*(dnudx+dnvdy)+dfudx+dfvdy
+     &         +ro(i,j)*(term8*snu+term9*snv)+term10*fuu+term11*fvv
+     &         -ro(i,j)*(dnudx+dnvdy)+dfudx+dfvdy
 25              tt=t(i,j,k)
                dt2dx2=(t(i+1,j,k)+t(i-1,j,k)-2.*tt)/dxs(i,j)
                dt2dy2=(t(i,j+1,k)+t(i,j-1,k)-tt*2.)/dys(i,j)
@@ -933,8 +995,8 @@ c
           nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))*.25
           if (uot .ne. bnd) then
            fu2=(fuangu*fuangu)
-           u(i,j,k)=(uot*erru(i,j,k)-fuangu*delo*(ro*nvv-fvv+dtdy))
-     &                        /aaa(i,j,k)      
+           u(i,j,k)=(uot*erru(i,j,k)
+     &     -fuangu*delo*(ro(i,j)*nvv-fvv+dtdy))/aaa(i,j,k)      
 
            data(1)=nvv
            data(2)=fvv
@@ -949,8 +1011,8 @@ c
           endif
           if ( vot .ne. bnd) then
            fv2=(fvangv*fvangv)
-           v(i,j,k)=(vot*erru(i,j,k)+fvangv*delo*(ro*nuu-fuu+dtdx))
-     &                              /aaa(i,j,k)       
+           v(i,j,k)=(vot*erru(i,j,k)
+     &     +fvangv*delo*(ro(i,j)*nuu-fuu+dtdx))/aaa(i,j,k)       
 
            data(5)=nuu
            data(6)=fuu
@@ -980,6 +1042,24 @@ c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
        call printmxmn(8,nf,nz,p,fldmax,fldmin
      &,fldmxi,fldmxj,fldmni,fldmnj)
 c 
+
+        call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED PERTURB PHIS ')
+        call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-PERTURB    ')
+        call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-PERTURB    ')
+       if(.true.)then
+        do k=1,nz
+          print*
+          print*,'Calling perturb  array diagnosis: ',k,p(k)
+          print*,'-------------------------------'
+          call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
+          call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
+c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
+c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
+          call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
+        enddo
+       endif
+
+
 c Restore full winds and heights by adding back in background
        do k=1,nz
           do j=1,ny
@@ -993,35 +1073,17 @@ c Restore full winds and heights by adding back in background
          enddo
          enddo
        enddo
-
-        call diagnose(t,nx,ny,nz,26,3,7,7,'BALANCED GEOPOTENTIALS')
-        call diagnose(u,nx,ny,nz,26,3,7,7,'BALANCED U-COMPONENT  ')
-        call diagnose(v,nx,ny,nz,26,3,7,7,'BALANCED V-COMPONENT  ')
-       if(.true.)then
-        do k=1,nz
-          print*
-          print*,'Calling array diagnosis: ',k,p(k)
-          print*,'-------------------------------'
-          call array_diagnosis(u(1,1,k),nx,ny,' u-comp   ')
-          call array_diagnosis(v(1,1,k),nx,ny,' v-comp   ')
-c          call array_diagnosis(uo(1,1,k),nx,ny,' uo comp  ')
-c          call array_diagnosis(vo(1,1,k),nx,ny,' vo comp  ')
-          call array_diagnosis(t(1,1,k),nx,ny,'  phi     ')
-        enddo
-       endif
-
-
        erf=100.
 
-       call leib_sub(nx,ny,nz,erf,tau,delo
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,vo,v,om,omo,nu,nv,fu,fv)
+       call leib_sub(nx,ny,nz,erf,tau,delo,erru
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb,om,omo,omb,nu,nv,fu,fv)
+
 
 c move adjusted fields to observation-driven fields for next iteration
        call move_3d(t,to,nx,ny,nz)
        call move_3d(u,uo,nx,ny,nz)
        call move_3d(v,vo,nx,ny,nz)
        call move_3d(om,omo,nx,ny,nz)
-
       enddo ! on lmax
 
       deallocate (aaa,bbb)
@@ -1034,8 +1096,8 @@ c move adjusted fields to observation-driven fields for next iteration
 c
 c ---------------------------------------------------------------
 c
-      subroutine leib_sub(nx,ny,nz,erf,tau,delo
-     .,lat,dx,dy,ps,p,dp,t,to,uo,u,vo,v,om,omo,nu,nv,fu,fv)
+      subroutine leib_sub(nx,ny,nz,erf,tau,delo,erru
+     .,lat,dx,dy,ps,p,dp,t,to,uo,u,ub,vo,v,vb,om,omo,omb,nu,nv,fu,fv)
 
       implicit none
 
@@ -1044,16 +1106,17 @@ c
       integer i,j,k,ks
 
       real*4 t(nx,ny,nz),to(nx,ny,nz)
-     .      ,u(nx,ny,nz),uo(nx,ny,nz)
-     .      ,v(nx,ny,nz),vo(nx,ny,nz)
-     .      ,om(nx,ny,nz),omo(nx,ny,nz)
+     .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
+     .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
+     .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz),erru(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
 
       real*4 ang,rdpdg,sin1,dldx,dldy,dldp
-     .,a,f,fo,fs,erf,tau,delo,bnd
+     .,a,f,fo,fs,erf,delo,bnd
+      real*4 tau(nx,ny)
 
       real, allocatable, dimension(:,:,:) :: slam,f3,h
 
@@ -1076,8 +1139,8 @@ c
 c
 c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
 c
-      call fthree(f3,u,v,omo,delo,nu,nv,h,tau,
-     .   nx,ny,nz,lat,dx,dy,dp)
+      call fthree(f3,uo,vo,omo,ub,vb,omb,delo,nu,nv,h,erru,tau,
+     .   fu,fv,nx,ny,nz,lat,dx,dy,dp)
 c
 c ****** Perform 3-d relaxation.
 c
@@ -1093,19 +1156,19 @@ c
       do j=1,nym1
       do i=1,nxm1
 
-c        ang=(lat(i,j))*rdpdg
-c        sin1=sin(ang)
-c        f=fo*sin1
-c        fs=f*f
-c        a=1.+fs*delo
+         ang=(lat(i,j))*rdpdg
+         sin1=sin(ang)
+         f=fo*sin1
+         fs=f*f
 c commemnted 01-02-01
-         a=1.0
+         a=(2.5*erru(i,j,k)+fs*delo)
          dldp=(slam(i,j,k)-slam(i,j,k+1))/dp(k+ks)
          dldx=(slam(i+1,j+1,k+1)-slam(i,j+1,k+1))/dx(i,j)
          dldy=(slam(i+1,j+1,k+1)-slam(i+1,j,k+1))/dy(i,j)
          if (u(i,j,k) .ne. bnd) u(i,j,k)=u(i,j,k)+.5*dldx/a
          if (v(i,j,k) .ne. bnd) v(i,j,k)=v(i,j,k)+.5*dldy/a
-         if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+.5*dldp/tau
+         if (omo(i,j,k).ne.bnd) om(i,j,k)=omo(i,j,k)+
+     &     .5*dldp/tau(i,j)
       enddo
       enddo
       enddo
@@ -1149,11 +1212,13 @@ c
      .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,lat(nx,ny),dx(nx,ny),dy(nx,ny)
      .      ,ps(nx,ny),p(nz),dp(nz)
-     .      ,delo,tau,rdpdg,fo,bnd
+     .      ,delo,rdpdg,fo,bnd
      .      ,conmax,sumom,cont,con,sumu,sumv,sumt,thermu,thermv
      .      ,sumww,resu,resv,tgpu,tgpv,tgpph,tgpc
      .      ,ang,sin1,f,nvv,nuu,dtdx,dtdy,dudx,dvdy,domdp
      .      ,uot,vot,tot,uuu,vvv,contm,fuu,fvv,dxx,dyy
+
+      real*4 tau(nx,ny)
 c_______________________________________________________________________________
 c
 c     write(9,*) '******ANALZ OUTPUT BY LAPS LAYER***********'
@@ -1254,11 +1319,12 @@ c        write(9,1002) sumww
 1002     format(1x,' rms wind speed:',e12.4)
          if (sumww .ne. 0.) sumww=sqrt(thermu**2+thermv**2)/sumww
 
+c took tau out of this write 2-20-01 (JS)
          write(6,1001) sumt,delo,sumu,sumv,
-     .             sumom,tau,cont,thermu,thermv,sumww,resu,resv
+     .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
 
 c        write(9,1001) sumt,delo,sumu,sumv,
-c    .             sumom,tau,cont,thermu,thermv,sumww,resu,resv
+c    .             sumom,tau(1,1),cont,thermu,thermv,sumww,resu,resv
 
          if (iflag.eq. 1) write(6,1009)
      .      isv,jsv,ksv,contm,f3(isv,jsv,ksv),slam(isv,jsv,ksv),
@@ -1281,7 +1347,7 @@ c    .      v(isv-1,jsv-1,ksv-1),om(isv,jsv,ksv),om(isv,jsv,ksv-1)
 1001  format(1x,' rms error for each term in functional and del,tau'
      . /1x,'    phi-phio:',e12.5,'   delo:',e12.5,
      . /1x,'    u-uo:    ',e12.5,'   v-vo:',e12.5,
-     . /1x,'    om-omo:  ',e12.5,'   tau:',e12.5,
+     . /1x,'    om-omo:  ',e12.5,',  !!!tau:',e12.5,
      . /1x,' rms cont eqn error:   ',e12.5
      . /1x,' rms ageostrophic wind:',2e12.5
      . /1x,' implied rossby number:',f6.3 
@@ -1412,8 +1478,9 @@ c background. Fu-Fub, Fv-Fvb
 c constnts
       grav=9.808!m/sec2
       r=287.04!gas const
-      hzdf=50000.!m2/sec
-      eddf=20.!pa2/sec
+c     hzdf=50000.!m2/sec ! this value in haltiner is suspected to be too large
+      hzdf=500.!m2/sec
+      eddf=200.!pa2/sec
       cd=.0025 !non dim
       nxm1=nx-1
       nym1=ny-1
@@ -1443,30 +1510,30 @@ c constnts
       do i=2,nxm1
          dauvdp=(sqrt(u(i,j,k-1)**2+v(i,j,k-1)**2)-
      &           sqrt(u(i,j,k+1)**2+v(i,j,k+1)**2))/ddp(k)
-         dauvbdp=(sqrt(ub(i,j,k-1)**2+vb(i,j,k-1)**2)-
-     &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/ddp(k)
+c        dauvbdp=(sqrt(ub(i,j,k-1)**2+vb(i,j,k-1)**2)-
+c    &           sqrt(ub(i,j,k+1)**2+vb(i,j,k+1)**2))/ddp(k)
          absuv=sqrt(u(i,j,k)**2+v(i,j,k)**2)
-         absuvb=sqrt(ub(i,j,k)**2+vb(i,j,k)**2)
+c        absuvb=sqrt(ub(i,j,k)**2+vb(i,j,k)**2)
          if(u(i,j,k).eq.bnd) then
           fu(i,j,k)=0.
          else
           d2udx=(u(i+1,j,k)+u(i-1,j,k)-2.*u(i,j,k))/dx2(i,j)
           d2udy=(u(i,j+1,k)+u(i,j-1,k)-2.*u(i,j,k))/dy2(i,j)
           d2udp=4.*(u(i,j,k+1)+u(i,j,k-1)-2.*u(i,j,k))/ddp2(k)
-          d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx2(i,j)
-          d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy2(i,j)
-          d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/ddp2(k)
+c         d2ubdx=(ub(i+1,j,k)+ub(i-1,j,k)-2.*ub(i,j,k))/dx2(i,j)
+c         d2ubdy=(ub(i,j+1,k)+ub(i,j-1,k)-2.*ub(i,j,k))/dy2(i,j)
+c         d2ubdp=4.*(ub(i,j,k+1)+ub(i,j,k-1)-2.*ub(i,j,k))/ddp2(k)
           gdtudp=0.
           if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k))then! we're near sfc
            den=p(k+1)/r/t(i,j,k+1)
            dudp=(u(i,j,k-1)-u(i,j,k+1))/ddp(k)
-           dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/ddp(k)
-           gdtudp=den*cd*grav*(dudp*absuv+dauvdp*u(i,j,k)
-     &        -dubdp*absuvb-dauvbdp*ub(i,j,k))
+c          dubdp=(ub(i,j,k-1)-ub(i,j,k+1))/ddp(k)
+           gdtudp=den*cd*grav*(dudp*absuv+dauvdp*u(i,j,k))
+c    &        -dubdp*absuvb-dauvbdp*ub(i,j,k))
            gdtudp_save(i,j)=gdtudp
           endif
-          fu(i,j,k)=hzdf*(d2udx+d2udy-d2ubdx-d2ubdy)
-     &         +eddf*(d2udp-d2ubdp)-gdtudp
+          fu(i,j,k)=hzdf*(d2udx+d2udy)
+     &         +eddf*d2udp-gdtudp
          endif
          if(v(i,j,k).eq.bnd) then
           fv(i,j,k)=0.
@@ -1474,18 +1541,17 @@ c constnts
           d2vdx=(v(i+1,j,k)+v(i-1,j,k)-2.*v(i,j,k))/dx2(i,j)
           d2vdy=(v(i,j+1,k)+v(i,j-1,k)-2.*v(i,j,k))/dy2(i,j)
           d2vdp=4.*(v(i,j,k+1)+v(i,j,k-1)-2.*v(i,j,k))/ddp2(k)
-          d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx2(i,j)
-          d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy2(i,j)
-          d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/ddp2(k)
+c         d2vbdx=(vb(i+1,j,k)+vb(i-1,j,k)-2.*vb(i,j,k))/dx2(i,j)
+c         d2vbdy=(vb(i,j+1,k)+vb(i,j-1,k)-2.*vb(i,j,k))/dy2(i,j)
+c         d2vbdp=4.*(vb(i,j,k+1)+vb(i,j,k-1)-2.*vb(i,j,k))/ddp2(k)
           gdtvdp=0.
           if(ps(i,j).gt.p(k+1).and.(ps(i,j)-p(k+1)).le.dp(k)) then! we're near sfc
            den=p(k+1)/r/t(i,j,k+1)
            dvdp=(v(i,j,k-1)-v(i,j,k+1))/ddp(k)
            davdp=(abs(v(i,j,k-1))-abs(v(i,j,k+1)))/ddp(k)
            dvbdp=(vb(i,j,k-1)-vb(i,j,k+1))/ddp(k)
-           davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/ddp(k)
-           gdtvdp=den*cd*grav*(dvdp*absuv+dauvdp*v(i,j,k)
-     &             -dvbdp*absuvb-dauvbdp*vb(i,j,k))
+c          davbdp=(abs(vb(i,j,k-1))-abs(vb(i,j,k+1)))/ddp(k)
+           gdtvdp=den*cd*grav*(dvdp*absuv+dauvdp*v(i,j,k))
            gdtvdp_save(i,j)=gdtvdp
            if(abs(gdtvdp).gt.0.5)then
               print*,'abs(gdtvdp) > 0.5 :', gdtvdp
@@ -1493,8 +1559,8 @@ c constnts
               print*,den,dvdp,absuv,dauvdp,absuvb,dvbdp,dauvbdp
            endif
           endif
-          fv(i,j,k)=hzdf*(d2vdx+d2vdy-d2vbdx-d2vbdy)
-     &              +eddf*(d2vdp-d2vbdp)-gdtvdp
+          fv(i,j,k)=hzdf*(d2vdx+d2vdy)
+     &              +eddf*d2vdp-gdtvdp
          endif
       enddo
       enddo
@@ -1655,8 +1721,8 @@ c
 c
 c===============================================================================
 c
-      subroutine fthree(f3,u,v,om,delo,nu,nv,h,tau
-     .,nx,ny,nz,lat,dx,dy,dp)
+      subroutine fthree(f3,u,v,om,ub,vb,omb,delo,nu,nv,h,erru,tau
+     .,fu,fv,nx,ny,nz,lat,dx,dy,dp)
 c
 c *** Fthree computes a/tau (h) and rhs terms in eqn. (3).
 c
@@ -1666,12 +1732,17 @@ c
      .         ,i,j,k,is,js,ks
 c
       real*4 f3(nx+1,ny+1,nz+1),h(nx+1,ny+1,nz+1)
+     .      ,erru(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz)
      .      ,om(nx,ny,nz),lat(nx,ny)
+     .      ,ub(nx,ny,nz),vb(nx,ny,nz),omb(nx,ny,nz)
      .      ,nu(nx,ny,nz),nv(nx,ny,nz)
+     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,delo,tau,fo,rdpdg,dpp,f,aa,dxx,dyy
+     .      ,delo,fo,rdpdg,dpp,f,aa,dxx,dyy
      .      ,dnudy,dnvdx,cont,formax
+     .      ,dfudy,dfvdx
+      real*4 tau(nx,ny)
 c_______________________________________________________________________________
 c
       print *,'fthree'
@@ -1682,27 +1753,31 @@ c
          dpp=dp(k)
          do j=2,ny
          do i=2,nx
-c           f=sin(lat(i,j)*rdpdg)*fo
-c           aa=1.+f*f*delo 
-            aa=1.0
+            f=sin(lat(i,j)*rdpdg)*fo
             js=1
             if (j .eq. 2) js=0
             dyy=dy(i,j)*float(js+1)
-            h(i,j,k)=aa/tau
             is=1
             if (i .eq. 2) is=0
-
-c           dxx=dx(i,j)*float(is+1)
-c           dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
-c    .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
-c           dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
-c    .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
-
-            cont=((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
-     .           +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j)
-     .           +(om(i,j,k-1)-om(i,j,k))/dpp)*aa
-            f3(i,j,k)=-2.*cont! remove this term test +2.*f*delo*(dnvdx-dnudy)
-            if (abs(f3(i,j,k)) .ge. formax) then
+            aa=2.5*erru(i,j,k)+f*f*delo
+            dxx=dx(i,j)*float(is+1)
+            dnudy=(nu(i,j,k-1)+nu(i-1,j,k-1)
+     .            -nu(i,j-js-1,k-1)-nu(i-1,j-js-1,k-1))/dyy*.25
+            dnvdx=(nv(i,j,k-1)+nv(i,j-1,k-1)
+     .            -nv(i-is-1,j,k-1)-nv(i-is-1,j-1,k-1))/dxx*.25
+            dfudy=(fu(i,j,k-1)+fu(i-1,j,k-1)
+     .            -fu(i,j-js-1,k-1)-fu(i-1,j-js-1,k-1))/dyy*.25
+            dfvdx=(fv(i,j,k-1)+fv(i,j-1,k-1)
+     .            -fv(i-is-1,j,k-1)-fv(i-is-1,j-1,k-1))/dxx*.25
+            h(i,j,k)=aa/(tau(i,j))
+            f3(i,j,k)=-2.*erru(i,j,k)*
+     &    ((u(i,j-1,k-1)-u(i-1,j-1,k-1))/dx(i,j)
+     .    +(v(i-1,j,k-1)-v(i-1,j-1,k-1))/dy(i,j))
+     .    -2.*aa*(om(i,j,k-1)-om(i,j,k))/dpp
+     &    +2.*(erru(i,j,k)-aa)*((ub(i,j-1,k-1)-ub(i-1,j-1,k-1))/dx(i,j)
+     .    +(vb(i-1,j,k-1)-vb(i-1,j-1,k-1))/dy(i,j))
+     .    +2.*f*delo*(dnvdx-dnudy)+2.*f*delo*(dfudy-dfvdx)      
+           if (abs(f3(i,j,k)) .ge. formax) then
                formax=abs(f3(i,j,k))
             endif
          enddo
@@ -2075,56 +2150,266 @@ c north and east boundaries for omega
        do k=1,nz
         do j=2,ny
          if(ps(1,j).ge.p(k)) then
-          u(1,j,k)=3.*u(2,j,k)-3.*u(3,j,k)+u(4,j,k)
-          v(1,j,k)=3.*v(2,j,k)-3.*v(3,j,k)+v(4,j,k)
-          om(1,j,k)=3.*om(2,j,k)-3.*om(3,j,k)+om(4,j,k)
+
+          call destagger_y(1,nx,ny,nz,u,j,k,bnd,p)
+          call destagger_y(1,nx,ny,nz,v,j,k,bnd,p)
+          call destagger_y(1,nx,ny,nz,om,j,k,bnd,p)
+
          else
+
           u(1,j,k)=bnd
           v(1,j,k)=bnd
           om(1,j,k)=bnd
+
          endif
+
          if(ps(nx,j).ge.p(k)) then
-          om(nx,j,k)=3.*om(nx-1,j,k)-3.*om(nx-2,j,k)+om(nx-3,j,k)
+
+          call destagger_y(nx,nx,ny,nz,om,j,k,bnd,p)
+
          else
+
           om(nx,j,k)=bnd
+
          endif
-         t(1,j,k)=3.*t(2,j,k)-3.*t(3,j,k)+t(4,j,k)
-         phi(1,j,k)=3.*phi(2,j,k)-3.*phi(3,j,k)+phi(4,j,k)
-         rh(1,j,k)=3.*rh(2,j,k)-3.*rh(3,j,k)+rh(4,j,k)
+
+         call destagger_y(1,nx,ny,nz,t,j,k,bnd,p)
+         call destagger_y(1,nx,ny,nz,phi,j,k,bnd,p)
+         call destagger_y(1,nx,ny,nz,rh,j,k,bnd,p)
+
         enddo
+
         do i=2,nx
          if(ps(i,1).ge.p(k)) then
-          u(i,1,k)=3.*u(i,2,k)-3.*u(i,3,k)+u(i,4,k)
-          v(i,1,k)=3.*v(i,2,k)-3.*v(i,3,k)+v(i,4,k)
-          om(i,1,k)=3.*om(i,2,k)-3.*om(i,3,k)+om(i,4,k)
+
+          call destagger_x(1,nx,ny,nz,u,i,k,bnd,p)
+          call destagger_x(1,nx,ny,nz,v,i,k,bnd,p)
+          call destagger_x(1,nx,ny,nz,om,i,k,bnd,p)
+
          else
+
           u(i,1,k)=bnd
           v(i,1,k)=bnd
           om(i,1,k)=bnd
+
          endif
+
          if(ps(i,ny).ge.p(k)) then
-          om(i,ny,k)=3.*om(i,ny-1,k)-3.*om(i,ny-2,k)+om(i,ny-3,k)
+
+          call destagger_x(ny,nx,ny,nz,om,i,k,bnd,p)
+
          else
+
           om(i,ny,k)=bnd
+
          endif
-         t(i,1,k)=3.*t(i,2,k)-3.*t(i,3,k)+t(i,4,k)
-         phi(i,1,k)=3.*phi(i,2,k)-3.*phi(i,3,k)+phi(i,4,k)
-         rh(i,1,k)=3.*rh(i,2,k)-3.*rh(i,3,k)+rh(i,4,k)
+
+         call destagger_x(1,nx,ny,nz,t,i,k,bnd,p)
+         call destagger_x(1,nx,ny,nz,phi,i,k,bnd,p)
+         call destagger_x(1,nx,ny,nz,rh,i,k,bnd,p)
+
         enddo
+
         if(ps(1,1).ge.p(k)) then
-          u(1,1,k)=3.*u(2,2,k)-3.*u(3,3,k)+u(4,4,k)
-          v(1,1,k)=3.*v(2,2,k)-3.*v(3,3,k)+v(4,4,k)
-          om(1,1,k)=3.*om(2,2,k)-3.*om(3,3,k)+om(4,4,k)
+
+          call destagger_c(nx,ny,nz,u,k,bnd,p)
+          call destagger_c(nx,ny,nz,v,k,bnd,p)
+          call destagger_c(nx,ny,nz,om,k,bnd,p)
+
         else
+
           u(1,1,k)=bnd
           v(1,1,k)=bnd
           om(1,1,k)=bnd
+
         endif
-        t(1,1,k)=3.*t(2,2,k)-3.*t(3,3,k)+t(4,4,k)
-        phi(1,1,k)=3.*phi(2,2,k)-3.*phi(3,3,k)+phi(4,4,k)
-        rh(1,1,k)=3.*rh(2,2,k)-3.*rh(3,3,k)+rh(4,4,k)
+
+        call destagger_c(nx,ny,nz,t,k,bnd,p)
+        call destagger_c(nx,ny,nz,phi,k,bnd,p)
+        call destagger_c(nx,ny,nz,rh,k,bnd,p)
+
        enddo 
       endif ! destagger
+
+      return
+      end
+c
+c--------------------------------------------------
+c
+      subroutine destagger_y(i,nx,ny,nz,data,j,k,bnd,p)
+
+      implicit none
+      integer nx,ny,nz
+      real data(nx,ny,nz)
+      real p(nz)
+      real bnd,pt1,pt2
+      integer i,j,k,jj
+      integer i1,i2,i3
+
+      if(i.eq.nx)then
+         i1=i-1
+         i2=i-2
+         i3=i-3
+      else
+         i1=i+1
+         i2=i+2
+         i3=i+3
+      endif
+
+      if( (data(i1,j,k).ne.bnd).and.
+     1    (data(i2,j,k).ne.bnd).and.
+     1    (data(i3,j,k).ne.bnd) ) then
+
+        data(i,j,k)=3.*data(i1,j,k)-3.*data(i2,j,k)+data(i3,j,k)
+
+      elseif( (data(i1,j,k).eq.bnd) .and.
+     1(data(i2,j,k).ne.bnd) .and. (data(i3,j,k).ne.bnd))then
+
+        data(i,j,k)=(data(i2,j,k)+data(i3,j,k))*.5
+
+      elseif(j.ne.ny)then
+
+        if(data(i,j+1,k).ne.bnd)then
+
+           data(i,j,k)=data(i,j+1,k)
+
+        endif
+
+      else
+
+        pt1=bnd
+        pt2=bnd
+        do jj=j-1,1,-1
+           if(data(i,jj,k).ne.bnd)then
+              pt1=data(i,jj,k)
+           endif
+        enddo
+        do jj=j+1,ny
+           if(data(i,jj,k).ne.bnd)then
+              pt2=data(i,jj,k)
+           endif
+        enddo
+        if(pt1.ne.bnd.and.pt2.ne.bnd)then
+           data(i,j,k)=(pt1+pt2)*.5
+        endif
+
+      endif
+
+      if(k.ne.nz.and.data(i,j,k).eq.bnd)then
+
+        data(i,j,k)=data(i,j,k+1)+
+     1              data(i,j,k+1)*(alog(p(k+1)/p(k)))
+      endif
+
+      return
+      end
+
+c
+c--------------------------------------------------
+c
+      subroutine destagger_x(j,nx,ny,nz,data,i,k,bnd,p)
+
+      implicit none
+      integer nx,ny,nz
+      real data(nx,ny,nz)
+      real p(nz)
+      real bnd,pt1,pt2
+      integer i,j,k,ii
+      integer j1,j2,j3
+
+      if(j.eq.ny)then
+         j1=j-1
+         j2=j-2
+         j3=j-3
+      else
+         j1=j+1
+         j2=j+2
+         j3=j+3
+      endif
+
+      if( (data(i,j1,k).ne.bnd).and.
+     1    (data(i,j2,k).ne.bnd).and.
+     1    (data(i,j3,k).ne.bnd) ) then
+
+        data(i,j,k)=3.*data(i,j1,k)-3.*data(i,j2,k)+data(i,j3,k)
+
+      elseif( (data(i,j1,k).eq.bnd) .and.
+     1(data(i,j2,k).ne.bnd) .and. (data(i,j3,k).ne.bnd))then
+
+        data(i,j,k)=(data(i,j2,k)+data(i,j3,k))*.5
+
+      elseif(data(i-1,j,k).ne.bnd)then
+
+        data(i,j,k)=data(i-1,j,k)
+
+      elseif(i.ne.nx)then
+
+        if(data(i+1,j,k).ne.bnd)then
+
+           data(i,j,k)=data(i+1,j,k)
+
+        endif
+
+      else
+
+        pt1=bnd
+        pt2=bnd
+        do ii=i-1,1,-1
+           if(data(ii,j,k).ne.bnd)then
+              pt1=data(ii,j,k)
+           endif
+        enddo
+        do ii=i+1,ny
+           if(data(ii,j,k).ne.bnd)then
+              pt2=data(ii,j,k)
+           endif
+        enddo
+        if(pt1.ne.bnd.and.pt2.ne.bnd)then
+           data(i,j,k)=(pt1+pt2)*.5
+        endif
+
+      endif
+
+      if(k.ne.nz.and.data(i,j,k).eq.bnd)then
+
+        data(i,j,k)=data(i,j,k+1)+
+     1              data(i,j,k+1)*(alog(p(k+1)/p(k)))
+      endif
+
+      return
+      end
+c
+c ------------------------------------------------------------
+c
+      subroutine destagger_c(nx,ny,nz,data,k,bnd,p)
+
+      implicit none
+      integer nx,ny,nz
+      real data(nx,ny,nz)
+      real p(nz)
+      real bnd
+      integer k
+
+      if( (data(2,2,k).ne.bnd).and.
+     1    (data(3,3,k).ne.bnd).and.
+     1    (data(4,4,k).ne.bnd) ) then
+
+        data(1,1,k)=3.*data(2,2,k)-3.*data(3,3,k)+data(4,4,k)
+
+      elseif( (data(2,2,k).eq.bnd) .and.
+     1(data(3,3,k).ne.bnd) .and. (data(4,4,k).ne.bnd))then
+
+        data(1,1,k)=(data(3,3,k)+data(4,4,k))*.5
+
+      elseif(data(2,1,k).ne.bnd.and.data(1,2,k).ne.bnd)then
+
+        data(1,1,k)=(data(2,1,k)+data(1,2,k))*.5
+
+      elseif(k.ne.nz)then
+
+        data(1,1,k)=data(1,1,k+1)+
+     1              data(1,1,k+1)*(alog(p(k+1)/p(k)))
+      endif
 
       return
       end
@@ -2229,4 +2514,3 @@ c--------------------------------------------------
 
       return
       end
-
