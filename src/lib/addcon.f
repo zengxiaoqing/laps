@@ -33,14 +33,38 @@ c
 c
         subroutine addcon(a,con,result,imax,jmax)
 c
-c.....  Routine to add the constant 'con' to array 'a' and put the
-c.....  result into array 'result' .
+cdoc    Routine to add the constant 'con' to array 'a' and put the
+cdoc    result into array 'result'.
 c
         real*4 a(imax,jmax), result(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
           result(i,j) = a(i,j) + con
+        enddo !i
+        enddo !j
+c
+        return
+        end
+
+
+        subroutine addcon_miss(a,con,result,imax,jmax)
+c
+cdoc    Routine to add the constant 'con' to array 'a' and put the
+cdoc    result into array 'result'. This takes account of 'r_missing_data'.
+c
+        real*4 a(imax,jmax), result(imax,jmax)
+c
+        call get_r_missing_data(r_missing_data,istatus)
+
+        do j=1,jmax
+        do i=1,imax
+          if(a(i,j) .ne. r_missing_data .and. 
+     1       con    .ne. r_missing_data       )then
+              result(i,j) = a(i,j) + con
+          else
+              result(i,j) = r_missing_data
+          endif
         enddo !i
         enddo !j
 c
