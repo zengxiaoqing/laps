@@ -493,12 +493,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 
-!       Plot Profiler winds  ***********************************************
+!       Plot Profile winds  ***********************************************
 811     write(6,*)
-        write(6,*)' Profiler Winds'
+        write(6,*)
+     1          ' Profile Winds (e.g. Profiler, Tower, Raob, Dropsonde)'       
 
         call setusv_dum(2hIN,17)
-
 
         lun = 32
         ext = 'prg'
@@ -508,9 +508,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         do while (.true.)
             read(32,*,end=41)ri,rj,rk,dir,speed_ms
-            ri = ri + 1.
-            rj = rj + 1.
-            rk = rk + 1.
+            ri = ri ! + 1.
+            rj = rj ! + 1.
+            rk = rk ! + 1.
 
             k = nint(rk)
 !           write(6,*)k,alat,alon,retheight,dir,speed_ms
@@ -518,9 +518,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
             k_sfc = 2
 
             if(k .eq. k_level
-     1  .or. k_level .eq. 0 .and. k .eq. k_sfc
-     1  .and. dir .ne. r_missing_data
-     1  .and. speed_ms .ne. r_missing_data
+     1    .or. k_level .eq. 0 .and. k .eq. k_sfc
+     1   .and. dir .ne. r_missing_data
+     1   .and. speed_ms .ne. r_missing_data
      1                                                  )then
 
 !               call latlon_ram(alat,alon,x,y,x0,y0,pix_per_km)
@@ -540,7 +540,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 41      continue
 
         close(32)
-
 
 !       Plot Pirep winds  ***********************************************
 911     write(6,*)
