@@ -438,8 +438,6 @@ cdis
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 heights_3d(imax,jmax,kmax)
 
-        Include   'lapsparms.inc' ! ref_base, msg data
-
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
@@ -459,6 +457,22 @@ cdis
         common / grid_fnam_cmn / grid_fnam_common
 
         write(6,*)' Subroutine read_radar_3dref'
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            return
+        endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_2dref = 0
+            istatus_3dref = 0
+            return
+        endif
 
         if(radarext(1:3) .eq. 'vrc')then
 50          write(6,*)' Reading NOWRAD data'
@@ -532,7 +546,7 @@ cdis
 558             format(2f9.3,f8.0,i7)
 
                 if(l_low_fill .or. l_high_fill)then
-                    if(.false.)then
+                    if(.false.)then ! WARNING: missing datas are modified
                         call rfill(grid_ra_ref,imax,jmax,kmax,l_low_fill       
      1                          ,l_high_fill,lat,lon,topo,rlat_radar
      1                          ,rlon_radar,rheight_radar,istatus_rfill)
@@ -565,6 +579,21 @@ cdis
                 if(istatus .ne. 1)then
                     istatus_2dref = 0
                     istatus_3dref = 0
+                endif
+
+!               We may want to remove this block eventually to allow calling
+!               routines to utilize the missing data flag in reflectivities.
+!               They are generally not set up to do this at present.
+                if(l_low_fill .or. l_high_fill)then
+                    do k = 1,kmax
+                    do j = 1,jmax
+                    do i = 1,imax
+                        if(grid_ra_ref(i,j,k) .eq. r_missing_data)then
+                            grid_ra_ref(i,j,k) = ref_base
+                        endif
+                    enddo ! i
+                    enddo ! j
+                    enddo ! k
                 endif
 
             else
@@ -662,8 +691,6 @@ cdis
         real*4 grid_ra_vel(imax,jmax,kmax)
         real*4 grid_ra_nyq(imax,jmax,kmax)
 
-        Include   'lapsparms.inc' ! ref_base, msg data
-
         character*3 var_2d
         character*31  ext
         character*10  units_2d
@@ -679,6 +706,14 @@ cdis
         common / grid_fnam_cmn / grid_fnam_common
 
         write(6,*)' Subroutine read_radar_vel'
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_vel = 0
+            istatus_nyq = 0
+            return
+        endif
 
         if(radarext(1:3) .eq. 'vrc')then
             write(6,*)' Error NOWRAD has no velocity data'
@@ -834,14 +869,26 @@ cdis
         real*4 ref_3d(imax,jmax,kmax)
         real*4 heights_3d(imax,jmax,kmax)
 
-        include 'lapsparms.inc'
-
         real*4 ref_2d_04(imax,jmax)
         real*4 ref_2d_48(imax,jmax)
         real*4 ref_2d_8c(imax,jmax)
         real*4 ref_2d_et(imax,jmax)
 
         write(6,*)' Subroutine read_nowrad_3dref'
+
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_3dref = 0
+            return
+        endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading ref_base parameter'
+            istatus_3dref = 0
+            return
+        endif
 
         icount_ref1 = 0
         icount_ref2 = 0

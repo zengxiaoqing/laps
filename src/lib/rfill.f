@@ -42,6 +42,7 @@ cdis
 !       missed because the grid points are below the radar horizon or too
 !       close to the terrain. This is done if radar echo is detected not
 !       too far above such grid points.
+!       WARNING: No missing values are outputted
 
 !       Steve Albers            1990
 !       Steve Albers            1992          Declare l_low_fill,l_high_fill
@@ -264,7 +265,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         return
         end
 
-        subroutine ref_fill_vert(ref_3d,ni,nj,nk,l_low_fill,l_high_fill
+        subroutine ref_fill_vert(ref_3d_io,ni,nj,nk
+     1           ,l_low_fill,l_high_fill
      1           ,lat,lon,topo,heights_3d,rlat_radar,rlon_radar
      1           ,rheight_radar,istatus)
 
@@ -276,20 +278,23 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 !       .true.. This will fill in low level echoes that might have been
 !       missed because the grid points are below the radar horizon or too
 !       close to the terrain. This is done if radar echo is detected not
-!       too far above such grid points.
+!       too far above such grid points. If the input column is entirely
+!       missing, so is the output column.
 
 !       Steve Albers            1990
 !       Steve Albers            1992          Declare l_low_fill,l_high_fill
 !       Steve Albers            1994          Set msg data to ref_base
 !       Steve Albers            1998          Read in ref_base, r_missing_data
+!            "              Feb 1998          Allows output of missing data
 
 !       ni,nj,nk are input LAPS grid dimensions
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
 
-        real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
-        real*4 heights_3d(ni,nj,nk)               ! Input
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
+        real*4 ref_3d_io(ni,nj,nk)               ! I/O   3D reflctvy grid
+        real*4 heights_3d(ni,nj,nk)              ! I
+        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I     2D grids
 
+        real*4 ref_3d(ni,nj,nk)                  ! Local 3D reflctvy grid
         integer*4 isum_ref_2d(ni,nj)             ! Local array
 
         logical l_low_fill,l_high_fill,l_test
@@ -306,19 +311,25 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
             return
         endif
 
-        write(6,*)' rfill: Setting r_missing_data values to ',ref_base
+!       Set missing values to ref_base for internal processing
+        write(6,*)' ref_fill_vert: Setting r_missing_data values to '
+     1             ,ref_base
 
         do k = 1,nk
         do j = 1,nj
         do i = 1,ni
-            if(ref_3d(i,j,k) .eq. r_missing_data)
-     1                            ref_3d(i,j,k) = ref_base
+            if(ref_3d_io(i,j,k) .eq. r_missing_data)then
+                ref_3d(i,j,k) = ref_base
+            else
+                ref_3d(i,j,k) = ref_3d_io(i,j,k)
+            endif
         enddo
         enddo
         enddo
 
 
-        write(6,*)' Rfill: Interpolating vertically through gaps'
+        write(6,*)
+     1       ' ref_fill_vert: Interpolating vertically through gaps'      
 
         n_low_fill = 0
 
@@ -498,6 +509,13 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
           endif ! echo present
 
+!         Return valid ref values to io array
+          do k = 1,nk
+              if(ref_3d(i,j,k) .ne. ref_base)then
+                  ref_3d_io(i,j,k) = ref_3d(i,j,k)
+              endif
+          enddo ! k
+
         enddo ! i
         enddo ! j
 
@@ -575,18 +593,6 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
             return
         endif
 
-        write(6,*)' ref_fill_horz: Setting r_missing_data values to '       
-     1             ,ref_base
-
-        do k = 1,nk
-        do j = 1,nj
-        do i = 1,ni
-            if(ref_3d(i,j,k) .eq. r_missing_data)
-     1                            ref_3d(i,j,k) = ref_base
-        enddo
-        enddo
-        enddo
-
 !       Calculate radar distance array
         do i = 1,ni
         do j = 1,nj
@@ -601,31 +607,37 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         enddo ! j
         enddo ! i
 
-        call constant(ref_2d,ref_base,ni,nj) ! Initialize Buffer Array
-
         do k = 1,nk
+            call move(ref_3d(1,1,k),ref_2d_buf,ni,nj) ! Initialize Buffer Array
             n_add_lvl = 0
 
             do i = 2,ni-1
             do j = 2,nj-1
 
 !               Assess neighbors to see if we should fill in this grid point
-                if(ngrids(i,j) .ge. 1 .and. 
-     1             ref_3d(i,j,k) .eq. ref_base)then       
+                if(   ngrids(i,j)   .ge. 1 
+     !                         .AND. 
+     1               (ref_3d(i,j,k) .eq. ref_base
+     1                          .or.
+     1                ref_3d(i,j,k) .eq. r_missing_data)      )then       
                     n_neighbors = 0
                     ref_sum = 0.
                     iil = i-1
                     jjl = j-1
                     iih = i+1
                     jjh = j+1
+
                     do ii = iil,iih
                     do jj = jjl,jjh
-                        if(ref_3d(ii,jj,k) .gt. ref_base)then
+                        if(ref_3d(ii,jj,k) .ne. ref_base
+     1               .and. ref_3d(ii,jj,k) .ne. r_missing_data   )then
                             n_neighbors = n_neighbors + 1
                             ref_sum = ref_sum + ref_3d(ii,jj,k)
                         endif
+
                     enddo ! jj
                     enddo ! ii
+
                 endif
 
 !               Fill into buffer array?
@@ -644,7 +656,6 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                 write(6,11)k,n_add_lvl
  11             format(' lvl/n_added ',2i4)
                 call move(ref_2d_buf,ref_3d(1,1,k),ni,nj)
-                call constant(ref_2d,ref_base,ni,nj) ! Reinitialize Buffer Array
             endif
 
         enddo ! k
