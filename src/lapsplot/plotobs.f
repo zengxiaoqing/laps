@@ -648,7 +648,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 
         subroutine plot_temp_obs(k_level,i4time,imax,jmax,kmax
-     1                          ,r_missing_data,lat,lon,topo,zoom)
+     1                          ,r_missing_data,lat,lon,topo,zoom
+     1                          ,plot_parms)
+
+        include 'lapsplot.inc'
 
         character*3 ext
         character*8 c8_obstype
@@ -747,7 +750,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          ,lat,lon,imax,jmax,size_temp
      1                          ,zoom,nobs_temp
      1                          ,icol_in,du_loc,wx
-     1                          ,iflag,iflag_cv)
+     1                          ,iflag,iflag_cv,plot_parms)
 
 
                 write(6,111,err=121)ri,rj,t_c,c8_obstype
