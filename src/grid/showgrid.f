@@ -34,6 +34,7 @@ c
 
 c      print *,ll_lat,ll_lon,ur_lat,ur_lon
 c      print *,lon(1,1),lon(nx,1),lon(1,ny),lon(nx,ny)
+
       do j=1,ny
          ll_lon=min(ll_lon,lon(1,j))
          ur_lon=max(ur_lon,lon(nx,j))
@@ -69,7 +70,7 @@ c         enddo
 c      enddo
 
       if(lon(1,1).eq.lon(1,ny)) then
-         write(2,103) lon(1,1),lat(1,1),lon(nx,ny),lat(nx,ny)
+         write(2,103) lon(1,1),lat(1,1),lon(1,ny),lat(1,ny)
       else
          do j=1,ny-1,5
             write(2,103) lon(1,j),lat(1,j)
@@ -124,30 +125,4 @@ c      write(2,*) 'plot "centerpoint" ls 3'
       close(2)
 
       return
-      end
-
-      subroutine get_gridnl(mode)
-      implicit none
-      integer mode
-      integer len
-      integer istatus
-      character*256 directory
-      character*256 fname
-      character*200 cdataroot
-      character*10  c10_grid_fname
-      namelist /grid_nl/ mode
-
-      mode = 0
-      call find_domain_name(cdataroot,c10_grid_fname,istatus)
-      if(istatus.ne.1)then
-         print*,'Error returned from find_domain_name'
-         return
-      endif
-      call get_directory(c10_grid_fname,directory,len)
-      fname = directory(1:len)//'grid.nl'
-      open(3,file=fname,status='old',err=101)
-      read(3,grid_nl,err=101,end=101)
-      close(3)
-
- 101  return
       end
