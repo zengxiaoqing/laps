@@ -8,10 +8,17 @@
 #include <unistd.h>
 #include <netcdf.h>
 #define SYSCMD "ncgen -o %s %s"
+
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define write_att_c write_att_c__
+#define nstrncpy nstrncpy__
+#endif
+
 #ifdef FORTRANUNDERSCORE
 #define write_att_c write_att_c_
 #define nstrncpy nstrncpy_
 #endif
+
 #ifdef __STDC__
 void write_att_c(char *f_filename, long *fn_len, char *f_cdlfile, long *cdl_len, 
                  char *f_sat_name, long *sn_len, long *num_atts, 
