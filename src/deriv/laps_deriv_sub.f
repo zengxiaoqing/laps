@@ -178,6 +178,7 @@ cdis
         integer*4 i_snd(max_cld_snd)
         integer*4 j_snd(max_cld_snd)
 
+        integer*4 ihist_alb(-10:20)
 
         real*4 cloud_top(NX_L,NY_L)
         real*4 cloud_base(NX_L,NY_L)
@@ -683,8 +684,8 @@ C READ IN SATELLITE DATA
         enddo
 
         call get_vis(i4time,vis_in,vis_out,solar_alt
-     1   ,cloud_frac_vis_a,albedo,NX_L,NY_L,KCLOUD,r_missing_data,istat_
-     1vis)
+     1              ,cloud_frac_vis_a,albedo,ihist_alb
+     1              ,NX_L,NY_L,KCLOUD,r_missing_data,istat_vis)
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1        tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
@@ -807,8 +808,8 @@ C INSERT RADAR DATA
 C       INSERT VISIBLE SATELLITE DATA
         if(istat_vis .eq. 1)then
             call insert_vis(i4time,clouds_3d,vis_in,vis_out,cld_hts
-     1        ,topo,cloud_frac_vis_a,albedo,NX_L,NY_L,KCLOUD
-     1        ,r_missing_data
+     1        ,topo,cloud_frac_vis_a,albedo,ihist_alb
+     1        ,NX_L,NY_L,KCLOUD,r_missing_data
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
      1        ,istat_radar_3dref,radar_ref_3d,NZ_L,ref_base
      1        ,dbz_max_2d,surface_sao_buffer,istatus)

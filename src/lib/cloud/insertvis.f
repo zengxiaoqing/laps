@@ -31,14 +31,13 @@ cdis
 cdis
 
         subroutine get_vis(i4time,vis_in,vis_out,solar_alt
-     1  ,cloud_frac_vis_a,albedo,ni,nj,nk,r_missing_data,istatus)
+     1                    ,cloud_frac_vis_a,albedo,ihist_alb
+     1                    ,ni,nj,nk,r_missing_data,istatus)
+
+!       Steve Albers 1997
 
         integer*4 ihist_alb(-10:20)
         integer*4 ihist_frac_sat(-10:20)
-        integer*4 ihist_frac_in(-10:20)
-        integer*4 ihist_frac_out(-10:20)
-        integer*4 ihist_frac_in_out(-10:20,-10:20)
-        integer*4 ihist_frac_in_sat(-10:20,-10:20)
         real*4 albedo(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
@@ -57,6 +56,12 @@ cdis
         data lvd_ext /'lvd'/
 
         character var*3,comment*125,units*10
+
+!       Initialize histograms
+        do i = -10,20
+            ihist_alb(i) = 0
+            ihist_frac_sat(i) = 0
+        enddo ! i
 
 !       Read in albedo data
         write(6,*)' Getting the VIS data from LVD file'
@@ -115,8 +120,8 @@ cdis
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
-            ihist_frac_sat(iscr_frac_sat) = ihist_frac_sat(iscr_frac_sat
-     1) + 1
+            ihist_frac_sat(iscr_frac_sat) = 
+     1      ihist_frac_sat(iscr_frac_sat) + 1
 
 !           Make sure satellite cloud fraction is between 0 and 1
             if(cloud_frac_vis .le. 0.0)cloud_frac_vis = 0.0
@@ -145,10 +150,9 @@ cdis
 
         write(6,*)'              HISTOGRAMS'
         write(6,*)' I          ',
-     1  ' Albedo  Cld Frac Sat  Cld Frac In  Cld Frac Out'
+     1  ' Albedo  Cld Frac Sat'
         do i = -5,15
-            write(6,11)i,ihist_alb(i),ihist_frac_sat(i),ihist_frac_in(i)
-     1                          ,ihist_frac_out(i)
+            write(6,11)i,ihist_alb(i),ihist_frac_sat(i)
 11          format(i4,i12,i12,i12,i12)
         enddo ! i
 
@@ -158,9 +162,9 @@ cdis
         return
         end
 
-        subroutine insert_vis(i4time,clouds_3d,vis_in,vis_out,cld_hts,to
-     1po
-     1      ,cloud_frac_vis_a,albedo,ni,nj,nk,r_missing_data
+        subroutine insert_vis(i4time,clouds_3d,vis_in,vis_out,cld_hts
+     1      ,topo,cloud_frac_vis_a,albedo,ihist_alb
+     1      ,ni,nj,nk,r_missing_data
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
      1      ,istat_radar,radar_ref_3d,klaps,ref_base
      1      ,dbz_max_2d,surface_sao_buffer,istatus)
@@ -193,6 +197,21 @@ cdis
 
         write(6,*)' Insert VIS data routine'
 
+!       Initialize histograms
+        do i = -10,20
+            ihist_frac_sat(i) = 0
+            ihist_frac_in(i) = 0
+            ihist_frac_out(i) = 0
+
+            do j = -10,20
+                ihist_frac_in_out(i,j) = 0
+                ihist_frac_in_sat(i,j) = 0
+                ihist_colmaxin_sat(i,j) = 0
+                ihist_colmaxout_sat(i,j) = 0
+            enddo ! j
+
+        enddo ! i
+
         n_missing_albedo = 0
         n_vis_mod = 0
 
@@ -211,8 +230,8 @@ cdis
 
             iscr_frac_sat = nint(cloud_frac_vis*10.)
             iscr_frac_sat = min(max(iscr_frac_sat,-10),20)
-            ihist_frac_sat(iscr_frac_sat) = ihist_frac_sat(iscr_frac_sat
-     1) + 1
+            ihist_frac_sat(iscr_frac_sat) = 
+     1      ihist_frac_sat(iscr_frac_sat) + 1
 
 !           Make sure satellite cloud fraction is between 0 and 1
             if(cloud_frac_vis .le. 0.0)cloud_frac_vis = 0.0
