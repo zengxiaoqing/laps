@@ -363,7 +363,7 @@ c       include 'satellite_dims_lvd.inc'
         write(6,12)
  12     format(
      1       /'     [br,fr,lq] Humidity (lga;fua;lq3: [q or rh]) '
-     1       ,' [pw] Precipitable Water'       
+     1       ,' [pw-i] Precipitable Water'       
      1       /
      1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
      1       ,' [ls] Cloud LWC'
@@ -469,7 +469,6 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_type .eq. 'bw'.or.c_type.eq.'bo')then
                 ext = 'balance'
             endif
-
 
             if(c_type.eq.'bw'.or.c_type.eq.'bo')then
                call get_filespec(ext,1,c_filespec,istatus)
@@ -604,14 +603,14 @@ c       include 'satellite_dims_lvd.inc'
      1                                          ,18x,'? ',$)
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
-                    if(c_field .ne. 'w ')then
+
+                    call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)      
+                    write(6,*)' Valid time = ',asc9_tim_3dw
+
+                    if(c_field .ne. 'w ' .and. c_field .ne. 'ob')then
                       write(6,*)' Calling get_uv_2d for ',ext
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,ext
      1                              ,NX_L,NY_L,fcst_hhmm,istatus)
-
-!                     write(6,*)' Initial time = ',asc9_tim_3dw
-                      call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)      
-                      write(6,*)' Valid time = ',asc9_tim_3dw
 
                       if(c_type .eq. 'wf')then
 
@@ -768,6 +767,8 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' WIND fua '//fcst_hhmm//'   kt'
                 elseif(c_type.eq.'bw'                       )then
                     c19_label = ' WIND  (bal)    kt'
+                elseif(c_field .eq. 'ob')then
+                    c19_label = ' WIND  (obs)    kt'
                 else
                     c19_label = ' WIND  (anl)    kt'
                 endif
@@ -788,6 +789,11 @@ c       include 'satellite_dims_lvd.inc'
 
                 if(c_field .eq. 'ob')then
                     igrid = 0
+                    if(i4time_3dw .eq. 0)then
+                        i4time_3dw = i4time_ref
+                        call make_fnam_lp(I4time_3dw,asc9_tim_3dw
+     1                                   ,istatus)
+                    endif
                 endif
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
@@ -871,7 +877,22 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
                 call divergence(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L
      1                         ,.true.,r_missing_data)
-                call mklabel33(k_mb,' DVRG (CPTD) 1e-5/s',c33_label)
+
+                c19_label = ' DVRG (CPTD) 1e-5/s'
+
+                if(c_type .eq. 'wf')then
+                    c19_label = ' DIV  (diff) 1e-5/s'
+                elseif(c_type .eq. 'wb')then
+                    c19_label = ' DIV  (lga)  1e-5/s'
+                elseif(c_type .eq. 'wr')then
+                    c19_label = ' DIV  (fua)  1e-5/s'
+                elseif(c_type .eq. 'bw')then
+                    c19_label = ' DIV  (bal)  1e-5/s'
+                else
+                    c19_label = ' DIV  (anal) 1e-5/s'
+                endif
+
+                call mklabel33(k_mb,c19_label,c33_label)
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -885,7 +906,18 @@ c       include 'satellite_dims_lvd.inc'
             elseif(c_field .eq. 'vo')then ! Display Vorticity Field
                 call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
      1                         ,.true.,r_missing_data)
-                call mklabel33(k_mb,' VORT (abs)  1e-5/s',c33_label)
+
+                if(c_type .eq. 'wf')then
+                    c19_label = ' VORT (diff) 1e-5/s'
+                elseif(c_type .eq. 'wb')then
+                    c19_label = ' VORT (lga)  1e-5/s'
+                elseif(c_type .eq. 'wr')then
+                    c19_label = ' VORT (fua)  1e-5/s'
+                elseif(c_type .eq. 'bw')then
+                    c19_label = ' VORT (bal)  1e-5/s'
+                else
+                    c19_label = ' VORT (anal) 1e-5/s'
+                endif
 
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
@@ -3412,7 +3444,7 @@ c                   cint = -1.
      1                                          ,lat,lon,jdot,
      1         NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'pw')then
+        elseif(c_type(1:2) .eq. 'pw')then
             var_2d = 'TPW'
             ext = 'lh4'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -3427,16 +3459,22 @@ c                   cint = -1.
 
             c33_label = 'LAPS Total Precipitable Water  cm'
 
-            clow = 0.
-            chigh = 15.
-            cint = .25
+            clow = 5.50
+            chigh = -1.00
+            cint = 0.25
+            scale = 1e-2
 
-            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+!           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-2,clow,chigh,cint,
-     1           asc9_tim_t,c33_label,i_overlay,c_display
-     1           ,lat,lon,jdot,
-     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1e-2,clow,chigh,cint,
+!    1           asc9_tim_t,c33_label,i_overlay,c_display
+!    1           ,lat,lon,jdot,
+!    1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'tt' 
      1    .or. c_type .eq. 'tf' .or. c_type .eq. 'tfi'
@@ -3572,17 +3610,6 @@ c                   cint = -1.
             clow = -20.
             chigh = +125.
             cint = 0.
-
-!           call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-!    1                           ,zoom,scale)       
-
-!           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-
-!           call plot_cont(field_2d,1e-0,clow,chigh,cint
-!    1                    ,asc9_tim_t,c33_label,i_overlay,c_display
-!    1                    ,lat,lon,jdot
-!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
