@@ -600,12 +600,8 @@
         Change the parameter 'nk_laps' to be equal to the (number of vertical 
         levels).
 
-     3. readwritelaps.c in the library needs to be changed. Explicit mention of
-        the number of levels occurs in quite a few places (default = 21).
-        Multiples of 21 also need to be changed (i.e. 42, 63, etc.).
-
-     4. Adjust the vertical grid point dimension (NZ,NZ_LONG) in:
-                          src/include/laps_grid_def.h.
+     3. Note that we have not tested laps with other than 21 vertical levels
+        for quite a while.
 
    PRESSURE OF THE LEVELS (and vertical resolution):
 
