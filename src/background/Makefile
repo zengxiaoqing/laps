@@ -22,7 +22,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
 EXE = lga.exe
 
 SRC=lga_interp.f  lga_util.f           \
-    lprep_eta_conusc.f  lprep_ruc2_pub.f
+    lprep_eta_conusc.f  lprep_ruc2_pub.f   get_bkgd_info.f
 
 MAIN=lga.f
 
