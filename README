@@ -1732,7 +1732,8 @@ Inputs:                                          '*' = essential input
 
       * vrc/v01/vrz  grid          2-D or 3-D radar reflectivity	
 
-      * lvd          grid          Infra-red and Visible satellite data
+        lvd          grid          Infra-red and Visible satellite data
+                                            (not essential, though recommended)
 	pin	     inter data	   pireps/clouds
         lm2          grid          composite snow cover (prev hour normally)
       * lga/ram      grid          model data analysis / forecast
@@ -2174,6 +2175,10 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 
 LAPS Variables and netCDF File Organization
         (author: Linda Wharton - wharton@fsl.noaa.gov)
+
+Note that more info on the units of the fields, etc. are contained in the
+'data/*.cdl' files.
+
 
                 File LAPS CDF
 		Ext  Var  Var   #Lvl  Field
