@@ -216,11 +216,13 @@
      included in the source code directory.
   
      Depending on the data source, you may generally prefer one of two choices:
-         1) Modify LAPS ingest code to accept your own raw data format. 
+         1) Modify LAPS ingest code to accept your own raw data format, all
+            that really counts is producing an intermediate data file. 
+            Generating a raw data output is not needed.
          2) Convert your raw data to NetCDF format then run the LAPS ingest
             code as is.
 
-     For surface obs, option (1) is generally better.
+     For surface obs and raobs, option (1) is generally better.
 
      You may note the following data sources used at FSL. These data sources
      are what the FSL ingest code is tailored to for producing intermediate
@@ -230,8 +232,8 @@
      The pathnames for most of the ingest data sources are assigned within
      the './data/static/nest7grid.parms' files and can be set accordingly at runtime.
 
-     Our long range plans are to hopefully make the ingest code compatable
-     with NOAAport data.
+     Note that the ingest code is also generally compatable with SBN data as
+     stored on the WFO-Advanced system.
 
      Sfc Obs (lso): FSL uses this data in FSL's NetCDF format as input.
            The FSL code is in the '.../src/ingest/sao' directory, and
@@ -1551,8 +1553,11 @@ Inputs:
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data	RAOB temp, dewpoint, wind
                                         
-        Note: This executable is not presently in the 'schedule.com' for the
-              operational LAPS at FSL. It could be added if desired.
+        Note: If you have good profiler or rass data, you may want to disable
+              the RAOB ingest as they would then perhaps hurt as much as they
+              help (due to raobs being relatively old). This can be done by
+              using a dummy path name for the raw raob data in 
+              'nest7grid.parms'.
 
 ********************************************************************************
 ********************************************************************************
