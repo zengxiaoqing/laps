@@ -105,6 +105,7 @@ then
   FIXED="-fixed"
   FREE="-free"
   OPTIMIZE="-O4"
+  CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
 fi  
 if test "$arch" = "sun4" 
 then
@@ -161,7 +162,7 @@ then
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
-    CFLAGS="$CFLAGS -DSWAPBYTE"
+    CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
     OPTIMIZE=""
   fi
 fi  
