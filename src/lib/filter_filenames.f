@@ -28,7 +28,7 @@ c
        integer   max_2letter_strings
        parameter(max_2letter_strings = 3)
        integer   max_files_filtered
-       parameter(max_files_filtered=3000)
+       parameter(max_files_filtered=5000)
 
        integer   max_files
        integer   i_nbr_files_in
