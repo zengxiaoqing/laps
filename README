@@ -560,10 +560,12 @@
         your domain runs outside the available 30" data, and should still be 
         covered by the 10' worldwide data, if available.
 
-                        MAP PROJECTION LIMITATIONS
+                     MAP PROJECTION STATUS / LIMITATIONS
 
-     Run-time testing for the various projections is in progress; initial 
-   results are promising. Please let us know of any problems you encounter. 
+     LAPS runs with the polar stereographic, lambert, and mercator projections.
+   Run-time testing for the various projections is in progress and initial 
+   results are promising. Please let us know of any problems you encounter;
+   the known limitations are as follows. 
 
      'Gridgen_model' does not yet work for the lambert map projection. This
    however should not impact the AFGWC port as they are presumably not using
