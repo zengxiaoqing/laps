@@ -209,8 +209,8 @@ c           call gdtost(tc(ii),1,1,ri,rj,rlct(i,j),0)
             i = nint(ri)
             j = nint(rj)
 
-            rlctp(i,j)=pct(ii)
-            rlca(i,j)=float(ca(ii))/100.
+            rlctp(i,j)=pct(ii)*100.      !pa
+            rlca(i,j)=float(ca(ii))/100. !unitless
             rlct(i,j)=tc(ii)
 
 c make and save i4time
