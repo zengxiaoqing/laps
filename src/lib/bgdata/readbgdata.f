@@ -49,7 +49,7 @@ c
       character*5     ctype      !either "dprep" or "lapsb" depending on dprep or lga
       character*2     gproj
       character*132   cmodel
-      character*256   fullname
+      character*200   fullname
       character*256   bgpath
       character*256   fname_bg
       character*4     af_bg
@@ -85,7 +85,7 @@ c
          real  ::     vw(nxbg,nybg,nzbguv)
          real  ::     ww(nxbg,nybg,nzbgww)
 
-         character*256 cdfname
+         character*200 cdfname
          character*132 cmodel
          character*5   ctype
          character*4   af
@@ -131,7 +131,7 @@ c
 
          character cmodel*132
          character path*256
-         character fname*256
+         character fname*200
          character af*4
          character gproj*2
  

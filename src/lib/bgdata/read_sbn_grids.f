@@ -395,6 +395,7 @@ c
       character*132 cmodel
 c
       real*4 xe,mrsat
+      real*4 make_ssh
 c
 c *** Common block variables for Lambert-conformal grid.
 c
@@ -419,7 +420,7 @@ c
           integer        nlvls
           character*4    cvar
           character*132  cmodel
-          real  ::       pr_levels_bg(:)
+          real  ::       pr_levels_bg(100)
         end subroutine
 
         subroutine read_netcdf_real(nf_fid,fname,n1,f
@@ -429,7 +430,7 @@ c
           integer istatus
           integer start(10),count(10)
           real*4  f(n1)
-          character*4 fname
+          character*(*) fname
         end subroutine
       end interface
 c
@@ -581,6 +582,7 @@ c
          k=k+1
          tp(:,:,k)=data(:,:,kk) 
       enddo
+
 c
 c ****** Statements to fill rh.                           
 c
@@ -614,11 +616,10 @@ c
          k=k+1
          sh(:,:,k)=data(:,:,kk)
       enddo
-
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbgsh,cvar,cmodel,prbg_sh)
+      call get_prbg(ncid,nzbgsh+kskp,cvar,cmodel,prbg_sh)
 c
 c ****** Statements to fill uw. 
 c
@@ -657,7 +658,7 @@ c
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbguv,cvar,cmodel,prbg_uv)
+      call get_prbg(ncid,nzbguv+kskp,cvar,cmodel,prbg_uv)
 
 c
 c ****** Statements to fill vw.                           
@@ -724,7 +725,7 @@ c
 c
 c get the pressures for this variable
 c
-      call get_prbg(ncid,nzbgww,cvar,cmodel,prbg_ww)
+      call get_prbg(ncid,nzbgww+kskp,cvar,cmodel,prbg_ww)
 
 
       deallocate (data)
@@ -828,21 +829,10 @@ c
       print*,'load prbg arrays'
       do j=1,nybg
       do i=1,nxbg
-         do k=1,nzbgsh
-            prbgsh(i,j,k)=prbg_sh(k)
-         enddo
-
-         do k=1,nzbght
-            prbght(i,j,k)=prbg_ht(k)
-         enddo
-
-         do k=1,nzbguv
-            prbguv(i,j,k)=prbg_uv(k)
-         enddo
-
-         do k=1,nzbgww
-            prbgww(i,j,k)=prbg_ww(k)
-         enddo
+         prbgsh(i,j,:)=prbg_sh(:)
+         prbght(i,j,:)=prbg_ht(:)
+         prbguv(i,j,:)=prbg_uv(:)
+         prbgww(i,j,:)=prbg_ww(:)
       enddo
       enddo
 
@@ -920,23 +910,30 @@ c
 
       ibdsh=0
       if(ctype(1:lent).eq.'lapsb')then
-         do i=1,nxbg
-         do j=1,nybg
          do k=1,nzbgsh
-            if (sh(i,j,k) .lt. 200)then
+            do kk=1,nzbgtp
+               if(prbght(1,1,kk).eq.prbgsh(1,1,k))then
+                  goto500
+               endif
+            enddo
+500         do i=1,nxbg
+            do j=1,nybg
+               if (sh(i,j,k).lt.200)then
+                sh(i,j,k)= make_ssh(prbgsh(i,j,k)
+     .,tp(i,j,kk)-273.15,sh(i,j,k)/100., -132.)*0.001  !kg/kg 
 
-                   it=tp(i,j,k)*100
-                   it=min(45000,max(15000,it))
-                   xe=esat(it)
-                   mrsat=0.00622*xe/(prbgsh(i,j,k)-xe)
-                   sh(i,j,k)=sh(i,j,k)*mrsat
-                   sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
+c                  it=tp(i,j,k)*100
+c                  it=min(45000,max(15000,it))
+c                  xe=esat(it)
+c                  mrsat=0.00622*xe/(prbgsh(i,j,k)-xe)
+c                  sh(i,j,k)=sh(i,j,k)*mrsat
+c                  sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
 
-            else
-                   ibdsh=ibdsh+1
-            endif
-         enddo
-         enddo
+               else
+                ibdsh=ibdsh+1
+               endif
+            enddo
+            enddo
          enddo
 
       endif

@@ -13,7 +13,7 @@ c
       real    La1,Lo1
       real    La2,Lo2
 
-      character*(*) filename
+      character filename*200
 C
 C  Open netcdf File for reading
 C

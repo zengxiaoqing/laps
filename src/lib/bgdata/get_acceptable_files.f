@@ -1,3 +1,4 @@
+
       subroutine get_acceptable_files(i4time_now,bgpath,bgmodel,names
      +     ,max_files,oldest_forecast,max_forecast_delta,use_analysis
      +     ,bg_files,accepted_files,forecast_length,cmodel,NX,NY,NZ
@@ -9,8 +10,10 @@
 
       integer bgmodel
       integer max_files, NX,NY,NZ,rejected_cnt
-      character*(*) names(max_files), cmodel, bgpath
-     +     ,rejected_files(max_files)
+      character*256 names(max_files)
+      character*256 rejected_files(max_files)
+      character*256 bgpath
+      character*132 cmodel
       integer oldest_forecast, bg_files,forecast_length
       integer i, j, k, kk
       integer max_forecast_delta
@@ -20,7 +23,7 @@
       integer nvaltimes
       character*4   af,c4valtime,c4_FA_valtime
       character*3   c_fa_ext
-      character*200 bg_names(max_files), fullname
+      character*200 fullname
       character*256 cfilespec
       integer istatus
       integer i4time_fa
@@ -38,6 +41,9 @@
       integer record
       character*3 lapsprds(4)
       character*2 cwb_model_type
+
+      character(len=256), allocatable :: bg_names(:)
+
       parameter (nlapsprds=4)
       data lapsprds/'lq3','lt1','lsx','lw3'/
 
@@ -47,6 +53,8 @@ C if forecast_length = 0 return files for i4time_now and the preceeding
 C forecast.  if forecast_length > 0 return all files for i4time_now
 C to >= i4time_now+forecast_length
 C      
+      if(.not.allocated(bg_names))allocate(bg_names(max_files))
+
       call s_len(bgpath,len)
       if(bgpath(len:len).ne.'/')then
          len=len+1
@@ -56,7 +64,7 @@ C
       cfilespec=bgpath(1:len)//'*'
 
       do ifile=1,max_files
-         do i=1,200
+         do i=1,256
             bg_names(ifile)(i:i) = char(0)
          enddo
       enddo
@@ -162,7 +170,7 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
       
       endif
 
-c      print *,bg_names(bg_files),bg_files
+      print *,bg_names(bg_files),bg_files
 
       bgtime2=0
       accepted_files = 0

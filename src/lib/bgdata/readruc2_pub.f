@@ -12,7 +12,7 @@ c
       real    La2,Lo2
 
       integer  NX, NY, NZ, nf_fid, nf_vid, nf_status
-      character*(*) filename
+      character filename*200
       integer istatus
 
       istatus = 0
@@ -177,7 +177,7 @@ C
       include 'netcdf.inc'
 C     integer NX, NY, NZ, nf_fid, nf_vid, nf_status,istatus
       integer NX, NY, NZ, nf_fid, nf_status,istatus
-      character*(*) filename
+      character*200 filename
       character*4   cvar
       integer nxny,nxnynz
       real mmsp(nx,ny), hgt( NX,  NY,  NZ), 

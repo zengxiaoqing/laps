@@ -72,7 +72,7 @@ c     real*4 rp_init
 c
       character*256 path
       character*132 cmodel
-      character*256 fname
+      character*200 fname
       character*10  cfname10,a9_to_yr_a10_time
       character*4   af
       character*2   gproj
