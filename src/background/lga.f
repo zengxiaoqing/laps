@@ -1,4 +1,4 @@
-cdis    Forecast Systems Laboratory
+ddis    Forecast Systems Laboratory
 cdis    NOAA/OAR/ERL/FSL
 cdis    325 Broadway
 cdis    Boulder, CO     80303
@@ -66,8 +66,9 @@ c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
-     .          lga_status                      !status returned from lga_driver
+     .          lga_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
+      integer   np
       real*4    prbot,delpr                  !LAPS bottom and delta pressures
 c
       character*255 lapsroot                 !LAPS root path
@@ -81,6 +82,7 @@ c *** Each line contains the background data directory path for each
 c        corresponding bgmodel defined above.
 c
       character*256 bgpath
+      character*256 cfilespec
 
 c
 c  This is the max number of paths allowed in nest7grid.parms
@@ -88,16 +90,19 @@ c  and should match the value in lib/lapsgrid.f
 c 
       character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), bglen
+
+      character*13 cvt_i4time_wfo_fname13
 c
       character*9 a9
-      integer i4time_now
+      integer i4time_now,i4time_latest
       integer*4 max_files,bg_files
-      parameter (max_files=500)
+      parameter (max_files=250)
       character*256 names(max_files)
       character*256 reject_files(max_files)
       integer reject_cnt
       data reject_cnt/0/
-
+      integer ntbg
+      integer idum,jdum,kdum
 c
 c-------------------------------------------------------------------------------
 c
@@ -108,6 +113,7 @@ c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
       character*132 cmodel(maxbgmodels)
+      character*255 cfname
       include 'lapsparms.cmn'
       integer oldest_forecast, max_forecast_delta
       logical use_analysis
@@ -131,7 +137,6 @@ c      istat = index(laps_domain_file,' ')-1
       call get_background_info(bgpaths,bgmodels
      +,oldest_forecast,max_forecast_delta,use_analysis,cmodel) 
       lga_status = 0
-
 c
 c *** Initialize esat table.
 c
@@ -152,8 +157,15 @@ c
             i=i+1 
             bgmodel = bgmodels(i)
             if(bgmodel .eq. 0) goto 965
-            call s_len(bgpaths(i),bglen)
             bgpath =  bgpaths(i)
+            call s_len(bgpath,bglen)
+            if(bgmodel .eq. 4)then
+               cfilespec=bgpath(1:bglen)//'/*'
+               call get_latest_file_time(cfilespec,i4time_latest)
+               cfname = cvt_i4time_wfo_fname13(i4time_latest)
+               call get_sbn_dims(bgpath,cfname,idum,jdum,kdum
+     .,ntbg)
+            endif
          endif
          if (bgmodel .lt. 1 .or. bgmodel .gt. maxbgmodels) then
             print*,'Bad model specification in LGA, bgmodel =',bgmodel
@@ -163,7 +175,7 @@ c
 
          call get_acceptable_files(i4time_now,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,0,cmodel(i)
+     +        ,use_analysis,bg_files,0,cmodel(i),ntbg
      +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
 
         if(bg_files.le.1) then
@@ -172,9 +184,7 @@ c
            lga_status = 0
         else
 
-
            print *, 'bgmodel is set to ', bgmodel
-
            print *, ' '
            print *, 'input parameters'
            print *,  ' '
@@ -192,7 +202,7 @@ c
 
            call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .          laps_cycle_time,lapsroot,laps_domain_file,
-     .          bgmodel,bgpath,names,cmodel(i),
+     .          bgmodel,bgpath,names,cmodel(i),max_files,
      .          nx_bg,ny_bg,nz_bg, 5*nz_laps, lga_status)
 
            if(lga_status.lt.0) then
@@ -252,7 +262,7 @@ c===============================================================================
 c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .     laps_cycle_time,lapsroot,laps_domain_file,
-     .     bgmodel,bgpath,bg_names,cmodel,
+     .     bgmodel,bgpath,bg_names,cmodel,max_files,
      .     nx_bg,ny_bg,nz_bg, kdim, lga_status)
 
 c
@@ -261,17 +271,21 @@ c
 c
       integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
-     .          max_files, lga_status, laps_cycle_time,
+     .          max_files, lga_status,
+     .          laps_cycle_time,
      .          bgmodel
       integer icnt
       integer i_mx, i_mn, j_mx, j_mn, nan_flag
       real diff, diff_mx, diff_mn
       real prbot, delpr
-      character*(*) lapsroot, laps_domain_file, bgpath, bg_names(2)
-     +     , cmodel
+
+      character*(*) lapsroot
+     +             ,laps_domain_file
+     +             ,bgpath
+     +             ,bg_names(max_files)
+     +             ,cmodel
       
-c
-      parameter (max_files=2000)
+      integer warncnt
       
 c
 c *** Background model grid data.
@@ -310,7 +324,7 @@ c
      .          sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
-     .          grid(nx_laps,ny_laps,kdim), !Full LAPS array for write_laps
+c    .          sfcgrid(nx_laps,ny_laps,nsfc_fields), !sfc grid array for write_laps
      .          pr(nz_laps),     !LAPS pressures
      .          lat(nx_laps,ny_laps),        !LAPS lat
      .          lon(nx_laps,ny_laps),        !LAPS lon
@@ -319,7 +333,9 @@ c
      .          gry(nx_laps,ny_laps),         !hinterp factor
      .          ht_sfc(nx_laps,ny_laps),
      .          tp_sfc(nx_laps,ny_laps),
+     .          Tdsfc(nx_laps,ny_laps),
      .          sh_sfc(nx_laps,ny_laps),
+     .          qsfc(nx_laps,ny_laps),
      .          uw_sfc(nx_laps,ny_laps),
      .          vw_sfc(nx_laps,ny_laps),
      .          pr_sfc(nx_laps,ny_laps),
@@ -327,35 +343,33 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
-     .          Tdsfc,qsfc,
      .          htave,tpave,shave,uwave,vwave
 c
       integer   ct,
      .          ihour,imin,
-     .          lga_files,lga_times(max_files),lga_valid(max_files),
+     .          lga_files,lga_times(max_files),
+     .          lga_valid(max_files),
+     .          i4time_lga_valid(max_files),i4time_now,
+     .          bg_times(max_files),
      .          bgtime,bgvalid,
-     .          ip(kdim),
      .          i,ic,ii,j,jj,k,kk,l,
      .          istatus
 c
       character*255 lgapath
       character*256 lga_names(max_files)
       character*13  fname13,fname9_to_wfo_fname13
-      character*9   fname
+      character*9   fname,a9
       character*2   gproj
-      character*256  outdir, fullname
+      character*256 fullname,outdir
       character*31  ext
-      character*3   var(kdim)
-      character*4   af
-      character*4   lvl_coord(kdim)
-      character*10  units(kdim)
-      character*125 comment(kdim)
-      integer len_dir, ntime, nf
+c     character*3   var(nz_laps)
+c     character*4   lvl_coord(nz_laps)
+c     character*10  units(nz_laps)
+      character*125 comment(nz_laps)
+      character*4   af(max_files)
+      integer len_dir,ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
-      integer nsfc_fields, warncnt
-      parameter (nsfc_fields=7)
 c
-
       data ntime/0/
       data ext/'lga'/
 
@@ -364,6 +378,9 @@ c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
       lga_status=0
+
+      call get_systime(i4time_now,a9,lga_status)
+
       call get_directory('static',outdir,len_dir)    
 
       call get_laps_lat_lon(outdir(1:len_dir),laps_domain_file,
@@ -405,8 +422,9 @@ c
          call s_len(bg_names(nf),j)
          j=j-13
          fname = bg_names(nf)(j+1:j+9)
-         af = bg_names(nf)(j+10:j+13)
+         af(nf) = bg_names(nf)(j+10:j+13)
          call i4time_fname_lp(fname,bgtime,istatus)
+         bg_times(nf)=bgtime
 
 c
 c Removal of this loop causes already existing lga files to be overwritten
@@ -416,11 +434,11 @@ c
          if(.false.) then
             do i=1,lga_files
                if (fname .eq. lga_names(i)(1:9) .and.
-     .              af(3:4) .eq. lga_names(i)(10:11)) then
+     .              af(nf)(3:4) .eq. lga_names(i)(10:11)) then
                   
-                  print *,i,lga_names(i),':',fname,':',af
+                  print *,i,lga_names(i),':',fname,':',af(nf)
                   call get_lga_source(nx_laps,ny_laps,nz_laps
-     +                 ,fname,af,comment(1))
+     +                 ,fname,af(nf),comment(1))
                   call s_len(cmodel,ic)
 
                   if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
@@ -441,9 +459,9 @@ c
          call s_len(bgpath,i)
          fullname = bgpath(1:i)//'/'//bg_names(nf)
          if (bgmodel .eq. 1) then     ! Process 60 km RUC data
-            call read_ruc60_native(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-     .                             prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                             gproj,istatus)
+            call read_ruc60_native(bgpath,fname,af(nf),nx_bg,ny_bg,
+     .                       nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .                       gproj,istatus)
  
          elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
             call read_eta_conusC(fullname,nx_bg,ny_bg,nz_bg,
@@ -460,10 +478,12 @@ c
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
             ntbg=10 
             
-            call get_sbn_dims(bgpath,fname,nxbg,nybg,nzbg,ntbg)
+            fname13 = fname9_to_wfo_fname13(fname)
+
+            call get_sbn_dims(bgpath,fname13,nxbg,nybg,nzbg,ntbg)
 
             print*,'entering read_conus_211'
-            call read_conus_211(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+            call read_conus_211(bgpath,fname,af(nf),nx_bg,ny_bg,nz_bg,
      .           nxbg,nybg,nzbg,ntbg,
      .           prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
@@ -489,7 +509,7 @@ c
      .           bgmodel .eq. 6 .or.
      .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
 
-            call read_dgprep(bgmodel,cmodel,bgpath,fname,af
+            call read_dgprep(bgmodel,cmodel,bgpath,fname,af(nf)
      .                      ,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
      .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
@@ -497,7 +517,7 @@ c
      .                      ,gproj,istatus)
 
          elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
-            call read_conus_nws(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
+            call read_conus_nws(bgpath,fname,af(nf),nx_bg,ny_bg,nz_bg,
      .                          prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .                          gproj,istatus)
 c
@@ -508,7 +528,7 @@ c            l=index(bgpath,' ')-1
 
             call s_len(bgpath,l)
             if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
-               fname13=fname//af
+               fname13=fname//af(nf)
             elseif (bgmodel .eq. 4) then
                fname13=fname9_to_wfo_fname13(fname)
             endif
@@ -731,10 +751,13 @@ c
          print *,' Dewpoint check (before call sfcbkgd):'
          print *,'     Dewpt greater than temp at ',icnt,' points.'
          if(icnt .gt. 0) then
-            write(6,9901) 'Max', diff_mx, i_mx, j_mx
-            write(6,9901) 'Min', diff_mn, i_mx, j_mx
-         endif
+            print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+            print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 
+c           write(6,9901) 'Max', diff_mx, i_mx, j_mx
+c           write(6,9901) 'Min', diff_mn, i_mx, j_mx
+
+         endif
       endif
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
@@ -748,10 +771,15 @@ c
       print *,' Dewpoint check (after call sfcbkgd):'
       print *,'     Dewpt greater than temp at ',icnt,' points.'
       if(icnt .gt. 0) then
-         write(6,9901) 'Max', diff_mx, i_mx, j_mx
-         write(6,9901) 'Min', diff_mn, i_mx, j_mx
+         print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+         print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+
+c        write(6,9901) 'Max', diff_mx, i_mx, j_mx
+c        write(6,9901) 'Min', diff_mn, i_mx, j_mx
+
       endif
-9901  format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
+
+c9901  format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
 c
 c..... Do the winds
 c
@@ -773,7 +801,6 @@ c
          enddo
       enddo
 c
-c
       do j=1,ny_laps
       do i=1,nx_laps
          if(sh_sfc(i,j).gt.tp_sfc(i,j))then
@@ -781,263 +808,135 @@ c
          endif
       enddo
       enddo
-c
-c ****** Fill grid for LAPS write routine.
-c
-c         i=index(cmodel,' ')-1
-
-      call s_len(cmodel,ic)
-      do k=1,nz_laps                 ! Height
-         do j=1,ny_laps
-         do i=1,nx_laps
-            grid(i,j,k)=ht(i,j,k)
-            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-               print*,'Missingflag at ',i,j,k,' in ht'
-               warncnt=warncnt+1
-            endif
-         enddo
-         enddo
-         ip(k)=int(pr(k))
-         var(k)='HT '
-         lvl_coord(k)='mb  '
-         units(k)='Meters'
-         comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-      enddo
-
-      do k=1,nz_laps                 ! Temperature
-         kk=k+nz_laps
-         do j=1,ny_laps
-         do i=1,nx_laps
-            grid(i,j,kk)=tp(i,j,k)
-            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-               print*,'Missingflag at ',i,j,k,' in tp'
-               warncnt=warncnt+1
-            endif
-         enddo
-         enddo
-         ip(kk)=int(pr(k))
-         var(kk)='T3 '
-         lvl_coord(kk)='mb  '
-         units(kk)='Kelvin'
-         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-      enddo
-c
-      do k=1,nz_laps                 ! Specific humidity
-         kk=k+2*nz_laps
-         do j=1,ny_laps
-         do i=1,nx_laps
-            grid(i,j,kk)=sh(i,j,k)
-            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +           then
-               print*,'Missingflag at ',i,j,k,' in sh'
-               warncnt=warncnt+1
-            endif
-         enddo
-         enddo
-         ip(kk)=int(pr(k))
-         var(kk)='SH '
-         lvl_coord(kk)='mb  '
-         units(kk)='kg/kg'
-         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-      enddo
-c
-      do k=1,nz_laps                 ! u-component wind
-         kk=k+3*nz_laps
-         do j=1,ny_laps
-         do i=1,nx_laps
-            grid(i,j,kk)=uw(i,j,k)
-            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-               print*,'Missingflag at ',i,j,k,' in uw'
-               warncnt=warncnt+1
-            endif
-         enddo
-         enddo
-         ip(kk)=int(pr(k))
-         var(kk)='U3 '
-         lvl_coord(kk)='mb  '
-         units(kk)='m/s'
-         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-      enddo
-c
-      do k=1,nz_laps                 ! v-component wind
-         kk=k+4*nz_laps
-         do j=1,ny_laps
-         do i=1,nx_laps
-            grid(i,j,kk)=vw(i,j,k)
-            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-               print*,'Missingflag at ',i,j,k,' in vw'
-               warncnt=warncnt+1
-            endif
-         enddo
-         enddo
-         ip(kk)=int(pr(k))
-         var(kk)='V3 '
-         lvl_coord(kk)='mb  '
-         units(kk)='m/s'
-         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-      enddo
-c
-      read(af,'(i4)') ihour
+ 
+      read(af(nf),'(i4)') ihour
       bgvalid=bgtime+ihour*3600
 c
-      ext = 'lga'
-      call get_directory(ext,outdir,len_dir) 
-      print *,'Writing - ',fname//af(3:4),'00.',ext
+c Write LGA
+c ---------
+      call write_lga(nx_laps,ny_laps,nz_laps,bgtime,bgvalid,
+     .cmodel,missingflag,pr,ht,tp,sh,uw,vw,istatus)
+      if(istatus.ne.1)then
+         print*,'Error writing lga - returning to main'
+         return
+      endif
 
       if(bgmodel.eq.4) then
-         lga_names(3-nf) = fname//af(3:4)//'00.'//ext
+         lga_names(3-nf) = fname//af(nf)(3:4)//'00.'//ext
          lga_files=2
       endif
-         
-
-      call write_laps(bgtime,bgvalid,outdir,ext,
-     .                nx_laps,ny_laps,nz_laps,kdim,var,
-     .                ip,lvl_coord,units,comment,grid,istatus)
-        
-
-      if (istatus .eq. 1) then
-          lga_status = 1
-      else
-          print *,'Error writing interpolated data to LAPS database.'
-      endif
+c         
+c Write LGB
+c ---------
 
       if(bgmodel.ne.7)then
-c
-c Write the 2d fields to lgb
-c
-         kk=0
-         var(kk+1)='USF'
-         units(kk+1)='m/s'
-         var(kk+2)='VSF'
-         units(kk+2)='m/s'
-         var(kk+3)='TSF'
-         units(kk+3)='K'
-         var(kk+4)='RSF'
-         units(kk+4)='none'
-         var(kk+5)='PSF'
-         units(kk+5)='PA'
-         var(kk+6)='SLP'
-         units(kk+6)='PA'
-         var(kk+7)='DSF'
-         units(kk+7)='K'
-         do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,kk+1) = uw_sfc(i,j)
-               grid(i,j,kk+2) = vw_sfc(i,j)
-               grid(i,j,kk+3) = tp_sfc(i,j)
-               grid(i,j,kk+4) = sh_sfc(i,j)
-               grid(i,j,kk+5) = pr_sfc(i,j)
-               grid(i,j,kk+6) = mslp(i,j)
-            enddo
-         enddo
-c
+ 
          do j=1,ny_laps
          do i=1,nx_laps
             if(pr_sfc(i,j) .lt. missingflag) then
-               Tdsfc=sh_sfc(i,j)
-               qsfc=ssh2(pr_sfc(i,j)*0.01,
+               qsfc(i,j)=ssh2(pr_sfc(i,j)*0.01,
      +                   tp_sfc(i,j)-273.15,
-     +                   Tdsfc-273.15,-47.)*0.001
-               grid(i,j,kk+7)=Tdsfc
-               grid(i,j,kk+4)=qsfc
+     +                   sh_sfc(i,j)-273.15,-47.)*0.001
+c              sfcgrid(i,j,kk+4)=qsfc(i,j)
             else
-               grid(i,j,kk+7) = missingflag
-               grid(i,j,kk+4)=qsfc
+               qsfc(i,j) = missingflag
+c              sfcgrid(i,j,kk+4)=missingflag
             endif
          enddo
          enddo
 
-         do kk=1,nsfc_fields
-            ip(kk)=0
-         enddo
-         
-         ext = 'lgb'
-         call get_directory(ext,outdir,len_dir)
-         print *,'writing to dir ',outdir
-         print *,'Writing - ',fname//af(3:4),'00.',ext
-         call write_laps(bgtime,bgvalid,outdir,ext,
-     .           nx_laps,ny_laps,nsfc_fields,nsfc_fields,var,
-     .           ip,lvl_coord,units,comment,grid,istatus)
-         
-
-         if (istatus .eq. 1) then
-            lga_status = 1
-         else
-            print*,'Error writing interpolated data to LAPS lgb'
+         call write_lgb(nx_laps,ny_laps,bgtime,bgvalid,cmodel
+     .,missingflag,uw_sfc,vw_sfc,tp_sfc,qsfc,pr_sfc,mslp,sh_sfc
+     .,istatus)
+         if(istatus.ne.1)then
+            print*,'Error writing lgb - returning to main'
+            return
          endif
+
       endif
+
+      lga_status = 1
 c
 80    continue
 
       enddo  !Main loop through two model backgrounds
 
-      if(lga_status.le.0) return
-
-c
-c-------------------------------------------------------------------------------
-c *** Backfill any missing file times using linear interpolation
-c        between existing files.
+c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
 c *** Get existing .lga file names.
 c
-      if(bgmodel.eq.4) then
-         print*,lga_files,lga_names(1),lga_names(2)
-      else
-         call get_file_names(lgapath,lga_files,lga_names,max_files,
-     +        istatus)
-      endif
+c     if(bgmodel.eq.4) then
+
+      call s_len(bg_names(1),j)
+      print*,bg_names(1)(1:j)
+      print*,bg_names(2)(1:j)
+
+c     else
+c        call get_file_names(lgapath,lga_files,lga_names,max_files,
+c    +        istatus)
+
+c     endif
 c
 c *** Convert file names to i4times and sort into one array.
 c
-      do i=1,lga_files
-c         j=index(lga_names(i),' ')-18
-
-         call s_len(lga_names(i),j)
-         j=j-17
-         if (j .ge. 0) then
-            call i4time_fname_lp(lga_names(i)(j+1:j+9),
+      do i=1,2                        !!lga_files
+c        call s_len(bg_names(i),j)
+c        j=j-17
+c        if (j .ge. 0) then
+            call i4time_fname_lp(bg_names(i)(1:9),
      .                           lga_times(i),istatus)
-            read(lga_names(i)(j+10:j+11),'(i2)') ihour
-            read(lga_names(i)(j+12:j+13),'(i2)') imin
+
+c           read(bg_names(i)(10:11),'(i2)') ihour
+
+            read(bg_names(i)(12:13),'(i2)') ihour
             lga_valid(i)=ihour*3600+imin*60
-         endif
+            i4time_lga_valid(i)=bg_times(i)+lga_valid(i)
+
+c        endif
       enddo
 c
 c *** Determine if new file needs to be created and perform
 c        linear interpolation.
 c
-      do i=lga_files,2,-1
+c     do i=2,1,-1    !!lga_files,2,-1
+      i=2
       print*,i,lga_files,lga_times(i),lga_times(i-1),
-     +     lga_valid(i),lga_valid(i-1),laps_cycle_time
-         
-         if (lga_times(i) .eq. lga_times(i-1) .and.
-     .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) then
+     +     lga_valid(i),lga_valid(i-1),laps_cycle_time,
+     +     i4time_lga_valid(i),i4time_lga_valid(i-1)
+c        if (lga_times(i) .eq. lga_times(i-1) .and.
+c    .       lga_valid(i)-lga_valid(i-1) .gt.laps_cycle_time .or.
+         if
+     .      (i4time_lga_valid(i-1)  .gt.i4time_now.and.
+     .       i4time_lga_valid(i).lt.i4time_now     )then
             ext = 'lga'
             call get_directory(ext,outdir,len_dir) 
             print*,outdir,ext,nz_laps
+
             call time_interp(outdir,ext,
-     .           nx_laps,ny_laps,nz_laps,nz_laps*5,
-     .           pr,laps_cycle_time,
-     .           lga_times(i-1),lga_valid(i-1),
+     .           nx_laps,ny_laps,nz_laps,5,pr,
+     .           i4time_lga_valid(i),i4time_lga_valid(i-1),
+     .           i4time_now,lga_times(i-1),lga_valid(i-1),
      .           lga_times(i  ),lga_valid(i  ))
-            if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.5
-     +         .or.bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.9)then
+
+c           if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.5
+c    +         .or.bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.9)then
+
+            if(bgmodel.ne.1.or.bgmodel.ne.7)then
                ext = 'lgb'
                call get_directory(ext,outdir,len_dir) 
                print*,outdir,ext
+
                call time_interp(outdir,ext,
-     .              nx_laps,ny_laps,1,nsfc_fields,
-     .              pr,laps_cycle_time,
-     .              lga_times(i-1),lga_valid(i-1),
-     .              lga_times(i  ),lga_valid(i  ))
+     .           nx_laps,ny_laps,1,7,pr(1),
+     .           i4time_lga_valid(i),i4time_lga_valid(i-1),
+     .           i4time_now,lga_times(i-1),lga_valid(i-1),
+     .           lga_times(i  ),lga_valid(i  ))
+
             endif
          endif
-      enddo
+
+c     enddo
 c
       return
 c
@@ -1149,7 +1048,7 @@ c
             if(diff .lt. diff_mn) then
                diff_mn = diff
                i_mn = i
-              j_mn = j
+               j_mn = j
             endif
          endif
       enddo

@@ -168,37 +168,44 @@ c
 c
 c===============================================================================
 c
-
-      subroutine time_interp(dir,ext,nx,ny,nz,kdim,pr,cycle_time,
-     .                       time1,fcst1,time2,fcst2)
+      subroutine time_interp(dir,ext,nx,ny,nz,ngrids,pr,
+     .                  i4time_valid1,i4time_valid2,i4time_now,
+     .                  time1,fcst1,time2,fcst2)
 c
       implicit none
       include 'bgdata.inc'
 c
-      integer nx,ny,nz,kdim
+      integer nx,ny,nz
+      integer n,ngrids
 c
-      integer time1,time2,
+c     integer time1,time2,
+c    .          fcst1,fcst2,
+
+      integer   i4time_valid1,
+     .          i4time_valid2,
+     .          i4time_now,
+     .          time1,time2,
      .          fcst1,fcst2,
-     .          cycle_time,
-     .          ip(kdim),
+     .          ip(nz),
      .          newfcst,
      .          imin,ihour,
-     .          i,j,k,kk,istatus
+     .          i,j,k,kk,
+     .          istatus,nstatus
 c
       real*4 pr(nz),weight,
-     .       grid1(nx,ny,kdim),
-     .       grid2(nx,ny,kdim),
-     .       gridn(nx,ny,kdim)
+     .       grid1(nx,ny,nz),
+     .       grid2(nx,ny,nz),
+     .       gridn(nx,ny,nz)
 c
       integer nan
       character*(*)  dir
       character*(*)  ext
-      character*3   var(kdim)
-      character*4   lvl_coord(kdim)
-      character*10  units(kdim)
-      character*125 comment(kdim)
-      character*9   fname
-      character*4   af
+      character*3    var(nz,ngrids)
+      character*4    lvl_coord(nz)
+      character*10   units(nz)
+      character*125  comment(nz)
+      character*9    fname9
+      character*4    af
 
 c_______________________________________________________________________________
 c
@@ -207,57 +214,67 @@ c
       if(ext.eq.'lga') then
          do k=1,nz
             ip(k)=int(pr(k))
-            var(k)='HT '
-            kk=k+nz
-            ip(kk)=int(pr(k))
-            var(kk)='T3 '
-            kk=k+2*nz
-            ip(kk)=int(pr(k))
-            var(kk)='SH '
-            kk=k+3*nz
-            ip(kk)=int(pr(k))
-            var(kk)='U3 '
-            kk=k+4*nz
-            ip(kk)=int(pr(k))
-            var(kk)='V3 '
+            var(k,1)='HT '
+            var(k,2)='T3 '
+            var(k,3)='SH '
+            var(k,4)='U3 '
+            var(k,5)='V3 '
          enddo
       else
-         do k=1,7
+         do k=1,nz
             ip(k)=0
          enddo
-         var(1)='USF'
-         var(2)='VSF'
-         var(3)='TSF'
-         var(4)='PSF'
-         var(5)='SLP'
-         var(6)='RSF'
-         var(7)='DSF'
+         var(1,1)='USF'
+         var(1,2)='VSF'
+         var(1,3)='TSF'
+         var(1,4)='PSF'
+         var(1,5)='SLP'
+         var(1,6)='RSF'
+         var(1,7)='DSF'
       endif
-         
+
+      newfcst=fcst2-(i4time_valid1-i4time_now)
+      weight=float(fcst2-newfcst)/float(fcst2-fcst1)
+      print*,'Time interp weight = ',weight
+
+      write(af,'(i4.4)') fcst1/3600
+      call  make_fnam_lp(time1, fname9, nstatus)
+      print*,'Reading: ',fname9,af,'.'//ext
+      write(af,'(i4.4)') fcst2/3600
+      call  make_fnam_lp(time2, fname9, nstatus)
+      print*,'Reading: ',fname9,af,'.'//ext
+
+      call make_fnam_lp(time1,fname9,istatus)
+      imin=mod(newfcst,3600)/60
+      ihour=newfcst/3600
+      write(af,'(2i2.2)') ihour,imin
+      print *,'Writing - ',fname9//af,'.'//ext//' (Backfill)'
+
+      do n=1,ngrids
+
+         call read_laps(time1,time1+fcst1,dir,ext,
+     .        nx,ny,nz,nz,var(1,n),ip,lvl_coord,units,comment,
+     .        grid1,istatus)
 c
-      call read_laps(time1,time1+fcst1,dir,ext,
-     .               nx,ny,kdim,kdim,var,
-     .               ip,lvl_coord,units,comment,grid1,istatus)
-c
-      if(istatus.ne.1) then
-         print *, 'ERROR returned from read_laps'
-         stop 'lga_interp'
-      endif
-      call read_laps(time2,time2+fcst2,dir,ext,
-     .               nx,ny,kdim,kdim,var,
-     .               ip,lvl_coord,units,comment,grid2,istatus)
-      if(istatus.ne.1) then
-         print *, 'ERROR returned from read_laps'
-         stop 'lga_interp'
-      endif
+         if(istatus.ne.1) then
+            print *, 'ERROR returned from read_laps'
+            stop 'lga_interp'
+         endif
+
+         call read_laps(time2,time2+fcst2,dir,ext,
+     .        nx,ny,nz,nz,var(1,n),ip,lvl_coord,units,comment,
+     .        grid2,istatus)
+         if(istatus.ne.1) then
+            print *, 'ERROR returned from read_laps'
+            stop 'lga_interp'
+         endif
 c
 c *** Do interpolation with time for each new file.
 c
-      newfcst=fcst2-cycle_time
-10    continue
-      weight=float(newfcst-fcst1)/float(fcst2-fcst1)
-c
-      do k=1,kdim
+
+c     weight=float(newfcst)/float(i4time_valid1-i4time_valid2)
+
+         do k=1,nz
          do j=1,ny
             do i=1,nx
                if(nan(grid1(i,j,k))+nan(grid2(i,j,k)).gt.0 .or.
@@ -269,37 +286,34 @@ c
                   gridn(i,j,k) = missingflag
                else
                
-                  gridn(i,j,k)= (1.-weight)*grid1(i,j,k) +
-     +                 weight*grid2(i,j,k)
+c                 gridn(i,j,k)= (1.-weight)*grid1(i,j,k) +
+c    +                 weight*grid2(i,j,k)
+
+                  gridn(i,j,k)= weight*grid1(i,j,k) +
+     +                      (1.-weight)*grid2(i,j,k)
+
                endif
 
             enddo
          enddo
+         enddo
+c
+         comment(1) = 'Time Interpolated: '//comment(1)
+         if(ext.eq.'lga')then
+            call write_laps(time1,time1+newfcst,dir,ext,
+     .           nx,ny,nz,nz,var(1,n),ip,lvl_coord,units,comment,
+     .           gridn,istatus)
+         else
+            call write_laps(time1,time1+newfcst,dir,ext,
+     .           nx,ny,1,1,var(1,n),ip,lvl_coord,units,comment,
+     .           gridn,istatus)
+         endif
+          
       enddo
-c
-c *** Write out file.
-c
-      call make_fnam_lp(time1,fname,istatus)
-      imin=mod(newfcst,3600)/60
-      ihour=newfcst/3600
-      write(af,'(2i2.2)') ihour,imin
-      print *,'Writing - ',fname//af,'.'//ext//' (Backfill)'
-      comment(1)='LI: '//comment(1)
-
-c      do k=1,kdim
-c         print*,k,gridn(1,1,k)
-c      enddo
-
-
-      call write_laps(time1,time1+newfcst,dir,ext,
-     .                nx,ny,nz,kdim,var,
-     .                ip,lvl_coord,units,comment,gridn,istatus)
-c
-      newfcst=newfcst-cycle_time
-      if (newfcst .gt. fcst1) goto 10
 c
       return
       end
+
       subroutine erase_file(inittime,validtime,dir,ext)
       integer inittime,validtime, istatus, rename
       character*(*) dir, ext
