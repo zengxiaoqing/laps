@@ -5,7 +5,7 @@ c routine returns a common set of variables that describe a domain projection.
 c
         implicit none
 c
-c all these include files are needed to marry and namelist besides nest7grid.parms
+c all these include files are needed to marry namelist besides nest7grid.parms
 c to the lapsparms.cmn.  At the moment we only deal with one additional namelist wrfsi.nl 
 c
 c       include 'wrf_dims.inc'
@@ -18,9 +18,9 @@ c       include 'wrf_dims.inc'
         real*4       PRESSURE_INTERVAL
         integer      laps_cycle_time
         integer      i_perimeter
-        integer      i2_missing_data
         logical*1    l_highres_laps,lpad1,lpad2,lpad3
-        real*4       r_missing_data
+c       integer      i2_missing_data
+c       real*4       r_missing_data
         integer      MAX_RADARS
         real*4       ref_base
         real*4       ref_base_useable
@@ -70,6 +70,9 @@ c       include 'wrf_laps_analysis.cmn'
            print*,'error reading wrfsi_hgridspec'
            return
         endif
+
+        r_missing_data=+1e37
+        i2_missing_data=-99
 
         call read_wrfsi_sfcfiles (istatus)
         if(istatus.ne.1)then
@@ -148,6 +151,9 @@ c
         path_to_wsi_3d_radar_cmn = path_to_wsi_3d_radar
         path_to_qc_acars_cmn = path_to_qc_acars
 
+        c_analysis_type ='wrfsi'
+        c_vcoordinate='pressure'
+
         call s_len(c_vcoordinate,lvc)
         call s_len(c_analysis_type,ltyp)
         vertical_grid = c_vcoordinate(1:lvc)
@@ -156,16 +162,17 @@ c
         nest = 1
         num_staggers=num_staggers_wrf
 
-        if(c_analysis_type(1:ltyp).eq.'laps')then   ! this means that the grid dimensions for lapsparms.cmn
-                                                    ! will be configured using laps_analysis_control
+        if(c_analysis_type(1:ltyp).eq.'laps')then
+                     ! this means that the grid dimensions for lapsparms.cmn
+                     ! will be configured using laps_analysis_control
            nx_l_cmn = nx_l
            ny_l_cmn = ny_l
            grid_spacing_m_cmn = grid_spacing_m
            silavwt_parm_cmn = silavwt_parm
            toptwvl_parm_cmn = toptwvl_parm
 
-        else                                        ! this means that the grid dimensions for lapsparms.cmn
-                                                    ! will be configured with the wrf h gridspec.
+        else                     ! this means that the grid dimensions for lapsparms.cmn
+                                 ! will be configured with the wrf h gridspec.
            nx_l_cmn = xdim(nest)
            ny_l_cmn = ydim(nest)
            grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
