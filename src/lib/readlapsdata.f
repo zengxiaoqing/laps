@@ -241,7 +241,7 @@ C
 C ****  make fortran file_name
 C
 
-      if (ext_dn(1:3) .eq. 'lga') then
+      if (ext_dn(1:2) .eq. 'lg') then
         file_name=dir(1:end_dir)//gtime//fhh//'.'//ext_dn(1:end_ext)
       else
         file_name = dir(1:end_dir)//gtime//'.'//ext_dn(1:end_ext)
