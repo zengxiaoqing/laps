@@ -993,7 +993,11 @@ C
         ARGQ=(AQ-(BQ*ALOG(P(I-1))))*PDELT+BQ*INTLOG
         SUMT=SUMT+ARGT
         SUMQ=SUMQ+ARGQ
-        HH=HH+THICK(P(I-1),PBOUND,ARGT/PDELT,ARGQ/PDELT)
+
+        if(pdelt .ne. 0.)then
+            HH=HH+THICK(P(I-1),PBOUND,ARGT/PDELT,ARGQ/PDELT)
+        endif
+
         IF(IO.GE.2)WRITE(6,1)I,P(I),T(I),Q(I),WT,SUMWT,SUMT,SUMQ,BT,BQ
      +              ,INTLOG,HH
  1      FORMAT(1x,I2,F6.0,F6.1,F6.4,2F7.1,2F11.4,F11.6,F9.6,F9.3,F6.2)
