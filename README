@@ -1332,7 +1332,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
 --------- 2.10 ------SURFACE ANALYSIS CHANGES---------------------------------
 
-	Updated: 16 Jan 1997.  Pete Stamus (stamus@fsl.noaa.gov)
+	Updated: 16 Jan 1997.  Pete Stamus
 
    For the laps_sfc.x (LSX) process, perform the following between untarring 
    the tar file and running the localization.
@@ -1354,7 +1354,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 	by automatically producing a scaling factor based on the range of
 	elevations across the domain.  This factor can be changed in the
 	'drag_coef' section of 'build_sfc_static', if so desired.  More 
-	details on this might be had from Pete Stamus (stamus@fsl.noaa.gov).
+	details on this might be had from Pete Stamus.
 
    QUALITY CONTROL
 
@@ -1931,7 +1931,7 @@ Outputs: (Feeds wind.exe)
 ------ 3.2.11.1   Ingest routines --- 
 
 Process: (obs_driver.x) LAPS Surface Ingest
-     (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (author: Pete Stamus)
      (description updated: 20 Dec 1999)
 
 <pre>
@@ -1957,7 +1957,7 @@ degrees.
 
 ------ 3.2.11.2   How to Blacklist stations ---
 
-     (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (author: Pete Stamus )
      (description updated: 20 Dec 1999)
 
 As part of the 'obs_driver' code, a Blacklisting function has been added.  This
@@ -2072,7 +2072,7 @@ Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
 
 Surface processing - laps_sfc.x (LSX and friends) 
-     (author: Pete Stamus - stamus@fsl.noaa.gov)
+     (author: Pete Stamus )
      (description updated: 21 Dec 1999)
 
 
@@ -2100,7 +2100,7 @@ located in the .../log/qc subdirectory.
 <pre>
 
 LSO process - obs_driver.x - Ingest surface data
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
+        (author: Pete Stamus)
 
 Input:
 	raw METAR data
@@ -2116,7 +2116,7 @@ Output:
 
 
 28257	LSX process - LAPS surface data analysis
-        (author: Pete Stamus - stamus@fsl.noaa.gov)
+        (author: Pete Stamus)
 
 Inputs:
          LSO    surface observations
