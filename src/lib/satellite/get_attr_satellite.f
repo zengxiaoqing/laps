@@ -162,17 +162,18 @@ c
 c
 c ===========================================================
 c
-      function nw_vis_line_gwc(chtype,bescnfc,fsci)
+      function nw_vis_line_gwc(chtype,decimation,bescnfc,fsci)
 
       integer   nw_vis_line_gwc
       integer   fsci
       integer   bescnfc
+      integer   decimation
       character chtype*3
 
       if(chtype.eq.'vis')then
-         nw_vis_line_gwc=(bescnfc+fsci)
+         nw_vis_line_gwc=(bescnfc*decimation+fsci)
       else
-         nw_vis_line_gwc=(bescnfc+fsci)*4 
+         nw_vis_line_gwc=(bescnfc*decimation+fsci)*4 
       endif
 
       return
@@ -180,17 +181,18 @@ c
 c
 c ===========================================================
 c
-      function nw_vis_pix_gwc(chtype,bepixfc,goalpha)
+      function nw_vis_pix_gwc(chtype,decimation,bepixfc,goalpha)
 
       integer    nw_vis_pix_gwc
       integer    bepixfc
+      integer    decimation
       real       goalpha
       character  chtype*3
 
       if(chtype.eq.'vis')then
-         nw_vis_pix_gwc=(bepixfc/4+int(goalpha))*8
+         nw_vis_pix_gwc=(bepixfc*decimation/4+int(goalpha))*8
       else
-         nw_vis_pix_gwc=(bepixfc+int(goalpha))*8
+         nw_vis_pix_gwc=(bepixfc*decimation+int(goalpha))*8
       endif 
 
       return

@@ -311,7 +311,12 @@ c        CALL convert_to_real(irdtbot(1),rdtbot)
 c
       write(ctime1,101)idttop
       write(ctime2,101)idtbot
-101      format(i9)
+101   format(i9)
+
+      do i=1,9
+         if(ctime1(i:i).eq.' ')ctime1(i:i)='0'
+         if(ctime2(i:i).eq.' ')ctime2(i:i)='0'
+      enddo
 
       cjjj1=ctime1(1:3)
       c_hm1=ctime1(4:7)

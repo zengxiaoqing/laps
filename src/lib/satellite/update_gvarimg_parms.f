@@ -218,8 +218,8 @@ c
 c
 c no water vapor switch atm
 c
-         nw_vis_pix = nw_vis_pix_gwc(chtype,bepixfc,goalpha)
-         nw_vis_line= nw_vis_line_gwc(chtype,bescnfc,fsci)
+         nw_vis_pix = nw_vis_pix_gwc(chtype,decimat,bepixfc,goalpha)
+         nw_vis_line= nw_vis_line_gwc(chtype,decimat,bescnfc,fsci)
 
 c        if(chtype.eq.'vis')then
 c           nw_vis_pix= (bepixfc/4+goalpha)*8
