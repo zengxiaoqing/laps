@@ -264,8 +264,12 @@ c --------------------------------------------------------------------
         character c_filenames(max_files)*255
         character cfilespec*255
         character directory*200
+        character generic_data_root_laps*200
+        character generic_data_root_wrfsi*200
         integer   i,j,jj
         integer   lend,lens,len_root
+        integer   len_root_laps
+        integer   len_root_wrfsi
         integer   numoffiles
         integer   narg,iargc
         integer   istatus
@@ -277,7 +281,27 @@ c
 c LAPS_DATA_ROOT is either environment variable or command line input.
 c command line overrides env variable if it exists.
 c
+c Lets be sure only one "DATA_ROOT" is on. If both, then we should
+c terminate since this is ambiguous.
+c
         istatus = 0
+
+        call GETENV('LAPS_DATA_ROOT',generic_data_root_laps)
+        call s_len(generic_data_root_laps,len_root_laps)
+        call GETENV('MOAD_DATAROOT',generic_data_root_wrfsi)
+        call s_len(generic_data_root_wrfsi,len_root_wrfsi)
+
+        if(len_root_laps.gt.0 .and. len_root_wrfsi.gt.0)then
+           print*
+           print*,'---------------------------------------------------'
+           print*,'*** ERROR: Two dataroots set => ambiguous info '
+           print*,'*** LAPS_DATA_ROOT and MOAD_DATAROOT are both set.'
+           print*,'*** Unable to proceed. Please fix your enviroment'
+           print*,'---------------------------------------------------'
+           print*
+           return
+        endif
+
         if(idir_len.eq.0) then
            narg = iargc()
            if(narg.gt.0)then
