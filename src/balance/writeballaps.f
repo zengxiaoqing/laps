@@ -8,7 +8,7 @@ C
      1              KMAX3,kmax2,
      1              IP(KMAX),
      1              LVL(kmax*3),
-     1              I,J,K,ERROR(2),
+     1              I,J,K,
      1              ISTATUS
 C
        integer      lend
