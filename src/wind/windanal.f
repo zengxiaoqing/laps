@@ -188,7 +188,7 @@ csms$serial end
 
       do iter = 1,n_iter_wind
 
-csms$serial(<varobs_diff_spread, wt_p_spread,
+csms$serial(<varobs_diff_spread, wt_p_spread, obs_barnes,
 csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
@@ -498,12 +498,13 @@ csms$serial end
       call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
 !     call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
-     1        ,varobs_diff_spread
-     1        ,wt_p_spread,fnorm,n_fnorm
-     1        ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1        ,varobs_diff_spread                                     ! O (aerr)
+     1        ,wt_p_spread,fnorm,n_fnorm                              ! I
+     1        ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const     ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
-     1        ,n_obs_lvl,istatus)
+     1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
+
 csms$serial(default=ignore)  begin              
 
       write(6,*)' Allocating upass1,vpass1'
@@ -556,14 +557,19 @@ csms$serial(default=ignore)  begin
      1          ,l_correct_unfolding,l_grid_north           ! Input
      1          ,istatus                                    ! Input/Output
      1                                                          )
-      enddo
+      enddo ! i_radar
 
 !     Perform analysis with radar data added in
       do k = 1,kmax
           l_analyze(k) = .false.
       enddo ! k
 
+csms$serial end
+
       if(n_radars .le. 1 .or. .not. l_3pass)then ! Single Doppler (or no radar) Option
+
+csms$serial(<varobs_diff_spread, wt_p_spread ,
+csms$>       out>:default=ignore)  begin
 
           mode = 1 ! All radar obs (in this case single Doppler)
 
@@ -589,7 +595,12 @@ csms$serial(default=ignore)  begin
      1        ,n_radarobs_tot_unfltrd                     ! Input
      1        ,istatus                                    ! Input/Output
      1                                                          )
+
+csms$serial end
+
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
+
+csms$serial(<obs_barnes , out>:default=ignore)  begin              
               I4_elapsed = ishow_timer()
 
               write(6,*)' Calling barnes with modified radar obs added'
@@ -613,23 +624,30 @@ csms$serial end
      1                             (varbuff,n_var,ncnt_total,obs_barnes
 !             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes       
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
-     1           ,varobs_diff_spread
-     1           ,wt_p_spread,fnorm,n_fnorm
-     1           ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1           ,varobs_diff_spread                                  ! O (aerr)
+     1           ,wt_p_spread,fnorm,n_fnorm                           ! I
+     1           ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const  ! I
      1           ,topo_dum,rland_frac_dum,1,1                         ! I
-     1           ,n_obs_lvl,istatus)
+     1           ,n_obs_lvl,istatus)                                  ! O
+
+csms$serial(default=ignore)  begin              
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
               call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
 
               if(istatus .ne. 1)return
-csms$serial(default=ignore)  begin              
 
               I4_elapsed = ishow_timer()
+
+csms$serial end
 
           endif ! There is any radar data
 
       else ! n_radars .gt. 1
+
+csms$serial(<varobs_diff_spread, wt_p_spread ,
+csms$>       out>:default=ignore)  begin
+
           mode = 2 ! Only multi-Doppler obs
 
 !         Take the data from all the radars and add the derived radar obs into
@@ -655,7 +673,11 @@ csms$serial(default=ignore)  begin
      1        ,istatus                                    ! Input/Output
      1                                                          )
 
+csms$serial end
+
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
+
+csms$serial(<obs_barnes , out>:default=ignore)  begin              
 
               I4_elapsed = ishow_timer()
 
@@ -681,19 +703,25 @@ csms$serial end
 !             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
               call barnes_multivariate(varbuff,n_var,ncnt_total
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl      
-     1          ,varobs_diff_spread
-     1          ,wt_p_spread,fnorm,n_fnorm
-     1          ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1          ,varobs_diff_spread                                     ! O (aerr)
+     1          ,wt_p_spread,fnorm,n_fnorm                              ! I
+     1          ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const     ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
-     1          ,n_obs_lvl,istatus)
+     1          ,n_obs_lvl,istatus)                                     ! O
+
+csms$serial(default=ignore)  begin              
 
               call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
               call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
 
               if(istatus .ne. 1)return
-csms$serial(default=ignore)  begin              
+
+csms$serial end
 
           endif
+
+csms$serial(<varobs_diff_spread, wt_p_spread , obs_barnes,
+csms$>       out>:default=ignore)  begin
 
 !         Make sure each level of uanl and vanl is initialized in the event it
 !         was not analyzed.
@@ -764,21 +792,26 @@ csms$serial end
 !         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
      1       ,imax,jmax,kmax
      1       ,grid_spacing_m,rep_pres_intvl
-     1       ,varobs_diff_spread
-     1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1       ,varobs_diff_spread                                      ! O (aerr)
+     1       ,wt_p_spread,fnorm,n_fnorm                               ! I
+     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const      ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
-     1       ,n_obs_lvl,istatus)
+     1       ,n_obs_lvl,istatus)                                      ! O
+
+csms$serial(default=ignore)  begin              
 
           call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
-csms$serial(default=ignore)  begin              
 
           I4_elapsed = ishow_timer()
 
+csms$serial end
+
       endif ! n_radars
+
+csms$serial(default=ignore)  begin              
 
       write(6,*)' Adding analyzed differences to the background '
      1         ,'to reconstruct full analyses'
@@ -859,9 +892,11 @@ csms$serial(default=ignore)  begin
       deallocate(vpass1)
 
 csms$serial end
+
       enddo ! n_iter_wind
 
 csms$serial(default=ignore)  begin              
+
 !     Compare final analysis to obs
       call compare_wind(
      1            uanl,vanl,'LAPS',
