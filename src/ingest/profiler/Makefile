@@ -23,7 +23,8 @@ SRC=ingest_pro.f \
     ingest_sub_rsapro.f \
     get_sodar_data.f \
     ingest_vad.f \
-    ingest_vad_sub.f
+    ingest_vad_sub.f \
+    write_pro.f
 
 all: exe
 
