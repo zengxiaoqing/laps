@@ -1614,7 +1614,11 @@ c
 
                     call get_ref_base(ref_base,istatus)
 
-                    call read_radar_3dref(i4time_get,
+                    call get_filespec(ext_radar,2,c_filespec,istatus)
+                    call get_file_time(c_filespec,i4time_get
+     1                                ,i4time_radar)    
+
+                    call read_radar_3dref(i4time_radar,
 !    1               .true.,ref_base,
      1               .true.,r_missing_data,
      1               NX_L,NY_L,NZ_L,ext_radar,
@@ -1624,7 +1628,7 @@ c
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
      1               n_ref_grids,istat_radar_2dref,istat_radar_3dref)
 
-                    i4time_radar = i4time_get
+!                   i4time_radar = i4time_get
 
                 endif ! c_type
 
