@@ -699,9 +699,9 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
         implicit real*4 (a-z)
 
-        real*4 field_3d(ni,nj,nk)
-
         integer i,j,k,ni,nj,nk,kref,istatus,isign
+
+        real*4 field_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
 
@@ -779,9 +779,6 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
 999     k_ref = k       ! Successful return
         istatus = 1
-        return
-
-        end
 
         return
         end
