@@ -212,7 +212,7 @@ c
       INTEGER*4 I4TIME,LVL(KMAX),I,J,ERROR(2),ISTATUS
 C
       REAL*4 lcv(imax,jmax),csc(imax,jmax)
-      Real*4 readv(imax,jmax,kmax)		
+      Real*4 readv(imax,jmax,kmax)
 C
       CHARACTER*150 LDIR
       CHARACTER*31 EXT
@@ -246,8 +246,8 @@ C
 C
         do j=1,jmax
         do i=1,imax
-          csc(i,j)=readv(i,j,2)
-          lcv(i,j)=readv(i,j,1)
+          csc(i,j)=readv(i,j,2) !Cloud analysis implied snow cover
+          lcv(i,j)=readv(i,j,1) !LAPS cloud cover
         enddo
         enddo
 c
