@@ -1754,11 +1754,10 @@ since 3 layers are routinely available from NESDIS.
    some simple editing to suit your needs (e.g. to specify the $LAPS_DATA_ROOT).
    The monitor script writes HTML output to 'stdout'. This HTML output, if 
    routed to a file or hooked up to a Web server, can be viewed with a browser.
-   An example of the monitor output can be seen at 
-   http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi.
-   Green means optimum product continuity, red means the product is failing
-   to generate, yellow means it is generating now but has been interrupted
-   in the past.
+   You can click on http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi
+   to see an example of the monitor output. Green means optimum product 
+   continuity, red means the product is failing to generate, yellow means it is
+   generating OK now but has failed in the past.
 
    Check the log files in the 'log' directory for occurrences of the string
    'error' and 'warning'. The errors are generally more significant.
