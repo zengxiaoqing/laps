@@ -475,7 +475,10 @@ cdis
             call get_ref_base(ref_base,istatus)
             if(istatus .ne. 1)return
 
+            i4_tol_radar = 1200
+
             call read_radar_3dref(i4time_radar,                 ! I
+     1       i4_tol_radar,i4_ret,                               ! I/O
      1       .true.,r_missing_data,imax,jmax,kmax,              ! I
      1       ext_local,lat,lon,topo,
      1       .true.,.false.,
