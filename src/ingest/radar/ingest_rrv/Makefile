@@ -25,7 +25,8 @@ SRC =  genv01lut_sub.f \
        gen_llij_lut_v01.f \
        readradar_v01_cdf.f \
        rrvdat2laps_v01.f \
-       buildcomment.f
+       buildcomment.f \
+       config_rrv_common.f
 
 MAIN=ingest_rrv.f $(LAPSROOT)/src/lib/block_data.f
 
