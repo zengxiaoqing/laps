@@ -6,12 +6,13 @@
       integer nxl,nyl
       integer nch
 
-      integer i4time
+      integer i4time,i4time_nearest
       integer istatus
-      integer i,j
+      integer i,j,k
       integer ni
       integer len_lsr
       integer lvl_lsr(nch)
+      integer izero
 
       real*4 data(nxl,nyl,nch)
       real*4 wavelength(nch)
@@ -57,6 +58,11 @@ c
 
       enddo !i
 
+      print*,'checking for <= zero radiance: before write'
+      do k=1,nch
+         call zero_rad_check(nxl,nyl,k,data(1,1,k))
+      enddo
+
       call write_laps_data(i4time,
      &                     dir_lsr,
      &                     ext_lsr,
@@ -74,6 +80,53 @@ c
       if(istatus.ne.1)then
          write(6,*)'Error writing lsr - write_laps_data'
       endif
+
+
+      if(.false.)then
+
+       print*,'spot check for <= zero radiance'
+
+       do k=1,nch
+
+         call get_2dgrid_dname(dir_lsr
+     1         ,i4time,900,i4time_nearest
+     1         ,ext_lsr,var_lsr(k),units_lsr(k)
+     1         ,c_lsr,nxl,nyl,data(1,1,k),0,istatus)
+
+         if(istatus.ne.1)then
+            print*,'subroutine error get_2dgrid_dname'
+            return
+         endif
+   
+
+         print*,'lsr 2d field obtained.'
+         call zero_rad_check(nxl,nyl,k,data(1,1,k))
+         print*,'finished spot check'
+
+       enddo
+
+      endif
+
+      return
+      end
+
+c
+      subroutine zero_rad_check(nxl,nyl,k,data)
+
+      real   data(nxl,nyl)
+
+      print*,'checking for <= zero value radiance'
+      print*,'Channel ',k
+      izero=0
+      do j=1,nyl
+      do i=1,nxl
+         if(data(i,j).le.0.0)then
+            print*,'i/j/2d: ',i,j,data(i,j)
+            izero=izero+1
+         endif
+      enddo
+      enddo
+      if(izero.gt.0)print*,'found ',izero,' <= zero radiance'
 
       return
       end

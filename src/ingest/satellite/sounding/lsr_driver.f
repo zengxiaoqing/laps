@@ -282,6 +282,8 @@ c ===================================================================
 c
       call get_r_missing_data(r_missing_data,iostatus)
 
+      print*,'Scaling counts to radiance with rsb/rsg'
+      print*,'---------------------------------------'
       do k=1,n_channels
 
         do j=1,ndimy
@@ -310,6 +312,10 @@ c                                                   this test doesn't work on li
               else
                  sndr_rad(i,j,k)=(rcount-rsb)/rsg
                  jcnt(k) = jcnt(k) + 1
+              endif
+
+              if(sndr_rad(i,j,k).le. 0.0)then
+                 print*,'rcount/rsb/rsg: ',rcount,rsb,rsg
               endif
 
            enddo

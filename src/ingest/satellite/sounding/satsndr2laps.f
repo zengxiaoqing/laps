@@ -75,6 +75,7 @@ c       real*4 fraci,fracj
         real*4 result
 
         integer i,j,ii,jj
+        integer i1,j1,i2,j2
         integer istart,jstart
         integer iend,jend
         integer npix, nwarm
@@ -85,9 +86,9 @@ c       real*4 fraci,fracj
         integer fcount
         integer icnt_out
 
-        call zero(sa,imax,jmax)
-        call zero(sc,imax,jmax)
-        call zero(sc,imax,jmax)
+        call initialize(sa,imax,jmax,r_missing_data)
+        call initialize(sc,imax,jmax,r_missing_data)
+        call initialize(st,imax,jmax,r_missing_data)
 
         istatus = -1
         qcstatus=0
@@ -105,15 +106,20 @@ c
 
           write(6,*)'Grid ratio .lt. 0.5'   !0.75'
           write(6,*)'Use pixel avg to get sndr Rad'
+
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
 
-          IF(ST(I,J).NE.0.) GO TO 10
+             IF(ST(I,J).NE.0.) GO TO 10
 c
 c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
 c also, use the lat/lon to real i/j look up table (r_llij_lut) to map out points
 c needed for satellite pixels.
 c****************************************************************************
+
+c            if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
+c    &          r_llij_lut_rj(i,j).ne.r_missing_data)then
+
              elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
              line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
@@ -126,6 +132,7 @@ c****************************************************************************
              if(istart.le.0 .or. jstart.le.0 .or.
      &iend.gt.elem_dim .or. jend.gt.line_dim)then
              icnt_out=icnt_out+1
+
 c            write(*,*)'insufficient data for lat/lon sector'
 c               write(*,1020)i,j
 c1020              format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
@@ -224,17 +231,19 @@ c              write(6,1112) wm,wc
 
                 endif ! npix .gt. 1
 
-             end if  ! Enough data for num_lines .gt. 0
+c            endif
 
-ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
-ccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
-ccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
-ccd           endif
+             endif  ! Enough data for num_lines .gt. 0
+
+c            if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+c               write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
+c 5555         format(1x,2i4,2f10.2,2i5,f10.2)
+c            endif
 
    10     CONTINUE ! I,J
 
-          write(6,*)'Max num sndr pix for avg: ',maxpix
-          write(6,*)'Number of LAPS gridpoints missing',
+          print*,'Max num sndr pix for avg: ',maxpix
+          print*,'Number of LAPS gridpoints missing',
      &fcount
 
         else
@@ -260,7 +269,17 @@ c
      &       elem_dim,line_dim,image_sndr,result,istatus)
 
               sa(i,j) = result
+              if(result.le.0)then
+                 print*,'<= 0.0: sndr values'
+                 i1=int(r_llij_lut_ri(i,j))
+                 i2=int(r_llij_lut_ri(i+1,j))
+                 j1=int(r_llij_lut_rj(i,j))
+                 j2=int(r_llij_lut_rj(i,j+1))
+           print*,'sndr(i,j)/sndr(i+1,j)/sndr(i,j+1)/sndr(i+1,j+1):'
+                 print*,image_sndr(i1,j1),image_sndr(i1,j2)
+     &,image_sndr(i2,j1),image_sndr(i2,j2) 
 
+              endif
             else
                 sa(i,j) = r_missing_data
                 icnt_out=icnt_out+1
@@ -287,10 +306,42 @@ c          close(29)
            print*,'found ', icnt_out,' gdpts out of domain'
         endif
 
+        icnt_out=0
+        do j=1,jmax
+        do i=1,imax
+           if(sa(i,j).le.0.0)then
+              icnt_out=icnt_out+1
+           endif
+        enddo
+        enddo
+        if(icnt_out.gt.0)print*,'found ',icnt_out,' <= 0.0 pts'
+
 c       WRITE(6,1234) IB,I4VTIME,ICT
 c1234       FORMAT(1X,'BAND ',I4,' COUNT FOR I4TIME ',I10,' IS ',I8)
 
         istatus = 1
 c
+        return
+        end
+
+c ------------------
+
+        subroutine initialize(a,imax,jmax,r_missing_data)
+
+        implicit none
+
+        integer  imax,jmax
+        real     a(imax,jmax)
+        real     r_missing_data
+
+        integer  i,j
+
+        do j=1,jmax
+        do i=1,imax
+
+           a(i,j)=r_missing_data
+
+        enddo
+        enddo
         return
         end
