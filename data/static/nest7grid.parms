@@ -18,13 +18,11 @@
  PRESSURE_INTERVAL_L=5000.,          
 
  laps_cycle_time_cmn=3600,           
- i_delta_sat_t_sec_cmn=1500,         
 
  l_highres=.false.,                  
  I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
- r_msng_sat_flag_cdf_cmn=255.,       
  c_raddat_type='wsi',
  radarext_3d_cmn='vrc',
 
@@ -40,13 +38,9 @@
 
  path_to_raw_blpprofiler_cmn='/public/data/profiler/wind/external/netcdf/',
 
- path_to_raw_satellite_cdf_cmn='/public/data/sat/fsl-conus/gs/netcdf/',
-
  path_to_wsi_2d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/',
 
  path_to_wsi_3d_radar_cmn='/public/data/radar/wsi/nowrad/netcdf/',
-
- path_to_raw_satellite_gvr_cmn='/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/',
 
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
@@ -55,18 +49,6 @@
  path_to_metar_data_cmn='/public/data/metar/netcdf/',
  path_to_local_data_cmn='/public/data/cdot/netcdf/',
 
- r_msng_sat_flag_gvr_cmn=255.,
- r_msng_sat_flag_asc_cmn=9999.,
-
- path_to_raw_sat_wfo_vis_cmn='NULL',
-
- path_to_raw_sat_wfo_i39_cmn='NULL',
-
- path_to_raw_sat_wfo_iwv_cmn='NULL',
-
- path_to_raw_sat_wfo_i11_cmn='NULL',
-
- path_to_raw_sat_wfo_i12_cmn='NULL',
  i2_missing_data_cmn=-99,
  r_missing_data_cmn=+1e37,
  MAX_RADARS_CMN=3,        
@@ -104,18 +86,35 @@ c
 cc
 c
  &satellite_nl
- path_to_raw_sat_wfo_vis='NULL',
- path_to_raw_sat_wfo_i39='NULL',
- path_to_raw_sat_wfo_iwv='NULL',
- path_to_raw_sat_wfo_i11='NULL',
- path_to_raw_sat_wfo_i12='NULL',
- path_to_raw_satellite_gvr='/data/lapb/import/lapsdat/sat/afgwc/',
+ path_to_raw_sat_wfo_vis='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_vis/regClip/',
+ path_to_raw_sat_wfo_i39='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_i39/regClip/',
+ path_to_raw_sat_wfo_iwv='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_iwv/regClip/',
+ path_to_raw_sat_wfo_i11='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_i11/regClip/',
+ path_to_raw_sat_wfo_i12='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_i12/regClip/',
+ path_to_raw_satellite_gvr='/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/',
  path_to_raw_satellite_cdf='/public/data/sat/fsl-conus/gs/netcdf/',
  i_delta_sat_t_sec=1500,         
  r_msng_sat_flag_cdf=255,       
- r_msng_sat_flag_gvr=255,
+ r_msng_sat_flag_gvr=0,
  r_msng_sat_flag_asc=9999,
  max_sat = 5,
  max_sat_channel = 5,
  max_images = 2,
+ $end
+
+cc
+c
+ &satellite_sounder_nl
+ n_sndr=2,
+ c_sndr_id='goes8','goes9',
+ path_to_sat_sounder='/public/data/sat/fsl-gs/goes8/raw/sounding/scan-area/netcdf/',
+                     '/public/data/sat/fsl-gs/goes9/raw/sounding/scan-area/netcdf/',
+ n_elems=322,192
+ n_lines=200,232
+ n_sndr_channels=19,
+ channel_wavelength_u  = 00.67,03.74,03.98,04.13,04.45,04.52,04.57,06.51,07.02,
+ 07.43,09.71,11.03,12.02,12.66,13.37,13.64,14.06,14.37,14.71,
+ 00.67,03.74,03.98,04.13,04.45,04.52,04.57,06.51,07.02,
+ 07.43,09.71,11.03,12.02,12.66,13.37,13.64,14.06,14.37,14.71,
+ imsng_sndr_pix=0,
  $end
