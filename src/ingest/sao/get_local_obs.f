@@ -141,7 +141,7 @@ c.....  Declarations for call to NetCDF reading routine (from gennet)
       character*12 providerId(maxobs)
       character temperatureDD(maxobs)
 
-      real seaSurfaceTemperature(maxobs) ! manually added
+      real seaSurfaceTemp(maxobs) ! manually added
 c
 c.....  Output arrays.
 c
@@ -247,7 +247,7 @@ c.....  Call the read routine.
 c
 	    call read_local_obs(nf_fid, recNum, altimeter(ix),
      &         dataProvider(ix), solarRadiation(ix), 
-     &         seaSurfaceTemperature(ix), soilTemperature(ix),        
+     &         seaSurfaceTemp(ix), soilTemperature(ix),        
      &         dewpoint(ix),        
      &         elevation(ix), latitude(ix), longitude(ix),       
      &         observationTime(ix), presWeather(ix), 
@@ -371,8 +371,8 @@ c
 	   if( nanf( dewpoint(i)   ) .eq. 1 ) dewpoint(i) = badflag
 	   if( nanf( solarRadiation(i)) .eq. 1 ) 
      1               solarRadiation(i) = badflag
-	   if( nanf( seaSurfaceTemperature(i)) .eq. 1 ) 
-     1               seaSurfaceTemperature(i) = badflag
+	   if( nanf( seaSurfaceTemp(i)) .eq. 1 ) 
+     1               seaSurfaceTemp(i) = badflag
 	   if( nanf( soilTemperature(i)) .eq. 1 ) 
      1               soilTemperature(i) = badflag
 	   if( nanf( windDir(i)   ) .eq. 1 ) windDir(i) = badflag       
@@ -590,7 +590,7 @@ c
 c
 c..... Sea Surface Temperature
 c
-         seatemp_k = seaSurfaceTemperature(i)                         
+         seatemp_k = seaSurfaceTemp(i)                         
          call sfc_climo_qc_r('tgd_k',seatemp_k)
          if(seatemp_k .ne. badflag) then          
             seatemp_f = k_to_f(seatemp_k)

@@ -1,7 +1,7 @@
 c
 c
       subroutine read_local_obs(nf_fid , recNum, altimeter, 
-     +     dataProvider, solarRadiation, seaSurfaceTemperature,    
+     +     dataProvider, solarRadiation, seaSurfaceTemp,    
      +     soilTemperature,
      +     dewpoint, elevation, latitude, longitude, observationTime,
      +     presWeather, relHumidity, rhChangeTime, seaLevelPressure,
@@ -36,7 +36,7 @@ c
      +     seaLevelPressure(recNum), stationPressure(recNum),
      +     temperature(recNum), visibility(recNum), windDir(recNum),
      +     windDirMax(recNum), windGust(recNum), windSpeed(recNum),
-     +     solarRadiation(recNum), seaSurfaceTemperature(recNum),
+     +     solarRadiation(recNum), seaSurfaceTemp(recNum),
      +     soilTemperature(recNum)
       real filval, misval
 
@@ -191,7 +191,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var seaSurfaceTemp'
       endif
-        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,seaSurfaceTemperature)       
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,seaSurfaceTemp)       
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ seaSurfaceTemp '
@@ -201,13 +201,13 @@ C
          print *, NF_STRERROR(nf_status)
          print *, ' in var seaSurfaceTemp'
       endif
-      call ck_array_real(seaSurfaceTemperature, recNum, filval, badflag)       
+      call ck_array_real(seaSurfaceTemp, recNum, filval, badflag)       
        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
       if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var seaSurfaceTemp'
       endif
-      call ck_array_real(seaSurfaceTemperature, recNum, misval, badflag)       
+      call ck_array_real(seaSurfaceTemp, recNum, misval, badflag)       
 C
 C     Variable        NETCDF Long Name
 C      "soil temperature" 
