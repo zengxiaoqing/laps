@@ -323,9 +323,11 @@ grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
      @fua_dirs[$ii] = 'fua';
      @fsf_dirs[$ii] = 'fsf';
      foreach (@fdda_dirs){
+        if($_ ne "lga"){
               $ii++;
               @fua_dirs[$ii]=@fua_dirs[0]."/".$_;
               @fsf_dirs[$ii]=@fsf_dirs[0]."/".$_;
+        }
      }
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
