@@ -43,7 +43,7 @@ cdis
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,                                ! I
      1                   ob_pr_u , ob_pr_v ,                        ! O
-     1                   nlevels_obs_pr,                            ! O
+     1                   nlevels_obs_pr, n_profiles,                ! O
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
      1                   u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,     ! I
@@ -196,7 +196,7 @@ c
      1                         ,MAX_PR,MAX_PR_LEVELS                    ! I
      1                         ,lat,lon,imax,jmax,kmax                  ! I
      1                         ,heights_3d                              ! I
-     1                         ,n_profiles                              ! O
+     1                         ,n_profiles                              ! I/O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr    ! O
      1                         ,c5_name_a,i4time_ob_pr,obstype          ! O
      1                         ,ob_pr_ht_obs,ob_pr_pr_obs               ! O
