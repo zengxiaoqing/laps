@@ -610,6 +610,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
      1                          ,r_missing_data,lat,lon,topo)
 
         character*3 ext
+        character*8 c8_obstype
         character*150 directory
         character*13 filename13
 
@@ -620,9 +621,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         write(6,*)
         write(6,*)' Plot Temperature Obs, size_temp = ',size_temp
-
-        icol_in = 17
-        call setusv_dum(2hIN,17)
 
         lun = 32
         ext = 'tmg'
@@ -637,7 +635,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         gust = r_missing_data
 
         do while (.true.)
-            read(32,*,end=41)ri,rj,rk,t_k
+            read(32,*,end=41,err=50)ri,rj,rk,t_k,c8_obstype
+ 50         continue
+
             ri = ri + 1.
             rj = rj + 1.
             rk = rk + 1.
@@ -645,24 +645,36 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
             k = nint(rk)
             k_sfc = 2
 
-            if(k .eq. k_level                      .or.
-     1         k_level .eq. 0 .and. k .eq. k_sfc   .and.
-     1         t_k .ne. r_missing_data                    )then
+            if( k .eq. k_level  
+     1                      .OR.
+     1         (k_level .eq. 0 .and. k .eq. k_sfc)  )then
+
+              if(t_k .ne. r_missing_data)then
 
                 t_c = t_k - 273.15
 
 !               spd_kt = SPEED_ms  / mspkt
 
                 iflag = 3
+ 
+                if(c8_obstype(1:2) .eq. 'RA')then
+                    icol_in = 12
+                    call setusv_dum(2hIN,12)
+                else
+                    icol_in = 17
+                    call setusv_dum(2hIN,17)
+                endif
 
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp,icol_in
      1                          ,iflag)
 
 
-                write(6,111,err=121)ri,rj,t_c
-111             format(1x,3f8.1)
+                write(6,111,err=121)ri,rj,t_c,c8_obstype
+111             format(1x,3f8.1,1x,a8)
 121             continue
+
+              endif ! t_k .ne. r_missing_data
 
             endif ! k .eq. k_level
 

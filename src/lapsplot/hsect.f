@@ -30,7 +30,7 @@ cdis
 
         subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
      1                           NZ_L, MAX_RADARS,r_missing_data,
-     1                           laps_cycle_time,maxstns)
+     1                           laps_cycle_time)
 
 !       1995        Steve Albers         Original Version
 !       1995 Dec 8  Steve Albers         Automated pressure range
@@ -38,7 +38,6 @@ cdis
 !       97-Aug-14     Ken Dritz     Added MAX_RADARS as dummy arg
 !       97-Aug-14     Ken Dritz     Added r_missing_data as dummy arg
 !       97-Aug-14     Ken Dritz     Added laps_cycle_time as dummy arg
-!       97-Aug-14     Ken Dritz     Added maxstns as dummy arg
 !       97-Aug-14     Ken Dritz     Changed LAPS_DOMAIN_FILE to 'nest7grid'
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 !       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, r_missing_data, and
@@ -52,7 +51,6 @@ cdis
 !                                   plot_cldpcp_type
 !       97-Aug-14     Ken Dritz     Pass NX_L, NY_L, and laps_cycle_time to
 !                                   plot_stations
-!       97-Aug-14     Ken Dritz     Pass maxstns to plot_station_locations
 !       97-Aug-17     Ken Dritz     Pass r_missing_data to divergence
 !       97-Aug-25     Steve Albers  Removed equivalence for uv_2d.
 !                                   Removed equivalence for slwc_int.
@@ -362,7 +360,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /
      1       /'     [br,fr,lq] Humidity (LGA/RAM LAPS-BKG/lq3; q/rh) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
-     1       ,'     [sc] Snow Cover    [tn,lf,gr,so] Ter/LndFrac/Grid, '
+     1       ,' [sc] Snow Cover,  [tn,lf,gr,so] Ter/LndFrac/Grid, '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       , 'Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -981,8 +979,8 @@ c
              enddo
 
              write(6,118)
-118         format(5x,'Select LVD field',5x,'(vis, 3.9, 6.7, 11.2, 12)'
-     1' [enter 1, 2, 3, 4, 5]? ',$)
+118          format(5x,'Select LVD field',5x,'(vis, 3.9, 6.7, 11.2, 12)'
+     1                ,' [enter 1, 2, 3, 4, 5]? ',$)
              read(lun,*)ilvd
 
              write(6,*)
@@ -4115,12 +4113,13 @@ c             cint = -1.
                stop
             endif
 
-            call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag,maxstns)
+            write(6,*)' Not calling plot_station_locations: 1'
+!           call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L
+!    1                                 ,iflag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
-     1                          c_metacode,i_overlay
+     1                        c_metacode,i_overlay
 
         if(clow .eq. 0. .and. chigh .eq. 0. .and. cint .gt. 0.)then
             clow =  (nint(vmin/cint)-1) * cint
@@ -4244,8 +4243,9 @@ c             cint = -1.
                stop
             endif
 
-            call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag,maxstns)
+            write(6,*)' Not calling plot_station_locations: 2'
+!           call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L
+!    1                                 ,iflag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -4476,8 +4476,9 @@ c             cint = -1.
                stop
             endif
 
-            call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag,maxstns)
+            write(6,*)' Not calling plot_station_locations: 3'
+!           call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L
+!    1                                 ,iflag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -4580,10 +4581,9 @@ c             cint = -1.
 
             i4time_plot = i4time_file ! /laps_cycle_time*laps_cycle_time
 !       1                                            -laps_cycle_time
-!           call setusv_dum(2hIN,34)
-            call setusv_dum(2HIN,11)
 
-            write(6,*)' Call plot_station_locations ',c_metacode
+            call setusv_dum(2hIN,34) ! Grey
+!           call setusv_dum(2HIN,11)
 
             call get_maxstns(maxstns,istatus)
             if (istatus .ne. 1) then
@@ -4591,8 +4591,11 @@ c             cint = -1.
                stop
             endif
 
-            call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
-     1lag,maxstns)
+            write(6,*)' Call plot_station_locations: 4 '
+     1               ,c_metacode
+
+            call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L
+     1                                 ,iflag,maxstns)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -4618,7 +4621,12 @@ c             cint = -1.
             endif
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
-                call setusv_dum(2hIN,icolors(i_overlay))
+
+                if(iflag .eq. 2)then ! obs with station locations?
+                    call setusv_dum(2hIN,icolors(i_overlay))
+                else                 ! station locations by themselves
+                    call setusv_dum(2hIN,34)                    ! Grey
+                endif
 
                 if(max(NX_L,NY_L) .gt. 61)then
                     interval = 4
@@ -4628,9 +4636,16 @@ c             cint = -1.
 
                 size = 1.0
 
-                write(6,*)' Call plot_station_locations ',c_metacode
+                call get_maxstns(maxstns,istatus)
+                if(istatus .ne. 1) then
+                   write (6,*) 'Error getting value of maxstns'
+                   stop
+                endif
+
+                write(6,*)' Call plot_station_locations: 5 '
+     1                   ,iflag,c_metacode       
                 call plot_station_locations(i4time_file,lat,lon
-     1                    ,NX_L,NY_L,iflag,maxstns)
+     1                                ,NX_L,NY_L,iflag,maxstns)
             endif
 
         endif

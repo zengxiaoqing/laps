@@ -162,7 +162,7 @@ cdis
      1                                                          )THEN
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,r_missing_data,
-     1                         laps_cycle_time,maxstns)
+     1                         laps_cycle_time)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
