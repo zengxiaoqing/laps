@@ -330,7 +330,7 @@ c
 c ============================================================
 c
       subroutine get_laps_analysis_data(i4time,nx,ny,nz
-     +,phi,t,u,v,rh,omo,istatus)
+     +,phi,t,u,v,rh,omo,lwc,istatus)
 c
       implicit none
 
@@ -342,15 +342,16 @@ c
       integer   lendt
       integer   lendw
       integer   lendrh
+      integer   lendlwc
 
       real*4  phi(nx,ny,nz),t(nx,ny,nz)
      .       ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
-     .       ,omo(nx,ny,nz)
+     .       ,omo(nx,ny,nz),lwc(nx,ny,nz)
 
 
-      character*255 tempdir,winddir,sfcdir,rhdir,lcodir
+      character*255 tempdir,winddir,sfcdir,rhdir,lcodir,lwcdir
       character*125 comment
-      character*31  tempext,windext,sfcext,rhext,lcoext
+      character*31  tempext,windext,sfcext,rhext,lcoext,lwcext
       character*10  units
 
 
@@ -359,12 +360,14 @@ c
       windext='lw3'
       sfcext='lsx'
       lcoext='lco'
+      lwcext='lwc'
 
       call get_directory(tempext,tempdir,lendt)
       call get_directory(windext,winddir,lendw)
       call get_directory(sfcext,sfcdir,lends)
       call get_directory(rhext,rhdir,lendrh)
       call get_directory(lcoext,lcodir,lendlco)
+      call get_directory(lwcext,lwcdir,lendlwc)
 
       call get_laps_3d(i4time,nx,ny,nz
      1  ,tempext,'ht ',units,comment,phi,istatus)
@@ -387,7 +390,7 @@ c
 c *** Get laps rel hum
 c
       call get_laps_3d(i4time,nx,ny,nz
-     1  ,rhext,'rh3',units,comment,rh,istatus)
+     1  ,rhext,'rhl',units,comment,rh,istatus)
 
       if(istatus .ne. 1)then
          print*,'Error getting LAPS rh  data ... Abort.'
@@ -400,13 +403,23 @@ c
      1  ,lcoext,'com',units,comment,omo,istatus)
 
       if(istatus .ne. 1)then
-         print*,'Error getting LAPS Cld Omega data ... Abort.'
+         print*,'No LAPS Cld Omega data ....'
+         print*,'Initializing omo array with zero'
+         call zero3d(omo,nx,ny,nz)
+      endif
+c
+c *** Get laps cloud liquid
+c
+      call get_laps_3d(i4time,nx,ny,nz
+     1  ,lwcext,'lwc',units,comment,lwc,istatus)
+
+      if(istatus .ne. 1)then
+         print*,'Error getting LAPS cloud liquid data ... Abort.'
          return
       endif
 c
 c *** Get laps wind data.
-c        Read t=t0 first, then read t=t0-dt.
-
+c
       call get_laps_3d(i4time,nx,ny,nz
      1  ,windext,'u3 ',units,comment,u,istatus)
 

@@ -6,9 +6,6 @@ c
       integer   istatus
 c_______________________________________________________________________________
 c
-
-      call get_laps_config('nest7grid',istatus)
-
       call get_grid_dim_xy(nx,ny,istatus)
       if (istatus .ne. 1) then
           write (6,*) 'Error getting horizontal domain dimensions'
@@ -37,7 +34,7 @@ c
       include 'trigd.inc'
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
 c
       real*4 dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,p(nz),ps(nx,ny),ter(nx,ny)
@@ -52,7 +49,7 @@ c
      .      ,us(nx,ny,nz),vs(nx,ny,nz),rhs(nx,ny,nz)
      .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt
      .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
-     .      ,lapsrh(nx,ny,nz)
+     .      ,lapsrh(nx,ny,nz),lapslwc(nx,ny,nz)
      .      ,dir(nx,ny),spd(nx,ny)
      .      ,lapstemp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
@@ -76,30 +73,35 @@ c
      .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
      .      ,u_true,v_true
+     .      ,pressure_interval_l
+     .      ,pressure_bottom_l
 
       real*4 g,sumdt,omsubs,sk,terscl,bnd,ff,fo,err
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl,ro
 c
-      integer*4 ip(nz),itmax,lmax
+      integer   ip(nz),itmax,lmax
      .         ,masstime,windtime,sfctime,omtime
      .         ,i,j,k,ll,istatus
      .         ,ks,kf
 
-      integer*4 lend
-      integer*4 lends
+      integer   lend
+      integer   lends
+      integer   lenvg
 c
       logical lrunbal
+      logical lrotate
+      logical lrh_adj/.true./
 
       character*255 staticdir,sfcdir
+      character*255 generic_data_root
       character*125 comment
+      character*40  vertical_grid
       character*31  staticext,sfcext
       character*10  units
       character*9   a9_time
 c
 c_______________________________________________________________________________
 c
-      include 'lapsparms.cmn'
-      
       call get_balance_nl(lrunbal,gamo,delo,istatus)
       if(istatus.ne.0)then
          print*,'error getting balance namelist'
@@ -108,6 +110,7 @@ c
       print*,'lrunbal = ',lrunbal
       print*,'gamo = ',gamo
       print*,'delo = ',delo
+      print*,'lrotate = ',lrotate
 c
 c switch to run balance package or not
 c
@@ -117,19 +120,22 @@ c
          goto 999
       endif
 
-      if(vertical_grid.eq.'PRESSURE')THEN!Pressure in pa
+      call get_pressure_interval(pressure_interval_l,istatus)
+      call get_pressure_bottom(pressure_bottom_l,istatus)
+      call get_vertical_grid(vertical_grid,istatus)
+      call s_len(vertical_grid,lenvg)
+      if(vertical_grid(1:lenvg).eq.'PRESSURE')THEN!Pressure in pa
          do i=1,nz
           p(i)=pressure_bottom_l-((i-1)*(pressure_interval_l))
           if(i.gt.1)dp(i)=pressure_interval_l
           ip(i)=int(p(i))
-
          enddo
       else
          print*,'vertical grid is not PRESSURE ',vertical_grid
          goto 999
       endif
 
-      staticext='nest7grid'
+      call find_domain_name(generic_data_root,staticext,istatus)
       sfcext='lsx'
       call get_directory(staticext,staticdir,lend)
       call get_directory(sfcext,sfcdir,lends)
@@ -179,7 +185,7 @@ c
 c *** Get laps analysis grids.
 c
       call get_laps_analysis_data(masstime,nx,ny,nz
-     +,lapsphi,lapstemp,lapsu,lapsv,lapsrh,omo,istatus)
+     +,lapsphi,lapstemp,lapsu,lapsv,lapsrh,omo,lapslwc,istatus)
 c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
          print *,'Error getting LAPS analysis data...Abort.'
@@ -190,29 +196,46 @@ c *** Not considering non-linear terms for now, so no need to read t0-dt.
 c     call get_laps_wind(winddir,windtime,windext,nx,ny,nz
 c    .                  ,lapsuo,lapsvo,istatus)
 
-      write(6,*)' Rotating u/v to grid north...LAPS winds are true N'
-      write(6,*)' Converting laps and background ht fields to GPM   '
+      if(lrotate)then
 
-      do k = 1, nz
-      do j = 1, ny
-      do i = 1, nx
-         call uvtrue_to_uvgrid(
+         write(6,*)' Rotate u/v to grid north. Input winds are true N'
+         write(6,*)' Convert input and background ht to GPM   '
+
+         do k = 1, nz
+         do j = 1, ny
+         do i = 1, nx
+
+            call uvtrue_to_uvgrid(
      1            lapsu(i,j,k),lapsv(i,j,k)
      1           ,u_grid   ,v_grid
      1           ,lon(i,j)           )
-         lapsu(i,j,k) = u_grid                    
-         lapsv(i,j,k) = v_grid                    
-         lapsphi(i,j,k)=lapsphi(i,j,k)*g
-         call uvtrue_to_uvgrid(
+            lapsu(i,j,k) = u_grid                    
+            lapsv(i,j,k) = v_grid                    
+            call uvtrue_to_uvgrid(
      1             ub(i,j,k),vb(i,j,k)
      1            ,u_grid   ,v_grid
      1            ,lon(i,j)          )
-         ub(i,j,k)=u_grid
-         vb(i,j,k)=v_grid
-         phib(i,j,k)=phib(i,j,k)*g
-      enddo
-      enddo
-      enddo
+            ub(i,j,k)=u_grid
+            vb(i,j,k)=v_grid
+            lapsphi(i,j,k)=lapsphi(i,j,k)*g
+            phib(i,j,k)=phib(i,j,k)*g
+         enddo
+         enddo
+         enddo
+
+      else
+
+         write(6,*)' Convert input and background ht to GPM   '
+         do k = 1, nz
+         do j = 1, ny
+         do i = 1, nx
+            lapsphi(i,j,k)=lapsphi(i,j,k)*g
+            phib(i,j,k)=phib(i,j,k)*g
+         enddo
+         enddo
+         enddo
+
+      endif
 
 c     enddo
 c     enddo
@@ -371,25 +394,63 @@ c   u,v,om,t,rh,phi.
       call get_laps_2d(masstime,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
 
-      write(6,*)' Rotating balanced u/v to true north...phis back to m'
-      do k = 1, nz
-       ip(k)=ip(k)/100
-      do j = 1, ny
-      do i = 1, nx
-         call uvgrid_to_uvtrue(
+      if(lrotate)then
+
+         print*,'rotate u/v back to true north'
+         print*,'Put geopotential hgt back to m'
+         do k = 1, nz
+            ip(k)=ip(k)/100
+            do j = 1, ny
+            do i = 1, nx
+               call uvgrid_to_uvtrue(
      1            u(i,j,k),v(i,j,k)
      1           ,u_true   ,v_true
      1           ,lon(i,j)           )
-         u(i,j,k) = u_true
-         v(i,j,k) = v_true
-         phi(i,j,k)=phi(i,j,k)/g
-      enddo
-      enddo
-      enddo
+               u(i,j,k) = u_true
+               v(i,j,k) = v_true
 
+               phi(i,j,k)=phi(i,j,k)/g
+            enddo
+            enddo
+         enddo
+
+      else
+
+         print*,'Put geopotential hgt back to m'
+         do k = 1, nz
+            ip(k)=ip(k)/100
+            do j = 1, ny
+            do i = 1, nx
+               phi(i,j,k)=phi(i,j,k)/g
+            enddo
+            enddo
+         enddo
+
+      endif
+c
+c  The (dry) dynamic balancing makes small adjustments to the temp
+c  field, which changes the saturation vapor pressure, which means
+c  rh may not be exactly 100% where there is cloud liquid present.
+c  That would cause erroneous evaporation of production of cloud
+c  liquid (and associated heating/cooling) in the very first time 
+c  step.  No good.
+
+      if(lrh_adj)then
+
+         do k = 1, nz
+         do j = 1, ny
+         do i = 1, nx
+           if(lapslwc(i,j,k).gt.0. .AND.
+     .        lapslwc(i,j,k).lt.100.)
+     .                rh(i,j,k)=100.
+         enddo
+         enddo
+         enddo
+
+      endif
 
 c
-      call write_bal_laps(masstime,phi,u,v,t,om,nx,ny,nz
+      call write_bal_laps(masstime,phi,u,v,t,om,rh,nx,ny,nz
      .                   ,ip,istatus)
       if(istatus.ne.1)then
          write(6,*)'error writing balance fields'
@@ -1468,28 +1529,6 @@ c     write(9,1002) ovr
 1001       format(1x,'iterations= ',i4,' max residual= ',e10.3,
      .    ' max correction= ',e10.3, ' first iter max cor= ',e10.3,
      .    'max bndry error= ',e10.3)
-c
-      return
-      end
-c
-c===============================================================================
-c
-      subroutine zero3d(a,nx,ny,nz)
-c
-      implicit none
-c
-      integer   nx,ny,nz,i,j,k
-c
-      real*4 a(nx,ny,nz)
-c_______________________________________________________________________________
-c
-      do k=1,nz
-      do j=1,ny
-      do i=1,nx
-         a(i,j,k)=0.
-      enddo
-      enddo
-      enddo
 c
       return
       end

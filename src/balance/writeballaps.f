@@ -1,4 +1,4 @@
-        subroutine write_bal_laps(i4time,phi,u,v,temp,om
+        subroutine write_bal_laps(i4time,phi,u,v,temp,om,rh
      .  ,imax,jmax,kmax,ip,istatus)
 C
        IMPLICIT       NONE
@@ -18,7 +18,8 @@ C
      1              V(IMAX,JMAX,KMAX),
      1              OM(IMAX,JMAX,KMAX),
      1              temp(imax,jmax,kmax),
-     1              bal(imax,jmax,kmax*3)
+     1              bal(imax,jmax,kmax*3),
+     1              rh(imax,jmax,kmax)
 C
        character*150   dir
        character*150   directory
@@ -126,6 +127,29 @@ C
 C
        IF (ISTATUS.ne.1) THEN
               PRINT*,'Error writing balanced data.'
+              ISTATUS=0
+              RETURN
+       ENDIF
+c
+c  And finally the rh.
+c
+       EXT='lh3'
+       dir=directory(1:lend)//'balance/'//ext(1:3)//'/'
+       DO K=1,KMAX
+              VAR(K)='RHL'
+              LVL(K)=IP(K)
+              LVL_COORD(K)='MB  '
+              UNITS(K)='Percent'
+              COMMENT(K)='Cloud liquid balanced rh.'
+       ENDDO
+
+       write(6,*)' Writing grids ',ext(1:3),' ',fname9
+
+       call write_laps_data(i4time,dir,ext,imax,jmax
+     +,kmax,kmax,var,lvl,lvl_coord,units,comment,rh,istatus)
+
+       IF (ISTATUS.ne.1) THEN
+              PRINT*,'Error writing balanced rh data.'
               ISTATUS=0
               RETURN
        ENDIF
