@@ -462,8 +462,8 @@ c
         st_dev = sqrt( var )
         z_max = (amax - amean) / st_dev
         z_min = (amin - amean) / st_dev
-        coef_sk = (sum_sk / pts) / sqrt( (sum_v / pts) ** 3 )
-        coef_kr = (sum_kr / pts) / ( (sum_v / pts) ** 2 )
+        coef_sk = (sum_sk / pts) / ( (sum_v / pts) ** 1.5 )
+        coef_kr = (sum_kr / pts) / ( (sum_v / pts) ** 2   )
       endif
 c
 c..... Write out the stats.
