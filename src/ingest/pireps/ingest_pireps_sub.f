@@ -3,65 +3,170 @@
      1                                                     ,NX_L,NY_L
      1                                                     ,istatus)
 
-!     Ken Dritz     15-Jul-1997       Added NX_L, NY_L to dummy arg. list
-!     Ken Dritz     15-Jul-1997       Changed LAPS_DOMAIN_FILE to 'nest7grid'
-!     Ken Dritz     15-Jul-1997       Removed include of lapsparms.for
+      character*70 filename
 
-C     FORTRAN TEMPLATE FOR FILE= test.nc                                 
-      PARAMETER (NVARS=33) !NUMBER OF VARIABLES
-C     PARAMETER (NREC=    97)   !CHANGE THIS TO GENERALIZE
-      PARAMETER (NREC=    97)   !CHANGE THIS TO GENERALIZE
-C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 33
-      INTEGER*4 RCODE
-      INTEGER*4 RECDIM
-C     ****VARIABLES FOR THIS NETCDF FILE****
+!.............................................................................
+
+      include 'netcdf.inc'
+      integer maxIcingLvls, maxLocs, maxSkyLvls, maxTurbElements,
+     +     maxTurbLvls, recNum,nf_fid, nf_vid, nf_status
 C
-      CHARACTER*1 collSite                       (   4,NREC)
-      CHARACTER*1 reportType                     (   4,NREC)
-      REAL*4      lat                            (   4,NREC)
-      REAL*4      lon                            (   4,NREC)
-      CHARACTER*1 locStr                         (  16,   4,NREC)
-      REAL*8      timeObs                        (NREC)
-      REAL*8      recptTime                      (NREC)
-      REAL*4      fltLvlBottom                   (NREC)
-      REAL*4      fltLvlTop                      (NREC)
-      CHARACTER*1 fltLvlInd                      (   4,NREC)
-      CHARACTER*1 aircraftType                   (   5,NREC)
-      REAL*4      skyCvrBottom                   (   3,NREC)
-      REAL*4      skyCvrTop                      (   3,NREC)
-      CHARACTER*1 skyCvrHtInd                    (   4,   3,NREC)
-      CHARACTER*1 skyCvrAmt                      (   8,   3,NREC)
-      CHARACTER*1 fltWthr                        (  33,NREC)
-      INTEGER*4   vis                            (NREC)
-      INTEGER*4   temptr                         (NREC)
-      INTEGER*4   windDir                        (NREC)
-      INTEGER*4   windSpd                        (NREC)
-      REAL*4      turbBottom                     (   2,NREC)
-      REAL*4      turbTop                        (   2,NREC)
-      CHARACTER*1 turbHtInd                      (   4,   2,NREC)
-      INTEGER*4   turbIntens                     (   2,   2,NREC)
-      CHARACTER*1 turbFreq                       (   4,   2,   2,NREC)
-      CHARACTER*1 turbType                       (   5,   2,NREC)
-      REAL*4      icingBottom                    (   2,NREC)
-      REAL*4      icingTop                       (   2,NREC)
-      CHARACTER*1 icingHtInd                     (   4,   2,NREC)
-      INTEGER*4   icingIntens                    (   2,NREC)
-      CHARACTER*1 icingType                      (   5,   2,NREC)
-      INTEGER*4   lowLvlWndShr                   (NREC)
-      CHARACTER*1 origReport                     ( 201,NREC)
-C*************************************
-      INTEGER*4 START(10)
-      INTEGER*4 COUNT(10)
-      INTEGER VDIMS(10) !ALLOW UP TO 10 DIMENSIONS
-      CHARACTER*31 DUMMY
+C  Open netcdf File for reading
+C
+      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',filename
+      endif
+C
+C  Fill all dimension values
+C
+C
+C Get size of maxIcingLvls
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'maxIcingLvls',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxIcingLvls'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxIcingLvls)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxIcingLvls'
+      endif
+C
+C Get size of maxLocs
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'maxLocs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxLocs'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxLocs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxLocs'
+      endif
+C
+C Get size of maxSkyLvls
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'maxSkyLvls',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxSkyLvls'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxSkyLvls)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxSkyLvls'
+      endif
+C
+C Get size of maxTurbElements
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'maxTurbElements',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxTurbElements'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxTurbElements)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxTurbElements'
+      endif
+C
+C Get size of maxTurbLvls
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'maxTurbLvls',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxTurbLvls'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,maxTurbLvls)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim maxTurbLvls'
+      endif
+C
+C Get size of recNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+      call main_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
+     +     maxTurbElements, maxTurbLvls, recNum,
+!.............................................................................
+     1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+      return
+!.............................................................................
+      end
+C
+C
+      subroutine main_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
+     +     maxTurbElements, maxTurbLvls, recNum,
+!.............................................................................
+     1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+!.............................................................................
 
-!     Non-automatic declarations
+      include 'netcdf.inc'
+      integer maxIcingLvls, maxLocs, maxSkyLvls, maxTurbElements,
+     +     maxTurbLvls, recNum,nf_fid, nf_vid, nf_status
+      integer icingIntens( maxIcingLvls, recNum),
+     +     lowLvlWndShr(recNum), temperature(recNum), turbIntens(
+     +     maxTurbElements,  maxTurbLvls, recNum), vis(recNum),
+     +     windDir(recNum), windSpd(recNum)
+      real fltLvlBottom(recNum), fltLvlTop(recNum), icingBottom(
+     +     maxIcingLvls, recNum), icingTop( maxIcingLvls, recNum),
+     +     lat( maxLocs, recNum), lon( maxLocs, recNum),
+     +     skyCvrBottom( maxSkyLvls, recNum), skyCvrTop( maxSkyLvls,
+     +     recNum), turbBottom( maxTurbLvls, recNum), turbTop(
+     +     maxTurbLvls, recNum)
+      double precision recptTime(recNum), timeObs(recNum)
+      character*4 icingHtInd( maxIcingLvls, recNum)
+      character*8 skyCvrAmt( maxSkyLvls, recNum)
+      character*4 turbHtInd( maxTurbLvls, recNum)
+      character*16 locStr( maxLocs, recNum)
+      character*4 skyCvrHtInd( maxSkyLvls, recNum)
+      character*4 turbFreq( maxTurbElements,  maxTurbLvls, recNum)
+      character*33 fltWthr(recNum)
+      character*5 icingType( maxIcingLvls, recNum)
+      character*201 origReport(recNum)
+      character*5 aircraftType(recNum)
+      character*4 reportType(recNum)
+      character*4 fltLvlInd(recNum)
+      character*4 collSite(recNum)
+      character*5 turbType( maxTurbLvls, recNum)
+
+!.............................................................................
+
       character*70 filename
       character*9 a9_timeObs,a9_recptTime 
       character*7 c7_skycover
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
+
+!.............................................................................
+
+      call read_netcdf(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls, 
+     +     maxTurbElements, maxTurbLvls, recNum, icingIntens, 
+     +     lowLvlWndShr, temperature, turbIntens, vis, windDir, 
+     +     windSpd, fltLvlBottom, fltLvlTop, icingBottom, icingTop, 
+     +     lat, lon, skyCvrBottom, skyCvrTop, turbBottom, turbTop, 
+     +     recptTime, timeObs, aircraftType, collSite, fltLvlInd, 
+     +     fltWthr, icingHtInd, icingType, locStr, origReport, 
+     +     reportType, skyCvrAmt, skyCvrHtInd, turbFreq, turbHtInd, 
+     +     turbType)
+C
+C The netcdf variables are filled - your code goes here
+C
+!.............................................................................
 
       call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a,
      1            topo_a,1.0,rnorth,south,east,west,istatus)
@@ -70,457 +175,14 @@ C*************************************
           return
       endif
 
-      NCID=NCOPN(filename
-     +,NCNOWRIT,RCODE)
-      CALL NCINQ(NCID,NDIMS,NVARS,NGATTS,RECDIM,RCODE)
-      CALL NCDINQ(NCID,RECDIM,DUMMY,NRECS,RCODE)
-C     !NRECS! NOW CONTAINS NUM RECORDS FOR THIS FILE
-C
-C    statements to fill collSite                       
-C
-      CALL NCVINQ(NCID, 1,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  10 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  10  CONTINUE
-      CALL NCVGTC(NCID, 1,START,COUNT,
-     +collSite                       ,LENSTR,RCODE)
-C
-C    statements to fill reportType                     
-C
-      CALL NCVINQ(NCID, 2,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  20 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  20  CONTINUE
-      CALL NCVGTC(NCID, 2,START,COUNT,
-     +reportType                     ,LENSTR,RCODE)
-C
-C    statements to fill lat                            
-C
-      CALL NCVINQ(NCID, 3,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  30 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  30  CONTINUE
-      CALL NCVGT(NCID, 3,START,COUNT,
-     +lat                            ,RCODE)
-C
-C    statements to fill lon                            
-C
-      CALL NCVINQ(NCID, 4,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  40 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  40  CONTINUE
-      CALL NCVGT(NCID, 4,START,COUNT,
-     +lon                            ,RCODE)
-C
-C    statements to fill locStr                         
-C
-      CALL NCVINQ(NCID, 5,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  50 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  50  CONTINUE
-      CALL NCVGTC(NCID, 5,START,COUNT,
-     +locStr                         ,LENSTR,RCODE)
-C
-C    statements to fill timeObs                        
-C
-      CALL NCVINQ(NCID, 6,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  60 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  60  CONTINUE
-      CALL NCVGT(NCID, 6,START,COUNT,
-     +timeObs                        ,RCODE)
-C
-C    statements to fill recptTime                      
-C
-      CALL NCVINQ(NCID, 7,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  70 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  70  CONTINUE
-      CALL NCVGT(NCID, 7,START,COUNT,
-     +recptTime                      ,RCODE)
-C
-C    statements to fill fltLvlBottom                   
-C
-      CALL NCVINQ(NCID, 8,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  80 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  80  CONTINUE
-      CALL NCVGT(NCID, 8,START,COUNT,
-     +fltLvlBottom                   ,RCODE)
-C
-C    statements to fill fltLvlTop                      
-C
-      CALL NCVINQ(NCID, 9,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  90 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  90  CONTINUE
-      CALL NCVGT(NCID, 9,START,COUNT,
-     +fltLvlTop                      ,RCODE)
-C
-C    statements to fill fltLvlInd                      
-C
-      CALL NCVINQ(NCID,10,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 100 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 100  CONTINUE
-      CALL NCVGTC(NCID,10,START,COUNT,
-     +fltLvlInd                      ,LENSTR,RCODE)
-C
-C    statements to fill aircraftType                   
-C
-      CALL NCVINQ(NCID,11,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 110 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 110  CONTINUE
-      CALL NCVGTC(NCID,11,START,COUNT,
-     +aircraftType                   ,LENSTR,RCODE)
-C
-C    statements to fill skyCvrBottom                   
-C
-      CALL NCVINQ(NCID,12,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 120 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 120  CONTINUE
-      CALL NCVGT(NCID,12,START,COUNT,
-     +skyCvrBottom                   ,RCODE)
-C
-C    statements to fill skyCvrTop                      
-C
-      CALL NCVINQ(NCID,13,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 130 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 130  CONTINUE
-      CALL NCVGT(NCID,13,START,COUNT,
-     +skyCvrTop                      ,RCODE)
-C
-C    statements to fill skyCvrHtInd                    
-C
-      CALL NCVINQ(NCID,14,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 140 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 140  CONTINUE
-      CALL NCVGTC(NCID,14,START,COUNT,
-     +skyCvrHtInd                    ,LENSTR,RCODE)
-C
-C    statements to fill skyCvrAmt                      
-C
-      CALL NCVINQ(NCID,15,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 150 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 150  CONTINUE
-      CALL NCVGTC(NCID,15,START,COUNT,
-     +skyCvrAmt                      ,LENSTR,RCODE)
-C
-C    statements to fill fltWthr                        
-C
-      CALL NCVINQ(NCID,16,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 160 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 160  CONTINUE
-      CALL NCVGTC(NCID,16,START,COUNT,
-     +fltWthr                        ,LENSTR,RCODE)
-C
-C    statements to fill vis                            
-C
-      CALL NCVINQ(NCID,17,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 170 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 170  CONTINUE
-      CALL NCVGT(NCID,17,START,COUNT,
-     +vis                            ,RCODE)
-C
-C    statements to fill temptr                         
-C
-      CALL NCVINQ(NCID,18,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 180 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 180  CONTINUE
-      CALL NCVGT(NCID,18,START,COUNT,
-     +temptr                         ,RCODE)
-C
-C    statements to fill windDir                        
-C
-      CALL NCVINQ(NCID,19,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 190 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 190  CONTINUE
-      CALL NCVGT(NCID,19,START,COUNT,
-     +windDir                        ,RCODE)
-C
-C    statements to fill windSpd                        
-C
-      CALL NCVINQ(NCID,20,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 200 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 200  CONTINUE
-      CALL NCVGT(NCID,20,START,COUNT,
-     +windSpd                        ,RCODE)
-C
-C    statements to fill turbBottom                     
-C
-      CALL NCVINQ(NCID,21,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 210 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 210  CONTINUE
-      CALL NCVGT(NCID,21,START,COUNT,
-     +turbBottom                     ,RCODE)
-C
-C    statements to fill turbTop                        
-C
-      CALL NCVINQ(NCID,22,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 220 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 220  CONTINUE
-      CALL NCVGT(NCID,22,START,COUNT,
-     +turbTop                        ,RCODE)
-C
-C    statements to fill turbHtInd                      
-C
-      CALL NCVINQ(NCID,23,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 230 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 230  CONTINUE
-      CALL NCVGTC(NCID,23,START,COUNT,
-     +turbHtInd                      ,LENSTR,RCODE)
-C
-C    statements to fill turbIntens                     
-C
-      CALL NCVINQ(NCID,24,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 240 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 240  CONTINUE
-      CALL NCVGT(NCID,24,START,COUNT,
-     +turbIntens                     ,RCODE)
-C
-C    statements to fill turbFreq                       
-C
-      CALL NCVINQ(NCID,25,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 250 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 250  CONTINUE
-      CALL NCVGTC(NCID,25,START,COUNT,
-     +turbFreq                       ,LENSTR,RCODE)
-C
-C    statements to fill turbType                       
-C
-      CALL NCVINQ(NCID,26,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 260 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 260  CONTINUE
-      CALL NCVGTC(NCID,26,START,COUNT,
-     +turbType                       ,LENSTR,RCODE)
-C
-C    statements to fill icingBottom                    
-C
-      CALL NCVINQ(NCID,27,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 270 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 270  CONTINUE
-      CALL NCVGT(NCID,27,START,COUNT,
-     +icingBottom                    ,RCODE)
-C
-C    statements to fill icingTop                       
-C
-      CALL NCVINQ(NCID,28,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 280 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 280  CONTINUE
-      CALL NCVGT(NCID,28,START,COUNT,
-     +icingTop                       ,RCODE)
-C
-C    statements to fill icingHtInd                     
-C
-      CALL NCVINQ(NCID,29,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 290 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 290  CONTINUE
-      CALL NCVGTC(NCID,29,START,COUNT,
-     +icingHtInd                     ,LENSTR,RCODE)
-C
-C    statements to fill icingIntens                    
-C
-      CALL NCVINQ(NCID,30,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 300 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 300  CONTINUE
-      CALL NCVGT(NCID,30,START,COUNT,
-     +icingIntens                    ,RCODE)
-C
-C    statements to fill icingType                      
-C
-      CALL NCVINQ(NCID,31,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 310 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 310  CONTINUE
-      CALL NCVGTC(NCID,31,START,COUNT,
-     +icingType                      ,LENSTR,RCODE)
-C
-C    statements to fill lowLvlWndShr                   
-C
-      CALL NCVINQ(NCID,32,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 320 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 320  CONTINUE
-      CALL NCVGT(NCID,32,START,COUNT,
-     +lowLvlWndShr                   ,RCODE)
-C
-C    statements to fill origReport                     
-C
-      CALL NCVINQ(NCID,33,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 330 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 330  CONTINUE
-      CALL NCVGTC(NCID,33,START,COUNT,
-     +origReport                     ,LENSTR,RCODE)
-C
-C     HERE IS WHERE YOU WRITE STATEMENTS TO USE THE DATA
-C
-C
-C
 !     Write All Pireps to LAPS PIN file
       altitude = 0.
 
       r_nc_missing_data = 1e20
 
-      if(NRECS .gt. NREC)then
-          write(6,*)' Warning: NRECS > NREC ',NRECS,NREC
-      else
-          write(6,*)' NRECS, NREC = ',NRECS,NREC
-      endif
+      write(6,*)' recNum = ',recNum
 
-      num_pireps = min(NREC,NRECS)
+      num_pireps = recNum
 
       do i = 1,num_pireps
 
@@ -609,9 +271,7 @@ C
                   rtop = skyCvrTop(ilyr,i) * 3.281
               endif
 
-              do j = 1,7
-                  c7_skycover(j:j) = skyCvrAmt(j,ilyr,i)
-              enddo ! j
+              c7_skycover(1:7) = skyCvrAmt(ilyr,i)(1:7)
 
               call skycover_to_frac(c7_skycover,fraction,istatus)
 
@@ -622,9 +282,9 @@ C
                   ieighths = nint(fraction * 8.0)
               endif                  
 
-              write(6,3)rbase,rtop,ieighths,(skyCvrAmt(j,ilyr,i),j=1,8)
+              write(6,3)rbase,rtop,ieighths,skyCvrAmt(ilyr,i)
      1                                     ,fraction
- 3            format(' Cloud layer',2f8.0,i5,1x,8a1,f5.2)
+ 3            format(' Cloud layer',2f8.0,i5,1x,a8,f5.2)
 
 !             if(istatus .eq. 1)then
 !                 write(6,*)' Above layer written to PIN file'
@@ -637,7 +297,532 @@ C
 
       enddo ! i
 
+!.............................................................................
+
       return
-      END
+      end
+C
+C  Subroutine to read the file "PIREP data : selected by receipt time : time range from 885926400 to 885926700" 
+C
+      subroutine read_netcdf(nf_fid, maxIcingLvls, maxLocs, 
+     +     maxSkyLvls, maxTurbElements, maxTurbLvls, recNum, 
+     +     icingIntens, lowLvlWndShr, temperature, turbIntens, vis, 
+     +     windDir, windSpd, fltLvlBottom, fltLvlTop, icingBottom, 
+     +     icingTop, lat, lon, skyCvrBottom, skyCvrTop, turbBottom, 
+     +     turbTop, recptTime, timeObs, aircraftType, collSite, 
+     +     fltLvlInd, fltWthr, icingHtInd, icingType, locStr, 
+     +     origReport, reportType, skyCvrAmt, skyCvrHtInd, turbFreq, 
+     +     turbHtInd, turbType)
+C
+      include 'netcdf.inc'
+      integer maxIcingLvls, maxLocs, maxSkyLvls, maxTurbElements, 
+     +     maxTurbLvls, recNum,nf_fid, nf_vid, nf_status
+      integer icingIntens( maxIcingLvls, recNum),
+     +     lowLvlWndShr(recNum), temperature(recNum), turbIntens(
+     +     maxTurbElements,  maxTurbLvls, recNum), vis(recNum),
+     +     windDir(recNum), windSpd(recNum)
+      real fltLvlBottom(recNum), fltLvlTop(recNum), icingBottom(
+     +     maxIcingLvls, recNum), icingTop( maxIcingLvls, recNum),
+     +     lat( maxLocs, recNum), lon( maxLocs, recNum),
+     +     skyCvrBottom( maxSkyLvls, recNum), skyCvrTop( maxSkyLvls,
+     +     recNum), turbBottom( maxTurbLvls, recNum), turbTop(
+     +     maxTurbLvls, recNum)
+      double precision recptTime(recNum), timeObs(recNum)
+      character*4 icingHtInd( maxIcingLvls, recNum)
+      character*8 skyCvrAmt( maxSkyLvls, recNum)
+      character*4 turbHtInd( maxTurbLvls, recNum)
+      character*16 locStr( maxLocs, recNum)
+      character*4 skyCvrHtInd( maxSkyLvls, recNum)
+      character*33 fltWthr(recNum)
+      character*4 turbFreq( maxTurbElements,  maxTurbLvls, recNum)
+      character*5 icingType( maxIcingLvls, recNum)
+      character*201 origReport(recNum)
+      character*5 aircraftType(recNum)
+      character*4 reportType(recNum)
+      character*4 fltLvlInd(recNum)
+      character*4 collSite(recNum)
+      character*5 turbType( maxTurbLvls, recNum)
 
 
+C   Variables of type REAL
+C
+C     Variable        NETCDF Long Name
+C      fltLvlBottom "Bottom of PIREPs flight level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'fltLvlBottom',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlBottom'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,fltLvlBottom)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlBottom'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      fltLvlTop    "Top of PIREPs flight level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'fltLvlTop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlTop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,fltLvlTop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlTop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      icingBottom  "Bottom of Icing Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'icingBottom',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingBottom'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,icingBottom)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingBottom'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      icingTop     "Top of Icing Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'icingTop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingTop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,icingTop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingTop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      lat          "Latitude of report"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'lat',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lat'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,lat)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lat'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      lon          "Longitude of report"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'lon',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lon'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,lon)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lon'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      skyCvrBottom "Bottom of Sky Cover Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'skyCvrBottom',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrBottom'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,skyCvrBottom)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrBottom'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      skyCvrTop    "Bottom of Sky Cover Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'skyCvrTop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrTop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,skyCvrTop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrTop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbBottom   "Bottom of Turbulence Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbBottom',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbBottom'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,turbBottom)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbBottom'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbTop      "Top of Turbulence Layer"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbTop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbTop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,turbTop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbTop'
+      endif
+
+C   Variables of type INT
+C
+C
+C     Variable        NETCDF Long Name
+C      icingIntens  "Icing intensity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'icingIntens',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingIntens'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,icingIntens)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingIntens'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      lowLvlWndShr "Low Level Wind Shear Indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'lowLvlWndShr',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lowLvlWndShr'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,lowLvlWndShr)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var lowLvlWndShr'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      temperature  "Temperature"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'temperature',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,temperature)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbIntens   "Turbulence Intensity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbIntens',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbIntens'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,turbIntens)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbIntens'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      vis          "Visibility"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'vis',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var vis'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,vis)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var vis'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windDir      "Wind Direction"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windDir',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,windDir)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windSpd      "Wind Speed"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windSpd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpd'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,windSpd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpd'
+      endif
+
+C   Variables of type DOUBLE
+C
+C
+C     Variable        NETCDF Long Name
+C      recptTime    "Time report was received"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'recptTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var recptTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,recptTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var recptTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      timeObs      "Time of report"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'timeObs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeObs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+
+
+C   Variables of type CHAR
+C
+C
+C     Variable        NETCDF Long Name
+C      aircraftType "Type of Aircraft issuing report"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'aircraftType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var aircraftType'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,aircraftType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var aircraftType'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      collSite     "Data Collection Site"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'collSite',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var collSite'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,collSite)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var collSite'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      fltLvlInd    "Flight Level Indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'fltLvlInd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlInd'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,fltLvlInd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltLvlInd'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      fltWthr      "Flight Weather"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'fltWthr',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltWthr'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,fltWthr)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var fltWthr'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      icingHtInd   "Icing Height Indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'icingHtInd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingHtInd'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,icingHtInd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingHtInd'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      icingType    "Type of Icing observed"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'icingType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingType'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,icingType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var icingType'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      locStr       "Location String for each derived lat/lon"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'locStr',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var locStr'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,locStr)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var locStr'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      origReport   "Original PIREPs report"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'origReport',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var origReport'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,origReport)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var origReport'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      reportType   "Report Type"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'reportType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var reportType'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,reportType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var reportType'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      skyCvrAmt    "Amount of Sky Cover"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'skyCvrAmt',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrAmt'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,skyCvrAmt)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrAmt'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      skyCvrHtInd  "Sky Cover Height Indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'skyCvrHtInd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrHtInd'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,skyCvrHtInd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var skyCvrHtInd'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbFreq     "Weather qualifier"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbFreq',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbFreq'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,turbFreq)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbFreq'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbHtInd    "Turbulence Height Indicator"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbHtInd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbHtInd'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,turbHtInd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbHtInd'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      turbType     "Type of turbulence observed"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'turbType',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbType'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,turbType)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var turbType'
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
+
+      return
+      end

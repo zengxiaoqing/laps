@@ -1,4 +1,5 @@
 
+!     Steve Albers                      Original Version
 !     Ken Dritz     15-Jul-1997         Added call to get_grid_dim_xy to
 !                                       get the values of NX_L, NY_L
 !     Ken Dritz     15-Jul-1997         Pass NX_L, NY_L to get_pirep_data
@@ -14,10 +15,8 @@
       integer i4times(max_files)
 
 !     Output file
-      character*70 filename_out
       character*13 filename13
       character*31    ext
-      character*50    directory
       integer*4       len_dir
 
       character*40 c_vars_req
@@ -46,11 +45,11 @@
 
 !     Open output PIN file
       ext = 'pin'
-      call get_directory(ext,directory,len_dir)
-      filename_out = directory(1:len_dir)
-     1                            //filename13(i4time,ext(1:3))     
-      write(6,*)' Output file ',filename_out
-      open(11,file=filename_out,status='unknown',err=999)
+      call open_lapsprd_file(11,i4time,ext(1:3),istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error opening output file'
+          go to 999
+      endif
 
 !     Get List of input /public NetCDF files
       c_vars_req = 'path_to_raw_pirep'
