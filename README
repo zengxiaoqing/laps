@@ -2556,9 +2556,9 @@ Sample Input/Output: May be available in the test data case. If not, the README
                      'snd' file.
                                         
         Note: Sounding data is used if the observations lie in the time window
-              centered on the analysis time. There are flags to toggle usage 
-              of the sounding (i.e. snd) data in 'wind.nl', 'temp.nl' and 
-              'moisture_switch.nl'.
+              of +/- 'laps_cycle_time' centered on the analysis time. There 
+              are flags to toggle usage of the sounding (i.e. snd) data in 
+              'wind.nl', 'temp.nl' and 'moisture_switch.nl'.
 
 ------ 3.2.10 --------- LVD (Satellite Image + Cloud Top Pressure) ------------
 
@@ -2599,6 +2599,9 @@ Outputs: (Feeds wind.exe)
 Parameter namelist file: 'static/cloud_drift.nl'
 
 Source directory: laps/src/ingest/satellite/cloud_drift
+
+Note: Sounding data is used if the observations lie in the time window
+      of +/- 'laps_cycle_time' centered on the analysis time. 
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
