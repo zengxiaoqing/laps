@@ -343,7 +343,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
-     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta'         
+     1      /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,wp,vv,hu-i,ta'         
      1      ,',th,te-i,vo,mr,mc,dv-i,ha,ma,sp]'
      1      /'          [cs,vs,tw,fw-i,hi-i,gf-i]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
@@ -1348,7 +1348,7 @@ c       include 'satellite_dims_lvd.inc'
                     clow = 150.
                     scale = 1000. / (ft_per_m / mspkt) ! Convert from M**2/S 
                                                        ! to FT-KT (inverse)
-                    units_2d = 'KT-FT [x1000]'
+                    units_2d = 'KT-FT x1000'
                 else
                     clow = 5000.
                     units_2d = c_vnt_units
@@ -1373,7 +1373,13 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 0.
             endif
 
-            c_label = comment_2d(1:26)//' '//units_2d
+            call s_len2(units_2d,len_units)
+            if(len_units .gt. 0)then
+                c_label = comment_2d(1:26)//' ('//units_2d(1:len_units)
+     1                                          //')'       
+            else
+                c_label = comment_2d(1:26)
+            endif
 
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,namelist_parms
@@ -4022,21 +4028,40 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            if(.false.)then ! Rotate sfc winds from grid north to true north
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    u_grid = u_2d(i,j)
-                    v_grid = v_2d(i,j)
-                    call uvgrid_to_uvtrue(  u_grid,
-     1                                      v_grid,
-     1                                      u_true,
-     1                                      v_true,
-     1                                      lon(i,j) )
-                    u_2d(i,j) = u_true
-                    v_2d(i,j) = v_true
-                enddo ! j
-                enddo ! i
+            call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
+     1                     ,asc9_tim_t,namelist_parms
+     1                     ,c33_label,c_field,k_level
+     1                     ,i_overlay,c_display
+     1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
+!    1                     ,grid_ra_ref_dum,grid_ra_vel_dum
+     1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
+     1                     ,jdot)
+
+        elseif(c_type .eq. 'wp')then ! planetary boundary layer mean wind
+            ext = 'lfr'
+            var_2d = 'UPB'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)      
+            var_2d = 'VPB'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)      
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading PBL Wind'
+                goto1200
             endif
+
+            c33_label = 'PBL Mean Wind            (kt)    '
+
+            nxz = float(NX_L) / zoom
+            nyz = float(NY_L) / zoom
+
+            interval = int(max(nxz,nyz) / 65.) + 1
+            size = float(interval) * .15
+
+            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
      1                     ,asc9_tim_t,namelist_parms
@@ -4152,7 +4177,7 @@ c                   cint = -1.
                 if(c_vnt_units .eq. 'KT-FT')then
                     scale = 1000. / (ft_per_m / mspkt) ! Convert from M**2/S 
                                                        ! to KT-FT (inverse)
-                    units_2d = 'KT-FT [x1000]'
+                    units_2d = 'KT-FT x1000'
                 endif
 
             elseif(units_2d(1:4) .eq. 'NONE')then
