@@ -335,7 +335,7 @@
      develop a method to save the hand edited files in a "safe" place 
      outside of the laps directory structure, or by using a revision control 
      system such as CVS.  This strategy would make it easier to update your 
-     implementation of LAPS with the 'latest laps.tar.gz' file from FSL, 
+     implementation of LAPS with the latest 'laps-m-n-o.tar.gz' file from FSL, 
      while minimizing the hassle involved with software modifications for 
      your local implementation.
 
@@ -1212,7 +1212,7 @@ April 1996
 
 ------ 2.15 -----Detecting and Reporting Installation Errors-------------------
 
-   To determine how well LAPS was installed, verify that all (33 at last check)
+   To determine how well LAPS was installed, verify that all (35 at last check)
    executables were built OK ('bin' directory) with no errors in the output 
    of 'make'.
 
@@ -1239,7 +1239,7 @@ April 1996
    The system limits (ulimit -a)
    The applicable compiler versions (often a -v or -V option to the compiler)
    The entire output of configure 
-   The entire output of make
+   The entire output of make (standard output + error output)
    The entire output of laps_localization.pl (i.e. make localize)
 </pre>
 
