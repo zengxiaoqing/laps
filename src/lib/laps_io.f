@@ -986,7 +986,7 @@ cdoc    time.
         end
 
         subroutine put_laps_multi_2d(i4time,EXT,var_a,units_a,
-     1                          comment_a,field_2d,ni,nj,nf,istatus)
+     1                          comment,field_2d,ni,nj,nf,istatus)
 
 cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
@@ -996,7 +996,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         character*150 DIRECTORY
         character*(*) EXT
 
-        character*125 comment_a(nf)
+        character*125 comment_a(nf),comment
         character*10 units_a(nf)
         character*3 var_a(nf)
         integer*4 LVL_2d(MAX_FIELDS)
@@ -1025,6 +1025,7 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         do l = 1,nf
             lvl_2d (l)= 0
             lvl_coord_2d(l) = 'MSL'
+            comment_a(l) = comment
         enddo ! l
 
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,ni,nj,
