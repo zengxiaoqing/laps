@@ -37,6 +37,8 @@
 
       do isnd = 1,nsnd
 
+!       Write Sounding Header
+
         write(6,511,err=990)
      1             iwmostanum(isnd),nlvl(isnd)
      1            ,stalat(isnd),stalon(isnd),staelev(isnd)
@@ -51,6 +53,8 @@
 
         do lvl = 1,nlvl(isnd)
 
+!         Write Sounding Level
+
           write(c_line,*)height_m(isnd,lvl),pressure_pa(isnd,lvl)
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
@@ -63,6 +67,7 @@
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
      1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
+     1              ,a9time_ob(isnd),stalat(isnd),stalon(isnd)
               write(6,521)c_line
           endif
 
