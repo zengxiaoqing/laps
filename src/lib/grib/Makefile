@@ -55,8 +55,8 @@ distclean: 	clean
 ifdef USECPP
 %.o : %.F
 	rm -f $*.f
-  	$(CPP) $(CPPFLAGS) $<
+	$(CPP) $(CPPFLAGS) $<
 	mv $*.i $*.f
-        $(FC) $(FFLAGS) -c $*.f
+	$(FC) $(FFLAGS) -c $*.f
 endif
 
