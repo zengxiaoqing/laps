@@ -48,7 +48,8 @@ c
      &                 store_3,store_3ea,store_4,store_4ea,
      &                 store_5,store_5ea,store_6,store_6ea,
      &                 store_7,store_cldht,store_cldamt,
-     &                 provider, laps_cycle_time, jstatus)
+     &                 provider, laps_cycle_time, 
+     &                 local_obs_thresh, i4wait_local_obs_max, jstatus)       
 
 c
 c*****************************************************************************
@@ -176,9 +177,12 @@ c.....  average number of gridpoints based on the grid spacing.
 c
         box_length = box_size * 111.137 !km/deg lat (close enough for lon)
         ibox_points = box_length / (grid_spacing / 1000.) !in km
+
+        nn_in = nn
 c
 c.....	Zero out the counters.
 c
+ 10     nn = nn_in
         n_obs_g = 0	        ! # of local obs in the laps grid
         n_obs_b = 0	        ! # of local obs in the box
 c
@@ -830,23 +834,31 @@ c
  125     continue
        enddo !i
 
-         I4_elapsed = ishow_timer()
+       I4_elapsed = ishow_timer()
+
+       write(6,*)' Elapsed time / nobs = ',i4_elapsed,n_obs_b
+
+       if(n_obs_b    .lt. local_obs_thresh .and. 
+     1    i4_elapsed .lt. i4wait_local_obs_max       )then
+           write(6,*)' Waiting 60 sec for more obs'
+           call snooze_gg(60.,istatus)
+           go to 10
+       endif
 c
+c..... That's it...lets go home.
 c
-c.....  That's it...lets go home.
+       print *,' Found ',n_obs_b,' local obs in the LAPS box'
+       print *,' Found ',n_obs_g,' local obs in the LAPS grid'
+       print *,' '
+       jstatus = 1            ! everything's ok...
+       return
 c
-	 print *,' Found ',n_obs_b,' local obs in the LAPS box'
-	 print *,' Found ',n_obs_g,' local obs in the LAPS grid'
-         print *,' '
-         jstatus = 1            ! everything's ok...
-         return
+ 990   continue               ! no data available
+       jstatus = 0
+       print *,' WARNING: No data available from GET_LOCAL_OBS'
+       return
 c
- 990     continue               ! no data available
-         jstatus = 0
-         print *,' WARNING: No data available from GET_LOCAL_OBS'
-         return
-c
-         end
+       end
 
          subroutine madis_qc_r(var,DD,badflag)
 
