@@ -73,7 +73,7 @@ cdoc
      1   i4time_ref,i4time_tol,i4time_radar_a
      1  ,max_radars,n_radars,ext_a,r_missing_data
      1  ,l_apply_map,imax,jmax,kmax
-     1  ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a,n_vel_a
+     1  ,grid_ra_vel,grid_ra_nyq,idx_radar,v_nyquist_in_a,n_vel_a
      1  ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a
      1  ,istatus_multi_vel,istatus_multi_nyq)
 
@@ -97,6 +97,7 @@ cdoc    Called from wind/lapsplot
 !       topo                Input   2D terrain array (meters)
 !       grid_ra_vel         Output  4D Velocity Grid
 !       grid_ra_nyq         Output  4D Nyquist Velocity Grid
+!       idx_radar           Output  1D grid of radar 'vxx' numbers
 !       v_nyquist_in_a      Output  Array: volume nyquist velocity of the radars
 !       n_vel_a             Output  Array: # of grid points with measurable velocity
 !       rlat_radar_a        Output  Array: Radar Latitude (Degrees)
@@ -123,6 +124,7 @@ cdoc    Called from wind/lapsplot
 
         real*4 grid_ra_vel(imax,jmax,kmax,max_radars)
         real*4 grid_ra_nyq(imax,jmax,kmax,max_radars)
+        integer*4 idx_radar(max_radars)
 
         real*4 rlat_radar_a(max_radars),rlon_radar_a(max_radars)
      1    ,rheight_radar_a(max_radars),v_nyquist_in_a(max_radars)
@@ -141,6 +143,7 @@ cdoc    Called from wind/lapsplot
         n_ref = 0
         istatus_multi_vel = 1
         istatus_multi_nyq = 1
+        idx_radar = 0
 
 !       Initialize this stuff
         do i = 1,max_radars
@@ -180,6 +183,8 @@ cdoc    Called from wind/lapsplot
             else
                 n_radars = n_radars + 1
 
+                idx_radar(n_radars) = i_radar_pot
+
                 do k = 1,kmax
                 do j = 1,jmax
                 do i = 1,imax
@@ -207,6 +212,7 @@ cdoc    Called from wind/lapsplot
                 if(n_vel_a(n_radars) .eq. 0 .or. istatus_vel .ne. 1)then       
                     write(6,*)' No valid velocities for radar ',n_radars
                   ! Don't count in a valid radar
+                    idx_radar(n_radars) = 0
                     n_radars = n_radars - 1
                 endif
 
