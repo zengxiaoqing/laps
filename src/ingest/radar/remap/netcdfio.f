@@ -506,33 +506,39 @@ c      Determine filename extension
        endif
  
        if(index .eq. 1)then
-           if(firstGateRangeZ .ne. r_missing_data)then
+           if(firstGateRangeZ .ge. -10. .and. 
+     1        firstGateRangeZ .lt. 1000.)then     
                first_gate_m = firstGateRangeZ * 1000.
            else
-               write(6,*)' Error: firstGateRangeZ has missing value'
-               stop
+               write(6,*)' Warning: firstGateRangeZ is outside range'
+     1                  ,firstGateRangeZ
+               first_gate_m = r_missing_data
            endif
 
-           if(gateSizeZ .ne. r_missing_data)then
+           if(gateSizeZ .ge. 0. .and. gateSizeZ .lt. 1000.)then     
                gate_spacing_m = gateSizeZ * 1000.
            else
-               write(6,*)' Error: gateSizeZ has missing value'
-               stop
+               write(6,*)' Warning: gateSizeZ is outside range'
+     1                  ,gateSizeZ
+               gate_spacing_m = r_missing_data
            endif
 
        elseif(index .eq. 2)then
-           if(firstGateRangeV .ne. r_missing_data)then
+           if(firstGateRangeV .ge. -10. .and. 
+     1        firstGateRangeV .lt. 1000.)then     
                first_gate_m = firstGateRangeV * 1000.
            else
-               write(6,*)' Error: firstGateRangeV has missing value'
-               stop
+               write(6,*)' Warning: firstGateRangeV is outside range'
+     1                  ,firstGateRangeV
+               first_gate_m = r_missing_data
            endif
 
-           if(gateSizeV .ne. r_missing_data)then
+           if(gateSizeV .ge. 0. .and. gateSizeV .lt. 1000.)then     
                gate_spacing_m = gateSizeV * 1000.
            else
-               write(6,*)' Error: gateSizeV has missing value'
-               stop
+               write(6,*)' Warning: gateSizeV is outside range'
+     1                  ,gateSizeV      
+               gate_spacing_m = r_missing_data
            endif
 
        endif
