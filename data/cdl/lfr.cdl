@@ -19,7 +19,7 @@ netcdf lfr {
             vnt:long_name="ventilation index";
             vnt:units="meters**2 / second";
             vnt:valid_range= 0.f, 10000.f;
-            vnt:LAPS_var="HAH";
+            vnt:LAPS_var="VNT";
             vnt:lvl_coord="MSL ";
 	    vnt:LAPS_units="M**2/S";
                 	        
