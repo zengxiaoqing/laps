@@ -53,7 +53,8 @@ cdis
 
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
+        real*4 t_s(maxstns), td_s(maxstns), rh_s(maxstns)
+        real*4 pr_s(maxstns), sr_s(maxstns)
         real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
      1       , ffg_s(maxstns)
         real*4 vis_s(maxstns), sfct_s(maxstns)
@@ -61,7 +62,7 @@ cdis
 
 c
         character atime*24, c33_label*33
-        character directory*150,ext*31
+        character directory*150,ext*31,ext_lso*6
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
         character*13 filename13
@@ -92,6 +93,8 @@ c
 
         logical l_parse
 
+        call get_sfc_badflag(badflag,istatus)
+
         call get_filespec('lso',2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time,i4time_lso)
 
@@ -112,27 +115,26 @@ c
             infile = 
      1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))//'_qc'    
 
+            ext_lso = 'lso_qc'
+
         else ! Regular LSO file
             infile = 
      1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))  
 
+            ext_lso = 'lso'
+
         endif
 
-!       call read_surface_old(infile,maxstns,atime,n_meso_g,
-!    &           n_meso_pos,
-!    &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
-!    &           n_obs_g,n_obs_pos_g,
-!    &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
-!    &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-!    &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
-!    &           store_emv,
-!    &           store_amt,store_hgt,vis_s,obstime,istatus)
+	call read_sfc_state(i4time,ext,btime,n_obs_g,n_obs_b,
+     &         stations_s,provider,lat_s,lon_s,elev_s,
+     &         t_s,td_s,rh_s,dd_s,ff_s,
+     &         alt,pstn,pmsl,maxstns,istatus)
 
         call read_surface_sa(infile,maxstns,atime,
-     &           n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
-     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
-     &           alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
-     &           store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
+     &         n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
+     &         elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
+     &         alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
+     &         store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
 100     write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
 
@@ -140,6 +142,22 @@ c
             write(6,*)' Too many stations, or no file present'
             istatus = 0
             return
+        endif
+
+        i_rh_convert = 0
+	do i=1,n_obs_b ! Preprocess the obs
+!           Convert RH to dewpoint if dewpoint is missing 
+            if(t_s(i) .ne. badflag .and. td_s(i) .eq. badflag 
+     1                             .and. rh_s(i) .ne. badflag)then
+                t_c = f_to_c(t_s(i))
+                dwpt_c = dwpt(t_c,rh_s(i))
+                td_s(i) = c_to_f(dwpt_c)
+                i_rh_convert = i_rh_convert + 1
+            endif
+        enddo ! i
+
+        if(i_rh_convert .gt. 0)then
+            write(6,*)'# of dewpoints converted from RH = ',i_rh_convert       
         endif
 
         size = 0.5
