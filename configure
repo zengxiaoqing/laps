@@ -2926,14 +2926,16 @@ trap 'rm -fr `echo "src/include/trigd.inc
 	  etc/LapsRadar.pl
           etc/check_release.csh
           etc/cloud.pl
+          etc/change_center.pl
           etc/cronfile.pl
+          etc/fxalogdir.pl
           etc/hum3d.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
           etc/realtime.pl
           etc/ramrsf.pl
-          etc/localize_optran.com
+          etc/localize_optran.pl
           etc/localize_domain.pl
 	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
@@ -2943,7 +2945,9 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/sfc.pl
           etc/systime.pl
           etc/temp.pl
+          etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
+          etc/wfo-relocalization.pl
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/xferData.pl src/include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
@@ -3043,27 +3047,31 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
-	  etc/LapsRadar.pl
+          etc/LapsRadar.pl
           etc/check_release.csh
           etc/cloud.pl
+          etc/change_center.pl
           etc/cronfile.pl
+          etc/fxalogdir.pl
           etc/hum3d.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
           etc/realtime.pl
           etc/ramrsf.pl
-          etc/localize_optran.com
+          etc/localize_optran.pl
           etc/localize_domain.pl
-	  etc/laps_localization.pl
-	  etc/laps_monitor.pl
+          etc/laps_localization.pl
+          etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
           etc/systime.pl
           etc/temp.pl
+          etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
+          etc/wfo-relocalization.pl
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/xferData.pl"}
