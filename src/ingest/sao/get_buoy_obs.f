@@ -52,6 +52,8 @@ c		P. Stamus  08-10-98  Original version (from get_metar_obs).
 c                          06-21-99  Change ob location check to gridpt space.
 c                                      Figure box size in gridpoint space from
 c                                      user-defined size (deg) and grid_spacing.
+c                          10-19-99  Added checks on each variable when doing
+c                                      units conversion.
 c
 c       Notes:
 c         1. This routine is not set up to collect cloud data (from ship
@@ -281,14 +283,16 @@ c
 c.....  Temperature and dewpoint
 c
 	temp_k = t(i)                         
-	if(temp_k .eq. badflag) then          !t bad?
+	if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
+	if(temp_k .le. badflag) then          !t bad?
 	   temp_f = badflag                   !          bag
 	else
 	   temp_f = ((temp_k - 273.16) * 9./5.) + 32.  ! K to F
 	endif
 c
-	dewp_k = td(i)   
-	if(dewp_k .eq. badflag) then           !dp bad?
+	dewp_k = td(i)
+	if(dewp_k.lt.210. .or. dewp_k.gt.320.) dewp_k = badflag
+	if(dewp_k .le. badflag) then           !dp bad?
 	   dewp_f = badflag                    !         bag
 	else
 	   dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.  ! K to F
@@ -297,20 +301,36 @@ c
 c..... Wind speed and direction
 c
 	ddg = badflag
-	if(ff(i)  .ne. badflag) ff(i)  = 1.94254 * ff(i)   !m/s to kt
-	if(ffg(i) .ne. badflag) then
+	if(dd(i).lt.0. .or. dd(i).gt.360.) then
+	   dd(i) = badflag
+	endif
+c
+	if(ff(i).lt.0. .or. ff(i).gt.100.) then
+	   ff(i) = badflag
+	else
+	   ff(i)  = 1.94254 * ff(i) !m/s to kt
+	endif
+	if(ffg(i).lt.0. .or. ffg(i).gt.120.) then
+	   ffg(i) = badflag
+	else
 	   ffg(i) = 1.94254 * ffg(i) !m/s to kt
 	   ddg = dd(i)
 	endif
 c
 c..... Pressure...MSL and 3-h pressure change
 c
-	if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01   !Pa to mb
-	if(dp(i)   .ne. badflag)   dp(i) =   dp(i) * 0.01   !Pa to mb
+	if(mslp(i).lt.85000. .or. mslp(i).gt.120000.) then
+	   mslp(i) = badflag
+	else
+	   mslp(i) = mslp(i) * 0.01 !Pa to mb
+	endif
+	if(dp(i)   .ne. badflag)   dp(i) =   dp(i) * 0.01 !Pa to mb
 c
 c..... Visibility
 c
-	if(vis(i) .ne. badflag) then
+	if(vis(i).lt.0. .or. vis(i).gt.330000.) then
+	   vis(i) = badflag
+	else
 	   vis(i) = vis(i) * .001      !m to km
 	   vis(i) = 0.621371 * vis(i)  !km to miles
 	endif
@@ -322,7 +342,7 @@ c
 	if(pcp24(i) .ne. badflag) pcp24(i) = pcp24(i) * 39.370079 ! m to in
 c
 	seatemp_k = sea_temp(i)                         
-	if(seatemp_k .eq. badflag) then          !t bad?
+	if(seatemp_k .le. badflag) then          !t bad?
 	   seatemp_f = badflag                   !  bag
 	else
 	   seatemp_f = ((seatemp_k - 273.16) * 9./5.) + 32.  ! K to F

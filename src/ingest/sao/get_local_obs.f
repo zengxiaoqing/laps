@@ -56,6 +56,8 @@ c                                        checks of the variables.
 c                          06-21-99  Change ob location check to gridpt space.
 c                                      Figure box size in gridpoint space from
 c                                      user-defined size (deg) and grid_spacing.
+c                          10-19-99  Added checks on each variable when doing
+c                                      units conversion.
 c
 c*****************************************************************************
 c
@@ -280,25 +282,28 @@ c
 c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = t(i) 
+	  if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
 	  if(t_time(i) .ne. badflag) then
 	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
 		temp_k = badflag
 	     endif
 	  endif
-	  if(temp_k .eq. badflag) then !t bad?
+	  if(temp_k .le. badflag) then !t bad?
 	     temp_f = badflag	!then bag it
 	  else
 	     temp_f = ((temp_k - 273.16) * 9./5.) + 32. ! K to F
 	  endif
 c       
-	  dewp_k = td(i) 
-	  if(dewp_k .eq. badflag) then !dp bad?
+	  dewp_k = td(i)
+	  if(dewp_k.lt.210. .or. dewp_k.gt.320.) dewp_k = badflag
+	  if(dewp_k .le. badflag) then !dp bad?
 	     dewp_f = badflag	       !then bag it
 	  else
 	     dewp_f = ((dewp_k - 273.16) * 9./5.) + 32.	! K to F
 	  endif
 c
 	  rh_p = rh(i) 
+	  if(rh_p.lt.0. .or. rh_p.gt.100.) rh_p = badflag
 	  if(rh_time(i) .ne. badflag) then
 	     if( (timeobs(i) - rh_time(i)) .gt. laps_cycle_time) then
 		rh_p = badflag
@@ -308,7 +313,9 @@ c
 c..... Wind speed and direction
 c
 	  dir = dd(i) 
+	  if(dir.lt.0. .or. dir.gt.360.) dir = badflag
 	  spd = ff(i)
+	  if(spd.lt.0 .or. spd.gt.100.) spd = badflag
 	  if(dd_time(i).ne.badflag .and. ff_time(i).ne.badflag) then
 	     if( ((timeobs(i) - dd_time(i)) .gt. laps_cycle_time) .or.
      &           ((timeobs(i) - ff_time(i)) .gt. laps_cycle_time) ) then
@@ -316,21 +323,24 @@ c
 		spd = badflag
 	     endif
 	  endif
-	  if(ff(i)  .ne. badflag) spd = 1.94254 * ff(i) !m/s to kt
+	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
 c
 	  dirgust = ddg(i)
+	  if(dirgust.lt.0. .or. dirgust.gt.360.) dirgust = badflag
 	  spdgust = ffg(i)
+	  if(spdgust.lt.0 .or. spdgust.gt.120.) spd = badflag
 	  if(gust_time(i) .ne. badflag) then
 	     if( (timeobs(i) - gust_time(i)) .gt. laps_cycle_time) then
 		dirgust = badflag
 		spdgust = badflag
 	     endif
 	  endif
-	  if(ffg(i) .ne. badflag) spdgust = 1.94254 * ffg(i) !m/s to kt
+	  if(spdgust .ne. badflag) spdgust = 1.94254 * spdgust !m/s to kt
 c
 c..... Pressure...Station pressure, MSL and altimeter
 c
-	  stn_press = stnp(i) 
+	  stn_press = stnp(i)
+	  if(stn_press.lt.40000. .or. stn_press.gt.120000.) stn_press = badflag
 	  if(p_time(i) .ne. badflag) then
 	     if( (timeobs(i) - p_time(i)) .gt. laps_cycle_time ) then
 		stn_press = badflag
@@ -338,12 +348,22 @@ c
 	  endif
 	  if(stn_press .ne. badflag) stn_press = stn_press * 0.01 !Pa to mb
 c
-	  if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01 !Pa to mb
-	  if(alt(i)  .ne. badflag)  alt(i) =  alt(i) * 0.01 !Pa to mb
+	  if(mslp(i).lt.85000. .or. mslp(i).gt.120000.) then
+	     mslp(i) = badflag
+	  else
+	     mslp(i) = mslp(i) * 0.01 !Pa to mb
+	  endif
+	  if(alt(i).lt.85000. .or. alt(i).gt.120000.) then
+	     alt(i) = badflag
+	  else
+	     alt(i) =  alt(i) * 0.01 !Pa to mb
+	  endif
 c
 c..... Visibility
 c
-	if(vis(i) .ne. badflag) then
+	if(vis(i).lt.0. .or. vis(i).gt.330000.) then
+	   vis(i) = badflag
+	else
 	   vis(i) = vis(i) * .001      !m to km
 	   vis(i) = 0.621371 * vis(i)  !km to miles
 	endif
