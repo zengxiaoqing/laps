@@ -71,6 +71,14 @@
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
 
+!tt -- copy and paste of the previous. I'll change the file names of the
+!tt    AVAPS dropsondes to follow the NIMBUS/RAOB convention.
+
+      elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
+          c_filespec = dir_in(1:len_dir_in)//'/*0300o'
+          call get_file_times(c_filespec,max_files,c_fnames
+     1                       ,i4times,i_nbr_files_ret,istatus)
+
       elseif(c8_drpsnd_format(1:3) .eq. 'WFO' .or.
      1       c8_drpsnd_format(1:3) .eq. 'RSA'      )then
           c_filespec = dir_in(1:len_dir_in)
@@ -120,6 +128,11 @@
           if(c8_drpsnd_format(1:6) .eq. 'NIMBUS')then
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
 !             i4_drpsnd_window = 60000  ! Temporary for testing
+              i4_contains_early = 10800
+              i4_contains_late  = 0
+
+          elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
+              filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
               i4_contains_early = 10800
               i4_contains_late  = 0
 
@@ -193,6 +206,12 @@
 !    1                ,NX_L,NY_L
 !    1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
 !    1                ,filename_in,istatus)
+!tt -- Tiziana: Sep, 27
+              elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
+!                Open output SND file
+                 call open_ext(11,i4time_sys,'snd',istatus)
+
+                 call avapsread_sub(filename_in, istatus)
 
               elseif(c8_drpsnd_format(1:3) .eq. 'RSA')then
 
