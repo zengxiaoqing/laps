@@ -783,11 +783,9 @@ c
          print *,' Dewpoint check (before call sfcbkgd):'
          print *,'     Dewpt greater than temp at ',icnt,' points.'
          if(icnt .gt. 0) then
+
             print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
             print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
-
-c           write(6,9901) 'Max', diff_mx, i_mx, j_mx
-c           write(6,9901) 'Min', diff_mn, i_mx, j_mx
 
          endif
       endif
@@ -803,15 +801,11 @@ c
       print *,' Dewpoint check (after call sfcbkgd):'
       print *,'     Dewpt greater than temp at ',icnt,' points.'
       if(icnt .gt. 0) then
+
          print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
          print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 
-c        write(6,9901) 'Max', diff_mx, i_mx, j_mx
-c        write(6,9901) 'Min', diff_mn, i_mx, j_mx
-
       endif
-
-c9901  format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
 c
 c..... Do the winds
 c
@@ -1023,8 +1017,8 @@ c
       real dmax,dmin
 
       icnt=0
-      diff_mx = -1.e30
-      diff_mn =  1.e30
+      dmax = -1.e30
+      dmin =  1.e30
       i_mx = 0
       j_mx = 0
       i_mn = 0
@@ -1035,13 +1029,13 @@ c
             diff = sh_sfc(i,j) - tp_sfc(i,j)
             sh_sfc(i,j)=tp_sfc(i,j)
             icnt=icnt+1
-            if(diff .gt. diff_mx) then
-               diff_mx = diff
+            if(diff .gt. dmax) then
+               dmax = diff
                i_mx = i
                j_mx = j
             endif
-            if(diff .lt. diff_mn) then
-               diff_mn = diff
+            if(diff .lt. dmin) then
+               dmin = diff
                i_mn = i
                j_mn = j
             endif
