@@ -2279,6 +2279,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             NULBLL = 1 ! for conrec (number of lines between labels)
 
+            colortable = 'moist'
+
         elseif(c_field .eq. 'cv')then
             var_2d = 'LCP'
             ext = 'lcp'
