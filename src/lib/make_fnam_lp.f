@@ -168,3 +168,14 @@ C
         NSEC = LFTOVR
         RETURN
         END
+      subroutine make_fnam13_lp(initial_i4time,forecast_time,filename,
+     +     status)
+      integer initial_i4time, forecast_time, status
+      character*13 filename
+
+      call make_fnam_lp(initial_i4time,filename,status)
+      write(filename(10:13),'(i2.2,i2.2)') forecast_time/3600,
+     +     mod(forecast_time,60)
+      return
+      end
+
