@@ -1551,18 +1551,21 @@ Sample Input/Output: Should be available in the test data case.
 
 ------ 3.2.8 ----------------- PIREPS/ACARS Ingest ----------------------------
 
-Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
+Process: (ingest_aircraft.exe) LAPS Pireps / ACARS
 
 Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	Aircraft voice pireps and ACARS data (separate NetCDF files
-                                                              FSL-NIMBUS CDLs)
-        AFWA format also allowed for ACARS.
+	Aircraft voice pireps (cloud layer reports) 
+            NetCDF files using FSL-NIMBUS CDLs
 
-Outputs: (The two executables are run sequentially, appending to the 'pin' 
-          file. Feeds cloud.exe, wind.exe, lq3driver.x)
+        ACARS data 
+            NetCDF files using FSL-NIMBUS CDLs
+            AFWA format also allowed for ACARS
+
+Outputs: (Intermediate output written to the 'pin' file. Feeds cloud.exe, 
+          wind.exe, lq3driver.x)
 
 	pin	inter data	voice pireps/clouds, ACARS/(wind, temp, 
                                                                   mixing ratio)
