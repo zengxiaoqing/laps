@@ -40,14 +40,13 @@ cdis
      :         i_tilt,                                     ! Integer*4 (input)
      :         i_last_scan,                                ! Integer*4 (input)
      :         i_first_scan,                               ! Integer*4 (input)
-     :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
-     :         grid_ref,ngrids_ref,n_pot_ref,
-     :         NX_L,NY_L,NZ_L,
+     :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
+     :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
+     :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
+     :         ref_min,                                    ! Integer*4 (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
      :         path_to_vrc,                                ! Char      (input)
      :         i_product_i4time,                           ! Integer*4 (input)
-     :         full_fname,                                 ! Character*91
-     :         i4_fn_length,                               ! Integer*4 (output)
      :         i_num_finished_products,                    ! Integer*4 (output)
      :         i_status)                                   ! Integer*4 (output)
 c
@@ -94,6 +93,8 @@ c
       integer*4 i_first_scan
       integer*4 i_product_i4time
       integer   NX_L,NY_L,NZ_L
+
+      real*4 ref_min
 c
 c     LAPS Grid Dimensions
 c
@@ -103,8 +104,6 @@ c
 c
 c     Output variables
 c
-      character*91 full_fname
-      integer*4 i4_fn_length
       integer*4 i_num_finished_products
       integer*4 i_status
 c
