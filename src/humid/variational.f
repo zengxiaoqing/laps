@@ -324,6 +324,7 @@ c     assign goes number for common block to make avail where needed for OPTRAN
       goes_number = ngoes
       if (goes_number == 8) sat_index = 1
       if (goes_number == 10) sat_index = 2
+      if (goes_number == 9) sat_index = 3
       
       
 c     assign pressure to global array
@@ -589,8 +590,8 @@ c     channels used in this algorithm.
      1           psfc(i,j),
      1           julian_day, sfc_data(i,j)%lat, theta(i,j), tbest,
      1           sfc_data(i,j)%secza(sat_index),
-     1           sfc_data(i,j)%sfc_emiss(sat_index),
-     1           sfc_data(i,j)%sfc_refl(sat_index),
+     1           sfc_data(i,j)%sfc_emiss(1),
+     1           sfc_data(i,j)%sfc_refl(1),
      1           sfc_data(i,j)%secsola
      1           )
             
@@ -770,8 +771,8 @@ c     fill cost function for background atmosphere
             cost_lat = sfc_data(i,j)%lat
             cost_theta = theta (i,j)
             cost_sec_za = sfc_data(i,j)%secza(sat_index)
-            cost_sfc_emis = sfc_data(i,j)%sfc_emiss(sat_index)
-            cost_sfc_refl = sfc_data(i,j)%sfc_refl(sat_index)
+            cost_sfc_emis = sfc_data(i,j)%sfc_emiss(1)
+            cost_sfc_refl = sfc_data(i,j)%sfc_refl(1)
             cost_sec_solar = sfc_data(i,j)%secsola
 
 c     cost function data for gvap
@@ -829,7 +830,7 @@ c     executed variational search
             ftol = 0.01
 
             cost_comment_switch = 1 ! turn on for one print of gps&cloud
-            
+            write (24,*) '-  ',i,j
             call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
             
 c     check output of variational search for fret of 0.0 that

@@ -57,7 +57,7 @@ c     parameter variables
       real mdf
       integer lct
       type (lbsi), dimension(ii,jj) :: sfc_data
-      real :: pi, d2r, tempz(2,ii,jj), alt, sol_sub_lat, sol_sub_lon
+      real :: pi, d2r, tempz(3,ii,jj), alt, sol_sub_lat, sol_sub_lon
       real :: zenith_angle      !added for testing calculation
       real zenith ! function
 
@@ -552,13 +552,16 @@ c     fill new data structure surface data
 c     compute the secant of zenith angle for each goes satellite
 c     (1) is goes east
 c     (2) is goes west
+c     (3) is goes 9
 c     (x) add additional satellites as needed
             tempz(1,i,j) =  zenith(lat(i,j)*d2r,lon(i,j)*d2r,
      1           0.0,-75.*d2r)
             tempz(2,i,j) = zenith(lat(i,j)*d2r,lon(i,j)*d2r,
      1           0.0,-135.*d2r)
+            tempz(3,i,j) = zenith(lat(i,j)*d2r,lon(i,j)*d2r,
+     1           0.0,+155.*d2r)
 
-            do k = 1,2
+            do k = 1,3
                tempz(k,i,j) = 1./cos(tempz(k,i,j)*d2r)
                sfc_data(i,j)%secza(k) = tempz(k,i,j)
             enddo               !k

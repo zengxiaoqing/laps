@@ -7,7 +7,7 @@
       real :: sfc_temp ! K
       real :: sfc_pres ! mb
       real :: secsola ! no units
-      real :: secza(2)  !no units, 1=goesE, 2=goesW
+      real :: secza(3)  !no units, 1=goesE, 2=goesW, 3=GOES 9
       real :: sfc_emiss (25) ! unknown units
       real :: sfc_refl (25) ! unknown units
 
