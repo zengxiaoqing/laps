@@ -43,12 +43,12 @@ cdis
 cdis
 cdis
       subroutine analq
-     1     (i4time,plevel,ps,t,ph,td,data,cg,tpw,bias_one,
+     1     (i4time,p_3d,ps,t,ph,td,data,cg,tpw,bias_one,
      1     kstart,qs,glat,glon,ii,jj,kk)
 
 c     variables
 c     
-c     plevel(kk)  the laps pressure levels
+c     p_3d(ii,jj,kk)  the laps pressure levels
 c     ps (ii,jj)  is the surface pressure field hpa
 c     t (ii,jj)  surfact temp (c)
 c     ph (ii,jj)  is the top of boundary layer pressure hpa
@@ -80,7 +80,7 @@ c     preliminary computations
 c     input variables
       
       integer i4time,ii,jj,kk
-      real plevel (kk)
+      real p_3d (ii,jj,kk)
       real ps (ii,jj)
       real t (ii,jj)
       real ph (ii,jj)
@@ -136,7 +136,7 @@ c     check integrity
             if (ph(i,j) .le. 0.0) return ! this cannot be 0.0
             
             k = kstart (i,j)    ! k is "surface"
- 10         if (plevel(k) .gt. ph(i,j)) then !  haven't reached the bl top
+ 10         if (p_3d(i,j,k) .gt. ph(i,j)) then !  haven't reached the bl top
                k = k+1
                if (k.gt.kk) then
                   write(6,*)  'error in analq, top of column reached'
@@ -145,7 +145,7 @@ c     check integrity
                goto 10
             endif
             
-            ph(i,j) = plevel(k) ! this is the top of bl in reg grid
+            ph(i,j) = p_3d(i,j,k) ! this is the top of bl in reg grid
             qk(i,j) = k
             
          enddo
@@ -207,7 +207,7 @@ c     0.092103403 <-->  10% at 25 hpa
 c     0.11982929 <-->  5% at 25 hpa
 
 
-                  frac = plevel(k)-plevel(kstart(i,j))
+                  frac = p_3d(i,j,k)-p_3d(i,j,kstart(i,j))
                   frac = exp(frac*0.11982929) ! 
                   data(i,j,k) = data(i,j,kstart(i,j))*frac +
      1                 (1.-frac)*data(i,j,k)
@@ -248,7 +248,7 @@ c     tpw_point, irad and jrad
          
 c     integrate the tpw field
          
-         call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+         call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
          
 c     determine the radiometer with the lowest bias correction and assume
 c     that it is "true"
@@ -289,7 +289,7 @@ c     check vertical column over radiometer and do not scale if cloudy
          cgsum = 0.
          k = 1
          
-         do while (plevel(k).gt.600) ! integrate cloud in lower trop
+         do while (p_3d(irad,jrad,k).gt.600) ! integrate cloud in lower trop
             cgsum=cgsum+cg(irad,jrad,k)
             k = k+1
          enddo
@@ -305,7 +305,7 @@ c     the value of bias will cause the code to branch at this point
             
 c     integrate the tpw field
             
-            call int_tpw (data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+            call int_tpw (data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
             
 c     compute the bias at the radiometer site
             
@@ -351,7 +351,7 @@ c     integrate the tpw field one pass and beleive it to be good
          write(6,*) 'radiometer un-avail, no bias correction to tpw'
          write (6,*) 'computing ipw from laps field for later comps'
          
-         call int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+         call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
 
          call check_nan2(tpw,ii,jj,istatus)
          if(istatus.ne.1) then

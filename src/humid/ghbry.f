@@ -42,7 +42,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine ghbry (i4time,plevel,pb,lt1dat,htby,
+      subroutine ghbry (i4time,p_3d,pb,lt1dat,htby,
      1     ii,jj,kk,istatus)
     
 c     routine to return boundary layer depth in meters
@@ -55,7 +55,7 @@ c     input parameters
       
       integer i4time
       integer ii,jj,kk,istatus
-      real plevel (kk)
+      real p_3d (ii,jj,kk)
       real pb (ii,jj)           ! surface station pressure
       real lt1dat(ii,jj,kk)
       real htby (ii,jj)
@@ -100,11 +100,11 @@ c     section is for better boundary layer analysis
          do i = 1,ii
             do k = 2,kk-1  !note that n2(,,k) end points are not filled.
                
-               n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (plevel(k)/r) *
+               n2(i,j,k) = (g/lt1dat(i,j,k) )**2 * (p_3d(i,j,k)/r) *
      1              (
-     1              kkk*lt1dat(i,j,k)/plevel(k)
+     1              kkk*lt1dat(i,j,k)/p_3d(i,j,k)
      1              -  ( lt1dat(i,j,k+1)-lt1dat(i,j,k-1) )
-     1              / ( plevel(k+1) - plevel(k-1) )
+     1              / ( p_3d(i,j,k+1) - p_3d(i,j,k-1) )
      1              )
                
                
@@ -122,13 +122,13 @@ c     now decide where the "height of the boundary layer" is
 c     search upward for n2(k+1) being negative, then interpolate there
 
             do k = 2,kk-2       ! avoid using n2(,,k) endpoints, (not filled)
-                  x1 = plevel(k)
+                  x1 = p_3d(i,j,k)
                   y1 = n2(i,j,k)
 
-               if (pb(i,j) .ge. plevel(k+1) 
+               if (pb(i,j) .ge. p_3d(i,j,k+1) 
      1              .and. n2(i,j,k+1) .lt. 0.0) then
 
-                  x2 = plevel(k+1)
+                  x2 = p_3d(i,j,k+1)
                   y2 = n2(i,j,k+1) 
 c     bail out of loop here to not affect regions above 1st inversion
                   go to 111

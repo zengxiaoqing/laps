@@ -141,7 +141,7 @@ c     ------------------
 
       character*3 desired_field
    
-      real*4 plevel(kk)
+      real*4 plevel(kk), p_3d(ii,jj,kk)
       integer*4 mlevel(kk)
 
 c    
@@ -378,6 +378,17 @@ c     initialize total pw to laps missing data flag
          mlevel(k) = plevel(k)
       enddo
 
+c     preliminary assignment of 3_d pressure here
+
+      do j = 1,jj
+         do i = 1,ii
+            do k = 1, kk
+               p_3d(i,j,k) = plevel(k)
+            enddo
+         enddo
+      enddo
+
+
 c     mark the maps gridpoints
 
       do j = 1,jj,(jj-1)/(jj-1)
@@ -525,7 +536,7 @@ c     perform initialquality control check for supersaturation after ingest
       counter = 0
       do k = 1,kk
          write (6,*)
-         write (6,*) 'Level ', k, '   ', plevel(k)
+         write (6,*) 'Level ', k, '   ', p_3d(1,1,k)
          write (6,*)
          
          do j = jj,1,-1
@@ -650,7 +661,7 @@ c     ***   insert bl moisture
 
       print*, 'calling lsin'
 c     insert boundary layer data
-      call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
+      call lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
 
 c     check fields after lsin call

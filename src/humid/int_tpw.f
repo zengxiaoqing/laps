@@ -32,7 +32,6 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
 cdis
 cdis
 cdis
@@ -42,19 +41,9 @@ cdis
 cdis
 cdis
 cdis
-      subroutine  int_tpw(data,kstart,qs,ps,plevel,tpw,ii,jj,kk)
+cdis
+      subroutine  int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
 
-c     $log: int_tpw.for,v $
-c     revision 1.3  1995/09/13  21:35:23  birk
-c     added disclaimer to files
-c     
-c     revision 1.2  1994/07/22  22:02:22  birk
-c     made code compatible with lapsparms.inc
-c     
-c     revision 1.1  1994/04/25  15:01:49  birk
-c     initial revision
-c     
-      
 c     subroutine to integrate the total precipitable water from the
 c     specific humidity data.  consolodating this process, since it is
 c     done numerous times in the code
@@ -73,7 +62,7 @@ c     parameter variables
       integer kstart (ii,jj)
       real qs(ii,jj)
       real ps(ii,jj)
-      real plevel (kk)
+      real p_3d (ii,jj,kk)
       real tpw (ii,jj)
       
       
@@ -93,14 +82,14 @@ c     integrate q
             tpw(i,j) = 0.0
             do k = kstart(i,j),kk-1
                tpw(i,j) = tpw(i,j) + ( data(i,j,k)+data(i,j,k+1) )/2. 
-     1              * (plevel(k)-plevel(k+1))
+     1              * (p_3d(i,j,k)-p_3d(i,j,k+1))
             enddo
 c     change units of q to g/kg
             tpw(i,j) = tpw(i,j) *1.e3 
 c     add surface layer (already in g/kg)
             tpw(i,j) = tpw(i,j)
      1           + ( qs(i,j) + data(i,j,kstart(i,j)) *1.e3 ) /2.
-     1           * (ps(i,j)-plevel(kstart(i,j)) )
+     1           * (ps(i,j)-p_3d(i,j,kstart(i,j)) )
 c     comvert g/kg to cm
             tpw(i,j) = tpw(i,j) / 100. / 9.8
             

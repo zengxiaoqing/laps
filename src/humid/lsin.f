@@ -37,7 +37,7 @@ cdis
 cdis
 cdis
 
-      subroutine lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
+      subroutine lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
      1     kstart,qs,p,glat,glon,ii,jj,kk,istatus)
 
 c     this routine is the laps surface interface for water vapor
@@ -59,7 +59,7 @@ c     basically we prepare all for a call to int_tpw
 c     we leave the boundary layer mixing process to analq along with
 c     radiometer adjustment.
       
-c     1 ) puts qs (surface q) at the plevel above ps (surface pressure)
+c     1 ) puts qs (surface q) at the p_3d above ps (surface pressure)
 c     2) does not write any data below ground
 c     3) maintains an integral from the true surface ps for tpw
 c     this might cause some difference between this output and
@@ -71,7 +71,7 @@ c     putting the data below ground.
 c     input variables
 
       integer i4time,istatus,ii,jj,kk
-      real plevel (kk)
+      real p_3d (ii,jj,kk)
       real lt1dat (ii,jj,kk)    ! laps 3-d temp field
       real data (ii,jj,kk)
       real cg (ii,jj,kk)
@@ -159,7 +159,7 @@ c     convert p to mb
       endif
       
       
-      call ghbry (i4time,plevel,p,lt1dat,pu,ii,jj,kk,
+      call ghbry (i4time,p_3d,p,lt1dat,pu,ii,jj,kk,
      1     istatus)
       if(istatus.ne.1) return
 
@@ -204,7 +204,7 @@ c     define kstart (k index of bottom of the column)
          do i = 1,ii
             do k = 1,kk
                
-               if (p(i,j).lt. plevel(k)) then ! plevel is underground
+               if (p(i,j).lt. p_3d(i,j,k)) then ! p_3d is underground
                   data(i,j,k) = bad
                   cg(i,j,k)   = 0.0 ! no clouds under ground
                else
@@ -240,7 +240,7 @@ c     compute the total precipitable water and bias correct total 3-d field to
 c     radiometer data
       
       print*, 'call routine analq'
-      call analq(i4time,plevel,p,t,pu,td,data,cg,tpw,bias_one,kstart,
+      call analq(i4time,p_3d,p,t,pu,td,data,cg,tpw,bias_one,kstart,
      1     qs, glat,glon,ii,jj,kk)
       
       print*, 'done with routine analq'
