@@ -571,7 +571,7 @@ cdoc                            calls read_multiradar_3dref.
 
         character*4 radar_name
 
-        logical l_low_fill,l_high_fill,l_apply_map
+        logical l_low_fill,l_high_fill,l_apply_map, l_parse
 
         write(6,*)' Subroutine read_multiradar_3dref'
 
@@ -688,8 +688,6 @@ cdoc                            calls read_multiradar_3dref.
         if(radarext(1:3) .eq. 'vrc' .or. radarext(1:3) .eq. 'all')then       
 50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
 
-            radar_name = 'WSI '
-
             var_2d = 'REF'
             ext = 'vrc'
             call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,ext,var_2d
@@ -699,6 +697,15 @@ cdoc                            calls read_multiradar_3dref.
             write(6,*)' istatus_vrc = ',istatus_vrc
 
             if(istatus_vrc .eq. 1 .or. istatus_vrc .eq. -1)then       
+                if(l_parse(comment_2d,'WSI'))then
+                    radar_name = 'WSI '
+                else
+                    len_comment = 37
+                    radar_name = comment_2d(len_comment-3:len_comment)       
+                endif 
+                    
+                write(6,*)' Read radar ',radar_name             
+
                 do i = 1,imax
                 do j = 1,jmax
                     if(radar_2dref(i,j) .ne. r_missing_data)then
