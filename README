@@ -207,8 +207,8 @@
      on your system, or editing your own version of 'ncargf90' patterned after
      'ncargf77', if needed. A possible alternative to fixing 
      'ncargf77/ncargf90' is to edit 'src/include/makefile.inc' with the full 
-     path for 'NCARGFC', and appropriate compiler for 'FC' for your system 
-     (after running configure).
+     path for 'NCARGFC', and appropriate compiler for 'FC' (and possibly 
+     compiler flags) for your system (after running configure).
 
      Lapsplot is built as a special option to 'make', simply type 
      'make lapsplot' or 'make install_lapsplot'. It is not built with a plain 
@@ -385,13 +385,13 @@
      on IRIX64 v6.2.
 
      A second method of modifying the flags is to edit 
-     'src/include/makefile.inc'. If you find that the default compiler flags 
-     don't work for your platform or that your platform has no default, you'll
-     need to experiment to find the right set of flags.  Experiment (after 
-     running 'configure') in 'src/include/makefile.inc' as this will 
-     automatically control the flags used throughout laps. If you find flags 
-     that work for your platform and would like us to add them to the defaults
-     in 'configure' please let us know via e-mail. 
+     'src/include/makefile.inc', after running configure. If you find that the
+     default compiler flags don't work for your platform or that your platform
+     has no default, you'll need to experiment to find the right set of flags.
+     Changes in 'src/include/makefile.inc' will automatically modify the 
+     flags used throughout laps. If you find flags that work for your platform
+     and would like us to add them to the defaults in 'configure' please let 
+     us know via e-mail. 
 
                 --- 2.2.3   Ingest Software changes ---
 
