@@ -15,7 +15,7 @@
       character*256 bgpath
       character*132 cmodel
       integer oldest_forecast, bg_files,forecast_length
-      integer i, j, k, kk
+      integer i, j, k, kk, ij
       integer max_forecast_delta
       integer ntbg,nvt
       parameter (ntbg=100)
@@ -42,6 +42,7 @@
       character*2 cwb_model_type
 
       character(len=256), allocatable :: bg_names(:)
+      character(len=256), allocatable :: bgnames_tmp(:)
 
       parameter (nlapsprds=5)
       character*3 lapsprds(nlapsprds)
@@ -185,7 +186,28 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
       
       endif
 
-      print *,bg_names(bg_files),bg_files
+c ok, if we do not want initial cond files (analysis files) then filter them.
+      if(.not.use_analysis)then
+          allocate(bgnames_tmp(bg_files))
+          call s_len(bg_names(1),j)
+          do i=1,bg_files
+             if(bg_names(i)(j-3:j).ne.'0000')then
+                ij=ij+1
+                bgnames_tmp(ij)=bg_names(i)
+             endif
+          enddo
+          print*,'Removed ',bg_files-ij,' initial cond files '
+          do i=1,bg_files
+             bg_names(i)=' '
+          enddo
+          bg_files=ij
+          do i=1,bg_files
+             bg_names(i)=bgnames_tmp(i)
+          enddo
+          deallocate(bgnames_tmp)
+      endif
+
+      print*,TRIM(bg_names(bg_files)),bg_files
 
       bgtime2=0
       accepted_files = 0
