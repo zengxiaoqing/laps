@@ -404,6 +404,7 @@ c     acquire sounder data
          if (istatus .ne. 1) then
             write (6,*) 'error obtaining sounder radiances'
             goes_good = 0
+            write(6,*) 'goes_good is ',goes_good
          endif
          
       endif                     ! only get SOUNDER data
@@ -449,7 +450,7 @@ c     get laps surface pressure
          
       endif
 
-c      if (goes_good .eq. 0) go to 865
+c     if (goes_good .eq. 0) go to 865
       
 c     convert pressure to hpa
       do j = 1,jj
@@ -644,21 +645,24 @@ c     Execute powell method correction of layer humidity in clear areas
                x(k) = 1.0
             enddo
             
-            if (ch3(i,j).eq.rmd) then
-               print*, 'missing data in channel 3 noted', i,j
-               cost_rad_istatus = 0
-               
-            elseif (ch4(i,j).eq.rmd) then
-               print*, 'missing data in channel 4 noted', i,j
-               cost_rad_istatus = 0
-               
-            elseif (ch5(i,j).eq.rmd) then
-               print*, 'missing data in channel 5 noted', i,j
-               cost_rad_istatus = 0
-               
+            if (cost_rad_istatus.ne.0) then ! reduce work 
+            
+               if (ch3(i,j).eq.rmd) then
+                  print*, 'missing data in channel 3 noted', i,j
+                  cost_rad_istatus = 0
+                  
+               elseif (ch4(i,j).eq.rmd) then
+                  print*, 'missing data in channel 4 noted', i,j
+                  cost_rad_istatus = 0
+                  
+               elseif (ch5(i,j).eq.rmd) then
+                  print*, 'missing data in channel 5 noted', i,j
+                  cost_rad_istatus = 0
+                  
+               endif ! end test of channel good 
             endif
             
-            if (isnd.eq.1) then
+            if (isnd.eq.1 .and. cost_rad_istatus.ne.0) then
                do k = 4,7
                   if (rads(i,j,kanch(k)) .eq. rmd) then
                      print*, 'missing data in sounder channel ',
@@ -682,7 +686,7 @@ c     new check for viable radiance location
                write(6,*) 'Radiance passed clear chan test',
      1              abs(ch4(i,j)-btemp(i,j,2))
                continue         ! pass clear channel test
-            else
+            elseif (cost_rad_istatus .eq. 1) then
                write (6,*)'Radiance failed clear chan test',
      1               abs(ch4(i,j)-btemp(i,j,2)), cost_rad_istatus
                cost_rad_istatus = 0 ! failing clear channel test
@@ -825,6 +829,7 @@ c     that the func will never be non-zero in real search.
             
             if (fret.eq.0.0) then ! assume that func set to no
                                 !convergence
+               write(6,*) ' FRET = 0, assume no converge, assign 1.0'
                do ijk = 1,3
                   x(ijk) = 1.0
                enddo
@@ -837,7 +842,7 @@ c     write out solution details
             else
                write(6,33) 'TEML ',abs(x(1)), abs(x(2)),abs(x(3)),
      1              i,j,fret,iter(i,j)
- 33            format(a5,3(f7.2,2x),i3,1x,i3,1x,f7.2,i3)
+ 33            format(a5,3(e11.6,2x),i3,1x,i3,1x,e11.6,i3)
             endif
                
 c     criterion to accept the result is based on variational 
@@ -847,7 +852,7 @@ c     if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
             if ( iter(i,j) .lt. 50
 c     1           .and. abs(abs(x(1))-1.) .lt. .1
      1           .and.
-     1           iter(i,j) .gt. 1 
+     1           iter(i,j) .gt. 0 
      1           .and.  abs(x(3)).ne.0.0
      1           .and.  abs(x(2)).ne.0.0
      1           .and.  abs(x(1)).ne.0.0) then
@@ -866,14 +871,11 @@ c     1                 abs(x(1)),iter(i,j), cld(i,j)
             endif
             
             write(6,*) blank
-            
-            
-            
          enddo
       enddo
       
       
-      write(6,*) failures,' failures occurred due to layer confusion' 
+      write(6,*) failures,' failures from variational processing' 
       write(6,*) '...non-convergence '
 
 c     ************* Section on processing resulting scaling fields  ****

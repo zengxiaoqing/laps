@@ -933,7 +933,7 @@ c     make call to goes moisture insertion
 
          if(c_istatus.eq.1 .and. t_istatus.eq.1) then
 
-            write (6,*) 'begin goes insertion step'
+            write (6,*) 'Begin variational assimilation'
             call variational (
      1           data,          ! 3-d specific humidity g/g
      1           lat,lon,       ! 2-d lat and longitude
