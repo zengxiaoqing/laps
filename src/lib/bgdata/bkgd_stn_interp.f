@@ -272,13 +272,14 @@ c             endif
 
         else
 
-           print *, ' '
-           print *, 'Input Parameters'
-           print *, '----------------'
            print *
-           print *, ' Analysis setup: '
-           print *, nx_laps,ny_laps,nz_laps
-           print *, laps_cycle_time
+
+c          print *, 'Input Parameters'
+c          print *, '----------------'
+c          print *
+c          print *, ' Analysis setup: '
+c          print *, laps_cycle_time
+
            print *
 
 
