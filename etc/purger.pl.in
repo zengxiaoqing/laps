@@ -18,22 +18,28 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 #
+use strict;
+use English;
+use vars qw($opt_r $opt_t $opt_m);
+use Getopt::Std;
 
-$DATAROOT=shift || die "LAPS_DATA_ROOT required";
-$realclean='';
-$realclean=shift;
+getopts('rt:m:');
+
+
+my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
+
 # This script purgers old data files in directories under the lapsprd 
 # directory.  It expects the at least the first two characters of the file
 # name are digits.  hist_time is the age in days of the oldest files to keep.
 # Exceptions can be listed below.
 #
-my(%clean_dirs);
+my(%clean_dirs, $hist_time, $min_files);
 
-if($realclean eq "FULLPURGE"){
+if($opt_r){
     $hist_time = 0;
     $min_files = 0;
 }else{
-    $hist_time = 1.5;
+    $hist_time = ($opt_t)?$opt_t:1.5;
     $clean_dirs{lga} = 0.5;
     $clean_dirs{lgb} = 0.5;
     $clean_dirs{ram} = 0.75;
@@ -46,25 +52,31 @@ if($realclean eq "FULLPURGE"){
     $clean_dirs{v03} = 0.125;
     $clean_dirs{v04} = 0.125;
     $clean_dirs{dprep} = 0.25;
+    $clean_dirs{'model/output'} = 0.25;
+    $clean_dirs{'model/varfiles'} = 0.25;
     $clean_dirs{'../log'} = 30.0;
 #
 # Don't ever completely empty the directories 
 #
 
-    $min_files = 5;
+    $min_files = ($opt_m)?$opt_m:5;
 }
-print "Running $0 for data in $DATAROOT $realclean\n";
+print "Running $0 for data in $DATAROOT default purge time is $hist_time days \n";
+print "Leave a minimum of $min_files in each directory\n";
+
+
 
 chdir($DATAROOT) || die "could not chdir to $DATAROOT";
-@subdirs = &dodir('.','.');
+my @subdirs = &dodir('.','.');
 foreach (@subdirs){
     next if($_ eq '.');
     $_ =~ s/^\.\///;
     $clean_dirs{$_} = $hist_time if(-d $_  && !$clean_dirs{$_});
 }
 
-
+my($dir);
 foreach $dir (keys(%clean_dirs)){
+    my(@filelist,$i);
     opendir(DIR,$dir);
     if($dir eq '../log'){
 	@filelist = grep(/\d\d$/, readdir(DIR));
@@ -75,6 +87,7 @@ foreach $dir (keys(%clean_dirs)){
     print "Purging in $dir\n";
     next if($#filelist < $min_files);
     $i=$#filelist;
+    my($file, $age);
     foreach $file (sort @filelist){
         stat("$dir/$file");
         $age = -M _;
@@ -116,7 +129,7 @@ sub dodir {
         my($found)=0;
 	for(@filenames) {
 	    next if(/^[\.]+$/);
-	    $name = "$dir/$_";
+	    my $name = "$dir/$_";
 	    if(($_ =~ $pattern) && $found==0){
 #		print $name,"\n";
                 $found++;
