@@ -1304,7 +1304,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      to run for the time you are inputting instead of the current time. 
      An example call is shown as follows...
 
-     prompt> perl sched.pl  -A dd-mmm-yyyy-hhmm $LAPSINSTALLROOT $LAPS_DATA_ROOT
+     prompt> perl sched.pl -A dd-mmm-yyyy-hhmm $LAPSINSTALLROOT $LAPS_DATA_ROOT
 
      ...where the inputted 'dd-mmm-yyyy-hhmm' value is the date (for example
      28-Aug-2002-1200). This date can be inferred from the contents of
@@ -1357,12 +1357,6 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      prompt> cd $LAPS_DATA_ROOT/lapsprd
      prompt> ln -s testdata/lapsprd/[inputlist]   .
-
-     You might check to ensure that the purger will not accidentally purge
-     any archived analysis files you want to keep in your $LAPS_DATA_ROOT. 
-     Either a copy of these files should be kept elsewhere or the purger can 
-     be disabled using the command line arguments 'sched.pl -r -m N', where 
-     N is a large number of files to keep in each directory. 
 
                 ----  2.5.2  Ingest + Analysis Test ---
 
