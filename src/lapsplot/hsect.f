@@ -2516,9 +2516,17 @@ c
                 write(c7_string,2017)min(num_hr_accum,999)
 2017            format(i4,' Hr')
                 if(c_type(1:2) .eq. 'sa')then
-                    c33_label = 'Stm Tot Snow Acc (in)'//c7_string
+                    if(c_units_type .eq. 'english')then
+                        c33_label = 'Stm Tot Snow Acc (in)'//c7_string
+                    else ! metric
+                        c33_label = 'Stm Tot Snow Acc (mm)'//c7_string
+                    endif
                 else
-                    c33_label = 'Stm Tot Prcp Acc (in)'//c7_string
+                    if(c_units_type .eq. 'english')then
+                        c33_label = 'Stm Tot Prcp Acc (in)'//c7_string
+                    else ! metric
+                        c33_label = 'Stm Tot Prcp Acc (mm)'//c7_string
+                    endif
                 endif
 
             elseif(.false.)then ! Phasing this out
@@ -2635,9 +2643,17 @@ c
                 write(c9_string,2029)r_hours
 
                 if(c_type(1:2) .eq. 'sa')then
-                    c33_label = c9_string//' Snow Accum  (in)       '
+                    if(c_units_type .eq. 'english')then
+                        c33_label = c9_string//' Snow Accum  (in)'      
+                    else ! metric
+                        c33_label = c9_string//' Snow Accum  (mm)'      
+                    endif
                 else
-                    c33_label = c9_string//' Prcp Accum  (in)       '
+                    if(c_units_type .eq. 'english')then
+                        c33_label = c9_string//' Prcp Accum  (in)'
+                    else ! metric
+                        c33_label = c9_string//' Prcp Accum  (mm)'
+                    endif
                 endif
 
             elseif(.true.)then ! under construction
