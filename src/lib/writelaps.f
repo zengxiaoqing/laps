@@ -133,8 +133,8 @@ C **** Special case where write_laps is called with fua or fsf extension
       if (ext .eq. 'fua') then
         j = base
         do i = 1, n_levels
-          cdl_levels(i) = base
-          j = j + interval
+          cdl_levels(i) = j
+          j = j - interval
         enddo
       endif
       if (ext .eq. 'fsf') then
