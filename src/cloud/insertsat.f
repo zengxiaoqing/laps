@@ -1105,6 +1105,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
           endif
 
           do i = 1,imax
+           if(tb8_k(i,j) .ne. r_missing_data)then
             do k = 1,kcld
                 cldcv_1d(k) = cldcv(i,j,k)
             enddo
@@ -1268,7 +1269,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
                 tdiff_corr_sumsq2 = tdiff_corr_sumsq2 + tdiff**2
             endif
 
-
+           endif ! tb8_k(i,j) is valid
           enddo ! i
         enddo ! j
 

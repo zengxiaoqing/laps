@@ -255,10 +255,12 @@ cdis
 
 !       Arrays used to read in satellite data
         real*4 tb8_k(NX_L,NY_L)
+        real*4 t39_k(NX_L,NY_L)
         real*4 tb8_cold_k(NX_L,NY_L)
         real*4 albedo(NX_L,NY_L)
         real*4 cloud_frac_vis_a(NX_L,NY_L)
         real*4 cloud_frac_co2_a(NX_L,NY_L)
+        integer*4 istat_39_a(NX_L,NY_L)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
@@ -637,6 +639,12 @@ C DO ANALYSIS on SAO and PIREP data
         endif
 
 C READ IN SATELLITE DATA
+        call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,
+     1                    NX_L,NY_L,
+     1                    tb8_k,istat_tb8,
+     1                    t39_k,istat_t39,
+     1                    sst_k,istat_sst)
+
 !       Calculate solar altitude
         do j = 1,NY_L
         do i = 1,NX_L
@@ -650,6 +658,9 @@ C READ IN SATELLITE DATA
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
      1              ,istat_vis)                                          ! I
+
+        call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data
+     1                   ,NX_L,NY_L,istat_39_a)
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
