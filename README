@@ -289,8 +289,10 @@
      the FSL NIMBUS system. Note that the ingest code is also generally 
      compatable with SBN/NOAAPORT data as stored in NetCDF files on the 
      WFO-Advanced system. The ingest code processes the "raw" data and 
-     outputs the LAPS "intermediate" data files. Most ingest code is 
-     located under the src/ingest directory. When NetCDf format is used for 
+     outputs the LAPS "intermediate" data files. These intermediate files
+     are generally in ASCII for point data and NetCDF format for gridded data
+     that have been remapped onto the LAPS grid. Most ingest code is 
+     located under the 'src/ingest directory'. When NetCDf format is used for 
      the raw data, a cdl file for the raw data is sometimes included in the 
      source code directory.
   
@@ -430,6 +432,9 @@
            The Atlanta WFO is getting this done as well, John Snook (FSL) 
            would have info on this.
 
+
+     Further information on specific LAPS ingest processes is found in Section
+     3 of this README.
       
 
                ---  2.4  Running LAPS Analyses  ---
