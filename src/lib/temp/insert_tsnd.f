@@ -325,12 +325,14 @@ cdis
 
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
 
-        logical l_good_tsnd(max_snd_grid),l_analyze(nk)
+        logical l_good_tsnd(max_snd_grid),l_analyze(nk),l_3d
 
         include 'tempobs.inc'
 
         write(6,*)
         write(6,*)' Subroutine analyze_tsnd'
+
+        l_3d = .false.
 
         if(.false.)then ! Insert a single TSND
           do i_tsnd = 1,n_tsnd
@@ -375,7 +377,7 @@ cdis
      1               ,bias_tsnd                              ! Input
      1               ,bias_3d                                ! Output
      1               ,bias_obs_3d                            ! Dummy
-     1               ,l_analyze                              ! Output
+     1               ,l_analyze,l_3d                         ! Output
      1               ,wt_3d                                  ! Dummy
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1               ,weight_bkg_const                       ! Input
@@ -389,7 +391,7 @@ cdis
 
              write(6,*)' Adding back in the biases'
              do k = 1,nk
-               if(l_analyze(k))then
+               if(l_analyze(k) .or. l_3d)then
                  do j = 1,nj
                  do i = 1,ni
                    if(bias_3d(i,j,k) .ne. r_missing_data)then
@@ -420,7 +422,7 @@ cdis
      1                   ,bias_tsnd                              ! Input
      1                   ,bias_3d                                ! Output
      1                   ,bias_obs_3d                            ! Input
-     1                   ,l_analyze                              ! Output
+     1                   ,l_analyze,l_3d                         ! Output/Input
      1                   ,wt_3d                                  ! Local
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1                   ,weight_bkg_const                       ! Input
@@ -443,7 +445,7 @@ cdis
         real*4 wt_3d(ni,nj,nk)
         integer*4 n_obs_lvl(nk)                                ! Local
 
-        logical l_analyze(nk)
+        logical l_analyze(nk),l_3d
 
         integer*4  n_fnorm
 
@@ -516,7 +518,7 @@ cdis
      1                     ,n_var                           ! Input
      1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
      1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs
-     1                     ,l_analyze                       ! Input
+     1                     ,l_analyze,l_3d                  ! Input
      1                     ,weight_bkg_const                ! Input
      1                     ,n_obs_lvl,istatus)              ! Outputs
 

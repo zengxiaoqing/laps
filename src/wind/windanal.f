@@ -103,6 +103,7 @@
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
+      logical  l_3d
 
 !     These are the weights of the various data types (filling the 3D array)
       real*4 weight_meso,weight_sao,weight_pirep,weight_prof,weight_rada
@@ -110,11 +111,13 @@
 
       integer*4 istatus         ! (1 is good)                          ! Output
 
-!****************END ARGUMENT LIST *******************************************
-
       integer*4  n_fnorm
 
       dimension fnorm(0:n_fnorm)
+
+!****************END DECLARATIONS *********************************************
+
+      l_3d = .false.
 
       do iter = 1,n_iter_wind
 
@@ -327,7 +330,7 @@
      1        ,imax,jmax,kmax,grid_spacing_m
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
-     1        ,l_analyze,weight_bkg_const
+     1        ,l_analyze,l_3d,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
@@ -343,8 +346,8 @@
       do k = 1,kmax
           if(n_obs_lvl(k) .eq. 0)then
               write(6,311)k
-311           format(1x,' No obs at lvl',i3,' Using Zero array as 1st Pa
-     1ss')
+311           format(1x,' No obs at lvl',i3,
+     1                  ' Using Zero array as 1st Pass')
               do j=1,jmax
               do i=1,imax
                   upass1(i,j,k) = 0.
@@ -435,7 +438,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const
+     1       ,l_analyze,l_3d,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -496,7 +499,7 @@
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const
+     1       ,l_analyze,l_3d,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -582,7 +585,7 @@
      1       ,grid_spacing_m
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,weight_bkg_const
+     1       ,l_analyze,l_3d,weight_bkg_const
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
@@ -594,14 +597,12 @@
 
           if(istatus .ne. 1)return
 
-            I4_elapsed = ishow_timer()
-
+          I4_elapsed = ishow_timer()
 
       endif ! n_radars
 
-      write(6,*)' Adding analyzed differences to the background to recon
-     1struct'
-     1  ,' full analyses'
+      write(6,*)' Adding analyzed differences to the background '
+     1         ,'to reconstruct full analyses'
 
       do k=1,kmax ! Add back differences for first pass
 
@@ -611,9 +612,9 @@
                   upass1(i,j,k) = upass1(i,j,k) + u_laps_bkg(i,j,k)
                   vpass1(i,j,k) = vpass1(i,j,k) + v_laps_bkg(i,j,k)
               else
-                  write(6,*)' ERROR: Missing data value(s) detected in f
-     1irst'
-     1      ,' pass at lvl',k
+                  write(6,*)
+     1            ' ERROR: Missing data value(s) detected in first'
+     1           ,' pass at lvl',k
                   istatus = 0
                   return
               endif
@@ -960,8 +961,8 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
 
-            if(abs(upass1(i,j,k)) .ge. 1e6 .or. abs(vpass1(i,j,k)) .ge. 
-     11e6)then
+            if(abs(upass1(i,j,k)) .ge. 1e6 .or. 
+     1         abs(vpass1(i,j,k)) .ge. 1e6)then
                 ierr_count = ierr_count + 1
                 if(ierr_count .lt. 100)write(6,*)
      1      ' Error in upass1,vpass1',i,j,k,upass1(i,j,k),vpass1(i,j,k)
@@ -1108,8 +1109,8 @@ c  convert radar obs into u & v by using tangential component of first pass
               do ii = i,i+1
                  if  ( l_found_one ) then
                     vr_obs_fltrd(ii,jj) = r_missing_data
-                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data ) th
-     1en
+                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data 
+     1                                                            )then       
                     vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
                     l_found_one = .true.
                  else

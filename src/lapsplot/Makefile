@@ -57,7 +57,7 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(NCARGFC) $(MAIN) $(DBFFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(NCARGFC) $(MAIN) $(DBFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)

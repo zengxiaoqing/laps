@@ -182,6 +182,13 @@ cdis
                            return
                         endif
 
+                        if(n_pirep_obs .le. 1000 .OR. 
+     1                     n_pirep_obs .eq. (n_pirep_obs/10) * 10)then       
+                            iwrite = 1
+                        else
+                            iwrite = 0
+                        endif
+
                         pirep_i(n_pirep_obs) = i_grid
                         pirep_j(n_pirep_obs) = j_grid
 
@@ -199,7 +206,7 @@ cdis
 
                         write(lun_pig,*)ri-1.,rj-1.,rk-1.,dd,ff
 
-                        write(6,101)xlat,xlon,dd,ff,rk
+                        if(iwrite .eq. 1)write(6,101)xlat,xlon,dd,ff,rk
      1          ,u_temp,v_temp,pirep_u(n_pirep_obs),pirep_v(n_pirep_obs)
 101                     format(2f8.2,2f8.1,f8.1,4f8.2)
 
@@ -220,7 +227,7 @@ cdis
                     endif ! In vertical bounds
 
 
-                    write(6,20)n_pirep_obs,
+                    if(iwrite .eq. 1)write(6,20)n_pirep_obs,
      1                 pirep_i(n_pirep_obs),
      1                 pirep_j(n_pirep_obs),
      1                 pirep_k(n_pirep_obs),
@@ -230,7 +237,8 @@ cdis
 20                  format(i4,1x,3i3,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
 
                 else
-                    write(6,*)' Out of horizontal bounds',i_grid,j_grid        
+                    if(iwrite .eq. 1)write(6,*)
+     1              ' Out of horizontal bounds',i_grid,j_grid        
 
                 endif ! In horizontal bounds
             endif ! Good data
