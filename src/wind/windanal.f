@@ -41,7 +41,7 @@ cdis
      1     ,istat_radar_vel                                      ! Input
      1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in
 !    1     ,upass1,vpass1                                        ! Output
-     1     ,n_var,n_fnorm                                        ! Input
+     1     ,n_var,n_fnorm_dum                                    ! Input
      1     ,uanl,vanl                                            ! Output
      1     ,wt_p,weight_bkg_const,rms_thresh_wind                ! Input/Local
      1     ,max_radars
@@ -156,11 +156,9 @@ cdis
 
       integer*4 istatus         ! (1 is good)                          ! Output
 
-      integer*4  n_fnorm
+      integer*4  n_fnorm_dum
 
       character*3 c3_string
-
-      dimension fnorm(0:n_fnorm)
 
 !****************END DECLARATIONS *********************************************
 
@@ -188,8 +186,8 @@ csms$serial end
 
       do iter = 1,n_iter_wind
 
-csms$serial(<varobs_diff_spread, wt_p_spread, obs_barnes,
-csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
+csms$serial(<wt_p_spread, obs_barnes, ncnt_total,      
+csms$>       rms_thresh , out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
               write(6,*)
@@ -495,15 +493,19 @@ csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
 
 csms$serial end
 
-      call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
-!     call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
-     1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
+      call barnes_multivariate(varbuff                                ! O
+     1        ,n_var,ncnt_total,obs_barnes                            ! I
+     1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1        ,varobs_diff_spread                                     ! O (aerr)
-     1        ,wt_p_spread,fnorm,n_fnorm                              ! I
-     1        ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const     ! I
+     1        ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1        ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
      1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
+
+csms$print_mode(async) begin
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 1 processor=',me
 
 csms$serial(default=ignore)  begin              
 
@@ -568,8 +570,11 @@ csms$serial end
 
       if(n_radars .le. 1 .or. .not. l_3pass)then ! Single Doppler (or no radar) Option
 
-csms$serial(<varobs_diff_spread, wt_p_spread ,
-csms$>       out>:default=ignore)  begin
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 2 processor=',me
+
+csms$serial(<wt_p_spread , 
+csms$>       icount_radar_total, out>:default=ignore)  begin
 
           mode = 1 ! All radar obs (in this case single Doppler)
 
@@ -600,10 +605,14 @@ csms$serial end
 
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
 
-csms$serial(<obs_barnes , out>:default=ignore)  begin              
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 3 processor=',me
+
+csms$serial(<obs_barnes , ncnt_total, 
+csms$>                    rms_thresh, out>:default=ignore)  begin              
               I4_elapsed = ishow_timer()
 
-              write(6,*)' Calling barnes with modified radar obs added'
+              write(6,*)' Calling barnes with single radar obs added'       
 
               call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
               call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
@@ -620,15 +629,17 @@ csms$serial(<obs_barnes , out>:default=ignore)  begin
 
 csms$serial end
 
-              call barnes_multivariate
-     1                             (varbuff,n_var,ncnt_total,obs_barnes
-!             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes       
-     1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
+              call barnes_multivariate(varbuff                           ! O
+     1           ,n_var,ncnt_total,obs_barnes                            ! I
+     1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1           ,varobs_diff_spread                                  ! O (aerr)
-     1           ,wt_p_spread,fnorm,n_fnorm                           ! I
-     1           ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const  ! I
-     1           ,topo_dum,rland_frac_dum,1,1                         ! I
-     1           ,n_obs_lvl,istatus)                                  ! O
+     1           ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1           ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
+     1           ,topo_dum,rland_frac_dum,1,1                            ! I
+     1           ,n_obs_lvl,istatus)                                     ! O
+
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 4 processor=',me
 
 csms$serial(default=ignore)  begin              
 
@@ -645,8 +656,10 @@ csms$serial end
 
       else ! n_radars .gt. 1
 
-csms$serial(<varobs_diff_spread, wt_p_spread ,
-csms$>       out>:default=ignore)  begin
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 5 processor=',me
+
+csms$serial(<wt_p_spread, icount_radar_total, out>:default=ignore) begin       
 
           mode = 2 ! Only multi-Doppler obs
 
@@ -677,7 +690,11 @@ csms$serial end
 
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
 
-csms$serial(<obs_barnes , out>:default=ignore)  begin              
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 6 processor=',me
+
+csms$serial(<obs_barnes , ncnt_total, 
+csms$>                    rms_thresh, out>:default=ignore)  begin              
 
               I4_elapsed = ishow_timer()
 
@@ -700,14 +717,17 @@ csms$serial(<obs_barnes , out>:default=ignore)  begin
 
 csms$serial end
 
-!             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
-              call barnes_multivariate(varbuff,n_var,ncnt_total
-     1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl      
+              call barnes_multivariate(varbuff                          ! O
+     1          ,n_var,ncnt_total                                       ! I
+     1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
      1          ,varobs_diff_spread                                     ! O (aerr)
-     1          ,wt_p_spread,fnorm,n_fnorm                              ! I
-     1          ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const     ! I
+     1          ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1          ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
      1          ,n_obs_lvl,istatus)                                     ! O
+
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 7 processor=',me
 
 csms$serial(default=ignore)  begin              
 
@@ -720,8 +740,11 @@ csms$serial end
 
           endif
 
-csms$serial(<varobs_diff_spread, wt_p_spread , obs_barnes,
-csms$>       out>:default=ignore)  begin
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 8 processor=',me
+
+csms$serial(<wt_p_spread , obs_barnes, ncnt_total, rms_thresh, out>
+csms$>                                     :default=ignore)  begin
 
 !         Make sure each level of uanl and vanl is initialized in the event it
 !         was not analyzed.
@@ -771,7 +794,7 @@ csms$>       out>:default=ignore)  begin
 
           I4_elapsed = ishow_timer()
 
-          write(6,*)' Calling barnes with modified radar obs added'
+          write(6,*)' Calling barnes with single+multi radar obs added'       
 
           call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
           call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
@@ -786,15 +809,19 @@ csms$>       out>:default=ignore)  begin
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
 
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 9 processor=',me
 csms$serial end
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 10 processor=',me
 
-          call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
-!         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
-     1       ,imax,jmax,kmax
-     1       ,grid_spacing_m,rep_pres_intvl
+          call barnes_multivariate(varbuff                            ! O
+     1       ,n_var,ncnt_total,obs_barnes                             ! I
+     1       ,imax,jmax,kmax                                          ! I
+     1       ,grid_spacing_m,rep_pres_intvl                           ! I
      1       ,varobs_diff_spread                                      ! O (aerr)
-     1       ,wt_p_spread,fnorm,n_fnorm                               ! I
-     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const      ! I
+     1       ,wt_p_spread,fnorm_dum,n_fnorm_dum                       ! I
+     1       ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const  ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)                                      ! O
 
