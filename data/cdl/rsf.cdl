@@ -431,7 +431,7 @@ netcdf rsf {
             lcv_comment(record,z,namelen),
             cce_comment(record,z,namelen),
             lmt_comment(record,z,namelen),
-            cxr_comment(record,z,namelen),
+            lmr_comment(record,z,namelen),
             llr_comment(record,z,namelen),
             spt_comment(record,z,namelen),
             lhe_comment(record,z,namelen),
@@ -541,8 +541,8 @@ netcdf rsf {
             lmt_fcinv:_FillValue= 0s;
 
         short
-            cxr_fcinv(record, z);
-            cxr_fcinv:_FillValue= 0s;
+            lmr_fcinv(record, z);
+            lmr_fcinv:_FillValue= 0s;
 
         short
             llr_fcinv(record, z);
