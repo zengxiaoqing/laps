@@ -2197,20 +2197,22 @@ this check is written to files located in
 <pre>
 
 
-28257	LSX process - LAPS surface data analysis
+LSX process - LAPS surface data analysis
         (author: Pete Stamus)
 
 Inputs:
          LSO    surface observations
-                  - or -
+                    - or -
          LSO_QC QC'd surface observations
 
 	 LGB	Background model on LAPS grid
-                  - or -
+                (TSF, PSF, SLP, DSF, P, VIS) fields
+                    - or -
          RSF    Background local model
-                  - or -
+                (T, PS, MSL, TD, P, VIS) fields
+                    - or -
 	 LSX    (previous hour's LSX)
-                  - or -
+                    - or -
          LWM    (background sfc wind from 3-D analysis - used for wind only)
 
 	 LM1    Soil moisture (for fire wx calc)
