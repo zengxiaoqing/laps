@@ -552,7 +552,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 !             This gives a cloud edge with more uniform height for an isolated
 !             cloud when the edge has a "soft" appearance in the imagery.
 
-              cldtop_m_old = cldtop_m(i,j)
+              cldtop_m_avg = cldtop_m(i,j)
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
 !    1            ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
      1            ,t_gnd_k,pres_sfc_pa
@@ -580,10 +580,10 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                   n_no_sao3 = n_no_sao3 + 1
               else
                   write(6,211,err=212)i,j,tb8_k(i,j),tb8_cold_k(i,j)
-     1                   ,cldtop_m_old,cldtop_m(i,j)
-!       1                        ,cldtop_m_old,cldtop_m_cold
+     1                   ,cldtop_m_avg,cldtop_m(i,j)
+!       1                        ,cldtop_m_avg,cldtop_m_cold
      1                   ,cover
-211               format(' ORIG/COLD',2i4,2f7.1,2x,2f7.0,f9.3)
+211               format(' AVG/COLD',2i4,2f7.1,2x,2f7.0,f9.3)
 212           endif
 
             elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below ceiling
