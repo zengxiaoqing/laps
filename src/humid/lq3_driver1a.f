@@ -151,6 +151,7 @@ c
       integer  raob_lookback
       integer goes_switch
       integer cloud_switch
+      integer cloud_d
       integer tiros_switch
       integer sounder_switch
       integer sat_skip
@@ -163,7 +164,7 @@ c
       integer gps_switch
       character*256 path_to_gvap8,path_to_gvap10,path_to_gps
       namelist /moisture_switch_nl/ raob_switch,
-     1     raob_lookback, goes_switch, cloud_switch
+     1     raob_lookback, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
@@ -205,6 +206,7 @@ c     routine
 c     
 c     set namelist parameters to defaults 
       cloud_switch = 1
+      cloud_d = 1
       raob_switch = 0
       raob_lookback = 0
       goes_switch = 0
@@ -238,6 +240,15 @@ c     set namelist parameters to defaults
       else
          write (6,*) 'Clouds will be used in the analysis'
       endif
+
+      if (cloud_d.eq.0) then
+         write(6,*) 'analysis will be produced even if clouds are'
+         write(6,*) 'not available'
+      else
+         write(6,*) 'analysis depends on cloud presence'
+         write(6,*) 'no cloud field.... no moisture field'
+      endif
+      
       
       if (raob_switch.eq.0) then
          write(6,*) 'raob switch off, ignoring raobs (.snd files)'
@@ -584,10 +595,27 @@ c     ****  get laps cloud data. used for cloud, bl, goes
       
       call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
      1     lct,c_istatus)
-      
+
+      if (cloud_d.eq.1) then
+         if(c_istatus .ne. 1) then
+            write(6,*) 'cloud data not available'
+            write(6,*) 'terminating'
+            istatus = 0
+            return
+         endif
+      endif
+
       c_istatus = 0
       if (i4time.eq.i4timep) c_istatus = 1
-      
+
+      if(cloud_d.eq.1 .and. c_istatus.eq.0) then
+         write(6,*) 'cloud data not available for exact time'
+         write(6,*) 'cloud_dependence switch is on'
+         write(6,*) 'aborting'
+         istatus = 0
+         return
+      endif
+
       call check_nan3 (cg,ii,jj,kk,istatus)
       if (istatus.ne.1) then
          write(6,*) 'NaN detected from Cloud Grid...ABORT'
