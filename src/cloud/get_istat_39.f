@@ -39,6 +39,7 @@ cdis
 
         subroutine get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data    ! I
      1                         ,rlaps_land_frac,ni,nj                   ! I
+     1                         ,static_albedo                           ! I
      1                         ,istat_39_a)                             ! O
 
 !       This routine returns the status of stratus cloud detection for each 
@@ -54,6 +55,7 @@ cdis
         real*4    tb8_k(ni,nj)
         real*4    solar_alt(ni,nj)
         real*4    rlaps_land_frac(ni,nj)
+        real*4    static_albedo(ni,nj)          ! Static albedo database
         integer*4 istat_39_a(ni,nj)
         integer*4 icount(-1:+1)
 
@@ -118,6 +120,12 @@ cdis
             else ! we have missing data
                 istat_39_a(i,j) = 0     ! Indeterminate
 
+            endif
+
+!           Screen points according to static albedo
+            if(static_albedo(i,j) .eq. r_missing_data .or.
+     1         static_albedo(i,j) .gt. 0.18                  )then
+                istat_39_a(i,j) = 0     ! Indeterminate
             endif
 
             icount(istat_39_a(i,j)) = icount(istat_39_a(i,j)) + 1
