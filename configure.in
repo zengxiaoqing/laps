@@ -128,13 +128,13 @@ then
   if test "$arch" = "solaris"
   then
 dnl module flags for solaris 
-	FFLAGS="$FFLAGS -fixed -M\$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -fixed -M\$(SRCROOT)/src/lib"
 dnl
 dnl The solaris cc has a bug in the preprocessor
 dnl 
 	CPP="/usr/ucb/cc -P"
 else
-	FFLAGS="$FFLAGS -I\$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -I\$(SRCROOT)/src/lib"
 fi
 fi
 AC_F90_FUNC_TRIGD
@@ -177,7 +177,7 @@ dnl AC_PROG_AWK
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 # AC_PROG_INSTALL
-INSTALL='$(LAPSROOT)/util/install-sh'
+INSTALL='$(SRCROOT)/util/install-sh'
 AC_SUBST(INSTALL)
 AC_SUBST(INCLUDE)
 AC_SUBST(DBFLAGS)
