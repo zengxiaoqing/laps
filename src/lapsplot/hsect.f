@@ -6301,7 +6301,8 @@ c             if(cint.eq.0.0)cint=0.1
                     ipres = k_level
 
                 else                    ! k_level is level number
-                    ipres = nint(zcoord_of_level(k_level)/100.)
+                    ipres = k_level
+!                   ipres = nint(zcoord_of_level(k_level)/100.)
 
                 endif
 
