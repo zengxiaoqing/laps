@@ -276,9 +276,9 @@ mkdirs: mkdatadirs
 	if [ ! -d  $(INSTALLROOT) ] ; then  \
 	mkdir -p $(INSTALLROOT) ; fi 
 	if [ ! -d $(INSTALLROOT)/util ] ; then  \
-	cp -r  $(LAPSROOT)/util $(INSTALLROOT)/util ; fi 
+	ls $(LAPSROOT)/util; cp -r $(LAPSROOT)/util $(INSTALLROOT)/util ; fi 
 	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
-	cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; fi
+	ls -l  $(LAPSROOT)/etc; cp -r $(LAPSROOT)/etc  $(INSTALLROOT)/etc ; ls -l $(INSTALLROOT)/etc ; fi
 
 mkdatadirs :
 	if [ ! -d $(DATAROOT) ] ; then  \
