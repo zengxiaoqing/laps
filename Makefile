@@ -126,7 +126,7 @@ ridds:
 	cd $(LAPSROOT)/src/lib/radar/a2io; $(MAKE)
 	cd $(LAPSROOT)/src/ingest/radar/circbuff_to_nc; $(MAKE)
 
-install: mkdirs
+install: mkdirs mkdatadirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
 	  do \
 	  echo " ";\
@@ -137,10 +137,10 @@ install: mkdirs
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
 
-mkdirs: mkdir -p $(INSTALLROOT)
+mkdirs:
+	mkdir -p $(INSTALLROOT)
 	ls -l  $(LAPSROOT)/util; cp -r $(LAPSROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
 	ls -l  $(LAPSROOT)/etc;  cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
-        mkdatadirs
 
 mkdatadirs:
 	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
