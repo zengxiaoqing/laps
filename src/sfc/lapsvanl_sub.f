@@ -329,7 +329,6 @@ c
 
 	imiss = 0
 	ovr = 1.4
-	iflag = 0
 	itmax = 1000	! max number of iterations
 	zeros = 1.e-30
 	smsng = 1.e37
@@ -432,7 +431,6 @@ c
 c.....  Bad data defined as deviating 'bad_mult' sigmas from 1st guess
 c
 	bad = bad_mult * std
-	iflag = 0
 	print *,' std dev: ',std,', bad value: ',bad
 c
 c.....  Normalize the obs with respect to the bkg.
@@ -474,7 +472,6 @@ c
 	               sumdif = sumdif + diff
 	               numdif = numdif + 1
 	           else
-	               iflag = 1
 	               write(6,1099) i,j,to(i,j), diff
 	               to(i,j) = 0.
 	               n_obs_var = n_obs_var - 1
@@ -572,17 +569,15 @@ c
             call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
             n_fnorm = int(fnorm_max) + 1
 
-!           rms_thresh_norm  = 1.0  ! a la wind.nl
             weight_bkg_const = 5e28 ! a la wind.nl
 
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
      1                                ,smsng                        ! Input
-     1                                ,max_snd                      ! Input
      1                                ,rms_thresh_norm              ! Input
      1                                ,rinst_err                    ! Input
      1                                ,weight_bkg_const             ! Input
      1                                ,n_fnorm                      ! Input
-     1                                ,l_boundary                   ! Input
+     1                                ,l_boundary,.true.,.false.    ! Input
      1                                ,n_valid_obs,obs_barnes       ! Input
      1                                ,t                            ! Output
      1                                ,istatus)                     ! Output
