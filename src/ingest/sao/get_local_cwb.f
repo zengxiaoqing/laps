@@ -80,14 +80,14 @@ c
 c
 c.....  Output arrays
 c
-        real  store_1(maxsta,4), 
-     &        store_2(maxsta,3), store_2ea(maxsta,3),
-     &        store_3(maxsta,4), store_3ea(maxsta,2),
-     &        store_4(maxsta,5), store_4ea(maxsta,2),
-     &        store_5(maxsta,4), store_5ea(maxsta,4),
-     &        store_6(maxsta,5), store_6ea(maxsta,2),
-     &        store_7(maxsta,3),
-     &        store_cldht(maxsta,5)
+        real*4 store_1(maxsta,4), 
+     &         store_2(maxsta,3), store_2ea(maxsta,3),
+     &         store_3(maxsta,4), store_3ea(maxsta,2),
+     &         store_4(maxsta,5), store_4ea(maxsta,2),
+     &         store_5(maxsta,4), store_5ea(maxsta,4),
+     &         store_6(maxsta,5), store_6ea(maxsta,2),
+     &         store_7(maxsta,3),
+     &         store_cldht(maxsta,5)
 
         character  stations(maxsta)*20
         character  store_cldamt(maxsta,5)*4

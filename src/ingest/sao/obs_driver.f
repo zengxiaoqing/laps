@@ -164,7 +164,7 @@ c
         integer ni, nj, maxsta, maxobs 
 c
 	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real    store_1(maxsta,4), 
+	real*4  store_1(maxsta,4), 
      &          store_2(maxsta,3), store_2ea(maxsta,3),
      &          store_3(maxsta,4), store_3ea(maxsta,2),
      &          store_4(maxsta,5), store_4ea(maxsta,2),
@@ -173,7 +173,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-        integer    wmoid(maxsta), jstatus, grid_spacing 
+        integer    wmoid(maxsta), jstatus
         integer    dpchar(maxsta), narg, iargc
 c
         character  stations(maxsta)*20, provider(maxsta)*11
