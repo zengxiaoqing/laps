@@ -1,8 +1,8 @@
 !Variables in the sfcfiles section of wrfsi.nl
       character*80 topo_30s, topo_10m, pctland_10m
      +,landuse_30s, soiltype_top_30s, soiltype_bot_30s
-     +,greenfrac_10m, soiltemp_1deg
+     +,greenfrac, soiltemp_1deg, albedo_ncep, sstemp
       common /wrf_sfcfiles_cmn/
      + topo_30s, topo_10m, pctland_10m, landuse_30s
      +,soiltype_top_30s, soiltype_bot_30s
-     +,greenfrac_10m, soiltemp_1deg
+     +,greenfrac, soiltemp_1deg, albedo_ncep, sstemp

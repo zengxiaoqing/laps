@@ -3,6 +3,7 @@
 !10
 
       integer num_domains
+      integer num_staggers_wrf
       integer xdim(10), ydim(10)
       integer parent_id(10)
       integer ratio_to_parent(10)
@@ -20,7 +21,7 @@
 
       common /wrf_hgrid_cmn/ 
      + xdim, ydim,moad_known_lat, moad_known_lon
-     +,num_domains ,parent_id
+     +,num_domains ,num_staggers_wrf, parent_id
      +,ratio_to_parent
      +,domain_origin_parent_x
      +,domain_origin_parent_y
