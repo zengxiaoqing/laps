@@ -800,9 +800,59 @@ c
       return
       end
 c
+c ===========================================================================
+c
+      subroutine latlon_2_mcij(n,rlat,rlon,ri,rj)
+
+      implicit none
+
+      integer n,i
+      real*4 rlat(n),rlon(n),ri(n),rj(n)
+      real*4 rlonc,dlon,rlatc,dlat
+      real*4 sw(2),ne(2)
+      real*4 x,y
+      real*4 nx,ny
+      real*4 xmax,ymax
+      real*4 xmin,ymin
+      real*4 dx,dy
+      real*4 R,PI
+      real*4 deg2rad
+      parameter (R=6367000.)
+      common /mcgrid/rlonc,rlatc,nx,ny,sw,ne,dx,dy
+
+      PI=acos(-1.)
+      deg2rad=PI/180.
+
+c     ymax=R*(1./tanh(sind(ne(1))))
+      ymax=R*(log(tan(PI/4.+(ne(1)-rlatc)*deg2rad)))
+
+      xmax=R*(deg2rad*(ne(2)-rlonc))
+
+      ymin=R*(1./tanh(sind(sw(1)-rlatc)))
+      ymin=R*(log(tan(PI/4.+(sw(1)-rlatc)*deg2rad)))
+
+      xmin=R*(deg2rad*(sw(2)-rlonc))
+
+      dx=(xmax-xmin)/(nx-1)
+      dy=(ymax-ymin)/(ny-1)
+
+      do i=1,n
+         dlon=rlon(i)-rlonc
+         dlat=rlat(i)-rlatc
+         if(dlon.gt.180.)dlon=dlon-360.
+         if(dlon.lt.-180.)dlon=dlon+360.
+         x=R*(deg2rad*dlon)
+         y=R*(1./tanh(sind(rlat(i))))
+         y=R*(log(tan(45.+0.5*rlat(i)*deg2rad)))
+         ri(i)=(x-xmin)/dx + 1.
+         rj(i)=(y-ymin)/dy + 1.
+      enddo
+
+      return
+      end
+c
 c===============================================================================
 c
-
       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .     lat,lon,grx,gry,bgmodel)
 
@@ -815,21 +865,25 @@ c
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
 c
       integer i,j,k
+      integer istatus
 c
       character*2 gproj
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
       real tol
+      real r_missing_data
       parameter (tol=0.10)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
-
-
 c_______________________________________________________________________________
+c
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne. 1)then
+         print*,'Error getting r_missing_data - init_hinterp'
+         return
+      endif
 c
 c *** Determine location of LAPS grid point in background data i,j space.
 c
-
-      
       if (gproj .eq. 'PS') then
 
 c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
@@ -889,11 +943,17 @@ c
      +              gry(i,j) = min(float(ny_bg)-tol,gry(i,j))
 
                if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
-     .              gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
-          print*,'LAPS gridpoint outside of background data coverage.'
-                  print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
-                  print*,'   grx, gry:',grx(i,j),gry(i,j)
-                  stop 'init_hinterp'
+     .             gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
+
+c         print*,'LAPS gridpoint outside of background data coverage.'
+c                 print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
+c                 print*,'   grx, gry:',grx(i,j),gry(i,j)
+
+                  grx(i,j) = r_missing_data
+                  gry(i,j) = r_missing_data
+
+c                 stop 'init_hinterp'
+
                endif
             enddo
          enddo
@@ -918,16 +978,29 @@ c
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
 c
       integer i,j,k
+      integer istatus
+      real    r_missing_data
 c
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting r_missing_data - hinterp_field'
+         return
+      endif
 c
 c *** Horizontally interpolate variable.
 c
       do k=1,nz
          do j=1,ny_laps
-            do i=1,nx_laps
+         do i=1,nx_laps
+            if(grx(i,j).lt.r_missing_data.and. 
+     .         gry(i,j).lt.r_missing_data)then
                call gdtost(fvi(1,1,k),nx_bg,ny_bg,
      .              grx(i,j),gry(i,j),flaps(i,j,k),bgmodel)
-            enddo
+            else
+               flaps(i,j,k)=r_missing_data
+            endif
+         enddo
          enddo
       enddo
 c

@@ -56,6 +56,16 @@ c       include 'wrf_laps_analysis.cmn'
         character*6   wrftolaps_c6_maprojname
         character*10  c_analysis_type
 
+        integer       iflag_config_wrfsi
+        data          iflag_config_wrfsi/0/
+        save          iflag_config_wrfsi
+
+
+        if(iflag_config_wrfsi.eq.1)then
+           istatus = 1
+           return
+        endif
+
         call read_wrfsi_hgridspec (istatus)
         if(istatus.ne.1)then
            print*,'error reading wrfsi_hgridspec'
@@ -187,6 +197,7 @@ c
         PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
 
         iflag_lapsparms_cmn = 1
+        iflag_config_wrfsi = 1
 
         return
         end
