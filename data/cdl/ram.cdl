@@ -13,7 +13,7 @@ netcdf ram {
         //      bigfile name = gh
 	float                                  
             ht(record,z,y,x);
-            ht:_FillValue = -99999.f;
+            ht:_FillValue = 1.e+37f;
             ht:long_name="LAPS Fcst height";
             ht:units="meters";
             ht:valid_range= 0.f, 100000.f;
@@ -25,7 +25,7 @@ netcdf ram {
         //      bigfile name = uw
 	float                                  
             u3(record,z,y,x);
-            u3:_FillValue = -99999.f;
+            u3:_FillValue = 1.e+37f;
             u3:long_name="LAPS Fcst u wind component";
             u3:units="m/s";
             u3:valid_range= -200.f, 200.f;
@@ -37,7 +37,7 @@ netcdf ram {
         //      bigfile name = vw
 	float                                  
             v3(record,z,y,x);
-            v3:_FillValue = -99999.f;
+            v3:_FillValue = 1.e+37f;
             v3:long_name="LAPS Fcst v wind component";
             v3:units="m/s";
             v3:valid_range= -200.f, 200.f;
@@ -49,7 +49,7 @@ netcdf ram {
         //      bigfile name = ww
 	float                                  
             w3(record,z,y,x);
-            w3:_FillValue = -99999.f;
+            w3:_FillValue = 1.e+37f;
             w3:long_name="LAPS Fcst w wind component";
             w3:units="m/s";
             w3:valid_range= -100.f, 100.f;
@@ -61,7 +61,7 @@ netcdf ram {
         //      bigfile name = t
 	float                                  
             t3(record,z,y,x);
-            t3:_FillValue = -99999.f;
+            t3:_FillValue = 1.e+37f;
             t3:long_name="LAPS Fcst temperature";
             t3:units="Kelvins";
             t3:valid_range= 0.f, 500.f;
@@ -73,7 +73,7 @@ netcdf ram {
         //      bigfile name = sh
 	float                                  
             sh(record,z,y,x);
-            sh:_FillValue = -99999.f;
+            sh:_FillValue = 1.e+37f;
             sh:long_name="LAPS Fcst specific humidity";
             sh:units="kg/kg";
             sh:valid_range= 0.f, 0.10f;
@@ -85,7 +85,7 @@ netcdf ram {
         //      bigfile name = rh
 	float                                  
             rh3(record,z,y,x);
-            rh3:_FillValue = -99999.f;
+            rh3:_FillValue = 1.e+37f;
             rh3:long_name="LAPS Fcst relative humidity";
             rh3:units="percent";
             rh3:valid_range= 0.f, 100.f;
@@ -97,7 +97,7 @@ netcdf ram {
         //      bigfile name = cw
         float
             lwc(record,z,y,x) ;
-            lwc:_FillValue = -99999.f;
+            lwc:_FillValue = 1.e+37f;
             lwc:long_name = "LAPS Fcst cloud liquid water" ;
             lwc:units = "kg/m**3" ;
             lwc:valid_range = 0.f, .1f ;
@@ -109,7 +109,7 @@ netcdf ram {
         //      bigfile name = cice
         float
             ice(record,z,y,x) ;
-            ice:_FillValue = -99999.f;
+            ice:_FillValue = 1.e+37f;
             ice:long_name = "LAPS Fcst cloud ice" ;
             ice:units = "kg/m**3" ;
             ice:valid_range = 0.f, .1f ;
@@ -121,7 +121,7 @@ netcdf ram {
         //      bigfile name = rain
         float
             rai(record,z,y,x) ;
-            rai:_FillValue = -99999.f;
+            rai:_FillValue = 1.e+37f;
             rai:long_name = "LAPS Fcst rain content" ;
             rai:units = "kg/m**3" ;
             rai:valid_range = 0.f, .1f ;
@@ -133,7 +133,7 @@ netcdf ram {
         //      bigfile name = snow
         float
             sno(record,z,y,x) ;
-            sno:_FillValue = -99999.f;
+            sno:_FillValue = 1.e+37f;
             sno:long_name = "LAPS Fcst snow content" ;
             sno:units = "kg/m**3" ;
             sno:valid_range = 0.f, .1f ;
@@ -145,7 +145,7 @@ netcdf ram {
         //      bigfile name = pice
         float
             pic(record,z,y,x) ;
-            pic:_FillValue = -99999.f;
+            pic:_FillValue = 1.e+37f;
             pic:long_name = "LAPS Fcst precip ice content" ;
             pic:units = "kg/m**3" ;
             pic:valid_range = 0.f, 100.f ;
@@ -157,7 +157,7 @@ netcdf ram {
         //      bigfile name = rr
         float
             ref(record,z,y,x) ;
-            ref:_FillValue = -99999.f;
+            ref:_FillValue = 1.e+37f;
             ref:long_name = "LAPS Fcst radar refl" ;
             ref:units = "dBZ" ;
             ref:valid_range = -20.f, 100.f ;
@@ -169,7 +169,7 @@ netcdf ram {
         //      bigfile name = ptyp
         float
             pty(record,z,y,x) ;
-            pty:_FillValue = -99999.f;
+            pty:_FillValue = 1.e+37f;
             pty:long_name = "LAPS Fcst pcp type" ;
             pty:units = "none" ;
             pty:valid_range = 0.f, 100.f ;

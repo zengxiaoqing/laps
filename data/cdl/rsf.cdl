@@ -14,7 +14,7 @@ netcdf rsf {
         //      bigfile name = uw
 	float                                  
             u(record,z,y,x);
-            u:_FillValue = -99999.f;
+            u:_FillValue = 1.e+37f;
             u:long_name="LAPS Fcst sfc u wind component";
             u:units="m/s";
             u:valid_range= -200.f, 200.f;
@@ -26,7 +26,7 @@ netcdf rsf {
         //      bigfile name = vw
 	float                                  
             v(record,z,y,x);
-            v:_FillValue = -99999.f;
+            v:_FillValue = 1.e+37f;
             v:long_name="LAPS Fcst sfc v wind component";
             v:units="m/s";
             v:valid_range= -200.f, 200.f;
@@ -38,7 +38,7 @@ netcdf rsf {
         //      bigfile name = ww
 	float                                  
             w(record,z,y,x);
-            w:_FillValue = -99999.f;
+            w:_FillValue = 1.e+37f;
             w:long_name="LAPS Fcst sfc w wind component";
             w:units="m/s";
             w:valid_range= -100.f, 100.f;
@@ -50,7 +50,7 @@ netcdf rsf {
         //      bigfile name = t
 	float                                  
             t(record,z,y,x);
-            t:_FillValue = -99999.f;
+            t:_FillValue = 1.e+37f;
             t:long_name="LAPS Fcst sfc temperature";
             t:units="Kelvins";
             t:valid_range= 0.f, 500.f;
@@ -62,7 +62,7 @@ netcdf rsf {
         //      bigfile name = dpt
 	float                                  
             td(record,z,y,x);
-            td:_FillValue = -99999.f;
+            td:_FillValue = 1.e+37f;
             td:long_name="LAPS Fcst sfc dewpoint";
             td:units="Kelvins";
             td:valid_range= 0.f, 500.f;
@@ -74,7 +74,7 @@ netcdf rsf {
         //      bigfile name = rh
         float
             rh(record,z,y,x);
-            rh:_FillValue = -99999.f;
+            rh:_FillValue = 1.e+37f;
             rh:long_name="LAPS Fcst sfc relative humidity";
             rh:units="meters";
             rh:valid_range= 0.f, 100.f;
@@ -86,7 +86,7 @@ netcdf rsf {
         //      bigfile name = cb
         float
             lcb(record,z,y,x);
-            lcb:_FillValue = -99999.f;
+            lcb:_FillValue = 1.e+37f;
             lcb:long_name="LAPS Fcst cloud base";
             lcb:units="meters";
             lcb:valid_range= 0.f, 100000.f;
@@ -98,7 +98,7 @@ netcdf rsf {
         //      bigfile name = ctop
         float
             lct(record,z,y,x);
-            lct:_FillValue = -99999.f;
+            lct:_FillValue = 1.e+37f;
             lct:long_name="LAPS Fcst cloud top";
             lct:units="meters";
             lct:valid_range= 0.f, 100000.f;
@@ -110,7 +110,7 @@ netcdf rsf {
         //      bigfile name = mslp
         float
             msl(record,z,y,x);
-            msl:_FillValue = -99999.f;
+            msl:_FillValue = 1.e+37f;
             msl:long_name="LAPS Fcst MSL pressure";
             msl:units="pascals";
             msl:valid_range= 0.f, 100000.f;
@@ -122,7 +122,7 @@ netcdf rsf {
         //      bigfile name = p (at level "FH  1500")
 	float                                  
             p(record,z,y,x);
-            p:_FillValue = -99999.f;
+            p:_FillValue = 1.e+37f;
             p:long_name="LAPS Fcst 1500m pressure";
             p:units="pascals";
             p:valid_range= 0.f, 100000.f;
@@ -134,7 +134,7 @@ netcdf rsf {
         //      bigfile name = p (at level "SFC")
         float
             ps(record,z,y,x);
-            ps:_FillValue = -99999.f;
+            ps:_FillValue = 1.e+37f;
             ps:long_name="LAPS Fcst sfc pressure";
             ps:units="pascals";
             ps:valid_range= 0.f, 100000.f;
@@ -146,7 +146,7 @@ netcdf rsf {
         //      bigfile name = ilw
         float
             lil(record,z,y,x);
-            lil:_FillValue = -99999.f;
+            lil:_FillValue = 1.e+37f;
             lil:long_name="LAPS Fcst integrated liquid water";
             lil:units="kg/m**2";
             lil:valid_range= 0.f, 100.f;
@@ -158,7 +158,7 @@ netcdf rsf {
         //      bigfile name = tpw
         float
             tpw(record,z,y,x);
-            tpw:_FillValue = -99999.f;
+            tpw:_FillValue = 1.e+37f;
             tpw:long_name="LAPS Fcst precipitable water";
             tpw:units="kg/m**2";
             tpw:valid_range= 0.f, 100.f;
@@ -170,7 +170,7 @@ netcdf rsf {
         //      bigfile name = pc
         float
             r01(record,z,y,x);
-            r01:_FillValue = -99999.f;
+            r01:_FillValue = 1.e+37f;
             r01:long_name="LAPS Fcst 60 min precip accum";
             r01:units="kg/m**2";
             r01:valid_range= 0.f, 10.f;
@@ -182,7 +182,7 @@ netcdf rsf {
         //      bigfile name = stpa
         float
             rto(record,z,y,x);
-            rto:_FillValue = -99999.f;
+            rto:_FillValue = 1.e+37f;
             rto:long_name="LAPS Fcst storm total precip accum";
             rto:units="kg/m**2";
             rto:valid_range= 0.f, 10.f;
@@ -195,7 +195,7 @@ netcdf rsf {
         //      bigfile name = s1hr
         float
             s01(record,z,y,x);
-            s01:_FillValue = -99999.f;
+            s01:_FillValue = 1.e+37f;
             s01:long_name="LAPS Fcst 60 min snow accum";
             s01:units="kg/m**2";
             s01:valid_range= 0.f, 10.f;
@@ -208,7 +208,7 @@ netcdf rsf {
         //      bigfile name = stot
         float
             sto(record,z,y,x);
-            sto:_FillValue = -99999.f;
+            sto:_FillValue = 1.e+37f;
             sto:long_name="LAPS Fcst storm total snow accumulation";
             sto:units="kg/m**2";
             sto:valid_range= 0.f, 10.f;
@@ -220,7 +220,7 @@ netcdf rsf {
         //      not transferred to bigfile
         float
             th(record,z,y,x);
-            th:_FillValue = -99999.f;
+            th:_FillValue = 1.e+37f;
             th:long_name="LAPS Fcst sfc potential temperature";
             th:units="Kelvins";
             th:valid_range= 0.f, 500.f;
@@ -232,7 +232,7 @@ netcdf rsf {
         //      not transferred to bigfile
         float
             the(record,z,y,x);
-            the:_FillValue = -99999.f;
+            the:_FillValue = 1.e+37f;
             the:long_name="LAPS Fcst sfc equivalent potential temperature";
             the:units="Kelvins";
             the:valid_range= 0.f, 500.f;
@@ -244,7 +244,7 @@ netcdf rsf {
         //      bigfile name = pbe
         float
             pbe(record,z,y,x);
-            pbe:_FillValue = -99999.f;
+            pbe:_FillValue = 1.e+37f;
             pbe:long_name="LAPS Fcst positive buoyant energy";
             pbe:units="j/kg";
             pbe:valid_range= 0.f, 10000.f;
@@ -256,7 +256,7 @@ netcdf rsf {
          //      bigfile name = nbe
          float
             nbe(record,z,y,x);
-            nbe:_FillValue = -99999.f;
+            nbe:_FillValue = 1.e+37f;
             nbe:long_name="LAPS Fcst negative buoyant energy";
             nbe:units="j/kg";
             nbe:valid_range= 0.f, 1000.f;
@@ -269,7 +269,7 @@ netcdf rsf {
         //      not computed yet
         float
             lcv(record,z,y,x);
-            lcv:_FillValue = -99999.f;
+            lcv:_FillValue = 1.e+37f;
             lcv:long_name="LAPS Fcst cloud cover";
             lcv:units="none";
             lcv:valid_range= 0.f, 1.f;
@@ -281,7 +281,7 @@ netcdf rsf {
         //      not yet computed -- this is a placeholder
         float
             cce(record,z,y,x);
-            cce:_FillValue = -99999.f;
+            cce:_FillValue = 1.e+37f;
             cce:long_name="LAPS Fcst cloud ceiling";
             cce:units="meters";
             cce:valid_range= 0.f, 100000.f;
@@ -293,7 +293,7 @@ netcdf rsf {
         //       bigfile name = mret
         float
             lmt(record,z,y,x);
-            lmt:_FillValue = -99999.f;
+            lmt:_FillValue = 1.e+37f;
             lmt:long_name="LAPS Fcst radar echo tops";
             lmt:units="meters";
             lmt:valid_range= 0.f, 100000.f;
@@ -305,7 +305,7 @@ netcdf rsf {
         //       bigfile name = cxr
         float
             lmr(record,z,y,x);
-            lmr:_FillValue = -99999.f;
+            lmr:_FillValue = 1.e+37f;
             lmr:long_name="LAPS Fcst column max refl";
             lmr:units="dBZ";
             lmr:valid_range= -20.f, 100.f;
@@ -317,7 +317,7 @@ netcdf rsf {
         //       bigfile name = llr
         float
             llr(record,z,y,x);
-            llr:_FillValue = -99999.f;
+            llr:_FillValue = 1.e+37f;
             llr:long_name="LAPS Fcst low level refl";
             llr:units="dBZ";
             llr:valid_range= -20.f, 100.f;
@@ -329,7 +329,7 @@ netcdf rsf {
         //      bigfile name = spt
         float
             spt(record,z,y,x);
-            spt:_FillValue = -99999.f;
+            spt:_FillValue = 1.e+37f;
             spt:long_name="LAPS Fcst sfc precip type";
             spt:units="code";
             spt:valid_range= 0.f, 100.f;
@@ -341,7 +341,7 @@ netcdf rsf {
         //      not transferred to bigfile
         float
             lhe(record,z,y,x);
-            lhe:_FillValue = -99999.f;
+            lhe:_FillValue = 1.e+37f;
             lhe:long_name="LAPS Fcst helicity";
             lhe:units="m/s**2";
             lhe:valid_range= 0.f, 10000.f;
@@ -353,7 +353,7 @@ netcdf rsf {
         //     bigfile name = sli
         float
             li(record,z,y,x);
-            li:_FillValue = -99999.f;
+            li:_FillValue = 1.e+37f;
             li:long_name="LAPS Fcst lifted index";
             li:units="Kelvins";
             li:valid_range= -50.f, 50.f;
@@ -365,7 +365,7 @@ netcdf rsf {
          //      bigfile name = hidx
          float
             hi(record,z,y,x);
-            hi:_FillValue = -99999.f;
+            hi:_FillValue = 1.e+37f;
             hi:long_name="LAPS Fcst heat index";
             hi:units="Kelvins";
             hi:valid_range= 0.f, 500.f;
@@ -377,7 +377,7 @@ netcdf rsf {
          //      not computed yet -- this is a placeholder
          float
             vis(record,z,y,x);
-            vis:_FillValue = -99999.f;
+            vis:_FillValue = 1.e+37f;
             vis:long_name="LAPS Fcst visibility";
             vis:units="meters";
             vis:valid_range= 0.f, 100000.f;
@@ -389,7 +389,7 @@ netcdf rsf {
         //      bigfile name = fd
         float
             fd(record,z,y,x);
-            fd:_FillValue = -99999.f;
+            fd:_FillValue = 1.e+37f;
             fd:long_name="fire index";
             fd:units="none";
             fd:valid_range= 0.f, 20.f;
