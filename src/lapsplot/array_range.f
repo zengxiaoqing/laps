@@ -42,6 +42,15 @@ cdis
 
        real*4 a(ni,nj)
 
+       scale_pcp = 1. / ((100./2.54))
+       if(abs(scale-scale_pcp) .le. .0001) then ! DENOM = (IN/M) for precip
+           clow = 0.0
+           chigh = 10.
+           cint = -0.01
+           write(6,*)' Subroutine contour_settings....',cint,scale
+           return
+       endif
+
        call get_r_missing_data(r_missing_data,istatus)
 
        call array_range(a,ni,nj,rmin,rmax,r_missing_data)
@@ -79,7 +88,8 @@ cdis
            chigh = nint(rmax/cint) * cint + cint
        endif
  
-       write(6,*)' Subroutine contour_settings....',range,zoom,cint,scale
+       write(6,*)' Subroutine contour_settings....',range,zoom,cint
+     1                                             ,scale      
 
        return
        end
@@ -103,3 +113,74 @@ cdis
 
        return
        end
+
+
+        subroutine condition_precip(NX_L,NY_L,c_type,accum_2d,scale
+     1                             ,pthr)           
+
+        real*4 accum_2d(NX_L,NY_L), image_cutoff
+        character*(*)c_type
+
+        image_cutoff = 0.2
+
+!       Eliminate "minor" maxima
+        do j = 1,NY_L
+        do i = 1,NX_L
+            if(c_type(1:2) .eq. 'pa')then
+                if(accum_2d(i,j)/scale .lt. 0.005)then
+                    accum_2d(i,j) = 0.0
+                elseif(accum_2d(i,j)/scale .gt. pthr .and. 
+     1                 accum_2d(i,j)/scale .lt. image_cutoff .and.
+     1                 c_type .eq. 'pai'                   )then
+                    accum_2d(i,j) = image_cutoff*scale
+                endif
+            else
+                if(accum_2d(i,j)/scale .lt. pthr)then
+                    accum_2d(i,j) = 0.0
+                endif
+!               if(accum_2d(i,j)/scale .le. 0.0001)then
+!                   accum_2d(i,j) = -1e-6
+!               endif
+            endif
+        enddo ! i
+        enddo ! j
+
+        return
+        end
+
+        subroutine condition_cape(NX_L,NY_L,c_type,field_2d)
+
+        real*4 field_2d(NX_L,NY_L), image_cutoff
+        character*(*)c_type
+
+        image_cutoff = 300.
+
+        if(c_type .eq. 'pe')then ! contour case
+!           Change flag value 
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(field_2d(i,j) .eq. r_missing_data)
+     1              field_2d(i,j) = -1.           
+            enddo ! j
+            enddo ! i
+
+        else                     ! image case
+!           Change flag value 
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(field_2d(i,j) .eq. -1.0)then
+                    field_2d(i,j) = r_missing_data    ! or could be 0.0
+                endif
+
+                if(field_2d(i,j) .gt. 0.0 .and. 
+     1             field_2d(i,j) .lt. image_cutoff)then
+                    field_2d(i,j) = image_cutoff
+                endif
+
+            enddo ! j
+            enddo ! i
+
+        endif
+
+        return
+        end
