@@ -68,12 +68,6 @@ if ($nlines > 0) {die "$searchstring\n\n";}
 
 $modeltype = "missing";
 
-#Older way without using 'get_modelfg_2d'
-$searchstring = "Found LGB background at";
-foreach (@lines) {
-  if (/$searchstring(.*)/) {$modeltype = "lgb"; $modeltime = $1; last; } 
-}
-
 #Newer way with using 'get_modelfg_2d'
 $searchstring = "Successfully obtained: ";
 foreach (@lines) {
