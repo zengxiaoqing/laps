@@ -177,40 +177,6 @@
 
        end
 
-      subroutine convert_array(array_in,array_out,n,string
-     1                        ,r_missing_data,istatus)       
-
-!     QC the observation array and convert units if needed
-!     If 'string' is 'none', then do just the QC without conversion
-
-      character*(*) string
-
-      real*4 k_to_c
-
-      real*4 array_in(n),array_out(n)
-
-      do i = 1,n
-          if(abs(array_in(i)) .ge. 1e10 .or. 
-     1           array_in(i)  .eq. r_missing_data )then
-              array_out(i) = r_missing_data
-          elseif(string .eq. 'k_to_c')then
-              array_out(i) = k_to_c(array_in(i))
-          elseif(string .eq. 'pa_to_mb')then
-              array_out(i) = array_in(i) / 100.
-          elseif(string .eq. 'none')then
-              array_out(i) = array_in(i)
-          else
-              write(6,*)' Unknown operator in convert_array: ',string
-              istatus = 0
-              return
-          endif
-      enddo ! i
-     
-      istatus = 1
-
-      return
-      end
-
 
       subroutine get_nlevels_snd(pressure_mb,height_m,r_missing_data
      1                          ,nlevels_raw,nlevels_snd) 
