@@ -519,8 +519,9 @@ c
             htbase_init=cldtop_m(i,j) - thk_def
             htbase = htbase_init
 
-!           Initialize lowest SAO cloud base
+!           Initialize lowest SAO cloud base & highest SAO/CO2 top
             ht_sao_base = 1e30
+            ht_sao_top  = 1e30
 
 !           Locate lowest SAO cloud base
             cldcv_below = 0.
@@ -535,6 +536,19 @@ c
 
  181        i_sao = i
             j_sao = j
+
+!           Locate highest SAO/CO2 top
+            cldcv_above = 0.
+            do k=kcld,2,-1
+              if(cldcv_above      .le. thr_sao_cvr .and.
+     1           cldcv_sao(i,j,k) .gt. thr_sao_cvr)then
+                    ht_sao_top = cld_hts(k)
+                    goto186
+              endif
+              cldcv_above = cldcv_sao(i,j,k)
+            enddo ! k
+
+ 186        continue
 
 !           if(.false.)then ! Search for nearby SAO cloud layers
             if(ht_sao_base .eq. 1e30)then ! Search for nearby SAO cloud layers
@@ -571,9 +585,6 @@ c
               enddo ! ii
               enddo ! jj
             endif
-
-!201         if(      ht_sao_base           .eq. 1e30 
-!     1         .and. istat_vis_potl_a(i,j) .eq. 1    )then ! VIS Sat but no SAO
 
 201         continue
 
@@ -664,7 +675,8 @@ c
 211               format(1x,2i4,' AVG/COLD',2f7.1,2x,2f7.0,f9.3)
 212           endif
 
-            elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below ceiling
+            elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below 
+                                                    ! ceiling (lowest SAO base)
               mode_sao = 4
               cover=sat_cover
               htbase_init = ht_sao_base
@@ -737,12 +749,17 @@ c
 
             endif ! Satellite top below SAO ceiling
 
-            if(idebug .eq. 1)then
-                write(6,291)i,j,mode_sao
-291             format(1x,2i4,' mode_sao =',i2)
-            endif
+301         continue
 
-301         if(htbase .ne. htbase_init)then
+            if(idebug .eq. 1)then
+                write(6,302,err=303)i,j,mode_sao,htbase,cover
+     1                             ,cldtop_m(i,j),ht_sao_top
+     1                             ,l_no_sao_vis,istat_vis_potl_a(i,j)
+302             format(1x,2i4,' mode_sao =',i2,f7.0,f7.2,2f7.0,l2,i2)       
+303             continue
+            endif
+            
+            if(htbase .ne. htbase_init)then
 !                write(6,*)' Satellite ceiling reset by SAO',i,j,htbase
 !       1       ,htbase_init,cldtop_m(i,j)
             endif
