@@ -10,6 +10,7 @@ use English;
 use vars qw($opt_s $opt_i $opt_d $opt_t $opt_c $opt_m);
 use Getopt::Std;
 use File::Copy 'cp';
+use Cwd;
 
 getopts('s:i:d:t:mc');
 
@@ -142,11 +143,11 @@ if( -e "$LAPS_DATA_ROOT/cdl\_err" ){
 # WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_LOCAL_DATA/laps_data) before removing it.
 #                 softlink data to laps_data appropriately (make "repository" data subdirectory..
 #                 otherwise: test if softlink has been broken re-establish it.
-if(defined $ENV{FXA_DATA}){
+if( defined $ENV{FXA_DATA} &&  $all_roots_equal eq "F" ) {
    my $FXA_DATA = $ENV{FXA_DATA};
-   my $curdir = Cwd::getcwd();
+   my $curdir = getcwd();
    chdir "$FXA_DATA/laps";
-   my $FXA_LOCAL_DATA = Cwd::getcwd();
+   my $FXA_LOCAL_DATA = getcwd();
    chdir "$curdir";
    chomp $FXA_LOCAL_DATA;
    my $slen=length($FXA_LOCAL_DATA);
