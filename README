@@ -52,7 +52,7 @@
          3.2.1 ..................  LGA Model
          3.2.2 ..................  LVD 
          3.2.3 ..................  Polar Radar Data (e.g. WSR 88D Level II, Level III)
-         3.2.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
+         3.2.4 ..................  WSI / NOWRAD RADAR PREPROCESSING (VRC)
          3.2.5 ..................  Radar Mosaic (Under development)
          3.2.6 ..................  PROFILER (PRO) Ingest
          3.2.7 ..................  VAD (PRO) Ingest
@@ -1351,7 +1351,9 @@ Output:
 
 ------ 3.2.3 --- Polar Radar Data (e.g. WSR 88D Level II, Level III) ---
 
-Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
+Process: remap_polar_netcdf.exe 
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 Every volume scan
 Initiation: Completion of volume scan
@@ -1393,9 +1395,11 @@ Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
 Sample Input/Output: May be available in the test data case.
 
------- 3.2.4 -------- WSI - NOWRAD RADAR PREPROCESSING (VRC) ----------------------------
+------ 3.2.4 -------- WSI / NOWRAD RADAR PREPROCESSING (VRC) ------------------
 
-Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
+Process: VRC (vrc_driver.x) 
+
+Author John Smart (smart@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1424,7 +1428,9 @@ The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
 ------ 3.2.5 --------------- Radar Mosaic (Under development) ----------------
 
-Process: (mosaic_radar.exe) Author John Smart (smart@fsl.noaa.gov)
+Process: (mosaic_radar.exe) 
+
+Author John Smart (smart@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1438,10 +1444,11 @@ Outputs (Intermediate data file):
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.6 ---------------- PROFILER (PRO) Ingest ---------------------------------
+------ 3.2.6 ---------------- PROFILER (PRO) Ingest ---------------------------
 
 Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest 
-                                  (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs: (located in two separate NetCDF directories)
@@ -1461,10 +1468,11 @@ Source directory: laps/src/ingest/profiler
 Sample Input/Output: Should be available in the test data case.
 
  
------- 3.2.7 ---------------------- VAD (PRO) Ingest ---------------------------------------
+------ 3.2.7 ---------------------- VAD (PRO) Ingest --------------------------
 
 Process: (ingest_vad.exe) LAPS RAOBs
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1477,10 +1485,12 @@ Outputs: (Feeds wind.exe)
               pro file.
 </pre>
  
------- 3.2.8 ----------------- RASSs (LRS) Ingest ------------------------------------
+------ 3.2.8 ----------------- RASSs (LRS) Ingest -----------------------------
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
+
 
 <pre>
 Inputs:
@@ -1496,10 +1506,11 @@ Source directory: laps/src/ingest/rass
 
 Sample Input/Output: Should be available in the test data case.
 
------- 3.2.9 ----------------- PIREPS/ACARS Ingest ----------------------------------
+------ 3.2.9 ----------------- PIREPS/ACARS Ingest ----------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1513,10 +1524,11 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.10 ---------------------- RAOB (SND) Ingest -------------------------------------
+------ 3.2.10 ---------------------- RAOB (SND) Ingest ------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1536,7 +1548,8 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 ------ 3.2.11 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
@@ -1572,7 +1585,8 @@ degrees.
 ------ 3.3.1 -------------------- WIND ----------------------------------------
 
 Process: wind.exe - WIND analysis and related fields
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 	Generate a preliminary analysis using SAOs, surface mesonet, profiler, 
 	and aircraft reports.  Output of the blance packge from the previous
@@ -1682,7 +1696,6 @@ Outputs: (Feeds L1S, LBA)
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
 Process: temp.exe - Temperature-Height analysis
-     (author: Steve Albers - albers@fsl.noaa.gov)
 
 	Generate a temperature analysis using model background, sfc temp
         analysis, and RASS data.
@@ -1708,7 +1721,8 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 ------ 3.3.4 ---------------------CLOUD---------------------------------------
 
 Process: cloud.exe - Cloud analysis package
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 	Several input analyses are combined with SAOs of cloud layers.  These 
         input analyses are the 3D temperature analysis,  a three-dimensional 
@@ -1970,7 +1984,8 @@ SATELLITE ALGORITHM:
 ------ 3.3.6 ---------------------DERIV---------------------------------------
 
 Process: deriv.exe - Derived products
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
         These derived products are mostly cloud and wind related.
 <pre>
@@ -2103,7 +2118,8 @@ References: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The
 ------ 3.3.7 ---------------------ACCUM---------------------------------------
 
 Process: accum.exe - Snowfall/Liquid Equivalent Precipitation
-     (author: Steve Albers - albers@fsl.noaa.gov)
+
+Author: Steve Albers (albers@fsl.noaa.gov)
 
 	LAPS incremental/storm total snowfall/liquid equivalent accumulation.
 <pre>
