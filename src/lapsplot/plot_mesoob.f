@@ -141,8 +141,13 @@ c
      &         elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
      &         alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
      &         store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
-            write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+
+        else                       ! QC case
+            if(n_obs_g .eq. 0)n_obs_g = n_obs_b         ! Bug recovery
+
         endif
+
+        write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
 
         if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
             write(6,*)' Too many stations, or no file present'
