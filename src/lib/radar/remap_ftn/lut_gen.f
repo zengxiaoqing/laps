@@ -53,13 +53,15 @@ c
 c
 c     Misc interval variables
 c
-      integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus
+      integer i,j,igate_lut,iaz,ielev,iran,iz_grid,istatus,len_dir
       real rlat_grid,rlon_grid,height_grid
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
       real slant_range,sl_range_m,ri,rj,dbz,z
       real cosd
       character*4 c4_radarname
+      character*150 static_dir,filename
+      character*3 ext
 c
 c     Fill arrays with initial values
 c
@@ -90,49 +92,67 @@ c
 
       write(6,*)' Radar Name  ',c4_radarname
       write(6,*)' Radar Coords',rlat_radar,rlon_radar,rheight_radar
-
-c
-c     Get Radar Location and name 
-c     call read_radar_info(c4_radarname,rlat_radar 
-c    :      ,rlon_radar 
-c    :      ,rheight_radar,istatus)
-
-c     if(istatus .ne. 1)then
-c         write(6,*)' Error in read_radar_coords'
-c         call exit
-c     endif
-
-      write(6,*)' Radar Name  ',c4_radarname 
-      write(6,*)' Radar Coords',rlat_radar,rlon_radar,rheight_radar
+      
+      ext = 'dat'
+      call get_directory(ext,static_dir,len_dir)
 
 c     Put the coords into common so remap_process can access them
       rlat_radar_cmn = rlat_radar
       rlon_radar_cmn = rlon_radar
       rheight_radar_cmn = rheight_radar
       c4_radarname_cmn = c4_radarname      
-
-      write(6,820) lut_gates
-  820 format(' REMAP > Building Gate/Elev to Projran lut, gates =',
-     :        I12)
 c
 c     Generate Gate/Elev to Projran lut
 c
-      DO 100 ielev = 0,lut_elevs
+!     Try to read lut
+      filename = static_dir(1:len_dir)//'vxx/'
+     1         //'gate_elev_to_projran_lut.'//c4_radarname
+      write(6,*)' Reading file: ',filename
+      open(11,file=filename,form='unformatted',status='old',err=90)
+      read(11,err=90)gate_elev_to_projran_lut
+      close(11)
+      goto 110
+90    write(6,*)' Generating LUT - no valid file exists'
+
+!     Calculate lut
+      write(6,820) lut_gates
+  820 format(' REMAP > Building Gate/Elev to Projran lut, gates =',
+     :        I12)
+
+      DO ielev = 0,lut_elevs
 
         elev_deg = ielev * elev_interval
         coselev = cosd(elev_deg)
 
-        DO 80 igate_lut = 1,lut_gates
+        DO igate_lut = 1,lut_gates
 
           sl_range_m = igate_lut * gate_spacing_m * gate_interval
           iran = sl_range_m * coselev / range_interval
           gate_elev_to_projran_lut(igate_lut,ielev) = iran
 
-   80   CONTINUE
-  100 CONTINUE
+        ENDDO
+      ENDDO
+
+!     Write lut
+      open(12,file=filename,form='unformatted',status='new')
+      write(12)gate_elev_to_projran_lut
+      close(12)
+  110 continue 
+
 c
 c     Generate Gate/Elev to Z lut
 c
+!     Try to read lut
+      filename = static_dir(1:len_dir)//'vxx/'
+     1         //'gate_elev_to_z_lut.'//c4_radarname
+      write(6,*)' Reading file: ',filename
+      open(11,file=filename,form='unformatted',status='old',err=190)
+      read(11,err=190)gate_elev_to_z_lut
+      close(11)
+      goto 210
+190   write(6,*)' Generating LUT - no valid file exists'
+
+!     Calculate lut
       write(6,830)
   830 format(' REMAP > Building Gate/Elev to Z lut')
 c
@@ -155,9 +175,27 @@ c
 
   180   CONTINUE
   200 CONTINUE
+
+!     Write lut
+      open(12,file=filename,form='unformatted',status='new')
+      write(12)gate_elev_to_z_lut
+      close(12)
+  210 continue 
+
 c
 c     Generate Az/Ran to i,j lut
 c
+!     Try to read lut
+      filename = static_dir(1:len_dir)//'vxx/'
+     1         //'azran_to_ijgrid_lut.'//c4_radarname
+      write(6,*)' Reading file: ',filename
+      open(11,file=filename,form='unformatted',status='old',err=290)
+      read(11,err=290)azran_to_igrid_lut,azran_to_jgrid_lut
+      close(11)
+      goto 310
+290   write(6,*)' Generating LUT - no valid file exists'
+
+!     Calculate lut
       write(6,840)
   840 format(' REMAP > Building Az/Ran to i,j lut')
 c
@@ -193,6 +231,12 @@ c
 
   280   CONTINUE
   300 CONTINUE
+
+!     Write lut
+      open(12,file=filename,form='unformatted',status='new')
+      write(12)azran_to_igrid_lut,azran_to_jgrid_lut
+      close(12)
+  310 continue 
 
 c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
       do i = -1000,+1000
