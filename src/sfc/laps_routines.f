@@ -731,7 +731,8 @@ c
 c
 c
       subroutine verify(field,ob,stn,n_obs_b,title,iunit,
-     &                  ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
+     &                  ni,nj,mxstn,x1a,x2a,y2a,ii,jj,
+     &                  field_ea,badflag)
 c
 c======================================================================
 c
@@ -742,6 +743,7 @@ c     Original: P.Stamus, NOAA/FSL  08-07-95
 c     Changes:  
 c               P.Stamus  08-14-95  Added mean.
 c                         08-25-97  Changes for dynamic LAPS
+c                         05-13-98  Added expected accuracy counts.
 c
 c     Notes:
 c
@@ -755,6 +757,9 @@ c
 c.... Start.
 c
 	num = 0
+	num_ea1 = 0
+	num_ea2 = 0
+	num_ea3 = 0
 	abs_diff = 0.
 	sum = 0.
 	amean = 0.
@@ -762,6 +767,10 @@ c
 	diff_mn = 1.e30
 	write(iunit,900) title
  900	format(/,/,2x,a40,/)
+c
+	ea1 = field_ea
+	ea2 = field_ea * 2.
+	ea3 = field_ea * 3.
 c
 c....   Find the 2nd derivative table for use by the splines.
 c
@@ -793,6 +802,13 @@ c
 		 diff_mn = adiff
 		 stn_mn = stn(i)
 	      endif
+c
+c.....  Count how many stns are within the exp accuracy (and multiples)
+c
+	      if(adiff .le. ea1) num_ea1 = num_ea1 + 1
+	      if(adiff .le. ea2) num_ea2 = num_ea2 + 1
+	      if(adiff .le. ea3) num_ea3 = num_ea3 + 1
+c
 	   endif
 c
 	   write(iunit,905) i, stn(i), interp_ob, ob(i), diff
@@ -814,6 +830,26 @@ c
  920	format(' Maximum difference of ',f10.2,' at ',a3)
 	write(iunit,925) diff_mn, stn_mn
  925	format(' Minimum difference of ',f10.2,' at ',a3)
+	write(iunit, 930)
+ 930	format(' ')
+c
+	write(iunit, 950) field_ea
+ 950	format(' Number of obs within multiples of exp acc of ',f8.2)
+	percent = -1.
+	anum = float(num)
+	if(num .ne. 0) percent = (float(num_ea1) / anum) * 100.
+	write(iunit, 952) num_ea1, num, percent
+ 952	format(10x,'1x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
+	if(num .ne. 0) percent = (float(num_ea2) / anum) * 100.
+	write(iunit, 953) num_ea2, num, percent
+ 953	format(10x,'2x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')	
+	if(num .ne. 0) percent = (float(num_ea3) / anum) * 100.
+	write(iunit, 954) num_ea3, num, percent
+ 954	format(10x,'3x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
+	write(iunit, 930)
+	write(iunit, 930)
+	write(iunit, 931)
+ 931	format(1x,'===============================================')
 c
 	return
 	end
@@ -1053,5 +1089,737 @@ c
       print *,' '
       return
       end
+c
+c
+       subroutine check_field_2d(x,ni,nj,fill_val,istatus)
+c
+c========================================================================
+c
+c     Routine to check a 2-d field for NaN's, out of range values, and
+c     other bad stuff.  The istatus flag returns what we found to the
+c     calling routine:
+c
+c               istatus =  1  Field ok.
+c                          0  Missing field (all 'fill_val')
+c                         -1  Found NaN's.
+c
+c     Some stats are calculated and printed in the log file:
+c
+c            Max, Min  Absolute Average  Std. Deviation  Mean  Range  
+c
+c     Original: 06-10-98  (from "stats.f").  P.A. Stamus, NOAA/FSL
+c     Changes:  
+c
+c========================================================================
+c
+      real*4 x(ni,nj)
+c
+      istatus = 1
+c
+c..... Start by zeroing some counters.
+c
+      amean = 0.
+      ave = 0.
+      sum = 0.
+      sum_a = 0.
+      sum_v = 0.
+      range = 0.
+      st_dev = 0.
+      var = 0.
+      amax = -1.e25
+      amin =  1.e25
+      pts = float(ni * nj)
+c
+c..... Check the field for NaN's
+c
+      call checknan_2d(x,ni,nj,nan_flag)
+      if(nan_flag .ne. 1) then
+         print *,'   *** ERROR. NaNs found in field. ***'
+         istatus = -1
+         return
+      endif
+c
+c..... Check for an empty field.
+c
+      do j=1,nj
+      do i=1,ni
+         if(x(i,j) .ne. fill_val) go to 100
+      enddo !i
+      enddo !j
+      print *,'   ** WARNING. Empty field. **'
+      istatus = 0
+      return
+c
+ 100  continue
+c
+c..... Calculate the means and range.
+c
+      do j=1,nj
+      do i=1,ni
+         if(x(i,j) .lt. amin) then
+            amin = x(i,j)
+            imin = i
+            jmin = j
+         endif
+         if(x(i,j) .gt. amax) then
+            amax = x(i,j)
+            imax = i
+            jmax = j
+         endif
+         sum = sum + x(i,j)
+         sum_a = sum_a + abs(x(i,j))
+      enddo !i
+      enddo !j
+c
+      amean = sum / pts
+      ave = sum_a / pts
+      range = amax - amin
+c
+c..... Now calculate the variance, stdev, etc.
+c
+      do j=1,nj
+      do i=1,ni
+         dif = x(i,j) - amean
+         dif2 = dif * dif
+         sum_v = sum_v + dif2
+      enddo !i
+      enddo !j
+c
+      var = 0.0
+      st_dev = -99.9
+      if(pts .ne. 1) var = sum_v / (pts - 1)
+      if (var .gt. 0.0) st_dev = sqrt( var )
+c
+c..... Write out some stat info.
+c
+      write(6,900) amax,imax,jmax,amin,imin,jmin,range
+ 900  format(5x,'Max: ',g12.4,' at ',2i4,'  Min: ',
+     &         g12.4,' at ',2i4,'  Range: ',g12.4)
+c
+      write(6,910) amean, ave, st_dev
+ 910  format(5x,'Mean:',g12.4,2x,'AbsAve:',g12.4,2x,'StDev:',g12.4)
+c
+c
+c.... That's it.  Let's go home.
+c
+      return
+      end
+c
+c
+      subroutine checknan_2d(x,ni,nj,nan_flag)
+c
+c     Routine to check a real 2-d array for NaN's.
+c
+      real*4 x(ni,nj)
+c
+      nan_flag = 1
+c
+      do j=1,nj
+      do i=1,ni
+         if( nan( x(i,j) ) .eq. 1) then
+            print *,' ** ERROR. Found a NaN at ', i, j
+            nan_flag = -1
+            return
+         endif
+      enddo !i
+      enddo !j
+c
+      return
+      end
+c
+c
+      subroutine checknan_3d(x,ni,nj,nk,nan_flag)
+c
+c     Routine to check a real 3-d array for NaN's.
+c
+      real*4 x(ni,nj,nk)
+c
+      nan_flag = 1
+c
+      do k=1,nk
+      do j=1,nj
+      do i=1,ni
+         if( nan( x(i,j,k) ) .eq. 1) then
+            print *,' ** ERROR. Found a NaN at ', i, j, k
+            nan_flag = -1
+            return
+         endif
+      enddo !i
+      enddo !j
+      enddo !k
+c
+      return
+      end
+c
+c
+	subroutine get_background_sfc(i4time_in,var_in,bkg_ext,
+     &                bkg_time,bkg_field,laps_cycle_time,ni,nj,
+     &                istatus)
 
+c
+c
+c*****************************************************************************
+c
+c       Routine to get a surface background field for a given variable.  
+c       This routine checks several different files for an appropiate field
+c       to use, and checks the field for NaN's and other problems before
+c       returning.  In addition to returning the appropiate background
+c       field, the routine also returns the extension and time of the
+c       background file.
+c
+c	History:
+c		P. Stamus, NOAA/FSL 
+c                   06-16-98  Original version.
+c                   09-10-98  Change SFM filename read to be like LGB.
+c
+c
+c       Notes:
+c               Inputs:    i4time_in  - time of analysis    (int)
+c                             var_in  - requested variable  (ch*4)
+c                    laps_cycle_time  - analysis interval   (int)
+c                             ni, nj  - grid dimensions     (int)
+c
+c               Outputs:    bkg_field - 2d background field    (r*4)
+c                             bkg_ext - ext of bkg file used  (ch*31)
+c                            bkg_time - time of bkg file used  (int)
+c                          bkg_status - Status:
+c                                          1 - normal return
+c                                          0 - No background files found
+c
+c
+c*****************************************************************************
+c
+	real*4 bkg_field(ni,nj)
+c
+	integer*4 i4time_in, lvl_in, bkg_time, ni, nj, bkg_status
+c
+	character bkg_ext*31, var_in*4, var(3)*3
+	character bkg_dir*256, filename*9
+	character units*10, lvlc*4, comment*125
+c
+	integer*4 max_files
+	parameter(max_files = 300)
+	character fnames(max_files)*80
+	character dir*150, ext*31, filespec*255, filename13*13
+c
+c
+c.....	Start here.  
+c
+	bkg_status = 0
+	lvl_in = 0      ! surface level
+	fill_val = 1.e37
+	i4time_prev = i4time_in - laps_cycle_time
+	call constant(bkg_field, fill_val, ni,nj)
+c
+c.....  Set up var array for the different names used in the different
+c.....  files, based on the 'var_in' variable.
+c
+	if(var_in .eq. 'TEMP') then
+	   var(1) = 'T  '  ! SFM variable
+	   var(2) = 'TSF'  ! LGB variable
+	   var(3) = 'T  '  ! LSX variable
+	elseif(var_in .eq. 'SFCP') then
+	   var(1) = 'PS '  ! SFM variable
+	   var(2) = 'PSF'  ! LGB variable
+	   var(3) = 'PS '  ! LSX variable
+	elseif(var_in .eq. 'MSLP') then
+	   var(1) = 'MSL'  ! SFM variable
+	   var(2) = 'SLP'  ! LGB variable
+	   var(3) = 'MSL'  ! LSX variable
+	elseif(var_in .eq. 'DEWP') then
+	   var(1) = 'TD '  ! SFM variable
+	   var(2) = 'DSF'  ! LGB variable
+	   var(3) = 'TD '  ! LSX variable
+	elseif(var_in .eq. 'REDP') then
+	   var(1) = 'P  '  ! SFM variable
+	   var(2) = 'P  '  ! LGB variable
+	   var(3) = 'P  '  ! LSX variable
+	elseif(var_in .eq. 'VISB') then
+	   var(1) = 'VIS'  ! SFM variable
+	   var(2) = 'VIS'  ! LGB variable
+	   var(3) = 'VIS'  ! LSX variable
+	else
+	   print *,
+     &       ' Invalid variable request sent to get_background_sfc'
+	   return
+	endif
+c
+c.....  Get the background data.  Try for a SFM forecast first.  If not
+c.....  available, try the LGB file.  If that's not there either, use a
+c.....  previous LAPS analysis.  If nothings available, print a warning.
+c
+	isfm_bk = 1
+	print *,' Trying for SFM background '
+c
+c	bkg_dir = '../lapsprd/rsf/'
+	bkg_ext = 'rsf'
+	i4time_bk = i4time_in
+
+	call get_directory('rsf',bkg_dir,len)
+	filespec = bkg_dir(1:len) // '*.'// bkg_ext
+	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
+
+	i_best_file = 0
+	i4_ftime_min = 9999999
+
+	do i=1,numfiles
+	   call get_directory_length(fnames(i), lend)
+	   call get_time_length(fnames(i), lenf)
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   if(i4valid .eq. i4time_in) then
+	      i4_fcst_time = i4valid - i4init
+	      if(i4_fcst_time .lt. i4_ftime_min) then
+		 i4_fcst_time = i4_ftime_min
+		 i_best_file = i
+	      endif
+	   endif
+	enddo !i
+c
+	if(i_best_file .gt. 0) then !found one
+
+	   i = i_best_file
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+c
+ 110	   call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &        var(1),lvl_in,lvlc,units,comment,bkg_field,istatus)
+  	   if(istatus .ne. 1) then
+	      print *,' ERROR reading SFM file at ', filename13
+	      isfm_bk = 0
+	      go to 200
+	   endif
+c
+	else
+c
+	   print *,' No SFM file with proper valid time.'
+	   isfm_bk = 0
+	   go to 200
+
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found SFM background at ',filename13,
+     &          '...checking field.'
+	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
+	if(istatus .eq. 1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,
+     &    '  Problem with SFM background, check status = ', istatus
+	endif
+c
+c.....  Try LGB.
+c
+ 200	continue
+	ilgb_bk = 1
+	print *,' Trying for LGB background '
+c	bkg_dir = '../lapsprd/lgb/'
+	bkg_ext = 'lgb'
+	i4time_bk = i4time_in
+
+	call get_directory('lgb',bkg_dir,len)
+	filespec = bkg_dir(1:len) // '*.'// bkg_ext
+	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
+
+	i_best_file = 0
+	i4_ftime_min = 9999999
+
+	do i=1,numfiles
+	   call get_directory_length(fnames(i), lend)
+	   call get_time_length(fnames(i), lenf)
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   if(i4valid .eq. i4time_in) then
+	      i4_fcst_time = i4valid - i4init
+	      if(i4_fcst_time .lt. i4_ftime_min) then
+		 i4_fcst_time = i4_ftime_min
+		 i_best_file = i
+	      endif
+	   endif
+	enddo !i
+c
+	if(i_best_file .gt. 0) then !found one
+
+	   i = i_best_file
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+c
+ 210	   call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &        var(2),lvl_in,lvlc,units,comment,bkg_field,istatus)
+  	   if(istatus .ne. 1) then
+	      print *,' ERROR reading LGB file at ', filename13
+	      ilgb_bk = 0
+	      go to 300
+	   endif
+c
+	else
+c
+	   print *,' No LGB file with proper valid time.'
+	   ilgb_bk = 0
+	   go to 300
+
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found LGB background at ',filename13,
+     &          '...checking field.'
+	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
+	if(istatus .eq. 1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,
+     &    '  Problem with LGB background, check status = ', istatus
+	endif
+c
+c.....	Try the previous LSX.
+c
+ 300	ilaps_bk = 1
+	ilaps_loop = 1
+	print *,' Trying for previous LSX background '
+c	bkg_dir = '../lapsprd/lsx/'
+	call get_directory('lsx',bkg_dir,len)
+	bkg_ext = 'lsx'
+	i4time_bk = i4time_prev
+c
+ 310	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var(3),lvl_in,lvlc,units,comment,bkg_field,istatus)
+	if(istatus .ne. 1) then
+	   if(ilaps_loop .gt. 3) then     ! give up
+	      print *,'  No LSX background available. '
+	      ilaps_bk = 0
+	      go to 500
+	   else
+	      ilaps_loop = ilaps_loop + 1
+	      i4time_bk = i4time_bk - laps_cycle_time
+	      go to 310
+	   endif
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+        call make_fnam_lp(i4time_bk,filename,istat)  ! make filename	
+	print *,'  Found LSX background at ',filename,
+     &          '...checking field.'
+	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
+	if(istatus .eq. 1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,'  Problem with LSX background, check status = ', istatus
+	endif
+c
+ 500	continue
+c
+c.....	That's about it...let's go home.
+c
+	return
+	end
+c
+c
+	subroutine get_bkgwind_sfc(i4time_in,bkg_ext,bkg_time,bkg_u,bkg_v,
+     &                laps_cycle_time,ni,nj,istatus)
+
+c
+c
+c*****************************************************************************
+c
+c       Routine to get a surface background wind field.  This routine checks 
+c       several different files for an appropiate fields to use, and checks 
+c       the fields for NaN's and other problems before returning.  The u and
+c       v components must be from the same file at the same time to be vaild.
+c       In addition to returning the appropiate background u and v, this 
+c       routine also returns the extension and time of the background file.
+c
+c	History:
+c		P. Stamus, NOAA/FSL 
+c                   07-10-98  Original version.
+c                   09-10-98  Change SFM filename read to be like LGB.
+c
+c
+c       Notes:
+c               Inputs:    i4time_in  - time of analysis    (int)
+c                    laps_cycle_time  - analysis interval   (int)
+c                             ni, nj  - grid dimensions     (int)
+c
+c               Outputs: bkg_u, bkg_v - 2d background component fields (r*4)
+c                             bkg_ext - ext of bkg file used  (ch*31)
+c                            bkg_time - time of bkg file used  (int)
+c                          bkg_status - Status:
+c                                          1 - normal return
+c                                          0 - No background files found
+c
+c
+c*****************************************************************************
+c
+	real*4 bkg_u(ni,nj), bkg_v(ni,nj)
+c
+	integer*4 i4time_in, lvl_in, bkg_time, ni, nj, bkg_status
+c
+	character bkg_ext*31, var_u*3, var_v*3
+	character bkg_dir*256, filename*9
+	character units*10, lvlc*4, comment*125
+c
+	integer*4 max_files
+	parameter(max_files = 300)
+	character fnames(max_files)*80
+	character dir*150, ext*31, filespec*255, filename13*13
+c
+c.....	Start here.  
+c
+	bkg_status = 0
+	lvl_in = 0      ! surface level
+	fill_val = 1.e37
+	i4time_prev = i4time_in - laps_cycle_time
+	call constant(bkg_u, fill_val, ni,nj)
+	call constant(bkg_v, fill_val, ni,nj)
+	var_u = 'U  '
+	var_v = 'V  '
+	print *,' '
+	print *,' Getting background wind data....'
+c
+c
+c.....  Get the background data.  Try for a SFM forecast first.  If not
+c.....  available, try the LGB file.  If that's not there either, use a
+c.....  previous LAPS analysis.  If nothings available, print a warning.
+c
+	isfm_bk = 1
+	print *,' Trying for SFM background '
+c	bkg_dir = '../lapsprd/rsf/'
+	bkg_ext = 'rsf'
+	i4time_bk = i4time_in
+
+	call get_directory('rsf',bkg_dir,len)
+	filespec = bkg_dir(1:len) // '*.'// bkg_ext
+	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
+
+	i_best_file = 0
+	i4_ftime_min = 9999999
+
+	do i=1,numfiles
+	   call get_directory_length(fnames(i), lend)
+	   call get_time_length(fnames(i), lenf)
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   if(i4valid .eq. i4time_in) then
+	      i4_fcst_time = i4valid - i4init
+	      if(i4_fcst_time .lt. i4_ftime_min) then
+		 i4_fcst_time = i4_ftime_min
+		 i_best_file = i
+	      endif
+	   endif
+	enddo !i
+c
+	if(i_best_file .gt. 0) then !found one
+
+	   i = i_best_file
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+c
+ 110	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
+	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
+
+  	   if(istatus_u.ne.1 .or. istatus_v.ne.1) then
+	      print *,' ERROR reading SFM file at ', filename13
+	      isfm_bk = 0
+	      go to 200
+	   endif
+c
+	else
+c
+	   print *,' No SFM file with proper valid time.'
+	   isfm_bk = 0
+	   go to 200
+
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found SFM backgrounds...checking fields.'
+	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
+	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
+	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,
+     &   '   Problem with SFM backgrounds, check status = ',
+     &   istatus_u, istatus_v
+	endif
+c
+c.....  Try LGB.
+c
+ 200	continue
+	var_u = 'USF'
+	var_v = 'VSF'
+	ilgb_bk = 1
+	print *,' Trying for LGB background '
+c	bkg_dir = '../lapsprd/lgb/'
+	bkg_ext = 'lgb'
+	i4time_bk = i4time_in
+
+	call get_directory('lgb',bkg_dir,len)
+	filespec = bkg_dir(1:len) // '*.'// bkg_ext
+	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
+
+	i_best_file = 0
+	i4_ftime_min = 9999999
+
+	do i=1,numfiles
+	   call get_directory_length(fnames(i), lend)
+	   call get_time_length(fnames(i), lenf)
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+	   if(i4valid .eq. i4time_in) then
+	      i4_fcst_time = i4valid - i4init
+	      if(i4_fcst_time .lt. i4_ftime_min) then
+		 i4_fcst_time = i4_ftime_min
+		 i_best_file = i
+	      endif
+	   endif
+	enddo !i
+c
+	if(i_best_file .gt. 0) then !found one
+
+	   i = i_best_file
+	   filename13 = fnames(i)(lend+1:lenf)
+	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
+c
+ 210	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
+	call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
+
+  	   if(istatus_u.ne.1 .or. istatus_v.ne.1) then
+	      print *,' ERROR reading LGB file at ', filename13
+	      ilgb_bk = 0
+	      go to 300
+	   endif
+c
+	else
+c
+	   print *,' No LGB file with proper valid time.'
+	   ilgb_bk = 0
+	   go to 300
+
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found LGB backgrounds at ',filename13,
+     &          '...checking fields.'
+	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
+	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
+	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,
+     &    '  Problem with LGB backgrounds, check status = ', 
+     &    istatus_u, istatus_v
+	endif
+c
+c.....	Try LWM (sfc interpolated from 3d)
+c
+ 300	ilwm_bk = 1
+	ilwm_loop = 1
+	print *,' Trying for LWM wind background '
+c	bkg_dir = '../lapsprd/lwm/'
+	call get_directory('lwm',bkg_dir,len)
+	bkg_ext = 'lwm'
+	i4time_bk = i4time_prev
+	var_u = 'SU '
+	var_v = 'SV '
+c
+ 310	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
+	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
+c
+	if(istatus_u.ne.1 .or. istatus_v.ne.1) then
+	   if(ilwm_loop .gt. 3) then     ! give up
+	      print *,'  No LWM background available. '
+	      ilwm_bk = 0
+	      go to 400
+	   else
+	      ilwm_loop = ilwm_loop + 1
+	      i4time_bk = i4time_bk - laps_cycle_time
+	      go to 310
+	   endif
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found LWM backgrounds...checking fields.'
+	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
+	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
+	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,'  Problem with LWM background, check status = ', 
+     &            istatus_u, istatus_v
+	endif
+c
+c.....	Try the previous LSX.
+c
+ 400	ilaps_bk = 1
+	ilaps_loop = 1
+	print *,' Trying for previous LSX background '
+c	bkg_dir = '../lapsprd/lsx/'
+	call get_directory('lsx',bkg_dir,len)
+	bkg_ext = 'lsx'
+	i4time_bk = i4time_prev
+	var_u = 'U  '
+	var_v = 'V  '
+c
+ 410	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_u,lvl_in,lvlc,units,comment,bkg_u,istatus_u)
+ 	call read_laps_data(i4time_bk,bkg_dir,bkg_ext,ni,nj,1,1,
+     &   var_v,lvl_in,lvlc,units,comment,bkg_v,istatus_v)
+c
+	if(istatus_u.ne.1 .or. istatus_v.ne.1) then
+	   if(ilaps_loop .gt. 3) then     ! give up
+	      print *,'  No LSX background available. '
+	      ilaps_bk = 0
+	      go to 500
+	   else
+	      ilaps_loop = ilaps_loop + 1
+	      i4time_bk = i4time_bk - laps_cycle_time
+	      go to 410
+	   endif
+	endif
+c
+c.....  Check the field for NaN's and other bad stuff.
+c
+	print *,'  Found LSX backgrounds...checking fields.'
+	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
+	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
+	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
+	   bkg_status = 1
+	   bkg_time = i4time_bk
+	   return
+	else
+	   print *,'  Problem with LSX background, check status = ', 
+     &             istatus_u, istatus_v
+	endif
+c
+ 500	continue
+c
+c.....	That's about it...let's go home.
+c
+	return
+	end
 
