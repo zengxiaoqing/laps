@@ -1,8 +1,12 @@
 #!/bin/csh -x
 
 #This script sets up the pre-compiled tar file and localizes it at CWB
-#Command line argument "p" does the configure/install for the pre-compiled tar file
-#Command line argument "w" does the localization for the particular window
+#Optional Command line argument "p" does the configure/install for the pre-compiled tar file
+#Optional Command line argument "w" does the localization for the particular window
+
+setenv LAPS_SRC_ROOT      $1
+setenv LAPSINSTALLROOT    $2
+setenv LAPS_DATA_ROOT     $3
 
 set arg1 = np
 set arg2 = nw
@@ -19,9 +23,6 @@ foreach i ($argv)
 end
 
 #Primary LAPS environment variables
-setenv LAPS_SRC_ROOT      /pj/fsl/albers/src/laps-0-8-19
-setenv LAPSINSTALLROOT    /pj/fsl/albers/data_disk/laps
-setenv LAPS_DATA_ROOT     /pj/fsl/albers/data_disk/laps/data
 setenv TEMPLATEDIR        /pj/fsl/albers/src/template
 #setenv NEWPERL            /pj/fsl/albers/bin/perl
 setenv NEWPERL            `which perl`
