@@ -1,0 +1,156 @@
+#!@PERL@
+
+# Looks in logdir (from command line) or $LAPS_DATA_ROOT/log.
+# The other command line argument is the hour of the LAPS run
+# if not current.  Both command line arguments are optional;
+# order doesn't matter.
+
+require '@prefix@/etc/wgi_utils.pm';
+
+$nargs = @ARGV;
+if ($nargs == 0) {}
+elsif ($nargs == 1) {
+ $arg = shift;
+ if ($arg =~ /^[0-9]*$/) {$hr=$arg;}
+ else {$logdir = $arg;}
+ }
+elsif ($nargs == 2) {
+ $arg1 = shift;
+ $arg2 = shift;
+ if ($arg1 =~ /^[0-9]*$/) {$hr=$arg1; $logdir=$arg2;}
+ else {$hr=$arg2; $logdir=$arg1;}
+ }
+ 
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+if (defined $logdir) {if ($logdir eq $LAPS_DATA_ROOT) {$logdir=$logdir."/log";} }
+elsif (defined $LAPS_DATA_ROOT) {$logdir=$LAPS_DATA_ROOT."/log";}
+else {die "Can't find path to log data.\n";}
+
+if (defined $hr) {$hr="0".$hr if (length($hr)<2);}
+
+# Get the most recent log file.
+
+$logname = "recurs_iter";
+$filename = &wgi_utils::get_log_filename($LAPS_DATA_ROOT,$logname,$hr);
+
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+close FILE;
+print "\nReading from log file $filename\n\n";
+
+# Determine analysis validtime.
+$searchstring = "Getting surface data at:";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($validtime) = split(" ",$1); 
+    last; } 
+}
+print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
+
+# Check for disaster.
+
+$searchstring = "No sfc obs from LSO";
+@greplines = grep /$searchstring/, @lines;
+$nlines = @greplines;
+if ($nlines > 0) {die "$searchstring\n\n";}
+
+# Determine background model.
+# ---------------------------
+
+($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&wgi_utils::which_bkgd(@lines);
+
+print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
+print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
+print "\n";
+
+# METAR and/or mesonet
+
+print "SFC OBS:  \n";
+$odfilename = $filename;
+$odfilename =~ s/$logname/obs_driver/;
+#open(ODLOG,$odfilename) or die "Can't open $odfilename.";
+if (open(ODLOG,$odfilename)) {
+  foreach (<ODLOG>) {if (/in the LAPS/) {print "$_";} }
+  close ODLOG;
+  print "\n";
+
+  foreach (@lines) {
+    if (/(.*)is at/) {
+    ($dummy,$obnum,$staname,$source,$type) = split /\s+/, $1;
+    if ($type eq "") {$type="$source";}
+    if ($type eq "UNK") {$type="$source";}
+    if ($type eq "") {$type="unknown";}
+    push(@stanames,$staname);
+    push(@types,$type);}}
+#   @stanames = sort(@stanames);
+#   $count=0;
+#   foreach (@stanames) {
+#   print "$_ "; 
+#   $count=$count+1;
+#   if ($count > 15) {print "\n          "; $count=0; } }
+  foreach (@types) {
+    $length = @typelist;
+    $i=0; $found=0;
+    while ($i < $length) {
+      if ($_ eq $typelist[$i]) {$found=1;}
+      $i=$i+1;}
+    if ($found != 1) {push(@typelist,$_);} }
+  foreach $type (@typelist) {
+    print "\nObservation type $type:\n     ";
+    $i=0; $count=0;
+    foreach (@types) {
+      if ($type eq $_) {
+        print "$stanames[$i]  ";
+        $count=$count+1;
+        if ($count == 8) {print "\n     "; $count=0; } }
+      $i=$i+1;}
+      if ($count != 8) {print "\n";} }
+  print "\n";
+}else{
+  print "Could not open $odfilename to obtain obs list\n";
+}
+
+# Satellite data
+
+@greplines = grep /Returning S8W/, @lines;
+($dummy1,$dummy2,$dummy3,$dummy4,$satellite) = split /\s+/, $greplines[0];
+print "Using satellite IR data from $satellite to verify sfc temperature analysis.";
+print "\n";
+print "\n";
+
+# Verification info
+
+print "Verification info:";
+
+@grepfields = grep /background verification/, @lines;
+
+@greprms = grep /RMS/, @lines;
+@greprms = grep /difference/, @greprms;
+
+$i = 0;
+
+foreach $field (@grepfields) {
+
+# Print field
+  ($dummy1,$dummy2,$dummy3,$dummy4,$dummy5,$dummy6,$dummy7) = split /\s+/, $field;
+  print " \n    $dummy2";
+  if("$dummy3" !~ "background"){print " $dummy3";}
+
+
+  ($dummyb1,$dummyb2,$dummyb3,$dummyb4,$dummyb5,$dummyb6) = split /\s+/, @greprms[$i];
+
+  ($dummya1,$dummya2,$dummya3,$dummya4,$dummya5,$dummya6) = split /\s+/, @greprms[$i+1];
+
+  print " rms diff against $dummya6 observations ";
+  if("$dummy5" !~ "verification"){print " $dummy5";}
+  print " $dummy6 $dummy7\n";
+
+# Print RMS values
+  print "        background: $dummyb4      analysis: $dummya4  \n";
+
+  $i = $i + 2;
+}
+
+
+
