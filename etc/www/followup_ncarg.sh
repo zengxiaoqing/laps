@@ -30,7 +30,7 @@ echo "user = "`whoami`
 echo "machine = "`uname -n`                                   
 echo " "                                  
 
-$LAPS_ROOT/etc/wait_for_file.sh $LAPS_DATA_ROOT/sched.lock 50
+$LAPS_ROOT/etc/wait_for_file.sh $LAPS_DATA_ROOT/log/sched.lock 50
 
 #LAPS WWW 2-D NCAR graphics products
 echo " "
