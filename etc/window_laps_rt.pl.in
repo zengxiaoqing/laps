@@ -84,8 +84,12 @@ my ($LAPS_TEMPLATE, $CONFIG_DOMAIN);
 
 if($opt_t){
    $LAPS_TEMPLATE = $opt_t;
+   if(!-e $LAPS_TEMPLATE){
+       print "Error: the template directory you specified does not exist.\n";
+       print "Terminating.\n";exit;
+   }
 }else{
-   print "no -t (path to template) command line input.\n";
+   print "WARNING! no -t (path to template) command line input.\n";
    print "Use LAPS_SRC_ROOT for namelists\n";
 }
 if($opt_c){
@@ -121,6 +125,10 @@ if( $CONFIG_DOMAIN eq "t" ) {
               system("rm -rf $LAPS_DATA_ROOT");
           }
       } 
+      if( !-e $DATAROOT/$DOMAIN_NAME ){
+          mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/DOMAIN_NAME $!\n";
+      }
+
       mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
       print "Generate lapsdataroot directory structure\n";
       &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
@@ -174,7 +182,7 @@ if( defined($LAPS_TEMPLATE) ){
        }
     }else{print "The template subdirectory you specified does not exist: $LAPS_TEMPLATE\n";
           print "Terminating.\n"; exit;}
-}else{print "No template subdirectory. All roots equal: $all_roots_equal.\n";}
+}else{print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";}
 
 if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
     print "Running $LAPSINSTALLROOT/laps_localization.pl\n";
