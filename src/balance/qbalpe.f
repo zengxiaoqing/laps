@@ -117,7 +117,7 @@ c
          goto 999
       endif
 
-      if(vertical_grid.eq.'PRESSURE')THEN!Pressure in mb
+      if(vertical_grid.eq.'PRESSURE')THEN!Pressure in pa
          do i=1,nz
           p(i)=pressure_bottom_l-((i-1)*(pressure_interval_l))
           if(i.gt.1)dp(i)=pressure_interval_l
@@ -282,7 +282,7 @@ c replace missing cloud vv's with background vv's.
       sumf=sumf/snxny
       sumv2=sumv2/snxny/sk
       sumr=sumr/snxny/sk
-      ro=sqrt(sumv2)/(sumf*cl)  ! rossby number for dynamic adjustment
+      ro=sqrt(sumv2)/(sumf*sl)  ! rossby number for dynamic adjustment
       tau=terscl**2*(g*sumdt/sumt/sumdz)**2/(sumr**2*g**2*sumv2*sumf**2)
       print*,'dthet/thet/dz/den/V/f/tau,ro: ',sumdt,sumt,sumdz,sumr,
      &     sqrt(sumv2),sumf,tau,ro
@@ -733,14 +733,14 @@ c
          nuu=(nu(i,j,k)+nu(i+1,j,k)+nu(i+1,j-js,k)+nu(i,j-js,k))*.25
          if (uot .ne. bnd) then
            fu2=(fuangu*fuangu)
-           u(i,j,k)=(uot*erru(i,j,k)-f*delo*(ro*nvv-fvv+dtdy))
+           u(i,j,k)=(uot*erru(i,j,k)-fuangu*delo*(ro*nvv-fvv+dtdy))
      &                        /aaa(i,j,k)      
           else 
            u(i,j,k)=bnd
          endif
          if ( vot .ne. bnd) then
            fv2=(fvangv*fvangv)
-           v(i,j,k)=(vot*erru(i,j,k)+f*delo*(ro*nuu-fuu+dtdx))
+           v(i,j,k)=(vot*erru(i,j,k)+fvangv*delo*(ro*nuu-fuu+dtdx))
      &                              /aaa(i,j,k)       
           else
            v(i,j,k)=bnd
@@ -1121,7 +1121,7 @@ c
      .      ,d2vbdx,d2vbdy,d2ubdx,d2ubdy
      .      ,d2vdx,d2vdy,d2udx,d2udy,dauvdp,dauvbdp
      .      ,d2udp,d2vdp,d2ubdp,d2vbdp,absuv,absuvb
-     .      ,hzdf,eddf,hdfz
+     .      ,hzdf,eddf
      .      ,grav,r,den,cd
 c_______________________________________________________________________________
 c
@@ -1132,8 +1132,8 @@ c background. Fu-Fub, Fv-Fvb
 c constnts
       grav=9.808!m/sec2
       r=287.04!gas const
-      hdfz=50000.!m2/sec
-      eddf=.002!mb2/sec
+      hzdf=50000.!m2/sec
+      eddf=20.!pa2/sec
       cd=.0025 !non dim
       nxm1=nx-1
       nym1=ny-1
@@ -1257,8 +1257,6 @@ c create perturbations in the u,v,om variables
      &            omb(i,j+1,k))*.25
           omu=(om(i+1,j+1,k+1)+om(i,j+1,k+1)+om(i+1,j+1,k)+
      &            om(i,j+1,k))*.25
-          omu=(om(i+1,j+1,k+1)+om(i,j+1,k+1)+om(i+1,j+1,k)+
-     &            om(i,j+1,k))*.25
           vvu=(v(i-1,j+1,k)+v(i,j+1,k)+v(i-1,j,k)+v(i,j,k))*.25
           vvbu=(vb(i-1,j+1,k)+vb(i,j+1,k)+vb(i-1,j,k)+vb(i,j,k))*.25
           dubdx=(ub(i+1,j,k)-ub(i-1,j,k))/(2.*dx(i,j))
@@ -1276,6 +1274,8 @@ c create perturbations in the u,v,om variables
          else 
           ombv=(omb(i+1,j+1,k+1)+omb(i+1,j,k+1)+omb(i+1,j,k)+
      &            omb(i+1,j+1,k))*.25
+          omv=(om(i+1,j+1,k+1)+om(i+1,j,k+1)+om(i+1,j,k)+
+     &            om(i+1,j+1,k))*.25
           uuv=(u(i,j,k)+u(i+1,j,k)+u(i,j-1,k)+u(i+1,j-1,k))*.25
           uubv=(ub(i,j,k)+ub(i+1,j,k)+ub(i,j-1,k)+ub(i+1,j-1,k))*.25
           dvbdx=(vb(i+1,j,k)-vb(i-1,j,k))/(2.*dx(i,j))
@@ -1618,7 +1618,8 @@ c  destaggering will only process interior grid points on the laps mesh
      &phi(nx,ny,nz),wr(nx+1,ny+1,nz+1,6),ps(nx,ny)
      &,p(nz),phis(nx,ny,nz),
      &rhs(nx,ny,nz),rh(nx,ny,nz)
-
+c wind on terrain face
+      bnd=1.e-30
 c  gas const
       r=287.04
 c  gravity
