@@ -158,8 +158,8 @@ cdis
 
             if(c_section .eq. 'hz')then
                 write(6,101)
- 101            format('    Zoom,Density (for sfc wind barbs)'
-     1                ,28x,'     ? ',$)
+ 101            format('    Zoom,Density (contours/sfc wind barbs)'       
+     1                ,23x,'     ? ',$)
                 read(lun,*)zoom,density
             else
                 zoom = 1.0
@@ -179,8 +179,19 @@ cdis
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
-     1                                  .or. c_section .eq. '2')THEN
+     1                            .or. c_section .eq. 'xz'
+     1                            .or. c_section .eq. '2')THEN
             zoom = 1.0
+
+            if(c_section .eq. 'xz')then
+                write(6,102)
+ 102            format('    Density (contours)'       
+     1                ,33x,'     ? ',$)
+                read(lun,*)density
+            else
+                density = 1.0
+            endif
+
             l_atms = .false.
 
             NXSECT = nint(sqrt(float(NX_L**2 + NY_L**2))) ! 541
@@ -190,7 +201,7 @@ cdis
             call xsect(c_display,i4time_ref,lun,l_atms
      1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,NXSECT       
      1                ,r_missing_data,laps_cycle_time,maxstns
-     1                ,namelist_parms)
+     1                ,density,namelist_parms)
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
