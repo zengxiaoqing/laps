@@ -1330,7 +1330,6 @@ Outputs:
                                    Units are meters AGL.
 
 	lcv     2d grid		column max cloud cover / snow cover
-                                    threshold for cloud cover in CTY is 0.65.
 </pre>
 Source directory: laps/nest7grid/source/cloud
 
