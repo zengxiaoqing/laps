@@ -7,7 +7,7 @@
 !     Input file 
       character*70 filename_in
       character*9 a9_time
-      character*80 dir_in
+      character*180 dir_in
       character*255 c_filespec
       integer max_files
       parameter(max_files = 3000)
@@ -19,7 +19,7 @@
       integer*4       len_dir
 
       character*40 c_vars_req
-      character*100 c_values_req
+      character*180 c_values_req
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999

@@ -653,7 +653,7 @@ c SG97 iodim increased, to be able to read larger blocks of data
       real std_lon
       integer istatus
       CHARACTER*(*) OFN
-      character*80 TITLE
+      character*180 TITLE
       logical which_data
 C
 c *********************
@@ -719,7 +719,7 @@ C
      +     wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,glatp,               ! pla,plo,
      +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
       real xr,yr,rval,sh,sha,rh,rha
-      CHARACTER*80 OFN,TITLE3
+      CHARACTER*180 OFN,TITLE3
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
       LOGICAL L1,L2,dem_data
@@ -775,11 +775,15 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   ELSE
                      WRITE(TITLE1,'(2I1,A1)')ISOCPT,ISOCPO,'S'
                   ENDIF
-                  IF(IWOC.GE.0)THEN
+
+                  IF(IWOC.GE.0 
+     1               .and. IWOC .ne. 180                    ! 1998 Steve Albers
+     1                                      )THEN
                      WRITE(TITLE2,'(3I1,A1)')IWOCPH,IWOCPT,IWOCPO,'E'
                   ELSE
                      WRITE(TITLE2,'(3I1,A1)')IWOCPH,IWOCPT,IWOCPO,'W'
                   ENDIF
+
                   LB=INDEX(OFN,' ')-1
                   TITLE3=OFN(1:LB)//TITLE1//TITLE2
                   LB=INDEX(TITLE3,' ')-1

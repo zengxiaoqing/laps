@@ -57,7 +57,7 @@ C
         character*9  asc9_tim_needed
         character*20 c20_type, a20_time
         character*(*) c_filespec                                 ! Input
-        character c_fnames(max_files)*100
+        character c_fnames(max_files)*150
 
         common /laps_diag/ no_laps_diag
 
@@ -145,7 +145,7 @@ C       More generic
 
         character*9 asc_tim_latest
         character*(*) c_filespec                                   ! Input
-        character c_fnames(max_files)*80
+        character c_fnames(max_files)*150
 
         common /laps_diag/ no_laps_diag
 

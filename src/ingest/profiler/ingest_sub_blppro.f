@@ -88,8 +88,8 @@ C       NOTE: Profiler winds are written out in KNOTS
         data qc_char/'G','B','M'/
         integer*4 byte_to_i4
 
-        character*100 fnam_in
-        character*80 dir_in
+        character*200 fnam_in
+        character*180 dir_in
         character*255 c_filespec
         integer wsmr_wmo_id
         data wsmr_wmo_id/74533/
@@ -121,7 +121,7 @@ C
         integer*4       len_dir_in
 
         character*40 c_vars_req
-        character*100 c_values_req
+        character*180 c_values_req
 
         character*6 prof_name(n_profilers)
         character*9 a9_timeObs

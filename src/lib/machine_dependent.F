@@ -189,12 +189,15 @@ cdis
       character*(*) file,status
 
       istat=1
+
 #if defined(hpux) && !defined(F90)
       open(lun,file=file,status=status,ACCESS='APPEND',err=998)
-
+#elif defined(IRIX) && !defined(F90)
+      open(lun,file=file,status=status,ACCESS='APPEND',err=998)
 #else
       open(lun,file=file,status=status,POSITION='APPEND',err=998)
 #endif
+
       return
  998  istat=0
       return

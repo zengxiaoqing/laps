@@ -5,9 +5,9 @@
 !                                       get_raob_data and get_raob_data_af.
 
 !     Input file 
-      character*70 filename_in
+      character*200 filename_in
       character*9 a9_time
-      character*80 dir_in
+      character*180 dir_in
       character*255 c_filespec
       integer max_files
       parameter(max_files = 3000)
@@ -23,7 +23,7 @@
       integer*4       len_dir
 
       character*40 c_vars_req
-      character*100 c_values_req
+      character*180 c_values_req
 
 !     Define interval to be used (between timestamps) for creation of SND files
       integer i4_snd_interval

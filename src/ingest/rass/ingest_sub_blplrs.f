@@ -39,14 +39,14 @@ C       Steve Albers               Apr-1996    BLP LAPS ingest
 !       Ken Dritz                1-Jul-1997  Changed include of lapsparms.for
 !                                            to laps_static_parameters.inc.
 !       Ken Dritz                1-Jul-1997  Added call to get_r_missing_data.
-!       Ken Dritz                8-Jul-1997  Replaced LAPS_DOMAIN_FILE with
+!       Ken Dritz                8-Jul-1997  Replaced LAPS_DOMAIN_FILE by
 !                                            'nest7grid' and removed include
 !                                            of laps_static_parameters.inc.
 C
 C       This file shows examples of how the use PROF_CDF subroutines to read
 C       WPDN 60-minute RASS data in netCDF files.
 C
-        integer cdfid,status,i,j,max_levels,max_stations,n_profilers
+        integer cdfid,status,i,j,max_levels,max_stations
         parameter (max_levels = 100)
         parameter (max_stations = 1000)
 
@@ -63,8 +63,8 @@ C
 C       character*1 submode
         character*6 pltc2_name
         data pltc2_name/'PLTC2 '/
-        character*100 fnam_in
-        character*80 dir_in
+        character*200 fnam_in 
+        character*180 dir_in
         character*255 c_filespec
 
         integer wsmr_wmo_id

@@ -62,8 +62,9 @@ C
         character*1 qc_char(3)
         data qc_char/'G','B','M'/
         character*6 staname
-        character*100 fnam_in
-        character*80 dir_in
+        character*200 fnam_in
+        character*150 line
+        character*180 dir_in
         character*255 c_filespec
         character*5 c5_data_interval
 
@@ -137,10 +138,6 @@ C
 C       For VMS systems, you must explicitly put in a period after the oh if
 C       you don't want a file extension, thus the string used in the open call.
 C
-
-
-!       dir_in = '/public/data/rass/netcdf/'
-!       dir_in = path_to_raw_rass
 
         c_vars_req = 'path_to_raw_rass'
         call get_static_info(c_vars_req,c_values_req,1,istatus)
@@ -442,10 +439,11 @@ c           write(1,*)'virtualTemp'
             rms = 1.0
 
 !           write surface temperature (and other data) as first level
-            write(1,*)elev,t_sfc,' ',i_qc_sfc,rms
-     1                              ,rh_sfc,di_sfc,sp_sfc,prs      
-            write(6,*)elev,t_sfc,' ',i_qc_sfc,rms
-     1                              ,rh_sfc,di_sfc,sp_sfc,prs      
+            write(line,*)elev,t_sfc,' ',i_qc_sfc,rms
+     1                                 ,rh_sfc,di_sfc,sp_sfc,prs      
+
+            write(1,*)line
+            write(6,*)line
 
             do i = 1, n_levels
                 iqc_flag  = byte_to_i4(qc_flag(i))
@@ -492,7 +490,7 @@ C       a time.  The CDFID's are what indicate which file is which.
 C
         CALL PROF_CDF_CLOSE(cdfid,status)
         if(status.ne.0)then
-                write(*,*)'bad close ',status
+            write(*,*)'bad close ',status
         endif
 C
         return
