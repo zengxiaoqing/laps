@@ -356,12 +356,18 @@ cc102                 format('R',i2)
         endif
 
 !       Get and advect the Reflectivity History Stuff (LF1)
-        write(6,*)
-        write(6,*)' Generating max reflectivity history analysis'
-        call get_radar_max_pd(i4time_sys-ilaps_cycle_time
+        if(.false.)then ! 'get_radar_max_pd' not yet modernized for radar input
+            write(6,*)
+            write(6,*)' Generating max reflectivity history analysis'
+            call get_radar_max_pd(i4time_sys-ilaps_cycle_time
      1          ,i4time_sys,imax,jmax,kmax,heights_3d,ext_radar
      1          ,lat,lon,topo
      1          ,ref_max(1,1,0),frac_sum,istat_radar_hist)
+
+        else
+            istat_radar_hist = 0
+
+        endif
 
         if(istat_radar_hist.eq.1)then
 
