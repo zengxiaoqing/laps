@@ -62,6 +62,13 @@ cdis
           go to 999
       endif
 
+      if(n_radars_remap .eq. -1)then
+          call get_max_radars(n_radars_remap,istatus)
+          if(istatus .ne. 1)goto999
+          write(6,*)' setting n_radars_remap = max_radars_cmn = '
+     1             ,n_radars_remap
+      endif
+
       max_times = 3
 
       do i_radar = 1,n_radars_remap
