@@ -18,7 +18,7 @@ DBLAPSLIBS = $(DBBGDATALIB) $(DBLAPSLIB) $(DBUTILLIB) $(DBMTHERMOLIB)
 
 EXE = lga.exe
 
-SRC=lga_interp.f  writelgalgb.f
+SRC= writelgalgb.f
 
 MAIN=lga.f
 
