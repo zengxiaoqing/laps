@@ -1140,7 +1140,7 @@ c
 c
 	subroutine get_background_sfc(i4time_in,var_in,bkg_ext,
      &                bkg_time,bkg_field,laps_cycle_time,ni,nj,
-     &                istatus)
+     &                bkg_status)
 
 c
 c
@@ -1158,6 +1158,7 @@ c		P. Stamus, NOAA/FSL
 c                   06-16-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
 c                   09-30-98  Housekeeping.
+c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
 c
 c
 c       Notes:
@@ -1413,7 +1414,7 @@ c
 c
 c
 	subroutine get_bkgwind_sfc(i4time_in,bkg_ext,bkg_time,bkg_u,bkg_v,
-     &                laps_cycle_time,ni,nj,istatus)
+     &                laps_cycle_time,ni,nj,bkg_status)
 
 c
 c
@@ -1431,6 +1432,7 @@ c		P. Stamus, NOAA/FSL
 c                   07-10-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
 c                   09-30-98  Housekeeping.
+c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
 c
 c
 c       Notes:
