@@ -98,7 +98,9 @@ c     internal variables
       desired_ext = 'tpw'
       istatus_8=0
       istatus_10 = 0
+
       call s_len(path_to_gvap12, ptg_index, istatus)
+
 
 c     reading goes 12
 

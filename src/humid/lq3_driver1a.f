@@ -185,6 +185,7 @@ c     namelist data
       integer  raob_switch
       integer  raob_lookback
       real raob_radius
+      integer endian  ! 1 = big, 0 = little , big default
       integer goes_switch
       integer cloud_switch
       integer cloud_d
@@ -201,7 +202,7 @@ c     namelist data
       integer gps_switch
       character*256 path_to_gvap12,path_to_gvap10,path_to_gps
       namelist /moisture_switch_nl/ raob_switch,
-     1     raob_lookback, 
+     1     raob_lookback, endian,
      1     raob_radius, goes_switch, cloud_switch, cloud_d
      1     ,tiros_switch, sounder_switch, sat_skip
      1     ,gvap_switch, IHOP_flag, time_diff, gps_switch
@@ -216,6 +217,15 @@ c     namelist data
       data extlt1/'lt1'/
       data ext /'lq3'/
       data rhext /'lh3'/
+
+
+c     optran 90 coefficient data information
+
+      character*256 sndr_coeff, sndr_trans
+      integer sndr_coeff_len, sndr_trans_len
+      common /optn_coef/ sndr_coeff, sndr_trans, sndr_coeff_len, 
+     1     sndr_trans_len
+
 
 c----------------------code   ------------------
 c     initialization
@@ -240,12 +250,15 @@ c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
       write (6,*) ' '
-      write (6,*) 'Release 12/12/2001 successfully incorporates'
-      write (6,*) '1) Variational inclusion of .SND data'
-      write (6,*) '2) Bug fix to GOES sounder radiances in'
-      write (6,*) '   variational assimilation step'
-      write (6,*) '3) raob_radius now a name list parameter'
-      write (6,*) ' '
+      write (6,*) 'Release 3.7.10 successfully incorporates'
+      write (6,*) '1) OPTRAN90 for BOTH imager and sounder data'
+      write (6,*) '2) Still Bigendian machines only, little endian soon'
+      write (6,*) '3) Initiated removal of old optran code'
+      write (6,*) 'Release 3.7.9 successfully incorporates'
+      write (6,*) '1) OPTRAN90 upgrade for sounder data only'
+      write (6,*) '2) Disabled use of imager data'
+      write (6,*) '3) Bigendian machines only, little to come soon'
+
 
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
@@ -266,6 +279,7 @@ c     set namelist parameters to defaults
       cloud_d = 1
       raob_switch = 0
       raob_lookback = 0
+      endian = 1 ! big endian is default
       raob_radius = 45000.0  ! meters (45km)
       goes_switch = 0
       sounder_switch = 0
@@ -323,12 +337,149 @@ c     set namelist parameters to defaults
       else
          write(6,*) 'GOES switch on, attempting GOES ', goes_switch
       endif
-      
+
       if (sounder_switch.eq.0) then
          write(6,*) 'Sounder switch off'
          write(6,*) 'Using IMAGER data only'
+         
+         if (goes_switch.eq.12) then
+            
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'imgr_g12_spectral_coefficients_big'
+               sndr_trans = 'imgr_g12_transmittance_coefficients_big'
+               
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'imgr_g12_spectral_coefficients_little'
+               sndr_trans = 'imgr_g12_transmittance_coefficients_little' 
+
+            endif
+         
+            
+         elseif (goes_switch.eq.11) then
+
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'imgr_g11_spectral_coefficients_big'
+               sndr_trans = 'imgr_g11_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'imgr_g11_spectral_coefficients_little'
+               sndr_trans = 'imgr_g11_transmittance_coefficients_little'
+
+            endif
+            
+         elseif (goes_switch.eq.10) then
+
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'imgr_g10_spectral_coefficients_big'
+               sndr_trans = 'imgr_g10_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+
+               sndr_coeff = 'imgr_g10_spectral_coefficients_little'
+               sndr_trans = 'imgr_g10_transmittance_coefficients_little'
+
+            endif
+            
+         elseif (goes_switch.eq.9)  then
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'imgr_g09_spectral_coefficients_big'
+               sndr_trans = 'imgr_g09_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'imgr_g09_spectral_coefficients_little'
+               sndr_trans = 'imgr_g09_transmittance_coefficients_little'
+
+            endif
+            
+         else
+            write(6,*) 'invalid sat number for this version'
+            write(6,*) 'turning goes function off in var. method'
+
+            goes_switch = 0 ! turning satellite off
+         endif
+
+         sndr_coeff_len = len_trim (sndr_coeff)
+         sndr_trans_len = len_trim (sndr_trans)
+
       else
          write(6,*) 'Sounder ON using Sounder data'
+         write (6,*) 'setting sounder to goes:', goes_switch
+
+         if (goes_switch.eq.12) then
+
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'sndr_g12_spectral_coefficients_big'
+               sndr_trans = 'sndr_g12_transmittance_coefficients_big'
+               
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'sndr_g12_spectral_coefficients_little'
+               sndr_trans = 'sndr_g12_transmittance_coefficients_little' 
+
+            endif
+         
+            
+         elseif (goes_switch.eq.11) then
+
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'sndr_g11_spectral_coefficients_big'
+               sndr_trans = 'sndr_g11_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'sndr_g11_spectral_coefficients_little'
+               sndr_trans = 'sndr_g11_transmittance_coefficients_little'
+
+            endif
+            
+         elseif (goes_switch.eq.10) then
+
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'sndr_g10_spectral_coefficients_big'
+               sndr_trans = 'sndr_g10_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+
+               sndr_coeff = 'sndr_g10_spectral_coefficients_little'
+               sndr_trans = 'sndr_g10_transmittance_coefficients_little'
+
+            endif
+            
+         elseif (goes_switch.eq.9)  then
+            if(endian.eq.1) then
+               
+               sndr_coeff = 'sndr_g09_spectral_coefficients_big'
+               sndr_trans = 'sndr_g09_transmittance_coefficients_big'
+
+            elseif (endian .eq. 0) then
+
+               sndr_coeff = 'sndr_g09_spectral_coefficients_little'
+               sndr_trans = 'sndr_g09_transmittance_coefficients_little'
+
+            endif
+            
+         else
+            write(6,*) 'invalid sat number for this version'
+            write(6,*) 'turning goes function off in var. method'
+
+            goes_switch = 0 ! turning satellite off
+         endif
+
+         sndr_coeff_len = len_trim (sndr_coeff)
+         sndr_trans_len = len_trim (sndr_trans)
+
       endif
       
       if (tiros_switch.eq.0) then

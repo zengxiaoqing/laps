@@ -47,6 +47,16 @@ cdis
 
       implicit none
 
+c     wt = gps total water cm
+c     nn = total number gps obs (even ones with missing data)
+c     glat, glon are laps gridpoints, ii,jj domain dimensions of laps grid
+c     data_out = output analyzed gps data on the laps grid
+c     data_weights = weight(distance from ob) at each laps gridpoint
+c     
+c     internal variables of special interest
+c
+c     r50 = radius(meters) from ob where weight drops to 0.5 (50%)
+
       integer ii,jj,nn,istatus
       real lat(nn),lon(nn),wt(nn)
       real data_out(ii,jj)
@@ -152,7 +162,7 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      r50 = 5.e+3     
+      r50 = 750.e+3 ! km radius of influence     
 
       call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 

@@ -72,6 +72,19 @@ c     compute layer pressure (density weighted) per Van Delst
          pp(k) = ( p(k-1)-p(k))/log( p(k-1)/p(k) )
       enddo                     !k
 
+c     in certain cases where the surface is very close to the lowest level
+c     a roundoff error will cause the pp(kk) value to be larger than p(kk)! 
+c     this in turn causes an out-of bounds extrapolation in the following code
+c     plus may damage the integration in the optran code.  To get around this,
+c     here a test is done to compare the values and if the pp(kk) is larger
+c     than p(kk), and average approximation is used for pp(kk)
+
+      if (pp(kk) .gt. p(kk) .or. pp(kk) .lt. p(kk-1)) then ! error condition
+c         write (6,*) 'savedppkk', pp(kk), p(kk-1), p(kk)
+         pp(kk) = (p(kk)+p(kk-1)) /2.
+c         write (6,*) 'savedppkk', pp(kk), p(kk-1), p(kk)
+      endif
+
 c     use the above pressure to derive the temp and other parameter values
 c     at the density weighted pressure by linear interpolation in log p
 c     space
@@ -86,6 +99,14 @@ c     space
       enddo ! k
 
 c     
+
+      if ( any ( aa < 0.0 ) .or.
+     1     any ( bb < 0.0 ) .or.
+     1     any ( cc < 0.0 ) )  then
+         write (6,*) 'error in make_optran_layers.f, out of range error'
+         stop
+         istatus = 0 
+      endif
 
 
       istatus = 1               ! set success

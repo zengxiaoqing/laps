@@ -132,6 +132,7 @@ c     parameter list variables
       integer :: raob_switch
 
 
+
 c internal variables
 
       integer :: istatus
@@ -147,6 +148,7 @@ c internal variables
       real :: qadjust(ii,jj,kk)
       integer :: k500, k700
       integer :: sat_index
+
 
 c climate model variables
       integer :: julian_day
@@ -198,7 +200,7 @@ c     powell specific arrays
       
 c     optran specific arrays for powell function calling
       
-      real radiance_ob (Nchan)
+      real btemp_ob (Nchan)
       integer cost_kk
       real cost_p(Nlevel)
       real cost_t_l(Nlevel)
@@ -220,7 +222,7 @@ c     optran specific arrays for powell function calling
       
 c     optran common block
       
-      common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
+      common /cost_optran/btemp_ob, cost_kk, cost_p, cost_t_l,
      1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
      1     cost_theta, cost_isnd, cost_rad_istatus, cost_sec_za,
      1     cost_sfc_emis, cost_sfc_refl,cost_sec_solar
@@ -393,7 +395,7 @@ c     install new changes for revised satellite path
          write (6,*) 'Attempting: ', filename1
 c     convert filename to i4time_sat
          call i4time_fname_lp (filename1,i4time_sat,istatus)
-         write (6,*) 'Getting satellite radainces (lvd)'
+         write (6,*) 'Getting satellite radiances (lvd)'
          call read_lvd_3_4_5 (path,i4time_sat,ch3,ch4,ch5,
      1        ii,jj,kk,ngoes,istatus)
          
@@ -471,7 +473,7 @@ c     setup cloud test (cloud array passed in)
          enddo
       enddo
       
-      write (6,*) 'Running GOES',ngoes,' forward model OPTRAN vsn'
+      write (6,*) 'Running GOES',ngoes,' forward model OPTRAN90 vsn'
       write (6,*) 'Modify tskin and psfc for cloud top if present'
       
       do j = 1,jj
@@ -603,7 +605,7 @@ c     channels used in this algorithm.
                
                do kan = 1,3
                   
-                  btemp(i,j,kan) = tbest (kan+7)
+                  btemp(i,j,kan) = tbest (kan+1) ! optran90 2,3,4 (chan 3,4,5)
                   
                enddo            !kan
                
@@ -613,7 +615,7 @@ c     channels used in this algorithm.
                
                do kan = 1,7
                   
-                  btemp(i,j,kan) = tbest(kan)
+                  btemp(i,j,kan) = tbest(kanch(kan))
                   
                enddo            ! kan
                
@@ -720,32 +722,32 @@ c     copy imager data into radiance arrays
             
             if(isnd.eq.0 .and. cost_rad_istatus.eq.1) then ! USE 
                                 !AS IMAGER DATA, btemps
-               radiance_ob(1) = ch3(i,j)
-               radiance_ob(2) = ch4(i,j)
-               radiance_ob(3) = ch5(i,j)
+               btemp_ob(1) = ch3(i,j)
+               btemp_ob(2) = ch4(i,j)
+               btemp_ob(3) = ch5(i,j)
             endif
             
 c     copy sounder data into radiance arrays
             
             if(isnd.eq.1 .and. cost_rad_istatus.eq.1) then ! USE
                                 ! AS SOUNDER DATA, btemps
-               radiance_ob(1) = ch3(i,j)
-               radiance_ob(2) = ch4(i,j)
-               radiance_ob(3) = ch5(i,j)
-               radiance_ob(4) = bias_correction(britgo(
+               btemp_ob(1) = ch3(i,j)
+               btemp_ob(2) = ch4(i,j)
+               btemp_ob(3) = ch5(i,j)
+               btemp_ob(4) = bias_correction(britgo(
      1              rads(i,j,kanch(4)),kanch(4)),ngoes,1,kanch(4))
-               radiance_ob(5) = bias_correction(britgo(
+               btemp_ob(5) = bias_correction(britgo(
      1              rads(i,j,kanch(5)),kanch(5)),ngoes,1,kanch(5))
-               radiance_ob(6) = bias_correction(britgo(
+               btemp_ob(6) = bias_correction(britgo(
      1              rads(i,j,kanch(6)),kanch(6)),ngoes,1,kanch(6))
-               radiance_ob(7) = bias_correction(britgo(
+               btemp_ob(7) = bias_correction(britgo(
      1              rads(i,j,kanch(7)),kanch(7)),ngoes,1,kanch(7))
                
-c     check for bad data in radiance_ob
+c     check for bad data in btemp_ob
                
                do k = 1,7
-                  if (radiance_ob(k) .le.0.0 ) then
-                     write(6,*) 'bad radiance_ob', radiance_ob(k),
+                  if (btemp_ob(k) .le.0.0 ) then
+                     write(6,*) 'bad btemp_ob', btemp_ob(k),
      1                    kanch(k), filename1,' aborting'
                      istatus = 0
                      return
@@ -1165,9 +1167,12 @@ c     fill field_display_btemps with missing data flag where not zero
       where (field_display_btemps < 1.0e-7 )
          field_display_btemps = mdf
       endwhere
-      
-      
-      
+
+c     all done using optran90 need to deallocate the coefficient arrays
+
+      call optran_deallocate (istatus)
+    
+
       return
       end
   

@@ -76,7 +76,7 @@ c     parameter variables
       
 c     optran specific arrays for powell function calling
       
-      real radiance_ob (Nchan)
+      real btemp_ob (Nchan)
       integer cost_kk
       real cost_p(Nlevel)
       real cost_t_l(Nlevel)
@@ -95,7 +95,7 @@ c     optran specific arrays for powell function calling
 
 c     optran common 
 
-      common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
+      common /cost_optran/btemp_ob, cost_kk, cost_p, cost_t_l,
      1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
      1     cost_theta, cost_isnd, cost_rad_istatus, cost_sec_za,
      1     cost_sfc_emis, cost_sfc_refl,cost_sec_solar
@@ -187,8 +187,8 @@ c     lcal variables
       data first_gvap /.true./
       integer lvl500, lvl700, lvl100
       save lvl500, lvl700, lvl100
-      real var_weights(7)       ! weights computing in func
       real p1,p2,p3             !pressure tops for gvap layers
+      real cloud_thresh         ! percent cloud for action (0.6)
       real GT  ! cloud functions
       real ipw                  !integrated water for GPS minimization
       real cloud_integral
@@ -196,9 +196,16 @@ c     lcal variables
 c     externals
       
       real plango
+
+
+
+
+
+
       
 c     code
 
+      cloud_thresh = 0.6
       tbest = 0.0 ! initialize tbest array to zero each call (no carryover)
       cloud_integral = 0.0
 
@@ -238,20 +245,10 @@ c     set up for sounder if needed instead of imager
             kan(5) = 16
             kan(6) = 6
             kan(7) = 12
-           
-            var_weights(1) = .0022
-            var_weights(2) = 0.
-            var_weights(3) = 0.
-            var_weights(4) = .0034
-            var_weights(5) = 0.
-            var_weights(6) = 0.
-            var_weights(7) = 0.0036
+
+
             
          else                   ! imager radiances used
-
-            var_weights(1) = .0022
-            var_weights(2) = 0.
-            var_weights(3) = 0.
             
          endif
          
@@ -297,6 +294,8 @@ C----------------END PRELIMINARY COMPUTATIONS AND PREP -----------
 
       
 C     SATELLITE RADIANCE SECTION
+c     note that radiance and tbest are brightness temperatures (not
+c     radiance as the code might lend you to believe
 
       if (cost_rad_istatus .eq. 1) then
          
@@ -331,22 +330,24 @@ c     time-consuming part of the code.
 c     compute cost function
 
          if (cost_isnd == 1) then ! SOUNDER radiances used
-            if(cost_isnd == 1 .and. cost_cld > 0.75) then ! report conflict
+            if(cost_isnd == 1 .and. cost_cld >= cloud_thresh) then ! report conflict
                GT = 0.25 ! reduce influence of this term by 3/4 due to 
 c     conflict with cloud analysis
             endif
             
-            do j = 1,7          ! radiance _ob(1-7) is sounder btemp
-               func = func + var_weights(j)*( radiance_ob(j) -
-     1              tbest(j) )**2/2.
+            do j = 1,7          ! btemp_ob(1-7) is sounder btemp
+               func = func + ( btemp_ob(j) -
+     1              tbest(kan(j)) )**2/2.
             enddo
+            func = func /2.25 !brightnessT variance (=1.5^2)
 
          else                   ! IMAGER situation (only 3 channels)
             
             do j = 1,3          ! radiance _ob(1-3) is imager btemp
-               func = func + var_weights(j)*( radiance_ob(j) -
-     1              tbest(j+7) )**2/2.
+               func = func + ( btemp_ob(j) -
+     1              tbest(j+7) )**2
             enddo
+            func = func /2.25 !brightnessT variance (=1.5^2)
             
          endif
 
@@ -358,6 +359,19 @@ c     conflict with cloud analysis
 c     stability cost is identical for both imager and sounder
          
       endif                     ! cost_rad_istatus
+
+
+c     fill display_btemps section for later display
+      display_btemps(1:7) = tbest (1:7)
+
+
+c
+c     END SATELLITE RADIANCE SECTION
+
+
+
+
+
 
 
 
@@ -378,8 +392,15 @@ c     background weighting, in effect even if radiance data are not present.
          max_func_back =   ((x(j) - 1.)**2) + max_func_back
       enddo
 
+      max_func_back = max_func_back/(0.005**2) ! background error small
+
       func = func + max_func_back
 c      write(6,*) 'func 1, ',func
+c     END BACKGROUND SECTION
+
+
+
+
 
 
 
@@ -391,7 +412,7 @@ c      write(6,*) 'func 1, ',func
 
 
       
-c     GVAP SECTION
+c     GVAP SECTION -- UNITS mm
 
       if (cost_gvap_istatus ==  1) then
 
@@ -440,21 +461,28 @@ c     determine sigma level pressure analogs
      1              (lpw3-cost_w3)**2*cost_weight
             endif
             
-c     note that gvap data are in mm and other func computations are in
-c     cm units.  therefore each weight must be converted unitwise
-c     (divided by 100 since they are a factor of 10**2) higher in the 
-c     numerator of the J function.
-            
-            max_func_gvap = (max_func_gvap1/100.+max_func_gvap2/100.
-     1           +max_func_gvap3/100.)
+c     lpw and cost are in mm tpw.  layer 1 is weighted very low since
+c     it seems to always disagree with model computations by a significant
+c     amount.  this are under research
 
-c     max_func_gvap is in cm (above) now divide by cm error to make
+            max_func_gvap1 = 0.0  ! give layer 1 no influence
+            
+            max_func_gvap = (max_func_gvap1+max_func_gvap2
+     1           +max_func_gvap3)
+
+c     max_func_gvap is in mm (above) now divide by mm error to make
 c     dimensionless
-            max_func_gvap = max_func_gvap / (0.327)**2 ! from SFOV worst case 
+            max_func_gvap = max_func_gvap / ((3.27)**2) ! from SFOV worst case 
             func = func + max_func_gvap
 
          endif                  !weight function test
       endif                     !data present test
+C     END GVAP SECTION
+
+
+
+
+
 
 
 
@@ -472,14 +500,14 @@ c     dimensionless
 
 
       
-c    CLOUD SECTION
+c    CLOUD SECTION -- UNITS (none, just a fraction 0->1)
       
       if (cost_cloud_istatus == 1) then ! cloud data present
          max_func_cloud = 0.0
          do k = 1,cost_kk
             cloud_integral = cloud_integral + cost_cloud(k)
             if (cost_data(k) /= cost_mdf .and. cost_data(k) > 0.0) then
-               if(cost_cloud(k) >= 0.6) then
+               if(cost_cloud(k) >= cloud_thresh) then
                   cloud_temp = cost_data(k)
                   call cloud_sat (cost_cloud(k),cost_qadjust(k),
      1                 cloud_temp)! cloud temp is "cloud forming q"
@@ -496,9 +524,15 @@ c    CLOUD SECTION
                endif            ! if cloudy check (cloudy enough?)
             endif               ! mdf check and bad value check
          enddo                  ! enddo k level
-         func = func + max_func_cloud  * 0.5 ! TONE DOWN CLOUD IMPACT !!!!
+         max_func_cloud = max_func_cloud * 0.5
+         func = func + max_func_cloud
       endif                     ! cloud data present
       
+C     END CLOUD SECTION
+
+
+
+
 
 
 
@@ -510,7 +544,7 @@ c    CLOUD SECTION
 
 
       
-c     GPS SECTION
+c     GPS SECTION  !  UNITS cm
       
       if (cost_gps_istatus == 1) then
 
@@ -521,10 +555,17 @@ c     GPS SECTION
          
          max_func_gps = (cost_gps_data-ipw)**2*cost_gps_weight
 
+         max_func_gps = max_func_gps/(0.03**2)  ! variance in cm**2
+
          func = func + max_func_gps
       else
          continue
       endif
+C     END GPS SECTION
+
+
+
+      
 
 
 
@@ -534,8 +575,7 @@ c     GPS SECTION
 
 
 
-
-
+ccc   ????????????????????????  double check error term
 c     RAOB SECTION (SND)
 
       if (cost_snd_istatus == 1) then
@@ -550,12 +590,14 @@ c     RAOB SECTION (SND)
             
       endif
 
-      func = func + max_func_snd
+      max_func_snd = max_func_snd/(0.5**2) ! error in q as 0.5K td error, 5% rh
+
+      func = func + max_func_snd 
+
+C     END RAOB SECTION
 
 
-c     fill display_btemps section for later display
 
-      display_btemps(1:7) = tbest (1:7)
 
 
 
@@ -576,14 +618,17 @@ C     BOOKEEPING/MONITOR SECTION
 
 c     print test output
 
-c      write (6,*) 'TEMP, ', x,
+c      write (24,*) x,
 c     1     max_func_back/func,
 c     1     max_func_rad/func,
-c     1     max_func_gvap1/100./func,
-c     1     max_func_gvap2/100./func,
-c     1     max_func_gvap3/100./func,
+c     1     max_func_gvap1/func,
+c     1     max_func_gvap2/func,
+c     1     max_func_gvap3/func,
 c     1     max_func_cloud/func,
 c     1     max_func_gps/func,func
+C     END BOOKEEPING/MONITOR SECTION
 
+
+      
       return
       end

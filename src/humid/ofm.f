@@ -74,7 +74,7 @@ c   further recompilation.
       include '../include/trans.inc'
       
       integer Mchan
-      parameter (Mchan=10)
+      parameter (Mchan=18) ! adjusted for optran 90.
       
       integer kk                ! kk the laps profile dim, 
       integer Nk                ! the size of the composite vectors
@@ -113,41 +113,17 @@ c     satellite number
       integer goes_number
       common /sat_id/ goes_number
       
-      Real TotTrans(0:Nlevel,Nchan)
-      
       Real O(Nlevel)
       
       Real Tbest(Nchan)         ! Brightness temps from estimated tau
       
-      Real Compbright           ! brightness temp function
+      integer ichan
       
-      Integer Ichan,Iatm,Iangle,Level
+      Integer Channels(Mchan) 
+     &     / 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 /
       
-      Real Angle(5) 
-      data angle /0.0,36.869898,48.189685,55.150095,60.0/
+      integer i
       
-      integer Channels(Mchan)
-      data channels     /10, 8, 7, 11, 16, 6, 12, 20, 21, 22 /
-      
-c     Integer Channels(Nchan) 
-c     &       	/ 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 /
-      
-c     Real Vnu(Nchan)
-      
-c     goes sounder vnu
-c     data vnu /680.,696.,711.,733.,748.,790.,832.,907.,1030.,
-c     1           1345.,1425.,1535.,2188.,2210.,2248.,2420.,2513.,2671./
-      
-      integer Jatm,Ist,Ind,i
-      
-c     goes sounder vnu goes imager vnu
-      
-      real vnu(Mchan)
-      
-      data vnu / 1345., 907., 832., 1425., 2420., 790., 1535.,
-     1     1482., 935., 835.4/
-
-
 c     ----------------------do ozone first call ----
 
       if (first_call) then
@@ -262,9 +238,9 @@ c surface parameters
       
 c     call to optran 90
 
-c      call optran90_fm ()
 
-      if (nk .eq. 10000) then
+
+c      if (nk .eq. 10000) then
 
          allocate (tau90 (1:nk_90, 1:mchan))
          allocate (flux_tau (1:nk_90,1:mchan))
@@ -293,54 +269,23 @@ c      call optran90_fm ()
      1        brightness_temperature
      1        )
          
+         
+         
+         Do Ichan = 1 , Mchan
+            
+            TbEst (Ichan) = brightness_temperature (ichan)   
+            
+         EndDo
+         
+
+        
+         
          deallocate (tau90,flux_tau)
          deallocate (upwelling_radiance, brightness_temperature)
-
-      endif
-
-c end insert new code
-      
-c11111111111111111111
-c     begin using vectors
-c11111111111111111111
-      
-      Iatm = 1 
-      
-      Call Precip_water_Profile(q(1,Iatm),P,0.0,Nk,Pw(1,Iatm))
-      Call Precip_water_Profile(O        ,P,0.0,Nk,O3(1,Iatm))
-      
-      Iangle = 1
-      Call Optrans(
-     &     nk,
-     &     P,
-     &     T(1,Iatm),
-     &     Q(1,Iatm),
-     &     Pw(1,Iatm),
-     &     O3(1,Iatm),
-     &     ZA,
-     &     Mchan,
-     &     Channels,
-     &     TotTrans)
-      
-c1111111111111111111
-c     end using vectors
-c1111111111111111111
-      
-c2222222222222222222
-c     begin computing brightness
-c2222222222222222222
-      
-      Do Ichan = 1 , Mchan
+         deallocate (solar_tau)
          
-         TbEst(Ichan) = Compbright(Vnu(Ichan),T(1,Iatm),
-     &        TotTrans(0,Ichan),laps_sfc_t,Nk)    
-         
-      EndDo
-      
-c2222222222222222222222
-c     end btemp computation
-c2222222222222222222222
-      
+
+
       return
       
       End
