@@ -533,15 +533,14 @@ C
      1                 ,rlon,elev,prof_name(ista),a9time_ob
 401         format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9)
 
-            if(n_good_sfc .eq. 1)then
-!               write surface winds as first level
-                write(1,301)elev,di_sfc,sp_sfc ! /r_mspkt
-                write(6,301)elev,di_sfc,sp_sfc ! /r_mspkt
-            endif
-
             rms = 1.0
 
-!           do i = 1,n_good_levels
+            if(n_good_sfc .eq. 1)then
+!               write surface winds as first level
+                write(1,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+                write(6,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+            endif
+
             do i = n_good_levels, 1, -1
                 write(1,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 
                 write(6,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 

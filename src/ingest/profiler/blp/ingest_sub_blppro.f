@@ -501,13 +501,14 @@ C
             write(1,401)wsmr_wmo_id,n_good_levels+n_good_sfc,rlat
      1                 ,rlon,elev,prof_name(ista),a9time_ob
 401         format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9)
-            if(n_good_sfc .eq. 1)then
-!               write surface winds as first level
-                write(1,301)elev,di_sfc,sp_sfc ! /r_mspkt
-                write(6,301)elev,di_sfc,sp_sfc ! /r_mspkt
-            endif
 
             rms = 1.0
+
+            if(n_good_sfc .eq. 1)then
+!               write surface winds as first level
+                write(1,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+                write(6,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+            endif
 
             do i = 1,n_good_levels
 !           do i = n_good_levels, 1, -1
