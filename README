@@ -993,7 +993,6 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
      RAOBs (snd):
            FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
-
            These are available in real-time from FSL with some restrictions. 
            The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
            Patty Miller at miller@fsl.noaa.gov for more information.   
