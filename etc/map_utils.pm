@@ -144,7 +144,7 @@ sub map_set($$$$$$$$$$$) {
   my %proj = map_set_sub($type, $knownlat, $knownlon, $dx, $stdlon,
                          $truelat1,$truelat2,$nx,$ny);
 
-  if (($kri != 1.000) or ($krj != 1.000)) {
+  if (($kri ne 1.000) or ($krj ne 1.000)) {
     my $rswi = 2.0 - $kri;
     my $rswj = 2.0 - $krj; 
     my ($latsw,$lonsw) = ij_to_latlon($rswi,$rswj,%proj);
@@ -212,7 +212,7 @@ sub map_set_sub($$$$$$$$$) {
 
   # If not a latlon grid, ensure dx is positive.  Dx is not used
   # in the case of a latlon grid
-  if ( ($type != "LL") and ($dx <= 0)){
+  if ( ($type ne "LL") and ($dx <= 0)){
     print "map_set: Invalid dx: $dx\n:";
     print "  For projections other than lat/lon, dx must be set to\n";
     print "  a postive value in meters.\n";
