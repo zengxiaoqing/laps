@@ -174,8 +174,8 @@ C
         goto 999
 C
 990     if (flag .ne. 1)
-     1    write (6,*) 'Error in version, not a valid LAPS file...
-     1read aborted.'
+     1    write (6,*) 'Error in version, not a valid LAPS file... '
+     1                ,'read aborted.'
         istatus=error(2)
         goto 999
 C
@@ -221,7 +221,7 @@ C**********************************************************************
 C#ifdefined NODYNAMIC
 C      character*31  ext_dn
 C#else
-      character*(ext_len) ext_dn
+      character*(10) ext_dn
 C#endif
 
       call downcase(ext,ext_dn)

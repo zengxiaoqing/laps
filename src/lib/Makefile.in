@@ -186,8 +186,8 @@ $(LIB): $(ARCHIVE)
 	$(RANLIB) $@
 
 debug: 
-	$(RM) *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -DDEBUG=1' \
-        FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
+	$(RM) *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -C -DDEBUG=1' \
+        FFLAGS='@FFLAGS@ $(INC) -g -C'
 
 install: lib
 
