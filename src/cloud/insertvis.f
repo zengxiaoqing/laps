@@ -152,7 +152,7 @@ cdis
 
 !               Modify the cloud field with the vis input - allow .3 vis err?
                 if(cld_hts(k) .gt. topo(i,j) + surface_sao_buffer)then
-                    cushion = 0.3
+                    cushion = 0.0 ! 0.3
                 else
                     cushion = 0.0
                 endif
