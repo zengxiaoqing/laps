@@ -5,14 +5,6 @@
 !        include 'lapsparms.cmn'
 !        data iflag_lapsparms_cmn /0/
 
-c     routine laps_thermo.f
-
-        COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)
-     1              ,VEL(20),temdif(70),partem(70),pbe(70)
-     #              ,DD85,FF85,DD50,FF50
-        DATA PBE/70*0./
-
-
 c     routine supmap.f
 
         COMMON/SUPMP1/PI,TOVPI,DTR,RTD,EPS,OV90,CON1,CON2,PART
