@@ -204,7 +204,7 @@ c
      &     maxsta,jstatus)
 c
            if(jstatus .ne. 1) then
-              print *,' ERROR.  No LSOQC file found for ', filename
+              print *,' ERROR.  No LSOQC file found for ', filetime
               istatus = -1
               return
            endif
@@ -223,7 +223,7 @@ c
      &     maxsta,jstatus)
 c
            if(jstatus .ne. 1) then
-              print *,' ERROR.  No LSO file found for ', filename
+              print *,' ERROR.  No LSO file found for ', filetime
               istatus = -1
               return
            endif

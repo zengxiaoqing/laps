@@ -833,7 +833,8 @@ C	  convert numerical string to number
 
 	  if (itime .eq. -1) then   ! couldn't convert timestr to itime, return error
             write(6,*)
-     1' Error: couldnt convert avgTimePeriod string to integer: ', timestr
+     1       ' Error: couldnt convert avgTimePeriod string to integer: '  
+     1       , timestr     
 	    istatus = 0
             return
 	  endif
@@ -852,7 +853,8 @@ C	  determine units in timestr
         endif
 
 	if (to_seconds .eq. 0) then   ! couldn't identify units, return error
-          write(6,*)' Error: couldnt decode avgTimePeriod from file ', timestr
+          write(6,*)
+     1      ' Error: couldnt decode avgTimePeriod from file ', timestr       
 	  istatus = 0
           return
         else

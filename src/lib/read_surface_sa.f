@@ -196,7 +196,7 @@ c
      &    maxsta,jstatus)
 c
         if(jstatus .ne. 1 .and. jstatus .ne. -1) then
-           print *,' ERROR: No valid LSO file found for ', filename       
+           print *,' ERROR: No valid LSO file found for ', filetime       
            istatus = -1
            return
         endif
