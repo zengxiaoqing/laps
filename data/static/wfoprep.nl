@@ -8,6 +8,8 @@
  output_freq = 1, 1, 1,
  output_format = 'mm5',
  output_name = 'ETA211','ETA212','ETA215'
+ min_vert_frac = 0.8,
+ min_time_frac = 0.8,
 /
 
 ! fxa_data = top directory containing the "Grid/SBN/netCDF" subdirectory.
@@ -53,4 +55,12 @@
 ! output_name:  One string entry per source.  This is the prefix that
 !               will be used for the output files.  Typically it will
 !               describe the model itself.
+!
+! min_vert_frac:  Minimum fraction of total pressure levels (0->1.0)
+!                 required to be present before the particular forecast
+!                 hour will be used.  The higher the setting (1 is max), the
+!                 more stringent the requirements are for complete data sets.
+!
+! min_time_frac:  Like min_vert_frac, but pertains to the number of "good"
+!                 forecast hours available compared to total requested.
 !
