@@ -179,24 +179,33 @@ cdis
 
         subroutine latlon_to_uv_ps(rlat_in,rlon_in,slat,polat,slon,u,v)
 
-        if(.true.)then ! Rotate considering where the projection pole is
+        if(abs(polat) .eq. 90.)then ! pole at N/S geographic pole
+            if(.true.)then
+                polon = slon
+                call GETOPS(rlat,rlon,rlat_in,rlon_in,polat,polon)
+                rlon = rlon - 270.  ! Counteract rotation done in GETOPS
+
+            else ! .false. (older simple method)
+                rlat = rlat_in
+                rlon = rlon_in
+
+            endif
+
+            b = rlon - slon         ! rotate relative to standard longitude
+
+        else                        ! local stereographic
             polon = slon
             call GETOPS(rlat,rlon,rlat_in,rlon_in,polat,polon)
-            rlon = rlon - 270.
-!           rlon = rlon - polon
-
-        else
-            rlat = rlat_in
-            rlon = rlon_in
-
+            b = rlon - 270.         ! rlon has zero angle pointing east
+                                    ! b has zero angle pointing south
         endif
 
         a=90.-rlat
         r = tand(a/2.)      ! Consistent with Haltiner & Williams 1-21
 
-        b=180.-rlon+slon
-        u=r*sind(b)
-        v=r*cosd(b)
+!       b = angle measured counterclockwise from -v axis (zero angle south)
+        u =  r * sind(b)
+        v = -r * cosd(b)
 
         return
         end
