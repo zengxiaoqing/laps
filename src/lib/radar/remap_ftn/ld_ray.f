@@ -111,23 +111,30 @@ c
 c     Fill velocity and reflectivity ray.
 c      Output gates are 250 m spacing,
 c             1840 are used for both reflecivity and velocity.
-c      Input gates are 460 gates, 1000m spacing for reflectivity,
-c                      920 gates,  250m for velocity.
+c
+c      For a typical NEXRAD radar....
+c     
+c      Input gates are as follows:
+c             460 gates, 1000m spacing for reflectivity,
+c             920 gates,  250m for velocity.
 c      Reflectivity is remapped by gate replication (factor of 4).
 c      Velocity is remapped by a 1 to 1 mapping for the 920 gates,
 c        output gates 921-1840 are filled by the missing data value.
+c
+c      Note that other input gate spacings may not be fully supported yet.
 c
 
 c     Velocity
 
       ratio_vel = gsp_vel_m_cmn / 250.
+      velocity = r_missing_data           ! Initialize array all at once
 
       DO i = 1,n_vel_gates_cmn
 
         IF (b_vel_cmn(i,i_ray) .ne. b_missing_cmn) THEN
           velocity(i) = 0.5*float(b_vel_cmn(i,i_ray))
-        ELSE 
-          velocity(i) = r_missing_data
+!       ELSE 
+!         velocity(i) = r_missing_data
         END IF
 
       ENDDO
@@ -135,6 +142,7 @@ c     Velocity
 c     Reflectivity
 
       ratio_ref = gsp_ref_m_cmn / 250.
+      reflect = r_missing_data            ! Initialize array all at once
 
       DO igate_88d = 1,n_ref_gates_cmn
 
@@ -143,8 +151,8 @@ c     Reflectivity
         if(i .le. ngates_remap)then
             IF (b_ref_cmn(igate_88d,i_ray) .ne. b_missing_cmn) THEN
               reflect(i) = 0.5*float(b_ref_cmn(igate_88d,i_ray))
-            ELSE
-              reflect(i) = r_missing_data
+!           ELSE
+!             reflect(i) = r_missing_data
             END IF
 
         endif ! i
