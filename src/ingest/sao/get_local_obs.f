@@ -44,6 +44,8 @@ c	Routine to gather local mesonet data for LAPS.
 c
 c	Changes:
 c	  P. Stamus, NOAA/FSL  02-04-98  Original version (from get_cdot_obs).
+c                              04-20-98  Add flags for bad update times.
+
 c
 c       NOTE: This routine is not as yet generic.  There are several places
 c             where the code is hardwired and expects the data to be in a
@@ -259,6 +261,8 @@ c
 		t(i) = ((t(i) - 273.15) * 9./5.) + 32.     ! K to F
 		if(t(i).lt.-50. .or. t(i).gt.130.)  t(i) = badflag !temp
 	     endif
+	  else
+	     t(i) = badflag
 	  endif
 c
 	  td(i) = ((td(i) - 273.15) * 9./5.) + 32. ! K to F
@@ -270,6 +274,8 @@ c
 	     else
 		stnp(i) = stnp(i) * .01
 	     endif
+	  else
+	     stnp(i) = badflag
 	  endif
           if(stnp(i).gt.1000. .or. stnp(i).lt.600.) 
      &                                         stnp(i) = badflag
@@ -280,6 +286,8 @@ c
 	     else
 		if(dd(i).lt.0. .or. dd(i).gt.360.) dd(i) = badflag
 	     endif
+	  else
+	     dd(i) = badflag
 	  endif
 c
 	  if(time_ff(i) .gt. 0.) then
@@ -289,6 +297,8 @@ c
 		ff(i) = 1.94254 * ff(i)	!m/s to kt
 		if(ff(i).lt.0. .or. ff(i).gt.120.) ff(i) = badflag
 	     endif
+	  else
+	     ff(i) = badflag
 	  endif
 c
 	  if(time_ffg(i) .gt. 0.) then
@@ -298,6 +308,8 @@ c
 		ffg(i) = 1.94254 * ffg(i) !m/s to kt
 		if(ffg(i).lt.0. .or. ffg(i).gt.140.) ffg(i) = badflag
 	     endif
+	  else
+	     ffg(i) = badflag
 	  endif
 c
 	  ddg = dd(i)
