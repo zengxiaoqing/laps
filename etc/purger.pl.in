@@ -9,7 +9,7 @@ $DATAROOT=shift;
 # Exceptions can be listed below.
 #
 
-$hist_time = 0.5;
+$hist_time = 1.5;
 
 print "Running $0 for data in $DATAROOT\n";
 
@@ -18,7 +18,7 @@ chdir($DATAROOT);
 opendir(DIR,$DATAROOT); 
 
 foreach(grep(!/^\.\.?$/,readdir(DIR))){
-    $clean_dirs{$_} = 1.5 if(-d $_);
+    $clean_dirs{$_} = $hist_time if(-d $_);
 }
 
 closedir(DIR);
