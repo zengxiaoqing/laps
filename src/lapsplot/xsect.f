@@ -1719,6 +1719,7 @@ c read in laps lat/lon and topo
 
         elseif(c_field .eq. 'cf' )then ! Cloud Gridded Image
             i_image = 1
+            i_contour = -1
 
             call set(vxmin, vxmax, vymin, vymax
      1             , rleft, right, bottom, top,1)
@@ -1752,18 +1753,23 @@ c read in laps lat/lon and topo
      1                           ,field_vert,field_vert3,r_missing_data)
 
 !           Blank out the edges external to the X-section
-            write(6,*)' Blackening the edges'
-            do i = 1,NX_P
-            do j = 1,NX_P
-                if(field_vert3(i,j) .eq. r_missing_data)then
-                    field_vert3(i,j) = 0.
-                endif
-            enddo ! j
-            enddo ! i
+!           write(6,*)' Blackening the edges'
+!           do i = 1,NX_P
+!           do j = 1,NX_P
+!               if(field_vert3(i,j) .eq. r_missing_data)then
+!                   field_vert3(i,j) = 0.
+!               endif
+!           enddo ! j
+!           enddo ! i
 
-            write(6,*)' calling solid fill cloud plot'
-            call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear'
-     1                             ,n_image,1e0,'xsect',namelist_parms)       
+            write(6,*)' calling solid fill cloud plot - commented out'       
+            colortable = 'linear'
+            clow = 0.0
+            chigh = 1.0
+            cint = 0.1
+            scale = 1e0
+!           call ccpfil(field_vert3,NX_P,NX_P,clow,chigh,colortable
+!    1                 ,n_image,scale,'xsect',namelist_parms)     
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
