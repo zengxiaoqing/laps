@@ -248,9 +248,15 @@ c new: changed variable name "ext" to "directory".
 
                 else
 
-                  call get_lapsdata_2d(i4_initial,i4_valid,directory
-     1              ,var_2d,units_2d,comment_2d,imax,jmax
-     1              ,field_3d_laps(1,1,1),istatus)
+c removed this since "directory" needed; therefore, using get_2dgrid_dname.
+c                 call get_lapsdata_2d(i4_initial,i4_valid,directory
+c    1              ,var_2d,units_2d,comment_2d,imax,jmax
+c    1              ,field_3d_laps(1,1,1),istatus)
+
+                  call get_2dgrid_dname(directory
+     1         ,i4_fn,0,i4time_nearest,EXT,var_2d,units_2d
+     1         ,comment_2d,imax,jmax,field_3d_laps(1,1,1),1,istatus)
+
 
                 endif
 
