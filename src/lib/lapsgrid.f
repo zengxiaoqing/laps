@@ -40,82 +40,24 @@ c   lat() contains grid latitudes (degrees north)
 c   lon() contains grid longitudes (degrees east; negative=west long.)
 c   topo() contains grid elevations (m)
 c
-        integer*4 ni,nj              ! Input
+        integer*4 ni,nj               ! Input
 
-        real*4 lat(ni,nj)            ! Output
-        real*4 lon(ni,nj)            ! Output
-        real*4 topo(ni,nj)           ! Output
+        real*4 lat(ni,nj)             ! Output
+        real*4 lon(ni,nj)             ! Output
+        real*4 topo(ni,nj)            ! Output
+        real*4 rlaps_land_frac(ni,nj) ! Local
 
-        character*(*) grid_fnam      ! Input
+        character*(*) grid_fnam       ! Dummy
 
-        character*3 var
-        character*50  directory
-        character*31  ext
-        character*10  units
-        character*125 comment
-
-        character*80 grid_fnam_common
-        common / grid_fnam_cmn / grid_fnam_common
-c
-        write(6,*)'    Reading in lat/lon/topo ',grid_fnam
-
-        grid_fnam_common = grid_fnam  ! Used in get_directory to modify
-                                      ! extension based on the grid domain
-
-        ext = grid_fnam
-
-!       Get the location of the static grid directory
-        call get_directory(ext,directory,len_dir)
-
-!       directory = ''
-
-        var = 'LAT'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                 ,lat,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LAT field'
-            return
-        endif
-
-        var = 'LON'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                  ,lon,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LON field'
-            return
-        endif
-
-        var = 'AVG'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                  ,topo,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading AVG (topo) field'
-            return
-        endif
-
-c       write(6,*)' LAT/LON Corner > ',lat(   1,   1),lon(   1,   1)
-c       write(6,*)' LAT/LON Corner > ',lat(   1,nj),lon(   1,nj)
-c       write(6,*)' LAT/LON Corner > ',lat(ni,   1),lon(ni,   1)
-c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
-
-        call get_laps_config(grid_fnam,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error in get_laps_config'
-            return
-        endif
-
-        call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
-        if(istat_chk .ne. 1)then
-            write(6,*)' Warning or Error in check_domain'
-        endif
+        call get_laps_domain_95(ni,nj,lat,lon,topo
+     1            ,rlaps_land_frac,grid_spacing_cen_m,istatus)
 
         return
-
         end
 
 
         subroutine get_domain_laps(ni,nj,grid_fnam,lat,lon,topo
-     1                             ,grid_spacing_m,istatus)
+     1                             ,grid_spacing_cen_m,istatus)
 
 !       1994 Steve Albers
 c
@@ -125,84 +67,25 @@ c   lat() contains grid latitudes (degrees north)
 c   lon() contains grid longitudes (degrees east; negative=west long.)
 c   topo() contains grid elevations (m)
 c
-        integer*4 ni,nj              ! Input
+        integer*4 ni,nj               ! Input
 
-        real*4 lat(ni,nj)            ! Output
-        real*4 lon(ni,nj)            ! Output
-        real*4 topo(ni,nj)           ! Output
+        real*4 lat(ni,nj)             ! Output
+        real*4 lon(ni,nj)             ! Output
+        real*4 topo(ni,nj)            ! Output
+        real*4 rlaps_land_frac(ni,nj) ! Local
 
-        character*(*) grid_fnam      ! Input
+        character*(*) grid_fnam       ! Dummy
 
-        character*3 var
-        character*50  directory
-        character*31  ext
-        character*10  units
-        character*125 comment
-
-        character*80 grid_fnam_common
-        common / grid_fnam_cmn / grid_fnam_common
-
-c
-        write(6,*)'    Reading in lat/lon/topo ',grid_fnam
-
-        grid_fnam_common = grid_fnam  ! Used in get_directory to modify
-                                      ! extension based on the grid domain
-
-        ext = grid_fnam
-
-!       Get the location of the static grid directory
-        call get_directory(ext,directory,len_dir)
-
-!       directory = ''
-
-        var = 'LAT'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                 ,lat,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LAT field'
-            return
-        endif
-
-        var = 'LON'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                  ,lon,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LON field'
-            return
-        endif
-
-        var = 'AVG'
-        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
-     1                                  ,topo,grid_spacing_m,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading AVG (topo) field'
-            return
-        endif
-
-c       write(6,*)' LAT/LON Corner > ',lat(   1,   1),lon(   1,   1)
-c       write(6,*)' LAT/LON Corner > ',lat(   1,nj),lon(   1,nj)
-c       write(6,*)' LAT/LON Corner > ',lat(ni,   1),lon(ni,   1)
-c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
-
-        call get_laps_config(grid_fnam,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error in get_laps_config'
-            return
-        endif
-
-        call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
-        if(istat_chk .ne. 1)then
-            write(6,*)' Warning or Error in check_domain'
-        endif
+        call get_laps_domain_95(ni,nj,lat,lon,topo
+     1            ,rlaps_land_frac,grid_spacing_cen_m,istatus)
 
         return
-
         end
 
 
 
-        subroutine get_laps_domain_95(ni,nj,grid_fnam,lat,lon,topo
-     1            ,rlaps_land_frac,grid_spacing_m,istatus)
+        subroutine get_laps_domain_95(ni,nj,lat,lon,topo
+     1            ,rlaps_land_frac,grid_spacing_cen_m,istatus)
 
 !       1994 Steve Albers
 c
@@ -212,30 +95,22 @@ c   lat() contains grid latitudes (degrees north)
 c   lon() contains grid longitudes (degrees east; negative=west long.)
 c   topo() contains grid elevations (m)
 c
-        integer*4 ni,nj              ! Input
+        integer*4 ni,nj               ! Input
 
-        real*4 lat(ni,nj)            ! Output
-        real*4 lon(ni,nj)            ! Output
-        real*4 topo(ni,nj)           ! Output
+        real*4 lat(ni,nj)             ! Output
+        real*4 lon(ni,nj)             ! Output
+        real*4 topo(ni,nj)            ! Output
         real*4 rlaps_land_frac(ni,nj) ! Output
 
-        character*(*) grid_fnam      ! Input
-
-        character*3 var
-        character*50  directory
+        character*3   var
+        character*150 directory
         character*31  ext
         character*10  units
         character*125 comment
 
-        character*80 grid_fnam_common
-        common / grid_fnam_cmn / grid_fnam_common
-c
-        write(6,*)'    Reading in lat/lon/topo/land frac ',grid_fnam
+        write(6,*)'    Reading in lat/lon/topo/land frac '
 
-        grid_fnam_common = grid_fnam  ! Used in get_directory to modify
-                                      ! extension based on the grid domain
-
-        ext = grid_fnam
+        ext = 'nest7grid'
 
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
@@ -290,15 +165,18 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         enddo
         enddo
 
-        call get_laps_config(grid_fnam,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error in get_laps_config'
-            return
-        endif
-
         call check_domain(lat,lon,ni,nj,grid_spacing_m,5,istat_chk)
         if(istat_chk .ne. 1)then
             write(6,*)' Warning or Error in check_domain'
+        endif
+
+        icen = ni/2 + 1
+        jcen = nj/2 + 1
+        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                              ,grid_spacing_cen_m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error return from get_grid_spacing_actual'       
+            return
         endif
 
         return

@@ -390,7 +390,7 @@ c Determine the source of the radar data
         write(6,*)' radarext_3d_cloud = ',radarext_3d_cloud
 
 c read in laps lat/lon and topo
-        call get_laps_domain_95(NX_L,NY_L,'nest7grid',lat,lon,topo
+        call get_laps_domain_95(NX_L,NY_L,lat,lon,topo
      1           ,rlaps_land_frac,grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
