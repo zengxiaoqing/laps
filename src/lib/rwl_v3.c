@@ -1743,7 +1743,15 @@ long *status;
         /* cdl file contains "extension" + ".cdl\0" */
 	cdlfile = malloc((*cdl_path_len + (*ext_len) + 5) * sizeof(char));
         nstrncpy(cdlfile,f_cdl_path,*cdl_path_len);
-        strcat(cdlfile,ext);
+
+/* check to see if ext is v01...v19 */
+        if ((strncmp(ext,"v0",2) == 0) || (strncmp(ext,"v1",2) == 0)) {
+          strcat(cdlfile,"v00");
+        }
+        else {
+          strcat(cdlfile,ext);
+        }
+
         strcat(cdlfile,".cdl");
         cdl_len = strlen(cdlfile);
 
@@ -1774,7 +1782,7 @@ long *status;
           }
         }
         else { /* file is there...*/
-          /* 10/14/97 for write_laps_data with no append, write over it anyway*/
+          /* 10/14/97 for write_laps_data with no append, write over it anyway */
           if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
             system(syscmd); /* added 10/14/97 */
           }
