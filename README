@@ -1013,11 +1013,11 @@ Outputs:
 	static/static.nest7grid   NetCDF grid   geography data mapped to LAPS 
                                                 grid
                                    
-                                                latitude in degrees
-                                                longitude in degrees
-                                                mean elevation MSL
-                                                land/water fraction
-                                                soil type (under development)
+                                    'LAT'       latitude in degrees
+                                    'LON'       longitude in degrees
+                                    'AVE'       mean elevation MSL
+                                    'LDF'       land fraction (0=water,1=land)
+                                    'USE'       soil type (under development)
 
         static/latlon.dat         Binary grid   latitude
                                                 longitude
@@ -2034,6 +2034,6 @@ gridgen_model.exe: creates file 'static.nest7grid'
                      STD           1  Unused
                      ENV           1  Unused
                      ZIN           1  Z coordinate - used for plotting in AVS
-                     LDF           1  Land Fraction (0-1)
+                     LDF           1  Land Fraction (0=water,1=land)
                      USE           1  Soil Type (under development)
 
