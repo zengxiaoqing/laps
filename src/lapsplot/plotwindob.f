@@ -106,12 +106,12 @@ cdis
 
       if(.true.)then
 
-!     call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-!     call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
-!     u = i
-!     v = j
-!     du = 1.
-!     dv = 1.
+      call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+      call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+      u = i
+      v = j
+      du = 1.
+      dv = 1.
 
       endif
 
@@ -120,6 +120,8 @@ cdis
           icol = min(max(  110. + vel / 2.0   ,  100.  )  ,120.)
           call setusv_dum(2hIN,icol)
 !         call setusv_dum(2hIN,40)
+
+          write(6,*)i,j
 
           do uu = u-du/2.,u+du/2.,du/25.
               call line(uu,v-dv/2.,uu,v+dv/2.)
