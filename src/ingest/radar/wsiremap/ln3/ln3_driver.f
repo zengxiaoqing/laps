@@ -31,12 +31,12 @@ cdis
 cdis 
        Program ln3_driver
 c
-c Program drives transformation of WSI/NOWRAD nexrad layer composite radar
-c to the laps domain (subroutine NOWRAD_to_LAPS). The nexrad layer composite data
-c has been mosaiced by WSI corporation and these files are part of Facility Division'
-c NIMBUS ingest. FD decodes these WSI files and stores them as netCDF files
+c Program transforms WSI/NOWRAD nexrad layer composite/echo tops/VIL 
+c to the laps domain (subroutine NOWRAD_to_LAPS). The data
+c have been mosaiced by WSI corporation and FSL's Facility Division stores them
+c FD decodes these WSI files and stores them as netCDF files
 c with names yyjjjhhmm_ll _lm and _lh, for layer low (ll), layer middle (lm) and
-c layer high (lh).
+c layer high (lh). Echo Tops (et) and VIL (vi).
 c
 
        include 'lapsparms.cmn'
@@ -214,7 +214,7 @@ c     &.and.(i4time_nearest-i4time_nearest_ln3).lt.1500)then
        else     !nfiles_p .eq. 0
 
           write(6,*)'No Current WSI 3d data - Terminating'
-          goto 1000
+          return
 
        endif
 
@@ -299,7 +299,7 @@ c
           ctype_data=c_filenames_proc(k)(nn-2:nn-1)
           write(6,*)'ctype data: ',ctype_data
 
-          call NOWRAD_to_LAPS(c_filenames_proc(k),
+          call NEXRADWSI_to_LAPS(c_filenames_proc(k),
      &                 lines,elements,nlevs,
      &                 nx_l,ny_l,
      &                 lat,

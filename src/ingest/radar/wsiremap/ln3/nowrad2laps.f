@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine NOWRAD_to_LAPS(filename,
+       subroutine NEXRADWSI_to_LAPS(filename,
      &                    nlines,nelements,nlev,
      &                    imax,jmax,
      &                    lat,lon,
@@ -40,15 +40,14 @@ c
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccc
 c
-c Routine reads netCDF nowrad (WSI) data using subroutine read_wsi_cdf.
+c Routine reads netCDF WSI-NEXRAD data using subroutine read_wsi_cdf.
 c Nowrad data is then remapped to LAPS domain given lat/lon of domain.
-c Routine automatically moves the boundary for any domain with the nowrad
-c confines.
 c
        integer   nlev
 
        real*4  lat(imax,jmax)
        real*4  lon(imax,jmax)
+       real*4  ri(imax,jmax),rj(imax,jmax)
        real*4  remapped_prod(imax,jmax)
        integer sum(imax,jmax)
        integer count(imax,jmax)
@@ -64,8 +63,6 @@ c
        integer num_levels
        integer msng_radar
 
-       integer istart,jstart
-       integer iend,jend
        integer ickint,itotwait,iageth
 
        character filename*200
@@ -74,18 +71,24 @@ c
        character lprefix(nlev)*2
 
        real*4 dgtord
-       real*4 rlat1
-       real*4 rlon1
-       real*4 rdlat
-       real*4 rdlon
+       real*4 rlat1, rlon1
+       real*4 rlat2, rlon2
+       real*4 rdlat, rdlon
+       real*4 starti,startj
+       real*4 endi,  endj
 
        real*4 r_missing_data
 
        integer image(nelements,nlines)
        integer imdata
+
+       real*4  rlatc,rlonc
+       real*4  nw(2),se(2)
+
+       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
 c ***************************************************************************
-c ************************** GET NOWRAD DATA ********************************
+c **************************  START ROUTINE *********************************
 c
       istatus=1
 
@@ -95,61 +98,81 @@ c
       rdtodg=180.0/3.1415926
       dgtord=0.017453292
 c
-c eventually this should be put in nest7grid.parms and accessed through wsi_ln3
-c i/o routine.
-c
       call get_ref_base(ref_base,iostatus)
       call get_ref_base_useable(ref_base_useable,iostatus)
       call get_r_missing_data(r_missing_data,iostatus)
-
+c
+c read ln3 namelist
+c
       call get_ln3_parameters(msng_radar,ickint,itotwait,iageth,
-     &             istart,jstart,iend,jend,lstatus)
+     &                        lstatus)
       if(lstatus.ne.0)then
          print*,'Error getting ln3 parameters'
          return
       endif
 
       write(6,*)'Reading: ',filename(1:n)
-
+c
+c read nimbus netCDF file
+c
       call rd_wsi_3dradar_cdf(filename,nlines,nelements,
-     &rdlat,rdlon,rlat1,rlon1,validTime,
-     &nlev,data_levels,num_levels,level_prefix,
+     &rdlat,rdlon,rlat1,rlon1,rlat2,rlon2,centerlon,
+     &validTime,nlev,data_levels,num_levels,level_prefix,
      &image,jstatus)
+
       if(jstatus.eq.-1)then
-         write(6,*)'Error reading nowrad data'
+         write(6,*)'Error reading WSI-NEXRAD data'
          goto 19
       end if
       write(6,*)'Found 3d WSI data. Valid Time: ',validTime
-
       print*
-      write(6,*)' rdlat ',rdlat,' rdlon ',rdlon
-      write(6,*)' rlat1 ',rlat1,' rlon1 ',rlon1
+c
+c load common block for cylindrical equidistant grid
+c
+      rdlat=rdlat*rdtodg
+      rdlon=rdlon*rdtodg
+      rlatc=rlat1-(rdlat*nlines*0.5)
+      nx=nelements
+      ny=nlines
+      nz=1
+c     rlatc=25.0
+      rlonc=centerlon*rdtodg
+      nw(1)=rlat1
+      nw(2)=rlon1
+      se(1)=rlat2
+      se(2)=rlon2
+c
+c compute i/j starting/ending points for this domain
+c
+      call latlon_2_ceij(imax*jmax,lat,lon,ri,rj)
+
+      starti= 99999.
+      startj= 99999.
+      endi  =-99999.
+      endj  =-99999. 
+      do j=1,jmax
+         starti=min(ri(1,j),starti)
+         endi  =max(ri(imax,j),endi)
+      enddo
+      do i=1,imax
+         startj=min(rj(i,jmax),startj)
+         endj  =max(rj(i,1),endj)
+      enddo
+      istart=max(1,nint(starti+0.5))
+      jstart=max(1,nint(startj+0.5))
+      iend  =min(nelements,nint(endi+0.5))
+      jend  =min(nlines,nint(endj+0.5))
+
       write(6,*)' istart/iend ',istart,iend
       write(6,*)' jstart/jend ',jstart,jend
       write(6,*)
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-c     ul=0
-c     do i=1,num_levels
-c       if(level_prefix(i)(1:2).eq.'ND')then
-c          ndvalue=i
-c       elseif(level_prefix(i)(1:1).eq.' '.or.
-c    &         level_prefix(i)(1:2).eq.'ND')then
-c          ul=ul+1
-c          il(ul)=data_levels(i)
-c       endif
-c     enddo
-
       print*,'useable levels = ',num_levels
       write(6,*)(data_levels(i),i=1,num_levels)
-
-      rdlat=rdlat*rdtodg
-      rdlon=rdlon*rdtodg
 c
-c rlon1 and rlat1 already in degrees
-c     rlon1=rlon1*rdtodg
-c     rlat1=rlat1*rdtodg
+c  rlon1 and rlat1 already in degrees
 c
 c  Remap NOWrad data onto LAPS grid.  We now have the 
 c  section of the NOWrad grid in units of dBZ which 
@@ -181,13 +204,13 @@ c
              if(image(i,j).lt.0)image(i,j)=256+image(i,j)
 
              call latlon_to_rlapsgrid(wsi_lat,wsi_lon,
-     &                                lat,lon,imax,jmax,ri,rj,
+     &                                lat,lon,imax,jmax,rii,rjj,
      &                                jstatus)
 
              if(jstatus.eq.1)then
 
-               ii=nint(ri)
-               jj=nint(rj)
+               ii=nint(rii)
+               jj=nint(rjj)
 
                itot=itot+1
                imdata=image(i,j)+1
@@ -218,14 +241,15 @@ c
           do j = 1,jmax
           do i = 1,imax
              if(count(i,j) .gt. 0)then
-c               if(sum(i,j) .gt. 0)then
-c------------>  remapped_prod(i,j)=float(sum(i,j))/float(count(i,j))
+                if(sum(i,j) .gt. 0)then
+                   remapped_prod(i,j)=float(sum(i,j))/
+     &                                float(count(i,j))
 
-                remapped_prod(i,j)=float(i_max_value(i,j))
+c               remapped_prod(i,j)=float(i_max_value(i,j))
 
-c               else
-c                  remapped_prod(i,j)=ref_base_useable
-c               endif
+                else
+                   remapped_prod(i,j)=ref_base
+                endif
              else
                 remapped_prod(i,j)=r_missing_data
              end if
@@ -235,11 +259,14 @@ c               endif
           do j = 1,jmax
           do i = 1,imax
              if(count(i,j) .gt. 0)then
-c            if(i_max_value(i,j).gt.0)then
-                remapped_prod(i,j)=float(i_max_value(i,j))
-             else
+                if(i_max_value(i,j).gt.0)then
+                   remapped_prod(i,j)=float(i_max_value(i,j))
+                else
+                   remapped_prod(i,j)=r_missing_data
+                endif
+              else
                 remapped_prod(i,j)=r_missing_data
-             endif
+              endif
           end do
           end do
        endif
