@@ -139,11 +139,19 @@ c     external rtsys_no_data, rtsys_abort_prod
       real*4 plevel(kk)
       integer*4 mlevel(kk)
       
-c     
+c    
+c     gps variables
+
+      real gps_data (ii,jj)
+      real gps_w (ii,jj)
+      integer istatus_gps
+      
 c     
 c     gvap variables
 c     
       real gvap_data(ii,jj)
+      real gvap_w (ii,jj)
+      integer istatus_gvap
       
       real pressure_of_level    !function call
       
@@ -160,13 +168,14 @@ c
       integer mod_4dda_1
       real    mod_4dda_factor
       real    t_ref
-      character*256 path_to_gvap8,path_to_gvap10
-      namelist /moisture_switch/ raob_switch,
+      integer gps_switch
+      character*256 path_to_gvap8,path_to_gvap10,path_to_gps
+      namelist /moisture_switch_nl/ raob_switch,
      1     raob_lookback, goes_switch, cloud_switch
      1     ,tiros_switch, sounder_switch, sat_skip
-     1     ,gvap_switch, time_diff
+     1     ,gvap_switch, time_diff, gps_switch
      1     ,sfc_mix, mod_4dda_1,mod_4dda_factor,
-     1     t_ref,path_to_gvap8,path_to_gvap10
+     1     t_ref,path_to_gvap8,path_to_gvap10,path_to_gps
       
       integer len
       character*200 cdomain
@@ -201,24 +210,6 @@ c     routine
          return
       endif
       
-c     *** check to see if we are set up to do this at all
-c     this mode check enables this routine to run without using
-c     sounding data even if it is present.
-c     
-c     perform test for rh
-c     
-c     do i = 1,350
-c     
-c     tempsh = esice(100. - float(i))/eslo(100.-float(i)) 
-      
-c     write(6,*) 100.-float(i),tempsh
-      
-c     enddo
-      
-c     stop
-      
-      
-      
 c     
 c     set namelist parameters to defaults 
       cloud_switch = 1
@@ -230,18 +221,20 @@ c     set namelist parameters to defaults
       sat_skip = 0
       gvap_switch = 0
       time_diff = 0
+      gps_switch = 0
       sfc_mix = 0
       mod_4dda_1 = 0
       mod_4dda_factor = 0.02
       t_ref = -132.0
       path_to_gvap8 = ' '
       path_to_gvap10 = ' '
+      path_to_gps = ' '
       
       call get_directory('static',fname,len)
       open (23, file=fname(1:len)//'moisture_switch.nl',
      1     status = 'old', err = 24)
       
-      read(23,moisture_switch,end=24)
+      read(23,moisture_switch_nl,end=24)
       
       
       close (23)
@@ -296,6 +289,12 @@ c     set namelist parameters to defaults
          write(6,*) 'Using goes derived pw, assume data connection'
       else
          write(6,*) 'GVAP not used... nominal state'
+      endif
+
+      if (gps_switch .eq. 1) then
+         write(6,*) 'Using GPS IPW data'
+      else
+         write(6,*) 'GPS data not used'
       endif
       
       if (time_diff .ne. 0) then
@@ -645,8 +644,6 @@ c     ****  get laps cloud data. used for cloud, bl, goes
          write(6,*) 'NaN detected from Cloud Grid...ABORT'
          return
       endif
-      
-
 
 c     ***   insert bl moisture
 
@@ -657,9 +654,6 @@ c     ***   insert bl moisture
             enddo
          enddo
       enddo
-
-
-
 
       print*, 'calling lsin'
 c     insert boundary layer data
@@ -685,11 +679,8 @@ c     insert boundary layer data
             enddo
          enddo
          
-
-
 c     end report moisture change block
          
-
       else
          write(6,*) 'Lsin and sfc mixing step skipped'
          
@@ -700,11 +691,77 @@ c     end report moisture change block
                enddo
             enddo
          enddo
+    
+      endif
+
+c     gps data inserstion step
+
+      istatus_gps = 0
+
+      if (gps_switch .eq. 1) then
+
+         call process_gps (ii,jj,gps_data,gps_w,
+     1        tpw,lat,lon,time_diff,
+     1        path_to_gps,filename,istatus_gps)
          
+c     gvap data insertion step
          
       endif
 
+      istatus_gvap = 0
+      
+      if (gvap_switch.eq.1) then
 
+         write(6,*) 
+         write(6,*) 'Begin GVAP insertion setep'
+         write(6,*) 
+         
+         call process_gvap(ii,jj,gvap_data,gvap_w,tpw,
+     1        lat,lon,time_diff,
+     1        path_to_gvap8,path_to_gvap10,filename,istatus_gvap)
+
+      endif
+         
+      if(istatus_gps.eq.1 .or. istatus_gvap.eq.1) then ! apply gvap and/or gps 
+
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
+               if(data(i,j,k).ge.0.0) then
+                  data(i,j,k) = 
+     1                 gvap_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
+     1                 *(data(i,j,k) * gvap_data(i,j))
+     1                 +
+     1                 gps_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
+     1                 *(data(i,j,k) *gps_data(i,j))
+     1                 + data(i,j,k)
+               endif
+            enddo
+         enddo
+      enddo
+      
+      write(6,*) 'Reporting changes from TPW data types'
+      
+      call report_change (data_in, data, plevel,mdf,ii,jj,kk)
+      
+      write(6,*) 'Reporting net change'
+      call report_change (data_start, data, plevel, mdf, ii,jj,kk)
+      
+      do i = 1,ii
+         do j = 1,jj
+            do k  = 1,kk
+               data_in(i,j,k) = data(i,j,k)
+            enddo
+         enddo
+      enddo
+      
+
+      else
+         write(6,*) 'gvap weights not applied, istatus = 0'
+      endif
+            
+
+      write(6,*) 
 
 c     make call to TIROS moisture insertion
 
@@ -816,50 +873,7 @@ c     end report moisture change block
          
       endif
 
-c     gvap data insertion step (currently under test)
-      
-      if (gvap_switch.eq.1) then
-         
-         call process_gvap(ii,jj,gvap_data,tpw,
-     1        lat,lon,time_diff,
-     1        path_to_gvap8,path_to_gvap10,filename,istatus)
-         
-         if(istatus.eq.1) then  ! apply gvap weights
-            
-            do k = 1,kk
-               do j = 1,jj
-                  do i = 1,ii
-                     if(data(i,j,k).ge.0.0) then
-                        data(i,j,k) = data(i,j,k) * gvap_data(i,j)
-     1                       + data(i,j,k)
-                     endif
-                  enddo
-               enddo
-            enddo
-            
-            write(6,*) 'Reporting changes from GVAP'
-            
-            call report_change (data_in, data, plevel,mdf,ii,jj,kk)
 
-            write(6,*) 'Reporting net change'
-            call report_change (data_start, data, plevel, mdf, ii,jj,kk)
-            
-            do i = 1,ii
-               do j = 1,jj
-                  do k  = 1,kk
-                     data_in(i,j,k) = data(i,j,k)
-                  enddo
-               enddo
-            enddo
-         
-
-            
-         else
-            write(6,*) 'gvap weights not applied, istatus = 0'
-         endif
-         
-      endif
-      
 c     *** insert cloud moisture, this section now controled by a switch
 
       if(cloud_switch.eq.0) then

@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine  process_gvap (ii,jj,data_out,
+      subroutine  process_gvap (ii,jj,data_out,data_weights,
      1     tpw,glat,glon,time_diff,
      1     path_to_gvap8,path_to_gvap10,filetime,istatus)
 
@@ -44,6 +44,7 @@ c     input variables
       real glat(ii,jj), glon(ii,jj)
       integer i4time
       character*256 path_to_gvap8,path_to_gvap10
+      real data_weights(ii,jj)
 
       integer nstations,nn
       parameter (nstations = 11000)
@@ -54,8 +55,6 @@ c     input variables
       real w2(nstations)
       real w3(nstations)
 
-c     volitile arrays
-      real data_weights(ii,jj)
 
 
       integer i,j
@@ -105,7 +104,7 @@ c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).
 
       endif
 
-c     data_out is now a fractional adjustment
+c     data_out is now a fractional adjustment (weighted)
 c     data_weights is how much of that fraction should be applied
 c     convert data_out to incremental weighted adjustment
 

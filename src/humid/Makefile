@@ -37,6 +37,7 @@ SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f \
     moment_b.f         two_d_stats.f      process_gvap.f     read_gvap.f \
     analz_gvap.f       report_change.f    ofm.f              oh_zone.f  \
+    process_gps.f      read_gps.f \
     get_newest_file.f  weight_field.f \
     precip_water_profile.f                optrans.f	     bias_correction.f
 

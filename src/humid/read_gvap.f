@@ -85,6 +85,10 @@ c     reading goes 8
 
 c     get most recent file in directory
 
+      write (6,*)
+      write (6,*) 'Acquiring GOES  8 GVAP info'
+      write (6,*)
+
       call get_newest_file (filename, time_diff,
      1     path_to_gvap8,ptg_index,filefound,
      1     extension, extension_index, istatus)
@@ -128,6 +132,10 @@ c     write(6,*) (wt(i),i=1,nn)
 c     reading goes 10
 
 c     get most recent file in directory
+
+      write (6,*)
+      write (6,*) 'Acquiring GOES 10 GVAP info'
+      write (6,*)
 
       istatus_10 = 1
 
