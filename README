@@ -2536,6 +2536,8 @@ Inputs:
 
         Radiometer (FSL-MADIS CDL - NetCDF)
 
+        Met Tower (LDAD NetCDF)
+
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              sounding temp, dewpoint, wind
 </pre>
