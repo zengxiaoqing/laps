@@ -40,8 +40,8 @@ cdis
       real func                 ! funciton type
       DIMENSION P(NP),XI(NP,NP),PT(NMAX),PTT(NMAX),XIT(NMAX)
       FRET=FUNC(P)
-      if(fret.eq.0.0) then      ! assume no data or perfect solution
-         return
+      if(fret.eq.0.0) then      !notify
+         write(6,*)'POWELL:fret = 0.0'
       endif
       DO 11 J=1,N
          PT(J)=P(J)
@@ -62,10 +62,14 @@ cdis
             IBIG=I
          ENDIF
  13   CONTINUE
-      IF(2.*ABS(FP-FRET).LE.FTOL*(ABS(FP)+ABS(FRET)))RETURN
+      IF(2.*ABS(FP-FRET).LE.FTOL*(ABS(FP)+ABS(FRET)))then
+c         write(6,*) 'POWELL difference less than FTOL'
+c         write(6,*) fp, fret, ftol,'fp, fret,ftol'
+         RETURN
+      endif
 c     IF(ITER.EQ.ITMAX) PAUSE 'Powell exceeding maximum iterations.'
       IF(ITER.EQ.ITMAX) then
-c     type*, 'Powell exceeding maximum iterations.'
+         write(6,*) 'Powell exceeding maximum iterations.'
          return
       endif
       DO 14 J=1,N
@@ -82,5 +86,6 @@ c     type*, 'Powell exceeding maximum iterations.'
          XI(J,IBIG)=XIT(J)
  15   CONTINUE
       GO TO 1
+      return
       END
       
