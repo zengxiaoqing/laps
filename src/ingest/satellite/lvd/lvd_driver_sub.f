@@ -725,9 +725,15 @@ c ----------  GMS SATELLITE SWITCH -------
      &                                   ,istatus)
                   endif
                   if(istatus.eq.1)then
+
+                     if(csattype.eq.'twn')then
+                        call filter_2dx(ta8,nx_l,ny_l,1, 0.5)
+                        call filter_2dx(ta8,nx_l,ny_l,1,-0.5)
+                     endif
+
                      nlf=nlf+1
                      call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
-                     var_lvd(nlf)  = 'S8A'       ! satellite, channel-4, averaged
+                     var_lvd(nlf)  = 'S8A'    ! satellite, channel-4, averaged
                      c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - AVERAGED'
                      nlf=nlf+1
                      call move(tb8,laps_data(1,1,nlf),nx_l,ny_l)
