@@ -947,23 +947,24 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 <pre>
 
-           (vrc)                 - low-level reflectivity from single or 
+           (vrc)                 - Low-level reflectivity from single or 
                                    multiple radars. For example, our ingest 
                                    at FSL processes WSI-NOWRAD, stored at FSL 
                                    in NetCDF, to create the 'vrc' intermediate 
-                                   file.
+                                   file. Narrowband single-tilt data from AWIPS
+                                   is also stored in 'vrc' files.
 
-           (v01, v02, ... )      - WSR-88Ds or other radar data stored as
-                                   a full volume in sparse arrays.
+           (v01, v02, ... )      - WSR-88Ds or other radar data are stored as
+                                   a full volume. 
 
-                                 - each 'vxx' file has 3-d reflectivity,
-                                   velocity, and nyquist velocity for a radar.
-                                   multiple 'vxx' files are allowed and are
-                                   especially useful for velocity.
+                                 - Each 'vxx' file has 3-d reflectivity,
+                                   velocity, and nyquist velocity for one 
+                                   radar. Horizontal and vertical gaps are
+                                   filled in for reflectivity while sparse 
+                                   arrays are used for velocity.
 
            (vrz)                 - 3-D reflectivity mosaic from multiple radars
-                                   ('vxx' files). This file has horizontal and 
-                                   vertical gaps filled in.
+                                   ('vxx' files). 
 
            (ln3)                 - Layer reflectivity and echo tops, from a
                                    single radar or mosaiced from multiple 
@@ -1002,10 +1003,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      These include information on which types of radar data are processed 
      via the various intermediate data files.
 
-     An important thing to establish is whether your raw data is in polar 
-     or Cartesian form. If polar, please take a look at the "Polar Radar Data"
-     subsection in Section 3. NOWRAD / WSI (Cartesian) data is covered 
-     separately within Section 3.
+     For details on using each radar ingest process, we should establish 
+     whether your raw data is in polar or Cartesian form. If polar, please take
+     a look at the "Polar Radar Data" subsection in Section 3. NOWRAD / WSI 
+     (Cartesian) data is covered separately within Section 3.
       
                        ----   2.3.3  Surface Data ---
 
