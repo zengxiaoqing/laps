@@ -284,8 +284,8 @@ c
          reverse_fields=.true.
       else
          do k=1,nz
-         do j=1,nx
-         do i=1,ny
+         do j=1,ny
+         do i=1,nx
             p(i,j,k) = tmp(k)
          enddo
          enddo 
