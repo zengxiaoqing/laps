@@ -831,15 +831,15 @@ c     that the func will never be non-zero in real search.
                                 !convergence
                write(6,*) ' FRET = 0, assume no converge, assign 1.0'
 c     new code to handle Jet errors, on this condition, bail out
-               write(6,*)'Fatal error in variational module'
-               write(6,*)'Non-convergence detected'
-               write(6,*)'Aborting variational step and continuing'
-               write(6,*)'to process with only background data'
-               return
+c               write(6,*)'Fatal error in variational module'
+c               write(6,*)'Non-convergence detected'
+c               write(6,*)'Aborting variational step and continuing'
+c               write(6,*)'to process with only background data'
+c               return
                
-c               do ijk = 1,3
-c                  x(ijk) = 1.0
-c               enddo
+               do ijk = 1,3
+                  x(ijk) = 1.0
+               enddo
             endif
             
 c     write out solution details

@@ -86,13 +86,13 @@ c found under the satellite library area.
          var = abs(var)
       endif
       sdev=sqrt(var)
-      if(var.ne.0.)then
+      if(var.gt.1.e-10) then               
         skew=skew/(n*sdev**3)
         curt=curt/(n*var**2)-3.
       else
         skew = 0.0
         curt = 0.0
-      write (6,*) 'Skew and Curt returned as zero, variance is zero'
+      write (6,*) 'Skew and Curt returned as zero, variance is small'
         return
       endif
       istatus = 1 !good
