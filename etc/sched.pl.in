@@ -61,10 +61,15 @@ system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
 my($exe);
 foreach $exe (@LAPS_EXE){
-    $t=gmtime(); print $t." Running $exe\n";
+    $t=gmtime(); 
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
-    system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+    if(-x  "$LAPSROOT/bin/$exe"){
+	print $t." Running $exe\n";
+	system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
+    }else{
+	print $t."WARNING: $exe not found\n";
+    }
     my $cur_time = time();
     if($cur_time-$initial_time>$cycle_time){
 	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";

@@ -154,8 +154,11 @@
 
      IBM rs6000 AIX3.25 and AIX4.
      HP         HPUX 10.20
+     SunOS (Solaris) 5.6     requires f90
+     IRIX64          6.4     works using f77 but requires namelist end delimiter 
+                             be changed from / to $
 
-     other platforms may be supported, we almost have solaris working.
+     other platforms may be supported.
 
 
      We welcome suggestions on how to modify LAPS for other platforms, though 
@@ -349,10 +352,10 @@
      There are several scripts in the ./etc directory designed to run laps under 
      cron.  You cron should look similar to :
 
-20 * * * * /fullpathto/perl /fullpathto/laps/etc/sched.pl /fullpathto/laps
-50 * * * * /fullpathto/perl /fullpathto/laps/etc/lga.pl /fullpathto/laps
-03,19,34,49 * * * * /fullpathto/perl /fullpathto/laps/etc/run_vrc_driver.pl /fullpathto/laps/
-08,14,23,29,38,45,53,59 * * * * /fullpathto/perl /fullpathto/laps/etc/run_lvd_driver.pl /fullpathto/laps/
+20                      * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/sched.pl                          /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
+03,19,34,49             * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl vrc_driver.x       /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
+08,14,23,29,38,45,53,59 * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl lvd_sat_ingest.exe /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
+22,30                   * * * *  /usr/nfs/bin/perl /usr/nfs/lapb/parallel/laps/etc/laps_driver.pl ingest_lrs.exe     /usr/nfs/lapb/parallel/laps /data/lapb/parallel/laps/data
 
 
      Once each hour (or other cycle time), the main './etc/sched.pl' runs.
