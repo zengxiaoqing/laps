@@ -1,6 +1,5 @@
       character path_to_raw_sat(maxchannel,maxtype,maxsat)*200
 
-      integer iflag_lvd_common
       integer isats(maxsat)
       integer itypes(maxtype,maxsat)
       integer ichannels(maxchannel,maxtype,maxsat)
@@ -53,6 +52,9 @@
       integer i_nwpix_wv(maxtype,maxsat)
       integer imc(maxsat)
 
+      logical l_national
+      logical l_cell_afwa
+
       real*4  r_resolution_x_vis(maxtype,maxsat)
       real*4  r_resolution_y_vis(maxtype,maxsat)
       real*4  r_resolution_x_ir(maxtype,maxsat)
@@ -60,7 +62,8 @@
       real*4  r_resolution_x_wv(maxtype,maxsat)
       real*4  r_resolution_y_wv(maxtype,maxsat)
 
-      common /lvd_namelist_cmn/iflag_lvd_common,
+      common /lvd_namelist_cmn/
+     +l_cell_afwa,l_national,
      +isats,itypes,ichannels,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
