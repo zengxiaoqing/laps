@@ -121,7 +121,7 @@ cdis
 10      i_qc = 1
 
         if(ext_in .eq. 'pin')then
-            call read_pirep_ob(lun_in,'wind',xlat,xlon,elev,dd,ff
+            call read_acars_ob(lun_in,'wind',xlat,xlon,elev,dd,ff
      1                                          ,asc9_tim_pirep,l_eof)
             if(elev .eq. 0.)i_qc = 0
         else

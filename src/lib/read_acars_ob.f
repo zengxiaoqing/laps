@@ -1,5 +1,5 @@
 
-        subroutine read_pirep_ob(lun,c_obtype,xlat,xlon,elev,arg1,arg2       
+        subroutine read_acars_ob(lun,c_obtype,xlat,xlon,elev,arg1,arg2       
      1                                          ,asc9_tim_pirep,l_eof)
 
         real*4 elev ! meters
@@ -40,6 +40,14 @@
             dd = idir_deg
             arg1 = dd
             arg2 = ff
+            return
+        endif
+
+        if(string(2:5) .eq. 'Temp' .and. c_obtype .eq. 'temp')then
+            read(lun,302)temp
+ 302        format (1x,f10.1)
+            write(6,302)temp
+            arg1 = temp
             return
         endif
 
