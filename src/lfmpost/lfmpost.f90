@@ -160,6 +160,8 @@ PROGRAM lfmpost
       INQUIRE(FILE=data_file,EXIST=file_ready)
       IF (.NOT.file_ready) THEN
         CALL wrfio_wait(data_file,max_wait_sec)
+      ELSE 
+        IF(realtime) CALL sleep(30)
       ENDIF
       CALL open_wrfnc(data_file,lun_data,status)
     ENDIF
