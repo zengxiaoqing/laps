@@ -527,12 +527,21 @@ C
 
       if(iswitch .eq. 1)go to 400
       
-!     Remove duplicate height levels
+!     Detect and remove duplicate levels
       i = 2
       do while(i .le. n_good_levels)
+          idupe = 0
           if(htout(indx(i)) .eq. htout(indx(i-1)))then          
-              write(6,*)' Remove duplicate level ',i,htout(indx(i))
-              do j = i,n_good_levels-1
+              idupe = i
+              write(6,*)' Remove duplicate ht level '
+     1                  ,idupe,htout(indx(idupe))
+          elseif(prout(indx(i)) .eq. prout(indx(i-1)))then          
+              write(6,*)' Duplicate pr level detected'
+     1                  ,i,prout(indx(i))
+          endif
+
+          if(idupe .gt. 0)then
+              do j = idupe,n_good_levels-1
                 htout(indx(j)) = htout(indx(j+1))
                 prout(indx(j)) = prout(indx(j+1))
                 tpout(indx(j)) = tpout(indx(j+1))
