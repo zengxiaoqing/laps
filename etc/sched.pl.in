@@ -86,7 +86,7 @@ if($opt_s){ # "surface only"
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x temp.exe 
                   mosaic_radar.x cloud.exe lq3driver.x deriv.exe accum.exe  
-		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe lapsprep.exe);
+		  lsm5.exe qbalpe.exe lapsprep.exe);
 }
 
 my $LAPSROOT=shift || die "LAPS root directory required\n";
