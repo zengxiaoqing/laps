@@ -32,7 +32,7 @@ cdis
 c
 c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-     &     itheta,redp_lvl,
+     &     itheta_in,redp_lvl,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
@@ -589,6 +589,18 @@ c.....  that takes into account mixing, etc.  For Colorado, use 500 mb;
 c.....  lower elevations try 700 mb.
 c
 	print *,' '
+
+        if(itheta_in .eq. -1)then
+           if(topo(imax/2,jmax/2) .ge. 1000.)then
+              itheta = 5
+           else
+              itheta = 7
+           endif
+	   print *,' itheta auto-set based on terrain = ',itheta
+        else
+           itheta = itheta_in
+        endif
+
 	itheta_all = 1
 	if(itheta .eq. 0) then
 	   print *,' Skipping theta check for surface temperatures.'
