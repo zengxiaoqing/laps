@@ -3112,7 +3112,9 @@ Outputs:
 
 This program is in the early stages of development and provides a three
 layer analysis of soil conditions. A snow cover analysis is included.
-More documentation can be found within the source code.
+The fractional snow cover is a composite over time of information from the 
+cloud analysis (visible and IR satellite), and snow accumulation (derived 
+mainly from radar). More documentation can be found within the source code.
 
 Source directory: laps/src/soil
 
