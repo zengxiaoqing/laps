@@ -5462,7 +5462,8 @@ c             if(cint.eq.0.0)cint=0.1
                     write(6,*)' Start/End radars = '
      1                       ,i_radar_start,i_radar_end
 
-                    call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
+!                   call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
+                    call plot_obs(k_level,.true.,asc_tim_9(1:9)
      1                  ,i_radar_start,i_radar_end
      1                  ,imax,jmax,kmax,idum1_array
      1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
