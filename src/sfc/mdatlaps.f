@@ -32,7 +32,7 @@ cdis
 c
 c
 	subroutine mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,
-     &    lat,lon,east,west,anorth,south,topo,x1a,x2a,y2a,
+     &    lat,lon,topo,x1a,x2a,y2a,
      &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
@@ -97,6 +97,11 @@ c                       09-24-98  If missing background, do a smooth Barnes
 c                                   so something is there.
 c                       09-30-98  Housekeeping.
 c                       01-28-99  Rm smooth Barnes for missing bkgs.
+c                       07-08-99  Removed east/west/north/south from call.
+c                                   Changed character array 'stn'.  Rm *4
+c                                   from all declarations.  Use Barnes for
+c                                   missing backgrounds. Turn off for now 
+c                                   MSL P calc at stns that don't report it.
 c
 c	Notes:
 c
@@ -106,68 +111,68 @@ c
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
-	real*4 lon_s(mxstn), elev_s(mxstn)
-	real*4 t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
-	real*4 pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
-	real*4 vis_s(mxstn)
-	real*4 rii(mxstn), rjj(mxstn)
+	real lon_s(mxstn), elev_s(mxstn)
+	real t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
+	real pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
+	real vis_s(mxstn)
+	real rii(mxstn), rjj(mxstn)
 c
-	integer*4 ii(mxstn), jj(mxstn)
+	integer ii(mxstn), jj(mxstn)
 c
-	character stn(mxstn)*3 
+	character stn(mxstn)*20 
 c
 c.....	Arrays for derived variables from OBS data
 c
-	real*4 uu(mxstn), vv(mxstn), pred_s(mxstn)
+	real uu(mxstn), vv(mxstn), pred_s(mxstn)
 c
 c.....	Stuff for satellite data.
 c
-	integer*4 lvl_v(1)
+	integer lvl_v(1)
 	character var_v(1)*3, units_v(1)*10
 	character comment_v(1)*125, ext_v*31
 c
 c.....  Stuff for intermediate grids (old LGS file)
 c
-	real*4 u1(ni,nj), v1(ni,nj)
-	real*4 t1(ni,nj), td1(ni,nj), tb81(ni,nj)
-	real*4 rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
-	real*4 vis1(ni,nj), elev1(ni,nj)
+	real u1(ni,nj), v1(ni,nj)
+	real t1(ni,nj), td1(ni,nj), tb81(ni,nj)
+	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
+	real vis1(ni,nj), elev1(ni,nj)
 c
 c..... Other arrays for intermediate grids 
 c
-        real*4 wwu(ni,nj), wwv(ni,nj)
-	real*4 wp(ni,nj), wsp(ni,nj), wmslp(ni,nj)
-	real*4 wt(ni,nj), wtd(ni,nj), welev(ni,nj), wvis(ni,nj)
+        real wwu(ni,nj), wwv(ni,nj)
+	real wp(ni,nj), wsp(ni,nj), wmslp(ni,nj)
+	real wt(ni,nj), wtd(ni,nj), welev(ni,nj), wvis(ni,nj)
 c
-        real*4 fnorm(0:ni-1,0:nj-1)
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)    !interp routine
-	real*4 d1(ni,nj)   ! work array
+        real fnorm(0:ni-1,0:nj-1)
+	real x1a(ni), x2a(nj), y2a(ni,nj)    !interp routine
+	real d1(ni,nj)   ! work array
 c
 c..... LAPS Lat/lon grids.
 c
-	real*4 lat(ni,nj),lon(ni,nj), topo(ni,nj)
+	real lat(ni,nj),lon(ni,nj), topo(ni,nj)
 c
-	real*4 lapse_t, lapse_td
+	real lapse_t, lapse_td
 	character atime*24
 c
 c.....	Grids for the background fields...use if not enough sao data.
 c
-        real*4 u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
-        real*4 wt_u(ni,nj), wt_v(ni,nj)
-        real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
-        real*4 wt_rp(ni,nj), wt_mslp(ni,nj) 
-        real*4 vis_bk(ni,nj) 
+        real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
+        real wt_u(ni,nj), wt_v(ni,nj)
+        real rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
+        real wt_rp(ni,nj), wt_mslp(ni,nj) 
+        real vis_bk(ni,nj) 
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
 c
 c.....  Stuff for checking the background fields.
 c
-	real*4 interp_spd(mxstn), bk_speed(ni,nj)
+	real interp_spd(mxstn), bk_speed(ni,nj)
 	parameter(threshold = 2.)  ! factor for diff check
 	parameter(spdt      = 20.) ! spd min for diff check
-	character stn_mx*3, stn_mn*3, amax_stn_id*3
+	character stn_mx*5, stn_mn*5, amax_stn_id*5
 c       
-	integer*4 jstatus(20)
+	integer jstatus(20)
 c
 c.....	START.  Set up constants.
 c
@@ -273,30 +278,30 @@ c
 	      endif
 	   endif
 	   write(6,400) 
-     &         i,stn(i),ii(i),jj(i),interp_spd(i),ff_s(i),diff,percent
+     &      i,stn(i)(1:5),ii(i),jj(i),interp_spd(i),ff_s(i),diff,percent
 	   if(diff .eq. badflag) go to 330
 	   diff = abs( diff )         ! only really care about magnitude
 	   if(diff .gt. diff_mx) then
 	      diff_mx = diff
-	      stn_mx = stn(i)
+	      stn_mx = stn(i)(1:5)
 	   endif
 	   if(diff .lt. diff_mn) then
 	      diff_mn = diff
-	      stn_mn = stn(i)
+	      stn_mn = stn(i)(1:5)
 	   endif
 	   if(diff.gt.(threshold * ff_s(i)).and.ff_s(i).gt.spdt) then
 	      ithresh = ithresh+1
 	   endif
 	   if(ff_s(i) .gt. amax_stn) then
 	      amax_stn = ff_s(i)
-	      amax_stn_id = stn(i)
+	      amax_stn_id = stn(i)(1:5)
 	   endif
  330	enddo !i
- 400	format(1x,i3,':',1x,a3,' at i,j ',2i3,':',3f12.2,f12.0)
+ 400	format(1x,i3,':',1x,a5,' at i,j ',2i3,':',3f12.2,f12.0)
 	write(6,405) diff_mx, stn_mx
- 405	format(1x,' Max difference of ',f12.2,'  at ',a3)
+ 405	format(1x,' Max difference of ',f12.2,'  at ',a5)
 	write(6,406) diff_mn, stn_mn
- 406	format(1x,' Min difference of ',f12.2,'  at ',a3)
+ 406	format(1x,' Min difference of ',f12.2,'  at ',a5)
 	write(6,410) ithresh, threshold, spdt
  410	format(1x,' There were ',i4,
      &            ' locations exceeding threshold of ',f6.3,
@@ -310,7 +315,7 @@ c
 	write(6,420) bksp_mx, ibksp, jbksp
  420	format(1x,' Background field max: ',f12.2,' at ',i3,',',i3)
 	write(6,421) amax_stn, amax_stn_id
- 421	format(1x,' Max speed at station: ',f12.2,' at ',a3)
+ 421	format(1x,' Max speed at station: ',f12.2,' at ',a5)
 c
 	if(bksp_mx .ge. 60.) then
 	   if(bksp_mx .gt. amax_stn*2.66) ibkthresh = 1
@@ -368,12 +373,12 @@ c
 	    if(pmsl_s(k).gt.900. .and. pmsl_s(k).lt.1100.) then
               if(p_msl .ne. badflag) then
 		 diff_ps = p_msl - pmsl_s(k)
-		 write(6,983) k, stn(k), p_msl, pmsl_s(k), diff_ps
+		 write(6,983) k, stn(k)(1:5), p_msl, pmsl_s(k), diff_ps
 		 sum_diffp = sum_diffp + diff_ps
 		 num_diffp = num_diffp + 1
 	      endif
 	    else
-	       pmsl_s(k) = p_msl
+cc	       pmsl_s(k) = p_msl
 	    endif
 	  endif
         enddo !k
@@ -384,7 +389,7 @@ c
 	   bias = sum_diffp / float(num_diffp)
 	   print *,'Num: ', num_diffp,'   MSL Pressure Bias = ', bias
 	endif
- 983    format(1x,i5,2x,a6,':',3f12.2)
+ 983    format(1x,i5,2x,a8,':',3f12.2)
 	print *,' '
 c
 c.....	Convert visibility to log( vis ) for the analysis.
@@ -484,81 +489,68 @@ c
 	if(back_t .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No T background. Setting to zero for now.'
-cc     & ' **WARNING. No T background. Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(t_bk,imax,jmax,t1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(t_bk,imax,jmax,fill_val,istatus)
-	   call zero(t_bk, imax,jmax)
+     & ' **WARNING. No T background. Using smooth Barnes anl of obs'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(t_bk,imax,jmax,t1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(t_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 	if(back_td .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No Td background. Setting to zero for now.'
-cc     & ' **WARNING. No Td background. Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(td_bk,imax,jmax,td1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
-	   call zero(td_bk, imax,jmax)
+     & ' **WARNING. No Td background. Using smooth Barnes anl of obs'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(td_bk,imax,jmax,td1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(td_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 	if(back_uv .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No wind background. Setting to zero.'
-cc     & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(u_bk,imax,jmax,u1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(u_bk,imax,jmax,fill_val,istatus)
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(v_bk,imax,jmax,v1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(v_bk,imax,jmax,fill_val,istatus)
-	   call zero(u_bk, imax,jmax)
-	   call zero(v_bk, imax,jmax)
+     & ' **WARNING. No wind background. Using smooth Barnes anl of obs'
+           call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(u_bk,imax,jmax,u1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(u_bk,imax,jmax,fill_val,istatus)
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(v_bk,imax,jmax,v1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(v_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 	if(back_sp .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No sfc P background. Setting to zero.'
-cc     & ' **WARNING. No sfc P background. Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(stnp_bk,imax,jmax,sp1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(stnp_bk,imax,jmax,fill_val,istatus)
-	   call zero(stnp_bk, imax,jmax)
+     & ' **WARNING. No sfc P background. Using smooth Barnes anl of obs'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(stnp_bk,imax,jmax,sp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(stnp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 	if(back_rp .ne. 1) then
 	   print *,' '
 	   print *, ' **WARNING. No reduced P background.',
-     &              ' Setting to zero.'
-cc     &              ' Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(rp_bk,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
-	   call zero(rp_bk, imax,jmax)
+     &              ' Using smooth Barnes anl of obs'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(rp_bk,imax,jmax,rp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
+cc	back_mp = 0
 	if(back_mp .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No MSL P background. Setting to zero.'
-cc     & ' **WARNING. No MSL P background. Using smooth Barnes anl of obs'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(mslp_bk,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
-	   call zero(mslp_bk, imax,jmax)
+     & ' **WARNING. No MSL P background. Using smooth Barnes anl of obs'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(mslp_bk,imax,jmax,mslp1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(mslp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 	if(back_vis .ne. 1) then
 	   print *,' '
 	   print *,
-     & ' **WARNING. No VIS background. Setting to zero.'
-cc	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-cc	   call barnes2(vis_bk,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
-cc	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
-	   call zero(vis_bk, imax,jmax)
+     & ' **WARNING. No VIS background. Using smooth Barnes anl of obs.'
+	   call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	   call barnes2(vis_bk,imax,jmax,vis1,smsng,mxstn,npass,fnorm)
+	   call check_field_2d(vis_bk,imax,jmax,fill_val,istatus)
 	endif
 c
 c.....	Fill in the boundary of each field.
