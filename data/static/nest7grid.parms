@@ -62,6 +62,9 @@
  maxobs_cmn=6000,  
  c8_project_common='NIMBUS', 
  /
-
+c OVERALL LAPS PARAMETERS
+c
+c maxstns_cmn - max number of sfc stations you are likely to encounter in the
+c             - LSO file and various analyses, in and near the domain.
 
 
