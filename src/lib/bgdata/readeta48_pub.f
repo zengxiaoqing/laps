@@ -128,6 +128,8 @@ C     integer NX,NY,NZ, nf_fid, nf_vid, nf_status, k
       logical reverse_fields
       data reverse_fields/.false./
 
+      istatus = 1
+
       nf_status = NF_OPEN(fname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -142,6 +144,11 @@ C     Variable        NETCDF Long Name
 C      p            "isobaric levels" 
 C
       call read_netcdf_real(nf_fid,'isoLevel',nz,p,0,0,nf_status)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim isoLevel'
+        return
+      endif
 
 c
 c If p is going from top to bottom, reverse it and set a flag to 
@@ -166,7 +173,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the height field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
          
@@ -179,7 +185,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the rh field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
 
@@ -193,7 +198,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the temp field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
 
@@ -207,7 +211,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the u-wind field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
 
@@ -221,7 +224,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the v-wind field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
 
@@ -235,7 +237,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the w-wind field is missing'
          print*, 'ABORTING file processing for eta file ',fname
-         istatus=0
          return
       endif
 
@@ -287,10 +288,9 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
-        istatus = 0
         return
       endif
-      istatus = 1
+      istatus = 0
 
       return
       end

@@ -5,6 +5,8 @@
       character*(*) filename
       integer istatus
 
+      istatus = 1
+
 C
 C  Open netcdf File for reading
 C
@@ -12,7 +14,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ', filename
-        istatus = 0
         return
       endif
 C
@@ -38,7 +39,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
-              istatus = 0
         return
       endif
 
@@ -46,7 +46,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
-              istatus = 0
         return
       endif
 
@@ -57,7 +56,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
-              istatus = 0
         return
       endif
 
@@ -65,7 +63,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
-              istatus = 0
         return
       endif
 
@@ -76,7 +73,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim z'
-              istatus = 0
         return
       endif
 
@@ -84,7 +80,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim z'
-              istatus = 0
         return
       endif
 
@@ -93,10 +88,10 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close ruc2'
-              istatus = 0
         return
       endif
 
+      istatus = 0
       
       return
       end
@@ -118,6 +113,7 @@ C     integer NX, NY, NZ, nf_fid, nf_vid, nf_status,istatus
      +     u( NX,  NY,  NZ), v( NX,  NY,  NZ), 
      +     vpt( NX,  NY,  NZ), w( NX,  NY,  NZ)
 
+      istatus = 1
       nxny=nx*ny
       nxnynz=nx*ny*nz
 
@@ -128,7 +124,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ', filename
-              istatus = 0
         return
       endif
       print*,'Reading - ',filename
@@ -148,7 +143,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the height field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 
@@ -162,7 +156,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
       print*, 'A substantial portion of the pressure field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 C
@@ -174,7 +167,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
       print*,'A substantial portion of the water vapor field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 
@@ -187,7 +179,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the u-wind field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 
@@ -200,7 +191,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the v-wind field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 
@@ -213,7 +203,6 @@ C
       if(nf_status.lt.-0.5*nxnynz) then
          print*, 'A substantial portion of the vpt field is missing'
          print*, 'ABORTING file processing for ruc2 file ',filename
-         istatus=0
          return
       endif
 
@@ -228,10 +217,9 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
-        istatus = 0
         return
       endif
 
-      istatus = 1
+      istatus = 0
       return
       end

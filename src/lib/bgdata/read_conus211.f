@@ -11,7 +11,7 @@
 C
 C  Open netcdf File for reading
 C
-      istatus = 0
+      istatus = 1
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
@@ -51,7 +51,7 @@ C
         return
       endif
 
-      istatus = 1
+      istatus = 0
 
       return
       end
@@ -67,6 +67,7 @@ C
       character*200 cdfname
       integer nxbg,nybg,nzbg,ntbg,n_valtimes 
       integer record
+      integer istatus
 
 C     integer ntp, nvdim, nvs, lenstr, ndsize
 c     integer ntp, nvdim, nvs
@@ -79,7 +80,9 @@ C     Linda Wharton 10/27/98 removed several commented out lines:
 c        print *,'ndsize = ', ndsize
 C        value ndsize not set anywhere in this subroutine
 C
-C  Fill all dimension values
+
+      istatus = 1
+
 C
 C
 C  Open netcdf File for reading
@@ -100,11 +103,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim n_valtimes'
+        return
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,n_valtimes)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim n_valtimes'
+        return
       endif
 C
 C Get size of record
@@ -113,11 +118,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim record'
+        return
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,record)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim record'
+        return
       endif
 C
 C Get size of x
@@ -126,11 +133,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
+        return
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nxbg)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
+        return
       endif
 C
 C Get size of y
@@ -139,11 +148,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
+        return
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nybg)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
+        return
       endif
 C
 C Get size of levels_19
@@ -152,11 +163,13 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim levels_19'
+        return
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nzbg)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim levels_19'
+        return
       endif
 
       print*, 'nxbg/nybg/nzbg/n_valtimes = ',nxbg,nybg,nzbg,n_valtimes
@@ -180,9 +193,11 @@ c      stop
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
+        return
       endif
-      return 
 
+      istatus = 0
+      return 
       end
 C
 C
@@ -247,6 +262,7 @@ C     integer vdims(10)
 C     character*31 dummy
 c
       integer i,j,k,n,ip,jp,ii,jj,kp1,it,istatus,slen
+      integer istatus_211
 c
       character*(*) path
       character*9   fname,oldfname,model
@@ -270,6 +286,8 @@ c
 c
 ccc      save htn,tpn,rhn,uwn,vwn,prn,oldfname
 c_______________________________________________________________________________
+
+      istatus = 1
 c
 c *** Open the netcdf file.
 c
@@ -280,7 +298,6 @@ ccc      if (fname .ne. oldfname) then
          model='ETA'
       endif
 
-      istatus=0
       fname13=fname9_to_wfo_fname13(fname)
 
       call s_len(path,slen)
@@ -293,6 +310,7 @@ ccc      if (fname .ne. oldfname) then
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
          print *,'NF_OPEN ',cdfname
+         return
       endif
 
       read(af,'(i4)') nn
@@ -301,11 +319,13 @@ ccc      if (fname .ne. oldfname) then
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
          print *,'in NF_GET_VAR_ model '
+         return
       endif
       rcode=NF_GET_VARA_INT(ncid,nf_vid,1,ntbg,ivaltimes)
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
          print *,'in NF_GET_VAR_ model '
+         return
       endif
 
       n=1
@@ -319,7 +339,14 @@ c        print*,'ERROR: No record valid at time ',nn,af
      &' ',n,' ',ivaltimes(n)
 
          rcode= NF_CLOSE(ncid)
+         if(rcode.ne.NF_NOERR) then
+            print *, NF_STRERROR(rcode)
+            print *,'in NF_GET_VAR_ model '
+            return
+         endif
+
          goto 999
+
       endif
        
 
@@ -339,70 +366,95 @@ c
 
       call read_netcdf_real(ncid,'gh',nxbg*nybg*count(3),htn,start
      +     ,count,rcode)
-
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 c
 c ****** Statements to fill rhn.                           
 c
 
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=nzbg2
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=nzbg2
+      start(4)=n
+      count(4)=1
 
-         call read_netcdf_real(ncid,'rh',nxbg*nybg*count(3),rhn,start
+      call read_netcdf_real(ncid,'rh',nxbg*nybg*count(3),rhn,start
      +     ,count,rcode)
 
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 
 c
 c ****** Statements to fill tpn.                              
 c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=nzbg2
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=nzbg2
+      start(4)=n
+      count(4)=1
 
-         call read_netcdf_real(ncid,'t',nxbg*nybg*count(3),tpn,start
+      call read_netcdf_real(ncid,'t',nxbg*nybg*count(3),tpn,start
      +     ,count,rcode)
 
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 
 c
 c ****** Statements to fill uwn.                           
 c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=nzbg2
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=nzbg2
+      start(4)=n
+      count(4)=1
 
-         call read_netcdf_real(ncid,'uw',nxbg*nybg*count(3),uwn,start
+      call read_netcdf_real(ncid,'uw',nxbg*nybg*count(3),uwn,start
      +     ,count,rcode)
 
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 
 c
 c ****** Statements to fill vwn.                           
 c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=nzbg2
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=nzbg2
+      start(4)=n
+      count(4)=1
 
-         call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
+      call read_netcdf_real(ncid,'vw',nxbg*nybg*count(3),vwn,start
      +     ,count,rcode)
+
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 c
 c ****** Statements to fill wwn.
 c
@@ -420,39 +472,59 @@ c
      +      ,start,count,rcode)
 
          endif
-
 c
 c get sfc pressure field
 c
-         start(1)=1
-         count(1)=nxbg
-         start(2)=1
-         count(2)=nybg
-         start(3)=1
-         count(3)=1
-         start(4)=n
-         count(4)=1
+      start(1)=1
+      count(1)=nxbg
+      start(2)=1
+      count(2)=nybg
+      start(3)=1
+      count(3)=1
+      start(4)=n
+      count(4)=1
       
-         call read_netcdf_real(ncid,'p',nxbg*nybg,pr_sfcn,start
+      call read_netcdf_real(ncid,'p',nxbg*nybg,pr_sfcn,start
      +     ,count,rcode)
 
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 c
 c get mslp (this field name differs from one model to the other)
 c
-         if(model.eq.'ETA') then
-            call read_netcdf_real(ncid,'emsp',nxbg*nybg,mslpn
+      if(model.eq.'ETA') then
+
+         call read_netcdf_real(ncid,'emsp',nxbg*nybg,mslpn
      +           ,start,count,rcode)
-         else
-            call read_netcdf_real(ncid,'mmsp',nxbg*nybg,mslpn
-     +           ,start,count,rcode)
+         if(rcode.ne.NF_NOERR) then
+            print *, NF_STRERROR(rcode)
+            print *,'in NF_GET_VAR_ model '
+            return
          endif
 
+      else
 
+         call read_netcdf_real(ncid,'mmsp',nxbg*nybg,mslpn
+     +           ,start,count,rcode)
+         if(rcode.ne.NF_NOERR) then
+            print *, NF_STRERROR(rcode)
+            print *,'in NF_GET_VAR_ model '
+            return
+         endif
 
+      endif
 c
 c *** Close netcdf file.
 c
       rcode= NF_CLOSE(ncid)
+      if(rcode.ne.NF_NOERR) then
+         print *, NF_STRERROR(rcode)
+         print *,'in NF_GET_VAR_ model '
+         return
+      endif
 c
 ccc      endif
 
@@ -486,7 +558,7 @@ c
       endif
 
       n=1
-      istatus=0
+      istatus_211 = 0
       do k=1,19
          do j=1,nybg
             do i=1,nxbg
@@ -512,7 +584,7 @@ c
                   uw(ii,jj,k)=uwn(i,j,kp1)
                   vw(ii,jj,k)=vwn(i,j,kp1)
                   ww(ii,jj,k)=wwn(i,j,k)
-                  istatus = 1
+                  istatus_211 = 1
                endif
             enddo
          enddo
@@ -535,8 +607,9 @@ c
       endif
 
 
-      if(istatus .eq. 0) then
+      if(istatus_211 .eq. 0) then
         print*, 'No valid data found for',fname, af
+        return
       else
 c
 c return sfc rh and use routine 'sfcprs' (in lga.f) to compute
@@ -563,10 +636,10 @@ c                 sh_sfc(ii,jj)=sh_sfc(ii,jj)/(1.+sh_sfc(ii,jj))
                   mslp(ii,jj)=mslpn(i,j)
                   pr_sfc(ii,jj)=pr_sfcn(i,j)
                   
-                  istatus = 1
                endif
             enddo
          enddo
+
       endif
 
 
@@ -583,6 +656,8 @@ c
       sw(2)=-133.459
       ne(1)=57.29
       ne(2)=-49.3849
+
+      istatus = 0
 c
 c *** Convert ruc winds from grid north to true north.
 c
@@ -597,6 +672,7 @@ c
 cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
 cc      oldfname=fname
+
       if(0.eq.1) then
  900     print*,'ERROR: bad dimension specified in netcdf file'
          print*, (count(i),i=1,4)

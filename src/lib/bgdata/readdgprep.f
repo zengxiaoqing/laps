@@ -77,6 +77,7 @@ c     character*13  fname13_to_FA_filename,cfname13
  
       character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
+      character*2   cwb_type
       character*132 origin,model,nav,grid,version
       character*255 filename,fname_index
 c
@@ -104,7 +105,7 @@ c ---------------------------------
       t_ref=-132.0
       rfill = -99999.
       r_bogus_sh = 1.0e-6
-      istatus = 0
+      istatus = 1
 c
       call get_r_missing_data(r_missing_data,istatus)
 
@@ -186,26 +187,21 @@ c    +,istatus)
 
       elseif(bgmodel.eq.3)then
 
-c        cfname13=fname//af
-c        cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
-
+         call downcase(cmodel(nclen-1:nclen),cwb_type)
          c3ext=c3_FA_ext(af) 
          cfname10=a9_to_yr_a10_time(fname,istatus)
-         call s_len(cmodel,lenc)
-         if(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_NF')then
-            cFA_filename='nf'//cfname10(1:8)//fname(6:7)//'.'//c3ext
-         elseif(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_RE')then
-            cFA_filename='re'//cfname10//'.'//c3ext
-         endif
+         cFA_filename=cwb_type//cfname10(1:8)//fname(6:7)//'.'//c3ext
          call s_len(path,l)
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
 
-         print*,'open and read FA file: ',filename(1:l)
+         print*,'accessing FA file: ',filename(1:l)
          open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=990)
 
-         call read_fa(lun,filename,c3ext(1:2)           ! I
+         if(cwb_type .eq. 're')then
+
+            call read_fa(lun,filename                   ! I
      .               ,nx,ny,nz                          ! I
      .               ,r_missing_data                    ! I
      .               ,prk                               ! O
@@ -213,7 +209,13 @@ c        cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
      .               ,mslp                              ! O
      .               ,istatus)                          ! O
 
-         call qcmodel_sh(nx,ny,nz,sh)
+            call qcmodel_sh(nx,ny,nz,sh)
+
+         elseif (cwb_type.eq.'nf')then
+            print *,'not able to read nf model format yet'
+            return
+c           call read_fa_nf(omega, mix_rat_water, mixr)  !for example
+         endif
 
       endif
  
@@ -415,18 +417,28 @@ c
 c
 c *** Fill the common block variables.
 c
-      if (bgmodel .eq. 3)then
+      if(bgmodel .eq. 3)then
          gproj='LC'
          nx_lc=nx
          ny_lc=ny
          nz_lc=nz
-         lat1=10.0
-         lat2=40.0
-         lon0_lc=+120.
-         sw(1)=15.879
-         sw(2)=+112.545
-         ne(1)=32.384
-         ne(2)=+131.172 
+         if(cwb_type .eq. 're')then
+            lat1=10.0
+            lat2=40.0
+            lon0_lc=+120.
+            sw(1)=15.879
+            sw(2)=+112.545
+            ne(1)=32.384
+            ne(2)=+131.172 
+         else
+            lat1=10.0
+            lat2=40.0
+            lon0_lc=+120.
+            sw(1)=15.80
+            sw(2)=+109.24
+            ne(1)=34.987
+            ne(2)=+131.60
+         endif
       elseif (bgmodel .eq. 6) then
          gproj='LL'
          nx_ll=nx
@@ -459,7 +471,7 @@ c
          dlon=1.0
       endif
 c
-      istatus=1
+      istatus=0
       return
 c
 
@@ -620,7 +632,7 @@ c
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
 
-      istatus=0
+      istatus=1
 
       print*,'read 3-d variables'
       do k=1,nz
@@ -654,7 +666,7 @@ c
       read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny)
       read(lun,err=50) ((mslp(i,j),i=1,nx),j=1,ny)
 
-      istatus=1
+      istatus=0
       return
 
 50    print*,'error during read'

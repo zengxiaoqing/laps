@@ -116,7 +116,7 @@ C
                      
                      call get_sbn_model_id(names(i),cmodel,ivaltimes,
      +                    ntbg,istatus)
-                     if(istatus.eq.0) then
+                     if(istatus.ne.0) then
                         print*,'error returned from get_sbn_model_id '
      +,fname
                      else
@@ -286,8 +286,8 @@ c     +     forecast_length,bg_files,n
              NY = 91
              NZ = 16
           elseif(cmodel.eq.'CWB_20FA_LAMBERT_NF')then
-             NX=191
-             NY=127
+             NX=145
+             NY=139
              NZ=16
           else
              print*,'Unknow type for bgmodel = ',bgmodel,
