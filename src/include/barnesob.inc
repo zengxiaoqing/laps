@@ -13,6 +13,7 @@
           real elev                   ! Used for sfc obs
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
+          character*10 type           ! Observation type
 	end type barnesob
 
 	type barnesob_qc
@@ -26,5 +27,6 @@
           real ldf                    ! Land fraction for surface obs
           integer mask_sea            ! Used for sfc analyses
           logical qc
+          character*10 type           ! Observation type
 	end type barnesob_qc
 
