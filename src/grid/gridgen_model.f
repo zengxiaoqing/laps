@@ -203,11 +203,11 @@ c calculate delta x and delta y using grid and map projection parameters
         write(6,*)' std_lon = ',std_lon
 
         if(c6_maproj .eq. 'plrstr')then
-!           call get_ps_parms(std_lat,std_lat2,grid_spacing_m,phi0
-!     1                      ,grid_spacing_proj_m)
+            call get_ps_parms(std_lat,std_lat2,grid_spacing_m,phi0
+     1                       ,grid_spacing_proj_m)
 
-            deltax = 2.0 / (1. + sind(std_lat)) * grid_spacing_m 
-                                                ! grid_spacing_proj_m
+            deltax = grid_spacing_proj_m
+
             if(std_lat2 .eq. +90.)then
                 write(6,*)' Note, grid spacing will equal '
      1                    ,grid_spacing_m,' at a latitude of ',std_lat

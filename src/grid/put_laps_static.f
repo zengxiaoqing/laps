@@ -58,7 +58,7 @@ C
       if(c6_maproj .eq. 'plrstr')then
           call get_ps_parms(std_lat,std_lat2,grid_spacing,phi0
      1                     ,grid_spacing_proj_m)
-          phi0=90.                                                  ! temporary
+
           if(phi0 .lt. 90.)then
               write(6,*)' Calculate Polar Stereo NetCDF parameters on'
      1                 ,' equivalent projection tangent to pole.'
@@ -68,6 +68,7 @@ C
               deltay_cdf = deltay * factor
               write(6,*)' deltax_cdf, deltay_cdf',deltax_cdf,deltay_cdf   
           endif
+
       endif
 
       write(6,*) dir_out(1:len),len

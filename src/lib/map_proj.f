@@ -416,6 +416,8 @@ C
 
       subroutine xy_to_uv(x,y,erad,u,v)
 
+      include 'trigd.inc'
+
       character*6 c6_maproj
       real*4 n 
 
@@ -425,17 +427,24 @@ C
           stop
       endif
 
+      call get_standard_latitudes(slat1,slat2,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' xy_to_uv: Error obtaining standard lats'
+          stop
+      endif
+
       if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
-          u = x / (2. * erad)
-          v = y / (2. * erad)
+          call get_grid_spacing(grid_spacing_m,istatus)
+          if(istatus .ne. 1)stop
+
+          call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                 ,grid_spacing_proj_m)
+          factor = 1. + sind(phi0)
+
+          u = x / (factor * erad)
+          v = y / (factor * erad)
 
       elseif(c6_maproj .eq. 'lambrt')then 
-          call get_standard_latitudes(slat1,slat2,istatus)
-          if(istatus .ne. 1)then
-              write(6,*)' xy_to_uv: Error obtaining standard lats'
-              stop
-          endif
-
           call lambert_parms(slat1,slat2,n,s,rconst)
 
           u = x / (erad * rconst)
@@ -446,7 +455,8 @@ C
           v = y / erad
 
       else
-          write(6,*)'xy_to_uv - Error: invalid map projection',c6_maproj       
+          write(6,*)'xy_to_uv - Error: invalid map projection '
+     1             ,c6_maproj             
           stop
 
       endif
@@ -457,6 +467,8 @@ C
 
       subroutine uv_to_xy(u,v,erad,x,y)
 
+      include 'trigd.inc'
+
       character*6 c6_maproj
       real*4 n 
 
@@ -466,17 +478,24 @@ C
           stop
       endif
 
+      call get_standard_latitudes(slat1,slat2,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' uv_to_xy: Error obtaining standard lats'
+          stop
+      endif
+
       if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
-          x = u * 2. * erad
-          y = v * 2. * erad
+          call get_grid_spacing(grid_spacing_m,istatus)
+          if(istatus .ne. 1)stop
+
+          call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                 ,grid_spacing_proj_m)
+          factor = 1. + sind(phi0)
+
+          x = u * factor * erad
+          y = v * factor * erad
 
       elseif(c6_maproj .eq. 'lambrt')then 
-          call get_standard_latitudes(slat1,slat2,istatus)
-          if(istatus .ne. 1)then
-              write(6,*)' uv_to_xy: Error obtaining standard lats'
-              stop
-          endif
-
           call lambert_parms(slat1,slat2,n,s,rconst)
 
           x = u * (erad * rconst)
@@ -487,7 +506,8 @@ C
           y = v * erad
 
       else
-          write(6,*)'uv_to_xy - Error: invalid map projection',c6_maproj       
+          write(6,*)'uv_to_xy - Error: invalid map projection '
+     1             ,c6_maproj       
           stop
 
       endif

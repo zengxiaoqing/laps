@@ -38,7 +38,7 @@ cdis
 !       Made even more general (Adjustable Dims)        1991
 !       Added new map projections for sigma calc        1997
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         REAL M
         DIMENSION FIELD(ni,nj),FLU(ni,nj),FLV(ni,nj),SIGMA(ni,nj)
         real UH(ni,nj),VH(ni,nj),FLXCNV(ni,nj),lat(ni,nj),lon(ni,nj)
@@ -132,10 +132,15 @@ C
         subroutine get_sigma(rlat,rlon,sigma,istatus)
 
 !       Steve Albers
+
+!       Sigma is defined to be one when we are located in the intersection
+!       of the projection plane and the earth's surface. It varies from unity
+!       elsewhere.
+
 !       Equations from Principles of Meteorological Analysis, Walter Saucier
 !       Pages 32,33
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         real*4 n
         character*6 c6_maproj
 
@@ -179,7 +184,16 @@ C
                 return
             endif
 
-            phi0 = slat1
+            call get_grid_spacing(grid_spacing_m,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)'get_sigma: bad istatus'
+                return
+            endif
+
+!           call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+!    1                       ,grid_spacing_proj_m)
+
+            phi0 = slat1 ! Remove this line and replace with above line
             phi  = rlat
 
             sigma = (1. + sind(phi0)) / (1. + sind(phi))               ! eq. 13

@@ -688,11 +688,30 @@ cdis
       subroutine get_grid_spacing_actual(rlat,rlon
      1                                  ,grid_spacing_actual_m,istatus)
 
+      character*6 c6_maproj
+
+      call get_standard_latitudes(slat1,slat2,istatus)
+      if(istatus .ne. 1)then
+          return
+      endif
+
       call get_grid_spacing(grid_spacing_m,istatus)
       if(istatus .ne. 1)then
           write(6,*)
      1    ' Error calling get_grid_spacing from get_grid_spacing_actual'       
           return
+      endif
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus .ne. 1)then
+          return
+      endif
+
+      if(c6_maproj .eq. 'plrstr')then
+          call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                 ,grid_spacing_proj_m)
+      else
+          grid_spacing_proj_m = grid_spacing_m
       endif
 
       call get_sigma(rlat,rlon,sigma,istatus)
@@ -702,7 +721,7 @@ cdis
           return
       endif
 
-      grid_spacing_actual_m = grid_spacing_m / sigma
+      grid_spacing_actual_m = grid_spacing_m / sigma ! grid_spacing_proj_m
 
       return
       end
@@ -713,24 +732,46 @@ cdis
 
 !     1998 Steve Albers
 
-!     Use secant projection assumption (unless we run into software problems)
+      include 'trigd.inc'
+
+      logical l_secant
+      data l_secant /.false./
+
+!     Secant projections are described in "Principles of Meteorological 
+!     Analysis", Saucier, p. 33. 'phi_std' is the value of phi at the 
+!     "standard latitude" as specified by input parameter. 'phi0' is the value 
+!     of phi on the actual projection plane utilized for internal map 
+!     projection calculations. 'phi0' represents the standard latitude in the
+!     more generic sense.
+
+!     We will eventually use the secant projection assumption (unless we run 
+!     into software problems)
+
 !     Projection is tangent to earth's surface only if phi0 = 90.
 
       if(slat2 .eq. +90.)then     ! Projection pole is at geographic north pole
-          phi0 = slat1       
+          phi_std = slat1       
 
       elseif(slat2 .eq. -90.)then ! Projection pole is at geographic south pole
-          phi0 = -slat1
+          phi_std = -slat1
 
       else
-          phi0 = +90.           ! We ignore standard lat for local sterographic
+          phi_std = +90.        ! We ignore standard lat for local sterographic
                                 ! No need for this to be not equal to +90.
       endif
 
 !     Calculate grid_spacing_proj_m: grid spacing in the projection plane
+      if(l_secant)then
+          grid_spacing_proj_m = grid_spacing_m ! equal to parameter value 
+                                               ! in nest7grid.parms
+          phi0 = phi_std
 
-      grid_spacing_proj_m = grid_spacing_m ! equal to parameter value 
-                                           ! in nest7grid.parms
+      else ! tangent projection
+          grid_spacing_proj_m = grid_spacing_m * 
+     1                          2. / (1. + sind(phi_std))
+          phi0 = 90.
+
+      endif
 
       return
       end
