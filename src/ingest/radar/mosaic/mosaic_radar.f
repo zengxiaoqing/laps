@@ -367,7 +367,8 @@ c ----------------------------------------------------------
          call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,
      &      i_ra_count,c_ra_ext,i4time_cur,i_window_size,
      &      rheight_laps,lat,lon,topo,
-     &      rlat_radar,rlon_radar,rheight_radar,grid_ra_ref,grid_ra_vel,       
+     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,
+     &      grid_ra_ref,grid_ra_vel,       
      &      istatus)
 
       elseif(c_mosaic_type(1:3).eq.'rdr')then
@@ -392,13 +393,13 @@ c ----------------------------------------------------------
 
 c
 c Determine max reflectivity 2-d field as composite of all radar files for
-c the given time. Test i_ra_count > 1. If not then no need to mosaic!
+c the given time. Test n_valid_radars > 1. If not then no need to mosaic!
 c -------------------------------------------------------------------------
-      if(i_ra_count.gt.1)then
+      if(n_valid_radars .ge. 1)then
 
 c this subroutine does not yet use imosaic_3d parameter.
 
-         call mosaic_ref_multi(i_ra_count,n_radars,l_low_level,           ! I
+         call mosaic_ref_multi(n_valid_radars,n_radars,l_low_level,       ! I
      &                         c_radar_id,lat,lon,nx_l,ny_l,nz_l,         ! I
      &                         rlat_radar,rlon_radar,rheight_radar,       ! I
      &                         topo,rheight_laps,grid_ra_ref,             ! I
@@ -406,7 +407,7 @@ c this subroutine does not yet use imosaic_3d parameter.
      &                         grid_mosaic_3dref,istatus)                 ! O
          if(istatus .ne. 1)return
 
-      elseif(i_ra_count.eq.1)then
+      elseif(n_valid_radars .eq. 1)then
 
          print*,'Only 1 radar - no mosaic'
 
@@ -487,11 +488,11 @@ c
 c vrz output. 
 c
       if(imosaic_3d.eq.1.or.imosaic_3d.eq.2)then
-         write(6,*)' Output VRZ file'
+         write(6,*)' Output VRZ file, n_valid_radars = ',n_valid_radars       
          ext_vrz = 'vrz'
          var_vrz = 'REF'
          units_vrz = 'DBZ'
-         read(cradars,*)n_radars
+         read(cradars,*)n_valid_radars
          comment_vrz='Radar mosaic. Type = '//c_mosaic_type//' '
      1               //cradars
 
