@@ -5,7 +5,7 @@
         parameter (maxlvl=10000)
 
         real*4 elapsed_time(maxlvl)
-        real*4 p(maxlvl),  p_out(maxlvl)
+        real*4 p(maxlvl),  p_out(maxlvl)          ! millibars
         real*4             ht_out(maxlvl)
         real*4 t(maxlvl),  t_out(maxlvl)
         real*4 td(maxlvl), td_out(maxlvl)
@@ -102,7 +102,7 @@ c
                 lvl_out = lvl_out + 1
                 i4time = i4time_launch + nint(elapsed_time(lvl))
                 call make_fnam_lp (I4TIME, a9time_a(lvl_out), ISTATUS)
-                p_out(lvl_out) = p(lvl)*100.
+                p_out(lvl_out) = p(lvl) ! *100.
                 ht_out(lvl_out) = r_missing_data
 
                 if(t(lvl) .eq. 999.)then
@@ -129,7 +129,17 @@ c
      1                   ,p_out(lvl_out)
      1                   ,t_out(lvl_out),td_out(lvl_out)
      1                   ,wd_out(lvl_out),ws_out(lvl_out)       
-            endif
+
+                if(lvl_out .gt. 1)then
+                    if(p_out(lvl_out) .ge. p_out(lvl_out-1))then
+                        write(6,*)
+     1                    ' ERROR: AVAPS Levels not sorted correctly'
+                        istatus = 0
+                        return
+                    endif ! pressure trend not monotonically decreasing
+                endif
+
+            endif ! valid pressure at this level
         enddo ! lvl
 
 !       Call write_snd for this sounding
