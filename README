@@ -1963,6 +1963,7 @@ Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
 
 	lso     intermediate data (ASCII) 
 
+Sample Input/Output: May be available in the test data case.
 </pre>
 
 Source directory: laps/src/ingest/sao
