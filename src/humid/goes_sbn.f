@@ -73,6 +73,7 @@ c
       implicit none
       save
       include 'Constants.inc'
+      include 'grid_fname.cmn'
 
 c     include 'lapsparms.for'
 
@@ -235,9 +236,12 @@ c     constants
       d2r = pi/180.
       blank = '  '
       
-c     set laps grid 
-      grid_name = 'nest7grid'
-      call get_laps_config(grid_name,istatus)
+c     set laps grid
+
+      call get_laps_config(grid_fnam_common,istatus)
+ 
+c      grid_name = 'nest7grid'
+c      call get_laps_config(grid_name,istatus)
       
       do j = 1,jj
          do i = 1,ii

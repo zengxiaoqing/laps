@@ -35,6 +35,8 @@ cdis
 
       implicit none
 
+      include 'grid_fname.cmn'
+
 c     parameter variables
 
       integer ii,jj,kk
@@ -70,10 +72,7 @@ c     1        make_ssh !function type
       real ps(ii,jj)
       
       real bias_one
-      
-c     include 'setup.inc'
-      
-      
+
       real*4 mask (ii,jj),cg(ii,jj,kk)
       
       real*4 lt1dat(ii,jj,kk)
@@ -87,10 +86,9 @@ c     include 'setup.inc'
      1     commentlt1(kk)*125
       
 c     lat lon variables
-      
-      
+   
       character*256  directory
-      character*256 grid_fnam_common
+c      character*256 grid_fnam_common
       real lat(ii, jj), lon(ii, jj)
       real rspacing_dum
       character*125 comment_2d
@@ -127,18 +125,11 @@ c     ------------------
       integer*4 lvllm(kk)
       
       real*4 maps_rh(ii,jj,kk)
-      
-c     real*4 maps_sh(ii,jj,kk)
-      
-      
+
       character*3 desired_field
-      
-c     external ss$_normal,rtsys_bad_prod,rtsys_good_prod
-c     external rtsys_no_data, rtsys_abort_prod
-      
+   
       real*4 plevel(kk)
       integer*4 mlevel(kk)
-
 
 c    
 c     gps variables
@@ -204,8 +195,10 @@ c     routine
       call get_directory(extlt1,dirlt1,len)
       call get_directory(ext,dir,len)
       call get_directory(rhext,rhdir,len)
-      
-      call get_laps_config('nest7grid',istatus)
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+c      call get_laps_config('nest7grid',istatus)
       if(istatus .ne. 1)then
          write(6,*)' error in get_laps_config'
          return
@@ -432,7 +425,7 @@ c     check for negative input and warn
 c     **** obtain lat lons for domain
       
       
-      grid_fnam_common = 'nest7grid' ! used in get_directory to modify
+c      grid_fnam_common = 'nest7grid' ! used in get_directory to modify
                                 ! extension based on the grid domain
       ext = 'nest7grid'
       
@@ -708,7 +701,8 @@ c     gvap data insertion step
       do k = 1,kk
          do j = 1,jj
             do i = 1,ii
-               if(data(i,j,k).ge.0.0) then
+               if(data(i,j,k).ge.0.0 .and. 
+     1              (gvap_w(i,j)+gps_w(i,j)) .ne. 0.0 ) then
                   data(i,j,k) = 
      1                 gvap_w(i,j)/(gvap_w(i,j)+gps_w(i,j))
      1                 *(data(i,j,k) * gvap_data(i,j))

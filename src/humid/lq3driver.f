@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        program lq3driver
+      program lq3driver
 
 c     routine to automatically execute routines lpw_driver1a & b for the laps
 c     scheduler.
@@ -43,60 +43,50 @@ c     modules be compiled with the highest permissible optimization.
 c     especially the satellite structure inclusion can take up to 1/2 hour
 c     of cpu time when run without optimization.
 
-        implicit none
-
-        include 'lapsparms.cmn'
-c        include 'parmtrs.inc'
-
-
-
-        integer*4
-     1       ii,jj,kk,
-     1       i4time,
-     1       istatus,
-     1       jstatus(3)
-
-        real mdf
-        integer lct
-
-
-        character*9 filename
-        character*200 fname
-        integer len
-
-
-        call get_laps_config('nest7grid',istatus)
-
-	ii = nx_l_cmn
-	jj = ny_l_cmn
-	kk = nk_laps
-        mdf = r_missing_data_cmn
-        lct = laps_cycle_time_cmn
-
-        call get_directory('etc',fname,len)
-        print *,fname(1:len)
-        open(11,file=fname(1:len)//'systime.dat',status='unknown')
-        read (11,*)i4time
-        read (11,22) filename
- 22     format (1x,a9)
-        close (11)
-
+      implicit none
+      
+      include 'lapsparms.cmn'
+      include 'grid_fname.cmn'
+      
+      integer*4
+     1     ii,jj,kk,
+     1     i4time,
+     1     istatus,
+     1     jstatus(3)
+      
+      real mdf
+      integer lct
+      
+      character*9 filename
+      character*200 fname
+      integer len
+      
+      call get_laps_config(grid_fnam_common,istatus)
+c     call get_laps_config('nest7grid',istatus)
+      
+      ii = nx_l_cmn
+      jj = ny_l_cmn
+      kk = nk_laps
+      mdf = r_missing_data_cmn
+      lct = laps_cycle_time_cmn
+      
+      call get_directory('etc',fname,len)
+      print *,fname(1:len)
+      open(11,file=fname(1:len)//'systime.dat',status='unknown')
+      read (11,*)i4time
+      read (11,22) filename
+ 22   format (1x,a9)
+      close (11)
+      
 c     convert filename to i4time
-
-
-
-c        call GETENV('FILETIME',filename)
-
-
-        call i4time_fname_lp (filename,i4time,istatus)
-
-
-        call lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
-
-        write(6,*) 'lq3, lh3, and lh4 (1=success)'
-        write(6,*) jstatus, ' output matrix'
-
-
-        stop
-        end
-
+ 
+      call i4time_fname_lp (filename,i4time,istatus)
+      
+      call lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
+      
+      write(6,*) 'lq3, lh3, and lh4 (1=success)'
+      write(6,*) jstatus, ' output matrix'
+      
+      stop
+      end
+      
