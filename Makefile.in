@@ -42,6 +42,7 @@ EXEDIRS = src/accum \
           src/ingest/rass \
           src/ingest/rass/blp \
           src/ingest/sao \
+          src/ingest/satellite/cloud_drift \
           src/ingest/satellite/goes8/lambert \
           src/ingest/satellite/goes8/lambert/table \
           src/ingest/satellite/sounding \

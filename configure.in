@@ -225,6 +225,7 @@ AC_OUTPUT(src/lib/Makefile
           src/ingest/rass/Makefile
           src/ingest/rass/blp/Makefile
           src/ingest/sao/Makefile
+          src/ingest/satellite/cloud_drift/Makefile
           src/ingest/satellite/goes8/lambert/Makefile
           src/ingest/satellite/goes8/lambert/table/Makefile
           src/ingest/satellite/sounding/Makefile
