@@ -929,24 +929,24 @@ C       EW SLICES
 
                 do jj = j+1,j-1,-1
                     write(6,511,err=512)
-     1                        nint(cvr_max(i-1,jj)*100)
-     1                       ,nint(cvr_max(i  ,jj)*100)
-     1                       ,nint(cvr_max(i+1,jj)*100)
-     1                       ,nint(tb8_k(i-1,jj)),nint(tb8_k(i,jj))
-     1                       ,nint(tb8_k(i+1,jj))
-     1                       ,nint(t_gnd_k(i-1,jj)),nint(t_gnd_k(i,jj))        
-     1                       ,nint(t_gnd_k(i+1,jj))
-     1                       ,nint(tb8_k(i-1,jj)-t_gnd_k(i-1,jj))
-     1                       ,nint(tb8_k(i  ,jj)-t_gnd_k(i  ,jj))
-     1                       ,nint(tb8_k(i+1,jj)-t_gnd_k(i+1,jj))
-     1                       ,nint(topo(i-1,jj)),nint(topo(i,jj))        
-     1                       ,nint(topo(i+1,jj))
-     1                       ,nint(cvr_sao_max(i-1,jj)*100)
-     1                       ,nint(cvr_sao_max(i  ,jj)*100)
-     1                       ,nint(cvr_sao_max(i+1,jj)*100)
-     1                       ,nint(cloud_frac_vis_a(i-1,jj)*100)
-     1                       ,nint(cloud_frac_vis_a(i  ,jj)*100)
-     1                       ,nint(cloud_frac_vis_a(i+1,jj)*100)
+     1                    nint(cvr_max(i-1,jj)*100)
+     1                   ,nint(cvr_max(i  ,jj)*100)
+     1                   ,nint(cvr_max(i+1,jj)*100)
+     1                   ,nint2(tb8_k(i-1,jj),1),nint2(tb8_k(i,jj),1)      
+     1                   ,nint2(tb8_k(i+1,jj),1)
+     1                   ,nint(t_gnd_k(i-1,jj)),nint(t_gnd_k(i,jj))        
+     1                   ,nint(t_gnd_k(i+1,jj))
+     1                   ,nint2(tb8_k(i-1,jj)-t_gnd_k(i-1,jj),1)
+     1                   ,nint2(tb8_k(i  ,jj)-t_gnd_k(i  ,jj),1)
+     1                   ,nint2(tb8_k(i+1,jj)-t_gnd_k(i+1,jj),1)
+     1                   ,nint(topo(i-1,jj)),nint(topo(i,jj))        
+     1                   ,nint(topo(i+1,jj))
+     1                   ,nint(cvr_sao_max(i-1,jj)*100)
+     1                   ,nint(cvr_sao_max(i  ,jj)*100)
+     1                   ,nint(cvr_sao_max(i+1,jj)*100)
+     1                   ,nint2(cloud_frac_vis_a(i-1,jj),100)
+     1                   ,nint2(cloud_frac_vis_a(i  ,jj),100)
+     1                   ,nint2(cloud_frac_vis_a(i+1,jj),100)
  511                format(1x,3i3,4x,3i4,4x,3i4,4x,3i4,4x,3i5,4x,3i3
      1                    ,4x,3i3)
  512            enddo ! jj
@@ -1731,3 +1731,17 @@ C       EW SLICES
         return
         end
 
+        function nint2(x,ifactor)
+
+!       This routine helps scale the arguments for ASCII debug printing
+
+        call get_r_missing_data(r_missing_data,istatus)
+
+        if(x .ne. r_missing_data)then
+            nint2 = nint(x*float(ifactor))
+        else
+            nint2 = 999999
+        endif
+
+        return
+        end
