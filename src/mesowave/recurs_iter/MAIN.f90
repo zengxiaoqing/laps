@@ -15,7 +15,7 @@ PROGRAM MAIN
   IMPLICIT NONE
 
   ! Local variable:
-  INTEGER :: id
+  INTEGER :: id,ierr
   REAL    :: ds(3)
 
   CALL LapsInfo
@@ -37,6 +37,9 @@ PROGRAM MAIN
         PRINT*,'Variable ',id,' has been analyzed'
      ENDIF
   ENDDO
+
+  ! Release memory of ldf:
+  DEALLOCATE(bkgd,ldf,STAT=ierr)
 
   ! CALL Writeout
   ! CALL Writeout

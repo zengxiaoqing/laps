@@ -289,5 +289,6 @@ SUBROUTINE LSO_Data
      PRINT*,'LSO_Data_QC: error to deallocate space for naccn'
      STOP
   ENDIF
+  DEALLOCATE(idsts,STAT=mem_error)
 
 END SUBROUTINE LSO_Data
