@@ -11,7 +11,7 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 
 
-
+NCARGFC=ncargf77
 
 
 
@@ -73,15 +73,10 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(NCARGFC) $(MAIN) $(DBFFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
-#$(EXE.F): $(MAIN) $(ARCHIVE)
-#	rm -f $*.f
-#	$(CPP) $(CPPFLAGS) $*.F 
-#	mv $*.i $*.f
-#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
-#	rm -f *.o $*.f
+
 
 debug: $(SRC)
 	$(RM) $(EXE) ;
