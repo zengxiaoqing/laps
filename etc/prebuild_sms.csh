@@ -18,8 +18,6 @@ foreach filename (*.f)
 #   Restore original files so we can optionally run this script multiple times 
     if (-e $file.f.orig) then
         cp $file.f.orig $file.f
-    else
-        cp $file.f $file.f.orig
     endif
 
     setenv nsms `grep -i csms $file.f | wc -l`
@@ -27,6 +25,7 @@ foreach filename (*.f)
 
 #   Translate with PPP only those files with SMS directives within
     if ($nsms != 0) then
+        cp $file.f $file.f.orig
         $SMS/bin/ppp --debug --comment --V=1 --header directives.inc
         cat $file.f | gcc -E -P -traditional - > $file\_cpp.f
         $SMS/bin/ppp --debug --includepath=$SMS/include --includepath=$LAPS_SRC_ROOT/src/include --Fcommon=directives.inc --comment --V=1 $file\_cpp.f
