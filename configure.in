@@ -139,7 +139,7 @@ then
   if test "$arch" = "solaris"
   then
 dnl module flags for solaris 
-	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib"
+	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib -M\$(SRCROOT)/src/lib/modules"
         FIXED="-fixed"
         FREE="-free"
 dnl

@@ -1506,7 +1506,7 @@ then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "solaris"
   then
-	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib"
+	FFLAGS="$FFLAGS -M\$(SRCROOT)/src/lib -M\$(SRCROOT)/src/lib/modules"
         FIXED="-fixed"
         FREE="-free"
 	CPP="/usr/ucb/cc -P"
