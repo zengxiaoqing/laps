@@ -1059,8 +1059,8 @@ c rotate them to the LAPS (output) domain as necessary.
            itstatus_rot=ishow_timer()
 
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
-     &,bgmodel,cmodel,fullname,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc
-     &,istatus)
+     &,bgmodel,cmodel,fullname(1:i),gproj,lon0,lat0,lat1,uw,vw
+     &,uw_sfc,vw_sfc,istatus)
            if(istatus.ne.1)then
               print*,'Error in rotate_background_uv '
               return
