@@ -257,8 +257,11 @@ c
                if(gridn(i,j,k) .gt. 1.e35) then
                   print *,'SEVERE Error in time_interp',
      +                 i,j,k,grid1(i,j,k),grid2(i,j,k),fcst1,fcst2
-                  call erase_file(time1,fcst1,dir,ext)
-                  call erase_file(time2,fcst2,dir,ext)
+c
+c haven't figured out a good way to do this yet.
+c
+c                  call erase_file(time1,fcst1,dir,ext)
+c                  call erase_file(time2,fcst2,dir,ext)
 
                   stop
                endif

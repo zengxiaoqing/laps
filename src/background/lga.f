@@ -395,26 +395,34 @@ c
          af = bg_names(nf)(j+10:j+13)
          call i4time_fname_lp(fname,bgtime,istatus)
 
-         do i=1,lga_files
-            if (fname .eq. lga_names(i)(1:9) .and.
-     .          af(3:4) .eq. lga_names(i)(10:11)) then
+c
+c Removal of this loop causes already existing lga files to be overwritten
+c possibly with the same data.  However the error frequency on SBN may warrent
+c this extra work.  
+c
+         if(.false.) then
+            do i=1,lga_files
+               if (fname .eq. lga_names(i)(1:9) .and.
+     .              af(3:4) .eq. lga_names(i)(10:11)) then
+                  
+                  print *,i,lga_names(i),':',fname,':',af
+                  call get_lga_source(nx_laps,ny_laps,nz_laps
+     +                 ,fname,af,comment(1))
+                  call s_len(cmodel,ic)
 
-               print *,i,lga_names(i),':',fname,':',af
-               call get_lga_source(nx_laps,ny_laps,nz_laps
-     +              ,fname,af,comment(1))
-               call s_len(cmodel,ic)
-               if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
-                  print *,'LGA file exists, not making one. ' 
-     +                   ,lga_names(i)
-                  lga_status=1
-                  goto 80
-               else
-                  print *,'Overwritting LGA file ',lga_names(i)
-     +            ,'from model ',comment(1)(1:i),' with a new one'
-     +            ,' from model ',cmodel(1:ic)
+                  if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
+                     print *,'LGA file exists, not making one. ' 
+     +                    ,lga_names(i)
+                     lga_status=1
+                     goto 80
+                  else
+                     print *,'Overwritting LGA file ',lga_names(i)
+     +                    ,'from model ',comment(1)(1:i),' with a new '
+     +                    ,'one from model ',cmodel(1:ic)
+                  endif
                endif
-            endif
-         enddo               
+            enddo          
+         endif     
 
 
          call s_len(bgpath,i)
