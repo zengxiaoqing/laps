@@ -158,7 +158,8 @@ print "METARS:\n";
 @greplines = grep /   METAR  /, @lines;
 foreach (@greplines) {
   ($name,@junk) = split;
-  print "$name ";}
+  if(@junk > 3){print "$name ";}
+}
 print "\n";
 print "\n";
 
