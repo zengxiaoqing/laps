@@ -1,5 +1,5 @@
 
-        subroutine avapsread_sub(lun)
+        subroutine avapsread_sub(filename, istatus)
 
         integer maxlvl
         parameter (maxlvl=10000)
@@ -34,13 +34,26 @@
         character*172 header_line(15)
 
         character*9 a9time_a(maxlvl), a9time_ob
+        character*(*)  filename
+        lun = 1
+        open ( lun, file=filename, status='old', err=1000 )
 
         call get_r_missing_data(r_missing_data,istatus)
+        if ( istatus .ne. 1 ) then
+           write (6,*) ' Error getting r_missing_data'
+           return
+        endif
         
+!       ---- read the top avaps header ----        
+
         do i=1,15
           read (lun,99) header_line(i)
+          print*, header_line(i)
 99        format (a172)
         enddo
+
+!       ---- read the whole data file  ---- 
+
         j = 1
 2       read (lun,100,end=105)elapsed_time(j),P(j),T(j),Td(j),RH(j),
      1                        u(j),v(j),WS(j),WD(j),dZ(j),lon(j),
@@ -73,9 +86,9 @@ c
         write(6,*)'iy,mon,id,ih,min,is',iy,mon,id,ih,min,is
 
         i4time_1960 = I4TIME_INT_LP (iy,mon,id,ih,min,is,istatus)
-        i4time_1970 = i4time_1960 - 315619200 ! Convert to LAPS i4time
+!       i4time_1970 = i4time_1960 - 315619200 ! Convert from LAPS i4time
 
-        i4time_launch = i4time_1970
+        i4time_launch = i4time_1960
         write(6,*)'i4time_launch = ',i4time_launch
 
         nlevels = j
@@ -84,7 +97,7 @@ c
 
         lvl_out = 0
 
-        do lvl = 1,nlevels
+        do lvl = nlevels,1,-1
             if(p(lvl) .ne. 9999.)then
                 lvl_out = lvl_out + 1
                 i4time = i4time_launch + nint(elapsed_time(lvl))
@@ -137,5 +150,5 @@ c
      1                    ,ws_out                          ! I
      1                    ,istatus)                        ! O
 
-        return
+1000    return
         end
