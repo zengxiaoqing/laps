@@ -118,9 +118,9 @@ cdis
      1                    ,jmaxerr,rmeanu,rmeanv,rmsamu,rmsamv
 !           write(15,102)k,nobs,rmsu,rmsv,rms,sqrt(rmaxerrsq),imaxerr
 !    1                    ,jmaxerr,rmeanu,rmeanv,rmsamu,rmsamv
-102         format(' RMS: LP/MP (k,n,rmsu,rmsv,rms,mxerr,ubr,vbr,rmamu,r
-     1mamv) =',
-     1         i3,i5,3f5.1,f5.1,2i4,4f5.1)
+102         format(
+     1      ' RMS: LP/MP (k,n,rmsu,rmsv,rms,mxerr,ubr,vbr,rmamu,rmamv)='       
+     1                                      ,i3,i7,3f5.1,f5.1,2i4,4f5.1)
 
             residualu_tot = residualu_tot + residualu
             residualv_tot = residualv_tot + residualv

@@ -117,6 +117,7 @@ SRC	= machine_dependent.F \
           readlaps.f \
           rd_laps_static.f \
           read-laps-static.f \
+          read_pirep_ob.f \
           read_surface_obs.f \
           read_surface_old.f \
           readlapsdata.f \
