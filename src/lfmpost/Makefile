@@ -67,7 +67,8 @@ COBJS=$(CSRC:.c=.o)
 FMOD = module_constants.o \
        module_postproc_lfm.o \
        module_setup.o \
-       module_vis5d.o
+       module_vis5d.o \
+       module_fire.o
 
 all:			$(EXE)
 
@@ -87,7 +88,7 @@ lfmpost.o:		module_setup.o \
        			module_vis5d.o
 
 
-module_postproc_lfm.o:	module_constants.o module_setup.o
+module_postproc_lfm.o:	module_constants.o module_setup.o module_fire.o
 
 met_functions.o:	module_constants.o
  

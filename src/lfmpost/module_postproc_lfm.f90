@@ -44,6 +44,7 @@ MODULE postproc_lfm
   USE setup
   USE constants
   USE vinterp_utils
+  USE fire
 
   IMPLICIT NONE
 
@@ -939,7 +940,7 @@ CONTAINS
      ENDDO
      print *, 'Computing dewpoint on pressure...'
      tdprs = tprs/((-rvolv * ALOG(rhprs*.01)*tprs) + 1.0) 
-
+     
      ! Compute specific humidity and Tv pressure
      print *, 'Computing specific humidity on pressure...'
      DO k=1,kprs
@@ -1135,10 +1136,15 @@ CONTAINS
     DO k = 1,kprs
       omprs(:,:,k)=-(prslvl(k)*wprs(:,:,k)*grav)/(r*tvprs(:,:,k))
     ENDDO
+   
     ! Compute the storm relative helicity
 
     CALL helicity(usig, vsig, zsig, terdot, nx, ny, ksigh, srhel)
+    PRINT *, 'Min/Max Helicity: ', MINVAL(srhel), MAXVAL(srhel)
 
+    ! Compute ventilation index
+    CALL ventilation(usig,vsig,zsig,pblhgt,terdot,nx,ny,ksigh,vnt_index)
+    PRINT *, 'Min/Max Ventilation : ', MINVAL(vnt_index), MAXVAL(vnt_index)    
     DEALLOCATE (usig)
     DEALLOCATE (vsig)
 
@@ -1226,7 +1232,7 @@ CONTAINS
         PRINT '(A)', 'Problem getting CLW!  Setting to 0.'
         cldliqmr_sig = 0.0
       ENDIF
-      WHERE(cldliqmr_sig .LT. 0.000001) cldliqmr_sig = 0.0
+      WHERE(cldliqmr_sig .LT. 0.00001) cldliqmr_sig = 0.0
       clwmrsfc(:,:) = cldliqmr_sig(:,:,1)
 
       IF (mtype .EQ. 'mm5') THEN 
@@ -1240,7 +1246,7 @@ CONTAINS
         PRINT '(A)', 'Problem getting RNW!  Setting to 0.'
         rainmr_sig = 0.0
       ENDIF
-      WHERE(rainmr_sig .LT. 0.000001) rainmr_sig = 0.0
+      WHERE(rainmr_sig .LT. 0.00001) rainmr_sig = 0.0
       rainmrsfc(:,:) = rainmr_sig(:,:,1)
 
     ELSE
@@ -1263,7 +1269,7 @@ CONTAINS
         PRINT '(A)', 'Problem getting ICE!  Setting to 0.'
         cldicemr_sig = 0.0
       ENDIF
-      WHERE(cldicemr_sig .LT. 0.000001) cldicemr_sig = 0.0
+      WHERE(cldicemr_sig .LT. 0.00001) cldicemr_sig = 0.0
       icemrsfc(:,:) = cldicemr_sig(:,:,1)
 
       IF (mtype .EQ. 'mm5') THEN  
@@ -1278,7 +1284,7 @@ CONTAINS
         PRINT '(A)', 'Problem getting SNOW!  Setting to 0.'
         snowmr_sig = 0.0
       ENDIF
-      WHERE(snowmr_sig .LT. 0.000001) snowmr_sig = 0.0
+      WHERE(snowmr_sig .LT. 0.00001) snowmr_sig = 0.0
       snowmrsfc(:,:) = snowmr_sig(:,:,1)
     ELSE
       cldicemr_sig = 0.0
@@ -1300,7 +1306,7 @@ CONTAINS
         PRINT '(A)', 'Problem getting GRAUPEL!  Setting to 0.'
         graupelmr_sig = 0.0
       ENDIF
-      WHERE(graupelmr_sig .LT. 0.000001) graupelmr_sig = 0.0
+      WHERE(graupelmr_sig .LT. 0.00001) graupelmr_sig = 0.0
       graupmrsfc(:,:) = graupelmr_sig(:,:,1)
     ELSE
       graupelmr_sig = 0.0
@@ -1364,11 +1370,11 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
     DEALLOCATE (below_ground) 
     
     ! Eliminate very small values due to interpolation
-    WHERE(cldliqmr_prs .LT. 0.000001) cldliqmr_prs = 0.0
-    WHERE(cldicemr_prs .LT. 0.000001) cldicemr_prs = 0.0
-    WHERE(rainmr_prs .LT. 0.000001) rainmr_prs = 0.0
-    WHERE(snowmr_prs .LT. 0.000001) snowmr_prs = 0.0 
-    WHERE(graupelmr_prs .LT. 0.000001) graupelmr_prs = 0.0
+    WHERE(cldliqmr_prs .LT. 0.00001) cldliqmr_prs = 0.0
+    WHERE(cldicemr_prs .LT. 0.00001) cldicemr_prs = 0.0
+    WHERE(rainmr_prs .LT. 0.00001) rainmr_prs = 0.0
+    WHERE(snowmr_prs .LT. 0.00001) snowmr_prs = 0.0 
+    WHERE(graupelmr_prs .LT. 0.00001) graupelmr_prs = 0.0
 
     ! Diagnostic Print of top 4 layers
 
@@ -1671,13 +1677,14 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
    
     IMPLICIT NONE
     REAL, EXTERNAL       :: heatindex
+    REAL, ALLOCATABLE    :: tdsig(:,:,:)
     ! Compute surface visibility from relative humidity and temp/dewpoint
 
     visibility = 6000.0 * (tsfc - tdsfc) / ( rhsfc**1.75)
  
     ! Convert to meters from km
     visibility = visibility * 1000.
-
+    WHERE(visibility .GT. 99990.) visibility = 99990.
     DO j = 1 , ny
       DO i = 1 , nx
         ! Compute heat index if temp is above 80F (300K)
@@ -1686,9 +1693,29 @@ print *, 'min/max zsig = ', minval(zsig),maxval(zsig)
         ELSE
           heatind(i,j) = tsfc(i,j)
         ENDIF
-        ! Compute fire index
+    
       ENDDO
     ENDDO
+   
+    ! Compute fire indices
+
+    ! We need dewpoint on sigma for the Haines indices
+    ALLOCATE (tdsig(nx,ny,ksigh))
+    tdsig = tsig/((-rvolv*ALOG(rhsig*0.01)*tsig)+1.0)
+
+    ! Mid-level Haines Index
+    CALL haines_layer(psig*0.01,tsig,tdsig,ham_index,nx,ny,ksigh, &
+                      850., 700.)
+
+    ! High-level Haines Index
+    CALL haines_layer(psig*0.01,tsig,tdsig,hah_index,nx,ny,ksigh, &
+                      700., 500.)
+
+    DEALLOCATE(tdsig)
+
+    ! Fosberg FWI
+
+    CALL fosberg_fwi(tsfc,rhsfc,psfc*0.01,usfc,vsfc,nx,ny,fwi_index)
     PRINT *, '      Min/Max Surface Visibility (m): ',MINVAL(visibility), &
                                                       MAXVAL(visibility)
     PRINT *, '      Min/Max Surface Heat Index (K): ',MINVAL(heatind), &
