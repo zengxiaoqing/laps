@@ -23,31 +23,15 @@ C
      +     visibilityICR, visibilityQCA, visibilityQCR, windDirICA, 
      +     windDirICR, windDirQCA, windDirQCR, windSpeedICA, 
      +     windSpeedICR, windSpeedQCA, windSpeedQCR, altimeter, 
-     +     altimeterQCD, capPi, dewpoint, dewpointQCD, 
-     +     drySignalDelay, elevation, formalError, fuelMoisture, 
+     +     capPi, dewpoint, drySignalDelay, elevation, 
      +     fuelTemperature, latitude, longitude, 
-     +     meanWeightedTemperature, precipAccum, precipAccumQCD, 
-     +     precipRate, precipRateQCD, pressChange3Hour, 
-     +     pressChange3HourQCD, rawPrecip, relHumidity, 
-     +     relHumidityQCD, roadLiquidChemFactor1, 
-     +     roadLiquidChemFactor2, roadLiquidChemFactor3, 
-     +     roadLiquidChemFactor4, roadLiquidChemPercent1, 
-     +     roadLiquidChemPercent2, roadLiquidChemPercent3, 
-     +     roadLiquidChemPercent4, roadLiquidDepth1, 
-     +     roadLiquidDepth2, roadLiquidDepth3, roadLiquidDepth4, 
-     +     roadLiquidFreezeTemp1, roadLiquidFreezeTemp2, 
-     +     roadLiquidFreezeTemp3, roadLiquidFreezeTemp4, 
-     +     roadLiquidIcePercent1, roadLiquidIcePercent2, 
-     +     roadLiquidIcePercent3, roadLiquidIcePercent4, 
-     +     roadSubsurfaceTemp1, roadSubsurfaceTemp2, 
-     +     roadSubsurfaceTemp3, roadSubsurfaceTemp4, 
-     +     roadTemperature1, roadTemperature2, roadTemperature3, 
-     +     roadTemperature4, seaLevelPressure, seaLevelPressureQCD, 
-     +     soilMoisture, soilTemperature, solarRadiation, 
-     +     stationPressure, stationPressureQCD, temperature, 
-     +     temperatureQCD, totalColumnPWV, totalSignalDelay, 
-     +     visibility, visibilityQCD, wetSignalDelay, windDir, 
-     +     windDirMax, windDirQCD, windGust, windSpeed, windSpeedQCD, 
+     +     meanWeightedTemperature, precipAccum, precipRate, 
+     +     pressChange3Hour, rawPrecip, relHumidity, relHumidityQCD, 
+     +     seaLevelPressure, seaLevelPressureQCD, soilMoisture, 
+     +     soilTemperature, solarRadiation, stationPressure, 
+     +     stationPressureQCD, temperature, temperatureQCD, 
+     +     totalColumnPWV, totalSignalDelay, visibility, 
+     +     visibilityQCD, windDir, windDirMax, windGust, windSpeed, 
      +     fuelMoistChangeTime, fuelTempChangeTime, observationTime, 
      +     receivedTime, reportTime, rhChangeTime, 
      +     solarRadChangeTime, stationPressChangeTime, 
@@ -96,38 +80,13 @@ C
      +     windDirQCA(recNum), windDirQCR(recNum),
      +     windSpeedICA(recNum), windSpeedICR(recNum),
      +     windSpeedQCA(recNum), windSpeedQCR(recNum)
-      real altimeter(recNum), altimeterQCD( QCcheckNum, recNum),
-     +     capPi(recNum), dewpoint(recNum), dewpointQCD( QCcheckNum,
-     +     recNum), drySignalDelay(recNum), elevation(recNum),
-     +     formalError(recNum), fuelMoisture(recNum),
+      real altimeter(recNum), capPi(recNum), dewpoint(recNum),
+     +     drySignalDelay(recNum), elevation(recNum),
      +     fuelTemperature(recNum), latitude(recNum),
      +     longitude(recNum), meanWeightedTemperature(recNum),
-     +     precipAccum(recNum), precipAccumQCD( QCcheckNum, recNum),
-     +     precipRate(recNum), precipRateQCD( QCcheckNum, recNum),
-     +     pressChange3Hour(recNum), pressChange3HourQCD( QCcheckNum,
-     +     recNum), rawPrecip(recNum), relHumidity(recNum),
-     +     relHumidityQCD( QCcheckNum, recNum),
-     +     roadLiquidChemFactor1(recNum),
-     +     roadLiquidChemFactor2(recNum),
-     +     roadLiquidChemFactor3(recNum),
-     +     roadLiquidChemFactor4(recNum),
-     +     roadLiquidChemPercent1(recNum),
-     +     roadLiquidChemPercent2(recNum),
-     +     roadLiquidChemPercent3(recNum),
-     +     roadLiquidChemPercent4(recNum), roadLiquidDepth1(recNum),
-     +     roadLiquidDepth2(recNum), roadLiquidDepth3(recNum),
-     +     roadLiquidDepth4(recNum), roadLiquidFreezeTemp1(recNum),
-     +     roadLiquidFreezeTemp2(recNum),
-     +     roadLiquidFreezeTemp3(recNum),
-     +     roadLiquidFreezeTemp4(recNum),
-     +     roadLiquidIcePercent1(recNum),
-     +     roadLiquidIcePercent2(recNum),
-     +     roadLiquidIcePercent3(recNum),
-     +     roadLiquidIcePercent4(recNum),
-     +     roadSubsurfaceTemp1(recNum), roadSubsurfaceTemp2(recNum),
-     +     roadSubsurfaceTemp3(recNum), roadSubsurfaceTemp4(recNum),
-     +     roadTemperature1(recNum), roadTemperature2(recNum),
-     +     roadTemperature3(recNum), roadTemperature4(recNum),
+     +     precipAccum(recNum), precipRate(recNum),
+     +     pressChange3Hour(recNum), rawPrecip(recNum),
+     +     relHumidity(recNum), relHumidityQCD( QCcheckNum, recNum),
      +     seaLevelPressure(recNum), seaLevelPressureQCD( QCcheckNum,
      +     recNum), soilMoisture(recNum), soilTemperature(recNum),
      +     solarRadiation(recNum), stationPressure(recNum),
@@ -135,10 +94,8 @@ C
      +     temperature(recNum), temperatureQCD( QCcheckNum, recNum),
      +     totalColumnPWV(recNum), totalSignalDelay(recNum),
      +     visibility(recNum), visibilityQCD( QCcheckNum, recNum),
-     +     wetSignalDelay(recNum), windDir(recNum),
-     +     windDirMax(recNum), windDirQCD( QCcheckNum, recNum),
-     +     windGust(recNum), windSpeed(recNum), windSpeedQCD(
-     +     QCcheckNum, recNum)
+     +     windDir(recNum), windDirMax(recNum), windGust(recNum),
+     +     windSpeed(recNum)
       double precision fuelMoistChangeTime(recNum),
      +     fuelTempChangeTime(recNum), observationTime(recNum),
      +     receivedTime(recNum), reportTime(recNum),
@@ -146,32 +103,32 @@ C
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     timeSinceLastPcp(recNum), windDirChangeTime(recNum),
      +     windGustChangeTime(recNum), windSpeedChangeTime(recNum)
-      character*51 stationName(recNum)
-      character visibilityDD(recNum)
-      character*24 staticIds(maxStaticIds)
-      character*11 namePST(maxPSTEntries)
-      character*6 handbook5Id(recNum)
-      character*11 dataProvider(recNum)
-      character*6 stationId(recNum)
-      character dewpointDD(recNum)
-      character*4 homeWFO(recNum)
-      character*60 QCT(QCcheckNum)
       character*12 providerId(recNum)
-      character*512 rawMessage(recNum)
-      character relHumidityDD(recNum)
-      character seaLevelPressureDD(recNum)
-      character temperatureDD(recNum)
-      character precipAccumDD(recNum)
-      character typePST(maxPSTEntries)
-      character altimeterDD(recNum)
-      character stationPressureDD(recNum)
-      character precipRateDD(recNum)
-      character*11 stationType(recNum)
       character pressChange3HourDD(recNum)
-      character*72 ICT(ICcheckNum)
-      character windSpeedDD(recNum)
-      character*51 test1(recNum)
+      character visibilityDD(recNum)
+      character precipRateDD(recNum)
+      character*24 staticIds(maxStaticIds)
+      character*4 homeWFO(recNum)
+      character seaLevelPressureDD(recNum)
       character windDirDD(recNum)
+      character*72 ICT(ICcheckNum)
+      character*60 QCT(QCcheckNum)
+      character precipAccumDD(recNum)
+      character*6 handbook5Id(recNum)
+      character typePST(maxPSTEntries)
+      character*512 rawMessage(recNum)
+      character*11 dataProvider(recNum)
+      character relHumidityDD(recNum)
+      character windSpeedDD(recNum)
+      character dewpointDD(recNum)
+      character stationPressureDD(recNum)
+      character*6 stationId(recNum)
+      character*51 test1(recNum)
+      character altimeterDD(recNum)
+      character temperatureDD(recNum)
+      character*51 stationName(recNum)
+      character*11 stationType(recNum)
+      character*11 namePST(maxPSTEntries)
 
 
 C   Variables of type REAL
@@ -188,20 +145,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var altimeter'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      altimeterQCD "altimeter setting QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'altimeterQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,altimeterQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCD'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -233,20 +176,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      dewpointQCD  "dew point QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'dewpointQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,dewpointQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      drySignalDelay"Dry component GPS signal delay"
 C
       nf_status=NF_INQ_VARID(nf_fid,'drySignalDelay',nf_vid)
@@ -272,34 +201,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevation'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      formalError  "Formal Error"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'formalError',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var formalError'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,formalError)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var formalError'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      fuelMoisture "Fuel moisture"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'fuelMoisture',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelMoisture'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,fuelMoisture)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelMoisture'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -373,20 +274,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      precipAccumQCD"precip amount QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipAccumQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,precipAccumQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      precipRate   "precipitation rate"
 C
       nf_status=NF_INQ_VARID(nf_fid,'precipRate',nf_vid)
@@ -401,20 +288,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      precipRateQCD"precip rate QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipRateQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,precipRateQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipRateQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      pressChange3Hour"3 hour pressure change"
 C
       nf_status=NF_INQ_VARID(nf_fid,'pressChange3Hour',nf_vid)
@@ -426,20 +299,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var pressChange3Hour'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      pressChange3HourQCD"3h pressure change QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,pressChange3HourQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCD'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -482,398 +341,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var relHumidityQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemFactor1"Road liquid chem factor  - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemFactor1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemFactor1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemFactor2"Road liquid chem factor  - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemFactor2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemFactor2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemFactor3"Road liquid chem factor  - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemFactor3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemFactor3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemFactor4"Road liquid chem factor  - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemFactor4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemFactor4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemFactor4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemPercent1"Road liquid chem percent  - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemPercent1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemPercent1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemPercent2"Road liquid chem percent  - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemPercent2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemPercent2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemPercent3"Road liquid chem percent  - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemPercent3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemPercent3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidChemPercent4"Road liquid chem percent  - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidChemPercent4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidChemPercent4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidChemPercent4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidDepth1"Road liquid depth  - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidDepth1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidDepth1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidDepth2"Road liquid depth  - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidDepth2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidDepth2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidDepth3"Road liquid depth  - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidDepth3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidDepth3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidDepth4"Road liquid depth  - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidDepth4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidDepth4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidDepth4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidFreezeTemp1"Road liquid freezing temp - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidFreezeTemp1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidFreezeTemp1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidFreezeTemp2"Road liquid freezing temp - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidFreezeTemp2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidFreezeTemp2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidFreezeTemp3"Road liquid freezing temp - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidFreezeTemp3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidFreezeTemp3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidFreezeTemp4"Road liquid freezing temp - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidFreezeTemp4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidFreezeTemp4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidFreezeTemp4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidIcePercent1"Road liquid ice percent  - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidIcePercent1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidIcePercent1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidIcePercent2"Road liquid ice percent  - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidIcePercent2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidIcePercent2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidIcePercent3"Road liquid ice percent  - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidIcePercent3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidIcePercent3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadLiquidIcePercent4"Road liquid ice percent  - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadLiquidIcePercent4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadLiquidIcePercent4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadLiquidIcePercent4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadSubsurfaceTemp1"Road subsurface temp - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadSubsurfaceTemp1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadSubsurfaceTemp1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadSubsurfaceTemp2"Road subsurface temp - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadSubsurfaceTemp2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadSubsurfaceTemp2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadSubsurfaceTemp3"Road subsurface temp - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadSubsurfaceTemp3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadSubsurfaceTemp3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadSubsurfaceTemp4"Road subsurface temp - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadSubsurfaceTemp4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadSubsurfaceTemp4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadSubsurfaceTemp4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadTemperature1"Road temperature - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadTemperature1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature1'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadTemperature1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadTemperature2"Road temperature - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadTemperature2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature2'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadTemperature2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadTemperature3"Road temperature - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadTemperature3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature3'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadTemperature3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadTemperature4"Road temperature - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadTemperature4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature4'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,roadTemperature4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadTemperature4'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -1059,20 +526,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      wetSignalDelay"Wet component GPS signal delay"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'wetSignalDelay',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wetSignalDelay'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,wetSignalDelay)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var wetSignalDelay'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      windDir      "wind direction"
 C
       nf_status=NF_INQ_VARID(nf_fid,'windDir',nf_vid)
@@ -1101,20 +554,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      windDirQCD   "wind direction QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windDirQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      windGust     "wind gust"
 C
       nf_status=NF_INQ_VARID(nf_fid,'windGust',nf_vid)
@@ -1140,20 +579,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windSpeed'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedQCD "wind speed QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windSpeedQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCD'
       endif
 
 C   Variables of type INT
