@@ -480,6 +480,7 @@ static int debug = 0;
 
 
 extern void printchar ();
+#define printchar putchar
 
 /* Print the fastmap in human-readable form.  */
 
