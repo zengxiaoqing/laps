@@ -1,4 +1,3 @@
-#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -449,8 +448,14 @@ long *kdim;
         *f_lvl_coord = '\0';
          
         hld_unit = malloc(*units_len + 1);
+        pc = hld_unit + (*units_len);
+        *pc = '\0';
         hld_comm = malloc(*comm_len + 1);
+        pc = hld_comm + (*comm_len);
+        *pc = '\0';
         hld_lvl = malloc(*lvl_coord_len + 1);
+        pc = hld_lvl + (*lvl_coord_len);
+        *pc = '\0';
         uptr = units;
         cptr = comment;
         lptr = lvl_coord;
@@ -654,12 +659,18 @@ long *status;
           *vptr = '\0';
           vptr++;
           fvptr += (*var_len);
-          *lptr = '\0';
-          lptr += (*lvl_coord_len) + 1;
-          *uptr = '\0';
-          uptr += (*units_len) + 1;
-          *cptr = '\0';
-          cptr += (*comm_len) + 1;
+          for ( j = 0; j < (*lvl_coord_len + 1); j++) {
+            *lptr = '\0';
+            lptr++;
+          }
+          for ( j = 0; j < (*units_len + 1); j++) {
+            *uptr = '\0';
+            uptr++;
+          }
+          for ( j = 0; j < (*comm_len + 1); j++) {
+            *cptr = '\0';
+            cptr++;
+          }
         }
         nstrncpy(ext,f_ext,*ext_len);
         upcase_c(ext, ext);
@@ -1723,21 +1734,23 @@ long *status;
         strcat(cdlfile,".cdl");
         cdl_len = strlen(cdlfile);
 
+/* check to see if cdl file is there */
+        if( access(cdlfile, F_OK) != 0 ) {
+          printf("The cdl file %s does not exist\n",cdlfile);
+          *status = -2; /* error in file creation */
+          return;
+        }
+       
         /* SYSCMD contains "/usr/local/netcdf/bin/ncgen -o %s %s\0" which
            is 33 char, cdlfile, and filename  + 10 extra  */
         syscmd = malloc((strlen(SYSCMD)+cdl_len+*fn_length+10) * sizeof(char));
         sprintf(syscmd,SYSCMD, filename, cdlfile);
         free(cdlfile);
         
-/*  For simplicity of error msgs, since we are not allowing append of files,
-    the following logic is commented out  LW 9-25-97 
-    see if file is already there by trying to open 
-        printf("Checking to see if file %s exists:\n",filename);
-        cdfid = ncopen(filename,NC_WRITE);
-        if (cdfid == -1) {   file not there, create one  
-          printf("File %s does not exist....creating new one.\n",filename);
-*/
-/*  create file */
+/*    see if file is already there  */
+        if( access(filename, F_OK) != 0 ) { /* file does not exist */
+
+/*  create file, then open it */
           system(syscmd);
           cdfid = ncopen(filename,NC_WRITE);
           if (cdfid == -1) {
@@ -1746,8 +1759,17 @@ long *status;
             free(ext);
             return;
           }
-/*      }
-*/
+        }
+        else { /* file is there....open it */
+          cdfid = ncopen(filename,NC_WRITE);
+          if (cdfid == -1) {    /* error opening file */ 
+            printf("File %s exists, but cannot be opened.\n",filename);
+	    *status = -2; /* error in file creation */ 
+            free_file_var(syscmd, filename);
+            free(ext);
+            return;
+          }
+        }
 
 /* set i_record to value returned by ncdiminq */
 
