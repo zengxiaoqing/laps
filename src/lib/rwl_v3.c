@@ -658,7 +658,7 @@ fint4 *status;
         int i,j, t_level, i_record, unconv_var;
         int val_id,dim_id, t_record, int_1, int_2, found,t_var_id;
         long num_record;
-        fint4 imax, jmax, kmax; 
+        fint4 imax, jmax, kmax, ii,jj,k; 
         size_t mindex[1], dim_len;
         float *dptr;
         double reftime, valtime, d_valtime, timeoff, diff; 
@@ -878,6 +878,19 @@ fint4 *status;
           istatus = retrieve_grid_v3(cdfid, t_level, t_record, 
                                      t_var, dptr, cptr, 
                                      name_len, lptr, uptr); 
+
+/*        if(DEBUG){
+	    k=0;
+	    for(ii=0;ii<(*iimax);ii++)
+	      for(jj=0;jj<(*jjmax);jj++){
+		k++;
+	        if(dptr[k]>1.e35){
+	          printf("found missing at i=%d j=%d %d %g\n",ii,jj,k,t_level,dptr[k]);
+	        } 
+	      }
+	  }
+*/
+	  
 
           if (istatus == -1)  {
             unconv_var += 1;
@@ -2303,6 +2316,8 @@ fint4 *status;
         }
 
         istatus = nc_close(cdfid);
+        if(DEBUG==1) printf("normal close in cdf_write %d\n",istatus);
+
         free(ext);
         free_write_var(var, comment, asctime, comm_var, inv_var);
 

@@ -1032,7 +1032,7 @@ fint4 *status;
           }
           else  {
 
-            if(DEBUG==1) printf("b write_cdf_static: >%s<>%s<\n",p_unit,units[i * c_unit_len]);
+	    /*            if(DEBUG==1) printf("b write_cdf_static: >%s<>%s<\n",p_unit,units[i * c_unit_len]); */
 
             istat = cdf_retr_grid_stat(cdfid,varid,prefix,p_data,
                                        p_com,c_com_len,p_unit,

@@ -941,7 +941,6 @@ c
       open(1,file=nest7grid,status='old',err=900)
       read(1,satellite_lvd_nl,err=901)
       close(1)
-      iflag_lvd_common=1
       istatus = 1
       return
 

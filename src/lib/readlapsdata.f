@@ -241,7 +241,11 @@ C
 C ****  make fortran file_name
 C
 
-      if (ext_dn(1:2) .eq. 'lg') then
+      if (ext_dn(1:2) .eq. 'lg' .or.
+     +     ext_dn(1:3).eq.'fua' .or.
+     +     ext_dn(1:3).eq.'fsf' .or.
+     +     ext_dn(1:3).eq.'ram' .or.
+     +     ext_dn(1:3).eq.'rsf') then
         file_name=dir(1:end_dir)//gtime//fhh//'.'//ext_dn(1:end_ext)
       else
         file_name = dir(1:end_dir)//gtime//'.'//ext_dn(1:end_ext)

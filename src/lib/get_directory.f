@@ -48,20 +48,28 @@ cdis
         character*(*) directory_out  ! output
         integer*4 len_dir            ! output
 
-        character*80 grid_fnam_common
+        character*80 grid_fnam_common, grid_fnam
         common / grid_fnam_cmn / grid_fnam_common
         character *201 laps_data_root, directory
 
-        call GETENV('LAPS_DATA_ROOT',laps_data_root) 
+
+        len_dir = index(grid_fnam_common,'/',.true.)
+        if(len_dir.gt.0) then
+           grid_fnam='nest7grid'
+           laps_data_root=grid_fnam_common
+        else
+           grid_fnam=grid_fnam_common
+           call GETENV('LAPS_DATA_ROOT',laps_data_root) 
+        endif
+
+        
 
 !       Test if the extension is the domain name. If so, then return the
 !       directory containing the static files.
+        call s_len(grid_fnam,len_grid_fnam)
 
         call s_len(ext_in,len_ext_in)
 
-
-
-        call s_len(grid_fnam_common,len_grid_fnam_common)
         call s_len(laps_data_root,len_lapsroot)
 
 
@@ -76,13 +84,13 @@ c        print *, laps_data_root(1:len_lapsroot),len_lapsroot
            len_lapsroot=len_lapsroot+1
            laps_data_root(len_lapsroot:len_lapsroot)='/'
         endif
-        if(len_ext_in .eq. len_grid_fnam_common)then
+        if(len_ext_in .eq. len_grid_fnam)then
           if(len_ext_in .ne. 0)then
             if(ext_in(1:len_ext_in) .eq.
-     1         grid_fnam_common(1:len_ext_in))then
+     1         grid_fnam(1:len_ext_in))then
                 directory = laps_data_root(1:len_lapsroot)//'static/'
                 goto 999
-            endif ! ext_in .eq. grid_fnam_common
+            endif ! ext_in .eq. grid_fnam
           endif ! len_ext .ne. 0
         endif ! lens are =
 

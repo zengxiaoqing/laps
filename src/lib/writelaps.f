@@ -197,6 +197,8 @@ C
 C
 C **** write out netCDF file
 C
+      print*,'Writing file: ',file_name
+
       call write_cdf_v3 (file_name,ext,var,comment,asctime,cdl_path, 
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
@@ -243,7 +245,7 @@ C
 C
 980     IF (FLAG .NE. 1)
      1    write (6,*) 'Some grids not written....could not convert LAPS
-     1variables.'
+     1variables.', istatus
         ISTATUS=ERROR(2)
         GOTO 999
 C
