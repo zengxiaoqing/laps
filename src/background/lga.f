@@ -532,7 +532,7 @@ c
          real  :: shbg_sfc(:,:)
          real  :: tpbg_sfc(:,:)
          real  :: htbg_sfc(:,:)
-         real  ::   mslpbg(:,:)
+         real  :: mslpbg(:,:)
 c
          real  :: prbght(:,:,:)
          real  :: prbgsh(:,:,:)
@@ -561,6 +561,44 @@ c
          integer       nzbg_ww
          integer       istatus
          end subroutine
+
+         subroutine vinterp(nz_laps,nx,ny,
+     .	nzbg_ht,nzbg_sh,nzbg_uv,nzbg_ww,
+     .  prlaps, prbght,prbgsh,prbguv,prbgww,
+     .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
+     .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+
+         integer nx,ny
+         integer nzbg_ht
+         integer nzbg_sh
+         integer nzbg_uv
+         integer nzbg_ww
+
+         integer nz_laps
+
+         real*4  ::  prbght(nx,ny,nzbg_ht)
+         real*4  ::  prbgsh(nx,ny,nzbg_sh)
+         real*4  ::  prbguv(nx,ny,nzbg_uv)
+         real*4  ::  prbgww(nx,ny,nzbg_ww)
+         real*4  ::  tpbg(nx,ny,nzbg_ht)
+         real*4  ::  htbg(nx,ny,nzbg_ht)
+         real*4  ::  shbg(nx,ny,nzbg_sh)
+         real*4  ::  uwbg(nx,ny,nzbg_uv)
+         real*4  ::  vwbg(nx,ny,nzbg_uv)
+         real*4  ::  wwbg(nx,ny,nzbg_ww)
+
+
+         real*4  ::  tpvi(nx,ny,nz_laps)
+         real*4  ::  htvi(nx,ny,nz_laps)
+         real*4  ::  shvi(nx,ny,nz_laps)
+         real*4  ::  uwvi(nx,ny,nz_laps)
+         real*4  ::  vwvi(nx,ny,nz_laps)
+         real*4  ::  wwvi(nx,ny,nz_laps)
+c
+         real*4  ::  prlaps(nz_laps)
+ 
+         end subroutine
+
       end interface
 
       warncnt=0 
@@ -1114,7 +1152,7 @@ c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
          call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
-     &icnt,i_mx,j_mx,diff_mx,diff_mn)
+     &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
          print *,' Dewpoint check (before call sfcbkgd):'
          print *,'     Dewpt greater than temp at ',icnt,' points.'
@@ -1140,7 +1178,7 @@ c
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
 
         call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
-     &icnt,i_mx,j_mx,diff_mx,diff_mn)
+     &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
         print *,' Dewpoint check (after call sfcbkgd):'
         print *,'     Dewpt greater than temp at ',icnt,' points.'
@@ -1409,7 +1447,7 @@ c
 c
 c
       subroutine tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
-     &icnt,i_mx,j_mx,dmax,dmin)
+     &icnt,i_mx,j_mx,i_mn,j_mn,dmax,dmin)
 
       integer icnt,i_mx,j_mx
 

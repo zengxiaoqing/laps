@@ -84,10 +84,10 @@ c
      .,nx,ny,nz,nzbg,pr,prbg,bgdata,bgdatavi)
          integer    nx,ny,nz
          integer    nzbg
-         real  ::   pr(:)
-         real  ::   prbg(:,:,:)
-         real  ::   bgdata(:,:,:)
-         real  ::   bgdatavi(:,:,:)
+         real  ::   pr(nz)
+         real  ::   prbg(nx,ny,nzbg)
+         real  ::   bgdata(nx,ny,nzbg)
+         real  ::   bgdatavi(nx,ny,nz)
          real       msngflag
          end subroutine
       end interface  
