@@ -106,6 +106,11 @@ c
 	character  reptype_in(maxobs)*6, atype_in(maxobs)*6
 	character  store_cldamt(maxsta,5)*4
 c
+        integer cnt
+	logical exists
+        data exists/.false./
+        data cnt/0/
+c
 c
 c.....	Set jstatus flag for the sao data to bad until we find otherwise.
 c
@@ -137,9 +142,11 @@ c.....      Get the data from the NetCDF file.  First, open the file.
 c
 	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
 
-	    if(nf_status.ne.NF_NOERR) then
+	    if(nf_status.ne.NF_NOERR) then ! No file found to open
 	       print *, NF_STRERROR(nf_status)
 	       print *, data_file
+               write(6,*)' WARNING: no file found in get_metar_obs'
+               return
 	    endif
 c
 c.....      Get the dimension of some of the variables.

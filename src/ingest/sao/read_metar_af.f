@@ -99,7 +99,7 @@ cc      af_file = '../lapsdat/sao_af_raw2/sao.' // af_time
 cc      af_file = 'sao.' // af_time
 cc    af_file = '../../../lapsdat/sao_af_raw/sao.'//af_time
 c
-      open(11,file=af_file,status='unknown',err=600)
+      open(11,file=af_file,status='old',err=590)
 c
 c..... Read the file header lines.
 c
@@ -271,6 +271,11 @@ c
  955  format(' Found ',i4,' stations in surface file.')
       istatus = 1
       return
+c
+ 590  	continue
+	print *,' WARNING: could not open SAO file.'
+	istatus = 0
+	return
 c
  600  	continue
 	print *,' ERROR reading SAO file.'

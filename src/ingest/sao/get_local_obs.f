@@ -275,7 +275,9 @@ c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
 c
-           if(lats(i) .lt. -90.) go to 125   ! badflag (-99.9)...from nan ck
+!          Test for badflag OR (close to S Pole but not quite at it)
+!          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
+           if(lats(i) .lt. -89.999 .and. lats(i) .ne. -90.) go to 125 
            call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,       
      &                              ri_loc,rj_loc,istatus)
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir

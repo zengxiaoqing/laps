@@ -175,7 +175,7 @@ c
         character*8   metar_format
         character*8   a9_to_a8, a8_time
 c
-        integer cnt, minutes_to_wait_for_metars
+        integer cnt
 	logical exists
         data exists/.false./
         data cnt/0/
@@ -331,7 +331,7 @@ c
 c
 	        INQUIRE(FILE=data_file_m,EXIST=exists)
 
-	        if(.not. exists) then ! Try WFO format
+                if(.not. exists) then ! Try WFO format
 	            filename13=fname9_to_wfo_fname13(a9time_metar_file)       
 
 	            len_path = index(path_to_METAR,' ') - 1
@@ -342,7 +342,7 @@ c
      &                path_to_buoy_data(1:len_path) // filename13
 
 	            INQUIRE(FILE=data_file_m,EXIST=exists)
-	            if(.not. exists) then
+		    if(.not. exists) then
                         if(cnt .lt. minutes_to_wait_for_metars)then
                             print*,'Waiting for file ', data_file_m
                             call waiting_c(60)
@@ -355,8 +355,66 @@ c
 	    enddo ! While in waiting loop
 
 	    if(.not.exists) then
-	        print *,' ERROR. File not Found: ', data_file_m
-	        stop 
+	        print *,' WARNING: File not Found: ', data_file_m
+	        continue
+            endif
+
+        elseif(metar_format(1:len_metar_format) .eq. 'NIMBUS' ! Not yet used
+     1    .or. metar_format(1:len_metar_format) .eq. 'WFO'        )then
+
+!           Select the hourly METAR file best suited to our obs time window
+!           Note that an hourly raw file contains obs from 15 before to 45 after
+            i4time_midwindow = i4time_sys + 
+     1                         (itime_after - itime_before) / 2      
+            i4time_metar_file = ((i4time_midwindow+900) / 3600) * 3600
+
+            call make_fnam_lp(i4time_metar_file,a9time_metar_file
+     1                       ,istatus)
+            if(istatus .ne. 1)return
+
+            if(metar_format(1:len_metar_format) .eq. 'NIMBUS')then
+                len_path = index(path_to_METAR,' ') - 1
+	        data_file_m = 
+     &	          path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
+c        
+                len_path = index(path_to_buoy_data,' ') - 1
+	        filename13=fname9_to_wfo_fname13(filename9(1:9))
+	        data_file_b = 
+     &	          path_to_buoy_data(1:len_path)//filename13  
+
+            elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
+                filename13=fname9_to_wfo_fname13(a9time_metar_file)       
+
+                len_path = index(path_to_METAR,' ') - 1
+                data_file_m = path_to_METAR(1:len_path)//filename13       
+
+                len_path = index(path_to_buoy_data,' ') - 1
+                data_file_b = 
+     &                path_to_buoy_data(1:len_path) // filename13
+
+            else
+                write(6,*)' ERROR'
+                stop
+
+            endif
+
+            do while(.not. exists .and. 
+     &                cnt .le. minutes_to_wait_for_metars)
+c
+	        INQUIRE(FILE=data_file_m,EXIST=exists)
+                if(.not. exists) then
+                    if(cnt .lt. minutes_to_wait_for_metars)then
+                        print*,'Waiting for file ', data_file_m
+                        call waiting_c(60)
+                    endif
+                    cnt = cnt+1               
+	        endif
+
+	    enddo ! While in waiting loop
+
+	    if(.not.exists) then
+	        print *,' WARNING: File not Found: ', data_file_m
+	        continue
             endif
 
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
@@ -390,7 +448,7 @@ c
      &                        store_7,store_cldht,store_cldamt,
      &                        provider, jstatus)
 	   if(jstatus .ne. 1) then
-	      print *, ' WARNING. Bad status return from GET_METAR_OBS'       
+	      print *, ' WARNING: Bad status return from GET_METAR_OBS'       
 	      print *,' '
 	   endif
 
@@ -673,6 +731,11 @@ c
 
         if(iblank .gt. 0)then
             write(6,*)' Warning: number of UNK stanames = ',iblank       
+        endif
+
+        if(nn .eq. 0)then
+            write(6,*)' WARNING: no LSO written due to no obs'
+            return
         endif
 
 	print *,'  Writing LSO file, # of obs (in box) = ',n_obs_b
