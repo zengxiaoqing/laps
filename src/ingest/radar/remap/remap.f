@@ -43,6 +43,8 @@ cdis
 
       character path_to_radar*150, laps_radar_ext*3
      1         ,radar_subdir_dum*3, path_to_vrc*15
+
+      real*4, allocatable, dimension(:,:) :: lat,lon,topo
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
       if (istatus .ne. 1) then
@@ -54,6 +56,24 @@ cdis
       if (istatus .ne. 1) then
           write (6,*) 'Error getting vertical domain dimensions'
           go to 999
+      endif
+
+      allocate(lat(NX_L,NY_L),STAT=istat_alloc)       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate lat'
+          stop
+      endif
+
+      allocate(lon(NX_L,NY_L),STAT=istat_alloc)       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate lon'
+          stop
+      endif
+
+      allocate(topo(NX_L,NY_L),STAT=istat_alloc)       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate topo'
+          stop
       endif
 
 !     This first call returns only 'n_radars_remap'
@@ -98,7 +118,9 @@ cdis
      1                      ,path_to_vrc,path_to_radar,ref_min
      1                      ,min_ref_samples,min_vel_samples,dgr
      1                      ,namelist_parms
-     1                      ,NX_L,NY_L,NZ_L,istatus)       
+     1                      ,NX_L,NY_L,NZ_L
+     1                      ,lat,lon,topo
+     1                      ,istatus)       
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
      1                                             ,istatus
@@ -117,6 +139,7 @@ cdis
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr       
      1                    ,namelist_parms
      1                    ,NX_L,NY_L,NZ_L
+     1                    ,lat,lon,topo
      1                    ,istatus)
 
       include 'remap.inc'
@@ -163,6 +186,10 @@ cdis
       character*4 rname_ptr
       character*3 laps_radar_ext, c3_radar_subdir
       character*(*) path_to_vrc, path_to_radar
+
+      real*4 lat(NX_L,NY_L)      
+      real*4 lon(NX_L,NY_L)      
+      real*4 topo(NX_L,NY_L)     
 
 !     Misc Local variables
 
@@ -459,21 +486,21 @@ cdis
               write(6,*)'  i4time_vol, i_num,  istatus',
      1                i4time_vol,i_num_finished_products,istatus
 
-c     Get radar data from the storage area (formerly in remap_process)
+c             Get radar data from the storage area (formerly in remap_process)
 c
-      allocate( Velocity(max_gates,max_rays), STAT=istat_alloc )       
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate Velocity'
-          stop
-      endif
+              allocate(Velocity(max_gates,max_rays),STAT=istat_alloc)       
+              if(istat_alloc .ne. 0)then
+                  write(6,*)' ERROR: Could not allocate Velocity'
+                  stop
+              endif
 
-      allocate( Reflect(max_gates,max_rays), STAT=istat_alloc )       
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate Reflect'
-          stop
-      endif
+              allocate(Reflect(max_gates,max_rays), STAT=istat_alloc)       
+              if(istat_alloc .ne. 0)then
+                  write(6,*)' ERROR: Could not allocate Reflect'
+                  stop
+              endif
 
-      call Read_Data_88D(
+              call Read_Data_88D(
      :               i_tilt_proc_curr,
      :               vel_thr_rtau,
      :               r_missing_data,       ! Input
@@ -496,6 +523,7 @@ c
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,  ! O
      :            grid_ref,ngrids_ref,n_pot_ref,                         ! O
      1            NX_L,NY_L,NZ_L,                                        ! I
+     1            lat,lon,topo,                                          ! L
      1            i_scan_mode,                                           ! I
      :            Slant_ranges_m,                                        ! I
      :            n_rays_88d,                                            ! I
