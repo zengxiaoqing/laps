@@ -1,6 +1,4 @@
 c
-c
-c
         subroutine score(TT,T,BB,XB,XT,TA,imax,scf,sca,scb,sco,
      &                   thresh,qcstat,m,badflag)
 c
@@ -85,9 +83,15 @@ c*********************************************************************
 c
       sum=0.
       do l=1,n
-         sum=sum+ran1(ii)
+         sum=sum+ran1(ii)             
       enddo !l
-      ffz=sum-float(n)/2.
+      if(n.ne.1) then
+       ffz=sum-float(n)/2.
+      else
+       ffz=sum
+      endif
+      ii=ii-1 
+      if(ii.ge.0) ii=-ii-1
 c
       return
       end
@@ -303,6 +307,7 @@ c for all stations
             dda(l)=dda(l+1)
             ffa(l)=ffa(l+1)
             pmsla(l)=pmsla(l+1)
+            alta(l)=alta(l+1)
             stna(l)=stna(l+1)
             providera(l)=providera(l+1)
             indexa(l)=indexa(l+1)
@@ -520,10 +525,13 @@ c
          end
 c
 c
-        subroutine grosserr(t,stn,maxsta,m,badflag,badthr,groserr
-     &          ,qcstat)
-        real t(m)
-        integer qcstat(m)
+        subroutine grosserr(t,tf,stn,maxsta,m,badflag,badthr,groserr
+     &          ,qcstat,onoff)
+c this routine performs a gross error check using a station average with
+c +/- groserr added as limits. If onoff is 1 then it uses tf as an
+c estimate with +/- groserr added as limits
+        real t(m),tf(m)
+        integer qcstat(m),onoff
         character stn(m)*5
         sum=0
         sum2=0
@@ -538,7 +546,7 @@ c
         if(cnt.ne.0) then
          sum=sum/cnt
         else
-         print*,'entire data set in gross error check is missing'
+         print*,'gross error check:entire data set is missing'
          return
         endif
         cnt=0.
@@ -549,19 +557,32 @@ c
          endif
         enddo
         sum2=sqrt(sum2/cnt)
-        top=sum+groserr
-        bot=sum-groserr
-        print*,'avg,stddev,low limit,high limit ',sum,sum2,bot,top
+        topg=sum+groserr
+        botg=sum-groserr
+        if(onoff.eq.0) then
+         print*,'avg,stddev,low limit,high limit ',sum,sum2,bot,top
+        endif
         do i=1,maxsta
          if(t(i).eq.badflag) go to 1 
+         if(tf(i).eq.badflag) go to 3
+         if(onoff.eq.0) go to 3
+           top=tf(i)+groserr
+           bot=tf(i)-groserr
          if (t(i).lt.bot) go to 3
          if (t(i).gt.top) go to 3
          go to 1
-   3     if (abs(t(i)-sum).lt.(badthr*sum2)) go to 1
-         print*,t(i),'at stn ',i,'  ',stn(i),
+   3     if(onoff.eq.1.and.tf(i).ne.badflag) then
+          print*,t(i),'at stn ',i,'  ',stn(i),' fails gross kalman ',
+     &     'check against ',tf(i),' ...setting to badflag'
+           t(i)=badflag
+           qcstat(i)=10
+         else
+          if (abs(t(i)-sum).lt.(badthr*sum2)) go to 1
+            print*,t(i),'at stn ',i,'  ',stn(i),
      &    ' fails gross error check ...setting to badflag'
-         t(i)=badflag
-         qcstat(i)=10
+            t(i)=badflag
+            qcstat(i)=10
+         endif
    1    enddo
         return
         end
@@ -650,7 +671,7 @@ c compute avg variable
                  else
                   if(abs(t(i)-sum).gt.grosserr) then
                    print*,'Sub fillqc replaces bad value of ',t(i),
-     &                   ' with buddy value ',sum             
+     &              'at stn ',stn(i),' ',i,' with buddy value ',sum            
                    t(i)=badflag
                    w(i)=sum
                   endif
@@ -660,10 +681,8 @@ c                write(6,1000) i, stn(i), t(i)
                  endif
               else
                  write(6,*) 'No fill possible for ',stn(i),',station ',i
-                 write(6,*) '..setting data to missing value          '
-                 c11=c11/10.
-                 c22=c22/10.
-                 go to  10
+                 write(6,*) '..          '
+                 w(i)=t(i)    
               endif
         enddo !i
         do i=1,maxsta
@@ -757,10 +776,8 @@ c                write(6,1000) i, stn(i), w(i)
      &                  ' with ',F8.3) 
               else
                  write(6,*) 'No fill possible for ',stn(i),',station ',i
-                 write(6,*) '..trying again by expanding search radius'
-                 c11=c11/10.
-                 c22=c22/10.
-                 go to  10
+                 write(6,*) '..setting parameter to missing           '
+                 w(i)=t(i)   
               endif
            endif 
         enddo !i
@@ -994,7 +1011,7 @@ c
 c
         Subroutine errorproc(dt,y,by,md,xt,x,wr,vr,ar,imax,m,qcstat,
      &        oberr,wk,wm,wo,wb,length,badthr,atime,icnt,nvar,n,i4time
-     &            ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &            ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
 c
 c*********************************************************************
 c
@@ -1014,17 +1031,19 @@ c*********************************************************************
 c
         parameter(badflag=-99.9)    
         real dt(m),y(m),xt(m),by(m),md(m),x(m),wr(m),vr(m),ar(m)
-        real me,oe,ce
+        real me,oe,ce,bmonster(m,24,nvar)
         real wm(m),wo(m),wb(m),wk(m)
         real tdt(m),b(m),tmb(nvar),tob(nvar),tcb(nvar),tmr(nvar)
         real totr(nvar),totb(nvar),tor(nvar),tcr(nvar),oberr2
         integer sca(2,2),scf(2,2),scb(2,2),sco(2,2),imax,qcstat(m)
-        integer scat(2,2),scft(2,2),scbt(2,2),scot(2,2),on,off
+        integer scat(2,2),scft(2,2),scbt(2,2),scot(2,2),on,off,ihr
 c
 c.....  Truth routine and missing ob replacement
 c
+c set period for averaging the bias error ~ 4 days for testing
+        biaslen=4 !days for averaging bias
         icnt=icnt+1
-        iiiii=-i4timei+icnt
+        iiiii=-i4time+icnt
         on=1
         off=0
         if(totr(nvar).ne.0) then
@@ -1078,7 +1097,7 @@ c
            if(dt(i).ne.badflag) then 
               VR(i)=dt(i)-tdt(i)
            else 
-              VR(i)=oberr*(-1.)**(int(10.*ran1(iiiii)+1.))
+              VR(i)=oberr*ffz(iiiii,20)
            endif 
            sumvr=sumvr+VR(i)
            stdvr=VR(i)*VR(i)+stdvr
@@ -1087,6 +1106,8 @@ c
            stdar=AR(i)*AR(i)+stdar
 c
 c  do kalmod errors
+c length is the averaging period in cycles for the kalmods and 
+c days for the bias correction. Make bias length 8 days
            wo(i)=(y(i)-tdt(i))**2+float(length-1)*wo(i)**2
            wo(i)=sqrt(wo(i)/float(length))
            wb(i)=(by(i)-tdt(i))**2+float(length-1)*wb(i)**2
@@ -1095,6 +1116,8 @@ c  do kalmod errors
            wm(i)=sqrt(wm(i)/float(length))
            wk(i)=(ar(i)-tdt(i))**2+float(length-1)*wk(i)**2
            wk(i)=sqrt(wk(i)/float(length))
+           bmonster(i,ihr,n)=(y(i)-tdt(i)+(biaslen-1.)
+     &                       *bmonster(i,ihr,n))/biaslen    
            sum1=sum1+wo(i)
            sum2=sum2+wb(i)
            sum3=sum3+wm(i)
@@ -1295,7 +1318,7 @@ c
         end
 c
 c
-        function ran1(idum)
+        function ran1(idum)              
 c
 c*********************************************************************
 c
@@ -1303,48 +1326,58 @@ c     Function to generated a random number.  Use this instead of a
 c     machine dependent one. idum must be a negative integer
 c     
 c     Original: Peter Stamus, NOAA/FSL  07 Oct 1998
-c     Changes:
+c     Changes:  John McGinley, NOAA/FSL 20 Apr 00 - changed to ran2
 c
 c     Notes:
-c        From "Numerical Recipes in Fortran", page 271.
+c        From "Numerical Recipes in Fortran", page 272.  There named ran2.
 c
 c*********************************************************************
 c
-        integer idum, ia, im, iq, ir, ntab, ndiv
+        integer idum, ia1,ia2,im1,im2,imm1,iq1,iq2,ir1,ir2, ntab,ndiv
         real ran1, am, eps, rnmx
-        parameter( ia = 16807,
-     &             im = 2147483647,
-     &             am = 1. / im,
-     &             iq = 127773,
-     &             ir = 2836,
+        parameter( ia1= 40014,
+     &             ia2=40692,
+     &             im1= 2147483563,
+     &             im2= 2147483399,
+     &             am= 1. / im1,
+     &             imm1=im1-1,
+     &             iq1= 53668, 
+     &             iq2= 52774, 
+     &             ir1= 12211,
+     &             ir2= 3791,
      &             ntab = 32,
-     &             ndiv = 1 + (im-1) / ntab,
+     &             ndiv = 1 + imm1/ntab    ,
      &             eps = 1.2e-7,
      &             rnmx = 1. - eps)
 c
-        integer j, k, iv(ntab), iy
-        save iv, iy
-        data iv/ntab * 0/, iy/0/
+        integer idum2,j, k, iv(ntab), iy
+        save iv, iy,idum2
+        data idum2/123456789/,iv/ntab * 0/, iy/0/
 c
 c.....  Start here.
 c
-        if(idum.le.0 .or. iy.eq.0) then  !initialize
+        if(idum.le.0 ) then  !initialize
            idum = max(-idum,1)           !prevent idum=0
+           idum2=idum
            do j=ntab+8,1,-1              !load the shuffle table
-              k = idum / iq
-              idum = ia * (idum - k*iq) - ir*k
-              if(idum .lt. 0) idum = idum + im
+              k = idum / iq1
+              idum = ia1* (idum - k*iq1) - ir1*k
+              if(idum .lt. 0) idum = idum + im1
               if(j .le. ntab) iv(j) = idum
            enddo !j
            iy = iv(1)
         endif
 c
-        k = idum / iq                     !start here if not initializing
-        idum = ia * (idum - k*iq) - ir*k  
-        if(idum .lt. 0) idum = idum + im
+        k = idum / iq1                    !start here if not initializing
+        idum = ia1* (idum - k*iq1) - ir1*k  
+        if(idum .lt. 0) idum = idum + im1
+        k = idum2/ iq2                    !start here if not initializing
+        idum2= ia2* (idum2- k*iq2) - ir2*k  
+        if(idum2.lt. 0) idum2= idum2+ im2
         j = 1 + iy/ndiv
-        iy = iv(j)                        !output prev stored value and 
+        iy = iv(j)-idum2                  !output prev stored value and 
         iv(j) = idum                      !  refill shuffle table
+        if(iy.lt.1)iy=iy+imm1
         ran1 = min(am*iy, rnmx)
 c
         return

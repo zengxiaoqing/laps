@@ -140,6 +140,7 @@ c  taylor series, buddy, and observation estimates
         real   monster(m,ncycles,nvar),yta(m),ytda(m),yua(m)
         real   yva(m),ypma(m),yalta(m)
         real   byta(m),bytda(m),byua(m),byva(m),bypma(m),byalta(m)
+        real   bmonster(m,24,nvar)
 c
 c  arrays for error processing for each variable by iteration
         real   ar(m),wr(m),vr(m),wit(m,m),witd(m,m),witu(m,m),witv(m,m)
@@ -155,12 +156,13 @@ c
 c  error variables
         real   oberr,moderr
 c
-c  integer arrays for data input
+c arrays for data input
         integer  obstime(m),kloud(m),idp3(m)
 c
 c  quality control status for each variable
         integer qcstat(m),qcstatd(m),qcstapm(m),qcstal(m),qcstau(m),
-     &          qcstav(m),qmonster(m,ncycles,nvar)
+     &          qcstav(m),qmonster(m,ncycles,nvar),ht(m),htd(m)
+     &          ,hu(m),hv(m),hp(m),ha(m)
 c
 c switches 
         integer on,off
@@ -236,11 +238,11 @@ c observation and model error assumptions
         moderru=3.0
         moderrpm=1.5
         moderral=1.5
-        grosst=25.
-        grosstd=30.
-        grossuv=25.
-        grosspm=20.
-        grossal=20.0
+        grosst=20.
+        grosstd=25.
+        grossuv=20.
+        grosspm=10.
+        grossal=10.0
 c  offset for model operator (>> than ob-fg)
 c
         offset=10000.
@@ -264,7 +266,7 @@ c  averaging period for error for w and vv
 c
         ia=24
 c
-c averaging period for model weights in cycles
+c averaging period for model weights in cycles; days for bias error
 c
         length=24
 c
@@ -339,28 +341,35 @@ c initial kalmod errors rms
               wma(i)=1.0
               wba(i)=1.0 
 c         
-              do j=1,ncycles
               do k=1,nvar
+              do l=1,24
+               bmonster(i,l,k)=0.
+c work in first guess temp bias based on past performance
+               bmonster(i,l,1)=3.5*cos(6.28318*(float(l)-2.5)/24.)
+     &                    +     0.5*cos(6.28318*(float(l)-8.5)/24.)
+              enddo!l
+              do j=1,ncycles
                  monster(i,j,k) = badflag
-              enddo !k
               enddo !j
+              enddo !k
 c
+                 iiiii=-i4time+i
               do j=1,2
-                 iiiii=-i4time+j
+                 if(iiiii.ge.0)iiiii=-1-iiiii
 c
 c     random number intial seed
-                 vit(i,j)=oberrt*ffz(iiiii,20)
-                 wit(i,j)=moderrt*ffz(iiiii,20)
-                 witd(i,j)=moderrtd*ffz(iiiii,20)
-                 vitd(i,j)=oberrtd*ffz(iiiii,20)
-                 witu(i,j)=moderru*ffz(iiiii,20)
-                 witv(i,j)=moderru*ffz(iiiii,20)
-                 vitv(i,j)=oberruv*ffz(iiiii,20)
-                 vitu(i,j)=oberruv*ffz(iiiii,20)
-                 witpm(i,j)=moderrpm*ffz(iiiii,20)
-                 vitpm(i,j)=oberrpm*ffz(iiiii,20)
-                 wital(i,j)=moderral*ffz(iiiii,20)
-                 vital(i,j)=oberral*ffz(iiiii,20)
+                 vit(i,j)=oberrt*(-1)**int(10.*ffz(iiiii,1))
+                 wit(i,j)=moderrt*(-1)**int(10.*ffz(iiiii,1))
+                 witd(i,j)=moderrtd*(-1)**int(10.*ffz(iiiii,1))
+                 vitd(i,j)=oberrtd*(-1)**int(10.*ffz(iiiii,1))
+                 witu(i,j)=moderru*(-1)**int(10.*ffz(iiiii,1))
+                 witv(i,j)=moderru*(-1)**int(10.*ffz(iiiii,1))
+                 vitv(i,j)=oberruv*(-1)**int(10.*ffz(iiiii,1))
+                 vitu(i,j)=oberruv*(-1)**int(10.*ffz(iiiii,1))
+                 witpm(i,j)=moderrpm*(-1)**int(10.*ffz(iiiii,1))
+                 vitpm(i,j)=oberrpm*(-1)**int(10.*ffz(iiiii,1))
+                 wital(i,j)=moderral*(-1)**int(10.*ffz(iiiii,1))
+                 vital(i,j)=oberral*(-1)**int(10.*ffz(iiiii,1))
               enddo !on j
 c
               Pt(i,i)=moderrt*moderrt
@@ -443,31 +452,31 @@ c missing data
            call trimlist(tb,tdb,ddb,ffb,latb,lonb,elevb,pstnb,pmslb,
      &       altb,stnb,providerb,reptypeb,indexb,maxstab,m,badflag)
 c do gross error checks
-           call grosserr(tb,stnb,maxstab,m,badflag,badthr,grosst
-     &                  ,qcstat)
-           call grosserr(tdb,stnb,maxstab,m,badflag,badthr,grosstd
-     &                  ,qcstatd)
-           call grosserr(ffb,stnb,maxstab,m,badflag,badthr,grossuv
-     &                  ,qcstau)
+           call grosserr(tb,tb,stnb,maxstab,m,badflag,badthr,grosst
+     &                  ,qcstat,off)
+           call grosserr(tdb,tdb,stnb,maxstab,m,badflag,badthr,grosstd
+     &                  ,qcstatd,off)
+           call grosserr(ffb,ffb,stnb,maxstab,m,badflag,badthr,grossuv
+     &                  ,qcstau,off)
            call replacei(qcstau,qcstav,maxstab,m)
-           call grosserr(pmslb,stnb,maxstab,m,badflag,badthr,grosspm
-     &                  ,qcstapm)
-           call grosserr(altb,stnb,maxstab,m,badflag,badthr,grossal
-     &                  ,qcstal)
+           call grosserr(pmslb,pmslb,stnb,maxstab,m,badflag,badthr,
+     &                 grosspm ,qcstapm,off)
+           call grosserr(altb,altb,stnb,maxstab,m,badflag,badthr,
+     &                 grossal,qcstal,off)
            call trimlist(ta,tda,dda,ffa,lata,lona,eleva,pstna,pmsla,
      &       alta,stna,providera,reptypea,indexa,maxstaa,m,badflag)
 c do gross error checks
-           call grosserr(ta,stna,maxstaa,m,badflag,badthr,grosst
-     &                  ,qcstat)
-           call grosserr(tda,stna,maxstaa,m,badflag,badthr,grosstd
-     &                  ,qcstatd)
-           call grosserr(ffa,stna,maxstaa,m,badflag,badthr,grossuv
-     &                  ,qcstau)
+           call grosserr(ta,ta,stna,maxstaa,m,badflag,badthr,grosst
+     &                  ,qcstat,off)
+           call grosserr(tda,tda,stna,maxstaa,m,badflag,badthr,
+     &                 grosstd ,qcstatd,off)
+           call grosserr(ffa,ffa,stna,maxstaa,m,badflag,badthr,grossuv
+     &                  ,qcstau,off)
            call replacei(qcstau,qcstav,maxstaa,m)
-           call grosserr(pmsla,stna,maxstaa,m,badflag,badthr,grosspm
-     &                  ,qcstapm)
-           call grosserr(alta,stna,maxstaa,m,badflag,badthr,grossal
-     &                  ,qcstal)
+           call grosserr(pmsla,pmsla,stna,maxstaa,m,badflag,badthr,
+     &                 grosspm ,qcstapm,off)
+           call grosserr(alta,alta,stna,maxstaa,m,badflag,badthr,
+     &                  grossal,qcstal,off)
 c reorder a and b
            call reorder(ta,tda,dda,ffa,lata,lona,eleva,pstna,pmsla,alta,
      &       stna,providera,reptypea,indexa,
@@ -540,7 +549,7 @@ c if the b set has much fewer obs than the a set just write a into b
             call replace(tda,tdb,maxstaa,1,m,1)  
             call replace(ua,ub,maxstaa,1,m,1)  
             call replace(va,vb,maxstaa,1,m,1)  
-            call replace(pmsla,pmalb,maxstaa,1,m,1)  
+            call replace(pmsla,pmslb,maxstaa,1,m,1)  
             call replace(alta,altb,maxstaa,1,m,1)  
            endif
            it=1
@@ -573,7 +582,7 @@ c
            read(15) vit,vitd,vitu,vitv,vitpm,vital
            read(15) wit,witd,witu,witv,witpm,wital
            read(15) pt,ptd,pu,pv,ppm,pal
-           read(15) monster
+           read(15) monster,bmonster
            read(15) stna,lata,lona,eleva
            read(15) providera, reptypea
            read(15) ta,tda,ua,va,pmsla,alta
@@ -602,7 +611,7 @@ c read time of either monster or lso and convert hour to a real value, time
         read(atime(12:14),1098) ihr
         print*,'GMT hour is ',ihr 
  1098   format(i3)
-        timer=ihr+1 
+        if(ihr.eq.0) ihr=24
 c
 c.....  This is the start of routine
 c
@@ -624,7 +633,8 @@ c
      &               300000.,30.)
         write(6,*) 'Process temp********************************'
         call project(2,yta,monster,1,nvar,
-     &             maxstaa,m,ncycles,nn,atime,it,icyc,oberrt,badthr)
+     &             maxstaa,m,ncycles,nn,atime,it,icyc,oberrt,badthr,
+     &             bmonster,ihr)
 c
 c.....  Input NWP model change
 c.....  Here, the model routine gets the current and previous values
@@ -660,9 +670,19 @@ c make tf all missing flag values
         call perturb(ta,zot,ta,maxstaa,m,offset,off)      
         call replace(ta,tc,maxstaa,1,m,1)  
         call perturb(tf,zot,tf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman T quality check'
+           call grosserr(tf,ta,stn,maxstaa,m,badflag,badthr,grosst
+     &           ,qcstat,on)
+        call thet(tf,thetaa,maxstaa,eleva,m)
+           call fillqc(stna,thetaa,lata,lona,eleva,thetaa,sl,
+     &             maxstaa,m,8./1000.,-1./1000.,200000.,30.,grosst)       
+        call thet2T(tf,thetaa,maxstaa,eleva,m)
         write(6,*) 'Process dewpoint***************************'
         call project(2,ytda,monster,2,nvar,
-     &               maxstaa,m,ncycles,nn,atime,it,icyc,oberrtd,badthr)
+     &               maxstaa,m,ncycles,nn,atime,it,icyc,oberrtd,badthr,
+     &             bmonster,ihr)
         call perturb(ytda,tda,ytda,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -676,9 +696,17 @@ c make tdf all missing flag values
         call perturb(tda,zot,tda,maxstaa,m,offset,off)      
         call replace(tda,tdc,maxstaa,1,m,1)  
         call perturb(tdf,zot,tdf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman TD quality check'
+          call grosserr(tdf,tda,stn,maxstaa,m,badflag,badthr,grosstd
+     &           ,qcstat,on)
+           call fillqc(stna,tdf,lata,lona,eleva,thetaa,sl,
+     &          maxstaa,m,15./1000.,-35./1000.,200000.,30.,grosstd)        
         write(6,*) 'Process u wind*******************************'
         call project(2,yua,monster,3,nvar,
-     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr)
+     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr,
+     &             bmonster,ihr)
         call perturb(yua,ua,yua,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -692,9 +720,17 @@ c make uf all missing flag values
         call perturb(ua,zot,ua,maxstaa,m,offset,off)      
         call replace(ua,uc,maxstaa,1,m,1)  
         call perturb(uf,zot,uf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman U quality check'
+           call grosserr(uf,ua,stn,maxstaa,m,badflag,badthr,grossuv
+     &           ,qcstat,on)
+           call fillqc(stna,uf,lata,lona,eleva,thetaa,sl,
+     &          maxstaa,m,10./1000.,-10./1000.,200000.,30.,grossuv)        
         write(6,*) 'Process v wind*******************************'
         call project(2,yva,monster,4,nvar,
-     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr)
+     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr,
+     &             bmonster,ihr)
         call perturb(yva,va,yva,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -708,9 +744,17 @@ c make vf all missing flag values
         call perturb(va,zot,va,maxstaa,m,offset,off)      
         call replace(va,vc,maxstaa,1,m,1)  
         call perturb(vf,zot,vf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman V quality check'
+           call grosserr(vf,va,stn,maxstaa,m,badflag,badthr,grossuv
+     &           ,qcstat,on)
+           call fillqc(stna,vf,lata,lona,eleva,thetaa,sl,
+     &          maxstaa,m,10./1000.,-10./1000.,200000.,30.,grossuv)        
         write(6,*) 'Process msl P****************************** '
         call project(2,ypma,monster,5,nvar,
-     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberrpm,badthr)
+     &                maxstaa,m,ncycles,nn,atime,it,icyc,oberrpm,badthr,
+     &             bmonster,ihr)
         call perturb(ypma,pmsla,ypma,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -724,9 +768,17 @@ c make pmslf all missing flag values
         call perturb(pmsla,zot,pmsla,maxstaa,m,offset,off)      
         call replace(pmsla,pmslc,maxstaa,1,m,1)  
         call perturb(pmslf,zot,pmslf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman PMSL quality check'
+         call grosserr(pmslf,pmsla,stn,maxstaa,m,badflag,badthr,grosspm
+     &           ,qcstat,on)
+         call fillqc(stna,pmslf,lata,lona,eleva,thetaa,sl,
+     &       maxstaa,m,2./1000.,-2./1000.,200000.,1000.,grosspm)    
         write(6,*) 'Process Alstg*********************************'
         call project(2,yalta,monster,6,nvar,
-     &       maxstaa,m,ncycles,nn,atime,it,icyc,oberral,badthr)
+     &       maxstaa,m,ncycles,nn,atime,it,icyc,oberral,badthr,
+     &             bmonster,ihr)
         call perturb(yalta,alta,yalta,maxstaa,m,0.,on)
 c
 c make the linear model for this iteration
@@ -740,8 +792,16 @@ c make altf all missing flag values
         call perturb(alta,zot,alta,maxstaa,m,offset,off)      
         call replace(alta,altc,maxstaa,1,m,1)  
         call perturb(altf,zot,altf,maxstaa,m,offset,off)      
+c validate the kalman estimate and usekalman buddy if it is not consistent
+c with last cycles values
+        write(6,*) 'Kalman ALSTG quality check'
+         call grosserr(altf,alta,stn,maxstaa,m,badflag,badthr,grossal
+     &           ,qcstat,on)
+         call fillqc(stna,altf,lata,lona,eleva,thetaa,sl,
+     &       maxstaa,m,2./1000.,-2./1000.,200000.,1000.,grosspm)    
 c
 c.....  Read in new (current) obs.....maxstaa will go up
+c      
 c
         call read_surface_data(i4time,atime_cur,n_obs_g,n_obs_b,time,
      &     wmoid,stations,provider,wx,reptype,autostntype,lat,lon,elev,
@@ -750,21 +810,17 @@ c
      &     td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
      &     sfcm_ea,pcp_ea,snow_ea,store_cldamt,store_cldht,
      &     m,jstatus)
-c DIAGNOSTIC 
-        do k=1,n_obs_b
-         print*, 'out1',stations(k),t(k),alt(k),pmsl(k)
-        enddo
         iflag=0
         if(jstatus .ne. 1) then
            print *,' No current LSO data for ', filename,'.Setting   ',
-     &             'data to all missing and using Kalman estimates.'
+     &             'data to Kalman estimates.'
      &      
-           call replace(msar,t,m,1,m,1)
-           call replace(msar,td,m,1,m,1)
-           call replace(msar,u,m,1,m,1)
-           call replace(msar,v,m,1,m,1)
-           call replace(msar,pmsl,m,1,m,1)
-           call replace(msar,alt,m,1,m,1)
+           call replace(tf,t,m,1,m,1)
+           call replace(tdf,td,m,1,m,1)
+           call replace(uf,u,m,1,m,1)
+           call replace(vf,v,m,1,m,1)
+           call replace(pmslf,pmsl,m,1,m,1)
+           call replace(altf,alt,m,1,m,1)
            call replace(msar,dd,m,1,m,1)
            call replace(msar,ff ,m,1,m,1)
            call replace(lata,lat,m,1,m,1)
@@ -803,36 +859,58 @@ c perform gross error checks
      &          maxsta,maxstaa,m,badflag)
         endif
 
-c DIAGNOSTIC 
-        do k=1,n_obs_b
-         print*, 'outro',stations(k),t(k),alt(k),pmsl(k)
-        enddo
 c put data into "r"arrays to save raw data
+        if(iflag.eq.0) then
            call replace(t,tr,maxsta,1,m,1)
            call replace(td,tdr,maxsta,1,m,1)
            call replace(dd,ddr,maxsta,1,m,1)
            call replace(ff,ffr,maxsta,1,m,1)
            call replace(pmsl,pmslr,maxsta,1,m,1)
            call replace(alt,altr,maxsta,1,m,1)
-           call grosserr(t,stn,maxsta,m,badflag,badthr,grosst
-     &           ,qcstat)
-           call grosserr(td,stn,maxsta,m,badflag,badthr,grosstd
-     &           ,qcstatd)
-           call grosserr(ff,stn,maxsta,m,badflag,badthr,grossuv
-     &           ,qcstau)
+c these grosserror checks are against the kalman estimate
+c ensure kalman values are missing for new stations
+           do i=maxstab+1,maxstaa
+            tf(i)=badflag
+            tdf(i)=badflag
+            uf(i)=badlag
+            vf(i)=badflag
+            pmslf(i)=badflag
+            altf(i)=badflag
+           enddo 
+           Write(6,*) 'New T gross error check'
+           call grosserr(t,tf,stn,maxsta,m,badflag,badthr,grosst
+     &           ,qcstat,on)
+           Write(6,*) 'New TD gross error check'
+           call grosserr(td,tdf,stn,maxsta,m,badflag,badthr,grosstd
+     &           ,qcstatd,on)
+           Write(6,*) 'New WIND SPEED gross error check'
+c except winds
+           call grosserr(ff,ff,stn,maxsta,m,badflag,badthr,grossuv
+     &           ,qcstau,off)
            call replacei(qcstau,qcstav,maxsta,m)
-           call grosserr(pmsl,stn,maxsta,m,badflag,badthr,grosspm
-     &           ,qcstapm)
-           call grosserr(alt,stn,maxsta,m,badflag,badthr,grossal
-     &           ,qcstal)
+           Write(6,*) 'New PMSL gross error check'
+           call grosserr(pmsl,pmslf,stn,maxsta,m,badflag,badthr,
+     &           grosspm,qcstapm,on)
+           Write(6,*) 'New ALT gross error check'
+           call grosserr(alt,altf,stn,maxsta,m,badflag,badthr,
+     &           grossal,qcstal,on)
 c reorder new obs
 c
 c.....  Convert new winds to u,v
 c
         call convuv(dd,ff,u,v,maxstaa,m,badflag)
         call convuv(ddr,ffr,ur,vr,maxstaa,m,badflag)
+       else !all obs are missing
+           call replace(msar,tr,maxsta,1,m,1)
+           call replace(msar,tdr,maxsta,1,m,1)
+           call replace(msar,ur,maxsta,1,m,1)
+           call replace(msar,vr,maxsta,1,m,1)
+           call replace(msar,pmslr,maxsta,1,m,1)
+           call replace(msar,altr,maxsta,1,m,1)
+       endif
 c.....  Move last cycle to tc; new obs to ta; ready the winds 
 c
+        
         call replace(ta,tc,maxstaa,1,m,1)
         call replace(tf,tb,maxstaa,1,m,1)
         call replace(t,te,maxstaa,1,m,1)
@@ -943,6 +1021,16 @@ c
 c.....  Run the gross error check with the kalman xt estimate; there should be 
 c.....  no missings in any "f" variable
 c
+c save all ncms
+        do i=1,maxstaa
+         ht(i)=ncmt(i)
+         htd(i)=ncmtd(i)
+         hu(i)=ncmu(i)
+         hv(i)=ncmv(i)
+         hp(i)=ncmpm(i)
+         ha(i)=ncmalt(i)
+        enddo
+        
         print*,'Gross error checks: T'
         call qcset(t,tf,ncmt,qcstat,m,maxstaa,badflag,grosst)
         print*,' dewpoint '
@@ -955,6 +1043,22 @@ c
         call qcset(pmsl,pmslf,ncmpm,qcstapm,m,maxstaa,badflag,grosspm)
         print*, 'Alt'
         call qcset(alt,altf,ncmalt,qcstal,m,maxstaa,badflag,grossal)
+        if(iflag.eq.1) then ! data is missing so set all q**** to 1
+         do i=1,maxstaa
+          qcstat(i)=1
+          qcstatd(i)=1
+          qcstau(i)=1
+          qcstav(i)=1
+          qcstapm(i)=1
+          qcstal(i)=1
+          ncmt(i)=ht(i)+1
+          ncmtd(i)=htd(i)+1
+          ncmu(i)=hu(i)+1
+          ncmv(i)=hv(i)+1
+          ncmpm(i)=hp(i)+1
+          ncmalt(i)=ha(i)+1 
+         enddo
+        endif
 c
 c.....  For missing observations use a weighted combination of the kalman (f)
 c.....  estimate and the buddy anal(e) assuming half weight for 'half' cycles
@@ -987,9 +1091,9 @@ c
      1       maxstaa,mwt,m)
         print*,'temp model before kalman call'
         do i=1,maxstaa
-         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yta(i),
-     &                  byta(i),dta(i),mwt(i,i)
- 3333 format(1x,a17,a5,i5,f10.7,4f7.2)
+         write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),yta(i),
+     &                  byta(i),dta(i),bmonster(i,ihr,1)
+ 3333 format(1x,a17,a5,i5,f10.7,3f7.2,f9.5)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -999,8 +1103,8 @@ c
 c
 c.....  Create the v and w matrices using the error history
 c
-        Call avgdiagerr(wit,B,c,w,maxstaa,ia,m,it)
-        Call avgdiagerr(Vit,B,c,vv,maxstaa,ia,m,it)
+        Call avgdiagerr(wit,B,c,w,maxstaa,ia,m,it-1)
+        Call avgdiagerr(Vit,B,c,vv,maxstaa,ia,m,it-1)
         write(6,*) 'Kalman for TEMP'
         call kalman(F,tc,ta,pt,it, w,vv,xt,xtt,maxstaa,m,atime,stna)
 c
@@ -1028,7 +1132,7 @@ c
         call perturb(xtt,tc,xtt,maxstaa,m,0.,on)      
         call errorproc(dt,yta,byta,dta,xtt,xt,wr,vr,ar,maxstaa,m,qcstat
      & ,oberrt,wkt,wmt,wot,wbt,length,badthr,atime,icnt,nvar,1,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(tb,yta,tc,maxstaa,m,0.,off)
         call perturb(te,dta,tc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,wit,it)
@@ -1040,10 +1144,14 @@ c.....  c= buddy,e=NWP, f=kalman fcst, a=Kalman optimum
 c.....  Temperature.  .  .  .  .  .  .  ..  .  .  .  .  .  .  .  .  .  .
 c
         write(6,*) 'OUTPUT for T '
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(tc,maxstaa,1,m, 'TA LAST CYC ',atime,on,0.)
         call writev(tf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(tr,maxstaa,1,m, ' RAW T OBS  ',atime,on,0.)
+        call perturb(tf,t,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XT - RAW T  ',atime,on,0.)
         call writev(tb,maxstaa,1,m, ' OB TREND T',atime,on,0.)
         call perturb(tc,byta,tc,maxstaa,m,0.,off)
         call writev(tc,maxstaa,1,m, ' BUD GUESS T',atime,on,0.)
@@ -1061,8 +1169,8 @@ c
      1              maxstaa,mwt,m)
         print*,'dewpoint model before kalman call'
         do i=1,maxstaa
-        write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),ytda(i),
-     &              bytda(i),dtda(i),mwt(i,i)
+        write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),ytda(i),
+     &              bytda(i),dtda(i),bmonster(i,ihr,2)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -1103,7 +1211,7 @@ c
         call errorproc(dtd,ytda,bytda,dtda,xtt,xt,wr,vr,ar,maxstaa,m,
      & qcstatd,oberrtd,wktd,wmtd,wotd,wbtd,length,badthr,atime,icnt,
      &  nvar,2,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(tdb,ytda,tdc,maxstaa,m,0.,off)
         call perturb(tde,dtda,tdc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witd,it)
@@ -1115,10 +1223,14 @@ c.....  d= buddy,e=NWP, a=Kalman optimum
 c.....  Dewpoint....
 c
         write(6,*) 'OUTPUT for TD'
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(tdc,maxstaa,1,m, 'TDA LAST CYC ',atime,on,0.)
         call writev(tdf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(tdr,maxstaa,1,m, ' RAW TD OBS ',atime,on,0.)
+        call perturb(tdf,td,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XTD- RAW TD ',atime,on,0.)
         call writev(tdb,maxstaa,1,m, ' OB TREND TD',atime,on,0.)
         call perturb(tdc,bytda,tdc,maxstaa,m,0.,off)
         call writev(tdc,maxstaa,1,m, ' BUD GUESS TD',atime,on,0.)
@@ -1136,8 +1248,8 @@ c
      1              maxstaa,mwt,m)
         print*,'u-wind model before kalman call '
         do i=1,maxstaa
-         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yua(i),
-     &                  byua(i),dua(i),mwt(i,i)
+         write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),yua(i),
+     &                  byua(i),dua(i),bmonster(i,ihr,3)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -1176,7 +1288,7 @@ c
         call perturb(xtt,uc,xtt,maxstaa,m,0.,on)      
         call errorproc(du,yua,byua,dua,xtt,xt,wr,vr,ar,maxstaa,m,qcstau
      & ,oberruv,wku,wmu,wou,wbu,length,badthr,atime,icnt,nvar,3,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(ub,yua,uc,maxstaa,m,0.,off)
         call perturb(ue,dua,uc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witu,it)
@@ -1188,10 +1300,14 @@ c.....  d= buddy,e=NWP, a=Kalman optimum
 c.....  U-Wind 
 c
         write(6,*) 'OUTPUT for U '
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(uc,maxstaa,1,m, 'UA LAST CYC ',atime,on,0.)
         call writev(uf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(ur,maxstaa,1,m, ' RAW U OBS  ',atime,on,0.)
+        call perturb(uf,u,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XU - RAW U  ',atime,on,0.)
         call writev(ub,maxstaa,1,m, ' OB TREND U',atime,on,0.)
         call perturb(uc,byua,uc,maxstaa,m,0.,off)
         call writev(uc,maxstaa,1,m, ' BUD GUESS U',atime,on,0.)
@@ -1209,8 +1325,8 @@ c
      1              maxstaa,mwt,m)
         print*,'v-wind model'
         do i=1,maxstaa
-         write(6,3333) 'stn,i,F,o,b,m ',stna(i),i,F(i,i),yva(i),
-     &                  byva(i),dva(i)
+         write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),yva(i),
+     &                  byva(i),dva(i),bmonster(i,ihr,4)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -1249,7 +1365,7 @@ c
         call perturb(xtt,vc,xtt,maxstaa,m,0.,on)      
         call errorproc(dv,yva,byva,dva,xtt,xt,wr,vr,ar,maxstaa,m,qcstav
      & ,oberruv,wkv,wmv,wov,wbv,length,badthr,atime,icnt,nvar,4,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(vb,yva,vc,maxstaa,m,0.,off)
         call perturb(ve,dva,vc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,witv,it)
@@ -1261,10 +1377,14 @@ c.....  d= buddy,e=NWP, a=Kalman optimum
 c.....  V wind
 c
         write(6,*) 'OUTPUT for V '
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(vc,maxstaa,1,m, 'VA LAST CYC ',atime,on,0.)
         call writev(vf,maxstaa,1,m, ' XT from KAL  ',atime,on,0.)
         call writev(vr,maxstaa,1,m, ' RAW V OBS  ',atime,on,0.)
+        call perturb(vf,v,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XV - RAW V  ',atime,on,0.)
         call writev(vb,maxstaa,1,m, ' OB TREND V',atime,on,0.)
         call perturb(vc,byva,vc,maxstaa,m,0.,off)
         call writev(vc,maxstaa,1,m, ' BUD GUESS V',atime,on,0.)
@@ -1282,8 +1402,8 @@ c
      1              maxstaa,mwt,m)
         print*,'pmsl   model before kalman call'
         do i=1,maxstaa
-        write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),ypma(i),
-     &             bypma(i),dpma(i),mwt(i,i)
+        write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),ypma(i),
+     &             bypma(i),dpma(i),bmonster(i,ihr,5)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -1324,7 +1444,7 @@ c
         call errorproc(dpm,ypma,bypma,dpma,xtt,xt,wr,vr,ar,maxstaa,
      &  m,qcstapm,oberrpm,wkp,wmp,wop,wbp,length,badthr,atime,icnt,nvar
      &  ,5,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(pmslb,ypma,pmslc,maxstaa,m,0.,off)
         call perturb(pmsle,dpma,pmslc,maxstaa,m,0.,off)
         call perturb(pmslc,bypma,pmslc,maxstaa,m,0.,off)
@@ -1337,10 +1457,14 @@ c.....  d= buddy,e=NWP, a=Kalman optimum
 c.....  Temperature
 c
         write(6,*) 'OUTPUT for PMSL '
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(pmslc,maxstaa,1,m, 'PMSLA LAST CYC ',atime,on,1000.)
         call writev(pmslf,maxstaa,1,m, ' XT from KAL  ',atime,on,1000.)
         call writev(pmslr,maxstaa,1,m, ' RAW PMSL OBS  ',atime,on,1000.)
+        call perturb(pmslf,pmsl,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XPM- RAW PM ',atime,on,0.)
         call writev(pmslb,maxstaa,1,m, ' OB TREND PMSL',atime,on,1000.)
         call perturb(pmslc,bypma,pmslc,maxstaa,m,0.,off)
         call writev(pmslc,maxstaa,1,m, ' BUD GUESS PMSL',atime,on,1000.)
@@ -1358,8 +1482,8 @@ c
      1              maxstaa,mwt,m)
         print*,'alstg  model before kalman call'
         do i=1,maxstaa
-         write(6,3333) 'stn,i,F,o,b,m,wt ',stna(i),i,F(i,i),yalta(i),
-     &            byalta(i),dalta(i),mwt(i,i)
+         write(6,3333) 'stn,i,F,o,b,m,bc ',stna(i),i,F(i,i),yalta(i),
+     &            byalta(i),dalta(i),bmonster(i,ihr,6)
         enddo
 c
 c.....  Prepare the fields for the kalman filter
@@ -1400,7 +1524,7 @@ c
         call errorproc(dalt,yalta,byalta,dalta,xtt,xt,wr,vr,ar,maxstaa,
      & m,qcstal,oberral,wka,wma,woa,wba,length,badthr,atime,icnt,nvar,6
      &     ,i4time  
-     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
+     &  ,tor,tcr,tmr,tob,tcb,tmb,totr,totb,bmonster,ihr)
         call perturb(altb,yalta,altc,maxstaa,m,0.,off)
         call perturb(alte,dalta,altc,maxstaa,m,0.,off)
         call writemon(wr,wr,wr,wr,wr,wr,1,maxstaa,m,ncycles,wital,it)
@@ -1412,10 +1536,14 @@ c.....  d= buddy,e=NWP, a=Kalman optimum
 c.....  Temperature
 c
         write(6,*) 'OUTPUT for ALSTG '
+        if(iflag.eq.1) 
+     &   write(6,*) 'WARNING: ALL OBS MISSING!!!!OBS ASSUMED AS KALMAN'
         call writec(stn,maxstaa,m,' Stations   ',atime)
         call writev(altc,maxstaa,1,m, 'ALTA LAST CYC  ',atime,on,1000.)
         call writev(altf,maxstaa,1,m, ' XT from KAL  ',atime,on,1000.)
         call writev(altr,maxstaa,1,m, ' RAW ALSTG OBS  ',atime,on,1000.)
+        call perturb(altf,alt,ffg ,maxstaa,m,0.,on)
+        call writev(ffg,maxstaa,1,m, 'XAL- RAW AL ',atime,on,0.)
         call writev(altb,maxstaa,1,m, ' OB TREND ALSTG',atime,on,1000.)
         call perturb(altc,byalta,altc,maxstaa,m,0.,off)
         call writev(altc,maxstaa,1,m, ' BUD GUESS ALSTG',atime,on,1000.)
@@ -1905,7 +2033,7 @@ c
            write(16) vit,vitd,vitu,vitv,vitpm,vital
            write(16) wit,witd,witu,witv,witpm,wital
            write(16) pt,ptd,pu,pv,ppm,pal
-           write(16) monster
+           write(16) monster,bmonster
            write(16) stna,lata,lona,eleva
            write(16) providera, reptypea
            write(16) ta,tda,ua,va,pmsla,alta

@@ -266,7 +266,7 @@ c*********************************************************************
 c
       real B(m),c(m,m),W(m,m),wit(m,m)
 c
-      call zero(W, imax,imax)
+      call zero(W,m,m)
       ia=iav
       if(ia.gt.it) ia=it
 c

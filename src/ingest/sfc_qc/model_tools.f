@@ -630,7 +630,7 @@ c
 c
 c
         subroutine project(ord,y,monster,nv,nvar,maxsta,m,ncycles,
-     &                     nn,atime,it,icyc,oberr,badthr)     
+     &              nn,atime,it,icyc,oberr,badthr,bmonster,ihr)     
 c
 c*********************************************************************
 c
@@ -643,6 +643,9 @@ c       24 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
 c       14 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
 c          Completely new version.
+c       Bias correction (bmonster) added to self trend. Includes
+c      a cycle dependent bias correction based on z time (ihr)
+c      and model performance
 c
 c     Notes:
 c          For the time being (14 Dec 1999) 'ord' is limited to 2.
@@ -652,7 +655,7 @@ c
         parameter(badflag=-99.9)
         common tab(10000),pi,re,rdpdg,reorpd
         integer ord
-        real y(m), monster(m,ncycles,nvar)
+        real y(m), monster(m,ncycles,nvar),bmonster(m,24,nvar)
         character*24 atime
 c
 c.....  Apply a filter to each derivative
@@ -667,7 +670,7 @@ c
            sum0 = monster(i,1,nv)*(1.+a*em1+b*em1s*.5) + 
      &            a*monster(i,2,nv)*(-a*em1-b*em1s) + 
      &            monster(i,3,nv)*(b*em1s*.5)    
-           y(i)=sum0
+           y(i)=sum0-bmonster(i,ihr,nv)
         enddo !on i
 c
         return 
