@@ -496,10 +496,11 @@ c --------------------------------------------------------------
 c
        subroutine read_sfc_nl(use_lso_qc,skip_internal_qc 
      1                       ,itheta, redp_lvl, del, gam, ak
-     1                       ,l_require_lso)
-c    1                              bad_t,bad_td,bad_u,bad_v,bad_p,
-c    1                              bad_mp,bad_th,bad_the,
-c    1                              bad_vis,bad_tb8
+     1                       ,l_require_lso
+     1                       ,bad_t,bad_td,bad_u,bad_v,bad_p
+     1                       ,bad_mp,bad_th,bad_the
+     1                       ,bad_vis,bad_tb8
+     1                       ,thresh_t,thresh_td,thresh_mslp)
 
        implicit none
 
@@ -510,15 +511,17 @@ c    1                              bad_vis,bad_tb8
        real    bad_t,bad_td,bad_u,bad_v,bad_p
        real    bad_mp,bad_th,bad_the
        real    bad_vis,bad_tb8
+       real    thresh_t,thresh_td,thresh_mslp
 
        integer istatus
        
-       namelist /surface_analysis/ use_lso_qc,skip_internal_qc,
-     1                              itheta, redp_lvl, del, gam, ak,
+       namelist /surface_analysis/  use_lso_qc,skip_internal_qc,
+     1                              itheta, redp_lvl, del, gam, ak,       
      1                              l_require_lso,
      1                              bad_t,bad_td,bad_u,bad_v,bad_p,
      1                              bad_mp,bad_th,bad_the,
-     1                              bad_vis,bad_tb8
+     1                              bad_vis,bad_tb8,
+     1                              thresh_t,thresh_td,thresh_mslp
 
        character*150    static_dir,filename
        integer len_dir
