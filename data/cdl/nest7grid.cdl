@@ -163,7 +163,7 @@ netcdf static {
             sbl:navigation_dim = "nav";
             sbl:record = "valtime, reftime";
             sbl:_FillValue = 1.e+37f;
-            sbl:long_name="top layer (30-90cm) soiltype";
+            sbl:long_name="bottom layer (30-90cm) soiltype";
             sbl:units="categorical";
             sbl:valid_range= 0.f, 30.f;
             sbl:LAPS_units="categorical";
