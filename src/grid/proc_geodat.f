@@ -282,11 +282,12 @@ c original create from Brent Shaw pseudocode
       max_lon = MAXVAL(dom_lons)
 
 ! no offsets needed here since these are the tiles, not the points
-! in the tiles.
-      min_lat =  max(-89.9999,min(89.9999,min_lat))  ! + rsoff))
-      max_lat =  max(-89.9999,min(89.9999,max_lat))  ! + rsoff))
-      min_lon =  max(-359.9999,min(359.9999,min_lon))! + rwoff))
-      max_lon =  max(-359.9999,min(359.9999,max_lon))! + rwoff))
+! in the tiles. However, since domains may need data from tiles with
+! offset considered, add it in.
+      min_lat =  max(-89.9999,min(89.9999,min_lat + rsoff))
+      max_lat =  max(-89.9999,min(89.9999,max_lat + rsoff))
+      min_lon =  max(-359.9999,min(359.9999,min_lon + rwoff))
+      max_lon =  max(-359.9999,min(359.9999,max_lon + rwoff))
 
       deallocate(dom_lats,dom_lons)
 

@@ -587,8 +587,8 @@ c
 
              if(istatus_30s .ne. 1)then
                 print*,'********* ERROR ***********'
-                print*,'File(s) missing for 30s terrain data'
-                print*,'Static file not created.......ERROR'
+                print*,'ERROR: File(s) missing for 30s terrain data'
+                print*,'ERROR: Static file not created'
                 return
              endif
 
@@ -684,9 +684,9 @@ c -----------------------------------------------------------
      +,istatus)
 
         if(istatus.ne.1)then
-         print*
-         print*,' File(s) missing for landuse data'
-         print*,' Error:  Static file not created'
+         print*,'********* ERROR ***********'
+         print*,'ERROR:  File(s) missing for landuse data'
+         print*,'ERROR:  Static file not created'
          print*
          return
         endif
@@ -713,7 +713,7 @@ c landmask for laps
 
 c ----------------------------------------------------------------
         print*
-        print*,' Processing 10m land fraction data....'
+        print*,' Processing 10m land fraction data ....'
         print*,' Create from 30s land use fractional dist'
         print*
 c
@@ -750,6 +750,12 @@ c       endif
         endif
         data(:,:,idx)=GEODAT2D
         print *,'pctlandfrac=',GEODAT2D(1,1),GEODAT2D(nnxp,nnyp)       
+c
+c -------------------------------------------------------------------
+c potential fix of fictitous islands for certain resolution domains.
+c
+        where(data(:,:,idx).le.0.1 .and. topt_out(:,:).lt.5.0)
+     &topt_out=0.0
 c
 c -------------------------------------------------------------------
 c
