@@ -17,6 +17,9 @@ int fillWFOlevels(int numWFOlevels, char *WFOlevels_char,
     for (i = 0; i < numWFOlevels; i++) {
       c_ptr = WFOlevels_char + (i * CHARS_PER_LEVEL);
       if ((strncmp(c_ptr,"SFC",3) == 0) ||
+          (strncmp(c_ptr,"TW0",3) == 0) ||
+          (strncmp(c_ptr,"LCL",3) == 0) ||
+          (strncmp(c_ptr,"EA",2) == 0) ||
           (strncmp(c_ptr,"MSL",3) == 0)) {
         strncpy(WFOlevels[i].WFO_level,c_ptr,3);
         WFOlevels[i].WFO_level[3] = '\0';
@@ -51,6 +54,33 @@ int findWFOindex(int numWFOlevels, WFO_LEVELS_T *WFOlevels,
     if ((strncmp(WFO_level,"SFC",3) == 0) && (*level_ptr == 0)) {
       while ((found == FALSE) && (i < numWFOlevels)) {
         if (strncmp(WFOlevels[i].WFO_level,"SFC",3) == 0) {
+          returnIndex = i;
+          found = TRUE;
+        }
+        i++;
+      }
+    }
+    if ((strncmp(WFO_level,"EA",2) == 0) && (*level_ptr == 0)) {
+      while ((found == FALSE) && (i < numWFOlevels)) {
+        if (strncmp(WFOlevels[i].WFO_level,"EA",2) == 0) {
+          returnIndex = i;
+          found = TRUE;
+        }
+        i++;
+      }
+    }
+    if ((strncmp(WFO_level,"LCL",3) == 0) && (*level_ptr == 0)) {
+      while ((found == FALSE) && (i < numWFOlevels)) {
+        if (strncmp(WFOlevels[i].WFO_level,"LCL",3) == 0) {
+          returnIndex = i;
+          found = TRUE;
+        }
+        i++;
+      }
+    }
+    if ((strncmp(WFO_level,"TW0",3) == 0) && (*level_ptr == 0)) {
+      while ((found == FALSE) && (i < numWFOlevels)) {
+        if (strncmp(WFOlevels[i].WFO_level,"TW0",3) == 0) {
           returnIndex = i;
           found = TRUE;
         }
@@ -537,6 +567,13 @@ int storeLAPSdata(long index, int cdfId, double d_reftime, double d_valtime,
     }
     free(WFOlevels_char);
 
+/* exception to write out showalter index - LAPS will have level as 0, 
+     AWIPS needs to write it into MB 850 */
+    if ((strncmp(variable,"shwlt",3) == 0) && 
+        (strncmp(WFO_level,"MB",2) == 0)) {
+      **level = 850.0;
+    } 
+
 /* write data to WFO variable one level at a time */
     inv_ptr = *inv;
     level_ptr = *level;
@@ -581,6 +618,8 @@ int storeLAPSdata(long index, int cdfId, double d_reftime, double d_valtime,
         else {
           inv_char = (char)0;  /* this writes a null */
           inv_status = NOINV;
+          fprintf(stdout, "No inventory for %s - level %d\n",
+                  variable, (int)*level_ptr);
         }
 
         invStart[1] = WFOlevelIndex;
