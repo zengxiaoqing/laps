@@ -393,6 +393,10 @@
      and would like us to add them to the defaults in 'configure' please let 
      us know via e-mail. 
 
+     On Solaris for example, you may want to remove "-C" from the DBFLAGS with
+     an edit of 'src/include/makefile.inc' to allow compiling FORTRAN debug 
+     versions of the software.
+
                 --- 2.2.3   Ingest Software changes ---
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
