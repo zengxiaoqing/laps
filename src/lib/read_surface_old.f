@@ -39,8 +39,9 @@ c
 c
 c*******************************************************************************
 c
-c       Routine to read mesonet and SAO data for LAPS that has been written
-c       into the .LSO file by the 'get_surface_obs' routine.
+cdoc    Routine to read surface data for LAPS that has been written into
+cdoc    the LSO/LSOQC file by the 'write_surface_obs' routine. Return arguments
+cdoc    are more in tune with an earlier lso format.
 c
 c       Changes:
 c               P. Stamus  12-30-92  Original version.
@@ -163,6 +164,8 @@ c
 c.....  Start here.  Set the status to nothing, zero out the cloud storage
 c.....  and character arrays.
 c
+        write(6,*)' Subroutine read_surface_old...'
+ 
         istatus = 0
         ibadflag = int(badflag)
 c
@@ -183,22 +186,48 @@ c
 c.....  Figure out the i4time and call the read routine.
 c
         call s_len(infile, len)
-        filetime(1:9) = infile(len-12:len-4)
-        call i4time_fname_lp(filetime,i4time,status)
 c
-	call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
-     &    wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
-     &    elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
-     &    sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kloud,max24t,min24t,t_ea,
-     &    td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
-     &    sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
-     &    maxsta,jstatus)
+        write(6,*)' infile = ',infile(1:len)
+
+        if(infile(len-1:len) .eq. 'qc')then
+           filetime(1:9) = infile(len-15:len-7)
+           call i4time_fname_lp(filetime,i4time,status)
+           write(6,*)' Calling read_surface_dataqc for ',filetime
+
+	   call read_surface_dataqc(i4time,atime,n_obs_g,n_obs_b,time,
+     &     wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
+     &     elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
+     &     sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kloud,max24t,min24t,t_ea,
+     &     td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
+     &     sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
+     &     maxsta,jstatus)
 c
-        if(jstatus .ne. 1) then
-           print *,' ERROR.  No LSO file found for ', filename
-           istatus = -1
-           return
-        endif
+           if(jstatus .ne. 1) then
+              print *,' ERROR.  No LSOQC file found for ', filename
+              istatus = -1
+              return
+           endif
+
+        else
+           filetime(1:9) = infile(len-12:len-4)
+           call i4time_fname_lp(filetime,i4time,status)
+           write(6,*)' Calling read_surface_data for ',filetime
+
+	   call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
+     &     wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
+     &     elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
+     &     sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kloud,max24t,min24t,t_ea,
+     &     td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,sfct_ea,
+     &     sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
+     &     maxsta,jstatus)
+c
+           if(jstatus .ne. 1) then
+              print *,' ERROR.  No LSO file found for ', filename
+              istatus = -1
+              return
+           endif
+
+        endif ! lso_qc infile
 c
 c.....  Shuffle data for the differences between old and new formats.
 c.....  First, the header.

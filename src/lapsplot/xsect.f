@@ -603,15 +603,20 @@ c read in laps lat/lon and topo
 
 100    write(6,95)
 95     format(
-     1  /'  Field:  [di,sp,u,v,w,vc (barbs)'
-     1  /'           t (Temp), pt (Potl Temp), ts (Thetae Sat), tw (wet
-     1bulb)'
+     1  /'  Field:  [WIND: di,sp,u,v,om,vc (barbs)'
+     1  /
+     1  /'           TEMP: t (Temp), pt (Potl Temp), bt (Balanced temp)'       
+     1  /
+     1  /'           HUMID: sh,rh,rl (Specific/Relative Humidity)'
+     1  /
+     1  /'           ts (Thetae Sat), tw (wetbulb)'
      1  /
      1  /'           cg (3D Cloud Image),  tc (Cloud Type),  tp (Precip
      1Type)'
 !       1 /'           la (LWC - Adiabatic),         lj (LWC - Adjusted)'
 !       1 /'                                         sj (SLWC - Adjusted)'
-     1  /'           ls (Smith-Feddes LWC)' ! ,        ss (SLWC - Smith-Feddes)'
+     1  /'           ls (Smith-Feddes LWC)' 
+                                          ! ,        ss (SLWC - Smith-Feddes)'
      1  /'           ci (cloud ice)'
      1  /
      1  /'           ic (icing index)    pc (precip conc)    mv (Mean Vo
@@ -619,7 +624,6 @@ c read in laps lat/lon and topo
      1  /
      1  /'           cv (cloud cover contours)'
      1  /'           rf (reflectivity-graphic), ri (ref-image)'
-     1  /'           sh,rh,rl (Specific/Relative Humidity)'
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
@@ -647,82 +651,118 @@ c read in laps lat/lon and topo
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
         if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
-     1  .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
-     1  .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
-     1  .or. c_field .eq. 'vc')then
+     1    .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
+     1    .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
+     1    .or. c_field .eq. 'vc' .or. c_field .eq. 'om')then
 
-            if(c_field .ne. 'w ')then
-!               write(6,104)
-104             format('$   Balanced Winds  [y,n]       (DEF=n) ',30x,'?
-     1 ')
-
-!               read(lun,1301)c_wind
-!               if(c_wind .eq. 'y' .or. c_wind .eq. 'Y')then
-!                   c_wind = 'y'
-!               else
-                    c_wind = 'n'
-!               endif
-
-            else
-                write(6,105)
-105             format('$   Omega field: Kinematic, Balanced, Cloud Bogu
-     1sed, QG'
-     1                  ,' [k,b,c,q]  ',3x,'? ')
+            if(c_field .ne. 'w ' .and. c_field .ne. 'om')then
+                write(6,104)
+104             format('  Balanced Winds  [y,n]  '
+     1                ,'     (DEF=n) ',32x,'? ',$)
 
                 read(lun,1301)c_wind
-                if(c_wind .eq. 'k' .or. c_wind .eq. 'K')c_wind = 'n'
-                if(c_wind .eq. 'b' .or. c_wind .eq. 'B')c_wind = 'y'
+                if(c_wind .eq. 'y' .or. c_wind .eq. 'Y')then
+                    c_wind = 'b'
+                else
+                    c_wind = 'k'
+                endif
+
+            elseif(c_field .eq. 'om')then
+                write(6,105)
+105             format('  Omega field: Kinematic (lw3), Balanced, '
+     1                ,'Cloud Bogused'
+     1                  ,' [k,b,c]  ',5x,'? ',$)
+
+                read(lun,1301)c_wind
+                if(c_wind .eq. 'k' .or. c_wind .eq. 'K')c_wind = 'k'
+                if(c_wind .eq. 'b' .or. c_wind .eq. 'B')c_wind = 'b'
                 if(c_wind .eq. 'c' .or. c_wind .eq. 'C')c_wind = 'c'
-                if(c_wind .eq. 'q' .or. c_wind .eq. 'Q')c_wind = 'q'
+
+            else
+                write(6,*)' ERROR: bad c_field'
+
             endif
 
-            if       (c_wind .eq. 'y')then
-                ext_wind = 'lba'
+            if  (c_wind .eq. 'b')then
+                write(6,*)' Balance Option - '
+     1                   ,'*** under construction ***'
+                ext_wind = 'balance'
                 call get_directory(ext_wind,directory,len_dir)
-                c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+                c_filespec = directory(1:len_dir)//'lw3/*.lw3'
 
-            else   if(c_wind .eq. 'c')then
+            elseif(c_wind .eq. 'c')then
                 ext_wind = 'lco'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
 
-            else   if(c_wind .eq. 'n')then
+            elseif(c_wind .eq. 'k')then
                 ext_wind = 'lw3'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
 
-            else   if(c_wind .eq. 'q')then
-                c_filespec = c_filespec_qg
             endif
 
             if(.not. l_wind_read)then
                 write(6,*)
-                write(6,*)'    Looking for 3D laps data:'
-                if(c_field .ne. 'w ')then
-                    call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-                    call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L
+                write(6,*)' Looking for 3D wind data: ',ext_wind
+     1                   ,c_field,c_wind
+
+                if(c_field .ne. 'w ' .and. c_field .ne. 'om')then ! Non-omega
+                    write(6,*)' Reading U/V'
+                    if(c_wind .eq. 'b')then
+                        directory = directory(1:len_dir)//'lw3'
+                        ext = 'lw3'
+
+                        var_2d = 'U3'
+
+                        call get_3dgrid_dname(directory
+     1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
+     1                  ,ext,var_2d,units_2d
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,u_3d,istatus)       
+
+                        var_2d = 'V3'
+
+                        call get_3dgrid_dname(directory
+     1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw       
+     1                  ,ext,var_2d,units_2d
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,v_3d,istatus)       
+
+                    else
+                        call get_file_time(c_filespec,i4time_ref
+     1                                               ,i4time_3dw)
+                        call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                  ,u_3d,v_3d,ext_wind,istatus)
+
+                    endif
+
                     call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
 
-                elseif(c_field .eq. 'w ')then
-                    if(lapsplot_pregen .or. c_wind .ne. 'c')then
-                      if(c_wind .ne. 'q')then ! Pregenerated Kinematic or
-                                              ! Balanced Omega
-                        call get_file_time(c_filespec,i4time_ref,i4time_
-     13dw)
+                elseif(c_field .eq. 'w ' .or. c_field .eq. 'om')then ! Omega
+                    write(6,*)' Reading Omega/W'
+                    call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+
+                    if(c_wind .eq. 'k')then
                         call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                  ,omega_3d,ext_wind,istatus)
-                        call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
 
-                      else ! Read Pregenerated QG Omega
-                        call get_file_time(c_filespec,i4time_ref,i4time_
-     13dw)
-!                       call GET_MAPS_QGOM(I4TIME_3DW,omega_3d,ISTATUS)
-                        write(6,*)' GET_MAPS_QGOM disabled'
-                        call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
+                    elseif(c_wind .eq. 'b')then
+                        directory = directory(1:len_dir)//'lw3'
+                        ext = 'lw3'
 
-                      endif
+                        var_2d = 'OM'
+
+                        call get_3dgrid_dname(directory
+     1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
+     1                  ,ext,var_2d,units_2d
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,u_3d,istatus)       
+
+                    elseif(c_wind .eq. 'c')then
+                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                  ,omega_3d,ext_wind,istatus)
+
                     endif
+
+                    call make_fnam_lp(i4time_3dw,asc_tim_9,istatus)
 
                 endif
             endif
@@ -746,32 +786,107 @@ c read in laps lat/lon and topo
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
             i_contour = 2
-            c33_label = 'LAPS Wind      Vert X-Sect  (kt) '
+
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS Wind (Balanced)       knots '
+            else ! if(c_wind .eq. 'k')then
+                c33_label = 'LAPS Wind                  knots '
+            endif
+
+
+        elseif(c_field .eq. 'om' )then
+
+            write(6,*)' Still working on units for omega'
+
+            if(ext_wind .eq. 'lco')then ! Cloud Omega
+
+!               Take out missing data values to ensure better interpolation
+                do k = 1,NZ_L
+                do j = 1,NY_L
+                do i = 1,NX_L
+                    if(omega_3d(i,j,k) .eq. r_missing_data)then
+                        omega_3d(i,j,k) = -1e-30
+                    endif
+                enddo ! i
+                enddo ! j
+                enddo ! k
+
+                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
+     1                        ,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C
+     1                        ,r_missing_data)
+
+                call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+                call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow
+     1                            ,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+                do k = 1,NZ_C
+                do i = 1,NX_C
+                    if(field_vert(i,k) .ne. r_missing_data)then
+                        field_vert(i,k) = field_vert(i,k)*10. ! Pa/S to ubar/S
+                    else
+                        field_vert(i,k) = -1e-30
+                    endif
+                enddo ! i
+                enddo ! k
+
+                cint = -1.
+
+            else ! Not LCO field
+                call interp_3d(omega_3d,field_vert
+     1                        ,xlow,xhigh,ylow,yhigh
+     1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
+
+
+                call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+                call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow,yhigh,       
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+
+                do k = NZ_C,1,-1
+                do i = 1,NX_C
+                    if(field_vert(i,k) .ne. r_missing_data)then
+                        field_vert(i,k) = field_vert(i,k)*10. ! Pa/S to ubar/S
+!                   else
+!                       field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                    endif
+                enddo ! i
+                enddo ! k
+
+                cint = -1.
+
+            endif ! LCO field
+
+            i_contour = 1
+
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS Omega (balanced)      ubar/s'
+            else   if(c_wind .eq. 'c')then
+                c33_label = 'LAPS Omega (cloud   )      ubar/s'
+            else ! if(c_wind .eq. 'k')then
+                c33_label = 'LAPS Omega (lw3)           ubar/s'
+            endif
 
         elseif(c_field .eq. 'w ' )then
 
             if(ext_wind .eq. 'lco')then ! Cloud Omega
 
-                if(.not. lapsplot_pregen)then ! Calculate on the Fly
-                    continue
+!               Take out missing data values to insure better interpolation
+                do k = 1,NZ_L
+                do j = 1,NY_L
+                do i = 1,NX_L
+                    if(omega_3d(i,j,k) .eq. r_missing_data)then
+                        omega_3d(i,j,k) = -1e-30
+                    endif
+                enddo ! i
+                enddo ! j
+                enddo ! k
 
-                else ! for pregenerated or non-cloud omega
-!                   Take out missing data values to insure better interpolation
-                    do k = 1,NZ_L
-                    do j = 1,NY_L
-                    do i = 1,NX_L
-                        if(omega_3d(i,j,k) .eq. r_missing_data)then
-                            omega_3d(i,j,k) = -1e-30
-                        endif
-                    enddo ! i
-                    enddo ! j
-                    enddo ! k
-
-                    call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
-     1                            ,yhigh,
-     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
-
-                endif ! (Read Pregenerated File)
+                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow
+     1                        ,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C
+     1                        ,r_missing_data)
 
                 call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d
      1                                                    ,istatus)
@@ -824,13 +939,11 @@ c read in laps lat/lon and topo
 
             i_contour = 1
 
-            if       (c_wind .eq. 'y')then
+            if       (c_wind .eq. 'b')then
                 c33_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
             else   if(c_wind .eq. 'c')then
                 c33_label = 'LAPS W (cloud) Vert X-Sect (cm/s)'
-            else   if(c_wind .eq. 'q')then
-                c33_label = 'LAPS W (Q-G)   Vert X-Sect (cm/s)'
-            else ! if(c_wind .eq. 'n')then
+            else ! if(c_wind .eq. 'k')then
                 c33_label = 'LAPS W (kinem) Vert X-Sect (cm/s)'
             endif
 
@@ -903,7 +1016,12 @@ c read in laps lat/lon and topo
             chigh = +1000.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS Isotachs  Vert X-Sect  (kt) '
+
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS Isotachs (Balanced)   knots '
+            else ! if(c_wind .eq. 'k')then
+                c33_label = 'LAPS Isotachs              knots '
+            endif
 
         elseif(c_field .eq. 'di' )then
             call interp_3d(u_3d,u_vert,xlow,xhigh,ylow,yhigh,
@@ -928,7 +1046,11 @@ c read in laps lat/lon and topo
             chigh = +1000.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS Isogons   Vert X-Sect  (Deg)'
+            if       (c_wind .eq. 'b')then
+                c33_label = 'LAPS Isogons (Balanced)    knots '
+            else ! if(c_wind .eq. 'k')then
+                c33_label = 'LAPS Isogons               knots '
+            endif
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
      1                   .or. c_field .eq. 'rk')then
@@ -1119,8 +1241,8 @@ c read in laps lat/lon and topo
             write(6,*)' Plotting cloud gridded image'
 
             ext = 'lc3'
-            call get_clouds_3dgrid(i4time_ref,i4time_nearest,NX_L,NY_L,K
-     1CLOUD
+            call get_clouds_3dgrid(i4time_ref,i4time_nearest
+     1               ,NX_L,NY_L,KCLOUD
      1               ,ext,clouds_3d,cld_hts,cld_pres,istatus)
 
             if(istatus .ne. 1)then
@@ -1259,9 +1381,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 't ')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
+
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!           if(istatus .ne. 1)goto100
+     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
@@ -1279,10 +1401,39 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             i_contour = 1
             c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
 
+        elseif(c_field .eq. 'bt')then
+            var_2d = 'T3'
+            call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
+            ext='lt1'
+
+            call get_directory('balance',directory,lend)
+            directory=directory(1:lend)//'lt1/'
+
+            call get_3dgrid_dname(directory
+     1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
+     1           ,ext,var_2d,units_2d
+     1           ,comment_2d,NX_L,NY_L,NZ_L,temp_3d,istatus)       
+
+            call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
+            call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = 1,NZ_L
+            do i = 1,NX_C
+                field_vert(i,k) = field_vert(i,k) - 273.15 ! K to C
+            enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +100.
+            cint = 5.
+            i_contour = 1
+            c33_label = 'LAPS Temp (Balanced)        Deg C'
+
         elseif(c_field .eq. 'ts')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
@@ -1523,7 +1674,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
                 call interp_3dn(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh
-     1,NX_L,NY_L,NZ_L,NX_C,NZ_C)
+     1                         ,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
                 do k = 1,NZ_C
                 do i = 1,NX_C
@@ -2770,3 +2921,96 @@ c       write(6,1)rmin,R1,R2,RD1,RD2,tclo
 1       format(f12.10,5f12.8)
         return
         end
+
+c
+
+        subroutine get_3dgrid_dname(directory_in
+     1         ,i4time_needed,i4tol,i4time_nearest
+     1         ,EXT,var_2d,units_2d
+     1         ,comment_2d,imax,jmax,kmax,field_3d,istatus)
+
+cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time window.
+
+!       directory_in        Input      Slash at end is optional
+!       i4time_needed       Input      Desired i4time
+!       imax,jmax,kmax      Input      LAPS grid dimensions
+!       ext                 Input      3 character file extension
+!       var_2d              Input      Which Variable do you want?
+!       units_2d            Output     Units of data
+!       Comment_2d          Output     Comment block
+!       field_3d            Output     3D grid
+
+        character*9 asc9_tim
+
+        character*150 DIRECTORY_IN
+        character*150 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax),var_2d
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
+
+        real*4 field_3d(imax,jmax,kmax)
+
+        character*255 c_filespec
+
+        logical ltest_vertical_grid
+
+        write(6,*)' Subroutine get_3dgrid_dname'
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_3dgrid_dname: bad istatus, return'
+            return
+        endif
+
+        call s_len(ext,len_ext)
+        call s_len(directory_in,len_dir)
+
+        if(directory_in(len_dir:len_dir) .ne. '/')then
+            directory = directory_in(1:len_dir)//'/'
+            len_dir = len_dir + 1
+        else
+            directory = directory_in
+        endif
+
+        c_filespec = directory(1:len_dir)//'*.'//ext(1:len_ext)
+        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
+
+        if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
+            do k = 1,kmax
+                units_3d(k)   = units_2d
+                if(ltest_vertical_grid('HEIGHT'))then
+                    lvl_3d(k) = zcoord_of_level(k)/10
+                    lvl_coord_3d(k) = 'MSL'
+                elseif(ltest_vertical_grid('PRESSURE'))then
+                    lvl_3d(k) = nint(zcoord_of_level(k))/100
+                    lvl_coord_3d(k) = 'MB'
+                else
+                    write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                    istatus = 0
+                    return
+                endif
+
+                var_3d(k) = var_2d
+
+            enddo ! k
+
+            CALL READ_LAPS_DATA(I4TIME_NEAREST,DIRECTORY,EXT,imax,jmax,       
+     1           kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1                     COMMENT_3D,field_3d,ISTATUS)
+
+            comment_2d=comment_3d(1)
+            units_2d=units_3d(1)
+
+        else
+            write(6,*)' No field found within window ',ext(1:10)
+            istatus = 0
+        endif
+
+        return
+        end
+

@@ -329,19 +329,19 @@ c       include 'satellite_dims_lvd.inc'
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd] Wind (LW3/LWM),'
      1       ,' [wb,wr,wf,bw] (LGA/LGB, RAM/RSF, LAPS-BKG, QBAL), '
-     1       /'     [co] Cloud Omega,'
-     1       ,' [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
-     1       ,' [ne] CIN' 
+     1       /'     [co,bo] Cloud/Balance Omega,'
+     1       ,' [lw] li*w, [li,he,pe,ne] li, helcty, CAPE, CIN'
      1       /'     [s] Other Stability Indices'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
      1       /'     SFC: [p,pm,ps,tt,td,ws,vv,hu,ta,th,te,vo,mr,mc,dv'       
      1       ,',ha,ma,sp,cs,vs,tw,fw,hi]'
-     1       /'          [ob,st] obs plot/station locations'
+     1       /'          [ob,st,oq,sq] obs plot/station locations'
+!    1       /'          [ob,st] obs plot/station locations'
      1       ,'  [bs] Sfc background'
      1       /
-     1       /'     [t,tb,tr,to] Temp (LAPS,LGA,RAM,OBS)'      
+     1       /'     [t,tb,tr,to,bt] Temp (LAPS,LGA,RAM,OBS,QBAL)'      
      1       ,',   [pt] Pot Temp'
      1       /'     [ht,hb,hr,hy,bh] Hgts (LAPS,LGA,RAM,Hydrstc,QBAL),'
      1       /'     [hh] Height of Const Temp Sfc')
@@ -373,7 +373,8 @@ c       include 'satellite_dims_lvd.inc'
 !  ***  Ask for wind field ! ***************************************************
         if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
-     1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw')then
+     1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw'
+     1    .or. c_type .eq. 'bo')then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
@@ -405,12 +406,12 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'lw3'
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-            elseif(c_type .eq. 'bw')then
+            elseif(c_type .eq. 'bw'.or.c_type.eq.'bo')then
                 ext = 'balance'
             endif
 
 
-            if(c_type.eq.'bw')then
+            if(c_type.eq.'bw'.or.c_type.eq.'bo')then
                call get_filespec(ext,1,c_filespec,istatus)
                ext='lw3'
                call s_len(c_filespec,ilen)
@@ -442,8 +443,8 @@ c       include 'satellite_dims_lvd.inc'
             call get_file_time(c_filespec,i4time_ref,i4time_3dw)
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
-            if(c_type.eq.'bw')ext='balance'
-            if(c_type .eq. 'co')then
+            if(c_type.eq.'bw'.or.c_type.eq.'bo')ext='balance'
+            if(c_type .eq. 'co'.or.c_type.eq.'bo')then
                 c_field = 'w'
                 goto115
             endif
@@ -698,12 +699,21 @@ c       include 'satellite_dims_lvd.inc'
                     call get_laps_2d(i4time_3dw,ext,var_2d
      1                  ,units_2d,comment_2d,NX_L,NY_L,w_2d,istatus)
 
-                else
+                else if(c_type.eq.'co')then
                     var_2d = 'OM'
                     ext = 'lw3'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
+
+                else if(c_type.eq.'bo')then
+                    var_2d = 'OM'
+                    ext = 'lw3'
+                    call get_directory('balance',directory,lend)
+                    directory=directory(1:lend)//'lw3/'
+                    call get_2dgrid_dname(directory
+     1     ,i4time_3dw,laps_cycle_time*100,i4time_heights,ext,var_2d
+     1     ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)
 
                 endif
 
@@ -951,19 +961,22 @@ c       include 'satellite_dims_lvd.inc'
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ms' .or. c_type .eq. 'ob'
-     1                          .or. c_type .eq. 'st'   )then
+     1                          .or. c_type .eq. 'st'   
+     1                          .or. c_type .eq. 'oq'   
+     1                          .or. c_type .eq. 'sq'   
+     1                                                )then
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
             call get_filespec('lso',2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
             call make_fnam_lp(i4time_plot,asc_tim_9,istatus)
 
-            if(c_type .eq. 'st')iflag = 0
-            if(c_type .eq. 'ms')iflag = 1
-            if(c_type .eq. 'ob')iflag = 2
+            if(c_type(1:1) .eq. 's' )iflag = 0
+            if(c_type      .eq. 'ms')iflag = 1
+            if(c_type(1:1) .eq. 'o' )iflag = 2
 
             c33_label = '                                 '
 
-            call plot_stations(asc_tim_9,c33_label,c_field,i_overlay
+            call plot_stations(asc_tim_9,c33_label,c_type,i_overlay
      1                        ,c_display,lat,lon,c_file,iflag
      1                        ,NX_L,NY_L,laps_cycle_time)
 
@@ -1957,7 +1970,7 @@ c
      1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 't' .or. c_type .eq. 'pt')then
+        elseif(c_type .eq.'t'.or.c_type.eq.'pt'.or.c_type.eq.'bt')then
             write(6,1513)
 1513        format('     Enter Level in mb',48x,'? ',$)
             read(lun,*)k_level
@@ -1999,6 +2012,24 @@ c
                 endif
 
                 call mklabel33(k_level,'  Temperature     C',c33_label)
+
+             elseif(c_type.eq. 'bt')then
+
+                var_2d = 'T3'
+                call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
+                ext='lt1'
+
+                call get_directory('balance',directory,lend)
+                directory=directory(1:lend)//'lt1/'
+                call get_2dgrid_dname(directory,i4time_ref
+     1           ,laps_cycle_time*10000,i4time_heights,ext,var_2d
+     1           ,units_2d,comment_2d,NX_L,NY_L,temp_2d,k_level,istatus)       
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    temp_2d(i,j) = temp_2d(i,j) - 273.15
+                enddo ! j
+                enddo ! i
 
             endif
 
@@ -4667,7 +4698,7 @@ c             cint = -1.
      1               ,c_metacode
 
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L
-     1                                 ,iflag,maxstns)
+     1                                 ,iflag,maxstns,c_field)
         endif
 
         write(6,*)' Plotting: c_metacode,i_overlay = ',
@@ -4717,7 +4748,7 @@ c             cint = -1.
                 write(6,*)' Call plot_station_locations: 5 '
      1                   ,iflag,c_metacode       
                 call plot_station_locations(i4time_file,lat,lon
-     1                                ,NX_L,NY_L,iflag,maxstns)
+     1                                ,NX_L,NY_L,iflag,maxstns,c_field)       
             endif
 
         endif
@@ -4765,7 +4796,7 @@ c             cint = -1.
         end
 
         subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag,
-     1                                    maxstns)
+     1                                    maxstns,c_field)
 
 !       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
@@ -4789,6 +4820,7 @@ c
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
         character*13 filename13
+        character*2 c_field
 
 !       Declarations for new read_surface routine
 !       New arrays for reading in the SAO data from the LSO files
@@ -4818,15 +4850,23 @@ c
 
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
-        infile = directory(1:len_dir)//filename13(i4time_lso,ext(1:3))       
+        if(c_field(2:2) .eq. 'q')then ! LSO_QC file
+            infile = 
+     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))//'_qc'    
 
-        write(6,*)infile
-        call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
+        else ! Regular LSO file
+            infile = 
+     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))  
+
+        endif
+
+        call read_surface_old(infile,maxstns,atime,n_meso_g,
+     &           n_meso_pos,
      &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
      &           n_obs_g,n_obs_pos_g,
      &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
      &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
+     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,       
      &           store_emv,
      &           store_amt,store_hgt,vis,obstime,istatus)
 
