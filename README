@@ -8,21 +8,21 @@
 
      1.0 ............  General LAPS info
      2.0 ............  Installing and running the LAPS Ingest/Analysis code 
-         2.1 ..............  Installation Procedure Summary
-         2.1.1 ..................  Untarring the Source Code
-         2.1.2 ..................  Running Configure
-         2.1.3 ..................  Ingest Software changes
-         2.1.4 ..................  Running make
-         2.1.5 ..................  Untarring the geography databases
-         2.1.6 ..................  Setting Runtime Parameters
-         2.1.7 ..................  Running the Localization
-         2.2 ..............  UNIX System Requirements
-         2.2.1 ..................  NetCDF library
-         2.2.2 ..................  Perl
-         2.2.3 ..................  make
-         2.2.4 ..................  Plotting / NCAR graphics library (optional)
-         2.2.5 ..................  C Compiler
-         2.2.6 ..................  FORTRAN Compiler
+         2.1 ..............  UNIX System Requirements
+         2.1.1 ..................  NetCDF library
+         2.1.2 ..................  Perl
+         2.1.3 ..................  make
+         2.1.4 ..................  C Compiler
+         2.1.5 ..................  FORTRAN Compiler
+         2.1.6 ..................  Plotting / NCAR graphics library (optional)
+         2.2 ..............  Installation Procedure Summary
+         2.2.1 ..................  Untarring the Source Code
+         2.2.2 ..................  Running Configure
+         2.2.3 ..................  Ingest Software changes
+         2.2.4 ..................  Running make
+         2.2.5 ..................  Untarring the geography databases
+         2.2.6 ..................  Setting Runtime Parameters
+         2.2.7 ..................  Running the Localization
          2.3 ..............  Raw data ingest 
          2.4 ..............  Running LAPS Analyses 
          2.5 ..............  Test data case
@@ -79,36 +79,135 @@
      support older versions of LAPS code. It is also recommended that LAPS 
      users try to take advantage of the latest LAPS updates by periodically 
      importing a fresh tar file every few months or so. A log of detailing 
-     recent revisions to the LAPS code may be found in laps/Revisions*.
+     recent revisions to the LAPS code may be found in 'laps/REVISIONS'.
 
 ---------- 2.0 Installing and running the LAPS Ingest/Analysis code -----------
 
+      ----------------  2.1   UNIX System Requirements  ----------------
 
-     ------------- 2.1 Installation Procedure Summary ------------------
+     Supported UNIX platforms include
+<pre>
+     IBM rs6000      AIX3.25 and AIX4.
+     HP              HPUX 10.20
+     SunOS (Solaris) 5.6               Requires f90
+     IRIX64          6.4               Works using f77 but requires namelist 
+                                       end delimiter be changed from / to $
+</pre>
+
+     We are working on adding more supported platforms. We welcome suggestions
+     on how to modify LAPS for other platforms, though we cannot yet guarantee
+     the portability of LAPS to these additional platforms.
+
+                      --- 2.1.1   NetCDF library   ---
+ 
+     The NetCDF package is required for laps, it is available via internet at 
+     'http://www.unidata.ucar.edu/packages/netcdf/'
+     netcdf 3.3.1 or higher is required.
+     Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
+     programs are in your path, so that 'configure' will find them and 
+     provide the laps package with the proper path.  You can also provide the 
+     path to netcdf to 'configure' by using the command line 
+     argument --netcdf=NETCDF 
+   
+                      --- 2.1.2  Perl             ---
+
+     The perl package is also required for laps, it is available 
+     via internet at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.  
+     Perl 5.003 or higher is required.  
+
+                      --- 2.1.3  make             ---
+
+     Laps Makefiles work best by using gnu make (version 3.75 or higher).  
+     This is available at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.
+     Some vendor provided make utilities may also work, however if you find 
+     you are having problems in this area please try installing and using gnu 
+     make.
+
+                    ---  2.1.4  C Compiler ---
+
+     In general, an ANSI compliant C compiler should be used. On some hardware
+     ANSI compliance requires a compiler flag, if you're not sure check the 
+     documentation for your compiler. Some platforms such as Solaris and HPUX 
+     do not come with an ANSI compliant C compiler by default.  If you have 
+     not purchased that additional product from the vendor, we recommend GNU C
+     available at 'ftp://prep.ai.mit.edu/pub/gnu'.
+
+                  ---  2.1.5  FORTRAN Compiler ---
+
+     Please note that LAPS uses dynamic memory within the FORTRAN code in
+     the form of automatic arrays. This implies that you will need a FORTRAN
+     90 compiler, or at least an f77 compiler that has f90 extensions
+     allowing for automatic arrays. LAPS will not work on a strict f77 
+     compiler that does not allow automatic arrays. Conversely, we are using
+     only a subset of f90 constructs to help ensure compatability with f77
+     compilers.
+
+   
+            ---  2.1.6  Plotting / NCAR graphics library (optional)  ---
+
+     To build the lapsplot process, access to an NCAR graphics library is 
+     needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
+     plotting program, thus NCAR graphics is optional. You might wish to check
+     the following World Wide Web location for more info...
+
+                   http://ngwww.ucar.edu
+
+     The 'lapsplot.exe' executable is an interactive program that reads in
+     the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
+     file can be displayed using other NCAR graphics utilities like 'ctrans'
+     and 'idt'.
+
+     'Lapsplot' is designed to work with version 3.2 (or higher) of NCAR 
+     graphics.
+
+     'Lapsplot' can be modified to show political boundaries outside of the 
+     U.S. The following data files are relevant from the 'static/ncarg' 
+     directory: 'continent_minus_us.dat', 'state_from_counties.dat', and 
+     'uscounty.dat'.
+
+     Please note that 'lapsplot' is provided to help you check out how your
+     LAPS implementation is working. The LAPB Branch does not have any other 
+     plotting or visualization packages available with LAPS at this time. 
+     One note of interest is that LAPS is visualized as an integral part of 
+     the AWIPS system.
 
 
-            ----   2.1.1  Untarring the Source Code  ---
+     ------------- 2.2 Installation Procedure Summary ------------------
 
-     Untar the laps source code using a command like
+
+            ----   2.2.1  Untarring the Source Code  ---
+
+     Untar the laps source code using a command like...
      $ zcat laps-m-n-o.tar.gz | tar xf -
+ 
+     OR...
 
-                ----   2.1.2  Running Configure ---
+     $ gunzip laps-m-n-o.tar.gz
+     $ tar -xf laps-m-n-o.tar
 
-     Go to the laps root directory and run 
+     The laps root directory will be set up one level below the tar file.
+
+                ----   2.2.2  Running Configure ---
+
+     Go to the laps root directory and run...
      $ ./configure
 
-     configure supports many options, the most important is the
+     You may want to save the output from 'configure' in a log for future
+     reference.
+
+     'configure' supports many options, the most important is the
      --prefix option which tells make where to install the laps system.
      The default is to install whereever the source is. A fully
      operational laps system can require up to 1 GB of disk space,
      this will vary depending on domain size and purge interval (more
      on this later).  You can also separate the data (read/write) from
-     the binary executables (read only) using the --datadir option.  For 
-     example, to install laps in directory '/data/fxa/laps' with data 
-     in '/data/fxa/laps/data' use 
+     the binary executables (read only) using the --datadir option.  
+
+     For example, to install laps in directory '/data/fxa/laps' with data 
+     in '/data/fxa/laps/data' use... 
      $ ./configure --prefix=/data/fxa/laps
      
-     To install in /usr/local/laps with data in /data/fxa/laps use
+     To install in /usr/local/laps with data in /data/fxa/laps use...
      $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
      
      One or more alternate data directories for running laps can be specified 
@@ -117,7 +216,7 @@
      also makes it a bit easier to maintain your own local set of parameters 
      that are unique to your domain. 
 
-                --- 2.1.3   Ingest Software changes ---
+                --- 2.2.3   Ingest Software changes ---
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
@@ -132,7 +231,7 @@
      your local implementation.
 
 
-                ----   2.1.4  Running make ---
+                ----   2.2.4  Running make ---
 
      The next step is to build and install the executables, this can be done 
      by running 
@@ -141,7 +240,7 @@
      Version 3.74 or later available via ftp from any GNU site. 
 
 
-            ----   2.1.5  Untarring the geography databases  ---
+            ----   2.2.5  Untarring the geography databases  ---
 
      Next untar the 'laps_terrain.tar.gz' file anywhere that is convenient
      on your machine.
@@ -153,13 +252,13 @@
      database. Only one copy of the topo data is required no matter how many 
      data installations you are supporting. The paths to the three main
      subdirectories (topo_30s, topo_10m, and land_10m) are defined as
-     runtime parameters within the 'nest7grid.parms' file (Sec 2.1.6). 
+     runtime parameters within the 'nest7grid.parms' file (Sec 2.2.6). 
 
      The land fraction database is required for the 'land_10m' subdirectory
      and is included in the 'laps_terrain.tar.gz' file.
 
 
-                --- 2.1.6   Setting Runtime Parameters ---
+                --- 2.2.6   Setting Runtime Parameters ---
 
      Runtime parameter changes (Sec 2.8) may be needed to specify the 
      domain(s); this includes ingest data path names, grid dimension and
@@ -181,7 +280,7 @@
      next section). 
 
 
-                ----   2.1.7  Running the Localization ---
+                ----   2.2.7  Running the Localization ---
 
      Finally you can create the static data files and look up tables specific 
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
@@ -195,89 +294,6 @@
      If you have multiple domains, 'make' can be run for each domain with
      different values of 'DATAROOT'. 
 
-
-      ----------------  2.2   UNIX System Requirements  ----------------
-
-     Supported UNIX platforms include
-<pre>
-     IBM rs6000      AIX3.25 and AIX4.
-     HP              HPUX 10.20
-     SunOS (Solaris) 5.6               Requires f90
-     IRIX64          6.4               Works using f77 but requires namelist 
-                                       end delimiter be changed from / to $
-</pre>
-
-     We are working on adding more supported platforms. We welcome suggestions
-     on how to modify LAPS for other platforms, though we cannot yet guarantee
-     the portability of LAPS to these additional platforms.
-
-                      --- 2.2.1   NetCDF library   ---
- 
-     The NetCDF package is required for laps, it is available via internet at 
-     'http://www.unidata.ucar.edu/packages/netcdf/'
-     netcdf 3.3.1 or higher is required.
-     If netCDF is properly installed and the ncdump and ncgen programs are in 
-     your path ./configure will find them and provide the laps package with the
-     proper path.  You can also provide the path to netcdf to ./configure by 
-     using the command line argument --netcdf=NETCDF 
-   
-                      --- 2.2.2  Perl             ---
-
-     The perl package is also required for laps, it is available 
-     via internet at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.  
-     Perl 5.003 or higher is required.  
-
-                      --- 2.2.3  make             ---
-
-     Laps Makefiles work best by using gnu make (version 3.75 or higher).  
-     This is available at any gnu site such as 'ftp://prep.ai.mit.edu/pub/gnu'.
-     Some vendor provided make utilities may also work, however if you find 
-     you are having problems in this area please try installing and using gnu 
-     make.
-
-   
-            ---  2.2.4  Plotting / NCAR graphics library (optional)  ---
-
-     To build the lapsplot process, access to an NCAR graphics library is 
-     needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
-     plotting program, thus NCAR graphics is optional. You might wish to check
-     the following World Wide Web location for more info...
-
-                   http://ngwww.ucar.edu
-
-     The 'lapsplot.exe' executable is an interactive program that reads in
-     the NetCDF LAPS files and produces a 'gmeta' file as output. The 'gmeta'
-     file can be displayed using other NCAR graphics utilities like 'ctrans'
-     and 'idt'.
-
-     Lapsplot can be modified to show political boundaries outside of the U.S.
-     The following data files are relevant from the 'static/ncarg' directory: 
-     'continent_minus_us.dat', 'state_from_counties.dat', and 'uscounty.dat'.
-
-     Please note that lapsplot is provided to help you check out how your
-     LAPS implementation is working. We do not have any other plotting or 
-     visualization packages available with LAPS at this time.
-
-     Lapsplot is designed to work with version 3.2 (or higher) of NCAR graphics.
-
-                    ---  2.2.5  C Compiler ---
-
-     In general, an ANSI compliant C compiler should be used. On some hardware
-     ANSI compliance requires a compiler flag, if you're not sure check the 
-     documentation for your compiler. Some platforms such as Solaris and HPUX 
-     do not come with an ANSI compliant C compiler by default.  If you have 
-     not purchased that additional product from the vendor, we recommend GNU C
-     available at 'ftp://prep.ai.mit.edu/pub/gnu'.
-
-                  ---  2.2.6  FORTRAN Compiler ---
-
-     Please note that LAPS uses dynamic memory within the FORTRAN code in
-     the form of automatic arrays. This implies that you will need a FORTRAN
-     90 compiler, or at least an f77 compiler that has f90 extensions
-     allowing for automatic arrays. LAPS will not work on a strict f77 
-     compiler that does not allow automatic arrays. Conversely, we are using
-     only a subset of f90 constructs to help ensure compatability with f77
-     compilers.
 
                   ---  2.3    Raw data ingest   ---
 
@@ -506,12 +522,12 @@
 
                ---  2.6  Modifying Compiler Flags       ---
 
-     The './configure' script automatically modifies the compilation 
+     The 'configure' script automatically modifies the compilation 
      flags by modifying the Makefiles according to what type of platform
      you are on. Hopefully the flags will work OK on your particular
      platform. If you want to change the flags from the default set, you 
-     can provide command line arguments to either the ./configure script or
-     to the Makefile.  For more information on flags to configure run 
+     can provide command line arguments to either the 'configure' script or
+     to the Makefile.  For more information on flags to 'configure' run 
      $ ./configure --help
 
      If you find that the default compiler flags don't work for your
@@ -519,7 +535,7 @@
      to find the right set of flags.  Experiment in the src/lib/Makefile 
      typically flags which work in that directory will work elsewhere in laps.
      If you find flags that work for your platform and would like us to add 
-     them to the defaults in configure please let us know via e-mail.
+     them to the defaults in 'configure' please let us know via e-mail.
 
 
 ---------------- 2.7 ------ I/O of LAPS gridded files-------------------------
@@ -954,7 +970,7 @@ April 1996
 
 ------ 2.15 -----Detecting and Reporting Installation Errors-------------------
 
-   To determine how well LAPS was installed, verify that all (30 at last check)
+   To determine how well LAPS was installed, verify that all (34 at last check)
    executables were built OK with no errors in the output of 'make'.
 
    Similarly, check the output of the localization script.
