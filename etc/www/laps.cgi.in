@@ -143,6 +143,10 @@ my $default_density = @lines[9];
 $default_density =~ s/ //g;
 chomp $default_density;
 
+my $default_thickness = @lines[10];
+$default_thickness =~ s/ //g;
+chomp $default_thickness;
+
 $n_choices=8;
 
 &ReadParse(*default);
@@ -189,12 +193,19 @@ close LAPSPRD;
 
 #print "@domainlist\n";
 
-@density_list[0] = "0.25";
-@density_list[1] = "0.5";
-@density_list[2] = "1.0";
-@density_list[3] = "2.0";
-@density_list[4] = "4.0";
+@density_list[0] = "0.125";
+@density_list[1] = "0.25";
+@density_list[2] = "0.5";
+@density_list[3] = "1.0";
+@density_list[4] = "2.0";
+@density_list[5] = "4.0";
+@density_list[6] = "8.0";
 #print "@density_list\n";
+
+@thickness_list[0] = "1";
+@thickness_list[1] = "2";
+@thickness_list[2] = "3";
+#print "@thickness_list\n";
 
 ##Here's new stuff (sort of)------------------
 
@@ -340,6 +351,8 @@ print <<"EOF";
 <option $selected{'HELICITY'}> HELICITY
 <option $selected{'HEATINDEX'}> HEATINDEX
 <option $selected{'FIREWX'}> FIREWX
+<option $selected{'VENT_INDX'}> VENT_INDX
+<option $selected{'HAINES'}> HAINES
 <option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
 <option $selected{'CLD_TOP'}> CLD_TOP
 <option $selected{'CLD_LIQ'}> CLD_LIQ
@@ -359,6 +372,8 @@ print <<"EOF";
 <option $selected{'SNOW_STO'}> SNOW_STO
 <option $selected{'SNOW_CVR'}> SNOW_CVR
 <option $selected{'LAND_FRAC'}> LAND_FRAC
+<option $selected{'LE_FLUX'}> LE_FLUX
+<option $selected{'SE_FLUX'}> SE_FLUX
 <option $selected{'ht'}> ht
 <option $selected{'temp'}> temp
 <option $selected{'sfct'}> sfct
@@ -385,6 +400,8 @@ print <<"EOF";
 <option $selected{'vsblty'}> vsblty
 <option $selected{'heatindex'}> heatindex
 <option $selected{'firewx'}> firewx
+<option $selected{'vent_indx'}> vent_indx
+<option $selected{'haines'}> haines
 <option $selected{'cld_cvr'}> cld_cvr
 <option $selected{'cld_base'}> cld_base
 <option $selected{'cld_top'}> cld_top
@@ -534,27 +551,32 @@ print <<"EOF";
 
 </center>
 
+
+<center>
+Thickness:
+<br>
+
+<select name="thickness">
+EOF
+  #display available thicknesses
+
+  foreach $thickness (@thickness_list) {
+
+    if($thickness == $default_thickness ) { print "<option selected>$thickness\n"; } 
+    else               { print "<option>$thickness\n"; } 
+
+  }
+
+print <<"EOF";
+</select>
+
+</center>
+
 </td>
 
 </tr>
 </table>
 <br>
-<!--
-
-<strong>Map Parameters:</strong>&nbsp;
-Zoom: <INPUT NAME="density" VALUE=$default_density size=4>&nbsp;   
-Lon: <INPUT NAME="CenterLon" VALUE=$default_CenterLon size=7><br>
-
-<font size="-1">(The Zoom and the center position specify the map
-parameters of ALL subsequent images.  The default zoom of 1.3 shows
-the entire nation; larger values of zoom show smaller sections of the 
-country.)</font>
-<input type="hidden" name="title" value="$default_title">
-<input type="submit" value="Send Request">
-<input type="reset" value="Previous Selections">
-
--->
-
 
 </FORM>
 
