@@ -674,7 +674,7 @@ c
 	call qcdata(filename,infile_last,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn3, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
-     &     ni,nj,t_bk,mslp_bk,back_t,back_mp,
+     &     ni,nj,t_bk,td_bk,mslp_bk,back_t,back_td,back_mp,
      &     istatus)
 c
 	if(istatus .eq. 1) then
