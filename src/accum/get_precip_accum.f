@@ -663,7 +663,7 @@ cdis
         write(6,*)' Final precip_accum(im,jm) = ',precip_accum(im,jm)
 
 !       Compare to gauge values
-        if(.true.)then
+        if(ilaps_cycle_time .eq. 3600)then
             call get_maxstns(maxsta,istatus)
             call compare_gauge_values(i4time_end,imax,jmax,maxsta  ! I
      1                               ,r_missing_data               ! I
@@ -683,20 +683,22 @@ cdis
 !       values are required for both gridded and gauge values.
 
         include 'read_sfc.inc'
+        include 'constants.inc'
 
         real*4 precip_accum(ni,nj) ! M
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
 
         write(6,*)
-        write(6,*)' Subroutine compare_gauge_values...'
+        write(6,*)' Subroutine compare_gauge_values (1hr pcp inches)...'
+        write(6,*)' #  Name        Gauge Analyzed'
 
         call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
      &           stations,provider,lat_s,lon_s,elev_s,
      &           pcp1,pcp3,pcp6,pcp24,
      &           snow,maxsta,jstatus)
 
-!       Loop through obs and write out precip values
+!       Loop through obs and write out precip values (when gauge reports precip)
         do iob = 1,n_obs_g
 
 !           Obtain LAPS i,j at ob location
@@ -715,8 +717,9 @@ cdis
 
                 if(pcp1(iob) .ge. 0. .and. 
      1             pcp_laps .ne. r_missing_data        )then
-                    write(6,11)iob,pcp1(iob),pcp_laps
-11                  format(i4,2f8.2)             
+                    write(6,11)iob,stations(iob)(1:10)
+     1                        ,pcp1(iob),pcp_laps      
+11                  format(i4,1x,a,2f6.2)             
                 endif
             endif
 
