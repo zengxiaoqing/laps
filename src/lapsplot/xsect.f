@@ -111,6 +111,8 @@ cdis
 
         character*4 c4_log
 
+        character*10 colortable
+
         real*4 dum1_array(NX_L,1)
         real*4 dum2_array(NX_L,1)
         real*4 dum3_array(NX_L,1)
@@ -310,14 +312,18 @@ cdis
         elseif(vymin .eq. .20)then
             ixl_remap = nint(float(NX_P-1) * .0630)
             ixh_remap = nint(float(NX_P-1) * .0630)
-!           iyl_remap = nint(float(NX_P) * .174)
-!           iyh_remap = nint(float(NX_P) * .162)
-!           iyl_remap = nint(float(NX_P-1) * .175)
-!           iyh_remap = nint(float(NX_P-1) * .175)
-            iyl_remap = nint(float(NX_P-1) * .190)
-            iyh_remap = nint(float(NX_P-1) * .165)
+
+            if(NZ_L .eq. 41)then ! e.g. RSA
+                iyl_remap = nint(float(NX_P-1) * .175)
+                iyh_remap = nint(float(NX_P-1) * .166)
+            else
+                iyl_remap = nint(float(NX_P-1) * .175)
+                iyh_remap = nint(float(NX_P-1) * .166)
+            endif
+
         else
             write(6,*)' Error, invalid vymin ',vymin
+
         endif
 
         ioffm = 1 ! Don't plot label stuff in conrec
@@ -364,6 +370,8 @@ c read in laps lat/lon and topo
 !           ibottom_terrain = 1
 
             write(6,*)'    Lowest Displayed Level = ',ibottom_terrain
+            write(6,*)'    NX_P/NZ_C/NZ_L',NX_P,NZ_C,NZ_L
+            write(6,*)'    iyl_remap,iyh_remap',iyl_remap,iyh_remap
 
             bottom = ibottom_terrain
 !       else
@@ -695,8 +703,12 @@ c read in laps lat/lon and topo
         call s_len(c_field,len_field)
         
         if(c_field(len_field:len_field) .eq. 'i' 
+     1                    .and. c_field .ne. 'ri'
      1                    .and. c_field .ne. 'dii')then
             i_image = 1
+            c_field = c_field(1:len_field-1)
+            scale = 1.0                                  ! default
+            colortable = 'hues'                          ! default
         endif
 
         call interp_2d(lat,lat_1d,xlow,xhigh,ylow,yhigh,
@@ -732,8 +744,9 @@ c read in laps lat/lon and topo
 !               call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
 !    1                          ,r_missing_data)
 
-!               call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax,'hues'
-!    1                     ,n_image,scale)    
+!               call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax
+!    1                     ,colortable
+!    1                     ,n_image,scale,'xsect')    
 !               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !               call setusv_dum(2hIN,7)
 !               call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
@@ -1667,7 +1680,7 @@ c read in laps lat/lon and topo
 
             write(6,*)' calling solid fill cloud plot'
             call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear'
-     1                             ,n_image,1e0)       
+     1                             ,n_image,1e0,'xsect')       
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
@@ -2402,6 +2415,155 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         write(6,*)' Plotting, Overlay = ',i_graphics_overlay
      1                                   ,i_label_overlay
+     1                                   ,i_image
+
+        if(abs(i_contour) .eq. 1)then
+            call set(vxmin, vxmax, vymin, vymax
+     1             , rleft, right, bottom, top,1)
+
+!           mini = icolors(i_graphics_overlay)   ! is this effective?
+!           maxi = icolors(i_graphics_overlay)   ! is this effective?
+
+!           if(i_contour .eq. 1)then
+            if(i_image .eq. 0)then
+                call setusv_dum(2hIN,icolors(i_graphics_overlay)) 
+            endif
+
+            vmax = -1e30
+            vmin = 1e30
+
+            do k = ibottom,NZ_C
+            do i = 1,NX_C
+                vmax = max(vmax,field_vert(i,k))
+                vmin = min(vmin,field_vert(i,k))
+            enddo ! k
+            enddo ! i
+
+            write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
+            write(6,*)' Max/Min = ',vmax,vmin
+
+            if(cint .ge. 0.)then
+                if(.false.)then
+!                   CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX'
+!    1                           , icolors(i_graphics_overlay))
+                    call conrec
+     1              (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,clow,chigh,cint,-1,0,-1848,0)
+
+                else ! Can we make this work (anamorphically) for color plots?
+!                   call get_border(ni,nj,x_1,x_2,y_1,y_2)
+!                   call set(x_1,x_2,y_1,y_2,0.05,0.95,0.05,0.95,1)
+
+                    call get_border(NX_C,NZ_C-ibottom+1,x_1,x_2,y_1,y_2)       
+
+                    call remap_field_2d(
+     1                            NX_C,1,NX_C
+     1                           ,NZ_C,ibottom,NZ_C
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
+     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
+     1                           ,field_vert,field_vert3,r_missing_data)       
+
+
+!                   if(i_contour .eq. 1)then
+                    if(i_image .eq. 0)then ! more generic test hopefully
+                        write(6,*)' Calling Set for conrec_line'
+                        call set(0.10,0.90,0.05,0.95
+     1                          ,0.10,0.90,0.05,0.95,1) ! Orig
+
+                        write(6,*)' calling contour line plot'
+                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
+     1                             ,clow,chigh,cint,-1,0,-1848,0)
+
+                    else ! image plot
+                        write(6,*)' calling solid fill cloud plot',cint       
+
+                        call set(0.10,0.90,0.05,0.95
+     1                          ,0.10,0.90,0.05,0.95,1) ! Orig
+
+!                       call set(x_1,x_2,y_1,y_2,0.15,0.85,0.15,0.85,1) ! New
+
+!                       if(cint .eq. 0.)then
+                            call array_range(field_vert3,NX_P,NX_P
+     1                                      ,rmin,rmax,r_missing_data)
+                            clow = rmin
+                            chigh = rmax
+!                       endif
+
+!                       Blank out the edges external to the X-section
+!                       write(6,*)' Blackening the edges'
+!                       do i = 1,NX_P
+!                       do j = 1,NX_P
+!                           if(field_vert3(i,j) .eq. r_missing_data)then       
+!                               field_vert3(i,j) = clow
+!                           endif
+!                       enddo ! j
+!                       enddo ! i
+
+!                       This method remaps well - with large border artifacts
+                        call ccpfil(field_vert3,NX_P,NX_P
+     1                             ,clow,chigh
+!    1                             ,'cpe',n_image,scale,'xsect')       
+     1                             ,colortable,n_image,scale,'xsect')       
+
+!                       This method may avoid the artifacts
+!                       call ccpfil(field_vert(1,ibottom),NX_C
+!    1                             ,(NZ_C-ibottom+1)
+!    1                             ,clow,chigh
+!    1                             ,colortable,n_image,scale,'xsect')       
+
+                    endif
+
+                endif
+
+            else ! logarithmic plot
+              if(.false.)then
+                call conrec(field_vert(1,ibottom)
+     1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                     ,0.,1e8,1e8,-1,0,-1848,0)
+
+                do i = 1,N_CONTOURS
+                    cvalue = factor(i)
+                    if(cvalue .ge. abs(cint))then
+                        call conrec(field_vert(1,ibottom)
+     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,cvalue,cvalue,1e-6,-1,0,-1848,0)
+                        call conrec(field_vert(1,ibottom)
+     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
+     1                             ,-cvalue,-cvalue,1e-6,-1,0,-1848,0)
+                    endif
+                enddo ! i
+
+              else
+                write(6,*)' logarithmic contour line plot'
+                call remap_field_2d(
+     1                            NX_C,1,NX_C
+     1                           ,NZ_C,ibottom,NZ_C
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
+     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
+     1                           ,field_vert,field_vert3,r_missing_data)       
+
+
+                call array_range(field_vert3,NX_P,NX_P,rmin,rmax
+     1                          ,r_missing_data)
+
+                cmax = max(abs(rmin),abs(rmax))
+
+                call conrec_line(field_vert3,NX_P,NX_P,NX_P
+     1                             ,0.,0.,cint,-1,0,-1848,0)
+
+                do i = 1,N_CONTOURS
+                    cvalue = factor(i)
+                    if(cvalue .ge. abs(cint) .and. cvalue .le. cmax)then       
+                        cint_in = 2 * cvalue
+                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
+     1                             ,-cvalue,cvalue,cint_in,-1,0,-1848,0)       
+                    endif
+                enddo ! i
+ 
+             endif
+
+           endif ! cint > 0
+        endif ! i_contour = 1
 
         call upcase(c33_label,c33_label)
         call set(0., 1., vymin2, vymax2, 0.,1.,0.,1.,1)
@@ -2425,7 +2587,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call set(vxmin, vxmax, vymin, vymax
      1             , rleft, right, bottom, top,1)
 
-!           This lets up plot outside the main box
+!           This lets us plot outside the main box
             call set(.00, 1.0, vymin2 , vymax2
      1             , rleft - width/8., right + width/8.,
      1               bottom - r_height/8., top + r_height/8.,1)
@@ -2541,129 +2703,6 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         endif ! i_map .eq. 0
 
-
-        if(abs(i_contour) .eq. 1)then
-            call set(vxmin, vxmax, vymin, vymax
-     1             , rleft, right, bottom, top,1)
-
-!           mini = icolors(i_graphics_overlay)   ! is this effective?
-!           maxi = icolors(i_graphics_overlay)   ! is this effective?
-
-            if(i_contour .eq. 1)then
-                call setusv_dum(2hIN,icolors(i_graphics_overlay)) 
-            endif
-
-            vmax = -1e30
-            vmin = 1e30
-
-            do k = ibottom,NZ_C
-            do i = 1,NX_C
-                vmax = max(vmax,field_vert(i,k))
-                vmin = min(vmin,field_vert(i,k))
-            enddo ! k
-            enddo ! i
-
-            write(6,*)' CLOW,HIGH,CINT ',clow,chigh,cint
-            write(6,*)' Max/Min = ',vmax,vmin
-
-            if(cint .ge. 0.)then
-                if(.false.)then
-!                   CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX'
-!    1                           , icolors(i_graphics_overlay))
-                    call conrec
-     1              (field_vert(1,ibottom),NX_C,NX_C,(NZ_C-ibottom+1)
-     1                             ,clow,chigh,cint,-1,0,-1848,0)
-
-                else ! Can we make this work (anamorphically) for color plots?
-!                   call get_border(ni,nj,x_1,x_2,y_1,y_2)
-!                   call set(x_1,x_2,y_1,y_2,0.05,0.95,0.05,0.95,1)
-
-                    call get_border(NX_C,NZ_C-ibottom+1,x_1,x_2,y_1,y_2)       
-                    write(6,*)' Calling Set for conrec_line'
-                    call set(0.10,0.90,0.05,0.95,0.10,0.90,0.05,0.95,1)
-
-!                   call set(.20, .80, .20, .80
-!    1                     , 1., 61., 1., 21. ,1)
-
-                    call remap_field_2d(
-     1                            NX_C,1,NX_C
-     1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
-     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
-     1                           ,field_vert,field_vert3,r_missing_data)       
-
-
-                    if(i_contour .eq. 1)then
-                        write(6,*)' calling contour line plot'
-                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,clow,chigh,cint,-1,0,-1848,0)
-
-                    else ! image plot
-                        write(6,*)' calling solid fill cloud plot',cint       
-
-                        if(cint .eq. 0.)then
-                            call array_range(field_vert3,NX_P,NX_P
-     1                                      ,rmin,rmax,r_missing_data)
-                            clow = rmin
-                            chigh = rmax
-                        endif
-
-                        call ccpfil(field_vert3,NX_P,NX_P,clow,chigh
-     1                              ,'hues',n_image,scale)       
-
-                    endif
-
-                endif
-
-            else ! logarithmic plot
-              if(.false.)then
-                call conrec(field_vert(1,ibottom)
-     1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
-     1                     ,0.,1e8,1e8,-1,0,-1848,0)
-
-                do i = 1,N_CONTOURS
-                    cvalue = factor(i)
-                    if(cvalue .ge. abs(cint))then
-                        call conrec(field_vert(1,ibottom)
-     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
-     1                             ,cvalue,cvalue,1e-6,-1,0,-1848,0)
-                        call conrec(field_vert(1,ibottom)
-     1                             ,NX_C,NX_C,(NZ_C-ibottom+1)
-     1                             ,-cvalue,-cvalue,1e-6,-1,0,-1848,0)
-                    endif
-                enddo ! i
-
-              else
-                write(6,*)' logarithmic contour line plot'
-                call remap_field_2d(
-     1                            NX_C,1,NX_C
-     1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
-     1                           ,NX_P, 1+iyl_remap, NX_P-iyh_remap
-     1                           ,field_vert,field_vert3,r_missing_data)       
-
-
-                call array_range(field_vert3,NX_P,NX_P,rmin,rmax
-     1                          ,r_missing_data)
-
-                cmax = max(abs(rmin),abs(rmax))
-
-                call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,0.,0.,cint,-1,0,-1848,0)
-
-                do i = 1,N_CONTOURS
-                    cvalue = factor(i)
-                    if(cvalue .ge. abs(cint) .and. cvalue .le. cmax)then       
-                        cint_in = 2 * cvalue
-                        call conrec_line(field_vert3,NX_P,NX_P,NX_P
-     1                             ,-cvalue,cvalue,cint_in,-1,0,-1848,0)       
-                    endif
-                enddo ! i
- 
-             endif
-
-           endif ! cint > 0
-        endif ! i_contour = 1
 
         if(i_contour .eq. 2)then ! Plot Wind Barbs
             call setusv_dum(2hIN,icolors(i_graphics_overlay))
