@@ -19,13 +19,13 @@
            cint = 100.
        elseif(range .gt. 200)then
            cint = 50.
-       elseif(range .gt. 60)then
+       elseif(range .gt. 60)then ! From 60-200, cint = 10 (6  - 20 contours)
            cint = 10.
-       elseif(range .gt. 20)then
+       elseif(range .gt. 30)then ! From  30-60, cint = 5  (6  - 12 contours)
            cint = 5.
-       elseif(range .gt. 5)then
+       elseif(range .gt. 6)then  ! From   6-30, cint = 2  (3  - 15 contours)
            cint = 2.
-       else ! range < 5
+       else ! range < 6          ! From   0- 6, cint = 1  (0  -  6 contours)
            cint = 1.
        endif
 

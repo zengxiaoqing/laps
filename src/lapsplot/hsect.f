@@ -1838,17 +1838,21 @@ cdis
             call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
      1                                     ,istatus)
 
-            if(pres_3d(icen,jcen,k_level) .le. 80000.)then
-                clow =  0.
-                chigh = 0.
-                cint = 2.
-            else
-                clow =  0.
-                chigh = 0.
-                cint = 5.
-            endif
+!           if(pres_3d(icen,jcen,k_level) .le. 80000.)then
+!               clow =  0.
+!               chigh = 0.
+!               cint = 2.
+!           else
+!               clow =  0.
+!               chigh = 0.
+!               cint = 5.
+!           endif
 
-            call plot_cont(temp_2d,1e0,clow,chigh,cint,
+            scale = 1.
+            call contour_settings(temp_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                        ,scale)
+
+            call plot_cont(temp_2d,scale,clow,chigh,cint,
      1                     asc9_tim_t,c33_label,
      1                     i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2682,20 +2686,22 @@ cdis
                 call mklabel33(k_level,' LAPS '//ext(1:3)//' Height dm'
      1                        ,c33_label)
 
-!               clow = 0.
-!               chigh = 0.
-!               call array_range(field_2d,NX_L,NY_L,rmin,rmax
-!    1                      ,r_missing_data)
+                clow = 0.
+                chigh = 0.
+                call array_range(field_2d,NX_L,NY_L,rmin,rmax
+     1                          ,r_missing_data)
 
-!               range = (rmax-rmin) / scale
+                range = (rmax-rmin) / scale
 
-!               if(range .gt. 20)then
-!                   cint = 3.
-!               elseif(range .gt. 8)then
-!                   cint = 2.
-!               else ! range < 8
-!                   cint = 1.
-!               endif
+                if(range .gt. 40)then
+                    cint = 6.
+                elseif(range .gt. 20)then
+                    cint = 3.
+                elseif(range .gt. 8)then
+                    cint = 2.
+                else ! range < 8
+                    cint = 1.
+                endif
 
             else  
                 call mklabel33(k_level,' LAPS '//ext(1:3)//' Temp    C'
@@ -2709,12 +2715,12 @@ cdis
                 enddo ! j
                 enddo ! i
 
+                call contour_settings(field_2d,NX_L,NY_L
+     1                             ,clow,chigh,cint,scale)       
+
             endif
 
             call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
-
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                         ,scale)       
 
             call plot_cont(field_2d,scale,clow,chigh,cint
      1                    ,asc9_tim_t,c33_label,i_overlay,c_display
