@@ -102,10 +102,11 @@ cdis
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
      1                                             ,istatus
+                  go to 900 ! saves computer time searching directories
               endif
           enddo ! itimes
 
-      enddo ! i_radar
+ 900  enddo ! i_radar
 
  999  end
 
