@@ -107,6 +107,7 @@ cdis
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
      1         ,iflag_bogus_w
         logical iflag_snow_potential, l_plot_image, l_image
+        logical l_low_fill, l_high_fill
 
         integer*4 ibase_array(NX_L,NY_L)
         integer*4 itop_array(NX_L,NY_L)
@@ -792,7 +793,7 @@ c       include 'satellite_dims_lvd.inc'
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
      1               ,interval,asc9_tim_3dw
      1               ,c33_label,c_field,k_level,i_overlay,c_display       
-     1               ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel       
+     1               ,NX_L,NY_L,NZ_L,MAX_RADARS,grid_ra_ref,grid_ra_vel       
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w' .or. c_field .eq. 'om')then ! Omega 
@@ -1730,11 +1731,19 @@ c
                     call get_file_time(c_filespec,i4time_get
      1                                ,i4time_radar)    
 
+                    if(ext_radar .ne. 'vrz')then
+                        l_low_fill = .true.                        
+                        l_high_fill = .true.                        
+                    else
+                        l_low_fill = .false.                        
+                        l_high_fill = .false.                        
+                    endif
+
                     call read_radar_3dref(i4time_radar,
 !    1               .true.,ref_base,
      1               .true.,r_missing_data,
      1               NX_L,NY_L,NZ_L,ext_radar,
-     1               lat,lon,topo,.true.,.true.,
+     1               lat,lon,topo,l_low_fill,l_high_fill,
      1               field_3d,
      1               grid_ra_ref,
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
@@ -1942,12 +1951,34 @@ c
             elseif(c_field .eq. 'vi')then
                 call mklabel33(k_mb,'  Radial Vel  (kt) ',c33_label)
 
-                write(6,2031)
-                read(lun,*)i_radar
+                write(6,*)'               # of radars available = '
+     1                    ,n_radars
 
-                call plot_obs(k_level,.false.,asc9_tim,i_radar
-     1          ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel(1,1,1,i_radar)
-     1          ,lat,lon,topo,2)
+                write(6,2032)
+2032            format('         Enter Radar # (of ones available - '
+     1                ,'use 0 for multi-radar plot) ','? ',$)
+                read(lun,*)i_radar  
+
+                idum1_array = 0
+
+                if(i_radar .eq. 0)then ! multi radars
+                    do i_radar = 1,n_radars
+                        write(6,*)'         Plotting radar # ',i_radar
+                        call plot_obs(k_level,.false.,asc9_tim
+     1                      ,i_radar,i_radar
+     1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
+     1                      ,grid_ra_vel(1,1,1,i_radar)    
+     1                      ,lat,lon,topo,2)
+                    enddo ! i_radar
+
+                else ! single radar
+                    call plot_obs(k_level,.false.,asc9_tim
+     1                      ,i_radar,i_radar
+     1                      ,NX_L,NY_L,NZ_L,idum1_array,grid_ra_ref
+     1                      ,grid_ra_vel(1,1,1,i_radar)    
+     1                      ,lat,lon,topo,2)
+
+                endif
 
                 n_image = n_image + 1
 
@@ -3819,7 +3850,8 @@ c                   cint = -1.
             call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom,interval       
      1                     ,asc9_tim_t,c33_label,c_field,k_level
      1                     ,i_overlay,c_display
-     1                     ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
+     1                     ,NX_L,NY_L,NZ_L,MAX_RADARS
+     1                     ,grid_ra_ref,grid_ra_vel
      1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
      1                     ,jdot)
 
@@ -4919,7 +4951,7 @@ c                   cint = -1.
         subroutine plot_barbs(u,v,lat,lon,topo,size,zoom,
      1  interval,asc_tim_9,
      1  c33_label,
-     1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,
+     1  c_field,k_level,i_overlay,c_display,imax,jmax,kmax,max_radars,       
      1  grid_ra_ref,grid_ra_vel,NX_L,NY_L,r_missing_data,
      1  laps_cycle_time,jdot)      
 
@@ -5021,8 +5053,19 @@ c                   cint = -1.
 2041                format('         Enter Radar #   ',45x,'? ',$)
                     read(5,*)i_radar
 
+                    idum1_array = 0
+
+                    if(i_radar .gt. 0)then         ! single radar plot
+                        i_radar_start = i_radar
+                        i_radar_end = i_radar
+                    else                           ! multi-radar plot
+                        i_radar_start = 1
+                        i_radar_end = max_radars
+                    endif
+
                     call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
-     1                  ,i_radar,imax,jmax,kmax
+     1                  ,i_radar_start,i_radar_end
+     1                  ,imax,jmax,kmax,idum1_array
      1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
                     return
                 endif
