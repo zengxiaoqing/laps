@@ -328,7 +328,7 @@ if( defined($LAPS_TEMPLATE) ){
         foreach (@filelist){
            if( ! /^\./ && ! /dataroot/ && ! /domain/ ){
               print "Copy $LAPS_TEMPLATE/$_ to $LAPS_DATA_ROOT/static \n";
-              system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
+              system("cp -r $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
            }
         }
 
