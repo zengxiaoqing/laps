@@ -4,9 +4,13 @@
         integer b_vel_cmn(MAX_VEL_GATES,MAX_RAY_TILT)  
 
         integer n_rays_cmn,i_tilt_cmn,n_ref_gates_cmn,n_vel_gates_cmn
+        real*4 first_ref_m_cmn,first_vel_m_cmn
+        real*4 gsp_ref_m_cmn,gsp_vel_m_cmn
         real*4 azim_cmn(MAX_RAY_TILT),elev_cmn,
      1         v_nyquist_ray_a_cmn(MAX_RAY_TILT)
 
         common /buffer_cmn/b_ref_cmn,b_vel_cmn,n_rays_cmn,i_tilt_cmn,
-     1  n_ref_gates_cmn,n_vel_gates_cmn,azim_cmn,elev_cmn,
-     1  v_nyquist_ray_a_cmn,b_missing_cmn
+     1         n_ref_gates_cmn,n_vel_gates_cmn,azim_cmn,elev_cmn,
+     1         v_nyquist_ray_a_cmn,b_missing_cmn,
+     1         first_ref_m_cmn,first_vel_m_cmn,
+     1         gsp_ref_m_cmn,gsp_vel_m_cmn

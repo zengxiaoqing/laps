@@ -67,6 +67,7 @@ c
 c     Misc. Local Variables
 c
       integer i,igate_88d
+      real ratio_ref, ratio_vel
 c
 c     Make sure the array dimensions are consistent
 c
@@ -112,6 +113,8 @@ c
 
 c     Velocity
 
+      ratio_vel = gsp_vel_m_cmn / 250.
+
       DO i = 1,n_vel_gates_cmn
 
         IF (b_vel_cmn(i,i_ray) .ne. b_missing_cmn) THEN
@@ -124,15 +127,20 @@ c     Velocity
 
 c     Reflectivity
 
-      DO i = 4,1840,4
+      ratio_ref = gsp_ref_m_cmn / 250.
 
-        igate_88d = ((i-2)/4)+1
+      DO igate_88d = 1,n_ref_gates_cmn
 
-        IF (b_ref_cmn(igate_88d,i_ray) .ne. b_missing_cmn) THEN
-          reflect(i) = 0.5*float(b_ref_cmn(igate_88d,i_ray))
-        ELSE
-          reflect(i) = r_missing_data
-        END IF
+        i = nint(float(igate_88d) * ratio_ref)
+
+        if(i .le. ngates_remap)then
+            IF (b_ref_cmn(igate_88d,i_ray) .ne. b_missing_cmn) THEN
+              reflect(i) = 0.5*float(b_ref_cmn(igate_88d,i_ray))
+            ELSE
+              reflect(i) = r_missing_data
+            END IF
+
+        endif ! i
 
       ENDDO
 c
