@@ -1,5 +1,6 @@
 c
 c
+c
         subroutine score(TT,T,BB,XB,XT,TA,imax,scf,sca,scb,sco,
      &                   thresh,qcstat,m,badflag)
 c
@@ -84,10 +85,6 @@ c*********************************************************************
 c
       sum=0.
       do l=1,n
-         imix=9.*ran1(ii)+1
-         do i=1,imix
-            ii=ran1(ii)*20000000.-10000000.
-         enddo !i
          sum=sum+ran1(ii)
       enddo !l
       ffz=sum-float(n)/2.
@@ -267,6 +264,59 @@ c
          end 
 c
 c
+         Subroutine trimlist(ta,tda,dda,ffa,lata,lona,eleva,pstna,
+     &     pmsla,alta,stna,providera,reptypea,indexa,maxstaa,
+     &     m,badflag)
+c This routine is designed to reduce the size of a station list by
+c removing stations with all missing data (t, td, dd, ff, pmsl, alt)
+c This should remove precip onlystations and those stations that
+c have perpetually missing data
+         real ta(m),tda(m),dda(m),ffa(m),lata(m),lona(m),eleva(m)
+         real pstna(m),pmsla(m),alta(m)
+         integer indexa(m), iholdx, ix
+         character stna(m)*5,holdnam*5, ch*1
+         character providera(m)*11, holdprov*11
+         character reptypea(m)*6,  holdrep*6
+c for all stations
+          k=0
+    3     k=k+1
+    2     if(k.gt.maxstaa) return
+          if(ta(k).ne.badflag) then
+           go to 3
+          endif
+          if(tda(k).ne.badflag) then
+           go to 3
+          endif
+          if(dda(k).ne.badflag) then
+           go to 3
+          endif
+          if(alta(k).ne.badflag) then
+           go to 3
+          endif
+          if(pmsla(k).ne.badflag) then
+           go to 3
+          endif
+           print*,stna(k),' has all missing data...removed from list'
+           do l=k,maxstaa
+            ta(l)=ta(l+1) 
+            tda(l)=tda(l+1)
+            dda(l)=dda(l+1)
+            ffa(l)=ffa(l+1)
+            pmsla(l)=pmsla(l+1)
+            stna(l)=stna(l+1)
+            providera(l)=providera(l+1)
+            indexa(l)=indexa(l+1)
+            reptypea(l)=reptypea(l+1)
+            lata(l)=lata(l+1)
+            lona(l)=lona(l+1)
+            eleva(l)=eleva(l+1)
+            pstna(l)=pstna(l+1)
+           enddo
+           maxstaa=maxstaa-1
+          go to 2
+         end
+
+
          Subroutine reorder(ta,tda,dda,ffa,lata,lona,eleva,pstna,
      &     pmsla,alta,stna,providera,reptypea,indexa,
      &     tb,tdb,ddb,ffb,latb,lonb,elevb,pstnb,pmslb,altb,stnb,
@@ -303,6 +353,7 @@ c
          holdnam = '     '
          max=maxstaa
          if(maxstab.gt.max)max=maxstab
+         if(maxstaa.eq.0) return
 c
 c first check the master list to find duplicates
 c
@@ -469,8 +520,162 @@ c
          end
 c
 c
+        subroutine grosserr(t,stn,maxsta,m,badflag,badthr,groserr
+     &          ,qcstat)
+        real t(m)
+        integer qcstat(m)
+        character stn(m)*5
+        sum=0
+        sum2=0
+        cnt=0.
+        do i=1,maxsta
+         qcstat(i)=0.
+         if (t(i).ne.badflag) then
+          sum=t(i)+sum
+          cnt=1.+cnt 
+         endif
+        enddo
+        if(cnt.ne.0) then
+         sum=sum/cnt
+        else
+         print*,'entire data set in gross error check is missing'
+         return
+        endif
+        cnt=0.
+        do i=1,maxsta
+         if(t(i).ne.badflag) then
+          sum2=(t(i)-sum)**2+sum2
+          cnt=cnt+1.
+         endif
+        enddo
+        sum2=sqrt(sum2/cnt)
+        top=sum+groserr
+        bot=sum-groserr
+        print*,'avg,stddev,low limit,high limit ',sum,sum2,bot,top
+        do i=1,maxsta
+         if(t(i).eq.badflag) go to 1 
+         if (t(i).lt.bot) go to 3
+         if (t(i).gt.top) go to 3
+         go to 1
+   3     if (abs(t(i)-sum).lt.(badthr*sum2)) go to 1
+         print*,t(i),'at stn ',i,'  ',stn(i),
+     &    ' fails gross error check ...setting to badflag'
+         t(i)=badflag
+         qcstat(i)=10
+   1    enddo
+        return
+        end
+
+        subroutine fillqc(stn,t,lat,lon,elev,theta,
+     &     lapse,maxsta,m,tmx,tmn,hcutoff,vcutoff,grosserr)
+c
+c*********************************************************************
+c
+c     Routine quality contols with buddy values and fills
+c     array t with an interpolated value if missing
+c     uses a pass for theta analysis then the variable
+c     tmx and tmn are the extremes of the variable lapse rate in unit/m)
+c     
+c     Original: John McGinley, NOAA/FSL  Spring 1998
+c     Changes:
+c       24 Aug 1998  Peter Stamus, NOAA/FSL
+c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       15 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          Add to write code 'if' block (1000 format).
+c
+c     Notes:
+c
+c*********************************************************************
+c
+        parameter(badflag=-99.9)
+        common tab(10000),pi,re,rdpdg,reorpd 
+        real t(m),lat(m),lon(m),elev(m),theta(m)
+        real lapse,w(m)
+        character stn(m)*5
+c
+        expsclr=1000.
+c       hcutoff=specify         !dist in m for wt e**-1
+c       vcutoff=specify         !ht(m) in vertical wt to go to e**-1
+        c1=sqrt(expsclr)/hcutoff**2
+        c2=hcutoff**2/vcutoff**2
+        thmx=8./1000.           ! C/m
+        thmn=-1./1000.
+        call regress(elev,theta,maxsta,m,thlapse,sint,thmx,thmn)
+        call regress(elev,t,maxsta,m,lapse,sintt,tmx,tmn)
+c
+c compute avg variable 
+        tbar=0.
+        ebar=0.
+        cnt=0.
+        do i=1,maxsta
+           w(i)=badflag
+           if (t(i).ne.badflag) then
+              cnt=cnt+1.
+              tbar=tbar+t(i)
+              ebar=ebar+elev(i)
+           endif
+        enddo !i
+        if(cnt.eq.0.) then
+         write(6,*) 'Fillqc: all missing data - returning'
+         return
+        endif
+        tbar=tbar/cnt
+        ebar=ebar/cnt
+        nct=0
+        do i=1,maxsta 
+           c11=c1
+           c22=c2
+  10          sumwt=0.
+              sum=0.
+              do j = 1,maxsta
+                 if(i.eq.j) go to 3
+                 if(t(j).eq.badflag) go to 3
+                 ang=(lat(i)+lat(j))*.5*rdpdg
+                 dy=(lat(j)-lat(i))*reorpd
+                 dx=(lon(j)-lon(i))*reorpd*cos(ang)
+                 dz=theta(j)-theta(i)
+                 if(theta(j).eq.badflag.or.theta(i).eq.badflag) then
+                    dz=(elev(j)-elev(j))*thlapse   
+                 endif
+                 iii=int(c11*((dx*dx+dy*dy) +c22*dz*dz))+1
+                 if(iii.gt.10000) iii=10000
+                 sum=tab(iii)*(t(j)-(tbar+lapse*(elev(j)-ebar)))+sum     
+                 sumwt=tab(iii)+sumwt
+ 3            enddo !on j
+              if(sumwt .ne. 0.) then
+                 sum=sum/sumwt+tbar+(elev(i)-ebar)*lapse
+                 if(t(i).eq.badflag) then
+                  w(i)=sum
+                  nct=nct+1
+                 else
+                  if(abs(t(i)-sum).gt.grosserr) then
+                   print*,'Sub fillqc replaces bad value of ',t(i),
+     &                   ' with buddy value ',sum             
+                   t(i)=badflag
+                   w(i)=sum
+                  endif
+c                write(6,1000) i, stn(i), t(i)
+ 1000            format(1x,' Replaced missing ob at stn ',i5,1x,a5,
+     &                  ' with ',F8.3) 
+                 endif
+              else
+                 write(6,*) 'No fill possible for ',stn(i),',station ',i
+                 write(6,*) '..setting data to missing value          '
+                 c11=c11/10.
+                 c22=c22/10.
+                 go to  10
+              endif
+        enddo !i
+        do i=1,maxsta
+         if(w(i).ne.badflag) t(i)=w(i)
+        enddo
+        write(6,*) 'Total number of missing obs replaced is ',nct
+c
+        return
+        end
+c
         subroutine fill(stn,t,lat,lon,elev,theta,
-     &     lapse,maxsta,m,tmx,tmn)
+     &     lapse,maxsta,m,tmx,tmn,hcutoff,vcutoff)
 c
 c*********************************************************************
 c
@@ -492,12 +697,12 @@ c
         parameter(badflag=-99.9)
         common tab(10000),pi,re,rdpdg,reorpd 
         real t(m),lat(m),lon(m),elev(m),theta(m)
-        real lapse
+        real lapse,w(m)
         character stn(m)*5
 c
         expsclr=1000.
-        hcutoff=200000.         !dist in m for wt e**-1
-        vcutoff=5.              !ht(m) in vertical wt to go to e**-1
+c       hcutoff=specify         !dist in m for wt e**-1
+c       vcutoff=specify         !ht(m) in vertical wt to go to e**-1
         c1=sqrt(expsclr)/hcutoff**2
         c2=hcutoff**2/vcutoff**2
         thmx=8./1000.           ! C/m
@@ -510,16 +715,24 @@ c compute avg variable
         ebar=0.
         cnt=0.
         do i=1,maxsta
+           w(i)=badflag
            if (t(i).ne.badflag) then
               cnt=cnt+1.
               tbar=tbar+t(i)
               ebar=ebar+elev(i)
            endif
         enddo !i
+        if(cnt.eq.0.) then
+         write(6,*) 'Fill: All missing data - returning'
+         return
+        endif
         tbar=tbar/cnt
         ebar=ebar/cnt
+        nct=0
         do i=1,maxsta 
-           if(t(i).eq.badflag) then
+           c11=c1
+           c22=c2
+  10       if(t(i).eq.badflag) then
               sumwt=0.
               sum=0.
               do j = 1,maxsta
@@ -531,28 +744,37 @@ c compute avg variable
                  if(theta(j).eq.badflag.or.theta(i).eq.badflag) then
                     dz=(elev(j)-elev(j))*thlapse   
                  endif
-                 iii=int(c1*((dx*dx+dy*dy) +c2*dz*dz))+1
+                 iii=int(c11*((dx*dx+dy*dy) +c22*dz*dz))+1
                  if(iii.gt.10000) iii=10000
                  sum=tab(iii)*(t(j)-(tbar+lapse*(elev(j)-ebar)))+sum     
                  sumwt=tab(iii)+sumwt
  3            enddo !on j
               if(sumwt .ne. 0.) then
-                 t(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
-                 write(6,1000) i, stn(i), t(i)
+                 w(i)=sum/sumwt+tbar+(elev(i)-ebar)*lapse
+                 nct=nct+1
+c                write(6,1000) i, stn(i), w(i)
  1000            format(1x,' Replaced missing ob at stn ',i5,1x,a5,
      &                  ' with ',F8.3) 
               else
-                 write(6,*) ' No fill possible for station ', i
+                 write(6,*) 'No fill possible for ',stn(i),',station ',i
+                 write(6,*) '..trying again by expanding search radius'
+                 c11=c11/10.
+                 c22=c22/10.
+                 go to  10
               endif
            endif 
         enddo !i
+        do i=1,maxsta
+         if(w(i).ne.badflag) t(i)=w(i)
+        enddo
+        write(6,*) 'Total number of missing obs replaced is ',nct
 c
         return
         end
 c
 c
         subroutine fillone(stn,t,lat,lon,elev,theta,
-     &    lapse,maxsta,m,tmx,tmn)
+     &    lapse,maxsta,m,tmx,tmn,hcutoff,vcutoff)
 c
 c*********************************************************************
 c
@@ -578,8 +800,8 @@ c
         character stn(m)*5
 c     
         expsclr=1000.
-        hcutoff=200000.         !dist in m for wt e**-1
-        vcutoff=5.              !ht(m) in vertical wt to go to e**-1
+c       hcutoff=specify         !dist in m for wt e**-1
+c       vcutoff=specify         !ht(m) in vertical wt to go to e**-1
         c1=sqrt(expsclr)/hcutoff**2
         c2=hcutoff**2/vcutoff**2
         thmx=8./1000.           ! C/m
@@ -700,23 +922,19 @@ c
         integer qcstat(m)
 c
         do i=1,maxsta
-           qcstat(i) = 0
-           if(t(i) .eq. badflag) then
-              qcstat(i) = 1
-              ncm(i) = ncm(i) + 1.
-           else
-              if(ta(i) .ne. badflag) then
-                 if(abs(t(i)-ta(i)) .gt. gross) then
-                    qcstat(i) = 10
-                    write(6,*) ' qcset:stn ',i,t(i),
-     &                         ' fails gross error ck relative to ',
-     &                         'estimate ',ta(i),' :ob replaced.'
+           if(qcstat(i).eq.10) then
+                    write(6,*) ' qcset:stn ',i,
+     &                     ' failed gross error ck, replaced with ',
+     &                        'Kalman estimate ',ta(i)
                     t(i) = ta(i)
-                    ncm(i) = ncm(i) + 1.
-                 else
-                    ncm(i) = 0.
-                 endif
-              endif
+           else
+             if(t(i) .eq. badflag) then
+               qcstat(i) = 1
+               ncm(i) = ncm(i) + 1.
+             else
+               qcstat(i)=0.
+               ncm(i) = 0.
+             endif
            endif
         enddo !i
 c
@@ -775,7 +993,7 @@ c
 c
 c
         Subroutine errorproc(dt,y,by,md,xt,x,wr,vr,ar,imax,m,qcstat,
-     &            oberr,wm,wo,wb,length,badthr,atime,icnt,nvar,n,i4time
+     &        oberr,wk,wm,wo,wb,length,badthr,atime,icnt,nvar,n,i4time
      &            ,tor,tcr,tmr,tob,tcb,tmb,totr,totb)
 c
 c*********************************************************************
@@ -797,37 +1015,41 @@ c
         parameter(badflag=-99.9)    
         real dt(m),y(m),xt(m),by(m),md(m),x(m),wr(m),vr(m),ar(m)
         real me,oe,ce
-        real wm(m),wo(m),wb(m)
+        real wm(m),wo(m),wb(m),wk(m)
         real tdt(m),b(m),tmb(nvar),tob(nvar),tcb(nvar),tmr(nvar)
-        real totr(nvar),totb(nvar),tor(nvar),tcr(nvar)
+        real totr(nvar),totb(nvar),tor(nvar),tcr(nvar),oberr2
         integer sca(2,2),scf(2,2),scb(2,2),sco(2,2),imax,qcstat(m)
         integer scat(2,2),scft(2,2),scbt(2,2),scot(2,2),on,off
 c
 c.....  Truth routine and missing ob replacement
 c
         icnt=icnt+1
-        iiiii=icnt+i4time
-        iiiii=ran1(iiiii)*20000000.-10000000.
+        iiiii=-i4timei+icnt
         on=1
         off=0
         if(totr(nvar).ne.0) then
-           me=sqrt(tmr(n)/totr(n))
-           oe=sqrt(tor(n)/totr(n))
-           ce=sqrt(tcr(n)/totr(n))
         endif
         thresh=oberr*badthr 
+        oberr2=oberr*oberr
         do i=1,imax
-           iiiii=ran1(iiiii)*2000000.-1000000.
-           if (dt(i).ne.badflag) then
-              tdt(i)=dt(i)-oberr*ffz(iiiii,20)
+           me=wm(i)**2
+           oe=wo(i)**2
+           ce=wb(i)**2
+c maximum likelyhood estimate of truth from all predictors
+           tdt(i)= 
+     &     (by(i)/ce+md(i)/me+y(i)/oe+dt(i)/oberr2)
+     &            /(1./oe+1./me+1./ce+1./oberr2)
+           fact=1.
+c insert random observation error but skew it toward above truth estimate
+           delt=oberr*ffz(iiiii,20)
+           if(tdt(i).gt.dt(i)) then
+             delt=abs(delt) 
            else
-              tdt(i) =
-     &           .3333*(xt(i)-me*ffz(iiiii,20)) +
-     &           .3333*( x(i)-ce*ffz(iiiii,20)) +
-     &           .3333*( y(i)-oe*ffz(iiiii,20))
+             delt=-abs(delt)
            endif
+           tdt(i)=dt(i)+delt
         enddo !i
-c
+
 c.....  Compute performance stats
 c
         stdwr=0.
@@ -847,6 +1069,7 @@ c
         sum1=0.
         sum2=0.
         sum3=0.
+        sum4=0.
         do i=1,imax
            sumtot=sumtot+1.
            WR(i)=xt(i)-tdt(i)
@@ -855,7 +1078,7 @@ c
            if(dt(i).ne.badflag) then 
               VR(i)=dt(i)-tdt(i)
            else 
-              VR(i)=oberr*(-1.)**(int(10.*ran1(i)+1.))
+              VR(i)=oberr*(-1.)**(int(10.*ran1(iiiii)+1.))
            endif 
            sumvr=sumvr+VR(i)
            stdvr=VR(i)*VR(i)+stdvr
@@ -870,9 +1093,12 @@ c  do kalmod errors
            wb(i)=sqrt(wb(i)/float(length))
            wm(i)=(md(i)-tdt(i))**2+float(length-1)*wm(i)**2
            wm(i)=sqrt(wm(i)/float(length))
+           wk(i)=(ar(i)-tdt(i))**2+float(length-1)*wk(i)**2
+           wk(i)=sqrt(wk(i)/float(length))
            sum1=sum1+wo(i)
            sum2=sum2+wb(i)
            sum3=sum3+wm(i)
+           sum4=sum4+wk(i)
       write(6,9) 'KALMOD ERRORS - OB - BUD - MOD :',i,wo(i),wb(i),wm(i)
       write(6,9) 'KALMOD PERCENTS-OB - BUD - MOD :',i,.5*(wb(i)+wm(i))/
      &  (wo(i)+wb(i)+wm(i)),.5*(wo(i)+wm(i))/(wo(i)+wb(i)+wm(i)),
@@ -1074,7 +1300,7 @@ c
 c*********************************************************************
 c
 c     Function to generated a random number.  Use this instead of a
-c     machine dependent one.
+c     machine dependent one. idum must be a negative integer
 c     
 c     Original: Peter Stamus, NOAA/FSL  07 Oct 1998
 c     Changes:
@@ -1173,4 +1399,67 @@ c
         enddo !j
 c
         return
-        end 
+        end
+      
+        subroutine checknan_pt(x,nan_flag)
+c
+c       Routine to check a single value for NaN's.
+c
+        real x
+c
+        nan_flag = 1
+c
+        if( nan( x ) .eq. 1) then
+           print *,' ** ERROR. Found a NaN '
+           nan_flag = -1
+           return
+        endif
+c
+        return
+        end
+c
+c
+        subroutine checknan_1d(x,ni,nan_flag)
+c
+c       Routine to check a real 1-d array for NaN's.
+c
+        integer ni
+        real x(ni)
+c
+        nan_flag = 1
+c
+        do i=1,ni
+           if( nan( x(i) ) .eq. 1) then
+              print *,' ** ERROR. Found a NaN at ', i
+              nan_flag = -1
+              return
+           endif
+        enddo !i
+c
+        return
+        end
+c
+c
+        subroutine checknan_2d(x,ni,nj,nan_flag)
+c
+c       Routine to check a real 2-d array for NaN's.
+c
+        integer ni,nj
+        real x(ni,nj)
+c
+        nan_flag = 1
+c
+        do j=1,nj
+        do i=1,ni
+           if( nan( x(i,j) ) .eq. 1) then
+              print *,' ** ERROR. Found a NaN at ', i, j
+              nan_flag = -1
+              return
+           endif
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
+
