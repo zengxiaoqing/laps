@@ -1,4 +1,4 @@
-#!/bin/csh -x
+#!/bin/csh 
 
 #This script sets up the pre-compiled tar file and localizes it at CWB
 #Usage: install_laps.csh $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE `which perl` [w/p]
@@ -26,6 +26,8 @@ setenv NEWPERL            $5
 #setenv TEMPLATEDIR        /pj/fsl/albers/src/template
 #setenv NEWPERL            /pj/fsl/albers/bin/perl
 #setenv NEWPERL            `which perl`
+
+echo "Starting install_laps.csh..."
 
 #Configure/install a precompiled tar file
 if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
@@ -139,7 +141,13 @@ if ($6 != p) then
         endif
     endif
 
-    $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -cf -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
+    if (-e $LAPS_DATA_ROOT/lapsprd) then
+        setenv config_domain f
+    else
+        setenv config_domain t
+    endif
+
+    $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -c$config_domain -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
 
 #   cd $LAPS_SRC_ROOT
 #   make DATAROOT=$LAPS_DATA_ROOT mkdatadirs 

@@ -32,6 +32,9 @@ cdis
 
         subroutine bilinear_laps(ri,rj,imax,jmax,array_2d,result)
 
+cdoc    Interpolate 2-d array to find the field value at a fractional grid
+cdoc    point.
+
         real*4 array_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -81,6 +84,10 @@ cdis
         subroutine bilinear_interp_extrap(ri,rj,imax,jmax
      1                                   ,array_2d,result,istatus)
 
+cdoc    Interpolate 2-d array to find the field value at a fractional grid
+cdoc    point. This one allows you to extrapolate very slightly outside the 
+cdoc    grid.
+
         real*4 array_2d(imax,jmax)
 
         call get_r_missing_data(r_missing_data,istatus)
@@ -112,9 +119,11 @@ c standard bilinear interpolation
               else
                   result = r_missing_data
               endif
+
         elseif(j .gt. jmax .or. j .lt. 1 .or.
-     &            i .gt. imax .or. i .lt. 1)then
+     &         i .gt. imax .or. i .lt. 1)then
                   result = r_missing_data
+
         elseif(j .eq. jmax .or. j .eq. 1)then
               if(i .eq. imax .or. i .eq. 1)then
                  result = array_2d(i,j)
@@ -125,6 +134,7 @@ c standard bilinear interpolation
                  Z2=array_2d(i+1, j  )
                  result = Z1*frac1+Z2*frac2
               endif
+
         elseif(i .eq. imax .or. i .eq. 1)then
               if(j .eq. jmax .or. j .eq. 1)then
                  result = array_2d(i,j)
@@ -135,6 +145,7 @@ c standard bilinear interpolation
                  Z2=array_2d(i, j+1  )
                  result = Z1*frac1+Z2*frac2
               endif
+
         endif
 
         istatus = 1

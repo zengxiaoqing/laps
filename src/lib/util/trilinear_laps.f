@@ -30,8 +30,11 @@ cdis
 cdis 
 cdis 
 
-        subroutine trilinear_laps(ri,rj,rk,imax,jmax,kmax,array_3d,resul
-     1t)
+        subroutine trilinear_laps(ri,rj,rk,imax,jmax,kmax,array_3d
+     1                           ,result)
+
+cdoc    Interpolate 3-d array to find the field value at a fractional grid
+cdoc    point.
 
         real*4 array_3d(imax,jmax,kmax)
 
@@ -41,20 +44,24 @@ cdis
         k_high = k_low + 1
         frac_k = rk - k_low
 
-        call bilinear_laps(ri,rj,imax,jmax,array_3d(1,1,k_low ),result_l
-     1ow)
-        call bilinear_laps(ri,rj,imax,jmax,array_3d(1,1,k_high),result_h
-     1igh)
+        call bilinear_laps(ri,rj,imax,jmax,array_3d(1,1,k_low )
+     1                    ,result_low)
+        call bilinear_laps(ri,rj,imax,jmax,array_3d(1,1,k_high)
+     1                    ,result_high)
 
 !       Interpolate in the vertical
         result = result_low  * (1.0 - frac_k)     +
-     1         result_high *        frac_k
+     1           result_high *        frac_k
 
         return
         end
 
-        subroutine trilinear_interp_extrap(ri,rj,rk,imax,jmax,kmax,array
-     1_3d,result,istatus)
+        subroutine trilinear_interp_extrap(ri,rj,rk,imax,jmax,kmax
+     1                                    ,array_3d,result,istatus)
+
+cdoc    Interpolate 3-d array to find the field value at a fractional grid
+cdoc    point. This one allows you to extrapolate very slightly outside the 
+cdoc    grid.
 
         real*4 array_3d(imax,jmax,kmax)
 
@@ -65,13 +72,13 @@ cdis
         frac_k = rk - k_low
 
         call bilinear_interp_extrap(ri,rj,imax,jmax,array_3d(1,1,k_low )
-     1,result_low,istatus)
+     1                             ,result_low,istatus)
         call bilinear_interp_extrap(ri,rj,imax,jmax,array_3d(1,1,k_high)
-     1,result_high,istatus)
+     1                             ,result_high,istatus)
 
 !       Interpolate in the vertical
         result = result_low  * (1.0 - frac_k)     +
-     1         result_high *        frac_k
+     1           result_high *        frac_k
 
         return
         end
