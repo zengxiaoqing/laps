@@ -2001,6 +2001,9 @@ For LDAD observations, they're just a best guess, since no one really knows
 how good the obs are.  These expected accuracies will be used in the quality 
 control routines sometime in the future.  The lat/lons are in decimal degrees.
 
+Gross "climatological" QC error checks are applied to several variables
+including temperature, wind, and pressure.
+
 ------ 3.2.2.2   sfc_qc.exe --- 
 
 Process: (sfc_qc.exe) LAPS Surface Ingest Quality Control
@@ -2480,7 +2483,8 @@ Surface processing - laps_sfc.x (LSX)
 The surface package collects surface data from the LSO intermediate data file  
 (METARs, local mesonets via LDAD, buoy/ship obs), IR brightness temperatures,
 and fields from selected background models.  Places surface data on LAPS grid
-and performs a simple quality control of the obs.  
+and performs a simple quality control of the obs (climo + standard deviation
+checks). The quality control is described in the next section (3.3.2.1).  
 
 The background fields come from the locally-run LAPS model (FSF file), other
 large-scale models (RUC, ETA, AVN - via the LGB file), or a previous analysis 
@@ -2491,15 +2495,20 @@ interpolated to the surface or LWM file. Data, both inside and outside the LAPS
 grid is used via an initial Barnes analysis of the observations to set the 
 boundary conditions.  
 
+Prior to analysis of each field, another quality control step is done that 
+rejects observations that deviate from the background by more than a threshold.
+This threshold is proportional to the standard deviation of the observation
+increments.
+
 The next step in the analyses is done with a successive correction technique 
 similar to the 3-D wind and temperature analyses (see those sections and their
-web references). Observation increments are used for T, Td, U, V, MSL, P, PS 
+web references). Observation increments are used for T, Td, U, V, MSL, P
 and straight observations are used for visibility. The temperature and dewpoint
 observations are also corrected for deviations of the station elevation from
 the LAPS terrain. Standard lapse rates are applied to this elevation difference.
 
 For pressure analysis, three fields are computed including reduced pressure (P)
-at reference level 'redp_lvl', surface pressure (PS), and mean sea level 
+at reference height 'redp_lvl', surface pressure (PS), and mean sea level 
 pressure (MSL). Background pressure fields come from the LGB or FSF files. 
 The MSL background is used as read in upon input. The (PS) background is 
 converted from the background model terrain to the LAPS terrain within the 
@@ -2589,7 +2598,7 @@ Parameter namelist file: 'static/surface_analysis.nl'
 
    PRESSURE REDUCTION
 
-     1. You will need to select an elevation for the reduced pressure analysis.
+        You will need to select an elevation for the reduced pressure analysis.
 	The reduced pressure is the only one really used in the variational
 	portion of LAPS, and the idea is to select an elevation that is 
 	representative of the domain (or portion of the domain) you are
@@ -2603,7 +2612,7 @@ Parameter namelist file: 'static/surface_analysis.nl'
 
    SURFACE THETA CHECK	
 
-     1. In the 'surface_analysis.nl' file, set the 'itheta' flag for the 
+        In the 'surface_analysis.nl' file, set the 'itheta' flag for the 
         surface theta check.  This check adjusts the surface potential 
         temperatures so they are not greater than the potential temperature at
         an upper level.  Set this variable equal to the desired upper level 
@@ -2618,15 +2627,20 @@ Parameter namelist file: 'static/surface_analysis.nl'
 
    QUALITY CONTROL
 
-     1. A still fairly simple quality control is included in the surface
-	package.  This first checks the observations against climatologically
-        reasonable ranges. Next, the observations are checked to see which
-        ones are outliers relative to the other observations. Also, the
-        MSL pressures are checked to see if they deviate from the background
-        field by more than a threshold amount. The output from these checks
-        is in both 'laps_sfc.log' and 'sfcqc.log'. The 'sfcqc.log' file 
-        contains the 'rely' (positive=retain, negative=reject) values 
-        designated as follows:
+        LAPS has a layered QC approach that gives us several opportunities
+        to flag erroneous observations. To start with, a variety of gross
+        "climo" checks are applied to the observations in the 'obs_driver.x' 
+        program.
+
+        The next steps in quality control are encountered in 'laps_sfc.x'.
+	This first checks the observations against climatologically
+        reasonable ranges. Next, the observations (most fields except wind)
+        are checked to see which ones are outliers relative to the other 
+        observations. As a further check, the Temperatures and MSL pressures 
+        are checked to see if they deviate from the background field by more 
+        than a threshold amount. The output from these checks is in both 
+        'laps_sfc.log' and 'sfcqc.log'. The 'sfcqc.log' file contains the 
+        'rely' (positive=retain, negative=reject) values designated as follows:
 <pre>
                |  STANDARD DEVIATION CHECK (against other obs)
                |
@@ -2641,14 +2655,15 @@ Parameter namelist file: 'static/surface_analysis.nl'
            -99        observation was missing
 </pre>
 
-        If you wish to skip over this step, you can change the 
+        If you wish to skip over these steps, you can change the 
         'surface_analysis.nl' namelist file. This is recommended when using 
         the separate flag to use the new quality control observation file 
         (lso_qc), generated by 'sfc_qc.exe'. 
 
-        There is an additional check within the 'spline' routine that rejects
-        stations deviating from the background by more than a threshold number
-        of standard deviations.
+        There is an additional check for all analyzed fields (except visibility) 
+        within the 'spline' routine that rejects stations deviating from the 
+        background by more than a threshold number of standard deviations of 
+        the observation increments.
 
         The new QC package (outlined in 3.2.2.2) compares the observations 
         temporally and fills in predicted values for an observation when it 
