@@ -175,7 +175,7 @@ c     lcal variables
       save lvl500, lvl700, lvl100
       real var_weights(7)       ! weights computing in func
       real p1,p2,p3             !pressure tops for gvap layers
-      real GT,G  ! cloud functions
+      real GT  ! cloud functions
       real ipw                  !integrated water for GPS minimization
       real cloud_integral
       
@@ -204,9 +204,6 @@ c     define G parameter
 
       GT = 1.0
 
-      G = 1.0
-
-
 c     constrain x to positive
       do i =1,3
          x(i) = abs(x(i))
@@ -217,7 +214,7 @@ c     constrain x to positive
 
 c     set up for sounder if needed instead of imager
          
-         if (cost_isnd.eq.1) then ! sounder radiances used
+         if (cost_isnd == 1) then ! sounder radiances used
             
             kan(1) = 10         ! 7.4 like ch3
             kan(2) = 8          ! 11.02 like ch4
@@ -246,9 +243,9 @@ c     set up for sounder if needed instead of imager
 c     determine layer levels 
          
          do i = cost_kk,1, -1
-            if (cost_p(i) .le. 100.) lvl100=i
-            if (cost_p(i) .le. 700.) lvl700=i
-            if (cost_p(i) .le. 500.) lvl500=i
+            if (cost_p(i) < 100.) lvl100=i
+            if (cost_p(i) < 700.) lvl700=i
+            if (cost_p(i) <= 500.) lvl500=i
          enddo
          
       endif                     ! first_time
@@ -260,11 +257,11 @@ c     modify mixing ratio per predifined pressure layers.
          
       do i = 1,cost_kk
          
-         if(i.lt. lvl700) then  ! sfc to 780
+         if(i < lvl700) then  ! sfc to 780
             mr_l(i) = abs(x(1)) * cost_mr_l(i)
-         elseif (i.ge.lvl700 .and. i.le. lvl500) then ! 700 to 500
+         elseif (i >= lvl700 .and. i.le. lvl500) then ! 700 to 500
             mr_l(i) = abs(x(2)) * cost_mr_l(i)
-         elseif (i.gt.lvl500 .and. i.le. lvl100) then ! between 475 and 100
+         elseif (i > lvl500 .and. i.le. lvl100) then ! between 475 and 100
             
 c     the corresponding change must also be made in variational.f where
 c     this information is applied.
@@ -277,8 +274,15 @@ c     1              cost_mr_l(i)
          endif
          
       enddo
+
+C----------------END PRELIMINARY COMPUTATIONS AND PREP -----------
+
+
+
+
       
-      
+C     SATELLITE RADIANCE SECTION
+
       if (cost_rad_istatus .eq. 1) then
          
          do i = 1, nlevel
@@ -293,7 +297,6 @@ c     1              cost_mr_l(i)
          lat = cost_lat
          theta = cost_theta
          
-
          
 c     perform forward model computation for radiance
 c     here is the main call to optran in this whole module, the real
@@ -305,8 +308,8 @@ c     time-consuming part of the code.
          
 c     compute cost function
 
-         if (cost_isnd.eq.1) then ! SOUNDER radiances used
-            if(cost_isnd.eq.1 .and. cost_cld.GT. 0.75) then ! report conflict
+         if (cost_isnd == 1) then ! SOUNDER radiances used
+            if(cost_isnd == 1 .and. cost_cld > 0.75) then ! report conflict
                GT = 0.25 ! reduce influence of this term by 3/4 due to 
 c     conflict with cloud analysis
             endif
@@ -334,30 +337,44 @@ c     stability cost is identical for both imager and sounder
          
       endif                     ! cost_rad_istatus
 
+
+
+
+
+
+
+
+
+
+
+C     BACKGROUND SECTION
+
 c     background weighting, in effect even if radiance data are not present.
       max_func_back = 0.0
+
       do j = 1,3
-c         func = func +   ((x(j) - 1.)**2 )
          max_func_back =   ((x(j) - 1.)**2) + max_func_back
       enddo
 
       func = func + max_func_back
 c      write(6,*) 'func 1, ',func
+
+
+
+
+
+
+
+
+
+
       
-c     GVAP section
+c     GVAP SECTION
 
-
-
-      if (cost_gvap_istatus .eq. 1) then
-
-         if (cost_cld.GT.0.25) then
-            G = 0.25            !reduction factor
-         else
-            G = 1.0
-         endif
+      if (cost_gvap_istatus ==  1) then
 
 c     test for weight of measurement
-         if(cost_weight.eq.cost_mdf) then !skip this step
+         if(cost_weight == cost_mdf) then !skip this step
             continue            ! skip this iteration
          else                   ! process gvap
             if (first_gvap) then
@@ -375,31 +392,28 @@ c     determine sigma level pressure analogs
      1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)
             
-            if (p1 .le. 300.0) then
+            if (p1 <= 300.0) then
                write(6,*)'TEMM ', x, p1,p2,p3,lpw1,lpw2,lpw3,
      1              cost_w1,cost_w2,cost_w3
             endif
             
-            if (lpw2.eq.cost_mdf) then
+            if (lpw2 == cost_mdf) then
                i = i
             endif
-            
-            
-c     minimize with respect to layer gvap data
-            
+
             max_func_gvap1 = 0.0
             max_func_gvap2 = 0.0
             max_func_gvap3 = 0.0
             
-            if (lpw1.ne.cost_mdf) then
+            if (lpw1 /= cost_mdf) then
                max_func_gvap1 =  
      1              (lpw1-cost_w1)**2*cost_weight
             endif
-            if (lpw2.ne.cost_mdf) then
+            if (lpw2 /= cost_mdf) then
                max_func_gvap2 =
      1              (lpw2-cost_w2)**2*cost_weight
             endif
-            if (lpw3.ne.cost_mdf) then
+            if (lpw3 /= cost_mdf) then
                max_func_gvap3 =  
      1              (lpw3-cost_w3)**2*cost_weight
             endif
@@ -411,46 +425,52 @@ c     numerator of the J function.
             
             func = func + (max_func_gvap1/100.+max_func_gvap2/100.
      1           +max_func_gvap3/100.)
-c     write(6,*) 'func 2 ',func
-            
-c     generate modfied cost function based on these layers
-            
+
          endif                  !weight function test
       endif                     !data present test
+
+
+
+
+
       
-c     minimize with respect to partly cloudy data
+c    CLOUD SECTION
       
-      if (cost_cloud_istatus.eq.1) then ! cloud data present
+      if (cost_cloud_istatus == 1) then ! cloud data present
          max_func_cloud = 0.0
          do k = 1,cost_kk
             cloud_integral = cloud_integral + cost_cloud(k)
-            if (cost_data(k).ne.cost_mdf) then
-               if(cost_data(k).ge.0.0) then
+            if (cost_data(k) /= cost_mdf .and. cost_data(k) > 0.0) then
+               if(cost_cloud(k) >= 0.6) then
                   cloud_temp = cost_data(k)
                   call cloud_sat (cost_cloud(k),cost_qadjust(k),
-     1                 cloud_temp)
-                  if(k .lt. lvl700 ) then ! sfc to 700
+     1                 cloud_temp)! cloud temp is "cloud forming q"
+                  if(k < lvl700 ) then ! sfc to 700
                      max_func_cloud = max_func_cloud + 
      1                    (cost_data(k)*x(1) - cloud_temp)**2 
-                  elseif (k .lt. lvl500) then ! 700-500
+                  elseif (k < lvl500) then ! 700-500
                      max_func_cloud = max_func_cloud + 
      1                    (cost_data(k)*x(2) - cloud_temp)**2
-                  elseif (k .lt. lvl100) then ! 500-100
+                  elseif (k < lvl100) then ! 500-100
                      max_func_cloud = max_func_cloud + 
      1                    (cost_data(k)*x(3) - cloud_temp)**2  
-                  endif         ! level test
-               endif            ! negative check
-            endif               ! mdf check
+                  endif         ! layer test (1-3)
+               endif            ! if cloudy check (cloudy enough?)
+            endif               ! mdf check and bad value check
          enddo                  ! enddo k level
+         func = func + max_func_cloud  * 0.5 ! TONE DOWN CLOUD IMPACT !!!!
       endif                     ! cloud data present
       
+
+
+
+
+
+
       
-c     avoiding cloud adjustment : UNCOMMENT NEXT LINE IF DOESN'T WORK
-      func = func + max_func_cloud
+c     GPS SECTION
       
-c     GPS section
-      
-      if (cost_gps_istatus .eq. 1) then
+      if (cost_gps_istatus == 1) then
 
          call int_ipw (x,cost_p1d,cost_data,ipw,cost_mdf,cost_kk)
 
@@ -459,16 +479,14 @@ c     GPS section
          max_func_gps = (cost_gps_data-ipw)**2*cost_gps_weight
 
          func = func + max_func_gps
-
-c     write(6,*) 'TEMPM max_func_gps,',max_func_gps
       else
-c     write(6,*) 'NO GPS in func'
+         continue
       endif
 
 c     avoid using gps where we have cloud (cloud_integral .ne. 0)
 
-c     if( max_func_cloud .lt. max_func_gps) then
-c      if (cloud_integral .eq. 0.0) then
+c     if( max_func_cloud < max_func_gps) then
+c      if (cloud_integral == 0.0) then
 c         if(cost_comment_switch.eq.1) then
 c            write(6,*) 'TEMU gps cloud', max_func_gps, max_func_cloud,
 c     1           cloud_integral
@@ -476,7 +494,7 @@ c            cost_comment_switch = 0
 c         endif
 c         func = func + max_func_gps
 c      else
-c         if(cost_comment_switch.eq.1) then
+c         if(cost_comment_switch == 1) then
 c            write(6,*) 'TEMS gps cloud', max_func_gps, max_func_cloud,
 c     1           cloud_integral
 c            cost_comment_switch = 0
@@ -484,9 +502,16 @@ c         endif
 c      endif
 
 
-c     snd addition
 
-      if (cost_snd_istatus.eq.1) then
+
+
+
+
+
+
+c     RAOB SECTION (SND)
+
+      if (cost_snd_istatus == 1) then
          
          do i = 1, cost_kk      ! all laps levels
             
@@ -498,8 +523,18 @@ c     snd addition
             
       endif
 
-            
       func = func + max_func_snd
+
+
+
+
+
+
+
+
+
+
+C     BOOKEEPING/MONITOR SECTION
 
 c     print test output
 
