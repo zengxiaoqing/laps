@@ -410,6 +410,7 @@ c is relevant to the actual data points within the tile.
      1,istat)
            if(istat.ne.0)then
               print*,'Error returned: proc_geodat: READ_DEM_G'
+              istatus=0
               return
            endif
            dem_data=.true.

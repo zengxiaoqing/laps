@@ -211,9 +211,9 @@ c
         integer iter
         integer istag
 
-	Real  mdlat,mdlon
-	Real  xmn(nnxp),ymn(nnyp)
-	Real  xtn(nnxp,n_staggers)
+        Real  mdlat,mdlon
+        Real  xmn(nnxp),ymn(nnyp)
+        Real  xtn(nnxp,n_staggers)
         Real  ytn(nnyp,n_staggers)
 
         real, allocatable ::  topt_10   (:,:)
@@ -229,12 +229,6 @@ c
         real  topt_out_s (nnxp,nnyp)
         real  topt_out_ln(nnxp,nnyp)
         real  topt_out_lt(nnxp,nnyp)
-
-c
-c  either 25 (nest7grid) or 39 + 3*maxdatacat (wrfsi)
-c
-        integer*4    nf
-        parameter (nf = 27+12)
 
         integer maxdatacat
         parameter (maxdatacat=24)
@@ -281,6 +275,7 @@ c
         real,  allocatable ::  data(:,:,:)     !primary output array storage unit.
  
         interface
+
           subroutine adjust_geog_data(nnxp,nnyp,ncat
      &,istatgrn,istattmp,istatslp,lat,topt_out,path_to_soiltemp
      &,landmask,soiltemp_1deg,greenfrac,islope,istatus)
@@ -299,6 +294,22 @@ c
           real    islope(nnxp,nnyp)
           real    greenfrac(nnxp,nnyp,12)
           end subroutine
+
+          subroutine proc_geodat(nx_dom,ny_dom,ncat
+     1,path_to_tile_data,dom_lats_in,dom_lons_in,lmask_out
+     1,geodat,istatus)
+
+          integer nx_dom 
+          integer ny_dom
+          integer ncat
+          character*(*) path_to_tile_data
+          real    dom_lats_in(nx_dom,ny_dom)
+          real    dom_lons_in(nx_dom,ny_dom)
+          real    lmask_out(nx_dom,ny_dom)
+          real    geodat(nx_dom,ny_dom,ncat)
+          integer istatus
+          end subroutine
+
         end interface
 
 C*********************************************************************
@@ -316,10 +327,9 @@ C*********************************************************************
 c add 12 for albedo month 1 - 12.
 c add 1 more for islope JS: 2-25-03
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           ngrids=112     !97+12   ! 2d grids (including %dist for landuse
-                                   ! and two soiltype categories, green frac, albedo and others).
+           ngrids=112 
         else
-           ngrids=38      !26+12   doesn't include terrain slope index and other stuff.
+           ngrids=38
         endif
 
         if(.not. allocated (data))then
@@ -411,7 +421,7 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
 
         call s_len(path_to_topt30s,len)
         print*,'path to topt30s:        ',path_to_topt30s(1:len)
-	path_to_topt30s(len+1:len+2)='/U'
+        path_to_topt30s(len+1:len+2)='/U'
 
         call s_len(path_to_topt10m,len)
         if(len.gt.0)then
@@ -422,7 +432,7 @@ cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
         call s_len(path_to_soiltype_top_30s,len)
         print*,'path to soiltype_top:   '
      .,path_to_soiltype_top_30s(1:len)
-	path_to_soiltype_top_30s(len+1:len+2)='/O'
+       path_to_soiltype_top_30s(len+1:len+2)='/O'
         print*,'path to soiltype_bot:   '
      .,path_to_soiltype_bot_30s(1:len)
         path_to_soiltype_bot_30s(len+1:len+2)='/O'
@@ -1303,7 +1313,7 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
            call move(topt_out_ln,data(1,1,8),nnxp,nnyp)            ! JS
            call move(topt_out_lt,data(1,1,9),nnxp,nnyp)            ! JS 
 
-           call get_gridgen_var(nf,ngrids,var,comment)
+           call get_gridgen_var(ngrids,ngrids,var,comment)
  
         endif
 
@@ -1334,7 +1344,6 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
 
         call put_laps_static(grid_spacing_m,model,comment,var
      1,data,nnxp,nnyp,ngrids,ngrids,std_lat,std_lat2,std_lon
-c    1,data,nnxp,nnyp,nf+3*maxdatacat,ngrids,std_lat,std_lat2,std_lon
      1,c6_maproj,deltax,deltay,nest)
 
         istatus = istat_chk
@@ -1344,8 +1353,8 @@ c    1,data,nnxp,nnyp,nf+3*maxdatacat,ngrids,std_lat,std_lat2,std_lon
         print*,' Total Elapsed time: ', itstatus
         print*,' -------------------------------'
 
-	return
-	End
+        return
+        End
 c
 c ================================================================
 c

@@ -2,7 +2,7 @@
       subroutine put_laps_static(grid_spacing,model,comment,var
      1                          ,data,imax,jmax,mkmax,ngrids
      1                          ,std_lat,std_lat2,std_lon      
-     1                          ,c6_maproj,deltax,deltay)
+     1                          ,c6_maproj,deltax,deltay,nest)
  
       include 'trigd.inc' 
 
@@ -29,6 +29,7 @@ C
       character*9       laps_dom_file
       character*6       c6_maproj       !Map projection
       character*200     cdataroot       !Dummy Variable used in find_domain_name.
+      character*2       cnest           !nest domain number
       integer len,lf 
       integer avgelem
       integer zinelem
@@ -54,12 +55,19 @@ C
      +' in either c80_description or simulation_name variables'
          stop
       endif
-      laps_dom_file = c10_grid_fname(1:len_fname)
 
 ! for LAPS, AVG data is elem 3, otherwise 9 (for WRFSI).
 
       avgelem=3
-      if(c10_grid_fname(1:lf).eq.'wrfsi')avgelem=9
+      laps_dom_file = c10_grid_fname(1:len_fname)
+
+      if(c10_grid_fname(1:lf).eq.'wrfsi')then
+         avgelem=9
+         if(nest.gt.1)then
+            write(cnest,'(i2.2)')nest
+            laps_dom_file = laps_dom_file//'_d'//cnest
+         endif
+      endif
 
 !     Do zin calc (note this is last [kmax] element in data array)
       do i = 1,imax
