@@ -30,20 +30,22 @@ cdis
 cdis 
 cdis 
         subroutine rdpirep(i4time,heights_3d
-     1  ,N_PIREP
+     1  ,N_PIREP,n_pirep_obs,ext_in
      1  ,u_maps_inc,v_maps_inc,ni,nj,nk
      1  ,lat,lon
-     1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v,n_pirep_obs
+     1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
      1                                                  ,istatus)
 
-!       Original version Steve Albers / FSL
+!      ~1990        Steve Albers  Original Version
 !       Modified 2/1993 by Steve Albers to fix check on pirep being in the
 !       domain as suggested by Steve Olson of LL.
 
 !       1997 Jun    Ken Dritz     Added N_PIREP as dummy argument, making
 !                                 arrays dimensioned therewith automatic.
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
+!       1998        Steve Albers  Called Sequentially for acars winds, 
+!                                 then cloud drift winds.
 
 !******************************************************************************
 !       LAPS Grid Dimensions
@@ -76,23 +78,23 @@ cdis
         character*13 filename13
 
         character*9 asc9_tim_pirep
-        character ext*31
+        character ext*31, ext_in*3
 
         logical l_eof
 
-        lun_pin = 31
-        lun_pig = 32
-
-        n_pirep_obs = 0
-
-        ext = 'pin'
-        call open_lapsprd_file(lun_pin,i4time,ext,istatus)
+!       Open input intermediate data file
+        lun_in = 31
+        call open_lapsprd_file(lun_in,i4time,ext_in,istatus)
         if(istatus .ne. 1)go to 999
 
+        lun_pig = 32
         ext = 'pig'
-        call open_lapsprd_file(lun_pig,i4time,ext,istatus)
-        if(istatus .ne. 1)go to 888
 
+!       Open output intermediate data file
+        if(ext_in .eq. 'pin')then
+            call open_lapsprd_file(lun_pig,i4time,ext,istatus)
+            if(istatus .ne. 1)go to 888
+        endif
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
         if(istatus .eq. 1)then
@@ -105,12 +107,12 @@ cdis
         i4time_pirep_thr = min(nint(ilaps_cycle_time*2.00),3600)
         write(6,*)' i4time_pirep_thr = ',i4time_pirep_thr
 
-5       write(6,12)
-12      format(/'             Reading Pirep Obs'
-     1      /'   n   i  j  k    u      v'
-     1      ,'       dd     ff      azi    ran ')
+        write(6,*)
+        write(6,*)'             Reading Pirep Obs: ',ext_in
+        write(6,*)
+     1  '   n   i  j  k    u      v       dd     ff      azi    ran '
 
-10      call read_laps_pirep_wind(lun_pin,xlat,xlon,elev,dd,ff
+10      call read_laps_pirep_wind(lun_in,xlat,xlon,elev,dd,ff
      1                                          ,asc9_tim_pirep,l_eof)
         if(l_eof)goto900
 
@@ -157,15 +159,15 @@ cdis
                         pirep_i(n_pirep_obs) = i_grid
                         pirep_j(n_pirep_obs) = j_grid
 
-                        if(elev .gt. 0.)call disp_to_uv(dd,ff,u_temp,v_t
-     1emp)
+                        if(elev .gt. 0.)call disp_to_uv(dd,ff,u_temp
+     1                                                       ,v_temp)
 
                         pirep_k(n_pirep_obs) = k_grid
 
-                        u_diff = u_maps_inc(i_grid,j_grid,k_grid) * rcyc
-     1les
-                        v_diff = v_maps_inc(i_grid,j_grid,k_grid) * rcyc
-     1les
+                        u_diff = u_maps_inc(i_grid,j_grid,k_grid) 
+     1                                                         * rcycles
+                        v_diff = v_maps_inc(i_grid,j_grid,k_grid)
+     1                                                         * rcycles       
 
                         pirep_u(n_pirep_obs) = u_temp + u_diff
                         pirep_v(n_pirep_obs) = v_temp + v_diff
@@ -179,18 +181,15 @@ cdis
 !                 ***   Remap pirep observation to LAPS observation grid
 
                         grid_laps_u
-     1   (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs)
-     1)
+     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))      
      1  = pirep_u(n_pirep_obs)
 
                         grid_laps_v
-     1   (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs)
-     1)
+     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))
      1  = pirep_v(n_pirep_obs)
 
                         grid_laps_wt
-     1   (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs)
-     1)
+     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))       
      1  = weight_pirep
 
                     endif ! In vertical bounds
@@ -219,9 +218,10 @@ cdis
 
 100     goto10
 
-900     write(6,*)' End of PIREP PIN file, # obs = ',n_pirep_obs
+900     write(6,*)' End of PIREP ',ext_in,' file, Cumulative # obs = '
+     1                                          ,n_pirep_obs
 
-        close(lun_pin)
+        close(lun_in)
         close(lun_pig)
 
         istatus = 1
@@ -241,28 +241,28 @@ cdis
         end
 
 
-!       subroutine read_laps_pirep_windo(lun,xlat,xlon,elev,dd,ff
-!    1                                          ,asc9_tim_pirep,l_eof)
+        subroutine read_laps_cdw_wind(lun,xlat,xlon,pres,dd,ff
+     1                                          ,asc9_tim_pirep,l_eof)
 
-!       real*4 elev ! ft
-!       real*4 dd   ! degrees (99999. is missing)
-!       real*4 ff   ! meters/sec (99999. is missing)
+        real*4 pres ! pa
+        real*4 dd   ! degrees (99999. is missing)
+        real*4 ff   ! meters/sec (99999. is missing)
 
-!       character*9 asc9_tim_pirep
+        character*9 asc9_tim_pirep
 
-!       logical l_eof
+        logical l_eof
 
-!       l_eof = .false.
+        l_eof = .false.
 
 !100     read(lun,895,err=100,end=900)xlat,xlon,elev,dd,ff,asc9_tim_pirep
 ! 895    FORMAT(2F8.2,f8.0,1X,'ddff',F7.0,F7.0,'  t',F8.1,2a10)
 
-!       return
+        return
 
-!900     l_eof = .true.
+ 900     l_eof = .true.
 
-!       return
-!       end
+        return
+        end
 
         subroutine read_laps_pirep_wind(lun,xlat,xlon,elev,dd,ff
      1                                          ,asc9_tim_pirep,l_eof)
@@ -306,18 +306,12 @@ cdis
             return
         endif
 
-        if(string(2:5) .eq. 'Clou')then
-            do i = 1,3
-                read(lun,203,err=500)cbase_ft,ctop_ft,icover
-203             format (12x,2f8.0,i5)
-            enddo ! i cloud layer
-        endif ! Cloud Report String
-
-!       if(string(2:5) .eq. 'Sky ')then
-!           read(lun,204,err=500)isky_cover
-!204         format (40x,i4)
-!            write(6,*)' sky cover = ',isky_cover
-!        endif
+!       if(string(2:5) .eq. 'Clou')then
+!           do i = 1,3
+!               read(lun,203,err=500)cbase_ft,ctop_ft,icover
+!203            format (12x,2f8.0,i5)
+!           enddo ! i cloud layer
+!       endif ! Cloud Report String
 
 500     goto5
 
