@@ -31,7 +31,8 @@ cdis
 cdis 
 c
 c
-	subroutine mean_lapse(num_sfc,elev,t,td,a_t,b_t,a_td,b_td,hbar)
+	subroutine mean_lapse(num_sfc,elev,t,td,a_t,b_t,a_td,b_td,
+     &                        hbar,badflag)
 c
 c*******************************************************************************
 c
@@ -41,9 +42,10 @@ c	for the temperatures and dew points.  Also calculates the mean
 c	elevation for the surface stations.
 c
 c	Changes:
-c		P.A. Stamus	12-01-88	Original (from J. McGinley)
-c				12-22-88	Added consistency check on td.
-c				05-24-90	Rig to return std lapse rate.
+c		P.A. Stamus	12-01-88  Original (from J. McGinley)
+c				12-22-88  Added consistency check on td.
+c				05-24-90  Rig to return std lapse rate.
+c                               08-25-97  Changes for dynamic LAPS.
 c
 c	Inputs/Outputs:
 c
@@ -58,6 +60,7 @@ c          b_t             R         O    'b'      "       "    "    "  (lapse)
 c	   a_td            R         O    'a'      "       "    "  dewpt.
 c	   b_td            R         O    'b'      "       "    "    "
 c	   hbar            R         O    Mean elevation of the stations.
+c          badflag         R         I    Bad flag value.
 c
 c	User Notes:
 c
@@ -66,8 +69,6 @@ c
 c*******************************************************************************
 c
 	real*4 elev(num_sfc), t(num_sfc), td(num_sfc)
-c
-	badflag = -99.9
 c
 c.....	Set up storage variables.
 c
@@ -171,9 +172,11 @@ c
 c
 c
 	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
-     &                          lapse_td,redpres,ref_lvl)
+     &                          lapse_td,redpres,ref_lvl,badflag)
 c
-C** This routine is designed to reduce the mesonet plains stations' pressure
+c
+c================================================================================
+c   This routine is designed to reduce the mesonet plains stations' pressure
 C   reports to the elevation of the Boulder mesonet station, namely 1612 m.  The
 C   hydrostatic equation is used to perform the reduction, with the assumption
 C   that the mean virtual temperature in the layer between the station in ques-
@@ -187,14 +190,17 @@ C   the free air temperature from a Denver sounding, or 2) use the data from
 C   each higher station to construct a vertical profile of the data and iterate
 C   downward to Boulder.
 
-C	D. Baker	 2 Sep 83	Original version.
-C	J. Wakefield	 8 Jun 87	Changed ZBOU from 1609 to 1612 m.
-c	P. Stamus 	27 jul 88       change ranges for good data tests.
-c	P. Stamus	05 dec 88	Added lapse rate for better computation
+C	D. Baker	 2 Sep 83  Original version.
+C	J. Wakefield	 8 Jun 87  Changed ZBOU from 1609 to 1612 m.
+c	P. Stamus 	27 Jul 88  Change ranges for good data tests.
+c	P. Stamus	05 Dec 88  Added lapse rate for better computation
 c	 				of mean virtual temps.
-c			19 Jan 89	Fixed error with lapse rates (sheeze!)
-c			19 Dec 89	Change reduction to 1500 m.
-c			20 Jan 93	Version with variable reference level.
+c			19 Jan 89  Fixed error with lapse rates (sheeze!)
+c			19 Dec 89  Change reduction to 1500 m.
+c			20 Jan 93  Version with variable reference level.
+c                       25 Aug 97  Changes for dynamic LAPS.
+c
+c================================================================================
 c
 	real lapse_t, lapse_td
 !	DATA GOR,ZBOU,CTV/.03414158,1612.,.37803/
@@ -211,7 +217,7 @@ C** Check input values......good T, Td, & P needed to perform the reduction.
 	if(dewp.gt.temp .or. pres.le.620. .or. pres.gt.1080. .or.
      &      temp.lt.-30. .or. temp.gt.120. .or. dewp.lt.-35. .or.
      &      dewp.gt.90.) then
-	 redpres= -99.9		!FLAG VALUE RETURNED FOR BAD INPUT
+	 redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
 	 return
 	endif
 
@@ -256,99 +262,6 @@ c
 c
 	return
 	end
-c
-c
-	subroutine histo(st,imax,jmax,amax1,amin1,std,atime)
-c
-	real*4 st(imax,jmax)
-	integer*4 line(130),ifreq(100)
-	character*24 atime
-	data istar,iblank/1h*,1h /
-c
-	zero = 1.e-38
-	amax = -1.e35
-	amin = 1.e35
-	ion = 0   !histogram turned on
-	std = 0.
-	cnt = 0.
-c
-	do 30 j=1,jmax
-	do 30 i=1,imax
-	  if(st(i,j) .eq. 0.) go to 30
-	  x1 = std
-	  x2 = (st(i,j) * st(i,j)) + x1
-	  std = x2
-	  cnt = cnt + 1.
-	  if(st(i,j) .gt. amax) amax = st(i,j)
-	  if(st(i,j) .lt. amin) amin = st(i,j)
-30	continue  
-	if(cnt .eq. 0.) then
-          print *,' All zeros in TB*8 array'
-          return
-	endif
-	amax1 = amax
-	amin1 = amin
-	std = sqrt(std / cnt)  
-	if(ion .eq. 0) return
-c
-	do 31 j=1,jmax
-	do 31 i=1,imax
-	  if(st(i,j) .eq. 0.) go to 31
-	  int = st(i,j) - amin + 1.
-	  ifreq(int) = ifreq(int) + 1
-31	continue
-	ifirst = 0
-	lfmax = 0
-	nmax = amax - amin + 1.
-	if(nmax .gt. 100) nmax = 100
-	do 15 n=1,nmax
-	  if(ifreq(n) .le. lfmax) go to 15
-	  lfmax = ifreq(n)
-	  nsv = n
-15	continue
-	do n=1,10
-	  ll = lfmax / n
-	  if(ll .lt. 130) go to 23
-	enddo !n
-23	ifact = n
-	ipeak = amin + float(nsv) - 1.
-	write(6,1003) mm,atime,amax,amin,ipeak,ifreq(nsv),ifact
-1003	format(1x,'histogram for data set ',i2,'on ',a24/
-     &1x,'max min ',2e12.4,' with peak of ',i8,' at ',i6,' points'/
-     &1x,'scale factor is ',i2)
-c
-	do 11 n=1,nmax
-	  if(ifreq(n).eq.0 .and. ifirst.eq.0) go to 11
-	  lf = ifreq(n) / ifact
-	  do 12 l=1,130
-12	  line(l) = iblank 
-	  do 13 l=1,lf
-13	  line(l) = istar
-	  itt = amin + n - 1
-	  if(ion .eq. 1) write(6,1000) itt,(line(l),l=1,125)
-	  ifirst = 1
-11	continue
-1000	format(1x,i5,125a1)
-	ifirst = 0
-	ilast = 0
-	do n=1,100
-	  if(ifirst.eq.0 .and. ifreq(n).gt.0) go to 55
-	  go to 54
-55	  nsv = n
-	  ifirst = 1
-54	  if(ifreq(n) .gt. 0) go to 56
-	  go to 57
-56	  nsvl = n 
-57	  ifreq(n) = 0
-	enddo !n
-c
-	imin1 = amin + float(nsv - 1)
-	imax1 = amin + float(nsvl - 1)
-	amin1 = imin1
-	amax1 = imax1
-c
-	return
-	end     
 c
 c
 	subroutine decompwind_gm(dd,ff,ucomp,vcomp,status)
@@ -477,8 +390,8 @@ c
      &       2x,'Skew:',g12.4)
 c
 	write(6,910) amax,imax,jmax,amin,imin,jmin
- 910  format(1x,'Max:',g12.4,' @ ',i2,',',i2,2x,'Min:',g12.4,' @ ',
-     &       i2,',',i2)
+ 910  format(1x,'Max:',g12.4,' @ ',i4,',',i4,2x,'Min:',g12.4,' @ ',
+     &       i4,',',i4)
 c
 	write(6,920) z_max, z_min, range
  920	format(1x,'Z-Max:',g12.4,2x,'Z-Min:',g12.4,2x,'Range:',g12.4)
@@ -490,27 +403,27 @@ c
 c
 c
 	subroutine clouds(imax,jmax,topo,t,smsng,tb8,
-     &                    dtb8,t_est,i4time,laps_cycle_time,lat,lon,
-     &                    r_missing_data,cvr_snow,t_gnd_k)
+     &                    i4time,laps_cycle_time,lat,lon,
+     &                    r_missing_data)
 c
 c*************************************************************************
 c
 c	Routine to process band 8 brightness temps for clouds.
 c	
 c	Changes: 11-01-91  Changes for new LAPS grids.
-c                07-20-94  New version.  S. Albers
+c                07-20-94  New version.    S. Albers
+c                08-25-97  Changes for dynamic LAPS.   P. Stamus
 c
 c*************************************************************************
 c
-	real*4 t(imax,jmax), lapse_t
-	real*4 tb8(imax,jmax), dtb8(imax,jmax)
-	real*4 t_est(imax,jmax), topo(imax,jmax)
-        real*4 lat(imax,jmax), lon(imax,jmax)
-        real*4 cvr_snow(imax,jmax), t_gnd_k(imax,jmax)
-	character atime*24
-
+	real*4 t(imax,jmax), tb8(imax,jmax), lapse_t
+        real*4 lat(imax,jmax), lon(imax,jmax), topo(imax,jmax)
+c
+        real*4 cvr_snow(imax,jmax), t_gnd_k(imax,jmax)  !work arrays
+	real*4 t_est(imax,jmax), dtb8(imax,jmax)        !work arrays
+c
+c
 	call zero(t_est,imax,jmax)
-	zeros = 1.e-30
 
 	do 11 j=1,jmax
 	do 11 i=1,imax
@@ -537,26 +450,7 @@ c
 
 21	continue
 c
-c.....	Call the HISTO routine to find the standard dev of the temp flds.
-c       This assumes that the mean values of the fields are zero as the
-c       HISTO routine seems to return the RMS value.
-c
-!	call histo(dtb8,imax,jmax,dtb8max,dtb8min,stdt8,atime)
-!	write(6,941) dtmax,dtmin,stdt
-!941	format(1x,'MX DT = ',e12.4,' MN DT = ',e12.4,' STD DT = ',e12.4)
-!	write(6,942) dtb8max,dtb8min,stdt8
-!942	format(1x,'MX DTB8 = ',e12.4,' MN DTB8 = ',e12.4,
-!     &          ' STD DTB8 = ',e12.4)
-c
-!	call histo(t_est,imax,jmax,tmax,tmin,stt,atime)
-!	call histo(tb8,imax,jmax,tb8max,tb8min,stt8,atime)
-!	write(6,943) tmax,tmin,stt
-!943	format(1x,'MX T = ',e12.4,' MN T = ',e12.4,' STD T = ',e12.4)
-!	write(6,944) tb8max,tb8min,stt8
-!944	format(1x,'MX TB8 = ',e12.4,' MN TB8 = ',e12.4,
-!     &          ' STD TB8 = ',e12.4)
-c
-c.....	Now use the std dev data to check the Band 8 data for clouds.
+c.....  Now use the std dev data to check the Band 8 data for clouds.
 c
 	icnt = 0
 
@@ -586,7 +480,7 @@ c.....	set the point and surrounding points to zero...clouds.
 	end
 c
 c
-	subroutine lp_fire_danger (lp_10krh,lp_10kt,lp_10kws,
+	subroutine lp_fire_danger (ni,nj,lp_10krh,lp_10kt,lp_10kws,
      &                             soil_moist,snow_cover,topo,
      &                        ismoist,isnow,lp_fire_index,i_status)
 c
@@ -595,38 +489,38 @@ c
 c	Routine to caluclate fire danger from LAPS surface data.
 c
 c	Original version:  Matt Kelsch  05-18-93
-c	Changes:           Pete Stamus  10-14-93 Set up for LAPS use.
-c                                       07-27-94 Unix version.
-c                                       07-29-94 Change units on tests.
+c	Changes:           Pete Stamus  10-14-93  Set up for LAPS use.
+c                                       07-27-94  Unix version.
+c                                       07-29-94  Change units on tests.
 c                                       02-24-95  Add snow, topo caps.
+c                                       08-25-97  Changes for dynamic LAPS.
+c
+c	Notes:
+c
+c       The if-then structure of this routine will produce a 0 to 20 unit
+c	scale of the fire danger based on the current conditions observed 
+c	within LAPS.  Each unit represents an increase in fire danger ...
+c
+c	The four components to the fire danger index and the number of
+c	points out of 20 each component may contribute are given below
+c	(note the relative humidity and wind speed are most influential):
+c		i.   relative humidity (7),
+c		ii.  wind speed (7),
+c		iii. soil moisture (3),
+c		iv.  temperature (3).
 c
 c++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 c
 c	implicit none
 c
-	include 'laps_sfc.inc'
-c
 	real*4 lp_10krh(ni,nj), lp_10kt(ni,nj), lp_10kws(ni,nj)
 	real*4 snow_cover(ni,nj), soil_moist(ni,nj), topo(ni,nj)
 	real*4 lp_fire_index(ni,nj)
 c
-	integer*4 i_lp,	j_lp,
-     &            i_rh, i_temp, i_wspeed, i_soil,
+	integer*4 i_lp,	j_lp, i_rh, i_temp, i_wspeed, i_soil,
      &            i_status
 c
 c	...BEGIN...
-
-c	... the following if-then structure will produce a 0 to 20 unit
-c	scale of the fire danger based on the current conditions observed 
-c	within LAPS.  Each unit represents an increase in fire danger ...
-
-c	... the four components to the fire danger index and the number of
-c	    points out of 20 each component may contribute are given below
-c	    (note the relative humidity and wind speed are most influential):
-c		i.   relative humidity (7),
-c		ii.  wind speed (7),
-c		iii. soil moisture (3),
-c		iv.  temperature (3).
 
 c	... loop over all of the LAPS gridpoints
 c
@@ -634,25 +528,25 @@ c
 	  do i_lp = 1,ni
 c
 c	... first, the relative humidity component, I_RH, of fire danger...
-c       ... the RH enters this routine in a range of 0.0 to 1.0  ...
+c       ... the RH enters this routine in a range of 0 to 100 Percent ...
 c
 	    i_rh = 0
 c	
-	    if (lp_10krh(i_lp,j_lp) .ge. .75) i_rh = -1 
+	    if (lp_10krh(i_lp,j_lp) .ge. 75.) i_rh = -1 
 c
-	    if (lp_10krh(i_lp,j_lp) .lt. .60) then
+	    if (lp_10krh(i_lp,j_lp) .lt. 60.) then
 	      i_rh = i_rh + 1
-	      if (lp_10krh(i_lp,j_lp) .lt. .50) then
+	      if (lp_10krh(i_lp,j_lp) .lt. 50.) then
 	        i_rh = i_rh + 1
-	        if (lp_10krh(i_lp,j_lp) .lt. .41) then
+	        if (lp_10krh(i_lp,j_lp) .lt. 41.) then
 	          i_rh = i_rh + 1
-	          if (lp_10krh(i_lp,j_lp) .lt. .33) then
+	          if (lp_10krh(i_lp,j_lp) .lt. 33.) then
 	            i_rh = i_rh + 1
-	            if (lp_10krh(i_lp,j_lp) .lt. .25) then
+	            if (lp_10krh(i_lp,j_lp) .lt. 25.) then
 	              i_rh = i_rh + 1
-	              if (lp_10krh(i_lp,j_lp) .lt. .17) then
+	              if (lp_10krh(i_lp,j_lp) .lt. 17.) then
 	                i_rh = i_rh + 1
-	                if (lp_10krh(i_lp,j_lp) .lt. .09) then
+	                if (lp_10krh(i_lp,j_lp) .lt. 9.) then
 	                  i_rh = i_rh + 1
 	                endif
 	              endif
@@ -769,89 +663,49 @@ c
 	end
 c
 c
-        subroutine get_2d_field(i4time_needed,i4time_tol,i4time_nearest,
-     &	           ext_in,var_in,ilevel_mb,field_2d,imax,jmax,istatus)
-c
-c     Routine to read in LAPS 3D data files and extract a 2D layer for
-c     any field/level in the grid.
-c
-
-	character*50 directory
-	character*31 ext
-        character*3  ext_in, var_in, var
-
-        character*125 comment_2d
-	character*10 units_2d, vertical_grid
-	integer*4 lvl_2d
-	character*4 lvl_coord_2d
-
-        real*4 field_2d(imax,jmax)
-
-	character*255 c_filespec
-
-        ext = ext_in
-	var = var_in
-        call get_directory(ext_in,directory,len)
-        c_filespec = directory(1:len)//'/*.' // ext_in
-c        directory = '../lapsprd/' // ext_in // '/'
-c        c_filespec = '../lapsprd/' // ext_in // '/*.' // ext_in
-
-	vertical_grid = 'PRESSURE'
-        write(6,*)
-	write(6,*)' Getting ',var,' field at ',ilevel_mb
-
-        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
-
-	if(abs(i4time_needed - i4time_nearest) .gt. i4time_tol)then
-            write(6,*)' No file available within requested time window'
-            istatus = 0		! no data
-	    return
-        endif
-
-        k = 0
-        if(vertical_grid .eq. 'HEIGHT')then
-            lvl_2d = zcoord_of_level(k+1)/10        
-            lvl_coord_2d = 'MSL'
-        elseif(vertical_grid .eq. 'PRESSURE')then
-            lvl_2d = ilevel_mb
-            lvl_coord_2d = 'MB'
-        endif
-
-
-c       Read the 2d array
-        call read_laps_data(i4time_nearest,directory,ext,imax,
-     &       jmax,1,1,var,lvl_2d,lvl_coord_2d,units_2d,comment_2d,
-     &       field_2d,istatus)
-
-c
-	return
-        end
-c
-c
-      subroutine heat_index(t,rh,hi,ni,nj)
+      subroutine heat_index(t,rh,hi,ni,nj,badflag)
 c
 c====================================================================
 c
-c     Routine to calculate a heat index.
+c     Routine to calculate a heat index.  Based on a formula 
+c     by Lans Rothfusz, NWS.  Seems to provide valid HI numbers
+c     for temperatures above 75 deg F.
 c
 c     Original:  07-18-95  P. Stamus, NOAA/FSL
-c     Changes:
+c     Changes:  P. Stamus  08-25-97  Return badflag if Temp < 75F
+c                                    Change units returned to K.
 c
 c     Notes:
-c       1.  The formula wants RH in percent (0 - 100), but RH enters
-c           this routine as 0.0 - 1.0.  T enters in K, wants deg F.
+c
+c       1.  Inputs:
+c                    rh = Relative Humidity (0 to 100 %)
+c                    t  = Temperature (deg F)
+c	             ni, nj  = Grid dimensions
+c                    badflag = Bad flag value
+c
+c           Output:
+c                    hi = Heat Index (deg K)
+c
+c       2.  If the temperature is below 75 deg F, no heat index is
+c           calculated and the point is set to "badflag".
+c
 c====================================================================
 c
       real*4 t(ni,nj), rh(ni,nj), hi(ni,nj)
 c
       do j=1,nj
       do i=1,ni
-         rh1 = rh(i,j) * 100.
-         rh2 = rh1 * rh1
-	 t1 = ( 1.8 * (t(i,j) - 273.15) ) + 32.
-         t2 = t1 * t1
 c
-         hi(i,j) = -42.379 + (2.04901523  * t1)
+	 if(t(i,j) .lt. 75.) then
+	    hi(i,j) = badflag
+
+	 else
+	    rh1 = rh(i,j)                                  ! %
+	    rh2 = rh1 * rh1
+	    t1 = ( 1.8 * (t(i,j) - 273.15) ) + 32.         ! K to F
+	    t2 = t1 * t1
+c
+	    heat = -42.379 + (2.04901523  * t1)
      &                     + (10.1433312  * rh1)
      &                     - (0.22475541  * t1  * rh1)
      &                     - (6.83783e-3  * t2)
@@ -860,6 +714,10 @@ c
      &                     + (8.52e-4     * rh2 * t1)
      &                     - (1.99e-6     * t2  * rh2)
 c
+	    hi(i,j) = ((heat - 32.) * 0.55555555) + 273.15 ! F to K
+c
+	 endif
+
       enddo !i
       enddo !j
 c
@@ -869,7 +727,8 @@ c
       end
 c
 c
-      subroutine verify(field,ob,stn,n_obs_b,title,iunit)
+      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
+     &                  ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
 c
 c======================================================================
 c
@@ -879,14 +738,16 @@ c
 c     Original: P.Stamus, NOAA/FSL  08-07-95
 c     Changes:  
 c               P.Stamus  08-14-95  Added mean.
+c                         08-25-97  Changes for dynamic LAPS
 c
 c     Notes:
 c
 c======================================================================
 c
-      include 'laps_sfc.inc'
-      real*4 field(ni,nj), ob(mxstn), interp_ob
-      character title*40, stn(mxstn)*3, stn_mx*3, stn_mn*3
+	real*4 field(ni,nj), ob(mxstn), interp_ob
+	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
+	integer*4 ii(mxstn), jj(mxstn)
+	character title*40, stn(mxstn)*3, stn_mx*3, stn_mn*3
 c
 c.... Start.
 c
@@ -906,10 +767,10 @@ c
 c....   Now call the spline for each station in the grid.
 c
 	do i=1,n_obs_b
-	   if(i_loc(i).lt.1 .or. i_loc(i).gt.ni) go to 500
-	   if(j_loc(i).lt.1 .or. j_loc(i).gt.nj) go to 500
-	   aii = float(i_loc(i))
-	   ajj = float(j_loc(i))
+	   if(ii(i).lt.1 .or. ii(i).gt.ni) go to 500
+	   if(jj(i).lt.1 .or. jj(i).gt.nj) go to 500
+	   aii = float(ii(i))
+	   ajj = float(jj(i))
 	   call splin2(x1a,x2a,field,y2a,ni,nj,aii,ajj,interp_ob)
 c
 	   if(ob(i) .le. badflag) then
@@ -956,7 +817,7 @@ c
 c
 c
 	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
-     &                    rii,rjj,wt)
+     &                    rii,rjj,wt,ni,nj,mxstn)
 c
 c***************************************************************************
 c
@@ -965,12 +826,12 @@ c	to find the station density and set up the assmilation weight array.
 c
 c	Changes:
 c 	P.A. Stamus	12-13-96  Original (from build_sfc_static)
+c                       08-25-97  Changes for dynamic LAPS
 c
 c       Note:  'topo' (the LAPS grid elevations) is passed in since we may
 c              want to have an elevation-based weight in the future.
 c***************************************************************************
 c
-	include 'laps_sfc.inc'
 c
 c..... Arrays for the OBS file input data
 c
@@ -1061,7 +922,7 @@ c
 905	format(/,' Distance:')
 	write(6,902) 'MAX',dist_max,max_i,max_j
 	write(6,902) 'MIN',dist_min,min_i,min_j
-902	format(3x,'The ',a3,' of ',f9.1,' occured at gridpoint ',2i3)
+902	format(3x,'The ',a3,' of ',f9.1,' occured at gridpoint ',2i4)
 c
 c.....	Now calculate the weight array by scaling the mean distances
 c.....	so that the larger the mean, the larger the weight.
@@ -1098,3 +959,41 @@ c
 c
 	return
 	end
+c
+c
+        subroutine move_2dto3d(a,b,index,imax,jmax,kmax)
+c
+c.....  Routine to move (copy) the 2d array 'a' into one level
+c.....  of the 3d array 'b'.  The level is defined by 'index'.
+c
+c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c
+        real*4 a(imax,jmax), b(imax,jmax,kmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          b(i,j,index) = a(i,j)
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
+c
+        subroutine move_3dto2d(a,index,b,imax,jmax,kmax)
+c
+c.....  Routine to move (copy) one level of the 3d array 'a' into 
+c.....  the 2d array 'b'.  The level is defined by 'index'.
+c
+c       Original:  P. Stamus  NOAA/FSL  15 Apr 1997
+c
+        real*4 a(imax,jmax,kmax), b(imax,jmax)
+c
+        do j=1,jmax
+        do i=1,imax
+          b(i,j) = a(i,j,index)
+        enddo !i
+        enddo !j
+c
+        return
+        end

@@ -31,8 +31,17 @@ cdis
 cdis 
 c
 c
-	subroutine laps_vanl(i4time,infile,dir_in,ext_in,dir,ext,
-     &        ihrs,dt,del,gam,ak,lat,lon,topo,grid_spacing,jstatus)
+	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
+     &        laps_cycle_time,
+     &        dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain, 
+     &        lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, vis_s, stn, 
+     &        n_obs_b, n_sao_b, n_sao_g,
+     &        u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
+     &        wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, 
+     &        ilaps_bk, irams_bk,
+     &        u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &        x1a,x2a,y2a,ii,jj,jstatus)
+c
 c
 c******************************************************************************
 c
@@ -139,10 +148,13 @@ c                               10-09-96  Gridded stn elevs for temp anl.
 c                               11-07-96  Num obs ck.
 c                               12-17-96  More porting changes...common for
 c                                           sfc data, LGS grids. 
+c                               08-07-97  Dynamic changes..rm equivs.
+c                               08-27-97  Changes for dynamic LAPS.
 c
 c*****************************************************************************
 cx
 	include 'laps_sfc.inc'
+        include 'laps_cloud.inc'
 c
 	parameter(roi = 20)	  !radius of influence for Barnes 
 	parameter( 	          !QC parameters: # of standard deviations 
@@ -155,6 +167,15 @@ c
      &            bad_the = 2.5,	! for theta-e
      &            bad_vis = 500.,	! for visibility
      &            bad_tb8 = 5.0)	! for tb8 Brightness temps.
+c
+	parameter(                !Expected observation error, ea. var.
+     &            obs_error_redp  = 0.1,  ! for reduced pressure
+     &            obs_error_t     = 0.1,  ! for temperature
+     &            obs_error_tb8   = 0.1,  ! for Brighness temperatures
+     &            obs_error_td    = 0.1,  ! for dew point
+     &            obs_error_mslp  = 0.1,  ! for MSL pressure
+     &            obs_error_wind  = 0.1,  ! for wind
+     &            obs_error_vis   = 0.1)  ! for visibility
 c
 	parameter(bad = 1.e6 - 2.)	! larger than 'bad' are.
 c
@@ -171,9 +192,6 @@ c
 	real*4 rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real*4 vis1(ni,nj), elev1(ni,nj)
 c
-	common/LGS_grids/
-     &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1
-c
 c.....	Grids for the first data's analyses.
 c
 	real*4 u(ni,nj), v(ni,nj)
@@ -188,7 +206,7 @@ c
 c.....	Grids for the derived quantities.
 c
 	real*4 du(ni,nj), dv(ni,nj), spd(ni,nj)
-	real*4 drp(ni,nj), w(ni,nj)
+	real*4 drp(ni,nj), vv(ni,nj)
 	real*4 tt(ni,nj), ttd(ni,nj)
 	real*4 li(ni,nj), qadv(ni,nj), rh(ni,nj)
 	real*4 cssi(ni,nj), fire(ni,nj), hi(ni,nj)
@@ -199,12 +217,6 @@ c.....  Grids for PUT_TEMP_ANAL and related stuff.
 c
         real*4 LT1_out(ni,nj,nk,2), grid_spacing
 	real*4 t_3d_k(ni,nj,nk), ht_3d_m(ni,nj,nk), rh_3d(ni,nj,nk)
-cc        equivalence(t_3d_k,   LT1_out(1,1,1,1))
-cc        equivalence(ht_3d_m,  LT1_out(1,1,1,2))
-        integer*4 lni_m, lnj_m
-        parameter(lni_m = ((ni-1)/iden_ratio)+1)
-        parameter(lnj_m = ((nj-1)/iden_ratio)+1)
-        integer*4 adbox(lni_m,lnj_m), ndbox(lni_m,lnj_m)
 c
 c.....	Grids for variables derived by the MESO_ANL subroutine.
 c
@@ -214,18 +226,13 @@ c.....	Grids for the background fields.
 c
         real*4 u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
         real*4 wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
-        real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
-        real*4 wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
+        real*4 rp_bk(ni,nj), mslp_bk(ni,nj)
+        real*4 wt_rp(ni,nj), wt_mslp(ni,nj)
         real*4 vis_bk(ni,nj), wt_vis(ni,nj)
-c
-        common/backgrnd/
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
-     &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_stnp, wt_vis, 
-     &     ilaps_bk, irams_bk
 c
 c.....	Grids for other stuff.
 c
-	real*4 ddiv(ni,nj), vort(ni,nj), st(ni,nj), sm(ni,nj)
+	real*4 ddiv(ni,nj), vort(ni,nj) 
 	real*4 f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
 	real*4 a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
 	real*4 nu(ni,nj),nv(ni,nj), t7(ni,nj), h7(ni,nj), td7(ni,nj)
@@ -234,84 +241,38 @@ c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
 	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
-	real*4 t_s(mxstn), td_s(mxstn), dd_s(mxstn), ff_s(mxstn)
-	real*4 ddg_s(mxstn), ffg_s(mxstn)
-	real*4 pstn_s(mxstn), pmsl_s(mxstn), alt_s(mxstn)
-	real*4 cover_s(mxstn), hgt_ceil(mxstn), hgt_low(mxstn)
-	real*4 solar_s(mxstn), store_hgt(mxstn,5), vis_s(mxstn)
-	real*4 rii(mxstn), rjj(mxstn)
+	real*4 t_s(mxstn), td_s(mxstn), ff_s(mxstn)
+	real*4 pstn_s(mxstn), vis_s(mxstn)
 c
-	integer*4 kloud_s(mxstn),idp3_s(mxstn),obstime(mxstn)
-	integer*4 ii(mxstn), jj(mxstn)
-c
-	character infile_o*70
-	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
-	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
-c
-	common/LSO_sfc_obs/
-     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
-     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
-     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
-     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
-     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g
-c
-        character atime_s*24, title*40, ver_file*200
+	character stn(mxstn)*3
+        character title*40, ver_file*256
 c
 c.....	dummy work arrays
 c
 	real*4 d1(ni,nj),d2(ni,nj),d3(ni,nj),d4(ni,nj),d5(ni,nj)
         real*4 d6(ni,nj), d7(ni,nj)
-	real*4 dm1(ni_maps,nj_maps,nk), dm2(ni_maps,nj_maps,nk)
-	real*4 dm3(ni_maps,nj_maps,nk), dm4(ni,nj,nk)
-c
-        include 'laps_cloud.inc'
-        real*4 d_c(ni,nj,kcloud)
-        integer*4 kdum(ni,nj)
+	real*4 dm1(ni,nj,nk),dm2(ni,nj,nk),dm3(ni,nj,nk)
+	real*4 dums(mxstn)
 c
 	real*4 lapse_t, lapse_td
 	real make_td
-	character infile*200, name*10, filename*9, atime*24
-	character var_fire*3, com_fire*125, units_fire*10, ext_f*31
-	character var_lga*3, ext_lga*31
+	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
+	integer*4 ii(mxstn), jj(mxstn)
 	integer*4 jstatus(20)
-	logical l_fill
+	character name*10, filename*9, infile*256
+	character var_fire*3, com_fire*125, units_fire*10, ext_f*31
+	character var_lga*3, ext_lga*31, laps_domain*9
 c
 	character*80 grid_fnam_common
 	common/ grid_fnam_cmn / grid_fnam_common
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
 c
-	real*4 data(ni,nj,27)
-	integer*4 imax,jmax,lvl(27)
-	character dir*50,ext*31,var(27)*3,lvl_coord(27)*4,units(27)*10
-	character comment(27)*125,dir_in*50,ext_in*31
-	equivalence(u_a,    data(1,1,1))
-	equivalence(v_a,    data(1,1,2))
-	equivalence(p_a,    data(1,1,3))
-	equivalence(t,      data(1,1,4))
-	equivalence(td,     data(1,1,5))
-	equivalence(w,      data(1,1,6))
-	equivalence(rh,     data(1,1,7))
-	equivalence(ceil,   data(1,1,8))
-	equivalence(mslp,   data(1,1,9))
-	equivalence(tadv,   data(1,1,10))
-	equivalence(theta,  data(1,1,11))
-	equivalence(thetae, data(1,1,12))
-	equivalence(psfc,   data(1,1,13))
-	equivalence(vort,   data(1,1,14))
-	equivalence(q,      data(1,1,15))
-	equivalence(qcon,   data(1,1,16))
-	equivalence(div,    data(1,1,17))
-	equivalence(thadv,  data(1,1,18))
-	equivalence(qadv,   data(1,1,19))
-	equivalence(li,     data(1,1,20))
-	equivalence(spd,    data(1,1,21))
-	equivalence(cssi,   data(1,1,22))
-	equivalence(pbe_2d, data(1,1,23))
-	equivalence(nbe_2d, data(1,1,24))
-	equivalence(vis,    data(1,1,25))
-	equivalence(fire,   data(1,1,26))
-	equivalence(hi,     data(1,1,27))
+	parameter(num_var = 27)
+	real*4 data(ni,nj,num_var)
+	integer*4 imax,jmax,lvl(num_var)
+	character dir*256,ext*31,var(num_var)*3,lvl_coord(num_var)*4
+	character units(num_var)*10, comment(num_var)*125
 c
 c
 c.....	Start...set up constants, initialize arrays, etc.
@@ -324,8 +285,6 @@ c
 	imax = ni
 	jmax = nj
 	kmax = nk
-	imax_m = ni_maps
-	jmax_m = nj_maps
 	beta = 3.
 	betac = .3
 	itmax = 100
@@ -348,7 +307,6 @@ c
 	call zero(z,imax,jmax)
         call zero(ceil,imax,jmax)   ! dummy ceil ht array
 	pblht = 500.		! pbl height in meters
-	call make_fnam_lp(i4time,filename,istatus)
 c
 c.....  calculate Coriolis term for each grid point
 c
@@ -381,48 +339,36 @@ cz..... Compute T on the surface using the LGA (or equiv) 700 T and HT.
 c
 	i4time_tol = 21600
 	ext_lga = 'lga'
-	l_fill = .true.
 c
 c.....  Get the latest 3d fields, pull out the var/lvls needed.
 c
 	print *,' Get LGA 700 T'
 	itheta7 = 1
 	var_lga = 'T3 '
-	call get_maps_laps_4d(i4time,var_lga,ni,nj,nk,ni_maps,
-     &                nj_maps,dm1,dm2,dm3,dm4,l_fill,istatus)
+	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
 	if(istatus .ne. 1)  then
 	   print *,' LGA 700 T not available. Using constant 5C.'
 	   call constant(t7,278.15,imax,jmax)
 	   itheta7 = 0
 	else
-	   do j=1,nj
-	   do i=1,ni
-	      t7(i,j) = dm4(i,j,9) ! lvl 9 = 700 hPa
-	   enddo !i
-	   enddo !j
+	   call move_3dto2d(dm1,9,t7,ni,nj,nk)  ! lvl 9 = 700 hPa
 	endif
 c
 	print *,' Get LGA 700 HT'
 	var_lga = 'HT '
-	call get_maps_laps_4d(i4time,var_lga,ni,nj,nk,ni_maps,
-     &                nj_maps,dm1,dm2,dm3,dm4,l_fill,istatus)
+	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
 	if(istatus .ne. 1)  then
-	 print *,' LGA 700 HT not available. Using constant 3000 m.'
-	 call constant(h7,3000.,imax,jmax)
+	   print *,' LGA 700 HT not available. Using constant 3000 m.'
+	   call constant(h7,3000.,imax,jmax)
 	else
-	   do j=1,nj
-	   do i=1,ni
-	      h7(i,j) = dm4(i,j,9) ! lvl 9 = 700 hPa
-	   enddo !i
-	   enddo !j
+	   call move_3dto2d(dm1,9,h7,ni,nj,nk)  ! lvl 9 = 700 hPa
 	endif
 c
 	print *,' Get LGA 700 TD'
 	var_lga = 'SH '  ! specific humidity 
-	call get_maps_laps_4d(i4time,var_lga,ni,nj,nk,ni_maps,
-     &                nj_maps,dm1,dm2,dm3,dm4,l_fill,istatus)
+	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
 	if(istatus .ne. 1)  then
 	   print *,' LGA 700 Td not available. Using constant -5C.'
@@ -431,7 +377,7 @@ c
 	   do j=1,nj
 	   do i=1,ni
 	    t7c = t7(i,j) - 273.15  !K to C
-	    qgkg = dm4(i,j,9) * 1000.   !lvl 9 = 700 hPa
+	    qgkg = dm1(i,j,9) * 1000.   !lvl 9 = 700 hPa
 	    td7(i,j) = make_td(700., t7c, qgkg, 0.) + 273.15 !in K
 	   enddo !i
 	   enddo !j
@@ -442,18 +388,13 @@ c
 	print *,' Get LGA 500 T'
 	itheta5 = 1
 	var_lga = 'T3 '
-	call get_maps_laps_4d(i4time,var_lga,ni,nj,nk,ni_maps,
-     &                nj_maps,dm1,dm2,dm3,dm4,l_fill,istatus)
+	call get_modelfg_3d(i4time,var_lga,ni,nj,nk,dm1,istatus)
 c
 	if(istatus .ne. 1)  then
-	 print *,' LGA 500 T not available.'
-	 itheta5 = 0
+ 	   print *,' LGA 500 T not available.'
+	   itheta5 = 0
 	else
-	   do j=1,nj
-	   do i=1,ni
-	      t5(i,j) = dm4(i,j,13) ! lvl 13 = 500 hPa
-	   enddo !i
-	   enddo !j
+	   call move_3dto2d(dm1,13,t5,ni,nj,nk)  ! lvl 13 = 500 hPa
 	endif
 c
 c.....  Convert units.
@@ -464,7 +405,7 @@ c
 c.....  Get lapse rate (usually std), and mean pressure.
 c
 	call mean_lapse(n_obs_b,elev_s,t_s,td_s,a_t,lapse_t,a_td,
-     &                  lapse_td,hbar)
+     &                  lapse_td,hbar,badflag)
 	call mean_pres(n_obs_b,pstn_s,pbar)
 c
 c.....  Calculate the terrain est temps and pressure.
@@ -506,11 +447,10 @@ c
 c
 c.....	Now call the solution algorithm for the tb8 data.
 c
-	call zero(w,imax,jmax)
 	print *,'  At spline call for tb8'
 	name = 'TB8   '	
-        call spline(tb8,tb81,w,alf,z,beta,0.,st,cormax,.3,imax,jmax,
-     &        roi,bad_tb8,imiss,d1,d2,d3,name)	! z is a zero array here...
+        call spline(tb8,tb81,z,alf,z,beta,0.,z,cormax,.3,imax,jmax,
+     &        roi,bad_tb8,imiss,mxstn,obs_error_tb8,name)
 	if(imiss .ne. 0) ibt = 0 ! all zeros in tb8 array
 c
 c.....	Now force the t analysis with the tb8 and background data.
@@ -520,7 +460,7 @@ c
 	if(ibt .eq. 0) gamma = 0.		! data not there
 	print *,'  At spline call for t'
         call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb8,cormax,.3,imax,
-     &        jmax,roi,bad_t,imiss,d1,d2,d3,name)
+     &        jmax,roi,bad_t,imiss,mxstn,obs_error_t,name)
 c
 c.....	Now call the solution algorithm for the dew point.
 c
@@ -531,8 +471,8 @@ c	beta_td = 3.0
 !	write(6,19998) beta_td
 19998	format(' Using beta_td of: ',f10.2)
 	print *,'  At spline call for td'
-        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,sm,cormax,.3,
-     &        imax,jmax,roi,bad_td,imiss,d1,d2,d3,name)
+        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.3,
+     &        imax,jmax,roi,bad_td,imiss,mxstn,obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (don't
 c.....	bother with the t and td backgrounds since we're done with them).
@@ -605,8 +545,8 @@ c
 	   theta_old = theta_c
 	   theta_k = theta_c + 273.15           ! sfc Th in K
 	   if(itheta_all .ne. 0) then
-	     if(theta_k .gt. d1(i,j)) then      ! if sfc Th > 500 Th...
-		theta_k = d1(i,j)               ! set sfc Th = 500 Th
+	     if(theta_k .gt. d1(i,j)) then      ! if sfc Th > Upper Th...
+		theta_k = d1(i,j)               ! set sfc Th = Upper Th
 		theta_c = theta_k - 273.15      ! adj sfc Th in C
 		tc = tda(theta_c,psfc(i,j))     ! adj sfc T in C
 		tnew_f = (tc * anof) + 32.      ! replace sfc T in F
@@ -638,20 +578,20 @@ c
 c..... Call the solution algorithm for the rest of the fields.
 c
 	print *,'  At spline call for u'
-	call spline(u,u1,u_bk,alf,wt_u,beta,0.,st,cormax,.1,imax,jmax,
-     &        roi,bad_u,imiss,d1,d2,d3,name)
+	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.1,imax,jmax,
+     &        roi,bad_u,imiss,mxstn,obs_error_wind,name)
 	print *,'  At spline call for v'
-	call spline(v,v1,v_bk,alf,wt_v,beta,0.,st,cormax,.1,imax,jmax,
-     &        roi,bad_v,imiss,d1,d2,d3,name)
+	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.1,imax,jmax,
+     &        roi,bad_v,imiss,mxstn,obs_error_wind,name)
 	print *,'  At spline call for red_p'
-	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,st,cormax,.1,imax,
-     &        jmax,roi,bad_p,imiss,d1,d2,d3,name)
+	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.1,imax,
+     &        jmax,roi,bad_p,imiss,mxstn,obs_error_redp,name)
 	print *,'  At spline call for msl p'
-	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,st,cormax,
-     &      .1,imax,jmax,roi,bad_p,imiss,d1,d2,d3,name)
+	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
+     &      .1,imax,jmax,roi,bad_p,imiss,mxstn,obs_error_mslp,name)
 	print *,'  At spline call for visibility'
-	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,st,cormax,10.,
-     &        imax,jmax,roi,bad_vis,imiss,d1,d2,d3,name)
+	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,10.,
+     &        imax,jmax,roi,bad_vis,imiss,mxstn,obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
@@ -666,11 +606,8 @@ c
 	endif
 c
 cv....	This is the where the variational analysis stuff starts.
-c.....	First compute the pressure change
 c
-!	call diff(rp,rp_bk,drp,imax,jmax)	! change that drove analysis
-c
-c.....	compute wind changes   
+c.....	Compute and save the wind changes.
 c
 	do 100 n=1,npass
 c
@@ -686,27 +623,10 @@ c
 	    call conv_kt2ms(v_bk,v_bk,imax,jmax)!   "      "     "   "     "
 	  endif
 c
-c.....  calculate and save the wind changes. first ones are off the bkg.
+	  call diff(u,u_bk,du,imax,jmax)
+	  call diff(v,v_bk,dv,imax,jmax)
 c
-cc	  if(n .eq. 1) then
-cc	    call zero(d1,imax,jmax)
-cc	    call zero(d2,imax,jmax)
-cc	    do j=1,jmax
-cc	    do i=1,imax
-cc	      if(u1(i,j) .ne. 0.) d1(i,j) = u1(i,j) - u_bk(i,j)  ! diff = 
-cc	      if(v1(i,j) .ne. 0.) d2(i,j) = v1(i,j) - v_bk(i,j)  !   ob - bk
-cc	    enddo !i
-cc	    enddo !j
-cc	    nbpass = 1
-cc	    kdim = 5 	! rad of infl of 0.01 
-cc	    call barnes2(du,imax,jmax,d1,bad,kdim,nbpass,d3,d4)
-cc	    call barnes2(dv,imax,jmax,d2,bad,kdim,nbpass,d3,d4) 
-cc	  else
-	    call diff(u,u_bk,du,imax,jmax)
-	    call diff(v,v_bk,dv,imax,jmax)
-cc	  endif
-c
-c.....	compute divergence change and vorticity
+c.....	Compute divergence change and vorticity
 c
 	  do j=2,jmax
 	  do i=2,imax
@@ -719,13 +639,12 @@ c
 c
 c.....	compute the nonlinear and friction terms
 c
-          call get_directory('static',infile,len)
-          infile=infile(1:len)//'drag_coef.dat'
-          call s_len(infile,len)
+	  call get_directory('static', infile, len)
+	  infile = infile(1:len) // '/drag_coef.dat'
+	  call s_len(infile, len)
+c	  open(51,file='../static/drag_coef.dat',
 	  open(51,file=infile(1:len),
      &         form='unformatted',status='old')
-c	  open(51,file='../static/surface/drag_coef.dat',
-c     &         form='unformatted',status='old')
 	  read(51) akk
 	  close(51)
 	  call nonlin(nu,nv,u,v,u_bk,v_bk,imax,jmax,dx,dy)
@@ -780,7 +699,7 @@ c
 	  enddo !i
 	  enddo !j
 c
-c.....	fill in boundaries of u_a and v_a for finite diff calcs.
+c.....	Fill in boundaries of u_a and v_a for finite diff calcs.
 c
 	call bounds(u_a,imax,jmax)
 	call bounds(v_a,imax,jmax)
@@ -790,26 +709,23 @@ c
 c
 c.....	Channel the winds around the terrain
 c
-       
-	call get_directory('static',infile,len)
-	infile=infile(1:len)//'pbl_top.dat'
-	call s_len(infile,len)
-	open(52,file=infile(1:len),
-     &         form='unformatted',status='old')
+	call get_directory('static', infile, len)
+	infile = infile(1:len) // '/pbl_top.dat'
+	call s_len(infile, len)
 c	open(52,file='../static/surface/pbl_top.dat',
-c     &       form='unformatted',status='old')
+	open(52,file=infile(1:len),
+     &       form='unformatted',status='old')
 	read(52) pbl_top
 	close(52)
 cc	call vortdiv(u_a,v_a,vort,div,imax,jmax,dx,dy)
-cc	call channel(u_a,v_a,topo,imax,jmax,pbl_top,pblht,dx,dy,z,
-cc   &               d1,d2,d3,d4,d5,d6,d7,div)
+cc	call channel(u_a,v_a,topo,imax,jmax,pbl_top,pblht,dx,dy,z,div)
 c
-c.....	Calculate the vorticity and divergence.
+c.....	Calculate the final vorticity and divergence.
 c
 	call vortdiv(u_a,v_a,vort,div,imax,jmax,dx,dy)
 c
-c.....	Compute w by integrating the surface winds over some pbl and
-c.....	allow for terrain lift.
+c.....	Compute a vertical velocity by integrating the surface winds over 
+c.....  some pbl and allow for terrain lift.
 c
 	do j=2,jmax-1
 	do i=2,imax-1
@@ -820,10 +736,10 @@ c
 	   ubar = (u_a(i-1,j-1) + u_a(i,j-1)) * .5
 	   vbar = (v_a(i-1,j) + v_a(i-1,j-1)) * .5
 	   dvh = ubar * dterdx + vbar * dterdy
-	   w(i,j) = (dvh - div(i,j) * pblht) * 100.	! cm/sec
+	   vv(i,j) = (dvh - div(i,j) * pblht) * 100.	! cm/sec
 	enddo !i
 	enddo !j
-	call bounds(w,imax,jmax)
+	call bounds(vv,imax,jmax)
 c
 c.....	Now convert some stuff, then call the thermo routines.
 c
@@ -833,7 +749,7 @@ c
 !	sflag = 2.e6	! this means li_laps will read 500 T from a file
 	call li_laps(t,td,psfc,d1,i4time,imax,jmax,li,sflag,istatus)
 c
-	call make_cssi(t,td,mslp,u_a,v_a,cssi,imax,jmax,d1,d2)
+	call make_cssi(t,td,mslp,u_a,v_a,cssi,imax,jmax,badflag)
 c
 	call conv_f2k(t,t,imax,jmax)		! conv F to K
 	call conv_f2k(td,td,imax,jmax)		! conv F to K
@@ -848,16 +764,19 @@ c
 	call multcon(p_a,100.,imax,jmax)	! conv mb to Pa
 	call multcon(psfc,100.,imax,jmax)	! conv mb to Pa
 	call multcon(mslp,100.,imax,jmax)	! conv mb to Pa
-	call multcon(w,.01,imax,jmax)		! conv cm/s to m/s
+	call multcon(vv,.01,imax,jmax)		! conv cm/s to m/s
 	call addcon(thetae,273.15,thetae,imax,jmax)	! C to  K
 	call windspeed(u_a,v_a,spd,imax,jmax)	! calc windspeed
-	call hum(t,td,rh,imax,jmax,d1,d2)	! calc rel hum.
 	call vlog2vis(vis,vis,imax,jmax)	! conv log(vis) to vis-miles
+c
+c.....  Calculate RH and change to %
+c
+	call hum(t,td,rh,imax,jmax,d1,d2)	! calc rel hum.
+	call multcon(rh,100.,imax,jmax)
 c
 c.....  Adjust visibility analysis.
 c
-        call enhance_vis(i4time,vis,rh,topo,imax,jmax,d1,d_c,
-     &                                                kcloud,kdum)
+        call enhance_vis(i4time,vis,rh,topo,imax,jmax,kcloud)
 	call conv_miles2m(vis,vis,imax,jmax)	! conv miles to meters
 c
 c.....  Call the Fire index routine.
@@ -875,8 +794,8 @@ c
 	ilev = -1
 	var_fire = 'LSM'                   ! soil moisture
 	ext_f = 'lm1'
-	call get_2d_field(i4time,i4time_tol,i4time_near,ext_f,var_fire,
-     &                    ilev,d6,imax,jmax,istatus)
+	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
+     &                    units_fire,com_fire,imax,jmax,d6,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting soil moisture.'
 	   ismoist = 0
@@ -884,14 +803,14 @@ c
 c
 	var_fire = 'SC '                   ! snow cover
 	ext_f = 'lm2'
-	call get_laps_2d(i4time_f,ext_f,var_fire,units_fire,com_fire,
-     &                   imax,jmax,d7,istatus)
+	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
+     &                    units_fire,com_fire,imax,jmax,d7,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting snow cover.'
 	   isnow = 0
 	endif
 c
-	call lp_fire_danger(rh,t,spd,d6,d7,topo,ismoist,isnow,
+	call lp_fire_danger(imax,jmax,rh,t,spd,d6,d7,topo,ismoist,isnow,
      &                                            fire,istatus)
 	print *,' Fire: ',ismoist, isnow, istatus
 	print *,' '
@@ -899,8 +818,7 @@ c
 c.....  Calculate Heat Index
 c
 	print *,' Heat Index...'
-	call heat_index(t,rh,hi,imax,jmax)
-	call conv_f2k(hi,hi,imax,jmax)		! conv F to K
+	call heat_index(t,rh,hi,imax,jmax,badflag)
 c
 c.....	Now calculate PBE and NBE.  First fix up the .LT1 file....
 c
@@ -917,10 +835,9 @@ c
 	call zero(d6,imax,jmax)
 	call zero(d7,imax,jmax)
 c
-        call put_temp_anal(i4time,imax,jmax,kmax,imax_m,jmax_m,
+        call put_temp_anal_97(i4time,imax,jmax,kmax,
      &                 dm1,dm2,dm3,
-     &                 lni_m,lnj_m,iden_ratio,dm4,
-     &                 adbox,ndbox,d2,d3,d4,d5,d6,d7,
+     &                 d2,d3,d4,d5,d6,d7,
      &                 ht_3d_m,LT1_out,
      &                 lat,lon,topo,d1,psfc,
      &                 LT1_write_flag,laps_cycle_time,grid_spacing,
@@ -943,19 +860,12 @@ c
 	    p_1d_pa(k) = pressure_of_level(k) ! Pressure at each level
 	enddo !k
 c
-c	Calculate a 3-D Height Field
-c	call get_heights_hydrostatic(t_3d_k,psfc,topo,d1,d2,d3,d4,
-c     &                               ni,nj,nk,ht_3d_m)
-c
 c	Get PBE and NBE - Make sure t_sfc_k(i,j) >= td_sfc_k(i,j)
 	call laps_be(ni,nj,nk,t,td,psfc,
      &  t_3d_k,ht_3d_m,p_1d_pa,topo,pbe_2d,nbe_2d)
 c
  888	continue
-c
-c.....  Change RH to %
-c
-	call multcon(rh,100.,imax,jmax)
+
 c
 c.....  Write out some stats.
 c
@@ -970,7 +880,7 @@ c
 	call stats(spd,imax,jmax)
 	print *,' -------------------------------'
 	print *,' vert vel (m/s):'
-	call stats(w,imax,jmax)
+	call stats(vv,imax,jmax)
 	print *,' -------------------------------'
 	print *, redp_lvl,' m pressure (pa):'
 	call stats(p_a,imax,jmax)
@@ -999,7 +909,7 @@ c
 	print *,' heat index :'
 	call stats(hi,imax,jmax)
 	print *,' ======================================================='
-
+c
 c.....	Now write out the grids to PROD_DEV.
 c
 	print *,' Saving primary fields.'
@@ -1009,103 +919,186 @@ c
 	enddo !i
 	lvl_coord(10) = 'MSL'
 	lvl_coord(26) = 'MSL'
-	var(1) = 'U'	! u-wind (m/s)
-	var(2) = 'V'	! v-wind (m/s)
-	var(3) = 'P'	! reduced press (Pa)
-	var(4) = 'T'	! temp (K)
-	var(5) = 'TD'	! dew point (K)
-	var(6) = 'VV'	! vert. vel (m/s)
-	var(7) = 'RH'	! relative humidity (%)
-	var(8) = 'CCE'	! ceiling ht. msl (m)
-	var(9) = 'MSL'	! MSL pressure (Pa)
-	var(10) = 'TAD'	! temperature advection (K/sec)
-	var(11) = 'TH'	! potential temp (K)
-	var(12) = 'THE' ! equiv pot temp (K)
-	var(13) = 'PS'	! surface press (Pa)
-	var(14) = 'VOR'	! sfc vorticity (/s)
-	var(15) = 'MR'	! mixing ratio (g/kg)
-	var(16) = 'MRC'	! moisture convergence (g/kg/s)
-	var(17) = 'DIV'	! sfc divergence (/s)
-	var(18) = 'THA' ! pot temp adv (K/s)
-	var(19) = 'MRA' ! moisture adv (g/kg/s)
-	var(20) = 'LI'	! lifted index (K)
-	var(21) = 'SPD'	! wind speed (m/s)
-	var(22) = 'CSS' ! CSSI 
-	var(23) = 'PBE' ! Pos Bouyant Energy (J/kg)
-	var(24) = 'NBE' ! Neg Bouyant Energy (J/kg)
-	var(25) = 'VIS' ! Visibility (m)
-	var(26) = 'FWX' ! Fire threat index (integer)
-	var(27) = 'HI'  ! Heat Index (K)
-	units(1) = 'M/S'
-	units(2) = 'M/S'
-	units(3) = 'PA'
-	units(4) = 'K'
-	units(5) = 'K'
-	units(6) = 'M/S'
-	units(7) = '%'
-	units(8) = 'M'
-	units(9) = 'PA'
-	units(10) = 'K/S'
-	units(11) = 'K'
-	units(12) = 'K'
-	units(13) = 'PA'
-	units(14) = '/S'
-	units(15) = 'G/KG'
-	units(16) = 'G/KG/S'
-	units(17) = '/S'
-	units(18) = 'K/S'
-	units(19) = 'G/KG/S'
-	units(20) = 'K'
-	units(21) = 'M/S'
-	units(23) = 'J/KG'
-	units(24) = 'J/KG'
-	units(25) = 'M'
-	units(26) = ' '
-	units(27) = 'K'
 c
         do i=1,27
-           write(comment(i)(50:52),180) n_sao_g
-           write(comment(i)(54:56),180) n_sao_b
-           write(comment(i)(58:60),180) n_obs_g
-180        format(i3)
+           write(comment(i),180) n_sao_g,n_sao_b,n_obs_g  
+c           write(comment(i)(50:52),180) n_sao_g
+c           write(comment(i)(54:56),180) n_sao_b
+c           write(comment(i)(58:60),180) n_obs_g
+ 180	   format(49x,3i4)
+         
+c 179	   format(125x)
         enddo !i
+        print*,comment(1)
+c
+c.....  Move the 2-d analyses to the 3-d storage array for writing.
+c
+	var(1) = 'U'		! u-wind (m/s)
+	units(1) = 'M/S'
+	call move_2dto3d(   u_a, data,  1, imax, jmax, num_var)
+c
+	var(2) = 'V'		! v-wind (m/s)
+	units(2) = 'M/S'
+	call move_2dto3d(   v_a, data,  2, imax, jmax, num_var)
+c
+	var(3) = 'P'		! reduced press (Pa)
+	units(3) = 'PA'
 	write(comment(3)(1:4),181) ifix(redp_lvl)
  181	format(i4)
 	comment(3)(5:23) = ' M REDUCED PRESSURE'
+	call move_2dto3d(   p_a, data,  3, imax, jmax, num_var)
+c
+	var(4) = 'T'		! temp (K)
+	units(4) = 'K'
+	call move_2dto3d(     t, data,  4, imax, jmax, num_var)
+c
+	var(5) = 'TD'		! dew point (K)
+	units(5) = 'K'
+	call move_2dto3d(    td, data,  5, imax, jmax, num_var)
+c
+	var(6) = 'VV'		! vert. vel (m/s)
+	units(6) = 'M/S'
+	call move_2dto3d(    vv, data,  6, imax, jmax, num_var)
+c
+	var(7) = 'RH'		! relative humidity (%)
+	units(7) = '%'
+	call move_2dto3d(    rh, data,  7, imax, jmax, num_var)
+c
+	var(8) = 'CCE'		! ceiling ht. msl (m)
+	units(8) = 'M'
+	call move_2dto3d(  ceil, data,  8, imax, jmax, num_var)
+c
+	var(9) = 'MSL'		! MSL pressure (Pa)
+	units(9) = 'PA'
 	comment(9) = 'MSL PRESSURE'
+	call move_2dto3d(  mslp, data,  9, imax, jmax, num_var)
+c
+	var(10) = 'TAD'		! temperature advection (K/sec)
+	units(10) = 'K/S'
+	call move_2dto3d(  tadv, data, 10, imax, jmax, num_var)
+c
+	var(11) = 'TH'		! potential temp (K)
+	units(11) = 'K'
+	call move_2dto3d( theta, data, 11, imax, jmax, num_var)
+c
+	var(12) = 'THE'		! equiv pot temp (K)
+	units(12) = 'K'
+	call move_2dto3d(thetae, data, 12, imax, jmax, num_var)
+c
+	var(13) = 'PS'		! surface press (Pa)
+	units(13) = 'PA'
+	call move_2dto3d(  psfc, data, 13, imax, jmax, num_var)
+c
+	var(14) = 'VOR'		! sfc vorticity (/s)
+	units(14) = '/S'
+	call move_2dto3d(  vort, data, 14, imax, jmax, num_var)
+c
+	var(15) = 'MR'		! mixing ratio (g/kg)
+	units(15) = 'G/KG'
+	call move_2dto3d(     q, data, 15, imax, jmax, num_var)
+c
+	var(16) = 'MRC'		! moisture convergence (g/kg/s)
+	units(16) = 'G/KG/S'
+	call move_2dto3d(  qcon, data, 16, imax, jmax, num_var)
+c
+	var(17) = 'DIV'		! sfc divergence (/s)
+	units(17) = '/S'
+	call move_2dto3d(   div, data, 17, imax, jmax, num_var)
+c
+	var(18) = 'THA'		! pot temp adv (K/s)
+	units(18) = 'K/S'
+	call move_2dto3d( thadv, data, 18, imax, jmax, num_var)
+c
+	var(19) = 'MRA'		! moisture adv (g/kg/s)
+	units(19) = 'G/KG/S'
+	call move_2dto3d(  qadv, data, 19, imax, jmax, num_var)
+c
+	var(20) = 'LI'		! lifted index (K)
+	units(20) = 'K'
+	call move_2dto3d(    li, data, 20, imax, jmax, num_var)
+c
+	var(21) = 'SPD'		! wind speed (m/s)
+	units(21) = 'M/S'
+	call move_2dto3d(   spd, data, 21, imax, jmax, num_var)
+c
+	var(22) = 'CSS'		! CSSI 
+	units(22) = ' '
 	comment(22)= 'CSSI - COLORADO SEVERE STORM INDEX'
-	comment(26)= 'LAPS FIRE THREAT INDEX'
+	call move_2dto3d(  cssi, data, 22, imax, jmax, num_var)
+c
+	var(23) = 'PBE'		! Pos Bouyant Energy (J/kg)
+	units(23) = 'J/KG'
+	call move_2dto3d(pbe_2d, data, 23, imax, jmax, num_var)
+c
+	var(24) = 'NBE'		! Neg Bouyant Energy (J/kg)
+	units(24) = 'J/KG'
+	call move_2dto3d(nbe_2d, data, 24, imax, jmax, num_var)
+c
+	var(25) = 'VIS'		! Visibility (m)
+	units(25) = 'M'
+	call move_2dto3d(   vis, data, 25, imax, jmax, num_var)
+c
+	var(26) = 'FWX'		! Fire threat index (integer)
+	units(26) = ' '
+	comment(26)(1:22)= 'LAPS FIRE THREAT INDEX'
 	comment(26)(62:120) = 
      &      'INDEX: 0-NONE, 5-SLGT, 10-MDT, 15-HI, 20-EXTREME'
-	comment(27)= 'HEAT INDEX'
+	call move_2dto3d(  fire, data, 26, imax, jmax, num_var)
 c
-
-	call write_laps_data(i4time,dir,ext,imax,jmax,27,27,var,
-     &                  lvl,lvl_coord,units,comment,data,istatus)
+	var(27) = 'HI'  ! Heat Index (K)
+	units(27) = 'K'
+	comment(27)= 'HEAT INDEX'
+	call move_2dto3d(    hi, data, 27, imax, jmax, num_var)
+c
+c.....  Now actually write the LSX file.
+c
+	call get_directory('lsx', dir, len)
+	ext = 'lsx'
+	call write_laps_data(i4time,dir,ext,imax,jmax,num_var,
+     &          num_var,var,lvl,lvl_coord,units,comment,data,istatus)
 c
 	jstatus(3) = 1		! everything ok...
 c
 c.....  Now finish up with some verification.
 c
 	iunit = 11
-        call get_directory('log',ver_file,len)
+	call get_directory('log', ver_file, len)
+c	ver_file = '../log/qc/laps_sfc.ver.'//filename(6:9)
 	ver_file = ver_file(1:len)//'qc/laps_sfc.ver.'//filename(6:9)
-        call s_len(ver_file,len)
-	call zero(d1,imax,jmax)
-
+	call s_len(ver_file, len)
 	open(iunit,file=ver_file(1:len),status='unknown')
 c
 	title = 'Temperature'
+	call zero(d1,imax,jmax)
 	call conv_k2f(t,d1,imax,jmax)
-	call verify(d1,t_s,stn,n_obs_b,title,iunit)
+	call verify(d1,t_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
 c	
 	title = 'Dew Point'
 	call conv_k2f(td,d1,imax,jmax)
-	call verify(d1,td_s,stn,n_obs_b,title,iunit)
+	call verify(d1,td_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
 c
 	title = 'Wind Speed'
 	call conv_ms2kt(spd,d1,imax,jmax)
-	call verify(d1,ff_s,stn,n_obs_b,title,iunit)
+	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
+c
+	title = 'Visibility'
+	call conv_m2miles(vis,d1,imax,jmax)
+	do i=1,n_obs_b            !conv to miles from log(miles)
+	   if(vis_s(i) .le. -1.5) then
+	      if(vis_s(i) .lt. -15.) then
+		 dums(i) = badflag
+	      else
+		 dums(i) = 0.
+	      endif
+	   else
+	      dums(i) = 10. ** (vis_s(i))
+	   endif
+	enddo !i
+	call verify(d1,dums,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,badflag)
 c
 	close(iunit)
 c

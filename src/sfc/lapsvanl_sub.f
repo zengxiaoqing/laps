@@ -54,18 +54,27 @@ c
 	end
 c
 c
-	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,z,b,c,
-     &                     phi,ter,du,dv,dpbl,div)
+	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
+     &                     z,div)
 c
-c.....	routine to channel winds around terrain features.
-c...... now includes option to conserve surface convergence from 
+c=====================================================================
+c
+c	Routine to channel winds around terrain features.
+c       Includes option to conserve surface convergence from 
 c       raw wind data since channeling routine acts to eliminate
 c       convergence totally.
 c
+c       Original:   J. McGinley, 2nd half of 20th Century
+c       Changes:    P. Stamus  26 Aug 1997  Changes for dynamic LAPS
+c
+c=====================================================================
+c
 	real*4 u(imax,jmax),v(imax,jmax),z(imax,jmax)
 	real*4 dx(imax,jmax),dy(imax,jmax),top(imax,jmax),topo(imax,jmax)
+	real*4 div(imax,jmax)
+c
 	real*4 phi(imax,jmax),ter(imax,jmax),du(imax,jmax),dv(imax,jmax)
-	real*4 dpbl(imax,jmax),b(imax,jmax),c(imax,jmax),div(imax,jmax)
+	real*4 dpbl(imax,jmax),b(imax,jmax),c(imax,jmax)
 c
 	call zero(phi,imax,jmax)	! zero the work arrays
 	call zero(ter,imax,jmax)
@@ -99,9 +108,9 @@ c
      1                +(v2*dzy2-v1*dzy1)/dy(i,j)) /zbars
      2                -div(i,j)/zbar
 	enddo !i
-
 	enddo !j
 c
+c	print *,' Calculating the solution for streamfunction'
 	call zero(phi,imax,jmax)
 	call leib(phi,ter,100,.1,imax,jmax,z,b,c,z,z,dx,dy,1.)
 c
@@ -236,7 +245,7 @@ c
 c
 c
 	subroutine spline(t,to,tb,alf,alf2,beta,a,s,cormax,err,imax,
-     &                    jmax,roi,bad_mult,imiss,alf2o,d1,d2,name)
+     &                    jmax,roi,bad_mult,imiss,mxstn,obs_error,name)
 c
 c*******************************************************************************
 c	LAPS spline routine...based on one by J. McGinley.
@@ -246,12 +255,16 @@ c	  P. Stamus	10-18-90  Started to clean code. Made alf2/alf2o arrays.
 c			11-11-91  Pass in dummy work arrays.
 c			07-27-93  Changes for new barnes2 routine. 
 c                       07-20-95  Put wt calcs here...call to dynamic_wts.
+c                       08-26-97  Changes for dynamic LAPS. Pass in obs_error.
 c
 c*******************************************************************************
 c
 	real*4 t(imax,jmax), to(imax,jmax), s(imax,jmax)
 	real*4 RESS(100), tb(imax,jmax), alf2(imax,jmax)
-	real*4 alf2o(imax,jmax), d1(imax,jmax), d2(imax,jmax)
+c
+	real*4 fnorm(0:imax-1,0:jmax-1)
+	real*4 alf2o(imax,jmax)  !work array
+c
 	character name*10
 	logical iteration
 c
@@ -269,7 +282,6 @@ c
 c.....	first guess use barnes
 c
 	npass = 1
-cc	kdim = 1  ! rad of infl 0.0005...lots of smoothing to id bad ob
 c
 c.....  Count the number of observations in the field (not counting the 
 c.....  boundaries.
@@ -285,7 +297,7 @@ c
 	  imiss = 1
 	  return
 	else
-	   print *,' Observations in data array: ',n_obs_var
+	   print *,' Observations in data array: ', n_obs_var
 	endif
 c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
@@ -296,8 +308,8 @@ c
 	endif
 c
 	rom2 = 0.0005
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d)
-	call barnes2(t,imax,jmax,to,smsng,kdim,npass,d1,d2)
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
 c
 c.....	Data check algorithm
 c
@@ -355,11 +367,10 @@ c
 c.....	now reestablish first guess with lots of detail in 2nd pass
 c.....	do a 2-pass Barnes unless there's lots of data.
 c
-	datacov = float(imax * jmax) / 3.
-	npass = 2
-	if(cnt .gt. datacov) npass = 1
-	kdim = 6	! rad of infl 0.02
-	npass = 1	! temp fix...8/27/93 pass
+!	datacov = float(imax * jmax) / 3.
+!	npass = 2
+!	if(cnt .gt. datacov) npass = 1
+	npass = 1
 c
 	if(n_obs_var .gt. 0) then
 	   print *,' Final observations in data array: ',n_obs_var
@@ -378,8 +389,9 @@ c	   if(n_obs_var .lt. 500) rom2 = 0.01
 c	   if(n_obs_var .lt. 100) rom2 = 0.005
 	endif
 c
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d)
-	call barnes2(t,imax,jmax,to,smsng,kdim,npass,d1,d2)
+	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
+	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
+c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
 	  write(9,2345) 
 2345      format(1x,'final first guess')
@@ -387,8 +399,8 @@ c
 c
 c.....  Calculate the spline weights.
 c
-	obs_error = 0.1                       !test version...pass in later
 	call calc_beta(d,obs_error,beta)
+c
 	if(beta .le. 0.) then 
 	   print *,' bad beta...skipping spline'
 	   go to 3
@@ -501,7 +513,7 @@ c
 	  endif	
  	  q(i,j) = 622. * e * drprs  !mixing ratio using (0.622*1000) for g/kg.
 10	continue
-990	format(1x,'Point ',2i3,' has a pressure of ',e12.4)
+990	format(1x,'Point ',2i4,' has a pressure of ',e12.4)
 c
 c.....	Compute moisture flux convergence on the laps grid.
 c.....	Units:  g / kg / sec
@@ -569,13 +581,14 @@ c
 	end
 c
 c
-	subroutine barnes2(t,imax,jmax,to,smsng,kdim,npass,h1,h2)
+	subroutine barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
 c
-	include 'laps_sfc.inc'
-	parameter(maxobs=15000)
-	real*4 to(imax,jmax), t(imax,jmax), val(maxobs)
-	real*4 h1(imax,jmax), h2(imax,jmax)
-	integer*4 iob(maxobs), job(maxobs), dx, dy
+	real*4 to(imax,jmax), t(imax,jmax), val(imax*jmax)
+	real*4 fnorm(0:imax-1,0:jmax-1)
+	real*4 h1(imax,jmax), h2(imax,jmax)  !work arrays
+c
+	integer*4 iob(imax*jmax), job(imax*jmax), dx, dy
+c
 c
 	call zero(h1,imax,jmax)
 	call zero(h2,imax,jmax)
@@ -603,7 +616,6 @@ c
 c
 	do ipass=1,npass
 c
-cc	  if(ipass .eq. 2) kdim = 7	! 2nd pass rad. of infl. 0.05
 	  do j=1,jmax
 	  do i=1,imax
 	    sum = 0.
@@ -613,40 +625,28 @@ cc	  if(ipass .eq. 2) kdim = 7	! 2nd pass rad. of infl. 0.05
 	    do n=1,ncnt
 	      dy = abs(j - job(n))
 	      dx = abs(i - iob(n))
-cc	      sum = fnorm2(dx,dy,kdim) * val(n) + sum
 	      sum2 = fnorm(dx,dy) * val(n) + sum2
-cc	      sumwt = sumwt + fnorm2(dx,dy,kdim)
 	      sumwt2 = sumwt2 + fnorm(dx,dy)
 	    enddo !n
 c
 	    if(sumwt2 .eq. 0.) then
 	      if(ipass .eq. 1) then
-cc	        if(kdim .eq. 1) then
-cc	          print *,
-cc     &              ' *** WARNING. sumwt = 0, kdim = 1 in BARNES2 ***'
-cc	          go to 500
-cc	        else
 		   print *,' got into wierd loop.............'
-cc	          do kk=kdim,1,-2
 	            sum2 = 0.
 	            sumwt2 = 0.
 	            do n=1,ncnt
 	              dx = abs(i - iob(n))
 	              dy = abs(j - job(n))
-cc	              sum = fnorm2(dx,dy,kk) * val(n) + sum
 	              sum2 = (fnorm(dx,dy) + .01) * val(n) + sum2
 	              sumwt2 = sumwt2 + (fnorm(dx,dy) + .01)
 	            enddo !n
 	            if(sumwt2 .ne. 0.) go to 490
-cc	          enddo !kk
-cc	        endif
 	      else
 	        go to 500
 	      endif
 	    endif
 c
 490	    continue
-cc	    t(i,j) = sum / sumwt
 	    t(i,j) = sum2 / sumwt2
 c
 500	  continue
@@ -679,20 +679,22 @@ c
 c
 c
 	subroutine barnes_wide(t,imax,jmax,ii,jj,t_ob,numsta,smsng,
-     &                         kdim,npass,h1)
+     &                         mxstn,npass,fnorm)
 c
 c.....	Routine to do a Barnes analysis that will consider stations in
 c.....	the 't_ob' array that are outside the boundaries of the 't' array.
 c
-	include 'laps_sfc.inc'
-	parameter(maxobs=15000)
-	real*4 t(imax,jmax), t_ob(maxobs) 
-	real*4 h1(imax,jmax), val(maxobs)
-	integer*4 iob(maxobs), job(maxobs), ii(maxobs), jj(maxobs)
+	real*4 t(imax,jmax), t_ob(mxstn) 
+	real*4 fnorm(0:imax-1,0:jmax-1)
+	real*4 h1(imax,jmax), val(mxstn)
+c	
+	integer*4 iob(mxstn), job(mxstn), ii(mxstn), jj(mxstn)
 	integer*4 dx, dy 
 c
 !	print *,' *** In BARNES_wide ***'
 	call zero(h1,imax,jmax)
+	im1 = imax - 1
+	jm1 = jmax - 1
 c
 c.....	loop over field npass times 
 c
@@ -715,50 +717,35 @@ c
 c
 	do ipass=1,npass
 c
-cc	  if(ipass .eq. 2) kdim = 7 	! 2nd pass rad. of infl.
 	  do j=1,jmax
 	  do i=1,imax
-cc	    sum = 0.
-cc	    sumwt = 0.
 	    sum2 = 0.
 	    sumwt2 = 0.
 	    do n=1,ncnt
-	      dy = min(abs(j - job(n)), 60) 
-	      dx = min(abs(i - iob(n)), 60) 
-cc	      sum = fnorm2(dx,dy,kdim) * val(n) + sum
-cc	      sumwt = sumwt + fnorm2(dx,dy,kdim)
+	      dy = min(abs(j - job(n)), jm1) 
+	      dx = min(abs(i - iob(n)), im1) 
 	      sum2 = fnorm(dx,dy) * val(n) + sum2
 	      sumwt2 = sumwt2 + fnorm(dx,dy)
 	    enddo !n
 	    if(sumwt2 .eq. 0.) then
 	      if(ipass .eq. 1) then
-cc	        if(kdim .eq. 1) then
-cc	          print *,
-cc     &       ' *** WARNING. sumwt = 0, kdim = 1 in BARNES_WIDE ***'
-cc	          go to 500 
-cc	        else
-cc	          do kk=kdim,1,-2 
-		     print *,' barneswide wierd loop...........'
-	            sum2 = 0.
-	            sumwt2 = 0.
-	            do n=1,ncnt
-	              dx = min(abs(i - iob(n)), 60) 
-	              dy = min(abs(j - job(n)), 60) 
-cc	              sum = fnorm2(dx,dy,kk) * val(n) + sum
-cc	              sumwt = sumwt + fnorm2(dx,dy,kk) 
-	              sum2 = fnorm(dx,dy) * val(n) + sum2
-	              sumwt2 = sumwt2 + fnorm(dx,dy) 
-	            enddo !n
-	            if(sumwt2 .ne. 0.) go to 490 
-cc	          enddo !kk 
-cc	        endif
+		print *,' barneswide wierd loop...........'
+	        sum2 = 0.
+	        sumwt2 = 0.
+	        do n=1,ncnt
+	          dx = min(abs(i - iob(n)), im1) 
+	          dy = min(abs(j - job(n)), jm1) 
+	          sum2 = fnorm(dx,dy) * val(n) + sum2
+	          sumwt2 = sumwt2 + fnorm(dx,dy) 
+	        enddo !n
+	        if(sumwt2 .ne. 0.) go to 490 
 	      else
 	        go to 500
 	      endif 
 	    endif 
 c
 490	    continue 
-cc	    t(i,j) = sum / sumwt
+c
 	    t(i,j) = sum2 / sumwt2
 c
 500 	  continue
@@ -819,23 +806,29 @@ c
 	end
 c
 c
-	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,spd,dir)
+	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 c
-c	Routine to calculate the CSSI (Rodgers and Maddox 81) at each LAPS 
-c       gridpoint.  The temp and dewpt enter in deg F, the MSL pressure in mb,
-c       and the wind components in m/s, which have to be converted to speed and
-c	direction in kts.
+c======================================================================
 c
-c	Original verstion: 05-03-91 	Peter A. Stamus
-c			   11-11-91	Pass in dummy arrays.
+c	Routine to calculate the CSSI (Rodgers and Maddox 81) at each 
+c       LAPS gridpoint.  The temp and dewpt enter in deg F, the MSL 
+c       pressure in mb, and the wind components in m/s, which have to be 
+c       converted to speed and direction in kts.
+c
+c	Original version: 05-03-91  Peter A. Stamus NOAA/FSL
+c	Changes:          11-11-91  Pass in dummy arrays.
+c                         08-26-97  Changes for dynamic LAPS
+c
+c======================================================================
 c
 	real*4 t(ni,nj), td(ni,nj), pmsl(ni,nj), u(ni,nj), v(ni,nj)
 	real*4 cssi(ni,nj)
-	real*4 spd(ni,nj), dir(ni,nj)
+c
+	real*4 spd(ni,nj), dir(ni,nj)  !work arrays
 c
 c.....	Start.  Convert u,v in m/s to spd/dir in kts.
 c
-	call windconvert(u,v,dir,spd,ni,nj)
+	call windconvert(u,v,dir,spd,ni,nj,badflag)
 	call conv_ms2kt(spd,spd,ni,nj)	
 c
 c.....	Calculate each of the 4 terms involved, then combine.
@@ -864,39 +857,52 @@ c
 	end
 c
 c
-	subroutine windconvert(uwind,vwind,direction,speed,ni,nj)
+	subroutine windconvert(uwind,vwind,direction,speed,
+     &                         ni,nj,badflag)
 c
-c-----  Given wind components, calculate the corresponding speed and direction.
-c-----  Hacked up from the windcnvrt_gm program.
-
+c======================================================================
 c
-C Argument	I/O	Type			Description
-C --------	---	----	-----------------------------------------------
-C UWind		 I	R*4	U-component of wind
-C VWind		 I	R*4	V-component of wind
-C Direction	 O	R*4	Wind direction (meteorological degrees)
-C Speed		 O	R*4	Wind speed (same units as input arguments)
-c ni,nj          I      I       dimensions.
+c       Given wind components, calculate the corresponding speed and 
+c       direction.  Hacked up from the windcnvrt_gm program.
 c
-C-----  If magnitude of UWind or VWind > 1E18, Speed and Direction set to -99.
 c
-	parameter(flag = -99.9)
+c       Argument     I/O   Type       Description
+c      --------	     ---   ----   -----------------------------------
+c       UWind         I    R*4A    U-component of wind
+c       VWind         I	   R*4A    V-component of wind
+c       Direction     O    R*4A    Wind direction (meteoro. degrees)
+c       Speed         O    R*4A    Wind speed (same units as input)
+c       ni,nj         I    I       Grid dimensions
+c       badflag       I    R*4     Bad flag value
 c
-	real*4		uwind(ni,nj),vwind(ni,nj),direction(ni,nj)
-	real*4		speed(ni,nj)
+c       Notes:
+c       1.  If magnitude of UWind or VWind > 500, set the speed and 
+c           direction set to the badflag value.
+c
+c       2.  Units are not changed in this routine.
+c
+c======================================================================
+c
+	real*4  uwind(ni,nj), vwind(ni,nj)
+	real*4  direction(ni,nj), speed(ni,nj)
 c
 	do j=1,nj
 	do i=1,ni
-	if(abs(uwind(i,j)).gt.1e18 .or. abs(vwind(i,j)).gt.1e18) then
-	 speed(i,j) = flag
-	 direction(i,j) = flag
-	elseiF(uwind(i,j).eq.0.0 .and. vwind(i,j).eq.0.0) then
-	 speed(i,j) = 0.0
-	 direction(i,j) = 0.0				!Undefined
-	else
-	 speed(i,j)=sqrt(uwind(i,j)*uwind(i,j)+vwind(i,j)*vwind(i,j))	!speed
-	 direction(i,j)=57.2957795*(atan2(uwind(i,j),vwind(i,j)))+180.	!dir
-	endif
+	   if(abs(uwind(i,j)).gt.500. .or. 
+     &                           abs(vwind(i,j)).gt.500.) then
+	      speed(i,j) = badflag
+	      direction(i,j) = badflag
+c
+	   elseif(uwind(i,j).eq.0.0 .and. vwind(i,j).eq.0.0) then
+	      speed(i,j) = 0.0
+	      direction(i,j) = 0.0			!Undefined
+c
+	   else
+	      speed(i,j) = 
+     &          sqrt(uwind(i,j)*uwind(i,j) + vwind(i,j)*vwind(i,j))  !speed
+	      direction(i,j) = 
+     &          57.2957795 * (atan2(uwind(i,j),vwind(i,j))) + 180.   !dir
+	   endif
 	enddo !i
 	enddo !j
 c
@@ -904,23 +910,33 @@ c
 	end
 c
 c
-        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,
-     &                         vismod,dum,kcloud,kdum)
+        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,kcloud)
 c
 c==============================================================================
 c
-c     Routine to call other routines to adjust the visibility analysis
-c     based on other data (radar, cloud, etc.).
-c     ** May want to put the spline call in here someday...
+c       Routine to call other routines to adjust the visibility analysis
+c       based on other data (radar, cloud, etc.).
+c            ** May want to put the spline call in here someday...
 c
-c     Original:  ??-??-93  Peter A. Stamus
-c     Changes:   02-03-94  Rewritten
+c       Original:  ??-??-93  Peter A. Stamus  NOAA/FSL
+c       Changes:   02-03-94  Rewritten
+c                  08-26-97  Changes for dynamic LAPS.
+c       
+c       Notes:
+c          1.  The variables here are:
+c                  i4time = Time for this analysis.
+c                  vis    = Visibility (units are not changed) 
+c                  hum    = Relative humidity (0 to 100 percent)
+c                  topo   = LAPS topography (meters)
+c                  ni,nj  = LAPS grid dimensions
+c                  kcloud = Cloud grid dimension in vertical
+c          2.  Units of visibility (miles, meters) are not changed
+c              in this routine.
 c
 c==============================================================================
 c
         real*4 vis(ni,nj), hum(ni,nj), topo(ni,nj)
-        real*4 vismod(ni,nj), dum(ni,nj,kcloud)
-        integer*4 kdum(ni,nj)
+        real*4 vismod(ni,nj)  !work array
 c
         print *,' In enhance_vis routine...'
 c
@@ -936,7 +952,7 @@ c..... Get the modification array using the cloud data from LC3 and the
 c..... surface relative humidity.  The multiply the visibilities by the
 c..... modification factor to get the adjusted visibility.
 c
-        call get_vismods(i4time,hum,topo,vismod,ni,nj,dum,kdum)
+        call get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
 c
         do j=1,nj
         do i=1,ni
@@ -951,30 +967,31 @@ c
         end
 c
 c
-        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,
-     &                         clouds_3d,k_hold)
+        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
 c
 c==============================================================================
 c
-c     Routine to set a visibility adjustment based on low cloud data from
-c     the LAPS 3-D cloud analysis and the LAPS surface humidity analysis.
-c     The adjustment is the percentage (0-1) that the visibility is 
-c     reduced for given cloud amounts/humidities.  The adjustment is put
-c     into the vismod array, and is multiplied by the vis array in the
-c     calling routine (enhance_vis).
+c       Routine to set a visibility adjustment based on low cloud data from
+c       the LAPS 3-D cloud analysis and the LAPS surface humidity analysis.
+c       The adjustment is the percentage (0-1) that the visibility is 
+c       reduced for given cloud amounts/humidities.  The adjustment is put
+c       into the vismod array, and is multiplied by the vis array in the
+c       calling routine (enhance_vis).
 c
-c     Original:  ??-??-93  Peter A. Stamus
-c     Changes:   02-03-94  Rewritten
+c       Original:  ??-??-93  Peter A. Stamus
+c       Changes:   02-03-94  Rewritten
+c                  08-26-97  Changes for dynamic LAPS
 c
 c==============================================================================
 c
-        include 'laps_cloud.inc'
-c
-        real*4 hum(ni,nj), vismod(ni,nj), topo(ni,nj), cld_pres(kcloud)
+        real*4 hum(ni,nj), vismod(ni,nj), topo(ni,nj)
+	real*4 cld_hts(kcloud), cld_pres(kcloud)
         real*4 clouds_3d(ni,nj,kcloud)
+c
         integer*4 k_hold(ni,nj), lvl(kcloud)
+c
         character ext*31, var(kcloud)*3, comment(kcloud)*125
-        character units(kcloud)*10, lvl_coord(kcloud)*4, dir*50
+        character units(kcloud)*10, lvl_coord(kcloud)*4, dir*256
 c
 c..... Start by setting up the default values for vismod (1.0=no adjustment)
 c
@@ -986,11 +1003,10 @@ c
         i4time_c = i4time
         do k=1,kcloud
            lvl(k) = k
-           var(k) = 'LC3'
+           var(k) = 'lc3'
         enddo !k
-        ext = 'LC3'
-        call get_directory('lc3',dir,len)
-c        dir = '../lapsprd/lc3/'
+        ext = 'lc3'
+	call get_directory('lc3', dir, len)
  500    call read_laps_data(i4time_c,dir,ext,ni,nj,kcloud,kcloud,
      &       var,lvl,lvl_coord,units,comment,clouds_3d,istatus)
 c
@@ -1051,10 +1067,10 @@ c
 c.....     Check for fog in the layer just above the surface.
 c
            if(clouds_3d(i,j,k_start) .gt. 0.65) then
-              if(hum(i,j) .gt. .70) vismod(i,j) = 0.90
-              if(hum(i,j) .gt. .80) vismod(i,j) = 0.75
-              if(hum(i,j) .gt. .90) vismod(i,j) = 0.55
-              if(hum(i,j) .gt. .95) vismod(i,j) = 0.35
+              if(hum(i,j) .gt. 70.) vismod(i,j) = 0.90
+              if(hum(i,j) .gt. 80.) vismod(i,j) = 0.75
+              if(hum(i,j) .gt. 90.) vismod(i,j) = 0.55
+              if(hum(i,j) .gt. 95.) vismod(i,j) = 0.35
               go to 200
            endif
 c
@@ -1069,10 +1085,10 @@ c
            enddo !k
 c
            if(amax_layer .gt. 0.65) then
-              if(hum(i,j) .gt. .70) vismod(i,j) = 0.95
-              if(hum(i,j) .gt. .80) vismod(i,j) = 0.80
-              if(hum(i,j) .gt. .90) vismod(i,j) = 0.60
-              if(hum(i,j) .gt. .95) vismod(i,j) = 0.40
+              if(hum(i,j) .gt. 70.) vismod(i,j) = 0.95
+              if(hum(i,j) .gt. 80.) vismod(i,j) = 0.80
+              if(hum(i,j) .gt. 90.) vismod(i,j) = 0.60
+              if(hum(i,j) .gt. 95.) vismod(i,j) = 0.40
            endif
 c
 200     continue
@@ -1089,7 +1105,7 @@ c
         end
 c
 c
-	subroutine dynamic_wts(imax,jmax,n_obs_var,rom2,d)
+	subroutine dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 c
 c=====================================================================
 c
@@ -1101,7 +1117,8 @@ c     calculations are required in the Barnes routine.  All of this
 c     is done in gridpoint space.
 c
 c     Original:  07-14-95  P. Stamus, NOAA/FSL
-c     Changes:
+c     Changes:   P. Stamus  08-28-97  Declare dx,dy integers.
+c                           09-10-97  Bag include. Pass in fnorm.
 c
 c     Notes:
 c
@@ -1124,8 +1141,8 @@ c                         0.50     R = 0.53002d
 c
 c=====================================================================
 c
-	include 'laps_sfc.inc'
-        integer dx,dy
+	real*4 fnorm(0:imax-1,0:jmax-1)
+	integer*4 dx, dy
 c
 c.... First, find the area that each ob covers in gridpt space (this
 c.... of course assumes a uniform coverage).
@@ -1153,7 +1170,7 @@ c
 c
 	do dy=0,jmax-1
 	do dx=0,imax-1
-	   rr = dx*dx + dy*dy
+	   rr = float(dx*dx + dy*dy)
 	   fnorm(dx,dy) = fno * (exp( -(rr * rom2)))
 	enddo !dx
 	enddo !dy
@@ -1196,7 +1213,7 @@ c
  100	continue
 	write(6,900) obs_error, d, alpha, beta
  900	format(1x,'obs error: ',f9.4,'  d: ',f9.4,
-     &                      '  alpha: ',f9.4,'  beta: ',f12.4)
+     &                      '  alpha: ',f9.4,'  beta: ',f15.4)
 	if(beta .eq. 0.) then
 	   print *,' **ERROR. beta = 0 in CALC_BETA.**'
 	   beta = -99.9

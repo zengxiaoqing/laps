@@ -31,7 +31,13 @@ cdis
 cdis 
 c
 c
-	subroutine qcdata(filename,infile_l,rely,ivals1,jstatus)
+	subroutine qcdata(filename,infile_l,rely,ivals1,mxstn,
+     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
+     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
+     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
+     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
+     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     istatus)
 c
 c=========================================================================
 c
@@ -40,13 +46,10 @@ c
 c       Original by C. Hartsough, FSL  c. 1992
 c       Changes:  
 c           P.Stamus  20 Dec 1996  Porting changes for go anywhere LAPS
+c                     25 Aug 1997  Changes for dynamic LAPS.
 c       
 c=========================================================================
 c
-	include 'laps_sfc.inc'
-c
-	parameter (mxstn_l = mxstn)
-	parameter (mxstn_s = mxstn)
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -64,34 +67,26 @@ c
 	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
 	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
 c
-	common/LSO_sfc_obs/
-     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
-     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
-     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
-     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
-     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g
-c
 c..... Arrays for the prev hour's OBS file input data
 c                            
-	Real*4 lat_l(mxstn_l),lon_l(mxstn_l),elev_l(mxstn_l)
-	real*4 td_l(mxstn_l),t_l(mxstn_l)
-	real*4 dd_l(mxstn_l),ff_l(mxstn_l),ddg_l(mxstn_l),ffg_l(mxstn_l)
-	real*4 pstn_l(mxstn_l),pmsl_l(mxstn_l),alt_l(mxstn_l)
-	real*4 store_hgt_l(mxstn_l,5),ceil_l(mxstn_l),lowcld_l(mxstn_l)
-	real*4 cover_l(mxstn_l),vis_l(mxstn_l),rad_l(mxstn_l)
-	Integer*4  obstime_l(mxstn_l),kloud_l(mxstn_l),idp3_l(mxstn_l)
-	Character  infile_l*70, atime_l*24, stn_l(mxstn_l)*3
-	character  obstype_l(mxstn_l)*8,wx_l(mxstn_l)*8
-	character  store_emv_l(mxstn_l,5)*1, store_amt_l(mxstn_l,5)*4
+	real*4 lat_l(mxstn),lon_l(mxstn),elev_l(mxstn)
+	real*4 td_l(mxstn),t_l(mxstn)
+	real*4 dd_l(mxstn),ff_l(mxstn),ddg_l(mxstn),ffg_l(mxstn)
+	real*4 pstn_l(mxstn),pmsl_l(mxstn),alt_l(mxstn)
+	real*4 store_hgt_l(mxstn,5),ceil_l(mxstn),lowcld_l(mxstn)
+	real*4 cover_l(mxstn),vis_l(mxstn),rad_l(mxstn)
+	Integer*4  obstime_l(mxstn),kloud_l(mxstn),idp3_l(mxstn)
+	Character  infile_l*256, atime_l*24, stn_l(mxstn)*3
+	character  obstype_l(mxstn)*8,wx_l(mxstn)*8
+	character  store_emv_l(mxstn,5)*1, store_amt_l(mxstn,5)*4
 c
 c	Other files for internal use...
 c
-	real*4 d1(mxstn_s), d2(mxstn_s) !dummy arrays for dev_ck
-	integer*4 rely(26,mxstn_s), ivals(mxstn_s)
-	integer*4 ivals1(mxstn_s), ivals2(mxstn_s)
-	integer*4 rely_l(26,mxstn_s)   !, ivals_l(mxstn_s)
+	integer*4 rely(26,mxstn), ivals(mxstn)
+	integer*4 ivals1(mxstn), ivals2(mxstn)
+	integer*4 rely_l(26,mxstn) 
 	integer*4 istatus, jstatus
-	character filename*9, outfile*70
+	character filename*9, outfile*256
 c
 c
 c.....  Start here.
@@ -106,18 +101,17 @@ c
 c
 c.....	OPEN QC FILE
 c
-        call get_directory('log',outfile,len)
-        
-	outfile = outfile(1:len)//'sfcqc.log.'//filename(6:9)
-	print *, ' opening log file for sfc qc:',outfile
+	call get_directory('log', outfile, len)
+	outfile = outfile(1:len) // 'sfcqc.log.' // filename(6:9)
+	print *, ' opening log file for sfc qc:', outfile
 	open(60,file=outfile,status='unknown')
-
-	write(60,*)'** LAPS Surface Quality Control **'
+c
+	write(60,*)' ** LAPS Surface Quality Control **'
 	write(60,*)' ** begin qc on surface data ',filename ,' ** '
 c
 c.....  Get previous sfc data (current passed in via common)
 c
-	call read_surface_old(infile_l,mxstn_l,atime_l,n_meso_g_l,
+	call read_surface_old(infile_l,mxstn,atime_l,n_meso_g_l,
      &  n_meso_pos_l,n_sao_g_l,n_sao_pos_g_l,n_sao_b_l,n_sao_pos_b_l,
      &	n_obs_g_l,n_obs_pos_g_l,n_obs_b_l,n_obs_pos_b_l,stn_l,obstype_l,
      &	lat_l,lon_l,elev_l,wx_l,t_l,td_l,dd_l,ff_l,ddg_l,ffg_l,pstn_l,
@@ -130,7 +124,7 @@ c
 c
 c.....  climatological extreme test            
 c                 
-	do n=1,mxstn_s
+	do n=1,mxstn
 	do i=1,26
 	  rely(i,n)   = imissing
 	  rely_l(i,n) = imissing
@@ -302,17 +296,17 @@ c.....  standard deviation check
 c
 	call time_ck(stn,n_obs_b,stn_l,n_obs_b_l,ivals)
 	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, ivals1,
-     +	       n_obs_b_l, elev_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, elev_l, rely_l, ivals, n_obs_curr)
 	call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, ivals1,
-     +	       n_obs_b_l, t_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, t_l, rely_l, ivals, n_obs_curr)
 	call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, ivals1,
-     +	       n_obs_b_l, td_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, td_l, rely_l, ivals, n_obs_curr)
 	call dev_ck(13, n_meso_pos, n_obs_b, pstn_s, rely, ivals1,
-     +	       n_obs_b_l, pstn_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, pstn_l, rely_l, ivals, n_obs_curr)
 	call dev_ck(14, n_meso_pos, n_obs_b, pmsl_s, rely, ivals1,
-     +	       n_obs_b_l, pmsl_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, pmsl_l, rely_l, ivals, n_obs_curr)
 	call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, ivals1,
-     +	       n_obs_b_l, alt_l, rely_l, ivals, n_obs_curr,d1,d2)
+     +	       n_obs_b_l, alt_l, rely_l, ivals, n_obs_curr)
 c
 	write(60,*) '  '
 	write(60,*) ' --- Reliability after standard deviation test --- '
@@ -373,9 +367,9 @@ c -----------------------------------------------------------------------------
 c
 c
 	subroutine dev_ck(ifld,n_meso_g,n_obs_b,  aa_s,rely,  ivals1,
-     +	            n_obs_b_l,aa_l,rely_l,ivals,n_obs_curr,diff,stdev)
+     +	            n_obs_b_l,aa_l,rely_l,ivals,n_obs_curr)
 	real*4 aa_s(n_obs_b),aa_l(n_obs_b_l)
-	real*4 diff(n_obs_curr),stdev(n_obs_curr)
+	real*4 diff(n_obs_curr),stdev(n_obs_curr)  !work arrays
 	integer*4 rely(26,n_obs_curr),  ivals1(n_obs_curr)
 	integer*4 rely_l(26,n_obs_curr),ivals(n_obs_curr), qc
 	missing = -99.

@@ -33,6 +33,27 @@ c
 c
 	program laps_sfc
 c
+	include 'lapsparms.cmn'
+	character laps_domain*9
+c
+	laps_domain = 'nest7grid'
+	call get_laps_config(laps_domain,istatus)
+	if(istatus .ne. 1) then
+	   write(6,*) 'LAPS_SFC: ERROR getting domain dimensions'
+	   stop
+	endif
+c
+	call laps_sfc_sub(nx_l_cmn,ny_l_cmn,nk_laps,maxstns_cmn,
+     &                    laps_cycle_time_cmn,grid_spacing_m_cmn,
+     &                    laps_domain)
+c
+	end
+c
+c
+	subroutine laps_sfc_sub(ni,nj,nk,mxstn,laps_cycle_time,
+     &                          grid_spacing,laps_domain)
+c
+c
 c*****************************************************************************
 c
 c	Driver program for the LAPS variational surface analysis.  This 
@@ -67,6 +88,7 @@ c                                         sfc data, LGS grids. Bag stations.in
 c                               03-26-97  Add ability to do interactive runs.
 c                                         (Removes need for 'laps_sfci')
 c                                         Remove equivs.
+c                               09-11-97  Changes for dynamic LAPS.
 c
 c       Notes:
 c
@@ -82,18 +104,17 @@ c*****************************************************************************
 c
 	include 'laps_sfc.inc'
 c
+	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
+	real*4 grid_spacing
+c
 	integer*4 jstatus(20)	! 20 is standard for prodgen drivers
 	integer narg, iargc
 c
-	character atime*24, filename*9, filename2*9
-	character infile1*70, outfile1*70, outfile2*70
-	character dir*50, ext*31
-	character dir_in*50, ext_in*31
-	character dir_v*50, ext_v*31
-	character dir_s*50,ext_s*31,units*10,comment*125,var_s*3
-c
-	real*4 grid_spacing
-	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	character atime*24, filename*9, filename_last*9
+	character infile1*256, infile_last*256
+	character dir_s*256,ext_s*31,units*10,comment*125,var_s*3
+	character laps_domain*9
 c
 c.....  Stuff for backgrounds.
 c
@@ -102,27 +123,22 @@ c
 	real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
 	real*4 wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
 	real*4 vis_bk(ni,nj), wt_vis(ni,nj)
-	real*4 wt(ni,nj)  !, d1(ni,nj)  !d1 is a work array
+	real*4 wt(ni,nj)  
 c
 	real*4 background(ni,nj,8)
 	integer*4 lvl_bk(8)
 	character var_bk(8)*3, back*9, unitsl(8)*10, lvlcl(8)*4
-	character coml(8)*125, dir_bk*50, ext_bk*31
+	character coml(8)*125, dir_bk*256, ext_bk*31
 c
 	real*4 bk_rams(ni,nj,5)
 	integer*4 lvl_bkr(5)
-	character var_bkr(5)*3, backrams*9, dir_rams*50, ext_rams*31
+	character var_bkr(5)*3, backrams*9, dir_rams*256, ext_rams*31
 	character unitsr(5)*10, lvlcr(5)*4, comr(5)*125
 c
 	real*4 bk_sw3d(ni,nj,2)
 	integer*4 lvl_sw3d(2)
-	character var_sw3d(2)*3, backsw3d*9, dir_sw3d*50, ext_sw3d*31
+	character var_sw3d(2)*3, backsw3d*9, dir_sw3d*256, ext_sw3d*31
 	character units3(2)*10, lvlc3(2)*4, com3(2)*125
-c
-        common/backgrnd/
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
-     &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_stnp, wt_vis, 
-     &     ilaps_bk, irams_bk
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -141,12 +157,9 @@ c
 	character stn(mxstn)*3,obstype(mxstn)*8,wx_s(mxstn)*8
 	character store_emv(mxstn,5)*1, store_amt(mxstn,5)*4
 c
-	common/LSO_sfc_obs/
-     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
-     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
-     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
-     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
-     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g
+c.....  Work arrays for the QC routine.
+c
+        integer*4 rely(26,mxstn), ivals1(mxstn)
 c
 c.....  Stuff for intermediate grids (old LGS file)
 c
@@ -154,11 +167,6 @@ c
 	real*4 t1(ni,nj), td1(ni,nj), tb81(ni,nj)
 	real*4 rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real*4 vis1(ni,nj), elev1(ni,nj)
-c
-	common/LGS_grids/
-     &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1
-
-        integer len
 c
 c
 c.....	Start here.  First see if this is an interactive run.
@@ -172,16 +180,14 @@ c
 c
 	   ihours = 1	! default # of hrs back for time-tendencies
 c
-           call get_directory('etc',infile1,len)
-
-           open(11,file=infile1(1:len)//'systime.dat',status='unknown')
-
-c	   open(11,file='../sched/systime.dat',status='unknown')
-	   read (11,21) i4time
- 21	   format(1x,i11)
-	   read (11,22) filename 
- 22	   format (1x,a9)
-	   close(11)
+	   call get_systime(i4time,filename,istatus)
+c
+cc	   open(11,file='../sched/systime.dat',status='unknown')
+cc	   read (11,21) i4time
+cc 21	   format(1x,i11)
+cc	   read (11,22) filename 
+cc 22	   format (1x,a9)
+cc	   close(11)
 c
 	else
 c
@@ -193,9 +199,8 @@ c
  974	   write(6,975)
  975	   format(
      &    ' Hours to go back for time-tendencies (1..6)[1]: ',$)
-	   read(5,976) ih, ihours
- 976	   format('2i')
-	   if(ih .eq. 0) ihours = 1
+	   read(5,976) ihours
+ 976	   format(i1)
 	   if(ihours .eq. 0) then
 	      print *, ' Will skip backgrounds.'
 	   elseif(ihours.lt.1 .or. ihours.gt.6) then
@@ -208,28 +213,18 @@ c
 c
 c
 500	dt = ihours * laps_cycle_time    ! multiples of time to get bkgs.
-	i4time2 = i4time - ifix( dt )
-	call cv_i4tim_asc_lp(i4time, atime, status)	! get the atime
-	call make_fnam_lp(i4time2,filename2, istatus)	! make earlier filename	
+	i4time_last = i4time - ifix( dt )
+	call cv_i4tim_asc_lp(i4time, atime, status)	   ! get the atime
+	call make_fnam_lp(i4time_last,filename_last,istatus)  ! make earlier filename	
 	del = 1.e6
 	gam = .0008
 	ak = 1.e-6
-	call get_laps_config(laps_domain,istatus)
-	if(istatus .ne. 1) then
-	   print *,' Bad status return from GET_LAPS_CONFIG.'
-	   stop
-	endif
-	call get_standard_longitude(std_lon, istatus)
-	if(istatus .ne. 1) then
-	   print *,' Bad status return from GET_STANDARD_LONGITUDE.'
-	   stop
-	endif
 c
 c.....	Get the LAPS lat/lon and topo data here so we can pass them to the 
 c.....	routines that need them.
 c
-c	dir_s = '../static/' 
-        call get_directory('static',dir_s,len)
+cc	dir_s = '../static/' 
+	call get_directory('static', dir_s, len)
 	ext_s = laps_domain
 	var_s = 'LAT'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
@@ -290,9 +285,9 @@ c
 	var_bkr(3) = 'RP'      ! reduced pressure (Pa) (1500 m in CO)
 	var_bkr(4) = 'T'       ! temp (K)
 	var_bkr(5) = 'TD'      ! dewpt (K)
-	i4time_rams = (i4time - 3600) + 60     ! get the 1-h fcst
-        call get_directory('rsf',dir_rams,len)
+	i4time_rams = i4time_last + 60     ! get the 1-h fcst
 c	dir_rams = '../lapsprd/rsf/'
+	call get_directory('rsf',dir_rams,len)
 	ext_rams = 'rsf'
  100	call read_laps_data(i4time_rams,dir_rams,ext_rams,ni,nj,5,5,
      &   var_bkr,lvl_bkr,lvlcr,unitsr,comr,bk_rams,istatus)
@@ -324,11 +319,10 @@ c
 	var_bk(6) = 'MSL'   ! msl pressure (Pa)
 	var_bk(7) = 'VIS'   ! visibility (m)
 	var_bk(8) = 'PS'    ! station pressure (Pa)
-
-        call get_directory('lsx',dir_bk,len)
 c	dir_bk = '../lapsprd/lsx/'
+	call get_directory('lsx',dir_bk,len)
 	ext_bk = 'lsx'
-	i4time_bk = i4time - ifix( dt )
+	i4time_bk = i4time_last 
  200	call read_laps_data(i4time_bk,dir_bk,ext_bk,ni,nj,8,8,var_bk,
      &     lvl_bk,lvlcl,unitsl,coml,background,istatus)
 	if(istatus .ne. 1) then
@@ -353,12 +347,10 @@ c
 	enddo !i
 	var_sw3d(1) = 'SU'     ! u-wind (m/s)
 	var_sw3d(2) = 'SV'     ! v-wind (m/s)
-
-        call get_directory('lwm',dir_sw3d,len)
-
 c	dir_sw3d = '../lapsprd/lwm/'
+	call get_directory('lwm',dir_sw3d,len)
 	ext_sw3d = 'lwm'
-	i4time_sw3d = i4time - ifix( dt )
+	i4time_sw3d = i4time_last
  202	call read_laps_data(i4time_sw3d,dir_sw3d,ext_sw3d,ni,nj,2,2,
      &     var_sw3d,lvl_sw3d,lvlc3,units3,com3,bk_sw3d,istatus)
 	if(istatus .ne. 1) then
@@ -394,15 +386,12 @@ c
 	   go to 600
 	endif
 	if(irams_bk .eq. 1) then     ! have RAMS for background
-	   do j=1,nj
-	   do i=1,ni
-	      u_bk(i,j)    = bk_rams(i,j,1)     ! rams u
-	      v_bk(i,j)    = bk_rams(i,j,2)     ! rams v
-	      rp_bk(i,j)   = bk_rams(i,j,3)     ! rams 1500 p
-	      t_bk(i,j)    = bk_rams(i,j,4)     ! rams t
-	      td_bk(i,j)   = bk_rams(i,j,5)     ! rams td
-	   enddo !i
-	   enddo !j
+	   call move_3dto2d(bk_rams,1, u_bk, ni,nj,nk)    !rams u
+	   call move_3dto2d(bk_rams,2, v_bk, ni,nj,nk)    !rams v
+	   call move_3dto2d(bk_rams,3,rp_bk, ni,nj,nk)    !rams 1500 p
+	   call move_3dto2d(bk_rams,4, t_bk, ni,nj,nk)    !rams t
+	   call move_3dto2d(bk_rams,5,td_bk, ni,nj,nk)    !rams td
+c
            call move(wt, wt_u, ni,nj)
            call move(wt, wt_v, ni,nj)
            call move(wt, wt_rp, ni,nj)
@@ -412,13 +401,10 @@ c
 c
 	if(ilaps_bk .eq. 1) then
 	   if(irams_bk .eq. 1) then  ! have RAMS, just fill in the others
-	      do j=1,nj
-	      do i=1,ni
-	         mslp_bk(i,j) = background(i,j,6)  ! laps msl p
-	         vis_bk(i,j)  = background(i,j,7)  ! laps vis
-	         stnp_bk(i,j) = background(i,j,8)  ! laps stn p
-	      enddo !i
-	      enddo !j
+	      call move_3dto2d(background,6, mslp_bk, ni,nj,nk)  !laps msl p
+	      call move_3dto2d(background,7,  vis_bk, ni,nj,nk)  !laps vis
+	      call move_3dto2d(background,8, stnp_bk, ni,nj,nk)  !laps stn p
+c
               call move(wt, wt_mslp, ni,nj)
               call move(wt, wt_vis, ni,nj)
               call move(wt, wt_stnp, ni,nj)
@@ -426,31 +412,20 @@ c
 	   else                      ! only previous laps for background
 c
 	      if(isw3d_bk .eq. 1) then      !but...have 3d sfc wind
-		 do j=1,nj
-		 do i=1,ni
-		    u_bk(i,j) = bk_sw3d(i,j,1) ! lwm 3d sfc u
-		    v_bk(i,j) = bk_sw3d(i,j,2) ! lwm 3d sfc v
-		 enddo !i
-		 enddo !j
+		 call move_3dto2d(bk_sw3d,1, u_bk, ni,nj,nk) !lwm 3d sfc u
+		 call move_3dto2d(bk_sw3d,2, v_bk, ni,nj,nk) !lwm 3d sfc v
 	      else
-		 do j=1,nj
-	         do i=1,ni
-		    u_bk(i,j) = background(i,j,1) ! laps u
-		    v_bk(i,j) = background(i,j,2) ! laps v
-		 enddo !i
-		 enddo !j
+		 call move_3dto2d(background,1, u_bk, ni,nj,nk) !laps u
+		 call move_3dto2d(background,2, v_bk, ni,nj,nk) !laps v
 	      endif
 c
-  	      do j=1,nj
-	      do i=1,ni
-	         rp_bk(i,j)   = background(i,j,3)  ! laps reduced p (co: 1500)
-	         t_bk(i,j)    = background(i,j,4)  ! laps t
-	         td_bk(i,j)   = background(i,j,5)  ! laps td
-	         mslp_bk(i,j) = background(i,j,6)  ! laps msl p
-	         vis_bk(i,j)  = background(i,j,7)  ! laps vis
-	         stnp_bk(i,j) = background(i,j,8)  ! laps stn p
-	      enddo !i
-	      enddo !j
+	      call move_3dto2d(background,3,   rp_bk, ni,nj,nk)  !laps reduced p (co: 1500m)
+	      call move_3dto2d(background,4,    t_bk, ni,nj,nk)  !laps t
+	      call move_3dto2d(background,5,   td_bk, ni,nj,nk)  !laps td
+	      call move_3dto2d(background,6, mslp_bk, ni,nj,nk)  !laps msl p
+	      call move_3dto2d(background,7,  vis_bk, ni,nj,nk)  !laps vis
+	      call move_3dto2d(background,8, stnp_bk, ni,nj,nk)  !laps stn p
+c
               call move(wt, wt_u, ni,nj)
               call move(wt, wt_v, ni,nj)
               call move(wt, wt_rp, ni,nj)
@@ -515,9 +490,10 @@ c
 c.....	READ IN THE SURFACE OBS:  dd/ff in deg/kt, t and td in F, elev in m,
 c.....	                          and the pressure variable. cld hts are msl.
 c
-        call get_directory('lso',infile1,len)
-      	infile1 = infile1(1:len)//filename//'.lso' 
 c 	infile1 = '../lapsprd/lso/'//filename//'.lso' 
+	call get_directory('lso',infile1,len)
+	infile1 = infile1(1:len) // filename(1:9) // '.lso'
+c
 	write(6,305) infile1
  305	format(' Getting surface data from: ',a70)
 	call read_surface_obs(infile1,mxstn,atime_s,n_meso_g,
@@ -529,8 +505,7 @@ c 	infile1 = '../lapsprd/lso/'//filename//'.lso'
 c
 	if(istatus.ne.1 .or. n_obs_b.eq.0) then	  !surface obs not available
 	  jstatus(1) = 0
-          print *,'No sfc obs from LSO', istatus, n_obs_b
-	  stop 
+	  stop 'No sfc obs from LSO'
 	endif
 c
 	print *,' '
@@ -545,6 +520,96 @@ c
 	endif
 	print *,' '
 c
+c.....	QC the surface data.
+c
+	if(iskip .gt. 0) then  !check QC flag
+	  print *, ' **  omit qc of data  **  '
+	  goto 521
+	endif
+	call get_directory('lso', infile_last, len)
+	infile_last = infile_last(1:len) // filename_last // '.lso'
+c
+	call qcdata(filename,infile_last,rely,ivals1,mxstn,
+     &     lat_s, lon_s, elev_s, t_s, td_s, dd_s, ff_s, ddg_s, 
+     &     ffg_s, pstn_s, pmsl_s, alt_s, cover_s, hgt_ceil, 
+     &     hgt_low, solar_s, store_hgt, vis_s, kloud_s, idp3_s, 
+     &     obstime, stn, obstype, wx_s, store_emv, store_amt,
+     &     rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     istatus)
+c
+	if(istatus .eq. 1) then
+	  jstatus(2) = 1
+	elseif(istatus .eq. 0) then
+	  jstatus(2) = 0
+	  print *, ' +++ No data for QC routine. +++'
+	  go to 521
+	else
+	  print *,
+     &    ' +++ ERROR.  Problem in QC routine. +++'
+	  jstatus(2) = -2
+	  go to 521
+	endif
+c
+c.....	Check each of the primary analysis variables.
+c
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 121
+	  if(rely(7,nn) .lt. 0) then	! temperature
+	    print *, 'QC: Bad T at ',stn(mm),' with value ',t_s(mm)
+	    t_s(mm) = badflag
+	  endif
+ 121	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 122
+	  if(rely(8,nn) .lt. 0) then	! dewpt
+	    print *, 'QC: Bad TD at ',stn(mm),' with value ',td_s(mm)
+	    td_s(mm) = badflag
+	  endif
+ 122	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 123
+	  if(rely(9,nn) .lt. 0) then	! wind direction
+	    print *, 'QC: Bad DIR at ',stn(mm),' with value ',dd_s(mm)
+	    dd_s(mm) = badflag
+	  endif
+ 123	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 124
+	  if(rely(10,nn) .lt. 0) then	! wind speed
+	    print *, 'QC: Bad SPD at ',stn(mm),' with value ',ff_s(mm)
+	    ff_s(mm) = badflag
+	  endif
+ 124	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 126
+	  if(rely(15,nn) .lt. 0) then	! altimeter 
+	    print *, 'QC: Bad ALT at ',stn(mm),' with value ',alt_s(mm)
+	    alt_s(mm) = badflag
+	  endif
+ 126	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 127
+	  if(rely(17,nn) .lt. 0) then	! ceiling 
+	   print *, 'QC: Bad CEIL at ',stn(mm),' with value ',hgt_ceil(mm)
+	   hgt_ceil(mm) = badflag
+	  endif
+ 127	enddo  !mm
+	do mm=1,n_obs_b
+	  nn = ivals1(mm)
+	  if(nn .lt. 1) go to 128
+	  if(rely(25,nn) .lt. 0) then	! visibility 
+	    print *, 'QC: Bad VIS at ',stn(mm),' with value ',vis_s(mm)
+	    vis_s(mm) = badflag
+	  endif
+ 128	enddo  !mm
+ 521	continue                          
+c
 c.....	Find the i,j location of each station, then calculate the
 c.....  background weights (based on station density).
 c
@@ -555,13 +620,9 @@ c
            write(6,999) ista,stn(ista),rii(ista),rjj(ista)
         enddo !ista
  999    format(i4,': ',a3,' is at i,j: ',f5.1,',',f5.1)
-	do k=1,mxstn
-	   i_loc(k) = ii(k)     !fill arrays in 'include' file
-	   j_loc(k) = jj(k)
-	enddo !k
 c
 	call bkgwts(lat,lon,topo,n_obs_b,lat_s,lon_s,elev_s,
-     &              rii,rjj,wt)
+     &              rii,rjj,wt,ni,nj,mxstn)
 c
 c.....  Set up arrays for the verify routine.
 c
@@ -573,29 +634,24 @@ c
 	enddo !j
 c
 c
-cx....	Now call MDATLAPS to QC the data and put it on the grid.
+cx....	Now call MDATLAPS to put the data on the grid.
 c
-c	dir_v = '../lapsprd/lvd/' 
-	ext_v = 'lvd'
-        call get_directory(ext_v,dir_v,len)
-        call get_directory('lgs',outfile1,len)
-        outfile1 = outfile1(1:len)//filename//'.lgs'
-        call get_directory('lsq',outfile2,len)
-        outfile1 = outfile2(1:len)//filename//'.lsq'
-        
-c	outfile1 = '../lapsprd/lgs/'//filename//'.lgs'
-c	outfile2 = '../lapsprd/lsq/'//filename//'.lsq'
+	call mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,lat,
+     &     lon,grid_east,grid_west,grid_north,grid_south,topo,x1a,x2a,
+     &     y2a, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
+     &     alt_s, vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
+     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
+     &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, irams_bk,
+     &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &     jstatus)
 c
-	call mdat_laps(i4time,atime,infile1,dir_v,ext_v,outfile1,
-     &       outfile2,ihours,del,gam,ak,lat,lon,grid_east,grid_west,
-     &       grid_north,grid_south,topo,std_lon,jstatus)
+cc	call mdat_laps(i4time,atime,infile1,dir_v,ext_v,outfile1,
+cc     &       outfile2,ihours,del,gam,ak,lat,lon,grid_east,grid_west,
+cc     &       grid_north,grid_south,topo,std_lon,jstatus)
 c
 	if(jstatus(1) .ne. 1) then
 	   print *,' From MDAT_LAPS:  Error Return.  Stop.'
 	   stop 
-	endif
-	if(jstatus(2) .ne. 1) then
-	  print *,' From MDAT_LAPS QC:  Error Return.' 
 	endif
 c
 c
@@ -603,23 +659,21 @@ c.....	Call LAPSVANL to do the actual variational analysis, and calculate
 c.....	derived variables, etc.  The output file goes to the lapsprd 
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
-        call get_directory('lgs',infile1,len)
-        infile1=infile1(1:len)//filename//'.lgs'
-        call get_directory('lsx',dir_in,len)
-        dir = dir_in
-
-c	infile1 = '../lapsprd/lgs/'//filename//'.lgs'
-c	dir_in = '../lapsprd/lsx/' 
-	ext_in = 'lsx'
-c	dir = '../lapsprd/lsx/' 
-	ext = 'lsx'	
+	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,laps_cycle_time,
+     &        dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
+     &        lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, vis_s, 
+     &        stn, n_obs_b, n_sao_b, n_sao_g,
+     &        u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
+     &        wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, 
+     &        ilaps_bk, irams_bk,
+     &        u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &        x1a,x2a,y2a,ii,jj,jstatus)
 c
-	call laps_vanl(i4time,infile1,dir_in,ext_in,dir,ext,ihours,dt,
-     &         del,gam,ak,lat,lon,topo,grid_spacing,jstatus)
+cc	call laps_vanl(i4time,infile1,dir_in,ext_in,dir,ext,ihours,dt,
+cc     &         del,gam,ak,lat,lon,topo,grid_spacing,jstatus)
 c
 	if(jstatus(3) .ne. 1) then
-	  print *,' From LAPS_VANL: Error Return.  Stop.' 
-	  stop 
+	  print *,' From LAPS_VANL: Error Return.' 
 	endif
 	if(jstatus(4) .ne. 1) then
 	  print *,' From LAPS_VANL LT1:  Error Return.' 
@@ -627,6 +681,6 @@ c
 c
 c.....	That's about it...let's go home.
 c
-	stop ' Normal stop in LAPS_SFC'
+	return
 	end
 
