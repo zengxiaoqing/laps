@@ -8,12 +8,12 @@ INSTALLROOT=@prefix@
 
 CC=@CC@
 
-CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+CFLAGS=@CFLAGS@ $(INC)  
 
 FC       = ncargf77
 
 
-FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+FFLAGS = @FFLAGS@ $(INC)
 
 # Define pre-processor command line options for .F files.
 
