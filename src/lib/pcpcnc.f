@@ -60,8 +60,11 @@ cdis
             pressure = pressure_of_level(k)
             ipcp_type = cldpcp_type_3d(i,j,k) / 16   ! Pull out precip type
             if(ipcp_type .ne. 0)then
+!                call cpt_fall_velocity(ipcp_type,pressure,temp_3d(i,j,k)
+!     1                                                  ,fall_velocity)
+! Adan add
                 call cpt_fall_velocity(ipcp_type,pressure,temp_3d(i,j,k)
-     1                                                  ,fall_velocity)
+     1                                 ,ref_3d(i,j,k),fall_velocity)
                 call cpt_concentration(rate_3d(i,j,k),fall_velocity
      1                                          ,pcp_cnc_3d(i,j,k))
 
@@ -96,16 +99,21 @@ cdis
 
         end
 
-        subroutine cpt_fall_velocity(ipcp_type,p,t,fall_velocity)
+        subroutine cpt_fall_velocity(ipcp_type,p,t,dbz,fall_velocity)
 
+        vvmax = 4.32*dbz**0.0714286      ! Adan add
         if(ipcp_type .eq. 1)then ! Rain
-            fall_velocity = 5.0
+!            fall_velocity = 5.0
+            fall_velocity = vvmax    ! Adan add
         elseif(ipcp_type .eq. 2)then ! Snow
-            fall_velocity = 1.0
+            fall_velocity = 1.
+!            fall_velocity = vvmax*0.2      ! Adan change
         elseif(ipcp_type .eq. 3)then ! Freezing Rain
-            fall_velocity = 5.0
+!            fall_velocity = 5.0
+            fall_velocity = vvmax    ! Adan add
         elseif(ipcp_type .eq. 4)then ! Sleet
-            fall_velocity = 5.0
+!            fall_velocity = 5.0
+            fall_velocity = vvmax    ! Adan add
         elseif(ipcp_type .eq. 5)then ! Hail
             fall_velocity = 10.0
         endif
