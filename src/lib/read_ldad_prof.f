@@ -122,6 +122,9 @@ C
       real*4 topo_a(NX_L,NY_L)
       real*4 ht_out(200),di_out(200),sp_out(200),temp_out(200)
       integer assetId_ref
+      real*4 mspkt
+      data mspkt/.518/
+
 !............................................................................
 
       call read_ldad_prof_netcdf(nf_fid, level, maxStaticIds, 
@@ -232,16 +235,20 @@ C
                 rms = 1.0
 
                 do i = 1,level
-                    if(windDir(i,i_pr_cl) .ge. 0    .and.
-     1                 windDir(i,i_pr_cl) .le. 360  .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. 1   .and.
-     1                 wdQcFlag(i,i_pr_cl) .ne. 2   .and.
-     1                 wsQcFlag(i,i_pr_cl) .ne. 1   .and.
-     1                 wsQcFlag(i,i_pr_cl) .ne. 2        )then ! Good QC
+                    if(windDir(i,i_pr_cl) .ge. 0      .and.
+     1                 windDir(i,i_pr_cl) .le. 360    .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. 1     .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. 2     .and.
+     1                 wdQcFlag(i,i_pr_cl) .ne. -9999 .and.
+     1                 wsQcFlag(i,i_pr_cl) .ne. 1     .and.
+     1                 wsQcFlag(i,i_pr_cl) .ne. 2     .and.   
+     1                 wsQcFlag(i,i_pr_cl) .ne. -9999 
+     1                                                      )then ! Good QC
                         n_good_levels = n_good_levels + 1
                         ht_out(n_good_levels) = levels(i,i_pr_cl)
                         di_out(n_good_levels) = windDir(i,i_pr_cl)
                         sp_out(n_good_levels) = windSpeed(i,i_pr_cl)
+     1                                        * mspkt
                     endif
                 enddo ! i
 
@@ -273,10 +280,12 @@ C
 
                 do i = 1,level
                     if(
-!    1                 tempQcFlag(i,i_pr_cl) .ne. 1 
-!    1                            .and.
-!    1                 tempQcFlag(i,i_pr_cl) .ne. 2       
-!    1                            .and.
+     1                 tempQcFlag(i,i_pr_cl) .ne. 1 
+     1                            .and.
+     1                 tempQcFlag(i,i_pr_cl) .ne. 2       
+     1                            .and.
+     1                 tempQcFlag(i,i_pr_cl) .ne. -9999       
+     1                            .and.
      1                 temperature(i,i_pr_cl) .gt. 200.
      1                            .and.
      1                 temperature(i,i_pr_cl) .lt. 400.
