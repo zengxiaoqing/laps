@@ -357,7 +357,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     RADAR: [ra] Intermediate VRC, [rf] Analysis fields'
      1      /'            Radar Intermediate Vxx - Ref [rv], Vel [rd]'     
      1      /
-     1      /'     SFC: [p,pm,ps,tf,tc,df,dc,ws,wp,vv,hu,ta'         
+     1      /'     SFC: [p,pm,ps,pp,tf,tc,df,dc,ws,wp,vv,hu,ta'         
      1      ,',th,te,vo,mr,mc,dv,ha,ma]'
      1      /'          [sp,cs,vs,tw,fw,hi,gf]'
      1      /'          [of,oc,ov,os,op,og,qf,qc,qv,qs,qp,qg] obs plots'    
@@ -4593,11 +4593,16 @@ c                   cint = -1.
 
             endif
 
-        elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! Reduced or MSL Pres
-            if(c_type .eq. 'p')then
+        elseif(c_type_i .eq. 'p' 
+     1    .or. c_type_i .eq. 'pm' 
+     1    .or. c_type_i .eq. 'pp' )then ! Reduced/MSL/Pert Pres
+
+            if(c_type_i .eq. 'p')then
                 var_2d = 'P'
-            else
+            elseif(c_type_i .eq. 'pm')then
                 var_2d = 'MSL'
+            elseif(c_type_i .eq. 'pp')then
+                var_2d = 'PP'
             endif
 
             ext = 'lsx'
@@ -4611,10 +4616,12 @@ c                   cint = -1.
                 goto1200
             endif
 
-            if(c_type .eq. 'p')then
+            if(c_type_i .eq. 'p')then
                 c33_label = comment_2d(1:23)//' (mb)     '       
-            else
+            elseif(c_type_i .eq. 'pm')then
                 c33_label = 'MSL Pressure            (mb)     '
+            elseif(c_type_i .eq. 'pp')then
+                c33_label = 'Perturbation Pressure   (mb)     '
             endif
 
             clow = 0.
@@ -4626,29 +4633,43 @@ c                   cint = -1.
             call array_range(field_2d,NX_L,NY_L,pres_low_pa,pres_high_pa
      1                      ,r_missing_data)
 
-            pres_high_mb = pres_high_pa / scale
-            pres_low_mb  = pres_low_pa / scale
-            range = ((pres_high_pa - pres_low_pa) / scale) 
-     1                                / (sqrt(zoom) * density)
+            if(c_type_i .ne. 'pp')then
+                pres_high_mb = pres_high_pa / scale
+                pres_low_mb  = pres_low_pa / scale
+                range = ((pres_high_pa - pres_low_pa) / scale) 
+     1                                    / (sqrt(zoom) * density)
 
-            if(range .gt. 30.)then
-                cint = 4.
-            elseif(range .gt. 8.)then
-                cint = 2.
-            else ! range < 8
-                cint = 1.
+                if(range .gt. 30.)then
+                    cint = 4.
+                elseif(range .gt. 8.)then
+                    cint = 2.
+                else ! range < 8
+                    cint = 1.
+                endif
+
+                icint   = cint
+                clow = int(pres_low_mb) / 4 * 4
+                chigh = (int(pres_high_mb) / icint) * icint + icint
+
+            else ! perturbation pressure (pp)
+                clow = -5.0
+                chigh = +5.0
+                cint = 0.1
+ 
             endif
-
-            icint   = cint
-            clow = int(pres_low_mb) / 4 * 4
-            chigh = (int(pres_high_mb) / icint) * icint + icint
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e+2,clow,chigh,cint,asc9_tim_t
-     1                    ,namelist_parms,plot_parms,c33_label
-     1                    ,i_overlay,c_display,lat,lon,jdot
-     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,1e+2,clow,chigh,cint,asc9_tim_t
+!    1                    ,namelist_parms,plot_parms,c33_label
+!    1                    ,i_overlay,c_display,lat,lon,jdot
+!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type .eq. 'ps')then ! Surface Pressure
             var_2d = 'PS'
