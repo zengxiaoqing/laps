@@ -269,6 +269,7 @@ AC_OUTPUT(src/include/trigd.inc
           util/cronfile
 	  etc/LapsRadar.pl
           etc/LapsRadar_RSA.pl
+          etc/casererun.pl
           etc/check_release.csh
           etc/cloud.pl
           etc/change-center.pl
@@ -276,7 +277,6 @@ AC_OUTPUT(src/include/trigd.inc
           etc/fxalogdir.pl
           etc/hum3d.pl
           etc/laps_driver.pl
-          etc/purger.pl
           etc/sched.pl
           etc/realtime.pl
           etc/ramrsf.pl
@@ -284,6 +284,8 @@ AC_OUTPUT(src/include/trigd.inc
           etc/localize_domain.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
+          etc/purger.pl
+          etc/purge_wideband.pl
           etc/putFile_fire1.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
