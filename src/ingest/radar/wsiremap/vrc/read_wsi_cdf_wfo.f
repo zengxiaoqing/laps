@@ -51,11 +51,11 @@ c
        
         integer varid,dimid,count(3),start(3)
         real*8 valtime
-        integer nrecs
-        parameter (nrecs=1)
+c       integer nrecs
+c       parameter (nrecs=1)
      
         integer lines,elems
-        integer image(nelems,nlines,nrecs)
+        integer image(nelems,nlines)   !,nrecs)
 
         integer bad_data_flag
         integer imax_image_value
@@ -66,11 +66,8 @@ c
         integer attlen
 
         character c_atvalue*80
-
-        integer i_value
-        integer      b_value(2), bad_data_byte
-        data bad_data_byte/-1/
-        equivalence (i_value,b_value(1))
+       
+        integer icount_out,icount_bad
 
         real*4 Dx,Dy
  
@@ -140,7 +137,7 @@ c
               return
            endif
         endif
-           istatus=NF_GET_VAR1_REAL(cdfid,varid,1,valtime)
+           istatus=NF_GET_VAR1_DOUBLE(cdfid,varid,1,valtime)
         if(istatus.ne.0)then
            write(6,*)'Error reading variable - valtime'
            return
@@ -195,33 +192,58 @@ c
 c for wfo data we must first rescale the values back to the original
 c wsi form to properly convert to dbz.
 c
-        imax_image_value = 0
-        imin_image_value = 255
-        icount_bad=0
-        b_value(1)=0
-        do j=1,ilines
-           do i=1,ielems
-           b_value(2) = image(i,j,1)
-           if(i_value .gt. imax_image_value) imax_image_value = i_value
-           if(i_value .lt. imin_image_value) imin_image_value = i_value
-           if(i_value .ne. bad_data_flag)then 
-              i_value = i_value/16
-              image(i,j,1)=b_value(2)
-              if ((i_value .ge. 16) .or. (i_value .lt. 0)) then
-                 write(6,*) i, j, i_value
-              endif
+      imax_image_value = 0
+      imin_image_value = 255
+      icount_bad=0
+      icount_out=0
 
-           else
-              icount_bad=icount_bad+1
-              image(i,j,1)=bad_data_byte
-           endif
-        enddo
-        enddo
+      do j=1,lines
+         do i=1,elems
+            if(image(i,j).lt.0)then
+               image(i,j)=127-image(i,j)
+            else
+               image(i,j)=image(i,j)/16
+            endif
+
+            if(image(i,j) .gt. imax_image_value)
+     +           imax_image_value = image(i,j)
+            if(image(i,j) .lt. imin_image_value)
+     +           imin_image_value = image(i,j)
+            if(image(i,j) .ge. bad_data_flag)then
+               icount_bad=icount_bad+1
+               image(i,j) = bad_data_flag
+            endif
+  
+            if((image(i,j).ge.16).or.(image(i,j).lt.0))then
+               image(i,j)=bad_data_flag
+c              write(6,*) i, j, i_value
+            endif
+
+         enddo
+      enddo
 c
-        write(6,*)'Number of bad data points (> ',bad_data_flag,' )'
-        write(6,*)'prior to calling c_scan_adjust: ',icount_bad
-        write(6,*)'Max value found in image array: ',imax_image_value
-        write(6,*)'Min value found in image array: ',imin_image_value
+      write(6,*)'Number of bad data points (> ',bad_data_flag,' )'
+      write(6,*)'prior to calling c_scan_adjust: ',icount_bad
+      write(6,*)'Max value found in image array: ',imax_image_value
+      write(6,*)'Min value found in image array: ',imin_image_value
+      write(6,*)
+      write(6,*)'Data found out-of-bounds (icount_out) ',icount_out
+      if(icount_out.gt.0)then
+         status = -1
+         return
+      endif
 
-9999    return
-        end
+
+C  new C version of scan_adjust implemented 05-apr-96
+ccc      call c_scan_adjust(image,lines,elems,bad_data_flag)
+c     do j=1,lines
+c        do i=1,elems
+c           if(image(i,j).ne.bad_data_flag)
+c    +         image(i,j)=mod(image(i,j),16)
+cc     +           image(i,j)=modulo(image(i,j),16)
+c        enddo
+c     enddo
+
+
+9999  return
+      end
