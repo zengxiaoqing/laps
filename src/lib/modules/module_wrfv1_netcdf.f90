@@ -684,7 +684,7 @@ CONTAINS
     WRITE(domstr, '(I2.2)') domnum
     WRITE(timestr, '(I6.6)') time_min
 
-    fname = TRIM(prddir) // '/wrfout_' // domstr // '_' // timestr
+    fname = TRIM(prddir) // '/wrfout_d' // domstr // '_' // timestr
     RETURN
   END SUBROUTINE make_wrf_file_name
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -697,7 +697,7 @@ CONTAINS
     LOGICAL             :: file_ready
     INTEGER             :: num_checks
     INTEGER             :: max_wait_sec
-    INTEGER, PARAMETER  :: pause_sec = 30
+    INTEGER, PARAMETER  :: pause_sec = 60
     INTEGER             :: secs_waited
     file_ready = .false.
     num_checks = 0
