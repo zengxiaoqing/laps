@@ -348,6 +348,7 @@ C
 
       character*9 a9time_raob
       character*8 c8_obstype
+      character*150 c_line
 
 !     Generate info for Sorting/QC, write original mandatory data to log file
       write(6,*)
@@ -479,14 +480,19 @@ C
               wsout(ilevel) = r_missing_data
           endif
 
-          write(6,*) htout(ilevel),prout(ilevel)
+          write(c_line,*) htout(ilevel),prout(ilevel)
      1              ,t_c
      1              ,td_c
      1              ,wdout(ilevel),wsout(ilevel),ilevel
-          write(11,*)htout(ilevel),prout(ilevel)
+          write(6,521)c_line
+
+          write(c_line,*)htout(ilevel),prout(ilevel)
      1              ,t_c
      1              ,td_c
      1              ,wdout(ilevel),wsout(ilevel) 
+          write(11,521)c_line
+ 521      format(a)
+
       enddo
 
       go to 999

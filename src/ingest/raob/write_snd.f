@@ -24,7 +24,7 @@
       integer iwmostanum(maxsnd),nlvl(maxsnd)
       real stalat(maxsnd),stalon(maxsnd),staelev(maxsnd)
       character c5_staid(maxsnd)*5,a9time_ob(maxsnd)*9
-     1         ,c8_obstype(maxsnd)*8
+     1         ,c8_obstype(maxsnd)*8,c_line*150
 
       real height_m(maxsnd,maxlvl)
       real pressure_pa(maxsnd,maxlvl)
@@ -46,16 +46,19 @@
 
         do lvl = 1,nlvl(isnd)
 
-          write(lun_out,*)height_m(isnd,lvl),pressure_pa(isnd,lvl)
+          write(c_line,*)height_m(isnd,lvl),pressure_pa(isnd,lvl)
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
      1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
+          write(lun_out,521)c_line
+  521     format(a)
 
           if(isnd .le. 100)then
-              write(lun_out,*)height_m(isnd,lvl),pressure_pa(isnd,lvl)
+              write(c_line,*)height_m(isnd,lvl),pressure_pa(isnd,lvl)
      1              ,temp_c(isnd,lvl)
      1              ,dewpoint_c(isnd,lvl)
      1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
+              write(6,521)c_line
           endif
 
         enddo ! lvl
