@@ -81,11 +81,11 @@ c       include 'wrf_laps_analysis.cmn'
            return
         endif
 
-        call read_wrfsi_vgridspec (istatus)
-        if(istatus.ne.1)then
-           print*,'error reading wrfsi_vgridspec'
-           return
-        endif
+c       call read_wrfsi_vgridspec (istatus)
+c       if(istatus.ne.1)then
+c          print*,'error reading wrfsi_vgridspec'
+c          return
+c       endif
 
         call read_wrfsi_laps_control (
      +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
@@ -147,16 +147,15 @@ c hardwires for the time being since these are not in wrfsi.nl
            grid_spacing_m_cmn = grid_spacing_m
            vertical_grid = c_vcoordinate(1:lvc)
 
-        else                                  !this means that laps will be configured
+c       else                                  !this means that laps will be configured
 !                                              with the wrf h/v gridspecs.
 
 c we also need to get the level info (p_bot, p_int, etc)
-
-           nx_l_cmn = xdim(nest)
-           ny_l_cmn = ydim(nest)
-           nk_laps = moad_nz
-           vertical_grid = verticalcoord
-           grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
+c          nx_l_cmn = xdim(nest)
+c          ny_l_cmn = ydim(nest)
+c          nk_laps = moad_nz
+c          vertical_grid = verticalcoord
+c          grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
 
         endif
 
