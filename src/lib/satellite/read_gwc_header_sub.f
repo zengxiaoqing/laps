@@ -35,6 +35,7 @@ cc      character*2 SPARE1     !Spare
       INTEGER DATASTR    !Data Start
       INTEGER SHPTPTR    !Shipping Table Ptr
       Integer lun
+      Integer istatus
 
       INTEGER STRPIX     !Start Pixel
       INTEGER STRSCNL    !Start Scanline 
@@ -103,7 +104,9 @@ cc      REAL*8 ARGPER        !ARG Perigee
 cc      REAL*8 ECCEN         !Eccentricity
 cc      REAL*8 ARGLAT        !ARG Latitude
 cc      REAL*8 DTTOP         !DT Top
+        Integer idttop
 cc      REAL*8 DTBOT         !DT Bottom
+        Integer idtbot
 cc      REAL*8 MIDTIME       !Midpoint Time
       INTEGER FSCI       !First Scanline of Complete Image
 cc      INTEGER STCI       !Start Time of Complete Image
@@ -117,9 +120,26 @@ cc      REAL*4 SATVEC(3)     !Satellite Position Vector
 cc      REAL*4 RMA           !Role Misalignment Angle
 cc      REAL*4 PMA           !Pitch Misalignment Angle
 
+        real   rdttop(2)
+        real   rdtbot(2)
+
+      character ctime1*9,ctime2*9
+      character cjjj1*3,cjjj2*3
+      character c_hm1*4,c_hm2*4
+
+      integer   i4time_cur
+      integer   i4time_now_gg
+      integer   i4time1,i4time2
+      integer   i4timediff
+      character cfname_cur*9
+      character cfname1*9
+      character cfname2*9
+      real*8    r8time
+
+
 
       integer byteswp2, byteswp4
-      character input(744) !just read it all and sort it later!
+      character input(1024) !just read it all and sort it later!
 
 c      BYTE JUNK512(512)     !Byte array used to 'read over' unneeded
 c                            !data
@@ -138,7 +158,7 @@ C***********************************************************************
       inquire(file=filename,opened=lopen,number=lun)
       if(lopen)write(6,*)'File already open',lun
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
-     &ACCESS='DIRECT', RECL=744,STATUS='OLD')
+     &ACCESS='DIRECT', RECL=1024,STATUS='OLD')
 
 cc     &ACCESS='DIRECT', FORM='UNFORMATTED',RECL=1024,STATUS='OLD')
 
@@ -233,7 +253,7 @@ C***********************************************************************
       strscnl = BYTESWP4(input(517))
       stppix  = BYTESWP4(input(521))
       stpscnl = BYTESWP4(input(525))
-      reqobstm= BYTESWP4(input(537))
+c     reqobstm= BYTESWP4(input(537))
 
       idecimat = BYTESWP2(input(541))
       istrbdy1  = BYTESWP2(input(546))
@@ -255,7 +275,34 @@ C***********************************************************************
       enddo
 
       FSCI   =  BYTESWP4(input(740))
+c
+c appears that all the time info is in array element 1
+c of rdttop1 and rdttop2.
+c
+      call cnvtvxfl(input(716),rdttop(1))
+      call cnvtvxfl(input(720),rdttop(2))
+      call cnvtvxfl(input(724),rdtbot(1))
+      call cnvtvxfl(input(728),rdtbot(2))
 
+      idttop =int(rdttop(1))           !+rdttop(2)
+      idtbot =int(rdtbot(1))           !+rdtbot(2)
+
+      write(ctime1,101)idttop
+      write(ctime2,101)idtbot
+101      format(i9)
+
+      cjjj1=ctime1(1:3)
+      c_hm1=ctime1(4:7)
+      cjjj2=ctime2(1:3)
+      c_hm2=ctime2(4:7)
+      i4time_cur=i4time_now_gg()
+      call make_fnam_lp(i4time_cur,cfname_cur,istatus)
+      cfname1=cfname_cur(1:2)//cjjj1//c_hm1
+      cfname2=cfname_cur(1:2)//cjjj2//c_hm2
+      call i4time_fname_lp(cfname1,i4time1,istatus)
+      call i4time_fname_lp(cfname2,i4time2,istatus)
+      i4timediff=int(abs(i4time2-i4time1)/2.)
+      reqobstm=i4time1+i4timediff 
 c
 c   No further header variables are required - return here.
 c
