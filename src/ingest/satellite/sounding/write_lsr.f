@@ -9,6 +9,7 @@
       integer*4 i4time
       integer*4 istatus
       integer*4 i,j
+      integer*4 ni
       integer*4 len_lsr
 
       real*4 data(nxl,nyl,nch)
@@ -21,14 +22,14 @@
       integer*4 lvl_lsr(nch)
       character*150 dir_lsr
       character*31 ext_lsr
-      character*5  csatid
+      character*6  csatid
       character*2  c_num
       character*4  cw
 c ---------------------------------------
 c Output for LAPS lsr files as indicated.
 c
-      call get_directory('lsr',dir_lsr,len_lsr)
       ext_lsr = 'lsr'
+      call get_directory(ext_lsr,dir_lsr,len_lsr)
 c
       do i=1,nch
          lvl_lsr(i) = 0
@@ -52,6 +53,12 @@ c
          c_lsr(i)=csatid//' SAT sounding radiance: '//cw//' (u)'
 
       enddo !i
+c
+c output
+c
+      ni=index(csatid,' ')-1
+      if(ni.le.0)ni=6
+      dir_lsr=dir_lsr(1:len_lsr)//csatid(1:ni)//'/'
 
       call write_laps_data(i4time,
      &                     dir_lsr,
