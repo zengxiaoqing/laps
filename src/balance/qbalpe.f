@@ -35,35 +35,43 @@ c
       implicit none
       include 'bgdata.inc'
 c
-      integer   nx,ny,nz
+      integer   nx,ny,nz   
+
 c
       real*4 dx(nx,ny),dy(nx,ny),dp(nz)
-     .      ,p(nz),pstag(nz),ps(nx,ny),ter(nx,ny)
-     .      ,lat(nx,ny),lon(nx,ny)
+     .      ,p(nz),pstag(nz),ps(nx,ny),psb(nx,ny)
+     .      ,lat(nx,ny),lon(nx,ny),ter(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
      .      ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
-     .      ,phib(nx,ny,nz),tb(nx,ny,nz)
-     .      ,ub(nx,ny,nz),vb(nx,ny,nz),shb(nx,ny,nz)
-     .      ,phibs(nx,ny,nz),tbs(nx,ny,nz)
-     .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),shbs(nx,ny,nz)
-     .      ,phis(nx,ny,nz),ts(nx,ny,nz)
-     .      ,us(nx,ny,nz),vs(nx,ny,nz),shs(nx,ny,nz)
+c    .      ,phib(nx,ny,nz),tb(nx,ny,nz)
+c    .      ,ub(nx,ny,nz),vb(nx,ny,nz),shb(nx,ny,nz)
+c    .      ,phibs(nx,ny,nz),tbs(nx,ny,nz)
+c    .      ,ubs(nx,ny,nz),vbs(nx,ny,nz),shbs(nx,ny,nz)
+c    .      ,phis(nx,ny,nz),ts(nx,ny,nz)
+c    .      ,us(nx,ny,nz),vs(nx,ny,nz),shs(nx,ny,nz)
 c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
-     .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
-     .      ,lapssh(nx,ny,nz)
-     .      ,lapstemp(nx,ny,nz)
-     .      ,lapsphi(nx,ny,nz)
 
-      real*4 om(nx,ny,nz),omb(nx,ny,nz)
-     .      ,omo(nx,ny,nz),oms(nx,ny,nz)
-     .      ,ombs(nx,ny,nz)
-     .      ,nu(nx,ny,nz),nv(nx,ny,nz)
-     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
-     .      ,wb(nx,ny,nz)
+      real*4, allocatable, dimension (:,:,:) ::
+     .        lapsu,lapsv,lapssh,lapstemp,lapsphi,omo
+     .       ,phib,  tb,  ub,  vb,  shb,  omb
+     .       ,phibs, tbs, ubs, vbs, shbs, ombs
+     .       ,phis,  ts,  us,  vs,  shs,  oms
+
+      real*4 errt(nx,ny,nz),errw(nx,ny,nz)
+     .      ,pd8(nz),pd5(nz),kpd8,kpd5
+
+      real*4 om(nx,ny,nz)
+c    .      ,omo(nx,ny,nz)
+c    .      ,oms(nx,ny,nz)
+c    .      ,ombs(nx,ny,nz)
+c    .      ,omb(nx,ny,nz)
+c    .      ,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
+c    .      ,wb(nx,ny,nz)
      .      ,re,rdpdg,po,cappa
      .      ,delo,dt
      .      ,gamo
-     .      ,erru(nx,ny,nz),errub(nx,ny,nz)
+     .      ,obert,oberu,oberw,zter
+     .      ,erru(nx,ny,nz),errv(nx,ny,nz),errub(nx,ny,nz)
      .      ,errphi(nx,ny,nz),errphib(nx,ny,nz)
 
       real*4 grid_spacing_actual_m
@@ -76,19 +84,21 @@ c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
       real*4 g,sumdt,omsubs,sk,bnd,ff,fo,err,rog,rod
      .      ,sumdz,sumr,sumv2,snxny,sumf,sumt,cl,sl
      .      ,sumtscl,sumkf,sumks,sldata,den,sumom2
+     .      ,ffz
 
 c made 2d 2-20-01 JS.
-      real*4  terscl(nx,ny)
       real*4  tau(nx,ny)
       real*4  ro(nx,ny)
-      integer ks(nx,ny)
-      integer kf(nx,ny)
-      integer ksij,kfij
+      real,   allocatable,dimension (:,:) :: terscl
+      integer,allocatable,dimension (:,:) :: ks,kf
+      integer ksij,kfij,k8,k5
 c
       integer   itmax,lmax
      .         ,npass
      .         ,i4time_sys
+     .         ,i4time_airdrop
      .         ,i,j,k,ll,istatus
+     .         ,ii,jj,iii
 
       integer   itstatus
       integer   init_timer
@@ -117,6 +127,9 @@ c    Added by B. Shaw, 4 Sep 01
       real*4, allocatable :: lapsrh(:,:,:)
       real*4, external :: ssh, make_rh
       real*4 shsat
+      real*4 ubias,vbias,urms,vrms,oberr
+c    Arrays for Airdrop application
+      real, allocatable, dimension(:) :: udrop,vdrop,tdrop,rri,rrj
 c_______________________________________________________________________________
 c
       call get_balance_nl(lrunbal,adv_anal_by_t_min,istatus)
@@ -188,6 +201,9 @@ c
 c
 c *** Get background grids
 c
+      allocate(phib(nx,ny,nz),tb(nx,ny,nz),shb(nx,ny,nz)
+     .,ub(nx,ny,nz),vb(nx,ny,nz),omb(nx,ny,nz))
+
       call get_modelfg_3d(i4time_sys,'U3 ',nx,ny,nz,ub,istatus)
       call get_modelfg_3d(i4time_sys,'V3 ',nx,ny,nz,vb,istatus)
       call get_modelfg_3d(i4time_sys,'T3 ',nx,ny,nz,tb,istatus)
@@ -195,11 +211,29 @@ c
       call get_modelfg_3d(i4time_sys,'SH ',nx,ny,nz,shb,istatus)
       call get_modelfg_3d(i4time_sys,'OM ',nx,ny,nz,omb,istatus)
 
+      if(istatus.ne.1)then
+         print*,'background model frst guess not obtained'
+         return
+      endif
+
+      call get_modelfg_2d(i4time_sys,'PSF',nx,ny,psb,istatus)
+
+      if(istatus.ne.1)then
+         print*,'background model frst guess not obtained'
+         return
+      endif
+
 c     check to see that omb is not missing
       where(abs(omb) .gt. 100.) omb=0.
 c
-c *** Get analysis grids.
+c *** Get LAPS 3D analysis grids.
 c
+      allocate (lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
+     .         ,lapssh(nx,ny,nz)
+     .         ,lapstemp(nx,ny,nz)
+     .         ,lapsphi(nx,ny,nz)
+     .         ,omo(nx,ny,nz))
+
       call get_laps_analysis_data(i4time_sys,nx,ny,nz
      +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
@@ -208,14 +242,19 @@ c omo is the cloud vertical motion from lco
          stop
       endif
 c
-c *** Get laps surface pressure.
+c *** Get LAPS 2D surface pressure.
 c
       call get_laps_2d(i4time_sys,sfcext,'PS ',units,
      1                  comment,nx,ny,ps,istatus)
 c
-c *** for Airdrop-LAPS project we want to advance background and
-c *** analysis grids to the time of payload release as specified
-c *** by namelist variable adv_anal_by_t_min
+c *** For Airdrop-LAPS project we want to advance
+c *** analyses to the time of payload release as specified
+c *** by namelist variable adv_anal_by_t_min. Subr 'advance_grids'
+c *** acquires backgrounds at i4time_airdrop and uses them to
+c *** advance the "laps" analysis arrays forward in time to
+c *** i4time_airdrop. Background arrays are filled with data
+c *** at i4time_airdrop.
+c *** 
 c
       call get_c8_project(c8_project,istatus)
       call upcase(c8_project,c8_project)
@@ -230,13 +269,11 @@ c
          print*,' Advance systime by ',
      +adv_anal_by_t_min*60, ' seconds '
 
-         i4time_sys=i4time_sys+adv_anal_by_t_min*60
+         i4time_airdrop=i4time_sys+adv_anal_by_t_min*60
 
-c advance laps (analysis) grid to payload drop time
-
-         call advance_grids(i4time_sys,nx,ny,nz
-     .,ub,vb,tb,phib,shb,omb,lapsphi,lapstemp,lapsu,lapsv
-     .,lapssh,omo,ps,istatus)
+         call advance_grids(i4time_sys,i4time_airdrop
+     .,nx,ny,nz,ub,vb,tb,phib,shb,omb,psb
+     .,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,ps,istatus)
          if(istatus.ne.1)then
             print*,'Error returned: advance_grids '
             return
@@ -289,18 +326,10 @@ c    .                  ,lapsuo,lapsvo,istatus)
 
       endif
 
-c     enddo
-c     enddo
-c
-c *** Get laps surface elevations.
-c
-c     call get_laps_sfc_elev(staticdir,staticext,nx,ny
-c    .                      ,ter,istatus)
-c
 c *** Get laps surface pressure.
 c
-      call get_laps_2d(i4time_sys,sfcext,'PS ',units,
-     1                  comment,nx,ny,ps,istatus)
+c     call get_laps_2d(i4time_sys,sfcext,'PS ',units,
+c    1                  comment,nx,ny,ps,istatus)
 c
 c all pressure is in pascals
 c set dynamic weight del using lat and surface pressure
@@ -336,32 +365,43 @@ c guess number of obs over grid, put in sldata for now.
 
 c set model scale - a low end wave resolvable by the grid
       sl=4.*dx(nx/2,ny/2)
-
       fo=14.52e-5   !2*omega
+
+      allocate (ks(nx,ny),kf(nx,ny),terscl(nx,ny))
 
       if(.false.)then
          call terrain_scale_vartau(nx,ny,nz,ter,lapsphi
      &,ks,kf,terscl)
       else
+
+         pd8=p/85000.
+         pd5=p/50000.
+         kpd8=nz
+         kpd5=nz
          do k=1,nz
-            if(p(k).eq.85000)ks(1,1)=k
-            if(p(k).eq.50000)kf(1,1)=k
-c        ks(1,1)=6
-c        kf(1,1)=11
+            if(pd8(k).lt.kpd8.and.pd8(k).ge.1.0)then
+               kpd8=pd8(k)
+               k8=k
+            endif
+            if(pd5(k).lt.kpd5.and.pd5(k).ge.1.0)then
+               kpd5=pd5(k)
+               k5=k
+            endif
          enddo
 
          call terrain_scale(nx,ny,ter,terscl(1,1))
       endif
+      ks(1,1)=k8
+      kf(1,1)=k5
 
       print*,'terrain scale = ',terscl(1,1)
       print*,'ks/p = ',ks(1,1),p(ks(1,1))
       print*,'kf/p = ',kf(1,1),p(kf(1,1))
 
-
       do i=1,nx
       do j=1,ny
 
-         terscl(i,j)=terscl(1,1)   !make it constant over domain for now.
+c        terscl(i,j)=terscl(1,1)   !make it constant over domain for now.
          ks(i,j)=ks(1,1)
          kf(i,j)=kf(1,1)
          
@@ -421,12 +461,17 @@ c if background is missing sumom2 will be 0. Assume a nominal .5Pa/s vv
 
       enddo
       enddo
+      deallocate(ks,kf,terscl)
+
 c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
       rod=sqrt(sumv2)/(sumf*sldata)
       rog=sqrt(sumv2)/(sumf*sl)
       if(rog.gt.1.) rog=1.
       if(rod.gt.1.) rod=1.
       delo=100.*sl**2/sumv2**2/rod**2           
+c if this is for airdrop there is no need to run the balance package, only 
+c continuity. set delo=0. In balcon this will skip the balance sequence.
+      if(c8_project .eq. 'AIRDROP') delo=0.
 c
 c print these arrays now.
       print*,'/dthet/thet/dz/den/N/V/f/delo/tau:' 
@@ -448,6 +493,7 @@ c put lapsphi into phi, lapsu into u, etc
       om  = omo
       sh  = lapssh
 
+      deallocate(lapsphi,lapsu,lapsv,omo)
 c
       if(larray_diag)then
          print*
@@ -465,6 +511,9 @@ c
 c stagger the LAPS grids to prepare for balancing
 c
 c laps analysis grids first.
+      allocate (phis(nx,ny,nz),ts(nx,ny,nz),shs(nx,ny,nz)
+     .,us(nx,ny,nz),vs(nx,ny,nz),oms(nx,ny,nz))
+
       call balstagger(u,v,phi,t,sh,om,us,vs,
      &phis,ts,shs,oms,nx,ny,nz,p,ps,1) 
 
@@ -480,12 +529,15 @@ c laps analysis grids first.
             call array_diagnosis(vs(1,1,k),nx,ny,'v-comp    ')
          enddo
       endif
-
-
 c
 c background grids second.
+      allocate (phibs(nx,ny,nz),tbs(nx,ny,nz)
+     .,shbs(nx,ny,nz),ombs(nx,ny,nz),ubs(nx,ny,nz)
+     .,vbs(nx,ny,nz))
       call balstagger(ub,vb,phib,tb,shb,omb,ubs,vbs,
      &phibs,tbs,shbs,ombs,nx,ny,nz,p,ps,1) 
+
+      deallocate(phib,shb)
    
 c put phis into phi, us into u ... ie., put staggered arrays into non-staggered.
       call move_3d(phis,phi,nx,ny,nz)
@@ -504,16 +556,15 @@ c     call zero3d(oms,nx,ny,nz)
       call terbnd(us,vs,oms,nx,ny,nz,ps,p,bnd)
       call terbnd(ubs,vbs,ombs,nx,ny,nz,ps,p,bnd)
 c
-
-c
 c ****** Execute mass/wind balance.
 c  set maximum relaxation correction for phi in GPM
       err=1.0
 c returns staggered grids of full fields u,v,phi
 
-      call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs,
-     .       ts,rod,delo,tau,itmax,err,erru,errphi,errub,errphib
-     .           ,nu,nv,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
+      call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs
+     . ,ts,rod,delo,tau,itmax,err,erru,errphi,errub,errphib
+c    . ,nu,nv,fu,fv
+     . ,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 
       if(larray_diag)then
          print*
@@ -533,25 +584,28 @@ c
 c *** destagger and Write out new laps fields.
 c
 c the non-staggered grids must be input with intact boundaries from background 
+c  the bs arrays are used as dummy arrays to go from stagger to non staggered
 
-      call balstagger(ub,vb,phib,tb,
-     & shb,omb,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
-c
+      call balstagger(ubs,vbs,phibs,tbs,
+     & shbs,ombs,u,v,phi,t,sh,om,nx,ny,nz,p,ps,-1) 
 c   Prior to applying boundary subroutine put non-staggered grids back into
 c   u,v,om,t,sh,phi.
 
 c adjust surface temps to account for poor phi estimates below ground 
       call sfctempadj(tb,lapstemp,p,ps,nx,ny,nz,npass)  
 
-      call move_3d(phib,phi,nx,ny,nz)
-      call move_3d(ub,u,nx,ny,nz)
-      call move_3d(vb,v,nx,ny,nz)
-      call move_3d(tb,t,nx,ny,nz)
-      call move_3d(omb,om,nx,ny,nz)
-      call move_3d(shb,sh,nx,ny,nz)
+      call move_3d(phibs,phi,nx,ny,nz)
+      call move_3d(ubs,u,nx,ny,nz)
+      call move_3d(vbs,v,nx,ny,nz)
+      call move_3d(tbs,t,nx,ny,nz)
+      call move_3d(ombs,om,nx,ny,nz)
+      call move_3d(shbs,sh,nx,ny,nz)
 
-      call get_laps_2d(i4time_sys,sfcext,'PS ',units,
-     1                  comment,nx,ny,ps,istatus)
+      deallocate (phibs,ubs,vbs,tbs,ombs,shbs,lapstemp)
+
+c JS> commented 8-21-02.  unsure of need for ps at this point?
+c     call get_laps_2d(i4time_sys,sfcext,'PS ',units,
+c    1                  comment,nx,ny,ps,istatus)
 
       if(lrotate)then
 
@@ -636,10 +690,54 @@ c           v(i,j,1:k-1) = v(i,j,k)
 c         ENDIF
 c       enddo
 c     enddo
+c 
+      if(c8_project .eq. 'AIRDROP')then
+
+c ----------------------------------------------------------------
+c  AIRDROP ANALYSIS ERROR SECTION
+c Output required: turbulent compontents of u, v, and w; analysis error of u,v,wc t, rh
+c compute dropsone wind difference from background
+c     simple solution is to read from .pig and tmg files, then create a 
+c truth profile and compute an average analysis error
+
+         allocate(udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz))
+
+c  create dropsond profiles for testing....comment out read pig,tmg
+cc       call readpig(generic_data_root,a9_time
+c    &,udrop,vdrop,tdrop,rri,rrj,nz,istatus)
+c routine to create drop and rr arrays:
+         iii=382983
+         do k=1,nz
+            rri(k)=nx/2+.5
+            rrj(k)=ny/2+.5
+            ii=rri(k)
+            jj=rrj(k)
+            udrop(k)= u(ii,jj,k) + ffz(iii,20)*3. ! assumed gaussian error 3ms 
+            vdrop(k)= v(ii,jj,k) + ffz(iii,20)*3
+            tdrop(k)= t(ii,jj,k) + ffz(iii,20)*2.   
+         enddo
+
+c subr profile fills array erru(u),errub(v) with analysis error 
+c here we assume the following for dropsonde error: wind 1m/s, temp .5deg
+         oberu=1.
+         obert=.5
+         oberw=.05
+
+c  compute TKE
+c  the s arrays are used to hold the turbulent components of u,v, and w
+         call turb(u,v,om,t,phi,p,us,vs,oms,ts,ter,nx,ny,nz)
+
+         call profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw
+     &,obert,erru,errv,errw ,errt,u,v,om,us,vs,oms,t,phi,ub,vb,omb,tb,p
+     &,ter,zter,nx,ny,nz,i4time_sys)
+
+         call write_errors(p,erru,errv,errw,errt,
+     1 nx,ny,nz,rri,rrj,zter)
+
+      endif
 
       call write_bal_laps(i4time_sys,phi,u,v,t,om,lapsrh,lapssh
-     .                   ,nx,ny,nz
-     .                   ,p,istatus)
+     .                   ,nx,ny,nz,p,istatus)
       if(istatus.ne.1)then
          write(6,*)'error writing balance fields'
          return
@@ -847,8 +945,9 @@ c===============================================================================
 c
 c
       subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,tmp,
-     .   rod,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
-     .     ,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
+     .   rod,delo,tau,itmax,err,erru,errph,errub,errphb
+c    .,nu,nv,fu,fv
+     .,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 c
 c *** Balcon executes the mass/wind balance computations as described
 c        mcginley (Meteor and Appl Phys, 1987) except that
@@ -888,8 +987,8 @@ c
      .      ,u(nx,ny,nz),uo(nx,ny,nz),ub(nx,ny,nz)
      .      ,v(nx,ny,nz),vo(nx,ny,nz),vb(nx,ny,nz)
      .      ,om(nx,ny,nz),omo(nx,ny,nz),omb(nx,ny,nz)
-     .      ,nu(nx,ny,nz),nv(nx,ny,nz),tmp(nx,ny,nz)
-     .      ,fu(nx,ny,nz),fv(nx,ny,nz)
+     .      ,tmp(nx,ny,nz)
+c    .,nu(nx,ny,nz),nv(nx,ny,nz),fu(nx,ny,nz),fv(nx,ny,nz)
      .      ,dx(nx,ny),dy(nx,ny),dp(nz)
      .      ,ps(nx,ny),p(nz)
      .      ,lat(nx,ny),ff(nx,ny)
@@ -912,7 +1011,7 @@ c
      .      ,eueub,fob,foax,foay
      .      ,fu2,fv2,fuangu,fvangv,dt
 
-c 2d arrays now (JS 2-20-01)
+c 2d array now (JS 2-20-01)
       real*4 tau(nx,ny)
 
 c these are used for diagnostics
@@ -930,6 +1029,7 @@ c these are used for diagnostics
       logical larray_diag/.false./
 
       real, allocatable, dimension(:,:,:) :: aaa,bbb
+      real, allocatable, dimension(:,:,:) :: fu,fv,nu,nv
       real, allocatable, dimension(:,:) :: dxx,dx2,dxs
       real, allocatable, dimension(:,:) :: dyy,dy2,dys
       real, allocatable, dimension(:,:) :: fx,ffx
@@ -994,6 +1094,9 @@ c wind error must be defined at the geopotential stagger points
       enddo
 
 c analz with input fields prior to balcon iterations on lmax
+      allocate (fu(nx,ny,nz),fv(nx,ny,nz)
+     .         ,nu(nx,ny,nz),nv(nx,ny,nz))
+
       call analzo(to,to,uo,uo,vo,vo,omo,omo
      .                ,nu,nv,fu,fv,delo,tau
      .                ,nx,ny,nz
@@ -1020,7 +1123,7 @@ c apply continuity to input winds
        call leib_sub(nx,ny,nz,erf,tau,erru
      .,lat,dx,dy,ps,p,dp,uo,u,vo,v,
      . omo,om,omb,l,lmax)
-
+       if(delo.eq.0.) go to 111
 c move adjusted fields to observation fields 
        call move_3d(u,uo,nx,ny,nz)
        call move_3d(v,vo,nx,ny,nz)
@@ -1058,7 +1161,6 @@ c
          sum=0.
          do 2 j=2,nym1
           do 2 i=2,nxm1
-            
 
            do 2 k=ks,kf
 
@@ -1313,12 +1415,12 @@ c move adjusted fields (uo,vo,omo) to solution fields
        call move_3d(ub,u,nx,ny,nz)
        call move_3d(vb,v,nx,ny,nz)
        call move_3d(omb,om,nx,ny,nz)
-      print*,'------------------------------------------------'
+ 111  print*,'------------------------------------------------'
       itstatus=ishow_timer()
       print*,'Elapsed time end of balcon loop (sec): ',itstatus
       print*,'------------------------------------------------'
 
-      deallocate (aaa,bbb)
+      deallocate (aaa,bbb,fu,fv,nu,nv)
       deallocate (dxx,dx2,dxs,dyy,dy2,dys
      1,fx,fy,ffx,ffy)
 
@@ -2476,6 +2578,7 @@ c omega is already on the staggered horizontal mesh
          enddo
         enddo
        enddo
+       ts(:,:,nz)=ts(:,:,nz-1)
 
        deallocate (wr)
        
@@ -2910,5 +3013,858 @@ c--------------------------------------------------
       enddo
 10    format(1x,8(e10.3,1x))
 
+      return
+      end
+
+      subroutine readpig(PATH,DATTIME,udrop,vdrop,tdrop
+     1,rri,rrj,nz,istatus)
+c this subroutine reads the .pig and .tmg files to recover observed  
+c u, v, bnd T profiles, the decimal i,j locations at the nz LAPS levels 
+      real udrop(nz),vdrop(nz),tdrop(nz),rri(nz),rrj(nz), dum2
+c variables output:
+c     udrop, vdrop tdrop: dropsonde u,v T obs at the nz laps levels
+c     rri, rrj: real grid coordinates of dropsone position in grid space 
+c
+      Character*80 PATH, DATTIME,dum
+      Character*3 dum1
+      integer len,istatus
+      real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
+     1,tt,uu,vv
+      
+      allocate(ri(2*nz),rj(2*nz),rk(2*nz))
+      allocate(dd(2*nz),ff(2*nz),tt(2*nz))
+      allocate(tt(2*nz),uu(2*nz),vv(2*nz))
+      istatus=0
+      call get_r_missing_data(smsng,istatus)
+      pi=4.*atan(1.)
+      rdpdg=pi/180. 
+      call s_len(PATH,len)
+      dum(1:len)=PATH
+      dum(len+1:len+9)=DATTIME(1:9)
+      dum(len+10:len+13 )='.pig'
+      open (11, file=dum,form='formatted',status='old') 
+      Do n=1,2000
+      read(11,*,end=1) ri(n),rj(n),rk(n),dd(n),ff(n),dum1
+       if(dum.eq.'  ') go to 1
+      enddo
+         print*, 'Suspect read in the pig file'
+         istatus=1
+         deallocate(ri,rj,rk,dd,ff)
+         deallocate (uu,vv)
+         return
+  1   nsave=n-1 
+c convert dd ff to u,v
+      do n=1,nsave
+      ang=rdpdg*(dd(n)-270.)
+       uu(n)=ff(n)/.515*cos(ang)
+       vv(n)=-ff(n)/.515*sin(ang)
+      enddo
+
+c now interpolate to the laps levels in rk space
+      do k=1,nz
+       rr=k
+       do  n=1,nsave-1
+        iflag=0        
+        if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
+         aa=(rr-rk(n))/(rk(n+1)-rk(n))
+         udrop(k)=uu(n)*(1.-aa)+uu(n+1)*aa
+         vdrop(k)=vv(n)*(1.-aa)+vv(n+1)*aa
+         rri(k)=ri(n)*(1.-aa)+ri(n+1)*aa
+         rrj(k)=rj(n)*(1.-aa)+ri(n+1)*aa
+         iflag=1
+         go to 3
+        endif
+       enddo ! on n
+       if(iflag.eq.0) then
+        udrop(k)=smsng
+        vdrop(k)=smsng
+       endif
+   3  enddo ! on k
+      close(11)
+c now read the tmg file to get the dropsone temps
+      dum(len+10:len+13 )='.tmg'
+      open (11, file=dum,form='formatted',status='old') 
+       Do n=1,2000
+       read(11,*,end=2) aa,bb,cc,ee, dum1           
+       if(dum1.eq.'  ') go to 2
+       if(dum1.eq.'ACA') then    
+        ri(n)=aa
+        rj(n)=bb
+        rk(n)=cc
+        tt(n)=ee  
+       endif
+      enddo
+c now interpolate to the laps levels in rk space
+ 2    do k=1,nz
+       rr=k
+       do  n=1,nsave-1
+        iflag=0        
+        if (rr.lt.rk(n+1).and.rr.ge.rk(n)) then ! point is between two dropsonde levels
+         aa=(rr-rk(n))/(rk(n+1)-rk(n))
+         tdrop(k)=tt(n)*(1.-aa)+tt(n+1)*aa
+         iflag=1
+         go to 4
+        endif
+       enddo 
+       if(iflag.eq.0) then
+        tdrop(k)=smsng
+       endif
+   4  enddo
+      deallocate(ri,rj,rk,dd,ff)
+      deallocate (uu,vv)
+      return
+      end
+c-------------------------------------------------------------------
+      subroutine profile(udrop,vdrop,tdrop,rri,rrj,oberu,oberw,obert
+     1,erru, errv, errw,errt, u,v,om,us,vs,oms,
+     1 t,phi,ub,vb,omb,tb,p,ter,zter,
+     1 nx,ny,nz,i4time)
+c
+c  this routine takes the measured fit between the obs and background
+c  and constructs analysis error estimates based on an estimated
+c  observation error, a projected truth based on gaussian random error.
+c  arrays erru errv errw errt are the output error estimates  
+c  us,vs,oms are the turbulent components here to evaluate covariance
+      real erru(nx,ny,nz),errv(nx,ny,nz),errw(nx,ny,nz),errt(nx,ny,nz)
+     1   ,u(nx,ny,nz), ub(nx,ny,nz), us(nx,ny,nz)
+     1   ,v(nx,ny,nz), vb(nx,ny,nz),vs(nx,ny,nz)
+     1   ,t(nx,ny,nz), tb(nx,ny,nz),oms(nx,ny,nz)
+     1   ,phi(nx,ny,nz),om(nx,ny,nz),omb(nx,ny,nz)
+     1   ,rri(nz),     rrj(nz), ter(nx,ny)
+      real p(nz),zter
+      real ubias,vbias,urms,vrms
+      real udrop(nz),vdrop(nz),tdrop(nz)  
+c                                        
+      real ffz
+      character*9 dum
+c  variables: udrop vdrop tdrop are the u,v,T from the dropsonde
+c             u,v are the LAPS analyzed velocities
+c             ub,vb are the background grids
+c  create a "truth " profile using gaussian normal distribution of 
+c dropsonde instrument error, oberru
+      real, allocatable, dimension(:) :: ri,rj,rk,dd,ff
+     1,ut,vt,Tt,wt
+
+      allocate(ri(2*nz),rj(2*nz),rk(2*nz))
+      allocate(dd(2*nz),ff(2*nz))
+      allocate(ut(nz),vt(nz),Tt(nz),wt(nz))
+      iii=i4time
+      call zero3d(erru,nx,ny,nz)
+      call zero3d(errv,nx,ny,nz)
+      call zero3d(errt,nx,ny,nz)
+      call zero3d(errw,nx,ny,nz)
+      r=287.04
+      g=9.808
+      cnt=0
+c recover variable profiles and put them in the error arrays 
+      do k=1,nz
+        ii=rri(k)
+        jj=rrj(k)  
+        aa=rri(k)-float(ii)
+        bb=rrj(k)-float(jj)
+        erru(1,6,k)=us(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +us(ii+1,jj,k)*aa*(1.-bb)+
+     1   us(ii,jj+1,k)*bb*(1.-aa)+us(ii+1,jj+1,k)*aa*bb
+        erru(1,5,k)=u(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +u(ii+1,jj,k)*aa*(1.-bb)+
+     1   u(ii,jj+1,k)*bb*(1.-aa)+u(ii+1,jj+1,k)*aa*bb
+        errv(1,6,k)=vs(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +vs(ii+1,jj,k)*aa*(1.-bb)+
+     1   vs(ii,jj+1,k)*bb*(1.-aa)+vs(ii+1,jj+1,k)*aa*bb
+        errv(1,5,k)=v(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +v(ii+1,jj,k)*aa*(1.-bb)+
+     1   v(ii,jj+1,k)*bb*(1.-aa)+v(ii+1,jj+1,k)*aa*bb
+        errt(1,6,k)=t(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +t(ii+1,jj,k)*aa*(1.-bb)+
+     1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb
+        errt(1,7,k)=p(k)/r/errt(1,6,k)          
+        errt(1,5,k)=phi(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +phi(ii+1,jj,k)*aa*(1.-bb)+
+     1   phi(ii,jj+1,k)*bb*(1.-aa)+phi(ii+1,jj+1,k)*aa*bb
+        zter=ter(ii,jj)*(1.-aa)*(1.-bb)
+     1   +ter(ii+1,jj)*aa*(1.-bb)+
+     1   ter(ii,jj+1)*bb*(1.-aa)+ter(ii+1,jj+1)*aa*bb
+        errw(1,5,k)=-r*errt(1,6,k)/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +om(ii+1,jj,k)*aa*(1.-bb)+
+     1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)
+        errw(1,6,k)=(oms(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +oms(ii+1,jj,k)*aa*(1.-bb)+
+     1   oms(ii,jj+1,k)*bb*(1.-aa)+oms(ii+1,jj+1,k)*aa*bb)
+      enddo ! on k
+
+      do n=4,nz ! these are the random estimates for the statistics
+c  do background errors first
+       do k=1,nz
+c create truth profiles using guassian random numbers
+        if(udrop(k).eq.smsng) go to 1
+        ut(k)=udrop(k)+oberu*ffz(iii,20)
+        vt(k)=vdrop(k)+oberu*ffz(iii,20)
+        Tt(k)=tdrop(k)+obert*ffz(iii,20)
+        Wt(k)=oberw*ffz(iii,20)
+1      enddo 
+
+
+       do k=1,nz
+        ii=rri(k)
+        jj=rrj(k)  
+        aa=rri(k)-float(ii)
+        bb=rrj(k)-float(jj)
+        berru=ub(ii,jj,k)*(1.-aa)*(1.-bb)+ub(ii+1,jj,k)*aa*(1.-bb)+
+     1   ub(ii,jj+1,k)*bb*(1.-aa)+ub(ii+1,jj+1,k)*aa*bb-ut(k)
+        berrv=vb(ii,jj,k)*(1.-aa)*(1.-bb)+vb(ii+1,jj,k)*aa*(1.-bb)+
+     1   vb(ii,jj+1,k)*bb*(1.-aa)+vb(ii+1,jj+1,k)*aa*bb-vt(k)
+        berrt=tb(ii,jj,k)*(1.-aa)*(1.-bb)+tb(ii+1,jj,k)*aa*(1.-bb)+
+     1   tb(ii,jj+1,k)*bb*(1.-aa)+tb(ii+1,jj+1,k)*aa*bb
+        errw(n,1,k)=-r*berrt/p(k)/g*(omb(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +omb(ii+1,jj,k)*aa*(1.-bb)+
+     1   omb(ii,jj+1,k)*bb*(1.-aa)+omb(ii+1,jj+1,k)*aa*bb)-wt(k)
+        berrt=p(k)/r*(1./berrt-1./Tt(k))
+        erru(n,1,k)=berru
+        errv(n,1,k)=berrv
+        errt(n,1,k)=berrt
+       enddo! on k
+      enddo! on n
+c now analysis errors with a different ensemble of truth estimates
+      do n=4,nz
+       do k=1,nz
+c create truth profiles using guassian random numbers
+        if(udrop(k).eq.smsng) go to 2
+        ut(k)=udrop(k)+oberu*ffz(iii,20)
+        vt(k)=vdrop(k)+oberu*ffz(iii,20)
+        Tt(k)=tdrop(k)+obert*ffz(iii,20)
+        Wt(k)=oberw*ffz(iii,20)
+2      enddo 
+
+
+       do k=1,nz
+        ii=rri(k)
+        jj=rrj(k)  
+        aa=rri(k)-float(ii)
+        bb=rrj(k)-float(jj)
+        aerru=u(ii,jj,k)*(1.-aa)*(1.-bb)+u(ii+1,jj,k)*aa*(1.-bb)+
+     1   u(ii,jj+1,k)*bb*(1.-aa)+u(ii+1,jj+1,k)*aa*bb-ut(k)
+        aerrv=v(ii,jj,k)*(1.-aa)*(1.-bb)+v(ii+1,jj,k)*aa*(1.-bb)+
+     1   v(ii,jj+1,k)*bb*(1.-aa)+v(ii+1,jj+1,k)*aa*bb-vt(k)
+        aerrt=t(ii,jj,k)*(1.-aa)*(1.-bb)+t(ii+1,jj,k)*aa*(1.-bb)+
+     1   t(ii,jj+1,k)*bb*(1.-aa)+t(ii+1,jj+1,k)*aa*bb
+        errw(n,2,k)=-r*aerrt/p(k)/g*(om(ii,jj,k)*(1.-aa)*(1.-bb)
+     1   +om(ii+1,jj,k)*aa*(1.-bb)+
+     1   om(ii,jj+1,k)*bb*(1.-aa)+om(ii+1,jj+1,k)*aa*bb)-wt(k)
+        aerrt=p(k)/r*(1./aerrt-1./Tt(k))
+        erru(n,2,k)=aerru
+        errv(n,2,k)=aerrv
+        errt(n,2,k)=aerrt
+       enddo! on k
+      enddo ! on n
+      do k=1,nz
+       cnt=0
+       sumbeu=0
+       sumbev=0
+       sumbet=0
+       sumaeu=0
+       sumaev=0
+       sumaet=0
+       sumbew=0
+       sumaew=0
+ 
+       do n=4,nz
+        cnt=cnt+1.
+        sumbeu=erru(n,1,k)+sumbeu
+        sumbev=errv(n,1,k)+sumbev
+        sumbet=errt(n,1,k)+sumbet
+        sumaeu=erru(n,2,k)+sumaeu
+        sumaev=errv(n,2,k)+sumaev
+        sumaet=errt(n,2,k)+sumaet
+        sumbew=errw(n,1,k)+sumbew
+        sumaew=errw(n,2,k)+sumaew
+ 1000  format(1x,f4.0,f6.0,6F8.2)
+       enddo ! on n
+c     bias estimates
+       erru(1,1,k)=sumbeu/cnt
+       errv(1,1,k)=sumbev/cnt
+       errt(1,1,k)=sumbet/cnt
+       erru(1,2,k)=sumaeu/cnt
+       errv(1,2,k)=sumaev/cnt
+       errt(1,2,k)=sumaet/cnt
+       errw(1,1,k)=sumbew/cnt
+       errw(1,2,k)=sumaew/cnt
+      enddo ! on k
+c now compute variance
+      do k=1,nz
+       sumbeu=0
+       sumbev=0
+       sumbet=0
+       sumbew=0
+       sumaeu=0
+       sumaev=0
+       sumaet=0
+       sumaew=0
+       cnt=0.
+       do n=4,nz
+        cnt=cnt+1.
+        sumbeu    =sumbeu+(erru(n,1,k)-erru(1,1,k))**2 !back error variance
+        sumaeu    =sumaeu+(erru(n,2,k)-erru(1,2,k))**2 !analysis error variance
+        sumbev    =sumbev+(errv(n,1,k)-errv(1,1,k))**2 
+        sumaev    =sumaev+(errv(n,2,k)-errv(1,2,k))**2
+        sumbet    =sumbet+(errt(n,1,k)-errt(1,1,k))**2 
+        sumaet    =sumaet+(errt(n,2,k)-errt(1,2,k))**2
+        sumbew    =sumbew+(errw(n,1,k)-errw(1,1,k))**2
+        sumaew    =sumaew+(errw(n,2,k)-errw(1,2,k))**2
+        erru(3,2,k)=(erru(n,2,k)-erru(1,2,k))*(erru(n,6,k)*ffz(iii,20))
+     1    +erru(3,2,k)
+        errv(3,2,k)=(errv(n,2,k)-errv(1,2,k))*(errv(n,6,k)*ffz(iii,20))
+     1    +errv(3,2,k)
+        errw(3,2,k)=(errw(n,2,k)-errw(1,2,k))*(errw(n,6,k)*ffz(iii,20))
+     1    +errw(3,2,k)
+       enddo! on n
+c   variance estimates
+       erru(2,1,k)=(sumbeu/cnt)
+       errv(2,1,k)=(sumbev/cnt)
+       errt(2,1,k)=(sumbet/cnt)
+       erru(2,2,k)=(sumaeu/cnt)
+       errv(2,2,k)=(sumaev/cnt)
+       errt(2,2,k)=(sumaet/cnt)
+       errw(2,1,k)=(sumbew/cnt)
+       errw(2,2,k)=(sumaew/cnt)
+       erru(3,2,k)=(erru(3,2,k)/cnt)
+       errv(3,2,k)=(errv(3,2,k)/cnt)
+       errw(3,2,k)=(errw(3,2,k)/cnt)
+      enddo ! on k
+      return
+      end 
+
+
+
+      function ffz(ii,n)
+c
+c*********************************************************************
+c
+c     Pulls out a random value from a unit normal distribution with standard 
+c     deviation = 1.  Input is
+c     an integer seed 'ii' and an interation number 'n'. 'n' should
+c     be >20 for best results.
+c     
+c     Original: John McGinley, NOAA/FSL  Spring 1998
+c     Changes:
+c       21 Aug 1998  Peter Stamus, NOAA/FSL
+c          Make code dynamic, housekeeping changes, for use in LAPS.
+c       07 Oct 1998  Peter Stamus, NOAA/FSL
+c          Change 'ran' to 'ran1' function for portability.
+c
+c     Notes:
+c
+c*********************************************************************
+c
+      sum=0.
+      do l=1,n
+         sum=sum+ran1(ii)             
+      enddo !l
+      if(n.ne.1) then
+       ffz=sum-float(n)/2.
+      else
+       ffz=sum
+      endif
+      ii=ii-1 
+      if(ii.ge.0) ii=-ii-1
+c
+      return
+      end
+c
+c
+        function ran1(idum)              
+c
+c*********************************************************************
+c
+c     Function to generated a random number.  Use this instead of a
+c     machine dependent one. idum must be a negative integer
+c     
+c     Original: Peter Stamus, NOAA/FSL  07 Oct 1998
+c     Changes:  John McGinley, NOAA/FSL 20 Apr 00 - changed to ran2
+c
+c     Notes:
+c        From "Numerical Recipes in Fortran", page 272.  There named ran2.
+c
+c*********************************************************************
+c
+        integer idum, ia1,ia2,im1,im2,imm1,iq1,iq2,ir1,ir2, ntab,ndiv
+        real ran1, am, eps, rnmx
+        parameter( ia1= 40014,
+     &             ia2=40692,
+     &             im1= 2147483563,
+     &             im2= 2147483399,
+     &             am= 1. / im1,
+     &             imm1=im1-1,
+     &             iq1= 53668, 
+     &             iq2= 52774, 
+     &             ir1= 12211,
+     &             ir2= 3791,
+     &             ntab = 32,
+     &             ndiv = 1 + imm1/ntab    ,
+     &             eps = 1.2e-7,
+     &             rnmx = 1. - eps)
+c
+        integer idum2,j, k, iv(ntab), iy
+        save iv, iy,idum2
+        data idum2/123456789/,iv/ntab * 0/, iy/0/
+c
+c.....  Start here.
+c
+        if(idum.gt.0) idum=-idum
+        if(idum.le.0 ) then  !initialize
+           idum = max(-idum,1)           !prevent idum=0
+           idum2=idum
+           do j=ntab+8,1,-1              !load the shuffle table
+              k = idum / iq1
+              idum = ia1* (idum - k*iq1) - ir1*k
+              if(idum .lt. 0) idum = idum + im1
+              if(j .le. ntab) iv(j) = idum
+           enddo !j
+           iy = iv(1)
+        endif
+c
+        k = idum / iq1                    !start here if not initializing
+        idum = ia1* (idum - k*iq1) - ir1*k  
+        if(idum .lt. 0) idum = idum + im1
+        k = idum2/ iq2                    !start here if not initializing
+        idum2= ia2* (idum2- k*iq2) - ir2*k  
+        if(idum2.lt. 0) idum2= idum2+ im2
+        j = 1 + iy/ndiv
+        iy = iv(j)-idum2                  !output prev stored value and 
+        iv(j) = idum                      !  refill shuffle table
+        if(iy.lt.1)iy=iy+imm1
+        ran1 = min(am*iy, rnmx)
+c
+        return
+        end
+c
+c
+      subroutine turb(u,v,om,t,phi,p,us,vs,ws,ts,ter,nx,ny,nz)
+c this subroutine estimates turbulent components from the laps 
+c grids.
+c variables: u,v,om,t,phi,sh are the input laps grids 
+c            us,vs,ws are the output turbulent components
+      real u(nx,ny,nz),v(nx,ny,nz),om(nx,ny,nz)
+     1,t(nx,ny,nz),phi(nx,ny,nz),p(nz),ts(nx,ny,nz)
+
+      real us(nx,ny,nz),vs(nx,ny,nz),ws(nx,ny,nz)
+      real ter(nx,ny)
+
+      real, allocatable, dimension(:,:,:) :: tke_3d
+
+      real, allocatable, dimension(:) :: p1d,u1d,v1d,t1d,z1d
+     .,dtf
+
+      allocate (p1d(nz),u1d(nz),v1d(nz),t1d(nz)
+     .,z1d(nz),dtf(nz))
+      allocate (tke_3d(nx,ny,nz))
+
+c prepare input columns for dtf3
+        
+c$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C This is the beginning TKE computation
+c
+c subus called: vertirreg
+c functions used: rf, RfKondo
+C
+      factr = 1.0  ! calibration factor for RUC-20 and RUC-10
+
+      do i=1,nx
+      do j=1,ny
+
+      do k=1,nz
+      p1d(k) = p(k)
+      t1d(k) = t(i,j,k)
+      u1d(k) = u(i,j,k)
+      v1d(k) = v(i,j,k)
+      z1d(k) = phi(i,j,k)
+      zter=ter(i,j)
+      enddo
+c
+c Error: arguments differ from those in subroutine
+      call compute_dtf3(p1d,t1d,u1d,v1d,z1d,zter,dtf,nz)
+C
+C The result of the tke computation goes into array tke_3d
+C from that we assume isotropy and recover the 3 turbulent components
+c in u,v,w
+c
+
+      do l=1,nz
+      tke3 = dtf(l)/factr
+      if(tke3.gt.10.) tke3 = 10.
+      tke_3d(i,j,l) = tke3
+      us(i,j,l)=sqrt(tke3/3.) 
+      vs(i,j,l)=us(i,j,l)
+      ws(i,j,l)=vs(i,j,l)
+      enddo
+
+      enddo
+      enddo
+
+      return
+      end
+
+c
+c________________________________________________________________________
+
+      subroutine compute_dtf3(p,t,u,v,z,zter,tke_KH,nz)
+
+c
+c Adrian Marroquin FSL
+c version modified for ITFA
+c 11/09/98
+c
+c Km parameter calibrated to optimize PODn and
+c PODy, Km = 75.0 m^2/s
+c The following is a table of POD's (PODn = PODy) and
+c thresholds for each one of the months from Nov 97
+c to June 1998.
+c
+c
+c Nov   Dec   Jan   Feb   Mar   Apr   May   Jun
+c
+c  66.   66.   61.   62.   68.   65.   64.   60.  GA (I>1, >20kft) all w
+c  .58   .71   .72   .86   .73   .73   .42   .47  Thresholds
+c  67.   66.   64.   63.   67.   64.   62.   59.  HA (I>1, >w120, >20kft)
+c  .65   .67   .63   .71   .70   .68   .4    .4   Thresholds
+c  63.   82.   72.   68.   76.   70.   60.   68.  GA (I>4, >20kft) all w
+c  .55  1.105  .85   .8    .975  .76   .39   .5   Thresholds
+c  62.   82.   72.   66.   75.   68.   59.   67.  HA (I>4, >w120, >20kft)
+c  .6    1.15  .95   .91   .93   .78   .39   .55  Thresholds
+c
+c In the above table GA means General Aviation,
+c HA heavy aircraft (commercial)
+c I>1 turbulence intensities light or greater,
+c >20kft aircraft flying above 20,000 ft,
+c >w120 aircraft heavier than 120,000 lbs,
+c and I>4 turbulence intensities moderate-to-severe or greater.
+c
+c WARNING: The above table was generated with TKE from DTF3 verified
+c with PIREPs. The model output was from RUC2 (40-km), 40 isentropi
+c levels. PIREPs from turbulence related to convection were not
+c removed. DTF3 formulation is only applicable to turbulence from
+c shear intabilities (clear-air turbulence) specially found in
+c upper fronts.
+c-------------------------------------------------------------------------
+c DTF3 has been tested with 12-15 December 97 case study. In this case
+c convective activity was at a minimum in the first half of December 97.
+c During 12-15 Dec 97 a quasi-steady front moved across the US accompanied
+c with a severe turbulence outbreak. For this case PODy = 93.6% and PODn =
+c 76.1% obtained using thresholds for the month of December (see table
+c above, PODn = PODy = 82% for December). The difference in PODy's is
+c attributed to the inclusion of PIREPs from convection during the second
+c half of December 97.
+c
+c DTF3 works well for moderate-to-severe turbulence or greater
+c that affect heavy (commercial aircraft).
+c
+c-------------------------------------------------------------------------
+c Constants from Stull (1988), page 219
+c
+      parameter(c1=1.44,c2=1.0,c3=1.92,
+     *          c13 = c1/c3, c23 = c2/c3, ce = 0.19)
+      parameter(alinf = 200.,akarm = 0.35,cr = 0.54)
+     *
+c
+c
+      parameter (cepn = 2.5, cepp = 0.76)
+c
+c pass p, t, u, v, and z
+c
+        real        p(nz),                     ! pressure in Pa
+     1              t(nz),
+     1              u(nz),
+     1              v(nz),
+     1              z(nz)
+
+      real, allocatable, dimension(:):: brnt,shr,ri
+     1,epsilon
+
+      real tke_KH(nz)
+      real tke
+c
+      data iepn3/0/
+      data akm/75.0/
+c
+c--------------------------------------------------------------
+c compute ri, brnt, and shr
+c
+      data r/287.04/,rocp/0.286/,g/9.8/
+c
+c Constants from Stull (1988), page 219
+c
+      data prands/2.5/
+c
+c
+      if(.not. allocated(brnt))then
+         allocate (brnt(nz),ri(nz),shr(nz),
+     1            epsilon(nz))
+      endif
+      klev= nz
+      pi1 = (p(1)/100000.)**rocp
+      pi2 = (p(2)/100000.)**rocp
+      th1 = t(1)/pi1
+      th2 = t(2)/pi2
+
+      do k=2,nz-1
+      pi3 = (p(k+1)/100000.)**rocp
+      th3 = t(k+1)/pi3
+c
+c vertical derivatives using pressure
+c
+      brunt = vertirreg(th1,th2,th3,
+     *                 p(k-1),p(k),p(k+1))
+      shru = vertirreg(u(k-1),u(k),u(k+1),
+     *                 p(k-1),p(k),p(k+1))
+
+      shrv = vertirreg(v(k-1),v(k),v(k+1),
+     *                 p(k-1),p(k),p(k+1))
+
+c
+      beta = g*g*p(k)/(r*pi2*th2*th2)
+      brnt(k) = -beta*brunt
+      shr(k) = beta*p(k)*(shru*shru+shrv*shrv)/(r*pi2)
+      th1 = th2
+      th2 = th3
+      pi1 = pi2
+      pi2 = pi3
+      ri(k) = brnt(k)/(shr(k)+1.e-10)
+      enddo
+c
+      brnt(1) = brnt(2)
+      shr(1) = shr(2)
+      ri(1) = ri(2)
+      brnt(nz) = brnt(nz-1)
+      shr(nz) = shr(nz-1)
+
+      ri(nz) = ri(nz-1)
+c
+      do k=1,nz
+      if(ri(k).gt.120.) ri(k) = 120.
+      enddo
+c
+c--------------------------------------------------------------
+c
+c now compute dissipation
+c ztop equivalent to cpbl
+c
+      ztop = zter+3000.
+      zsfc = zter
+c
+      DO K=1,klev
+c
+      zlev = z(k)
+        if(ri(k).gt.0.01) then
+        Rff = RfKondo(ri(k))
+        else
+        Rff = rf(ri(k))
+        endif
+      epsilon(k) = akm*shr(k)*(c13-c23*Rff)
+      if(epsilon(k).lt.0.) epsilon(k) = 0.
+c      tke_KH(k) = epsilon(k)
+      if(iepn3.eq.0) then                 ! if iepn3 = 1, only epn
+      if(brnt(k).le.0.) then
+          tke_KH(k) = 0.
+      else
+         br = sqrt(brnt(k))
+         tke_KH(k) = 0.7*epsilon(k)/(ce*br)
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         if(zsfc.le.zlev.and.zlev.le.ztop) then                     !
+         dz = zlev - zsfc                                           !
+         alb = alinf*akarm*dz/(akarm*dz+alinf)                      !
+         als = cr*sqrt(tke_KH(k))/br                                !
+         all = amin1(alb,als)                                       !
+         tke_KH(k) = (all*epsilon(k))**.666666                      !
+         endif      
+
+c!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      endif
+      endif
+c
+      ENDDO    ! end of K-loop (klev)
+c
+      return
+      end
+c---------------------------------------------------------------------
+      function RfKondo(ri)
+c
+      parameter(c0=6.873,c1=7.)
+c
+c Rfc (critical flux Ri) = 0.143
+c
+      if(ri.gt.1.) then
+      RfKondo = 1./c1
+      else
+      if(0.01.lt.ri.and.ri.le.1.) then
+      d1 = 1.+c0*ri
+      ahm = 1./(c0*ri+1./d1)
+      RfKondo = ri*ahm
+      endif
+      endif
+c
+c for Ri < 0.01 use Rf (Yamada form)
+c
+      return
+      end
+c-------------------------------------------------------------------------
+      subroutine maxminav2d(aux,mx,my,amin,amax)
+c
+      dimension aux(mx,my)
+c
+      anxy = float(mx*my)
+c
+      amax = -1.e10
+      amin = 1.e10
+c
+      sum = 0.
+
+      do i=1,mx
+      do j=1,my
+      sum = sum+ aux(i,j)
+      if(aux(i,j).ge.amax) amax = aux(i,j)
+      if(aux(i,j).le.amin) amin = aux(i,j)
+      enddo
+      enddo
+c
+      avfld = sum/anxy
+      print*,'  max=',amax,'  min=',amin,' average=',avfld
+c
+      return
+      end
+c________________________________________________________________________-
+      function vertirreg(f1,f2,f3,x1,x2,x3)
+      dx1 = x2-x1
+      dx2 = x3-x2
+      rat1 = dx1/dx2
+      rat2 = 1./rat1
+      sdx = 1./(dx1+dx2)
+      vertirreg = ((f3-f2)*rat1+(f2-f1)*rat2)*sdx
+      return
+      end
+C_____________________________________________________________
+      function prand(ri)
+      data b/3.0/, a/6.873/
+c
+      if(ri.gt.1.) then
+      prand = 7.*ri/b
+      else
+      if(0.01.lt.ri.and.ri.lt.1.) then
+      prand = (a*ri*(1.+a*ri)+1.)/(b*(1.+a*ri))
+      else
+      prand = 1./b
+      endif
+      endif
+c
+      return
+      end
+c____________________________________________________________
+      function rifunc(ri2,ri4,ric)
+c
+      fact = sqrt(4.+ri2*(1+4.*ric)/ric)
+      anum = -(2.+ri2/ric)+ri4*fact/sqrt(ric)
+      rifunc = anum/(2.*ri2)
+c
+      return
+      end
+c--------------------------------------------------------------------------
+      function rf(ri)
+c
+      data c1/.056/,c2/.3/,c3/.3333/
+      data a1/.78/,a2/.79/,b1/15./,b2/8./
+c
+      e1 = b1-6.*a1
+      e2 = b1 + 12.*a1*(1.-c2)+3.*b2*(1.-c3)
+      e3 = b1*(1.-3.*c1)-6.*a1
+      e4 = b1*(1.-3.*c1)+12.*a1*(1.-c2)+9.*a2*(1.-c2)
+      e5 = b1+3.*a1*(1.-c2)+3.*b2*(1.-c3)
+c
+      f1 = 0.5*a2*e5/(a1*e4)
+      f2 = a1*e3/(a2*e5)
+      f3 = 2.*a1*(e3*e5-2.*e1*e4)/(a2*e5*e5)
+      f4 = a1*e3/(a2*e5)
+      f42 = f4*f4
+c
+      rf = f1*(ri+f2-sqrt(ri*ri+f3*ri+f42))
+c
+      return
+      end
+
+
+      Subroutine write_errors(p,erru,errv,errw,errt
+     1,nx,ny,nz,rri,rrj,zter)
+c this routine writes an ascii file to the output log summarizing errors
+      real p(nz)
+      real erru(nx,ny,nz),errv(nx,ny,nz),errt(nx,ny,nz)
+      real errw(nx,ny,nz)
+      real rri(nz),rrj(nz)
+       r=287.04
+       sum=0
+       sum1=0
+       sum2=0
+      print*, '************AIRDROP OUTPUT**************   '
+      print*, 'AIRDROP PROFILES FROM LAPS ANALYSIS   '
+      print*, '  P       HT      U        V        W        T       Den'   
+      do k=1,nz                                               
+       ii=rri(k)
+       jj=rrj(k)
+       if(zter.lt.errt(1,5,k)) then
+        write(6,1005) p(k)/100., errt(1,5,k),erru(1,5,k),
+     1  errv(1,5,k),errw(1,5,k),errt(1,6,k),errt(1,7,k)
+       endif
+      enddo
+      print*, '   '
+      print*, 'BIAS ERROR ESTIMATES'
+      write(6,1002)
+      write(6,1003)
+      write(6,1004)
+      do k=1,nz
+       ii=rri(k)
+       jj=rrj(k)
+       if(zter.lt.errt(1,5,k)) then
+        write(6,1006) p(k)/100., errt(1,5,k),erru(1,1,k),
+     1  errv(1,1,k),errw(1,1,k),
+     1  erru(1,2,k),errv(1,2,k),errw(1,2,k),sum,sum,sum,
+     1  errt(1,1,k),errt(1,2,k)
+       endif
+      enddo
+      print*, '   '
+      print*, 'VARIANCE ESTIMATES'
+      write(6,1002)
+      write(6,1003)
+      write(6,1004)
+      do k=1,nz
+       ii=rri(k)
+       jj=rrj(k)
+       if(zter.lt.errt(1,5,k)) then
+        write(6,1000) p(k)/100., errt(1,5,k),erru(2,1,k),
+     1  errv(2,1,k),errw(2,1,k),
+     1  erru(2,2,k),errv(2,2,k),errw(2,2,k),erru(1,6,k)**2,
+     1  errv(1,6,k)**2,
+     1  errw(1,6,k)**2,errt(2,1,k),errt(2,2,k)
+       endif
+      enddo
+      print*, '   '
+      print*, 'TOTAL VARIANCE ESTIMATES'
+      print*, '  P     HT     Analysis + Turbulence '
+      print*, '                     (m/sec)  ' 
+      print*, '                  U        V         W  ' 
+      do k=1,nz
+       ii=rri(k)
+       jj=rrj(k)
+c combined variance formula - err(3,2,k) contains covariance
+       sum=erru(2,2,k)+erru(1,6,k)**2+2.*erru(3,2,k) 
+       sum1=errv(2,2,k)+errv(1,6,k)**2+2.*errv(3,2,k)
+       sum2=errw(2,2,k)+errw(1,6,k)**2+2.*errw(3,2,k)
+       if(zter.lt.errt(1,5,k)) then
+        write(6,1001) p(k)/100., errt(1,5,k),sum,sum1,sum2
+       endif
+      enddo
+ 1000 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.6)
+ 1006 format(1x,f5.0,f8.0,2(f5.1,f5.1,f5.3),3f5.2,2f7.4)
+ 1002 format(18x,'Background',5x,'Analysis',7x,'Turbulence',4x,
+     1'Density')
+ 1003 format(20x,3('(m/sec)',7x),'(kg/m3)')
+ 1004 format(3x,'P',7x,'HT  ',3('  U    V    W  '),' Bgnd   Anal')
+ 1001 format(1x,f5.0,f8.0,3f9.3)
+ 1005 format(1x,f5.0,f8.0,5f9.3)
       return
       end

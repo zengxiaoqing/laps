@@ -379,8 +379,9 @@ c     terscl=sqrt(sumt/(nx*ny))
       return
       end
 
-      subroutine advance_grids(i4time_sys,nx,ny,nz,ub,vb,tb,phib
-     .,shb,omb,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,ps,istatus)
+      subroutine advance_grids(i4time_sys_sonde,i4time_sys_drop
+     .,nx,ny,nz,ub_a,vb_a,tb_a,phib_a,shb_a,omb_a,psb_a
+     .,lapsphi,lapstemp,lapsu,lapsv,lapssh,lapsomo,ps,istatus)
 
       implicit none
 
@@ -388,29 +389,33 @@ c     terscl=sqrt(sumt/(nx*ny))
 
       integer nx,ny,nz
 
-      real    phib(nx,ny,nz)
-     .       ,tb(nx,ny,nz)
-     .       ,ub(nx,ny,nz)
-     .       ,vb(nx,ny,nz)
-     .       ,shb(nx,ny,nz)
-     .       ,omb(nx,ny,nz)
+      real    phib_a(nx,ny,nz)
+     .       ,tb_a(nx,ny,nz)
+     .       ,ub_a(nx,ny,nz)
+     .       ,vb_a(nx,ny,nz)
+     .       ,shb_a(nx,ny,nz)
+     .       ,omb_a(nx,ny,nz)
+     .       ,psb_a(nx,ny)
 
       real    lapsu(nx,ny,nz)
      .       ,lapsv(nx,ny,nz)
      .       ,lapssh(nx,ny,nz)
      .       ,lapstemp(nx,ny,nz)
      .       ,lapsphi(nx,ny,nz)
-     .       ,omo(nx,ny,nz)
+     .       ,lapsomo(nx,ny,nz)
      .       ,ps(nx,ny)
 
-      character*256 bgpaths(maxbgmodels)
-      character*132 cmodels(maxbgmodels)
+      real, allocatable, dimension(:,:,:) ::
+     .      phib, tb, ub, vb, shb, omb
+      real, allocatable :: psb(:,:)
+ 
+
       integer   bgmodels(maxbgmodels)
       integer   itime_inc
 
-      character(len=256), allocatable :: names(:)
-      character(len=256), allocatable :: reject_names(:)
-      character(len=256), allocatable :: bg_names(:)
+      character(len=256), allocatable, dimension(:) ::
+     .        names,reject_names,bg_names,bgpaths
+      character(len=132), allocatable, dimension(:) :: cmodels
 
       integer   max_files
       parameter (max_files=200)
@@ -420,18 +425,49 @@ c     terscl=sqrt(sumt/(nx*ny))
       integer forecast_length
       integer max_forecast_delta
       integer rejected_cnt
+      integer laps_cycle_time
       logical use_analysis
 
-      integer i4time_sys
+      integer i4time_sys_sonde
+     .       ,i4time_sys_drop
      .       ,lenm
      .       ,istatus
+     .       ,lga_status
 
-      print*,'Test subroutine advance_grid: doesnt do much yet.'
+      print*,'************************'
+      print*,'Subroutine advance_grids'
+      print*,'************************'
 
-c     1. use readbgdata with input (advanced) i4time_sys and
-c        path to do bgdata to read LAPS_FUA. Because this routine
-c        expects a full path/filename, we must determine this apriori
-c        which is a lga/get_acceptable_files function.
+c
+c                dropsonde          payload drop
+c                  (ta)                (td)
+c                    ^
+c                    !                   !
+c            bkgd    !   bkgd    bkgd    !   bkgd
+c              1     !     2       3     !     4
+c        - - - - - - - - - - - - - - - - - - - - - 
+c              |     !     |       |frac1!frac2|
+c                    !                   !
+c                    ^                   !
+c                 analysis            airdrop
+c                   (A)                 (D)
+c                 input:lga,anal
+c 
+c    background at D (Note: this happens automatically in lga_driver):
+c       bkgd_lga-D = (frac2*bkgd4 + frac1*bkgd3)
+c
+c    analysis at D:
+c       analysis-D = analysis-A + (bkgd_lga-D - input_lga-A)
+c
+c    return bkgd_lga-D
+
+      call get_laps_cycle_time(laps_cycle_time,istatus)
+      if(istatus.ne.1)then
+         print*,'error returned: no cycle time. return'
+         return
+      endif
+
+      allocate (cmodels(maxbgmodels),bgpaths(maxbgmodels))
 
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
@@ -439,23 +475,88 @@ c        which is a lga/get_acceptable_files function.
 
       call s_len(cmodels(1),lenm)
 
-      if(cmodels(1).ne.'LAPS_FUA')then
+      if(cmodels(1)(1:lenm).ne.'LAPS_FUA'.and.
+     .   cmodels(1)(1:lenm).ne.'MODEL_FUA')then
          print*,' Error: analysis and background grids are'
      .,' advanced in time only when background model is LAPS_FUA'
-     .,' as specified in background.nl'
+     .,' or MODEL_FUA as specified in background.nl'
             print*,' Current background: ',cmodels(1)(1:lenm)
+         istatus = 0
          return
       endif
 
       allocate (names(max_files),reject_names(max_files)
      .         ,bg_names(max_files))
 
-      call get_acceptable_files(i4time_sys,bgpaths(1),bgmodels(1)
+      print*,'Calling get_acceptable_files'
+
+      call get_acceptable_files(i4time_sys_drop,bgpaths(1),bgmodels(1)
      +        ,names,max_files,oldest_forecast,max_forecast_delta
      +        ,use_analysis,bg_files,accepted_files,forecast_length
      +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
 
-      deallocate (names,reject_names,bg_names)
+      print*,'Returned from get_acceptable_files'
 
+      print*,'Calling lga_driver!'
+      call lga_driver(nx,ny,nz,laps_cycle_time
+     .         ,bgmodels(1),bgpaths(1),cmodels(1),rejected_cnt
+     .         ,reject_names,names,max_files,accepted_files
+     .         ,i4time_sys_drop, lga_status)
+
+      if(lga_status.ne.1)then
+         print*,'error returned from lga_driver'
+         print*,'terminating in advance_grids'
+         istatus = 0
+         return
+      endif
+
+      deallocate (names,reject_names,bg_names,cmodels,bgpaths)
+c
+c now read the lga/lgb just made
+c
+      allocate (ub(nx,ny,nz)
+     .         ,vb(nx,ny,nz)
+     .         ,tb(nx,ny,nz)
+     .         ,phib(nx,ny,nz)
+     .         ,shb(nx,ny,nz)
+     .         ,omb(nx,ny,nz)
+     .         ,psb(nx,ny))
+
+      call get_modelfg_3d(i4time_sys_drop,'U3 ',nx,ny,nz,ub,istatus)
+      call get_modelfg_3d(i4time_sys_drop,'V3 ',nx,ny,nz,vb,istatus)
+      call get_modelfg_3d(i4time_sys_drop,'T3 ',nx,ny,nz,tb,istatus)
+      call get_modelfg_3d(i4time_sys_drop,'HT ',nx,ny,nz,phib,istatus)
+      call get_modelfg_3d(i4time_sys_drop,'SH ',nx,ny,nz,shb,istatus)
+      call get_modelfg_3d(i4time_sys_drop,'OM ',nx,ny,nz,omb,istatus)
+      if(istatus.ne.1)then
+         print*,'Error returned: get_modelfg_3d'
+      endif
+      call get_modelfg_2d(i4time_sys_drop,'PSF',nx,ny,psb,istatus)
+      if(istatus.ne.1)then
+         print*,'Error returned: get_modelfg_2d'
+      endif
+c
+c use this background with the input background to advance the analysis
+c to time i4time_sys_drop.
+c
+      lapsu=lapsu+(ub-ub_a)
+      lapsv=lapsv+(vb-vb_a)
+      lapstemp=lapstemp+(tb-tb_a)
+      lapssh=lapssh+(shb-shb_a)
+      lapsphi=lapsphi+(phib-phib_a)
+      lapsomo=lapsomo+(omb-omb_a)
+      ps=ps+(psb-psb_a)
+
+c return backgrounds at i4time_sys_drop.
+      ub_a=ub
+      vb_a=vb
+      tb_a=tb
+      shb_a=shb
+      phib_a=phib
+      omb_a=omb
+      psb_a=psb
+
+      deallocate (ub,vb,tb,phib,shb,omb,psb)
+      
       return
       end
