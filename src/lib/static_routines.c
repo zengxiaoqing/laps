@@ -589,7 +589,7 @@ fint4 *status;
         nstrncpy(cdlfile,f_cdl_dir,*cdl_len);
         ldf = malloc(((*ldf_len) + 1) * sizeof(char));
         nstrncpy(ldf,f_ldf,*ldf_len);
-        strcat(cdlfile,ldf,*ldf_len);
+        strcat(cdlfile,ldf);
         free(ldf);
         strcat(cdlfile,".cdl");
         *cdl_len = strlen(cdlfile);
