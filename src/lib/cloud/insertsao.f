@@ -53,7 +53,7 @@ cdis
         parameter (IY_LOW  = 1    - I_PERIMETER)
         parameter (IY_HIGH = NY_L + I_PERIMETER)
 
-        character*50 c50_filename,directory
+        character*150 c150_filename,directory
         character*31 ext
         character*13 filename13
 
@@ -86,7 +86,7 @@ cdis
 c
         Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
 c
-        Character   infile*70,atime*24 
+        Character   infile*170,atime*24 
      1             ,obstype(maxstns)*8
      1             ,wx(maxstns)*8
         character   store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
@@ -131,7 +131,7 @@ c
 !       Construct file name for LSO file
         ext = lso_ext
         call get_directory(ext,directory,len_dir) ! Returns directory
-        c50_filename = directory(1:len_dir)
+        c150_filename = directory(1:len_dir)
      1                            //filename13(i4time_database,lso_ext)
 
         n_wait_saos = 0   ! (0,2) THIS IS INPUTTED, 10 min per potential wait
@@ -141,7 +141,7 @@ c
         call cv_i4tim_asc_lp(i4time_database,atime,istatus)
 
 !       Access SAO data from LSO files
-        infile = c50_filename
+        infile = c150_filename
         call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
      1   n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_pos_g,
      1   n_obs_b,n_obs_pos_b,c_stations,obstype,lat_sta_ret,lon_sta_ret,       
