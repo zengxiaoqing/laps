@@ -3,9 +3,11 @@
      1                                    ,NX_L,NY_L
      1                                    ,c8_project
      1                                    ,ext
+     1                                    ,l_use_tamdar
      1                                    ,filename,istatus)
 
       character*(*) filename,ext
+      logical l_use_tamdar
 
 !.............................................................................
 
@@ -37,7 +39,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call acars_sub(nf_fid, recNum, c8_project, ext,
+      call acars_sub(nf_fid, recNum, c8_project, ext, l_use_tamdar,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
       return
@@ -45,7 +47,8 @@ C
       end
 C
 C
-      subroutine acars_sub(nf_fid, recNum, c8_project, ext,
+      subroutine acars_sub(nf_fid, recNum, c8_project, ext, 
+     1                     l_use_tamdar,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
 !.............................................................................
@@ -87,8 +90,6 @@ C
       logical l_use_tamdar, l_debug
 
 !............................................................................
-
-      l_use_tamdar = .false. ! applies to non-WFO, non_RSA runs
 
       if (c8_project(1:3) .eq. 'WFO' .or. 
      1    c8_project(1:3) .eq. 'RSA'      ) then     
