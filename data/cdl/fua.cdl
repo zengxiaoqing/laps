@@ -1,4 +1,4 @@
-netcdf ram {
+netcdf fua {
 
     dimensions:
         record = unlimited,

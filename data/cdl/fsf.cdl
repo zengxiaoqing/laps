@@ -1,4 +1,4 @@
-netcdf rsf {
+netcdf fsf {
 
     dimensions:
         record = unlimited,
