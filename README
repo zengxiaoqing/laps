@@ -311,21 +311,36 @@
      variables. These can optionally be set to make it easier to follow the 
      instructions below more literally. The installation scripts can be run
      without setting these variables if you'd like to enter the associated
-     paths directly.
+     paths directly as command line input.
  
-     $LAPS_SRC_ROOT - The full path of the LAPS tar file / source code.
+     $LAPS_SRC_ROOT - The full path that was created when the LAPS tar file 
+     was untarred. This contains the source code and other supporting software.
 
      $LAPSINSTALLROOT - The full path of installed binaries and scripts 
-     (bin and etc).
+     (bin and etc). This is where you build the executables, configure the 
+     scripts (converted the *.pl.in to *.pl), and configure 
+     $LAPS_SRC_ROOT/src/include/makefile.inc. Note: $LAPS_SRC_ROOT and 
+     $LAPSINSTALLROOT are in many cases the same but don't have to be. You do 
+     not need $LAPS_SRC_ROOT to run.
 
-     $LAPS_DATA_ROOT - The full path of output data and namelists. This 
+     $LAPS_DATA_ROOT - The full path to the output data and namelists. This 
      includes lapsprd subdirectories containing both LAPS output grids and 
-     intermediate data files. Input data in its "raw" form is stored outside 
-     the $LAPS_DATA_ROOT tree.
+     intermediate data files. $LAPS_DATA_ROOT contains all the files configured
+     to run an analysis domain localized to a location on earth. The 
+     $LAPSINSTALLROOT tree can drive several $LAPS_DATA_ROOTs. Input data in 
+     its "raw" form is stored outside the $LAPS_DATA_ROOT tree.
+    
+     Note: $LAPS_DATA_ROOT is usually (and recommended to be) different than 
+     $LAPS_SRC_ROOT/data and $LAPSINSTALLROOT/data but they don't need to be.
+     Also, $LAPS_SRC_ROOT/data/cdl and $LAPS_SRC_ROOT/data/static are 
+     the repository versions and should be kept pristine.
+    
+     Note: the namelists you get from the tar are configured for our Colorado 
+     domain.  More on localizing a domain for your own area later on.
 
-     All three of these environment variables can either be part of one
-     directory tree or split out into separate trees as discussed at various
-     times below.
+     To summarize, these three environment variables can either be part of one
+     directory tree or split out into separate trees as further discussed at 
+     various times below.
 
      <pre>
      /home_disk/
