@@ -145,6 +145,8 @@ cdis
      1                           (-1./exponent_distance_wt) )
      1                                     * (dist_norm/1000.)
 
+! LSW comment added for AWIPS logging 7/1/04
+      write(6,*)' Optimizing Model background weight ...'
       write(6,*)' Model background weight  = ',weight_modelfg
       write(6,*)' Approx radius of influence (km) = '
      1         ,radius_of_influence_km
