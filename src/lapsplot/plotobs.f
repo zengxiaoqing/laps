@@ -285,7 +285,7 @@ cdis
 
                 spd_kt = SPEED_ms  / mspkt
 
-d               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
+c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 112             format(1x,f6.1,i4,2f7.0,4x,2f7.0,i4)
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size

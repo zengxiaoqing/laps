@@ -136,9 +136,13 @@ cdis
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
 
-        du=(imax-imin)/200. * relsize
+        if(imax .gt. 75 .or. jmax .gt. 75)then
+            isize = 0
+        else
+            isize = 1
+        endif
 
-        call pwrity (ri, rj, c_type, nc, 1, 0, 0)
+        call pwrity (ri, rj, c_type, nc, isize, 0, 0)
 
     1   continue
         return

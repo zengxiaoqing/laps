@@ -29,16 +29,25 @@ cdis
 cdis
 cdis
 cdis
-        subroutine plot_grid_2d(interval,size,imax,jmax)
+        subroutine plot_grid_2d(interval,size,imax,jmax,lat,lon)
+
+        real*4 lat(imax,jmax),lon(imax,jmax)
+
+        common /supmp6/ umin,umax,vmin,vmax
 
         size = 61. / 200.
+
+        write(6,*)' plot_grid_2d: UMIN/UMAX/VMIN/VMAX'
+     1                           ,umin,umax,vmin,vmax
 
         do j = 1,jmax
         do i = 1,imax
 
-            ri = i
-            rj = j
+!           ri = i
+!           rj = j
 
+            call latlon_to_uv(lat(i,j),lon(i,j),ri,rj,istatus)
+           
             call plot_gridpt(ri,rj,imax,jmax,size)
 
         enddo ! i
@@ -49,16 +58,27 @@ cdis
 
       subroutine plot_gridpt(ri,rj,imax,jmax,relsize)
 
+!     1997 Steve Albers
+!     Note that the umin/umax come from the NCAR graphics subroutines while
+!     the u/v values for the individual grid points come from the laps library.
+!     This plot is therefore a good test of the consistency of these two
+!     methods of calculating u and v.
+
       include 'lapsparms.cmn'
 
-      call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
+      common /supmp6/ umin,umax,vmin,vmax
+
+!     call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 !     write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
  1234 format(1x,4i5,4e12.4,i4)
 
 !     This tries to keep the same size of barbs relative to the grid points
 
       call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-      call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+!     call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+      call set(x_1,x_2,y_1,y_2,umin,umax,vmin,vmax)
+
+      relsize = 0.3 * (umax - umin) / float(imax)
 
       du = relsize
 

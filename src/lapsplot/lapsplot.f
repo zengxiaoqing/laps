@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
         subroutine lapsplot(field,ni,nj,clow,chigh,cint,lat,lon
-     1                  ,c_metacode,c_file,c_domain,jdot)
+     1                  ,c_metacode,c_file,c_domain,jdot_in)
 
 !       implicit none
 
@@ -84,7 +84,6 @@ cdis
         real*4 cint,cbase,cvalue,clow,chigh
 
         integer*4
-     1  jproj,
      1  jlts,
      1  jnj,
      1  iusout,
@@ -93,7 +92,6 @@ cdis
 
         real*4
      1  tx,ty,
-     1  polat,
      1  polon,
      1  rot,
      1  plm1(2),plm2(2),plm3(2),plm4(2)
@@ -115,16 +113,7 @@ cdis
 
 c           set up supmap for plot
 
-            jproj=1
-            polat=90
-
-            call get_standard_longitude(polon,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Bad istatus in lapsplot.for'
-                stop
-            endif
-
-            call lapsplot_setup(ni,nj,lat,lon,jdot)
+            call lapsplot_setup(ni,nj,lat,lon,jdot_in)
 
             return
 
@@ -170,17 +159,14 @@ c           set up supmap for plot
         end
 
 
-        subroutine lapsplot_setup(ni,nj,lat,lon,jdot)
+        subroutine lapsplot_setup(ni,nj,lat,lon,jdot_in)
 
 !       implicit none
 
-        include 'lapsparms.cmn'
+!       include 'lapsparms.cmn'
         common /supmp1/ dummy,part
         common /supmp6/ umin,umax,vmin,vmax
-!       common /mapcol/ mpcol1,mpcol2,mpcol3,mpcol4
         real*4 dummy(8),part
-!       common /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
-!       COMMON/LABS/IA(2),NC,NREP,NCRT,ILAB,NULBLL,SIZEL,SIZEM,SIZEP
         common /ERROR/ IFRAME, IERRR
 
         integer*4       idummy(6),ioffm,istatus
@@ -221,7 +207,6 @@ c           set up supmap for plot
         real*4 cint,cbase,cvalue,clow,chigh
 
         integer*4
-     1  jproj,
      1  jlts,
      1  jnj,
      1  iusout,
@@ -230,12 +215,12 @@ c           set up supmap for plot
 
         real*4
      1  tx,ty,
-     1  polat,
      1  polon,
      1  rot,
      1  plm1(2),plm2(2),plm3(2),plm4(2)
 
         character*2 c_metacode
+        character*6 c6_maproj
 
         write(6,*)' lapsplot_setup: start'
 
@@ -246,16 +231,26 @@ c           set up supmap for plot
 
 c       set up supmap for plot
 
-        jproj=1
-        polat=90
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling laps routine'
+            stop 
+        endif
+        write(6,*)' c6_maproj = ',c6_maproj
 
-!       call get_standard_longitude(standard_longitude,istatus)
-!       if(istatus .ne. 1)then
-!           write(6,*)' Bad istatus in lapsplot.for'
-!           stop
-!       endif
+        call get_standard_longitude(std_lon,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Bad istatus in lapsplot.for'
+            stop
+        endif
+        write(6,*)' standard_lon = ',std_lon
 
-        polon = standard_longitude
+        call get_standard_latitudes(std_lat1,std_lat2,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling laps routine'
+            stop 
+        endif
+        write(6,*)' standard_lats = ',std_lat1,std_lat2
 
         rot=0
         jlts=-3
@@ -272,8 +267,6 @@ c       set up supmap for plot
 
 c       set up supmap for plot
 
-        jproj=1
-        polat=90
         rot=0
         jlts=-3
         jnj=1000
@@ -281,10 +274,10 @@ c       set up supmap for plot
 
         iusout = 3
 
-        PLM1(1)=lat(ni,1)
-        PLM1(2)=lon(ni,1)
-        PLM2(1)=lat(1,nj)
-        PLM2(2)=lon(1,nj)
+        PLM1(1)=lat(1,nj)
+        PLM1(2)=lon(1,nj)
+        PLM2(1)=lat(ni,1)
+        PLM2(2)=lon(ni,1)
         PLM3(1)=lat(1,1)
         PLM3(2)=lon(1,1)
         PLM4(1)=lat(ni,nj)
@@ -295,32 +288,67 @@ c       set up supmap for plot
         IFRAME=IFRAME + 1
 
         write(6,*)' lapsplot_setup: IFRAME = ',IFRAME,' JDOT = '
-     1                                   ,jdot,' ',c6_maproj
+     1                                   ,jdot_in,' ',c6_maproj
 
 !       call MAPINT
 
 !       call GSCR(1,0,0.9,1.0,0.9)
 !       call GSCR(1,1,0.,0.,0.)
 
-!       Set Up Colors
-
-        call setusv_dum(2HIN,32)
-
         call MAPSTC('OU','US')
 
         if(c6_maproj .eq. 'plrstr')then
-            write(6,*)' polar stereo projection:',90.0,polon
-            call maproj('ST',90.0,polon,0.0)
-            call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
+            polat = std_lat2
+            polon = std_lon
+            call maproj('ST',polat,polon,0.0)
+            jproj = 1
+
+        elseif(c6_maproj .eq. 'lambrt')then
+            call maproj('LC',std_lat1,polon,std_lat2)   
+            jproj = 3
+            polat = std_lat2
+            polon = std_lon
+
+        elseif(c6_maproj .eq. 'merctr')then
+            call maproj('ME',90.,0.0,0.0)
+            jproj = 9
+            polat = std_lat2
+            polon = std_lon
+
         else
-            write(6,*)' lambert projection:',standard_latitude,polon       
-            call maproj('LC',standard_latitude,polon,standard_latitude)   
-            call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
+            write(6,*)' lapsplot_setup: Error, maproj = ',c6_maproj
+
         endif
+
+
+        map_mode = 2
+
+!       Set up the colors, draw the county map
+        if(map_mode .eq. 1)then
+            icol_sta = 32
+            icol_cou = 32
+            jdot = jdot_in
+        elseif(map_mode .eq. 2)then
+            icol_sta = 7
+            icol_cou = 29
+            jdot = 0
+        endif
+
+        call draw_county_map(PLM3,PLM4,jproj,polat,polon,jdot
+     1                                             ,icol_sta,icol_cou)
+
+!       Set up colors, draw the state map?
+ 
+!       if(map_mode .eq. 1)then
+!           call setusv_dum(2HIN,32)
+!       elseif(map_mode .eq. 2)then
+!           call setusv_dum(2HIN,7)
+!       endif
+
+        call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
 
         call MAPINT
         if(IFRAME .eq. 1)call MAPLOT
-        call draw_county_map(PLM3,PLM4,polon,jdot)
 
         IF(NERRO(IERR) .ne. 0)THEN
             call EPRIN

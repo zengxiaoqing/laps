@@ -1174,9 +1174,9 @@ c read in laps lat/lon and topo
                     i_eighths = 0
                 endif
 
-d               if(clouds_vert(i,k) .gt. 0.01)
-d       1       write(6,1100)i,k,nint(cld_hts(k)),clouds_vert(i,k)
-d       1                                               ,i_eighths
+c               if(clouds_vert(i,k) .gt. 0.01)
+c       1       write(6,1100)i,k,nint(cld_hts(k)),clouds_vert(i,k)
+c       1                                               ,i_eighths
 1100            format(2i3,i6,f6.2,i3)
 
                 if(i_eighths .ne. i_eighths_ref)then
@@ -1189,7 +1189,7 @@ d       1                                               ,i_eighths
                   phigh = (cld_pres(k) + cld_pres(k-1))/2.
                   plow  = (cld_pres(k_ref) + cld_pres(k_ref-1))/2.
 
-d                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
+c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 1101              format(1x,i2,2i6)
 
                   if(i_eighths_ref .ge. 1)then
@@ -2849,7 +2849,7 @@ c
         subroutine closest(r1,r2,rd1,rd2,tclo,rmin)
         implicit real*4 (a-z)
 
-d       write(6,*)
+c       write(6,*)
 
         rnum =  -(      R1 * RD1
      1  +       R2 * RD2)
@@ -2861,9 +2861,9 @@ d       write(6,*)
         rdot = sqrt(RD1**2 + RD2**2)
         rnum = (R1*RD2) - (R2*RD1)
         rmin = rnum/rdot
-d       write(6,*)' rnum,rdot = ',rnum,rdot
+c       write(6,*)' rnum,rdot = ',rnum,rdot
 
-d       write(6,1)rmin,R1,R2,RD1,RD2,tclo
+c       write(6,1)rmin,R1,R2,RD1,RD2,tclo
 1       format(f12.10,5f12.8)
         return
         end

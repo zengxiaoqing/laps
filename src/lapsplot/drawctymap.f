@@ -29,7 +29,8 @@ cdis
 cdis
 cdis
 cdis
-      subroutine draw_county_map(sw,ne,polon,jdot)
+      subroutine draw_county_map(sw,ne,jproj,polat,polon,jdot
+     1                                             ,icol_sta,icol_cou)
 c
 c
       real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
@@ -51,6 +52,7 @@ c
       jjlts=-2
       jgrid=0
 
+
 !     Plot Counties
       jus=-4
 
@@ -60,6 +62,7 @@ c
           call gsln(1) ! Solid
       endif
 
+      call setusv_dum(2HIN,icol_cou)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
       call sflush
@@ -67,12 +70,14 @@ c
 !     Plot States From Counties
       jus=-8
       call gsln(1)
+      call setusv_dum(2HIN,icol_sta)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
 
 !     Plot Continents
       jus=-1
       call gsln(1)
+      call setusv_dum(2HIN,icol_sta)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
 

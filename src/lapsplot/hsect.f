@@ -251,22 +251,10 @@ cdis
         data mode_lwc/2/
 
         i_overlay = 0
-        jdot = 1   ! Dotted Boundaries
+        jdot = 1   ! 1 = Dotted County Boundaries, 0 = Solid County Boundaries
         part = 0.9 ! For plotting routines
 
         ioffm = 1 ! Don't plot label stuff in conrec
-
-c read in laps lat/lon and topo
-c       call get_laps_domain_95(NX_L,NY_L,'nest7grid'
-c    1                         ,lat,lon,topo,rlaps_land_frac
-c    1                         ,rspacing_dum,istatus)
-
-!       call get_laps_config('nest7grid',istatus)
-!       if(istatus .ne. 1)then
-!           write(6,*)' Error in get_laps_config'
-!           return
-!       endif
-
 
         grid_fnam_common = 'nest7grid'  ! Used in get_directory to modify
                                       ! extension based on the grid domain
@@ -538,7 +526,7 @@ c    1                         ,rspacing_dum,istatus)
      19_tim_3dw
      1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
      1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
-     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w')then ! Display W fields
 !               if(lapsplot_pregen .and. k_level .eq. 7)then
@@ -2135,7 +2123,7 @@ c    1                         ,rspacing_dum,istatus)
                 call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
      1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
             else ! OLD ARCHAIC CODE
 
@@ -2213,7 +2201,7 @@ c    1                         ,rspacing_dum,istatus)
                 call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
      1     ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
      1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 elseif(k_level .eq. -1)then ! Find lowest cloud in column
                     do j = 1,NY_L
@@ -2229,7 +2217,7 @@ c    1                         ,rspacing_dum,istatus)
                     call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
      1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 elseif(k_level .eq. -2)then ! Find highest cloud in column
                     do j = 1,NY_L
@@ -2245,7 +2233,7 @@ c    1                         ,rspacing_dum,istatus)
                     call plot_cldpcp_type(b_array
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
      1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 endif ! k_level
 
@@ -2308,13 +2296,13 @@ c    1                         ,rspacing_dum,istatus)
                     call plot_cldpcp_type(pcp_type_2d
      1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
      1         ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 else
                     call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
      1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
      1         ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 endif
 
@@ -2381,7 +2369,7 @@ c    1                         ,rspacing_dum,istatus)
                 call plot_cldpcp_type(pcp_type_2d
      1     ,asc9_tim,c33_label,c_type,k,i_overlay,c_display
      1     ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
             endif ! k_level
 
@@ -2937,7 +2925,7 @@ c    1                         ,rspacing_dum,istatus)
      1m_t
      1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
      1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
-     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
         elseif(c_type .eq. 'p')then ! 1500m Pressure (or other hight level)
             var_2d = 'P'
@@ -3712,6 +3700,13 @@ c    1                         ,rspacing_dum,istatus)
             call setusv_dum(2hIN,34)
 
             iflag = 0
+
+            call get_maxstns(maxstns,istatus)
+            if (istatus .ne. 1) then
+               write (6,*) 'Error getting value of maxstns'
+               stop
+            endif
+
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
      1lag,maxstns)
         endif
@@ -3734,10 +3729,10 @@ c    1                         ,rspacing_dum,istatus)
 !                c33_label = 'FSL/'//c33_label(1:29)
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
-                 call pwrity
-     1               (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call pwrity(cpux(90),cpux(1000),'FSL',3,2,0,0)
+!                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
+!                call pwrity
+!    1               (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)
             endif
 
             if(c_display .ne. 't')then
@@ -3761,7 +3756,7 @@ c    1                         ,rspacing_dum,istatus)
      1  c33_label,
      1  c_field,k_level,i_overlay,c_display,c_file,imax,jmax,kmax,
      1  grid_ra_ref,grid_ra_vel,NX_L,NY_L,r_missing_data,
-     1  laps_cycle_time)      
+     1  laps_cycle_time,jdot)      
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
@@ -3835,6 +3830,13 @@ c    1                         ,rspacing_dum,istatus)
             call setusv_dum(2hIN,34)
 
             iflag = 0
+
+            call get_maxstns(maxstns,istatus)
+            if (istatus .ne. 1) then
+               write (6,*) 'Error getting value of maxstns'
+               stop
+            endif
+
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
      1lag,maxstns)
         endif
@@ -3849,10 +3851,11 @@ c    1                         ,rspacing_dum,istatus)
      1  .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call pwrity
-     1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-                 call pwrity
-     1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+!                call pwrity
+!    1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
+!                call pwrity
+!    1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)       
             endif
 
 
@@ -3935,9 +3938,9 @@ c    1                         ,rspacing_dum,istatus)
             write(6,*)' c_metacode,i_overlay = ',c_metacode,i_overlay
 
             if(c_display .eq. 'r')then
-                call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint,lat,l
-     1on
-     1          ,c_metacode,c_file,'nest7grid',jdot)
+                call lapsplot(array_plot,NX_L,NY_L,clow,chigh,cint
+     1                       ,lat,lon
+     1                       ,c_metacode,c_file,'nest7grid',jdot)
             endif
 
             c_metacode = 'c '
@@ -3974,7 +3977,7 @@ c    1                         ,rspacing_dum,istatus)
 
 !               call set(x_1,x_2,y_1,y_2,1.,float(NX_L),1.,float(NY_L))
 
-                call plot_grid_2d(interval,size,NX_L,NY_L)
+                call plot_grid_2d(interval,size,NX_L,NY_L,lat,lon)
 
             endif
 
@@ -3986,7 +3989,7 @@ c    1                         ,rspacing_dum,istatus)
         subroutine plot_cldpcp_type(cldpcp_type_2d
      1     ,asc_tim_9,c33_label,c_field,k_level,i_overlay,c_display
      1     ,lat,lon,ifield_2d,c_file
-     1     ,NX_L,NY_L,laps_cycle_time)
+     1     ,NX_L,NY_L,laps_cycle_time,jdot)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
 !                                   dummy arguments
@@ -4059,6 +4062,13 @@ c    1                         ,rspacing_dum,istatus)
             call setusv_dum(2hIN,34)
 
             iflag = 0
+
+            call get_maxstns(maxstns,istatus)
+            if (istatus .ne. 1) then
+               write (6,*) 'Error getting value of maxstns'
+               stop
+            endif
+
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
      1lag,maxstns)
         endif
@@ -4077,11 +4087,11 @@ c    1                         ,rspacing_dum,istatus)
      1  .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call pwrity
-     1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-                 call pwrity
-     1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call pwrity(cpux(90),cpux(1000),'FSL',3,2,0,0)
+!                call pwrity
+!    1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
+!                call pwrity
+!    1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)
             endif
 
 
@@ -4171,6 +4181,13 @@ c    1                         ,rspacing_dum,istatus)
             call setusv_dum(2HIN,11)
 
             write(6,*)' Call plot_station_locations ',c_metacode
+
+            call get_maxstns(maxstns,istatus)
+            if (istatus .ne. 1) then
+               write (6,*) 'Error getting value of maxstns'
+               stop
+            endif
+
             call plot_station_locations(i4time_plot,lat,lon,NX_L,NY_L,if
      1lag,maxstns)
         endif
@@ -4449,3 +4466,29 @@ c
         return
         end
 
+
+        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24)
+
+        character*33 c33_label
+        character*24 asc_tim_24
+
+        call get_border(ni,nj,x_1,x_2,y_1,y_2)
+
+        y_1 = y_1 - .025
+        y_2 = y_2 + .025
+
+        ix = 115
+        iy = y_2 * 1024
+        call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,2,0,0)
+
+        ix = 320
+        iy = y_1 * 1024
+        call pwrity(cpux(ix),cpux(iy),c33_label,33,2,0,0)
+
+        ix = 800
+        iy = y_1 * 1024
+        call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,2,0,0)
+
+
+        return
+        end

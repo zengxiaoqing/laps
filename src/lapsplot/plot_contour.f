@@ -354,6 +354,7 @@ C DarkViolet
       CALL GSCR(1, 16, 0.6, 0.0, 0.8)
 C Lavender
       CALL GSCR(1, 17, 1.00, 0.65, 1.0)
+C Black
       CALL GSCR (1,21,0.,0.,0.)
       CALL GSCR (1,22,0.,.7,0.)
       CALL GSCR (1,23,.0,.0,.7)
@@ -363,7 +364,8 @@ C Lavender
 C Orchid
       CALL GSCR (1,27, 0.85, 0.45, 0.8)
       CALL GSCR (1,28,.0,.0,.95)
-      CALL GSCR (1,29,.95,.0,.0)
+! Paler Yellow
+      CALL GSCR (1,29,.50,.43,.0)
       CALL GSCR (1,30,.0,.95,.0)
       CALL GSCR (1,31,.2,.7,.7)
 
