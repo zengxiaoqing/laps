@@ -215,8 +215,12 @@ sub systime{
     my($DATAROOT,$delay,$cycle_time) = @_;
     my $ctime = time - $delay*3600;
     my($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
+    my $yyyy = 1900+$year;
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
-    my $CEN = ($year < 70)?20:19;
+    my $year= $year-100 if($year>99);
+
+
+
 #
 #  This resets to the top of the cycle
 #
@@ -230,7 +234,7 @@ sub systime{
     }
   
     
-    $ctime = timegm(0,$min,$hour,$mday,$mon,$year);
+    $ctime = timegm(0,$min,$hour,$mday,$mon,$yyyy-1900);
 
     my $ftime = $ctime +  315619200;
     $min = '0'.$min if(length($min)<2);
@@ -250,7 +254,7 @@ sub systime{
     print TFILE " $year$jjj$hour$min\n";
     print TFILE "$hour\n";
     print TFILE "$min\n";
-    print TFILE "$mday-$MON[$mon]-$CEN$year $hour$min\n";
+    print TFILE "$mday-$MON[$mon]-$yyyy $hour$min\n";
     print TFILE "$year$jjj\n";
     close(TFILE);
 }
