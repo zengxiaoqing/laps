@@ -60,7 +60,7 @@ c
       character*125 comment_ll(2)
       character*10 units_ll(2)
       character*3 var_ll(2)
-      character*100 dir_static
+      character*150 dir_static
       character c_radar_name(max_radars)*4
 c
 c ======================== START ==============================
