@@ -188,7 +188,6 @@ cdis
         real*4 cloud_top(NX_L,NY_L)
         real*4 cloud_base(NX_L,NY_L)
         real*4 cloud_ceiling(NX_L,NY_L)
-        real*4 cloud_base_buf(NX_L,NY_L)
 
         real*4 cldtop_m(NX_L,NY_L)
         real*4 cldtop_co2_m(NX_L,NY_L)
@@ -887,7 +886,7 @@ C INSERT RADAR DATA
 
             call insert_radar(i4time,clouds_3d,cld_hts
      1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
-     1          ,KCLOUD,cloud_base,cloud_base_buf,ref_base
+     1          ,KCLOUD,cloud_base,ref_base
      1          ,topo,r_missing_data                                 ! I
      1          ,radar_ref_3d,dbz_max_2d
      1          ,vis_radar_thresh_dbz                                ! I
