@@ -1081,7 +1081,8 @@
         The following error message, "FILE /U50N119W DOES NOT EXIST",
         does not necessarily mean there is a problem. It signifies that 
         your domain runs outside the available 30" data, and should still be 
-        covered by the 10' worldwide data, if available.
+        covered by the 10' worldwide data, if your are using the 'topo_30s'
+        dataset.
 
           ----  2.7.2.1 MAP PROJECTION FUNCTIONALITY/LIMITATIONS  ---
 
@@ -1113,16 +1114,17 @@
 
                    ----  2.7.4 Terrain Databases ---
 
-        The './src/grid/gridgen_model.f' program normally utilizes one of
-        two terrain data databases (distributed separately and available from 
-        the laps www site). 
+        The 'gridgen_model.exe' program normally utilizes one of two terrain 
+        databases (distributed separately and available from the laps www 
+        site). 
 
         The first database has two components; one is a worldwide 10' dataset,
-        the other is 30" data and covers the continental U.S.  The software 
-        automatically chooses the higher resolution data if it covers the 
-        domain of interest, otherwise it defaults to the lower resolution 
-        data. A ~0.2 degree wide transition zone is used for blending at 
-        the boundary between the two datasets. 
+        (topo_10m directory) the other is 30" data (topo_30s directory) 
+        and covers the continental U.S.  The software automatically chooses 
+        the higher resolution data if it covers the domain of interest, 
+        otherwise it defaults to the lower resolution data. A ~0.2 degree 
+        wide transition zone is used for blending at the boundary between the 
+        two datasets. 
 
         Two scenarios for processing the first database may need more testing.
         These are:
@@ -1136,8 +1138,11 @@
         2) If you are in the vicinity of a land border of the Continental 
            United States (e.g. Southern Canada or Northern Mexico).
 
-        The second database is a global 30" terrain dataset from USGS that we
-        have reformatted here at FSL. 
+        The second database is a global 30" terrain dataset (world_topo_30s
+        directory) from USGS that we have reformatted here at FSL. This
+        data comes in 10x10 degree tiles. Since there is no automated blending
+        between this dataset and the 10' data, it is suggested that all the 
+        tiles be in place to cover the domain.
 
                  ----  2.7.5 Terrain Smoothing/Filtering  ---
 
