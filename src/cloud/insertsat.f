@@ -159,6 +159,8 @@ c
         integer*4 nidelt,njdelt
         data nidelt/3/,njdelt/3/
 
+        write(6,*)' Subroutine insert_sat...'
+
         idelt_max = nint(50000. / grid_spacing_m)
 
         idelt(1) = -idelt_max
@@ -292,8 +294,8 @@ c
 
 
         write(6,*)
-        write(6,*)'  i  k   frac_k   cldtop_temp_f  cldtop_m',
-     1                  '     sfc T (f)   Topo'
+        write(6,*)'  cldtp_t  i  j  k   frac_k   cldtop_temp_f   ',       
+     1            'cldtop_m     sfc T (f)   Topo'
 
         init_co2 = 0 ! Initializes CO2 Slicing routine
         n_valid_co2 = 0
@@ -308,6 +310,13 @@ c
         do j=1,jmax
         do i=1,imax
 
+         jp10 = j+10
+         if(jp10 .eq. (jp10/20)*20 .and. i .eq. (i/4)*4)then
+          idebug=1
+         else
+          idebug=0
+         endif
+
          if(imax-i .le. nskip_max .or. jmax-j .le. nskip_max)then
              l_poss_extrap = .true. ! Extrapolation edge effects possible
          else
@@ -317,14 +326,14 @@ c
          if(tb8_k(i,j) .ne. r_missing_data)then
 
 !         Compare brightness temp to surface temperature
-          if(j .eq. 29)then
-              write(6,111,err=112)i,k_to_f(tb8_k(i,j))
-     1                             ,k_to_f(t_gnd_k(i,j))
-111           format(1x,i3,11x,f14.1,8x,f14.1)
+          if(idebug .eq. 1)then
+              write(6,111,err=112)i,j,k_to_f(tb8_k(i,j))
+     1                               ,k_to_f(t_gnd_k(i,j))
+111           format(1x,'tb8/sfc',2i4,11x,f8.1,8x,f8.1)
 112       endif
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
-          call cloud_top( init_co2,i4time,tb8_k(i,j)
+          call cloud_top( init_co2,i4time,tb8_k(i,j),idebug
      1     ,cloud_frac_co2_a(i,j)                                         ! I
      1     ,t_gnd_k,pres_sfc_pa
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
@@ -346,6 +355,8 @@ c
      1                    (iwrite .eq. (iwrite/100)*100)
      1                              .OR. 
      1                       (.not. l_cloud_present)
+     1                              .OR. 
+     1                       (idebug .eq. 1)
      1                                                          )then
                   write(6,113)i,j,istat_vis_added_a(i,j),l_tb8
      1                       ,l_cloud_present
@@ -363,6 +374,8 @@ c
      1                    (iwrite .eq. (iwrite/100)*100)
      1                              .OR. 
      1                       (.not. l_cloud_present)
+     1                              .OR. 
+     1                       (idebug .eq. 1)
      1                                                          )then
                   write(6,114)i,j,istat_39_add_a(i,j),l_tb8
      1                       ,l_cloud_present
@@ -604,7 +617,7 @@ c
 !             cloud when the edge has a "soft" appearance in the imagery.
 
               cldtop_m_avg = cldtop_m(i,j)
-              call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
+              call cloud_top(init_co2,i4time,tb8_cold_k(i,j),idebug
      1            ,cloud_frac_co2_a(i,j)                                 ! I
      1            ,t_gnd_k,pres_sfc_pa
      1            ,thresh_ir_diff1,topo(i,j),r_missing_data
@@ -782,7 +795,7 @@ c
         return
         end
 
-        subroutine cloud_top( init_co2,i4time,tb8_k                    ! I
+        subroutine cloud_top( init_co2,i4time,tb8_k,idebug             ! I
      1  ,cloud_frac_co2                                                ! I
      1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data       ! I
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p       ! I
@@ -919,7 +932,7 @@ c
                         cldtop_tb8_m = arg
                     endif
 
-                    if(j .eq. 29)then
+                    if(idebug .eq. 1)then
                         if(arg .lt. topo)then
                             write(6,*)
      1                      ' Cloud Top Below Ground - not used'
@@ -928,11 +941,13 @@ c
                         write(6,111,err=121)cldtop_tb8_m,cldtop_co2_m
 111                     format(1x,f10.0,1x,f10.0)
 
-121                     write(6,122,err=123)i,kl,frac_k
+121                     write(6,122,err=123)i,j,kl,frac_k
+     1                           ,k_to_f(cldtop_temp_k_before)
      1                           ,k_to_f(cldtop_temp_k)
      1                           ,arg,topo,k_to_f(temp_3d(i,j,kl))
      1                           ,k_to_f(temp_above)
-122                     format(1x,2i3,f8.3,f14.1,f11.1,f21.1,2f6.1)
+122                     format(1x,'cldtp_t',3i4,f8.3,2f8.1,f11.1
+     1                           ,f21.1,2f6.1)
 123                 endif
 
                 endif
