@@ -14,6 +14,7 @@ c     by T. Smith, FSL.
 c
 c     Original:  2 Oct 1996  Peter A. Stamus, FSL
 c     Changes:   9 Jun 1997  Changes for new Metar CDL
+c               28 Apr 1998  Fixed uninitialized variables problem.
 c
 c.......................................................................
 c
@@ -63,6 +64,7 @@ c      call ncpopt(0)
 c       
 c.....  Open the desired netCDF data file
 c
+       nsta = 0
        do while(nsta.lt.min_stations.and.
      +           cnt.lt.minutes_to_wait_for_metars)
 
