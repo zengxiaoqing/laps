@@ -36,8 +36,10 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine plot_obs(k_level,l_ask_questions,asc9_tim,i_radar
-     1    ,imax,jmax,kmax,grid_ra_ref,grid_ra_vel,lat,lon,topo,mode)
+        subroutine plot_obs(k_level,l_ask_questions,asc9_tim
+     1    ,i_radar_start,i_radar_end
+     1    ,imax,jmax,kmax,n_plotted,grid_ra_ref,grid_ra_vel,lat,lon
+     1    ,topo,mode)
 
 !       Steve A         Nov  1989       Original Version
 !       Steve A         Nov  1991       Adjustable Dimensions
@@ -49,6 +51,8 @@ cdis
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
+
+        integer*4 n_plotted(imax,jmax)
 
         character*150 directory
         character*31 ext,c3_obsext
@@ -157,12 +161,12 @@ cdis
 
         c1_plottype = 'y'
 
-        if(mode .eq. 1)then
-            call cv_asc_i4time(asc9_tim,i4time_needed)
+        do i_radar = i_radar_start,i_radar_end
 
-!            write(6,110)
-!110         format(' Radar #',30x,'? ',$)
-!            if(l_ask_questions)read(lun_in,*)i_radar
+          write(6,*)' mode / radar = ',mode,i_radar
+
+          if(mode .eq. 1)then
+            call cv_asc_i4time(asc9_tim,i4time_needed)
 
             if(i_radar .le. 9)then
                 write(ext,151)i_radar
@@ -174,7 +178,7 @@ cdis
 
             var_2d = 'VEL'
 
-            write(6,*)' mode 1, calling get_laps_3dgrid'
+            write(6,*)' calling get_laps_3dgrid'
 
             call get_laps_3dgrid(i4time_needed,200000000,i4time_found
      1          ,imax,jmax,kmax,ext,var_2d
@@ -182,40 +186,48 @@ cdis
 
             if(istatus.ne.1)goto221
 
-        endif
+            write(6,*)comment_2d
 
-        do k_grid = 1,kmax
+          endif
 
-          if(k_grid .gt. k_level .and. k_level .gt. 0)goto221
+          do k_grid = 1,kmax
 
-          do j_grid = 1,jmax
-          do i_grid = 1,imax
+            if(k_grid .gt. k_level .and. k_level .gt. 0)goto221
 
-            if(k_level .eq. 0)then
+            do j_grid = 1,jmax
+            do i_grid = 1,imax
+
+              if(k_level .eq. 0)then
                 k_sfc = 
      1              nint(height_to_zcoord(topo(i_grid,j_grid),istatus))     
-            else
+              else
                 k_sfc = -99
-            endif
-
-            if(k_grid  .eq. k_level                   .OR.
-     1         k_level .eq. 0 .and. k_sfc .eq. k_grid      )then
-
-              if(grid_ra_vel(i_grid,j_grid,k_grid)
-     1                          .ne. r_missing_data)then
-                call plot_vr(i_grid,j_grid
-     1              ,grid_ra_vel(i_grid,j_grid,k_grid),imax,jmax
-     1              ,c1_plottype)
               endif
 
-            endif ! at the right level to plot
+              if(k_grid  .eq. k_level                   .OR.
+     1           k_level .eq. 0 .and. k_sfc .eq. k_grid      )then
 
-          enddo ! i_grid
-          enddo ! j_grid
+                if(grid_ra_vel(i_grid,j_grid,k_grid)
+     1                          .ne. r_missing_data)then
 
-        enddo ! k_grid
+                  n_plotted(i_grid,j_grid) = n_plotted(i_grid,j_grid)+1      
 
-221     continue
+                  call plot_vr(i_grid,j_grid
+     1              ,grid_ra_vel(i_grid,j_grid,k_grid),imax,jmax
+     1              ,c1_plottype,n_plotted(i_grid,j_grid))
+
+                endif
+
+              endif ! at the right level to plot
+
+            enddo ! i_grid
+            enddo ! j_grid
+
+          enddo ! k_grid
+
+221       continue
+
+        enddo ! i_radar
 
         if(mode .eq. 2)return
 
@@ -228,7 +240,7 @@ cdis
         if(l_ask_questions)read(lun_in,211)c_obs_type
 211     format(a1)
 
-        if(c_obs_type(1:1) .ne. ' ')then
+!       if(c_obs_type(1:1) .ne. ' ')then
         if(c_obs_type(1:1) .eq. 'r')then
 
         write(6,*)
@@ -238,28 +250,32 @@ cdis
 
         lun = 61
 
-        if(i_radar .le. 9)then
+        do i_radar = i_radar_start,i_radar_end
+
+          if(i_radar .le. 9)then
             write(ext,251)i_radar
  251        format('d0',i1)
-        else
+          else
             write(ext,252)i_radar
  252        format('d',i2)
-        endif
+          endif
 
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=1300)
+          call get_directory(ext,directory,len_dir)
+          open(lun
+     1        ,file=directory(1:len_dir)//filename13(i4time,ext(1:3))      
+     1        ,status='old',err=1300)
 
-1211    read(61,*,end=1300)ri,rj,k,dir,speed_ms
-!421    format(1x,f6.3,f8.3,i2,2f6.1)
-        ri = ri + 1.
-        rj = rj + 1.
-        k_ob = k + 1.
+1211      read(61,*,end=1300)ri,rj,k,dir,speed_ms
+!421      format(1x,f6.3,f8.3,i2,2f6.1)
+          ri = ri + 1.
+          rj = rj + 1.
+          k_ob = k + 1.
 
-        k_sfc = nint(height_to_zcoord(topo(nint(ri),nint(rj)),istatus))
+          k_sfc = 
+     1    nint(height_to_zcoord(topo(nint(ri),nint(rj)),istatus))
 
-        if(k_ob .eq. k_level .or.
-     1           k_level .eq. 0 .and. k_sfc .eq. k_ob)then
+          if(k_ob .eq. k_level .or.
+     1       k_level .eq. 0 .and. k_sfc .eq. k_ob)then
 
 !               write(6,421)alat,alon,k,dir,speed_ms
 !               call latlon_ram_laps(alat,alon,x,y,init,'p')
@@ -274,14 +290,17 @@ cdis
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_radar,'true')
 
-        else if(k_ob .gt. k_level)then
+          elseif(k_ob .gt. k_level)then
                 goto1300
 
-        endif ! k_ob .eq. k_level
+          endif ! k_ob .eq. k_level
 
-        goto1211
+          goto1211
 
-1300    continue
+1300      continue
+
+        enddo ! i_radar
+
         endif
 
 
@@ -289,25 +308,26 @@ cdis
 
         if(c_obs_type(1:1) .eq. 's')then
 
-222     call setusv_dum(2hIN,201)
+222         call setusv_dum(2hIN,201)
 
-        lun = 32
-        ext = 'suw'
-        call get_directory(ext,directory,len_dir)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=240)
+            lun = 32
+            ext = 'suw'
+            call get_directory(ext,directory,len_dir)
+            open(lun
+     1          ,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
+     1          ,status='old',err=240)
 
-230     read(32,*,end=240)azimuth_deg,range_km,elev_deg,dir,speed_ms
+230         read(32,*,end=240)azimuth_deg,range_km,elev_deg,dir,speed_ms
 
-        range_m = range_km * 1000.
+            range_m = range_km * 1000.
 
-        range_km = range_km * cosd(elev_deg)
+            range_km = range_km * cosd(elev_deg)
 
-        call radar_to_latlon(alat,alon,retheight
+            call radar_to_latlon(alat,alon,retheight
      1                      ,azimuth_deg,range_m,elev_deg
-     1                  ,rlat_radar,rlon_radar,rheight_radar)
+     1                      ,rlat_radar,rlon_radar,rheight_radar)
 
-        k = nint(height_to_zcoord(retheight,istatus))
+            k = nint(height_to_zcoord(retheight,istatus))
 
             if ( k .eq. k_level) then ! plot even range_km rings
 
@@ -323,16 +343,14 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon
      1                          ,imax,jmax,size_suw,'true')
-                endif
+              endif
 
-
-              end if ! Valid Wind
+            end if ! Valid Wind
 
         goto230
 240     continue
-        endif
-        endif
 
+        endif
 
         dularge = dusmall * 2.
 
