@@ -5,6 +5,7 @@
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
      +c_sat_id, c_sat_types,c_channel_types,
+     +vis_cnt_range_in,vis_cnt_range_out,
      +r_sat_sub_lat, r_sat_sub_lon,
      +r_resolution_x_vis,r_resolution_y_vis,r_resolution_x_ir,
      +r_resolution_y_ir,r_resolution_x_wv,r_resolution_y_wv,

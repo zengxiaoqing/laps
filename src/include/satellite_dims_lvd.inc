@@ -3,6 +3,6 @@
       integer maxtype
       integer maxchannel
 
-      parameter (maxsat=4)
+      parameter (maxsat=6)
       parameter (maxtype=4)
-      parameter (maxchannel=5)
+      parameter (maxchannel=6)

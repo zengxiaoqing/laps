@@ -12,6 +12,8 @@
       character c_sat_types(maxtype,maxsat)*3
       character c_channel_types(maxchannel,maxtype,maxsat)*3
 
+      real*4 vis_cnt_range_in(2,maxsat)
+      real*4 vis_cnt_range_out(2,maxsat)
       real*4 r_sat_sub_lat(maxsat)
       real*4 r_sat_sub_lon(maxsat)
       real*4 sat_range_m(maxsat)
@@ -87,4 +89,5 @@
      +i_nwline_vis,i_nwline_ir,i_nwline_wv,
      +i_nwpix_vis,i_nwpix_ir,i_nwpix_wv,
      +imc,path_to_raw_sat,
-     +c_sat_id,c_sat_types,c_channel_types
+     +c_sat_id,c_sat_types,c_channel_types,
+     +vis_cnt_range_in,vis_cnt_range_out
