@@ -205,7 +205,7 @@ foreach $exe (@LAPS_EXE){
         $sms_path = "/home/schaffer/sms.steve";
 
         if($exe =~ "wind"){
-            $nodes_current = 4;
+            $nodes_current = 1; # 4
         }else{
             $nodes_current = 1;
         }

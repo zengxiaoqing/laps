@@ -145,7 +145,8 @@ cdis
 
         if(c_radial(1:1) .eq. 'n')goto205
 
-        retheight = height_of_level(k_level)
+        write(6,*)' Skipping call to height_of_level to get retheight'       
+!       retheight = height_of_level(k_level)
 
         c1_plottype = 'y'
 

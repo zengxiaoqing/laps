@@ -91,10 +91,9 @@ cdis
         real*4 dum4_array(NX_L,NY_L)
 
       ! Used for "Potential" Precip Type
-!       logical l_mask(NX_L,NY_L)
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
      1         ,iflag_bogus_w
-        logical iflag_snow_potential
+        logical iflag_snow_potential, l_plot_image
 
         integer*4 ibase_array(NX_L,NY_L)
         integer*4 itop_array(NX_L,NY_L)
@@ -315,11 +314,9 @@ c       include 'satellite_dims_lvd.inc'
 
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
-     1       /'     [wd] Wind (LW3/LWM),'
-     1       ,' [wb,wr,wf,bw] (LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
+     1       /'     [wd,wb,wr,wf,bw] Wind'
+     1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
      1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'        
-     1       /'     [lw] li*w, [li,he,pe,ne] li, helcty, CAPE, CIN,'
-     1       ,' [s] Other Stability Indices'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
@@ -328,26 +325,31 @@ c       include 'satellite_dims_lvd.inc'
      1       /'          [cs,vs,tw,fw,hi]'
      1       /'          [of,oc,os,qf,qc,qs] obs plot/station locations'       
      1       ,'  [bs] Sfc background'
+     1       /'          [li,lw,he,pe,ne] li, li*w, helcty, CAPE, CIN,'
+     1       /'          [s] Other Stability Indices'
      1       /
      1       /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1       ,',   [pt,pb] Theta, Blnc Theta'
      1       /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,FUA,Hydrstc,QBAL),'
-     1       /'           [hh] Height of Const Temp Sfc')
+     1       /'           [hh] Height of Const Temp Sfc'               )
 
         write(6,12)
- 12     format(/4x,' [ci] Cloud Ice     ',22x
-     1       ,'  [ls] Smith - Feddes Cloud LWC'
-     1       /'     [is] Smith - Feddes Integrated Cloud LWC  '
-     1       /'     [mv] Mean Volume Drop Diam,   [ic] Icing Index,'
-     1       ,' [cy,py] Cloud/Precip Type'
-     1       /
-     1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'       
-     1       ,',  [ct] Highest Cld Top'
-     1       /'     [cv/cg] Cloud Cover (2-D), [pw] Precipitable Water'       
-     1       /
+ 12     format(
      1       /'     [br,fr,lq] Humidity (lga;fua;lq3: [q or rh]) '
-     1       /'     [sa/pa] Snow/Pcp Accum,'
-     1       ,' [sc] Snow Cvr,  [tn(i),lf,gr,so] Ter/LndFrac/Grid, '
+     1       ,' [pw] Precipitable Water'       
+     1       /
+     1       /'     CLOUDS/PRECIP: [ci] Cloud Ice,'
+     1       ,' [ls] Cloud LWC'
+     1       /'         [is] Integrated Cloud LWC  '
+     1       /'         [mv] Mean Volume Drop Diam,   [ic] Icing Index,'       
+     1       /'         [cc] Cld Ceiling (AGL),'
+     1       ,' [cb,ct-i] Cld Base/Top (MSL)'      
+     1       /'         [cv/cg] Cloud Cover (2-D)'
+     1       ,' [cy,py] Cloud/Precip Type'
+     1       /'         [sa/pa] Snow/Pcp Accum,'
+     1       ,' [sc] Snow Cvr'
+     1       /
+     1       /'     [tn-i,lf,gr,so] Ter/LndFrac/Grid'
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       , 'Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -1107,6 +1109,13 @@ c
      1                ,' [enter 1, 2, 3, 4, 5]? ',$)
              read(lun,*)ilvd
 
+             if(ilvd .lt. 0)then
+                 l_plot_image = .true.
+                 ilvd = -ilvd
+             else
+                 l_plot_image = .false.
+             endif
+             
              write(6,*)
              write(6,*)'    Looking for Laps LVD data:'
 c
@@ -1121,8 +1130,8 @@ c
              endif
 
              call get_2dgrid_dname(directory
-     1     ,i4time_ref,100000,i4time_nearest,ext,var_2d
-     1     ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
+     1               ,i4time_ref,100000,i4time_nearest,ext,var_2d
+     1               ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
              if(istatus .eq. 0)then
               write(6,*)' Cant find ',var_2d,' Analysis ',istatus
@@ -1154,24 +1163,39 @@ c
               c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
              endif
 
-             if(ilvd .eq. 1)then
-              if(var_2d.eq.'ALB')then
-               clow = 0.0
-               chigh = 1.
-               cint = 0.1
-               scale = 1e0
-              else
-               clow = 0.0
-               chigh = 256.
-               cint = 05.
-               scale = 1e0
-              endif
-             endif
-
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
-             call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1         c33_label,i_overlay,c_display,lat,lon,jdot,
-     1         NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+             if(l_plot_image)then
+                 scale_l = 313.0
+                 scale_h = 223.0
+
+                 n_image = n_image + 1
+                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear')
+                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                 call setusv_dum(2hIN,7)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+     1                                                    ,i_overlay)
+
+             else ! contours
+                 if(ilvd .eq. 1)then
+                     if(var_2d.eq.'ALB')then
+                         clow = 0.0
+                         chigh = 1.
+                         cint = 0.1
+                         scale = 1e0
+                     else
+                         clow = 0.0
+                         chigh = 256.
+                         cint = 05.
+                         scale = 1e0
+                     endif
+                 endif
+
+                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+     1             c33_label,i_overlay,c_display,lat,lon,jdot,
+     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+             endif
 
             endif !(cansw)
            endif  !(isats)
@@ -2063,7 +2087,18 @@ c
 
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!           if(istatus .ne. 1)goto1200
+            if(istatus .ne. 1)goto1200
+
+!           Obtain height field
+            ext = 'lt1'
+            var_2d = 'HT'
+            call get_laps_3dgrid(i4time_ref,10000000,i4time_ht
+     1                          ,NX_L,NY_L,NZ_L,ext,var_2d
+     1                          ,units_2d,comment_2d,field_3d,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Error locating height field'
+                return
+            endif
 
             write(c33_label,1516)nint(temp_in_c)
 1516        format('LAPS Height of ',i3,'C Lvl (hft MSL)')
@@ -2077,11 +2112,11 @@ c
      1                 temp_3d(i,j,k+1) .le. temp_in_k       )then
 
 !                       Desired Temperature occurs in this layer
-                        frac_k = (       temp_in_k - temp_3d(i,j,k))/
+                        frac_k = (     temp_in_k - temp_3d(i,j,k))/
      1                         (temp_3d(i,j,k+1) - temp_3d(i,j,k))
-                        height_2d(i,j) =
-     1             height_of_level(k)   * (1.0 - frac_k)
-     1                 + height_of_level(k+1) * frac_k
+
+                        height_2d(i,j) = field_3d(i,j,k) * (1.0-frac_k)       
+     1                 +                 field_3d(i,j,k+1) * frac_k
 
                         height_2d(i,j) = height_2d(i,j) * 3.281
 
@@ -3404,20 +3439,11 @@ c                   cint = -1.
      1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
             
             else
-                write(6,*)' calling solid fill cloud plot'
                 n_image = n_image + 1
-                call ccpfil(field_2d,NX_L,NY_L,1.0)
-                call upcase(c33_label,c33_label)
+                call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear')
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                if(asc_tim_9 .ne. '         ')then
-                    call i4time_fname_lp(asc9_tim,I4time_lbl,istatus)       
-                    call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24,istatus)      
-                else
-                    asc_tim_24 = '                        '
-                endif
-
-                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
 
             endif
@@ -3959,7 +3985,7 @@ c                   cint = -1.
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'ct')then
+        elseif(c_type .eq. 'ct' .or. c_type .eq. 'cti')then
             var_2d = 'LCT'
             ext = 'lcb'
             call get_laps_2dgrid(i4time_ref,864000,i4time_nearest,
@@ -3971,15 +3997,28 @@ c                   cint = -1.
                 goto1200
             endif
 
+            c33_label = 'LAPS Cloud Top          m   MSL  '
+
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
-            clow = 0.
-            chigh = 20000.
-            cint = 1000.
-            call plot_cont(cloud_top,1e0,
+            if(c_type .eq. 'ct')then
+                clow = 0.
+                chigh = 20000.
+                cint = 1000.
+                call plot_cont(cloud_top,1e0,
      1                     clow,chigh,cint,asc9_tim,c33_label,
      1                     i_overlay,c_display,lat,lon,jdot,       
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else
+                n_image = n_image + 1
+                call ccpfil(cloud_top,NX_L,NY_L,0.0,14000.,'linear')
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+     1                                                    ,i_overlay)
+
+            endif
 
         elseif(c_type .eq. 'cv' .or. c_type .eq. 'cg')then
             write(6,2514)
@@ -4046,18 +4085,10 @@ c                   cint = -1.
             else ! 'cg'
                 write(6,*)' calling solid fill cloud plot'
                 n_image = n_image + 1
-                call ccpfil(cloud_cvr,NX_L,NY_L,1.0)
-                call upcase(c33_label,c33_label)
+                call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,'linear')
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                if(asc_tim_9 .ne. '         ')then
-                    call i4time_fname_lp(asc9_tim,I4time_lbl,istatus)       
-                    call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24,istatus)      
-                else
-                    asc_tim_24 = '                        '
-                endif
-
-                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
      1                                                    ,i_overlay)
 
             endif
@@ -4072,7 +4103,7 @@ c                   cint = -1.
             if(c_type .eq. 'tni')then
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
-                call ccpfil(topo,NX_L,NY_L,scale)
+                call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear')
                 n_image = n_image + 1
             else
                 call plot_cont(topo,1e0,
@@ -4279,9 +4310,8 @@ c                   cint = -1.
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'c ')then
-                 call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
      1                                                      ,i_overlay)
             endif
 
@@ -4401,11 +4431,9 @@ c                   cint = -1.
         call setusv_dum(2hIN,icolors(i_overlay))
 
         if(c_metacode .ne. 'n ')then
-            if(c_metacode .eq. 'y '
-     1  .or. c_metacode .eq. 'c ')then
-                 call upcase(c33_label,c33_label)
+            if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
      1                                                      ,i_overlay)
             endif
 
@@ -4512,12 +4540,11 @@ c                   cint = -1.
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
      1    .or. c_metacode .eq. 'c ')then
-                 call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)      
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
      1                                                      ,i_overlay)
             endif
 
@@ -4641,9 +4668,8 @@ c                   cint = -1.
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
      1    .or. c_metacode .eq. 'c ')then
-                 call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
      1                                                      ,i_overlay)
             endif
 
@@ -4758,7 +4784,6 @@ c                   cint = -1.
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
      1  .or. c_metacode .eq. 'c ')then
-                 call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !                call pwrity
 !    1                (cpux(320),cpux(ity),c33_label,33,2,0,0)
@@ -4769,7 +4794,7 @@ c                   cint = -1.
 !                    c33_label = 'Sfc Obs'
 !                endif
 
-!                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+!                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
 !    1                                                      ,i_overlay)
             endif
 
@@ -4956,14 +4981,13 @@ c
                 c33_label = 'Sfc Obs      ('//c3_presob//' pres)'
             endif
 
-            call upcase(c33_label,c33_label)
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call write_label_lplot(ni,nj,c33_label,atime,i_overlay)       
+            call write_label_lplot(ni,nj,c33_label,asc_tim_9,i_overlay)       
 
         endif
 
         call get_border(ni,nj,x_1,x_2,y_1,y_2)
-        call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj))
+        call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj),1)
 
         call get_r_missing_data(r_missing_data,istatus)
         call get_sfc_badflag(badflag,istatus)
@@ -5112,13 +5136,22 @@ c
         end
 
 
-        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24_in
-     1                                                      ,i_overlay)        
+        subroutine write_label_lplot(ni,nj,c33_label,a9time,i_overlay)        
 
         character*33 c33_label
         character*24 asc_tim_24,asc_tim_24_in
+        character*9 a9time
 
         common /image/ n_image
+
+        call upcase(c33_label,c33_label)
+
+        if(a9time .ne. '         ')then
+            call i4time_fname_lp(a9time,I4time_lbl,istatus)       
+            call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24_in,istatus)      
+        else
+            asc_tim_24_in = '                        '
+        endif
 
         asc_tim_24 = asc_tim_24_in(1:14)//asc_tim_24_in(16:17)//' '      
 

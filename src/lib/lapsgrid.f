@@ -31,15 +31,11 @@ cdis
 cdis
 
         subroutine get_laps_domain(ni,nj,grid_fnam,lat,lon,topo,istatus)
+c
+cdoc    Reads in lat/lon/topo/landfrac fields
+c
+c       1994 Steve Albers
 
-!       1992 Steve Albers
-c
-c  get maps grid information
-c
-c   lat() contains grid latitudes (degrees north)
-c   lon() contains grid longitudes (degrees east; negative=west long.)
-c   topo() contains grid elevations (m)
-c
         integer*4 ni,nj               ! Input
 
         real*4 lat(ni,nj)             ! Output
@@ -58,14 +54,10 @@ c
 
         subroutine get_domain_laps(ni,nj,grid_fnam,lat,lon,topo
      1                             ,grid_spacing_cen_m,istatus)
-
-!       1994 Steve Albers
 c
-c  get maps grid information
+cdoc    Reads in lat/lon/topo fields with grid spacing
 c
-c   lat() contains grid latitudes (degrees north)
-c   lon() contains grid longitudes (degrees east; negative=west long.)
-c   topo() contains grid elevations (m)
+c       1994 Steve Albers
 c
         integer*4 ni,nj               ! Input
 
@@ -86,15 +78,11 @@ c
 
         subroutine get_laps_domain_95(ni,nj,lat,lon,topo
      1            ,rlaps_land_frac,grid_spacing_cen_m,istatus)
+c
+cdoc    Reads in lat/lon/topo/landfrac fields with grid spacing
+c
+c       1994 Steve Albers
 
-!       1994 Steve Albers
-c
-c  get maps grid information
-c
-c   lat() contains grid latitudes (degrees north)
-c   lon() contains grid longitudes (degrees east; negative=west long.)
-c   topo() contains grid elevations (m)
-c
         integer*4 ni,nj               ! Input
 
         real*4 lat(ni,nj)             ! Output
@@ -178,6 +166,40 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1                              ,grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error return from get_grid_spacing_actual'       
+            return
+        endif
+
+        return
+        end
+
+        subroutine read_static_grid(ni,nj,var,static_grid,istatus)
+
+cdoc    Reads an arbitrary static field given an input 'var' string
+
+c       2000    Steve Albers
+
+        integer*4 ni,nj                       ! Input
+        character*(*) var                     ! Input
+        real*4 static_grid(ni,nj)             ! Output
+
+        character*150 directory
+        character*31  ext
+        character*10  units
+        character*125 comment
+
+        include 'grid_fname.cmn'
+
+        write(6,*)'    Reading in static grid: ',var
+
+        ext = grid_fnam_common
+
+!       Get the location of the static grid directory
+        call get_directory(ext,directory,len_dir)
+
+        call rd_laps_static(directory,ext,ni,nj,1,var,units,comment
+     1                     ,static_grid,grid_spacing_m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading field ',var
             return
         endif
 

@@ -15,7 +15,7 @@
      1     ,i_3d                                                 ! Input
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1     ,n_iter_wind_in
-     1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar     
+     1     ,weight_cdw,weight_sfc,weight_pirep,weight_prof,weight_radar
      1     ,istatus)
 
 !     This routine uses the inputted wind data and actually does the analysis
@@ -36,6 +36,7 @@
 
 !********************ARGUMENT LIST********************************************
 
+      integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
 
 !     3D arrays of u/v observations, all data sources, one datum per gridpoint.
@@ -63,6 +64,7 @@
 
       integer*4 i4time                                             ! Input
 
+      real*4 grid_spacing_m                                        ! Input
       real*4 r_missing_data                  ! missing data value    Input
 
 !-----Radar Data -----------------------------------------------------------
@@ -101,6 +103,9 @@
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
       logical  l_3d
 
+      real*4   rms_thresh                                              ! Input
+      real*4   weight_bkg_const                                        ! Input
+
 !     These are the weights of the various data types (filling the 3D array)
       real*4 weight_cdw,weight_sfc,weight_pirep,weight_prof
      1      ,weight_radar ! Input
@@ -117,6 +122,8 @@
 
       write(6,*)' Subroutine laps_anl...'
 
+csms$serial(:default=ignore)  begin
+
 !     Compare background to obs
       call compare_wind(
      1            u_laps_bkg,v_laps_bkg,' FG ',
@@ -126,6 +133,7 @@
      1            imax,jmax,kmax,r_missing_data,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
+csms$serial end
 
       if(i_3d .eq. 1)then
           l_3d = .true.
@@ -152,6 +160,8 @@
 
       do iter = 1,n_iter_wind
 
+csms$serial(<varobs_diff_spread, wt_p_spread,
+csms$>       fnorm, l_analyze, rms_thresh : out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
               write(6,*)
@@ -214,12 +224,12 @@
             if(uobs(i,j,k) .ne. r_missing_data      .and.
      1         vobs(i,j,k) .ne. r_missing_data              )then
 
-              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2 
+              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2
      1                        + v_laps_bkg(i,j,k)**2)
 
               uobs_diff(i,j,k) = uobs(i,j,k) - u_laps_bkg(i,j,k)
               vobs_diff(i,j,k) = vobs(i,j,k) - v_laps_bkg(i,j,k)
-              speed_diff = sqrt(uobs_diff(i,j,k)**2  
+              speed_diff = sqrt(uobs_diff(i,j,k)**2
      1                        + vobs_diff(i,j,k)**2)
 
 !             Apply QC check to the OB against the background analysis
@@ -339,7 +349,7 @@
 
                   n_qc_total_good = n_qc_total_good + 1
 
-                  if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then       
+                  if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then
                       iwrite = 1
                   else
                       iwrite = 0
@@ -399,25 +409,25 @@
       deallocate(vobs_diff)
 
       write(6,*)
-      write(6,*)' QC info for non-radar data (after remapping to grid)'       
+      write(6,*)' QC info for non-radar data (after remapping to grid)'
       write(6,601)n_qc_pirep_good,n_qc_pirep_bad
-     1           ,pct_rejected(n_qc_pirep_good,n_qc_pirep_bad)       
- 601  format(' # of PIREPs GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)       
+     1           ,pct_rejected(n_qc_pirep_good,n_qc_pirep_bad)
+ 601  format(' # of PIREPs GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-      write(6,602)n_qc_cdw_good,n_qc_cdw_bad       
-     1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)       
+      write(6,602)n_qc_cdw_good,n_qc_cdw_bad
+     1           ,pct_rejected(n_qc_cdw_good,n_qc_cdw_bad)
  602  format(' # of CDWs   GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-      write(6,603)n_qc_sfc_good,n_qc_sfc_bad       
-     1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)       
+      write(6,603)n_qc_sfc_good,n_qc_sfc_bad
+     1           ,pct_rejected(n_qc_sfc_good,n_qc_sfc_bad)
  603  format(' # of SFC    GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-      write(6,604)n_qc_prof_good,n_qc_prof_bad       
-     1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)       
+      write(6,604)n_qc_prof_good,n_qc_prof_bad
+     1           ,pct_rejected(n_qc_prof_good,n_qc_prof_bad)
  604  format(' # of PROFs  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
-      write(6,605)n_qc_total_good,n_qc_total_bad       
-     1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)       
+      write(6,605)n_qc_total_good,n_qc_total_bad
+     1           ,pct_rejected(n_qc_total_good,n_qc_total_bad)
  605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6,7x,'% rejected = ',f6.1)
 
 !     Initialize fnorm array used in barnes_multivariate
@@ -446,6 +456,8 @@
       call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$serial end
+
       call barnes_multivariate(varbuff,n_var
      1        ,imax,jmax,kmax,grid_spacing_m
      1        ,varobs_diff_spread
@@ -453,6 +465,7 @@
      1        ,l_analyze,l_3d,rms_thresh,weight_bkg_const
      1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
+csms$serial(:default=ignore)  begin
 
       write(6,*)' Allocating upass1,vpass1'
 
@@ -554,9 +567,11 @@
      1                                                          )
           if(icount_radar_total .gt. 0 .or. .not. l_3d)then
 
+csms$insert      print *, 'Error Parallelization not done for this code section'
+csms$insert      stop
               I4_elapsed = ishow_timer()
 
-              write(6,*)' Calling barnes with modified radar obs added'       
+              write(6,*)' Calling barnes with modified radar obs added'
 
               call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
               call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
@@ -582,6 +597,8 @@
 
       else ! n_radars .gt. 1
 
+csms$insert      print *, 'Error Parallelization not done for this code section'
+csms$insert      stop
           mode = 2 ! Only multi-Doppler obs
 
 !         Take the data from all the radars and add the derived radar obs into
@@ -647,7 +664,7 @@
                       vanl(i,j,k) = 0.
                   enddo ! i
                   enddo ! j
-              elseif(.not. l_analyze(k) 
+              elseif(.not. l_analyze(k)
      1               .or. icount_radar_total .eq. 0)then
                    write(6,412)k
 412                format(' No multi-radar obs at lvl',i3,
@@ -737,7 +754,7 @@
           enddo ! j
 
 
-          if(l_analyze(k) .OR. (l_3d .and. icount_radar_total .gt. 0)  
+          if(l_analyze(k) .OR. (l_3d .and. icount_radar_total .gt. 0)
      1                         )then ! This depends on the presence of radar obs
               write(6,511)k
 511           format(' Use 2nd Pass for lvl',i3)
@@ -794,8 +811,10 @@
       deallocate(upass1)
       deallocate(vpass1)
 
+csms$serial end
       enddo ! n_iter_wind
 
+csms$serial(:default=ignore)  begin
 !     Compare final analysis to obs
       call compare_wind(
      1            uanl,vanl,'LAPS',
@@ -809,6 +828,8 @@
       istatus = 1
 
       write(6,*)' End of subroutine laps_anl'
+
+csms$serial end
 
       return
       end
@@ -852,6 +873,9 @@
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
 
+c DSS TBD: Work-around for SMS bug
+csms$insert      imax = imax
+csms$ignore begin
       write(6,*)' Entering insert_derived_radar_obs, mode =',mode
 
 !     Initialize l_good_multi_doppler_ob if mode = 2
@@ -985,7 +1009,7 @@
           if(mode .eq. 1)then ! Use all Doppler obs
               write(6,504)k,icount_good_lvl,l_analyze(k)
 504           format(' LVL',i3,' # sngl+multi = ',i6,l2)
-          elseif(mode .eq. 2)then ! Use only multi Doppler obs  
+          elseif(mode .eq. 2)then ! Use only multi Doppler obs
               write(6,505)k,icount_good_lvl,l_analyze(k)
 505           format(' LVL',i3,' # multi = ',i6,l2)
           endif
@@ -995,9 +1019,10 @@
       enddo ! k
 
       write(6,*)
-     1     ' Finished insert_derived_radar_obs, icount_radar_total = ' 
+     1     ' Finished insert_derived_radar_obs, icount_radar_total = '
      1    ,icount_radar_total
 
+csms$ignore end
       return
       end
 
@@ -1037,6 +1062,9 @@
 
       character*31 ext
 
+c DSS TBD: Work-around for SMS bug
+csms$insert      imax = imax
+csms$ignore begin
       write(6,*)' Filtering radar obs into superobs',rlat_radar,rlon_rad
      1ar
       n_radarobs_tot_fltrd = 0
@@ -1124,7 +1152,7 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
 
-            if(abs(upass1(i,j,k)) .ge. 1e6 .or. 
+            if(abs(upass1(i,j,k)) .ge. 1e6 .or.
      1         abs(vpass1(i,j,k)) .ge. 1e6)then
                 ierr_count = ierr_count + 1
                 if(ierr_count .lt. 100)write(6,*)
@@ -1225,6 +1253,7 @@ c  convert radar obs into u & v by using tangential component of first pass
           close(61)
       endif
 
+csms$ignore end
       return
       end
 
@@ -1256,6 +1285,9 @@ c  convert radar obs into u & v by using tangential component of first pass
         logical l_found_one, l_imax_odd, l_jmax_odd
         integer i,j,ii,jj
 
+c DSS TBD: Work-around for SMS bug
+csms$insert      imax = imax
+csms$ignore begin
         l_imax_odd = 1 .eq. mod(imax,2)
         l_jmax_odd = 1 .eq. mod(jmax,2)
 
@@ -1273,8 +1305,8 @@ c  convert radar obs into u & v by using tangential component of first pass
               do ii = i,i+1
                  if  ( l_found_one ) then
                     vr_obs_fltrd(ii,jj) = r_missing_data
-                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data 
-     1                                                            )then       
+                 elseif ( vr_obs_unfltrd(ii,jj) .ne. r_missing_data
+     1                                                            )then
                     vr_obs_fltrd(ii,jj) = vr_obs_unfltrd(ii,jj)
                     l_found_one = .true.
                  else
@@ -1297,7 +1329,7 @@ c  convert radar obs into u & v by using tangential component of first pass
               enddo
            endif
 
-        elseif(n_radarobs_lvl_unfltrd .gt. 
+        elseif(n_radarobs_lvl_unfltrd .gt.
      1         thresh_2_radarobs_lvl_unfltrd)then
            ! Keep every other ob.  Keep one ob out of every `pair'.
            intvl_rad = 2
@@ -1328,6 +1360,7 @@ c  convert radar obs into u & v by using tangential component of first pass
            enddo
       endif
 
+csms$ignore end
       return
       end
 
@@ -1369,6 +1402,9 @@ c  convert radar obs into u & v by using tangential component of first pass
       integer*4 vert_rad_pirep_s,vert_rad_cdw_s,vert_rad_sfc_s
      1         ,vert_rad_prof_s
 
+c DSS TBD: Work-around for SMS bug
+csms$insert      imax = imax
+csms$ignore begin
       call get_r_missing_data(r_missing_data, istatus)
       if(istatus .ne. 1)return
 
@@ -1398,7 +1434,7 @@ c  convert radar obs into u & v by using tangential component of first pass
           weights(i,j,k) = wt_p(i,j,k)
       enddo ! k
 
-      iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points 
+      iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points
                                                  ! looped in the vertical
       vert_rad_pirep_s = vert_rad_pirep * iscale
       vert_rad_cdw_s  = vert_rad_cdw  * iscale
@@ -1504,6 +1540,7 @@ c  convert radar obs into u & v by using tangential component of first pass
               endif
           endif
       enddo ! k
+csms$ignore end
 
       return
       end
@@ -1513,6 +1550,10 @@ c  convert radar obs into u & v by using tangential component of first pass
      1           ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
       real*4    wt_p_spread(imax,jmax,kmax)                        ! Input
+
+c DSS TBD: Work-around for SMS bug
+csms$insert      imax = imax
+csms$ignore begin
 
       write(6,*)
       write(6,*)' subroutine get_inst_err...'
@@ -1543,9 +1584,10 @@ c  convert radar obs into u & v by using tangential component of first pass
 
       write(6,*)' n_obs_total = ',n_obs_total
       write(6,*)' wt_p_inv_total,wt_p_inv_ave = '
-     1           ,wt_p_inv_total,wt_p_inv_ave        
+     1           ,wt_p_inv_total,wt_p_inv_ave
       write(6,*)' rms_inst, rms_thresh = ',rms_inst,rms_thresh
+csms$ignore end
 
       return
       end
-      
+

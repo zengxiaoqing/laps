@@ -170,8 +170,13 @@
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data           ! I
      1                           ,sfc_albedo,istat_sfc_albedo)       ! O
 
+        character*3 var
         real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj)
+        real*4 sfc_albedo(ni,nj), static_albedo(ni,nj)
+
+        var = 'ALB'
+
+        call read_static_grid(ni,nj,var,static_albedo,istatus)
 
         do i = 1,ni
         do j = 1,nj

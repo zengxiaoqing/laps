@@ -1,13 +1,22 @@
-      subroutine ccpfil(ZREG,MREG,NREG,scale)
+      subroutine ccpfil(field_in,MREG,NREG,scale_l,scale_h,colortable)       
 
 C 
 C Define error file, Fortran unit number, and workstation type,
 C and workstation ID.
 C 
       PARAMETER (IERRF=6, LUNIT=2, IWTYPE=1, IWKID=1)
-      REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG)
+      REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG),field_in(MREG,NREG)
+
+      character*(*)colortable
       
       EXTERNAL COLOR2
+
+      write(6,*)' Subroutine ccpfil for solid fill plot...'
+
+!     Apply scaling to the array
+      scale = scale_h - scale_l
+      call addcon(field_in,-scale_l,ZREG,MREG,NREG)
+
 C      
 C Get data array
 C
@@ -21,6 +30,7 @@ C
 C      
 C Call Conpack color fill routine
 C      
+      write(6,*)' Colortable is ',colortable
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,COLOR2,IWKID,scale)
 C      
 C Close frame

@@ -1310,7 +1310,7 @@ c read in laps lat/lon and topo
      1                           ,field_vert,field_vert3,r_missing_data)
 
             write(6,*)' calling solid fill cloud plot'
-            call ccpfil(field_vert3,NX_P,NX_P,1.0)
+            call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear')
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
