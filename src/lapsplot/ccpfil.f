@@ -79,7 +79,7 @@ C
           if(field_in(i,j) .eq. r_missing_data)then
 !             Test for 'linear' is proxy for rejecting X-sects
 !             We only want to color missing data values for H-sects
-              if(colortable .ne. 'linear')then
+              if(colortable(1:3) .ne. 'lin')then
                   ZREG(i,j) = scale * 0.96
               endif
           elseif(ireverse .eq. 1)then
@@ -188,14 +188,24 @@ C
 C BACKGROUND COLOR
 C BLACK
 
-      rcols = ncols - 1
 C
       CALL GSCR(IWKID,0,0.,0.,0.)
 
-      if(colortable .eq. 'linear')then
+      if(colortable(1:3) .eq. 'lin')then
+          if(colortable .eq. 'linear_reduced')then
+              ncols = 8
+          else
+              ncols = 20
+          endif
+
+          rcols = ncols - 1
           do i = 1,255
-!             rintens = min(max(float(i-2) / rcols,0.),1.)
-              rintens = min(max(float(i-2) / rcols,0.),1.)
+              if(colortable .eq. 'linear_reduced')then
+                  rintens = min(max( (float(i) / rcols) - 0.4 ,0.),1.)       
+              else
+                  rintens = min(max(float(i-2) / rcols,0.),1.)
+              endif
+
               if(ireverse .eq. 1)rintens = 1.0 - rintens
               call GSCR(IWKID, i, rintens, rintens, rintens)
           enddo ! i
