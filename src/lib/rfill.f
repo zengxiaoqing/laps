@@ -339,8 +339,9 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
 !       ni,nj,nk are input LAPS grid dimensions
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
-!       Input field ref_3d is assumed to either equal ref_base or 
-!       r_missing_data or a valid value.
+!       Input field 'ref_3d' is assumed to either equal 'ref_base' or 
+!       'r_missing_data' or a valid value. QC flags are also allowed though
+!       this is still being assessed. 
 !       Output is either filled in value or original reflectivity
 
         real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflct grid
@@ -349,6 +350,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         real*4 ref_2d_buf(ni,nj)
         real*4 radar_dist(ni,nj)
         integer ngrids(ni,nj), ngrids_max
+
+        logical l_fill
 
         parameter (ngrids_max = 10)
         real*4 weight_a(-ngrids_max:+ngrids_max,-ngrids_max:+ngrids_max)
@@ -376,7 +379,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         endif
 
 !       Calculate radar distance array
-        dgr = 1.1 ! maximum number of deg allowed between radials
+        dgr = 1.6 ! maximum number of deg allowed between radials
         do i = 1,ni
         do j = 1,nj
             call latlon_to_radar(lat(i,j),lon(i,j),0.,
@@ -453,9 +456,18 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     neighbor_thresh = 1
                 endif
 
-!               Fill into buffer array?
+                l_fill = .false.
+
                 if(n_neighbors .ge. neighbor_thresh)then 
                     ref_fill = ref_sum / float(n_neighbors)
+                    if(ref_fill .ge. ref_base)then ! QC flags probably not in 
+                                                   ! the mix
+                        l_fill = .true.
+                    endif
+                endif
+
+!               Fill into buffer array?
+                if(l_fill)then 
                     ref_2d_buf(i,j) = ref_fill ! ref_3d(i,j,k) (test disable)
                     n_add_lvl = n_add_lvl + 1
                     if(n_add_lvl .le. 20)then
