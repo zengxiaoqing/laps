@@ -108,7 +108,7 @@ netcdf static {
             std:valid_range= -5000.f, 5000.f;
 	    std:LAPS_units="METERS";
                 	        
-        //	LAPS grid envelope	
+        //	LAPS grid envelope
 
 	float                                  
             env(record,z,y,x);
@@ -132,7 +132,7 @@ netcdf static {
             zin:valid_range= 0.f, 20.f;
 	    zin:LAPS_units="none";
                 	        
-        //land fractions	
+        //      land fractions
 
 	float                                  
             ldf(record,z,y,x);
@@ -155,7 +155,91 @@ netcdf static {
             use:units="none";
             use:valid_range= 0.f, 20.f;
 	    use:LAPS_units="none";
-                	        
+
+        //      sin projection rotation
+
+        float
+            spr(record,z,y,x);
+            spr:navigation_dim = "nav";
+            spr:record = "valtime, reftime";
+            spr:_FillValue = 1.e+37f;
+            spr:long_name="sin proj rot";
+            spr:units="none";
+            spr:valid_range= -1.0f, 1.0f;
+            spr:LAPS_units="radians";
+
+        //      cosine projection rotation
+
+        float
+            cpr(record,z,y,x);
+            cpr:navigation_dim = "nav";
+            cpr:record = "valtime, reftime";
+            cpr:_FillValue = 1.e+37f;
+            cpr:long_name="cos proj rot";
+            cpr:units="none";
+            cpr:valid_range= -1.0f, 1.0f;
+            cpr:LAPS_units="radians";
+
+        //      map factor A-grid
+
+        float
+            mfa(record,z,y,x);
+            mfa:navigation_dim = "nav";
+            mfa:record = "valtime, reftime";
+            mfa:_FillValue = 1.e+37f;
+            mfa:long_name="map factor A-grid";
+            mfa:units="none";
+            mfa:valid_range= 0.f, 2.0f;
+            mfa:LAPS_units="none";
+
+        //      map factor b-grid
+
+        float
+            mfb(record,z,y,x);
+            mfb:navigation_dim = "nav";
+            mfb:record = "valtime, reftime";
+            mfb:_FillValue = 1.e+37f;
+            mfb:long_name="map factor b-grid";
+            mfb:units="none";
+            mfb:valid_range= 0.f, 2.0f;
+            mfb:LAPS_units="none";
+
+        //      map factor c-grid
+
+        float
+            mfc(record,z,y,x);
+            mfc:navigation_dim = "nav";
+            mfc:record = "valtime, reftime";
+            mfc:_FillValue = 1.e+37f;
+            mfc:long_name="map factor c-grid";
+            mfc:units="none";
+            mfc:valid_range= 0.f, 2.0f;
+            mfc:LAPS_units="none";
+
+        //      horizontal comp coriolis parameter
+
+        float
+            cph(record,z,y,x);
+            cph:navigation_dim = "nav";
+            cph:record = "valtime, reftime";
+            cph:_FillValue = 1.e+37f;
+            cph:long_name="Coriolis parameter h-comp";
+            cph:units="none";
+            cph:valid_range= 0.f, 0.0001f;
+            cph:LAPS_units="none";
+
+        //      vertical comp coriolis parameter
+
+        float
+            cpv(record,z,y,x);
+            cpv:navigation_dim = "nav";
+            cpv:record = "valtime, reftime";
+            cpv:_FillValue = 1.e+37f;
+            cpv:long_name="Coriolis parameter v-comp";
+            cpv:units="none";
+            cpv:valid_range= 0.f, 0.0001f;
+            cpv:LAPS_units="none";
+
         //	LAPS variables
 
         long
@@ -179,6 +263,13 @@ netcdf static {
             zin_comment(record,z,namelen),
             ldf_comment(record,z,namelen),
             use_comment(record,z,namelen),
+            spr_comment(record,z,namelen),
+            cpr_comment(record,z,namelen),
+            mfa_comment(record,z,namelen),
+            mfb_comment(record,z,namelen),
+            mfc_comment(record,z,namelen),
+            cph_comment(record,z,namelen),
+            cpv_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
