@@ -166,7 +166,7 @@ c         len = index(bgpaths(i),' ')
          else if(bgmodel.eq.7) then
             nx_bg = 185
             ny_bg = 129
-            nz_bg = 39
+            nz_bg = 20
             cmodel = 'ETA48_GRIB'
          else if(bgmodel.eq.8) then
             nx_bg = 360
@@ -325,7 +325,7 @@ c
      .          lga_files,lga_times(max_files),lga_valid(max_files),
      .          bg_files,bgtime,bgvalid,
      .          ip(5*nz_laps),
-     .          i,ii,j,jj,k,kk,l,ll,n,
+     .          i,ic,ii,j,jj,k,kk,l,ll,n,
      .          istatus
 c
       character*(*) bgpath,lapsroot,laps_domain_file
@@ -567,8 +567,8 @@ c
                print *,i,lga_names(i),':',fname,':',af
                call get_lga_source(nx_laps,ny_laps,nz_laps
      +              ,fname,af,comment(1))
-               call s_len(cmodel,i)
-               if(cmodel(1:i) .eq. comment(1)(1:i)) then
+               call s_len(cmodel,ic)
+               if(cmodel(1:ic) .eq. comment(1)(1:ic)) then
                   print *,'LGA file exists, not making one. ' 
      +                   ,lga_names(i)
                   lga_status=1
@@ -576,7 +576,7 @@ c
                else
                   print *,'Overwritting LGA file ',lga_names(i)
      +            ,'from model ',comment(1)(1:i),' with a new one'
-     +            ,' from model ',cmodel(1:i)
+     +            ,' from model ',cmodel(1:ic)
                endif
             endif
                
@@ -783,7 +783,7 @@ c ****** Fill grid for LAPS write routine.
 c
 c         i=index(cmodel,' ')-1
 
-         call s_len(cmodel,i)
+         call s_len(cmodel,ic)
          do k=1,nz_laps                 ! Height
             do j=1,ny_laps
             do i=1,nx_laps
@@ -794,7 +794,7 @@ c         i=index(cmodel,' ')-1
             var(k)='HT '
             lvl_coord(k)='mb  '
             units(k)='Meters'
-            comment(k)=cmodel(1:i)//' interpolated to LAPS isobaric.'
+            comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
 c
          do k=1,nz_laps                 ! Temperature
@@ -808,7 +808,7 @@ c
             var(kk)='T3 '
             lvl_coord(kk)='mb  '
             units(kk)='Kelvin'
-            comment(kk)=cmodel(1:i)//' interpolated to LAPS isobaric.'
+            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
 c
          do k=1,nz_laps                 ! Specific humidity
@@ -822,7 +822,7 @@ c
             var(kk)='SH '
             lvl_coord(kk)='mb  '
             units(kk)='kg/kg'
-            comment(kk)=cmodel(1:i)//' interpolated to LAPS isobaric.'
+            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
 c
          do k=1,nz_laps                 ! u-component wind
@@ -836,7 +836,7 @@ c
             var(kk)='U3 '
             lvl_coord(kk)='mb  '
             units(kk)='m/s'
-            comment(kk)=cmodel(1:i)//' interpolated to LAPS isobaric.'
+            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
 c
          do k=1,nz_laps                 ! v-component wind
@@ -850,7 +850,7 @@ c
             var(kk)='V3 '
             lvl_coord(kk)='mb  '
             units(kk)='m/s'
-            comment(kk)=cmodel(1:i)//' interpolated to LAPS isobaric.'
+            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
 c
          read(af,'(i4)') ihour
