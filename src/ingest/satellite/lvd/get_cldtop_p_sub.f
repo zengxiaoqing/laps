@@ -131,7 +131,7 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
             print*,'unable to convert to i4time'
             stop
          endif
-         i4timedif=i4time_sys-i4time_file
+         i4timedif=abs(i4time_sys-i4time_file)
          if(i4timedif.lt.i4timemin)then
             isave=i
             i4timefile_min=i4time_file
