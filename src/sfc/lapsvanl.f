@@ -166,6 +166,11 @@ c                                           with Barnes.
 c                               01-28-99  Rm Barnes calls. Add check for t,td
 c                                           bkgs, if none use tt, ttd.
 c                               06-18-99  Remove LI, CAPE, CIN calcs.
+c                               07-08-99  Remove LI/CAPE/CIN arrays.  Change 
+c                                           stn char array.  Rm *4 from all
+c                                           declarations. Don't calc subsitute
+c                                           T/Td backgrounds here. Don't use
+c                                           sat data in T spline if no bkg.
 c
 c*****************************************************************************
 cx
@@ -197,87 +202,82 @@ c
 c
 c.....	LAPS lat/lon and terrain grids, and Coriolis.
 c
-	integer*4 istatus
-	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
-	real*4 fo(ni,nj), fo2(ni,nj), akk(ni,nj), pbl_top(ni,nj)
+	integer istatus
+        real grid_spacing
+	real lat(ni,nj), lon(ni,nj), topo(ni,nj)
+	real fo(ni,nj), fo2(ni,nj), akk(ni,nj), pbl_top(ni,nj)
 c
 c.....  Stuff for intermediate grids (old LGS file)
 c
-	real*4 u1(ni,nj), v1(ni,nj)
-	real*4 t1(ni,nj), td1(ni,nj), tb81(ni,nj)
-	real*4 rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
-	real*4 vis1(ni,nj), elev1(ni,nj)
+	real u1(ni,nj), v1(ni,nj)
+	real t1(ni,nj), td1(ni,nj), tb81(ni,nj)
+	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
+	real vis1(ni,nj), elev1(ni,nj)
 c
 c.....	Grids for the first data's analyses.
 c
-	real*4 u(ni,nj), v(ni,nj)
-	real*4 rp(ni,nj), psfc(ni,nj), vis(ni,nj)
-	real*4 t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
-	real*4 td(ni,nj), ceil(ni,nj), mslp(ni,nj)
+	real u(ni,nj), v(ni,nj)
+	real rp(ni,nj), psfc(ni,nj), vis(ni,nj)
+	real t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
+	real td(ni,nj), ceil(ni,nj), mslp(ni,nj)
 c
 c.....	Grids for the variational analyses of rp, u, v
 c
-	real*4 p_a(ni,nj), u_a(ni,nj), v_a(ni,nj)
+	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj)
 c
 c.....	Grids for the derived quantities.
 c
-	real*4 du(ni,nj), dv(ni,nj), spd(ni,nj)
-	real*4 drp(ni,nj), vv(ni,nj)
-	real*4 tt(ni,nj), ttd(ni,nj)
-	real*4 li(ni,nj), qadv(ni,nj), rh(ni,nj)
-	real*4 cssi(ni,nj), fire(ni,nj), hi(ni,nj)
-	real*4 p_1d_pa(nk)
-	real*4 pbe_2d(ni,nj), nbe_2d(ni,nj)
-c
-c.....  Grids for PUT_TEMP_ANAL and related stuff.
-c
-        real*4 grid_spacing
-	real*4 t_3d_k(ni,nj,nk), ht_3d_m(ni,nj,nk)
+	real du(ni,nj), dv(ni,nj), spd(ni,nj)
+	real drp(ni,nj), vv(ni,nj)
+	real tt(ni,nj), ttd(ni,nj)
+	real qadv(ni,nj), rh(ni,nj)
+	real cssi(ni,nj), fire(ni,nj), hi(ni,nj)
+	real p_1d_pa(nk)
 c
 c.....	Grids for variables derived by the MESO_ANL subroutine.
 c
-	real*4 q(ni,nj), qcon(ni,nj), thadv(ni,nj), tadv(ni,nj)
+	real q(ni,nj), qcon(ni,nj), thadv(ni,nj), tadv(ni,nj)
 c
 c.....	Grids for the background fields.
 c
-        real*4 u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
-        real*4 wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
-        real*4 rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
-        real*4 wt_rp(ni,nj), wt_mslp(ni,nj)
-        real*4 vis_bk(ni,nj), wt_vis(ni,nj)
-	real*4 tb8_bk(ni,nj)
+        real u_bk(ni,nj), v_bk(ni,nj), t_bk(ni,nj), td_bk(ni,nj)
+        real wt_u(ni,nj), wt_v(ni,nj), wt_t(ni,nj), wt_td(ni,nj)
+        real rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
+        real wt_rp(ni,nj), wt_mslp(ni,nj)
+        real vis_bk(ni,nj), wt_vis(ni,nj)
+	real tb8_bk(ni,nj)
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
 c
 c.....	Grids for other stuff.
 c
-        real*4 fnorm(0:ni-1,0:nj-1)
-	real*4 ddiv(ni,nj), vort(ni,nj) 
-	real*4 f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
-	real*4 a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
-	real*4 nu(ni,nj),nv(ni,nj), t7(ni,nj), h7(ni,nj), td7(ni,nj)
-	real*4 t5(ni,nj)
+        real fnorm(0:ni-1,0:nj-1)
+	real ddiv(ni,nj), vort(ni,nj) 
+	real f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
+	real a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
+	real nu(ni,nj),nv(ni,nj), t7(ni,nj), h7(ni,nj), td7(ni,nj)
+	real t5(ni,nj)
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
-	real*4 lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
-	real*4 t_s(mxstn), td_s(mxstn), ff_s(mxstn)
-	real*4 pstn_s(mxstn), mslp_s(mxstn), vis_s(mxstn)
+	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
+	real t_s(mxstn), td_s(mxstn), ff_s(mxstn)
+	real pstn_s(mxstn), mslp_s(mxstn), vis_s(mxstn)
 c
-	character stn(mxstn)*3
+	character stn(mxstn)*20
         character title*40, ver_file*256
 c
 c.....	dummy work arrays
 c
-	real*4 d1(ni,nj), d2(ni,nj)
-	real*4 dm1(ni,nj,nk)
-	real*4 dums(mxstn)
+	real d1(ni,nj), d2(ni,nj)
+	real dm1(ni,nj,nk)
+	real dums(mxstn)
 c
-	real*4 lapse_t, lapse_td
+	real lapse_t, lapse_td
 	real make_td
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
-	integer*4 ii(mxstn), jj(mxstn)
-	integer*4 jstatus(20)
+	real x1a(ni), x2a(nj), y2a(ni,nj)
+	integer ii(mxstn), jj(mxstn)
+	integer jstatus(20)
 	character name*10, filename*9, infile*256
 	character var_fire*3, com_fire*125, units_fire*10, ext_f*31
 	character var_lga*3, ext_lga*31, laps_domain*9
@@ -287,9 +287,9 @@ c
 c
 c.....	Stuff for LAPS outputs (i.e., standard forms).
 c
-	parameter(num_var = 26)
-	real*4 data(ni,nj,num_var)
-	integer*4 imax,jmax,lvl(num_var)
+	parameter(num_var = 23)
+	real data(ni,nj,num_var)
+	integer imax,jmax,lvl(num_var)
 	character dir*256,ext*31,var(num_var)*3,lvl_coord(num_var)*4
 	character units(num_var)*10, comment(num_var)*125
 c
@@ -308,7 +308,7 @@ c
 	itmax = 100
 	alf = 100.
 	alfg = 1000.
-	err = .1
+	err = .0003
 	ovr = 1.4
 	scale = 0.
 	npass = 1
@@ -441,25 +441,25 @@ c
 c.....  Calculate the terrain est temps and pressure.
 c.....  If no t or td background, make one.
 c
-	if(back_t .ne. 1) then
-	   print *,' No t background.  Est from t7.'
-	   do j=1,jmax
-	   do i=1,imax
-	      dz = topo(i,j) - h7(i,j)
-	      t_bk(i,j) = t7(i,j) + (lapse_t * dz) 
-	   enddo !i
-	   enddo !j
-	endif
+cc	if(back_t .ne. 1) then
+cc	   print *,' No t background.  Est from t7.'
+cc	   do j=1,jmax
+cc	   do i=1,imax
+cc	      dz = topo(i,j) - h7(i,j)
+cc	      t_bk(i,j) = t7(i,j) + (lapse_t * dz) 
+cc	   enddo !i
+cc	   enddo !j
+cc	endif
 c
-	if(back_td .ne. 1) then
-	   print *,' No td background.  Est from td7.'
-	   do j=1,jmax
-	   do i=1,imax
-	      dz = topo(i,j) - h7(i,j)
-	      td_bk(i,j) = td7(i,j) + (lapse_td * dz) 
-	   enddo !i
-	   enddo !j
-	endif
+cc	if(back_td .ne. 1) then
+cc	   print *,' No td background.  Est from td7.'
+cc	   do j=1,jmax
+cc	   do i=1,imax
+cc	      dz = topo(i,j) - h7(i,j)
+cc	      td_bk(i,j) = td7(i,j) + (lapse_td * dz) 
+cc	   enddo !i
+cc	   enddo !j
+cc	endif
 c
 cc	go to 887
 c
@@ -527,11 +527,16 @@ c
 c	print *,'  Fill in tb8 field using smooth Barnes'
 c
 	n_obs_var = 0
+
 c       fill_val = 1.e37
 c       smsng = 1.e37
 c	npass = 1
 c	rom2 = 0.005
+c
 	call zero(tb8, imax,jmax)
+	if(back_t .ne. 1) call zero(tb81, imax,jmax) !if no bkg, 
+                                                     ! don't use sat data
+c
 c	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 c	call barnes2(tb8,imax,jmax,tb81,smsng,mxstn,npass,fnorm)
 c       print *,' Got the weights'
@@ -560,7 +565,7 @@ cc	   call zero(tb8, imax,jmax)
 
 c	return
 
-        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,.003,
+        call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb81,cormax,err,
      &        imax,jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
 c
 c.....	Now call the solution algorithm for the dew point.
@@ -574,7 +579,7 @@ c	beta_td = 3.0
 	print *,'  At spline call for td'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
-        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,.003,
+        call spline(td,td1,td_bk,alf,wt_td,beta_td,0.,z,cormax,err,
      &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
@@ -589,6 +594,7 @@ c
  887	continue
 c
 cc	call conv_f2k(t, t, imax,jmax)
+cc	call conv_f2k(td, td, imax,jmax)
 cc	go to 888
 c
 c.....	Check to make sure that td is not greater than t...1st time.
@@ -709,31 +715,31 @@ c
 	print *,'  At spline call for u'
 	bad_uw = bad_u
 	if(back_uv .ne. 1) bad_uw = bad_u * 2.
-	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,.01,imax,jmax,
+	call spline(u,u1,u_bk,alf,wt_u,beta,0.,z,cormax,err,imax,jmax,
      &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
 c
 	print *,'  At spline call for v'
 	bad_vw = bad_v
 	if(back_uv .ne. 1) bad_vw = bad_v * 2.
-	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,.01,imax,jmax,
+	call spline(v,v1,v_bk,alf,wt_v,beta,0.,z,cormax,err,imax,jmax,
      &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
 c
 	print *,'  At spline call for red_p'
 	bad_rp = bad_p
 	if(back_rp .ne. 1) bad_rp = bad_p * 2.
-	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,.01,imax,
+	call spline(rp,rp1,rp_bk,alf,wt_rp,beta,0.,z,cormax,err,imax,
      &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
 c
 	print *,'  At spline call for msl p'
 	bad_mp = bad_p
 	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	call spline(mslp,mslp1,mslp_bk,alf,wt_mslp,beta,0.,z,cormax,
-     &      .01,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
+     &      err,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
 c
 	print *,'  At spline call for visibility'
 	bad_vs = bad_vis
 	if(back_vis .ne. 1) bad_vs = bad_vis * 2.
-	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,1.,
+	call spline(vis,vis1,vis_bk,alf,wt_vis,beta,0.,z,cormax,err,
      &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
@@ -884,15 +890,9 @@ c
 	enddo !j
 	call bounds(vv,imax,jmax)
 c
-c.....	Now convert some stuff, then call the thermo routines.
+c.....	Now convert some stuff and call the derived routines.
 c
 	call multcon(p_a,0.01,imax,jmax)
-cc	call zero(d1,ni,nj)
-cc	sflag = 0.
-!	sflag = 2.e6	! this means li_laps will read 500 T from a file
-cc	call li_laps(t,td,psfc,d1,i4time,imax,jmax,li,sflag,istatus)
-	call constant(li,fill_val,imax,jmax)
-c
 	call make_cssi(t,td,mslp,u_a,v_a,cssi,imax,jmax,badflag)
 c
 	call conv_f2k(t,t,imax,jmax)		! conv F to K
@@ -982,68 +982,20 @@ c
 	print *,' Heat Index...'
 	call heat_index(t,rh,hi,imax,jmax,badflag)
 c
-c.....	Now calculate PBE and NBE.  First fix up the .LT1 file....
-c
-	call constant(pbe_2d,fill_val,imax,jmax)
-	call constant(nbe_2d,fill_val,imax,jmax)
-	go to 888   !skip over all this 3-d stuff....
-
-	print *,' PBE/NBE calcs...'
-	no_3d_t = 1	! flag for if 3-d temps missing: 1-there,0-missing
-	jstatus(4) = 1
-        LT1_write_flag = 0     ! flag for writing the LT1 file: 1-yes,0-no
-c
-	call move(t,d1,imax,jmax)     ! move temps into dummy array
-c       
-	call put_temp_anal(i4time,imax,jmax,kmax,
-     &                 ht_3d_m,                                     !3d hts - returned
-     &                 lat,lon,topo,
-     &                 d1,psfc,                                     !2d t and sfc p
-     &                 LT1_write_flag,laps_cycle_time,grid_spacing,
-     &                 t_3d_k,istatus)                              !3d t - returned
-c
-	print *,' From put_temp_anal: istatus = ', istatus
-	if(istatus .ne. 1) then
-	   no_3d_t = 0	   
-	   jstatus(4) = 2	! written but incompl. data
-	endif
-c
-	if(no_3d_t .ne. 1) then		! skip p/nbe calc...no upper air temps
-	  print *,' ** Upper temps missing.  Skipping BE calc. **'
-	  call constant(pbe_2d,1.e6,imax,jmax)
-	  call constant(nbe_2d,1.e6,imax,jmax)
-	  go to 888
-	endif
-c
-	do k = 1,nk ! Calculate pressure at each level
-	    p_1d_pa(k) = pressure_of_level(k) ! Pressure at each level
-	enddo !k
-c
-c	Get PBE and NBE - Make sure t_sfc_k(i,j) >= td_sfc_k(i,j)
-	call laps_be(ni,nj,nk,t,td,psfc,
-     &  t_3d_k,ht_3d_m,p_1d_pa,topo,pbe_2d,nbe_2d)
-c
- 888	continue
-c
 c.....	Now write out the grids to PROD_DEV.
 c
+ 888	continue
 	print *,' Saving primary fields.'
 	do i=1,num_var
 	  lvl(i) = 0
 	  lvl_coord(i) = 'AGL'
 	enddo !i
-	lvl_coord(10) = 'MSL'
-	lvl_coord(26) = 'MSL'
+	lvl_coord(9) = 'MSL'
 c
         do i=1,num_var
            write(comment(i),180) n_sao_g,n_sao_b,n_obs_g  
-c           write(comment(i)(50:52),180) n_sao_g
-c           write(comment(i)(54:56),180) n_sao_b
-c           write(comment(i)(58:60),180) n_obs_g
- 180	   format(49x,3i4)
-         
-c 179	   format(125x)
         enddo !i
+ 180	   format(49x,3i4)
         print*,comment(1)
 c
 	do k=1,num_var  ! fill the output array
@@ -1231,56 +1183,32 @@ c
      &     call move_2dto3d(  qadv, data, 19, imax, jmax, num_var)
 c
 	print *,' -------------------------------'
-	print *,' LI (K):'
-	var(20) = 'LI'		! lifted index (K)
-	units(20) = 'K'
-	call check_field_2d(li, imax,jmax,fill_val,istatus)
-	if(istatus .eq. 1)
-     &     call move_2dto3d(    li, data, 20, imax, jmax, num_var)
-c
-	print *,' -------------------------------'
 	print *,' wind spd (m/s):'
-	var(21) = 'SPD'		! wind speed (m/s)
-	units(21) = 'M/S'
+	var(20) = 'SPD'		! wind speed (m/s)
+	units(20) = 'M/S'
 	call check_field_2d(spd, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
-     &     call move_2dto3d(   spd, data, 21, imax, jmax, num_var)
+     &     call move_2dto3d(   spd, data, 20, imax, jmax, num_var)
 c
-	var(22) = 'CSS'		! CSSI 
-	units(22) = ' '
-	comment(22)= 'CSSI - COLORADO SEVERE STORM INDEX'
-        call move_2dto3d(  cssi, data, 22, imax, jmax, num_var)
-c
-	print *,' -------------------------------'
-	print *,' pbe (J/kg)'
-	var(23) = 'PBE'		! Pos Bouyant Energy (J/kg)
-	units(23) = 'J/KG'
-	call check_field_2d(pbe_2d, imax,jmax,fill_val,istatus)
-	if(istatus .eq. 1)
-     &     call move_2dto3d(pbe_2d, data, 23, imax, jmax, num_var)
-c
-	print *,' -------------------------------'
-	print *,' nbe (J/kg)'
-	var(24) = 'NBE'		! Neg Bouyant Energy (J/kg)
-	units(24) = 'J/KG'
-	call check_field_2d(nbe_2d, imax,jmax,fill_val,istatus)
-	if(istatus .eq. 1)
-     &     call move_2dto3d(nbe_2d, data, 24, imax, jmax, num_var)
+	var(21) = 'CSS'		! CSSI 
+	units(21) = ' '
+	comment(21)= 'CSSI - COLORADO SEVERE STORM INDEX'
+        call move_2dto3d(  cssi, data, 21, imax, jmax, num_var)
 c
 	print *,' -------------------------------'
 	print *,' vis (m):'
-	var(25) = 'VIS'		! Visibility (m)
-	units(25) = 'M'
+	var(22) = 'VIS'		! Visibility (m)
+	units(22) = 'M'
 	call check_field_2d(vis, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
-     &     call move_2dto3d(   vis, data, 25, imax, jmax, num_var)
+     &     call move_2dto3d(   vis, data, 22, imax, jmax, num_var)
 c
-	var(26) = 'FWX'		! Fire threat index (integer)
-	units(26) = ' '
-	comment(26)(1:22)= 'LAPS FIRE THREAT INDEX'
-	comment(26)(63:121) = 
+	var(23) = 'FWX'		! Fire threat index (integer)
+	units(23) = ' '
+	comment(23)(1:22)= 'LAPS FIRE THREAT INDEX'
+	comment(23)(63:121) = 
      &      'INDEX: 0-NONE, 5-SLGT, 10-MDT, 15-HI, 20-EXTREME'
-	call move_2dto3d(  fire, data, 26, imax, jmax, num_var)
+	call move_2dto3d(  fire, data, 23, imax, jmax, num_var)
 c
 	print *,' ======================================================='
 c
