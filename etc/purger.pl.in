@@ -60,14 +60,14 @@ foreach $dir (keys(%clean_dirs)){
 }
 
 sub dodir {
-    local($dir,$pattern,$nlink) = @_;
-    local($dev,$ino,$mode,$subcount);
-    local(@dirlist);
+    my($dir,$pattern,$nlink) = @_;
+    my($dev,$ino,$mode,$subcount);
+    my(@dirlist);
     ($dev,$ino,$mode,$nlink) = stat('.') unless $nlink;
 
 
     opendir(DIR,'.');
-    local(@filenames) = readdir(DIR);
+    my(@filenames) = readdir(DIR);
     closedir(DIR);
 
     if($nlink==2){                  # directory with no subs
@@ -82,7 +82,7 @@ sub dodir {
 	}
     }else{
 	$subcount = $nlink-2;
-        local($found)=0;
+        my($found)=0;
 	for(@filenames) {
 	    next if(/^[\.]+$/);
 	    $name = "$dir/$_";
