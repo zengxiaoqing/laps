@@ -50,6 +50,7 @@ C      Author:    John Snook
 C      Modified:  To write netCDF data files  1/93 Linda Wharton
 C                 To remove BYTE arrays       4/94 Linda Wharton
 C                 To accept netCDF ver. 3 data files  9/97 Linda Wharton
+C                 To read levels from pressure.nl    2/01 Linda Wharton
 C
 C      Writes data in arrays DATA and COMMENT to the netCDF file name
 C      specified by I4TIME, DIR and EXT.  The data in VAR, LVL, LVL_COORD,
@@ -96,8 +97,7 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels=100)
-      real*4         base,                 !bottom of LAPS levels
-     1               interval,             !interval of LAPS levels
+      real*4         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
 C
       character*4    fcst_hh_mm
@@ -107,6 +107,7 @@ C
       character*150  static_path
       character*9    laps_dom_file
       character*24   asctime
+      character*20   v_g
 C
       common         /prt/flag
 C
@@ -128,17 +129,22 @@ C ****  call get_laps_config to read nest7grid.parms
 C
       call get_laps_config(laps_dom_file,istatus)
       n_levels = nk_laps
-      base = PRESSURE_BOTTOM_L / 100.0
-      interval = PRESSURE_INTERVAL_L / 100.0
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
+      v_g = VERTICAL_GRID
+
+      if (v_g .ne. 'PRESSURE') goto 920
+
+      call get_pres_1d(i4_valtime,n_levels,pr,istatus)
+      do j = 1,n_levels
+         pr(j)=pr(j)/100.
+      enddo
+
 
 C **** Special case where write_laps_data is called with fua or fsf extension
       if (ext .eq. 'fua') then
-        j = base
-        do i = n_levels, 1, -1
-          cdl_levels(i) = j 
-          j = j - interval
+        do i = 1, n_levels
+          cdl_levels(i) =  pr(i)
         enddo
       endif
       if (ext .eq. 'fsf') then
@@ -224,7 +230,7 @@ C
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
-     1                   lvl, data,base,interval, n_levels, cdl_levels,
+     1                   lvl, data, pr, n_levels, cdl_levels,
      1                   called_from,append, istatus) 
 C
       if (istatus .gt. 0) goto 980
@@ -241,6 +247,16 @@ C
 C
 C ****  Error trapping.
 C
+920     IF (FLAG .NE. 1) THEN
+          write(6,*) 'write_laps ABORTED!'
+          write(6,*) ' LAPS will currently only work on a PRESSURE'
+     1,' vertical grid'
+          write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1,' in nest7grid.parms'
+        ENDIF
+        ISTATUS=ERROR(2)
+        GOTO 999
+
 930     if (flag .ne. 1)
      1    write (6,*) 'file_name variable too short...write aborted.'
         istatus=error(2)
@@ -311,6 +327,7 @@ C                 To accept netCDF ver. 3
 C                   data files                9/97 Linda Wharton
 C                 To allow multiple writes to 
 C                   one file                 10/97 Linda Wharton
+C                 To read levels from pressure.nl    2/01 Linda Wharton
 C
 C      Writes data in arrays DATA and COMMENT to the netCDF file name
 C      specified by I4TIME, DIR and EXT.  The data in VAR, LVL, LVL_COORD,
@@ -357,8 +374,7 @@ C
      1               append                !0=no, 1=yes
 C
       parameter (max_levels=100)
-      real*4         base,                 !bottom of LAPS levels
-     1               interval,             !interval of LAPS levels
+      real*4         pr(max_levels),       !pressures read from get_pres_1d
      1               cdl_levels(max_levels)
 C
       character*4    fcst_hh_mm
@@ -368,6 +384,7 @@ C
       character*128  static_path
       character*9    laps_dom_file
       character*24   asctime
+      character*40   v_g
 C
       common         /prt/flag
 C
@@ -388,17 +405,21 @@ C ****  call get_laps_config to read namelist parameter file
 C
       call get_laps_config(laps_dom_file,istatus)
       n_levels = nk_laps
-      base = PRESSURE_BOTTOM_L / 100.0
-      interval = PRESSURE_INTERVAL_L / 100.0
       n7g_nx = NX_L_CMN 
       n7g_ny =  NY_L_CMN
+      v_g = VERTICAL_GRID
+
+      if (v_g .ne. 'PRESSURE') goto 920
+
+      call get_pres_1d(i4_valtime,n_levels,pr,istatus)
+      do j = 1,n_levels
+         pr(j)=pr(j)/100.
+      enddo
 
 C **** Special case where write_laps_data is called with fua or fsf extension
       if (ext .eq. 'fua') then
-        j = base
         do i = 1, n_levels
-          cdl_levels(i) = j
-          j = j - interval
+          cdl_levels(i) = pr(i)
         enddo
       endif
       if (ext .eq. 'fsf') then
@@ -483,7 +504,7 @@ C
      1                   static_path,fn_length,ext_len,var_len, 
      1                   comm_len, asc_len, cdl_path_len, stat_len,
      1                   i_reftime, i_valtime,imax, jmax, kmax, kdim, 
-     1                   lvl, data,base,interval, n_levels, cdl_levels,
+     1                   lvl, data, pr, n_levels, cdl_levels,
      1                   called_from, append, istatus)
 C
       if (istatus .gt. 0) goto 980
@@ -500,6 +521,16 @@ C
 C
 C ****  Error trapping.
 C
+920     IF (FLAG .NE. 1) THEN
+          write(6,*) 'write_laps ABORTED!'
+          write(6,*) ' LAPS will currently only work on a PRESSURE'
+     1,' vertical grid'
+          write(6,*) ' Make sure VERTICAL_GRID is set to PRESSURE'
+     1,' in nest7grid.parms'
+        ENDIF
+        ISTATUS=ERROR(2)
+        GOTO 999
+
 940     IF (FLAG .NE. 1)
      1    write (6,*) 'Error opening file to be written to...write abort
      1ed.'

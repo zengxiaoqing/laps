@@ -1386,14 +1386,14 @@ fint4 *asc_len;
 /************************************************************/
 #ifdef __STDC__
 int  write_hdr_v3(int cdfid, char *ext, int i_record, fint4 *imax, 
-                  fint4 *jmax, fint4 *kmax, fint4 *kdim, float *base, 
-                  float *interval, fint4 *n_levels, float *Dx, 
+                  fint4 *jmax, fint4 *kmax, fint4 *kdim, float *pr, 
+                  fint4 *n_levels, float *Dx, 
                   float *Dy, float *La1, float *Lo1, float *LoV, 
                   float *Latin1, float *Latin2, char *map_proj, 
                   char *origin, int name_len, float *cdl_levels)
 #else
-int  write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, base, 
-                  interval,n_levels, Dx, Dy, La1, Lo1, LoV, Latin1, 
+int  write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, pr, 
+                  n_levels, Dx, Dy, La1, Lo1, LoV, Latin1, 
                   Latin2, map_proj, origin, name_len, cdl_levels)
 int cdfid; 
 char *ext;
@@ -1402,8 +1402,7 @@ fint4 *imax;
 fint4 *jmax; 
 fint4 *kmax; 
 fint4 *kdim; 
-float *base; 
-float *interval; 
+float *pr; 
 fint4 *n_levels; 
 float *Dx; 
 float *Dy; 
@@ -1513,6 +1512,7 @@ float *cdl_levels;
 /* write out levels */
 /* levels written are based on value in n_levels, which has been adjusted to
      one of four options: standard LAPS 3D (nk_laps in nest7grid.parms),
+                            This then uses the values in pressure.nl for the levels
                           surface = 1, or two special files LC3 and LM1,
                           which are currently set with #define at beginning of
                           this file */
@@ -1536,21 +1536,15 @@ float *cdl_levels;
             *levels = 0;
           }
           else {  /* standard LAPS 3D */
+/* the ordering in *pr is from the bottom up, we need top down ordering in the
+   file, so invert what is in *pr and put it into levels */
 
-            j = *n_levels - 1;
+            j = *n_levels -1;
             for( i = 0; i < *n_levels; i++) {
-              lp = levels + j;
-              j = j - 1;
-              *lp = *base;
-              *base = *base - *interval;
+              levels[i] = pr[j];
+              j--;
             }
       
-/*          for( i = 0; i < *n_levels; i++) {
-              *lp = *base;
-              lp++;
-              *base = *base - *interval;
-            }
-*/
           }
 
           start[0] = 0;
@@ -1958,15 +1952,15 @@ void write_cdf_v3 (char *f_filename, char *f_ext, char *f_var,
                    fint4 *var_len, fint4 *comm_len, fint4 *asc_len, 
                    fint4 *cdl_path_len, fint4 *stat_len, fint4 *i_reftime, 
                    fint4 *i_valtime, fint4 *imax, fint4 *jmax, fint4 *kmax, 
-                   fint4 *kdim,fint4 lvl[], float *data, float *base, 
-                   float *interval, fint4 *n_levels, float *cdl_levels,
+                   fint4 *kdim,fint4 lvl[], float *data, float *pr, 
+                   fint4 *n_levels, float *cdl_levels,
                    fint4 *called_from, fint4 *append, fint4 *status)
 #else
 void write_cdf_v3 (f_filename, f_ext, f_var, f_comment, f_asctime, 
                    f_cdl_path, f_static_path, fn_length, ext_len, 
                    var_len, comm_len,  asc_len, cdl_path_len, stat_len, 
                    i_reftime, i_valtime, imax, jmax, kmax, kdim, lvl, 
-                   data, base, interval, n_levels, cdl_levels,
+                   data, pr, n_levels, cdl_levels,
                    called_from, append, status)
 char *f_filename; 
 char *f_ext; 
@@ -1990,8 +1984,7 @@ fint4 *kmax;
 fint4 *kdim; 
 fint4 lvl[]; 
 float *data; 
-float *base; 
-float *interval; 
+float *pr; 
 fint4 *n_levels;
 float *cdl_levels;
 fint4 *called_from;
@@ -2219,7 +2212,7 @@ fint4 *status;
 /* write out header information into file */
 
 	  istatus = write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, 
-                                 base, interval, n_levels, &Dx, &Dy, &La1, &Lo1, 
+                                 pr, n_levels, &Dx, &Dy, &La1, &Lo1, 
                                  &LoV, &Latin1, &Latin2, map_proj, origin,name_len,
                                  cdl_levels);
 
