@@ -1,5 +1,5 @@
 
-        subroutine ref_fill_horz(ref_3d,ni,nj,nk,lat,lon
+        subroutine ref_fill_horz(ref_3d,ni,nj,nk,lat,lon,dgr
      1                ,rlat_radar,rlon_radar,rheight_radar,istatus)
 
 !       Steve Albers            1998
@@ -49,7 +49,6 @@
         endif
 
 !       Calculate radar distance array
-        dgr = 1.6 ! maximum number of deg allowed between radials
         do i = 1,ni
         do j = 1,nj
             call latlon_to_radar(lat(i,j),lon(i,j),0.,
@@ -142,8 +141,8 @@
                     dbz_ave = alog10(z_ave) * 10.  ! Currently just a test
                     
                     if(ref_fill .ge. ref_base)then ! QC flags probably not in 
-                                                   ! the mix
-                        l_fill = .true.
+                                                   ! the mix?
+                        l_fill = .true. ! Improves coverage if always .true.
                     endif
                 endif
 
