@@ -187,6 +187,8 @@ mkdirs:
 	mkdir -p $(INSTALLROOT) ; fi 
 	if [ ! -d $(DATAROOT) ] ; then  \
 	cp -r $(LAPSROOT)/data $(DATAROOT) ; fi 
+	if [ ! -d $(INSTALLROOT)/util ] ; then  \
+	cp -r  $(LAPSROOT)/util $(INSTALLROOT)/util ; fi 
 	if [ ! -d $(INSTALLROOT)/etc ] ; then  \
 	cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; fi
 	@for dir in $(DATADIRS) ;\
