@@ -167,6 +167,7 @@ c     local monitor variables
 
       real max_func_rad
       real max_func_back
+      real max_func_gvap
       real max_func_gvap1
       real max_func_gvap2
       real max_func_gvap3
@@ -444,11 +445,27 @@ c     cm units.  therefore each weight must be converted unitwise
 c     (divided by 100 since they are a factor of 10**2) higher in the 
 c     numerator of the J function.
             
-            func = func + (max_func_gvap1/100.+max_func_gvap2/100.
+            max_func_gvap = (max_func_gvap1/100.+max_func_gvap2/100.
      1           +max_func_gvap3/100.)
+
+c     max_func_gvap is in cm (above) now divide by cm error to make
+c     dimensionless
+            max_func_gvap = max_func_gvap / 0.327 ! from SFOV worst case 
+            func = func + max_func_gvap
 
          endif                  !weight function test
       endif                     !data present test
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -488,6 +505,10 @@ c    CLOUD SECTION
 
 
 
+
+
+
+
       
 c     GPS SECTION
       
@@ -504,6 +525,15 @@ c     GPS SECTION
       else
          continue
       endif
+
+
+
+
+
+
+
+
+
 
 
 c     RAOB SECTION (SND)
@@ -526,6 +556,19 @@ c     RAOB SECTION (SND)
 c     fill display_btemps section for later display
 
       display_btemps(1:7) = tbest (1:7)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
