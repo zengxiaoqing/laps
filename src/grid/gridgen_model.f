@@ -720,8 +720,8 @@ c ----------------------------------------------------------------
         print*
 c
         GEODAT2D(:,:)=1.- GEODAT3D(:,:,16)
-        call filter_2dx(geodat2d,nnxp,nnyp,1, 0.5)
-        call filter_2dx(geodat2d,nnxp,nnyp,1,-0.5)
+        call filter_2dx(geodat2d,nnxp,nnyp,2, 0.5)
+        call filter_2dx(geodat2d,nnxp,nnyp,2,-0.5)
 
         istatus_ldf=1
 
