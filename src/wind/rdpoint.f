@@ -277,8 +277,8 @@ cdis
                         obs_point(nobs_point)%i = i_grid
                         obs_point(nobs_point)%j = j_grid
                         obs_point(nobs_point)%k = k_grid
-                        obs_point(nobs_point)%valuef(1) = u_temp - u_diff       
-                        obs_point(nobs_point)%valuef(2) = v_temp - v_diff       
+                        obs_point(nobs_point)%valuef(1) = u_temp-u_diff       
+                        obs_point(nobs_point)%valuef(2) = v_temp-v_diff       
                         obs_point(nobs_point)%weight = weight_ob
                         obs_point(nobs_point)%type   = ext_in
 
