@@ -20,6 +20,7 @@
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
+               2.2.2.1 ..............  Modifying Compiler Flags     
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
                2.2.4.1 ............... Creating single or multiple data domains
@@ -33,21 +34,20 @@
          2.5 ..............  Test data case
          2.5.1 ..................  Analysis Only Test
          2.5.2 ..................  Ingest + Analysis Test
-         2.6 ..............  Modifying Compiler Flags     
-         2.7 ..............  I/O of LAPS gridded files
-         2.8 ..............  CHANGING THE HORIZONTAL DOMAIN
-         2.8.1 ..................  Number of Grid Points
-         2.8.2 ..................  Location of Domain (Map projections)
-         2.8.3 ..................  Domain Resolution 
-         2.8.4 ..................  Terrain Databases
-         2.8.5 ..................  Terrain Smoothing/Filtering  
-         2.9 ..............  CHANGING THE VERTICAL DOMAIN
-         2.10 .............  CHANGING THE CYCLE TIME 
-         2.11 .............  SURFACE ANALYSIS CHANGES
-         2.12 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.13 .............  LVD (SATELLITE INGEST) CHANGES
-         2.14 .............  OTHER RUNTIME PARAMETERS
-         2.15 .............  Detecting and Reporting Installation Errors
+         2.6 ..............  I/O of LAPS gridded files
+         2.7 ..............  CHANGING THE HORIZONTAL DOMAIN
+         2.7.1 ..................  Number of Grid Points
+         2.7.2 ..................  Location of Domain (Map projections)
+         2.7.3 ..................  Domain Resolution 
+         2.7.4 ..................  Terrain Databases
+         2.7.5 ..................  Terrain Smoothing/Filtering  
+         2.8 ..............  CHANGING THE VERTICAL DOMAIN
+         2.9 .............  CHANGING THE CYCLE TIME 
+         2.10 .............  SURFACE ANALYSIS CHANGES
+         2.11 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
+         2.12 .............  LVD (SATELLITE INGEST) CHANGES
+         2.13 .............  OTHER RUNTIME PARAMETERS
+         2.14 .............  Detecting and Reporting Installation Errors
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Localization Processes
          3.1.1 ..................  Gridgen_model (static.nest7grid generation)
@@ -163,11 +163,11 @@
 
                     ---  2.1.6  Disk Space ---
 
-     The disk space requirements for LAPS vary depending on the implementation.
-     As a general guide, 10MB would be needed for source code. About 30MB are 
-     needed for executable binaries. 500MB to 1GB are typically needed for 
-     12-24 hours worth of output data. A similar amount of space is needed
-     for the raw input data.
+     The disk space requirements for LAPS vary depending on factors such as 
+     domain size and purge parameters. As a general guide, 10MB would be needed 
+     for source code. About 30MB are needed for executable binaries. 
+     500MB to 1GB are typically needed for 12-24 hours worth of output data. 
+     A similar amount of space is needed for the raw input data.
 
                     ---  2.1.7  Memory Etc. (ulimit) ---
 
@@ -319,11 +319,7 @@
      Go to the $SRCROOT directory and run...
      prompt> ./configure
 
-     For IBM/AIX platforms, you will want to override the default FORTRAN
-     compiler with 'xlf' using the command line option --fc=xlf. For Solaris, 
-     you will want to use --fc=f90, and possibly -cc=cc.
-
-     'configure' supports many other options, the most important is the
+     'configure' supports many options, the most important is the
      --prefix option which tells make where to install the laps system
      (FORTRAN executables, Perl Scripts, etc.). The default (if you did 
      not use --prefix) is to install whereever the source is. The use of 
@@ -338,15 +334,44 @@
      One or more data directories for running laps can be specified 
      at runtime, if desired. A single set of binaries can thus support several 
      data directories as described below. 
- 
-     A fully operational laps system can require up to 1 GB of disk space;
-     this will vary depending on domain size and purge interval (more on 
-     this later).  
 
      Another configure option is --arch. Configure tries to get the 
      architecture from a 'uname' command, but this can be overridden by having
      an $ARCH environment variable or by using --arch. The allowed values for 
      'arch' include 'aix', 'hpux', etc.
+
+     For more information on passing in command line flags to 'configure' run 
+     prompt> ./configure --help
+
+               ---  2.2.2.1  Modifying Compiler Flags       ---
+
+     The 'configure' script automatically modifies the compilation 
+     flags by modifying 'src/include/makefile.inc' according to what type of 
+     platform you are on. Hopefully the flags will work OK on your particular
+     platform. If you want to change the flags from the default set, you 
+     can provide command line arguments to the 'configure' script.
+
+     Some examples based on our experience are as follows:
+    
+     Solaris...
+     prompt>./configure --fc=f90 --fflags="-Bstatic -fixed" -cc=cc
+
+     For IBM/AIX platforms, you will want to override the default FORTRAN
+     compiler with 'xlf' using the command line option --fc=xlf... 
+     prompt>./configure --fc=xlf 
+
+     A second method of modifying the flags is to edit 
+     'src/include/makefile.inc'. If you find that the default compiler flags 
+     don't work for your platform or that your platform has no default, you'll
+     need to experiment to find the right set of flags.  Experiment (after 
+     running 'configure') in 'src/include/makefile.inc' as this will 
+     automatically control the flags used throughout laps. If you find flags 
+     that work for your platform and would like us to add them to the defaults
+     in 'configure' please let us know via e-mail. Additional examples are 
+     shown as follows...
+
+     For SGI platforms, certain flags may be needed. '-mips3' seems to help
+     on IRIX64 v6.2.
 
                 --- 2.2.3   Ingest Software changes ---
 
@@ -404,7 +429,7 @@
      The terrain data files come in compressed tar files separate
      from the rest of the LAPS distribution.  There are two topography 
      databases, one in file 'laps_terrain.tar.gz', the other in our 
-     'world_topo_30s' directory (see section 2.8). You can choose from either 
+     'world_topo_30s' directory (see section 2.7). You can choose from either 
      database. Only one copy of the topo data is required no matter how many 
      data installations you are supporting. The paths to the three main
      subdirectories (topo_30s, topo_10m, and land_10m) are defined as
@@ -765,30 +790,7 @@
      system, they can be obtained directly from FSL's facility division at 
      'http://www-fd.fsl.noaa.gov/'.
 
-               ---  2.6  Modifying Compiler Flags       ---
-
-     The 'configure' script automatically modifies the compilation 
-     flags by modifying 'src/include/makefile.inc' according to what type of 
-     platform you are on. Hopefully the flags will work OK on your particular
-     platform. If you want to change the flags from the default set, you 
-     can provide command line arguments to the 'configure' script.
-     For more information on passing in command line flags to 'configure' run
-     prompt> ./configure --help
-
-     A second method of modifying the flags is to edit 
-     'src/include/makefile.inc'. If you find that the default compiler flags 
-     don't work for your platform or that your platform has no default, you'll
-     need to experiment to find the right set of flags.  Experiment (after 
-     running 'configure') in 'src/include/makefile.inc' as this will 
-     automatically control the flags used throughout laps. If you find flags 
-     that work for your platform and would like us to add them to the defaults
-     in 'configure' please let us know via e-mail. Some examples based on
-     our experience are shown as follows...
-
-     For SGI platforms, certain flags may be needed. '-mips3' seems to help
-     on IRIX64 v6.2.
-
----------------- 2.7 ------ I/O of LAPS gridded files -------------------------
+---------------- 2.6 ------ I/O of LAPS gridded files -------------------------
 
      Once the laps library is compiled (as outlined above), laps grids can
      be read. There are three levels of software that can access the data.
@@ -809,13 +811,13 @@
      libnetcdf.a
 
 
--------------- 2.8 ----  CHANGING THE HORIZONTAL DOMAIN-----------------------
+-------------- 2.7 ----  CHANGING THE HORIZONTAL DOMAIN-----------------------
 
      Laps will allow you to change the horizontal domain after compilation
      and before the running of the localization script. Below is a list of 
      the relevant changes.
 
-                ----  2.8.1 Number of Grid Points ---
+                ----  2.7.1 Number of Grid Points ---
 
      Adjust the horizontal dimensions (NX_L, NY_L) in 
                                               './data/static/nest7grid.parms'.
@@ -826,7 +828,7 @@
            './data/static/nest7grid.parms'.
 
 
-          ----  2.8.2 Location of Domain (Map projections) ---
+          ----  2.7.2 Location of Domain (Map projections) ---
 
      The location of the horizontal domain can now be changed at run time. 
      Simply change the lat/lon values in 'data/static/nest7grid.parms'
@@ -1001,14 +1003,14 @@
    'projrot_laps' also has some approximations when local stereographic is 
    used.
 
-                   ----  2.8.3 Domain Resolution  ---
+                   ----  2.7.3 Domain Resolution  ---
 
      The default value is 10000m. This is one of the items used in 
    constructing the static file (see above). To date, we have run LAPS with
    resolutions ranging from 1000m to 48000m.
 
 
-                   ----  2.8.4 Terrain Databases ---
+                   ----  2.7.4 Terrain Databases ---
 
         The './src/grid/gridgen_model.f' program normally utilizes one of
         two terrain data databases (distributed separately and available from 
@@ -1036,7 +1038,7 @@
         The second database is a global 30" terrain dataset from USGS that we
         have reformatted here at FSL. 
 
-                 ----  2.8.5 Terrain Smoothing/Filtering  ---
+                 ----  2.7.5 Terrain Smoothing/Filtering  ---
 
     Edit the file 'data/static/nest7grid.parms'...
 <pre>
@@ -1055,7 +1057,7 @@
            numbers mean smoother terrain.
 </pre>
    
---------- 2.9  ----- CHANGING THE VERTICAL DOMAIN------------------------------
+--------- 2.8  ----- CHANGING THE VERTICAL DOMAIN------------------------------
 
 
    NUMBER OF LEVELS:
@@ -1092,7 +1094,7 @@
         Of course, the top pressure should be greater than zero mb. The
         bottom level should extend below the terrain and the observations.
 
--------- 2.10 ----- CHANGING THE CYCLE TIME -----------------------------------
+-------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 
       The default cycle time is 60 minutes. To change this, do the following.
    between untarring the tar file and compiling
@@ -1100,7 +1102,7 @@
      1. Edit runtime parameter file 'data/static/nest7grid.parms' 
         to change the value of 'laps_cycle_time'.
 
---------- 2.11 ------SURFACE ANALYSIS CHANGES---------------------------------
+--------- 2.10 ------SURFACE ANALYSIS CHANGES---------------------------------
 
 	Updated: 16 Jan 1997.  Pete Stamus (stamus@fsl.noaa.gov)
 
@@ -1164,7 +1166,7 @@
 	areas (like Colorado).
 
 
- ----- 2.12 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
+ ----- 2.11 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
 Major Updates (from most recent to oldest mods)
 Last updated: 5/28/99 by Daniel Birkenheuer
@@ -1276,14 +1278,14 @@ April 1996
    radiometer data are forever lost.  For now treat this as orphan code, if
    ignored, it will not cause problems.
 
------- 2.13 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+------ 2.12 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info documented in the file
    './src/ingest/satellite/lvd/README'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
------- 2.14 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.13 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' and other namelist
    files in data/static to make sure all the runtime parameters are
@@ -1312,7 +1314,7 @@ April 1996
                        normalization.
 </pre>
 
------- 2.15 -----Detecting and Reporting Installation Errors-------------------
+------ 2.14 -----Detecting and Reporting Installation Errors-------------------
 
    To determine how well LAPS was installed, verify that all (35 at last check)
    executables were built OK ('bin' directory) with no errors in the output 
