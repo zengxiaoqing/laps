@@ -44,12 +44,15 @@ c
      1  imax,jmax,r_missing_data,                                        ! I
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
-     1  sst_k,istat_sst,comment_sst)                                     ! O
+     1  sst_k,istat_sst,comment_sst,                                     ! O
+     1  cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2)                      ! O
 
 !       Output
         real*4 s8a_k(imax,jmax)
         real*4 s3a_k(imax,jmax)
         real*4 sst_k(imax,jmax)
+        real*4 cldtop_co2_pa_a(imax,jmax)
+        real*4 cloud_frac_co2_a(imax,jmax)
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
@@ -115,6 +118,23 @@ c
         if(istat_s3a .ne. 1)then
             write(6,*)' No S3A data available'
         endif
+
+!       Obtain NESDIS Cloud-top pressure
+        write(6,*)' Getting NESDIS Cloud-top pressure'
+        ext = 'ctp'
+        var = 'CTP'
+        ilevel = 0
+!       call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var
+!    1                ,units,comment_ctp,imax,jmax,sst_k,ilevel
+!    1                ,istat_co2)       
+        istat_co2 = 0
+        if(istat_co2 .ne. 1)then
+            write(6,*)' Note: cannot yet read co2 cloud top'
+        endif
+
+!       Obtain NESDIS Cloud-fraction
+
+!       Calculate CO2-Slicing Cloud-top pressure
 
         return
         end
