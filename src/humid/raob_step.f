@@ -29,9 +29,9 @@ cdis
 cdis
 cdis
 cdis
-        subroutine raob_step (i4time, data, laps_pressure, 
-     1  raob_lookback,
-     1  lat,lon,  ii,jj,kk)
+      subroutine raob_step (i4time, data, laps_pressure, 
+     1     raob_lookback,
+     1     lat,lon,  ii,jj,kk)
 
 
 
@@ -109,13 +109,13 @@ c revision 1.3  1996/06/25  19:27:34  birk
 c added log line
 c
 
-        implicit none
+      implicit none
 
-c        include 'lapsparms.for'
-c        include 'parmtrs.inc'
+c     include 'lapsparms.for'
+c     include 'parmtrs.inc'
 
 
-c  input parameters
+c     input parameters
 
       integer i4time, ii,jj,kk, raob_lookback
       real data(ii,jj,kk), laps_pressure (kk)
@@ -129,264 +129,260 @@ c  dynamic dependent parameters
 
 c  normal internal parameters
 
-        integer i,j,k,ks,is
-        integer look_back_time
-        integer raob_i4time  ! actual time of raob data used
-        integer numoffiles, istatus, maxfiles
-        character*256 c_filenames(200),pathname_in
-        character*9 filename
-        character*200 fname
-        integer idx, len
-        real lat_r(100), lon_r(100)
-        integer  i_r(100), j_r(100)
-        integer lev_r(100), dummy, isound
-        real p_r(70,100), td_r(70,100), t_r(70,100)
-        real temt, temtd, ssh2
-        real r, rmin
-        real d2r,pi
-        real tot_diff, tot_weight
-        real rspacing_dum
+      integer i,j,k,ks,is
+      integer look_back_time
+      integer raob_i4time       ! actual time of raob data used
+      integer numoffiles, istatus, maxfiles
+      character*256 c_filenames(200),pathname_in
+      character*9 filename
+      character*200 fname
+      integer idx, len
+      real lat_r(100), lon_r(100)
+      integer  i_r(100), j_r(100)
+      integer lev_r(100), dummy, isound
+      real p_r(70,100), td_r(70,100), t_r(70,100)
+      real temt, temtd, ssh2
+      real r, rmin
+      real d2r,pi
+      real tot_diff, tot_weight
+      real rspacing_dum
       real rmd
         
-
-
-
-
-
-
-
-
 c *** begin routine
 
-        pi = acos(-1.0)
-        d2r = pi/180.
-        look_back_time = raob_lookback
-        maxfiles = 200
+      pi = acos(-1.0)
+      d2r = pi/180.
+      look_back_time = raob_lookback
+      maxfiles = 200
       call get_r_missing_data(rmd, istatus)   
 
-c *** read in the raob data
+c     *** read in the raob data
 
-c +++ get latest raob file name
+c     +++ get latest raob file name
 
-        call get_directory('snd',pathname_in,len)
-        pathname_in = pathname_in(1:len)//'*'
-c        pathname_in = '../lapsprd/snd/*'
+      call get_directory('snd',pathname_in,len)
+      pathname_in = pathname_in(1:len)//'*'
+c     pathname_in = '../lapsprd/snd/*'
 
-        call get_file_names (pathname_in,numoffiles,c_filenames,
-     1         maxfiles,istatus)
+      call get_file_names (pathname_in,numoffiles,c_filenames,
+     1     maxfiles,istatus)
 
-        if (istatus.ne.1) then ! no data to read
-        return
+      if (istatus.ne.1) then    ! no data to read
+         return
 
-        elseif(numoffiles.eq.0) then! no data to read
-        return
+      elseif(numoffiles.eq.0) then ! no data to read
+         return
 
-        endif
+      endif
 
-        idx = index(c_filenames(numoffiles), ' ')
+      idx = index(c_filenames(numoffiles), ' ')
 
-        filename = c_filenames(numoffiles)(idx-13:idx-4)
+      filename = c_filenames(numoffiles)(idx-13:idx-4)
 
-        call i4time_fname_lp (filename, raob_i4time, istatus)
+      call i4time_fname_lp (filename, raob_i4time, istatus)
 
-c +++ validate the raob time
+c     +++ validate the raob time
 
-        if (raob_i4time + look_back_time .lt. i4time) then ! too old
+      if (raob_i4time + look_back_time .lt. i4time) then ! too old
          write (6,*) 'raob data found is too old to be used'
          return
-        endif
+      endif
 
-        if (raob_i4time .gt. i4time) then ! too new
+      if (raob_i4time .gt. i4time) then ! too new
          write (6,*) 'warning raob data found is too new to be used'
          write (6,*) 'assigning current file time for .snd'
          raob_i4time = i4time
          call make_fnam_lp (raob_i4time, filename, istatus)
-        endif
+      endif
 
-c +++ read raob file
-        call get_directory('snd',fname,len)
+c     +++ read raob file
+      call get_directory('snd',fname,len)
 
-        do isound = 1,100
+      do isound = 1,100
                 
-        open (12, file = fname(1:len)//filename//'.snd',
-     1  form='formatted',status='old',err=18)
-15      read (12,*,end=16) dummy, idx, lat_r(isound), lon_r (isound)
-        print*, idx
-        lev_r(isound) = 1
+         open (12, file = fname(1:len)//filename//'.snd',
+     1        form='formatted',status='old',err=18)
+ 15      read (12,*,end=16) dummy, idx, lat_r(isound), lon_r (isound)
+         print*, idx
+         lev_r(isound) = 1
 
-        do i = 1, idx
+         do i = 1, idx
 
-        read(12,*) rspacing_dum,
-     1  p_r (lev_r(isound),isound),
-     1  t_r (lev_r(isound),isound),
-     1  td_r(lev_r(isound),isound)
+            read(12,*) rspacing_dum,
+     1           p_r (lev_r(isound),isound),
+     1           t_r (lev_r(isound),isound),
+     1           td_r(lev_r(isound),isound)
 
-        if (
-     1  (p_r (lev_r(isound),isound).ne.rmd)
-     1  .and.
-     1  (t_r (lev_r(isound),isound).ne.rmd)
-     1  .and.
-     1  (td_r (lev_r(isound),isound).ne.rmd)
-     1  ) then
+            if (
+     1           (p_r (lev_r(isound),isound).ne.rmd)
+     1           .and.
+     1           (t_r (lev_r(isound),isound).ne.rmd)
+     1           .and.
+     1           (td_r (lev_r(isound),isound).ne.rmd)
+     1           ) then
 
-        lev_r(isound) = lev_r(isound) + 1
+               lev_r(isound) = lev_r(isound) + 1
 
-        else
+            else
 
-        continue
+               continue
 
-        endif
+            endif
 
-        enddo
+         enddo
 
-        lev_r(isound) = lev_r(isound) - 1
+         lev_r(isound) = lev_r(isound) - 1
 
-        enddo
+      enddo
 
-16      close (12)
+ 16   close (12)
 
-        isound = isound -1
+      isound = isound -1
 
-        if (isound .le. 0 ) return  ! no data found
+      if (isound .le. 0 ) then ! no data found
+         write(6,*) 'No RAOB data available in database'
+      else
+         write(6,*) isound, ' Number of RAOBs considered in analysis'
+      endif
 
-c *** match raob points with nearest laps i,j locations (horizontal map)
+c     +++ compute the nearest i,j for all sounding locations
+c     also compute weighting function for all locations for given raob
 
+      do k = 1,isound
 
+         rmin = 1.e30
 
+         do j = 1,jj
+            do i = 1,ii
 
-c +++ compute the nearest i,j for all sounding locations
+               r = sin(lat_r(k)*d2r)*sin(lat(i,j)*d2r)
+     1              +cos(lat_r(k)*d2r) *cos(lat(i,j)*d2r)
+     1              * cos( abs( lon_r(k) - lon(i,j)) *d2r )
 
-        do k = 1,isound
+               r = acos (r)
 
-        rmin = 1.e30
+               if (r.ge.0.5) then
+                  weight(i,j,k) =  0.2662467082E-43
+               else
+                  weight(i,j,k) = exp ( -1.*(r * 6371)**2/101131. ) 
+c     lam = 600 km
+c     2*lam = 1200km , c = ln(2)*lam**2/4/pi**2 = 25282km**2
+c     denominator = 4*c = 101131.
 
-        do j = 1,jj
-        do i = 1,ii
+               endif
 
-        r = sin(lat_r(k)*d2r)*sin(lat(i,j)*d2r)
-     1  +cos(lat_r(k)*d2r) *cos(lat(i,j)*d2r) *
-     1  cos( abs( lon_r(k) - lon(i,j)) *d2r )
+c     rmin is the minimum distance to the raob (i,j of raob essentially)
+               rmin = min (rmin,r)
+               if (rmin.eq.r) then
+                  i_r(k) = i
+                  j_r(k) = j
+               endif
 
-        r = acos (r)
+            enddo
+         enddo
 
-        weight(i,j,k) = exp ( -1.*(r * 6371)**2/101131. ) ! lam = 600 km
-c               2*lam = 1200km , c = ln(2)*lam**2/4/pi**2 = 25282km**2
-c               denominator = 4*c = 101131.
+      enddo
 
-        rmin = min (rmin,r)
-        if (rmin.eq.r) then
-                i_r(k) = i
-                j_r(k) = j
-        endif
-
-        enddo
-        enddo
-
-        enddo
-
-c *** interpolate q in the vertical at each raob location to the laps
+c     *** interpolate q in the vertical at each raob location to the laps
 c     pressure levels
 
-        do is = 1,isound
+      do is = 1,isound
 
-        do k = 1,kk ! each laps pressure level (ks)
+         do k = 1,kk            ! each laps pressure level (ks)
 
-        call locate(p_r(1,is),lev_r(is),laps_pressure(k),ks)
+            call locate(p_r(1,is),lev_r(is),laps_pressure(k),ks)
 
-        if(ks.eq.0  .or. ks.eq.lev_r(is)) then
+            if(ks.eq.0  .or. ks.eq.lev_r(is)) then
 
-                q_r(k,is) = rmd
+               q_r(k,is) = rmd
 
-        else ! interpolate to the desired level
+            else                ! interpolate to the desired level
 
-        call interp (log(laps_pressure(k)),
-     1  log(p_r(ks,is)),log(p_r(ks+1,is)),
-     1  t_r(ks,is),t_r(ks+1,is),temt)
+               call interp (log(laps_pressure(k)),
+     1              log(p_r(ks,is)),log(p_r(ks+1,is)),
+     1              t_r(ks,is),t_r(ks+1,is),temt)
 
-        call interp (log(laps_pressure(k)),
-     1  log(p_r(ks,is)),log(p_r(ks+1,is)),
-     1  td_r(ks,is),td_r(ks+1,is),temtd)
+               call interp (log(laps_pressure(k)),
+     1              log(p_r(ks,is)),log(p_r(ks+1,is)),
+     1              td_r(ks,is),td_r(ks+1,is),temtd)
 
-        q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,0.0)/1000.
+               q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,0.0)/1000.
 
-        endif
+            endif
 
-        enddo ! k
+         enddo                  ! k
 
-        enddo  ! is
+      enddo                     ! is
 
 c *** difference the raob data at each gridpoint location and height
 
-        do is = 1,isound
+      do is = 1,isound
 
-        do k = 1,kk
+         do k = 1,kk
 
-        if (
-     1  (data(i_r(is),j_r(is),k) .eq. rmd)
-     1  .or.
-     1  (q_r(k,is) .eq. rmd)
-     1  ) then
+            if (
+     1           (data(i_r(is),j_r(is),k) .eq. rmd)
+     1           .or.
+     1           (q_r(k,is) .eq. rmd)
+     1           ) then
 
-        diff(k,is) = rmd
+               diff(k,is) = rmd
 
-        else
+            else
 
-        diff(k,is) = q_r(k,is) - data(i_r(is),j_r(is),k)
+               diff(k,is) = q_r(k,is) - data(i_r(is),j_r(is),k)
 
-        endif
+            endif
 
-        enddo
+         enddo
 
-        enddo
+      enddo
 
-c *** analyze the field (barnes second pass to background)
+c     *** analyze the field (barnes second pass to background)
 
-        do k = 1,kk
-        do j = 1,jj
-        do i = 1,ii
+      do k = 1,kk
+         do j = 1,jj
+            do i = 1,ii
 
-        tot_weight = 0.0
-        tot_diff = 0.0
+               tot_weight = 0.0
+               tot_diff = 0.0
 
-        do is = 1,isound
+               do is = 1,isound
 
-        if       (diff(k,is).eq.rmd) then !dont modify
-        continue
-        elseif  (data(i,j,k).eq.rmd) then !dont modify
-        continue
-        else
-        tot_diff = weight(i,j,is)*diff(k,is) + tot_diff
-        tot_weight = weight(i,j,is) + tot_weight
+                  if (diff(k,is).eq.rmd) then !dont modify
+                     continue
+                  elseif(data(i,j,k).eq.rmd) then !dont modify
+                     continue
+                  else
+                     tot_diff = weight(i,j,is)*diff(k,is) + tot_diff
+                     tot_weight = tot_weight + weight(i,j,is)
+                  endif
 
+               enddo
 
-        endif
+               if (
+     1              (data(i,j,k) .ne. rmd)
+     1              .and.
+     1              (tot_weight.ne.0.0) )then
+                  data(i,j,k) = data(i,j,k) + tot_diff/tot_weight
 
-        enddo
+                  if (data(i,j,k) .lt. 0.0) data(i,j,k) = 0.0
+               endif
 
-        if (
-     1  (data(i,j,k) .ne. rmd)
-     1  .and.
-     1  (tot_weight.ne.0.0) )then
-        data(i,j,k) = data(i,j,k) + tot_diff/tot_weight
+            enddo
+         enddo
+      enddo
 
-        if (data(i,j,k) .lt. 0.0) data(i,j,k) = 0.0
-        endif
+c     *** return modified data array
 
-        enddo
-        enddo
-        enddo
+      write(6,*) 'end RAOB step'
 
-c *** return modified data array
+      return
 
+ 18   write(6,*) 'error opening requested .snd file, raob step skipped'
+      return
 
-        return
+ 24   write(6,*)  'raob moisture switch missing!, ignoring raobs'
+      return
 
-18      write(6,*) 'error opening requested .snd file, raob step skipped
-     1'
-
-        return
-
-24      write(6,*)  'raob moisture switch missing!, ignoring raobs'
-        return
-
-        end
+      end

@@ -563,20 +563,6 @@ c     get the location of the static grid directory
         endif
 
 
-
-
-c     ****  execute raob step if switch is on
-
-
-        if(raob_switch.eq.1) then
-           write (6,*) 'begin raob insertion'
-           call raob_step (i4time,data,plevel, raob_lookback,
-     1          lat,lon, ii,jj,kk)
-        else
-           write(6,*) 'the raob switch is off... raobs skipped'
-        endif
-
-
  151    continue    ! go here if using rams data as background
 
 c     open file for laps temp data
@@ -660,6 +646,17 @@ c     record total moisture
            enddo
         enddo
 
+
+c     ****  execute raob step if switch is on
+
+
+        if(raob_switch.eq.1) then
+           write (6,*) 'begin raob insertion'
+           call raob_step (i4time,data,plevel, raob_lookback,
+     1          lat,lon, ii,jj,kk)
+        else
+           write(6,*) 'the raob switch is off... raobs skipped'
+        endif
 
 
 
@@ -967,7 +964,7 @@ c record total moisture
         counter = counter+1
         diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
         delta_moisture(k) = diff_data(counter) + delta_moisture(k)
-        avg_moisture(k) = avg_moisture(k) + data(i,j,k)
+        avg_moisture(k) = avg_moisture(k) + data_in(i,j,k)
       endif
       enddo
       enddo
