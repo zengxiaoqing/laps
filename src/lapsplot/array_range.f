@@ -61,7 +61,9 @@ cdis
 
        range = (rmax-rmin) / (sqrt(zoom) * density)
 
-       if(range .gt. 10000)then
+       if(range .gt. 20000)then
+           cint = 5000.
+       elseif(range .gt. 8000)then
            cint = 1000.
        elseif(range .gt. 2000)then
            cint = 400.
