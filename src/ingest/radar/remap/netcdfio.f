@@ -39,7 +39,7 @@ cdis
 
  
        subroutine radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)       
-!                                 I       I           O         O
+!                                 I     I/O           O         O
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
@@ -208,22 +208,12 @@ c      Determine filename extension
 !      Pull in housekeeping data from 1st tilt
        write(6,*)' radar_init: looking for file... '
 
-       filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
-     1            //c2_tilt
-       call s_len(filename,len_file)
-       write(6,*)filename(1:len_file)
+       i_skip = 0
 
-!      Test existence of yyjjjhhmm file
-       inquire(file=filename,exist=l_exist)
-       if(.not. l_exist)then ! Reset to yyyyjjjhhmmss file
-           filename = path_to_radar(1:len_path)//'/'
-     1              //a9_to_rsa13(a9_time)//'_elev'//c2_tilt
-           call s_len(filename,len_file)
-           write(6,*)filename(1:len_file)
-       endif
+!      Test existence of raw input 'yyjjjhhmm_elevtt' file
+ 200   call check_input_file(path_to_radar,a9_time,i_tilt_proc,filename       
+     1                      ,l_exist)       
 
-!      Retest existence of file (either yyjjjhhmm or yyyyjjjhhmmss)
-       inquire(file=filename,exist=l_exist)
        if(l_exist)then
            call get_tilt_netcdf_data(filename
      1                               ,radarName
@@ -245,6 +235,11 @@ c      Determine filename extension
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
 
+       elseif(i_tilt_proc .le. 20)then
+           i_tilt_proc = i_tilt_proc + 1
+           i_skip = 1
+           goto 200
+
        else
            istatus = 0
 
@@ -257,10 +252,17 @@ c      Determine filename extension
            if(i_tilt_proc .eq. 1)then
                write(6,201)elevationNumber, i_tilt_proc
  201           format(' elevationNumber, i_tilt_proc',2i4)
+
            else
                write(6,202)elevationNumber, i_tilt_proc
  202           format(' elevationNumber, i_tilt_proc',2i4
      1               ,' (upcoming tilt)')
+
+               if(iskip .eq. 1)then
+                   write(6,*)
+     1               ' WARNING: We had to skip past some missing tilts'       
+               endif
+
            endif
 
        else
@@ -552,3 +554,33 @@ c      Determine filename extension
        end
  
  
+       subroutine check_input_file(path_to_radar,a9_time,i_tilt
+     1                            ,filename,l_exist)       
+
+       logical l_exist
+
+       character*(*) path_to_radar
+       character*(*) filename
+       character*2 c2_tilt
+       character*9 a9_time
+
+       if(i_tilt .lt. 10)then
+           write(c2_tilt,101)i_tilt
+ 101       format('0',i1)
+       else
+           write(c2_tilt,102)i_tilt
+ 102       format(i2)
+       endif
+
+       call s_len(path_to_radar,len_path)
+       filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
+     1            //c2_tilt
+
+!      Test existence of yyjjjhhmm file
+       inquire(file=filename,exist=l_exist)
+
+       call s_len(filename,len_file)
+       write(6,*)' check_input_file: ',filename(1:len_file),' ',l_exist       
+
+       return
+       end
