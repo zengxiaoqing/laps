@@ -119,6 +119,7 @@ SRC	= machine_dependent.F \
           rd_laps_static.f \
           read-laps-static.f \
           read_acars_ob.f \
+          read_ldad_prof.f \
           read_namelist.f \
           read_pro_data.f \
           read_snd_data.f \
