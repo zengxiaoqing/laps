@@ -66,7 +66,7 @@ c                               not exactly match the LAPS analysis time.
 !                               the pressure if the height is missing.
 
         integer*4 max_snd_levels
-        parameter (max_snd_levels = 300)
+        parameter (max_snd_levels = 3000)
 
         real*4 surface_rass_buffer
         parameter (surface_rass_buffer = 30.)
