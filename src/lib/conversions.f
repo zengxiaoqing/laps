@@ -205,7 +205,7 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
 
-        integer i,j,k,ni,nj,nk,kref,istatus
+        integer i,j,k,ni,nj,nk,k_ref,istatus
 
         real*4 heights_3d(ni,nj,nk)
 
@@ -226,17 +226,17 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
             if(height_m .gt. heights_3d(i,j,nk))then
                 height_to_zcoord2 = nk+1 
-!               write(6,101)kref,height_m,heights_3d(i,j,nk)
+!               write(6,101)k_ref,height_m,heights_3d(i,j,nk)
 !101            format('  Note: above domain in height_to_zcoord2,'       
-!    1                ,' kref,h,h(nk)',i3,2e11.4)
+!    1                ,' k_ref,h,h(nk)',i3,2e11.4)
                 istatus = 0
                 return
 
             elseif(height_m .lt. heights_3d(i,j,1))then
                 height_to_zcoord2 = 0
-                write(6,102)kref,height_m,heights_3d(i,j,1)
+                write(6,102)k_ref,height_m,heights_3d(i,j,1)
 102             format('  Warning: below domain in height_to_zcoord2,'
-     1                ,' kref,h,h(1)',i3,2e11.4)
+     1                ,' k_ref,h,h(1)',i3,2e11.4)
                 istatus = 0
                 return
 
@@ -304,7 +304,7 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
         implicit real*4 (a-z)
 
-        integer i,j,k,ni,nj,nk,kref,istatus
+        integer i,j,k,ni,nj,nk,k_ref,istatus
 
         real*4 heights_3d(ni,nj,nk)
         real*4 zcoords_1d(nk)
@@ -326,17 +326,17 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
 
             if(height_m .gt. heights_3d(i,j,nk))then
                 height_to_zcoord3 = nk+1 
-!               write(6,101)kref,height_m,heights_3d(i,j,nk)
+!               write(6,101)k_ref,height_m,heights_3d(i,j,nk)
 !101            format('  Note: above domain in height_to_zcoord3,'       
-!    1                ,' kref,h,h(nk)',i3,2e11.4)
+!    1                ,' k_ref,h,h(nk)',i3,2e11.4)
                 istatus = 0
                 return
 
             elseif(height_m .lt. heights_3d(i,j,1))then
                 height_to_zcoord3 = 0
-                write(6,102)kref,height_m,heights_3d(i,j,1)
+                write(6,102)k_ref,height_m,heights_3d(i,j,1)
 102             format('  Warning: below domain in height_to_zcoord3,'
-     1                ,' kref,h,h(1)',i3,2e11.4)
+     1                ,' k_ref,h,h(1)',i3,2e11.4)
                 istatus = 0
                 return
 
@@ -650,7 +650,7 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
         implicit real*4 (a-z)
 
-        integer i,j,k,ni,nj,nk,kref,istatus,isign
+        integer i,j,k,ni,nj,nk,k_ref,istatus,isign
 
         real*4 field_3d(ni,nj,nk)
 
@@ -679,17 +679,17 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
             if((value - field_3d(i,j,nk)) * rsign .gt. 0.)then
                 rlevel_of_field = nk+1 
-!               write(6,101)kref,value,field_3d(i,j,nk)
+!               write(6,101)k_ref,value,field_3d(i,j,nk)
 !101            format('  Note: above domain in rlevel_of_field,'       
-!    1                ,' kref,h,h(nk)',i3,2e11.4)
+!    1                ,' k_ref,h,h(nk)',i3,2e11.4)
                 istatus = 0
                 return
 
             elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
                 rlevel_of_field = 0
-                write(6,102)kref,value,field_3d(i,j,1)
+                write(6,102)k_ref,value,field_3d(i,j,1)
 102             format('  Warning: below domain in rlevel_of_field,'
-     1                ,' kref,h,h(1)',i3,2e11.4)
+     1                ,' k_ref,h,h(1)',i3,2e11.4)
                 istatus = 0
                 return
 
@@ -743,7 +743,7 @@ cdoc    as log code is not yet in place.
 
         implicit real*4 (a-z)
 
-        integer i,j,k,ni,nj,nk,kref,istatus,isign
+        integer i,j,k,ni,nj,nk,k_ref,istatus,isign
 
         real*4 field_3d(ni,nj,nk)
 
@@ -772,17 +772,17 @@ cdoc    as log code is not yet in place.
 
             if((value - field_3d(i,j,nk)) * rsign .gt. 0.)then
                 rlevel_of_logfield = nk+1 
-!               write(6,101)kref,value,field_3d(i,j,nk)
+!               write(6,101)k_ref,value,field_3d(i,j,nk)
 !101            format('  Note: above domain in rlevel_of_logfield,'       
-!    1                ,' kref,h,h(nk)',i3,2e11.4)
+!    1                ,' k_ref,h,h(nk)',i3,2e11.4)
                 istatus = 0
                 return
 
             elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
                 rlevel_of_logfield = 0
-                write(6,102)kref,value,field_3d(i,j,1)
+                write(6,102)k_ref,value,field_3d(i,j,1)
 102             format('  Warning: below domain in rlevel_of_logfield,'
-     1                ,' kref,h,h(1)',i3,2e11.4)
+     1                ,' k_ref,h,h(1)',i3,2e11.4)
                 istatus = 0
                 return
 
