@@ -71,7 +71,7 @@ SUBROUTINE Minimize(id)
   ! Count number of iteration and compute relative error:
   IF (ctask(1:5) .EQ. 'NEW_X') THEN
      itr = itr+1
-     print*,''
+     ! print*,''
   ENDIF
 
   ! If number of iterations of LBFGS_B exceeds the limit:

@@ -160,7 +160,7 @@ c       Background: time order is reverse of LAPS reading order - YUANFU.
         call get_background_sfc(i4prev(n),'REDP',bkg_ext,bkg_time,
      &       bkgd(1,1,ncycles-n+1,6),laps_cycle_time,nx,ny,jstatus)
         IF (jstatus .EQ. 0) THEN
-	   PRINT*,'lso_reader_meso: error in reading MSL pressure background'
+	   PRINT*,'lso_reader_meso: error in reading MSL pressure bkgrd'
 	   STOP
 	ENDIF
 	print*,'REDP BKGD: ',bkgd(1,1,ncycles-n+1,6),bkg_time
