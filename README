@@ -161,6 +161,8 @@
 
      For IBM/AIX platforms 'xlf' is recommended.
 
+     For Solaris platforms, 'f90' is needed.
+
                     ---  2.1.6  Disk Space ---
 
      The disk space requirements for LAPS vary depending on factors such as 
