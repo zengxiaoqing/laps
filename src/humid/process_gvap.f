@@ -146,7 +146,7 @@ c     bias correct GVAP data per 3x3 IHOP correction
      1     data_weights,ii,jj,istatus)
 
 c     temporary assignment made until gvap_p read okay from data bases
-      gvap_p = mdf
+c      gvap_p = mdf
 
       if(istatus.ne.1) then ! failure to get data
          return
