@@ -3982,7 +3982,7 @@ c                   cint = -1.
      1          /
      1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
      1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto,'
-     1                 /20x,'                     lwo,swo] ? ',$)       
+     1                 /17x,'ptp,pdm,vnt,hah,ham,fwi,lwo,swo] ? ',$)       
 
             endif
 
@@ -4098,6 +4098,21 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'RH')then
                     call ccpfil(field_2d,NX_L,NY_L,220.,-40.
      1                         ,'hues',n_image,scale) 
+                elseif(var_2d .eq. 'VNT')then
+                    call ccpfil(field_2d,NX_L,NY_L,5000.,0.
+     1                         ,'spectral',n_image,scale) 
+                elseif(var_2d(1:2) .eq. 'HA')then
+                    call ccpfil(field_2d,NX_L,NY_L,2.,6.
+     1                         ,'spectral',n_image,scale) 
+                elseif(var_2d .eq. 'FWI')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.,40.
+     1                         ,'spectral',n_image,scale) 
+                elseif(var_2d .eq. 'PTP')then
+                    call ccpfil(field_2d,NX_L,NY_L,50000.,110000.
+     1                         ,'spectral',n_image,scale) 
+                elseif(var_2d .eq. 'PDM')then
+                    call ccpfil(field_2d,NX_L,NY_L,0.,2400.
+     1                         ,'spectral',n_image,scale) 
                 elseif(var_2d(2:3) .eq. '01' .or.           ! Precip
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
