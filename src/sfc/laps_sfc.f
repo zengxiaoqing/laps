@@ -442,13 +442,17 @@ c
      1         .and. obs(ista)%j .ge. 1 .and. obs(ista)%j .le. nj )then ! in domain
 
                elev_diff = elev_s(ista) - topo(obs(ista)%i,obs(ista)%j)
+               obs(ista)%elev_diff = elev_diff
+
+               rland_frac_grid = ldf(obs(ista)%i,obs(ista)%j) ! for testing
+               call bilinear_laps(obs(ista)%ri,obs(ista)%rj,ni,nj
+     1                           ,ldf,obs(ista)%ldf)
+
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
      &                    ,autostntype(ista)(1:6), rii(ista), rjj(ista)       
      &                    ,elev_s(ista),topo(obs(ista)%i,obs(ista)%j)
-     &                    ,elev_diff,ldf(obs(ista)%i,obs(ista)%j)
-
-               obs(ista)%elev_diff = elev_diff
-               obs(ista)%ldf       = ldf(obs(ista)%i,obs(ista)%j)
+     &                    ,obs(ista)%elev_diff,obs(ista)%ldf
+     &                    ,rland_frac_grid
 
            else
                write(6,999)ista,stations(ista)(1:5), reptype(ista)(1:6)
@@ -461,7 +465,7 @@ c
 
         enddo !ista
  999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
-     1        ,2x,3f8.0,2x,f8.3)
+     1        ,2x,3f8.0,2x,2f8.3)
 c
         call zero(wt, ni,nj)
         if(n_obs_b .gt. 0.)then
