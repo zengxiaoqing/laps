@@ -199,7 +199,7 @@ c     +++ validate the raob time
 c     +++ read raob file
       call get_directory('snd',fname,len)
 
-      do isound = 1,100
+      do isound = 1,snd_total
                 
          open (12, file = fname(1:len)//filename//'.snd',
      1        form='formatted',status='old',err=18)
