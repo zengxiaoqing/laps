@@ -61,8 +61,7 @@ c     real*4    resx,resy
       real*4    lonterm
       real*4    dxterm
       real*4    dyterm
-c     real*4    wdw_lat
-c     real*4    wdw_lon
+      real*4    r_missing_data
       real*4    rls,rle,res,ree
       real*4    rlatin,rlap,rlov
       real*4    rla1,rlo1
@@ -82,6 +81,7 @@ c     integer i,j,n,nc
       integer ii,jj
       integer indx
       integer n1
+      integer i1,j1
       integer nx,ny
 c     integer lend
       integer istatus
@@ -91,7 +91,9 @@ c     integer lend
       integer nx3mx,ny3mx
       integer linestart,lineend
       integer elemstart,elemend
-c     integer idum
+      integer nijout
+
+      logical lpoint
 
       character*200 table_path
       character*255 path
@@ -136,7 +138,7 @@ c
 
          if(istatus_wp.eq.1)then
 
-            print*,'Warning, using namelist values for wfo mapping'
+            print*,'WARNING:, using namelist values for wfo mapping'
             print*,'because new wfo nav parameters were not obtained'
             rla1 = r_la1(jtype,isat)
             rlo1 = r_lo1(jtype,isat)
@@ -335,12 +337,34 @@ c
 c compute ri, rj relative look up table for the block of data surrounding
 c the laps domain.
 c
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)then
+         print*,'Error getting r_missing_data'
+         return
+      endif
+
       do j = 1,ny
       do i = 1,nx
-         rel_ri(i,j) = ri(i,j) - res ! + 1.
-         rel_rj(i,j) = rj(i,j) - rls ! + 1.
+       if(ri(i,j).ne.r_missing_data.and.rj(i,j).ne.r_missing_data)then
+          rel_ri(i,j) = ri(i,j)  - res
+          rel_rj(i,j) = rj(i,j) - rls 
+          if(lpoint)then
+             i1=i
+             j1=j
+             lpoint=.false.
+          endif
+       else
+          rel_ri(i,j) = r_missing_data
+          rel_rj(i,j) = r_missing_data
+          nijout=nijout+1
+       endif
+
       enddo
       enddo
+
+      if(nijout.gt.0)then
+         print*,'Found ',nijout,' points outside domain'
+      endif
 c
 c put the rel ri/rj lut into the laps domain size
 c
@@ -381,6 +405,12 @@ c
          write(6,*)'Error writing look-up table'
          goto 1000
       endif
+
+      if(elemstart.le.0)elemstart=1
+      if(elemend.gt.nx)elemend=nx3
+      if(linestart.le.0)linestart=1
+      if(lineend.gt.ny)lineend=ny3
+
 
       r_lap(jtype,isat) = rlap
       r_lov(jtype,isat) = rlov
