@@ -24,7 +24,11 @@ c     integer i, filesfound, nf_fid, len
       integer bgmodel, oldest_forecast, max_forecast_delta
       logical use_analysis, outdir_defined, bgpath_defined
       character*9 a9
+      character*13 cvt_i4time_wfo_fname13
+      integer i4time_latest
       integer i4time_now, lendr, itime, ntime
+      integer ntbg, idum
+      character*256 cfilespec,cfname
       character*256 bgpath, topofname, outdir
       character*256 initbgpaths(maxdprepmodels)
      +             ,bndybgpaths(maxdprepmodels)
@@ -100,13 +104,19 @@ c
                print*,'Could not find directory ',bgpath
                stop
             endif
-
+            if(bgmodel .eq. 4)then
+               cfilespec=bgpath(1:len)//'/*'
+               call get_latest_file_time(cfilespec,i4time_latest)
+               cfname = cvt_i4time_wfo_fname13(i4time_latest)
+               call get_sbn_dims(bgpath,cfname,idum,idum,idum,ntbg)
+            endif
 
 
 
             call get_acceptable_files(i4time_now,bgpath,bgmodel
      +           ,bgfnames,max_files,oldest_forecast,0,use_analysis,
-     +           bgfcnt,-1,cmodel,nx,ny,nz,reject_files,reject_cnt)
+     +           bgfcnt,-1,cmodel,ntbg,nx,ny,nz,reject_files,reject_cnt)
+
 
             i=i+1
             if(bgfcnt.ge.1) then
@@ -130,13 +140,21 @@ c            stop
          do while(filesfound.le.0 .and. i.le.maxdprepmodels)
             bgmodel = bndybgmodels(i)
             bgpath = bndybgpaths(i)
+            call s_len(bgpath,len)
+
+            if(bgmodel .eq. 4)then
+               cfilespec=bgpath(1:len)//'/*'
+               call get_latest_file_time(cfilespec,i4time_latest)
+               cfname = cvt_i4time_wfo_fname13(i4time_latest)
+               call get_sbn_dims(bgpath,cfname,idum,idum,idum,ntbg)
+            endif
 
 
 
             call get_acceptable_files(i4time_now,bgpath,bgmodel,
      +           bgfnames,max_files,oldest_forecast,max_forecast_delta,
-     +           use_analysis,bgfcnt,fcstlengths(itime),cmodel,nx,ny,nz,
-     +           reject_files,reject_cnt)
+     +           use_analysis,bgfcnt,fcstlengths(itime),cmodel,ntbg,
+     +           nx,ny,nz,reject_files,reject_cnt)
 
 
             print *, nx,ny,nz
@@ -174,7 +192,7 @@ c     integer bgmodel, istatus, bgfcnt, k, len, filesfound
       character*256 fullname
       character*4 ext, gproj, af
       character*9 fname
-c     character*13 fname13
+      character*13 fname13,fname9_to_wfo_fname13
       integer nxbg, nybg, nzbg(5),ntbg 
 c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ), 
       real ht( NX,  NY,  NZ), 
@@ -245,7 +263,8 @@ c     real La1, La2, Lo1, Lo2, ht( NX,  NY,  NZ),
             ne(1)=57.29
             ne(2)=-49.3849
             
-            call get_sbn_dims(bgpath,fname,nxbg,nybg,nzbg,ntbg)
+            fname13 = fname9_to_wfo_fname13(fname)
+            call get_sbn_dims(bgpath,fname13,nxbg,nybg,nzbg,ntbg)
             
             call read_conus_211(bgpath,fname,af,nx,ny,nz,
      .           nxbg,nybg,nzbg,ntbg,
