@@ -82,8 +82,8 @@
  toptwvl_parm_cmn=4.,     
  maxstations_cmn=6000,
  maxobs_cmn=6000,  
- c8_project_common='NIMBUS',
- /  
+ c8_project_common='NIMBUS', 
+ $end  
 c
 c bgpaths is a list of paths to background models in order of preference
 c bgmodels describes the model type of the files found in each path
@@ -98,8 +98,8 @@ c
  bgpaths='/public/data/grids/ruc/60km_nat_hybb/netcdf',
          '/public/data/grids/maps/40km_fsl-conus_hybb/netcdf',
          '/public/data/grids/eta/48km_nat_isobaric/netcdf',
- bgmodels=1,5,2,
- /
+ bgmodels=1,5,2, 
+ $end
 
 
 
