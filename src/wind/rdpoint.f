@@ -43,6 +43,7 @@ cdis
      1  ,lat,lon                                                       ! I
 !    1  ,point_i,point_j,point_k,point_u,point_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v                          ! O
+     1  ,max_obs,obs_point,nobs_point                                  ! I/O
      1  ,istatus)                                                      ! O
 
 !      ~1990        Steve Albers  Original Version
@@ -56,6 +57,10 @@ cdis
 !                                 then cloud drift winds.
 
 !******************************************************************************
+
+        include 'barnesob.inc'
+        type (barnesob_qc) obs_point(max_obs)                           
+
 !       LAPS Grid Dimensions
 
         include 'windparms.inc' ! weight_pirep, weight_cdw
@@ -265,6 +270,16 @@ cdis
                         grid_laps_wt
      1  (point_i(n_point_obs),point_j(n_point_obs),point_k(n_point_obs))       
      1  = weight_ob
+
+!                       Add to data structure
+                        nobs_point = nobs_point + 1
+                        obs_point(nobs_point)%i = i_grid
+                        obs_point(nobs_point)%j = j_grid
+                        obs_point(nobs_point)%k = k_grid
+                        obs_point(nobs_point)%value(1) = u_temp - u_diff       
+                        obs_point(nobs_point)%value(2) = v_temp - v_diff       
+                        obs_point(nobs_point)%weight = weight_ob
+                        obs_point(nobs_point)%type   = 'pirep'
 
                     endif ! In vertical bounds
 
