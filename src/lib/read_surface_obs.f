@@ -247,8 +247,8 @@ c
 	end
 c
 c
-	subroutine read_sfc_state(i4time,btime,n_obs_g,n_obs_b,
-     &    stations,provider,lat,lon,elev,t,td,dd,ff,alt,stnp,mslp,
+	subroutine read_sfc_state(i4time,ext,btime,n_obs_g,n_obs_b,
+     &    stations,provider,lat,lon,elev,t,td,rh,dd,ff,alt,stnp,mslp,
      &    maxsta,jstatus)
 c
 c*****************************************************************************
@@ -269,6 +269,7 @@ c
 	real*4 lat(maxsta), lon(maxsta), elev(maxsta)
 	real*4 t(maxsta)
 	real*4 td(maxsta)
+	real*4 rh(maxsta)
 	real*4 dd(maxsta)
 	real*4 ff(maxsta)
 	real*4 alt(maxsta)
@@ -279,6 +280,7 @@ c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
 	character dum*132
+        character ext*(*)
 c
 	jstatus = 0
 c
@@ -286,7 +288,8 @@ c.....	Get the file.
 c
 	call make_fnam_lp(i4time, filetime, istatus)
 	call get_directory('lso', infile, len)
-	infile = infile(1:len) // filetime(1:9) // '.lso'
+        call s_len(ext,len_ext)
+	infile = infile(1:len) // filetime(1:9) // '.' // ext(1:len_ext)       
 c
 	open(11,file=infile,status='old',err=999)
 c
@@ -310,7 +313,7 @@ c
 c
 	  read(11,905)   t(k), dummy,              !temp, temp expected accuracy
      &                   td(k), dummy,             !dew point, dew point exp. accuracy
-     &                   dummy, dummy              !Rel hum, rh expected accuracy
+     &                   rh(k), dummy              !Rel hum, rh expected accuracy
 c
 	  read(11,907)   dd(k), ff(k),             !wind dir, wind speed
      &                   dummy, dummy,             !wind gust dir, wind gust speed
@@ -349,7 +352,8 @@ c
 	jstatus = 1
 	return
 999     continue
-	print *,' ++ ERROR opening LSO file in READ_SFC_STATE ++'
+	print *,' ++ ERROR opening ',ext(1:len_ext),
+     1          ' file in READ_SFC_STATE ++'
         jstatus = -1
 	return
         include 'lso_formats.inc'
