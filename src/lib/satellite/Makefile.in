@@ -59,6 +59,7 @@ SRC=bcd_to_int.f \
     lvd_file_specifier.f \
     rdgvarimg_cdf_header.f \
     read_gwc_header_sub.f \
+    read_orb_att.f \
     rewrite_satellite_lvd_nl.f \
     satsublatlon.f \
     update_gvarimg_parms.f \

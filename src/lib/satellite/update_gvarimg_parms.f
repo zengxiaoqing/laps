@@ -63,6 +63,7 @@ c
       Integer   i4time_cur
       Integer   i4time_nearest
       Integer   i_obstime
+      Integer   ld
       Integer   numoffiles
       Integer   nn,nf
       Integer   nsat
@@ -77,6 +78,7 @@ c
       Integer   idum
 
       character*100 dir
+      character*150 c_filespec
       character*255 filename_cdf
       character*200 cdir_path
       character*255 fname_sat
@@ -203,10 +205,10 @@ c
          fname_sat='u'//cd6(1:2)//cd6(5:6)//ct//'1_'//chtype(1:nn)
          nf=index(fname_sat,' ')
          n=index(cdir_path,' ')-1
-
          filename_cdf=cdir_path(1:n)//fname_sat(1:nf)
+         nf=index(filename_cdf,' ')-1
 
-         call read_gwc_header(filename_cdf,strtpix,strtline,
+         call read_gwc_header(filename_cdf(1:nf),strtpix,strtline,
      &stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
      &image_width,image_depth,goalpha,strbdy1,strbdy2,stpbdy1,
      &stpbdy2,bepixfc,bescnfc,fsci,decimat,gstatus)
@@ -239,19 +241,26 @@ c
          call get_file_time(filename_cdf,i4time_cur,i4time_nearest)
 
          if(i4time_nearest.eq.0)then
-            filename_cdf=cdir_path(1:n)//'971841336.oad'
+            call get_directory('static',c_filespec,ld)
+            c_filespec=c_filespec(1:ld)//'/lvd'
+            ld=index(c_filespec, ' ')-1
+            call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
+     &istatus)
+            if(istatus.ne.0)then
+               write(6,*)'O&A Data not obtained',c_filespec(1:ld)
+               goto 900
+            endif
          else
             call make_fnam_lp(i4time_nearest,c_fname,istatus)
             filename_cdf=cdir_path(1:n)//c_fname//'.oad'
-         endif
-
-         write(6,*)'Using: ',filename_cdf(1:100)
-         call get_gwc_oa(filename_cdf,c_imc,orbitAttitude,336,
+            write(6,*)'Using: ',filename_cdf(1:100)
+            call get_gwc_oa(filename_cdf,c_imc,orbitAttitude,336,
      &gstatus)
-         if(gstatus.ne.0)then
-            write(6,*)'Error in get_gwc_oanda'
-            istatus=-1 
-            goto 900
+            if(gstatus.ne.0)then
+               write(6,*)'Error in get_gwc_oanda'
+               istatus=-1 
+               goto 900
+            endif
          endif
 c
          frameStartTime=getftime()

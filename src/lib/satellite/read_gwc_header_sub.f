@@ -27,21 +27,25 @@ C  declared.
 C***********************************************************************
 
       IMPLICIT NONE    
-      CHARACTER*255 FILENAME
+      CHARACTER*(*) FILENAME
       CHARACTER*3 DATATYP  !Data Type
       CHARACTER*3 DATASBTP !Data Subtype
 cc      character*2 SPARE1     !Spare
-      INTEGER*4 HDRSIZE    !Header Size
-      INTEGER*4 DATASTR    !Data Start
-      INTEGER*4 SHPTPTR    !Shipping Table Ptr
+      INTEGER   HDRSIZE    !Header Size
+      INTEGER DATASTR    !Data Start
+      INTEGER SHPTPTR    !Shipping Table Ptr
+      Integer lun
 
-      INTEGER*4 STRPIX     !Start Pixel
-      INTEGER*4 STRSCNL    !Start Scanline 
-      INTEGER*4 STPPIX     !Stop Pixel
-      INTEGER*4 STPSCNL    !Stop Scanline
+      INTEGER STRPIX     !Start Pixel
+      INTEGER STRSCNL    !Start Scanline 
+      INTEGER STPPIX     !Stop Pixel
+      INTEGER STPSCNL    !Stop Scanline
+
+      integer n
+
 cc      CHARACTER*6 SATID    !Satellite Identification
 cc      CHARACTER*2 ORGDATTP !Data Type
-      INTEGER*4 REQOBSTM   !Requested Observation Time
+      INTEGER REQOBSTM   !Requested Observation Time
 
 cc      INTEGER DECIMAT    !Decimation Resolution 
       Integer   idecimat   !Returned variable
@@ -71,9 +75,9 @@ cc      REAL*4 GORHO         !GOES Rho
 cc      REAL*4 GOSBSCN       !Scanline of Satellite subpoint
 cc      REAL*4 GOSBSAMP      !Pixel of Satellite subpoint
 cc      REAL*4 GOGEOCAL      !GOES Geoc altitude????     
-cc      INTEGER*4 SPARE2(6)  !Spare Bytes not currently used
-      INTEGER*4 BEPIXFC    !Begin Pixel First Cell
-      INTEGER*4 BESCNFC    !Begin Scaneline First Cell
+cc      INTEGER SPARE2(6)  !Spare Bytes not currently used
+      INTEGER BEPIXFC    !Begin Pixel First Cell
+      INTEGER BESCNFC    !Begin Scaneline First Cell
 
 cc      INTEGER WIDTH      !Tracks in Width of image
       Integer   iwidth     !Returned variable
@@ -81,8 +85,8 @@ cc      INTEGER WIDTH      !Tracks in Width of image
 cc      INTEGER DEPTH      !Tracks in Depth of image
       Integer   idepth     !Returned Variable
 
-cc      INTEGER*4 LSTPIX     !Last Pixel in complete image
-cc      INTEGER*4 LSTSCN     !Last Scanline in complete imagec
+cc      INTEGER LSTPIX     !Last Pixel in complete image
+cc      INTEGER LSTSCN     !Last Scanline in complete imagec
 cc      BYTE REQDC           !Required data complete
 cc      CHARACTER*3 ORTYPE   !Original Type
 cc      CHARACTER*3 ORSTYPE  !Original Subtype
@@ -101,8 +105,8 @@ cc      REAL*8 ARGLAT        !ARG Latitude
 cc      REAL*8 DTTOP         !DT Top
 cc      REAL*8 DTBOT         !DT Bottom
 cc      REAL*8 MIDTIME       !Midpoint Time
-      INTEGER*4 FSCI       !First Scanline of Complete Image
-cc      INTEGER*4 STCI       !Start Time of Complete Image
+      INTEGER FSCI       !First Scanline of Complete Image
+cc      INTEGER STCI       !Start Time of Complete Image
 cc      BYTE CHAN            !Channel 1=IR1, 2=IR2, 3=IR3, 4=Water Vap
 cc      REAL*4 ROTANG        !Rotation Angle between Aries and Greenwich
 cc      REAL*4 ABSMAG        !Absolute Magnitude of craft in inertial 
@@ -121,9 +125,9 @@ c      BYTE JUNK512(512)     !Byte array used to 'read over' unneeded
 c                            !data
 c      BYTE JUNK95(95)       !Byte array used to 'read over' unneeded
 c                            !data
-      INTEGER*4 IOSTATUS    !I/O status flag
-      INTEGER*4 I        !Array indices
-
+      INTEGER IOSTATUS    !I/O status flag
+      INTEGER I        !Array indices
+      logical lopen
 C***********************************************************************
 C  Open the file that contains the GVAR header and pixel data.  The 
 C  record length in the direct access read is 1024 bytes (the number of
@@ -132,8 +136,12 @@ C***********************************************************************
 
       IOSTATUS = 1
 
+      write(6,*)'Opening ',FILENAME
+      inquire(file=filename,opened=lopen,number=lun)
+      if(lopen)write(6,*)'File already open',lun
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
-     &ACCESS='DIRECT', FORM='UNFORMATTED',RECL=744,STATUS='OLD')
+     &ACCESS='DIRECT', RECL=744,STATUS='OLD')
+
 cc     &ACCESS='DIRECT', FORM='UNFORMATTED',RECL=1024,STATUS='OLD')
 
 C***********************************************************************
