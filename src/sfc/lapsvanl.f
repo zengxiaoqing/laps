@@ -492,23 +492,6 @@ c
 !              tb81(i,j) = tb81(i,j) - tt(i,j)
 !          endif
 
-c.....     Using laps sfc p and background model sfc p,  
-c.....     move background temps from background model 
-c.....     terrain to laps terrain.  Use Poisson's eqn.
-c
-!          if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .false.)then 
-!                                                          ! is this needed?
-!              t_bk_ltopo = 
-!    1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
-!              t_bk(i,j) = t_bk_ltopo - tt(i,j)
-!          else
-!!             t_bk(i,j) = t_bk(i,j) - tt(i,j)
-!	   endif
-
-!	   if(td_bk(i,j) .ne. 0.) then
-!	       td_bk(i,j) = td_bk(i,j) - ttd(i,j)
-!	   endif
-
            if(sp_bk(i,j) .ne. 0. .and. back_sp .eq. 1)then ! psfc from bkgnd  
                                                            ! can be used as it
                                                            ! is on the LAPS trn
