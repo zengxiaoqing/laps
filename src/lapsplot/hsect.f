@@ -924,6 +924,8 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' VORT (anal) 1e-5/s'
                 endif
 
+                call mklabel33(k_mb,c19_label,c33_label)
+
                 scale = 1e-5
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                               ,zoom,density,scale)
@@ -3724,8 +3726,8 @@ c                   cint = -1.
 
             c33_label = 'Total Precipitable Water  cm     '
 
-            clow = 5.50
-            chigh = -1.00
+            clow = 0.00
+            chigh = 5.50
             cint = 0.25
             scale = 1e-2
 
@@ -3735,7 +3737,7 @@ c                   cint = -1.
      1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'tpw')
 
         elseif(c_type .eq. 'tt' 
      1    .or. c_type .eq. 'tf' .or. c_type .eq. 'tfi'
@@ -4312,7 +4314,8 @@ c                   cint = -1.
      1                        ,laps_cycle_time)
 
             else ! image plot
-                call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
+!               call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
+                call ccpfil(field_2d,NX_L,NY_L,0.,100.,'moist'
      1                     ,n_image,1e-0)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
