@@ -62,6 +62,7 @@ cdis
         if(abs(i4time_needed - i4time_nearest) .gt. i4time_tol)then
             write(6,*)' No file available within requested time window'
             istatus = 0
+            return
         endif
 
         units_2d  = 'K'
