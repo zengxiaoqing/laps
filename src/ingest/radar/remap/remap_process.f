@@ -43,13 +43,20 @@ cdis
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
      :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
      :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
+     1         i_scan_mode,                                !           (input)
+     :         Slant_ranges_m,                             !           (input)
+     :         n_rays,                                     !           (input)
+     :         n_gates,                                    !           (input)
+     1         Velocity,Reflect,                           !           (input)
+     1         Az_Array,Elevation_deg,                     !           (input)
+     1         vel_nyquist,                                !           (input)
      :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer*4 (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
      :         path_to_vrc,                                ! Char      (input)
      :         namelist_parms,                             ! Struct    (input)
      :         i_product_i4time,                           ! Integer*4 (input)
      :         i_num_finished_products,                    ! Integer*4 (output)
-     :         i_status)                                   ! Integer*4 (output)
+     :         i_status_tilt,i_status)                     ! Integer*4 (output)
 c
 c     Subroutine remap_process
 c
@@ -89,7 +96,7 @@ c
 c
 c     Input variables
 c
-      integer*4 i_tilt
+      integer*4 i_tilt, i_status_tilt
       integer*4 i_last_scan
       integer*4 i_first_scan
       integer*4 i_product_i4time
@@ -144,12 +151,10 @@ c
 c
       Real*4  Slant_ranges_m (max_gates),
      :        Elevation_deg,
-     :        Az_array(max_rays) ! ,
-!    :        Velocity(max_gates,max_rays),
-!    :        Reflect(max_gates,max_rays)
+     :        Az_array(max_rays),
+     :        Velocity(max_gates,max_rays),
+     :        Reflect(max_gates,max_rays)
 
-      real*4, allocatable, dimension(:,:) :: Velocity
-      real*4, allocatable, dimension(:,:) :: Reflect
       real*4, allocatable, dimension(:,:,:,:) :: out_array_4d
 
       real*4 r_missing_data
@@ -177,7 +182,7 @@ c
       integer i_purge
       integer init_ref_gate_hyb,init_ref_gate_actual
 
-      real vel_thr_rtau,rvel
+      real rvel
       real rmax,height_max,rlat_radar,rlon_radar,rheight_radar
       real vknt,rknt,variance,hybrid_range
 
@@ -256,40 +261,8 @@ c
 
       I4_elapsed = ishow_timer()
 
-c
-c     Get radar data from the storage area.
-c
-      allocate( Velocity(max_gates,max_rays), STAT=istat_alloc )       
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate Velocity'
-          stop
-      endif
-
-      allocate( Reflect(max_gates,max_rays), STAT=istat_alloc )       
-      if(istat_alloc .ne. 0)then
-          write(6,*)' ERROR: Could not allocate Reflect'
-          stop
-      endif
-
-      call Read_Data_88D(
-     :               i_tilt,
-     :               vel_thr_rtau,
-     :               r_missing_data,       ! Input
-     :               namelist_parms,
-     :               gate_spacing_m_ret,   ! Output
-     :               i_scan_mode,
-     :               Num_sweeps,
-     :               Elevation_deg,
-     :               n_rays,
-     :               n_gates,          ! Ref and Vel are on the same # of gates
-     :               Slant_ranges_m,
-     :               Velocity,
-     :               Reflect,
-     :               Az_Array,
-     :               vel_nyquist,
-     :               i_status)
-c
-      IF (i_status .ne. 1) GO TO 998 ! abnormal return
+c     Former location of 'read_data_88d' call
+      IF (i_status_tilt .ne. 1) GO TO 998 ! abnormal return
 c
       v_nyquist_tilt(i_tilt) = vel_nyquist
 c
@@ -443,9 +416,6 @@ c    :          grid_ref(i,j,k) + ref_value
 
   180   CONTINUE ! igate
   200 CONTINUE ! jray
-
-      deallocate(Velocity)
-      deallocate(Reflect)
 
       write(6,815,err=816) elevation_deg,n_obs_vel
   815 format(' REMAP_PROCESS > End Ray/Gate Loop: Elev= ',F10.2
