@@ -101,8 +101,6 @@ cdis
 
         write(6,*)' Welcome to subroutine put_temp_anal'
 
-        i4time_raob_window = 0 ! 43200
-
         call get_temp_parms(l_use_raob,l_adjust_heights,weight_bkg_const
      1                     ,pres_mix_thresh,istatus)
         if(istatus .ne. 1)then
@@ -220,7 +218,6 @@ cdis
      1                  ,ilaps_cycle_time   ! Input
      1                  ,l_use_raob         ! Input
      1                  ,weight_bkg_const   ! Input
-     1                  ,i4time_raob_window ! Input
      1                  ,ni,nj,nk           ! Input
      1                  ,grid_spacing_m     ! Input
      1                  ,istatus)           ! Output

@@ -39,7 +39,6 @@ cdis
      1               ,ilaps_cycle_time              ! Input
      1               ,l_use_raob                    ! Input
      1               ,weight_bkg_const              ! Input
-     1               ,i4time_raob_window            ! Input
      1               ,ni,nj,nk                      ! Input
      1               ,grid_spacing_m                ! Input
      1               ,istatus)                      ! Output
@@ -67,7 +66,7 @@ cdis
 !       read_tsnd and analyze_tsnd.
 
         integer*4 max_snd_grid,max_obs
-        parameter (max_snd_grid = 500)              ! Total number of profiles
+        parameter (max_snd_grid = 5000)             ! Total number of profiles
         parameter (max_obs = 100000)                ! # obs in data structure
 
         real*4 lat(ni,nj),lon(ni,nj)
@@ -97,6 +96,10 @@ cdis
            write (6,*) 'Error getting r_missing_data'
            return
         endif
+
+        call get_tempob_time_window('SND',i4_window_ob,istatus)
+
+        i4time_raob_window = 0
 
         do i_pr = 1,max_snd_grid
             l_good_tsnd(i_pr) = .false.
@@ -138,7 +141,11 @@ cdis
 
         do i_tsnd = 1,n_tsnd
 
-          iwrite = 1
+          if(i_tsnd .le. 200 .or. i_tsnd .eq. (i_tsnd/10)*10)then
+              iwrite = 1
+          else
+              iwrite = 0
+          endif
 
           call latlon_to_rlapsgrid(lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
      1                          ,lat,lon,ni,nj,ri,rj,istatus)

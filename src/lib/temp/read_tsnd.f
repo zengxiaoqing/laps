@@ -111,7 +111,7 @@ c                               not exactly match the LAPS analysis time.
 
 !       Initialize
 
-        write(6,*)' Subroutine read_tsnd -- reads RASS and Sondes'
+        write(6,*)' Subroutine read_tsnd -- reads LRS and SND'
 
         if(max_snd_obs .gt. max_snd_grid)then
             write(6,*)' Error in read_tsnd: max_snd_obs > max_snd_grid'       
@@ -189,8 +189,9 @@ c                               not exactly match the LAPS analysis time.
 
             write(6,407,err=408)i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                 ,i_ob,j_ob,c5_name(i_pr),a9time
-407         format(/' RASS #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9)
+     1                 ,i_ob,j_ob,c5_name(i_pr),a9time,c8_obstype(i_pr)       
+407         format(/' LRS #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9
+     1                       ,1x,a8)
 
 408         do level = 1,nlevels_in
 
@@ -260,58 +261,8 @@ c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
 412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
+     1                        ,c8_obstype(i_pr)
                 enddo ! level
-
-
-!          ***  Interpolate LAPS to the LOWEST RASS level  ****
-
-                if(.not. l_3d)then
-                    level = 1
-
-                    t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
-
-                    call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
-     1                         t_interp_laps,p_interp_laps,
-     1                         i_pr,
-     1                         level,
-     1                         nlevels_good,
-     1                         lat_pr,lon_pr,i_ob,j_ob,
-     1                         imax,jmax,kmax,
-     1                         max_snd_obs,max_snd_levels,
-     1                         r_missing_data,     
-     1                         temp_bkg_3d,heights_3d,pres_3d)
-
-                    call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
-     1                         sh_interp_laps,p_interp_laps,
-     1                         i_pr,
-     1                         level,
-     1                         nlevels_good,
-     1                         lat_pr,lon_pr,i_ob,j_ob,
-     1                         imax,jmax,kmax,
-     1                         max_snd_obs,max_snd_levels,
-     1                         r_missing_data,
-     1                         sh_3d,heights_3d,pres_3d)
-
-                    tvir = ob_pr_t_obs(i_pr,level) + t_diff
-                    p_pa = p_interp_laps
-                    tamb = devirt_sh(tvir,sh_interp_laps,p_pa)
-
-                    bias_htlow(i_pr) = tamb - t_interp_laps
-!                   bias_htlow(i_pr) = tvir - t_interp_laps
-
-                    write(6,*)' TRASS-VIR= ',tvir
-                    write(6,*)' SH       = ',sh_interp_laps
-                    write(6,*)' TRASS-AMB= ',tamb
-                    write(6,*)' TLAPS    = ',t_interp_laps
-                    write(6,*)' Low bias = ',bias_htlow(i_pr)
-
-!d                   write(6,511,err=512)ista,i_pr,level
-!d      1                ,ob_pr_t(i_pr,level)
-!d      1                ,t_diff
-511                 format(1x,i6,2i4,f8.0,1x,f7.1,f6.1)
-
-512                 continue
-                endif ! l_3d
 
             endif ! # levels > 0 (good rass)
 
@@ -335,7 +286,7 @@ c
 c       Process sounding data
 c
         if(.not. l_use_raob)then
-            write(6,*)' Skipping read of sonde data'
+            write(6,*)' Skipping read of SND data'
             goto 900
         endif
 
@@ -344,7 +295,7 @@ c
         rcycles = float(i4time_sys - i4time_snd + lag_time)
      1                                  / float(ilaps_cycle_time)
 
-! ***   Read in Sonde data  ***************************************
+! ***   Read in SND data  ***************************************
 
         ext = 'snd'
         call get_filespec(ext,2,c_filespec,istatus)
@@ -374,7 +325,7 @@ c
      1          ,c5_name(i_pr),a9time,c8_obstype(i_pr)
 801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
-!           Determine if sonde is in the LAPS domain
+!           Determine if SND is in the LAPS domain
 706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
      1                              ,imax,jmax,ri,rj,istatus)
 
@@ -384,7 +335,8 @@ c
             write(6,707,err=708)i_pr,ista,nlevels_in
      1                 ,lat_pr(i_pr),lon_pr(i_pr)
      1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr),a9time
-707         format(/' Sonde #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9)
+     1                 ,c8_obstype(i_pr)
+707         format(/' SND #',i3,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9,1x,a8)       
 
             if(nlevels_in .gt. max_snd_levels)then
                 write(6,*)' ERROR: too many levels in SND file '       
@@ -474,49 +426,14 @@ c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
 712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
+     1                        ,c8_obstype(i_pr)
                 enddo ! level
-
-
-!          ***  Interpolate LAPS to the LOWEST Sonde level  ****
-
-                level=1
-
-                if(.not. l_3d)then
-
-                    t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
-
-                    call interp_laps_to_rass(ob_pr_ht_obs,ob_pr_t_obs,
-     1                      t_interp_laps,p_interp_laps,
-     1                      i_pr,
-     1                      level,
-     1                      nlevels_good,
-     1                      lat_pr,lon_pr,i_ob,j_ob,
-     1                      imax,jmax,kmax,
-     1                      max_snd_obs,max_snd_levels,r_missing_data,       
-     1                      temp_bkg_3d,heights_3d,pres_3d)
-
-                    tamb = ob_pr_t_obs(i_pr,level) + t_diff
-
-                    bias_htlow(i_pr) = tamb - t_interp_laps
-
-                    write(6,*)' TSonde-AMB= ',tamb
-                    write(6,*)' TLAPS    = ',t_interp_laps
-                    write(6,*)' Low bias = ',bias_htlow(i_pr)
-
-!d                  write(6,811,err=812)ista,i_pr,level
-!d      1                ,ob_pr_t(i_pr,level)
-!d      1                ,t_diff
-811                 format(1x,i6,2i4,f8.0,1x,f7.1,f6.1)
-
-812                 continue
-
-                endif ! l_3d
 
             endif ! # levels > 0
 
         enddo  ! i_pr
         write(6,*)' ERROR: Used all space in temperature arrays'
-        write(6,*)' while reading sondes.  Check max_snd_obs: '
+        write(6,*)' while reading SND.  Check max_snd_obs: '
      1            ,max_snd_obs
 
 800     continue ! Exit out of loop when file is done
@@ -529,7 +446,7 @@ c       1                ,t_diff
 900     n_tsnd = n_rass + n_snde
  
         write(6,*) ' Read ',n_snde,' temperature sonde(s)'
-        write(6,*) ' Read ',n_tsnd,' Total RASS+Sonde sounding(s)'
+        write(6,*) ' Read ',n_tsnd,' Total LRS+SND sounding(s)'
 
         istatus = 1
         RETURN
