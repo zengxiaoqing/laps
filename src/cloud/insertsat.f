@@ -376,8 +376,8 @@ c
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
                 if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.050)then   ! excessively over 1.0
-                      write(6,*)' Error in insert_sat, cldcv > 1.050'
+                  if(cldcv(i,j,k) .gt. 1.070)then   ! excessively over 1.0
+                      write(6,*)' Error in insert_sat, cldcv > 1.070'
      1                         ,i,j,k,cldcv(i,j,k)
                       istatus = 0
                       return
@@ -673,6 +673,10 @@ c
         call compare_radiation(kcld,temp_3d,klaps,imax,jmax
      1               ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
      1               ,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)
+     1           ' Warning: bad status returned from compare_radiation'       
+        endif
 
         return
         end
@@ -1073,6 +1077,8 @@ c
 !       a better fit.
 
         write(6,*)' Comparing radiation'
+
+        istatus=1
 
         corr_thr = 4.
         cover_step = 0.05
