@@ -218,13 +218,14 @@ if($fxa_sys!=0){
     }
   }
   $numrad = scalar(@currad);  # get number of elements in @currad
+  print "homeRadar_U: $homeRadar_U \n";
   print "Current Radars: @currad \n";
 
 # if $homeRadar is not "none", see if it matches any radar with a current RPS list
   if ($homeRadar ne "none") {
     if ($numrad >= 1) {
       foreach(@currad){
-        if ($currName_U eq  $homeRadar_U) {
+        if ($_ eq  $homeRadar_U) {
           $process = $true;
         }
       }
@@ -271,6 +272,7 @@ if($fxa_sys!=0){
       closedir(VXX);
 
       foreach (@oldrad) {
+        print "Deleting file: $LAPS_DATA_ROOT/static/vxx/$_ \n";
         unlink "$LAPS_DATA_ROOT/static/vxx/$_";
       }
     }
