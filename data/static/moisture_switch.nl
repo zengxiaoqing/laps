@@ -3,10 +3,11 @@
  RAOB_LOOKBACK = 3600,
  GOES_SWITCH = 8,
  CLOUD_SWITCH = 1,
- SOUNDER_SWITCH = 1,
+ SOUNDER_SWITCH = 0,
  TIROS_SWITCH = 0,
- SAT_SKIP = 2,
-
+ SAT_SKIP = 3,
+ GVAP_SWITCH = 0,
+ 
  /
 c   This is a switch for the module  lq3.  If the value of the first record is 0,
 c   raob data (i.e., .snd files) will be ignored even if they are present ... (but
@@ -36,3 +37,5 @@ c   reflect the satellite number (i.e. 12).
 c
 c   The sat_skip parameter will not skip=1, or skip the number of gridpoints
 c   each application
+C
+C   GVAP_SWITCH enables use of derived goes precipitable water
