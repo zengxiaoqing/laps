@@ -36,7 +36,8 @@ c     endif
       call get_directory('log',clogdir,lend)
 
       if(balance.eq.1)then
-         call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type,istatus)
+         call get_balance_nl(lrunbal,adv_anal_by_t_min,cpads_type
+     1,istatus)
          call i4time_fname_lp(a9_time,i4time,istatus)
          i4time=i4time-adv_anal_by_t_min*60
          call make_fnam_lp(i4time,a9_time,istatus)
