@@ -51,6 +51,11 @@ C
 
       n_image = n_image + 1
 
+!     if(n_image .gt. 1)then
+!         write(6,*)' Image was already plotted - returning from ccpfil'
+!         return
+!     endif
+
       if(scale_l_in .lt. scale_h_in)then
           ireverse = 0
           scale_l = scale_l_in

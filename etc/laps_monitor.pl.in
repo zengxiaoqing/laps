@@ -1,0 +1,351 @@
+#!@PERL@
+# 
+# Program to check status of laps output data and report in an html table format.
+#
+# Note that this monitor is set up for an example of 5 windows being run
+# concurrently. You may want to edit this script for your particular windows
+# and $LAPS_DATA_ROOT paths. The main lines to edit are the %lapsprds and
+# the @order.
+
+select STDOUT; $|=1;
+$ENV{PATH}="";
+my(%lapsprds)=( "FSLD" =>   '/data/fxa2/fxa_local/laps/lapsprd',
+                "WFO30" =>  '/data/lapb/wfo/data/lapsprd',
+                "WFO5KM" => '/data/lapb/wfo5km/data/lapsprd', 
+                "TW/FSL" => '/data/lapb/tw/fsl/data/lapsprd',
+  	        "TW/CWB" => '/data/lapb/tw/cwb/data/lapsprd');
+
+# This defines the order of the sources in the table
+#
+my(@order) = qw(FSLD WFO30 WFO5KM TW/FSL TW/CWB);
+
+my(%min_age,$min_age,%max_age,$max_age,%files_per_hour,$fph,$model,%green,%yellow,%red,$dir,@filelist,$file,$age,$image,$time,$i);
+
+$min_age{vrc} = 0.5;
+$files_per_hour{vrc}=10;
+
+#$min_age{lvd} = 0.5;
+#$files_per_hour{lvd}=3;
+
+$files_per_hour{snd}=0.001;
+
+$min_age{"rdr/001/raw"} = 0.5;
+$files_per_hour{"rdr/001/raw"} = 10.0;
+
+$max_age{l1s} = 48.0;
+$max_age{lcv} = 48.0;
+
+#
+# This defines the order of the products in the table
+#
+
+my(@lapsDirs) = qw( lga lgb lvd/goes08 lvd/goes10 
+                  rdr/001/raw vrc 
+                  pro lso lsq snd
+                  cdw pin 
+                  v01 v02 v03 v04 d01 d02 d03 pig prg sag lw3 lwm 
+                  lrs lsx tmg lt1 
+                  lc3 lps lcb lcv  
+                  lsr/goes08 lsr/goes10 lh3 lh4 lq3 
+                  lcp lwc lil lct lmd lmt lco lrp lty lst 
+                  lmr lf1 liw lhe 
+                  l1s lm1 lm2
+                  balance/lt1 balance/lw3 balance/lh3 bigfile
+                  dprep fsf fua);
+
+
+
+#have this expire in 1 hour, so the form won't keep resetting itself.
+#use HTTP::Date;
+#my $plusOneHour=time() + 1*3600;
+#my $stringGMT = time2str($plusOneHour);   # Format as GMT ascii time
+my $server_protocol = $ENV{'SERVER_PROTOCOL'};
+
+
+#print "$server_protocol 200 OK\n" .
+print    "Content-type: text/html\n\n" if($server_protocol);
+
+#print "Content-type: text/html\n\n";
+print  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 //EN\">\n";
+print  "<html>\n";
+print  "<head>\n";
+print  "<META HTTP-EQUIV=\"REFRESH\" CONTENT=3600>\n";
+print  "<title>WFO/Taiwan Product Monitor</title>\n";
+print  "</head>\n";
+print  "<body>\n";
+print  "<center><h1> WFO/Taiwan Product Monitor </h1></center>\n";
+#print  "<IMG SRC=\"./glite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >";
+#print  "indicates that product is up to date and consistantly filled <br><br><br> <br>\n";
+#print  "<IMG SRC=\"./ylite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >" ;
+#print  "indicates that product is up to date but has failed during the data period <br><br><br> <br>\n";
+#print  "<IMG SRC=\"./rlite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT > ";
+#print  "indicates that product is out of date <br><br><br> <br>\n";
+#print  "The 3 numbers under Status indicate the total number of green, yellow, and red products 
+#        for each model\n<BR>";
+
+
+
+foreach $model (keys %lapsprds){
+    $green{$model}=0;
+    $yellow{$model}=0;
+    $red{$model}=0;
+    chdir "$lapsprds{$model}" || next;
+
+    $files_per_hour{dprep}=3./12.;
+    $min_age{dprep}=13.;
+
+    if($model eq "CART"){
+        $min_age_model = 1.5;
+        $fph_model = 1.0;
+
+        $min_age{lga} = 13.0;
+        $min_age{lgb} = 13.0;
+        $lga_per_run = 1.0;
+
+        $min_age{snd} = 13.0;
+
+        $lso_per_run = 2.0;   # Parallel Code
+
+    }elsif($model eq "WIAP"){  
+        $min_age_model = 3.5;
+        $fph_model = 1. / 3.0;
+
+        $min_age{lga} = 4.5;
+        $min_age{lgb} = 4.5;
+        $lga_per_run = 1.0;
+
+        $min_age{snd} = 13.0;
+
+        $lso_per_run = 1.0;     # Operational Code
+
+    }elsif($model eq "FSLD"){   # WFO Runs
+        $min_age_model = 1.5;
+        $fph_model = 1.0;
+        $min_age{lga} = 4.5;
+        $min_age{lgb} = 4.5;
+        $lso_per_run = 1.0; 
+
+    }elsif($model eq "WFO30"){
+        $min_age_model = 0.8;
+        $fph_model = 2.0;
+        $min_age{lga} = 4.5;
+        $min_age{lgb} = 4.5;
+        $lso_per_run = 1.5; 
+
+    }elsif($model eq "WIAP10"){
+        $min_age_model = 27.0;
+        $fph_model = 1. / 24.0;
+
+        $lso_per_run = 2.0;    # Parallel Code
+        $min_age{lga} = 27.0;
+        $min_age{lgb} = 27.0;
+        $lga_per_run = 1.0;
+
+        $min_age{snd} = 27.0;
+
+        $min_age{dprep}=27.;
+
+    }else{                  # Default (Taiwan)
+        $min_age_model = 1.5;
+        $fph_model = 1.0;
+
+        $min_age{lga} = 6.0;
+        $min_age{lgb} = 6.0;
+        $lga_per_run = 0.85;
+
+        $min_age{snd} = 13.0;
+
+        $lso_per_run = 1.0; # Operational Code
+
+    }
+
+    $files_per_hour{lso} = $fph_model * $lso_per_run;
+    $files_per_hour{lga} = $fph_model * $lga_per_run;
+    $files_per_hour{lgb} = $fph_model * $lga_per_run;
+
+    my(@subdirs) = &dodir('.','.');
+    foreach $dir (@subdirs){
+	next if($dir eq '.');
+	$dir =~ s/^\.\///;
+#        print "$dir\n";
+	opendir(DIR,"$lapsprds{$model}/$dir");
+	@filelist = grep(/^\d\d\d\d/, readdir(DIR));
+	closedir(DIR);       
+#        next if($#filelist <=0);
+        next unless($filelist[0]!='');
+        my($file_count)=$#filelist+1;
+        my($minage)=9999;
+        my($maxage)=-100;
+
+
+	foreach $file (sort @filelist){        
+	    stat("$dir/$file");
+            $age = 24*(-M _);
+	    $minage = ($age<$minage)?$age:$minage;
+	    $maxage = ($age>$maxage)?$age:$maxage;
+	}
+	$minage = int(10*$minage)/10;
+	$maxage = int(10*$maxage)/10;
+
+
+#	$image = "<IMG SRC=\"./rlite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >";
+        $image = "red";
+
+        if(defined($files_per_hour{$dir})){       # Defined exception
+	    $fph= $files_per_hour{$dir};
+	}else{
+            $fph = $fph_model;
+	}
+
+        $minage_out = $minage;
+#       $minage_out = "< 1" if($minage < 1.0 && $fph_model <= 1.0);
+        $minage_out = "< 1" if($minage < 1.0 && $fph <= 1.0);
+
+        if(defined($min_age{$dir})){              # Defined exception
+	    $min_age= $min_age{$dir};
+	}else{
+	    $min_age = $min_age_model;
+	}
+
+        if(defined($max_age{$dir})){              # Defined exception
+	    $max_age= $max_age{$dir};
+	}else{
+	    $max_age = 0.0;
+	}
+
+#       printf "$dir$max_age\n";
+
+        if($dir eq "lso" && $file_count < $lso_per_run){
+            $image = "yellow";
+ 	    $yellow{$model}++;
+ 	}else{
+       
+#       Test if product is current and did not fail in the past and did not have a purger problem
+#       Right hand side should be -0.5 to test for one missing file, +0.5 for 2 files, +1.5 for 3 files, etc...
+	if($minage < $min_age && ($maxage-$minage)*$fph-$file_count <= -0.5 && $maxage >= $max_age ){
+#	    $image = "<IMG SRC=\"./glite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >";;
+            $image = "green";
+	    $green{$model}++;
+
+#       Test if product is current and either failed in the past or had purger problem
+	}elsif($minage < $min_age && ( ($maxage-$minage)*$fph-$file_count > -0.5 || $maxage < $max_age) ){  
+#	    $image = "<IMG SRC=\"./ylite.gif\" VSPACE=2 HSPACE=6 Height=26 Width=40 ALIGN=LEFT >";;
+            $image = "yellow";
+	    $yellow{$model}++;
+	}elsif($file_count>0){
+	    $red{$model}++;
+	}
+
+        }
+
+	$$model{$dir} = "<th>$dir </th><th bgcolor=$image>$file_count</th><th bgcolor=$image>$minage_out</th><th bgcolor=$image>$maxage</th>\n";
+    }
+}
+
+
+
+$time = gmtime;
+
+foreach (keys %lapsprds){
+    foreach $dir (sort keys %$_){
+	next if(grep(/$dir/,@lapsDirs)>0);
+	push(@lapsDirs,$dir);
+    }
+}
+
+
+print "<center><table border>\n<caption><b>$time</b></caption>\n";
+print "<tr>\n";
+
+my($maxdirs) = 0;
+
+foreach(keys %lapsprds){
+#    print "<th> Model </th> <th>Status</th><th rowpsan=2>File Count</th> <th colspan=2>File Age (hours)</th>\n";
+    print "<th> Model </th> <th rowpsan=2>File Count</th> <th colspan=2>File Age (hours)</th>\n";
+}
+print "</tr><tr>\n";
+foreach $model (@order){
+
+    
+    print "<th> <h3> $model  </h3> </th>\n";
+    print "<th>Status: $green{$model}:$yellow{$model}:$red{$model} </th><th> Latest</th><th>Oldest</th>\n";
+}
+
+
+#foreach $dir (sort keys %$use_model){
+foreach $dir (@lapsDirs){
+    print "<tr>\n";
+    foreach $model (@order){
+# Print out HTML
+         if($$model{$dir}){
+            print $$model{$dir};
+         }else{
+  	    print "<th>$dir </th><th bgcolor=black> </th><th bgcolor=black></th><th bgcolor=black></th>\n";
+         }
+    }
+    print "</tr>\n";
+}
+print "</tr>\n\n";
+print "</table></center>\n";
+print "</body></html>\n";  
+exit;
+
+
+sub dodir {
+    my($dir,$pattern,$nlink) = @_;
+    my($dev,$ino,$mode,$subcount);
+    my(@dirlist,$name);
+    my($dev,$ino,$mode);
+    
+    ($dev,$ino,$mode,$nlink) = stat('.') unless $nlink;
+
+
+    opendir(DIR,'.') ;
+    my(@filenames) = readdir(DIR);
+    closedir(DIR);
+
+    if($nlink==2){                  # directory with no subs
+	for (@filenames){
+	    next if(/^[\.]+$/);
+#            print $_,"\n";
+            if($_ =~ $pattern){
+#		print "$dir/$_\n";
+		push(@dirlist,$dir);
+		last;
+	    }
+	}
+    }else{
+	$subcount = $nlink-2;
+        my($found)=0;
+	for(@filenames) {
+	    next if(/^[\.]+$/);
+	    $name = "$dir/$_";
+	    if(($_ =~ $pattern) && $found==0){
+#		print $name,"\n";
+                $found++;
+		push(@dirlist,$dir);
+		
+	    }
+	    next if $subcount == 0;
+
+	    ($dev,$ino,$mode,$nlink) = lstat($_);
+
+	    next unless -d _;
+
+            $_=~/([^;]*)/;
+            $dir_safe = $1;
+	    chdir $dir_safe || die "Can't cd to $name\n";
+
+	    push(@dirlist,&dodir($name,$pattern,$nlink));
+	    chdir '..';
+	    --$subcount;
+	}
+    }
+    return(@dirlist);
+}
+
+
+
+
+
+

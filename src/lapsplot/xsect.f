@@ -672,13 +672,22 @@ c read in laps lat/lon and topo
      1    .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
      1    .or. c_field .eq. 'vc' .or. c_field .eq. 'om')then
 
-            if(c_field .ne. 'w ' .and. c_field .ne. 'om')then
-                write(6,104)
-104             format('  Balanced Winds  [y,n]  '
-     1                ,'     (DEF=n) ',32x,'? ',$)
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-                read(lun,1301)c_wind
-                if(c_wind .eq. 'y' .or. c_wind .eq. 'Y')then
+            i4time_3dw = i4_valid
+
+            if(c_field .ne. 'w ' .and. c_field .ne. 'om')then
+                if(c_prodtype .eq. 'N')then
                     c_wind = 'b'
                 else
                     c_wind = 'k'
@@ -700,7 +709,7 @@ c read in laps lat/lon and topo
 
             endif
 
-            if  (c_wind .eq. 'b')then
+            if  (c_prodtype .eq. 'N')then
                 ext_wind = 'balance'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'lw3/*.lw3'
@@ -710,21 +719,28 @@ c read in laps lat/lon and topo
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
 
-            elseif(c_wind .eq. 'k')then
+            elseif(c_prodtype .eq. 'A')then
                 ext_wind = 'lw3'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
 
+            else ! Background or Forecast
+                ext_wind = ext
+!               call get_directory(ext_wind,directory,len_dir)
+                call s_len(directory,len_dir)
+                c_filespec = directory(1:len_dir)//'*.'//ext_wind(1:3)
+
             endif
+
 
             if(.not. l_wind_read)then
                 write(6,*)
-                write(6,*)' Looking for 3D wind data: ',ext_wind
-     1                   ,c_field,c_wind
+                write(6,*)' Looking for 3D wind data: ',ext_wind(1:10)
+     1                   ,' ',ext,c_field,c_wind
 
                 if(c_field .ne. 'w ' .and. c_field .ne. 'om')then ! Non-omega
                     write(6,*)' Reading U/V'
-                    if(c_wind .eq. 'b')then
+                    if(c_prodtype .eq. 'N')then
                         directory = directory(1:len_dir)//'lw3'
                         ext = 'lw3'
 
@@ -742,11 +758,26 @@ c read in laps lat/lon and topo
      1                  ,ext,var_2d,units_2d
      1                  ,comment_2d,NX_L,NY_L,NZ_L,v_3d,istatus)       
 
-                    else
+                    elseif(c_prodtype .eq. 'A')then
                         call get_file_time(c_filespec,i4time_ref
      1                                               ,i4time_3dw)
                         call get_uv_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                  ,u_3d,v_3d,ext_wind,istatus)
+
+                    else ! Background or Forecast
+                        var_2d = 'U3'
+                        call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,u_3d
+     1                              ,istatus)
+
+                        var_2d = 'V3'
+                        call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,v_3d
+     1                              ,istatus)
 
                     endif
 
@@ -757,11 +788,15 @@ c read in laps lat/lon and topo
                     write(6,*)' Reading Omega/W'
                     call get_file_time(c_filespec,i4time_ref,i4time_3dw)
 
-                    if(c_wind .eq. 'k')then
+                    if(c_wind .eq. 'c')then
                         call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
      1                                  ,field_3d,ext_wind,istatus)
 
-                    elseif(c_wind .eq. 'b')then
+                    elseif(c_prodtype .eq. 'A')then
+                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
+     1                                  ,field_3d,ext_wind,istatus)
+
+                    elseif(c_prodtype .eq. 'N')then
                         directory = directory(1:len_dir)//'lw3'
                         ext = 'lw3'
                         var_2d = 'OM'
@@ -770,10 +805,6 @@ c read in laps lat/lon and topo
      1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
      1                  ,ext,var_2d,units_2d
      1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
-
-                    elseif(c_wind .eq. 'c')then
-                        call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
-     1                                  ,field_3d,ext_wind,istatus)
 
                     endif
 
@@ -802,10 +833,16 @@ c read in laps lat/lon and topo
 
             i_contour = 2
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Wind (Balanced)       knots '
-            else ! if(c_wind .eq. 'k')then
+            elseif   (c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Wind (Analyzed)       knots '
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Wind (Background)     knots '
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Wind (Forecast)       knots '
+            else
+                c33_label = 'LAPS Wind (??????????)     knots '
             endif
 
 
@@ -874,11 +911,11 @@ c read in laps lat/lon and topo
 
             i_contour = 1
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Omega (balanced)      ubar/s'
             else   if(c_wind .eq. 'c')then
                 c33_label = 'LAPS Omega (cloud)         ubar/s'
-            else ! if(c_wind .eq. 'k')then
+            else ! if(c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Omega (analyzed)      ubar/s'
             endif
 
@@ -952,11 +989,11 @@ c read in laps lat/lon and topo
 
             i_contour = 1
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
             else   if(c_wind .eq. 'c')then
                 c33_label = 'LAPS W (cloud) Vert X-Sect (cm/s)'
-            else ! if(c_wind .eq. 'k')then
+            else ! if(c_prodtype .eq. 'A')then
                 c33_label = 'LAPS W (kinem) Vert X-Sect (cm/s)'
             endif
 
@@ -982,7 +1019,7 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS  U    (balanced)       (kt) '
             else
                 c33_label = 'LAPS  U    (analyzed)       (kt) '
@@ -1009,7 +1046,7 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS  V    (balanced)       (kt) '
             else
                 c33_label = 'LAPS  V    (analyzed)       (kt) '
@@ -1040,9 +1077,9 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
 
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Isotachs (Balanced)   knots '
-            else ! if(c_wind .eq. 'k')then
+            else ! if(c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Isotachs (Analyzed)   knots '
             endif
 
@@ -1069,9 +1106,9 @@ c read in laps lat/lon and topo
             chigh = +1000.
             cint = 10.
             i_contour = 1
-            if       (c_wind .eq. 'b')then
+            if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Isogons (Balanced)    knots '
-            else ! if(c_wind .eq. 'k')then
+            else ! if(c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Isogons (Analysis)    knots '
             endif
 
@@ -3073,14 +3110,14 @@ c
 
         write(6,1)
  1      format('  Product type: analysis [a], background [b]'
-     1        ,', forecast [f] ? ',$)        
+     1        ,', balance [n], forecast [f] ? ',$)        
 
         read(5,2)c_prodtype
  2      format(a)
 
         call upcase(c_prodtype,c_prodtype)
 
-        if(c_prodtype .eq. 'A')then
+        if(c_prodtype .eq. 'A' .or. c_prodtype .eq. 'N')then
             return
 
         else

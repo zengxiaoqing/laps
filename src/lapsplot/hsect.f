@@ -78,7 +78,7 @@ cdis
         real*4 static_slpe_ln(NX_L,NY_L)
         real*4 static_slpe_lt(NX_L,NY_L)
 
-        character*1 c_display, qtype
+        character*1 c_display, qtype, tunits
         character*1 cansw
         character*13 filename,a13_time
         character*3 c3_site
@@ -693,7 +693,11 @@ c       include 'satellite_dims_lvd.inc'
                     cint = 5.
                 endif
 
-                call plot_cont(spds,1e0,0.,300.,cint,asc9_tim_3dw,
+                scale = 1.0
+                call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
+     1                                                  ,zoom,scale)
+
+                call plot_cont(spds,scale,clow,chigh,cint,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,       
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -712,7 +716,11 @@ c       include 'satellite_dims_lvd.inc'
 
                 call mklabel33(k_mb,c19_label,c33_label)
 
-                call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
+                scale = 1.0
+                call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                  ,zoom,scale)
+
+                call plot_cont(u_2d,1e0,clow,chigh,cint,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -733,7 +741,12 @@ c       include 'satellite_dims_lvd.inc'
 
                 call mklabel33(k_mb,c19_label,c33_label)
 
-                call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
+                scale = 1.0
+                call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                  ,zoom,scale)
+
+
+                call plot_cont(v_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
      1               c33_label,i_overlay,c_display,lat,lon,jdot,       
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -861,7 +874,6 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_mb,' DVRG (CPTD) 1e-5/s',c33_label)
 
                 scale = 1e-5
-
                 call contour_settings(div,NX_L,NY_L,clow,chigh,cint
      1                                                  ,zoom,scale)
 
@@ -3569,12 +3581,20 @@ c                   cint = -1.
      1         var_2d .eq. 'T'   .or.
      1         var_2d .eq. 'TD'       )then
 
+                write(6,726)
+ 726            format(10x,'plot Fahrenheit or Celsius [f/c]  ? ',$)
+                read(5,*)tunits
+
                 write(6,*)' Converting sfc data to Fahrenheit'
 
-!               K to F
+!               Kelvin conversion to F or C
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    field_2d(i,j) = k_to_f(field_2d(i,j))
+                    if(tunits .ne. 'c')then
+                        field_2d(i,j) = k_to_f(field_2d(i,j))
+                    else
+                        field_2d(i,j) = k_to_c(field_2d(i,j))
+                    endif
                 enddo ! j
                 enddo ! i
 
@@ -4345,7 +4365,7 @@ c                   cint = -1.
               if(cstatic .eq. 'sni')then
                 write(6,*)' calling solid fill plot'
                 call get_mxmn_2d(NX_L,NY_L,static_slpe_ln,rmx2d
-     1                          ,rmn2d)
+     1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_slpe_ln,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -4369,7 +4389,7 @@ c                   cint = -1.
               if(cstatic .eq. 'sli')then
                 write(6,*)' calling solid fill plot'
                 call get_mxmn_2d(NX_L,NY_L,static_slpe_lt,rmx2d
-     1                          ,rmn2d)
+     1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_slpe_lt,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)

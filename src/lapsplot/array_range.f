@@ -63,14 +63,21 @@ cdis
            cint = 5.
        elseif(range .gt. 6)then  ! From   6-30, cint = 2  (3  - 15 contours)
            cint = 2.
-       else ! range < 6          ! From   0- 6, cint = 1  (0  -  6 contours)
+       elseif(range .ge. 1)then  ! From   1- 6, cint = 1  (1  -  6 contours)
            cint = 1.
+       else ! range < 1          
+           cint = 0.1
        endif
 
        cint_2 = cint * 2.
 
-       clow  = int(rmin)/int(cint_2) * int(cint_2)
-       chigh = int(rmax)/int(cint) * int(cint) + int(cint)
+       if(cint .ge. 1.0)then
+           clow  = int(rmin)/int(cint_2) * int(cint_2)
+           chigh = int(rmax)/int(cint) * int(cint) + int(cint)
+       else
+           clow =  nint(rmin/cint) * cint - cint
+           chigh = nint(rmax/cint) * cint + cint
+       endif
  
        write(6,*)' Subroutine contour_settings....',range,zoom,cint
 
