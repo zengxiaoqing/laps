@@ -66,17 +66,17 @@ cdis
         call get_c8_project(c8_project,istatus)
         if(istatus .ne. 1)goto999
 
-        if(c8_project .ne. 'RSA' .and. c8_project .ne. 'WFO')then
+        if(c8_project .ne. 'RSA')then
             write(6,*)
             write(6,*)' Running BLP (NIMBUS) local profiler ingest'
             call ingest_blppro(i4time,NX_L,NY_L,j_status)
             write(6,*)' Return from BLP (NIMBUS) local profiler ingest'
         else
             write(6,*)
-            write(6,*)' Running RSA/WFO local profiler ingest - '
-     1               ,'not yet supported'
-!           call ingest_rsapro(i4time,NX_L,NY_L,j_status)
-!           write(6,*)' Return from RSA/WFO local profiler ingest'
+            write(6,*)' Running RSA/LDAD local profiler ingest - '
+     1               ,'not yet functioning'
+            call ingest_rsapro(i4time,NX_L,NY_L,j_status)
+            write(6,*)' Return from RSA/WFO local profiler ingest'
         endif
 
         write(6,*)
