@@ -100,6 +100,10 @@
         prof_subdirs(2) = '915mhz'
         prof_subdirs(3) = 'minisodar'
 
+        ext = 'pro'
+
+        i4_prof_window = 1800 ! could be reset to laps_cycle_time
+
         do idir = 1,MAX_SUBDIRS
             call s_len(prof_subdirs(idir),len_subdir)
  
@@ -120,153 +124,26 @@ C           READ IN THE RAW PROFILER DATA
 !     1                   ,ht_m_pr,di_dg_pr,sp_ms_pr                   ! O
 !     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
 !     1                   ,i4_mid_window_pr,istatus)                   ! O
-            istatus = 0
+!           istatus = 0
+
+
+            if(idir .eq. 1 .or. idir .eq. 2)then
+                call read_rsa_50mhz(i4time_sys,i4_prof_window          ! I
+     1                                    ,NX_L,NY_L                   ! I
+     1                                    ,ext                         ! I
+     1                                    ,fnam_in(1:len_fnam_in)      ! I
+     1                                    ,istatus)                    ! O
+            endif ! idir
+
             if(istatus.ne.1)then
-                write(6,*)' Warning: bad status on read_prof_rsa '
+                write(6,*)' Warning: bad status on read_rsa_50mhz'
      1                   ,istatus           
                 goto980
             endif
 
-            do i_pr = 1,n_profiles
+ 980        continue
 
-              write(6,*)
-              write(6,*)' Looping for profiler ',prof_name(i_pr)
-C
-C
-C           Get the surface pressure.  This time we'll use the
-C           5-character site name (plus a terminating blank) to select the station.
-C
-              CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0,'pressure',2,prs
-     1                          ,status)
-              if(status.ne.0)then
-                if(status .eq. -3)then
-                    write(6,*)prof_name(i_pr),' not found'
-                    goto 900
-                else
-                    write(6,*)' Warning: bad pressure read ',status
-                    goto980
-                endif
-              endif
-              write(6,*)
-              write(6,*)prof_name(i_pr),' pressure ',prs
-
-              rlat = lat_pr(i_pr)
-              rlon = lon_pr(i_pr)
-
-              if(rlat .le. rnorth .and. rlat .ge. south .and.
-     1           rlon .ge. west   .and. rlon .le. east            )then
-
-                write(6,*)prof_name(i_pr),' is in box'
-
-                elev = elev_m_pr(i_pr)
-
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0
-     1                            ,'windSpeedSfc',2,sp_sfc,istatus1)
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0
-     1                            ,'windDirSfc',2,di_sfc,istatus2)
-
-                if(abs(sp_sfc) .gt. 500.)istatus1 = 1
-                if(abs(di_sfc) .gt. 500.)istatus2 = 1
-
-                if(istatus1 .eq. 0 .and. istatus2 .eq. 0)then
-                    n_good_sfc = 1
-                else
-                    n_good_sfc = 0
-                endif
-
-C
-C               Get the array of profiler winds for the profiler station
-C               at Platteville.  For this call, we'll use the WMO
-C               identifier to tell the subroutine what station we want.
-C
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0,'uComponent'
-     1                            ,2,u,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad uComponent read ',status
-                    goto980
-                endif
-
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0,'vComponent'
-     1                            ,2,v,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad vComponent read ',status
-                    goto980
-                endif
-C
-C               Get the associated quality control flags.
-C
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr)
-     1                            ,0,'uvQualityCode',0,qc_flag,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad qualityCode read ',status
-                    goto980
-                endif
-C
-C               Get the associated levels for this profiler
-C
-                CALL PROF_CDF_READ(cdfid,prof_name(i_pr),0,'levels',2,
-     $                         level,status)
-                if(status.ne.0)then
-                    write(6,*)' Warning: bad level read ',status
-                    goto980
-                endif
-C
-                write(6,*)prof_name(i_pr)
-
-!               Convert u_std, v_std to rms
-
-                write(6,*)
-
-                i4time_ob = i4_mid_window_pr(i_pr)
-
-                call make_fnam_lp(i4time_ob,a9time_ob,istatus)
-
-C
-C               Open intermediate output file.
-C
-                ext = 'pro'
-                call open_ext(1,i4time_sys,ext,istatus)
-                if(istatus .ne. 1)then
-                    write(6,*)' Error opening product file',ext
-                    goto980
-                endif
-
-                write(*,401)wmo_id(i_pr),n_good_levels+n_good_sfc,rlat
-     1                 ,rlon,elev,prof_name(i_pr),a9time_ob,'PROFILER'
-                write(1,401)wmo_id(i_pr),n_good_levels+n_good_sfc,rlat
-     1                 ,rlon,elev,prof_name(i_pr),a9time_ob,'PROFILER'
-401             format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
-
-                rms = 1.0
-
-                if(n_good_sfc .eq. 1)then
-!                   write surface winds as first level
-                    write(1,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
-                    write(6,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
-                endif
-
-                n_good_levels = n_lvls_pr(i_pr)
-
-                do i = 1,n_good_levels
-!               do i = n_good_levels, 1, -1
-                    write(1,301,err=303)ht_out(i),di_out(i),sp_out(i)
-     1                                 ,rms
-                    write(6,301,err=303)ht_out(i),di_out(i),sp_out(i)
-     1                                 ,rms      
-301                 format(1x,f6.0,f6.0,2f6.1)
-303                 continue
-                enddo ! i
-
-              else !
-                 write(6,*)prof_name(i_pr),' is outside of domain'
-
-              endif ! l_in_box
-
-              write(6,*)prof_name(i_pr)
-
-900         enddo ! i_pr
-
-980     enddo                  ! idir
+        enddo ! idir
 
         return
         end
