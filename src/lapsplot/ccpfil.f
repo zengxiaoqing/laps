@@ -122,7 +122,7 @@ C
 
           ZREG = field_in - scale_l                      ! Array subtraction
 
-!         Adjust field values
+!         Adjust field values (missing data or reverse cases)
           do i = 1,MREG
           do j = 1,NREG
             if(field_in(i,j) .eq. r_missing_data)then
@@ -133,8 +133,10 @@ C
                   ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
 
                 elseif(colortable(1:3) .eq. 'cpe')then ! apply only to hsects
-                  if(scale_h_in .eq. 7000. .or. scale_h_in .eq. 50.)then 
-                      ZREG(i,j) = scale_loc * 0.00 ! ! cape/cin for hsect
+                  if(scale_h_in .eq. 7000.)then 
+                      ZREG(i,j) = scale_loc * 0.00 ! ! cape for hsect
+                  elseif(scale_h_in .eq. 50.)then 
+                      ZREG(i,j) = scale_loc * 1.00 ! ! cin for hsect
                   endif
 
                 elseif(l_integral)then ! e.g. Haines
@@ -142,7 +144,7 @@ C
 
                 else
 
-                  ZREG(i,j) = scale_loc * 0.96 ! e.g. CIN
+                  ZREG(i,j) = scale_loc * 0.96 
                 endif
 
               endif
@@ -208,6 +210,12 @@ C
           elseif(colortable .eq. 'tpw')then
               l_discrete = namelist_parms%l_discrete
           elseif(colortable .eq. 'hues')then
+              if(l_divisible)then
+                  l_discrete = namelist_parms%l_discrete
+              else
+                  l_discrete = .false.
+              endif
+          elseif(colortable .eq. 'cpe' .and. scale_h_in .eq. 7000.)then       
               if(l_divisible)then
                   l_discrete = namelist_parms%l_discrete
               else
@@ -424,14 +432,9 @@ C
               call GSCR(IWKID, i+icol_offset, rintens, rintens, rintens)
           enddo ! i
 
-      elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
-     1                              .or. colortable .eq. 'cpe')then       
+      elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref')then       
 
-          if(colortable .eq. 'cpe' .and. MREG*NREG .gt. 62500)then       
-              ncols1 = 25
-              ncols = 30
-          else
-              ncols1 = 50
+          if(.not. l_discrete)then
               ncols = 60
           endif
 
@@ -446,21 +449,32 @@ C
               do i = ncols,ncols
                   call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
               enddo
+          endif
 
-          elseif(colortable .eq. 'cpe')then
-              do i = 1,1
-                  call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
-              enddo 
+      elseif(colortable .eq. 'cpe')then       
 
+          if(.not. l_discrete)then
               if(MREG*NREG .gt. 62500)then       
                   ncols = 24
               else
                   ncols = 48
               endif
-
-!             call GSCR(IWKID, ncols+icol_offset, 0.3, 0.3, 0.3)
-
           endif
+
+          call generate_colortable(ncols,'cpe',IWKID,icol_offset       
+     1                            ,istatus)
+
+          do i = 1,1
+              call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
+          enddo 
+
+!         if(.not. l_discrete)then
+!             if(MREG*NREG .gt. 62500)then       
+!                 ncols = 24
+!             else
+!                 ncols = 48
+!             endif
+!         endif
 
       elseif(colortable .eq. 'vnt')then       
           if(.not. l_discrete)then
@@ -953,9 +967,14 @@ c     Restore original color table
               endif
 
               if(abs(rlabel) .lt. 0.999)then
-                  write(ch_frac,3)rlabel
+                  rarg = rlabel*10.
+                  if(rarg .ne. nint(rarg))then
+                      write(ch_frac,3)rlabel
+                  else
+                      write(ch_frac,2)rlabel
+                  endif
               elseif( (abs(rlabel) .lt. 2.0 
-     1                                   .or. rlabel .ne. nint(rlabel) )       
+     1                .or. rlabel .ne. nint(rlabel) )       
      1                         .AND.   colortable .ne. 'haines'    )then       
                   write(ch_frac,2)rlabel
               else
@@ -1036,7 +1055,9 @@ c     Restore original color table
 
       logical l_divisible
 
-      if(range .gt. 2500.)then
+      if(range .gt. 13000.)then
+          colorbar_int = 2000.
+      elseif(range .gt. 2500.)then
           colorbar_int = 1000.
       elseif(range .gt. 1000.)then
           colorbar_int = 400.
@@ -1082,13 +1103,12 @@ c     Restore original color table
       vals(6) = .20
       vals(7) = .50
       vals(8) = 1.0
-      vals(8) = 1.5
-      vals(9) = 2.0
-      vals(10) = 3.0
-      vals(11) = 4.0
-      vals(12) = 5.0
-      vals(13) = 6.0
-      vals(14) = 8.0
+      vals(9) = 1.5
+      vals(10) = 2.0
+      vals(11) = 3.0
+      vals(12) = 4.0
+      vals(13) = 5.0
+      vals(14) = 7.0
       vals(15) = 10.0
 
       nvals = 15
