@@ -1,5 +1,5 @@
 
-      subroutine ingest_raob(path_to_raw_raob)
+      subroutine ingest_raob(path_to_raw_raob,c8_raob_format)
 
 !     Steve Albers FSL   1999       Original Version
 
@@ -56,18 +56,13 @@
 
       call s_len(dir_in,len_dir_in)
 
-      call get_c8_project(c8_raob_format,istatus)
-      if (istatus .ne. 1) then
-          write (6,*) 'Error getting c8_raob_format'
-          go to 999
-      endif
-
       if(c8_raob_format(1:6) .eq. 'NIMBUS')then
           c_filespec = dir_in(1:len_dir_in)//'/*0300o'
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
 
-      elseif(c8_raob_format(1:3) .eq. 'WFO')then
+      elseif(c8_raob_format(1:3) .eq. 'WFO' .or.
+     1       c8_raob_format(1:3) .eq. 'RSA'      )then
           c_filespec = dir_in(1:len_dir_in)
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
@@ -141,6 +136,12 @@
               i4_contains_early = 43200
               i4_contains_late  = 0
 
+          elseif(c8_raob_format(1:3) .eq. 'RSA')then
+              filename13 = cvt_i4time_wfo_fname13(i4times(i))
+              filename_in = dir_in(1:len_dir_in)//'/'//filename13      
+              i4_contains_early = 43200
+              i4_contains_late  = 0
+
           elseif(      l_parse(c8_raob_format,'AFGWC')
      1            .or. l_parse(c8_raob_format,'AFWA')   )then
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
@@ -208,6 +209,12 @@
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest
      1                ,filename_in,istatus)
+
+              elseif(c8_raob_format(1:3) .eq. 'RSA')then
+!                 call get_raob_data_rtamps(i4time_sys,ilaps_cycle_time       
+!    1                ,NX_L,NY_L
+!    1                ,i4time_raob_earliest,i4time_raob_latest
+!    1                ,filename_in,istatus)
 
               elseif(      l_parse(c8_raob_format,'AFGWC')
      1                .or. l_parse(c8_raob_format,'AFWA')   )then

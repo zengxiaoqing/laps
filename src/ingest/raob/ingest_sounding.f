@@ -6,20 +6,39 @@
        character*150 path_to_raw_raob,path_to_local_raob
        character*150 path_to_raw_satsnd
        character*200 path_to_raw_tower
+       character*8 c8_raob_format, c8_project
 
        call get_laps_config('nest7grid',istatus)
 
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                   ,path_to_raw_satsnd,path_to_raw_tower,istatus)       
        if(istatus .ne. 1)goto999
+
+       call get_c8_project(c8_project,istatus)
+       if (istatus .ne. 1) then
+          write (6,*) 'Error getting c8_project'
+          go to 999
+       endif
+
+       if(c8_project .ne. 'RSA')then
+           c8_raob_format = c8_project
+           write(6,*)
+           write(6,*)' Call ingest_raob'
+           call ingest_raob(path_to_raw_raob,c8_raob_format)
+
+       else ! RSA project
+           c8_raob_format = 'WFO'
+           write(6,*)
+           write(6,*)' Call ingest_raob'
+           call ingest_raob(path_to_raw_raob,c8_raob_format)
+
+           c8_raob_format = 'RSA'
+           write(6,*)
+           write(6,*)' Call ingest_local_raob (not yet supported)'
+           call ingest_raob(path_to_local_raob,c8_raob_format)
+
+       endif
  
-       write(6,*)
-       write(6,*)' Call ingest_raob'
-       call ingest_raob(path_to_raw_raob)
- 
-       write(6,*)
-       write(6,*)' Call ingest_local_raob (not yet supported)'
-!      call ingest_local_raob(path_to_local_raob)
 
        write(6,*)
        write(6,*)' Call ingest_satsnd'
