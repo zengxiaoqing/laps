@@ -166,6 +166,23 @@ then
     OPTIMIZE=""
   fi
 fi  
+
+dnl  Check to see if we are running the mpif90
+dnl  compiler on a PC. If so, set flags appropriately.
+
+grep 'pgf' << EOF
+$FC
+EOF
+if test $? -eq 0
+then
+  if test "$arch" = "mpif90"
+  then
+    FFLAGS="$FFLAGS -w90 -w95 -cm"
+    FREE="-FR"
+    OPTIMIZE=""
+  fi
+fi  
+
 AC_F90_FUNC_TRIGD
 if test $USE_TRIGD -eq 1 
 then
