@@ -2,8 +2,14 @@ package fxa;
 sub Get_env'fxa{ #'
     local($fxa_env_file) = "/awips/fxa/.environs";
     open(FXA,"$fxa_env_file") || return 0;
-
-    while(<FXA>){
+    @fxaenv = <FXA>;
+    close(FXA);
+    $fxa_env_file.=".".`hostname`;
+    chomp($fxa_env_name);
+    open(FXA,"$fxa_env_file");
+    push(@fxaenv,<FXA>);
+    close(FXA);
+    foreach(@fxaenv){
 	next if /^#/;
 	next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
         $evar = $1;

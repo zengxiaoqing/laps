@@ -1,24 +1,39 @@
 #!@PERL@
 # @configure_input@
 #
-$DATAROOT=shift;
-
+$DATAROOT=shift || die "LAPS_DATA_ROOT required";
+$realclean='';
+$realclean=shift;
 # This script purgers old data files in directories under the lapsprd 
 # directory.  It expects the at least the first two characters of the file
 # name are digits.  hist_time is the age in days of the oldest files to keep.
 # Exceptions can be listed below.
 #
+my(%clean_dirs);
 
-$hist_time = 1.5;
+if($realclean eq "FULLPURGE"){
+    $hist_time = 0;
+    $min_files = 0;
+}else{
+    $hist_time = 1.5;
+    $clean_dirs{lga} = 0.5;
+    $clean_dirs{lcv} = 2.1;
+    $clean_dirs{l1s} = 2.1;
+    $clean_dirs{lm2} = 1.5;
+#
+# Don't ever completely empty the directories 
+#
 
-print "Running $0 for data in $DATAROOT\n";
+    $min_files = 5;
+}
+print "Running $0 for data in $DATAROOT $realclean\n";
 
 chdir($DATAROOT);
 
 opendir(DIR,$DATAROOT); 
 
 foreach(grep(!/^\.\.?$/,readdir(DIR))){
-    $clean_dirs{$_} = $hist_time if(-d $_);
+    $clean_dirs{$_} = $hist_time if(-d $_  && !$clean_dirs{$_});
 }
 
 closedir(DIR);
@@ -26,14 +41,7 @@ closedir(DIR);
 # List directories in which to keep files for a longer or shorter time here.
 #
 
-$clean_dirs{lga} = 0.5;
-$clean_dirs{lm2} = 2.1;
 
-#
-# Don't ever completely empty the directories 
-#
-
-$min_files = 5;
 
 
 foreach $dir (keys(%clean_dirs)){

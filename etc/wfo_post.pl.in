@@ -61,21 +61,10 @@ use File::Copy 'cp';
 
 cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
 
-$sys = "$ENV{FXA_HOME}/bin/GridNotify.script Laps $filetime 0";
+$sys = "$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0";
 print "running $sys\n";
 
 system $sys;
-
-
-if($ENV{FXA_LOCAL_SITE} eq "FSL"){
-    print "Copying file $WFO_FCSTPRD/$filename to yarmouth\n";
-    $sys = "rcp $WFO_FCSTPRD/$filename yarmouth:$WFO_FCSTPRD";
-    print $sys;
-    system $sys;
-}
-
-
-
 
 
 
