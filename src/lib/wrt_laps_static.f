@@ -1,57 +1,43 @@
-      subroutine wrt_laps_static (dir,laps_dom_file,imax,jmax,n_grids,
-     1                            var,comment,data,zin,model,
-     1                            grid_spacing,status)
+      subroutine wrt_laps_static (dir, laps_dom_file, imax, jmax, 
+     1                            n_grids, dx, dy, lov, latin1, 
+     1                            latin2, origin, var, comment, 
+     1                            data, model, grid_spacing,
+     1                            map_proj, status)
 
       implicit none
 
-      include 'lapsparms.for'
-
-C MAX_GRIDS is the max number of grids that may be passed in for writing
-C out to the static file.  An additional grid, ZIN, is generated within
-C this subroutines from the AVG grid
-
 C This routine calls functions in static_routines.c.  To create the new
 C static file, a cdl file named <laps_dom_file>.cdl (ie. nest7grid.cdl)
-C must be located in the same directory as the output file will be written
-C to.  Generally, this is in laps/nest7grid/static.
+C must be located in the LAPS cdl directory and is written out to the
+C directory specified in "dir".
 
-      integer*4      max_grids
-      parameter      (MAX_GRIDS=7)
-
-      character      dir*(*),
-     1               laps_dom_file*(DOMAIN_NAME_LEN)
-
-      integer*4      imax,
-     1               jmax,
-     1               n_grids
-
-      character*3    var(MAX_GRIDS)
-      character*125  comment(MAX_GRIDS)
-      character*92   file_name
-
-      real*4         data(imax,jmax,n_grids),
-     1               zin(imax,jmax),
-     1               ZtoPsa,
-     1               grid_spacing
-
-      character*131  model
-
-      integer*4      i4time_now_gg,
-     1               status
+C Passed in variables
+      character      dir*(*),laps_dom_file*(*)
+      integer*4      imax, jmax, n_grids
+      real*4         dx, dy, lov, latin1, latin2
+      character*(*)  origin
+      character*(*)  var(n_grids)
+      character*(*)  comment(n_grids)
+      real*4         data(imax,jmax,n_grids)
+      character*(*)  model
+      real*4         grid_spacing
+      character*(*)  map_proj
+      integer*4      status
 
 C Local variables
 
-      character*3    var_in(MAX_GRIDS)
+      integer*4      i4time_now_gg, dom_len, map_len
+      integer*4      origin_len, unixtime, nx_lp, ny_lp
+      integer*4      var_len, com_len, cdl_dir_len 
+      character*132  file_name, cdl_dir
       character*24   asctime
-
+      character*30   map_projection
+      
       integer*4      i4time,
-     1               i, iz, jz, z,
      1               ERROR(2),
      1               flag
 
       integer*2      f_len
-
-      real*4         psa
 
       COMMON         /PRT/flag
 
@@ -60,34 +46,44 @@ C Local variables
 
 C  BEGIN SUBROUTINE
 
-      if (n_grids .gt. MAX_GRIDS) goto 930
-
-      do i=1,n_grids
-        call upcase(var(i),var_in(i))
-      enddo
-
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
 
       i4time = i4time_now_gg()
       call cv_i4tim_asc_lp(i4time,asctime,status)
+      unixtime = i4time - 315619200
 
-C generate zin grid
-C   find index of AVG
-      do i = 1, n_grids
-        if (var(i) .eq. 'AVG') z = i
-      enddo
+c get NX_L and NY_L from nest7grid.parms
+      call get_grid_dim_xy(nx_lp, ny_lp, status)
 
-      do iz = 1, imax
-        do jz= 1, jmax
-          psa = ZtoPsa(data(iz,jz,z))
-          zin(iz,jz) = (20.0 - ((psa - 100.0) * 0.02))
-        enddo
-      enddo
+      call s_len(laps_dom_file, dom_len)
+      var_len = len(var(1))
+      com_len = len(comment(1))
+      origin_len = len(origin)
 
-      call write_cdf_static(file_name,f_len,asctime,dir,DIR_LEN,
-     1                      var_in,comment,
-     1                      laps_dom_file,DOMAIN_NAME_LEN,imax,jmax,
-     1                      n_grids,data,zin,model,grid_spacing,status)
+      map_len = len(map_projection)
+      map_projection = ' '
+      if (map_proj .eq. 'plrstr') 
+     1  map_projection = 'polar stereographic'
+      if (map_proj .eq. 'lambrt' ) then
+        if (latin1 .eq. latin2) then
+          map_projection = 'tangential lambert conformal'
+        else
+          map_projection = 'secant lambert conformal'
+        endif
+      endif
+      if (map_proj .eq. 'merctr') map_projection = 'mercator'
+
+      if (lov .lt. 0.0) lov = 360.0 + lov
+     
+      call get_directory('cdl',cdl_dir, cdl_dir_len)
+
+      call write_cdf_static(file_name,f_len,asctime,cdl_dir,
+     1                      cdl_dir_len,var,var_len,comment,
+     1                      com_len,laps_dom_file,dom_len,imax,
+     1                      jmax,n_grids,nx_lp,ny_lp,data,model,
+     1                      grid_spacing,dx,dy,lov,latin1,latin2,
+     1                      origin,origin_len,map_projection,
+     1                      map_len,unixtime, status)
 
       if (status .eq. -2) GOTO 940
       if (status .eq. -3) GOTO 950
@@ -101,11 +97,6 @@ C
 999   return
 C
 C ****  Error trapping.
-C
-930   if (flag .ne. 1)
-     1   write(6,*) ' Can only write out ',MAX_GRIDS,' grids.'
-      status = ERROR(2)
-      goto 999
 C
 940   if (flag .ne. 1)
      1write(6,*) 'Error opening file to be written to...write aborted.'
@@ -128,7 +119,8 @@ C
       goto 999
 C
 980   if (flag .ne. 1)
-     1   write(6,*) 'Missing one of LAT,LON or AVG grids.'
+     1write(6,*) 'x and y values in nest7grid.cdl do not match imax
+     1and jmax in nest7grid.parms...write aborted.'
       status = ERROR(2)
       goto 999
 C
