@@ -582,8 +582,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 spd_kt = SPEED_ms  / mspkt
 
-                write(6,921)ri,rj,max(dir,-99.),spd_kt,c3_obsext
-921             format(1x,2f8.1,4x,f7.0,f7.0,2x,a3)
+                write(6,921)ri,rj,rk,max(dir,-99.),spd_kt,c3_obsext
+921             format(1x,3f8.1,4x,f7.0,f7.0,2x,a3)
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_pirep,'true')
 
