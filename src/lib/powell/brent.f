@@ -71,7 +71,7 @@
           ENDIF
         ENDIF
 11    CONTINUE
-      PAUSE 'Brent exceed maximum iterations.'
+      write(6,*)  'Brent exceed maximum iterations.'
 3     XMIN=X
       BRENT=FX
       RETURN
