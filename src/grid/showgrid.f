@@ -56,11 +56,11 @@ c      print *,ll_lat,ll_lon,ur_lat,ur_lon
 
 c      print *,ll_lat,ll_lon,ur_lat,ur_lon
 
-      call create_bcd_bkgnd(proj_idx,std_lat,std_lon,std_lat2,ll_lat
+      call create_bcd_bkgnd_xy(proj_idx,std_lat,std_lon,std_lat2,ll_lat
      +     ,ll_lon,ur_lat,ur_lon,2,istatus)
 
-      open(2,file="gridpoints")
-      open(3,file="centerpoint")
+      open(4,file="gridpoints")
+      open(5,file="centerpoint")
       write(3,'(f16.8,a,f16.8)') cenlon,',',cenlat
       close(3)
 c      do j=1,ny
