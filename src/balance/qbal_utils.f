@@ -421,12 +421,11 @@ c     terscl=sqrt(sumt/(nx*ny))
       parameter (max_files=200)
       integer accepted_files
       integer bg_files
-      integer oldest_forecast
       integer forecast_length
-      integer max_forecast_delta
       integer rejected_cnt
       integer laps_cycle_time
       logical use_analysis
+      logical luse_sfc_bkgd
       logical smooth_fields
 
       integer i4time_sys_sonde
@@ -475,9 +474,8 @@ c
 
       allocate (cmodels(maxbgmodels),bgpaths(maxbgmodels))
 
-      call get_background_info(bgpaths,bgmodels,oldest_forecast
-     +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime_inc,smooth_fields)
+      call get_background_info(bgpaths,bgmodels,forecast_length
+     +,use_analysis,cmodels,itime_inc,smooth_fields,luse_sfc_bkgd)
 
       call s_len(cmodels(1),lenm)
 
@@ -487,14 +485,14 @@ c
       print*,'Calling get_acceptable_files'
 
       call get_acceptable_files(i4time_sys_drop,bgpaths(1),bgmodels(1)
-     +        ,names,max_files,oldest_forecast,max_forecast_delta
+     +        ,names,max_files
      +        ,use_analysis,bg_files,accepted_files,forecast_length
      +        ,cmodels(1),nx,ny,nz,reject_names,rejected_cnt)
 
       print*,'Returned from get_acceptable_files'
 
       print*,'Calling lga_driver!'
-      call lga_driver(nx,ny,nz,laps_cycle_time
+      call lga_driver(nx,ny,nz,luse_sfc_bkgd,laps_cycle_time
      .         ,bgmodels(1),bgpaths(1),cmodels(1),rejected_cnt
      .         ,reject_names,names,max_files,accepted_files
      .         ,i4time_sys_drop,smooth_fields,lga_status)
