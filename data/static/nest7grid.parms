@@ -5,8 +5,6 @@
 
  vertical_grid='PRESSURE',
  nk_laps=21,                         
-
- c6_maproj='plrstr',                 
  standard_latitude=40.0,        
  standard_latitude2=0.0,        
  standard_longitude=-105.0,       
@@ -20,10 +18,11 @@
  c50_lowres_directory='NULL',
  grid_spacing_m_cmn=10000.,          
 
+ c6_maproj='plrstr',                 
  laps_cycle_time_cmn=3600,           
  i_delta_sat_t_sec_cmn=1500,         
  r_msng_sat_flag_cdf_cmn=255.,       
-
+ c_raddat_type='wsi',
  radarext_3d_cmn='vrc',
 
  radarext_3d_accum_cmn='vrc',
@@ -53,6 +52,10 @@
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
  path_to_raw_raob_cmn='/public/data/raob/netcdf/',
+
+ path_to_metar_data_cmn='/public/data/metar/netcdf/',
+ path_to_local_data_cmn='/public/data/cdot/netcdf/',
+
  r_msng_sat_flag_gvr_cmn=255.,
  r_msng_sat_flag_asc_cmn=9999.,
 
@@ -78,7 +81,9 @@
  vert_rad_prof_cmn=1,     
  silavwt_parm_cmn=1.,     
  toptwvl_parm_cmn=4.,     
- laps_background_model_cmn=4,
+ maxstations_cmn=6000,
+ maxobs_cmn=6000,  
+ laps_background_model_cmn=1,
  c8_project_common='NIMBUS',
  /  
 
