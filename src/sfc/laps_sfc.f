@@ -395,7 +395,7 @@ c
            endif
 
         enddo !ista
- 999    format(i4,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
+ 999    format(i5,': ',a5,2x,a6,2x,a6,' is at i,j: ',f5.1,',',f5.1
      1        ,2x,3f8.0)
 c
         call zero(wt, ni,nj)
