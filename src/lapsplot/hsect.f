@@ -546,11 +546,7 @@ c       include 'satellite_dims_lvd.inc'
 
                         level=0
 
-                        if(ext(1:3) .eq. 'lgb')then
-                            var_2d = 'USF'
-                        else
-                            var_2d = 'U'
-                        endif
+                        var_2d = 'USF'
 
                         write(6,*)' Reading sfc wind data from: '
      1                            ,ext(1:3),' ',var_2d
@@ -563,11 +559,7 @@ c       include 'satellite_dims_lvd.inc'
 
                         if(istatus.ne.1)goto1200
 
-                        if(ext(1:3) .eq. 'lgb')then
-                            var_2d = 'VSF'
-                        else
-                            var_2d = 'V'
-                        endif
+                        var_2d = 'VSF'
 
                         write(6,*)' Reading sfc wind data from: '
      1                            ,ext(1:3),' ',var_2d
