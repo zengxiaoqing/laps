@@ -3772,6 +3772,7 @@ the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
 Process surface:LSX  U    su       1  Surface wind u (grid north)
        		     V    sv       1  Surface wind v (grid east)
         	     P    fp       1  Reduced Pressure (constant height sfc)
+        	     PP   pp       1  Perturbation Pressure (if available)
             	     T    st       1  Temp 
 		     TD   std      1  Dewpt Temp
         	     VV   vv	   1  Vertical Velocity
