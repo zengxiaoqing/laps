@@ -34,7 +34,7 @@
          2.13 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
          2.14 .............  LVD (SATELLITE INGEST) CHANGES
          2.15 .............  OTHER RUNTIME PARAMETERS
-         2.16 .............  Reporting Installation Errors
+         2.16 .............  Detecting and Reporting Installation Errors
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Ingest Processes
          3.1.1 ..................  LGA Model
@@ -908,7 +908,21 @@ April 1996
                        normalization.
 </pre>
 
------- 2.16 ----------------Reporting Installation Errors---------------------------
+------ 2.16 -----Detecting and Reporting Installation Errors-------------------
+
+   To determine how well LAPS was installed, verify that all (30 at last check)
+   executables were built OK with no errors in the output of 'make'.
+
+   Similarly, check the output of the localization script.
+
+   Check if output is being generated in the various 'lapsprd' subdirectories.
+   A Web based monitor might be useful here. Examples of these are at:
+
+       "http://laps.fsl.noaa.gov/~jedwards/Laps_Monitor.cgi"
+       "http://fics.fsl.noaa.gov:4267/PRODS/LapsComparison.shtml"
+
+   Check the log files in the 'log' directory for occurrences of errors and 
+   warnings. The errors are generally more significant.
    
    If you have any problems during the configure, install and localization
    process, first check this README file and the FAQ available at
