@@ -25,7 +25,7 @@ c
       integer  it
       integer  lun
       integer  iostat,iostatus
-      integer  nclen,lenc
+      integer  nclen,nflen,lenc
 
       logical  lopen,lext
 
@@ -70,8 +70,9 @@ c     real*4 rp_init
       integer imx,jmx,imn,jmn
 
 c
-      character*(*) path,cmodel
-      character*9   fname
+      character*256 path
+      character*132 cmodel
+      character*256 fname
       character*10  cfname10,a9_to_yr_a10_time
       character*4   af
       character*2   gproj
@@ -113,13 +114,14 @@ c
       call get_r_missing_data(r_missing_data,istatus)
 
       call s_len(cmodel,nclen)
+      call s_len(fname,nflen)
 
       lun=10
 c
       if(bgmodel.eq.6.or.bgmodel.eq.8)then
 
          call s_len(path,l)
-         filename=path(1:l)//'/'//fname//af
+         filename=path(1:l)//'/'//fname(1:nflen)//af
          call s_len(filename,l)
 
          if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB'.or.
@@ -234,6 +236,8 @@ c    &,imx,jmx,imn,jmn)
 c              print*,'k mx/mn ww ',k,rmx2d,rmn2d
 c           enddo
          endif
+
+         nzsh=nz
 
       endif
 

@@ -59,6 +59,7 @@ c
       character*13    fname9_to_wfo_fname13
 
       interface
+
          subroutine read_sbn_grids(cdfname,af,cmodel,
      .mxlvls,nxbg,nybg,nzbght,nzbgsh,nzbguv,nzbgww,
      .prbght,prbgsh,prbguv,prbgww,
@@ -99,6 +100,45 @@ c
          integer       istatus
 c
          end subroutine
+
+         subroutine read_dgprep(bgmodel,cmodel,path,fname,af
+     .                    ,nx,ny,nz
+     .                    ,pr,ht,tp,sh,uw,vw,ww
+     .                    ,ht_sfc,pr_sfc,td_sfc,tp_sfc
+     .                    ,uw_sfc,vw_sfc,mslp
+     .                    ,gproj,lon0,lat1,lat2,istatus)
+
+         integer bgmodel
+         integer nx,ny,nz
+         integer istatus
+
+         real*4 ht(nx,ny,nz)
+         real*4 tp(nx,ny,nz)
+         real*4 sh(nx,ny,nz)
+         real*4 uw(nx,ny,nz)
+         real*4 vw(nx,ny,nz)
+         real*4 ww(nx,ny,nz)
+         real*4 pr(nx,ny,nz)
+
+         real*4 ht_sfc(nx,ny)
+         real*4 pr_sfc(nx,ny)
+         real*4 td_sfc(nx,ny)
+         real*4 tp_sfc(nx,ny)
+         real*4 uw_sfc(nx,ny)
+         real*4 vw_sfc(nx,ny)
+         real*4 mslp(nx,ny)
+
+	 real*4 lon0
+	 real*4 lat1,lat2
+
+         character cmodel*132
+         character path*256
+         character fname*256
+         character af*4
+         character gproj*2
+ 
+         end subroutine
+
       end interface
 
       call s_len(cmodel,lencm)
