@@ -1,6 +1,6 @@
-
-     This LAPS README file is viewable on the WWW via the LAPB home 
-     page at http://laps.fsl.noaa.gov/
+  
+      This LAPS README file is viewable on the WWW via the LAPB home 
+      page at http://laps.fsl.noaa.gov/
 
 
                        TABLE OF CONTENTS  
@@ -21,10 +21,9 @@
          2.11 .............  CHANGING THE CYCLE TIME 
          2.12 .............  SURFACE ANALYSIS CHANGES
          2.13 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.14 .............  LGA (MODEL BACKGROUND INGEST) CHANGES
-         2.15 .............  VRC (NOWRAD/ETC RADAR INGEST) CHANGES
-         2.16 .............  LVD (SATELLITE INGEST) CHANGES
-         2.17 .............  OTHER RUNTIME PARAMETERS
+         2.14 .............  VRC (NOWRAD/ETC RADAR INGEST) CHANGES
+         2.15 .............  LVD (SATELLITE INGEST) CHANGES
+         2.16 .............  OTHER RUNTIME PARAMETERS
      3.0 ............  Description of LAPS Processes
          3.1 ..............  WATER VAPOR (HUMIDITY PROCESSING)
          3.2 ..............  WSR 88-D RADAR REMAPPER
@@ -124,10 +123,15 @@
      from the top level directory.  We recommend using Gnu Make
      Version 3.74 or later available via ftp from any GNU site. 
 
+     Next untar the laps_terrain.tar.gz file in the data/static directory
+     created by the make install step.  Alternatively untar this file in
+     some place outside the laps tree and create a symbolic link to
+     data/static/model - this prevents having to update these terrain files 
+     each time you update LAPS.
      Finally the script ./etc/laps_localization.pl will create the
      static data files and look up tables specific to the domain you
      have defined in data/static/nest7grid.parms, below are details on
-     the contents of the nest7grid.parms file.
+     the contents of the nest7grid.parms file.  
 
 
      In this file, a number of potential manual changes to the code are 
@@ -357,12 +361,22 @@
      to the Makefile.  For more information on flags to configure run 
      './configure --help'
 
+     Please note that LAPS uses dynamic memory within the FORTRAN code in
+     the form of automatic arrays. This implies that you will need a FORTRAN
+     90 compiler, or at least an f77 compiler that has f90 extensions
+     allowing for automatic arrays. LAPS will not work on a strict f77 
+     compiler that does not allow automatic arrays.
+
+     The f77 compiler with f90 extensions may in fact be the best option at the
+     moment as we are still getting some bugs out that show up with the f90
+     compiler.
+
      If you find that the default compiler flags don't work for your
      platform or that your platform has no default, you'll need to experiment 
      to find the right set of flags.  Experiment in the src/lib/Makefile 
      typically flags which work in that directory will work elsewhere in laps.
-     If you find flags that work for your platform and would like us to add them
-     to the defaults in configure please let us know via e-mail.
+     If you find flags that work for your platform and would like us to add 
+     them to the defaults in configure please let us know via e-mail.
 
 
 ---------------- 2.8 ------ I/O of LAPS gridded files-------------------------
@@ -794,14 +808,7 @@ April 1996
 
 
 
-
------ 2.14 ----------LGA (MODEL BACKGROUND INGEST) CHANGES---------------------
-
-   Check and modify the following variables in 'source/background/grid_dim.inc'
-  
-       nx_laps, ny_laps, nz_laps
-
------- 2.15 --------VRC (NOWRAD/WSR-88D ETC RADAR INGEST) CHANGES--------------
+------ 2.14 --------VRC (NOWRAD/WSR-88D ETC RADAR INGEST) CHANGES--------------
 
    Depending on where the raw radar data is coming from, you will want to
    set the 'radarext_3d' parameter in the 'nest7grid.parms' file as 
@@ -819,14 +826,14 @@ April 1996
              This is the default value.
 
 
------- 2.16 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+------ 2.15 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info is in the README in 
    'source/ingest/satellite/goes8/lambert'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
------- 2.17 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.16 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' file to make sure all
    the runtime parameters are correct. Some parameters worth noting are:
