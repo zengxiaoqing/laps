@@ -26,6 +26,7 @@
          2.2.6 ..................  Setting Runtime Parameters
          2.2.7 ..................  Running the Localization
          2.3 ..............  Raw data ingest 
+         2.3.1 ..................  Radar ingest
          2.4 ..............  Running LAPS Analyses 
          2.5 ..............  Test data case
          2.5.1 ..................  Analysis Only Test
@@ -483,62 +484,6 @@
            the '.../src/ingest/sao' directory should provide enough 
            information to get you started.  Direct questions about surface 
            data to Pete Stamus (stamus@fsl.noaa.gov).
-<pre>
-     Radar: The following are intermediate files for various forms of radar
-            data.
-
-           (vrc)                 - low-level reflectivity from single or 
-                                   multiple radars. For example, our ingest 
-                                   at FSL processes WSI-NOWRAD, stored at FSL 
-                                   in NetCDF, to create the 'vrc' intermediate 
-                                   file.
-
-           (v01, v02, ... )      - WSR-88Ds or other radar data stored as
-                                   a full volume in sparse arrays.
-
-                                 - each 'vxx' file has 3-d reflectivity,
-                                   velocity, and nyquist velocity for a radar.
-                                   multiple 'vxx' files are allowed and are
-                                   especially useful for velocity.
-
-           (vrz)                 - 3-D reflectivity mosaic from multiple radars
-                                   ('vxx' files). This file has horizontal and 
-                                   vertical gaps filled in.
-
-           (ln3)                 - Layer reflectivity and echo tops, from a
-                                   single radar or mosaiced from multiple 
-                                   radars. For example, WSI sends put a variety
-                                   of derived products from the WSR-88D's 
-                                   which we call nexrad products. These 
-                                   include 3 layer reflectivity products, 
-                                   a composite reflectivity, echo tops, and 
-                                   vil.  FD also decodes these and writes 
-                                   netCDF files. We have an experimental 
-                                   process called 'ln3' that ingests these 
-                                   data that we haven't yet approved for 
-                                   release in our tar. This will probably 
-                                   happen shortly though as the need 
-                                   to further test/use this 3D reflectivity in
-                                   LAPS is increasing.
-				   As of 9-22-98 we have committed the ln3 ingest
-				   process to our repository and distribute this
-				   source code with our tarfile.  The reliability
-				   of echo tops in conjunction with the layer
-                                   reflecitivity information still makes this a
-                                   problematical data set to use in the analyses.
-				   Committing this source to the repository will
-				   help to further investigate the utility of this
-                                   product.
-                                   The key fields from 'ln3' which are used
-                                   in the analyses are the Layer reflectivity
-                                   (0-4 km MSL, 4-8 km MSL, and >8 km MSL), as
-                                   well as echo tops (MSL).
-</pre>
-
-     More details about radar data usage in LAPS are on the World Wide Web at:
-     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
-     includes information on which types of radar data are processed via the
-     various intermediate data files.
 
      Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
            FSL in NetCDF or SBN data (also in netcdf). Ingest of Air Force 
@@ -607,9 +552,74 @@
            on isobaric surfaces. Pete Stamus (FSL) would have 
            more info on this.
 
+                       ----   2.3.1  Radar ingest ---
 
-     Further information on specific LAPS ingest processes is found in Section
-     3 of this README.
+     One of the first things to establish is whether your raw data is in
+     polar or Cartesian form. If polar, take a look at the "Polar Radar Data"
+     subsection in Section 3. NOWRAD / WSI (Cartesian) data is also covered in
+     Section 3.
+
+     More details about radar data usage in LAPS are on the World Wide Web at:
+     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
+     includes information on which types of radar data are processed via the
+     various intermediate data files.
+
+     The following are intermediate files for various forms of radar
+     data. These may have already been pre-processed from "raw" data,
+     and are in Cartesian format on the LAPS grid.
+
+<pre>
+
+           (vrc)                 - low-level reflectivity from single or 
+                                   multiple radars. For example, our ingest 
+                                   at FSL processes WSI-NOWRAD, stored at FSL 
+                                   in NetCDF, to create the 'vrc' intermediate 
+                                   file.
+
+           (v01, v02, ... )      - WSR-88Ds or other radar data stored as
+                                   a full volume in sparse arrays.
+
+                                 - each 'vxx' file has 3-d reflectivity,
+                                   velocity, and nyquist velocity for a radar.
+                                   multiple 'vxx' files are allowed and are
+                                   especially useful for velocity.
+
+           (vrz)                 - 3-D reflectivity mosaic from multiple radars
+                                   ('vxx' files). This file has horizontal and 
+                                   vertical gaps filled in.
+
+           (ln3)                 - Layer reflectivity and echo tops, from a
+                                   single radar or mosaiced from multiple 
+                                   radars. For example, WSI sends put a variety
+                                   of derived products from the WSR-88D's 
+                                   which we call nexrad products. These 
+                                   include 3 layer reflectivity products, 
+                                   a composite reflectivity, echo tops, and 
+                                   vil.  FD also decodes these and writes 
+                                   netCDF files. We have an experimental 
+                                   process called 'ln3' that ingests these 
+                                   data that we haven't yet approved for 
+                                   release in our tar. This will probably 
+                                   happen shortly though as the need 
+                                   to further test/use this 3D reflectivity in
+                                   LAPS is increasing.
+				   As of 9-22-98 we have committed the ln3 ingest
+				   process to our repository and distribute this
+				   source code with our tarfile.  The reliability
+				   of echo tops in conjunction with the layer
+                                   reflecitivity information still makes this a
+                                   problematical data set to use in the analyses.
+				   Committing this source to the repository will
+				   help to further investigate the utility of this
+                                   product.
+                                   The key fields from 'ln3' which are used
+                                   in the analyses are the Layer reflectivity
+                                   (0-4 km MSL, 4-8 km MSL, and >8 km MSL), as
+                                   well as echo tops (MSL).
+</pre>
+
+     Further information on specific LAPS ingest processes for radar and other
+     data sources is found in Section 3 of this README.
       
 
                ---  2.4  Running LAPS Analyses  ---
