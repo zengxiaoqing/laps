@@ -29,8 +29,11 @@ $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
 require "$LAPSROOT/etc/run_sys.pm";
 
+my $dsunavailable;
 if(!$opt_w){
     $fxa_sys =  &Get_env'fxa; #'
+}else{
+    $dsunavailable = system("rsh -l fxa ds \'hostname\'");
 }
 
 $ENV{LAPS_DATA_ROOT} = shift ;
@@ -94,22 +97,29 @@ $filetime= $filetime - 315619200;
 
 run_sys::run_sys( "$LAPSROOT/bin/xfer_laps.exe");
 
-if(!$opt_w){
-    $mon++;
-    ($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
-    $mon++;
-    $yy += 1900;
-    $filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
-
+# if(!$opt_w){
+$mon++;
+($ss,$mm,$hh,$dd,$mon,$yy) = gmtime($filetime);
+$mon++;
+$yy += 1900;
+$filename = sprintf "%4.4d%2.2d%2.2d_%2.2d00", ($yy,$mon,$dd,$hh);
+if (!$opt_w){
     use File::Copy 'cp';
-
     cp("$WFO_FCSTPRD/$filename", "$WFO_FCSTPRD_BACKUP/$filename") if(-d $FXA_DATA_BACKUP);
-
     $sys = "/bin/csh -c \'$ENV{FXA_HOME}/bin/GridNotify Laps $filetime 0\'";
     print "running $sys\n";
     run_sys::run_sys("$sys");
-
+}else{
+    if (! $dsunavailable){
+      my $ld;
+      if ($LAPS_DATA_ROOT =~ /LAPS(\d\d)$/){
+        print "RSA type notification\n";
+        $ld = "laps".$1;
+      }else{
+        $ld = "Laps";
+      }
+      $sys="rsh -l fxa ds \'/awips/fxa/bin/GridNotify $ld $filetime 0\'";
+      print "running $sys\n";
+      run_sys::run_sys("$sys >/dev/null 2>&1 &");
+    }
 }
-
-
-
