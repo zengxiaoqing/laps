@@ -278,8 +278,8 @@ c
 c.....	Set up the counters, and zero/blank arrays.
 c
 	nn = 0
-	n_obs_g = 0
-	n_obs_b = 0
+	n_obs_g = 0 ! # of obs in grid (domain)
+	n_obs_b = 0 ! # of obs in box that includes perimeter around domain
 	n_sao_g = 0
 	n_sao_b = 0
 	n_local_g = 0
