@@ -620,6 +620,8 @@ C
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
       LOGICAL L1,L2,dem_data
+      data icnt/0/
+      save icnt
 C
       print *,'no,mof,np,niq,njq=',no,mof,np,niq,njq
 c      stop
@@ -678,7 +680,11 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   LB=INDEX(TITLE3,' ')-1
                   INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
                   IF(.NOT.L1)THEN
-                     PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST'
+                     if(icnt .le. 100 .or. icnt .eq. (icnt/200)*200)then       
+                        PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST '
+     1                        ,icnt
+                        icnt = icnt + 1
+                     endif ! icnt
                      DATP(IP,JP)=0. ! set to missing?
                      GO TO 20
                   ENDIF
