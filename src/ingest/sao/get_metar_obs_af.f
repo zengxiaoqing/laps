@@ -137,23 +137,23 @@ c
 c.....  Toss the ob if lat/lon/elev bad by setting lat to badflag (-99.9),
 c.....  which causes the bounds check to think its outside the LAPS domain.
 c
-	   if( nan( lats(i) ) .eq. 1 ) lats(i) = badflag
-	   if( nan( lons(i) ) .eq. 1 ) lats(i) = badflag
-	   if( nan( elev(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( lats(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( lons(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( elev(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nan( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nan( vis(i)   ) .eq. 1 ) vis(i)  = badflag
-	   if( nan( mslp(i)  ) .eq. 1 ) mslp(i) = badflag
-	   if( nan( t(i)     ) .eq. 1 ) t(i)    = badflag
-	   if( nan( td(i)    ) .eq. 1 ) td(i)   = badflag
-	   if( nan( dd(i)    ) .eq. 1 ) dd(i)   = badflag
-	   if( nan( ff(i)    ) .eq. 1 ) ff(i)   = badflag
-	   if( nan( ffg(i)   ) .eq. 1 ) ffg(i)  = badflag
-	   if( nan( alt(i)   ) .eq. 1 ) alt(i)  = badflag
+	   if( nanf( vis(i)   ) .eq. 1 ) vis(i)  = badflag
+	   if( nanf( mslp(i)  ) .eq. 1 ) mslp(i) = badflag
+	   if( nanf( t(i)     ) .eq. 1 ) t(i)    = badflag
+	   if( nanf( td(i)    ) .eq. 1 ) td(i)   = badflag
+	   if( nanf( dd(i)    ) .eq. 1 ) dd(i)   = badflag
+	   if( nanf( ff(i)    ) .eq. 1 ) ff(i)   = badflag
+	   if( nanf( ffg(i)   ) .eq. 1 ) ffg(i)  = badflag
+	   if( nanf( alt(i)   ) .eq. 1 ) alt(i)  = badflag
 c
 	   do j=1,5
-	      if( nan(ht(j,i) ) .eq. 1 ) ht(j,i) = badflag
+	      if( nanf(ht(j,i) ) .eq. 1 ) ht(j,i) = badflag
 	   enddo !j
 c
 	enddo !i

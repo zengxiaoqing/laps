@@ -162,12 +162,9 @@ if ($6 != p) then
 
 #   Now we can edit the cronfile (README section 2.4)
     echo " "
-    echo "Setting up a cronfile in $LAPS_DATA_ROOT/cronfile..."
-    cp $LAPSINSTALLROOT/util/cronfile     $LAPS_DATA_ROOT/cronfile
-    cd $LAPS_DATA_ROOT
-#   $LAPS_SRC_ROOT/util/fix_net @PERL@    $NEWPERL         cronfile
-#   $LAPS_SRC_ROOT/util/fix_net @prefix@  $LAPSINSTALLROOT cronfile
-    $LAPS_SRC_ROOT/util/fix_net @datadir@ $LAPS_DATA_ROOT  cronfile
+    echo "Setting up a cronfile in $LAPS_DATA_ROOT..."
+    cd $LAPSINSTALLROOT/etc
+    $NEWPERL cronfile.pl --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT
 
 else
     echo "Skipping window setup step"

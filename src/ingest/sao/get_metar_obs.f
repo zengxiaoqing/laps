@@ -170,7 +170,10 @@ c
      &         timeobs, vis, dd, ffg, ff,
      &         wmoid_in, badflag, istatus)
 
-        else
+	    if(istatus .ne. 1) go to 990
+	    n_sao_all = recNum
+
+        else ! Read CWB Metar and Synop Obs
             recNum=150
             maxSkyCover=10
             call read_metar_cwb(data_file , maxSkyCover, recNum, alt,    
@@ -181,12 +184,31 @@ c
      &         reptype_in, mslp, cvr, ht,
      &         snowcvr, stname, tt, t,
      &         timeobs, vis, dd, ffg, ff,
-     &         wmoid_in, badflag, istatus)
+     &         wmoid_in, badflag, n_metar_cwb, istatus)
+
+            ix = n_metar_cwb + 1
+
+            if(.false.)then
+               call read_synop_cwb(data_file , maxSkyCover, recNum, alt,       
+     &         atype_in(ix), td(ix), ttd(ix), elev(ix),
+     &         lats(ix), lons(ix), max24t(ix), min24t(ix),
+     &         pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
+     &         wx(ix), dp(ix), dpchar(ix),
+     &         reptype_in(ix), mslp(ix), cvr(1,ix), ht(1,ix),
+     &         snowcvr(ix), stname(ix), tt(ix), t(ix),
+     &         timeobs(ix), vis(ix), dd(ix), ffg(ix), ff(ix),
+     &         wmoid_in(ix), badflag, n_synop_cwb, istatus)
+            endif
+
+            n_sao_all = n_metar_cwb + n_synop_cwb
+            if(n_sao_all .le. 0) go to 990
 
         endif
 c
-	if(istatus .ne. 1) go to 990
-	n_sao_all = recNum
+	if(n_sao_all .gt. maxobs)then
+            write(6,*)' ERROR, n_sao_all > maxobs ',n_sao_all,maxobs
+            return
+        endif
 c
 c.....  First check the data coming from the NetCDF file.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
@@ -203,34 +225,34 @@ c.....  Toss the ob if lat/lon/elev or observation time are bad by setting
 c.....  lat to badflag (-99.9), which causes the bounds check to think that
 c.....  the ob is outside the LAPS domain.
 c
-	   if( nan( lats(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( lons(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( elev(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
 c
-	   if( nan( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nan( vis(i)  ) .eq. 1 ) vis(i)   = badflag
-	   if( nan( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
-	   if( nan( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nan( td(i)   ) .eq. 1 ) td(i)    = badflag
-	   if( nan( tt(i)   ) .eq. 1 ) tt(i)    = badflag
-	   if( nan( ttd(i)  ) .eq. 1 ) ttd(i)   = badflag
-	   if( nan( dd(i)   ) .eq. 1 ) dd(i)    = badflag
-	   if( nan( ff(i)   ) .eq. 1 ) ff(i)    = badflag
-	   if( nan( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
-	   if( nan( alt(i)  ) .eq. 1 ) alt(i)   = badflag
-	   if( nan( pcp1(i) ) .eq. 1 ) pcp1(i)  = badflag
-	   if( nan( pcp3(i) ) .eq. 1 ) pcp3(i)  = badflag
-	   if( nan( pcp6(i) ) .eq. 1 ) pcp6(i)  = badflag
-	   if( nan( pcp24(i)) .eq. 1 ) pcp24(i) = badflag
-	   if( nan( dp(i)   ) .eq. 1 ) dp(i)    = badflag
+	   if( nanf( vis(i)  ) .eq. 1 ) vis(i)   = badflag
+	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
+	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
+	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nanf( tt(i)   ) .eq. 1 ) tt(i)    = badflag
+	   if( nanf( ttd(i)  ) .eq. 1 ) ttd(i)   = badflag
+	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
+	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
+	   if( nanf( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
+	   if( nanf( alt(i)  ) .eq. 1 ) alt(i)   = badflag
+	   if( nanf( pcp1(i) ) .eq. 1 ) pcp1(i)  = badflag
+	   if( nanf( pcp3(i) ) .eq. 1 ) pcp3(i)  = badflag
+	   if( nanf( pcp6(i) ) .eq. 1 ) pcp6(i)  = badflag
+	   if( nanf( pcp24(i)) .eq. 1 ) pcp24(i) = badflag
+	   if( nanf( dp(i)   ) .eq. 1 ) dp(i)    = badflag
 c
-	   if( nan( snowcvr(i) ) .eq. 1 ) snowcvr(i) = badflag
-	   if( nan( max24t(i)  ) .eq. 1 ) max24t(i)  = badflag
-	   if( nan( min24t(i)  ) .eq. 1 ) min24t(i)  = badflag
+	   if( nanf( snowcvr(i) ) .eq. 1 ) snowcvr(i) = badflag
+	   if( nanf( max24t(i)  ) .eq. 1 ) max24t(i)  = badflag
+	   if( nanf( min24t(i)  ) .eq. 1 ) min24t(i)  = badflag
 c
 	   do j=1,5
-	      if( nan( ht(j,i) ) .eq. 1 ) ht(j,i) = badflag
+	      if( nanf( ht(j,i) ) .eq. 1 ) ht(j,i) = badflag
 	   enddo !j
 c
 	enddo !i

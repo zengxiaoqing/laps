@@ -319,7 +319,11 @@ c
 
 	    len_path = index(path_to_METAR,' ') - 1
 	    data_file_m = 
-     1              path_to_METAR(1:len_path)//'metar'//a8_time//'.dat'
+     1          path_to_METAR(1:len_path)//'metar'//a8_time//'.dat'
+
+	    len_path = index(path_to_buoy_data,' ') - 1
+	    data_file_b = 
+     &          path_to_buoy_data(1:len_path)//'buoy'//a8_time//'.dat'       
 
         else
             write(6,*)' ERROR, unknown metar format'

@@ -39,11 +39,11 @@ grep '(E)' $FILE
 grep '(S)' $FILE
 ls -l $FILE
 
-echo " "
-echo "checking install_laps_builds.out"
-grep build_laps.pl         $BUILD_DIR/install_laps_builds_$PLATFORM*
-#tail -1                   $BUILD_DIR/build.log*
-ls -l                      $BUILD_DIR/install_laps_builds_$PLATFORM*
+#echo " "
+#echo "checking install_laps_builds.out"
+#grep build_laps.pl         $BUILD_DIR/install_laps_builds_$PLATFORM*
+##tail -1                   $BUILD_DIR/build.log*
+#ls -l                      $BUILD_DIR/install_laps_builds_$PLATFORM*
 
 echo " "
 echo "checking static.nest7grid"

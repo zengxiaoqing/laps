@@ -36,9 +36,13 @@
       integer  seaLevelPressQua(recNum), seaSurfaceTempQua(recNum)
       integer  dewpointQua(recNum)
 
+      real  relaHumility(recNum)
+
       istatus = 0
  
-      open ( 1, file=filename, status='old' )
+      open ( 1, file=filename, status='old', err=1000 )
+
+      istatus= 1
 
       n= 0
       do j= 1,recNum
@@ -51,12 +55,13 @@
      ~               pressChange3Hour(j)
          read (1,30) seaSurfaceTemp(j), seaSurfaceTempQua(j),
      ~               dewpoint(j), dewpointQua(j)
+         read (1,40) relaHumility(j)
 
-         do 5 i= 1,logicRecNum(j)-3 
+         do 5 i= 1,logicRecNum(j)-4
 5           read (1,*)
 
          if ( reportFlag(j) .ne. '*81' )  then
-            write (6,*) 'read data heading error'
+            write (6,*) 'read buoy data heading error'
             go to 1000
          endif
 
@@ -66,18 +71,13 @@
 10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2, i3 )
 20    format ( 2f3.0, i1, f4.1, i1, f5.1, i1, x, f3.1 ) 
 30    format ( f4.1, i1, 22x, f5.1, i1 )
+40    format ( 30x, f3.0 )
 
 c      ----------       examing data quality and changing units       ---------
 99    do j= 1,n
          if ( windQua(j) .eq. 9 )  then
             windDir(j)= badflag
             windSpeed(j)= badflag
-         endif
-
-         if ( temperatureQua(j) .eq. 1 )  then
-               temperature(j)= temperature(j) +273.15         ! degC -> degK
-            else
-               temperature(j)= badflag
          endif
 
          if ( seaLevelPressQua(j) .eq. 1 )  then
@@ -95,7 +95,19 @@ c      ----------       examing data quality and changing units       ---------
          if ( dewpointQua(j) .eq. 1 )  then
                dewpoint(j)= dewpoint(j) +273.15               ! degC -> degK
             else
-               dewpoint(j)= badflag
+               if ( temperature(j) .ne. -999.9   .and. 
+     ~              relaHumility(j) .ne. -99. )  then
+                  dewpoint(j)= dwpt( temperature(j), relaHumility(j) )
+                  dewpoint(j)= dewpoint(j) +273.15            ! degC -> degK
+                else
+                  dewpoint(j)= badflag
+               endif
+         endif
+
+         if ( temperatureQua(j) .eq. 1 )  then
+               temperature(j)= temperature(j) +273.15         ! degC -> degK
+            else
+               temperature(j)= badflag
          endif
 
          if ( pressChange3Hour(j).eq.-9.9 ) pressChange3Hour(j)= badflag        
@@ -129,8 +141,7 @@ c               -------      dealing with lacking of data      -------
          windGust(j)= badflag
       enddo
 
-      istatus= 1
-*     go to 1000 
+      go to 1000 
 
 999   do j= 1,n
          write(6,*) reportFlag(j),
@@ -142,6 +153,7 @@ c               -------      dealing with lacking of data      -------
      ~              pressChange3Hour(j)
          write(6,*) seaSurfaceTemp(j), seaSurfaceTempQua(j),
      ~              dewpoint(j), dewpointQua(j), timeobs(j)
+         write(6,*) relaHumility(j)
       enddo
 
 1000  return

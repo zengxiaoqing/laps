@@ -175,27 +175,27 @@ c.....  Toss the ob if lat/lon/elev or observation time are bad by setting
 c.....  lat to badflag (-99.9), which causes the bounds check to think that
 c.....  the ob is outside the LAPS domain.
 c
-	   if( nan( lats(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( lons(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( elev(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
 c
-	   if( nan( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nan( rh_time(i)   ) .eq. 1 ) rh_time(i)   = ibadflag
-	   if( nan( t_time(i)    ) .eq. 1 ) t_time(i)    = ibadflag
-	   if( nan( p_time(i)    ) .eq. 1 ) p_time(i)    = ibadflag
-	   if( nan( dd_time(i)   ) .eq. 1 ) dd_time(i)   = ibadflag
-	   if( nan( ff_time(i)   ) .eq. 1 ) ff_time(i)   = ibadflag
-	   if( nan( gust_time(i) ) .eq. 1 ) gust_time(i) = ibadflag
+	   if( nanf( rh_time(i)   ) .eq. 1 ) rh_time(i)   = ibadflag
+	   if( nanf( t_time(i)    ) .eq. 1 ) t_time(i)    = ibadflag
+	   if( nanf( p_time(i)    ) .eq. 1 ) p_time(i)    = ibadflag
+	   if( nanf( dd_time(i)   ) .eq. 1 ) dd_time(i)   = ibadflag
+	   if( nanf( ff_time(i)   ) .eq. 1 ) ff_time(i)   = ibadflag
+	   if( nanf( gust_time(i) ) .eq. 1 ) gust_time(i) = ibadflag
 c
-	   if( nan( vis(i)  ) .eq. 1 ) vis(i)   = badflag
-	   if( nan( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
-	   if( nan( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nan( td(i)   ) .eq. 1 ) td(i)    = badflag
-	   if( nan( dd(i)   ) .eq. 1 ) dd(i)    = badflag
-	   if( nan( ff(i)   ) .eq. 1 ) ff(i)    = badflag
-	   if( nan( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
-	   if( nan( alt(i)  ) .eq. 1 ) alt(i)   = badflag
+	   if( nanf( vis(i)  ) .eq. 1 ) vis(i)   = badflag
+	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
+	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
+	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
+	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
+	   if( nanf( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
+	   if( nanf( alt(i)  ) .eq. 1 ) alt(i)   = badflag
 c
 	enddo !i
 c

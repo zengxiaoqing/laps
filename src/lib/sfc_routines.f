@@ -31,7 +31,7 @@ cdis
 cdis 
 c
 c
-	subroutine write_surface_obs_old(btime,outfile,n_obs_g,
+	subroutine write_surface_obs(btime,outfile,n_obs_g,
      &    n_obs_b,wmoid,stations,provider,wx,reptype,autostntype,
      &    store_1,store_2,store_3,store_4,store_5,store_6,store_7,
      &    store_2ea,store_3ea,store_4ea,store_5ea,store_6ea,

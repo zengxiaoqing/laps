@@ -1,4 +1,4 @@
-      subroutine read_metar_cwb(
+      subroutine read_synop_cwb(
      &     filename, maxSkyCover, recNum, altimeter,
      &     autoStationType, dewpoint, dpFromTenths, elevation,
      &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
@@ -7,7 +7,7 @@
      &     reportType, seaLevelPress, skyCover, skyLayerBase,
      &     snowCover, stationName, tempFromTenths, temperature,
      &     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
-     &     badflag, n, istatus )
+     &     badflag, istatus )
 
       implicit none
 
@@ -60,7 +60,6 @@
       character*100  stn_filename
 
       istatus= 0
-      n= 0
 
       open ( 1, file=filename, status='old', err=1000 )
       call get_directory ( 'static', stn_directory, len_dir )
@@ -69,6 +68,7 @@
 
       istatus= 1
 
+      n= 0
       do j= 1,recNum
          read ( 1, 10, end=99, err=999 )
      *   hh(j), m2(j), stationName(j), latitude(j),

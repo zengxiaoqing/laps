@@ -125,8 +125,7 @@ c
 	n_buoy_b = 0		! # of buoy obs in the box
 
         call s_len(buoy_format, len_buoy_format)
-!       if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
-        if(.true.)then
+        if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c.....      If not there, return.
@@ -165,7 +164,7 @@ c
         else ! Read buoy obs in CWB format
             recNum = 150
 
-	    call read_buoy_cwb(nf_fid , recNum, iplat_type,
+	    call read_buoy_cwb(data_file, recNum, iplat_type,
      &         td, elev, equivspd, lats, lons, 
      &         pcp1, pcp24, pcp6,
      &         wx, dp, dpchar,
@@ -193,27 +192,27 @@ c.....  Toss the ob if lat/lon/elev or observation time are bad by setting
 c.....  lat to badflag (-99.9), which causes the bounds check to think that
 c.....  the ob is outside the LAPS domain.
 c
-	   if( nan( lats(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( lons(i) ) .eq. 1 ) lats(i)  = badflag
-	   if( nan( elev(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
 c
-	   if( nan( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
 c
-	   if( nan( vis(i)  ) .eq. 1 ) vis(i)   = badflag
-	   if( nan( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
-	   if( nan( t(i)    ) .eq. 1 ) t(i)     = badflag
-	   if( nan( td(i)   ) .eq. 1 ) td(i)    = badflag
-	   if( nan( dd(i)   ) .eq. 1 ) dd(i)    = badflag
-	   if( nan( ff(i)   ) .eq. 1 ) ff(i)    = badflag
-	   if( nan( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
-	   if( nan( pcp1(i) ) .eq. 1 ) pcp1(i)  = badflag
-	   if( nan( pcp6(i) ) .eq. 1 ) pcp6(i)  = badflag
-	   if( nan( pcp24(i)) .eq. 1 ) pcp24(i) = badflag
-	   if( nan( dp(i)   ) .eq. 1 ) dp(i)    = badflag
+	   if( nanf( vis(i)  ) .eq. 1 ) vis(i)   = badflag
+	   if( nanf( mslp(i) ) .eq. 1 ) mslp(i)  = badflag
+	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
+	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
+	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
+	   if( nanf( ffg(i)  ) .eq. 1 ) ffg(i)   = badflag
+	   if( nanf( pcp1(i) ) .eq. 1 ) pcp1(i)  = badflag
+	   if( nanf( pcp6(i) ) .eq. 1 ) pcp6(i)  = badflag
+	   if( nanf( pcp24(i)) .eq. 1 ) pcp24(i) = badflag
+	   if( nanf( dp(i)   ) .eq. 1 ) dp(i)    = badflag
 c
-	   if( nan( sea_temp(i) ) .eq. 1 ) sea_temp(i) = badflag
-	   if( nan( t_wet(i)    ) .eq. 1 ) t_wet(i)    = badflag
-	   if( nan( equivspd(i) ) .eq. 1 ) equivspd(i) = badflag
+	   if( nanf( sea_temp(i) ) .eq. 1 ) sea_temp(i) = badflag
+	   if( nanf( t_wet(i)    ) .eq. 1 ) t_wet(i)    = badflag
+	   if( nanf( equivspd(i) ) .eq. 1 ) equivspd(i) = badflag
 c
 	enddo !i
 c
