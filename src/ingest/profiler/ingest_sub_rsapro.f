@@ -48,6 +48,8 @@
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
+        lun_out = 1
+
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error getting r_missing_data'
@@ -113,31 +115,15 @@ C           READ IN THE RAW PROFILER DATA
      1                                    ,fnam_in(1:len_fnam_in)      ! I
      1                                    ,istatus)                    ! O
                 else ! idir .eq. 3
-!                   Note that these arguments can be pared down to look
-!                   more like the call to 'read_ldad_prof' if desired
-!                   If that is done then the PRO file could be written to
-!                   from within 'read_ldad_sodar'. A new subroutine called
-!                   'write_pro' could also be constructed if needed that
-!                   is common to 'read_ldad_prof' and the SODAR data.
-!                   call read_ldad_sodar(fnam_in(1:len_fnam_in)        ! I
-!     1                   ,MAX_PROFILES,MAX_LEVELS                     ! I
-!     1                   ,n_profiles                                  ! O
-!     1                   ,n_lvls_pr                                   ! O
-!     1                   ,prof_name,wmo_id                            ! O
-!     1                   ,lat_pr,lon_pr,elev_m_pr                     ! O
-!     1                   ,ht_m_pr,di_dg_pr,sp_ms_pr                   ! O
-!     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
-!     1                   ,i4_mid_window_pr,istatus)                   ! O
-
                     i4time_earliest = i4time_sys - i4_prof_window
                     i4time_latest   = i4time_sys + i4_prof_window
 
-!                   call get_sodar_data
-!    +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L        ! I
-!    +                   ,i4time_earliest,i4time_latest                ! I
-!    +                   ,fnam_in(1:len_fnam_in)                       ! I
-!    +                   ,lun_out                                      ! I
-!    +                   ,istatus)                                     ! O
+                    call get_sodar_data
+     +                   (i4time_sys,ilaps_cycle_time,NX_L,NY_L        ! I
+     +                   ,i4time_earliest,i4time_latest                ! I
+     +                   ,fnam_in(1:len_fnam_in)                       ! I
+     +                   ,lun_out                                      ! I
+     +                   ,istatus)                                     ! O
 
                 endif ! idir
 
