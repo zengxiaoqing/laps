@@ -143,6 +143,7 @@ c
         character var*3,comment*125,units*10
 
         logical  l_tb8,l_cloud_present,l_use_39,l_poss_extrap
+     1          ,l_no_sao_vis
 
         logical lstat_co2_a(imax,jmax)
 
@@ -539,19 +540,33 @@ c
 !201         if(      ht_sao_base           .eq. 1e30 
 !     1         .and. istat_vis_potl_a(i,j) .eq. 1    )then ! VIS Sat but no SAO
 
-201         if(          istat_vis_potl_a(i,j) .eq. 1   ! Vis Sat present 
+201         continue
+
+            l_no_sao_vis = .false.
+            mode_sao = 0
+
+            if(          istat_vis_potl_a(i,j) .eq. 1   ! Vis Sat present 
      1                                .AND.             ! and
      1                 ( ht_sao_base .eq. 1e30 .or.     ! No obvious SAO base
      1                   ht_sao_base .gt. cldtop_m(i,j) )
      1                                                      )then 
               n_no_sao_vis = n_no_sao_vis + 1
+              l_no_sao_vis = .true.
+              mode_sao = 1
 
 !             Calculate/Utilize cloud top based on vis cover and tb8 temp
               cover=sat_cover
               htbase = max( topo(i,j), cldtop_m(i,j)-1000. )
 
+              if(cldtop_m(i,j) .eq. 0.           .or. 
+     1           abs(cldtop_m(i,j)) .gt. 100000.      )then
+                  write(6,*)' WARNING: cldtop_m(i,j) = ',cldtop_m(i,j)
+     1                     ,i,j,mode_sao     
+              endif
+
             elseif(ht_sao_base .eq. 1e30)then ! Non-vis Sat with no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
+              mode_sao = 2
               cover=sat_cover
               htbase_init = ht_sao_base
 
@@ -591,6 +606,7 @@ c
 
               if(htbase .gt. cldtop_m(i,j))then
                   n_no_sao3 = n_no_sao3 + 1
+                  mode_sao = 3
               else
                   write(6,211,err=212)i,j,tb8_k(i,j),tb8_cold_k(i,j)
      1                   ,cldtop_m_avg,cldtop_m(i,j)
@@ -600,6 +616,7 @@ c
 212           endif
 
             elseif(ht_sao_base .gt. cldtop_m(i,j))then ! Satellite top below ceiling
+              mode_sao = 4
               cover=sat_cover
               htbase_init = ht_sao_base
               htbase = htbase_init
@@ -628,12 +645,13 @@ c
               endif ! .true.
 
             else ! Normal use of satellite data
+              mode_sao = 5
               cover=sat_cover
 
               if(cldtop_m(i,j) .eq. 0.           .or. 
      1           abs(cldtop_m(i,j)) .gt. 100000.      )then
                   write(6,*)' WARNING: cldtop_m(i,j) = ',cldtop_m(i,j)
-     1                     ,i,j     
+     1                     ,i,j,mode_sao     
               endif
 
               if(htbase_init .eq. 0.           .or. 
@@ -678,7 +696,9 @@ c
 
             if(htbase      .eq. 0.           .or. 
      1         abs(htbase) .gt. 100000.             )then
-                write(6,*)' WARNING: htbase = ',htbase,i,j
+                write(6,*)' WARNING: htbase = ',htbase,i,j,mode_sao
+     1                   ,cldtop_m(i,j),l_no_sao_vis
+     1                   ,istat_vis_potl_a(i,j)
             endif
 
 !           Add satellite cloud to array
@@ -929,6 +949,11 @@ c
             cldtop_m = cldtop_tb8_m
             sat_cover = 1.0 
 
+        endif
+
+        if(l_cloud_present .and. cldtop_m .eq. r_missing_data)then
+            write(6,*)' Warning in cloud_top: ',l_cloud_present,cldtop_m       
+     1               ,i,j
         endif
 
         return
