@@ -40,7 +40,7 @@ c
       parameter (MAX_RANGE_M = GATE_SPACING_M * MAX_GATES_LUT)
 
       integer*4  LUT_RANGES,LUT_AZIMUTHS
-      parameter (LUT_RANGES = 230)
+      parameter (LUT_RANGES = 460)
       parameter (LUT_AZIMUTHS = 360) ! This should not be changed
 
       real*4     ELEV_INTERVAL
