@@ -18,9 +18,9 @@ $custom_center_file =
 $orig_center_file =
   "$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/Laps_Center_Point.txt";
 
-$custom_center_lat = shift; $custom_center_lon = shift;
+$custom_center_lat = shift; $custom_center_lon = shift; $default_flag = shift;
 
-if (defined $custom_center_lat) {
+if (!defined $default_flag) {
   open (CENTER,">$custom_center_file");
   print CENTER "$custom_center_lat $custom_center_lon\n";
   close CENTER;
@@ -28,4 +28,9 @@ if (defined $custom_center_lat) {
   print CENTER "$custom_center_lat $custom_center_lon\n";
   close CENTER;
   }
-else {unlink $custom_center_file;}
+else {
+  unlink $custom_center_file;
+  open (CENTER,">$orig_center_file");
+  print CENTER "$custom_center_lat $custom_center_lon\n";
+  close CENTER;
+  }
