@@ -237,7 +237,7 @@ int write_latlon(int cdfid, int *numSta, float *lat, float *lon, float *elev)
 	  return 2;
 	}
 
-        istatus = nc_put_vara_float(cdfid, varid, start,count, lat);
+        istatus = nc_put_vara_float(cdfid, varid, start,count, lon);
         if (istatus != NC_NOERR){
  	  printf("Can't write variable 'longitude'\n");
 	  return 2;
@@ -249,7 +249,7 @@ int write_latlon(int cdfid, int *numSta, float *lat, float *lon, float *elev)
 	  return 2;
 	}
 
-        istatus = nc_put_vara_float(cdfid, varid, start, count, lat);
+        istatus = nc_put_vara_float(cdfid, varid, start, count, elev);
         if (istatus != NC_NOERR){
  	  printf("Can't write variable 'elevation'\n");
 	  return 2;
@@ -819,16 +819,17 @@ int write_char_var(int cdfid, int *numSta, char *f_stations,
                    char *f_provider, char *f_reptype, int *sta_len,
                    int *pro_len, int *type_len)
 {
-	int file_prov, file_staid, file_statype, recNum;
+	int file_prov, file_staid, file_reptype, recNum;
 	int var_pro, var_sta, var_typ, istatus, slen;
+        int wrtlen_pro, wrtlen_sta, wrtlen_typ;
 	size_t start_pro[2], count_pro[2], start_sta[2], count_sta[2]; 
 	size_t start_typ[2], count_typ[2];
-	char *station, *staType, *provider, *pro_ptr, *sta_ptr, *typ_ptr;
+	char *station, *repType, *provider, *pro_ptr, *sta_ptr, *typ_ptr;
 
 /* determine dimension values of maxProviderLen, maxStaTypeLen, and maxStaIdLen
      from the output file */ 
 
-	istatus = get_dims(cdfid, &file_prov, &file_staid, &file_statype);
+	istatus = get_dims(cdfid, &file_prov, &file_staid, &file_reptype);
 	if (istatus == -1) {
           return -1; 
         }
@@ -837,65 +838,62 @@ int write_char_var(int cdfid, int *numSta, char *f_stations,
 	start_pro[1] = 0;
 	count_pro[0] = 1;
 
-	if (*pro_len < file_prov) {
-          count_pro[1] = *pro_len; 
+	if (*pro_len+1 < file_prov) {
+          wrtlen_pro = *pro_len+1; 
 	}
 	else if (*pro_len == file_prov) {
-	  count_pro[1] = *pro_len - 1;
+	  wrtlen_pro = *pro_len;
         }
 	else {
-	  count_pro[1] = file_prov - 1;
+	  wrtlen_pro = file_prov;
         }
 
 	start_sta[1] = 0;
 	count_sta[0] = 1;
 
-	if (*sta_len < file_staid) {
-          count_sta[1] = *sta_len; 
+	if (*sta_len+1 < file_staid) {
+          wrtlen_sta = *sta_len+1; 
 	}
 	else if (*sta_len == file_staid) {
-	  count_sta[1] = *sta_len - 1;
+	  wrtlen_sta = *sta_len;
         }
 	else {
-	  count_sta[1] = file_staid - 1;
+	  wrtlen_sta = file_staid;
         }
 
 	start_typ[1] = 0;
 	count_typ[0] = 1;
 
-	if (*type_len < file_statype) {
-          count_typ[1] = *type_len; 
+	if (*type_len+1 < file_reptype) {
+          wrtlen_typ = *type_len+1; 
 	}
-	else if (*type_len == file_statype) {
-	  count_typ[1] = *type_len - 1;
+	else if (*type_len == file_reptype) {
+	  wrtlen_typ = *type_len;
         }
 	else {
-	  count_typ[1] = file_statype - 1;
+	  wrtlen_typ = file_reptype;
         }
-
-/* setup character strings to hold results of nstrncpy */
-	station = malloc((count_typ[1]+1) * sizeof(char));
-	staType = malloc((count_sta[1]+1) * sizeof(char));
-	provider = malloc((count_pro[1]+1) * sizeof(char));
 
 /* get var_pro, var_sta, var_typ, varids for each variable */
         istatus = nc_inq_varid (cdfid, "dataProvider", &var_pro);
         if (istatus != NC_NOERR) {
-          free_strings(station, staType, provider);
 	  return -1;
 	}
 
         istatus = nc_inq_varid (cdfid, "stationId", &var_sta);
         if (istatus != NC_NOERR) {
-	  free_strings(station, staType, provider);
 	  return -1;
 	}
 
-        istatus = nc_inq_varid (cdfid, "stationType", &var_typ);
+        istatus = nc_inq_varid (cdfid, "reportType", &var_typ);
         if (istatus != NC_NOERR) {
-	  free_strings(station, staType, provider);
 	  return -1;
 	}
+
+/* setup character strings to hold results of nstrncpy */
+	station = malloc((wrtlen_sta) * sizeof(char));
+	repType = malloc((wrtlen_typ) * sizeof(char));
+	provider = malloc((wrtlen_pro) * sizeof(char));
 
 	pro_ptr = f_provider;
 	sta_ptr = f_stations;
@@ -903,57 +901,76 @@ int write_char_var(int cdfid, int *numSta, char *f_stations,
 
 /* loop over numSta */
 	for (recNum = 0; recNum < *numSta; recNum++) {
+
+/* write provider */
 	  start_pro[0] = recNum;
-          nstrncpy(provider, pro_ptr, count_pro[1]);
+          nstrncpy(provider, pro_ptr, wrtlen_pro - 1);
 
 	  slen = strlen(provider);
-	  if (slen < count_pro[1]) count_pro[1] = slen;
+	  if (slen < wrtlen_pro) {
+            count_pro[1] = slen + 1;
+          } 
+          else {
+            count_pro[1] = wrtlen_pro;
+          }
           istatus = nc_put_vara_text(cdfid,var_pro,start_pro,count_pro,provider);
           if (istatus != NC_NOERR) {
-	    free_strings(station, staType, provider);
+	    free_strings(station, repType, provider);
 	    return 2;
 	  }
 	  pro_ptr += *pro_len;
 
+/* write reportType */
 	  start_typ[0] = recNum;
-          nstrncpy(staType, typ_ptr, count_typ[1]);
+          nstrncpy(repType, typ_ptr, wrtlen_typ - 1);
 
-	  slen = strlen(staType);
-	  if (slen < count_sta[1]) count_sta[1] = slen;
-          istatus = nc_put_vara_text(cdfid,var_typ,start_typ,count_typ,staType);
+	  slen = strlen(repType);
+	  if (slen < wrtlen_typ) {
+            count_typ[1] = slen + 1;
+          } 
+          else {
+            count_typ[1] = wrtlen_typ;
+          }
+          istatus = nc_put_vara_text(cdfid,var_typ,start_typ,count_typ,repType);
           if (istatus != NC_NOERR) {
-	    free_strings(station, staType, provider);
+	    free_strings(station, repType, provider);
 	    return 2;
 	  }
 	  typ_ptr += *type_len;
 
+/* write stationId */
 	  start_sta[0] = recNum;
-          nstrncpy(station, sta_ptr, count_sta[1]);
+          nstrncpy(station, sta_ptr, wrtlen_sta - 1);
 
 	  slen = strlen(station);
-	  if (slen < count_typ[1]) count_typ[1] = slen;
+	  if (slen < wrtlen_sta) {
+            count_sta[1] = slen + 1;
+          } 
+          else {
+            count_sta[1] = wrtlen_sta;
+          }
           istatus = nc_put_vara_text(cdfid,var_sta,start_sta,count_sta, station);
           if (istatus != NC_NOERR) {
-	    free_strings(station, staType, provider);
+	    free_strings(station, repType, provider);
 	    return 2;
 	  }
 	  sta_ptr += *sta_len;
 
         }
 
-	free_strings(station, staType, provider);
+	free_strings(station, repType, provider);
 	return (SUCCESS);
 }
 /*******************************************************************************/
-void free_strings(char *station, char *staType, char *provider) 
+void free_strings(char *station, char *repType, char *provider) 
 {
         free(station);
-        free(staType);
+        free(repType);
         free(provider);
 	return;
 }
 /*******************************************************************************/
-int get_dims(int cdfid, int *file_prov, int *file_staid, int *file_statype)
+int get_dims(int cdfid, int *file_prov, int *file_staid, int *file_reptype)
 {
 	int dimid, istatus;
 	size_t dim_len;
@@ -971,18 +988,18 @@ int get_dims(int cdfid, int *file_prov, int *file_staid, int *file_statype)
         }
 	*file_prov = (int)dim_len;
 
-        istatus = nc_inq_dimid(cdfid,"maxStaTypeLen",&dimid);
+        istatus = nc_inq_dimid(cdfid,"maxRepTypeLen",&dimid);
         if (istatus != NC_NOERR) {
           istatus = nc_close(cdfid);
           return (-1);
         }
         istatus = nc_inq_dimlen(cdfid,dimid,&dim_len);
         if (istatus != NC_NOERR){
-	  printf("Cannot read dimension 'maxStaTypeLen'\n");
+	  printf("Cannot read dimension 'maxRepTypeLen'\n");
           istatus = nc_close(cdfid);
           return (-1);
         }
-	*file_statype = (int)dim_len;
+	*file_reptype = (int)dim_len;
 
         istatus = nc_inq_dimid(cdfid,"maxStaIdLen",&dimid);
         if (istatus != NC_NOERR) {
