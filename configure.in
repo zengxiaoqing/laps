@@ -76,11 +76,12 @@ then
   CPPFLAGS = "cc -P"     
 fi
 
-
+LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
+  LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
   if test -z "$GCC"
   then
@@ -156,7 +157,7 @@ dnl
 dnl How to compile fortran with ncarg?
 dnl
 AC_FC_FUNC_NCARGFC(NCARGFC)
-
+AC_SUBST(LIBPATHFLAG)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(PERL)
 AC_SUBST(CSH)
