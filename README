@@ -1413,11 +1413,16 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
         Change the parameter PRESSURE_INTERVAL_L to be the vertical
         pressure resolution desired (default is 5000pa). 
+
+     2. Edit 'data/static/pressures.nl'
+
+        Update the list of pressures so that it is consistent with the
+        other vertical grid parameters mentioned above.
  
-        Note that the vertical grid uses pressure coordinates and that
-        the vertical pressure interval must be uniform between levels.
-        Of course, the top pressure should be greater than zero mb. The
-        bottom level should extend below the terrain and the observations.
+     Note that the vertical grid uses pressure coordinates and that the 
+     vertical pressure interval must be uniform between levels. Of course, the 
+     top pressure should be greater than zero mb. The bottom level should 
+     extend below the terrain and the observations.
 
 -------- 2.9 ----- CHANGING THE CYCLE TIME -----------------------------------
 

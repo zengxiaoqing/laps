@@ -176,7 +176,22 @@ C
           enddo ! i
 
       elseif(colortable .eq. 'hues')then
-          call color_ramp(1,20,IWKID,0.5,0.7,0.7,3.0,0.7,0.7)          
+          ncols = 50
+          call color_ramp(1,ncols/8,IWKID
+     1                   ,0.5,0.15,0.6                 ! Pink
+     1                   ,0.5,0.5,0.7)                ! Violet
+          call color_ramp(ncols/8,59*ncols/120,IWKID
+     1                   ,0.5,0.5,0.7                 ! Violet
+     1                   ,1.5,1.0,0.7)                ! Aqua
+          call color_ramp(59*ncols/120,73*ncols/120,IWKID
+     1                   ,1.5,1.0,0.7                 ! Aqua
+     1                   ,2.0,0.4,0.4)                ! Green
+          call color_ramp(73*ncols/120,90*ncols/100,IWKID
+     1                   ,2.0,0.4,0.4                 ! Green
+     1                   ,3.0,0.9,0.7)                ! Red
+          call color_ramp(90*ncols/100,ncols,IWKID
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,3.0,0.9,0.2)                ! Hot
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
@@ -219,6 +234,14 @@ C
       red = max(red1,red2)
       grn = max(1.0 - abs(hue  - 2.0),0.0)
       blu = max(1.0 - abs(hue  - 1.0),0.0)
+
+!     Normalize to the max intensity
+      colmax = max(red,grn,blu)
+      if(colmax .gt. 0.)then
+          red = red/colmax
+          grn = grn/colmax
+          blu = blu/colmax
+      endif
 
       red = (red*sat) + 1.0*(1.0-sat)
       grn = (grn*sat) + 1.0*(1.0-sat)

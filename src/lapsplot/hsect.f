@@ -338,7 +338,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [wd,wb,wr,wf,bw] Wind'
      1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
      1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'        
-     1       /'     [ra/rp] Radar Data,  [rx] Max Radar'
+     1       /'     [ra/rf] Radar Data,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df,dc,ws,vv,hu,ta,th,te,vo'  
@@ -1355,7 +1355,7 @@ c
 21        continue
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
-     1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rp'
+     1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
      1    .or.  c_type .eq. 'rd'                          )then
 
             if(c_type .eq. 'ra')mode = 1
@@ -1375,7 +1375,7 @@ c
                 i4time_get = i4time_ref
             endif
 
-            if(c_type .ne. 'rp')then
+            if(c_type .ne. 'rf')then
 
               if(.not. l_radar_read)then
 
@@ -1471,14 +1471,15 @@ c
 2020        format(/'  [ve] Velocity Contours, '  
      1             ,' [vi] Velocity Image (no map)'
      1             /'  [rf] Reflectivity Data, '
-     1             /'  [mr] Max Reflectivity, [vl] VIL, [mt] Max Tops,'       
-     1             /'  [lr] Low Lvl Reflectivity, '
+     1             /'  [mr] Column Max Ref, [mt] Max Tops,'       
+     1             /'  [lr] Low Lvl Ref, '
      1             ,'[f1] 1 HR Fcst Max Reflectivity,'
      1             /' ',61x,' [q] Quit ? ',$)
             read(lun,15)c_field
 
-            if(c_type .eq. 'rp' .and. c_field .ne. 'lr')then
-!             Obtain LPR reflectivity field
+            if(c_type .eq. 'rf' .and. c_field .ne. 'mr'
+     1                          .and. c_field .ne. 'lr')then
+!             Obtain LPS reflectivity field
               write(6,*)' Reading LPS radar volume reflectivity'
               ext = 'lps'
               var_2d = 'REF'
@@ -1588,33 +1589,6 @@ c
      1                        ,cint_ref,asc9_tim_r,c33_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L        
      1                        ,NY_L,r_missing_data,laps_cycle_time)
-
-            elseif(c_field .eq. 'vl')then ! Do VIL
-
-!               Initialize Radar Array
-                do i = 1,NX_L
-                do j = 1,NY_L
-                    radar_array(i,j) = 0.
-                enddo
-                enddo
-
-                do i = 1,NX_L
-                do j = 1,NY_L
-                do k = 1,NZ_L
-                    radar_array(i,j) =
-     1          max(radar_array(i,j),grid_ra_ref(i,j,k,1))
-
-                enddo
-                enddo
-                enddo
-
-                write(6,*)' Calculating VIL'
-                call plot_cont(radar_array,1e0,clow,chigh,10.
-     1                        ,asc9_tim_r
-     1                        ,'LAPS DUMMY VIL                   '
-     1                        ,i_overlay,c_display,lat,lon
-     1                        ,jdot
-     1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
                 i4time_hour = (i4time_radar+laps_cycle_time/2)
@@ -3250,7 +3224,7 @@ c                   cint = -1.
 
             else ! image plot
                 n_image = n_image + 1
-                call ccpfil(field_2d,NX_L,NY_L,0.,100.,'hues')
+                call ccpfil(field_2d,NX_L,NY_L,-20.,100.,'hues')
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t

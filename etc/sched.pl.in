@@ -37,6 +37,8 @@
 # -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
+# -t                   override default purge time expressed in days
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -131,6 +133,7 @@ my $t=gmtime(); print $t." Running purger\n";
 my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
 $sys .= "-r " if($opt_r);
 $sys .= "-m $opt_m " if($opt_m);
+$sys .= "-t $opt_t " if($opt_t);
 $sys .= " $LAPS_DATA_ROOT/lapsprd";
 
 system($sys);

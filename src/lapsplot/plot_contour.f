@@ -362,7 +362,8 @@ C Chartreuse
 C Celeste
       CALL GSCR(1, 10, 0.2, 1.0, 0.5)
 C Green
-      CALL GSCR(1, 11, 0.2, 0.8, 0.2)
+!     CALL GSCR(1, 11, 0.2, 0.8, 0.2)
+      CALL GSCR(1, 11, 0.1, 0.9, 0.1)
 C Aqua
       CALL GSCR(1, 12, 0.0, 0.9, 1.0)
 C DeepSkyBlue
