@@ -133,7 +133,8 @@ c
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
-     .          htave,tpave,shave,uwave,vwave
+     .          htave,tpave,shave,uwave,vwave,
+     .          rmaxvv,rminvv
 c
       integer   ct,  reject_cnt,
      .          ihour,imin,
@@ -413,6 +414,11 @@ c *** get LAPS pressure levels.  Using pressures.nl
 c
 c     print*,'get pressures from pressure.nl'
       call get_pres_1d(i4time_now,nz_laps,pr,istatus)
+      if(istatus.ne.1)then
+         print*,'Error returned from get_pres_1d'
+         print*,'Check pressures.nl or nk_laps in nest7grid.parms'
+         stop
+      endif
       do k = 1,nz_laps
          pr(k)=pr(k)/100.
       enddo
@@ -571,6 +577,15 @@ c
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
      +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
+
+           if(.false.)then
+           print*,'After read'
+           do k=1,nzbg_ww
+              rmaxvv=maxval(wwbg(:,:,k))
+              rminvv=minval(wwbg(:,:,k))
+              print*,'k Max/Min vv ',k,rmaxvv,rminvv
+           enddo
+           endif
 
        if (istatus_prep(nf) .ne. 0) then
 
@@ -760,15 +775,32 @@ c
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,shvi,sh,bgmodel)
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,uwvi,uw,bgmodel)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,vwvi,vw,bgmodel)
            call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,tpvi,tp,bgmodel)
-           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
-     .        grx,gry,wwvi,ww,bgmodel)
+
+
+           if(bgmodel.eq.2.and.cmodel(1:ic).eq.'ORSM_HKO'.and.
+     .       .false.)then
+              print*,'use bilinear interp for ',cmodel(1:ic)
+              do k=1,nz_laps
+              do j=1,ny_laps
+              do i=1,nx_laps
+                 call bilinear_laps(grx(i,j),gry(i,j),nx_bg,ny_bg
+     .                             ,shvi(1,1,k),sh(i,j,k)) 
+                 call bilinear_laps(grx(i,j),gry(i,j),nx_bg,ny_bg
+     .                             ,wwvi(1,1,k),ww(i,j,k))
+              enddo
+              enddo
+              enddo
+           else
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .           grx,gry,shvi,sh,bgmodel)
+              call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .           grx,gry,wwvi,ww,bgmodel)
+           endif
 
            itstatus(2)=ishow_timer()
            print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
@@ -794,10 +826,10 @@ c
      +                   (tp(i,j,k)  .le. 0.) .or.
      +               (abs(sh(i,j,k)) .gt. 1.) .or.
      +               (abs(uw(i,j,k)) .gt. 150.) .or.
-     +               (abs(vw(i,j,k)) .gt. 150.))then
+     +               (abs(vw(i,j,k)) .gt. 150.) )then
+c    +             .or.(abs(ww(i,j,k)) .gt. 10.) )then
 c
 c ww may be missing from some models! Don't stop just because of that.
-C    +             .or.(abs(ww(i,j,k)) .gt. 100.) )then
 c                  if (max(ht(i,j,k),tp(i,j,k),sh(i,j,k),
 c     .                 uw(i,j,k),vw(i,j,k)) .ge. missingflag) then
 

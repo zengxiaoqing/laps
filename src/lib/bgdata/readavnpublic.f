@@ -27,9 +27,12 @@ C Get size of numIsoLevel
 C
       nf_status = NF_INQ_DIMID(nf_fid,'numIsoLevel',nf_vid)
       if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim numIsoLevel'
-        return
+        nf_status = NF_INQ_DIMID(nf_fid,'isoLevel',nf_vid)
+        if(nf_status.ne.NF_NOERR) then
+           print *, NF_STRERROR(nf_status)
+           print *,'dim numIsoLevel'
+           return
+        endif
       endif
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,numIsoLevel)
       if(nf_status.ne.NF_NOERR) then
@@ -145,13 +148,14 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var ACCS'
-        return
-      endif
-      nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,ACCS)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var ACCS'
-        return
+c       return
+      else
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,ACCS)
+        if(nf_status.ne.NF_NOERR) then
+           print *, NF_STRERROR(nf_status)
+           print *,'in var ACCS'
+           return
+        endif
       endif
 C
 C     Variable        NETCDF Long Name
