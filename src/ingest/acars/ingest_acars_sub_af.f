@@ -99,11 +99,11 @@
           endif
 
           write(6,1)a9_timeObs,a9_recptTime 
-          write(11,1)a9_timeObs,a9_recptTime 
+          write(31,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
           write(6,2)latitude,longitude,altitude
-          write(11,2)latitude,longitude,altitude
+          write(31,2)latitude,longitude,altitude
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
 !         Test for bad winds
@@ -124,7 +124,7 @@
 
           else ! write out valid wind
               write(6,3)int(windDir),windSpeed
-              write(11,3)int(windDir),windSpeed
+              write(31,3)int(windDir),windSpeed
  3            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
 
           endif
@@ -133,7 +133,7 @@
 
  850      if(abs(temperature) .lt. 400.)then
               write(6,13)temperature
-              write(11,13)temperature
+              write(31,13)temperature
  13           format(' Temp:'/1x,f10.1)
        
           else
@@ -145,7 +145,7 @@
 !         if(waterVaporMR .ge. 0. .and. 
 !    1       waterVaporMR .le. 100.)then
 !             write(6,23)waterVaporMR
-!             write(11,23)waterVaporMR
+!             write(31,23)waterVaporMR
 !23           format(' MixR:'/1x,f10.3)
 
 !         else
@@ -163,7 +163,7 @@
 
  999  write(6,*)' End of AFWA file detected'
 
-      close(lun_in)
+!     close(lun_in)
       istatus = 1
       return
       end
