@@ -99,7 +99,7 @@ cdis
 !     3D array of observation weights, depends on data type
 !     The choices are outlined below
       real*4    wt_p(imax,jmax,kmax)                               ! Input
-      real*4    wt_p_spread(imax,jmax,kmax)                        ! Local
+      real*4    wt_p_radar(imax,jmax,kmax)                         ! Local
 
 !     Model background field
       real*4 u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
@@ -180,7 +180,7 @@ csms$serial(default=ignore)  begin
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
 
-      l_point_struct = .false.
+      l_point_struct = .false. 
 
       rms_thresh_norm = rms_thresh_wind          
 
@@ -188,7 +188,7 @@ csms$serial end
 
       do iter = 1,n_iter_wind
 
-csms$serial(<wt_p_spread, varobs_diff_spread, 
+csms$serial(<wt_p_radar, varobs_diff_spread, 
 csms$>       rms_thresh , out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
@@ -245,19 +245,19 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
       deallocate(pres_3d)
 
-      allocate( uobs_diff(imax,jmax,kmax), STAT=istat_alloc )
-      if(istat_alloc .ne. 0)then
+      if(.not. l_point_struct)then
+
+       allocate( uobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate uobs_diff'
           stop
-      endif
+       endif
 
-      allocate( vobs_diff(imax,jmax,kmax), STAT=istat_alloc )
-      if(istat_alloc .ne. 0)then
+       allocate( vobs_diff(imax,jmax,kmax), STAT=istat_alloc )
+       if(istat_alloc .ne. 0)then
           write(6,*)' ERROR: Could not allocate vobs_diff'
           stop
-      endif
-
-      if(.not. l_point_struct)then
+       endif
 
        do j=1,jmax
        do i=1,imax
@@ -435,16 +435,13 @@ csms$>       rms_thresh , out>:default=ignore)  begin
        enddo ! i
        enddo ! j
 
-      endif ! .not. l_point_struct
+       varobs_diff_spread(:,:,:,1) = uobs_diff
+       varobs_diff_spread(:,:,:,2) = vobs_diff
 
-      varobs_diff_spread(:,:,:,1) = uobs_diff
-      varobs_diff_spread(:,:,:,2) = vobs_diff
+       deallocate(uobs_diff)
+       deallocate(vobs_diff)
 
-      deallocate(uobs_diff)
-      deallocate(vobs_diff)
-
-!     Perform QC of data structure info
-      if(l_point_struct)then
+      else ! Perform QC of data structure info (l_point_struct = .true)
           do i_ob = 1,nobs_point
               i = obs_point(i_ob)%i                       
               j = obs_point(i_ob)%j                       
@@ -472,7 +469,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 !              Stricter QC check for pireps
      1                       .OR. 
      1         (speed_diff .gt. 10. .and. 
-     1                              obs_point(i_ob)%type .eq. 'pirep')        
+     1                              obs_point(i_ob)%type .eq. 'pin')        
 
 !              Stricter QC check for Cloud Drift Winds
      1                       .OR. 
@@ -488,7 +485,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1                                                          )then
 
 !                 Throw out the ob
-                  if(obs_point(i_ob)%type .eq. 'pirep')then
+                  if(obs_point(i_ob)%type .eq. 'pin')then
                       n_qc_pirep_bad = n_qc_pirep_bad + 1
                   elseif(obs_point(i_ob)%type .eq. 'cdw')then
                       n_qc_cdw_bad = n_qc_cdw_bad + 1
@@ -512,29 +509,63 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1                                        ,f5.0,f5.2)
 232               continue
 
-!                 Set the difference OB to missing (original ob left alone)
-!                 uobs_diff(i,j,k) = r_missing_data
-!                 vobs_diff(i,j,k) = r_missing_data
-!                 wt_p(i,j,k) = r_missing_data
-
                   n_qc_total_bad = n_qc_total_bad + 1
 
               else ! keep and write out the good OB
+                  if(obs_point(i_ob)%type .eq. 'pin')then
+                      n_qc_pirep_good = n_qc_pirep_good + 1
+                      c3_string = 'Prp'
+                  endif
+
+                  if(obs_point(i_ob)%type .eq. 'cdw')then
+                      n_qc_cdw_good  = n_qc_cdw_good + 1
+                      c3_string = 'Cdw'
+                  endif
+
+                  if(obs_point(i_ob)%type .eq. 'sfc')then
+                      n_qc_sfc_good   = n_qc_sfc_good + 1
+                      c3_string = 'Sfc'
+                  endif
+
+                  if(obs_point(i_ob)%type .eq. 'prof')then
+                      n_qc_prof_good  = n_qc_prof_good + 1
+                      c3_string = 'Prf'
+                  endif
 
                   n_qc_total_good = n_qc_total_good + 1
 
+!                 Assign data structure element (using difference ob)
                   obs_barnes(n_qc_total_good) = obs_point(i_ob)
+                  obs_barnes(n_qc_total_good)%value(1) = u_diff
+                  obs_barnes(n_qc_total_good)%value(2) = v_diff
 
-                  if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then
+                  if(n_qc_total_good .le. 500 .OR. 
+     1               n_qc_total_good .eq. (n_qc_total_good/10)*10)then
                       iwrite = 1
                   else
                       iwrite = 0
                   endif
 
-              endif
+                  if(iwrite .eq. 1)then
+                      write(6,201,err=302)c3_string,i,j,k
+     1                  ,u_diff
+     1                  ,v_diff
+     1                  ,u
+     1                  ,v
+     1                  ,u_laps_bkg(i,j,k)
+     1                  ,v_laps_bkg(i,j,k)
+     1                  ,speed_diff
+     1                  ,obs_barnes(n_qc_total_good)%weight
+302                   continue
+                  endif
+
+              endif ! passed the QC test
 
           enddo ! i_ob
-      endif
+
+          ncnt_total = n_qc_total_good
+
+      endif ! .not. l_point_struct
 
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'
@@ -565,24 +596,9 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
       I4_elapsed = ishow_timer()
 
-!     Perform 1st pass analysis of non-radar difference obs
-      do k = 1,kmax
-          l_analyze(k) = .true.
-      enddo ! k
-
 csms$serial end
 
-      if(l_point_struct)then
-          call get_inst_err2(r_missing_data                           ! I
-     1                      ,obs_barnes,max_obs,n_qc_total_good       ! I
-     1                      ,rms_thresh_norm                          ! I
-     1                      ,rms_inst,rms_thresh)                     ! O
-     
-      else
-!         call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
-!    1                     ,wt_p,rms_thresh_norm                      ! I
-!    1                     ,rms_inst,rms_thresh)                      ! O
-
+      if(.not. l_point_struct)then
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p          ! I
@@ -590,12 +606,17 @@ csms$serial end
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
 
-          call get_inst_err2(r_missing_data                           ! I
-     1                      ,obs_barnes,max_obs,n_qc_total_good       ! I
-     1                      ,rms_thresh_norm                          ! I
-     1                      ,rms_inst,rms_thresh)                     ! O
-     
+          if(ncnt_total .ne. n_qc_good_total)then
+              write(6,*)' WARNING: ncnt_total .ne. n_qc_good_total'
+     1                 ,ncnt_total,n_qc_good_total
+          endif
+
       endif
+
+      call get_inst_err2(r_missing_data                               ! I
+     1                  ,obs_barnes,max_obs,n_qc_total_good           ! I
+     1                  ,rms_thresh_norm                              ! I
+     1                  ,rms_inst,rms_thresh)                         ! O
 
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_barnes                            ! I
@@ -607,7 +628,7 @@ csms$serial end
      1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
 
-      wt_p_spread = wt_p
+      wt_p_radar = wt_p
 
 csms$print_mode(async) begin
 csms$insert      call nnt_me(me)
@@ -637,6 +658,11 @@ csms$serial(default=ignore)  begin
       call move_3d(varbuff(1,1,1,2),vpass1,imax,jmax,kmax)
 
       I4_elapsed = ishow_timer()
+
+      if(l_point_struct)then
+          write(6,*)' End of supported data structure code'
+          stop
+      endif
 
 !     Perform radar QC by differencing radial velocities and first pass analysis
       do i_radar = 1,n_radars
@@ -674,7 +700,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 2 processor=',me
 
-csms$serial(<wt_p_spread , varobs_diff_spread,  
+csms$serial(<wt_p_radar , varobs_diff_spread,  
 csms$>       icount_radar_total, out>:default=ignore)  begin
 
           mode = 1 ! All radar obs (in this case single Doppler)
@@ -695,7 +721,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
-     1        ,wt_p_spread                                ! Input/Output
+     1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
@@ -714,18 +740,15 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
 
               write(6,*)' Calling barnes with single radar obs added'       
 
-!             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-!             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
-
               call get_inst_err(imax,jmax,kmax,r_missing_data         ! I
-     1                         ,wt_p_spread,rms_thresh_norm           ! I
+     1                         ,wt_p_radar,rms_thresh_norm            ! I
      1                         ,rms_inst,rms_thresh)                  ! O
 
 csms$serial end
 
               call arrays_to_barnesobs(imax,jmax,kmax                 ! I
      1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
@@ -734,7 +757,7 @@ csms$serial end
      1           ,n_var,ncnt_total,obs_barnes                            ! I
      1           ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1           ,varobs_diff_spread                                  ! O (aerr)
-     1           ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1           ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1           ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1           ,topo_dum,rland_frac_dum,1,1                            ! I
      1           ,n_obs_lvl,istatus)                                     ! O
@@ -760,7 +783,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 5 processor=',me
 
-csms$serial(<wt_p_spread, varobs_diff_spread, icount_radar_total, 
+csms$serial(<wt_p_radar, varobs_diff_spread, icount_radar_total, 
 csms$>                    out>:default=ignore) begin       
 
           mode = 2 ! Only multi-Doppler obs
@@ -781,7 +804,7 @@ csms$>                    out>:default=ignore) begin
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
-     1        ,wt_p_spread                                ! Input/Output
+     1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2) ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
@@ -803,18 +826,15 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
  401          format(1x,' Analyzing with ',i5
      1                 ,' multi-doppler grid points')     
 
-!             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-!             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
-
               call get_inst_err(imax,jmax,kmax,r_missing_data           ! I
-     1                         ,wt_p_spread,rms_thresh_norm             ! I
+     1                         ,wt_p_radar,rms_thresh_norm              ! I
      1                         ,rms_inst,rms_thresh)                    ! O
 
 csms$serial end
 
               call arrays_to_barnesobs(imax,jmax,kmax                   ! I
      1                                ,r_missing_data                   ! I
-     1                                ,varobs_diff_spread,wt_p_spread   ! I
+     1                                ,varobs_diff_spread,wt_p_radar    ! I
      1                                ,n_var,max_obs,obs_barnes         ! I/O
      1                                ,ncnt_total,weight_total          ! O
      1                                ,istatus)                         ! O
@@ -823,7 +843,7 @@ csms$serial end
      1          ,n_var,ncnt_total                                       ! I
      1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl! I   
      1          ,varobs_diff_spread                                     ! O (aerr)
-     1          ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1          ,wt_p_radar,fnorm_dum,n_fnorm_dum                       ! I
      1          ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const      ! I
      1          ,topo_dum,rland_frac_dum,1,1                            ! I
      1          ,n_obs_lvl,istatus)                                     ! O
@@ -845,7 +865,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 8 processor=',me
 
-csms$serial(<wt_p_spread , varobs_diff_spread, rms_thresh, out>
+csms$serial(<wt_p_radar , varobs_diff_spread, rms_thresh, out>
 csms$>                                     :default=ignore)  begin
 
 !         Make sure each level of uanl and vanl is initialized in the event it
@@ -887,7 +907,7 @@ csms$>                                     :default=ignore)  begin
      1        ,u_laps_bkg,v_laps_bkg                      ! Input
      1        ,weight_radar                               ! Input
      1        ,l_derived_output,l_grid_north              ! Input
-     1        ,wt_p_spread                                ! Input/Output
+     1        ,wt_p_radar                                 ! Input/Output
      1        ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)  ! I/O
      1        ,l_analyze,icount_radar_total               ! Output
      1        ,n_radarobs_tot_unfltrd                     ! Input
@@ -898,11 +918,8 @@ csms$>                                     :default=ignore)  begin
 
           write(6,*)' Calling barnes with single+multi radar obs added'       
 
-!         call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-!         call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
-
           call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
-     1                     ,wt_p_spread,rms_thresh_norm               ! I
+     1                     ,wt_p_radar,rms_thresh_norm                ! I
      1                     ,rms_inst,rms_thresh)                      ! O
 
 csms$insert      call nnt_me(me)
@@ -913,7 +930,7 @@ csms$insert      print *, 'got to 10 processor=',me
 
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,varobs_diff_spread,wt_p_radar    ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
@@ -923,7 +940,7 @@ csms$insert      print *, 'got to 10 processor=',me
      1       ,imax,jmax,kmax                                          ! I
      1       ,grid_spacing_m,rep_pres_intvl                           ! I
      1       ,varobs_diff_spread                                      ! O (aerr)
-     1       ,wt_p_spread,fnorm_dum,n_fnorm_dum                       ! I
+     1       ,wt_p_radar,fnorm_dum,n_fnorm_dum                        ! I
      1       ,l_analyze_dum,.false.,rms_thresh,weight_bkg_const       ! I
      1       ,topo_dum,rland_frac_dum,1,1                             ! I
      1       ,n_obs_lvl,istatus)                                      ! O
@@ -1064,7 +1081,7 @@ csms$serial end
      1  ,u_laps_bkg,v_laps_bkg                      ! Input
      1  ,weight_radar                               ! Input
      1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
+     1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
      1  ,l_analyze,icount_radar_total               ! Output
      1  ,n_radarobs_tot_unfltrd                     ! Input
@@ -1080,7 +1097,7 @@ csms$serial end
       real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
       real*4   uobs_diff_spread(imax,jmax,kmax)
      1        ,vobs_diff_spread(imax,jmax,kmax)
-      real*4   wt_p_spread(imax,jmax,kmax)
+      real*4   wt_p_radar(imax,jmax,kmax)
 
       real*4   vr_obs_fltrd(imax,jmax,kmax)                          ! Local
       real*4   upass1_buf(imax,jmax,kmax)                            ! Local
@@ -1129,7 +1146,7 @@ csms$ignore begin
      1  ,u_laps_bkg,v_laps_bkg                      ! Input
      1  ,weight_radar                               ! Input
      1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
+     1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
      1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
      1  ,vr_obs_fltrd                               ! Local
@@ -1151,7 +1168,7 @@ csms$ignore begin
      1  ,u_laps_bkg,v_laps_bkg                      ! Input
      1  ,weight_radar                               ! Input
      1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
+     1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
      1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
      1  ,vr_obs_fltrd                               ! Local
@@ -1180,7 +1197,7 @@ csms$ignore begin
               do k = 1,kmax
               do j = 1,jmax
               do i = 1,imax
-                  if(wt_p_spread(i,j,k) .eq. weight_radar)then
+                  if(wt_p_radar(i,j,k) .eq. weight_radar)then
                       upass1_buf(i,j,k) = uobs_diff_spread(i,j,k)
                       vpass1_buf(i,j,k) = vobs_diff_spread(i,j,k)
                   endif
@@ -1199,7 +1216,7 @@ csms$ignore begin
           if(mode .eq. 1)then ! Use all Doppler obs
               do j = 1,jmax
               do i = 1,imax
-                  if(wt_p_spread(i,j,k) .eq. weight_radar)then ! Good single or multi ob
+                  if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
                       icount_good_lvl = icount_good_lvl + 1
                   endif
               enddo ! i
@@ -1207,11 +1224,11 @@ csms$ignore begin
           elseif(mode .eq. 2)then ! Throw out single Doppler obs
               do j = 1,jmax
               do i = 1,imax
-                  if(wt_p_spread(i,j,k) .eq. weight_radar)then ! Good single or multi ob
+                  if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
                       if(.not. l_good_multi_doppler_ob(i,j,k))then
                           uobs_diff_spread(i,j,k) = r_missing_data
                           vobs_diff_spread(i,j,k) = r_missing_data
-                          wt_p_spread(i,j,k) = r_missing_data
+                          wt_p_radar(i,j,k) = r_missing_data
                       else
                           icount_good_lvl = icount_good_lvl + 1
                       endif
@@ -1256,7 +1273,7 @@ csms$ignore end
      1  ,u_laps_bkg,v_laps_bkg                      ! Input
      1  ,weight_radar                               ! Input
      1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
+     1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
      1  ,n_radarobs_tot_unfltrd                     ! Input
      1  ,vr_obs_fltrd                               ! Local
@@ -1270,7 +1287,7 @@ csms$ignore end
       real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
       real*4   uobs_diff_spread(imax,jmax,kmax)
      1        ,vobs_diff_spread(imax,jmax,kmax)
-      real*4   wt_p_spread(imax,jmax,kmax)
+      real*4   wt_p_radar(imax,jmax,kmax)
       real*4   vr_obs_fltrd(imax,jmax,kmax)
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax),l_derived_output
@@ -1293,8 +1310,8 @@ csms$ignore begin
         do j=1,jmax
         do i=1,imax
             if(vr_obs_unfltrd(i,j,k) .ne. r_missing_data)then
-                if(wt_p_spread(i,j,k) .ne. weight_radar .and.
-     1     wt_p_spread(i,j,k) .ne. r_missing_data)then ! Non-radar ob
+                if(wt_p_radar(i,j,k) .ne. weight_radar .and.
+     1     wt_p_radar(i,j,k) .ne. r_missing_data)then ! Non-radar ob
                     vr_obs_unfltrd(i,j,k) = r_missing_data
                     i_radar_reject = i_radar_reject + 1
                 else
@@ -1441,7 +1458,7 @@ c  convert radar obs into u & v by using tangential component of first pass
 !                 This checks for multi Doppler when mode = 2. Note that the
 !                 geometry of the multi-Doppler measurements is not yet considered
                   if(mode .eq. 2)then
-                      if(wt_p_spread(i,j,k) .eq. weight_radar)then
+                      if(wt_p_radar(i,j,k) .eq. weight_radar)then
                           l_good_multi_doppler_ob(i,j,k) = .true.
                       endif
                   endif
@@ -1458,7 +1475,7 @@ c  convert radar obs into u & v by using tangential component of first pass
 321                   format(1x,3i4,2f6.1,2f6.1)
                   endif
 
-                  wt_p_spread(i,j,k) = weight_radar
+                  wt_p_radar(i,j,k) = weight_radar
 
                 endif
 
