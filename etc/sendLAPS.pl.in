@@ -31,10 +31,14 @@ my $root = "$LAPS_DATA_ROOT/lapsprd";
 my $feed="FSL2";
 my $sendscript = "$LAPSROOT/etc/SendFile2LDM";
 my @fext=("fua","fsf");
-my $key = "LAPB.netCDF.B52.SFM.";
+my $host = uc `hostname`;
+chomp($host);
+$host =~ /([^\.]+)\.*/;
+$host = $1;
+my $key = "LAPB.netCDF.$host.SFM.";
 
 
-if(`hostname` =~ /b52/){
+if($host =~ /B52/){
     if($LAPS_DATA_ROOT=~/data1/){
 	$key.="G1.";
     }else{
@@ -99,7 +103,7 @@ sub sendfile{
     next if(-M "$root/$fext/$_" > $prevtime);
     print "Found file $_\n"; 
     
-    system("$sendscript -k $key -t $feed -l $LAPS_LOG_PATH -f $root/$fext/$_");
+    run_sys::run_sys("$sendscript -k $key -t $feed -l $LAPS_LOG_PATH -f $root/$fext/$_",1);
     
   }
 #  print TMP gmtime;
