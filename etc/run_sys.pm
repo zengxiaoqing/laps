@@ -20,24 +20,23 @@ package run_sys;
 require 5.002;
 require Exporter;
 
-
 @run_sys::ISA = qw(Exporter);
 
 @EXPORT = qw(run_sys);
 use strict;
 
 sub run_sys{
-    my($sys) = @_;
+    my($sys,$noexit) = @_;
     my $rc = 0xffff & system($sys);
     if($rc == 0){
 	print "$sys completed \n";
     }elsif($rc == 0xff00){
 	print "ERROR: $rc Command $sys failed: $! ";
-	exit;
+	exit unless($noexit);
     }elsif($rc > 0x80){
 	$rc >>= 8; 
 	print "ERROR: $sys returned non-zero exit status $rc\n";
-        exit;
+        exit unless($noexit);
     }else{
 	print "ERROR: $sys ran with ";
 	if($rc & 0x80){
@@ -45,7 +44,7 @@ sub run_sys{
 	    print "coredump from ";
 	}
 	print "signal $rc\n";
-	exit -1;
+	exit -1 unless($noexit);
     }
     return 1;
 }
