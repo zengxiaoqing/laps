@@ -49,7 +49,7 @@ my(@lapsDirs) = qw( lga lgb lvd/goes08 lvd/goes10
                   lc3 lps lcb lcv  
                   lsr/goes08 lsr/goes10 lh3 lh4 lq3 
                   lcp lwc lil lct lmd lmt lco lrp lty lst 
-                  lmr lf1 liw lhe 
+                  lmr liw lhe 
                   l1s lm1 lm2
                   balance/lt1 balance/lw3 balance/lh3 bigfile
                   dprep fsf fua);
