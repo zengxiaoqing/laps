@@ -163,6 +163,10 @@
               TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
               TRIM(ext(loop))
           ENDIF
+        ELSE
+          input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
+              TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
+              TRIM(ext(loop)) 
         ENDIF
       ENDIF
       PRINT *, 'Opening: ', input_laps_file
