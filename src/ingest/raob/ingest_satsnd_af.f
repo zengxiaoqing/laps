@@ -201,8 +201,11 @@
               endif
 
 !             Convert rh(lvl) to dewpoint?
-!             dewpoint_c = dwpt(temp_c,rh(lvl))
-              dewpoint_c = r_missing_data
+              if(rh(lvl) .gt. 0. .and. rh(lvl) .le. 100.)then
+                  dewpoint_c = dwpt(temp_c,rh(lvl))
+              else
+                  dewpoint_c = r_missing_data
+              endif
 
               if(abs(rheight(lvl)) .gt. 100000.)then
                   rheight(lvl) = r_missing_data
