@@ -62,6 +62,9 @@ cdis
      1     gps_data,
      1     gps_w,
      1     istatus_gps,
+     1     q_snd,
+     1     weight_snd,
+     1     raob_switch,
      1     ii,jj,kk             ! grid dimensions
      1     )
 
@@ -120,6 +123,9 @@ c     parameter list variables
       real gps_data(ii,jj)
       real gps_w (ii,jj)
       integer istatus_gps
+      real q_snd(ii,jj,kk)
+      real weight_snd(ii,jj,kk)
+      integer raob_switch
 
 
 c internal variables
@@ -240,6 +246,12 @@ c     common block for gps
       integer cost_gps_istatus
       real cost_gps_data
       real cost_gps_weight
+
+c     SND common block
+      common /cost_snd/cost_snd_data, cost_snd_wt,cost_snd_istatus
+      real cost_snd_data(500)
+      real cost_snd_wt(500)
+      integer cost_snd_istatus
       
 c     analysis of the factor field
       integer pn
@@ -647,9 +659,9 @@ c     Execute powell method correction of layer humidity in clear areas
             
             if (isnd.eq.1) then
                do k = 4,7
-                  if (rads(i,j,k) .eq. rmd) then
+                  if (rads(i,j,kanch(k)) .eq. rmd) then
                      print*, 'missing data in sounder channel ',
-     1                    k,' index ',i,j
+     1                    kanch(k),' index ',i,j
                      cost_rad_istatus = 0 ! fail using radiance
                   endif
                enddo
@@ -777,6 +789,22 @@ c     cost function data for gps
             cost_gps_data = gps_data(i,j)
             cost_gps_weight = gps_w (i,j)
             cost_gps_istatus = istatus_gps
+
+c     cost function data for SND, fill with mixing ratio
+
+            do k = 1,kk
+
+               if(q_snd(i,j,k).ne.rmd) then
+                  call sh2mr(q_snd(i,j,k)*1.e-3, ! change to g/g for call
+     1                 cost_snd_data(k),istatus)
+                  if(istatus.ne.1) cost_snd_data(k) = rmd
+               else
+                  cost_snd_data(k) = rmd
+               endif
+
+               cost_snd_wt(k) = weight_snd(i,j,k)
+            enddo
+            cost_snd_istatus = raob_switch
             
             
 c     executed variational search

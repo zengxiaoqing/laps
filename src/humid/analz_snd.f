@@ -171,7 +171,7 @@ c     all data now in the 2 arrays in question.
 c     next step is to distribute the data using existing routines
 
 
-      r50 = 150.e+3             !150km spatial influence
+
 
       do k = 1,kk
 
@@ -180,6 +180,7 @@ c     next step is to distribute the data using existing routines
             call prep_grid (ii,jj,rh_fields(1,1,k),nnn,
      1           points(1,1,k),pn(k),istatus)
             call slv_laplc (rh_fields(1,1,k),mask(1,1,k),ii,jj)
+            r50 = 45.e+3       !45km spatial influence
             call weight_field (w_field(1,1,k), mask(1,1,k), ii,jj,
      1           r50, istatus)
 

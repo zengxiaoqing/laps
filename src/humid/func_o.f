@@ -123,6 +123,12 @@ c     gps common
       integer cost_gps_istatus
       real cost_gps_data
       real cost_gps_weight
+
+c     SND common block
+      common /cost_snd/cost_snd_data, cost_snd_wt,cost_snd_istatus
+      real cost_snd_data(500)   !mixing ratio
+      real cost_snd_wt(500)
+      integer cost_snd_istatus
       
 
 c     local analogs to common block variables for input to parameters
@@ -147,6 +153,7 @@ c     local monitor variables
       real max_func_gvap3
       real max_func_cloud
       real max_func_gps
+      real max_func_snd
 
 c     lcal variables
 
@@ -182,6 +189,7 @@ c      endif
 
       func = 0.0                ! Default is start at minima
       max_func_rad = 0.0
+      max_func_snd = 0.0
 
 c     define G parameter
 
@@ -237,9 +245,33 @@ c     determine layer levels
       endif                     ! first_time
       
 c     fill local variables from common block for parameter list in ofm
+c     and now snd
 
-      if (cost_rad_istatus .eq. 1) then
+c     modify mixing ratio per predifined pressure layers.
+         
+      do i = 1,cost_kk
+         
+         if(i.lt. lvl700) then  ! sfc to 780
+            mr_l(i) = abs(x(1)) * cost_mr_l(i)
+         elseif (i.ge.lvl700 .and. i.le. lvl500) then ! 700 to 500
+            mr_l(i) = abs(x(2)) * cost_mr_l(i)
+         elseif (i.gt.lvl500 .and. i.le. lvl100) then ! between 475 and 100
+            
+c     the corresponding change must also be made in variational.f where
+c     this information is applied.
+            
+            mr_l(i) = abs(x(3))*cost_mr_l(i)
+c     1              ((abs(x(3))-1.)*(p(i)/500.) + 1.) *
+c     1              cost_mr_l(i)
+         else
+            mr_l(i) =  cost_mr_l(i)
+         endif
+         
+      enddo
       
+      
+      if (cost_rad_istatus .eq. 1) then
+         
          do i = 1, nlevel
             p(i) = cost_p(i)
             t_l(i) = cost_t_l(i)
@@ -252,27 +284,7 @@ c     fill local variables from common block for parameter list in ofm
          lat = cost_lat
          theta = cost_theta
          
-c     modify mixing ratio per predifined pressure layers.
-         
-         do i = 1,cost_kk
-            
-            if(i.lt. lvl700) then ! sfc to 780
-               mr_l(i) = abs(x(1)) * cost_mr_l(i)
-            elseif (i.ge.lvl700 .and. i.le. lvl500) then ! 700 to 500
-               mr_l(i) = abs(x(2)) * cost_mr_l(i)
-            elseif (i.gt.lvl500 .and. i.le. lvl100) then ! between 475 and 100
-               
-c     the corresponding change must also be made in variational.f where
-c     this information is applied.
 
-               mr_l(i) = abs(x(3))*cost_mr_l(i)
-c     1              ((abs(x(3))-1.)*(p(i)/500.) + 1.) *
-c     1              cost_mr_l(i)
-            else
-               mr_l(i) =  cost_mr_l(i)
-            endif
-            
-         enddo
          
 c     perform forward model computation for radiance
 c     here is the main call to optran in this whole module, the real
@@ -439,6 +451,23 @@ c         write(6,*) 'NO GPS in func'
       endif
 
       func = func + max_func_gps
+
+c     snd addition
+
+      if (cost_snd_istatus.eq.1) then
+         
+         do i = 1, cost_kk      ! all laps levels
+            
+            max_func_snd = max_func_snd +
+     1           (mr_l(i)-cost_snd_data(i))**2 * 
+     1           cost_snd_wt(i) !weighted squared difference
+
+         enddo
+            
+      endif
+
+            
+      func = func + max_func_snd
 
 c     print test output
 

@@ -210,6 +210,13 @@ c     initialize laps field
 c     call get_laps congif to fill common block used in pressure assignment
 c     routine
       
+      write (6,*) ' '
+      write (6,*) 'Release 12/12/2001 successfully incorporates'
+      write (6,*) '1) Variational inclusion of .SND data'
+      write (6,*) '2) Bug fix to GOES sounder radiances in'
+      write (6,*) '   variational assimilation step'
+      write (6,*) ' '
+
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)
       call get_directory(extlt1,dirlt1,len)
@@ -368,10 +375,6 @@ c     initialize total pw to laps missing data flag
             gps_w(i,j) = 0.0
          enddo
       enddo
-
-      write(6,*) 'running NEW T_ref change' 
-
-
 
       jstatus(1) = 0
       jstatus(2) = 0            !%loc(rtsys_abort_prod)
@@ -615,27 +618,26 @@ c     ****  execute raob step if switch is on
          call snd_step (i4time,p_3d,raob_lookback, lat,lon,
      1        lt1dat, ii,jj,kk, q_snd,weight_snd, raob_switch)
          
-c     ---  as of 11/28/01 snd_step has been inserted for testing
-c     at this time it does nothing except read the same data that
-c     raobstep reads, but does nothing with it except prepare arrays
-c     for variational processing.  When fully implemented, raob_step
-c     will be removed.
+c     ---  as of 12/07/01 snd_step has been replaced raob_step
+c     Raob_step will be removed in the near future.
+c     The new snd_step routine is variational and also is set to use
+c     tower data for the RSA project.
 
-         call raob_step (i4time,data,p_3d, raob_lookback,
-     1        lat,lon, lt1dat, ii,jj,kk)
+c         call raob_step (i4time,data,p_3d, raob_lookback,
+c     1        lat,lon, lt1dat, ii,jj,kk)
          
          
-         write(6,*) 'Reporting effects of RAOB insertion'
+c         write(6,*) 'Reporting effects of RAOB insertion'
          
-         call report_change (data_in, data, p_3d, mdf,ii,jj,kk)
+c         call report_change (data_in, data, p_3d, mdf,ii,jj,kk)
          
-         do i = 1,ii
-            do j = 1,jj
-               do k  = 1,kk
-                  data_in(i,j,k) = data(i,j,k)
-               enddo
-            enddo
-         enddo
+c         do i = 1,ii
+c            do j = 1,jj
+c               do k  = 1,kk
+c                  data_in(i,j,k) = data(i,j,k)
+c               enddo
+c            enddo
+c         enddo
          
 c     end report moisture change block
          
@@ -938,6 +940,9 @@ c     make call to goes moisture insertion
      1           gps_data,
      1           gps_w,
      1           istatus_gps,
+     1           q_snd,
+     1           weight_snd,
+     1           raob_switch,
      1           ii,jj,kk
      1           )
             
