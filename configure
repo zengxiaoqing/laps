@@ -2803,7 +2803,6 @@ trap 'rm -fr `echo "src/lib/Makefile
           src/ingest/acars/Makefile
           src/ingest/pireps/Makefile
           src/ingest/profiler/Makefile
-          src/ingest/profiler/blp/Makefile
           src/ingest/radar/ingest_rrv/Makefile
           src/ingest/radar/remap/Makefile
           src/ingest/radar/vad/Makefile
@@ -2950,7 +2949,6 @@ CONFIG_FILES=\${CONFIG_FILES-"src/lib/Makefile
           src/ingest/acars/Makefile
           src/ingest/pireps/Makefile
           src/ingest/profiler/Makefile
-          src/ingest/profiler/blp/Makefile
           src/ingest/radar/ingest_rrv/Makefile
           src/ingest/radar/remap/Makefile
           src/ingest/radar/vad/Makefile

@@ -46,7 +46,7 @@ INSTALL=@INSTALL@
 
 SRC=ingest_pro.f \
     ingest_sub_pro.f \
-    blp/ingest_sub_blppro.f
+    ingest_sub_blppro.f
 
 
 all: exe
@@ -78,4 +78,6 @@ install: exe
 
 
 ingest_sub_pro.f:  @NETCDFINC@/netcdf.inc $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+ingest_sub_blppro.f:  @NETCDFINC@/netcdf.inc $(LAPSROOT)/src/include/lapsparms.for@F77INC@
 

@@ -32,7 +32,7 @@ cdis
 
 
 
-        subroutine ingest_blppro(i4time,NX_L,NY_L,istatus)
+        subroutine ingest_blppro(i4time_sys,NX_L,NY_L,istatus)
 
 C       Michael Barth           12-Aug-1993
 C       Steve Albers               Nov-1993         Reworked for LAPS ingest
@@ -52,22 +52,22 @@ C       WPDN 60-minute RASS data in netCDF files.
 C
 C       NOTE: Profiler winds are written out in KNOTS
 
-        integer cdfid,status,i,j,n_levels,n_profilers,file_n_prof
-        parameter (n_levels = 150)
+        integer cdfid,status,i,j,max_levels_out,n_profilers,file_n_prof       
+        parameter (max_levels_out = 150)
         parameter (n_profilers = 1000)
 
 	parameter (max_modes = 3)
-	parameter (max_gates = 50)
+	parameter (max_levels = 50)
         character nmodes_short(4)
 	integer nmodes
         equivalence(nmodes,nmodes_short)
 
-        real u(max_modes,max_gates)
-        real v(max_modes,max_gates), prs
+        real u(max_modes,max_levels)
+        real v(max_modes,max_levels), prs
 
-        character*1 qc_flag(max_modes,max_gates)
+        character*1 qc_flag(max_modes,max_levels)
         character*4 c4_qc
-        real*4 level(max_modes,max_gates)
+        real*4 level(max_modes,max_levels)
 
         character ngates_short(max_modes*4)
         character tmpgates    (max_modes*4)
@@ -76,9 +76,9 @@ C       NOTE: Profiler winds are written out in KNOTS
 
         equivalence(ngates,tmpgates)
 
-        real ht_out(n_levels)
-        real di_out(n_levels)
-        real sp_out(n_levels)
+        real ht_out(max_levels_out)
+        real di_out(max_levels_out)
+        real sp_out(max_levels_out)
 
         integer good,bad,missing, start(2), count(2), staNamLen
         parameter (good = 0)
@@ -90,8 +90,6 @@ C       NOTE: Profiler winds are written out in KNOTS
 
         character*6 staname
         character*1 submode
-        character*6 pltc2_name
-        data pltc2_name/'PLTC2 '/
 
         character*100 fnam_in
         character*80 dir_in
@@ -129,6 +127,8 @@ C
         character*100 c_values_req
 
         character*6 prof_name(n_profilers)
+        character*9 a9_timeObs
+        double precision timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -154,7 +154,7 @@ C
             return
         endif
 
-        outfile = filename13(i4time,'pro')
+        outfile = filename13(i4time_sys,'pro')
         asc9_tim = outfile(1:9)
 C
 C       Open a 60-minute RASS netCDF file for 20:00:00.00 on Julian date 217,
@@ -199,12 +199,12 @@ C       Wait for the data
 
         write(6,*)c_filespec(1:80)
 
-        i4time_desired = i4time
+        i4time_desired = i4time_sys
 
         i4time_now = i4time_now_gg()
         i4_hour = (i4time_now/3600) * 3600
         minutes_now = (i4time_now - i4_hour) / 60
-        i4time_stop_waiting = i4time + 26 * 60
+        i4time_stop_waiting = i4time_sys + 26 * 60
         i4_wait_period = i4time_stop_waiting - i4time_now
 
         i4_check_interval = 10
@@ -247,7 +247,7 @@ C
 C       Open an output file.
 C
         ext = 'pro'
-        call open_lapsprd_file_append(1,i4time,ext,istatus)
+        call open_lapsprd_file_append(1,i4time_sys,ext,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening product file',ext
             return
@@ -319,8 +319,8 @@ C
 C       Get the surface pressure.  This time we'll use the
 C       5-character site name (plus a terminating blank) to select the station.
 C
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs,st
-     1atus)
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs
+     1                      ,status)
           if(status.ne.0)then
             if(status .eq. -3)then
                 write(6,*)prof_name(ista),' not found'
@@ -333,8 +333,9 @@ C
           write(6,*)
           write(6,*)prof_name(ista),' pressure ',prs
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat,sta       
-     1tus)
+!         Get the latitude
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+     1                      ,status)
           if(status.ne.0)then
                 write(6,*)' Warning: bad lat read ',status
                 return
@@ -342,14 +343,41 @@ C
           write(6,*)
           write(6,*)prof_name(ista),' Lat ',rlat
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon,sta
-     1tus)
+!         Get the longitude
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+     1                      ,status)
           if(status.ne.0)then
                 write(6,*)' Warning: bad lon read ',status
                 return
           endif
           write(6,*)
           write(6,*)prof_name(ista),' Lon ',rlon
+
+!         Get the observation time
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,timeObs       
+     1                      ,status)
+
+          if(status.ne.0)then
+              write(6,*)' Warning: bad timeObs read ',status,timeObs
+
+          elseif(abs(timeObs) .gt. 3d9)then
+              write(6,*)' Warning: Bad observation time',timeObs
+
+          else
+              call c_time2fname(nint(timeObs),a9_timeObs)
+
+              write(6,*)
+              write(6,*)' timeObs ',a9_timeObs
+
+              call cv_asc_i4time(a9_timeObs,i4time_ob)
+              i4_resid = abs(i4time_ob - i4time_sys)
+!             if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+              if(i4_resid .gt. 0)then
+                  write(6,*)' Warning, time is suspect '
+     1                     ,a9_timeObs,i4_resid       
+              endif
+
+          endif
 
           if(rlat .le. rnorth .and. rlat .ge. south .and.
      1       rlon .ge. west   .and. rlon .le. east            )then
@@ -407,7 +435,7 @@ C
                 return
             endif
 C
-C           Get the associated levels
+C           Get the associated levels for this profiler
 C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
      $                     level,status)
@@ -419,7 +447,7 @@ C
             write(6,*)prof_name(ista)
 
             n_good_levels = 0
-!           do i = 1, max_gates
+!           do i = 1, max_levels
 
             do im = 2,1,-1
 
@@ -453,7 +481,7 @@ C
 
                 mode_flag = 1
 
-!               Use mode 1 (100 km) only if it's above the highest good level 
+!               Use mode 1 (100 m) only if it's above the highest good level 
 !               from mode 2
                 if(n_good_levels .ge. 1 .and. im .eq. 1)then
                     if(height_msl .le. ht_out(n_good_levels))then
@@ -461,8 +489,10 @@ C
                     endif
                 endif
 
-                write(6,*)i,height_msl,u(im,i),v(im,i),' ',iqc_flag,iqc
-     1                   ,mode_flag,' ',c4_qc
+                write(6,251,err=252)i,height_msl,u(im,i),v(im,i)
+     1                             ,iqc_flag,iqc,mode_flag,c4_qc
+ 251            format(i3,f8.0,2f8.1,1x,2i3,i3,1x,a4)
+ 252            continue
 
                 if(  (.not.
      1                    (u(im,i) .gt. r_missing_data      .or. 
@@ -481,8 +511,10 @@ C
               enddo ! i
             enddo ! im
 
+            write(6,*)
+
             lag_time = 1800
-            i4time_ob = i4time - lag_time
+            i4time_ob = i4time_sys - lag_time
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 

@@ -32,7 +32,7 @@ cdis
 
 
 
-        subroutine ingest_pro(i4time,NX_L,NY_L,istatus)
+        subroutine ingest_pro(i4time_sys,NX_L,NY_L,istatus)
 
 C       Michael Barth           12-Aug-1993
 C       Steve Albers               Nov-1993         Reworked for LAPS ingest
@@ -52,12 +52,15 @@ C       WPDN 60-minute RASS data in netCDF files.
 C
 C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
 
-        integer cdfid,status,i,j,max_levels,n_profilers,file_n_prof
+        integer cdfid,status,i,j,max_levels,max_levels_out,n_profilers
+     1         ,file_n_prof
         parameter (max_levels = 72)
+        parameter (max_levels_out = 72)
         parameter (n_profilers = 33)
 
         real u(max_levels),v(max_levels),prs
-        real ht_out(max_levels),di_out(max_levels),sp_out(max_levels)
+        real ht_out(max_levels_out),di_out(max_levels_out)
+     1                             ,sp_out(max_levels_out)
 
         character*1 c1_qc_flag(max_levels)        ! for /public
         integer*4 i4_qc_flag(max_levels)          ! for WFO
@@ -96,7 +99,6 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         integer n_levels 
         include 'netcdf.inc'
         character*(MAXNCNAM) dimname 
-!       character*128 dimname
 C
 C       Set error handling mode.  Note that you don't have to do this, if this
 C       call isn't made, default error processing will occur:
@@ -120,6 +122,8 @@ C
         character*100 c_values_req
 
         character*6 prof_name(n_profilers)
+        character*9 a9_timeObs
+        double precision timeObs
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
@@ -149,7 +153,7 @@ C
                 return
         endif
 
-        outfile = filename13(i4time,'pro')
+        outfile = filename13(i4time_sys,'pro')
         asc9_tim = outfile(1:9)
 C
 C       Open a 60-minute RASS netCDF file for 20:00:00.00 on Julian date 217,
@@ -244,7 +248,7 @@ C           Determine file format by looking at the file name convention
         write(6,*)c_filespec(1:80)
 
 C       Wait for the data
-        i4time_desired = i4time
+        i4time_desired = i4time_sys
         i4_check_interval = 10
         i4_thresh_age = 3600
         i4time_now = i4time_now_gg()
@@ -299,7 +303,7 @@ C
 C
 C       Open an output file.
         ext = 'pro'
-        call open_lapsprd_file(1,i4time,ext,istatus)
+        call open_lapsprd_file(1,i4time_sys,ext,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening product file',ext
             return
@@ -344,12 +348,12 @@ C       Open an output file.
      1                prof_name(ista), staNamLen, status)
           prof_name(ista)(6:6) = ' '
 C
-C       Get the surface pressure for Platteville.  This time we'll use the
-C       5-character site name (plus a terminating blank) to select the station.
+C         Get the surface pressure for Platteville.  This time we'll use the
+C         5-character site name (plus a terminating blank) to select the station.
 C
-        CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs,st
-     1atus)
-        if(status.ne.0)then
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs
+     1                    ,status)
+          if(status.ne.0)then
             if(status .eq. -3)then
                 write(6,*)prof_name(ista),' not found'
                 goto 900
@@ -357,30 +361,58 @@ C
                 write(6,*)' Warning: bad pressure read ',status
                 return
             endif
-        endif
-        write(6,*)
-        write(6,*)prof_name(ista),' pressure ',prs
+          endif
+          write(6,*)
+          write(6,*)prof_name(ista),' pressure ',prs
 
-        CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat,sta
-     1tus)
-        if(status.ne.0)then
-                write(6,*)' Warning: bad lat read ',status
-                return
-        endif
-        write(6,*)
-        write(6,*)prof_name(ista),' Lat ',rlat
+!         Get the latitude
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+     1                      ,status)
+          if(status.ne.0)then
+              write(6,*)' Warning: bad lat read ',status
+              return
+          endif
+          write(6,*)
+          write(6,*)prof_name(ista),' Lat ',rlat
 
-        CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon,sta
-     1tus)
-        if(status.ne.0)then
-                write(6,*)' Warning: bad lon read ',status
-                return
-        endif
-        write(6,*)
-        write(6,*)prof_name(ista),' Lon ',rlon
+!         Get the longitude
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+     1                      ,status)
+          if(status.ne.0)then
+              write(6,*)' Warning: bad lon read ',status
+              return
+          endif
+          write(6,*)
+          write(6,*)prof_name(ista),' Lon ',rlon
 
-        if(rlat .le. rnorth .and. rlat .ge. south .and.
-     1     rlon .ge. west   .and. rlon .le. east            )then
+!         Get the observation time
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,timeObs       
+     1                      ,status)
+
+          if(status.ne.0)then
+              write(6,*)' Warning: bad timeObs read ',status,timeObs
+
+          elseif(abs(timeObs) .gt. 3d9)then
+              write(6,*)' Warning: Bad observation time',timeObs
+
+          else
+              call c_time2fname(nint(timeObs),a9_timeObs)
+
+              write(6,*)
+              write(6,*)' timeObs ',a9_timeObs
+
+              call cv_asc_i4time(a9_timeObs,i4time_ob)
+              i4_resid = abs(i4time_ob - i4time_sys)
+!             if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+              if(i4_resid .gt. 0)then
+                  write(6,*)' Warning, time is suspect '
+     1                     ,a9_timeObs,i4_resid       
+              endif
+
+          endif
+
+          if(rlat .le. rnorth .and. rlat .ge. south .and.
+     1       rlon .ge. west   .and. rlon .le. east            )then       
 
             write(6,*)prof_name(ista),' is in box'
 
@@ -456,7 +488,8 @@ C
             endif
 
 C
-C           Get the associated levels
+C           Get the associated levels for this profiler (also works with
+C           global data statement on NIMBUS)
 C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'levels',0,
      $                     level,status)
@@ -520,7 +553,7 @@ C
                 endif
             enddo ! i
 
-            i4time_ob = i4time - lag_time
+            i4time_ob = i4time_sys - lag_time
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
