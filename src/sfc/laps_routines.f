@@ -1887,7 +1887,8 @@ c
 	return
 	end
 
-        subroutine pstn_anal(mslp_bk,mslp,ni,nj,stnp_bk,stnp)
+        subroutine pstn_anal(back_mp,back_sp,mslp_bk,mslp,ni,nj
+     1                      ,stnp_bk,stnp)
 
 !       This routine solves for the 'stnp' analysis by assuming that ratio
 !       stnp/stnp_bk is equal to mslp/mslp_bk. This provides an indirect
@@ -1895,13 +1896,36 @@ c
 !       come up with a STNP analysis. We are thus feeding off of any MSLP obs
 !       that contributed to the MSLP analysis.
 
+        integer back_mp,back_sp
+
         real*4 mslp_bk(ni,nj)                                    ! I
         real*4 mslp(ni,nj)                                       ! I
+        real*4 mslp_diff(ni,nj)                                  ! L
         
         real*4 stnp_bk(ni,nj)                                    ! I
         real*4 stnp(ni,nj)                                       ! I/O
 
         call get_r_missing_data(r_missing_data,istatus)
+
+!       Check bounds of mslp/stnp fields
+        if(back_sp .eq. 1)then
+!           call array_diagnosis(stnp_bk,300.,1100.) ! ERROR
+        endif
+
+!       call array_diagnosis(mslp,850.,1100.) ! WARNING
+
+        if(back_mp .eq. 1)then
+!           call array_diagnosis(mslp_bk,850.,1100.) ! WARNING
+!           call diff(mslp,mslp_bk,mslp_diff,ni,nj)
+!           call array_diagnosis(mslp_diff,-50.,+50.) ! WARNING
+        endif
+
+        if(back_mp .ne. 1 .or. back_sp .ne. 1)then
+            write(6,*)' Skipping stnp adjustment'
+            return
+        endif
+
+        write(6,*)' Performing stnp adjustment using mslp/mslp_bk'
 
         do i = 1,ni
         do j = 1,nj

@@ -5,6 +5,7 @@ main                                           laps_sfc.f
         get_bkgwind_sfc                        laps_routines.f
         get_background_sfc                          "
         qcdata                                 qc_data.f
+           dev_ck                                   "
            bkg_chk                                  "
         mdat_laps                              mdatlaps.f
         lapsvanl                               lapsvanl.f
@@ -14,11 +15,13 @@ main                                           laps_sfc.f
             mean_pressure                           "
             spline (t,td)                      lapsvanl_sub.f
             spline (td)                             "
-            add                                     
+            add  
             spline (u,v)                       lapsvanl_sub.f
             nonlin                                  "
             frict                                   "
             leib                                    "
+            spline (mslp)                      lapsvanl_sub.f
+            pstn_anal                          laps_routines.f
             lp_fire_danger                          "
             heat_index                              "
             verify                                  "

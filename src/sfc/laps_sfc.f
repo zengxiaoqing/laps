@@ -178,7 +178,7 @@ c
 c
 	character atime_s*24
 	character store_amt(mxstn,5)*4
-        character stations(mxstn)*20, provider(mxstn)*11
+        character stations(mxstn)*20, provider(mxstn)*11,stn20*20      
         character reptype(mxstn)*6, autostntype(mxstn)*6
         character wx_s(mxstn)*25 
 c
@@ -357,8 +357,10 @@ c
 	   stn3(i)(1:3) = '   '
 	enddo !i
 c
-	do i=1,n_obs_b
-	   stn3(i)(1:3) = stations(i)(2:4)
+	do i=1,n_obs_b ! Put last three chars of large string into small string
+           stn20 = stations(i)
+           call right_justify(stn20)
+	   stn3(i) = stn20(18:20)
 	enddo !i
 c
 c.....	Find the i,j location of each station, then calculate the
@@ -568,7 +570,7 @@ c
 c.....	QC the surface data.
 c
 	if(use_lso_qc .eq. 1) then        !data already qc'd
-	   print *,' ** Using pre-QCd data...skipping LSX QC step.'
+	   print *,' ** Using pre-QCd LSO_QC...skipping LSX QC step.'       
 	   go to 521
 	endif
 	if(skip_internal_qc .eq. 1) then  !skip QC routine
@@ -693,8 +695,8 @@ c
 cx....	Now call MDATLAPS to put the data on the grid.
 c
 	call mdat_laps(i4time,atime,ni,nj,mxstn,laps_cycle_time,lat,
-     &     lon,topo,x1a,x2a,
-     &     y2a, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
+     &     lon,topo,x1a,x2a,y2a,redp_lvl,
+     &     lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
      &     alt_s, vis_s, stations, rii, rjj, ii, jj, n_obs_b, n_sao_g,
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk,
      &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
@@ -713,7 +715,7 @@ c.....	derived variables, etc.  The output file goes to the lapsprd
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-     &     itheta,laps_cycle_time,
+     &     itheta,redp_lvl,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,
@@ -734,3 +736,17 @@ c
 c
 	end
 
+
+        subroutine right_justify(string)
+
+        character*(*) string
+
+        call left_justify(string)
+
+        call s_len(string,len1)
+        len2 = len(string)
+
+        string(len2-len1+1:len2) = string(1:len1)
+
+        return
+        end        

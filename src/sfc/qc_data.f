@@ -175,13 +175,13 @@ c
      &      ffg_s(n)  .le.  200.               ) rely(12,m)=10
 c
 	 if(pstn_s(n) .ge.  500.          .and.
-     &      pstn_s(n) .le. 1200.               ) rely(13,m)=10
+     &      pstn_s(n) .le. 1100.               ) rely(13,m)=10
 c
 	 if(pmsl_s(n) .ge.  900.          .and.
-     &      pmsl_s(n) .le. 1200.               ) rely(14,m)=10
+     &      pmsl_s(n) .le. 1100.               ) rely(14,m)=10
 c
 	 if(alt_s(n)  .ge.  900.          .and.
-     &      alt_s(n)  .le. 1200.               ) rely(15,m)=10 
+     &      alt_s(n)  .le. 1100.               ) rely(15,m)=10 
 c
 c	 ** no climatological check on KLOUD_S **   rely(16,m)=imissing 
 c	 ** no climatological check on HGT_CEIL **  rely(17,m)=imissing 
@@ -209,7 +209,7 @@ c	 ** no climatological check on OBSTYPE_L **  rely_l(02,m)=imissing
 c	 ** no climatological check on LAT_L **      rely_l(03,m)=imissing
 c	 ** no climatological check on LON_L **      rely_l(04,m)=imissing
 c	 ** no climatological check on ELEV_L **     rely_l(05,m)=imissing
-c	 ** no climatological check on WX_L **           rely_l(06,m)=imissing
+c	 ** no climatological check on WX_L **       rely_l(06,m)=imissing
 c
 	 if(t_l(n)        .ge.   -50.      .and.
      &      t_l(n)        .le.   130.           ) rely_l(07,m)=10 
@@ -224,11 +224,11 @@ c
 	 if(ffg_l(n)      .ge.     0.      .and.
      &      ffg_l(n)      .le.   200.           ) rely_l(12,m)=10
 	 if(pstn_l(n)     .ge.   500.      .and.
-     &      pstn_l(n)     .le.  1200.           ) rely_l(13,m)=10
+     &      pstn_l(n)     .le.  1100.           ) rely_l(13,m)=10
 	 if(pmsl_l(n)     .ge.   900.      .and.
-     &      pmsl_l(n)     .le.  1200.           ) rely_l(14,m)=10
+     &      pmsl_l(n)     .le.  1100.           ) rely_l(14,m)=10
 	 if(alt_l(n)      .ge.   900.      .and.
-     &      alt_l(n)      .le.  1200.           ) rely_l(15,m)=10 
+     &      alt_l(n)      .le.  1100.           ) rely_l(15,m)=10 
 c
 c	 ** no climatological check on KLOUD_L **     rely_l(16,m)=imissing 
 c	 ** no climatological check on CEIL_L **      rely_l(17,m)=imissing 

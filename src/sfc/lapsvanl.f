@@ -32,7 +32,7 @@ cdis
 c
 c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
-     &     itheta,
+     &     itheta,redp_lvl,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,
@@ -762,7 +762,10 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 c
         if(back_mp .eq. 1. .and. back_sp .eq. 1 .and. .true.)then
             write(6,*)' Updating psfc field using mslp/mslp_bk'
-            call pstn_anal(mslp_bk,mslp,imax,jmax,sp_bk,psfc)
+            call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
+     1                                                 ,sp_bk,psfc)       
+        else
+            write(6,*)' Keeping psfc field from the background'
         endif
 c
 	print *,' '
