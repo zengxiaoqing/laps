@@ -146,8 +146,8 @@
 
           elseif(c8_drpsnd_format(1:5) .eq. 'SND')then
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'.snd'       
-              i4_contains_early = 1800
-              i4_contains_late  = 1800
+              i4_contains_early = 3600
+              i4_contains_late  = 3600
 
           elseif(c8_drpsnd_format(1:3) .eq. 'WFO')then
               filename13 = cvt_i4time_wfo_fname13(i4times(i))
@@ -318,7 +318,7 @@
 
       logical l_fill_ht, l_snd2
 
-      l_snd2 = .true.
+      l_snd2 = .false.
 
       lun_in = 59
       mode = 1
