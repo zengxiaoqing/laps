@@ -39,24 +39,6 @@
  moad_delta_y = 10000.,
 /
 
-&vgridspec
- verticalcoord = 'height',                   ! 'sigmap', 'pressure', 'height'
- moad_nz = 36,                               ! number of levels
- vertical_increment = 500.,                  ! vertical increment, set 
-                                             ! to 0 to explicitly specify levels
- vertical_stretch = 1.1,                     ! Stretch factor starting at ground
- max_vertical_inc = 1000.,                   ! Maximum allowed vertical_inc
- levels = 00000., 00050., 00100., 00150., 00200.,  ! Specified levels
-          00250., 00300., 00350., 00400., 00450.,  ! if vertical_inc <= 0
-          00500., 00600., 00700., 00800., 00900.,
-          01000., 01250., 01500., 01750., 02000.,
-          02500., 03000., 03500., 04000., 04500.,
-          05000., 06000., 07000., 08000., 09000.,
-          10000., 11000., 12000., 13000., 14000.,
-          15000., 
- vstagger_type = 'lorenz',                                 ! 'charney'
-/
-
 &sfcfiles
  topo_30s = '/projects/oplapb/geog/model/topo_30s',
  topo_10m = '/projects/oplapb/geog/model/topo_10m',
@@ -70,19 +52,37 @@
   new_levels_in_Pa =  ,
   sst_to_ice_threshold = -9999,
   linear_interpolation = .false., 
-  root = '/scratch/oplapb/wrf_si/FILE',
-  terrain_file_name = 'wrfstatic',
+  input_root = '/scratch/oplapb/wrf_si/FILE',
+  output_prefix = '/scratch/oplapb/wrf_si/hinterp_out'
+  terrain_file_name = '/scratch/oplapb/wrf_si/data/static/static.wrfsi',
   constants_full_name = 'sst_file:2000-02-16-09',
-  print_echo = .true., 
-  print_debug = .true.,
-  print_mask = .true.,
-  print_interp = .true.,
-  print_link_list_store = .true.,
-  print_array_store = .true., 
-  print_header = .true.,
-  print_output = .true., 
-  print_file = .true.,
-  print_f77_info=.true. 
+  verbose = .true.,     
+  static_in_output = .true.
+/
+
+&vinterp_control
+ input_prefix = 'hinterp_eta'
+ output_prefix = 'wrf_input_eta'
+ output_coord = 'ZETA',                      !
+ stagger_w = .true.
+ num_levels = 31,                            ! number of levels
+ vertical_increment = 100.,                  ! vertical increment, set
+                                             ! to 0 to explicitly specify levels
+ vertical_stretch = 1.1,                     ! Stretch factor starting at ground
+ max_vertical_inc = 1000.,                   ! Maximum allowed vertical_inc
+ max_top = 15000.,
+ use_specified_levels = .false.
+ levels = 00000., 00050., 00100., 00150., 00200.,  ! Specified levels
+          00250., 00300., 00350., 00400., 00450.,  ! if vertical_inc <= 0
+          00500., 00600., 00700., 00800., 00900.,
+          01000., 01250., 01500., 01750., 02000.,
+          02500., 03000., 03500., 04000., 04500.,
+          05000., 06000., 07000., 08000., 09000.,
+          10000., 11000., 12000., 13000., 14000.,
+          15000.,
+ verbose = .true.
+ output_nonwrf =.true.
+ print_setup_only = .false.
 /
 
 &paths_to_raw_data
