@@ -124,10 +124,13 @@ c      Determine filename extension
 !          Get filecount of 02 elevation raw files
            c2_tilt = '02'
            c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
-           call get_file_names(c_filespec,i_nbr_files_2nd,c_fnames
-     1                        ,max_files,istatus)
-           if(istatus .ne. 1)then
-               return
+
+           if(itimes .eq. 1)then
+               call get_file_names(c_filespec,i_nbr_files_2nd,c_fnames
+     1                            ,max_files,istatus)
+               if(istatus .ne. 1)then
+                   return
+               endif
            endif
 
            write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_2nd
@@ -145,8 +148,11 @@ c      Determine filename extension
 !          Get i4times of 01 elevation raw files
            c2_tilt = '01'
            c_filespec = path_to_radar(1:len_path)//'/*elev'//c2_tilt       
-           call get_file_times(c_filespec,max_files,c_fnames
-     1                        ,i4times_raw,i_nbr_files_raw,istatus)
+
+           if(itimes .eq. 1)then
+               call get_file_times(c_filespec,max_files,c_fnames
+     1                            ,i4times_raw,i_nbr_files_raw,istatus)
+           endif
 
            write(6,*)' # of 1st tilt raw files = ',i_nbr_files_raw
 
