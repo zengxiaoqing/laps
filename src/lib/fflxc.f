@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
 
-        SUBROUTINE FFLXC(NI,NJ,M,PHI0,SCALE,uh,vh,field,flxcnv,lat
+        SUBROUTINE FFLXC(NI,NJ,M,PHI0,SCALE,uh,vh,field,flxcnv,lat,lon 
      1  ,flu,flv,sigma,r_missing_data)
 
 !       Original Version S. Albers                      1986
@@ -40,7 +40,7 @@ cdis
 
         REAL M
         DIMENSION FIELD(ni,nj),FLU(ni,nj),FLV(ni,nj),SIGMA(ni,nj)
-        real UH(ni,nj),VH(ni,nj),FLXCNV(ni,nj),lat(ni,nj)
+        real UH(ni,nj),VH(ni,nj),FLXCNV(ni,nj),lat(ni,nj),lon(ni,nj)
         DATA  RPD/.0174532925/
 
 c       WRITE(6,18)
@@ -67,7 +67,7 @@ C       THIS VALUE REPRESENTS  (M*RHO(EARTH)*(1.+SIN(PHI0))/MPIN)**2
 !           SIGMA(I,J) = (1.+sind(PHI0)) / (1.+ sind(lat(i,j))) 
 !           sigma(i,j)=1.0
 
-            call get_sigma(lat(i,j),sigma(i,j),istatus)
+            call get_sigma(lat(i,j),lon(i,j),sigma(i,j),istatus)
             if(istatus .ne. 1)stop
 C
             FL=FIELD(I,J)/(COEFF*SIGMA(I,J))
@@ -128,7 +128,7 @@ C
         RETURN
         END
 
-        subroutine get_sigma(rlat,sigma,istatus)
+        subroutine get_sigma(rlat,rlon,sigma,istatus)
 
 !       Steve Albers
 !       Equations from Principles of Meteorological Analysis, Walter Saucier
@@ -138,6 +138,12 @@ C
         character*6 c6_maproj
 
         call get_standard_latitudes(slat1,slat2,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)'get_sigma: bad istatus'
+            return
+        endif
+
+        call get_standard_longitude(slon,istatus)
         if(istatus .ne. 1)then
             write(6,*)'get_sigma: bad istatus'
             return
@@ -155,6 +161,13 @@ C
         colat  = 90. - rlat
 
         if(c6_maproj .eq. 'plrstr')then ! polar stereo
+
+!           Rotate to arbitrary pole
+            polat = slat2
+            polon = slon
+            rlat_in = rlat
+            rlon_in = rlon
+            call GETOPS(rlat_in,rlon_in,rlat,rlon_dum,polat,polon)
 
             s = slat1 / abs(slat1)
 
