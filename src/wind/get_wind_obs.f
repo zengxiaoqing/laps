@@ -322,7 +322,7 @@ cdis
         logical l_profiler
 
         write(6,*)
-        write(6,*)' Subroutine remap profiler'
+        write(6,*)' Subroutine remap_profiles'
 
         do i_pr = 1,MAX_PR
             if(nlevels_obs_pr(i_pr) .gt. 0)then
@@ -330,6 +330,7 @@ cdis
      1                                  ,lat,lon,ni,nj,ri,rj,istatus)       
                 if(istatus .ne. 1)then
                     write(6,*)' NOTE... Profile is outside domain'  
+     1                       ,i_pr,i_ob,j_ob
 
                 else ! inside domain
                     i_ob = nint(ri)
@@ -368,8 +369,14 @@ cdis
                         endif ! In bounds vertically (of profile data)
                    enddo ! level
                endif ! istatus
+
+            else
+               write(6,*)' Zero levels in profile',i_pr,i_ob,j_ob
+
             endif ! data present
+
         enddo ! i_pr
+
         I4_elapsed = ishow_timer()
 
         istatus = 1
