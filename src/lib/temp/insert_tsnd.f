@@ -134,6 +134,7 @@ cdis
         endif
 
         n_good_tsnd = 0
+        n_bad_tsnd = 0
 
         n_obs = 0
 
@@ -292,6 +293,7 @@ cdis
                 write(6,*)' l_qc =      ',l_qc
                 write(6,*)' l_flag_vv = ',l_flag_vv
                 l_good_tsnd(i_tsnd) = .false.
+                n_bad_tsnd = n_bad_tsnd + 1
                 do k = 1,nk
                     bias_tsnd(i_tsnd,k) = r_missing_data
                 enddo ! k
@@ -305,7 +307,9 @@ cdis
 
         enddo ! i_tsnd
 
-        write(6,*)'n_good_tsnd = ',n_good_tsnd
+        write(6,*)' # of TSND stations passing QC = ',n_good_tsnd
+        write(6,*)' # of TSND stations failing QC = ',n_bad_tsnd
+
         write(6,*)' # of obs in data structure (tsnds only) = '
      1            ,n_obs
 
@@ -314,13 +318,15 @@ cdis
         write(6,*)' # of obs in data structure (tsnds + acars) = '
      1            ,n_obs
 
-        call analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd
-     1      ,weight_bkg_const                                  ! Input
-     1      ,grid_spacing_m,max_snd_grid                       ! Input
-     1      ,temp_obs,max_obs,n_obs                            ! Input
-     1      ,r_missing_data                                    ! Input
-     1      ,l_3d                                              ! Input
-     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
+        call analyze_tsnd(n_tsnd,ni,nj,nk,l_good_tsnd          ! I
+     1      ,weight_bkg_const                                  ! I
+     1      ,grid_spacing_m,max_snd_grid                       ! I
+     1      ,temp_obs,max_obs,n_obs                            ! I
+     1      ,r_missing_data                                    ! I
+     1      ,l_3d                                              ! I
+     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd           ! I
+     1      ,temp_3d                                           ! I/O
+     1      ,istatus)                                          ! O
 
         if(istatus .ne. 1)then
             write(6,*)' Bad istatus returned from analyze_tsnd'
@@ -332,13 +338,15 @@ cdis
         end
 
 
-        subroutine analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd     
-     1      ,weight_bkg_const                                  ! Input
-     1      ,grid_spacing_m,max_snd_grid                       ! Input
-     1      ,temp_obs,max_obs,n_obs                            ! Input
-     1      ,r_missing_data                                    ! Input
-     1      ,l_3d                                              ! Input
-     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
+        subroutine analyze_tsnd(n_tsnd,ni,nj,nk,l_good_tsnd       ! I     
+     1      ,weight_bkg_const                                     ! I
+     1      ,grid_spacing_m,max_snd_grid                          ! I
+     1      ,temp_obs,max_obs,n_obs                               ! I
+     1      ,r_missing_data                                       ! I
+     1      ,l_3d                                                 ! I
+     1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd              ! I
+     1      ,temp_3d                                              ! I/O
+     1      ,istatus)                                             ! I
 
 !       Original Version        Steve Albers
 
@@ -367,9 +375,7 @@ cdis
 
         if(.true.)then ! Use Barnes analysis routine (multi-TSND)
 
-          if(n_good_tsnd .gt. 0)then
-             write(6,*)' # of TSND stations passing QC = ',n_good_tsnd
-
+          if(n_obs .gt. 0)then
            ! This is in effect a single pass Barnes with a spatially varying
            ! radius of influence to account for clustering of data
 
@@ -411,10 +417,10 @@ cdis
              enddo ! k
 
           else
-             write(6,*)' No Good TSND data, Barnes skipped'
+             write(6,*)' No Good Obs Data, Barnes skipped'
              istatus = 1
 
-          endif ! N GOOD TSNDes > 0
+          endif ! N GOOD OBS > 0
 
         endif ! Do Barnes
 
@@ -456,7 +462,7 @@ cdis
 
         integer*4  n_fnorm
 
-        data l_struct /.false./
+        data l_struct /.true./
 
         dimension fnorm(0:n_fnorm)
 

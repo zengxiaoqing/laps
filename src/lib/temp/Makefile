@@ -29,7 +29,7 @@ DEBUGLIB = libdebugtemp.a
 
 
 
-SRC=insert_tsnd.f   puttmpanal.f    read_tsnd.f \
+SRC=insert_tsnd.f   puttmpanal.f    read_tsnd.f  read_acars_t.f \
     interp_tobs.f   interp_rass.f   adjust_heights.f
 
 
