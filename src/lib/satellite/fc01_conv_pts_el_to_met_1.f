@@ -158,11 +158,20 @@ C#
          IF(YR .GE. 0.0) YR = INT(PY / (DELTAY * LPSI2)) + 0.5
          IF(YR .LT. 0.0) YR = INT(PY / (DELTAY * LPSI2)) - 0.5
 
-         X_COORD = (XR + 1250.5)*radjust
-         Y_COORD = (YR + 1250.5)*radjust
-
+         X_COORD = (XR + 1250.0)*radjust
+         Y_COORD = (YR + 1251.0)*radjust
+c
+c compute file relative x/y coordinate positions.
+c
+         X_COORD = X_COORD/DECIMAT
          X_COORD = STOP_PIX-X_COORD
-         Y_COORD = (Y_COORD-FSCI)/DECIMAT + 0.5 - START_LINE
+
+         Y_COORD = Y_COORD - FSCI
+         Y_COORD = Y_COORD/DECIMAT + 0.5
+         Y_COORD = Y_COORD - START_LINE
+
+C        Y_COORD = ((Y_COORD-(FSCI/radjust))/DECIMAT)+0.5-START_LINE
+
       END IF
 
 99999 RETURN
