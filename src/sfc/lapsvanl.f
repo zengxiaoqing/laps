@@ -450,6 +450,7 @@ c.....	Now call the solution algorithm for the tb8 data.
 c
 	print *,'  At spline call for tb8'
 	name = 'TB8   '	
+	call zero(tb8, imax,jmax)
         call spline(tb8,tb81,z,alf,z,beta,0.,z,cormax,.3,imax,jmax,
      &        roi,bad_tb8,imiss,mxstn,obs_error_tb8,name)
 	if(imiss .ne. 0) ibt = 0 ! all zeros in tb8 array
@@ -458,7 +459,10 @@ c.....	Now force the t analysis with the tb8 and background data.
 c
 	name = 'NOPLOT'	
 	gamma = 5.
-	if(ibt .eq. 0) gamma = 0.		! data not there
+	if(ibt .eq. 0) then	! data not there
+	   call zero(tb8, imax,jmax)
+	   gamma = 0.
+	endif
 	print *,'  At spline call for t'
         call spline(t,t1,t_bk,alf,wt_t,beta,gamma,tb8,cormax,.3,imax,
      &        jmax,roi,bad_t,imiss,mxstn,obs_error_t,name)
