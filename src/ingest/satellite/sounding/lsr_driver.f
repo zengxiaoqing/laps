@@ -2,15 +2,15 @@
 c
       include      'lapsparms.cmn'
 
-      integer*4     max_sat
-      integer*4     max_ch
+      integer     max_sat
+      integer     max_ch
       parameter     (max_sat=2,max_ch=19)
-      integer*4     n_elems(max_sat)
-      integer*4     n_lines(max_sat)
-      integer*4     ismsng
+      integer     n_elems(max_sat)
+      integer     n_lines(max_sat)
+      integer     ismsng
       
       real*4        r_channel_wavelengths(max_ch,max_sat)
-      character     c_sat_id(max_sat)*6
+      character     c_sat_id(max_sat)*5
       character     c_sounding_path(max_sat)*200
       character     cmode*10
 
@@ -77,19 +77,19 @@ c
 c
       implicit none
 c
-      integer*4     i_sat
-      integer*4     nlines
-      integer*4     nelems
-      integer*4     nx_l,ny_l
-      integer*4     n_channels
+      integer     i_sat
+      integer     nlines
+      integer     nelems
+      integer     nx_l,ny_l
+      integer     n_channels
 
-      integer*4     icnt(n_channels)
-      integer*4     jcnt(n_channels)
-      integer*4     icount
-      integer*4     ismsng
+      integer     icnt(n_channels)
+      integer     jcnt(n_channels)
+      integer     icount
+      integer     ismsng
 
-      integer*4     ndimx(nlines)
-      integer*4     ndimy,ndimch
+      integer     ndimx(nlines)
+      integer     ndimy,ndimch
 
       Real*8        orbitAttitude(336)
       Real*8        lineTimeBeg(nlines,n_channels)
@@ -124,27 +124,27 @@ c
       real*4        scalingBias(nlines,n_channels)
       real*4        scalingGain(nlines,n_channels)
 
-      Integer*2     ewCycles,ewIncs
-      Integer*2     nsCycles,nsIncs
-      Integer*2     nw_pix,nw_line
-      Integer*4     istatus
-      Integer*4     iostatus
-      Integer*4     mstatus
-      Integer*4     i,j,k,n
-      Integer*4     lend
-      Integer*4     time_spec(2)
-      Integer*4     imcI4
-      Integer*4     int4(2)
-      Integer*4     imax,jmax
-      Integer*4     i4time_data
-      Integer*4     i4time_data_orig
-      Integer*4     imaximum(n_channels)
-      Integer*4     iminimum(n_channels)
-      Integer*4     i2_missing_data
-      Integer*4     ltindex
+      Integer     ewCycles,ewIncs
+      Integer     nsCycles,nsIncs
+      Integer     nw_pix,nw_line
+      Integer     istatus
+      Integer     iostatus
+      Integer     mstatus
+      Integer     i,j,k,n
+      Integer     lend
+      Integer     time_spec(2)
+      Integer     imcI4
+      Integer     int4(2)
+      Integer     imax,jmax
+      Integer     i4time_data
+      Integer     i4time_data_orig
+      Integer     imaximum(n_channels)
+      Integer     iminimum(n_channels)
+      Integer     i2_missing_data
+      Integer     ltindex
 c
-      Integer*4     instr
-      Integer*4     isndrdata(nelems,nlines,n_channels)
+      Integer     instr
+      Integer     isndrdata(nelems,nlines,n_channels)
       REAL*8        wavelength(n_channels)
       Character*1   imc(4)
       Character*100 filename
@@ -158,7 +158,7 @@ c
       character*150 dir_static
       Character     cmode*10
       Character     f9time*9
-      Character     c_sat_id*6
+      Character     c_sat_id*5
       Character     cid*2
 c =============================================================
 c
@@ -296,11 +296,6 @@ c
         rsg=scalingGain(1,k)
 
         write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
-        if(rsb.eq.0.or.rsg.eq.0.0)then
-           write(*,*)'WARNING: rsg or rsg = 0.0'
-           goto 875
-        endif
-
         do j=1,ndimy
         do i=1,ndimx(j)
 
@@ -321,11 +316,10 @@ c
         write(6,*)'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
         write(6,*)
 
-875     enddo
+      enddo
 c 
 c Determine representative time 11-14-97 (J.Smart)
 c
-      i4time_data_orig=i4time_data
       rmintime=9999999999.
       rmaxtime=0.
       do j=1,ny_l
@@ -340,18 +334,9 @@ c
          endif
       enddo
       enddo
-
       write(6,*)'max/min line times ',rmaxtime,rmintime
-
-      if(rmintime.le.0.or.rmaxtime.le.0)then
-         if(rmintime.le.0.and.rmaxtime.gt.0)then
-            i4time_data=((nint(rmaxtime)+315619200)+i4time_data_orig)/2.0
-         elseif(rmintime.gt.0.and.rmaxtime.le.0)then
-            i4time_data=((nint(rmintime)+315619200)+i4time_data_orig)/2.0
-         endif
-      else
-         i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
-      endif
+      i4time_data_orig=i4time_data
+      i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
 c
 c remap to laps domain
 c

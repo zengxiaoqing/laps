@@ -6,17 +6,17 @@ c data channel
 c
       implicit none
 
-      integer*4 i,j,k
-      integer*4 ndimch,ndimy,ndimx(jmax)
-      integer*4 imax,jmax,nch
-      integer*4 istatus
-      integer*4 isndrdata(imax,jmax,nch)
-      integer*4 imaximum(nch)
-      integer*4 iminimum(nch)
-      integer*4 i2_missing_data
-      integer*4 maxthresh
-      integer*4 icntm(nch)
-      integer*4 icnteth(nch)
+      integer i,j,k
+      integer ndimch,ndimy,ndimx(jmax)
+      integer imax,jmax,nch
+      integer istatus
+      integer isndrdata(imax,jmax,nch)
+      integer imaximum(nch)
+      integer iminimum(nch)
+      integer i2_missing_data
+      integer maxthresh
+      integer icntm(nch)
+      integer icnteth(nch)
 
       call get_i2_missing_data(i2_missing_data,istatus)
       if(istatus.ne.1)goto 999

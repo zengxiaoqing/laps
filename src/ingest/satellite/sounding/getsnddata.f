@@ -1,4 +1,4 @@
-	subroutine get_sounding_data_cdf(csat_id,
+      subroutine get_sounding_data_cdf(csat_id,
      &                         c_sounding_path,
      &                         i4time_latest,
      &                         c_filename_sat,
@@ -40,12 +40,12 @@ c                     Modify for dynamic memory;
 c                     Modify to accept both goes8 and goes9.
       implicit none
 
-      integer*4     max_files
+      integer     max_files
       parameter    (max_files=100)
-      integer*4     i_snddata_age
+      integer     i_snddata_age
       parameter    (i_snddata_age=20000)
-      integer*4     nch
-      integer*4     nelems,nlines
+      integer     nch
+      integer     nelems,nlines
 
       character*255 c_filename_sat
       character*255 c_filename_lsr
@@ -56,30 +56,30 @@ c                     Modify to accept both goes8 and goes9.
       character*9   c_filetime_sat
       character*9   c_filetime_lsr
       character*9   c_fname
-      character*6   csat_id
+      character*5   csat_id
 
-      integer*4     i,j,k,n,jj
-      integer*4     istatus
-      integer*4     mstatus
-      integer*4     gfn_status
-      integer*4     nfiles_sat
-      integer*4     numoffiles
+      integer     i,j,k,n,jj
+      integer     istatus
+      integer     mstatus
+      integer     gfn_status
+      integer     nfiles_sat
+      integer     numoffiles
 c     integer*4     nfiles_lsr
 c     integer*4     icnt
-      integer*4     lend
-      integer*4     ndimy,ndimch
-      integer*4     ndimx(nlines)
-      integer*4     imcI4
+      integer     lend
+      integer     ndimy,ndimch
+      integer     ndimx(nlines)
+      integer     imcI4
 c     integer*4     nlsr
-      integer*4     itstatus
-      integer*4     init_timer
-      integer*4     ishow_timer
+      integer     itstatus
+      integer     init_timer
+      integer     ishow_timer
 
-      integer*4     i4time
-      integer*4     i4time_proc
-      integer*4     i4time_latest
-      integer*4     i4time_nearest_lsr
-      integer*4     i4time_now_gg
+      integer     i4time
+      integer     i4time_proc
+      integer     i4time_latest
+      integer     i4time_nearest_lsr
+      integer     i4time_now_gg
 c     integer*4     i4time_lsr(max_files)
 c     integer*4     i4time_sat(max_files)
 
@@ -90,11 +90,11 @@ c     integer*4     i4time_sat(max_files)
       Real*4        scalingBias(nlines,nch)
       Real*4        scalingGain(nlines,nch)
 
-      Integer*2     ewCycles,ewIncs
-      Integer*2     nsCycles,nsIncs
-      Integer*2     nw_pix,nw_line
+      Integer     ewCycles,ewIncs
+      Integer     nsCycles,nsIncs
+      Integer     nw_pix,nw_line
 c
-      Integer*4     i4snddata(nelems,nlines,nch)
+      Integer     i4snddata(nelems,nlines,nch)
       REAL*8        wavelength(nch)
       Character*1   imc(4)
 c
@@ -107,6 +107,8 @@ c the _sdr file at ~ 45 or 46 past the hour..
 c
       i4time_proc=i4time_now_gg()
 
+      call get_directory('lsr',c_lsr_dir,lend)
+
       n=index(c_sounding_path,' ')-1
       c_filename_sat=c_sounding_path(1:n)//'*_sdr'
       call get_file_names(c_filename_sat,numoffiles,c_filename
@@ -115,14 +117,14 @@ c
       do i = 1,numoffiles
          j=index(c_filename(i),' ')-5
          jj=j-8
-         if(csat_id.eq.'goes08')then
+         if(csat_id.eq.'goes8')then
             if(c_filename(i)(j-1:j-1).eq.'4')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
                   i4time_latest = i4time
                endif
             endif
-         elseif(csat_id.eq.'goes09')then
+         elseif(csat_id.eq.'goes9')then
             if(c_filename(i)(j-1:j-1).eq.'0')then
                call cv_asc_i4time(c_filename(i)(jj:j),i4time)
                if(i4time.gt.i4time_latest)then
@@ -150,10 +152,8 @@ c
       endif
 c
 c We have "current" data. Determine if it has already been processed.
-c Get latest lsr file (ie., in lapsprd/lsr/"csat_id")
+c Get latest lsr file (ie., in lapsprd/lsr)
 c
-      call get_directory('lsr',c_lsr_dir,lend)
-      c_lsr_dir=c_lsr_dir(1:lend)//'/'//csat_id
       call get_file_time(c_lsr_dir,i4time_proc,
      +i4time_nearest_lsr)
 

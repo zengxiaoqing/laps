@@ -43,20 +43,20 @@ c                        addition to missing sat pixels
 c
         implicit none
 c
-        integer*4 nx,ny,i,j,n
-        integer*4 ii,jj
-        integer*4 ndimx(ny)
-        integer*4 ndimy
-        integer*4 istatus
-        integer*4 mstatus
-        integer*4 istat_status
-        integer*4 imiss_status
-        integer*4 image_in(nx,ny)
-        integer*4 image_temp(nx,ny)
+        integer nx,ny,i,j,n
+        integer ii,jj
+        integer ndimx(ny)
+        integer ndimy
+        integer istatus
+        integer mstatus
+        integer istat_status
+        integer imiss_status
+        integer image_in(nx,ny)
+        integer image_temp(nx,ny)
         real*4    data(125)
         real*4    ave,adev,sdev,var,skew,curt
-        integer*4 ismsng
-        integer*4 i2_missing_data
+        integer ismsng
+        integer i2_missing_data
 c
 c note that this quality control step is performed on sounder counts
 c

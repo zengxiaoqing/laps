@@ -19,71 +19,66 @@
 c
 c
       implicit none
-
-      integer*4 irec_max
+      include 'netcdf.inc'
+      integer irec_max
       parameter (irec_max=5000)
 
-      Integer*4  NVARS
+      Integer  NVARS
       PARAMETER (NVARS=60) !NUMBER OF VARIABLES
 C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 60
-      INTEGER*4 RCODE
+      INTEGER RCODE
 C     ****VARIABLES FOR THIS NETCDF FILE****
 c
 c the following declarations are for testing using the original netCDF read
 c routine. Ie., read the entire array all at once
 c
 
-      Integer*4   imax,jmax,nch
-      Integer*4   sounding(imax,jmax,nch)
-      Integer*4   i,j,k,n
-      Integer*4   dim_id_y
+      Integer   imax,jmax,nch
+      Integer   sounding(imax,jmax,nch)
+      Integer   i,j,k,n
+      Integer   dim_id_y
 
       REAL*8      wavelength      ( nch )
       Real*4      scalingBias     (jmax,nch)
       Real*4      scalingGain     (jmax,nch)
       Real*4      scaling_rec     (irec_max)
 
-      INTEGER*2   northwest_sdr_pixel
-      INTEGER*2   northwest_sdr_line
-      INTEGER*4   varid
-      Integer*4   ncid
-      Integer*4   ncopn
+      INTEGER   northwest_sdr_pixel
+      INTEGER   northwest_sdr_line
+      INTEGER   varid
       CHARACTER*1 imc                      (   4)
       REAL*4      imcEnableTime
-      INTEGER*2   eastWestCycles                 
-      INTEGER*2   eastWestIncs                   
-      INTEGER*2   northSouthCycles               
-      INTEGER*2   northSouthIncs                 
+      INTEGER   eastWestCycles                 
+      INTEGER   eastWestIncs                   
+      INTEGER   northSouthCycles               
+      INTEGER   northSouthIncs                 
       REAL*8      frameStartTime                 
       REAL*8      orbitAttitude            (336)
       Real*8      lineTimeBegin(jmax,nch)
       Real*8      lineTimeEnd(jmax,nch)
       Real*8      ltrec(irec_max)
 
-      Integer*4 Istatus
-      INTEGER*4 NCVID,ncdid
-      Integer*4 ndsize_x(jmax)
-      Integer*4 ndsize_y
-      Integer*4 ndsize_ch
-      Integer*4 ndsize_sb(nch)
-      Integer*4 ndsize_ltb(nch)
-      Integer*4 ndsize_lte(nch)
-      Integer*4 ndsize
+      Integer Istatus
+      Integer ndsize_x(jmax)
+      Integer ndsize_y
+      Integer ndsize_ch
+      Integer ndsize_sb(nch)
+      Integer ndsize_ltb(nch)
+      Integer ndsize_lte(nch)
+      Integer ndsize, ncid
 
-      Integer*4 NCNOWRIT
-      Integer*4 NVDIM
-      Integer*4 NTP,NVS
-      Integer*4 LENSTR
-      INTEGER*4 START(10)
-      INTEGER*4 COUNT(10)
+      Integer NVDIM
+      Integer NTP,NVS
+      Integer LENSTR
+      INTEGER START(10)
+      INTEGER COUNT(10)
       INTEGER VDIMS(10) !ALLOW UP TO 10 DIMENSIONS
       CHARACTER*31 DUMMY
       CHARACTER*255 filename
 C
       istatus = 1
 
-      NCID=NCOPN(filename,
-     +NCNOWRIT,RCODE)
+      RCODE=NF_OPEN(filename,NF_NOWRITE,NCID)
       if(rcode.ne.0)then
          n=index(filename,' ')
          write(6,*)'Error openning netCDF file'
@@ -107,7 +102,7 @@ c -------------------------------------
 C
 C    statements to fill wavelength                     
 C
-      varid = ncvid(ncid,'wavelength',rcode)
+      rcode=NF_INQ_VARID(ncid,'wavelength',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -117,12 +112,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   20  CONTINUE
-      CALL NCVGT(NCID, varid,START,COUNT,
-     +wavelength                     ,RCODE)
+      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,wavelength)
 C
 C    statements to fill northwest_sdr_pixel            
 C
-      varid = ncvid(ncid,'northwest_sdr_pixel',rcode)
+      rcode=NF_INQ_VARID(ncid,'northwest_sdr_pixel',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -132,12 +126,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   50  CONTINUE
-      CALL NCVGT(NCID, varid,START,COUNT,
-     +northwest_sdr_pixel            ,RCODE)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,northwest_sdr_pixel)
 C
 C    statements to fill northwest_sdr_line             
 C
-      varid = ncvid(ncid,'northwest_sdr_line',rcode)
+      rcode=NF_INQ_VARID(ncid,'northwest_sdr_line',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID, varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -147,12 +140,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
   60  CONTINUE
-      CALL NCVGT(NCID, varid,START,COUNT,
-     +northwest_sdr_line             ,RCODE)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,northwest_sdr_line)
 C
 C    statements to fill frameStartTime                 
 C
-      varid = ncvid(ncid,'frameStartTime',rcode)
+      rcode=NF_INQ_VARID(ncid,'frameStartTime',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -162,12 +154,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  70   CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +frameStartTime                 ,RCODE)
+      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,frameStartTime)
 C
 C    statements to fill imc                            
 C
-      varid = ncvid(ncid,'imc',rcode)
+      rcode=NF_INQ_VARID(ncid,'imc',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -177,12 +168,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  180  CONTINUE
-      CALL NCVGTC(NCID,varid,START,COUNT,
-     +imc                            ,LENSTR,RCODE)
+      RCODE= NF_GET_VARA_TEXT(NCID,varid,START,COUNT,imc)
 C
 C    statements to fill imcEnableTime                  
 C
-      varid = ncvid(ncid,'imcEnableTime',rcode)
+      rcode=NF_INQ_VARID(ncid,'imcEnableTime',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -192,12 +182,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  260  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +imcEnableTime                  ,RCODE)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,imcEnableTime)
 C
 C    statements to fill eastWestCycles                 
 C
-      varid = ncvid(ncid,'eastWestCycles',rcode)
+      rcode=NF_INQ_VARID(ncid,'eastWestCycles',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -207,12 +196,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  300  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +eastWestCycles                 ,RCODE)
+      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,eastWestCycles)
 C
 C    statements to fill eastWestIncs                   
 C
-      varid = ncvid(ncid,'eastWestIncs',rcode)
+      rcode=NF_INQ_VARID(ncid,'eastWestIncs',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -222,12 +210,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  310  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +eastWestIncs                   ,RCODE)
+      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,eastWestIncs)
 C
 C    statements to fill northSouthCycles               
 C
-      varid = ncvid(ncid,'northSouthCycles',rcode)
+      rcode=NF_INQ_VARID(ncid,'northSouthCycles',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -237,12 +224,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  320  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +northSouthCycles               ,RCODE)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,northSouthCycles)
 C
 C    statements to fill northSouthIncs                 
 C
-      varid = ncvid(ncid,'northSouthIncs',rcode)
+      rcode=NF_INQ_VARID(ncid,'northSouthIncs',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -252,12 +238,11 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  330  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +northSouthIncs                 ,RCODE)
+      RCODE=NF_GET_VARA_INT(NCID,varid,START,COUNT,northSouthIncs)
 C
 C    statements to fill orbitAttitude                  
 C
-      varid = ncvid(ncid,'orbitAttitude',rcode)
+      rcode=NF_INQ_VARID(ncid,'orbitAttitude',varid)
       if(rcode.ne.0) return
       CALL NCVINQ(NCID,varid,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
       LENSTR=1
@@ -267,15 +252,14 @@ C
       START(J)=1
       COUNT(J)=NDSIZE
  340  CONTINUE
-      CALL NCVGT(NCID,varid,START,COUNT,
-     +orbitAttitude                  ,RCODE)
+      RCODE=NF_GET_VARA_REAL(NCID,varid,START,COUNT,orbitAttitude)
 c
 c new: 11-21-96. JRSmart. Retrieve scalinggain and scalingbias. These needed
 c to convert counts to useable brightness temps and radiances.
 c
-      dim_id_y = ncdid(ncid, 'y', rcode)
+      dim_id_y = NCDID(ncid, 'y', rcode)
 
-      varid = ncvid(ncid,'scalingBias',rcode)
+      rcode=NF_INQ_VARID(ncid,'scalingBias',varid)
       if(rcode.ne.0)then
          write(6,*)'Error getting scalingBias '
          istatus = -1
@@ -292,7 +276,7 @@ c
 
 c        write(6,*)'Reading ScalingBias for channel ',k
 
-         call ncdinq(NCID,dim_id_y,dummy,NDSIZE_SB(k),RCODE)
+         call NCDINQ(NCID,dim_id_y,dummy,NDSIZE_SB(k),RCODE)
          if(rcode.ne.0)then
             write(6,*)'Error getting SB dimension - NDSIZE_SB'
          endif
@@ -310,7 +294,7 @@ c        write(6,*)'Reading ScalingBias for channel ',k
 c
 c read record
 c
-         call NCVGT(NCID,varid,START,COUNT,scaling_rec,rcode)
+      rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,scaling_rec)
          if(rcode.ne.0)then 
             write(6,*)'Error reading scaling database'
             istatus = -1
@@ -327,7 +311,7 @@ c
 c
 c  statements to fill scalingGain
 c
-      varid = ncvid(ncid,'scalingGain',rcode)
+      rcode=NF_INQ_VARID(ncid,'scalingGain',varid)
       if(rcode.ne.0)then
          write(6,*)'Error getting scalingGain '
          istatus = -1
@@ -338,7 +322,7 @@ c
 
 c        write(6,*)'Reading ScalingGain for channel ',k
 
-         call ncdinq(NCID,dim_id_y,dummy,NDSIZE_SB(k),RCODE)
+         call NCDINQ(NCID,dim_id_y,dummy,NDSIZE_SB(k),RCODE)
          if(rcode.ne.0)then
             write(6,*)'Error getting SG dimension - NDSIZE_SB'
          endif
@@ -356,7 +340,7 @@ c        write(6,*)'Reading ScalingGain for channel ',k
 c
 c read record
 c
-         call NCVGT(NCID,varid,START,COUNT,scaling_rec,rcode)
+      rcode=NF_GET_VARA_REAL(NCID,varid,START,COUNT,scaling_rec)
          if(rcode.ne.0)then
             write(6,*)'Error reading scaling database'
             istatus = -1
@@ -373,14 +357,14 @@ c
 c
 c 11-14-97 (J.Smart). Acquire lineTimeBegin and lineTimeEnd.
 c
-      varid = ncvid(ncid,'lineTimeBegin',rcode)
+      rcode=NF_INQ_VARID(ncid,'lineTimeBegin',varid)
       if(rcode.ne.0)then
          write(6,*)'Error getting lineTimeBegin '
          istatus = -1
       endif
       write(6,*)'Reading lineTimeBegin'
       do k = 1,nch  !# of channels in sounding database (= 19).
-         call ncdinq(NCID,dim_id_y,dummy,NDSIZE_LTB(k),RCODE)
+         call NCDINQ(NCID,dim_id_y,dummy,NDSIZE_LTB(k),RCODE)
          if(rcode.ne.0)then
             write(6,*)'Error getting LTB dimension - NDSIZE_LTB'
          endif
@@ -396,7 +380,7 @@ c
 c
 c read record, use scaling_rec for the i/o.
 c
-         call NCVGT(NCID,varid,START,COUNT,ltrec,rcode)
+      rcode=NF_GET_VARA_DOUBLE(NCID,varid,START,COUNT,ltrec)
          if(rcode.ne.0)then
             write(6,*)'Error reading scaling database'
             istatus = -1
@@ -412,14 +396,14 @@ c
 c -----------
 c lineTimeEnd
 c
-      varid = ncvid(ncid,'lineTimeEnd',rcode)
+      rcode=NF_INQ_VARID(ncid,'lineTimeEnd',varid)
       if(rcode.ne.0)then
          write(6,*)'Error getting lineTimeBegin '
          istatus = -1
       endif
       write(6,*)'Reading lineTimeEnd'
       do k = 1,nch  !# of channels in sounding database (= 19).
-         call ncdinq(NCID,dim_id_y,dummy,NDSIZE_LTE(k),RCODE)
+         call NCDINQ(NCID,dim_id_y,dummy,NDSIZE_LTE(k),RCODE)
          if(rcode.ne.0)then
             write(6,*)'Error getting LTE dimension - NDSIZE_LTE'
          endif
@@ -435,7 +419,7 @@ c
 c
 c read record, use scaling_rec for the i/o.
 c
-         call NCVGT(NCID,varid,START,COUNT,ltrec,rcode)
+      rcode=NF_GET_VARA_DOUBLE(NCID,varid,START,COUNT,ltrec)
          if(rcode.ne.0)then
             write(6,*)'Error reading scaling database'
             istatus = -1

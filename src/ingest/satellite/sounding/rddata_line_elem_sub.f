@@ -6,29 +6,29 @@ c line and element dimensions. Should work for 2d data with variable dimensions
 c if nch = 1
 c
       Implicit None
-
-      Integer*4   RCODE
+      include 'netcdf.inc'
+      Integer   RCODE
 c
-      Integer*4   imax,jmax,nch
-      Integer*4   sounding(imax, jmax, nch)
-      Integer*2   sounding_rec(imax)
+      Integer   imax,jmax,nch
+      Integer   sounding(imax, jmax, nch)
+      Integer   sounding_rec(imax)
 
-      Integer*4 i,j,k
-      Integer*4 varid,ncid,ncdid
-      Integer*4 istatus
-      Integer*4 NCVID,VARID
-      Integer*4 NDSIZE_X(jmax)
-      Integer*4 NDSIZE_Y,NDSIZE_CH
-      Integer*4 dim_id_x
-      Integer*4 dim_id_y
-      Integer*4 dim_id_k
-      Integer*4 i4dum
+      Integer i,j,k
+      Integer varid,ncid
+      Integer istatus
+*4*4=NF_INQ_VARID,VARID
+      Integer NDSIZE_X(jmax)
+      Integer NDSIZE_Y,NDSIZE_CH
+      Integer dim_id_x
+      Integer dim_id_y
+      Integer dim_id_k
+      Integer i4dum
 
-      Integer*4 START(10)
-      Integer*4 COUNT(10)
+      Integer START(10)
+      Integer COUNT(10)
       Character*31 DUMMY
-      integer*4     i4val
-      integer*2     i2val(2)
+      integer     i4val
+      integer     i2val(2)
       equivalence   (i4val,i2val(1))
 c
 C **************************************************************************
@@ -40,7 +40,7 @@ c get dimensions for sounding array (x,y,lambda) [lambda is # of wavelengths]
 c
 c This is the number of lines
 c
-      dim_id_y = ncdid(ncid, 'y', rcode)
+      dim_id_y = NCDID(ncid, 'y', rcode)
       if(rcode.ne.0)then
          write(6,*)'Error getting y id code - returning'
          istatus = -1
@@ -66,7 +66,7 @@ c get 3rd dimension if it exists. For sounding data this is the number of wavele
 c
       if(nch .gt. 1)then
 
-         dim_id_k = ncdid(ncid, 'wavelength', rcode)
+         dim_id_k = NCDID(ncid, 'wavelength', rcode)
          if(rcode.ne.0)then
             write(6,*)'Error getting channel id code - returning'
             istatus = -1
@@ -98,7 +98,7 @@ c
 c
 c get sounding variable id
 c
-      varid = ncvid(ncid,'sounding',rcode)
+      rcode=NF_INQ_VARID(ncid,'sounding',varid)
       if(rcode.ne.0)then
          write(6,*)'Error getting sounding varid'
          istatus = -1
@@ -107,7 +107,7 @@ c
 c
 c get x dimension id
 c
-      dim_id_x = ncdid(ncid, 'x', rcode)
+      dim_id_x = NCDID(ncid, 'x', rcode)
       if(rcode.ne.0)then
          write(6,*)'Error getting x id code - returning'
          istatus = -1
@@ -122,7 +122,7 @@ c
 
          do j = 1,NDSIZE_Y
 
-            call ncdinq(NCID,dim_id_x,dummy,NDSIZE_X(j),RCODE)
+            call NCDINQ(NCID,dim_id_x,dummy,NDSIZE_X(j),RCODE)
             if(rcode.ne.0)then
                write(6,*)'Error getting x dimension - NDSIZE_X'
             endif
@@ -137,7 +137,7 @@ c
             START(2)=j
 
 c read line
-            call NCVGT(NCID,varid,START,COUNT,sounding_rec,rcode)
+      rcode=NF_GET_VARA_INT(NCID,varid,START,COUNT,sounding_rec)
             if(rcode.ne.0)then 
                write(6,*)'Error reading sounding database'
                istatus = -1

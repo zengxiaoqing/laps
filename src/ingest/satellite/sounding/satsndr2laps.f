@@ -50,40 +50,40 @@ c.....          Changes:  02-OCT-1990       Set up for prodgen.
 c.....          Changes:     SEP-1993       Add average (SA)
 c.....  J. Smart          Dec 1996          Modified the satdat2laps_ir for sounder data
 c
-	implicit none
+      implicit none
 
-	integer*4 max_elem,max_line
-        integer*4 imax,jmax
-	parameter (max_elem = 15)
-	parameter (max_line = 15)
-	integer*4 line_dim,elem_dim
+      integer max_elem,max_line
+        integer imax,jmax
+      parameter (max_elem = 15)
+      parameter (max_line = 15)
+      integer line_dim,elem_dim
         real*4    r_grid_ratio
 
-	real image_sndr(elem_dim,line_dim)
+      real image_sndr(elem_dim,line_dim)
         real*4 sc(imax,jmax)
-	real*4 sa(imax,jmax)
+      real*4 sa(imax,jmax)
         real*4 st(imax,jmax)
         real*4 r_llij_lut_ri(imax,jmax)
         real*4 r_llij_lut_rj(imax,jmax)
 
-	real*4 line_mx,line_mn,elem_mx,elem_mn
-	real*4 t_array(max_elem*max_line)
-	real*4 wm, wc, btemp, tmean
+      real*4 line_mx,line_mn,elem_mx,elem_mn
+      real*4 t_array(max_elem*max_line)
+      real*4 wm, wc, btemp, tmean
         real*4 frac
 c       real*4 fraci,fracj
         real*4 pixsum 
         real*4 r_missing_data
         real*4 result
 
-        integer*4 i,j,ii,jj
-        integer*4 istart,jstart
-        integer*4 iend,jend
-	integer*4 npix, nwarm
-        integer*4 maxpix
-        integer*4 ipix
-        integer*4 istatus
-        integer*4 qcstatus
-        integer*4 fcount
+        integer i,j,ii,jj
+        integer istart,jstart
+        integer iend,jend
+      integer npix, nwarm
+        integer maxpix
+        integer ipix
+        integer istatus
+        integer qcstatus
+        integer fcount
 
         call zero(sa,imax,jmax)
         call zero(sc,imax,jmax)
@@ -125,7 +125,7 @@ c****************************************************************************
      &iend.gt.elem_dim .or. jend.gt.line_dim)then
              write(*,*)'insufficient data for lat/lon sector'
                 write(*,1020)i,j
-1020	        format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
+1020              format(1x,'LAPS grid (i,j) = ',i3,1x,i3)
                 write(6,1021)elem_mx,elem_mn,line_mx,line_mn
 1021            format(1x,'elem mx/mn  line mx/mn ',4f7.1)
              else
@@ -222,10 +222,10 @@ c              write(6,1112) wm,wc
 
              end if  ! Enough data for num_lines .gt. 0
 
-d           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
-d              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
-d5555         format(1x,2i4,2f10.2,2i5,f10.2)
-d           endif
+ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
+ccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
+ccd5555         format(1x,2i4,2f10.2,2i5,f10.2)
+ccd           endif
 
    10     CONTINUE ! I,J
           write(6,*)'Max num sndr pix for avg: ',maxpix
@@ -254,7 +254,7 @@ c
                call bilinear_laps(r_llij_lut_ri(i,j),r_llij_lut_rj(i,j),
      &       elem_dim,line_dim,image_sndr,result,istatus)
 
-	        sa(i,j) = result
+              sa(i,j) = result
 
             else
                 sa(i,j) = r_missing_data
