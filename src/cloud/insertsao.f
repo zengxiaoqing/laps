@@ -324,7 +324,7 @@ C CLOUDS ARE NOW IN MSL
      1                     ,' of domain up to '
      1                     ,nint(min(ht_base,ht_defined)),' meters'     
 
-                  if(.false.)then                         ! SKC is not yet used
+                  if(.true.)then                              ! SKC is now used
                       if(amt_ret(i,l) .eq. ' CLR' .and. 
      1                                            .not. l_auto)then
                           write(6,*)' WARNING: CLR reported for '
@@ -333,8 +333,8 @@ C CLOUDS ARE NOW IN MSL
      1                                                  l_auto)then
                           write(6,*)' WARNING: SKC reported for '
      1                             ,'automated station'
-                      endif
-                  endif ! .false.
+                      endif ! CLR/SKC test
+                  endif ! .true.
 
 !                 go to 125 ! Loop to next station
               endif

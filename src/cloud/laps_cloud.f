@@ -115,6 +115,9 @@ cdis
        read(1,cloud_nl,err=901)
        close(1)
 
+       print*,'success reading cloud_nl in ',filename
+       write(*,cloud_nl)
+
        istatus = 1
        return
 

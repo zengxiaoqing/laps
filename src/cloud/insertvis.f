@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
 
-        subroutine get_vis(i4time,solar_alt                        ! Input
+        subroutine get_vis(i4time,solar_alt,l_use_vis              ! Input
      1                    ,cloud_frac_vis_a,albedo,ihist_alb       ! Output
      1                    ,ni,nj,nk,r_missing_data                 ! Input
      1                    ,istatus)                                ! Output
@@ -70,16 +70,6 @@ cdis
         enddo ! i
 
         n_missing_albedo = ni*nj
-
-!       Read in parms
-        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)'l_use_vis = ',l_use_vis
-        else
-            write(6,*)' Error in obtaining l_use_vis parameter'
-            istatus = 0
-            return
-        endif
 
 !       Determine whether to use VIS / ALBEDO data
         if(.not. l_use_vis)then
@@ -285,8 +275,8 @@ cdis
      1                .and. dbz_max_2d(i,j) .gt. ref_base
      1                                               )then ! Valid radar echo
                        if(cloud_frac_out .lt. vis_radar_thresh_cvr)then
-                           if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)
-     1then
+                           if(dbz_max_2d(i,j) .lt. 
+     1                                        vis_radar_thresh_dbz)then
 
 !                              Blank out Radar, Normal VIS Clearing
                                iblank_radar = 1
@@ -311,18 +301,18 @@ cdis
 
 !               Update Histograms
                 iscr_frac_in = nint(cloud_frac_in*10.)
-                ihist_frac_in(iscr_frac_in) = ihist_frac_in(iscr_frac_in
-     1) + 1
+                ihist_frac_in(iscr_frac_in) = 
+     1          ihist_frac_in(iscr_frac_in) + 1
 
                 iscr_frac_out = nint(cloud_frac_out*10.)
-                ihist_frac_out(iscr_frac_out)
-     1  = ihist_frac_out(iscr_frac_out) + 1
+                ihist_frac_out(iscr_frac_out) =
+     1          ihist_frac_out(iscr_frac_out) + 1
 
-                ihist_frac_in_sat(iscr_frac_in,iscr_frac_sat)
-     1  = ihist_frac_in_sat(iscr_frac_in,iscr_frac_sat) + 1
+                ihist_frac_in_sat(iscr_frac_in,iscr_frac_sat) =
+     1          ihist_frac_in_sat(iscr_frac_in,iscr_frac_sat) + 1
 
-                ihist_frac_in_out(iscr_frac_in,iscr_frac_out)
-     1  = ihist_frac_in_out(iscr_frac_in,iscr_frac_out) + 1
+                ihist_frac_in_out(iscr_frac_in,iscr_frac_out) =
+     1          ihist_frac_in_out(iscr_frac_in,iscr_frac_out) + 1
 
                 colmaxin  = max(colmaxin,cloud_frac_in)
                 colmaxout = max(colmaxout,cloud_frac_out)
@@ -335,20 +325,22 @@ cdis
 !               Blank out radar column for this grid point
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
-                    write(6,1)i,j,colmaxout,dbz_max_2d(i,j),cloud_frac_v
-     1is
-1                   format(' VIS_RDR - Blank out radar: cvr/dbz/vis     
-     1 < '
-     1                                  ,2i4,f8.2,f8.1,f8.2)
+                    write(6,1)i,j,colmaxout,dbz_max_2d(i,j)
+     1                       ,cloud_frac_vis
+1                   format(
+     1              ' VIS_RDR - Blank out radar: cvr/dbz/vis      < '       
+     1                    ,2i4,f8.2,f8.1,f8.2)
+
                 else ! Some of the column remains above the VIS threshold
                      ! We are "saved" by the VIS cushion
                      ! May not show up in comparisons
 
-                    write(6,2)i,j,colmaxout,dbz_max_2d(i,j),cloud_frac_v
-     1is
-2                   format(' VIS_RDR - Blank out radar: cvr/dbz/vis-s   
-     1 < '
-     1                                  ,2i4,f8.2,f8.1,f8.2)
+                    write(6,2)i,j,colmaxout,dbz_max_2d(i,j)
+     1                       ,cloud_frac_vis
+2                   format(
+     1              ' VIS_RDR - Blank out radar: cvr/dbz/vis-s    < '
+     1                    ,2i4,f8.2,f8.1,f8.2)
+
                 endif
 
                 if(.true.)then        ! Take action
@@ -362,24 +354,22 @@ cdis
 !               Cloud cvr has been reset to threshold value above VIS
 
                 if(colmaxout .le. vis_radar_thresh_cvr)then
-                    write(6,3)i,j,colmaxout,dbz_max_2d(i,j),cloud_frac_v
-     1is
-     1                                 ,vis_radar_thresh_cvr
-3                   format(' VIS_RDR - Reset vis:       cvr/dbz/vis/thr*
-     1 > '
-     1                                   ,2i4,f8.2,f8.1,2f8.2)
+                    write(6,3)i,j,colmaxout,dbz_max_2d(i,j)
+     1                       ,cloud_frac_vis,vis_radar_thresh_cvr
+3                   format(
+     1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr* > '
+     1                    ,2i4,f8.2,f8.1,2f8.2)
 
                 else ! Some of the column remains above the VIS threshold
                      ! We are "saved" by the VIS cushion
                      ! May not show up in comparisons
                      ! Is resetting the VIS perhaps not necessary?
 
-                    write(6,4)i,j,colmaxout,dbz_max_2d(i,j),cloud_frac_v
-     1is
-     1                                 ,vis_radar_thresh_cvr
-4                   format(' VIS_RDR - Reset vis:       cvr/dbz/vis/thr-
-     1s> '
-     1                                   ,2i4,f8.2,f8.1,2f8.2)
+                    write(6,4)i,j,colmaxout,dbz_max_2d(i,j)
+     1                       ,cloud_frac_vis,vis_radar_thresh_cvr
+4                   format(
+     1              ' VIS_RDR - Reset vis:       cvr/dbz/vis/thr-s> '
+     1                    ,2i4,f8.2,f8.1,2f8.2)
 
 
                 endif
@@ -430,8 +420,8 @@ cdis
         enddo ! i
 
         write(6,*)
-        write(6,*)'               Input vs. Satellite Cloud Fraction His
-     1togram'
+        write(6,*)
+     1  '               Input vs. Satellite Cloud Fraction Histogram'       
         write(6,*)
         write(6,*)'                           SATELLITE CLOUD FRACTION'
         do i = 0,10
@@ -440,8 +430,8 @@ cdis
         enddo ! i
 
         write(6,*)
-        write(6,*)'                  Input vs. Output Cloud Fraction His
-     1togram'
+        write(6,*)
+     1  '                  Input vs. Output Cloud Fraction Histogram'
         write(6,*)
         write(6,*)'                             OUTPUT CLOUD FRACTION'
         do i = 0,10
@@ -449,8 +439,8 @@ cdis
         enddo ! i
 
         write(6,*)
-        write(6,*)'          Column Max Input vs. Satellite Fraction His
-     1togram'
+        write(6,*)
+     1  '          Column Max Input vs. Satellite Fraction Histogram'
         write(6,*)
         write(6,*)'                           SATELLITE CLOUD FRACTION'
         do i = 0,10
@@ -458,8 +448,8 @@ cdis
         enddo ! i
 
         write(6,*)
-        write(6,*)'          Column Max Output vs. Satellite Fraction Hi
-     1stogram'
+        write(6,*)
+     1  '          Column Max Output vs. Satellite Fraction Histogram'
         write(6,*)
         write(6,*)'                           SATELLITE CLOUD FRACTION'
         do i = 0,10

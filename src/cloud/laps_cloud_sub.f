@@ -516,7 +516,7 @@ C READ IN RADAR DATA
      1                 heights_3d,
      1                 radar_ref_3d,
      1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
-     1                 n_ref_grids,istat_radar_2dref_a,
+     1                 n_ref_grids,n_2dref,n_3dref,istat_radar_2dref_a,       
      1                 istat_radar_3dref_a)       
 
         else
@@ -645,9 +645,10 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
-        call get_vis(i4time,solar_alt
-     1              ,cloud_frac_vis_a,albedo,ihist_alb
-     1              ,NX_L,NY_L,KCLOUD,r_missing_data,istat_vis)
+        call get_vis(i4time,solar_alt,l_use_vis                          ! I
+     1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
+     1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
+     1              ,istat_vis)                                          ! I
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1        pct_req_lvd_s8a,
