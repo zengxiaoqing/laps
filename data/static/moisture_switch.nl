@@ -8,6 +8,8 @@
  SAT_SKIP = 3,
  GVAP_SWITCH = 0,
  SFC_MIX = 1,
+ MOD_4DDA_1 = 0,
+ MOD_4DDA_FACTOR = 0.02,
  
  /
 c   This is a switch for the module  lq3.  If the value of the first record is 0,
