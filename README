@@ -1302,6 +1302,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      prompt> cd data/lapsprd
      prompt> ln -s testdata/lapsprd/input1/*        input1
 
+     You might check to ensure that the purger will not accidentally purge
+     any archived analysis files you want to keep in your $LAPS_DATA_ROOT. 
+     Either a copy of these files should be kept elsewhere or the purger can 
+     be disabled using the command line arguments 'sched.pl -r -m N', where 
+     N is a large number of files to keep in each directory. 
 
                 ----  2.5.2  Ingest + Analysis Test ---
 
@@ -2593,7 +2598,7 @@ Outputs: (LW3 is main output)
 	sag	inter data	surface        (prior to QC, true north)
 	d01-dxx inter data 	derived radar vector obs    (grid north)
 
-	lw3	3d grid		3-D winds (U and V are wrt GRID NORTH)
+	lw3	3d grids        3-D winds (U and V are wrt GRID NORTH), omega
 	lwm	2d grid		surface winds
 
 </pre>                                        
