@@ -653,7 +653,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 !               spd_kt = SPEED_ms  / mspkt
 
-                iflag = 2
+                iflag = 3
 
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp,icol_in

@@ -67,6 +67,12 @@ cdis
      1            ,vmin_l/vmin_n,vmax_l/vmax_n
 31      format('  ratio UMIN/UMAX/VMIN/VMAX',4f10.5)
 
+        aspect_n = (vmax_n - vmin_n) / (umax_n - umin_n)
+        aspect_l = (vmax_l - vmin_l) / (umax_l - umin_l)
+
+        write(6,41)aspect_n,aspect_l,aspect_n/aspect_l
+ 41     format('  aspect NCARG/LAPS/ratio: ',3f10.5)
+
 !       Call Check_domain for good measure
         call get_grid_spacing(grid_spacing_m,istatus)
         if(istatus .ne. 1)then

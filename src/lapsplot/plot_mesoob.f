@@ -31,52 +31,63 @@ cdis
 cdis
 c
 c
-      subroutine plot_mesoob(dir,spd,gust,t,td,p,ri,rj,lat,lon,
+        subroutine plot_mesoob(dir,spd,gust,t,td,p,ri,rj,lat,lon,
      &                   imax,jmax,relsize,icol_in,iflag)
 
-      include 'lapsparms.cmn'
+        include 'lapsparms.cmn'
 
-      real*4 lat(imax,jmax),lon(imax,jmax)
-      character*3 t1,td1,p1
+        real*4 lat(imax,jmax),lon(imax,jmax)
+        character*3 t1,td1,p1
 
-      call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
-!     write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
- 1234 format(1x,4i5,4e12.4,i4)
+        call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
+!       write(6,1234) mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype
+ 1234   format(1x,4i5,4e12.4,i4)
 
-      du=(imax)/300. * relsize
-      jsize = nint(0.4 * relsize) - 1
+        du_b=(imax)/300. * relsize
 
-      write(6,*)' relsize,du,jsize = ',relsize,du,jsize
+        jsize = nint(0.4 * relsize) - 1
 
-      call get_border(imax,jmax,x_1,x_2,y_1,y_2)
-      call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
+        write(6,*)' relsize,du_b,jsize = ',relsize,du_b,jsize
 
-      rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
+        call get_border(imax,jmax,x_1,x_2,y_1,y_2)
+        call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
 
-!     Convert ri and rj to x1 and y1 (U and V)
-!     call supcon(alat,alon,x1,y1)
-      x1 = umin + (umax - umin) * (ri-1.) / float(imax-1)
-      y1 = vmin + (vmax - vmin) * (rj-1.) / float(jmax-1)
+        rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
 
-      if(dir .gt. -400. .and. dir .lt. +400)then
-          call barbs(spd,dir,ri,rj,du,rot,-1e10,+1e10,-1e10,+1e10)
-      endif
+!       Convert ri and rj to x1 and y1 (U and V)
+!       call supcon(alat,alon,x1,y1)
+        x1 = umin + (umax - umin) * (ri-1.) / float(imax-1)
+        y1 = vmin + (vmax - vmin) * (rj-1.) / float(jmax-1)
 
-      u = ri
-      v = rj
+        if(dir .gt. -400. .and. dir .lt. +400)then
+            call barbs(spd,dir,ri,rj,du_b,rot,-1e10,+1e10,-1e10,+1e10)
+        endif
+
+        u = ri
+        v = rj
+
+        if(iflag .eq. 3)then ! Plot on top of station location for 'tmg'
+            du = 0.
+        else
+            du = du_b
+        endif
 
         dv   = 1.2 * du
-        du_t = 4.  * du
+        du_t = 3.0 * du
         du_p = 3.0 * du
-        if(t.gt.-75. .and. t.lt.140.) then
+
+!       Plot Temperature       
+        if(t.gt.-75. .and. t.lt.140.) then 
            write(t1,100,err=20) nint(t)
-           call pwrity(u-du_t,v+dv,t1,3,jsize,0,-1)
+           call pwrity(u-du_t,v+dv,t1,3,jsize,0,0)
         endif
  100    format(i3)
 c
+
+!       Plot Dew Point
  20     if(td.gt.-75. .and. td.lt.100.) then
            write(td1,100,err=30) nint(td)
-           call pwrity(u-du_t,v-dv,td1,3,jsize,0,-1)
+           call pwrity(u-du_t,v-dv,td1,3,jsize,0,0)
         endif
 c
  30     if(p .gt. 0. .and. p .lt. 10000.) then
