@@ -1394,7 +1394,7 @@ c
 	real field(ni,nj), ob(mxstn), interp_ob
 	real x1a(ni), x2a(nj), y2a(ni,nj)
 	integer ii(mxstn), jj(mxstn)
-	character title*40, stn(mxstn)*20, stn_mx*5, stn_mn*5
+	character title*(*), stn(mxstn)*20, stn_mx*5, stn_mn*5
 c
 c.... Start.
 c
@@ -1412,7 +1412,7 @@ c
 	print *,' '
 	write(6,900) title
 	write(iunit,900) title
- 900	format(/,2x,a40,/)
+ 900	format(/,2x,a,/)
 c
 	ea1 = field_ea
 	ea2 = field_ea * 2.
