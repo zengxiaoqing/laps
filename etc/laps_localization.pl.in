@@ -167,50 +167,57 @@ sub wfo_localization{
   ($lat,$lon) = split(",",$line);
   $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
 
-  #First file:  the static parameters file.
-
-  $srctemplate = "$LAPS_SRC_ROOT/data/static/nest7grid.parms";
-    
-  $outfile = "$LAPS_DATA_ROOT/static/nest7grid.parms";
-
-  if(! -d "$LAPS_DATA_ROOT/static"){
-    system("mkdir -p $LAPS_DATA_ROOT");
-    mkdir "$LAPS_DATA_ROOT/static", 0755 || die "$0 Could not create $LAPS_DATA_ROOT/static" ;
-  }
-
-  $template = &get_best_template($srctemplate,$outfile);
+  #First files:  the namelist files.
 
 
-  open(TEMPLATE,"$template") or die "$0: Can't find template file in $srctemplate or $outfile";
-  @template = <TEMPLATE>;
-  close(TEMPLATE);
-  print "Using static template file $template\n";
+  opendir(NL,"$LAPS_SRC_ROOT/data/static");
+  my(@srctemplates) = grep(/\.nl/,readdir(NL));
+  closedir(NL);
+  push(@srctemplates,"nest7grid.parms");
+  foreach $srctemplate (@srctemplates){
+      $outfile = "$LAPS_DATA_ROOT/static/$srctemplate";
+      $srctemplate = "$LAPS_SRC_ROOT/data/static/$srctemplate";
 
-  open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
 
-  foreach (@template)
-  {
-      $_ =~ s/\$FXA_DATA/$FXA_DATA/;
-      if(/standard_latitude\s*=/){
-	  print OUTFILE " standard_latitude=$lat,\n";
-      }elsif(/standard_longitude\s*=/){
-	  print OUTFILE " standard_longitude=$lon,\n";
-      }elsif(/grid_cen_lat_cmn\s*=/){
-          print OUTFILE " grid_cen_lat_cmn=$lat,\n";
-      }elsif(/grid_cen_lon_cmn\s*=/){
-          print OUTFILE " grid_cen_lon_cmn=$lon,\n";
-      }elsif(/path_to_raw_sat/){
-        if($goes==8){
-	    $_ =~ s/west/east/;
-	}else{
-	    $_ =~ s/east/west/;
-	}
-	print OUTFILE $_;
-      }else{
-	  print OUTFILE $_;
+      if(! -d "$LAPS_DATA_ROOT/static"){
+	  system("mkdir -p $LAPS_DATA_ROOT");
+	  mkdir "$LAPS_DATA_ROOT/static", 0755 || die "$0 Could not create $LAPS_DATA_ROOT/static" ;
       }
+
+      $template = &get_best_template($srctemplate,$outfile);
+
+
+      open(TEMPLATE,"$template") or die "$0: Can't find template file in $srctemplate or $outfile";
+      @template = <TEMPLATE>;
+      close(TEMPLATE);
+      print "Using static template file $template\n";
+
+      open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
+      
+      foreach (@template)
+      {
+	  $_ =~ s/\$FXA_DATA/$FXA_DATA/;
+	  if(/standard_latitude\s*=/){
+	      print OUTFILE " standard_latitude=$lat,\n";
+	  }elsif(/standard_longitude\s*=/){
+	      print OUTFILE " standard_longitude=$lon,\n";
+	  }elsif(/grid_cen_lat_cmn\s*=/){
+	      print OUTFILE " grid_cen_lat_cmn=$lat,\n";
+	  }elsif(/grid_cen_lon_cmn\s*=/){
+	      print OUTFILE " grid_cen_lon_cmn=$lon,\n";
+	  }elsif(/path_to_raw_sat/){
+	      if($goes==8){
+		  $_ =~ s/west/east/;
+	      }else{
+		  $_ =~ s/east/west/;
+	      }
+	      print OUTFILE $_;
+	  }else{
+	      print OUTFILE $_;
+	  }
+      }
+      close(OUTFILE); 
   }
-  close(OUTFILE); 
 
 #Second file.  Are we using GOES-E or GOES-W?  Ramer says the distinction
 #is only position relative to 100 deg W longitude.  This information goes
