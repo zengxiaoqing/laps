@@ -39,7 +39,7 @@
     rh_m = thresh*100.
 
     ! Convert modified mixing ratio back to specific humidity
-    sh_m = mr_m/(1.+mr_m)
+    sh_m = mrmax/(1.+mrmax)
 
     RETURN
   END SUBROUTINE saturate_lwc_points 

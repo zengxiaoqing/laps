@@ -20,7 +20,7 @@
 
     ! Locals
 
-    REAL :: shsat,mr,mrsat,mr_m,mrmax,tc
+    REAL :: shsat,mr,mrsat,mrmax,tc
     REAL, EXTERNAL :: ssh2,make_rh
 
     
@@ -34,7 +34,7 @@
     mrmax = mrsat*thresh
     rh_m = mrmax/mrsat
 
-    ! Convert mr_m to sh_m
-    sh_m = mr_m/(1.+mr_m) 
+    ! Convert mrmax to sh_m
+    sh_m = mrmax/(1.+mrmax) 
     RETURN
   END SUBROUTINE saturate_ice_points
