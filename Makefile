@@ -15,6 +15,7 @@ LIBDIRS = src/lib \
           src/lib/bgdata \
           src/lib/blas \
           src/lib/fm \
+          src/lib/grib \
           src/lib/goesinav \
           src/lib/goeslib \
           src/lib/lapack \
@@ -26,7 +27,7 @@ LIBDIRS = src/lib \
           src/lib/radar/wsi_ingest \
           src/lib/satellite \
           src/lib/temp   \
-          src/lib/util  
+          src/lib/util
 
 EXEDIRS = src/accum \
           src/background \
