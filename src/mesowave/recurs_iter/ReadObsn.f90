@@ -17,7 +17,8 @@ SUBROUTINE ReadObsn
   READ(10,*) dm(1:2,1:3)
   d(1:3) = (dm(2,1:3)-dm(1,1:3))/FLOAT(n(1:3)-1)
 
-  nobs = 1
+  nobs = 1		! Count observations
+  m = 0			! Count variables to be analyzed
 
 1 FORMAT(i2,5e14.6)
 2 CONTINUE
