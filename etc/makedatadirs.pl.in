@@ -32,7 +32,7 @@ if( defined($cleandirs)){
     system("rm -rf $LAPS_DATA_ROOT/lapsprd");
     mkdir "$LAPS_DATA_ROOT/lapsprd", 0777 or die "Can't make directory in $LAPS_DATA_ROOT/lapsprd $!\n"
 }
-require "$LAPSINSTALLROOT/etc/mkdatadirs.pm";
-print "Using mkdatadir.pm to generate lapsdataroot directories\n";
-mkdatadirs::mkdatadirs($LAPS_DATA_ROOT);
+require "$LAPSINSTALLROOT/etc/laps_tools.pm";
+print "Use mkdatadir to generate lapsdataroot directories\n";
+laps_tools::mkdatadirs($LAPS_DATA_ROOT);
 exit;
