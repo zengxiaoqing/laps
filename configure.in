@@ -221,6 +221,7 @@ AC_OUTPUT(src/include/trigd.inc
           util/cronfile
 	  etc/LapsRadar.pl
           etc/cloud.pl
+          etc/hum3d.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
@@ -228,9 +229,11 @@ AC_OUTPUT(src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.com
 	  etc/laps_localization.pl
-          etc/makedatadirs.pm
           etc/sendLAPS.pl
+          etc/sfc.pl
+          etc/temp.pl
           etc/wfo_post.pl
+          etc/wind3d.pl
           etc/window_laps_rt.pl
           etc/xferData.pl)
 
