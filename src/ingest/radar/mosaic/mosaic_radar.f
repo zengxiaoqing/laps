@@ -299,6 +299,8 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
 
 333   enddo
 
+      I4_elapsed = ishow_timer()
+
       if(mosaic_cycle_time .ge. 300 .and. 
      1   mosaic_cycle_time .le. laps_cycle_time)then
 
