@@ -23,9 +23,10 @@ cdoc    Convert a10_time (yyMMddhhmm) to a9_time (yydddhhmm)
 cdoc    Convert a10_time (yyyyMMddhh) to a9_time (yydddhhmm)
 !       John Smart 2000
 
-        character*10 a10_time,yr_a10_to_a9
+        character*10 a10_time
         character*10 new_a10_time
-        character*9 a10_to_a9, a9_time
+        character*9  yr_a10_to_a9
+        character*9  a10_to_a9, a9_time
 
         new_a10_time=a10_time(3:10)//'00'         !warning: always assuming 00 minutes
         a9_time = a10_to_a9(new_a10_time,istatus)
