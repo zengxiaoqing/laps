@@ -161,7 +161,7 @@ PROGRAM lfmpost
       IF (.NOT.file_ready) THEN
         CALL wrfio_wait(data_file,max_wait_sec)
       ELSE 
-        IF(realtime) CALL sleep(30)
+        IF(realtime) CALL sleep(60)
       ENDIF
       CALL open_wrfnc(data_file,lun_data,status)
     ENDIF
