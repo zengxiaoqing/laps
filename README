@@ -1688,6 +1688,7 @@ since 3 layers are routinely available from NESDIS.
 
 Package: gridgen_model.exe - Writes static file, run by localization script. 
                                  (contact: Steve Albers - albers@fsl.noaa.gov).
+                                           John  Smart  - smart@fsl.noaa.gov).
 
 Inputs:
 	Geography databases (topography, land fraction)
@@ -1702,7 +1703,34 @@ Outputs:
                                     'LON'       longitude in degrees
                                     'AVE'       mean elevation MSL
                                     'LDF'       land fraction (0=water,1=land)
-                                    'USE'       soil type (under development)
+                                    'USE'       usgs 30s (24 vegetation categories)
+                                                landuse data (currently dominant category
+                                                              for each grid point).
+
+                                     1:   Urban and Built-Up Land
+                                     2:   Dryland Cropland and Pasture
+                                     3:   Irrigated Cropland and Pasture
+                                     4:   Mixed Dryland/Irrigated Cropland and Pasture
+                                     5:   Cropland/Grassland Mosaic
+                                     6:   Cropland/Woodland Mosaic
+                                     7:   Grassland
+                                     8:   Shrubland
+                                     9:   Mixed Shrubland/Grassland
+                                    10:   Savanna
+                                    11:   Deciduous Broadleaf Forest
+                                    12:   Deciduous Needleleaf Forest
+                                    13:   Evergreen Broadleaf Forest
+                                    14:   Evergreen Needleleaf Fores
+                                    15:   Mixed Forest
+                                    16:   Water Bodies
+                                    17:   Herbaceous Wetland
+                                    18:   Wooded Wetland
+                                    19:   Barren or Sparsely Vegetated
+                                    20:   Herbaceous Tundra
+                                    21:   Wooded Tundra
+                                    22:   Mixed Tundra
+                                    23:   Bare Ground Tundra
+                                    24:   Snow or Ice
 
         static/latlon.dat         Binary grid   latitude
                                                 longitude
