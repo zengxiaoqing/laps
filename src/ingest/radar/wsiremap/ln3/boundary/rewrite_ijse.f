@@ -11,14 +11,15 @@ c
       integer istatus,iostat,lend
       integer lun
       integer msng_radar
+      integer ickint,itotwait,iageth
 
       character filename*200
       character dir*150
 
       istatus=1   !return failed
 
-      call get_ln3_parameters(msng_radar,
-     +     istart,jstart,iend,jend,iostat)
+      call get_ln3_parameters(msng_radar,ickint,itotwait,
+     +     iageth,istart,jstart,iend,jend,iostat)
 
       if(iostat.ne.0)then
          print*,'error reading ln3 parameters'
@@ -40,6 +41,9 @@ c
 
       write(lun,*,err=950)'&ln3_nl'
       write(lun,10,err=950)msng_radar
+      write(lun,15,err=950)ickint
+      write(lun,16,err=950)itotwait
+      write(lun,17,err=950)iageth
       write(lun,11,err=950)istrtin
       write(lun,12,err=950)jstrtin
       write(lun,13,err=950)iendin
@@ -54,6 +58,9 @@ c
 12    format(1x,'JSTART = ',i4,',')
 13    format(1x,'IEND = ',i4,',')
 14    format(1x,'JEND = ',i4,',')
+15    format(1x,'ICKINT = ',i4,',')
+16    format(1x,'ITOTWAIT = ',i4,',')
+17    format(1x,'IAGETH = ',i4,',')
 
       istatus=0
       return
