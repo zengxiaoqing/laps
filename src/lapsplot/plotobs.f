@@ -45,6 +45,7 @@ cdis
 !       Steve A         Nov  1991       Adjustable Dimensions
 
         include 'trigd.inc'
+        common /zoom/ zoom
 
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 grid_ra_vel(imax,jmax,kmax)
@@ -130,14 +131,14 @@ cdis
 
         size_factor = float(max(imax,jmax)) / 300.
 
-        size_prof = 3.  * size_factor
-        size_pirep = 3. * size_factor
-        size_maps = 2.  * size_factor
-        size_vad = 2.   * size_factor
-        size_anl = 0.7  * size_factor
-        size_suw = 1.   * size_factor
+        size_prof = 3.  * size_factor / zoom
+        size_pirep = 3. * size_factor / zoom
+        size_maps = 2.  * size_factor / zoom
+        size_vad = 2.   * size_factor / zoom
+        size_anl = 0.7  * size_factor / zoom
+        size_suw = 1.   * size_factor / zoom
         size_radar = 1. * size_factor
-        size_meso = 2.  * size_factor
+        size_meso = 2.  * size_factor / zoom
 
         LUN_IN = 5
 
