@@ -4576,7 +4576,9 @@ c                   cint = -1.
      1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
-                call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
+!               call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
+!    1                     ,n_image,1.)      
+                call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'spectral'
      1                     ,n_image,1.)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)

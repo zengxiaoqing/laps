@@ -306,24 +306,19 @@ C
           endif
 
       elseif(colortable .eq. 'spectral')then       
-          ncon  = 5
-          ncols = 50 - ncon
-          call color_ramp(ncols/8-ncon,59*ncols/120-ncon
+          ncols = 40
+          call color_ramp(1,35*ncols/100
      1                   ,IWKID,icol_offset
-     1                   ,0.5,0.5,0.7                 ! Violet
+     1                   ,0.6,0.7,0.4                 ! Violet
      1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(59*ncols/120-ncon,73*ncols/120-ncon
+          call color_ramp(35*ncols/100,55*ncols/100
      1                   ,IWKID,icol_offset       
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(73*ncols/120-ncon,90*ncols/100-ncon
+          call color_ramp(55*ncols/100,ncols
      1                   ,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(90*ncols/100-ncon,ncols-ncon
-     1                   ,IWKID,icol_offset
-     1                   ,3.0,0.9,0.7                 ! Red
-     1                   ,3.0,0.9,0.2)                ! Hot
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
