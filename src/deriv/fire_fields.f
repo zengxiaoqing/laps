@@ -4,6 +4,8 @@ c**************new routine as adapted at FSL**************************
       subroutine fire_fields(ni,nj,nk,temp_3d,td_3d                 ! I
 !    1                      ,heights_3d                             ! I
      1                      ,u_3d,v_3d                              ! I
+     1                      ,t_sfc_k,p_sfc_pa                       ! I
+!    1                      ,rh_sfc,u_sfc,v_sfc                     ! I
      1                      ,r_missing_data,i4time                  ! I
      1                      ,istatus)                               ! O
 
@@ -28,6 +30,8 @@ c**************new routine as adapted at FSL**************************
       real*4 t_sfc_k(ni,nj)                                         ! I?
       real*4 rh_sfc(ni,nj)                                          ! I?
       real*4 p_sfc_pa(ni,nj)                                        ! I?
+      real*4 u_sfc(ni,nj)
+      real*4 v_sfc(ni,nj)
 
       real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! L
       real*4 pres_3d_pa(ni,nj,nk)                                   ! L
@@ -74,6 +78,8 @@ c**************new routine as adapted at FSL**************************
      1                          ,pbl_top_pa,pbl_depth_m,istat_pbl   ! I
      1                          ,t_sfc_k                            ! I
      1                          ,rh_sfc                             ! I
+     1                          ,u_sfc                              ! I
+     1                          ,v_sfc                              ! I
      1                          ,p_sfc_pa                           ! I
      1                          ,fosberg_2d                         ! O
      1                          ,haines_mid_2d                      ! O
@@ -117,6 +123,8 @@ c**************new routine as adapted at FSL**************************
      1                           ,pbl_top_pa,pbl_depth_m,istat_pbl   ! I
      1                           ,t_sfc_k                            ! I
      1                           ,rh_sfc                             ! I
+     1                           ,u_sfc                              ! I
+     1                           ,v_sfc                              ! I
      1                           ,p_sfc_pa                           ! I
      1                           ,fosberg_2d                         ! O
      1                           ,haines_mid_2d                      ! O
@@ -135,6 +143,8 @@ c**************new routine as adapted at FSL**************************
 
        real*4 t_sfc_k(ni,nj)
        real*4 rh_sfc(ni,nj)
+       real*4 u_sfc(ni,nj)
+       real*4 v_sfc(ni,nj)
        real*4 p_sfc_pa(ni,nj)
        real*4 p_sfc_mb(ni,nj)
 
@@ -155,7 +165,7 @@ c**************new routine as adapted at FSL**************************
 !      Calculate Fosberg Fireweather Index
        write(6,*)' Calculate Fosberg Fireweather Index'
 !      Note that 3d inputs are presently anticipated as sigma coordinates
-!      call fireweatherindex(t_sfc_k,rh_sfc,p_sfc_mb,u10,v10
+!      call fireweatherindex(t_sfc_k,rh_sfc,p_sfc_mb,u_sfc,v_sfc
 !    1                      ,fosberg_2d)      
 
 !      Calculate Ventilation Index
