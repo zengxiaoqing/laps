@@ -330,6 +330,7 @@ cdis
         ioffm = 1 ! Don't plot label stuff in conrec
 
         igrid=0
+        idiff=0
 
         lapsplot_pregen = .true.
 
@@ -723,7 +724,7 @@ c read in laps lat/lon and topo
         call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh,
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
-        if(c_field(1:2) .eq. 'df')then
+        if(c_field(1:2) .eq. 'df' .and. idiff .eq. 0)then
             write(6,*)' Plotting difference field of last two entries'       
             call diff(field_vert,field_vert_buf,field_vert ! _diff
      1               ,NX_C,NZ_C)       
@@ -734,12 +735,14 @@ c read in laps lat/lon and topo
             cint = 0.
 
             i_contour = 1
+            idiff = 1
 
         else
             if(igrid .eq. 1)then
                 write(6,*)' Copying field_vert to field_buf'
                 call move(field_vert,field_vert_buf,NX_C,NZ_C)       
             endif
+            idiff = 0
         endif
 
         igrid = 1
@@ -1005,11 +1008,11 @@ c read in laps lat/lon and topo
 
 
             if(i_image .eq. 0)then
-                cint = -1.
+                cint = -1. * 2. ** (-density)
                 i_contour = 1
             else
 !               cint = 0.
-                cint = 10.
+                cint = 10. 
                 clow = -50.
                 chigh = +50.
                 i_contour = -1
@@ -1961,7 +1964,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             do k = 1,NZ_L
             do i = 1,NX_C
-                field_vert(i,k) = field_vert(i,k) - 273.15 ! K to C
+                field_vert(i,k) = k_to_c(field_vert(i,k))
             enddo ! i
             enddo ! k
 
@@ -1989,7 +1992,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             do k = 1,NZ_L
             do i = 1,NX_C
-                field_vert(i,k) = field_vert(i,k) - 273.15 ! K to C
+                field_vert(i,k) = k_to_c(field_vert(i,k))
             enddo ! i
             enddo ! k
 
@@ -2636,7 +2639,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 enddo ! i
 
               else
-                write(6,*)' logarithmic contour line plot'
+                write(6,*)' logarithmic contour line plot, cint = ',cint
                 call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
