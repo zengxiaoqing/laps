@@ -146,7 +146,7 @@ cdis
 1110    format(/////'     [h]  Horizontal Plan View '
      1        ,'   (Const Pressure Level or SFC)'
      1        /'     [x]  Vertical Cross Section'
-     1        /' ',60x,'[q] QUIT ? '$)
+     1        /' ',60x,'[q] QUIT ? ',$)
         read(lun,1111)c_section
 1111    format(a)
 

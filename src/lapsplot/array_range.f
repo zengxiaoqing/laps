@@ -1,6 +1,6 @@
 
 
-       subroutine contour_settings(a,ni,nj,clow,chigh,cint)
+       subroutine contour_settings(a,ni,nj,clow,chigh,cint,scale)
 
        real*4 a(ni,nj)
 
@@ -8,7 +8,7 @@
 
        call array_range(a,ni,nj,rmin,rmax,r_missing_data)
 
-       range = rmax-rmin
+       range = (rmax-rmin) / scale
 
        if(range .gt. 2000)then
            cint = 400.

@@ -101,6 +101,7 @@ cdis
         integer*4 itop_array(NX_L,NY_L)
 
         character*2 c_field,c_metacode,c_type
+        character*3 c_bkg
         character c19_label*19,c33_label*33
 
 !       integer*4 ity,ily,istatus
@@ -315,8 +316,8 @@ cdis
         if(lun .eq. 5)call logit('nest7grid')
 
 1200    write(6,11)
-11      format(//'  SELECT FIELD:  '
-     1       /'     [wd] Wind, [wb,wr,wf] Background Wind, '
+11      format(//'  SELECT FIELD:  ',
+     1       /'     [wd] Wind, [wb,wr,wf] (LGA,RAM,LAPS-BKG), '
      1       ,'[co] Cloud Omega'
      1       /'     [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
      1       ,' [ne] CIN'
@@ -326,30 +327,34 @@ cdis
      1       /'     SFC: [p,pm,ps,tt,td,ws,vv,hu,ta,th,te,vo,mr,mc,dv'       
      1       ,',ha,ma,sp,cs,vs,tw,fw,hi]'
      1       /'          [ob,st] obs plot/station locations'
+     1       ,'  [bs] Sfc background'
      1       /
-     1       /'     [t]  Temperature, [pt] Potential Temperature,'
-     1       ,'  [hh] Height of Const Temp Sfc'
-     1       /
-     1       /4x,' [ci] Cloud Ice     ',22x,'  [ls] Smith - Feddes Cloud
-     1 LWC'
+     1       /'     [t,tb,tr] Temp (LAPS,LGA,RAM), [pt] Pot Temp,'
+     1       ,' [hh] Height of Const Temp Sfc'
+     1       /)
+
+        write(6,12)
+ 12     format(/4x,' [ci] Cloud Ice     ',22x
+     1       ,'  [ls] Smith - Feddes Cloud LWC'
      1       /'     [is] Smith - Feddes Integrated Cloud LWC  '
      1       /'     [mv] Mean Volume Drop Diam,   [ic] Icing Index,'
      1       ,' [tc,tp] Cloud/Precip Type'
      1       /
-     1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'
+     1       /'     [cc] Cld Ceiling (AGL), [cb] Lowest Cld Base (MSL)'       
      1       ,',  [ct] Highest Cld Top'
      1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
      1       /
-     1       /'     [ht,hb,hy] Hts (LAPS,Bkgnd,Hydrstc),'
+     1       /'     [ht,hb,hr,hy] Hts (LAPS,LGA,RAM,Hydrstc),'
      1       ,' [sa/pa] Snow/Pcp Accum'
      1       /'     [sc] Snow Cover'
      1       /'     [sh,rh] Specific/Rel Humidity'
      1       ,'     [tr,lf,gr,so] Terrain/Land Frac/Grid, '
      1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
-     1        '; Polar Orbiter'
-     1       //' ',52x,'[q] quit/display ? '$)
-        read(lun,12)c_type
-12      format(a2)
+     1       ,'; Polar Orbiter'
+     1       //' ',52x,'[q] quit/display ? ',$)
+
+        read(lun,15)c_type
+ 15     format(a2)
 
         c4_log = 'h '//c_type
         if(lun .eq. 5 .and. c_type .ne. 'q ')call logit(c4_log)
@@ -400,10 +405,10 @@ cdis
             if(c_type .eq. 'wd')then
                 write(6,13)
 13              format(
-     1    '     Enter Level in mb, -1 = steering, 0 = sfc',24x,'? '$)
+     1    '     Enter Level in mb, -1 = steering, 0 = sfc',24x,'? ',$)
             else
                 write(6,14)
-14              format('     Enter Level in mb',48x,'? '$)
+14              format('     Enter Level in mb',48x,'? ',$)
             endif
 
             read(lun,*)k_level
@@ -424,7 +429,7 @@ cdis
                 if(k_level .eq. 0)then ! SFC Winds
                     write(6,102)
 102                 format(/
-     1 '  Field [di,sp,u,v,vc (barbs), ob (obs)]',30x,'? '$)
+     1          '  Field [di,sp,u,v,vc (barbs), ob (obs)]',30x,'? ',$)
                     read(lun,12)c_field
                     ext = 'lwm'
                     call get_directory(ext,directory,len_dir)
@@ -432,17 +437,17 @@ cdis
 
                     var_2d = 'SU'
                     call get_laps_2d(i4time_3dw,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
+     1                  ,units_2d,comment_2d,NX_L,NY_L,u_2d,istatus)
                     var_2d = 'SV'
                     call get_laps_2d(i4time_3dw,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
+     1                  ,units_2d,comment_2d,NX_L,NY_L,v_2d,istatus)
 
 
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1 '  Field [di,sp,u,v,w,dv,vc (barbs), ob (obs))]'
-     1                                          ,24x,'? '$)
+     1              '  Field [di,sp,u,v,w,dv,vc (barbs), ob (obs))]'
+     1                                          ,24x,'? ',$)
                     read(lun,12)c_field
                     write(6,*)' ext = ',ext
                     if(c_field .ne. 'w ')then
@@ -494,7 +499,7 @@ cdis
 
                 write(6,104)
 104             format(/
-     1     '  Field [di,sp,u,v,vc (barbs)]   ',25x,'? '$)
+     1     '  Field [di,sp,u,v,vc (barbs)]   ',25x,'? ',$)
                 read(lun,12)c_field
             endif
 
@@ -524,8 +529,8 @@ cdis
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
-     1  c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1          c33_label,i_overlay,c_display,'nest7grid',lat,lon,jdot,       
+     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field .eq. 'sp')then
                 c19_label = ' Isotachs (kt)     '
@@ -544,9 +549,14 @@ cdis
             else if(c_field .eq. 'u ')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' U - Diff      '
+                elseif(c_type .eq. 'wb')then
+                    c19_label = ' U (lga) - Comp'
+                elseif(c_type .eq. 'wr')then
+                    c19_label = ' U (ram) - Comp'
                 else
                     c19_label = ' U - Component '
                 endif
+
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
@@ -556,6 +566,10 @@ cdis
             else if(c_field .eq. 'v ')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' V - Diff      '
+                elseif(c_type .eq. 'wb')then
+                    c19_label = ' V (lga) - Comp'
+                elseif(c_type .eq. 'wr')then
+                    c19_label = ' V (ram) - Comp'
                 else
                     c19_label = ' V - Component '
                 endif
@@ -568,6 +582,10 @@ cdis
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
+                elseif(c_type .eq. 'wb')then
+                    c19_label = ' WIND-lga  (kt)    '
+                elseif(c_type .eq. 'wr')then
+                    c19_label = ' WIND-ram  (kt)    '
                 else
                     c19_label = ' WINDS    (kt)     '
                 endif
@@ -773,8 +791,8 @@ cdis
                 return
             endif
 
-            call get_tw_approx_2d(temp_2d,td_2d,pres_2d,NX_L,NY_L,tw_sfc
-     1_k)
+            call get_tw_approx_2d(temp_2d,td_2d,pres_2d,NX_L,NY_L
+     1                           ,tw_sfc_k)
 
             call make_fnam_lp(i4time_temp,asc9_tim_n,istatus)
 
@@ -788,7 +806,7 @@ cdis
 
 
             call plot_cont(field_2d,1e-0,-30.,+30.,2.,asc9_tim_n,
-     1      'LAPS    SFC Wetbulb (approx) (C) '
+     1                    'LAPS    SFC Wetbulb (approx) (C) '
      1                    ,i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1129,7 +1147,7 @@ cdis
                 write(6,*)
                 write(6,2026)
 2026            format('         Enter Radar # (for reflectivity)  '
-     1                                                     ,27x,'? '$)
+     1                                                     ,27x,'? ',$)
                 read(lun,*)i_radar
 
                 write(6,*)' Reading reflectivity data from radar '
@@ -1171,13 +1189,13 @@ cdis
      1           /'  [mr] Max Reflectivity, [vl] VIL, [mt] Max Tops,'
      1     /'  [lr] Low Lvl Reflectivity, '
      1     ,'[f1] 1 HR Fcst Max Reflectivity,'
-     1     /' ',61x,' [q] Quit ? '$)
+     1     /' ',61x,' [q] Quit ? ',$)
             read(lun,12)c_field
 
             if(  c_field .eq. 'rf' 
      1      .or. c_field .eq. 'vi' .or. c_field .eq. 've')then
                 write(6,2021)
-2021            format('         Enter Level in mb ',45x,'? '$)
+2021            format('         Enter Level in mb ',45x,'? ',$)
                 read(lun,*)k_level
 
                 if(k_level .gt. 0)then
@@ -1243,7 +1261,7 @@ cdis
 
                 write(6,2031)
 2031            format('         Enter Radar # (of ones available)  '
-     1                                                    ,28x,'? '$)
+     1                                                    ,28x,'? ',$)
                 read(lun,*)i_radar
 
                 call make_fnam_lp(i4time_radar_a(i_radar),asc9_tim_r
@@ -1477,13 +1495,13 @@ cdis
             if(c_type .eq. 'sa')then
                 write(6,1321)
 1321            format('     ','Enter # of Hours of Snow Accumulation,',
-     1          ' [-99 for Storm Total]     ','? '$)
+     1          ' [-99 for Storm Total]     ','? ',$)
                 var_2d = 'STO'
             else
                 write(6,1322)
 1322            format('     ','Enter # of Hours of Precip Accumulation,
      1',
-     1          ' [-99 for Storm Total]   ','? '$)
+     1          ' [-99 for Storm Total]   ','? ',$)
                 var_2d = 'RTO'
             endif
 
@@ -1724,7 +1742,7 @@ cdis
         elseif( c_type .eq. 'rx')then
             write(6,1311)
 1311        format('     ','Enter # of Hours of Radar Data,',
-     1          ' [-99 for Storm Total]     ','? '$)
+     1          ' [-99 for Storm Total]     ','? ',$)
             read(lun,*)r_hours
 
             write(6,*)
@@ -1766,13 +1784,13 @@ cdis
             endif
 
             call plot_cont(radar_array,scale,
-     1             0.,80.,cint_ref,asc9_tim_r,c33_label,
+     1          0.,80.,cint_ref,asc9_tim_r,c33_label,
      1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 't' .or. c_type .eq. 'pt')then
             write(6,1513)
-1513        format('     Enter Level in mb',48x,'? '$)
+1513        format('     Enter Level in mb',48x,'? ',$)
             read(lun,*)k_level
 
 !           if(istatus .ne. 1)goto1200
@@ -1781,8 +1799,8 @@ cdis
                 iflag_temp = 0 ! Returns Potential Temperature
 
                 if(k_level .gt. 0)then
-                    k_level = nint(zcoord_of_pressure(float(k_level*100)
-     1))
+                    k_level = 
+     1                  nint(zcoord_of_pressure(float(k_level*100)))
                 endif
 
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
@@ -1838,7 +1856,7 @@ cdis
         elseif(c_type .eq. 'hh')then
             write(6,1515)
 1515        format('     Enter Temperature surface to display '
-     1                      ,'height of (deg C)',11x,'? '$)
+     1                      ,'height of (deg C)',11x,'? ',$)
             read(lun,*)temp_in_c
             temp_in_k = temp_in_c + 273.15
 
@@ -1857,7 +1875,7 @@ cdis
 
                 do k = 1,NZ_L-1
                     if(temp_3d(i,j,k  ) .gt. temp_in_k  .and.
-     1               temp_3d(i,j,k+1) .le. temp_in_k       )then
+     1                 temp_3d(i,j,k+1) .le. temp_in_k       )then
 
 !                       Desired Temperature occurs in this layer
                         frac_k = (       temp_in_k - temp_3d(i,j,k))/
@@ -1889,7 +1907,7 @@ cdis
      1hen
             write(6,1514)
 1514        format('     Enter Level in mb; OR [-1] for max in column'
-     1                          ,21x,'? '$)
+     1                          ,21x,'? ',$)
             read(lun,*)k_level
             k_mb = k_level
 
@@ -2193,7 +2211,7 @@ cdis
 1517        format('     Enter Lvl (mb); OR [0] 2D cldtyp'
 !    1          ,' [-1] low cloud,'
 !    1          ,' [-2] high cloud'
-     1          ,' ? '$)
+     1          ,' ? ',$)
 
 1525        read(lun,*)k_level
             k_mb = k_level
@@ -2254,7 +2272,7 @@ cdis
         elseif(c_type .eq. 'tp')then
 1624        write(6,1617)
 1617        format('     Enter Level in mb; [0] for surface,'
-     1          ,' OR [-1] for sfc thresholded: ','? '$)
+     1          ,' OR [-1] for sfc thresholded: ','? ',$)
 
 1625        read(lun,*)k_level
             k_mb = k_level
@@ -2452,6 +2470,13 @@ cdis
           call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
 
           if(c_type .eq. 'pe')then
+!             Change flag value 
+              do i = 1,NX_L
+              do j = 1,NY_L
+                  if(pbe_2d(i,j) .eq. r_missing_data)pbe_2d(i,j) = -1.       
+              enddo ! j
+              enddo ! i
+
               c33_label = 'LAPS CAPE                (J/KG)  '
               clow = 0.
               chigh = 8000.
@@ -2476,11 +2501,10 @@ cdis
               clow = -500 !   0.
               chigh = 0.  !   0.
               cint = 50.  ! -10.
-              call plot_cont(nbe_2d,scale,clow,chigh,cint,asc9_tim_t,c33
-     1_label,
-     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
-     1t,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+              call plot_cont(nbe_2d,scale,clow,chigh,cint,asc9_tim_t
+     1                      ,c33_label,i_overlay,c_display,'nest7grid'
+     1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
+     1                      ,laps_cycle_time)
           endif
 
         elseif(c_type .eq. 'sh')then
@@ -2552,9 +2576,9 @@ cdis
 !           enddo ! i
 
             call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay
-     1          ,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1           asc9_tim_t,c33_label,i_overlay,
+     1           c_display,'nest7grid',lat,lon,jdot,
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hy')then
             write(6,1513)
@@ -2597,23 +2621,36 @@ cdis
 
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-            call plot_cont(heights_3d(1,1,k_level),1e1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(heights_3d(1,1,k_level),1e1,clow,chigh,cint       
+     1          ,asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1          ,lat,lon,jdot
+     1          ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'hb')then
-
-            var_2d = 'HT'
+        elseif(c_type .eq. 'hb' .or. c_type .eq. 'tb' .or.
+     1         c_type .eq. 'hr' .or. c_type .eq. 'tr'      )then
+            
+            if(c_type(1:1) .eq. 'h')then
+                var_2d = 'HT'
+            else
+                var_2d = 'T3'
+            endif
 
             call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
 
-            ext = 'lga'
+            if(c_type(2:2) .eq. 'b')then
+                ext = 'lga'
+            else
+                ext = 'ram'
+            endif
+
             call get_directory(ext,directory,len_dir)
 
-            write(6,*)' Enter yydddhhmmHHMM for lga file'
-            read(5,211)a13_time
- 211        format(a13)
+            write(6,211)ext(1:3)
+ 211        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
+
+            read(5,221)a13_time
+ 221        format(a13)
+
             call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
 
             call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
@@ -2633,22 +2670,54 @@ cdis
 !    1                                     ,field_2d,k_mb,istatus)
 
             IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Background Height Analysis'
+                write(6,*)' Error Reading Background Analysis ',var_2d
                 goto1200
             endif
 
-            call mklabel33(k_level,' LAPS Heights    dm',c33_label)
 
-            clow = 0.
-            chigh = 0.
-            cint = 1. ! 3.
+            if(c_type(1:1) .eq. 'h')then
+                scale = 10.
 
-            call make_fnam_lp(i4time,asc9_tim_t,istatus)
+                call mklabel33(k_level,' LAPS '//ext(1:3)//' Height dm'
+     1                        ,c33_label)
+                clow = 0.
+                chigh = 0.
+                call array_range(field_2d,NX_L,NY_L,rmin,rmax
+     1                      ,r_missing_data)
 
-            call plot_cont(field_2d,1e1,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                  ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                range = (rmax-rmin) / scale
+
+                if(range .gt. 20)then
+                    cint = 3.
+                elseif(range .gt. 8)then
+                    cint = 2.
+                else ! range < 8
+                    cint = 1.
+                endif
+
+            else  
+                call mklabel33(k_level,' LAPS '//ext(1:3)//' Temp    C'
+     1                        ,c33_label)
+
+                scale = 1.
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = field_2d(i,j) - 273.15
+                enddo ! j
+                enddo ! i
+
+            endif
+
+            call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                         ,scale)       
+
+            call plot_cont(field_2d,scale,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+     1                    ,'nest7grid',lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ht')then
             write(6,1513)
@@ -2662,8 +2731,8 @@ cdis
 
             ext = 'lt1'
 
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_h
-     1eights,
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1             ,i4time_heights,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,k_mb,istatus)
 
@@ -2678,7 +2747,6 @@ cdis
 
             clow = 0.
             chigh = 0.
-!           cint = 1. ! 3.
             call array_range(field_2d,NX_L,NY_L,rmin,rmax
      1                      ,r_missing_data)
 
@@ -2751,7 +2819,7 @@ cdis
 !           chigh = +120.
 !           cint = 5.
 
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint)       
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -2785,7 +2853,7 @@ cdis
 !           clow = +50.
 !           chigh = +150.
 !           cint = 5.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint)       
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -2819,7 +2887,7 @@ cdis
 !           clow = -50.
 !           chigh = +120.
 !           cint = 5.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint)       
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -2853,6 +2921,7 @@ cdis
      1            asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1                                          ,lat,lon,jdot,
      1            NX_L,NY_L,r_missing_data,laps_cycle_time)
+
         elseif(c_type .eq. 'ws')then ! surface wind
             ext = 'lsx'
             var_2d = 'U'
@@ -2862,7 +2931,7 @@ cdis
             var_2d = 'V'
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_pw,ext,var_2d,units_2d
-     1                          ,comment_2d,NX_L,NY_L,u_2d,0,istatus)      
+     1                          ,comment_2d,NX_L,NY_L,v_2d,0,istatus)      
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface Wind'
@@ -2902,6 +2971,74 @@ cdis
      1                     ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
      1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
      1                     ,jdot)
+
+        elseif(c_type .eq. 'bs')then ! surface backgrounds
+            write(6,711)
+ 711        format('   Background extension [lgb,rsf]',5x,'? ',$)
+            read(lun,712)ext
+ 712        format(a3)
+
+            call get_directory(ext,directory,len_dir)
+
+            write(6,716)ext(1:3)
+ 716        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
+
+            read(5,717)a13_time
+ 717        format(a13)
+
+            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+
+            write(6,723)
+ 723        format(/'  SELECT FIELD (VAR_2D):  '
+     1       /
+     1       /'     SFC: [usf,vsf,psf,tsf,dsf,rsf,slp] ? ',$)
+
+            read(lun,724)var_2d
+ 724        format(a)
+            call upcase(var_2d,var_2d)
+
+            level=0
+            CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
+     1          VAR_2d,level,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
+     1          field_2d,ISTATUS)
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Background Analysis ',var_2d
+                goto1200
+            endif
+
+            if(var_2d .eq. 'TSF')then
+!               K to F
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = ((field_2d(i,j)-273.15) * 1.8) + 32.
+                enddo ! j
+                enddo ! i
+
+                scale = 1.
+!               c33_label = 'LAPS Sfc Temperature     (F)     '
+
+            elseif(var_2d .eq. 'SLP' .or. var_2d .eq. 'PSF')then
+                scale = 100.
+
+            else
+                scale = 1.
+
+            endif
+
+            c33_label = 'LAPS Sfc Background       '
+     1                  //ext(1:3)//'/'//var_2d(1:3)
+
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                   ,scale)       
+
+            call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+
+            call plot_cont(field_2d,scale,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+     1                    ,'nest7grid',lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
+            
 
         elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! 1500m or MSL Pres
             if(c_type .eq. 'p')then
@@ -3026,14 +3163,14 @@ cdis
 !           clow = 0.
 !           chigh = +100.
 !           cint = 10.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint)       
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1      asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1      NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ta')then
             var_2d = 'TAD'
@@ -3473,7 +3610,7 @@ cdis
         elseif(c_type .eq. 'cv')then
             write(6,2514)
 2514        format('     Enter Level (1-42); [-bbbb] for mb; '
-     1                          ,'OR [0] for max in column',5x,'? '$)
+     1                          ,'OR [0] for max in column',5x,'? ',$)
             read(lun,*)k_level
 
             if(k_level .gt. 0)then
@@ -3869,7 +4006,7 @@ cdis
                     call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltyp
      1e)
                     write(6,2031)
-2031                format('         Enter Radar #   ',45x,'? '$)
+2031                format('         Enter Radar #   ',45x,'? ',$)
                     read(5,*)i_radar
 
                     call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
@@ -3882,7 +4019,8 @@ cdis
 
                 call get_border(NX_L,NY_L,x_1,x_2,y_1,y_2)
 
-                call set(x_1,x_2,y_1,y_2,1.,float(NX_L),1.,float(NY_L))
+                call set(x_1,x_2,y_1,y_2,1.,float(NX_L),1.,float(NY_L)
+     1                                                             ,1)       
 
                 call plot_winds_2d(u,v,interval,size
      1          ,NX_L,NY_L,lat,lon,r_missing_data)
@@ -4299,37 +4437,48 @@ cdis
 c
         character atime*24, infile*70
         character directory*150,ext*31
-
-        character*9 c9_string
+        character*255 c_filespec
+        character*9 c9_string, asc_tim_9
         character*13 filename13
 
 !       Declarations for new read_surface routine
 !       New arrays for reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns),store_hgt(maxs
-     1tns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns),vis(maxs
-     1tns)
-     1                                          ,rad(maxstns)
+        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
+     1          ,store_hgt(maxstns,5)
+        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
+     1          ,vis(maxstns),rad(maxstns)
 
         Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
 
         Character   obstype(maxstns)*8
      1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
 
-        write(6,*)' Reading Station locations from read_sfc for labellin
-     1g '
+        call get_filespec('lso',2,c_filespec,istatus)
+        call get_file_time(c_filespec,i4time,i4time_lso)
+
+        if(i4time_lso .eq. 0)then
+            write(6,*)' No LSO files available for station plotting'
+            return
+        endif
+
+        call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
+
+        write(6,*)
+     1  ' Reading Station locations from read_sfc for labeling: '
+     1  ,asc_tim_9
+
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
-        infile = directory(1:len_dir)//filename13(i4time,ext(1:3))
+        infile = directory(1:len_dir)//filename13(i4time_lso,ext(1:3))       
 
         write(6,*)infile
         call read_surface_old(infile,maxstns,atime,n_meso_g,n_meso_pos,
-     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,n_obs_p
-     1os_g,
+     &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
+     &           n_obs_g,n_obs_pos_g,
      &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
      &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
      &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,
-     1store_emv,
+     &           store_emv,
      &           store_amt,store_hgt,vis,obstime,istatus)
 
 100     write(6,*)'     n_obs_b',n_obs_b
@@ -4342,7 +4491,7 @@ c
 
         size = 0.5
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
-        du= float(ni) / 300.
+        du = float(ni) / 300.
 
         call get_border(ni,nj,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj))
@@ -4383,7 +4532,6 @@ c
      1                 ,pstn(i),xsta,ysta
      1                 ,lat,lon,ni,nj,relsize,11,iflag)
 
-
                 if(iflag .eq. 1)call setusv_dum(2HIN,33)
 
                 call line(xsta,ysta+du*0.5,xsta,ysta-du*0.5)
@@ -4393,10 +4541,8 @@ c
               endif
 
             else ! Write station location only
-
                 call line(xsta,ysta+du,xsta,ysta-du)
                 call line(xsta+du,ysta,xsta-du,ysta)
-
 
             endif
 
