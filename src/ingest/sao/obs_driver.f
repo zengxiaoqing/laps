@@ -775,6 +775,9 @@ c
 
               if(l_match)then
 
+                 write(6,911)stations(i),provider(i),l_provider
+ 911		 format(a,a,l2)
+
 		 do j=1,num_varb(ibl)
 
 		    if( var_b(ibl,j) .eq. 'ALL' ) then
