@@ -2,7 +2,8 @@
      +    ,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
      +    ,htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus)
+     +    ,uwbg_sfc,vwbg_sfc,mslpbg
+     +    ,gproj,lon0,lat1,lat2,istatus)
 
       implicit none
 
@@ -29,19 +30,21 @@ c
      .          vwbg_sfc(nx_bg,ny_bg),
      .          tpbg_sfc(nx_bg,ny_bg)
 
+      real*4    lon0,lat1,lat2
 
       character*(*)   gproj,cmodel
       character*(*)   fullname
       character*(*)   bgpath
       character*(*)   fname_bg
       character*(*)   af_bg
+      character*6     c6_maproj
       character*13    fname13
       character*13    fname9_to_wfo_fname13
 
       if (bgmodel .eq. 1) then     ! Process 60 km RUC data
           call read_ruc60_native(bgpath,fname_bg,af_bg,
      .               nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .               gproj,istatus)
+     .               gproj,lon0,istatus)
 
       elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
           call read_eta_conusC(fullname,nx_bg,ny_bg,nz_bg,
@@ -51,8 +54,9 @@ c
      .                         istatus)
 
           if(istatus.eq.0) then
-             call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,prbg,tpbg,shbg,
-     +             tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus)
+             call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,prbg,tpbg,shbg
+     +            ,tpbg_sfc,prbg_sfc,shbg_sfc
+     +            ,gproj,lon0,lat1,lat2,istatus)
           endif
 c
       elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
@@ -66,7 +70,7 @@ c
      .         nx_bg,ny_bg,nz_bg, nxbg,nybg,nzbg,ntbg,
      .         prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg,
      .         prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
-     .         mslpbg,gproj,1,istatus)
+     .         mslpbg,gproj,lon0,lat1,lat2,1,istatus)
 c
       elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
 
@@ -76,7 +80,7 @@ c
              print*,'Read complete: entering prep'
              call lprep_ruc2_hybrid(nx_bg,ny_bg,nz_bg,htbg,prbg,shbg,
      +            uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc,tpbg_sfc,prbg_sfc,
-     +            shbg_sfc,htbg_sfc,gproj)
+     +            shbg_sfc,htbg_sfc,gproj,lon0,lat1,lat2)
              print*,'Data prep complete'
           else
              print*,'lprep_ruc not called'
@@ -94,18 +98,18 @@ c
      .                 ,fname_bg,af_bg,nx_bg,ny_bg,nz_bg
      .                 ,prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .                 ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .                 ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus)
+     .                 ,uwbg_sfc,vwbg_sfc,mslpbg
+     .                 ,gproj,lon0,lat1,lat2,istatus)
 
       elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
              call read_conus_nws(bgpath,fname_bg,af_bg,
      .               nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .               gproj,istatus)
+     .               gproj,lon0,lat1,lat2,istatus)
 c
       endif
 
       if(istatus.ne. 0)then
          print*,'Error reading background model data in read_bgdata'
-         return
       endif
 
       return

@@ -2,7 +2,7 @@
      .                      ,pr,ht,tp,sh,uw,vw,ww
      .                      ,ht_sfc,pr_sfc,td_sfc,tp_sfc
      .                      ,uw_sfc,vw_sfc,mslp
-     .                      ,gproj,istatus)
+     .                      ,gproj,lon0,lat1,lat2,istatus)
 
 c
       implicit none
@@ -88,8 +88,10 @@ c
 c *** Common block variables for lambert-conformal grid.
 c
       integer*4 nx_lc,ny_lc,nz_lc
-      real*4 lat1,lat2,lon0_lc,sw(2),ne(2)
-      common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0_lc,sw,ne
+      real*4 lat1_lc,lat2_lc,lon0_lc,sw(2),ne(2)
+      common /lcgrid/nx_lc,ny_lc,nz_lc,lat1_lc,lat2_lc,lon0_lc,sw,ne
+      real*4 lon0       !returned for wind rotations
+      real*4 lat1,lat2  !   "
 c
       common /estab/esat(15000:45000)
 c
@@ -430,16 +432,22 @@ c
          nz_lc=nz
          if(cwb_type .eq. 're')then
             lat1=10.0
+            lat1_lc=lat1
             lat2=40.0
-            lon0_lc=+120.
+            lat2_lc=lat2
+            lon0=+120.
+            lon0_lc=lon0
             sw(1)=15.879
             sw(2)=+112.545
             ne(1)=32.384
             ne(2)=+131.172 
          else
             lat1=10.0
+            lat1_lc=lat1
             lat2=40.0
-            lon0_lc=+120.
+            lat2_lc=lat2
+            lon0=+120.
+            lon0_lc=lon0
             sw(1)=15.80
             sw(2)=+109.24
             ne(1)=34.987
@@ -450,7 +458,8 @@ c
          nx_ll=nx
          ny_ll=ny
          nz_ll=nz
-         lon0_ll=0.0
+         lon0=0.0
+         lon0_ll=lon0
          dlat=1.0
          dlon=1.0
          if(cmodel(1:nclen).eq.'AVN_AFWA_DEGRIB')then
@@ -464,8 +473,11 @@ c
          ny_lc=ny
          nz_lc=nz
          lat1=25.0
+         lat1_lc=lat1
          lat2=25.0
-         lon0_lc=-95.0
+         lat2_lc=lat2
+         lon0=-95.0
+         lon0_lc=lon0
          sw(1)=12.19
          sw(2)=-133.459
          ne(1)=57.29
@@ -476,7 +488,8 @@ c
          ny_ll=ny
          nz_ll=nz
          lat0=-90.0
-         lon0_ll=0.0
+         lon0=0.0
+         lon0_lc=lon0
          dlat=1.0
          dlon=1.0
       endif

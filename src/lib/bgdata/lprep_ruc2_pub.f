@@ -1,5 +1,7 @@
-      subroutine lprep_ruc2_hybrid(nx,ny,nz,ht,pr,sh,uw,vw,th,usfc,vsfc,
-     +     tsfc,prsfc,shsfc,htsfc,gproj)
+      subroutine lprep_ruc2_hybrid(nx,ny,nz,ht,pr,sh,uw,vw,th
+     +     ,usfc,vsfc,tsfc,prsfc,shsfc,htsfc
+     +     ,gproj,lon0_lc,lat1_lc,lat2_lc)
+c
       implicit none
       include 'bgdata.inc'
       integer nx,ny,nz,i,j,k
@@ -9,8 +11,7 @@
      +     shsfc(nx,ny),htsfc(nx,ny)
       real cp,g,r,cpog,kappa
       parameter (cp=1004.686,g=9.80665,r=287.053,cpog=cp/g,kappa=r/cp)
-      real tv, psi(nx,ny),psj(nx,ny),lat(nx,ny),lon(nx,ny),
-     .       angle(nx,ny)
+      real tv, psi(nx,ny),psj(nx,ny),lat(nx,ny),lon(nx,ny)
       character*(*) gproj
       real missing
       
@@ -22,6 +23,8 @@ c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
+      real*4 lon0_lc             !returned for wind rotations
+      real*4 lat1_lc,lat2_lc     !       "
 
 c *** Convert Pascals to mb.
 c *** Compute tv from thetav.
@@ -63,9 +66,11 @@ c
       nx_lc=nx
       ny_lc=ny
       lat1=25.0
+      lat1_lc=lat1
       lat2=25.0
+      lat2_lc=lat2
       lon0=-95.0
-
+      lon0_lc=lon0
       sw(1)=16.2810
       sw(2)=-126.1378
       ne(1)=55.4818
@@ -81,7 +86,7 @@ c         enddo
 c      enddo
 c      call psij_2_latlon(nx*ny,psi,psj,lat,lon)
 c
-c      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+c      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz)
 c
       return
       end

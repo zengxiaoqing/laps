@@ -114,7 +114,6 @@ C
      +     mslp,istatus)
 
       include 'netcdf.inc'
-C     integer NX,NY,NZ, nf_fid, nf_vid, nf_status, k
       integer NX,NY,NZ, nf_fid, nf_status, k
       character*(*) fname
       real MSLP( NX,  NY),    ht( NX,  NY,  NZ), 

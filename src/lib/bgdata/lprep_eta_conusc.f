@@ -1,5 +1,6 @@
-      subroutine lprep_eta_conusc(nx,ny,nz,pr,tp,rh,
-     .                     tp_sfc,pr_sfc,rh_sfc,gproj,istatus)
+      subroutine lprep_eta_conusc(nx,ny,nz,pr,tp,rh
+     .         ,tp_sfc,pr_sfc,rh_sfc
+     .         ,gproj,lon0_lc,lat1_lc,lat2_lc,istatus)
 c
       implicit none
 c
@@ -27,6 +28,8 @@ c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
+      real*4 lon0_lc             !returned for wind rotations
+      real*4 lat1_lc,lat2_lc     !    "
 c
 c_______________________________________________________________________________
 c  pr is input as a single verticle column output as 3d array
@@ -79,8 +82,11 @@ c
       nx_lc=nx
       ny_lc=ny
       lat1=25.0
+      lat1_lc=lat1
       lat2=25.0
+      lat2_lc=lat2
       lon0=-95.0
+      lon0_lc=lon0
       sw(1)=12.19
       sw(2)=-133.459
       ne(1)=57.29

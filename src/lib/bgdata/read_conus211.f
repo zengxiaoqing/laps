@@ -204,7 +204,7 @@ C
       subroutine read_conus_211(path,fname,af,nx,ny,nz,
      .     nxbg,nybg,nzbg,ntbg,pr,ht,tp,sh,uw,vw,ww,
      .     pr_sfc,uw_sfc,vw_sfc,sh_sfc,tp_sfc,mslp
-     .     ,gproj,model_out,istatus)
+     .     ,gproj,lon0_lc,lat1_lc,lat2_lc,model_out,istatus)
 
 c
       implicit none
@@ -254,8 +254,7 @@ c
      .       ww(nx,ny,nz)
 c
       real*4 lci(nx,ny),lcj(nx,ny),
-     .       lat(nx,ny),lon(nx,ny),
-     .       angle(nx,ny)
+     .       lat(nx,ny),lon(nx,ny)
 c
       integer start(10),count(10)
 C     integer vdims(10) 
@@ -280,6 +279,8 @@ c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
+      real*4 lon0_lc
+      real*4 lat1_lc,lat2_lc
       integer nf_vid,nn
       real cp,rcp, factor
       parameter (cp=1004.,rcp=287./cp)
@@ -650,8 +651,11 @@ c
       nx_lc=nx
       ny_lc=ny
       lat1=25.0
+      lat1_lc=lat1
       lat2=25.0
+      lat2_lc=lat2
       lon0=-95.0
+      lon0_lc=lon0
       sw(1)=12.19
       sw(2)=-133.459
       ne(1)=57.29
@@ -669,7 +673,7 @@ cc      enddo
 cc      enddo
 cc      call lcij_2_latlon(nx*ny,lci,lcj,lat,lon)
 c
-cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz)
 c
 cc      oldfname=fname
 

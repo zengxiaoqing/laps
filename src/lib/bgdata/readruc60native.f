@@ -30,7 +30,7 @@ cdis
 cdis 
 cdis 
       subroutine read_ruc60_native(path,fname,af,nx,ny,nz,
-     .                             pr,ht,tp,sh,uw,vw,gproj,istatus)
+     .                   pr,ht,tp,sh,uw,vw,gproj,lon0_ps,istatus)
 c
 c *** Subroutine to read 60 km ruc data on the native polar stereographic,
 c        hybrid-b grid.
@@ -59,7 +59,6 @@ c
 c
       real*4 psi(nx,ny),psj(nx,ny),
      .       lat(nx,ny),lon(nx,ny),
-     .       angle(nx,ny),
      .       mr,tv
 c
       integer start(10),count(10)
@@ -82,6 +81,7 @@ c
       real*4 lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx_ps,ny_ps,nz_ps,lat0,lon0,rota,sw,ne
+      real*4 lon0_ps             !returned for wind rotations
 c_______________________________________________________________________________
 c      
 c *** Open the netcdf file.
@@ -202,22 +202,23 @@ c
       rota=0.
       lat0=90.0
       lon0=-105.0
+      lon0_ps=lon0
       sw(1)=22.83730698
       sw(2)=-120.4905014
       ne(1)=45.98867416
       ne(2)=-60.82944107
 c
 c *** Convert ruc winds from grid north to true north.
+c commented JS 11-09-00.
+c     do j=1,ny
+c     do i=1,nx
+c        psi(i,j)=float(i)
+c        psj(i,j)=float(j)
+c     enddo
+c     enddo
+c     call psij_2_latlon(nx*ny,psi,psj,lat,lon)
 c
-      do j=1,ny
-      do i=1,nx
-         psi(i,j)=float(i)
-         psj(i,j)=float(j)
-      enddo
-      enddo
-      call psij_2_latlon(nx*ny,psi,psj,lat,lon)
-c
-      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
+c     call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz)
 c
       istatus=1
       return
