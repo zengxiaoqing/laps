@@ -33,14 +33,38 @@ c
 c
         subroutine add(a,b,result,imax,jmax)
 c
-c.....  Routine to add array 'b' to array 'a' and put the
-c.....  result into array 'result' .
+cdoc    Routine to add array 'b' to array 'a' and put the
+cdoc    result into array 'result' .
 c
         real*4 a(imax,jmax), b(imax,jmax), result(imax,jmax)
 c
         do j=1,jmax
         do i=1,imax
           result(i,j) = a(i,j) + b(i,j)
+        enddo !i
+        enddo !j
+c
+        return
+        end
+c
+c
+        subroutine add_miss(a,b,result,imax,jmax)
+c
+cdoc    Routine to add array 'b' to array 'a' and put the
+cdoc    result into array 'result'. This takes account of 'r_missing_data'.
+c
+        real*4 a(imax,jmax), b(imax,jmax), result(imax,jmax)
+c
+        call get_r_missing_data(r_missing_data,istatus)
+
+        do j=1,jmax
+        do i=1,imax
+          if(a(i,j) .ne. r_missing_data .and. 
+     1       b(i,j) .ne. r_missing_data       )then
+              result(i,j) = a(i,j) + b(i,j)
+          else
+              result(i,j) = r_missing_data
+          endif
         enddo !i
         enddo !j
 c
