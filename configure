@@ -2795,6 +2795,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
 	  etc/LapsRadar.pl
+          etc/cloud.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
@@ -2899,6 +2900,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
 	  etc/LapsRadar.pl
+          etc/cloud.pl
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl

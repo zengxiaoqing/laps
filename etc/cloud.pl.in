@@ -1,0 +1,112 @@
+#!@PERL@
+# @configure_input@
+
+$root = shift;
+$hr = shift;
+if (defined $root) {
+  if ($root =~ /^p$/i) {$logdir = "/data/lapb/parallel/laps/data/log";}
+  elsif ($root =~ /^o$/i) {$logdir = "/data/lapb/operational/laps/data/log";}
+  else {$logdir = $root . "/data/log"; } }
+else {$logdir = "/data/lapb/operational/laps/data/log"; } 
+
+# Get the most recent log file.
+
+$logname = "cloud";
+@filenames = <$logdir/$logname.log*>;
+$nfiles = @filenames;
+if ($nfiles == 0) {die "No log files found.\n"}
+$age_of_newest = 1;
+foreach $file (@filenames) {
+  $age = -M $file;
+  if ($age < $age_of_newest) {
+    $filename = $file;
+    $age_of_newest = $age; } }
+
+# This isn't kosher, but it's okay for now:
+if (defined $hr) {$filename = $logdir."/".$logname.".log.".$hr."20";}
+
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+print "\nReading from log file $filename\n\n";
+
+# See if the analysis is done.
+@greplines = grep /End of Cloud Analysis Package/, @lines;
+$ngreplines = @greplines;
+if ($ngreplines == 0) {die "Cloud analysis isn't finished.\n";}
+
+# Determine background model.
+
+$modeltype = "missing";
+$searchstring = "Successfully obtained: ";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($modeltime,$modeltype,$modelfield) = split(" ",$1,$2); 
+    last; } }
+if ($modeltype eq "missing") {die "Can't determine model background ..."}
+print "BACKGROUND $modelfield FIELD:  ";
+
+if ($modeltype =~ /ram/) {
+  if ($modeltime =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
+    $runtime = $2+0;
+    $fcsthr = $3/100;
+    print "Using $fcsthr hr fcst from local model started at $runtime UTC \n";
+    print "(local model file timestamp = $modeltime)\n"; } } 
+else {
+  $bgmodelfile = $filename;
+  $bgmodelfile =~ s/$logname/lga/;
+  open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
+  foreach (<BGMODEL>) {
+    if (/cmodel (.*)/) {
+      $modelid = $1;
+      $modelid =~ s/\ //g; }
+    if (/Reading - (.*)/) {
+      $pathname = $1; last; close BGMODEL; } }
+  $basename = $1 if ($pathname =~ /([^\/]*)$/);
+  if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
+    $runtime = $2/100;
+    $fcsthr = $4;
+    print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
+  else {
+    print "$modelid (Sorry -- can't decode model filename)\n"; } }
+
+# Temp/hgt info
+print "\nLAPS temperature/height fields:\n";
+$searchstring = " Reading 3D ";
+foreach (@lines) {if (/$searchstring(.*)/) {print "$1\n";}}
+
+# Satellite data
+print "\nSatellite (IR):";
+@greplines = grep /Returning S8A/, @lines;
+print "$greplines[0]";
+@greplines = grep /required/, @lines;
+print "$greplines[0]\n";
+
+print "Satellite (Visible Albedo):";
+@greplines = grep /Returning ALB/, @lines;
+print "$greplines[0]\n";
+
+# Radar data
+print "Radar:\n";
+@greplines = grep /NOWRAD/, @lines;
+print "$greplines[0]\n";
+
+# Surface metars (sfc.pl has a nicer way of printing these out)
+print "METARS:\n";
+@greplines = grep /   METAR  /, @lines;
+foreach (@greplines) {
+  ($name,@junk) = split;
+  print "$name ";}
+print "\n";
+print "\n";
+
+# Pirep data
+print "Pilot reports:\n";
+$searchstring = "num pireps/num good pireps/cloud layers =";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+   ($dummy,$npireps,$ngood,$nlayers) = split /\s+/, $1;
+   print "  $npireps pireps\n";
+   print "  $ngood good reports\n";
+   print "  $nlayers layers\n";
+  }
+}
