@@ -167,15 +167,17 @@ c    +,istatus)
          endif
 
          print*,'open and read FA file: ',filename(1:l)
-         open(lun,file=filename,status='old',IOSTAT=IOSTATUS,err=991)
+         open(lun,file=filename(1:l),status='old'
+     +,IOSTAT=IOSTATUS,err=991)
+
 c
-         call read_fa(lun,filename                      ! I
-     .               ,nx,ny,nz                          ! I
-     .               ,r_missing_data                    ! I
-     .               ,prk                               ! O
-     .               ,ht,tp,sh,uw,vw                    ! O
-     .               ,mslp                              ! O
-     .               ,istatus)                          ! O
+c        call read_fa(lun,filename                      ! I
+c    .               ,nx,ny,nz                          ! I
+c    .               ,r_missing_data                    ! I
+c    .               ,prk                               ! O
+c    .               ,ht,tp,sh,uw,vw                    ! O
+c    .               ,mslp                              ! O
+c    .               ,istatus)                          ! O
 c
 c
          istatus=0
@@ -315,7 +317,19 @@ c
 c
 c *** Fill the common block variables.
 c
-      if (bgmodel .eq. 6) then
+      if (bgmodel .eq. 3)then
+         gproj='LC'
+         nx_lc=nx
+         ny_lc=ny
+         nz_lc=nz
+         lat1=10.0
+         lat2=40.0
+         lon0_lc=+120.
+         sw(1)=15.897
+         sw(2)=+112.545
+         ne(1)=32.384
+         ne(2)=+131.172 
+      elseif (bgmodel .eq. 6) then
          gproj='LL'
          nx_ll=nx
          ny_ll=ny
