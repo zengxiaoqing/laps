@@ -3582,23 +3582,25 @@ c
      1                             ,NX_L,NY_L,field_2d,k_mb,istatus)
 
 c                call get_laps_3dgrid
-c    1        (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+c    1           (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
 c    1          ,ext,var_2d,units_2d,comment_2d
 c    1                                  ,field_3d,istatus) ! q_3d
                  call mklabel33(k_mb,' LAPS Spec Hum x1e3',c33_label)
               endif   
-              if(istatus.ne. 1)then
+
+              if(istatus.ne.1 .and. istatus.ne.-1)then
                  print*,'No plotting for the requested time period'
               else
-
                  clow = 0.
                  chigh = +40.
                  cint = 0.2
-c             cint = -1.
+c                cint = -1.
 
                  call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-                 call plot_cont(field_2d,1e-3
+                 scale = 1e-3
+
+                 call plot_cont(field_2d,scale
      1               ,clow,chigh,cint,asc9_tim_t
      1               ,namelist_parms,plot_parms,c33_label      
      1               ,i_overlay,c_display,lat,lon,jdot
@@ -3735,13 +3737,17 @@ c
                     cint = 0.2
 c                   cint = -1.
 
-                    call plot_cont(sh_2d,1e-3
+                    scale = 1e-3
+
+                    call plot_cont(sh_2d,scale
      1                            ,clow,chigh,cint ! q_3d
      1                            ,asc9_tim_t,namelist_parms,plot_parms       
      1                            ,c33_label,i_overlay
      1                            ,c_display
      1                            ,lat,lon,jdot,NX_L,NY_L
      1                            ,r_missing_data,laps_cycle_time)
+
+                    call move(sh_2d,field_2d,NX_L,NY_L) ! supports diff option
 
                 elseif(qtype .eq. 'r')then
                     if(istat_rh .ne. 1 .and. istat_sh .eq. 1)then
