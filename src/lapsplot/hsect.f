@@ -1818,10 +1818,12 @@ c
                     cint = 0.1
                     scale = 1e0
                 else
-                    clow = -10.0
-                    chigh = 40.
-                    cint = 10.
+!                   clow = -10.0
+!                   chigh = 40.
+!                   cint = 10.
                     scale = 1e0
+                    call contour_settings(vas,NX_L,NY_L,clow,chigh,cint
+     1                                   ,zoom,density,scale)
                 endif
 
                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
