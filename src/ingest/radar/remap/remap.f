@@ -14,16 +14,23 @@
           go to 999
       endif
 
+!     This first call returns only 'n_radars_remap'
       call get_remap_parms(0,n_radars_remap,path_to_radar
      1                  ,c4_radarname,ext_dum,radar_subdir_dum,istatus)       
 
       do i_radar = 1,n_radars_remap
-          call remap_sub(i_radar,NX_L,NY_L,NZ_L,istatus)
+          write(6,*)
+          write(6,*)' Looping through radar # ',i_radar
+          call get_remap_parms(i_radar,n_radars_remap,path_to_radar
+     1                  ,c4_radarname,ext_dum,radar_subdir_dum,istatus)       
+          call remap_sub(i_radar,c4_radarname,ext_dum,radar_subdir_dum
+     1                  ,NX_L,NY_L,NZ_L,istatus)
       enddo
 
  999  end
 
-      subroutine remap_sub(i_radar,NX_L,NY_L,NZ_L,istatus)
+      subroutine remap_sub(i_radar,rname_ptr,laps_radar_ext
+     1                    ,c3_radar_subdir,NX_L,NY_L,NZ_L,istatus)
 
       include 'remap.inc'
       include 'remap_dims.inc'
@@ -59,6 +66,7 @@
       real radar_lon
       real radar_alt
       character*4 rname_ptr
+      character*3 laps_radar_ext, c3_radar_subdir
 
 !     Misc Local variables
 
@@ -114,13 +122,11 @@
 
 
 !     Get Radar name environment variable 
-      call getenv('RADARNAME',rname_ptr) 
+!     call getenv('RADARNAME',rname_ptr) 
 
       if (rname_ptr .eq. ' ')then
         write(6,*)' Could not evaluate RADARNAME environment variable.'
-        write(6,*)' Set the 4-character radar name using:'
-        write(6,*)'  setenv RADARNAME Kxxx'
-        write(6,*)'     before running remap.'
+        write(6,*)' Set the 4-character radar name before running remap'       
         call exit(1) 
       endif
 
@@ -318,13 +324,15 @@
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
      :            grid_ref,ngrids_ref,n_pot_ref,
      1            NX_L,NY_L,NZ_L,
+     1            laps_radar_ext,c3_radar_subdir,
      1            i4time_vol,full_fname,len_fname,
      1            i_num_finished_products,i_status) 
 
 
               if(i_last_scan .eq. 1)then
-                  write(6,*)' Volume completed, exit program'
-                  call exit(0)
+                  write(6,*)' Volume completed, return from remap_sub'
+                  istatus = 1
+                  return
               endif
 
               i_tilt_proc = i_tilt_proc_new
@@ -399,7 +407,7 @@
 !      Determine name of radar_subdir if any
        i_ext = 0
        do i = 1,i_radar
-           if(laps_radar_ext_a(i_radar) .eq. 'vrc')then
+           if(laps_radar_ext_a(i) .eq. 'vrc')then
                i_ext = i_ext + 1
            endif
        enddo ! i

@@ -53,7 +53,7 @@ C
         character*13 asc_time,asc_tim_nearest,asc13_tim_needed
         character*13 cvt_i4time_wfo_fname13
         character*9  asc9_tim_needed
-        character*255 c_filespec
+        character*(*) c_filespec                                 ! Input
         character c_fnames(max_files)*100
 
         common /laps_diag/ no_laps_diag
@@ -66,7 +66,7 @@ C
 
 !       call downcase(c_filespec,c_filespec)
 
-        call    Get_file_names(  c_filespec,
+        call    Get_file_names(c_filespec,
      1                   i_nbr_files_ret,
      1                   c_fnames,
      1                   max_files,
@@ -136,14 +136,14 @@ C       use a directory name only, the ls command can't handle it otherwise.
         parameter (max_files = 3000)
 
         character*13 asc_time,asc_tim_latest
-        character*255 c_filespec
+        character*(*) c_filespec                                   ! Input
         character c_fnames(max_files)*80
 
         common /laps_diag/ no_laps_diag
 
 !       call downcase(c_filespec,c_filespec)
 
-        call    Get_file_names(  c_filespec,
+        call    Get_file_names(c_filespec,
      1                   i_nbr_files_ret,
      1                   c_fnames,
      1                   max_files,
@@ -196,13 +196,13 @@ C       use a directory name only, the ls command can't handle it otherwise.
         integer max_files
 
         character*13 asc_time
-        character*255 c_filespec
+        character*(*) c_filespec                           ! Input
         character*(*) c_fnames(max_files)
         integer i4times(max_files)
 
         common /laps_diag/ no_laps_diag
 
-        call    Get_file_names(  c_filespec,
+        call    Get_file_names(c_filespec,
      1                   i_nbr_files_ret,
      1                   c_fnames,
      1                   max_files,

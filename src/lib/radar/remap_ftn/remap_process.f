@@ -1,15 +1,16 @@
       Subroutine Remap_process(
-     :                  i_tilt,                   ! Integer*4 (input)
-     :                  i_last_scan,              ! Integer*4 (input)
-     :                  i_first_scan,             ! Integer*4 (input)
+     :         i_tilt,                                     ! Integer*4 (input)
+     :         i_last_scan,                                ! Integer*4 (input)
+     :         i_first_scan,                               ! Integer*4 (input)
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
      :         grid_ref,ngrids_ref,n_pot_ref,
      :         NX_L,NY_L,NZ_L,
-     :                  i_product_i4time,         ! Integer*4 (input)
-     :                  full_fname,               ! Character*91
-     :                  i4_fn_length,             ! Integer*4 (output)
-     :                  i_num_finished_products,  ! Integer*4 (output)
-     :                  i_status )                ! Integer*4 (output)
+     :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
+     :         i_product_i4time,                           ! Integer*4 (input)
+     :         full_fname,                                 ! Character*91
+     :         i4_fn_length,                               ! Integer*4 (output)
+     :         i_num_finished_products,                    ! Integer*4 (output)
+     :         i_status)                                   ! Integer*4 (output)
 c
 c     Subroutine remap_process
 c
@@ -40,16 +41,11 @@ c                                       for FTPing and purging the output.
 c                                       New streamlined purging function.
 c       Albers, Steve      FEB-1996     Linear reflectivity averaging (via lut)
 c       Albers, Steve      MAY-1996     New igate_lut to reduce processing 
-c
+c       Albers, Steve          1998     More flexibility added
+
 *********************** Declaration Section **************************
 c
       implicit none
-c
-c     LAPS Grid Dimensions
-c
-      include 'remap_constants.dat'
-      include 'remap.cmn'
-      include 'remap.inc'
 c
 c     Input variables
 c
@@ -58,6 +54,12 @@ c
       integer*4 i_first_scan
       integer*4 i_product_i4time
       integer   NX_L,NY_L,NZ_L
+c
+c     LAPS Grid Dimensions
+c
+      include 'remap_constants.dat'
+      include 'remap.cmn'
+      include 'remap.inc'
 c
 c     Output variables
 c
@@ -85,6 +87,7 @@ c
       character*3 var_a(max_fields)
       character*125 comment_a(max_fields)
       character*10  units_a(max_fields)
+      character*3 laps_radar_ext, c3_radar_subdir
 
       integer*2 i2_fn_length
 
@@ -134,7 +137,6 @@ c
       character*7 c7_laps_xmit
       character*7 c7_laps_purge
       character*7 c7_laps_sleep
-      character*7 c7_laps_ext
 c
 c     Beginning of executable code
 c
@@ -214,7 +216,7 @@ c
      :               vel_nyquist,
      :               i_status)
 c
-      IF (i_status .ne. 1) GO TO 998
+      IF (i_status .ne. 1) GO TO 998 ! abnormal return
 c
       v_nyquist_tilt(i_tilt) = vel_nyquist
 c
@@ -468,7 +470,7 @@ c       call radar_qc(NX_L,NY_L,NZ_L,grid_rvel,istatus_qc)
           i_num_finished_products = 0
           write(6,840)
   840     format(' REMAP_PROCESS > Bad data detected, no data written')       
-          GO TO 900
+          GO TO 998 ! abnormal return
         END IF
 
         write(6,842) n_ref_grids_qc_fail,n_ref_grids
@@ -479,7 +481,7 @@ c       call radar_qc(NX_L,NY_L,NZ_L,grid_rvel,istatus_qc)
           write(6,845) n_ref_grids,REF_GRIDS_CHECK
   845     format(' REMAP_PROCESS > ',i4,' ref grids < ',i4
      :                                 ,'no data file written...')
-          GO TO 900
+          GO TO 999 ! normal return
         END IF
 
         write(6,851)n_ref_obs_old(1),n_ref_grids,i4time_old(1)
@@ -492,14 +494,8 @@ c       call radar_qc(NX_L,NY_L,NZ_L,grid_rvel,istatus_qc)
         n_ref_obs_old(1) = n_ref_grids
 c
 c     Determine filename extension
-        call getenv('LAPS_REMAP_EXT',c7_laps_ext)
-        call downcase(c7_laps_ext,c7_laps_ext)
-        write(6,*)' REMAP_PROCESS > laps_ext = ',c7_laps_ext
-        if(c7_laps_ext(1:1) .eq. 'v')then
-          ext = c7_laps_ext
-        else
-          ext = 'v01'
-        endif
+        ext = laps_radar_ext
+        write(6,*)' REMAP_PROCESS > laps_ext = ',laps_radar_ext
 c
 c     Prepare to write out data
 c
@@ -582,21 +578,23 @@ c
 
         I4_elapsed = ishow_timer()
 
-        if(c7_laps_ext(1:3) .ne. 'vrc')then
+        if(laps_radar_ext .ne. 'vrc')then
             call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
 
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
      1                  ,rlat_radar,rlon_radar,rheight_radar
-     1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L,istatus)   
+     1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
+     1                  ,c3_radar_subdir,istatus)   
 
         endif
 
         I4_elapsed = ishow_timer()
 
-        stop
+        go to 900
 
+!       This code is disabled for now as we cannot get to this point
         call make_fnam_lp(i_product_i4time,gtime,istatus)
         call downcase(ext,ext_in)
         call s_len(ext_in,end_ext)
@@ -670,13 +668,19 @@ c            ext = 'v01'
 
          i_num_finished_products = 1
 
+900      continue
+
       END IF ! i_last_scan
 
-900   i_status = 1
-      write(6,*)
-      RETURN
+      go to 999 ! normal return
+
+!     Return section
 
 998   i_status = 0
+      write(6,*) ' WARNING: Return from remap_process with 0 status'
+      RETURN
+
+999   i_status = 1
       RETURN
 
       END
@@ -755,7 +759,8 @@ c            ext = 'v01'
 
         subroutine put_remap_vrc(i4time,comment_2d 
      1                         ,rlat_radar,rlon_radar,rheight_radar
-     1                         ,field_3d,imax,jmax,kmax,istatus)
+     1                         ,field_3d,imax,jmax,kmax,c3_radar_subdir        
+     1                         ,istatus)
 
         character*7 c7_ext
 
@@ -778,6 +783,7 @@ c            ext = 'v01'
         real*4 topo(imax,jmax)
 
         character*8 radar_subdir
+        character*3 c3_radar_subdir
 
         write(6,*)' Subroutine put_remap_vrc'
 
@@ -801,16 +807,15 @@ c            ext = 'v01'
         var_2d = 'REF'
         units_2d = 'DBZ'
 
-        call getenv('RADAR_SUBDIR',radar_subdir)
-        call downcase(radar_subdir,radar_subdir)
+        radar_subdir = c3_radar_subdir
         write(6,*)' radar_init: radar_subdir = ',radar_subdir
 
         call get_directory('rdr',directory1,len_dir)
 
         directory = directory1(1:len_dir)//radar_subdir(1:3)//'/vrc/'  
 
-        write(6,11)directory,ext(1:5),var_2d
-11      format(' Writing 2d ',a50,1x,a5,1x,a3)
+        write(6,11)directory(1:len_dir+8),ext(1:5),var_2d
+11      format(' Writing 2d ',a,1x,a5,1x,a3)
 
         lvl_2d = 0
         lvl_coord_2d = 'MSL'

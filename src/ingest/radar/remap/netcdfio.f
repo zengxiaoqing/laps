@@ -1,7 +1,7 @@
 
  
        subroutine radar_init(i_radar,i_tilt_proc,i_last_scan)       
-!                                 I           O     
+!                                 I       I           O     
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
@@ -21,18 +21,18 @@
 !      include 'remap_constants.dat' ! for debugging only
 !      include 'remap.cmn' ! for debugging only
 
+       call get_remap_parms(i_radar,n_radars_remap,path_to_wideband       
+     1                    ,c4_radarname,ext_out,c3_radar_subdir,istatus)       
+
 c
 c      Determine filename extension
-       call getenv('LAPS_REMAP_EXT',ext_out)
-       call downcase(ext_out,ext_out)
        write(6,*)' radar_init: laps_ext = ',ext_out
        if(ext_out(1:1) .ne. 'v')then
            ext_out = 'v01'
        endif
 
-       if(ext_out .eq. 'vrc')then ! Obtain radar subdir 
-           call getenv('RADAR_SUBDIR',radar_subdir)
-           call downcase(radar_subdir,radar_subdir)
+       if(ext_out .eq. 'vrc')then 
+           radar_subdir = c3_radar_subdir
            write(6,*)' radar_init: radar_subdir = ',radar_subdir
        endif
 
@@ -49,9 +49,6 @@ c      Determine filename extension
        if(i_tilt_proc .eq. 1)then
            c2_tilt = '01'
 
-!          Get path to file
-           call get_remap_parms(i_radar,n_radars_remap,path_to_wideband       
-     1                    ,c4_radarname,ext_dum,c3_radar_subdir,istatus)       
            call s_len(path_to_wideband,len_path)
  
 !          Get i4time of 01 elevation file nearest to 15 minutes ago
