@@ -434,8 +434,8 @@ cdis
 !      character*4 c4_radarname_a(MAX_RADARS_REMAP)
 !      character*4 c4_radarname
 
-       character*4 laps_radar_ext_a(MAX_RADARS_REMAP)
-       character*4 laps_radar_ext
+       character*4   laps_radar_ext_a(MAX_RADARS_REMAP)
+       character*(*) laps_radar_ext
 
        character*3 c3_radar_subdir
 
@@ -465,7 +465,9 @@ cdis
 
        path_to_radar  = path_to_radar_a(i_radar)
 !      c4_radarname   = c4_radarname_a(i_radar)
-       laps_radar_ext = laps_radar_ext_a(i_radar)
+
+       call s_len(laps_radar_ext_a(i_radar),len_ext)
+       laps_radar_ext = laps_radar_ext_a(i_radar)(1:len_ext)
 
        length = min(len(path_to_vrc),len(path_to_vrc_nl))
        path_to_vrc    = path_to_vrc_nl(1:length)
@@ -482,7 +484,8 @@ cdis
  801   format(i3.3)
 
 !      write(6,*)' c4_radarname    = ',c4_radarname
-       write(6,*)' laps_radar_ext  = ',laps_radar_ext
+       call s_len(laps_radar_ext,len_ext)
+       write(6,*)' laps_radar_ext  = ',laps_radar_ext(1:len_ext)
        write(6,*)' c3_radar_subdir = ',c3_radar_subdir
        write(6,*)' path_to_vrc     = ',path_to_vrc
 
