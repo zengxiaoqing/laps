@@ -443,8 +443,8 @@ c       include 'satellite_dims_lvd.inc'
             call get_file_time(c_filespec,i4time_ref,i4time_3dw)
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
-            if(c_type.eq.'bw'.or.c_type.eq.'bo')ext='balance'
-            if(c_type .eq. 'co'.or.c_type.eq.'bo')then
+            if(c_type .eq. 'bw' .or. c_type.eq.'bo')ext='balance'
+            if(c_type .eq. 'co' .or. c_type.eq.'bo')then
                 c_field = 'w'
                 goto115
             endif
@@ -672,7 +672,7 @@ c       include 'satellite_dims_lvd.inc'
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
                 elseif(c_type.eq.'wb'.or.c_type.eq.'wr'.or.
-     1c_type.eq.'bw')then
+     1                 c_type.eq.'bw')then
                     c19_label = ' WIND- (bal) (kt) '
                 else
                     c19_label = ' WINDS (anl) (kt) '
@@ -689,35 +689,31 @@ c       include 'satellite_dims_lvd.inc'
      1               ,'nest7grid',NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel       
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
-            else if(c_field .eq. 'w')then ! Display W fields
-!               if(lapsplot_pregen .and. k_level .eq. 7)then
-                if(.false.)then
-                    write(6,*)' Getting pregenerated 600mb omega file'
-
-                    var_2d = 'OM'
-                    ext = 'liw'
-                    call get_laps_2d(i4time_3dw,ext,var_2d
-     1                  ,units_2d,comment_2d,NX_L,NY_L,w_2d,istatus)
-
-                else if(c_type.eq.'co')then
-                    var_2d = 'OM'
-                    ext = 'lw3'
+            else if(c_field .eq. 'w' .or. c_field .eq. 'om')then ! Omega 
+                if(c_type .eq. 'co')then
+                    write(6,*)' Reading cloud omega'
+                    var_2d = 'COM'
+                    ext = 'lco'
                     call get_laps_2dgrid(i4time_3dw,0,i4time_nearest,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,w_2d,k_mb,istatus)
+                    call mklabel33(k_level
+     1                     ,' Cloud Omega ubar/s',c33_label)       
 
-                else if(c_type.eq.'bo')then
+                else if(c_type .eq. 'bo')then
+                    write(6,*)' Reading balanced omega'
                     var_2d = 'OM'
                     ext = 'lw3'
                     call get_directory('balance',directory,lend)
                     directory=directory(1:lend)//'lw3/'
-                    call get_2dgrid_dname(directory
-     1     ,i4time_3dw,laps_cycle_time*100,i4time_heights,ext,var_2d
-     1     ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)
+                    call get_2dgrid_dname(directory,i4time_3dw
+     1              ,laps_cycle_time*100,i4time_heights,ext,var_2d
+     1              ,units_2d,comment_2d,NX_L,NY_L,w_2d,k_mb,istatus)       
+
+                    call mklabel33(k_level
+     1                     ,' Balnc Omega ubar/s',c33_label)       
 
                 endif
-
-                call mklabel33(k_level,' Omega    (ubar/s) ',c33_label)       
 
                 do j = 1,NY_L
                 do i = 1,NX_L

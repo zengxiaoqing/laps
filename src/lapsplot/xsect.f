@@ -270,25 +270,16 @@ cdis
 
         character*80 c80_domain
 
-!       common /lapsplot_cmn1/u_3d,v_3d,omega_3d,temp_3d,rh_3d,q_3d,slwc
-!    1_3d,
-!    1               cice_3d,grid_ra_ref,grid_ra_vel
-
 !       sizem = 1.0
         sizel = 2.0
 
         ioffm = 1 ! Don't plot label stuff in conrec
 
-        if(.not. l_atms)then
-!           open(8,file='for008.dat',status='unk')
-!           call OPNGKS
-        endif
-
         lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
-        call get_laps_domain(NX_L,NY_L,'nest7grid',lat,lon,topo,ist
-     1atus)
+        call get_laps_domain(NX_L,NY_L,'nest7grid',lat,lon,topo
+     1                      ,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
             return
@@ -684,8 +675,6 @@ c read in laps lat/lon and topo
             endif
 
             if  (c_wind .eq. 'b')then
-                write(6,*)' Balance Option - '
-     1                   ,'*** under construction ***'
                 ext_wind = 'balance'
                 call get_directory(ext_wind,directory,len_dir)
                 c_filespec = directory(1:len_dir)//'lw3/*.lw3'
@@ -748,13 +737,12 @@ c read in laps lat/lon and topo
                     elseif(c_wind .eq. 'b')then
                         directory = directory(1:len_dir)//'lw3'
                         ext = 'lw3'
-
                         var_2d = 'OM'
 
                         call get_3dgrid_dname(directory
      1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
      1                  ,ext,var_2d,units_2d
-     1                  ,comment_2d,NX_L,NY_L,NZ_L,u_3d,istatus)       
+     1                  ,comment_2d,NX_L,NY_L,NZ_L,omega_3d,istatus)       
 
                     elseif(c_wind .eq. 'c')then
                         call get_w_3d(i4time_3dw,NX_L,NY_L,NZ_L
@@ -795,8 +783,6 @@ c read in laps lat/lon and topo
 
 
         elseif(c_field .eq. 'om' )then
-
-            write(6,*)' Still working on units for omega'
 
             if(ext_wind .eq. 'lco')then ! Cloud Omega
 
@@ -864,7 +850,7 @@ c read in laps lat/lon and topo
             if       (c_wind .eq. 'b')then
                 c33_label = 'LAPS Omega (balanced)      ubar/s'
             else   if(c_wind .eq. 'c')then
-                c33_label = 'LAPS Omega (cloud   )      ubar/s'
+                c33_label = 'LAPS Omega (cloud)         ubar/s'
             else ! if(c_wind .eq. 'k')then
                 c33_label = 'LAPS Omega (lw3)           ubar/s'
             endif
@@ -2923,94 +2909,4 @@ c       write(6,1)rmin,R1,R2,RD1,RD2,tclo
         end
 
 c
-
-        subroutine get_3dgrid_dname(directory_in
-     1         ,i4time_needed,i4tol,i4time_nearest
-     1         ,EXT,var_2d,units_2d
-     1         ,comment_2d,imax,jmax,kmax,field_3d,istatus)
-
-cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time window.
-
-!       directory_in        Input      Slash at end is optional
-!       i4time_needed       Input      Desired i4time
-!       imax,jmax,kmax      Input      LAPS grid dimensions
-!       ext                 Input      3 character file extension
-!       var_2d              Input      Which Variable do you want?
-!       units_2d            Output     Units of data
-!       Comment_2d          Output     Comment block
-!       field_3d            Output     3D grid
-
-        character*9 asc9_tim
-
-        character*150 DIRECTORY_IN
-        character*150 DIRECTORY
-        character*(*) EXT
-
-        character*125 comment_3d(kmax),comment_2d
-        character*10 units_3d(kmax),units_2d
-        character*3 var_3d(kmax),var_2d
-        integer*4 LVL_3d(kmax)
-        character*4 LVL_COORD_3d(kmax)
-
-        real*4 field_3d(imax,jmax,kmax)
-
-        character*255 c_filespec
-
-        logical ltest_vertical_grid
-
-        write(6,*)' Subroutine get_3dgrid_dname'
-
-        call get_r_missing_data(r_missing_data,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' get_3dgrid_dname: bad istatus, return'
-            return
-        endif
-
-        call s_len(ext,len_ext)
-        call s_len(directory_in,len_dir)
-
-        if(directory_in(len_dir:len_dir) .ne. '/')then
-            directory = directory_in(1:len_dir)//'/'
-            len_dir = len_dir + 1
-        else
-            directory = directory_in
-        endif
-
-        c_filespec = directory(1:len_dir)//'*.'//ext(1:len_ext)
-        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
-
-        if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
-            do k = 1,kmax
-                units_3d(k)   = units_2d
-                if(ltest_vertical_grid('HEIGHT'))then
-                    lvl_3d(k) = zcoord_of_level(k)/10
-                    lvl_coord_3d(k) = 'MSL'
-                elseif(ltest_vertical_grid('PRESSURE'))then
-                    lvl_3d(k) = nint(zcoord_of_level(k))/100
-                    lvl_coord_3d(k) = 'MB'
-                else
-                    write(6,*)' Error, vertical grid not supported,'
-     1                   ,' this routine supports PRESSURE or HEIGHT'
-                    istatus = 0
-                    return
-                endif
-
-                var_3d(k) = var_2d
-
-            enddo ! k
-
-            CALL READ_LAPS_DATA(I4TIME_NEAREST,DIRECTORY,EXT,imax,jmax,       
-     1           kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
-     1                     COMMENT_3D,field_3d,ISTATUS)
-
-            comment_2d=comment_3d(1)
-            units_2d=units_3d(1)
-
-        else
-            write(6,*)' No field found within window ',ext(1:10)
-            istatus = 0
-        endif
-
-        return
-        end
 

@@ -33,7 +33,7 @@ cdis
         subroutine get_laps_2d(i4time,EXT,var_2d,units_2d,
      1                  comment_2d,imax,jmax,field_2d,istatus)
 
-!       This routine can be used to read in a surface grid of known time
+cdoc    Used to read in a surface grid with inputs of time and ext
 
         character*9 asc9_tim
         character*150 DIRECTORY
@@ -97,8 +97,8 @@ cdis
 
 !       Steve Albers            1996
 
-!       This routine can be used to read in a surface grid of known time
-!       by calling the new READ_LAPS routine
+cdoc    This routine can be used to read in a surface grid of known time
+cdoc    by calling the new READ_LAPS routine
 
         character*9 asc9_tim
         character*150 DIRECTORY
@@ -150,7 +150,7 @@ cdis
      1         ,EXT,var_2d,units_2d
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
 
-!       Steve Albers            1990
+cdoc    Returns a 2-D grid. Inputs include the extension and time window.
 
         character*9 asc9_tim
 
@@ -239,6 +239,8 @@ c
      1         ,i4time_needed,i4tol,i4time_nearest
      1         ,EXT,var_2d,units_2d
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
+
+cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
 
 !       Steve Albers            1990
 !           J Smart             1998
@@ -333,12 +335,12 @@ c
      1         ,comment_2d,imax,jmax,field_2d,ilevel,istatus)
 
 !       Steve Albers            1996
-!       This routine tries to read in the desired variable from all files
-!       having the proper extension, picking the closest one within the
-!       specified time window.
+cdoc    This routine tries to read in the desired variable from all files
+cdoc    having the proper extension, picking the closest one within the
+cdoc    specified time window.
 !
 !       J Smart                 1998
-!       added lvd subdirectory flexibility. Only one 2d satellite field returned.
+cdoc    added lvd subdirectory flexibility. Only one 2d satellite field returned.
 
         character*9 asc9_tim
 
@@ -492,7 +494,8 @@ c
         subroutine get_laps_3d(i4time,imax,jmax,kmax
      1  ,EXT,var_2d,units_2d,comment_2d,field_3d,istatus)
 
-!       Returns a 3D laps grid
+cdoc    Returns a 3-D grid. Inputs include the extension and time.
+
 !       i4time              Input      Desired i4time
 !       imax,jmax,kmax      Input      LAPS grid dimensions
 !       ext                 Input      3 character file extension
@@ -504,54 +507,24 @@ c
 !       Steve Albers            1990
 
         character*150 DIRECTORY
-cc        character*31 EXT
         character*(*) EXT, var_2d
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
-cc        character*3 var_3d(kmax),var_2d
         character*3 var_3d(kmax)
         integer*4 LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
         real*4 field_3d(imax,jmax,kmax)
 
-        character*9 asc9_tim
-
-        logical ltest_vertical_grid
+        write(6,*)' Subroutine get_laps_3d...'
 
         call get_directory(ext,directory,len_dir)
 
-        call make_fnam_lp(i4time,asc9_tim,istatus)
-
-        write(6,11)directory(1:45),asc9_tim,ext,var_2d
-11      format(' Reading 3D ',a,1x,a,1x,a,1x,a)
-
-        do k = 1,kmax
-            units_3d(k)   = units_2d
-            if(ltest_vertical_grid('HEIGHT'))then
-                lvl_3d(k) = zcoord_of_level(k)/10
-                lvl_coord_3d(k) = 'MSL'
-            elseif(ltest_vertical_grid('PRESSURE'))then
-                lvl_3d(k) = nint(zcoord_of_level(k))/100
-                lvl_coord_3d(k) = 'MB'
-            else
-                write(6,*)' Error, vertical grid not supported,'
-     1                   ,' this routine supports PRESSURE or HEIGHT'
-                istatus = 0
-                return
-            endif
-
-            var_3d(k) = var_2d
-
-        enddo ! k
-
-        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
-     1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
-     1                     COMMENT_3D,field_3d,ISTATUS)
-
-        comment_2d=comment_3d(1)
-        units_2d=units_3d(1)
+        call get_3d_dir_time(directory,i4time
+     1                      ,EXT,var_2d,units_2d
+     1                      ,comment_2d
+     1                      ,imax,jmax,kmax,field_3d,istatus)
 
         return
         end
@@ -559,7 +532,8 @@ cc        character*3 var_3d(kmax),var_2d
         subroutine get_lapsdata_3d(i4time,i4_valid,imax,jmax,kmax
      1  ,EXT,var_2d,units_2d,comment_2d,field_3d,istatus)
 
-!       Returns a 3D laps grid
+cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
+
 !       i4time              Input      Desired i4time initial
 !       i4_valid            Input      i4time for valid data time
 !       imax,jmax,kmax      Input      LAPS grid dimensions
@@ -624,7 +598,8 @@ cc        character*3 var_3d(kmax),var_2d
      1          imax,jmax,kmax,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,istatus)
 
-!       Returns a 3D laps grid
+cdoc    Returns a 3-D grid. Inputs include the extension and time window.
+
 !       i4time_needed       Input      Desired i4time
 !       i4tol               Input      Tolerance of accepted file times
 !       i4time_nearest      Output     Actual File time of returned data
@@ -673,6 +648,8 @@ cc        character*3 var_3d(kmax),var_2d
         subroutine put_laps_2d(i4time,EXT,var_2d,units_2d,
      1                  comment_2d,imax,jmax,field_2d,istatus)
 
+cdoc    Writes a 2-D grid. Inputs include the extension and time.
+
         character*150 DIRECTORY
 cc        character*31 EXT
         character*(*) EXT
@@ -703,6 +680,8 @@ cc        character*3 var_2d
 
         subroutine put_laps_3d(i4time,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,ni,nj,nk)
+
+cdoc    Writes a 3-D grid. Inputs include the extension and time.
 
         logical ltest_vertical_grid
 
@@ -751,6 +730,8 @@ cc        character*3 var_2d
 
         subroutine put_laps_multi_3d(i4time,EXT,var_2d,units_2d,
      1                          comment_2d,field_3d,ni,nj,nk,nf,istatus)
+
+cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
 
         logical ltest_vertical_grid
 
@@ -812,6 +793,8 @@ cc        character*3 var_2d
 
         subroutine put_laps_multi_2d(i4time,EXT,var_a,units_a,
      1                          comment_a,field_2d,ni,nj,nf,istatus)
+
+cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
 
         integer*4 MAX_FIELDS
         parameter (MAX_FIELDS = 10)
@@ -1019,10 +1002,10 @@ c
      1     ,var_2d,units_2d,comment_2d,imax,jmax
      1     ,field_2d,istatus)
 c
-c J. Smart 2-98.
-c This routine acquires satellite data from the lvd subdirectories
-c and makes decisions about what the best data is to return as the
-c 2d field (for var_2d).
+c    J. Smart 2-98.
+cdoc This routine acquires satellite data from the lvd subdirectories
+cdoc and makes decisions about what the best data is to return as the
+cdoc 2d field (for var_2d).
 c
         implicit none
 
@@ -1296,5 +1279,163 @@ c
         istatus = 1
 
         return 
+        end
+
+
+        subroutine get_3dgrid_dname(directory_in
+     1         ,i4time_needed,i4tol,i4time_nearest
+     1         ,EXT,var_2d,units_2d
+     1         ,comment_2d,imax,jmax,kmax,field_3d,istatus)
+
+cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time window.
+
+!       directory_in        Input      Slash at end is optional
+!       i4time_needed       Input      Desired i4time
+!       imax,jmax,kmax      Input      LAPS grid dimensions
+!       ext                 Input      3 character file extension
+!       var_2d              Input      Which Variable do you want?
+!       units_2d            Output     Units of data
+!       Comment_2d          Output     Comment block
+!       field_3d            Output     3D grid
+
+        character*9 asc9_tim
+
+        character*(*) DIRECTORY_IN
+        character*255 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax),var_2d
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
+
+        real*4 field_3d(imax,jmax,kmax)
+
+        character*255 c_filespec
+
+        logical ltest_vertical_grid
+
+        write(6,*)' Subroutine get_3dgrid_dname...'
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_3dgrid_dname: bad istatus, return'
+            return
+        endif
+
+        call s_len(ext,len_ext)
+        call s_len(directory_in,len_dir)
+
+        if(directory_in(len_dir:len_dir) .ne. '/')then
+            directory = directory_in(1:len_dir)//'/'
+            len_dir = len_dir + 1
+        else
+            directory = directory_in
+        endif
+
+        c_filespec = directory(1:len_dir)//'*.'//ext(1:len_ext)
+        call get_file_time(c_filespec,i4time_needed,i4time_nearest)
+
+        if(abs(i4time_needed - i4time_nearest) .le. i4tol)then
+            call get_3d_dir_time(directory_in,i4time_nearest,EXT
+     1                          ,var_2d,units_2d,comment_2d
+     1                          ,imax,jmax,kmax,field_3d,istatus)
+
+        else
+            write(6,*)' No field found within window ',ext(1:10)
+            istatus = 0
+        endif
+
+        return
+        end
+
+
+        subroutine get_3d_dir_time(directory_in,i4time
+     1                            ,EXT,var_2d,units_2d
+     1                            ,comment_2d
+     1                            ,imax,jmax,kmax,field_3d,istatus)
+
+cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
+
+!       directory_in        Input      Slash at end is optional
+!       i4time              Input      Desired i4time
+!       imax,jmax,kmax      Input      LAPS grid dimensions
+!       ext                 Input      3 character file extension
+!       var_2d              Input      Which Variable do you want?
+!       units_2d            Output     Units of data
+!       Comment_2d          Output     Comment block
+!       field_3d            Output     3D grid
+
+        character*9 asc9_tim
+
+        character*(*) DIRECTORY_IN
+        character*255 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_3d(kmax),comment_2d
+        character*10 units_3d(kmax),units_2d
+        character*3 var_3d(kmax),var_2d
+        integer*4 LVL_3d(kmax)
+        character*4 LVL_COORD_3d(kmax)
+
+        real*4 field_3d(imax,jmax,kmax)
+
+        character*255 c_filespec
+
+        logical ltest_vertical_grid
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' get_3d_dir_time: bad istatus, return'
+            return
+        endif
+
+        call s_len(ext,len_ext)
+        call s_len(directory_in,len_dir)
+
+        if(directory_in(len_dir:len_dir) .ne. '/')then
+            directory = directory_in(1:len_dir)//'/'
+            len_dir = len_dir + 1
+        else
+            directory = directory_in
+        endif
+
+
+        call make_fnam_lp(i4time,asc9_tim,istatus)
+
+        len_high = max(45,len_dir)
+        len_low = len_high - 44
+
+        write(6,11)directory(len_low:len_high),asc9_tim,ext,var_2d
+11      format('  get_3d_dir_time: ',a,1x,a,1x,a,1x,a)
+
+        do k = 1,kmax
+            units_3d(k)   = units_2d
+            if(ltest_vertical_grid('HEIGHT'))then
+                lvl_3d(k) = zcoord_of_level(k)/10
+                lvl_coord_3d(k) = 'MSL'
+            elseif(ltest_vertical_grid('PRESSURE'))then
+                lvl_3d(k) = nint(zcoord_of_level(k))/100
+                lvl_coord_3d(k) = 'MB'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
+            endif
+
+            var_3d(k) = var_2d
+
+        enddo ! k
+
+        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1                     COMMENT_3D,field_3d,ISTATUS)
+
+        comment_2d=comment_3d(1)
+        units_2d=units_3d(1)
+
+        return
         end
 
