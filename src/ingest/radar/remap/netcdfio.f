@@ -39,6 +39,7 @@ cdis
 
  
        subroutine radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
+     1                      ,b_missing_data                             ! I
      1                      ,i_tilt_proc                                ! I/O
      1                      ,i_last_scan,istatus)                       ! O
  
@@ -272,6 +273,14 @@ c      Determine filename extension
      1                               ,MAX_VEL_GATES, MAX_REF_GATES
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
+
+           if(istatus .eq. 1 .and. namelist_parms%l_line_ref_qc)then
+               write(6,*)' radar_init: calling rayqckz...'
+               iscale = 2
+               miss = nint(b_missing_data)
+               call rayqckz(MAX_REF_GATES,numRadials,iscale
+     1                     ,miss,Z,radialAzim)
+           endif
 
        elseif(i_tilt_proc .le. 20)then
            i_tilt_proc = i_tilt_proc + 1
@@ -572,6 +581,11 @@ c      Determine filename extension
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
+
+!      Note that Z and V are integer arrays that have been read in from the
+!      NetCDF files as byte values. These are here converted to dBZ and 
+!      meters per second, respectively. This is done for one radial for
+!      each call to this routine.
  
        real*4 data(n_gates)
 
