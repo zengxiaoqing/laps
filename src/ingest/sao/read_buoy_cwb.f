@@ -1,3 +1,4 @@
+
       subroutine read_buoy_cwb ( filename, recNum, 
      +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
      +     latitude, longitude, precip1Hour, precip24Hour,
@@ -5,13 +6,16 @@
      +     pressChangeChar, seaLevelPress, seaSurfaceTemp,
      +     stationName, temperature, timeObs,
      +     visibility, wetBulbTemperature, windDir, windGust,
-     +     windSpeed, badflag, istatus)
+     +     windSpeed, wmoId, badflag, n, istatus )
  
-      integer recNum, i4time
+      integer  recNum
 
-      character*25 presWeather(recNum)
-      character*8  stationName(recNum)
+      character*(*)  filename
+      character*25   presWeather(recNum)
+      character*8    stationName(recNum)
+
       integer  dataPlatformType(recNum), pressChangeChar(recNum)
+      integer  wmoId(recNum)
 
       real  dewpoint(recNum), elevation(recNum),
      ~      equivWindSpeed10m(recNum), latitude(recNum),
@@ -24,7 +28,6 @@
 
       double precision  timeObs(recNum)
 
-      character*(*) filename
       character*3   reportFlag(recNum)
       character*2   yy(recNum), mo(recNum), dd(recNum)
       character*2   hh(recNum), mn(recNum)
@@ -39,20 +42,20 @@
       real  relaHumility(recNum)
 
       istatus = 0
+      n= 0
  
       open ( 1, file=filename, status='old', err=1000 )
 
       istatus= 1
 
-      n= 0
       do j= 1,recNum
-         read ( 1, 10, end=99, err=999 ) reportFlag(j),
-     ~               stationName(j), latitude(j), longitude(j),
+         read ( 1, 10, end=99, err=999 )
+     ~               reportFlag(j), wmoId(j), latitude(j), longitude(j),       
      ~               yy(j), mo(j), dd(j), hh(j), mn(j), logicRecNum(j)
          read (1,20) windDir(j), windSpeed(j), windQua(j),
      ~               temperature(j), temperatureQua(j),
      ~               seaLevelPress(j), seaLevelPressQua(j),
-     ~               pressChange3Hour(j)
+     ~               pressChangeChar(j), pressChange3Hour(j)
          read (1,30) seaSurfaceTemp(j), seaSurfaceTempQua(j),
      ~               dewpoint(j), dewpointQua(j)
          read (1,40) relaHumility(j)
@@ -68,8 +71,8 @@
          n= n+1
       enddo
 
-10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2, i3 )
-20    format ( 2f3.0, i1, f4.1, i1, f5.1, i1, x, f3.1 ) 
+10    format ( a3, i5, 4x, 2f5.2, 2x, 5a2, i3 )
+20    format ( 2f3.0, i1, f4.1, i1, f5.1, 2i1, f3.1 ) 
 30    format ( f4.1, i1, 22x, f5.1, i1 )
 40    format ( 30x, f3.0 )
 
@@ -81,38 +84,40 @@ c      ----------       examing data quality and changing units       ---------
          endif
 
          if ( seaLevelPressQua(j) .eq. 1 )  then
-               seaLevelPress(j)= seaLevelPress(j) *100        ! mb -> pascal
+               seaLevelPress(j)= seaLevelPress(j) *100.         ! mb -> pascal
             else
                seaLevelPress(j)= badflag
          endif
   
+         if ( pressChange3Hour(j) .eq. 1 )  then
+               pressChange3Hour(j)= pressChange3Hour(j) *100.   ! mb -> pascal
+            else
+               pressChange3Hour(j)= badflag
+         endif
+
          if ( seaSurfaceTempQua(j) .eq. 1 )  then
-               seaSurfaceTemp(j)= seaSurfaceTemp(j) +273.15   ! degC -> degK
+               seaSurfaceTemp(j)= seaSurfaceTemp(j) +273.15     ! degC -> degK
             else
                seaSurfaceTemp(j)= badflag
          endif
 
          if ( dewpointQua(j) .eq. 1 )  then
-               dewpoint(j)= dewpoint(j) +273.15               ! degC -> degK
+               dewpoint(j)= dewpoint(j) +273.15                 ! degC -> degK
             else
                if ( temperature(j) .ne. -999.9   .and. 
      ~              relaHumility(j) .ne. -99. )  then
                   dewpoint(j)= dwpt( temperature(j), relaHumility(j) )
-                  dewpoint(j)= dewpoint(j) +273.15            ! degC -> degK
+                  dewpoint(j)= dewpoint(j) +273.15              ! degC -> degK
                 else
                   dewpoint(j)= badflag
                endif
          endif
 
          if ( temperatureQua(j) .eq. 1 )  then
-               temperature(j)= temperature(j) +273.15         ! degC -> degK
+               temperature(j)= temperature(j) +273.15           ! degC -> degK
             else
                temperature(j)= badflag
          endif
-
-         if ( pressChange3Hour(j).eq.-9.9 ) pressChange3Hour(j)= badflag        
-
-         elevation(j)= 0
 
          if ( yy(j)(1:1) .eq. ' ' )  yy(j)= '0'//yy(j)(2:2)
          if ( mo(j)(1:1) .eq. ' ' )  mo(j)= '0'//mo(j)(2:2)
@@ -121,36 +126,36 @@ c      ----------       examing data quality and changing units       ---------
          if ( mn(j)(1:1) .eq. ' ' )  mn(j)= '0'//mn(j)(2:2)
          time(j)= yy(j)//mo(j)//dd(j)//hh(j)//mn(j)
          call cv_asc_i4time( a10_to_a9(time(j),istatus), i4time )
-         timeObs(j)= dble( i4time )                    ! seconds since 1960
+         timeObs(j)= dble( i4time )                       ! seconds since 1960
       enddo
 
 c               -------      dealing with lacking of data      -------
       do j= 1,n
          presWeather(j)= "UNK"
+         stationName(j)= "UNK"
 
          pressChangeChar(j)= int(badflag)
          dataPlatformType(j)= int(badflag)
 
+         elevation(j)= 0.
          equivWindSpeed10m(j)= badflag
          precip1Hour(j)= badflag
          precip24Hour(j)= badflag
          precip6Hour(j)= badflag 
-         pressChangeChar(j)= badflag
          visibility(j)= badflag
          wetBulbTemperature(j)= badflag
          windGust(j)= badflag
       enddo
 
-      go to 1000 
+*     go to 1000 
 
 999   do j= 1,n
-         write(6,*) reportFlag(j),
-     ~              stationName(j),latitude(j), longitude(j),
+         write(6,*) reportFlag(j), wmoId(j),latitude(j), longitude(j),
      ~              yy(j), mo(j), dd(j), hh(j), mn(j), logicRecNum(j)
          write(6,*) windDir(j), windSpeed(j), windQua(j),
      ~              temperature(j), temperatureQua(j),
      ~              seaLevelPress(j), seaLevelPressQua(j),
-     ~              pressChange3Hour(j)
+     ~              pressChangeChar(j), pressChange3Hour(j)
          write(6,*) seaSurfaceTemp(j), seaSurfaceTempQua(j),
      ~              dewpoint(j), dewpointQua(j), timeobs(j)
          write(6,*) relaHumility(j)

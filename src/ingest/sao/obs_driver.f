@@ -318,7 +318,7 @@ c
 	  enddo
 	  if(.not.exists) then
 	    print *,' ERROR. File not Found: ', data_file_m
-	    stop 'Config error'
+	    stop 
           endif
 
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
@@ -328,9 +328,9 @@ c
 	    data_file_m = 
      1          path_to_METAR(1:len_path)//'metar'//a8_time//'.dat'
 
-	    len_path = index(path_to_buoy_data,' ') - 1
-	    data_file_b = 
-     &          path_to_buoy_data(1:len_path)//'buoy'//a8_time//'.dat'       
+!	    len_path = index(path_to_buoy_data,' ') - 1
+!	    data_file_b = 
+!    &          path_to_buoy_data(1:len_path)//'buoy'//a8_time//'.dat'       
 
         else
             write(6,*)' ERROR, unknown metar format'
@@ -401,7 +401,8 @@ c
 cc	data_file_b = '/data/fxa/point/maritime/netcdf/' // filename13
 	print*,'Getting buoy/ship data ', data_file_b
 c
-        call get_buoy_obs(maxobs,maxsta,i4time,data_file_b,metar_format,
+        call get_buoy_obs(maxobs,maxsta,i4time,path_to_buoy_data,
+     &                      data_file_b,metar_format,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
@@ -579,7 +580,8 @@ c
 c
 c.....	That's about it...let's go home.
 c
-	stop 'Normal completion of OBS_DRIVER'
+	write(6,*)' Normal completion of OBS_DRIVER'
+
 	end
 
 

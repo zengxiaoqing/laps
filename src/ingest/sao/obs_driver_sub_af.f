@@ -81,7 +81,7 @@ c
 c
 	integer*4 mstn_ii(maxsta), mstn_jj(maxsta)
 	integer*4 n_updates(maxsta)
-	integer*2 rtime
+	integer*4 rtime
 c
         character mstn_name(maxsta)*5
 c
@@ -715,7 +715,7 @@ c
 	do dy=0,jmax-1
 	do dx=0,imax-1
 	   rr = dx*dx + dy*dy
-	   fnorm(dx,dy) = fno * (exp( -(rr * rom2)))
+           fnorm(dx,dy) = fno * (exp( -(rr * rom2)))
 	enddo !dx
 	enddo !dy
 c

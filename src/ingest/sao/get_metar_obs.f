@@ -178,6 +178,10 @@ c
         else ! Read CWB Metar and Synop Obs
             recNum=150
             maxSkyCover=10
+
+            call s_len(data_file,len_file)
+            write(6,*)' CWB Metar Data: ',data_file(1:len_file)
+
             call read_metar_cwb(data_file , maxSkyCover, recNum, alt,    
      &         atype_in, td, ttd, elev,
      &         lats, lons, max24t, min24t,
@@ -188,11 +192,22 @@ c
      &         timeobs, vis, dd, ffg, ff,
      &         wmoid_in, badflag, n_metar_cwb, istatus)
 
+            write(6,*)' n_metar_cwb = ',n_metar_cwb
+
             ix = n_metar_cwb + 1
 
+            maxSkyCover=2
+            recNum=610
+
+            call s_len(data_file,len_file)
+            write(6,*)' CWB Synop Data: ',data_file(1:len_file)
+
+            n_synop_cwb = 0
+
             if(.false.)then
-               call read_synop_cwb(data_file , maxSkyCover, recNum, alt,       
-     &         atype_in(ix), td(ix), ttd(ix), elev(ix),
+
+                call read_synop_cwb(data_file , maxSkyCover, recNum, 
+     &         alt(ix), atype_in(ix), td(ix), ttd(ix), elev(ix),
      &         lats(ix), lons(ix), max24t(ix), min24t(ix),
      &         pcp1(ix), pcp24(ix), pcp3(ix), pcp6(ix),
      &         wx(ix), dp(ix), dpchar(ix),
@@ -200,7 +215,10 @@ c
      &         snowcvr(ix), stname(ix), tt(ix), t(ix),
      &         timeobs(ix), vis(ix), dd(ix), ffg(ix), ff(ix),
      &         wmoid_in(ix), badflag, n_synop_cwb, istatus)
+
             endif
+
+            write(6,*)' n_synop_cwb = ',n_synop_cwb
 
             n_sao_all = n_metar_cwb + n_synop_cwb
             if(n_sao_all .le. 0) go to 990
@@ -209,6 +227,8 @@ c
 
         endif
 c
+        write(6,*)' n_sao_all = ',n_sao_all
+
 	if(n_sao_all .gt. maxobs)then
             write(6,*)' ERROR, n_sao_all > maxobs ',n_sao_all,maxobs
             return

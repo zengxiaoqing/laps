@@ -31,7 +31,8 @@ cdis
 cdis 
 c
 c
-	subroutine get_buoy_obs(maxobs,maxsta,i4time,data_file,
+	subroutine get_buoy_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_buoy_data,data_file,
      &                      buoy_format,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
@@ -70,7 +71,8 @@ c
 c
 c.....  Read arrays.
 c
-        integer maxobs,maxsta
+        integer maxobs ! raw data file
+        integer maxsta ! output LSO file
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs)
@@ -92,16 +94,18 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, before, after, wmoid(maxobs)
+	integer    itime60, i4time_before, i4time_after
+        integer    wmoid_in(maxobs), wmoid(maxsta)
 	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*8, save_stn(maxobs)*8
-	character  data_file*(*), timech*9, time*4, buoy_format*(*)
+	character  data_file*(*), a9time*9, a8time*8, a9_to_a8*8, time*4       
 	character  stations(maxsta)*20, provider(maxsta)*11
 	character  weather(maxobs)*25, wx(maxsta)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
 	character  store_cldamt(maxsta,5)*4
+        character  path_to_buoy_data*(*), buoy_format*(*)
 c
 c
 c.....  Start.
@@ -123,6 +127,11 @@ c.....	Zero out the counters.
 c
 	n_buoy_g = 0		! # of buoy obs in the laps grid
 	n_buoy_b = 0		! # of buoy obs in the box
+c
+c.....  Set up the time window.
+c
+	i4time_before = i4time_sys - time_before
+	i4time_after  = i4time_sys + time_after
 
         call s_len(buoy_format, len_buoy_format)
         if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
@@ -162,24 +171,56 @@ c
      &         badflag, istatus)
 
             i4time_offset=315619200
+
+            do i = 1,recnum
+                wmoid_in(i) = ibadflag
+            enddo ! i
+
+	    if(istatus .ne. 1) go to 990
+	    n_buoy_all = recNum
 c
         else ! Read buoy obs in CWB format
-            recNum = 150
 
-	    call read_buoy_cwb(data_file, recNum, iplat_type,
-     &         td, elev, equivspd, lats, lons, 
-     &         pcp1, pcp24, pcp6,
-     &         wx, dp, dpchar,
-     &         mslp, sea_temp, stname, t,
-     &         timeobs, vis, t_wet, dd, ffg, ff,
-     &         badflag, istatus)
+            ix = 1
 
+            i4time_file_b = ( (i4time_before+3600) / 10800) * 10800
+            i4time_file_a = ( (i4time_after+3600) / 10800) * 10800
+
+            do i4time_file = i4time_file_b, i4time_file_a, 10800
+   	        call make_fnam_lp(i4time_file,a9time,istatus)
+                a8time = a9_to_a8(a9time(1:9))
+
+	        call s_len(path_to_buoy_data,len_path)
+	        data_file = path_to_buoy_data(1:len_path)//'buoy'
+     1                                           //a8time//'.dat'      
+
+                recNum = 150
+
+                call s_len(data_file,len_file)
+                write(6,*)' CWB Buoy Data: ',data_file(1:len_file)
+
+	        call read_buoy_cwb(data_file, recNum, iplat_type(ix),
+     &          td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
+     &          pcp1(ix), pcp24(ix), pcp6(ix),
+     &          wx, dp(ix), dpchar(ix),
+     &          mslp(ix), sea_temp(ix), stname(ix), t(ix),
+     &          timeobs(ix), vis(ix), t_wet(ix), 
+     &          dd(ix), ffg(ix), ff(ix),             
+     &          wmoid_in(ix), badflag, n_buoy_file, istatus)
+
+	        if(istatus .ne. 1) n_buoy_file = 0
+
+                ix = ix + n_buoy_file
+
+            enddo ! i4time_file
+
+            n_buoy_all = ix - 1
             i4time_offset=0
 
         endif
 
-	if(istatus .ne. 1) go to 990
-	n_buoy_all = recNum
+        write(6,*)' n_buoy_all = ',n_buoy_all
+
 c
 c.....  First check the data coming from the NetCDF file.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
@@ -220,11 +261,6 @@ c
 c
 	enddo !i
 c
-c.....  Set up the time window.
-c
-	before = i4time - time_before
-	after  = i4time + time_after
-c
 c..................................
 c.....	Now loop over all the obs.
 c..................................
@@ -252,12 +288,13 @@ c
 c.....  Check to see if its in the desired time window.
 c
 	  itime60 = nint(timeobs(i)) + i4time_offset
-	  if(itime60.lt.before .or. itime60.gt.after) go to 125
+	  if(itime60 .lt. i4time_before 
+     1  .or. itime60 .gt. i4time_after) go to 125
 c
 c.....  Right time, right location...
 
- 	  call make_fnam_lp(itime60,timech,istatus)
-	  time = timech(6:9)
+ 	  call make_fnam_lp(itime60,a9time,istatus)
+	  time = a9time(6:9)
 	  read(time,*) rtime
 c
 c.....  Check if station is reported more than once this
@@ -458,7 +495,7 @@ c
 	 elseif(iplat_type(i) .eq. 1) then
 	    atype(nn)(1:6) = 'MVG   '
 	 endif
-	 wmoid(nn) = ibadflag                   ! WMO id...not applicable here
+	 wmoid(nn) = wmoid_in(i)                ! WMO id
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
          call filter_string(weather(nn))
 c       
