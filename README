@@ -66,7 +66,7 @@
          3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
          3.2.10 .................  Cloud Drift Wind (CDW) Ingest
          3.2.11 .................  Surface Data Ingest
-         3.3 ..............  Analysis Processes
+         3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
          3.3.3 ..................  TEMP 
@@ -85,7 +85,7 @@
      Below is a description of the tar file containing the LAPS data ingest and
      analysis code. The predictive component of LAPS (MM5 or RAMS) is
      distributed separately. The main FSL contact for this is 
-     Jim Edwards (jedwards@fsl.noaa.gov).
+     Paul Schultz (schultz@fsl.noaa.gov).
 
      Please note that FSL provides support for LAPS software only if a prior
      agreement is made to that effect. Additionally, questions concerning LAPS
@@ -760,8 +760,9 @@
            AFWA database format. 
 
      Cloud Drift Winds (cdw):
-           We are ingesting the NESDIS (ASCII) satellite cloud-drift wind files
-           for use in the wind analysis.
+           We are ingesting the ASCII satellite cloud-drift wind files
+           for use in the wind analysis. These come from NESDIS (via NIMBUS)
+           as well as from AFWA.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -1657,12 +1658,12 @@ Process: PRO (ingest_pro.exe) LAPS Wind Profile Ingest
 Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
-Inputs: (located in two separate NetCDF directories)
-	WPDN 404-MHz profiler wind data in netCDF format 
+Inputs: (located in separate NetCDF directories)
+	NPN 404-MHz profiler wind data in netCDF format 
             NetCDF CDLs from both FSL-NIMBUS and AWIPS are accepted. 
 
 	Boundary layer 915-MHz profiler wind data in netCDF format
-            NetCDF CDL from FSL-NIMBUS. 
+            NetCDF CDL from FSL-NIMBUS/DD. 
 
 	Doppler Radar VADs in NetCDF (FSL-NIMBUS CDL) format
 
