@@ -750,7 +750,7 @@ cdoc                            calls read_multiradar_3dref.
 
 !               closest_vrc = 180000. ! This can be activated by commenting out
 
-                if(istatus_dis .ne. 1)then
+                if(istatus_dis .ne. 1 .and. istatus_dis .ne. -1)then
                     write(6,*)' ERROR in get_radar: istatus_dis = '
      1                       ,istatus_dis
                     goto900
