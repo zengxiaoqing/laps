@@ -1,12 +1,13 @@
  &background_nl
  bgpaths='/public/data/grids/ruc2/40km_fsl-conus_hybb/netcdf',
-         '/public/data/grids/eta/48km_nat_isobaric/netcdf',
-                  '',
+'/public/data/grids/eta/48km_nat_isobaric/netcdf',
+'',
  bgmodels=5,2,0,
  max_forecast_delta=6,
  oldest_forecast=12,
  use_analysis=.false.,
  cmodel='RUC40_NATIVE','ETA48_CONUS','LAPS',
+ itime_inc =0,
  /
 c
 c bgpaths is a list of paths to background models in order of preference
