@@ -383,10 +383,12 @@ c               dewpt_dep       - dewpoint depression
 c-------------------------------------------------------------------------------
 c    variable declarations
 c-------------------------------------------------------------------------------
-        real*4  press(1),
-     1  temp(1),
-     1  dewpt_dep(1),
-     1  mix_ratio(1),
+
+        integer nl
+        real*4  press(nl),
+     1  temp(nl),
+     1  dewpt_dep(nl),
+     1  mix_ratio(nl),
      1  temp_dew                !dew pt temperature
 
 
