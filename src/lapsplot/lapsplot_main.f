@@ -40,4 +40,8 @@ cdis
 
         call lapsplot_3d()
 
+        CALL GDAWK (1)
+        CALL GCLWK (1)
+        CALL GCLKS
+
         end
