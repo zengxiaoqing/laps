@@ -159,7 +159,7 @@ c convert fname9 to i4time
 c
        call i4time_fname_lp (fname9, i4time, istatus)
        if(istatus.ne.1)then
-          write(6,*)'Error converting fname9 to i4time'
+          write(6,*)'Error converting fname9 to i4time: ',fname9
           write(6,*)'Conversion incomplete in cvt_wfo_fname13_i4time'
        endif
 
@@ -189,7 +189,7 @@ c
        i4time_temp=i4time
        call make_fnam_lp (i4time_temp, fname9, istatus)
        if(istatus.ne.1)then
-          write(6,*)'Error converting i4time to fname9'
+          write(6,*)'Error converting i4time to fname9: ', i4time_temp       
           write(6,*)'Conversion incomplete in cvt_i4time_wfo_fname13'
        endif
 c
