@@ -223,18 +223,12 @@ C
 C       Open an output file.
 C
         ext = 'lrs'
-        call open_lapsprd_file(1,i4time,ext(1:3),istatus)
+        call open_lapsprd_file_append(1,i4time,ext(1:3),istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening output file'
             istatus = 0
             return
         endif
-
-!       Read to end of file so we can append to it
-        do i = 1,1000000
-            read(1,*,end=2)
-        enddo ! i
- 2      continue
 
         lag_time = 1800
 
@@ -351,6 +345,8 @@ C
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
+            write(*,401)ista,n_levels_tot,rlat,rlon,elev
+     1                 ,prof_name(ista)(1:5),a9time_ob
             write(1,401)ista,n_levels_tot,rlat,rlon,elev
      1                 ,prof_name(ista)(1:5),a9time_ob
 401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9)
