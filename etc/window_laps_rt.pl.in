@@ -31,7 +31,7 @@ umask 002;
 #
 # opt_m controls laps_localization.pl no_ggm switch. ggm = gridgen_model.
 #       if $opt_m is not defined then laps_localization updates the namelists
-#       and also runs gridgen_model.
+#       and also runs gridgen_model (producing static.nest7grid).
 #
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
@@ -111,13 +111,21 @@ print "Config Domain  = $CONFIG_DOMAIN \n";
 
 # WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_DATA/laps_data) before removing it.
 #                 softlink data to laps_data appropriately.
+#      otherwise: if link has been broken re-establish it.
 my $FXA_DATA = $ENV{"FXA_DATA"}; my $LAPS_HOME = $ENV{"LAPS_HOME"};
-if(-d $FXA_DATA && ! -d "$FXA_DATA/laps_data"){
-   mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
-   system("cp -r $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
-   system("cp -r $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
-   chdir $LAPS_HOME;
-   system("ln -s $FXA_DATA/laps_data data");
+if(-d $FXA_DATA ){
+   if( ! -d "$FXA_DATA/laps_data"){
+       mkdir "$FXA_DATA/laps_data", 0777 or die "Can't make directory $FXA_DATA/laps_data";
+       system("cp -r $LAPS_DATA_ROOT/static $FXA_DATA/laps_data/.");
+       system("cp -r $LAPS_DATA_ROOT/cdl $FXA_DATA/laps_data/.");
+       chdir $LAPS_HOME;
+       system("ln -s $FXA_DATA/laps_data data");
+   }elsif( ! -l "$LAPS_HOME/data" ){
+       print "re-establish softlink $LAPS_HOME/data -> $FXA_DATA/laps_data \n";
+       chdir $LAPS_HOME;
+       if( -d data ){system("rmdir -rf data");}
+       system("ln -s $FXA_DATA/laps_data data");
+   }
 }
 
 if( $CONFIG_DOMAIN eq "t" ) {
@@ -134,7 +142,9 @@ if( $CONFIG_DOMAIN eq "t" ) {
           mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/DOMAIN_NAME $!\n";
       }
 
-      mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
+      if( !-e $LAPS_DATA_ROOT ){
+         mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";}
+
       print "Generate lapsdataroot directory structure\n";
       &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }else{
@@ -147,22 +157,23 @@ if( $CONFIG_DOMAIN eq "t" ) {
   if(-e $LAPS_DATA_ROOT ){
      if($all_roots_equal eq "F") {
         if(defined $opt_m ){
-           print "Save entire data root\n";
-           rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+           print "Save static subdirectory\n";
+           rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
+           mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
         }else{
            print "Only save lapsprd and log subdirectories\n";
            system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
            rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+           mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
+           &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
         }
-        mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
-        &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
      }else{
         print "All lapsroots equal. Make datadirs as necessary\n";
         &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
      }
   }else{
      print "Making a new LAPS_DATA_ROOT.\n";
-     mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/DOMAIN_NAME $!\n";
+     mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/$DOMAIN_NAME $!\n";
      mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
      &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
   }
@@ -208,13 +219,16 @@ if( $opt_m ){
    system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/laps_localization.log");
 }
 
-if( defined $opt_m ){
-    rename ("$LAPS_DATA_ROOT\_save/static/topo.dat","$LAPS_DATA_ROOT/static/");
-    rename ("$LAPS_DATA_ROOT\_save/static/latlon.dat","$LAPS_DATA_ROOT/static/");
-    rename ("$LAPS_DATA_ROOT\_save/static/corners.dat","$LAPS_DATA_ROOT/static/");
-    rename ("$LAPS_DATA_ROOT\_save/static/topography.dat","$LAPS_DATA_ROOT/static/");
-    rename ("$LAPS_DATA_ROOT\_save/static/static.nest7grid","$LAPS_DATA_ROOT/static/");
-    rename ("$LAPS_DATA_ROOT\_save/static/drag_coef.dat","$LAPS_DATA_ROOT/static/");
+if( $opt_m ){
+    print "moving ggm-produced files from 'static_save' to static\n";
+    system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");
+    system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");
+    system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");
+    system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");
+    system ("mv $LAPS_DATA_ROOT/static\_save/static.nest7grid $LAPS_DATA_ROOT/static/");
+    system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");
+    print "removing $LAPS_DATA_ROOT/static\_save\n";
+    system ("rm -rf $LAPS_DATA_ROOT/static\_save");
 }
 
 print ("Checking for static.nest7grid");
