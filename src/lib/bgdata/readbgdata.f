@@ -7,6 +7,7 @@
      +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
 
       implicit none
+      include 'netcdf.inc'
 
       integer nx_bg
       integer ny_bg
@@ -16,11 +17,16 @@
       integer nzbg_uv
       integer nzbg_ww
       integer bgmodel
-      integer ntbg
-      integer k
-      integer lencm
+      integer ntbg,nzbg
+      integer i,j,k
+      integer lencm,lend
       integer ivaltimes(100)
+      integer i4_initial
+      integer i4_valid
+      integer i4time
+      integer i4hr
       integer nan_flag
+      integer nf_fid,nf_vid,nf_status
       integer istatus
 c
 c *** Background model grid data.
@@ -29,6 +35,7 @@ c
       real, intent(out) :: prbgsh(nx_bg,ny_bg,nzbg_sh) !Pressure (mb) q
       real, intent(out) :: prbguv(nx_bg,ny_bg,nzbg_uv) !Pressure (mb) u- v-components
       real, intent(out) :: prbgww(nx_bg,ny_bg,nzbg_ww) !Pressure (mb) omega
+      real  pr(nzbg_ht)
 
       real, intent(out) :: htbg(nx_bg,ny_bg,nzbg_ht)   !Height (m)
       real, intent(out) :: tpbg(nx_bg,ny_bg,nzbg_tp)   !Temperature (K)
@@ -47,16 +54,19 @@ c
 
       real      lon0,lat1,lat2
 
-      character*5     ctype      !either "dprep" or "lapsb" depending on dprep or lga
-      character*2     gproj
-      character*132   cmodel
-      character*200   fullname
       character*256   bgpath
       character*256   fname_bg
-      character*4     af_bg
-      character*6     c6_maproj
+      character*200   fullname
+      character*150   directory
+      character*132   cmodel
+      character*125   comment_2d
+      character*10    units_2d
       character*13    fname13
       character*13    fname9_to_wfo_fname13
+      character*6     c6_maproj
+      character*5     ctype      !either "dprep" or "lapsb" depending on dprep or lga
+      character*4     af_bg
+      character*2     gproj
 
       interface
 
@@ -145,8 +155,137 @@ c        character gproj*2
 
       if(bgmodel.eq.0)then
 
-         print*,'readbgdata not yet designed to read laps -'
-         print*,'this is temporary and will be added soon'
+        print*,'Reading fua/fsf'
+
+        call get_directory_length(fullname,lend)
+        directory=fullname(1:lend)
+        call cv_asc_i4time(fullname(lend+1:lend+9),i4_initial)
+        read(af_bg,100)i4hr
+100     format(i4.4)
+
+        i4_valid=i4_initial+i4hr/100*3600
+
+        if(cmodel(1:lencm).eq.'LAPS_FUA')then
+
+         call get_modelfg_3d(i4_valid,'U3 ',nx_bg,ny_bg,nzbg_uv
+     .,uwbg,istatus)
+         call get_modelfg_3d(i4_valid,'V3 ',nx_bg,ny_bg,nzbg_uv
+     .,vwbg,istatus)
+         call get_modelfg_3d(i4_valid,'T3 ',nx_bg,ny_bg,nzbg_ht
+     .,tpbg,istatus)
+         call get_modelfg_3d(i4_valid,'HT ',nx_bg,ny_bg,nzbg_ht
+     .,htbg,istatus)
+         call get_modelfg_3d(i4_valid,'SH ',nx_bg,ny_bg,nzbg_sh
+     .,shbg,istatus)
+         call get_modelfg_3d(i4_valid,'OM ',nx_bg,ny_bg,nzbg_ww
+     .,wwbg,istatus)
+
+c     print*,'get pressures from pressure.nl'
+         call get_pres_1d(i4time,nzbg_ht,pr,istatus)
+         do k = 1,nzbg_ht
+            pr(k)=pr(k)/100.
+            do j=1,ny_bg
+            do i=1,nx_bg
+               prbght(i,j,k)=pr(k)
+               prbgsh(i,j,k)=pr(k)
+               prbguv(i,j,k)=pr(k)
+               prbgww(i,j,k)=pr(k)
+            enddo
+            enddo
+         enddo
+
+         call get_modelfg_2d(i4_valid,'USF',nx_bg,ny_bg,uwbg_sfc
+     .,istatus)
+         call get_modelfg_2d(i4_valid,'VSF',nx_bg,ny_bg,vwbg_sfc
+     .,istatus)
+         call get_modelfg_2d(i4_valid,'TSF',nx_bg,ny_bg,tpbg_sfc
+     .,istatus)
+         call get_modelfg_2d(i4_valid,'DSF',nx_bg,ny_bg,shbg_sfc
+     .,istatus)
+         call get_modelfg_2d(i4_valid,'SLP',nx_bg,ny_bg,mslpbg
+     .,istatus)
+         call get_modelfg_2d(i4_valid,'PSF',nx_bg,ny_bg,prbg_sfc
+     .,istatus)
+
+        elseif(cmodel.eq.'MODEL_FUA')then
+
+         nf_status = NF_OPEN(fullname,NF_NOWRITE,nf_fid)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'NF_OPEN ', fullname
+            return
+         endif
+         nf_status=NF_INQ_VARID(nf_fid,'z',nf_vid)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'in NF_GET_VAR_ model '
+            return
+         endif
+         nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nzbg)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'dim n_valtimes'
+            return
+         endif
+         nf_status=NF_INQ_VARID(nf_fid,'levels',nf_vid)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'in NF_GET_VAR_ model '
+            return
+         endif
+         nf_status=NF_GET_VARA_INT(nf_fid,nf_vid,1,nzbg_ht,pr)
+         if(nf_status.ne.NF_NOERR) then
+            print *, NF_STRERROR(nf_status)
+            print *,'in NF_GET_VAR_ model '
+            return
+         endif
+
+         do k = 1,nzbg_ht
+            do j=1,ny_bg
+            do i=1,nx_bg
+               prbght(i,j,k)=pr(k)
+               prbgsh(i,j,k)=pr(k)
+               prbguv(i,j,k)=pr(k)
+               prbgww(i,j,k)=pr(k)
+            enddo
+            enddo
+         enddo
+
+c upper air
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_uv,directory,'U3 '
+     1            ,units_2d,comment_2d,uwbg,istatus)
+
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_uv,directory,'V3 '
+     1            ,units_2d,comment_2d,vwbg,istatus)
+
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_ht,directory,'T3 '
+     1            ,units_2d,comment_2d,tpbg,istatus)
+
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_ht,directory,'HT '
+     1            ,units_2d,comment_2d,htbg,istatus)
+
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_sh,directory,'SH '
+     1            ,units_2d,comment_2d,shbg,istatus)
+
+         call get_lapsdata_3d(i4_initial,i4_valid,nx_bg
+     1            ,ny_bg,nzbg_ww,directory,'OM '
+     1            ,units_2d,comment_2d,wwbg,istatus)
+
+c sfc data
+         call get_lapsdata_2d(i4time,i4_valid,directory,'SLP'
+     1            ,units_2d,comment_2d,nx_bg,ny_bg,mslpbg
+     1            ,istatus)
+
+         call get_lapsdata_2d(i4time,i4_valid,directory,'DSF'
+     1            ,units_2d,comment_2d,nx_bg,ny_bg,shbg_sfc
+     1            ,istatus)
+
+        endif
 
       elseif (bgmodel .eq. 1) then     ! Process 60 km RUC data
 

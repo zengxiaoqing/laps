@@ -727,6 +727,8 @@ c
             print *,'in NF_GET_VAR (ww): ',cmodel
          else
             print *,'Missing ww data detected: continue without'
+            print *,'Filling ww with 0.0'
+            data(:,:,1:nzbgww) = 0.0
          endif
          print*
       endif

@@ -39,13 +39,14 @@
       data print_message/.true./
       integer nlapsprds,lentodot,nc
       integer record
-      character*3 lapsprds(4)
       character*2 cwb_model_type
 
       character(len=256), allocatable :: bg_names(:)
 
-      parameter (nlapsprds=4)
-      data lapsprds/'lq3','lt1','lsx','lw3'/
+      parameter (nlapsprds=5)
+      character*3 lapsprds(nlapsprds)
+
+      data lapsprds/'lq3','lt1','lsx','lw3','fua'/
 
 C
 C if forecast_length < 0 return only the file which matches i4time_now 
@@ -69,7 +70,7 @@ C
          enddo
       enddo
 
-      if(bgmodel.eq.0) then
+      if(bgmodel.eq.0 .and. cmodel.ne.'LAPS_FUA') then
          do i=max(0,forecast_length),0,-1
             bg_files=bg_files+1
             call make_fnam_lp(i4time_now+3600*i
@@ -130,11 +131,18 @@ c              print*,'nvt/bg_names(nvt) ',i,bg_names(nvt)(1:14)
 
          nvaltimes = 1
          do i=1,bg_files
-            call s_len(names(i),j)
+
+            if(bgmodel .eq. 0)then
+               call get_time_length(names(i),j)
+            else    
+               call s_len(names(i),j)
+            endif
+
             j=j-13
             if (j .ge. 0) then
                if(index(names(i)(j+1:j+13),'/').eq.0 .and.
      +              names(i)(j:j).eq.'/') then
+
                   if (bgmodel .eq. 4) then
 
 c     print *, 'SBN file:',names(i)(j+1:j+13)
@@ -161,6 +169,7 @@ c     print*,'SBN: ',bg_names(k),k
                         nvaltimes = k-1
                      endif
                   else 
+
 c     if(names(i)(j:j) .eq. '/') then
                      bg_names(i)=names(i)(j+1:j+13)
 c     print*,'NOTSBN: ',bg_names(i),bg_files
@@ -198,6 +207,8 @@ c     print*,'NOTSBN: ',bg_names(i),bg_files
                   fname=bg_names(n)(1:9)
                   af=bg_names(n)(10:13)
                   read(af,'(i4)',err=888) ihour
+                  if(bgmodel.eq.0.and.cmodel.eq.'LAPS_FUA')
+     +               ihour=ihour/100
 	    else
 	       print*,'Ignoring weird filename ',bg_names(n)(1:bg_len)
 	    endif 
