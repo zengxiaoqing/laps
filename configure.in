@@ -124,13 +124,13 @@ then
   if test "$arch" = "solaris"
   then
 dnl module flags for solaris 
-	FFLAGS="$FFLAGS -M$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -M\$(LAPSROOT)/src/lib"
 dnl
 dnl The solaris cc has a bug in the preprocessor
 dnl 
 	CPP="/usr/ucb/cc -P"
 else
-	FFLAGS="$FFLAGS -I$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -I\$(LAPSROOT)/src/lib"
 fi
 fi
 AC_F90_FUNC_TRIGD

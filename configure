@@ -1440,10 +1440,10 @@ then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "solaris"
   then
-	FFLAGS="$FFLAGS -M$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -M\$(LAPSROOT)/src/lib"
 	CPP="/usr/ucb/cc -P"
 else
-	FFLAGS="$FFLAGS -I$(LAPSROOT)/src/lib"
+	FFLAGS="$FFLAGS -I\$(LAPSROOT)/src/lib"
 fi
 fi
 
