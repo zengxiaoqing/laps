@@ -468,40 +468,49 @@ c
 c.....  Check if station is reported more than once this
 c.....  time period.
 c
-	  if(jfirst .eq. 1) then
+          i_reject = 0
+
+	  if(jfirst .eq. 1) then ! first station in dataset
 	     icount = 1
 	     save_stn(1) = stname(i)
 	     jfirst = 0
-	     go to 150
-	  endif
-c
-!         Do duplication check unless station names are 'UNK'
-	  do k=1,icount
-	     if(stname(i) .eq. save_stn(k))then
-                 if(stname(i)(1:3) .ne. 'UNK')go to 125
 
-!                Alternatively set l_dupe_time based on abs(obstime-systime)
-                 i_diff = abs(nint(timeobs(i)) + i4time_offset 
-     1                                         - i4time_sys)
-                 k_diff = abs(nint(timeobs(k)) + i4time_offset 
-     1                                         - i4time_sys)
-                 if(i_diff .ge. k_diff)then
-                     i_reject = i
-                 else
-                     i_reject = k
-                 endif
+          else ! all subsequent stations
+!            Do duplication check unless station names are 'UNK'
+	     do k=1,icount
+	        if(stname(i) .eq. save_stn(k))then
+                   if(stname(i)(1:3) .ne. 'UNK')go to 125
 
-             endif
-	  enddo	!k
-c
-	  icount = icount + 1
-	  save_stn(icount) = stname(i) ! only one...save for checking
-c
- 150	  nn = nn + 1
+                   i4time_ob_k = nint(timeobs(k)) + i4time_offset
 
-          if(nn .gt. maxsta)then
+!                  Alternatively set l_dupe_time based on abs(obstime-systime)
+                   i_diff = abs(i4time_ob   - i4time_sys)
+                   k_diff = abs(i4time_ob_k - i4time_sys)
+
+                   if(i_diff .gt. k_diff)then
+                      i_reject = i
+                   else
+                      i_reject = k
+                   endif
+
+                   write(6,*)' Dupe METAR at ',stname(i),timech
+     1                                        ,k,i,i_reject
+
+                endif
+	     enddo ! k
+c
+	     icount = icount + 1
+	     save_stn(icount) = stname(i) ! only one...save for checking
+c
+          endif
+
+  	  nn = nn + 1
+
+          np = nn ! this can be set differently depending on i_reject
+
+          if(np .gt. maxsta)then
               write(6,*)' ERROR in get_metar_obs: increase maxsta '
-     1                 ,nn,maxsta
+     1                 ,np,maxsta
               stop
           endif
 
@@ -670,14 +679,14 @@ c
 c..... Temperature (deg F)
 c
 	fon = 9. / 5.  !ratio when converting C to F
-	store_2ea(nn,1) = 5.0 * fon        ! start...we don't know what we have
+	store_2ea(np,1) = 5.0 * fon        ! start...we don't know what we have
 	if(temp_f .ne. badflag) then
 	   if(temp_f.ge.c2f(-62.) .and. temp_f.le.c2f(-50.)) then
-	      store_2ea(nn,1) = 1.1 * fon  ! conv to deg F
+	      store_2ea(np,1) = 1.1 * fon  ! conv to deg F
 	   elseif(temp_f.gt.c2f(-50.) .and. temp_f.lt.c2f(50.)) then
-	      store_2ea(nn,1) = 0.6 * fon  ! conv to deg F
+	      store_2ea(np,1) = 0.6 * fon  ! conv to deg F
 	   elseif(temp_f.ge.c2f(50.) .and. temp_f.le.c2f(54.)) then
-	      store_2ea(nn,1) = 1.1 * fon  ! conv to deg F
+	      store_2ea(np,1) = 1.1 * fon  ! conv to deg F
 	   endif
 	endif
 c
@@ -686,41 +695,41 @@ c..... Estimates for the RH expected accuracy are from playing around with the
 c..... Psychrometric Tables for various T/Td combinations (including their
 c..... accuracies from the FMH-1 Appendix C).
 c
-	 store_2ea(nn,2) = 5.0 * fon       ! start...don't know what we have 
-	 store_2ea(nn,3) = 50.0            ! Relative Humidity %
+	 store_2ea(np,2) = 5.0 * fon       ! start...don't know what we have 
+	 store_2ea(np,3) = 50.0            ! Relative Humidity %
 	 if(dewp_f .ne. badflag) then
 	    if(dewp_f.ge.c2f(-34.) .and. dewp_f.lt.c2f(-24.)) then
-	       store_2ea(nn,2) = 2.2 * fon ! conv to deg F
-	       store_2ea(nn,3) = 20.0      ! RH (%) 
+	       store_2ea(np,2) = 2.2 * fon ! conv to deg F
+	       store_2ea(np,3) = 20.0      ! RH (%) 
 	    elseif(dewp_f.ge.c2f(-24.) .and. dewp_f.lt.c2f(-1.)) then
-	       store_2ea(nn,2) = 1.7 * fon ! conv to deg F
-	       store_2ea(nn,3) = 12.0      ! RH (%) 
+	       store_2ea(np,2) = 1.7 * fon ! conv to deg F
+	       store_2ea(np,3) = 12.0      ! RH (%) 
 	    elseif(dewp_f.ge.c2f(-1.) .and. dewp_f.le.c2f(30.)) then
-	       store_2ea(nn,2) = 1.1 * fon ! conv to deg F
-	       store_2ea(nn,3) = 8.0       ! RH (%) 
+	       store_2ea(np,2) = 1.1 * fon ! conv to deg F
+	       store_2ea(np,3) = 8.0       ! RH (%) 
 	    endif
 	 endif
 c
 c..... Wind direction (deg) and speed (kts)
 c
-	 store_3ea(nn,1) = 10.0    ! deg 
-	 store_3ea(nn,2) =  1.0    ! kt
+	 store_3ea(np,1) = 10.0    ! deg 
+	 store_3ea(np,2) =  1.0    ! kt
 	 if(ff(i) .ne. badflag) then
 	    if(ff(i).ge.1.0 .and. ff(i).le.10.0) then
-	       store_3ea(nn,2) = 1.0          ! kt
+	       store_3ea(np,2) = 1.0          ! kt
 	    elseif(ff(i) .gt. 10.0) then
-	       store_3ea(nn,2) = ff(i) * 0.1  ! 10% of speed (kts)
+	       store_3ea(np,2) = ff(i) * 0.1  ! 10% of speed (kts)
 	    endif
 c
 	    if(ff(i) .ge. 5.0) then    ! dir check
-	       store_3ea(nn,1) = 5.0   ! deg
+	       store_3ea(np,1) = 5.0   ! deg
 	    endif
 	 endif
 c
 c..... Pressure and altimeter (mb)
 c
-	 store_4ea(nn,1) = 0.68            ! pressure (mb)
-	 store_4ea(nn,2) = 0.68            ! altimeter (mb)
+	 store_4ea(np,1) = 0.68            ! pressure (mb)
+	 store_4ea(np,2) = 0.68            ! altimeter (mb)
 c
 c..... Visibility (miles).  For automated stations use a guess based 
 c..... on Table C-2 in Appendix C of FMH-1.  For manual stations, use
@@ -728,27 +737,27 @@ c..... a guess based on the range between reportable values (e.g., for
 c..... reported visibility between 0 and 3/8th mile, set accuracy to 
 c..... 1/16th mile).  This isn't ideal, but its a start.
 c
-	 store_5ea(nn,1) = 10.00         ! Start with this (miles)
+	 store_5ea(np,1) = 10.00         ! Start with this (miles)
 	 if(vis(i) .ne. badflag) then
 	    if(atype_in(i)(1:2) .eq. 'A0') then   ! have an auto station
 	       if(vis(i) .lt. 2.0) then
-		  store_5ea(nn,1) = 0.25         ! miles
+		  store_5ea(np,1) = 0.25         ! miles
 	       elseif(vis(i).ge.2.0 .and. vis(i).lt.3.0) then
-		  store_5ea(nn,1) = 0.50         ! miles
+		  store_5ea(np,1) = 0.50         ! miles
 	       elseif(vis(i) .gt. 3.0) then
-		  store_5ea(nn,1) = 1.00         ! miles
+		  store_5ea(np,1) = 1.00         ! miles
 	       endif
 	    else		! have a manual station
 	       if(vis(i) .le. 0.375) then
-		  store_5ea(nn,1) = 0.0625       ! miles
+		  store_5ea(np,1) = 0.0625       ! miles
 	       elseif(vis(i).gt.0.375 .and. vis(i).le.2.0) then
-		  store_5ea(nn,1) = 0.125        ! miles
+		  store_5ea(np,1) = 0.125        ! miles
 	       elseif(vis(i).gt.2.0 .and. vis(i).le.3.0) then
-		  store_5ea(nn,1) = 0.25         ! miles
+		  store_5ea(np,1) = 0.25         ! miles
 	       elseif(vis(i).gt.3.0 .and. vis(i).le.15.0) then
-		  store_5ea(nn,1) = 1.00         ! miles
+		  store_5ea(np,1) = 1.00         ! miles
 	       elseif(vis(i) .gt. 15.0) then
-		  store_5ea(nn,1) = 5.00         ! miles
+		  store_5ea(np,1) = 5.00         ! miles
 	       endif
 	    endif
 	 endif
@@ -756,77 +765,77 @@ c
 c..... Other stuff.  Don't really know about the precip, but probably
 c..... worse that this guess.
 c
-	 store_5ea(nn,2) = 0.0             ! solar radiation 
-	 store_5ea(nn,3) = 0.0             ! soil/water temperature
-	 store_5ea(nn,4) = 0.0             ! soil moisture 
+	 store_5ea(np,2) = 0.0             ! solar radiation 
+	 store_5ea(np,3) = 0.0             ! soil/water temperature
+	 store_5ea(np,4) = 0.0             ! soil moisture 
 c
-	 store_6ea(nn,1) = 0.01            ! precipitation (in)
-	 store_6ea(nn,2) = 1.0             ! snow cover (in) 
+	 store_6ea(np,1) = 0.01            ! precipitation (in)
+	 store_6ea(np,2) = 1.0             ! snow cover (in) 
 c
 c
 c..... Output the data to the storage arrays
 c
 	 call s_len(stname(i), len)
-	 stations(nn)(1:len) = stname(i)(1:len) ! station name
+	 stations(np)(1:len) = stname(i)(1:len) ! station name
 c
 	 call s_len(atype_in(i), len)
 	 if(len .ne. 0) then
-	    atype(nn)(1:len) = atype_in(i)(1:len) ! auto stn type
+	    atype(np)(1:len) = atype_in(i)(1:len) ! auto stn type
 	 endif
 c
 	 call s_len(reptype_in(i), len)
 	 if(len .ne. 0) then
-	    reptype(nn)(1:len) = reptype_in(i)(1:len) ! report type
+	    reptype(np)(1:len) = reptype_in(i)(1:len) ! report type
 	 endif
 c
- 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
-         call filter_string(weather(nn))
+ 	 weather(np)(1:25) = wx(i)(1:25)        ! present weather
+         call filter_string(weather(np))
 
-	 provider(nn)(1:11) = c11_provider      ! data provider 
-	 wmoid(nn) = wmoid_in(i)
+	 provider(np)(1:11) = c11_provider      ! data provider 
+	 wmoid(np) = wmoid_in(i)
 c
-	 store_1(nn,1) = lats(i)                ! station latitude
-	 store_1(nn,2) = lons(i)                ! station longitude
-	 store_1(nn,3) = elev(i)                ! station elevation
-	 store_1(nn,4) = rtime                  ! observation time
+	 store_1(np,1) = lats(i)                ! station latitude
+	 store_1(np,2) = lons(i)                ! station longitude
+	 store_1(np,3) = elev(i)                ! station elevation
+	 store_1(np,4) = rtime                  ! observation time
 c
-	 store_2(nn,1) = temp_f                 ! temperature (deg f)
-	 store_2(nn,2) = dewp_f                 ! dew point (deg f)
-	 store_2(nn,3) = rh(i)                  ! Relative Humidity
+	 store_2(np,1) = temp_f                 ! temperature (deg f)
+	 store_2(np,2) = dewp_f                 ! dew point (deg f)
+	 store_2(np,3) = rh(i)                  ! Relative Humidity
 c
-	 store_3(nn,1) = dd(i)                  ! wind dir (deg)
-	 store_3(nn,2) = ff(i)                  ! wind speed (kt)
-	 store_3(nn,3) = ddg(i)                 ! wind gust dir (deg)
-	 store_3(nn,4) = ffg(i)                 ! wind gust speed (kt)
+	 store_3(np,1) = dd(i)                  ! wind dir (deg)
+	 store_3(np,2) = ff(i)                  ! wind speed (kt)
+	 store_3(np,3) = ddg(i)                 ! wind gust dir (deg)
+	 store_3(np,4) = ffg(i)                 ! wind gust speed (kt)
 c
-	 store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
-	 store_4(nn,2) = stnp(i)                ! station pressure (mb)
-	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-	 store_4(nn,4) = float(dpchar(i))       ! 3-h press change character
-         store_4(nn,5) = dp(i)                  ! 3-h press change (mb)
+	 store_4(np,1) = alt(i)                 ! altimeter setting (mb)
+	 store_4(np,2) = stnp(i)                ! station pressure (mb)
+	 store_4(np,3) = mslp(i)                ! MSL pressure (mb)
+	 store_4(np,4) = float(dpchar(i))       ! 3-h press change character
+         store_4(np,5) = dp(i)                  ! 3-h press change (mb)
 c
-	 store_5(nn,1) = vis(i)                 ! visibility (miles)
-	 store_5(nn,2) = sr(i)                  ! solar radiation 
-	 store_5(nn,3) = st(i)                  ! soil/water temperature
-	 store_5(nn,4) = badflag                ! soil moisture
+	 store_5(np,1) = vis(i)                 ! visibility (miles)
+	 store_5(np,2) = sr(i)                  ! solar radiation 
+	 store_5(np,3) = st(i)                  ! soil/water temperature
+	 store_5(np,4) = badflag                ! soil moisture
 c
-	 store_6(nn,1) = pcp1(i)                ! 1-h precipitation
-	 store_6(nn,2) = pcp3(i)                ! 3-h precipitation
-	 store_6(nn,3) = pcp6(i)                ! 6-h precipitation
-	 store_6(nn,4) = pcp24(i)               ! 24-h precipitation
-	 store_6(nn,5) = snowcvr(i)             ! snow cover
+	 store_6(np,1) = pcp1(i)                ! 1-h precipitation
+	 store_6(np,2) = pcp3(i)                ! 3-h precipitation
+	 store_6(np,3) = pcp6(i)                ! 6-h precipitation
+	 store_6(np,4) = pcp24(i)               ! 24-h precipitation
+	 store_6(np,5) = snowcvr(i)             ! snow cover
 c
-	 store_7(nn,1) = float(k_layers)        ! number of cloud layers
-	 store_7(nn,2) = max24t(i)              ! 24-h max temperature
-	 store_7(nn,3) = min24t(i)              ! 24-h min temperature
+	 store_7(np,1) = float(k_layers)        ! number of cloud layers
+	 store_7(np,2) = max24t(i)              ! 24-h max temperature
+	 store_7(np,3) = min24t(i)              ! 24-h min temperature
 c
 c.....	Store cloud info if we have any. 
 c
 	 if(k_layers .gt. 0) then
 	   do ii=1,k_layers
-	     store_cldht(nn,ii) = ht(ii,i)
-	     store_cldamt(nn,ii)(1:1) = ' '
-	     store_cldamt(nn,ii)(2:4) = cvr(ii,i)(1:3)
+	     store_cldht(np,ii) = ht(ii,i)
+	     store_cldamt(np,ii)(1:1) = ' '
+	     store_cldamt(np,ii)(2:4) = cvr(ii,i)(1:3)
 	   enddo !ii
 	 endif
 c
