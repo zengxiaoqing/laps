@@ -3,10 +3,6 @@
  ICKINT = 15,
  ITOTWAIT = 120,
  IAGETH = 2701,
- ISTART = 419,
- JSTART = 207,
- IEND = 863,
- JEND = 479,
  /
 c
 c Author: J. Smart (9-22-98)
