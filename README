@@ -1995,6 +1995,8 @@ Also recall the flow chart showing the inputs and outputs for
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
+Parameter namelist file: 'static/remap.nl'
+
 Sample Input/Output: May be available in the test data case.
 
 ------ 3.2.4 -------- WSI / NOWRAD RADAR PREPROCESSING (VRC) ------------------
