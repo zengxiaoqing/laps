@@ -174,9 +174,7 @@
      netcdf 3.3.1 or higher is required.
      Once netCDF is properly installed, check that the 'ncdump' and 'ncgen' 
      programs are in your path (e.g. 'which ncdump'), so that 'configure' 
-     will find them and provide the laps package with the proper path. You 
-     can also provide the path to netcdf to 'configure' by using the command 
-     line argument --netcdf=path_to_ncdump.
+     will find them and provide the laps package with the proper path. 
 
      NetCDF is a general format structure. The detailed format of each data 
      file is self-describing (via 'ncdump'), and is mirrored in a separate 
@@ -226,6 +224,8 @@
      For Solaris & HP-UX platforms, 'f90' is needed.
 
      For Linux platforms (Intel chip), 'pgf90' is suggested.
+
+     For Linux platforms (Alpha chip), 'fort' is suggested (normal serial use).
 
                     ---  2.1.6  Disk Space ---
 
