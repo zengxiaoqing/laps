@@ -778,16 +778,26 @@ C
 	character*20 timestr
         character*13 attname
 	integer*4    lenstr, sp_loc, units_loc, to_seconds, itime
+        integer      tlen, ttype      ! attribute type and length
+
+        include 'netcdf.inc'
 
 C       netCDF file is opened, and accessed via cdfid
 C	read "avgTimePeriod" global attribute into timestr 
 
         lenstr = len(timestr)  
         attname = 'avgTimePeriod'
-C looking for a character string
-	CALL NCAGTC(cdfid,ncglobal,attname,timestr,lenstr,istatus)
 
-	if (istatus .ne. 0) then   !didn't get a character string....look for an integer
+C determine type of attribute 'avgTimePeriod'
+        call NCAINQ (cdfid, ncglobal, 'avgTimePeriod', ttype,
+     1               tlen, istatus)
+        if (istatus .ne. 0) then  !error retrieving info about avgTimePeriod
+          istatus = 0
+          return
+        endif
+
+        if (ttype .ne. NCCHAR) then   !read avgTimePeriod as an integer
+
 	  CALL NCAGT(cdfid,ncglobal,attname,itime,istatus)
 
 	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
@@ -798,13 +808,19 @@ C looking for a character string
 C  units assumed to be minutes
 	  to_seconds = 60
 
-        else  !got character string
+        else  !looking for a character string
 
 C	  format of avgTimeString should be a number followed by a space and
 C           then a lower case string of units, ie. "60 minutes" or "6 minutes"
 C	    Verify that the units are minutes, seconds or hour, and convert
 C	    the number string into an integer.  Return value is via i4_avg_wdw_sec
 C  	    and is in seconds 
+
+          CALL NCAGTC(cdfid,ncglobal,attname,timestr,lenstr,istatus)
+	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
+            istatus = 0
+            return
+          endif
 
 	  sp_loc = index(timestr,' ')  !everything to the left should be number
 	
