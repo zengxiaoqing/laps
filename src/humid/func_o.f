@@ -165,15 +165,15 @@ c     local analogs to common block variables for input to parameters
 
 c     local monitor variables
 
-      real max_func_rad
-      real max_func_back
-      real max_func_gvap
+      real max_func_rad, min_func_rad
+      real max_func_back, min_func_back
+      real max_func_gvap, min_func_gvap
       real max_func_gvap1
       real max_func_gvap2
       real max_func_gvap3
-      real max_func_cloud
-      real max_func_gps
-      real max_func_snd
+      real max_func_cloud, min_func_cloud
+      real max_func_gps, min_func_gps
+      real max_func_snd, min_func_snd
 
 c     lcal variables
 
@@ -206,6 +206,8 @@ c     externals
       
 c     code
 
+      
+
       cloud_thresh = 0.6
       tbest = 0.0 ! initialize tbest array to zero each call (no carryover)
       cloud_integral = 0.0
@@ -234,6 +236,15 @@ c     constrain x to positive
       
       if (first_time) then
          first_time  = .false.
+
+c     initialize min variables
+
+         min_func_rad = 1.e38
+         min_func_back = 1.e38
+         min_func_gvap = 1.e38
+         min_func_cloud = 1.e38
+         min_func_gps = 1.e38
+         min_func_snd = 1.e38
 
 c     set up for sounder if needed instead of imager
          
@@ -355,6 +366,9 @@ c     conflict with cloud analysis
          func = func * GT ! importance reduced by cloud influence
 
          max_func_rad = func
+         if (max_func_rad .ne. 0.0) then
+            min_func_rad = min(min_func_rad,max_func_rad)
+         endif
             
          
 c     stability cost is identical for both imager and sounder
@@ -396,6 +410,11 @@ c     background weighting, in effect even if radiance data are not present.
       max_func_back = max_func_back/(0.005**2) ! background error small
 
       func = func + max_func_back
+
+      if (max_func_back .ne. 0.0) then
+         min_func_back = min(min_func_back,max_func_back)
+      endif
+
 c      write(6,*) 'func 1, ',func
 c     END BACKGROUND SECTION
 
@@ -480,7 +499,12 @@ c     max_func_gvap is in mm (above) now divide by mm error to make
 c     dimensionless
             max_func_gvap = max_func_gvap / ((3.27)**2) ! from SFOV worst case 
             func = func + max_func_gvap
-
+            if (max_func_gvap .ne. 0.0) then
+               min_func_gvap = min(min_func_gvap,max_func_gvap)
+            endif
+            
+            
+            
          endif                  !weight function test
       endif                     !data present test
 C     END GVAP SECTION
@@ -532,6 +556,11 @@ c    CLOUD SECTION -- UNITS (none, just a fraction 0->1)
          enddo                  ! enddo k level
          max_func_cloud = max_func_cloud * 0.5
          func = func + max_func_cloud
+         if (max_func_cloud .ne. 0.0) then
+            min_func_cloud = min(min_func_cloud,max_func_cloud)
+         endif
+
+
       endif                     ! cloud data present
       
 C     END CLOUD SECTION
@@ -564,6 +593,10 @@ c     GPS SECTION  !  UNITS cm
          max_func_gps = max_func_gps/(0.03**2)  ! variance in cm**2
 
          func = func + max_func_gps
+         if (max_func_gps .ne. 0.0) then
+            min_func_gps = min(min_func_gps,max_func_gps)
+         endif
+
       else
          continue
       endif
@@ -588,17 +621,23 @@ c     RAOB SECTION (SND)
          
          do i = 1, cost_kk      ! all laps levels
             
+            if (mr_l(i) .ne. 0.0) then
             max_func_snd = max_func_snd +
      1           (mr_l(i)-cost_snd_data(i))**2 * 
      1           cost_snd_wt(i) !weighted squared difference
+     1           / (0.05*mr_l(i))**2
+            endif
 
          enddo
             
       endif
 
-      max_func_snd = max_func_snd/(0.5**2) ! error in q as 0.5K td error, 5% rh
+c      max_func_snd = max_func_snd/(0.5**2) ! error in q as 0.5K td error, 5% rh
 
       func = func + max_func_snd 
+      if (max_func_snd .ne. 0.0) then
+         min_func_snd = min(min_func_snd,max_func_snd)
+      endif
 
 C     END RAOB SECTION
 

@@ -151,7 +151,7 @@ c     *** begin routine
       pi = acos(-1.0)
       d2r = pi/180.
       look_back_time = snd_lookback
-      maxfiles = 200
+      maxfiles = nnn
       
       do j = 1,jj
          do i = 1,ii
