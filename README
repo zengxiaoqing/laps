@@ -277,6 +277,15 @@
      'lapsplot', if your machine is expecting little_endian. We will consider 
      automating this in the future. 
 
+     To run lapsplot you can do the following...
+
+     1. setenv LAPS_DATA_ROOT to the correct path
+
+     2. run $LAPSINSTALLROOT/bin/lapsplot.exe (answer the questions it asks 
+                                               interactively)
+
+     3. idt gmeta
+
      Please note that 'lapsplot' is provided to help you check out how your
      LAPS implementation is working. The LAPB Branch does not have any other 
      plotting or visualization packages available for distribution with LAPS 
