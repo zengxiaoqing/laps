@@ -5,3 +5,4 @@
 00,05,10,15,20,25,30,45 * * * *  @PERL@ @prefix@/etc/laps_driver.pl ingest_rrv.exe         @prefix@ @datadir@
 02,12,22,32,42,52       * * * *  @PERL@ @prefix@/etc/laps_driver.pl ln3_driver.exe         @prefix@ @datadir@ 
 12                      * * * *  @PERL@ @prefix@/etc/laps_driver.pl remap_polar_netcdf.exe @prefix@ @datadir@
+40                      * * * *  @CSH@  @prefix@/etc/topc.csh  @datadir@/log
