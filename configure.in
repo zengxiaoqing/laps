@@ -228,6 +228,8 @@ AC_OUTPUT(src/include/trigd.inc
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
+          etc/realtime.pl
+          etc/ramrsf.pl
 	  etc/laps_localization.pl
           etc/wfo_post.pl)
 
