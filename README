@@ -1683,7 +1683,7 @@ Inputs: (from PRO, PIN, LGA/RAM, CDW)       '*' = essential input
                                 needed for current and previous cycle times
 	pro     inter data      profiler, VAD, SODAR winds
         snd     inter data      RAOB data including winds
-	pin	inter data      pireps/clouds
+	pin	inter data      ACARS Winds
         cdw     inter data      cloud drift wind
       * lso     inter data      LAPS surface obs file: mesonet & SAO
 
@@ -1779,6 +1779,7 @@ Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
       * lga/ram grid            model data analysis / forecast
 	lrs	inter data      RASS vertical temp profile 
         snd     inter data      RAOB data including temperatures
+	pin	inter data	ACARS Temperatures
       * lsx     grid            LAPS surface data grids
 
 Outputs: (LW3 used by LBA)
