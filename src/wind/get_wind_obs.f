@@ -360,7 +360,7 @@ cdis
      1          ,nlevels_obs_pr,lat_pr,lon_pr                           ! I
      1          ,r_missing_data,weight_prof                             ! I/O
      1          ,heights_1d                                             ! I
-     1          ,istatus)                                               ! I
+     1          ,istatus)                                               ! O
 
 !          Do a rough analysis of profile data for comparison with radial
 !          velocities. Only one radar (#1) is used.
@@ -554,7 +554,7 @@ cdis
         endif ! We have radar data
         I4_elapsed = ishow_timer()
 
-
+        istatus = 1
         return
         end
 
