@@ -319,6 +319,7 @@ c
                         obs_point(nobs_point)%valuef(2) = ob_v + v_diff
                         obs_point(nobs_point)%weight = weight_prof       
                         obs_point(nobs_point)%type = 'prof'      
+                        obs_point(nobs_point)%file = 'pro'      
                     endif ! istatus
 
                     call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)

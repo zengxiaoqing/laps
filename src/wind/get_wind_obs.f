@@ -357,6 +357,7 @@ cdis
                                     obs_point(nobs_point)%weight = 
      1                                                    weight_prof       
                                     obs_point(nobs_point)%type = 'prof'      
+                                    obs_point(nobs_point)%file = 'pro'      
 
                                 endif ! l_profiler
 
