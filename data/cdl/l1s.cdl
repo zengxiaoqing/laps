@@ -1,0 +1,203 @@
+netcdf l1s {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	60 min snow accumulation
+
+	float                                  
+            s01(record,z,y,x);
+            s01:navigation_dim = "nav";
+            s01:record = "valtime, reftime";
+            s01:_FillValue = 1.e+37f;
+            s01:long_name="LAPS 60 minute snow accum.";
+            s01:units="meters";
+            s01:valid_range= -200.f, 200.f;
+            s01:LAPS_var="S01";
+            s01:lvl_coord="MSL";
+	    s01:LAPS_units="M";
+                	        
+        //	storm total accumulation
+
+	float                                  
+            sto(record,z,y,x);
+            sto:navigation_dim = "nav";
+            sto:record = "valtime, reftime";
+            sto:_FillValue = 1.e+37f;
+            sto:long_name="storm total snow accumulation";
+            sto:units="meters";
+            sto:valid_range= -200.f, 200.f;
+            sto:LAPS_var="STO";
+            sto:lvl_coord="MSL";
+	    sto:LAPS_units="M";
+                	        
+        //	60 minute precip accumulation
+
+	float                                  
+            r01(record,z,y,x);
+            r01:navigation_dim = "nav";
+            r01:record = "valtime, reftime";
+            r01:_FillValue = 1.e+37f;
+            r01:long_name="LAPS 60 minute precip. accum.";
+            r01:units="meters";
+            r01:valid_range= -200.f, 200.f;
+            r01:LAPS_var="R01";
+            r01:lvl_coord="MSL";
+	    r01:LAPS_units="M";
+                	        
+        //	storm total precip accum
+
+	float                                  
+            rto(record,z,y,x);
+            rto:navigation_dim = "nav";
+            rto:record = "valtime, reftime";
+            rto:_FillValue = 1.e+37f;
+            rto:long_name="storm total precip. accum.";
+            rto:units="meters";
+            rto:valid_range= -200.f, 200.f;
+            rto:LAPS_var="RTO";
+            rto:lvl_coord="MSL";
+	    rto:LAPS_units="M";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            s01_comment(record,z,namelen),
+            sto_comment(record,z,namelen),
+            r01_comment(record,z,namelen),
+            rto_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            s01_fcinv(record, z);
+            s01_fcinv:_FillValue= 0s;
+              	
+        short
+            sto_fcinv(record, z);
+            sto_fcinv:_FillValue= 0s;
+              	
+        short
+            r01_fcinv(record, z);
+            r01_fcinv:_FillValue= 0s;
+              	
+        short
+            rto_fcinv(record, z);
+            rto_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS l1s file - snow and precip accumulation";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS l1s file - snow and precip accumulation";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+
+}                       

@@ -1,0 +1,259 @@
+netcdf lm2 {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	cumluative infiltration volume
+
+	float                                  
+            civ(record,z,y,x);
+            civ:navigation_dim = "nav";
+            civ:record = "valtime, reftime";
+            civ:_FillValue = 1.e+37f;
+            civ:long_name="cumluative infiltration volume";
+            civ:units="meters";
+            civ:valid_range= -200.f, 200.f;
+            civ:LAPS_var="CIV";
+            civ:lvl_coord="AGL";
+	    civ:LAPS_units="M";
+                	        
+        //	depth to wetting front
+
+	float                                  
+            dwf(record,z,y,x);
+            dwf:navigation_dim = "nav";
+            dwf:record = "valtime, reftime";
+            dwf:_FillValue = 1.e+37f;
+            dwf:long_name="depth to wetting front";
+            dwf:units="meters";
+            dwf:valid_range= -200.f, 200.f;
+            dwf:LAPS_var="DWF";
+            dwf:lvl_coord="AGL";
+	    dwf:LAPS_units="M";
+                	        
+        //	wet or dry grid point
+
+	float                                  
+            wx(record,z,y,x);
+            wx:navigation_dim = "nav";
+            wx:record = "valtime, reftime";
+            wx:_FillValue = 1.e+37f;
+            wx:long_name="wet/dry grid point";
+            wx:units="none";
+            wx:valid_range= -200.f, 200.f;
+            wx:LAPS_var="WX";
+            wx:lvl_coord="none";
+	    wx:LAPS_units="none";
+                	        
+        //	evaporation data
+
+	float                                  
+            evp(record,z,y,x);
+            evp:navigation_dim = "nav";
+            evp:record = "valtime, reftime";
+            evp:_FillValue = 1.e+37f;
+            evp:long_name="evaporation data";
+            evp:units="meters/second";
+            evp:valid_range= -200.f, 200.f;
+            evp:LAPS_var="EVP";
+            evp:lvl_coord="HPA";
+	    evp:LAPS_units="M/S";
+                	        
+        //	snow covered
+
+	float                                  
+            sc(record,z,y,x);
+            sc:navigation_dim = "nav";
+            sc:record = "valtime, reftime";
+            sc:_FillValue = 1.e+37f;
+            sc:long_name="snow covered";
+            sc:units="none";
+            sc:valid_range= -200.f, 200.f;
+            sc:LAPS_var="SC";
+            sc:lvl_coord="none";
+	    sc:LAPS_units="none";
+                	        
+        //	snow melting
+
+	float                                  
+            sm(record,z,y,x);
+            sm:navigation_dim = "nav";
+            sm:record = "valtime, reftime";
+            sm:_FillValue = 1.e+37f;
+            sm:long_name="snow melting";
+            sm:units="meters**3/meters**3";
+            sm:valid_range= -200.f, 200.f;
+            sm:LAPS_var="SM";
+            sm:lvl_coord="none";
+	    sm:LAPS_units="M**3/M**3";
+                	        
+        //	soil moisture content of wetting front
+
+	float                                  
+            mwf(record,z,y,x);
+            mwf:navigation_dim = "nav";
+            mwf:record = "valtime, reftime";
+            mwf:_FillValue = 1.e+37f;
+            mwf:long_name="soil moisture content of wetting front";
+            mwf:units="meters**3/meters**3";
+            mwf:valid_range= -200.f, 200.f;
+            mwf:LAPS_var="MWF";
+            mwf:lvl_coord="none";
+	    mwf:LAPS_units="M**3/M**3";
+                	        
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            civ_comment(record,z,namelen),
+            dwf_comment(record,z,namelen),
+            wx_comment(record,z,namelen),
+            evp_comment(record,z,namelen),
+            sc_comment(record,z,namelen),
+            sm_comment(record,z,namelen),
+            mwf_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            civ_fcinv(record, z);
+            civ_fcinv:_FillValue= 0s;
+              	
+        short
+            dwf_fcinv(record, z);
+            dwf_fcinv:_FillValue= 0s;
+              	
+        short
+            wx_fcinv(record, z);
+            wx_fcinv:_FillValue= 0s;
+              	
+        short
+            evp_fcinv(record, z);
+            evp_fcinv:_FillValue= 0s;
+              	
+        short
+            sc_fcinv(record, z);
+            sc_fcinv:_FillValue= 0s;
+              	
+        short
+            sm_fcinv(record, z);
+            sm_fcinv:_FillValue= 0s;
+              	
+        short
+            mwf_fcinv(record, z);
+            mwf_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lm2 file - soil moisture fields";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lm2 file - soil moisture fields";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       

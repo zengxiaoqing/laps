@@ -1,0 +1,181 @@
+netcdf lhe {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	helicity
+
+	float                                  
+            lhe(record,z,y,x);
+            lhe:navigation_dim = "nav";
+            lhe:record = "valtime, reftime";
+            lhe:_FillValue = 1.e+37f;
+            lhe:long_name="helicity";
+            lhe:units="meters / second**2";
+            lhe:valid_range= 0.f, 0.100f;
+            lhe:LAPS_var="LHE";
+            lhe:lvl_coord="MSL ";
+	    lhe:LAPS_units="M/S**2";
+                	        
+        //	SFC-300mb mean wind-u component
+        float 
+            mu(record,z,y,x) ;
+            mu:navigation_dim = "nav";
+            mu:record = "valtime, reftime";
+            mu:_FillValue = 1.e+37f;
+            mu:long_name = "SFC-300mb mean wind-u component" ;
+            mu:units = "meters/second" ;
+            mu:valid_range = 0.f, 0.1f ;
+            mu:LAPS_var = "MU" ;
+            mu:lvl_coord = "MSL" ;
+            mu:LAPS_units = "M/S" ;
+
+        //	SFC-300mb mean wind-v component
+        float 
+            mv(record,z,y,x) ;
+            mv:navigation_dim = "nav";
+            mv:record = "valtime, reftime";
+            mv:_FillValue = 1.e+37f;
+            mv:long_name = "SFC-300mb mean wind-v component" ;
+            mv:units = "meters/second" ;
+            mv:valid_range = 0.f, 0.1f ;
+            mv:LAPS_var = "MV" ;
+            mv:lvl_coord = "MSL" ;
+            mv:LAPS_units = "M/S" ;
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            lhe_comment(record,z,namelen),
+            mu_comment(record,z,namelen),
+            mv_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            lhe_fcinv(record, z);
+            lhe_fcinv:_FillValue= 0s;
+              	
+        short
+            mu_fcinv(record, z);
+            mu_fcinv:_FillValue= 0s;
+              	
+        short
+            mv_fcinv(record, z);
+            mv_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lhe file - helicity";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lhe file - helicity";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
