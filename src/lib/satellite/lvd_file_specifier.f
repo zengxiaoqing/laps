@@ -7,7 +7,6 @@
       integer istatus
       integer n
       character*3 c_type
-      character*3 c_type
 
       istatus = 0
       lvd_index=0
