@@ -36,7 +36,6 @@
 
 MODULE wrfsi_static
 
-  !USE date_pack
   USE time_utils
   ! F90 module to interact with the WRFSI static file, which is found
   ! in MOAD_DATAROOT/static.  
@@ -86,6 +85,12 @@ MODULE wrfsi_static
   CHARACTER(LEN=3), PARAMETER  :: NAME_LON_U = 'lob'
   CHARACTER(LEN=3), PARAMETER  :: NAME_LAT_V = 'laa'
   CHARACTER(LEN=3), PARAMETER  :: NAME_LON_V = 'loa'
+!mp-BLS
+  CHARACTER(LEN=3), PARAMETER  :: NAME_LAT_H= 'lah'
+  CHARACTER(LEN=3), PARAMETER  :: NAME_LON_H = 'loh'
+  CHARACTER(LEN=3), PARAMETER  :: NAME_LAT_W = 'lav'
+  CHARACTER(LEN=3), PARAMETER  :: NAME_LON_W = 'lov'
+!mp-BLS
 
   ! Stuff related to topography
   CHARACTER(LEN=3), PARAMETER  :: NAME_TER_N = 'avg'
@@ -125,16 +130,19 @@ MODULE wrfsi_static
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE open_wrfsi_static(dataroot,cdfid)
+  SUBROUTINE open_wrfsi_static(dataroot,nestid,cdfid)
   
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)   :: dataroot
+    INTEGER, INTENT(IN)            :: nestid
     INTEGER, INTENT(OUT)           :: cdfid
     CHARACTER(LEN=255)            :: staticfile
     LOGICAL                       :: static_exists
     INTEGER                       :: status
+    CHARACTER(LEN=2)              :: nestid_str
 
-    staticfile = TRIM(dataroot) // '/static/static.wrfsi'
+    WRITE(nestid_str, '(I2.2)') nestid
+    staticfile = TRIM(dataroot) // '/static/static.wrfsi.d' // nestid_str
     INQUIRE(FILE=staticfile, EXIST=static_exists)
     IF (static_exists) THEN
       status = NF_OPEN(TRIM(staticfile),NF_NOWRITE,cdfid)
@@ -143,57 +151,77 @@ CONTAINS
         STOP 'open_wrfsi_static'
       END IF 
     ELSE
-      PRINT '(A)', 'Static file not found: ', staticfile
-      STOP 'open_wrfsi_static'
+!mp-BLS
+!       search for rotlat version??
+!      PRINT '(A)', 'Static file not found ', staticfile
+!      PRINT '(A)', 'Look for NMM version'
+      staticfile = TRIM(dataroot) // '/static/static.wrfsi.rotlat'
+      INQUIRE(FILE=staticfile, EXIST=static_exists)
+      IF (static_exists) THEN
+        status = NF_OPEN(TRIM(staticfile),NF_NOWRITE,cdfid)
+        IF (status .NE. NF_NOERR) THEN
+          PRINT '(A,I5)', 'NetCDF error opening WRF static file: ',status
+          STOP 'open_wrfsi_static'
+        END IF
+      ELSE
+
+        PRINT '(A)', 'rotlat Static file not found, either: ', staticfile
+        STOP 'open_wrfsi_static'
+      ENDIF
+
     ENDIF
     RETURN
   END SUBROUTINE open_wrfsi_static      
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_dims(dataroot, nx, ny)
+  SUBROUTINE get_wrfsi_static_dims(dataroot, nestid, nx, ny)
   
     ! Subroutine to return the horizontal dimensions of WRF static file
     ! contained in the input dataroot
 
     IMPLICIT NONE
-    CHARACTER(LEN=*), INTENT(IN)   :: dataroot
-    INTEGER, INTENT(OUT)          :: nx
-    INTEGER, INTENT(OUT)          :: ny
+    CHARACTER(LEN=*), INTENT(IN)  :: dataroot
+    INTEGER         , INTENT(IN)  :: nestid
+    INTEGER         , INTENT(OUT) :: nx
+    INTEGER         , INTENT(OUT) :: ny
 
     INTEGER                       :: cdfid,vid, status
 
-    CALL open_wrfsi_static(dataroot,cdfid)
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)
     status = NF_INQ_DIMID(cdfid, 'x', vid)
     status = NF_INQ_DIMLEN(cdfid, vid, nx)
     status = NF_INQ_DIMID(cdfid, 'y', vid)
     status = NF_INQ_DIMLEN(cdfid, vid, ny) 
-    PRINT '(A,I5,A,I5)', 'WRF X-dimension = ',nx, &
-        ' WRF Y-dimension = ',ny  
     status = NF_CLOSE(cdfid)  
     RETURN
   END SUBROUTINE get_wrfsi_static_dims     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_proj(dataroot,proj_type, lat1, lon1, dx, dy, &
+  SUBROUTINE get_wrfsi_static_proj(dataroot,nestid,proj_type, lat1, lon1, dx, dy, &
                                    stdlon, truelat1, truelat2)
 
     ! Returns basic projection information from the WRF static file found
     ! in dataroot
 
     IMPLICIT NONE
-    CHARACTER(LEN=*), INTENT(IN)       :: dataroot
+    CHARACTER(LEN=*) , INTENT(IN)      :: dataroot
+    INTEGER, INTENT(IN)                :: nestid
     CHARACTER(LEN=32), INTENT(OUT)     :: proj_type
-    REAL, INTENT(OUT)                  :: lat1
-    REAL, INTENT(OUT)                  :: lon1
-    REAL, INTENT(OUT)                  :: dx
-    REAL, INTENT(OUT)                  :: dy
-    REAL, INTENT(OUT)                  :: stdlon
-    REAL, INTENT(OUT)                  :: truelat1
-    REAL, INTENT(OUT)                  :: truelat2
+    REAL             , INTENT(OUT)     :: lat1
+    REAL             , INTENT(OUT)     :: lon1
+    REAL             , INTENT(OUT)     :: dx
+    REAL             , INTENT(OUT)     :: dy
+    REAL             , INTENT(OUT)     :: stdlon
+    REAL             , INTENT(OUT)     :: truelat1
+    REAL             , INTENT(OUT)     :: truelat2
    
     INTEGER                            :: cdfid, vid,status
+    INTEGER                            :: nx,ny
+    REAL,ALLOCATABLE                   :: lats(:,:),lons(:,:)
     CHARACTER(LEN=132)                 :: grid_type
-
-
-    CALL open_wrfsi_static(dataroot,cdfid)   
+    
+    CALL get_wrfsi_static_dims(dataroot,nestid,nx,ny)
+    ALLOCATE(lats(nx,ny))
+    ALLOCATE(lons(nx,ny))
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)   
     status = NF_INQ_VARID( cdfid , NAME_TYPE, vid )   
     status = NF_GET_VAR_TEXT( cdfid , vid , grid_type )  
     IF (grid_type(1:19) .EQ. 'polar stereographic') THEN 
@@ -204,22 +232,25 @@ CONTAINS
       proj_type = 'LAMBERT CONFORMAL               '  
     ELSE IF (grid_type(1:8)  .EQ. 'mercator'                 ) THEN
       proj_type = 'MERCATOR                        '    
+!mp-BLS
+    ELSE IF (grid_type(1:15)  .EQ. 'rotated lat-lon'                 ) THEN
+      write(6,*) 'setting proj_type to ROTATED LATLON'
+      proj_type = 'ROTATED LATLON                  '    
+!mp-BLS
     ELSE
       PRINT '(A,A)', 'Unrecognized Projection:', proj_type
       STOP 'GET_WRFSI_STATIC_PROJ'
     END IF                                                       
 
     ! Get SW Corner lat/lon of projection
-
-    status = NF_INQ_VARID( cdfid, NAME_LAT1, vid )
-    status = NF_GET_VAR_REAL(cdfid,vid,lat1)
-    status = NF_INQ_VARID( cdfid, NAME_LON1, vid )
-    status = NF_GET_VAR_REAL(cdfid,vid,lon1)
+    CALL get_wrfsi_static_2d(dataroot,nestid,NAME_LAT_N,lats)
+    CALL get_wrfsi_static_2d(dataroot,nestid,NAME_LON_N,lons)
+    lat1 = lats(1,1)
+    lon1 = lons(1,1)
     IF (lon1 .LT. -180.) lon1 = lon1 + 360.
     IF (lon1 .GT. +180.) lon1 = lon1 - 360.
     PRINT '(A,F10.2,A,F10.2)', 'WRF Lat1 = ',lat1, &
         ' WRF lon1 = ', lon1
-
     ! Get dx and dy, convert to meters from kilometers
 
     status =  NF_INQ_VARID( cdfid, NAME_DX, vid )
@@ -228,31 +259,31 @@ CONTAINS
     status = NF_GET_VAR_REAL(cdfid,vid,dy)
     PRINT '(A,F10.2,A,F10.2)', 'WRF Delta-x = ',dx, &
         ' WRF Delta-y = ', dy  
-
     ! Get standard longitude
     status = NF_INQ_VARID ( cdfid , NAME_STDLON, vid )
     status = NF_GET_VAR_REAL(cdfid , vid , stdlon)    
     IF (stdlon .LT. -180.) stdlon = stdlon + 360.
     IF (stdlon .GT. 180.) stdlon = stdlon - 360.
     PRINT '(A,F10.3)', 'WRF Standard Lon = ', stdlon
-
     ! Get true latitudes
     status = NF_INQ_VARID(cdfid , NAME_TRUELAT1 , vid)
     status = NF_GET_VAR_REAL( cdfid , vid , truelat1)
     status = NF_INQ_VARID(cdfid , NAME_TRUELAT2, vid)
     status = NF_GET_VAR_REAL( cdfid , vid , truelat2 )
     PRINT '(A,2F10.3)', 'WRF Standard Lats = ', truelat1, truelat2
-   
     status = NF_CLOSE(cdfid)
+    DEALLOCATE(lats)
+    DEALLOCATE(lons)
     RETURN
   END SUBROUTINE get_wrfsi_static_proj
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_latlon(dataroot, stagger, lat, lon)
+  SUBROUTINE get_wrfsi_static_latlon(dataroot, nestid,stagger, lat, lon)
 
     ! Subroutine to get lat/lon arrays for desired grid stagger
 
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)        :: dataroot
+    INTEGER , INTENT(IN)                :: nestid
     CHARACTER(LEN=1), INTENT(IN)        :: stagger
     REAL                                :: lat(:,:)
     REAL                                :: lon(:,:)
@@ -260,7 +291,7 @@ CONTAINS
     INTEGER                             :: status, cdfid, vid
     CHARACTER(LEN=3)                    :: varname_lat, varname_lon
 
-    CALL open_wrfsi_static(dataroot, cdfid)    
+    CALL open_wrfsi_static(dataroot, nestid,cdfid)    
 
     IF ( (stagger .EQ. 'N').OR.(stagger .EQ. 'n').OR.(stagger.EQ. ' '))THEN
       varname_lat = NAME_LAT_N
@@ -274,6 +305,14 @@ CONTAINS
     ELSE IF ( (stagger .EQ. 'V').OR.(stagger.EQ.'v'))THEN 
       varname_lat = NAME_LAT_V
       varname_lon = NAME_LON_V
+!mp-BLS
+    ELSE IF ( (stagger .EQ. 'H').OR.(stagger.EQ.'h'))THEN 
+      varname_lat = NAME_LAT_H
+      varname_lon = NAME_LON_H
+    ELSE IF ( (stagger .EQ. 'W').OR.(stagger.EQ.'w'))THEN 
+      varname_lat = NAME_LAT_W
+      varname_lon = NAME_LON_W
+!mp-BLS
     ELSE
       PRINT '(2A)', 'Unrecongized stagger code: ', stagger
       STOP 'GET_WRFSI_STATIC_LATLON'
@@ -289,19 +328,20 @@ CONTAINS
 
   END SUBROUTINE get_wrfsi_static_latlon 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_mapfac(dataroot, stagger, mapfac) 
+  SUBROUTINE get_wrfsi_static_mapfac(dataroot, nestid,stagger, mapfac) 
 
     ! Subroutine to get alpha arrays for desired grid stagger
 
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)        :: dataroot
+    INTEGER, INTENT(IN)                 :: nestid
     CHARACTER(LEN=1), INTENT(IN)        :: stagger
     REAL, INTENT(OUT)                   :: mapfac(:,:)
 
     INTEGER                             :: cdfid, vid, status
     CHARACTER(LEN=3)                    :: varname_map
 
-    CALL open_wrfsi_static(dataroot,cdfid)
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)
     IF ( (stagger .EQ. 'N').OR.(stagger .EQ. 'n').OR.(stagger.EQ. ' '))THEN
       varname_map = NAME_MAPFAC_N
     ELSE IF ( (stagger .EQ. 'U').OR.(stagger.EQ.'u'))THEN
@@ -323,14 +363,15 @@ CONTAINS
 
   END SUBROUTINE get_wrfsi_static_mapfac
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_landmask(dataroot, landmask)
+  SUBROUTINE get_wrfsi_static_landmask(dataroot, nestid,landmask)
  
     ! Subroutine to get the 2D land mask field from the WRFSI static
     ! file
    
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)        :: dataroot
-    REAL, INTENT(OUT)                   :: landmask(:,:)
+    INTEGER, INTENT(IN)                 :: nestid
+    REAL            , INTENT(OUT)       :: landmask(:,:)
 
     INTEGER                             :: cdfid, vid, status
     INTEGER                             :: lu_water
@@ -340,7 +381,7 @@ CONTAINS
     REAL, ALLOCATABLE                   :: landuse(:,:,:)
     INTEGER                             :: i,j
 
-    CALL open_wrfsi_static(dataroot,cdfid)  
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)  
     status = NF_INQ_VARID(cdfid, NAME_LWMASK_T, vid)
     print '(a,2i4)','landmask inq_varid status and vid = ' ,status,vid
     IF (status .NE. NF_ENOTVAR) THEN
@@ -357,11 +398,11 @@ CONTAINS
       PRINT '(A)','Problem getting WRF landmask from static.'
       PRINT '(A)', '(Old version of static file?)'
       PRINT '(A)', 'Attempting to use land use...'
-      CALL get_wrfsi_static_landuse_info(dataroot,lu_source,n_cat,dim3, &
+      CALL get_wrfsi_static_landuse_info(dataroot,nestid,lu_source,n_cat,dim3, &
                                          lu_water,lu_ice)
-      CALL get_wrfsi_static_dims(dataroot, nx,ny)
-      ALLOCATE(landuse(nx,ny,dim3))
-      CALL get_wrfsi_static_landuse(dataroot, landuse)
+      CALL get_wrfsi_static_dims(dataroot,nestid, nx,ny)
+      ALLOCATE (landuse(nx,ny,dim3))
+      CALL get_wrfsi_static_landuse(dataroot, nestid,landuse)
       IF (dim3 .EQ. 1) THEN
         PRINT '(A)', 'Using dominant category version...'
         WHERE(NINT(landuse(:,:,1)) .NE. lu_water) landmask = 1.
@@ -375,12 +416,13 @@ CONTAINS
           ENDDO
         ENDDO
       ENDIF
+      DEALLOCATE(landuse)
     ENDIF
     status = NF_CLOSE(cdfid)
     RETURN
   END SUBROUTINE get_wrfsi_static_landmask
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_landuse_info(dataroot, source, n_categories, dim3, &
+  SUBROUTINE get_wrfsi_static_landuse_info(dataroot, nestid, source, n_categories, dim3, &
                                            water_ind,ice_ind )
  
     ! Subroutine to query what type of land use we have in the static file
@@ -395,17 +437,18 @@ CONTAINS
    
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)        :: dataroot
-    CHARACTER(LEN=4),INTENT(OUT)        :: source
-    INTEGER, INTENT(OUT)                :: n_categories
-    INTEGER, INTENT(OUT)                :: dim3
-    INTEGER, INTENT(OUT)                :: water_ind
-    INTEGER, INTENT(OUT)                :: ice_ind
+    INTEGER, INTENT(IN)                 :: nestid
+    CHARACTER(LEN=4), INTENT(OUT)       :: source
+    INTEGER         , INTENT(OUT)       :: n_categories
+    INTEGER         , INTENT(OUT)       :: dim3
+    INTEGER         , INTENT(OUT)       :: water_ind
+    INTEGER         , INTENT(OUT)       :: ice_ind
 
     INTEGER                             :: cdfid, vid, status
     INTEGER                             :: dimid(4)
    
 
-    CALL open_wrfsi_static(dataroot,cdfid)
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)
     ! Get land use source (hard coded for USGS 24 cat)
     source = 'USGS'
 
@@ -433,16 +476,17 @@ CONTAINS
     RETURN
   END SUBROUTINE get_wrfsi_static_landuse_info
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_landuse(dataroot,landuse)
+  SUBROUTINE get_wrfsi_static_landuse(dataroot,nestid,landuse)
     
     ! Gets the landuse data
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN)  :: dataroot
-    REAL, INTENT(OUT)             :: landuse(:,:,:)
+    INTEGER, INTENT(IN)           :: nestid
+    REAL, INTENT(INOUT)             :: landuse(:,:,:)
  
     INTEGER                             :: cdfid, vid, status
    
-    CALL open_wrfsi_static(dataroot,cdfid)
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)
     status = NF_INQ_VARID(cdfid,NAME_LANDUSE_T,vid)
     status = NF_GET_VAR_REAL(cdfid,vid,landuse)
     IF (status .NE. NF_NOERR) THEN
@@ -452,18 +496,19 @@ CONTAINS
     RETURN
   END SUBROUTINE get_wrfsi_static_landuse  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_landusef(dataroot, source,ncat, water, ice)
+  SUBROUTINE get_wrfsi_static_landusef(dataroot, nestid,source,ncat, water, ice)
     
     ! Reads the individual 2D categorical landuse fraction arrays from
     ! the static file and populates the 3D variable delcared at the top of this
     ! module (static_landusef)
 
     IMPLICIT NONE
-    CHARACTER(LEN=*),INTENT(IN)          :: dataroot
+    CHARACTER(LEN=*), INTENT(IN)         :: dataroot
+    INTEGER, INTENT(IN)                  :: nestid
     CHARACTER(LEN=4), INTENT(OUT)        :: source
-    INTEGER, INTENT(OUT)                 :: ncat
-    INTEGER, INTENT(OUT)                 :: water
-    INTEGER, INTENT(OUT)                 :: ice
+    INTEGER         , INTENT(OUT)        :: ncat
+    INTEGER         , INTENT(OUT)        :: water
+    INTEGER         , INTENT(OUT)        :: ice
     INTEGER                              :: dom_nx,dom_ny
     INTEGER                              :: cdfid,vid,status
     INTEGER                              :: cat
@@ -481,10 +526,10 @@ CONTAINS
     PRINT '(A,I2)','Number of categories = ', ncat
     PRINT '(A,I2)','Index used for water = ', water
     PRINT '(A,I2)','Index used for ice = ', ice
-    CALL get_wrfsi_static_dims(dataroot, dom_nx, dom_ny)
+    CALL get_wrfsi_static_dims(dataroot, nestid,dom_nx, dom_ny)
     IF (ALLOCATED(static_landusef)) DEALLOCATE(static_landusef)
     ALLOCATE(static_landusef(dom_nx,dom_ny,ncat))
-    CALL open_wrfsi_static(dataroot,cdfid)      
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)      
     DO cat = 1, ncat
       WRITE(vname,'("u",I2.2)') cat 
       status = NF_INQ_VARID(cdfid, vname, vid) 
@@ -497,16 +542,17 @@ CONTAINS
     RETURN
   END SUBROUTINE get_wrfsi_static_landusef
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
-  SUBROUTINE get_wrfsi_static_soil(dataroot, source,ncat, st_water)
+  SUBROUTINE get_wrfsi_static_soil(dataroot, nestid,source,ncat, st_water)
     
     ! Reads the 2-layer soil categorical fractions and populates the arrays
     ! static_soiltop and static_soilbot
 
     IMPLICIT NONE
-    CHARACTER(LEN=*),INTENT(IN)          :: dataroot
+    CHARACTER(LEN=*), INTENT(IN)         :: dataroot 
+    INTEGER, INTENT(IN)                  :: nestid
     CHARACTER(LEN=4), INTENT(OUT)        :: source
-    INTEGER,INTENT(OUT)                  :: ncat
-    INTEGER,INTENT(OUT)                  :: st_water
+    INTEGER         , INTENT(OUT)        :: ncat
+    INTEGER         , INTENT(OUT)        :: st_water
 
     INTEGER                              :: dom_nx,dom_ny
     INTEGER                              :: cdfid,vid,status
@@ -521,13 +567,13 @@ CONTAINS
     st_water = 14
     PRINT '(A)', 'Attempting to read categorical soil type fractions...'
     PRINT '(2A)','Source = ', source
-    PRINT '(A,I3)','Number of categories = ', ncat
-    CALL get_wrfsi_static_dims(dataroot, dom_nx, dom_ny)
+    PRINT '(A,I2)','Number of categories = ', ncat
+    CALL get_wrfsi_static_dims(dataroot, nestid,dom_nx, dom_ny)
     IF (ALLOCATED(static_soiltop)) DEALLOCATE(static_soiltop)
     IF (ALLOCATED(static_soilbot)) DEALLOCATE(static_soilbot)
     ALLOCATE(static_soiltop(dom_nx,dom_ny,ncat))
     ALLOCATE(static_soilbot(dom_nx,dom_ny,ncat))
-    CALL open_wrfsi_static(dataroot,cdfid)      
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)      
     DO cat = 1, ncat
       WRITE(vname,'("b",I2.2)') cat 
       status = NF_INQ_VARID(cdfid, vname, vid) 
@@ -546,7 +592,7 @@ CONTAINS
     RETURN
   END SUBROUTINE get_wrfsi_static_soil  
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_monthly(dataroot, dtypechar, time, data)
+  SUBROUTINE get_wrfsi_static_monthly(dataroot,nestid, dtypechar, time, data)
    
     ! Returns a time-interpolated (valid for time) 2D array for either
     ! greenness ("g") or albedo ("a"), based on user-supplied type character.
@@ -556,10 +602,11 @@ CONTAINS
     ! big deal.  
 
     IMPLICIT NONE
-    CHARACTER(LEN=*), INTENT(IN)                :: dataroot
+    CHARACTER(LEN=*) , INTENT(IN)               :: dataroot
+    INTEGER, INTENT(IN)                         :: nestid
     CHARACTER(LEN=19), INTENT(IN)               :: time    ! yyyy-mm-dd_hh:mm:ss
-    CHARACTER(LEN=1), INTENT(IN)                :: dtypechar
-    REAL, INTENT(OUT)                           :: data(:,:)
+    CHARACTER(LEN=1) , INTENT(IN)               :: dtypechar
+    REAL             , INTENT(OUT)              :: data(:,:)
     
     INTEGER                                     :: midmonth_day(12)
     INTEGER                                     :: valid_day
@@ -591,7 +638,6 @@ CONTAINS
     CALL mm5_to_wrf_date(time, yyyyjjj, sss)
     valid_day = MOD(yyyyjjj,1000)
     PRINT *, 'Time-interpolating to day # ', valid_day
-
     ! Find bounding months
     IF ((valid_day .LT. midmonth_day(1)) .OR. (valid_day .GT. midmonth_day(12))) THEN
       ! December and January are bounding months
@@ -625,16 +671,16 @@ CONTAINS
     ! data values
     IF ( d1 .EQ. d2) THEN
       WRITE(varname, '(A1,I2.2)') dtypechar,m1
-      CALL get_wrfsi_static_2d(dataroot,varname,data)
+      CALL get_wrfsi_static_2d(dataroot,nestid,varname,data)
     ELSE
       ! We need to get the two months of bounding data and time interpolate
-      CALL get_wrfsi_static_dims(dataroot, nx, ny)
+      CALL get_wrfsi_static_dims(dataroot,nestid, nx, ny)
       ALLOCATE(data1 (nx,ny))
       ALLOCATE(data2 (nx,ny))
       WRITE(varname, '(A1,I2.2)') dtypechar,m1
-      CALL get_wrfsi_static_2d(dataroot,varname,data1)
+      CALL get_wrfsi_static_2d(dataroot,nestid,varname,data1)
       WRITE(varname, '(A1,I2.2)') dtypechar,m2
-      CALL get_wrfsi_static_2d(dataroot,varname,data2)
+      CALL get_wrfsi_static_2d(dataroot,nestid,varname,data2)
 
       ! Compute weights
       IF (d2 .GT. d1) THEN
@@ -653,17 +699,44 @@ CONTAINS
     ENDIF
     RETURN
   END SUBROUTINE get_wrfsi_static_monthly
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE get_wrfsi_static_monthly_all(dataroot, nestid, dtypechar, data)
+    IMPLICIT NONE
+    CHARACTER(LEN=*) , INTENT(IN)               :: dataroot
+    INTEGER, INTENT(IN)                         :: nestid
+    CHARACTER(LEN=1) , INTENT(IN)               :: dtypechar
+    REAL             , INTENT(OUT)              :: data(:,:,:)
+    INTEGER                                     :: m,nx,ny
+    REAL, ALLOCATABLE                           :: month_slab(:,:)
+    CHARACTER(LEN=3)                            :: varname
+
+    ! Allocate the dummy array to hold each months data
+    CALL get_wrfsi_static_dims(dataroot,nestid, nx, ny)
+    ALLOCATE (month_slab(nx,ny))
+    month_slab(:,:) = 0.
+    month_loop: DO m = 1, 12  
+      WRITE (varname, '(a1,I2.2)') dtypechar, m
+      CALL get_wrfsi_static_2d(dataroot,nestid,varname,month_slab)
+      data(:,:,m) = month_slab(:,:)
+      month_slab(:,:) = 0.
+    ENDDO month_loop
+    DEALLOCATE(month_slab)
+    RETURN
+  END SUBROUTINE get_wrfsi_static_monthly_all
+ 
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE get_wrfsi_static_2d(dataroot, varname, data)
+  SUBROUTINE get_wrfsi_static_2d(dataroot, nestid,varname, data)
 
     ! Gets any 2D variable from the static file
     CHARACTER(LEN=*), INTENT(IN)  :: dataroot
+    INTEGER, INTENT(IN)           :: nestid
     CHARACTER(LEN=*), INTENT(IN)  :: varname
     REAL, INTENT(OUT)             :: data(:,:)
  
     INTEGER                             :: cdfid, vid, status
    
-    CALL open_wrfsi_static(dataroot,cdfid)
+    CALL open_wrfsi_static(dataroot,nestid,cdfid)
     status = NF_INQ_VARID(cdfid,varname,vid)
     status = NF_GET_VAR_REAL(cdfid,vid,data)
     IF (status .NE. NF_NOERR) THEN
