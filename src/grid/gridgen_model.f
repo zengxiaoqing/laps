@@ -203,14 +203,27 @@ c calculate delta x and delta y using grid and map projection parameters
      1                    ,grid_spacing_m,' at a latitude of ',std_lat
                 write(6,*)' deltax, deltay ',deltax,deltay
      1                   ,' at the north pole'
-            else
+
+            elseif(std_lat2 .eq. -90.)then
+                write(6,*)' Note, grid spacing will equal '
+     1                    ,grid_spacing_m,' at a latitude of ',-std_lat       
+                write(6,*)' deltax, deltay ',deltax,deltay
+     1                   ,' at the south pole'
+
+            else ! abs(std_lat2) .ne. 90. (local stereographic)
                 write(6,*)' The standard latitude ',std_lat,' is'
      1                   ,' relative to where the pole'
                 write(6,*)' of the map projection is: lat/lon '
      1                   ,std_lat2,std_lon
                 write(6,*)' deltax, deltay ',deltax,deltay
      1                   ,' at the projection pole'
+                if(std_lat .ne. +90.)then
+                    write(6,*)' Note: std_lat should usually be set'
+     1                       ,' to +90. for local stereographic'
+                endif
+
             endif
+
         else
             deltax = grid_spacing_m
             deltay = deltax

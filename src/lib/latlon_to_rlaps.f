@@ -196,20 +196,23 @@ cdis
             endif
 
             b = rlon - slon         ! rotate relative to standard longitude
+            s = polat / abs(polat)
 
         else                        ! local stereographic
             polon = slon
             call GETOPS(rlat,rlon,rlat_in,rlon_in,polat,polon)
             b = rlon - 270.         ! rlon has zero angle pointing east
                                     ! b has zero angle pointing south
+            s = 1.0
+
         endif
 
         a=90.-rlat
         r = tand(a/2.)      ! Consistent with Haltiner & Williams 1-21
 
 !       b = angle measured counterclockwise from -v axis (zero angle south)
-        u =  r * sind(b)
-        v = -r * cosd(b)
+        u =   r * sind(b)
+        v = (-r * cosd(b)) * s
 
         return
         end
@@ -306,6 +309,13 @@ cdis
      1                                         ,rlat_out,rlon_out)
 
         include 'trigd.inc'
+
+        if(abs(polat) .eq. 90.)then
+            s = polat / abs(polat)
+        else
+            s = 1.0
+        endif
+
         r=sqrt(u**2+v**2)
 
         if (r .eq. 0) then
@@ -315,7 +325,7 @@ cdis
         else                           
             a=2.* atand(r)               ! From Haltiner & Williams 1-21
             rlat=90.- a
-            rlon = atan2d(v,u)
+            rlon = atan2d(s*v,u)
             rlon = rlon + 90.
         endif
 

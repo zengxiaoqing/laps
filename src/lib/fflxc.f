@@ -171,8 +171,6 @@ C
             rlon_in = rlon
             call GETOPS(rlat_in,rlon_in,rlat,rlon_dum,polat,polon)
 
-            s = slat1 / abs(slat1)
-
 !           Check to see if you are at the opposite pole
             if(slat1 * rlat .lt. 0. .and. abs(rlat) .eq. 90.)then      
                 sigma = 0.
@@ -181,7 +179,10 @@ C
                 return
             endif
 
-            sigma = (s + sind(slat1)) / (s + sind(rlat))           ! eq. 13
+            phi0 = slat1
+            phi  = rlat
+
+            sigma = (1. + sind(phi0)) / (1. + sind(phi))               ! eq. 13
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert
 
