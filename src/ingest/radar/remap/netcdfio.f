@@ -38,8 +38,9 @@ cdis
 cdis
 
  
-       subroutine radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)       
-!                                 I     I/O           O         O
+       subroutine radar_init(i_radar,path_to_radar,path_to_vrc          ! I
+     1                      ,i_tilt_proc                                ! I/O
+     1                      ,i_last_scan,istatus)                       ! O
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
@@ -51,7 +52,7 @@ cdis
        character*9 a9_time
        integer*4 i4times_raw(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
-       character*3 ext_out, c3_radar_subdir
+       character*3 laps_radar_ext, c3_radar_subdir
        character*8 radar_subdir
        logical l_multi_tilt,l_exist,l_output
        character*13 a9_to_rsa13
@@ -63,9 +64,11 @@ cdis
 !      include 'remap_constants.dat' ! for debugging only
 !      include 'remap.cmn' ! for debugging only
 
+!      This call is still needed for return of 'laps_radar_ext/c3_radar_subdir'
+!      We could change this to pass these in through the 'radar_init' call
        call get_remap_parms(i_radar,n_radars_remap,path_to_radar       
-     1                    ,ext_out,c3_radar_subdir
-     1                    ,path_to_vrc,istatus) 
+     1                    ,laps_radar_ext,c3_radar_subdir
+     1                    ,path_to_vrc,ref_min,istatus) 
        if(istatus .ne. 1)then
            write(6,*)'Warning: bad status return from get_remap_parms'       
            return
@@ -78,12 +81,12 @@ cdis
        if(istatus .ne. 1)return   
 c
 c      Determine filename extension
-       write(6,*)' radar_init: laps_ext = ',ext_out
-       if(ext_out(1:1) .ne. 'v')then
-           ext_out = 'v01'
+       write(6,*)' radar_init: laps_ext = ',laps_radar_ext
+       if(laps_radar_ext(1:1) .ne. 'v')then ! Sanity check
+           laps_radar_ext = 'v01'
        endif
 
-       if(ext_out .eq. 'vrc')then 
+       if(laps_radar_ext .eq. 'vrc')then 
            radar_subdir = c3_radar_subdir
            write(6,*)' radar_init: radar_subdir = ',radar_subdir
        endif
@@ -133,16 +136,17 @@ c      Determine filename extension
            endif
 
 !          Get output filespec
-           if(ext_out .ne. 'vrc')then
-               call get_filespec(ext_out,1,c_filespec,istatus)
+           if(laps_radar_ext .ne. 'vrc')then
+               call get_filespec(laps_radar_ext,1,c_filespec,istatus)
 
-           else ! ext_out = 'vrc', now check path_to_vrc
+           else ! laps_radar_ext = 'vrc', now check path_to_vrc
                if(path_to_vrc .eq. 'rdr')then
                    call get_directory('rdr',directory,len_dir)
                    c_filespec = directory(1:len_dir)//radar_subdir(1:3)
      1                          //'/vrc'     
                else ! path_to_vrc = 'lapsprd'
-                   call get_filespec(ext_out,1,c_filespec,istatus)
+                   call get_filespec(laps_radar_ext,1,c_filespec
+     1                              ,istatus)      
                endif
 
            endif
@@ -260,8 +264,8 @@ c      Determine filename extension
 
        if(istatus .eq. 1
      1             .AND.
-     1     .not. (ext_out .eq. 'vrc' .and. i_tilt_proc .gt. 1)
-     1                                                         )then
+     1     .not. (laps_radar_ext .eq. 'vrc' .and. i_tilt_proc .gt. 1)
+     1                                                             )then       
            if(i_tilt_proc .eq. 1)then
                write(6,201)elevationNumber, i_tilt_proc
  201           format(' elevationNumber, i_tilt_proc',2i4)
