@@ -4,7 +4,7 @@
 use strict;
 use English;
 use Getopt::Long;
-my($INSTALL_ROOT,$DATA_ROOT,$beg_time,$end_time,$lapsdriver,$runsched);
+my($INSTALL_ROOT,$DATA_ROOT,$beg_time,$end_time,$lapsdriver,$runsched,$wideband_2_netcdf);
 
 my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
                         'dataroot=s',      \$DATA_ROOT,
@@ -12,6 +12,7 @@ my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
                         'end_time=s',      \$end_time,
                         'run_sched',       \$runsched,
                         'laps_driver=s',   \$lapsdriver,
+                        'wideband_2_nc=s', \$wideband_2_netcdf,
                         'help',            \&help_sub,
                         '<>',              \&help_sub);
 
@@ -35,6 +36,7 @@ sub help_sub
     print "-laps_driver: Used to run lvd, vrc, lsr, ln3, remap or all\n";
     print "                  Enter (lvd, vrc, lsr, ln3, remap, or all) depending on your needs.\n";
     print "                  You will get the intermediate ingest files between each cycle.\n";
+    print "-wideband_2_nc:   Runs archive II to netcdf conversion - enter path to wideband root.\n";
     print " NOTES:\n";
     print " 1. the number of cycles for post analysis depends on the input beginning, ending, and\n";
     print "    the cycle time (see dataroot/static/nest7grid.parms LAPS_CYCLE_TIME)\n";
@@ -171,6 +173,32 @@ while ($i4time70<=$i4time70_end)
      $mn='0'.$mn while(length($mn)<2);
      $sc='0'.$sc while(length($sc)<2);
      $yr=substr($year,2,2);
+
+     if(defined $wideband_2_netcdf){
+
+        my ($ddd,$dddm1,$dddp1,$purgewl,$purgewh);
+        $ddd = &laps_tools::julian($year, $mo, $dy);
+        $dddm1 = $ddd - 1;
+        $dddm1='0'.$dddm1 while(length($dddm1)<3);
+        $dddm1='0'.$dddm1 while(length($dddm1)<3);
+        $purgewl = "$yr$dddm1".'12';
+
+        $dddp1 = $ddd + 1;
+        $dddp1='0'.$dddp1 while(length($dddp1)<3);
+        $dddp1='0'.$dddp1 while(length($dddp1)<3);
+        $purgewh = "$yr$dddp1".'12';
+
+#       Run purge_wideband first
+        $command = "@PERL@ $INSTALL_ROOT/etc/purge_wideband.pl $purgewl $purgewh $wideband_2_netcdf";
+        print "Running $command\n";
+        run_sys::run_sys($command);
+
+#       Run wideband_2_netcdf 
+        $command = "/home/lapb/albers/ihop/radar_scripts/wideband2nc.csh $year $mo $dy $hr $yr$ddd yes";
+        print "Running $command\n";
+        run_sys::run_sys($command);
+
+     }
 
      my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
 
