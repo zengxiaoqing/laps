@@ -2155,31 +2155,42 @@ Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
 
 ------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
 
-Surface processing - laps_sfc.x (LSX and friends) 
-     (author: Pete Stamus )
-     (description updated: 21 Dec 1999)
+Surface processing - laps_sfc.x (LSX) 
+     (authors: Pete Stamus / Steve Albers)
 
 
 The surface package collects surface data from the LSO intermediate data file  
 (METARs, local mesonets via LDAD, buoy/ship obs), IR brightness temperatures,
 and fields from selected background models.  Places surface data on LAPS grid
-and performs a simple quality control of the obs.  Backgrounds can come from
-a locally-run model, the national-scale models (RUC, ETA, AVN), or a previous
-analysis (if all else fails).  Data outside the LAPS grid is used to improve
-boundary conditions.  Analyses are done on analysis increments using a cubic
-spline technique. 
+and performs a simple quality control of the obs.  
+
+Most backgrounds can come from locally-run model, the national-scale models 
+(RUC, ETA, AVN), or a previous analysis (if all else fails).  For wind fields,
+the background comes from the 3-D wind interpolated to the surface or LWM file.
+Data, both inside and outside the LAPS grid is used via an initial Barnes 
+analysis to improve boundary conditions.  The next step in the analyses are 
+done using a cubic spline technique. Observation increments are used for T, Td
+and straight observations are used for other variables.
 
 Satellite IR gives relative temperatures, not absolute temps.  The temperature 
 gradients from the satellite are used with surface observations and backgrounds 
 in the temperature analysis.  
 
 The analysis uses variational techniques to constrain the surface winds and 
-reduced pressures to the full equations on motion.  Several derived variables
-are calculated before the LSX file is written.  Also, a dependent data 
-validation is done by interpolating several variables back to the observation 
-locations and comparing the analysis to the ob.  Output from this check is 
-written to files located in '$LAPS_DATA_ROOT/log/qc/laps_sfc.ver.hhmm', where
-'hhmm' is the analysis 'systime'.
+reduced pressures (P) to the full equations on motion. In contrast, mean sea 
+level pressure (MSL) is a direct analysis of the observations of MSLP. Station
+pressure (PS) is calculated by starting with a mean pressure value. This comes
+from either altimeter setting observations, reduced to the station elevation
+giving actual pressure measurements, or the model background gridded 'PS'
+field. The mean pressure is adjusted with Poisson's equation for each grid 
+point by considering the mean layer temperature and grid point elevation.
+
+Several derived variables are calculated before the LSX file is written.  Also,
+a dependent data validation is done by interpolating several variables back to
+the observation locations and comparing the analysis to the obs.  Output from 
+this check is written to files located in 
+'$LAPS_DATA_ROOT/log/qc/laps_sfc.ver.hhmm', where 'hhmm' is the analysis 
+'systime'.
 
 
 <pre>
@@ -2204,7 +2215,7 @@ Inputs:
 	 LM1    Soil moisture (for fire wx calc)
          LM2    Snow cover (for fire wx calc)
 
-Outputs: (Feeds L1S, LBA)
+Output: 
 
  28257   LSX    LAPS surface data grids (23 2-d fields packed in one file)
 </pre>
@@ -2691,6 +2702,7 @@ Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
 Inputs: (from LT1, LW3 processes)
       * lw3          grid       LAPS 3-d wind analysis
       * lt1          grid       LAPS 3-d temperature analysis
+      * lsx          grid       LAPS 2-d station pressure (PS field)
 
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
