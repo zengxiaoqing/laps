@@ -9,7 +9,7 @@
       integer max_files, NX,NY,NZ,rejected_cnt
       character*(*) names(max_files), cmodel, bgpath
      +     ,rejected_files(rejected_cnt)
-      integer oldest_forecast, bg_files, forecast_length, i, j, k
+      integer oldest_forecast, bg_files,forecast_length, i, j, k
      + , max_forecast_delta
       integer ntbg
       integer ivaltimes(ntbg)
@@ -21,7 +21,7 @@ C     integer nf_status, nf_vid, nf_fid, istatus
       integer i4time_fa
       logical use_analysis
       character*9   fname,wfo_fname13_to_fname9,fname9
-      integer i4time_now, bgtime, bgtime2,previous_time, next_time, len
+      integer i4time_now,bgtime,bgtime2,previous_time,next_time,len
       integer bigint, ihour, n, accepted_files, final_time
       parameter(bigint=2000000000)
       logical print_message
@@ -63,17 +63,20 @@ C
          next_time=bigint
          final_time=i4time_now+3600*max(0,forecast_length)
          call get_file_names(bgpath,bg_files,names,max_files,istatus)
+         if(istatus.ne.1)then
+            print*,'error status returned: get_file_names'
+     +,' in get_acceptable_files'
+            return
+         endif
 
          do i=1,bg_files
             call i4time_fname_lp(names(i),i4time_fa,istatus)
-            if(istatus.eq.1)then
-               call make_fnam_lp(i4time_fa,fname9,istatus)
-               call s_len(names(i),lens)
-               lentodot=index(names(i),'.')
-               c_fa_ext=names(i)(lentodot+1:lens)
-               c4valtime=c4_FA_valtime(c_fa_ext)
-               bg_names(i)=fname9//c4valtime
-            endif
+            call make_fnam_lp(i4time_fa,fname9,istatus)
+            call s_len(names(i),lens)
+            lentodot=index(names(i),'.')
+            c_fa_ext=names(i)(lentodot+1:lens)
+            c4valtime=c4_FA_valtime(c_fa_ext)
+            bg_names(i)=fname9//c4valtime
          enddo
 
       else
@@ -81,7 +84,11 @@ C
          next_time=bigint
          final_time = i4time_now+3600*max(0,forecast_length)
          call get_file_names(bgpath,bg_files,names,max_files,istatus)
-         if (istatus .ne. 1) print *,'Error in get_file_names.'
+         if(istatus.ne.1)then
+            print*,'error status returned: get_file_names'
+     +,' in get_acceptable_files'
+            return
+         endif
          bg_files=0
 
          do i=1,max_files
@@ -95,10 +102,10 @@ C
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
                      
                      call get_sbn_model_id(names(i),cmodel,ivaltimes,
-     +                    ntbg)
-
+     +                    ntbg,istatus)
                      if(istatus.eq.0) then
-                        print*,'Not enough records in file ',fname
+                        print*,'error returned from get_sbn_model_id '
+     +,fname
                      else
                         do k=1,ntbg
                            write(af,'(i4.4)') ivaltimes(k)/3600

@@ -17,8 +17,10 @@ c
 
       integer   bgmodel,nx,ny,nz
      .         ,i,j,k,l,n,istatus
-     .         ,icm
+     .         ,icm(nz),icm_sfc
 c
+      real*4   shsum(nz),sumtot,sumsfctd
+      real*4   shavg
       integer  it
       integer  lun
       integer  iostat,iostatus
@@ -60,7 +62,7 @@ c     real*4 rp_init
       real*4 t_ref
       real*4 pcnt
       real*4 r_missing_data
-      real*4 bogus_sh
+      real*4 r_miss_sh
 c
       character*(*) path,cmodel
       character*9   fname
@@ -96,8 +98,8 @@ c_______________________________________________________________________________
 c
 c Td or rh liq/ice phase temp thresh
 c ---------------------------------
-      t_ref=-47.0
-      bogus_sh = 0.00001
+      t_ref=-132.0
+      r_miss_sh = -99999.
       istatus = 0
 c
       call get_r_missing_data(r_missing_data,istatus)
@@ -207,6 +209,8 @@ c        cFA_filename=fname13_to_FA_filename(cfname13,cmodel)
      .               ,mslp                              ! O
      .               ,istatus)                          ! O
 
+         call qcmodel_sh(nx,ny,nz,sh)
+
       endif
  
       if(istatus .eq. 1)then
@@ -228,22 +232,27 @@ c
          endif
 
          print*,'convert rh to q - 3D'
-         icm=0
          do k=1,nz
-         do j=1,ny
-         do i=1,nx
+
+          icm(k)=0
+          shsum(k)=0.0
+          do j=1,ny
+          do i=1,nx
 
             pr(i,j,k)=prk(k)
             if(bgmodel.eq.3)pr(i,j,k)=pr(i,j,k)/100.
-            if(sh(i,j,k).gt.0.0 .and. nint(sh(i,j,k)).le.100.)then
+
+            if(sh(i,j,k) .gt.  0.001 .and.
+     &         sh(i,j,k) .le.100.001)then
                if(sh(i,j,k).gt.100.)sh(i,j,k)=100.
                sh(i,j,k)=make_ssh(pr(i,j,k)
      .                        ,tp(i,j,k)-273.15
      .                        ,sh(i,j,k)/100.,t_ref)*0.001
 
+               shsum(k)=shsum(k)+sh(i,j,k)
             else
-               icm=icm+1
-               sh(i,j,k)=bogus_sh
+               icm(k)=icm(k)+1
+               sh(i,j,k)=r_miss_sh
             endif
                
 c           it=tp(i,j,k)*100
@@ -253,16 +262,10 @@ c           mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
 c           sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
 c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
 
-         enddo
-         enddo
-         enddo
+          enddo
+          enddo
 
-         if(icm.gt.0)then
-            pcnt=float(icm)/float(nx*ny*nz)
-            print*,'WARNING: suspect 3d rh data (#/%): ',icm,pcnt
-     &,' Bogus Q used for these points'
-
-         endif
+         enddo
 
 c        if(bgmodel.eq.3)then
 c           do j=1,ny
@@ -275,20 +278,23 @@ c        endif
          if(bgmodel.eq.6)then     !no sfc fields for FA model (bgmodel = 3)
  
             print*,'convert rh to Td - sfc: bgmodel: ',bgmodel
-            icm=0
+            icm_sfc=0
+            sumsfctd=0.0
             do j=1,ny
             do i=1,nx
 
-               if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).le.100.)then
+               if(td_sfc(i,j).gt.0.0 .and. td_sfc(i,j).lt.100.001)then
                   prsfc=pr_sfc(i,j)/100.
                   qsfc=make_ssh(prsfc,tp_sfc(i,j)-273.15,td_sfc(i,j)/100.
      &,t_ref)
                   td_sfc(i,j)=make_td(prsfc,tp_sfc(i,j)-273.15,qsfc
      &,t_ref)+273.15
+                  sumsfctd=sumsfctd+td_sfc(i,j)
                else
-                  td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
-     &,bogus_sh,t_ref)+273.15
-                  icm=icm+1
+                  td_sfc(i,j)=r_miss_sh
+c                 td_sfc(i,j)=make_td(pr_sfc(i,j)/100.,tp_sfc(i,j)-273.15
+c    &,bogus_sh,t_ref)+273.15
+                  icm_sfc=icm_sfc+1
                endif
 
 c           it=tp_sfc(i,j)*100
@@ -301,28 +307,24 @@ c           td_sfc(i,j)=td_sfc(i,j)/(1.+td_sfc(i,j))  !mr --> sh
             enddo
             enddo
 
-            if(icm.gt.0)then
-               pcnt=float(icm)/float(nx*ny)
-               print*,'WARNING: suspect 2d rh data (#/%): ',icm,pcnt
-     &,' Bogus Q used for these points'
-            endif
-
          endif
 
       elseif(bgmodel.eq.8)then
 c
 c *** Convert Td to sh and fill 3D pressure array.
 c
-         icm=0
          print*,'Convert Td to q - 3D'
          do k=1,nz
-         do j=1,ny
-         do i=1,nx
+          shsum(k)=0.0
+          icm(k) = 0
+          do j=1,ny
+          do i=1,nx
             pr(i,j,k)=prk(k)
             if (sh(i,j,k) .gt. -99999.) then
-               
-               sh(i,j,k)=ssh2(prk(k),tp(i,j,k)-273.15,sh(i,j,k)-273.15
-     &,t_ref)*0.001
+                sh(i,j,k)=ssh2(prk(k),tp(i,j,k)-273.15,
+     & sh(i,j,k)-273.15,t_ref)*0.001
+
+               shsum(k)=shsum(k)+sh(i,j,k)
 
 c              it=sh(i,j,k)*100
 c              it=min(45000,max(15000,it))
@@ -331,35 +333,67 @@ c              sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
 c              sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
 
             else
-               sh(i,j,k)=bogus_sh
-               icm=icm+1
+               sh(i,j,k)=r_miss_sh
+               icm(k)=icm(k)+1
             endif
+          enddo
+          enddo
          enddo
-         enddo
-         enddo
-         if(icm.gt.0)then
-            pcnt=float(icm)/float(nx*ny*nz)
-            print*,'WARNING: missing 3d NOGAPS Td data ',icm,pcnt
-         endif
 c
 c check for missing Td NOGAPS data.
 c
-         icm=0
+         icm_sfc=0
+         sumsfctd=0.0
          do j=1,ny
          do i=1,nx
             if(td_sfc(i,j).eq.-99999.)then
-               icm=icm+1
-               td_sfc(i,j)=r_missing_data
+               icm_sfc=icm_sfc+1
+               td_sfc(i,j)=r_miss_sh
+            else
+               sumsfctd=sumsfctd+td_sfc(i,j)
             endif
          enddo
          enddo
-         if(icm.gt.0)then
-            pcnt=float(icm)/float(nx*ny)
-            print*,'WARNING: missing 2d NOGAPS Td data ',icm,pcnt
-         endif
-
 
       endif
+c
+c check for and fill missing sh with computed avg for that level
+c
+      sumtot = 0
+      do k=1,nz
+         if(icm(k).gt.0.and.icm(k).lt.nx*ny)then
+            shavg=shsum(k)/(nx*ny-icm(k))
+            do j=1,ny
+            do i=1,nx
+               if(sh(i,j,k).eq.r_miss_sh)sh(i,j,k)=shavg
+            enddo
+            enddo
+            sumtot=shsum(k)+sumtot
+         endif
+      enddo
+
+      if(sumtot.gt.0)then
+         print*,'Missing background 3D moisture filled with '
+     &,'average of good points'
+         print*,'#/% 3D points filled: ',sumtot,sumtot/(nx*ny*nz)
+      endif
+
+      if(bgmodel.eq.6.or.bgmodel.eq.8)then
+         if(icm_sfc.gt.0.and.icm_sfc.lt.nx*ny)then
+            shavg=sumsfctd/(nx*ny-icm_sfc)
+            do j=1,ny
+            do i=1,nx
+               if(td_sfc(i,j).eq.r_miss_sh)td_sfc(i,j)=shavg
+            enddo
+            enddo
+         endif
+      endif
+      if(icm_sfc.gt.0)then
+         print*,'Missing background 2D moisture filled with '
+     &,'average of good points (Td avg = ',shavg,').'
+         print*,'#/% 2D points filled: ',icm_sfc,icm_sfc/(nx*ny*nz)
+      endif
+
 c
 c *** Fill the common block variables.
 c

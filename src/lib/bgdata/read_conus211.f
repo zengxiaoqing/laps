@@ -1,49 +1,57 @@
-      subroutine get_sbn_model_id(filename,model,ivaltimes,ntbg)
+      subroutine get_sbn_model_id(filename,model,ivaltimes,ntbg
+     &,istatus)
 
       implicit none
       include 'netcdf.inc'
       character*(*) model
       character*(*) filename
-      integer ntbg
+      integer ntbg,istatus
       integer ivaltimes(ntbg)
       integer nf_fid,nf_vid,nf_status
 C
 C  Open netcdf File for reading
 C
+      istatus = 0
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ', filename
+        return
       endif
 
       nf_status = NF_INQ_VARID(nf_fid,'model',nf_vid)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in var model'
+         return
       endif
       nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,model)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in NF_GET_VAR_ model '
+         return
       endif
       nf_status=NF_INQ_VARID(nf_fid,'valtimeMINUSreftime',nf_vid)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in NF_GET_VAR_ model '
+         return
       endif
       nf_status=NF_GET_VARA_INT(nf_fid,nf_vid,1,ntbg,ivaltimes)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *,'in NF_GET_VAR_ model '
+         return
       endif
-      
-      
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
+        return
       endif
+
+      istatus = 1
 
       return
       end
