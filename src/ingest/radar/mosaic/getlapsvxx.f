@@ -1,7 +1,8 @@
        Subroutine getlapsvxx(imax,jmax,kmax,maxradar,c_radar_id,
-     &nfiles,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d,
-     &lat,lon,topo,rlat_radar,rlon_radar,rheight_radar,
-     &grid_ra_ref,grid_ra_vel,istatus)
+     &      n_radars,c_extension_proc,i4timefile_proc,i4_tol,rheight_3d,      
+     &      lat,lon,topo,
+     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,
+     &      grid_ra_ref,grid_ra_vel,istatus)
 c
        Integer       imax,jmax,kmax  !same as imax,jmax,kmax in lapsparms.for
        Integer       maxradar
@@ -18,7 +19,6 @@ c
        Integer       istatus_3dref
        Integer       level
 
-       Integer       nfiles
        Integer       i4timefile_proc
 
        Real*4          grid_ra_ref(imax,jmax,kmax,maxradar)
@@ -61,9 +61,11 @@ c
 
       write(6,*)
       write(6,*)'get_laps_vxx: Reading v-file Reflectivity, ',
-     1          '# of radars = ',nfiles
+     1          '# of potential radars = ',n_radars
 
-      do k=1,nfiles
+      n_valid_radars = 0
+
+      do k=1,n_radars
 
          call get_directory(c_extension_proc(k),directory,len_dir)
 
@@ -92,7 +94,8 @@ c          read(5,*)level
          else
             write(6,*)'Successful reading radar ',ext
             write(6,*)'radar lat/lon/elev: ',rlat_radar(k),
-     &rlon_radar(k),rheight_radar(k)
+     &                         rlon_radar(k),rheight_radar(k)
+            n_valid_radars = n_valid_radars + 1
          endif
 
          level=9
@@ -115,7 +118,7 @@ c38       format(a1)
 c        if(c_again.eq.'Y'.or.c_again.eq.'y')goto 100
 30       format(1x,2i3,1x,3f7.1,1x,2(f8.1,1x))
 
-44       if(k.lt.nfiles)write(6,*)'Ok, next radar '
+44       if(k.lt.n_radars)write(6,*)'Ok, next radar '
 
       enddo
 
