@@ -24,7 +24,9 @@ c
       call ps_param(xmin,ymin,dx,dy)
       do n=1,np
          call geoll_2_psll(glat(n),glon(n),pslat,pslon)
+
          call psll_2_psij(pslat,pslon,psi(n),psj(n))
+
       enddo
 c
       return
@@ -780,5 +782,267 @@ c
          lli(n)=ri
          llj(n)=rj
       enddo
+      return
+      end
+c
+c===============================================================================
+c
+
+      subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .     lat,lon,grx,gry,bgmodel)
+
+c
+      implicit none
+c
+      integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
+c
+      real*4 lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+c
+      integer i,j,k
+c
+      character*2 gproj
+
+      real sw(2),ne(2),nxc,nyc,nzc,rota,lat0,lon0
+      real tol
+      parameter (tol=.03)
+      common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
+
+
+c_______________________________________________________________________________
+c
+c *** Determine location of LAPS grid point in background data i,j space.
+c
+
+      
+      if (gproj .eq. 'PS') then
+
+c      print*,nxc,nyc,nzc,lat0,lon0,rota,sw,ne
+
+         call latlon_2_psij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'LC') then
+         call latlon_2_lcij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'CE') then
+         call latlon_2_coneqij(nx_laps*ny_laps,lat,lon,grx,gry)
+      elseif (gproj .eq. 'LL') then
+         call latlon_2_llij(nx_laps*ny_laps,lat,lon,grx,gry)
+      endif
+c
+c *** Check that all LAPS grid points are within the background data coverage.
+c
+c
+c ****** Check for wrapping if a global data set.
+c
+      if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
+     .     bgmodel .eq. 8) then
+         do j=1,ny_laps
+            do i=1,nx_laps
+               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               if (gry(i,j) .lt. 1) then
+                  gry(i,j)=2.-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+               if (gry(i,j) .gt. ny_bg) then
+                  gry(i,j)=float(2*ny_bg)-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+            enddo
+         enddo
+c
+c ****** If not a global data set, then check that LAPS domain is fully
+c           within background domain.
+c
+      else
+         do j=1,ny_laps
+            do i=1,nx_laps
+c
+c LAPS must fit into model grid which must also fit into LAPS grid thus we
+c introduce a small fudge factor on the grid boundaries.
+c               
+
+               if(grx(i,j).gt.1.-tol) grx(i,j) = max(1.,grx(i,j))
+               if(gry(i,j).gt.1.-tol) gry(i,j) = max(1.,gry(i,j))
+
+               if(grx(i,j).lt.float(nx_bg)+1.-tol) 
+     +              grx(i,j) = min(float(nx_bg),grx(i,j))
+               if(gry(i,j).lt.float(ny_bg)+1.-tol) 
+     +              gry(i,j) = min(float(ny_bg),gry(i,j))
+
+               if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
+     .              gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
+          print*,'LAPS gridpoint outside of background data coverage.'
+                  print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
+                  print*,'   grx, gry:',grx(i,j),gry(i,j)
+                  stop 'init_hinterp'
+               endif
+            enddo
+         enddo
+      endif
+c
+      return
+      end
+
+      subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz,
+     .     grx,gry,fvi,flaps,bgmodel)
+
+c
+      implicit none
+c
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+c
+c *** Input vertically interpolated field.
+c *** Output Laps field
+c
+      real*4 fvi(nx_bg,ny_bg,nz),
+     .       flaps(nx_laps,ny_laps,nz),
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+c
+      integer i,j,k
+c
+c
+c *** Horizontally interpolate variable.
+c
+      do k=1,nz
+         do j=1,ny_laps
+            do i=1,nx_laps
+               call gdtost(fvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),flaps(i,j,k),bgmodel)
+            enddo
+         enddo
+      enddo
+c
+      return
+      end
+c
+c===============================================================================
+c
+      subroutine gdtost(ab,ix,iy,stax,stay,staval,bgmodel)
+c
+c *** Subroutine to return stations back-interpolated values(staval)
+c        from uniform grid points using overlapping-quadratics.
+c        gridded values of input array a dimensioned ab(ix,iy), where
+c        ix = grid points in x, iy = grid points in y.  Station
+c        location given in terms of grid relative station x (stax)
+c        and station column.
+c *** Values greater than 1.0e30 indicate missing data.
+c
+      dimension ab(ix,iy),r(4),scr(4)
+      integer bgmodel
+c_______________________________________________________________________________
+c
+      iy1=int(stay)-1
+      iy2=iy1+3
+      ix1=int(stax)-1
+      ix2=ix1+3
+      staval=1e30
+      fiym2=float(iy1)-1
+      fixm2=float(ix1)-1
+      ii=0
+      do iii=ix1,ix2
+         i=iii
+c
+c ****** Account for wrapping around effect of global data at Greenwich.
+c
+         if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+     .       bgmodel .eq. 8) then
+            if (i .lt. 1) i=i+ix
+            if (i .gt. ix) i=i-ix
+         endif
+         ii=ii+1
+         if (i .ge. 1 .and. i .le. ix) then 
+            jj=0
+            do jjj=iy1,iy2
+               j=jjj
+c
+c ************ Account for N-S wrapping effect of global data.
+c
+               if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+     .             bgmodel .eq. 8) then
+                  if (j .lt. 1) then
+                     j=2-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+                  if (j .gt. iy) then
+                     j=2*iy-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+               endif
+               jj=jj+1
+               if (j .ge. 1 .and. j .le. iy) then
+                  r(jj)=ab(i,j)
+               else
+                  r(jj)=1e30
+               endif
+            enddo
+            yy=stay-fiym2
+            if (yy .eq. 2.0) then
+               scr(ii)=r(2)
+            else
+               call binom(1.,2.,3.,4.,r(1),r(2),r(3),r(4),yy,scr(ii))
+            endif
+         else 
+            scr(ii)=1e30
+         endif
+      enddo
+      xx=stax-fixm2
+      if (xx .eq. 2.0) then
+         staval=scr(2)
+      else
+         call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval)
+      endif
+c
+      return
+      end
+c
+c===============================================================================
+c
+      subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
+c
+      yyy=1e30
+      if (x2 .gt. 1.e19 .or. x3 .gt. 1.e19 .or.
+     .    y2 .gt. 1.e19 .or. y3 .gt. 1.e19) return
+c
+      wt1=(xxx-x3)/(x2-x3)
+      wt2=1.0-wt1
+c
+      if (y4 .lt. 1.e19 .and. x4 .lt. 1.e19) then
+c        yz22=(xxx-x3)*(xxx-x4)/((x2-x3)*(x2-x4))
+         yz22=wt1*(xxx-x4)/(x2-x4)
+c        yz23=(xxx-x2)*(xxx-x4)/((x3-x2)*(x3-x4))
+         yz23=wt2*(xxx-x4)/(x3-x4)
+         yz24=(xxx-x2)*(xxx-x3)/((x4-x2)*(x4-x3))
+      else
+         yz22=wt1
+         yz23=wt2
+         yz24=0.0
+      endif
+c
+      if (y1 .lt. 1.e19 .and. x1 .lt. 1.e19) then
+         yz11=(xxx-x2)*(xxx-x3)/((x1-x2)*(x1-x3))
+c        yz12=(xxx-x1)*(xxx-x3)/((x2-x1)*(x2-x3))
+         yz12=wt1*(xxx-x1)/(x2-x1)
+c        yz13=(xxx-x1)*(xxx-x2)/((x3-x1)*(x3-x2))
+         yz13=wt2*(xxx-x1)/(x3-x1)
+      else
+         yz11=0.0
+         yz12=wt1
+         yz13=wt2
+      endif
+c
+      if (yz11 .eq. 0. .and. yz24 .eq. 0.) then
+         yyy=wt1*y2+wt2*y3
+      else
+         yyy=wt1*(yz11*y1+yz12*y2+yz13*y3)+wt2*(yz22*y2+yz23*y3+yz24*y4)
+      endif
+c
       return
       end
