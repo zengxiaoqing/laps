@@ -792,6 +792,12 @@ cc        character*3 var_2d
         write(6,11)directory,ext,var_2d
 11      format(' Writing 2d ',a50,1x,a5,1x,a3)
 
+        call check_nan2(field_2d,imax,jmax,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' ERROR: Nan Detected in this 2D field'
+            return
+        endif
+
         lvl_2d = 0
         lvl_coord_2d = 'MSL'
 
@@ -1009,6 +1015,11 @@ cdoc    Writes multiple 2-D grids. Inputs include the extension and time.
         do l = 1,nf
             write(6,11)directory,ext(1:5),var_a(l)
 11          format(' Writing 2d ',a50,1x,a5,1x,a3)
+            call check_nan2(field_2d(1,1,l),ni,nj,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' ERROR: Nan Detected in above 2D field'
+                return
+            endif
         enddo ! l
 
         do l = 1,nf
