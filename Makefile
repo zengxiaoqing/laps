@@ -51,7 +51,6 @@ EXEDIRS = src/accum \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
           src/sfc \
-          src/sfc/pbl \
           src/sfc/table \
           src/soil \
           src/temp \
