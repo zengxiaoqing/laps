@@ -170,9 +170,6 @@ c
        character cfname*11
        character c_afwa_fname*11
        character cfilename*255
-
-c
-c first try for the ir data
 c
       istatus = -1   !bad status return
       ntm=0
@@ -186,64 +183,54 @@ c     cid4='go'//c_sat_id(isat)(5:6)
          n=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
          cfilename=path_to_raw_sat(ispec,jtype,isat)(1:n)//cfname
 
-c        goto(10,20,20,20,20)ispec   !(vis,3.9,wv,11.0,12.0)
+         n=index(cfilename,' ')
+         write(6,*)'Reading: ',cfilename(1:n)
 
-c10          if(lvis_flag)goto 30
-c           path=path_to_raw_sat(ispec,jtype,isat)
-c           csname='u'//cid4//'v1'
-c           n=index(path,' ')-1
-c           cfname=path(1:n)//csname//'*_'//chtype(i)
-c           goto 15
+         if(ispec.eq.1)then
 
-c20          csname='u'//cid4/'i1'
-c           path=path_to_raw_sat(ispec,jtype,isat)
-c           n=index(path,' ')-1
-c           cfname=path(1:n)//csname//'*_'//chtype(i)
-c
-               n=index(cfilename,' ')
-               write(6,*)'Reading: ',cfilename(1:n)
-
-               goto(21,22,23,24,25)ispec
-
-21             call read_afgwc_satdat(cfilename,isat,jtype,
+            call read_afgwc_satdat(cfilename,isat,jtype,
      &l_cell_afwa,chtype(i),i_delta_sat_t_sec,i4time_current,
      &nvislines,nviselem,image_vis,i4time_data_io,iostatus)
-               goto 26
 
-22             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+         elseif(ispec.eq.2)then
+
+            call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
      &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
      &,image_39,i4time_data_io,iostatus)
-               goto 26
 
-23             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+         elseif(ispec.eq.3)then
+
+            call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
      &,chtype(i),i_delta_sat_t_sec,i4time_current,nwvlines,nwvelem
      &,image_67,i4time_data_io,iostatus)
-               goto 26
 
-24             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+         elseif(ispec.eq.4)then
+
+            call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
      &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
      &,image_11,i4time_data_io,iostatus)
-               goto 26
 
-25             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+         elseif(ispec.eq.5)then
+
+            call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
      &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
      &,image_12,i4time_data_io,iostatus)
 
-26             continue
+         endif
 
-               if(iostatus .eq. 1)then
-                  ntm=ntm+1
-                  c_type(ntm)=chtype(i)
-                  i4time_data_int(ntm)=i4time_data_io
-                  call make_fnam_lp(i4time_data_io,c_fname_data(ntm)
+         if(iostatus .eq. 1)then
+            ntm=ntm+1
+            c_type(ntm)=chtype(i)
+            i4time_data_int(ntm)=i4time_data_io
+            call make_fnam_lp(i4time_data_io,c_fname_data(ntm)
      &,fstatus)
-                  write(6,*)'gwc data loaded: ',c_type(ntm)
-               else
-                  write(6,*)'No data loaded - ',chtype(i)
-                  goto 1000
-               endif  
+            write(6,*)'gwc data loaded: ',c_type(ntm)
+         else
+            write(6,*)'No data loaded - ',chtype(i)
+            goto 1000
+         endif  
 
-30    enddo
+      enddo
 c
 c In this section we determine the i4time of the data and also check
 c whether the i4times satisfy i_delta_sat_t_sec criterion.
@@ -499,43 +486,48 @@ c =====================================================================
             call read_binary_field(image_gms,1,4,npixgms*nlingms+8,
      +cfilenames(nfiles),lenf)
 
-            goto(10,1000,13,14,15)lvdindex
-10          do k=1,nlingms
+          if(lvdindex.eq.1)then
+            do k=1,nlingms
             do l=1,npixgms
                m=m+1
                image_vis(l,k)=float(image_gms(m))
             enddo
             enddo
-            goto 19
 
-13          do k=1,nlingms
+          elseif(lvdindex.eq.3)then
+
+            do k=1,nlingms
             do l=1,npixgms
                m=m+1
                image_67(l,k)=float(image_gms(m))
             enddo
             enddo
-            goto 19
 
-14          do k=1,nlingms
+          elseif(lvdindex.eq.4)then
+
+            do k=1,nlingms
             do l=1,npixgms
                m=m+1
                image_11(l,k)=float(image_gms(m))
             enddo
             enddo
-            goto 19
 
-15          do k=1,nlingms
+          elseif(lvdindex.eq.5)then
+
+            do k=1,nlingms
             do l=1,npixgms
                m=m+1
                image_12(l,k)=float(image_gms(m))
             enddo
             enddo
 
-19          ntm=ntm+1
-            c_type(ntm)=ct
-            call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
-
           endif
+
+          ntm=ntm+1
+          c_type(ntm)=ct
+          call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
+
+         endif
  
 c       enddo
 

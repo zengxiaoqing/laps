@@ -45,31 +45,28 @@ c
 
          call lvd_file_specifier(chtype(i),ispec,istat)
          if(istat.eq.0)then
-
             if(.not.lgot_lut(ispec))then
-              lgot_lut(ispec)=.true.
-
-              ct=chtype(i)
-              goto(3,2,3,2,2)ispec
-2             ct='ir'
-
-3             n=index(ct,' ')-1
-              if(n.le.0)n=3
-              file=cpath(1:lend)//csat_id//'-llij-'
-              lenf=index(file,' ')-1
-              file=file(1:lenf)//ct(1:n)//'-'//csat_typ//'.lut'
-
-              n=index(file,' ')-1
-              open(12,file=file,
+               lgot_lut(ispec)=.true.
+               ct=chtype(i)
+               if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+                  ct='ir'
+               endif
+               n=index(ct,' ')-1
+               if(n.le.0)n=3
+               file=cpath(1:lend)//csat_id//'-llij-'
+               lenf=index(file,' ')-1
+               file=file(1:lenf)//ct(1:n)//'-'//csat_typ//'.lut'
+               n=index(file,' ')-1
+               open(12,file=file,
      &form='unformatted',status='old',err=101)
-              write(6,*)'Reading ',file(1:n)
-              read(12,err=23,end=23) rdummy
-              read(12,err=23,end=23) rdummy
-              read(12,err=23,end=23) ri_in
-              read(12,err=23,end=23) rj_in
-              close (12)
-              call move(ri_in,ri(1,1,ispec),nx,ny)
-              call move(rj_in,rj(1,1,ispec),nx,ny)
+               write(6,*)'Reading ',file(1:n)
+               read(12,err=23,end=23) rdummy
+               read(12,err=23,end=23) rdummy
+               read(12,err=23,end=23) ri_in
+               read(12,err=23,end=23) rj_in
+               close (12)
+               call move(ri_in,ri(1,1,ispec),nx,ny)
+               call move(rj_in,rj(1,1,ispec),nx,ny)
             endif
          endif
       enddo
@@ -146,34 +143,33 @@ c
       do i = 1,nchannels
       call lvd_file_specifier(chtype(i),ispec,istatus)
 
-      goto(10,11,12,11,11)ispec
+      if(ispec.eq.1)then
 
-10       resx=r_resolution_x_vis(jtype,isat)
+         resx=r_resolution_x_vis(jtype,isat)
          resy=r_resolution_y_vis(jtype,isat)
          nlin=n_lines_vis(jtype,isat)
          npix=n_pixels_vis(jtype,isat)
          nw_line=i_nwline_vis(jtype,isat)
          nw_pix=i_nwpix_vis(jtype,isat)
-         goto 13
+      elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
 
-11       resx=r_resolution_x_ir(jtype,isat)
+         resx=r_resolution_x_ir(jtype,isat)
          resy=r_resolution_y_ir(jtype,isat)
          nlin=n_lines_ir(jtype,isat)
          npix=n_pixels_ir(jtype,isat)
          nw_line=i_nwline_ir(jtype,isat)
          nw_pix=i_nwpix_ir(jtype,isat)
 
-         goto 13
+      elseif(ispec.eq.3)then
 
-12       resx=r_resolution_x_wv(jtype,isat)
+         resx=r_resolution_x_wv(jtype,isat)
          resy=r_resolution_y_wv(jtype,isat)
          nlin=n_lines_wv(jtype,isat)
          npix=n_pixels_wv(jtype,isat)
          nw_line=i_nwline_wv(jtype,isat)
          nw_pix=i_nwpix_wv(jtype,isat)
-         goto 13
 
-13    continue
+      endif
 
 c check if namelist parameters are current
 
@@ -240,7 +236,7 @@ c for GOES data only
                endif
             endif
 c
-c NOTE: nw_line and nw_pix are hardwired by src/include/sat_data_static
+c NOTE: nw_line and nw_pix are hardwired by src/include/satdata_lvd.f
 c       however, gen_lut_gvar.f uses the new values for these variables.
 c       this will always trip the lut regeneration unless nw_line/pix match.
 c

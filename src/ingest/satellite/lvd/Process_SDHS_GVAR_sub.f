@@ -98,22 +98,22 @@ c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
       istatus=0
 
       call lvd_file_specifier(chtype,ispec,istat)
-      goto(10,12,11,12,12)ispec
-10    istart=i_start_vis(jtype,isat)
-      jstart=j_start_vis(jtype,isat)
-      iend=i_end_vis(jtype,isat)
-      jend=j_end_vis(jtype,isat)
-      goto 13
-11    istart=i_start_wv(jtype,isat)
-      jstart=j_start_wv(jtype,isat)
-      iend=i_end_wv(jtype,isat)
-      jend=j_end_wv(jtype,isat)
-      goto 13
-12    istart=i_start_ir(jtype,isat)
-      jstart=j_start_ir(jtype,isat)
-      iend=i_end_ir(jtype,isat)
-      jend=j_end_ir(jtype,isat)
-13    continue
+      if(ispec.eq.1)then
+       istart=i_start_vis(jtype,isat)
+       jstart=j_start_vis(jtype,isat)
+       iend=i_end_vis(jtype,isat)
+       jend=j_end_vis(jtype,isat)
+      elseif(ispec.eq.3)then
+       istart=i_start_wv(jtype,isat)
+       jstart=j_start_wv(jtype,isat)
+       iend=i_end_wv(jtype,isat)
+       jend=j_end_wv(jtype,isat)
+      elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+       istart=i_start_ir(jtype,isat)
+       jstart=j_start_ir(jtype,isat)
+       iend=i_end_ir(jtype,isat)
+       jend=j_end_ir(jtype,isat)
+      endif
 C
 C**********************************************************************
 C  Read the header information and pass back the number of 64 scanline

@@ -61,10 +61,9 @@ c
             write(6,*)'first set missing sat: '
 
             call lvd_file_specifier(c_type(j,i),ispec,istat)
-            goto(1,2,3,4,5)ispec
-
+            if(ispec.eq.2)then
 c -------------------------------------------
-2           call set_missing_sat(csat_id,csat_type,c_type(j,i),
+            call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_39(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,istatus)
 
@@ -87,9 +86,9 @@ c -------------------------------------------
 
             mstatus(j,i)=percent_missing
 
-            goto 6
+            elseif(ispec.eq.4)then
 c -------------------------------------------
-4           call set_missing_sat(csat_id,csat_type,c_type(j,i),
+            call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_ir(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -113,9 +112,9 @@ c -------------------------------------------
 
             mstatus(j,i)=percent_missing
 
-            goto 6
+            elseif(ispec.eq.5)then
 c -------------------------------------------
-5           call set_missing_sat(csat_id,csat_type,c_type(j,i),
+            call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_12(1,1,i),nir_elem,nir_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -139,9 +138,9 @@ c -------------------------------------------
 
             mstatus(j,i)=percent_missing
 
-            goto 6
+            elseif(ispec.eq.3)then
 c -------------------------------------------
-3           call set_missing_sat(csat_id,csat_type,c_type(j,i),
+            call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_67(1,1,i),nwv_elem,nwv_lines,
      &               smsng,r_missing_data,
      &               istatus)
@@ -165,9 +164,9 @@ c -------------------------------------------
 
             mstatus(j,i)=percent_missing
 
-            goto 6
+            elseif(ispec.eq.1)then
 c -------------------------------------------
-1           c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
+            c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
      &               smsng,r_missing_data,
@@ -191,7 +190,7 @@ c -------------------------------------------
 
             mstatus(j,i)=percent_missing
 
-6           continue
+            endif
 
          enddo
       enddo

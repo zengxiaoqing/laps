@@ -395,15 +395,13 @@ c --------------------------------
       do i = 1,ntm(j)
 
          call lvd_file_specifier(c_type(i,j),ispec,istatus)
-         goto(301,302,303,302,302)ispec
-
-301           r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
-              goto 304
-302           r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
-              goto 304
-303           r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
-
-304      continue
+         if(ispec.eq.1)then
+            r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
+         elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+            r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
+         elseif(ispec.eq.3)then
+            r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
+         endif
 
       enddo
       enddo
@@ -441,30 +439,25 @@ c
          do j = 1,nft
          do i = 1,ntm(j)
 
-         call lvd_file_specifier(c_type(i,j),ispec,istat)
+            call lvd_file_specifier(c_type(i,j),ispec,istat)
 
-         goto(1,2,3,4,5)ispec     !ispec = 1 is visible data
-
-1           if(csatid.eq.'gmssat')goto 6    
-
-            call read_gvarimg_cnt2btemp_lut(csatid,
+            if(ispec.eq.1.and.csatid.ne.'gmssat')then
+               call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),vis_cnt_to_cnt_lut,istatus)
-            goto 6
-
-2           call read_gvarimg_cnt2btemp_lut(csatid,
+            elseif(ispec.eq.2)then
+               call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),r39_cnt_to_btemp_lut,istatus)
-            goto 6
-
-3           call read_gvarimg_cnt2btemp_lut(csatid,
+            elseif(ispec.eq.3)then
+               call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),r67_cnt_to_btemp_lut,istatus)
-            goto 6
-
-4           call read_gvarimg_cnt2btemp_lut(csatid,
+            elseif(ispec.eq.4)then
+               call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),ir_cnt_to_btemp_lut,istatus)
-            goto 6
-
-5           call read_gvarimg_cnt2btemp_lut(csatid,
+            elseif(ispec.eq.5)then
+               call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),r12_cnt_to_btemp_lut,istatus)
+
+            endif
 
 6        enddo
          enddo
@@ -569,50 +562,54 @@ c ------------------------------------------------------------
           do j = 1,ntm(i)
              if(r_image_status(j,i).le.0.333)then
 
-             call lvd_file_specifier(c_type(j,i),ispec,istat)
-             goto(15,11,12,13,14)ispec
+                call lvd_file_specifier(c_type(j,i),ispec,istat)
+                if(ispec.eq.4)then
 
-13           write(6,*)'For ',c_type(j,i)
-             call btemp_convert(n_ir_elem,n_ir_lines,
+                   write(6,*)'For ',c_type(j,i)
+                   call btemp_convert(n_ir_elem,n_ir_lines,
      &                        ir_cnt_to_btemp_lut,
      &                        r_missing_data,
      &                        image_ir(1,1,i))
-             goto 17
+                elseif(ispec.eq.2)then 
  
-11           write(6,*)'For ',c_type(j,i)
-             call btemp_convert(n_ir_elem,n_ir_lines,
+                   write(6,*)'For ',c_type(j,i)
+                   call btemp_convert(n_ir_elem,n_ir_lines,
      &                        r39_cnt_to_btemp_lut,
      &                        r_missing_data,
      &                        image_39(1,1,i))
-             goto 17
+                elseif(ispec.eq.3)then
 
-12          write(6,*)'For ',c_type(j,i)
-             call btemp_convert(n_wv_elem,n_wv_lines,
+                   write(6,*)'For ',c_type(j,i)
+                   call btemp_convert(n_wv_elem,n_wv_lines,
      &                        r67_cnt_to_btemp_lut,
      &                        r_missing_data,
      &                        image_67(1,1,i))
-             goto 17
 
-14           write(6,*)'For ',c_type(j,i)
-             call btemp_convert(n_ir_elem,n_ir_lines,
+                elseif(ispec.eq.5)then
+
+                   write(6,*)'For ',c_type(j,i)
+                   call btemp_convert(n_ir_elem,n_ir_lines,
      &                        r12_cnt_to_btemp_lut,
      &                        r_missing_data,
      &                        image_12(1,1,i))
-             endif
 
-             goto 17
+                elseif(ispec.eq.1)then
 
-15           if(csattype.eq.'gvr'.or.csattype.eq.'gwc')then
-                if(csatid.eq.'gmssat')goto 17
-                call btemp_convert(n_vis_elem,n_vis_lines,
+                   if( (csattype.eq.'gvr'.or.csattype.eq.'gwc').and.
+     &                  csatid.ne.'gmssat')then
+
+                       call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
      &                          r_missing_data,
      &                          image_vis(1,1,i))
-              write(*,*)'Converted GVAR vis data using cnt-to-cnt lut'
-             else
-              write(*,*)'Not converting ',csattype,' vis data'
+                    write(*,*)'GVAR vis data converted - cnt-to-cnt lut'
+                   else
+                    write(*,*)'Not converting ',csattype,' vis data'
+                   endif
+
+                endif
              endif
-17        enddo
+          enddo
           enddo
           write(6,*)'Done with conversions '
           write(6,*)
@@ -625,25 +622,23 @@ c
           write(6,*)'Convert ascii btemps from Integer to Floating pt.'
           do i = 1,nft
           do j = 1,ntm(i)
+
              call lvd_file_specifier(c_type(j,i),ispec,istat)
-             goto(26,22,23,24,25)ispec
-
-22           call btemp_convert_asc(n_ir_lines,n_ir_elem,
+             if(ispec.eq.2)then
+                call btemp_convert_asc(n_ir_lines,n_ir_elem,
      &               r_missing_data,image_39(1,1,i),istatus)
-             goto 26
-
-23           call btemp_convert_asc(n_wv_lines,n_wv_elem,
+             elseif(ispec.eq.3)then
+                call btemp_convert_asc(n_wv_lines,n_wv_elem,
      &               r_missing_data,image_67(1,1,i),istatus)
-             goto 26
-
-24           call btemp_convert_asc(n_ir_lines,n_ir_elem,
+             elseif(ispec.eq.4)then
+                call btemp_convert_asc(n_ir_lines,n_ir_elem,
      &               r_missing_data,image_ir(1,1,i),istatus)
-             goto 26
-
-25           call btemp_convert_asc(n_ir_lines,n_ir_elem,
+             elseif(ispec.eq.5)then
+                call btemp_convert_asc(n_ir_lines,n_ir_elem,
      &               r_missing_data,image_12(1,1,i),istatus)
+             endif
 
-26        enddo
+          enddo
           enddo
           write(6,*)'Done with conversion'
           write(6,*)

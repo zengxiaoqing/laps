@@ -79,17 +79,18 @@ c
              goto 1000
           endif
 
-          goto(1,2,3,2,2)ispec
-
-1         nelemvis=i_end_vis(j,k)-i_start_vis(j,k)+1
-          nlinesvis=j_end_vis(j,k)-j_start_vis(j,k)+1
-          goto 4
-2         nelemir=i_end_ir(j,k)-i_start_ir(j,k)+1
-          nlinesir=j_end_ir(j,k)-j_start_ir(j,k)+1
-          goto 4
-3         nelemwv=i_end_wv(j,k)-i_start_wv(j,k)+1
-          nlineswv=j_end_wv(j,k)-j_start_wv(j,k)+1
+          if(ispec.eq.1)then
+             nelemvis=i_end_vis(j,k)-i_start_vis(j,k)+1
+             nlinesvis=j_end_vis(j,k)-j_start_vis(j,k)+1
+          elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+             nelemir=i_end_ir(j,k)-i_start_ir(j,k)+1
+             nlinesir=j_end_ir(j,k)-j_start_ir(j,k)+1
+          elseif(ispec.eq.3)then
+             nelemwv=i_end_wv(j,k)-i_start_wv(j,k)+1
+             nlineswv=j_end_wv(j,k)-j_start_wv(j,k)+1
+          endif
          endif
+
 4       enddo
  
         write(6,*)'lvd process information'

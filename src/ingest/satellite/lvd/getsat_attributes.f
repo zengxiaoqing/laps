@@ -28,26 +28,22 @@
            if(c_channel_types(i,j,k).eq.chtype)then
 
             call lvd_file_specifier(chtype,ispec,istatus)
-            goto(1,2,3,2,2)ispec
-
-1           istart=i_start_vis(j,k)
-            iend  =i_end_vis(j,k)
-            jstart=j_start_vis(j,k)
-            jend  =j_end_vis(j,k)
-            goto 10
-
-2           istart=i_start_ir(j,k)
-            iend  =i_end_ir(j,k)
-            jstart=j_start_ir(j,k)
-            jend  =j_end_ir(j,k)
-            goto 10
-
-3           istart=i_start_wv(j,k)
-            iend  =i_end_wv(j,k)
-            jstart=j_start_wv(j,k)
-            jend  =j_end_wv(j,k)
-
-10          continue
+            if(ispec.eq.1)then
+              istart=i_start_vis(j,k)
+              iend  =i_end_vis(j,k)
+              jstart=j_start_vis(j,k)
+              jend  =j_end_vis(j,k)
+            elseif(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
+              istart=i_start_ir(j,k)
+              iend  =i_end_ir(j,k)
+              jstart=j_start_ir(j,k)
+              jend  =j_end_ir(j,k)
+            elseif(ispec.eq.3)then
+              istart=i_start_wv(j,k)
+              iend  =i_end_wv(j,k)
+              jstart=j_start_wv(j,k)
+              jend  =j_end_wv(j,k)
+            endif
            endif
           enddo
          endif
