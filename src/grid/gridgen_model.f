@@ -109,6 +109,7 @@ c
 
         character*255 filename
         character*200 c_dataroot
+        character*200 cdl_dir
         character*180 static_dir 
         character*10  c10_grid_fname 
         character*6   c6_maproj
@@ -692,12 +693,13 @@ c SG97  splot 'topography.dat'
         
         filename = c10_grid_fname(1:lf)//'.cdl'
         call s_len(filename,lfn)
+        call get_directory('cdl',cdl_dir,lcdl)
 
-        INQUIRE(FILE=static_dir(1:len)//filename(1:lfn),EXIST=exist)
+        INQUIRE(FILE=cdl_dir(1:lcdl)//filename(1:lfn),EXIST=exist)
 
-        if(.not.exist.and.c10_grid_fname(1:lf).ne.'wrfsi') then
+        if(.not.exist) then
            print*,'Error: Could not find file '
-     +           ,static_dir(1:len)//filename(1:lf)
+     +           ,cdl_dir(1:len)//filename(1:lfn)
            print*,'c10_grid_fname: ',c10_grid_fname(1:lf)
            istatus = 0
            return
