@@ -153,7 +153,7 @@ c....loop for rh computation
         do i=1,ii
 
 
-        if (tdata(i,j,k) .lt. 200. .or. data(i,j,k) .eq. rmd) then
+        if (tdata(i,j,k) .lt. 50. .or. data(i,j,k) .eq. rmd) then
         rhdata(i,j,k) = 0   ! pseudo bad data flag for albers routine
         rhdata_l(i,j,k) = 0   ! pseudo bad data flag for albers routine
         else
