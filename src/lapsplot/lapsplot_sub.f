@@ -227,7 +227,7 @@ cdis
 
         write(6,*)
         write(6,*)' closing GKS, look for your ./gmeta file'
-        call CLSGKS
+!       call CLSGKS
 
         if(c_display .ne. 'v')then
 !           write(6,*)' Saving metacode file in for008.dat'
