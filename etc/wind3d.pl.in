@@ -61,38 +61,51 @@ print "\nReading from log file $filename\n\n";
 # Determine background model.
 
 $modeltype = "missing";
+
+#Newer way with using 'get_modelfg_3d'
 $searchstring = "Successfully obtained: ";
 foreach (@lines) {
   if (/$searchstring(.*)/) {
     ($modeltime,$modeltype) = split(" ",$1); 
-    last; } }
-if ($modeltype eq "missing") {print "Can't determine model background.\n"}
-print "BACKGROUND FIELDS:  ";
+    last; } 
+}
 
+if ($modeltype eq "missing") {print "Can't determine model background.\n"}
+
+print "BACKGROUND FIELDS:  ";
 if ($modeltype =~ /ram/) {
-  if ($modeltime =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
-    $runtime = $2+0;
-    $fcsthr = $3/100;
-    print "Using $fcsthr hr fcst from local model started at $runtime UTC \n";
-    print "(local model file timestamp = $modeltime)\n"; } }
-else {
+  $modelid = "local";
+
+} else {
   $bgmodelfile = $filename;
   $bgmodelfile =~ s/$logname/lga/;
+  $modelid = "???";
   if (open(BGMODEL,$bgmodelfile)) {
     foreach (<BGMODEL>) {
-      if (/cmodel (\w*)/) {$modelid = $1;}
-      if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL;}
-      if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } }
+#     if (/cmodel (\w*)/) {$modelid = $1;}
+      if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
+      if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; } 
+      if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } 
+    }
     $basename = $1 if ($pathname =~ /([^\/]*)$/);
-    if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
-      $runtime = $2/100;
-      $fcsthr = $4;
-      print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; }
-    elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
-      $runtime = $4;
-      print "Using grids from $modelid started at $runtime UTC \n"; }
-    else {print "$modelid (Sorry -- can't decode model filename)\n";} }
-  else {print "Background model file $bgmodelfile not found\n";} }
+  }
+
+  if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
+    $runtime = $2/100;
+    $fcsthr = $4;
+#   print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; 
+  } elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
+    $runtime = $4;
+#   print "Using grids from $modelid started at $runtime UTC \n"; 
+  }
+
+}
+
+if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
+  $runtime = $3;
+  $fcsthr = $4;
+  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
+} 
 
 # Doppler radars.
 
@@ -199,13 +212,20 @@ print "Observation QC:\n";
 @greplines = grep /QC/, @lines;
 $nlines=0;
 foreach (@greplines) {
- if (/GOOD/) {
-  @list=split;
-  $src=$list[2]; $good=$list[6]; $bad=$list[7]; $pct=$list[11];
-  print "$src:  $good good, $bad bad, $pct\% rejected\n";
-  $nlines=$nlines+1; if ($nlines==6) {last;}
+  if (/GOOD/) {
+    @list=split;
+    $src=$list[2]; $good=$list[6]; $bad=$list[7]; $pct=$list[11];
+
+    if ($nlines < 5) {
+      print "$src:  $good good, $bad bad, $pct\% rejected\n";
+    }else{
+      $iradar = $nlines-4;
+      print "$src $iradar:  $good good, $bad bad, $pct\% rejected\n";
+    }
+
+    $nlines=$nlines+1; if ($nlines==999) {last;}
   }
- }
+}
 print "\n";
 
 print "Obs minus First Guess, before QC (m/s):\n";
@@ -220,7 +240,7 @@ foreach (@greplines) {
   write;
   }  }
 
-print "\nObs minus LAPS Analysis, after QC (m/s):\n";
+print "\nObs minus LAPS Analysis, after QC, radar is unfiltered (m/s):\n";
 $src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS";
 write;
 foreach (@greplines) {
