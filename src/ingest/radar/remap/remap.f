@@ -172,6 +172,8 @@ cdis
       ISTAT = INIT_TIMER()
       VERBOSE = 1
 
+      call get_r_missing_data(r_missing_data,istatus)
+
       n_vel_gates = MAX_VEL_GATES
       n_ref_gates = MAX_REF_GATES
       b_missing_data = 255.
@@ -234,6 +236,7 @@ cdis
       write_and_exit = 0
       read_next = 1
       alls_well = 1
+      i_missing_data = -999
 
 !     Begin infinite loop to continuously read radar data  
 
@@ -269,6 +272,12 @@ cdis
      1         get_status(vel_index) .eq. 0 ) then
             knt_bad_stat = 0 
             i_angle = get_fixed_angle() 
+            if(i_angle .eq. i_missing_data)then
+                write(6,*)' Warning: invalid i_angle in remap_sub'
+                istatus = 0
+                return
+            endif
+
             i_scan = get_scan() 
             i_tilt = get_tilt() 
             num_rays = get_num_rays() 
@@ -309,7 +318,18 @@ cdis
 
 !             Not end of tilt
               n_rays = n_rays + 1
-              azim(n_rays) = 0.01 * get_azi(n_rays)
+              iarg = get_azi(n_rays)
+              if(iarg .eq. i_missing_data)then
+                  write(6,*)' Warning: invalid azi in remap_sub',n_rays       
+
+!                 We set this to missing and continue to try remainder of tilt
+                  azim(n_rays) = r_missing_data
+
+              else
+                  azim(n_rays) = 0.01 * iarg
+
+              endif
+
               v_nyquist_ray_a(n_rays) = get_nyquist() 
 
               if(n_rays-1 .eq. n_rays/10 * 10)then
@@ -317,10 +337,6 @@ cdis
      1                   ,'    ref_ptr / vel_ptr = ' 
      1                   ,     ref_ptr,vel_ptr  
               endif
-
-!             if ( (n_rays-1) % 60 .eq. 0)
-!               write(6,*)'  eleva = %f  azim = %f  Nyqst = %f\n",
-!                   eleva,azim(n_rays-1),v_nyquist_ray_a(n_rays-1)) 
 
               if(VERBOSE .eq. 1)then
                 ng_ref = get_number_of_gates(ref_index) 
@@ -335,9 +351,6 @@ cdis
               io_stat = get_data_field(vel_index, b_vel(vel_ptr)
      1                                ,vel_ptr  , MAX_VEL_GATES
      1                                , b_missing_data) 
-
-!             parameter (MAX_REF_TILT = MAX_REF_GATES * MAX_RAY_TILT)
-!             parameter (MAX_VEL_TILT = MAX_VEL_GATES * MAX_RAY_TILT)
 
               ref_ptr = ref_ptr + MAX_REF_GATES 
               vel_ptr = vel_ptr + MAX_VEL_GATES 
