@@ -29,6 +29,7 @@ LIBDIRS = src/lib \
 
 EXEDIRS = src/accum \
           src/background \
+          src/balance \
           src/cloud \
           src/deriv \
 	  src/dprep \
@@ -63,6 +64,8 @@ DATADIRS = log/qc \
            static \
            time \
            cdl \
+           lapsprd/balance/lt1 \
+           lapsprd/balance/lw3 \
            lapsprd/cdw \
            lapsprd/dprep \
            lapsprd/d01 \
@@ -118,6 +121,7 @@ DATADIRS = log/qc \
            lapsprd/lsr/dmsp02 \
            lapsprd/lsr/goes08 \
            lapsprd/lsr/goes09 \
+           lapsprd/lsr/goes10 \
            lapsprd/lsr/tros12 \
            lapsprd/lsr/tros14 \
            lapsprd/lsx \
@@ -307,25 +311,4 @@ links:
 	  $(MAKE) links ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
