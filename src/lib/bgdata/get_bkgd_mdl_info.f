@@ -122,33 +122,33 @@ c     USE laps_static
       call s_len(cmodel,nclen)
 
       if(bgmodel.eq.0)then 
-       if(cmodel(1:nclen).eq.'LAPS_FUA')
-     &then
-         call find_domain_name(generic_data_root,grid_fnam_common,
-     &istatus)
+c      if(cmodel(1:nclen).eq.'LAPS_FUA')
+c    &then
+c        call find_domain_name(generic_data_root,grid_fnam_common,
+c    &istatus)
 c        call get_horiz_grid_spec(generic_data_root)
-         call s_len(grid_type,leng)
-         if(grid_type(1:5).eq. 'polar')gproj='PS'
-         if(grid_type(1:17).eq.'lambert conformal')gproj='LC'
-         if(grid_type(1:8).eq. 'mercator')gproj='MC'
+c        call s_len(grid_type,leng)
+c        if(grid_type(1:5).eq. 'polar')gproj='PS'
+c        if(grid_type(1:17).eq.'lambert conformal')gproj='LC'
+c        if(grid_type(1:8).eq. 'mercator')gproj='MC'
          
-         nxbg=x
-         nybg=y
-         nzbg_ht=nk
-         nzbg_tp=nk
-         nzbg_sh=nk
-         nzbg_uv=nk
-         nzbg_ww=nk
-         sw(1)=la1
-         sw(2)=lo1
-         ne(1)=la2
-         ne(2)=lo2
-         Lon0=lov
-         Lat0=latin1
-         Lat1=latin2
-       elseif(cmodel(1:nclen).eq.'MODEL_FUA')then
+c        nxbg=x
+c        nybg=y
+c        nzbg_ht=nk
+c        nzbg_tp=nk
+c        nzbg_sh=nk
+c        nzbg_uv=nk
+c        nzbg_ww=nk
+c        sw(1)=la1
+c        sw(2)=lo1
+c        ne(1)=la2
+c        ne(2)=lo2
+c        Lon0=lov
+c        Lat0=latin1
+c        Lat1=latin2
+c      elseif(cmodel(1:nclen).eq.'MODEL_FUA')then
 c        call get_fua_dims()
-       endif
+c      endif
 
       endif
 c ETA Public
