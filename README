@@ -537,7 +537,9 @@
      run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
 
      Below are two mainly equivalent procedures for localizing LAPS to set
-     up one or more domains. Only one of these are necessary to follow.
+     up one or more domains. The first is our original method for localization. .
+     The second is a newer more efficient method using "template" directories.
+     Only one of these are necessary to follow.
 
                         --- 2.2.6.1 Localization Method 1 ---
 
