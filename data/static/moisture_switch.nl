@@ -9,14 +9,14 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
- IHOP_flag = 0,
+ IHOP_flag = 1,
  TIME_DIFF = 9000,
  GPS_SWITCH = 1,
  SFC_MIX = 1,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
  T_REF = -132.0,
- PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
+ PATH_TO_GVAP12 = '/public/data/sat/nesdis/goes12/tpw/sfov_ihop/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
  PATH_TO_GPS = '/public/data/gpsmet/netcdf/'
 /
@@ -35,7 +35,7 @@ c  SOUNDER_SWITCH = 1,  sounder switch  on/off
 c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
 c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint
 c  GVAP_SWITCH = 1,    gvap on/off
-c  IHOP_flag = 0,     (normally off = 0), (on = 1) initiates IHOP special data
+c  IHOP_flag = 1,     (off = 0), (normally on = 1) on for nesdis off for cimss
 c  TIME_DIFF = 70800,  gvap latency seconds
 c  SFC_MIX = 0,        surface mixing on/off
 c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
