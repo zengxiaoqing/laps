@@ -51,6 +51,7 @@
 
       subroutine get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg,ivaltimes)
       integer id_fields(5), i, istat, vdims(10)
+      integer ncid,nxbg,nybg,nzbg(5),ntbg 
       integer ivaltimes(ntbg), ncid, ntp, nvdim, nvs, lenstr, ndsize
       character*31 dummy
       data id_fields/1,4,7,10,13/
