@@ -51,8 +51,13 @@ foreach $file (@filenames) {
 
 # For the moisture analysis we need to look at selected log files
 # because different data get in at different times (i.e., RAOB).
-# This isn't kosher, but it's okay for now:
-if (defined $hr) {$filename = $logdir."/".$logname.".log.".$hr."20";}
+# This is a bit more kosher... (SA 2/09/02)
+if (defined $hr) {
+    if(length($hr) < 4)
+       {$filename = $logdir."/".$logname.".log.".$hr."20";}
+    else
+       {$filename = $logdir."/".$logname.".log.".$hr;}
+}
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
