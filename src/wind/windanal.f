@@ -673,8 +673,9 @@ csms$serial(default=ignore)  begin
 
           v_nyquist_global = v_nyquist_in(i_radar)
           
-          write(6,*)' Radar QC for radar #/v_nyq ',i_radar
-     1                                            ,v_nyquist_global
+          write(6,*)' Radar QC for radar #/v_nyq/lat/lon ',i_radar
+     1             ,v_nyquist_global
+     1             ,rlat_radar(i_radar),rlon_radar(i_radar)
           call qc_radar_obs(
      1           imax,jmax,kmax                             ! Input
      1          ,r_missing_data                             ! Input
