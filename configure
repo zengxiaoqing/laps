@@ -2804,6 +2804,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.com
 	  etc/laps_localization.pl
+          etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
           etc/temp.pl
