@@ -20,26 +20,26 @@
         east = -1000.
 
         do i = 1,ni
-            rnorth = max(rnorth,lat(i,1),lat(i,nj))
-            south  = min(south ,lat(i,1),lat(i,nj))
-            east   = max(east  ,lon(i,1),lon(i,nj))
-            west   = min(west  ,lon(i,1),lon(i,nj))
-        enddo ! i
-
         do j = 1,nj
-            rnorth = max(rnorth,lat(1,j),lat(ni,j))
-            south  = min(south ,lat(1,j),lat(ni,j))
-            east   = max(east  ,lon(1,j),lon(ni,j))
-            west   = min(west  ,lon(1,j),lon(ni,j))
+            rnorth = max(rnorth,lat(i,j))
+            south  = min(south ,lat(i,j))
+            east   = max(east  ,lon(i,j))
+            west   = min(west  ,lon(i,j))
         enddo ! j
+        enddo ! i
 
         rnorth = rnorth + r_buffer
         south  = south  - r_buffer
         east   = east   + r_buffer
         west   = west   - r_buffer
 
+        rnorth = min(rnorth, +90.)
+        south  = max(south , -90.)
+        east   = min(east  ,+180.)
+        west   = max(west  ,-180.)
+
         write(6,101)rnorth,south,east,west
-101     format(1x,' Box around LAPS grid - NSEW ',4f9.2)
+101     format(1x,' Lat/lon box around LAPS grid - NSEW ',4f9.2)
 
         return
         end

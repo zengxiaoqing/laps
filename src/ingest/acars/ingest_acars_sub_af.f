@@ -20,13 +20,6 @@
       lun_in = 21
 
       open(lun_in,file=filename,status='old')
-
-      call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
-     1            topo_a,1.0,rnorth,south,east,west,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Error in get_laps_perimeter'
-          return
-      endif
   
       i = 0
 
@@ -61,18 +54,18 @@
           longitude = +float(I_A1LON)/100.
           altitude  =  I_A1ALT
 
-          write(6,*)' location = '
-     1             ,latitude,longitude,altitude
+!         write(6,*)' location = '
+!    1             ,latitude,longitude,altitude
 
-          if(latitude  .le. rnorth .and. latitude  .ge. south .and.
-     1       longitude .ge. west   .and. longitude .le. east      
-     1                                                             )then       
-              continue
-          else ! Outside lat/lon perimeter - reject
-              write(6,*)' lat/lon - reject'       
-!    1                 ,latitude,longitude
-              goto 900
-          endif
+!         if(latitude  .le. rnorth .and. latitude  .ge. south .and.
+!    1       longitude .ge. west   .and. longitude .le. east      
+!    1                                                             )then       
+!             continue
+!         else ! Outside lat/lon perimeter - reject
+!             write(6,*)' lat/lon - reject'       
+!!   1                 ,latitude,longitude
+!             goto 900
+!         endif
 
           if(altitude .gt. 20000.)then
               write(6,*)' Altitude is suspect - reject',altitude
