@@ -32,6 +32,7 @@ cdis
 c
 c
         subroutine insert_sat(i4time,cldcv,cldcv_sao,cld_hts,rlat,rlon,
+     1  pct_req_lvd_s8a,
      1  tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
      1  cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
      1  cloud_frac_co2_a,rlaps_land_frac,
@@ -126,7 +127,7 @@ c
         character*31 ext
         character var*3,comment*125,units*10
 
-        logical  l_tb8,l_cloud_present,l_use_vis
+        logical  l_tb8,l_cloud_present
         logical l_co2
         data l_co2 /.false./ ! Attempt to use co2 slicing method?
 
@@ -175,18 +176,19 @@ c
         call get_laps_2dvar(i4time-60,970,i4time_nearest,EXT,var,units
      1                      ,comment,imax,jmax,tb8_k,ilevel,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Error reading tb8_k - return from insert_sat'
-            return
-        endif
+            if(pct_req_lvd_s8a .gt. 0.)then
+                write(6,*)
+     1              ' Error reading tb8_k - return from insert_sat'            
+                istatus = 0
+                return
 
-!       Read in parms
-        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)'pct_req_lvd_s8a = ',pct_req_lvd_s8a
-        else
-            write(6,*)' Error in obtaining pct_req_lvd_s8a parameter'       
-            istatus = 0
-            return
+            else ! pct_req_lvd_s8a .eq. 0
+                write(6,*)' No lvd files, however pct_req_lvd_s8a = 0.'       
+                istatus = 1
+                return
+
+            endif
+
         endif
 
 !       Final QC check on band 8 (11.2 mm) brightness temps
@@ -208,11 +210,17 @@ c
         enddo
 
         valid_pct = (1.- float(icount)/float(imax*jmax) ) * 100.
+
         if(valid_pct .lt. pct_req_lvd_s8a)then
-            write(6,*)' insufficient lvd s8a data',valid_pct
-     1                                            ,pct_req_lvd_s8a
+            write(6,51)pct_req_lvd_s8a,valid_pct
+ 51         format(' WARNING: insufficient LVD S8A data ',2f8.2)
             istatus = 0
             return
+
+        else
+            write(6,52)pct_req_lvd_s8a,valid_pct
+ 52         format(' Pct LVD S8A data required/actual...',2f8.2)
+            
         endif
 
 !       Calculate cold filtered temperatures
@@ -561,11 +569,11 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               if(.true.)then ! Should this depend on co2?
 
 !                 Note that cover is not really used here as an input
-                  call correct_cover(cover,cover_new,cldtop_old,cldtop_m
-     1(i,j)
-     1                         ,temp_3d,tb8_k(i,j),t_gnd_k(i,j),heights_
-     13d
-     1                                  ,imax,jmax,klaps,i,j,istatus)
+                  call correct_cover(cover,cover_new,cldtop_old
+     1                              ,cldtop_m(i,j)
+     1                              ,temp_3d,tb8_k(i,j),t_gnd_k(i,j)
+     1                              ,heights_3d
+     1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
                       write(6,*)' Error in correct_cover'
                       return
@@ -819,10 +827,10 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
                         write(6,111,err=121)cldtop_m_tb8,cldtop_m_co2
 111                     format(1x,f10.0,1x,f10.0)
 
-121                     write(6,122,err=123)i,kl,frac_k,k_to_f(cldtop_te
-     1mp_k)
-     1                  ,arg,topo,k_to_f(temp_3d(i,j,kl))
-     1                                      ,k_to_f(temp_above)
+121                     write(6,122,err=123)i,kl,frac_k
+     1                           ,k_to_f(cldtop_temp_k)
+     1                           ,arg,topo,k_to_f(temp_3d(i,j,kl))
+     1                           ,k_to_f(temp_above)
 122                     format(1x,2i3,f8.3,f14.1,f11.1,f21.1,2f6.1)
 123                 endif
 
@@ -916,10 +924,9 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         return
         end
 
-        subroutine correct_cover(cover_in,cover_new_f,cldtop_old,cldtop_
-     1new
-     1         ,temp_3d,tb8_k,t_gnd_k,heights_3d,imax,jmax,klaps,i,j,ist
-     1atus)
+        subroutine correct_cover(cover_in,cover_new_f,cldtop_old
+     1             ,cldtop_new,temp_3d,tb8_k,t_gnd_k,heights_3d
+     1             ,imax,jmax,klaps,i,j,istatus)
 
 !       Find a thinner value for cloud cover consistent with the new
 !       higher cloud top and the known brightness temperature.
@@ -1099,8 +1106,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             if(nlyr .eq. 1)then
                 tb8_g_clr_sum   = tb8_g_clr_sum   + tdiff
                 tb8_g_clr_sumsq = tb8_g_clr_sumsq + tdiff**2
-                tb8_a_clr_sum   = tb8_a_clr_sum   + tb8_k(i,j) - t_sfc_k
-     1(i,j)
+                tb8_a_clr_sum   = tb8_a_clr_sum   + tb8_k(i,j) 
+     1                                            - t_sfc_k(i,j)
                 tb8_a_clr_sumsq = tb8_a_clr_sumsq +
      1                                  (tb8_k(i,j) - t_sfc_k(i,j))**2
                 n_clear = n_clear + 1
@@ -1147,9 +1154,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             endif
 
             if(abs(tdiff) .gt. corr_thr .and. l_output)then
-                write(6,901,err=902)i,j,nlyr-1,tb8_k(i,j),t_effective,td
-     1iff
-     1               ,frac_clouds,l_correct,(a(l),l=nlyr-1,1,-1)
+                write(6,901,err=902)i,j,nlyr-1,tb8_k(i,j),t_effective
+     1               ,tdiff,frac_clouds,l_correct,(a(l),l=nlyr-1,1,-1)       
 901             format(1x,2i3,i3,2f7.0,f7.1,f7.3,l2,' *',10f6.2)
 902         endif
 
@@ -1171,11 +1177,10 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
                 call apply_correction(cldcv,i,j,imax,jmax
      1                       ,cldcv_1d,1,1,1,1,kcld,f,ilyr,delta_cover)
 
-                call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j,imax,jm
-     1ax
-     1         ,a_new,f_new,ilyr_new,cldcv_1d,cld_hts,t_gnd_k(i,j),heigh
-     1ts_3d
-     1                  ,t_effective,nlyr_new,istatus)
+                call cvr_to_tb8_effective(kcld,temp_3d,klaps,i,j
+     1              ,imax,jmax,a_new,f_new,ilyr_new,cldcv_1d,cld_hts       
+     1              ,t_gnd_k(i,j),heights_3d
+     1              ,t_effective,nlyr_new,istatus)
 
                 tdiff = tb8_k(i,j)-t_effective
                 frac_clouds = 1.-f_new(nlyr_new)
@@ -1190,10 +1195,10 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
                 if(iwrite .le. 100 .and. l_output)then
                     iwrite = iwrite + 1
-                    write(6,911,err=912)i,j,nlyr_new-1,tb8_k(i,j),t_effe
-     1ctive
-     1               ,tdiff,frac_clouds,i_correct,(a_new(l),l=nlyr_new-1
-     1,1,-1)
+                    write(6,911,err=912)i,j,nlyr_new-1,tb8_k(i,j)
+     1               ,t_effective
+     1               ,tdiff,frac_clouds,i_correct
+     1               ,(a_new(l),l=nlyr_new-1,1,-1)
 911                 format(1x,2i3,i3,2f7.0,f7.1,f7.3,i2,'  ',10f6.2)
 912             endif
 

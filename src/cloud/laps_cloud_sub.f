@@ -671,6 +671,7 @@ C READ IN SATELLITE DATA
      1              ,NX_L,NY_L,KCLOUD,r_missing_data,istat_vis)
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
+     1        pct_req_lvd_s8a,
      1        tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
      1        cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
      1        cloud_frac_co2_a,rlaps_land_frac,
