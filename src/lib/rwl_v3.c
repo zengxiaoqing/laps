@@ -408,7 +408,7 @@ char *uptr;
                                     record_indx, var);
         if (i_invflag == (-1)){
           if (DEBUG == 1)
-            printf("cdf_retrieve_laps: grid not available\n");
+            printf("cdf_retrieve_laps: grid %s not available.\n",var);
           return -1;
         }
  
