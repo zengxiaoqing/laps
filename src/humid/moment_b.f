@@ -48,7 +48,7 @@ c found under the satellite library area.
       else
         skew = 0.0
         curt = 0.0
-      write (6,*) 'note that skew and curt blow up... returned as zero'
+      write (6,*) 'Skew and Curt returned as zero, variance is zero'
         return
       endif
       istatus = 1 !good
