@@ -144,10 +144,6 @@ c      gvap variables
 c
  	real gvap_data(ii,jj)
 
-
-
-
-
         real pressure_of_level  !function call
 
         integer  raob_switch
@@ -162,12 +158,12 @@ c
         integer mod_4dda_1
         real    mod_4dda_factor
         real    t_ref
-        character*256 path_to_gvap
+        character*256 path_to_gvap8,path_to_gvap10
         namelist /moisture_switch/ raob_switch,
      1       raob_lookback, goes_switch, cloud_switch
      1       ,tiros_switch, sounder_switch, sat_skip
      1       ,gvap_switch, sfc_mix, mod_4dda_1,mod_4dda_factor,
-     1       t_ref,path_to_gvap
+     1       t_ref,path_to_gvap8,path_to_gvap10
 
         integer len
         character*200 cdomain
@@ -234,7 +230,8 @@ c set namelist parameters to defaults
         mod_4dda_1 = 0
         mod_4dda_factor = 0.02
         t_ref = -132.0
-        path_to_gvap = ' '
+        path_to_gvap8 = ' '
+        path_to_gvap10 = ' '
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
@@ -312,12 +309,12 @@ c set namelist parameters to defaults
 
       write(6,*) 'T_ref is set to: ',t_ref
 
-      if (path_to_gvap .eq. ' ')then
+      if (path_to_gvap8 .eq. ' '.and. path_to_gvap10 .eq. ' ')then
          write(6,*) 'Path to gvap not assigned, assigning gvap switch 0'
          gvap_switch = 0
       else
          write(6,*) 'Gvap switch assigned, using assigned switch'
-         write(6,*) 'Path is ', path_to_gvap
+         write(6,*) 'Path is ', path_to_gvap8, ' ',path_to_gvap10
          write(6,*) 'GVAP switch is set to ',gvap_switch
       endif
 
@@ -833,7 +830,7 @@ c     gvap data insertion step (currently under test)
       if (gvap_switch.eq.1) then
          
          call process_gvap(ii,jj,gvap_data,tpw,
-     1        lat,lon,path_to_gvap,filename,istatus)
+     1        lat,lon,path_to_gvap8,path_to_gvap10,filename,istatus)
          
          if(istatus.eq.1) then  ! apply gvap weights
             

@@ -29,7 +29,8 @@ cdis
 cdis
 cdis
 cdis
-      subroutine read_gvap (filename, nstations, path_to_gvap,
+      subroutine read_gvap (filename, nstations, path_to_gvap8,
+     1     path_to_gvap10,
      1     lat,lon, wt,w1,w2,w3,
      1     nn, istatus)
 
@@ -53,7 +54,7 @@ c
 c     input variables
       character*9 filename
       integer nstations,nn,istatus,idummy,idummy2
-      character*256 path_to_gvap
+      character*256 path_to_gvap8,path_to_gvap10
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)
@@ -75,21 +76,21 @@ c     internal variables
 
       time_diff = 3600*4        ! 4-hour latency allowed
 
-      call s_len(path_to_gvap, ptg_index, istatus)
+      call s_len(path_to_gvap8, ptg_index, istatus)
 
 c     reading goes 8
 
 c     get most recent file in directory
 
       call get_newest_file (filename, time_diff,
-     1     path_to_gvap,ptg_index,filefound,
+     1     path_to_gvap8,ptg_index,filefound,
      1     extension, extension_index, istatus)
 
       if(istatus.ne.1) then     !failure in getting file
          return
       endif
 
-      const_file = path_to_gvap(1:ptg_index)//'20'//filefound
+      const_file = path_to_gvap8(1:ptg_index)//'20'//filefound
      1     //'.'//extension(1:extension_index)
 
       call s_len(const_file, cf, istatus)
@@ -114,20 +115,36 @@ c     write(6,*) (wt(i),i=1,nn)
 
       go to 669
 
- 668  write(6,*) 'failed reading GOES 8'
+ 668  close (22)
+      write(6,*) 'failed reading GOES 8'
       nn = 1
 
  669  continue
 
 c     reading goes 10
 
-      filename = filename(1:7)//'24'
+c     get most recent file in directory
 
-      open (23, file=path_to_gvap(1:ptg_index)//'20'//filename//'.wv10',
-     1     form='formatted',status='old',err = 666)
+      call get_newest_file (filename, time_diff,
+     1     path_to_gvap10,ptg_index,filefound,
+     1     extension, extension_index, istatus)
+
+      if(istatus.ne.1) then     !failure in getting file
+         return
+      endif
+
+      const_file = path_to_gvap10(1:ptg_index)//'20'//filefound
+     1     //'.'//extension(1:extension_index)
+
+      call s_len(const_file, cf, istatus)
+
+      write(6,*) 'opening file ',const_file(1:cf)
+      
+      open(23, file=const_file(1:cf),form='formatted',
+     1     status='old',err = 666)
       read(23,*,end=666,err=666) ! first header line is ignored
-      do i = nn,nstations
-         read(23,*,end=667,err=667) idummy,lat(i),lon(i),
+      do i = 1,nstations
+         read(23,*,end=667,err=667) idummy,idummy,lat(i),lon(i),
      1        idummy,idummy,wt(i), w1(i),w2(i),w3(i)
 
       enddo

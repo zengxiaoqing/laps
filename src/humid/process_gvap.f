@@ -31,7 +31,7 @@ cdis
 cdis
       subroutine  process_gvap (ii,jj,data_out,
      1     tpw,glat,glon,
-     1     path_to_gvap,filetime,istatus)
+     1     path_to_gvap8,path_to_gvap10,filetime,istatus)
 
       implicit none
 
@@ -42,7 +42,7 @@ c     input variables
       real data_out(ii,jj),tpw(ii,jj)
       real glat(ii,jj), glon(ii,jj)
       integer i4time
-      character*256 path_to_gvap
+      character*256 path_to_gvap8,path_to_gvap10
 
       integer nstations,nn
       parameter (nstations = 9000)
@@ -61,7 +61,7 @@ c     volitile arrays
 
       filename = filetime
 
-      call read_gvap (filename, nstations, path_to_gvap,
+      call read_gvap (filename, nstations, path_to_gvap8,path_to_gvap10,
      1     lat,lon, wt,w1,w2,w3, nn,
      1     istatus)
 
