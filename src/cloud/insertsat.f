@@ -962,6 +962,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         data iwrite /0/
         save iwrite
 
+        logical lwrite
+
         istatus = 1
 
 !       Find Temperature of old cloud top
@@ -997,15 +999,25 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
 !       This one utilizes the sigma T**4 relationship
         call get_band8_cover(tb8_k,t_gnd_k,temp_new,cover_new_f,istatus)
-        if(istatus .ne. 1)write(6,*)' Bad band8_cover status #2'      
+        if(istatus .ne. 1)then
+            write(6,*)' Bad band8_cover status #2'      
+            lwrite = .true.
+        else
+            lwrite = .false.
+        endif
 
         if(j .eq. int(j-9)/10*10+9)then
             iwrite = iwrite + 1
             if(iwrite .lt. 60)then
-                write(6,1,err=2)i,j,t_gnd_k,temp_old,temp_new,cldtop_old
-     1                         ,cldtop_new,cover_new,cover_new_f
-1               format(1x,'Corr-cvr ',2i3,3f7.0,2f8.0,2f8.2)
-2           endif
+                lwrite = .true.
+            endif
+        endif
+
+        if(lwrite)then
+            write(6,1,err=2)i,j,t_gnd_k,temp_old,temp_new,cldtop_old
+     1                     ,cldtop_new,cover_new,cover_new_f
+1           format(1x,'Corr-cvr ',2i3,3f7.0,2f8.0,2f8.2)
+2           continue
         endif
 
         return
