@@ -1129,9 +1129,14 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Dropsondes (snd):
            A Dropsonde ingest module has been developed for the CWB database. 
-           An ingest module has also been developed for AVAPS. We may include 
-           modules for other (e.g. NetCDF) databases in the future, such as 
-           NIMBUS or WFO/AWIPS.          
+           An ingest module has also been developed for AVAPS. 
+
+           We now allow the SND format to be used as input (so far just for
+           the "AIRDROP" project). For the SND input option, the ingest program
+           simply does a time windowing of the raw data.
+
+           We may include modules for other (e.g. NetCDF) databases in the  
+           future, such as NIMBUS or WFO/AWIPS.
 
      Radiometers (snd):
            A radiometer ingest module has been developed for the MADIS
@@ -2538,7 +2543,7 @@ Inputs:
 
         Satellite Soundings in AFWA format
 
-        Dropsonde (AVAPS or CWB format)
+        Dropsonde (AVAPS, CWB, or SND format)
 
         Radiometer (FSL-MADIS CDL - NetCDF)
 
