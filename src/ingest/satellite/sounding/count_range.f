@@ -7,8 +7,8 @@ c
       implicit none
 
       integer i,j,k
-      integer ndimch,ndimy,ndimx(jmax)
       integer imax,jmax,nch
+      integer ndimch,ndimy,ndimx(jmax)
       integer istatus
       integer isndrdata(imax,jmax,nch)
       integer imaximum(nch)
