@@ -118,7 +118,7 @@ c
 c
         integer cnt
 	logical exists, l_parse
-        logical l_dupe_time(maxsta)
+        logical l_dupe_time(maxobs)
         data exists/.false./
         data cnt/0/
 c
