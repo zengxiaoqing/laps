@@ -4218,7 +4218,8 @@ c                   cint = -1.
      1          /
      1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
      1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto,'
-     1                 /13x,'ptp,pdm,vnt,hah,ham,fwi,lwo,swo,tpw] ? ',$)       
+     1                 /10x,'ptp,pdm,vnt,hah,ham,fwi,lwo,swo,tpw,li] ? '
+     1                 ,$)       
 
             endif
 
@@ -4227,7 +4228,8 @@ c                   cint = -1.
             call upcase(var_2d,var_2d)
 
             call s_len(var_2d,len_var)
-            if(var_2d(len_var:len_var) .eq. 'I')then
+            if(var_2d(len_var:len_var) .eq. 'I' .and. 
+     1         var_2d(1:len_var) .ne. 'LI'                  )then
                 l_image = .true.
                 var_2d = var_2d(1:len_var-1)
             else
