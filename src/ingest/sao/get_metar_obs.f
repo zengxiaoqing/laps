@@ -358,6 +358,9 @@ c
      &         stname(ix), tt(ix), t(ix), timeobs(ix), vis(ix), 
      &         dd(ix), ddg(ix), ff(ix), ffg(ix), wmoid_in(ix), badflag,       
      &         n_synop_cwb, istatus)
+            if(istatus .ne. 1)then
+                n_synop_cwb = 0
+            endif
 
             write(6,*)' n_synop_cwb = ',n_synop_cwb
 
@@ -866,7 +869,7 @@ c
 c
  990	 continue		! no data available
 	 jstatus = 0
-	 print *,' ERROR.  No data available from READ_METAR.'
+	 print *,' WARNING: No data available from READ_METAR.'
 	 return
 c
 	 end
