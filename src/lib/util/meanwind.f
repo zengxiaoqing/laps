@@ -1,41 +1,90 @@
-cdis   
-cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
-cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-cdis    
-cdis    This software is distributed under the Open Source Definition,
-cdis    which may be found at http://www.opensource.org/osd.html.
-cdis    
-cdis    In particular, redistribution and use in source and binary forms,
-cdis    with or without modification, are permitted provided that the
-cdis    following conditions are met:
-cdis    
-cdis    - Redistributions of source code must retain this notice, this
-cdis    list of conditions and the following disclaimer.
-cdis    
-cdis    - Redistributions in binary form must provide access to this
-cdis    notice, this list of conditions and the following disclaimer, and
-cdis    the underlying source code.
-cdis    
-cdis    - All modifications to this software must be clearly documented,
-cdis    and are solely the responsibility of the agent making the
-cdis    modifications.
-cdis    
-cdis    - If significant modifications or enhancements are made to this
-cdis    software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis    
-cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-cdis   
-cdis
-cdis
-cdis   
-cdis
+
+        subroutine mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax  ! I
+     1                              ,heights_3d                     ! I
+     1                              ,umean,vmean                    ! O
+     1                              ,ustorm,vstorm,istatus)         ! O
+
+        logical ltest_vertical_grid
+
+        real*4 umean(imax,jmax),vmean(imax,jmax)                    ! O
+        real*4 ustorm(imax,jmax),vstorm(imax,jmax)                  ! O
+        real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)            ! I
+        real*4 heights_3d(imax,jmax,kmax)                           ! I
+
+        real*4 topo(imax,jmax)                                      ! I
+
+        real*4 sum(imax,jmax)                                       ! L
+        real*4 usum(imax,jmax)                                      ! L
+        real*4 vsum(imax,jmax)                                      ! L
+        integer*4 klow(imax,jmax)                                   ! L
+        integer*4 khigh(imax,jmax)                                  ! L
+
+        write(6,*)
+        write(6,*)' Calculating Mean Wind (BSM)'
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
+        do j = 1,jmax
+          do i = 1,imax
+!            Layer is 0-6 km AGL, denoted from "sfc" to "top"
+
+             klow(i,j) = nint(height_to_zcoord2(topo(i,j)      
+     1                       ,heights_3d,imax,jmax,kmax,i,j,istatus))
+             if(istatus .ne. 1)return
+
+             khigh(i,j) = nint(height_to_zcoord2(topo(i,j)+6000.
+     1                        ,heights_3d,imax,jmax,kmax,i,j,istatus))
+             if(istatus .ne. 1)return
+
+             sum(i,j) = 0.
+             usum(i,j) = 0.
+             vsum(i,j) = 0.
+
+          enddo ! j
+        enddo ! i
+
+        do j = 1,jmax
+          do i = 1,imax
+            do k = 1,khigh(i,j)
+              if(uanl(i,j,k) .ne. r_missing_data .and.
+     1           vanl(i,j,k) .ne. r_missing_data
+     1                        .and. k .ge. klow(i,j))then
+                sum(i,j) = sum(i,j) + 1.
+                usum(i,j) = usum(i,j) + uanl(i,j,k)
+                vsum(i,j) = vsum(i,j) + vanl(i,j,k)
+              endif
+            enddo ! k
+          enddo ! i
+        enddo ! j
+
+        do j = 1,jmax
+          do i = 1,imax
+
+C            COMPUTE STORM MOTION VECTOR (a la the RUC code)
+C            IT IS DEFINED AS 7.5 M/S TO THE RIGHT OF THE 0-6 KM MEAN
+C            WIND CONSTRAINED ALONG A LINE WHICH IS BOTH PERPENDICULAR
+C            TO THE 0-6 KM MEAN VERTICAL WIND SHEAR VECTOR AND PASSES
+C            THROUGH THE 0-6 KM MEAN WIND.  
+
+!            Mean wind through the layer
+             umean(i,j) = usum(i,j) / sum(i,j)
+             vmean(i,j) = vsum(i,j) / sum(i,j)
+
+!            Shear Vector through the layer
+             ushear = uanl(i,j,khigh(i,j)) - uanl(i,j,klow(i,j))
+             vshear = vanl(i,j,khigh(i,j)) - vanl(i,j,klow(i,j))
+
+             shearspeed = sqrt(ushear*ushear+vshear*vshear)
+
+             ustorm(i,j) = umean(i,j) + (7.5*vshear/shearspeed)
+             vstorm(i,j) = vmean(i,j) - (7.5*ushear/shearspeed)
+
+          enddo ! i
+        enddo ! j
+
+        return
+        end
 
         subroutine mean_wind(uanl,vanl,topo,imax,jmax,kmax
      1                                  ,umean,vmean
@@ -53,6 +102,9 @@ cdis
         real*4 usum(imax,jmax)                                    ! Local
         real*4 vsum(imax,jmax)                                    ! Local
         integer*4 klow(imax,jmax)                                 ! Local
+
+        write(6,*)
+        write(6,*)' Calculating Mean Wind (LSM)'
 
         if(ltest_vertical_grid('HEIGHT'))then
             khigh = nint(height_to_zcoord(5000.,istatus))
