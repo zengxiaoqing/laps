@@ -51,6 +51,7 @@ EXEDIRS = src/accum \
 
 DATADIRS = log/qc \
            static \
+           time \
            lapsprd/l1s \
            lapsprd/lc3 \
            lapsprd/lcb \

@@ -50,8 +50,9 @@ dnl Find path to csh  ***required by LAPS***
 dnl
 AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
-
-
+dnl FFLAGS=" "
+dnl OPTIMIZE="-O"
+dnl CFLAGS=" "
 if test "$arch" = "hpux" 
 then
   FFLAGS="+e +U77 +FPVZO -K" 
@@ -200,6 +201,7 @@ AC_OUTPUT(src/lib/Makefile
           etc/sched.pl
 	  etc/laps_localization.pl
           etc/install_lvd.csh
+          etc/install_vrc.csh
           etc/update_nav_file.csh)
 
 
