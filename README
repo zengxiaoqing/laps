@@ -82,7 +82,7 @@
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
          3.3.6 ..................  DERIV
          3.3.7 ..................  ACCUM 
-         3.3.8 ..................  BALANCE
+         3.3.9 ..................  BALANCE
          3.4 ..............  Model Initialization
          3.4.1 ..................  DPREP
          3.4.2 ..................  LAPSPREP
@@ -2909,7 +2909,31 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
            Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
 
------- 3.3.8 ---------------------BALANCE--------------------------------------
+------ 3.3.8 ---------------------SOIL MOISTURE------------------------------
+
+Process: lsm5.exe - Soil Moisture
+
+Author: John Smart (smart@fsl.noaa.gov)
+
+	LAPS soil moisture and snow cover
+<pre>
+Inputs: 
+      * lsx	     grid	LAPS surface data grids
+        l1s	     grid	LAPS surface precipitation
+        lcv          grid       LAPS satellite derived snow cover
+
+Outputs:
+	LM1/LM2      2d grids   Soil moisture and snow cover
+
+</pre>
+
+This program is in the early stages of development and provides a three
+layer analysis of soil conditions. A snow cover analysis is included.
+More documentation can be found within the source code.
+
+Source directory: laps/src/soil
+
+------ 3.3.9 ---------------------BALANCE------------------------------------
 
 Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
      (author: John McGinley/John Smart/John Snook - smart@fsl.noaa.gov)
