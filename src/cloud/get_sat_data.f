@@ -42,6 +42,7 @@ c
         subroutine get_sat_data(i4time,
      1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  imax,jmax,r_missing_data,                                        ! I
+     1  l_use_39,                                                        ! I
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
      1  sst_k,istat_sst,comment_sst,                                     ! O
@@ -54,12 +55,18 @@ c
         real*4 cldtop_co2_pa_a(imax,jmax)
         real*4 cloud_frac_co2_a(imax,jmax)
 
+        logical l_use_39
+
+!       Local
+        real*4 pct_pa(imax,jmax)
+        real*4 lca(imax,jmax)
+
         character*3 lvd_ext
         data lvd_ext /'lvd'/
 
         character*31 ext
         character var*3,units*10
-        character*125 comment_s8a,comment_s3a,comment_sst
+        character*125 comment_s8a,comment_s3a,comment_sst,comment
 
         write(6,*)' Subroutine get_sat_data...'
 
@@ -107,34 +114,86 @@ c
             write(6,*)' Note: cannot read sst_k'
         endif
 
-        write(6,*)' Getting 3.9 micron satellite data from LVD file'
-        ext = lvd_ext
-        var = 'S3A'
-        ilevel = 0
-        call get_laps_2dvar(i4time_s8a,0       
-     1                     ,i4time_nearest,EXT,var,units
-     1                     ,comment_s3a,imax,jmax,s3a_k,ilevel
-     1                     ,istat_s3a)
-        if(istat_s3a .ne. 1)then
-            write(6,*)' No S3A data available'
+        if(l_use_39)then
+            write(6,*)' Getting 3.9 micron satellite data from LVD file'
+            ext = lvd_ext
+            var = 'S3A'
+            ilevel = 0
+            call get_laps_2dvar(i4time_s8a,0       
+     1                         ,i4time_nearest,EXT,var,units
+     1                         ,comment_s3a,imax,jmax,s3a_k,ilevel
+     1                         ,istat_s3a)
+            if(istat_s3a .ne. 1)then
+                write(6,*)' No S3A data available'
+                s3a_k = r_missing_data
+            endif
+
+        else
+            write(6,*)' Namelist flag set for not using 3.9u (S3A) data'
+            istat_s3a = 0
+            s3a_k = r_missing_data
+
         endif
 
 !       Obtain NESDIS Cloud-top pressure
+        i4_co2_window = 4000
+
         write(6,*)' Getting NESDIS Cloud-top pressure'
         ext = 'ctp'
-        var = 'CTP'
+        var = 'PCT'
         ilevel = 0
-!       call get_laps_2dgrid(i4time,3600,i4time_nearest,EXT,var
-!    1                ,units,comment_ctp,imax,jmax,sst_k,ilevel
-!    1                ,istat_co2)       
-        istat_co2 = 0
-        if(istat_co2 .ne. 1)then
-            write(6,*)' Note: cannot yet read co2 cloud top'
+        call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest,EXT,var       
+     1                      ,units,comment,imax,jmax,pct_pa,ilevel
+     1                      ,istat_pct)       
+        if(abs(istat_pct) .ne. 1)then
+            write(6,*)' Note: cannot read NESDIS Cloud-top pressure'
         endif
 
 !       Obtain NESDIS Cloud-fraction
+        write(6,*)' Getting NESDIS Cloud-fraction'
+        ext = 'ctp'
+        var = 'LCA'
+        ilevel = 0
+        call get_laps_2dgrid(i4time,i4_co2_window,i4time_nearest,EXT,var
+     1                      ,units,comment,imax,jmax,lca,ilevel
+     1                      ,istat_lca)       
+        if(abs(istat_lca) .ne. 1)then
+            write(6,*)' Note: cannot read NESDIS Cloud-fraction'
+        endif
 
 !       Calculate CO2-Slicing Cloud-top pressure
+
+        cloud_frac_co2_a = r_missing_data
+        cldtop_co2_pa_a  = r_missing_data
+        icount = 0
+
+        if(abs(istat_pct) .eq. 1 .and. abs(istat_lca) .eq. 1)then
+            write(6,*)' Extracting CO2-Slicing info from NESDIS data'
+            do j = 1,jmax
+            do i = 1,imax
+!               Test for partial cloudiness
+                if(lca(i,j) .gt. 0. .and. lca(i,j) .lt. 1.0)then ! use co2 data
+                    if(pct_pa(i,j) .lt. 100000.)then
+                        icount = icount + 1
+                        cloud_frac_co2_a(i,j) = lca(i,j)
+                        cldtop_co2_pa_a(i,j) = pct_pa(i,j) 
+                    endif
+                endif
+            enddo ! i
+            enddo ! j
+
+            istat_co2 = 0 ! for now
+        else
+            istat_co2 = 0
+        endif
+
+        write(6,*)' Number of valid CO2-Slicing data points = ',icount
+
+        percent_co2_pot = float(icount) / float(imax*jmax) * 100.
+
+        write(6,101)percent_co2_pot
+101     format(' CO2-Slicing data potentially used over ',f6.2
+     1        ,'% of domain')
 
         return
         end
