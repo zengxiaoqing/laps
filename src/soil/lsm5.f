@@ -38,10 +38,10 @@ cdis
        
       Call get_laps_config('nest7grid',IStatus)
       if(istatus.eq.1)then
-        write(*,*)'LAPS Parameters obtained'
+        write(6,*)'LAPS Parameters obtained'
       else
-        write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-        write(*,*)'Terminating LAPS-LSM5. Soil Moisture'
+        write(6,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
+        write(6,*)'Terminating LAPS-LSM5. Soil Moisture'
         stop
       end if
       call lsm5_sub(NX_L_CMN,NY_L_CMN)
@@ -151,10 +151,9 @@ c
       close(11)
 c -------------------------
 c open log file
+c removed internal logfile output: 10-2-97 J. Smart.
+c logfile is now redirected to lsm5.log.
 c
-      call get_directory('log',fname,len)
-      open(6,file=fname(1:len)//'lsm.log.'//ftime_smcur(6:9),
-     1       status='unknown',err=998)      
       write(6,*)'file time: ',ftime_smcur,' i4time: ',i4time_smcur
 C**** Read soil description and simulation time step 
 
