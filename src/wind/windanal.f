@@ -186,7 +186,7 @@ csms$serial end
 
       do iter = 1,n_iter_wind
 
-csms$serial(<wt_p_spread, obs_barnes, ncnt_total,      
+csms$serial(<wt_p_spread, varobs_diff_spread, 
 csms$>       rms_thresh , out>:default=ignore)  begin
       if(.true.)then ! Experimental
           if(iter .ge. 2)then
@@ -484,14 +484,14 @@ csms$>       rms_thresh , out>:default=ignore)  begin
       call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$serial end
+
       call arrays_to_barnesobs      (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
-
-csms$serial end
 
       call barnes_multivariate(varbuff                                ! O
      1        ,n_var,ncnt_total,obs_barnes                            ! I
@@ -573,7 +573,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 2 processor=',me
 
-csms$serial(<wt_p_spread , 
+csms$serial(<wt_p_spread , varobs_diff_spread,  
 csms$>       icount_radar_total, out>:default=ignore)  begin
 
           mode = 1 ! All radar obs (in this case single Doppler)
@@ -608,8 +608,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 3 processor=',me
 
-csms$serial(<obs_barnes , ncnt_total, 
-csms$>                    rms_thresh, out>:default=ignore)  begin              
+csms$serial(<rms_thresh, out>:default=ignore)  begin              
               I4_elapsed = ishow_timer()
 
               write(6,*)' Calling barnes with single radar obs added'       
@@ -620,14 +619,14 @@ csms$>                    rms_thresh, out>:default=ignore)  begin
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$serial end
+
               call arrays_to_barnesobs(imax,jmax,kmax                 ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
-
-csms$serial end
 
               call barnes_multivariate(varbuff                           ! O
      1           ,n_var,ncnt_total,obs_barnes                            ! I
@@ -659,7 +658,8 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 5 processor=',me
 
-csms$serial(<wt_p_spread, icount_radar_total, out>:default=ignore) begin       
+csms$serial(<wt_p_spread, varobs_diff_spread, icount_radar_total, 
+csms$>                    out>:default=ignore) begin       
 
           mode = 2 ! Only multi-Doppler obs
 
@@ -693,8 +693,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 6 processor=',me
 
-csms$serial(<obs_barnes , ncnt_total, 
-csms$>                    rms_thresh, out>:default=ignore)  begin              
+csms$serial(<rms_thresh, out>:default=ignore)  begin              
 
               I4_elapsed = ishow_timer()
 
@@ -708,14 +707,14 @@ csms$>                    rms_thresh, out>:default=ignore)  begin
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$serial end
+
               call arrays_to_barnesobs(imax,jmax,kmax                   ! I
      1                                ,r_missing_data                   ! I
      1                                ,varobs_diff_spread,wt_p_spread   ! I
      1                                ,n_var,max_obs,obs_barnes         ! I/O
      1                                ,ncnt_total,weight_total          ! O
      1                                ,istatus)                         ! O
-
-csms$serial end
 
               call barnes_multivariate(varbuff                          ! O
      1          ,n_var,ncnt_total                                       ! I
@@ -743,7 +742,7 @@ csms$serial end
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 8 processor=',me
 
-csms$serial(<wt_p_spread , obs_barnes, ncnt_total, rms_thresh, out>
+csms$serial(<wt_p_spread , varobs_diff_spread, rms_thresh, out>
 csms$>                                     :default=ignore)  begin
 
 !         Make sure each level of uanl and vanl is initialized in the event it
@@ -802,18 +801,18 @@ csms$>                                     :default=ignore)  begin
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 9 processor=',me
+csms$serial end
+csms$insert      call nnt_me(me)
+csms$insert      print *, 'got to 10 processor=',me
+
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
-
-csms$insert      call nnt_me(me)
-csms$insert      print *, 'got to 9 processor=',me
-csms$serial end
-csms$insert      call nnt_me(me)
-csms$insert      print *, 'got to 10 processor=',me
 
           call barnes_multivariate(varbuff                            ! O
      1       ,n_var,ncnt_total,obs_barnes                             ! I
@@ -1484,13 +1483,13 @@ csms$ignore end
 
       include 'windparms.inc'
 
-      real*4 uobs_in(imax,jmax,kmax)
-      real*4 uobs_out(imax,jmax,kmax)
-      real*4 vobs_in(imax,jmax,kmax)
-      real*4 vobs_out(imax,jmax,kmax)
-      real*4 wt_p(imax,jmax,kmax)                      ! Input
-      real*4 weights(imax,jmax,kmax)                   ! Output (spread)
-      real*4 pres_3d(imax,jmax,kmax)                   ! Input
+      real*4 uobs_in(imax,jmax,kmax)                   ! I
+      real*4 uobs_out(imax,jmax,kmax)                  ! O
+      real*4 vobs_in(imax,jmax,kmax)                   ! I
+      real*4 vobs_out(imax,jmax,kmax)                  ! O
+      real*4 wt_p(imax,jmax,kmax)                      ! I
+      real*4 weights(imax,jmax,kmax)                   ! O (spread)
+      real*4 pres_3d(imax,jmax,kmax)                   ! I
 
       integer*4 vert_rad_pirep
       integer*4 vert_rad_sfc
