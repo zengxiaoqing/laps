@@ -1377,7 +1377,8 @@ C   COMPUTE DEW POINT DEPRESSION.
                   tcij_c = (tc(i,j)-32.)/1.8
                   tdij_c = (td(i,j)-32.)/1.8
                   t500laps_c = t500laps(i,j) - 273.15
-                  li(i,j) = func_li(TCij_c,TDij_c,PR(i,j),t500laps_c)
+                  li(i,j) = func_li(TCij_c,TDij_c,PR(i,j),t500laps_c
+     1                             ,r_missing_data)
               else
                   li(i,j) = r_missing_data
               endif
@@ -1388,26 +1389,40 @@ C   COMPUTE DEW POINT DEPRESSION.
 999   return
       end
 
-        function func_li(t_c,td_c,psta_mb,t500_c)
+        function func_li(t_c,td_c,psta_mb,t500_c,r_missing_data)
 
         real*4 li
 
         td_in = min(td_c,t_c)
 
         thetae = THAE(t_c,td_in,psta_mb)
-        t500_parcel = t500(thetae)
-        func_li = t500_c - t500_parcel
+
+!       t500_parcel = t500(thetae)
+        call thetae_to_t500(thetae,t500_parcel,istatus)
+
+        if(istatus .eq. 1)then
+            func_li = t500_c - t500_parcel
+
+        else
+            write(6,1,err=2)psta_mb,t_c,td_c
+1           format(' WARNING: setting li to missing - p,t,td= ',3f10.0)       
+2           func_li = r_missing_data
+
+        endif
 
         return
         end
 
 
-        function t500(thetae)
+!       function t500(thetae)
+        subroutine thetae_to_t500(thetae,t500,istatus)
 
         real diff(10)
 C
 C CALCULATE LI
         ITER=1
+        ITERC1=1
+        ITERC2=1
 
 C ESTIMATE PARCEL TEMP AT 500MB
         T500NW=THETAE-(307.260+72.122*EXP((THETAE-382.635)*.0141672))
@@ -1428,6 +1443,14 @@ C DETERMINE LATENT HEAT RELEASED ABOVE 500MB
 !       1   ITER,iok,jok,XOK,YOK,IUS,JUS,XUS,YUS,T500NW,T500OL,FUDGE,RATIO
 !666        FORMAT(I1,2I3,F6.2,F4.1,2I3,2F7.3,2X,4F10.5)
             ITERC1=ITERC1+1
+
+            if(ITERC1 .gt. 1000)then
+                write(6,*)
+     1               ' WARNING in thetae_to_t500, too many iterations, '       
+     1              ,' thetae = ',thetae
+                istatus = 0
+                return
+            endif
 
 C TEST FOR CONVERGENCE
             DIFF(ITER)=T500NW-T500OL
@@ -1454,6 +1477,8 @@ C USE AITKEN'S FORMULA TO ACCELERATE CONVERGENCE
         ENDIF
 
 900     t500 = t500nw
+
+        istatus = 1
         return
         end
 
