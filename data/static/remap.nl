@@ -1,8 +1,28 @@
  &remap_nl
- n_radars_remap=1,
- path_to_vrc_nl='lapsprd',
- path_to_radar_a='/data/fxa/laps/lapsprd/rdr/001/raw',
- laps_radar_ext_a='vrc',
+ n_radars_remap=3,
+ path_to_vrc_nl='rdr',
+ path_to_radar_a=
+'/public/data/radar/wsr88d/wideband/kftg/netcdf',
+'/public/data/radar/wsr88d/wideband/kftg/netcdf',
+'/data/fxa/laps/lapsprd/rdr/001/raw',
+'',
+'',
+'',
+'',
+'',
+'',
+'',
+ laps_radar_ext_a=
+'v02',
+'vrc',
+'vrc',
+'',
+'',
+'',
+'',
+'',
+'',
+'',
  /
 
 c
@@ -16,7 +36,7 @@ c                      also the number of array elements for each subsequent
 c                      parameter.
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of radar
-c                      tilts. Max of 10 elements.
+c                      tilts. Max of 10 elements. 
 c
 c 'path_to_vrc_nl'   - Path used if we have 'vrc' output. Can be either 'rdr' 
 c                      or 'lapsprd'. If we're using the mosaicing program 

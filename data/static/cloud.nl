@@ -1,5 +1,5 @@
  &cloud_nl
- l_use_vis=.false.,
+ l_use_vis=.true.,
  l_use_39=.false.,
  pct_req_lvd_s8a=0.,
  i4_sat_window=970,
