@@ -485,16 +485,15 @@ c
          comment_vrz='Radar mosaic. Type = '//c_mosaic_type//' '
      1               //cradars
 
-         if(.false.)then ! write radar info into comments
-             call get_directory(ext,directory,len_dir)
-             write(6,11)directory,ext_vrz,var_vrz
+         if(.true.)then ! write radar info into comments
+             call get_directory(ext_vrz,path,len_dir)
+             write(6,11)path,ext_vrz,var_vrz
 11           format(' Writing 3d ',a50,1x,a5,1x,a3)
 
-             do k = 1,nk
+             do k = 1,nz_l
                  units_3d(k) = units_vrz
-                 lvl_3d(k) = k ! ???
+                 lvl_3d(k) = nint(zcoord_of_level(k))/100
                  lvl_coord_3d(k) = 'HPA'
-
                  var_3d(k) = var_vrz
              enddo ! k
 
@@ -522,7 +521,7 @@ c
 
              enddo ! i
 
-             CALL WRITE_LAPS_DATA(i4time_data,DIRECTORY,ext_vrz,
+             CALL WRITE_LAPS_DATA(i4time_data,path,ext_vrz,
      1                            nx_l,ny_l,nz_l,nz_l,
      1                            VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
      1                            COMMENT_3D,grid_mosaic_3dref,ISTATUS)       
