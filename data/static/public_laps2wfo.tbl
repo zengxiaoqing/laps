@@ -20,7 +20,7 @@ lsx  fwx   z  fd       levels_1   SFC 0
 lsx  mrc   z  mcon     levels_1   SFC 0
 lsx  tha   z  pta      levels_1   SFC 0
 lsx  css   z  cssi     levels_1   SFC 0
-lt1  z     z  gh       levels_21  MB  0
+lt1  ht    z  gh       levels_21  MB  0
 lt1  t3    z  t        levels_22  MB  0
 lh3  rh3   z  rh       levels_22  MB  0
 lw3  u3    z  uw       levels_22  MB  0
