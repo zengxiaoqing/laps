@@ -101,13 +101,13 @@ cdis
         end
 
  
-       subroutine get_cloud_parms(l_use_vis,l_use_39,l_use_co2
+       subroutine get_cloud_parms(l_use_vis,l_use_39,latency_co2
      1                           ,pct_req_lvd_s8a
      1                           ,i4_sat_window,i4_sat_window_offset
      1                           ,istatus)
 
-       logical l_use_vis,l_use_39,l_use_co2
-       namelist /cloud_nl/ l_use_vis, l_use_39, l_use_co2
+       logical l_use_vis,l_use_39 
+       namelist /cloud_nl/ l_use_vis, l_use_39, latency_co2
      1                    ,pct_req_lvd_s8a
      1                    ,i4_sat_window,i4_sat_window_offset
  
