@@ -259,7 +259,7 @@ C       string          char       I       string
         implicit none
 
         character*(*)   string
-        integer*4       s_length, i, len_str, aval
+        integer*4       i, len_str, aval
         logical         space
 
         space = .false.

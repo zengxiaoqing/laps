@@ -40,7 +40,6 @@ cc        character*500   string
 
         integer*4       nchar,
 !       1               lnblnk,
-     1          l,
      1          len,
      1          chr,
      1          i

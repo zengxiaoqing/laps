@@ -84,7 +84,6 @@ C
      1          i_reftime,              !UNIX time of data
      1          i_valtime,              !UNIX time of data
      1          flag,                   !Print flag (1 = off)
-     1          i,j,k,kk,
      1          error(3),
      1          called_from,
      1          var_len,

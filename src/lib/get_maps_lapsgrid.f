@@ -50,25 +50,21 @@ cdis
 !       Jan 1996               - Now will handle 9 or 13 character versions
 !                                of lga filenames
 !       Feb 1997               - Added entry get_modelfg_3d.
+!       Oct 1998 Linda Wharton - removed variables never used: a9_filename,
+!                                ext_f, field_3d_maps, l_fill, field_3d_maps_1,
+!                                field_3d_maps_2
 !
-!       These three fields are no longer used and scheduled for removal
-!
-        real*4 field_3d_maps(1)     ! Local Dummy array
-        real*4 field_3d_maps_1(1)   ! Local Dummy array
-        real*4 field_3d_maps_2(1)   ! Local Dummy array
 
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
-        logical l_fill                             ! Input (use .true.)
-
         character*3 var_2d
-        character*9 a9_time, a9_filename
+        character*9 a9_time
         character*13 a_filename
 
         character*125 comment_2d
         character*10 units_2d
 
-        character*31 ext,ext_a,ext_f
+        character*31 ext,ext_a
         character*150  directory
         character*255 c_filespec
 

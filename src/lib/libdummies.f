@@ -94,7 +94,8 @@ C
 C==========================================
 C
         subroutine LIB$SHOW_TIMER(my_show_timer)
-        integer*4 istatus
+!	Linda Wharton 26 Oct 1998 commented declaration of istatus never used
+C       integer*4 istatus
 C
         write(6,10)
 10      format('Called Lib$show_Timer')

@@ -38,6 +38,7 @@ cdis
 !       Steve Albers            1991     (b_cldcv now is an input with adj dim)
 !       Steve Albers     30 Oct 1991     cld_pres now has adjustable dims
 !       Steve Albers      6 Nov 1991     ext is passed in
+!	Linda Wharton    26 Oct 1998	 removed units_2d and comment_2d var not used
 
 !       This is a newer version of 'get_clouds_3d' that reads the heights and
 !       approximate Pressures directly from the cloud grid
@@ -80,8 +81,8 @@ cdis
         character*150 directory
 
 !       Stuff for readlapsdata
-        character*125 comment_3d(KCLOUD),comment_2d
-        character*10 units_3d(KCLOUD),units_2d
+        character*125 comment_3d(KCLOUD)
+        character*10 units_3d(KCLOUD)
 
         character*3 var_3d(KCLOUD),var_2d
         data var_2d/'LC3'/
