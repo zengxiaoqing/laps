@@ -141,7 +141,7 @@ cdis
         character*4 var_2d, var_2d_in
         character*150  directory
         character*31  ext
-        character*10  units_2d
+        character*20  units_2d
         character*4   LVL_COORD_2D
         character*125 comment_2d
         character*9 comment_a,comment_b
@@ -281,7 +281,6 @@ c       include 'satellite_dims_lvd.inc'
         icen = NX_L/2+1
         jcen = NY_L/2+1
 
-!       c_vnt_units = 'FT-KT' ! pass in from namelist later on
         c_vnt_units = namelist_parms%c_vnt_units
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
@@ -1333,6 +1332,8 @@ c       include 'satellite_dims_lvd.inc'
             else ! default value
                 scale = 1.
             endif
+
+            colortable = 'spectral'
             
             if(var_2d(1:3) .eq. 'PTP')then
                 clow = 500.
@@ -1343,18 +1344,20 @@ c       include 'satellite_dims_lvd.inc'
                 chigh = 2400.
                 cint = 0.
             elseif(var_2d(1:3) .eq. 'VNT')then
-                if(c_vnt_units .eq. 'FT-KT')then
-                    clow = 30000.
-                    scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
-                                                    ! FT-KT (inverse)
+                if(c_vnt_units .eq. 'KT-FT')then
+                    clow = 150.
+                    scale = 1000. / (ft_per_m / mspkt) ! Convert from M**2/S 
+                                                       ! to FT-KT (inverse)
+                    units_2d = 'KT-FT [x1000]'
                 else
                     clow = 5000.
+                    units_2d = c_vnt_units
                 endif
 
                 chigh = 0.
                 cint = 0.
 
-                units_2d = c_vnt_units
+                colortable = 'vnt'
 
             elseif(var_2d(1:2) .eq. 'HA')then
                 clow = 2.
@@ -1370,13 +1373,13 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 0.
             endif
 
-            c33_label = comment_2d(1:26)//' '//units_2d(1:6)
+            c_label = comment_2d(1:26)//' '//units_2d
 
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,namelist_parms
-     1                        ,clow,chigh,cint,c33_label
+     1                        ,clow,chigh,cint,c_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'spectral')
+     1                        ,NX_L,NY_L,r_missing_data,colortable)
 
         elseif(c_type .eq. 'lv'.or.c_type .eq. 'lr' )then
 
@@ -4146,10 +4149,10 @@ c                   cint = -1.
                 units_2d = 'cm'
 
             elseif(var_2d .eq. 'VNT')then 
-                if(c_vnt_units .eq. 'FT-KT')then
-                    scale = 1. / (ft_per_m / mspkt) ! Convert from M**2/S to 
-                                                    ! FT-KT (inverse)
-                    units_2d = 'FT-KT'
+                if(c_vnt_units .eq. 'KT-FT')then
+                    scale = 1000. / (ft_per_m / mspkt) ! Convert from M**2/S 
+                                                       ! to KT-FT (inverse)
+                    units_2d = 'KT-FT [x1000]'
                 endif
 
             elseif(units_2d(1:4) .eq. 'NONE')then
@@ -4245,12 +4248,12 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,0.,5.5
      1                         ,'tpw',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'VNT')then
-                    if(c_vnt_units .eq. 'FT-KT')then
-                        call ccpfil(field_2d,NX_L,NY_L,30000.,0.
-     1                             ,'spectral',n_image,scale,'hsect') 
+                    if(c_vnt_units .eq. 'KT-FT')then
+                        call ccpfil(field_2d,NX_L,NY_L,150.,0.
+     1                             ,'vnt',n_image,scale,'hsect') 
                     else
                         call ccpfil(field_2d,NX_L,NY_L,5000.,0.
-     1                             ,'spectral',n_image,scale,'hsect') 
+     1                             ,'vnt',n_image,scale,'hsect') 
                     endif
                 elseif(var_2d(1:2) .eq. 'HA')then
                     call ccpfil(field_2d,NX_L,NY_L,2.,6.
