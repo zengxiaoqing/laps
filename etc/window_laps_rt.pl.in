@@ -48,7 +48,17 @@ $LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT} && !defined $LAPS_S
 $LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $LAPSINSTALLROOT);
 $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT} && !defined $LAPS_DATA_ROOT);
 
+if( !-d $LAPS_SRC_ROOT){
+    print "LAPS SRC ROOT does not exist. $LAPS_SRC_ROOT. Exiting.\n";
+    exit;
+}
+
 $LAPSINSTALLROOT=$LAPS_SRC_ROOT if(! defined($LAPSINSTALLROOT));
+
+if( !-d $LAPSINSTALLROOT){
+    print "LAPS INSTALL ROOT does not exist. $LAPSINSTALLROOT. Exiting.\n";
+    exit;
+}
 
 my $all_roots_equal = "F";
 if(! defined($LAPS_DATA_ROOT) ){$LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data";
