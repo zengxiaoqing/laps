@@ -1282,6 +1282,10 @@ c       include 'satellite_dims_lvd.inc'
                 clow = 0.
                 chigh = 2400.
                 cint = 0.
+            elseif(var_2d(1:3) .eq. 'VNT')then
+                clow = 5000.
+                chigh = 0.
+                cint = 0.
             elseif(var_2d(1:3) .eq. 'HAM')then
                 clow = 2.
                 chigh = 6.
