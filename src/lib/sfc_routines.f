@@ -237,3 +237,37 @@ c
 c
       return
       end
+
+        subroutine get_sfc_obtime(int_obtime,i4time_lso
+     1                           ,i4time_ob,istatus)
+
+        character*9 a9time
+
+        call make_fnam_lp(i4time_lso,a9time,istatus)
+        if(istatus .ne. 1)go to 900
+
+        write(a9time(6:9),1,err=900)int_obtime
+ 1      format(i4.4)
+        
+        call i4time_fname_lp(a9time,i4time_ob,istatus)
+        if(istatus .ne. 1)return
+
+        if(i4time_ob .lt. (i4time_lso - 43200))then
+            i4time_ob = i4time_ob + 86400
+        elseif(i4time_ob .gt. (i4time_lso + 43200))then
+            i4time_ob = i4time_ob - 86400
+        endif            
+
+        if(abs(i4time_ob-i4time_lso) .gt. 43200)then
+            go to 900
+        endif
+
+        istatus = 1
+        return
+
+ 900    write(6,*)' Error in get_sfc_obtime, unresolved ob time'
+        i4time_ob = i4time_lso
+        istatus = 0
+        return
+
+        end
