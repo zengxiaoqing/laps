@@ -804,7 +804,8 @@ c ===========================================================================
 c
       subroutine latlon_2_mcij(n,rlat,rlon,ri,rj)
 
-      implicit none
+cc     implicit none
+      include 'trigd.inc'
 
       integer n,i
       real*4 rlat(n),rlon(n),ri(n),rj(n)
