@@ -952,14 +952,21 @@ c        end
       return
       end
 
-      subroutine get_background_info(len,bgpaths,bgmodels)
+      subroutine get_background_info(len,bgpaths,bgmodels
+     +     ,oldest_forecast,use_analysis)
       integer maxbgmodels,len
       parameter (maxbgmodels=4)
       character*150 nest7grid
       character*150 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
-      namelist /background_nl/bgpaths,bgmodels
+      integer oldest_forecast
+      logical use_analysis
+      namelist /background_nl/bgpaths,bgmodels,oldest_forecast
+     +         ,use_analysis   
 
+
+      oldest_forecast=18
+      use_analysis=.false.
       call get_directory('nest7grid',nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
