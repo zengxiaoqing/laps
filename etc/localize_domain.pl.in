@@ -469,44 +469,79 @@ sub wfo_localization{
         splice(@template,$i,1);
       }
 
+# ISAT = 'goes08, metsat, goes10, gmssat, goes12, goes09
 
       open(OUTFILE,">$template") or die "$0: Can't open $template to write";
-      
+
       foreach (@template)
       {
-	  $_ =~ s/\$FXA_DATA/$FXA_DATA/g;
-	  if(/standard_latitude\s*=/i){
-	      print OUTFILE " standard_latitude=$lat,\n";
-	  }elsif(/standard_longitude\s*=/i){
-	      print OUTFILE " standard_longitude=$lon,\n";
-	  }elsif(/grid_cen_lat_cmn\s*=/i){
-	      print OUTFILE " grid_cen_lat_cmn=$lat,\n";
-	  }elsif(/grid_cen_lon_cmn\s*=/i){
-	      print OUTFILE " grid_cen_lon_cmn=$lon,\n";
-	  }elsif(/\sISATS\s*=/i){
-	      if($goes==8){
-		  print OUTFILE " ISATS = 1,0,0,0,\n";
-	      }else{
-		  print OUTFILE " ISATS = 0,0,1,0,\n";
-	      }
-	      
-          }elsif(/\sgoes_switch\s*=/i){
-	      print OUTFILE " goes_switch = $goes,\n";
-	  }elsif(/\sITYPES\s*=/i){
-	      if($goes==8){
-		  print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,\n";
-	      }else{
-		  print OUTFILE " ITYPES = 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,\n";
-	      }
+          $_ =~ s/\$FXA_DATA/$FXA_DATA/g;
+          if(/standard_latitude\s*=/i){
+              print OUTFILE " standard_latitude=$lat,\n";
+          }elsif(/standard_longitude\s*=/i){
+              print OUTFILE " standard_longitude=$lon,\n";
+          }elsif(/grid_cen_lat_cmn\s*=/i){
+              print OUTFILE " grid_cen_lat_cmn=$lat,\n";
+          }elsif(/grid_cen_lon_cmn\s*=/i){
+              print OUTFILE " grid_cen_lon_cmn=$lon,\n";
+          }elsif(/\sISATS\s*=/i){
+              if($goes==8){
+                  print OUTFILE " ISATS = 1,0,0,0,0,0\n";
+              }else{
+                  print OUTFILE " ISATS = 0,0,1,0,0,0\n";
+              }
 
-	  }else{
-	      print OUTFILE $_;
-	  }
+          }elsif(/\sgoes_switch\s*=/i){
+              print OUTFILE " goes_switch = $goes,\n";
+          }elsif(/\sITYPES\s*=/i){
+              if($goes==8){
+                  print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n";
+              }else{
+                  print OUTFILE " ITYPES = 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n";
+              }
+
+          }else{
+              print OUTFILE $_;
+          }
       }
-      close(OUTFILE); 
+      close(OUTFILE);
   }
 
   $goes = "g".$goes;
+
+# setup background.nl based on site location
+
+  my $old_nl;
+  my $new_nl;
+  my $command;
+
+# Revert to CONUS if file background.nl.CONUS exists (this assumes localization is CONUS)
+  if (-s "$DATA_ROOT/static/background.nl.CONUS") {
+    $old_nl = "$DATA_ROOT/static/background.nl.CONUS";
+    $new_nl = "$DATA_ROOT/static/background.nl";
+    $command = "cp $old_nl $new_nl";
+    run_sys::run_sys($command);
+  }
+
+# OCONUS namelist setup
+# Check for Alaska ingest sites AJK, AFG, AFC, ACR (rfc)
+# copy background.nl.AK to background.nl
+
+  if (($site eq "AJK") || ($site eq "AFG") ||
+      ($site eq "AFC") || ($site eq "ACR")) {
+    if (!-s "$DATA_ROOT/static/background.nl.CONUS") {
+      # preserve background.nl if it exists as background.nl.CONUS
+      $old_nl = "$DATA_ROOT/static/background.nl";
+      $new_nl = "$DATA_ROOT/static/background.nl.CONUS";
+      $command = "cp $old_nl $new_nl";
+      run_sys::run_sys($command);
+    }
+
+    $old_nl = "$DATA_ROOT/static/background.nl.AK";
+    $new_nl = "$DATA_ROOT/static/background.nl";
+    $command = "cp $old_nl $new_nl";
+    run_sys::run_sys($command);
+  }
 
 }
 
