@@ -62,6 +62,8 @@ c     write(lun,64)iflag_lvd_common
       write(lun,62)((itypes(i,j),i=1,maxtype),j=1,maxsat)
       write(lun,63)(((ichannels(i,j,k),i=1,maxchannel),j=1,maxtype),
      &k=1,maxsat)
+      write(lun,68)((vis_cnt_range_in(i,j),i=1,2),j=1,maxsat)
+      write(lun,69)((vis_cnt_range_out(i,j),i=1,2),j=1,maxsat)
       write(lun,2,err=950)i_delta_sat_t_sec
       write(lun,3,err=950)((i_msng_sat_flag(i,j),i=1,maxtype),
      &j=1,maxsat)
@@ -158,23 +160,25 @@ c    &j=1,maxsat)
       write(lun,59,err=950)
 
 
-1     format(1x,'PATH_TO_RAW_SAT=',5("'",a,"',",/))   !channel x type x sat
-61    format(1x,'ISATS=',4(i1,","))
-62    format(1x,'ITYPES=',4(i1,","),1x)
-63    format(1x,'ICHANNELS=',5(i1,","),1x)
-64    format(1x,'IFLAG_LVD_COMMON= ',i1,",")
-65    format(1x,'L_CELL_AFWA= ',a,",")
-66    format(1x,'L_NATIONAL= ',a,",")
-67    format(1x,'ISKIP_BILIN= ',i1,",")
-2     format(1x,'I_DELTA_SAT_T_SEC=',i6,",")
-3     format(1x,'I_MSNG_SAT_FLAG=',4(i4,","))
-5     format(1x,'SAT_RANGE_M=',4(1x,f11.2,','))       !maxsat = 4
+1     format(1x,'PATH_TO_RAW_SAT=',6("'",a,"',",/))   !channel x type x sat
+61    format(1x,'ISATS=',6(i1,','))
+62    format(1x,'ITYPES=',4(i1,','),1x)
+63    format(1x,'ICHANNELS=',6(i1,','),1x)
+64    format(1x,'IFLAG_LVD_COMMON= ',i1,',')
+65    format(1x,'L_CELL_AFWA= ',a,',')
+66    format(1x,'L_NATIONAL= ',a,',')
+67    format(1x,'ISKIP_BILIN= ',i1,',')
+68    format(1x,'VIS_CNT_RANGE_IN= ',2(f6.2,','))
+69    format(1x,'VIS_CNT_RANGE_OUT= ',2(f6.2,','))
+2     format(1x,'I_DELTA_SAT_T_SEC=',i6,',')
+3     format(1x,'I_MSNG_SAT_FLAG=',4(i4,','))
+5     format(1x,'SAT_RANGE_M=',6(1x,f11.2,','))       !maxsat = 6
 7     format(1x,'N_IMAGES=',i2,',')
-8     format(1x,'C_SAT_ID=',4("'",a,"',"))            !maxsat = 4
-9     format(1x,'C_SAT_TYPES=',4("'",a,"',"))
-10    format(1x,'C_CHANNEL_TYPES=',5("'",a,"',"))     !channel x type x sat
-11    format(1x,'R_SAT_SUB_LAT=',4(f10.5,","))        !all the rest are maxtype
-12    format(1x,'R_SAT_SUB_LON=',4(f10.5,","))
+8     format(1x,'C_SAT_ID=',6("'",a,"',"))            !maxsat = 6
+9     format(1x,'C_SAT_TYPES=',6("'",a,"',"))
+10    format(1x,'C_CHANNEL_TYPES=',4("'",a,"',"))     !channel x type x sat
+11    format(1x,'R_SAT_SUB_LAT=',6(f10.5,','))        !all the rest are maxtype
+12    format(1x,'R_SAT_SUB_LON=',6(f10.5,','))
 13    format(1x,'R_RESOLUTION_X_VIS=',4(f10.4,','))
 14    format(1x,'R_RESOLUTION_Y_VIS=',4(f10.4,','))
 15    format(1x,'R_RESOLUTION_X_IR=',4(f10.4,','))
@@ -215,7 +219,7 @@ c    &j=1,maxsat)
 55    format(1x,'I_NWPIX_VIS=',4(i5,','))
 56    format(1x,'I_NWPIX_IR=',4(i5,','))
 57    format(1x,'I_NWPIX_WV=',4(i5,','))
-58    format(1x,'IMC=',4(i4,","))
+58    format(1x,'IMC=',6(i4,","))
 59    format(1x,"/")
       close(lun)
       istatus=1

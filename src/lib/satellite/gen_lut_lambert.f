@@ -120,8 +120,10 @@ c
       logical     lwrite
       data lwrite /.false./
 
-      logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98)
+      logical     lfirst(maxtype,maxsat)              !4 types x 3 sats (5-12-98) 6 sats (1-31-03)
       data lfirst /.false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false.,
+     &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false.,
      &             .false.,.false.,.false.,.false./
