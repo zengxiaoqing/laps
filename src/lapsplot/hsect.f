@@ -40,7 +40,8 @@ cdis
         subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
      1                           NZ_L, MAX_RADARS, L_RADARS,
      1                           r_missing_data,
-     1                           laps_cycle_time,zoom,density)
+     1                           laps_cycle_time,zoom,density,
+     1                           namelist_parms)
 
 !       1995        Steve Albers         Original Version
 !       1995 Dec 8  Steve Albers         Automated pressure range
@@ -70,6 +71,8 @@ cdis
 !       98-Mar-23        "          Added lvd subdirectory flexibility.
 
         include 'trigd.inc'
+
+        include 'lapsplot.inc'
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
 
@@ -111,7 +114,7 @@ cdis
         character*4 c_type
         character*3 cstatic
         character*3 c_bkg
-        character c19_label*19,c33_label*33
+        character c19_label*19,c33_label*33,c_label*100
 
 !       integer*4 ity,ily,istatus
 !       data ity/35/,ily/1010/
@@ -345,7 +348,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1      ,',   [pt,pb] Theta, Blnc Theta'
      1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,QBAL),'
-     1      /'           [hh,bl,lf] Ht of Const Temp Sfc, PBL, Fire Wx')       
+     1      /'           [hh,bl-i,lf-i] Ht of Temp Sfc, PBL, Fire Wx')
 
         write(6,12)
  12     format(
@@ -389,7 +392,7 @@ c       include 'satellite_dims_lvd.inc'
      1               ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field_2d_diff,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,       
+     1               asc9_tim_3dw,namelist_parms,       
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -402,7 +405,7 @@ c       include 'satellite_dims_lvd.inc'
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -666,7 +669,8 @@ c       include 'satellite_dims_lvd.inc'
                 call mklabel33(k_mb,c19_label,c33_label)
 
                 call plot_cont(dir,1e0,clow,chigh,30.,asc9_tim_3dw,
-     1              c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1              namelist_parms,c33_label,i_overlay,c_display,
+     1              lat,lon,jdot,       
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else if(c_field(1:2) .eq. 'sp')then
@@ -682,10 +686,6 @@ c       include 'satellite_dims_lvd.inc'
                 scale = 1.0
                 call contour_settings(spds,NX_L,NY_L,clow,chigh,cint
      1                               ,zoom,density,scale)
-
-!               call plot_cont(spds,scale,clow,chigh,cint,asc9_tim_3dw,
-!    1               c33_label,i_overlay,c_display,lat,lon,jdot,       
-!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 call plot_field_2d(i4time_3dw,c_field,spds,scale
      1                        ,clow,chigh,cint,c33_label
@@ -710,10 +710,6 @@ c       include 'satellite_dims_lvd.inc'
                 scale = 1.0
                 call contour_settings(u_2d,NX_L,NY_L,clow,chigh,cint
      1                               ,zoom,density,scale)
-
-!               call plot_cont(u_2d,1e0,clow,chigh,cint,asc9_tim_3dw,
-!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
-!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 call plot_field_2d(i4time_3dw,c_field,u_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -741,10 +737,6 @@ c       include 'satellite_dims_lvd.inc'
                 call contour_settings(v_2d,NX_L,NY_L,clow,chigh,cint
      1                               ,zoom,density,scale)
 
-
-!               call plot_cont(v_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
-!    1               c33_label,i_overlay,c_display,lat,lon,jdot,       
-!    1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
                 call plot_field_2d(i4time_3dw,c_field,v_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -871,10 +863,6 @@ c       include 'satellite_dims_lvd.inc'
                 enddo ! i
                 enddo ! j
 
-!               call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
-!    1              c33_label,i_overlay,c_display,lat,lon,jdot,       
-!    1              NX_L,NY_L,r_missing_data,laps_cycle_time)
-
                 scale = 1e-1
                 cint = -1.0
                 chigh = 50.
@@ -911,7 +899,7 @@ c       include 'satellite_dims_lvd.inc'
      1                               ,zoom,density,scale)
 
                 call plot_cont(field_2d,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,
+     1               asc9_tim_3dw,namelist_parms,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -936,7 +924,7 @@ c       include 'satellite_dims_lvd.inc'
      1                               ,zoom,density,scale)
 
                 call plot_cont(field_2d,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,
+     1               asc9_tim_3dw,namelist_parms,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -953,7 +941,7 @@ c       include 'satellite_dims_lvd.inc'
      1                           ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field2_2d,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,
+     1               asc9_tim_3dw,namelist_parms,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -1026,6 +1014,7 @@ c       include 'satellite_dims_lvd.inc'
             chigh = 50.
 
             call plot_cont(liw,1e0,0.0,50.0,-0.5,asc9_tim_3dw,
+     1              namelist_parms,
      1              'sfc LI X 600mb omega  Pa-K/s     ',i_overlay
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -1055,6 +1044,7 @@ c       include 'satellite_dims_lvd.inc'
             call make_fnam_lp(i4time_nearest,asc9_tim_n,istatus)
 
             call plot_cont(field_2d,1e-0,-20.,+40.,2.,asc9_tim_n,
+     1          namelist_parms,
      1          '    SFC Lifted Index     (K)     ',i_overlay
      1          ,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -1105,8 +1095,8 @@ c       include 'satellite_dims_lvd.inc'
      1                           ,zoom,density,scale)       
 
             call plot_cont(field_2d,scale,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
-     1                    ,lat,lon,jdot
+     1                    ,asc9_tim_t,namelist_parms,c33_label
+     1                    ,i_overlay,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'tw')then
@@ -1163,6 +1153,7 @@ c       include 'satellite_dims_lvd.inc'
 
 
             call plot_cont(field_2d,1e-0,-30.,+30.,2.,asc9_tim_n,
+     1                    namelist_parms,
      1                    '    SFC Wetbulb (approx) (C)     '
      1                    ,i_overlay,c_display,lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -1426,7 +1417,7 @@ c
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                           ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                  call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
              else ! contours
@@ -1445,7 +1436,8 @@ c
                  endif
 
                  call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1             c33_label,i_overlay,c_display,lat,lon,jdot,
+     1             namelist_parms,c33_label,
+     1             i_overlay,c_display,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
              endif
@@ -1487,7 +1479,7 @@ c
          call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
          call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1        c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        namelist_parms,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'v5')then
@@ -1526,7 +1518,7 @@ c
          call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
          call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1       c33_label,i_overlay,c_display,lat,lon,jdot,
+     1       namelist_parms,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 
@@ -1568,7 +1560,7 @@ c
           c33_label = 'Polar Orbiter Channel '//cchan//' deg C'
 
           call plot_cont(vas,1e0,clow,chigh,cint,asc9_tim,
-     1       c33_label,i_overlay,c_display,lat,lon,jdot,
+     1       namelist_parms,c33_label,i_overlay,c_display,lat,lon,jdot,        
      1       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           goto 21
@@ -1667,7 +1659,7 @@ c
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             else ! contours
@@ -1684,7 +1676,8 @@ c
                 endif
 
                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
-     1             c33_label,i_overlay,c_display,lat,lon,jdot,
+     1             namelist_parms,c33_label,i_overlay,c_display,
+     1             lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
              endif
@@ -1951,7 +1944,7 @@ c
 !               Display R field
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
-     1               asc9_tim_r,c33_label,
+     1               asc9_tim_r,namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
@@ -1960,7 +1953,7 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                              ,asc9_tim_r,i_overlay,'hsect')
+     1                     ,asc9_tim_r,namelist_parms,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -1997,7 +1990,7 @@ c
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(radar_array,1e0,0.,chigh,cint_ref
      1                        ,asc9_tim_r
-     1                        ,c33_label
+     1                        ,namelist_parms,c33_label
      1                        ,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)
@@ -2008,7 +2001,8 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay,'hsect')       
+     1                                    ,asc9_tim_r,namelist_parms
+     1                                    ,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -2027,7 +2021,8 @@ c
                 if(c_field(3:3) .ne. 'i')then
                     call plot_cont(grid_ra_ref(1,1,k_level,1)
      1                        ,1e0,0.,chigh
-     1                        ,cint_ref,asc9_tim_r,c33_label,i_overlay
+     1                        ,cint_ref,asc9_tim_r,namelist_parms
+     1                        ,c33_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L        
      1                        ,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2037,7 +2032,8 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay,'hsect')       
+     1                                    ,asc9_tim_r,namelist_parms
+     1                                    ,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -2054,7 +2050,8 @@ c
      1                                                      ,istatus)
 
                 call plot_cont(grid_ra_vel(1,1,k_level,i_radar),.518
-     1                        ,clow,chigh,5.,asc9_tim_r,c33_label
+     1                        ,clow,chigh,5.,asc9_tim_r,namelist_parms       
+     1                        ,c33_label
      1                        ,i_overlay,c_display,lat,lon        
      1                        ,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)                          
@@ -2096,7 +2093,8 @@ c
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay,'hsect')       
+     1                                ,asc9_tim_r,namelist_parms
+     1                                ,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
@@ -2142,7 +2140,7 @@ c
                 write(6,*)' Displaying Max Tops, cint = '
      1                          ,cont_low,cont_high,cint
                 call plot_cont(radar_array,1e0,cont_low
-     1                        ,cont_high,cint,asc9_tim_r
+     1                        ,cont_high,cint,asc9_tim_r,namelist_parms       
      1                        ,'Max Echo Tops    (km MSL)        '
      1                        ,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data
@@ -2166,7 +2164,8 @@ c
 
 !               Display Advected Reflectivity Field
                 call plot_cont(radar_array_adv,1e0,0.,chigh,cint_ref
-     1         ,asc9_tim_r,'Max Reflectivity  1 HR Fcst    ',
+     1         ,asc9_tim_r,namelist_parms,
+     1          'Max Reflectivity  1 HR Fcst    ',
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2228,7 +2227,7 @@ c
             scale = 1. / (10. * (100./2.54) * 3600.) ! DENOM = (IN snow/HR) / (M/S)
 
             call plot_cont(snow_2d,scale,
-     1          0.,0.,-0.1,asc9_tim_r,c33_label,
+     1          0.,0.,-0.1,asc9_tim_r,namelist_parms,c33_label,
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2494,7 +2493,7 @@ c
             endif
 
             call plot_cont(radar_array,scale,
-     1          0.,80.,cint_ref,asc9_tim_r,c33_label,
+     1          0.,80.,cint_ref,asc9_tim_r,namelist_parms,c33_label,
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2588,7 +2587,7 @@ c
      1                           ,zoom,density,scale)
 
             call plot_cont(field_2d,scale,clow,chigh,cint,
-     1                     asc9_tim_t,c33_label,
+     1                     asc9_tim_t,namelist_parms,c33_label,
      1                     i_overlay,c_display,lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2650,7 +2649,7 @@ c
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
             call plot_cont(height_2d,1e2,clow,chigh,cint,asc9_tim_t,
-     1       c33_label,i_overlay,c_display,lat,lon,jdot,
+     1       namelist_parms,c33_label,i_overlay,c_display,lat,lon,jdot,       
      1       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'la' .or. c_type .eq. 'lj' .or.
@@ -2788,7 +2787,8 @@ c
                if(c_type .ne. 'ci')then
                    call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
                    call plot_cont(field_2d,1e-3,clow,chigh,cint
-     1                           ,asc9_tim_t,c33_label,i_overlay
+     1                           ,asc9_tim_t,namelist_parms
+     1                           ,c33_label,i_overlay
      1                           ,c_display,lat,lon,jdot
      1                           ,NX_L,NY_L,r_missing_data
      1                           ,laps_cycle_time)
@@ -2796,7 +2796,8 @@ c
                else ! c_type .ne. 'ci'
                    call subcon(cice_2d,1e-30,field_2d,NX_L,NY_L)
                    call plot_cont(field_2d,1e-3,clow,chigh,cint
-     1                           ,asc9_tim_t,c33_label,i_overlay
+     1                           ,asc9_tim_t,namelist_parms
+     1                           ,c33_label,i_overlay
      1                           ,c_display,lat,lon,jdot
      1                           ,NX_L,NY_L,r_missing_data
      1                           ,laps_cycle_time)
@@ -2824,7 +2825,8 @@ c
                call subcon(column_max,1e-30,field_2d,NX_L,NY_L)
 
                call plot_cont(field_2d,1e-3,
-     1                        clow,chigh,cint,asc9_tim_t,c33_label,
+     1                        clow,chigh,cint,asc9_tim_t,
+     1                        namelist_parms,c33_label,
      1                        i_overlay,c_display,lat,lon,
      1                        jdot,NX_L,NY_L,r_missing_data,
      1                        laps_cycle_time)
@@ -2892,12 +2894,14 @@ c
                    if(.true.)then
                        call subcon(mvd_2d,1e-30,field_2d,NX_L,NY_L)
                        call plot_cont(field_2d,0.9999e-6,
-     1                   clow,chigh,cint,asc9_tim_t,c33_label,
+     1                   clow,chigh,cint,asc9_tim_t,namelist_parms,
+     1                   c33_label,
      1                   i_overlay,c_display,lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    else
                        call plot_cont(field_3d(1,1,k_level),0.9999e-6, ! mvd_3d
-     1                   clow,chigh,cint,asc9_tim_t,c33_label,
+     1                   clow,chigh,cint,asc9_tim_t,
+     1                   namelist_parms,c33_label,
      1                   i_overlay,c_display,lat,lon,jdot,
      1                   NX_L,NY_L,r_missing_data,laps_cycle_time)
                    endif
@@ -2914,7 +2918,8 @@ c
                    enddo ! j
 
                    call plot_cont(column_max,0.9999e-6,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,namelist_parms,
+     1               c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2929,7 +2934,8 @@ c
                    if(.true.)then
                        call plot_cont(field_2d,1e0,clow,chigh,cint
      1                      ,asc9_tim_t
-     1                      ,c33_label,i_overlay,c_display
+     1                      ,namelist_parms,c33_label
+     1                      ,i_overlay,c_display     
      1                      ,lat,lon,jdot
      1                      ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2949,7 +2955,8 @@ c
                    endif
 
                    call plot_cont(column_max,1e0,
-     1                  clow,chigh,cint,asc9_tim_t,c33_label,
+     1                  clow,chigh,cint,asc9_tim_t,namelist_parms,
+     1                  c33_label,
      1                  i_overlay,c_display,lat,lon,jdot,
      1                  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3152,7 +3159,7 @@ c
           cint = -0.1
 
           call plot_cont(column_max,1e-3,
-     1          clow,chigh,cint,asc9_tim_t,c33_label,
+     1          clow,chigh,cint,asc9_tim_t,namelist_parms,c33_label,    
      1          i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3228,7 +3235,7 @@ c
 !    1                               ,clow,chigh,cint,zoom,density,1.)       
 
               call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t       
-     1           ,c33_label,i_overlay,c_display
+     1           ,namelist_parms,c33_label,i_overlay,c_display
      1           ,lat,lon,jdot
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3238,7 +3245,7 @@ c
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
               call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                              ,i_overlay,'hsect')
+     1                              ,namelist_parms,i_overlay,'hsect')
               call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
           endif ! image plot
@@ -3299,7 +3306,8 @@ c             cint = -1.
                  call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
                  call plot_cont(field_2d,1e-3
-     1               ,clow,chigh,cint,asc9_tim_t,c33_label
+     1               ,clow,chigh,cint,asc9_tim_t
+     1               ,namelist_parms,c33_label      
      1               ,i_overlay,c_display,lat,lon,jdot
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -3365,7 +3373,7 @@ c    1                ,field_3d,istatus)
                 call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
 !             call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
-!    1           asc9_tim_t,c33_label,i_overlay,
+!    1           asc9_tim_t,namelist_parms,c33_label,i_overlay,
 !    1           c_display,lat,lon,jdot,
 !    1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3443,7 +3451,8 @@ c                   cint = -1.
 
                     call plot_cont(sh_2d,1e-3
      1                            ,clow,chigh,cint ! q_3d
-     1                            ,asc9_tim_t,c33_label,i_overlay
+     1                            ,asc9_tim_t,namelist_parms
+     1                            ,c33_label,i_overlay
      1                            ,c_display
      1                            ,lat,lon,jdot,NX_L,NY_L
      1                            ,r_missing_data,laps_cycle_time)
@@ -3507,7 +3516,8 @@ c                   cint = -1.
 
                     call plot_cont(rh_2d,1e0
      1                            ,clow,chigh,cint,asc9_tim_t
-     1                            ,c33_label,i_overlay,c_display
+     1                            ,namelist_parms,c33_label
+     1                            ,i_overlay,c_display
      1                            ,lat,lon,jdot
      1                            ,NX_L,NY_L,r_missing_data
      1                            ,laps_cycle_time)
@@ -3607,7 +3617,8 @@ c                   cint = -1.
             call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,scale,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay,c_display
+     1                    ,asc9_tim_t,namelist_parms
+     1                    ,c33_label,i_overlay,c_display
      1                    ,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3678,11 +3689,6 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-!           call plot_cont(field_2d,scale,clow,chigh,cint,
-!    1         asc9_tim_t,c33_label,i_overlay,c_display
-!    1                                          ,lat,lon,jdot,
-!    1         NX_L,NY_L,r_missing_data,laps_cycle_time)
-
             call plot_field_2d(i4time_heights,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -3709,11 +3715,6 @@ c                   cint = -1.
             scale = 1e-2
 
 !           call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-!           call plot_cont(field_2d,1e-2,clow,chigh,cint,
-!    1           asc9_tim_t,c33_label,i_overlay,c_display
-!    1           ,lat,lon,jdot,
-!    1           NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -3774,7 +3775,7 @@ c                   cint = -1.
      1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t       
-     1           ,c33_label,i_overlay,c_display
+     1           ,namelist_parms,c33_label,i_overlay,c_display
      1           ,lat,lon,jdot
      1           ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3784,7 +3785,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -3826,7 +3827,8 @@ c                   cint = -1.
      1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1               ,asc9_tim_t,c33_label,i_overlay,c_display
+     1               ,asc9_tim_t,namelist_parms
+     1               ,c33_label,i_overlay,c_display
      1               ,lat,lon,jdot
      1               ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3837,7 +3839,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -3899,7 +3901,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-4,clow,chigh,cint,
-     1            asc9_tim_t,c33_label,i_overlay,c_display
+     1            asc9_tim_t,namelist_parms
+     1               ,c33_label,i_overlay,c_display
      1                                          ,lat,lon,jdot,
      1            NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4049,14 +4052,24 @@ c                   cint = -1.
 
             endif
 
-!           c33_label = 'Sfc Bkgnd/Fcst  '//fcst_hhmm//' '
-!    1                  //ext(1:3)//'/'//var_2d(1:3)
-
             if(ext(1:3) .eq. 'fsf')then
-                c33_label = comment_2d(1:28)//' '//fcst_hhmm
-            else
-                c33_label = comment_2d(1:24)
-     1                      //' '//var_2d(1:3)//' '//fcst_hhmm
+                if(fcst_hhmm(3:4) .eq. '00')then
+                    c_label = comment_2d(1:28)//' '
+     1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
+                else
+                    c_label = comment_2d(1:28)//' '
+     1                                       //fcst_hhmm(1:4)//' Fcst'
+                endif
+            else ! lgb
+                if(fcst_hhmm(3:4) .eq. '00')then
+                    c_label = comment_2d(1:25)
+     1                      //' '//var_2d(1:3)//' '
+     1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
+                else
+                    c_label = comment_2d(1:25)
+     1                      //' '//var_2d(1:3)//' '
+     1                                       //fcst_hhmm(1:4)//' Fcst'
+                endif
             endif
 
             call make_fnam_lp(i4_valid,asc9_tim,istatus)
@@ -4068,7 +4081,8 @@ c                   cint = -1.
      1                            ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field_2d,scale,clow,chigh,cint
-     1                        ,asc9_tim,c33_label,i_overlay,c_display
+     1                        ,asc9_tim,namelist_parms
+     1                        ,c_label,i_overlay,c_display
      1                        ,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
             
@@ -4134,8 +4148,8 @@ c                   cint = -1.
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                          ,i_overlay,'hsect')
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4193,7 +4207,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e+2,clow,chigh,cint,asc9_tim_t
-     1                    ,c33_label,i_overlay,c_display
+     1                    ,namelist_parms,c33_label,i_overlay,c_display       
      1                    ,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4220,7 +4234,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,scale,clow,chigh,cint
-     1             ,asc9_tim_t,c33_label,i_overlay,c_display
+     1             ,asc9_tim_t,namelist_parms
+     1             ,c33_label,i_overlay,c_display
      1             ,lat,lon,jdot
      1             ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4245,7 +4260,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-2,clow,chigh,cint
-     1                    ,asc9_tim_t,c33_label,i_overlay
+     1                    ,asc9_tim_t,namelist_parms,c33_label,i_overlay
      1                    ,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4271,7 +4286,8 @@ c                   cint = -1.
      1                               ,clow,chigh,cint,zoom,density,1.)       
 
                 call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1                        ,asc9_tim_t,c33_label,i_overlay,c_display        
+     1                        ,asc9_tim_t,namelist_parms
+     1                        ,c33_label,i_overlay,c_display        
      1                        ,lat,lon,jdot,NX_L,NY_L,r_missing_data
      1                        ,laps_cycle_time)
 
@@ -4281,7 +4297,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                               ,namelist_parms,i_overlay,'hsect')        
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4308,7 +4324,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1          asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1          asc9_tim_t,namelist_parms,
+     1          c33_label,i_overlay,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'th')then
@@ -4333,7 +4350,7 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
-     1                    ,c33_label,i_overlay,c_display
+     1                    ,namelist_parms,c33_label,i_overlay,c_display       
      1                    ,lat,lon,jdot,NX_L,NY_L,r_missing_data
      1                    ,laps_cycle_time)
 
@@ -4358,12 +4375,6 @@ c                   cint = -1.
             scale = 1e0
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-!           call plot_cont(field_2d,1e-0,clow,chigh,cint
-!    1                    ,asc9_tim_t,c33_label,i_overlay
-!    1                    ,c_display
-!    1                    ,lat,lon,jdot
-!    1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -4392,7 +4403,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1             asc9_tim_t,c33_label,i_overlay,c_display
+     1             asc9_tim_t,namelist_parms
+     1            ,c33_label,i_overlay,c_display
      1            ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4418,7 +4430,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        asc9_tim_t,namelist_parms,
+     1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'dv')then
@@ -4467,7 +4480,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        asc9_tim_t,namelist_parms,
+     1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ma')then
@@ -4492,7 +4506,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        asc9_tim_t,namelist_parms,
+     1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'sp')then
@@ -4539,10 +4554,6 @@ c                   cint = -1.
 
             scale = 1.
 
-!           call plot_cont(spds,1.,clow,chigh,cint,
-!    1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
-
             call plot_field_2d(i4time_pw,c_type,spds,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
@@ -4578,10 +4589,6 @@ c                   cint = -1.
             call contour_settings(field_2d,NX_L,NY_L
      1                           ,clow,chigh,cint,zoom,density,1.)       
 
-!           call plot_cont(field_2d,1.,clow,chigh,cint,
-!    1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-!    1        NX_L,NY_L,r_missing_data,laps_cycle_time)
-
             scale = 1.
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -4610,7 +4617,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        asc9_tim_t,namelist_parms,
+     1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'vs')then
@@ -4635,7 +4643,8 @@ c                   cint = -1.
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1600.,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
+     1        asc9_tim_t,namelist_parms,
+     1        c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type(1:2) .eq. 'fw')then
@@ -4661,7 +4670,8 @@ c                   cint = -1.
                 cint = 2.0
 
                 call plot_cont(field_2d,1.,clow,chigh,cint,
-     1           asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,       
+     1           asc9_tim_t,namelist_parms,
+     1           c33_label,i_overlay,c_display,lat,lon,jdot,       
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
 !               call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
@@ -4671,7 +4681,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4752,7 +4762,7 @@ c                   cint = -1.
 
             if(c_type(3:3) .ne. 'i')then
                 call plot_cont(field_2d,1e0,
-     1               clow,chigh,cint,asc9_tim,c33_label,
+     1               clow,chigh,cint,asc9_tim,namelist_parms,c33_label,       
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4762,7 +4772,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4825,7 +4835,7 @@ c                   cint = -1.
                 chigh = 0.8
                 cint = 0.2
                 call plot_cont(cloud_cvr,1e0,
-     1               clow,chigh,cint,asc9_tim,c33_label,
+     1               clow,chigh,cint,asc9_tim,namelist_parms,c33_label,        
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4843,7 +4853,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4874,11 +4884,12 @@ c                   cint = -1.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
      1                                                       ,1e0)            
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(topo,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -4906,12 +4917,13 @@ c                   cint = -1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
      1                     ,n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
 
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -4930,7 +4942,8 @@ c                   cint = -1.
               cint = 1.
               c33_label = 'Static Land Use           '
               call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,      
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               i4time_topo = 0
@@ -4961,11 +4974,12 @@ c             cint = .05
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
      1                     ,n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5001,14 +5015,15 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
      1                     ,n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 clow = 0.0
                 chigh = 1.0
                 cint = .10
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5035,11 +5050,12 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh
      1               ,'hues',n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5066,11 +5082,12 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5097,11 +5114,12 @@ c             if(cint.eq.0.0)cint=0.1
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image,1e0)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                          ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
-     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               clow,chigh,cint,asc9_tim_t,
+     1               namelist_parms,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
@@ -5142,13 +5160,16 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine plot_cont(array,scale,clow,chigh,cint,
-     1    asc_tim_9,c_label,i_overlay,c_display,lat,lon,jdot,
+     1    asc_tim_9,namelist_parms,c_label,
+     1    i_overlay,c_display,lat,lon,jdot,
      1    NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added r_missing_data, laps_cycle_time
 !                                   as dummy arguments
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+
+        include 'lapsplot.inc'
 
         common /MCOLOR/mini,maxi
 
@@ -5278,7 +5299,7 @@ c             if(cint.eq.0.0)cint=0.1
             if(c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c_label,asc_tim_9
-     1                                           ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
             if(c_display .ne. 't')then
@@ -5305,6 +5326,8 @@ c             if(cint.eq.0.0)cint=0.1
 !    1  grid_ra_ref_dum,grid_ra_vel_dum,
      1  NX_L,NY_L,r_missing_data,
      1  laps_cycle_time,jdot)      
+
+        include 'lapsplot.inc'
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -5392,7 +5415,7 @@ c             if(cint.eq.0.0)cint=0.1
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                           ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
 
@@ -5445,6 +5468,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         subroutine plot_grid(i_overlay,c_display,lat,lon,
      1                       NX_L,NY_L,laps_cycle_time)
+
+        include 'lapsplot.inc'
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added laps_cycle_time as dummy argument
@@ -5517,7 +5542,7 @@ c             if(cint.eq.0.0)cint=0.1
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                           ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
 
@@ -5546,6 +5571,8 @@ c             if(cint.eq.0.0)cint=0.1
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, laps_cycle_time as
 !                                   dummy arguments
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
+
+        include 'lapsplot.inc'
 
         character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
@@ -5639,7 +5666,7 @@ c             if(cint.eq.0.0)cint=0.1
      1    .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                           ,i_overlay,'hsect')
+     1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
 
@@ -5764,7 +5791,7 @@ c             if(cint.eq.0.0)cint=0.1
 !                endif
 
 !                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-!    1                                           ,i_overlay,'hsect')
+!    1                                ,namelist_parms,i_overlay,'hsect')      
             endif
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
@@ -5893,7 +5920,9 @@ c             if(cint.eq.0.0)cint=0.1
 
 
         subroutine write_label_lplot(ni,nj,c_label,a9time
-     1                              ,i_overlay,c5_sect)        
+     1                              ,namelist_parms,i_overlay,c5_sect)       
+
+        include 'lapsplot.inc'
 
         character*(*) c_label
         character*24 asc_tim_24,asc_tim_24_in
@@ -5904,10 +5933,14 @@ c             if(cint.eq.0.0)cint=0.1
         common /image/ n_image
         common /icol_index/ icol_common
 
+        namelist_parms%time_zone = 0.
+        namelist_parms%c3_time_zone = 'UTC'
+
 !       call upcase(c_label,c_label)
 
         if(a9time .ne. '         ')then
-            call i4time_fname_lp(a9time,I4time_lbl,istatus)       
+            call i4time_fname_lp(a9time,i4time_lbl,istatus)       
+            i4time_lbl = i4time_lbl+nint(namelist_parms%time_zone*3600)      
             call cv_i4tim_asc_lp(i4time_lbl,asc_tim_24_in,istatus)      
         else
             asc_tim_24_in = '                        '
@@ -5987,10 +6020,15 @@ c             if(cint.eq.0.0)cint=0.1
         CALL PCHIQU (cpux(ix),cpux(iy),c_label,rsize,0,-1.0)
 
 !       Time on Bottom Right
-        ix = 672
+        if(c5_sect .eq. 'hsect')then
+            ix = 672
+        else
+            ix = 622
+        endif
         iy = y_1 * 1024
         call downcase(asc_tim_24(5:10),asc_tim_24(5:10))
-        CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)//'UTC'
+        CALL PCHIQU (cpux(ix),cpux(iy),'VT '//asc_tim_24(1:17)
+     1                                //namelist_parms%c3_time_zone
      1                                ,rsize,0,-1.0)
 
 !       Resolution on Bottom Center
@@ -6229,6 +6267,8 @@ c             if(cint.eq.0.0)cint=0.1
      1                        ,c_label,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
 
+        include 'lapsplot.inc'
+
         character*(*) c_type_in, c_label, c_display, colortable
         character*10 c_type
         character*9 asc9_tim_t
@@ -6285,7 +6325,8 @@ c             if(cint.eq.0.0)cint=0.1
             endif
 
             call plot_cont(field_2d,scale,clow,chigh,cint
-     1                        ,asc9_tim_t,c_label,i_overlay
+     1                        ,asc9_tim_t,namelist_parms
+     1                        ,c_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L,NY_L
      1                        ,r_missing_data,laps_cycle_time)
 
@@ -6305,7 +6346,7 @@ c             if(cint.eq.0.0)cint=0.1
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
-     1                            ,i_overlay,'hsect')
+     1                            ,namelist_parms,i_overlay,'hsect')       
             call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
         endif ! image plot
