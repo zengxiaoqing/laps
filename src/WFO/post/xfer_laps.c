@@ -1,4 +1,3 @@
-#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -9,7 +8,7 @@
 
 main()
 {
-       int xfr_status, numElements,xstatus;
+       int xfr_status, numElements, xstatus, fn_len;
        PARAMETER_LIST_T paramInfo[MAX_PARAMETER_LIST_LEN];
        FILE *fp;
        time_t unix_filetime;
@@ -54,10 +53,14 @@ main()
              sscanf(timestr,"%ld", &i4time);
 
              nptr = namestr;
-/* strip leading blanks from namestr */
+/* strip leading blanks and trailing newline from namestr */
              while (strncmp(nptr," ",1) == 0) nptr++;
              strncpy(fcstRunTime,nptr,LAPS_FN_LEN);
-             fcstRunTime[LAPS_FN_LEN] = '\0';
+             fn_len = strlen(fcstRunTime);
+             if (fcstRunTime[fn_len - 1] == '\n')
+	       fcstRunTime[fn_len - 1] = '\0'; 
+             else
+               fcstRunTime[fn_len] = '\0';
 
 /* convert i4time with base of 1/1/60 to unixtime with base of 1/1/70 */
              unix_filetime = i4time - 315619200;
