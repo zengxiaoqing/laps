@@ -61,7 +61,7 @@ c       Dan Birkenheuer    14 May 1993
         data mw_vap /18.0152/
         data mw_air /28.966/
 
-        if (t.lt.-200. .or. ssh .eq. 0.0) then   !the obvious limitation
+        if (ssh .eq. 0.0) then   !the obvious limitation
                 make_rh = 0.0
                 return
         endif
@@ -69,18 +69,15 @@ c       Dan Birkenheuer    14 May 1993
 
 c       first compute the saturation  vapor pressure of water
 
-        if (t .ge. t_ref .and. t .ge. -47. ) then ! liquid phase
+        if (t .gt. t_ref .and. t .gt. -50. ) then ! liquid phase
 c                                               eslo approx
-
                 esat = eslo (t)
 
-        elseif (t .ge. t_ref .and. t .lt. -47.) then !liq phase poorer
-c                                       es approx
-                esat = es (t)
-
-        else ! ice phase
-
+        elseif (t .le. t_ref) then ! assume ice phase
                 esat = esice (t)
+
+        else ! liquid phase and td is less tan -50
+                esat = es(t)
 
         endif
 
