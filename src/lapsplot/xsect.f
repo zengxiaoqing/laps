@@ -750,7 +750,7 @@ c read in laps lat/lon and topo
 
 !               call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax
 !    1                     ,colortable
-!    1                     ,n_image,scale,'xsect')    
+!    1                     ,n_image,scale,'xsect',namelist_parms)    
 !               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !               call setusv_dum(2hIN,7)
 !               call write_label_lplot(NX_C,NZ_C,c_label,asc9_tim_t
@@ -1032,7 +1032,10 @@ c read in laps lat/lon and topo
                 cint = -1.
                 i_contour = 1
             else
-                cint = 0.
+!               cint = 0.
+                cint = 10.
+                clow = -50.
+                chigh = +50.
                 i_contour = -1
             endif
 
@@ -1760,7 +1763,7 @@ c read in laps lat/lon and topo
 
             write(6,*)' calling solid fill cloud plot'
             call ccpfil(field_vert3,NX_P,NX_P,0.0,1.0,'linear'
-     1                             ,n_image,1e0,'xsect')       
+     1                             ,n_image,1e0,'xsect',namelist_parms)       
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
@@ -2589,19 +2592,19 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                             ,clow,chigh,cint,-1,0,-1848,0)
 
                     else ! image plot
-                        write(6,*)' calling solid fill cloud plot',cint       
+                        write(6,*)' calling solid fill plot',cint       
 
                         call set(0.10,0.90,0.05,0.95
      1                          ,0.10,0.90,0.05,0.95,1) ! Orig
 
 !                       call set(x_1,x_2,y_1,y_2,0.15,0.85,0.15,0.85,1) ! New
 
-!                       if(cint .eq. 0.)then
+                        if(cint .eq. 0.)then
                             call array_range(field_vert3,NX_P,NX_P
      1                                      ,rmin,rmax,r_missing_data)
                             clow = rmin
                             chigh = rmax
-!                       endif
+                        endif
 
 !                       Blank out the edges external to the X-section
 !                       write(6,*)' Blackening the edges'
@@ -2616,14 +2619,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                       This method remaps well - with large border artifacts
                         call ccpfil(field_vert3,NX_P,NX_P
      1                             ,clow,chigh
-!    1                             ,'cpe',n_image,scale,'xsect')       
-     1                             ,colortable,n_image,scale,'xsect')       
+!    1                             ,'cpe',n_image,scale,'xsect'
+     1                             ,colortable,n_image,scale,'xsect'
+     1                             ,namelist_parms)       
 
 !                       This method may avoid the artifacts
 !                       call ccpfil(field_vert(1,ibottom),NX_C
 !    1                             ,(NZ_C-ibottom+1)
 !    1                             ,clow,chigh
-!    1                             ,colortable,n_image,scale,'xsect')       
+!    1                             ,colortable,n_image,scale,'xsect'
+!    1                             ,namelist_parms)       
 
                     endif
 
