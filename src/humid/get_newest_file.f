@@ -21,7 +21,7 @@ c     parameter list variables
 
 c     internal variables
       character*256 filenames (maxfiles)
-      character*256 hash
+      character*256 hash, maxhash
       integer hashpoint
       integer numoffiles
       integer i4time_input
@@ -43,9 +43,12 @@ c     get the  filenames available from get_filenames
          return
       endif
 
+      maxhash = ' '
+
       do i = 1,numoffiles
          hashpoint = index (filenames(i),'tpw')
          if (hashpoint .ne. 0) hash = filenames(i)
+         if (hash.gt.maxhash) maxhash = hash
       enddo                     ! i
    
       hashpoint = index (hash,'.')
@@ -54,6 +57,8 @@ c     get the  filenames available from get_filenames
          istatus = 0
          return
       endif
+
+      hash = maxhash
 
       file_new = hash(hashpoint-9:hashpoint)
       ext = hash(hashpoint+1:256)
