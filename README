@@ -2896,8 +2896,8 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
 ------ 3.3.8 ---------------------BALANCE--------------------------------------
 
-Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
-     (author: John McGinley/John Snook/John Smart - smart@fsl.noaa.gov)
+Process: qbalpe.exe - "Quasi-geostrophic balance of height, wind and clouds.
+     (author: John McGinley/John Smart/John Snook - smart@fsl.noaa.gov)
 
         LAPS quasi-geostrophic balance of height and wind with temp adjustment.
         Cloud fields are now balanced with the other fields.
@@ -2918,6 +2918,20 @@ Outputs:
 Source directory: laps/src/balance
 
 Parameter namelist file: 'static/balance.nl'
+
+The balance package starts by inputting the results from a simple, offline 
+cloud model which retrieves liquid and ice partitioning and an estimate of 
+vertical motion from the observed clouds (lco/lwc). The variational scheme 
+is designed to accept cloud vertical motion estimates and ice and water 
+content as observations. The cloud observations are fully coupled to the 
+three dimensional mass and momentum field using dynamical constraints 
+which minimize the local tendency in the velocities and ensure continuity 
+is satisfied everywhere. 
+
+The scheme performs the analysis on the difference from an input model 
+background with the benefit that existing background model balances need not 
+be recreated each model cycle and that background model error daily compiled 
+is input explicitly on a gridpoint by gridpoint basis.
 
 ------- 3.4  -------------  Model Initialization --------------------------
 
