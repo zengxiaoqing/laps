@@ -281,6 +281,11 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
                 print TFILE "  \n";
 
+                if($node_type eq "rt"){
+                    print TFILE "export PBS_SERVER_LIST=/usr/local/fsl/lib/server.rt\n";
+                    print TFILE "  \n";
+                }
+
                 if($nodes_current > 1){
                     print TFILE "export GMPIENVVAR=LAPS_DATA_ROOT:LAPS_SRC_ROOT\n";
                     print TFILE "SMS_SERVER_MODE=serverless\n";
