@@ -41,6 +41,8 @@ C*  version 2b which uses polar stereographic projections. Other      *
 C*  projections have since been added.                                *
 c*                                                                    *
 C*********************************************************************
+        integer n_staggers
+        parameter (n_staggers = 3)
         integer NX_L,NY_L
 
         write(6,*)
@@ -52,20 +54,22 @@ C*********************************************************************
 	   goto999
 	endif
 
-        call Gridmap_sub(NX_L,NY_L,istatus)
+        call Gridmap_sub(NX_L,NY_L,n_staggers,istatus)
 
  999	write(6,*)' gridgen_model finish: istatus = ',istatus
         write(6,*)
 
         end
        
-        subroutine Gridmap_sub(nnxp,nnyp,istatus)
+        subroutine Gridmap_sub(nnxp,nnyp,n_staggers,istatus)
 
         include 'trigd.inc'
 
         logical exist,new_DEM
 
         integer nnxp,nnyp,mode
+        integer ngrids
+        integer n_staggers
 
 	Real mdlat,mdlon
 	Real xmn(nnxp),ymn(nnyp)
@@ -79,7 +83,8 @@ C*********************************************************************
         real  topt_pctlfn(nnxp,nnyp)
         real  soil(nnxp,nnyp)
 
-        include 'lapsparms.cmn'
+        real lats(nnxp,nnyp,n_staggers)
+        real lons(nnxp,nnyp,n_staggers)
 
 c********************************************************************
 
@@ -88,16 +93,26 @@ c       integer*4    ni,nj
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
 c
-c  only 5 used here but 8 needed in put_laps_static
+c  either 6 (nest7gird) or 10 (wrfsi) used here but 12 needed in put_laps_static
 c
         integer*4    nf
-        parameter (nf = 8)
+        parameter (nf = 12)
         
+        character*3   var(nf)
         character*125 comment(nf)
         character*131 model
 
+        character*200 path_to_topt30s
+        character*200 path_to_topt10m
+        character*200 path_to_pctl10m
+        character*200 path_to_soil2m
+
+        character*255 filename
+        character*200 c_dataroot
         character*180 static_dir 
-        integer len
+        character*10  c10_grid_fname 
+        character*6   c6_maproj
+        integer len,lf,lfn
         real*4 data(nnxp,nnyp,nf)
 c       equivalence(data(1,1,1),lat)
 c       equivalence(data(1,1,2),lon)
@@ -106,20 +121,30 @@ c       equivalence(data(1,1,4),topt_pctlfn)
 
 C*********************************************************************
 
-        call get_laps_config('nest7grid',istatus)
+        call find_domain_name(c_dataroot,c10_grid_fname,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Bad status from get_laps_config'
-            stop
+            write(6,*) 'Error getting path_to_topt10m'
+            return
         endif
+        call s_len(c10_grid_fname,lf)
 
         model = 'MODEL 4 delta x smoothed filter\0'
 
+      if(c10_grid_fname(1:lf).eq.'wrfsi')then
         comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
         comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-        comment(3) = '\0'
+        comment(3) = 'B-stagger latitudes for WRF_SI \0'
+        comment(4) = 'B-stagger longitudes for WRF_SI \0'
+        comment(5) = 'C-stagger latitudes for WRF_SI \0'
+        comment(6) = 'C-stagger longitudes for WRF_SI \0'
+        comment(7) = 'Average terrain elevation (m) \0'
+      else
+        comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+        comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+        comment(3) = 'Average terrain elevation (m) \0'
         comment(4) = '\0'
         comment(5) = '\0'
-
+      endif
 
         icount_10 = 0
         icount_30 = 0
@@ -135,6 +160,30 @@ c   the 10m topo covers the world
 cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
 c   the 10m pctl covers the world
 cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
+
+        call get_path_to_topo_10m(path_to_topt10m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_topt10m'
+            return
+        endif
+
+        call get_path_to_topo_30s(path_to_topt30s,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_topt30s'
+            return
+        endif
+
+        call get_path_to_pctl_10m(path_to_pctl10m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_pctl10m'
+            return
+        endif
+
+        call get_path_to_soil_2m(path_to_soil2m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_soil2m'
+            return
+        endif
 
         call s_len(path_to_topt30s,len)
 	path_to_topt30s(len+1:len+2)='/U'
@@ -208,6 +257,13 @@ c calculate delta x and delta y using grid and map projection parameters
         endif
         write(6,*)' std_lon = ',std_lon
 
+        call get_earth_radius(erad,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling laps routine'
+            return
+        endif
+        write(6,*)' Earth Radius = ',erad
+
         if(c6_maproj .eq. 'plrstr')then
             call get_ps_parms(std_lat,std_lat2,grid_spacing_m,phi0
      1                       ,grid_spacing_proj_m)
@@ -256,51 +312,24 @@ c calculate delta x and delta y using grid and map projection parameters
      1             ,deltax,deltay
  
 c*********************************************************************
-c       Get X/Y for lower left corner
-        CALL POLAR_GP(mdlat,mdlon,XMN,YMN,DELTAX,DELTAY,
-     1  NNXP,NNYP)
+c in arrays lats/lons, the first stagger is actually not staggered
+c but is the usual lat/lon values at non-staggered grid points.
 
+        call compute_latlon(nnxp,nnyp,n_staggers
+     + ,deltax,xtn,ytn,lats,lons,istatus)
+        if(istatus.ne.1)then
+           print*,'Error returned: compute_stagger_ll'
+           return
+        endif
 
-	DO 600 I=2,NNXP
-	   XMN(I)=XMN(I-1)+DELTAX
- 600	CONTINUE
-        XMN(NNXP)=2*XMN(NNXP-1)-XMN(NNXP-2)
-C
-	DO 610 J=2,NNYP
-	   YMN(J)=YMN(J-1)+DELTAY
- 610	CONTINUE
-        YMN(NNYP)=2*YMN(NNYP-1)-YMN(NNYP-2)
-C
-	DO 650 I=2,NNXP
-	   XTN(I)=.5*(XMN(I)+XMN(I-1))
- 650	CONTINUE
-	XTN(1)=1.5*XMN(1)-.5*XMN(2)
-
-	DO 660 J=2,NNYP
-	   YTN(J)=.5*(YMN(J)+YMN(J-1))
- 660	CONTINUE
-	YTN(1)=1.5*YMN(1)-.5*YMN(2)
+        do j=1,nnyp
+        do i=1,nnxp
+           lat(i,j)=lats(i,j,1)
+           lon(i,j)=lons(i,j,1)
+        enddo
+        enddo
 
 C*****************************************************************
-C*  Convert it to lat/lon using the library routines.            *
-
-        call get_earth_radius(erad,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Error calling get_earth_radius'
-            return
-        endif
-        
-        Do J = 1,nnyp
-	   Do I = 1,nnxp
-!	      call xytops(xtn(i),ytn(j),pla,plo,erad)
-!             call pstoge(pla,plo,lat(I,J),lon(I,J),90.,std_lon)           
-
-              call xy_to_latlon(xtn(i),ytn(j),erad ! ,90.,std_lon
-     1                                          ,lat(I,J),lon(I,J))
-
-c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
-    	   enddo
-        enddo
 
         write(6,*)
         write(6,*)'Corner points...'
@@ -311,7 +340,8 @@ c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
  701    format(' lat/lon at ',i5,',',i5,' =',2f12.5)
  702    continue
 
-        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)  
+        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1
+     + ,istat_chk)  
 
 ! We will end at this step given the showgrid or max/min lat lon
 ! options.
@@ -634,20 +664,44 @@ c SG97  splot 'topography.dat'
         enddo
         close(666)
 
-        call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
-        call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
-        call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
-        call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
-        call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
 
-        call get_directory('cdl',static_dir,len)
-	INQUIRE(FILE=static_dir(1:len)//'nest7grid.cdl',EXIST=exist)
-        if(.not.exist) then
-	   print*,'Error: Could not find file '
-     +           ,static_dir(1:len)//'nest7grid.cdl '
+           call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
+           call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
+           call move(lats(1,1,2),data(1,1,3),nnxp,nnyp)    ! JS
+           call move(lons(1,1,2),data(1,1,4),nnxp,nnyp)    ! JS
+           call move(lats(1,1,3),data(1,1,5),nnxp,nnyp)    ! JS
+           call move(lons(1,1,3),data(1,1,6),nnxp,nnyp)    ! JS
+           call move(topt_out,data(1,1,7),nnxp,nnyp)       ! KWD
+           call move(topt_pctlfn,data(1,1,8),nnxp,nnyp)    ! KWD
+           call move(soil,data(1,1,9),nnxp,nnyp)           ! SA
+           ngrids=10
+           call get_gridgen_var(nf,ngrids,var)
+
+        else
+
+           call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
+           call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
+           call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
+           call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
+           call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
+           ngrids=6
+           call get_gridgen_var(nf,ngrids,var)
+ 
+        endif
+        
+        filename = c10_grid_fname(1:lf)//'.cdl'
+        call s_len(filename,lfn)
+
+        INQUIRE(FILE=static_dir(1:len)//filename(1:lfn),EXIST=exist)
+
+        if(.not.exist.and.c10_grid_fname(1:lf).ne.'wrfsi') then
+           print*,'Error: Could not find file '
+     +           ,static_dir(1:len)//filename(1:lf)
+           print*,'c10_grid_fname: ',c10_grid_fname(1:lf)
            istatus = 0
            return
-	endif
+        endif
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)
 
@@ -659,8 +713,8 @@ c SG97  splot 'topography.dat'
             write(6,*)'ERROR in check_domain: status = ',istat_chk       
         endif
 
-        call put_laps_static(grid_spacing_m,model,comment,data
-     1       ,nnxp,nnyp,nf,std_lat,std_lat2,std_lon
+        call put_laps_static(grid_spacing_m,model,comment,var
+     1       ,data,nnxp,nnyp,nf,ngrids,std_lat,std_lat2,std_lon
      1       ,c6_maproj,deltax,deltay)
 
         istatus = istat_chk
