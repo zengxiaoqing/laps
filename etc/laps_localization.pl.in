@@ -76,7 +76,6 @@ if(-d "$LAPS_SRC_ROOT/data"){
     }
     &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
 
-
 }else{
     print "Template directory $LAPS_SRC_ROOT/data not found - proceding assuming all namelists are up to date\n";
 }
@@ -199,7 +198,7 @@ sub update_nl{
     push(@nl,"nest7grid.parms");
 
     my %nl_vals;
-    my(%comments);
+    my %comments;
     my $nl_file;
 
     foreach $nl_file (@nl){
@@ -229,6 +228,7 @@ sub update_nl{
 		next;
 	    }elsif($line =~ /^(.*)$/){
 		$nl_vals{$var} .= "\n$1";
+		next;
 	    }
 	    if($mark>0){
 		$var = '';
