@@ -82,7 +82,7 @@ c
         integer*4  i4time_ob_a(maxobs), before, after
         real    lat(ni,nj), lon(ni,nj), k_to_f
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
-        logical l_dupe(maxobs)
+        logical l_reject(maxobs)
 c
 	integer*4  wmoid(maxsta)
 	integer    recNum
@@ -297,25 +297,40 @@ c.....	First QC loop over all the obs.
 c..................................
 c
 	do i=1,n_local_all
-           l_dupe(i) = .false.
+           l_reject(i) = .false.
 c
 c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
 c........  lat to badflag (-99.9), which causes the bounds check to think that
 c........  the ob is outside the LAPS domain.
-	   if( nanf( latitude(i) ) .eq. 1 ) latitude(i)  = badflag
-	   if( nanf( longitude(i) ) .eq. 1 ) latitude(i)  = badflag
-	   if( nanf( elevation(i) ) .eq. 1 ) latitude(i)  = badflag
-	   if( nanf( observationTime(i) ) .eq. 1 ) latitude(i) = badflag       
+	   if( nanf( latitude(i) ) .eq. 1 ) l_reject(i) = .true.
+	   if( nanf( longitude(i) ) .eq. 1 ) l_reject(i) = .true.
+	   if( nanf( elevation(i) ) .eq. 1 ) l_reject(i) = .true.
+	   if( nanf( observationTime(i) ) .eq. 1 ) l_reject(i) = .true.
 
 	   i4time_ob_a(i) = nint(observationTime(i)) + 315619200
 	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
 
            call filter_string(stationId(i))
+c
+c........  Check to see if its in the desired time window.
+c
+	   if(i4time_ob_a(i) .lt. before 
+     1   .or. i4time_ob_a(i) .gt. after) then
+               if(i .le. max_write)then
+                   write(6,71,err=105)i,wmoid(i),stationId(i)
+     1                               ,a9time_a(i),before
+     1                               ,after
+ 71		   format(i6,i7,1x,a8,' out of time ',a11,2i12)
+               endif
+               l_reject(i) = .true.
+               go to 105
+           endif
 
+!          Pick closest station if multiple stations are in time window
            do k = 1,i-1
              if(       stationId(i) .eq. stationId(k) 
      1                          .AND.
-     1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
+     1           ( (.not. l_reject(i)) .and. (.not. l_reject(k)) )
      1                                                           )then
                  i_diff = abs(i4time_ob_a(i) - i4time_sys)
                  k_diff = abs(i4time_ob_a(k) - i4time_sys)
@@ -331,9 +346,7 @@ c........  the ob is outside the LAPS domain.
  51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
      1                 ,1x,i6)
 
-                 latitude(i_reject) = badflag ! test with this for now
-
-                 l_dupe(i_reject) = .true.
+                 l_reject(i_reject) = .true.
              endif
            enddo ! k
 c
@@ -366,6 +379,8 @@ c
 	   if( nanf( windSpeed(i)   ) .eq. 1 ) windSpeed(i) = badflag
 	   if( nanf( windGust(i)  ) .eq. 1 ) windGust(i)   = badflag
 	   if( nanf( altimeter(i)  ) .eq. 1 ) altimeter(i)   = badflag
+
+ 105       continue
 c
 	enddo !i
 c
@@ -379,10 +394,23 @@ c
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
 	do i=1,n_local_all
+
+           if(l_reject(i))go to 125
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
 c
+!          Test for invalid latitude
+           if(latitude(i) .lt. -90 .or. latitude(i) .gt. +90.)then
+               if(.true.)then
+                   write(6,81,err=125)i,n_local_all
+     1                               ,wmoid(i),stationId(i)
+     1                               ,latitude(i)
+ 81                format(2i7,i7,1x,a8,' invalid latitude ',e12.5)
+               endif
+               go to 125
+           endif
+
 !          Test for badflag OR (close to S Pole but not quite at it)
 !          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
            if(latitude(i) .lt. -89.999 .and. latitude(i) .ne. -90.) 
@@ -392,9 +420,9 @@ c
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
                if(i .le. max_write)then
-                   write(6,81,err=125)i,wmoid(i),stationId(i)
+                   write(6,91,err=125)i,wmoid(i),stationId(i)
      1                               ,nint(ri_loc),nint(rj_loc)
- 81                format(i6,i7,1x,a8,' out of box ',2i12)
+ 91                format(i6,i7,1x,a8,' out of box ',2i12)
                endif
                go to 125
            endif
@@ -403,19 +431,6 @@ c.....  Elevation ok?
 c
 	   if(elevation(i).gt.5200. .or. elevation(i).lt.-400.) 
      1                                                        go to 125       
-c
-c.....  Check to see if its in the desired time window.
-c
-	   if(i4time_ob_a(i) .lt. before 
-     1   .or. i4time_ob_a(i) .gt. after) then
-               if(i .le. max_write)then
-                   write(6,91,err=125)i,wmoid(i),stationId(i)
-     1                               ,a9time_a(i),before
-     1                               ,after
- 91		   format(i6,i7,1x,a8,' out of time ',a11,2i12)
-               endif
-               go to 125
-           endif
 c
 c.....  Right time, right location...
 
