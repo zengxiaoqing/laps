@@ -33,16 +33,11 @@ cdis
      &wsi_lat,wsi_lon,istart,jstart,iend,jend)
 cc
 c
-c program builds static file for WSI radar processor. Requires lat/lon static
-c file for laps. Output is i and j starting and ending points for processing the
-c WSI radar file.  This program must be run before installing laps
-c
-c This program should run out of ../exe
+c Output is i and j starting and ending points for processing the
+c WSI radar file.
 c
 
       Implicit NONE
-
-      include 'lapsparms.for'
 
       integer*4 lines,elements
       integer*4 nx,ny
@@ -138,13 +133,13 @@ c
          do i = 1,elements
 
             call latlon_to_rlapsgrid(wsi_lat(i,j),wsi_lon(i,j),
-     &                                lat,lon,nx_l,ny_l,ri,rj,
+     &                                lat,lon,nx,ny,ri,rj,
      &                                istatus)
             ii = nint(ri)
             jj = nint(rj)
 
-            if(ii .gt. 0 .and. ii .le. nx_l)then
-               if(jj .gt. 0 .and. jj .le. ny_l)then
+            if(ii .gt. 0 .and. ii .le. nx)then
+               if(jj .gt. 0 .and. jj .le. ny)then
                   jstart = min(jstart,j)
                   jend   = max(jend,j)
                   istart = min(istart,i)
