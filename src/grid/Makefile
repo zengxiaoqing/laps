@@ -4,13 +4,13 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
@@ -18,8 +18,8 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 EXE = gridgen_model.exe
 
 SRC   = put_laps_static.f showgrid.f \
-        bcd_file.c compute_latlon.f create_bcd_bkgnd.c setsup.c \
-        get_gridgen_var.f getarealim.c xy_to_ll.c ll_to_xy.c 
+        bcd_file.c create_bcd_bkgnd.c setsup.c \
+        gridgen_utils.f getarealim.c xy_to_ll.c ll_to_xy.c 
 
 MAIN=gridgen_model.f 
 
@@ -55,19 +55,4 @@ distclean: clean
 	mv $*.i $*.f
 
 %.o : %.F
-
-
-getgrid: getgrid.o
-	$(FC) $@.o $(LAPSLIBS) -o $@
-
-
-
-
-
-
-
-
-
-
-
 

@@ -96,7 +96,7 @@ c
 c  either 6 (nest7gird) or 10 (wrfsi) used here but 12 needed in put_laps_static
 c
         integer*4    nf
-        parameter (nf = 12)
+        parameter (nf = 19)
         
         character*3   var(nf)
         character*125 comment(nf)
@@ -114,6 +114,9 @@ c
         character*10  c10_grid_fname 
         character*6   c6_maproj
         integer len,lf,lfn
+        real*4 coriolis_parms(nnxp,nnyp,2)
+        real*4 projrot_grid(nnxp,nnyp,2)
+        real*4 r_map_factors(nnxp,nnyp,n_staggers)
         real*4 data(nnxp,nnyp,nf)
 c       equivalence(data(1,1,1),lat)
 c       equivalence(data(1,1,2),lon)
@@ -130,22 +133,6 @@ C*********************************************************************
         call s_len(c10_grid_fname,lf)
 
         model = 'MODEL 4 delta x smoothed filter\0'
-
-      if(c10_grid_fname(1:lf).eq.'wrfsi')then
-        comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-        comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-        comment(3) = 'B-stagger latitudes for WRF_SI \0'
-        comment(4) = 'B-stagger longitudes for WRF_SI \0'
-        comment(5) = 'C-stagger latitudes for WRF_SI \0'
-        comment(6) = 'C-stagger longitudes for WRF_SI \0'
-        comment(7) = 'Average terrain elevation (m) \0'
-      else
-        comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-        comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
-        comment(3) = 'Average terrain elevation (m) \0'
-        comment(4) = '\0'
-        comment(5) = '\0'
-      endif
 
         icount_10 = 0
         icount_30 = 0
@@ -676,8 +663,36 @@ c SG97  splot 'topography.dat'
            call move(topt_out,data(1,1,7),nnxp,nnyp)       ! KWD
            call move(topt_pctlfn,data(1,1,8),nnxp,nnyp)    ! KWD
            call move(soil,data(1,1,9),nnxp,nnyp)           ! SA
-           ngrids=10
-           call get_gridgen_var(nf,ngrids,var)
+c
+           call get_projrot_grid(nnxp,nnyp,lat,lon
+     +,projrot_grid,istatus)
+           call move(projrot_grid(1,1,1),data(1,1,10)
+     +,nnxp,nnyp)
+           call move(projrot_grid(1,1,2),data(1,1,11)
+     +,nnxp,nnyp)
+c
+           call get_map_factor_grid(nnxp,nnyp,n_staggers
+     +,lats,lons ,r_map_factors,istatus)
+           if(istatus.ne.1)then
+              print*,'Error returned: get_maps_factor_grid'
+              return
+           endif
+           call move(r_map_factors(1,1,1),data(1,1,12)
+     +,nnxp,nnyp)
+           call move(r_map_factors(1,1,2),data(1,1,13)
+     +,nnxp,nnyp)
+           call move(r_map_factors(1,1,3),data(1,1,14)
+     +,nnxp,nnyp)
+c           
+           call get_coriolis_components(nnxp,nnyp,lat
+     +,coriolis_parms)
+           call move(coriolis_parms(1,1,1),data(1,1,15)
+     +,nnxp,nnyp)
+           call move(coriolis_parms(1,1,2),data(1,1,16)
+     +,nnxp,nnyp)
+
+           ngrids=17
+           call get_gridgen_var(nf,ngrids,var,comment)
 
         else
 
@@ -687,10 +702,10 @@ c SG97  splot 'topography.dat'
            call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
            call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
            ngrids=6
-           call get_gridgen_var(nf,ngrids,var)
+           call get_gridgen_var(nf,ngrids,var,comment)
  
         endif
-        
+
         filename = c10_grid_fname(1:lf)//'.cdl'
         call s_len(filename,lfn)
         call get_directory('cdl',cdl_dir,lcdl)
