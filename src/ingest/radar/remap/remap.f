@@ -1,7 +1,7 @@
       
       program remap
 
-      character path_to_radar*150, c4_radarname*4, ext_dum*3
+      character path_to_radar*150, ext_dum*3
      1         ,radar_subdir_dum*3, path_to_vrc*15
        
       call get_grid_dim_xy(NX_L,NY_L,istatus)
@@ -18,17 +18,19 @@
 
 !     This first call returns only 'n_radars_remap'
       call get_remap_parms(0,n_radars_remap,path_to_radar
-     1       ,c4_radarname,ext_dum,radar_subdir_dum,path_to_vrc,istatus)       
+     1       ,ext_dum,radar_subdir_dum,path_to_vrc,istatus)       
 
       do i_radar = 1,n_radars_remap
           write(6,*)
           write(6,*)' Looping through radar # ',i_radar
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
-     1                  ,c4_radarname,ext_dum,radar_subdir_dum
+     1                  ,ext_dum,radar_subdir_dum
      1                  ,path_to_vrc,istatus)       
-          call remap_sub(i_radar,ext_dum,radar_subdir_dum       
-     1                  ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
-      enddo
+          do itimes = 1,1
+              call remap_sub(i_radar,ext_dum,radar_subdir_dum       
+     1                      ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
+          enddo ! itimes
+      enddo ! i_radar
 
  999  end
 
@@ -376,7 +378,7 @@
 
  
        subroutine get_remap_parms(i_radar,n_radars_remap
-     1            ,path_to_radar,c4_radarname,laps_radar_ext
+     1            ,path_to_radar,laps_radar_ext
      1            ,c3_radar_subdir,path_to_vrc,istatus)       
 
        integer*4 MAX_RADARS_REMAP
@@ -385,15 +387,15 @@
        character*150 path_to_radar_a(MAX_RADARS_REMAP),path_to_vrc_nl       
        character*(*) path_to_radar,path_to_vrc
 
-       character*4 c4_radarname_a(MAX_RADARS_REMAP)
-       character*4 c4_radarname
+!      character*4 c4_radarname_a(MAX_RADARS_REMAP)
+!      character*4 c4_radarname
 
        character*4 laps_radar_ext_a(MAX_RADARS_REMAP)
        character*4 laps_radar_ext
 
        character*3 c3_radar_subdir
 
-       namelist /remap_nl/ n_radars_remap,path_to_radar_a,c4_radarname_a       
+       namelist /remap_nl/ n_radars_remap,path_to_radar_a     ! ,c4_radarname_a
      1                    ,laps_radar_ext_a,path_to_vrc_nl      
        character*150 static_dir,filename
  
@@ -418,7 +420,7 @@
        endif
 
        path_to_radar  = path_to_radar_a(i_radar)
-       c4_radarname   = c4_radarname_a(i_radar)
+!      c4_radarname   = c4_radarname_a(i_radar)
        laps_radar_ext = laps_radar_ext_a(i_radar)
 
        length = min(len(path_to_vrc),len(path_to_vrc_nl))
@@ -435,7 +437,7 @@
        write(c3_radar_subdir,801)i_ext
  801   format(i3.3)
 
-       write(6,*)' c4_radarname    = ',c4_radarname
+!      write(6,*)' c4_radarname    = ',c4_radarname
        write(6,*)' laps_radar_ext  = ',laps_radar_ext
        write(6,*)' c3_radar_subdir = ',c3_radar_subdir
        write(6,*)' path_to_vrc     = ',path_to_vrc

@@ -12,17 +12,6 @@
 '',
 '',
 '',
- c4_radarname_a=
-'KFTG',
-'KFTG',
-'KFTG',
-'',
-'',
-'',
-'',
-'',
-'',
-'',
  laps_radar_ext_a=
 'v02',
 'vrc',
@@ -58,8 +47,6 @@ c                      'lapsprd' and the use of only one radar is implied.
 c                      Additional radars would be overwriting in the same 
 c                      directory which is somewhat undesirable. 
 c 
-c 'c4_radarname_a'   - Name for each radar (4 characters). Max of 10 elements.
-c
 c 'laps_radar_ext_a' - Extension name representing the type of output that
 c                      will be generated. For full volume data (e.g. wideband)
 c                      set this to 'v01', or 'v02', etc. For single tilt data

@@ -16,6 +16,9 @@
        character*2 c2_tilt
        character*3 ext_out, c3_radar_subdir
        character*8 radar_subdir
+       logical l_multi_tilt
+
+       save a9_time
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
@@ -23,7 +26,7 @@
 !      include 'remap.cmn' ! for debugging only
 
        call get_remap_parms(i_radar,n_radars_remap,path_to_radar       
-     1                    ,c4_radarname,ext_out,c3_radar_subdir
+     1                    ,ext_out,c3_radar_subdir
      1                    ,path_to_vrc,istatus)       
 
 c
@@ -49,17 +52,34 @@ c      Determine filename extension
        endif
 
        if(i_tilt_proc .eq. 1)then
-           c2_tilt = '01'
-
            call s_len(path_to_radar,len_path)
  
-!          Get i4time of 01 elevation files
+!          Get filecount of 02 elevation raw files
+           c2_tilt = '02'
            c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
+           call get_file_names(c_filespec,i_nbr_files_out,c_fnames
+     1                        ,max_files,istatus)
+           if(istatus .ne. 1)then
+               return
+           endif
 
+           write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_out
+
+           if(i_nbr_files_out .gt. 0)then
+               l_multi_tilt = .true.
+               write(6,*)' We have multiple tilt data'
+           else
+               l_multi_tilt = .false.
+               write(6,*)' We have single tilt data'
+           endif
+ 
+!          Get i4times of 01 elevation raw files
+           c2_tilt = '01'
+           c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
            call get_file_times(c_filespec,max_files,c_fnames
      1                        ,i4times,i_nbr_files_out,istatus)
 
-           write(6,*)' # of raw files = ',i_nbr_files_out
+           write(6,*)' # of 1st tilt raw files = ',i_nbr_files_out
            if(istatus .ne. 1 .or. i_nbr_files_out .eq. 0)then
                istatus = 0
                return
@@ -68,27 +88,43 @@ c      Determine filename extension
            if(ext_out .ne. 'vrc')then
                call get_filespec(ext_out,1,c_filespec,istatus)
 
-           else ! We should add path_to_vrc
-               call get_directory('rdr',directory,len_dir)
-               c_filespec = directory(1:len_dir)//radar_subdir(1:3)     
+           else ! ext_out = 'vrc', now check path_to_vrc
+               if(path_to_vrc .eq. 'rdr')then
+                   call get_directory('rdr',directory,len_dir)
+                   c_filespec = directory(1:len_dir)//radar_subdir(1:3)
+     1                          //'/vrc'     
+               else ! path_to_vrc = 'lapsprd'
+                   call get_filespec(ext_out,1,c_filespec,istatus)
+               endif
 
            endif
 
+           write(6,*)' Output filespec = ',c_filespec
 
+!          Get i4times of output files
            call get_file_times(c_filespec,max_files,c_fnames
      1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
-
+           write(6,*)' # of output files = ',i_nbr_lapsprd_files
+           
            if(i_nbr_files_out .ge. 2)then
-               i4time_process = i4times(i_nbr_files_out-1)
+               if(l_multi_tilt)then
+                   i4time_process = i4times(i_nbr_files_out-1)
+                   write(6,*)' Processing second latest input file'
+               else
+                   i4time_process = i4times(i_nbr_files_out)
+                   write(6,*)' Processing latest input file'
+               endif
+
                call make_fnam_lp(i4time_process,a9_time,istatus)
                do i = 1,i_nbr_lapsprd_files
-                   if(i4time_process .eq. i4times(i))then
+                   if(i4time_process .eq. i4times_lapsprd(i))then
                        write(6,*)' Product file already exists ',a9time      
+                       istatus = 0
+                       return
                    endif
                enddo ! i
            endif
-
-       endif
+       endif ! i_tilt_proc = 1
 
 !      Pull in housekeeping data from 1st tilt
 
