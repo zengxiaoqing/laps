@@ -216,6 +216,7 @@ AC_OUTPUT(src/lib/Makefile
           src/ingest/pireps/Makefile
           src/ingest/profiler/Makefile
           src/ingest/profiler/blp/Makefile
+          src/ingest/radar/remap/Makefile
           src/ingest/radar/wsiremap/vrc/Makefile
           src/ingest/radar/wsiremap/vrc/table/Makefile
           src/ingest/raob/Makefile

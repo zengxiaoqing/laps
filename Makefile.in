@@ -21,6 +21,7 @@ LIBDIRS = src/lib \
           src/lib/mthermo \
           src/lib/nav \
           src/lib/powell  \
+          src/lib/radar/remap_ftn \
           src/lib/temp   \
           src/lib/util  
 
@@ -34,6 +35,7 @@ EXEDIRS = src/accum \
           src/ingest/pireps \
           src/ingest/profiler \
           src/ingest/profiler/blp \
+          src/ingest/radar/remap \
           src/ingest/radar/wsiremap/vrc \
           src/ingest/radar/wsiremap/vrc/table \
           src/ingest/raob \
