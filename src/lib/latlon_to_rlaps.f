@@ -348,7 +348,8 @@ c
         call lambert_parms(slat1,slat2,n,s,rconst)
 
         rlon=slon+atand(-s*u/v)/n
-        rlat=(90.- 2.*atand((-v/cosd(n*(rlon-slon)))**(1./n)))/s      
+!       rlat=(90.- 2.*atand((-  v/cosd(n*(rlon-slon)))**(1./n)))/s      
+        rlat=(90.- 2.*atand((-s*v/cosd(n*(rlon-slon)))**(1./n)))/s      
 
         return
         end
@@ -379,9 +380,12 @@ c
 
         entry projrot_latlon(rlat,rlon,istatus)
 
-!       1997 Steve Albers       Calculate map projection rotation, this is the
-!                               angle between the y-axis "grid north" and
-!                               true north.
+!       1997 Steve Albers    Calculate map projection rotation, this is the
+!                            angle between the y-axis (grid north) and
+!                            true north. Units are degrees.
+!
+!                            projrot_laps = (true north value of wind direction
+!                                          - grid north value of wind direction)
 
         real*4 n
 
@@ -460,6 +464,8 @@ c
             stop
 
         endif
+
+        projrot_latlon = projrot_laps
 
         return
         end
