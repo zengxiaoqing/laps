@@ -26,8 +26,10 @@ c
       Integer ispec
       Integer nchannels
       Integer i4time_now_gg
-      integer i4time_cur
+      Integer i4time_cur
+      Integer i4time_sys
       Integer istatus
+      Integer laps_cycle_time
       Integer nav_status
 
       include 'satellite_dims_lvd.inc'
@@ -35,6 +37,7 @@ c
 
       character*3 chtype(maxchannel)
       character*9 cfname_cur
+      character*9 cfname_sys
       character   cgeneric_dataroot*255
       character   c_gridfname*50
 c
@@ -56,7 +59,16 @@ c
       endif
 
       i4time_cur = i4time_now_gg()
+      call get_systime(i4time_sys,cfname_sys,istatus)
       call make_fnam_lp(i4time_cur,cfname_cur,istatus)
+
+c this is designed to allow archive data runs!
+      call get_laps_cycle_time(laps_cycle_time,istatus)
+      if(i4time_cur-i4time_sys .gt. 2*laps_cycle_time)then
+         print*,'Set current time to contents of systime.dat'
+         cfname_cur=cfname_sys
+         i4time_cur=i4time_sys
+      endif
 
 c---------------------------------------------------------------
 c Compute array dimensions for ir, vis, and wv.

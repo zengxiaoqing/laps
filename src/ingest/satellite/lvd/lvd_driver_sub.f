@@ -90,6 +90,7 @@ c                                     used for variable in include 'satellite_co
       character*3 c_type(maxchannels,max_files)
       character*3 chtype(maxchannels)
       character*6 csatid
+      character*6 csat  !this one used for cld top p path
       character*9 c_fname_cur
       character*9 c_fname
       character*9 fname_ctp
@@ -159,7 +160,7 @@ c
       integer   ispec
       integer   nlf
       integer   nlf_prev
-      integer   in
+      integer   in,ncs
 c
       real*4      vis_cnt_to_cnt_lut(0:1023)
       real*4      ir_cnt_to_btemp_lut(0:1023) !this one is 11u
@@ -187,6 +188,8 @@ c
       integer ishow_timer
       integer init_timer
       integer i4time_cur
+      integer i4time_now
+      integer i4time_now_gg
       integer i_delta_t
       integer i4time_data(max_files)
       integer i4time_ctp_data
@@ -196,6 +199,7 @@ c
       integer istatus_vis(3)
       integer istatus_ctp
       integer itstatus
+      integer laps_cycle_time
       integer lvd_status
       integer nft,ntm(max_files),nft_prior
 
@@ -235,12 +239,19 @@ c
 c ----------------------------------------------------------------------
 c if current time is at beginning of new day, then adjust time back just
 c a few seconds to allow any data just before top of hour to have a chance
-c at being processed now.
+c at being processed now.  Only do this for real time runs
 c ---------------------------------------------------------------------
+      i4time_now = i4time_now_gg()
       call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
-      if(c_fname_cur(6:9).eq.'0000')then
-         i4time_cur=i4time_cur-15
-         call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
+      call get_laps_cycle_time(laps_cycle_time,istatus)
+      if(i4time_now-i4time_cur .lt. 2*laps_cycle_time)then
+         if(c_fname_cur(6:9).eq.'0000')then
+            print*
+            print*,'Adjusting time for beginning of new day'
+            print*
+            i4time_cur=i4time_cur-15
+            call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
+         endif
       endif
 
       write(6,*)'Current LVD process time: ',
@@ -1016,10 +1027,18 @@ c been mapped to the laps domain. AFWA's GMS so far.
 17    call get_c8_project(c8_project,istatus)
       if(c8_project.eq.'NIMBUS')then
 
+         if(csatid.eq.'goes08')then
+            csat=csatid(1:4)//csatid(6:6)
+            ncs=5
+         else
+            csat=csatid
+            ncs=6
+         endif
          print*,'check for new cloud top pressure (C02) files'
-         iwindow_ctp=4000
+         iwindow_ctp=40
          print*,'ctp time window (sec) = ',iwindow_ctp
-         path_to_ctp='/public/data/sat/nesdis/goes8/cloudtop/'
+         path_to_ctp='/public/data/sat/nesdis/'//csat(1:ncs)//
+     + '/cloudtop/'
          call s_len(path_to_ctp,lctp)
          if(.true.)then
             path_to_ctp=path_to_ctp(1:lctp)//'sfov_ihop/ascii'

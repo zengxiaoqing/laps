@@ -54,9 +54,6 @@ c cld-top-p files we read from FSL's /public data base.
 
       integer   nxl,nyl
       integer   i,j,ii,jj
-      integer   icnt0
-      integer   icnt1
-      integer   icntCO2
       integer   isave
       integer   isec
       integer   iobs
@@ -145,8 +142,8 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
       print*,'index for minmum time: i= ',isave
       print*,'current cld-top-p file: ',c_filenames(isave)(1:lenf)
 
-      if(i4timefile_min.ge.i4time_sys-iwindow_ctp_s.and.
-     &   i4timefile_min.le.i4time_sys+iwindow_ctp_s)then
+c     if(i4timefile_min.ge.i4time_sys-iwindow_ctp_s.and.
+c    &   i4timefile_min.le.i4time_sys+iwindow_ctp_s)then
 
         print*
         print*,'read current cld top p file'
@@ -170,6 +167,8 @@ c     print*,'last file name:  ',c_filenames(numoffiles)(1:lenf)
 c
 c determine which observations are within the analysis domain
 c
+        close(15)
+
         call find_domain_name(c_dataroot,c_domain_name,istatus)
         if(istatus.ne.1)then
            print*,'Error returned: find_domain_name'
@@ -192,9 +191,6 @@ c determine cld top p data spacing
         rlca=r_missing_data
         i4timemx=0
         i4timemn=2000000000
-        icnt0=0
-        icnt1=0
-        icntCO2=0
 
         do ii=1,iobs
       
@@ -238,14 +234,6 @@ c make and save i4time
             i4timemx=max(int(ri4time_ob(i,j)),i4timemx)
             i4timemn=min(int(ri4time_ob(i,j)),i4timemn)
 
-            if(rlca(i,j).eq.0.0)then
-               icnt0=icnt0+1
-            elseif(rlca(i,j).eq.1.0)then
-               icnt1=icnt1+1
-            elseif(rlca(i,j).gt.0.0.and.rlca(i,j).lt.1.0)then
-               icntCO2=icntCO2+1
-            endif
-
          endif
 
         enddo
@@ -260,8 +248,6 @@ c make and save i4time
         enddo
         pctobs=float(inobs)/float(nxl*nyl)
         if(pctobs.gt.0.0)then
-           jj=icnt0+icnt1+icntCO2
-           print*,'% of grid with CTP obs: ',pctobs
            rtimemx=float(i4timemx)/1.0e6
            rtimemn=float(i4timemn)/1.0e6
            i4time_data=int(((rtimemx+rtimemn)*1.0e6)/2.0)
@@ -270,19 +256,18 @@ c make and save i4time
            print*,'num/pct obs for domain ',inobs,pctobs
            print*,'time of data: ',a24time_data,' ',i4time_data
            print*,'returning data to main: fname data = ',a9time_data
-           print*
-        print*,'Cld Amt Dist:/0.0/1.0/0.0-1.0/',icnt0,icnt1,icntCO2
-        print*,'% dist: ',icnt0/jj,icnt1/jj,icntCO2/jj
         else
            istatus=0
            print*,'no cloud top p data in domain'
            print*,'no data processed for ctp: return to main'
         endif
-      else
-        istatus=0
-        print*,'no current cloud top p files: return to main'
-        print*,'no data processed'
-      endif
+
+c     else
+c       istatus=0
+c       print*,'no current cloud top p files: return to main'
+c       print*,'no data processed'
+c     endif
+
       goto 1000
 
 9     print*,'Error reading cloud top p header'

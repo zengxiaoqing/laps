@@ -140,11 +140,14 @@ c
       integer i4time_array(max_channel,max_files)
       integer i4time_data_new(max_files)
       integer cvt_wfo_fname13_i4time
+      integer i4time_now
+      integer i4time_now_gg
       integer i4time_in
       integer i4time
       integer itm
       integer ivar
       integer lend
+      integer laps_cycle_time
 
       logical   first_time
       logical   found_lvd_match
@@ -186,9 +189,13 @@ C            10 minutes to be safe...BLS 19 Jul 2002
             write(6,*)'New time: ',wfo_fname13_in
          endif
       else
-         if(c_fname_in(8:8).eq.'0')then
+        i4time_now = i4time_now_gg()
+        call cv_asc_i4time(c_fname_in,i4time_in)
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if(i4time_now-i4time_in .lt. 2*laps_cycle_time)then
+           if(c_fname_in(8:8).eq.'0')then
+            print*
             write(6,*)'Adjusting I4time_In'
-            call cv_asc_i4time(c_fname_in,i4time_in)
             i4time_in = i4time_in-480
             call make_fnam_lp (i4time_in, c_fname_in, i4status)
             if(i4status.ne.1)then
@@ -196,6 +203,7 @@ C            10 minutes to be safe...BLS 19 Jul 2002
                goto 992
             endif
             write(6,*)'New time: ',c_fname_in
+           endif
          endif
       endif
 
