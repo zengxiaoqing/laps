@@ -1350,12 +1350,13 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
      One way to supply the analysis inputs is as follows for each input (taken
      from a list of ingest outputs, see section 3.2):
 
-     prompt> cp testdata/lapsprd/input1/*           data/lapsprd/lapsprd/input1
+     prompt> cp testdata/lapsprd/[inputlist]/*  
+                                          $LAPS_DATA_ROOT/lapsprd/[inputlist]
 
                                    OR
 
-     prompt> cd data/lapsprd
-     prompt> ln -s testdata/lapsprd/input1/*        input1
+     prompt> cd $LAPS_DATA_ROOT/lapsprd
+     prompt> ln -s testdata/lapsprd/[inputlist]   .
 
      You might check to ensure that the purger will not accidentally purge
      any archived analysis files you want to keep in your $LAPS_DATA_ROOT. 
