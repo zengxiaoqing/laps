@@ -61,10 +61,10 @@ c     routine xsect.f
         data l_convert /.true./
 
 c     routine config_satellite_lvd (in file lapsgrid.f).
-        include 'satellite_dims_lvd.inc'
-        include 'satellite_common_lvd.inc'
-        include 'sat_data_static_lvd.inc'
-        data iflag_lvd_common /0/ 
+c       include 'satellite_dims_lvd.inc'
+c       include 'satellite_common_lvd.inc'
+c       include 'sat_data_static_lvd.inc'
+c       data iflag_lvd_common /0/ 
 
 c     routine config_ingest_rrv_parms
         include 'ingest_rrv_dims.inc'

@@ -328,12 +328,9 @@ c
 c lvd switch
 c
         if(ext(1:lenext).eq.'lvd')then
-
-           if(iflag_lvd_common.ne.1)then
-              call config_satellite_lvd(istatus)
-              if(istatus.ne.1)then
-                 return
-              endif
+           call config_satellite_lvd(istatus)
+           if(istatus.ne.1)then
+              return
            endif
 
            call get_laps_sat(maxsat,c_sat_id,isats

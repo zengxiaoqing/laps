@@ -252,7 +252,9 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 
 !       Get the location of the parameter directory
         call s_len(grid_fnam,len_grid_fnam)
-        len_dir = index(grid_fnam_common,'/',.true.)
+c        len_dir = index(grid_fnam_common,'/',.true.)
+        call get_directory_length(grid_fnam_common,len_dir)
+
         if(len_dir.gt.0) then
            ext='nest7grid'
         else
@@ -928,6 +930,7 @@ c
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
       include 'satellite_namelist_lvd.cmn'
+      include 'satdata_lvd.for'
 
       istatus = 0
 
