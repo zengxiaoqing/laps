@@ -36,7 +36,7 @@ c
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,obs,
-     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk,
+     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk_f,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1_f, td1_f, sp1, tb81, mslp1, vis1, elev1,
@@ -227,7 +227,7 @@ c
 	real rp(ni,nj), psfc(ni,nj), vis(ni,nj)
 	real t(ni,nj), theta(ni,nj), thetae(ni,nj), tb8(ni,nj)
 	real td(ni,nj), mslp(ni,nj)
-        real tgd(ni,nj)
+        real tgd_k(ni,nj)
 c
 c.....	Grids for the variational analyses of rp, u, v
 c
@@ -253,7 +253,7 @@ c
         real rp_bk(ni,nj), mslp_bk(ni,nj), sp_bk(ni,nj)
         real wt_rp(ni,nj), wt_mslp(ni,nj)
         real vis_bk(ni,nj), wt_vis(ni,nj)
-	real tgd_bk(ni,nj)
+	real tgd_bk_f(ni,nj)
 	real tb8_bk(ni,nj)
         integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
         integer back_mp
@@ -275,9 +275,10 @@ c
 	real lat_s(mxstn), lon_s(mxstn), elev_s(mxstn)
 	real t_s(mxstn), td_s(mxstn), ff_s(mxstn)
 	real pstn_s(mxstn), mslp_s(mxstn), vis_s(mxstn)
+        real ob_full(mxstn)
 c
 	character stn(mxstn)*20
-        character title*40, ver_file*256
+        character title*60, ver_file*256
 c
 c.....	dummy work arrays
 c
@@ -753,10 +754,11 @@ c
 
         write(6,*)' Analyze TGD observations'
         bad_tgd = 3.0
-        call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk
+        call barnes_multivariate_sfc_jacket('tgd',obs,mxstn,tgd_bk_f
      1                                     ,badflag,imax,jmax
      1                                     ,rms_thresh_norm,bad_tgd
-     1                                     ,tgd,istatus)
+     1                                     ,d2,istatus)
+	call conv_f2k(d2,tgd_k,imax,jmax)                  ! conv F to K
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
@@ -1231,8 +1233,8 @@ c
 	call move_2dto3d(  fire, data, 23, imax, jmax, num_var)
 c
 	var(24) = 'TGD'		! Ground Temperature
-	units(24) = ' '
-	call move_2dto3d(  tgd_bk, data, 24, imax, jmax, num_var)
+	units(24) = 'K'
+	call move_2dto3d(  tgd_k, data, 24, imax, jmax, num_var)       
 c
 	print *,' ======================================================='
 c
@@ -1256,43 +1258,36 @@ c	ver_file = '../log/qc/laps_sfc.ver.'//filename(6:9)
 	ver_file = ver_file(1:len)//'qc/laps_sfc.ver.'//filename(6:9)
 	call s_len(ver_file, len)
 	open(iunit,file=ver_file(1:len),status='unknown',err=999)
-c
-	title = 'Temperature (deg F)'
-	ea = 1.50
-	call zero(d1,imax,jmax)
-	call conv_k2f(t,d1,imax,jmax)
-	call verify(d1,t_s,stn,n_obs_b,title,iunit,
-     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c	
-	title = 'Temperature background (deg F)'
+	title = 'Temperature background verification (deg F)'
 	ea = 1.50
 	call zero(d1,imax,jmax)
 	call move(t_bk,d1,imax,jmax)
 	call verify(d1,t_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Temperature verification (deg F)'
+	ea = 1.50
+	call zero(d1,imax,jmax)
+	call conv_k2f(t,d1,imax,jmax)
+	call verify(d1,t_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'Dew Point background verification  (deg F)'
+	ea = 2.00
+	call zero(d1,imax,jmax)
+	call move(td_bk,d1,imax,jmax)
+	call verify(d1,td_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c	
-	title = 'Dew Point (deg F)'
+	title = 'Dew Point verification (deg F)'
 	ea = 2.00
 	call zero(d1,imax,jmax)
 	call conv_k2f(td,d1,imax,jmax)
 	call verify(d1,td_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
-	title = 'Dew Point background (deg F)'
-	ea = 2.00
-	call zero(d1,imax,jmax)
-	call move(td_bk,d1,imax,jmax)
-	call verify(d1,td_s,stn,n_obs_b,title,iunit,
-     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
-c
-	title = 'Wind Speed (kt)'
-	ea = 2.00
-	call zero(d1,imax,jmax)
-	call conv_ms2kt(spd,d1,imax,jmax)
-	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
-     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
-c
-	title = 'Wind Speed background (kt)'
+	title = 'Wind Speed background verification (kt)'
 	ea = 2.00
 	call zero(d1,imax,jmax)
 	call windspeed(u_bk,v_bk,d1,imax,jmax)	! calc windspeed
@@ -1300,20 +1295,39 @@ c
 	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
-	title = 'MSL pressure (mb)'   
+	title = 'Wind Speed verification (kt)'
+	ea = 2.00
+	call zero(d1,imax,jmax)
+	call conv_ms2kt(spd,d1,imax,jmax)
+	call verify(d1,ff_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'MSL pressure background verification (mb)'   
+	ea = 0.68
+	call zero(d1,imax,jmax)
+	call move(mslp_bk,d1,imax,jmax)
+!	call multcon(d1,.01,imax,jmax)
+	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c
+	title = 'MSL pressure verification (mb)'   
 	ea = 0.68
 	call zero(d1,imax,jmax)
 	call move(mslp,d1,imax,jmax)
 	call multcon(d1,.01,imax,jmax)
 	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
+c	
+	title = 'Ground Temperature background verification (deg F)'
+	ea = 1.50
+        call get_sfcob_field(obs,mxstn,'tgd',ob_full,istatus)
+	call verify(tgd_bk_f,ob_full,stn,n_obs_b,title,iunit,
+     &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
-	title = 'MSL pressure background (mb)'   
-	ea = 0.68
-	call zero(d1,imax,jmax)
-	call move(mslp_bk,d1,imax,jmax)
-!	call multcon(d1,.01,imax,jmax)
-	call verify(d1,mslp_s,stn,n_obs_b,title,iunit,
+	title = 'Ground Temperature verification (deg F)'
+	ea = 1.50
+	call conv_k2f(tgd_k,d1,imax,jmax)
+	call verify(d1,ob_full,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
 c
 	close(iunit)
