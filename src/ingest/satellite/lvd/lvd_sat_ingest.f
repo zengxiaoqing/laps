@@ -101,9 +101,9 @@ c
      &                      istatus)
 
         if(istatus.ne.1)then
-           write(6,*)'Error status returned from lvd_driver_sub'
+           write(6,*)'NO data was processed by lvd_driver_sub'
         else
-           write(6,*)'Finished - lvd_driver_sub'
+           write(6,*)'Data was processed by lvd_driver_sub'
         endif
 
 c =================================================================

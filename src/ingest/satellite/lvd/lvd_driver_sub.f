@@ -11,7 +11,8 @@ cdis    This software and its documentation are in the public domain and
 cdis    are furnished "as is."  The United States government, its 
 cdis    instrumentalities, officers, employees, and agents make no 
 cdis    warranty, express or implied, as to the usefulness of the software 
-cdis    and documentation for any purpose.  They assume no responsibility cdis    (1) for the use of the software and documentation; or (2) to provide
+cdis    and documentation for any purpose.  They assume no responsibility 
+cdis    (1) for the use of the software and documentation; or (2) to provide
 cdis     technical support to users.
 cdis    
 cdis    Permission to use, copy, modify, and distribute this software is
@@ -130,6 +131,7 @@ c                                     used for variable in include 'satellite_co
       logical   lvis_flag
       logical   found_data
       logical   lsatqc
+      logical   l_lut_flag
 
       integer	iskip_bilin
       integer   i,j,k,l
@@ -260,8 +262,7 @@ c
      &                      istatus)
 
          if(istatus .ne. 1)then
-            write(6,*)'Failure getting satellite data for'
-            write(6,*)c_fname_cur
+            write(6,*)'Did not get data for ',c_fname_cur
             goto 998
          else
             found_data = .true.
@@ -314,8 +315,7 @@ c    &                        istatus)
 c        if(istatus .eq. 1)then
 c           found_data = .true.
 c        else
-c           write(6,*)'Failure getting satellite data for'
-c           write(6,*)c_fname_cur
+c           write(6,*)'Did not get data for ',c_fname_cur
 c           goto 998
 c        end if
 c
@@ -340,7 +340,7 @@ c
      &                        istatus)
 
          if(istatus.ne.1)then
-            write(6,*)'No data returned from getafgwc_satdat'
+            write(6,*)'Did not get data for ',c_fname_cur
             goto 998
          endif 
 
@@ -386,33 +386,67 @@ c
                goto 909
             endif
          endif
+         call rewrite_satellite_lvd_nl(istatus)
+
       elseif(istatus.lt.0)then
+ 
          write(6,*)'Error in readlut'
-         goto 909
+         write(6,*)'Possibly the domain has changed',
+     +' try rebuilding the luts'
+         call genlvdlut_sub(nx_l,ny_l,gstatus)
+         if(gstatus.lt.0)then
+            write(6,*)'Error generating LUT - terminating'
+            goto 910
+         else
+            write(6,*)'**********************************'
+            write(6,*)
+            call readlut(csatid,csattype,maxchannels,
+     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+            if(istatus.lt.0)then
+               write(6,*)'Error reading new luts - terminating'
+               goto 909
+            endif
+         endif
+         call rewrite_satellite_lvd_nl(istatus)
+
       else
+
          write(6,*)'Got the mapping look-up-tables '
-c
-c add additional code (maybe subroutine) here to check if current lut
-c needs to be recomputed. 
-c
-c     A. For public and wfo data types:
-c        1. compare the namelist navigation parameters (r_la1 and r_lo1)
-c           to the values within a current satellite file. This requires
-c           a routine to get the relevant parameters from the netCDF header.
-c
-c     B. For public and AFWA gvar data:
-c        1. compare the relevant namelist values to those available from
-c           the file header (sat sub lat/lon, etc).
+         write(6,*)'Check if luts are up-to-date'
+         call check_luts(c_fname_cur,isat,jtype,
+     &chtype,maxchannels,nchannels,l_lut_flag,istatus)
+
+         if(l_lut_flag.and.istatus.eq.1)then
+            write(6,*)'Found difference in nav parms',
+     +' rebuild the lut'
+            call genlvdlut_sub(nx_l,ny_l,gstatus)
+            if(gstatus.lt.0)then
+               write(6,*)'Error generating LUT - terminating'
+               goto 910
+            else
+               write(6,*)'**********************************'
+               write(6,*)
+               call readlut(csatid,csattype,maxchannels,
+     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+               if(istatus.lt.0)then
+                  write(6,*)'Error reading new luts - terminating'
+                  goto 909
+               endif
+            endif
+         else
+            write(6,*)'Lut checked out ok'
+            write(6,*)
+         endif
+         call rewrite_satellite_lvd_nl(istatus)
 
       endif
-      write(6,*)
 c
 c Compute look-up table for converting ir counts to brightness temp (Tb).
 c ----------------------------------------------------------------------
 c
       if(csattype.eq.'cdf'.or.csattype.eq.'wfo')then
 
-         write(6,*)'Compute',csatid,' cnt-to-btemp lookup tables'
+         write(6,*)'Compute ',csatid,' cnt-to-btemp lookup tables'
          call genbtemplut(2,r39_cnt_to_btemp_lut,istatus)
          if(istatus.ne.1)then
             write(6,*)'Error computing 39 lut'

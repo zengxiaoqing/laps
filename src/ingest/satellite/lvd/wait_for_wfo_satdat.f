@@ -43,11 +43,9 @@ c
 87     format(i2)
 88     format(i3)
 89     format(i4)
-       write(6,*)'check-interval, total_wait, thresh age'
-       write(6,*)i4_check_interval,i4_total_wait,i4_thresh_age
+       write(6,*)'In wait-for-wfo-data '
 c
 c set "found" flag. set extensions (because the filenames are not in the same order
-c                   every time.
 c
        do i=1,nchannels
           foundit(i)=.false.
@@ -79,7 +77,7 @@ c
 
           call lvd_file_specifier(chtype(i),ispec,lstatus)
 
-          if(.not.foundit(i))then
+          if(.not.foundit(ispec))then
              nn=index(data_dir(ispec),' ')-1
              path=data_dir(ispec)(1:nn)//'*'
              nn=index(path,' ')
@@ -90,7 +88,7 @@ c
      1               ,i4_thresh_age
      1               ,istatus)
              if(istatus .ne. 1)then
-                write(6,*)'No data found: ',data_dir(i)(1:nn)
+                write(6,*)'No data found: ',path(1:nn)
              else
                 call get_latest_file_time(path,i4time_nearest)
                 if(i4time_nearest.eq.i4time_data)then
