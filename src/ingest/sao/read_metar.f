@@ -53,7 +53,7 @@ c
        integer*4 START(MAXVDIMS),COUNT(MAXVDIMS)
        integer*4 status, cnt
        character data_path*80 
-       integer min_stations minutes_to_wait_for_metars
+       integer min_stations,minutes_to_wait_for_metars
        parameter(minutes_to_wait_for_metars=10)
        parameter(min_stations=1000)
        data cnt/0/
