@@ -119,8 +119,8 @@ cdis
         do j = 1,nj
 
 !         We will now only use the VIS data if the solar alt exceeds 15 deg
-!         11 degrees now used to allow 15 min slack in data availability
-          if(solar_alt(i,j) .lt. 11.0)then
+!         7 degrees now used to allow 30 min slack in data availability
+          if(solar_alt(i,j) .lt. 7.0)then
               if(vis_albedo(i,j) .ne. r_missing_data)then
                   write(6,*)' Error -  vis_albedo not missing:'
      1                     ,solar_alt(i,j)
