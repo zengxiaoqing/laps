@@ -79,8 +79,7 @@ cdis
       integer nlast(KCLOUD)
       logical l_analyze(KCLOUD)
 
-      write(6,1234)
- 1234 format(1x,'barnes_r5 called')
+      write(6,*)' subroutine barnes_r5...'
 
       if(n_cld_snd .gt. max_cld_snd)then
           write(6,*)' barnes_r5: ERROR, too many cloud soundings'
@@ -124,20 +123,33 @@ cdis
       exponent_distance_wt = 5.0
 
       iiizero = 0
+      bias_iii = 1e0
 
-      do iii = 1,n_fnorm
-        bias_iii = 1e0
-        fnorm(iii) = 
-     1        (100.*bias_iii/float(iii)) ** (exponent_distance_wt / 2.0)       
+      grid_spacing_mc = grid_spacing_m * 10000. / 10080.8 ! For testing
+
+      dist_norm = 100000. ! at 100km distance, ob weight = 1.
+      dist_norm_grid = dist_norm / grid_spacing_mc ! Normalized dist per grid pt
+      dist_norm_grid_sq = dist_norm_grid**2
+
+!     More efficient way to say weight = (d / 100km) ** exponent_distance_wt
+      do iii = 1,n_fnorm ! iii is loosely the dist in grid points squared
+        fnorm(iii) = (dist_norm_grid_sq * bias_iii/float(iii)) 
+     1                                 ** (exponent_distance_wt / 2.0)       
         if(fnorm(iii) .eq. 0. .and. iiizero .eq. 0)then
             iiizero = iii
             write(6,*)' WARNING: fnorm array reached zero, iii=',iiizero
         endif
       enddo
 
-      write(6,*)' Model background weight = ',weight_modelfg
-      write(6,*)' Min possible ob weight = ',fnorm(n_fnorm)
-      write(6,*)' Max possible ob weight = ',fnorm(1)
+      radius_of_influence_km =  ( weight_modelfg ** 
+     1                           (-1./exponent_distance_wt) )
+     1                                     * (dist_norm/1000.)
+
+      write(6,*)' Model background weight  = ',weight_modelfg
+      write(6,*)' Approx radius of influence (km) = '
+     1         ,radius_of_influence_km
+      write(6,*)' Min possible ob weight   = ',fnorm(n_fnorm)
+      write(6,*)' Max possible ob weight   = ',fnorm(1)
 
       ncnt=0
       do k=1,kmax
@@ -222,14 +234,13 @@ cdis
          write(6,*)' Ncnt = ',ncnt
       endif
 
-      spcng = 10.
-      radm2=1.533/spcng**2
+      radm2=1.533/100.
 
       rr_max = (NX_DIM_LUT-1)**2 + (NY_DIM_LUT-1)**2
-      iii_max = radm2 * 100. * rr_max + 1.
+      iii_max = 1.533 * rr_max + 1.
 
-      write(6,*)' radm2*100/iii_max/n_fnorm = '
-     1           ,radm2*100.,iii_max,n_fnorm
+      write(6,*)' 1.533/iii_max/n_fnorm = '
+     1           ,1.533,iii_max,n_fnorm
 
       if(iii_max .gt. n_fnorm)then
           write(6,*)' iii_max is too large, increase n_fnorm'
@@ -241,10 +252,10 @@ cdis
 !     Create a lookup table for fnorm(iii)
       do i = -NX_DIM_LUT,NX_DIM_LUT
       do j = -NY_DIM_LUT,NY_DIM_LUT
-              rr=i*i+j*j
-              iii=radm2*100.*rr+1.
-              if(iii .gt. n_fnorm)iii=n_fnorm
-              iiilut(i,j) = fnorm(iii)
+          rr=i*i+j*j
+          iii=1.533*rr+1.
+          if(iii .gt. n_fnorm)iii=n_fnorm
+          iiilut(i,j) = fnorm(iii)
       enddo
       enddo
 
