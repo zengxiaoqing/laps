@@ -190,7 +190,8 @@ c
             endif
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call write_label_lplot(ni,nj,c33_label,asc_tim_9,i_overlay)       
+            call write_label_lplot(ni,nj,c33_label,asc_tim_9,i_overlay
+     1                            ,'hsect')       
 
         endif
 

@@ -149,6 +149,7 @@ cdis
 1110    format(/////'     [h/hz]  Horizontal Plan View '
      1        ,'   (Const Pressure Level or SFC)'
      1        /'     [x]  Vertical Cross Section'
+     1        /'     [s]  Sounding (Under Construction)'
      1        /' ',60x,'[q] QUIT ? ',$)
         read(lun,1111)c_section
 1111    format(a)
@@ -195,8 +196,8 @@ cdis
      1                ,r_missing_data,laps_cycle_time,maxstns)
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
-            call sounding(i4time_ref,lun,NX_L,NY_L,NZ_L,r_missing_data
-     1                   ,laps_cycle_time,maxstns)
+            call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
+     1                        ,r_missing_data,laps_cycle_time,maxstns)       
 
         endif ! c_section
 
@@ -218,10 +219,4 @@ cdis
 
         return
 
-        end
-
-        subroutine sounding(i4time_ref,lun,NX_L,NY_L,NZ_L,r_missing_data       
-     1                     ,laps_cycle_time,maxstns)
-
-        return
         end

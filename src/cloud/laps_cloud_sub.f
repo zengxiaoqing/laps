@@ -810,7 +810,8 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
 C INSERT RADAR DATA
         if(n_radar_3dref .gt. 0)then
-            call get_max_ref(radar_ref_3d,NX_L,NY_L,NZ_L,dbz_max_2d)
+            call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L,ref_base       
+     1                          ,dbz_max_2d)
 
             call insert_radar(i4time,clouds_3d,cld_hts
      1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
@@ -897,6 +898,9 @@ C       EW SLICES
         enddo ! j
 
         if(istat_radar_3dref .eq. 1)then
+            call get_max_reflect(radar_ref_3d,NX_L,NY_L,NZ_L
+     1                          ,r_missing_data,dbz_max_2d)
+
             call compare_cloud_radar(radar_ref_3d,dbz_max_2d,cvr_max
      1         ,ref_base,cloud_frac_vis_a
      1         ,vis_radar_thresh_cvr,vis_radar_thresh_dbz,r_missing_data       
@@ -1567,17 +1571,13 @@ C       EW SLICES
      1          ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
      1          ,r_missing_data,ni,nj,nk)
 
-        real*4 radar_ref_3d(ni,nj,nk)
-        real*4 dbz_max_2d(ni,nj)
-        real*4 cvr_max(ni,nj)
-        real*4 cloud_frac_vis_a(ni,nj)
+        real*4 radar_ref_3d(ni,nj,nk)                   ! I
+        real*4 dbz_max_2d(ni,nj)                        ! I
+        real*4 cvr_max(ni,nj)                           ! I
+        real*4 cloud_frac_vis_a(ni,nj)                  ! I
 
 !       This routine compares the cloud and radar fields and flags
 !       remaining differences that weren't caught in earlier processing
-!       This routine does not alter any arrays or pass anything back,
-!       it is diagnostic only.
-
-        call get_max_ref(radar_ref_3d,ni,nj,nk,dbz_max_2d)
 
         write(6,*)'Comparing clouds and radar (_RDR)'
         write(6,*)'vis_radar_thresh_cvr = ',vis_radar_thresh_cvr

@@ -2786,8 +2786,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         real*4 array_in(NX_L,NY_L)
         real*4 array_out(NX_C)
 
-        deltax = (xhigh - xlow) / (float(NX_C) - 1.)
-        deltay = (yhigh - ylow) / (float(NX_C) - 1.)
+        if(NX_C .gt. 1)then
+            deltax = (xhigh - xlow) / (float(NX_C) - 1.)
+            deltay = (yhigh - ylow) / (float(NX_C) - 1.)
+        else
+            deltax = 0.
+            deltay = 0.
+        endif
 
 !       Bilinearly interpolate from 2d grid to 1d array
         do ii = 1,NX_C

@@ -66,7 +66,7 @@ cdis
         real*4 ref_3d(ni,nj,nk)                  ! Local 3D reflctvy grid
         integer*4 isum_ref_2d(ni,nj)             ! Local array
 
-        logical l_low_fill,l_high_fill,l_test
+        logical l_low_fill, l_high_fill, l_test, l_nonmissing(ni,nj)       
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)then
@@ -115,11 +115,16 @@ cdis
         enddo
         enddo
 
-        do k = 1,nk
-        do j = 1,nj
         do i = 1,ni
-            isum_ref_2d(i,j) = isum_ref_2d(i,j) + nint(ref_3d(i,j,k))
-        enddo
+        do j = 1,nj
+            l_nonmissing(i,j) = .false.
+            do k = 1,nk
+                isum_ref_2d(i,j) = isum_ref_2d(i,j) 
+     1                           + nint(ref_3d(i,j,k))
+                if(ref_3d_io(i,j,k) .ne. r_missing_data)then
+                    l_nonmissing(i,j) = .true.
+                endif
+            enddo
         enddo
         enddo
 
@@ -282,12 +287,15 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
             endif ! l_low_fill
 
-!           Return valid ref values to io array
-            do k = 1,nk
-                ref_3d_io(i,j,k) = ref_3d(i,j,k)
-            enddo ! k
 
           endif ! echo present
+
+!         Return valid ref values to io array
+          if(l_nonmissing(i,j))then 
+              do k = 1,nk
+                  ref_3d_io(i,j,k) = ref_3d(i,j,k)
+              enddo ! k
+          endif ! We have non-missing reflectivity values in the column
 
         enddo ! i
         enddo ! j

@@ -41,6 +41,7 @@ SRC= lapsplot_main.f \
      plotwindob.f \
      plot_mesoob.f \
      plot_contour.f \
+     plot_sounding.f \
      supmap.f \
      drawctymap.f \
      weight_vertical.f \
