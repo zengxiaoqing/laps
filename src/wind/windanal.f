@@ -38,6 +38,7 @@ cdis
 cdis
 
        subroutine laps_anl(uobs,vobs
+!    1     ,obs_point,max_obs                                          ! I
      1     ,n_radars,istat_radar_vel                                   ! I
      1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in,idx_radar_a             ! I
 !    1     ,upass1,vpass1                                              ! O
@@ -78,6 +79,7 @@ cdis
       parameter (max_obs = 40000)       
       include 'barnesob.inc'
       type (barnesob) obs_barnes(max_obs)                           
+!     type (barnesob) obs_point(max_obs)                           
 
       integer n_var                                                ! Input
       integer*4 imax,jmax,kmax        ! 3D array dimensions        ! Input
@@ -178,7 +180,7 @@ csms$serial(default=ignore)  begin
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
 
-      l_3d = .true.
+      l_3d = .true.                              ! Can no longer be changed
       l_not_struct = .false.
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
@@ -434,12 +436,29 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
         enddo ! k
 
-!       Spread the difference ob vertically
-        call spread_vert(uobs_diff,vobs_diff,l_3d,iwrite
-     1          ,varobs_diff_spread(1,1,1,1),varobs_diff_spread(1,1,1,2)
-     1          ,wt_p,wt_p_spread,pres_3d,i,j,imax,jmax,kmax,istatus)
+        if(.false.)then
+!         Spread the difference ob vertically
+          call spread_vert(uobs_diff,vobs_diff,l_3d               ! I
+     1                    ,iwrite                                 ! I/O
+     1                    ,varobs_diff_spread(1,1,1,1)            ! O*
+     1                    ,varobs_diff_spread(1,1,1,2)            ! O*
+     1                    ,wt_p                                   ! I
+     1                    ,wt_p_spread                            ! O*
+     1                    ,pres_3d,i,j,imax,jmax,kmax             ! I
+     1                    ,istatus)                               ! O*
 
-        if(istatus .ne. 1)return
+!         if(istatus .ne. 1)return
+
+        else
+
+!         Initialize the obs_out columns
+          do k = 1,kmax
+            varobs_diff_spread(i,j,k,1) = uobs_diff(i,j,k)
+            varobs_diff_spread(i,j,k,2) = vobs_diff(i,j,k)
+!           wt_p_spread(i,j,k) = wt_p(i,j,k)
+          enddo ! k
+
+        endif ! phase out 'spread_vert' call
 
       enddo ! i
       enddo ! j
@@ -482,14 +501,15 @@ csms$>       rms_thresh , out>:default=ignore)  begin
           l_analyze(k) = .true.
       enddo ! k
 
-      call get_inst_err(imax,jmax,kmax,r_missing_data
-     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+      call get_inst_err(imax,jmax,kmax,r_missing_data                 ! I
+     1                 ,wt_p,rms_thresh_norm                          ! I
+     1                 ,rms_inst,rms_thresh)                          ! O
 
 csms$serial end
 
       call arrays_to_barnesobs      (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_spread   ! I
+     1                              ,varobs_diff_spread,wt_p          ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
@@ -498,11 +518,13 @@ csms$serial end
      1        ,n_var,ncnt_total,obs_barnes                            ! I
      1        ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl           ! I
      1        ,varobs_diff_spread                                     ! O (aerr)
-     1        ,wt_p_spread,fnorm_dum,n_fnorm_dum                      ! I
+     1        ,wt_p,fnorm_dum,n_fnorm_dum                             ! I
      1        ,l_analyze_dum,l_not_struct,rms_thresh,weight_bkg_const ! I
      1        ,topo_dum,rland_frac_dum,1,1                            ! I
      1        ,n_obs_lvl,istatus)                                     ! O
       if(istatus .ne. 1)return
+
+      wt_p_spread = wt_p
 
 csms$print_mode(async) begin
 csms$insert      call nnt_me(me)
@@ -612,8 +634,9 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
 !             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
 !             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-              call get_inst_err(imax,jmax,kmax,r_missing_data
-     1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+              call get_inst_err(imax,jmax,kmax,r_missing_data         ! I
+     1                         ,wt_p_spread,rms_thresh_norm           ! I
+     1                         ,rms_inst,rms_thresh)                  ! O
 
 csms$serial end
 
@@ -700,8 +723,9 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
 !             call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
 !             call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-              call get_inst_err(imax,jmax,kmax,r_missing_data
-     1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+              call get_inst_err(imax,jmax,kmax,r_missing_data           ! I
+     1                         ,wt_p_spread,rms_thresh_norm             ! I
+     1                         ,rms_inst,rms_thresh)                    ! O
 
 csms$serial end
 
@@ -794,8 +818,9 @@ csms$>                                     :default=ignore)  begin
 !         call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
 !         call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-          call get_inst_err(imax,jmax,kmax,r_missing_data
-     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+          call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
+     1                     ,wt_p_spread,rms_thresh_norm               ! I
+     1                     ,rms_inst,rms_thresh)                      ! O
 
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 9 processor=',me
@@ -1472,9 +1497,14 @@ csms$ignore end
       end
 
 
-      subroutine spread_vert(uobs_in,vobs_in,l_3d,iwrite,uobs_out
-     1                      ,vobs_out,wt_p,weights,pres_3d,i,j
-     1                      ,imax,jmax,kmax,istatus)
+      subroutine spread_vert(uobs_in,vobs_in,l_3d               ! I
+     1                      ,iwrite                             ! I/O
+     1                      ,uobs_out,vobs_out                  ! O*
+     1                      ,wt_p                               ! I
+     1                      ,weights                            ! O*
+     1                      ,pres_3d,i,j                        ! I
+     1                      ,imax,jmax,kmax                     ! I
+     1                      ,istatus)                           ! O*
 
 !     Modified 7/94 S. Albers to allow better handling of variable
 !     vertical resolution of pressure
@@ -1500,7 +1530,7 @@ csms$ignore end
 !     Vertical radius of influence for each data source (pascals)
       real*4 r0_vert_pirep,r0_vert_cdw,r0_vert_sfc,r0_vert_prof
       parameter (r0_vert_pirep = 2500.)
-      parameter (r0_vert_cdw  = 2500.)
+      parameter (r0_vert_cdw   = 2500.)
       parameter (r0_vert_sfc   = 2500.)
       parameter (r0_vert_prof  = 2500.)
 
@@ -1526,141 +1556,19 @@ csms$ignore begin
       enddo ! k
 
       do k = 1,kmax
-          if(.true.)then ! l_3d
-              kklow = k
-              kkhigh = k
-          else
-              kklow = 1
-              kkhigh = kmax
-          endif
 
           if(weights(i,j,k) .eq. weight_pirep)then ! Spread this pirep vertically
-              do kk = kklow,kkhigh
-                  if(.true.)then ! l_3d
-                      if(k .ne. kk)stop
-                      dist_pa = 0.
-                  else
-                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
-                  endif
-
-                  if(weights(i,j,kk) .eq. r_missing_data   .and.
-     1               dist_pa         .le. pres_range_pirep       )then
-                      weights(i,j,kk) = weight_pirep
-     1                  * exp(-(dist_pa/r0_vert_pirep))
-                      uobs_out(i,j,kk) = uobs_in(i,j,k)
-                      vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      if(iwrite .eq. 1)write(6,101)i,j,k,kk
-     1                                            ,uobs_out(i,j,kk)
-     1                                            ,vobs_out(i,j,kk)
-     1                                            ,weights(i,j,kk)
-101                   format(' Prp',2i5,2i4,2f6.1,f8.5)
-                  endif
-              enddo
+              dist_pa = 0.
           endif
 
           if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
-              do kk = kklow,kkhigh
-                  if(.true.)then ! l_3d
-                      if(k .ne. kk)stop
-                      dist_pa = 0.
-                  else
-                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
-                  endif
-
-                  if(weights(i,j,kk) .eq. r_missing_data   .and.
-     1               dist_pa         .le. pres_range_cdw         )then
-                      weights(i,j,kk) = weight_cdw
-     1                          * exp(-(dist_pa/r0_vert_cdw))
-                      uobs_out(i,j,kk) = uobs_in(i,j,k)
-                      vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      if(iwrite .eq. 1)write(6,201)i,j,k,kk
-     1                                            ,uobs_out(i,j,kk)
-     1                                            ,vobs_out(i,j,kk)
-     1                                            ,weights(i,j,kk)
-201                   format(' Cdw',2i5,2i4,2f6.1,f8.5)
-                  endif
-              enddo
+              dist_pa = 0.
           endif
 
           if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
-              do kk = kklow,kkhigh
-                  if(.true.)then ! l_3d
-                      if(k .ne. kk)stop
-                      dist_pa = 0.
-                  else
-                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
-                  endif
-
-                  if(weights(i,j,kk) .eq. r_missing_data   .and.
-     1               dist_pa         .le. pres_range_sfc         )then
-                      weights(i,j,kk) = weight_sfc
-     1                          * exp(-(dist_pa/r0_vert_sfc))
-                      uobs_out(i,j,kk) = uobs_in(i,j,k)
-                      vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      if(iwrite .eq. 1)write(6,301)i,j,k,kk
-     1                                            ,uobs_out(i,j,kk)
-     1                                            ,vobs_out(i,j,kk)
-     1                                            ,weights(i,j,kk)
-301                   format(' Sfc',2i5,2i4,2f6.1,f8.5)
-                  endif
-              enddo
+              dist_pa = 0.
           endif
 
-          if(weights(i,j,k) .eq. weight_prof)then ! Spread this profiler vertically
-
-!             Spread on high side
-              kp1 = min(kmax,k+1)
-              if(weights(i,j,kp1) .eq. r_missing_data)then
-              do kk = kklow,kkhigh
-                  if(.true.)then ! l_3d
-                      if(k .ne. kk)stop
-                      dist_pa = 0.
-                  else
-                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
-                  endif
-
-                  if(weights(i,j,kk) .eq. r_missing_data   .and.
-     1               dist_pa         .le. pres_range_prof  .and.
-     1               kk              .gt. k                      )then
-                      weights(i,j,kk) = weight_prof
-     1                          * exp(-(dist_pa/r0_vert_prof))
-                      uobs_out(i,j,kk) = uobs_in(i,j,k)
-                      vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      if(iwrite .eq. 1)write(6,401)i,j,k,kk
-     1                                            ,uobs_out(i,j,kk)       
-     1                                            ,vobs_out(i,j,kk)
-     1                                            ,weights(i,j,kk)
-401                   format(' Prf',2i5,2i4,2f6.1,f8.5)
-                  endif
-                enddo ! kk
-              endif
-
-!             Spread on low side
-              km1 = max(1,k-1)
-              if(weights(i,j,km1) .eq. r_missing_data)then
-              do kk = kklow,kkhigh
-                  if(.true.)then ! l_3d
-                      if(k .ne. kk)stop
-                      dist_pa = 0.
-                  else
-                      dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
-                  endif
-
-                  if(weights(i,j,kk) .eq. r_missing_data   .and.
-     1               dist_pa         .le. pres_range_prof  .and.
-     1               kk              .lt. k                      )then
-                      weights(i,j,kk) = weight_prof
-     1                          * exp(-(dist_pa/r0_vert_prof))
-                      uobs_out(i,j,kk) = uobs_in(i,j,k)
-                      vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      if(iwrite .eq. 1)write(6,401)i,j,k,kk
-     1                                            ,uobs_out(i,j,kk)
-     1                                            ,vobs_out(i,j,kk)
-     1                                            ,weights(i,j,kk)
-                  endif
-                enddo ! kk
-              endif
-          endif
       enddo ! k
 csms$ignore end
 
@@ -1668,8 +1576,9 @@ csms$ignore end
       end
 
 
-      subroutine get_inst_err(imax,jmax,kmax,r_missing_data
-     1           ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+      subroutine get_inst_err(imax,jmax,kmax,r_missing_data        ! I
+     1                       ,wt_p_spread,rms_thresh_norm          ! I
+     1                       ,rms_inst,rms_thresh)                 ! O
 
       real*4    wt_p_spread(imax,jmax,kmax)                        ! Input
 
