@@ -2476,8 +2476,8 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 <pre>
 Inputs:
 	RAOBs in various formats (FSL-NIMBUS CDL - NetCDF)
-                                 (WFO/AWIPS - except for software changes 
-                                  needed to address some CDL differences)
+                                 (WFO/AWIPS - except that software changes may
+                                  be needed to address some CDL differences)
                                  (AFWA and CWB ASCII formats also allowed)
 
         Satellite Soundings in AFWA format
