@@ -33,6 +33,7 @@ cdis
         subroutine get_heights_hydrostatic
      1              (temp_3d_k          ! Input (3d temp K)
      1              ,pres_sfc_pa        ! Input (surface pressure pa)
+     1              ,pres_3d            ! Input (3d pressure pa)
      1              ,sh_3d              ! Input (3d specific humidity)
      1              ,topo               ! Input (terrain m)
      1              ,ni,nj,nk           ! Input (Dimensions)
@@ -56,8 +57,11 @@ cdis
         real*4 pres_sfc_mb(ni,nj)
         real*4 z_correction(ni,nj)
 
+        real*4 pres_3d(ni,nj,nk)                    
+
+        real*4 pres_3d_mb(ni,nj,nk)               ! Local
         real*4 p_1d_mb(nk)                        ! Local
-        real*4 alog_array(nk)                     ! Local
+        real*4 alog_array(ni,nj,nk)               ! Local
 
         real*4 make_td, k_to_c
 
@@ -75,8 +79,16 @@ c       write(6,*)' Initialize and calculate first level'
         enddo
 
         do k = 1,nk
-            p_1d_mb(k) = zcoord_of_level(k)/100.
-            if(k .gt. 1)alog_array(k-1) = alog(p_1d_mb(k-1)/p_1d_mb(k))
+            do j = 1,nj
+            do i = 1,ni
+!               p_1d_mb(k) = zcoord_of_level(k)/100.
+                pres_3d_mb(i,j,k) = pres_3d(i,j,k) / 100.
+                if(k .gt. 1)then
+                    alog_array(i,j,k-1) = 
+     1                  alog(pres_3d_mb(i,j,k-1)/pres_3d_mb(i,j,k))
+                endif
+            enddo ! i
+            enddo ! j
         enddo
 
 
@@ -86,10 +98,10 @@ c       write(6,*)' Initialize and calculate first level'
             heights_below(i,j) = 0.
             t_2d_c_below = k_to_c(temp_3d_k(i,j,1))
             td_2d_c_below = t_2d_c_below - 10.
-            td_2d_c_below = make_td(p_1d_mb(1),t_2d_c_below
+            td_2d_c_below = make_td(pres_3d_mb(i,j,1),t_2d_c_below
      1                             ,sh_3d(i,j,1)*1000.,-132.)
             A_below(i,j)= temp_3d_k(i,j,1)
-     1           * (C2 + W_laps(TD_2D_c_below,P_1d_mb(1  ),esat_lut))       
+     1         * (C2 + W_laps(TD_2D_c_below,pres_3d_mb(i,j,1),esat_lut))       
         enddo ! i
         enddo ! j
 
@@ -101,27 +113,29 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
             do i = 1,ni
                 t_1d_c  = k_to_c(temp_3d_k(i,j,k))
                 td_1d_c = t_1d_c - 10. ! Typical Dewpoint Depression
-                td_1d_c = make_td(p_1d_mb(k),t_1d_c
+                td_1d_c = make_td(pres_3d_mb(i,j,k),t_1d_c
      1                           ,sh_3d(i,j,k)*1000.,-132.)       
 
                 A1= temp_3d_k(i,j,k) *
-     1          (C2 + W_laps(TD_1D_c,P_1d_mb(K  ),esat_lut))
+     1          (C2 + W_laps(TD_1D_c,pres_3d_mb(i,j,k),esat_lut))
 
-                Z_add = (A1+A_below(i,j))*(alog_array(k-1))
+                Z_add = (A1+A_below(i,j))*(alog_array(i,j,k-1))
 
                 heights_3d(i,j,k) = heights_below(i,j) + z_add
 
 !               Test whether this layer contains the surface
-                if(p_1d_mb(k)   .le. pres_sfc_mb(i,j)     .and.
-     1             p_1d_mb(k-1) .ge. pres_sfc_mb(i,j)           )then    
+                if(pres_3d_mb(i,j,k  ) .le. pres_sfc_mb(i,j) .and.
+     1             pres_3d_mb(i,j,k-1) .ge. pres_sfc_mb(i,j)      )then       
 
-                    alog_factor = alog(p_1d_mb(k-1)/pres_sfc_mb(i,j))
-                    z_to_sfc = z_add * (alog_factor / alog_array(k-1))
+                    alog_factor = alog( pres_3d_mb(i,j,k-1)
+     1                                 /pres_sfc_mb(i,j)   )
+                    z_to_sfc = z_add * (  alog_factor 
+     1                                  / alog_array(i,j,k-1) )
 
                     z_below = topo(i,j) - z_to_sfc
 
 !                   z_below = topo(i,j) -
-!       1               z_thk(pres_sfc_mb(i,j),p_1d_mb(k-1),t_1d_c,td_1d_c
+!       1           z_thk(pres_sfc_mb(i,j),pres_3d_mb(i,j,k-1),t_1d_c,td_1d_c
 !       1                                               ,alog_array,esat_lut,2)
 
                     z_correction(i,j) = z_below - heights_below(i,j)
