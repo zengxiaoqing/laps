@@ -262,7 +262,9 @@
      the form of automatic arrays. This implies that you will need a FORTRAN
      90 compiler, or at least an f77 compiler that has f90 extensions
      allowing for automatic arrays. LAPS will not work on a strict f77 
-     compiler that does not allow automatic arrays.
+     compiler that does not allow automatic arrays. Conversely, we are using
+     only a subset of f90 constructs to help ensure compatability with f77
+     compilers.
 
                   ---  2.3    Raw data ingest   ---
 
