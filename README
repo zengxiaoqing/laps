@@ -1194,6 +1194,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      Satellite derived soundings (snd):
            AFWA database format. Previously used at FSL but not currently.
+           We are currently developing a new interface to GOES12.
+
+     Radiometric Profiler (snd):
+           We have an interface to radiometric profilers (in NetCDF via NIMBUS)
+           that can be used for the temperature and humidity analyses.
 
      Cloud Drift Winds (cdw):
            We are ingesting the ASCII satellite cloud-drift wind files
