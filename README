@@ -1499,6 +1499,38 @@ sounding data will be on, and .snd files will be processed if present.
 If this character is "0", the moisture code will not process sounding
 data.
 
+GVAP
+
+GVAP data are GOES sounder total precipitable water data acquired from
+the sounding retrieval process.  These data were added to LAPS under a
+grant from NOAA NESDIS.
+
+The analysis for GVAP data is basically as follows.  Following the
+varational adjustment for sounder data, (1Dvar), the Q field is
+integrated to give total precipitable water (TPW) at each GVAP
+location.  These values are differenced against the GVAP data.  The
+differences are then analyzed as a 2D field (difference correction
+field) by solving Laplace's equation (minimizing the first derivative).
+
+Routine weight_field.f is then called with a radius of influence of
+15km.  A weight field is then generated where a weight of 0.5 is
+defined to be at a distance of 15km from a GVAP observation.  GVAP data
+locations are provided in array MASK.  A weight_field array is
+populated with the highest weight value possible at each i,j, location
+determined by the proximity of that location to a GVAP observation
+position.
+
+The analysis concludes by applying the difference correction field to
+the Q field at all levels, (effectively scaling it up or down) and the
+magnitude of this adjustment is controlled by the weight field.  Note
+that it is felt that it is appropriate to scale the Q field with a
+ratio of TPW since TPW is an absolute measure of moisture as is Q. 
+This method assures continuous fields, and limits the corrections to
+the radius of influence (15km) deemed appropriate to GVAP measurements. 
+At this time the only TPW full column adjustment is made.  At a future
+time, it may be worthwhile to design an adjustment based on layer PW
+since 3 layers are routinely available from NESDIS.  
+
 ------ 2.12 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
