@@ -187,13 +187,13 @@ cdis
         real*4 slwc_2d(NX_L,NY_L)
         real*4 cice_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
+        real*4 field_2d_buf(NX_L,NY_L)
 
         real*4 snow_2d(NX_L,NY_L)
         real*4 snow_2d_buf(NX_L,NY_L)
         real*4 precip_2d(NX_L,NY_L)
         real*4 precip_2d_buf(NX_L,NY_L)
         real*4 accum_2d(NX_L,NY_L)
-        real*4 accum_2d_buf(NX_L,NY_L)
 
 !       Local variables used in
         logical l_mask(NX_L,NY_L)
@@ -369,11 +369,11 @@ c       include 'satellite_dims_lvd.inc'
      1       ,' [cy,py] Cloud/Precip Type'
      1       /'         [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc-i] Snow Cvr'
-     1       /
-     1       /'     STATIC INFO: [gg] '
+     1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
-     1       , 'Polar Orbiter'
-     1       //' ',52x,'[q] quit/display ? ',$)
+     1       ,'Polar Orbiter'
+     1      //'     Difference field: [di] '
+     1      //' ',52x,'[q] quit/display ? ',$)
 
  15     format(a2)
 
@@ -383,8 +383,26 @@ c       include 'satellite_dims_lvd.inc'
 !       c4_log = 'h '//c_type
 !       if(lun .eq. 5 .and. c_type .ne. 'q ')call logit(c4_log)
 
-!  ***  Ask for wind field ! ***************************************************
-        if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'
+        if(c_type .eq. 'di')then
+            write(6,*)' Plotting difference field of last two entries'       
+            call diff(field_2d_buf,field_2d,field_2d,NX_L,NY_L)
+
+            c33_label = 'difference field'
+
+            scale = 1.
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                                                  ,zoom,scale)
+
+            call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+        else
+            call move(field_2d,field_2d_buf,NX_L,NY_L)
+
+        endif
+
+        if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'     ! Wind fields
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
      1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw'
      1    .or. c_type .eq. 'bo' .or. c_type .eq. 'lo'
@@ -662,15 +680,15 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'u ')then
                 if(c_type .eq. 'wf')then
-                    c19_label = ' U - Diff      '
+                    c19_label = ' U   Diff      '
                 elseif(c_type .eq. 'wb')then
-                    c19_label = ' U (lga) - Comp'
+                    c19_label = ' U   (lga)     '
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' U (fua) - Comp'
+                    c19_label = ' U   (fua)     '
                 elseif(c_type .eq. 'bw')then
-                    c19_label = ' U - Comp (bal)'
+                    c19_label = ' U   (bal)     '
                 else
-                    c19_label = ' U - Comp (anal)'
+                    c19_label = ' U   (anal)    '
                 endif
 
                 call mklabel33(k_level,c19_label,c33_label)
@@ -678,6 +696,8 @@ c       include 'satellite_dims_lvd.inc'
                 call plot_cont(u_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call move(u_2d,field_2d,NX_L,NY_L)
 
             else if(c_field .eq. 'v ')then
                 if(c_type .eq. 'wf')then
@@ -696,6 +716,8 @@ c       include 'satellite_dims_lvd.inc'
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,       
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call move(v_2d,field_2d,NX_L,NY_L)
 
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
@@ -792,6 +814,8 @@ c       include 'satellite_dims_lvd.inc'
                 call plot_cont(w_2d,1e-1,0.,0.,-1.0,asc9_tim_3dw,
      1              c33_label,i_overlay,c_display,lat,lon,jdot,       
      1              NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+                call move(w_2d,field_2d,NX_L,NY_L)
 
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
                 call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
@@ -1855,7 +1879,7 @@ c
      1     ' Looking for Storm Total Accumulations Stored In Files'
 
                     call get_laps_2d(i4time_endfile,ext,var_2d
-     1          ,units_2d,comment_2d,NX_L,NY_L,accum_2d_buf,istatus_file
+     1          ,units_2d,comment_2d,NX_L,NY_L,field_2d_buf,istatus_file
      1)
                     if(istatus_file .ne. 1)goto2100
                     comment_b = comment_2d(1:9)
@@ -1888,7 +1912,7 @@ c
 
                     write(6,*)
      1     ' Subtracting Storm Totals to yield Accumulation over period'
-                    call diff(accum_2d_buf,accum_2d,accum_2d,NX_L,NY_L)
+                    call diff(field_2d_buf,accum_2d,accum_2d,NX_L,NY_L)
 
                     do j = 1,NY_L
                     do i = 1,NX_L
@@ -2072,7 +2096,7 @@ c
 
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    temp_2d(i,j) = temp_3d(i,j,k_level)
+                    field_2d(i,j) = temp_3d(i,j,k_level)
                 enddo ! j
                 enddo ! i
 
@@ -2085,7 +2109,7 @@ c
 
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    temp_2d(i,j) = temp_3d(i,j,k_level)
+                    field_2d(i,j) = temp_3d(i,j,k_level)
                 enddo ! j
                 enddo ! i
 
@@ -2093,9 +2117,15 @@ c
                 call get_temp_2d(i4time_ref,7200,i4time_nearest
      1                          ,level_mb,NX_L,NY_L,temp_2d,istatus)
 
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(temp_2d(i,j))
+                enddo ! j
+                enddo ! i
+
                 call mklabel33(k_level,' Temperature      C',c33_label)       
 
-             elseif(c_type.eq. 'bt')then
+            elseif(c_type.eq. 'bt')then
                 var_2d = 'T3'
                 ext='lt1'
 
@@ -2104,7 +2134,7 @@ c
                 call get_2dgrid_dname(directory
      1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
      1           ,ext,var_2d,units_2d,comment_2d
-     1           ,NX_L,NY_L,temp_2d,level_mb,istatus)       
+     1           ,NX_L,NY_L,field_2d,level_mb,istatus)       
 
                 call mklabel33(k_level,' Temp (Bal)       C',c33_label)
 
@@ -2126,10 +2156,10 @@ c
 !           endif
 
             scale = 1.
-            call contour_settings(temp_2d,NX_L,NY_L,clow,chigh,cint
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
      1                                                   ,zoom,scale)
 
-            call plot_cont(temp_2d,scale,clow,chigh,cint,
+            call plot_cont(field_2d,scale,clow,chigh,cint,
      1                     asc9_tim_t,c33_label,
      1                     i_overlay,c_display,lat,lon,jdot,
      1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -3538,7 +3568,7 @@ c                   cint = -1.
 
             endif
 
-        elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! 1500m or MSL Pres
+        elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! Reduced or MSL Pres
             if(c_type .eq. 'p')then
                 var_2d = 'P'
             else

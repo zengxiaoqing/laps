@@ -604,9 +604,12 @@ c.....	Check each of the primary analysis variables.
 c
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
-          if(nn .ne. mm)write(6,*)'nn .ne. mm',nn,mm,stations(mm)
-	  if(nn .lt. 1) go to 121
-	  if(rely(7,nn) .lt. 0) then	! temperature
+          if(nn .ne. mm)write(6,*)'WARNING: nn .ne. mm'
+     1                            ,nn,mm,stations(mm)
+        enddo ! mm
+
+	do mm=1,n_obs_b
+	  if(rely(7,mm) .lt. 0) then	! temperature
 	     print *, 'QC: Bad T at ',stations(mm),' with rely/value '       
      1              ,rely(7,mm),t_s(mm)
 	     t_s(mm) = badflag
@@ -614,60 +617,49 @@ c
  121	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 122
-	  if(rely(8,nn) .lt. 0) then	! dewpt
-	      print *, 'QC: Bad TD at ',stations(mm),' with value '
-     1               ,td_s(mm)
+	  if(rely(8,mm) .lt. 0) then	! dewpt
+	      print *, 'QC: Bad TD at ',stations(mm)
+     1               ,' with rely/value ',rely(8,mm),td_s(mm)
 	      td_s(mm) = badflag
 	  endif
  122	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 123
-	  if(rely(9,nn) .lt. 0) then	! wind direction
-	   print *, 'QC: Bad DIR at ',stations(mm),' with value ',dd_s(mm)
+	  if(rely(9,mm) .lt. 0) then	! wind direction
+	   print *, 'QC: Bad DIR at ',stations(mm),' with rely/value '       
+     1            ,rely(9,mm),dd_s(mm)
 	    dd_s(mm) = badflag
 	  endif
  123	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 124
-	  if(rely(10,nn) .lt. 0) then	! wind speed
-	      print *, 'QC: Bad SPD at ',stations(mm),' with value '
-     1               ,ff_s(mm)
+	  if(rely(10,mm) .lt. 0) then	! wind speed
+	      print *, 'QC: Bad SPD at ',stations(mm)
+     1               ,' with rely/value ',rely(10,mm),ff_s(mm)
 	      ff_s(mm) = badflag
 	  endif
  124	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 125
-          if(rely(14,nn) .lt. 0) then	! mslp
-	      print *, 'QC: Bad MSLP at ',stations(mm),' with value '
-     1               ,pmsl_s(mm)
+          if(rely(14,mm) .lt. 0) then	! mslp
+	      print *, 'QC: Bad MSLP at ',stations(mm)
+     1               ,' with rely/value ',rely(14,mm),pmsl_s(mm)
 	      pmsl_s(mm) = badflag
 	  endif
  125	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 126
-	  if(rely(15,nn) .lt. 0) then	! altimeter 
-	      print *, 'QC: Bad ALT at ',stations(mm),' with value '
-     1               ,alt_s(mm)
+	  if(rely(15,mm) .lt. 0) then	! altimeter 
+	      print *, 'QC: Bad ALT at ',stations(mm)
+     1               ,' with rely/value ',rely(15,mm),alt_s(mm)
 	      alt_s(mm) = badflag
 	  endif
  126	enddo  !mm
 
 	do mm=1,n_obs_b
-	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 128
-          if(rely(25,nn) .lt. 0) then	! visibility 
-	      print *, 'QC: Bad VIS at ',stations(mm),' with value '
-     1               ,vis_s(mm)
+          if(rely(25,mm) .lt. 0) then	! visibility 
+	      print *, 'QC: Bad VIS at ',stations(mm)
+     1               ,' with rely/value ',rely(25,mm),vis_s(mm)
 	      vis_s(mm) = badflag
 	  endif
  128	enddo  !mm
