@@ -71,7 +71,7 @@ cdoc    Used to read in a surface grid with inputs of time and ext
         do j = 1,jmax
         do i = 1,imax
             if(istatus .eq. 1 .and.
-     1             field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+     1         field_2d(i,j) .eq. r_missing_data)then
                 write(6,*)' Missing Data Value Detected in 2D Field'
                 istatus = -1
             endif
@@ -164,7 +164,7 @@ cdoc    by calling the new READ_LAPS routine
         do j = 1,jmax
         do i = 1,imax
             if(istatus .eq. 1 .and.
-     1             field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+     1         field_2d(i,j) .eq. r_missing_data)then
                 write(6,*)' Missing Data Value Detected in 2D Field'
                 istatus = -1
             endif
@@ -246,8 +246,8 @@ cdoc    Returns a 2-D grid. Inputs include the extension and time window.
 !           Check for missing data
             do j = 1,jmax
             do i = 1,imax
-                if(istatus .eq. 1 .and.
-     1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+                if(istatus .eq. 1 .and. 
+     1             field_2d(i,j) .eq. r_missing_data)then
                     write(6,*)' Missing Data Value Detected in 2D Field'
                     istatus = -1
                 endif
@@ -339,7 +339,7 @@ cdoc    Returns a 2-D grid. Inputs include the directory, ext, and time window.
             do j = 1,jmax
             do i = 1,imax
                 if(istatus .eq. 1 .and.
-     1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
+     1             field_2d(i,j) .eq. r_missing_data)then
                     write(6,*)' Missing Data Value Detected in 2D Field'
                     istatus = -1
                 endif

@@ -694,24 +694,18 @@ cdoc                            calls read_multiradar_3dref.
             ext = 'vrc'
             call get_laps_2dgrid(i4time_radar,i4_tol,i4_ret,ext,var_2d
      1                          ,units_2d,comment_2d,imax,jmax
-     1                          ,radar_2dref,0,istatus_nowrad)
+     1                          ,radar_2dref,0,istatus_vrc)
 
-            if(istatus_nowrad .eq. 1)then
-                if(radarext(1:3) .ne. 'all')then
-                    istatus_2dref_a = 1
-                    istatus_3dref_a = 0
+            write(6,*)' istatus_vrc = ',istatus_vrc
 
-                else ! radarext = 'all'
-                    do i = 1,imax
-                    do j = 1,jmax
-                        if(   radar_2dref(i,j)     .ne. r_missing_data       
-     1                  .and. istatus_2dref_a(i,j) .eq. 0)then
-                            istatus_2dref_a(i,j) = 1
-                        endif
-                    enddo ! j
-                    enddo ! i                 
-
-                endif
+            if(istatus_vrc .eq. 1 .or. istatus_vrc .eq. -1)then       
+                do i = 1,imax
+                do j = 1,jmax
+                    if(radar_2dref(i,j) .ne. r_missing_data)then
+                        istatus_2dref_a(i,j) = 1
+                    endif
+                enddo ! j
+                enddo ! i                 
 
 !               Conditionally fill up the 3D reflectivity array 
 !                          (useful for precip type, get_low_ref)
@@ -817,11 +811,9 @@ cdoc                            calls read_multiradar_3dref.
         var_2d = 'REF'
         ext = 'vrc'
         call get_laps_2d(i4time_radar,ext,var_2d
-     1          ,units_2d,comment_2d,imax,jmax,ref_2d,istatus_nowrad)
+     1          ,units_2d,comment_2d,imax,jmax,ref_2d,istatus_vrc)
 
-        if(istatus_nowrad .eq. 1)then
-            istatus_2dref = 1
-        endif
+        istatus_2dref = istatus_vrc
 
         return
         end
