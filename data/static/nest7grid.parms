@@ -44,7 +44,7 @@
 
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
- path_to_raw_raob_cmn='/public/data/raob/netcdf/',
+ path_to_raw_raob_cmn='/public/dummy',
 
  path_to_metar_data_cmn='/public/data/metar/netcdf/',
  path_to_local_data_cmn='/public/data/cdot/netcdf/',
@@ -117,4 +117,9 @@ c
  00.67,03.74,03.98,04.13,04.45,04.52,04.57,06.51,07.02,
  07.43,09.71,11.03,12.02,12.66,13.37,13.64,14.06,14.37,14.71,
  imsng_sndr_pix=0,
+ $end
+
+c Wideband remapper that reads polar NetCDF files (remap_polar_netcdf.exe)
+ &remap_nl
+ path_to_wideband='/public/data/radar/wsr88d/wideband/kftg/netcdf',
  $end
