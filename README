@@ -561,10 +561,10 @@
                         MAP PROJECTION LIMITATIONS
 
      LAPS has only been partially run-time tested for projections other than 
-   Polar stereographic. Use Lambert and Mercator at your own risk for now.
+   Polar stereographic. Mercator looks fairly good so far in testing, lambert
+   has some known bugs that need attention.
 
-     'Lapsplot' works only for polar stereographic and tangent lambert
-   projections.
+     'Lapsplot' works only for the polar stereographic projection at this time.
 
      The polar stereographic projection has a pole constrained to be at the
    earth's north geographic pole. Setting the pole to the South Pole or
