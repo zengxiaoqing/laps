@@ -301,8 +301,9 @@ d01 d02 d03 d04 d05 d06 d07 d08 d09 d10 d11 d12
 d13 d14 d15 d16 d17 d18 d19 d20 
 ln3 lsr lsr/dmsp01 lsr/dmsp02 lsr/goes08 lsr/goes10 lsr/tros12 lsr/tros14 cdw rdr 
 rdr/001 rdr/002 rdr/003 rdr/004 rdr/005 rdr/006 rdr/007 rdr/008 rdr/009 
-rdr/001/raw rdr/001/vrc rdr/002/vrc rdr/003/vrc rdr/004/vrc 
-rdr/005/vrc rdr/006/vrc rdr/007/vrc rdr/008/vrc rdr/009/vrc 
+rdr/001/vrc rdr/001/raw rdr/002/vrc rdr/002/raw rdr/003/vrc rdr/003/raw
+rdr/004/vrc rdr/004/raw rdr/005/vrc rdr/005/raw rdr/006/vrc rdr/006/raw
+rdr/007/vrc rdr/007/raw rdr/008/vrc rdr/008/raw rdr/009/vrc rdr/009/raw 
 lgb ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
 dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc);
