@@ -14,12 +14,12 @@
 
   511 format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
 
-      The subsequent rows contain (in free format) height (m), pressure (mb),
-      temperature (C), Dewpoint (C), Wind Direction (Deg), Wind Speed (m/s).
-      The missing data flag is 1e37. Please note that in some cases the
-      height is given but not the pressure. On rare occasions, we may have the
-      pressure, but not the height. In the ideal situation, we would like to 
-      have both heights and pressures for all the levels. This can be tricky 
+      The subsequent rows contain (in free format) height (meters-MSL), 
+      pressure (mb), temperature (C), Dewpoint (C), Wind Direction (Deg), Wind 
+      Speed (m/s). The missing data flag is 1e37. Please note that in some cases 
+      the height is given but not the pressure. On rare occasions, we may have 
+      the pressure, but not the height. In the ideal situation, we would like 
+      to have both heights and pressures for all the levels. This can be tricky 
       as the raw RAOB data may have one or the other depending on whether it 
       is mandatory, significant wind, or significant temperature / dewpoint 
       data. The analyses will do their best to fill in missing heights or
