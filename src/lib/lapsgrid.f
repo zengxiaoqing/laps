@@ -308,11 +308,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 
         include 'lapsparms.cmn'
 
-
-
-
-
-c        if(iflag_lapsparms_cmn .eq. 1)goto999
+        if(iflag_lapsparms_cmn .eq. 1)goto999
 
 !       While we are here, let's put the grid name into the common area
         grid_fnam_common = grid_fnam  ! Used in get_directory to modify
@@ -566,6 +562,30 @@ c        end
       endif
 
       c6_maproj_ret = c6_maproj
+
+      istatus = 1
+      return
+      end
+
+
+      subroutine get_c80_description(c80_description_ret,istatus)
+
+      include 'lapsparms.cmn' ! c80_description
+
+      character*6 c80_description_ret
+
+!     This routine accesses the c80_description variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      if(iflag_lapsparms_cmn .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not called'
+          istatus = 0
+          return
+!         stop
+      endif
+
+      c80_description_ret = c80_description
 
       istatus = 1
       return

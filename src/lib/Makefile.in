@@ -74,6 +74,7 @@ SRC	= readwritelaps.c \
           diff.f \
           downcase.f \
           esat1.f \
+          fflxc.f \
           filename13.f \
           filter_filenames.f \
           get_cloud_deriv.f \
