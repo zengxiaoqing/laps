@@ -51,7 +51,6 @@ EXEDIRS = src/accum \
           src/ingest/satellite/lvd \
           src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
-          src/sched \
           src/sfc \
           src/sfc/table \
           src/soil \
@@ -190,6 +189,16 @@ DATADIRS = log/qc \
 
 all: exe
 debug: debuglib
+#
+# The following targets are for building within awips 4.2
+#
+buildlib: lib
+buildexe: exe
+doc:
+depend:
+prebuild:
+
+
 
 localize: mkdatadirs
 	/usr/nfs/bin/perl $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
