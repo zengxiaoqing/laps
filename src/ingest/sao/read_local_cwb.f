@@ -42,14 +42,13 @@ cdis
      ~           pcp24hr, dd, ff, wgdd, wgff, p, mslp, pcc, pc, sr, st,
      ~           num, istatus )
         
-      integer, parameter :: maxobs = 600
-      integer, parameter :: maxMso = 40
-      integer, parameter :: maxAgr = 20
+      integer, parameter :: maxobs = 530
+      integer, parameter :: maxAgr =  20
       integer, parameter :: maxCum = 400
       integer, parameter :: maxShp = 110
 
       character(*)  stname(maxobs), inpath
-      integer       pcc(maxobs)
+      integer        pcc(maxobs)
       real  lats(maxobs), lons(maxobs), elev(maxobs)
       real  t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
       real  rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
@@ -81,26 +80,15 @@ cdis
       sr     = badflag
       st     = badflag
 
-      numMso= 0
       numAgr= 0
       numCum= 0
       numShp= 0
-      istatusMso= 0
       istatusAgr= 0
       istatusCum= 0
       istatusShp= 0
 
-      nq= maxMso
-
-      call read_meso_cwb (inpath, maxMso, badflag, ibadflag, i4time_sys,
-     ~     stname(1:nq), lats(1:nq), lons(1:nq), elev(1:nq), t(1:nq),
-     ~     t24max(1:nq), t24min(1:nq), td(1:nq), rh(1:nq), pcp1hr(1:nq),
-     ~     pcp3hr(1:nq), pcp6hr(1:nq), pcp24hr(1:nq), dd(1:nq), 
-     ~     ff(1:nq), wgdd(1:nq), wgff(1:nq), p(1:nq), mslp(1:nq),
-     ~     pcc(1:nq), pc(1:nq), sr(1:nq), st(1:nq), numMso, istatusMso)
-
-      np= numMso +1
-      nq= numMso +maxAgr
+      np= 1
+      nq= maxAgr
 
       call read_agr_cwb (inpath, maxAgr, badflag, i4time_sys,
      ~     stname(np:nq), lats(np:nq), lons(np:nq), elev(np:nq), 
@@ -118,15 +106,15 @@ cdis
      ~     numCum, istatusCum)
 
       npC= np
-      num= numMso +numAgr +numCum
-      np= np +numCum
-      nq= np +maxShp
+      num= numAgr +numCum
+      np=  np +numCum
+      nq=  np +maxShp
 
       call read_shp_cwb (inpath, maxShp, badflag, i4time_sys,
      ~     stname(np:nq), lats(np:nq), lons(np:nq), elev(np:nq),
      ~     p(np:nq), t(np:nq), dd(np:nq), ff(np:nq), numShp, istatusShp)       
 
-      nt= numMso +numAgr +numCum +numShp
+      nt= numAgr +numCum +numShp
 
       do j= np,nt
       do i= npC,num
@@ -139,725 +127,17 @@ cdis
       enddo 
       enddo 
 
-      if ( istatusMso == 1 .and. istatusAgr == 1 .and. istatusCum == 1
+      if ( istatusAgr == 1 .and. istatusCum == 1 
      ~                     .and. istatusShp == 1 ) then
          istatus= 1
       else
          istatus= -1
-         write(6,*) ' Mso ', istatusMso, ' Agr ', istatusAgr,
-     ~              ' Cum ', istatusCum, ' Shp ', istatusShp
+         write(6,*) ' Agr ', istatusAgr, ' Cum ', istatusCum,
+     ~              ' Shp ', istatusShp
       endif
 
       end
  
-
-
-      subroutine read_meso_cwb (inpath, maxobs, badflag, ibadflag,
-     ~                          i4time_sys, stname, lats, lons, elev,
-     ~                          t, t24max, t24min, td, rh, pcp1hr,
-     ~                          pcp3hr, pcp6hr, pcp24hr, dd, ff,
-     ~                          wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
-     ~                          num, istatus)                    
- 
-c======================================================================
-c
-c     Routine to read the CWB ASCII Mesonet files.
-c     
-c======================================================================
- 
-      real :: lats(maxobs), lons(maxobs), elev(maxobs)
-      real :: t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
-      real :: rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
-      real :: pcp24hr(maxobs), dd(maxobs), ff(maxobs), wgdd(maxobs)
-      real :: wgff(maxobs), stnp(maxobs), mslp(maxobs), pc(maxobs)
-      real :: sr(maxobs), st(maxobs)
-      integer*4 :: pcc(maxobs)
-
-      logical :: l_parse
-
-c    larger arrays for istart and iend to read data to make processes smooth
-      integer, parameter :: num40 = 40,  num70 = 70
-      integer   :: istart(num70), iend(num70), hh, flag
- 
-      character(*) :: stname(maxobs), inpath
-      character(13)  cvt_i4time_wfo_fname13, a13time_eat
-      character    :: stn_id*3, filename*80, line*320, c5_blank*5
- 
-c                      Stuff for the mesonet metadata.
-      real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)
- 
-      character :: stn_id_master(maxobs)*3, stn_name_master(maxobs)*5
- 
-c               Get the mesonet metadata (station information).
-      call read_tmeso_stntbl (inpath, maxobs, badflag,  
-     ~                        stn_id_master, stn_name_master,
-     ~                        lat_master, lon_master, elev_master,
-     ~                        num_master, istatus)
-      if ( istatus /= 1 ) then
-         write(6,*) ' Error reading mesonet station table'
-         return
-      endif
-
-c    Fill the output arrays with something, then open the file to read.
- 
-      istatus= 0
-      c5_blank= '     '
-      stname= c5_blank 
-      pcc = ibadflag
-      t   = badflag
-      td  = badflag
-      rh  = badflag
-      stnp= badflag
-      dd  = badflag
-      ff  = badflag
-      wgdd= badflag
-      wgff= badflag
-      pc  = badflag
-      sr  = badflag
-      st  = badflag
-
-      i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
-      a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
-
-      filename= 'Data.CWB.MSO.'
-     ~           //a13time_eat(1:4)//'-'//a13time_eat(5:6)            ! yyyy_mm
-     ~           //'-'//a13time_eat(7:8) //'_' //'0000' //'_h.pri'    ! dd
-
-      write(6,*) ' Mesonet file ', filename
-
-      call s_len ( inpath, len_inpath )
-      call s_len ( filename, len_fname )
- 
-      num= 0
-      num_keep= 0
-
-      open (11,file=inpath(1:len_inpath)//filename(1:len_fname), 
-     ~         status='old',err=980)
-
-c.....  This starts the read loop.  Since we don't know how many 
-c.....  stations we have, read until we hit the end of file.
-      
- 100  flag= 0
- 
-      read (11,'(a)',end=600,err=990) line
-
-c                         Find ':' in time portion 
-      do i= 1,300
-         if (line(i:i) == ':')  exit
-      enddo 
- 
-c                  Parse the string into contiguous characters
-      idash= i -9
-      istart= 0
-      iend=   0
-
-      ivar= 1
-      istart(1)= 1
-
-      do i= 1,idash
-         if ( i == 1 )  go to 200
-         if ( line(i:i) == ' ' .and. line(i-1:i-1) /= ' ' ) then
-            iend(ivar)= i-1
-         endif
-
- 200     if ( line(i:i) == ' ' .and. line(i+1:i+1) /= ' ' ) then
-            ivar= ivar +1
-            istart(ivar)= i+1
-         endif
-      enddo
-
-      if ( istart(num40) /= 0 )  go to 100
-
-      ivar= 1
-      read (line(istart(ivar):iend(ivar)),'(2i2)',err=399) ihr, imin
-
-      read (a13time_eat(10:11),'(i2)') hh
-      if ( ihr /= hh )  go to 100
-
-      ivar= 2
-      read (line(istart(ivar):iend(ivar)),*,err=399) stn_id
-
-      ivar= 3
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rstnp= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rstnp
-      endif
-
-      ivar= 4
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         slp= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) slp 
-      endif
-
-      ivar= 5
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         ipcc= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) ipcc
-      endif
-
-      ivar= 6
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rpc= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rpc
-      endif
-
-      ivar= 7
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rt= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rt
-      endif
-
-      ivar= 10
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rtd= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rtd
-      endif
-
-      ivar= 11
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         idir= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) idir
-      endif
-
-      ivar= 12
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rspd= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rspd
-      endif
-
-      ivar= 13
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rwgff= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rwgff
-      endif
-
-      ivar= 14
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         iwgdd= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) iwgdd
-      endif
-
-      ivar= 15
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rpcp= badflag
-      elseif ( l_parse(line(istart(ivar):iend(ivar)),'000T') ) then
-         rpcp= 0
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rpcp
-      endif
-
-      ivar= 21
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rsr= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rsr
-      endif
-
-      ivar= 24
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         irh= ibadflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) irh
-      endif
-
-      ivar= 28
-      if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-         rst= badflag
-      else
-         read (line(istart(ivar):iend(ivar)),*,err=399) rst
-      endif
-
-      if ( num == 0 )  go to 400
-
-      do i= 1,num
-         if ( stn_id//'  ' == stname(i) ) then 
-            num= i
-            flag= 1
-            go to 500
-         else
-            cycle
-         endif
-      enddo
-      go to 400
-
- 399  write(6,*) ' read error in station/variable ', num+1, ivar
-      write(6,*) ivar, line(istart(ivar):iend(ivar))
-      go to 990
-
-c    Have good date/time...store ob.  Adjust/scale variables while storing.
- 400  num= num_keep +1                    ! add to count
-
-      if ( num > maxobs ) then
-         write(6,*) ' read_local_cwb error for too many obs: ',
-     ~              num, maxobs
-         istatus= 0
-         return
-      endif
- 
-c Match data with metadata for this station, then store the metadata in arrays.
-      imatch= 0
-      do j= 1,num_master
-         if ( stn_id == stn_id_master(j) ) then
-            lats(num)= lat_master(j)
-            lons(num)= lon_master(j)
-            elev(num)= elev_master(j)
-            imatch=1
-         endif
-      enddo 
-
-      if ( imatch == 0 ) then
-         write(6,*) ' No station match ',stn_id
-      endif
- 
-      stname(num)= stn_id//'  '
- 
-c                                quality control
- 500  if ( rstnp <= 0 ) then
-         stnp(num)= badflag
-      else
-         stnp(num)= rstnp
-      endif
- 
-      if ( slp <= 800. .or. slp > 1100. ) then
-         mslp(num)= badflag
-      else
-         mslp(num)= slp
-      endif
- 
-      pcc(num)= ipcc
-
-      if ( rpc <= 0 ) then
-         pc(num)= badflag
-      else
-         pc(num)= rpc
-      endif
- 
-      if ( rt <= -90 ) then
-         t(num)= badflag
-      else
-         if ( rt > 50. )  rt= - (rt - 50.)
-         t(num)= c_to_f(rt) 
-      endif
- 
-      if ( rtd <= -90 ) then
-         td(num)= badflag
-      else
-         if ( rtd > 50. ) rtd= - (rtd - 50.)
-         td(num)= c_to_f(rtd) 
-      endif
- 
-      if ( idir > 36 .or. idir < 0 ) then
-         dd(num)= badflag
-      else
-         dd(num)= float(idir * 10)
-      endif
- 
-      if ( rspd < 0 ) then
-         ff(num)= badflag
-      else
-         ff(num)= (rspd * 0.1) * 1.94254           ! conv m/s to kt
-      endif
- 
-      if ( rwgff < 0 ) then
-         wgff(num)= badflag
-      else
-         wgff(num)= (rwgff * 0.1) * 1.94254        ! conv m/s to kt
-      endif
- 
-      if ( iwgdd > 36 .or. iwgdd < 0 ) then
-         wgdd(num)= badflag
-      else
-         wgdd(num)= float(iwgdd * 10)
-      endif
- 
-      if ( rpcp < 0 ) then
-         pcp1hr(num)= badflag
-      else
-         pcp1hr(num)= rpcp * 0.1 * 0.03937         ! conv mm to inch
-      endif
- 
-      if ( rsr < 0 ) then
-         sr(num)= badflag
-      else
-         sr(num)= rsr /1000. /3600.                ! conv mJ/m/m to watt/m/m
-      endif
- 
-      if ( irh < 0 ) then
-         rh(num)= badflag
-      else
-         rh(num)= float(irh)
-      endif
- 
-      if ( rst < 0 ) then
-         st(num)= badflag
-      else
-         st(num)= rst
-      endif
- 
-c                          Go back for the next ob.
-      if ( flag == 0 )  num_keep= num 
-      num= num_keep
-      go to 100
- 
- 600  call mso_t24_pcp (inpath, filename, stname, maxobs, badflag,
-     ~     hh, num, t24max, t24min, pcp3hr, pcp6hr, pcp24hr,      
-     ~     istatus)
-
-      if ( istatus == 1 ) then
-         do i= 1,maxobs
-            t24max(i)= c_to_f(t24max(i))
-            t24min(i)= c_to_f(t24min(i))
-         enddo
-      else
-         write(6,*) ' Error estimating mso_t24_pcp '
-      endif
-
-c                        Hit end of file...that's it.
-      write(6,*) ' Found ', num, ' mesonet stations.'
-      istatus= 1
-      return
-      
- 980  write(6,*) ' Warning: could not open mesonet data file ',filename
-      num= 0
-      istatus= -1
-      return
-
- 990  write(6,*) ' ** ERROR reading mesonet data.'
-      num= 0
-      istatus= -1
-      return
-      
-      end
- 
- 
- 
-      subroutine read_tmeso_stntbl (inpath, maxobs, badflag, stn_id,
-     ~           stn_name, lat, lon, elev, num, istatus)       
- 
-c======================================================================
-c
-c     Routine to read station information for the CWB ASCII Mesonet 
-c	data.
-c     
-c======================================================================
- 
-      real         :: lat(maxobs), lon(maxobs), elev(maxobs)
-      character(3) :: stn_id(maxobs), stn_id_in
-      character(5) :: stn_name(maxobs), stn_name_in
-      character(*) :: inpath
- 
-      lat=  badflag
-      lon=  badflag
-      elev= badflag
-      stn_id=   '   '
-      stn_name= '     '
- 
-      call s_len ( inpath, len_inpath )
-      open (13,file=inpath(1:len_inpath)//'stn-table',status='old',
-     ~                                                err=990)
-      num= 0
-
-c                 Skip header comments at the top of the file
-      do iread= 1,2
-         read (13,*,end=550,err=990)
-      enddo
- 
-c.....  This starts the station read loop.  Since we don't know how many 
-c.....  stations we have, read until we hit the end of file.
-
- 500  read (13,900,end=550,err=990) stn_id_in,stn_name_in,
-     ~                              lat_deg,lat_min,lat_sec,alat_sec,       
-     ~                              lon_deg,lon_min,lon_sec,alon_sec,
-     ~                              elev_m
- 900  format (2x,a3,1x,a5,14x,                     ! name
-     ~        i2,2x,i2,1x,i2,1x,f3.0,4x,           ! lat
-     ~        i3,2x,i2,1x,i2,1x,f3.0,              ! lon
-     ~        f12.0)                               ! elevation
- 
-c         Move station info to arrays for sending to calling routine.
- 
-      alat= float(lat_deg) +float(lat_min)/60. 
-     ~                     +(float(lat_sec) +alat_sec) /3600.
-      alon= float(lon_deg) +float(lon_min)/60. 
-     ~                     +(float(lon_sec) +alon_sec) /3600.
-
-      num= num +1
-      stn_id(num)= stn_id_in
-      stn_name(num)= stn_name_in
-      lat(num)= alat
-      lon(num)= alon
-      elev(num)= elev_m
- 
-c                         Go back for the next ob.
-      go to 500
- 
-c                        Hit end of file...that's it.
- 550  write(6,*) ' Found ', num,
-     ~           ' mesonet stations in the station table.' 
-      istatus= 1
-      return
-      
- 990  write(6,*) stn_id_in, stn_name_in,
-     ~           lat_deg, lat_min, lat_sec, alat_sec,       
-     ~           lon_deg, lon_min, lon_sec, alon_sec, elev_m
-      write(6,*) ' ** ERROR reading mesonet station table'
-      istatus= 0
-      return
-
-      end
-
-
- 
-      subroutine mso_t24_pcp (inpath, filename, stname, maxobs, badflag,
-     ~           ih, num, t24max, t24min, pcp3hr, pcp6hr, pcp24hr,
-     ~           istatus)
-
-      integer, parameter :: num24 = 24,  num40 = 40,  num70 = 70
-      character(*) :: stname(maxobs), inpath
-      character(2) :: yy, mm, dd
-      character    :: filename*35, fileDummy*35, line*320, stn*3
-      logical :: l_parse
-      integer :: istart(num70), iend(num70), d(12) 
-      integer :: hr, flag
-      real :: t24max(maxobs), t24min(maxobs)
-      real :: tmax(maxobs,num24), tmin(maxobs,num24)
-      real :: pcp3hr(maxobs), pcp6hr(maxobs), pcp24hr(maxobs)
-      real :: p1hr(maxobs,-4:num24)
-      data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
-
-      stn=  '   '
-      tmax= badflag
-      tmin= badflag
-      p1hr=    0
-      pcp3hr=  0
-      pcp6hr=  0
-      pcp24hr= 0
-      maxrcd= 3000
-      istatus= 0
-
-      read (filename(14:17),'(i4)') iy
-      read (filename(19:20),'(i2)') im
-      read (filename(22:23),'(i2)') id
-
-c                 open two files to read data of 24 hours
-      do l= 0,1
-         id= id -l
-
-         if ( id < 1 ) then
-            im= im -1
-  
-            if ( im < 1 ) then
-               im= 12
-               iy= iy -1
-            endif
-
-            id= d(im)
-         endif
-
-         iy= iy -2000
-         call i2a ( iy, yy )
-         call i2a ( im, mm )
-         call i2a ( id, dd )
-         fileDummy= 'Data.CWB.MSO.' //'20' //yy //'-' //mm //'-' //dd
-     ~                                          //'_' //'0000_h.pri'     
-         iy= iy +2000
-
-         call s_len ( inpath, len_inpath )
-         call s_len ( fileDummy, len_fname )
-
-         select case ( l ) 
-         case ( 0 )
-            rewind (11)
-         case ( 1 )
-            open (11,file=inpath(1:len_inpath)//fileDummy(1:len_fname),
-     ~               status='old',err=980)
-         end select
-
-         do 200 k= 1,maxrcd
-            read (11,'(a)',iostat=istat) line
-
-            if ( istat == -1 .or. istat == -2 )  exit
-            if ( istat > 0 )  go to 990
-               
-c                           Find ':' in time portion 
-            do i= 1,300
-               if (line(i:i) == ':')  exit
-            enddo
-
-            idash= i -9
-
-c                 Parse the string into contiguous characters
-            istart= 0
-            iend=   0
-
-            ivar= 1
-            istart(1)= 1
-
-            do i= 1,idash
-               if ( i == 1 )  go to 100
-
-               if ( line(i:i) == ' ' .and. line(i-1:i-1) /= ' ' ) then      
-                  iend(ivar)= i-1
-               endif
-
- 100           if ( line(i:i) == ' ' .and. line(i+1:i+1) /= ' ' ) then
-                  ivar= ivar +1
-                  istart(ivar)= i+1
-               endif
-            enddo
-
-c                              avoid daily data
-            if ( istart(num40) /= 0 )  cycle
-
-            ivar= 1
-            read (line(istart(ivar):iend(ivar)),'(2i2)',err=199) hr, mn
-            if ( l == 0 .and. hr >  ih )  cycle  
-            if ( l == 1 .and. hr <= ih )  cycle  
-            if ( hr == 0 )  hr= 24
-           
-            ivar= 2
-            read (line(istart(ivar):iend(ivar)),*,err=200) stn
-
-            do i= 1,num
-            if ( stname(i) == stn//'  ' ) then
-               ivar= 8
-               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-                 tmax(i,hr)= badflag
-               else
-                 read(line(istart(ivar):iend(ivar)),*,err=199)tmax(i,hr)
-               endif
-
-               ivar= 9
-               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-                 tmin(i,hr)= badflag
-               else
-                 read(line(istart(ivar):iend(ivar)),*,err=199)tmin(i,hr)    
-               endif
-
-               ivar= 15
-               if ( l_parse(line(istart(ivar):iend(ivar)),'/') ) then
-                 p1hr(i,hr)= badflag
-               elseif(l_parse(line(istart(ivar):iend(ivar)),'000T'))then
-                 p1hr(i,hr)= 0
-               else
-                 read(line(istart(ivar):iend(ivar)),*,err=199)p1hr(i,hr)
-               endif
-            endif
-            enddo
-
-            cycle
-
- 199        write(6,*) ' read error in station/variable ', j, ivar
-            write(6,*) ivar,line(istart(ivar):iend(ivar))
- 200     enddo
-
-         if ( ih == 23 )  exit 
- 500  enddo 
-
-      do i= 1,num
-         t24max(i)= tmax(i,1)
-         t24min(i)= tmin(i,1)
-
-         do j= 2,num24
-            flag= 0
-
-            if ( tmax(i,j) > 50. .or. tmax(i,j) < -90. ) then
-               tmax(i,j)= badflag
-               exit
-            elseif ( tmin(i,j) > 50. .or. tmin(i,j) < -90. ) then
-               tmin(i,j)= badflag
-               exit
-            endif
-
-            if ( t24max(i) < tmax(i,j) )  t24max(i)= tmax(i,j)
-            if ( t24min(i) > tmin(i,j) )  t24min(i)= tmin(i,j)
-
-            flag= 1
-         enddo
-
-c    there is data missing in tmax or tmin when flag= 0 from prior do loop
-         if ( flag /= 1 ) then
-            t24max(i)= badflag
-            t24min(i)= badflag
-            write(6,*) 'too few data to obtain Tmax/Tmin for ',
-     ~                 stname(i), ' mesonet station ', j
-            cycle
-         endif
- 900  enddo
-
-c                         calculate accumulated rain gauge
-      do i= 1,num
-         p1hr(i, 0)= p1hr(i,24)
-         p1hr(i,-1)= p1hr(i,23)
-         p1hr(i,-2)= p1hr(i,22)
-         p1hr(i,-3)= p1hr(i,21)
-         p1hr(i,-4)= p1hr(i,20)
-      enddo
-
-      do i= 1,num
-      do j= ih,ih-2,-1
-         if ( p1hr(i,j) == badflag ) then
-            pcp3hr(i)= badflag
-            write(6,*) 'too few data to estimate pcp3hr for ',
-     ~                 stname(i), ' mesonet station ', j
-            exit
-         else
-            pcp3hr(i)= pcp3hr(i) +p1hr(i,j)
-         endif
-      enddo
-      enddo
-
-      do i= 1,num
-      do j= ih,ih-5,-1
-         if ( p1hr(i,j) == badflag ) then
-            pcp6hr(i)= badflag
-            write(6,*) 'too few data to estimate pcp6hr for ',
-     ~                 stname(i), ' mesonet station ', j
-            exit
-         else
-            pcp6hr(i)= pcp6hr(i) +p1hr(i,j)
-         endif
-      enddo
-      enddo
-
-      do i= 1,num
-      do j= 1,num24
-         if ( p1hr(i,j) == badflag ) then
-            pcp24hr(i)= badflag
-            write(6,*) 'too few data to estimate pcp24hr for ',
-     ~                 stname(i), ' mesonet station ', j
-            exit
-         else
-            pcp24hr(i)= pcp24hr(i) +p1hr(i,j)
-         endif
-      enddo
-      enddo
-
-      istatus= 1
-      return
-
- 980  write(6,*) ' Warning: could not open mesonet data file ',
-     ~           inpath(1:len_inpath)//fileDummy(1:len_fname)
-      istatus= -1
-      return
-        
- 990  write(6,*) ' ** ERROR reading mesonet data.'
-      num= 0
-      istatus= -1
-      return
-
-      end
-        
 
 
       subroutine read_agr_cwb (inpath, maxobs, badflag, i4time_sys,
@@ -1140,13 +420,13 @@ c               match data with agricultural data for this station
             ff(j)= badflag
             wgff(j)= badflag
          else
-            ff(j)= ( ff(j) * 0.1 ) * 1.94254         ! conv m/s to kt
+            ff(j)= ff(j) * 1.94254         ! conv m/s to kt
          endif
  
          if ( wgff(j) < 0 ) then
             wgff(j)= badflag
          else
-            wgff(j)= ( wgff(j) * 0.1 ) * 1.94254     ! conv m/s to kt
+            wgff(j)= wgff(j) * 1.94254     ! conv m/s to kt
          endif
 
          if ( pcp1hr(j) < 0 ) then
@@ -1889,11 +1169,10 @@ c                               quality control
          if ( ff(i) < 0 ) then
             ff(i)= badflag
          else
-            ff(i)= ( ff(i) * 0.1 ) * 1.94254        ! conv m/s to kt
+            ff(i)= ff(i) * 1.94254        ! conv m/s to kt
          endif
  
       enddo
-
 c                               end of file
       write(6,*) ' Found ', num, ' shp stations.'
       istatus= 1
