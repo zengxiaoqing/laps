@@ -17,7 +17,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 
 EXE = ingest_cloud_drift.exe
 
-SRC=ingest_cloud_drift.f      cloud_drift_sub.f
+SRC=ingest_cloud_drift.f  cloud_drift_sub.f  cloud_drift_sub_af.f
 
 all: exe
 

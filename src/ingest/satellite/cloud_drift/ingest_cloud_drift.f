@@ -138,8 +138,7 @@
      1                                          ,filename_in,istatus)
 
                   elseif(cloud_drift_format(ipath) .eq. 'AFWA')then       
-!                     Placeholder call
-                      call get_cloud_drift_data(i4time_sys,i4_window
+                      call get_cloud_drift_afwa(i4time_sys,i4_window
      1                                          ,NX_L,NY_L
      1                                          ,filename_in,istatus)
                   else
