@@ -9,6 +9,7 @@ use Getopt::Long;
 $result = GetOptions("lapsroot=s" => \$LAPSROOT,
                      "dataroot=s" => \$LAPS_DATA_ROOT,
                      "srcroot=s"  => \$LAPS_SRC_ROOT,
+                     "quiet" => \$quiet, 
                      "site=s" => \$localization_site,
                      "help" => \&help_sub,
                      "<>" => \&help_sub);
@@ -55,14 +56,12 @@ if(-d $FXA_DATA){
   print "$0 Could not identify your site for localization\n";
   print "please refer to the file $LAPS_SRC_ROOT/README\n";
   print "For complete instructions on a custom install\n\n";
-
-  print "Assume all files have been edited and continue with install? (y or n)\n";
-  
-  $key = getc;
-
-  print "$key\n";
-  exit if($key != 'y');
-
+  unless($quiet){
+      print "Assume all files have been edited and continue with install? (y or n)\n";
+      $key = getc;
+      print "$key\n";
+      exit if($key != 'y');
+  }
 }
 #
 # run gridgen_model to set up the static.nest7grid file 
