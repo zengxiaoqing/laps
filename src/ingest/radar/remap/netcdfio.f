@@ -261,7 +261,7 @@ c      Determine filename extension
  202           format(' elevationNumber, i_tilt_proc',2i4
      1               ,' (upcoming tilt)')
 
-               if(iskip .eq. 1)then
+               if(i_skip .eq. 1)then
                    write(6,*)
      1               ' WARNING: We had to skip past some missing tilts'       
                endif
