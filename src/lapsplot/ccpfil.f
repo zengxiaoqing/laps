@@ -51,10 +51,18 @@ C
       character*5 c5_sect
 
       logical log_scaling, l_integral, l_discrete, l_divisible
+      logical l_set_contours
 
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
       if(colortable(1:3) .eq. 'acc')then
+          l_set_contours = .true.             ! For testing
+!         l_set_contours = .false.            ! Operational
+      else
+          l_set_contours = .false.
+      endif
+
+      if(colortable(1:3) .eq. 'acc' .and. (.not. l_set_contours))then       
           log_scaling = .true.
       else
           log_scaling = .false.
@@ -109,7 +117,7 @@ C
 
           scale_loc = scale_h - scale_l
 
-      else
+      elseif(.not. l_set_contours)then
           scale_loc = scale_h - scale_l
 
           ZREG = field_in - scale_l                      ! Array subtraction
@@ -160,7 +168,10 @@ C
           enddo ! j
           enddo ! i
 
-      endif ! log_scaling
+      else ! l_set_contours = .true.
+          ZREG = field_in 
+
+      endif ! type of scaling / contours
 
       ireverse_colorbar = ireverse
 
@@ -208,8 +219,8 @@ C
       endif
 
       write(6,*)' Colortable is ',colortable,scale_l,scale_h
-     1                           ,ireverse_colorbar
-     1                           ,l_discrete,log_scaling,l_integral
+     1                           ,ireverse_colorbar,l_discrete
+     1                           ,log_scaling,l_integral,l_set_contours       
 
       if(l_discrete)then
 !         Set interval for writing numbers
@@ -227,9 +238,9 @@ C
 
       LMAP=MREG*NREG*256 ! 16000000
       LMAP = min(LMAP,32000000)
-      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
+      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,scale,ireverse       
      1                               ,r_missing_data
-     1                               ,LMAP,log_scaling
+     1                               ,LMAP,log_scaling,l_set_contours  ! I
      1                               ,colortable                       ! I
      1                               ,ncols                            ! I/O
      1                               ,l_discrete                       ! I
@@ -251,7 +262,8 @@ c     Call local colorbar routine
       call colorbar(MREG, NREG, 
      1              ncols, ireverse_colorbar, log_scaling,             ! I
      1              scale_l, scale_h, colortable, scale,icol_offset,
-     1              c5_sect, l_discrete, l_integral, colorbar_int)
+     1              c5_sect, l_discrete, l_integral, l_set_contours,
+     1              colorbar_int)
 
       jdot = 1
       
@@ -259,11 +271,13 @@ c     Call local colorbar routine
       END
 
       
-      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
+      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale_loc,scale
+     1                                ,ireverse       
      1                                ,r_missing_data
-     1                                ,LMAP,log_scaling
-     1                                ,colortable,ncols
-     1                                ,l_discrete                  ! I
+     1                                ,LMAP,log_scaling,l_set_contours
+     1                                ,colortable                      ! I
+     1                                ,ncols                           ! I/O
+     1                                ,l_discrete                      ! I
      1                                ,icol_offset)      
 
       PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
@@ -272,41 +286,82 @@ c     Call local colorbar routine
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
       character*(*) colortable
-      logical log_scaling, l_discrete
+      logical log_scaling, l_discrete, l_set_contours
+
+      integer maxvals
+      parameter (maxvals=100)
+
+      real*4 vals(maxvals),vals_scaled(maxvals)
       
       EXTERNAL FILL
 
 C      
 C Set up color table
-      write(6,*)' ccpfil_sub - scale = ',scale
+      write(6,*)' ccpfil_sub - scale,scale_loc = ',scale,scale_loc
 C      
-      CALL set_image_colortable(IWKID,ncols,l_discrete,ireverse
-     1                         ,colortable
+      if(l_set_contours)then
+          if(colortable .eq. 'acc')then
+              call get_pcp_vals(maxvals,nvals,vals)
+          endif
+
+          ncols = nvals - 1
+      endif
+
+      CALL set_image_colortable(IWKID
+     1                         ,ncols                                ! I/O
+     1                         ,l_discrete,ireverse
+     1                         ,l_set_contours,colortable
      1                         ,MREG,NREG,log_scaling,icol_offset)
 C      
 C Initialize Areas
 C      
       CALL ARINAM(MAP, LMAP)
 
-      col_offset = float(icol_offset) / float(ncols)
-      write(6,*)' col_offset / scale = ',col_offset,scale
+      if(l_set_contours)then
+          icol_offset2 = icol_offset - 2
 
-      do m = 1,MREG
-      do n = 1,NREG
-          ZREG(m,n) = ZREG(m,n) + (col_offset * scale)
-      enddo ! n
-      enddo ! m
+!         Set up 'CLV' array
+          CALL CPSETI('NCL',nvals+icol_offset2)
+
+          do i = 1,icol_offset2 ! bogus in contour values in offset region
+              CALL CPSETI ('PAI - PARAMETER ARRAY INDEX',i)
+              CALL CPSETR ('CLV - CONTOUR LEVEL'
+     1                    ,vals_scaled(1)-float(i))      
+          enddo ! i
+
+          do i = 1,nvals
+              is = i + icol_offset2
+              vals_scaled(is) = vals(i) * scale
+              write(6,*)'is/scaled value',is,vals_scaled(is)
+              CALL CPSETI ('PAI - PARAMETER ARRAY INDEX',is)
+              CALL CPSETR ('CLV - CONTOUR LEVEL',vals_scaled(is))
+          enddo ! i
+
+          CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',0)
+
+      else
+          col_offset = float(icol_offset) / float(ncols)
+          write(6,*)' col_offset / scale_loc = ',col_offset,scale_loc       
+
+          do m = 1,MREG
+          do n = 1,NREG
+              ZREG(m,n) = ZREG(m,n) + (col_offset * scale_loc)
+          enddo ! n
+          enddo ! m
 
 C      
-C Set number of contour levels and initialize Conpack
+C         Set number of contour levels and initialize Conpack
 C      
-!      CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
+!         CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
 
-      cis = abs(scale) / float(ncols)
-      CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
-      CALL CPSETR('CIS', cis)
-      CALL CPSETR('CMN',(0.0           ) * abs(scale) + 2.0*cis)
-      CALL CPSETR('CMX',(1.0+col_offset) * abs(scale) + 2.0*cis)
+          cis = abs(scale_loc) / float(ncols)
+          CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
+          CALL CPSETR('CIS', cis)
+          CALL CPSETR('CMN',(0.0           ) * abs(scale_loc) + 2.0*cis)
+          CALL CPSETR('CMX',(1.0+col_offset) * abs(scale_loc) + 2.0*cis)       
+
+      endif
+
       call cpsetr ('SPV',r_missing_data)
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
@@ -336,16 +391,18 @@ C
       END
       
       SUBROUTINE set_image_colortable(IWKID,ncols,l_discrete,ireverse
-     1                               ,colortable
+     1                               ,l_set_contours,colortable
      1                               ,MREG,NREG,log_scaling,icol_offset)    
 
       character*(*) colortable
-      logical log_scaling, l_discrete
+      logical log_scaling, l_discrete, l_set_contours
 C 
 C BACKGROUND COLOR
 C BLACK
 C
 !     CALL GSCR(IWKID,0,0.,0.,0.)
+
+      write(6,*)' subroutine set_image_colortable: ncols = ',ncols
 
       if(colortable(1:3) .eq. 'lin')then
           if(colortable .eq. 'linear_reduced')then
@@ -413,49 +470,6 @@ C
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
      1                            ,istatus)
 
-!         i1 = 1
-!         i2 = 1 + nint(.1017 * float(ncols-1))
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,0.5,0.15,0.6                ! Pink
-!    1                   ,0.5,0.5,0.7)                ! Violet
-
-!         i1 = 1 + nint(.1017 * float(ncols-1))
-!         i2 = 1 + nint(.31   * float(ncols-1))
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,0.5,0.5,0.7                 ! Violet
-!    1                   ,1.5,1.0,0.7)                ! Aqua
-
-!         i1 = 1 + nint(.31   * float(ncols-1))
-!         i2 = 1 + nint(.49   * float(ncols-1))
-!         call color_ramp(i1,i2,IWKID,icol_offset       
-!    1                   ,1.5,1.0,0.7                 ! Aqua
-!    1                   ,2.0,0.4,0.4)                ! Green
-
-!         i1 = 1 + nint(.49   * float(ncols-1))
-!         i2 = 1 + nint(.6349 * float(ncols-1))
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,2.0,0.4,0.4                 ! Green
-!!   1                   ,2.5,0.65,0.55)              ! Yellow Orig
-!    1                   ,2.45,0.95,0.60)             ! Yellow New
-
-!         i1 = 1 + nint(.6349 * float(ncols-1))
-!         i2 = 1 + nint(.77   * float(ncols-1))       ! .8136 orig
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,2.45,0.95,0.60              ! Yellow 
-!    1                   ,2.72,0.9,0.7)               ! Orange
-
-!         i1 = 1 + nint(.77   * float(ncols-1))
-!         i2 = 1 + nint(.81   * float(ncols-1))
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,2.72,0.9,0.7                ! Orange 
-!    1                   ,3.0,0.9,0.7)                ! Red
-
-!         i1 = 1 + nint(.81   * float(ncols-1))
-!         i2 = ncols
-!         call color_ramp(i1,i2,IWKID,icol_offset
-!    1                   ,3.0,0.9,0.7                 ! Red
-!    1                   ,3.0,0.9,0.2)                ! Dark Hot
-
       elseif(colortable .eq. 'tpw')then
           if(.not. l_discrete)then
               ncols = 60
@@ -476,13 +490,15 @@ C
      1              .or. colortable .eq. 'spectralr'     
      1              .or. colortable .eq. 'acc'            )then       
 
-          if(.not. l_discrete)then
-              if(            colortable .eq. 'acc' 
-     1                  .or. colortable .eq. 'spectralr'     
-     1                  .or. MREG*NREG .gt. 62500)then       
-                  ncols = 20
-              else
-                  ncols = 40
+          if(.not. l_set_contours)then
+              if(.not. l_discrete)then
+                  if(            colortable .eq. 'acc' 
+     1                      .or. colortable .eq. 'spectralr'     
+     1                      .or. MREG*NREG .gt. 62500)then       
+                      ncols = 20
+                  else
+                      ncols = 40
+                  endif
               endif
           endif
 
@@ -540,9 +556,9 @@ C
               call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
           enddo 
 
-          do i = ncols,ncols
-              call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
-          enddo
+!         do i = ncols,ncols
+!             call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
+!         enddo
       endif
 C 
       RETURN
@@ -614,14 +630,20 @@ C
       subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
      1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset,c5_sect
-     1                   ,l_discrete,l_integral,colorbar_int)      ! I
+     1                   ,l_discrete,l_integral,l_set_contours          ! I
+     1                   ,colorbar_int)                                 ! I
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
       character*5 c5_sect
       logical log_scaling,l_loop, l_discrete, l_integral, l_divisible       
+      logical l_set_contours
 
-      real*4 frac_a(100)
+      integer maxvals
+      parameter (maxvals=100)
+
+      real*4 frac_a(maxvals)
+      real*4 vals(maxvals)
 
       write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
 
@@ -639,10 +661,17 @@ C
      1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. l_divisible              ! divisible colorbars
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
-          l_loop = .true.
+          if(l_set_contours)then
+              l_loop = .false.
+          else
+              l_loop = .true.
+          endif
       else
           l_loop = .false.
       endif
+
+      write(6,*)' l_integral,l_discrete,l_divisible,l_set_contours',
+     1            l_integral,l_discrete,l_divisible,l_set_contours
 
 !     if(colortable(1:3) .eq. 'lin')l_loop = .false.
 
@@ -701,7 +730,7 @@ c     Restore original color table
       rsize = .008
       iy = (y_2+.021) * 1024
 
-      if(.not. l_integral)then
+      if(.not. l_integral .and. .not. l_set_contours)then
 
 !         Left Edge
           if(log_scaling)then
@@ -750,6 +779,7 @@ c     Restore original color table
       endif ! l_integral
 
       if(.not. l_loop .and. .not. l_integral 
+     1                .and. .not. l_set_contours
      1                .and. .not. log_scaling)then ! Plot Midpoint
 
           frac = 0.5
@@ -789,6 +819,8 @@ c     Restore original color table
 
       endif
 
+      ixl = 409
+      ixh = 924
 
       if(l_loop)then ! plot additional numbers
 
@@ -803,9 +835,6 @@ c     Restore original color table
 
 !         Interval for writing lines
           colorbar_int = colorbar_int * scale / 1.0
-
-          ixl = 409
-          ixh = 924
 
           write(6,*)' Plotting colorbar',scale_l,colorbar_int,ixl,ixh          
 
@@ -868,11 +897,18 @@ c     Restore original color table
       else      
 !         Other fractions
 
-          if(log_scaling .and. colortable .eq. 'acc')then
+          if(l_set_contours)then
+              call get_pcp_vals(maxvals,nvals,vals)
+              do i = 1,nvals
+                  frac_a(i) = float(i-1) / float(nvals-1)
+              enddo ! i
+              nfrac = nvals
+
+          elseif(log_scaling .and. colortable .eq. 'acc')then
               frac_a(1) = 0.125
               frac_a(2) = 0.230
               frac_a(3) = 0.330
-              frac_a(4) = 0.430  ! .420 = .18
+              frac_a(4) = 0.436  ! .420 = .18
               frac_a(5) = 0.490  ! .500 = .32
               frac_a(6) = 0.567
               frac_a(7) = 0.670
@@ -880,28 +916,35 @@ c     Restore original color table
               frac_a(9) = 0.824  ! .830 = 3.1
               frac_a(10) = 0.900
               nfrac = 10
+
           else
               frac_a(1) = 0.25
               frac_a(2) = 0.75
               nfrac = 2
+
           endif
 
           do ifrac = 1,nfrac
               frac = frac_a(ifrac)
 
-!             Plot Black Line
-              x1   = xlow + frac*xrange 
-              x2   = xlow + frac*xrange 
-              call setusv_dum(2hIN,0)
+              if(frac .ne. 0.0 .and. frac .ne. 1.0)then
+!                 Plot Black Line
+                  x1   = xlow + frac*xrange 
+                  x2   = xlow + frac*xrange 
+                  call setusv_dum(2hIN,0)
 
-              y1 = ylow
-              y2 = yhigh
-              call line(x1,y1,x2,y2)
+                  y1 = ylow
+                  y2 = yhigh
+                  call line(x1,y1,x2,y2)
+              endif
 
 !             Plot Number
               call setusv_dum(2hIN,7)  ! Yellow
               rarg = scale_l + (scale_h-scale_l) * frac
-              if(log_scaling)then
+
+              if(l_set_contours)then
+                  rlabel = vals(ifrac)
+              elseif(log_scaling)then
                   rlabel = (10.**(rarg)) / scale
               else
                   rlabel = rarg / scale
@@ -991,8 +1034,10 @@ c     Restore original color table
 
       logical l_divisible
 
-      if(range .gt. 1000.)then
+      if(range .gt. 2500.)then
           colorbar_int = 1000.
+      elseif(range .gt. 1000.)then
+          colorbar_int = 400.
       elseif(range .gt. 700.)then
           colorbar_int = 100.
       elseif(range .gt. 200.)then
