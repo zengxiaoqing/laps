@@ -93,11 +93,16 @@ c
 	character atime*24, outfile*200
 	character dir_s*50,ext_s*31,units*10,comment*125,var_s*3
 c
-	character filename*13
+	character filename13*13
+	character filename9*9
         character fname9_to_wfo_fname13*13
 	character data_file_m*80, data_file_c*80
+        integer cnt, minutes_to_wait_for_metars
+        parameter(minutes_to_wait_for_metars=10)
 	logical exists
-c
+        data exists/.false./
+        data cnt/0/
+c 
 c
 c.....	Start here.  Check to see if this is an interactive run.
 c
@@ -107,7 +112,7 @@ c
 c.....  Get the time from the scheduler or from the user if interactive.
 c
 	if(narg .eq. 0) then
-           call get_systime(i4time,filename,istatus)
+           call get_systime(i4time,filename9,istatus)
 c           call get_directory('etc',outfile,len)
 c           open(11,file=outfile(1:len)//'systime.dat',status='unknown')
 ccc	   open(11,file='../sched/systime.dat',status='unknown')
@@ -122,16 +127,16 @@ c
 c
  970	   write(6,973)
  973	   format(' Enter input filename (yydddhhmm): ',$)
-	   read(5,972) filename
+	   read(5,972) filename9
  972	   format(a9)
-	   call i4time_fname_lp(filename(1:9),i4time,istatus)
+	   call i4time_fname_lp(filename9(1:9),i4time,istatus)
 	   i4time = i4time / laps_cycle_time * laps_cycle_time
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
 c
 cc	outfile = filename//'.lso'
         call get_directory('lso',outfile,len)
-	outfile = outfile(1:len)//filename(1:9)//'.lso'
+	outfile = outfile(1:len)//filename9(1:9)//'.lso'
 
 cc	outfile = '/home/peaks1/stamus/laps/obs/' // filename // '.lso'
 c
@@ -183,30 +188,38 @@ c
 c.....  Call the routine that reads the METAR data files, then get
 c.....  the METAR data.
 c
-
+        do while(.not. exists .and. 
+     +            cnt .lt. minutes_to_wait_for_metars)
         
 c	if(idata_config .eq. 1) then   ! /public at FSL
-        len_path = index(path_to_METAR,' ') - 1
-	data_file_m = 
-     1    path_to_METAR(1:len_path)//filename(1:9)// '0100o'
-        len_path = index(path_to_local_data,' ') - 1
-	data_file_c = 
-     &      path_to_local_data(1:len_path)//filename(1:9)//'0015r'
-        INQUIRE(FILE=data_file_m,EXIST=exists)
-        if(.not. exists) then
-	  filename=fname9_to_wfo_fname13(filename(1:9))
-	  len_path = index(path_to_METAR,' ') - 1
-	  data_file_m = 
-     &        path_to_METAR(1:len_path) // filename
-	  len_path = index(path_to_local_data,' ') - 1
-	  data_file_c = 
-     &        path_to_local_data(1:len_path) // filename
-	  INQUIRE(FILE=data_file_m,EXIST=exists)
-	  if(.not. exists) then
-	     print *,' ERROR. File not Found: ',data_file_m
-	     stop 'Config error'
-	  endif
-	endif
+	   len_path = index(path_to_METAR,' ') - 1
+	   data_file_m = 
+     1	      path_to_METAR(1:len_path)//filename9(1:9)// '0100o'
+	   len_path = index(path_to_local_data,' ') - 1
+	   data_file_c = 
+     1	      path_to_local_data(1:len_path)//filename9(1:9)//'0015r'
+	   INQUIRE(FILE=data_file_m,EXIST=exists)
+	   if(.not. exists) then
+	      filename13=fname9_to_wfo_fname13(filename9(1:9))
+	      len_path = index(path_to_METAR,' ') - 1
+	      data_file_m = 
+     &           path_to_METAR(1:len_path) // filename13
+	      len_path = index(path_to_local_data,' ') - 1
+	      data_file_c = 
+     &           path_to_local_data(1:len_path) // filename13
+	      INQUIRE(FILE=data_file_m,EXIST=exists)
+	      if(.not. exists) then
+                 print*,'Waiting for file ',data_file_m
+                 call waiting_c(60)
+                 cnt = cnt+1               
+	      endif
+	   endif
+	enddo
+	if(.not.exists) then
+	   print *,' ERROR. File not Found: ',data_file_m
+	   stop 'Config error'
+        endif
+
 	print*,'Getting surface data ',data_file_m
 c	elseif(idata_config .eq. 2) then ! WFO-adv data
 c	   data_file_m = 

@@ -51,35 +51,62 @@ c
        real*8 value(MAXNCATT)
 c
        integer*4 START(MAXVDIMS),COUNT(MAXVDIMS)
-       integer*4 status
+       integer*4 status, cnt
        character data_path*80 
+       integer min_stations minutes_to_wait_for_metars
+       parameter(minutes_to_wait_for_metars=10)
+       parameter(min_stations=1000)
+       data cnt/0/
 c
 c.....  Start the program
 c      call ncpopt(0)
 c       
 c.....  Open the desired netCDF data file
 c
-       cdfid = ncopn(data_path,ncnowrit,rcode)
-       if(rcode.ne.0 .or. cdfid.lt.0) then
-         status = rcode
-         if(status .eq. 0) status = 0
-         return
-       else
-         status = 1
-       endif
+       do while(nsta.lt.min_stations.and.
+     +           cnt.lt.minutes_to_wait_for_metars)
+
+          cdfid = ncopn(data_path,ncnowrit,rcode)
+          if(rcode.ne.0 .or. cdfid.lt.0) then
+             status = rcode
+             if(status .eq. 0) status = 0
+             return
+          else
+             status = 1
+          endif
 c 
 c.....  Find out the number of dimensions, variables, attributes
 c.....     and record dimensions
 c
-       call ncinq(cdfid,ndims,nvars,natts,recdim,rcode)
+          call ncinq(cdfid,ndims,nvars,natts,recdim,rcode)
+
 c 
 c.....  Inquire about dimension names and sizes
 c
-       do k=1,ndims
-         call ncdinq(cdfid,k,dimnam(k),dimsiz(k),rcode)
-         if(dimnam(k).eq.'recNum') nsta=dimsiz(k)
-       enddo !k
-c
+          do k=1,ndims
+             call ncdinq(cdfid,k,dimnam(k),dimsiz(k),rcode)
+             if(dimnam(k).eq.'recNum') nsta=dimsiz(k)
+          enddo                 !k
+
+          print *,'Total records found: ',nsta
+          if(nsta.lt.min_stations.and.
+     +        cnt.lt.minutes_to_wait_for_metars-1) then
+             print*,'Waiting for more stations'
+             call ncclos(cdfid,rcode)
+             call waiting_c(60)
+             cnt = cnt+1
+          endif
+       enddo
+       if(nsta.le.0) then
+         print*,'Error, No stations in file ',data_path
+         stop 'read_metar'
+       else if(nsta.lt.min_stations) then
+          print*,'Proceeding with less than ',min_stations,' stations'
+       endif
+       
+
+
+
 c.....  Inquire about variables- datatype, name, number of dimensions,
 c.....     dimensions, number of attributes
 c
