@@ -80,15 +80,20 @@ AC_PATH_PROG(CSH,$CSH )
 if test "$GCC" = "yes"
 then
   OTHERLIBS="$OTHERLIBS -lgcc"
+  CPPFLAGS = "cc -P"     
 fi
+
+
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
-  OTHERLIBS="$OTHERLIBS -lm"
-  KRCFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS -Aa"
-  CPPFLAGS="$CPPFLAGS "
+  if test "$GCC" = "no"
+      OTHERLIBS="$OTHERLIBS -lm"
+      KRCFLAGS="$CFLAGS"
+      CFLAGS="$CFLAGS -Aa"
+      CPPFLAGS="$CPPFLAGS "
+  fi
 fi
 if test "$arch" = "rs6000" 
 then
@@ -106,6 +111,7 @@ then
   AC_PROG_FC
 fi
 AC_FC_CPP
+
 AC_FC_INC
 
 AC_FC_BYTE_UNSIGNED
@@ -122,7 +128,12 @@ then
   CPPFLAGS="$CPPFLAGS -DF90"
   if test "$arch" = "solaris"
 then
+dnl module flags for solaris 
 	FFLAGS="$FFLAGS -M$(LAPSROOT)/src/lib"
+dnl
+dnl The solaris cc has a bug in the preprocessor
+dnl 
+	CPP="/usr/ucb/cc -P"
 else
 	FFLAGS="$FFLAGS -I$(LAPSROOT)/src/lib"
 fi
