@@ -29,18 +29,18 @@ C      debug = .true.   ! Debug mode
 
         if(.false.)then ! original Seattle code with sigma coordinate inputs
 
-          if (nint(xlus(i,j)).eq.iwater) then
-           fwi(i,j) = -3.
-           goto 100
-          endif
-          t2k = (tmk(i,j,mkzh) + tgk(i,j)) / 2.
-          t2f = (t2k - celkel) * 1.8 + 32.
-          ht = ght(i,j,mkzh) - ter(i,j)
-          prs2 = (ht-2.)/ht * (sfp(i,j)-prs(i,j,mkzh)) + prs(i,j,mkzh)
-          q = .001 * qvp(i,j,mkzh)  ! g/kg to g/g
-          e = q*prs2/(eps+q)
-          es = ezero * exp( eslcon1*(t2k-celkel)/(t2k-eslcon2) )
-          rh2 = 100.*(e*(prs2-es))/(es*(prs2-e))
+!         if (nint(xlus(i,j)).eq.iwater) then
+!          fwi(i,j) = -3.
+!          goto 100
+!         endif
+!         t2k = (tmk(i,j,mkzh) + tgk(i,j)) / 2.
+!         t2f = (t2k - celkel) * 1.8 + 32.
+!         ht = ght(i,j,mkzh) - ter(i,j)
+!         prs2 = (ht-2.)/ht * (sfp(i,j)-prs(i,j,mkzh)) + prs(i,j,mkzh)
+!         q = .001 * qvp(i,j,mkzh)  ! g/kg to g/g
+!         e = q*prs2/(eps+q)
+!         es = ezero * exp( eslcon1*(t2k-celkel)/(t2k-eslcon2) )
+!         rh2 = 100.*(e*(prs2-es))/(es*(prs2-e))
 
         else ! new version to use sfc inputs from LAPS analysis
           rh2 = rh_sfc(i,j)
