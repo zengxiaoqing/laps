@@ -347,7 +347,9 @@ C
 
       integer*4   indx(NLVL_OUT)  
       REAL*4      prout                          (NLVL_OUT)
+      REAL*4      prout_sort                     (NLVL_OUT)
       REAL*4      htout                          (NLVL_OUT)
+      REAL*4      htout_sort                     (NLVL_OUT)
       REAL*4      tpout                          (NLVL_OUT)
       REAL*4      tpout_sort_c                   (NLVL_OUT)
       REAL*4      tpout_c_z                      (NLVL_OUT)
@@ -355,7 +357,9 @@ C
       REAL*4      tdout_sort_c                   (NLVL_OUT)
       REAL*4      tdout_c_z                      (NLVL_OUT)
       REAL*4      wdout                          (NLVL_OUT)
+      REAL*4      wdout_sort                     (NLVL_OUT)
       REAL*4      wsout                          (NLVL_OUT)
+      REAL*4      wsout_sort                     (NLVL_OUT)
 
       real*4 k_to_c
 
@@ -420,15 +424,22 @@ C
 
 !     Generate best current sounding for subsequent use in height integration
       n_good_z = 0
+      tdout_ref = 10.
       do i = 1,n_good_man
           if(abs(tpout(i)) .le. 500.)then ! good t value
               tpout_c_z(i) = k_to_c(tpout(i))
               n_good_z = n_good_z + 1
 
               if(abs(tdout(i)) .le. 500.)then ! good td value
+!                 tdout_c_z(i) = tpout_c_z(i) - tdout(i)
                   tdout_c_z(i) = k_to_c(tdout(i))
+
+                  tdout_ref = tdout(i)
+
               else ! generate approximate moisture value for height integration
                   tdout_c_z(i) = tpout_c_z(i) - 10.
+!                 tdout_c_z(i) = tpout_c_z(i) - tdout_ref
+
               endif ! good td value
           endif ! good t value
       enddo ! i
@@ -529,7 +540,40 @@ C
 
       call open_ext(11,i4time_sys,'snd',istatus)
 
-      if(.true.)then ! QC, convert units, & write out the sounding
+!     QC and convert units, T and Td are converted to deg C
+      do i = 1,n_good_levels
+          ilevel = indx(i)
+
+          htout_sort(i) = htout(ilevel)
+          prout_sort(i) = prout(ilevel)
+
+          if(tpout(ilevel) .eq. 99999. .or.
+     1       tpout(ilevel) .eq. r_missing_data     )then
+              tpout_sort_c(i) = r_missing_data
+          else
+              tpout_sort_c(i) = k_to_c(tpout(ilevel))
+          endif
+
+          if(tdout(ilevel)   .eq. 99999. .or. 
+     1       tpout_sort_c(i) .eq. r_missing_data)then       
+              tdout_sort_c(i) = r_missing_data
+          else
+              tdout_sort_c(i) = k_to_c(tpout(ilevel)) 
+     1                        - tdout(ilevel)      
+          endif
+
+          if(abs(wdout(ilevel)) .ge. 99999. .or.
+     1       abs(wsout(ilevel)) .ge. 99999.)then
+              wdout(ilevel) = r_missing_data
+              wsout(ilevel) = r_missing_data
+          endif
+
+          wdout_sort(i) = wdout(ilevel)
+          wsout_sort(i) = wsout(ilevel)
+
+      enddo ! i
+
+      if(.true.)then ! write out the sounding with original code
 
           write(6,*)
           write(6,511,err=998)
@@ -543,33 +587,10 @@ C
 
   511     format(i12,i12,f11.4,f15.4,f15.0,1x,5a1,3x,a9,1x,a8)
 
-
 !         Write out all sorted data for mandatory + sigw + sigt levels. 
 !         T and Td are in deg C
           do i = 1,n_good_levels
               ilevel = indx(i)
-
-              if(tpout(ilevel) .eq. 99999. .or.
-     1           tpout(ilevel) .eq. r_missing_data     )then
-                  tpout_sort_c(i) = r_missing_data
-              else
-                  tpout_sort_c(i) = k_to_c(tpout(ilevel))
-              endif
-
-              if(tpout(ilevel) .eq. 99999. .or.
-     1           tdout(ilevel) .eq. 99999. .or. 
-     1                                    t_c .eq. r_missing_data)then       
-                  tdout_sort_c(i) = r_missing_data
-              else
-                  tdout_sort_c(i) = k_to_c(tpout(ilevel)) 
-     1                            - tdout(ilevel)      
-              endif
-
-              if(abs(wdout(ilevel)) .ge. 99999. .or.
-     1           abs(wsout(ilevel)) .ge. 99999.)then
-                  wdout(ilevel) = r_missing_data
-                  wsout(ilevel) = r_missing_data
-              endif
 
               write(c_line,*) htout(ilevel),prout(ilevel)
      1              ,tpout_sort_c(i)
@@ -600,12 +621,12 @@ C
      1                    ,stalat,stalon,staelev                  ! I
      1                    ,staname(1,isnd),a9time_raob,c8_obstype ! I
      1                    ,n_good_levels                          ! I
-     1                    ,htout                                  ! I
-     1                    ,prout                                  ! I
+     1                    ,htout_sort                             ! I
+     1                    ,prout_sort                             ! I
      1                    ,tpout_sort_c                           ! I
      1                    ,tdout_sort_c                           ! I
-     1                    ,wdout                                  ! I
-     1                    ,wsout                                  ! I
+     1                    ,wdout_sort                             ! I
+     1                    ,wsout_sort                             ! I
      1                    ,istatus)                               ! O
 
       endif
