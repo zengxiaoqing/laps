@@ -99,7 +99,7 @@
       call get_tempob_time_window('RAOB',i4_temp_ob,istatus)
       if(istatus .ne. 1)goto 997
 
-      i4_raob_window = 2 * max(i4_wind_ob,i4_temp_ob)
+      i4_raob_window = max(i4_wind_ob,i4_temp_ob)
 
 !     Loop through raob files and choose ones in time window
       write(6,*)' # of files using filename format ',c8_project,' = '          
@@ -120,8 +120,8 @@
 !         filename_in = 'test.nc                                 '
 
 !         Define limits of RAOB release times we are interested in
-          i4time_raob_latest =   i4time_sys + i4_raob_window / 2
-          i4time_raob_earliest = i4time_sys - i4_raob_window / 2
+          i4time_raob_latest =   i4time_sys + i4_raob_window 
+          i4time_raob_earliest = i4time_sys - i4_raob_window 
 
 !         Define limits of NetCDF file times we are interested in. This 
 !         assumes NetCDF files have RAOBs for 3 hours ending at the NetCDF

@@ -193,12 +193,6 @@ C
 !         QC and write out the sounding
           i4time_raob = 0
 
-          if(abs(reltime(isnd)) .lt. 1e10)then
-              i4time_release = idint(reltime(isnd))+315619200
-          else
-              i4time_release = 0
-          endif
-
           if(abs(syntime(isnd)) .lt. 1e10)then
               i4time_syn  = idint(syntime(isnd))+315619200
               i4time_raob = i4time_syn
@@ -206,7 +200,25 @@ C
               i4time_syn = 0
           endif
 
-          i4time_diff    = i4time_release - i4time_sys
+          if(abs(reltime(isnd)) .lt. 1e10)then
+              i4time_release = idint(reltime(isnd))+315619200
+
+              i4time_diff = i4time_release - i4time_sys
+
+              if(abs(i4time_diff) .gt. 20000)then
+                  write(6,*)' Warning: i4time_release is not '
+     1                     ,'consistent with i4time_diff'
+     1                     ,i4time_release,i4time_sys
+              endif
+
+!             Correction for balloon rise time to mid-troposphere
+              i4time_raob = i4time_release + 1800
+
+          else
+              i4time_release = 0
+              i4time_diff = 0
+
+          endif
 
           write(6,*)
           write(6,*)' Raob #',isnd,i4time_sys,i4time_release,i4time_diff       
@@ -225,6 +237,7 @@ C
               write(6,*)' Missing first latitude',i
               goto 999
           endif
+
           if(stalon(isnd) .ge. r_nc_missing_data)then
               write(6,*)' Missing first longitude',i
               goto 999
