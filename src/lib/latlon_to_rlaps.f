@@ -52,13 +52,6 @@ cdis
         save init,umin,umax,vmin,vmax
         data init/0/
 
-        include 'lapsparms.cmn'
-
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
-            stop
-        endif
-
         if(init .eq. 0)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
             call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
@@ -109,13 +102,6 @@ cdis
 
         save init,umin,umax,vmin,vmax
         data init/0/
-
-        include 'lapsparms.cmn'
-
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
-            stop
-        endif
 
         if(init .eq. 0)then
             call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
@@ -338,9 +324,9 @@ cdis
 !       rlon=slon + atand(-s*u/v) /n
 !       rlat=(90.- 2.*atand((-  v/cosd(n*(rlon-slon)))**(1./n)))/s      
 
-        arg  = atan2d(-s*u,v)
-        rlat = (90.- 2.*atand((-s*v/cosd(arg))**(1./n))) / s      
-        rlon = slon + arg / n
+        angle  = atan2d(u,-s*v)
+        rlat = (90.- 2.*atand((-s*v/cosd(angle))**(1./n))) / s      
+        rlon = slon + angle / n
 
         rlon = mod(rlon+540.,360.) - 180.          ! Convert to -180/+180 range
 
