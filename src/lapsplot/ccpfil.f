@@ -46,10 +46,20 @@ C
       PARAMETER (IERRF=6, LUNIT=2, IWTYPE=1, IWKID=1)
       REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG),field_in(MREG,NREG)
       character*(*)colortable
-      
+
+      logical log_scaling
+
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
+      if(colortable(1:3) .eq. 'acc')then
+          log_scaling = .true.
+      else
+          log_scaling = .false.
+      endif
+
       n_image = n_image + 1
+
+      call get_r_missing_data(r_missing_data,istatus)
 
 !     if(n_image .gt. 1)then
 !         write(6,*)' Image was already plotted - returning from ccpfil'
@@ -69,15 +79,33 @@ C
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
 
 !     Apply scaling to the array
-      scale_loc = scale_h - scale_l
-      call addcon(field_in,-scale_l,ZREG,MREG,NREG)
+!     call addcon(field_in,-scale_l,ZREG,MREG,NREG)
 
-      call get_r_missing_data(r_missing_data,istatus)
+      if(log_scaling)then ! e.g. for precip
+          scale_l = .01 * scale
 
-!     Adjust field values
-      do i = 1,MREG
-      do j = 1,NREG
-          if(field_in(i,j) .eq. r_missing_data)then
+          do i = 1,MREG
+          do j = 1,NREG
+            ZREG(i,j) = alog10(max(field_in(i,j),scale_l))
+          enddo ! j
+          enddo ! i
+
+          scale_l = alog10(scale_l)
+          scale_h = alog10(scale_h)
+
+          ZREG = ZREG - scale_l                          ! Array subtraction
+
+          scale_loc = scale_h - scale_l
+
+      else
+          scale_loc = scale_h - scale_l
+
+          ZREG = field_in - scale_l                      ! Array subtraction
+
+!         Adjust field values
+          do i = 1,MREG
+          do j = 1,NREG
+            if(field_in(i,j) .eq. r_missing_data)then
 !             Test for 'linear' used to be proxy for rejecting X-sects?
 !             We may only want to color missing data values for H-sects
               if(colortable(1:3) .eq. 'lin')then
@@ -88,23 +116,26 @@ C
                   ZREG(i,j) = scale_loc * 0.96 ! e.g. CIN
               endif
 
-          elseif(ireverse .eq. 1)then
+            elseif(ireverse .eq. 1)then
               ZREG(i,j) = scale_loc - ZREG(i,j)
 
-          endif
+            endif
 
-!         Prevent overshoot beyond colortable (except for CAPE/CIN)
-          if(ZREG(i,j) .gt. scale_loc .and. 
-     1       colortable(1:3) .ne. 'cpe'     )then
+!           Prevent overshoot beyond colortable (except for CAPE/CIN)
+            if(ZREG(i,j) .gt. scale_loc .and. 
+     1         colortable(1:3) .ne. 'cpe'     )then
               ZREG(i,j) = scale_loc
-          endif
+            endif
 
-          if(ZREG(i,j) .lt. 0.0      )then
+            if(ZREG(i,j) .lt. 0.0      )then
               ZREG(i,j) = 0.0
-          endif
+            endif
 
-      enddo ! j
-      enddo ! i
+          enddo ! j
+          enddo ! i
+
+      endif ! log_scaling
+
 
       ireverse_colorbar = ireverse
 
@@ -126,7 +157,7 @@ C
 
       LMAP=MREG*NREG*64 ! 16000000
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
-     1                               ,LMAP
+     1                               ,LMAP,log_scaling
      1                               ,colortable,ncols,icol_offset)      
 C      
 C Close frame
@@ -142,7 +173,7 @@ C
 c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-      call colorbar(MREG, NREG, ncols, ireverse_colorbar, 
+      call colorbar(MREG, NREG, ncols, ireverse_colorbar, log_scaling,
      1              scale_l, scale_h, colortable, scale,icol_offset)
 
       jdot = 1
@@ -152,7 +183,7 @@ c     Call local colorbar routine
 
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
-     1                                ,LMAP
+     1                                ,LMAP,log_scaling
      1                                ,colortable,ncols,icol_offset)      
       
       PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
@@ -161,6 +192,7 @@ c     Call local colorbar routine
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
       character*(*) colortable
+      logical log_scaling
       
       EXTERNAL FILL
 
@@ -170,7 +202,7 @@ C Set up color table
       write(6,*)' ccpfil_sub - scale = ',scale
 C      
       CALL set_image_colortable(IWKID,ncols,ireverse,colortable
-     1                                              ,icol_offset)
+     1                                     ,log_scaling,icol_offset)
 C      
 C Initialize Areas
 C      
@@ -223,9 +255,10 @@ C
       END
       
       SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable
-     1                                                    ,icol_offset)    
+     1                               ,log_scaling,icol_offset)    
 
       character*(*) colortable
+      logical log_scaling
 C 
 C BACKGROUND COLOR
 C BLACK
@@ -253,11 +286,11 @@ C
           enddo ! i
 
       elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
-     1  .or. colortable .eq. 'acc'  .or. colortable .eq. 'cpe')then       
+     1                              .or. colortable .eq. 'cpe')then       
           ncols1 = 50
           ncols = 60
           call color_ramp(1,ncols1/8,IWKID,icol_offset
-     1                   ,0.5,0.15,0.6                 ! Pink
+     1                   ,0.5,0.15,0.6                ! Pink
      1                   ,0.5,0.5,0.7)                ! Violet
           call color_ramp(ncols1/8,59*ncols1/120,IWKID,icol_offset
      1                   ,0.5,0.5,0.7                 ! Violet
@@ -284,16 +317,6 @@ C
                   call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
               enddo
 
-          elseif(colortable .eq. 'acc')then
-              do i = 1,1
-!             do i = 1,3
-                  call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
-              enddo 
-
-              do i = ncols,ncols
-                  call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
-              enddo
-
           elseif(colortable .eq. 'cpe')then
               do i = 1,1
                   call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
@@ -305,7 +328,7 @@ C
 
           endif
 
-      elseif(colortable .eq. 'spectral')then       
+      elseif(colortable .eq. 'spectral' .or. colortable .eq. 'acc')then       
           ncols = 40
           call color_ramp(1,35*ncols/100
      1                   ,IWKID,icol_offset
@@ -323,6 +346,17 @@ C
       else
           write(6,*)' ERROR: Unknown color table ',colortable
 
+      endif
+
+      if(colortable .eq. 'acc')then ! Set colortable ends
+          do i = 1,1
+!         do i = 1,3
+              call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
+          enddo 
+
+          do i = ncols,ncols
+              call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
+          enddo
       endif
 C 
       RETURN
@@ -387,11 +421,13 @@ C
       end
 
 
-      subroutine colorbar(ni,nj,ncols,ireverse,scale_l,scale_h
+      subroutine colorbar(ni,nj,ncols,ireverse,log_scaling
+     1                   ,scale_l,scale_h
      1                   ,colortable,scale,icol_offset)
 
       character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
+      logical log_scaling
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
@@ -444,12 +480,18 @@ c     Restore original color table
       iy = (y_2+.021) * 1024
 
 !     Left Edge
-      if(abs(scale_l/scale) .gt. 0.0 .and. 
-     1   abs(scale_l/scale) .le. 0.5                  )then
-          write(ch_low,3)scale_l/scale
+      if(log_scaling)then
+          rlow = 0.
+      else
+          rlow = scale_l/scale
+      endif
+
+      if(abs(rlow) .gt. 0.0 .and. 
+     1   abs(rlow) .le. 0.5                  )then
+          write(ch_low,3)rlow
           call right_justify(ch_low)
       else
-          write(ch_low, 1)nint(scale_l/scale)
+          write(ch_low, 1)nint(rlow)
           call right_justify(ch_low)
       endif
 
@@ -457,15 +499,21 @@ c     Restore original color table
       CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
 
 !     Right Edge
-      if(abs(scale_h/scale) .ge. 1.0)then
-          if(abs(scale_h/scale-float(nint(scale_h/scale))) .lt. .05)then       
-              write(ch_high,1)nint(scale_h/scale)
+      if(log_scaling)then
+          rhigh = (10.**scale_h) / scale
+      else
+          rhigh = scale_h / scale
+      endif
+
+      if(abs(rhigh) .ge. 1.0)then
+          if(abs(rhigh-float(nint(rhigh))) .lt. .05)then       
+              write(ch_high,1)nint(rhigh)
  1            format(i8)
           else
-              write(ch_high,2)scale_h/scale
+              write(ch_high,2)rhigh
           endif
       else
-          write(ch_high,3)scale_h/scale
+          write(ch_high,3)rhigh
  3        format(f8.2)
       endif
       call left_justify(ch_high)
@@ -474,14 +522,19 @@ c     Restore original color table
       CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
 !     Midpoint
-      rmid = ((scale_l+scale_h) / scale)/2.0
-      if( (abs(rmid) .gt. 1.0 .or. abs(scale_l/scale) .gt. 1.0
-     1                        .or. abs(scale_h/scale) .gt. 1.0 )
+      if(log_scaling)then
+          rmid = (10.** ((scale_l+scale_h) / 2.0) ) / scale
+      else
+          rmid = ((scale_l+scale_h) / scale)/2.0
+      endif
+
+      if( (abs(rmid) .gt. 1.0 .or. abs(rlow) .gt. 1.0
+     1                        .or. abs(rhigh) .gt. 1.0 )
      1                        .AND. 
      1            abs(rmid-float(nint(rmid))) .lt. .05   
      1                                                           )then       
           write(ch_mid,1)nint(rmid)
-      elseif(abs(scale_h/scale) .ge. 1.0)then
+      elseif(abs(rhigh) .ge. 1.0)then
           write(ch_mid,2)rmid
  2        format(f8.1)
       else
@@ -493,12 +546,25 @@ c     Restore original color table
       ixm = (ixl+ixh)/2
       CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0 , 0.0)       
 
-      if(colortable .ne. 'spectral')return
+      if(colortable .ne. 'spectral' .and. colortable .ne. 'acc')return       
 
 !     Other fractions
       do frac = 0.25,0.75,0.50
-          rfrac = scale_l + (scale_h-scale_l) * frac
-          write(ch_frac,1)nint(rfrac)
+          rarg = scale_l + (scale_h-scale_l) * frac
+          if(log_scaling)then
+              rfrac = (10.**(rarg)) / scale
+          else
+              rfrac = rarg / scale
+          endif
+
+          if(rfrac .lt. 0.2)then
+              write(ch_frac,3)rfrac
+          elseif(rfrac .lt. 2.0)then
+              write(ch_frac,2)rfrac
+          else
+              write(ch_frac,1)nint(rfrac)
+          endif
+
           call left_justify(ch_frac)
           call s_len(ch_frac,len_frac)
 
