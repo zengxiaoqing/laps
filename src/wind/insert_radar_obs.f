@@ -4,6 +4,7 @@
      1  ,n_radars,max_radars,idx_radar_a            ! Input
      1  ,imax,jmax,kmax                             ! Input
      1  ,r_missing_data                             ! Input
+!    1  ,height_3d                                  ! Input
      1  ,vr_obs_unfltrd                             ! Input
      1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
@@ -25,7 +26,6 @@
       real*4   vr_obs_unfltrd(imax,jmax,kmax,max_radars)
       real*4   rlat_radar(max_radars),rlon_radar(max_radars)
       real*4   rheight_radar(max_radars)
-      real*4   n_radarobs_tot_unfltrd(max_radars)
       real*4   lat(imax,jmax),lon(imax,jmax)
       real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
       real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
@@ -37,6 +37,12 @@
       real*4   upass1_buf(imax,jmax,kmax)                            ! Local
       real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
 
+      real*4   xx(max_radars),yy(max_radars)
+      real*4   xx2(max_radars),yy2(max_radars)
+      real*4   vr(max_radars),ht(max_radars)
+      real*4   x(imax,jmax),y(imax,jmax)
+
+      integer*4 n_radarobs_tot_unfltrd(max_radars)
       integer*4 idx_radar_a(max_radars)
       integer*4 thresh_2_radarobs_lvl_unfltrd
      1         ,thresh_4_radarobs_lvl_unfltrd
@@ -188,56 +194,22 @@ csms$ignore begin
 
         enddo ! i_radar
 
-
-        icount_radar_total = 0
-
-!       Use only multiple Doppler obs if mode = 2, use all obs if mode = 1
-        do k = 1,kmax
-          icount_good_lvl = 0
-          if(mode .eq. 1)then ! Use all Doppler obs
-              do j = 1,jmax
-              do i = 1,imax
-                  if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
-                      icount_good_lvl = icount_good_lvl + 1
-                  endif
-              enddo ! i
-              enddo ! j
-          elseif(mode .eq. 2)then ! Throw out single Doppler obs
-              do j = 1,jmax
-              do i = 1,imax
-                  if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
-                      if(.not. l_good_multi_doppler_ob(i,j,k))then
-                          uobs_diff_spread(i,j,k) = r_missing_data
-                          vobs_diff_spread(i,j,k) = r_missing_data
-                          wt_p_radar(i,j,k) = r_missing_data
-                      else
-                          icount_good_lvl = icount_good_lvl + 1
-                      endif
-                  endif
-              enddo ! i
-              enddo ! j
-          endif ! mode
-
-          if(icount_good_lvl .gt. 0)l_analyze(k) = .true.
-
-          if(mode .eq. 1)then ! Use all Doppler obs
-              write(6,504)k,icount_good_lvl,l_analyze(k)
-504           format(' LVL',i3,' # sngl+multi = ',i6,l2)
-          elseif(mode .eq. 2)then ! Use only multi Doppler obs
-              write(6,505)k,icount_good_lvl,l_analyze(k)
-505           format(' LVL',i3,' # multi = ',i6,l2)
-          endif
-
-          icount_radar_total = icount_radar_total + icount_good_lvl
-
-        enddo ! k
-
       else ! call new multi-doppler routine
         if(n_radars .gt. kmax)then
 !           Dimensioning of 'vr_obs_fltrd' should be reworked
             write(6,*)' Software error with new multi-doppler routine'       
             stop
         endif
+
+!       Set up x and y arrays
+        call get_earth_radius(earth_radius,istatus)
+
+        do j = 1,jmax
+        do i = 1,imax
+            call latlon_to_xy(lat(i,j),lon(i,j),earth_radius
+     1                       ,x(i,j),y(i,j))
+        enddo ! i
+        enddo ! j
 
         do k = 1,kmax
           do i_radar = 1,n_radars
@@ -256,22 +228,38 @@ csms$ignore begin
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
 
+              call latlon_to_xy(rlat_radar(i_radar),rlon_radar(i_radar)       
+     1                         ,earth_radius,xx(i_radar),yy(i_radar))
+
           enddo ! i_radar
 
           do j = 1,jmax
           do i = 1,imax
-
 !             Assess which radars have data at this grid point
               do i_radar = 1,n_radars
                   n_illuminated = 0
                   if(vr_obs_fltrd(i,j,i_radar) .ne. r_missing_data
      1                                                             )then       
                       n_illuminated = n_illuminated + 1
+                      vr(n_illuminated) = vr_obs_fltrd(i,j,i_radar)
+                      ht(n_illuminated) = rheight_radar(i_radar)
+                      xx2(n_illuminated) = xx(i_radar)
+                      yy2(n_illuminated) = yy(i_radar)
                   endif
               enddo ! i_radar
 
-              call multiwind_noz(u,v,rms,u0,v0,x,y,height
-     1                          ,n_illuminated,xx,yy,ht,vr,rmsmax,ier)       
+              call multiwind_noz(u,v,rms,upass1(i,j,k),vpass1(i,j,k)
+     1                          ,x(i,j),y(i,j),htdum ! ,height_3d(i,j,k)
+     1                          ,n_illuminated,xx2,yy2,ht,vr,rmsmax,ier)       
+
+              if(ier .eq. 0)then
+                  uobs_diff_spread(i,j,k) = u
+                  vobs_diff_spread(i,j,k) = v
+                  wt_p_radar(i,j,k) = weight_radar
+                  if(n_radars_used .ge. 2)then
+                      l_good_multi_doppler_ob(i,j,k) = .true.
+                  endif
+              endif
 
           enddo ! i
           enddo ! j
@@ -279,6 +267,49 @@ csms$ignore begin
         enddo ! k
 
       endif ! l_multi_doppler_new
+
+      icount_radar_total = 0
+
+!     Use only multiple Doppler obs if mode = 2, use all obs if mode = 1
+      do k = 1,kmax
+        icount_good_lvl = 0
+        if(mode .eq. 1)then ! Use all Doppler obs
+            do j = 1,jmax
+            do i = 1,imax
+                if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
+                    icount_good_lvl = icount_good_lvl + 1
+                endif
+            enddo ! i
+            enddo ! j
+        elseif(mode .eq. 2)then ! Throw out single Doppler obs
+            do j = 1,jmax
+            do i = 1,imax
+                if(wt_p_radar(i,j,k) .eq. weight_radar)then ! Good single or multi ob
+                    if(.not. l_good_multi_doppler_ob(i,j,k))then
+                        uobs_diff_spread(i,j,k) = r_missing_data
+                        vobs_diff_spread(i,j,k) = r_missing_data
+                        wt_p_radar(i,j,k) = r_missing_data
+                    else
+                        icount_good_lvl = icount_good_lvl + 1
+                    endif
+                endif
+            enddo ! i
+            enddo ! j
+        endif ! mode
+
+        if(icount_good_lvl .gt. 0)l_analyze(k) = .true.
+
+        if(mode .eq. 1)then ! Use all Doppler obs
+            write(6,504)k,icount_good_lvl,l_analyze(k)
+504         format(' LVL',i3,' # sngl+multi = ',i6,l2)
+        elseif(mode .eq. 2)then ! Use only multi Doppler obs
+            write(6,505)k,icount_good_lvl,l_analyze(k)
+505         format(' LVL',i3,' # multi = ',i6,l2)
+        endif
+
+        icount_radar_total = icount_radar_total + icount_good_lvl
+
+      enddo ! k
 
       write(6,*)
      1     ' Finished insert_derived_radar_obs, icount_radar_total = '
