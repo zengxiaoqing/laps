@@ -2689,7 +2689,7 @@ Outputs:
                                 mixing ratio if desired by dividing through
                                 by the air density. 
 
-	lil     2d grid		integrated lwc
+	lil     2d grid		vertically integrated cloud liquid water content
 
 	lct     2d grid		SFC precip type (SPT,PTT) 
                                     Types are:
