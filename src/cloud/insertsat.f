@@ -578,11 +578,11 @@ c
      1                              ,heights_3d
      1                              ,imax,jmax,klaps,i,j,istatus)
                   if(istatus .ne. 1)then
-                      write(6,*)' Error in correct_cover'
+                      write(6,*)' Correct_cover: t_cld > tb8_k'
                       write(6,*)cldtop_old,cldtop_m(i,j)
      1                         ,htbase_init,thk_def,cover
                       write(6,*)(heights_3d(i,j,k),k=1,klaps)
-                      return
+!                     return
                   endif
                   cover = cover_new
               endif ! l_co2
@@ -648,10 +648,10 @@ c
         I4_elapsed = ishow_timer()
 
         call compare_radiation(kcld,temp_3d,klaps,imax,jmax
-     1      ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
+     1               ,cldcv,cldcv_1d,cld_hts,t_sfc_k,t_gnd_k,tb8_k
      1               ,r_missing_data,cvr_snow,heights_3d,nlyr,istatus)
 
-999     return
+        return
         end
 
         subroutine cloud_top( init_co2,i4time,tb8_k
