@@ -49,7 +49,9 @@ INSTALL=@INSTALL@
 # Define all source code to be compiled and placed in local library.
 
 SRC=gridconv.f         lga_interp.f       readnogaps.f       readconus211.f\
-    lga_util.f         readruc40native.f  readruc60native.f  readeta.f
+    lga_util.f         readruc40native.f  readruc60native.f  readeta.f \
+    readdgprep.f
+
 MAIN=lga.f
 
 
