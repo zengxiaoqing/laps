@@ -77,10 +77,10 @@ cdis
                 diff = r_radar - grid_ra_vel(i,j,k)
                 residual = residual + diff ** 2
                 bias_sum = bias_sum + diff
-                if(float(nobs)/40. .eq. nobs/40)then
-                    write(6,101)i,j,k,grid_ra_vel(i,j,k),r_radar,
-     1                  diff
-101                 format(1x,3i4,3f7.1,3i6)
+                if(float(nobs)/40. .eq. nobs/40 .or. nobs .le. 25)then       
+                    write(6,101)nobs,i,j,k,grid_ra_vel(i,j,k),r_radar
+     1                         ,diff
+101                 format(1x,i5,3i4,3f7.1,3i6)
                 endif
 
             endif
