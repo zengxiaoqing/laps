@@ -87,57 +87,36 @@ C***************** Declarations **************************************
      1                                          ,grid_laps_wt(ni,nj,nk)
 
         character*4 cgrid
+        character*12 c_obstype_a(4)
         logical l_parse, l_point_struct
 
 C********************************************************************
 
         write(6,*)' Subroutine compare_wind...',cgrid
 
-        write(6,*)
-        if(l_parse(cgrid,'FG'))then
-            write(6,*)'  Comparing ',cgrid,' to SFC Obs (prior to QC)'       
-        else
-            write(6,*)'  Comparing ',cgrid,' to SFC Obs (passing QC)'       
-        endif
-        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+        c_obstype_a(1) = 'SFC '
+        c_obstype_a(2) = 'PROF'
+        c_obstype_a(3) = 'PIN '
+        c_obstype_a(4) = 'CDW '
+
+        do i_obstype = 1,4
+            call s_len(c_obstype_a(i_obstype),len_obstype)
+            write(6,*)
+            if(l_parse(cgrid,'FG'))then
+                write(6,11)cgrid,c_obstype_a(i_obstype)(1:len_obstype)       
+ 11             format(1x,'  Comparing ',a,' to ',a4
+     1                   ,' Obs (prior to QC)')    
+            else
+                write(6,12)cgrid,c_obstype_a(i_obstype)(1:len_obstype)
+ 12             format(1x,'  Comparing ',a,' to ',a4
+     1                   ,' Obs (passing QC)')    
+            endif
+            call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
      1        ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1        ,cgrid,'SFC ',r_missing_data,rms)
+     1        ,cgrid,c_obstype_a(i_obstype),r_missing_data,rms)
 
-        write(6,*)
-        write(6,*)'  Comparing ',cgrid,' to Profiler'       
-        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
-     1        ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1        ,cgrid,'PROF',r_missing_data,rms)
-
-        write(6,*)
-        write(6,*)'  Comparing ',cgrid,' to Pireps'       
-        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
-     1        ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1        ,cgrid,'PIN ',r_missing_data,rms)
-
-        write(6,*)
-        if(l_parse(cgrid,'FG'))then
-            write(6,*)'  Comparing ',cgrid,' to CDW Obs (prior to QC)'       
-        else
-            write(6,*)'  Comparing ',cgrid,' to CDW Obs (passing QC)'       
-        endif
-        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
-     1        ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1        ,cgrid,'CDW ',r_missing_data,rms)
-
-!       write(6,*)
-!       write(6,*)'  Comparing LAPS First Pass & Analysis'
-!       call comp_laps1_laps2(upass1,vpass1,uanl,vanl
-!    1                                  ,ni,nj,nk,rms_fg_laps)
-
-!       write(6,*)
-!       write(6,*)'  Comparing LAPS Analysis & MODEL'
-!       call comp_laps_maps(uanl,vanl,u_mdl_curr,v_mdl_curr,ni,nj,nk
-!    1             ,r_missing_data,rms_laps_maps)
+        enddo
 
         do l = 1,n_radars
             write(6,*)
@@ -158,7 +137,7 @@ C********************************************************************
         subroutine comp_grid_windobs(u_3d,v_3d,ni,nj,nk
      1  ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_ob
      1  ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1  ,c_grid,c_ob,r_missing_data,rms)
+     1  ,c_grid,c_obs,r_missing_data,rms)
 
         include 'barnesob.inc'
         type (barnesob) obs_barnes(max_obs)      
@@ -167,8 +146,8 @@ C********************************************************************
         real*4 grid_laps_wt(ni,nj,nk)
         real*4 u_3d(ni,nj,nk),v_3d(ni,nj,nk) 
 
-        character*4  c_grid,c_ob
-        character*12 c_ob_loc
+        character*4  c_grid
+        character*12 c_ob_type,c_obs,c_obs_left,c_obs_right
 
         logical l_point_struct
 
@@ -179,21 +158,30 @@ C********************************************************************
         sumv = 0.
         sumsp = 0.
 
-        write(6,*)'Comparing ',c_ob,' Wind Obs (passing QC) to '
-     1                       ,c_grid,' Grid'
-        write(6,2)c_ob,c_grid
-!2      format(1x,'   i   j   k      ',a,' Ob          '
-!     1                               ,a,' Analysis     diff')
-2       format(1x,'   i   j   k      ',a,' Ob (Struct)    Ob (array)'
-     1                                ,a,' Analysis        diff')       
+        c_obs_left = c_obs
+        call left_justify(c_obs_left)
+        call s_len(c_obs_left,len_obstype)
+
+        c_obs_right = c_obs
+        call right_justify(c_obs_right)
+
+        write(6,*)'Comparing ',c_obs_left(1:len_obstype)
+     1           ,' Wind Obs (passing QC) to ',c_grid,' Grid'
+        write(6,2)c_obs_right(4:12),c_grid
+2       format(1x,'   i   j   k ',a,' Ob (Struct)    Ob (array)'
+     1                           ,a,' Analysis        diff')       
 
         if(l_point_struct)then
-           c_ob_loc = c_ob
-           call downcase(c_ob_loc,c_ob_loc)
-           call left_justify(c_ob_loc)
- 
+
+!          Checking the obstype is case insensitive
+           call downcase(c_obs_left,c_obs_left)
+
            do iob = 1,ncnt_total
-              if(obs_barnes(iob)%type .eq. c_ob_loc)then
+              c_ob_type = obs_barnes(iob)%type
+              call downcase(c_ob_type,c_ob_type)
+              call left_justify(c_ob_type)
+
+              if(c_ob_type .eq. c_obs_left)then
                   nobs = nobs + 1
                   il = obs_barnes(iob)%i
                   jl = obs_barnes(iob)%j
@@ -301,10 +289,14 @@ C********************************************************************
 
         rms  = sqrt(rmsu**2 + rmsv**2)
 
-        write(6,102)c_ob,c_grid,nobs,biasu,biasv,biassp,rmsu,rmsv,rms
-102     format(' BIAS/RMS between '
+        if(nobs .gt. 0)then
+            call upcase(c_obs_left,c_obs_left)
+            write(6,102)c_obs_left(1:8),c_grid,nobs,biasu,biasv,biassp
+     1                 ,rmsu,rmsv,rms      
+102         format(' BIAS/RMS between '
      1        ,a,' & ',a,' (n,biasu,biasv,biassp,rmsu,rmsv,rms) = '
      1        ,i4,6f5.1)
+        endif
 
         return
 
