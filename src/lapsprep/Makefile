@@ -55,7 +55,8 @@ RM=rm -f
 
 
 EXE=lapsprep.exe
-FSRC=lapsprep.f90 lwc2vapor.f90   
+FSRC=lapsprep.f90 lwc2vapor.f90 ice2vapor.f90 saturate_lwc_points.f90 \
+     saturate_ice_points.f90 
 
 FOBJS=$(FSRC:.f90=.o)
 

@@ -97,12 +97,12 @@
                                         
     INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus
     LOGICAL :: file_present
-    REAL    :: rhmod, lwcmod, shmod
+    REAL    :: rhmod, lwcmod, shmod, icemod
     REAL    :: rhadj
     REAL    :: lwc_limit
-
+    REAL    :: hydrometeor_scale
     ! Beginning of code
- 
+
     ! Check for command line argument containing LAPS valid time
     ! (in YYJJJHHMM format).  If not present, use the systime.dat
     ! file to get current time.  Note that on HPUX, argument #1
@@ -142,6 +142,13 @@
  
     PRINT '(A)', 'Getting horizontal grid specs from static file.'
     CALL get_horiz_grid_spec(laps_data_root)
+
+    ! Now that we have LAPS grid info, set up the hydrometeor scaling
+    ! factor, which scales the concentrations of hydormeteors for this
+    ! grid spacing.  We assume the values from LAPS are approprate on
+    ! a grid with radar scaling (approx. 2km)
+
+    hydrometeor_scale = 2./dx  ! dx is in km
 
     !  Loop through each of the requested extensions for this date.  Each of the
     !  extensions has a couple of the variables that we want.
@@ -462,88 +469,103 @@
 
       IF (MAXVAL(lwc) .LT. 99999.) THEN
 
+        ! Scale lwc for grid spacing
+        lwc = lwc*hydrometeor_scale
+        ! Cap lwc to autoconversion rate for liquid to rain
+        WHERE(lwc .GT. autoconv_lwc2rai) lwc = autoconv_lwc2rai
         ! Convert lwc concentration to mixing ratio
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
 
         ! Convert lwc mixing ratio to vapor mixing ratio
-        IF (lwc2vapor_thresh .GT. 0.) THEN
+        IF (lwc2vapor_thresh .GT. 0.000001) THEN
           DO k=1,z3
             DO j=1,y
               DO i=1,x  
                 IF (lwc(i,j,k).GT.0.) THEN
-                  CALL lwc2vapor(lwc(i,j,k),sh(i,j,k),t(i,j,k), &
-                                 p(k),lwc2vapor_thresh, &
-                                 lwcmod,shmod,rhmod)
+                  !CALL lwc2vapor(lwc(i,j,k),sh(i,j,k),t(i,j,k), &
+                  !               p(k),lwc2vapor_thresh, &
+                  !               lwcmod,shmod,rhmod)
 
+                  CALL saturate_lwc_points(sh(i,j,k),t(i,j,k), &
+                                           p(k),lwc2vapor_thresh, &
+                                           shmod,rhmod)
                   ! Update moisture arrays
 
-                  rhadj = rhmod-rh(i,j,k)
-                  if (rhadj .lt. 0.) then
-                    print *, 'WARNING:  Bad Cloud RH adjustment'
-                    print *, '  LWC/SH/RH: ', lwc(i,j,k),sh(i,j,k),rh(i,j,k)
-                    print *, '  MODIFIED:  ', lwcmod, shmod, rhmod
-                  endif
-                  !if ((rhmod .LT. lwc2vapor_thresh*100.).and.(lwcmod>0.)) then 
-                  !  print *, 'WARNING: Cloud water in non-saturated box...'
-                  !  print *, '  lwcmod = ',lwcmod
-                  !  print *, '  rhmod  = ', rhmod
-                  !endif
-                  lwc(i,j,k) = lwcmod
                   sh(i,j,k) = shmod
                   rh(i,j,k) = rhmod
                   mr(i,j,k) = shmod/(1.-shmod)
-
-                  ! Recompute Tv and Rho for this point
-
-                  virtual_t(i,j,k) = ( 1. + 0.61*mr(i,j,k))*t(i,j,k)
-                  rho(i,j,k) =  p(k)*100. / (rdry * virtual_t(i,j,k))
-
-                  ! Limit remaining cloud liquid to autoconversion rate
-                  ! Note, conversion rates are specified in kg/m**3, 
-                  ! so we need to convert this rate to kg/kg
-
-                  lwc_limit = autoconv_lwc2rai/rho(i,j,k)
-                  lwc(i,j,k) = MIN(lwc(i,j,k),lwc_limit)      
-
                 ENDIF
               ENDDO
             ENDDO
           ENDDO
         ENDIF
       ELSE
-        PRINT *,'Cloud Liquid (lwc/lwc) appears to be missing, setting values to 0.0'
+        PRINT *,'Missing cloud liquid, setting values to 0.0'
         lwc(:,:,:) = 0.0
       ENDIF
 
       IF (MAXVAL(rai) .LT. 99999.) THEN
+        rai(:,:,:) = rai(:,:,:) * hydrometeor_scale
         rai(:,:,:) = rai(:,:,:)/rho(:,:,:)   ! Rain mixing ratio
-        rai(:,:,:) = rai(:,:,:) * rai_frac
       ELSE
-        PRINT *, 'Rain (lwc/rai) appears to be missing, setting values to 0.0' 
+        PRINT *, 'Missing rain, setting values to 0.0' 
         rai(:,:,:) = 0.0
       ENDIF
 
       IF (MAXVAL(sno) .LT. 99999.) THEN
+        sno(:,:,:) = sno(:,:,:) * hydrometeor_scale
         sno(:,:,:) = sno(:,:,:)/rho(:,:,:)   ! Snow mixing ratio
-        sno(:,:,:) = sno(:,:,:) * sno_frac
       ELSE
-        PRINT *, 'Snow (lwc/sno) appears to be missing, setting values to 0.0'    
+        PRINT *, 'Missing snow, setting values to 0.0'    
         sno(:,:,:) = 0.0
       ENDIF
 
       IF (MAXVAL(ice) .LT. 99999.) THEN 
         ! Limit ice to autoconversion threshold
+
+        ice(:,:,:) = ice(:,:,:) * hydrometeor_scale
         WHERE(ice .GT. autoconv_ice2sno) ice = autoconv_ice2sno
         ice(:,:,:) = ice(:,:,:)/rho(:,:,:)   ! Ice mixing ratio
+      
+        ! Convert ice mixing ratio to vapor mixing ratio
+        ! (for now ice conversion tied to lwc2vapor_thresh)
+
+        IF (lwc2vapor_thresh .GT. 0.) THEN
+          DO k=1,z3
+            DO j=1,y
+              DO i=1,x
+                IF (ice(i,j,k).GT.0.000001) THEN
+                  !CALL ice2vapor(ice(i,j,k),sh(i,j,k),t(i,j,k), &
+                  !               p(k),lwc2vapor_thresh, &
+                  !               icemod,shmod,rhmod)
+
+                  ! Update moisture arrays
+                  CALL saturate_ice_points(sh(i,j,k),t(i,j,k), &
+                                           p(k),lwc2vapor_thresh, &
+                                           shmod,rhmod)
+                  IF (t(i,j,k).gt. 253) THEN
+                    sh(i,j,k) = MAX(shmod,sh(i,j,k))
+                    rh(i,j,k) = MAX(rhmod,rh(i,j,k))
+                  ELSE
+                    sh(i,j,k) = shmod
+                    rh(i,j,k) = rhmod
+                  ENDIF 
+                   mr(i,j,k) = sh(i,j,k)/(1.-sh(i,j,k))
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDIF
       ELSE
-        PRINT *, 'Ice (lwc/ice) appears to be missing, setting values to 0.0' 
+        PRINT *, 'Missing ice, setting values to 0.0' 
         ice(:,:,:) = 0.0
       ENDIF
 
       IF (MAXVAL(pic) .LT. 99999.) THEN
+         pic(:,:,:) = pic(:,:,:)*hydrometeor_scale
         pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
       ELSE
-        PRINT *, 'P. Ice (lwc/pic) appears to be missing, setting values to 0.0' 
+        PRINT *, 'Missing pice, setting values to 0.0' 
         pic(:,:,:) = 0.0
       ENDIF
 
