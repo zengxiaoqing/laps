@@ -1052,7 +1052,7 @@ c
       integer n_lines(maxsndr)
       integer imsng_sndr_pix
       integer istatus
-      character*5   c_sndr_id(maxsndr)
+      character*6   c_sndr_id(maxsndr)
       character*150 nest7grid
       character*200 path_to_sat_sounder(maxsndr)
 
