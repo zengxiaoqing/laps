@@ -122,8 +122,8 @@ CONTAINS
 
   ! Build the output file name
  
-  output_prefix = TRIM(laps_data_root)// '/lapsprd/dprep/' // &
-                  TRIM(output_format(1:3)) // '_init'
+  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
+                  TRIM(output_format(1:3)) // '_laps'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(date_string,'(I4.4,"-",I2.2,"-",I2.2,"-",I2.2,I2.2)') &
@@ -225,8 +225,9 @@ CONTAINS
    WRITE(output_unit,'(8F10.3)') (( slp(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( psfc(i,j)*.01,i=1,x),j=1,y)
    WRITE(output_unit,'(8F10.3)') (( t(i,j,z3+1),i=1,x),j=1,y)
-   WRITE(output_unit,'(8F10.4)') (( snodep(i,j),i=1,x),j=1,y)
-
+   IF (MAXVAL(snodep).GE.0) THEN
+     WRITE(output_unit,'(8F10.4)') (( snodep(i,j),i=1,x),j=1,y)
+   ENDIF
   ! Close the file
   
   CLOSE(output_unit)

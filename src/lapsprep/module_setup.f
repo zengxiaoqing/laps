@@ -57,29 +57,30 @@ MODULE setup
    INTEGER , PARAMETER :: output = 10
    CHARACTER (LEN=132) :: name
 
-     !  The items below define the number of different LAPS files that will
+   !  The items below define the number of different LAPS files that will
    !  be read, what their extensions are, and what variables from
    !  each file.  These are hard-coded for now, but we may put this
-   !  into lapsprep.nl in the future.
+   !  into lapsprep.nl in the future.  Mandatory extensions must be
+   !  listed first
 
    INTEGER , PARAMETER :: num_ext = 8
-   CHARACTER(LEN=3),DIMENSION(num_ext) :: ext = (/ 'lh3' , 'lt1' , &
-                                                   'lw3' , 'lwc',  &
-                                                   'lq3' , 'lsx',  &
-                                                   'lsx' , 'l1s' /)
+   CHARACTER(LEN=3),DIMENSION(num_ext) :: ext = (/ 'lt1' , 'lw3' , &
+                                                   'lh3' , 'lsx',  &
+                                                   'lsx' , 'lwc',  &
+                                                   'lq3' , 'l1s' /)
 
    CHARACTER(LEN=3),DIMENSION(5,num_ext) :: cdf_var_name = RESHAPE ( &
-                           (/ 'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
-                              'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , &
-                              'u3 ' , 'v3 ' , 'xxx' , 'xxx' , 'xxx' , &
-                              'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
-                              'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
+                           (/ 'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , & 
+                              'u3 ' , 'v3 ' , 'xxx' , 'xxx' , 'xxx' , & 
+                              'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'u  ' , 'v  ' , 't  ' , 'rh ' , 'xxx' , &
                               'ps ',  'msl' , 'xxx' , 'xxx' , 'xxx' , &
+                              'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
+                              'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'sto' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/ 1,2 ,2,5,1,4,2,1 /) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,2,1,4,2,5,1,1/) 
 
 CONTAINS
 

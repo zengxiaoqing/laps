@@ -95,7 +95,8 @@
     ! Miscellaneous local variables
                                         
     INTEGER :: loop , var_loop , k, istatus
-   
+    LOGICAL :: file_present
+
     ! Beginning of code
  
     ! Check for command line argument containing LAPS valid time
@@ -165,6 +166,31 @@
         ENDIF
       ENDIF
       PRINT *, 'Opening: ', input_laps_file
+
+      ! Determine if the file exists
+
+      INQUIRE (FILE=TRIM(input_laps_file), EXIST=file_present)
+      IF (.NOT.file_present) THEN
+        IF( (ext(loop).EQ.'lt1').OR. &
+            (ext(loop).EQ.'lw3').OR. &
+            (ext(loop).EQ.'lh3').OR. &
+            (ext(loop).EQ.'lsx') ) THEN 
+          PRINT '(A)', 'Mandatory file not available!'
+          STOP 'not_enough_data'
+        ELSE IF ( (ext(loop).EQ.'lq3') .OR. &
+               (ext(loop).EQ.'lwc') ) THEN
+          PRINT '(A)', 'File not available, cannot do hotstart.'
+          hotstart = .false.
+          CYCLE file_loop
+        ELSE IF (ext(loop).EQ.'l1s') THEN
+          PRINT '(A)', 'File not available, cannot do snowcover.'
+          CYCLE file_loop
+        ELSE
+          PRINT '(A)', 'File not available, but not mandatory.'
+          CYCLE file_loop
+        ENDIF
+      ENDIF
+
       ! Open the netcdf file and get the vertical dimension
 
       cdfid = NCOPN ( TRIM(input_laps_file) , NCNOWRIT , rcode )
@@ -194,17 +220,30 @@
         ALLOCATE ( psfc (x , y         ) )
         ALLOCATE ( d2d ( x , y         ) )
         ALLOCATE ( p   (         z3 + 1 ) ) 
+        ! The followin variables are not "mandatory"
         ALLOCATE ( lwc ( x , y , z3 ) ) 
         ALLOCATE ( rai ( x , y , z3 ) ) 
         ALLOCATE ( sno ( x , y , z3 ) ) 
         ALLOCATE ( pic ( x , y , z3 ) ) 
-        ALLOCATE ( ice ( x , y , z3 ) ) 
+        ALLOCATE ( ice ( x , y , z3 ) )
+        ALLOCATE ( snodep ( x , y ) ) 
+ 
+        ! The following variables are only used
+        ! for converting non-mandatory cloud variables
+        ! to mixing ratio values 
         ALLOCATE ( rho ( x , y , z3 ) )
         ALLOCATE ( virtual_t ( x , y , z3 ) )
         ALLOCATE ( sh ( x , y , z ) )
         ALLOCATE ( mr ( x , y , z ) )
-        ALLOCATE ( snodep ( x , y ) )
 
+        ! Initialize the non-mandatory values
+
+        lwc(:,:,:) = -999.
+        rai(:,:,:) = -999.
+        sno(:,:,:) = -999.
+        pic(:,:,:) = -999.
+        snodep(:,:) = -999.
+        
       END IF
 
       IF       ( ext(loop) .EQ. 'lh3' ) THEN
@@ -389,17 +428,6 @@
       pic(:,:,:) = pic(:,:,:)/rho(:,:,:)   ! Graupel (precipitating ice) mixing rat.
     ENDIF
 
-    ! Clean up the arrays before output
-
-    WHERE(ABS(u) .LT. tiny) u = 0.0
-    WHERE(ABS(v) .LT. tiny) v = 0.0
-    WHERE(rh .lt. tiny) rh = 0.0
-    WHERE(lwc .lt. tiny) lwc = 0.0
-    WHERE(rai .LT. tiny) rai = 0.0
-    WHERE(sno .LT. tiny) sno = 0.0
-    WHERE(ice .LT. tiny) ice = 0.0
-    WHERE(pic .LT. tiny) pic = 0.0
-    
     ! Now it is time to output these arrays.  The arrays are ordered
     !  as (x,y,z).  The origin is the southwest corner at the top of the 
     ! atmosphere for the 3d arrays, where the last layer (z3+1) contains    

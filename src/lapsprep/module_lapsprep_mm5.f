@@ -112,8 +112,8 @@ CONTAINS
   ALLOCATE (p_pa (z3+1))
   ! Build the output file name
  
-  output_prefix = TRIM(laps_data_root)// '/lapsprd/dprep/' // &
-                  TRIM(output_format(1:3)) // '_init'
+  output_prefix = TRIM(laps_data_root)// '/lapsprd/lapsprep/' // &
+                  TRIM(output_format(1:3)) // '_laps'
   yyyyddd = valid_yyyy*1000 + valid_jjj
   CALL wrf_date_to_ymd(yyyyddd, valid_yyyy, valid_mm, valid_dd) 
   WRITE(hdate, '(I4.4,"-",I2.2,"-",I2.2,"_",I2.2,":",I2.2,":00.0000")') &
@@ -273,40 +273,44 @@ CONTAINS
   PRINT '(A,F9.1,A,F9.1,A,F9.1)', 'Level (Pa):', slp_level, ' Min: ', MINVAL(slp),&
             ' Max: ', MAXVAL(slp)
 
-  ! Water equivalent snow depth
-  field = 'WEASD    '
-  units = 'kg m{-2}                 '
-  desc  = 'Water equivalent snow depth                   '
-  PRINT *, 'FIELD = ', field
-  PRINT *, 'UNITS = ', units
-  PRINT *, 'DESC =  ',desc
-  CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
+  IF (MAXVAL(snodep) .GE. 0) THEN
+    ! Water equivalent snow depth
+    field = 'WEASD    '
+    units = 'kg m{-2}                 '
+    desc  = 'Water equivalent snow depth                   '
+    PRINT *, 'FIELD = ', field
+    PRINT *, 'UNITS = ', units
+    PRINT *, 'DESC =  ',desc
+    CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
 
-  ! Compute WEASD from actual snow depth, which comes in as meters
+    ! Compute WEASD from actual snow depth, which comes in as meters
 
-  d2d = snodep * 1000.  &  ! Convert from m to kg m{-2}, which = mm
-        / 10.             ! Convert from actual to liquid equivalent
-  WHERE(d2d .LT. 0.) d2d = 0.0
-  WRITE ( output_unit ) d2d
-  PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):',p_pa(z3+1), ' Min: ', MINVAL(d2d),&
-            ' Max: ', MAXVAL(d2d) 
+    d2d = snodep * 1000.  &  ! Convert from m to kg m{-2}, which = mm
+          / 10.             ! Convert from actual to liquid equivalent
+    WHERE(d2d .LT. 0.) d2d = 0.0
+    WRITE ( output_unit ) d2d
+    PRINT '(A,F9.1,A,F9.2,A,F9.2)', 'Level (Pa):',p_pa(z3+1), &
+       ' Min: ', MINVAL(d2d),&
+       ' Max: ', MAXVAL(d2d) 
 
-  ! Snow cover (flag)
-  field = 'SNOWCOVR '
-  units = '0/1 Flag                 '
-  desc  = 'Snow cover flag                               '
-  PRINT *, 'FIELD = ', field
-  PRINT *, 'UNITS = ', units
-  PRINT *, 'DESC =  ',desc
-  CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
-  ! Compute snow cover by using mask of d2d, which is currently = 
-  ! to WEASD
+    ! Snow cover (flag)
+    field = 'SNOWCOVR '
+    units = '0/1 Flag                 '
+    desc  = 'Snow cover flag                               '
+    PRINT *, 'FIELD = ', field
+    PRINT *, 'UNITS = ', units
+    PRINT *, 'DESC =  ',desc
+    CALL write_pregrid_header(field,units,desc,p_pa(z3+1))
+    ! Compute snow cover by using mask of d2d, which is currently = 
+    ! to WEASD
+    WHERE(d2d .GT. 0.) d2d = 1.0
+    WRITE ( output_unit ) d2d
+    PRINT '(A,F9.1,A,F9.7,A,F9.7)', 'Level (Pa):', p_pa(z3+1),& 
+       ' Min: ', MINVAL(d2d),&
+       ' Max: ', MAXVAL(d2d)                               
 
-  WHERE(d2d .GT. 0.) d2d = 1.0
-  WRITE ( output_unit ) d2d
-  PRINT '(A,F9.1,A,F9.7,A,F9.7)', 'Level (Pa):', p_pa(z3+1), ' Min: ', MINVAL(d2d),&
-            ' Max: ', MAXVAL(d2d)                               
-
+  ENDIF
+  
   ! Get cloud species if this is a hot start
   IF (hotstart) THEN
     field = 'CLW      '
