@@ -284,6 +284,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/localize_domain.pl
 	  etc/laps_monitor.pl
           etc/makedatadirs.pl
+          etc/prebuild_sms.pl
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
