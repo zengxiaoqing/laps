@@ -110,12 +110,12 @@
 <pre>
      IBM rs6000      AIX3.25 and AIX4. NFS mounted disks should be mounted with
                                        NFS version 2 instead of 3.
-     HP              HPUX 10.20
+     HP              HPUX 10.20        Requires f90
      SunOS (Solaris) 5.6               Requires f90
      IRIX64          6.4               Works using f77 but requires namelist 
                                        end delimiter be changed from / to $
      DEC (Alpha)
-     LINUX (elf)
+     LINUX (elf)                       
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
@@ -171,7 +171,9 @@
 
      For IBM/AIX platforms 'xlf' is recommended.
 
-     For Solaris platforms, 'f90' is needed.
+     For Solaris & HP-UX platforms, 'f90' is needed.
+
+     For Linux platforms (Intel chip), 'pgf90' is suggested.
 
                     ---  2.1.6  Disk Space ---
 
