@@ -313,8 +313,9 @@ cdis
 
         do i_pr = 1,n_profiles ! MAX_PR
 
-            if(.not. l_use_all_nontower_lvls .and.
-     1        obstype(i_pr)(1:5) .ne. 'TOWER'     )then       
+            if(.not. l_use_all_nontower_lvls  .and.
+     1        obstype(i_pr)(1:5) .ne. 'TOWER' .and.
+     1        obstype(i_pr)(1:5) .ne. 'SODAR'      )then       
 
                 if(nlevels_obs_pr(i_pr) .gt. 0)then
                     call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
