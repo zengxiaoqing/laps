@@ -346,7 +346,7 @@
  
       ! Compute density from virtual temperature and gas constant for dry air
       DO k = 1, z3
-        rho(:,:,k) = p(k)*1000. / (rdry * virtual_t(:,:,k))
+        rho(:,:,k) = p(k)*100. / (rdry * virtual_t(:,:,k))
       ENDDO
       ! Divide all of species by density     
       lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio

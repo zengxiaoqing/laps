@@ -113,7 +113,7 @@ CONTAINS
 
   ! Convert p levels from mb to Pascals
 
-  p_pa = p * 1000.
+  p_pa = p * 100.
 
   ! Set llflag based on grid type
 
@@ -318,7 +318,7 @@ CONTAINS
         WRITE ( output_unit ) la1 , lo1 , dx , dy , lov , latin1
       END IF
       d2d = lwc(:,:,k)
-      WRITE ( output ) d2d
+      WRITE ( output_unit ) d2d
       PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_lwc 
@@ -344,7 +344,7 @@ CONTAINS
         WRITE ( output_unit ) la1 , lo1 , dx , dy , lov , latin1
       END IF
       d2d = ice(:,:,k)
-      WRITE ( output ) d2d
+      WRITE ( output_unit ) d2d
       PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)
     END DO var_ice
