@@ -6,7 +6,7 @@
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
  itime_before=900,
- itime_after=300,
+ itime_after=900,
  maxobs=6000,
  /
 

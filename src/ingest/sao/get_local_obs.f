@@ -103,6 +103,7 @@ c
 	character  reptype(maxsta)*6, atype(maxsta)*6
 	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
         character*(*) path_to_local_data, local_format
+        character*9 a9time_before, a9time_after, a9time_a(maxobs)
         character*13 filename13, cvt_i4time_wfo_fname13
         character*150 data_file 
 c
@@ -137,51 +138,82 @@ c
 c.....  Get the data from the NetCDF file.  First, open the file.
 c.....  If not there, return to obs_driver.
 c
-        call s_len(path_to_local_data,len_path)
-        filename13= cvt_i4time_wfo_fname13(i4time)
- 	data_file = path_to_local_data(1:len_path)//filename13
+        ix = 1
+c
+c.....  Set up the time window.
+c
+	before = i4time - itime_before
+	after  = i4time + itime_after
 
-        write(6,*)' mesonet file = ',data_file(1:len_path+13)
+!       Ob times contained in each file
+        i4_contains_early = 0 
+        i4_contains_late = 3599
 
-	nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+        call get_filetime_range(before,after                
+     1                         ,i4_contains_early,i4_contains_late       
+     1                         ,3600                                     
+     1                         ,i4time_file_b,i4time_file_a)              
 
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *, data_file
-	   go to 990
-	endif
+        do i4time_file = i4time_file_a, i4time_file_b, -3600
+
+            call s_len(path_to_local_data,len_path)
+            filename13= cvt_i4time_wfo_fname13(i4time_file)
+ 	    data_file = path_to_local_data(1:len_path)//filename13
+
+            write(6,*)' mesonet file = ',data_file(1:len_path+13)
+
+	    nf_status = NF_OPEN(data_file,NF_NOWRITE,nf_fid)
+
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *, data_file
+	       go to 990
+	    endif
 c
 c.....  Get the dimension of some of the variables.
 c
 c.....  "recNum"
 c
-	nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
-	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
-	if(nf_status.ne.NF_NOERR) then
-	   print *, NF_STRERROR(nf_status)
-	   print *,'dim recNum'
-	endif
+	    nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
+	    nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+	    if(nf_status.ne.NF_NOERR) then
+	       print *, NF_STRERROR(nf_status)
+	       print *,'dim recNum'
+	    endif
 c
 c.....  Call the read routine.
 c
-	call read_local(nf_fid, recNum, alt,
-     &     pro, td, elev, lats, lons,
-     &     timeobs, wx, rh, rh_time,
-     &     mslp, stname, p_time, stnp, 
-     &     stn_type, t_time, t, vis,
-     &     dd, dd_time, ddg, ffg, gust_time, 
-     &     ff, ff_time, badflag, istatus)
+	    call read_local(nf_fid, recNum, alt(ix),
+     &         pro(ix), td(ix), elev(ix), lats(ix), lons(ix),
+     &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
+     &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
+     &         stn_type(ix), t_time(ix), t(ix), vis(ix),
+     &         dd(ix), dd_time(ix), ddg(ix), ffg(ix), gust_time(ix), 
+     &         ff(ix), ff_time(ix), badflag, istatus)
 c
-	if(istatus .ne. 1) go to 990
-	n_local_all = recNum
+	    if(istatus .ne. 1)then
+                write(6,*)
+     1          '     Warning: bad status return from READ_LOCAL'       
+                n_local_file = 0
 
+            else
+                n_local_file = recNum
+                write(6,*)'     n_local_file = ',n_local_file
+
+            endif
+
+            ix = ix + n_local_file
+
+        enddo ! i4time_file
+
+        n_local_all = ix - 1
         write(6,*)' n_local_all = ',n_local_all
 c
-c.....  First check the data coming from the NetCDF file.  There can be
+c.....  First check the data coming from the NetCDF files.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
 c.....  are not handled the same by different operating systems.  For 
 c.....  example, IBM systems make "FloatInf" into "NaN" and store them that
@@ -222,11 +254,6 @@ c
 c
 	enddo !i
 c
-c.....  Set up the time window.
-c
-	before = i4time - itime_before
-	after  = i4time + itime_after
-c
 c..................................
 c.....	Now loop over all the obs.
 c..................................
@@ -237,6 +264,8 @@ c
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
 	do 125 i=1,n_local_all
+
+           call filter_string(stname(i))
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -261,20 +290,22 @@ c
 c.....  Check to see if its in the desired time window.
 c
 	   itime60 = nint(timeobs(i)) + 315619200
+	   call make_fnam_lp(itime60,timech,istatus)
+           a9time_a(i) = timech
+
 	   if(itime60 .lt. before 
      1   .or. itime60 .gt. after) then
                if(i .le. max_write)then
                    write(6,91,err=125)i,wmoid(i),stname(i)
-     1                               ,itime60,before
+     1                               ,a9time_a(i),before
      1                               ,after
- 91		   format(i6,i7,1x,a8,' out of time',3i12)
+ 91		   format(i6,i7,1x,a8,' out of time ',a11,2i12)
                endif
                go to 125
            endif
 c
 c.....  Right time, right location...
 
-	   call make_fnam_lp(itime60,timech,istatus)
 	   time = timech(6:9)
 	   read(time,*) rtime
 c
@@ -289,7 +320,11 @@ c
 	  endif
 c
 	  do k=1,icount
-	     if(stname(i) .eq. save_stn(k)) go to 125
+             if(stname(i) .eq. save_stn(k)) then
+                 write(6,*)' Rejecting duplicate ',i,k,stname(i)
+     1                    ,' ',a9time_a(i),' ',a9time_a(k)
+                 go to 125
+             endif
 	  enddo !k
 c
 	  icount = icount + 1
