@@ -41,8 +41,13 @@ foreach $file (@filenames) {
     $filename = $file;
     $age_of_newest = $age; } }
 
-# This isn't kosher, but it's okay for now:
-if (defined $hr) {$filename = $logdir."/".$logname.".log.".$hr."20";}
+# This is a bit more kosher...
+if (defined $hr) { 
+    if(length($hr) < 4)
+       {$filename = $logdir."/".$logname.".log.".$hr."20";}
+    else
+       {$filename = $logdir."/".$logname.".log.".$hr;}
+}
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
