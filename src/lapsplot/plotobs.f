@@ -662,6 +662,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         character*150 filename
         character*13 filename13
 
+        logical l_found_file
+
 !       Plot Temperature Obs  ***********************************************
 
 !       size_temp = 8. * float(max(imax,jmax)) / 300.
@@ -678,10 +680,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         call s_len(filename,len_file)
 
         open(lun,file=filename(1:len_file),status='old',err=31)
+        l_found_file = .true.
         go to 32
-
+       
  31     write(6,*)' Could not open ',filename(1:len_file)
-        go to 41
+        l_found_file = .false.
+        go to 42
 
  32     td = r_missing_data
         p = r_missing_data
@@ -720,9 +724,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         rewind(32)
 
-        write(6,*)' Number of temperature obs = ',nobs_temp
+42      write(6,*)' Number of temperature obs = ',nobs_temp
 
-        do while (.true.) ! Plot the temp obs
+        do while (l_found_file) ! Plot the temp obs
             read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
 150         continue
 
@@ -745,12 +749,16 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 iflag = 3
 
-                if(c8_obstype(1:2) .eq. 'RA')then       ! RASS, RAOB
-                    icol_in = 12
+                if(c8_obstype(1:3) .eq. 'RAS')then      ! RASS
+                    icol_in = 12 ! Aqua
+                elseif(c8_obstype(1:3) .eq. 'RAO')then  ! RAOB
+                    icol_in = 7  ! Yellow
+                elseif(c8_obstype(1:3) .eq. 'DRO')then  ! Dropsonde
+                    icol_in = 17 ! Lavender
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
-                    icol_in = 17
+                    icol_in = 17 ! Lavender
                 else                                    ! ACARS
-                    icol_in = 3
+                    icol_in = 3  ! Red
                 endif
 
                 call setusv_dum(2hIN,icol_in)
@@ -778,7 +786,6 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 141     continue
 
         close(32)
-
 
         return
         end
