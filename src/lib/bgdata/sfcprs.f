@@ -72,7 +72,7 @@ c recompute psfc with moisture consideration
                tvsfc=tsfc(i,j)*(1.+0.608*qsfc)
                tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
                tbarv=(tvsfc+tvk)*.5
-               psfc(i,j)=p(k)*exp(G/(R*tbarv)*dz)
+               psfc(i,j)=(p(k)*exp(G/(R*tbarv)*dz))*100.    !return units = pascals
 
             endif
             if(k.eq.kx)lfndz=.true.
