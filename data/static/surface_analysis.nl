@@ -7,7 +7,6 @@
  gam=.0008,
  ak=1.e-6, 
  /
-c
 c..... This is the namelist for the LAPS surface analysis
 c..... process (LSX).  Switches and similar things can go
 c..... here, and are read at runtime (rather than requiring
