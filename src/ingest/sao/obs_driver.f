@@ -287,37 +287,14 @@ c
 	n_gps_b = 0
 c
 	do i=1,maxsta
-	   stations(i) = '                    '
-	   provider(i) = '           '
-	   weather(i)  = '                         '
-	   reptype(i)  = '      '
-	   atype(i)    = '      '
-c
-	   do j=1,2
-	      store_3ea(i,j) = badflag
-	      store_4ea(i,j) = badflag
-	      store_6ea(i,j) = badflag
-	   enddo !j
-c
-	   do j=1,3
-	      store_2(i,j) = badflag
-	      store_7(i,j) = badflag
-	      store_2ea(i,j) = badflag
-	   enddo !j
-c
-	   do j=1,4
-	      store_1(i,j) = badflag
-	      store_3(i,j) = badflag
-	      store_5(i,j) = badflag
-	      store_5ea(i,j) = badflag
-	   enddo !j
-c
-	   do j=1,5
-	      store_4(i,j) = badflag
-	      store_6(i,j) = badflag
-	      store_cldht(i,j) = badflag
-	      store_cldamt(i,j) = '    '
-	   enddo !j
+!          Initialize station i
+           call init_station(i
+     1                      ,stations,provider,weather,reptype,atype      
+     1                      ,store_1,store_2,store_3,store_4,store_5
+     1                      ,store_6,store_7
+     1                      ,store_2ea,store_3ea,store_4ea,store_5ea
+     1                      ,store_6ea,dpchar,wmoid
+     1                      ,store_cldht,store_cldamt,maxsta,badflag)
 	enddo !i
 
 c
@@ -931,6 +908,70 @@ c
 	print *,' '
 	print *,'  Duplicate check: # of identical stations = '
      1         ,n_identical     
+
+        return
+        end
+
+
+        subroutine init_station(i
+     1                      ,stations,provider,weather,reptype,atype      
+     1                      ,store_1,store_2,store_3,store_4,store_5
+     1                      ,store_6,store_7
+     1                      ,store_2ea,store_3ea,store_4ea,store_5ea
+     1                      ,store_6ea,dpchar,wmoid
+     1                      ,store_cldht,store_cldamt,maxsta,badflag)
+
+	real*4  store_1(maxsta,4), 
+     &          store_2(maxsta,3), store_2ea(maxsta,3),
+     &          store_3(maxsta,4), store_3ea(maxsta,2),
+     &          store_4(maxsta,5), store_4ea(maxsta,2),
+     &          store_5(maxsta,4), store_5ea(maxsta,4),
+     &          store_6(maxsta,5), store_6ea(maxsta,2),
+     &          store_7(maxsta,3),
+     &          store_cldht(maxsta,5)
+c
+        integer    wmoid(maxsta)
+        integer    dpchar(maxsta)
+c
+        character  stations(maxsta)*20, provider(maxsta)*11
+        character  weather(maxsta)*25 
+        character  reptype(maxsta)*6, atype(maxsta)*6
+        character  store_cldamt(maxsta,5)*4
+
+        dpchar(i) = 0
+        wmoid(i) = 0
+
+	stations(i) = '                    '
+	provider(i) = '           '
+	weather(i)  = '                         '
+	reptype(i)  = '      '
+	atype(i)    = '      '
+c
+	do j=1,2
+	    store_3ea(i,j) = badflag
+	    store_4ea(i,j) = badflag
+	    store_6ea(i,j) = badflag
+	enddo !j
+c
+	do j=1,3
+	    store_2(i,j) = badflag
+	    store_7(i,j) = badflag
+	    store_2ea(i,j) = badflag
+	enddo !j
+c
+	do j=1,4
+	    store_1(i,j) = badflag
+	    store_3(i,j) = badflag
+	    store_5(i,j) = badflag
+	    store_5ea(i,j) = badflag
+	enddo !j
+c
+	do j=1,5
+	    store_4(i,j) = badflag
+	    store_6(i,j) = badflag
+	    store_cldht(i,j) = badflag
+	    store_cldamt(i,j) = '    '
+	enddo !j
 
         return
         end
