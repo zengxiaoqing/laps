@@ -1,0 +1,182 @@
+netcdf lst {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //      lifted index            //
+
+        float
+            li(record,z,y,x);
+            li:navigation_dim = "nav";
+            li:record = "valtime, reftime";
+            li:_FillValue = 1.e+37f;
+            li:long_name="lifted index";
+            li:units="degrees Kelvin";
+            li:valid_range= -20000.f, 20000.f;
+            li:LAPS_var="LI";
+            li:lvl_coord="AGL";
+            li:LAPS_units="K";
+ 
+        //      positive buoyant energy         //
+        float
+            pbe(record,z,y,x);
+            pbe:navigation_dim = "nav";
+            pbe:record = "valtime, reftime";
+            pbe:_FillValue = 1.e+37f;
+            pbe:long_name="positive buoyant energy";
+            pbe:units="joules/kilogram";
+            pbe:valid_range= -20000.f, 20000.f;
+            pbe:LAPS_var="PBE";
+            pbe:lvl_coord="AGL";
+            pbe:LAPS_units="J/KG";
+ 
+         //      negative buoyant energy         //
+
+         float
+            nbe(record,z,y,x);
+            nbe:navigation_dim = "nav";
+            nbe:record = "valtime, reftime";
+            nbe:_FillValue = 1.e+37f;
+            nbe:long_name="negative buoyant energy";
+            nbe:units="joules/kilogram";
+            nbe:valid_range= -20000.f, 20000.f;
+            nbe:LAPS_var="NBE";
+            nbe:lvl_coord="AGL";
+            nbe:LAPS_units="J/KG";
+ 
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            li_comment(record,z,namelen),
+            pbe_comment(record,z,namelen),
+            nbe_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            li_fcinv(record, z);
+            li_fcinv:_FillValue= 0s;
+              	
+        short
+            pbe_fcinv(record, z);
+            pbe_fcinv:_FillValue= 0s;
+              	
+        short
+            nbe_fcinv(record, z);
+            nbe_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS lst file - LAPS stability indices ";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS lst file - LAPS stability indices";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
