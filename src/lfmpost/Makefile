@@ -46,21 +46,21 @@ include $(SRCROOT)/src/include/makefile.inc
 
 RM=rm -f 
 
-.SUFFIXES:              .f .o
+.SUFFIXES:              .f90 .o
 
-.f.o:
+.f90.o:
 			$(RM) $@
-			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f
+			$(FC) -c $(FFLAGS) $(FREE) $(INC) $*.f90
 
 EXE=lfmpost.exe
-FSRC=lfmpost.f bint.f clouds.f integrated_liquid.f reflectivity.f \
-     met_functions.f interp_press_to_z.f \
-     snowfall.f wintprec.f helicity.f capecin.f the2t.f \
-     output_laps_format.f smooth.f grib_sfc_vars.f grib_ua_vars.f
+FSRC=lfmpost.f90 bint.f90 clouds.f90 integrated_liquid.f90 reflectivity.f90 \
+     met_functions.f90 interp_press_to_z.f90 \
+     snowfall.f90 wintprec.f90 helicity.f90 capecin.f90 the2t.f90 \
+     output_laps_format.f90 smooth.f90 grib_sfc_vars.f90 grib_ua_vars.f90
 
 CSRC = v5d.c binio.c
 
-FOBJS=$(FSRC:.f=.o)
+FOBJS=$(FSRC:.f90=.o)
 
 COBJS=$(CSRC:.c=.o)
 
