@@ -44,7 +44,7 @@ c
 c
         include 'netcdf.inc'
         character*128 dimname                   ! Must match NETCDF.INC's
-        integer ncopts,ncdid,ncvid
+
         common/ncopts/ncopts                    ! NetCDF error handling flag.
 
         character*200 input_name
@@ -57,7 +57,7 @@ c
      
         integer*4 nelems,nlines
 	byte image(nelems,nlines)
-
+  
         integer*2 i_value
         byte      b_value(2)
         equivalence (i_value,b_value(1))
@@ -201,7 +201,7 @@ c                write(6,*) i, j, i_value
 
            else
               icount_bad=icount_bad+1
-              image(i,j)=255
+              image(i,j) = 255
            endif
         enddo
         enddo

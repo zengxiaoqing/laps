@@ -114,8 +114,9 @@ c
 c
 c get remapping look-up-table
 c
-      call readvrclut(c_raddat_type,imax,jmax,
-     &r_llij_lut_ri,r_llij_lut_rj,istatus)
+      
+      call readvrclut(c_radtype,imax,jmax,
+     &     r_llij_lut_ri,r_llij_lut_rj,istatus)
 c
 c compute grid ratio 
 c

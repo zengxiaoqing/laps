@@ -29,8 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-	subroutine read_table(table_path,nx,ny,
-     &lat,lon,ri,rj,istatus)
+       subroutine read_table(table_path,nx,ny,lat,lon,ri,rj,istatus)
 
         integer nx,ny
         real lat (nx,ny)
@@ -42,18 +41,19 @@ cdis
 
 	istatus = 0
 
-	open (unit=12,file=table_path,form='unformatted',
-     &status='old',err=23)
+ 	open(unit=12,file=table_path,form='unformatted',status='old'
+     +       ,err=23)
 
 	read(12,err=23,end=23) lat
 	read(12,err=23,end=23) lon
 	read(12,err=23,end=23) ri
 	read(12,err=23,end=23) rj
 
-
 	close (12)
 
 	istatus = 1
 
-23	return
+	return
+ 23	print *,'Could not open vrc look up table',table_path
+        stop 'read_table.f'
 	end

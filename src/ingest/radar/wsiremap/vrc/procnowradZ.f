@@ -240,7 +240,7 @@ c
      &           r_llij_lut_ri(i,j),
      &           r_llij_lut_rj(i,j),
      &           elem_dim,line_dim,wsi_dbz_data,
-     &           result,istatus)
+     &           result)
 
 	    if(result .ne. r_missing_data_cmn .and.
      &         result .gt. 0.0)then
@@ -261,3 +261,6 @@ c
 c
         return
         end
+
+
+

@@ -34,9 +34,8 @@ ccc        if(cradtype.eq.c_raddat_types(i))then
          table_path=path(1:n1)//cnm(1:n2)//cradtype//'.lut'
          n=index(table_path,' ')
 
-            call read_table(table_path,nx,ny,
-     &rdummy,rdummy,ri,rj,istatus)
-
+         call read_table(table_path,nx,ny,
+     &        rdummy,rdummy,ri,rj,istatus)
 
 ccc         endif
 ccc      enddo
