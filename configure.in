@@ -158,12 +158,12 @@ if test $? -eq 0
 then
   if test "$arch" = "i686"
   then
-    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -O2"
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
     CFLAGS="$CFLAGS -DLITTLE -DSWAPBYTE"
-    OPTIMIZE=""
+    OPTIMIZE="-O2"
   fi
 fi  
 
@@ -177,7 +177,7 @@ if test $? -eq 0
 then
   if test "$arch" = "mpif90"
   then
-    FFLAGS="$FFLAGS -w90 -w95 -cm"
+    FFLAGS="$FFLAGS -w90 -w95 -cm -fpe3"
     FREE="-FR"
     OPTIMIZE=""
   fi
