@@ -78,8 +78,8 @@
 
      Below is a description of the tar file containing the LAPS data ingest and
      analysis code. The predictive component of LAPS (MM5 or RAMS) is
-     distributed separately. The main FSL contacts for this are 
-     John Snook (snook@fsl.noaa.gov) and Jim Edwards (jedwards@fsl.noaa.gov).
+     distributed separately. The main FSL contact for this is 
+     Jim Edwards (jedwards@fsl.noaa.gov).
 
      Please note that FSL provides support for LAPS software only if a prior
      agreement is made to that effect. Additionally, questions concerning LAPS
@@ -598,7 +598,7 @@
            The Atlanta, Sterling, and Seattle WFOs have followed a more direct
            route, going from the RUC/Eta to the intermediate "lga" file,
            bypassing the NetCDF file on the model grid. This includes RUC
-           on isobaric surfaces. Pete Stamus or John Snook (FSL) would have 
+           on isobaric surfaces. Pete Stamus (FSL) would have 
            more info on this.
 
 
@@ -1325,7 +1325,7 @@ Sample Output: Should be available in the test data case. The grids start with
 
 ------ 3.2.1 -------------------- LGA Model ---------------------------------
 
-Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
+Package: lga.exe - ingest model data (contact: Jim Edwards - jedwards@fsl.noaa.gov).
 
         LGA 	LAPS analysis grids from RUC or other analysis/forecast grids.
 
