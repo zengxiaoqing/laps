@@ -166,6 +166,12 @@ c read in laps lat/lon and topo
                 call snooze_gg(60.0,istat_snooze)
                 i_wait = i_wait - 1
                 goto50
+
+            else ! Will not wait for radar data
+                write(6,*)' WARNING: Insufficient radar data available'
+                write(6,*)' No accum output being generated'
+                return
+
             endif
         endif
 
