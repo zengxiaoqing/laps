@@ -10,7 +10,6 @@
        character*150 path_to_radar,c_filespec,filename,directory
      1              ,c_fnames(max_files)
        character*15 path_to_vrc
-       character*4 c4_radarname ! Not used in this file
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
@@ -57,15 +56,15 @@ c      Determine filename extension
 !          Get filecount of 02 elevation raw files
            c2_tilt = '02'
            c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
-           call get_file_names(c_filespec,i_nbr_files_out,c_fnames
+           call get_file_names(c_filespec,i_nbr_files_raw,c_fnames
      1                        ,max_files,istatus)
            if(istatus .ne. 1)then
                return
            endif
 
-           write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_out
+           write(6,*)' # of 2nd tilt raw files = ',i_nbr_files_raw
 
-           if(i_nbr_files_out .gt. 0)then
+           if(i_nbr_files_raw .gt. 0)then
                l_multi_tilt = .true.
                write(6,*)' We have multiple tilt data'
            else
@@ -77,14 +76,26 @@ c      Determine filename extension
            c2_tilt = '01'
            c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
            call get_file_times(c_filespec,max_files,c_fnames
-     1                        ,i4times,i_nbr_files_out,istatus)
+     1                        ,i4times,i_nbr_files_raw,istatus)
 
-           write(6,*)' # of 1st tilt raw files = ',i_nbr_files_out
-           if(istatus .ne. 1 .or. i_nbr_files_out .eq. 0)then
+           write(6,*)' # of 1st tilt raw files = ',i_nbr_files_raw
+           if(istatus .ne. 1 .or. i_nbr_files_raw .eq. 0)then
                istatus = 0
                return
            endif
+           
+!          Get input filetime to process
+           if(l_multi_tilt .and. i_nbr_files_raw .ge. 2)then
+               i4time_process = i4times(i_nbr_files_raw-1)
+               write(6,*)' Processing second latest input file'
+           else
+               i4time_process = i4times(i_nbr_files_raw)
+               write(6,*)' Processing latest input file'
+           endif
 
+           call make_fnam_lp(i4time_process,a9_time,istatus)
+
+!          Get output filespec
            if(ext_out .ne. 'vrc')then
                call get_filespec(ext_out,1,c_filespec,istatus)
 
@@ -101,29 +112,18 @@ c      Determine filename extension
 
            write(6,*)' Output filespec = ',c_filespec
 
-!          Get i4times of output files
+!          Get i4times of output files and compare to input filetime to process
            call get_file_times(c_filespec,max_files,c_fnames
      1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
            write(6,*)' # of output files = ',i_nbr_lapsprd_files
-           
-           if(i_nbr_files_out .ge. 2)then
-               if(l_multi_tilt)then
-                   i4time_process = i4times(i_nbr_files_out-1)
-                   write(6,*)' Processing second latest input file'
-               else
-                   i4time_process = i4times(i_nbr_files_out)
-                   write(6,*)' Processing latest input file'
-               endif
 
-               call make_fnam_lp(i4time_process,a9_time,istatus)
-               do i = 1,i_nbr_lapsprd_files
-                   if(i4time_process .eq. i4times_lapsprd(i))then
-                       write(6,*)' Product file already exists ',a9time      
-                       istatus = 0
-                       return
-                   endif
-               enddo ! i
-           endif
+           do i = 1,i_nbr_lapsprd_files
+               if(i4time_process .eq. i4times_lapsprd(i))then
+                   write(6,*)' Product file already exists ',a9_time      
+                   istatus = 0
+                   return
+               endif
+           enddo ! i
        endif ! i_tilt_proc = 1
 
 !      Pull in housekeeping data from 1st tilt
