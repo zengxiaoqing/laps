@@ -499,21 +499,24 @@
      second tree shown above), you have the option of setting up those runtime
      parameter files with only those parameters that need to be changed for 
      each of the domain(s). These generally include map projection parameters,
-     data paths, etc. The remaining fixed parameters are automatically merged 
-     in from the '$LAPS_SRC_ROOT/data/static' directory tree by the 
+     data paths, etc. The remaining fixed parameters will be automatically 
+     merged in from the '$LAPS_SRC_ROOT/data/static' directory tree by the 
      localization script. As an example, 'nest7grid.parms' only needs to 
      contain the subset of parameters that are unique to your domain(s). 
-     The rest can be omitted from the file; they are automatically added in as
-     a result of the merging operation performed within the localization (next
-     step). This "template" procedure provides an end result equivalent to that
-     from the previous paragraph and is described to provide an alternative
-     method of modifying the parameters. Templates can be a time saver, 
-     especially if you are managing parameters in multiple windows and are
-     performing frequent software updates. Templates are normally maintained
-     by the user independent of the LAPS distribution (e.g. see the template
-     directory in the tree diagram above). They tend to contain parameters 
-     dependent on the local implementation and relatively independent of 
-     software updates.
+     The rest can be omitted from the file; they will automatically be added in
+     as a result of the merging operation performed within the localization 
+     (next step). This "template" procedure provides an end result equivalent 
+     to that from the previous paragraph and is described to provide an 
+     alternative method of modifying the parameters. Templates can be a time 
+     saver, especially if you are managing parameters in multiple windows and 
+     are performing frequent software updates. Templates are normally 
+     maintained in a location independent of the LAPS distribution (e.g. see 
+     the template directory in the tree diagram above). They tend to contain 
+     parameters dependent on the local implementation and relatively independent
+     of software updates. The template files should be copied into 
+     '$LAPS_DATA_ROOT/data/static' prior to running the localization. This
+     can be done manually or via the 'window_laps_rt.pl' script (described 
+     later).
 
 
                 ----   2.2.7  Running the Localization ---
