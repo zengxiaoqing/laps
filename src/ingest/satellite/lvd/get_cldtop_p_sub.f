@@ -37,7 +37,7 @@ c
       implicit none
 
       integer   max_files
-      parameter (max_files=500)
+      parameter (max_files=20000)
 c
 c the max_ctp parameter is set based upon the size of the
 c cld-top-p files we read from FSL's /public data base.
