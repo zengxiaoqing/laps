@@ -141,8 +141,9 @@ c read in laps lat/lon and topo
         endif
 
 !       Get Incremental Accumulations from Radar Data & Update Storm Totals
-!       i_wait = ilaps_cycle_time / 270
-        i_wait = 0
+        i4time_now = i4time_now_gg()
+        i_wait = (i4time + (35*60) - i4time_now) / 60
+        write(6,*)' Number of potential wait cycles = ',i_wait
 
         istatus_inc = 1
 
@@ -160,9 +161,9 @@ c read in laps lat/lon and topo
 
         if(istatus_inc .ne. 1)then ! Decide whether to wait for radar data
             if(i_wait .gt. 0 .and. frac_sum .ge. 0.30)then
-                write(6,*)' Waiting 2 min for possible radar data',frac_
-     1sum
-                call snooze_gg(120.0,istat_snooze)
+                write(6,*)' Waiting 1 min for possible radar data'
+     1                    ,frac_sum
+                call snooze_gg(60.0,istat_snooze)
                 i_wait = i_wait - 1
                 goto50
             endif
@@ -190,22 +191,22 @@ c read in laps lat/lon and topo
         rate_thresh = .0001
         filename_start = comment_r(1:9)
 
-        call i4time_fname_lp(filename_start, i4time_start, istatus)
+        call i4time_fname_lp(filename_start, i4time_start_tot, istatus)       
         if(istatus .ne. 1)then
             write(6,*)' Could not get start time for storm total'
      1                 ,comment_r
-            i4_total = ilaps_cycle_time
+            i4_prev_total = 0
             istatus_tot = 0
 
         else ! Valid storm total start time in comment
-            i4_total = i4time - i4time_start
-            if(i4_total .gt. 48*3600)then
+            i4_prev_total = i4time_beg - i4time_start_tot
+            if(i4_prev_total .gt. 48*3600)then
                 rate_thresh = .001
             endif
         endif
 
-        write(6,*)i4_total/3600,' hours storm total, rate_thresh = '
-     1                                              ,rate_thresh
+        write(6,*)i4_prev_total/3600,' hour previous storm total,'       
+     1                              ,' rate_thresh = ',rate_thresh
 
 !       Decide whether to reset Storm Total based on insignificant precip over
 !       current cycle time
