@@ -1,9 +1,11 @@
 
       subroutine get_pirep_data(i4time_sys,ilaps_cycle_time,filename
+     1                                                     ,ext
      1                                                     ,NX_L,NY_L
      1                                                     ,istatus)
 
       character*170 filename
+      character*(*) ext
 
 !.............................................................................
 
@@ -102,7 +104,7 @@ C
       call pireps_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
      +     maxTurbElements, maxTurbLvls, recNum,
 !.............................................................................
-     1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+     1     ext,i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
       return
 !.............................................................................
       end
@@ -111,7 +113,7 @@ C
       subroutine pireps_sub(nf_fid, maxIcingLvls, maxLocs, maxSkyLvls,
      +     maxTurbElements, maxTurbLvls, recNum,
 !.............................................................................
-     1     i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
+     1     ext,i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
@@ -146,6 +148,7 @@ C
 !.............................................................................
 
       character*170 filename
+      character*(*) ext
       character*9 a9_timeObs,a9_recptTime 
       character*7 c7_skycover
       real*4 lat_a(NX_L,NY_L)
@@ -243,6 +246,7 @@ C
               goto 999        
           endif
 
+          call open_ext(31,i4time_sys,ext(1:3),istatus)
 
           write(6,1)a9_timeObs,a9_recptTime 
           write(31,1)a9_timeObs,a9_recptTime 

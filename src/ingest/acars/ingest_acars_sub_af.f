@@ -1,9 +1,10 @@
 
       subroutine get_acars_afwa(i4time_sys,i4_acars_window
      1                                    ,NX_L,NY_L
+     1                                    ,ext
      1                                    ,filename,istatus)
 
-      character*(*) filename
+      character*(*) filename,ext
 
 !.............................................................................
 
@@ -97,6 +98,8 @@
      1           ,a9_timeObs,i4_resid,i4_acars_window
               goto 900        
           endif
+
+          call open_ext(31,i4time_sys,ext(1:3),istatus)       
 
           write(6,1)a9_timeObs,a9_recptTime 
           write(31,1)a9_timeObs,a9_recptTime 
