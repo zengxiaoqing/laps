@@ -3,50 +3,35 @@
 
         integer cdfid,status,MAX_PROFILES,MAX_LEVELS,file_n_prof       
 
-        parameter (MAX_PROFILES = 1000)
-	parameter (MAX_LEVELS = 300)
+!       parameter (MAX_PROFILES = 1000)
+!       parameter (MAX_LEVELS = 300)
         parameter (MAX_SUBDIRS = 3)
 
-        real ht_out(max_levels)
-        real di_out(max_levels)
-        real sp_out(max_levels)
+!       real ht_out(max_levels)
+!       real di_out(max_levels)
+!       real sp_out(max_levels)
 
-        character*6 prof_name(MAX_PROFILES)
+!       character*6 prof_name(MAX_PROFILES)
 
         character*255 prof_subdirs(MAX_SUBDIRS)
 
-        integer i4_mid_window_pr(MAX_PROFILES)
-        integer wmo_id(MAX_PROFILES)
+!       integer i4_mid_window_pr(MAX_PROFILES)
+!       integer wmo_id(MAX_PROFILES)
 
-        real lat_pr(MAX_PROFILES)
-        real lon_pr(MAX_PROFILES)
-        real elev_m_pr(MAX_PROFILES)
-        real n_lvls_pr(MAX_PROFILES)
-        real ht_m_pr(MAX_PROFILES,MAX_LEVELS)
-        real dir_dg_pr(MAX_PROFILES,MAX_LEVELS)
-        real spd_ms_pr(MAX_PROFILES,MAX_LEVELS)
-        real u_std_ms_pr(MAX_PROFILES,MAX_LEVELS)
-        real v_std_ms_pr(MAX_PROFILES,MAX_LEVELS)
-
-        integer bad,missing, start(2), count(2), staNamLen
-        integer start_time(1), count_time(1)
-        parameter (bad = 12)
-        parameter (missing = -1)
-        character*1 qc_char(3)
-        data qc_char/'G','B','M'/
-        integer*4 byte_to_i4
+!       real lat_pr(MAX_PROFILES)
+!       real lon_pr(MAX_PROFILES)
+!       real elev_m_pr(MAX_PROFILES)
+!       real n_lvls_pr(MAX_PROFILES)
+!       real ht_m_pr(MAX_PROFILES,MAX_LEVELS)
+!       real dir_dg_pr(MAX_PROFILES,MAX_LEVELS)
+!       real spd_ms_pr(MAX_PROFILES,MAX_LEVELS)
+!       real u_std_ms_pr(MAX_PROFILES,MAX_LEVELS)
+!       real v_std_ms_pr(MAX_PROFILES,MAX_LEVELS)
 
         character*200 fnam_in
         character*180 dir_in
         character*255 c_filespec
-        integer error_code
-        data error_code/1/
-        logical l_in_box
-        data l_in_box/.true./
-
-        integer varid
-        include 'netcdf.inc'
-        character*(MAXNCNAM) dimname 
+        logical l_exist
 
         character*13 a13_time,filename13,cvt_i4time_wfo_fname13,outfile       
         character*9 asc9_tim,a9time_ob
@@ -115,7 +100,11 @@ C           READ IN THE RAW PROFILER DATA
             call s_len(fnam_in,len_fnam_in)
             write(6,*)' file = ',fnam_in(1:len_fnam_in)
 
-!           call read_prof_rsa(fnam_in(1:len_fnam_in)                  ! I
+            inquire(file=fnam_in(1:len_fnam_in),exist=l_exist)
+
+            if(l_exist)then
+
+!               call read_prof_rsa(fnam_in(1:len_fnam_in)              ! I
 !     1                   ,MAX_PROFILES,MAX_LEVELS                     ! I
 !     1                   ,n_profiles                                  ! O
 !     1                   ,n_lvls_pr                                   ! O
@@ -124,24 +113,32 @@ C           READ IN THE RAW PROFILER DATA
 !     1                   ,ht_m_pr,di_dg_pr,sp_ms_pr                   ! O
 !     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
 !     1                   ,i4_mid_window_pr,istatus)                   ! O
-!           istatus = 0
+!               istatus = 0
 
 
-            if(idir .eq. 1 .or. idir .eq. 2)then
-                call read_rsa_50mhz(i4time_sys,i4_prof_window          ! I
+                if(idir .eq. 1 .or. idir .eq. 2)then
+                    call read_ldad_prof(i4time_sys,i4_prof_window      ! I
      1                                    ,NX_L,NY_L                   ! I
      1                                    ,ext                         ! I
      1                                    ,fnam_in(1:len_fnam_in)      ! I
      1                                    ,istatus)                    ! O
-            endif ! idir
+                endif ! idir
 
-            if(istatus.ne.1)then
-                write(6,*)' Warning: bad status on read_rsa_50mhz'
-     1                   ,istatus           
-                goto980
-            endif
+                if(istatus.ne.1)then
+                    write(6,*)' Warning: bad status on read_ldad_prof'
+     1                       ,istatus           
+                    goto980
+                endif
 
- 980        continue
+ 980            continue
+
+            else
+                write(6,*)' Warning: cannot find file '
+     1                   ,fnam_in(1:len_fnam_in)
+
+            endif ! file exists
+
+            write(6,*)
 
         enddo ! idir
 
