@@ -65,7 +65,7 @@ my @LAPS_EXE = qw(lga.exe
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x laps_pbl.x temp.exe 
                   cloud.exe lq3driver.x deriv.exe accum.exe  
-		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe dprep.exe);
+		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe lapsprep.exe);
 
 my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
