@@ -5,6 +5,8 @@
  c_institution='NOAA/FSL',
  time_zone=0.,
  c_vnt_units='KT-FT',
+ c_units_type='english',
+ l_discrete=.false.,
  /
 
 c LAPSPLOT PARAMETERS
@@ -23,5 +25,10 @@ c time_zone - local time minus UTC in hours (real number)
 c
 c c_vnt_units - units for use in Ventilation Index (valid values are 
 c               'KT-FT' or 'default')
+c
+c c_units_type - default type of units ('english' or 'metric')
+c
+c l_discrete - default type of image colortable, '.false.' means more
+c              continuous colors, '.true.' means fewer more discrete colors
 c
 
