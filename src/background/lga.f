@@ -30,6 +30,8 @@ cdis
 cdis 
 cdis 
       program lga
+
+      use laps_static
       implicit none
       include 'bgdata.inc'
 
@@ -200,7 +202,7 @@ c
             reject_cnt = 0
          endif
 
-         if (bgmodel .lt. 1 .or. bgmodel .gt. maxbgmodels) then
+         if (bgmodel .lt. 0 .or. bgmodel .gt. maxbgmodels) then
             print*
             print*,' Cannot proceed with model specification in LGA'
             print*,' Check bgpaths in static/background.nl'
@@ -364,17 +366,12 @@ c
       real cenlat,cenlon
       real dx,dy
 
-c     common /lcgrid/nx_bg,ny_bg,nzbg_ht,lat0,lat1,lon0,sw,ne
-c     common /llgrid/nx_bg,ny_bg,nzbg_ht,lat0,lon0,dlat,dlon
-c     common /cegrid/nx_bg,ny_bg,nzbg_ht,nw,se,lat0,lon0
-
       character*256 bgpath
       character*256 bg_names(max_files)
       character*256 reject_names(max_files)
       character*132 cmodel
       
       integer warncnt
-      
 c
 c *** Background model grid data.
 c
@@ -391,34 +388,19 @@ c
 c
 c *** 3D background arrays.
 c
-      real, allocatable  :: prbght(:,:,:)
-      real, allocatable  :: prbgsh(:,:,:)
-      real, allocatable  :: prbguv(:,:,:)
-      real, allocatable  :: prbgww(:,:,:)
-      real, allocatable  :: htbg(:,:,:)
-      real, allocatable  :: tpbg(:,:,:)
-      real, allocatable  :: shbg(:,:,:)
-      real, allocatable  :: uwbg(:,:,:)
-      real, allocatable  :: vwbg(:,:,:)
-      real, allocatable  :: wwbg(:,:,:)
-
-c     real*4    prbg(nx_bg,ny_bg,nz_bg),     !Pressure (mb)
-c    .          htbg(nx_bg,ny_bg,nz_bg),     !Height (m)
-c    .          tpbg(nx_bg,ny_bg,nz_bg),     !Temperature (K)
-c    .          shbg(nx_bg,ny_bg,nz_bg),     !Specific humidity (kg/kg)
-c    .          uwbg(nx_bg,ny_bg,nz_bg),     !U-wind (m/s)
-c    .          vwbg(nx_bg,ny_bg,nz_bg),     !V-wind (m/s)
-c    .          mslpbg(nx_bg,ny_bg),         !mslp  (mb)
-c    .          wwbg(nx_bg,ny_bg,nz_bg),     !W-wind (pa/s)
-c    .          htbg_sfc(nx_bg,ny_bg),
-c    .          prbg_sfc(nx_bg,ny_bg), 
-c    .          shbg_sfc(nx_bg,ny_bg), 
-c    .          uwbg_sfc(nx_bg,ny_bg), 
-c    .          vwbg_sfc(nx_bg,ny_bg), 
-c    .          tpbg_sfc(nx_bg,ny_bg)
-
+      real, allocatable  :: prbght(:,:,:)    !Pressure (mb) height levels
+      real, allocatable  :: prbgsh(:,:,:)    !Pressure (mb) humidity levels
+      real, allocatable  :: prbguv(:,:,:)    !Pressure (mb) u/v components
+      real, allocatable  :: prbgww(:,:,:)    !Pressure (mb) omega levels
+      real, allocatable  :: htbg(:,:,:)      !Background heights (m)
+      real, allocatable  :: tpbg(:,:,:)      !Background temps (K)
+      real, allocatable  :: shbg(:,:,:)      !Background humidity (gm/m3)
+      real, allocatable  :: uwbg(:,:,:)      !Background u component (m/s)
+      real, allocatable  :: vwbg(:,:,:)      !Background v component (m/s)
+      real, allocatable  :: wwbg(:,:,:)      !Background omega (m/s)
 c
-c *** Background data vertically interpolated to LAPS isobaric levels.
+c *** Intermediate arrays for background data vertically
+c     interpolated to LAPS isobaric levels.
 c
       real, allocatable :: htvi(:,:,:)
       real, allocatable :: tpvi(:,:,:)
@@ -428,15 +410,6 @@ c
       real, allocatable :: wwvi(:,:,:)
 
       integer, allocatable :: msgpt(:,:)
-
-c     real      htvi(nx_bg,ny_bg,nz_laps),   !Height (m)
-c    .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
-c    .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
-c    .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
-c    .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
-c    .          wwvi(nx_bg,ny_bg,nz_laps)    !W-wind (pa/s)
-
-c     integer msgpt(nx_bg,ny_bg)
 c
 c *** Background data interpolated to LAPS grid.
 c
@@ -501,16 +474,16 @@ c
       character*200 fullname
       character*256 outdir
       character*31  ext
-c     character*3   var(nz_laps)
-c     character*4   lvl_coord(nz_laps)
-c     character*10  units(nz_laps)
       character*125 comment(nz_laps)
       character*4   af_bg(max_files)
       character*10  c_domain_name
       character*200 c_dataroot
       character*200 cfname
+
       integer len_dir,ntime, nf
 c
+      logical llapsfua
+
       data ntime/0/
       data ext/'lga'/
 
@@ -665,6 +638,8 @@ c
       print *,'in lga_sub'
       lga_status=0
 
+      call s_len(cmodel,ic)
+
       call s_len(bgpath,bglen)
       if(bgpath(bglen:bglen).ne.'/')then
          bglen=bglen+1
@@ -683,9 +658,22 @@ c
          return
       endif
 
-      call init_gridconv_cmn(gproj,nx_bg,ny_bg,nzbg_ht
+      if(bgmodel.eq.0 .and. cmodel(1:ic).eq.'LAPS_FUA')then
+
+         print*,'****************************************'
+         print*,'Do not convert background grid to domain'
+         print*,'****************************************'
+         llapsfua=.true.
+
+      else
+
+         call init_gridconv_cmn(gproj,nx_bg,ny_bg,nzbg_ht
      &,dlat,dlon,cenlat,cenlon,Lat0,Lat1,Lon0
      &,sw(1),sw(2),ne(1),ne(2),cgrddef,istatus)
+         llapsfua=.false.
+
+      endif
+      
 
       print *
       print *, ' Background information: '
@@ -734,7 +722,11 @@ c
 
       do j=1,accepted_files
          call i4time_fname_lp(names(j)(1:9),bg_times(j),istatus)
-         read(bg_names(j)(12:13),'(i2)')ihour
+         if(llapsfua)then
+            read(bg_names(j)(10:11),'(i2)')ihour
+         else
+            read(bg_names(j)(12:13),'(i2)')ihour
+         endif
          bg_valid(j)=ihour*3600
          i4time_bg_valid(j)=bg_times(j)+bg_valid(j)
       enddo
@@ -816,7 +808,6 @@ c     print*,'process new model background'
 c Removal of this loop causes already existing lga files to be overwritten
 c possibly with the same data.  However the error frequency on SBN may warrent
 c this extra work.  
-       call s_len(cmodel,ic)
        if(.false.) then
         do i=1,lga_files
          if (fname_bg(nf) .eq. lga_names(i)(1:9) .and.
@@ -933,29 +924,30 @@ c        endif
 c
 c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
-         itstatus(1)=init_timer()
+         if(.not.llapsfua)then   ! this switch determines if we are going to h/v-interp or not
 
-         allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
+           itstatus(1)=init_timer()
+
+           allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
      .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
      .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
      .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
      .          vwvi(nx_bg,ny_bg,nz_laps),   !V-wind (m/s)
      .          wwvi(nx_bg,ny_bg,nz_laps))   !W-wind (pa/s)
 
-c        print*,'Call vinterp '
-         call vinterp(nz_laps,nx_bg,ny_bg
+           call vinterp(nz_laps,nx_bg,ny_bg
      .       ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      .       ,pr,prbght,prbgsh,prbguv,prbgww
      .       ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .       ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 
-         itstatus(1)=ishow_timer()
-         print*,' Vinterp elapsed time (sec): ',itstatus(1)
+           itstatus(1)=ishow_timer()
+           print*,' Vinterp elapsed time (sec): ',itstatus(1)
 
-         deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+           deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww )
 
-         allocate (msgpt(nx_bg,ny_bg))
+           allocate (msgpt(nx_bg,ny_bg))
 c
 c ****** Run 2dx filter on vertically interpolated fields.
 c ****** Only run filter on sh up to 300 mb, since the filter may
@@ -963,7 +955,7 @@ c           create small neg values when the field is small to begin with.
 c ****** If bgmodel=4, there exists missing data.  Don't use these points
 c           in the filter.
 c
-         if (bgmodel .eq. 4 .or. bgmodel .eq. 9) then
+           if (bgmodel .eq. 4 .or. bgmodel .eq. 9) then
             do j=1,ny_bg
             do i=1,nx_bg
                if (htvi(i,j,1) .eq. missingflag) then
@@ -1014,26 +1006,26 @@ c
             enddo
             enddo
             enddo
-         endif
+           endif
 c
-         do kk=nz_laps,1,-1
+           do kk=nz_laps,1,-1
             if (pr(kk) .ge. 300.) goto 20
-         enddo
-20       continue
-         call filter_2dx(htvi,nx_bg,ny_bg,nz_laps, 0.5)
-         call filter_2dx(htvi,nx_bg,ny_bg,nz_laps,-0.5)
-         call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps, 0.5)
-         call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps,-0.5)
-         call filter_2dx(shvi,nx_bg,ny_bg,kk     , 0.5)
-         call filter_2dx(shvi,nx_bg,ny_bg,kk     ,-0.5)
-         call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps, 0.5)
-         call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps,-0.5)
-         call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps, 0.5)
-         call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps,-0.5)
-         call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps, 0.5)
-         call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps,-0.5)
+           enddo
+20         continue
+           call filter_2dx(htvi,nx_bg,ny_bg,nz_laps, 0.5)
+           call filter_2dx(htvi,nx_bg,ny_bg,nz_laps,-0.5)
+           call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps, 0.5)
+           call filter_2dx(tpvi,nx_bg,ny_bg,nz_laps,-0.5)
+           call filter_2dx(shvi,nx_bg,ny_bg,kk     , 0.5)
+           call filter_2dx(shvi,nx_bg,ny_bg,kk     ,-0.5)
+           call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps, 0.5)
+           call filter_2dx(uwvi,nx_bg,ny_bg,nz_laps,-0.5)
+           call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps, 0.5)
+           call filter_2dx(vwvi,nx_bg,ny_bg,nz_laps,-0.5)
+           call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps, 0.5)
+           call filter_2dx(wwvi,nx_bg,ny_bg,nz_laps,-0.5)
 c
-         if (bgmodel .eq. 4) then
+           if (bgmodel .eq. 4) then
             do j=1,ny_bg
             do i=1,nx_bg
                if (msgpt(i,j) .eq. 0) then
@@ -1047,36 +1039,35 @@ c
                endif
             enddo
             enddo
-         endif
+           endif
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
-         print*
-         itstatus(2)=init_timer()
+           itstatus(2)=init_timer()
 
-         call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+           call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,htvi,ht,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,shvi,sh,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,uwvi,uw,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,vwvi,vw,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,tpvi,tp,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+           call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,wwvi,ww,bgmodel)
 
-         itstatus(2)=ishow_timer()
-         print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
-         print*
+           itstatus(2)=ishow_timer()
+           print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
+           print*
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
 c
-         deallocate(htvi,   !Height (m)
+           deallocate(htvi,   !Height (m)
      .              tpvi,   !Temperature (K)
      .              shvi,   !Specific humidity (kg/kg)
      .              uwvi,   !U-wind (m/s)
@@ -1084,7 +1075,7 @@ c
      .              wwvi,   !W-wind (pa/s)
      .              msgpt)
 
-         do k=1,nz_laps
+           do k=1,nz_laps
             do j=1,ny_laps
                do i=1,nx_laps
                   if((abs(ht(i,j,k)) .gt. 100000.) .or.
@@ -1137,54 +1128,54 @@ cc            endif
 c-----------------------------------
                enddo
             enddo
-         enddo
+           enddo
 c
-         call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
+           call checknan_3d(ht,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array ht'
             lga_status = -nf
             return
-         endif
+           endif
 c
-         call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
+           call checknan_3d(tp,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array tp'
             lga_status = -nf
             return
-         endif
+           endif
 c
-         call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
+           call checknan_3d(sh,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array sh'
             lga_status = -nf
             return
-         endif
+           endif
 c
-         call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
-           print *,' ERROR: NaN found in array uw'
-           lga_status = -nf
-           return
-         endif
+           call checknan_3d(uw,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array uw'
+            lga_status = -nf
+            return
+           endif
 c
-         call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
-           print *,' ERROR: NaN found in array vw'
-           lga_status = -nf
-           return
-         endif
-         call checknan_3d(ww,nx_laps,ny_laps,nz_laps,nan_flag)
-         if(nan_flag .ne. 1) then
+           call checknan_3d(vw,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
             print *,' ERROR: NaN found in array vw'
             lga_status = -nf
             return
-         endif
+           endif
+           call checknan_3d(ww,nx_laps,ny_laps,nz_laps,nan_flag)
+           if(nan_flag .ne. 1) then
+            print *,' ERROR: NaN found in array vw'
+            lga_status = -nf
+            return
+           endif
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
-        itstatus(3)=init_timer()
+           itstatus(3)=init_timer()
 
-        if(bgmodel.ne.1.and.bgmodel.ne.9)then
+           if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
            if(bgmodel.ne.3)then
 
@@ -1225,50 +1216,50 @@ c
      .                  grx,gry,mslpbg,mslp,bgmodel)
 
            endif
-        endif
+           endif
 
-        deallocate (htbg_sfc)
-        deallocate (prbg_sfc)
-        deallocate (shbg_sfc)
-        deallocate (uwbg_sfc)
-        deallocate (vwbg_sfc)
-        deallocate (tpbg_sfc)
-        deallocate (mslpbg)
+           deallocate (htbg_sfc)
+           deallocate (prbg_sfc)
+           deallocate (shbg_sfc)
+           deallocate (uwbg_sfc)
+           deallocate (vwbg_sfc)
+           deallocate (tpbg_sfc)
+           deallocate (mslpbg)
 c
 c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c
-        call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
+           call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo,pr,
      .            nx_laps, ny_laps, nz_laps, pr_sfc)
 
-        call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+           call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
      &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
 
-        print *,' Dewpoint check (after call sfcbkgd):'
-        print *,'     Dewpt greater than temp at ',icnt,' points.'
-        if(icnt .gt. 0) then
+           print *,' Dewpoint check (after call sfcbkgd):'
+           print *,'     Dewpt greater than temp at ',icnt,' points.'
+           if(icnt .gt. 0) then
 
-         print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
-         print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
+           print*,'Max diff of ',diff_mx,' at ',i_mx,',',j_mx
+           print*,'Min diff of ',diff_mn,' at ',i_mn,',',j_mn
 c
 c fix sfc Td to not be greater than T at points determined above
-         where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
+           where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
 
-        endif
+           endif
 c
 c..... Do the winds
 c
-        call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+           call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
-        call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+           call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
 c
-        icnt=0
-        do k=1,nz_laps
-         do j=1,ny_laps
-          do i=1,nx_laps
+           icnt=0
+           do k=1,nz_laps
+           do j=1,ny_laps
+           do i=1,nx_laps
             if(tp(i,j,k).gt.100.0)then
                shsat=ssh2(pr(k),tp(i,j,k)-273.15,
      .             tp(i,j,k)-273.15,-132.0)*0.001
@@ -1276,28 +1267,51 @@ c
             else
                icnt=icnt+1
             endif
-          enddo
-         enddo
-        enddo
-        print*
-        if(icnt.gt.0)then
-           print*,'Warning: found ',icnt,' 3D points when'
-           print*,'         checking for supersaturations'
-        endif
+           enddo
+           enddo
+           enddo
+           print*
+           if(icnt.gt.0)then
+            print*,'Warning: found ',icnt,' 3D points when'
+            print*,'         checking for supersaturations'
+           endif
 c
-        itstatus(3)=ishow_timer()
-        print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
-        print*
+           itstatus(3)=ishow_timer()
+           print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
+           print*
 c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
-        call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
+           call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
      +,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
-        if(istatus.ne.1)then
-         print*,'Error in rotate_background_uv '
-         return
-        endif
+           if(istatus.ne.1)then
+              print*,'Error in rotate_background_uv '
+              return
+           endif
+
+         else     !this is a grid compatible fua file
+
+           ht=htbg
+           tp=tpbg
+           sh=shbg
+           uw=uwbg
+           vw=vwbg
+           ww=wwbg
+           pr_sfc=prbg_sfc
+           mslp=mslpbg
+           tp_sfc=tpbg_sfc
+           ht_sfc=htbg_sfc 
+           sh_sfc=shbg_sfc
+           uw_sfc=uwbg_sfc
+           vw_sfc=vwbg_sfc
+
+           deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
+     +                ,prbght, prbguv, prbgsh, prbgww )
+           deallocate (htbg_sfc,prbg_sfc,shbg_sfc,uwbg_sfc
+     +                ,vwbg_sfc,tpbg_sfc,mslpbg)
+
+         endif !(llapsfua)
 c
 c Write LGA
 c ---------
@@ -1363,8 +1377,13 @@ c
 c *** Determine if new file needs to (can) be created and perform
 c        linear time interpolation.
 c
-       i=accepted_files
        if(accepted_files.gt.1)then
+
+         i=accepted_files
+         if(accepted_files.gt.2)then
+            i=2
+         endif
+
          print*,i,bg_times(i),bg_times(i-1),
      +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
      +     i4time_bg_valid(i),i4time_bg_valid(i-1)
