@@ -10,7 +10,7 @@ c
       integer*4     ismsng
       
       real*4        r_channel_wavelengths(max_ch,max_sat)
-      character     c_sat_id(max_sat)*5
+      character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
       character     cmode*10
 
@@ -158,7 +158,7 @@ c
       character*150 dir_static
       Character     cmode*10
       Character     f9time*9
-      Character     c_sat_id*5
+      Character     c_sat_id*6
       Character     cid*2
 c =============================================================
 c
@@ -296,6 +296,11 @@ c
         rsg=scalingGain(1,k)
 
         write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
+        if(rsb.eq.0.or.rsg.eq.0.0)then
+           write(*,*)'WARNING: rsg or rsg = 0.0'
+           goto 875
+        endif
+
         do j=1,ndimy
         do i=1,ndimx(j)
 
@@ -316,10 +321,11 @@ c
         write(6,*)'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
         write(6,*)
 
-      enddo
+875     enddo
 c 
 c Determine representative time 11-14-97 (J.Smart)
 c
+      i4time_data_orig=i4time_data
       rmintime=9999999999.
       rmaxtime=0.
       do j=1,ny_l
@@ -334,9 +340,18 @@ c
          endif
       enddo
       enddo
+
       write(6,*)'max/min line times ',rmaxtime,rmintime
-      i4time_data_orig=i4time_data
-      i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
+
+      if(rmintime.le.0.or.rmaxtime.le.0)then
+         if(rmintime.le.0.and.rmaxtime.gt.0)then
+            i4time_data=((nint(rmaxtime)+315619200)+i4time_data_orig)/2.0
+         elseif(rmintime.gt.0.and.rmaxtime.le.0)then
+            i4time_data=((nint(rmintime)+315619200)+i4time_data_orig)/2.0
+         endif
+      else
+         i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
+      endif
 c
 c remap to laps domain
 c
