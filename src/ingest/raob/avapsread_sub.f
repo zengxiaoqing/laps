@@ -32,9 +32,13 @@
         real*4 lat_a(maxlvl),lon_a(maxlvl)
 
         character*172 header_line(15)
+        character*130 line
 
         character*9 a9time_a(maxlvl), a9time_ob
         character*(*)  filename
+
+        logical l_parse
+
         lun = 1
         open ( lun, file=filename, status='old', err=1000 )
 
@@ -44,18 +48,36 @@
            return
         endif
         
+        nh = 15
+
 !       ---- read the top avaps header ----        
 
-        do i=1,15
-          read (lun,99) header_line(i)
+40      do i=1,nh
+          read (lun,99,end=1000) header_line(i)
           print*, header_line(i)
-99        format (a172)
+99        format (a)
         enddo
 
 !       ---- read the whole data file  ---- 
 
         j = 1
-2       read (lun,100,end=105)elapsed_time(j),P(j),T(j),Td(j),RH(j),
+
+        write(6,*)' Reading levels from the sounding'
+
+ 2      read (lun,99,end=105)line(1:20)
+        if(l_parse(line,'Data') .and. l_parse(line,'Type'))then
+            write(6,*)' New Sounding Detected - backspace lun'
+            backspace lun
+            go to 105
+
+        else ! reread full line
+            backspace lun
+            read (lun,99,end=105)line
+
+        endif
+
+        write(6,*)line(1:130)
+        read (line,100,end=105)elapsed_time(j),P(j),T(j),Td(j),RH(j),
      1                        u(j),v(j),WS(j),WD(j),dZ(j),lon(j),
      2                        lat(j),rng(j),az(j),alt(j),Qp(j),Qt(j),
      3                        Qh(j),Qu(j),Qv(j),Quv(j)
@@ -64,6 +86,10 @@
         if (lon(j).ne.999.0 .and. lat(j).ne.999.0) then
           hlon = -lon(j)
           hlat = lat(j)
+        endif
+
+        if(elapsed_time(j) .le. 5.)then
+            write(6,*)'Nearing end of sounding'
         endif
 c
         j = j + 1
@@ -93,11 +119,23 @@ c
 
         nlevels = j
 
-        write(6,*)' lvl  i4time   p   t   td'
+        do isort = 1,2
+          write(6,*)' isort = ',isort
+          write(6,*)' lvl  i4time   p   t   td'
+          lvl_out = 0
+          isort_status = 1
 
-        lvl_out = 0
+          if(isort .eq. 1)then
+              lvlb = nlevels
+              lvle = 1
+              lvli = -1
+          else
+              lvlb = 1
+              lvle = nlevels
+              lvli = +1
+          endif
 
-        do lvl = nlevels,1,-1
+          do lvl = lvlb,lvle,lvli
             if(p(lvl) .ne. 9999.)then
                 lvl_out = lvl_out + 1
                 i4time = i4time_launch + nint(elapsed_time(lvl))
@@ -132,18 +170,35 @@ c
 
                 if(lvl_out .gt. 1)then
                     if(p_out(lvl_out) .ge. p_out(lvl_out-1))then
-                        write(6,*)
-     1                    ' ERROR: AVAPS Levels not sorted correctly'
-                        istatus = 0
-                        return
+                        if(isort_status .eq. 1)then
+                            write(6,*)
+     1                    ' NOTE: AVAPS pressures increase with height'       
+                            write(6,*)lvl_out,p_out(lvl_out)
+     1                                       ,p_out(lvl_out-1)
+                        endif
+
+                        isort_status = 0
+
+                        if(isort .eq. 2)then
+                            write(6,*)' ERROR: sounding not monotonic'
+                            istatus = 0
+                            return
+                        endif
                     endif ! pressure trend not monotonically decreasing
                 endif
 
             endif ! valid pressure at this level
-        enddo ! lvl
+          enddo ! lvl
+
+          if(isort_status .eq. 1)then
+              write(6,*)' Good sort of levels, we will proceed'
+              go to 200
+          endif
+
+        enddo ! isort
 
 !       Call write_snd for this sounding
-        lat_a = lat_s
+200     lat_a = lat_s
         lon_a = lon_s
 
         call write_snd    (lun_out                         ! I
@@ -160,5 +215,11 @@ c
      1                    ,ws_out                          ! I
      1                    ,istatus)                        ! O
 
-1000    return
+        write(6,*)' Looping back to look for rest of new sounding'
+        nh = 14
+        go to 40
+
+1000    write(6,*)' End of file reached'
+        
+        return
         end
