@@ -1195,8 +1195,8 @@ then
 fi
 if test "$arch" = "alpha"
 then
-  FFLAGS="$FFLAGS -fixed"
-  FFLAGS90="$FFLAGS90 -free"
+  FFLAGS="$FFLAGS -convert big_endian -fixed"
+  FFLAGS90="$FFLAGS90 -convert big_endian -free"
   OPTIMIZE="-O4"
 fi 
 if test "$arch" = "sun4" 
