@@ -2,7 +2,7 @@
 #
 #
 #Program either localizes (new) or re-localizes (existing)
-#a laps domain
+#laps domains
 #J.Smart 8-20-99
 #
 use strict;
@@ -23,19 +23,21 @@ umask 002;
 #
 # opt_t is template subdirectory (eg., /usr/nfs/common/lapb/parallel/laps/template/"name")
 #       The name should be the same as the domain name in LAPS_DATA_ROOT
-#       If there is no -t option, then it is assumed to be the same as
-#       LAPS_SRC_ROOT and -ct is disabled.
+#       If -t is not defined then it is assumed to be the same as
+#       LAPS_SRC_ROOT and -c is disabled.
 #
 # opt_c controls the removal of entire data root (use command line "-c") or
 # saves the log and lapsprd directories          (do not use command line "-c")
 #
 # opt_m controls laps_localization.pl no_ggm switch. ggm = gridgen_model.
 #       if $opt_m is not defined then laps_localization updates the namelists
-#       and also runs gridgen_model (producing static.nest7grid).
+#       and also runs gridgen_model (producing static.nest7grid). If $opt_m
+#       is defined then only the namelists are updated (no ggm).
 #
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
 #
+# The -m and -c options cannot be used simultaneously.
 # -----------------------------------------------------------------------------
 
 my ($LAPS_SRC_ROOT, $LAPSINSTALLROOT, $LAPS_DATA_ROOT, $DATAROOT, $DOMAIN_NAME);
@@ -104,7 +106,7 @@ if($opt_t){
    }
 }else{
    print "WARNING! no -t (path to template) command line input.\n";
-   print "Use LAPS_SRC_ROOT for namelists\n";
+   print "Using LAPS_SRC_ROOT (repository) for namelists\n";
 }
 if($opt_c){
    $CONFIG_DOMAIN = "true";
@@ -118,6 +120,22 @@ print "Install_Root   = $LAPSINSTALLROOT \n";
 print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
 print "Laps Template  = $LAPS_TEMPLATE \n";
 print "Config Domain  = $CONFIG_DOMAIN \n";
+
+if($opt_m && $CONFIG_DOMAIN eq "true"){
+   print "-m and -c cannot be used simultaneously!\n";
+   print " Reconsider the command line inputs.  Abort\n";
+   exit;
+}
+
+#check to see if any saved static and cdl subdirectories got save to _err; if so, remove.
+if( -e "$LAPS_DATA_ROOT/static\_err" ){
+   print "removing leftover $LAPS_DATA_ROOT/static\_err\n";
+   system("rm -rf $LAPS_DATA_ROOT/static\_err");
+}
+if( -e "$LAPS_DATA_ROOT/cdl\_err" ){
+   print "removing leftover $LAPS_DATA_ROOT/cdl\_err\n";
+   system("rm -rf $LAPS_DATA_ROOT/cdl\_err");
+}
 
 # WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_LOCAL_DATA/laps_data) before removing it.
 #                 softlink data to laps_data appropriately (make "repository" data subdirectory..
@@ -178,21 +196,11 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
   if(-e $LAPS_DATA_ROOT ){
      if($all_roots_equal eq "F") {
-        if(defined $opt_m ){
-           print "Save static subdirectory\n";
-           rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
-           mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
-        }else{
-           print "Only save lapsprd and log subdirectories\n";
-           if(-e "$LAPS_DATA_ROOT\_save"){
-              print "Error: $LAPS_DATA_ROOT\_save already exists.\n";
-              exit;
-           }
-           system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
-           rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
-           mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
-           &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
-        }
+        print "Save static and cdl subdirectories\n";
+        rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
+        rename ("$LAPS_DATA_ROOT/cdl","$LAPS_DATA_ROOT/cdl\_save");
+        mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
+        mkdir "$LAPS_DATA_ROOT/cdl", 0777 or die "Can't make $LAPS_DATA_ROOT/cdl $!\n";
      }else{
         print "All lapsroots equal. Make datadirs as necessary\n";
         &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
@@ -241,58 +249,71 @@ if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
 # ------------------------------------
 if( $opt_m ){
    print "--no_ggm switch on\n";
-   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --no_ggm='t' > $LAPS_DATA_ROOT/laps_localization.log");
+   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --no_ggm='t' > $LAPS_DATA_ROOT/log/laps_localization.log");
 }else{
-   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/laps_localization.log");
+   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/log/laps_localization.log");
 }
 
+
 if( $opt_m ){
-    print "moving ggm-produced files from 'static_save' to static\n";
+    print "restoring gridgen files. Moving from  static_save  to  static \n";
     system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/static.nest7grid $LAPS_DATA_ROOT/static/");
     system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");
+}
+
+print "Checking for static.nest7grid \n";
+my $restore_files="false";
+if( !-e "$LAPS_DATA_ROOT/static/static.nest7grid"){
+    print "$LAPS_DATA_ROOT/static/static.nest7grid does not exist!\n";
+    print "Setting variable - restore_files - to true\n";
+    $restore_files="true";
+}else{
+    system ("ls -l $LAPS_DATA_ROOT/static/static.nest7grid");
+}
+
+if($restore_files eq "false"){
+   print "checking laps_localization.log\n";
+   open(LOC,"$LAPS_DATA_ROOT/log/laps_localization.log");
+   my @loc=<LOC>;
+   close(LOC);
+
+   my $world_topo_warn_lines = 0;
+   foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
+   my $error_lines = grep /error/i,@loc;
+   my $cannot_lines = grep /cannot/i,@loc;
+
+   if($error_lines gt 0){print "Lines with error found in laps_localization.log\n";
+                         $restore_files="true";}
+   if($cannot_lines gt 0){print "Lines with cannot found in laps_localization.log\n";}
+   if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in laps_localization.log\n";}
+
+   system ("ls -l   $LAPS_DATA_ROOT/log/laps_localization.log");
+   system ("tail -1 $LAPS_DATA_ROOT/log/laps_localization.log");
+}
+
+if( $restore_files eq "true" ) {
+    print "restoring saved static and cdl files\n";
+    system("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/static\_err");
+    system("mv $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_err");
+    system("mv $LAPS_DATA_ROOT/static\_save $LAPS_DATA_ROOT/static");
+    system("mv $LAPS_DATA_ROOT/cdl\_save    $LAPS_DATA_ROOT/cdl");
+    print "update lapsprd - synchronize with repository\n";
+    &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
+}
+
+if( -e "$LAPS_DATA_ROOT/static\_save"){
     print "removing $LAPS_DATA_ROOT/static\_save\n";
-    system ("rm -rf $LAPS_DATA_ROOT/static\_save");
+    system("rm -rf $LAPS_DATA_ROOT/static\_save");
+}
+if( -e "$LAPS_DATA_ROOT/cdl\_save"){
+    print "removing $LAPS_DATA_ROOT/cdl\_save\n";
+    system("rm -rf $LAPS_DATA_ROOT/cdl\_save");
 }
 
-print ("Checking for static.nest7grid");
-system("ls -l $LAPS_DATA_ROOT/static/static.nest7grid"); print "\n";
-
-print "checking laps_localization.log\n";
-open(LOC,"$LAPS_DATA_ROOT/laps_localization.log");
-my @loc=<LOC>;
-close(LOC);
-
-my $world_topo_warn_lines = 0;
-foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
-my $error_lines = grep /error/i,@loc;
-my $cannot_lines = grep /cannot/i,@loc;
-
-if($error_lines gt 0){print "Lines with error found in laps_localization.log\n";}
-if($cannot_lines gt 0){print "Lines with cannot found in laps_localization.log\n";}
-if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in laps_localization.log\n";}
-
-system ("tail -1               $LAPS_DATA_ROOT/laps_localization.log");
-system ("ls -l                 $LAPS_DATA_ROOT/laps_localization.log");
-
-if( -e "$LAPS_DATA_ROOT\_save" ) {
-    print "restoring saved dataroot files\n";
-    system("mv $LAPS_DATA_ROOT/laps_localization.log $LAPS_DATA_ROOT\_save/log/.");
-
-    system("rm -rf $LAPS_DATA_ROOT/lapsprd");
-    system("rm -rf $LAPS_DATA_ROOT/log");
-    system("rm -rf $LAPS_DATA_ROOT/time");
-
-    system("mv $LAPS_DATA_ROOT\_save/lapsprd $LAPS_DATA_ROOT/");
-    system("mv $LAPS_DATA_ROOT\_save/log     $LAPS_DATA_ROOT/");
-    system("mv $LAPS_DATA_ROOT\_save/time    $LAPS_DATA_ROOT/");
-    system("rm -rf $LAPS_DATA_ROOT\_save");
-}elsif ( -e "$LAPS_DATA_ROOT/laps_localization.log"){
-    system("mv $LAPS_DATA_ROOT/laps_localization.log $LAPS_DATA_ROOT/log/.");
-}
 if( -e "$LAPS_DATA_ROOT\tmpdata"){
     system("rm -rf $LAPS_DATA_ROOT/tmpdata");
 }
