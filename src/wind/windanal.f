@@ -486,14 +486,14 @@ csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
       call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-csms$serial end
-
       call arrays_to_barnesobs      (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+
+csms$serial end
 
       call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
 !     call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
@@ -599,14 +599,14 @@ csms$serial(default=ignore)  begin
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-csms$serial end
-
               call arrays_to_barnesobs(imax,jmax,kmax                 ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+
+csms$serial end
 
               call barnes_multivariate
      1                             (varbuff,n_var,ncnt_total,obs_barnes
@@ -666,14 +666,14 @@ csms$serial(default=ignore)  begin
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-csms$serial end
-
               call arrays_to_barnesobs(imax,jmax,kmax                   ! I
      1                                ,r_missing_data                   ! I
      1                                ,varobs_diff_spread,wt_p_spread   ! I
      1                                ,n_var,max_obs,obs_barnes         ! I/O
      1                                ,ncnt_total,weight_total          ! O
      1                                ,istatus)                         ! O
+
+csms$serial end
 
 !             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
               call barnes_multivariate(varbuff,n_var,ncnt_total
@@ -747,14 +747,14 @@ csms$serial(default=ignore)  begin
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-csms$serial end
-
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
      1                              ,n_var,max_obs,obs_barnes         ! I/O
      1                              ,ncnt_total,weight_total          ! O
      1                              ,istatus)                         ! O
+
+csms$serial end
 
           call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes
 !         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
