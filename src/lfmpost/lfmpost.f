@@ -312,7 +312,8 @@ PROGRAM lfmpost
                             pcptype_sfc,srhel,liftedind,heatind,visibility,&
                             terdot,lwout,swout,shflux,lhflux,pblhgt,ground_t,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
-                            laps_reftime,laps_valtime,nx,ny,kprs,realtime)
+                            laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
+                            write_to_lapsdir,model_name)
 
       DEALLOCATE(cldliqcon_prs)
       DEALLOCATE(cldicecon_prs)

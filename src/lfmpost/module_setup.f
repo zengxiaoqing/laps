@@ -72,6 +72,7 @@ MODULE setup
   INTEGER                       :: file_num_inc
   LOGICAL                       :: file_num3
   LOGICAL                       :: make_laps
+  LOGICAL                       :: write_to_lapsdir
   LOGICAL                       :: make_v5d
   LOGICAL                       :: make_points
   INTEGER                       :: v5d_compress
@@ -270,9 +271,11 @@ CONTAINS
     REAL                        :: levels_mb(max_levels)
     LOGICAL                     :: used
     CHARACTER(LEN=255)          :: namelist_file    
+    CHARACTER(LEN=32)           :: lfm_name
+
     NAMELIST /lfmpost_nl/ domain_num, keep_fdda, split_output, levels_mb,&
-        redp_lvl,model_name , proc_by_file_num, start_file_num, stop_file_num, &
-             file_num_inc, file_num3, make_laps,realtime, &
+        redp_lvl,lfm_name , proc_by_file_num, start_file_num, stop_file_num, &
+             file_num_inc, file_num3, make_laps,realtime, write_to_lapsdir, &
              make_v5d, make_points, v5d_compress,max_wait_sec, do_smoothing, &
              gribsfc,gribua, table_version, center_id, subcenter_id, process_id
 
@@ -330,8 +333,8 @@ CONTAINS
     center_id = 59   ! FSL
     subcenter_id = 2 ! LAPB
     process_id = 0
+    write_to_lapsdir = .false.
   
-   
     READ(UNIT=nml_unit, NML=lfmpost_nl)
     CLOSE (nml_unit)
     ! Count up number of levels requested.  They must be in monotonically 
@@ -357,7 +360,7 @@ CONTAINS
     DO k = 1,kprs
       PRINT '(A,F9.1,A)', 'Level: ', prslvl(k), 'Pa'
     ENDDO
-
+    model_name =lfm_name
   END SUBROUTINE read_namelist
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE time_setup(lun_data)

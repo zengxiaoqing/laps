@@ -42,7 +42,7 @@
                                   press_levels, &
                                   lfmprd_dir, laps_data_root, domnum, &
                                   laps_reftime, laps_valtime, nx, ny, nz, &
-                                  realtime )
+                                  realtime,write_to_lapsdir,model_name )
 
     ! Creates the LAPS *.fua and *.fsf files for model output.  The names of the
     ! input variables correspond to their netCDF names found in the fua.cdl
@@ -134,7 +134,8 @@
     INTEGER, INTENT(IN)             :: laps_reftime
     INTEGER, INTENT(IN)             :: laps_valtime
     LOGICAL, INTENT(IN)             :: realtime
-
+    LOGICAL, INTENT(IN)             :: write_to_lapsdir
+    CHARACTER(LEN=32), INTENT(IN)   :: model_name
     ! Locals
     CHARACTER(LEN=2)             :: domnum_str
     INTEGER, PARAMETER           :: nvar3d = 15 ! Equals # of 3d arrays above!
@@ -149,6 +150,7 @@
     INTEGER                         :: stopind
     INTEGER                         :: istatus
     CHARACTER(LEN=255)              :: output_dir
+    CHARACTER(LEN=255)              :: cdl_dir
     REAL, ALLOCATABLE               :: cdl_levels(:)
 
     INTEGER                         :: nz_one
@@ -303,7 +305,13 @@
     varcomment(startind:stopind) = 'Forecast precip type in coded values'
 
     ! Write out the 3D stuff using LAPS library routine
-    output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fua/'
+    IF (.NOT. write_to_lapsdir) THEN
+      output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fua/'
+    ELSE
+      output_dir = TRIM(laps_data_root) // '/lapsprd/fua/' // &
+                   TRIM(model_name) // '/'
+    ENDIF
+    cdl_dir = TRIM(laps_data_root) // '/cdl/'
 
     ! Build the output file name so we can create a "donefile" if 
     ! running in realtime mode
@@ -315,7 +323,8 @@
          fnlen,istatus)
 
     PRINT *, 'Writing 3d fields to ', TRIM(output_file)
-    CALL write_laps_lvls(laps_reftime, laps_valtime, output_dir, 'fua', &
+    CALL write_laps_lfm(laps_reftime, laps_valtime, output_dir, cdl_dir, &
+                        'fua', &
                         nx,ny,nz*nvar3d,nz*nvar3d,varname,levels,&
                         varlvltype, varunits, varcomment, nz, cdl_levels,&
                         laps_data, istatus)
@@ -540,14 +549,20 @@
     varname(startind) = 'TGD'
     varcomment(startind) = 'Forecast Ground Temperature'
 
-    output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fsf/' 
+    IF (.NOT. write_to_lapsdir) THEN
+      output_dir = TRIM(lfmprd_dir) // '/d' // domnum_str // '/fsf/' 
+    ELSE
+      output_dir = TRIM(laps_data_root) // '/lapsprd/fsf/' // &
+                   TRIM(model_name) // '/'
+    ENDIF
 
     CALL cvt_fname_v3(output_dir,gtime,fcst_hhmm,'fsf',extlen,output_file, &
          fnlen,istatus)
 
     PRINT *, 'Writing 2d fields to ', TRIM(output_file)
     
-    CALL write_laps_lvls(laps_reftime, laps_valtime, TRIM(output_dir), 'fsf', &
+    CALL write_laps_lfm(laps_reftime, laps_valtime, TRIM(output_dir), cdl_dir, &
+                         'fsf', &
                          nx, ny, nvar2d, nvar2d, varname, levels, varlvltype, &
                          varunits, varcomment, nz_one, cdl_levels_one,  &  
                          laps_data, istatus)

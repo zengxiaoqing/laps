@@ -277,7 +277,7 @@
       timerange = 0
       timeperiod1 = fcsttime_now
       timeperiod2 = 0
-      scalep10 = 1
+      scalep10 = 3
       CALL make_id(table_version,center_id,subcenter_id,process_id, &
                    param,leveltype,level1,level2,yyyyr,mmr,ddr, &
                    hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
