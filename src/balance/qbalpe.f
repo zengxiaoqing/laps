@@ -55,15 +55,15 @@ c
      .      ,wb(nx,ny,nz)
      .      ,wr1(nx,ny,nz),wr2(nx,ny,nz),wr3(nx,ny,nz)
      .      ,re,rdpdg,po,cappa,gam(nz),dppp(nz)
-     .      ,delo,gamo,del(nx,ny,nz),tau,timef,dt,cint
-     .      ,ne,nl,du,rot,err,grid_spacing_actual_m
-     .      ,slope,pdif,dpbl,dpblf
+     .      ,delo,gamo,del(nx,ny,nz),tau,dt
+     .      ,err,grid_spacing_actual_m
+     .      ,pdif,dpbl,dpblf
      .      ,u_grid,v_grid
      .      ,u_true,v_true
 c
       integer*4 ip(nz),icon,itmax,lmax
-     .         ,masstime,windtime,windtimemdt,sfctime,omtime
-     .         ,ree,rll,i,j,k,ll,istatus
+     .         ,masstime,windtime,sfctime,omtime
+     .         ,i,j,k,ll,istatus
 
       integer*4 lend
       integer*4 lends
@@ -593,12 +593,12 @@ c
      .      ,h(nx,ny,nz),f3(nx,ny,nz)
      .      ,bndx(nx,ny,nz),bndy(nx,ny,nz)
      .      ,del(nx,ny,nz),tau,err,rdpdg,bnd,g,fo,r,re,ovr
-     .      ,dy2,dys,ang,f,aa,cotmax,sin1,fs,cos1,beta
+     .      ,dy2,dys,ang,f,cotmax,sin1,fs,cos1,beta
      .      ,a,bb,term1,term2,term3,term4,dx2,dxs,cortmt
      .      ,dudy,dvdx,dnudx,dnvdy,snv,tt,uot,vot,tot
-     .      ,dt2dx2,dt2dy2,slap,force,rest,bcr,cot
+     .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
-     .      ,dldp,dldx,dldy,sum,cnt,tsum,r_missing_data
+     .      ,dldp,dldx,dldy,tsum,r_missing_data
      .      ,usum,vsum
 
       real*4 ttemp(nx,ny,nz)
