@@ -683,15 +683,15 @@ cdoc                            calls read_multiradar_3dref.
 
                 endif
 
-                if(.false.)then
-                    call ref_fill_horz(grid_ra_ref,imax,jmax,kmax
-     1                ,lat,lon,rlat_radar,rlon_radar,rheight_radar
-     1                ,istatus)
-                    if(istatus .ne. 1)then
-                        istatus_2dref_a = 0
-                        istatus_3dref_a = 0
-                    endif
-                endif
+!               if(.false.)then
+!                   call ref_fill_horz(grid_ra_ref,imax,jmax,kmax
+!    1                ,lat,lon,rlat_radar,rlon_radar,rheight_radar
+!    1                ,istatus)
+!                   if(istatus .ne. 1)then
+!                       istatus_2dref_a = 0
+!                       istatus_3dref_a = 0
+!                   endif
+!               endif
 
                 if(l_low_fill .or. l_high_fill .or. 
      1             radarext(1:3) .eq. 'vrz'                )then
