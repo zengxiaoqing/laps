@@ -102,13 +102,14 @@ cdis
 
  
        subroutine get_cloud_parms(l_use_vis,l_use_vis_add                ! O
+     1                           ,l_use_vis_partial                      ! O
      1                           ,l_use_39,latency_co2                   ! O
      1                           ,pct_req_lvd_s8a                        ! O
      1                           ,i4_sat_window,i4_sat_window_offset     ! O
      1                           ,istatus)                               ! O
 
-       logical l_use_vis,l_use_vis_add,l_use_39 
-       namelist /cloud_nl/ l_use_vis, l_use_vis_add
+       logical l_use_vis,l_use_vis_add,l_use_vis_partial,l_use_39 
+       namelist /cloud_nl/ l_use_vis, l_use_vis_add, l_use_vis_partial       
      1                    ,l_use_39, latency_co2
      1                    ,pct_req_lvd_s8a
      1                    ,i4_sat_window,i4_sat_window_offset
@@ -117,6 +118,7 @@ cdis
 
 !      Default value that can be overridden in namelist
        l_use_vis_add = .false.
+       l_use_vis_partial = .true.
  
        call get_directory('static',static_dir,len_dir)
 

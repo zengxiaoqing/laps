@@ -38,7 +38,7 @@ cdis
 cdis
 
         subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
-     1                    ,lat                                      ! I
+     1                    ,l_use_vis_partial,lat                    ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
      1                    ,rlaps_land_frac                          ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
@@ -71,7 +71,7 @@ cdis
         data lvd_ext /'lvd'/
 
         character var*3,comment*125,units*10
-        logical l_use_vis, l_use_vis_add
+        logical l_use_vis, l_use_vis_add, l_use_vis_partial
 
 !       l_use_vis_add = .false.
         icount_vis_add_potl = 0
@@ -120,6 +120,21 @@ cdis
             istatus = 0
             return
         endif
+
+!       Initial test for missing albedo (and partial data coverage)
+        do i = 1,ni
+        do j = 1,nj
+            if(vis_albedo(i,j) .eq. r_missing_data .and. 
+     1                          (.not. l_use_vis_partial)      )then
+                write(6,*)
+     1              ' No VIS / ALBEDO available (missing data found)'          
+                write(6,*)' return from get_vis'
+                vis_albedo = r_missing_data
+                istatus = 0
+                return
+            endif
+        enddo ! j
+        enddo ! i
 
         n_missing_albedo = 0
 
