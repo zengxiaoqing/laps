@@ -964,12 +964,12 @@ CONTAINS
          status
       CALL ABORT
     ENDIF
-    REWIND(unit)
-    READ(unit, NML=namelist_01)
-    READ(unit, NML=namelist_02)
-    READ(unit, NML=namelist_03)
-    READ(unit, NML=namelist_05)
-    CLOSE(unit)
+    REWIND(nml_unit)
+    READ(nml_unit, NML=namelist_01)
+    READ(nml_unit, NML=namelist_02)
+    READ(nml_unit, NML=namelist_03)
+    READ(nml_unit, NML=namelist_05)
+    CLOSE(nml_unit)
 
     num_times_avail = time_step_max/time_step_count_output + 1
     
