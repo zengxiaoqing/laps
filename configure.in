@@ -89,6 +89,7 @@ then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
   if test "$GCC" = "no"
+  then
       OTHERLIBS="$OTHERLIBS -lm"
       KRCFLAGS="$CFLAGS"
       CFLAGS="$CFLAGS -Aa"
