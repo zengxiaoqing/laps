@@ -93,6 +93,7 @@ my $c8_project = uc @c8_project[0];
 #
 
 my @LAPS_EXE;
+my @LAPS_VERIF;
 my @WHAT_GOT_IN;
 my $wgi_log;
 
@@ -135,8 +136,7 @@ if(defined $opt_s){ # "surface only"
 }
 
 if(defined $opt_v){
-   push(@LAPS_EXE,"gen_verif_prof.exe");
-   push(@LAPS_EXE,"gen_verif_raob.exe");
+   @LAPS_VERIF = qw(gen_verif_prof.exe gen_verif_raob.exe);
 }
 
 require "$LAPSROOT/etc/fxa.pm";
@@ -256,6 +256,7 @@ if(! defined $opt_A && ! defined $opt_a){
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 my($nexe);
 my($exe);
+my($verifexe);
 my($exenext);
 my($execount);
 my($scriptcount);
@@ -340,6 +341,17 @@ foreach $exe (@LAPS_EXE){
                 }
                 $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1";
                 &forksub($sys,$lockfile);
+            }
+            foreach $verifexe (@LAPS_VERIF){
+                $log = $verifexe;
+                $log =~ s/\..*$/\.log\.$yyjjjhhmm/;
+                if(-x "$LAPSROOT/bin/$verifexe"){
+                    print $t." Running $verifexe\n";
+                    my $sys="$LAPSROOT/bin/$verifexe 1> $LAPS_LOG_PATH/$log 2>&1";
+                    &forksub($sys,$lockfile);
+                }else{
+                    print $t."WARNING: $verifexe not found\n";
+                }
             }
         }
 
@@ -432,6 +444,9 @@ foreach $exe (@LAPS_EXE){
                     $wgi_log = $wgi_script;
                 }
                 print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1\n";
+            }
+            if($#LAPS_VERIF > 0){
+                print "WARNING! Verification executables requested (-v). Script not ready to run these\n";
             }
         }
 
