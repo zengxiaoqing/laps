@@ -118,7 +118,7 @@ c
       subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
      &,t,p,q,t_ref,psfc,tsfc,tdsfc)
 c
-c J. Smart 11/18 put existing code in subroutine for other process use in laps
+c J. Smart 11/18/99 put existing code in subroutine for other process use in laps
 c
       implicit none
 

@@ -197,10 +197,11 @@ c
          do j=1,ny
          do i=1,nx
 
-            pr(i,j,k)=prk(k)/100.
+            pr(i,j,k)=prk(k)
+            if(bgmodel.eq.3)pr(i,j,k)=pr(i,j,k)/100.
             if(sh(i,j,k).gt.0.0 .and. nint(sh(i,j,k)).le.100.)then
                if(sh(i,j,k).gt.100.)sh(i,j,k)=100.
-               sh(i,j,k)=make_ssh(prk(k)/100.
+               sh(i,j,k)=make_ssh(pr(i,j,k)
      .                        ,tp(i,j,k)-273.15
      .                        ,sh(i,j,k)/100.,t_ref)*0.001
 
