@@ -225,6 +225,7 @@ c**************new routine as adapted at FSL**************************
            call ventilation_index(u_3d,v_3d,pbl_top_pa,pbl_depth_m        ! I
      1                           ,pres_3d_pa,p_sfc_pa                     ! I
      1                           ,ni,nj,nk                                ! I
+     1                           ,r_missing_data                          ! I
 !    1                           ,heights_3d                              ! I
      1                           ,umean_2d,vmean_2d                       ! O
      1                           ,vent_2d,istatus)                        ! O
@@ -247,6 +248,7 @@ c**************new routine as adapted at FSL**************************
        subroutine ventilation_index(u_3d,v_3d,pbl_top_pa,pbl_depth_m      ! I
      1                             ,pres_3d_pa,p_sfc_pa                   ! I
      1                             ,ni,nj,nk                              ! I
+     1                             ,r_missing_data                        ! I
 !    1                             ,heights_3d                            ! I
      1                             ,umean_2d,vmean_2d                     ! O
      1                             ,vent_2d,istatus)                      ! O
@@ -265,10 +267,17 @@ c**************new routine as adapted at FSL**************************
 
        write(6,*)' Subroutine ventilation_index'
 
+       vent_2d = r_missing_data
+
 !      Calculate mean wind within the PBL
        call pbl_mean_wind(u_3d,v_3d,topo,pbl_top_pa,ni,nj,nk              ! I
      1                   ,pres_3d_pa,p_sfc_pa                             ! I
      1                   ,umean_2d,vmean_2d,istatus)                      ! O
+       if(istatus .ne. 1)then
+           write(6,*)' WARNING: Bad status returned from pbl_mean_wind'       
+           write(6,*)' Returning vent_2d field as missing data'
+           return
+       endif
 
        write(6,*)' Compute VI from mean wind speed and PBL Depth'
 
@@ -330,8 +339,10 @@ c**************new routine as adapted at FSL**************************
         do j = 1,jmax
           do i = 1,imax
              if(pbl_top_pa(i,j) .gt. p_sfc_pa(i,j))then
-                 write(6,*)' WARNING in pbl_mean_wind: Pbl Top > Sfc P'
+                 write(6,*)' ERROR in pbl_mean_wind: Pbl Top > Sfc P'
      1                    ,i,j,pbl_top_pa(i,j),p_sfc_pa(i,j)
+                 istatus = 0
+                 return
              endif
 
              khigh(i,j) = rlevel_of_field(pbl_top_pa(i,j),pres_3d_pa
@@ -370,15 +381,14 @@ c**************new routine as adapted at FSL**************************
 
         do j = 1,jmax
           do i = 1,imax
+             if(sum(i,j) .gt. 0.)then ! Mean wind through the layer
+                 umean_2d(i,j) = usum(i,j) / sum(i,j)
+                 vmean_2d(i,j) = vsum(i,j) / sum(i,j)
 
-             if(sum(i,j) .eq. 0.)then
-                 write(6,*)' WARNING: sum = 0',i,j,klow(i,j),khigh(i,j)
+             else 
+                 write(6,*)' WARNING: sum <= 0',i,j,klow(i,j),khigh(i,j)       
+
              endif
-
-!            Mean wind through the layer
-             umean_2d(i,j) = usum(i,j) / sum(i,j)
-             vmean_2d(i,j) = vsum(i,j) / sum(i,j)
-
           enddo ! i
         enddo ! j
 
