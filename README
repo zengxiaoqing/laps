@@ -2347,12 +2347,9 @@ Most backgrounds can come from locally-run model, the national-scale models
 the background comes from the 3-D wind interpolated to the surface or LWM file.
 Data, both inside and outside the LAPS grid is used via an initial Barnes 
 analysis of the observations to set the boundary conditions.  The next step in
-the analyses are done using a cubic spline technique. Observation increments 
-are used for T, Td and straight observations are used for other variables.
-
-Satellite IR gives relative temperatures, not absolute temps.  The temperature 
-gradients from the satellite are used with surface observations and backgrounds 
-in the temperature analysis.  
+the analyses is done with a successive correction technique similar to
+the 3-D wind and temperature analyses. Observation increments are used for 
+T, Td, U, V, MSL, P, PS and straight observations are used for visibility.
 
 For pressure analysis, three fields are computed including reduced pressure (P)
 at reference level 'redp_lvl', surface pressure (PS), and mean sea level 
