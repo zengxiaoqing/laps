@@ -425,10 +425,10 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 !         
 !         interpolate
 !
-          do i = 1, nxx, istep
+          do i = 1, nxx-istep, istep
            i1 = 1+(i-1)/istep 
            i2 = i1 + 1
-           do j = 1, nyy, istep
+           do j = 1, nyy-istep, istep
             j1 = 1+(j-1)/istep
             j2 = j1 + 1
             if( radar_2d_max(i1,j1) .ne. r_miss .and.
