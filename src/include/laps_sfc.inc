@@ -7,26 +7,20 @@ c.....  to be changed for porting LAPS to different domains.
 c.....  Most, if not all, porting changes will be done automatically
 c.....  when 'lapsparms.for' is changed.
 c
-	include 'lapsparms.for'
+cc	include '../../static/lapsparms.for'
 c
 c.....	Define surface analysis parameters in terms of 'lapsparms'
 c.....	parameters for easier porting.
 c
-	parameter(ni = NX_L, nj = NY_L, nk = NZ_L)
-	parameter(mxstn = maxstns)
+cc	parameter(ni = NX_L, nj = NY_L, nk = NZ_L)
+cc	parameter(mxstn = maxstns)
 c
-	real*4 fnorm(0:ni-1,0:nj-1)
-	common/bimode2/ fnorm
 c
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
-	integer*4 i_loc(mxstn), j_loc(mxstn)
-	common/verif/ x1a, x2a, y2a, i_loc, j_loc
-c
-	character*9 laps_domain
-	parameter(laps_domain = LAPS_DOMAIN_FILE)
-	integer*4 iden_ratio
-	parameter(iden_ratio = IDEN_RATIO_TEMP)
-	parameter(ni_maps = NX_M, nj_maps = NY_M)
+cc	character*9 laps_domain
+cc	parameter(laps_domain = LAPS_DOMAIN_FILE)
+cc	integer*4 iden_ratio
+cc	parameter(iden_ratio = IDEN_RATIO_TEMP)
+cc	parameter(ni_maps = NX_M, nj_maps = NY_M)
 c
 	parameter(badflag = -99.9)
 c
