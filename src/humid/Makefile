@@ -40,7 +40,8 @@ SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     process_gps.f      read_gps.f         int_layerpw.f      cloud_sat.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
     int_ipw.f \
-    precip_water_profile.f                optrans.f	     bias_correction.f 
+    precip_water_profile.f                optrans.f \
+    bias_correction.f  snd_step.f         analz_snd.f  
 
 MAIN=lq3driver.f
 

@@ -146,7 +146,11 @@ c     ------------------
       real*4 plevel(kk), p_3d(ii,jj,kk)
       integer*4 mlevel(kk)
 
-c    
+c     SND variables
+
+      real q_snd (ii,jj,kk)
+      real weight_snd(ii,jj,kk)
+
 c     gps variables
 
       real gps_data (ii,jj)
@@ -166,6 +170,8 @@ c
       
       real pressure_of_level    !function call
       
+c     namelist data
+
       integer  raob_switch
       integer  raob_lookback
       integer goes_switch
@@ -605,6 +611,16 @@ c     ****  execute raob step if switch is on
       
       if(raob_switch.eq.1) then
          write (6,*) 'begin raob insertion'
+
+         call snd_step (i4time,p_3d,raob_lookback, lat,lon,
+     1        lt1dat, ii,jj,kk, q_snd,weight_snd, raob_switch)
+         
+c     ---  as of 11/28/01 snd_step has been inserted for testing
+c     at this time it does nothing except read the same data that
+c     raobstep reads, but does nothing with it except prepare arrays
+c     for variational processing.  When fully implemented, raob_step
+c     will be removed.
+
          call raob_step (i4time,data,p_3d, raob_lookback,
      1        lat,lon, lt1dat, ii,jj,kk)
          
@@ -612,7 +628,7 @@ c     ****  execute raob step if switch is on
          write(6,*) 'Reporting effects of RAOB insertion'
          
          call report_change (data_in, data, p_3d, mdf,ii,jj,kk)
-
+         
          do i = 1,ii
             do j = 1,jj
                do k  = 1,kk
@@ -624,7 +640,7 @@ c     ****  execute raob step if switch is on
 c     end report moisture change block
          
       else
-         write(6,*) 'the raob switch is off... raobs skipped'
+         write(6,*) 'the raob switch is off... SND skipped'
       endif
       
 c     ****   laps cloud data. used for cloud, bl, goes

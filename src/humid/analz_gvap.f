@@ -174,7 +174,7 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      r50 = 15.e+3
+      r50 = 30.e+3 ! R50 assigned 30 km 11/19/01
 
       call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 
