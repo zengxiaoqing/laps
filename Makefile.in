@@ -47,7 +47,8 @@ EXEDIRS = src/accum \
           src/sfc \
           src/soil \
           src/temp \
-          src/wind 
+          src/wind \
+          src/WFO/post
 
 DATADIRS = log/qc \
            static \
