@@ -29,6 +29,8 @@ c
       Logical   found_height
       Logical   l_valid
 
+      integer   lr_2d(nx,ny)
+
       Character*4 radar_name(maxradars)
 
       write(6,*)
@@ -40,11 +42,12 @@ c
 !     Initialize
       grid_mosaic_2dref = r_missing_data
       grid_mosaic_3dref = r_missing_data
+      lr_2d = 0
 c
 c first find the radar location in ri/rj laps-space.
 c
       istatus = 1
-      if(i_ra_count .gt. 1)then
+      if(i_ra_count .ge. 1)then ! essentially all the time
          do k = 1,i_ra_count
             call latlon_to_rlapsgrid(rlat_radar(k),
      &                            rlon_radar(k),
@@ -172,55 +175,11 @@ c to mosaic
                endif
 
             endif ! low_level switch
+
+            lr_2d(i,j) = lr
+
          enddo ! i
          enddo ! j
-
-      else ! 1 radar
-c
-c no need to mosaic since only one radar!
-c
-        write(6,*)'Only 1 radar - no mosaic'
-
-        icntn=0
-        icntp=0
-        icntz=0
-        lr = 1
-        do j = 1,ny
-        do i = 1,nx
-          found_height=.false.
-          k=0
-          do while (.not.found_height)
-            k=k+1
-            if(k.le.nz)then
-              if(rheight_laps(i,j,k).gt.topo(i,j))then
-                 found_height=.true.
-
-                 if(lr .gt. 0)then
-                    if(grid_ra_ref(i,j,k,lr).ne.ref_base .and.
-     1                 grid_ra_ref(i,j,k,lr).ne.r_missing_data)then
-                       grid_mosaic_3dref(i,j,k)
-     1                                    =grid_ra_ref(i,j,k,lr)   
-
-                      if(grid_mosaic_3dref(i,j,k).lt.0.0)then
-                         icntn=icntn+1
-                      elseif(grid_mosaic_3dref(i,j,k).eq.0.0)then
-                         icntz=icntz+1
-                      else
-                         icntp=icntp+1
-                      endif
-
-                    endif ! valid 3-D grid point
-
-                 endif ! lr .ne. 0
-
-              endif
-
-            else
-              found_height=.true.
-            endif
-          enddo
-        enddo
-        enddo
 
       endif ! i_ra_count > 1
 
@@ -229,6 +188,16 @@ c
       print*,'Num points > 0.0 ',icntp
       print*,'Num points = 0.0 ',icntz
       print*,'Num points < 0.0 ',icntn
- 
+
+      intvl = int(nx/68) + 1
+
+      write(6,*)
+      write(6,*)' Map of radars used: intvl = ',intvl
+
+      do j = ny,1,-intvl
+          write(6,101)(lr_2d(i,j),i=1,nx,intvl) 
+ 101      format(75i2)
+      enddo ! j
+
       return
       end
