@@ -620,8 +620,10 @@ cdoc                            calls read_multiradar_3dref.
 
             if(istatus .eq. 1)then
                 read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
-     1                             ,n_ref_grids
-558             format(2f9.3,f8.0,i7)
+     1                             ,n_ref_grids,radar_name
+558             format(2f9.3,f8.0,i7,a4)
+
+                write(6,*)' Read radar ',radar_name,' Volume'
 
                 if(l_low_fill .or. l_high_fill)then
                     call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
@@ -699,13 +701,14 @@ cdoc                            calls read_multiradar_3dref.
             if(istatus_vrc .eq. 1 .or. istatus_vrc .eq. -1)then       
                 if(l_parse(comment_2d,'WSI'))then
                     radar_name = 'WSI '
+                    write(6,*)' Read radar ',radar_name
+     1                       ,' Low Level Mosaic'    
                 else
                     len_comment = 37
                     radar_name = comment_2d(len_comment-3:len_comment)       
+                    write(6,*)' Read radar ',radar_name,' Low Level'
                 endif 
                     
-                write(6,*)' Read radar ',radar_name             
-
                 do i = 1,imax
                 do j = 1,jmax
                     if(radar_2dref(i,j) .ne. r_missing_data)then
