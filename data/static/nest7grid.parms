@@ -5,7 +5,7 @@
  c6_maproj='plrstr',                 
  standard_latitude=40.0,        
  standard_latitude2=90.0,        
- standard_longitude=-105.0,       
+ standard_longitude=-105.5,       
  grid_cen_lat_cmn=41.0,         
  grid_cen_lon_cmn=-105.5,         
  grid_spacing_m_cmn=10000.,          
