@@ -1,9 +1,10 @@
  &moisture_switch
  raob_switch = 0,
- goes_switch = 9,
+ goes_switch = 8,
  cloud_switch = 1,
  sounder_switch = 1,
  tiros_switch = 0,
+ sat_skip = 2,
  /
 
 c   This is a switch for the module  lq3.  If the value of the first record is 0,
@@ -28,3 +29,7 @@ c
 c   
 c   The fifth parameter is used to indicate tiros data.  If non-zero it must
 c   reflect the satellite number (i.e. 12).
+c
+c   The sat_skip parameter will not skip=1, or skip the number of gridpoints
+c   each application
+
