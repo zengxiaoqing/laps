@@ -74,7 +74,7 @@ cdoc    Returns sounding data from the SND file
      1             ,lon_pr(i_pr)
      1             ,elev_pr(i_pr),rcycles_pr,c5_name(i_pr),a9time_ob       
      1             ,obstype(i_pr)     
- 512    format(/' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
+ 512    format(1x,' SND #',i4,i6,i5,2f8.2,e10.3,f8.2,1x,a5,3x,a9,1x,a8)       
 
         n_good_levels = 0
 
