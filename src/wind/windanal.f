@@ -174,6 +174,8 @@ cdis
 
       write(6,*)' Subroutine laps_anl...'
 
+      l_point_struct = .false. 
+
 csms$serial(default=ignore)  begin              
 
 !     Compare background to obs
@@ -183,11 +185,10 @@ csms$serial(default=ignore)  begin
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
+     1            obs_point,max_obs,nobs_point,l_point_struct,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
-
-      l_point_struct = .false. 
 
       rms_thresh_norm = rms_thresh_wind          
 
@@ -666,11 +667,6 @@ csms$serial(default=ignore)  begin
 
       I4_elapsed = ishow_timer()
 
-      if(l_point_struct)then
-          write(6,*)' End of supported data structure code'
-          stop
-      endif
-
 !     Perform radar QC by differencing radial velocities and first pass analysis
       do i_radar = 1,n_radars
 
@@ -716,6 +712,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           if(l_point_struct)then
               wt_p_radar = r_missing_data                 ! Initialize
+              varobs_diff_spread = r_missing_data         ! Initialize
           endif
 
           call insert_derived_radar_obs(
@@ -825,6 +822,7 @@ csms$>                    out>:default=ignore) begin
 !         uobs_diff_spread and vobs_diff_spread (varobs_diff_spread)
           if(l_point_struct)then
               wt_p_radar = r_missing_data                 ! Initialize
+              varobs_diff_spread = r_missing_data         ! Initialize
           endif
 
           call insert_derived_radar_obs(
@@ -955,6 +953,7 @@ csms$>                                     :default=ignore)  begin
 !         uobs_diff_spread and vobs_diff_spread
           if(l_point_struct)then
               wt_p_radar = r_missing_data                 ! Initialize
+              varobs_diff_spread = r_missing_data         ! Initialize
           endif
 
           call insert_derived_radar_obs(
@@ -1099,19 +1098,6 @@ csms$serial(default=ignore)  begin
       enddo ! k
 
       if(iter .eq. n_iter_wind)then
-!         write(6,*)' Calling comparisons'
-!         call comparisons(
-!    1            upass1,vpass1,istat_radar_vel,max_radars,
-!    1            vr_obs_unfltrd,
-!    1            rlat_radar,rlon_radar,rheight_radar,
-!    1            lat,lon,
-!    1            uanl,vanl,u_laps_bkg,v_laps_bkg,
-!    1            istat_bal,
-!    1            imax,jmax,kmax,r_missing_data,
-!    1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
-!    1            uobs,vobs,wt_p,
-!    1            n_radars)
-
 !         Compare 1st pass analysis to obs
           call compare_wind(
      1            upass1,vpass1,'PS1 ',
@@ -1119,6 +1105,7 @@ csms$serial(default=ignore)  begin
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
+     1            obs_barnes,max_obs,ncnt_total,l_point_struct,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 
@@ -1141,6 +1128,7 @@ csms$serial(default=ignore)  begin
      1            rlat_radar,rlon_radar,rheight_radar,
      1            lat,lon,
      1            imax,jmax,kmax,r_missing_data,
+     1            obs_barnes,max_obs,ncnt_total,l_point_struct,
      1            weight_pirep,weight_prof,weight_sfc,weight_cdw,
      1            uobs,vobs,wt_p,istatus)
 
