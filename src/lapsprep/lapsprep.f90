@@ -91,7 +91,7 @@
                                              virtual_t, rho,lcp
     REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
-    REAL , PARAMETER                       :: tiny = 1.0e-20
+    REAL , PARAMETER                       :: tiny = 1.0e-30
     
     ! Miscellaneous local variables
                                         
@@ -101,6 +101,15 @@
     REAL    :: rhadj
     REAL    :: lwc_limit
     REAL    :: hydrometeor_scale
+
+    ! Some stuff for JAX to handle lga problem
+    ! with constant mr above 300
+    LOGICAL :: jaxsbn
+    REAL  :: weight_top, weight_bot, newsh
+    REAL, EXTERNAL ::make_rh 
+    INTEGER :: k300
+    jaxsbn = .false.
+     
     ! Beginning of code
 
     ! Check for command line argument containing LAPS valid time
@@ -451,9 +460,36 @@
     ! Compute mixing ratio from spec hum.
     ! Fill missing values with sfc value.
 
+    k300 = 0
+    do k= 1,z3
+      if (p(k) .eq. 300.) k300 = k
+    enddo
+    if (k300 .eq. 0) THEN
+      print *, "Could not find k300!"
+      stop
+    endif
     do k=1,z3
     do j=1,y
     do i=1,x
+
+      if ((jaxsbn).and.(p(k).LT.300.)) then
+           weight_bot = (p(k) - 50) / (250)
+           weight_top = 1.0 - weight_bot
+           newsh = weight_bot * sh(i,j,k300) + &
+                       weight_top * tiny 
+               
+           newsh = MIN(sh(i,j,k),newsh)
+            
+           ! Make sure sh does not exceed 
+           ! ice saturation value
+           CALL saturate_ice_points(t(i,j,k), &
+                                    p(k),1.0, &
+                                    shmod,rhmod)
+           sh(i,j,k) = MIN(shmod, newsh)
+           rh(i,j,k) = make_rh(p(k),t(i,j,k)-273.15, &
+             sh(i,j,k)*1000., -132.) * 100.
+      endif
+     
       if (sh(i,j,k) .ge. 0. .and. sh(i,j,k) .lt. 1.) then
         mr(i,j,k)=sh(i,j,k)/(1.-sh(i,j,k))
       else
@@ -470,6 +506,7 @@
     ht(:,:,z3+1) = topo 
 
     IF (hotstart) THEN
+
       ! If this is a hot start, then we need to convert the microphysical
       ! species from mass per volume to mass per mass (mixing ratio).  This
       ! requires that we compute the air density from virtual temperature
@@ -560,18 +597,13 @@
                 IF ((lcp(i,j,k).GE.lcp_min).AND. &
                     (t(i,j,k).LT.263.).AND. &
                     (ice(i,j,k).GT.ice_min)) THEN  
-                !IF (ice(i,j,k).GT.0.00002) THEN
-                  !CALL ice2vapor(ice(i,j,k),sh(i,j,k),t(i,j,k), &
-                  !               p(k),lwc2vapor_thresh, &
-                  !               icemod,shmod,rhmod)
 
-                  ! Update moisture arrays
-                  CALL saturate_ice_points(sh(i,j,k),t(i,j,k), &
+                      ! Update moisture arrays
+                       CALL saturate_ice_points(t(i,j,k), &
                                            p(k),lwc2vapor_thresh, &
                                            shmod,rhmod)
-                  
-                  sh(i,j,k) = MAX(shmod,sh(i,j,k))
-                  rh(i,j,k) = MAX(rhmod,rh(i,j,k))
+                  sh(i,j,k) = shmod
+                  rh(i,j,k) = rhmod
                   mr(i,j,k) = sh(i,j,k)/(1.-sh(i,j,k))
                 ENDIF
               ENDDO

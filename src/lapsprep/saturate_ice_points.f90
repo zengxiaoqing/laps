@@ -1,4 +1,4 @@
-  SUBROUTINE saturate_ice_points(sh,t,p,thresh,sh_m,rh_m)
+  SUBROUTINE saturate_ice_points(t,p,thresh,sh_m,rh_m)
 
   ! Subroutine to saturate grid boxes with respect to ice 
 
@@ -6,7 +6,6 @@
 
     ! Inputs:
 
-    REAL, INTENT(IN)    :: sh     ! Specific humidity (kg/kg)   
     REAL, INTENT(IN)    :: t      ! Temperature (K)
     REAL, INTENT(IN)    :: p      ! Pressure (Pa)
     REAL, INTENT(IN)    :: thresh ! Saturation factor    
@@ -20,21 +19,27 @@
 
     ! Locals
 
-    REAL :: shsat,mr,mrsat,mrmax,tc
-    REAL, EXTERNAL :: ssh2,make_rh
+    REAL :: shsat,mr,mrsat,mrmax,tc,esi,esw,e
+    REAL, EXTERNAL :: ssh2,es,esice
 
-    
-    ! Set saturation specific humidity for ice for this point         
-    tc = t-273.15
-    shsat = ssh2(p,tc,tc,0.)*0.001
+    tc = t - 273.15
+  
+    ! Determine ice satuaration vapor pressure
+    esi = esice(tc)
+
+    ! Determine water saturation vapor pressure
+    esw = es(tc)
+
+
+    ! Compute the e needed to reach thresh saturation wrt ice
+    e = thresh * esi
+
+    ! Compute rh wrt liquid for this new e
+    rh_m = e/esw * 100.
+    ! Compute saturated sh by seting e = esi in the
+    ! typical formula for q
+
+    sh_m = (0.622 * esi) / ( p - 0.378 * esi)
  
-   ! Convert specific humidity to mixing ratio 
-    mrsat = shsat/(1.-shsat)
-    mr = sh/(1.-sh)
-    mrmax = mrsat*thresh
-    rh_m = mrmax/mrsat
-
-    ! Convert mrmax to sh_m
-    sh_m = mrmax/(1.+mrmax) 
     RETURN
   END SUBROUTINE saturate_ice_points
