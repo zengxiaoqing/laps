@@ -218,8 +218,12 @@ c----------------------------------------------------
               nradars_dom = nradars_dom + 1
               radar_lat(nradars_dom)=present_site_lat(i)
               radar_lon(nradars_dom)=present_site_lon(i)
-              call bilinear_laps(rii,rjj,imax,jmax,height_grid
-     &                          ,result)
+              call bilinear_interp_extrap(rii,rjj,imax,jmax
+     &                    ,height_grid,result,istatus)
+
+c             call bilinear_laps(rii,rjj,imax,jmax,height_grid
+c    &                          ,result)
+
               radar_elev(nradars_dom)=result
            endif
         enddo
@@ -233,9 +237,11 @@ c----------------------------------------------------
 
            distmin=r_missing_data
            do k=1,nradars_dom
-              call latlon_to_radar(lat(i,j),lon(i,j),height_grid(i,j)
+              if(radar_elev(k).lt.10000.)then
+                call latlon_to_radar(lat(i,j),lon(i,j),height_grid(i,j)
      1,azimuth,slant_range,elev,radar_lat(k),radar_lon(k),radar_elev(k))     
-              if(slant_range.lt.distmin)distmin=slant_range
+                if(slant_range.lt.distmin)distmin=slant_range
+              endif
            enddo
            radar_dist_min(i,j)=distmin
        enddo
