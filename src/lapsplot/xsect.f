@@ -40,7 +40,7 @@ cdis
         subroutine xsect(c_display,i4time_ref,lun,l_atms
      1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C
      1                  ,NX_P,r_missing_data,laps_cycle_time,maxstns
-     1                  ,namelist_parms)
+     1                  ,density,namelist_parms)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -285,6 +285,8 @@ cdis
      1     -103.70,-103.22,-101.70,-103.52,-105.25,-104.42,-104.63,
      1     -105.03,-104.76,-105.19,-104.64,-104.34, -97.60, -94.60,
      1      -97.43, -93.65, -98.32,-106.87/
+
+        zoom = 1.0
 
 !       sizem = 1.0
         sizel = 2.0
@@ -705,7 +707,8 @@ c read in laps lat/lon and topo
 
             if(c_field(4:4) .ne. 'i')then ! contour plot
                 call contour_settings(field_vert_diff,NX_C,NZ_C
-     1                               ,clow,chigh,cint,zoom,1.,scale)
+     1                               ,clow,chigh,cint
+     1                               ,zoom,density,scale)      
 
                 call plot_cont(field_vert_diff,scale,clow,chigh,cint,
      1               asc9_tim_3dw,namelist_parms,       
@@ -1098,7 +1101,7 @@ c read in laps lat/lon and topo
             enddo ! k
             clow = -100.
             chigh = +1000.
-            cint = 10.
+            cint = 10. / density
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
@@ -1129,7 +1132,7 @@ c read in laps lat/lon and topo
             enddo ! k
             clow = -100.
             chigh = +1000.
-            cint = 10.
+            cint = 10. / density
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
@@ -1164,7 +1167,7 @@ c read in laps lat/lon and topo
             enddo ! k
             clow = -100.
             chigh = +1000.
-            cint = 10.
+            cint = 10. / density
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
@@ -1198,7 +1201,7 @@ c read in laps lat/lon and topo
             enddo ! k
             clow = -100.
             chigh = +1000.
-            cint = 10.
+            cint = 10. / density
             i_contour = 1
             if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Isogons (Balanced)    knots '
@@ -1231,7 +1234,7 @@ c read in laps lat/lon and topo
 
             clow = -100.
             chigh = +1000.
-            cint = 2.
+            cint = 2. / density
 
             i_contour = 1
 
@@ -1267,7 +1270,7 @@ c read in laps lat/lon and topo
 
             clow = -100.
             chigh = +1000.
-            cint = 2.
+            cint = 2. / density
 
             i_contour = 1
 
@@ -1309,7 +1312,7 @@ c read in laps lat/lon and topo
 
             clow = -100.
             chigh = +1000.
-            cint = 5.
+            cint = 5. / density
 
             i_contour = 1
 
@@ -1389,7 +1392,7 @@ c read in laps lat/lon and topo
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             clow = 0.
             chigh = +100.
-            cint = 10.
+            cint = 10. / density
             i_contour = 1
 !           c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
 !           call make_fnam_lp(i4time_radar,a9time,istatus)
@@ -1788,7 +1791,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 200.
             chigh = +500.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
             c33_label = 'LAPS Potl Temp Vert X-Sect    K  '
 
@@ -1804,7 +1807,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 200.
             chigh = +500.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
             c33_label = 'LAPS Potl Temp (Balanced)     K  '
 
@@ -1866,7 +1869,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = -100.
             chigh = +100.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
 
         elseif(c_field .eq. 'tb')then
@@ -1894,7 +1897,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = -100.
             chigh = +100.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
             c33_label = 'LAPS Temp (Balanced)        Deg C'
 
@@ -1924,7 +1927,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = +200.
             chigh = +600.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
             c33_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
 
@@ -1971,7 +1974,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = -100.
             chigh = +100.
-            cint = 5.
+            cint = 5. / density
             i_contour = 1
             c33_label = 'LAPS Wet Bulb       X-Sect  Deg K'
 
@@ -1998,7 +2001,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 0.
             chigh = +40.
-            cint = 0.4
+            cint = 0.4 / density
             cint = -1.
             i_contour = 1
             c33_label = 'LAPS Specific Humidity     x1e3  '
@@ -2128,9 +2131,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             if(c_field(3:3) .ne. 'i')then
                 clow = 0.
                 chigh = +100.
-                cint = 10.
+                cint = 10. / density
                 i_contour = +1
-            else
+            else ! image
                 clow = 220.
                 chigh = -40.
                 cint = 10.
@@ -2155,7 +2158,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 0.
             chigh = +1.
-            cint = 0.2
+            cint = 0.2 / density
             i_contour = 1
             c33_label = 'LAPS Cloud Fraction              '
 
@@ -2220,7 +2223,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             clow = 0.
             chigh = 0.
             if(c_field .eq. 'pc')then
-                cint = -0.01
+                cint = -0.01 
             else
                 cint = -0.01
             endif
@@ -2291,7 +2294,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             clow = 10.
             chigh = 26.
-            cint = 2.
+            cint = 2. / density
             i_contour = 1
             call make_fnam_lp(i4time_cloud,a9time,istatus)
 
