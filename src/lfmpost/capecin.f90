@@ -206,7 +206,5 @@
       ! Cap the negative buoyancy to a maximum value of 700 J/kg
 
       WHERE(negbuoyen .LT. -700) negbuoyen = -700. 
-      print *, 'CAPE/CIN/LI at (69,46) = ', posbuoyen(69,46),negbuoyen(69,46),&
-                li(69,46)
       DEALLOCATE(buoy)
       END SUBROUTINE CAPECIN
