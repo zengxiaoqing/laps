@@ -81,9 +81,23 @@ foreach (@lines) {
 
 if ($modeltype eq "missing") {print "Can't determine model background.\n"}
 
+if ($modeltype eq 'fua'){
+
+    $searchstring = "Reading 3d";
+    foreach (@lines) {
+       if (/$searchstring(.*)/) {
+
+           @string_elems=split(" ",$1);
+           $bkgdpath = @string_elems[0];
+           @string_elems = split("/",$bkgdpath);
+           $modelid = @string_elems[$#string_elems];
+           last; }
+    }
+}
+
 print "BACKGROUND FIELDS:  ";
-if ($modeltype =~ /ram/) {
-  $modelid = "local";
+if ($modeltype =~ /fua/) {
+# $modelid = "local";
 
 } else {
   $bgmodelfile = $filename;
@@ -113,7 +127,9 @@ if ($modeltype =~ /ram/) {
 if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
   $runtime = $3;
   $fcsthr = $4;
-  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
+  $lengthmdlid=length $modelid;
+  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
+  print "$modeltype $modelid $1$2$3$4 \n";
 } 
 
 # Doppler radars.
