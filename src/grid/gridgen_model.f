@@ -614,7 +614,7 @@ c SG97  splot 'topography.dat'
       integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
      1  iblksizo,no,iodim,istat_files
       parameter (n23=20000)
-      real vt3da(500),vt3db(n23)
+      real vt3da(500)
       real vctr1(n23),
      1 vctr21(n23),erad,rlat,wlon1,deltax,deltay,wvln,silwt
       real DATR(N2,N3)
@@ -667,7 +667,7 @@ C
       endif
       CALL SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,90.,std_lon,ERAD
      +            ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +            ,ISBEGO,IWBEGO,DATO,VT3DA,VT3DB,DATR
+     +            ,ISBEGO,IWBEGO,DATO,VT3DA,DATR
      +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data,istat_files)       
       RETURN
       END
@@ -678,7 +678,7 @@ C     ******************************************************************
 C
       SUBROUTINE SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,RLAT,WLON1,ERAD
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +          ,ISBEGO,IWBEGO,DATO,DATP,DATQ,DATR,ISO,IWO
+     +          ,ISBEGO,IWBEGO,DATO,DATP,DATR,ISO,IWO
      +          ,OFN,WVLN,SILWT,dem_data,istat_files)
       real dato(no,no,mof)
       real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3)
