@@ -111,11 +111,15 @@ c
         write(6,*)' Completed sounding read, # of levels = ',j
 
 !       Get Launch Location
-        read(header_line(4),4)lat_s,lon_s,ialt
-        write(6,*)' lat_s,lon_s,ialt',lat_s,lon_s,ialt
- 4      format(60x,f11.0,1x,f9.0,1x,i5)
+        read(header_line(4),4)lon_s,lat_s,ralt
+        write(6,*)' lat_s,lon_s,ralt',lat_s,lon_s,ralt
+ 4      format(59x,f8.0,1x,f7.0,1x,f8.0)
 
-        elev_s = ialt
+        if(ralt .eq. 9999.)then
+            staelev = 0.        
+        else
+            staelev = ralt
+        endif
 
 !       Get Launch Time
         read(header_line(5),5)iy,mon,id,ih,min,is
