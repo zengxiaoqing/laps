@@ -130,10 +130,11 @@ c
 	    call read_local_tower(data_file, maxsta, maxlvls,     ! I
      &         r_missing_data,                                    ! I
      &         nsnd_file, nlvls, lvls_m(1,ix),                    ! O
-     &         staelev(ix), stalat(1,ix), stalon(1,ix),           ! O
-     &         temp_c(1,ix), dewpoint_c(1,ix),                    ! O
+     &         staelev(ix), stalat(ix,1), stalon(ix,1),           ! O
+     &         temp_c(ix,1), dewpoint_c(ix,1),                    ! O
+     &         height_m(ix,1), pressure_pa(ix,1),                 ! O
      &         dd(1,ix), ff(1,ix),                                ! O
-     &         a9time_ob(1,ix), stname(ix), wmoid(ix),            ! O
+     &         a9time_ob(ix,1), stname(ix), wmoid(ix),            ! O
      &         istatus)                                           ! O
  
 	    if(istatus .ne. 1)then
@@ -190,7 +191,8 @@ c
      &         r_missing_data,                                    ! I
      &         nobs, nlvls, lvls_m,                               ! O
      &         staelev, stalat, stalon,                           ! O
-     &         temp_c, dewpoint_c, dir_deg, spd_mps               ! O
+     &         temp_c, dewpoint_c, height_m,                      ! O
+     &         pressure_pa, dir_deg, spd_mps                      ! O
      &         a9time_ob, stname, wmoid,                          ! O
      &         istatus)                                           ! O
 
@@ -393,7 +395,7 @@ c       relHumidity, windSpeed, windDir, observationTime
         return
       endif
 
-      nf_status = NF_INQ_VARID(nf_fid,'stationName',sta_id)
+      nf_status = NF_INQ_VARID(nf_fid,'stationName',sn_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'finding var stationName'
@@ -403,7 +405,7 @@ c       relHumidity, windSpeed, windDir, observationTime
         return
       endif
 
-      nf_status = NF_INQ_VARID(nf_fid,'temperature',sta_id)
+      nf_status = NF_INQ_VARID(nf_fid,'temperature',temp_id)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'finding var temperature'
@@ -567,7 +569,7 @@ c           read var temperature(recNum,lvl) -> temp
             endif 
 
 c           NEEDS DOING?
-            temp_c(lvl,maxsta) = k_to_c(temp_k) ! to convert kelvin to celsius
+            temp_c(obno,lvl) = k_to_c(temp_k) ! to convert kelvin to celsius
 
 c           read var relHumidity(recNum,level) -> rh
             nf_status = NF_GET_VAR1_REAL(nf_fid,rh_id,index_2,rh_pct)
@@ -577,7 +579,7 @@ c           read var relHumidity(recNum,level) -> rh
             endif 
 
 c           NEEDS DOING?
-            dewpoint_c(lvl,maxsta) = dwpt(temp_c(lvl,maxsta), rh_pct) ! celsius
+            dewpoint_c(obno,lvl) = dwpt(temp_c(obno,lvl), rh_pct) ! celsius
 
 c           read var windSpeed(recNum,level) -> ws
             nf_status = NF_GET_VAR1_REAL(nf_fid,ws_id,index_2,ws)
