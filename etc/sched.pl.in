@@ -100,13 +100,15 @@ system("$LAPSROOT/bin/accum.exe 1> $LAPS_LOG_PATH/accum.log.$hhmm 2>&1");
 print gmtime." Running lsm5\n";
 system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_LOG_PATH/lsm5.log.$hhmm 2>&1");
 
+
+$time = gmtime;
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
-print LOG gmtime;
+print LOG "$time\n";
 close(LOG);
 
 
 if($fxa_sys!=0){
-    print LOG gmtime." Running wfo postprocessing\n";
+    print LOG $time." Running wfo postprocessing\n";
     system("@PERL@ $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
 }
 
