@@ -345,7 +345,8 @@
      the --prefix option is highly recommended to make it easier to update 
      your source code (e.g. importing a new LAPS tar file), without
      disturbing the binaries, data, and runtime parameters that you are 
-     working with on-site. 
+     working with on-site. This goes along with the second directory tree
+     diagram shown above in Section 2.0.
 
      For example, to install laps in directory '/usr/local/laps' use... 
      prompt> ./configure --prefix=/usr/local/laps
@@ -426,6 +427,8 @@
      We recommend using Gnu Make Version 3.75 or later available via ftp from 
      any GNU site. 
 
+     There are many other targets within the Makefile that can be used for
+     specialized purposes, such as cleaning things up to get a fresh start.
 
             --- 2.2.4.1 Creating single or multiple data domains ---
 
