@@ -1277,26 +1277,37 @@ c       include 'satellite_dims_lvd.inc'
             if(var_2d(1:3) .eq. 'PTP')then
                 clow = 500.
                 chigh = 1100.
-            else
+                cint = 0.
+            elseif(var_2d(1:3) .eq. 'PDM')then
                 clow = 0.
-                chigh = 5000.
+                chigh = 2400.
+                cint = 0.
+            elseif(var_2d(1:3) .eq. 'HAM')then
+                clow = 2.
+                chigh = 6.
+                cint = 1.
+            else ! default values
+                clow = 0.
+                chigh = 0.
+                cint = 0.
             endif
 
             if(units_2d(1:2) .eq. 'PA')then
                 units_2d = 'hPa'
                 scale = 100.
-            else
+            elseif(units_2d(1:4) .eq. 'NONE')then
+                units_2d = '          '
+                scale = 1.
+            else ! default value
                 scale = 1.
             endif
-
-            cint = 0.
 
             c33_label = comment_2d(1:26)//' '//units_2d(1:6)
 
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
-     1                        ,NX_L,NY_L,r_missing_data,'hues')
+     1                        ,NX_L,NY_L,r_missing_data,'spectral')
 
         elseif(c_type .eq. 'lv'.or.c_type .eq. 'lr' )then
 
@@ -3615,7 +3626,7 @@ c                   cint = -1.
             call plot_temp_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,lat,lon,topo)
 
-        elseif(c_type .eq. 'ht'.or. c_type .eq. 'bh')then
+        elseif(c_type(1:2) .eq. 'ht'.or. c_type(1:2) .eq. 'bh')then
             write(6,1513)
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
@@ -3649,7 +3660,7 @@ c                   cint = -1.
 
             scale = 10.
 
-            clow = 0.
+            clow =  0.
             chigh = 0.
             call array_range(field_2d,NX_L,NY_L,rmin,rmax
      1                      ,r_missing_data)
@@ -3668,10 +3679,15 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,scale,clow,chigh,cint,
-     1         asc9_tim_t,c33_label,i_overlay,c_display
-     1                                          ,lat,lon,jdot,
-     1         NX_L,NY_L,r_missing_data,laps_cycle_time)
+!           call plot_cont(field_2d,scale,clow,chigh,cint,
+!    1         asc9_tim_t,c33_label,i_overlay,c_display
+!    1                                          ,lat,lon,jdot,
+!    1         NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            call plot_field_2d(i4time_heights,c_type,field_2d,scale
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'hues')
 
         elseif(c_type(1:2) .eq. 'pw')then
             var_2d = 'TPW'
@@ -6221,9 +6237,17 @@ c             if(cint.eq.0.0)cint=0.1
             if(cint_in .eq. 0.)then
                 call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                               ,zoom,density,scale)
+
+            elseif(clow_in .eq. 0. .and. chigh_in .eq. 0.)then
+                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+     1                               ,zoom,density,scale)
+
+                cint = cint_in
+
             else
                 cint = cint_in
                 chigh = chigh + 5. * cint ! Add 5 extra contours
+
             endif
 
             call plot_cont(field_2d,scale,clow,chigh,cint
@@ -6233,6 +6257,14 @@ c             if(cint.eq.0.0)cint=0.1
 
         else ! image plot
             write(6,*)' plot_field_2d - image plot ',c_type
+     1               ,clow_img,chigh_img
+
+            if(clow_img .eq. 0. .and. chigh_img .eq. 0.)then
+                call contour_settings(field_2d,NX_L,NY_L
+     1                               ,clow_img,chigh_img,cint       
+     1                               ,zoom,density,scale)
+            endif
+
             call ccpfil(field_2d,NX_L,NY_L
      1                 ,clow_img*scale,chigh_img*scale      
      1                 ,colortable,n_image,scale)    
