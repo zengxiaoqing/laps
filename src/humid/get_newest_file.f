@@ -1,5 +1,5 @@
-      subroutine get_newest_file (filename,time_diff,
-     1     path,pi,file,ext,ei,istatus)
+      subroutine get_newest_file (filename,time_diff,file_name_length,
+     1     path,pi,file,de,dei,ext,ei,istatus)
 
       implicit none
 
@@ -18,6 +18,9 @@ c     parameter list variables
       character*120 ext
       integer ei
       integer istatus
+      integer file_name_length
+      character*120 de
+      integer dei
 
 c     internal variables
       character*256 filenames (maxfiles)
@@ -31,6 +34,8 @@ c     internal variables
       integer i
 
 c     code
+
+      call s_len(de, dei, istatus)
 
       
 c     get the  filenames available from get_filenames
@@ -47,7 +52,7 @@ c     get the  filenames available from get_filenames
       hash = ' '
 
       do i = 1,numoffiles
-         hashpoint = index (filenames(i),'tpw')
+         hashpoint = index (filenames(i),de(1:dei))
          if (hashpoint .ne. 0) hash = filenames(i)
          if (hash.gt.maxhash) maxhash = hash
       enddo                     ! i
@@ -61,7 +66,7 @@ c     get the  filenames available from get_filenames
 
       hash = maxhash
 
-      file_new = hash(hashpoint-9:hashpoint)
+      file_new = hash(hashpoint-file_name_length:hashpoint)
       ext = hash(hashpoint+1:256)
 
       call s_len(ext, ei, istatus)
@@ -78,11 +83,11 @@ c     compute time difference
       if (i4time_difference .lt. time_diff) then !success in finding file
          file = file_new
          write(6,*) 'Found file ', file_new//'.'//ext(1:ei)
-         write(6,*) 'Age of GVAP file is ',i4time_difference, ' seconds'
+         write(6,*) 'Age of file found is ',i4time_difference,' seconds'
          return
       else
          istatus = 0 
-         write(6,*)'GVAP file not found'
+         write(6,*)'File not found'
          return
       endif
 

@@ -74,9 +74,13 @@ c     internal variables
       character*120 extension
       integer extension_index
       integer istatus_8,istatus_10
+      integer file_name_length
+      character*120 desired_ext
+      integer de_index
 
 
-
+      file_name_length = 9
+      desired_ext = 'tpw'
       istatus_8=0
       istatus_10 = 0
       call s_len(path_to_gvap8, ptg_index, istatus)
@@ -89,8 +93,10 @@ c     get most recent file in directory
       write (6,*) 'Acquiring GOES  8 GVAP info'
       write (6,*)
 
-      call get_newest_file (filename, time_diff,
-     1     path_to_gvap8,ptg_index,filefound,
+
+
+      call get_newest_file (filename, time_diff,file_name_length,
+     1     path_to_gvap8,ptg_index,filefound,desired_ext, de_index,
      1     extension, extension_index, istatus)
 
       if(istatus.ne.1) then     !failure in getting file
@@ -141,8 +147,10 @@ c     get most recent file in directory
 
       call s_len(path_to_gvap10, ptg_index, istatus)
 
-      call get_newest_file (filename, time_diff,
-     1     path_to_gvap10,ptg_index,filefound,
+      desired_ext = 'tpw'
+
+      call get_newest_file (filename, time_diff,file_name_length,
+     1     path_to_gvap10,ptg_index,filefound,desired_ext, de_index,
      1     extension, extension_index, istatus)
 
       if(istatus.ne.1) then     !failure in getting file

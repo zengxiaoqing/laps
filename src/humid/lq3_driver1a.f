@@ -326,8 +326,7 @@ c     set namelist parameters to defaults
          write(6,*) 'Path is ', path_to_gvap8, ' ',path_to_gvap10
          write(6,*) 'GVAP switch is set to ',gvap_switch
       endif
-      
-      
+     
       
 c     initialize field to lq3 internal missing data flag.
 c     initialize total pw to laps missing data flag
