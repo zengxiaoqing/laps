@@ -162,7 +162,7 @@ c     climate model (for QC)
         
 c *** begin routine
 
-      write(6,*) '1.20; Td adjusted WRT liq at freezing temps.'
+      write(6,*) '1.21; allowing satsnd data in routine, = weight'
 
       pi = acos(-1.0)
       d2r = pi/180.
@@ -270,19 +270,21 @@ c     reject on time condition (one hour lookback)
                isound = isound -1 !reject -- out of time bounds
             else
                write(6,*) 'accepting.. ', r_filename(isound)
+                                !COMMENTING OUT RAOB SPECIFIC
+                                !1.21 MOD  8/6/99 BEGIN TEST D.B.
 c     test for non-RAOB type sounding
-               if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
-                  write(6,*) 'rejecting ', snd_type(isound)
-                  isound = isound -1
-               endif
+c               if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
+c                  write(6,*) 'rejecting ', snd_type(isound)
+c                  isound = isound -1
+c               endif
             endif
          else                   ! accept implicitly
             write(6,*) 'accepting.. time exact ', snd_type(isound)
 c     test for non-RAOB type sounding
-            if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
-               write(6,*) 'rejecting ', snd_type(isound)
-               isound = isound -1
-            endif
+c            if (snd_type(isound) .ne. "RAOB    ") then ! reject (wrong type)
+c               write(6,*) 'rejecting ', snd_type(isound)
+c               isound = isound -1
+c            endif
 
          endif
 
