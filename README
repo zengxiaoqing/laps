@@ -2142,10 +2142,11 @@ Outputs:
                                 A calculated storm motion vector is used. First
                                 a layer from the sfc to 300mb is used to 
                                 calculate the mean wind. A shear vector through
-                                the layer is also calculated. The storm motion
-                                is assumed to equal the mean wind + .15 times
-                                the shear vector (rotated for a right mover 
-                                by 90 degrees).
+                                the sfc-300mb layer is also calculated. The 
+                                storm motion is assumed to equal the mean wind 
+                                + .15 times the shear vector (rotated for a 
+                                right mover by a 90 degree angle with respect
+                                to the shear vector).
 
                                 Mean Winds (sfc - 300mb layer)
 
