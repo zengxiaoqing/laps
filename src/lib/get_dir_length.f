@@ -450,3 +450,24 @@ cdoc    Similar to 'l_string_contains'
 
         return
         end        
+
+
+        subroutine s_len2(string,len_string)
+
+cdoc    This routine finds the length of the string counting intermediate
+cdoc    blanks
+
+        character*(*) string
+
+        len1 = len(string)
+
+        len_string = 0
+
+        do i = 1,len1
+            call s_len(string(i:i),len2)
+            if(len2 .eq. 1)len_string = i
+        enddo ! i
+
+        return
+        end
+
