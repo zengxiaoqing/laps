@@ -1,10 +1,10 @@
-netcdf l1s {
+netcdf lgb {
 
     dimensions:
         record = unlimited,
         z = 1,
-	x = 41,
-        y = 41,
+	x = 125,
+        y = 105,
         nav = 1,
         namelen = 132;
 		
@@ -54,6 +54,20 @@ netcdf l1s {
             tsf:lvl_coord="AGL";
 	    tsf:LAPS_units="K";
                 	        
+        //      surface dewpoint temperature    //
+
+        float
+            dsf(record,z,y,x);
+            dsf:navigation_dim = "nav";
+            dsf:record = "valtime, reftime";
+            dsf:_FillValue = 1.e+37f;
+            dsf:long_name="Background surface dewpoint temperature";
+            dsf:units="degrees kelvin";
+            dsf:valid_range= -75.f, 125.f;
+            dsf:LAPS_var="DSF";
+            dsf:lvl_coord="AGL ";
+            dsf:LAPS_units="K";
+ 
         //	Background MSL pressure
 
 	float                                  
@@ -90,7 +104,7 @@ netcdf l1s {
             rsf:record = "valtime, reftime";
             rsf:_FillValue = 1.e+37f;
             rsf:long_name="Background specific humidity";
-            rsf:units="meters";
+            rsf:units="g/kg?";
             rsf:valid_range= 0.f, 100.f;
             rsf:LAPS_var="RSF";
             rsf:lvl_coord="AGL";
@@ -110,6 +124,7 @@ netcdf l1s {
             usf_comment(record,z,namelen),
             vsf_comment(record,z,namelen),
             tsf_comment(record,z,namelen),
+            dsf_comment(record,z,namelen),
             psf_comment(record,z,namelen),
             rsf_comment(record,z,namelen),
             slp_comment(record,z,namelen),
@@ -127,6 +142,9 @@ netcdf l1s {
         short
             tsf_fcinv(record, z);
             tsf_fcinv:_FillValue= 0s;
+        short
+            dsf_fcinv(record, z);
+            dsf_fcinv:_FillValue= 0s;
         short
             psf_fcinv(record, z);
             psf_fcinv:_FillValue= 0s;
