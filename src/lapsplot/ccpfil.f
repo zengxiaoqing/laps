@@ -37,7 +37,8 @@ cdis
 cdis   
 cdis
       subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
-     1                 ,colortable,n_image,scale,c5_sect,namelist_parms)       
+     1                 ,colortable,n_image,scale,c5_sect
+     1                 ,plot_parms,namelist_parms)       
 
 
       include 'lapsplot.inc'
@@ -247,7 +248,7 @@ C
       LMAP=MREG*NREG*256 ! 16000000
       LMAP = min(LMAP,32000000)
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,scale,ireverse       
-     1                               ,r_missing_data
+     1                               ,r_missing_data,plot_parms        ! I
      1                               ,LMAP,log_scaling,l_set_contours  ! I
      1                               ,colortable                       ! I
      1                               ,ncols                            ! I/O
@@ -281,12 +282,14 @@ c     Call local colorbar routine
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale_loc,scale
      1                                ,ireverse       
-     1                                ,r_missing_data
+     1                                ,r_missing_data,plot_parms       ! I
      1                                ,LMAP,log_scaling,l_set_contours
      1                                ,colortable                      ! I
      1                                ,ncols                           ! I/O
      1                                ,l_discrete                      ! I
      1                                ,icol_offset)      
+
+      include 'lapsplot.inc'
 
       PARAMETER (LRWK=300000,LIWK=300000,NWRK=300000
      1          ,NOGRPS=5)       
@@ -316,6 +319,7 @@ C
       endif
 
       CALL set_image_colortable(IWKID
+     1                         ,plot_parms                           ! I
      1                         ,ncols                                ! I/O
      1                         ,l_discrete,ireverse
      1                         ,l_set_contours,colortable
@@ -398,9 +402,12 @@ C
       RETURN
       END
       
-      SUBROUTINE set_image_colortable(IWKID,ncols,l_discrete,ireverse
+      SUBROUTINE set_image_colortable(IWKID,plot_parms,ncols
+     1                               ,l_discrete,ireverse
      1                               ,l_set_contours,colortable
      1                               ,MREG,NREG,log_scaling,icol_offset)    
+
+      include 'lapsplot.inc'
 
       character*(*) colortable
       logical log_scaling, l_discrete, l_set_contours
@@ -439,7 +446,7 @@ C
           endif
 
           call generate_colortable(ncols,'hues',IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
           if(colortable .eq. 'ref')then
               do i = 1,3
@@ -462,7 +469,7 @@ C
           endif
 
           call generate_colortable(ncols,'cpe',IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
           do i = 1,1
               call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
@@ -482,7 +489,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
       elseif(colortable .eq. 'tpw')then
           if(.not. l_discrete)then
@@ -490,7 +497,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
       elseif(colortable .eq. 'moist')then
           if(.not. l_discrete)then
@@ -498,7 +505,7 @@ C
           endif
 
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
       elseif(            colortable .eq. 'spectral' 
      1              .or. colortable .eq. 'spectralr'      )then       
@@ -515,7 +522,7 @@ C
           endif
 
           call generate_colortable(ncols,'spectral',IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
       elseif(colortable .eq. 'haines')then       
           ncols = 5 
@@ -559,7 +566,7 @@ C
 
       elseif(colortable .eq. 'acc')then       
           call generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                            ,istatus)
+     1                            ,plot_parms,istatus)
 
       else
           write(6,*)' ERROR: Unknown color table ',colortable
@@ -997,10 +1004,12 @@ c     Restore original color table
 
 
       subroutine generate_colortable(ncols,colortable,IWKID,icol_offset       
-     1                              ,istatus)
+     1                              ,plot_parms,istatus)
 
 !     Generate colortable from ramp information stored in a file
 !     Number of colors is passed in
+
+      include 'lapsplot.inc'
 
       character*200 path,filename
       character*(*)colortable
