@@ -95,6 +95,8 @@ cdoc    Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
             endif
         endif
 
+        im = 0
+
         write(a9,2)iyr,idays,ih,im
 2       format(i2,i3,i2,i2)
 
