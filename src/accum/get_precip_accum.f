@@ -35,26 +35,6 @@ cdis
      1          ,lat,lon,topo      ! Input
      1          ,ilaps_cycle_time  ! Input
      1          ,radarext_3d_accum ! Input
-     1          ,grid_ra_ref   ! 3d real
-     1          ,grid_ra_vel   ! 3d real
-     1          ,grid_ra_nyq   ! 3d real
-     1          ,snow_accum_pd ! 2d real (Dummy array used locally)
-     1          ,snow_rate     ! 2d real
-     1          ,precip_rate   ! 2d real
-     1          ,dbz_2d        ! 2d real
-     1          ,t_sfc_k       ! 2d real
-     1          ,td_sfc_k      ! 2d real
-     1          ,pres_sfc_pa   ! 2d real
-     1          ,tw_sfc_k      ! 2d real (Not currently used)
-     1          ,temp_3d       ! 3d real
-     1          ,height_3d     ! 3d real
-     1          ,temp_col_max  ! 2d real
-     1          ,rh_3d         ! 3d real
-     1          ,pressures_mb  ! 1d real
-     1          ,l_mask        ! 2d logical
-     1          ,i2_pcp_type_2d! 2d integer*2
-     1          ,i2_cldpcp_type_3d! 3d integer*2
-     1          ,ipcp_1d       ! 1d vertical integer
      1          ,snow_accum,precip_accum,frac_sum      ! Outputs
      1          ,istatus)                 ! Output
 
@@ -110,13 +90,11 @@ cdis
         real*4 frac(MAX_FILES)
         character c_fnames(MAX_FILES)*80
 
-        character*255 c255_radar_filename
         character*255 c_filespec
 
         character*4  radar_name ! Local
 
         character*3 var_2d
-        character*50  directory
         character*31  ext, radarext_3d_accum
         character*10  units_2d
         character*125 comment_2d
@@ -147,11 +125,10 @@ cdis
         call make_fnam_lp(i4time_end,asc_tim_9_end,istatus)
 
         write(6,*)' Radar accumulation from ',asc_tim_9_beg,
-     1                         ' to ',asc_tim_9_end
+     1                                 ' to ',asc_tim_9_end
 
 !       Get File Times
-        call get_directory(radarext_3d_accum,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.'//radarext_3d_accum(1:3)       
+        call get_filespec(radarext_3d_accum(1:3),2,c_filespec,istatus)
 
         call    Get_file_names(  c_filespec,
      1                   i_nbr_files_ret,
@@ -237,29 +214,7 @@ cdis
 !           write(6,101)asc_tim_9,frac(ifile)
 !101        format(' Time, Frac = ',a9,2x,f6.3)
 
-            call get_directory(radarext_3d_accum,directory,len_dir)
-            c255_radar_filename = c_fnames(ifile)(1:lenf)
-     1                       //asc_tim_9//'.'//radarext_3d_accum(1:3)      
-
             write(6,*)
-
-!           Read in radar data with low level reflectivities filled in
-
-            if(.false.)then
-              call read_radar_ref(i4time_radar,.true.,
-     1           imax,jmax,kmax,radarext_3d_accum,lat,lon,topo,
-     1           .true.,.false.,
-     1           grid_ra_ref,
-     1           rlat_radar,rlon_radar,rheight_radar,radar_name,
-     1           n_ref,istatus_2dref,istatus_3dref)
-
-              if(istatus_2dref .eq. 0)then
-                write(6,*)' Error in reading radar data in PRECIP ACCUM'
-                frac_sum = -1.0 ! Turns off the wait loop for more radar
-                istatus = 0
-                return
-              endif
-            endif ! .false.
 
 !           Determine whether we need to update the sfc data to match the radar
 !           and if we should add the period snow accum onto the total

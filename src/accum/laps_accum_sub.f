@@ -63,10 +63,6 @@ cdis
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
-        real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
-        real*4 radar_vel_dum_3d(NX_L,NY_L,NZ_L)
-        real*4 radar_nyq_dum_3d(NX_L,NY_L,NZ_L)
-
         real*4 snow_2d(NX_L,NY_L)
         real*4 snow_2d_tot(NX_L,NY_L)
 
@@ -77,32 +73,13 @@ cdis
 
         real*4 precip_type_2d(NX_L,NY_L)
 
-!       Locally used in get_precip_accum
-        real*4 snow_accum_pd(NX_L,NY_L)
-        real*4 snow_rate(NX_L,NY_L) ! M/S
-        real*4 precip_rate(NX_L,NY_L) ! M/S
-        real*4 dbz_2d(NX_L,NY_L)
-        real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 temp_col_max(NX_L,NY_L)
-        real*4 td_sfc_k(NX_L,NY_L)
-        real*4 pres_sta_pa(NX_L,NY_L)
-        real*4 tw_sfc_k(NX_L,NY_L)
-        real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 height_3d(NX_L,NY_L,NZ_L)
-        real*4 rh_3d(NX_L,NY_L,NZ_L)
-        real*4 pressures_mb(NZ_L)
-        logical l_mask(NX_L,NY_L)
-        integer*2 pcp_type_2d(NX_L,NY_L)
-        integer*2 cldpcp_type_3d(NX_L,NY_L,NZ_L)
-        integer ipcp_1d(NZ_L)
-
-        character*9 filename
+        character*9 filename, filename_start
 
         character*13 filename13
 
         character*31  radarext_3d_accum
 
-        character var*3,comment*125,directory*50,ext*31,units*10
+        character var*3,comment*125,directory*150,ext*31,units*10
 
         character*125 comment_s,comment_r
 
@@ -156,7 +133,6 @@ c read in laps lat/lon and topo
         n_l1s = 1
 
         ext = 'l1s'
-        call get_directory(ext,directory,len_dir)
 
         if(ext(1:3) .ne. 'l1s')then
             iprod_number(n_l1s) = 36352 ! L1S
@@ -169,7 +145,6 @@ c read in laps lat/lon and topo
         i_wait = 0
 
         istatus_inc = 1
-        istatus_tot = 1
 
         i4time_end = i4time
         i4time_beg = i4time_end - ilaps_cycle_time
@@ -181,24 +156,6 @@ c read in laps lat/lon and topo
 50      call get_precip_accum(i4time_beg,i4time_end,NX_L,NY_L,NZ_L
      1          ,lat,lon,topo,ilaps_cycle_time
      1          ,radarext_3d_accum                     ! Input
-     1          ,radar_ref_3d,radar_vel_dum_3d,radar_nyq_dum_3d
-     1          ,snow_accum_pd ! 2d real (Dummy arrays)
-     1          ,snow_rate     ! 2d real
-     1          ,precip_rate   ! 2d real
-     1          ,dbz_2d        ! 2d real
-     1          ,temp_sfc_k    ! 2d real
-     1          ,td_sfc_k      ! 2d real
-     1          ,pres_sta_pa   ! 2d real
-     1          ,tw_sfc_k      ! 2d real
-     1          ,temp_3d       ! 3d real
-     1          ,height_3d     ! 3d real
-     1          ,temp_col_max  ! 2d real
-     1          ,rh_3d         ! 3d real
-     1          ,pressures_mb  ! 1d real
-     1          ,l_mask        ! 2d logical
-     1          ,pcp_type_2d   ! 2d i*2 ! Returned but not written out
-     1          ,cldpcp_type_3d! 3d integer*2
-     1          ,ipcp_1d       ! 1d vertical integer
      1          ,snow_2d,precip_2d,frac_sum,istatus_inc)
 
         if(istatus_inc .ne. 1)then ! Decide whether to wait for radar data
@@ -211,30 +168,11 @@ c read in laps lat/lon and topo
             endif
         endif
 
-!       Decide whether to reset Storm Total based on insignificant precip over
-!       current cycle time
-        i_suff_pcp = 0
-
-        precip_reset_thresh = .0001 * float(ilaps_cycle_time) / 3600.
-
-        if(istatus_inc .eq. 1)then
-            precip_max = 0.
-            do j = 1,NY_L
-            do i = 1,NX_L
-                precip_max = max(precip_max,precip_2d(i,j))
-                if(precip_2d(i,j) .gt. precip_reset_thresh)then    
-                    i_suff_pcp = 1
-                endif
-            enddo ! i
-            enddo ! j
-            write(6,*)' Max precip over domain = ',precip_max
-            if(i_suff_pcp .eq. 0)
-     1          write(6,*)' Resetting due to insufficient precip'
-        endif
-
+        comment_r = '           Null Comment'
+        comment_s = '           Null Comment'
 
 !       Get storm total from previous analysis cycle
-        if(istatus_inc .eq. 1 .and. i_suff_pcp .eq. 1)then
+        if(istatus_inc .eq. 1)then
             write(6,*)' Getting Previous Storm Total Accumulations'
             ext = 'l1s'
             var = 'STO'
@@ -248,10 +186,57 @@ c read in laps lat/lon and topo
             endif
         endif
 
+!       Set rate threshold based on length of storm total so far 
+        rate_thresh = .0001
+        filename_start = comment_r(1:9)
+
+        call i4time_fname_lp(filename_start, i4time_start, istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Could not get start time for storm total'
+     1                 ,comment_r
+            i4_total = ilaps_cycle_time
+            istatus_tot = 0
+
+        else ! Valid storm total start time in comment
+            i4_total = i4time - i4time_start
+            if(i4_total .gt. 48*3600)then
+                rate_thresh = .001
+            endif
+        endif
+
+        write(6,*)i4_total/3600,' hours storm total, rate_thresh = '
+     1                                              ,rate_thresh
+
+!       Decide whether to reset Storm Total based on insignificant precip over
+!       current cycle time
+        i_suff_pcp = 0
+
+        precip_reset_thresh = 
+     1                  rate_thresh * float(ilaps_cycle_time) / 3600.
+
+        if(istatus_inc .eq. 1 .and. istatus_tot .eq. 1)then
+            precip_max = 0.
+            do j = 1,NY_L
+            do i = 1,NX_L
+                precip_max = max(precip_max,precip_2d(i,j))
+                if(precip_2d(i,j) .gt. precip_reset_thresh)then    
+                    i_suff_pcp = 1
+                endif
+            enddo ! i
+            enddo ! j
+            write(6,*)' Max precip over domain = ',precip_max
+            if(i_suff_pcp .eq. 0)then
+                write(6,*)' Resetting due to insufficient precip'
+            else
+                write(6,*)
+     1          ' We have sufficient precip to continue storm total'
+            endif
+        endif
+
 
 !       Add current hour snow accumulation to storm total
         if(istatus_inc .eq. 1 .and. istatus_tot .eq. 1
-     1                                    .and. i_suff_pcp .eq. 1)then
+     1                        .and. i_suff_pcp  .eq. 1)then
             write(6,*)' Adding latest increment for new Storm Total Accu
      1mulation'
             call add(snow_2d,  snow_2d_tot,  snow_2d_tot,  NX_L,NY_L)
@@ -271,10 +256,13 @@ c read in laps lat/lon and topo
 
             call move(snow_2d  ,snow_2d_tot  ,NX_L,NY_L)
             call move(precip_2d,precip_2d_tot,NX_L,NY_L)
-        endif
+
+        endif ! Valid continuation of storm total
 
         if(istatus_inc .eq. 1)then
             write(6,*)' Writing Incr / Storm Total Accumulations'
+            write(6,*)comment_r(1:80)
+            write(6,*)comment_s(1:80)
             ext = 'l1s'
             call get_directory(ext,directory,len_dir)
             units = 'M'
@@ -311,7 +299,7 @@ c read in laps lat/lon and topo
         integer*4 nfields
         parameter (nfields = 4)
 
-        character*50 DIRECTORY
+        character*(*) DIRECTORY
         character*31 EXT
 
         character*125 comment_s,comment_r,comment_2d(nfields)
@@ -322,8 +310,9 @@ c read in laps lat/lon and topo
 
         real*4 field_2dsnow(imax,jmax,nfields)
 
-        write(6,11)directory,ext(1:5)
-11      format(' Writing 2d Snow/Precip ',a50,1x,a5,1x,a3)
+        lend = len(directory)
+        write(6,11)directory(1:lend),ext(1:5)
+11      format(' Writing 2d Snow/Precip ',a<lend>,1x,a5,1x,a3)
 
         lvl = 0
         lvl_coord = 'MSL'
