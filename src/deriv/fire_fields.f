@@ -201,6 +201,7 @@ c**************new routine as adapted at FSL**************************
        if(istat_pbl .eq. 1)then
            write(6,*)' Calculate Ventilation Index'
            call ventilation_index(u_3d,v_3d,pbl_top_pa,pbl_depth_m        ! I
+     1                           ,pres_3d_pa,p_sfc_pa                     ! I
      1                           ,ni,nj,nk                                ! I
 !    1                           ,heights_3d                              ! I
      1                           ,vent_2d,istatus)                        ! O
@@ -213,11 +214,13 @@ c**************new routine as adapted at FSL**************************
        end
 
        subroutine ventilation_index(u_3d,v_3d,pbl_top_pa,pbl_depth_m      ! I
+     1                             ,pres_3d_pa,p_sfc_pa                   ! I
      1                             ,ni,nj,nk                              ! I
 !    1                             ,heights_3d                            ! I
      1                             ,vent_2d,istatus)                      ! O
 
 !      real*4 heights_3d(ni,nj,nk)                                        ! I
+       real*4 pres_3d_pa(ni,nj,nk)                                        ! I
        real*4 u_3d(ni,nj,nk)                                              ! I
        real*4 v_3d(ni,nj,nk)                                              ! I
 
@@ -226,11 +229,13 @@ c**************new routine as adapted at FSL**************************
        real*4 vent_2d(ni,nj)                                              ! O
 
        real*4 topo(ni,nj)           ! Switch to sfc_pres_pa?
+       real*4 p_sfc_pa(ni,nj)                                             ! I
 
        write(6,*)' Subroutine ventilation_index'
 
 !      Calculate mean wind within the PBL
        call pbl_mean_wind(u_3d,v_3d,topo,pbl_top_pa,ni,nj,nk              ! I
+     1                   ,pres_3d_pa,p_sfc_pa                             ! I
      1                   ,umean,vmean,istatus)                            ! O
 
 !      Multiply PBL depth by mean wind to obtain ventilation index
@@ -248,14 +253,17 @@ c**************new routine as adapted at FSL**************************
 
         subroutine pbl_mean_wind(uanl,vanl,topo,pbl_top_pa        ! I
      1                          ,imax,jmax,kmax                   ! I
+     1                          ,pres_3d_pa,p_sfc_pa              ! I
      1                          ,umean,vmean,istatus)             ! O
 
         logical ltest_vertical_grid
 
         real*4 umean(imax,jmax),vmean(imax,jmax)                  ! Output
         real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
+        real*4 pres_3d_pa(imax,jmax,kmax)                         ! Input
 
         real*4 topo(imax,jmax)                                    ! Input
+        real*4 p_sfc_pa(imax,jmax)                                ! Input
         real*4 pbl_top_pa(imax,jmax)                              ! Input
 
         real*4 sum(imax,jmax)                                     ! Local
@@ -270,15 +278,23 @@ c**************new routine as adapted at FSL**************************
 
         do j = 1,jmax
           do i = 1,imax
-
-             khigh = nint(zcoord_of_pressure(pbl_top_pa(i,j)))
-
-             klow(i,j) =
-     1            max(nint(height_to_zcoord(topo(i,j),istatus)),1)
+             khigh = rlevel_of_field(pbl_top_pa(i,j),pres_3d_pa
+     1                              ,imax,jmax,kmax,i,j,istatus)
+!            khigh = nint(zcoord_of_pressure(pbl_top_pa(i,j)))
              if(istatus .ne. 1)then
-                 write(6,*)' mean_wind: ERROR in height_to_zcoord'
+                 write(6,*)' mean_wind: ERROR in rlevel_of_field'
                  return
              endif
+
+             klow(i,j) = rlevel_of_field(p_sfc_pa(i,j),pres_3d_pa
+     1                                  ,imax,jmax,kmax,i,j,istatus)
+!            klow(i,j) =
+!    1            max(nint(height_to_zcoord(topo(i,j),istatus)),1)
+             if(istatus .ne. 1)then
+                 write(6,*)' mean_wind: ERROR in rlevel_of_field'
+                 return
+             endif
+
              sum(i,j) = 0.
              usum(i,j) = 0.
              vsum(i,j) = 0.
