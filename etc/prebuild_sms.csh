@@ -4,7 +4,7 @@ setenv $LAPS_SRC_ROOT $1
 setenv srcdir $2
 setenv SMS $3
 
-echo "begin prebuild_sms.csh..."
+echo "begin prebuild_sms.csh - SMS environment variable is $SMS"
 
 cd $LAPS_SRC_ROOT/$srcdir
 pwd
