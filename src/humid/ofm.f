@@ -95,7 +95,8 @@ c     satellite number
       
       Integer Ichan,Iatm,Iangle,Level
       
-      Real Angle(5) /0.0,36.869898,48.189685,55.150095,60.0/
+      Real Angle(5) 
+      data angle /0.0,36.869898,48.189685,55.150095,60.0/
       
       integer Channels(Mchan)
       data channels     /10, 8, 7, 11, 16, 6, 12, 20, 21, 22 /
