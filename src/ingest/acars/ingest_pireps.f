@@ -66,7 +66,6 @@
 !     Open output PIN file
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
-          call open_ext(31,i4time,ext(1:3),istatus)
           if(istatus .ne. 1)then
               write(6,*)' Error opening output file'
               go to 999
@@ -99,6 +98,7 @@
               write(6,*)' Input file ',filename_in
 !             Read from the NetCDF pirep file and write to the opened PIN file
               call get_pirep_data(i4time,ilaps_cycle_time,filename_in
+     1                                      ,ext
      1                                      ,NX_L,NY_L
      1                                      ,istatus)
           endif
