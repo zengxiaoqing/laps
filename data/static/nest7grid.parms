@@ -1,27 +1,29 @@
  &lapsparms_nl
  c80_description='NOAA/ERL Forecast Systems Laboratory, Boulder CO (PARALLEL)'
  iflag_lapsparms_cmn=1,              
- PRESSURE_BOTTOM_L=110000.,          
- PRESSURE_INTERVAL_L=5000.,          
 
- vertical_grid='PRESSURE',
- nk_laps=21,                         
+ c6_maproj='plrstr',                 
  standard_latitude=40.0,        
  standard_latitude2=90.0,        
  standard_longitude=-105.0,       
  grid_cen_lat_cmn=41.0,         
  grid_cen_lon_cmn=-105.5,         
-
- l_highres=.false.,                  
+ grid_spacing_m_cmn=10000.,          
  NX_L_CMN=125,                         
  NY_L_CMN=105,                         
- I_PERIMETER_CMN=0,                  
- c50_lowres_directory='NULL',
- grid_spacing_m_cmn=10000.,          
 
- c6_maproj='plrstr',                 
+ vertical_grid='PRESSURE',
+ nk_laps=21,                         
+ PRESSURE_BOTTOM_L=110000.,          
+ PRESSURE_INTERVAL_L=5000.,          
+
  laps_cycle_time_cmn=3600,           
  i_delta_sat_t_sec_cmn=1500,         
+
+ l_highres=.false.,                  
+ I_PERIMETER_CMN=0,                  
+ c50_lowres_directory='NULL',
+
  r_msng_sat_flag_cdf_cmn=255.,       
  c_raddat_type='wsi',
  radarext_3d_cmn='vrc',
