@@ -42,12 +42,12 @@ cdis
 !           now called from lplot
 !
 !       read_radar_ref
-!           now called from (lplot via) get_radar_ref
+!           now called from smart
 !
 !       read_radar_3dref
 !           now called from cloud
 !           now called from accum
-!           now be called from lplot
+!           now called from lplot
 !
 !       read_radar_2dref
 !           now called directly from wind-derived
@@ -67,8 +67,8 @@ cdis
      1   i4time_ref,i4time_tol,i4time_radar_a
      1  ,max_radars,n_radars,ext_a,r_missing_data
      1  ,l_apply_map,imax,jmax,kmax
-     1  ,grid_ra_vel,grid_ra_nyq,v_nyquist_in,n_vel
-     1  ,rlat_radar,rlon_radar,rheight_radar,radar_name
+     1  ,grid_ra_vel,grid_ra_nyq,v_nyquist_in_a,n_vel_a
+     1  ,rlat_radar_a,rlon_radar_a,rheight_radar_a,radar_name_a
      1  ,istatus_multi_vel,istatus_multi_nyq)
 
 
@@ -82,7 +82,7 @@ cdis
 !       max_radars          Input   Dimensioning for maximum # of radars
 !       n_radars            Output  Actual number of radars returned with at
 !                                   least one valid velocity measurement
-!       ext_a               Local   Possible extensions
+!       ext_a               Local   Array: Possible extensions
 !       r_missing_data      Input
 !       mode                Input   (1) normal radar data, (2) return clutter map
 !       l_apply_map         Input   .true. - remove 3D ground clutter
@@ -91,12 +91,12 @@ cdis
 !       topo                Input   2D terrain array (meters)
 !       grid_ra_vel         Output  4D Velocity Grid
 !       grid_ra_nyq         Output  4D Nyquist Velocity Grid
-!       v_nyquist_in        Output  volume nyquist velocity of the radars
-!       n_vel               Output  Array: # of grid points with measurable velocity
-!       rlat_radar          Output  Radar Latitude (Degrees)
-!       rlon_radar          Output  Radar Longitude (Degrees)
-!       rheight_radar       Output  Radar Height (m MSL)
-!       radar_name          Output  Radar Name (Character*4)
+!       v_nyquist_in_a      Output  Array: volume nyquist velocity of the radars
+!       n_vel_a             Output  Array: # of grid points with measurable velocity
+!       rlat_radar_a        Output  Array: Radar Latitude (Degrees)
+!       rlon_radar_a        Output  Array: Radar Longitude (Degrees)
+!       rheight_radar_a     Output  Array: Radar Height (m MSL)
+!       radar_name_a        Output  Array: Radar Name (Character*4)
 !       istatus_multi_vel   Output  Data is useable for 3D vel applications
 !       istatus_multi_nyq   Output  Data is useable for 3D nyq applications
 
@@ -118,12 +118,12 @@ cdis
         real*4 grid_ra_vel(imax,jmax,kmax,max_radars)
         real*4 grid_ra_nyq(imax,jmax,kmax,max_radars)
 
-        real*4 rlat_radar(max_radars),rlon_radar(max_radars)
-     1    ,rheight_radar(max_radars),v_nyquist_in(max_radars)
+        real*4 rlat_radar_a(max_radars),rlon_radar_a(max_radars)
+     1    ,rheight_radar_a(max_radars),v_nyquist_in_a(max_radars)
 
-        character*4 radar_name(max_radars)
+        character*4 radar_name_a(max_radars)
 
-        integer*4 n_vel(max_radars)
+        integer*4 n_vel_a(max_radars)
         integer*4 i4time_radar_a(max_radars)
 
         logical l_conus_vel
@@ -145,7 +145,7 @@ cdis
                 write(ext_a(i),92)i
  92             format('v',i2)
             endif
-            n_vel(i) = 0
+            n_vel_a(i) = 0
         enddo
 
         if(l_conus_vel)then
@@ -191,14 +191,14 @@ cdis
                 call read_radar_vel(i4time_radar,l_apply_map,
      1           imax,jmax,kmax,ext_a(i_radar_pot),
      1           grid_ra_vel(1,1,1,n_radars),
-     1           grid_ra_nyq(1,1,1,n_radars),v_nyquist_in(n_radars),
-     1           rlat_radar(n_radars),rlon_radar(n_radars)
-     1                      ,rheight_radar(n_radars)
-     1                      ,radar_name(n_radars)
-     1                      ,n_vel(n_radars),
+     1           grid_ra_nyq(1,1,1,n_radars),v_nyquist_in_a(n_radars),       
+     1           rlat_radar_a(n_radars),rlon_radar_a(n_radars)
+     1                      ,rheight_radar_a(n_radars)
+     1                      ,radar_name_a(n_radars)
+     1                      ,n_vel_a(n_radars),
      1                       istatus_vel,istatus_nyq)
 
-                if(n_vel(n_radars) .eq. 0 .or. istatus_vel .ne. 1)then
+                if(n_vel_a(n_radars) .eq. 0 .or. istatus_vel .ne. 1)then       
                   ! Don't count in a valid radar
                     n_radars = n_radars - 1
                 endif
@@ -243,12 +243,13 @@ cdis
         subroutine get_radar_ref(i4time_ref,i4time_tol,i4time_radar
      1        ,mode,l_apply_map,imax,jmax,kmax
      1        ,lat,lon,topo,l_low_fill,l_high_fill
+     1        ,heights_3d
      1        ,grid_ra_ref,n_ref
      1        ,rlat_radar,rlon_radar,rheight_radar
      1        ,istatus_2dref,istatus_3dref)
 
 !       This routine returns 3D radar ref data from the LAPS radar files
-!       Called from cloud analysis and lapsplot
+!       Called from lapsplot
 
 !       i4time_ref          Input   Desired i4time
 !       i4time_tol          Input   Half Width of allowable time window
@@ -289,6 +290,7 @@ cdis
         character asc9_tim_radar*9
 
         real*4 grid_ra_ref(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
@@ -399,9 +401,10 @@ cdis
 
             else ! Attempt to get reflectivity from V01/VRC
 
-                call read_radar_ref(i4time_radar,l_apply_map,
+                call read_radar_3dref(i4time_radar,l_apply_map,
      1               imax,jmax,kmax,radarext,
      1               lat,lon,topo,l_low_fill,l_high_fill,
+     1               heights_3d,
      1               grid_ra_ref,
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
      1               n_ref,istatus_2dref,istatus_3dref)
@@ -433,9 +436,7 @@ cdis
 !       of multiple radars is in the calling routine 'get_radar_ref'.
 !       The domain must be specified using grid_fnam_common
 
-!       Called from accum analysis, and from wind analysis via get_radar_max_pd.
-!       Now called from get_multiradar_ref, and from the cloud analysis
-!       via get_radar_ref.
+!       Now called from smart
 
         real*4 grid_ra_ref(imax,jmax,kmax)
 
@@ -564,7 +565,7 @@ cdis
      1   l_apply_map,
      1   imax,jmax,kmax,radarext,
      1   lat,lon,topo,l_low_fill,l_high_fill,
-     1   height_3d,
+     1   heights_3d,
      1   grid_ra_ref,
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,
      1   n_ref_grids,istatus_2dref,istatus_3dref)
@@ -581,7 +582,7 @@ cdis
 
 
         real*4 grid_ra_ref(imax,jmax,kmax)
-        real*4 height_3d(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
 
         Include   'lapsparms.inc' ! ref_base, msg data
 
@@ -714,7 +715,7 @@ cdis
         elseif(radarext(1:3) .eq. 'ln3')then
             call read_nowrad_3dref(i4time_radar,
      1                  imax,jmax,kmax,
-     1                  grid_ra_ref,height_3d,istatus_3dref)
+     1                  grid_ra_ref,heights_3d,istatus_3dref)
             if(istatus_3dref .ne. 1)then
                 write(6,*)
      1            ' Radar ln3 reflectivity data cannot be read in'
@@ -955,7 +956,7 @@ cdis
 
         subroutine read_nowrad_3dref(i4time_radar,
      1                  imax,jmax,kmax,
-     1                  ref_3d,height_3d,istatus_3dref)
+     1                  ref_3d,heights_3d,istatus_3dref)
 
         character*3 var_2d
         character*31  ext
@@ -963,7 +964,7 @@ cdis
         character*125 comment_2d
 
         real*4 ref_3d(imax,jmax,kmax)
-        real*4 height_3d(imax,jmax,kmax)
+        real*4 heights_3d(imax,jmax,kmax)
 
         include 'lapsparms.inc'
 
@@ -1026,34 +1027,34 @@ cdis
         do j = 1,jmax
         do i = 1,imax
 
-            if    (height_3d(i,j,k) .le. 3000.  )then
+            if    (heights_3d(i,j,k) .le. 3000.  )then
 
                 frac1 = 1.0
                 frac2 = 0.0
                 frac3 = 0.0
 
-            elseif(height_3d(i,j,k) .ge. 3000. .and.
-     1             height_3d(i,j,k) .le. 5000.  )then
+            elseif(heights_3d(i,j,k) .ge. 3000. .and.
+     1             heights_3d(i,j,k) .le. 5000.  )then
 
-                frac2 = (height_3d(i,j,k) - 3000.) / 2000.
+                frac2 = (heights_3d(i,j,k) - 3000.) / 2000.
                 frac1 = 1.0 - frac2
                 frac3 = 0.0
 
-            elseif(height_3d(i,j,k) .ge. 5000. .and.
-     1             height_3d(i,j,k) .le. 7000.  )then
+            elseif(heights_3d(i,j,k) .ge. 5000. .and.
+     1             heights_3d(i,j,k) .le. 7000.  )then
 
                 frac1 = 0.0
                 frac2 = 1.0
                 frac3 = 0.0
 
-            elseif(height_3d(i,j,k) .ge. 7000. .and.
-     1             height_3d(i,j,k) .le. 9000.  )then
+            elseif(heights_3d(i,j,k) .ge. 7000. .and.
+     1             heights_3d(i,j,k) .le. 9000.  )then
 
-                frac3 = (height_3d(i,j,k) - 7000.) / 2000.
+                frac3 = (heights_3d(i,j,k) - 7000.) / 2000.
                 frac2 = 1.0 - frac3
                 frac1 = 0.0
 
-            else ! height_3d(i,j,k) .ge. 9000.
+            else ! heights_3d(i,j,k) .ge. 9000.
 
                 frac1 = 0.0
                 frac2 = 0.0
@@ -1091,7 +1092,7 @@ cdis
             endif
 
 !           Clear echo out if we are above echo top
-            if(height_3d(i,j,k) .gt. echo_top)then ! set echo to ref_base
+            if(heights_3d(i,j,k) .gt. echo_top)then ! set echo to ref_base
                 ref_3d(i,j,k) = -10.
             endif
 
