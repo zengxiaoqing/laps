@@ -994,13 +994,15 @@ c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
-     +,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
+     &,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
            if(istatus.ne.1)then
               print*,'Error in rotate_background_uv '
               return
            endif
 
-         else     !this is a grid compatible fua file
+         else
+
+c this is a grid compatible fua file
 
            ht=htbg
            tp=tpbg
@@ -1011,10 +1013,38 @@ c rotate them to the LAPS (output) domain as necessary.
            pr_sfc=prbg_sfc
            mslp=mslpbg
            tp_sfc=tpbg_sfc
-           ht_sfc=htbg_sfc 
+           ht_sfc=htbg_sfc
            sh_sfc=shbg_sfc
            uw_sfc=uwbg_sfc
            vw_sfc=vwbg_sfc
+c
+c LAPS_FUA doesnt require interp but we will recompute
+c pr_sfc, tp_sfc and sh_sfc using high res terrain
+c
+           call sfcbkgd(bgmodel,tp,sh,ht,tp_sfc,sh_sfc,topo
+     &           ,pr,nx_laps, ny_laps, nz_laps, pr_sfc)
+
+           call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+     &icnt,i_mx,j_mx,i_mn,j_mn,diff_mx,diff_mn)
+
+           print *,' Td check (after call sfcbkgd - MODEL_FUA):'
+           print *,' Td greater than T at ',icnt,' points.'
+           if(icnt .gt. 0) then
+              print*,'Max diff = ',diff_mx,' at ',i_mx,',',j_mx
+              print*,'Min diff = ',diff_mn,' at ',i_mn,',',j_mn
+c
+c fix sfc Td to not be greater than T at points determined above
+c
+              where(sh_sfc .gt. tp_sfc)sh_sfc=tp_sfc
+           endif
+
+c
+c..... Do the winds
+c
+           call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+     &                         nz_laps,missingflag,uw_sfc)
+           call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+     &                         nz_laps,missingflag,vw_sfc)
 
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +                ,prbght, prbguv, prbgsh, prbgww )
