@@ -1209,6 +1209,12 @@ cdoc    Convert Fahrenheit to Celsius
         return
         end
 c
+        function c_to_f(t_c)
+cdoc    Convert Celsius to Fahrenheit
+        c_to_f = (t_c * 9./5.) + 32.             ! C to F
+        return
+        end
+c
 c
 
 c
