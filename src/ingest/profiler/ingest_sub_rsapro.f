@@ -104,7 +104,22 @@ C           READ IN THE RAW PROFILER DATA
 
             if(l_exist)then
 
-!               call read_prof_rsa(fnam_in(1:len_fnam_in)              ! I
+                istatus = 0
+
+                if(idir .eq. 1 .or. idir .eq. 2)then
+                    call read_ldad_prof(i4time_sys,i4_prof_window      ! I
+     1                                    ,NX_L,NY_L                   ! I
+     1                                    ,ext                         ! I
+     1                                    ,fnam_in(1:len_fnam_in)      ! I
+     1                                    ,istatus)                    ! O
+                else ! idir .eq. 3
+!                   Note that these arguments can be pared down to look
+!                   more like the call to 'read_ldad_prof' if desired
+!                   If that is done then the PRO file could be written to
+!                   from within 'read_ldad_sodar'. A new subroutine called
+!                   'write_pro' could also be constructed if needed that
+!                   is common to 'read_ldad_prof' and the SODAR data.
+!                   call read_ldad_sodar(fnam_in(1:len_fnam_in)        ! I
 !     1                   ,MAX_PROFILES,MAX_LEVELS                     ! I
 !     1                   ,n_profiles                                  ! O
 !     1                   ,n_lvls_pr                                   ! O
@@ -113,20 +128,12 @@ C           READ IN THE RAW PROFILER DATA
 !     1                   ,ht_m_pr,di_dg_pr,sp_ms_pr                   ! O
 !     1                   ,u_std_ms_pr,v_std_ms_pr                     ! O
 !     1                   ,i4_mid_window_pr,istatus)                   ! O
-!               istatus = 0
 
-
-                if(idir .eq. 1 .or. idir .eq. 2)then
-                    call read_ldad_prof(i4time_sys,i4_prof_window      ! I
-     1                                    ,NX_L,NY_L                   ! I
-     1                                    ,ext                         ! I
-     1                                    ,fnam_in(1:len_fnam_in)      ! I
-     1                                    ,istatus)                    ! O
                 endif ! idir
 
                 if(istatus.ne.1)then
-                    write(6,*)' Warning: bad status on read_ldad_prof'
-     1                       ,istatus           
+                    write(6,*)' Warning: bad status on '
+     1                       ,prof_subdirs(idir),istatus           
                     goto980
                 endif
 
