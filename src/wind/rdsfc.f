@@ -36,11 +36,13 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine rdsfc(i4time,heights_3d
-     1  ,N_SFC,maxstns
-     1  ,lat,lon,n_sfc_obs
-     1  ,grid_laps_wt,grid_laps_u,grid_laps_v
-     1  ,ni,nj,nk,istatus)
+        subroutine rdsfc(i4time,heights_3d                              ! I
+     1  ,N_SFC,maxstns                                                  ! I
+     1  ,lat,lon,r_missing_data                                         ! I
+     1  ,n_sfc_obs                                                      ! O
+     1  ,grid_laps_wt,grid_laps_u,grid_laps_v                           ! I/O
+     1  ,ni,nj,nk                                                       ! I
+     1  ,istatus)                                                       ! O
 
 !****************************************************************************
 
@@ -148,6 +150,8 @@ c
      1      /'   n  Sta    i   j  k     u      v'
      1      ,'       dd     ff      azi    ran ')
 
+        n_in_domain = 0
+        n_overwrite = 0
 
         do i = 1,n_obs_b 
 
@@ -197,6 +201,13 @@ c
 
                 k = sfc_k(n_sfc_obs)
 
+                if(grid_laps_wt(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)     
+     1                  .ne. r_missing_data)then
+                    write(6,*)
+     1              ' This next station overwrites another on the grid'
+                    n_overwrite = n_overwrite + 1
+                endif
+
                 grid_laps_u(sfc_i(n_sfc_obs),sfc_j(n_sfc_obs),k)
      1                          = sfc_u(n_sfc_obs)
 
@@ -214,8 +225,10 @@ c
      1                     sfc_v(n_sfc_obs),
      1                     dd_s(i),ff_s(i)
 
+                n_in_domain = n_in_domain + 1
+
             else
-                write(6,20)n_sfc_obs,stations(i)(1:3)
+                write(6,20)n_sfc_obs,stations(i)(1:5)
 
             endif ! In horizontal bounds
 
@@ -226,6 +239,10 @@ c
         enddo
 
         close(32)
+
+        write(6,*)' # of valid sfc stations in domain = ',n_in_domain
+        write(6,*)' # of unique grid points with sfc stations = '
+     1           ,n_in_domain - n_overwrite
 
         istatus =1
 
