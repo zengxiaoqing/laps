@@ -141,14 +141,16 @@ c
             rla1 = r_la1(jtype,isat)
             rlo1 = r_lo1(jtype,isat)
 
-            goto(52,53,54,53,53)indx
-52            dx = r_resolution_x_vis(jtype,isat)
+            if(indx.eq.1)then
+
+              dx = r_resolution_x_vis(jtype,isat)
               dy = r_resolution_y_vis(jtype,isat)
               nx3= n_pixels_vis(jtype,isat)
               ny3= n_lines_vis(jtype,isat)
-              goto 55
 
-53            if(.not.lfirst(jtype,isat))then
+            elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+
+              if(.not.lfirst(jtype,isat))then
                  ct='ir'
                  dx = r_resolution_x_ir(jtype,isat)
                  dy = r_resolution_y_ir(jtype,isat)
@@ -159,14 +161,15 @@ c
                  jstatus = 0
                  goto 1000
               endif
-              goto 55
 
-54            dx = r_resolution_x_wv(jtype,isat)
+            elseif(indx.eq.3)then
+
+              dx = r_resolution_x_wv(jtype,isat)
               dy = r_resolution_y_wv(jtype,isat)
               nx3= n_pixels_wv(jtype,isat)
               ny3= n_lines_wv(jtype,isat)
 
-55          continue
+            endif
 
          elseif(istatus_wp.eq.0)then
 
@@ -190,15 +193,16 @@ c
 c not wfo data type
       else
 
-         goto(61,62,63,62,62)indx
+         if(indx.eq.1)then
 
-61          dx = r_resolution_x_vis(jtype,isat)
+            dx = r_resolution_x_vis(jtype,isat)
             dy = r_resolution_y_vis(jtype,isat)
             nx3 = n_pixels_vis(jtype,isat)
             ny3 = n_lines_vis(jtype,isat)
-            goto 65
 
-62          if(.not.lfirst(jtype,isat))then
+         elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
+
+            if(.not.lfirst(jtype,isat))then
                ct='ir'
                dx = r_resolution_x_ir(jtype,isat)
                dy = r_resolution_y_ir(jtype,isat)
@@ -209,14 +213,15 @@ c not wfo data type
                jstatus = 0
                goto 1000
             endif
-            goto 65
 
-63          dx = r_resolution_x_wv(jtype,isat)
+         elseif(indx.eq.3)then
+
+            dx = r_resolution_x_wv(jtype,isat)
             dy = r_resolution_y_wv(jtype,isat)
             nx3 = n_pixels_wv(jtype,isat)
             ny3 = n_lines_wv(jtype,isat)
 
-65       continue
+         endif
 
          rla1=r_la1(jtype,isat)
          rlo1=r_lo1(jtype,isat)
@@ -381,9 +386,9 @@ c
       r_lov(jtype,isat) = rlov
       r_latin(jtype,isat) = rlatin
 
-      goto(71,72,73,72,72)indx
+      if(indx.eq.1)then
 
-71       i_start_vis(jtype,isat)= elemstart
+         i_start_vis(jtype,isat)= elemstart
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
@@ -394,9 +399,9 @@ c
          n_pixels_vis(jtype,isat) = nx3mx
          n_lines_vis(jtype,isat)  = ny3mx
 
-         goto 75
+      elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-72       i_start_ir(jtype,isat) = elemstart
+         i_start_ir(jtype,isat) = elemstart
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
@@ -407,9 +412,9 @@ c
          n_pixels_ir(jtype,isat) = nx3mx
          n_lines_ir(jtype,isat)  = ny3mx
 
-         goto 75
+      elseif(indx.eq.3)then
 
-73       i_start_wv(jtype,isat) = elemstart
+         i_start_wv(jtype,isat) = elemstart
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
@@ -420,7 +425,8 @@ c
          n_pixels_wv(jtype,isat) = nx3mx
          n_lines_wv(jtype,isat)  = ny3mx
 
-75    continue
+      endif
+
       jstatus = 1
 
 1000  return

@@ -141,17 +141,18 @@ c ---------------------------------------------------------
      &indx,istatus)
 
       csattype  = c_sat_types(jtype,isat)
-      goto(61,62,63,62,62)indx
 
-61       ct='vis'
+      if(indx.eq.1)then
+
+         ct='vis'
          elemstart_orig = i_start_vis(jtype,isat)
          elemend_orig   = i_end_vis(jtype,isat)
          linestart_orig = j_start_vis(jtype,isat)
          lineend_orig   = j_end_vis(jtype,isat)
 
-         goto 65
+      elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-62       if(.not.lfirst(jtype,isat))then
+         if(.not.lfirst(jtype,isat))then
             ct='ir'
             elemstart_orig = i_start_ir(jtype,isat)
             elemend_orig   = i_end_ir(jtype,isat)
@@ -165,15 +166,15 @@ c
             return
          endif 
 
-         goto 65
+      elseif(indx.eq.3)then
  
-63       ct='wv'
+         ct='wv'
          elemstart_orig = i_start_wv(jtype,isat)
          elemend_orig   = i_end_wv(jtype,isat)
          linestart_orig = j_start_wv(jtype,isat)
          lineend_orig   = j_end_wv(jtype,isat)
 
-65    continue
+      endif
 c
 c get current nav parameters for file header
 c
@@ -477,9 +478,9 @@ c
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &instr,r_img_res_m,istatus)
 
-      goto(71,72,73,72,72)indx
+      if(indx.eq.1)then
 
-71       i_start_vis(jtype,isat)= elemstart
+         i_start_vis(jtype,isat)= elemstart
          i_end_vis(jtype,isat) = elemend
          j_start_vis(jtype,isat) = linestart
          j_end_vis(jtype,isat) = lineend
@@ -488,9 +489,9 @@ c
          n_pixels_vis(jtype,isat) = nx
          n_lines_vis(jtype,isat)  = ny
 
-         goto 75
+      elseif(indx.eq.2.or.indx.eq.4.or.indx.eq.5)then
 
-72       i_start_ir(jtype,isat) = elemstart
+         i_start_ir(jtype,isat) = elemstart
          i_end_ir(jtype,isat) = elemend
          j_start_ir(jtype,isat) = linestart
          j_end_ir(jtype,isat) = lineend
@@ -499,9 +500,9 @@ c
          n_pixels_ir(jtype,isat) = nx
          n_lines_ir(jtype,isat)  = ny
 
-         goto 75
+      elseif(indx.eq.3)then
 
-73       i_start_wv(jtype,isat) = elemstart
+         i_start_wv(jtype,isat) = elemstart
          i_end_wv(jtype,isat) = elemend
          j_start_wv(jtype,isat) = linestart
          j_end_wv(jtype,isat) = lineend
@@ -510,7 +511,7 @@ c
          n_pixels_wv(jtype,isat) = nx
          n_lines_wv(jtype,isat)  = ny
 
-75    continue
+      endif
  
       call write_orb_att(path,c_sat_id(isat),336,orbAt)
 
