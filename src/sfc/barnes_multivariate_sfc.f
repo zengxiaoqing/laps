@@ -3,6 +3,7 @@
      1                   ,r_missing_data                         ! Input
      1                   ,max_snd                                ! Input
      1                   ,rms_thresh_norm                        ! Input
+     1                   ,rinst_err                              ! Input
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,t_2d                                   ! Output
@@ -49,7 +50,6 @@
         do i = 1,ni
         do j = 1,nj
             if(to_2d_in(i,j) .ne. 0.0)then
-                rinst_err = 1.5
                 wt_2d(i,j) = 1.0 / rinst_err**2
                 sumsq_inst = sumsq_inst + 1./wt_2d(i,j)
                 n_obs_valid = n_obs_valid + 1

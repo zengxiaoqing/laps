@@ -498,11 +498,13 @@ c
 
 !           rms_thresh_norm  = 1.0  ! a la wind.nl
             weight_bkg_const = 5e28 ! a la wind.nl
+            rinst_err = 1.5
 
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
      1                                    ,smsng                    ! Input
      1                                    ,max_snd                  ! Input
      1                                    ,rms_thresh_norm          ! Input
+     1                                    ,rinst_err                ! Input
      1                                    ,weight_bkg_const         ! Input
      1                                    ,n_fnorm                  ! Input
      1                                    ,t                        ! Output

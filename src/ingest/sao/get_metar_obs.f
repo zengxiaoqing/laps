@@ -103,7 +103,8 @@ c
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
 c
 	character  stname(maxobs)*5, save_stn(maxobs)*5
-	character  data_file*(*), timech*9, time*4, metar_format*(*)
+	character  data_file*150, timech*9, time*4, metar_format*(*)
+	character  filename13*13, fname9_to_wfo_fname13*13
         character  path_to_metar*(*), a9time*9, a8time*8, a9_to_a8*8
 	character  cvr(6,maxobs)*8
 	character  stations(maxsta)*20, provider(maxsta)*11
@@ -140,12 +141,53 @@ c.....	Zero out the counters.
 c
 	n_sao_g = 0		! # of saos in the laps grid
 	n_sao_b = 0		! # of saos in the box
+c
+c.....  Set up the time window.
+c
+	i4time_before = i4time_sys - itime_before
+	i4time_after  = i4time_sys + itime_after
 
         call s_len(metar_format,len_metar_format)
 
         if(     l_parse(metar_format,'FSL') 
      1     .or. l_parse(metar_format,'NIMBUS')
-     1     .or. l_parse(metar_format,'WFO')     )then
+     1     .or. l_parse(metar_format,'WFO')     )then ! FSL NetCDF format
+
+            ix = 1
+
+            i4_contains_early = 900
+            i4_contains_late = 2699
+            i4_file_interval = 3600
+
+            call get_filetime_range(i4time_before,i4time_after                
+     1                             ,i4_contains_early,i4_contains_late       
+     1                             ,i4_file_interval                         
+     1                             ,i4time_file_b,i4time_file_a)              
+
+            call s_len(path_to_metar,len_path)
+
+            do i4time_file = i4time_file_b, i4time_file_a
+     1                     , i4_file_interval
+
+                call make_fnam_lp(i4time_file,a9time,istatus)
+
+                if(metar_format(1:len_metar_format) .eq. 'NIMBUS')then
+	            data_file = path_to_metar(1:len_path)
+     1                            //a9time// '0100o'
+
+                elseif(metar_format(1:len_metar_format) .eq. 'WFO')then
+                    filename13=fname9_to_wfo_fname13(a9time)       
+                    data_file = path_to_metar(1:len_path) // filename13       
+
+                else
+                    write(6,*)' ERROR: unknown metar format '
+     1                       ,metar_format          
+                    istatus = 0
+                    return
+
+                endif
+
+            enddo ! Move enddo down lower for full multiple file implementation
 
             if(     l_parse(metar_format,'NIMBUS')
      1         .or. l_parse(metar_format,'WFO')     )then
@@ -345,11 +387,6 @@ c
 	   enddo !j
 c
 	enddo !i
-c
-c.....  Set up the time window.
-c
-	i4time_before = i4time_sys - itime_before
-	i4time_after  = i4time_sys + itime_after
 c
 c..................................
 c.....	Now loop over all the obs.

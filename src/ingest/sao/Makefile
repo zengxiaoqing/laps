@@ -30,7 +30,7 @@ SRC   = obs_driver_sub_af.f \
 	get_local_obs.f \
 	get_local_cwb.f \
 	read_local_cwb.f \
-        get_buoy_obs.f \
+        get_maritime_obs.f \
 	read_buoy.f \
 	read_buoy_cwb.f \
 	read_ship_cwb.f \
