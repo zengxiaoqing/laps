@@ -142,7 +142,7 @@ cdis
 
         real*4 sndr_po(19,NX_L,NY_L)
 
-        character*4 var_2d
+        character*4 var_2d, var_2d_in
         character*150  directory
         character*31  ext
         character*10  units_2d
@@ -376,8 +376,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /'         [sa-i/pa-i] Snow/Pcp Accum,'
      1       ,' [sc-i/csc-i] Snow Cvr'
      1      //'     STATIC INFO: [gg] '
-     1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
-     1       ,'Polar Orbiter'
+     1       /'     [lv(d),lr(lsr),v3,v5,po,lc-i] lvd; lsr; VCF; '             
+     1       ,'Tsfc-11u; Polar Orbiter, lcv'
      1      //'     Difference field: [di-i] '
      1      //' ',52x,'[q] quit/display ? ',$)
 
@@ -1433,7 +1433,7 @@ c
          var_2d = 'T'
          call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1       ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L,dum1_array,0
-     1,istatus)
+     1       ,istatus)
          if(istatus .ne. 1)then
             write(6,*)' Cant find VAS/S8A Analysis'
             goto1200
@@ -1496,6 +1496,117 @@ c
           goto 21
 19        write(6,*)'Not able to open an lsr file ', asc9_tim
 21        continue
+
+        elseif(c_type(1:2) .eq. 'lc')then ! Satellite/Cloud data in LCV
+            write(6,122)
+ 122        format(5x,'Select field name [s8a, s3a, d39] :    ',$)
+            read(lun,*)var_2d_in
+            call upcase(var_2d_in,var_2d_in)
+
+            ext = 'lcv'
+
+            if(var_2d_in .ne. 'd39')then
+                var_2d = var_2d_in
+                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+     1                              ,i4time_nearest,ext,var_2d
+     1                              ,units_2d,comment_2d,NX_L,NY_L
+     1                              ,vas,0,istatus)
+                if(istatus .eq. 0)then
+                    write(6,*)' Cant find ',var_2d,' Analysis ',istatus
+                    goto1200
+                endif
+
+            else ! 'd39' field which is the difference of 's3a' - 's8a'
+                var_2d = 's8a'
+                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+     1                              ,i4time_nearest,ext,var_2d
+     1                              ,units_2d,comment_2d,NX_L,NY_L
+     1                              ,vas,0,istatus)
+                if(istatus .eq. 0)then
+                    write(6,*)' Cant find ',var_2d,' Analysis ',istatus
+                    goto1200
+                endif
+
+                var_2d = 's3a'
+                call get_laps_2dgrid(i4time_ref,laps_cycle_time
+     1                              ,i4time_nearest,ext,var_2d
+     1                              ,units_2d,comment_2d,NX_L,NY_L
+     1                              ,field_2d,0,istatus)
+                if(istatus .eq. 0)then
+                    write(6,*)' Cant find ',var_2d,' Analysis ',istatus
+                    goto1200
+                endif
+
+!               Subtract the two satellite fields
+
+            endif
+
+            c33_label='LAPS B-Temps (C) from LCV     '//var_2d_in
+
+            if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
+              vasmx=-255.
+              vasmn=255.
+              do i = 1,NX_L
+              do j = 1,NY_L
+                 if(vas(i,j).ne.r_missing_data)then
+                    vas(i,j) = vas(i,j) - 273.15
+                    vasmx=int(max(vas(i,j),vasmx))
+                    vasmn=int(min(vas(i,j),vasmn))
+                 endif
+              enddo
+              enddo
+              clow = -80.
+              chigh = +40.
+              cint = (vasmx-vasmn)/10.
+              scale = 1e0
+              scale_l = +40.          ! for image plots
+              scale_h = -50.          ! for image plots
+             elseif(var_2d_in.eq.'ALB')then
+              c33_label='LAPS Albedo '//c_sat_id(k)
+              scale_l = 0.00          ! for image plots
+              cloud_albedo = .4485300
+              scale_h = cloud_albedo  ! for image plots
+             elseif(var_2d_in.eq.'SVS')then
+              c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
+              scale_l = 30.           ! for image plots
+              scale_h = 100.          ! for image plots
+             else
+              c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+              scale_l = 30.           ! for image plots
+              scale_h = 230.          ! for image plots
+             endif
+
+             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+
+             if(c_type(3:3) .eq. 'i')then
+                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
+     1                      ,n_image)
+                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                 call setusv_dum(2hIN,7)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
+     1                                           ,i_overlay,'hsect')
+                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+             else ! contours
+                 if(ilvd .eq. 1)then
+                     if(var_2d_in.eq.'ALB')then
+                         clow = 0.0
+                         chigh = 1.
+                         cint = 0.1
+                         scale = 1e0
+                     else
+                         clow = 0.0
+                         chigh = 256.
+                         cint = 05.
+                         scale = 1e0
+                     endif
+                 endif
+
+                 call plot_cont(vas,scale,clow,chigh,cint,asc9_tim,
+     1             c33_label,i_overlay,c_display,lat,lon,jdot,
+     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+             endif
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
      1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
