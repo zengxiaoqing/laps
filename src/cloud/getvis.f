@@ -49,6 +49,7 @@ cdis
 !       Steve Albers 1997
 
         integer*4 ihist_alb(-10:20)
+        integer*4 ihist_alb_sfc(-10:20)
         integer*4 ihist_frac_sat(-10:20)
         integer*4 istat_vis_a(ni,nj)            ! Cloud mask based on VIS
 
@@ -76,6 +77,7 @@ cdis
 !       Initialize histograms
         do i = -10,20
             ihist_alb(i) = 0
+            ihist_alb_sfc(i) = 0
             ihist_frac_sat(i) = 0
         enddo ! i
 
@@ -142,6 +144,13 @@ cdis
             iscr_alb  = min(max(iscr_alb,-10),20)
             ihist_alb(iscr_alb) = ihist_alb(iscr_alb) + 1
 
+            if(sfc_albedo(i,j) .ne. r_missing_data)then
+                iscr_alb_sfc  = nint(sfc_albedo(i,j)*10.)
+                iscr_alb_sfc  = min(max(iscr_alb_sfc,-10),20)
+                ihist_alb_sfc(iscr_alb_sfc) = 
+     1          ihist_alb_sfc(iscr_alb_sfc) + 1
+            endif
+
             clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
      1                                           ,vis_albedo(i,j))
@@ -190,11 +199,11 @@ cdis
 
         write(6,*)
         write(6,*)'              HISTOGRAMS'
-        write(6,*)' I          ',
-     1  ' Albedo  Cld Frac Sat'
+        write(6,*)' I       ',
+     1  ' Sat Albedo  Sfc Albedo  Cld Frac Sat'
         do i = -5,15
-            write(6,11)i,ihist_alb(i),ihist_frac_sat(i)
-11          format(i4,i12,i12,i12,i12)
+            write(6,11)i,ihist_alb(i),ihist_alb_sfc(i),ihist_frac_sat(i)       
+11          format(i4,i12,i12,i12)
         enddo ! i
 
         write(6,*)
