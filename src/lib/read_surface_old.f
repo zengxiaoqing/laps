@@ -329,3 +329,18 @@ c
 
         return
         end
+
+        subroutine right_justify(string)
+
+        character*(*) string
+
+        call left_justify(string)
+
+        call s_len(string,len1)
+        len2 = len(string)
+
+        string(len2-len1+1:len2) = string(1:len1)
+
+        return
+        end        
+

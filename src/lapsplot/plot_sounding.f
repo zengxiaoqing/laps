@@ -6,6 +6,9 @@
         real*4 field_3d(NX_L,NY_L,NZ_L)
 !       real*4 rh_3d(NX_L,NY_L,NZ_L)
 
+        real*4 pres_2d(NX_L,NY_L)
+        real*4 t_2d(NX_L,NY_L)
+        real*4 td_2d(NX_L,NY_L)
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
 
@@ -15,7 +18,7 @@
         real*4 td_vert(NZ_L)
 
         real*4 pres_1d(NZ_L)
-        real*4 logp_1d(NZ_L), logp_bottom, logp_top, logp
+        real*4 logp_1d(NZ_L), logp_bottom, logp_top, logp, logp_sfc
   
         real*4 k_to_c, make_td
 
@@ -59,8 +62,8 @@
         call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
         if(istatus .ne. 1)go to 900
 
-        ix = nint(xsound)
-        iy = nint(ysound)
+        isound = nint(xsound)
+        jsound = nint(ysound)
 
         ext = 'static'
 
@@ -81,14 +84,14 @@
             return
         endif
 
-        rlat = lat(ix,iy)
-        rlon = lon(ix,iy)
+        rlat = lat(isound,jsound)
+        rlon = lon(isound,jsound)
 
         write(c16_latlon,101)rlat,rlon
  101    format(2f8.2)
 
         do iz = 1,NZ_L
-            pres_1d(iz) = pres_3d(ix,iy,iz)
+            pres_1d(iz) = pres_3d(isound,jsound,iz)
             logp_1d(iz) = log(pres_1d(iz))
         enddo ! iz
 
@@ -226,6 +229,35 @@
 
         endif
 
+!       Read in sfc data (pressure, temp, dewpoint)
+        ext = 'lsx'
+
+        var_2d = 'PS'
+        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pres_2d,0,istat_sfc)
+        if(istat_sfc .ne. 1)goto100
+
+        var_2d = 'T'
+        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,t_2d,0,istat_sfc)
+        if(istat_sfc .ne. 1)goto100
+
+        var_2d = 'TD'
+        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,td_2d,0,istat_sfc)
+        if(istat_sfc .ne. 1)goto100
+
+!       Convert sfc variables
+        p_sfc_pa = pres_2d(isound,jsound)
+        logp_sfc = log(p_sfc_pa)
+        t_sfc_k  = t_2d(isound,jsound)
+        td_sfc_k = td_2d(isound,jsound)
+
+        write(6,*)' Sfc P = ', p_sfc_pa
+
 !       Read Wind (a la xsect)
 
  100    continue
@@ -337,25 +369,80 @@
 
         call setusv_dum(2hIN,icolors(i_overlay))
 
-!       Plot temp sounding
+!       Plot temp and dewpoint sounding
         do iz = 2,NZ_L
-            y1 = logp_1d(iz-1)
-            y2 = logp_1d(iz)
-            x1 = skewt(k_to_c(temp_vert(iz-1)),y1)
-            x2 = skewt(k_to_c(temp_vert(iz)),y2)
-            call line(x1,y1,x2,y2) 
-        enddo ! iz
 
-!       Plot dewpoint sounding
-        if(istat_td .eq. 1)then
-            do iz = 2,NZ_L
+            if(istat_sfc .eq. 0      .OR.
+     1         pres_1d(iz-1) .le. p_sfc_pa          )then  ! above sfc or no 
+
+                call setusv_dum(2hIN,icolors(i_overlay))   ! sfc data   
+                                                                    
                 y1 = logp_1d(iz-1)
                 y2 = logp_1d(iz)
-                x1 = skewt(td_vert(iz-1),y1)
-                x2 = skewt(td_vert(iz),y2)
+
+                x1 = skewt(k_to_c(temp_vert(iz-1)),y1)
+                x2 = skewt(k_to_c(temp_vert(iz)),y2)
                 call line(x1,y1,x2,y2) 
-            enddo ! iz
-        endif
+
+                if(istat_td .eq. 1)then
+                    x1 = skewt(td_vert(iz-1),y1)
+                    x2 = skewt(td_vert(iz),y2)
+                    call line(x1,y1,x2,y2) 
+                endif
+
+            elseif(pres_1d(iz) .gt. p_sfc_pa)then          ! below sfc
+                call setusv_dum(2hIN,34)
+
+                y1 = logp_1d(iz-1)
+                y2 = logp_1d(iz)
+
+                x1 = skewt(k_to_c(temp_vert(iz-1)),y1)
+                x2 = skewt(k_to_c(temp_vert(iz)),y2)
+                call line(x1,y1,x2,y2) 
+
+                if(istat_td .eq. 1)then
+                    x1 = skewt(td_vert(iz-1),y1)
+                    x2 = skewt(td_vert(iz),y2)
+                    call line(x1,y1,x2,y2) 
+                endif
+
+            else                                           ! straddles the sfc
+!               Plot line below the sfc              
+                call setusv_dum(2hIN,34)
+
+                y1 = logp_1d(iz-1)
+                y2 = logp_sfc
+
+                x1 = skewt(k_to_c(temp_vert(iz-1)),y1)
+                x2 = skewt(k_to_c(t_sfc_k),y2)
+                call line(x1,y1,x2,y2) 
+
+                if(istat_td .eq. 1)then
+                    x1 = skewt(td_vert(iz-1),y1)
+                    x2 = skewt(k_to_c(td_sfc_k),y2)
+                    call line(x1,y1,x2,y2) 
+                endif
+
+!               Plot line above the sfc              
+                call setusv_dum(2hIN,icolors(i_overlay))
+
+                y1 = logp_sfc
+                y2 = logp_1d(iz)
+
+                x1 = skewt(k_to_c(t_sfc_k),y1)
+                x2 = skewt(k_to_c(temp_vert(iz)),y2)
+                call line(x1,y1,x2,y2) 
+
+                if(istat_td .eq. 1)then
+                    x1 = skewt(k_to_c(td_sfc_k),y1)
+                    x2 = skewt(td_vert(iz),y2)
+                    call line(x1,y1,x2,y2) 
+                endif
+
+            endif
+
+        enddo ! iz
+
 
 !       Plot time/source label
         if(box_low .eq. 0.1)then

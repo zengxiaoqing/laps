@@ -85,7 +85,7 @@ C***Parameter list variables
 C***Local variables
         integer*4 maxlut
         real*4 rpd
-        Parameter   (maxlut=205,         ! largest array size allowed
+        Parameter   (maxlut=235,         ! largest array size allowed
      1          rpd=3.1415926536/180.)
 
         Real*8  TX,TY,TZ,RX,RY,RZ,
@@ -146,13 +146,14 @@ C***Fill the solar brightness and phase angle arrays
         njlut = (nj-2) / iskip_bilin + 2
 
         if(nilut .gt. maxlut .or. njlut .gt. maxlut)then
-            write(lun,*)'Insufficient dimension for maxlut'
+            write(lun,*)'WARNING: Insufficient dimension for maxlut'
             write(lun,*)'maxlut = ',maxlut
             write(lun,*)'nilut = ',nilut
             write(lun,*)'njlut = ',njlut
 
             rskip_new = max(float(nilut)/float(maxlut)
-     1                     ,float(njlut)/float(maxlut))
+     1                     ,float(njlut)/float(maxlut)) 
+     1                    * float(iskip_bilin)
             iskip_new = int(rskip_new) + 1
 
             write(lun,*)'Input parameter iskip_bilin currently equals'   
@@ -169,6 +170,7 @@ C***Fill the solar brightness and phase angle arrays
         else
             write(lun,*)' Dimension for maxlut',maxlut,nilut,njlut
         endif
+
         nj2 = nj
         ni2 = ni
         Do jlut=1,njlut

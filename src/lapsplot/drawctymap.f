@@ -60,6 +60,9 @@ c
       jjlts=-2
       jgrid=0
 
+!     1 means use local version of supmap, 2 means use the NCARGlib version
+      mode_supmap=1
+
       call get_grid_spacing(grid_spacing_m,istatus)
       if(istatus .ne. 1)then
           write(6,*)' no grid spacing, stop in draw_county_map'
@@ -73,8 +76,6 @@ c
       call get_lapsplot_parms(latlon_int,continent_line_width,istatus)       
 
 !     Plot Counties
-      jus=-4
-
       if(jdot .eq. 1)then
           call gsln(3) ! Dotted
       else
@@ -85,8 +86,17 @@ c
           write(6,*)' Plotting Counties'
           call setusv_dum(2HIN,icol_cou)
           jgrid=latlon_int                        ! Draw lat/lon lines?
-          call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
-     +                jgrid,jus,jdot,ier)
+
+          if(mode_supmap .eq. 1)then
+              jus=-4
+              call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                          jjlts,jgrid,jus,jdot,ier)
+          else
+              iout = 0
+              call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                          jjlts,jgrid,iout,jdot,ier)
+          endif
+          if(ier .ne. 0)write(6,*)' ier = ',ier
 
           call sflush
       else
@@ -95,23 +105,41 @@ c
       endif
 
       write(6,*)' Plotting States From Counties'
-      jus=-8
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
       jgrid=0                                ! Do not draw lat/lon lines
-      call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
-     +            jgrid,jus,jdot,ier)
+
+      if(mode_supmap .eq. 1)then
+          jus=-8
+          call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                      jjlts,jgrid,jus,jdot,ier)
+      else
+          iout = 0
+          call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                      jjlts,jgrid,iout,jdot,ier)
+      endif
+      if(ier .ne. 0)write(6,*)' ier = ',ier
+
       call sflush
 
       write(6,*)' Plotting Continents'
-      jus=-1
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
 
       jgrid=0                                ! Do not draw lat/lon lines
       call GSLWSC(continent_line_width)
-      call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
-     +            jgrid,jus,jdot,ier)
+
+      if(mode_supmap .eq. 1)then
+          jus=-1
+          call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                      jjlts,jgrid,jus,jdot,ier)
+      else
+          iout = 2
+          call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
+     +                      jjlts,jgrid,iout,jdot,ier)
+      endif
+      if(ier .ne. 0)write(6,*)' ier = ',ier
+
       call GSLWSC(1.0)
 
       call sflush

@@ -36,7 +36,8 @@ cdis
 cdis
 cdis   
 cdis
-      SUBROUTINE SUPMAP (JPROJ,POLAT,POLON,RROT,PL1,PL2,PL3,PL4,JJLTS,
+      SUBROUTINE SUPMAP_local 
+     +                (JPROJ,POLAT,POLON,RROT,PL1,PL2,PL3,PL4,JJLTS,
      +                   JGRID,JUS,JDOT,IER)
 C   SupMap is used to plot map outlines according to one of nine projections.
 C The origin and orientation of the projection are selected by the user.

@@ -168,10 +168,10 @@ cdis
 
         real*4 clouds_vert(NX_C,KCLOUD)
 
-!       real*4 cloud_cvr_1d(NX_C)
         real*4 cloud_ceil_1d(NX_C)
-!       real*4 cloud_low_1d(NX_C)
         real*4 cloud_top_1d(NX_C)
+
+        real*4 k_to_c, make_rh
 
         common /MCOLOR/mini,maxi
 
@@ -1959,24 +1959,76 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             c33_label = 'LAPS Specific Humidity     x1e3  '
 
         elseif(c_field .eq. 'rh' .or. c_field .eq. 'rl')then
-            if(c_field .eq. 'rh')then
-                var_2d = 'RH3'
-            elseif(c_field .eq. 'rl')then
-                var_2d = 'RHL'
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
+            if(c_prodtype .eq. 'A')then
+                if(c_field .eq. 'rh')then
+                    var_2d = 'RH3'
+                elseif(c_field .eq. 'rl')then
+                    var_2d = 'RHL'
+                endif
+
+                write(6,*)' Reading lh3 / ',var_2d
+
+                ext = 'lh3'
+                call get_laps_3dgrid(i4time_ref,1000000,i4time_nearest
+     1                              ,NX_L,NY_L,NZ_L,ext,var_2d,units_2d
+     1                              ,comment_2d,rh_3d,istatus)
+                if(istatus .ne. 1)goto100
+
+                call make_fnam_lp(i4time_nearest,a9time,istatus)
+                call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+                var_2d = 'SH'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,q_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                var_2d = 'T3'
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,temp_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+     1                          ,istatus)
+
+                t_ref = -192.
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                do k = 1,NZ_L
+                    rh_3d(i,j,k)=make_rh(pres_3d(i,j,k)/100.
+     1                                  ,k_to_c(temp_3d(i,j,k))
+     1                                  ,q_3d(i,j,k)*1000.
+     !                                  ,t_ref                )  * 100. 
+                enddo ! k
+                enddo ! j
+                enddo ! i
+
+                call make_fnam_lp(i4_valid,a9time,istatus)
+                call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
+
             endif
-
-            write(6,*)' Reading lh3 / ',var_2d
-
-            ext = 'lh3'
-            call get_laps_3dgrid
-     1      (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,rh_3d,istatus)
-            if(istatus .ne. 1)goto100
-
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
-            call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
-     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
             do k = NZ_C,1,-1
             do i = 1,NX_C
@@ -2578,9 +2630,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         i4time_tol = 43200
         var_2d = 'PS'
         ext = 'lsx'
-        call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_nearest,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
+        call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pres_2d,0,istatus)
         IF(istatus .ne. 1)THEN
             write(6,*)' Error Reading Surface Pressure Analysis'
             write(6,*)
