@@ -30,9 +30,9 @@ cdis
 cdis
 cdis
 
-        subroutine xsect(c_display,i4time_ref,lun,l_atms,standard_longit
-     1ude,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data,laps_cycle_time,
-     1maxstns)
+        subroutine xsect(c_display,i4time_ref,lun,l_atms
+     1                  ,standard_longitude,NX_L,NY_L,NZ_L,NX_C,NZ_C       
+     1                  ,r_missing_data,laps_cycle_time,maxstns)
 
 !       97-Aug-14     Ken Dritz     Added NX_L, NY_L, NZ_L as dummy arguments
 !       97-Aug-14     Ken Dritz     Added NX_C, NZ_C as dummy arguments
@@ -72,12 +72,11 @@ cdis
 
         common/lapsplot_omega/l_convert
 
-        logical l_sta,l_convert,lapsplot_pregen,l_atms,l_pregen,l_arriva
-     1l_gate
-        logical l_radar_read, l_wind_read
-        logical iflag_mvd,iflag_icing_index,iflag_cloud_type,iflag_bogus
-     1_w
-        logical iflag_snow_potential
+        logical l_sta,l_convert,lapsplot_pregen,l_atms,l_pregen 
+        logical l_radar_read, l_wind_read,l_arrival_gate
+        logical iflag_mvd,iflag_icing_index,iflag_cloud_type
+        logical iflag_snow_potential,iflag_bogus_w
+
         data lapsplot_pregen /.true./
 
         real*4 cld_pres(KCLOUD)
@@ -200,11 +199,13 @@ cdis
         real*4 lon_1d(NX_C)
         real*4 snow_1d(NX_C)
 
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 pres_2d(NX_L,NY_L)
         real*4 pres_1d(NX_C)
 
         real*4 u_vert(NX_C,NZ_C)
         real*4 v_vert(NX_C,NZ_C)
+        real*4 pres_vert(NX_C,NZ_C)
         real*4 temp_2d(NX_C,NZ_C)
         real*4 rh_2d(NX_C,NZ_C)
         real*4 heights_2d(NX_C,NZ_C)
@@ -748,66 +749,7 @@ c read in laps lat/lon and topo
             if(ext_wind .eq. 'lco')then ! Cloud Omega
 
                 if(.not. lapsplot_pregen)then ! Calculate on the Fly
-                    iflag_temp = 1 ! Returns Ambient Temp (K)
-                    call get_temp_3d(i4time_ref,i4time_nearest,iflag_tem
-     1p
-     1          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!                   if(istatus .ne. 1)goto100
-
-                    call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
-                    call interp_3d(temp_3d,temp_2d,xlow,xhigh,ylow,yhigh
-     1,
-     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
-
-!                   Read Cloud Base and Ceiling Data
-                    call get_clouds_3dgrid(i4time_ref,i4time_cloud,NX_L,
-     1NY_L,KCLOUD
-     1         ,ext,clouds_3d,cld_hts,cld_pres,istatus)
-                    call interp_3dc
-     1              (clouds_3d,clouds_vert,xlow,xhigh,ylow,yhigh,
-     1               NX_L,NY_L,NX_C,r_missing_data)
-
-!                   Read in sfc pressure
-                    i4time_tol = 10000000
-                    var_2d = 'PS'
-                    ext = 'lsx'
-                    call get_laps_2dgrid(i4time_ref,i4time_tol,i4time_ne
-     1arest,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
-                    IF(istatus .ne. 1)THEN
-                        write(6,*)' Error Reading Surface Pressure Analy
-     1sis'
-                        goto100
-                    endif
-                    call interp_2d
-     1             (pres_2d,pres_1d,xlow,xhigh,ylow,yhigh,
-     1                 NX_L,NY_L,NX_C,r_missing_data)
-
-                    write(6,*)' Getting laps hydrostatic heights'
-                    call get_heights_hydrostatic(temp_2d,pres_1d,terrain
-     1_vert1d,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_C,1,NZ_C,heights_2d)
-
-                    iflag_mvd = .false.
-                    iflag_icing_index = .false.
-                    iflag_cloud_type = .false.
-                    iflag_bogus_w = .true.
-!                   iflag_snow_potential = .false.
-
-                    call get_cloud_deriv(NX_C,1,NZ_C,clouds_vert,cld_hts
-     1,
-     1                          temp_2d,rh_2d,heights_2d,
-     1                          istat_radar,radar_2d,
-     1                          l_mask_pcptype,ibase_array,itop_array,
-     1                          iflag_slwc,slwc_2d,cice_2d,
-     1                          iflag_cloud_type,cldpcp_type_2d,
-     1                          iflag_mvd,mvd_2d,
-     1                          iflag_icing_index,icing_index_2d,
-     1                                iflag_bogus_w,field_vert,istatus)
-!       1                               iflag_snow_potential,snow_1d,lwc_res_2d)
-                    if(istatus .ne. 1)goto100
+                    continue
 
                 else ! for pregenerated or non-cloud omega
 !                   Take out missing data values to insure better interpolation
@@ -827,11 +769,19 @@ c read in laps lat/lon and topo
 
                 endif ! (Read Pregenerated File)
 
+                call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+                call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow
+     1                            ,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
                 do k = 1,NZ_C
                 do i = 1,NX_C
                     if(field_vert(i,k) .ne. r_missing_data)then
-                        if(l_convert)field_vert(i,k) = ! Always should be .true.
-     1           omega_to_w(field_vert(i,k),pressure_of_level(k)) * 100.
+                        if(l_convert)then
+                            field_vert(i,k) = ! Always should be .true.
+     1           omega_to_w(field_vert(i,k),pres_vert(i,k)) * 100.
+                        endif
                     else
                         field_vert(i,k) = -1e-30
                     endif
@@ -841,16 +791,23 @@ c read in laps lat/lon and topo
                 cint = -1.
 
             else ! Not LCO field
-                call interp_3d(omega_3d,field_vert,xlow,xhigh,ylow,yhigh
-     1,
+                call interp_3d(omega_3d,field_vert
+     1                        ,xlow,xhigh,ylow,yhigh
+     1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
+
+
+                call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+                call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow,yhigh,       
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
 
                 do k = NZ_C,1,-1
                 do i = 1,NX_C
                     if(field_vert(i,k) .ne. r_missing_data)then
 !                       l_convert is .false. if old 'W' data is read in (not OM)
                         if(l_convert)field_vert(i,k) =
-     1           omega_to_w(field_vert(i,k),pressure_of_level(k)) * 100.
+     1             omega_to_w(field_vert(i,k),pres_vert(i,k)) * 100.       
                     else
                         field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
                     endif
@@ -1325,10 +1282,17 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call interp_3d(temp_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
+
+            call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+            call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+
             do k = 1,NZ_L
             do i = 1,NX_C
                 field_vert(i,k) =
-     1   OS(field_vert(i,k)-273.15,pressure_of_level(k)/100.) + 273.15
+     1           OS(field_vert(i,k)-273.15,pres_vert(i,k)/100.) + 273.15       
             enddo ! i
             enddo ! k
 
@@ -1341,7 +1305,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
         elseif(c_field .eq. 'tw')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
             call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1  ,NX_L,NY_L,NZ_L,temp_3d,istatus)
+     1                      ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 !           if(istatus .ne. 1)goto100
 
             call make_fnam_lp(i4time_nearest,asc_tim_9,istatus)
@@ -1351,19 +1315,24 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             var_2d = 'RHL'
             ext = 'lh3'
             call get_laps_3dgrid
-     1  (i4time_nearest,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,rh_3d,istatus)
+     1          (i4time_nearest,1000000,i4time_nearest,NX_L,NY_L,NZ_L       
+     1          ,ext,var_2d,units_2d,comment_2d,rh_3d,istatus)
             if(istatus .ne. 1)goto100
 
             call interp_3d(rh_3d,field_vert2,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
+            call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+     1                                                    ,istatus)
+            call interp_3d(pres_3d,pres_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+
             do k = 1,NZ_L
             do i = 1,NX_C
                 t_c         = field_vert(i,k) - 273.15
                 td_c        = DWPT(t_c,field_vert2(i,k))
-                pressure_mb = pressure_of_level(k)/100.
+                pressure_mb = pres_vert(i,k)/100.
 
 !               This function call here is fast but returns a t_wb_c
 !               equal to t_c if pres < 500mb. This approximation should
@@ -1384,7 +1353,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             var_2d = 'SH '
             ext = 'lq3'
             call get_laps_3dgrid
-     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
+     1      (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
      1          ,ext,var_2d,units_2d,comment_2d
      1                                  ,q_3d,istatus)
             if(istatus .ne. 1)goto100

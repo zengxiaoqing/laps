@@ -164,6 +164,7 @@ cdis
         real*4 tw_sfc_k(NX_L,NY_L)
         real*4 td_2d(NX_L,NY_L)
         real*4 pres_2d(NX_L,NY_L)
+        real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 temp_col_max(NX_L,NY_L)
         real*4 rh_3d(NX_L,NY_L,NZ_L)
@@ -241,10 +242,6 @@ cdis
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
 
-!       common/lapsplot_cmn1/heights_3d,slwc_3d,cice_3d,q_3d,rh_3d,temp_
-!    13d,
-!    1              u_3d,v_3d,omega_3d,grid_ra_ref,grid_ra_vel
-
         common /supmp1/ dummy,part
 
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
@@ -253,6 +250,9 @@ cdis
         include 'satellite_common_lvd.inc'
 
         data mode_lwc/2/
+
+        icen = NX_L/2+1
+        jcen = NY_L/2+1
 
         i_overlay = 0
         jdot = 1   ! 1 = Dotted County Boundaries, 0 = Solid County Boundaries
@@ -269,8 +269,8 @@ cdis
 
         var_2d='LAT'
         call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1units_2d,comment_2d,
-     1lat,rspacing_dum,istatus)
+     1                       units_2d,comment_2d,
+     1                       lat,rspacing_dum,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading LAPS static-lat'
             return
@@ -1764,7 +1764,10 @@ cdis
 
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-            if(pressure_of_level(k_level) .le. 80000.)then
+            call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+     1                                     ,istatus)
+
+            if(pres_3d(icen,jcen,k_level) .le. 80000.)then
                 clow =  0.
                 chigh = 0.
                 cint = 2.
@@ -1775,9 +1778,9 @@ cdis
             endif
 
             call plot_cont(temp_2d,1e0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,
-     1  i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1                     asc9_tim_t,c33_label,
+     1                     i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1                     NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hh')then
             write(6,1515)
@@ -2367,90 +2370,30 @@ cdis
 
           call plot_cont(column_max,1e3,
      1          clow,chigh,cint,asc9_tim_t,c33_label,
-     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
-     1t,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
+     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'pe' .or. c_type .eq. 'ne')then
-          if(lapsplot_pregen)then ! Pregenerated version
-            ext = 'lsx'
+          ext = 'lsx'
 
-            if(c_type .eq. 'pe')then
-                var_2d = 'PBE'
+          if(c_type .eq. 'pe')then
+              var_2d = 'PBE'
 
-                call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+              call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
+     1        ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,pbe_2d,0,istatus)
 
-            else
-                var_2d = 'NBE'
+          else
+              var_2d = 'NBE'
 
-                call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+              call get_laps_2dgrid(i4time_ref,10000000,i4time_temp,
+     1        ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,nbe_2d,0,istatus)
 
-            endif
-
-            call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
-
-          else
-            iflag_temp = 1 ! Returns Ambient Temperature
-
-            call get_temp_3d(i4time_ref,i4time_temp,iflag_temp
-     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-!           if(istatus .ne. 1)goto1200
-
-!           Read in surface temp data
-            var_2d = 'T'
-            ext = 'lsx'
-            call get_laps_2d(i4time_temp,
-     1  ext,var_2d,units_2d,comment_2d,
-     1                          NX_L,NY_L,temp_2d,istatus)
-
-            if(istatus .ne. 1)then
-                write(6,*)' LAPS Sfc Temp not available'
-                return
-            endif
-
-!           Read in surface dewpoint data
-            var_2d = 'TD'
-            ext = 'lsx'
-            call get_laps_2d(i4time_temp,
-     1  ext,var_2d,units_2d,comment_2d,
-     1                          NX_L,NY_L,td_2d,istatus)
-
-            if(istatus .ne. 1)then
-                write(6,*)' LAPS Sfc Dewpoint not available'
-                goto1200
-            endif
-
-!           Read in SFC pressure data
-            var_2d = 'PS'
-            ext = 'lsx'
-            call get_laps_2d(i4time_temp,
-     1  ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,pres_2d,istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' LAPS SFC pressure not available'
-                goto1200
-            endif
-
-            do k = 1,NZ_L ! Calculate pressure at each level
-                p_1d_pa(k) = pressure_of_level(k) ! Pressure at each level
-            enddo ! k
-
-!           Calculate a 3-D Height Field
-            call get_heights_hydrostatic(temp_3d,pres_2d,topo
-     1          ,dum1_array,dum2_array,dum3_array,dum4_array
-     1          ,NX_L,NY_L,NZ_L
-     1                                          ,heights_3d)
-
-!           Get PBE and NBE - Make sure t_sfc_k(i,j) >= td_sfc_k(i,j)
-            call laps_be(NX_L,NY_L,NZ_L
-     1  ,temp_2d,td_2d,pres_2d,temp_3d,heights_3d,p_1d_pa,topo,pbe_2d,nb
-     1e_2d)
-
           endif
+
+          call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
+
 
           scale = 1.
           call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
@@ -2460,19 +2403,18 @@ cdis
               clow = 0.
               chigh = 8000.
               cint = +400.
-              call plot_cont(pbe_2d,scale,clow,chigh,cint,asc9_tim_t,c33
-     1_label,
-     1                  i_overlay,c_display,'nest7grid',lat,lon,jdo
-     1t,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+              call plot_cont(pbe_2d,scale,clow,chigh,cint,asc9_tim_t,
+     1                       c33_label,i_overlay,c_display,'nest7grid',
+     1                       lat,lon,jdot,
+     1                       NX_L,NY_L,r_missing_data,laps_cycle_time)
 
           elseif(c_type .eq. 'ne')then
 !             Change flag value (for now)
               do i = 1,NX_L
               do j = 1,NY_L
                   if(nbe_2d(i,j) .eq. -1e6)nbe_2d(i,j) = r_missing_data
-                  if(nbe_2d(i,j) .ge. -2. .and. nbe_2d(i,j) .ne. r_missi
-     1ng_data)
+                  if(nbe_2d(i,j) .ge. -2. .and. 
+     1               nbe_2d(i,j) .ne. r_missing_data)
      1                                   nbe_2d(i,j) = +.0001
               enddo ! j
               enddo ! i
@@ -2621,10 +2563,12 @@ cdis
  211        format(a13)
             call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
 
+            call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d,istatus)
+
             write(6,1513)
             read(lun,*)k_mb
             k_level = nint(zcoord_of_pressure(float(k_mb*100)))
-            k_mb    = nint(pressure_of_level(k_level) / 100.)
+            k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
 
             CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
      1          VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
