@@ -297,7 +297,7 @@ CONTAINS
 
     ! Get a unit number
     nml_unit = -1
-    find_lun: DO unit = 10,100
+    find_lun: DO unit = 7, 255
       INQUIRE (UNIT=unit, OPENED=used)
       IF (.NOT.used) THEN
          nml_unit = unit
@@ -721,7 +721,7 @@ CONTAINS
       status = 1
     ELSE
       ! Get a logical unit number to use
-      find_lun: DO pointunit = 7,255
+      find_lun: DO pointunit = 7,128
         INQUIRE(UNIT=pointunit, OPENED=lunused)
         IF (.NOT.lunused) EXIT find_lun
       ENDDO find_lun
