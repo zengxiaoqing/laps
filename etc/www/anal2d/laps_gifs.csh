@@ -6,8 +6,7 @@
 umask 000
 #umask 002
 
-limit coredumpsize 1k
-limit cputime 30
+#limit coredumpsize 1k
 
 setenv LAPS_DATA_ROOT $1
 setenv WEB_ROOT $2
@@ -23,13 +22,7 @@ echo "LAPS_ROOT/bin ="$EXE_DIR
 echo "WEB_ROOT ="$WEB_ROOT
 echo "WINDOW ="$WINDOW
 echo "RESOLUTION ="$RESOLUTION
-
-echo " "
-limit
-limit cputime unlimited
-echo " "
-limit
-echo " "
+echo "DOMAIN_SUFFIX ="$DOMAIN_SUFFIX
 
 if (-e /w3/lapb) then
 #   In-house at FSL
@@ -38,9 +31,13 @@ if (-e /w3/lapb) then
     setenv LAPS_GIFS     $WEB_ROOT/www/anal2d
 
 #   Set up soft link for on-the-fly program
+    echo "updating on-the-fly page softlink..."
+    mkdir -p /w3/lapb/domains/$DOMAIN_SUFFIX
     cd /w3/lapb/domains/$DOMAIN_SUFFIX
-    rm -f data
-    ln -s $LAPS_DATA_ROOT data
+    rm -f private_data
+    ln -s $LAPS_DATA_ROOT private_data
+    ls -l /w3/lapb/domains/$DOMAIN_SUFFIX
+    echo " "
 
 else
 #   External to FSL
@@ -61,6 +58,8 @@ endif
 setenv CP cp
 setenv WWW_DIR $SERVER_ROOT/$WWW_DOMAIN
 
+echo "WWW_DIR ="$WWW_DIR
+
 mkdir -p $WWW_DIR/anal2d
 mkdir -p $WWW_DIR/anal2d/archive
 mkdir -p $WWW_DIR/anal2d/recent
@@ -80,8 +79,11 @@ endif
 
 #Set up scripts for pregenerated pages
 if (-e /home/lapb/albers) then
+    echo "updating pregenerated page directory..."
     echo $DOMAIN_SUFFIX > /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
     chmod 666 /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
+    ls -l /home/lapb/albers/www/laps_anal/domain_$DOMAIN_SUFFIX
+    echo " "
 endif
 
 setenv SCRATCH_DIR   $LAPS_GIFS
@@ -102,8 +104,25 @@ setenv latest latest
 echo "utc_hour = "$utc_hour
 echo "utc_min  = "$utc_min
 
+echo " "
+limit
+limit cputime unlimited
+echo " "
+limit
+echo " "
+
 cd $LAPS_GIFS
 date
+
+# Wind Graphic Product
+echo "Generating Graphical Wind Product"; date -u
+setenv prod wd0
+$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
+
+if ($LAPS_DATA_ROOT == "/data/lapb/mesowave/dwfe1/rcsv3") then
+    echo "Exiting after wind/pressure product..."
+    exit
+endif
 
 # PBE Graphic Product
 echo "Generating Graphical PBE Product"; date -u
@@ -125,12 +144,7 @@ echo "Generating Graphical TD Product"; date -u
 setenv prod td
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
 
-# Wind Graphic Product
-echo "Generating Graphical Wind Product"; date -u
-setenv prod wd0
-$LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
-
-# Wind Graphic Product
+# H5 Graphic Product
 echo "Generating Graphical Wind Product"; date -u
 setenv prod h5b
 $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime $RESOLUTION
@@ -208,11 +222,9 @@ $LAPS_GIFS/laps_gifs_sub.sh $prod $WINDOW $LAPS_GIFS $WWW_DIR $utc_hour$utc_min 
 # X-sect
 echo "Generating X-Sect Product"; date -u
 setenv prod xct
-#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.14:0.94:0.86 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
-#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.84 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
-#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.13:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
 #$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 732x614
-$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
+#$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 792x664
+$LAPS_GIFS/laps_gifs_sub.sh $prod 0.06:0.12:0.94:0.85 $LAPS_GIFS $WWW_DIR $utc_hour$utc_min $LAPS_DATA_ROOT $latest $datetime 1056x885
 
 # Update the date
 echo "Update systime on web directory..."
