@@ -160,7 +160,7 @@
      IRIX64          6.5               Requires f90
      DEC (Alpha)
      LINUX (Intel)                     pgf90 is suggested
-     LINUX (Alpha)                       
+     LINUX (Alpha)                     fort is suggested  
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
