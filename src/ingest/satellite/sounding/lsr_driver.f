@@ -1,6 +1,5 @@
       Program lsr_driver
 c
-      include      'lapsparms.cmn'
       include      'lsr_dims.inc'
 
       integer     n_elems(max_sat)
@@ -11,15 +10,13 @@ c
       character     c_sat_id(max_sat)*6
       character     c_sounding_path(max_sat)*200
 
-      Call get_laps_config('nest7grid',IStatus)
-      if(istatus.eq.1)then
-        write(*,*)'LAPS Parameters obtained'
-      else
-         write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-         write(*,*)'Terminating LAPS-lsr. Sat Sounder remapping'
-         stop
-      end if
+      integer     nx,ny
 
+      call get_grid_dim_xy(nx,ny,istatus)
+      if (istatus .ne. 1) then
+         write (6,*) 'Error getting horizontal domain dimensions'
+         stop
+      endif
 c
 c get the number of satellites and channels data/static/sat_sounder.nl
 c
@@ -34,7 +31,7 @@ c
 
       do i=1,n_sat
 
-         call lsr_driver_sub(NX_L_CMN,NY_L_CMN,n_channels,
+         call lsr_driver_sub(nx,ny,n_channels,
      &     n_elems(i),n_lines(i),ismsng,c_sat_id(i),c_sounding_path(i),
      &     r_channel_wavelengths(i,1),pct_req_lsr,istatus)
          if(istatus.ne.1)then
@@ -334,7 +331,9 @@ c
       do j=1,ny_l
       do i=1,nx_l
          if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
-     &      r_llij_lut_rj(i,j).ne.r_missing_data)then
+     &      r_llij_lut_rj(i,j).ne.r_missing_data.and.
+     &      r_llij_lut_ri(i,j).gt.0.            .and.
+     &      r_llij_lut_rj(i,j).gt.0.                )then
             ltindex=int(r_llij_lut_rj(i,j)+0.5)
             rltb=lineTimeBeg(ltindex,1)
             rlte=lineTimeEnd(ltindex,1)

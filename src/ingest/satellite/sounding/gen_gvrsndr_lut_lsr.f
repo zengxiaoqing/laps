@@ -226,8 +226,8 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
          rny=float(nyl)
          rnp=float(npoints_out)
          write(6,*)'WARNING! Some rl/rp values out of domain'
-         pct_covered=((rnx*rny)-rnp)/(rnx*rny)*100.
-         if(pct_covered.lt.pct_req_lsr*100.)then
+         pct_covered=((rnx*rny)-rnp)/(rnx*rny)
+         if(pct_covered.lt.pct_req_lsr)then
             print*,'Exceeded domain cover namelist parameter',
      +' pct_req_lsr: % req/% covered:',pct_req_lsr,'/',pct_covered
             return
