@@ -66,11 +66,11 @@ C
         character*100 fnam_in
         character*80 dir_in
         character*255 c_filespec
+        character*5 c5_data_interval
 
         integer wsmr_wmo_id
         integer*4 wsmr_wmo_id_a(max_stations)
         integer error_code
-!       data wsmr_wmo_id/74533/ 
         data error_code/1/
         integer*4 byte_to_i4
 C
@@ -91,10 +91,9 @@ C
         character*(MAXNCNAM) dimname
 
         character*13 filename13,c13_dum
-        character*9 asc9_tim
+        character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        character*50    directory
         integer*4       len_dir
 
         character*40 c_vars_req
@@ -161,11 +160,28 @@ C
             return
         endif
 
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if (istatus .ne. 1) then
+           write(6,*)'Error getting laps_cycle_time'
+           return
+        else
+           write(6,*)'laps_cycle_time = ',laps_cycle_time
+        endif
+
+!       Do we want hourly or 6 minute profiler data?
+        if(laps_cycle_time .le. 1800)then
+!       if(.true.)then
+            c5_data_interval = '0006o'
+            lag_time = 180
+            write(6,*)' Using 6 minute data'
+        else
+            c5_data_interval = '0100o'
+            lag_time = 1800
+            write(6,*)' Using hourly data'
+        endif
+        c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
+
 C       Wait for the data
-
-!       len_dir_in = 25
-        c_filespec = dir_in(1:len_dir_in)//'*0100o'
-
         write(6,*)c_filespec(1:80)
 
         i4time_desired = i4time
@@ -217,11 +233,12 @@ C
 C       Open an output file.
 C
         ext = 'lrs'
-        call get_directory(ext,directory,len_dir)
-
-        open(1,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1          ,status='unknown')
-
+        call open_lapsprd_file(1,i4time,ext(1:3),istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error opening output file'
+            istatus = 0
+            return
+        endif
 
 !       Get the number of levels from the NetCDF file
         varid = NCDID(cdfid,'level',status)
@@ -345,10 +362,13 @@ C
             write(6,*)
             write(6,*)'elev ',elev
 
+            i4time_ob = i4time - lag_time
+
+            call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
             write(1,401)wsmr_wmo_id/100,n_levels+1,rlat,rlon,elev
-     1                 ,staname(1:5)
-401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5)
+     1                 ,staname(1:5),a9time_ob
+401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9)
 C
 C           Get the array of RASS virtual temperatures for the profiler station.
 C           For this call, we'll use the WMO

@@ -90,13 +90,12 @@ C
         character*(MAXNCNAM) dimname
 
         character*13 filename13,c13_dum
-        character*9 asc9_tim
+        character*9 asc9_tim,a9time_ob
 
         character*40 c_vars_req
         character*100 c_values_req
 
         character*31    ext
-        character*50    directory
         integer*4       len_dir
         character*6 prof_name(max_profilers)
 
@@ -224,16 +223,20 @@ C
 C       Open an output file.
 C
         ext = 'lrs'
-        call get_directory(ext,directory,len_dir)
-
-        open(1,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1          ,status='unknown')
+        call open_lapsprd_file(1,i4time,ext(1:3),istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error opening output file'
+            istatus = 0
+            return
+        endif
 
 !       Read to end of file so we can append to it
         do i = 1,1000000
             read(1,*,end=2)
         enddo ! i
  2      continue
+
+        lag_time = 1800
 
 !       Get the number of levels from the NetCDF file
         varid = NCDID(cdfid,'level',status)
@@ -315,8 +318,8 @@ C
             write(6,*)
             write(6,*)prof_name(ista),' pressure ',prs
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'temperature',0,
-     1t_sfc,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'temperature'
+     1                        ,0,t_sfc,status)
             i_qc_sfc = 0
             if(status.ne.0)then
                 write(*,*)'bad t_sfc read ',status
@@ -326,15 +329,15 @@ C
             write(6,*)
             write(6,*)prof_name(ista),' t_sfc ',t_sfc,i_qc_sfc
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'relHumidity',0,
-     1rh_sfc,status)
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windSpeedSfc',0
-     1,sp_sfc,status)
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windDirSfc',0,d
-     1i_sfc,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'relHumidity'
+     1                        ,0,rh_sfc,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windSpeedSfc'
+     1                        ,0,sp_sfc,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'windDirSfc'
+     1                        ,0,di_sfc,status)
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staElev',0,elev
-     1,status)
+            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staElev'
+     1                        ,0,elev,status)
             if(status.ne.0)then
                 write(*,*)'bad elev read ',status
                 go to 900
@@ -344,9 +347,13 @@ C
 
             n_levels_tot = n_levels
 
-            write(1,401)ista,n_levels_tot,rlat,rlon,elev,prof_name(ista)
-     1(1:5)
-401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5)
+            i4time_ob = i4time - lag_time
+
+            call make_fnam_lp(i4time_ob,a9time_ob,istatus)
+
+            write(1,401)ista,n_levels_tot,rlat,rlon,elev
+     1                 ,prof_name(ista)(1:5),a9time_ob
+401         format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9)
 C
 C           Get the array of RASS virtual temperatures for the profiler station.
 C
