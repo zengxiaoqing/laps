@@ -122,6 +122,8 @@ cdis
         real*4 accum_2d(NX_L,NY_L), image_cutoff
         character*(*)c_type
 
+        if(.true.)return
+
         image_cutoff = 0.2
 
 !       Eliminate "minor" maxima
