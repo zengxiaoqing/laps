@@ -1,24 +1,23 @@
-
 C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
-      subroutine read_ldadmadis_netcdf(nf_fid, maxSensor, recNum, 
+      subroutine read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
      +     filterSetNum, firstOverflow, globalInventory, nStaticIds, 
      +     numPST, numericWMOid, precipIntensity, precipType, 
      +     pressChangeChar, altimeter, dewpoint, elevation, latitude, 
      +     longitude, meanWeightedTemperature, precipAccum, 
      +     precipRate, pressChange3Hour, rawPrecip, relHumidity, 
-     +     seaLevelPressure, soilMoisture, soilTemperature, 
-     +     solarRadiation, stationPressure, temperature, visibility, 
-     +     windDir, windDirMax, windGust, windSpeed, observationTime, 
-     +     receivedTime, reportTime, rhChangeTime, 
-     +     stationPressChangeTime, tempChangeTime, windDirChangeTime, 
-     +     windGustChangeTime, windSpeedChangeTime, altimeterDD, 
-     +     dataProvider, dewpointDD, precipAccumDD, precipRateDD, 
-     +     pressChange3HourDD, providerId, relHumidityDD, 
-     +     seaLevelPressureDD, staticIds, stationId, stationName, 
-     +     stationPressureDD, stationType, temperatureDD, test1, 
-     +     visibilityDD, windDirDD, windSpeedDD)
+     +     seaLevelPressure, seaSurfaceTemp, soilMoisture, 
+     +     soilTemperature, solarRadiation, stationPressure, 
+     +     temperature, visibility, windDir, windDirMax, windGust, 
+     +     windSpeed, altimeterDD, dataProvider, dewpointDD, 
+     +     precipAccumDD, precipRateDD, pressChange3HourDD, 
+     +     providerId, relHumidityDD, seaLevelPressureDD, staticIds, 
+     +     stationId, stationName, stationPressureDD, stationType, 
+     +     temperatureDD, test1, visibilityDD, windDirDD, 
+     +     windSpeedDD, observationTime, receivedTime, reportTime, 
+     +     rhChangeTime, stationPressChangeTime, tempChangeTime, 
+     +     windDirChangeTime, windGustChangeTime, windSpeedChangeTime)
 C
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
@@ -31,35 +30,35 @@ C
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
      +     precipRate(recNum), pressChange3Hour(recNum),
      +     rawPrecip(recNum), relHumidity(recNum),
-     +     seaLevelPressure(recNum), soilMoisture(recNum),
-     +     soilTemperature(recNum), solarRadiation(recNum),
-     +     stationPressure(recNum), temperature(recNum),
-     +     visibility(recNum), windDir(recNum), windDirMax(recNum),
-     +     windGust(recNum), windSpeed(recNum)
+     +     seaLevelPressure(recNum), seaSurfaceTemp(recNum),
+     +     soilMoisture(recNum), soilTemperature(recNum),
+     +     solarRadiation(recNum), stationPressure(recNum),
+     +     temperature(recNum), visibility(recNum), windDir(recNum),
+     +     windDirMax(recNum), windGust(recNum), windSpeed(recNum)
       double precision observationTime(recNum), receivedTime(recNum),
      +     reportTime(recNum), rhChangeTime(recNum),
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     windDirChangeTime(recNum), windGustChangeTime(recNum),
      +     windSpeedChangeTime(recNum)
-      character windDirDD(recNum)
-      character*11 stationType(recNum)
-      character*51 test1(recNum)
-      character*24 staticIds
-      character windSpeedDD(recNum)
-      character relHumidityDD(recNum)
-      character stationPressureDD(recNum)
-      character altimeterDD(recNum)
-      character pressChange3HourDD(recNum)
       character precipRateDD(recNum)
-      character*11 dataProvider(recNum)
-      character dewpointDD(recNum)
-      character*6 stationId(recNum)
       character seaLevelPressureDD(recNum)
       character visibilityDD(recNum)
-      character precipAccumDD(recNum)
       character*51 stationName(recNum)
-      character*12 providerId(recNum)
       character temperatureDD(recNum)
+      character windSpeedDD(recNum)
+      character dewpointDD(recNum)
+      character windDirDD(recNum)
+      character pressChange3HourDD(recNum)
+      character*51 test1(recNum)
+      character*11 stationType(recNum)
+      character stationPressureDD(recNum)
+      character altimeterDD(recNum)
+      character*12 providerId(recNum)
+      character*6 stationId(recNum)
+      character relHumidityDD(recNum)
+      character*11 dataProvider(recNum)
+      character*24 staticIds
+      character precipAccumDD(recNum)
 
 
 C   Variables of type REAL
@@ -255,6 +254,22 @@ C
         print *,'in var seaLevelPressure'
       endif
       call ck_array_real(seaLevelPressure,recNum,misval,badflag)
+C
+C     Variable        NETCDF Long Name
+C      seaSurfaceTemp"sea surface temperature"
+C
+      nf_status=NF_INQ_VARID(nf_fid,'seaSurfaceTemp',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var seaSurfaceTemp'
+      endif
+      call ck_array_real(seaSurfaceTemp,recNum,filval,badflag)
+      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,seaSurfaceTemp)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var seaSurfaceTemp'
+      endif
+      call ck_array_real(seaSurfaceTemp,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      soilMoisture "Soil moisture"
