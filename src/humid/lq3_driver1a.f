@@ -253,6 +253,7 @@ c rams stuff--------
 c ------------------
 
         real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
+        real data_pre_bound (ii,jj,kk)
         real diff_data(ii*jj)
         real ave,adev,sdev,var,skew,curt
 
@@ -717,6 +718,15 @@ c ****  get laps cloud data. used for cloud, bl, goes
 
 c ***   insert bl moisture
 
+        do k = 1,kk
+           do i = 1,ii
+              do j = 1,jj
+                 data_pre_bound(i,j,k) = data(i,j,k)
+              enddo
+           enddo
+        enddo
+
+
 
 
         print*, 'calling lsin'
@@ -733,7 +743,7 @@ c     insert boundary layer data
         do k = 1,kk
            do i = 1,ii
               do j = 1,jj
-                 data(i,j,k) = data_in(i,j,k)
+                 data(i,j,k) = data_pre_bound(i,j,k)
               enddo
            enddo
         enddo
