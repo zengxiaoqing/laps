@@ -682,8 +682,8 @@
                ---  2.6  Modifying Compiler Flags       ---
 
      The 'configure' script automatically modifies the compilation 
-     flags by modifying the Makefiles according to what type of platform
-     you are on. Hopefully the flags will work OK on your particular
+     flags by modifying 'src/include/makefile.inc' according to what type of 
+     platform you are on. Hopefully the flags will work OK on your particular
      platform. If you want to change the flags from the default set, you 
      can provide command line arguments to either the 'configure' script or
      to the Makefile.  For more information on flags to 'configure' run 
@@ -691,11 +691,11 @@
 
      If you find that the default compiler flags don't work for your
      platform or that your platform has no default, you'll need to experiment 
-     to find the right set of flags.  Experiment in the src/lib/Makefile 
-     typically flags which work in that directory will work elsewhere in laps.
-     If you find flags that work for your platform and would like us to add 
-     them to the defaults in 'configure' please let us know via e-mail.
-
+     to find the right set of flags.  Experiment (after running configure) in 
+     'src/include/makefile.inc' as this will automatically control the flags 
+     used throughout laps. If you find flags that work for your platform and 
+     would like us to add them to the defaults in 'configure' please let us 
+     know via e-mail.
 
 ---------------- 2.7 ------ I/O of LAPS gridded files-------------------------
 
@@ -747,14 +747,14 @@
         the default Colorado domain).
 
 <pre>
-
+                      
         1) Modify the 'grid_spacing_m_cmn' parameter (only if you are not 
                 using the default 10000m for the grid spacing).
-
+                 
         2) Modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
-
+             
         3) c6_maproj:
-
+                
                 Polar stereographic: 
                     Set to 'plrstr'. 
 
@@ -765,22 +765,22 @@
                     Set to 'merctr'.
 
                 See the note below regarding current map projection limitations.
-
+                
         4) standard_longitude:
-
+                        
                 Polar Stereographic:
                     This defines the longitude which is straight up and down 
                     (parallel to the "y" axis) in the map projection.
-
+               
                 Lambert Conformal:
                     This defines the longitude which is straight up and down 
                     (parallel to the "y" axis) in the map projection.
-
+                  
                 Mercator:
                     N/A
-
+                                       
         5) standard_latitude:
-
+                                         
                 Polar Stereographic:
                     This parameter (that we also denote as 'phi0') is often set
                     to +90, regardless of which hemisphere your domain is in. 
@@ -791,13 +791,13 @@
                     grid spacing inside the domain becomes noticeably less. 
                     The value of 'grid_spacing_m_cmn' can be increased to 
                     compensate.
-
+                     
                     Consider the angle 'psi' which is the angular distance from
                     the pole of the projection. 'phi' = 90 - 'psi'. The map
                     factor 'sigma' is (1+sin(phi0))/(1+sin(phi)) and becomes
                     unity when 'phi' for a particular grid point is equal to 
                     'phi0'. 
-
+                    
                     'phi0' can be set to values less than +90 (but should
                     almost always be > 0) as follows. When the projection pole
                     is located at the north geographic pole, the 
@@ -806,54 +806,54 @@
                     projection pole is at the south geographic pole, then 
                     'grid_spacing_m_cmn' becomes the true spacing at a latitude
                     of -'standard_latitude'.
-
+                  
                     Note that the grid spacing for a particular location in
                     the domain is equal to 'grid_spacing_m_cmn'/'sigma'.
-
+                     
                     Example 1: grid_spacing_m_cmn = 10000.
                                standard_latitude  =   +90.
                                standard_latitude2 =   +90.
                                grid_cen_lat_cmn   =   +40.
-
+                   
                                grid_spacing at projection (north) pole = 10km
                                grid_spacing at domain center (+40)     ~  8km
-                               
-
+                                                    
+                     
                     Example 2: grid_spacing_m_cmn = 10000.
                                standard_latitude  =   +40.
                                standard_latitude2 =   +90.
                                grid_cen_lat_cmn   =   +40.
-
+                     
                                grid_spacing at projection (north) pole ~ 12km
                                grid_spacing at domain center (+40)     = 10km
-                               
+                                                     
                     Example 3: grid_spacing_m_cmn = 10000.
                                standard_latitude  =   +90.
                                standard_latitude2 =   -90.
                                grid_cen_lat_cmn   =   +40.
-
+                          
                                grid_spacing at projection (south) pole = 10km
                                grid_spacing at domain center (-40)     ~  8km
-
+                     
                     Example 4: grid_spacing_m_cmn = 10000.
                                standard_latitude  =   +40.
                                standard_latitude2 =   -90.
                                grid_cen_lat_cmn   =   -40.
-
+                        
                                grid_spacing at projection (south) pole ~ 12km
                                grid_spacing at domain center (-40)     = 10km
-                               
-
+                                                                
+                         
                 Lambert:
                     This is the latitude at which the grid spacing is exactly 
                     the nominal value (e.g. 10km). 
-
+                   
                 Mercator:
                     This is the latitude at which the grid spacing is exactly 
                     the nominal value (e.g. 10km). 
-
+                                     
         6) standard_latitude2:
-
+             
                 Polar Stereographic:
                     This must be set to +90. or -90. and defines the pole 
                     latitude of the polar stereographic projection 
@@ -935,7 +935,6 @@
 
     Edit the file 'data/static/nest7grid.parms'...
 <pre>
-            
         1) silavwt_parm: 
 
            Default value of 1. represents the use of silhouette terrain
@@ -943,13 +942,12 @@
            between 0-1. A value of zero uses the average terrain instead of
            the maximum. Note that a value of 1. may reduce the apparent effect
            of filtering with 'toptwvl_parm'.
-
+           
         2) toptwvl_parm: 
 
            Default value is 4 represents 4 delta-x filtering of the terrain.
            You can change this to alter the smoothness of the terrain. Higher
            numbers mean smoother terrain.
-
 </pre>
    
 --------- 2.9  ----- CHANGING THE VERTICAL DOMAIN------------------------------
