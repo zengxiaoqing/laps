@@ -2782,8 +2782,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
 !       endif
 
-        call write_label_lplot(100,94,c_label,a9time,namelist_parms
-     1                        ,i_label_overlay,'xsect')       
+        call write_label_lplot(100,94,c_label,a9time,plot_parms
+     1                        ,namelist_parms,i_label_overlay,'xsect')       
 
         if(i_map .eq. 0)then
 

@@ -291,7 +291,8 @@ cdis
 
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call write_label_lplot(ni,nj,c_label,asc_tim_9
-     1                            ,namelist_parms,i_overlay,'hsect')       
+     1                            ,plot_parms,namelist_parms
+     1                            ,i_overlay,'hsect')       
 
         endif
 

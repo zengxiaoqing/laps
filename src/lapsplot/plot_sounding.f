@@ -1,7 +1,7 @@
 
         subroutine plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
      1                          ,r_missing_data,laps_cycle_time,maxstns
-     1                          ,namelist_parms)       
+     1                          ,plot_parms,namelist_parms)       
 
         include 'lapsplot.inc'
 
@@ -509,12 +509,14 @@
             call set(0., 1., 0., 1.
      1              ,0., 1., 0., 1., 1)
             call write_label_lplot(100,94,c33_label,a9time
-     1                            ,namelist_parms,i_overlay,'sound')
+     1                            ,plot_parms,namelist_parms
+     1                            ,i_overlay,'sound')
         elseif(box_low .eq. 0.2)then
             call set(0., 1., 0., 1.
      1              ,0., 1., 0., 1., 1)
             call write_label_lplot(100,94,c33_label,a9time
-     1                            ,namelist_parms,i_overlay,'sound')
+     1                            ,plot_parms,namelist_parms
+     1                            ,i_overlay,'sound')
         endif
 
         write(6,*)' Sounding has been plotted...'
