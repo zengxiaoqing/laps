@@ -52,7 +52,7 @@ CONTAINS
     REAL, INTENT(IN)       :: usig(nx,ny,nz)  ! U on sigma
     REAL, INTENT(IN)       :: vsig(nx,ny,nz)  ! V on sigma
     REAL, INTENT(IN)       :: zsig(nx,ny,nz)  ! Z on sigma
-    REAL, INTENT(IN)       :: pblhgt(nx,ny,nz)
+    REAL, INTENT(IN)       :: pblhgt(nx,ny)
     REAL, INTENT(IN)       :: topo(nx,ny)
     REAL, INTENT(OUT)      :: vent_ind(nx,ny)
 
