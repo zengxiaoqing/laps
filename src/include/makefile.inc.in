@@ -34,6 +34,9 @@ LIBPATHFLAG=@LIBPATHFLAG@
 LAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -llaps
 DBLAPSLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib -ldebuglaps
 
+BGDATALIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/bgdata -lbgdata
+DBBGDATALIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/bgdata -ldebugbgdata
+
 MTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -lmthermo
 DBMTHERMOLIB=$(LIBPATHFLAG)$(LAPSROOT)/src/lib/mthermo -ldebugmthermo
 
