@@ -320,6 +320,8 @@ cdis
 
         ioffm = 1 ! Don't plot label stuff in conrec
 
+        igrid=0
+
         lapsplot_pregen = .true.
 
 c read in laps lat/lon and topo
@@ -669,7 +671,7 @@ c read in laps lat/lon and topo
      1  /
      1  /'           cv (cloud cover contours)'
      1  /'           rf (reflectivity-graphic), ri (ref-image)'
-     1  //'     Difference field: [dif-i] '
+     1  //'     Difference field: [df-i]  '
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
@@ -696,42 +698,44 @@ c read in laps lat/lon and topo
         call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh,
      1                 NX_L,NY_L,NX_C,r_missing_data)
 
-        if(c_field(1:3) .eq. 'dif')then
+        if(c_field(1:2) .eq. 'df')then
             write(6,*)' Plotting difference field of last two entries'       
-            call diff(field_vert,field_vert_buf,field_vert_diff
+            call diff(field_vert,field_vert_buf,field_vert ! _diff
      1               ,NX_C,NZ_C)       
 
             c33_label = 'difference field'
 
             scale = 1.
 
-            if(c_field(4:4) .ne. 'i')then ! contour plot
-                call contour_settings(field_vert_diff,NX_C,NZ_C
-     1                               ,clow,chigh,cint
-     1                               ,zoom,density,scale)      
+            i_contour = 1
 
-                call plot_cont(field_vert_diff,scale,clow,chigh,cint,
-     1               asc9_tim_3dw,namelist_parms,       
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
-     1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
+!           if(c_field(4:4) .ne. 'i')then ! contour plot
+!               call contour_settings(field_vert_diff,NX_C,NZ_C
+!    1                               ,clow,chigh,cint
+!    1                               ,zoom,density,scale)      
 
-            else ! image plot
-                call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
-     1                          ,r_missing_data)
+!               call plot_cont(field_vert_diff,scale,clow,chigh,cint,
+!    1               asc9_tim_3dw,namelist_parms,       
+!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
 
-                call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax,'hues'
-     1                     ,n_image,scale)    
-                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
-     1                                ,namelist_parms,i_overlay,'xsect')       
-                call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
+!           else ! image plot
+!               call array_range(field_vert_diff,NX_C,NZ_C,rmin,rmax
+!    1                          ,r_missing_data)
 
-            endif
+!               call ccpfil(field_vert_diff,NX_C,NZ_C,rmin,rmax,'hues'
+!    1                     ,n_image,scale)    
+!               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+!               call setusv_dum(2hIN,7)
+!               call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
+!    1                                ,namelist_parms,i_overlay,'xsect')       
+!               call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
+
+!           endif
 
         else
             if(igrid .eq. 1)then
-                write(6,*)' Copying field to field_buf'
+                write(6,*)' Copying field_vert to field_buf'
                 call move(field_vert,field_vert_buf,NX_C,NZ_C)       
             endif
         endif
