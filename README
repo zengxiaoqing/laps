@@ -553,22 +553,20 @@
      
             ----   2.2.5  Geography databases  ---
 
-     Currently there are four mandatory geography databases required to
+     Currently there are three mandatory geography databases required to
      localize a LAPS domain. These are: 
 
 		1) terrain elevation 
 		2) landuse category 
-		3) land fraction
-		4) albedo climatology. 
+		3) albedo climatology. 
 
      The 30" terrain elevation data is found in the tar files for 
      'topo_30s'.
 
      The landuse data is global 30" data and required to compute a
      land/water mask. The mask is used during localization to force consistency
-     between the other geography data at land-water boundaries.
-
-     Land fraction is derived from the landuse data, using the water category.
+     between the other geography data at land-water boundaries. Land fraction 
+     is derived from the landuse data, using the water category.
 
      The global albedo climatology database has less resolution than either
      the terrain or landuse data.  The albedo is approximately 8.6 minutes
