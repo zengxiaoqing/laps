@@ -1,6 +1,7 @@
  &moisture_switch_nl
  RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 3600,
+ ENDIAN = 1,
  RAOB_RADIUS = 45000.0,
  GOES_SWITCH = 12,
  CLOUD_SWITCH = 0,
@@ -28,6 +29,7 @@ c   particular applicaton.  Here are the definitions of the current
 c   values used.
 c  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
+c  ENDIAN = 1 (big endian machines [default], =0 little endian machines)
 c  GOES_SWITCH = 12,  goes switch on/off assign sat
 c  CLOUD_SWITCH = 1, cloud usage on/off
 c  CLOUD_D = 1, cloud field presence is mandated to produce output
