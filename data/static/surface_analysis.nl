@@ -2,7 +2,7 @@
  use_lso_qc = 0,
  skip_internal_qc = 0,
  l_require_lso = .false.,
- itheta=5,
+ itheta=-1,
  redp_lvl=1500.,
  del=3.24e6,
  gam=.0001,
@@ -32,7 +32,7 @@ c
 c      l_require_lso: boolean flag to indicate whether an LSO file (with obs)
 c                     is required in order to generate an LSX surface analysis
 c
-c.......... itheta=5
+c.......... itheta,  
 c
 c.......... Surface Theta check:  Check to see that the surface potential
 c..........     temperatures are not greater than the potential temperature
