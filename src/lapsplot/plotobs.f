@@ -180,7 +180,7 @@ cdis
 
             write(6,*)' calling get_laps_3dgrid'
 
-            call get_laps_3dgrid(i4time_needed,200000000,i4time_found
+            call get_laps_3dgrid(i4time_needed,1200,i4time_found
      1          ,imax,jmax,kmax,ext,var_2d
      1          ,units_2d,comment_2d,grid_ra_vel,istatus)
 
