@@ -308,8 +308,8 @@
      prompt> ./configure
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
-     compiler with 'xlf' using the option --fc=xlf. For Solaris, you will want
-     to use --fc=f90.
+     compiler with 'xlf' using the command line option --fc=xlf. For Solaris, 
+     you will want to use --fc=f90, and possibly -cc=cc.
 
      'configure' supports many other options, the most important is the
      --prefix option which tells make where to install the laps system. 
@@ -432,7 +432,9 @@
      the merging operation performed within the localization (next step).
      This "template" procedure provides an end result equivalent to that 
      from the previous paragraph and is described to provide an alternative
-     method of modifying the parameters.
+     method of modifying the parameters. Templates can be a time saver, 
+     especially if you are managing parameters in multiple windows and are
+     performing frequent software updates.
 
 
                 ----   2.2.7  Running the Localization ---
