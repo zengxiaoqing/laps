@@ -45,13 +45,24 @@
        integer strcon
        integer rand_index
        integer dbz(nx,ny)
+       real dx1
+       integer nstep 
 
        istatus = 1
-       nxx=int(dx/1000.+0.01)*(nx-1)+1
-       nyy=int(dx/1000.+0.01)*(ny-1)+1
+       if (dx .lt. 1500.) then
+        dx1 = dx
+        nxx = nx
+        nyy = ny
+       else
+        nstep = int((dx+500.)/1000.) 
+        dx1 = dx /nstep
+        nxx = (nx-1)*nstep+1
+        nyy = (ny-1)*nstep+1
+       endif
        call get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,
      1                  pres_3d,temp_3d,str_con_index,
-     1                  radar_2d_max,r_miss,ier,index_random)
+     1                  radar_2d_max,r_miss,ier,index_random,
+     1                  dx1)
        if( ier .eq. 0) then
         write(*,*)'Can not seprate convection and stratiform region'
         istatus = 0
@@ -153,14 +164,14 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            ratio_radar=vvmax / depth / 1.1
            if(ratio_radar .gt. ratio) ratio = ratio_radar
           endif
-!         else          ! for rand_index = 1
-!          ratio_radar=0.
-!          depth = ztop - zbase
-!          if(radar_ref_max .gt. 0. ) then
+         else          ! for rand_index = 1
+          ratio_radar=0.
+          depth = ztop - zbase
+          if(radar_ref_max .gt. 0. ) then
 !           vvmax=4.32*radar_ref_max**0.0714286
-!           ratio_radar=vvmax / depth / 1.1
+           ratio_radar=vvmax / depth / 1.1
 !           if(ratio_radar .gt. ratio) ratio = ratio_radar
-!          endif
+          endif
          endif
  
          Do k = 1, ktop
@@ -280,7 +291,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 
           subroutine get_con_str(nx,ny,nz,nxx,nyy,radar_ref_3d,pres_3d,
      1                  temp_3d,str_con_index,radar_2d_max,r_miss,ier,
-     1                  index_random) 
+     1                  index_random,dx1) 
 !
 !        Description : Interpolate radar reflectivity to 1 km
 !                      resolution, then call dfconstr to define
@@ -311,6 +322,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 !                                              devide_random
 !                                           =2 random number greater than 
 !                                              devide_random
+!        I      dx1            real         grid size of small resolution
 !
           implicit none
           integer nx, ny, nz, nxx, nyy
@@ -322,6 +334,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           real    radar_2d_max(nx,ny)
           real    r_miss
           real    devide_random
+          real    dx1
           integer ier
           integer i,j,k,ii,jj
           real    ref_2d(nxx,nyy)
@@ -382,7 +395,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            enddo
           enddo
 !
-!         interpolate to 1 km resolution
+!         interpolate to small resolution
 ! 
           
           do i = 1, nxx
@@ -456,7 +469,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            enddo
           enddo
 
-          call dfconstr(nxx,nyy,r_miss,ref_2d,icon,ierdf)
+          call dfconstr(nxx,nyy,r_miss,ref_2d,icon,ierdf,dx1)
           if (ierdf .eq. 0 ) then
            ier = 0
            return
@@ -505,8 +518,6 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 !             else
 !              str_con_index(ii,jj) = 1
 !             endif
-!             str_con_index(ii,jj) = iconmax
-!             str_con_index(ii,jj) = icon(i,j)
 !            endif
            enddo
           enddo 
@@ -594,7 +605,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
          end
 
                  
-          subroutine dfconstr(nx,ny,r_miss,ref_2d,icon,ier)
+          subroutine dfconstr(nx,ny,r_miss,ref_2d,icon,ier,dx1)
 !        
 !      Subroutine/Function : dfconstr
 !
@@ -614,6 +625,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 !                                           =2, convective region
 !        O        ier          integer      =0, failure
 !                                           =1, success
+!        I        dx1          real         grid size
 !        Original version: Shiow-Ming Deng
 !        Recently version: Jen-Hsin Teng in 15-Aug-2003
 !
@@ -624,11 +636,15 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
          integer  icon(nx,ny) 
          integer  i, j, nn, ii, jj
          real     dzmax, dzmin, sumdz, detz, gdz
+         real dx1
          integer  irr
+         integer  njump
          
          ier = 0
-         if( nx .lt. 30 .or. ny .lt. 30) then
+         njump = int(10000./dx1)
+         if( nx .lt. 3*njump .or. ny .lt. 3*njump) then
           write(*,*) 'Error in subroutine dfconstr.'
+          write(*,*) 'Your Domain is too small.'
           write(*,*) '   nx:',nx,'   ny:',ny
           return
          endif
@@ -641,8 +657,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           enddo
          enddo
 
-         do 100 j = 11, ny-10, 1
-          do 100 i = 11, nx-10, 1
+         do 100 j = njump+1, ny-njump, 1
+          do 100 i = njump+1, nx-njump, 1
            if(ref_2d(i,j) .eq. r_miss) go to 100
            ier = 1
            if(ref_2d(i,j) .lt. dzmin ) then
@@ -656,8 +672,8 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
            icon(i,j) = 1
            sumdz = 0.
            nn = 0
-           do jj = j-10, j+10, 1
-            do ii = i-10, i+10, 1
+           do jj = j-njump, j+njump, 1
+            do ii = i-njump, i+njump, 1
              irr=(jj-j)**2+(ii-i)**2
              if (irr .le. 100) then
                nn = nn + 1
