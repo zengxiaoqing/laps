@@ -254,6 +254,8 @@ cdis
             write(6,*)' Calling fire_fields'
             call fire_fields(NX_L,NY_L,NZ_L,temp_3d,td_3d_k          ! I
      1                      ,u_3d,v_3d                               ! I
+     1                      ,temp_sfc_k,pres_sfc_pa                  ! I
+!    1                      ,rh_sfc,u_sfc,v_sfc                      ! I
      1                      ,r_missing_data,i4time                   ! I
      1                      ,istatus)                                ! O
 
