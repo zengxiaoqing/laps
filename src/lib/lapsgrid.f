@@ -648,6 +648,29 @@ c ---------------------------------------------------------------------
       return
       end
 
+      subroutine get_vertical_grid(vert_grid,istatus)
+
+      include 'lapsparms.cmn' ! standard_latitude, standard_latitude2
+      include 'grid_fname.cmn'! grid_fnam_common
+
+      character*40 vert_grid
+
+!     This routine accesses the vertical_grid variables from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      vert_grid = vertical_grid
+
+      istatus = 1
+      return
+      end
+
 
       subroutine get_maxstns(maxstns,istatus)
 

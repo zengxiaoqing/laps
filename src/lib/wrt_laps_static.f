@@ -104,7 +104,8 @@ C ****  Error trapping.
 C
 930   if (flag .ne. 1)
      1write(6,*) 
-     1'Error getting info from nest7grid.parms..write aborted.'
+     1'Error getting info from ',laps_dom_file(1:dom_len),
+     1'.parms..write aborted.'
       status = ERROR(2)
       goto 999
 C
@@ -129,8 +130,9 @@ C
       goto 999
 C
 980   if (flag .ne. 1)
-     1write(6,*) 'x and y values in nest7grid.cdl do not match imax
-     1and jmax in nest7grid.parms...write aborted.'
+     1write(6,*) 'x and y values in ',laps_dom_file(1:dom_len),
+     1'.cdl do not match imax and jmax in ',laps_dom_file(1:dom_len),
+     1'.parms...write aborted.'
       status = ERROR(2)
       goto 999
 C

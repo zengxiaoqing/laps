@@ -45,3 +45,26 @@ c
 c
         return
         end
+c
+c===============================================================================
+c
+      subroutine zero3d(a,nx,ny,nz)
+c
+      implicit none
+c
+      integer   nx,ny,nz,i,j,k
+c
+      real*4 a(nx,ny,nz)
+c_______________________________________________________________________________
+c
+      do k=1,nz
+      do j=1,ny
+      do i=1,nx
+         a(i,j,k)=0.
+      enddo
+      enddo
+      enddo
+c
+      return
+      end
+
