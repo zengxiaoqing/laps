@@ -930,9 +930,16 @@ C       EW SLICES
         do k=1,KCLOUD
             rlevel = height_to_zcoord2(cld_hts(k),heights_3d
      1                   ,NX_L,NY_L,NZ_L,NX_L/2,NY_L/2,istatus)   
-            cld_pres_1d(k) = pressure_of_rlevel(rlevel)
-            write(6,102)k,cld_pres_1d(k),istatus
-102         format(1x,i3,f10.1,i2)
+
+            if(rlevel .le. float(NZ_L))then
+                cld_pres_1d(k) = pressure_of_rlevel(rlevel)
+            else
+                cld_pres_1d(k) = 0. ! Cloud height level above pressure grid
+            endif
+
+            write(6,102)k,cld_hts(k),cld_pres_1d(k),istatus
+102         format(1x,i3,2f10.1,i2)
+
         enddo ! k
 
         ext = 'lc3'

@@ -695,17 +695,16 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
         function zcoord_of_pressure(pres_pa)
 
-cdoc    Convert pressure to a real (fractional) level. Being phased out?
+cdoc    Convert pressure to a real (fractional) level. 
+cdoc    Works only for constant pressure levels.
 
         real*4, allocatable, dimension(:) :: pres_1d
 
-        integer*4 level, istatus, istat_alloc
+        logical ltest_vertical_grid
 
-!       if(ltest_vertical_grid('HEIGHT'))then
+        if(ltest_vertical_grid('HEIGHT'))then
 
-!       elseif(ltest_vertical_grid('PRESSURE'))then
-
-        if(.true.)then
+        elseif(ltest_vertical_grid('PRESSURE'))then
             call get_laps_dimensions(nk,istatus)
             if(istatus .ne. 1)stop
 
@@ -734,7 +733,7 @@ cdoc    Convert pressure to a real (fractional) level. Being phased out?
 
         else
             write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
+     1               ,' zcoord_of_pressure supports PRESSURE or HEIGHT'  
             istatus = 0
             return
 
@@ -748,27 +747,21 @@ cdoc    Convert pressure to a real (fractional) level. Being phased out?
         function zcoord_of_logpressure(pres_pa)
 
 cdoc    Convert pressure to a real (fractional) level in log space. 
-cdoc    Being phased out?
-
-        implicit real*4 (a-z)
-
-        include 'lapsparms.cmn'
+cdoc    Works only for constant pressure levels.
 
         logical ltest_vertical_grid
-
-        integer istatus
-
-        call get_config(istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
-        endif
 
         if(ltest_vertical_grid('HEIGHT'))then
 
         elseif(ltest_vertical_grid('PRESSURE'))then
-            rz = (PRESSURE_0_L - pres_pa) / PRESSURE_INTERVAL_L
+            call get_r_missing_data(r_missing_data,istatus)
+            
+            rz = zcoord_of_pressure(pres_pa)
+
+            if(rz .eq. r_missing_data)then
+                zcoord_of_logpressure = r_missing_data
+                return
+            endif
 
             pres_low  = pressure_of_level(int(rz))
             pres_high = pressure_of_level(int(rz)+1)
