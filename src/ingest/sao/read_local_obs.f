@@ -35,7 +35,7 @@ c
      +     seaLevelPressure(recNum), stationPressure(recNum),
      +     temperature(recNum), visibility(recNum), windDir(recNum),
      +     windDirMax(recNum), windGust(recNum), windSpeed(recNum),
-     +     seaSurfaceTemperature
+     +     seaSurfaceTemperature(recNum)
       real filval, misval
 
       double precision observationTime(recNum), rhChangeTime(recNum),
@@ -158,26 +158,26 @@ C
 C     Variable        NETCDF Long Name
 C      dewpoint     "sea surface temperature" 
 C
-        nf_status = NF_INQ_VARID(nf_fid,'seaSurfaceTemperature',nf_vid)       
+        nf_status = NF_INQ_VARID(nf_fid,'seaSurfaceTemp',nf_vid)       
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in var seaSurfaceTemperature'
+        print *,'in var seaSurfaceTemp'
       endif
         nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,seaSurfaceTemperature)       
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'in NF_GET_VAR_ seaSurfaceTemperature '
+        print *,'in NF_GET_VAR_ seaSurfaceTemp '
       endif
         nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
       if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
-         print *, ' in var seaSurfaceTemperature'
+         print *, ' in var seaSurfaceTemp'
       endif
       call ck_array_real(seaSurfaceTemperature, recNum, filval, badflag)       
        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
       if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
-         print *, ' in var seaSurfaceTemperature'
+         print *, ' in var seaSurfaceTemp'
       endif
       call ck_array_real(seaSurfaceTemperature, recNum, misval, badflag)       
 C
