@@ -944,7 +944,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            and can be processed by LAPS ingest to appear in the PRO file.
 
      RAOBs (snd):
-           FSL NIMBUS, WFO Advanced, or AFWA databases. 
+           FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
 
      Satellite derived soundings (snd):
            AFWA database format. 
@@ -952,7 +952,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      Cloud Drift Winds (cdw):
            We are ingesting the ASCII satellite cloud-drift wind files
            for use in the wind analysis. These come from NESDIS (via NIMBUS)
-           as well as from AFWA.
+           as well as from CWB and AFWA.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -2168,7 +2168,7 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 <pre>
 Inputs:
 	GOES 8/9 cloud drift winds in NESDIS (ASCII) format
-        AFWA format also allowed.
+        AFWA & CWB formats are also allowed.
 
 Parameter namelist file: 'static/cloud_drift.nl'
 
