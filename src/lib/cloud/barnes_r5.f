@@ -145,10 +145,10 @@ cdis
               if(cld_snd(n,k) .eq. r_missing_data) go to 233
 
 !             Test if out of bounds of established perimeter around LAPS domain
-              if(i_snd(n) .lt. IX_LOW .or. i_snd(n) .gt. IX_HIGH) go to 
-     1233
-              if(j_snd(n) .lt. IY_LOW .or. i_snd(n) .gt. IY_HIGH) go to 
-     1233
+              if(i_snd(n) .lt. IX_LOW .or. 
+     1           i_snd(n) .gt. IX_HIGH) go to 233
+              if(j_snd(n) .lt. IY_LOW .or. 
+     1           j_snd(n) .gt. IY_HIGH) go to 233
 
               ncnt=ncnt+1
               iob(ncnt)=i_snd(n)
