@@ -122,35 +122,40 @@ c
       do i = 1,numoffiles
          j=index(c_filename(i),' ')-5
          jj=j-8
-         if(csat_id.eq.'goes08')then
-            if(c_filename(i)(j-1:j-1).eq.'4')then
-               call cv_asc_i4time(c_filename(i)(jj:j),i4time)
-               if(i4time.gt.i4time_latest)then
-                  i4time_latest = i4time
-               endif
-            endif
-         elseif(csat_id.eq.'goes09')then
-            if(c_filename(i)(j-1:j-1).eq.'0')then
-               call cv_asc_i4time(c_filename(i)(jj:j),i4time)
-               if(i4time.gt.i4time_latest)then
-                  i4time_latest = i4time
-               endif
-            endif
-         else
-            write(6,*)'Unknown Satellite Type - returning to main'
-            goto 1000
+         call cv_asc_i4time(c_filename(i)(jj:j),i4time)
+         if(i4time.gt.i4time_latest)then
+            i4time_latest = i4time
          endif
       enddo
-      call make_fnam_lp(i4time_latest,c_filetime_sat
-     +,mstatus)
-      c_filename_sat=c_sounding_path(1:n)//c_filetime_sat//'_sdr'
+
+c     do i = 1,numoffiles
+c        j=index(c_filename(i),' ')-5
+c        jj=j-8
+c        if(csat_id.eq.'goes08')then
+c           if(c_filename(i)(j-1:j-1).eq.'4')then
+c              call cv_asc_i4time(c_filename(i)(jj:j),i4time)
+c              if(i4time.gt.i4time_latest)then
+c                 i4time_latest = i4time
+c              endif
+c           endif
+c        elseif(csat_id.eq.'goes09')then
+c           if(c_filename(i)(j-1:j-1).eq.'0')then
+c              call cv_asc_i4time(c_filename(i)(jj:j),i4time)
+c              if(i4time.gt.i4time_latest)then
+c                 i4time_latest = i4time
+c              endif
+c           endif
+c        else
+c           write(6,*)'Unknown Satellite Type - returning to main'
+c           goto 1000
+c        endif
+c     enddo
 
       if(i4time_proc-i4time_latest.gt.i_snddata_age)then
 c
 c put in wait for data here
 c
-         write(6,*)'Either data is too old or the correct sector'
-     &,' is not available.' 
+         write(6,*)'Data is old'
          write(6,*)'Returning to main without new sounder data'
          istatus = -1
          goto 1000
@@ -159,6 +164,10 @@ c
 c We have "current" data. Determine if it has already been processed.
 c Get latest lsr file (ie., in lapsprd/lsr)
 c
+      call make_fnam_lp(i4time_latest,c_filetime_sat
+     +,mstatus)
+      c_filename_sat=c_sounding_path(1:n)//c_filetime_sat//'_sdr'
+
       call get_file_time(c_lsr_dir,i4time_proc,
      +i4time_nearest_lsr)
 
