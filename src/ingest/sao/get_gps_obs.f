@@ -31,12 +31,12 @@ cdis
 cdis 
 c
 c
-	subroutine get_gps_obs(maxobs,maxsta,i4time,data_file,
-     &                      gps_format,
+	subroutine get_gps_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_gps_data,gps_format,
      &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
-     &                      nn,n_gps_g,n_gps_b,stations,
+     &                      nn,n_obs_g,n_obs_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
      &                      store_3,store_3ea,store_4,store_4ea,
@@ -52,20 +52,29 @@ c
 c*****************************************************************************
 c
 	include 'netcdf.inc'
-	include 'surface_obs.inc'
 c
-c.....  Read arrays.
+c.....  Input variables/arrays.
 c
-        integer maxobs,maxsta
+        integer maxobs ! raw data file
+        integer maxsta ! processed stations for LSO file
+        character  path_to_gps_data*(*)
+c
+c.....  Local variables/arrays
+c
+        real    lat(ni,nj), lon(ni,nj)
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs)
-!	real*4  dd(maxobs), ff(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs)
-!	real*4  vis(maxobs), dp(maxobs)
-!	real*4  pcp1(maxobs), pcp6(maxobs), pcp24(maxobs)
-!	real*4  equivspd(maxobs), sea_temp(maxobs), t_wet(maxobs)
-        real    lat(ni,nj), lon(ni,nj)
+
+	integer*4  i4time_ob, before, after, wmoid(maxobs)
+	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
+
+        character*9 a9time_file
+	character  stname(maxobs)*8, save_stn(maxobs)*8
+	character  data_file*255, timech*9, time*4, gps_format*(*)
+	character  weather(maxobs)*25, wx(maxsta)*25
+	character  reptype(maxobs)*6, atype(maxobs)*6
 c
 c.....  Output arrays.
 c
@@ -78,15 +87,8 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  i4time_ob, before, after, wmoid(maxobs)
-	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 	integer    recNum, nf_fid, nf_vid, nf_status
-c
-	character  stname(maxobs)*8, save_stn(maxobs)*8
-	character  data_file*(*), timech*9, time*4, gps_format*(*)
 	character  stations(maxsta)*20, provider(maxsta)*11
-	character  weather(maxobs)*25, wx(maxsta)*25
-	character  reptype(maxobs)*6, atype(maxobs)*6
 	character  store_cldamt(maxsta,5)*4
 c
 c
@@ -97,6 +99,15 @@ c
 c.....	Set jstatus flag for the gps data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_box_size(box_size,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -107,12 +118,17 @@ c
 c
 c.....	Zero out the counters.
 c
-	n_gps_g = 0		! # of gps obs in the laps grid
-	n_gps_b = 0		! # of gps obs in the box
+	n_obs_g = 0		! # of gps obs in the laps grid
+	n_obs_b = 0		! # of gps obs in the box
 
-!       call s_len(gps_format, len_gps_format)
-!       if(gps_format(1:len_gps_format) .eq. 'FSL')then ! FSL NetCDF format
-        if(.true.)then ! FSL NetCDF format
+        call s_len(gps_format, len_gps_format)
+        if(gps_format(1:len_gps_format) .eq. 'NIMBUS')then ! FSL NetCDF format
+
+            i4time_file = i4time_sys - 900
+            call make_fnam_lp(i4time_file,a9time_file,istatus)
+            call s_len(path_to_gps_data,len_path)
+	    data_file = path_to_gps_data(1:len_path)//a9time_file
+     1                                              //'0100o'     
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c.....      If not there, return.
@@ -122,6 +138,10 @@ c
 	    if(nf_status.ne.NF_NOERR) then
 	       print *, NF_STRERROR(nf_status)
 	       print *, data_file
+               go to 990
+            else
+               write(6,*)' File opened successfully'
+               write(6,*)' Returning since GPS code is not tested yet'
                go to 990
 	    endif
 c
@@ -147,10 +167,14 @@ c
 
             i4time_offset=315619200
 c
+        else
+            write(6,*)' Unknown GPS format ',gps_format
+            go to 990
+
         endif
 
 	if(istatus .ne. 1) go to 990
-	n_gps_all = recNum
+	n_gps_raw = recNum
 c
 c.....  First check the data coming from the NetCDF file.  There can be
 c.....  "FloatInf" (used as fill value) in some of the variables.  These
@@ -161,7 +185,7 @@ c.....  checks for "FloatInf" and sets the variable to 'badflag'.  If the
 c.....  "FloatInf" is in the lat, lon, elevation, or time of observation,
 c.....  we toss the whole ob since we can't be sure where it is.
 c
-	do i=1,n_gps_all
+	do i=1,n_gps_raw
 c
 c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
 c.....  lat to badflag (-99.9), which causes the bounds check to think that
@@ -181,8 +205,8 @@ c
 c
 c.....  Set up the time window.
 c
-	before = i4time - itime_before
-	after  = i4time + itime_after
+	before = i4time_sys - itime_before
+	after  = i4time_sys + itime_after
 c
 c..................................
 c.....	Now loop over all the obs.
@@ -193,7 +217,7 @@ c
         box_idir = float( ni + ibox_points)  !buffer on east
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
-	do 125 i=1,n_gps_all
+	do 125 i=1,n_gps_raw
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -237,13 +261,13 @@ c
 	  save_stn(icount) = stname(i)  ! only one...save for checking
 c
  150	  nn = nn + 1
-	  n_gps_b = n_gps_b + 1     !station is in the box
+	  n_obs_b = n_obs_b + 1     !station is in the box
 c
 c.....  Check if its in the LAPS grid.
 c
           if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151  !off grid
           if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151  !off grid
-	  n_gps_g = n_gps_g + 1  !on grid...count it
+	  n_obs_g = n_obs_g + 1  !on grid...count it
  151	  continue
 c
 c.....	Figure out the cloud data.
@@ -369,8 +393,8 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 print *,' Found ',n_gps_b,' gps obs in the LAPS box'
-	 print *,' Found ',n_gps_g,' gps obs in the LAPS grid'
+	 print *,' Found ',n_obs_b,' gps obs in the LAPS box'
+	 print *,' Found ',n_obs_g,' gps obs in the LAPS grid'
 	 print *,' '
 	 jstatus = 1		! everything's ok...
 	 return

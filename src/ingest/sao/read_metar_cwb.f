@@ -13,10 +13,9 @@
 
       integer  maxSkyCover, recNum
 
-      character*6   autoStationType(recNum)
+      character*6   autoStationType(recNum), reportType(recNum)
+      character*8   dmyCover(10,recNum), skyCover( maxSkyCover, recNum)
       character*25  presWeather(recNum)
-      character*6   reportType(recNum)
-      character*8   skyCover( maxSkyCover, recNum)
       character*5   stationName(recNum)
 
       integer  pressChangeChar(recNum), wmoId(recNum)
@@ -36,25 +35,26 @@
       real  windSpeed(recNum)
       real  badflag
 
-      integer windQua(recNum), windGustQua(recNum)
-      integer temperatureQua(recNum), dewpointQua(recNum)
-      integer altimeterQua(recNum)
-      integer i, j, n, i4time
-
       character*(*) filename
       character*2   yy(recNum), m1(recNum), dd(recNum)
       character*2   hh(recNum), m2(recNum)
       character*10  time(recNum)
       character*9   a10_to_a9
 
+      integer windQua(recNum), windGustQua(recNum)
+      integer temperatureQua(recNum), dewpointQua(recNum)
+      integer altimeterQua(recNum)
+      integer i, j, n, i4time
+
+      real  dmyLayerBase(10,recNum)
+
       integer    stnNum, len_dir
       parameter  ( stnNum=4503 )
 
-      character*4  stn(stnNum)
-      real         stnElevation(stnNum)
+      character*100  stn_directory, stn_filename
+      character*4    stn(stnNum)
 
-      character*100  stn_directory
-      character*100  stn_filename
+      real         stnElevation(stnNum)
 
       istatus= 0
       n= 0
@@ -71,7 +71,7 @@
      *   hh(j), m2(j), stationName(j), latitude(j),
      *   longitude(j), windDir(j), windSpeed(j), windQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
-     *   ( skyCover(i,j), skyLayerBase(i,j), i=1,10 ), temperature(j),
+     *   ( dmyCover(i,j), dmyLayerBase(i,j), i=1,10 ), temperature(j),
      *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),
      *   altimeterQua(j), precip1Hour(j), yy(j), m1(j), dd(j)
          n= n+1
@@ -129,7 +129,11 @@ c      ----------       examing data quality and changing units       ---------
 
       do 30 j= 1,n
       do 30 i= 1,maxSkyCover
+         skyCover(i,j)= dmyCover(i,j)
+         skyLayerBase(i,j)= dmyLayerBase(i,j)
+
          if ( skyCover(i,j) .eq. '-99' )  skyCover(i,j)= '   '
+
          if ( skyLayerBase(i,j) .eq. -9999. )  then
                skyLayerBase(i,j)= badflag
          elseif ( skyLayerBase(i,j) .eq. 0. )  then
@@ -160,6 +164,7 @@ c               -------      dealing with lacking of data      -------
          snowCover(j)= badflag
          tempFromTenths(j)= badflag
       enddo
+
       go to 1000
 
 999   do j= 1,n
@@ -167,7 +172,7 @@ c               -------      dealing with lacking of data      -------
      *   hh(j), m2(j), stationName(j), latitude(j), longitude(j),
      *   windDir(j), windSpeed(j), windQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
-     *   ( skyCover(i,j), skyLayerBase(i,j), i=1,10), temperature(j),
+     *   ( dmyCover(i,j), dmyLayerBase(i,j), i=1,10), temperature(j),
      *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),
      *   altimeterQua(j), precip1Hour(j), yy(j), m1(j), dd(j), hh(j),
      *   m2(j), time(j), timeObs(j), elevation(j)

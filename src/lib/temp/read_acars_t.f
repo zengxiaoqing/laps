@@ -233,6 +233,15 @@ cdis
                             n_good_acars = n_good_acars + 1            
                             n_obs = n_obs + 1
 
+                            if(n_obs .gt. max_obs)then
+                                write(6,*)
+     1                        ' Error - too many obs in data structure'       
+                                write(6,*)
+     1                        ' Increase max_obs parameter from',max_obs     
+                                istatus = 0
+                                return
+                            endif
+
 !                           Insert ob into data structure
                             temp_obs(n_obs,i_ri) = i_grid
                             temp_obs(n_obs,i_rj) = j_grid

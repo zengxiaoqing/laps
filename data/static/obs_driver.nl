@@ -2,6 +2,7 @@
  path_to_metar='/public/data/metar/netcdf/',
  path_to_local_data='/public/data/ldad/mesonet/netcdf/',
  path_to_buoy_data='/data/fxa/point/maritime/netcdf/',
+ path_to_gps_data='/public/data/gpsmet/netcdf/',
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
  itime_before=900,
@@ -16,6 +17,8 @@ c
 c 'path_to_local_data' - Directory for local data
 c
 c 'path_to_buoy data' - Directory for buoy data
+c
+c 'path_to_gps data' - Directory for gps data
 c
 c 'metar_format' - Normally not specified here since it defaults to 
 c                  'c8_project' in 'nest7grid.parms'. An override to this 

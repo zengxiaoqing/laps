@@ -311,60 +311,7 @@ c
 
         call s_len(metar_format,len_metar_format)
 
-        if(metar_format(1:len_metar_format) .eq. 'FSL')then
-!           Select the hourly METAR file best suited to our obs time window
-!           Note that an hourly raw file contains obs from 15 before to 45 after
-            i4time_midwindow = i4time_sys + 
-     1                         (itime_after - itime_before) / 2      
-            i4time_metar_file = ((i4time_midwindow+900) / 3600) * 3600
-
-            call make_fnam_lp(i4time_metar_file,a9time_metar_file
-     1                       ,istatus)
-            if(istatus .ne. 1)return
-
-            do while(.not. exists .and. 
-     &                cnt .le. minutes_to_wait_for_metars)
-c        
-	        len_path = index(path_to_METAR,' ') - 1
-	        data_file_m = 
-     &	          path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
-c
- 	        len_path = index(path_to_buoy_data,' ') - 1
-	        filename13=fname9_to_wfo_fname13(filename9(1:9))
-	        data_file_b = 
-     &	          path_to_buoy_data(1:len_path)//filename13  
-c
-	        INQUIRE(FILE=data_file_m,EXIST=exists)
-
-                if(.not. exists) then ! Try WFO format
-	            filename13=fname9_to_wfo_fname13(a9time_metar_file)       
-
-	            len_path = index(path_to_METAR,' ') - 1
-	            data_file_m = path_to_METAR(1:len_path)//filename13       
-
-	            len_path = index(path_to_buoy_data,' ') - 1
-	            data_file_b = 
-     &                path_to_buoy_data(1:len_path) // filename13
-
-	            INQUIRE(FILE=data_file_m,EXIST=exists)
-		    if(.not. exists) then
-                        if(cnt .lt. minutes_to_wait_for_metars)then
-                            print*,'Waiting for file ', data_file_m
-                            call waiting_c(60)
-                        endif
-                        cnt = cnt+1               
-	            endif
-
-	        endif
-
-	    enddo ! While in waiting loop
-
-	    if(.not.exists) then
-	        print *,' WARNING: File not Found: ', data_file_m
-	        continue
-            endif
-
-        elseif(metar_format(1:len_metar_format) .eq. 'NIMBUS' ! Not yet used
+        if(    metar_format(1:len_metar_format) .eq. 'NIMBUS' ! Not yet used
      1    .or. metar_format(1:len_metar_format) .eq. 'WFO'        )then
 
 !           Select the hourly METAR file best suited to our obs time window
@@ -540,11 +487,12 @@ c
 c.....  Call the routine that reads the GPS data files, then get
 c.....  the data.
 c
-        if(.false.)then
-	    print*,'Getting GPS data ', data_file_b
+        if(.true.)then
+
+	    print*,'Getting GPS data...'
 c
-            call get_gps_obs(maxobs,maxsta,i4time_sys,data_file_b,       
-     &                      metar_format,
+            call get_gps_obs(maxobs,maxsta,i4time_sys,
+     &                      path_to_gps_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,       
      &                      lat,lon,ni,nj,grid_spacing,

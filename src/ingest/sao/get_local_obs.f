@@ -4,7 +4,7 @@ c
      &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
-     &                 nn,n_local_g,n_local_b,stations,
+     &                 nn,n_obs_g,n_obs_b,stations,
      &                 reptype,atype,weather,wmoid,
      &                 store_1,store_2,store_2ea,
      &                 store_3,store_3ea,store_4,store_4ea,
@@ -43,6 +43,7 @@ c
 c
 c.....  Local variables/arrays
 c
+        real    lat(ni,nj), lon(ni,nj)
 	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
 	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
 	real*8  ff_time(maxobs)
@@ -50,8 +51,7 @@ c
 	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
-        real    lat(ni,nj), lon(ni,nj)
-        integer*4  i4time_ob_a(maxobs)
+        integer*4  i4time_ob_a(maxobs), before, after
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
 c
@@ -66,7 +66,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  before, after, wmoid(maxsta)
+	integer*4  wmoid(maxsta)
 	integer    rtime
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
@@ -105,8 +105,8 @@ c
 c
 c.....	Zero out the counters.
 c
-        n_local_g = 0	        ! # of local obs in the laps grid
-        n_local_b = 0	        ! # of local obs in the box
+        n_obs_g = 0	        ! # of local obs in the laps grid
+        n_obs_b = 0	        ! # of local obs in the box
 c
 c.....  Get the data from the NetCDF file.  First, open the file.
 c.....  If not there, return to obs_driver.
@@ -167,7 +167,7 @@ c
      &         stn_type(ix), t_time(ix), t(ix), vis(ix),
      &         dd(ix), dd_time(ix), ddg(ix), ffg(ix), gust_time(ix), 
      &         ff(ix), ff_time(ix), badflag, istatus)
-c
+ 
 	    if(istatus .ne. 1)then
                 write(6,*)
      1          '     Warning: bad status return from READ_LOCAL'       
@@ -322,40 +322,40 @@ c
 	     save_stn(1) = stname(i)
 	     jfirst = 0
 	     go to 150
-	  endif
+	   endif
 c
-	  do k=1,icount
+	   do k=1,icount
              if(stname(i) .eq. save_stn(k)) then
                  write(6,*)' Rejecting duplicate ',i,k,stname(i)
      1                    ,' ',a9time_a(i),' ',a9time_a(k)
                  go to 125
              endif
-	  enddo !k
+	   enddo !k
 c
-	  icount = icount + 1
-	  save_stn(icount) = stname(i)  ! only one...save for checking
+	   icount = icount + 1
+	   save_stn(icount) = stname(i)  ! only one...save for checking
 c
- 150	  nn = nn + 1
+ 150	   nn = nn + 1
 
-          if(nn .gt. maxsta)then
+           if(nn .gt. maxsta)then
               write(6,*)' ERROR in get_local_obs: increase maxsta '
      1                 ,nn,maxsta
               stop
-          endif
+           endif
  
-	  n_local_b = n_local_b + 1     !station is in the box
+           n_obs_b = n_obs_b + 1     !station is in the box
 c
 c.....  Check if its in the LAPS grid.
 c
-          if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151 !off grid
-          if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151 !off grid
-	  n_local_g = n_local_g + 1  !on grid...count it
- 151	  continue
+           if(ri_loc.lt.1. .or. ri_loc.gt.float(ni)) go to 151 !off grid
+           if(rj_loc.lt.1. .or. rj_loc.gt.float(nj)) go to 151 !off grid
+           n_obs_g = n_obs_g + 1  !on grid...count it
+ 151	   continue
 c
 c.....	Figure out the cloud data.
 c.....     NOTE: Not currently reading cloud data from mesonets.
 c
-	  kkk = 0               ! number of cloud layers
+           kkk = 0               ! number of cloud layers
 c
 c
 c.....  Convert units for storage.  For those variables with a "change
@@ -595,26 +595,26 @@ c
 	 store_3(nn,3) = dirgust                ! wind gust dir (deg)
 	 store_3(nn,4) = spdgust                ! wind gust speed (kt)
 c
-	 store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
-	 store_4(nn,2) = stn_press              ! station pressure (mb)
-	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-	 store_4(nn,4) = badflag                ! 3-h press change character
+         store_4(nn,1) = alt(i)                 ! altimeter setting (mb)
+         store_4(nn,2) = stn_press              ! station pressure (mb)
+         store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
+         store_4(nn,4) = badflag                ! 3-h press change character
          store_4(nn,5) = badflag                ! 3-h press change (mb)
 c
-	 store_5(nn,1) = vis(i)                 ! visibility (miles)
-	 store_5(nn,2) = badflag                ! solar radiation 
-	 store_5(nn,3) = badflag                ! soil/water temperature
-	 store_5(nn,4) = badflag                ! soil moisture 
+         store_5(nn,1) = vis(i)                 ! visibility (miles)
+         store_5(nn,2) = badflag                ! solar radiation 
+         store_5(nn,3) = badflag                ! soil/water temperature
+         store_5(nn,4) = badflag                ! soil moisture 
 c
-	 store_6(nn,1) = badflag                ! 1-h precipitation
-	 store_6(nn,2) = badflag                ! 3-h precipitation
-	 store_6(nn,3) = badflag                ! 6-h precipitation
-	 store_6(nn,4) = badflag                ! 24-h precipitation
-	 store_6(nn,5) = badflag                ! snow cover
+         store_6(nn,1) = badflag                ! 1-h precipitation
+         store_6(nn,2) = badflag                ! 3-h precipitation
+         store_6(nn,3) = badflag                ! 6-h precipitation
+         store_6(nn,4) = badflag                ! 24-h precipitation
+         store_6(nn,5) = badflag                ! snow cover
 c
-	 store_7(nn,1) = float(kkk)             ! number of cloud layers
-	 store_7(nn,2) = badflag                ! 24-h max temperature
-	 store_7(nn,3) = badflag                ! 24-h min temperature
+         store_7(nn,1) = float(kkk)             ! number of cloud layers
+         store_7(nn,2) = badflag                ! 24-h max temperature
+         store_7(nn,3) = badflag                ! 24-h min temperature
 c
 c.....	Store cloud info if we have any. 
 c
@@ -633,15 +633,15 @@ c
 c
 c.....  That's it...lets go home.
 c
-	 print *,' Found ',n_local_b,' local obs in the LAPS box'
-	 print *,' Found ',n_local_g,' local obs in the LAPS grid'
-	 print *,' '
-	 jstatus = 1		! everything's ok...
-	 return
+	 print *,' Found ',n_obs_b,' local obs in the LAPS box'
+	 print *,' Found ',n_obs_g,' local obs in the LAPS grid'
+         print *,' '
+         jstatus = 1            ! everything's ok...
+         return
 c
- 990	 continue		! no data available
-	 jstatus = 0
-	 print *,' WARNING: No data available from GET_LOCAL_OBS'
-	 return
+ 990     continue               ! no data available
+         jstatus = 0
+         print *,' WARNING: No data available from GET_LOCAL_OBS'
+         return
 c
-	 end
+         end

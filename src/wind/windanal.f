@@ -240,7 +240,7 @@
 
 !              Stricter QC check for profilers
      1                       .OR. 
-     1         (speed_diff .gt. 15. .and. wt_p(i,j,k) .eq. weight_prof)
+     1         (speed_diff .gt. 22. .and. wt_p(i,j,k) .eq. weight_prof)
      1                                                                 )
 
 !       1       .OR. (abs(k-16) .le. 5 .and. (i .ne. 50 .or. j .ne. 14)) )

@@ -53,6 +53,12 @@
 
       istatus= 1
 
+c      ------   give initial values to avoid data stack problem  ------
+      do 5 j= 1,recNum
+      do 5 i= 1,maxSkyCover
+         skyCover(i,j)= "   "
+5        skyLayerBase(i,j)= badflag
+
       do j= 1,recNum
          read ( 1, 10, end=99, err=999 ) reportFlag(j), wmoId(j),
      ~               elevation(j), latitude(j), longitude(j),

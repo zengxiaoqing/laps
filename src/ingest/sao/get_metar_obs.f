@@ -225,7 +225,7 @@ c
             call s_len(path_to_metar,len_path)
 
 !           Read Metar Obs
-            maxSkyCover=10
+            maxSkyCover=6
             recNum = maxobs
 
 	    data_file = 
