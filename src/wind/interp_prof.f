@@ -91,11 +91,14 @@ cdis
      1                    +       ob_pr_v_obs(i_pr,i_obs-1) * fracl
 
 !               Correct for the time lag
+!               u_diff      = du/dt * [t(anal) - t(ob)]
                 u_interp = u_interp + u_diff
+
+!               v_diff      = dv/dt * [t(anal) - t(ob)]
                 v_interp = v_interp + v_diff
 
 !               Calculate direction and speed
-                call uv_to_disp(         u_interp,
+                call uv_to_disp( u_interp,
      1                           v_interp,
      1                           di_interp,
      1                           sp_interp)

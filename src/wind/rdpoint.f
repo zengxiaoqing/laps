@@ -247,6 +247,7 @@ cdis
      1                                    ,i4time,i4time_ob
      1                                    ,v_time_interp,v_diff,istatus)       
 
+!                       u_diff = du/dt * [t(ob) - t(anal)]
                         point_u(n_point_obs) = u_temp - u_diff
                         point_v(n_point_obs) = v_temp - v_diff
 
@@ -389,7 +390,7 @@ cdis
            istatus = -1
        endif
 
-       itlow = nint(rcycles - 0.5)
+       itlow = nint(rcycles - 0.5) ! round down to nearest integer
        itlow = min(itlow,NTMAX-1)
        itlow = max(itlow,NTMIN)
 
@@ -400,7 +401,8 @@ cdis
        field_interp = field_4d(i,j,k,itlow)  * (1.0 - frac_t)
      1              + field_4d(i,j,k,ithigh) * frac_t
 
-       field_diff = field_interp - field_4d(i,j,k,0)
+!      du/dt * [t(ob) - t(anal)]
+       field_diff = field_interp - field_4d(i,j,k,0) 
 
        istatus = 1
        return

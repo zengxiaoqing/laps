@@ -287,6 +287,9 @@ c
      1                                ,i4time_sys,i4time_ob_pr(i_pr)
      1                                ,u_time_interp,u_diff_term
      1                                ,istatus)
+
+!                   u_diff_term = du/dt * [t(ob) - t(anal)]
+!                   u_diff      = du/dt * [t(anal) - t(ob)]
                     u_diff = -u_diff_term
 
                     call get_time_term(v_mdl_bkg_4d,imax,jmax,kmax
@@ -295,6 +298,8 @@ c
      1                                ,i4time_sys,i4time_ob_pr(i_pr)
      1                                ,v_time_interp,v_diff_term
      1                                ,istatus)
+!                   v_diff_term = dv/dt * [t(ob) - t(anal)]
+!                   v_diff      = dv/dt * [t(anal) - t(ob)]
                     v_diff = -v_diff_term
 
                     call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,     ! I
