@@ -190,7 +190,11 @@ c
       write(6,805) i_first_scan,i_last_scan,i_tilt
   805 format(' REMAP_PROCESS > ifirst,ilast,tilt',4i5)
 
-      l_compress_output = .false.
+      call get_l_compress_radar(l_compress_output,i_status)
+      if(i_status .ne. 1)then
+          write(6,*)' Error in obtaining l_compress_radar'
+          return
+      endif
 
       rlat_radar = rlat_radar_cmn
       rlon_radar = rlon_radar_cmn
