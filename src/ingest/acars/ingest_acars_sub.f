@@ -1,6 +1,11 @@
 
-      subroutine get_acars_data(i4time_sys,ilaps_cycle_time,filename
-     1                                                     ,istatus)
+      subroutine get_acars_data(i4time_sys,ilaps_cycle_time
+     1                                    ,NX_L,NY_L
+     1                                    ,filename,istatus)
+
+!     Ken Dritz     15-Jul-1997      Changed LAPS_DOMAIN_FILE to 'nest7grid'
+!     Ken Dritz     15-Jul-1997      Removed include of lapsparms.for
+!     Steve Albers  22-Jul-1997      Added NX_L, NY_L to dummy argument list
 
 !.............................................................................
 
@@ -52,8 +57,6 @@ C*************************************
 
 !     Non-automatic declarations...............................................
 
-      include 'lapsparms.for'            ! NX_L, NY_L, LAPS_DOMAIN_FILE
-
       character*1 c1_dataDescriptor                 (NREC)
       equivalence(c1_dataDescriptor,dataDescriptor)
 
@@ -67,7 +70,7 @@ C*************************************
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
 
-      call get_domain_perimeter(NX_L,NY_L,LAPS_DOMAIN_FILE,lat_a,lon_a, 
+      call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
      1            topo_a,1.0,rnorth,south,east,west,istatus)
       if(istatus .ne. 1)then
           write(6,*)' Error in get_laps_perimeter'

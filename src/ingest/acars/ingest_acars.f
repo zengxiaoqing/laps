@@ -1,4 +1,7 @@
-      program ingest_acars
+
+!     Ken Dritz      15-Jul-1997        Added call to get_grid_dim_xy to get
+!                                       the values of NX_L, NY_L
+!     Ken Dritz      15-Jul-1997        Pass NX_L, NY_L to get_acars_data
 
 !     Input file 
       character*70 filename_in
@@ -9,24 +12,28 @@
       parameter(max_files = 3000)
       character*255 c_fnames(max_files)
       integer i4times(max_files)
-      integer i4time_file_earliest, i4time_file_latest
-      integer i_nbr_files_ret, istatus,ilaps_cycle_time
-      integer i,  len_dir_in
 
 !     Output file
       character*70 filename_out
       character*13 filename13
       character*31    ext
       character*50    directory
-      integer*4       len_dir, i4time_sys
+      integer*4       len_dir
 
       character*40 c_vars_req
       character*100 c_values_req
 
       call get_systime(i4time_sys,a9_time,istatus)
+      if(istatus .ne. 1)go to 999
 
-      i4time_sys = (i4time_sys/3600) * 3600
-      
+!     i4time = (i4time/3600) * 3600
+
+      call get_grid_dim_xy(NX_L,NY_L,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting horizontal domain dimensions'
+          go to 999
+      endif
+ 
       call get_laps_cycle_time(ilaps_cycle_time,istatus)
       if(istatus .eq. 1)then
           write(6,*)' ilaps_cycle_time = ',ilaps_cycle_time
@@ -34,6 +41,8 @@
           write(6,*)' Error getting laps_cycle_time'
           stop
       endif
+
+      lag_time_report = 3600
 
 !     Open output PIN file
       ext = 'pin'
@@ -76,7 +85,7 @@
 
 !         Test whether we want the NetCDF file for this time
           i4time_file_earliest = i4time_sys - (ilaps_cycle_time / 2)
-     1                                      - 3600      
+     1                                      - lag_time_report
           i4time_file_latest =   i4time_sys + (ilaps_cycle_time / 2) 
           
           if(i4times(i) .lt. i4time_file_earliest)then
@@ -89,12 +98,12 @@
 
 !             Read from the NetCDF pirep file and write to the opened PIN file
               call get_acars_data(i4time_sys,ilaps_cycle_time
+     1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
           endif
       enddo
 
 !     Read from the "latest" NetCDF pirep file and write to the opened PIN file
-
       filename_in = dir_in(1:len_dir_in)//'latest_q.cdf'
       write(6,*)' Opening ',filename_in
       open(21,file=filename_in,status='old',err=980)
@@ -102,6 +111,7 @@
 
       write(6,*)' Reading from "latest_q.cdf" acars file'
       call get_acars_data(i4time_sys,ilaps_cycle_time
+     1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
 
       go to 990
