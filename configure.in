@@ -60,7 +60,7 @@ AC_PROG_GENERIC(NETCDF, ncdump, libnetcdf.a, netcdf.inc)
 dnl
 dnl Find path to perl  ***required by LAPS***
 dnl
-AC_CHECK_PROGS(PERL,perl5 perl,,$PATH)
+AC_CHECK_PROGS(PERL,perl perl5,,$PATH)
 AC_PATH_PROG(PERL,$PERL )
 
 dnl
