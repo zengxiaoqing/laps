@@ -46,9 +46,9 @@ C
 C       This file shows examples of how the use PROF_CDF subroutines to read
 C       WPDN 60-minute RASS data in netCDF files.
 C
-        integer cdfid,status,i,j,max_levels,max_profilers,n_profilers
+        integer cdfid,status,i,j,max_levels,max_stations,n_profilers
         parameter (max_levels = 100)
-        parameter (max_profilers = 1000)
+        parameter (max_stations = 1000)
 
         real temp(max_levels),prs
         character*1 qc_flag(max_levels)
@@ -96,7 +96,7 @@ C
         character*100 c_values_req
 
         character*31    ext
-        character*6 prof_name(max_profilers)
+        character*6 prof_name(max_stations)
 
         character*9 a9_timeObs
         double precision timeObs
@@ -241,7 +241,7 @@ C
         varid = NCDID(cdfid,'recNum',status)
         CALL NCDINQ(cdfid,varid,dimname,n_profilers,status)
         write(6,*)' # of BLP RASSs = ',n_profilers
-        if (n_profilers .gt. max_profilers) then
+        if (n_profilers .gt. max_stations) then
           write(6,*)' Too many profilers to process'
           istatus = 0
           return
@@ -255,7 +255,7 @@ C
         count(2) = 1
         count(1) = staNamLen
 
-!       do ista = 1,max_profilers
+!       do ista = 1,max_stations
 
         do ista = 1,n_profilers
 

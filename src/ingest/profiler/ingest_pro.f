@@ -48,6 +48,7 @@ cdis
             write(6,*)
             write(6,*)' Running WPDN (NIMBUS/WFO) profiler ingest'       
             call ingest_pro(i4time,NX_L,NY_L,j_status)
+            write(6,*)' Return from WPDN (NIMBUS/WFO) profiler ingest'              
 
 !       else
 !           write(6,*)' Not on the hour, no WPDN profiler ingest run'       
@@ -57,6 +58,7 @@ cdis
         write(6,*)
         write(6,*)' Running BLP (NIMBUS) profiler ingest'
         call ingest_blppro(i4time,NX_L,NY_L,j_status)
+        write(6,*)' Return from BLP (NIMBUS) profiler ingest'
 
  999    continue
 

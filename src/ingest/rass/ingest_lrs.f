@@ -47,10 +47,12 @@ cdis
         write(6,*)
         write(6,*)' Running WPDN (NIMBUS) Rass ingest'
         call ingest_lrs(i4time,NX_L,NY_L,j_status)
+        write(6,*)' Return from WPDN (NIMBUS) Rass ingest'
 
         write(6,*)
         write(6,*)' Running BLP (NIMBUS) Rass ingest'
         call ingest_blplrs(i4time,NX_L,NY_L,j_status)
+        write(6,*)' Return from BLP (NIMBUS) Rass ingest'
 
 999     continue
         end

@@ -102,7 +102,7 @@ C
 C       ERROR_FLAG      Error handling flag.
 C
         integer max_profilers
-        parameter (max_profilers = 40)
+        parameter (max_profilers = 200)
 C
         include 'prof_cdf_common.inc'
         include 'netcdf.inc'
@@ -227,7 +227,7 @@ C
 C       ERROR_FLAG      Error handling flag.
 C
         integer max_profilers
-        parameter (max_profilers = 40)
+        parameter (max_profilers = 200)
 C
         include 'prof_cdf_common.inc'
         include 'netcdf.inc'
@@ -238,6 +238,18 @@ C                                               ! MAXNCNAM parameter.
 C
         integer i,j,varid,start(2),count(2)
         integer ndims,nvars,ngatts,recdim
+
+        logical l_exist
+
+        write(6,*)' Subroutine PROF_CDF_OPEN'
+
+        inquire(file=file,exist=l_exist)
+        if(.not. l_exist)then
+            write(6,*)' Warning in PROF_CDF_OPEN, file does not exist: '
+     1               ,file 
+            status=-7
+            return
+        endif ! l_exist
 C
 C       Unless non-default error handling has been set by a call to
 C       PROF_CDF_SET_ERROR set the default error handling.
@@ -270,6 +282,14 @@ C       Get the number of records (stations) in the file.
 C
                  varid = NCDID(cdfid,'recNum',status)
                  CALL NCDINQ(cdfid,varid,dimname,nrec_list(i),status)
+                 
+                 if(nrec_list(i) .gt. max_profilers)then
+                     write(6,*)' Too many profilers in PROF_CDF_OPEN '       
+     1                        ,nrec_list(i),max_profilers
+                     status=-7
+                     return
+                 endif
+
                  if(status.eq.0.and.nrec_list(i).gt.0)then
 C
 C       Get the station names.  (Have to do this in a loop as I can't get
@@ -456,7 +476,7 @@ C
 C       ERROR_FLAG      Error handling flag.
 C
         integer max_profilers
-        parameter (max_profilers = 40)
+        parameter (max_profilers = 200)
  
         include 'prof_cdf_common.inc'
         include 'netcdf.inc'
@@ -613,7 +633,7 @@ C
 C       ERROR_FLAG      Error handling flag.
 C
         integer max_profilers
-        parameter (max_profilers = 40)
+        parameter (max_profilers = 200)
 C
         include 'prof_cdf_common.inc'
         include 'netcdf.inc'
@@ -705,7 +725,7 @@ C
 C       ERROR_FLAG      Error handling flag.
 C
         integer max_profilers
-        parameter (max_profilers = 40)
+        parameter (max_profilers = 200)
  
         include 'prof_cdf_common.inc'
  

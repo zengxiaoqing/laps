@@ -50,7 +50,7 @@ C       WPDN 60-minute RASS data in netCDF files.
 C
         integer cdfid,status,i,j,max_levels,max_stations
         parameter (max_levels = 100)
-        parameter (max_stations = 100)
+        parameter (max_stations = 200)
 
         real temp(max_levels),prs
         character*1 qc_flag(max_levels)
