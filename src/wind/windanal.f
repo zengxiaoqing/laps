@@ -1,3 +1,4 @@
+
        subroutine laps_anl(uobs,vobs,n_radars,
      1      vr_obs_unfltrd,vr_nyq,v_nyquist_in
      1     ,upass1,vpass1                                        ! Output
@@ -106,12 +107,14 @@
       logical  l_3d
 
 !     These are the weights of the various data types (filling the 3D array)
-      real*4 weight_meso,weight_sao,weight_pirep,weight_prof,weight_rada
-     1r ! Input
+      real*4 weight_meso,weight_sao,weight_pirep,weight_prof
+     1      ,weight_radar ! Input
 
       integer*4 istatus         ! (1 is good)                          ! Output
 
       integer*4  n_fnorm
+
+      character*3 c3_string
 
       dimension fnorm(0:n_fnorm)
 
@@ -147,54 +150,67 @@
 !     and spread the obs vertically.
 
       write(6,91)
-91    format(1x,' Subtracting the background from the obs, then spreadin
-     1g the'
-     1  ,' obs vertically.'
-     1  /'      i   j   k  kk  udf  vdf       uob  vob     ubg   vbg  sp
-     1  wt')
+91    format(1x,' Subtracting the background from the obs'
+     1         ,' then spreading the obs vertically.'
+     1         /'       i    j   k  kk   udf   vdf     '
+     1         ,'uob   vob     ubg   vbg vcdf  wt')
+
+      n_qc_pirep_bad = 0
+      n_qc_meso_bad = 0
+      n_qc_sao_bad = 0
+      n_qc_prof_bad = 0
+      n_qc_total_bad = 0
+
+      n_qc_pirep_good = 0
+      n_qc_meso_good = 0
+      n_qc_sao_good = 0
+      n_qc_prof_good = 0
+      n_qc_total_good = 0
+
+      iwrite = 1
 
       qc_thresh = 30. ! Threshold speed for throwing out the ob
 
       do j=1,jmax
       do i=1,imax
         do k = 1,kmax
-!         wt_p_spread(i,j,k) = wt_p(i,j,k)                         ! Initialize the local array
+!         wt_p_spread(i,j,k) = wt_p(i,j,k)        ! Initialize the local array
 
           if(wt_p(i,j,k) .ne. r_missing_data)then
-            if(uobs(i,j,k) .ne. r_missing_data          .and.
-     1       vobs(i,j,k) .ne. r_missing_data                        )the
-     1n
+            if(uobs(i,j,k) .ne. r_missing_data      .and.
+     1         vobs(i,j,k) .ne. r_missing_data              )then
 
-              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2 + v_laps_bkg(i,j,k)
-     1**2)
+              speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2 
+     1                        + v_laps_bkg(i,j,k)**2)
 
               uobs_diff(i,j,k) = uobs(i,j,k) - u_laps_bkg(i,j,k)
               vobs_diff(i,j,k) = vobs(i,j,k) - v_laps_bkg(i,j,k)
-              speed_diff = sqrt(uobs_diff(i,j,k)**2  + vobs_diff(i,j,k)*
-     1*2)
+              speed_diff = sqrt(uobs_diff(i,j,k)**2  
+     1                        + vobs_diff(i,j,k)**2)
 
 !             Apply QC check to the OB against the background analysis
               if(
-!                    Make sure we actually have a real reference background
-     1    (speed_bkg .gt. 0.) .and.
+!                Make sure we actually have a real reference background
+     1           (speed_bkg .gt. 0.) .and.
 
-!                    General QC check
-     1    (speed_diff .gt. qc_thresh
+!                General QC check
+     1           (speed_diff .gt. qc_thresh
 
-!                    Stricter QC check for pireps
-     1      .or. (speed_diff .gt. 10. .and. wt_p(i,j,k) .eq. weight_pire
-     1p)
+!              Stricter QC check for pireps
+     1                       .OR. 
+     1         (speed_diff .gt. 10. .and. wt_p(i,j,k) .eq. weight_pirep)
 
-!                    Stricter QC check for profilers
-     1      .or. (speed_diff .gt. 15. .and. wt_p(i,j,k) .eq. weight_prof
-     1)
-     1                                                               )
+!              Stricter QC check for profilers
+     1                       .OR. 
+     1         (speed_diff .gt. 15. .and. wt_p(i,j,k) .eq. weight_prof)
+     1                                                                 )
 
 !       1       .OR. (abs(k-16) .le. 5 .and. (i .ne. 50 .or. j .ne. 14)) )
      1                                                          )then
 
                 ! Throw out the ob
                   if(wt_p(i,j,k) .eq. weight_pirep)then
+                      n_qc_pirep_bad = n_qc_pirep_bad + 1
                       write(6,101,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -204,10 +220,11 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-101                   format(' Prp QCed out - ',2i4,i3,3(2x,2f5.0),f5.0,
-     1f5.2)
+101                   format(' Prp QCed out - ',2i5,i3,3(2x,2f5.0)
+     1                                         ,f5.0,f5.2)
 
                   elseif(wt_p(i,j,k) .eq. weight_meso)then
+                      n_qc_meso_bad = n_qc_meso_bad + 1
                       write(6,111,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -217,10 +234,11 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-111                  format(' Mso QCed out - ',2i4,i3,3(2x,2f5.0),f5.0,f
-     15.2)
+111                  format(' Mso QCed out - ',2i5,i3,3(2x,2f5.0)
+     1                                        ,f5.0,f5.2)
 
                   elseif(wt_p(i,j,k) .eq. weight_sao)then
+                      n_qc_sao_bad = n_qc_sao_bad + 1
                       write(6,121,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -230,10 +248,11 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-121                  format(' Sao QCed out - ',2i4,i3,3(2x,2f5.0),f5.0,f
-     15.2)
+121                  format(' Sao QCed out - ',2i5,i3,3(2x,2f5.0)
+     1                                        ,f5.0,f5.2)
 
                   elseif(wt_p(i,j,k) .eq. weight_prof)then
+                      n_qc_prof_bad = n_qc_prof_bad + 1
                       write(6,131,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -243,8 +262,8 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-131                  format(' Prf QCed out - ',2i4,i3,3(2x,2f5.0),f5.0,f
-     15.2)
+131                  format(' Prf QCed out - ',2i5,i3,3(2x,2f5.0)
+     1                                        ,f5.0,f5.2)
 
                   endif ! Type of OB to write out
 
@@ -253,8 +272,43 @@
                   vobs_diff(i,j,k) = r_missing_data
                   wt_p(i,j,k) = r_missing_data
 
-              else ! write out obs
-                  write(6,201,err=202)i,j,k
+                  n_qc_total_bad = n_qc_total_bad + 1
+
+              else ! write out the good OB
+                  if(wt_p(i,j,k) .eq. weight_pirep)then
+                      n_qc_pirep_good = n_qc_pirep_good + 1
+                      c3_string = 'Prp'
+                      n_good_thistype = n_qc_pirep_good
+                  endif
+
+                  if(wt_p(i,j,k) .eq. weight_meso)then
+                      n_qc_meso_good  = n_qc_meso_good + 1
+                      c3_string = 'Mso'
+                      n_good_thistype = n_qc_meso_good
+                  endif
+
+                  if(wt_p(i,j,k) .eq. weight_sao)then
+                      n_qc_sao_good   = n_qc_sao_good + 1
+                      c3_string = 'Sao'
+                      n_good_thistype = n_qc_sao_good
+                  endif
+
+                  if(wt_p(i,j,k) .eq. weight_prof)then
+                      n_qc_prof_good  = n_qc_prof_good + 1
+                      c3_string = 'Prf'
+                      n_good_thistype = n_qc_prof_good
+                  endif
+
+                  n_qc_total_good = n_qc_total_good + 1
+
+                  if(n_qc_total_good .le. 500 .OR. j .eq. (j/10)*10)then       
+                      iwrite = 1
+                  else
+                      iwrite = 0
+                  endif
+
+                  if(iwrite .eq. 1)then
+                      write(6,201,err=202)c3_string,i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
      1                  ,uobs(i,j,k)
@@ -263,9 +317,10 @@
      1                  ,v_laps_bkg(i,j,k)
      1                  ,speed_diff
      1                  ,wt_p(i,j,k)
-201               format(' OB ',2i4,i3,3x,f6.1,f6.1,2(2x,2f6.1),f5.1,f5.
-     12)
-202               continue
+201                   format(1x,a3,2i5,i3,3x,f6.1,f6.1,2(2x,2f6.1)
+     1                         ,f5.1,f5.2)
+202                   continue
+                  endif
 
               endif
 
@@ -284,7 +339,7 @@
             endif ! U and V .ne. MISSING
 
 
-          else ! Set these to missing just in case
+          else  ! wt_p .eq. MISSING; set these to missing just in case
             uobs_diff(i,j,k) = r_missing_data
             vobs_diff(i,j,k) = r_missing_data
 
@@ -293,7 +348,7 @@
         enddo ! k
 
 !       Spread the difference ob vertically
-        call spread_vert(uobs_diff,vobs_diff,l_3d
+        call spread_vert(uobs_diff,vobs_diff,l_3d,iwrite
      1          ,uobs_diff_spread,vobs_diff_spread
      1          ,wt_p,wt_p_spread,i,j,imax,jmax,kmax,istatus)
 
@@ -301,6 +356,23 @@
 
       enddo ! i
       enddo ! j
+
+      write(6,*)
+      write(6,*)' QC info for non-radar data (after remapping to grid)'       
+      write(6,601)n_qc_pirep_good,n_qc_pirep_bad       
+ 601  format(' # of PIREPs GOOD/BAD QC = ',2i6)
+
+      write(6,602)n_qc_meso_good,n_qc_meso_bad       
+ 602  format(' # of MESOs  GOOD/BAD QC = ',2i6)
+
+      write(6,603)n_qc_sao_good,n_qc_sao_bad       
+ 603  format(' # of SAOs   GOOD/BAD QC = ',2i6)
+
+      write(6,604)n_qc_prof_good,n_qc_prof_bad       
+ 604  format(' # of PROFs  GOOD/BAD QC = ',2i6)
+
+      write(6,605)n_qc_total_good,n_qc_total_bad       
+ 605  format(/' # of TOTAL  GOOD/BAD QC = ',2i6)
 
 !     Initialize fnorm array used in barnes_multivariate
       write(6,*)' Creating fnorm LUT'
@@ -405,27 +477,27 @@
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread
           call insert_derived_radar_obs(
-     1   mode                                       ! Input
-     1  ,n_radars,max_radars                        ! Input
-     1  ,imax,jmax,kmax                             ! Input
-     1  ,r_missing_data                             ! Input
-     1  ,vr_obs_unfltrd                             ! Input
-     1  ,i4time                                     ! Input
-     1  ,lat,lon                                    ! Input
-     1  ,rlat_radar,rlon_radar                      ! Input
-     1  ,rheight_radar                              ! Input
-     1  ,upass1,vpass1                              ! Input
-     1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,weight_radar                               ! Input
-     1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
-     1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,l_analyze                                  ! Output
-     1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,vr_obs_fltrd                               ! Local
-     1  ,upass1_buf,vpass1_buf                      ! Local
-     1  ,l_good_multi_doppler_ob                    ! Local
-     1  ,istatus                                    ! Input/Output
+     1         mode                                       ! Input
+     1        ,n_radars,max_radars                        ! Input
+     1        ,imax,jmax,kmax                             ! Input
+     1        ,r_missing_data                             ! Input
+     1        ,vr_obs_unfltrd                             ! Input
+     1        ,i4time                                     ! Input
+     1        ,lat,lon                                    ! Input
+     1        ,rlat_radar,rlon_radar                      ! Input
+     1        ,rheight_radar                              ! Input
+     1        ,upass1,vpass1                              ! Input
+     1        ,u_laps_bkg,v_laps_bkg                      ! Input
+     1        ,weight_radar                               ! Input
+     1        ,l_derived_output,l_grid_north              ! Input
+     1        ,wt_p_spread                                ! Input/Output
+     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,l_analyze                                  ! Output
+     1        ,n_radarobs_tot_unfltrd                     ! Input
+     1        ,vr_obs_fltrd                               ! Local
+     1        ,upass1_buf,vpass1_buf                      ! Local
+     1        ,l_good_multi_doppler_ob                    ! Local
+     1        ,istatus                                    ! Input/Output
      1                                                          )
 
           I4_elapsed = ishow_timer()
@@ -465,27 +537,27 @@
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread
           call insert_derived_radar_obs(
-     1   mode                                       ! Input
-     1  ,n_radars,max_radars                        ! Input
-     1  ,imax,jmax,kmax                             ! Input
-     1  ,r_missing_data                             ! Input
-     1  ,vr_obs_unfltrd                             ! Input
-     1  ,i4time                                     ! Input
-     1  ,lat,lon                                    ! Input
-     1  ,rlat_radar,rlon_radar                      ! Input
-     1  ,rheight_radar                              ! Input
-     1  ,upass1,vpass1                              ! Input
-     1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,weight_radar                               ! Input
-     1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
-     1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,l_analyze                                  ! Output
-     1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,vr_obs_fltrd                               ! Local
-     1  ,upass1_buf,vpass1_buf                      ! Local
-     1  ,l_good_multi_doppler_ob                    ! Local
-     1  ,istatus                                    ! Input/Output
+     1         mode                                       ! Input
+     1        ,n_radars,max_radars                        ! Input
+     1        ,imax,jmax,kmax                             ! Input
+     1        ,r_missing_data                             ! Input
+     1        ,vr_obs_unfltrd                             ! Input
+     1        ,i4time                                     ! Input
+     1        ,lat,lon                                    ! Input
+     1        ,rlat_radar,rlon_radar                      ! Input
+     1        ,rheight_radar                              ! Input
+     1        ,upass1,vpass1                              ! Input
+     1        ,u_laps_bkg,v_laps_bkg                      ! Input
+     1        ,weight_radar                               ! Input
+     1        ,l_derived_output,l_grid_north              ! Input
+     1        ,wt_p_spread                                ! Input/Output
+     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,l_analyze                                  ! Output
+     1        ,n_radarobs_tot_unfltrd                     ! Input
+     1        ,vr_obs_fltrd                               ! Local
+     1        ,upass1_buf,vpass1_buf                      ! Local
+     1        ,l_good_multi_doppler_ob                    ! Local
+     1        ,istatus                                    ! Input/Output
      1                                                          )
 
           I4_elapsed = ishow_timer()
@@ -552,27 +624,27 @@
 !         Take the data from all the radars and add the derived radar obs into
 !         uobs_diff_spread and vobs_diff_spread
           call insert_derived_radar_obs(
-     1   mode                                       ! Input
-     1  ,n_radars,max_radars                        ! Input
-     1  ,imax,jmax,kmax                             ! Input
-     1  ,r_missing_data                             ! Input
-     1  ,vr_obs_unfltrd                             ! Input
-     1  ,i4time                                     ! Input
-     1  ,lat,lon                                    ! Input
-     1  ,rlat_radar,rlon_radar                      ! Input
-     1  ,rheight_radar                              ! Input
-     1  ,uanl,vanl                                  ! Input
-     1  ,u_laps_bkg,v_laps_bkg                      ! Input
-     1  ,weight_radar                               ! Input
-     1  ,l_derived_output,l_grid_north              ! Input
-     1  ,wt_p_spread                                ! Input/Output
-     1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
-     1  ,l_analyze                                  ! Output
-     1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,vr_obs_fltrd                               ! Local
-     1  ,upass1_buf,vpass1_buf                      ! Local
-     1  ,l_good_multi_doppler_ob                    ! Local
-     1  ,istatus                                    ! Input/Output
+     1         mode                                       ! Input
+     1        ,n_radars,max_radars                        ! Input
+     1        ,imax,jmax,kmax                             ! Input
+     1        ,r_missing_data                             ! Input
+     1        ,vr_obs_unfltrd                             ! Input
+     1        ,i4time                                     ! Input
+     1        ,lat,lon                                    ! Input
+     1        ,rlat_radar,rlon_radar                      ! Input
+     1        ,rheight_radar                              ! Input
+     1        ,uanl,vanl                                  ! Input
+     1        ,u_laps_bkg,v_laps_bkg                      ! Input
+     1        ,weight_radar                               ! Input
+     1        ,l_derived_output,l_grid_north              ! Input
+     1        ,wt_p_spread                                ! Input/Output
+     1        ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
+     1        ,l_analyze                                  ! Output
+     1        ,n_radarobs_tot_unfltrd                     ! Input
+     1        ,vr_obs_fltrd                               ! Local
+     1        ,upass1_buf,vpass1_buf                      ! Local
+     1        ,l_good_multi_doppler_ob                    ! Local
+     1        ,istatus                                    ! Input/Output
      1                                                          )
 
           I4_elapsed = ishow_timer()
@@ -1020,8 +1092,9 @@ c  convert radar obs into u & v by using tangential component of first pass
                 diff_radial = vr_obs_fltrd(i,j,k) - r_radar
 
                 icount_output = icount_output + 1
-                if(icount_output .le. 3)
-     1    write(6,310)i,j,k,diff_radial,vr_obs_fltrd(i,j,k),r_radar
+                if(icount_output .le. 3)write(6,310)i,j,k
+     1                                 ,diff_radial
+     1                                 ,vr_obs_fltrd(i,j,k),r_radar
 310             format(3i4,3f6.1)
 
 !               if(k .eq. 13 .and. i .eq. 29 .and. j .eq. 23)then
@@ -1175,8 +1248,9 @@ c  convert radar obs into u & v by using tangential component of first pass
 
 
 
-      subroutine spread_vert(uobs_in,vobs_in,l_3d,uobs_out,vobs_out,
-     1      wt_p,weights,i,j,imax,jmax,kmax,istatus)
+      subroutine spread_vert(uobs_in,vobs_in,l_3d,iwrite,uobs_out
+     1                      ,vobs_out,wt_p,weights,i,j
+     1                      ,imax,jmax,kmax,istatus)
 
 !     Modified 7/94 S. Albers to allow better handling of variable
 !     vertical resolution of pressure
@@ -1256,10 +1330,11 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                  * exp(-(dist_pa/r0_vert_pirep))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,101)i,j,k,kk,uobs_out(i,j,kk)
+                      if(iwrite .eq. 1)write(6,101)i,j,k,kk
+     1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-101                   format(' Prp',2i4,2i3,2f6.1,f8.5)
+101                   format(' Prp',2i5,2i3,2f6.1,f8.5)
                   endif
               enddo
           endif
@@ -1273,10 +1348,11 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_meso))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,201)i,j,k,kk,uobs_out(i,j,kk)
+                      if(iwrite .eq. 1)write(6,201)i,j,k,kk
+     1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-201                   format(' Mso',2i4,2i3,2f6.1,f8.5)
+201                   format(' Mso',2i5,2i3,2f6.1,f8.5)
                   endif
               enddo
           endif
@@ -1290,10 +1366,11 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_sao))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,301)i,j,k,kk,uobs_out(i,j,kk)
+                      if(iwrite .eq. 1)write(6,301)i,j,k,kk
+     1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-301                   format(' Sao',2i4,2i3,2f6.1,f8.5)
+301                   format(' Sao',2i5,2i3,2f6.1,f8.5)
                   endif
               enddo
           endif
@@ -1311,10 +1388,11 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,401)i,j,k,kk,uobs_out(i,j,kk)
+                      if(iwrite .eq. 1)write(6,401)i,j,k,kk
+     1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
-401                   format(' Prf',2i4,2i3,2f6.1,f8.5)
+401                   format(' Prf',2i5,2i3,2f6.1,f8.5)
                   endif
                 enddo ! kk
 
@@ -1331,7 +1409,8 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
-                      write(6,401)i,j,k,kk,uobs_out(i,j,kk)
+                      if(iwrite .eq. 1)write(6,401)i,j,k,kk
+     1                           ,uobs_out(i,j,kk)
      1                           ,vobs_out(i,j,kk)
      1                           ,weights(i,j,kk)
                   endif

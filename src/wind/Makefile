@@ -34,7 +34,7 @@ SRC= main_sub.f \
      comp_laps1_laps2.f \
      comp_laps_maps.f \
      vertwind.f \
-     rdpirep.f \
+     rdpoint.f \
      rdsao.f \
      read_profiles.f \
      interp_prof.f \

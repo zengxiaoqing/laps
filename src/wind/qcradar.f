@@ -189,15 +189,16 @@ c    1                  ,rlat_radar,rlon_radar,rheight_radar)
         enddo ! j
       enddo ! k
 
-      write(6,*)' # of Input (unfiltered) Radar obs = ',n_radarobs_tot_u
-     1nfltrd
+      write(6,*)' # of Input (unfiltered) Radar obs = '
+     1                                      ,n_radarobs_tot_unfltrd
 
       n_radarobs_tot_unfltrd = icount_good_qc
 
       write(6,*)' # of Velocities Unfolded = ',icount_unfld
-      write(6,*)' # of GOOD/BAD QC = ',icount_good_qc,icount_bad_qc
-      write(6,*)' # of Output (unfiltered) Radar obs = ',n_radarobs_tot_
-     1unfltrd
+      write(6,*)' # of RADAR GOOD/BAD QC = ',icount_good_qc
+     1                                      ,icount_bad_qc
+      write(6,*)' # of Output (unfiltered) Radar obs = '
+     1                                      ,n_radarobs_tot_unfltrd       
 
       return
       end

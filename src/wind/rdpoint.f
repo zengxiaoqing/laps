@@ -29,12 +29,12 @@ cdis
 cdis 
 cdis 
 cdis 
-        subroutine rdpirep(i4time,heights_3d
-     1  ,N_PIREP,n_pirep_obs,ext_in
+        subroutine rdpoint(i4time,heights_3d
+     1  ,N_POINT,n_point_obs,ext_in
      1  ,ni,nj,nk
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
      1  ,lat,lon
-     1  ,pirep_i,pirep_j,pirep_k,pirep_u,pirep_v
+     1  ,point_i,point_j,point_k,point_u,point_v
      1  ,grid_laps_wt,grid_laps_u,grid_laps_v
      1  ,istatus)
 
@@ -42,7 +42,7 @@ cdis
 !       Modified 2/1993 by Steve Albers to fix check on pirep being in the
 !       domain as suggested by Steve Olson of LL.
 
-!       1997 Jun    Ken Dritz     Added N_PIREP as dummy argument, making
+!       1997 Jun    Ken Dritz     Added N_POINT as dummy argument, making
 !                                 arrays dimensioned therewith automatic.
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
 !       1998        Steve Albers  Called Sequentially for acars winds, 
@@ -56,13 +56,13 @@ cdis
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
 
-!       Pireps
+!       Point obs
 
-        integer pirep_i(N_PIREP) ! X pirep coordinates
-        integer pirep_j(N_PIREP) ! Y pirep coordinates
-        integer pirep_k(N_PIREP) ! Z pirep coordinates
-        real    pirep_u(N_PIREP) ! u pirep component
-        real    pirep_v(N_PIREP) ! v pirep component
+        integer point_i(N_POINT) ! X point coordinates
+        integer point_j(N_POINT) ! Y point coordinates
+        integer point_k(N_POINT) ! Z point coordinates
+        real    point_u(N_POINT) ! u point component
+        real    point_v(N_POINT) ! v point component
 
 
 !       Laps Analysis Grids
@@ -77,7 +77,7 @@ cdis
         dimension u_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
 
-        character*9 asc9_tim_pirep
+        character*9 asc9_tim_point
         character ext*31, ext_in*3
 
         logical l_eof
@@ -124,8 +124,8 @@ cdis
 
 10      i_qc = 1
 
-        if(n_pirep_obs .le. 500 .OR. 
-     1     n_pirep_obs - (n_pirep_obs/10)*10 .eq. 9)then       
+        if(n_point_obs .le. 500 .OR. 
+     1     n_point_obs - (n_point_obs/10)*10 .eq. 9)then       
             iwrite2 = 1
         else
             iwrite2 = 0
@@ -133,21 +133,22 @@ cdis
 
         if(ext_in .eq. 'pin')then
             call read_acars_ob(lun_in,'wind',xlat,xlon,elev,dd,ff
-     1                                   ,asc9_tim_pirep,iwrite2,l_eof)       
+     1                                   ,asc9_tim_point,iwrite2,l_eof)       
             if(elev .eq. 0.)i_qc = 0
         else
             call read_laps_cdw_wind(lun_in,xlat,xlon,pres,dd,ff
-     1                                           ,asc9_tim_pirep,l_eof)
+     1                                           ,asc9_tim_point,l_eof)
         endif
 
         if(l_eof)goto900
 
-        call cv_asc_i4time(asc9_tim_pirep,i4time_ob)
+        call cv_asc_i4time(asc9_tim_point,i4time_ob)
 
         if(abs(i4time_ob - i4time) .le. i4_window_ob)then
 
-!           Climo QC check
-            if(dd .lt. 500. .and. i_qc .eq. 1)then
+!           Climo/QC check
+            if(abs(dd) .lt. 500. .and. abs(ff) .lt. 500. 
+     1                           .and. i_qc .eq. 1)then
 
                 call latlon_to_rlapsgrid(xlat,xlon,lat,lon,ni,nj
      1                                  ,ri,rj,istatus)
@@ -180,28 +181,28 @@ cdis
      1             .and. k_grid .le. nk
      1             .and. k_grid .ge. 1    )then ! Ob is in vertical domain
 
-                        n_pirep_obs = n_pirep_obs + 1
+                        n_point_obs = n_point_obs + 1
 
-                        if(n_pirep_obs .gt. N_PIREP)then
-                           write(6,*)' Warning: Too many pireps, '
-     1                              ,'limit is ',N_PIREP
+                        if(n_point_obs .gt. N_POINT)then
+                           write(6,*)' Warning: Too many point obs, '       
+     1                              ,'limit is ',N_POINT
                            istatus = 0
                            return
                         endif
 
-                        if(n_pirep_obs .le. 500 .OR. 
-     1                     n_pirep_obs .eq. (n_pirep_obs/10) * 10)then       
+                        if(n_point_obs .le. 500 .OR. 
+     1                     n_point_obs .eq. (n_point_obs/10) * 10)then       
                             iwrite = 1
                         else
                             iwrite = 0
                         endif
 
-                        pirep_i(n_pirep_obs) = i_grid
-                        pirep_j(n_pirep_obs) = j_grid
+                        point_i(n_point_obs) = i_grid
+                        point_j(n_point_obs) = j_grid
 
                         call disp_to_uv(dd,ff,u_temp,v_temp)
 
-                        pirep_k(n_pirep_obs) = k_grid
+                        point_k(n_point_obs) = k_grid
 
                         call get_time_term(u_mdl_bkg_4d,ni,nj,nk
      1                                    ,NTMIN,NTMAX
@@ -215,38 +216,39 @@ cdis
      1                                    ,i4time,i4time_ob
      1                                    ,v_time_interp,v_diff,istatus)       
 
-                        pirep_u(n_pirep_obs) = u_temp - u_diff
-                        pirep_v(n_pirep_obs) = v_temp - v_diff
+                        point_u(n_point_obs) = u_temp - u_diff
+                        point_v(n_point_obs) = v_temp - v_diff
 
-                        write(lun_pig,*)ri-1.,rj-1.,rk-1.,dd,ff
+                        write(lun_pig,91)ri-1.,rj-1.,rk-1.,dd,ff,ext_in       
+ 91                     format(1x,5f8.1,1x,a3)
 
                         if(iwrite .eq. 1)write(6,101)xlat,xlon,dd,ff,rk
-     1          ,u_temp,v_temp,pirep_u(n_pirep_obs),pirep_v(n_pirep_obs)
+     1          ,u_temp,v_temp,point_u(n_point_obs),point_v(n_point_obs)
 101                     format(2f8.2,2f8.1,f8.1,4f8.2)
 
-!                 ***   Remap pirep observation to LAPS observation grid
+!                 ***   Remap point observation to LAPS observation grid
 
                         grid_laps_u
-     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))      
-     1  = pirep_u(n_pirep_obs)
+     1  (point_i(n_point_obs),point_j(n_point_obs),point_k(n_point_obs))      
+     1  = point_u(n_point_obs)
 
                         grid_laps_v
-     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))
-     1  = pirep_v(n_pirep_obs)
+     1  (point_i(n_point_obs),point_j(n_point_obs),point_k(n_point_obs))
+     1  = point_v(n_point_obs)
 
                         grid_laps_wt
-     1  (pirep_i(n_pirep_obs),pirep_j(n_pirep_obs),pirep_k(n_pirep_obs))       
+     1  (point_i(n_point_obs),point_j(n_point_obs),point_k(n_point_obs))       
      1  = weight_pirep
 
                     endif ! In vertical bounds
 
 
-                    if(iwrite .eq. 1)write(6,20)n_pirep_obs,
-     1                 pirep_i(n_pirep_obs),
-     1                 pirep_j(n_pirep_obs),
-     1                 pirep_k(n_pirep_obs),
-     1                 pirep_u(n_pirep_obs),
-     1                 pirep_v(n_pirep_obs),
+                    if(iwrite .eq. 1)write(6,20)n_point_obs,
+     1                 point_i(n_point_obs),
+     1                 point_j(n_point_obs),
+     1                 point_k(n_point_obs),
+     1                 point_u(n_point_obs),
+     1                 point_v(n_point_obs),
      1                 dd,ff
 20                  format(i5,1x,3i4,2f7.1,2x,2f7.1,2x,2f7.1,2x,2f7.1)
 
@@ -255,7 +257,8 @@ cdis
      1              ' Out of horizontal bounds',i_grid,j_grid        
 
                 endif ! In horizontal bounds
-            endif ! Good data
+
+            endif ! Good data (passed gross climo/qc check)
 
         else
             write(6,*)' Out of temporal bounds'
@@ -265,8 +268,8 @@ cdis
 
 100     goto10
 
-900     write(6,*)' End of RDPIREP',ext_in,' file
-     1           , Cumulative # obs = ',n_pirep_obs
+900     write(6,*)' End of RDPOINT ',ext_in,' file
+     1           , Cumulative # obs = ',n_point_obs
 
         close(lun_in)
         close(lun_pig)
@@ -289,19 +292,19 @@ cdis
 
 
         subroutine read_laps_cdw_wind(lun,xlat,xlon,pres,dd,ff
-     1                                          ,asc9_tim_pirep,l_eof)
+     1                                          ,asc9_tim_point,l_eof)
 
         real*4 pres ! pa
         real*4 dd   ! degrees (99999. is missing)
         real*4 ff   ! meters/sec (99999. is missing)
 
-        character*9 asc9_tim_pirep
+        character*9 asc9_tim_point
 
         logical l_eof
 
         l_eof = .false.
 
-100     read(lun,895,err=100,end=900)xlat,xlon,pres,dd,ff,asc9_tim_pirep       
+100     read(lun,895,err=100,end=900)xlat,xlon,pres,dd,ff,asc9_tim_point       
 895     FORMAT(f8.3,f10.3,f8.0,f6.0,f6.1,2x,a9)
 
         return
