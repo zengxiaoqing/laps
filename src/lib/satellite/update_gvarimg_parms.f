@@ -71,7 +71,7 @@ c     Integer   nch
       Integer   i_obstime
       Integer   ld
       Integer   numoffiles
-      Integer   nn,nf
+      Integer   nf,nl,nn
 c     Integer   nsat
 c     Integer   n,ns,nc
       Integer   n
@@ -91,8 +91,8 @@ c     character*150 dir
       character*255 fname_sat
       character*255 c_filenames(max_files)
 c     character*200 cdum
-      character     cfname*11
-      character     c_afwa_fname*11
+      character     cfname*100
+      character     c_afwa_fname*100
 c     character*10  cmode
       character*9   c_fname_cur
       character*9   c_fname
@@ -204,7 +204,8 @@ c
 
          n=index(cdir_path,' ')-1
          cfname=c_afwa_fname(cd6,chtype)
-         filename_cdf=cdir_path(1:n)//cfname
+         call s_len(cfname,nl)
+         filename_cdf=cdir_path(1:n)//cfname(1:nl)
 
          call read_gwc_header(filename_cdf,l_cell_afwa,strtpix,
      &strtline,stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
@@ -221,8 +222,13 @@ c
 c
 c no water vapor switch atm
 c
-         nw_vis_pix = nw_vis_pix_gwc(chtype,decimat,bepixfc,goalpha)
-         nw_vis_line= nw_vis_line_gwc(chtype,decimat,bescnfc,fsci)
+         if(cd6.eq.'meteos')then
+            nw_vis_pix=stoppix
+            nw_vis_line=-(fsci+strtline)
+         else
+            nw_vis_pix = nw_vis_pix_gwc(chtype,decimat,bepixfc,goalpha)
+            nw_vis_line= nw_vis_line_gwc(chtype,decimat,bescnfc,fsci)
+         endif
 
 c        if(chtype.eq.'vis')then
 c           nw_vis_pix= (bepixfc/4+goalpha)*8
@@ -243,46 +249,51 @@ c        endif
          write(6,*)'GWC nw_vis_pix/nw_vis_line: ',nw_vis_pix,nw_vis_line
          write(6,*)
 
-         filename_cdf=cdir_path(1:n)//'*_OA_01.DAT'
-         nf=index(filename_cdf,' ')-1
-         call get_file_names(filename_cdf,numoffiles,c_filenames
+c Currently no O&A data for METEOSAT
+         if(cd6.ne.'meteos')then
+
+           filename_cdf=cdir_path(1:n)//'*_OA_01.DAT'
+           nf=index(filename_cdf,' ')-1
+           call get_file_names(filename_cdf,numoffiles,c_filenames
      1        ,max_files,istatus)
 
-         if(istatus.eq.1.and.numoffiles.gt.0)then
+           if(istatus.eq.1.and.numoffiles.gt.0)then
 
-         call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
+           call get_gwc_oa(c_filenames(1),c_imc,orbitAttitude,336,
      &gstatus)
-         if(gstatus.ne.0)then
-            write(6,*)'error: get_gwc_oa '
-            call get_directory('static',c_filespec,ld)
-            c_filespec=c_filespec(1:ld)//'/lvd'
-            ld=index(c_filespec, ' ')-1
-            print*,'try ',c_filespec(1:ld),'lvd/',cd6,'_orbatt.dat'
-            call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
+           if(gstatus.ne.0)then
+             write(6,*)'error: get_gwc_oa '
+             call get_directory('static',c_filespec,ld)
+             c_filespec=c_filespec(1:ld)//'/lvd'
+             ld=index(c_filespec, ' ')-1
+             print*,'try ',c_filespec(1:ld),'lvd/',cd6,'_orbatt.dat'
+             call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
      &istatus)
-            if(istatus.ne.0)then
-               write(6,*)'O&A Data not obtained',c_filespec(1:ld)
-               goto 900
-            endif
-         else
-c           call make_fnam_lp(i4time_nearest,c_fname,istatus)
-c           filename_cdf=cdir_path(1:n)//c_fname//'.oad'
-c           ld=index(c_filespec, ' ')-1
-c           write(6,*)'Using: ',filename_cdf(1:ld)
-            write(6,*)'gwc O&A obtained '
-         endif
+             if(istatus.ne.0)then
+                write(6,*)'O&A Data not obtained',c_filespec(1:ld)
+                goto 900
+             endif
+           else
+c            call make_fnam_lp(i4time_nearest,c_fname,istatus)
+c            filename_cdf=cdir_path(1:n)//c_fname//'.oad'
+c            ld=index(c_filespec, ' ')-1
+c            write(6,*)'Using: ',filename_cdf(1:ld)
+             write(6,*)'gwc O&A obtained '
+           endif
 
-         else
-            write(6,*)'No O&A files exist ',filename_cdf(1:nf)
-            call get_directory('static',c_filespec,ld)
-            c_filespec=c_filespec(1:ld)//'/lvd'
-            ld=index(c_filespec, ' ')-1
-            call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
+           else
+
+             write(6,*)'No O&A files exist ',filename_cdf(1:nf)
+             call get_directory('static',c_filespec,ld)
+             c_filespec=c_filespec(1:ld)//'/lvd'
+             ld=index(c_filespec, ' ')-1
+             call read_orb_att(c_filespec(1:ld),cd6,336,orbitAttitude,
      &istatus)
-            if(istatus.ne.0)then
-               write(6,*)'O&A Data not obtained',c_filespec(1:ld)
-               goto 900
-            endif
+             if(istatus.ne.0)then
+                write(6,*)'O&A Data not obtained',c_filespec(1:ld)
+                goto 900
+             endif
+           endif
          endif
          frameStartTime=getftime()
          x_step=decimat

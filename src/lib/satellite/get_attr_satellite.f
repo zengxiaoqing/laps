@@ -146,15 +146,18 @@ c
       character cs1*1
       character cs2*2
       character cs3*2
-      character c_afwa_fname*11
+      character c_afwa_fname*(*)
 
       cs1='i'
       if(chtype.eq.'vis')cs1='v'
 
-      cs2=csatid(1:2)
-      cs3=csatid(5:6)
-
-      c_afwa_fname='u'//cs2//cs3//cs1//'1_'//chtype
+      if(csatid.eq.'meteos')then
+         c_afwa_fname=csatid//cs1//'1_'//chtype
+      else
+         cs2=csatid(1:2)
+         cs3=csatid(5:6)
+         c_afwa_fname='u'//cs2//cs3//cs1//'1_'//chtype
+      endif
 
       return 
       end
