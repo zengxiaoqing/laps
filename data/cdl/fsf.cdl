@@ -18,7 +18,7 @@ netcdf rsf {
             usf:long_name="LAPS Fcst sfc u wind component";
             usf:units="m/s";
             usf:valid_range= -200.f, 200.f;
-            usf:LAPS_var="U";
+            usf:LAPS_var="USF";
             usf:lvl_coord="AGL";
 	    usf:LAPS_units="M/S";
                 	        
@@ -30,7 +30,7 @@ netcdf rsf {
             vsf:long_name="LAPS Fcst sfc v wind component";
             vsf:units="m/s";
             vsf:valid_range= -200.f, 200.f;
-            vsf:LAPS_var="V";
+            vsf:LAPS_var="VSF";
             vsf:lvl_coord="AGL";
 	    vsf:LAPS_units="M/S";
                 	        
@@ -42,7 +42,7 @@ netcdf rsf {
             wsf:long_name="LAPS Fcst sfc w wind component";
             wsf:units="m/s";
             wsf:valid_range= -100.f, 100.f;
-            wsf:LAPS_var="W";
+            wsf:LAPS_var="WSF";
             wsf:lvl_coord="AGL";
 	    wsf:LAPS_units="M/S";
                 	        
@@ -54,7 +54,7 @@ netcdf rsf {
             tsf:long_name="LAPS Fcst sfc temperature";
             tsf:units="Kelvins";
             tsf:valid_range= 0.f, 500.f;
-            tsf:LAPS_var="T";
+            tsf:LAPS_var="TSF";
             tsf:lvl_coord="AGL";
 	    tsf:LAPS_units="K";
                 	        
@@ -66,7 +66,7 @@ netcdf rsf {
             dsf:long_name="LAPS Fcst sfc dewpoint";
             dsf:units="Kelvins";
             dsf:valid_range= 0.f, 500.f;
-            dsf:LAPS_var="TD";
+            dsf:LAPS_var="DSF";
             dsf:lvl_coord="AGL";
 	    dsf:LAPS_units="K";
 
@@ -114,7 +114,7 @@ netcdf rsf {
             slp:long_name="LAPS Fcst MSL pressure";
             slp:units="pascals";
             slp:valid_range= 0.f, 100000.f;
-            slp:LAPS_var="MSL";
+            slp:LAPS_var="SLP";
             slp:lvl_coord="MSL";
             slp:LAPS_units="PA";
 
@@ -138,7 +138,7 @@ netcdf rsf {
             psf:long_name="LAPS Fcst sfc pressure";
             psf:units="pascals";
             psf:valid_range= 0.f, 100000.f;
-            psf:LAPS_var="PS";
+            psf:LAPS_var="PSF";
             psf:lvl_coord="AGL";
             psf:LAPS_units="PA";
 
