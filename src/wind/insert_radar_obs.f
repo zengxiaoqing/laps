@@ -79,6 +79,7 @@ csms$ignore begin
 
       n_radarobs_tot_fltrd = 0
       i_radar_reject = 0
+      vr_obs_fltrd = r_missing_data ! initialize array
 
       if(.not. l_multi_doppler_new)then ! original radar analysis method
 
@@ -87,6 +88,7 @@ csms$ignore begin
 
 !         Begin Filtering Section
           write(6,*)' Filtering radar obs into superobs'
+     1             ,i_radar,idx_radar_a(i_radar)
      1             ,rlat_radar(i_radar),rlon_radar(i_radar)
 
           write(6,*)' LVL  # Obs  Intvl  # FLTR'
@@ -118,6 +120,7 @@ csms$ignore begin
 
           write(6,*)' # Radar Obs Rejected due to other data = '
      1             ,i_radar_reject(i_radar)
+     1             ,i_radar,idx_radar_a(i_radar)
           write(6,502)n_radarobs_tot_unfltrd(i_radar)
      1               ,n_radarobs_tot_fltrd(i_radar)
 502       format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',2i7)       
@@ -147,7 +150,7 @@ csms$ignore begin
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
 !    1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
-     1  ,vr_obs_fltrd                               ! Local
+     1  ,vr_obs_fltrd                               ! Input
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
      1                                                          )
@@ -171,7 +174,7 @@ csms$ignore begin
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
 !    1  ,n_radarobs_tot_unfltrd(i_radar)            ! Input
-     1  ,vr_obs_fltrd                               ! Local
+     1  ,vr_obs_fltrd                               ! Input
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
      1                                                          )
@@ -242,12 +245,16 @@ csms$ignore begin
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
 
+              write(6,*)' k,i_radar,unfiltered/filtered',k,i_radar
+     1                 ,n_radarobs_lvl_unfltrd,n_radarobs_lvl_fltrd
+
               n_radarobs_tot_fltrd(i_radar) =
      1        n_radarobs_tot_fltrd(i_radar) + n_radarobs_lvl_fltrd       
 
               if(k .eq. kmax)then
                   write(6,*)' # Radar Obs Rejected due to other data = '
      1                     ,i_radar_reject(i_radar)
+     1                     ,i_radar,idx_radar_a(i_radar)
                   write(6,502)n_radarobs_tot_unfltrd(i_radar)
      1                       ,n_radarobs_tot_fltrd(i_radar)
               endif ! k
@@ -387,7 +394,7 @@ csms$ignore end
      1  ,wt_p_radar                                 ! Input/Output
      1  ,uobs_diff_spread,vobs_diff_spread          ! Input/Output
 !    1  ,n_radarobs_tot_unfltrd                     ! Input
-     1  ,vr_obs_fltrd                               ! Local
+     1  ,vr_obs_fltrd                               ! Input
      1  ,l_good_multi_doppler_ob                    ! Input/Output
      1  ,istatus                                    ! Input/Output
      1                                                          )
