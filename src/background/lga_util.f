@@ -85,7 +85,7 @@ c
 c
 c===============================================================================
 c
-      subroutine gdtost(ab,ix,iy,stax,stay,staval)
+      subroutine gdtost(ab,ix,iy,stax,stay,staval,bgmodel)
 c
 c *** Subroutine to return stations back-interpolated values(staval)
 c        from uniform grid points using overlapping-quadratics.
@@ -96,6 +96,7 @@ c        and station column.
 c *** Values greater than 1.0e30 indicate missing data.
 c
       dimension ab(ix,iy),r(4),scr(4)
+      integer bgmodel
 c_______________________________________________________________________________
 c
       iy1=int(stay)-1
@@ -106,11 +107,37 @@ c
       fiym2=float(iy1)-1
       fixm2=float(ix1)-1
       ii=0
-      do i=ix1,ix2
+      do iii=ix1,ix2
+         i=iii
+c
+c ****** Account for wrapping around effect of global data at Greenwich.
+c
+         if (bgmodel .eq. 3) then
+            if (i .lt. 1) i=i+ix
+            if (i .gt. ix) i=i-ix
+         endif
          ii=ii+1
          if (i .ge. 1 .and. i .le. ix) then 
             jj=0
-            do j=iy1,iy2
+            do jjj=iy1,iy2
+               j=jjj
+c
+c ************ Account for N-S wrapping effect of global data.
+c
+               if (bgmodel .eq. 3) then
+                  if (j .lt. 1) then
+                     j=2-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+                  if (j .gt. iy) then
+                     j=2*iy-j
+                     i=i-ix/2
+                     if (i .lt. 1) i=i+ix
+                     if (i .gt. ix) i=i-ix
+                  endif
+               endif
                jj=jj+1
                if (j .ge. 1 .and. j .le. iy) then
                   r(jj)=ab(i,j)

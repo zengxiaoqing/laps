@@ -163,12 +163,13 @@ c
       subroutine hinterp(nx_bg,ny_bg,nx_laps,ny_laps,nz,gproj,
      .     lat,lon,
      .     htvi,tpvi,shvi,uwvi,vwvi,
-     .     ht,tp,sh,uw,vw)
+     .     ht,tp,sh,uw,vw,
+     .     bgmodel)
 
 c
       implicit none
 c
-      integer nx_bg,ny_bg,nx_laps,ny_laps,nz
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
 c
 c *** Input vertically interpolated fields.
 c
@@ -210,12 +211,36 @@ c *** Check that all LAPS grid points are within the background data coverage.
 c
       do j=1,ny_laps
       do i=1,nx_laps
-         if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
-     .       gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
+c
+c ****** Check for wrapping if a global data set.
+c
+         if (bgmodel .eq. 3) then
+            if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+            if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+            if (gry(i,j) .lt. 1) then
+               gry(i,j)=2.-gry(i,j)
+               grx(i,j)=grx(i,j)-float(nx_bg/2)
+               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+            endif
+            if (gry(i,j) .gt. ny_bg) then
+               gry(i,j)=float(2*ny_bg)-gry(i,j)
+               grx(i,j)=grx(i,j)-float(nx_bg/2)
+               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+            endif
+c
+c ****** If not a global data set, then check that LAPS domain is fully
+c           within background domain.
+c
+         else
+            if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
+     .          gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
             print*,'LAPS gridpoint outside of background data coverage.'
-            print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
-            print*,'   grx, gry:',grx(i,j),gry(i,j)
-            stop 'hinterp'
+               print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
+               print*,'   grx, gry:',grx(i,j),gry(i,j)
+               stop 'hinterp'
+            endif
          endif
       enddo
       enddo
@@ -226,15 +251,15 @@ c
       do j=1,ny_laps
       do i=1,nx_laps
             call gdtost(htvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),ht(i,j,k))
+     .                  grx(i,j),gry(i,j),ht(i,j,k),bgmodel)
             call gdtost(tpvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),tp(i,j,k))
+     .                  grx(i,j),gry(i,j),tp(i,j,k),bgmodel)
             call gdtost(shvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),sh(i,j,k))
+     .                  grx(i,j),gry(i,j),sh(i,j,k),bgmodel)
             call gdtost(uwvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),uw(i,j,k))
+     .                  grx(i,j),gry(i,j),uw(i,j,k),bgmodel)
             call gdtost(vwvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),vw(i,j,k))
+     .                  grx(i,j),gry(i,j),vw(i,j,k),bgmodel)
       enddo
       enddo
       enddo

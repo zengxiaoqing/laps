@@ -699,7 +699,8 @@ c
          call hinterp(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,gproj,
      .        lat,lon,
      .        htvi,tpvi,shvi,uwvi,vwvi,
-     .        ht,tp,sh,uw,vw)
+     .        ht,tp,sh,uw,vw,
+     .        bgmodel)
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
