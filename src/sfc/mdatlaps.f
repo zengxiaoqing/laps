@@ -106,6 +106,8 @@ c	                07-26-99  Set back_mp off until can check.
 c                       08-17-99  Change vis for obs of 10+ miles, turn off bkg.
 c                                   If LGB bkgs good, calculate a bkg red_p
 c                                   instead of using previous LSX.
+c                       09-17-99  Add check of red_p bkg calc.  If badflags get
+c                                   in, don't use it.
 c
 c	Notes:
 c
@@ -180,7 +182,7 @@ c
 c
 c.....	START.  Set up constants.
 c
-	call tagit('mdatlaps', 19990817)
+	call tagit('mdatlaps', 19990917)
 	jstatus(1) = -1		! put something in the status
 	jstatus(2) = -1
 	ibt = 0
@@ -188,6 +190,8 @@ c
 	jmax = nj
 	icnt = 0
 	delt = 0.035
+        fill_val = 1.e37
+        smsng = 1.e37
 c
 c.....  Zero out the sparse obs arrays.
 c
@@ -415,6 +419,20 @@ c
 	      endif
 	   enddo !i
 	   enddo !j
+c
+c.....  Check for badflags in the field.  Don't use if we find one.
+c
+	   back_rp = 1
+	   do j=1,jmax
+	   do i=1,imax
+	      if(rp_bk(i,j) .le. badflag) back_rp = 0
+	   enddo !i
+	   enddo !j
+c
+	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
+	   if(istatus .ne. 1) back_rp = 0
+c
+	   print *,' Done.  back_rp = ', back_rp
 	endif
 c
 c.....	Change vis observations that are more than 10 miles to 11 miles,
@@ -512,8 +530,6 @@ c.....  us to cold start the analysis, or run the analysis in a
 c.....  stand-alone mode.
 c
 	n_obs_var = 0
-        fill_val = 1.e37
-        smsng = 1.e37
 	npass = 1
 	rom2 = 0.005
 	if(back_t .ne. 1) then
@@ -564,7 +580,6 @@ c
 	   call check_field_2d(rp_bk,imax,jmax,fill_val,istatus)
 	endif
 c
-	back_mp = 0
 	if(back_mp .ne. 1) then
 	   print *,' '
 	   print *,
