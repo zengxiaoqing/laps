@@ -104,7 +104,6 @@ c                               not exactly match the LAPS analysis time.
 !       date rass obs according to the model rates of change.
 !       real*4 t_maps_inc(imax,jmax,kmax)
 
-        character*13 filename13
         character ext*31
         character*255 c_filespec
 
@@ -138,6 +137,10 @@ c                               not exactly match the LAPS analysis time.
 
         i4_window_rass_ob   = ilaps_cycle_time
         i4_window_rass_file = 3600
+
+        ext = 'tmg'
+        call open_lapsprd_file(32,i4time_sys,ext,istatus)
+        if(istatus .ne. 1)return
 
 ! ***   Read in rass data from nearest filetime ******************************
 
@@ -250,7 +253,7 @@ c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-412                 continue
+412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
                 enddo ! level
 
 
@@ -457,7 +460,7 @@ c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-712                 continue
+712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
                 enddo ! level
 
 

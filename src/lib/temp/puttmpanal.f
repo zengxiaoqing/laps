@@ -63,10 +63,6 @@ cdis
 !       dealing with lapse rates are calculated using the standard atmosphere.
 !       This should be an acceptable approximation for this application.
 
-        character*50 DIRECTORY
-        character*31 ext
-
-        character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
 
@@ -279,6 +275,7 @@ cdis
 !           are below the ground so things don't get too out of hand.
             frac_bias_max = (pres_intvl + blayer_thk_pres) 
      1                     / blayer_thk_pres
+!           frac_bias_max = 1.0 ! Potential mod for AFWA concerns
 
 !           QC Check (Compare MODEL Temps to LAPS Sfc Temp)
 !           For this check, interpolation in P space is sufficient
@@ -286,7 +283,7 @@ cdis
             temp_sfc_intrpl = temp_3d(i,j,k_sfc) * (1.0 - frac_k_sfc)       
      1                      + temp_3d(i,j,k_sfc+1)  *     frac_k_sfc
 
-!           Store the sfc temperature in a local variable
+!           Store the sfc temperature that is finally used in a local variable
             temp_sfc_eff = temp_sfc_k(i,j)
 
             diff_intrpl = temp_sfc_eff - temp_sfc_intrpl ! LAPS - MODEL
@@ -360,6 +357,13 @@ cdis
 
                 frac_bias = (height_top - height(k)) / 
      1                      (height_top - height_sfc)
+
+!               Potential mod for AFWA concerns - apply reverse ramp underground
+!               if(frac_bias .gt. frac_bias_max)then
+!                   frac_bias = (2. * frac_bias_max) - frac_bias
+!                   frac_bias = max(frac_bias,0.)
+!               endif
+
                 frac_bias = min(frac_bias, frac_bias_max) ! Prevent overshooting below sfc
 
                 temp_ref = temp_3d(i,j,k)
@@ -493,12 +497,12 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         if(iwarn .eq. 1)then
             write(6,*)' WARNING: sfc temps had to be reduced to be'
-     1               ,' within adiabatic/3d tolerances, max change = '       
-     1               ,diff_temp_max
+     1               ,' within adiabatic/3d tolerances,'
+     1               ,' max reduction = ',diff_temp_max
         else
             write(6,*)' Input sfc temps were adiabatically/3D'
-     1               ,' consistent with other data within tolerances '
-     1               ,diff_temp_max
+     1               ,' consistent with other data within tolerances,'
+     1               ,' max reduction = ',diff_temp_max
         endif
 
 !       Double Check 3D Temps against Sfc Temps
@@ -528,7 +532,8 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! j
         enddo ! i
 
-!       This should be fairly close to diff_temp_max
+!       This should be fairly close to diff_temp_max 
+!                                      (blayer/adiabatic sfc T reduction)
         write(6,*)' Max diff of input surface T - interpolated 3D T = '       
      1           ,d_diff,i_diff,j_diff,t_diff,rm_diff,p_diff
 
@@ -537,18 +542,18 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         write(6,201)diff_thmax,theta_diff_thmax,i_diff_thmax,
      1                          j_diff_thmax,k_diff_thmax
-201     format('  Maximum Adiabatic Adjustment of ',f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
+201     format('  Maximum Adiabatic Adjustment of Theta',f8.1
+     1        ,' to ',f8.1,' at ',i3,i4,i3)
 
         write(6,211)diff_min,t_diff_min,i_diff_min,
      1                       j_diff_min,k_diff_min
-211     format('  Largest Cold Adjustment of ',5x,f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
+211     format('  Largest Cold Adjustment of Temp      ',f8.1
+     1        ,' to ',f8.1,' at ',i3,i4,i3)
 
         write(6,221)diff_max,t_diff_max,i_diff_max,
      1                       j_diff_max,k_diff_max
-221     format('  Largest Warm Adjustment of ',5x,f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
+221     format('  Largest Warm Adjustment of Temp      ',f8.1
+     1        ,' to ',f8.1,' at ',i3,i4,i3)
 
 !       Height Analysis
         write(6,*)

@@ -883,7 +883,7 @@ cc        character*3 var_2d
      1          ,status='unknown',err=998)
         go to 999
 
- 998    write(6,*)' Error in open_lapsprd_file: cannot open the product'
+ 998    write(6,*)' Error in open_lapsprd_file, cannot open product: '   
      1            ,ext       
         istatus = 0
         return
@@ -950,7 +950,7 @@ cc        character*3 var_2d
         if(istatus.eq.0) then
            write(6,*)
      1          ' Error in open_lapsprd_file_append: ',
-     2          'cannot open the file',
+     2          'cannot open the file ',
      3          directory(1:len_dir)//filename13(i4time,ext(1:3))       
         else
            istatus = 1

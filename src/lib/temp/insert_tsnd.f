@@ -299,7 +299,7 @@ cdis
 
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
 
-        logical l_good_tsnd(max_snd_grid),l_highest,l_analyze(nk)
+        logical l_good_tsnd(max_snd_grid),l_analyze(nk)
 
         write(6,*)
         write(6,*)' Subroutine analyze_tsnd'

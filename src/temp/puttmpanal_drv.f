@@ -98,17 +98,20 @@ cdis
         real*4 lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
-        character*9 a9_time
+!       Needed for stability section
+        real*4 td_sfc_k(NX_L,NY_L)
+        real*4 pbe_2d(NX_L,NY_L)
+        real*4 nbe_2d(NX_L,NY_L)
+        real*4 pres_sfc_mb(NX_L,NY_L)
+        real*4 li(NX_L,NY_L)
+        real*4 t500laps(NX_L,NY_L)
+        real*4 p_1d_pa(NZ_L) ! This should eventually be pres_3d
 
-        character*50 DIRECTORY
         character*31 EXT
 
         character*10  units_2d
         character*125 comment_2d
         character*3 var_2d
-
-        character*9 asc9_time
-        character*1 cmode
 
 c read in LAPS_DOMAIN
         call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo
@@ -126,30 +129,28 @@ c read in LAPS_DOMAIN
 !       Read in surface temp data
         var_2d = 'T'
         ext = 'lsx'
-        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2,i4time_near
-     1est,
-     1  ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,temp_sfc_k,0,istatus)
+        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2
+     1                      ,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L       
+     1                      ,temp_sfc_k,0,istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' LAPS Sfc Temp not available'
-            write(6,*)' Returning from PUT_TEMP_ANAL without writing LT1
-     1 file'
+            write(6,*)' Not calling put_temp_anal'
             go to 999
         endif
 
 !       Read in surface pressure data
         var_2d = 'PS'
         ext = 'lsx'
-        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2,i4time_near
-     1est,
-     1  ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_sfc_pa,0,istatus)
+        call get_laps_2dgrid(i4time_needed,laps_cycle_time/2
+     1                      ,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+     1                      ,pres_sfc_pa,0,istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' LAPS Sfc Pres not available'
-            write(6,*)' Returning from PUT_TEMP_ANAL without writing LT1
-     1 file'
+            write(6,*)' Not calling put_temp_anal'
             go to 999
         endif
 
@@ -168,6 +169,48 @@ c read in LAPS_DOMAIN
      1          ,grid_spacing_m                  ! Input
      1          ,temp_3d,istatus)                ! Output
 
+!  ************ STABILITY TEST STUFF ******************************************
+
+!       This code is here just in case we need it due to a change in stability
+!       index strategy.
+
+        if(.false.)then
+
+!           Read in surface dewpoint data
+            var_2d = 'TD'
+            ext = 'lsx'
+            call get_laps_2dgrid(i4time_needed,laps_cycle_time/2
+     1                      ,i4time_nearest
+     1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L       
+     1                      ,td_sfc_k,0,istatus)
+
+            if(istatus .ne. 1)then
+                write(6,*)' LAPS Sfc Temp not available'
+                write(6,*)' Not calling laps_be'
+                go to 999
+            endif
+
+!           Fill p_1d_pa, later we can change this to pres_3d?
+            do k = 1,NZ_L
+                p_1d_pa = pressure_of_level(k)
+            enddo ! k
+
+            call laps_be(NX_L,NY_L,NZ_L
+     1                  ,temp_sfc_k,td_sfc_k,pres_sfc_pa
+     1                  ,temp_3d,heights_3d,p_1d_pa,topo   
+     1                  ,pbe_2d,nbe_2d)
+
+!           Fill pres_sfc_mb
+            call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
+            call multcon(pres_sfc_mb,.01,NX_L,NY_L)
+
+            flag = 0.0
+            call li_laps(temp_sfc_k,td_sfc_k,pres_sfc_mb,t500laps ! Local?
+     1                  ,i4time_needed,NX_L,NY_L,li,flag,istatus)
+
+!           call put_laps_multi_2d()
+
+        endif ! .false.
 
 ! ************* NOTIFICATION STUFF *********************************************
 
