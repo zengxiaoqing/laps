@@ -121,7 +121,7 @@ print "\n";
 
 # SAO's (METAR's).
 
-$searchstring = "Mapping Sao Obs";
+$searchstring = "Mapping Sfc Obs";
 $i=0; $found=0;
 foreach (@lines) {
   if (/$searchstring/) {$found=1; last;}
@@ -169,3 +169,21 @@ print "\nCloud-drift winds:  ";
 if ($found2 == 1) {print "$nclouddriftwinds \n";}
 else {print "none \n";}
 print "\n";
+
+# RMS Ob-First Guess Grid differences
+print "Obs-First Guess difference stats, after QC (m/s):\n";
+@greplines = grep /BIAS\/RMS/, @lines;
+@greplines = grep /FG/, @greplines;
+print "@greplines[0]";
+print "@greplines[1]";
+print "@greplines[2]";
+print "@greplines[3]";
+print "\n";
+
+print "Obs-LAPS Analysis difference stats, after QC (m/s):\n";
+@greplines = grep /BIAS\/RMS/, @lines;
+@greplines = grep /LAPS/, @greplines;
+print "@greplines[0]";
+print "@greplines[1]";
+print "@greplines[2]";
+print "@greplines[3]";
