@@ -155,16 +155,19 @@ c
  
        character*150 static_dir,filename
        character*3 c3_time_zone
+       character*9 c_institution
        real*4 time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
+     1                       ,c_institution
 
 !      Set defaults
        latlon_int = 0
        continent_line_width = 1.0
        c3_time_zone = 'UTC'
        time_zone = 0.0
+       c_institution = 'NOAA/FSL LAPS'
  
        call get_directory('static',static_dir,len_dir)
 
@@ -181,6 +184,7 @@ c
        namelist_parms%latlon_int = latlon_int
        namelist_parms%continent_line_width = continent_line_width
        namelist_parms%c3_time_zone = c3_time_zone
+       namelist_parms%c_institution = c_institution
        namelist_parms%time_zone = time_zone
 
        istatus = 1
