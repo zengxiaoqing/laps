@@ -455,7 +455,7 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'lga'
 
             elseif(c_type_i .eq. 'wr')then
-                call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
+!               call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'fua'
 
@@ -579,6 +579,8 @@ c       include 'satellite_dims_lvd.inc'
      1                                 v_2d,ISTATUS)
 
                         i4time_3dw = i4_valid
+                        call make_fnam_lp(i4time_3dw,asc9_tim_3dw
+     1                                   ,istatus)     
                         write(6,*)' Valid time = ',asc9_tim_3dw
 
                     else ! lwm
@@ -613,6 +615,7 @@ c       include 'satellite_dims_lvd.inc'
                       write(6,*)' Calling get_uv_2d for ',ext
                       call get_uv_2d(i4time_3dw,k_level,uv_2d,ext
      1                              ,NX_L,NY_L,fcst_hhmm,istatus)
+                      call make_fnam_lp(i4time_3dw,asc9_tim_3dw,istatus)
 
                       if(c_type_i .eq. 'wf')then
 
@@ -1438,8 +1441,8 @@ c       include 'satellite_dims_lvd.inc'
                 colortable = 'vnt'
 
             elseif(var_2d(1:2) .eq. 'HA')then
-                clow = 1.5
-                chigh = 6.4999
+                clow = 2.
+                chigh = 6.
                 cint = 1.0
 
                 colortable = 'haines'
@@ -1448,6 +1451,14 @@ c       include 'satellite_dims_lvd.inc'
                 clow = 0.
                 chigh = 40.
                 cint = 0.
+
+            elseif(var_2d(1:3) .eq. 'CWI')then
+                clow =  0.
+                chigh = 1.
+                cint = 1.
+
+                colortable = 'cwi'
+
             else ! default values
                 clow = 0.
                 chigh = 0.
@@ -4391,7 +4402,7 @@ c                   cint = -1.
      1                             ,'vnt',n_image,scale,'hsect') 
                     endif
                 elseif(var_2d(1:2) .eq. 'HA')then
-                    call ccpfil(field_2d,NX_L,NY_L,1.5,6.4999
+                    call ccpfil(field_2d,NX_L,NY_L,2.,6.
      1                         ,'haines',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
@@ -5449,7 +5460,7 @@ c             if(cint.eq.0.0)cint=0.1
             endif
         endif
 
- 211    format(/' Enter yydddhhmmHHMM or HHMM for file: ',$)
+ 211    format(/' Enter yydddhhmmHHMM or HHMM for file: ',a3,$)
  221    format(a13)
 
         return
