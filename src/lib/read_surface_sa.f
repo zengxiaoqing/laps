@@ -224,8 +224,11 @@ c
               else
                  stn(i)(1:3) = stations(i)(1:3)
               endif
+
            else
-              stn(i)(1:3) = stations(i)(2:4)
+              call right_justify(stations(i))
+              stn(i)(1:3) = stations(i)(18:20)
+
            endif
 c
         enddo !i

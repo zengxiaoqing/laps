@@ -311,7 +311,13 @@ c read in laps lat/lon and topo
             call put_precip_2d(i4time,directory,ext,var,units
      1       ,comment_s,comment_r,NX_L,NY_L,field_2d,ilaps_cycle_time
      1       ,istatus)
-            if(istatus .eq. 1)j_status(n_l1s) = ss_normal
+            if(istatus .eq. 1)then
+                j_status(n_l1s) = ss_normal
+            else
+                write(6,*)
+     1          ' Warning: Bad status returned from put_precip_2d'
+     1          ,istatus
+            endif
 
         else
             write(6,*)' Not Writing Incr / Storm Total Accumulations'
@@ -379,6 +385,9 @@ c read in laps lat/lon and topo
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
      1  nfields,nfields,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
      1                     COMMENT_2D,field_2dsnow,ISTATUS)
-
+        if(istatus .ne. 1)then
+            write(6,*)' Bad status returned from write_laps_data'
+        endif
+     
         return
         end

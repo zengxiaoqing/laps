@@ -76,8 +76,9 @@ c
         icount = 0
         do j = 1,jmax
         do i = 1,imax
-            if(s8a_k(i,j) .lt. 173. .or. s8a_k(i,j) .gt. 350.)then
-                if(icount .le. 100)then
+            if(s8a_k(i,j) .lt. 173. .or. s8a_k(i,j) .gt. 350.
+     1                              .or. istat_s8a  .ne. 1      )then
+                if(icount .le. 100 .and. istat_s8a .eq. 1)then
                     write(6,*)' Bad LVD/S8A Satellite Brightness '       
      1                       ,'Temperature of'
      1                       ,s8a_k(i,j),' at',i,j

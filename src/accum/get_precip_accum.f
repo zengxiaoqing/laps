@@ -70,6 +70,9 @@ cdis
         real*4 snow_accum(imax,jmax) ! M
         real*4 precip_accum(imax,jmax) ! M
 
+!       Local
+        real*4 precip_rateave(imax,jmax)
+        real*4 snow_rateave(imax,jmax)
         real*4 snow_accum_pd(imax,jmax)
         real*4 snow_rate(imax,jmax) ! M/S
         real*4 precip_rate(imax,jmax) ! M/S
@@ -122,6 +125,9 @@ cdis
 
         call make_fnam_lp(i4time_beg,asc_tim_9_beg,istatus)
         call make_fnam_lp(i4time_end,asc_tim_9_end,istatus)
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
 
         write(6,*)' Radar accumulation from ',asc_tim_9_beg,
      1                                 ' to ',asc_tim_9_end
@@ -187,9 +193,9 @@ cdis
 
         do j = 1,jmax
         do i = 1,imax
-            snow_accum(i,j) = 0.
+            snow_rateave(i,j) = 0.
             snow_accum_pd(i,j) = 0.
-            precip_accum(i,j) = 0.
+            precip_rateave(i,j) = 0.
             l_mask(i,j) = .false.
         enddo ! i
         enddo ! j
@@ -225,13 +231,12 @@ cdis
 !               initializing and don't need to add to the snow accum, we just 
 !               read in the initial ancillary LAPS data.
 
-                if(l_first_sfc_update_completed .eqv. .true.)then
-
-
+                if(l_first_sfc_update_completed)then
                     do j = 1,jmax
                     do i = 1,imax
-                        if(snow_accum_pd(i,j) .gt. 1e-10)
-     1                     l_mask(i,j) = .true.
+                        if(snow_accum_pd(i,j) .gt. 1e-10)then
+                            l_mask(i,j) = .true.
+                        endif
                     enddo
                     enddo
 
@@ -289,8 +294,8 @@ cdis
                                 endif
 
                                 if(r_pcp_type_thresh .eq. 2.0)then
-                                    snow_accum(i,j)
-     1                          = snow_accum(i,j) + snow_accum_pd(i,j)
+                                    snow_rateave(i,j) = 
+     1                              snow_rateave(i,j)+snow_accum_pd(i,j)       
                                     n_snw_pts = n_snw_pts + 1
                                 else
                                     write(6,*)
@@ -317,7 +322,7 @@ cdis
                         ipcp_1d(k) = iarg
                     enddo ! k
                     write(6,101)l_mask(im,jm),snow_accum_pd(im,jm)
-     1                          ,snow_accum(im,jm)
+     1                          ,snow_rateave(im,jm)
      1                          ,t_sfc_k(im,jm),td_sfc_k(im,jm)
      1                          ,i2_pcp_type_2d(im,jm)
      1                          ,(ipcp_1d(k),k=1,min(kmax,10))
@@ -424,9 +429,9 @@ cdis
                 var_2d = 'RHL'
                 ext = 'lh3'
                 call get_laps_3dgrid(i4time_temp,ilaps_cycle_time ! *2
-     1                                  ,i4time_rh
-     1          ,imax,jmax,kmax,ext,var_2d
-     1                  ,units_2d,comment_2d,rh_3d,istatus)
+     1                              ,i4time_rh
+     1                              ,imax,jmax,kmax,ext,var_2d
+     1                              ,units_2d,comment_2d,rh_3d,istatus)       
                 if(istatus .ne. 1)then
                     write(6,*)' Warning: LAPS 3D RH not available'
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
@@ -470,8 +475,8 @@ cdis
 
             write(6,*)' Call get_low_ref'
 
-            call get_low_ref(grid_ra_ref,pres_sfc_pa,imax,jmax,kmax,dbz_
-     12d)
+            call get_low_ref(grid_ra_ref,pres_sfc_pa,imax,jmax,kmax
+     1                      ,dbz_2d)
 
             write(6,*)' Incrementing Precip Accumulation '
      1               ,'rate for this scan (call zr)'
@@ -480,8 +485,10 @@ cdis
 
             do j = 1,jmax
             do i = 1,imax
-                precip_accum(i,j) = precip_accum(i,j)
-     1                            + precip_rate(i,j) * frac(ifile)
+                if(precip_rate(i,j) .ne. r_missing_data)then
+                    precip_rateave(i,j) = precip_rateave(i,j)
+     1                                  + precip_rate(i,j) * frac(ifile)       
+                endif
             enddo ! i
             enddo ! j
 
@@ -560,8 +567,8 @@ cdis
                     endif
 
                     if(r_pcp_type_thresh .eq. 2.0)then
-                        snow_accum(i,j) = snow_accum(i,j) 
-     1                                  + snow_accum_pd(i,j)
+                        snow_rateave(i,j) = snow_rateave(i,j) 
+     1                                    + snow_accum_pd(i,j)
                         n_snw_pts = n_snw_pts + 1
                     endif
 
@@ -585,10 +592,10 @@ cdis
             ipcp_1d(k) = iarg
         enddo ! k
         write(6,101)l_mask(im,jm),snow_accum_pd(im,jm)
-     1                          ,snow_accum(im,jm)
-     1                          ,t_sfc_k(im,jm),td_sfc_k(im,jm)
-     1                          ,i2_pcp_type_2d(im,jm)
-     1                          ,(ipcp_1d(k),k=1,min(kmax,10))
+     1                           ,snow_rateave(im,jm)
+     1                           ,t_sfc_k(im,jm),td_sfc_k(im,jm)
+     1                           ,i2_pcp_type_2d(im,jm)
+     1                           ,(ipcp_1d(k),k=1,min(kmax,10))
 
         write(6,*)' # of Points Snow/Precip/ZR = ',n_snw_pts,n_pcp_pts
      1                                            ,n_zr_pts
@@ -601,8 +608,17 @@ cdis
 !       Convert from time averaged rate to accumulation
         do j = 1,jmax
         do i = 1,imax
-            snow_accum(i,j) = snow_accum(i,j) * i4_interval
-            precip_accum(i,j) = precip_accum(i,j) * i4_interval
+            if(snow_rateave(i,j) .ne. r_missing_data)then
+                snow_accum(i,j) = snow_rateave(i,j) * i4_interval
+            else
+                snow_accum(i,j) = r_missing_data
+            endif
+
+            if(precip_rateave(i,j) .ne. r_missing_data)then
+                precip_accum(i,j) = precip_rateave(i,j) * i4_interval
+            else
+                precip_accum(i,j) = r_missing_data
+            endif
         enddo ! i
         enddo ! j
 
@@ -652,7 +668,7 @@ cdis
                 frac(iend) = frac(iend) + 0.5 * frac_between_files
 
                 if(interval_between_files .gt. max_radar_gap)then
-                    write(6,*)' ERROR: Gap in radar files (min) >'
+                    write(6,*)' Warning: Gap in radar files (min) >'
      1                                          ,max_radar_gap/60
                     istatus = 0
                     return
@@ -661,8 +677,8 @@ cdis
             endif
 
             if(i4time_file(ibeg) .lt. i4time_beg .and.
-     1       i4time_file(iend) .gt. i4time_beg .and.
-     1       i4time_file(iend) .le. i4time_end        )then ! Straddle Beginning
+     1         i4time_file(iend) .gt. i4time_beg .and.
+     1         i4time_file(iend) .le. i4time_end     )then ! Straddle Beginning
                 a = i4time_beg - i4time_file(ibeg)
                 b = i4time_file(iend) - i4time_beg
                 partial_frac = b/(a+b)
@@ -672,7 +688,7 @@ cdis
      1                          * frac_between_files * partial_frac
 
                 if(interval_between_files .gt. max_radar_gap)then
-                    write(6,*)' ERROR: Gap in radar files (min) >'
+                    write(6,*)' Warning: Gap in radar files (min) >'
      1                                          ,max_radar_gap/60
                     istatus = 0
                     return
@@ -681,8 +697,8 @@ cdis
             endif
 
             if(i4time_file(ibeg) .lt. i4time_end   .and.
-     1       i4time_file(ibeg) .ge. i4time_beg   .and.
-     1       i4time_file(iend) .gt. i4time_end       )then ! Straddle End
+     1         i4time_file(ibeg) .ge. i4time_beg   .and.
+     1         i4time_file(iend) .gt. i4time_end         )then ! Straddle End
                 a = i4time_end - i4time_file(ibeg)
                 b = i4time_file(iend) - i4time_end
                 partial_frac = a/(a+b)
@@ -692,7 +708,7 @@ cdis
      1                  * frac_between_files * partial_frac
 
                 if(interval_between_files .gt. max_radar_gap)then
-                    write(6,*)' ERROR: Gap in radar files (min) >'
+                    write(6,*)' Warning: Gap in radar files (min) >'
      1                                          ,max_radar_gap/60
                     istatus = 0
                     return
@@ -700,8 +716,8 @@ cdis
 
             endif
 
-            if(i4time_file(ibeg) .lt. i4time_beg   .and.
-     1       i4time_file(iend) .gt. i4time_end    )then ! Brackets the Pd
+            if(i4time_file(ibeg) .lt. i4time_beg .and.
+     1         i4time_file(iend) .gt. i4time_end       )then ! Brackets the Pd
                 i4time_mid = i4time_beg + (i4time_end - i4time_beg) / 2
                 frac_mid = float(i4time_mid        - i4time_file(ibeg))
      1           /       float(i4time_file(iend) - i4time_file(ibeg))
@@ -709,7 +725,7 @@ cdis
                 frac(iend) = frac_mid
 
                 if(interval_between_files .gt. max_radar_gap)then
-                    write(6,*)' ERROR: Gap in radar files (min) >'
+                    write(6,*)' Warning: Gap in radar files (min) >'
      1                                          ,max_radar_gap/60
                     istatus = 0
                     return
@@ -731,7 +747,8 @@ cdis
 
         if(abs(frac_sum - 1.0) .gt. 1e-5)then
 !           Note: we can here potentially wait for more radar data in driver
-            write(6,*)' ERROR: Fractions do not add up to 1.0',frac_sum
+            write(6,*)' Warning: Fractions do not add up to 1.0'
+     1               ,frac_sum
             istatus = 0
         endif
 
