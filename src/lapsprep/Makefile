@@ -35,9 +35,13 @@
 
 SRCROOT=../..
 
-LAPSTHERMO=$(SRCROOT)/src/lib/mthermo/libmthermo.a
-
 include $(SRCROOT)/src/include/makefile.inc
+
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a
+
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
 
 RM=rm -f 
 
@@ -48,7 +52,7 @@ RM=rm -f
 			$(FC) -c $(FFLAGS) $(FREE) $*.f
 
 EXE=lapsprep.exe
-FSRC=lapsprep.f lwc2vapor.f
+FSRC=lapsprep.f   
 
 FOBJS=$(FSRC:.f=.o)
 
@@ -64,12 +68,12 @@ FMOD = module_constants.o \
 
 all:			$(EXE)
 
-$(EXE):			$(FOBJS) $(FMOD)
-			$(FC) -o $@ $(FOBJS) $(FMOD)  $(LAPSLIB) $(OTHERLIBS) $(LAPSTHERMO)
+$(EXE):			$(FOBJS) $(FMOD) $(LAPSLIBS)
+			$(FC) -o $@ $(FOBJS) $(FMOD)  $(LAPSLIBS) $(OTHERLIBS) 
 
 debug:	
 	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
- 	"LAPSLIBS	=	$(DBLAPSLIB)" 	\
+ 	"LAPSLIBS	=	$(DBLAPSLIBS)" 	\
 	"FFLAGS         =	$(DBFLAGS)" 	)
 
 lapsprep.o:		$(FMOD)
