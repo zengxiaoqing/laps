@@ -39,10 +39,10 @@ if (-e /w3/lapb) then
 
 else
 #   External to FSL
-    setenv SERVER_ROOT $LAPS_DATA_ROOT/lapsprd/www
+    setenv SERVER_ROOT $LAPS_DATA_ROOT                
     mkdir -p $SERVER_ROOT
-    setenv WWW_DOMAIN domains/$DOMAIN_SUFFIX
-    setenv LAPS_GIFS     $EXE_DIR/..
+    setenv WWW_DOMAIN lapsprd/www              
+    setenv LAPS_GIFS     $EXE_DIR/../etc/www/anal2d
 
 endif
 
