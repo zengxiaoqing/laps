@@ -30,6 +30,8 @@ print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
 # In the future, this construct could be expanded to allow the
 # cronfile and laps_monitor.pl scripts to handle multiple windows.
 
+chdir $LAPS_DATA_ROOT;
+
 #Make a copy of the cronfile that is unique for this LAPS_DATA_ROOT
 system("cp $LAPSINSTALLROOT/util/cronfile $LAPS_DATA_ROOT/cronfile");
 
