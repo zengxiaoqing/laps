@@ -413,7 +413,7 @@ if ($num_pres > 0){ # New method of displaying pressure levels
 print <<"EOF";
 <td align="right">
 <strong>
-Level(s):
+<A HREF="levels.html">Level(s):</A>
 </strong>
 </td>
 
