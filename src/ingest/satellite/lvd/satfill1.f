@@ -12,9 +12,12 @@ c
 c
       implicit none
 c
+      include 'netcdf.inc'
+
       integer   n_lines
       integer   n_elems
       integer   i,n,j,nt
+      integer   record
 
       REAL*4      la1
       REAL*4      lo1
@@ -23,6 +26,7 @@ c
       REAL*4      lov
       INTEGER   validTime
       Integer   nx2,ny2
+      integer   rcode,ncid
 
       character*13  cfname13
       character*13  cvt_i4time_wfo_fname13
@@ -102,19 +106,28 @@ c
             else
                call make_fnam_lp(i4time_nearest,cfname,lstatus)
                c_filename=cdirpath(1:n-1)//cfname//'_'//c_type(1:nt)
+               rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
+               if(rcode.ne.nf_noerr) return
+               call get_cdf_dims(ncid,record,nx2,ny2,istatus)
+               if(istatus.eq.1)then
+                  print*,'Error reading cdf dimensions'
+                  return
+               endif
+ 
             endif
             n=index(c_filename,' ')
             write(6,*)'    Filename: ',c_filename(1:n-1)
 
             call readcdf(csat_id,csat_type,c_type,
      &                   nx2,ny2,
+     &                   record,
      &                   n_elems,n_lines,
      &                   image_prev,
      &                   la1,lo1,
      &                   Dx,Dy,
      &                   Latin,Lov,
      &                   validTime,
-     &                   c_filename,
+     &                   ncid,
      &                   io_status)
             if(io_status .ne. 1)then
                write(6,*)'    Error getting image for qc'

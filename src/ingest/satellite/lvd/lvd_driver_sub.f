@@ -279,6 +279,7 @@ c --------------------------------------------------------------------------
 
       elseif(csattype.eq.'asc')then   !then we are using ascii files for raw ingest sat data
 
+         call s_len(path_to_raw_sat(1,jtype,isat),in)
          write(6,*)'datapath: ',path_to_raw_sat(1,jtype,isat)(1:in)
          write(6,*)'Using getascii_satdat routine'
 

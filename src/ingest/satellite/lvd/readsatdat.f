@@ -19,6 +19,8 @@ c
 c
       implicit none
 
+      include 'netcdf.inc'
+
       integer i,j,n
       integer ntf
       integer nlinesir,nelemir
@@ -30,6 +32,7 @@ c
       integer istatus_ir
       integer istatus_vis
       integer istatus_wv
+      integer wstatus
       integer istat
       integer ispec
 
@@ -53,24 +56,51 @@ c
 c
       INTEGER   Nx
       INTEGER   Ny 
-      INTEGER   validTime
-      REAL*4      la1_vis,la1_ir,la1_wv
-      REAL*4      lo1_vis,lo1_ir,lo1_wv
-      REAL*4      dx_vis,dx_ir,dx_wv
-      REAL*4      dy_vis,dy_ir,dy_wv
-      REAL*4      latin_vis,latin_ir,latin_wv
-      REAL*4      lov_vis,lov_ir,lov_wv
+      INTEGER   record
+      INTEGER   ncid
+      INTEGER   rcode
+      INTEGER   ivalidTime
+      doubleprecision validtime
+      REAL*4    dummy
+      REAL*4    la1_vis,la1_ir,la1_wv
+      REAL*4    lo1_vis,lo1_ir,lo1_wv
+      REAL*4    dx_vis,dx_ir,dx_wv
+      REAL*4    dy_vis,dy_ir,dy_wv
+      REAL*4    latin_vis,latin_ir,latin_wv
+      REAL*4    lov_vis,lov_ir,lov_wv
 
       istatus=1
 
       do i=1,ntf
          do j=1,ntm(i)
+
             call lvd_file_specifier(c_type(j,i),ispec,istat)
 
             if(csat_type.eq.'wfo')then
                n=index(c_dir_path(ispec),' ')-1
                c_wfo_fname = fname9_to_wfo_fname13(c_fname_data(i))
                c_filename=c_dir_path(ispec)(1:n)//c_wfo_fname
+
+               n=index(c_filename,' ')-1
+               print*,'opening ',c_filename(1:n)
+               rcode = NF_OPEN(c_filename,NF_NOWRITE,ncid)
+
+               if(rcode.ne.NF_NOERR) then
+                  print *, NF_STRERROR(rcode)
+                  print *,'NF_OPEN ',c_filename(1:n)
+                  istatus=-1
+                  return
+               endif
+
+               print*,'calling get_attribute_wfo ',c_type(i,j)
+               call get_attribute_wfo(ncid,dummy,dummy,dummy,
+     &dummy,dummy,dummy,dummy,dummy,dummy,dummy,nx,ny,wstatus)
+
+               if(wstatus .lt. 0)then
+                  print*,'No attributes: get_attribute_wfo ',c_type(j,i)
+                  return
+               endif
+               record=1
                n=index(c_filename,' ')
                write(6,*)'Reading: ',c_filename(1:n)
             else
@@ -79,6 +109,17 @@ c
      &'_'//c_type(j,i)
                n=index(c_filename,' ')
                write(6,*)'Reading: ',c_filename(1:n)
+
+               rcode=NF_OPEN(c_filename,NF_NOWRITE,NCID)
+               if(rcode.ne.nf_noerr) return
+
+               call get_cdf_dims(ncid,record,nx,ny,istatus)
+               if(istatus.eq.1)then
+                  print*,'Error reading cdf dimensions'
+                  return
+               endif
+               istatus =1
+
             endif
 
             if(ispec.ne.1.and.ispec.ne.3)then    !check for visible and water vapor
@@ -87,13 +128,14 @@ c
      &                    csat_type,
      &                    c_type(j,i),
      &                    nx,ny,
+     &                    record,
      &                    nelemir,nlinesir,
      &                    ir_image,
      &                    la1_ir,lo1_ir,
      &                    Dx_ir,Dy_ir,
      &                    Latin_ir,Lov_ir,
-     &                    validTime,
-     &                    c_filename,
+     &                    ivalidTime,
+     &                    ncid,
      &                    istatus_ir)
                if(istatus_ir.eq.1)then
                   write(6,*)'Successful'
@@ -117,13 +159,14 @@ c
      &                    csat_type,
      &                    c_type(j,i),
      &                    nx,ny,
+     &                    record,
      &                    nelemvis,nlinesvis,
      &                    vis_image,
      &                    la1_vis,lo1_vis,
      &                    Dx_vis,Dy_vis,
      &                    Latin_vis,Lov_vis,
-     &                    validTime,
-     &                    c_filename,
+     &                    ivalidTime,
+     &                    ncid,
      &                    istatus_vis)
                if(istatus_vis.eq.1)then
                   write(6,*)'Successful'
@@ -142,13 +185,14 @@ c
      &                    csat_type,
      &                    c_type(j,i),
      &                    nx,ny,
+     &                    record,
      &                    nelemwv,nlineswv,
      &                    wv_image,
      &                    la1_wv,lo1_wv,
      &                    Dx_wv,Dy_wv,
      &                    Latin_wv,Lov_wv,
-     &                    validTime,
-     &                    c_filename,
+     &                    ivalidTime,
+     &                    ncid,
      &                    istatus_wv)
                if(istatus_wv.eq.1)then
                   write(6,*)'Successful'
