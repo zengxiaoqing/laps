@@ -102,7 +102,7 @@ c
       integer i4time_now_lga,i4time_now_gg
       integer max_files,bg_files
       integer itime_inc
-      parameter (max_files=900)
+      parameter (max_files=600)
       character*256 names(max_files)
       character*256 reject_names(max_files)
       integer reject_cnt
@@ -477,7 +477,9 @@ c
      .          valid_bg(max_files),time_bg(max_files),
      .          bgvalid,
      .          i,ic,ii,j,jj,k,kk,l,ldl,lf,
-     .          istatus,istatus_prep
+     .          istatus
+
+      integer   istatus_prep(max_files)
 
       integer   i4lgatime(max_files)
       integer   i4bgtime
@@ -868,9 +870,9 @@ c
      +    ,prbght,prbgsh,prbguv,prbgww
      +    ,htbg,tpbg,uwbg,vwbg,shbg,wwbg
      +    ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep)
+     +    ,uwbg_sfc,vwbg_sfc,mslpbg,istatus_prep(nf))
 
-       if (istatus_prep .ne. 0) then
+       if (istatus_prep(nf) .ne. 0) then
 
 c           call s_len(fname_bg(nf),lf)
 c           call s_len(bgpath,l)
