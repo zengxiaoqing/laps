@@ -26,6 +26,9 @@ require "timelocal.pl";
 use vars qw($opt_h $opt_j $opt_H $opt_o $opt_q);
 getopt('hj');
 
+
+my @hosts = qw( machine1 machine2 );
+
 my $LAPSROOT=shift || die "LAPS root directory required";
 
 require "$LAPSROOT/etc/fxa.pm";
@@ -45,7 +48,7 @@ if($fxa_sys!=0){
 
 my $month = (gmtime())[4];
 my $sfcfile = "$LAPS_DATA_ROOT/lapsprd/model/sfc/sfc$month"."b";
-my $S_MODEL = "$LAPSROOT/model/bin/rams";
+my $S_MODEL = "smsRun 1 $LAPSROOT/model/bin/sfm";
 my $P_MODEL = "$LAPSROOT/model/bin/sfm";
 
 $ENV{MPI_ROOT}="/home/lapb/jedwards/mpich/bin/";
@@ -71,7 +74,7 @@ if($opt_H>0){
 #
 #
 my($jjj,$hh,$dd,$MMM,$yyyy,$time,$mm,$yy,$rtime,$freq);
-if(open(LAPSTIME,"$LAPS_DATA_ROOT/time/systime.dat")){
+if(! defined($opt_h) && open(LAPSTIME,"$LAPS_DATA_ROOT/time/systime.dat")){
     my @lapstime = <LAPSTIME>;
     close(LAPSTIME);
 
@@ -87,8 +90,7 @@ if(open(LAPSTIME,"$LAPS_DATA_ROOT/time/systime.dat")){
 
 }else{ # error on open
 #
-    print "Could not get LAPS time - getting system time\n";
-    exit;
+    print "Could not get LAPS time - getting system time\n" unless(defined($opt_h));
     $time = time;
 #
     ($yyyy, $mm, $dd, $hh) = &unix_to_time($time); 
@@ -601,6 +603,18 @@ unless($opt_q>0){
     }
     close(SFMOUT);
 
+    if($nprocs>1 && `hostname` =~ /b52/){
+      $nprocs+=1;
+        print "Waiting for $nprocs processors\n";
+      my $b52avail = `/usr/local/sms/bin/waitFor $nprocs 5 20`;
+        $nprocs-=1;
+      if($b52avail != 0){
+          print "ERROR: B52 reports only $b52avail procs available after 1 hour\n";
+          exit;
+      }
+    }
+
+
 #
 # Start the postprocessing script
 #
@@ -620,11 +634,11 @@ unless($opt_q>0){
     print "Starting the model $child_pid\n";
 
 #system("wall \"Starting the SFM forecast model\"");
-    if($nprocs==1){
-	&forksub("$S_MODEL",$lockfile);
-    }else{
-	&run_parallel($nprocs,$P_MODEL,$lockfile);
-    }
+#    if($nprocs==1){
+#	&forksub("$S_MODEL",$lockfile);
+#    }else{
+	&run_parallel($nprocs,$P_MODEL,$lockfile,$runlength,@hosts);
+#    }
 #system("wall \"SFM forecast model done: $LAPS_DATA_ROOT \"") unless($opt_o);
     print `time`;
 
@@ -777,28 +791,50 @@ sub postproc{
 }
 
 sub run_parallel{
-    my($procs,$exe,$lockfile) = @_;
+    my($procs,$exe,$lockfile,$runlength,@hosts) = @_;
     my($smsSrvr) = "$LAPSROOT/model/bin/smsSrvr";
     my($rundir) = `pwd`;
     $rundir =~ s/\s*$//;
     my($sys);
-    $ENV{'USER'} = 'fxa';
-    system("$LAPSROOT/model/bin/kipc");
 
-    open(PG,">procsfm");
-    my($host) = `hostname`;
-    chomp($host);
-    $host =~ s/\..*$//;
-    print PG "$host 0\n";
-    my($i); 
-    for($i=0;$i<$procs;$i++){
-	print PG "$host 1 $exe\n";
+    my $machine = `uname -s`;
+
+    $ENV{'USER'} = 'fxa';
+    system("$LAPSROOT/model/bin/kipc") if($machine eq "HP-UX");
+
+
+
+    open(PG,">procsfm") || die "Could not open procsfm";
+    my $host;
+    if(@hosts){
+      $host = $hosts[0];
+    }else{
+      $host = `hostname`;
+      chomp($host);
+      $host =~ s/\..*$//;
     }
+
+    print PG "$host 0 $smsSrvr\n";
+    my($i); 
+    if($runlength<=2){
+      for($i=0;$i<$procs;$i++){
+	print PG "$host 1 $exe\n";
+      }
+    }else{
+      for($i=0;$i<$procs;$i++){
+	print PG "$hosts[1] 1 $exe\n";
+      }
+    }      
     close(PG);
 #    $sys = "$LAPSROOT/model/bin/mpirun -p4pg $rundir/procsfm $smsSrvr $rundir $procs $exe";
 #    $sys = "/opt/mpi/bin/mpirun $smsSrvr $rundir $procs $exe -np $procs $exe";
 #    $sys = "$LAPSROOT/model/bin/smsRun $procs $exe";
-    $sys = "smsRun $procs $exe";
+
+    
+
+    $sys = "$smsSrvr $LAPS_DATA_ROOT/static/model/usr $procs $exe -p4pg $LAPS_DATA_ROOT/static/model/usr/procsfm";
+
+#    $sys = "smsRun $procs $exe";
     print $sys;
     &forksub($sys,$lockfile);
 
