@@ -90,6 +90,19 @@ netcdf lfr {
             fwi:lvl_coord = "NONE" ;
             fwi:LAPS_units = "NONE" ;
 
+        //	Critical fire weather index
+        float 
+            cwi(record,z,y,x) ;
+            cwi:navigation_dim = "nav";
+            cwi:record = "valtime, reftime";
+            cwi:_FillValue = 1.e+37f;
+            cwi:long_name = "critical fire weather index" ;
+            cwi:units = "none" ;
+            cwi:valid_range = 0.f, 1.0f ;
+            cwi:LAPS_var = "CWI" ;
+            cwi:lvl_coord = "NONE" ;
+            cwi:LAPS_units = "NONE" ;
+
         //	LAPS variables
 
         long
@@ -105,6 +118,7 @@ netcdf lfr {
             ham_comment(record,z,namelen),
             hah_comment(record,z,namelen),
             fwi_comment(record,z,namelen),
+            cwi_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -133,6 +147,10 @@ netcdf lfr {
         short
             fwi_fcinv(record, z);
             fwi_fcinv:_FillValue= 0s;
+              	
+        short
+            cwi_fcinv(record, z);
+            cwi_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 

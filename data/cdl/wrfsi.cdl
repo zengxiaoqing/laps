@@ -127,7 +127,7 @@ netcdf static {
             std:navigation_dim = "nav";
             std:record = "valtime, reftime";
             std:_FillValue = 1.e+37f;
-            std:long_name="LAPS grid std dev of elevation";
+            std:long_name="Grid std dev of elevation";
             std:units="meters";
             std:valid_range= -5000.f, 5000.f;
 	    std:LAPS_units="METERS";
@@ -168,17 +168,29 @@ netcdf static {
             ldf:valid_range= 0.f, 1.f;
 	    ldf:LAPS_units="none";
                 	        
-        //	land use
+        //	land-water mask
 
 	float                                  
+            lnd(record,z,y,x);
+            lnd:navigation_dim = "nav";
+            lnd:record = "valtime, reftime";
+            lnd:_FillValue = 1.e+37f;
+            lnd:long_name="land (1) water (0) mask";
+            lnd:units="none";
+            lnd:valid_range= 0.f, 1.f;
+	    lnd:LAPS_units="none";
+
+        //      landuse dominant category
+
+        float
             use(record,z,y,x);
             use:navigation_dim = "nav";
             use:record = "valtime, reftime";
             use:_FillValue = 1.e+37f;
-            use:long_name="land use";
+            use:long_name="land use dominant category";
             use:units="none";
             use:valid_range= 0.f, 20.f;
-	    use:LAPS_units="none";
+            use:LAPS_units="none";
 
         //      sin projection rotation
 
@@ -288,7 +300,7 @@ netcdf static {
             alb:valid_range= 0.f, 1.f;
             alb:LAPS_units="none";
 
-        //      mean long slope
+        //      mean longitude terrain slope
 
         float
             sln(record,z,y,x);
@@ -300,7 +312,7 @@ netcdf static {
             sln:valid_range= -1.f, 1.f;
             sln:LAPS_units="M/M";
 
-        //      mean lat slope
+        //      mean latitude terrain slope
 
         float
             slt(record,z,y,x);
@@ -324,30 +336,1000 @@ netcdf static {
             avc:valid_range= -200.f, 5000.f;
             avc:LAPS_units="METERS MSL";
 
-        //      LAPS grid top layer soiltype
+        //      top layer dominant category soiltype
 
         float
             stl(record,z,y,x);
             stl:navigation_dim = "nav";
             stl:record = "valtime, reftime";
             stl:_FillValue = 1.e+37f;
-            stl:long_name="top layer (0-30cm) soiltype";
+            stl:long_name="top layer (0-30cm) dom cat soiltype";
             stl:units="categorical";
-            stl:valid_range= -200.f, 5000.f;
+            stl:valid_range= 0.f, 1.f;
             stl:LAPS_units="categorical";
 
-        //      LAPS grid bottom layer soiltype
+        //      bottom layer dominant category soiltype
 
         float
             sbl(record,z,y,x);
             sbl:navigation_dim = "nav";
             sbl:record = "valtime, reftime";
             sbl:_FillValue = 1.e+37f;
-            sbl:long_name="top layer (30-90cm) soiltype";
+            sbl:long_name="top layer (30-90cm) dom cat soiltype";
             sbl:units="categorical";
-            sbl:valid_range= 0.f, 30.f;
+            sbl:valid_range= 0.f, 16.f;
             sbl:LAPS_units="categorical";
 
+        //      percent dist landuse category 01
+
+        float
+            u01(record,z,y,x);
+            u01:navigation_dim = "nav";
+            u01:record = "valtime, reftime";
+            u01:_FillValue = 1.e+37f;
+            u01:long_name="land use category 01";
+            u01:units="none";
+            u01:valid_range= 0.f, 1.f;
+            u01:LAPS_units="none";
+
+        //      percent dist landuse category 02
+
+        float
+            u02(record,z,y,x);
+            u02:navigation_dim = "nav";
+            u02:record = "valtime, reftime";
+            u02:_FillValue = 1.e+37f;
+            u02:long_name="land use category 02";
+            u02:units="none";
+            u02:valid_range= 0.f, 1.f;
+            u02:LAPS_units="none";
+
+        //      percent dist landuse category 03
+
+        float
+            u03(record,z,y,x);
+            u03:navigation_dim = "nav";
+            u03:record = "valtime, reftime";
+            u03:_FillValue = 1.e+37f;
+            u03:long_name="land use category 03";
+            u03:units="none";
+            u03:valid_range= 0.f, 1.f;
+            u03:LAPS_units="none";
+
+        //      percent dist landuse category 04
+
+        float
+            u04(record,z,y,x);
+            u04:navigation_dim = "nav";
+            u04:record = "valtime, reftime";
+            u04:_FillValue = 1.e+37f;
+            u04:long_name="land use category 04";
+            u04:units="none";
+            u04:valid_range= 0.f, 1.f;
+            u04:LAPS_units="none";
+
+        //      percent dist landuse category 05
+
+        float
+            u05(record,z,y,x);
+            u05:navigation_dim = "nav";
+            u05:record = "valtime, reftime";
+            u05:_FillValue = 1.e+37f;
+            u05:long_name="land use category 05";
+            u05:units="none";
+            u05:valid_range= 0.f, 1.f;
+            u05:LAPS_units="none";
+
+        //      percent dist landuse category 06
+
+        float
+            u06(record,z,y,x);
+            u06:navigation_dim = "nav";
+            u06:record = "valtime, reftime";
+            u06:_FillValue = 1.e+37f;
+            u06:long_name="land use category 06";
+            u06:units="none";
+            u06:valid_range= 0.f, 1.f;
+            u06:LAPS_units="none";
+
+        //      percent dist landuse category 07
+
+        float
+            u07(record,z,y,x);
+            u07:navigation_dim = "nav";
+            u07:record = "valtime, reftime";
+            u07:_FillValue = 1.e+37f;
+            u07:long_name="land use category 07";
+            u07:units="none";
+            u07:valid_range= 0.f, 1.f;
+            u07:LAPS_units="none";
+
+        //      percent dist landuse category 08
+
+        float
+            u08(record,z,y,x);
+            u08:navigation_dim = "nav";
+            u08:record = "valtime, reftime";
+            u08:_FillValue = 1.e+37f;
+            u08:long_name="land use category 08";
+            u08:units="none";
+            u08:valid_range= 0.f, 1.f;
+            u08:LAPS_units="none";
+
+        //      percent dist landuse category 09
+
+        float
+            u09(record,z,y,x);
+            u09:navigation_dim = "nav";
+            u09:record = "valtime, reftime";
+            u09:_FillValue = 1.e+37f;
+            u09:long_name="land use category 09";
+            u09:units="none";
+            u09:valid_range= 0.f, 1.f;
+            u09:LAPS_units="none";
+
+        //      percent dist landuse category 10
+
+        float
+            u10(record,z,y,x);
+            u10:navigation_dim = "nav";
+            u10:record = "valtime, reftime";
+            u10:_FillValue = 1.e+37f;
+            u10:long_name="land use category 10";
+            u10:units="none";
+            u10:valid_range= 0.f, 1.f;
+            u10:LAPS_units="none";
+
+        //      percent dist landuse category 11
+
+        float
+            u11(record,z,y,x);
+            u11:navigation_dim = "nav";
+            u11:record = "valtime, reftime";
+            u11:_FillValue = 1.e+37f;
+            u11:long_name="land use category 11";
+            u11:units="none";
+            u11:valid_range= 0.f, 1.f;
+            u11:LAPS_units="none";
+
+        //      percent dist landuse category 12
+
+        float
+            u12(record,z,y,x);
+            u12:navigation_dim = "nav";
+            u12:record = "valtime, reftime";
+            u12:_FillValue = 1.e+37f;
+            u12:long_name="land use category 12";
+            u12:units="none";
+            u12:valid_range= 0.f, 1.f;
+            u12:LAPS_units="none";
+
+        //      percent dist landuse category 13
+
+        float
+            u13(record,z,y,x);
+            u13:navigation_dim = "nav";
+            u13:record = "valtime, reftime";
+            u13:_FillValue = 1.e+37f;
+            u13:long_name="land use category 13";
+            u13:units="none";
+            u13:valid_range= 0.f, 1.f;
+            u13:LAPS_units="none";
+
+        //      percent dist landuse category 14
+
+        float
+            u14(record,z,y,x);
+            u14:navigation_dim = "nav";
+            u14:record = "valtime, reftime";
+            u14:_FillValue = 1.e+37f;
+            u14:long_name="land use category 14";
+            u14:units="none";
+            u14:valid_range= 0.f, 1.f;
+            u14:LAPS_units="none";
+
+        //      percent dist landuse category 15
+
+        float
+            u15(record,z,y,x);
+            u15:navigation_dim = "nav";
+            u15:record = "valtime, reftime";
+            u15:_FillValue = 1.e+37f;
+            u15:long_name="land use category 15";
+            u15:units="none";
+            u15:valid_range= 0.f, 1.f;
+            u15:LAPS_units="none";
+
+        //      percent dist landuse category 16
+
+        float
+            u16(record,z,y,x);
+            u16:navigation_dim = "nav";
+            u16:record = "valtime, reftime";
+            u16:_FillValue = 1.e+37f;
+            u16:long_name="land use category 16";
+            u16:units="none";
+            u16:valid_range= 0.f, 1.f;
+            u16:LAPS_units="none";
+
+        //      percent dist landuse category 17
+
+        float
+            u17(record,z,y,x);
+            u17:navigation_dim = "nav";
+            u17:record = "valtime, reftime";
+            u17:_FillValue = 1.e+37f;
+            u17:long_name="land use category 17";
+            u17:units="none";
+            u17:valid_range= 0.f, 1.f;
+            u17:LAPS_units="none";
+
+        //      percent dist landuse category 18
+
+        float
+            u18(record,z,y,x);
+            u18:navigation_dim = "nav";
+            u18:record = "valtime, reftime";
+            u18:_FillValue = 1.e+37f;
+            u18:long_name="land use category 18";
+            u18:units="none";
+            u18:valid_range= 0.f, 1.f;
+            u18:LAPS_units="none";
+
+        //      percent dist landuse category 19
+
+        float
+            u19(record,z,y,x);
+            u19:navigation_dim = "nav";
+            u19:record = "valtime, reftime";
+            u19:_FillValue = 1.e+37f;
+            u19:long_name="land use category 19";
+            u19:units="none";
+            u19:valid_range= 0.f, 1.f;
+            u19:LAPS_units="none";
+
+        //      percent dist landuse category 20
+
+        float
+            u20(record,z,y,x);
+            u20:navigation_dim = "nav";
+            u20:record = "valtime, reftime";
+            u20:_FillValue = 1.e+37f;
+            u20:long_name="land use category 20";
+            u20:units="none";
+            u20:valid_range= 0.f, 1.f;
+            u20:LAPS_units="none";
+
+        //      percent dist landuse category 21
+
+        float
+            u21(record,z,y,x);
+            u21:navigation_dim = "nav";
+            u21:record = "valtime, reftime";
+            u21:_FillValue = 1.e+37f;
+            u21:long_name="land use category 21";
+            u21:units="none";
+            u21:valid_range= 0.f, 1.f;
+            u21:LAPS_units="none";
+
+        //      percent dist landuse category 22
+
+        float
+            u22(record,z,y,x);
+            u22:navigation_dim = "nav";
+            u22:record = "valtime, reftime";
+            u22:_FillValue = 1.e+37f;
+            u22:long_name="land use category 22";
+            u22:units="none";
+            u22:valid_range= 0.f, 1.f;
+            u22:LAPS_units="none";
+
+        //      percent dist landuse category 23
+
+        float
+            u23(record,z,y,x);
+            u23:navigation_dim = "nav";
+            u23:record = "valtime, reftime";
+            u23:_FillValue = 1.e+37f;
+            u23:long_name="land use category 23";
+            u23:units="none";
+            u23:valid_range= 0.f, 1.f;
+            u23:LAPS_units="none";
+
+        //      percent dist landuse category 24
+
+        float
+            u24(record,z,y,x);
+            u24:navigation_dim = "nav";
+            u24:record = "valtime, reftime";
+            u24:_FillValue = 1.e+37f;
+            u24:long_name="land use category 24";
+            u24:units="none";
+            u24:valid_range= 0.f, 1.f;
+            u24:LAPS_units="none";
+
+        //      percent dist top layer soiltype category 01
+
+        float
+            t01(record,z,y,x);
+            t01:navigation_dim = "nav";
+            t01:record = "valtime, reftime";
+            t01:_FillValue = 1.e+37f;
+            t01:long_name="% dist top layer soiltype cat 01";
+            t01:units="categorical";
+            t01:valid_range= 0.f, 1.f;
+            t01:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 02
+
+        float
+            t02(record,z,y,x);
+            t02:navigation_dim = "nav";
+            t02:record = "valtime, reftime";
+            t02:_FillValue = 1.e+37f;
+            t02:long_name="% dist top layer soiltype cat 02";
+            t02:units="categorical";
+            t02:valid_range= 0.f, 1.f;
+            t02:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 03
+
+        float
+            t03(record,z,y,x);
+            t03:navigation_dim = "nav";
+            t03:record = "valtime, reftime";
+            t03:_FillValue = 1.e+37f;
+            t03:long_name="% dist top layer soiltype cat 03";
+            t03:units="categorical";
+            t03:valid_range= 0.f, 1.f;
+            t03:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 04
+
+        float
+            t04(record,z,y,x);
+            t04:navigation_dim = "nav";
+            t04:record = "valtime, reftime";
+            t04:_FillValue = 1.e+37f;
+            t04:long_name="% dist top layer soiltype cat 04";
+            t04:units="categorical";
+            t04:valid_range= 0.f, 1.f;
+            t04:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 05
+
+        float
+            t05(record,z,y,x);
+            t05:navigation_dim = "nav";
+            t05:record = "valtime, reftime";
+            t05:_FillValue = 1.e+37f;
+            t05:long_name="% dist top layer soiltype cat 05";
+            t05:units="categorical";
+            t05:valid_range= 0.f, 1.f;
+            t05:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 06
+
+        float
+            t06(record,z,y,x);
+            t06:navigation_dim = "nav";
+            t06:record = "valtime, reftime";
+            t06:_FillValue = 1.e+37f;
+            t06:long_name="% dist top layer soiltype cat 06";
+            t06:units="categorical";
+            t06:valid_range= 0.f, 1.f;
+            t06:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 07
+
+        float
+            t07(record,z,y,x);
+            t07:navigation_dim = "nav";
+            t07:record = "valtime, reftime";
+            t07:_FillValue = 1.e+37f;
+            t07:long_name="% dist top layer soiltype cat 07";
+            t07:units="categorical";
+            t07:valid_range= 0.f, 1.f;
+            t07:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 08
+
+        float
+            t08(record,z,y,x);
+            t08:navigation_dim = "nav";
+            t08:record = "valtime, reftime";
+            t08:_FillValue = 1.e+37f;
+            t08:long_name="% dist top layer soiltype cat 08";
+            t08:units="categorical";
+            t08:valid_range= 0.f, 1.f;
+            t08:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 09
+
+        float
+            t09(record,z,y,x);
+            t09:navigation_dim = "nav";
+            t09:record = "valtime, reftime";
+            t09:_FillValue = 1.e+37f;
+            t09:long_name="% dist top layer soiltype cat 09";
+            t09:units="categorical";
+            t09:valid_range= 0.f, 1.f;
+            t09:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 10
+
+        float
+            t10(record,z,y,x);
+            t10:navigation_dim = "nav";
+            t10:record = "valtime, reftime";
+            t10:_FillValue = 1.e+37f;
+            t10:long_name="% dist top layer soiltype cat 10";
+            t10:units="categorical";
+            t10:valid_range= 0.f, 1.f;
+            t10:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 11
+
+        float
+            t11(record,z,y,x);
+            t11:navigation_dim = "nav";
+            t11:record = "valtime, reftime";
+            t11:_FillValue = 1.e+37f;
+            t11:long_name="% dist top layer soiltype cat 11";
+            t11:units="categorical";
+            t11:valid_range= 0.f, 1.f;
+            t11:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 12
+
+        float
+            t12(record,z,y,x);
+            t12:navigation_dim = "nav";
+            t12:record = "valtime, reftime";
+            t12:_FillValue = 1.e+37f;
+            t12:long_name="% dist top layer soiltype cat 12";
+            t12:units="categorical";
+            t12:valid_range= 0.f, 1.f;
+            t12:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 13
+
+        float
+            t13(record,z,y,x);
+            t13:navigation_dim = "nav";
+            t13:record = "valtime, reftime";
+            t13:_FillValue = 1.e+37f;
+            t13:long_name="% dist top layer soiltype cat 13";
+            t13:units="categorical";
+            t13:valid_range= 0.f, 1.f;
+            t13:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 14
+
+        float
+            t14(record,z,y,x);
+            t14:navigation_dim = "nav";
+            t14:record = "valtime, reftime";
+            t14:_FillValue = 1.e+37f;
+            t14:long_name="% dist top layer soiltype cat 14";
+            t14:units="categorical";
+            t14:valid_range= 0.f, 1.f;
+            t14:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 15
+
+        float
+            t15(record,z,y,x);
+            t15:navigation_dim = "nav";
+            t15:record = "valtime, reftime";
+            t15:_FillValue = 1.e+37f;
+            t15:long_name="% dist top layer soiltype cat 15";
+            t15:units="categorical";
+            t15:valid_range= 0.f, 1.f;
+            t15:LAPS_units="categorical";
+
+        //      percent dist top layer soiltype category 16
+
+        float
+            t16(record,z,y,x);
+            t16:navigation_dim = "nav";
+            t16:record = "valtime, reftime";
+            t16:_FillValue = 1.e+37f;
+            t16:long_name="% dist top layer soiltype cat 16";
+            t16:units="categorical";
+            t16:valid_range= 0.f, 1.f;
+            t16:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 01
+
+        float
+            b01(record,z,y,x);
+            b01:navigation_dim = "nav";
+            b01:record = "valtime, reftime";
+            b01:_FillValue = 1.e+37f;
+            b01:long_name="% dist bot layer soiltype cat 01";
+            b01:units="categorical";
+            b01:valid_range= 0.f, 16.f;
+            b01:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 02
+
+        float
+            b02(record,z,y,x);
+            b02:navigation_dim = "nav";
+            b02:record = "valtime, reftime";
+            b02:_FillValue = 1.e+37f;
+            b02:long_name="% dist bot layer soiltype cat 02";
+            b02:units="categorical";
+            b02:valid_range= 0.f, 16.f;
+            b02:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 03
+
+        float
+            b03(record,z,y,x);
+            b03:navigation_dim = "nav";
+            b03:record = "valtime, reftime";
+            b03:_FillValue = 1.e+37f;
+            b03:long_name="% dist bot layer soiltype cat 03";
+            b03:units="categorical";
+            b03:valid_range= 0.f, 16.f;
+            b03:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 04
+
+        float
+            b04(record,z,y,x);
+            b04:navigation_dim = "nav";
+            b04:record = "valtime, reftime";
+            b04:_FillValue = 1.e+37f;
+            b04:long_name="% dist bot layer soiltype cat 04";
+            b04:units="categorical";
+            b04:valid_range= 0.f, 16.f;
+            b04:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 05
+
+        float
+            b05(record,z,y,x);
+            b05:navigation_dim = "nav";
+            b05:record = "valtime, reftime";
+            b05:_FillValue = 1.e+37f;
+            b05:long_name="% dist bot layer soiltype cat 05";
+            b05:units="categorical";
+            b05:valid_range= 0.f, 16.f;
+            b05:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 06
+
+        float
+            b06(record,z,y,x);
+            b06:navigation_dim = "nav";
+            b06:record = "valtime, reftime";
+            b06:_FillValue = 1.e+37f;
+            b06:long_name="% dist bot layer soiltype cat 06";
+            b06:units="categorical";
+            b06:valid_range= 0.f, 16.f;
+            b06:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 07
+
+        float
+            b07(record,z,y,x);
+            b07:navigation_dim = "nav";
+            b07:record = "valtime, reftime";
+            b07:_FillValue = 1.e+37f;
+            b07:long_name="% dist bot layer soiltype cat 07";
+            b07:units="categorical";
+            b07:valid_range= 0.f, 16.f;
+            b07:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 08
+
+        float
+            b08(record,z,y,x);
+            b08:navigation_dim = "nav";
+            b08:record = "valtime, reftime";
+            b08:_FillValue = 1.e+37f;
+            b08:long_name="% dist bot layer soiltype cat 08";
+            b08:units="categorical";
+            b08:valid_range= 0.f, 16.f;
+            b08:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 09
+
+        float
+            b09(record,z,y,x);
+            b09:navigation_dim = "nav";
+            b09:record = "valtime, reftime";
+            b09:_FillValue = 1.e+37f;
+            b09:long_name="% dist bot layer soiltype cat 09";
+            b09:units="categorical";
+            b09:valid_range= 0.f, 16.f;
+            b09:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 10
+
+        float
+            b10(record,z,y,x);
+            b10:navigation_dim = "nav";
+            b10:record = "valtime, reftime";
+            b10:_FillValue = 1.e+37f;
+            b10:long_name="% dist bot layer soiltype cat 10";
+            b10:units="categorical";
+            b10:valid_range= 0.f, 16.f;
+            b10:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 11
+
+        float
+            b11(record,z,y,x);
+            b11:navigation_dim = "nav";
+            b11:record = "valtime, reftime";
+            b11:_FillValue = 1.e+37f;
+            b11:long_name="% dist bot layer soiltype cat 11";
+            b11:units="categorical";
+            b11:valid_range= 0.f, 16.f;
+            b11:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 12
+
+        float
+            b12(record,z,y,x);
+            b12:navigation_dim = "nav";
+            b12:record = "valtime, reftime";
+            b12:_FillValue = 1.e+37f;
+            b12:long_name="% dist bot layer soiltype cat 12";
+            b12:units="categorical";
+            b12:valid_range= 0.f, 16.f;
+            b12:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 13
+
+        float
+            b13(record,z,y,x);
+            b13:navigation_dim = "nav";
+            b13:record = "valtime, reftime";
+            b13:_FillValue = 1.e+37f;
+            b13:long_name="% dist bot layer soiltype cat 13";
+            b13:units="categorical";
+            b13:valid_range= 0.f, 16.f;
+            b13:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 14
+
+        float
+            b14(record,z,y,x);
+            b14:navigation_dim = "nav";
+            b14:record = "valtime, reftime";
+            b14:_FillValue = 1.e+37f;
+            b14:long_name="% dist bot layer soiltype cat 14";
+            b14:units="categorical";
+            b14:valid_range= 0.f, 16.f;
+            b14:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 15
+
+        float
+            b15(record,z,y,x);
+            b15:navigation_dim = "nav";
+            b15:record = "valtime, reftime";
+            b15:_FillValue = 1.e+37f;
+            b15:long_name="% dist bot layer soiltype cat 15";
+            b15:units="categorical";
+            b15:valid_range= 0.f, 16.f;
+            b15:LAPS_units="categorical";
+
+        //      percent dist bot layer soiltype category 16
+
+        float
+            b16(record,z,y,x);
+            b16:navigation_dim = "nav";
+            b16:record = "valtime, reftime";
+            b16:_FillValue = 1.e+37f;
+            b16:long_name="% dist bot layer soiltype cat 16";
+            b16:units="categorical";
+            b16:valid_range= 0.f, 16.f;
+            b16:LAPS_units="categorical";
+
+        //      greeness fraction - January
+
+        float
+            g01(record,z,y,x);
+            g01:navigation_dim = "nav";
+            g01:record = "valtime, reftime";
+            g01:_FillValue = 1.e+37f;
+            g01:long_name="greeness fraction - January";
+            g01:units="categorical";
+            g01:valid_range= 0.f, 1.f;
+            g01:LAPS_units="categorical";
+
+        //      greeness fraction - February
+
+        float
+            g02(record,z,y,x);
+            g02:navigation_dim = "nav";
+            g02:record = "valtime, reftime";
+            g02:_FillValue = 1.e+37f;
+            g02:long_name="greeness fraction - February";
+            g02:units="categorical";
+            g02:valid_range= 0.f, 1.f;
+            g02:LAPS_units="categorical";
+
+        //      greeness fraction - March
+
+        float
+            g03(record,z,y,x);
+            g03:navigation_dim = "nav";
+            g03:record = "valtime, reftime";
+            g03:_FillValue = 1.e+37f;
+            g03:long_name="greeness fraction - March";
+            g03:units="categorical";
+            g03:valid_range= 0.f, 1.f;
+            g03:LAPS_units="categorical";
+
+        //      greeness fraction - April
+
+        float
+            g04(record,z,y,x);
+            g04:navigation_dim = "nav";
+            g04:record = "valtime, reftime";
+            g04:_FillValue = 1.e+37f;
+            g04:long_name="greeness fraction - April";
+            g04:units="categorical";
+            g04:valid_range= 0.f, 1.f;
+            g04:LAPS_units="categorical";
+
+        //      greeness fraction - May
+
+        float
+            g05(record,z,y,x);
+            g05:navigation_dim = "nav";
+            g05:record = "valtime, reftime";
+            g05:_FillValue = 1.e+37f;
+            g05:long_name="greeness fraction - May";
+            g05:units="categorical";
+            g05:valid_range= 0.f, 1.f;
+            g05:LAPS_units="categorical";
+
+        //      greeness fraction - June
+
+        float
+            g06(record,z,y,x);
+            g06:navigation_dim = "nav";
+            g06:record = "valtime, reftime";
+            g06:_FillValue = 1.e+37f;
+            g06:long_name="greeness fraction - June";
+            g06:units="categorical";
+            g06:valid_range= 0.f, 1.f;
+            g06:LAPS_units="categorical";
+
+        //      greeness fraction - July
+
+        float
+            g07(record,z,y,x);
+            g07:navigation_dim = "nav";
+            g07:record = "valtime, reftime";
+            g07:_FillValue = 1.e+37f;
+            g07:long_name="greeness fraction - July";
+            g07:units="categorical";
+            g07:valid_range= 0.f, 1.f;
+            g07:LAPS_units="categorical";
+
+        //      greeness fraction - August
+
+        float
+            g08(record,z,y,x);
+            g08:navigation_dim = "nav";
+            g08:record = "valtime, reftime";
+            g08:_FillValue = 1.e+37f;
+            g08:long_name="greeness fraction - August";
+            g08:units="categorical";
+            g08:valid_range= 0.f, 1.f;
+            g08:LAPS_units="categorical";
+
+        //      greeness fraction - September
+
+        float
+            g09(record,z,y,x);
+            g09:navigation_dim = "nav";
+            g09:record = "valtime, reftime";
+            g09:_FillValue = 1.e+37f;
+            g09:long_name="greeness fraction - September";
+            g09:units="categorical";
+            g09:valid_range= 0.f, 1.f;
+            g09:LAPS_units="categorical";
+
+        //      greeness fraction - October
+
+        float
+            g10(record,z,y,x);
+            g10:navigation_dim = "nav";
+            g10:record = "valtime, reftime";
+            g10:_FillValue = 1.e+37f;
+            g10:long_name="greeness fraction - October";
+            g10:units="categorical";
+            g10:valid_range= 0.f, 1.f;
+            g10:LAPS_units="categorical";
+
+        //      greeness fraction - November
+
+        float
+            g11(record,z,y,x);
+            g11:navigation_dim = "nav";
+            g11:record = "valtime, reftime";
+            g11:_FillValue = 1.e+37f;
+            g11:long_name="greeness fraction - November";
+            g11:units="categorical";
+            g11:valid_range= 0.f, 1.f;
+            g11:LAPS_units="categorical";
+
+        //      greeness fraction - December
+
+        float
+            g12(record,z,y,x);
+            g12:navigation_dim = "nav";
+            g12:record = "valtime, reftime";
+            g12:_FillValue = 1.e+37f;
+            g12:long_name="greeness fraction - December";
+            g12:units="categorical";
+            g12:valid_range= 0.f, 1.f;
+            g12:LAPS_units="categorical";
+
+        //      Terrain Adjusted Mean Annual Soil Temp 
+
+        float
+            tmp(record,z,y,x);
+            tmp:navigation_dim = "nav";
+            tmp:record = "valtime, reftime";
+            tmp:_FillValue = 1.e+37f;
+            tmp:long_name="Terrain Adjusted Mean Annual Soil Temp";
+            tmp:units="categorical";
+            tmp:valid_range= 200.f, 350.f;
+            tmp:LAPS_units="categorical";
+        //      albedo - January
+
+        float
+            a01(record,z,y,x);
+            a01:navigation_dim = "nav";
+            a01:record = "valtime, reftime";
+            a01:_FillValue = 1.e+37f;
+            a01:long_name="climatological albedo - January";
+            a01:units="unitless";
+            a01:valid_range= 0.f, 1.f;
+            a01:LAPS_units="fractional";
+
+        //      albedo - February
+
+        float
+            a02(record,z,y,x);
+            a02:navigation_dim = "nav";
+            a02:record = "valtime, reftime";
+            a02:_FillValue = 1.e+37f;
+            a02:long_name="climatological albedo - February";
+            a02:units="unitless";
+            a02:valid_range= 0.f, 1.f;
+            a02:LAPS_units="fractional";
+
+        //      albedo - March
+
+        float
+            a03(record,z,y,x);
+            a03:navigation_dim = "nav";
+            a03:record = "valtime, reftime";
+            a03:_FillValue = 1.e+37f;
+            a03:long_name="climatological albedo - March";
+            a03:units="unitless";
+            a03:valid_range= 0.f, 1.f;
+            a03:LAPS_units="fractional";
+
+        //      albedo - April
+
+        float
+            a04(record,z,y,x);
+            a04:navigation_dim = "nav";
+            a04:record = "valtime, reftime";
+            a04:_FillValue = 1.e+37f;
+            a04:long_name="climatological albedo - April";
+            a04:units="unitless";
+            a04:valid_range= 0.f, 1.f;
+            a04:LAPS_units="fractional";
+
+        //      albedo - May
+
+        float
+            a05(record,z,y,x);
+            a05:navigation_dim = "nav";
+            a05:record = "valtime, reftime";
+            a05:_FillValue = 1.e+37f;
+            a05:long_name="climatological albedo - May";
+            a05:units="unitless";
+            a05:valid_range= 0.f, 1.f;
+            a05:LAPS_units="fractional";
+
+        //      albedo - June
+
+        float
+            a06(record,z,y,x);
+            a06:navigation_dim = "nav";
+            a06:record = "valtime, reftime";
+            a06:_FillValue = 1.e+37f;
+            a06:long_name="climatological albedo - June";
+            a06:units="unitless";
+            a06:valid_range= 0.f, 1.f;
+            a06:LAPS_units="fractional";
+
+        //      albedo - July
+
+        float
+            a07(record,z,y,x);
+            a07:navigation_dim = "nav";
+            a07:record = "valtime, reftime";
+            a07:_FillValue = 1.e+37f;
+            a07:long_name="climatological albedo - July";
+            a07:units="unitless";
+            a07:valid_range= 0.f, 1.f;
+            a07:LAPS_units="fractional";
+
+        //      albedo - August
+
+        float
+            a08(record,z,y,x);
+            a08:navigation_dim = "nav";
+            a08:record = "valtime, reftime";
+            a08:_FillValue = 1.e+37f;
+            a08:long_name="climatological albedo - August";
+            a08:units="unitless";
+            a08:valid_range= 0.f, 1.f;
+            a08:LAPS_units="fractional";
+
+        //      albedo - September
+
+        float
+            a09(record,z,y,x);
+            a09:navigation_dim = "nav";
+            a09:record = "valtime, reftime";
+            a09:_FillValue = 1.e+37f;
+            a09:long_name="climatological albedo - September";
+            a09:units="unitless";
+            a09:valid_range= 0.f, 1.f;
+            a09:LAPS_units="fractional";
+
+        //      albedo - October
+
+        float
+            a10(record,z,y,x);
+            a10:navigation_dim = "nav";
+            a10:record = "valtime, reftime";
+            a10:_FillValue = 1.e+37f;
+            a10:long_name="climatological albedo - October";
+            a10:units="unitless";
+            a10:valid_range= 0.f, 1.f;
+            a10:LAPS_units="fractional";
+
+        //      albedo - November
+
+        float
+            a11(record,z,y,x);
+            a11:navigation_dim = "nav";
+            a11:record = "valtime, reftime";
+            a11:_FillValue = 1.e+37f;
+            a11:long_name="climatological albedo - November";
+            a11:units="unitless";
+            a11:valid_range= 0.f, 1.f;
+            a11:LAPS_units="fractional";
+ 
+        //      albedo - December
+
+        float
+            a12(record,z,y,x);
+            a12:navigation_dim = "nav";
+            a12:record = "valtime, reftime";
+            a12:_FillValue = 1.e+37f;
+            a12:long_name="climatological albedo - December";
+            a12:units="unitless";
+            a12:valid_range= 0.f, 1.f;
+            a12:LAPS_units="fractional";
 
         //	LAPS variables
 
@@ -373,6 +1355,7 @@ netcdf static {
             env_comment(record,z,namelen),
             zin_comment(record,z,namelen),
             ldf_comment(record,z,namelen),
+            lnd_comment(record,z,namelen),
             use_comment(record,z,namelen),
             spr_comment(record,z,namelen),
             cpr_comment(record,z,namelen),
@@ -388,6 +1371,87 @@ netcdf static {
             avc_comment(record,z,namelen),
             stl_comment(record,z,namelen),
             sbl_comment(record,z,namelen),
+            u01_comment(record,z,namelen),
+            u02_comment(record,z,namelen),
+            u03_comment(record,z,namelen),
+            u04_comment(record,z,namelen),
+            u05_comment(record,z,namelen),
+            u06_comment(record,z,namelen),
+            u07_comment(record,z,namelen),
+            u08_comment(record,z,namelen),
+            u09_comment(record,z,namelen),
+            u10_comment(record,z,namelen),
+            u11_comment(record,z,namelen),
+            u12_comment(record,z,namelen),
+            u13_comment(record,z,namelen),
+            u14_comment(record,z,namelen),
+            u15_comment(record,z,namelen),
+            u16_comment(record,z,namelen),
+            u17_comment(record,z,namelen),
+            u18_comment(record,z,namelen),
+            u19_comment(record,z,namelen),
+            u20_comment(record,z,namelen),
+            u21_comment(record,z,namelen),
+            u22_comment(record,z,namelen),
+            u23_comment(record,z,namelen),
+            u24_comment(record,z,namelen),
+            t01_comment(record,z,namelen),
+            t02_comment(record,z,namelen),
+            t03_comment(record,z,namelen),
+            t04_comment(record,z,namelen),
+            t05_comment(record,z,namelen),
+            t06_comment(record,z,namelen),
+            t07_comment(record,z,namelen),
+            t08_comment(record,z,namelen),
+            t09_comment(record,z,namelen),
+            t10_comment(record,z,namelen),
+            t11_comment(record,z,namelen),
+            t12_comment(record,z,namelen),
+            t13_comment(record,z,namelen),
+            t14_comment(record,z,namelen),
+            t15_comment(record,z,namelen),
+            t16_comment(record,z,namelen),
+            b01_comment(record,z,namelen),
+            b02_comment(record,z,namelen),
+            b03_comment(record,z,namelen),
+            b04_comment(record,z,namelen),
+            b05_comment(record,z,namelen),
+            b06_comment(record,z,namelen),
+            b07_comment(record,z,namelen),
+            b08_comment(record,z,namelen),
+            b09_comment(record,z,namelen),
+            b10_comment(record,z,namelen),
+            b11_comment(record,z,namelen),
+            b12_comment(record,z,namelen),
+            b13_comment(record,z,namelen),
+            b14_comment(record,z,namelen),
+            b15_comment(record,z,namelen),
+            b16_comment(record,z,namelen),
+            g01_comment(record,z,namelen),
+            g02_comment(record,z,namelen),
+            g03_comment(record,z,namelen),
+            g04_comment(record,z,namelen),
+            g05_comment(record,z,namelen),
+            g06_comment(record,z,namelen),
+            g07_comment(record,z,namelen),
+            g08_comment(record,z,namelen),
+            g09_comment(record,z,namelen),
+            g10_comment(record,z,namelen),
+            g11_comment(record,z,namelen),
+            g12_comment(record,z,namelen),
+            tmp_comment(record,z,namelen),
+            a01_comment(record,z,namelen),
+            a02_comment(record,z,namelen),
+            a03_comment(record,z,namelen),
+            a04_comment(record,z,namelen),
+            a05_comment(record,z,namelen),
+            a06_comment(record,z,namelen),
+            a07_comment(record,z,namelen),
+            a08_comment(record,z,namelen),
+            a09_comment(record,z,namelen),
+            a10_comment(record,z,namelen),
+            a11_comment(record,z,namelen),
+            a12_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
@@ -447,6 +1511,14 @@ netcdf static {
                 Lo1:long_name = "first longitude";
                 Lo1:units = "degrees_east" ;
     
+        float   La2(nav);
+                La2:long_name = "latitude NE corner";
+                La2:units = "degrees_north"; 
+                
+        float   Lo2(nav);
+                Lo2:long_name = "longitude NE corner";
+                Lo2:units = "degrees_east" ;
+
         float   LoV(nav);
                 LoV:long_name = "orientation of grid" ;
                 LoV:units = "degrees_east";
@@ -485,4 +1557,3 @@ netcdf static {
         y_dim           = "y";
 
 }                       
-
