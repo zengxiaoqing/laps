@@ -26,7 +26,8 @@ c     c_mosaic_type='vxx'
 c     c_mosaic_type='rdr'
 
       call mosaic_radar_nl(c_radar_mosaic,n_radars,c_radar_ext,
-     & i_window,imosaic_3d,istatus)
+     & i_window,imosaic_3d,n_radars_wideband,n_radars_narrowband,
+     & istatus)      
     
       if(n_radars .eq. -1)then
           call get_max_radars(n_radars,istatus)
