@@ -199,7 +199,8 @@ c
 	integer use_lso_qc, skip_internal_qc, itheta
 	character nl_file*256
 c
-	namelist /surface_analysis/ use_lso_qc, skip_internal_qc, itheta
+	namelist /surface_analysis/ use_lso_qc,skip_internal_qc
+     1                             ,itheta, del, gam, ak
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.

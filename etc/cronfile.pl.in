@@ -1,0 +1,27 @@
+#!@PERL@
+#
+# installroot is location of binaries (bin), scripts (etc),
+# and installed data (data); otherwise it can be srcroot.
+# laps_data_root is location of static, lapsprd, cdl, and
+# so forth.
+
+use strict;
+umask 002;
+use Getopt::Long;
+
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$cleandirs);
+my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT,
+                        "dataroot=s" => \$LAPS_DATA_ROOT);
+
+print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
+
+$LAPS_DATA_ROOT = "$LAPSINSTALLROOT/data" if(! $LAPS_DATA_ROOT);
+print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
+
+#Make a copy of the cronfile that is unique for this LAPS_DATA_ROOT
+system("cp $LAPSINSTALLROOT/util/cronfile $LAPS_DATA_ROOT/cronfile");
+
+#String edit the cronfile to set the proper LAPS_DATA_ROOT path
+system("$LAPSINSTALLROOT/util/fix_net \@LAPS_DATA_ROOT@ $LAPS_DATA_ROOT $LAPS_DATA_ROOT/cronfile");
+
+exit;

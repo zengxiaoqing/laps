@@ -222,6 +222,7 @@ AC_OUTPUT(src/include/trigd.inc
 	  etc/LapsRadar.pl
           etc/check_release.csh
           etc/cloud.pl
+          etc/cronfile.pl
           etc/hum3d.pl
           etc/laps_driver.pl
           etc/purger.pl

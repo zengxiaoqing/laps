@@ -7,8 +7,12 @@
 int pipe=0;
 #define min(a,b) (a<b)?a:b
 #define max(a,b) (a>b)?a:b
+
 #ifdef FORTRANUNDERSCORE
 #define create_bcd_bkgnd create_bcd_bkgnd_
+#endif
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define create_bcd_bkgnd create_bcd_bkgnd__
 #endif
 
 FILE * dopen(char * fileName)

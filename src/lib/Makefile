@@ -106,6 +106,7 @@ SRC	= machine_dependent.F \
           multar.f \
           multcon.f \
           my_show_timer.f \
+          nanf.f \
           newreadobs.f \
           normalize.f \
           pcpcnc.f \

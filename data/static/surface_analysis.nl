@@ -1,7 +1,10 @@
  &surface_analysis
  use_lso_qc = 0,
  skip_internal_qc = 0,
- itheta=5, 
+ itheta=5,
+ del=1.e6,
+ gam=.0008,
+ ak=1.e-6, 
  /
 c
 c..... This is the namelist for the LAPS surface analysis
@@ -38,4 +41,7 @@ c..........       	5 = Use 500 mb level
 c
 c..........     Recommended:  Use 700 mb most places, 500 mb over higher
 c..........                   terrain areas (like Colorado).
-
+c
+c..... comments on del, gam, ak are in the surface code
+c
+c..... if del=0., then variational section would be skipped for (u,v,p)

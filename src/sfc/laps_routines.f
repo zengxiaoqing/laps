@@ -1183,45 +1183,6 @@ c
       end
 c
 c
-	subroutine checknan_pt(x,nan_flag)
-c       
-c       Routine to check a single value for NaN's.
-c
-	real x
-c
-	nan_flag = 1
-c
-	if( nan( x ) .eq. 1) then
-	   print *,' ** ERROR. Found a NaN '
-	   nan_flag = -1
-	   return
-	endif
-c
-	return
-	end
-c
-c
-	subroutine checknan_1d(x,ni,nan_flag)
-c
-c       Routine to check a real 1-d array for NaN's.
-c
-	integer ni
-	real x(ni)
-c
-	nan_flag = 1
-c
-	do i=1,ni
-	   if( nan( x(i) ) .eq. 1) then
-	      print *,' ** ERROR. Found a NaN at ', i
-	      nan_flag = -1
-	      return
-	   endif
-	enddo !i
-c
-	return
-	end
-c
-c
 	subroutine checknan_2d(x,ni,nj,nan_flag)
 c
 c       Routine to check a real 2-d array for NaN's.
@@ -1233,38 +1194,14 @@ c
 c
 	do j=1,nj
 	do i=1,ni
-	   if( nan( x(i,j) ) .eq. 1) then
+           call check_nan( x(i,j), istatus )
+	   if(istatus .ne. 1) then
 	      print *,' ** ERROR. Found a NaN at ', i, j
 	      nan_flag = -1
 	      return
 	   endif
 	enddo !i
 	enddo !j
-c
-	return
-	end
-c
-c
-	subroutine checknan_3d(x,ni,nj,nk,nan_flag)
-c       
-c       Routine to check a real 3-d array for NaN's.
-c       
-	integer ni,nj,nk
-	real x(ni,nj,nk)
-c
-	nan_flag = 1
-c
-	do k=1,nk
-	do j=1,nj
-        do i=1,ni
-	   if( nan( x(i,j,k) ) .eq. 1) then
-	      print *,' ** ERROR. Found a NaN at ', i, j, k
-	      nan_flag = -1
-	      return
-	   endif
-	enddo !i
-	enddo !j
-	enddo !k
 c
 	return
 	end

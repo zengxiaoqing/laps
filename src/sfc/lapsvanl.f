@@ -361,7 +361,9 @@ c
      &             ,grid_spacing_actual_m,istatus)
 	   dy(i,j) = grid_spacing_actual_m
 	   dx(i,j) = grid_spacing_actual_m
-	   a(i,j) = -(1. + fo2(i,j) * del) * gam * rho2 / del
+           if(del .gt. 0.)then ! we will not divide by zero
+	       a(i,j) = -(1. + fo2(i,j) * del) * gam * rho2 / del
+           endif
 	enddo !i
 	enddo !j
 c
@@ -784,11 +786,13 @@ c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
 c.....	calculated.  The fields may not be very good....
 c
-	if(ilaps_bk .eq. 0) then
+	if(ilaps_bk .eq. 0 .or. del .eq. 0.) then
 	  call move(rp,p_a,imax,jmax)
 	  call multcon(p_a,100.,imax,jmax)	! conv mb to Pa
 	  call conv_kt2ms(u,u_a,imax,jmax)	! conv kt to m/s and move array
 	  call conv_kt2ms(v,v_a,imax,jmax)	! conv kt to m/s and move array
+          write(6,*)' Skipping variational adjustment of u,v,p '
+     1             ,ilaps_bk,del
 	  go to 500
 	endif
 c
