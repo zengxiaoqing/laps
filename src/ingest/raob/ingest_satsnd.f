@@ -46,10 +46,14 @@
       call get_tempob_time_window('SATSND',i4_satsnd_window,istatus)
       if(istatus .ne. 1)return
 
+      lun_in = 21
+      lun_out = 11
+
 !     Open output SND file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'snd'
-          call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)       
+          call open_lapsprd_file_append(lun_out,i4time_sys,ext(1:3)
+     1                                                    ,istatus)       
       else
           write(6,*)' No raw data files identified:',' *.',ext_in
           goto999
@@ -78,12 +82,12 @@
 !             Read from the SATSND file 
 !             Write to the opened SND file
               call get_satsnd_afwa(i4time_sys,i4_satsnd_window
-     1                                       ,NX_L,NY_L
-     1                                       ,filename_in,istatus)
+     1                            ,NX_L,NY_L
+     1                            ,lun_in,filename_in,lun_out,istatus)       
           endif
       enddo
 
- 990  close(11) ! Output SND file
+ 990  close(lun_out) ! Output SND file
 
  999  continue
 

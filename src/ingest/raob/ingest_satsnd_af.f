@@ -1,7 +1,7 @@
            
       subroutine get_satsnd_afwa(i4time_sys,i4_satsnd_window
-     1                                     ,NX_L,NY_L
-     1                                     ,filename,istatus)
+     1                          ,NX_L,NY_L
+     1                          ,lun_in,filename,lun_out,istatus)
 
 !     Steve Albers FSL    May 1999
 
@@ -22,7 +22,7 @@
       real*4 RHEIGHT(MAX_LEVELS)
       real*4 RH(MAX_LEVELS)
       real*4 PRESSURE(MAX_LEVELS)
-      real*4 TEMP(MAX_LEVELS)
+      real*4 TEMP_K(MAX_LEVELS)
 
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
@@ -30,7 +30,7 @@
 
 !............................................................................
 
-      open(11,file=filename,status='old')
+      open(lun_in,file=filename,status='old')
 
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus .ne. 1)then
@@ -49,10 +49,10 @@
 
       do while (.true.)
 
-          read(11,51,err=890,end=999)c_line
+          read(lun_in,51,err=890,end=999)c_line
  51       format(a)
 
-          read(c_line,101,err=890,end=999) !    NAME             UNITS & FACTOR
+          read(c_line,101,err=890)     !    NAME             UNITS & FACTOR
      1         I_A1CYCC,                       
      1         I_A1GWC,
      1         I_A1JUL,                ! JULIAN HOUR          HR since 673650000
@@ -110,7 +110,7 @@
               iend = istart+8
               c_read = c_line(istart:iend) 
               read(c_read,102,err=890)I_TEMP
-              temp(lvl) = float(I_TEMP) / 10.
+              temp_k(lvl) = float(I_TEMP) / 10.
           enddo ! lvl
 
 !         Read hours & minutes
@@ -122,6 +122,14 @@
           read(c_read,112,err=890)I_HR,I_MIN
  112      format(5x,2i2)
 
+!         Read satellite ID
+          iblk = 5
+          lvl = 3
+          istart = 66 + (iblk-1)*nlvls*11 + (lvl-1)*11 + 1
+          iend = istart+8
+          c_read = c_line(istart:iend) 
+          c5_staid = c_read(1:2)//c_read(4:6)
+
           i = i + 1
 
           write(6,*)
@@ -130,7 +138,8 @@
           stalat =  float(I_A1LAT)/100.
           stalon = +float(I_A1LON)/100.
 
-          write(6,*)' location = ',stalat,stalon
+          write(6,2)stalat,stalon
+ 2        format(' Lat, lon '/f8.3,f10.3)  
 
           if(stalat .le. rnorth .and. stalat .ge. south .and.
      1       stalon .ge. west   .and. stalon .le. east        )then       
@@ -145,29 +154,28 @@
 
           write(6,*)' I_HR, I_HR_JUL, I_MIN ', I_HR, I_HR_JUL, I_MIN       
 
+          if(I_HR .ne. I_HR_JUL)then
+              write(6,*)' WARNING: I_HR discrepancy - reject '
+     1                 ,I_HR,I_HR_JUL
+              goto900
+          endif
+
           call afwa_julhr_i4time(I_A1JUL,I_MIN,i4time_ob)
 
-          call make_fnam_lp(i4time_ob,a9_time_ob,istatus)
+          call make_fnam_lp(i4time_ob,a9time_ob,istatus)
           if(istatus .ne. 1)goto900
 
           a9_recptTime = '         '
 
-!         call cv_asc_i4time(a9_timeObs,i4time_ob)
-
           i4_resid = abs(i4time_ob - i4time_sys)
           if(i4_resid .gt. i4_satsnd_window)then ! outside time window
               write(6,*)' time - reject '
-     1           ,a9_time_ob,i4_resid,i4_satsnd_window
+     1           ,a9time_ob,i4_resid,i4_satsnd_window
               goto 900        
           endif
 
-          write(6,1)a9_time_ob,a9_recptTime 
-          write(11,1)a9_time_ob,a9_recptTime 
- 1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
-
-          write(6,2)stalat,stalon
-          write(11,2)stalat,stalon
- 2        format(' Lat, lon '/f8.3,f10.3,f8.0)  
+          write(6,1)a9time_ob
+ 1        format(' Time:'/1x,a9) 
 
           staelev = 0.
 
@@ -176,35 +184,45 @@
           write(6,511,err=990)
      1             iwmostanum,nlvls,stalat
      1            ,stalon,staelev,c5_staid,a9time_ob,c8_obstype
-          write(11,511,err=990)
+          write(lun_out,511,err=990)
      1             iwmostanum,nlvls,stalat
      1            ,stalon,staelev,c5_staid,a9time_ob,c8_obstype
 
   511     format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
-          dewpoint = r_missing_data
           dir = r_missing_data
           spd = r_missing_data
 
           do lvl = 1,nlvls
-              if(abs(temp(lvl)) .gt. 400.)then
-                  temp(lvl) = r_missing_data
+              if(abs(temp_k(lvl)) .gt. 400.)then
+                  temp_c = r_missing_data
+              else
+                  temp_c = temp_k(lvl) - 273.15
+              endif
+
+!             Convert rh(lvl) to dewpoint?
+!             dewpoint_c = dwpt(temp_c,rh(lvl))
+              dewpoint_c = r_missing_data
+
+              if(abs(rheight(lvl)) .gt. 100000.)then
+                  rheight(lvl) = r_missing_data
               endif
 
               write(6,*)rheight(lvl),pressure(lvl)
-     1              ,temp(lvl)
+     1              ,temp_c
+     1              ,dewpoint_c
      1              ,ilvl
 
-              write(11,*)rheight(lvl),pressure(lvl)
-     1              ,temp(lvl)
-     1              ,dewpoint
+              write(lun_out,*)rheight(lvl),pressure(lvl)
+     1              ,temp_c
+     1              ,dewpoint_c
      1              ,dir,spd
 
           enddo ! lvl
 
           go to 900
 
- 890      write(6,*)' Warning: read/write error'
+ 890      write(6,*)' Warning (get_satsnd_afwa): read/write error'
 
  900  enddo ! read line of AFWA file
 

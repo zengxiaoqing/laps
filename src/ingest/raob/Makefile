@@ -15,7 +15,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
 
-EXE = ingest_raob.exe
+EXE = ingest_sounding.exe
 
 SRC=ingest_sounding.f \
     ingest_raob.f \
