@@ -1141,17 +1141,21 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the localization procedure, make sure the paths
-     to the geography data are correct in 'data/static/nest7grid.parms'.
+     to the geography data are correct in '$TEMPLATE/nest7grid.parms' and/or
+     '$LAPS_DATA_ROOT/static/nest7grid.parms'.
 
      When running LAPS as a whole for the archived data, the 'etc/sched.pl' 
      script will accept a '-a' command line argument. This forces the script
-     to run for the time you are inputting instead of the current realtime. 
-     The inputted value should be the number of seconds since 0000 UTC 
-     Jan 1, 1970. This is also the value found in line 2 of 
-     'data/time/c_time.dat'. An example is shown as follows; note that
-     'ssssssss' represents the ctime. 
+     to run for the time you are inputting instead of the current time. 
+     An example call is shown as follows...
 
-     prompt> perl sched.pl  -a sssssssss $LAPS_ROOT $LAPS_DATA_ROOT
+     prompt> perl sched.pl  -a ssssssss $LAPSINSTALLROOT $LAPS_DATA_ROOT
+
+     ...where the inputted 'ssssssss' value is the number of seconds since 
+     0000 UTC Jan 1, 1970. As an example, this value is generated in line 2 of 
+     '$LAPS_DATA_ROOT/time/c_time.dat'. Line 1 of 
+     '$LAPS_DATA_ROOT/time/systime.dat' is similar except that it is offset by
+     +31536000 seconds. 
 
      One can also initiate individual executables (bin directory) listed in the
      'sched.pl' to run on the test data. This often helps in getting a better
