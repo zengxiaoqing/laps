@@ -191,7 +191,7 @@ c     sition temperature for ice and liquid vapor reference.
                   rhdata(i,j,k) = max(0.,rhdata(i,j,k) )
                   rhdata(i,j,k) = min(100.,rhdata(i,j,k) )
                   rhdata_l(i,j,k) = max(0.,rhdata_l(i,j,k) )
-c                 rhdata_l(i,j,k) = min(100.,rhdata_l(i,j,k) )
+                  rhdata_l(i,j,k) = min(100.,rhdata_l(i,j,k) )
 
                endif
 
