@@ -165,7 +165,7 @@ c        Real OzMax /153.4007/   ! maximum value for Ozo absorber space
 	Integer Pred_Index_Dry(0:NDry,Nchan) ! dry predictors
 	Integer Pred_Index_Ozo(0:NOzo,Nchan) ! dry predictors
 
-	Integer IOs ! io return from open
+c	Integer IOs ! io return from open
 
 
 *  This may need a SAVE statement on some systems
@@ -330,7 +330,7 @@ c     LAPS APPS
 
   310   Continue
 	Write(6,*) 'Error on control file open '
-	Write(6,*) IOs
+c	Write(6,*) IOs
 	Stop
 	end
 	Subroutine Optrans_Species	(
