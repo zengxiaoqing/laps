@@ -245,6 +245,10 @@ lapsplot: lib
 install_lapsplot: lib
 	cd src/lapsplot; $(MAKE) install
 
+ridds: 	
+	cd $(LAPSROOT)/src/lib/radar/nexrad_nssl; $(MAKE)
+	cd $(LAPSROOT)/src/lib/radar/a2io; $(MAKE)
+	cd $(LAPSROOT)/src/ingest/radar/circbuff_to_nc; $(MAKE)
 
 install: mkdirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
