@@ -122,7 +122,7 @@
 
       l_3d = .false.
 
-      rms_thresh = 0.5                            ! Not used if l_3d = .false.
+      rms_thresh_norm = 0.5                      ! Not used if l_3d = .false.
 
       if(l_3d)then
           n_iter_wind = 1
@@ -415,6 +415,9 @@
       call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
      1                             ,imax,jmax,kmax)
 
+      call get_inst_err(imax,jmax,kmax,r_missing_data
+     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+
       call barnes_multivariate(varpass1,n_var
      1        ,imax,jmax,kmax,grid_spacing_m
      1        ,varobs_diff_spread
@@ -523,6 +526,9 @@
           call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
      1                             ,imax,jmax,kmax)
 
+          call get_inst_err(imax,jmax,kmax,r_missing_data
+     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+
           call barnes_multivariate(varanl,n_var
      1       ,imax,jmax,kmax,grid_spacing_m
      1       ,varobs_diff_spread
@@ -583,6 +589,9 @@
      1                             ,imax,jmax,kmax)
           call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
      1                             ,imax,jmax,kmax)
+
+          call get_inst_err(imax,jmax,kmax,r_missing_data
+     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
           call barnes_multivariate(varanl,n_var
      1       ,imax,jmax,kmax,grid_spacing_m
@@ -669,6 +678,9 @@
      1                             ,imax,jmax,kmax)
           call move_3d(vobs_diff_spread,varobs_diff_spread(1,1,1,2)
      1                             ,imax,jmax,kmax)
+
+          call get_inst_err(imax,jmax,kmax,r_missing_data
+     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
           call barnes_multivariate(varanl,n_var,imax,jmax,kmax
      1       ,grid_spacing_m
@@ -1433,3 +1445,44 @@ c  convert radar obs into u & v by using tangential component of first pass
 
       return
       end
+
+
+      subroutine get_inst_err(imax,jmax,kmax,r_missing_data
+     1           ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+
+      real*4    wt_p_spread(imax,jmax,kmax)                        ! Input
+
+      write(6,*)
+      write(6,*)' subroutine get_inst_err...'
+
+      n_obs_total = 0
+      wt_p_total = 0.
+
+      do i = 1,imax
+      do j = 1,jmax
+      do k = 1,kmax
+          if(wt_p_spread(i,j,k) .ne. r_missing_data)then
+              n_obs_total = n_obs_total + 1
+              wt_p_total = wt_p_total + wt_p_spread(i,j,k)
+          endif
+      enddo ! k
+      enddo ! j
+      enddo ! i
+
+      if(n_obs_total .gt. 0)then
+          wt_p_ave = wt_p_total / float(n_obs_total)
+          rms_inst = sqrt(1./wt_p_ave)
+      else
+          wt_p_ave = 0.
+          rms_inst = 0.
+      endif
+
+      rms_thresh = rms_inst * rms_thresh_norm
+
+      write(6,*)' n_obs_total = ',n_obs_total
+      write(6,*)' wt_p_total,wt_p_ave = ',wt_p_total,wt_p_ave
+      write(6,*)' rms_inst, rms_thresh = ',rms_inst,rms_thresh
+
+      return
+      end
+      
