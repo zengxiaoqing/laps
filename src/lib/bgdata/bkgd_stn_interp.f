@@ -67,14 +67,14 @@ c *** The fourth line specifies the LAPS domain designation.
 c *** Each following line specifies the grid dimensions for each corresponding
 c        bgmodel defined above.
 c
-      integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
+      integer   nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          bkg_status                   !status returned from lga_driver
 c                                            ! 1=good 0=bad
       real*4    prbot,delpr                  !LAPS bottom and delta pressures
 
-      integer   nstns
+      integer  nstns
       real*4   slat(nstns)
       real*4   slon(nstns)
       real*4   selev(nstns)
@@ -583,7 +583,7 @@ c     linear time interpolation to satisfy analysis time.
             stn_vw(i)  = vw_sfc(i,nbg)
             stn_pr(i)  = pr_sfc(i,nbg)
             stn_mslp(i)= mslp(i,nbg)
-            stn_alt(i)  = alt_sfc(i,nbg)
+            stn_alt(i) = alt_sfc(i,nbg)
          enddo
       endif
 

@@ -34,7 +34,7 @@ c
      .      ,sh(nx,ny,nz)      !specific humidity (kg/kg) 
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
-     .      ,ww(nx,ny,nz)      !w-wind (pa/s)  !currently not available for AVN, NOGAPS, FA
+     .      ,ww(nx,ny,nz)      !w-wind (pa/s)  !currently not available for NOGAPS
      .      ,pr(nx,ny,nz)      !pressures (mb)
      .      ,pw(nx,ny,nz)      !precip h2o for /public AVN
      .      ,prk(nz)
@@ -66,6 +66,9 @@ c     real*4 rp_init
       real*4 pcnt
       real*4 r_missing_data
       real*4 rfill
+      real*4 rmx2d,rmn2d
+      integer imx,jmx,imn,jmn
+
 c
       character*(*) path,cmodel
       character*9   fname
@@ -198,7 +201,7 @@ c       to covert the FA filename but currently is not.  J.Smart
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
 
-         print*,'accessing FA file: ',filename(1:l)
+         print*,'Reading FA file: ',filename(1:l)
          open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=990)
 
@@ -223,6 +226,11 @@ c       to covert the FA filename but currently is not.  J.Smart
      .                uw_sfc, vw_sfc, mslp,            ! O
      .                istatus )                        ! O
             call qcmodel_sh(nx,ny,nz,sh)
+c           do k=1,nz
+c              call get_mxmn_2d(nx,ny,ww,rmx2d,rmn2d
+c    &,imx,jmx,imn,jmn)
+c              print*,'k mx/mn ww ',k,rmx2d,rmn2d
+c           enddo
          endif
 
       endif
@@ -269,8 +277,10 @@ c
                sh(i,j,k)=rfill
             endif
 
-            if(cmodel(1:nclen).ne.'AVN_FSL_NETCDF'.or.
-     +ww(i,j,k).eq.rfill)ww(i,j,k)=0.0
+            if(cmodel(1:nclen).ne.'AVN_FSL_NETCDF'.and.
+     +         cmodel(1:nclen).ne.'CWB_20FA_LAMBERT_NF')then
+               if(ww(i,j,k).eq.rfill)ww(i,j,k)=0.0
+            endif
 
 c           it=tp(i,j,k)*100
 c           it=min(45000,max(15000,it)) 

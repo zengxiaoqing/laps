@@ -32,7 +32,8 @@ c
 
       real*4    lon0,lat1,lat2
 
-      character*(*)   gproj,cmodel
+      character*(*)   gproj
+      character*(*)   cmodel
       character*(*)   fullname
       character*(*)   bgpath
       character*(*)   fname_bg
