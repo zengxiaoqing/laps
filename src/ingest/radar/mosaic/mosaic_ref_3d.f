@@ -102,42 +102,7 @@ c
 
             enddo ! l
 
-            if(l_low_level)then ! currently passed in as .false.
-
-c use the altitude of the radar compared to the altitude of the laps
-c level to find the appropriate level within grid_ra_ref as the data
-c to mosaic
-               found_height=.false.
-               k=0
-               do while (.not.found_height)
-                  k=k+1
-                  if(k.le.nz)then
-                     if(rheight_laps(i,j,k).gt.topo(i,j))then
-                        found_height=.true.
-
-                        if(grid_ra_ref(i,j,k,lr).ne.ref_base .and.
-     1                     grid_ra_ref(i,j,k,lr).ne.r_missing_data)then       
-                           grid_mosaic_3dref(i,j,k)
-     1                                           =grid_ra_ref(i,j,k,lr)
-
-!                          Increment stats
-                           if(grid_mosaic_3dref(i,j,k).lt.0.0)then
-                              icntn=icntn+1
-                           elseif(grid_mosaic_3dref(i,j,k).eq.0.0)then
-                              icntz=icntz+1
-                           else
-                              icntp=icntp+1
-                           endif
-
-                        endif
-                     endif
-                  else
-                    found_height=.true.
-                  endif
-               enddo
-
-            else  ! by default this switch means to use max dBZ in vertical?
-
+            if(.true.)then 
                r_dbzmax=ref_base
 
                if(lr .gt. 0)then
@@ -181,7 +146,7 @@ c to mosaic
                   endif
                endif
 
-            endif ! low_level switch
+            endif ! .true.
 
             lr_2d(i,j) = lr
 
