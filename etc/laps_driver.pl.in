@@ -25,6 +25,13 @@
 #
 # Command line arguments
 #
+# -g                   Run for archive time, specified by number of seconds since
+#                      Jan 1 1970 at 0000 UTC; used for archive time on log filename.
+#
+# -L                   Run for input analysis time specified as dd-mmm-yyyy-hhmm
+#                      which can also substitute for archive time (Eg., 28-Aug-2002-1200)
+#                      used for archive time on log filename
+#
 # -q  P                Use QSUB (PBS syntax on 'jet/ijet') where P is the project name
 #
 # -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
@@ -44,10 +51,10 @@
 #
 
 use strict;
-use vars qw($opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n);
+use vars qw($opt_L $opt_g $opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n);
 use Getopt::Std;
 
-getopts('e:lq:Q:n:');
+getopts('e:lq:Q:n:L:g:');
 
 #flush buffer; ie., prevent buffering of output
 $|=1;
@@ -87,32 +94,50 @@ unless(-x "$LAPSROOT/bin/$exe"){
 #
 # Construct 'yyjjjhhmm' for the current time
 #
-my $year = (gmtime)[5];
-$year= $year-100 if($year>99);
-$year='0'.$year if(length($year)<2);
-
-my $month = (gmtime)[4];
-
-my $date = (gmtime)[3];
-$date = '0'.$date if(length($date)<2);
-
-my $hh = (gmtime)[2];
-my $mm = (gmtime)[1];
-my $hhmm = 100*$hh+$mm;
-$hhmm = "0".$hhmm while(length($hhmm)<4);
-
 require "$LAPSROOT/etc/laps_tools.pm";
-my $jjj = &laps_tools::julian($year,$month+1,$date);
-$jjj="0".$jjj while(length($jjj)< 3);
 
-my $yyjjjhhmm = "$year$jjj$hhmm";
+my $archive_time = -99;  #insures that we don't force $yyjjjhhmm to the nearest cycle
+#                         when calling &laps_tools::systime below.
+
+$archive_time = $opt_g if(defined $opt_g);
+
+my @cycle_time=&laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time_cmn",$LAPS_DATA_ROOT);
+my $cycle_time = ($cycle_time[0]>0)?$cycle_time[0]:3600;
+
+my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+if(defined $opt_L){
+   if(length($opt_L) != 16){
+      print "USEAGE: use -L to input time with the following format\n";
+      print "dd-mmm-yyyy-hhmm. Eg., 28-Aug-2002-1200 \n";
+      exit;
+   }
+   my $mon=0;
+   my ($day,$month,$year,$hoursmin)=split /\-/, $opt_L;
+   my $hours   = substr($hoursmin,0,2);
+   my $minutes = substr($hoursmin,2,2);
+   foreach (@MON){
+       if($_ eq (uc $month)){last;}
+       $mon++;
+   }
+   $mon=$mon+1;
+   $mon="0".$mon if(length($mon)<2);
+
+   $archive_time = &laps_tools::date_to_i4time($year,$mon,$day,$hours,$minutes,"00");
+
+}
+
+#this for logfile names only.
+#---------------------------
+my $delay_time = 0;
+my $yyjjjhhmm=&laps_tools::systime($LAPS_DATA_ROOT,$delay_time,$cycle_time,$archive_time);
 
 my $log = $exe;
 #$log =~ s/\..*$/\.log\.$hhmm/;
 $log =~ s/\..*$/\.log\.$yyjjjhhmm/;
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
-open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout to $LAPS_LOG_PATH/$log";
 open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
