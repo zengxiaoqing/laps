@@ -244,7 +244,7 @@ c
 	end
 c
 c
-	subroutine spline(t,to,tb,alf,alf2,beta,a,s,cormax,err,imax,
+	subroutine spline(t,to,tb,alf,alf2,beta,a,s_in,cormax,err,imax,
      &                    jmax,roi,bad_mult,imiss,mxstn,obs_error,name)
 c
 c*******************************************************************************
@@ -256,14 +256,21 @@ c			11-11-91  Pass in dummy work arrays.
 c			07-27-93  Changes for new barnes2 routine. 
 c                       07-20-95  Put wt calcs here...call to dynamic_wts.
 c                       08-26-97  Changes for dynamic LAPS. Pass in obs_error.
+c         J. McGinley   09-22-98  Changes to fully exploit background info.
+c          and P.Stamus           Routine modified to always use a background
+c                                 field for QC and 1st guess.  Spline solves for
+c                                 a solution difference from 1st guess.  Removed
+c                                 2 Barnes calls. When no satellite data for HSM,
+c                                 'a' weight set to zero.  Bkg added back into
+c                                 t, to, and s arrays on exit.
 c
 c*******************************************************************************
 c
-	real*4 t(imax,jmax), to(imax,jmax), s(imax,jmax)
-	real*4 RESS(100), tb(imax,jmax), alf2(imax,jmax)
+	real*4 t(imax,jmax), to(imax,jmax), s(imax,jmax), s_in(imax,jmax)
+	real*4 RESS(100), tb(imax,jmax) , alf2(imax,jmax)
 c
 	real*4 fnorm(0:imax-1,0:jmax-1)
-	real*4 alf2o(imax,jmax)  !work array
+c	real*4 alf2o(imax,jmax)  !work array
 c
 	character name*10
 	logical iteration
@@ -278,6 +285,7 @@ c
 	smsng = 1.e37
 	cormax = 1.
 	beta = 0.
+	call move(s_in, s, imax, jmax)
 c
 c.....	first guess use barnes
 c
@@ -287,8 +295,8 @@ c.....  Count the number of observations in the field (not counting the
 c.....  boundaries.
 c
 	n_obs_var = 0
-	do j=2,jmax-1
-	do i=2,imax-1
+	do j=3,jmax-2
+	do i=3,imax-2
 	  if(to(i,j) .ne. 0.) n_obs_var = n_obs_var + 1
 	enddo !i
 	enddo !j
@@ -302,16 +310,11 @@ c
 c
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
 	  write(9,912)
-912	  format(' data passed into spline:')
-	  write(9,913)
-913	  format(' calling barnes')
+ 912	  format(' data passed into spline:')
 	endif
 c
-	rom2 = 0.0005
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
-c
-c.....	Data check algorithm
+c.....	Data check algorithm and computation of difference 
+c.....  from background.
 c
 	sum = 0.
 	cnt = 0.
@@ -323,7 +326,7 @@ c
 	do j=1,jmax
 	do i=1,imax
 	  if(to(i,j) .eq. 0.) go to 99
-	  sum = sum + ((to(i,j) - t(i,j)) ** 2)
+	  sum = sum + ((to(i,j) - tb(i,j)) ** 2)
 	  cnt = cnt + 1.
 99	continue
         enddo !i
@@ -337,130 +340,136 @@ c
 	endif
 	if(std .eq. 0.) then
 	  write(6,927) t(21,21)
-927	  format(1x,'++ Uniform input to spline routine with value: ',
+ 927	  format(1x,'++ Uniform input to spline routine with value: ',
      &           e12.4,' ++')
 	  std = zeros
 	endif
 c
-c bad data defined as deviating 3.5 (now 'bad_mult') sigma from first guess
+c.....  Bad data defined as deviating 'bad_mult' sigmas from 1st guess
 c
 	bad = bad_mult * std
 	iflag = 0
+	print *,' std dev: ',std,', bad value: ',bad
 c
 c.....  eliminate bad data   
 c
 	do j=1,jmax
 	do i=1,imax
 	  if(to(i,j) .eq. 0.) go to 98
-	  diff = t(i,j) - to(i,j)
-	  if(abs(diff).lt.bad) go to 98
-	  iflag = 1
-	  write(6,1099) i,j,to(i,j)
-	  to(i,j) = 0.
-	  if(i.ne.1 .and. i.ne.imax .and. j.ne.1 .and. j.ne.jmax)
-     &                                    n_obs_var = n_obs_var - 1
-98	continue 
+	  diff = to(i,j) - tb(i,j)
+	  if(abs(diff) .lt. bad) then
+	     to(i,j) = diff
+	  else
+	     iflag = 1
+	     write(6,1099) i,j,to(i,j), diff
+	     to(i,j) = 0.
+	     if(i.ne.1 .and. i.ne.imax .and. j.ne.1 .and. j.ne.jmax)
+     &         n_obs_var = n_obs_var - 1
+	  endif
+ 98	  continue 
         enddo !i
 	enddo !j
-1099	format(1x,'bad data at i,j ',2i5,' with value ',e12.4)
-c
-c.....	now reestablish first guess with lots of detail in 2nd pass
-c.....	do a 2-pass Barnes unless there's lots of data.
-c
-!	datacov = float(imax * jmax) / 3.
-!	npass = 2
-!	if(cnt .gt. datacov) npass = 1
-	npass = 1
+ 1099	format(1x,'bad data at i,j ',2i5,': value ',e12.4,', diff ',e12.4)
 c
 	if(n_obs_var .gt. 0) then
-	   print *,' Final observations in data array: ',n_obs_var
+	   print *,
+     &       ' Observations in data array after spline QC: ',n_obs_var
 	else
 	   print *,' No obs in data array.  Returning.'
 	   return
 	endif
 c
-c.....  Fix for the tb8's.  Check on number of obs and set rom2.
+c.....  Ensure that HSM weights are zero if there is no HSM field
 c
-	rom2 = 0.
-	if(name(1:3) .eq. 'TB8') then
-	   rom2 = .0005
-c	   rom2 = .001
-c	   if(n_obs_var .lt. 500) rom2 = 0.01
-c	   if(n_obs_var .lt. 100) rom2 = 0.005
-	endif
+	isat_flag = 0
+	do j=1,jmax
+	do i=1,imax
+	   t(i,j) = 0.
+	   if(s(i,j) .ne. 0.) then
+	      isat_flag = 1
+	      s(i,j) = s(i,j) - tb(i,j) !diff from background
+	   endif
+	enddo !i
+	enddo !j
 c
-	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
-	call barnes2(t,imax,jmax,to,smsng,mxstn,npass,fnorm)
+c.....  Set the weights for the spline.
 c
-	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
-	  write(9,2345) 
-2345      format(1x,'final first guess')
-	endif
+	alf = 100.
+	beta = 75.
+	a = 10.
+	if(isat_flag .eq. 0) a = 0
+	alf2a = (1./9.) * alf
 c
-c.....  Calculate the spline weights.
+	write(6,9995) alf, beta, alf2a, a
+ 9995	format(5x,'Using spline wts: alf, beta, alf2a, a = ',4f10.4)
 c
-	call calc_beta(d,obs_error,beta)
-c
-	if(beta .le. 0.) then 
-	   print *,' bad beta...skipping spline'
-	   go to 3
-	endif
+c.....  Now do the spline.
 c
 	iteration = .true.
 	do it=1,itmax
 	  cormax = 0.
 	  if(iteration) then
-	  do j=3,jmax-2
-	  do i=3,imax-2
-	    alfo = alf
-	    alf2o(i,j) = alf2(i,j)
-	    if(to(i,j) .eq. 0.) alfo = 0.
-	    if(tb(i,j) .eq. 0.) alf2o(i,j) = 0.
-	    dtxx = t(i+1,j) + t(i-1,j) - 2. * t(i,j)
-	    dtyy = t(i,j+1) + t(i,j-1) - 2. * t(i,j)
-	    d4t = 20. * t(i,j) 
-     &       - 8. * (t(i+1,j) + t(i,j+1) + t(i-1,j) + t(i,j-1))
-     &       + 2. * (t(i+1,j+1) + t(i+1,j-1) + t(i-1,j+1) + t(i-1,j-1))
-     &       + (t(i+2,j) + t(i-2,j) + t(i,j+2) + t(i,j-2))
-	    d2t = dtxx + dtyy
-	    dtx = (t(i+1,j) - t(i-1,j)) * .5
-	    dty = (t(i,j+1) - t(i,j-1)) * .5
-	    sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
-	    syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
-c
-	    res = d4t - a * (d2t - sxx - syy) / beta
-     &            + alfo/beta * (t(i,j) - to(i,j))	  ! stations
-     &            + alf2o(i,j)/beta * (t(i,j) - tb(i,j))  ! background
-	    cortm = 20. + a*4./beta + alfo/beta + alf2o(i,j)/beta
-	    tcor = abs(res / cortm)
-	    t(i,j) = t(i,j) - res / cortm * ovr
-	    if(tcor .le. cormax) go to 5
-	    cormax = tcor
-	    ress(it) = tcor
+	     do j=3,jmax-2
+	     do i=3,imax-2
+		alfo = alf
+		alf2o = alf2a
+		if(to(i,j) .eq. 0.) alfo = 0.
+		dtxx = t(i+1,j) + t(i-1,j) - 2. * t(i,j)
+		dtyy = t(i,j+1) + t(i,j-1) - 2. * t(i,j)
+		d4t = 20. * t(i,j) 
+     &            - 8. * (t(i+1,j) + t(i,j+1) + t(i-1,j) + t(i,j-1))
+     &            + 2.*(t(i+1,j+1)+t(i+1,j-1) + t(i-1,j+1) + t(i-1,j-1))
+     &            + (t(i+2,j) + t(i-2,j) + t(i,j+2) + t(i,j-2))
+		d2t = dtxx + dtyy
+		dtx = (t(i+1,j) - t(i-1,j)) * .5
+		dty = (t(i,j+1) - t(i,j-1)) * .5
+		sxx = (s(i+1,j) + s(i-1,j) - 2. * s(i,j))
+		syy = (s(i,j+1) + s(i,j-1) - 2. * s(i,j))
+c       
+		res = d4t - a * (d2t - sxx - syy) / beta
+     &               + alfo/beta * (t(i,j) - to(i,j)) ! stations
+     &               + alf2o/beta * t(i,j)            ! background
+		cortm = 20. + a*4./beta + alfo/beta + alf2o/beta
+		tcor = abs(res / cortm)
+		t(i,j) = t(i,j) - res / cortm * ovr
+		if(tcor .le. cormax) go to 5
+		cormax = tcor
+		ress(it) = tcor
 c	write(6,1010) i,j,res,cortm,tcor
 c1010	format(1x,2i5,3e12.4)
 c	write(6,1009)beta,d4t,d2t,dtxy,dtx,dty,gam,sxx,syy,sxy,sx,sy
-5	  continue
-          enddo !i
-	  enddo !j
+ 5		continue
+	     enddo !i
+	     enddo !j
+
 c
 c	write(6,1000) it,cormax
-	  if(cormax .lt. err) iteration = .false.
-	    corhold = cormax
-	    ithold = it
+	     if(cormax .lt. err) iteration = .false.
+	     corhold = cormax
+	     ithold = it
 	  endif
 	enddo !it
 c
-6	write(6,1000) ithold ,corhold              !it, cormax
+c
+c.....  Add backgrounds back to t, to, and s
+c
+	do j=1,jmax
+	do i=1,imax
+	   t(i,j) = t(i,j) + tb(i,j)
+	   s(i,j) = s(i,j) + tb(i,j)
+	   if(to(i,j) .ne. 0.) to(i,j) = to(i,j) + tb(i,j)
+	enddo !i
+	enddo !j
+c
+ 6	write(6,1000) ithold ,corhold !it, cormax
+ 1000	format(1x,i4,e12.4)
 	if(name.ne.'NOPLOT' .and. name(1:3).ne.'TB8') then
-	  write(9,923)
-923	  format(1x,' solution after spline')
+	   write(9,923)
+ 923	   format(1x,' solution after spline')
 	endif
 	if(cormax.lt.err .and. it.eq.1) return
-1000 	format(1x,i4,e12.4)
-3	continue
-1001 	format(1x,3e12.4)
-c
+ 3	continue
+c       
 !	print *,' leaving spline'
 	return
 	end
@@ -606,6 +615,7 @@ c
             iob(ncnt) = i
             job(ncnt) = j 
             val(ncnt) = to(i,j)
+cc	     write(6,999) ncnt, i, j, to(i,j)
           endif
         enddo !i
         enddo !j
@@ -613,6 +623,7 @@ c
 	  print *,' *** NCNT = 0 in BARNES2. ***'
 	  return
 	endif
+ 999	format('   ncnt: ',i4,' at ',2i5,f10.3)
 c
 	do ipass=1,npass
 c
@@ -631,7 +642,7 @@ c
 c
 	    if(sumwt2 .eq. 0.) then
 	      if(ipass .eq. 1) then
-		   print *,' got into wierd loop.............'
+c		   print *,' got into wierd loop.............'
 	            sum2 = 0.
 	            sumwt2 = 0.
 	            do n=1,ncnt
