@@ -20,6 +20,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 EXE = obs_driver.x
 
 SRC   = read_metar.f \
+        read_metar_cwb.f \
 	get_metar_obs.f \
 	read_local.f \
 	get_local_obs.f \

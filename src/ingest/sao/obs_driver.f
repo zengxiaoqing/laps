@@ -79,15 +79,11 @@ c
 	   stop
 	endif
         call obs_driver_sub(NX_L_CMN,NY_L_CMN,maxstations_cmn,
-     &             maxobs_cmn,path_to_metar_data_cmn,
-     &             path_to_local_data_cmn,path_to_buoy_data_cmn,
-     &             min_to_wait_for_metars_cmn,laps_cycle_time_cmn)
+     &                      maxobs_cmn,laps_cycle_time_cmn)
 
         end
 
-        subroutine obs_driver_sub(ni,nj,maxsta,maxobs
-     &          ,path_to_metar,path_to_local_data,path_to_buoy_data,
-     &          minutes_to_wait_for_metars,laps_cycle_time)
+        subroutine obs_driver_sub(ni,nj,maxsta,maxobs,laps_cycle_time)
 c        
         include 'surface_obs.inc'
         integer ni, nj, maxsta, maxobs 
@@ -301,7 +297,8 @@ c
             a8_time = a9_to_a8(filename9(1:9))
 
 	    len_path = index(path_to_METAR,' ') - 1
-	    data_file_m = 'metar'//a8_time//'.dat'
+	    data_file_m = 
+     1              path_to_METAR(1:len_path)//'metar'//a8_time//'.dat'
 
         else
             write(6,*)' ERROR, unknown metar format'

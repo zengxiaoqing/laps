@@ -170,16 +170,17 @@ c
      &         timeobs, vis, dd, ffg, ff,
      &         wmoid_in, badflag, istatus)
 
-!       else
-!           call read_metar_cwb(nf_fid , maxSkyCover, recNum, alt,   
-!    &         atype_in, td, ttd, elev,
-!    &         lats, lons, max24t, min24t,
-!    &         pcp1, pcp24, pcp3, pcp6,
-!    &         wx, dp, dpchar,
-!    &         reptype_in, mslp, cvr, ht,
-!    &         snowcvr, stname, tt, t,
-!    &         timeobs, vis, dd, ffg, ff,
-!    &         wmoid_in, badflag, istatus)
+        else
+            recNum=150
+            call read_metar_cwb(data_file , maxSkyCover, recNum, alt,    
+     &         atype_in, td, ttd, elev,
+     &         lats, lons, max24t, min24t,
+     &         pcp1, pcp24, pcp3, pcp6,
+     &         wx, dp, dpchar,
+     &         reptype_in, mslp, cvr, ht,
+     &         snowcvr, stname, tt, t,
+     &         timeobs, vis, dd, ffg, ff,
+     &         wmoid_in, badflag, istatus)
 
         endif
 c
