@@ -224,6 +224,7 @@ c
 c     define PI
       pi = acos(-1.0)
       d2r = pi/180.
+      write (6,*) 'Starting run for I4TIME', i4time
 c     initialize IR emissivity (1:n) and reflectance (1:n)
 
       do i = 1,ii
