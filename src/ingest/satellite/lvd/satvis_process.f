@@ -473,20 +473,21 @@ c
        print*,'  ================='
        print*,'  Albedo statistics'
        print*,'  ================='
-       if(icnt.gt.0)then
+       if(icnt.gt.0.and.ismax.gt.0.and.jsmax.gt.0.and.
+     &ismin.gt.0.and.jsmin.gt.0)then
           print*,'  N > 3 standard dev = ',icnt
           print*,'  Last i/j > 3 stand dev = ',i,j
           print*,'  laps_vis_norm(i,j)= ',laps_vis_norm(i,j)
+          print*,'  Average albedo = ', ave
+          print*,'  Standard dev = ',sdev
+          print*,'  i/j/count of max albedo ',ismax,jsmax,
+     &laps_vis_norm(ismax,jsmax)
+          print*,'  i/j/count of min albedo ',ismin,jsmin,
+     &laps_vis_norm(ismin,jsmin)
        else
           print*,'All albedo < 3 standard dev'
+          print*,'No max/min output'
        endif
-       print*,'Average albedo = ', ave
-       print*,'Standard dev = ',sdev
-       print*,'i/j/count of max albedo ',ismax,jsmax,
-     &laps_vis_norm(ismax,jsmax)
-       print*,'i/j/count of min albedo ',ismin,jsmin,
-     &laps_vis_norm(ismin,jsmin)
-
 
        goto 999
 898    write(6,*)'Error getting r_msng_sat_flag'

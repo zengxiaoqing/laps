@@ -210,9 +210,9 @@ c
      &nvislines,nviselem,image_vis,i4time_data_io,iostatus)
                goto 26
 
-22             call read_afgwc_satdat(cfilename,isat,jtype,
-     &l_cell_afwa,chtype(i),i_delta_sat_t_sec,i4time_current,
-     &nvislines,nviselem,image_vis,i4time_data_io,iostatus)
+22             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+     &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
+     &,image_39,i4time_data_io,iostatus)
                goto 26
 
 23             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa

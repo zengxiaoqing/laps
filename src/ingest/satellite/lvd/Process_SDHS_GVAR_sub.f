@@ -172,7 +172,7 @@ c back as floating 10-bit info for the sector in domain.
 
       else ! afwa data not cellularized but bits need moving
 
-         m=HEADER_SIZE*4
+         m=HEADER_SIZE  !*4
          do j=1,nlfi
          do i=1,nefi
             m=m+1
