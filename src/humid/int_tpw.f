@@ -87,7 +87,7 @@ c     fill vertical specific arrays
                data_vert(k) = data(i,j,k)
             enddo               !end k
 
-            call int_ipw (xdum,p_vert,data_vert,kstart,
+            call int_ipw (xdum,p_vert,data_vert,kstart(i,j),
      1           qs(i,j),ps(i,j),tpw(i,j),mdf,kk)
 
          enddo                  !i
