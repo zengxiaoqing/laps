@@ -37,7 +37,13 @@ c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
 c                           ORSM_HKO (Hong Kong Observ model     (tested) 
 c                                     
-c        bgmodels = 3 ----> CWB_20FA_LAMBERT (_NF or _RE)        (tested)
+c        bgmodels = 3 ----> CWB_20FA_LAMBERT
+c                                           _NF                  (tested, obsolete)
+c                                           _RE                  (tested, obsolete)
+c                                           _NF15                (under construction)
+c                                           _GFS                 (not avail yet)
+c                                           _NF45                (not avail yet)
+c
 c        bgmodels = 4 ----> (SBN: RUC, ETA, AVN, MesoEta)        (all tested)
 c                                 RUC40_NATIVE,
 c                                      ETA48_CONUS,
