@@ -202,12 +202,12 @@
 
               elseif(c8_raob_format(1:3) .eq. 'RSA')then
                   write(6,*)
-     1                ' Subroutine get_rtamps_data under construction'       
+     1                ' Calling get_rtamps_data (under construction)'       
 
-!                 call get_rtamps_data(i4time_sys,ilaps_cycle_time       
-!    1                ,NX_L,NY_L
-!    1                ,i4time_raob_earliest,i4time_raob_latest
-!    1                ,filename_in,lun_out,istatus)
+                  call get_rtamps_data(i4time_sys,ilaps_cycle_time       
+     1                ,NX_L,NY_L
+     1                ,i4time_raob_earliest,i4time_raob_latest
+     1                ,filename_in,lun_out,istatus)
 
               elseif(      l_parse(c8_raob_format,'AFGWC')
      1                .or. l_parse(c8_raob_format,'AFWA')   )then
