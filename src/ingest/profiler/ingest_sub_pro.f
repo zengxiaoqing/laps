@@ -430,29 +430,24 @@ C
             write(6,*)
             write(6,*)prof_name(ista),' elev ',elev
 
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     1                         ,'windSpeedSfc',0,sp_sfc,istatus1)
-
-            if(c8_project(1:6) .eq. 'NIMBUS')then
-                CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     1                         ,'windDirSfc',0,di_sfc,istatus2)
-            else
-                CALL PROF_CDF_READ(cdfid,prof_name(ista),0
-     1                         ,'windDirSfc',0,i4_di_sfc,istatus2)
-
-                di_sfc = i4_di_sfc
-            endif
+            call prof_sfcob_read(cdfid,prof_name(ista)          ! I
+     1                          ,r_missing_data                 ! I
+     1                          ,di_sfc                         ! O
+     1                          ,sp_sfc                         ! O
+     1                          ,p_sfc_hpa                      ! O
+     1                          ,t_sfc_k                        ! O
+     1                          ,rh_sfc_pct                     ! O
+     1                          ,status)                        ! O
 
 !           Test whether di and sp lie within valid range
-            if(abs(sp_sfc) .gt. 500.)istatus1 = 1
-            if(abs(di_sfc) .gt. 500.)istatus2 = 1
+            if(abs(sp_sfc) .gt. 500.)status = 1
+            if(abs(di_sfc) .gt. 500.)status = 1
 
-            if(istatus1 .eq. 0 .and. istatus2 .eq. 0)then
+            if(status .eq. 0)then
                 n_good_sfc = 1
             else
                 n_good_sfc = 0
             endif
-
 C
 C           Get the array of profiler winds for the profiler station
 C           at Platteville.  For this call, we'll use the WMO
@@ -571,15 +566,21 @@ C
             rms = 1.0
 
             if(n_good_sfc .eq. 1)then
-!               write surface winds as first level
+!               write surface data as first level
                 write(1,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+     1                          ,p_sfc_hpa 
+     1                          ,t_sfc_k   
+     1                          ,rh_sfc_pct
                 write(6,301)elev,di_sfc,sp_sfc,rms ! /r_mspkt
+     1                          ,p_sfc_hpa 
+     1                          ,t_sfc_k   
+     1                          ,rh_sfc_pct
             endif
 
             do i = n_good_levels, 1, -1
                 write(1,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 
                 write(6,301,err=303)ht_out(i),di_out(i),sp_out(i),rms 
-301             format(1x,f6.0,f6.0,2f6.1)
+301             format(1x,f6.0,f6.0,2f6.1,3f7.1)
 303             continue
             enddo ! i
 
@@ -607,3 +608,57 @@ C
         return
         end
 
+        subroutine prof_sfcob_read(cdfid,prof_name              ! I
+     1                          ,r_missing_data                 ! I
+     1                          ,di_sfc                         ! O
+     1                          ,sp_sfc                         ! O
+     1                          ,p_sfc_hpa                      ! O
+     1                          ,t_sfc_k                        ! O
+     1                          ,rh_sfc_pct                     ! O
+     1                          ,istatus)                       ! O
+
+        integer istatus   ! A value of zero indicates good dir & speed
+
+        integer cdfid
+        character*8 c8_project
+        character*(*) prof_name
+
+        di_sfc = r_missing_data
+        sp_sfc = r_missing_data
+
+        call get_sfc_badflag(sfc_badflag,istatus)
+        if(istatus .ne. 1)return
+
+        t_sfc_k = sfc_badflag
+        rh_sfc_pct = sfc_badflag
+        p_sfc_hpa = sfc_badflag
+
+        call get_c8_project(c8_project,istatus)
+        if(istatus .ne. 1)return
+
+        CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'windSpeedSfc',0,sp_sfc,istat_sp)
+
+        if(c8_project(1:6) .eq. 'NIMBUS')then
+            CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'windDirSfc',0,di_sfc,istat_di)
+        else
+            CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'windDirSfc',0,i4_di_sfc,istat_di)
+
+            di_sfc = i4_di_sfc
+        endif
+
+        CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'pressure',0,p_sfc_hpa,istatus2)
+
+        CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'temperature',0,t_sfc_k,istatus2)
+
+        CALL PROF_CDF_READ(cdfid,prof_name,0
+     1                         ,'relHumidity',0,rh_sfc_pct,istatus2)
+
+        istatus = istat_di * istat_sp
+
+        return
+        end

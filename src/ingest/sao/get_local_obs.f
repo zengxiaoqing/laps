@@ -35,10 +35,14 @@ c*****************************************************************************
 c
 	include 'netcdf.inc'
 c
-c.....  Read arrays.
+c.....  Input variables/arrays
 c
         integer maxobs ! raw data file
         integer maxsta ! processed stations for LSO file
+        character*(*) path_to_local_data, local_format
+c
+c.....  Local variables/arrays
+c
 	real*8  timeobs(maxobs), rh_time(maxobs), p_time(maxobs)
 	real*8  t_time(maxobs), dd_time(maxobs), gust_time(maxobs)
 	real*8  ff_time(maxobs)
@@ -47,6 +51,8 @@ c
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
         real    lat(ni,nj), lon(ni,nj)
+        integer*4  i4time_ob_a(maxobs)
+        character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
 c
 c.....  Output arrays.
@@ -61,7 +67,6 @@ c
      &          store_cldht(maxsta,5)
 c
 	integer*4  before, after, wmoid(maxsta)
-        integer*4  i4time_ob_a(maxobs)
 	integer    rtime
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
@@ -72,8 +77,6 @@ c
 	character  wx(maxobs)*25, weather(maxsta)*25
 	character  reptype(maxsta)*6, atype(maxsta)*6
 	character  store_cldamt(maxsta,5)*4, stn_type(maxobs)*11
-        character*(*) path_to_local_data, local_format
-        character*9 a9time_before, a9time_after, a9time_a(maxobs)
         character*13 filename13, cvt_i4time_wfo_fname13
         character*150 data_file 
 c
@@ -196,7 +199,7 @@ c
       
 c
 c..................................
-c.....	First loop over all the obs.
+c.....	First QC loop over all the obs.
 c..................................
 c
 	do i=1,n_local_all
@@ -217,8 +220,6 @@ c........  the ob is outside the LAPS domain.
 
            do k = 1,i-1
              if(       stname(i) .eq. stname(k) 
-!    1                          .AND.
-!    1           (lats(i) .ne. badflag .and. lats(k) .ne. badflag)
      1                          .AND.
      1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
      1                                                           )then
@@ -262,7 +263,7 @@ c
 	enddo !i
 c
 c..................................
-c.....	Second loop over all the obs.
+c.....	Second QC loop over all the obs.
 c..................................
 c
 	jfirst = 1
@@ -270,7 +271,7 @@ c
         box_idir = float( ni + ibox_points)  !buffer on east
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
-	do 125 i=1,n_local_all
+	do i=1,n_local_all
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -444,12 +445,12 @@ c
 c
 c..... Visibility
 c
-	if(vis(i).lt.0. .or. vis(i).gt.330000.) then
+	 if(vis(i).lt.0. .or. vis(i).gt.330000.) then
 	   vis(i) = badflag
-	else
+	 else
 	   vis(i) = vis(i) * .001      !m to km
 	   vis(i) = 0.621371 * vis(i)  !km to miles
-	endif
+	 endif
 c
 c
 c..... Fill the expected accuracy arrays.  Values are based on information
@@ -465,9 +466,9 @@ c..... using here.
 c
 c..... Temperature (deg F)
 c
-	fon = 9. / 5.  !ratio when converting C to F
-	store_2ea(nn,1) = 10.0 * fon        ! start...we don't know what we have
-	if(temp_f .ne. badflag) then
+	 fon = 9. / 5.  !ratio when converting C to F
+	 store_2ea(nn,1) = 10.0 * fon        ! start...we don't know what we have
+	 if(temp_f .ne. badflag) then
 	   if(temp_f.ge.c2f(-62.) .and. temp_f.le.c2f(-50.)) then
 	      store_2ea(nn,1) = 2.2 * fon  ! conv to deg F
 	   elseif(temp_f.gt.c2f(-50.) .and. temp_f.lt.c2f(50.)) then
@@ -475,7 +476,7 @@ c
 	   elseif(temp_f.ge.c2f(50.) .and. temp_f.le.c2f(54.)) then
 	      store_2ea(nn,1) = 2.2 * fon  ! conv to deg F
 	   endif
-	endif
+	 endif
 c
 c..... Dew point (deg F).  Also estimate a RH accuracy based on the dew point.
 c..... Estimates for the RH expected accuracy are from playing around with the
@@ -626,7 +627,8 @@ c
 	 endif
 c
 c
-  125	 continue
+ 125     continue
+       enddo !i
 c
 c
 c.....  That's it...lets go home.

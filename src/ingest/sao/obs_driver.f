@@ -484,7 +484,7 @@ c
 
         else
             call get_local_cwb(maxobs,maxsta,i4time_sys,
-     &                      path_to_local_data,
+     &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,

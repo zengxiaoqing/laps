@@ -381,16 +381,10 @@ c       include 'satellite_dims_lvd.inc'
 
                 ext = 'lga'
 
-!               call get_directory(ext,directory,len_dir)
-!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
-
             elseif(c_type .eq. 'wr')then
                 call make_fnam_lp(i4time_ref,asc9_tim_3dw,istatus)
 
                 ext = 'fua'
-
-!               call get_directory(ext,directory,len_dir)
-!               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
 
             elseif(c_type .eq. 'co')then
                 ext = 'lco'
@@ -436,12 +430,18 @@ c       include 'satellite_dims_lvd.inc'
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
 
-            if(c_type.ne.'lo' .and. c_type .ne. 'wr')then
+            if(c_type.ne.'lo' .and. c_type .ne. 'wr'
+     1                        .and. c_type .ne. 'wb')then
                write(6,*)
                write(6,*)'    Looking for laps wind data: ',ext(1:3)
                call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-               call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+
+            else 
+               i4time_3dw = i4time_ref
+
             endif
+
+            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
             if(c_type.eq.'bw'.or.c_type.eq.'bo')ext='balance'
             if(c_type.eq.'co'.or.c_type.eq.'bo'.or.c_type.eq.'lo')then
@@ -512,6 +512,7 @@ c       include 'satellite_dims_lvd.inc'
      1                                 UNITS_2d,COMMENT_2d,
      1                                 v_2d,ISTATUS)
 
+                        i4time_3dw = i4_valid
                         write(6,*)' Valid time = ',asc9_tim_3dw
 
                     else ! lwm
@@ -2724,18 +2725,17 @@ c
 
             print*,'      plotting ',ext(1:3),' humidity data'
 
-            call input_model_time(i4time_ref              ! I
-     1                           ,laps_cycle_time         ! I
-     1                           ,asc9_tim_t              ! O
-     1                           ,fcst_hhmm               ! O
-     1                           ,i4_initial              ! O
-     1                           ,i4_valid                ! O
-     1                                                            )
-
-!           write(6,211)ext(1:3)
-!           read(5,221)a13_time
-
-!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+            call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,asc9_tim_r              ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+            if(istatus.ne.1)goto1200
 
             write(6,1513)
             read(lun,*)k_level
@@ -2748,7 +2748,7 @@ c
             read(5,*)qtype
 
             var_2d = 'SH '
-            call get_modelfg_3d_sub(i4_valid,var_2d,ext
+            call get_modelfg_3d_sub(i4_valid,var_2d,subdir,ext
      1             ,nx_l,ny_l,nz_l,field_3d,istatus)             ! q_3d
 
             if(istatus.ne.1)then
@@ -2781,7 +2781,7 @@ c                   cint = -1.
                     read(5,*)t_ref
 
                     var_2d = 'T3 '
-                    call get_modelfg_3d_sub(i4_valid,var_2d,ext
+                    call get_modelfg_3d_sub(i4_valid,var_2d,subdir,ext
      1                          ,nx_l,ny_l,nz_l,temp_3d,istatus)
                     if(istatus.ne.1)then
                         print*,var_2d, ' not obtained from ',ext(1:3)
@@ -2870,33 +2870,21 @@ c                   cint = -1.
 
             if(c_type(2:2) .eq. 'b')then
                 ext = 'lga'
-                call get_directory(ext,directory,len_dir)
-
             else
                 ext = 'fua'
-
-                write(6,205)ext(1:3)
- 205            format(/' Enter model [e.g. mm5] for ',a3,' file: ',$)       
-
-                read(5,206)c_model
- 206            format(a)
-
-                call get_directory(ext,directory,len_dir)
-                call s_len(c_model,len_model)
-                directory = directory(1:len_dir)//c_model(1:len_model)
-     1                                          //'/'
-
             endif
 
-            write(6,*)' Using ',ext(1:3),' file'
-
-            call   input_model_time(i4time_ref              ! I
+            call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
-     1                                                            )
+     1                             ,istatus)                ! O
+            if(istatus.ne.1)goto1200
 
             call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d,istatus)       
 
@@ -3254,37 +3242,31 @@ c                   cint = -1.
             read(lun,712)ext
  712        format(a3)
 
-            call get_directory(ext,directory,len_dir)
-
-            write(6,*)' Using ',ext(1:3),' file'
-
-            call input_model_time(i4time_ref    ! I
+            call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
      1                             ,asc9_tim_t              ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
-     1                                                            )
-
-!           write(6,716)ext(1:3)
-!716        format(/' Enter yydddhhmmHHMM for ',a3,' file: ',$)
-
-!           read(5,717)a13_time
-!717        format(a13)
-
-!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+     1                             ,istatus)                ! O
+            if(istatus.ne.1)goto1200
 
             if(ext.eq.'lgb')then
                write(6,723)
+ 723           format(/'  SELECT FIELD (VAR_2D):  '
+     1          /
+     1          /'     SFC: [usf,vsf,psf,tsf,dsf,fsf,slp] ? ',$)
+
             else
                write(6,725)
+ 725           format(/'  SELECT FIELD (VAR_2D):  '
+     1          /
+     1          /'     SFC: [u,v,ps,t,td,rh,msl] ? ',$)
+
             endif
- 723        format(/'  SELECT FIELD (VAR_2D):  '
-     1       /
-     1       /'     SFC: [usf,vsf,psf,tsf,dsf,fsf,slp] ? ',$)
- 725        format(/'  SELECT FIELD (VAR_2D):  '
-     1       /
-     1       /'     SFC: [u,v,ps,t,td,rh,msl] ? ',$)
 
             read(lun,724)var_2d
  724        format(a)
@@ -4993,7 +4975,7 @@ c
      1                             ,directory               ! O
      1                             ,i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
-     1                             ,asc9_tim_3dw            ! O
+     1                             ,asc9_tim_t              ! O
      1                             ,fcst_hhmm               ! O
      1                             ,i4_initial              ! O
      1                             ,i4_valid                ! O
@@ -5011,6 +4993,7 @@ c
         character*20  c_model
         character*10  cmds
         character*1   cansw
+        character*150 c_filenames(1000)
 
         character*4 fcst_hhmm
         character*9 asc9_tim_t, a9time
@@ -5018,7 +5001,7 @@ c
 
         logical l_parse
 
-        write(6,*)' Subroutine background_directory...'
+        write(6,*)' Subroutine input_background_info...'
 
         write(6,*)' Using ',ext(1:3),' file'
 
@@ -5034,11 +5017,13 @@ c
         call s_len(directory,len_dir)
         cansw='n'
         l=1
+
 !       do while((cansw.eq.'n'.or.cansw.eq.'N').and.l.le.n_fdda_models)
         do while(.false.)
            if(l.ne.n_fdda_models)then
               write(6,108)c_fdda_mdl_src(l)
-108   format(/'  Plot field for FDDA source -> ',a9,'[y/n]',25x,'? ',$)
+108           format(/'  Plot field for FDDA source -> '
+     1               ,a9,'[y/n]',25x,'? ',$)
               read(5,*)cansw
               if(cansw.eq.'y'.or.cansw.eq.'Y')then
                  call s_len(c_fdda_mdl_src(l),lfdda)
@@ -5048,26 +5033,48 @@ c
               l=l+1
            else
               write(6,109)c_fdda_mdl_src(l)
-109   format(/'  Plotting field for FDDA source -> ',a9)
+109           format(/'  Plotting field for FDDA source -> ',a9)
               call s_len(c_fdda_mdl_src(l),lfdda)
               cmds=c_fdda_mdl_src(l)(1:lfdda)//'/'
               cansw='y'
            endif
         enddo
+
         if(n_fdda_models.eq.0)then
            print*,'fdda is not turned on in nest7grid.parms'
            return 
         endif
 
-        write(6,205)ext(1:3)
- 205    format(/' Enter model [e.g. mm5] for ',a3,' file: ',$)
+        write(6,*)' Available models are...'
+
+        do l = 1,n_fdda_models
+            call s_len(c_fdda_mdl_src(l),lfdda)
+            write(6,*)' ',c_fdda_mdl_src(l)(1:lfdda)
+        enddo ! l
+
+        call s_len(c_fdda_mdl_src(1),lfdda)
+        write(6,205)c_fdda_mdl_src(1)(1:lfdda),ext(1:3)
+ 205    format(/'  Enter model [e.g. ',a,'] for ',a3,' file: ',$)
 
         read(5,206)c_model
  206    format(a)
 
-        DIRECTORY=directory(1:len_dir)//cmds
+        call s_len(c_model,len_model)
+
+        DIRECTORY=directory(1:len_dir)//c_model(1:len_model)//'/'
 
  900    continue
+
+        call get_file_names(directory,nfiles,c_filenames
+     1                     ,1000,istatus)
+
+        write(6,*)' Available files in ',directory(1:len_dir)
+        if(nfiles .ge. 1)then
+            call s_len(c_filenames(1),len_fname)
+            do i = 1,nfiles
+                write(6,*)c_filenames(i)(1:len_fname)
+            enddo
+        endif
 
         call       input_model_time(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
@@ -5080,8 +5087,6 @@ c
         istatus = 1
         return
         end
-
-
 
         subroutine input_model_time(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
@@ -5096,7 +5101,7 @@ c
         character*13 a13_time
 
  1200   write(6,211)
- 211    format(/' Enter yydddhhmmHHMM or HHMM for file: ',$)
+ 211    format(/'  Enter yydddhhmmHHMM or HHMM for file: ',$)
 
         read(5,221)a13_time
  221    format(a13)

@@ -253,7 +253,7 @@ c
             call make_fnam_lp(i4time_file,a9time,istatus)
             a8time = a9_to_a8(a9time(1:9))
 
-            maxSkyCover=2
+            maxSkyCover=6
             recNum = maxobs
 
 	    data_file = 

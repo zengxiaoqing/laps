@@ -264,8 +264,13 @@ c
               else
                  stn(i)(1:3) = stations(i)(1:3)
               endif
-           else
-              stn(i)(1:3) = stations(i)(2:4)
+
+           else ! right justify the string
+              call left_justify(stations(i))
+              call s_len(stations(i),len_sta)
+              len_sta = max(3,len_sta)
+              stn(i)(1:3) = stations(i)(len_sta-2:len_sta)
+
            endif
 c
            if(reptype(i)(1:4) .eq. 'LDAD') then
@@ -292,5 +297,27 @@ c
         istatus = 1             ! everything's ok...
         print *, ' Normal completion of new READ_SURFACE_OLD'
 c
+        return
+        end
+
+        subroutine left_justify(string)
+
+        character*(*) string
+
+        len_string = len(string)
+        call filter_string(string)
+
+        index_first = 0
+        do j = len_string,1,-1
+            if(string(j:j) .ne. ' ')then
+                index_first = j
+            endif
+        enddo
+        
+        if(index_first .gt. 1)then
+            string(1:len_string-index_first+1) 
+     1                         = string(index_first:len_string)
+        endif
+
         return
         end

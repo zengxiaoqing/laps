@@ -1,6 +1,6 @@
 c
         subroutine get_local_cwb(maxobs,maxsta,i4time_sys,
-     &                 path_to_local_data,
+     &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
@@ -12,32 +12,32 @@ c
      &                 store_7,store_cldht,store_cldamt,
      &                 provider, laps_cycle_time, jstatus)
 c
-c======================================================================
+	include 'netcdf.inc'
 c
-c     Routine to gather the CWB ASCII Mesonet data, and store it for
-c     LAPS use.
-c     
-c     Original:  P. Stamus, NOAA/FSL  08 Sep 1999
-c     Changes:
+c.....  Input variables/arrays
 c
-c     Notes:
-c	1. Code assumes that the station metadata file is in the same
-c 	   directory as the raw observations.  If they are different,
-c 	   change the variable 'infile' in the call to 
-c          'read_tmeso_stntbl'.
+        integer maxobs ! raw data file
+        integer maxsta ! processed stations for LSO file
+        character*(*) path_to_local_data, local_format
 c
-c       2. Code assumes that the reported precip is a 1-h amount.  
-c
-c======================================================================
-c
-c
-c.....  Input 
+c.....  Local variables/arrays
 c
 	real lat(ni,nj), lon(ni,nj)
-        character path_to_local_data*(*)
+        integer    wmoid(maxobs)
+        integer*4  i4time_ob_a(maxobs)
+        character  provider(maxobs)*11
+        character  weather(maxobs)*25
+        character  reptype(maxobs)*6, atype(maxobs)*6
+        character*9 a9time_before, a9time_after, a9time_a(maxobs)
+        logical l_dupe(maxobs)
 c
 c.....  Output arrays
 c
+        real t(maxsta), td(maxsta), rh(maxsta)
+        real dd(maxsta), ff(maxsta)
+        real sfcp(maxsta), pcp(maxsta)
+	real lats(maxsta), lons(maxsta), elev(maxsta)
+        real rtime(maxsta)
         real  store_1(maxsta,4), 
      &        store_2(maxsta,3), store_2ea(maxsta,3),
      &        store_3(maxsta,4), store_3ea(maxsta,2),
@@ -46,26 +46,10 @@ c
      &        store_6(maxsta,5), store_6ea(maxsta,2),
      &        store_7(maxsta,3),
      &        store_cldht(maxsta,5)
-c
-        integer    wmoid(maxobs)
-c
+
         character  stations(maxsta)*20
-        character  provider(maxobs)*11
-        character  weather(maxobs)*25
-        character  reptype(maxobs)*6, atype(maxobs)*6
         character  store_cldamt(maxsta,5)*4
-
-c
-c.....  Local arrays
-c
-        real t(maxsta), td(maxsta), rh(maxsta)
-        real dd(maxsta), ff(maxsta)
-        real sfcp(maxsta), pcp(maxsta)
-	real lats(maxsta), lons(maxsta), elev(maxsta)
-
-        real rtime(maxsta)
-c
-        character stn(maxsta)*5
+        character stname(maxsta)*5
 c
 c.....  Stuff for the mesonet metadata.
 c
@@ -111,44 +95,87 @@ c
 c
 c.....  Get the mesonet data.
 c
-        call read_tmeso_data(path_to_local_data,maxsta,badflag,
-     &                  i4time_sys,stn,rtime,
+        call read_tmeso_data(path_to_local_data,maxsta,badflag,ibadflag,
+     &                  i4time_sys,stname,i4time_ob_a,
      &                  t,td,rh,pcp,sfcp,dd,
      &                  ff,num,istatus)
 c
 	if(istatus .ne. 1) go to 990
 	n_local_all = num
 c
-c.....  Match data with metadata for each station, then store
-c.....  the metadata in arrays.
+c       Match data with metadata for each station, then store the metadata 
+c       in arrays.
 c
         do i=1,n_local_all
-c
-c.....  For each station, search the master list.  
-c
 	   do j=1,num_master
-c
-	      if(stn(i)(1:5) .eq. stn_master(j)(1:5)) then
-c
-c.....  Found one...store the location info.
-c
+	      if(stname(i)(1:5) .eq. stn_master(j)(1:5)) then
 		 lats(i) = lat_master(j)
 		 lons(i) = lon_master(j)
 		 elev(i) = elev_master(j)
-c
 	      endif
 	   enddo !j
 	enddo !i
 c
-c.....  Now that we have a matched set of data and metadata, 
-c.....  process the stations.  Check to see if the station is
-c.....  within the LAPS grid; if so, store it.
+c..................................
+c.....	First QC loop over all the obs.
+c..................................
+c
+	do i=1,n_local_all
+           l_dupe(i) = .false.
+c
+c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
+c........  lat to badflag (-99.9), which causes the bounds check to think that
+c........  the ob is outside the LAPS domain.
+	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
+	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
+
+	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
+
+           call filter_string(stname(i))
+
+           do k = 1,i-1
+             if(       stname(i) .eq. stname(k) 
+     1                          .AND.
+     1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
+     1                                                           )then
+                 i_diff = abs(i4time_ob_a(i) - i4time_sys)
+                 k_diff = abs(i4time_ob_a(k) - i4time_sys)
+
+                 if(i_diff .ge. k_diff)then
+                     i_reject = i
+                 else
+                     i_reject = k
+                 endif
+
+                 write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)
+     1                     ,i_reject
+ 51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
+     1                 ,1x,i6)
+
+                 lats(i_reject) = badflag ! test with this for now
+
+                 l_dupe(i_reject) = .true.
+             endif
+           enddo ! k
+c
+c
+	   if( nanf( t(i)    ) .eq. 1 ) t(i)     = badflag
+	   if( nanf( td(i)   ) .eq. 1 ) td(i)    = badflag
+	   if( nanf( dd(i)   ) .eq. 1 ) dd(i)    = badflag
+	   if( nanf( ff(i)   ) .eq. 1 ) ff(i)    = badflag
+c
+	enddo !i
+c
+c..................................
+c.....	Second QC loop over all the obs.
+c..................................
 c
 	jfirst = 1
 	box_low = 1. - float(ibox_points)  !buffer on west/south side
 	box_idir = float(ni + ibox_points) !buffer on east
 	box_jdir = float(nj + ibox_points) !buffer on north
-c
+
 	do i=1,n_local_all
 	   if(lats(i) .lt. -90.) go to 125	
 	   call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,
@@ -210,12 +237,12 @@ c
 c
 c.....  Output the data to the storage arrays.
 c
-!    	  call s_len(stn(i), len)
-!         stations(nn)(1:len) = stn(i)(1:len)
+!    	  call s_len(stname(i), len)
+!         stations(nn)(1:len) = stname(i)(1:len)
 
- 	  call s_len(stn(i), len)
+ 	  call s_len(stname(i), len)
           if(len .ne. 0)then
-              stations(nn)(1:len) = stn(i)(1:len) ! station name
+              stations(nn)(1:len) = stname(i)(1:len) ! station name
           else
               write(6,*)' Warning in get_local_cwb: blank station name.'
      1                 ,' Assigning name ',i
@@ -379,9 +406,10 @@ c
 	end
 
 c
-        subroutine read_tmeso_data(infile,maxsta,badflag,i4time_sys,stn       
-     1                            ,rtime,t,td,rh,pcp,sfcp,dd,ff,num
-     1                            ,istatus)
+        subroutine read_tmeso_data(infile,maxsta,badflag,ibadflag
+     1                            ,i4time_sys,stn       
+     1                            ,i4time_ob_a,t,td,rh,pcp,sfcp,dd,ff
+     1                            ,num,istatus)
 c
 c======================================================================
 c
@@ -395,7 +423,7 @@ c
         real t(maxsta), td(maxsta), rh(maxsta)
         real dd(maxsta), ff(maxsta)
         real sfcp(maxsta), pcp(maxsta)
-        real rtime(maxsta)
+        integer*4 i4time_ob_a(maxsta)
 c
         character infile*(*), stn_id*5, stn(maxsta)*5 
      1           ,a9_to_a8*8, a9time*9, a8time*8, a6time*6, filename*21       
@@ -409,7 +437,7 @@ c
 	istatus = 0
 	do i=1,maxsta
 	   stn(i)(1:5) = '     '
-	   rtime(i) = badflag
+	   i4time_ob_a(i) = ibadflag
 	   t(i) = badflag
 	   td(i) = badflag
 	   rh(i) = badflag
@@ -419,7 +447,9 @@ c
 	   ff(i) = badflag
 	enddo !i
 c
-        a13time = cvt_i4time_wfo_fname13(i4time_sys)
+        i4time_file = i4time_sys
+
+        a13time = cvt_i4time_wfo_fname13(i4time_file)
 
         filename = a13time(1:4)//'_'//a13time(5:6)             ! yyyy_mm
      1                         //'_'//a13time(7:8)             ! dd
@@ -467,8 +497,8 @@ c
 c
 	stn(num)(1:5) = stn_id(1:5)
 c
-        itime = (ihr * 100) + imin   !figure out the time
-        rtime(num) = float(itime)
+        i4_mm = imin * 60
+        i4time_ob_a(num) = i4time_file + i4_mm
 c
         if(idir.gt.36 .or. idir.lt.0) then
            dd(num) = badflag

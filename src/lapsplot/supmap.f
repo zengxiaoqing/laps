@@ -733,6 +733,10 @@ c    4          MPCOL4,LDash4   /255,'1777'O/   !Perimeter
         character       supmap_dir*150
         integer*4       lsdir
 
+        data iwrite /0/
+
+        character*1000 c_line
+
       DIMENSION SPLAT(2)
       REAL MAXLAT,MINLAT,MAXLON,MINLON,MIDLAT,MIDLON
       CHARACTER*180 NAMFIL
@@ -822,7 +826,33 @@ C***Error opening file -- return
         Return
 
 C***Read next line
-   30   Read(3,End=99)NPts,MaxLat,MinLat,MaxLon,MinLon,(Pts(M),M=1,NPts)
+   30   continue
+
+        if(.false.)then
+            if(iwrite .eq. 0)
+     1        write(6,*)' Using simple read to read binary map info...'
+            Read(3,End=99)NPts,MaxLat,MinLat,MaxLon,MinLon
+     1                   ,(Pts(M),M=1,NPts)
+
+        else
+            if(iwrite .eq. 0)
+     1        write(6,*)' Using cio.c to read binary map info...'
+            Read(3,End=99,err=41)NPts,MaxLat,MinLat,MaxLon,MinLon
+     1                   ,(Pts(M),M=1,200)
+ 41         continue
+
+!           Convert between Bigendian and Littleendian (under construction)
+            call in_to_im(4,4,NPts,1)
+            call in_to_im(4,4,Pts,NPts)
+            call in_to_im(4,4,MaxLat,1)
+            call in_to_im(4,4,MinLat,1)
+            call in_to_im(4,4,MaxLon,1)
+            call in_to_im(4,4,MinLon,1)
+
+        endif
+
+        iwrite = iwrite + 1
+
    99   NPts=NPts/2
       IF (NPTS .EQ. 0)THEN
         CLOSE(3)

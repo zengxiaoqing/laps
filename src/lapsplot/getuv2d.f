@@ -85,38 +85,19 @@ cdis
         enddo ! k
 
         if(ext(1:3) .eq. 'lga' .or. ext(1:3) .eq. 'fua')then
-            if(ext(1:3) .eq. 'fua')then
-                write(6,205)ext(1:3)
- 205            format(/'  Enter model [e.g. mm5] for ',a3,' file: ',$)       
-
-                read(5,206)c_model
- 206            format(a)
-
-                call get_directory(ext,directory,len_dir)
-                call s_len(c_model,len_model)
-                directory = directory(1:len_dir)//c_model(1:len_model)
-     1                                          //'/'
-
-            endif
-
-            write(6,*)' Using ',ext(1:3),' file'
-
             call get_laps_cycle_time(laps_cycle_time,istatus)
 
-            call input_model_time(i4time                  ! I
-     1                           ,laps_cycle_time         ! I
-     1                           ,a9time                  ! O
-     1                           ,fcst_hhmm               ! O
-     1                           ,i4_initial              ! O
-     1                           ,i4_valid                ! O
-     1                                                            )
-
-!           write(6,211)ext(1:3)
-!211        format(/'  Enter yydddhhmmHHMM for ',a3,' file: ',$)
-
-!           read(5,1)a13_time
-!1          format(a13)
-!           call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+            call input_background_info(
+     1                              ext                     ! I
+     1                             ,directory               ! O
+     1                             ,i4time                  ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+            if(istatus.ne.1)return
 
             CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
      1                    ,imax,jmax,2,2,VAR,LVL_2d,LVL_COORD_2d
