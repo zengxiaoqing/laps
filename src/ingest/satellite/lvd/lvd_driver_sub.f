@@ -118,6 +118,7 @@ c
       character*4 lvl_coord_ctp(4)
       integer lvl_ctp(4)
       integer ldctp
+      integer lctp
       character*150 dir_ctp
       character*31 ext_ctp
 
@@ -1018,7 +1019,17 @@ c been mapped to the laps domain. AFWA's GMS so far.
          print*,'check for new cloud top pressure (C02) files'
          iwindow_ctp=4000
          print*,'ctp time window (sec) = ',iwindow_ctp
-         path_to_ctp='/public/data/sat/nesdis/goes8/cloudtop/ascii'
+         path_to_ctp='/public/data/sat/nesdis/goes8/cloudtop/'
+         call s_len(path_to_ctp,lctp)
+         if(.true.)then
+            path_to_ctp=path_to_ctp(1:lctp)//'sfov_ihop/ascii'
+         else
+            path_to_ctp=path_to_ctp(1:lctp)//'ascii'
+         endif
+
+         call s_len(path_to_ctp,lctp)
+         print*,'Path to CO2 data: ',path_to_ctp(1:lctp)
+
          call check_for_new_ctp(iwindow_ctp,istatus_ctp)
 
          if(istatus_ctp.eq.1)then
