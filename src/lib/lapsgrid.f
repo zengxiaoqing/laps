@@ -407,7 +407,7 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L
      1  ,nk_laps,standard_latitude,standard_latitude2       
      1  ,standard_longitude,NX_L_CMN, NY_L_CMN, I_PERIMETER_CMN
-     1  ,l_highres
+     1  ,l_compress_radar
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
@@ -1151,6 +1151,29 @@ c----------------------------------------------------------
       endif
 
       ref_base_useable = ref_base_useable_cmn
+
+      istatus = 1
+      return
+      end
+
+      subroutine get_l_compress_radar(l_compress_radar_ret, istatus)
+
+      include 'lapsparms.cmn' ! l_compress_radar
+      include 'grid_fname.cmn'! grid_fnam_common
+
+      logical l_compress_radar_ret
+
+!     This routine accesses the 'l_compress_radar' variable from the
+!     .parms file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
+      endif
+
+      l_compress_radar_ret = l_compress_radar
 
       istatus = 1
       return
