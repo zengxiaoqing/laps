@@ -171,26 +171,11 @@ C
         return
       endif
 C
-C **** get actual reftime from gtime...if gtime has '00' on the
-C        end then it is a reftime and valtime is 0. 
+C **** get actual reftime from gtime...
 C
-      if ((gtime(8:9) .eq. '00') .or. (ext .eq. 'lvd') .or.
-     1    (ext .eq. 'LVD')) then 
-        i_reftime = i4time - 315619200
-        i_valtime = i_reftime
-      else
-        g_reftime = gtime(1:7)//'00'
-        call i4time_fname_lp(g_reftime, i_reftime, istatus)
-        i_reftime = i_reftime - 315619200
-        if (gtime(8:8) .eq. '0') then
-          fcst_sec = (ichar(gtime(9:9)) - ichar('0')) * 3600
-        else
-          fcst_sec = (ichar(gtime(8:8)) - ichar('0')) * 10 
-          fcst_sec = fcst_sec +  (ichar(gtime(9:9)) - ichar('0')) 
-          fcst_sec = fcst_sec * 3600
-        endif
-        i_valtime = i_reftime + fcst_sec
-      endif
+      i_reftime = i4time - 315619200
+      i_valtime = i_reftime
+
 C
 C ****  Create ascii time variables.
 C
@@ -244,8 +229,7 @@ C
         GOTO 999
 C
 950     IF (FLAG .NE. 1)
-     1    write (6,*) 'Error in imax,jmax,or n_levels...write aborted
-     1.'
+     1    write (6,*) 'Error in imax,jmax,or n_levels..write aborted'
         ISTATUS=ERROR(2)
         GOTO 999
 C
@@ -255,20 +239,20 @@ C
         GOTO 999
 C
 970     IF (FLAG .NE. 1)
-     1    write (6,*) 'Error writing header info into file...write abort
-     1ed.'
+     1    write (6,*) 
+     1 'Error writing header info into file...write aborted.'
         ISTATUS=ERROR(2)
         GOTO 999
 C
 980     IF (FLAG .NE. 1)
-     1    write (6,*) 'Some grids not written....could not convert LAPS
-     1variables.'
+     1    write (6,*) 
+     1 'Some grids not written....could not convert LAPS variables.'
         ISTATUS=ERROR(2)
         GOTO 999
 C
 990     IF (FLAG .NE. 1)
-     1    write (6,*) 'File already exists for analysis time...write
-     1aborted.'
+     1    write (6,*) 
+     1 'File already exists for analysis time...write aborted.'
         ISTATUS=ERROR(2)
         GOTO 999
 C
