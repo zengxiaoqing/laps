@@ -39,6 +39,8 @@ cdis
       
       program remap
 
+      include 'remap_constants.dat'      
+
       character path_to_radar*150, laps_radar_ext*3
      1         ,radar_subdir_dum*3, path_to_vrc*15
        
@@ -55,9 +57,10 @@ cdis
       endif
 
 !     This first call returns only 'n_radars_remap'
-      call get_remap_parms(0,n_radars_remap,max_times,path_to_radar
-     1       ,laps_radar_ext,radar_subdir_dum,path_to_vrc,ref_min
-     1       ,min_ref_samples,min_vel_samples,dgr,istatus)          
+      call get_remap_parms(0,n_radars_remap,max_times,path_to_radar     ! I/O
+     1       ,laps_radar_ext,radar_subdir_dum,path_to_vrc,ref_min       ! O
+     1       ,min_ref_samples,min_vel_samples,dgr,namelist_parms        ! O
+     1       ,istatus)                                                  ! O
       if(istatus .ne. 1)then
           write(6,*)'Warning: bad status return from get_remap_parms'       
           go to 999
@@ -71,12 +74,12 @@ cdis
       endif
 
       do i_radar = 1,n_radars_remap
-          call get_remap_parms(i_radar,n_radars_remap,max_times
-     1                  ,path_to_radar
-     1                  ,laps_radar_ext,radar_subdir_dum
-     1                  ,path_to_vrc
-     1                  ,ref_min,min_ref_samples,min_vel_samples,dgr
-     1                  ,istatus)             
+          call get_remap_parms(i_radar,n_radars_remap,max_times       ! I/O
+     1                  ,path_to_radar                                ! O
+     1                  ,laps_radar_ext,radar_subdir_dum              ! O
+     1                  ,path_to_vrc                                  ! O
+     1                  ,ref_min,min_ref_samples,min_vel_samples,dgr  ! O
+     1                  ,namelist_parms,istatus)                      ! O
           if(istatus .ne. 1)then
               write(6,*)
      1            'Warning: bad status return from get_remap_parms'       
@@ -94,6 +97,7 @@ cdis
      1                      ,radar_subdir_dum       
      1                      ,path_to_vrc,path_to_radar,ref_min
      1                      ,min_ref_samples,min_vel_samples,dgr
+     1                      ,namelist_parms
      1                      ,NX_L,NY_L,NZ_L,istatus)       
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
@@ -110,11 +114,13 @@ cdis
      1                    ,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,path_to_radar
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr       
+     1                    ,namelist_parms
      1                    ,NX_L,NY_L,NZ_L
      1                    ,istatus)
 
       include 'remap.inc'
       include 'remap_dims.inc'
+!     include 'remap_constants.dat'      
 
       integer MAX_REF_TILT
       integer MAX_VEL_TILT
@@ -448,6 +454,7 @@ cdis
      1            NX_L,NY_L,NZ_L,                                        ! I
      1            ref_min,min_ref_samples,min_vel_samples,dgr,           ! I
      1            laps_radar_ext,c3_radar_subdir,path_to_vrc,            ! I
+     1            namelist_parms,                                        ! I
      1            i4time_vol,                                            ! I
      1            i_num_finished_products,istatus)                       ! O
               if(istatus .ne. 1)then
@@ -485,12 +492,13 @@ cdis
       end
 
  
-       subroutine get_remap_parms(i_radar,n_radars_remap,max_times
-     1            ,path_to_radar,laps_radar_ext
-     1            ,c3_radar_subdir,path_to_vrc
-     1            ,ref_min,min_ref_samples,min_vel_samples,dgr     
-     1            ,istatus) 
+       subroutine get_remap_parms(i_radar,n_radars_remap,max_times    ! I/O
+     1            ,path_to_radar,laps_radar_ext                       ! O
+     1            ,c3_radar_subdir,path_to_vrc                        ! O
+     1            ,ref_min,min_ref_samples,min_vel_samples,dgr        ! O
+     1            ,namelist_parms,istatus)                            ! O 
 
+       include 'remap_constants.dat'      
        include 'radar_mosaic_dim.inc'      
 
        integer*4 MAX_RADARS_REMAP
@@ -510,6 +518,7 @@ cdis
        namelist /remap_nl/ n_radars_remap,max_times,path_to_radar_a ! ,c4_radarname_a
      1                    ,laps_radar_ext_a,path_to_vrc_nl
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
+     1                    ,abs_vel_min
        character*150 static_dir,filename
 
        call get_directory('nest7grid',static_dir,len_dir)
@@ -564,6 +573,9 @@ cdis
        write(6,*)' min_ref_samples = ',min_ref_samples
        write(6,*)' min_vel_samples = ',min_vel_samples
        write(6,*)' dgr             = ',dgr
+       write(6,*)' abs_vel_min     = ',abs_vel_min
+
+       namelist_parms%abs_vel_min = abs_vel_min
 
        istatus = 1
        return

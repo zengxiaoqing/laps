@@ -46,6 +46,7 @@ cdis
      :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer*4 (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
      :         path_to_vrc,                                ! Char      (input)
+     :         namelist_parms,                             ! Struct    (input)
      :         i_product_i4time,                           ! Integer*4 (input)
      :         i_num_finished_products,                    ! Integer*4 (output)
      :         i_status)                                   ! Integer*4 (output)
@@ -362,7 +363,7 @@ c
               vel_value = Velocity(igate,jray)
 
               IF (abs(vel_value) .lt. VEL_MIS_CHECK .and.
-     :            abs(vel_value) .gt. ABS_VEL_MIN ) THEN
+     :            abs(vel_value) .gt. namelist_parms%abs_vel_min ) THEN
 
                 IF(ngrids_vel(i,j,k).eq.0) THEN
 
