@@ -905,38 +905,3 @@ c           read var windDir(recNum,level) -> dd(lvl,obno)
       end
 
 
-      function l_closest_time_i(wmoid,a9time_ob,nobs
-     1                        ,i,i4time_sys,istatus)      
-
-!     Determine if the ob time is the closest time for that station to systime
-
-      logical l_closest_time_i
-
-      character*9 a9time_ob(nobs)
-      integer wmoid(nobs)
-!     character*(*)wmoid(nobs)    ! Allows arbitrary variable type to compare
-
-      i4_closest = 99999
-
-      do j = 1,nobs
-          if(wmoid(j) .eq. wmoid(i))then
-!             Calculate time of station j
-              call i4time_fname_lp(a9time_ob(j),i4time_j,istatus)
-              i4_diff = abs(i4time_j - i4time_sys)
-              if(i4_diff .lt. i4_closest)then
-                  j_closest = j
-                  i4_closest = i4_diff
-              endif
-          endif
-      enddo ! j
-
-      if(i .eq. j_closest)then
-          l_closest_time_i = .true.
-          write(6,*)' Closest time: ',a9time_ob(i)
-     1             ,i,wmoid(i),j_closest,i4_closest
-      else
-          l_closest_time_i = .false.
-      endif
-
-      return
-      end
