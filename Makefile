@@ -156,6 +156,7 @@ DATADIRS = log/qc \
            lapsprd/rdr/007 \
            lapsprd/rdr/008 \
            lapsprd/rdr/009 \
+           lapsprd/rdr/001/raw \
            lapsprd/rdr/001/vrc \
            lapsprd/rdr/002/vrc \
            lapsprd/rdr/003/vrc \
