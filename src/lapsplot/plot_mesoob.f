@@ -40,13 +40,16 @@ cdis
 
 
         subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag
-     1                                   ,maxstns,c_field,zoom
+     1                                   ,maxsta,c_field,zoom
      1                                   ,namelist_parms,atime
      1                                   ,c33_label,i_overlay)
 
         include 'lapsplot.inc'
 
-!       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
+!       Declarations for 'read_surface_snd', etc.
+        include 'read_sfc.inc'
+
+!       97-Aug-14     Ken Dritz     Added maxsta as dummy argument
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 !       97-Aug-25     Steve Albers  Removed /read_sfc_cmn/.
 
@@ -54,44 +57,32 @@ cdis
 
         real*4 lat(ni,nj),lon(ni,nj)
 
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), rh_s(maxstns)
-        real*4 pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
-     1       , ffg_s(maxstns)
-        real*4 vis_s(maxstns), sfct_s(maxstns)
-        character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
-
-c
         character atime*24, c33_label*33
         character directory*150,ext*31,ext_lso*6
         character*255 c_filespec
         character*9 c9_string, asc_tim_9
         character*13 filename13
         character*2 c_field
-        character*3 c3_name, c3_presob
+        character*3 c_staname, c3_presob
+
+!       Declarations for 'read_sfc_state' call
+        real*4 pr_s(maxsta), sr_s(maxsta)
+        real*4 sfct_s(maxsta)
+        character c3_stations_a(maxsta)*3, c8_wx_a(maxsta)*8
 
 !       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
-     1          ,store_hgt(maxstns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
-     1          ,vis(maxstns),rad(maxstns)
+        real*4   ceil(maxsta),lowcld(maxsta),cover_a(maxsta)
+     1          ,vis(maxsta),rad(maxsta)
 
-        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
+        Integer*4   kloud(maxsta),idp3(maxsta)
 
-        Character   obstype(maxstns)*8
-     1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
+        Character store_emv(maxsta,5)*1 ! ,store_amt(maxsta,5)*4
 
-        character reptype(maxstns)*6, atype(maxstns)*6
+        character atype(maxsta)*6
 
 !       Declarations for 'read_sfc_precip' call
-	real*4 pcp1(maxstns), pcp3(maxstns), pcp6(maxstns)
-	real*4 pcp24(maxstns)
-	real*4 snow(maxstns)
 	character filetime*9, infile*256, btime*24
-	character stations_s(maxstns)*20, provider(maxstns)*11
         character c20_stations*20
 	character dum*132
 
@@ -99,16 +90,18 @@ c
 
         call get_sfc_badflag(badflag,istatus)
 
+        lun = 42
+
         if(c_field(1:2) .eq. 'mw')then ! Read Mesowx
             ext = 'mesowx'
             call get_directory(ext,directory,len_dir) ! Mesowx directory
             infile = 
      1      directory(1:len_dir)//'lfmpost_points.txt'
 
-            open(41,file=infile,status='unknown')
+            open(lun,file=infile,status='unknown')
 
             i = 1
- 4          read(41,5,end=15)lat_s(i),lon_s(i)
+ 4          read(lun,5,end=15)lat_s(i),lon_s(i)
  5          format(2x,1x,10x,1x,f8.0,f10.0)
 
             i = i+1
@@ -147,21 +140,40 @@ c
 
             endif
 
-            write(6,*)' Calling read_sfc_state...',ext_lso,asc_tim_9
+            if(ext_lso .eq. 'lso')then ! phase in call to read_surface_data
+              write(6,*)' Calling read_surface_data...',ext_lso
+     1                                                 ,asc_tim_9      
+              call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b, !regular LSO
+     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &         istatus)
+            else
+              write(6,*)' Calling read_surface_dataqc...',ext_lso
+     1                                                 ,asc_tim_9      
+              call read_surface_dataqc(i4time,atime_s,n_obs_g,n_obs_b, !regular LSO
+     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &         istatus)
 
-	    call read_sfc_state(i4time,ext_lso,btime,n_obs_g,n_obs_b,
-     &         stations_s,provider,lat_s,lon_s,elev_s,
-     &         t_s,td_s,rh_s,dd_s,ff_s,
-     &         alt,pstn,pmsl,maxstns,istatus)
+            endif
 
-            write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+            write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
             if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
                 write(6,*)' Calling read_surface_sa...',infile,atime
-                call read_surface_sa(infile,maxstns,atime,
-     &             n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
-     &             elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,       
-     &             alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
+                call read_surface_sa(infile,maxsta,atime,n_obs_g,
+     &             n_obs_b,c3_stations_a,reptype,atype,lat_s,lon_s,      
+     &             elev_s,c8_wx_a,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn_s,      
+     &             pmsl_s,alt_s,kloud,ceil,lowcld,cover_a,
+     &             rad,sfct_s,idp3,           
      &             store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
             else                       ! QC case
@@ -169,10 +181,22 @@ c
 
             endif
 
-            write(6,*)'     n_obs_b:',n_obs_b
-     1               ,'      n_obs_g:',n_obs_g       
+            write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
-            if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
+            if(.true.)then
+	      call read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
+     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &         istatus)
+            endif
+
+            write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
+
+            if(n_obs_b .gt. maxsta .or. istatus .ne. 1)then
                 write(6,*)' Too many stations, or no file present'
                 istatus = 0
                 return
@@ -217,9 +241,9 @@ c
         elseif(c_field(2:2) .eq. 'p')then     ! Precip
             write(6,*)' Reading precip obs'
 	    call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
-     &        stations_s,provider,lat_s,lon_s,elev_s,
+     &        stations,provider,lat_s,lon_s,elev_s,
      &        pcp1,pcp3,pcp6,pcp24,snow,       
-     &        maxstns,jstatus)
+     &        maxsta,jstatus)
             iflag_cv = 2
         elseif(c_field(2:2) .eq. 'g')then ! Soil/Water Temp
             iflag_cv = 3
@@ -266,6 +290,8 @@ c
 
 !       Plot Stations
         do i = 1,n_obs_b ! num_sfc
+            wx_s(i) = c8_wx_a(i)
+
             call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
      1                          ,ni,nj,xsta,ysta,istatus)
 
@@ -287,30 +313,26 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
-                if(ext_lso .eq. 'lso')then 
-                    c20_stations = stations(i)
-                else ! lso_qc
-                    c20_stations = stations_s(i)
-                endif
+                c20_stations = stations(i)
+
+                len_sta_plot = 3 ! maximum station name length allowed in plot
 
                 call left_justify(c20_stations)
                 call s_len(c20_stations,len_sta)
 
-                if(len_sta .ge. 3)then
-                    c3_name = c20_stations(len_sta-2:len_sta)
+                if(len_sta .eq. 4 .and. len_sta_plot .eq. 3)then
+                    c_staname = c20_stations(len_sta-2:len_sta)
                 else
-                    c3_name = c20_stations(1:3)
+                    c_staname = c20_stations(1:len_sta_plot)
                 endif
 
                 charsize = .0040 / zoom_eff
 
-!               call pwrity(xsta, ysta-du*3.5, c3_name, 3, -1, 0, 0)     
-
                 if(iflag_cv .eq. 0 .and. atype(i) .ne. 'CUM')then
 !                   Plot station name & Wx String
-                    CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+                    CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                          charsize,ANGD,CNTR)
-                    CALL PCLOQU(xsta+du2*1.1, ysta-du2*1.1, wx_s(i), 
+                    CALL PCLOQU(xsta+du2*1.1, ysta-du2*1.1, wx_s(i),        
      1                              charsize,ANGD,-1.0)
                 endif
 
@@ -328,7 +350,7 @@ c
                     nlyr = kloud(i)
 
                     if(nlyr .ge. 1)then
-                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+                        CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                              charsize,ANGD,CNTR)
                     endif
 
@@ -386,7 +408,7 @@ c
 !                   Plot name and Station Location
                     if(pcp1(i) .ne. badflag .or. 
      1                 snow(i) .ne. badflag .or. lenwx .gt. 0)then
-                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+                        CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                              charsize,ANGD,CNTR)
 
                         call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)        
@@ -427,11 +449,11 @@ c
 
                 if(iflag_cv .eq. 0)then
                     if(c3_presob .eq. 'msl')then
-                        pressure = pmsl(i)
+                        pressure = pmsl_s(i)
                     elseif(c3_presob .eq. 'alt')then
-                        pressure = alt(i)
+                        pressure = alt_s(i)
                     elseif(c3_presob .eq. 'stn')then 
-                        pressure = pstn(i)
+                        pressure = pstn_s(i)
                     else
                         pressure = r_missing_data
                     endif
