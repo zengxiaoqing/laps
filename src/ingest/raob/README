@@ -33,9 +33,12 @@
       The 'a9time' is the time the balloon is in the mid-troposphere, or
       release time plus 30min.
 
-      Allowed values of 'obstype' are 'RAOB    ' or 'SATSND  '. The latter
-      is for satellite derived soundings.
+      Allowed values of 'obstype' are as follows:
 
+                           'RAOB    ' 
+                           'SATSND  '
+                           'GOES12  '
+                           'DROPSND '
 
 -------------------------------------------------------------------------------
 
