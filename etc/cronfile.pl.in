@@ -78,9 +78,9 @@ if(-e "$LAPS_DATA_ROOT/cronfile"){
            if( /sched\.pl/ ){
                s/sched\.pl/sched\.pl -q $qsubproj/;
            }
-           if( /laps_driver\.pl/ ){
-               s/laps_driver\.pl/laps_driver\.pl -q $qsubproj/;
-           }
+#          if( /laps_driver\.pl/ ){
+#              s/laps_driver\.pl/laps_driver\.pl -q $qsubproj/;
+#          }
        }
 
     }
