@@ -89,8 +89,8 @@ c
       integer   lenvg
 c
       logical lrunbal
-      logical lrotate
-      logical lrh_adj/.true./
+      logical lrotate/.false./
+      logical lrh_adj/.false./
 
       character*255 staticdir,sfcdir
       character*255 generic_data_root
