@@ -11,17 +11,11 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 KRCFLAGS=-g $(INC)
 
-.SUFFIXES:
-.SUFFIXES: .o .c .f .a
-
 LIB      = libsatellite.a
 DEBUGLIB = libdebugsatellite.a
 
-
-
-
-SRC=bcd_to_int.f \
-    bcdtoint.F \
+SRC=bcdtoint.F \
+    bcd_to_int.f \
     byteswp2.f \
     byteswp4.f \
     c_time_fnc.f \
