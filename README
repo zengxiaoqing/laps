@@ -2122,12 +2122,25 @@ Parameter file (specifies input data paths and formats): 'obs_driver.nl'
 The LSO file is fairly self explanatory. The easiest way to see what
 goes where is to look at the routine 'read_surface_data' in the file 
 'src/lib/read_surface_obs.f', and the corresponding format statements in the 
-file 'src/include/lso_formats.inc'.
+file 'src/include/lso_formats.inc'. 
 
 The routines are pretty well commented, and should be enough to tell you what 
 you need to know if you want to make a decoder that outputs an LSO-type 
 formatted file directly. This direct route would allow you to bypass the
 step of producing "raw" NetCDF surface observation data. 
+
+Here are a few recommended settings for the observation type
+variables (reportType and autoStationType) 
+if you are constructing your own LSO file:
+
+<pre>
+raw data    reportType    autoStationType
+________    __________    _______________
+ metar       METAR         UNK (unless an automated A01 or A02 station)
+ synop       SYNOP         UNK (unless an automated A01 or A02 station) 
+ buoy        MARTIM        FIX
+ ship        MARTIM        MVG
+</pre>
 
 The expected accuracies are based on "offical" NWS numbers where possible.  
 For LDAD observations, they're just a best guess, since no one really knows 
