@@ -322,9 +322,6 @@ c
 
       implicit none
 
-c     include 'wrf_dims.inc'
-c     include 'wrf_laps_analysis.cmn'
-
       integer      nx_l,ny_l,nz_l
       character*8  c_vcoordinate
       real*4       grid_spacing_m

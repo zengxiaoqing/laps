@@ -5,11 +5,6 @@ c routine returns a common set of variables that describe a domain projection.
 c
         implicit none
 c
-c all these include files are needed to marry namelist besides nest7grid.parms
-c to the lapsparms.cmn.  At the moment we only deal with one additional namelist wrfsi.nl 
-c
-c       include 'wrf_dims.inc'
-
         include 'lapsparms.cmn'
 
         integer      nx_l,ny_l,nz_l
