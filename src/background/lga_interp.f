@@ -34,6 +34,7 @@ cdis
      .                   htvi,tpvi,shvi,uwvi,vwvi)
 c
       implicit none
+      include 'bgdata.inc'
 c
       integer nx,ny,nz_bg,nz_laps
 c
@@ -54,12 +55,12 @@ c
      .       uwvi(nx,ny,nz_laps), !u-wind (m/s)
      .       vwvi(nx,ny,nz_laps)  !v-wind (m/s)
 c
-      real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3,msgflg
+      real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3
       real*4 datmsg
       integer i,j,k,kk
 c_______________________________________________________________________________
 c
-      msgflg=1.e30
+
       do k=1,nz_laps
          prilaps=1./prlaps(k)
          do j=1,ny
@@ -70,7 +71,7 @@ c
                   if (prlaps(k) .gt. prbg(i,j,1)) then
                      datmsg = max(htbg(i,j,1),tpbg(i,j,1),shbg(i,j,1),
      +                    uwbg(i,j,1),vwbg(i,j,1))
-                     if (datmsg .lt. msgflg) then
+                     if (datmsg .lt. missingflag) then
                         fact2=14.642857*alog(prbg(i,j,1)*prilaps)
                         tpvi(i,j,k)=tpbg(i,j,1)
      +                       +(prlaps(k)-prbg(i,j,1))*0.056
@@ -80,17 +81,17 @@ c
                         uwvi(i,j,k)=uwbg(i,j,1)
                         vwvi(i,j,k)=vwbg(i,j,1)
                      else
-                        htvi(i,j,k)=msgflg
-                        tpvi(i,j,k)=msgflg
-                        shvi(i,j,k)=msgflg
-                        uwvi(i,j,k)=msgflg
-                        vwvi(i,j,k)=msgflg
+                        htvi(i,j,k)=missingflag
+                        tpvi(i,j,k)=missingflag
+                        shvi(i,j,k)=missingflag
+                        uwvi(i,j,k)=missingflag
+                        vwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .lt. prbg(i,j,nz_bg)) then
                      datmsg = max(htbg(i,j,nz_bg),tpbg(i,j,nz_bg)
      +                ,shbg(i,j,nz_bg),uwbg(i,j,nz_bg),vwbg(i,j,nz_bg))
-                     if (datmsg .lt. msgflg) then
+                     if (datmsg .lt. missingflag) then
                         fact2=29.285714*alog(prbg(i,j,nz_bg)*prilaps)
                         tpvi(i,j,k)=tpbg(i,j,nz_bg)
                         htvi(i,j,k)=htbg(i,j,nz_bg)
@@ -99,33 +100,33 @@ c
                         uwvi(i,j,k)=uwbg(i,j,nz_bg)
                         vwvi(i,j,k)=vwbg(i,j,nz_bg)
                      else
-                        htvi(i,j,k)=msgflg
-                        tpvi(i,j,k)=msgflg
-                        shvi(i,j,k)=msgflg
-                        uwvi(i,j,k)=msgflg
-                        vwvi(i,j,k)=msgflg
+                        htvi(i,j,k)=missingflag
+                        tpvi(i,j,k)=missingflag
+                        shvi(i,j,k)=missingflag
+                        uwvi(i,j,k)=missingflag
+                        vwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .eq. prbg(i,j,kk)) then
                      datmsg = max(htbg(i,j,kk),tpbg(i,j,kk),
      +                    shbg(i,j,kk),uwbg(i,j,kk),vwbg(i,j,kk))
-                     if (datmsg .lt. msgflg) then
+                     if (datmsg .lt. missingflag) then
                         htvi(i,j,k)=htbg(i,j,kk)
                         tpvi(i,j,k)=tpbg(i,j,kk)
                         shvi(i,j,k)=shbg(i,j,kk)
                         uwvi(i,j,k)=uwbg(i,j,kk)
                         vwvi(i,j,k)=vwbg(i,j,kk)
                      else
-                        htvi(i,j,k)=msgflg
-                        tpvi(i,j,k)=msgflg
-                        shvi(i,j,k)=msgflg
-                        uwvi(i,j,k)=msgflg
-                        vwvi(i,j,k)=msgflg
+                        htvi(i,j,k)=missingflag
+                        tpvi(i,j,k)=missingflag
+                        shvi(i,j,k)=missingflag
+                        uwvi(i,j,k)=missingflag
+                        vwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
      .                    prlaps(k) .gt. prbg(i,j,kk+1)) then
-                     if (datmsg .lt. msgflg) then
+                     if (datmsg .lt. missingflag) then
                         fact1=alog(prlaps(k)/prbg(i,j,kk))/
      .                       alog(prbg(i,j,kk+1)/prbg(i,j,kk))
                         fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
@@ -142,11 +143,11 @@ c
                         vwvi(i,j,k)=vwbg(i,j,kk)
      .                       +(vwbg(i,j,kk+1)-vwbg(i,j,kk))*fact3
                      else
-                        htvi(i,j,k)=msgflg
-                        tpvi(i,j,k)=msgflg
-                        shvi(i,j,k)=msgflg
-                        uwvi(i,j,k)=msgflg
-                        vwvi(i,j,k)=msgflg
+                        htvi(i,j,k)=missingflag
+                        tpvi(i,j,k)=missingflag
+                        shvi(i,j,k)=missingflag
+                        uwvi(i,j,k)=missingflag
+                        vwvi(i,j,k)=missingflag
                      endif
                      goto 10
                   endif
@@ -163,32 +164,13 @@ c
 c===============================================================================
 c
 
-      subroutine hinterp(nx_bg,ny_bg,nx_laps,ny_laps,nz,gproj,
-     .     lat,lon,
-     .     htvi,tpvi,shvi,uwvi,vwvi,
-     .     ht,tp,sh,uw,vw,
-     .     bgmodel)
+      subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .     lat,lon,grx,gry,bgmodel)
 
 c
       implicit none
 c
-      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
-c
-c *** Input vertically interpolated fields.
-c
-      real*4 htvi(nx_bg,ny_bg,nz),
-     .       tpvi(nx_bg,ny_bg,nz),
-     .       shvi(nx_bg,ny_bg,nz),
-     .       uwvi(nx_bg,ny_bg,nz),
-     .       vwvi(nx_bg,ny_bg,nz)
-c
-c *** Output horizontally interpolated to LAPS arrays.
-c
-      real*4 ht(nx_laps,ny_laps,nz),
-     .       tp(nx_laps,ny_laps,nz),
-     .       sh(nx_laps,ny_laps,nz),
-     .       uw(nx_laps,ny_laps,nz),
-     .       vw(nx_laps,ny_laps,nz)
+      integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
 c
       real*4 lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
@@ -248,27 +230,40 @@ c
           print*,'LAPS gridpoint outside of background data coverage.'
                   print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
                   print*,'   grx, gry:',grx(i,j),gry(i,j)
-                  stop 'hinterp'
+                  stop 'init_hinterp'
                endif
             enddo
          enddo
       endif
 c
-c *** Horizontally interpolate variables.
+      return
+      end
+
+      subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz,
+     .     grx,gry,fvi,flaps,bgmodel)
+
+c
+      implicit none
+c
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+c
+c *** Input vertically interpolated field.
+c *** Output Laps field
+c
+      real*4 fvi(nx_bg,ny_bg,nz),
+     .       flaps(nx_laps,ny_laps,nz),
+     .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
+c
+      integer i,j,k
+c
+c
+c *** Horizontally interpolate variable.
 c
       do k=1,nz
          do j=1,ny_laps
             do i=1,nx_laps
-               call gdtost(htvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),ht(i,j,k),bgmodel)
-               call gdtost(tpvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),tp(i,j,k),bgmodel)
-               call gdtost(shvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),sh(i,j,k),bgmodel)
-               call gdtost(uwvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),uw(i,j,k),bgmodel)
-               call gdtost(vwvi(1,1,k),nx_bg,ny_bg,
-     .              grx(i,j),gry(i,j),vw(i,j,k),bgmodel)
+               call gdtost(fvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),flaps(i,j,k),bgmodel)
             enddo
          enddo
       enddo
@@ -279,57 +274,71 @@ c
 c===============================================================================
 c
 
-      subroutine time_interp(dir,ext,nx,ny,nz,pr,cycle_time,
+      subroutine time_interp(dir,ext,nx,ny,nz,kdim,pr,cycle_time,
      .                       time1,fcst1,time2,fcst2)
 c
       implicit none
 c
-      integer nx,ny,nz
+      integer nx,ny,nz,kdim
 c
       integer time1,time2,
      .          fcst1,fcst2,
      .          cycle_time,
-     .          ip(5*nz),
+     .          ip(kdim),
      .          newfcst,
      .          imin,ihour,
      .          i,j,k,kk,istatus
 c
       real*4 pr(nz),weight,
-     .       grid1(nx,ny,nz*5),
-     .       grid2(nx,ny,nz*5),
-     .       gridn(nx,ny,nz*5)
+     .       grid1(nx,ny,kdim),
+     .       grid2(nx,ny,kdim),
+     .       gridn(nx,ny,kdim)
 c
       character*(*)  dir
       character*(*)  ext
-      character*3   var(5*nz)
-      character*4   lvl_coord(5*nz)
-      character*10  units(5*nz)
-      character*125 comment(5*nz)
+      character*3   var(kdim)
+      character*4   lvl_coord(kdim)
+      character*10  units(kdim)
+      character*125 comment(kdim)
       character*9   fname
       character*4   af
+
 c_______________________________________________________________________________
 c
 c *** Read in the two existing .lga files.
 c
-      do k=1,nz
-         ip(k)=int(pr(k))
-         var(k)='HT '
-         kk=k+nz
-         ip(kk)=int(pr(k))
-         var(kk)='T3 '
-         kk=k+2*nz
-         ip(kk)=int(pr(k))
-         var(kk)='SH '
-         kk=k+3*nz
-         ip(kk)=int(pr(k))
-         var(kk)='U3 '
-         kk=k+4*nz
-         ip(kk)=int(pr(k))
-         var(kk)='V3 '
-      enddo
+      if(ext.eq.'lga') then
+         do k=1,nz
+            ip(k)=int(pr(k))
+            var(k)='HT '
+            kk=k+nz
+            ip(kk)=int(pr(k))
+            var(kk)='T3 '
+            kk=k+2*nz
+            ip(kk)=int(pr(k))
+            var(kk)='SH '
+            kk=k+3*nz
+            ip(kk)=int(pr(k))
+            var(kk)='U3 '
+            kk=k+4*nz
+            ip(kk)=int(pr(k))
+            var(kk)='V3 '
+         enddo
+      else
+         do k=1,6
+            ip(k)=0
+         enddo
+         var(1)='USF'
+         var(2)='VSF'
+         var(3)='TSF'
+         var(4)='PSF'
+         var(5)='SLP'
+         var(6)='RSF'
+      endif
+         
 c
       call read_laps(time1,time1+fcst1,dir,ext,
-     .               nx,ny,nz*5,nz*5,var,
+     .               nx,ny,kdim,kdim,var,
      .               ip,lvl_coord,units,comment,grid1,istatus)
 c
       if(istatus.ne.1) then
@@ -337,7 +346,7 @@ c
          stop 'lga_interp'
       endif
       call read_laps(time2,time2+fcst2,dir,ext,
-     .               nx,ny,nz*5,nz*5,var,
+     .               nx,ny,kdim,kdim,var,
      .               ip,lvl_coord,units,comment,grid2,istatus)
       if(istatus.ne.1) then
          print *, 'ERROR returned from read_laps'
@@ -350,7 +359,7 @@ c
 10    continue
       weight=float(newfcst-fcst1)/float(fcst2-fcst1)
 c
-      do k=1,nz*5
+      do k=1,kdim
          do j=1,ny
             do i=1,nx
                gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
@@ -364,11 +373,11 @@ c
       imin=mod(newfcst,3600)/60
       ihour=newfcst/3600
       write(af,'(2i2.2)') ihour,imin
-      print *,'Writing - ',fname//af,'.lga  (Backfill)'
+      print *,'Writing - ',fname//af,'.'//ext//' (Backfill)'
       comment(1)='LI: '//comment(1)
 
       call write_laps(time1,time1+newfcst,dir,ext,
-     .                nx,ny,nz*5,nz*5,var,
+     .                nx,ny,nz,kdim,var,
      .                ip,lvl_coord,units,comment,gridn,istatus)
 c
       newfcst=newfcst-cycle_time

@@ -31,6 +31,7 @@ cdis
 cdis 
       program lga
       implicit none
+      include 'bgdata.inc'
 c
 c
 c------------------> BACKGROUND MODEL DESIGNATION <-----------------------------
@@ -88,7 +89,7 @@ c  This is the max number of paths allowed in nest7grid.parms
 c  and should match the value in lib/lapsgrid.f 
 c 
       integer maxbgmodels
-      parameter (maxbgmodels=4)
+      parameter (maxbgmodels=10)
       character*150 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), len
 c
@@ -112,7 +113,7 @@ c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
       character*132 cmodel
       include 'lapsparms.cmn'
-      integer oldest_forecast
+      integer oldest_forecast, max_forecast_delta
       logical use_analysis
 c_______________________________________________________________________________
 c
@@ -131,8 +132,8 @@ c      istat = index(laps_domain_file,' ')-1
 
       i=1
 
-      call get_background_info(150,bgpaths,bgmodels,oldest_forecast
-     +                      ,use_analysis) 
+      call get_background_info(150,bgpaths,bgmodels
+     +     ,oldest_forecast,max_forecast_delta,use_analysis) 
       lga_status = 0
 
 c
@@ -159,8 +160,9 @@ c *** Get current time from systime.dat
 c
          call get_systime(i4time_now,a9,lga_status)
          call get_acceptable_files(i4time_now,bgpath,bgmodel
-     +         ,names,max_files,oldest_forecast,use_analysis,bg_files,0
-     +         ,cmodel,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
+     +        ,names,max_files,oldest_forecast,max_forecast_delta
+     +        ,use_analysis,bg_files,0,cmodel,nx_bg,ny_bg,nz_bg
+     +        ,reject_files,reject_cnt)
 
         if(bg_files.le.1) then
            print*,'No Acceptable files found for model: ',bgpaths(i),
@@ -189,7 +191,7 @@ c
            call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .          laps_cycle_time,lapsroot,laps_domain_file,
      .          bgmodel,bgpath,names,cmodel,
-     .          nx_bg,ny_bg,nz_bg, lga_status)
+     .          nx_bg,ny_bg,nz_bg, 5*nz_laps, lga_status)
 
            if(lga_status.lt.0) then
               reject_cnt=reject_cnt+1
@@ -246,7 +248,7 @@ c
       subroutine lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .     laps_cycle_time,lapsroot,laps_domain_file,
      .     bgmodel,bgpath,bg_names,cmodel,
-     .     nx_bg,ny_bg,nz_bg, lga_status)
+     .     nx_bg,ny_bg,nz_bg, kdim, lga_status)
 
 c
       implicit none
@@ -262,7 +264,7 @@ c
       
 c
       parameter (max_files=2000)
-
+      
 c
 c *** Background model grid data.
 c
@@ -294,15 +296,25 @@ c
 c
 c *** Background data interpolated to LAPS grid.
 c
+      integer kdim
       real*4    ht(nx_laps,ny_laps,nz_laps), !Height (m)
      .          tp(nx_laps,ny_laps,nz_laps), !Temperature (K)
      .          sh(nx_laps,ny_laps,nz_laps), !Specific humidity (kg/kg)
      .          uw(nx_laps,ny_laps,nz_laps), !!U-wind (m/s)
      .          vw(nx_laps,ny_laps,nz_laps), !V-wind (m/s)
-     .          grid(nx_laps,ny_laps,nz_laps*5), !Full LAPS array for write_laps
+     .          grid(nx_laps,ny_laps,kdim), !Full LAPS array for write_laps
      .          pr(nz_laps),     !LAPS pressures
      .          lat(nx_laps,ny_laps),        !LAPS lat
-     .          lon(nx_laps,ny_laps)         !LAPS lon
+     .          lon(nx_laps,ny_laps),         !LAPS lon
+     .          grx(nx_laps,ny_laps),         !hinterp factor
+     .          gry(nx_laps,ny_laps),         !hinterp factor
+     .          ht_sfc(nx_laps,ny_laps),
+     .          tp_sfc(nx_laps,ny_laps),
+     .          sh_sfc(nx_laps,ny_laps),
+     .          uw_sfc(nx_laps,ny_laps),
+     .          vw_sfc(nx_laps,ny_laps),
+     .          pr_sfc(nx_laps,ny_laps),
+     .          mslp(nx_laps,ny_laps)
 c
       real      ssh2,                        !Function name
      .          shsat,cti,
@@ -312,22 +324,22 @@ c
      .          ihour,imin,
      .          lga_files,lga_times(max_files),lga_valid(max_files),
      .          bgtime,bgvalid,
-     .          ip(5*nz_laps),
+     .          ip(kdim),
      .          i,ic,ii,j,jj,k,kk,l,
-     .          istatus
+     .          istatus, nf_fid
 c
       character*255 lgapath
       character*100 lga_names(max_files)
       character*13  fname13,fname9_to_wfo_fname13
       character*9   fname
       character*2   gproj
-      character*150  outdir, fullname
+      character*150  outdir, fullname, fullname2
       character*31  ext
-      character*3   var(5*nz_laps)
+      character*3   var(kdim)
       character*4   af
-      character*4   lvl_coord(5*nz_laps)
-      character*10  units(5*nz_laps)
-      character*125 comment(5*nz_laps)
+      character*4   lvl_coord(kdim)
+      character*10  units(kdim)
+      character*125 comment(kdim)
       integer len_dir, ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
 
@@ -338,6 +350,8 @@ c
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
+
+
       lga_status=0
       call get_directory('static',outdir,len_dir)    
 
@@ -405,7 +419,6 @@ c
 
          call s_len(bgpath,i)
          fullname = bgpath(1:i)//'/'//bg_names(nf)
-
          if (bgmodel .eq. 1) then     ! Process 60 km RUC data
             call read_ruc60_native(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
      .                             prbg,htbg,tpbg,shbg,uwbg,vwbg,
@@ -433,22 +446,25 @@ c
             call get_sbn_dims(bgpath,fname,nxbg,nybg,nzbg,ntbg)
 
             call read_conus_211(bgpath,fname,af,nx_bg,ny_bg,nz_bg,
-     .                            nxbg,nybg,nzbg,ntbg,
-     .                            prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                            gproj,istatus)
+     .           nxbg,nybg,nzbg,ntbg,
+     .           prbg,htbg,tpbg,shbg,uwbg,vwbg,
+     .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
+     .           mslpbg,gproj,istatus)
 c
          elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
-            call read_ruc2_pub(fullname,nx_bg,ny_bg,nz_bg
+            call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg
      +                     ,mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg
      +                    ,istatus)
             if(istatus.gt.0) then
+
                print*,'Read complete: entering prep'
                call lprep_ruc2_pub(nx_bg,ny_bg,nz_bg
      +              ,htbg,prbg,shbg,uwbg,vwbg,tpbg,gproj)
 
                print*,'Data prep complete'
             endif
-c
+
+c     
          elseif (bgmodel .eq. 6 .or.
      .           bgmodel .eq. 7) then ! Process AVN or ETA grib data
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
@@ -577,11 +593,40 @@ c
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
-         call hinterp(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,gproj,
-     .        lat,lon,
-     .        htvi,tpvi,shvi,uwvi,vwvi,
-     .        ht,tp,sh,uw,vw,
-     .        bgmodel)
+         call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .        lat,lon,grx,gry,bgmodel)
+
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .        grx,gry,htvi,ht,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .        grx,gry,shvi,sh,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .        grx,gry,uwvi,uw,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .        grx,gry,vwvi,vw,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
+     .        grx,gry,tpvi,tp,bgmodel)
+
+
+c
+c ****** Horizontally interpolate background surface data to LAPS grid points.
+c
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,uwbg_sfc,uw_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,vwbg_sfc,vw_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,mslpbg,mslp,bgmodel)
+
+
 c
 c ****** Check for missing value flag in any of the fields.
 c ****** Check for NaN's in any of the fields.
@@ -695,22 +740,77 @@ c
             units(kk)='m/s'
             comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
+
+
 c
          read(af,'(i4)') ihour
          bgvalid=bgtime+ihour*3600
 c
          ext = 'lga'
+         call get_directory(ext,outdir,len_dir) 
          print *,'Writing - ',fname//af(3:4),'00.',ext
 
          call write_laps(bgtime,bgvalid,outdir,ext,
-     .                   nx_laps,ny_laps,nz_laps*5,nz_laps*5,var,
+     .                   nx_laps,ny_laps,nz_laps,kdim,var,
      .                   ip,lvl_coord,units,comment,grid,istatus)
          
+
          if (istatus .eq. 1) then
             lga_status = 1
          else
            print *,'Error writing interpolated data to LAPS database.'
          endif
+
+         if(bgmodel.eq.2.or.bgmodel.eq.4) then
+
+c
+c Write the 2d fields to lgb
+c
+            kk=0
+            var(kk+1)='USF'
+            units(kk+1)='m/s'
+            var(kk+2)='VSF'
+            units(kk+2)='m/s'
+            var(kk+3)='TSF'
+            units(kk+3)='K'
+            var(kk+4)='RSF'
+            units(kk+4)='none'
+            var(kk+5)='PSF'
+            units(kk+5)='PA'
+            var(kk+6)='SLP'
+            units(kk+6)='PA'
+            do j=1,ny_laps
+               do i=1,nx_laps
+                  grid(i,j,kk+1) = uw_sfc(i,j)
+                  grid(i,j,kk+2) = vw_sfc(i,j)
+                  grid(i,j,kk+3) = tp_sfc(i,j)
+                  grid(i,j,kk+4) = sh_sfc(i,j)
+                  grid(i,j,kk+5) = pr_sfc(i,j)
+                  grid(i,j,kk+6) = mslp(i,j)
+
+               enddo
+            enddo
+            do kk=1,6
+               ip(kk)=0
+            enddo
+         
+
+            ext = 'lgb'
+            call get_directory(ext,outdir,len_dir)
+            print *,'writing to dir ',outdir
+            print *,'Writing - ',fname//af(3:4),'00.',ext
+            call write_laps(bgtime,bgvalid,outdir,ext,
+     .           nx_laps,ny_laps,6,6,var,
+     .           ip,lvl_coord,units,comment,grid,istatus)
+         
+
+            if (istatus .eq. 1) then
+               lga_status = 1
+            else
+               print*,'Error writing interpolated data to LAPS lgb'
+            endif
+         endif
+
 c
  80      continue
       enddo
@@ -749,14 +849,25 @@ c
       do i=lga_files,2,-1
          if (lga_times(i) .eq. lga_times(i-1) .and.
      .       lga_valid(i)-lga_valid(i-1) .gt. laps_cycle_time) then
+            ext = 'lga'
+            call get_directory(ext,outdir,len_dir) 
             print*,outdir,ext
             call time_interp(outdir,ext,
-     .           nx_laps,ny_laps,nz_laps,
+     .           nx_laps,ny_laps,nz_laps,nz_laps*5,
      .           pr,laps_cycle_time,
      .           lga_times(i-1),lga_valid(i-1),
      .           lga_times(i  ),lga_valid(i  ))
+            if(bgmodel.eq.2.or.bgmodel.eq.4) then
+               ext = 'lgb'
+               call get_directory(ext,outdir,len_dir) 
+               print*,outdir,ext
+               call time_interp(outdir,ext,
+     .              nx_laps,ny_laps,1,6,
+     .              pr,laps_cycle_time,
+     .              lga_times(i-1),lga_valid(i-1),
+     .              lga_times(i  ),lga_valid(i  ))
+            endif
          endif
-
       enddo
 c
       return
