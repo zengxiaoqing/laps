@@ -55,6 +55,7 @@
          2.11 .............  LVD (SATELLITE INGEST) CHANGES
          2.12 .............  OTHER RUNTIME PARAMETERS
          2.13 .............  Detecting and Reporting Installation Errors
+         2.13.1 .................. Runtime Monitoring
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Localization Processes
          3.1.1 ..................  Gridgen_model (static.nest7grid generation)
@@ -1716,6 +1717,8 @@ since 3 layers are routinely available from NESDIS.
    The entire output of laps_localization.pl 
 </pre>
 
+                   ----  2.13.1 Runtime Monitoring ---
+
    To see how well LAPS is running, check if output files are being placed in 
    the various 'lapsprd' subdirectories. A graphical product monitor that can 
    help with this is available in 'etc/laps_monitor.pl'. This script may need 
@@ -1730,6 +1733,12 @@ since 3 layers are routinely available from NESDIS.
 
    Check the log files in the 'log' directory for occurrences of the string
    'error' and 'warning'. The errors are generally more significant.
+
+   To check what data got into the analyses as well as some QC and error
+   statistics, you can run a series of perl scripts located in
+   '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind3d.pl', 'temp.pl', 
+   'hum3d.pl', and 'cloud.pl'. These scripts operate mainly by distilling other
+   log file output.
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
