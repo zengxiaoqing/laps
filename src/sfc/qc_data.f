@@ -31,7 +31,7 @@ cdis
 cdis 
 c
 c
-	subroutine qcdata(filename,infile_l,rely,ivals1,mxstn,
+	subroutine qcdata(filename,infile_l,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
      &     ni, nj, mslp_bk_mb, iback_mp,
@@ -84,8 +84,7 @@ c
 	integer rely(26,mxstn)            ! QC flags for current cycle
 	integer rely_l(26,mxstn)          ! QC flags for previous cycle
         integer ivals(mxstn)              
-	integer ivals1(mxstn)             ! Ob indices for current cycle
-        integer ivals2(mxstn)             ! Ob indices for previous cycle
+        integer ivals_l(mxstn)            ! Ob indices for previous cycle
 	integer istatus, jstatus
 	character filename*9, outfile*256
 c
@@ -105,8 +104,7 @@ c
 	n_meso_pos = 0
 c
 	do n=1,mxstn
-	   ivals1(n) = imissing
-	   ivals2(n) = imissing
+	   ivals_l(n) = imissing
 	do i=1,26
 	   rely(i,n)   = imissing
 	   rely_l(i,n) = imissing
@@ -145,10 +143,10 @@ c
 	 return
 	endif
 c
-	call time_ck2(stn,n_obs_b,ivals1,stn_l,n_obs_b_l,ivals2,stn,
+	call time_ck2(stn,n_obs_b,stn_l,n_obs_b_l,ivals_l,stn,       
      &	              n_obs_curr)
 	do 10 n = 1, n_obs_b
-	 m = ivals1(n)
+	 m = n 
 	 if(m .lt. 1) go to 10
 c
 c	 ** no climatological check on STN **       rely(01,m)=imissing 
@@ -203,7 +201,7 @@ c
  10	continue
 c
 	do 12 n=1,n_obs_b_l
-	 m = ivals2(n)
+	 m = ivals_l(n)
 	 if (m .lt. 1) go to 12
 c
 c	 ** no climatological check on STN_L **      rely_l(01,m)=imissing 
@@ -259,18 +257,18 @@ c
 c.....  standard deviation check
 c
 	call time_ck(stn,n_obs_b,stn_l,n_obs_b_l,ivals)
-cc	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, ivals1,
-cc     +	       n_obs_b_l, elev_l, rely_l, ivals, n_obs_curr)
-	call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, ivals1,
-     +	       n_obs_b_l, t_l, rely_l, ivals, n_obs_curr)
-	call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, ivals1,
-     +	       n_obs_b_l, td_l, rely_l, ivals, n_obs_curr)
-	call dev_ck(13, n_meso_pos, n_obs_b, pstn_s, rely, ivals1,
-     +	       n_obs_b_l, pstn_l, rely_l, ivals, n_obs_curr)
-	call dev_ck(14, n_meso_pos, n_obs_b, pmsl_s, rely, ivals1,
-     +	       n_obs_b_l, pmsl_l, rely_l, ivals, n_obs_curr)
-	call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, ivals1,
-     +	       n_obs_b_l, alt_l, rely_l, ivals, n_obs_curr)
+cc	call dev_ck( 5, n_meso_pos, n_obs_b, elev_s, rely, 
+cc     +	       n_obs_b_l, elev_l, rely_l, ivals)
+	call dev_ck( 7, n_meso_pos, n_obs_b, t_s, rely, 
+     +	       n_obs_b_l, t_l, rely_l, ivals)
+	call dev_ck( 8, n_meso_pos, n_obs_b, td_s, rely, 
+     +	       n_obs_b_l, td_l, rely_l, ivals)
+	call dev_ck(13, n_meso_pos, n_obs_b, pstn_s, rely, 
+     +	       n_obs_b_l, pstn_l, rely_l, ivals)
+	call dev_ck(14, n_meso_pos, n_obs_b, pmsl_s, rely, 
+     +	       n_obs_b_l, pmsl_l, rely_l, ivals)
+	call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, 
+     +	       n_obs_b_l, alt_l, rely_l, ivals)
 c
 	write(60,*) '  '
 	write(60,*) ' --- Reliability after standard deviation test --- '
@@ -379,24 +377,20 @@ c       in the stn1 array. This matches the stations in the two arrays.
 c ---------------------------------------------------------------------------
 c
 c
-	subroutine time_ck2(stn1,num1,ivals1,stn2,num2,ivals2,
+	subroutine time_ck2(stn1,num1,stn2,num2,ivals_l,
      &	                    stn_all,n_obs_curr)
-	dimension ivals1(num1),ivals2(num2)
+	dimension ivals_l(num2)
 	character stn1(num1)*3,stn2(num2)*3,stn_all(n_obs_curr)*3
-
-	do n=1,num1
-            ivals1(n) = n
-        enddo ! n
 
 !       Calculate array of indices in stn_all array corresponding to each 
 !       index in the stn2 array. This matches the stations in the two arrays.
 	do 30 n=1,num2
-	 ivals2(n) = -99
+	 ivals_l(n) = -99
 	 do 40 m=1,n_obs_curr
 	  if(stn_all(m) .ne. stn2(n)) goto 40
-	  ivals2(n) = m
+	  ivals_l(n) = m
 40	 continue
-	 if(ivals2(n) .lt. 0) 
+	 if(ivals_l(n) .lt. 0) 
      &          write(60,*) n,' cannot find previous ',stn2(n)
 30	continue	 
 
@@ -405,12 +399,12 @@ c
 c -----------------------------------------------------------------------------
 c
 c
-	subroutine dev_ck(ifld,n_meso_g,n_obs_b,  aa_s,rely,  ivals1,
-     +	            n_obs_b_l,aa_l,rely_l,ivals,n_obs_curr)
+	subroutine dev_ck(ifld,n_meso_g,n_obs_b,  aa_s,rely,  
+     +	            n_obs_b_l,aa_l,rely_l,ivals)
 	real*4 aa_s(n_obs_b),aa_l(n_obs_b_l)
-	real*4 diff(n_obs_curr),stdev(n_obs_curr)  !work arrays
-	integer*4 rely(26,n_obs_curr),  ivals1(n_obs_curr)
-	integer*4 rely_l(26,n_obs_curr),ivals(n_obs_curr), qc
+	real*4 diff(n_obs_b),stdev(n_obs_b)  !work arrays
+	integer*4 rely(26,n_obs_b)  
+	integer*4 rely_l(26,n_obs_b),ivals(n_obs_b), qc
 	missing = -99.
 	imissing = -99
 c
@@ -442,7 +436,7 @@ c
 	 if(diff(n) .ne. missing) sumdev = sumdev + (diff(n)-avgdiff)**2
  210	continue
 	std = sqrt(sumdev/float(numdiff))
-	if (std .eq. 0.) then
+        if(std .eq. 0.) then
 	 write(60,*) ' std dev = 0., dev_ck not completed...'
 	 return
 	endif
@@ -455,7 +449,7 @@ c
 c	add or subtract reliability points based on std dev
 c
 	do 230 n=1,n_obs_b
-	 m1 = ivals1(n)
+	 m1 = n 
 	 if(m1 .lt. 1) go to 230
 	 qc = +25
 	 if(abs(stdev(n)) .ge. 5.0 .and. abs(diff(n)) .gt. 5.0) qc = -25
