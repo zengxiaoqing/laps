@@ -391,7 +391,7 @@ c
          comment(2) = 'Lon: From MODEL by J. Snook/ S. Albers 1-95\0'
          comment(3) = 'Average terrain elevation (m) \0'
          comment(4) = 'Land Fraction \0'
-         comment(5) = 'Soil Type (Missing) \0'
+         comment(5) = 'Land Use (USGS 24 Category) \0'
          comment(6) = 'Clear Sky Albedo - fixed at .04 over water\0'
          comment(7) = 'Standard Deviation of Elevation data (m)\0'
          comment(8) = 'Mean longitudinal terrain slope (m/m)\0'
@@ -413,7 +413,7 @@ c
          var(9)    = 'AVG'  ! Topo (m) on Analysis-grid
 
          var(10)   = 'LDF'  ! Land Fraction
-         var(11)   = 'USE'  !
+         var(11)   = 'USE'  ! Land Use (USGS 24 Category)
          var(12)   = 'SPR'  ! Sin(projection rotation) from true
          var(13)   = 'CPR'  ! Cos(projection rotation) from true
          var(14)   = 'MFL'  ! Map factor Analysis grid
@@ -441,7 +441,7 @@ c
          comment(9) = 'Average terrain elevation (m) \0'
 
          comment(10)= 'Land Fraction A-grid \0'
-         comment(11)= 'Land Use Categories \0'
+         comment(11)= 'Land Use (USGS 24 Category) \0'
          comment(12)= 'Sin of projection rotation (rad) \0'
          comment(13)= 'Cosine of projection rotation (rad) \0'
          comment(14)= 'Map Factor Analysis grid \0'

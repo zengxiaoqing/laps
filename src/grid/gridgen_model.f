@@ -87,12 +87,15 @@ C*********************************************************************
         real  topt_30_ln(nnxp,nnyp)
         real  topt_30_lt(nnxp,nnyp)
         real  topt_out(nnxp,nnyp)
+        real  topt_stag_out(nnxp,nnyp)
         real  topt_out_s(nnxp,nnyp)
         real  topt_out_ln(nnxp,nnyp)
         real  topt_out_lt(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
         real  soil(nnxp,nnyp)
         real  static_albedo(nnxp,nnyp)
+        real  landuse_30s(nnxp,nnyp)
+        real  landuse_30s_dist(nnxp,nnyp,5)
 
         real lats(nnxp,nnyp,n_staggers)
         real lons(nnxp,nnyp,n_staggers)
@@ -117,6 +120,7 @@ c
         character*200 path_to_topt10m
         character*200 path_to_pctl10m
         character*200 path_to_soil2m
+        character*200 path_to_luse_30s
 
         character*255 filename
         character*200 c_dataroot
@@ -185,6 +189,12 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
             return
         endif
 
+        call get_path_to_landuse_30s(path_to_luse_30s,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_luse_30s'
+            return
+        endif
+
         call s_len(path_to_topt30s,len)
 	path_to_topt30s(len+1:len+2)='/U'
 
@@ -197,7 +207,11 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         call s_len(path_to_soil2m,len)
 	path_to_soil2m(len+1:len+2)='/O'
 
+        call s_len(path_to_luse_30s,len)
+        path_to_luse_30s(len+1:len+2)='/V'
+
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
+
 	if (istatus .ne. 1) then
            write (6,*) 'Error getting terrain smoothing parms'
 	   return
@@ -614,13 +628,14 @@ c from the non-staggered topo
           do j=2,nnyp
           do i=2,nnxp
 
-             adum(i,j)=r_missing_data
+             topt_stag_out(i,j)=r_missing_data
              call bilinear_interp(i,j,nnxp,nnyp,topt_out,result)
-             adum(i-1,j-1)=result
+             topt_stag_out(i-1,j-1)=result
 
           enddo
           enddo
-          where((adum.lt.0.01).and.(adum.gt.-0.01)) adum=0.0
+          where((topt_stag_out.lt. 0.01).and.
+     1          (topt_stag_out.gt.-0.01))topt_stag_out=0.0
        endif 
 
        write(6,*)
@@ -718,6 +733,22 @@ c SG97  splot 'topography.dat'
         enddo
         close(666)
 c
+c  now lets use GEODAT to process the world 30s USGS landuse data
+c
+        write(6,*)
+        write(6,*)' Processing 30s landuse data....'
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
+     +,deltax,deltay,LANDUSE_30S,LANDUSE_30S_DIST,adum,adum
+     + ,PATH_TO_LUSE_30S,TOPTWVL,SILAVWT,new_DEM,istatus)
+
+        if(istatus.ne. 1)then
+           print*,'land use data not processed'
+           print*,'Static file not created.......ERROR'
+           return
+        endif
+
+
+c
 c retrieve climatological albedo. Currently this is a fixed water albedo
 c that is a namelist value (nest7grid.parms - water_albedo_cmn)
 c
@@ -737,7 +768,8 @@ c
 
            call move(topt_out,data(1,1,9),nnxp,nnyp)       ! KWD
            call move(topt_pctlfn,data(1,1,10),nnxp,nnyp)   ! KWD
-           call move(soil,data(1,1,11),nnxp,nnyp)           ! SA
+           call move(landuse_30s,data(1,1,11),nnxp,nnyp)   ! JS
+c          call move(soil,data(1,1,11),nnxp,nnyp)          ! SA [JS - this now USGS 30s landuse]
 c
            call get_projrot_grid(nnxp,nnyp,lat,lon
      +,projrot_grid,istatus)
@@ -773,7 +805,7 @@ c
            call move(topt_out_s,data(1,1,21),nnxp,nnyp)
            call move(topt_out_ln,data(1,1,22),nnxp,nnyp)
            call move(topt_out_lt,data(1,1,23),nnxp,nnyp)
-           call move(adum,data(1,1,24),nnxp,nnyp)
+           call move(topt_stag_out,data(1,1,24),nnxp,nnyp)
 
 
            ngrids=25
@@ -785,7 +817,8 @@ c
            call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
            call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
            call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
-           call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
+           call move(soil,data(1,1,5),nnxp,nnyp)           ! SA [JS - this now USGS 30s landuse]
+           call move(landuse_30s,data(1,1,5),nnxp,nnyp)    ! JS 2-22-01
            call move(static_albedo,data(1,1,6),nnxp,nnyp)  ! JS
            call move(topt_out_s,data(1,1,7),nnxp,nnyp)     ! JS
            call move(topt_out_ln,data(1,1,8),nnxp,nnyp)    ! JS
@@ -910,22 +943,36 @@ C
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
      +          ,ISBEGO,IWBEGO,DATO,DATP,DATR,DATS,DATLN,DATLT,ISO,IWO
      +          ,OFN,WVLN,SILWT,dem_data,istat_files)
+
       real dato(no,no,mof)
+
       real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3),DATQS(NIQ,NJQ),
      +     DATSM(NIQ,NJQ),DATSMX(NIQ,NJQ),
      +     DATS(N2,N3),DATSLN(NIQ,NJQ),DATSLT(NIQ,NJQ),
      +     DATLN(N2,N3),DATLT(N2,N3)
+
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
      +     erad,deltallo,deltaxp,deltayp,deltaxq,deltayq,
      +     wvln,silwt,xq,yq,xp,yp,xcentr,ycentr,glatp,               ! pla,plo,
      +     glonp,rio,rjo,wio2,wio1,wjo2,wjo1,xq1,yq1
+
       real xr,yr,rval,sh,sha,rh,rha,rhn,rht,shn,sht
       real shln,shlt,rhln,rhlt
       real delta_ln(np,np),delta_lt(np,np)
+
+c     real xpmn,xpmx,ypmn,ypmx
+      real xp1,xp2,yp1,yp2
+      real xpcentr,ypcentr
+
+      integer nlucat
+      parameter (nlucat=24)
+
+      integer ixr,iyr
+
       CHARACTER*180 OFN,TITLE3,TITLE3_last_read,TITLE3_last_inquire
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
-      LOGICAL L1,L2,dem_data,l_string_contains
+      LOGICAL L1,L2,dem_data,l_string_contains,landuse
       data icnt/0/
       save icnt
 C
@@ -948,13 +995,28 @@ c      stop
       TITLE3_last_read    = '/dev/null'
       TITLE3_last_inquire = '/dev/null'
 
+      len=index(ofn,' ')
+      landuse=.false.
+      if(ofn(len-1:len-1).eq.'V')then
+         print*,'landuse = true '
+         landuse=.true.
+      endif
+
       DO 15 JQ=1,NJQ
          print *,'jq,njq,niq=',jq,njq,niq
          DO 16 IQ=1,NIQ
+
             XQ=(FLOAT(IQ)-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
             YQ=(FLOAT(JQ)-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
+
+            xpmn=1.0e30
+            ypmn=1.0e30
+c           xpmx=-1.0e30
+c           ypmx=-1.0e30
+
             DO 17 JP=1,NP
                DO 18 IP=1,NP
+
                   XP=XQ+(FLOAT(IP)-0.5*FLOAT(NP+1))*DELTAXP
                   YP=YQ+(FLOAT(JP)-0.5*FLOAT(NP+1))*DELTAYP
 !                 CALL XYTOPS(XP,YP,PLA,PLO,ERAD)
@@ -1043,14 +1105,16 @@ c                 print *,'rlat,wlon1=',rlat,wlon1
                      endif ! iwrite
 
                      icnt = icnt + 1
+
 c initialize these arrays as they may have some garbage in them
 c if we don't actually read in any data.
-
-                     DATP(IP,JP) = 0. ! set to missing? 
+c
+                     DATP(IP,JP) = 0.
                      DELTA_LN(IP,JP) = 0.
                      DELTA_LT(IP,JP) = 0.
                      istat_files = 0
                      GO TO 20
+
                   ENDIF
 
                   IF(NOFR.GE.MOF)THEN
@@ -1062,17 +1126,20 @@ c if we don't actually read in any data.
                   ENDIF
                   NOFR=NOFR+1
                   JOFR=NOFR
-                  len=index(ofn,' ')
 
 !                 Read the tile
                   if(TITLE3 .ne. TITLE3_last_read)then
                     if( (ofn(len-1:len).eq.'U').and.(no.eq.1200) )then
                       CALL READ_DEM(29,TITLE3(1:LB),no,no,2,4, ! world topo_30s
-     .                              DATO(1,1,NOFR))
+     .                              'ter',DATO(1,1,NOFR))
                       dem_data=.true.
                     elseif( (ofn(len-1:len).eq.'O') )then      ! soil
                       CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
-     .                              DATO(1,1,NOFR))
+     .                              'soi',DATO(1,1,NOFR))
+                      dem_data=.true.
+                    elseif( (ofn(len-1:len).eq.'V') )then      ! world USGS 30s landuse
+                      CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
+     .                              'veg',DATO(1,1,NOFR))
                       dem_data=.true.
                     else                                       ! other
                       CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0,istatus)      
@@ -1136,27 +1203,53 @@ C
      +                       +WIO2*(WJO1*DATO(IO2,JO1,JOFR)
      +                             +WJO2*DATO(IO2,JO2,JOFR))
 
+!                 if(.not.landuse)then
+
 !S & W-facing slopes > 0.
-                  DELTA_LN(IP,JP)=
+                   DELTA_LN(IP,JP)=
      .           ((DATO(IO2,JO1,JOFR)-DATO(IO1,JO1,JOFR))+
      .            (DATO(IO2,JO2,JOFR)-DATO(IO1,JO2,JOFR)))*.5
 
-                  DELTA_LT(IP,JP)=
+                   DELTA_LT(IP,JP)=
      .           ((DATO(IO1,JO2,JOFR)-DATO(IO1,JO1,JOFR))+
      .            (DATO(IO2,JO2,JOFR)-DATO(IO2,JO1,JOFR)))*.5
 
+!                 else
+!                  if(xp.lt.xpmn.and.yp.lt.ypmn)then
+!                   datq(iq,jq)=dato(IO1,JO1,nofr)
+!                   xpmn=xp
+!                   ypmn=yp
+!                  endif
+!                 endif
+
+c                if(xp.gt.xpmx)xpmx=xp
+c                if(xp.lt.xpmn)xpmn=xp
+c                if(yp.gt.ypmx)ypmx=yp
+c                if(yp.lt.ypmn)ypmn=yp
+
+c                if(ip.eq.1)xp1=xp
+c                if(ip.eq.np)xp2=xp
+c                if(jp.eq.1)yp1=yp
+c                if(jp.eq.np)yp2=yp
+                   
 20               CONTINUE
 18             continue ! IP
 17           continue ! JP
 
-!           Calculate average and silhouette terrain, then apply SILWT weight
-            SHA=0.
-            RHA=0.
-            RHLN=0.
-            RHLT=0.
-            shmax=0.
 
-            DO 22 JP=1,NP
+!           print*,'xpmx/xpmn//ypmx/ypmn/ ',xpmx,xpmn,ypmx,ypmn
+
+!           Calculate average and silhouette terrain, then apply SILWT weight
+
+            if(.not.landuse)then
+
+             SHA=0.
+             RHA=0.
+             RHLN=0.
+             RHLT=0.
+             shmax=0.
+
+             DO 22 JP=1,NP
                SH=0.
                RH=0.
                RHN=0.
@@ -1174,11 +1267,11 @@ C
                RHLN=RHLN+RHN
                RHLT=RHLT+RHT
                SHMAX=max(SHMAX,SH)
-22          continue ! JP
+22           continue ! JP
  
-            RHA=RHA/FLOAT(NP*NP)
-            RMS=0.0
-            DO 24 IP=1,NP ! The reason for this second SHA loop is unclear
+             RHA=RHA/FLOAT(NP*NP)
+             RMS=0.0
+             DO 24 IP=1,NP ! The reason for this second SHA loop is unclear
 c              SH=0.      ! It is now used for std dev of terrain
                DO 25 JP=1,NP
 c                 SH=max(SH,DATP(IP,JP))
@@ -1187,18 +1280,63 @@ c                 SH=max(SH,DATP(IP,JP))
 
 c              SHA=SHA+SH/(2.*FLOAT(NP))
 
-24          continue ! IP
+24           continue ! IP
 
-            DATQS(IQ,JQ)=SQRT(RMS/FLOAT(NP*NP))
-            DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
-            DATSM(IQ,JQ)=RHA                           !mean value of points used for IQ,JQ
-            DATSMX(IQ,JQ)=SHMAX                        !max value from points used for IQ,JQ
-            DATSLN(IQ,JQ)=RHLN/FLOAT(NP*NP)/DELTAXP
-            DATSLT(IQ,JQ)=RHLT/FLOAT(NP*NP)/DELTAYP
+             DATQS(IQ,JQ)=SQRT(RMS/FLOAT(NP*NP))
+             DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
+             DATSM(IQ,JQ)=RHA                           !mean value of points used for IQ,JQ
+             DATSMX(IQ,JQ)=SHMAX                        !max value from points used for IQ,JQ
+             DATSLN(IQ,JQ)=RHLN/FLOAT(NP*NP)/DELTAXP
+             DATSLT(IQ,JQ)=RHLT/FLOAT(NP*NP)/DELTAYP
 
-c           print *,'datq=',datq(iq,jq)
+c            print *,'datq=',datq(iq,jq)
 
-16      continue ! IQ
+            else   !then this is landuse (30s vegie) data
+
+             call landuse_cat(np,datp,nlucat,domcat)
+             datq(iq,jq)=domcat 
+
+c
+c in this case we want the grid point of raw remapped data
+c closest to the expanded domain (datq)
+c             xpcentr=(xp2-xp1)*.5
+c             ypcentr=(yp2-yp1)*.5
+c             XP=XQ+(1.-0.5*FLOAT(NP+1))*DELTAXP+xpcentr
+c             YP=YQ+(1.-0.5*FLOAT(NP+1))*DELTAYP+ypcentr
+c             call xy_to_latlon(XP,YP,erad,GLATP,GLONP)
+c             RIO=(GLONP-FLOAT(IWOC))/DELTALLO+1.
+c             RJO=(GLATP-FLOAT(ISOC))/DELTALLO+1.
+!  Prevent Bounds Error (Steve Albers used for landuse also)
+c             if(RIO .lt. 1.0)then
+c               if(RIO .gt. 0.98)then
+c                  write(6,*)' Reset RIO for Machine Epsilon'
+c                  RIO = 1.0
+c               else
+c                  write(6,*)' ERROR: RIO out of bounds',RIO
+c                  stop
+c               endif
+c             endif
+c             if(RJO .lt. 1.0)then
+c               if(RJO .gt. 0.98)then
+c                  write(6,*)' Reset RJO for Machine Epsilon'
+c                  write(6,*)JQ,IQ,
+c    1                IP,JP,IO1,JO1,JOFR,RIO,RJO,GLATP,ISOC
+c                  RJO = 1.0
+c               else
+c                  write(6,*)' ERROR: RJO out of bounds',RJO
+c                  write(6,*)JQ,IQ,
+c    1                IP,JP,IO1,JO1,JOFR,RIO,RJO,GLATP,ISOC
+c                  stop
+c               endif
+c             endif
+c             IO1=nint(RIO)
+c             JO1=nint(RJO)
+c             datq(iq,jq)=dato(IO1,JO1,NOFR)
+c             call landuse_cat(np,datq,iq,jq,niq,njq,nlucat
+c    &,lucat)
+
+            endif
+16       continue ! IQ
 15    continue ! JQ
 
       print *,'after 15'
@@ -1206,17 +1344,19 @@ c     stop
  
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
-      print*
-      print*,'Before GDTOST2'
-      print*,'--------------'
-      print*,'datq(1,1)/(niq,njq)= ',datq(1,1),datq(niq,njq)
-      print*,'datqs(1,1)/(niq,njq)= ',datqs(1,1),datqs(niq,njq)
-      print*,'datsln(1,1)/(niq,njq)= ',datsln(1,1),datsln(niq,njq)
-      print*,'datslt(1,1)/(niq,njq)= ',datslt(1,1),datslt(niq,njq)
-      print*,'Mean/Max topo at IQ,JQ (1,1)/(niq,njq): '
+
+      if(.not.landuse)then
+        print*
+        print*,'Before GDTOST2'
+        print*,'--------------'
+        print*,'datq(1,1)/(niq,njq)= ',datq(1,1),datq(niq,njq)
+        print*,'datqs(1,1)/(niq,njq)= ',datqs(1,1),datqs(niq,njq)
+        print*,'datsln(1,1)/(niq,njq)= ',datsln(1,1),datsln(niq,njq)
+        print*,'datslt(1,1)/(niq,njq)= ',datslt(1,1),datslt(niq,njq)
+        print*,'Mean/Max topo at IQ,JQ (1,1)/(niq,njq): '
      +,datsm(1,1),datsmx(1,1),datsm(niq,njq),datsmx(niq,njq)
 
-      DO 28 JR=1,N3
+        DO 28 JR=1,N3
          DO 29 IR=1,N2
             XR=(XT(IR)-XQ1)/DELTAXQ+1.
             YR=(YT(JR)-YQ1)/DELTAYQ+1.
@@ -1236,14 +1376,34 @@ c     stop
             DATLT(IR,JR)=RVAL
 
  29      CONTINUE
- 28   CONTINUE
+ 28     CONTINUE
 
-      print*,'After GDTOST2'
-      print*,'-------------'
-      print*,'datr(1,1)/(n2,n3)= ',datr(1,1),datr(N2,N3)
-      print*,'dats(1,1)/(n2,n3)= ',dats(1,1),dats(n2,n3)
-      print*,'datln(1,1)/(n2,n3)= ',datln(1,1),datln(n2,n3)
-      print*,'datlt(1,1)/(n2,n3)= ',datlt(1,1),datlt(n2,n3)
+        print*,'After GDTOST2'
+        print*,'-------------'
+        print*,'datr(1,1)/(n2,n3)= ',datr(1,1),datr(N2,N3)
+        print*,'dats(1,1)/(n2,n3)= ',dats(1,1),dats(n2,n3)
+        print*,'datln(1,1)/(n2,n3)= ',datln(1,1),datln(n2,n3)
+        print*,'datlt(1,1)/(n2,n3)= ',datlt(1,1),datlt(n2,n3)
+ 
+      elseif(landuse)then
+
+c       call landuse_cat(niq,njq,datq,nlucat)
+
+        DO 38 JR=1,N3
+         DO 39 IR=1,N2
+            IXR=NINT((XT(IR)-XQ1)/DELTAXQ)
+            IYR=NINT((YT(JR)-YQ1)/DELTAYQ)
+            if(ixr.lt.1)ixr=1
+            if(iyr.lt.1)iyr=1
+            if(ixr.gt.n2)ixr=niq
+            if(iyr.gt.n3)iyr=njq
+c dont use this for landuse
+c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
+            datr(ir,jr)=datq(ixr,iyr)
+ 39      CONTINUE
+ 38     CONTINUE
+
+      endif
 
       RETURN
       END
@@ -1440,13 +1600,15 @@ c--------------------------------------------------------
 
 c ********************************************************************
 
-      subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2,data)
+      subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2
+     &,type,data)
       implicit none
       integer countx,county,unit_no,nn1,nn2
       real data(nn1,nn2)
       integer idata(nn1,nn2), len, i1, i2
       logical l1,l2
       character*(*) unit_name
+      character*(*) type
 
 C      open(unit_no,file=unit_name,status='old',access='direct',
 C     . recl=nn2*nn1*2)
@@ -1457,7 +1619,15 @@ C      read(unit_no,rec=1) idata
 
       call read_binary_field(idata,i1,i2,nn1*nn2,unit_name,len)
 
-      do county=1,nn2
+c     if(type.eq.'veg')then
+c      do county=1,nn2
+c        do countx=1,nn1
+c           data(countx,county)=float(idata(countx,county))
+c        enddo
+c      enddo
+c     else
+
+       do county=1,nn2
         do countx=1,nn1
           if (idata(countx,county).eq.-9999) idata(countx,county)=0
            data(countx,county)=float(idata(countx,nn2-county+1))
@@ -1465,12 +1635,13 @@ c SG97 initial data (DEM format) starts in the lower-left corner;
 c SG97 this format is wrapped around to have upper-left corner as its start.
 c
 c JS00 some machines do not account for signed integers
-          if(data(countx,county).ge.15535.0)
-c    &print*,'x/y/val: ',countx,county,data(countx,county)
+           if(data(countx,county).ge.15535.0)
      &data(countx,county)=data(countx,county)-65535
 
         enddo
-      enddo
+       enddo
+
+c     endif
 ccc      close(unit_no)
       return
       end
@@ -1531,3 +1702,66 @@ c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
 490   YOO=YYY
       RETURN
       END
+c
+c determine dominant land use category 1-05-01 JS
+c
+      subroutine landuse_cat(np,data,nlucat,domcat)
+
+      implicit none
+
+      integer np
+      integer i,j,k
+      integer nlucat
+      integer lucat(nlucat)
+      integer maxcat
+      real    data(np,np)
+      real    domcat
+
+      do k=1,nlucat
+         lucat(k)=0
+      enddo
+      do i=1,np
+      do j=1,np
+      do k=1,nlucat
+         if(nint(data(i,j)).eq.k)then
+            lucat(k)=lucat(k)+1
+         endif
+      enddo
+      enddo
+      enddo
+      maxcat=-1
+      do k=1,nlucat
+         if(lucat(k).gt.maxcat)then
+            maxcat=lucat(k)
+            domcat=float(k)
+         endif
+      enddo
+      return
+      end
+
+c
+c new subroutine on 1-05-01 JS
+c
+c     subroutine landuse_cat(niq,njq,data,nlucat
+c    &,lucat)
+
+c     implicit none
+
+c     integer i,j,k
+c     integer niq,njq
+c     integer nlucat
+c     integer lucat(niq,njq,nlucat)
+c     real    data(niq,njq)
+
+c     do i=1,niq
+c     do j=1,njq
+c     do k=1,nlucat
+c        if(data(i,j).eq.k)then
+c           lucat(iq,jq,k)=lucat(iq,jq,k)+1
+c        endif
+c     enddo
+c     enddo
+c     enddo
+
+c     return
+c     end
