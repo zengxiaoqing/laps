@@ -214,7 +214,9 @@ cdis
 
       if(ncnt.eq.0) then
          write(6,1002)
- 1002    format(1x,'no data for barnes')
+ 1002    format(1x,'no data for barnes: result = first guess')
+         t = cf_modelfg
+         istatus = 1
          return
       else
          write(6,*)' Ncnt = ',ncnt
