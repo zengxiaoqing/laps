@@ -273,6 +273,14 @@ C
           call get_nlevels_snd(pressure_mb,height_m,r_missing_data
      +                        ,rawLevel,nlevels_snd)
 
+!         Apply QC editflag
+          do i = 1,nlevels_snd
+              if(editflag(i,iob) .eq. 3)then ! set wind to missing
+                  direction(iob,3) = r_missing_data
+                  speed(iob,3) = r_missing_data
+              endif
+          enddo ! i
+
           l_closest_time = .true.
 
           if(nlevels_snd .gt. 0 .and. l_closest_time)then
