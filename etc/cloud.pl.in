@@ -100,7 +100,7 @@ $searchstring = " Reading 3D ";
 foreach (@lines) {if (/$searchstring(.*)/) {print "$1\n";}}
 
 # Satellite data
-print "\nSatellite (IR):";
+print "\nSatellite (IR):\n";
 @greplines = grep /Returning S8A/, @lines;
 print "$greplines[0]";
 @greplines = grep /No S8A/, @lines;
@@ -112,7 +112,7 @@ print "\n";
 print "Satellite (Visible Albedo):\n";
 @greplines = grep /Returning ALB/, @lines;
 print "$greplines[0]";
-@greplines = grep /could not read albedo/, @lines;
+@greplines = grep /No VIS/, @lines;
 print "$greplines[0]";
 @greplines = grep /Visible albedo data used/, @lines;
 print "$greplines[0]";
