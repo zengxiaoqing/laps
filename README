@@ -656,6 +656,8 @@
 
         When you run ./etc/laps_localization.pl, the NetCDF static 
         file 'static.nest7grid' will be automatically generated (we hope). 
+        This contains grids of latitude, longitude, elevation, and land 
+        (vs. water) fraction.
 
         The following error message, "FILE /U50N119W DOES NOT EXIST",
         does not necessarily mean there is a problem. It signifies that 
@@ -1954,3 +1956,14 @@ Process LVD:    LVD  S8W  s8w      1  GOES IR band-8 bright temp warmest pixel
                      S8A  s8a      1  GOES IR band-8 bright temp averaged
                      SCA  sca      1  GOES IR band-12 bright temp averaged
                      SCC  scc      1  GOES IR band-12 bright temp averaged
+
+Static LAPS file - run by localization/gridgen_model.exe:
+
+static.nest7grid:    LAT           1  Latitude (degrees)
+                     LON           1  Longitude (degrees)
+                     AVE           1  Mean elevation MSL (m)
+                     STD           1  Unused
+                     ENV           1  Unused
+                     ZIN           1  Z coordinate - used for plotting in AVS
+                     LDF           1  Land Fraction (0-1)
+                     USE           1  Soil Type (under development)
