@@ -33,6 +33,8 @@
       real  vis(maxobs), dd(maxobs), wgdd(maxobs), wgff(maxobs)
       real  ff(maxobs), sr(maxobs), st(maxobs)
 
+      double precision  timeObs(maxobs), timeObsMso(maxMso)
+
       character(6)   rptTpMso(maxobs), stnTpMso(maxobs)
       character(5)   stnNoMso(maxMso)
       integer  pccMso(maxMso)
@@ -44,8 +46,6 @@
       real  pcp24hrMso(maxMso), ddMso(maxMso), ffMso(maxMso)
       real  wgddMso(maxMso), wgffMso(maxMso), pMso(maxMso)
       real  mslpMso(maxMso), pcMso(maxMso), srMso(maxMso), stMso(maxMso)       
-
-      double precision  timeObs(maxobs)
 
       rptTp   = 'SYNOP'
       stnTp   = 'UNK'
@@ -103,14 +103,15 @@
 
       do i= 1,numSynop
          write(stnNo(i),'(i5)') wmoId(i)      
-         write(*,*) wmoId(i)      
+c        write(*,*) i,stnNo(i),rptTp(i),stnTp(i), timeObs(i)
+         write(*,*) i,stnNo(i),stname(i)
       enddo
 
       np= numSynop +1
       nq= numSynop +maxMso
 
       call read_meso_cwb ( path_to_local, maxMso, badflag, ibadflag, 
-     ~                     i4time_sys, rptTpMso, stnTpMso,
+     ~                     i4time_sys, timeObsMso, rptTpMso, stnTpMso,
      ~                     stnNoMso, latsMso, lonsMso, elevMso,
      ~                     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
      ~                     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
@@ -123,7 +124,7 @@ c                    combine synop data and mesonet data
       do i= 1,numMso
          flag= 0
 
-	 write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i)
+c write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i),timeObsMso(i)
          do j= 1,numSynop
             if ( stnNoMso(i) .eq. stnNo(j) ) then
                rh(j)=   rhMso(i)
@@ -143,9 +144,11 @@ c                    combine synop data and mesonet data
          if ( flag /= 1 ) then
             k= k +1
 
+            timeObs(k)= timeObsMso(i)
             rptTp(k)=   rptTpMso(i)
             stnTp(k)=   stnTpMso(i)
             stnNo(k)=   stnNoMso(i)
+            wmoId(k)=   ibadflag
             td(k)=      tdMso(i)
             tdTths(k)=  tdMso(i)
             elev(k)=    elevMso(i)
@@ -174,7 +177,8 @@ c                    combine synop data and mesonet data
       enddo
 
       do i= 1,k
-	 write(*,*) i,stnNo(i),rptTp(i),stnTp(i)
+      write(*,*) i,stnNo(i),timeObs(i),rptTp(i),stnTp(i),
+     ~           stname(i),wmoId(i), stnNo(i)
       enddo
       num = k
 
@@ -598,7 +602,7 @@ c        presWeather(j)= "UNK"
 
 
       subroutine read_meso_cwb (inpath, maxobs, badflag, ibadflag,
-     ~                          i4time_sys, rptTp, stnTp, 
+     ~                          i4time_sys, timeObs, rptTp, stnTp, 
      ~                          stname, lats, lons, elev,
      ~                          t, t24max, t24min, td, rh, 
      ~                          pcp1hr, pcp3hr, pcp6hr, pcp24hr, 
@@ -619,6 +623,8 @@ c======================================================================
       real :: wgff(maxobs), stnp(maxobs), mslp(maxobs), pc(maxobs)
       real :: sr(maxobs), st(maxobs)
       integer :: pcc(maxobs), wmoId(maxobs)
+
+      double precision  timeObs(maxobs)
 
       logical :: l_parse
 
@@ -667,6 +673,7 @@ c    Fill the output arrays with something, then open the file to read.
       pc  =     badflag
       sr  =     badflag
       st  =     badflag
+      timeObs=  dble( i4time_sys )
 
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
       a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
