@@ -158,13 +158,14 @@ c
        character*9 c_institution
        character*6 c_vnt_units
        character*7 c_units_type
+       character*7 c_pbl_depth_units
        logical l_discrete
        real*4 time_zone
 
        namelist /lapsplot_nl/ latlon_int,continent_line_width
      1                       ,c3_time_zone,time_zone
      1                       ,c_institution,c_vnt_units
-     1                       ,c_units_type,l_discrete
+     1                       ,c_units_type,c_pbl_depth_units,l_discrete       
 
 !      Set defaults
        latlon_int = 0
@@ -193,6 +194,7 @@ c
        namelist_parms%time_zone = time_zone
        namelist_parms%c_vnt_units = c_vnt_units
        namelist_parms%c_units_type = c_units_type
+       namelist_parms%c_pbl_depth_units = c_pbl_depth_units
        namelist_parms%l_discrete = l_discrete
 
        istatus = 1
