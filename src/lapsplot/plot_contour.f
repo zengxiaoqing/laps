@@ -210,7 +210,7 @@ C
         CALL PLCHHQ (0.05,0.14-(NC-1)*0.02, LAB1   , .01,
      1       0., -1.)
 
-        FMIN = CEILING2(FMIN,DF,MACHINE_EPSILON_P)   ! Minimum contour
+!       FMIN = CEILING2(FMIN,DF,MACHINE_EPSILON_P)   ! Minimum contour
         SPVALU=SPVAL_P
 !       CALL FXFY(NF)                               ! Initialize FX and FY fcns
 
