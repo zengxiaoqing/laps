@@ -126,6 +126,9 @@ c ----------------------
       write(6,*)'Lov    ',Lov
       write(6,*)'lap    ',lap
 c
+      if(la1.ne.0.0 .and. lo1.ne.0.0 .and.
+     &    dx.ne.0.0 .and.  dy.ne.0.0)then
+
       dxterm = dx/1000.
       dyterm = dy/1000.
       call getdudv_lam(lov,lap,dxterm,dyterm,
@@ -193,6 +196,10 @@ c
          write(6,*)'i,j,ri,rj: ',i,j,ri(i,j),rj(i,j)
       enddo
       enddo
+      endif
+
+      else
+        print*,'Not able to compute lut given those parms'
       endif
 
 c     if(.false)then

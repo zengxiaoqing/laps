@@ -29,15 +29,14 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine genv01lut_sub(nx_l,ny_l,max_radars,n_radars,
-     &         iradar_index,c_radar_name,radar_la1,radar_lo1,
+      subroutine genv01lut_sub(nx_l,ny_l,max_radars,
+     &                      c_radar_name,radar_la1,radar_lo1,
      &                 nxv01,nyv01,dxv01,dyv01,ri,rj,istatus)
 c
       implicit none
 
       integer*4 nx_l,ny_l
       integer*4 max_radars
-      integer*4 n_radars
       integer*4 nxv01,nyv01
 
       real*4    lat(nx_l,ny_l)
@@ -51,7 +50,6 @@ c
       real*4    dxv01,dyv01
 
       integer*4 i,j
-      integer*4 iradar_index(max_radars)
       integer*4 istatus
       Integer*4 lend
 c
@@ -61,7 +59,6 @@ c
       character*10 units_ll(2)
       character*3 var_ll(2)
       character*100 dir_static
-c     character*10 cmode
       character c_radar_name(max_radars)*4
 c
 c ======================== START ==============================
@@ -92,19 +89,18 @@ c -------------------------------------------------------------
       end if
 c-----------------------------------------------------------------
 c
-      do i = 1,n_radars
+      do i = 1,max_radars
 
-         j=iradar_index(i)
-         call gen_llij_lut_v01(c_radar_name(j),nx_l,ny_l,lat,lon,
-     &radar_la1(j),radar_lo1(j),nxv01,nyv01,dxv01,dyv01,
-     &ri(1,1,j),rj(1,1,j),istatus)
+         call gen_llij_lut_v01(c_radar_name(i),nx_l,ny_l,lat,lon,
+     &radar_la1(i),radar_lo1(i),nxv01,nyv01,dxv01,dyv01,
+     &ri(1,1,i),rj(1,1,i),istatus)
 
          if(istatus.eq.1)then
-            write(6,*)'LUT generated ',c_radar_name(j)
+            write(6,*)'LUT generated ',c_radar_name(i)
             write(6,*)'********************************'
             write(6,*)
          else
-            write(6,*)'LUT not generated ',c_radar_name(j)
+            write(6,*)'LUT not generated ',c_radar_name(i)
             write(6,*)
          endif
 

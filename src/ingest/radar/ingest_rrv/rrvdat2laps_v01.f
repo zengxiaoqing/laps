@@ -117,11 +117,21 @@ c The "10" loop represents input image resolution < output grid resolution such
 c that there are enough pixels from the input image to get a representative
 c mean value for the remapped output grid value
 c
-c since rrv data is 5km resolution atm, this switch will not be used.
-        if(r_grid_ratio .lt. 0.5)then  !0.75)then
+c rrv data is 5km resolution and it is sparse data so use this switch. 
+c
+        itot=0
+        icnt_msng=0
+        icnt_zero=0
+        icnt_gt_zero=0
+        icnt_lt_zero=0
+        fcount=0
+        icnt=0
 
-          write(6,*)'Grid ratio .lt. 0.5'   !0.75'
-          write(6,*)'Use pixel avg to get sndr Rad'
+        if(r_grid_ratio .lt. 1.0)then  !0.75)then
+
+          write(6,*)'Grid ratio .lt. 1.0'   !0.75'
+          write(6,*)'Use pixel avg to get dbz from rrv'
+          maxpix=0
           DO 10 J=1,JMAX
           DO 10 I=1,IMAX
 
@@ -131,7 +141,6 @@ c line/elem are floating point i/j positions in ISPAN grid for input lat/lon
 c also, use the lat/lon to real i/j look up table (r_llij_lut) to map out points
 c needed for satellite pixels.
 c****************************************************************************
-c
              elem_mx = r_llij_lut_ri(i,j) + ((1./r_grid_ratio) * 0.5)
              elem_mn = r_llij_lut_ri(i,j) - ((1./r_grid_ratio) * 0.5)
              line_mx = r_llij_lut_rj(i,j) + ((1./r_grid_ratio) * 0.5)
@@ -154,95 +163,47 @@ c               write(6,1021)elem_mx,elem_mn,line_mx,line_mn
 
              else
 c
-c **** FIND PIXELS AROUND GRID POINT
-c
-                wm=-1.e15
-                wc=1.e15
                 npix = 0
                 pixsum = 0.
-                maxpix = 0
+                itot=itot+1
 
                 DO 3 JJ=jstart,jend
-                   DO 3 II=istart,iend
+                DO 3 II=istart,iend
 
-                      if(image_v01(II,JJ) .ne.
-     &r_missing_data)then
-                         npix=npix+1
-                         t_array(npix) = image_v01(II,JJ)
-
-                      endif
-
+                 if(image_v01(II,JJ).ne.r_missing_data)then
+                    npix=npix+1
+                    t_array(npix) = image_v01(II,JJ)
+                 endif
     3           continue  
 c
-                if(npix.gt.1)then
-
-c
-c...  this section finds the warmest pixel, coldest pixel, and mean pixel temp.
-c
+                if(npix.gt.0)then
                    Do ii=1,npix
-
-                      btemp  = t_array(ii)
-                      pixsum = pixsum + btemp
-
-                      if(btemp.gt.wm) then
-                         wm=btemp
-                      end if
-
-                      if(btemp.lt.wc) then
-                         wc=btemp
-                      end if
-
+                      pixsum = pixsum + t_array(ii)
                    enddo
-
-                elseif(npix.eq.1)then
-
-                   btemp = t_array(npix)
-
                 else   
-
-                   btemp=r_missing_data
+                   pixsum=r_missing_data
                    fcount=fcount+1
-
                 endif
 
                 if(npix .ge. maxpix)maxpix=npix
 
-                if(npix .gt. 1)then
-
+                if(npix .gt. 0)then
                    sa(i,j) = pixsum / float(npix)
-
-c.....  Operate on T_array to find cloud top temp. This chooses the warmest
-c.....  or coldest pixel depending on whether most pixels are closer to the
-c.....  warmest or coldest. The net result is an edge sharpening filter.
-
-                   tmean = (wc + wm)/2.
-
-                   nwarm = 0
-                   do ipix = 1,npix
-                      if(t_array(ipix) .ge. tmean)then
-                         nwarm = nwarm + 1
-                      endif
-                   enddo
-
-c              write(6,1112) wm,wc
- 1112          FORMAT(1X,11F7.0)
-
-                   frac = float(nwarm) / float(npix)
-                   if(frac .gt. 0.5)then
-                      sc(i,j)=wm
-                   else
-                      sc(i,j)=wc
-                   endif
-
-                   sT(i,j)=wm
-
                 else
-
-                   sa(i,j)=btemp
-                   sc(i,j)=btemp
-                   sT(i,j)=btemp
-
+                   sa(i,j)=pixsum
+                   sc(i,j)=pixsum
+                   sT(i,j)=pixsum
                 endif ! npix .gt. 1
+
+                if(pixsum.eq.r_missing_data)then
+                   icnt_msng=icnt_msng+1
+                elseif(pixsum.eq.0.0)then
+                   icnt_zero=icnt_zero+1
+                elseif(pixsum.gt.0.0)then
+                   icnt_gt_zero=icnt_gt_zero+1
+                elseif(pixsum.lt.0.0)then
+                   icnt_lt_zero=icnt_lt_zero+1
+                endif
 
              end if  ! Enough data for num_lines .gt. 0
 
@@ -252,9 +213,10 @@ d5555         format(1x,2i4,2f10.2,2i5,f10.2)
 d           endif
 
    10     CONTINUE ! I,J
+
+          write(6,*)'Number of pixels with no radar ',icnt
           write(6,*)'Max num sndr pix for avg: ',maxpix
-          write(6,*)'Number of LAPS gridpoints missing',
-     &fcount
+          write(6,*)'Number of gridpts missing',fcount
 
 c ---------------------------------------------------------------------
         elseif(r_grid_ratio .le. 1.1)then
@@ -268,12 +230,6 @@ c
              write(6,*)'Using bilinear interp for sndr Rad'
              iwrite=0
           endif
-
-          icnt_msng=0
-          icnt_zero=0
-          icnt_gt_zero=0
-          icnt_lt_zero=0
-          itot=0
 
           DO 20 J=1,JMAX
           DO 20 I=1,IMAX
@@ -387,15 +343,18 @@ c1234       FORMAT(1X,'BAND ',I4,' COUNT FOR I4TIME ',I10,' IS ',I8)
         percent_gt_zero=float(icnt_gt_zero)/float(itot)
         percent_lt_zero=float(icnt_lt_zero)/float(itot)
 
-        write(*,*)'Stats for rrvdat2laps_v01 '
-        write(*,*)'------------------------------'
-        write(*,*)'Total potential useable points: ',itot
-        write(*,*)'N missing/% ',icnt_msng,percent_msng
-        write(*,*)'N =  zero/% ',icnt_zero,percent_zero
-        write(*,*)'N > zero/% ',icnt_gt_zero,percent_gt_zero
-        write(*,*)'N < zero/% ',icnt_lt_zero,percent_lt_zero
-        write(*,*)'------------------------------'
-        write(*,*)
+        if(icnt_msng .ne. itot)then
+           write(*,*)'------------------------------'
+           write(*,*)'Total potential useable points: ',itot
+           write(*,*)'N missing/% ',icnt_msng,percent_msng
+           write(*,*)'N =  zero/% ',icnt_zero,percent_zero
+           write(*,*)'N > zero/% ',icnt_gt_zero,percent_gt_zero
+           write(*,*)'N < zero/% ',icnt_lt_zero,percent_lt_zero
+           write(*,*)'------------------------------'
+           write(*,*)
+        else
+           write(*,*)'All points = missing'
+        endif
 
         istatus = 1
 c
