@@ -22,7 +22,11 @@ PLATFORM=`uname -s`
 
 #export NCARG_ROOT=/usr/local/apps/ncarg-4.0.1
 #setenv NCARG_ROOT `cat /usr/nfs/lapb/bin/ncarg_root`
-export NCARG_ROOT=`cat /usr/nfs/lapb/bin/ncarg_root`
+
+cd
+if test -r etc/ncarg_root; then
+    export NCARG_ROOT=`cat etc/ncarg_root`
+fi
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
 
@@ -151,7 +155,10 @@ ln -s $WWW_DIR/anal2d/archive/$prod/$datetime.gif                   $WWW_DIR/ana
 #Make the soft link for Web display of directories
 cd    $WWW_DIR/anal2d/archive/$prod
 rm -f                                                                  80.htaccess
-ln -s $WWW_DIR/../../utilities/public-current-directory.htaccess       80.htaccess
+
+#if test -r $WWW_DIR/../../utilities/public-current-directory.htaccess; then
+#     ln -s $WWW_DIR/../../utilities/public-current-directory.htaccess       80.htaccess
+#fi
 
 #Create the files.txt script with the equivalent of files.sh
 cd  $WWW_DIR/anal2d/loop/$prod
@@ -160,6 +167,8 @@ cd  $WWW_DIR/anal2d/loop/$prod
 #Link to the files.cgi script
 cd    $WWW_DIR/anal2d/loop/$prod
 rm -f files.cgi
-ln -s $WWW_DIR/../../looper/files.cgi files.cgi
 
+if test -r $WWW_DIR/../../looper/files.cgi; then
+     ln -s $WWW_DIR/../../looper/files.cgi files.cgi
+fi
 
