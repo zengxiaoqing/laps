@@ -2879,6 +2879,7 @@ Outputs:
                                     freezing drizzle, rain, freezing rain, 
                                     and snow - in areas that radar does not 
                                     detect echoes.
+
                                 SFC cloud type (SCT)
                                     This is the type of the lowest cloud layer
                                     in the LTY (3-D cloud type) file. The 
@@ -2901,7 +2902,7 @@ Outputs:
 	lmd     3d grid         mean cloud drop diameter 
 	lmt	2d grid	        max echo tops (LMT), 
                                 Low level reflectivity (LLR)
-	lco     3d grid         cloud omega       
+	lco     3d grid         Cloud omega - computed where cloud cover > .65 
 	lrp     3d grid         3D icing index (integers 0-6)
 
                                 0 is no icing
