@@ -197,8 +197,10 @@ c       powell specific arrays
 
 c  analysis of the factor field
       integer pn
-      real points(3,ii*jj)
+      real points(ii*jj,3)
       real data_anal(ii,jj)
+      real ave,adev,sdev,var,skew,curt
+      real upper_limit, lower_limit
 
 c  cloud variables
       real cld(ii,jj)
@@ -812,13 +814,35 @@ c  analyze top level adjustments.
              data_anal(i,j) = 1.
              if (factor(i,j).ne.rmd ) then
                 pn = pn+1
-                points(1,pn) = factor(i,j)
-                points(2,pn) = i
-                points(3,pn) = j
+                points(pn,1) = factor(i,j)
+                points(pn,2) = i
+                points(pn,3) = j
                 mask(i,j) = 1
-                data_anal(i,j) = factor(i,j)
+c                data_anal(i,j) = factor(i,j)
              endif
           enddo
+       enddo
+
+c     derive field statistics to determine outliers
+       call moment_b (points(1,1),pn,ave,adev,sdev,var,skew,
+     1      curt,istatus)
+       upper_limit = ave + 3.*sdev
+       lower_limit = ave - 3.*sdev
+       write (6,*) 
+       write (6,*) 
+       write (6,*) 'Classify acceptable data' 
+       write (6,*) 
+       write (6,*) 'acceptable range', lower_limit, upper_limit
+
+       do i = 1,pn
+          if(points(i,1) .lt. upper_limit .and.
+     1         points(i,1) .gt. lower_limit) then
+             data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
+             write(6,*) points(i,1), 'assigned'
+          else
+             write(6,*) points(i,1), 'rejected ******************'
+             points(i,2) = 0 ! flag for bad point in prep grid
+          endif
        enddo
 
 
@@ -828,6 +852,7 @@ c  analyze top level adjustments.
          call prep_grid(ii,jj,data_anal,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
+         call two_d_stats(ii,jj,data_anal,rmd)
 
       else
          write(6,*) 
@@ -879,13 +904,34 @@ c  analyze second level adjustments.
              data_anal(i,j) = 1.
              if (factor2(i,j).ne.rmd ) then
                 pn = pn+1
-                points(1,pn) = factor2(i,j)
-                points(2,pn) = i
-                points(3,pn) = j
+                points(pn,1) = factor2(i,j)
+                points(pn,2) = i
+                points(pn,3) = j
                 mask(i,j) = 1
-                data_anal(i,j) = factor2(i,j)
+c                data_anal(i,j) = factor2(i,j)
              endif
           enddo
+       enddo
+c     derive field statistics to determine outliers
+       call moment_b (points(1,1),pn,ave,adev,sdev,var,skew,
+     1      curt,istatus)
+       upper_limit = ave + 3.*sdev
+       lower_limit = ave - 3.*sdev
+       write (6,*) 
+       write (6,*) 
+       write (6,*) 'Classify acceptable data' 
+       write (6,*) 
+       write (6,*) 'acceptable range', lower_limit, upper_limit
+
+       do i = 1,pn
+          if(points(i,1) .lt. upper_limit .and.
+     1         points(i,1) .gt. lower_limit) then
+             data_anal(int(points(i,2)),int(points(i,3))) = points (i,1)
+             write(6,*) points(i,1), 'assigned'
+          else
+             write(6,*) points(i,1), 'rejected ******************'
+             points(i,2) = 0 ! flag for bad point in prep grid
+          endif
        enddo
 
 
@@ -895,6 +941,7 @@ c  analyze second level adjustments.
          call prep_grid(ii,jj,data_anal,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
+         call two_d_stats(ii,jj,data_anal,rmd)
 
       else
          write(6,*) 

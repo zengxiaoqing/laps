@@ -106,7 +106,6 @@ c  internal variables
      1          i4time1,
      1          i,k
 
-        character*9 filetry
         integer iter ! iterations reqd to go back 48 hour
 
         real pressure_of_level ! function call
@@ -114,7 +113,7 @@ c
 c
 c
 c
-c-------------------------------------------------------------------------------
+c------------------------------------------------------------------------------
 c
         call get_directory(extlma,dirlma,len)
         call get_directory(extlmf,dirlmf,len)
@@ -122,8 +121,8 @@ c
         laps_cycle_time = lct
 
         do k = 1,kk
-        lapsp(k) =  nint( pressure_of_level(k)  * .01 )
-        var(k) = df
+           lapsp(k) =  nint( pressure_of_level(k)  * .01 )
+           var(k) = df
         enddo
 
 
@@ -146,13 +145,13 @@ c       cycle through all possible forecasts for current time.
 c     add direct call to get laps cycle time so that changes to this can be
 c     managed at runtime.
         call get_laps_cycle_time(laps_cycle_time,istatus)
-         if (istatus .ne. 1) then
+        if (istatus .ne. 1) then
            write(6,*) 'Error obtaining laps_cycle time'
            write (6,*) 'Aborting'
            return
-         endif
+        endif
 
-c figure iterations to go back 48 hours
+c     figure iterations to go back 48 hours
 
         write(6,*) 'laps cycle time is, ', laps_cycle_time
     
@@ -162,37 +161,36 @@ c figure iterations to go back 48 hours
 
         do i = 0,iter
 
-        i4time1 = i4time - i*laps_cycle_time
+           i4time1 = i4time - i*laps_cycle_time
 
 
-c       attempt reading data for this time pair
+c     attempt reading data for this time pair
 
-        print *, 'attempting to open from lga ', i4time-i4time1
+           print *, 'attempting to open from lga ', i4time-i4time1
 
-        call read_laps(i4time1,i4time, dirlma,
-     1  extlma,ii,jj,
-     1  kk,kk,var,lapsp,
-     1  lvl_coord,units,comment,htm,istatus)
+           call read_laps(i4time1,i4time, dirlma,
+     1          extlma,ii,jj,
+     1          kk,kk,var,lapsp,
+     1          lvl_coord,units,comment,htm,istatus)
 
-                if (istatus.eq.1) then !successful read
-                        print *,  'successful read of ', filetry
+           if (istatus.eq.1) then !successful read
+              write(6,*)  'successful read of input file'
+              istatus = 1
+              return
 
-                        istatus = 1
-                        return
+           endif
 
-                endif
-
-        enddo ! i
-
-
+        enddo                   ! i
 
 
 
-        print *, 'error finding suitable maps for past'
-        print*, ' failure on interpolating to get a good background'
+
+
+        write(6,*) 'error finding suitable maps for past'
+        write(6,*) ' failure on interpolating to get a good background'
         istatus = 0
         return
 
 
-c
+c     
         end

@@ -253,6 +253,9 @@ c rams stuff--------
 c ------------------
 
         real data_in(ii,jj,kk), delta_moisture(kk), avg_moisture(kk)
+        real diff_data(ii*jj)
+        integer counter_d
+        real ave,adev,sdev,var,skew,curt
 
 
         character*125 commentline
@@ -484,11 +487,11 @@ c  attempt to get data from the ramsfile
 
         if (istatus.ne.1) go to 150
 
-c       get the background field for analysis
-150     continue ! go to this point if no rams background
+c     get the background field for analysis
+ 150    continue                ! go to this point if no rams background
         print*, '4dda background data not avail... default to lga'
 
-c first the rh data
+c     first the rh data
 
         desired_field = 'sh '
 
@@ -496,89 +499,89 @@ c first the rh data
      1                      ii,jj,kk,lct,istatus)
 
         if(istatus.ne.1) then
-        print*, 'reading maps rh file failed'
-        return
+           print*, 'reading maps rh file failed'
+           return
         endif
 
 
         call check_nan3 (maps_rh,ii,jj,kk,istatus)
-         if (istatus.ne.1) then
-               write(6,*) 'NaN detected from RUC/MAPS...abort'
-               return
-         endif
+        if (istatus.ne.1) then
+           write(6,*) 'NaN detected from RUC/MAPS...abort'
+           return
+        endif
 
 
         i4time = save_i4time
         filename = savefilename
 
-c use maps specific humidity  (now contained in maps_rh variable) directly
+c     use maps specific humidity  (now contained in maps_rh variable) directly
 
 
         do k = 1,kk
-        do j = 1,jj
-        do i = 1,ii
+           do j = 1,jj
+              do i = 1,ii
 
-        if( maps_rh(i,j,k) .lt.0.0) then
-                write(6,*) 'negative rh read from lga', i,j,k
-                maps_rh(i,j,k) = 0.0
-        endif
+                 if( maps_rh(i,j,k) .lt.0.0) then
+                    write(6,*) 'negative rh read from lga', i,j,k
+                    maps_rh(i,j,k) = 0.0
+                 endif
 
-        data (i,j,k) = maps_rh(i,j,k)
+                 data (i,j,k) = maps_rh(i,j,k)
+
+              enddo
+           enddo
+
 
         enddo
-        enddo
+
+c     **** obtain lat lons for domain
 
 
-        enddo
-
-c **** obtain lat lons for domain
-
-
-        grid_fnam_common = 'nest7grid'  ! used in get_directory to modify
-                                      ! extension based on the grid domain
+        grid_fnam_common = 'nest7grid' ! used in get_directory to modify
+                                ! extension based on the grid domain
         ext = 'nest7grid'
 
-!       get the location of the static grid directory
+c     get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
 
         var_2d='lat'
         call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1units_2d,comment_2d,
-     1lat,rspacing_dum,istatus)
+     1       units_2d,comment_2d,
+     1       lat,rspacing_dum,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' error reading laps static-lat'
-            return
+           write(6,*)' error reading laps static-lat'
+           return
         endif
 
         var_2d='lon'
         call rd_laps_static (directory,ext,ii,jj,1,var_2d,
-     1units_2d,comment_2d,
-     1lon,rspacing_dum,istatus)
+     1       units_2d,comment_2d,
+     1       lon,rspacing_dum,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' error reading laps static-lon'
-            return
+           write(6,*)' error reading laps static-lon'
+           return
         endif
 
 
 
 
-c ****  execute raob step if switch is on
+c     ****  execute raob step if switch is on
 
 
         if(raob_switch.eq.1) then
-        write (6,*) 'begin raob insertion'
-        call raob_step (i4time,data,plevel, raob_lookback,
-     1        lat,lon, ii,jj,kk)
+           write (6,*) 'begin raob insertion'
+           call raob_step (i4time,data,plevel, raob_lookback,
+     1          lat,lon, ii,jj,kk)
         else
-        write(6,*) 'the raob switch is off... raobs skipped'
+           write(6,*) 'the raob switch is off... raobs skipped'
         endif
 
 
-151     continue ! go here if using rams data as background
+ 151    continue    ! go here if using rams data as background
 
-c    open file for laps temp data
+c     open file for laps temp data
         do k = 1,kk
-        varlt1(k) = 't3 '
+           varlt1(k) = 't3 '
         enddo
 
         call read_laps (save_i4time,save_i4time,
@@ -613,51 +616,48 @@ c perform initialquality control check for supersaturation after ingest
         print*, 'perform qc for supersaturation'
         counter = 0
         do k = 1,kk
-        write(6,*)  ' '
-        write(6,*) 'Level ', k, '   ', plevel(k)
+           write (6,*)
+           write (6,*) 'Level ', k, '   ', plevel(k)
+           write (6,*)
 
-        do j = jj,1,-1
-        do i = 1,ii
+           do j = jj,1,-1
+              do i = 1,ii
+                 tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
+     1                lt1dat(i,j,k)-273.15, 0.0 )/1000.
 
-        tempsh = ssh2( float(lvllm(k)) ,lt1dat(i,j,k)-273.15,
-     1           lt1dat(i,j,k)-273.15, 0.0 )/1000.
-
-        if ( data(i,j,k)/tempsh .ge. 1.0) then
-            cdomain(i:i) = 'x'
-            if(data(i,j,k)/tempsh .gt. 1.01) then
+                 if ( data(i,j,k)/tempsh .ge. 1.0) then
+                    cdomain(i:i) = 'x'
+                    if(data(i,j,k)/tempsh .gt. 1.01) then
                        cdomain(i:i) = 's'
-            endif
-        counter = counter + 1
-        data(i,j,k) = tempsh
-        else
-               write (cdomain(i:i),34) int(data(i,j,k)/tempsh*10.)
-34             format (i1)
+                    endif
+                    counter = counter + 1
+                    data(i,j,k) = tempsh
+                 else
+                    write (cdomain(i:i),34) int(data(i,j,k)/tempsh*10.)
+ 34                 format (i1)
+                 endif
+              enddo
+              write(6,*) cdomain(1:ii)
+           enddo
+        enddo
+
+        if(counter.gt.0) then
+
+           write(6,*) ' '
+           write(6,*) 'Questionable INPUT DATA DETECTED'
+           write(6,*)  counter,' times.'
+           write(6,*) ' '
         endif
 
 
-
-        enddo
-        write(6,*) cdomain(1:ii)
-        enddo
-        enddo
-
-         if(counter.gt.0) then
-
-               write(6,*) ' '
-               write(6,*) 'Questionable INPUT DATA DETECTED'
-               write(6,*)  counter,' times.'
-               write(6,*) ' '
-          endif
-
-
-c record total moisture
+c     record total moisture
 
         do k = 1,kk
-        do i = 1,ii
-        do j = 1,jj
-        data_in(i,j,k) = data(i,j,k)
-	enddo
-	enddo
+           do i = 1,ii
+              do j = 1,jj
+                 data_in(i,j,k) = data(i,j,k)
+              enddo
+           enddo
         enddo
 
 
@@ -666,25 +666,25 @@ c record total moisture
 c ****  get laps cloud data. used for cloud, bl, goes
 
         call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
-     1                     lct,c_istatus)
+     1       lct,c_istatus)
 
         c_istatus = 0
         if (i4time.eq.i4timep) c_istatus = 1
 
         call check_nan3 (cg,ii,jj,kk,istatus)
-         if (istatus.ne.1) then
-               write(6,*) 'NaN detected from Cloud Grid...ABORT'
-               return
-         endif
+        if (istatus.ne.1) then
+           write(6,*) 'NaN detected from Cloud Grid...ABORT'
+           return
+        endif
 
 
 
 c ***   insert bl moisture
 
         print*, 'calling lsin'
-c       insert boundary layer data
+c     insert boundary layer data
         call lsin (i4time,plevel,lt1dat,data,cg,tpw,bias_one,
-     1        kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
+     1       kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
 
         print*, 'finished with routine lsin'
 
@@ -950,29 +950,49 @@ c       generate lh3 file (RH true, RH liquid)
 
 c record total moisture
 
+      write(6,*)
+      write(6,*)
+
+       write(6,*) 'Delta moisture stats:'
+       write(6,*) 'Avg = Average difference (g/g) Q'
+       write(6,*) 'Std Dev = +/- difference (g/g) Q'
+
         do k = 1,kk
         delta_moisture(k) = 0.0
         avg_moisture(k) = 0.0
+        counter = 0
         do i = 1,ii
         do j = 1,jj
         if( data(i,j,k) .ne. mdf) then
-        delta_moisture(k) = data(i,j,k) - data_in(i,j,k)
+        counter = counter+1
+        diff_data(counter) = (data(i,j,k) - data_in(i,j,k))
+        delta_moisture(k) = diff_data(counter) + delta_moisture(k)
         avg_moisture(k) = avg_moisture(k) + data(i,j,k)
-        endif
-	enddo
-	enddo
-        if(avg_moisture(k).ne.0) then
-           delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
-        endif
+      endif
+      enddo
+      enddo
+      if(avg_moisture(k).ne.0) then
+         delta_moisture(k) = delta_moisture(k)/avg_moisture(k)
+         call moment_b (diff_data,counter,ave,adev,sdev,
+     1        var,skew,curt,istatus)
+         write(6,*) plevel(k), ave, ' +/-', sdev,' g/g Q'  
+      endif
          
-        enddo
+      enddo
+      write(6,*)
+      write(6,*)
 
-       do k = 1,kk
-        write(6,*)'delta moisture level ',plevel(k), delta_moisture(k)
-       enddo
+      write(6,*) 'Relative moisture change % each level'
+      write(6,*) 'Avg delta moisture/Avg moisture for level*100'
+
+      do k = 1,kk
+         write(6,*)plevel(k), delta_moisture(k)*100.,'%'
+      enddo
+      write(6,*)
+      write(6,*)
 
 
-        return
+      return
 
 24      write(6,*) 'error finding moisture switch file'
         write(6,*) 'check to see it is under'

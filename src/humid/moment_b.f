@@ -47,6 +47,6 @@ c found under the satellite library area.
       write (6,*) 'note that skew and curt blow up... returned as zero'
         return
       endif
-      istatus = 1
+      istatus = 1 !good
       return
       end

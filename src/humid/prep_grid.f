@@ -42,7 +42,7 @@ c
 
         integer m,n,pn
 
-        real points(3,pn),data(m,n),weight_t,dist,weight
+        real points(m*n,3),data(m,n),weight_t,dist,weight
 
 
         integer i,j,k
@@ -58,14 +58,14 @@ c
 
         do k = 1,pn
 
-                if (points(2,k).eq.i  .and. points(3,k) .eq.j) then
-                        data(i,j) = points(1,k)
+                if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
+                        data(i,j) = points(k,1)
                         go to 22
-                else
+                elseif (points(k,2) .ne. 0) then
 
-                dist = sqrt( (i-points(2,k))**2+(j-points(3,k))**2)
+                dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
                 weight = 1./dist
-                data(i,j) = data(i,j) + weight*points(1,k)
+                data(i,j) = data(i,j) + weight*points(k,1)
                 weight_t = weight_t + weight
 
 
@@ -76,7 +76,7 @@ c
         if(weight_t.ne.0.) then
         data(i,j) = data(i,j) / weight_t
         else
-        print*, 'error in divide'
+        write(6,*) 'error in divide'
         endif
 
 22      continue
@@ -96,14 +96,14 @@ c
 
         do k = 1,pn
 
-                if (points(2,k).eq.i  .and. points(3,k) .eq.j) then
-                        data(i,j) = points(1,k)
+                if (points(k,2).eq.i  .and. points(k,3) .eq.j) then
+                        data(i,j) = points(k,1)
                         go to 23
-                else
+                elseif (points(k,2).ne.0) then
 
-                dist = sqrt( (i-points(2,k))**2+(j-points(3,k))**2)
+                dist = sqrt( (i-points(k,2))**2+(j-points(k,3))**2)
                 weight = 1./dist
-                data(i,j) = data(i,j) + weight*points(1,k)
+                data(i,j) = data(i,j) + weight*points(k,1)
                 weight_t = weight_t + weight
 
 
@@ -114,7 +114,7 @@ c
         if(weight_t.ne.0.) then
         data(i,j) = data(i,j) / weight_t
         else
-        print*, 'error in divide'
+        write (6,*) 'error in divide'
         endif
 
 23      continue
