@@ -1,7 +1,7 @@
  &temp_nl
  l_use_raob_t=.true.,
  l_adjust_heights=.true.,
- weight_bkg_const_temp=0.,
+ weight_bkg_const_temp=5e28,
  /
 
 c TEMPERATURE (LT1/temp.exe) PARAMETERS
@@ -15,8 +15,7 @@ c                    the reference level for the integration is the model
 c                    background 500mb heights. If .false., the reference is 
 c                    the surface pressures ('PS' field) from the LSX file.
 c
-c weight_bkg_const_temp - Weight for Model Background. Recommended values: 
-c                         0. to 1e+30. Best might be 1e29 or 1e28. This will 
-c                         make the output values match the background if far 
-c                         from obs. A value of zero means this parameter is 
-c                         not active.
+c weight_bkg_const_temp - Weight for Model Background. 
+c                         Recommended values: 0. < value <= 1e+30.
+c                         This controls how quickly the output values match the
+c                         background if far from obs. 
