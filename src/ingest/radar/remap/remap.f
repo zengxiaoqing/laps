@@ -459,8 +459,9 @@ cdis
            return
        endif
 
-       if(i_radar .gt. n_radars_remap .or. 
-     1                 n_radars_remap .gt. MAX_RADARS_REMAP)then       
+       if(i_radar        .gt. MAX_RADARS_REMAP  
+     1                   .OR. 
+     1    n_radars_remap .gt. MAX_RADARS_REMAP)then       
            write(6,*)' ERROR: too many radars in get_remap_parms'
      1              ,i_radar,n_radars_remap,MAX_RADARS_REMAP
            istatus = 0
