@@ -180,6 +180,10 @@
      NetCDF is a general format structure. The detailed format of each data 
      file is self-describing (via 'ncdump'), and is mirrored in a separate 
      static file called the CDL. This CDL can be FSL's version or someone elses.
+
+     The NetCDF library contains C routines that are to be linked with the
+     LAPS FORTRAN routines. Please see the discussion in section 2.2.2.1 for
+     details on troubleshooting this.
    
                       --- 2.1.2  Perl             ---
 
@@ -505,16 +509,18 @@
      versions of the software.
 
      On some platforms (e.g. Linux) the linking of FORTRAN programs to NetCDF
-     and other C library routines may need adjustment. This involves the 
+     and other C library routines may need adjustment. This relates to the 
      existence and number of underscores in the C routine names when called by
      FORTRAN routines. Fixes for this may include a combination of changing 
      the number of underscores in the C routines, changing the CPPFLAGS for 
      LAPS, or changing the FFLAGS for LAPS. For example, with errors linking
      to "nf" routines, you might rebuild the NetCDF C library with a different 
      number of underscores and/or adjust the FFLAGS according to the man page 
-     in your FORTRAN compiler. Errors linking to other LAPS C routines could
-     be addressed with adjusting the CCPFLAGS (among FORTRANUNDERSCORE and 
-     FORTRANDOUBLEUNDERSCORE), or again the FFLAGS.
+     in your FORTRAN compiler. On a Linux-Intel machine the NetCDF library
+     can be rebuilt with the -DpgiFortran CFLAGS setting. Errors linking to 
+     other LAPS C routines could be addressed with adjusting the CCPFLAGS 
+     (among FORTRANUNDERSCORE and FORTRANDOUBLEUNDERSCORE), or again the 
+     FFLAGS.
 
                 --- 2.2.3   Ingest Software changes ---
 
