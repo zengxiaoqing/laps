@@ -429,7 +429,7 @@ PROGRAM wfoprep
 
         ! Check MSL pressure
         IF (.NOT.msl_inv(msl_ksfc,i)) THEN
-          PRINT *, 'Missing MSL for this time.',msl_ksfc,i
+          PRINT *, 'Missing MSL for this time.',i
           goodtime_flag(i) = .false.
           CYCLE invloop
         ENDIF
@@ -442,7 +442,7 @@ PROGRAM wfoprep
         goodpct = FLOAT(goodlevs)/FLOAT(np_ht)
         IF ((goodpct .LT. 1.0).OR.(.NOT.ht_inv(ht_kbotp,i)).OR.&
             (.NOT.ht_inv(ht_ktopp,i))) THEN
-          PRINT *, 'Height inventory failed check:', &
+          PRINT *, 'Time ',i,' Height inventory failed check:', &
               ht_inv(ht_kbotp:ht_ktopp,i),ht_kbotp,ht_ktopp
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -456,7 +456,7 @@ PROGRAM wfoprep
         goodpct = FLOAT(goodlevs)/FLOAT(np_t)
         IF ((goodpct .LT. 1.0).OR.(.NOT.t_inv(t_kbotp,i)).OR.&
             (.NOT.t_inv(t_ktopp,i))) THEN
-          PRINT *, 'Temperature inventory failed check:', &
+          PRINT *, 'Time ',i,' Temperature inventory failed check:', &
               t_inv(t_kbotp:t_ktopp,i)
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -470,7 +470,7 @@ PROGRAM wfoprep
         goodpct = FLOAT(goodlevs)/FLOAT(np_rh)
         IF ((goodpct .LT. 1.0).OR.(.NOT.rh_inv(rh_kbotp,i)).OR.&
             (.NOT.rh_inv(rh_ktopp,i))) THEN
-          PRINT *, 'RH inventory failed check:', &
+          PRINT *, 'Time ',i,' RH inventory failed check:', &
               rh_inv(rh_kbotp:rh_ktopp,i)
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -484,7 +484,7 @@ PROGRAM wfoprep
         goodpct = FLOAT(goodlevs)/FLOAT(np_u)
         IF ((goodpct .LT. 1.0).OR.(.NOT.u_inv(u_kbotp,i)).OR.&
             (.NOT.u_inv(u_ktopp,i))) THEN
-          PRINT *, 'U inventory failed check:', &
+          PRINT *, 'Time ',i,' U inventory failed check:', &
               u_inv(u_kbotp:u_ktopp,i)
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -498,7 +498,7 @@ PROGRAM wfoprep
         goodpct = FLOAT(goodlevs)/FLOAT(np_v)
         IF ((goodpct .LT. 1.0).OR.(.NOT.v_inv(v_kbotp,i)).OR.&
             (.NOT.v_inv(v_ktopp,i))) THEN
-          PRINT *, 'V inventory failed check:', &
+          PRINT *, 'Time ',i,' V inventory failed check:', &
               v_inv(v_kbotp:v_ktopp,i)
           goodtime_flag(i) = .false.
           CYCLE invloop
@@ -548,9 +548,13 @@ PROGRAM wfoprep
       IF (goodtime_flag(i)) goodlevs = goodlevs + 1
     ENDDO
     goodpct = FLOAT(goodlevs)/FLOAT(ntimes_needed)
-    IF ( (goodpct .LT. 0.80).OR.(.NOT.goodtime_flag(1)).OR.&
+    IF ( (goodpct .LT. 0.50).OR.(.NOT.goodtime_flag(1)).OR.&
          (.NOT.goodtime_flag(ntimes_needed)))THEN
       PRINT *, 'Model run failed time inventory checks.  Skipping.'
+      PRINT *, 'goodpct = ', goodpct
+      PRINT *, 'goodtime_Flag(1) = ', goodtime_Flag(1)
+      PRINT *, 'ntimes_needed = ', ntimes_needed
+      PRINT *, 'goodtime_flag(ntimes_needed) =',goodtime_flag(ntimes_needed)
       CALL close_wfofile(nfid,istatus)
       CYCLE model_loop
     ENDIF
