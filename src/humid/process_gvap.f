@@ -46,7 +46,7 @@ c     input variables
       character*256 path_to_gvap8,path_to_gvap10
 
       integer nstations,nn
-      parameter (nstations = 9000)
+      parameter (nstations = 11000)
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)
