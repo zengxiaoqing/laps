@@ -1,0 +1,45 @@
+                                              J. Smart
+                                              2-25-98
+Introduction:
+------------
+
+The lvd code is written to read a  block of satellite data for
+the laps domain and with dynamic memory. The lvd_sat_ingest.exe
+process requires mapping look-up-tables that are produced by
+genlvdlut.exe. The genlvdlut code is in subdirectory table.
+
+The LAPS satellite ingest creates an intermediate file with
+extension "lvd". The process, lvd_sat_ingest (lsi for short)
+uses the satellite namelist data/static/satellite.nl. The
+namelist works in conjunction with a data include file
+src/include/sat_data_static.inc which contains static information
+relevant to lsi.  LAPS library routine satellite_config (in file
+lapsgrid.f) loads the common block defined in src/include/satellite
+_common.inc.  The appropriate information in the common block is
+referenced by the namelist variables isat, itypes, ichannels.
+Therefore, the user only needs to modify the isat, itypes, ichannels
+information for the appropriate satellite, format type, and channnels
+and everything else is taken care of automatically.
+
+                      RAW Satellite Data
+                      ------------------
+
+lvd accepts goes08 or goes09 satellite data in several formats: 
+
+    1. netcdf: (remapped fsl-conus [lambert] and raw gvar).
+    2. wfo: also netcdf and lambert projection. Data from SBN.
+    3. gwc: AirForce Global Weather Center. 
+
+                     Selection of Channels
+                     ---------------------
+
+The lvd can process a variable number of channels, from just 1 to all 5.
+There are 4 IR channels and 1 visible channel. The user can modify the
+isat, itype, ichannel variables in the satellite namelist to direct lvd_
+sat_ingest to the desired data.
+
+                         Look-Up-Table
+                         -------------
+
+The look-up-tables are produced by process genlvdlut.exe. This binary
+is produced from the code in subdirectory table.

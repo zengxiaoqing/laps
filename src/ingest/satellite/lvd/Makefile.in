@@ -1,0 +1,179 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+
+FC       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS=@CPPFLAGS@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a  \
+           $(LAPSROOT)/src/lib/nav/libnav.a  \
+           $(LAPSROOT)/src/lib/util/libutil.a \
+           $(LAPSROOT)/src/lib/satellite/libsatellite.a 
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a  \
+             $(LAPSROOT)/src/lib/nav/libdebugnav.a  \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a \
+             $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a 
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .F .i .exe
+
+EXE = lvd_sat_ingest.exe
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC = lvd_driver_sub.f \
+  readcdf.f \
+  readsatdat.f \
+  read_ascii_satdat.f \
+  read_gwc_satdat.f \
+  read_gwc_header_sub.f \
+  readlut.f \
+  read_gvarimg_cnt2btemp_lut.f \
+  rdcdfblock.f \
+  get_gwc_oa.f \
+  getcdf_satdat.f \
+  getascii_satdat.f \
+  getsat_attributes.f \
+  getsat_boundary.f \
+  getafgwc_satdat.f \
+  bcd_to_int.f \
+  compute_gvarimg_res.f \
+  c_time_fnc.f \
+  Process_SDHS_GVAR_sub.f \
+  satir_process.f \
+  satvis_process.f \
+  satir2laps.f \
+  satvis2laps.f \
+  set_missing_sat.f \
+  setmissingflag.f \
+  satdatfill.f \
+  stats.f \
+  satfill1.f \
+  imagecomp.f \
+  check_data.f \
+  genbtemplut.f \
+  btempconvert.f \
+  btempconv_asc.f \
+  loadarray_i2r.f \
+  ldarray_i2r_gwc.f \
+  wait_for_satdat.f \
+  wait_for_wfo_satdat.f \
+  setvisflag.f \
+  decellularize_gwc_image.f
+
+MAIN=lvd_sat_ingest.f
+
+LIB=liblvd.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+
+all: exe
+
+exe: $(ARCHIVE) $(EXE)
+
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+#$(EXE.F): $(MAIN) $(ARCHIVE)
+#	rm -f $*.f
+#	$(CPP) $(CPPFLAGS) $*.F 
+#	mv $*.i $*.f
+#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+#	rm -f *.o $*.f
+
+debug: clean 
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
+
+
+distclean: clean
+	rm -f Makefile
+
+
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+
+%.o : %.F
+
+
+
+
+
+
+
+
+
+getascii_satdat.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+getcdf_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+getwfo_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+lvd_driver.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+readispan_vis.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+readlut.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+readsatdat.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+satdatfill.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+satfill1.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+satir_process.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+satvis2laps.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+satvis_process.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+set_missing_sat.f:  $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+setmissingflag.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+wait_for_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+wait_for_wfo_satdat.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
