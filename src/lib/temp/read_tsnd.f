@@ -32,10 +32,10 @@ cdis
 
         subroutine read_tsnd(i4time_sys,heights_3d,temp_bkg_3d,   ! Input
      1                   sh_3d,pres_3d,                           ! Input
-     1                   lat_pr,lon_pr,                           ! Output
+     1                   lat_tsnd,lon_tsnd,                       ! Output
      1                   lat,lon,                                 ! Input
-     1                   max_snd_grid,max_snd_obs,                ! Input
-     1                   ob_pr_t,                                 ! Output
+     1                   max_snd,                                 ! Input
+     1                   ob_pr_t,inst_err_tsnd,                   ! Output
      1                   c5_name,c8_obstype,                      ! Output
      1                   l_use_raob,l_3d,                         ! Input
      1                   i4_window_raob_file,                     ! Input
@@ -65,10 +65,6 @@ c                               not exactly match the LAPS analysis time.
 !       1998 Feb Steve Albers   Added feature to calculate the height from
 !                               the pressure if the height is missing.
 
-!       'max_snd_obs' is the max number of rass+raob soundings and represents
-!       arrays used locally. 'max_snd_grid' is the max number of overall
-!       soundings and represents output arrays.
- 
         integer*4 max_snd_levels
         parameter (max_snd_levels = 300)
 
@@ -77,19 +73,20 @@ c                               not exactly match the LAPS analysis time.
 
 
 !       Output arrays
-        real lat_pr(max_snd_grid)
-        real lon_pr(max_snd_grid)
-        real bias_htlow(max_snd_grid)
-        real ob_pr_t (max_snd_grid,kmax) ! Vertically interpolated RASS temp
-        character*5 c5_name(max_snd_grid) 
-        character*8 c8_obstype(max_snd_grid) 
+        real lat_tsnd(max_snd)
+        real lon_tsnd(max_snd)
+        real bias_htlow(max_snd)
+        real ob_pr_t (max_snd,kmax) ! Vertically interpolated TSND temp
+        real inst_err_tsnd(max_snd)
+        character*5 c5_name(max_snd) 
+        character*8 c8_obstype(max_snd) 
 
 !       Local arrays
-        integer num_pr(max_snd_obs)
-        integer nlevels(max_snd_obs),nlevels_good(max_snd_obs)
-        real ob_pr_ht_obs(max_snd_obs,max_snd_levels)
-        real ob_pr_t_obs(max_snd_obs,max_snd_levels)
-        real elev_pr(max_snd_obs)
+        integer num_pr(max_snd)
+        integer nlevels(max_snd),nlevels_good(max_snd)
+        real ob_pr_ht_obs(max_snd,max_snd_levels)
+        real ob_pr_t_obs(max_snd,max_snd_levels)
+        real elev_tsnd(max_snd)
 
         character*9 a9time
 
@@ -108,31 +105,25 @@ c                               not exactly match the LAPS analysis time.
         character ext_uc*31
         character*255 c_filespec
 
-        logical l_use_raob,l_3d
+        logical l_use_raob,l_3d,l_string_contains
 
 !       Initialize
 
         write(6,*)' Subroutine read_tsnd -- reads LRS and SND'
 
-        if(max_snd_obs .gt. max_snd_grid)then
-            write(6,*)' Error in read_tsnd: max_snd_obs > max_snd_grid'       
-     1               ,max_snd_obs,max_snd_grid
-            istatus = 0
-            return
-        endif
-
         n_rass = 0
         n_snde = 0
         n_tsnd = 0
 
-        do i_pr = 1,max_snd_obs
-            nlevels(i_pr) = 0
-            nlevels_good(i_pr) = 0
+        do i_tsnd = 1,max_snd
+            nlevels(i_tsnd) = 0
+            nlevels_good(i_tsnd) = 0
         enddo
 
-        do i_pr = 1,max_snd_obs
+        do i_tsnd = 1,max_snd ! Initialize some output arrays
+            inst_err_tsnd(i_tsnd) = r_missing_data
             do level = 1,kmax
-                ob_pr_t(i_pr,level)  = r_missing_data
+                ob_pr_t(i_tsnd,level) = r_missing_data
             enddo
         enddo
 
@@ -168,50 +159,60 @@ c                               not exactly match the LAPS analysis time.
         call open_lapsprd_file_read(12,i4time_file,ext,istatus)
         if(istatus .ne. 1)go to 590
 
-400     do i_pr = 1,max_snd_obs
+400     do i_tsnd = 1,max_snd
 
 340         iwrite=1
 
             read(12,401,err=406,end=500)
-     1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                     ,c5_name(i_pr),a9time,c8_obstype(i_pr)
+     1      ista,nlevels_in,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
+     1                     ,elev_tsnd(i_tsnd)       
+     1                     ,c5_name(i_tsnd),a9time,c8_obstype(i_tsnd)       
 401         format(i12,i12,f11.0,f15.0,f15.0,5x,a5,3x,a9,1x,a8)
 
             if(nlevels_in .gt. max_snd_levels)then
                 write(6,*)' ERROR: too many levels in file ',ext_uc(1:3)       
-     1                   ,i_pr,nlevels_in,max_snd_levels
+     1                   ,i_tsnd,nlevels_in,max_snd_levels
                 istatus = 0
                 return
             endif
 
 !           Determine if rass is in the LAPS domain
-406         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
+406         call latlon_to_rlapsgrid(lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)       
+     1                              ,lat,lon    
      1                              ,imax,jmax,ri,rj,istatus)
 
             i_ob = nint(ri)
             j_ob = nint(rj)
 
-            write(6,407,err=408)ext_uc(1:3),i_pr,ista,nlevels_in
-     1                 ,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1                 ,i_ob,j_ob,c5_name(i_pr),a9time,c8_obstype(i_pr)       
+            write(6,407,err=408)ext_uc(1:3),i_tsnd,ista,nlevels_in       
+     1                 ,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
+     1                 ,elev_tsnd(i_tsnd),i_ob,j_ob,c5_name(i_tsnd)
+     1                 ,a9time,c8_obstype(i_tsnd)       
 407         format(/' ',a3,' #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9
      1                       ,1x,a8)
+
+            if(l_string_contains(c8_obstype(i_tsnd),'SAT',istatus))then       
+                inst_err_tsnd(i_tsnd) = 5.0
+            else
+                inst_err_tsnd(i_tsnd) = 1.0
+            endif                
 
 408         do level = 1,nlevels_in
 
                 read(12,*,err=340)ht_in,t_in,i_qc
 
                 if(       i_qc .eq. 1
-     1             .and.  ht_in .gt. elev_pr(i_pr) + surface_rass_buffer
+     1             .and.  ht_in .gt. 
+     1                    elev_tsnd(i_tsnd) + surface_rass_buffer
      1             .and.  level .le. max_snd_levels )then
-                    nlevels_good(i_pr) = nlevels_good(i_pr) + 1
+                    nlevels_good(i_tsnd) = nlevels_good(i_tsnd) + 1       
 
-                    ob_pr_ht_obs(i_pr,nlevels_good(i_pr)) = ht_in
-                    ob_pr_t_obs(i_pr,nlevels_good(i_pr)) =  t_in
+                    ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd)) = ht_in       
+                    ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd)) =  t_in
 
-c                   write(6,311,err=312)ista,i_pr
-c       1                ,ob_pr_ht_obs(i_pr,nlevels_good(i_pr))
-c       1                ,ob_pr_t_obs(i_pr,nlevels_good(i_pr))
+c                   write(6,311,err=312)ista,i_tsnd
+c       1                ,ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd))
+c       1                ,ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd))
 c311                format(1x,i6,i4,5f8.1)
 
                 endif
@@ -224,20 +225,20 @@ c311                format(1x,i6,i4,5f8.1)
      1         nlevels_in .ge. 2  ! Upper Lvl profile + sfc temps present
      1                                                  )then
                 write(6,*)'  In Bounds - Vertically Interpolating the '
-     1                   ,c8_obstype(i_pr)
+     1                   ,c8_obstype(i_tsnd)
             else
                 write(6,*)'  Out of Bounds or < 2 levels',nlevels_in
-                nlevels_good(i_pr)=0 ! This effectively throws out the Rass
+                nlevels_good(i_tsnd)=0 ! This effectively throws out the Rass
             endif
 
             call cv_asc_i4time(a9time,i4time_ob)
             if(abs(i4time_ob-i4time_sys) .gt. i4_window_ob)then
                 write(6,*)' Out of time bounds:',i4time_ob-i4time_sys
      1                                          ,i4_window_ob
-                nlevels_good(i_pr)=0 ! This effectively throws out the Rass    
+                nlevels_good(i_tsnd)=0 ! This effectively throws out the Rass    
             endif
 
-            if(nlevels_good(i_pr) .gt. 0)then
+            if(nlevels_good(i_tsnd) .gt. 0)then
 
 !          ***  Interpolate the rass observations to the LAPS grid levels  ****
 
@@ -247,37 +248,37 @@ c311                format(1x,i6,i4,5f8.1)
 
                     call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                          t_diff,temp_bkg_3d,
-     1                          ob_pr_t(i_pr,level),
-     1                          i_pr,iwrite,
+     1                          ob_pr_t(i_tsnd,level),
+     1                          i_tsnd,iwrite,
      1                          level,l_3d,
      1                          nlevels_good,
-     1                          lat_pr,lon_pr,i_ob,j_ob,
+     1                          lat_tsnd,lon_tsnd,i_ob,j_ob,
      1                          imax,jmax,kmax,
-     1                          max_snd_obs,max_snd_levels,
+     1                          max_snd,max_snd_levels,
      1                          r_missing_data,      
      1                          heights_3d)
 
-c                   write(6,411,err=412)ista,i_pr,level
-c       1                ,ob_pr_t(i_pr,level)
+c                   write(6,411,err=412)ista,i_tsnd,level
+c       1                ,ob_pr_t(i_tsnd,level)
 c       1                ,temp_bkg_3d(i_ob,j_ob,level)
 c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 411                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
-     1                        ,c8_obstype(i_pr)
+412                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
+     1                        ,c8_obstype(i_tsnd)
                 enddo ! level
 
             endif ! # levels > 0 (good rass)
 
-        enddo  ! i_pr
+        enddo  ! i_tsnd
         write(6,*)' WARNING: Used all space in temperature arrays'
-        write(6,*)' while reading RASS.  Check max_snd_obs: '
-     1            ,max_snd_obs
+        write(6,*)' while reading RASS.  Check max_snd: '
+     1            ,max_snd
 
 500     continue ! Exit out of loop when file is done
 
-        n_rass = i_pr - 1
+        n_rass = i_tsnd - 1
         close(12)
 
 
@@ -324,9 +325,9 @@ c
         call open_lapsprd_file_read(12,i4time_snd,ext,istatus)
         if(istatus .ne. 1)go to 890
 
-        do i_pr = n_rass+1,max_snd_obs
+        do i_tsnd = n_rass+1,max_snd
 
-            if(i_pr .le. 200 .or. i_pr .eq. (i_pr/10)*10)then
+            if(i_tsnd .le. 200 .or. i_tsnd .eq. (i_tsnd/10)*10)then
                 iwrite = 1
             else
                 iwrite = 0
@@ -335,29 +336,37 @@ c
 640         continue
 
             read(12,801,err=706,end=800)
-     1      ista,nlevels_in,lat_pr(i_pr),lon_pr(i_pr),elev_pr(i_pr)
-     1          ,c5_name(i_pr),a9time,c8_obstype(i_pr)
+     1      ista,nlevels_in,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
+     1          ,elev_tsnd(i_tsnd) 
+     1          ,c5_name(i_tsnd),a9time,c8_obstype(i_tsnd)
 801         format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
 !           Determine if SND is in the LAPS domain
-706         call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon
+706         call latlon_to_rlapsgrid(lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)       
+     1                              ,lat,lon
      1                              ,imax,jmax,ri,rj,istatus)
 
             i_ob = nint(ri)
             j_ob = nint(rj)
 
-            if(iwrite .eq. 1)write(6,707,err=708)i_pr,ista,nlevels_in
-     1                 ,lat_pr(i_pr),lon_pr(i_pr)
-     1                 ,elev_pr(i_pr),i_ob,j_ob,c5_name(i_pr),a9time
-     1                 ,c8_obstype(i_pr)
+            if(iwrite .eq. 1)write(6,707,err=708)i_tsnd,ista,nlevels_in       
+     1                 ,lat_tsnd(i_tsnd),lon_tsnd(i_tsnd)
+     1                 ,elev_tsnd(i_tsnd),i_ob,j_ob,c5_name(i_tsnd)
+     1                 ,a9time,c8_obstype(i_tsnd)
 707         format(/' SND #',i5,i6,i5,2f8.2,e10.3,2i4,1x,a5,3x,a9,1x,a8)       
 
             if(nlevels_in .gt. max_snd_levels)then
                 write(6,*)' ERROR: too many levels in SND file '       
-     1                   ,i_pr,nlevels_in,max_snd_levels
+     1                   ,i_tsnd,nlevels_in,max_snd_levels
                 istatus = 0
                 return
             endif
+
+            if(l_string_contains(c8_obstype(i_tsnd),'SAT',istatus))then       
+                inst_err_tsnd(i_tsnd) = 5.0
+            else
+                inst_err_tsnd(i_tsnd) = 1.0
+            endif                
 
 708         do level = 1,nlevels_in
 
@@ -387,14 +396,15 @@ c
 710             if( abs(t_in)        .lt. 99.
      1             .and.  abs(ht_in) .lt. 1e6
      1             .and.  level      .le. max_snd_levels )then
-                    nlevels_good(i_pr) = nlevels_good(i_pr) + 1
+                    nlevels_good(i_tsnd) = nlevels_good(i_tsnd) + 1       
 
-                    ob_pr_ht_obs(i_pr,nlevels_good(i_pr)) = ht_in
-                    ob_pr_t_obs(i_pr,nlevels_good(i_pr)) =  t_in + 273.15
+                    ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd)) = ht_in       
+                    ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd)) 
+     1                  =  t_in + 273.15
 
-c                   if(iwrite .eq. 1)write(6,611,err=312)ista,i_pr
-c       1                ,ob_pr_ht_obs(i_pr,nlevels_good(i_pr))
-c       1                ,ob_pr_t_obs(i_pr,nlevels_good(i_pr))
+c                   if(iwrite .eq. 1)write(6,611,err=312)ista,i_tsnd       
+c       1                ,ob_pr_ht_obs(i_tsnd,nlevels_good(i_tsnd))
+c       1                ,ob_pr_t_obs(i_tsnd,nlevels_good(i_tsnd))
 c611                format(1x,i6,i4,5f8.1)
 
                 endif
@@ -407,7 +417,7 @@ c611                format(1x,i6,i4,5f8.1)
                 if(iwrite .eq. 1)write(6,*)' Out of time bounds:'
      1                                          ,i4time_ob-i4time_sys       
      1                                          ,i4_window_ob
-                nlevels_good(i_pr)=0 ! This effectively throws out the sounding
+                nlevels_good(i_tsnd)=0 ! This effectively throws out the sounding
             endif
 
             if(i_ob .ge. 1 .and. i_ob .le. imax .and.
@@ -420,10 +430,10 @@ c611                format(1x,i6,i4,5f8.1)
             else
                 if(iwrite .eq. 1)write(6,*)
      1              '  Out of Bounds or < 2 levels ',nlevels_in
-                nlevels_good(i_pr)=0 ! This effectively throws out the Sonde
+                nlevels_good(i_tsnd)=0 ! This effectively throws out the Sonde
             endif
 
-            if(nlevels_good(i_pr) .gt. 0)then
+            if(nlevels_good(i_tsnd) .gt. 0)then
 
 !          ***  Interpolate the sonde observations to the LAPS grid levels  ****
 
@@ -433,36 +443,36 @@ c611                format(1x,i6,i4,5f8.1)
 
                     call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                         t_diff,temp_bkg_3d,
-     1                         ob_pr_t(i_pr,level),
-     1                         i_pr,iwrite,
+     1                         ob_pr_t(i_tsnd,level),
+     1                         i_tsnd,iwrite,
      1                         level,l_3d,
      1                         nlevels_good,
-     1                         lat_pr,lon_pr,i_ob,j_ob,
+     1                         lat_tsnd,lon_tsnd,i_ob,j_ob,
      1                         imax,jmax,kmax,
-     1                         max_snd_obs,max_snd_levels,
+     1                         max_snd,max_snd_levels,
      1                         r_missing_data,
      1                         heights_3d)
 
-c                   write(6,711,err=712)ista,i_pr,level
-c       1                ,ob_pr_t(i_pr,level)
+c                   write(6,711,err=712)ista,i_tsnd,level
+c       1                ,ob_pr_t(i_tsnd,level)
 c       1                ,temp_bkg_3d(i_ob,j_ob,level)
 c       1                ,heights_3d(i_ob,j_ob,level)
 c       1                ,t_diff
 711                 format(1x,i6,2i4,f7.1,1x,f7.1,f8.0,f6.1)
 
-712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_pr,level)       
-     1                        ,c8_obstype(i_pr)
+712                 write(32,*)ri-1.,rj-1.,level-1,ob_pr_t(i_tsnd,level)       
+     1                        ,c8_obstype(i_tsnd)
                 enddo ! level
 
             endif ! # levels > 0
 
-        enddo  ! i_pr
+        enddo  ! i_tsnd
         write(6,*)' ERROR: Used all space in temperature arrays'
-        write(6,*)' while reading SND.  Check max_snd_obs: '
-     1            ,max_snd_obs
+        write(6,*)' while reading SND.  Check max_snd: '
+     1            ,max_snd
 
 800     continue ! Exit out of loop when file is done
-        n_snde = i_pr - 1 - n_rass 
+        n_snde = i_tsnd - 1 - n_rass 
         close(12)
         goto 900
 

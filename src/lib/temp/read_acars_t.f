@@ -152,9 +152,9 @@ cdis
                     if(ext_in .eq. 'pin')then
 !                       Assume ACARS elev is pressure altitude MSL
                         elev_std = elev_in
-                        pres_mb = ztopsa(elev_std)
 
-                        if(abs(arg) .lt. 90000.)then ! Within flag value
+                        if(abs(elev_std) .lt. 90000.)then ! Within flag value
+                            pres_mb = ztopsa(elev_std)
                             pres_pa = pres_mb * 100.
                             call pressure_to_height(pres_pa,heights_3d       
      1                                             ,ni,nj,nk
@@ -244,6 +244,7 @@ cdis
                             temp_obs(n_obs,i_ob_grid) = t_interp
                             temp_obs(n_obs,i_wt) = 1.0
                             temp_obs(n_obs,i_bias) = bias
+                            temp_obs(n_obs,i_inst_err) = 1.0
  
 
                         else

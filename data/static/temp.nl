@@ -3,6 +3,7 @@
  l_adjust_heights=.true.,
  weight_bkg_const_temp=5e28,
  pres_mix_thresh=20000.,
+ rms_thresh_temp=0.5,
  /
 
 c TEMPERATURE (LT1/temp.exe) PARAMETERS
@@ -20,6 +21,12 @@ c weight_bkg_const_temp - Weight for Model Background.
 c                         Recommended values: 0. < value <= 1e+30.
 c                         This controls how quickly the output values match the
 c                         background if far from obs. 
+c
+c rms_thresh_temp - Threshold for rms fit of analysis to obs (deg K). This
+c                   controls when to stop the successive correction iterations
+c                   at progressively smaller radii of influence. Lower values
+c                   tend to put more detail in the analysis in the attempt to
+c                   fit the obs.
 c
 c pres_mix_thresh - Depth of allowed mixed layer when the sfc temperature
 c                   analysis is inserted and adiabatically propagated upward. 
