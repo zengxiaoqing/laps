@@ -119,7 +119,8 @@ c
       character*4 lvl_coord_ctp(4)
       integer lvl_ctp(4)
       integer ldctp
-      integer lctp
+      integer lctp,lend
+      character*50 cdomain_fname
       character*150 dir_ctp
       character*31 ext_ctp
 
@@ -219,6 +220,8 @@ c used for "bad" meteosat (11u) data.
       data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
       include 'satellite_common_lvd.inc'
+      include 'grid_fname.cmn'
+
 c =========================================================================
 c ----------------------------- START -------------------------------------
 c
@@ -1061,15 +1064,33 @@ c been mapped to the laps domain. AFWA's GMS so far.
             ncs=6
          endif
          print*,'check for new cloud top pressure (C02) files'
-         iwindow_ctp=40
          print*,'ctp time window (sec) = ',iwindow_ctp
 
          if(l_archive_case)then
-            path_to_ctp='/data/ihop/casedate/data/sat/nesdis/'
+            call s_len(generic_data_root,lend)
+            i=lend-1
+            do while(i.gt.0)
+               if(generic_data_root(i:i).eq.'/')then
+                  l=i+1
+                  i=0
+               else
+                  i=i-1
+               endif
+            enddo
+            cdomain_fname =generic_data_root(l:lend-1)
+            if(cdomain_fname.eq.'laps12_goes'.or.
+     +         cdomain_fname.eq.'laps12_baseline')then
+            path_to_ctp='/data/ihop/lapb/casedate/data/sat/nesdis/'
      +//csat(1:ncs)//'/cloudtop/'
+            else
+            path_to_ctp='/no/data/ihop/lapb/casedate/data/sat/nesdis/'
+     +//csat(1:ncs)//'/cloudtop/'
+            endif
+            iwindow_ctp=1000000
          else
             path_to_ctp='/public/data/sat/nesdis/'//csat(1:ncs)//
      +'/cloudtop/'
+            iwindow_ctp=3600
          endif
 
          call s_len(path_to_ctp,lctp)
