@@ -54,17 +54,6 @@ c.....      Size of "box" around LAPS grid to collect data for boundary
 c.....      analysis.  Around 1 deg lat/lon is good.
 c
       parameter( box_size = 1.1 )
-c
-c
-c.....      Time window.  Set these variables for time filtering the data.
-c.....      Units are seconds.  For example, if you want data with a time
-c.....      stamp from 15 min before to 5 min after the analysis time to
-c.....      be included in the LSO file, use 900 and 300 for time_before
-c.....      and time_after, respectively.
-c
-      integer time_before, time_after
-      parameter( time_before = 900 )     ! default 15 min.
-      parameter( time_after  = 300 )     ! default  5 min.
 
 
 

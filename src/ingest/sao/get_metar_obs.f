@@ -34,6 +34,7 @@ c
 	subroutine get_metar_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_metar,data_file,
      &                      metar_format,ick_metar_time,
+     &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
@@ -67,7 +68,8 @@ c
 	include 'netcdf.inc'
 	include 'surface_obs.inc'
 c
-        integer maxobs,maxsta
+        integer maxobs ! raw data file
+        integer maxsta ! output LSO file
 	real*8  timeobs(maxobs)
 	real*4  lats(maxobs), lons(maxobs), elev(maxobs)
 	real*4  t(maxobs), td(maxobs), tt(maxobs), ttd(maxobs)
@@ -186,7 +188,7 @@ c
 
 !           Read Metar Obs
             maxSkyCover=10
-            recNum=150
+            recNum = maxobs
 
 	    data_file = 
      1            path_to_metar(1:len_path)//'metar'//a8time//'.dat'
@@ -209,8 +211,12 @@ c
             ix = n_metar_cwb + 1
 
 !           Read Synop Obs
+            i4time_file = ( (i4time_sys+3600) /10800) * 10800
+            call make_fnam_lp(i4time_file,a9time,istatus)
+            a8time = a9_to_a8(a9time(1:9))
+
             maxSkyCover=2
-            recNum=610
+            recNum = maxobs
 
 	    data_file = 
      1          path_to_metar(1:len_path)//'synop'//a8time//'.dat'
@@ -295,8 +301,8 @@ c
 c
 c.....  Set up the time window.
 c
-	i4time_before = i4time_sys - time_before
-	i4time_after  = i4time_sys + time_after
+	i4time_before = i4time_sys - itime_before
+	i4time_after  = i4time_sys + itime_after
 c
 c..................................
 c.....	Now loop over all the obs.

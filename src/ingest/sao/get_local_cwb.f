@@ -9,6 +9,7 @@ c
 c
         subroutine get_local_cwb(maxobs,maxsta,i4time,
      &                 path_to_local_data,
+     &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_local_g,n_local_b,stations,

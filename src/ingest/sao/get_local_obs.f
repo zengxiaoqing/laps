@@ -32,6 +32,7 @@ cdis
 c
 c
 	subroutine get_local_obs(maxobs,maxsta,i4time,data_file,
+     &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
@@ -201,8 +202,8 @@ c
 c
 c.....  Set up the time window.
 c
-	before = i4time - time_before
-	after  = i4time + time_after
+	before = i4time - itime_before
+	after  = i4time + itime_after
 c
 c..................................
 c.....	Now loop over all the obs.

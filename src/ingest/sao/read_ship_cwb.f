@@ -1,4 +1,4 @@
-      subroutine read_synop_cwb (
+      subroutine read_ship_cwb (
      ~     filename, maxSkyCover, recNum, altimeter,
      ~     autoStationType, dewpoint, dpFromTenths, elevation,
      ~     latitude, longitude, maxTemp24Hour, minTemp24Hour,
@@ -54,8 +54,8 @@
       istatus= 1
 
       do j= 1,recNum
-         read ( 1, 10, end=99, err=999 ) reportFlag(j), wmoId(j),
-     ~               elevation(j), latitude(j), longitude(j),
+         read ( 1, 10, end=99, err=999 ) reportFlag(j), stationName(j),
+     ~               latitude(j), longitude(j),
      ~               yy(j), mo(j), dd(j), hh(j), mn(j)
          read (1,20) windDir(j), windSpeed(j), windQua(j),
      ~               visibility(j), presWeather(j),
@@ -70,15 +70,15 @@
      ~               precip24Hour(j)
          read (1,*)
 
-         if ( reportFlag(j) .ne. '*31' )  then
-            write (6,*) 'read synop data heading error'
+         if ( reportFlag(j) .ne. '*34' )  then
+            write (6,*) 'read ship data heading error'
             go to 1000
          endif
 
          n= n+1
       enddo
 
-10    format ( a3, i5, f4.0, 2f5.2, 2x, 5a2 )
+10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2 )
 20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
 30    format ( f3.1, i1, x, i2, f3.1, i1, 3(x, f4.1), 8x, f3.0 )
@@ -287,10 +287,12 @@ c               -------      dealing with lacking of data      -------
       do j= 1,n
          autoStationType(j)= "UNK"
          presWeather(j)= "UNK"
-         reportType(j)= "SYNOP"
-         stationName(j)= "UNK"
+         reportType(j)= "SHIP"
+
+         wmoId(j)= int(badflag)
 
          altimeter(j)= badflag
+         elevation(j)= 0.
          precip1Hour(j)= badflag
          precip6Hour(j)= badflag
          snowCover(j)= badflag
@@ -299,7 +301,7 @@ c               -------      dealing with lacking of data      -------
       go to 1000
 
 999   do j= 1,n
-         write (6,*) reportFlag(j), wmoId(j), elevation(j),
+         write (6,*) reportFlag(j), stationName(j),
      ~               latitude(j), longitude(j), ' ',
      ~               yy(j), mo(j), dd(j), hh(j), mn(j), ' ', timeobs(j)
          write (6,*) windDir(j), windSpeed(j), windQua(j),

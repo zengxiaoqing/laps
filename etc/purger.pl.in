@@ -28,10 +28,19 @@ getopts('rt:m:');
 
 my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
 
-# This script purgers old data files in directories under the lapsprd 
-# directory.  It expects the at least the first two characters of the file
-# name are digits.  hist_time is the age in days of the oldest files to keep.
-# Exceptions can be listed below.
+# This script purges old data files in directories under the 'lapsprd' 
+# directory.  More generally, it purges one or more levels below the
+# input directory, not in the directory itself. It purges only those files
+# having primarily digits in the name. $hist_time is the age in days of the 
+# oldest files to keep.
+#
+# Command line arguments::
+#
+# -m  default maximum number of files to keep in each directory
+#
+# -t  default maximum time (days) to keep files in each directory
+#
+# Exceptions can be listed below...
 #
 my(%clean_dirs, $hist_time, $min_files);
 

@@ -46,7 +46,7 @@
  MAX_RADARS_CMN=3,        
  ref_base_cmn=-10.,       
  ref_base_useable_cmn=0., 
- maxstns_cmn=600,         
+ maxstns_cmn=2000,         
  N_PIREP_CMN=3000,         
  vert_rad_meso_cmn=1,     
  vert_rad_sao_cmn=1,      
@@ -60,7 +60,7 @@ c OVERALL LAPS PARAMETERS
 c
 c maxstns_cmn - max number of sfc stations you are likely to encounter in the
 c             - LSO file and various analyses, in and near the domain.
-c             - used in sfc_qc.exe, laps_sfc.x, and others?
+c             - used in obs_driver.x, sfc_qc.exe, laps_sfc.x, and others?
 c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for

@@ -78,8 +78,14 @@ c
         character*200 path_to_gps_data
         character*8   metar_format
 
-        include 'lapsparms.cmn'
+        include 'lapsparms.cmn' ! Do we still need this?
         call get_laps_config('nest7grid',istatus)
+	if (istatus .ne. 1) then
+           write (6,*) 'Error getting horizontal domain dimensions'
+	   stop
+	endif
+
+        call get_grid_dim_xy(nx,ny,istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error getting horizontal domain dimensions'
 	   stop
@@ -93,12 +99,16 @@ c
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
-     1                           ,maxsta
+     1                           ,itime_before,itime_after
+     1                           ,maxobs
      1                           ,istatus)
         if(istatus .ne. 1)stop
 
-        call obs_driver_sub(NX_L_CMN,NY_L_CMN
-     1                           ,maxsta,laps_cycle_time_cmn
+        call get_max_stations(maxsta, istatus)
+        if(istatus .ne. 1)stop
+
+        call obs_driver_sub(      nx,ny
+     1                           ,maxobs,laps_cycle_time_cmn
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
@@ -106,6 +116,7 @@ c
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
+     1                           ,itime_before,itime_after
      1                           ,maxsta
      1                           ,istatus)
 
@@ -120,6 +131,7 @@ c
      1                           ,metar_format
      1                           ,minutes_to_wait_for_metars
      1                           ,ick_metar_time
+     1                           ,itime_before,itime_after
      1                           ,maxsta
      1                           ,istatus)
 c        
@@ -149,7 +161,7 @@ c
         character  store_cldamt(maxsta,5)*4
 	character  atime*24, outfile*200
 	character  dir_s*256, ext_s*31, units*10, comment*125,var_s*3
-	character  filename9*9, filename13*13
+	character  filename9*9, filename13*13, a9time_metar_file*9
         character  fname9_to_wfo_fname13*13
 	character  data_file_m*150, data_file_l*150, data_file_b*150
 	character  dir_b*256, black_path*256, stations_b(maxsta)*20
@@ -176,8 +188,8 @@ c
 c.....  Get the time from the scheduler or from the user if interactive.
 c
 	if(narg .eq. 0) then
-           call get_systime(i4time,filename9,istatus)
-	   call cv_i4tim_asc_lp(i4time,atime,istatus)
+           call get_systime(i4time_sys,filename9,istatus)
+	   call cv_i4tim_asc_lp(i4time_sys,atime,istatus)
 c
 	else
 c
@@ -185,9 +197,9 @@ c
  973	   format(' Enter input filename (yydddhhmm): ',$)
 	   read(5,972) filename9
  972	   format(a9)
-	   call i4time_fname_lp(filename9(1:9),i4time,istatus)
-	   i4time = i4time / laps_cycle_time * laps_cycle_time
-	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
+	   call i4time_fname_lp(filename9(1:9),i4time_sys,istatus)
+	   i4time_sys = i4time_sys / laps_cycle_time * laps_cycle_time        
+	   call cv_i4tim_asc_lp(i4time_sys, atime, istatus) !find the atime
 	endif
 c
 	call get_directory('lso',outfile,len)
@@ -284,12 +296,21 @@ c
         call s_len(metar_format,len_metar_format)
 
         if(metar_format(1:len_metar_format) .eq. 'FSL')then
+
+!         Select the hourly METAR file best suited to our obs time window
+!         Note that an hourly raw file contains obs from 15 before to 45 after
+          i4time_midwindow = i4time_sys + (itime_after - itime_before)/2       
+          i4time_metar_file = ((i4time_midwindow+900) / 3600) * 3600
+
+          call make_fnam_lp(i4time_metar_file,a9time_metar_file,istatus)
+          if(istatus .ne. 1)return
+
           do while(.not. exists .and. 
-     &              cnt .lt. minutes_to_wait_for_metars)
+     &              cnt .le. minutes_to_wait_for_metars)
 c        
 	    len_path = index(path_to_METAR,' ') - 1
 	    data_file_m = 
-     &	      path_to_METAR(1:len_path)//filename9(1:9)// '0100o'
+     &	      path_to_METAR(1:len_path)//a9time_metar_file// '0100o'       
 c
 	    len_path = index(path_to_local_data,' ') - 1
 	    filename13=fname9_to_wfo_fname13(filename9(1:9))
@@ -340,9 +361,9 @@ c.....  the data.
 c
 	print*,'Getting METAR data ', data_file_m
 c
-        call get_metar_obs(maxobs,maxsta,i4time,
+        call get_metar_obs(maxobs,maxsta,i4time_sys,
      &                     path_to_metar,data_file_m,metar_format,   
-     &                     ick_metar_time,
+     &                     ick_metar_time,itime_before,itime_after,
      &                     grid_east,grid_west,grid_north,grid_south,
      &                     lat,lon,ni,nj,grid_spacing,
      &                     nn,n_sao_g,n_sao_b,stations,
@@ -363,7 +384,8 @@ c
 	print*,'Getting mesonet data ', data_file_l
 c
         if(metar_format(1:len_metar_format) .ne. 'CWB')then ! LDAD Netcdf
-            call get_local_obs(maxobs,maxsta,i4time,data_file_l,
+            call get_local_obs(maxobs,maxsta,i4time_sys,data_file_l,       
+     &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
@@ -375,7 +397,9 @@ c
      &                      provider, laps_cycle_time, jstatus)
 
         else
-            call get_local_cwb(maxobs,maxsta,i4time,path_to_local_data,
+            call get_local_cwb(maxobs,maxsta,i4time_sys,
+     &                      path_to_local_data,
+     &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
@@ -399,8 +423,9 @@ c
 cc	data_file_b = '/data/fxa/point/maritime/netcdf/' // filename13
 	print*,'Getting buoy/ship data ', data_file_b
 c
-        call get_buoy_obs(maxobs,maxsta,i4time,path_to_buoy_data,
+        call get_buoy_obs(maxobs,maxsta,i4time_sys,path_to_buoy_data,       
      &                      data_file_b,metar_format,
+     &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
@@ -422,8 +447,9 @@ c
         if(.false.)then
 	    print*,'Getting GPS data ', data_file_b
 c
-            call get_gps_obs(maxobs,maxsta,i4time,data_file_b,
+            call get_gps_obs(maxobs,maxsta,i4time_sys,data_file_b,       
      &                      metar_format,
+     &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,       
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_gps_g,n_gps_b,stations,
@@ -591,7 +617,8 @@ c
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
-     1                         ,maxsta
+     1                         ,itime_before,itime_after
+     1                         ,maxobs
      1                         ,istatus)
 
        character*200 path_to_metar
@@ -607,7 +634,8 @@ c
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
-     1                         ,maxsta
+     1                         ,itime_before,itime_after
+     1                         ,maxobs
  
        character*150 static_dir,filename
  

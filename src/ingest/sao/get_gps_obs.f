@@ -33,6 +33,7 @@ c
 c
 	subroutine get_gps_obs(maxobs,maxsta,i4time,data_file,
      &                      gps_format,
+     &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_gps_g,n_gps_b,stations,
@@ -180,8 +181,8 @@ c
 c
 c.....  Set up the time window.
 c
-	before = i4time - time_before
-	after  = i4time + time_after
+	before = i4time - itime_before
+	after  = i4time + itime_after
 c
 c..................................
 c.....	Now loop over all the obs.

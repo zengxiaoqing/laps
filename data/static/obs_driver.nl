@@ -5,7 +5,9 @@
  metar_format='FSL',
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
- maxsta=6000,
+ itime_before=900,
+ itime_after=300,
+ maxobs=6000,
  /
 
 c Obs Driver ingest (obs_driver.exe)
@@ -17,6 +19,8 @@ c
 c 'path_to_buoy data' - Directory for buoy data
 c
 c 'metar_format' - Format of metar data. Valid values are 'FSL' and 'CWB'
+c                  'FSL' denotes NetCDF format used by NIMBUS and AWIPS/WFO
+c                  'CWB' is Central Weather Bureau in Taiwan
 c
 c 'minutes_to_wait_for_metars' - Especially helpful on WFO
 c
@@ -26,8 +30,14 @@ c.....      or LS2 files will not include top of the hour data.  This will
 c.....      probably be ok if there are a lot of off hour mesonet data, but
 c.....      not so good otherwise.
 c
-c 'maxsta' - max number of surface stations in raw data
+c 'itime_before'
+c 'itime_after'
+c.....      Time window.  Set these variables for time filtering the data.
+c.....      Units are seconds.  For example, if you want data with a time
+c.....      stamp from 15 min before to 5 min after the analysis time to
+c.....      be included in the LSO file, use 900 and 300 for time_before
+c.....      and time_after, respectively.
 c
-c
+c 'maxobs' - max number of surface stations in raw data
 c
 c

@@ -34,6 +34,7 @@ c
 	subroutine get_buoy_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_buoy_data,data_file,
      &                      buoy_format,
+     &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
@@ -130,8 +131,8 @@ c
 c
 c.....  Set up the time window.
 c
-	i4time_before = i4time_sys - time_before
-	i4time_after  = i4time_sys + time_after
+	i4time_before = i4time_sys - itime_before
+	i4time_after  = i4time_sys + itime_after
 
         call s_len(buoy_format, len_buoy_format)
         if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
@@ -194,7 +195,7 @@ c
 	        data_file = path_to_buoy_data(1:len_path)//'buoy'
      1                                           //a8time//'.dat'      
 
-                recNum = 150
+                recNum = maxobs
 
                 call s_len(data_file,len_file)
                 write(6,*)' CWB Buoy Data: ',data_file(1:len_file)
