@@ -57,7 +57,6 @@ INSTALL=@INSTALL@
 
 SRC= main_sub.f \
      get_wind_obs.f \
-     put_derived_wind_prods.f \
      weights.f \
      comp_vr_prof.f \
      comp_laps_meso.f \
@@ -141,8 +140,6 @@ interp_prof.f:  $(LAPSROOT)/src/include/windparms.inc@F77INC@
 main.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
 
 main_sub.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/windparms.inc $(LAPSROOT)/src/include/main_sub.inc@F77INC@
-
-put_derived_wind_prods.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/windparms.inc@F77INC@
 
 rdmeso.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/windparms.inc@F77INC@
 

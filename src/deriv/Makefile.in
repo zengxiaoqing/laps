@@ -54,7 +54,7 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=laps_deriv.f      laps_deriv_sub.f
+SRC=laps_deriv.f      laps_deriv_sub.f      put_derived_wind_prods.f 
 
 
 all: exe
@@ -90,3 +90,4 @@ distclean: clean
 
 laps_deriv_sub.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/laps_cloud.inc@F77INC@
 
+put_derived_wind_prods.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/windparms.inc@F77INC@

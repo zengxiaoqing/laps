@@ -97,6 +97,13 @@ cdis
      1                  isplit,
      1                  j_status)
 
+
+        call put_derived_wind_prods(NX_L,NY_L,NZ_L           ! Input
+     1          ,NX_L,NY_L,NZ_L                              ! Input (sic)
+     1          ,max_radars,r_missing_data                   ! Input
+     1          ,i4time)                                     ! Input
+
+
 999     continue
 
         end
