@@ -414,31 +414,49 @@ c       include 'satellite_dims_lvd.inc'
 
         if(c_type(1:2) .eq. 'di')then
             write(6,*)' Plotting difference field of last two entries'       
-            call diff(field_2d,field_2d_buf,field_2d_diff,NX_L,NY_L)       
+            call diff_miss(field_2d,field_2d_buf,field_2d_diff
+     1                                          ,NX_L,NY_L)       
 
-            c33_label = 'difference field'
+            c_label = 'difference field'
 
-            scale = 1.
+!           Use scale from the most recent plot?
+!           scale = 1.
+            write(6,*)' scale/cint: ',scale,cint   
 
-            if(c_type(3:3) .ne. 'i')then ! contour plot
+            if(.false.)then ! experimental
+                colortable = 'hues'
+                call plot_field_2d(i4time_3dw,c_type,field_2d_diff,scale       
+     1                            ,namelist_parms,plot_parms
+     1                            ,clow,chigh,cint,c_label
+     1                            ,i_overlay,c_display,lat,lon,jdot
+     1                            ,NX_L,NY_L,r_missing_data,colortable)       
+
+            elseif(c_type(3:3) .ne. 'i')then ! contour plot
                 call contour_settings(field_2d_diff,NX_L,NY_L
      1               ,clow,chigh,cint,zoom,density,scale)      
 
                 call plot_cont(field_2d_diff,scale,clow,chigh,cint,
      1               asc9_tim_3dw,namelist_parms,plot_parms,       
-     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               c_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else ! image plot
                 call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
      1                          ,r_missing_data)
 
+                rmin = rmin/scale
+                rmax = rmax/scale
+
+                rscale = max(abs(rmin),abs(rmax))
+                rmin = -rscale
+                rmax = +rscale
+
                 call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
      1                     ,n_image,scale,'hsect',plot_parms
      1                     ,namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+                call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
@@ -4239,6 +4257,7 @@ c                   cint = -1.
 
             call s_len(var_2d,len_var)
             if(var_2d(len_var:len_var) .eq. 'I' .and. 
+     1         var_2d(1:len_var) .ne. 'FWI'     .and.
      1         var_2d(1:len_var) .ne. 'LI'                  )then
                 l_image = .true.
                 var_2d = var_2d(1:len_var-1)
