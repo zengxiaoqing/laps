@@ -50,6 +50,11 @@ cdis
         real*4 uv_2d(imax,jmax,2)
 
         call get_directory(ext,directory,len_dir)
+        call s_len(ext,lext)
+        if(ext(1:lext).eq.'balance')then
+           ext='lw3'
+           directory=directory(1:len_dir)//'lw3'//'/'
+        endif
 
         do k = 1,2
           units_2d(k)   = 'M/S'

@@ -330,7 +330,7 @@ c       include 'satellite_dims_lvd.inc'
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd] Wind (LW3/LWM),'
-     1       ,' [wb,wr,wf] (LGA/LGB, RAM/RSF, LAPS-BKG), '
+     1       ,' [wb,wr,wf,bw] (LGA/LGB, RAM/RSF, LAPS-BKG, QBAL), '
      1       /'     [co] Cloud Omega,'
      1       ,' [lw] li*w, [li] li, [he] helicity, [pe] CAPE,'
      1       ,' [ne] CIN' 
@@ -344,9 +344,9 @@ c       include 'satellite_dims_lvd.inc'
      1       ,'  [bs] Sfc background'
      1       /
      1       /'     [t,tb,tr,to] Temp (LAPS,LGA,RAM,OBS)'      
-     1       ,', [pt] Pot Temp'
-     1       /'     [ht,hb,hr,hy] Heights (LAPS,LGA,RAM,Hydrstc),'
-     1       /'     [hh] Height of Const Temp Sfc')
+     1       ,',   [pt] Pot Temp'
+     1       /'    [ht,hb,hr,hy,bh] Hgts (LAPS,LGA,RAM,Hydrstc,QBAL),'
+     1       /'  [hh] Height of Const Temp Sfc')
 
         write(6,12)
  12     format(/4x,' [ci] Cloud Ice     ',22x
@@ -375,7 +375,7 @@ c       include 'satellite_dims_lvd.inc'
 !  ***  Ask for wind field ! ***************************************************
         if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
-     1    .or. c_type .eq. 'wf')then
+     1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw')then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
@@ -407,9 +407,19 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'lw3'
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+            elseif(c_type .eq. 'bw')then
+                ext = 'balance'
             endif
 
-            call get_filespec(ext,2,c_filespec,istatus)
+
+            if(c_type.eq.'bw')then
+               call get_filespec(ext,1,c_filespec,istatus)
+               ext='lw3'
+               call s_len(c_filespec,ilen)
+               c_filespec=c_filespec(1:ilen)//ext(1:3)//'/*.'//ext
+            else
+               call get_filespec(ext,2,c_filespec,istatus)
+            endif
 
             if(c_type .eq. 'wd')then
                 write(6,13)
@@ -434,6 +444,7 @@ c       include 'satellite_dims_lvd.inc'
             call get_file_time(c_filespec,i4time_ref,i4time_3dw)
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
+            if(c_type.eq.'bw')ext='balance'
             if(c_type .eq. 'co')then
                 c_field = 'w'
                 goto115
@@ -628,8 +639,10 @@ c       include 'satellite_dims_lvd.inc'
                     c19_label = ' U (lga) - Comp'
                 elseif(c_type .eq. 'wr')then
                     c19_label = ' U (ram) - Comp'
+                elseif(c_type .eq. 'bw')then
+                    c19_label = ' U - Comp (bal)'
                 else
-                    c19_label = ' U - Component '
+                    c19_label = ' U - Comp (anal)'
                 endif
 
                 call mklabel33(k_level,c19_label,c33_label)
@@ -640,13 +653,15 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'v ')then
                 if(c_type .eq. 'wf')then
-                    c19_label = ' V - Diff      '
+                    c19_label = ' V - Diff       '
                 elseif(c_type .eq. 'wb')then
-                    c19_label = ' V (lga) - Comp'
+                    c19_label = ' V (lga) - Comp '
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' V (ram) - Comp'
+                    c19_label = ' V (ram) - Comp '
+                elseif(c_type .eq. 'bw')then
+                    c19_label = ' V - Comp (bal)'
                 else
-                    c19_label = ' V - Component '
+                    c19_label = ' V - Comp (anal) '
                 endif
                 call mklabel33(k_level,c19_label,c33_label)
 
@@ -657,10 +672,11 @@ c       include 'satellite_dims_lvd.inc'
             else if(c_field .eq. 'vc' .or. c_field .eq. 'ob')then
                 if(c_type .eq. 'wf')then
                     c19_label = ' WIND diff (kt)    '
-                elseif(c_type .eq. 'wb' .or. c_type .eq. 'wr')then
-                    c19_label = ' WIND-'//ext(1:3)//'  (kt)    '
+                elseif(c_type.eq.'wb'.or.c_type.eq.'wr'.or.
+     1c_type.eq.'bw')then
+                    c19_label = ' WIND- (bal) (kt) '
                 else
-                    c19_label = ' WINDS    (kt)     '
+                    c19_label = ' WINDS (anl) (kt) '
                 endif
                 call mklabel33(k_level,c19_label,c33_label)
 
@@ -1051,7 +1067,7 @@ c
              endif
 
              call get_2dgrid_dname(directory
-     1     ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1     ,i4time_ref,100000,i4time_nearest,ext,var_2d
      1     ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
              if(istatus .eq. 0)then
@@ -1115,7 +1131,7 @@ c
 
          var_2d = 'ALB'
          call get_2dgrid_dname(directory
-     1        ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1        ,i4time_ref,100000,i4time_nearest,ext,var_2d
      1        ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
 
          if(istatus .eq. 0)then
@@ -1146,7 +1162,7 @@ c
 
          var_2d = 'S8A'
          call get_2dgrid_dname(directory
-     1       ,i4time_ref,10000,i4time_nearest,ext,var_2d
+     1       ,i4time_ref,100000,i4time_nearest,ext,var_2d
      1       ,units_2d,comment_2d,NX_L,NY_L,vas,0,istatus)
          if(istatus .eq. 0)then
             write(6,*)' Cant find VAS/S8A Analysis'
@@ -2937,7 +2953,7 @@ c             cint = -1.
      1          ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hb' .or. c_type .eq. 'tb' .or.
-     1         c_type .eq. 'hr' .or. c_type .eq. 'tr'      )then
+     1         c_type .eq. 'hr' .or. c_type .eq. 'tr'     )then
             
             if(c_type(1:1) .eq. 'h')then
                 var_2d = 'HT'
@@ -3047,7 +3063,7 @@ c             cint = -1.
             call plot_temp_obs(k_level,i4time_temp,NX_L,NY_L,NZ_L
      1                        ,r_missing_data,lat,lon,topo)
 
-        elseif(c_type .eq. 'ht')then
+        elseif(c_type .eq. 'ht'.or. c_type .eq. 'bh')then
             write(6,1513)
             read(lun,*)k_mb
 
@@ -3057,12 +3073,21 @@ c             cint = -1.
 
             call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
 
-            ext = 'lt1'
+            ext='lt1'
 
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+            if(c_type .eq. 'bh' )then
+               call get_directory('balance',directory,lend)
+               directory=directory(1:lend)//'lt1/'
+               call get_2dgrid_dname(directory
+     1     ,i4time_ref,laps_cycle_time*100,i4time_heights,ext,var_2d
+     1     ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
+
+            else
+               call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1             ,i4time_heights,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,k_mb,istatus)
+            endif
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading LAPS Height Analysis'
