@@ -83,7 +83,7 @@ c       trap the obvious error conditions
         endif
 
 
-        if (t .gt. t_ref  .and. td.gt.-50.) then !assume liquid phase
+        if (t .gt. t_ref  .and. td.gt.-47.) then !assume liquid phase
 
                 ew = eslo (td)
 
@@ -91,7 +91,7 @@ c       trap the obvious error conditions
 
                 ew = esice (td)
 
-        else   ! liquid phase and td is less than -50 which will
+        else   ! liquid phase and td is less than -47 which will
 c                 cause severe problems in the code!
 
                 ew = es (td)
