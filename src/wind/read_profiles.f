@@ -1,3 +1,4 @@
+
 cdis   
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
@@ -38,11 +39,12 @@ cdis
 cdis
  
         subroutine read_profiles(i4time_sys,heights_3d,             ! I
-     1                   lat_pr,lon_pr,                             ! O
+     1                   lat_pr,lon_pr,obstype,                     ! O
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
-     1                   l_use_raob,                                ! I
+     1                   l_use_raob,l_use_all_prof_lvls,            ! I
      1                   ob_pr_u , ob_pr_v ,                        ! O
+     1                   max_obs,obs_point,nobs_point,              ! I/O
      1                   nlevels_obs_pr, n_profiles,                ! O
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
@@ -65,6 +67,9 @@ c                             time of the current LAPS analysis time.
 
 
 !*****************************************************************************
+
+        include 'barnesob.inc'
+        type (barnesob) obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
 
@@ -93,8 +98,6 @@ c                             time of the current LAPS analysis time.
         real ob_pr_sp(MAX_PR,kmax)                                          ! L
         real ob_pr_u (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! O
         real ob_pr_v (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! O
-        real ob_pr_r (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! L
-        real ob_pr_t (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! L
         real sfc_t(MAX_PR), sfc_p(MAX_PR), sfc_rh(MAX_PR)                   ! L
         real sfc_u(MAX_PR), sfc_v(MAX_PR)                                   ! L
 
@@ -110,7 +113,7 @@ c                             time of the current LAPS analysis time.
         character*5 c5_name, c5_name_a(MAX_PR)
         character*9 a9time_ob
 
-        logical l_use_raob
+        logical l_use_raob, l_use_all_prof_lvls
 
         r_mspkt = .518
 
@@ -130,8 +133,6 @@ c                             time of the current LAPS analysis time.
                 ob_pr_sp(i_pr,level) = r_missing_data
                 ob_pr_u(i_pr,level)  = r_missing_data
                 ob_pr_v(i_pr,level)  = r_missing_data
-                ob_pr_r(i_pr,level)  = r_missing_data
-                ob_pr_t(i_pr,level)  = r_missing_data
 
             enddo
         enddo
@@ -263,18 +264,59 @@ c
 
             if(nlevels_obs_pr(i_pr) .gt. 0)then
 
-                if(n_vel_grids .gt. 0)then ! Calculate azimuth relative to radar
-                   ht = 0.
-                   call latlon_to_radar(lat_pr(i_pr),
-     1                          lon_pr(i_pr),
-     1                          ht,
-     1                          azimuth,
-     1                          slant_range,
-     1                          elevation_angle,
-     1                          rlat_radar,rlon_radar,rheight_radar)       
-                endif
+              if(l_use_all_prof_lvls .and. 
+     1           obstype(i_pr)(1:5) .eq. 'TOWER')then
 
+                write(6,*)' Adding all levels for this ',obstype(i_pr)       
+     1                   ,i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
 
+                do lvl = 1,nlevels_obs_pr(i_pr)
+                    ob_height = ob_pr_ht_obs(i_pr,lvl)
+                    ob_u      = ob_pr_u_obs(i_pr,lvl)
+                    ob_v      = ob_pr_v_obs(i_pr,lvl)
+                    rklaps = height_to_zcoord2(ob_height
+     1                                        ,heights_3d,imax,jmax,kmax       
+     1                                        ,i_ob,j_ob,istatus)
+                    klaps = nint(rklaps)
+
+                    if(istatus .eq. 1)then
+!                       Obtain time terms
+                        call get_time_term(u_mdl_bkg_4d,imax,jmax,kmax
+     1                                    ,NTMIN,NTMAX
+     1                                    ,i_ob,j_ob,klaps
+     1                                    ,i4time_sys,i4time_ob_pr(i_pr)       
+     1                                    ,u_time_interp,u_diff_term
+     1                                    ,istatus)
+
+!                       u_diff_term = du/dt * [t(ob) - t(anal)]
+!                       u_diff      = du/dt * [t(anal) - t(ob)]
+                        u_diff = -u_diff_term
+
+                        call get_time_term(v_mdl_bkg_4d,imax,jmax,kmax
+     1                                    ,NTMIN,NTMAX
+     1                                    ,i_ob,j_ob,klaps
+     1                                    ,i4time_sys,i4time_ob_pr(i_pr)
+     1                                    ,v_time_interp,v_diff_term
+     1                                    ,istatus)
+!                       v_diff_term = dv/dt * [t(ob) - t(anal)]
+!                       v_diff      = dv/dt * [t(anal) - t(ob)]
+                        v_diff = -v_diff_term
+
+!                       Add to data structure (full sampling)
+                        nobs_point = nobs_point + 1
+                        obs_point(nobs_point)%i = i_ob
+                        obs_point(nobs_point)%j = j_ob
+                        obs_point(nobs_point)%k = klaps
+                        obs_point(nobs_point)%rk = rklaps
+                        obs_point(nobs_point)%valuef(1) = ob_u + u_diff       
+                        obs_point(nobs_point)%valuef(2) = ob_v + v_diff
+                        obs_point(nobs_point)%weight = weight_prof       
+                        obs_point(nobs_point)%type = 'prof'      
+                    endif ! istatus
+
+                enddo ! lvl
+
+              else
                 do level = 1,kmax
 
                     ht = heights_3d(i_ob,j_ob,level)
@@ -308,13 +350,11 @@ c
      1                               v_diff,                       ! I
      1                               ob_pr_u(i_pr,level),          ! O
      1                               ob_pr_v(i_pr,level),          ! O
-     1                               ob_pr_r(i_pr,level),          ! O
-     1                               ob_pr_t(i_pr,level),          ! O
      1                               ob_pr_di(i_pr,level),         ! O
      1                               ob_pr_sp(i_pr,level),         ! O
      1                               i_pr,ht,level,nlevels_obs_pr, ! I
      1                               lat_pr,lon_pr,i_ob,j_ob,      ! I
-     1                               azimuth,r_missing_data,       ! I
+     1                               r_missing_data,               ! I
      1                               heights_3d,imax,jmax,kmax,    ! I
      1                               MAX_PR,MAX_PR_LEVELS,         ! I
      1                               n_vel_grids,istatus)          ! I/O
@@ -327,14 +367,14 @@ c       1                ,ob_pr_u(i_pr,level)
 c       1                ,ob_pr_v(i_pr,level)
 c       1                ,u_diff
 c       1                ,v_diff
-c       1                ,ob_pr_r(i_pr,level)
-c       1                ,ob_pr_t(i_pr,level)
 411                 format(1x,i6,2i4,f8.1,8f7.1)
 
 412                 write(32,*)ri-1.,rj-1.,level-1
-     1         ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)
+     1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
 
                 enddo ! level
+              
+              endif ! use all levels
 
             endif ! # levels > 0
 
