@@ -347,13 +347,13 @@ ccc   error reading data file.
      +        points,
      +        ierror
 
-c      real elevation,
-c     +     longitude,
-c     +     latitude
+      real elevation,
+     +     longitude,
+     +     latitude
 
       character*(*) header
 
-c      character*6 type, site
+      character*6 type, site
 
 
 c     ... read header information ...
@@ -403,10 +403,10 @@ c     ... error in read process ...
      +        fh     (*),
      +        qc     (*)
 
-      real    elevation,
-     +        longitude,
-     +        latitude,
-     +        mrelev (*),
+c      real    elevation,
+c     +        longitude,
+c     +        latitude,
+      real    mrelev (*),
      +        mrazim (*),
      +        vapor  (*),
      +        liquid (*),
@@ -415,7 +415,7 @@ c     ... error in read process ...
      +        press  (*),
      +        cbt    (*)
 
-      character*6 type, site
+c      character*6 type, site
 
       character*(*) header
 

@@ -126,7 +126,7 @@ c
      1          jlat,
      1          jl,kk,i,j,k,jl1,jl2,
      1          it1,it2,iz1,iz2,iw1,iw2,kday,nmon,imon,
-     1          lmon,nday,nyr,lday,
+     1          lmon,nday,nyr,
      1          iz10
 
 
