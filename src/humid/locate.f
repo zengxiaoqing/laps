@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -45,41 +45,39 @@ cdis
 
 
       subroutine locate(xx,n,x,j)
+      
+      
+c     adapted for the laps moisture routine june 1996
 
+c     given input array xx, dimensioned by n, and value x
+c     the routine returns the index j such that x exists
+c     between xx(j) and xx(j+1).
+c     
+c     the routine returns 0 if x does not exist inside the array
+c     
+c     
+      
+      implicit none
+c     parameter variables
+      integer n
+      real xx(n)
+      real x
+      integer j
 
-c       adapted for the laps moisture routine june 1996
-c       author dan birkenheuer
-c
-c
-c
-c       theory:
-c
-c
-c       given input array xx, dimensioned by n, and value x
-c       the routine returns the index j such that x exists
-c       between xx(j) and xx(j+1).
-c
-c       the routine returns 0 if x does not exist inside the array
-c
-c       $log: locate.for,v $
-c revision 1.2  1996/06/25  19:43:47  birk
-c added fsl disclaimer.
-c
+c     internal variables
+      integer jl,ju,jm
 
-
-
-
-      dimension xx(n)
+c     code
       jl=0
       ju=n+1
-10    if(ju-jl.gt.1)then
-        jm=(ju+jl)/2
-        if((xx(n).gt.xx(1)).eqv.(x.gt.xx(jm)))then
-          jl=jm
-        else
-          ju=jm
-        endif
-      go to 10
+ 10   if(ju-jl.gt.1)then
+         jm=(ju+jl)/2
+         if((xx(n).gt.xx(1)).eqv.(x.gt.xx(jm)))then
+            jl=jm
+         else
+            ju=jm
+         endif
+         go to 10
       endif
       j=jl
       return
