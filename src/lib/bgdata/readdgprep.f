@@ -177,7 +177,7 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
 
          if(icm.gt.0)then
             pcnt=float(icm)/float(nx*ny*nz)
-            print*,'WARNING: missing 3d AVN rh data ',icm
+            print*,'WARNING: bad 3d AVN rh data ',icm,pcnt
          endif
  
          print*,'convert rh to Td - sfc'
@@ -242,8 +242,7 @@ c              sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
          enddo
          if(icm.gt.0)then
             pcnt=float(icm)/float(nx*ny*nz)
-            print*,'WARNING: missing 3d NOGAPS Td data ',icm,
-     &pcnt
+            print*,'WARNING: missing 3d NOGAPS Td data ',icm,pcnt
          endif
 c
 c check for missing Td NOGAPS data.
@@ -259,8 +258,7 @@ c
          enddo
          if(icm.gt.0)then
             pcnt=float(icm)/float(nx*ny)
-            print*,'WARNING: missing 2d NOGAPS Td data ',icm
-     &,pcnt
+            print*,'WARNING: missing 2d NOGAPS Td data ',icm,pcnt
          endif
 
 
