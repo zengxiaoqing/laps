@@ -58,7 +58,7 @@
  vert_rad_pirep_cmn=1,    
  vert_rad_prof_cmn=1,     
  silavwt_parm_cmn=0.,     
- toptwvl_parm_cmn=4.,     
+ toptwvl_parm_cmn=2.,     
  maxstations_cmn=6000,
  maxobs_cmn=6000,  
  c8_project_common='NIMBUS', 
