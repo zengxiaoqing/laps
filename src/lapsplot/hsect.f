@@ -4670,9 +4670,11 @@ c                   cint = -1.
                 chigh = (int(pres_high_mb) / icint) * icint + icint
 
             else ! perturbation pressure (pp)
-                clow = -2.0
-                chigh = +2.0
+                clow = +4.0
+                chigh = -4.0
                 cint = 0.1
+
+                plot_parms%ncols = nint(abs(chigh-clow)/cint)
  
             endif
 
@@ -4759,41 +4761,51 @@ c                   cint = -1.
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            if(c_type(3:3) .ne. 'i')then ! contour plot
-!               call contour_settings(field_2d,NX_L,NY_L
-!    1                               ,clow,chigh,cint,zoom,density,1.)       
-                clow = 0.
-                chigh = 100.
-                cint = 10.
+            clow = 0.
+            chigh = 100.
+            cint = 10.
 
-                call plot_cont(field_2d,1e-0,clow,chigh,cint
-     1                        ,asc9_tim_t,namelist_parms,plot_parms
-     1                        ,c33_label,i_overlay,c_display        
-     1                        ,lat,lon,jdot,NX_L,NY_L,r_missing_data
-     1                        ,laps_cycle_time)
 
-            else ! image plot
-!               call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
-                call ccpfil(field_2d,NX_L,NY_L,0.,100.,'moist'
-     1                     ,n_image,1e-0,'hsect',plot_parms
-     1                     ,namelist_parms) 
-                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                call setusv_dum(2hIN,7)
-                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                ,plot_parms,namelist_parms
-     1                                ,i_overlay,'hsect')        
-                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot
-     1                             ,namelist_parms,plot_parms)
+            call plot_field_2d(i4time_pw,c_type,field_2d,1e0
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
+        elseif(c_type(1:2) .eq. 'sm')then
+            var_2d = 'LSM'
+            ext = 'lm1'
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,-1,istatus)
+
+            IF(istatus .ne. 1)THEN
+                write(6,*)' Error Reading Surface ',var_2d
+                goto1200
             endif
+
+            c33_label = 'Soil Moisture      (PERCENT)     '
+
+            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
+
+            clow = 0.
+            chigh = 100.
+            cint = 10.
+
+            call plot_field_2d(i4time_pw,c_type,field_2d,1e0
+     1                        ,namelist_parms,plot_parms
+     1                        ,clow,chigh,cint,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,'moist')
 
         elseif(c_type .eq. 'ta')then
             var_2d = 'TAD'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,field_2d
+     1                          ,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
