@@ -294,7 +294,7 @@ if($fxa_sys!=0){
                           #with the closest being first, and the 10th closest being last in the list
 
 #   if opt_n, use nest7grid.parms for laps_center_point rather than Laps_Center_Point.txt
-    if (opt_n) {
+    if ($opt_n) {
       my $llatc = `grep -i "grid_cen_lat_cmn" $LAPS_DATA_ROOT/static/nest7grid.parms`;
       ($junk,$lat_laps) = split("=",$llatc);
       chomp($lat_laps);
