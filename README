@@ -1493,6 +1493,21 @@ sounding data will be on, and .snd files will be processed if present.
 If this character is "0", the moisture code will not process sounding
 data.
 
+ADDENDUM:  routine RAOB_STEP.F
+
+It should be noted that some users have had to modify the parameter that
+defines dimensions in routine raob_step.f due to the fact that this can
+overflow array limits on some machines.  The current parameter snd_tot
+is set to 1000.  The primary reason for this is to accommodate satellite
+soundings of which there can be many in even a small area.  This
+parameter ties in to the dimensions of the weight matrix
+(ii,jj,snd_tot).  If a large horizontal domain is defined, and you don't
+have a lot of RAOB data and are not using satellite processed soundings,
+you may have better success at compiling this routine by reducing the
+value of snd_tot to a smaller value.
+
+
+
 GVAP
 
 GVAP data are GOES sounder total precipitable water data acquired from
