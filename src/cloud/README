@@ -1,0 +1,36 @@
+
+
+main
+    get_cloud_parms
+    laps_cloud                                           laps_cloud_sub.f
+        get_model_fg                
+        insert_sao                                       insertsao.f
+            read_surface_sa                                  
+            modify_sounding
+            get_layer_cover
+            spread2
+        insert_pireps
+            spread2
+        barnes_r5
+        GET_SAT_DATA (read 3.9 micron)                   get_sat_data.f
+        get_vis      (read vis data)                     getvis.f
+            get_sfc_albedo
+            albedo_to_cloudfrac2
+        GET_ISTAT_39 (cloud mask from 3.9u)              get_istat_39.f
+        insert_sat   (add based on IR/3.9u)              insertsat.f
+            correlation                                      "
+            cloud_top                                        "
+            correct_cover                                    "
+            compare_radiation                                "
+            cvr_to_tb8_effective                             "
+            apply_correction                                 "
+        get_max_ref
+        insert_radar 
+        insert_vis   (subtract based on vis/3.9u)        insertvis.f
+        compare_cloud_radar
+        put_clouds_3d
+        put_clouds_2d
+        cloud_snow_cvr
+        compare_analysis_to_saos
+        array_plot
+

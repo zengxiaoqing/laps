@@ -641,11 +641,11 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
-        call get_vis(i4time,solar_alt,l_use_vis                          ! I
+        call get_vis(i4time,solar_alt,l_use_vis,lat                      ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
-     1              ,istat_vis)                                          ! I
+     1              ,istat_vis)                                          ! O
 
         call get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data
      1                   ,NX_L,NY_L,istat_39_a)

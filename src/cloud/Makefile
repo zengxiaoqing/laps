@@ -27,6 +27,7 @@ SRC=array_plot.f \
     get_fg_cloud.f \
     get_istat_39.f \
     get_sat_data.f \
+    getvis.f \
     insertpireps.f \
     insertradar.f \
     insertsao.f \
