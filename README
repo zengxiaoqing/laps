@@ -634,16 +634,15 @@
 
                ---  2.5  Test data case  ---
 
-     Tar files containing test data are available that contain 1 hour runs of 
-     laps data on the Colorado domain (intermediate files from the 'ingest' 
-     code plus outputs from the 'analysis' code). Several consecutive hours 
-     are posted, one hour per file (e.g. 'm3', 'm2', 'm1', '0' represent 
-     consecutive hours of data). Included are the contents of the 'lapsprd', 
-     'time', 'static', and 'log' subdirectories under 'data'. The log files 
-     are useful for diagnosing any differences in output you may observe. 
-     The contents of the various directories are outlined below in this 
-     README file. The data was created using the latest software release. Our 
-     users can download this data at 
+     Tar files containing test data are available that contain successive runs
+     of laps data on the Colorado domain (intermediate files from the 'ingest' 
+     code plus outputs from the 'analysis' code). Several consecutive analysis
+     cycles are posted, one file per cycle. Included are the contents of the 
+     'lapsprd', 'time', 'static', and 'log' subdirectories under 'data'. The 
+     log files are useful for diagnosing any differences in output you may 
+     observe. The contents of the various directories are outlined below in 
+     this README file. The data was created using the latest software release.
+     Our users can download this data at 
      'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the localization procedure, make sure the paths
@@ -672,7 +671,7 @@
 
      Note that the 'lapsdata*' tar files contain intermediate plus analysis
      output files only. We also have 'rawdata*' tar files that supply
-     a limited amount of "raw" data that are inputted to the ingest processes.
+     a some of the "raw" data that are inputted to the ingest processes.
      The times for the raw data match the 'lapsdata*' output approximately but
      not always exactly. In many cases, a user would independently generate 
      the intermediate data files (ingest output) and could then compare them 
