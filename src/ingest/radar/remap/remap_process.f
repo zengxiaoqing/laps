@@ -175,10 +175,11 @@ c
       integer istatus,istatus_qc,istat_alloc
       integer ishow_timer,i4_elapsed
       integer i_purge
+      integer init_ref_gate_hyb,init_ref_gate_actual
 
       real vel_thr_rtau,rvel
       real rmax,height_max,rlat_radar,rlon_radar,rheight_radar
-      real vknt,rknt,variance
+      real vknt,rknt,variance,hybrid_range
 
       character*4 c4_radarname
       character*7 c7_laps_xmit
@@ -274,6 +275,7 @@ c
      :               i_tilt,
      :               vel_thr_rtau,
      :               r_missing_data,       ! Input
+     :               namelist_parms,
      :               gate_spacing_m_ret,   ! Output
      :               i_scan_mode,
      :               Num_sweeps,
@@ -324,6 +326,29 @@ c
 
       write(6,*)' REMAP_PROCESS > Looping through rays and gates'
 
+      if(namelist_parms%l_hybrid_first_gate)then
+          if(elevation_deg .lt. 1.0)then     ! < 1.0
+              hybrid_range = 50.
+          elseif(elevation_deg .lt. 2.0)then ! Between 1.0 and 2.0
+              hybrid_range = 28.
+          elseif(elevation_deg .lt. 3.0)then ! Between 2.0 and 3.0
+              hybrid_range = 18.
+          else
+              hybrid_range = 0.
+          endif
+
+          init_ref_gate_hyb = hybrid_range / gate_spacing_m
+          init_ref_gate_actual = max(INITIAL_REF_GATE,init_ref_gate_hyb)       
+
+          write(6,*)
+     1        ' l_hybrid_first_gate flag is set, first range/gate = '      
+     1        ,hybrid_range,init_ref_gate_actual
+
+      else
+          init_ref_gate_actual = INITIAL_REF_GATE
+
+      endif
+
       DO 200 jray=1, n_rays
 
         if(az_array(jray) .ne. r_missing_data)then
@@ -335,7 +360,7 @@ c
 
         igate_interval=1
 
-        DO 180 igate=INITIAL_REF_GATE,igate_max,igate_interval
+        DO 180 igate=init_ref_gate_actual,igate_max,igate_interval       
 
           if(lgate_lut(igate))then ! we'll process this gate, it may have data
 
