@@ -126,6 +126,13 @@ c
             goto990
         endif
 c
+        if(cntd .eq. 0.)then
+            write(6,*)' WARNING in mean_lapse: cntd = 0.!'
+     1               ,' dewpoints all badflag/missing'
+            write(6,*)' Skipping lapse rate regression'
+            goto990
+        endif
+c
 	b_t = (cnt*sumht - sumh*sumt) / (cnt*sumh2 - sumh*sumh)
 	a_t = (sumt - b_t * sumh) / cnt
 c
