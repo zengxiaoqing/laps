@@ -245,7 +245,9 @@ distclean: realclean cleandirs
 	  $(MAKE) distclean ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
-	$(RM) -r config.cache Makefile bin log 
+	$(RM) config.cache Makefile config.status \
+	      ./util/cronfile ./etc/*.pl ./etc/*.csh ./src/include/config.h; \
+	$(RM) -r ./bin ./log 
 
 cleandirs:
 	@for dir in $(DATADIRS) ;\
