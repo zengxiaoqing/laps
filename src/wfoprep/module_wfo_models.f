@@ -296,7 +296,8 @@ CONTAINS
              (TRIM(varname).EQ.'vw'))THEN
        sfc_level = 'FHAG 10   '
     ELSE IF ((TRIM(varname).EQ.'emsp').OR.&
-             (TRIM(varname).EQ.'pmsl'))THEN
+             (TRIM(varname).EQ.'pmsl').OR.&
+             (TRIM(varname).EQ.'mmsp'))THEN
        sfc_level = 'MSL       '
     ELSE
        sfc_level = 'UNKNOWN   '

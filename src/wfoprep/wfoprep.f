@@ -366,13 +366,21 @@ PROGRAM wfoprep
           PRINT *, 'Using PMSL field'
           mslname = 'pmsl      '
         ELSE
-          PRINT '(A)', ' '
-          PRINT '(A)', '#################################'
-          PRINT '(A)', 'SKIPPING MODEL: NO MSLP DATA        '
-          PRINT '(A)', '#################################'
-          PRINT '(A)', ' '  
-          CALL close_wfofile(nfid,istatus)
-          CYCLE model_loop
+          CALL get_wfomodel_var_levels(nfid,'mmsp      ',msl_id, nz_msl, &
+                 msl_levels_c, np_msl, &
+                 msl_plevels,msl_kbotp,msl_ktopp, havesfc_msl, msl_ksfc,istatus)
+          IF (istatus .EQ. 1) THEN
+            PRINT *, 'Using MMSP field (MAPS Sea-level Pressure)'
+            mslname = 'mmsp      '
+          ELSE
+            PRINT '(A)', ' '
+            PRINT '(A)', '#################################'
+            PRINT '(A)', 'SKIPPING MODEL: NO MSLP DATA        '
+            PRINT '(A)', '#################################'
+            PRINT '(A)', ' '  
+            CALL close_wfofile(nfid,istatus)
+            CYCLE model_loop
+          ENDIF
         ENDIF
       ENDIF
     ENDIF    
