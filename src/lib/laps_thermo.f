@@ -930,7 +930,9 @@ cdoc    Calculate boundary layer mean values from an input sounding
         DIMENSION P(70),T(70),Q(70)
         TVIRT(TT,QQ)=TT/(1.-QQ*.37803)
         THICK(P1,P2,TC,QQ)=ALOG(P1/P2)*TVIRT((TC+273.15),QQ)*.09604
+
         IF(NLEVEL.LT.2)GOTO9000
+        ZERO=0.
         HH=0.
         SUMWT=0.
         SUMT=0.
