@@ -110,6 +110,8 @@ CONTAINS
   INTEGER,ALLOCATABLE            :: p_int(:)
   REAL                           :: latin1_out
   REAL                           :: latin2_out
+  REAL, ALLOCATABLE              :: ut ( : , : )
+  REAL, ALLOCATABLE              :: vt ( : , : )
   CHARACTER (LEN=256)            :: output_file_name
   CHARACTER (LEN=15)             :: date_string
 
@@ -181,17 +183,36 @@ CONTAINS
   p_int = NINT(p)
   WRITE(output_unit, *) level_flag, p_int(z3:1:-1)
   DEALLOCATE(p_int)
+
+  ALLOCATE (ut(x,y)) ! Array for true u-winds
+  ALLOCATE (vt(x,y)) ! Array for true v-winds
   ! Now write out the pressure level data, looping by level
 
   level_loop: DO k = z3,1,-1
 
-    WRITE(output_unit,'(8F10.3)') (( u(i,j,k),i=1,x),j=1,y)
-    WRITE(output_unit,'(8F10.3)') (( v(i,j,k),i=1,x),j=1,y)
+    ! Rotate the u and v winds to true if proj_flag EQ 2 
+    IF (proj_flag .EQ. 2) THEN
+      rotate_winds_j: DO j=1,y
+        rotate_winds_i: DO i=1,x
+          CALL uvgrid_to_uvtrue(u(i,j,k),v(i,j,k), &
+                                ut(i,j),vt(i,j),&
+                                lons(i,j))
+        ENDDO rotate_winds_i
+      ENDDO rotate_winds_j
+    ELSE
+      ut(:,:) = u(:,:,k)
+      vt(:,:) = v(:,:,k)
+    ENDIF
+     
+    WRITE(output_unit,'(8F10.3)') (( ut(i,j),i=1,x),j=1,y)
+    WRITE(output_unit,'(8F10.3)') (( vt(i,j),i=1,x),j=1,y)
     WRITE(output_unit,'(8F10.3)') (( t(i,j,k),i=1,x),j=1,y)
     WRITE(output_unit,'(8F10.2)') (( ht(i,j,k),i=1,x),j=1,y)
     WRITE(output_unit,'(8F10.5)') (( rh(i,j,k)*.01,i=1,x),j=1,y)
  
   ENDDO level_loop
+  DEALLOCATE (ut)
+  DEALLOCATE (vt)
 
   ! Write out the surface fields
    

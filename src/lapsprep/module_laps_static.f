@@ -15,6 +15,8 @@ MODULE laps_static
   REAL                        :: latin1         ! Standard Lat 1
   REAL                        :: latin2         ! Standard Lat 2
   REAL, ALLOCATABLE           :: topo(:,:)      ! LAPS Topographic height
+  REAL, ALLOCATABLE           :: lats(:,:)      ! LAPS Latitude Array
+  REAL, ALLOCATABLE           :: lons(:,:)      ! LAPS Longitude Array
   CHARACTER (LEN=132)         :: grid_type      ! Map projection type
 
 CONTAINS
@@ -30,7 +32,6 @@ CONTAINS
     INTEGER :: cdfid, rcode,xid,yid,vid
     INTEGER, DIMENSION(2) :: startc, countc
     INTEGER, DIMENSION(4) :: start, count
-    REAL, ALLOCATABLE     :: lats(:,:), lons(:,:)
     INCLUDE "netcdf.inc"
 
     static_file = TRIM(laps_data_root)//'/static/static.nest7grid'
@@ -72,8 +73,6 @@ CONTAINS
     IF (lo2 .gt. 180) lo2 = lo2 - 360.
     IF (la1 .gt. 270) la1 = la1 - 360.
     IF (la2 .gt. 270) la2 = la2 - 360.
-    DEALLOCATE (lats)
-    DEALLOCATE (lons)
     print '(A,2F10.2)', 'SW Corner Lat/Lon = ', la1, lo1
     print '(A,2F10.2)', 'NE Corner Lat/Lon = ', la2, lo2
 
