@@ -489,6 +489,48 @@ cdoc    Convert Pressure to Height, using a 3-D Height field for reference
         return
         end
 
+        subroutine pres_to_ht(pres_pa,pres_3d,heights_3d
+     1                       ,ni,nj,nk,i,j,height_out,istatus)       
+
+cdoc    Convert Pressure to Height, using 3-D Pres & Ht fields for reference
+cdoc    This currently does a linear interpolation in the vertical. We can 
+cdoc    change this to a log interpolation later if needed.
+
+        real*4 pres_3d(ni,nj,nk)
+        real*4 heights_3d(ni,nj,nk)
+
+!       rk = zcoord_of_logpressure(pres_pa)
+
+        rk = rlevel_of_field(pres_pa,pres_3d,ni,nj,nk,i,j,istatus)
+        if(istatus .ne. 1)return
+
+        if(rk .lt. 1. .or. rk .gt. float(nk))then
+            istatus = 0
+            return
+
+        else
+            if(rk .eq. float(nk))then
+                klow = nk - 1
+                khigh = nk
+            else
+                klow = int(rk)
+                khigh = klow + 1
+            endif
+
+            frac = rk - klow
+
+            height_out = heights_3d(i,j,klow)  * (1. - frac)
+     1                 + heights_3d(i,j,khigh) * (frac)
+
+            istatus = 1
+            return
+
+        endif ! rk is within domain
+
+        istatus = 0
+        return
+        end
+
 
         function height_of_level(level)
 
@@ -675,6 +717,99 @@ cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
 
             rlevel_of_field = 0
             write(6,*)' Error, iteration limit in rlevel_of_field'
+            istatus = 0
+            return
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
+        endif
+
+999     k_ref = k       ! Successful return
+        istatus = 1
+
+        return
+        end
+
+
+        function rlevel_of_logfield(value,field_3d,ni,nj,nk,i,j,istatus)       
+
+cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
+cdoc    Log vertical interpolation is used. Warning: under construction
+cdoc    as log code is not yet in place.
+
+        implicit real*4 (a-z)
+
+        integer i,j,k,ni,nj,nk,kref,istatus,isign
+
+        real*4 field_3d(ni,nj,nk)
+
+        logical ltest_vertical_grid
+
+        data k_ref /1/
+        save k_ref
+
+        if(ltest_vertical_grid('HEIGHT'))then
+            print*, 'Call is obsolete, please report this message to '       
+            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!           rlevel_of_logfield = value / HEIGHT_INTERVAL
+
+        elseif(ltest_vertical_grid('PRESSURE'))then
+            if(field_3d(i,j,nk) .gt. field_3d(i,j,1))then
+                rsign = 1.0
+                isign = 1
+            else
+                rsign = -1.0
+                isign = -1
+            endif
+
+            rlevel_of_logfield = nk+1 ! Default value is off the grid
+
+            k = k_ref
+
+            if((value - field_3d(i,j,nk)) * rsign .gt. 0.)then
+                rlevel_of_logfield = nk+1 
+!               write(6,101)kref,value,field_3d(i,j,nk)
+!101            format('  Note: above domain in rlevel_of_logfield,'       
+!    1                ,' kref,h,h(nk)',i3,2e11.4)
+                istatus = 0
+                return
+
+            elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
+                rlevel_of_logfield = 0
+                write(6,102)kref,value,field_3d(i,j,1)
+102             format('  Warning: below domain in rlevel_of_logfield,'
+     1                ,' kref,h,h(1)',i3,2e11.4)
+                istatus = 0
+                return
+
+            endif ! input height is outside domain
+
+            do iter = 1,nk
+                if( (field_3d(i,j,k+1) - value) * rsign .ge. 0. .and.
+     1              (field_3d(i,j,k)   - value) * rsign .le. 0.  )then
+                    thickness = field_3d(i,j,k+1) - field_3d(i,j,k)
+                    fraction = (value - field_3d(i,j,k))/thickness
+
+                    rlevel_of_logfield = k + fraction
+
+                    goto999
+
+                elseif((value - field_3d(i,j,k+1)) * rsign .gt. 0.)then
+                    k = min(k+1,nk-1)
+
+                elseif((value - field_3d(i,j,k))   * rsign .lt. 0.)then
+                    k = max(k-1,1)
+
+                endif
+
+            enddo ! iter
+
+            rlevel_of_logfield = 0
+            write(6,*)' Error, iteration limit in rlevel_of_logfield'
             istatus = 0
             return
 
