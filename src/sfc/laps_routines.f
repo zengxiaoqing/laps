@@ -458,9 +458,7 @@ c
 c
       var = sum_v / (pts - 1)
 
-c .... test divide by zero ... added by Dan Birkenheuer (11/15)
-
-      if (var .ne. 0.0) then
+      if (var .gt. 0. .and. sum_v .gt. 0. .and. pts .gt. 0.) then
         st_dev = sqrt( var )
         z_max = (amax - amean) / st_dev
         z_min = (amin - amean) / st_dev
@@ -878,8 +876,8 @@ c
 !	write(9,899)
 !899	format(/,10x,'Within 2',3x,'Within 5',3x,'Within 10',3x,'Within 20',
 !     &         3x,' Mean Distance')
-	dist_max = -1.e30
-	dist_min = 1.e30
+	dist_max = -1.e15
+	dist_min = +1.e15
 	do j=1,jmax
 	do i=1,imax
 	  num50 = 0
