@@ -229,6 +229,44 @@ cdis
             return
         endif
 
+!       Height Analysis (done prior to surface temp analysis insertion)
+        write(6,*)
+        if(l_adjust_heights)then ! Store model fg 500 heights
+            arg = rlevel_of_field(50000.
+     1                           ,pres_3d,ni,nj,nk,icen,jcen,istatus)
+            if(istatus .ne. 1)return
+            k_ref = nint(arg)
+
+            write(6,*)' Storing bkg ht level ',k_ref
+            do i = 1,ni
+            do j = 1,nj
+                bkg_500(i,j) = heights_3d(i,j,k_ref) 
+                if(bkg_500(i,j) .lt. 3000. .or. 
+     1             bkg_500(i,j) .gt. 6500.       )then
+                    write(6,*)' Error: bkg ht failed QC check at level'       
+     1                       ,' nearest 500mb ',i,j,k_ref,bkg_500(i,j)
+                    istatus = 0
+                    return
+                endif ! QC check
+            enddo ! j
+            enddo ! i
+        endif
+
+!       Hydrostatically integrate the temps to get heights using the surface
+!       pressure as a reference. The heights_3d array will now contain the
+!       integrated heights instead of the model background heights.
+
+        write(6,*)' Calling get_heights_hydrostatic'
+        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,topo,
+     1          dum1_array,dum2_array,dum3_array,dum4_array,
+     1                                  ni,nj,nk,heights_3d)
+
+        if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
+            call adjust_heights(temp_3d,heights_3d,bkg_500
+     1                         ,ni,nj,nk,k_ref,istatus)
+
+        endif
+
 !       Insert Surface Temp at Lowest Levels
         blayer_thk_pres = 5000. 
 
@@ -575,45 +613,9 @@ c       1                               j_diff_thmax,k_diff_thmax
 221     format('  Largest Warm Adjustment of Temp      ',f8.1
      1        ,' to ',f8.1,' at ',i3,i4,i3)
 
-!       Height Analysis
-        write(6,*)
-        if(l_adjust_heights)then ! Store model fg 500 heights
-            arg = rlevel_of_field(50000.
-     1                           ,pres_3d,ni,nj,nk,icen,jcen,istatus)
-            if(istatus .ne. 1)return
-            k_ref = nint(arg)
+!       Former location of Height Analysis
 
-            write(6,*)' Storing bkg ht level ',k_ref
-            do i = 1,ni
-            do j = 1,nj
-                bkg_500(i,j) = heights_3d(i,j,k_ref) 
-                if(bkg_500(i,j) .lt. 3000. .or. 
-     1             bkg_500(i,j) .gt. 6500.       )then
-                    write(6,*)' Error: bkg ht failed QC check at level'       
-     1                       ,' nearest 500mb ',i,j,k_ref,bkg_500(i,j)
-                    istatus = 0
-                    return
-                endif ! QC check
-            enddo ! j
-            enddo ! i
-        endif
-
-!       Hydrostatically integrate the temps to get heights using the surface
-!       pressure as a reference. The heights_3d array will now contain the
-!       integrated heights instead of the model background heights.
-
-        write(6,*)' Calling get_heights_hydrostatic'
-        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,topo,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  ni,nj,nk,heights_3d)
-
-        if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
-            call adjust_heights(temp_3d,heights_3d,bkg_500
-     1                         ,ni,nj,nk,k_ref,istatus)
-
-        endif
-
-
+!       Write column of output
         write(6,*)
      1    ' Final temp/ht column at (ichk,jchk,k) with LAPS sfc t/p in'       
      1                                  ,temp_sfc_k(ichk,jchk)
