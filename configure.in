@@ -2,6 +2,27 @@ dnl Process this file with autoconf to produce a configure script.
 sinclude(./aclocal.m4)dnl
 sinclude(./acfortran.m4)dnl
 AC_INIT_LAPS(src/lib/regex.c)
+dnl
+dnl override presets with user input if present
+dnl
+if test -n "$user_cflags"
+then
+  CFLAGS="$user_cflags"
+fi
+if test -n "$user_cflags"
+then
+  CFLAGS="$user_cflags"
+fi
+if test -n "$user_fflags"
+then
+  FFLAGS="$user_fflags"
+fi
+
+if test -n "$user_optimize"
+then
+  OPTIMIZE="$user_optimize"
+fi
+
 if test "$prefix" = "NONE" 
 then
   echo "This install may overwrite any currently installed LAPS in $ac_default_prefix"
@@ -27,6 +48,7 @@ dnl Check for host architecture
 
 ARCHIVE="ar"
 ANSICFLAGS=$CFLAGS
+KRCFLAGS=$CFLAGS
 dnl
 dnl guess arch if not set by user
 dnl
@@ -55,26 +77,22 @@ dnl
 AC_CHECK_PROGS(CSH,csh,,$PATH)
 AC_PATH_PROG(CSH,$CSH )
 
-dnl FFLAGS=" "
-dnl OPTIMIZE="-O"
-dnl CFLAGS=" "
 if test "$arch" = "hpux" 
 then
-  FFLAGS="+e +U77 +FPVZO -K" 
+  FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
   OPTIMIZE="-O"
   OTHERLIBS="-lm"
-  KRCFLAGS=" $CFLAGS"
+  KRCFLAGS="$CFLAGS"
   CFLAGS="$CFLAGS -Aa"
   CPPFLAGS="$CPPFLAGS -D_HPUX_SOURCE"
 fi
 if test "$arch" = "rs6000" 
 then
-  FFLAGS=" "
   OPTIMIZE="-O3 -qstrict"
 fi
 if test "$arch" = "sun4" 
 then
-  FFLAGS="-native -xl -i4 -fnonstd"
+  FFLAGS="$FFLAGS -native -xl -i4 -fnonstd"
   OPTIMIZE="-O"
 fi
 if ! test "$FC"
@@ -83,26 +101,6 @@ then
 fi
 AC_FC_CPP
 AC_FC_INC
-dnl 
-dnl override presets with user input if present
-if test -n "$user_cflags"
-then
-  CFLAGS="$user_cflags"
-fi
-if test -n "$user_cflags"
-then
-  CFLAGS="$user_cflags"
-fi
-if test -n "$user_fflags"
-then
-  FFLAGS="$user_fflags"
-fi
-
-if test -n "$user_optimize"
-then
-  OPTIMIZE="$user_optimize"
-fi
-
 
 if test $ac_fc_inc_val -eq 0
 then
