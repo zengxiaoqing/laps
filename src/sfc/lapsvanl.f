@@ -39,6 +39,8 @@ c
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,sp_bk,vis_bk,tgd_bk_f,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
+     &     bad_t,bad_td,bad_u,bad_v,bad_p,bad_mp,bad_th,bad_the,
+     &     bad_vis,bad_tb8,
      &     u1, v1, rp1, t1_f, td1_f, sp1, tb81, mslp1, vis1, elev1,
      &     x1a,x2a,y2a,ii,jj,jstatus)
 c
@@ -183,18 +185,6 @@ c*****************************************************************************
 cx
 	include 'laps_sfc.inc'
         include 'laps_cloud.inc'
-c
-	parameter( 	          !QC parameters: # of standard deviations 
-     &            bad_p  = 3.0,		! for reduced pressure
-     &            bad_mp = 4.0,		! for MSL pressure
-     &            bad_t  = 2.5,		! for temperature
-     &            bad_td = 2.5,		! for dewpoint
-     &            bad_u  = 4.0,		! for u-wind
-     &            bad_v  = 4.0,		! for v-wind
-     &            bad_th = 3.5,		! for theta
-     &            bad_the = 2.5,	! for theta-e
-     &            bad_vis = 500.,	! for visibility
-     &            bad_tb8 = 5.0)	! for tb8 Brightness temps.
 c
 	parameter(                !Expected observation error, ea. var.
      &            obs_error_redp  = 0.1,  ! for reduced pressure
