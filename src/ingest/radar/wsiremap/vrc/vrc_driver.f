@@ -72,10 +72,12 @@ c WFO (c_raddat_type = 'wfo').
 c
        integer extreme_thrsh_70
        integer extreme_thrsh_47
+       integer maxradars
 
        parameter (max_files=100,
      &            extreme_thrsh_47=0.30,
-     &            extreme_thrsh_70=0.10)
+     &            extreme_thrsh_70=0.10,
+     &            maxradars=200)
 
        character*150 dir_vrc
        character*31 ext_vrc
@@ -93,6 +95,8 @@ c
        real*4 rdbz(nx_l,ny_l)
        real*4 grid_spacing
        real*4 data(nx_l,ny_l,2)
+       real*4 radar_lat(maxradars)
+       real*4 radar_lon(maxradars)
        real*4 rdum
 
        real*4 percent_extreme_47
@@ -109,6 +113,7 @@ c
        integer lvl_2d
        integer n,nn,nd, len
        integer n_vars_req
+       integer nradars_dom
        integer irad
        integer msngrad,i4_check_interval
        integer i4_total_wait,i4_thresh_age
@@ -293,12 +298,16 @@ c    +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
 
           call NOWRADWSI_to_LAPS(c_raddat_type,
      &                     c_filenames_proc(k),
-     &                           nlines,nelems,
-     &                               nx_l,ny_l,
-     &                                 lat,lon,
-     &                            i4_validTime,
-     &                                    rdbz,
-     &                                 istatus )
+     &                     nlines,nelems,
+     &                     nx_l,ny_l,
+     &                     lat,lon,
+     &                     i4_validTime,
+     &                     rdbz,
+     &                     maxradars,
+     &                     nradars_dom,
+     &                     radar_lat,
+     &                     radar_lon,
+     &                     istatus )
 
          if(istatus .eq. 1)then
             write(6,*)'WSI data properly remapped'

@@ -29,6 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
+
        subroutine NOWRADWSI_to_LAPS(ctype,
      &                    filename,
      &                    nlines,nelems,
@@ -36,6 +37,10 @@ cdis
      &                    lat,lon,
      &                    validTime,
      &                    rdbz,
+     &                    maxradars,
+     &                    nradars_dom,
+     &                    radar_lat,
+     &                    radar_lon,
      &                    istatus)
 c
 c
@@ -46,31 +51,46 @@ c Nowrad data is then remapped to LAPS domain given lat/lon of domain.
 c Routine automatically moves the boundary for any domain with the nowrad
 c confines.
 
-       real*4 lat(imax,jmax)
-       real*4 lon(imax,jmax)
-       real*4 rdbz(imax,jmax)
-       real*4 ri(imax,jmax)
-       real*4 rj(imax,jmax)
-       real*4 grid_spacing_m
-       real*4 dlat,dlon
-       real*4 LoV, Latin, La1,La2,Lo1,Lo2
-       real*4 centerLon,topLat,dx,dy
-       real*4 nw(2),se(2)
-       real*4 pi,rad2dg
+      integer maxradars
+      integer nsites_present
+      integer nsites_absent
+      real    present_site_loc_i(maxradars)
+      real    present_site_loc_j(maxradars)
+      real    absent_site_loc_i(maxradars)
+      real    absent_site_loc_j(maxradars)
+      real    present_site_lat(maxradars)
+      real    present_site_lon(maxradars)
+      real    absent_site_lat(maxradars)
+      real    absent_site_lon(maxradars)
+      real    radar_lat(maxradars)
+      real    radar_lon(maxradars)
 
-       integer image_to_dbz(0:15)
-       integer validTime
-       integer istatus
-       integer status
-       integer i_base_value
-       integer increment
+      real*4 lat(imax,jmax)
+      real*4 lon(imax,jmax)
+      real*4 rdbz(imax,jmax)
+      real*4 ri(imax,jmax)
+      real*4 rj(imax,jmax)
+      real*4 grid_spacing_m
+      real*4 dlat,dlon
+      real*4 LoV, Latin, La1,La2,Lo1,Lo2
+      real*4 centerLon,topLat,dx,dy
+      real*4 nw(2),se(2)
+      real*4 pi,rad2dg,rii,rjj
 
-       character filename*200
-       character ctype*3
+      integer image_to_dbz(0:15)
+      integer validTime
+      integer istatus
+      integer jstatus
+      integer status
+      integer i_base_value
+      integer increment
 
-       integer image(nelems,nlines)
+      character filename*200
+      character ctype*3
 
-       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
+      integer image(nelems,nlines)
+
+      common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 
 c ----------------------------------------------------------------
 c Read data and get navigation info to build lat/lon to i/j table
@@ -82,8 +102,15 @@ c ----------------------------------------------------------------
      + dx,dy,Lov, Latin, image, istatus)
 c
 c this routine converts the raw bytes to integers scaled 0 - 64
-c
-      call cvt_wsi_nowrad(ctype,nelems,nlines,image,istatus)
+c it also determines the wsi grid i/j locations for absent
+c or presently reporting radars.
+
+      call cvt_wsi_nowrad(ctype,nelems,nlines,image
+     +,nsites_present,present_site_loc_i,present_site_loc_j
+     +,nsites_absent,absent_site_loc_i,absent_site_loc_j
+     +,maxradars,istatus)
+
+c     call cvt_wsi_nowrad(ctype,nelems,nlines,image,istatus)
 
       pi=acos(-1.)
       rad2dg=180.0/pi
@@ -118,10 +145,23 @@ c
            se(2)=lo2
            rlatc=(topLat - (dlat*(nlines-1)*0.5))*rad2dg
            rlonc=centerLon*rad2dg
-           
+
+c--------------------------------------------------
+c compute the wsi grid i/j values for domain lat/lon
+c--------------------------------------------------           
            call latlon_2_ceij(imax*jmax,lat,lon,ri,rj)
 
            call check_domain_vrc(imax,jmax,ri,rj,nx,ny)
+
+c--------------------------------------------------
+c compute radar site lat/lon locations both present
+c and missing for the wsi mosaic.
+c--------------------------------------------------
+           call ceij_2_latlon(nsites_present,present_site_loc_i
+     .,present_site_loc_j,present_site_lat,present_site_lon)
+
+           call ceij_2_latlon(nsites_absent,absent_site_loc_i
+     .,absent_site_loc_j,absent_site_lat,absent_site_lon)
 
       endif
 
@@ -146,7 +186,7 @@ c ---------------------------------------------------
 c ---------------------------------------------------
 c  Remap NOWRAD-WSI data to LAPS grid.
 c ---------------------------------------------------
-       Call process_nowrad_z(imax,jmax,
+      Call process_nowrad_z(imax,jmax,
      &                  r_grid_ratio,
      &                  image_to_dbz,
      &                  image,
@@ -156,12 +196,35 @@ c ---------------------------------------------------
      &                  rdbz,
      &                  istatus)
 
-       goto 16
-19     write(6,*)'Error in nowrad_2_laps, terminating'
-       goto 16
-14     write(*,*)'NOWRAD data not found for given time or'
-       write(6,*)'Data could be bad. No vrc produced'
+c----------------------------------------------------
+c Determine which radars in wsi grid are in this domain
+c----------------------------------------------------
+      nradars_dom=0
+      if(ctype.eq.'wsi')then
+         do i=1,nsites_present
+           call latlon_to_rlapsgrid(present_site_lat(i),
+     &                              present_site_lon(i),
+     &                              lat,lon,            !LAPS lat/lon arrays
+     &                              imax,jmax,          !LAPS horiz domain
+     &                              rii,rjj,            !Output: real i,j, scalars
+     &                              jstatus)
+           if(jstatus .eq. 1)then
+              nradars_dom = nradars_dom + 1
+              radar_lat(nradars_dom)=present_site_lat(i)
+              radar_lon(nradars_dom)=present_site_lon(i)
+           endif
+        enddo
+        print*
+        print*,'Found ',nradars_dom,' radars in domain'
+        print*
+       endif
 
-16     write(6,*)'Finished in nowrad_2_laps'
+       goto 16
+19     print*,'Error in nowrad_2_laps, terminating'
+       goto 16
+14     print*,'NOWRAD data not found for given time or'
+       print*,'Data could be bad. No vrc produced'
+
+16     print*,'Finished in nowrad_2_laps'
        return
        end
