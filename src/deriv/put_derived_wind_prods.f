@@ -209,7 +209,7 @@ cdis
 
         write(6,*)' ext_radar = ',ext_radar
 
-        i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
+!       i4_tol = max(ilaps_cycle_time / 2, iradar_cycle_time / 2)
 
         call get_filespec(ext_radar,2,c_filespec,istatus)
 
@@ -225,7 +225,10 @@ cdis
                 return
             endif
 
+            i4_tol = 1200
+
             call read_radar_3dref(i4time_sys,
+     1                 i4_tol,i4_ret,                                   ! I/O
      1                 .true.,ref_base,
      1                 NX_L,NY_L,NZ_L,ext_radar,
      1                 lat,lon,topo,.true.,.true.,
@@ -233,7 +236,6 @@ cdis
      1                 grid_ra_ref,
      1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
      1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
-
 
             if(istat_radar_2dref .eq.  1 .or. 
      1         istat_radar_2dref .eq. -1          )then
