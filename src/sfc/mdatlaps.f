@@ -743,36 +743,6 @@ c
         end
 c
 c
-	subroutine find_ij(lat_s,lon_s,lat,lon,numsta,mxsta,
-     &                     ni,nj,ii,jj,rii,rjj)
-c
-c======================================================================
-c
-c       Routine to find the i,j locations for each station.  Do not "round"
-c       the ii,jj's "up"...straight truncation puts the ob at the proper
-c       grid point on the major grid.
-c
-c       Orginal:  P. Stamus NOAA/FSL c.1990
-c       Changes:
-c
-c======================================================================
-c
-	real*4 lat_s(mxsta), lon_s(mxsta)
-        real*4 lat(ni,nj), lon(ni,nj)
-	integer*4 ii(mxsta), jj(mxsta)
-        real*4 rii(mxsta), rjj(mxsta)
-c
-	do ista=1,numsta
-          call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon,
-     &       ni,nj,rii(ista),rjj(ista),istatus)
-	  ii(ista) = rii(ista)
-	  jj(ista) = rjj(ista)
-	enddo !ista
-c
-	return
-	end
-c
-c
 	subroutine fill_bounds(x,imax,jmax,ii,jj,x_ob,
      &                           n_obs_b,badflag,mxstn)
 c

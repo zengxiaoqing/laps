@@ -182,74 +182,35 @@ c
 	end
 c
 c
-	subroutine reduce_p(temp,dewp,pres,elev,lapse_t,
-     &                          lapse_td,redpres,ref_lvl,badflag)
+	subroutine find_ij(lat_s,lon_s,lat,lon,numsta,mxsta,
+     &                     ni,nj,ii,jj,rii,rjj)
 c
+c======================================================================
 c
-c================================================================================
-c   This routine is designed to reduce the mesonet plains stations' pressure
-C   reports to the elevation of the Boulder mesonet station, namely 1612 m.  The
-C   hydrostatic equation is used to perform the reduction, with the assumption
-C   that the mean virtual temperature in the layer between the station in ques-
-C   tion and Boulder can approximated by the station virtual temperature.  This
-C   is a sufficient approximation for the mesonet plains stations below about
-C   7000 ft.  For the mountain and higher foothill stations (Estes Park,
-C   Rollinsville, Ward, Squaw Mountain, and Elbert), a different technique needs
-C   to be utilized in order to decently approximate the mean virtual temperature
-C   in the layer between the station and Boulder. Ideas to do this are 1) use
-C   the free air temperature from a Denver sounding, or 2) use the data from
-C   each higher station to construct a vertical profile of the data and iterate
-C   downward to Boulder.
-
-C	D. Baker	 2 Sep 83  Original version.
-C	J. Wakefield	 8 Jun 87  Changed ZBOU from 1609 to 1612 m.
-c	P. Stamus 	27 Jul 88  Change ranges for good data tests.
-c	P. Stamus	05 Dec 88  Added lapse rate for better computation
-c	 				of mean virtual temps.
-c			19 Jan 89  Fixed error with lapse rates (sheeze!)
-c			19 Dec 89  Change reduction to 1500 m.
-c			20 Jan 93  Version with variable reference level.
-c                       25 Aug 97  Changes for dynamic LAPS.
+c       Routine to find the i,j locations for each station.  Do not "round"
+c       the ii,jj's "up"...straight truncation puts the ob at the proper
+c       grid point on the major grid.
 c
-c================================================================================
+c       Orginal:  P. Stamus NOAA/FSL c.1990
+c       Changes:
 c
-	implicit none
-	real lapse_t, lapse_td, temp, dewp, pres, elev, redpres, ref_lvl
-	real badflag
-	real gor, ctv
-	parameter(gor=0.03414158,ctv=0.37803)
-	real dz, dz2, t_mean, td_mean, td, e, tkel, tv, esw
-!	DATA GOR,ZBOU,CTV/.03414158,1612.,.37803/
-!	data gor,ctv/.03414158,.37803/
-		!GOR= acceleration due to gravity divided by the dry air gas
-		!     constant (9.8/287.04)
-		!F2M= conversion from feet to meters
-		! *** zbou is now the standard (reduction) level 12-19-89 ***
-		!CTV= 1-EPS where EPS is the ratio of the molecular weight of
-		!     water to that of dry air.
-
-
-C** Check input values......good T, Td, & P needed to perform the reduction.
-	if(dewp.gt.temp .or. pres.le.620. .or. pres.gt.1080. .or.
-     &      temp.lt.-30. .or. temp.gt.120. .or. dewp.lt.-35. .or.
-     &      dewp.gt.90.) then
-	 redpres = badflag	!FLAG VALUE RETURNED FOR BAD INPUT
-	 return
-	endif
-
-	dz= elev - ref_lvl	!thickness (m) between station & reference lvl
-	dz2 = 0.5 * dz		! midway point in thickness (m)
-	t_mean = temp - (lapse_t * dz2)	! temp at midpoint (F)
-	td_mean = dewp - (lapse_td * dz2)	! dewpt at midpoint (F)
-	TD= 0.55556 * (td_mean - 32.)		! convert F to C
-	e= esw(td)		!saturation vapor pressure
-	tkel= 0.55556 * (t_mean - 32.) + 273.15	! convert F to K
-	tv= tkel/(1.-ctv*e/pres)	!virtual temperature
-
-	redpres= pres*exp(gor*(dz/tv))	!corrected pressure
+c======================================================================
+c
+	real*4 lat_s(mxsta), lon_s(mxsta)
+        real*4 lat(ni,nj), lon(ni,nj)
+	integer*4 ii(mxsta), jj(mxsta)
+        real*4 rii(mxsta), rjj(mxsta)
+c
+	do ista=1,numsta
+          call latlon_to_rlapsgrid(lat_s(ista),lon_s(ista),lat,lon,
+     &       ni,nj,rii(ista),rjj(ista),istatus)
+	  ii(ista) = rii(ista)
+	  jj(ista) = rjj(ista)
+	enddo !ista
 c
 	return
 	end
+c
 c
 c
 	subroutine extract(a,imax,jmax,i,j,ix,jy)
@@ -762,132 +723,6 @@ c.... That's it.  Let's go home.
 c
       return
       end
-c
-c
-      subroutine verify(field,ob,stn,n_obs_b,title,iunit,
-     &                  ni,nj,mxstn,x1a,x2a,y2a,ii,jj,
-     &                  field_ea,badflag)
-c
-c======================================================================
-c
-c     Routine to interpolate a field back to station locations, to 
-c     compare the analysis to the original obs.
-c
-c     Original: P.Stamus, NOAA/FSL  08-07-95
-c     Changes:  
-c               P.Stamus  08-14-95  Added mean.
-c                         08-25-97  Changes for dynamic LAPS
-c                         05-13-98  Added expected accuracy counts.
-c
-c     Notes:
-c
-c======================================================================
-c
-	integer ni,nj,mxstn
-	real*4 field(ni,nj), ob(mxstn), interp_ob
-	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
-	integer*4 ii(mxstn), jj(mxstn)
-	character title*40, stn(mxstn)*3, stn_mx*3, stn_mn*3
-c
-c.... Start.
-c
-	num = 0
-	num_ea1 = 0
-	num_ea2 = 0
-	num_ea3 = 0
-	abs_diff = 0.
-	sum = 0.
-	amean = 0.
-	diff_mx = -1.e30
-	diff_mn = 1.e30
-	write(iunit,900) title
- 900	format(/,/,2x,a40,/)
-c
-	ea1 = field_ea
-	ea2 = field_ea * 2.
-	ea3 = field_ea * 3.
-c
-c....   Find the 2nd derivative table for use by the splines.
-c
-	call splie2(x1a,x2a,field,ni,nj,y2a)
-c
-c....   Now call the spline for each station in the grid.
-c
-	do i=1,n_obs_b
-	   if(ii(i).lt.1 .or. ii(i).gt.ni) go to 500
-	   if(jj(i).lt.1 .or. jj(i).gt.nj) go to 500
-	   aii = float(ii(i))
-	   ajj = float(jj(i))
-	   call splin2(x1a,x2a,field,y2a,ni,nj,aii,ajj,interp_ob)
-c
-	   if(ob(i) .le. badflag) then
-	      diff = badflag
-	   else
-	      diff = interp_ob - ob(i)
-	      sum = diff + sum
-	      adiff = abs(diff)
-	      abs_diff = abs_diff + adiff
-	      num = num + 1
-c
-	      if(adiff .gt. diff_mx) then
-		 diff_mx = adiff
-		 stn_mx = stn(i)
-	      endif
-	      if(adiff .lt. diff_mn) then
-		 diff_mn = adiff
-		 stn_mn = stn(i)
-	      endif
-c
-c.....  Count how many stns are within the exp accuracy (and multiples)
-c
-	      if(adiff .le. ea1) num_ea1 = num_ea1 + 1
-	      if(adiff .le. ea2) num_ea2 = num_ea2 + 1
-	      if(adiff .le. ea3) num_ea3 = num_ea3 + 1
-c
-	   endif
-c
-	   write(iunit,905) i, stn(i), interp_ob, ob(i), diff
- 905	   format(5x,i3,1x,a3,1x,3f10.2)
-c
- 500	enddo !i
-c
-c.... Get the average diff over the obs.
-c     
-	ave_diff = badflag
-	amean = badflag
-	if(num .ne. 0) amean = sum / float(num)
-	if(num .ne. 0) ave_diff = abs_diff / float(num)
-	write(iunit,909) amean, num
- 909	format(/,'    Mean difference: ',f10.2,' over ',i4,' stations.')
-	write(iunit,910) ave_diff, num
- 910	format(' Average difference: ',f10.2,' over ',i4,' stations.')
-	write(iunit,920) diff_mx, stn_mx
- 920	format(' Maximum difference of ',f10.2,' at ',a3)
-	write(iunit,925) diff_mn, stn_mn
- 925	format(' Minimum difference of ',f10.2,' at ',a3)
-	write(iunit, 930)
- 930	format(' ')
-c
-	write(iunit, 950) field_ea
- 950	format(' Number of obs within multiples of exp acc of ',f8.2)
-	percent = -1.
-	anum = float(num)
-	if(num .ne. 0) percent = (float(num_ea1) / anum) * 100.
-	write(iunit, 952) num_ea1, num, percent
- 952	format(10x,'1x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
-	if(num .ne. 0) percent = (float(num_ea2) / anum) * 100.
-	write(iunit, 953) num_ea2, num, percent
- 953	format(10x,'2x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')	
-	if(num .ne. 0) percent = (float(num_ea3) / anum) * 100.
-	write(iunit, 954) num_ea3, num, percent
- 954	format(10x,'3x exp accuracy: ',i5,' of ',i5,' (',f5.1,'%)')
-	write(iunit, 930)
-	write(iunit, 930)
-	write(iunit, 931)
- 931	format(1x,'===============================================')
-c
-	return
-	end
 c
 c
 	subroutine bkgwts(lat,lon,topo,numsfc,lat_s,lon_s,elev_s,
