@@ -1,5 +1,5 @@
       subroutine read_afgwc_satdat(c_filename,
-     &                       isat,jtype,
+     &                       isat,jtype,l_cell_afwa,
      &                       chtype,i_delta_t,
      &                       i4time_current,
      &                       nlines,nelems,
@@ -56,6 +56,7 @@ c
       Character     c_filename*255
 
       logical       lopen,lext
+      logical       l_cell_afwa
 
       istatus=0
  
@@ -70,8 +71,8 @@ c
          print*,'File is already open: ',c_filename(1:n)
          goto 1000
       endif
-      call read_gwc_header(c_filename(1:n),STRPIX,STRSCNL,STPPIX,
-     +    STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH, 
+      call read_gwc_header(c_filename(1:n),l_cell_afwa,STRPIX,STRSCNL,
+     +   STPPIX,STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH, 
      +   GOALPHA,STRBDY1,STRBDY2,STPBDY1,STPBDY2,BEPIXFC,BESCNFC,
      +   FSCI,DECIMAT,istatus)
       if(istatus.eq.0)then
@@ -116,8 +117,13 @@ c
 c
 c read afgwc binary data file
 c
-      nlfi=depth*cell_depth
-      nefi=width*cell_width
+      if(l_cell_afwa)then
+         nlfi=depth*cell_depth
+         nefi=width*cell_width
+      else
+         nlfi=stpscnl-strscnl+1
+         nefi=stppix-strpix+1
+      endif
 
       call Process_SDHS_GVAR_sub(c_filename,chtype,isat,jtype,
      &nelems,nlines,image_data,nlfi,nefi,depth,width,istatus)

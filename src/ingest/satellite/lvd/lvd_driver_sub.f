@@ -128,7 +128,6 @@ c                                     used for variable in include 'satellite_co
       real      r_missing_data
       real      radtodeg
 
-      logical	l_national
       logical   lvis_flag
       logical   lsatqc
       logical   l_lut_flag
@@ -510,7 +509,6 @@ c
 
       endif
 
-      l_national = .false.
       iskip_bilin = 1
 c
 c ---------------------------------------------------

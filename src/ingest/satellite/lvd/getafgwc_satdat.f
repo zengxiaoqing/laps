@@ -206,28 +206,28 @@ c
                goto(21,22,23,24,25)ispec
 
 21             call read_afgwc_satdat(cfilename,isat,jtype,
-     &chtype(i),i_delta_sat_t_sec,i4time_current,nvislines,nviselem,
-     &image_vis,i4time_data_io,iostatus)
+     &l_cell_afwa,chtype(i),i_delta_sat_t_sec,i4time_current,
+     &nvislines,nviselem,image_vis,i4time_data_io,iostatus)
                goto 26
 
 22             call read_afgwc_satdat(cfilename,isat,jtype,
-     &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
-     &image_39,i4time_data_io,iostatus)
+     &l_cell_afwa,chtype(i),i_delta_sat_t_sec,i4time_current,
+     &nvislines,nviselem,image_vis,i4time_data_io,iostatus)
                goto 26
 
-23             call read_afgwc_satdat(cfilename,isat,jtype,
-     &chtype(i),i_delta_sat_t_sec,i4time_current,nwvlines,nwvelem,
-     &image_67,i4time_data_io,iostatus)
+23             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+     &,chtype(i),i_delta_sat_t_sec,i4time_current,nwvlines,nwvelem
+     &,image_67,i4time_data_io,iostatus)
                goto 26
 
-24             call read_afgwc_satdat(cfilename,isat,jtype,
-     &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
-     &image_11,i4time_data_io,iostatus)
+24             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+     &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
+     &,image_11,i4time_data_io,iostatus)
                goto 26
 
-25             call read_afgwc_satdat(cfilename,isat,jtype,
-     &chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem,
-     &image_12,i4time_data_io,iostatus)
+25             call read_afgwc_satdat(cfilename,isat,jtype,l_cell_afwa
+     &,chtype(i),i_delta_sat_t_sec,i4time_current,nirlines,nirelem
+     &,image_12,i4time_data_io,iostatus)
 
 26             continue
 

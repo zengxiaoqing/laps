@@ -117,6 +117,7 @@ c
       integer        i_la1,i_lo1
       integer        idx,idy,iresx,iresy
       integer        nw_line,nw_pix
+      integer        nxaf,nyaf
       integer        lenf
 
       integer        strpix,strscnl,stppix,stpscnl
@@ -221,16 +222,22 @@ c for GOES data only
          lenf=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
          cfname=path_to_raw_sat(ispec,jtype,isat)(1:lenf)//cname
 
-         call read_gwc_header(cfname,strpix,strscnl,stppix,stpscnl,
+         call read_gwc_header(cfname,l_cell_afwa,
+     &strpix,strscnl,stppix,stpscnl,
      &reqobstm,imgtype,golatsbp,golonsbp,iwidth,idepth,goalpha,istrbdy1,
      &istrbdy2,istpbdy1,istpbdy2,bepixfc,bescnfc,fsci,idecimat,istatus)
 
          if(istatus.eq.0)then
-c
-c this test is only good for the old SDHS data files.
-c
-            if(iwidth*256.ne.npix.or.idepth*64.ne.nlin)then
-               l_lut_flag=.true.
+            if(l_cell_afwa)then
+               if(iwidth*256.ne.npix.or.idepth*64.ne.nlin)then
+                  l_lut_flag=.true.
+               endif
+            else
+               nxaf=stppix-strpix+1
+               nyaf=stpscnl-strscnl+1
+               if(nxaf.ne.npix.or.nyaf.ne.nlin)then
+                  l_lut_flag=.true.
+               endif
             endif
 c
 c NOTE: nw_line and nw_pix are hardwired by src/include/sat_data_static

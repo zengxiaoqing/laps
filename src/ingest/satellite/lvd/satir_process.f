@@ -121,7 +121,7 @@ c
 
 c      bad = 1.e6 - 2.
        badlow=0.0
-       badhigh=335.0  !equivalent to 62C or 144F.
+       badhigh=341.25  !in line with goes08 cnt-to-btemp lut max value.
 
        imax = ni
        jmax = nj

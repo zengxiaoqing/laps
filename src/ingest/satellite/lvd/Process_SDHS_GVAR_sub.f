@@ -42,6 +42,7 @@ C**********************************************************************
       Integer lend
       INTEGER WIDTH      !Number of Cells in Width of image
       INTEGER DEPTH      !Number of Cells in Depth of image
+      Integer itempintgr
 
       PARAMETER (HEADER_SIZE = 256) 
       PARAMETER (CELL_WIDTH = 256)
@@ -70,7 +71,7 @@ c     INTEGER*4 YS         !Scanlines depth of image
                            !image
       INTEGER CNUM       !the column number(pixel) of the converted 
                            !image
-      Integer ii,jj
+      Integer ii,jj,m
       Integer ispec
       Integer istat
       Integer istart,jstart
@@ -87,7 +88,8 @@ c static case: JSmart 5-12-97
 c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
 
       character      IMAGEC(nlfi*nefi)*1
-      Integer        image_decell(nefi,nlfi)
+      Integer        image_decell_2d(nefi,nlfi)
+      Integer        image_decell_1d(nefi*nlfi+HEADER_SIZE*4)
       real           image_out(nelem,nlines)
 
       include 'satellite_dims_lvd.inc'
@@ -129,45 +131,76 @@ C Original constructs:
 C     XS =WIDTH*CELL_WIDTH
 C     YS = DEPTH*CELL_DEPTH
 C     SIZE = YS*XS+HEADER_SIZE
-      SIZE = nlfi*nefi+HEADER_SIZE*4
+      SIZE = nlfi*nefi+HEADER_SIZE*4   !note HEADER_SIZE = 256
 C
 C**********************************************************************
 C  Open the file that contains the GVAR header and pixel data.  The
 C  record length in the direct access read is set equal to the SIZE
 C**********************************************************************
+c
+      imagelen=nlfi*nefi    !/4
 
       nf=index(filename,' ')-1
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
      & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= SIZE)
-      READ (8,REC=1,ERR=99)HEADER,IMAGEC
+
+      if(l_cell_afwa)then
+         READ (8,REC=1,ERR=99)HEADER,IMAGEC
+      else
+         call read_binary_field(image_decell_1d,1,4,imagelen+
+     +HEADER_SIZE*4,filename,nf)
+      endif
 
       Close(8)
-      imagelen=nlfi*nefi/4
-      if(imagelen .ne. float(nlfi*nefi)/4.) imagelen=imagelen+1
 
-      call decellularize_image(IMAGEC,imagelen,width,depth,
-     &pixels_per_cell,cell_width,cell_depth,nefi,nlfi,image_decell)
+      if(l_cell_afwa)then
+
+         call decellularize_image(IMAGEC,imagelen,width,depth,
+     &pixels_per_cell,cell_width,cell_depth,nefi,nlfi,image_decell_2d)
 
 c back as floating 10-bit info for the sector in domain.
 
-      jj=0
-      do j=jstart,jend
-         jj=jj+1
-         ii=0
-      do i=istart,iend
-         ii=ii+1
-         image_out(ii,jj)=float(image_decell(i,j))*4.0
-      enddo
-      enddo
+         jj=0
+         do j=jstart,jend
+            jj=jj+1
+            ii=0
+         do i=istart,iend
+            ii=ii+1
+            image_out(ii,jj)=float(image_decell_2d(i,j))*4.0
+         enddo
+         enddo
 
+      else ! afwa data not cellularized but bits need moving
+
+         m=HEADER_SIZE*4
+         do j=1,nlfi
+         do i=1,nefi
+            m=m+1
+            image_decell_2d(i,j)=image_decell_1d(m)
+         enddo
+         enddo
+
+         jj=0
+         do j=jstart,jend
+            jj=jj+1
+            ii=0
+         do i=istart,iend
+            ii=ii+1
+            itempintgr=IBITS(image_decell_2d(i,j),0,8)
+            image_out(ii,jj)=float(itempintgr)*4.0
+         enddo
+         enddo
+
+      endif
+
+c leftover stuff from original AFWA code.
+C
 C**********************************************************************
 C  allocate space for the working INTEGER*1 array and the final image
 C  array
 C**********************************************************************
-      
 C     ALLOCATE(IMAGEI1(YS*XS))
 C     ALLOCATE(IMAGE(XS,YS)) 
-
 C**********************************************************************
 C  Decellularize the data and fill the image array.  The 
 C  algorithm used is one I derived.  It make use of the number of
@@ -179,23 +212,16 @@ C  function IBITS and stored in the final 2-D image array
 C**********************************************************************
 C
 C  This code now in subroutine decellularize_image
- 
 c     DO I=1,YS*XS 
-
 c       CELL_NUM = (I-1)/PIXELS_PER_CELL + 1
 c       CELL_ROW = (I-1)/(PIXELS_PER_CELL*WIDTH) +1
 c       CELL_COLUMN = MOD( (I-1)/PIXELS_PER_CELL, WIDTH ) + 1
-
 c       RNUM = (I-((CELL_NUM-1)*PIXELS_PER_CELL)-1)/CELL_WIDTH
 c    &         + (CELL_ROW-1)*CELL_DEPTH + 1
-
 c       CNUM = MOD( (I-((CELL_NUM-1)*PIXELS_PER_CELL)-1), CELL_WIDTH)
 c    &         + 1 + (CELL_COLUMN-1)*256
-
 c       IMAGE(CNUM,RNUM)=IBITS(IMAGEI1(I),0,8)
-
 c     END DO
-
 C**********************************************************************
 C Open a file to write out the image array.  this is done for QC 
 C purposes only.  The file is write out one scanline at a time using a
@@ -203,15 +229,13 @@ C Fortran 90 construct.  The record length is set to 2 times the width
 C of the image in pixels to account for the fact that the array type
 C is two byte integer
 C**********************************************************************
-
 C     OPEN(UNIT=9, FILE='output', ERR=100, IOSTAT=IOSTATUS,
 C    & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= 2*XS)
-
 C     DO I=1,YS
 C       WRITE(9,REC=I)IMAGE(:,I)
 C     END DO
-
 C     CLOSE(9)
+
 
       istatus = 1
       goto 1000
