@@ -1,4 +1,5 @@
  &lapsparms_nl
+ c80_description='NOAA/ERL Forecast Systems Laboratory, Boulder CO (PARALLEL)'
  iflag_lapsparms_cmn=1,              
  PRESSURE_BOTTOM_L=110000.,          
  PRESSURE_INTERVAL_L=5000.,          
@@ -6,7 +7,7 @@
  vertical_grid='PRESSURE',
  nk_laps=21,                         
  standard_latitude=40.0,        
- standard_latitude2=0.0,        
+ standard_latitude2=90.0,        
  standard_longitude=-105.0,       
  grid_cen_lat_cmn=41.0,         
  grid_cen_lon_cmn=-105.5,         
@@ -51,7 +52,7 @@
 
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
- path_to_raw_raob_cmn='/public/data/raob/netcdf/',
+ path_to_raw_raob_cmn='/public/dummy/',
 
  path_to_metar_data_cmn='/public/data/metar/netcdf/',
  path_to_local_data_cmn='/public/data/cdot/netcdf/',
