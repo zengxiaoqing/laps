@@ -39,7 +39,7 @@ cdis
         subroutine insert_radar(i4time,cldcv,cld_hts
      1         ,temp_3d,temp_sfc_k,grid_spacing_m,ni,nj,nk,kcloud
      1         ,cloud_base,cloud_base_buf,ref_base
-     1         ,topo                                                 ! I
+     1         ,topo,r_missing_data                                  ! I
      1         ,grid_ra_ref,dbz_max_2d
      1         ,vis_radar_thresh_dbz                                 ! I
      1         ,l_unresolved                                         ! O
@@ -63,6 +63,8 @@ cdis
         real*4 cloud_base_buf(ni,nj) ! Lowest SAO/IR base within search radius
         real*4 topo(ni,nj)
 
+        real*4 echo_top(ni,nj)       ! L
+
 !       Cloud not filled in unless radar echo is higher than base calculated
 !       with THIS threshold.
         real*4     thresh_cvr
@@ -77,6 +79,7 @@ cdis
         do j = 1,nj
         do i = 1,ni
             cloud_base(i,j) = unlimited_ceiling
+            echo_top(i,j) = r_missing_data
 
             do k = kcloud-1,1,-1
                 if(cldcv(i,j,k  ) .lt. thresh_cvr .and.
@@ -156,10 +159,10 @@ c                   write(6,*)' khigh = ',kk
                     if(k .eq. nk   .or. 
      1                 grid_ra_ref(i,j,kp1) .lt. ref_thresh)then
 
-                        echo_top = heights_3d(i,j,k)
+                        echo_top(i,j) = heights_3d(i,j,k)
 
 !                       Test if we are below the cloud base
-                        if(echo_top .lt. cloud_base_buf(i,j)
+                        if(echo_top(i,j) .lt. cloud_base_buf(i,j)
      1                                                         )then
 
 !                           Radar Echo Top is below analyzed cloud base
@@ -178,12 +181,13 @@ c                   write(6,*)' khigh = ',kk
                             enddo ! i
                             enddo ! j
 
-                            if(cloud_base_buf(i,j) .lt. echo_top)then       
+                            if(cloud_base_buf(i,j) 
+     1                                           .lt. echo_top(i,j))then       
 
                               isearch_base = isearch_base + 1
                               if(isearch_base .lt. 50)then ! limit log output
                                 write(6,71)i,j,k
-     1                                    ,nint(echo_top)
+     1                                    ,nint(echo_top(i,j))
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
 71                              format(' Rdr Top > Bse ',2i4,i3,3i7
@@ -194,14 +198,15 @@ c                   write(6,*)' khigh = ',kk
                                 if(cloud_base(i,j) 
      1                                      .eq. unlimited_ceiling  ! No clds
      1                                      .OR.
-     1                             echo_top - topo(i,j) .lt. 1000.  ! Gnd Clut
+     1                             echo_top(i,j) - topo(i,j) 
+     1                                      .lt. 1000.              ! Gnd Clut
      1                                                             )then       
 
 !                                   We will want to reconcile cloud/radar
                                     l_unresolved(i,j) = .true.
 
                                     write(6,72)i,j,k
-     1                                    ,nint(echo_top)
+     1                                    ,nint(echo_top(i,j))
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
 72                                  format(' Rdr Top < Bse ',2i4,i3,3i7
@@ -209,7 +214,7 @@ c                   write(6,*)' khigh = ',kk
 
                                 else
                                     write(6,73)i,j,k
-     1                                    ,nint(echo_top)
+     1                                    ,nint(echo_top(i,j))
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
 73                                  format(' Rdr Top < Bse ',2i4,i3,3i7
@@ -265,15 +270,29 @@ c                   write(6,*)' khigh = ',kk
 
         do i = 1,ni
         do j = 1,nj
+            if(echo_top(i,j) .eq. r_missing_data)then
+                echo_top_agl = -9999.
+            else
+                echo_top_agl = echo_top(i,j) - topo(i,j)
+                if(echo_top_agl .lt. 1000. .and. 
+     1             .not. l_unresolved(i,j)       )then
+!                   Should we set these to unresolved here or better yet above?
+                    write(6,*)'CLD_RDR - Low echo top yet resolved ',i,j       
+     1                        ,nint(echo_top_agl)
+     1                        ,nint(cloud_base(i,j))
+     1                        ,nint(cloud_base_buf(i,j))
+                endif
+            endif
+
             if(l_unresolved(i,j))then
 
 !               Reconcile radar and satellite
                 if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
 !                   Blank out radar
-                    write(6,601)i,j,dbz_max_2d(i,j)
+                    write(6,601)i,j,dbz_max_2d(i,j),nint(echo_top_agl)
 601                 format(' CLD_RDR - insert_radar: '
      1                             ,'Blank out radar < '
-     1                             ,2x,2i4,f6.1,' dbz')
+     1                             ,2x,2i4,f6.1,' dbz',i6,' agl')
 
                     if(.true.)then ! Block out the radar
                         do k = 1,nk
@@ -291,10 +310,10 @@ c                   write(6,*)' khigh = ',kk
 !                   clouds analyzed. For now we blank out the radar, but we
 !                   could also create a cloud at the radar echo location.
 
-                    write(6,602)i,j,dbz_max_2d(i,j)
+                    write(6,602)i,j,dbz_max_2d(i,j),nint(echo_top_agl)       
 602                 format(' CLD_RDR - insert_radar: '
      1                             ,'Blank out radar > *'
-     1                             ,1x,2i4,f6.1,' dbz')
+     1                             ,1x,2i4,f6.1,' dbz',i6,' agl')
 
                     if(.true.)then ! Block out the radar
                         do k = 1,nk
