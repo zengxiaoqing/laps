@@ -278,17 +278,16 @@ cdis
      1       k_level .eq. 0 .and. k_sfc .eq. k_ob)then
 
 !               write(6,421)alat,alon,k,dir,speed_ms
-!               call latlon_ram_laps(alat,alon,x,y,init,'p')
-!               write(6,323)alat,alon,nint(x),nint(y)
-1322             format(' old ',2f8.3,2i5)
-1323             format(' new ',2f8.3,10x,2i5)
+1322            format(' old ',2f8.3,2i5)
+1323            format(' new ',2f8.3,10x,2i5)
 
                 spd_kt = speed_ms / mspkt
 
                 write(6,*)nint(ri),nint(rj),dir,spd_kt
 
+!               Note the 'false' passed as DXX winds are grid north
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,size_radar,'true')
+     1                          ,size_radar,'false')
 
           elseif(k_ob .gt. k_level)then
                 goto1300
