@@ -4,35 +4,25 @@
 
       implicit none
 
-C MAX_GRIDS is the max number of grids that may be passed in for writing
-C out to the static file.  An additional grid, ZIN, is generated within
-C this subroutines from the AVG grid
-      integer*4      max_grids
-      parameter      (MAX_GRIDS=7)
+C This routine calls functions in static_routines.c.  To create the new
+C static file, a cdl file named <laps_dom_file>.cdl (ie. nest7grid.cdl)
+C must be located in the LAPS cdl directory and is written out to the
+C directory specified in "dir".
 
-      character      dir*(*),
-     1               laps_dom_file*(*)
-
-      integer*4      imax,
-     1               jmax,
-     1               n_grids
-
-      character*3    var(n_grids)
-      character*4    c_var(8)
-      character*125  comment(8)
-      character*126  c_comment(8)
-      character*10   units(n_grids)
-      character*11   c_units(8)
-      character*91   file_name
-
-      real*4         data(imax,jmax,n_grids),
-     1               grid_spacing
-
+C Passed in variables
+      character      dir*(*), laps_dom_file*(*)
+      integer*4      imax, jmax, n_grids
+      character*(*)  var(n_grids)
+      character*(*)  units(n_grids)
+      character*(*)  comment(n_grids)
+      real*4         data(imax,jmax,n_grids), grid_spacing
       integer*4      status
 
 C Local variables
 
+      character*91   file_name
       integer*4      i,
+     1               var_len, com_len, unit_len,
      1               ERROR(3),
      1               no_laps_diag,
      1               flag
@@ -50,24 +40,22 @@ C Local variables
 
 C  BEGIN SUBROUTINE
 
-      do i=1,n_grids
-        call upcase(var(i),c_var(i))
-      enddo
-
       call make_static_fname(dir,laps_dom_file,file_name,f_len,status)
 
-      print *,'rd_laps_static: ',file_name
+      var_len = len(var(1))
+      com_len = len(comment(1))
+      unit_len = len(units(1))
 
-      call read_cdf_static(file_name,f_len,c_var,c_comment,c_units,
-     1                     imax,jmax,n_grids,data,grid_spacing,
-     1                     no_laps_diag,status)
+      call read_cdf_static(file_name,f_len,var,var_len,comment,com_len,
+     1                     units,unit_len,imax,jmax,n_grids,data,
+     1                     grid_spacing,no_laps_diag,status)
 
       if (status .ge. 0) then       !return from read with no errors
 
-        do i = 1, n_grids
-          comment(i) = c_comment(i)
-          units(i) = c_units(i)
-        enddo
+c       do i = 1, n_grids
+c         comment(i) = c_comment(i)
+c         units(i) = c_units(i)
+c       enddo
 
         if (status .gt. 0) l_some_missing = .true.
 
@@ -96,7 +84,7 @@ C
       goto 999
 C
 950   if (flag .ne. 1)
-     1write(6,*) 'Error in imax,jmax, or n_grids...write aborted.'
+     1write(6,*) 'Error in imax,jmax, or n_grids...read aborted.'
       status = ERROR(2)
       goto 999
 C
