@@ -419,3 +419,40 @@ sub julian {
 
     $today - $first_of_year + 1;
 }
+
+sub get_system_type {
+
+    my $dataroot = shift(@_);
+
+    if(!defined $dataroot){
+       $dataroot = $ENV{LAPS_DATA_ROOT}  if( $ENV{LAPS_DATA_ROOT} );
+       $dataroot = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $dataroot);
+       $dataroot = $ENV{LAPS_SRC_ROOT}   if( $ENV{LAPS_SRC_ROOT}   && !defined $dataroot);
+       $dataroot = $ENV{MOAD_DATAROOT}   if( $ENV{MOAD_DATAROOT}   && !defined $dataroot);
+       $dataroot = $ENV{INSTALLROOT}     if( $ENV{INSTALLROOT}     && !defined $dataroot);
+       $dataroot = $ENV{SOURCE_ROOT}     if( $ENV{SOURCE_ROOT}     && !defined $dataroot);
+    }
+    print "The dataroot = $dataroot \n";
+
+    my @dirs;
+    opendir(DIR,$dataroot)
+        or die "Can't open $dataroot";
+
+    my $wrfsystem=0;
+    my $lapssystem=0;
+    my @dirs = readdir DIR;
+    foreach (@dirs) {
+#      print "'$_',\n";
+       if($_ eq "siprd"   || $_ eq "silog"){$wrfsystem=1;}
+       if($_ eq "lapsprd" || $_ eq "log")  {$lapssystem=1;}
+       }
+    if($wrfsystem==1 && $lapssystem==1){
+       print "Found ambiguous system \n";
+       print "Both siprd and lapsprd in dataroot \n";
+    }elsif($wrfsystem==1){
+       print "Welcome to WRF\n";
+    }else{
+       print "Welcome to LAPS\n";
+    }
+}
+1;
