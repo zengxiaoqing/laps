@@ -820,7 +820,7 @@ c
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
       real tol
-      parameter (tol=.01)
+      parameter (tol=0.1)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
 
 
