@@ -133,7 +133,11 @@ cdis
             call OPNGKS
         endif
 
+!       Read namelist parameters
         call get_lapsplot_parms(namelist_parms,istatus)       
+
+!       Set Default plot parameters
+        plot_parms%rimage_intensity = 1.0
 
 1100    write(6,1110)
 1110    format(/////'     [h/hz]  Horizontal Plan View '
@@ -149,6 +153,12 @@ cdis
         call get_laps_cycle_time(laps_cycle_time, istatus)
         if(istatus .ne. 1)then
             write(6,*)' Bad call to get_laps_cycle_time'
+        endif
+
+        if(c_section .eq. 'in')then
+            write(6,*)' Input image intensity...'
+            read(lun,*)plot_parms%rimage_intensity
+            go to 1100
         endif
 
         IF(     c_section .eq. 'h' .or. c_section .eq. 'H' 
