@@ -200,7 +200,7 @@ c vrc definitions
 c
 !     character     dir_vrc*50
       character     ext_vrc*31
-      character     comment_vrc*125
+      character*125 comment_vrc(2)
       character*10  units_vrc(2)
       character*3   var_vrc(2)
       character     lvl_coord_2d*4
@@ -537,8 +537,10 @@ c
              units_vrc(2) = 'M'
 
              read(cradars,*)n_radars
-             comment_vrc='Radar mosaic. Type = '//c_mosaic_type//' '
-     1                   //cradars
+             do ic = 1,2
+                 comment_vrc(ic)='Radar mosaic. Type = '//c_mosaic_type       
+     1                           //' '//cradars
+             enddo ! ic
 
 !            call get_directory('vrc',path,lenp)
 !            dir_vrc = path(1:lenp)
