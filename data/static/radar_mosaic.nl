@@ -10,9 +10,9 @@ c
 c
 c  J. Smart (smart@fsl.noaa.gov 303-497-6597)
 c 
-c  c_radar_mosaic_type: input either 'vxx' = rrv or 'rdr' = wfo type.
-c      vxx files are in lapsprd/v01, v02, etc. 
-c      rdr files are in lapsprd/rdr/001,002, 003, etc.
+c  c_radar_mosaic_type: input either 'vxx' or 'rdr' 
+c      vxx files are in lapsprd/v01, v02, etc.         (wideband   / full volume / Level 2)
+c      rdr files are in lapsprd/rdr/001,002, 003, etc. (narrowband / low-level   / Level 3)
 c 
 c      Pathways to data are automatically built in the program since it is lapsprd.
 c
