@@ -72,13 +72,21 @@ C            THROUGH THE 0-6 KM MEAN WIND.
              vmean(i,j) = vsum(i,j) / sum(i,j)
 
 !            Shear Vector through the layer
-             ushear = uanl(i,j,khigh(i,j)) - uanl(i,j,klow(i,j))
-             vshear = vanl(i,j,khigh(i,j)) - vanl(i,j,klow(i,j))
+             if(uanl(i,j,klow(i,j)) .ne. r_missing_data .and.
+     1          vanl(i,j,klow(i,j)) .ne. r_missing_data       )then
+                 ushear = uanl(i,j,khigh(i,j)) - uanl(i,j,klow(i,j))
+                 vshear = vanl(i,j,khigh(i,j)) - vanl(i,j,klow(i,j))
 
-             shearspeed = sqrt(ushear*ushear+vshear*vshear)
+                 shearspeed = sqrt(ushear*ushear+vshear*vshear)
 
-             ustorm(i,j) = umean(i,j) + (7.5*vshear/shearspeed)
-             vstorm(i,j) = vmean(i,j) - (7.5*ushear/shearspeed)
+                 ustorm(i,j) = umean(i,j) + (7.5*vshear/shearspeed)
+                 vstorm(i,j) = vmean(i,j) - (7.5*ushear/shearspeed)
+
+             else
+                 write(6,*)' Error in meanwind, missing low level wind'       
+
+             endif
+
 
           enddo ! i
         enddo ! j
