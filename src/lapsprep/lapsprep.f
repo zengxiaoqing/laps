@@ -190,7 +190,7 @@
             (ext(loop).EQ.'lw3').OR. &
             (ext(loop).EQ.'lh3').OR. &
             (ext(loop).EQ.'lsx') ) THEN 
-          PRINT '(A)', 'Mandatory file not available!'
+          PRINT '(A)', 'Mandatory file not available:' ,input_laps_file
           STOP 'not_enough_data'
         ELSE IF ( (ext(loop).EQ.'lq3') .OR. &
                (ext(loop).EQ.'lwc') ) THEN
@@ -436,8 +436,8 @@
       else
         mr(i,j,k)=mr(i,j,z3+1)
       endif
-      if (u(i,j,k) .eq. 1.e-30 .or. abs(u(i,j,k)) .gt. 200.) u(i,j,k)=u(i,j,z3+1)
-      if (v(i,j,k) .eq. 1.e-30 .or. abs(v(i,j,k)) .gt. 200.) v(i,j,k)=v(i,j,z3+1)
+!      if (u(i,j,k) .eq. 1.e-30 .or. abs(u(i,j,k)) .gt. 200.) u(i,j,k)=u(i,j,z3+1)
+!     if (v(i,j,k) .eq. 1.e-30 .or. abs(v(i,j,k)) .gt. 200.) v(i,j,k)=v(i,j,z3+1)
     enddo
     enddo
     enddo
@@ -480,6 +480,7 @@
 
       IF (MAXVAL(lwc) .LT. 99999.) THEN
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
+        lwc = lwc*lwc_scale  
       ELSE
         PRINT *,'Cloud Liquid (lwc/lwc) appears to be missing, setting values to 0.0'
         lwc(:,:,:) = 0.0

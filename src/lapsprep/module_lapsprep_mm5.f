@@ -316,7 +316,9 @@ CONTAINS
         CYCLE var_lwc
       END IF
       CALL write_pregrid_header(field,units,desc,p_pa(k))
-      d2d = lwc(:,:,k)
+
+      d2d = lwc(:,:,k) 
+      
       WRITE ( output_unit ) d2d
       PRINT '(A,F9.1,A,F8.6,A,F8.6)', 'Level (Pa):', p_pa(k), ' Min: ', MINVAL(d2d),&
             ' Max: ', MAXVAL(d2d)

@@ -51,7 +51,7 @@ MODULE setup
    LOGICAL            :: hotstart,balance,adjust_rh
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
-   REAL               :: snow_thresh
+   REAL               :: snow_thresh, lwc_scale
    CHARACTER (LEN=256):: output_prefix
   
   !  Output file info.
@@ -96,7 +96,8 @@ CONTAINS
                          balance           , &
                          adjust_rh         , &
                          output_format     , &
-                         snow_thresh   
+                         snow_thresh       , &
+                         lwc_scale 
 
       nml_unit = 77
 
@@ -105,6 +106,7 @@ CONTAINS
       balance = .false.
       adjust_rh = .false.
       snow_thresh = 0.5
+      lwc_scale = 1.0
  
       ! Open the namelist
 

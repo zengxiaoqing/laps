@@ -85,35 +85,40 @@ CONTAINS
 
   include 'netcdf.inc'
 
-  REAL, target                   :: pr(z3+1)      !Pressure levels (mb)
-  REAL, target                   :: uw(x,y,z3+1)  !U-component of wind wrt grid (m/s)
-  REAL, target                   :: vw(x,y,z3+1)  !V-component of wind wrt grid (m/s) 
-  REAL, target                   :: ww(x,y,z3+1)  !W-component of wind (m/s) 
-  REAL, target                   :: tp(x,y,z3+1)  !Temperature (K)
-  REAL, target                   :: ht(x,y,z3+1)  !Geopotential Height (m)
-  REAL, target                   :: mr(x,y,z3+1)  !Mixing ratio (kg/kg)
-  REAL                           :: slp(x,y)      !MSL Pressure (Pa)
-  REAL                           :: spr(x,y)      !Surface Pressure (Pa)
-  REAL                           :: lwc(x,y,z3)   !Cloud water mr (kg/kg)
-  REAL                           :: ice(x,y,z3)   !Cloud ice mr (kg/kg)
-  REAL                           :: rai(x,y,z3)   !Precip rain mr (kg/kg)
-  REAL                           :: sno(x,y,z3)   !Precip snow mr (kg/kg)
-  REAL                           :: pic(x,y,z3)   !Precip ice mr (kg/kg)
+  REAL                   :: pr(z3+1)      !Pressure levels (mb)
+  REAL                   :: uw(x,y,z3+1)  !U-component of wind wrt grid (m/s)
+  REAL                   :: vw(x,y,z3+1)  !V-component of wind wrt grid (m/s) 
+  REAL                   :: ww(x,y,z3+1)  !W-component of wind (m/s) 
+  REAL                   :: tp(x,y,z3+1)  !Temperature (K)
+  REAL                   :: ht(x,y,z3+1)  !Geopotential Height (m)
+  REAL                   :: mr(x,y,z3+1)  !Mixing ratio (kg/kg)
+  REAL                   :: slp(x,y)      !MSL Pressure (Pa)
+  REAL                   :: spr(x,y)      !Surface Pressure (Pa)
+  REAL                   :: lwc(x,y,z3)   !Cloud water mr (kg/kg)
+  REAL                   :: ice(x,y,z3)   !Cloud ice mr (kg/kg)
+  REAL                   :: rai(x,y,z3)   !Precip rain mr (kg/kg)
+  REAL                   :: sno(x,y,z3)   !Precip snow mr (kg/kg)
+  REAL                   :: pic(x,y,z3)   !Precip ice mr (kg/kg)
 
   ! Local Variables
 
-  real, pointer                  :: pr3(:)
-  real, pointer                  :: ht3(:,:,:)
-  real, pointer                  :: tp3(:,:,:)
-  real, pointer                  :: mr3(:,:,:)
-  real, pointer                  :: uw3(:,:,:)
-  real, pointer                  :: vw3(:,:,:)
-  real, pointer                  :: ww3(:,:,:)
-  real, pointer                  :: sht(:,:)
-  real, pointer                  :: stp(:,:)
-  real, pointer                  :: smr(:,:)
-  real, pointer                  :: suw(:,:)
-  real, pointer                  :: svw(:,:)
+  real, allocatable              :: pr3(:)
+  real, allocatable              :: ht3(:,:,:)
+  real, allocatable              :: tp3(:,:,:)
+  real, allocatable              :: mr3(:,:,:)
+  real, allocatable              :: uw3(:,:,:)
+  real, allocatable              :: vw3(:,:,:)
+  real, allocatable              :: ww3(:,:,:)
+  real, allocatable              :: sht(:,:)
+  real, allocatable              :: stp(:,:)
+  real, allocatable              :: smr(:,:)
+  real, allocatable              :: suw(:,:)
+  real, allocatable              :: svw(:,:)
+  real, allocatable              :: lwcf(:,:,:)
+  real, allocatable              :: icef(:,:,:)
+  real, allocatable              :: raif(:,:,:)
+  real, allocatable              :: snof(:,:,:)
+  real, allocatable              :: picf(:,:,:)
 
   INTEGER                        :: yyyyddd, valid_mm, valid_dd
   INTEGER                        :: icode,ncid,nid,idimid(3),start,count
@@ -129,18 +134,41 @@ CONTAINS
 
   ! Separate surface data from upper air data.
 
-  pr3 => pr(1:z3)
-  ht3 => ht(1:x,1:y,1:z3)
-  tp3 => tp(1:x,1:y,1:z3)
-  mr3 => mr(1:x,1:y,1:z3)
-  uw3 => uw(1:x,1:y,1:z3)
-  vw3 => vw(1:x,1:y,1:z3)
-  ww3 => ww(1:x,1:y,1:z3)
-  sht => ht(1:x,1:y,z3+1)
-  stp => tp(1:x,1:y,z3+1)
-  smr => mr(1:x,1:y,z3+1)
-  suw => uw(1:x,1:y,z3+1)
-  svw => vw(1:x,1:y,z3+1)
+  allocate(pr3(z3))
+  pr3 = pr(1:z3)
+
+  allocate(ht3(x,y,z3))
+  ht3 = ht(1:x,1:y,1:z3)
+
+  allocate(tp3(x,y,z3))
+  tp3 = tp(1:x,1:y,1:z3)
+
+  allocate(mr3(x,y,z3))
+  mr3 = mr(1:x,1:y,1:z3)
+
+  allocate(uw3(x,y,z3))
+  uw3 = uw(1:x,1:y,1:z3)
+
+  allocate(vw3(x,y,z3))
+  vw3 = vw(1:x,1:y,1:z3)
+
+  allocate(ww3(x,y,z3))
+  ww3 = ww(1:x,1:y,1:z3)
+
+  allocate(sht(x,y))
+  sht = ht(1:x,1:y,z3+1)
+
+  allocate(stp(x,y))
+  stp = tp(1:x,1:y,z3+1)
+
+  allocate(smr(x,y))
+  smr = mr(1:x,1:y,z3+1)
+
+  allocate(suw(x,y))
+  suw = uw(1:x,1:y,z3+1)
+
+  allocate(svw(x,y))
+  svw = vw(1:x,1:y,z3+1)
 
   ! Flip 3d arrays.
 
@@ -152,11 +180,25 @@ CONTAINS
   call flip_array(x,y,z3,vw3)
 
   if (hotstart) then
-    call flip_array(x,y,z3,lwc)
-    call flip_array(x,y,z3,ice)
-    call flip_array(x,y,z3,rai)
-    call flip_array(x,y,z3,sno)
-    call flip_array(x,y,z3,pic)
+    allocate(lwcf(x,y,z3))
+    lwcf = lwc
+    call flip_array(x,y,z3,lwcf)
+
+    allocate(icef(x,y,z3))
+    icef = ice
+    call flip_array(x,y,z3,icef)
+
+    allocate(raif(x,y,z3))
+    raif = rai
+    call flip_array(x,y,z3,raif)
+
+    allocate(snof(x,y,z3))
+    snof = sno
+    call flip_array(x,y,z3,snof)
+
+    allocate(picf(x,y,z3))
+    picf = pic
+    call flip_array(x,y,z3,picf)
     call flip_array(x,y,z3,ww3)
   endif
 
@@ -320,7 +362,8 @@ CONTAINS
 
   IF      ( grid_type(1:8)  .EQ. 'latlon'                   ) THEN
     agridtype='Lat-Lon'
-  ELSE IF ( grid_type(1:24) .EQ. 'secant lambert conformal' ) THEN
+  ELSE IF ((grid_type(1:24) .EQ. 'secant lambert conformal').OR. &
+           (grid_type(1:28) .EQ. 'tangential lambert conformal')) THEN
     agridtype='Lambert-Conformal'
   ELSE IF ( grid_type(1:19) .EQ. 'polar stereographic'      ) THEN
     agridtype='Polar-Stereographic'
@@ -379,7 +422,7 @@ CONTAINS
   ALLOCATE (ut(x,y,1)) ! Array for true u-winds
   ALLOCATE (vt(x,y,1)) ! Array for true v-winds
 
-  IF (agridtype(1:3) .EQ. 'Pol') THEN
+  IF ((agridtype(1:3) .EQ. 'Pol').OR.(agridtype(1:3) .EQ. 'Lam')) THEN
     DO j=1,y
     DO i=1,x
       CALL uvgrid_to_uvtrue(suw(i,j),svw(i,j), &
@@ -417,7 +460,7 @@ CONTAINS
   ALLOCATE (ut(x,y,z3)) ! Array for true u-winds
   ALLOCATE (vt(x,y,z3)) ! Array for true v-winds
 
-  IF (agridtype(1:3) .EQ. 'Pol') THEN
+  IF ((agridtype(1:3) .EQ. 'Pol').OR.(agridtype(1:3) .EQ. 'Lam')) THEN
     level_loop: DO k = 1,z3
     rotate_winds_j: DO j=1,y
     rotate_winds_i: DO i=1,x
@@ -447,21 +490,38 @@ CONTAINS
 
   if (hotstart) then
     icode=nf_inq_varid(ncid,'lwc',nid)
-    icode=nf_put_var_real(ncid,nid,lwc)
+    icode=nf_put_var_real(ncid,nid,lwcf)
     icode=nf_inq_varid(ncid,'ice',nid)
-    icode=nf_put_var_real(ncid,nid,ice)
+    icode=nf_put_var_real(ncid,nid,icef)
     icode=nf_inq_varid(ncid,'rai',nid)
-    icode=nf_put_var_real(ncid,nid,rai)
+    icode=nf_put_var_real(ncid,nid,raif)
     icode=nf_inq_varid(ncid,'sno',nid)
-    icode=nf_put_var_real(ncid,nid,sno)
+    icode=nf_put_var_real(ncid,nid,snof)
     icode=nf_inq_varid(ncid,'pic',nid)
-    icode=nf_put_var_real(ncid,nid,pic)
+    icode=nf_put_var_real(ncid,nid,picf)
     icode=nf_inq_varid(ncid,'ww',nid)
     icode=nf_put_var_real(ncid,nid,ww3)
+    DEALLOCATE(lwcf)
+    deallocate(icef)
+    deallocate(raif)
+    deallocate(snof)
+    deallocate(picf)
   endif
      
   DEALLOCATE (ut)
   DEALLOCATE (vt)
+  deallocate (pr3)
+  deallocate (ht3)
+  deallocate (tp3)
+  deallocate (mr3)
+  deallocate (uw3)
+  deallocate (vw3)
+  deallocate (ww3)
+  deallocate (sht)
+  deallocate (stp)
+  deallocate (smr)
+  deallocate (suw)
+  deallocate (svw)
 
   ! Close the netcdf file.
 
