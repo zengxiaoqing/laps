@@ -160,8 +160,15 @@ cdis
         IF(c_section .eq. 'h' .or. c_section .eq. 'H' .or. c_section .eq
      1. '1'
      1                                                          )THEN
+
+            if(MAX_RADARS .ge. 1)then
+                L_RADARS = 1
+            else
+                L_RADARS = 0
+            endif
+
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
-     1                         MAX_RADARS,r_missing_data,
+     1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time)
             call frame
 

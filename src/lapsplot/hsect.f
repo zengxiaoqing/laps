@@ -29,7 +29,8 @@ cdis
 cdis
 
         subroutine lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,
-     1                           NZ_L, MAX_RADARS,r_missing_data,
+     1                           NZ_L, MAX_RADARS, L_RADARS,
+     1                           r_missing_data,
      1                           laps_cycle_time)
 
 !       1995        Steve Albers         Original Version
@@ -153,7 +154,7 @@ cdis
         real*4 u_3d(NX_L,NY_L,NZ_L) ! WRT True North
         real*4 v_3d(NX_L,NY_L,NZ_L) ! WRT True North
 !       real*4 omega_3d(NX_L,NY_L,NZ_L)
-        real*4 grid_ra_ref(NX_L,NY_L,NZ_L)
+        real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 grid_ra_nyq(NX_L,NY_L,NZ_L,MAX_RADARS)
         real*4 field_3d(NX_L,NY_L,NZ_L)
@@ -164,12 +165,11 @@ cdis
         real*4 tw_sfc_k(NX_L,NY_L)
         real*4 td_2d(NX_L,NY_L)
         real*4 pres_2d(NX_L,NY_L)
-        real*4 pres_3d(NX_L,NY_L,NZ_L)
+!       real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 temp_col_max(NX_L,NY_L)
         real*4 rh_3d(NX_L,NY_L,NZ_L)
         real*4 pressures_mb(NZ_L)
-!       real*4 q_3d(NX_L,NY_L,NZ_L)
 
 !       real*4 slwc_int(NX_L,NY_L)
         real*4 column_max(NX_L,NY_L)
@@ -200,7 +200,6 @@ cdis
 
 
         character cldpcp_type_3d(NX_L,NY_L,NZ_L)
-!       real*4 mvd_3d(NX_L,NY_L,NZ_L)
         integer*4 iarg
 
         real*4 cloud_cvr(NX_L,NY_L)
@@ -1454,7 +1453,6 @@ c
      1                              ,radar_array,0,istatus)
 
                 call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
-!               call get__low__ref(grid_ra_ref,topo,NX_L,NY_L,NZ_L,radar_array)
 
 !               Display R field
                 call plot_cont(radar_array,1e0,0.,chigh,cint_ref
@@ -1494,7 +1492,7 @@ c
             elseif(c_field .eq. 'rf')then
                 call mklabel33(k_level,'   Reflectivity    ',c33_label)
 
-                call plot_cont(grid_ra_ref(1,1,k_level),1e0,0.,chigh
+                call plot_cont(grid_ra_ref(1,1,k_level,1),1e0,0.,chigh
      1                        ,cint_ref,asc9_tim_r,c33_label,i_overlay
      1                        ,c_display,'nest7grid',lat,lon,jdot,NX_L        
      1                        ,NY_L,r_missing_data,laps_cycle_time)
@@ -1512,15 +1510,13 @@ c
                 do j = 1,NY_L
                 do k = 1,NZ_L
                     radar_array(i,j) =
-     1          max(radar_array(i,j),grid_ra_ref(i,j,k))
+     1          max(radar_array(i,j),grid_ra_ref(i,j,k,1))
 
                 enddo
                 enddo
                 enddo
 
                 write(6,*)' Calculating VIL'
-!               Call VIL(grid_ra_ref,radar_array)
-
                 call plot_cont(radar_array,1e0,clow,chigh,10.
      1                        ,asc9_tim_r
      1                        ,'LAPS DUMMY VIL                   '
@@ -1538,8 +1534,6 @@ c
      1                              ,i4time_lr,ext,var_2d,units_2d
      1                              ,comment_2d,NX_L,NY_L
      1                              ,radar_array,0,istatus)
-
-!               call get_maxtops(grid_ra_ref,NX_L,NY_L,NZ_L,radar_array)
 
                 highest_top_m = 0.
 
@@ -1642,8 +1636,6 @@ c
             mode = 1
 
             call make_fnam_lp(I4time_radar,asc9_tim_r,istatus)
-
-!           call get__low__ref(grid_ra_ref,topo,NX_L,NY_L,NZ_L,radar_array)
 
 !           Read in surface temp data
             var_2d = 'T'
@@ -1752,15 +1744,6 @@ c
                 else
                     c33_label = 'LAPS Stm Tot Prcp Acc (in)'//c7_string
                 endif
-
-!           elseif(i4time_end .lt. 970677700)then
-!               write(6,*)
-!       1      ' Getting Entire Time Span of Accumulation from Radar Data, etc.'
-!               encode(9,2029,c9_string)r_hours
-!2029           format(f5.1,' Hr ')
-!               call get_snow_accum(i4time_start,i4time_end,NX_L,NY_L,NZ_L
-!       1               ,lat,lon,topo,grid_ra_ref,grid_ra_vel
-!       1                            ,snow_2d,istatus)
 
             else ! Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
@@ -1962,11 +1945,11 @@ c
 
             if(.true.)then ! Get entire time span from radar etc. data
                  write(6,*)
-     1       ' Getting Entire Time Span of Accumulation from Radar Data,
-     1 etc.'
+     1           ' Getting Entire Time Span of Accumulation from Radar '       
+     1          ,'Data, etc.'
                  call get_radar_max_pd(i4time_start,i4time_end
-     1    ,NX_L,NY_L,NZ_L,lat,lon,topo,grid_ra_ref
-     1        ,dummy_array,radar_array,frac_sum,istatus)
+     1                ,NX_L,NY_L,NZ_L,lat,lon,topo,grid_ra_ref
+     1                ,dummy_array,radar_array,frac_sum,istatus)
 
             endif
 
@@ -2059,8 +2042,8 @@ c
 
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-            call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
-     1                                     ,istatus)
+!           call get_pres_3d(i4time_nearest,NX_L,NY_L,NZ_L,pres_3d
+!    1                                     ,istatus)
 
 !           if(pres_3d(icen,jcen,k_level) .le. 80000.)then
 !               clow =  0.
@@ -2992,7 +2975,7 @@ c             cint = -1.
 
             if(len_time .eq. 13)then
                 call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
-                call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,pres_3d
+                call get_pres_3d(i4_valid,NX_L,NY_L,NZ_L,field_3d
      1                          ,istatus)
                 fcst_hhmm = a13_time(10:13)
 
@@ -3010,7 +2993,7 @@ c             cint = -1.
             write(6,1513)
             read(lun,*)k_mb
             k_level = nint(zcoord_of_pressure(float(k_mb*100)))
-            k_mb    = nint(pres_3d(icen,jcen,k_level) / 100.)
+            k_mb    = nint(field_3d(icen,jcen,k_level) / 100.)
 
             CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
      1          VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
