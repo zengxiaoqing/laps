@@ -497,7 +497,15 @@
                                    happen shortly though as the need 
                                    to further test/use this 3D reflectivity in
                                    LAPS is increasing.
-
+				   As of 9-22-98 we have committed the ln3 ingest
+				   process to our repository and distribute this
+				   source code with our tarfile.  The reliability
+				   of echo tops in conjunction with the layer
+                                   reflecitivity information still makes this a
+                                   problematical data set to use in the analyses.
+				   Committing this source to the repository will
+				   help to further investigate the utility of this
+                                   product.
                                    The key fields from 'ln3' which are used
                                    in the analyses are the Layer reflectivity
                                    (0-4 km MSL, 4-8 km MSL, and >8 km MSL), as
@@ -2037,7 +2045,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
------- 3.3.8 ---------------------BALANCE---------------------------------------
+------ 3.3.8 ---------------------BALANCE--------------------------------------
 
 Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
      (author: John McGinley/John Snook/John Smart - smart@fsl.noaa.gov)
@@ -2058,7 +2066,7 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 ********************************************************************************
 ********************************************************************************
 
-        4.0 --  Porting code mods from LAPS users back to FSL:
+-------- 4.0 --  Porting code mods from LAPS users back to FSL: --------------
 
    We would like to encourage suggestions from LAPS users on how to improve
    LAPS, both scientifically and in the software itself. In general, we should 
