@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        subroutine      get_maps_df (i4time,df,htm,ii,jj,kk,istatus)
+        subroutine      get_maps_df (i4time,df,htm,ii,jj,kk,lct,istatus)
 
 c       $log: getmapsdf.for,v $
 c revision 1.7  1996/07/22  16:43:35  birk
@@ -73,8 +73,6 @@ c-------non-executable statements-----------------------------------------------
 c
         implicit        none
 c
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
         CHARACTER*50 DIRLMA
         CHARACTER*50 DIRLMF
         CHARACTER*31 EXTLMA
@@ -89,16 +87,19 @@ c input parameter
       character*4     df               ! desired field (e.g., 'rh ')
       integer ii,jj,kk
       real          htm(ii,jj,kk)
+      integer lct !laps cycle time
 
 c  internal variables that depend on dynamic allocation
 
-      integer lapsp (kgrid)
-      character*3     var(kgrid)
-      character*4     lvl_coord(kgrid)
-      character*10    units(kgrid)
-      character*125   comment(kgrid)
+      integer lapsp (kk)
+      character*3     var(kk)
+      character*4     lvl_coord(kk)
+      character*10    units(kk)
+      character*125   comment(kk)
 
 c  internal variables
+
+        integer laps_cycle_time
 
         integer*4 
      1          i4time1,
@@ -116,8 +117,9 @@ c
         call get_directory(extlma,dirlma,len)
         call get_directory(extlmf,dirlmf,len)
         istatus = 0
+        laps_cycle_time = lct
 
-        do k = 1,kgrid
+        do k = 1,kk
         lapsp(k) =  nint( pressure_of_level(k)  * .01 )
         var(k) = df
         enddo

@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
         subroutine mak_cld_grid (i4time_d,i4time_r,cg,ii,jj,kk,
-     1                            istatus)
+     1                            lct,istatus)
 
 c       $log: mak_cld_grid.for,v $
 c revision 1.6  1995/09/13  21:36:15  birk
@@ -66,6 +66,7 @@ c
 c parameter variables
 
       integer ii,jj,kk
+      integer lct
 
       integer i4time_d     !i4time of the desired grid
       integer i4time_r       !i4time of returned grid
@@ -112,7 +113,7 @@ c       initialize
         desired_field = 'ht  '
 
         call get_maps_df (i4time_d,desired_field,lma_ht,
-     1              ii,jj,kk,istatus)
+     1              ii,jj,kk,lct,istatus)
 
         if (istatus .ne. 1 ) return
 

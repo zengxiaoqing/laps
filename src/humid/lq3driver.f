@@ -57,6 +57,7 @@ c        include 'parmtrs.inc'
      1       jstatus(3)
 
         real mdf
+        integer lct
 
 
         character*9 filename
@@ -70,6 +71,7 @@ c        include 'parmtrs.inc'
 	jj = ny_l_cmn
 	kk = nk_laps
         mdf = r_missing_data_cmn
+        lct = laps_cycle_time_cmn
 
         call get_directory('etc',fname,len)
         print *,fname(1:len)
@@ -84,7 +86,7 @@ c     convert filename to i4time
         call i4time_fname_lp (filename,i4time,istatus)
 
 
-        call lq3_driver1a (i4time,ii,jj,kk,mdf,jstatus)
+        call lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
 
         write(6,*) 'lq3, lh3, and lh4 (1=success)'
         write(6,*) jstatus, ' output matrix'

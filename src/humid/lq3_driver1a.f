@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,jstatus)
+        subroutine lq3_driver1a (i4time,ii,jj,kk,mdf,lct,jstatus)
 
 c       $log: lq3_driver1a.f,v $
 c revision 1.18  1996/09/05  16:05:32  birk
@@ -181,6 +181,7 @@ c     parameter variables
 
         integer ii,jj,kk
         real mdf
+        integer lct
 
 
         integer*4
@@ -449,7 +450,7 @@ c first the rh data
         desired_field = 'sh '
 
         call get_maps_df (i4time,desired_field,maps_rh,
-     1                      ii,jj,kk,istatus)
+     1                      ii,jj,kk,lct,istatus)
 
         if(istatus.ne.1) then
         print*, 'reading maps rh file failed'
@@ -611,7 +612,7 @@ c perform initialquality control check for supersaturation after ingest
 c ****  get laps cloud data. used for cloud, bl, goes
 
         call mak_cld_grid (i4time,i4timep,cg,ii,jj,kk,
-     1                     c_istatus)
+     1                     lct,c_istatus)
 
         c_istatus = 0
         if (i4time.eq.i4timep) c_istatus = 1
