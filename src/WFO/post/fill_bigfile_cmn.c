@@ -8,8 +8,17 @@
 #include "fill_bigfile.h"
 
 /******************************************************************/
+#ifdef __STDC__
 int fillWFOlevels(int numWFOlevels, char *WFOlevels_char,
                   WFO_LEVELS_T *WFOlevels)
+#else
+int fillWFOlevels(numWFOlevels, WFOlevels_char, WFOlevels)
+
+int numWFOlevels; 
+char *WFOlevels_char;
+WFO_LEVELS_T *WFOlevels;
+#endif
+
 {
     int i;
     char c_level_value[10], *c_ptr;
@@ -40,8 +49,19 @@ int fillWFOlevels(int numWFOlevels, char *WFOlevels_char,
 }
 
 /******************************************************************/
+#ifdef __STDC__
 int findWFOindex(int numWFOlevels, WFO_LEVELS_T *WFOlevels,
                  char *WFO_level, char *WFO_level_value, float *level_ptr)
+#else
+int findWFOindex(numWFOlevels, WFOlevels,
+                 WFO_level, WFO_level_value, level_ptr)
+
+int numWFOlevels; 
+WFO_LEVELS_T *WFOlevels;
+char *WFO_level; 
+char *WFO_level_value; 
+float *level_ptr;
+#endif
 {
     int i, found, returnIndex;
     float findLevel, level_val;
@@ -108,10 +128,28 @@ int findWFOindex(int numWFOlevels, WFO_LEVELS_T *WFOlevels,
 }
 
 /******************************************************************/
+#ifdef __STDC__
 int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInfo, 
                     char *r_filename, time_t reftime, time_t valtime, 
                     int *x, int *y, int *numLevels, float **level,
                     float **data, short **LAPSinv)
+#else
+int extractLAPSdata(cdfId_in, prevFilename, paramInfo, r_filename, reftime, 
+                    valtime, x, y, numLevels, level, data, LAPSinv)
+
+int *cdfId_in; 
+char *prevFilename; 
+PARAMETER_LIST_T paramInfo; 
+char *r_filename; 
+time_t reftime; 
+time_t valtime; 
+int *x; 
+int *y; 
+int *numLevels; 
+float **level;
+float **data; 
+short **LAPSinv;
+#endif
 {
     char filename[80];
     int cdfId, mode = NC_NOWRITE, status, nc_status;    
@@ -175,10 +213,20 @@ int extractLAPSdata(int *cdfId_in, char *prevFilename, PARAMETER_LIST_T paramInf
 }
 
 /******************************************************************/
+#ifdef __STDC__
 int getDataSize(int cdfId, char *level_name, int *x, int *y, int *numLevels)
+#else
+int getDataSize(cdfId, level_name, x, y, numLevels)
+
+int cdfId; 
+char *level_name; 
+int *x; 
+int *y; 
+int *numLevels;
+#endif
 {
     int xId, yId, zId, nc_status;
-    long long_x, long_y, long_lvl;
+    size_t long_x, long_y, long_lvl;
 
     nc_status = nc_inq_dimid(cdfId, "x", &xId);
     if (nc_status != NC_NOERR) {
@@ -198,30 +246,50 @@ int getDataSize(int cdfId, char *level_name, int *x, int *y, int *numLevels)
       return ERROR;
     }
     
-    nc_status = nc_inq_dimlen(cdfId, xId, (size_t *)x);
+    nc_status = nc_inq_dimlen(cdfId, xId, (size_t *)&long_x);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting x dimension from LAPS file.\n");
       return ERROR;
-    }
+    } else {
+      *x = (int) long_x;
 
-    nc_status = nc_inq_dimlen(cdfId, yId, (size_t *)y);
+    nc_status = nc_inq_dimlen(cdfId, yId, (size_t *)&long_y);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting y dimension from LAPS file.\n");
       return ERROR;
+    } else {
+      *y = (int) long_y;
     }
 
-    nc_status = nc_inq_dimlen(cdfId, zId, (size_t *)numLevels);
+    nc_status = nc_inq_dimlen(cdfId, zId, (size_t *)&long_lvl);
     if (nc_status != NC_NOERR) {
       fprintf(stdout, "Error getting z dimension from LAPS file.\n");
       return ERROR;
+    } else {
+      *numLevels = (int) long_lvl;
     }
  
     return SUCCESS;
 }
 
 /******************************************************************/
+#ifdef __STDC__
 int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable, 
                 int x, int y, int numLevels, float **level, float **data, short **inv)
+#else
+int getLAPSdata(cdfId, reftime, valtime, variable, x, y, numLevels, level, data, inv);
+
+int cdfId; 
+double reftime; 
+double valtime; 
+const char *variable; 
+int x; 
+int y; 
+int numLevels; 
+float **level; 
+float **data; 
+short **inv;
+#endif
 {
     int varId, invId, levelId, nc_status;
     size_t start[5], count[5], invStart[3], invCount[3], levelStart[1], levelCount[1];
@@ -321,6 +389,9 @@ int getLAPSdata(int cdfId, double reftime, double valtime, const char *variable,
 
 /******************************************************************/
 int openOutputWFOfile(long *index, time_t reftime, long *x, long *y)
+#ifdef __STDC__
+#else
+#endif
 {
     int cdfId, mode = NC_WRITE;
     int dimId, nc_status;
@@ -385,6 +456,9 @@ int transferLAPStoWFO(int cdfId, long index, PARAMETER_LIST_T paramInfo,
                       time_t reftime, time_t valtime, int x, int y, 
                       int numLevels, float **level, float **data, 
                       short **LAPSinv)
+#ifdef __STDC__
+#else
+#endif
 {
     double d_reftime, d_valtime;
     int fcst_status;
@@ -406,6 +480,9 @@ int storeLAPSdata(long index, int cdfId, double d_reftime, double d_valtime,
                   char *variable, char *levelName, char *WFO_level,
                   char *WFO_level_value, int x, int y, 
 		  int numLevels, float **level, float **data, short **inv)
+#ifdef __STDC__
+#else
+#endif
 {
     int WFOvarId, WFOinvId, WFOlevelsId, dimId, numWFOlevels, WFOlevelIndex;
     int varId, i, inv_status, nc_status;
@@ -600,6 +677,9 @@ int get_LAPS_cdf_filename (PARAMETER_LIST_T paramInfo,
                            char *r_filename,
                            time_t obtime, 
                            char *filename)
+#ifdef __STDC__
+#else
+#endif
 {
     char timeString[MAX_TIMESTRING_LEN];
     char suffix[5]; 
@@ -620,6 +700,9 @@ int get_LAPS_cdf_filename (PARAMETER_LIST_T paramInfo,
 
 /******************************************************************/
 int get_WFO_cdf_filename (time_t obtime, char *filename, char *templateName)
+#ifdef __STDC__
+#else
+#endif
     {
     char timeString[MAX_TIMESTRING_LEN];
     struct tm *time = gmtime (&obtime);
@@ -630,7 +713,7 @@ int get_WFO_cdf_filename (time_t obtime, char *filename, char *templateName)
     strcpy (templateName, filename);
     strcat(templateName, "template");
     
-    strftime(timeString, MAX_TIMESTRING_LEN, "%Y%m%d_%H00", time);
+    strftime(timeString, MAX_TIMESTRING_LEN, "%Y%m%d_%H%M", time);
     strcat (filename, timeString);
     
     return SUCCESS;
@@ -639,6 +722,9 @@ int get_WFO_cdf_filename (time_t obtime, char *filename, char *templateName)
 /******************************************************************/
 int get_transfer_parameter_list (PARAMETER_LIST_T *paramInfo, 
                                     int *numOfElements )
+#ifdef __STDC__
+#else
+#endif
     {
     FILE *fp;
     char filename [100];
@@ -683,6 +769,9 @@ int get_transfer_parameter_list (PARAMETER_LIST_T *paramInfo,
 
 /******************************************************************/
 int copyTemplateToNewCDFfile(char *templateFile, char *cdfFilename)
+#ifdef __STDC__
+#else
+#endif
 {
   char command[150];
   int status;     
@@ -730,6 +819,9 @@ int copyTemplateToNewCDFfile(char *templateFile, char *cdfFilename)
 }
 /******************************************************************/
 void filenameToUnixtime(time_t * refTime, time_t *validTime, char *filename)
+#ifdef __STDC__
+#else
+#endif
 {
         int hour_r, min_r, hour_v, min_v, j_day, yr, mo, day, sec, fn_len;
         char c_hour_r[3], c_min_r[3], c_hour_v[3], c_min_v[3]; 
@@ -821,6 +913,9 @@ void filenameToUnixtime(time_t * refTime, time_t *validTime, char *filename)
 
 /*************************************************************************/
 void jdayToMoDay(int jday, int yr, int *mo, int *day)
+#ifdef __STDC__
+#else
+#endif
 {
         int dayInMo[12];
 
@@ -851,6 +946,9 @@ void jdayToMoDay(int jday, int yr, int *mo, int *day)
               it will overlap with the 1/1/1970 start date of unixtime  */
 
 long dayInfo2unixtime(int yr, int mo, int day, int hour, int min, int sec)
+#ifdef __STDC__
+#else
+#endif
 {
 
         int dayInMo[12], n_leap_1970_to_1999;
@@ -942,6 +1040,9 @@ long dayInfo2unixtime(int yr, int mo, int day, int hour, int min, int sec)
 }
 /*************************************************************************/
 int get_n_valtimes(long *n_valtimes)
+#ifdef __STDC__
+#else
+#endif
 {
         int cdfId, mode = NC_NOWRITE, status, dimId, nc_status;    
         char fname[128];
