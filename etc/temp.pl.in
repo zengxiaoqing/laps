@@ -80,11 +80,8 @@ else {
   $bgmodelfile =~ s/$logname/lga/;
   open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
   foreach (<BGMODEL>) {
-    if (/cmodel (.*)/) {
-      $modelid = $1;
-      $modelid =~ s/\ //g; }
-    if (/Reading - (.*)/) {
-      $pathname = $1; last; close BGMODEL; } }
+    if (/cmodel (\w*)/) {$modelid = $1;}
+    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } }
   $basename = $1 if ($pathname =~ /([^\/]*)$/);
   if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
     $runtime = $2/100;
