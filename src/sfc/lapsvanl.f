@@ -1031,7 +1031,7 @@ c
 	lvl_coord(9) = 'MSL'
 c
         do i=1,num_var
-           write(comment(i),180) n_sao_g,n_sao_b,n_obs_g  
+           write(comment(i),180) n_sao_g,n_sao_b
         enddo !i
  180	   format(49x,3i4)
         print*,comment(1)
@@ -1257,6 +1257,7 @@ c
 	ext = 'lsx'
 	call write_laps_data(i4time,dir,ext,imax,jmax,num_var,
      &          num_var,var,lvl,lvl_coord,units,comment,data,istatus)
+        write(6,*)' LSX file write completed, istatus = ',istatus
 c
 	jstatus(3) = 1		! everything ok...
 c
