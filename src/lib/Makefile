@@ -109,6 +109,7 @@ SRC	= machine_dependent.F \
           newreadobs.f \
           normalize.f \
           ofm.f \
+          oh_zone.f \
           pcpcnc.f \
           prof_cdf.f \
           psatoz.f \
