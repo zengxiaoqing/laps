@@ -184,40 +184,18 @@ cdis
       end module
 
 #endif
-        subroutine open_lapsprd_file_append(lun,i4time,ext,istatus)
+      subroutine open_append(lun,file,status,istat)
+      integer unit,istat
+      character*(*) file,status
 
-!       1997   Steve Albers
-
-        character*(*)    ext
-        character*150    directory
-        character*13 filename13
-
-!       Test for proper length of extension
-        call s_len(ext,len_ext)
-        if(len_ext .ne. 3)then
-           write(6,*)' Error in open_lapsprd_file: ext has length'
-     1               ,len_ext
-           istatus = 0
-           return
-        endif
-
-        call get_directory(ext,directory,len_dir)
+      istat=1
 #if defined(hpux) && !defined(F90)
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))       
-     1          ,status='unknown',ACCESS='APPEND',err=998)
+      open(lun,file=file,status=status,ACCESS='APPEND',err=998)
 
 #else
-        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))       
-     1          ,status='unknown',POSITION='APPEND',err=998)
+      open(lun,file=file,status=status,POSITION='APPEND',err=998)
 #endif
-        go to 999
-
- 998    write(6,*)
-     1  ' Error in open_lapsprd_file_append: cannot open the file'       
-        istatus = 0
-        return
-
- 999    istatus = 1
-        return
-        end ! open_lapsprd_file_append
-
+      return
+ 998  istat=0
+      return
+      end

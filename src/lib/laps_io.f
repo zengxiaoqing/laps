@@ -924,6 +924,44 @@ cc        character*3 var_2d
         return
         end
 
+
+        subroutine open_lapsprd_file_append(lun,i4time,ext,istatus)
+
+!       1997   Steve Albers
+
+        character*(*)    ext
+        character*150    directory
+        character*13 filename13
+        integer istatus
+!       Test for proper length of extension
+        call s_len(ext,len_ext)
+        if(len_ext .ne. 3)then
+           write(6,*)' Error in open_lapsprd_file: ext has length'
+     1               ,len_ext
+           istatus = 0
+           return
+        endif
+
+        call get_directory(ext,directory,len_dir)
+        
+        call open_append(lun,directory(1:len_dir)//
+     +       filename13(i4time,ext(1:3)),'unknown',istatus)
+
+        if(istatus.eq.0) then
+           write(6,*)
+     1          ' Error in open_lapsprd_file_append: ',
+     2          'cannot open the file',
+     3          directory(1:len_dir)//filename13(i4time,ext(1:3))       
+        else
+           istatus = 1
+        endif
+
+        return
+        end ! open_lapsprd_file_append
+
+
+
+
         subroutine get_filespec(ext,mode,c_filespec,istatus)
 
 !       1997   Steve Albers
