@@ -2834,10 +2834,6 @@ cdis
 
             c33_label = 'LAPS Sfc Temperature     (F)     '
 
-!           clow = -50.
-!           chigh = +120.
-!           cint = 5.
-
             call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint,1.)       
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
@@ -3007,10 +3003,17 @@ cdis
 
             call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
 
-            write(6,723)
+            if(ext.eq.'lgb')then
+               write(6,723)
+            else
+               write(6,725)
+            endif
  723        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
      1       /'     SFC: [usf,vsf,psf,tsf,dsf,rsf,slp] ? ',$)
+ 725        format(/'  SELECT FIELD (VAR_2D):  '
+     1       /
+     1       /'     SFC: [u,v,ps,t,td,rh,msl] ? ',$)
 
             read(lun,724)var_2d
  724        format(a)
@@ -3037,7 +3040,8 @@ cdis
                 scale = 1.
 !               c33_label = 'LAPS Sfc Temperature     (F)     '
 
-            elseif(var_2d .eq. 'SLP' .or. var_2d .eq. 'PSF')then
+            elseif(var_2d .eq. 'PS'  .or. var_2d .eq. 'PSF'
+     1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
                 scale = 100.
 
             else
@@ -3114,10 +3118,10 @@ cdis
         elseif(c_type .eq. 'ps')then ! Surface Pressure
             var_2d = 'PS'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -3126,23 +3130,23 @@ cdis
 
             c33_label = 'LAPS Surface Pressure        (mb)'
 
-            clow = 650.
-            chigh = +1100.
-            cint = 5.
+            scale = 100.
+
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
+     1                           ,scale)
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e+2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,scale,clow,chigh,cint
+     1             ,asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'       
+     1             ,lat,lon,jdot
+     1             ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'vv')then
             var_2d = 'VV'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1          ,i4time_pw,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
@@ -3158,10 +3162,11 @@ cdis
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,1e-2,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay
+     1                    ,c_display,'nest7grid'
+     1                    ,lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hu')then
             var_2d = 'RH'
