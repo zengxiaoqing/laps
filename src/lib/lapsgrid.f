@@ -446,6 +446,7 @@ c ----------------------------------------------------------------------------
         character cfilespec*255
         integer   numoffiles, idir_len, lgfc
         integer   i, j, jj
+        logical   lfound_name
 
         include 'grid_fname.cmn'
 
@@ -463,11 +464,13 @@ c  known namelists files used by this system
 c (currently nest7grid.parms and wrfsi.nl)
 c  assume the namelist file is always in DATA_ROOT/static.
 
+        lfound_name = .false.
+        i=1
         call s_len(data_root,len_root)
         cfilespec=data_root(1:len_root)//'/static/*'
         call get_file_names(cfilespec,numoffiles,c_filenames,
      +max_files,istatus)
-        do i=1,numoffiles
+        do while (i.le.numoffiles.and.(.not.lfound_name))
           call get_directory_length(c_filenames(i),lend)
           call s_len(c_filenames(i),lens)
           if(c_filenames(i)(lend+1:lens).eq.'nest7grid.parms'
@@ -479,7 +482,9 @@ c  assume the namelist file is always in DATA_ROOT/static.
                     grid_fnam = c_filenames(i)(lend+1:lend+jj-2)
                  endif
               enddo
+              lfound_name = .true.
            endif
+           i=i+1
         enddo
 
         call s_len(grid_fnam,len_grid_fnam)
