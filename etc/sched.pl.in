@@ -103,7 +103,7 @@ if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave
-    @LAPS_EXE = ("obs_driver\.x", "sfc_qc\.exe", $opt_M);
+    @LAPS_EXE = ("lga\.exe", "obs_driver\.x", "sfc_qc\.exe", $opt_M);
 
 }elsif($c8_project eq "AIRDROP"){
     @LAPS_EXE = qw(lga.exe
