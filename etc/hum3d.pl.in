@@ -1,0 +1,83 @@
+#!@PERL@
+# @configure_input@
+
+$root = shift;
+$hr = shift;
+if (defined $root) {
+  if ($root =~ /^p$/i) {$logdir = "/data/lapb/parallel/laps/data/log";}
+  elsif ($root =~ /^o$/i) {$logdir = "/data/lapb/operational/laps/data/log";}
+  else {$logdir = $root . "/data/log"; } }
+else {$logdir = "/data/lapb/operational/laps/data/log"; } 
+
+# Get the most recent log file.
+
+$logname = "lq3driver";
+@filenames = <$logdir/$logname.log*>;
+$nfiles = @filenames;
+if ($nfiles == 0) {die "No log files found.\n"}
+$age_of_newest = 1;
+foreach $file (@filenames) {
+  $age = -M $file;
+  if ($age < $age_of_newest) {
+    $filename = $file;
+    $age_of_newest = $age; } }
+
+# Moisture analysis log files need a tail line like this:
+
+#$tail = `tail -1 $filename`;
+#if ($tail !~ /End of LAPS Wind Analysis/) {
+#  die "Wind analysis is in progress...\n";}
+
+# For the moisture analysis we need to look at selected log files
+# because different data get in at different times (i.e., RAOB).
+# This isn't kosher, but it's okay for now:
+if (defined $hr) {$filename = $logdir."/".$logname.".log.".$hr."20";}
+
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+print "\nReading from log file $filename\n\n";
+
+# Model background, 4dda mode
+
+print "4DDA mode:\n";
+@greplines = grep /4dda/i, @lines;
+print "$greplines[0]";
+print "\n";
+
+# RAOBs
+
+print "RAOBS:\n";
+@greplines = grep /raob switch off/, @lines;
+foreach (@greplines) {print "$_";}
+@greplines = grep /No usable RAOB data/, @lines;
+foreach (@greplines) {print "$_";}
+@greplines = grep /Number of RAOBs considered/, @lines;
+foreach (@greplines) {print "$_";}
+print "\n";
+
+# Satellite
+
+print "Satellite:\n";
+@greplines = grep /GOES/, @lines;
+print "$greplines[0]";
+@greplines = grep /sounder/i, @lines;
+print "$greplines[0]";
+@greplines = grep /imager/i, @lines;
+print "$greplines[0]";
+@greplines = grep /tiros/i, @lines;
+print "$greplines[0]";
+print "\n";
+
+# Cloud analysis
+
+print "Cloud analysis:\n";
+@greplines = grep /Clouds/, @lines;
+print "$greplines[0]";
+print "\n";
+
+# Surface
+
+print "Surface:\n";
+@greplines = grep /Sfc moisture/, @lines;
+print "$greplines[0]";
+print "\n";

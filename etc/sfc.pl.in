@@ -1,0 +1,126 @@
+#!@PERL@
+# @configure_input@
+
+$root = shift;
+$hr = shift;
+if (defined $root) {
+  if ($root =~ /^p$/i) {$logdir = "/data/lapb/parallel/laps/data/log";}
+  elsif ($root =~ /^o$/i) {$logdir = "/data/lapb/operational/laps/data/log";}
+  else {$logdir = $root . "/data/log"; } }
+else {$logdir = "/data/lapb/operational/laps/data/log"; } 
+
+# Get the most recent log file.
+
+$logname = "laps_sfc";
+@filenames = <$logdir/$logname.log*>;
+$nfiles = @filenames;
+if ($nfiles == 0) {die "No log files found.\n"}
+$age_of_newest = 1;
+foreach $file (@filenames) {
+  $age = -M $file;
+  if ($age < $age_of_newest) {
+    $filename = $file;
+    $age_of_newest = $age; } }
+
+# This isn't kosher, but it's okay for now:
+if (defined $hr) {$filename = $logdir."/".$logname.".log.".$hr."20";}
+
+@greplines = `grep "Normal completion of LAPSVANL" $filename`;
+$nlines = @greplines;
+if ($nlines == 0) {die "Surface analysis is in progress...\n";}
+
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+close FILE;
+print "\nReading from log file $filename\n\n";
+
+# Check for disaster.
+
+$searchstring = "No sfc obs from LSO";
+@greplines = grep /$searchstring/, @lines;
+$nlines = @greplines;
+if ($nlines > 0) {die "$searchstring\n\n";}
+
+# Determine background model.
+
+$modeltype = "missing";
+$searchstring = "Using background from ";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($modeltype,$dummy,$modeltime) = split(" ",$1); 
+    last; } }
+if ($modeltype eq "missing") {die "Can't determine model background ..."}
+print "BACKGROUND FIELDS:  ";
+
+if ($modeltype =~ /rsf/) {
+  if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d)(\d\d)/ ) {
+    $runtime = $3 + 0;
+    $fcsthr = $4;
+    print "Using $fcsthr hr fcst from local model started at $runtime UTC \n"; } }
+else {
+  $bgmodelfile = $filename;
+  $bgmodelfile =~ s/$logname/lga/;
+  open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
+  foreach (<BGMODEL>) {
+    if (/cmodel (.*)/) {
+      $modelid = $1;
+      $modelid =~ s/\ //g; }
+    if (/Reading - (.*)/) {
+      $pathname = $1; last; close BGMODEL; } }
+  $basename = $1 if ($pathname =~ /([^\/]*)$/);
+  if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
+    $runtime = $2/100;
+    $fcsthr = $4;
+    print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
+  else {
+    print "$modelid (Sorry -- can't decode model filename)\n"; } }
+print "\n";
+
+# METAR and/or mesonet
+
+print "SFC OBS:  \n";
+$odfilename = $filename;
+$odfilename =~ s/$logname/obs_driver/;
+open(ODLOG,$odfilename) or die "Can't open $odfilename.";
+foreach (<ODLOG>) {if (/in the LAPS/) {print "$_";} }
+close ODLOG;
+print "\n";
+
+foreach (@lines) {
+  if (/(.*)is at/) {
+  ($dummy,$obnum,$staname,$source,$type) = split /\s+/, $1;
+  if ($type eq "") {$type="unknown";}
+  push(@stanames,$staname);
+  push(@types,$type);}}
+#@stanames = sort(@stanames);
+#$count=0;
+#foreach (@stanames) {
+#  print "$_ "; 
+#  $count=$count+1;
+#  if ($count > 15) {print "\n          "; $count=0; } }
+foreach (@types) {
+  $length = @typelist;
+  $i=0; $found=0;
+  while ($i < $length) {
+    if ($_ eq $typelist[$i]) {$found=1;}
+    $i=$i+1;}
+  if ($found != 1) {push(@typelist,$_);} }
+foreach $type (@typelist) {
+  print "\nObservation type $type:\n     ";
+  $i=0; $count=0;
+  foreach (@types) {
+    if ($type eq $_) {
+      print "$stanames[$i]  ";
+      $count=$count+1;
+      if ($count == 8) {print "\n     "; $count=0; } }
+    $i=$i+1;}
+    if ($count != 8) {print "\n";} }
+print "\n";
+
+# Satellite data
+
+@greplines = grep /Returning S8W/, @lines;
+($dummy1,$dummy2,$dummy3,$dummy4,$satellite) = split /\s+/, $greplines[0];
+print "Using satellite IR data from $satellite to enhance sfc temperature analysis.";
+
+print "\n";
