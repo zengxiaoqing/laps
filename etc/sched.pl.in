@@ -44,18 +44,20 @@ system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_DATA_ROOT/log/rass.log.$hhmm 2>&1"
 print "\nRunning BLP rass ingest\n";
 system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_DATA_ROOT/log/rass_blp.log.$hhmm 2>&1");
 
+print "\nRunning ingest_pro\n";
+system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_DATA_ROOT/log/ingest_pro.log.$hhmm 2>&1");
+
+print "\nRunning ingest_blppro\n";
+system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_DATA_ROOT/log/ingest_blppro.log.$hhmm 2>&1");
+
+print "\nRunning raob ingest\n";
+system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_DATA_ROOT/log/raob.log.$hhmm 2>&1");
 
 print "\nRunning laps_sfc\n";
 system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_DATA_ROOT/log/laps_sfc.log.$hhmm 2>&1");
 
 print "\nRunning temp.exe\n";
 system("$LAPSROOT/bin/temp.exe 1> $LAPS_DATA_ROOT/log/temp.log.$hhmm 2>&1");
-
-print "\nRunning ingest_pro\n";
-system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_DATA_ROOT/log/ingest_pro.log.$hhmm 2>&1");
-
-print "\nRunning ingest_blppro\n";
-system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_DATA_ROOT/log/ingest_blppro.log.$hhmm 2>&1");
 
 print "\nRunning ingest_pireps\n";
 system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_DATA_ROOT/log/ingest_pireps.log.$hhmm 2>&1");
