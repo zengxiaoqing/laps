@@ -1216,8 +1216,9 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
                 In most cases, the Lambert projection is recommended.
 
                 Mercator is recommended if the domain includes the
-                equator, or if sin(latitude) varies by more than a factor 
-                of two over the domain.
+                equator, or for domains centered in the tropics where 
+                sin(latitude) varies by more than a factor of two over the 
+                domain.
 
                 If the domain includes one of the geographic poles, then
                 Polar Stereographic should be used instead.
