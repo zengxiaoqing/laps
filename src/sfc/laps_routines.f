@@ -404,6 +404,7 @@ c	Changes: 11-01-91  Changes for new LAPS grids.
 c                07-20-94  New version.    S. Albers
 c                08-25-97  Changes for dynamic LAPS.   P. Stamus
 c                09-30-98  Housekeeping.
+c                04-12-99  More housekeeping.
 c
 c*************************************************************************
 c
@@ -416,6 +417,7 @@ c
 c
 c
 	call zero(t_est,imax,jmax)
+	call constant(dtb8,-99.,imax,jmax)
 
 	do j=1,jmax
 	do i=1,imax
@@ -1161,6 +1163,7 @@ c                   09-30-98  Housekeeping.
 c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
 c                   01-28-99  Skip LGB until can figure out how to deal 
 c                               with bias in its fields.
+c                   06-11-99  Turn LGB back on.
 c
 c
 c       Notes:
@@ -1305,12 +1308,7 @@ c
 c
 c.....  Try LGB.
 c
- 200	continue
-	print *,' Skipping LGB file for now.'
-	ilgb_bk = 0
-	go to 300
-c
-	ilgb_bk = 1
+ 200	ilgb_bk = 1
 	print *,' Trying for LGB background '
 c	bkg_dir = '../lapsprd/lgb/'
 	bkg_ext = 'lgb'
@@ -1441,6 +1439,7 @@ c                   09-30-98  Housekeeping.
 c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
 c                   01-28-99  Skip LGB until can figure out how to deal 
 c                               with bias in its fields.
+c                   06-11-99  Turn LGB back on.
 c
 c
 c       Notes:
@@ -1560,10 +1559,6 @@ c
 c.....  Try LGB.
 c
  200	continue
-	print *,' Skipping LGB file for now.'
-	ilgb_bk = 0
-	go to 300
-c
 	var_u = 'USF'
 	var_v = 'VSF'
 	ilgb_bk = 1
@@ -1726,4 +1721,72 @@ c.....	That's about it...let's go home.
 c
 	return
 	end
+c
+c
+      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
+     &                         badflag,interp_2d)
+c
+c=================================================================
+c     
+c     Routine to interpolate a 3-d field to a 2-d surface.  The
+c     2-d surface can be the actual "surface" (the topography),
+c     or any other 2-d surface within the grid.
+c
+c     Based on code in the LAPS wind analysis, Steve Albers, FSL.
+c
+c     Original: 04-09-99  Peter A. Stamus, NOAA/FSL
+c     Changes:
+c
+c=================================================================
+c
+      real sfc_2d(ni,nj), field_3d(ni,nj,nk), heights_3d(ni,nj,nk)
+      real interp_2d(ni,nj)
+c
+
+      write(6,*)' Interpolating 3-d field to 2-d surface.'
+
+cc      i_sfc_bad = 0
+c
+c..... Interpolate from the 3-d grid to the 2-d surface at each point.
+c
+      do j=1,nj
+      do i=1,ni
+c
+         zlow = height_to_zcoord2(sfc_2d(i,j),heights_3d,ni,nj,nk,
+     &                            i,j,istatus)
+         if(istatus .ne. 1)then
+            write(6,*) ' Error in height_to_zcoord2 in interp_to_sfc',
+     &                 istatus       
+            write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k),k=1,nk)     
+            return
+         endif
+c
+         klow = max(zlow, 1.)
+         khigh = klow + 1
+         fraclow = float(khigh) - zlow
+         frachigh = 1.0 - fraclow
+c
+         if( field_3d(i,j,klow)  .eq. badflag .or.
+     &       field_3d(i,j,khigh) .eq. badflag) then
+
+            write(6,3333)i,j
+ 3333       format(' Warning: cannot interpolate to sfc at ',2i5)       
+cc            i_sfc_bad = 1
+            interp_2d(i,j) = badflag
+
+         else
+
+            interp_2d(i,j) = field_3d(i,j,klow ) * fraclow  +  
+     &                       field_3d(i,j,khigh) * frachigh
+
+         endif
+c
+      enddo !i
+      enddo !j
+c
+c..... That's all.
+c
+      return
+      end
+
 
