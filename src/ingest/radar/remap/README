@@ -12,15 +12,15 @@ main                                                    remap.f
         lut_gen                                         lut_gen.f
         radar_init (1st call)                           netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
-            rayqckz                                     rayqckz.f
         get_data_field                                  netcdfio.f
         fill_common                                     fill_common.f
         radar_init (2nd call)                           netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
-            rayqckz                                     rayqckz.f
         remap_process                                   remap_process.f
             read_data_88d                               readdata.f
                 ld_ray                                  ld_ray.f
+                rayqckz                                 rayqckz.f
+                unfold                                  unfold.f
             ref_fill_horz                               ref_fill_horz.f
             put_laps_multi_3d                           laps_io.f
             put_remap_vrc                               remap_process.f
@@ -34,5 +34,5 @@ Notes: Source code files are mainly in these directories
        src/lib
 
        The conversion from counts to reflectivity and velocity is mainly
-       done in subroutine 'get_data_field'.
+       done (and illustrated) in subroutine 'get_data_field'.
 
