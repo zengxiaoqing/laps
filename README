@@ -1209,7 +1209,7 @@ April 1996
    The entire output of laps_localization.pl (i.e. make localize)
 </pre>
 
-----------  3.0 DESCRIPTION OF LAPS PROCESSES  --------------------------------
+---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
        The following section contains information on which LAPS processes 
    generate which LAPS output products. Static data (like lat and lon  
@@ -1270,7 +1270,7 @@ Sample Output: Should be available in the test data case. The grids start with
 
 ------- 3.2  ------------------  INGEST PROCESSES---------------------------
 
------- 3.2.1 --------------------LGA-------------------------------------------
+------ 3.2.1 -------------------- LGA ----------------------------------------
 
 Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
 
@@ -1282,7 +1282,7 @@ Inputs:
 Outputs: (Feeds LZB, LC3)
 	lga	grid	model data analysis/forecast
 
------- 3.2.2 --------------------LVD-------------------------------------------
+------ 3.2.2 -------------------- LVD ----------------------------------------
 
 LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
               grid.
@@ -1295,7 +1295,7 @@ Output:
          LVD/"SATID"	grid	LAPS satellite data file
 			`	SATID currently can be either goes08 or goes09
 
------- 3.2.3 ---------Polar Coordinate Radar Data (e.g. Wideband)-------------
+------ 3.2.3 -------- Polar Coordinate Radar Data (e.g. Wideband) -------------
 
 Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
 
@@ -1309,11 +1309,12 @@ Inputs:
         we obtain this raw wideband data is at 
         'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_raw.html'.
 
-Outputs (LAPS intermediate files):
+Outputs (LAPS intermediate files - depending on input parameters):
 <pre>
      v01         grids       3-D Radar reflectivity, velocity, and Nyquist vel
-     v02           "                                  "
+     v02           "                  "
      rdr/xxx/vrc   "         2-D Radar reflectivity
+     vrc           "                  "
      etc. (for each radar)
 </pre>
 
@@ -1332,6 +1333,7 @@ Source directory: The source code for this is in 'src/ingest/radar/remap'.
 Sample Output: May be available in the test data case.
 
 ------ 3.2.4 -------------------VRC--------------------------------------------
+
 Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
 
 <pre>
@@ -1379,8 +1381,10 @@ Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest
 <pre>
 Inputs: (located in two separate NetCDF directories)
 	WPDN 404-MHz profiler wind data in netCDF format 
+            NetCDF CDLs from both FSL-NIMBUS and WFO-Advanced are accepted. 
+
 	Boundary layer 915-MHz profiler wind data in netCDF format
-        NetCDF CDLs from both FSL-NIMBUS and WFO-Advanced are accepted.        
+            NetCDF CDL from FSL-NIMBUS. 
 
 Output: (feeds wind)
 	pro	inter data	profiler wind direction (degrees) and
@@ -1417,7 +1421,7 @@ Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
 Inputs:
 	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
 	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
-        These are in two separate NetCDF directories (FSL-NIMBUS CDL format).
+        These are in two separate NetCDF directories (FSL-NIMBUS CDLs).
 
 Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
@@ -1452,6 +1456,7 @@ Process: (ingest_raob.exe) LAPS RAOBs
 <pre>
 Inputs:
 	RAOBs in NetCDF format (FSL-NIMBUS CDL)
+                               (Should also work with WFO-Advanced CDL)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
