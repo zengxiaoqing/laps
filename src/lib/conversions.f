@@ -150,7 +150,7 @@ cdoc    value of height_to_zcoord will have a fraction of 0.5.
 
         logical ltest_vertical_grid
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
             return
@@ -699,7 +699,7 @@ cdoc    Calculate zcoord (e.g. pressure) of a given level. Being phased out?
 
         logical ltest_vertical_grid
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -738,7 +738,7 @@ cdoc    Calculate pressure of a given integer level. Being phased out?
 
         include 'lapsparms.cmn'
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -763,7 +763,7 @@ cdoc    Obtain pressure of a given real (fractional) level. Being phased out?
 
         include 'lapsparms.cmn'
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -790,7 +790,7 @@ cdoc    Convert pressure to a real (fractional) level. Being phased out?
 
         integer istatus
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -828,7 +828,7 @@ cdoc    Being phased out?
 
         integer istatus
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -923,7 +923,7 @@ cdoc    given the longitude.
 
         real longitude
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -1051,7 +1051,7 @@ cdoc    Convert DIR and SPEED (true north) to U and V (grid north)
 
         real longitude
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -1078,7 +1078,7 @@ cdoc    Convert wind vector from true north to grid north, given the longitude.
 
         real longitude
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       
@@ -1106,7 +1106,7 @@ cdoc    Convert wind vector from grid north to true north, given the longitude
 
         real longitude
 
-        call get_laps_config('nest7grid',istatus)
+        call get_config(istatus)
 
         if(istatus .ne. 1)then
             write(6,*)' ERROR, get_laps_config not successfully called'       

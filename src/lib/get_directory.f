@@ -38,6 +38,12 @@ cdis
 !       If the extension is a domain name, the location of the static file
 !       directory is returned.
 
+!       Added wrfsi as a possible domain name (namelist) in addition to nes7grid.
+!       Thus, made the data root a bit more generic. Retain functionality for
+!       calls independent of get_laps_config; ie.,  still gets the env or command
+!       line input
+!       2000         J. Smart
+
 !       If the extension is a product file, the domain is tested, the extension
 !       is modified for the domain if necessary, and the directory containing
 !       the products is returned. This routine is designed for a UNIX
@@ -48,52 +54,53 @@ cdis
         character*(*) directory_out  ! output
         integer*4 len_dir            ! output
 
-        character*80 grid_fnam_common, grid_fnam
-        common / grid_fnam_cmn / grid_fnam_common
-        character*201 laps_data_root, directory
+        include 'grid_fname.cmn'
 
-        call get_directory_length(grid_fnam_common,len_dir)
-cc      
+        character*201 directory
+
+        call s_len(grid_fnam_common,len_dir)
+
 cc        len_dir = index(grid_fnam_common,'/',.true.)
-        if(len_dir.gt.0) then
-           grid_fnam='nest7grid'
-           laps_data_root=grid_fnam_common
-        else
-           grid_fnam=grid_fnam_common
-           call GETENV('LAPS_DATA_ROOT',laps_data_root) 
+        if(len_dir.eq.0) then
+           call get_config(istatus)
+           if(istatus.ne.1)then
+              print*,'ERROR: get_config failed'
+              return
+           endif
         endif
-
-        
 
 !       Test if the extension is the domain name. If so, then return the
 !       directory containing the static files.
-        call s_len(grid_fnam,len_grid_fnam)
 
+        call s_len(grid_fnam_common,len_grid_fnam)
         call s_len(ext_in,len_ext_in)
+        call s_len(generic_data_root,len_root)
 
-        call s_len(laps_data_root,len_lapsroot)
-
-
-        if(len_lapsroot .gt. 200) then
-          write(6,*)' get_directory ERROR: LAPS_DATA_ROOT is too long,'
-     1             ,' shorten to <200'
+        if(len_root .gt. 200) then
+          write(6,*)'get_directory ERROR: The env var for the DATA ROOT'
+     1             ,' is too long; shorten to <200'
           stop
         endif 
-c        print *, laps_data_root(1:len_lapsroot),len_lapsroot
+c        print *, generic_data_root(1:len_root),len_root
 
-        if(laps_data_root(len_lapsroot:len_lapsroot).ne.'/') then
-           len_lapsroot=len_lapsroot+1
-           laps_data_root(len_lapsroot:len_lapsroot)='/'
+        if(generic_data_root(len_root:len_root).ne.'/') then
+           len_root=len_root+1
+           generic_data_root(len_root:len_root)='/'
         endif
+c
+c both laps and wrfsi have static files in 'static' at the moment.
         if(len_ext_in .eq. len_grid_fnam)then
           if(len_ext_in .ne. 0)then
-            if(ext_in(1:len_ext_in) .eq.
-     1         grid_fnam(1:len_ext_in))then
-                directory = laps_data_root(1:len_lapsroot)//'static/'
+            if(ext_in(1:len_ext_in).eq.grid_fnam_common(1:len_grid_fnam)
+     1)then
+              if(ext_in(1:len_ext_in) .eq. 'nest7grid'
+     1 .or.      ext_in(1:len_ext_in) .eq. 'wrfsi')then
+                directory = generic_data_root(1:len_root)//'static/'
                 goto 999
-            endif ! ext_in .eq. grid_fnam
+              endif
+            endif ! ext_in .eq. grid_fnam_common
           endif ! len_ext .ne. 0
-        endif ! lens are =
+        endif ! lens are = ?
 
         call downcase(ext_in,ext)
 
@@ -101,42 +108,31 @@ c        print *, laps_data_root(1:len_lapsroot),len_lapsroot
 !       If so, then return the directory containing the static thermo files.
 !       added direct test for static dir
         if(ext(1:3) .eq. 'dat' .or. ext(1:6) .eq. 'static')then
-           directory = laps_data_root(1:len_lapsroot)//'static/'
+           directory = generic_data_root(1:len_root)//'static/'
            goto 999
         endif
 
         if(ext(1:3) .eq. 'etc' .or. ext(1:4).eq.'time')then
-c           directory = laps_data_root(1:len_lapsroot)//'etc/'
-           directory = laps_data_root(1:len_lapsroot)//'time/'
+c           directory = generic_data_root(1:len_root)//'etc/'
+           directory = generic_data_root(1:len_root)//'time/'
            goto 999
         endif
 
         if(ext(1:3) .eq. 'cdl')then
-           directory = laps_data_root(1:len_lapsroot)//'cdl/'
+           directory = generic_data_root(1:len_root)//'cdl/'
            goto 999
         endif
 
         if(ext(1:3) .eq. 'log')then
-           directory = laps_data_root(1:len_lapsroot)//'log/'
+           directory = generic_data_root(1:len_root)//'log/'
            goto 999
         endif
-
-        if(ext(1:8) .eq. 'radioprd') then
-           directory = laps_data_root(1:len_lapsroot)//'radioprd/'
-           goto 999
-        endif
-
-        if(ext(1:7) .eq. 'nowrad6') then
-           directory = laps_data_root(1:len_lapsroot)//'nowrad6/'
-           goto 999
-        endif
-
 
 !       In this section, we assume the extension points to a product file
         call s_len(ext,len_ext)
 
 
-        directory = laps_data_root(1:len_lapsroot)
+        directory = generic_data_root(1:len_root)
      +       //'lapsprd/'//ext(1:len_ext)//'/'
 
 !       Get Length of directory

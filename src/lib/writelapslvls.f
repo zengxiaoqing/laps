@@ -81,6 +81,7 @@ C
      1               i_valtime,            !UNIX time of data
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
+     1               lgfc,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -109,6 +110,7 @@ C
       common         /prt/flag
 C
       include 'lapsparms.cmn'
+      include 'grid_fname.cmn'
 C
 C-------------------------------------------------------------------------------
 C
@@ -117,7 +119,8 @@ C
 C
 C ****  Specify laps domain name
 C
-      laps_dom_file = 'nest7grid'
+      call s_len(grid_fnam_common,lgfc)
+      laps_dom_file = grid_fnam_common(1:lgfc)
 C 
       if ((ext .eq. 'fua') .or. (ext .eq. 'fsf') .or.
      1 (ext .eq. 'pbl'))  then

@@ -81,8 +81,8 @@ C
            file_name = yr_a10_to_a9(fname_in(leni+1:leni+lent))
 
         else                                                ! Unrecognized type
-           write(6,*)'i4time_fname_lp: unable to convert to i4time',
-     1'    type = ',c20_type
+c          write(6,*)'i4time_fname_lp: unable to convert to i4time',
+c    1'    type = ',c20_type
            istatus = 0
            FNAME_IN = FNAME_BUF
            return

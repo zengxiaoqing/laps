@@ -74,6 +74,7 @@ SRC	= machine_dependent.F \
           getcld3d.f \
           getradar.f \
           get_time_window.f \
+          get_wrfsi_config.f \
           gettmp2d.f \
           gettmp3d.f \
           getuv3d.f \
@@ -121,6 +122,7 @@ SRC	= machine_dependent.F \
           read_snd_data.f \
           read_surface_obs.f \
           read_surface_old.f \
+          read_wrfsi_nl.f \
           readlapsdata.f \
           readlapsheader.f \
           rfill.f \

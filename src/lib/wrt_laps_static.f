@@ -53,7 +53,7 @@ C  BEGIN SUBROUTINE
       call cv_i4tim_asc_lp(i4time,asctime,status)
       unixtime = i4time - 315619200
 
-c get NX_L and NY_L from nest7grid.parms
+c get NX_L and NY_L from namelist (or common if namelist read already).
       call get_grid_dim_xy(nx_lp, ny_lp, status)
       if (status .ne. 1) goto 930
         

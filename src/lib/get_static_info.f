@@ -36,9 +36,10 @@
 ! -----------------------------------------------------------------------------
 
 !     Let's make sure we have the run time variables in the common block
-      call get_laps_config('nest7grid',istatus)
+
+      call get_config(istatus)
       if(istatus .ne. 1)then
-          write(6,*)' Error detected in calling get_laps_config'
+          write(6,*)' Error detected in calling get_config'
           istatus = 0
           return
       endif

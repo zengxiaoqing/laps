@@ -39,8 +39,8 @@ cdis
 !                                    - as well as mercator projection
 !       1997            Steve Albers - Added local stereographic
 
-!       This routine assumes a polar stereographic, lambert conformal,
-!       or mercator projection.
+cdoc    This routine assumes a polar stereographic, lambert conformal,
+cdoc    or mercator projection.
 
         real*4 rlat                         ! Input Lat
         real*4 rlon                         ! Input Lon
@@ -90,8 +90,8 @@ cdis
 
 !       1997            Steve Albers 
 
-!       This routine assumes a polar stereographic, lambert conformal,
-!       or mercator projection.
+cdoc    This routine assumes a polar stereographic, lambert conformal,
+cdoc    or mercator projection.
 
         real*4 ri,rj                        ! Input (I,J on LAPS Grid)
         real*4 lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
@@ -134,36 +134,67 @@ cdis
 
 !       1997            Steve Albers 
 
-!       This routine assumes a polar stereographic, lambert conformal,
-!       or mercator projection.
+cdoc    This routine assumes a polar stereographic, lambert conformal,
+cdoc    or mercator projection.
+
+        character*6  c6_maproj
 
         include 'trigd.inc'
-        include 'lapsparms.cmn'
+        include 'grid_fname.cmn'
 
-        call get_laps_config('nest7grid',istatus)  
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus.ne.1)then
+           print*,'Error from get_c6_maproj'
+           return
         endif
 
         if(c6_maproj .eq. 'plrstr')then ! polar stereo
-            slat1 = standard_latitude
-            polat = standard_latitude2
-            slon = standard_longitude
+            call get_standard_latitudes(slat1,polat,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1 = standard_latitude
+c           polat = standard_latitude2
+c           slon = standard_longitude
 
             call latlon_to_uv_ps(rlat,rlon,slat1,polat,slon,u,v)
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert
-            slat1 = standard_latitude
-            slat2 = standard_latitude2
-            slon = standard_longitude
+            call get_standard_latitudes(slat1,slat2,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1 = standard_latitude
+c           slat2 = standard_latitude2
+c           slon = standard_longitude
 
             call latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
-            slat1  = standard_latitude
-            cenlon = grid_cen_lon_cmn
+            call get_standard_latitude(slat1,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(cenlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1  = standard_latitude
+c           cenlon = grid_cen_lon_cmn
 
             call latlon_to_uv_mc(rlat,rlon,slat1,cenlon,u,v)
 
@@ -263,39 +294,70 @@ cdis
 !       This routine assumes a polar stereographic, lambert conformal,
 !       or mercator projection.
 
+        character*6  c6_maproj
+
         include 'trigd.inc'
-        include 'lapsparms.cmn'
+        include 'grid_fname.cmn'
 
-        call get_laps_config('nest7grid',istatus)
-
-        if(istatus .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus.ne.1)then
+           print*,'Error from get_c6_maproj'
+           return
         endif
 
         if(c6_maproj .eq. 'plrstr')then ! polar stereo
-            slat1 = standard_latitude
-            polat = standard_latitude2
-            slon = standard_longitude
+            call get_standard_latitudes(slat1,polat,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1 = standard_latitude
+c           polat = standard_latitude2
+c           slon = standard_longitude
 
             call uv_to_latlon_ps(u,v,slat1,polat,slon,rlat,rlon)
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert
-            slat1 = standard_latitude
-            slat2 = standard_latitude2
-            slon = standard_longitude
+            call get_standard_latitudes(slat1,slat2,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1 = standard_latitude
+c           slat2 = standard_latitude2
+c           slon = standard_longitude
 
             call uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
-            slat1  = standard_latitude
-            cenlon = grid_cen_lon_cmn
+            call get_standard_latitude(slat1,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(cenlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+c           slat1  = standard_latitude
+c           cenlon = grid_cen_lon_cmn
 
             call uv_to_latlon_mc(u,v,slat1,cenlon,rlat,rlon)
 
         else
-            write(6,*)'uv_to_latlon: unrecognized projection '
-     1                ,c6_maproj       
+            write(6,*)'latlon_to_uv: unrecognized projection '
+     1                ,c6_maproj
             stop
 
         endif
@@ -387,47 +449,67 @@ cdis
         end
 
 
-        function projrot_laps(rlon)
+        function projrot_latlon(rlat,rlon,istatus)
         include 'trigd.inc'
-        entry projrot_latlon(rlat,rlon,istatus)
 
-!       1997 Steve Albers    Calculate map projection rotation, this is the
-!                            angle between the y-axis (grid north) and
-!                            true north. Units are degrees.
+cdoc    1997 Steve Albers    Calculate map projection rotation, this is the
+cdoc                         angle between the y-axis (grid north) and
+cdoc                         true north. Units are degrees.
 !
 !                            projrot_laps = (true north value of wind direction
 !                                          - grid north value of wind direction)
+       
+!       Added 8/4/2000 to make sure these are declared even if not passed in
+        integer*4 istatus
+        real*4 rlat, rlon
 
         real*4 n
 
         save init
         data init/0/
 
-        include 'lapsparms.cmn'
+        character*6  c6_maproj
+
+        include 'grid_fname.cmn'
 
 !       Difference between two angles, result is between -180. and +180.
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
-        call get_laps_config('nest7grid',istat_config)
-
-        if(istat_config .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not successfully called'       
-            stop
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus.ne.1)then
+           print*,'Error returned from get_c6_maproj'
+           return
         endif
 
         if(c6_maproj .eq. 'plrstr')then ! polar stereographic
-            polat = standard_latitude2
-            polon = standard_longitude
+
+            call get_standard_longitude(polon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+            call get_standard_latitudes(stdlat,polat,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+
+            call get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_grid_center'
+               return
+            endif
+
 
             if(polat .eq. +90.)then
-                projrot_laps = standard_longitude - rlon
+                projrot_laps = polon - rlon
 
             elseif(polat .eq. -90.)then
-                projrot_laps = rlon - standard_longitude 
+                projrot_laps = rlon - polon 
 
             else ! abs(polat) .ne. 90.
-                if(grid_cen_lat_cmn .eq. polat .and. 
-     1             grid_cen_lon_cmn .eq. polon)then ! grid centered on proj pole
+                if(grid_cen_lat .eq. polat .and. 
+     1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
 
                     if(init .eq. 0)then
                         write(6,*)
@@ -439,7 +521,7 @@ cdis
                     endif
 
                     rn = cosd(90.-polat)
-                    projrot_laps = rn * angdif(standard_longitude,rlon)      
+                    projrot_laps = rn * angdif(polon,rlon)      
 
                 elseif(.true.)then
                     if(init .eq. 0)then
@@ -462,12 +544,161 @@ cdis
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert conformal
 
-            slat1 = standard_latitude
-            slat2 = standard_latitude2
+            call get_standard_latitudes(slat1,slat2,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
 
             call lambert_parms(slat1,slat2,n,s,rconst)
 
-            projrot_laps = n * s * angdif(standard_longitude,rlon)
+            call get_standard_longitude(stdlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_c6_maproj'
+               return
+            endif
+
+            projrot_laps = n * s * angdif(stdlon,rlon)
+
+        elseif(c6_maproj .eq. 'merctr')then ! mercator
+            projrot_laps = 0.
+
+        else
+            write(6,*)'projrot_laps: unrecognized projection ',c6_maproj       
+            stop
+
+        endif
+
+        projrot_latlon = projrot_laps
+
+        istatus = 1 
+        return
+        end
+
+
+
+        function projrot_laps(rlon)
+        include 'trigd.inc'
+
+cdoc    This routine is being phased out. Please try to use 'projrot_latlon'.
+
+!       1997 Steve Albers    Calculate map projection rotation, this is the
+!                            angle between the y-axis (grid north) and
+!                            true north. Units are degrees.
+!
+!                            projrot_laps = (true north value of wind direction
+!                                          - grid north value of wind direction)
+       
+!       Added 8/4/2000 to make sure these are declared even if not passed in
+        integer*4 istatus
+        real*4 rlat, rlon
+
+        real*4 n
+
+        save init
+        data init/0/
+
+        character*6  c6_maproj
+
+        include 'grid_fname.cmn'
+
+!       Difference between two angles, result is between -180. and +180.
+        angdif(X,Y)=MOD(X-Y+540.,360.)-180.
+
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus.ne.1)then
+           print*,'Error returned from get_c6_maproj'
+           return
+        endif
+
+        if(c6_maproj .eq. 'plrstr')then ! polar stereographic
+
+            call get_standard_longitude(polon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+            call get_standard_latitudes(stdlat,polat,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+
+            call get_grid_center(grid_cen_lat,grid_cen_lon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_grid_center'
+               return
+            endif
+
+
+            if(polat .eq. +90.)then
+                projrot_laps = polon - rlon
+
+            elseif(polat .eq. -90.)then
+                projrot_laps = rlon - polon 
+
+            else ! abs(polat) .ne. 90.
+                if(grid_cen_lat .eq. polat .and. 
+     1             grid_cen_lon .eq. polon)then ! grid centered on proj pole
+
+                    if(init .eq. 0)then
+                        write(6,*)
+     1                   ' NOTE: local stereographic projection.'
+                        write(6,*)
+     1                   ' Using approximation for "projrot_laps",'
+     1                  ,' accurate calculation not yet in place.'
+                        init = 1
+                    endif
+
+                    rn = cosd(90.-polat)
+                    projrot_laps = rn * angdif(polon,rlon)      
+
+                elseif(.true.)then
+                    if(init .eq. 0)then
+                        write(6,*)' ERROR in projrot_laps: '
+                        write(6,*)' This type of local'
+     1                  ,' stereographic projection not yet supported.'
+                        write(6,*)' Grid should be centered on'
+     1                  ,' projection pole.'
+                        init = 1
+                    endif
+
+                    projrot_laps = 0.
+         
+                else ! .false.
+!                   Find dx/lat and dy/lat, then determine projrot_laps
+
+                endif
+
+            endif ! polat
+
+        elseif(c6_maproj .eq. 'lambrt')then ! lambert conformal
+
+            call get_standard_latitudes(slat1,slat2,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_latitudes'
+               return
+            endif
+            call get_standard_longitude(slon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_standard_longitude'
+               return
+            endif
+
+            call lambert_parms(slat1,slat2,n,s,rconst)
+
+            call get_standard_longitude(stdlon,istatus)
+            if(istatus.ne.1)then
+               print*,'Error returned from get_c6_maproj'
+               return
+            endif
+
+            projrot_laps = n * s * angdif(stdlon,rlon)
 
         elseif(c6_maproj .eq. 'merctr')then ! mercator
             projrot_laps = 0.
@@ -488,11 +719,11 @@ cdis
       subroutine check_domain(lat,lon,ni,nj,grid_spacing_m,intvl
      1                                                       ,istatus)
 
-!     This routine checks whether the lat/lon grid is consistent with
-!     map projection parameters as processed by latlon_to_rlapsgrid,
-!     and rlapsgrid_to_latlon. The grid size is also checked.
-!     This is a good sanity check of the NetCDF static file, nest7grid.parms,
-!     as well as various grid conversion routines.
+cdoc  This routine checks whether the lat/lon grid is consistent with
+cdoc  map projection parameters as processed by latlon_to_rlapsgrid,
+cdoc  and rlapsgrid_to_latlon. The grid size is also checked.
+cdoc  This is a good sanity check of the NetCDF static file, namelist files,
+cdoc  as well as various grid conversion routines.
 
 !     1997 Steve Albers
 
@@ -763,7 +994,7 @@ cdis
 !     Calculate grid_spacing_proj_m: grid spacing in the projection plane
       if(l_secant)then
           grid_spacing_proj_m = grid_spacing_m ! equal to parameter value 
-                                               ! in nest7grid.parms
+                                               ! in namelist files
           phi0 = phi_std
 
       else ! tangent projection

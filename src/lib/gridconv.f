@@ -717,7 +717,7 @@ c
          if (diff .lt. 0.) diff=diff+360.
          if (diff .ge. 360.) diff=diff-360.
          lli(n)=diff/dlon+1.
-         llj(n)=(glat(n)-lat0)/dlat+1.
+         llj(n)=(lat0-glat(n))/dlat+1.  !mod 7-6-00 JSmart orig: glat(n)-lat0
       enddo
       return
 c

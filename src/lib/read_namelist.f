@@ -1,5 +1,4 @@
       subroutine config_satellite_lvd(istatus)
-
 c
 cdoc  Reads static/satellite_lvd.nl file.
 
@@ -7,11 +6,13 @@ cdoc  Reads static/satellite_lvd.nl file.
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
       include 'satellite_namelist_lvd.cmn'
+      include 'grid_fname.cmn'
+
       include 'satdata_lvd.for'
 
       istatus = 0
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
 
       nest7grid = nest7grid(1:len_dir)//'/satellite_lvd.nl'
 
@@ -38,6 +39,7 @@ c
 cdoc  Reads static/sat_sounder.nl file.
 
       include 'lsr_dims.inc'
+      include 'grid_fname.cmn'       !grid_fnam_common
 
       integer len_dir
       integer n_sndr
@@ -57,7 +59,7 @@ cdoc  Reads static/sat_sounder.nl file.
      +er,n_elems,n_lines,n_sndr_channels,channel_wavelength_u,imsng_sndr
      +_pix,pct_req_lsr
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
 
       nest7grid = nest7grid(1:len_dir)//'/sat_sounder.nl'
 
@@ -88,11 +90,13 @@ cdoc  Reads static/balance.nl file.
       real*4     gamo,delo
       character  nest7grid*150
 
+      include   'grid_fname.cmn'       !grid_fnam_common
+
       namelist /balance_nl/lrunbal,gamo,delo
 
       istatus = 0
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
         nest7grid(len_dir:len_dir)='/'
@@ -121,6 +125,7 @@ cdoc  Reads static/radar_mosaic.nl file
       implicit none
 
       include    'radar_mosaic_dim.inc'
+      include    'grid_fname.cmn'              !grid_fnam_common
 
       integer    istatus
       integer    len_dir
@@ -136,7 +141,7 @@ cdoc  Reads static/radar_mosaic.nl file
 
       istatus = 0
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
         nest7grid(len_dir:len_dir)='/'
@@ -165,6 +170,8 @@ cdoc reads static/background.nl
 
       implicit none
       include 'bgdata.inc'
+      include 'grid_fname.cmn'             !grid_fnam_common
+
       character*150 nest7grid
       character*256 bgpaths(maxbgmodels)
       character*132 cmodel(maxbgmodels)
@@ -176,7 +183,7 @@ cdoc reads static/background.nl
      +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
      +,itime_inc
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
         nest7grid(len_dir:len_dir)='/'
@@ -206,6 +213,7 @@ cdoc  Reads static/osse.nl file.
       implicit none
 
       include 'osse.inc'
+      include 'grid_fname.cmn'                 !grid_fnam_common
 
       integer        istatus
       integer        len_dir
@@ -219,7 +227,7 @@ cdoc  Reads static/osse.nl file.
 
       istatus = 0
 
-      call get_directory('nest7grid',nest7grid,len_dir)
+      call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
         len_dir=len_dir+1
         nest7grid(len_dir:len_dir)='/'
@@ -261,6 +269,8 @@ c
      1                          ,max_pr,max_pr_levels,i_3d
      1                          ,istatus)
 
+       include 'grid_fname.cmn'                          !grid_fnam_common
+
        logical l_use_raob, l_use_cdw, l_use_radial_vel
        namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel
      1                   ,weight_bkg_const_wind
@@ -269,7 +279,7 @@ c
  
        character*150 static_dir,filename
  
-       call get_directory('nest7grid',static_dir,len_dir)
+       call get_directory(grid_fnam_common,static_dir,len_dir)
 
        filename = static_dir(1:len_dir)//'/wind.nl'
  

@@ -60,6 +60,8 @@ C**********************************************************************
 C
         implicit  none
 C
+      include       'grid_fname.cmn'
+
       integer*4      i4_reftime,           !INPUT I4time of run
      1               i4_valtime,           !INPUT I4time data is valid
      1               imax,jmax,kmax,       !INPUT # cols, # rows, # fields
@@ -80,6 +82,7 @@ C
      1               i_valtime,            !UNIX time of data
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
+     1               lgfc,
      1               fn_length,
      1               var_len,
      1               comm_len,
@@ -118,7 +121,8 @@ C
 C
 C ****  Specify laps domain name
 C
-      laps_dom_file = 'nest7grid'
+      call s_len(grid_fnam_common,lgfc)
+      laps_dom_file = grid_fnam_common(1:lgfc)
 C
 C ****  call get_laps_config to read nest7grid.parms
 C

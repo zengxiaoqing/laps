@@ -37,7 +37,7 @@ c
        integer*4 i_files_qualifying
        integer*4 lend
        integer*4 istatus
-       integer*4 i,k,n
+       integer*4 i,j,k,n
 
        logical found_qualifying
 
@@ -67,7 +67,12 @@ c
 
           do k=1,max_2letter_strings
              if(c_fnames(i)(lend+1:lend+2).eq.c_qualifying_
-     12letter_string(k)(1:2))found_qualifying=.true.
+     12letter_string(k)(1:2))then
+                do j=1,max_numeric_char
+                   if(c_fnames(i)(lend+3:lend+3).eq.
+     +c_qualifying_numeric_char(j))found_qualifying=.true.
+                enddo
+             endif
           enddo
 
           if(found_qualifying)then

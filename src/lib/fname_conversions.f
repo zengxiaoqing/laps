@@ -326,3 +326,33 @@ c
 
       return
       end
+
+c ---------------------------------------------------------------------------
+c
+      function wrftolaps_c6_maprojname(map_proj_name)
+
+      implicit none
+
+      character*32  map_proj_name
+      character*6   c6_maproj
+      character*6   wrftolaps_c6_maprojname
+ 
+      integer       len
+      
+
+      call s_len(map_proj_name,len)
+      if(map_proj_name(1:len).eq.'polar')then
+         c6_maproj='plrstr'
+      elseif(map_proj_name(1:len).eq.'lambert')then
+         c6_maproj='lambrt'
+      elseif(map_proj_name(1:len).eq.'mercator')then
+         c6_maproj='merctr'
+      else
+         print*,'unknown map projection setting',' map_proj =
+     1 ',map_proj_name(1:len),'.  Check the WRF namelist wrfsi.nl'
+         return
+      endif
+
+      wrftolaps_c6_maprojname=c6_maproj
+      return
+      end
