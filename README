@@ -417,23 +417,13 @@
 
                         NUMBER OF GRID POINTS
 
-     In general, Laps will allow you to change the horizontal domain at 
-     runtime. Below is a list of the relevant files that need to be changed.
+     Laps will allow you to change the horizontal domain at runtime. 
+     Below is a list of the relevant files that need to be changed.
  
-     1. Check 'src/include/lapsparms.inc'. 
-
-        NX_L_MAX and NY_L_MAX are the maximum allowed dimensions for LAPS.
-        If your dynamic adjustment of the dimensions will exceed these values,
-        then 'lapsparms.inc' should be modified at compile time (before
-        running make).. 
-
-        Note also that NX_L_MAX is the dimension counting from W to E. 
-        NY_L_MAX is the dimension counting from S to N.
-
-     2. Adjust the horizontal dimensions in 
+     1. Adjust the horizontal dimensions in 
                                    './data/static/nest7grid.parms'.
 
-     3. Edit the file './data/static/nest7grid.cdl' to modify
+     2. Edit the file './data/static/nest7grid.cdl' to modify
 	the domain size from the Colorado (61x61) to your domain size.
 	This should be consistent with the horizontal grid dimensions in
                                    './data/static/nest7grid.parms'. 
@@ -460,13 +450,13 @@
 
         Two scenarios for processing terrain may need more testing. These are:
 
-        a) Near a land/sea border
+        1) Near a land/sea border
            In this case a filter that sets a given terrain point to zero
            if the absolute value of the point is less than 1 meter may
            help as a post processing step to reduce noise just off of
            the coast. 
            
-        b) If you are in the vicinity of a land border of the Continental 
+        2) If you are in the vicinity of a land border of the Continental 
            United States (e.g. Southern Canada or Northern Mexico).
 
         The './src/grid/gridgen_model.f' program normally utilizes one of
@@ -483,7 +473,7 @@
         The second database is a global 30" terrain dataset from USGS that we
         have reformatted here at FSL. 
 
-        Prior to running laps_localization.pl, set the following parameters
+        Prior to running 'laps_localization.pl', set the following parameters
         in 'data/static/nest7grid.parms' (needed only if you are outside 
         the default Colorado domain).
 
@@ -589,19 +579,12 @@
      To do this, perform the following between untarring the tar file and
     compiling 
 
-     1. Check 'src/include/lapsparms.inc'. 
-
-        NZ_L_MAX is the maximum allowed dimensions for LAPS.
-        If your dynamic adjustment of the dimensions will exceed these values,
-        then 'lapsparms.inc' should be modified at compile time (before
-        running make).. 
-
-     2. Edit 'data/static/nest7grid.parms'
+     1. Edit 'data/static/nest7grid.parms'
        
         Change the parameter 'nk_laps' to be equal to the (number of vertical 
         levels).
 
-     3. Note that we have not tested laps with other than 21 vertical levels
+     2. Note that we have not tested laps with other than 21 vertical levels
         for quite a while.
 
    PRESSURE OF THE LEVELS (and vertical resolution):
