@@ -1013,8 +1013,8 @@ c read in laps lat/lon and topo
             else
 !               cint = 0.
                 cint = 10. 
-                clow = -50.
-                chigh = +50.
+                clow = -40.
+                chigh = +40.
                 i_contour = -1
             endif
 
@@ -1073,6 +1073,12 @@ c read in laps lat/lon and topo
                 enddo ! k
 
                 cint = -1.
+
+!               This is commented out to help with manual lapsplot ports
+!               We can turn this on once the omega.lut is propagated everywhere
+!               It should be turned on if the 'omega.lut' is different from
+!               the 'hues.lut'
+!               colortable = 'omega'
 
             else ! Not LCO field
                 call interp_3d(field_3d,field_vert
