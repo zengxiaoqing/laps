@@ -257,6 +257,7 @@ C --- Do contouring
           else
             call cpseti ('CLD',65535)
           end if
+!         call cpseti ('CLL',1)       ! Line Width
 !         CALL CPSETI ('CLC - CONTOUR LINE COLOR INDEX', 7+NC)
 111     CONTINUE
 

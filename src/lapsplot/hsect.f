@@ -65,6 +65,7 @@ cdis
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
         real*4 rlaps_land_frac(NX_L,NY_L)
         real*4 soil_type(NX_L,NY_L)
+        real*4 static_albedo(NX_L,NY_L)
 
         character*1 c_display, qtype
         character*1 cansw
@@ -296,11 +297,16 @@ c       include 'satellite_dims_lvd.inc'
         endif
 
         var_2d='USE'
-        call rd_laps_static (directory,ext,nx_l,ny_l,1,var_2d,
-     1                       units_2d,comment_2d,
-     1                       soil_type,rspacing_dum,istatus)
+        call read_static_grid(nx_l,ny_l,var_2d,soil_type,istatus)       
         if(istatus .ne. 1)then
-            write(6,*)' Warning: could not read LAPS soil-type'
+            write(6,*)' Error reading LAPS static-use'
+            return
+        endif
+
+        var_2d='ALB'
+        call read_static_grid(nx_l,ny_l,var_2d,static_albedo,istatus)       
+        if(istatus .ne. 1)then
+            write(6,*)' Warning: could not read LAPS static-albedo'
 !           return
         endif
 
@@ -341,7 +347,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'         [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc] Snow Cvr'
      1       /
-     1       /'     [tn-i,lf,gr,so] Ter/LndFrac/Grid'
+     1       /'     [tn-i,lf,gr,so,al-i] Ter/LndFrac/Grid/Albedo'
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       , 'Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -1077,7 +1083,7 @@ c       include 'satellite_dims_lvd.inc'
           do k=1,maxsat
            if(isats(k).eq.1)then
             write(6,114)c_sat_id(k)
-114         format(5x,'plot the data for ',a6,45x,' [y/n]? ',$)
+114         format(5x,'plot the data for ',a6,34x,' [y/n] ? ',$)
             read(lun,*)cansw
             if(cansw.eq.'y'.or.cansw.eq.'Y')then
 
@@ -1097,8 +1103,8 @@ c
              enddo
 
              write(6,118)
-118          format(5x,'Select LVD field',5x,'(vis, 3.9, 6.7, 11.2, 12)'
-     1                ,' [enter 1, 2, 3, 4, 5]? ',$)
+118          format(5x,'Select LVD field',1x,'(vis, 3.9, 6.7, 11.2, 12)'
+     1                /34x,' [enter 1, 2, 3, 4, 5; neg for img] ? ',$)
              read(lun,*)ilvd
 
              if(ilvd .lt. 0)then
@@ -1147,20 +1153,25 @@ c
               chigh = +40.
               cint = (vasmx-vasmn)/10.
               scale = 1e0
+              scale_l = +40.     ! for image plots
+              scale_h = -50.     ! for image plots
              elseif(var_2d.eq.'ALB')then
               c33_label='LAPS Albedo '//c_sat_id(k)
+              scale_l = 0.00     ! for image plots
+              scale_h = 0.50     ! for image plots
              elseif(var_2d.eq.'SVS')then
               c33_label='LAPS VIS counts (raw) - '//c_sat_id(k)
+              scale_l = 30.     ! for image plots
+              scale_h = 100.    ! for image plots
              else
               c33_label='LAPS VIS counts (normalized) - '//c_sat_id(k)
+              scale_l = 30.     ! for image plots
+              scale_h = 230.    ! for image plots
              endif
 
              call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
              if(l_plot_image)then
-                 scale_l = +40.
-                 scale_h = -50.
-
                  n_image = n_image + 1
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear')
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4138,6 +4149,27 @@ c                   cint = -1.
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            i4time_topo = 0
+
+        elseif(c_type(1:2) .eq. 'al')then
+            clow = 0.
+            chigh = 1.0
+            cint = .05
+            c33_label = 'Static Albedo                    '
+            asc9_tim_t = '         '
+
+            if(c_type .eq. 'ali')then
+                write(6,*)' calling solid fill plot'
+                call ccpfil(static_albedo,NX_L,NY_L,0.0,0.5,'linear')
+                n_image = n_image + 1
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+            else
+                call plot_cont(static_albedo,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+            endif
 
             i4time_topo = 0
 

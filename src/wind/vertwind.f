@@ -33,7 +33,7 @@ cdis
         subroutine vert_wind(uanl,vanl,u_sfc,v_sfc,ni,nj,nk,wanl
      1          ,topo,lat,lon,grid_spacing_m,istatus
      1          ,r_missing_data
-     1          ,laps_rotate_winds)
+     1          ,l_grid_north)
 
 !      ~1990        Steve Albers  Orig version
 !       1997 Jun    Ken Dritz     Added ni and nj as dummy
@@ -54,7 +54,7 @@ cdis
         real*4 wsum(ni,nj)
         real*4  one(ni,nj)
 
-        logical laps_rotate_winds
+        logical l_grid_north ! Sfc & 3D winds
 
         integer k_terrain(ni,nj)
 
@@ -131,7 +131,7 @@ cdis
         enddo
 
 !       Rotate Sfc Winds
-        if(.not. laps_rotate_winds)then
+        if(.not. l_grid_north)then
           write(6,*)' Rotating SFC winds to calculate terrain forcing'
           write(6,*)' Calculating Beta Factor'
           do j=1,nj

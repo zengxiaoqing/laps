@@ -1,7 +1,7 @@
 
         subroutine get_vis(i4time,solar_alt,l_use_vis,lat          ! Input
      1                    ,i4_sat_window,i4_sat_window_offset      ! Input
-     1                    ,cloud_frac_vis_a,albedo,ihist_alb       ! Output
+     1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb   ! Output
      1                    ,ni,nj,nk,r_missing_data                 ! Input
 !    1                    ,istat_vis_a                             ! Output
      1                    ,istatus)                                ! Output
@@ -11,10 +11,10 @@
         integer*4 ihist_alb(-10:20)
         integer*4 ihist_frac_sat(-10:20)
         integer*4 istat_vis_a(ni,nj)            ! Cloud mask based on VIS
-        real*4 albedo(ni,nj)
 
         real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj)
+        real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
+        real*4 vis_albedo(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
         real*4 solar_alt(ni,nj)
@@ -39,14 +39,14 @@
 !       Initialize
         do i = 1,ni
         do j = 1,nj
-            albedo(i,j) = r_missing_data
+            vis_albedo(i,j) = r_missing_data
             cloud_frac_vis_a(i,j) = r_missing_data
             istat_vis_a(i,j) = 0
         enddo ! j
         enddo ! i
 
-        call get_sfc_albedo(ni,nj,lat,r_missing_data               ! I
-     1                     ,sfc_albedo,istat_sfc_albedo)           ! O
+        call get_sfc_albedo(ni,nj,lat,r_missing_data                     ! I
+     1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_albedo) ! O   
 
         n_missing_albedo = ni*nj
 
@@ -66,10 +66,10 @@
         ilevel = 0
         call get_laps_2dvar(i4time+i4_sat_window_offset,i4_sat_window
      1                     ,i4time_nearest,EXT,var,units
-     1                     ,comment,ni,nj,albedo,ilevel,istatus)
-        write(6,*)' istatus from albedo data = ',istatus
+     1                     ,comment,ni,nj,vis_albedo,ilevel,istatus)
+        write(6,*)' istatus from vis_albedo data = ',istatus
         if(istatus .ne. 1 .and. istatus .ne. -1)then
-            write(6,*)' Warning: could not read albedo - '
+            write(6,*)' Warning: could not read vis_albedo - '
      1               ,'return from get_vis'
             istatus = 0
             return
@@ -84,26 +84,26 @@
 !         We will now only use the VIS data if the solar alt exceeds 15 deg
 !         11 degrees now used to allow 15 min slack in data availability
           if(solar_alt(i,j) .lt. 11.0)then
-              if(albedo(i,j) .ne. r_missing_data)then
-                  write(6,*)' Error -  albedo not missing:'
+              if(vis_albedo(i,j) .ne. r_missing_data)then
+                  write(6,*)' Error -  vis_albedo not missing:'
      1                     ,solar_alt(i,j)
                   stop
               endif
-!             albedo(i,j) = r_missing_data
+!             vis_albedo(i,j) = r_missing_data
           endif
 
-          if(albedo(i,j) .ne. r_missing_data)then
+          if(vis_albedo(i,j) .ne. r_missing_data)then
 
-!           Translate the albedo into cloud fraction
+!           Translate the vis_albedo into cloud fraction
 
 !           Store histogram information for satellite data
-            iscr_alb  = nint(albedo(i,j)*10.)
+            iscr_alb  = nint(vis_albedo(i,j)*10.)
             iscr_alb  = min(max(iscr_alb,-10),20)
             ihist_alb(iscr_alb) = ihist_alb(iscr_alb) + 1
 
-            clear_albedo = .2097063
+            clear_albedo = sfc_albedo_lwrb(i,j)
             cloud_frac_vis = albedo_to_cloudfrac2(clear_albedo
-     1                                           ,albedo(i,j))
+     1                                           ,vis_albedo(i,j))
 
 !           Fudge the frac at low solar elevation angles
 !           Note the ramp extrapolates down to 9 deg to account for slight
@@ -168,19 +168,26 @@
         end
 
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data           ! I
-     1                           ,sfc_albedo,istat_sfc_albedo)       ! O
+     1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
+     1                           ,istat_sfc_albedo)                  ! O
 
         character*3 var
         real*4 lat(ni,nj)
-        real*4 sfc_albedo(ni,nj), static_albedo(ni,nj)
+        real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
+        real*4 static_albedo(ni,nj)
 
         var = 'ALB'
-
         call read_static_grid(ni,nj,var,static_albedo,istatus)
 
         do i = 1,ni
         do j = 1,nj
-            sfc_albedo(i,j) = r_missing_data
+            if(istatus .eq. 1)then
+                sfc_albedo(i,j)      = r_missing_data
+                sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
+            else
+                sfc_albedo(i,j)      = r_missing_data
+                sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
+            endif
         enddo ! j
         enddo ! i
 

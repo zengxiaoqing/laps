@@ -9,8 +9,6 @@ C
       REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG),field_in(MREG,NREG)
       character*(*)colortable
       
-!     EXTERNAL COLOR2
-
       write(6,*)' Subroutine ccpfil for solid fill plot...'
 
       if(scale_l_in .lt. scale_h_in)then
@@ -41,7 +39,8 @@ C
 C Call Conpack color fill routine
 C      
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
-      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse)
+      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse
+     1                                              ,colortable)      
 C      
 C Close frame
 C      
@@ -61,23 +60,24 @@ C
       END
 
       
-      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse)
+      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
+     1                                                    ,colortable)      
       
       PARAMETER (LRWK=150000,LIWK=150000,LMAP=1000000,NWRK=150000
      1          ,NOGRPS=5)       
       REAL ZREG(MREG,NREG),RWRK(LRWK), XWRK(NWRK), YWRK(NWRK)
       INTEGER MREG,NREG,IWRK(LIWK)
       INTEGER MAP(LMAP),IAREA(NOGRPS),IGRP(NOGRPS)
+      character*(*) colortable
       
       EXTERNAL FILL
-!     EXTERNAL COLOR2
 
       ncols = 20
 C      
 C Set up color table
       write(6,*)' ccpfil_sub - scale = ',scale
 C      
-      CALL COLOR2(IWKID,ncols,ireverse)
+      CALL set_image_colortable(IWKID,ncols,ireverse,colortable)
 C      
 C Initialize Areas
 C      
@@ -141,7 +141,9 @@ C
 
 
       
-      SUBROUTINE COLOR2(IWKID,ncols,ireverse)
+      SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable)    
+
+      character*(*) colortable
 C 
 C BACKGROUND COLOR
 C BLACK
@@ -150,16 +152,24 @@ C BLACK
 C
       CALL GSCR(IWKID,0,0.,0.,0.)
 
-      do i = 1,255
-!         rintens = min(max(float(i-2) / rcols,0.),1.)
-          rintens = min(max(float(i-2) / rcols,0.),1.)
-          if(ireverse .eq. 1)rintens = 1.0 - rintens
-          call GSCR(IWKID, i, rintens, rintens, rintens)
-      enddo ! i
+      if(colortable .eq. 'linear')then
 
+          do i = 1,255
+!             rintens = min(max(float(i-2) / rcols,0.),1.)
+              rintens = min(max(float(i-2) / rcols,0.),1.)
+              if(ireverse .eq. 1)rintens = 1.0 - rintens
+              call GSCR(IWKID, i, rintens, rintens, rintens)
+          enddo ! i
+
+      elseif(colortable .eq. 'hues')then
+          call color_ramp(1,20,IWKID,1.0,0.7,0.7,1.0,0.7,0.7)          
+
+      else
+          write(6,*)' ERROR: Unknown color table ',colortable
+
+      endif
 C 
       RETURN
-C 
       END
 
       subroutine hsi_to_rgb(hue,sat,rintens,red,grn,blu)
@@ -182,12 +192,9 @@ C
       return
       end
 
-      subroutine color_ramp(ncol1,ncol2,ncol        ! I
+      subroutine color_ramp(ncol1,ncol2,IWKID       ! I
      1                     ,hue1,sat1,rintens1      ! I
-     1                     ,hue2,sat2,rintens2      ! I
-     1                     ,red_a,grn_a,blu_a)      ! I/O
-
-      real*4 red_a(ncol), grn_a(ncol), blu_a(ncol)
+     1                     ,hue2,sat2,rintens2)     ! I
 
       do icol = ncol1,ncol2
           frac = float(icol-ncol1) / float(ncol2-ncol1)
@@ -196,9 +203,9 @@ C
           sat     = (1.0 - frac) * sat1     + frac * sat2
           rintens = (1.0 - frac) * rintens1 + frac * rintens2
 
-          call hsi_to_rgb(hue,sat,rintens
-     1                   ,red_a(icol),grn_a(icol),blu_a(icol))
-
+          call hsi_to_rgb(hue,sat,rintens,red,grn,blu)
+          
+          call GSCR(IWKID,icol,red,grn,blu)
       enddo
 
       return

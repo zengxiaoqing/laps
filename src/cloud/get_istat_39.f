@@ -38,7 +38,7 @@
      1                     .AND.
      1             solar_alt(i,j) .lt. 0.        )then
 
-                    if(t39_k(i,j) - tb8_k(i,j) .lt. -4.)then ! Sufficient diff
+                    if(t39_k(i,j) - tb8_k(i,j) .lt. -3.)then ! Sufficient diff
                         istat_39_a(i,j) = +1
 
                         if(icount(1) .le. 20)then            ! Log output
@@ -112,7 +112,7 @@
                     istat_39_lwc_a(i,j) = +1
 
                 elseif(solar_alt(i,j) .lt. 0.        )then
-                    if(t39_k(i,j) - tb8_k(i,j) .lt. -4.)then ! Sufficient diff
+                    if(t39_k(i,j) - tb8_k(i,j) .lt. -3.)then ! Sufficient diff
                         istat_39_lwc_a(i,j) = +1
                     else                                     ! Insuff diff
                         istat_39_lwc_a(i,j) = -1

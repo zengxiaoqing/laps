@@ -57,6 +57,8 @@ c                             time of the current LAPS analysis time.
         real ob_pr_v (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! O
         real ob_pr_r (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! L
         real ob_pr_t (MAX_PR,kmax) ! Vertically interpolated Profiler wind  ! L
+        real sfc_t(MAX_PR), sfc_p(MAX_PR), sfc_rh(MAX_PR)                   ! L
+        real sfc_u(MAX_PR), sfc_v(MAX_PR)                                   ! L
 
 !*****************************************************************************
 
@@ -111,14 +113,15 @@ c                             time of the current LAPS analysis time.
         call get_file_time(c_filespec,i4time_sys,i4time_prof)
 
         lun = 12
-        call read_pro_data(lun,i4time_prof,ext
-     1                         ,MAX_PR,MAX_PR_LEVELS      
-     1                         ,n_profiles
-     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr
-     1                         ,c5_name_a,i4time_ob_pr,obstype
-     1                         ,ob_pr_ht_obs
-     1                         ,ob_pr_u_obs,ob_pr_v_obs
-     1                         ,istatus)
+        call read_pro_data(lun,i4time_prof,ext                        ! I
+     1                         ,MAX_PR,MAX_PR_LEVELS                  ! I
+     1                         ,n_profiles                            ! O
+     1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr  ! O
+     1                         ,c5_name_a,i4time_ob_pr,obstype        ! O
+     1                         ,ob_pr_ht_obs                          ! O
+     1                         ,ob_pr_u_obs,ob_pr_v_obs               ! O
+     1                         ,sfc_t,sfc_p,sfc_rh,sfc_u,sfc_v        ! O
+     1                         ,istatus)                              ! O
 
         n_profilers = n_profiles
 
