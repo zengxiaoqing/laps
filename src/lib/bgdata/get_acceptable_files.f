@@ -4,12 +4,13 @@
      +     ,rejected_cnt)
       implicit none
       include 'netcdf.inc'
-      integer bgmodel, max_files, NX,NY,NZ
+      integer bgmodel
+      integer max_files, NX,NY,NZ
       character*(*) names(max_files), cmodel, bgpath
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
      + ,rejected_cnt, max_forecast_delta
-      integer ivaltimes(20), ntbg
+      integer ivaltimes(10), ntbg
       character*4   af
       character*100 bg_names(max_files), fullname
       integer nf_status, nf_vid, nf_fid, istatus
@@ -57,11 +58,11 @@ C
      .              names(i)(j+1:j+1) .eq. '9') then
                   if (bgmodel .eq. 4) then
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
-                     call get_sbn_model_id(names(i),cmodel,ivaltimes
-     .               ,ntbg)
-c     print *,fname, ntbg
-c                   print*, names(i)(j+1:j+13)
-c                   print*,cmodel,ivaltimes
+
+                     call get_sbn_model_id(names(i),cmodel,ivaltimes,
+     +                    ntbg)
+
+
                      if(istatus.eq.0) then
                         print*,'Not enough records in file ',fname
                      else
@@ -69,12 +70,13 @@ c                   print*,cmodel,ivaltimes
                            write(af,'(i4.4)') ivaltimes(k)/3600
                            bg_files=bg_files+1
                            bg_names(bg_files)=fname//af
-c     print*,'SBN: ',bg_names(bg_files),bg_files
+c                           print*,'SBN: ',bg_names(bg_files),bg_files
                         enddo
                      endif
                   else
                      bg_files=bg_files+1
                      bg_names(bg_files)=names(i)(j+1:j+13)
+c                     print*,'NOTSBN: ',bg_names(bg_files),bg_files
                   endif
                endif
             endif
@@ -86,11 +88,11 @@ c      print *,bg_names(bg_files),bg_files
       bgtime2=0
       accepted_files = 0
       n=bg_files+1
-      do while((accepted_files.lt.2
+      do while((previous_time.eq.0
      +     .or.(forecast_length.lt.0.and.accepted_files.lt.1))
      +     .and.bg_files.gt.0.and.n.gt.1)
          n=n-1
-         print *,n,bg_names(n)
+
          do i=1,rejected_cnt
             if(bg_names(n).eq.rejected_files(i)) goto 40
          enddo
@@ -150,7 +152,7 @@ c
                accepted_files=1
                names(accepted_files) = bg_names(n)
                bgtime2=bgtime
-c               print *, '1: ',next_time,accepted_files,bg_names(n)
+cc               print *, '1: ',next_time,accepted_files,bg_names(n)
             else if(bgtime+ihour*3600.ge.i4time_now.and.
      +              bgtime+ihour*3600.lt.next_time) then
                next_time = bgtime+ihour*3600
@@ -158,23 +160,38 @@ c               print *, '1: ',next_time,accepted_files,bg_names(n)
                   accepted_files=accepted_files+1
                endif
                names(accepted_files) = bg_names(n)
-c               print *, '2: ',next_time,accepted_files,bg_names(n)
+cc               print *, '2: ',next_time,accepted_files,bg_names(n)
             endif
+c            print*,bg_names(n),bgtime+ihour*3600,i4time_now,n
             if(bgtime+ihour*3600.lt.i4time_now.and.
      +           bgtime+ihour*3600.gt.previous_time) then
-               if(next_time.lt.bigint.and. 
+               if(forecast_length.gt.0) then
+c
+c If this is a forecast request we want the first forecast > i4time_now
+c to be the last file on the list 
+c
+                  if(next_time.gt.i4time_now) then
+                     previous_time=next_time
+                  else
+                     names(accepted_files) = ' '
+                     accepted_files=accepted_files-1
+                     previous_time=next_time
+                  endif
+                     
+               else if(next_time.lt.bigint.and. 
      +              (next_time-(bgtime+ihour*3600))
      +              .le.max_forecast_delta*3600) then
                   previous_time = bgtime+ihour*3600
                   accepted_files=accepted_files+1
                   names(accepted_files) = bg_names(n)
+                  
                else
 c     
 c     otherwise the latest model is incomplete and doesn't have a current forecast 
 c     look for an older one
 c
                endif
-c       print *, '3: ',next_time,accepted_files,bg_names(n),previous_time
+cc       print *, '3: ',next_time,accepted_files,bg_names(n),previous_time
             endif
          endif
       
@@ -184,12 +201,15 @@ c       print *, '3: ',next_time,accepted_files,bg_names(n),previous_time
 
       enddo
 
+c      print*,accepted_files,previous_time,
+c     +     forecast_length,bg_files,n
+
 
       if (previous_time.eq.0 .or. next_time.eq.bigint) then
         print*, 'not enough files:',previous_time,next_time 
       endif
 
-      print*,previous_time,next_time, accepted_files 
+
 
       do i=1,accepted_files
          print*,  names(i)
@@ -230,12 +250,12 @@ c     NZ = 40
       else if(bgmodel.eq.6) then
          NX = 360
          NY = 181
-         NZ = 17
+         NZ = 26 
          cmodel = 'AVN_LL_GRIB'
       else if(bgmodel.eq.7) then
          NX = 185
          NY = 129
-         NZ = 20
+         NZ = 42
          cmodel = 'ETA48_GRIB'
       else if(bgmodel.eq.8) then
          NX = 360
