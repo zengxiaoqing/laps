@@ -425,6 +425,8 @@ c code put in subroutine for use in lvd satellite ingest for
 c determining the polar extent of useable satellite data.
 c Smart, J. 3/10/99
 c
+      include 'trigd.inc'
+
       Implicit None
 
       integer  i,j,istatus
