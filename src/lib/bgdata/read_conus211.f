@@ -15,7 +15,7 @@ C
         print *,'NF_OPEN ', filename
       endif
 
-      nf_status=NF_INQ_DIMID(nf_fid,'record`,nf_vid)
+      nf_status=NF_INQ_DIMID(nf_fid,'record',nf_vid)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
       endif
