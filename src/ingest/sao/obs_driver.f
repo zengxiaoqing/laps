@@ -67,12 +67,12 @@ c
 	endif
         call obs_driver_sub(NX_L_CMN,NY_L_CMN,maxstations_cmn
      +             ,maxobs_cmn,path_to_metar_data_cmn
-     +             ,path_to_local_data_cmn)
+     +             ,path_to_local_data_cmn,laps_cycle_time_cmn)
 
         end
 
         subroutine obs_driver_sub(ni,nj,maxsta,maxobs
-     +          ,path_to_metar,path_to_local_data)
+     +          ,path_to_metar,path_to_local_data,laps_cycle_time)
         
         include 'surface_obs.inc'
         integer ni,nj,maxsta,maxobs
@@ -116,7 +116,7 @@ c 21	   format(1x,i11)
 c	   read(11,22) filename
 c 22	   format(1x,a9)
 c	   close(11)
-	   call cv_i4tim_asc_lp(i4time,atime,status)
+	   call cv_i4tim_asc_lp(i4time,atime,istatus)
 c
 	else
 c
@@ -124,9 +124,9 @@ c
  973	   format(' Enter input filename (yydddhhmm): ',$)
 	   read(5,972) filename
  972	   format(a9)
-	   call i4time_fname_lp(filename(1:9),i4time,status)
+	   call i4time_fname_lp(filename(1:9),i4time,istatus)
 	   i4time = i4time / laps_cycle_time * laps_cycle_time
-	   call cv_i4tim_asc_lp(i4time, atime, status) !find the atime
+	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
 c
 cc	outfile = filename//'.lso'
@@ -203,7 +203,7 @@ c	if(idata_config .eq. 1) then   ! /public at FSL
      &        path_to_local_data(1:len_path) // filename
 	  INQUIRE(FILE=data_file_m,EXIST=exists)
 	  if(.not. exists) then
-	     print *,' ERROR. Invalid data config variable.'
+	     print *,' ERROR. File not Found: ',data_file_m
 	     stop 'Config error'
 	  endif
 	endif
