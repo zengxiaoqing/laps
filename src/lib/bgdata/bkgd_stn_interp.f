@@ -149,7 +149,8 @@ c
 c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
-      character*132 cmodels(maxbgmodels),cmodel
+      character*132 cmodels(maxbgmodels)
+      character*132 cmodel
       integer oldest_forecast, max_forecast_delta
       logical use_analysis, use_systime
 
@@ -376,6 +377,15 @@ ccc - to here
         endif
         
       enddo
+
+      print*,'station interp done'
+      print*
+      do i=1,nstns
+         print*,'istn/ht/t/td/pr/mslp ',i,stn_ht(i)
+     &,stn_tp(i),stn_td(i),stn_pr(i),stn_mslp(i)
+      enddo
+      print*
+
       if(no_infinite_loops.gt.oldest_forecast) then
          print*,'ERROR: Infinite loop condition found'
       endif
@@ -444,10 +454,11 @@ c
      +         ,max_files, bkg_status
      +         ,bgmodel
 
-      character*(*) bgpath
+      character*256 bgpath
      +             ,bg_names(max_files)
      +             ,reject_names(max_files)
-     +             ,cmodel
+
+      character*132 cmodel
 
       character*256 fname_bg(max_files)
       real*4    diff_mn,diff_mx
@@ -561,10 +572,148 @@ c
       character*256 outdir
       character*4   af_bg(max_files)
 
+      interface
+
+       subroutine read_bgdata(nx_bg,ny_bg
+     +,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,ctype
+     +,bgpath,fname_bg,af_bg,fullname,cmodel,bgmodel
+     +,prbght,prbgsh,prbguv,prbgww
+     +,htbg,tpbg,uwbg,vwbg,shbg,wwbg
+     +,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
+     +,uwbg_sfc,vwbg_sfc,mslpbg,istatus)
+c
+         real  :: prbg_sfc(nx_bg,ny_bg)
+         real  :: uwbg_sfc(nx_bg,ny_bg)
+         real  :: vwbg_sfc(nx_bg,ny_bg)
+         real  :: shbg_sfc(nx_bg,ny_bg)
+         real  :: tpbg_sfc(nx_bg,ny_bg)
+         real  :: htbg_sfc(nx_bg,ny_bg)
+         real  :: mslpbg(nx_bg,ny_bg)
+c
+         real  :: prbght(nx_bg,ny_bg,nzbg_ht)
+         real  :: prbgsh(nx_bg,ny_bg,nzbg_sh)
+         real  :: prbguv(nx_bg,ny_bg,nzbg_uv)
+         real  :: prbgww(nx_bg,ny_bg,nzbg_ww)
+         real  :: htbg(nx_bg,ny_bg,nzbg_ht)
+         real  :: tpbg(nx_bg,ny_bg,nzbg_tp)
+         real  :: shbg(nx_bg,ny_bg,nzbg_sh)
+         real  :: uwbg(nx_bg,ny_bg,nzbg_uv)
+         real  :: vwbg(nx_bg,ny_bg,nzbg_uv)
+         real  :: wwbg(nx_bg,ny_bg,nzbg_ww)
+
+         character*4   af_bg
+         character*5   ctype
+         character*132 cmodel
+         character*256 bgpath
+         character*256 fname_bg
+         character*200 fullname
+         integer       bgmodel
+         integer       nx_bg
+         integer       ny_bg
+         integer       nzbg_ht
+         integer       nzbg_tp
+         integer       nzbg_sh
+         integer       nzbg_uv
+         integer       nzbg_ww
+         integer       istatus
+       end subroutine
+
+       subroutine vinterp(nz_laps,nx,ny,
+     .  nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww,
+     .  prlaps, prbght,prbgsh,prbguv,prbgww,
+     .  htbg,tpbg,shbg,uwbg,vwbg,wwbg,
+     .  htvi,tpvi,shvi,uwvi,vwvi,wwvi)
+
+         integer nx,ny
+         integer nzbg_ht
+         integer nzbg_tp
+         integer nzbg_sh
+         integer nzbg_uv
+         integer nzbg_ww
+
+         integer nz_laps
+
+         real*4  ::  prbght(nx,ny,nzbg_ht)
+         real*4  ::  prbgsh(nx,ny,nzbg_sh)
+         real*4  ::  prbguv(nx,ny,nzbg_uv)
+         real*4  ::  prbgww(nx,ny,nzbg_ww)
+         real*4  ::  tpbg(nx,ny,nzbg_tp)
+         real*4  ::  htbg(nx,ny,nzbg_ht)
+         real*4  ::  shbg(nx,ny,nzbg_sh)
+         real*4  ::  uwbg(nx,ny,nzbg_uv)
+         real*4  ::  vwbg(nx,ny,nzbg_uv)
+         real*4  ::  wwbg(nx,ny,nzbg_ww)
+
+
+         real*4  ::  tpvi(nx,ny,nz_laps)
+         real*4  ::  htvi(nx,ny,nz_laps)
+         real*4  ::  shvi(nx,ny,nz_laps)
+         real*4  ::  uwvi(nx,ny,nz_laps)
+         real*4  ::  vwvi(nx,ny,nz_laps)
+         real*4  ::  wwvi(nx,ny,nz_laps)
+c
+         real*4  ::  prlaps(nz_laps)
+ 
+       end subroutine
+
+       subroutine get_bkgd_mdl_info(bgmodel
+     &,cmodel,fullname,nx,ny,nzbg_ht,nzbg_tp
+     &,nzbg_sh,nzbg_uv,nzbg_ww
+     &,gproj,dlat,dlon,centrallat,centrallon,dx,dy
+     &,Lat0,Lat1,Lon0,sw,ne,istatus)
+
+        character*200 fullname
+        character*132 cmodel
+        character*2   gproj
+        integer       istatus
+        integer       bgmodel
+        integer       nx,ny
+        integer       nzbg_ht
+        integer       nzbg_tp
+        integer       nzbg_sh
+        integer       nzbg_uv
+        integer       nzbg_ww
+        real          Lat1
+        real          Lat0,Lon0
+        real          sw(2),ne(2)
+        real          centrallat
+        real          centrallon
+        real          dx,dy
+
+       end subroutine
+
+       subroutine init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
+     .     lat,lon,grx,gry,bgmodel,cmodel)
+
+         character  gproj*2
+         character  cmodel*132
+         integer nx_bg,ny_bg,nx_laps,ny_laps,bgmodel
+         real*4 lat(nx_laps,ny_laps)
+     .         ,lon(nx_laps,ny_laps)
+     .         ,grx(nx_laps,ny_laps)
+     .         ,gry(nx_laps,ny_laps)
+
+       end subroutine
+
+       subroutine hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz
+     .,grx,gry,fvi,flaps,bgmodel)
+
+         integer nx_bg,ny_bg,nx_laps,ny_laps,nz,bgmodel
+         real*4 fvi(nx_bg,ny_bg,nz)
+     .         ,flaps(nx_laps,ny_laps,nz)
+     .         ,grx(nx_laps,ny_laps)
+     .         ,gry(nx_laps,ny_laps)
+
+       end subroutine
+
+      end interface
+
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
+
       print *,'in bkgd_stn_interp sub'
+      print*,'Interpolating for ',nstns,' stations'
       bkg_status=0
 
       call get_r_missing_data(rmissingflag,istatus)
@@ -712,8 +861,6 @@ c         convert to wfo if necessary
 
 c        endif
 c
-c ****** Vertically interpolate background data to LAPS isobaric levels.
-c
          itstatus=init_timer()
 c
 c determine grid-x and grid-y (ri and rj) for station locations
@@ -722,7 +869,7 @@ c
          if(.not.l_done_this)then
              do i = 1,nstns
                 call init_hinterp(nx_bg,ny_bg,1,1,gproj
-     +,slat(i),slon(i),grx(i),gry(i),bgmodel)
+     +,slat(i),slon(i),grx(i),gry(i),bgmodel,cmodel)
              enddo
              l_done_this = .true.
          endif
@@ -734,7 +881,7 @@ c
          do i = 1,nstns
 
 
-c ****** Horizontally interpolate background surface data to LAPS grid points.
+c ****** Horizontally interpolate background surface data to station location. 
 c
          if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
@@ -798,7 +945,8 @@ c to be on the same set of levels.
 
 c questionable whether we need this... if interpolating upper
 c air obs we should use data on model surfaces directly?!
-c           print*,'Call vinterp '
+
+            print*,'Call vinterp '
 
             call vinterp(nz_laps,1,1
      +  ,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
