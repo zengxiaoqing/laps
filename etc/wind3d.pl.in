@@ -6,7 +6,7 @@
 # if not current.  Both command line arguments are optional;
 # order doesn't matter.
 
-require '@prefix@/etc/which_bkgd.pm';
+require '@prefix@/etc/wgi_utils.pm';
 
 $nargs = @ARGV;
 if ($nargs == 0) {}
@@ -33,27 +33,7 @@ if (defined $hr) {$hr="0".$hr if (length($hr)<2);}
 # Get the most recent log file.
 
 $logname = "wind";
-@filenames = <$logdir/$logname.log*>;
-$nfiles = @filenames;
-if ($nfiles == 0) {die "No log files found.\n"}
-$age_of_newest = 1;
-foreach $file (@filenames) {
-  $age = -M $file;
-  if ($age < $age_of_newest) {
-    $filename = $file;
-    $age_of_newest = $age; } }
-
-#$tail = `tail -1 $filename`;
-#if ($tail !~ /End of LAPS Wind Analysis/) {
-#  print "Wind analysis is in progress...\n";}
-
-# This is a bit more kosher...
-if (defined $hr) { 
-    if(length($hr) < 4)
-       {$filename = $logdir."/".$logname.".log.".$hr."20";}
-    else
-       {$filename = $logdir."/".$logname.".log.".$hr;}
-}
+$filename = &wgi_utils::get_log_filename($LAPS_DATA_ROOT,$logname,$hr);
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
@@ -72,7 +52,7 @@ print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
 
 # Determine background model.
 # ---------------------------
-($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&which_bkgd::which_bkgd(@lines);
+($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&wgi_utils::which_bkgd(@lines);
 
 print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
 print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
@@ -123,7 +103,8 @@ if ($found == 1) {
   while ($end == 0) {
     if (($lines[$i] =~ /Elapsed/) || ($i>=$nlines)) {$end=1;}
     else {
-      ($dummy,$num,$name,$lapsi,$lapsj) = split /\s+/,$lines[$i] ;
+      ($num,$name,$lapsi,$lapsj) = split (' ',$lines[$i]) ;
+#     ($dummy,$num,$name,$lapsi,$lapsj) = split /\s+/,$lines[$i] ;
       if ($lapsi > 0) {push(@saos,$name); } }
     $i=$i+1; } }
 

@@ -1,4 +1,5 @@
-package which_bkgd;
+package wgi_utils;
+
 sub which_bkgd
 {
     @lines=@_;
@@ -85,5 +86,43 @@ sub which_bkgd
 
     return ($modelid,$modeltype,$runtime,$fcsthr,$1,$2);
 
+}
+1;
+#
+#--------------------------------------------------------------
+#
+sub get_log_filename
+{
+    my ($dataroot,$log_name,$hour)=@_;
+    if(!defined $dataroot){$dataroot = "./..";}
+    my @fnames = <$dataroot/log/$log_name.log*>;
+    my $nf = @fnames;
+    if ($nf == 0) {die "No log files found.\n";}
+
+    open(SYSDAT,"$dataroot/time/systime.dat");
+    my @systime_info=<SYSDAT>;
+    close SYSDAT;
+    my $yyjjjhhmm = $1 if($systime_info[1] =~ /(\d\d\d\d\d\d\d\d\d)/);
+    my ($file,$fname_yyjjjhhmm,$fname);
+    my $age_of_newest = 100;
+    foreach $file (@fnames){
+            $age = -M $file;
+            if ($age < $age_of_newest){
+                $fname = $file;
+                $fname_yyjjjhhmm = $1 if($fname =~ /(\d\d\d\d\d\d\d\d\d)/);
+                $age_of_newest = $age;
+                
+            }
+    }
+
+# This is a bit more kosher... this doesn't work with log file names having ".log.yyjjjhhmm"
+    if (defined $hour) { 
+           $fname = $dataroot."/log/".$log_name.".log.".$hour;
+    }else{
+           if($fname_yyjjjhhmm != $yyjjjhhmm){
+              $fname = $dataroot."/log/".$log_name.".log.".$yyjjjhhmm;
+           }
+    }
+    return $fname;
 }
 1;

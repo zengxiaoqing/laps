@@ -6,7 +6,7 @@
 # if not current.  Both command line arguments are optional;
 # order doesn't matter.
 
-require '@prefix@/etc/which_bkgd.pm';
+require '@prefix@/etc/wgi_utils.pm';
 
 $nargs = @ARGV;
 if ($nargs == 0) {}
@@ -35,31 +35,7 @@ print "logdir:  $logdir\nhr:      $hr\n";
 # Get the most recent log file.
 
 $logname = "lq3driver";
-@filenames = <$logdir/$logname.log*>;
-$nfiles = @filenames;
-if ($nfiles == 0) {die "No log files found.\n"}
-$age_of_newest = 1;
-foreach $file (@filenames) {
-  $age = -M $file;
-  if ($age < $age_of_newest) {
-    $filename = $file;
-    $age_of_newest = $age; } }
-
-# Moisture analysis log files need a tail line like this:
-
-#$tail = `tail -1 $filename`;
-#if ($tail !~ /End of LAPS Wind Analysis/) {
-#  print "Wind analysis is in progress...\n";}
-
-# For the moisture analysis we need to look at selected log files
-# because different data get in at different times (i.e., RAOB).
-# This is a bit more kosher... (SA 2/09/02)
-if (defined $hr) {
-    if(length($hr) < 4)
-       {$filename = $logdir."/".$logname.".log.".$hr."20";}
-    else
-       {$filename = $logdir."/".$logname.".log.".$hr;}
-}
+$filename = &wgi_utils::get_log_filename($LAPS_DATA_ROOT,$logname,$hr);
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
@@ -68,7 +44,7 @@ print "\nReading from log file $filename\n\n";
 # Determine background model.
 # ---------------------------
 
-($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&which_bkgd::which_bkgd(@lines);
+($modelid,$modeltype,$runtime,$fcsthr,$mdlyr,$mdldy)=&wgi_utils::which_bkgd(@lines);
 
 print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n";
 print "$modeltype $modelid $mdlyr$mdldy$runtime$fcsthr \n";
