@@ -56,7 +56,7 @@ cdis
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
         real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
      1       , ffg_s(maxstns)
-        real*4 vis_s(maxstns)
+        real*4 vis_s(maxstns), sfct_s(maxstns)
         character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
 
 c
@@ -130,8 +130,8 @@ c
 
         call read_surface_sa(infile,maxstns,atime,
      &           n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
-     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
+     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
+     &           alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
      &           store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
 
 100     write(6,*)'     n_obs_b',n_obs_b
@@ -151,15 +151,17 @@ c
 
 !       call setusv_dum(2HIN,11)
 
-        if(c_field(2:2) .eq. 'p')then     ! Precip
+        if(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
+            iflag_cv = 1
+        elseif(c_field(2:2) .eq. 'p')then     ! Precip
             write(6,*)' Reading precip obs'
 	    call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
      &        stations_s,provider,lat_s,lon_s,elev_s,
      &        pcp1,pcp3,pcp6,pcp24,snow,       
      &        maxstns,jstatus)
             iflag_cv = 2
-        elseif(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
-            iflag_cv = 1
+        elseif(c_field(2:2) .eq. 'g')then ! Soil/Water Temp
+            iflag_cv = 3
         else
             iflag_cv = 0
         endif
@@ -247,44 +249,7 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,11)
 
-                if(iflag_cv .eq. 2)then     ! Precip
-                    temp = badflag
-                    if(pcp1(i) .ne. badflag)then
-                        dewpoint = pcp1(i)
-                        write(6,*)' Precip ob ',i,pcp1(i)
-                    else
-                        dewpoint = badflag
-                    endif
-
-                    if(snow(i) .ne. badflag)then
-                        temp = snow(i)
-                        write(6,*)' Snow ob ',i,snow(i)
-                    else
-                        temp = badflag
-                    endif
-
-                    pressure = r_missing_data
-
-                    call s_len(wx_s(i),lenwx)
-
-!                   Plot Weather String
-                    if(lenwx .gt. 0)then
-                        CALL PCLOQU(xsta-du2*0.9, ysta-du2*1.5
-     1                        , wx_s(i)(1:lenwx), charsize,ANGD,+1.0)
-                    endif
-
-!                   Plot name and Station Location
-                    if(pcp1(i) .ne. badflag .or. 
-     1                 snow(i) .ne. badflag .or. lenwx .gt. 0)then
-                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
-     1                              charsize,ANGD,CNTR)
-
-                        call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)        
-                        call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
-
-                    endif
-
-                elseif(iflag_cv .eq. 1)then ! Ceiling & Visibility
+                if(iflag_cv .eq. 1)then ! Ceiling & Visibility
                     if(vis_s(i) .ne. badflag)then
                         dewpoint = vis_s(i)
                     else
@@ -321,6 +286,56 @@ c
      1                               ,store_amt(i,nlyr)
                             temp = 0.0
                         endif
+                    endif
+
+                elseif(iflag_cv .eq. 2)then ! Precip
+                    temp = badflag
+                    if(pcp1(i) .ne. badflag)then
+                        dewpoint = pcp1(i)
+                        write(6,*)' Precip ob ',i,pcp1(i)
+                    else
+                        dewpoint = badflag
+                    endif
+
+                    if(snow(i) .ne. badflag)then
+                        temp = snow(i)
+                        write(6,*)' Snow ob ',i,snow(i)
+                    else
+                        temp = badflag
+                    endif
+
+                    pressure = r_missing_data
+
+                    call s_len(wx_s(i),lenwx)
+
+!                   Plot Weather String
+                    if(lenwx .gt. 0)then
+                        CALL PCLOQU(xsta-du2*0.9, ysta-du2*1.5
+     1                        , wx_s(i)(1:lenwx), charsize,ANGD,+1.0)
+                    endif
+
+!                   Plot name and Station Location
+                    if(pcp1(i) .ne. badflag .or. 
+     1                 snow(i) .ne. badflag .or. lenwx .gt. 0)then
+                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
+     1                              charsize,ANGD,CNTR)
+
+                        call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)        
+                        call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
+
+                    endif
+
+                elseif(iflag_cv .eq. 3)then ! Soil/Water T
+                    temp = sfct_s(i)
+                    dewpoint = badflag
+
+                    if(temp .ne. badflag)then
+                        write(6,*)' Sfc T = ',temp
+
+!                       Plot Station Location
+                        call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
+                        call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
+
                     endif
 
                 elseif(c_field(2:2) .ne. 'c')then ! Fahrenheit
@@ -412,7 +427,10 @@ c
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
 
-        rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
+!       rot = (standard_longitude - lon(nint(ri),nint(rj))) / 57.295
+
+        rot = projrot_latlon(lat(nint(ri),nint(rj))
+     1                      ,lon(nint(ri),nint(rj)),istatus) / 57.295
 
 !       Convert ri and rj to x1 and y1 (U and V)
 !       call supcon(alat,alon,x1,y1)
@@ -509,7 +527,7 @@ c
             endif
  31         continue
 
-        else                    ! Precip obs plot
+        elseif(iflag_cv .eq. 2)then ! Precip obs plot
 !           Plot 1hr Precip Ob
             if(td.gt.-75. .and. td.lt.100.) then
                write(c4_pcp,103,err=32) td
@@ -519,9 +537,16 @@ c
             endif
  32         continue
 
+        elseif(iflag_cv .eq. 3)then ! Sfc T plot
+!           Plot Temperature       
+            if(t.gt.-75. .and. t.lt.140.) then 
+               write(t1,100,err=40) nint(t)
+!              call pwrity(u-du_t,v+dv,t1,3,jsize,0,0)
+               CALL PCLOQU(u-du_t,v+dv,t1,charsize,ANGD,CNTR)
+            endif
         endif
-
 c
  40     continue
+
         return
         end
