@@ -905,7 +905,9 @@ c
 c
       do i=1,recNum
          if(var(i) .eq. filval) var(i) = badflag
+         if(abs(var(i)) .gt. 1e20) var(i) = badflag
       enddo !i
+
 c
       return
       end
