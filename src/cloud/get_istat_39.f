@@ -48,8 +48,11 @@
                         endif 
 
                     else                                     ! Insuff diff
-                        istat_39_a(i,j) = -1
-
+                        if(tb8_c .gt. 0.)then
+                            istat_39_a(i,j) = -1             ! Warm - no cloud
+                        else
+                            istat_39_a(i,j) = 0
+                        endif
                     endif
 
                 else ! Sun above horizon or possibly cold cloud top: ambiguous
@@ -136,10 +139,4 @@
 
         return
         end 
-
-        function k_to_c(x)
-        real*4 k_to_c
-        k_to_c = (x - 273.15)
-        return
-        end
 

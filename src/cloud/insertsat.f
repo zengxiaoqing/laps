@@ -128,7 +128,7 @@ c
 
         real*4 k_terrain(imax,jmax)
         real*4 zcoords_1d(klaps)
-        integer krefs_1d(kcloud)
+!       integer krefs_1d(kcloud)
         real*4 cldcv_1d(kcloud)
         real*4 laps_p(klaps)
 
@@ -169,13 +169,13 @@ c
 
 !       First guess conversion from cloud height grid to LAPS pressure grid
 !       This has to err slightly on the high side
-        write(6,*)' k,krefs'
-        do k = 1,kcld
-            krefs_1d(k) = min(int(height_to_zcoord((cld_hts(k)+600.)*1.2
-     1                                          ,istatus)),klaps)
-            write(6,11)k,krefs_1d(k)
-11          format(1x,2i3)
-        enddo ! k
+!       write(6,*)' k,krefs'
+!       do k = 1,kcld
+!           krefs_1d(k) = min(int(height_to_zcoord((cld_hts(k)+600.)*1.2
+!    1                                          ,istatus)),klaps)
+!           write(6,11)k,krefs_1d(k)
+!11         format(1x,2i3)
+!       enddo ! k
 
 !       write(6,*)' Getting IR satellite data from LVD file'
 !       ext = lvd_ext
@@ -360,13 +360,13 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               if(cldcv(i,j,k) .gt. .04)then ! Efficiency test
 
 !               Find Temperature of this cloud grid point
-                if(.false.)then
-                    z_temp = height_to_zcoord4(cld_hts(k),heights_3d,
-     1              zcoords_1d,krefs_1d(k),imax,jmax,klaps,i,j,istatus1)       
-                else
+!               if(.false.)then
+!                   z_temp = height_to_zcoord4(cld_hts(k),heights_3d,
+!    1              zcoords_1d,krefs_1d(k),imax,jmax,klaps,i,j,istatus1)       
+!               else
                     z_temp = height_to_zcoord2(cld_hts(k),heights_3d,
      1                                     imax,jmax,klaps,i,j,istatus1)       
-                endif
+!               endif
 
                 if(istatus1 .ne. 1)then
                     if(cld_hts(k) .gt. heights_3d(i,j,klaps))then
@@ -462,6 +462,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
           endif ! Using Band 8
 
+!         Test if we're confident that a cloud is present and we know where
+!         the cloud top is.
           IF(l_cloud_present) then ! Insert satellite clouds
 
 !           Set initial satellite cloud base

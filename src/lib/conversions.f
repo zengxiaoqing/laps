@@ -526,88 +526,6 @@ c       1                       ,hor_dist,curvature
 999     return
         end
 
-        function height_to_zcoord4(height_m,heights_3d,zcoords_1d,kref
-     1                                  ,ni,nj,nk,i,j,istatus)
-
-
-!       Note that this routine works with the real atmosphere.
-!       The type of interpolation is similar to that in 'height_to_zcoord'.
-!       When the vertical grid is pressure, the height is converted to
-!       pressure, then the interpolation to the vertical grid is performed.
-!       Thus if the height is midway between two LAPS levels in height space,
-!       the value of 'height_to_zcoord4' will not have a fraction of 0.5.
-!       If the pressure is midway between two LAPS levels, then the
-!       value of 'height_to_zcoord4' will have a fraction of 0.5.
-
-        implicit real*4 (a-z)
-
-        integer i,j,k,ni,nj,nk,kref,istatus
-
-        real*4 heights_3d(ni,nj,nk)
-        real*4 zcoords_1d(nk)
-
-        logical ltest_vertical_grid
-
-        istatus = 1
-
-        if(ltest_vertical_grid('HEIGHT'))then
-           print*, 'Call is obsolete, please report this message to '
-           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord4 = height_m / HEIGHT_INTERVAL
-
-        elseif(ltest_vertical_grid('PRESSURE'))then
-            height_to_zcoord4 = nk+1 ! Default value is off the grid
-
-            heights_above = heights_3d(i,j,kref)
-
-            if(height_m .gt. heights_above)then
-                istatus = 0
-                goto999
-            endif
-
-            do k = kref-1,1,-1
-                if(heights_above     .ge. height_m .and.
-     1           heights_3d(i,j,k) .le. height_m         )then
-                    thickness = heights_above - heights_3d(i,j,k)
-                    fraction = (height_m - heights_3d(i,j,k))/thickness
-                    pressure_low  = zcoords_1d(k)
-                    pressure_high = zcoords_1d(k+1)
-                    diff_log_space = log(pressure_high/pressure_low)
-                    pressure = pressure_low * exp(diff_log_space*fractio
-     1n)
-                    height_to_zcoord4 = zcoord_of_pressure(pressure)
-
-!                   if(j .eq. 29)then
-!                       write(6,*)' height_to_zcoord4: kref,k,kref-k+1'
-!       1                                             ,kref,k,kref-k+1
-!                   endif
-
-                    goto999
-
-                endif
-
-                heights_above = heights_3d(i,j,k)
-
-            enddo ! k
-
-            istatus = 0
-            height_to_zcoord4 = 0
-            write(6,101)kref,height_m,heights_3d(i,j,1)
-101         format('  Error: below domain in height_to_zcoord4, kref,h,h
-     1(1)',
-     1             i3,2e11.4)
-
-        else
-            write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
-            istatus = 0
-            return
-
-        endif
-
-999     return
-        end
-
 
         function height_to_pressure(height_m,heights_3d
      1                          ,pressures_1d,ni,nj,nk,i,j)
@@ -1193,6 +1111,11 @@ c       1                       ,hor_dist,curvature
         return
         end
 
+        function k_to_c(x)
+        real*4 k_to_c
+        k_to_c = (x - 273.15)
+        return
+        end
 c
 c
 
