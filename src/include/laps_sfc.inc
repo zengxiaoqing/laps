@@ -21,11 +21,6 @@ c..........                           0 to do the QC.
 c
 	parameter(iskip = 0)	
 c
-c..........	Use the Kalman QC obs:  Set to 1 to use the Kalman obs,
-c..........                             0 to use the regular (raw) obs.
-c
-	parameter(use_kalman = 0)
-c
 c
 c.......... Pressure reduction:  The main pressure analysis that LAPS produces
 c..........     is a reduction to this elevation (m).  For example, the 
