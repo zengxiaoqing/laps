@@ -238,6 +238,7 @@ c
                 obs_point(nobs_point)%i = sfc_i(n_sfc_obs)
                 obs_point(nobs_point)%j = sfc_j(n_sfc_obs)
                 obs_point(nobs_point)%k = sfc_k(n_sfc_obs)
+                obs_point(nobs_point)%rk = sfc_k(n_sfc_obs)
                 obs_point(nobs_point)%valuef(1) = sfc_u(n_sfc_obs)
                 obs_point(nobs_point)%valuef(2) = sfc_v(n_sfc_obs)
                 obs_point(nobs_point)%weight = weight_sfc
