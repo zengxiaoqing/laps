@@ -72,7 +72,11 @@ cdis
         integer*4 mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
 
-        write(6,*)' subroutine insert_vis...'
+        if(l_use_39)then
+            write(6,*)' subroutine insert_vis (with 3.9u)...'
+        else
+            write(6,*)' subroutine insert_vis...'
+        endif
 
 !       Initialize histograms
         do i = -10,20
@@ -92,7 +96,7 @@ cdis
         n_missing_albedo = 0
         n_missing_uprb = 0
         n_vis_mod = 0
-        n_39_mod = 0
+        n_39_clr = 0
 
         diffin_sum  = 0.
         diffout_sum = 0.
@@ -104,9 +108,10 @@ cdis
         do j = 1,nj
 
 !         Calculate upper bound to cloud cover (through the column)
-          if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
+          if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then ! VIS (Daytime)
               cloud_frac_uprb = cloud_frac_vis_a(i,j)
-          else
+
+          else                                              ! 3.9u (Nighttime)
               n_missing_albedo =  n_missing_albedo + 1
   
               if(istat_39_a(i,j) .eq. -1 .and. l_use_39)then
@@ -180,7 +185,7 @@ cdis
                        if(cloud_frac_vis_a(i,j) .ne. r_missing_data)then
                            n_vis_mod = n_vis_mod + 1
                        else
-                           n_39_mod = n_39_mod + 1
+                           n_39_clr = n_39_clr + 1
                        endif
                    endif
 
@@ -303,7 +308,7 @@ cdis
         write(6,*)' N_MISSING_ALBEDO = ',n_missing_albedo
         write(6,*)' N_MISSING_UPRB = ',n_missing_uprb
         write(6,*)' N_VIS_MOD = ',n_vis_mod
-        write(6,*)' N_39_MOD = ',n_39_mod
+        write(6,*)' N_39_CLR = ',n_39_clr
         write(6,*)
 
         write(6,*)'              HISTOGRAMS'
