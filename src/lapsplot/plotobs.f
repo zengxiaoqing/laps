@@ -285,7 +285,7 @@ cdis
 
                 spd_kt = speed_ms / mspkt
 
-                write(6,*)nint(ri),nint(rj)
+                write(6,*)nint(ri),nint(rj),dir,spd_kt
 
                 call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
      1                          ,size_radar,'true')
