@@ -589,9 +589,6 @@ csms$serial(default=ignore)  begin
      1        ,istatus                                    ! Input/Output
      1                                                          )
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
-
-csms$insert      print *, 'Error Parallelization not done for this code section'
-csms$insert      stop
               I4_elapsed = ishow_timer()
 
               write(6,*)' Calling barnes with modified radar obs added'
@@ -601,6 +598,8 @@ csms$insert      stop
 
               call get_inst_err(imax,jmax,kmax,r_missing_data
      1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+
+csms$serial end
 
               call arrays_to_barnesobs(imax,jmax,kmax                 ! I
      1                              ,r_missing_data                   ! I
@@ -622,15 +621,13 @@ csms$insert      stop
               call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
 
               if(istatus .ne. 1)return
+csms$serial(default=ignore)  begin              
 
               I4_elapsed = ishow_timer()
 
           endif ! There is any radar data
 
       else ! n_radars .gt. 1
-
-csms$insert      print *, 'Error Parallelization not done for this code section'
-csms$insert      stop
           mode = 2 ! Only multi-Doppler obs
 
 !         Take the data from all the radars and add the derived radar obs into
@@ -658,36 +655,39 @@ csms$insert      stop
 
           if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
 
-          I4_elapsed = ishow_timer()
+              I4_elapsed = ishow_timer()
 
-          write(6,*)' Calling barnes with only multi-doppler obs '
-     1          ,'creating an intermediate analysis'
+              write(6,*)' Calling barnes with only multi-doppler obs '
+     1                 ,'creating an intermediate analysis'
 
-          call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
-          call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
+              call move_3d(uanl,varbuff(1,1,1,1),imax,jmax,kmax)
+              call move_3d(vanl,varbuff(1,1,1,2),imax,jmax,kmax)
 
-          call get_inst_err(imax,jmax,kmax,r_missing_data
-     1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
+              call get_inst_err(imax,jmax,kmax,r_missing_data
+     1            ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
-          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
-     1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_spread   ! I
-     1                              ,n_var,max_obs,obs_barnes         ! I/O
-     1                              ,ncnt_total,weight_total          ! O
-     1                              ,istatus)                         ! O
+csms$serial end
 
-          call barnes_multivariate(varbuff,n_var,ncnt_total,obs_barnes       
-!         call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
-     1       ,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl
-     1       ,varobs_diff_spread
-     1       ,wt_p_spread,fnorm,n_fnorm
-     1       ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
-     1       ,n_obs_lvl,istatus)
+              call arrays_to_barnesobs(imax,jmax,kmax                   ! I
+     1                                ,r_missing_data                   ! I
+     1                                ,varobs_diff_spread,wt_p_spread   ! I
+     1                                ,n_var,max_obs,obs_barnes         ! I/O
+     1                                ,ncnt_total,weight_total          ! O
+     1                                ,istatus)                         ! O
 
-          call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
-          call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
+!             call barnes_multivariate(varbuff,n_var,max_obs,obs_barnes
+              call barnes_multivariate(varbuff,n_var,ncnt_total
+     1          ,obs_barnes,imax,jmax,kmax,grid_spacing_m,rep_pres_intvl      
+     1          ,varobs_diff_spread
+     1          ,wt_p_spread,fnorm,n_fnorm
+     1          ,l_analyze,l_not_struct,rms_thresh,weight_bkg_const
+     1          ,n_obs_lvl,istatus)
 
-          if(istatus .ne. 1)return
+              call move_3d(varbuff(1,1,1,1),uanl,imax,jmax,kmax)
+              call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
+
+              if(istatus .ne. 1)return
+csms$serial(default=ignore)  begin              
 
           endif
 
@@ -747,6 +747,8 @@ csms$insert      stop
           call get_inst_err(imax,jmax,kmax,r_missing_data
      1        ,wt_p_spread,rms_thresh_norm,rms_inst,rms_thresh)
 
+csms$serial end
+
           call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
      1                              ,r_missing_data                   ! I
      1                              ,varobs_diff_spread,wt_p_spread   ! I
@@ -767,6 +769,7 @@ csms$insert      stop
           call move_3d(varbuff(1,1,1,2),vanl,imax,jmax,kmax)
 
           if(istatus .ne. 1)return
+csms$serial(default=ignore)  begin              
 
           I4_elapsed = ishow_timer()
 
