@@ -10,11 +10,14 @@ main                                                    remap.f
         get_latitude                                       "
         get_longitude                                      "
         lut_gen                                         lut_gen.f
-        radar_init                                      netcdfio.f
-        get_data_field                                     "
-        fill_common                                     fill_common.f
-        radar_init                                      netcdfio.f
+        radar_init (1st call)                           netcdfio.f
             get_tilt_netcdf_data                        get_tilt_netcdf.f
+            rayqckz                                     rayqckz.f
+        get_data_field                                  netcdfio.f
+        fill_common                                     fill_common.f
+        radar_init (2nd call)                           netcdfio.f
+            get_tilt_netcdf_data                        get_tilt_netcdf.f
+            rayqckz                                     rayqckz.f
         remap_process                                   remap_process.f
             read_data_88d                               readdata.f
                 ld_ray                                  ld_ray.f
@@ -24,8 +27,12 @@ main                                                    remap.f
                 ref_fill_horz                           ref_fill_horz.f
 
 
-Note: Source code files are mainly in these directories
+Notes: Source code files are mainly in these directories
       
-      src/ingest/radar/remap            (this directory)
-      src/lib/radar/remap_ftn
-      src/lib
+       src/ingest/radar/remap            (this directory)
+       src/lib/radar/remap_ftn
+       src/lib
+
+       The conversion from counts to reflectivity and velocity is mainly
+       done in subroutine 'get_data_field'.
+
