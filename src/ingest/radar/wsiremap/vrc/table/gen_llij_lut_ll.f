@@ -224,9 +224,11 @@ c
        enddo
        enddo
 
+       call get_directory('static',path,n1)
+
        cname='wsi_llij_lut_'//c_raddat_type
        n2=index(cname,' ')-1
-       file = path(1:n1)//cname(1:n2)//'.lut'
+       file = path(1:n1)//'vrc/'//cname(1:n2)//'.lut'
        n=index(file,' ')
        write(6,*)'Write lat/lon to i/j look up table'
        write(6,*)file(1:n)
