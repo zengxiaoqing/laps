@@ -94,8 +94,8 @@ c
              print*,'Waiting for more stations'
              rcode= NF_CLOSE(cdfid)
              call waiting_c(60)
-             cnt = cnt+1
           endif
+          cnt = cnt+1
        enddo
        if(nsta.le.0) then
          print*,'Error, No stations in file ',data_path
