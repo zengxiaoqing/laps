@@ -158,21 +158,13 @@ CONTAINS
     latin1_out = latin1
     latin2_out = latin2
   ELSE IF ( grid_type(1:19) .EQ. 'polar stereographic'      ) THEN
-    PRINT '(A)', 'RALPH2 does not support polar stereographic.'
-    PRINT '(A)', ' Attempting to fake it with lambert conformal.'
-    ! This fake only works if this is a polar stereographic, so
-    ! we need to make sure this is actually not a local 
-    ! stereographic.  
     IF (ABS(latin2).NE.90.) THEN
        PRINT '(A)', 'This is a local stereographic, so I quit.'
        stop 'unsupported projection'
     ELSE
-      proj_flag = 2
-      If (latin2 .EQ. -90) THEN
-        latin1_out = -90.00000
-      ELSE
-        latin1_out = 90.000000
-      ENDIF
+      proj_flag = 3
+      latin1_out = latin1
+      latin2_out = latin2
     ENDIF
   ELSE
     PRINT '(A,A,A)','RALPH2 unsupported map projection: ', &
