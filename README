@@ -279,25 +279,26 @@
 
                   ---  2.3    Raw data ingest   ---
 
-     There is a layer of raw data ingest code that may have to be modified
+     There is a layer of "raw" data ingest code that may have to be modified
      for the individual location depending on data formats. This is usually
      the largest task within the porting of the LAPS code. The supported
      component of the LAPS code is the analysis section. Ingest code is
      supported only if your raw data looks has the same configuration and
      format as FSL's raw data. It is the reponsibility of the LAPS user to 
      modify the LAPS ingest code if necessary to generate the intermediate 
-     data files that are inputs to the analysis code.
+     data files that are inputs to the analysis code. 
 
-     The default LAPS ingest code obtains "raw" data in NetCDF format from 
-     the FSL NIMBUS system. Note that the ingest code is also generally 
-     compatable with SBN/NOAAPORT data as stored in NetCDF files on the 
-     WFO-Advanced system. The ingest code processes the "raw" data and 
-     outputs the LAPS "intermediate" data files. These intermediate files
-     are generally in ASCII for point data and NetCDF format for gridded data
-     that have been remapped onto the LAPS grid. Most ingest code is 
-     located under the 'src/ingest directory'. When NetCDf format is used for 
-     the raw data, a cdl file for the raw data is sometimes included in the 
-     source code directory.
+     The default LAPS ingest code obtains "raw" data from the FSL NIMBUS 
+     system. The raw data can either be in ASCII, NetCDF (as point data), or
+     NetCDF (as gridded data - generally not on the LAPS grid). Note that the 
+     ingest code is also generally compatable with raw SBN/NOAAPORT data as 
+     stored in NetCDF files on the WFO-Advanced system. The ingest code 
+     processes the raw data and outputs the LAPS "intermediate" data files. 
+     The intermediate files are generally in ASCII for point data and 
+     NetCDF format for gridded data that have now been remapped onto the LAPS 
+     grid. Most ingest code is located under the 'src/ingest directory'. When 
+     NetCDf format is used for the raw data, a cdl file for the raw data is 
+     sometimes included in the source code directory.
   
      Depending on the data source, you may generally prefer one of two choices:
          1) Modify LAPS ingest code to accept your own raw data format, all
@@ -416,6 +417,9 @@
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
+
+     RAOBs (snd):
+           FSL NIMBUS database. 
 
      Model first guess (lga): 
            RUC grids are ftp'ed from NMC to FSL, then converted at FSL from 
@@ -1039,14 +1043,13 @@ Sample Output: Should be available in the test data case. The grids start with
 
 Package: lga.exe - ingest model data (author: John Snook - snook@fsl.noaa.gov).
 
-        LGA 	LAPS analysis grids from RUC analysis grids, 50 mb levels 
-                (1 hr files) (vertical interpolation)
+        LGA 	LAPS analysis grids from RUC or other analysis/forecast grids.
 
 Inputs:
-	Model hybrid data 
+	Model data in NetCDF (NIMBUS CDL) on the model's native grid.
 
-Outputs: (Feeds LZB, LC3 )
-	lga	grid	maps data analysis/forecast
+Outputs: (Feeds LZB, LC3)
+	lga	grid	model data analysis/forecast
 
 ------ 3.2.2 --------------------LVD-------------------------------------------
 
@@ -1122,6 +1125,7 @@ the country.
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
 ------ 3.2.5 ----------------RADAR MOSAIC (under development)-----------------
+
 Process: (mosaic_radar.exe) Author John Smart (smart@fsl.noaa.gov)
 
 <pre>
@@ -1145,7 +1149,7 @@ Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest
 Inputs: (located in two separate NetCDF directories)
 	WPDN 404-MHz profiler wind data in netCDF format 
 	Boundary layer 915-MHz profiler wind data in netCDF format
-        
+        NetCDF CDLs from both FSL-NIMBUS and WFO-Advanced are accepted.        
 
 Output: (feeds wind)
 	pro	inter data	profiler wind direction (degrees) and
@@ -1164,7 +1168,7 @@ Process: (ingest_vad.exe) LAPS RAOBs
 
 <pre>
 Inputs:
-	VADs in NetCDF format
+	VADs in NetCDF (FSL-NIMBUS CDL) format
 
 Outputs: (Feeds wind.exe)
 	pro	inter data	VAD wind
@@ -1182,7 +1186,7 @@ Process: (ingest_lrs.exe, ingest_blplrs.exe) LAPS local data RASS ingest
 Inputs:
 	WPDN RASS temperature data in netCDF format (ingest_lrs.exe) 
 	Boundary layer RASS data in netCDF format (ingest_blplrs.exe) 
-        These are in two separate NetCDF directories.
+        These are in two separate NetCDF directories (FSL-NIMBUS CDL format).
 
 Outputs: (The two executables are run sequentially, feeds LSX and temp.exe)
 	lrs	inter data	RASS Virtual Temperatures (ASCII)
@@ -1199,7 +1203,8 @@ Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
 
 <pre>
 Inputs:
-	Aircraft voice pireps and ACARS data (separate NetCDF files)
+	Aircraft voice pireps and ACARS data (separate NetCDF files
+                                                              FSL-NIMBUS CDLs)
 
 Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 	pin	inter data	voice pireps/clouds, ACARS/winds
@@ -1215,7 +1220,7 @@ Process: (ingest_raob.exe) LAPS RAOBs
 
 <pre>
 Inputs:
-	RAOBs in NetCDF format
+	RAOBs in NetCDF format (FSL-NIMBUS CDL)
 
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
