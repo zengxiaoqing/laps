@@ -2,6 +2,7 @@
         subroutine read_profiles(i4time,heights_3d,lat_pr,lon_pr,   ! I
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
+     1                   l_use_raob,                                ! I
      1                   ob_pr_ht,                                  ! O
      1                   ob_pr_di, ob_pr_sp,                        ! O
      1                   ob_pr_u , ob_pr_v ,                        ! O
@@ -73,16 +74,9 @@ c                             time of the current LAPS analysis time.
         character*5 c5_name
         character*9 a9time_ob
 
-        logical l_use_raob, l_use_cdw, l_use_radial_vel
+        logical l_use_raob
 
         r_mspkt = .518
-
-        call get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
-     1                     ,weight_bkg_const,istatus)     
-        if(istatus .ne. 1)then
-            write(6,*)' Error getting wind parms'
-            return
-        endif
 
         write(6,*)' Subroutine read_profiles: i4time = ',i4time
 

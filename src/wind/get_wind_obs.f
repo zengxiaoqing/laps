@@ -4,7 +4,7 @@
      1            NX_L,NY_L,NZ_L,                                   ! I
      1            r_missing_data,i2_missing_data,                   ! I
      1            i4time_lapswind,heights_3d,heights_1d,            ! I
-     1            MAX_PR,MAX_PR_LEVELS,weight_prof,                 ! I
+     1            MAX_PR,MAX_PR_LEVELS,weight_prof,l_use_raob,      ! I
      1            lat,lon,                                          ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
      1            grid_laps_u,grid_laps_v,grid_laps_wt,             ! O
@@ -30,6 +30,8 @@
         real*4 heights_1d(NZ_L)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L)
 
+        logical l_use_raob
+
 !  ***  Read in Profiler Data  ********************************************
 
         call get_laps_cycle_time(ilaps_cycle_time,istatus)
@@ -46,6 +48,7 @@
      1            i4time_lapswind,heights_3d,lat_pr,lon_pr,         ! I
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
+     1            l_use_raob,                                       ! I
      1            ob_pr_ht,                                         ! O
      1            ob_pr_di, ob_pr_sp,                               ! O
      1            ob_pr_u , ob_pr_v ,                               ! O
