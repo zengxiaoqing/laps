@@ -71,7 +71,6 @@ SRC= main_sub.f \
      comp_laps_maps.f \
      vertwind.f \
      rdpirep.f \
-     rdmeso.f \
      rdsao.f \
      read_profiles.f \
      interp_prof.f \

@@ -149,11 +149,9 @@ c
      1      ,'       dd     ff      azi    ran ')
 
 
-        do i = 1,n_obs_b ! num_meso+1,num_sfc
+        do i = 1,n_obs_b 
 
-          if(      obstype(i)(1:4) .ne. 'MESO' 
-     1       .and. obstype(i)(1:4) .ne. 'CDOT' 
-     1       .and. dd_s(i)         .ge. 0.0    )then
+          if(dd_s(i) .ge. 0.0)then
 
             n_sao_obs = n_sao_obs + 1
 
@@ -179,7 +177,11 @@ c
                 rk = height_to_zcoord2(elev_s(i)
      1              ,heights_3d,ni,nj,nk
      1              ,sao_i(n_sao_obs),sao_j(n_sao_obs),istatus)
-                if(istatus .ne. 1)return
+                if(istatus .ne. 1)then
+                    write(6,*)
+     1              ' Error: sfc ob may be outside range of ht field'      
+                    return
+                endif
 
                 sao_k(n_sao_obs) = nint(rk)
 

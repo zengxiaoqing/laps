@@ -439,7 +439,7 @@
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
-          call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)
+          call move_3d(varanl(1,1,1,2),vanl,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
      1                             ,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
@@ -500,7 +500,7 @@
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
-          call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)
+          call move_3d(varanl(1,1,1,2),vanl,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
      1                             ,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
@@ -586,7 +586,7 @@
      1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
-          call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)
+          call move_3d(varanl(1,1,1,2),vanl,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,1),uobs_diff_spread
      1                             ,imax,jmax,kmax)
           call move_3d(varobs_diff_spread(1,1,1,2),vobs_diff_spread
