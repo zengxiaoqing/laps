@@ -4,6 +4,7 @@
      1                                           ,badflag,ni,nj       ! I
      1                                           ,rms_thresh_norm     ! I
      1                                           ,bad_mult            ! I
+     1                                           ,topo,ldf            ! I
      1                                           ,t_2d,istatus)       ! O
 
 !       This subroutine can be a substitute to the call to 'spline' and 
@@ -22,6 +23,7 @@
 
         real*4 tb(ni,nj)                                ! Background field
         real*4 t_2d(ni,nj)                              ! Analyzed field
+        real*4 topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
         real*4 ob_diff(mxstn)
         real*4 ob_full(mxstn)
         real*4 ob_bkg(mxstn)
@@ -124,6 +126,7 @@
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,.false.,.true.              ! Input
      1                   ,mxstn,obs_barnes                       ! Input
+     1                   ,topo,ldf                               ! Input
      1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
 
@@ -142,6 +145,7 @@
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,l_barnes_wide,l_struct_in   ! Input
      1                   ,n_obs,obs_barnes                       ! Input
+     1                   ,topo,ldf                               ! Input
      1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
 
@@ -155,6 +159,7 @@
         real*4 t_2d(ni,nj)                              ! Analyzed field
         real*4 to_2d_in(ni,nj)                          ! Observations
         real*4 to_2d_dum(ni,nj)                         
+        real*4 topo(ni,nj),ldf(ni,nj)                   ! Topo & Landfrac
 
         real*4 wt_2d(ni,nj)
         integer*4 n_obs_lvl
@@ -195,8 +200,11 @@
         boundary_err = rinst_err
             
         if(l_struct_in)then
+
+!         Determine if point would represent a boundary ob that gets skipped
           if(l_barnes_wide)then
             do iob = 1,n_obs
+                l_use_ob = .true.
                 if(obs_barnes(iob)%qc)then
                     i = obs_barnes(iob)%i
                     j = obs_barnes(iob)%j              
@@ -224,6 +232,11 @@
      1                                        = obs_barnes(iob)%value(1)       
                 sumsq_inst = sumsq_inst 
      1                     + 1. / obs_barnes_valid(n_obs_valid)%weight
+
+                obs_barnes_valid(n_obs_valid)%elev 
+     1                                        = obs_barnes(iob)%elev       
+                obs_barnes_valid(n_obs_valid)%ldf = obs_barnes(iob)%ldf        
+
             endif ! valid ob
           enddo ! iob
 
@@ -253,6 +266,8 @@
                 obs_barnes_valid(n_obs_valid)%k = 1
                 obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2       
                 obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
+                obs_barnes_valid(n_obs_valid)%elev = topo(i,j)
+                obs_barnes_valid(n_obs_valid)%ldf = ldf(i,j)
 
             endif
 
@@ -286,6 +301,7 @@
      1                     ,to_2d_dum,wt_2d,fnorm,n_fnorm         ! Inputs
      1                     ,l_analyze,l_not_struct_out,rms_thresh ! Input
      1                     ,weight_bkg_const                      ! Input
+     1                     ,topo,ldf,ni,nj                        ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
 
         call stats(t_2d,ni,nj)
