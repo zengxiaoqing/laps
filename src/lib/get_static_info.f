@@ -35,21 +35,11 @@
 ! -----------------------------------------------------------------------------
 
 !     Let's make sure we have the run time variables in the common block
-      if(iflag_lapsparms_cmn .ne. 1)then
-!         write(6,*)' Warning in get_static_info:'
-!    1             ,' get_laps_config not yet called'
-
-          write(6,*)' get_static_info: calling get_laps_config'
-
-          call get_laps_config('nest7grid',istatus)
-          if(istatus .ne. 1 .or. iflag_lapsparms_cmn .ne. 1)then
-              write(6,*)' Error detected in calling get_laps_config'
-              istatus = 0
-              return
-          else
-              write(6,*)' Success in calling get_laps_config'
-          endif
-
+      call get_laps_config('nest7grid',istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error detected in calling get_laps_config'
+          istatus = 0
+          return
       endif
 
 !     List the variable names
