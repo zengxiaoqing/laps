@@ -44,9 +44,10 @@ C          ISTATUS -  The return status.
 C
 C================================================================
 C
-        CHARACTER*9 wfo_fname13_to_fname9
+        CHARACTER*9 wfo_fname13_to_fname9, rsa13_to_a9, a8_to_a9
         CHARACTER*9 FILE_NAME
         CHARACTER*(*) FNAME_IN
+        CHARACTER*20 c20_type
         INTEGER*4 I4TIME, ISTATUS
 C
         INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
@@ -56,25 +57,25 @@ C================================================================
 C
 C       Check the length of FILE_NAME to be sure that it is valid.
 C
-        call get_filetime_length(fname_in,lenf)
+        call get_filetime_type(fname_in,c20_type,leni,lent)
 
-        if(lenf.ne.9.and.lenf.ne.13)then
-           write(6,*)' error in i4time_fname_lp: ',fname_in,lenf
+        if(c20_type .eq. 'yyjjjhhmm')then                   ! NIMBUS/LAPS type
+           file_name = fname_in(leni+1:leni+lent)
+
+        elseif(c20_type .eq. 'yyyymmdd_hhmm')then           ! WFO type
+           file_name = wfo_fname13_to_fname9(fname_in(leni+1:leni+lent))
+
+        elseif(c20_type .eq. 'yyyyjjjhhmmss')then           ! RSA type
+           file_name = rsa13_to_a9(fname_in(leni+1:leni+lent))
+
+        elseif(c20_type .eq. 'yymmddhh')then                ! AFWA RAOB type
+           file_name = a8_to_a9(fname_in(leni+1:leni+lent))
+
+        else                                                ! Unrecognized type
+           write(6,*)' error in i4time_fname_lp: ',fname_in,' ',c20_type
            go to 1000
         endif
 
-c
-c added 9-3-96 JSmart for use in conversions of wfo filenames of
-c the type yyyymmdd_hhmm (13 characters).
-c
-
-        if(fname_in(9:9) .eq. '_')then ! We have a WFO file
-           file_name = wfo_fname13_to_fname9(fname_in)
-
-        else   !assume 9 character filename type
-           file_name = fname_in
-
-        endif
 C
 C       Split the file name into individual integers, checking for invalid
 C       characters in the file name.

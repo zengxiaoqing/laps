@@ -136,7 +136,6 @@ c       sort data
         character*(*) names(number)     ! Input/Output
 
         integer i4time(number)          ! Local
-        character*13 asc_time           ! Local
         character*500 names_buf         ! Local
         logical l_switch                ! Local
 
@@ -169,9 +168,7 @@ c       sort data
             endif
 
             if(num_out .eq. 1)then ! Calculate i4time(i)
-                call get_filetime_length(names(i),lent)
-                asc_time = names(i)(lenf+1:lenf+lent)
-                call i4time_fname_lp(asc_time,i4time(i),istatus)
+                call i4time_fname_lp(names(i),i4time(i),istatus)
             else
                 i4time(i) = 0      ! File is non-numeric and has no i4time
                 n_non_numeric = n_non_numeric + 1

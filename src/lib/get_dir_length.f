@@ -88,7 +88,7 @@ C
 C       Name            Type    I/O     Description
 C       ----            ---     --      -----------
 C       c_fnames        char    I       file name.
-C       lenf            I       O       index to end of directory
+C       lenf            I       O       index to end of filetime
 C
 C********************************************************************
 C
@@ -99,7 +99,7 @@ C
 C
 C****************************
 C
-        strlen = len(c_fname)
+        call s_len(c_fname,strlen)
 C
         i = strlen
         do while (i .gt. 0)
@@ -220,8 +220,9 @@ C
         integer*4 lend,lent,lenf
 
         call get_directory_length(c_fname,lend)
+        call s_len(c_fname,len_fname)
 
-        lenf = len(c_fname) - lend
+        lenf = len_fname - lend
 
         if(lenf .ge. 13 .and. c_fname(lend+9:lend+9).eq.'_')then
            lent=13
@@ -239,6 +240,67 @@ c       write(6,*)'Time portion of string = ',c_fname(lend+1:lend+lent)
         return
         end
 
+C
+C#####################################################################
+C
+        subroutine get_filetime_type(c_fname,c20_type,leni,lent)
+C
+C*********************************************************************
+C
+C       This routine takes as input a full path filename and returns
+C       the length and type of the file time length portion of the path.
+C       Simple-minded algorithm uses other simple minded algorithms
+C       found in this file to determine the length and type of the time portion
+C       of the character string.
+C
+C       1998          Steve Albers
+
+        character*(*) c_fname
+        character*20 c20_type
+
+        integer*4 lend ! Directory length including the last 'slash'. 
+        integer*4 lenf ! Length of the filename excluding the path.
+        integer*4 lent ! Length of the filetime portion.
+        integer*4 leni ! Length of the initial non-filetime portion.
+                       ! This is often but not always the directory length.
+
+        call s_len(c_fname,len_fname)
+        call get_directory_length(c_fname,lend)
+        lenf = len_fname - lend
+
+        if(lenf .ge. 13 .and. c_fname(lend+9:lend+9) .eq. '_')then
+           c20_type = 'yyyymmdd_hhmm'                         ! WFO type
+           leni = lend
+           lent=13
+
+        elseif(lenf .eq. 20 .and. c_fname(lend+14:lend+14) .eq. '_')then   
+           c20_type = 'yyyyjjjhhmmss'                         ! RSA radar type
+           leni = lend
+           lent=13
+
+        elseif(lenf .eq. 13 .and. c_fname(lend+1:lend+5) .eq. 'raob.'
+     1                                                             )then   
+           c20_type = 'yymmddhh'                              ! AFWA raob
+           leni = lend+5
+           lent=8
+
+        elseif(lenf .ge. 9)then ! assume 9 chars for time portion of filename
+           c20_type = 'yyjjjhhmm'                             ! NIMBUS/LAPS
+           leni = lend
+           lent=9
+
+        else
+           c20_type = 'unknown'
+           leni = lend
+           lent = lenf
+
+        endif
+
+!       write(6,*)'Time portion of string = ',c20_type
+!    1                                       ,c_fname(leni+1:leni+lent)
+        
+        return
+        end
 C
 C#####################################################
 C

@@ -120,3 +120,41 @@ c
 c
       return
       end
+
+        function rsa13_to_a9(rsa13_time)
+
+!       Convert rsa13_time (yyyyjjjhhmmss) to a9_time (yyjjjhhmm)
+!       Steve Albers 1998
+
+        character*13 rsa13_time
+        character*9 rsa13_to_a9
+
+        rsa13_to_a9 = rsa13_time(3:11)
+
+        istatus = 1
+
+        return
+        end
+
+        function a9_to_rsa13(a9_time)
+
+!       Convert a9_time (yyjjjhhmm) to rsa13_time (yyyyjjjhhmmss)
+!       Steve Albers 1998
+
+        character*9 a9_time
+        character*13 a9_to_rsa13
+        character*2 cc
+
+        if(a9_time(1:1) .eq. '9')then
+            cc = '19'
+        else
+            cc = '20'
+        endif
+
+        a9_to_rsa13 = cc//a9_time//'00'
+
+        istatus = 1
+
+        return
+        end
+

@@ -47,12 +47,15 @@ C
 C       Incorporated subroutine Filter_non_numeric_fnames. This eliminates
 C       c_fnames that are other that numeric so that i4time_fname_lp works.
 C
+!       Steve Albers            1998            Slightly more generic
+       
         integer max_files
         parameter (max_files = 3000)
 
         character*13 asc_time,asc_tim_nearest,asc13_tim_needed
         character*13 cvt_i4time_wfo_fname13
         character*9  asc9_tim_needed
+        character*20 c20_type, a20_time
         character*(*) c_filespec                                 ! Input
         character c_fnames(max_files)*100
 
@@ -83,9 +86,8 @@ C
         if(i_nbr_files_out .gt. 0)then
             call get_directory_length(c_fnames(1),lenf)
             do i=1,i_nbr_files_out
-                call get_filetime_length(c_fnames(i),lent)
-                asc_time = c_fnames(i)(lenf+1:lenf+lent)
-                call i4time_fname_lp(asc_time,I4time_file,istatus)
+                call get_filetime_type(c_fnames(i),c20_type,leni,lent)       
+                call i4time_fname_lp(c_fnames(i),I4time_file,istatus)       
 
                 i4_diff = abs(i4time_file - i4time_needed)
 
@@ -93,15 +95,11 @@ C
                     min_diff = i4_diff
                     i_file_nearest = i
                     i4time_nearest = i4time_file
-                    asc_tim_nearest = asc_time
+                    a20_time = c_fnames(i)(leni+1:leni+lent)
                 endif
 
-            enddo
-
-        else ! Error Condition
-            call get_directory_length(c_filespec,lenf)
-
-        endif
+            enddo ! i
+        endif ! i_nbr_files_out > 0
 
         if(i_nbr_files_out .gt. 0)then
            if(no_laps_diag .eq. 0)then
@@ -113,10 +111,12 @@ C
               asc13_tim_needed = cvt_i4time_wfo_fname13(i4time_needed)
            endif
               write(6,*)'    file time (needed/nearest) = '
-     1                  ,asc13_tim_needed,' / ',asc_tim_nearest
+     1                  ,asc13_tim_needed,' / ',a20_time(1:lent)
            endif
+
         else
-            write(6,*)'  No Files Available - ',c_filespec(1:lenf+10)
+            call s_len(c_filespec,len_spec)
+            write(6,*)'  No Files Available - ',c_filespec(1:len_spec)
             i4time_nearest = 0
         endif
 
@@ -132,10 +132,13 @@ C       matching file i4time in the given directory matching that wildcard.
 C       If there are very many files in the directory, you will need to
 C       use a directory name only, the ls command can't handle it otherwise.
 
+!       Steve Albers            1998
+C       More generic
+
         integer max_files
         parameter (max_files = 3000)
 
-        character*13 asc_time,asc_tim_latest
+        character*9 asc_tim_latest
         character*(*) c_filespec                                   ! Input
         character c_fnames(max_files)*80
 
@@ -156,19 +159,12 @@ C       use a directory name only, the ls command can't handle it otherwise.
      1                   istatus)
 
         if(i_nbr_files_out .gt. 0)then
-            call get_directory_length(c_fnames(1),lenf)
             i = i_nbr_files_out
-            call get_filetime_length(c_fnames(i),lent)
-            asc_time = c_fnames(i)(lenf+1:lenf+lent)
-            call i4time_fname_lp(asc_time,I4time_file,istatus)
+            call i4time_fname_lp(c_fnames(i),I4time_file,istatus)
+            call make_fnam_lp(i4time_file,asc_tim_latest,istatus)
 
             i_file_latest = i
             i4time_latest = i4time_file
-            asc_tim_latest = asc_time
-
-        else ! Error Condition
-            call get_directory_length(c_filespec,lenf)
-
         endif
 
 
@@ -177,7 +173,8 @@ C       use a directory name only, the ls command can't handle it otherwise.
                 write(6,*)'    file time (latest) = ',asc_tim_latest
             endif
         else
-            write(6,*)'  No Files Available - ',c_filespec(1:lenf+10)
+            call s_len(c_filespec,len_spec)
+            write(6,*)'  No Files Available - ',c_filespec(1:len_spec)       
             i4time_latest = 0
         endif
 
@@ -193,9 +190,11 @@ C       return a list of the filenames and associated i4times
 C       If there are very many files in the directory, you will need to
 C       use a directory name only, the ls command can't handle it otherwise.
 
+!       Steve Albers            1998
+C       More generic
+
         integer max_files
 
-        character*13 asc_time
         character*(*) c_filespec                           ! Input
         character*(*) c_fnames(max_files)
         integer i4times(max_files)
@@ -215,11 +214,8 @@ C       use a directory name only, the ls command can't handle it otherwise.
      1                   istatus)
 
         if(i_nbr_files_out .gt. 0)then
-            call get_directory_length(c_fnames(1),lenf)
             do i = 1,i_nbr_files_out
-                call get_filetime_length(c_fnames(i),lent)
-                asc_time = c_fnames(i)(lenf+1:lenf+lent)
-                call i4time_fname_lp(asc_time,I4times(i),istatus)
+                call i4time_fname_lp(c_fnames(i),I4times(i),istatus)
             enddo ! i
         endif
 
