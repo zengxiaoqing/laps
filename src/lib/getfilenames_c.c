@@ -167,11 +167,11 @@ int *status;
 	open the directory
 *******************/  
      
-	nstrncpy ( (char *) &dirname, c_dirname, 255);
-	nstrncpy ( (char *) &match, match_string, 255);
+	nstrncpy ( (char *) dirname, c_dirname, 255);
+	nstrncpy ( (char *) match, match_string, 255);
 	match_length = strlen ( match );
 
-	WorkingDir = opendir( (char *) &dirname);
+	WorkingDir = opendir( (char *) dirname);
 
 	if ( WorkingDir == (DIR *)NULL )
 	{

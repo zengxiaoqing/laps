@@ -149,6 +149,8 @@ c       1                       ,hor_dist,curvature
         endif
 
         if(ltest_vertical_grid('HEIGHT'))then
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
 !           height_to_zcoord = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
@@ -199,7 +201,9 @@ c       1                       ,hor_dist,curvature
         istatus = 1
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord2 = nk+1 ! Default value is off the grid
@@ -280,7 +284,9 @@ c       1                       ,hor_dist,curvature
         istatus = 1
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_to_zcoord2_lin = height_m / HEIGHT_INTERVAL
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_to_zcoord2_lin = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord2_lin = nk+1 ! Default value is off the grid
@@ -361,7 +367,9 @@ c       1                       ,hor_dist,curvature
         istatus = 1
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_to_zcoord3 = height_m / HEIGHT_INTERVAL
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_to_zcoord3 = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord3 = nk+1 ! Default value is off the grid
@@ -445,7 +453,9 @@ c       1                       ,hor_dist,curvature
         istatus = 1
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_to_zcoord4 = height_m / HEIGHT_INTERVAL
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_to_zcoord4 = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_zcoord4 = nk+1 ! Default value is off the grid
@@ -513,7 +523,9 @@ c       1                       ,hor_dist,curvature
         real*4 pressures_1d(nk)
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_to_pressure = -999. ! Default value is off the grid
@@ -608,7 +620,9 @@ c       1                       ,hor_dist,curvature
         logical ltest_vertical_grid
 
         if(ltest_vertical_grid('HEIGHT'))then
-            height_of_level = HEIGHT_INTERVAL * level
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!            height_of_level = HEIGHT_INTERVAL * level
 
         elseif(ltest_vertical_grid('PRESSURE'))then
             height_of_level = psatoz(pressure_of_level(level) * .01)
@@ -644,6 +658,8 @@ c       1                       ,hor_dist,curvature
         endif
 
         if(ltest_vertical_grid('HEIGHT'))then
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
 !           zcoord_of_level = height_interval * level
 
         elseif(ltest_vertical_grid('PRESSURE'))then
