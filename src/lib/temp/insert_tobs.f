@@ -334,7 +334,7 @@ cdis
      1      ,weight_bkg_const                                  ! I
      1      ,grid_spacing_m,rep_pres_intvl,max_snd             ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
-     1      ,r_missing_data                                    ! I
+     1      ,r_missing_data,i4time                             ! I
      1      ,l_struct,rms_thresh_norm                          ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                   ! I
      1      ,temp_3d                                           ! I/O
@@ -354,7 +354,7 @@ cdis
      1      ,weight_bkg_const                                     ! I
      1      ,grid_spacing_m,rep_pres_intvl,max_snd                ! I
      1      ,temp_obs,max_obs,n_obs                               ! I
-     1      ,r_missing_data                                       ! I
+     1      ,r_missing_data,i4time                                ! I
      1      ,l_struct,rms_thresh_norm                             ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                      ! I
      1      ,temp_3d                                              ! I/O
@@ -397,7 +397,7 @@ cdis
              write(6,*)' Calling new barnes_univariate_shell routine'
 
              call barnes_univariate_shell(ni,nj,nk           ! Inputs
-     1               ,r_missing_data                         ! Input
+     1               ,r_missing_data,i4time                  ! Input
      1               ,grid_spacing_m,rep_pres_intvl          ! Input
      1               ,max_snd                                ! Input
      1               ,l_good_tsnd,n_tsnd                     ! Inputs
@@ -442,7 +442,7 @@ cdis
 
 
         subroutine barnes_univariate_shell(ni,nj,nk              ! Inputs
-     1                   ,r_missing_data                         ! Input
+     1                   ,r_missing_data,i4time                  ! Input
      1                   ,grid_spacing_m,rep_pres_intvl          ! Input
      1                   ,max_snd                                ! Input
      1                   ,l_good_tsnd,n_tsnd                     ! Inputs
@@ -533,6 +533,7 @@ cdis
                 obs_barnes(n_obs_valid)%k = temp_obs(i_ob,i_k)
                 obs_barnes(n_obs_valid)%weight = temp_obs(i_ob,i_wt)
                 obs_barnes(n_obs_valid)%value(1) = temp_obs(i_ob,i_bias)
+                obs_barnes(n_obs_valid)%i4time = i4time
 
             endif
 
