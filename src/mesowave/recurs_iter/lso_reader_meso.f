@@ -201,12 +201,12 @@ c
             endif
 
 	    ! Use either altimeter or station pressure: YUANFU
-            !if ((alt(k).ne.badflag) .and. (alt(k).ne.badsfc)) then
-            !   o(4,nobs)=alt_2_sfc_press(alt(k),elev(k))
- 	    !else 
-	    !   o(4,nobs)=pstn(k)
-	    !endif
-	    o(4,nobs) = pmsl(k)
+	    ! This station pressure is needed for reduced pressure:
+            if ((alt(k).ne.badflag) .and. (alt(k).ne.badsfc)) then
+               o(4,nobs)=alt_2_sfc_press(alt(k),elev(k))
+ 	    else 
+	       o(4,nobs)=pstn(k)
+	    endif
 
             o(5,nobs)=td(k)
 	IF ((o(5,nobs) .NE. badsfc) .AND. (o(5,nobs) .NE. badflag) 
@@ -221,6 +221,8 @@ c
 	! PRINT*,'Reduced: ',o(4,nobs),elev(k),o(6,nobs)
 
             ! o(6,nobs)=pmsl(k)
+	    ! This 6th variable is msl pressure:
+	    o(4,nobs) = pmsl(k)
 
            enddo !k
         endif
