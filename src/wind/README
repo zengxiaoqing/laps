@@ -14,7 +14,7 @@ program laps_wind                              main.f
             get_fg_wind_new                    get_fg_wind.f
             read_profiles                      read_profiles.f
                 interp_prof                    interp_prof.f
-            remap_profiler                     get_wind_obs.f
+            remap_profiles                     get_wind_obs.f
             prof_anal
             rdsfc                              rdsfc.f
             rdpoint                            rdpoint.f
