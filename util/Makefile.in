@@ -1,0 +1,86 @@
+# Generated automatically from Makefile.in by configure.
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS= @CFLAGS@ $(INC) @OPTIMIZE@
+
+FC       = @FC@
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a
+
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
+
+
+
+OTHERLIBS = @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .exe
+
+EXE = dump_parms.exe
+SRC = dump_parms.f 
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL = @INSTALL@
+
+# Define all source code to be compiled 
+
+
+all: exe
+
+exe: $(EXE)
+
+%.exe: $(SRC)
+	$(FC) $(FFLAGS) $(SRC)  $(OTHERLIBS) -o $@
+	rm -f *.o
+
+debug: $(SRC)
+	rm -f $(EXE) *.o;
+	$(MAKE) FFLAGS='$(FFLAGS) -g' CFLAGS='$(CFLAGS) -g'
+
+install: exe
+	@for file in $(EXE);\
+	  do \
+	  $(INSTALL) $$file $(INSTALLROOT)/bin/$$file; \
+	done
+
+clean:
+	rm -f $(EXE)  *.o *~ *#
+
+
+distclean: clean
+	rm -f Makefile
+
+
+
+
+
+
+
+
+
+
