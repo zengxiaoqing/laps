@@ -37,7 +37,7 @@ cdis
 cdis   
 cdis
       subroutine ccpfil(field_in,MREG,NREG,scale_l_in,scale_h_in
-     1                 ,colortable,n_image,scale)       
+     1                 ,colortable,n_image,scale,c5_sect)       
 
 C 
 C Define error file, Fortran unit number, and workstation type,
@@ -46,6 +46,7 @@ C
       PARAMETER (IERRF=6, LUNIT=2, IWTYPE=1, IWKID=1)
       REAL XREG(MREG),YREG(NREG),ZREG(MREG,NREG),field_in(MREG,NREG)
       character*(*)colortable
+      character*5 c5_sect
 
       logical log_scaling
 
@@ -68,12 +69,12 @@ C
 
       if(scale_l_in .lt. scale_h_in)then
           ireverse = 0
-          scale_l = scale_l_in
-          scale_h = scale_h_in
+          scale_l = scale_l_in * scale
+          scale_h = scale_h_in * scale
       else
           ireverse = 1
-          scale_l = scale_h_in
-          scale_h = scale_l_in
+          scale_l = scale_h_in * scale
+          scale_h = scale_l_in * scale
       endif
 
       write(6,*)' Colortable is ',colortable,scale_l,scale_h,ireverse
@@ -106,14 +107,24 @@ C
           do i = 1,MREG
           do j = 1,NREG
             if(field_in(i,j) .eq. r_missing_data)then
-!             Test for 'linear' used to be proxy for rejecting X-sects?
-!             We may only want to color missing data values for H-sects
-              if(colortable(1:3) .eq. 'lin')then
+
+              if(c5_sect .eq. 'hsect')then
+
+!               Test for 'linear' used to be proxy for rejecting X-sects?
+!               We may only want to color missing data values for H-sects
+                if(colortable(1:3) .eq. 'lin')then
                   ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
-              elseif(colortable(1:3) .eq. 'cpe')then
-                  ZREG(i,j) = scale_loc * 0.00 ! e.g. CAPE
-              else
+
+                elseif(colortable(1:3) .eq. 'cpe')then ! apply only to hsects
+                  if(scale_h_in .eq. 7200. .or. scale_h_in .eq. 50.)then 
+                      ZREG(i,j) = scale_loc * 0.00 ! ! cape/cin for hsect
+                  endif
+
+                else
+
                   ZREG(i,j) = scale_loc * 0.96 ! e.g. CIN
+                endif
+
               endif
 
             elseif(ireverse .eq. 1)then
@@ -122,9 +133,11 @@ C
             endif
 
 !           Prevent overshoot beyond colortable (except for CAPE/CIN)
-            if(ZREG(i,j) .gt. scale_loc .and. 
+            if(c5_sect .eq. 'hsect')then
+              if(ZREG(i,j) .gt. scale_loc .and. 
      1         colortable(1:3) .ne. 'cpe'     )then
-              ZREG(i,j) = scale_loc
+                ZREG(i,j) = scale_loc
+              endif
             endif
 
             if(ZREG(i,j) .lt. 0.0      )then
@@ -158,6 +171,7 @@ C
       LMAP=MREG*NREG*256 ! 16000000
       LMAP = min(LMAP,32000000)
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
+     1                               ,r_missing_data
      1                               ,LMAP,log_scaling
      1                               ,colortable,ncols,icol_offset)      
 C      
@@ -184,6 +198,7 @@ c     Call local colorbar routine
 
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
+     1                                ,r_missing_data
      1                                ,LMAP,log_scaling
      1                                ,colortable,ncols,icol_offset)      
       
@@ -228,6 +243,7 @@ C
       CALL CPSETR('CIS', cis)
       CALL CPSETR('CMN',(0.0           ) * abs(scale) + 2.0*cis)
       CALL CPSETR('CMX',(1.0+col_offset) * abs(scale) + 2.0*cis)
+      call cpsetr ('SPV',r_missing_data)
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
@@ -340,8 +356,11 @@ C
           call color_ramp(1,8,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! Dark Hot
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(8,29,IWKID,icol_offset
+          call color_ramp(8,18,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.5,0.95,0.65)              ! Yellow
+          call color_ramp(18,29,IWKID,icol_offset
+     1                   ,2.5,0.95,0.65               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(29,36,IWKID,icol_offset       
      1                   ,2.0,0.4,0.4                 ! Green
@@ -358,8 +377,11 @@ C
           call color_ramp(1,11,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! Dark Hot
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(11,46,IWKID,icol_offset
+          call color_ramp(11,28,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,2.5,0.95,0.65)              ! Yellow
+          call color_ramp(28,46,IWKID,icol_offset
+     1                   ,2.5,0.95,0.65               ! Yellow
      1                   ,2.0,0.4,0.4)                ! Green
           call color_ramp(47,60,IWKID,icol_offset       
      1                   ,2.0,0.4,0.4                 ! Green
@@ -375,9 +397,13 @@ C
      1                   ,IWKID,icol_offset       
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(55*ncols/100,ncols
+          call color_ramp(55*ncols/100,78*ncols/100
      1                   ,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
+     1                   ,2.5,0.95,0.65)              ! Yellow
+          call color_ramp(78*ncols/100,ncols
+     1                   ,IWKID,icol_offset
+     1                   ,2.5,0.95,0.65               ! Yellow
      1                   ,3.0,0.9,0.7)                ! Red
 
       else
@@ -466,10 +492,12 @@ C
       character*(*)colortable
       logical log_scaling,l_loop
 
+      write(6,*)' colorbar: scale_l,scale_h,scale',scale_l,scale_h,scale
+
       range = abs(scale_h - scale_l) / scale
 
       if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
-     1                     .or. range .eq. 5.5           ! TPW
+     1                     .or. colortable .eq. 'tpw'    ! TPW
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
           l_loop = .true.
       else
@@ -648,15 +676,18 @@ c     Restore original color table
           enddo
 
       elseif(l_loop)then ! plot additional numbers
+
+!         Set interval for writing numbers
           if(range .gt. 1000.)then
               colorbar_int = 1000.
           elseif(range .gt. 10.)then
-              colorbar_int = 5.
+              colorbar_int = 10.
           else ! range .le. 10
-              colorbar_int = 0.5
+              colorbar_int = 1.0
           endif
 
-          colorbar_int = colorbar_int * scale
+!         Interval for writing lines
+          colorbar_int = colorbar_int * scale / 1.0
 
           ixl = 409
           ixh = 924
@@ -680,7 +711,7 @@ c     Restore original color table
               y2 = yhigh
               call line(x1,y1,x2,y2)
 
-              if(loop_count .eq. (loop_count/2) * 2 )then
+              if(loop_count .eq. (loop_count/1) * 1 )then ! number every line
 !                 Plot Number
                   call setusv_dum(2hIN,7)  ! Yellow
                   if(log_scaling)then
