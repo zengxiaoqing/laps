@@ -23,7 +23,6 @@ PLATFORM=`uname -s`
 #export NCARG_ROOT=/usr/local/apps/ncarg-4.0.1
 #setenv NCARG_ROOT `cat /usr/nfs/lapb/bin/ncarg_root`
 export NCARG_ROOT=`cat /usr/nfs/lapb/bin/ncarg_root`
-SUPMAP_DATA_DIR=/home/elvis/mcdonald/data/supmap/
 
 #alias ctrans '/usr/local/apps/ncarg-4.0.1/bin/ctrans  -verbose'
 
