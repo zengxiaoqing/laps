@@ -114,9 +114,9 @@ c
 	character  stname(maxobs)*8, save_stn(maxobs)*8
 	character  data_file*150, a9time*9, a8time*8, a9_to_a8*8, time*4       
 	character  filename13*13, fname9_to_wfo_fname13*13
-	character  stations(maxsta)*20, provider(maxsta)*11
-	character  weather(maxobs)*25, wx(maxsta)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
+	character  wx(maxobs)*25, weather(maxsta)*25
+	character  stations(maxsta)*20, provider(maxsta)*11
 	character  store_cldamt(maxsta,5)*4
         character  path_to_buoy_data*(*), buoy_format*(*)
         character  skyCover(maxSkyCover,maxobs)
@@ -228,6 +228,13 @@ c
 	           print *, NF_STRERROR(nf_status)
 	           print *,'dim recNum'
 	        endif
+
+                n_maritime_pot = ix-1 + recNum 
+                if(n_maritime_pot .gt. maxobs)then
+                    write(6,*)' ERROR: exceeded maxobs limit'
+     1                       ,recNum,n_maritime_pot,maxobs
+                    stop
+                endif
 
 	        call read_buoy(nf_fid , recNum, iplat_type(ix),
      &             td(ix), elev(ix), equivspd(ix), lats(ix), lons(ix), 
@@ -484,7 +491,8 @@ c
  150	  nn = nn + 1
 
           if(nn .gt. maxsta)then
-              write(6,*)' ERROR in get_buoy_obs ',nn,maxsta
+              write(6,*)' ERROR: maxsta exceeded in get_buoy_obs '
+     1                 ,nn,maxsta
               stop
           endif
 
