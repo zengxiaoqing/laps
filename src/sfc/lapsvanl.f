@@ -501,30 +501,44 @@ c
 c
 	   dz = ter - hbar     ! calc a sfc pressure
 	   tbar = a_t + (lapse_t * (hbar + (dz * .5)))
-	   tbar = (tbar - 32.) * fon + 273.15 ! conv F to K
-	   psfc(i,j) = pbar * exp(-dz * gor / tbar)
+	   tbar = (tbar - 32.) * fon + 273.15        ! conv F to K
+	   psfc(i,j) = pbar * exp(-dz * gor / tbar)  ! Has no meteorological 
+                                                     ! variation       
+
+           if(.true.)then                            ! is this needed?
 c
-c.....    Using laps sfc p and background model sfc p,  
-c.....    move background temps from background model 
-c.....    terrain to laps terrain.  Use Poisson's eqn.
+c.....         Using laps sfc p and background model sfc p,  
+c.....         move background temps from background model 
+c.....         terrain to laps terrain.  Use Poisson's eqn.
 c
-	   dz = ter - h7(i,j)
-	   tt(i,j) = t7(i,j) + (lapse_t * dz)   
-	   ttd(i,j) = td7(i,j) + (lapse_td * dz)	
+	       dz = ter - h7(i,j)
+	       tt(i,j) = t7(i,j) + (lapse_t * dz)   
+	       ttd(i,j) = td7(i,j) + (lapse_td * dz)	
 c
-	   if(tb81(i,j) .ne. 0.) then
-	      tb81(i,j) = tb81(i,j) - tt(i,j)
-	   endif
-	   if(t_bk(i,j).ne.0. .and. back_t.eq.1) then
-	      t_bk_ltopo = t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
-	      diff_tbk = t_bk_ltopo - t_bk(i,j)
-	      t_bk(i,j) = t_bk_ltopo - tt(i,j)
-	   else
-	      t_bk(i,j) = t_bk(i,j) - tt(i,j)
-	   endif
-	   if(td_bk(i,j) .ne. 0.) then
-	      td_bk(i,j) = td_bk(i,j) - ttd(i,j)
-	   endif
+	       if(tb81(i,j) .ne. 0.) then
+	           tb81(i,j) = tb81(i,j) - tt(i,j)
+	       endif
+
+	       if(t_bk(i,j).ne.0. .and. back_t.eq.1) then
+	           t_bk_ltopo = 
+     1             t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
+	           diff_tbk = t_bk_ltopo - t_bk(i,j)
+	           t_bk(i,j) = t_bk_ltopo - tt(i,j)
+	       else
+	           t_bk(i,j) = t_bk(i,j) - tt(i,j)
+	       endif
+
+	       if(td_bk(i,j) .ne. 0.) then
+	           td_bk(i,j) = td_bk(i,j) - ttd(i,j)
+	       endif
+
+           endif ! .true.
+
+           if(sp_bk(i,j) .ne. 0. .and. back_sp .eq. 1)then ! psfc from bkgnd  
+                                                           ! can be used as it
+                                                           ! is on the LAPS trn
+               psfc(i,j) = sp_bk(i,j)
+           endif
 c
 	enddo !i
 	enddo !j
