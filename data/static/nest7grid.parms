@@ -50,7 +50,7 @@
 
  path_to_qc_acars_cmn='/public/data/acars/qc/netcdf/',
 
- path_to_raw_raob_cmn='/public/dummy/',
+ path_to_raw_raob_cmn='/public/data/raob/netcdf/',
 
  path_to_metar_data_cmn='/public/data/metar/netcdf/',
  path_to_local_data_cmn='/public/data/cdot/netcdf/',
@@ -101,10 +101,21 @@ c
  bgmodels=1,5,2, 
  $end
 
-
-
-
-
-
-
-
+cc
+c
+ &satellite_nl
+ path_to_raw_sat_wfo_vis='NULL',
+ path_to_raw_sat_wfo_i39='NULL',
+ path_to_raw_sat_wfo_iwv='NULL',
+ path_to_raw_sat_wfo_i11='NULL',
+ path_to_raw_sat_wfo_i12='NULL',
+ path_to_raw_satellite_gvr='/data/lapb/import/lapsdat/sat/afgwc/',
+ path_to_raw_satellite_cdf='/public/data/sat/fsl-conus/gs/netcdf/',
+ i_delta_sat_t_sec=1500,         
+ r_msng_sat_flag_cdf=255,       
+ r_msng_sat_flag_gvr=255,
+ r_msng_sat_flag_asc=9999,
+ max_sat = 5,
+ max_sat_channel = 5,
+ max_images = 2,
+ $end
