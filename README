@@ -138,7 +138,6 @@
      have defined in data/static/nest7grid.parms, below are details on
      the contents of the nest7grid.parms file.  
 
-
      In this file, a number of potential manual changes to the code are 
      outlined prior to running make and 'laps_localization.pl',especially 
      if one is on a domain other than the default Colorado domain. After 
@@ -158,6 +157,10 @@
 
      One caution here is that you might want to check for any updates FSL has 
      made in these files.
+
+     Note that the namelist format for 'nest7grid.parms' works on most 
+     platforms. On the IBM/AIX however, you may need to set an environment
+     variable as follows: XLFRTEOPTS=namelist=old
 
 
                   --- 2.2   NetCDF library   ---
