@@ -57,6 +57,7 @@ cdis
         real*4    rlaps_land_frac(ni,nj)
         real*4    static_albedo(ni,nj)          ! Static albedo database
         integer*4 istat_39_a(ni,nj)
+        integer*4 istat_39_buff(ni,nj)
         integer*4 icount(-1:+1)
 
         real*4 k_to_c
@@ -135,6 +136,35 @@ cdis
 
         write(6,12)icount(-1),icount(0),icount(+1)
  12     format('  3.9u cloud mask status vals [-1,0,+1] =',3i8)       
+
+!       Filter out isolated points
+        istat_39_buff = istat_39_a
+
+        do i = 2,ni-1
+        do j = 2,nj-1
+            if(istat_39_buff(i,j) .eq. 1)then
+!               Count neighbors
+                n_neighbors = 0
+                do ii = i-1,i+1
+                do jj = j-1,j+1
+                    if(istat_39_buff(ii,jj) .eq. 1)then
+                        n_neighbors = n_neighbors + 1
+                    endif
+                enddo ! jj
+                enddo ! ii
+
+                if(n_neighbors .gt. 2)then
+!                   Keep if at least 2 neighbors (plus central pt) are there
+                    istat_39_a(i,j) = istat_39_buff(i,j) ! 1
+                else
+!                   Throw out if isolated point or just one neighbor
+                    istat_39_a(i,j) = 0
+                endif
+            else
+                istat_39_a(i,j) = istat_39_buff(i,j)
+            endif
+        enddo ! j
+        enddo ! i
 
         return
         end 
