@@ -37,7 +37,8 @@ cdis
 cdis   
 cdis
         subroutine insert_sao(i4time,cldcv,cf_modelfg,t_modelfg,cld_hts   ! I
-     1          ,default_clear_cover,lat,lon,topo,t_sfc_k,wtcldcv         ! I
+     1          ,default_clear_cover,namelist_parms                       ! I
+     1          ,lat,lon,topo,t_sfc_k,wtcldcv                             ! I
      1          ,name_array,l_perimeter,ista_snd,cvr_snd,cld_snd
      1          ,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1          ,ni,nj,nk                                                 ! I
@@ -62,6 +63,8 @@ cdis
 !                                       IX_LOW, IX_HIGH, IY_LOW, and IY_HIGH.
 !        1-Aug-1997    Ken Dritz        Removed include of lapsparms.for
 !        6-Aug-1997    Steve Albers     Removed equivalences.
+
+        include 'cloud.inc'
 
         character*150 c150_filename,directory
         character*31 ext
@@ -109,7 +112,7 @@ c
         real*4 wtcldcv(ni,nj,nk)
         real*4 cld_hts(nk)
         real*4 lat(ni,nj),lon(ni,nj)
-        character*1 name_array(ni,nj)
+        character*1 name_array(ni,nj,nk)
 
 !       Arrays for cloud soundings
         integer*4 ista_snd(max_cld_snd)
@@ -119,7 +122,7 @@ c
         integer*4 i_snd(max_cld_snd)
         integer*4 j_snd(max_cld_snd)
 
-        logical l_out_of_bounds
+        logical l_out_of_grid
 
 !       Initialize ista_snd
         do i = 1,max_cld_snd
@@ -155,6 +158,12 @@ c
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status returned from reading SAO data'
+            return
+        endif
+
+        if(.not. namelist_parms%l_use_metars)then
+            write(6,*)' Skipping insertion of METAR/SAOs for analysis'       
+            write(6,*)' METAR/SAO data used for verification only'
             return
         endif
 
@@ -195,7 +204,6 @@ c place station at proper laps grid point
               write(6,*)' Note: out of bounds ',c_stations(i)
               goto 125
           endif
-
 
           if(n_cloud_layers_ret(i) .eq. 0)then ! Kick out AMOS stations not
                                                ! reporting clouds this time
@@ -265,10 +273,10 @@ c place station at proper laps grid point
 
           if(  ilaps .lt. 1 .or. ilaps .gt. ni
      1    .or. jlaps .lt. 1 .or. jlaps .gt. nj)then
-              l_out_of_bounds = .true.
+              l_out_of_grid = .true.
           else
-              l_out_of_bounds = .false.
-              name_array(ilaps,jlaps)=c_stations(i)(1:1)
+              l_out_of_grid = .false.
+              name_array(ilaps,jlaps,:)=c_stations(i)(1:1)
           endif
 
           cvr_snd(n_cld_snd) = 0.
@@ -722,6 +730,23 @@ C CLOUDS ARE NOW IN MSL
         endif
 
 125     continue
+
+!       Clear out name array for the station where the station has no influence
+        if(  ilaps .lt. 1 .or. ilaps .gt. ni
+     1  .or. jlaps .lt. 1 .or. jlaps .gt. nj)then
+            l_out_of_grid = .true.
+        else
+            l_out_of_grid = .false.
+        endif
+
+        if(l_perimeter .and. .not. l_out_of_grid)then
+          do k=1,nk
+            if(wt_snd(n_cld_snd,k) .ne. 1.00)then
+                name_array(ilaps,jlaps,k) = ' '
+            endif
+          enddo
+        endif
+
         enddo ! i
 
         write(6,*)
