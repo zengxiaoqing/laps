@@ -2701,6 +2701,19 @@ Process: dprep.exe - Does some analysis post processing for model
    conditions. It also takes background model fields to generate the forecast
    model lateral boundary conditions.
 
+Inputs: 
+      * lw3                 grid       LAPS 3-d wind analysis
+      * lt1                 grid       LAPS 3-d temperature & height analyses
+      * lq3                 grid       LAPS 3-d humidity analysis
+      * lsx                 grids      LAPS 2-d surface analyses
+      * model backgrounds
+
+Parameter file: 'static/dprep.nl'
+
+Outputs: 'lapsprd/dprep' directory
+
+Source directory: 'laps/src/dprep'
+
    Please contact the authors for additional information.
 
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
