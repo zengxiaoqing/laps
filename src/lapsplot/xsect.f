@@ -704,6 +704,8 @@ c read in laps lat/lon and topo
 
         i_image = 0
 
+        scale = 1.0                                      ! default
+
         call s_len(c_field,len_field)
         
         if(c_field(len_field:len_field) .eq. 'i' 
@@ -712,7 +714,6 @@ c read in laps lat/lon and topo
      1                    .and. c_field .ne. 'dii')then
             i_image = 1
             c_field = c_field(1:len_field-1)
-            scale = 1.0                                  ! default
             colortable = 'hues'                          ! default
         endif
 
@@ -2122,20 +2123,15 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call interp_3d(q_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-            do k = NZ_C,1,-1
-            do i = 1,NX_C
-                if(field_vert(i,k) .ne. r_missing_data)then
-                    field_vert(i,k) = field_vert(i,k) * 1000.
-                endif
-            enddo ! i
-            enddo ! k
-
             clow = 0.
             chigh = +40.
-            cint = 0.4 / density
-            cint = -1.
+            cint = 1.0 / density
+!           cint = -1.
             i_contour = 1
             c_label = 'LAPS Specific Humidity     x1e3  '
+            scale = 1e-3
+
+            colortable = 'moist'
 
         elseif(c_field(1:2) .eq. 'rh' .or. c_field(1:2) .eq. 'rl')then
             call input_product_info(i4time_ref              ! I
@@ -2586,6 +2582,16 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                   call get_border(ni,nj,x_1,x_2,y_1,y_2)
 !                   call set(x_1,x_2,y_1,y_2,0.05,0.95,0.05,0.95,1)
 
+                    if(i_image .eq. 0)then
+                        do k = NZ_C,1,-1
+                        do i = 1,NX_C
+                            if(field_vert(i,k) .ne. r_missing_data)then
+                              field_vert(i,k) = field_vert(i,k) / scale       
+                            endif
+                        enddo ! i
+                        enddo ! k
+                    endif ! contour plot
+
                     call get_border(NX_C,NZ_C-ibottom+1,x_1,x_2,y_1,y_2)       
 
                     call remap_field_2d(
@@ -2602,7 +2608,9 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                         call set(0.10,0.90,0.05,0.95
      1                          ,0.10,0.90,0.05,0.95,1) ! Orig
 
-                        write(6,*)' calling contour line plot'
+                        write(6,*)' calling contour line plot, scale:'       
+     1                            ,scale
+
                         call conrec_line(field_vert3,NX_P,NX_P,NX_P
      1                             ,clow,chigh,cint,plot_parms
      1                             ,-1,0,-1848,0)
