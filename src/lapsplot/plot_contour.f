@@ -135,6 +135,7 @@ C
 
         COMMON /NXNY/ NX1,NY1
         common /icol_index/ icol_current
+        common /zoom/       zoom
 
 c ... compare,spv def'n from iftran.im/b. jewett
       compare(a,b,c)=((int(sign(1.,c-abs(a-b)))+1)/2)
@@ -212,7 +213,7 @@ C
 C --- Do contouring
 !      if (ihl.ge.1) then
        if (.true.) then
-        call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.025)
+        call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.025/zoom)
         call CPSETC('ILT',' ')
         call cpseti('NSD',2)
 !       call cpseti('NLS',2)
@@ -221,7 +222,7 @@ C --- Do contouring
         if (ihl.ge.2) call cpsetc('HLT',' ')
        end if
 
-        call cpsetr ('LLS',.040)
+        call cpsetr ('LLS',.040/zoom)
         call cpseti ('CLS - contour level selection flag',20)
         call cpsetr ('CIS',DF)
         call cpseti ('LIS - label interval specifier',lis)

@@ -1,6 +1,6 @@
 
 
-       subroutine contour_settings(a,ni,nj,clow,chigh,cint,scale)
+       subroutine contour_settings(a,ni,nj,clow,chigh,cint,zoom,scale)       
 
        real*4 a(ni,nj)
 
@@ -11,7 +11,7 @@
        rmax = rmax / scale
        rmin = rmin / scale
 
-       range = rmax-rmin
+       range = (rmax-rmin) / sqrt(zoom)
 
        if(range .gt. 2000)then
            cint = 400.
@@ -33,6 +33,8 @@
 
        clow  = int(rmin)/int(cint_2) * int(cint_2)
        chigh = int(rmax)/int(cint) * int(cint) + int(cint)
+ 
+       write(6,*)' Subroutine contour_settings....',range,zoom,cint
 
        return
        end

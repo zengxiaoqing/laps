@@ -286,8 +286,10 @@ cdis
             iyl_remap = 13
             iyh_remap = 8
         elseif(vymin .eq. .20)then
-            iyl_remap = 33
-            iyh_remap = 28
+            ixl_remap = nint(float(NX_P) * .0580)
+            ixh_remap = nint(float(NX_P) * .0575)
+            iyl_remap = nint(float(NX_P) * .174)
+            iyh_remap = nint(float(NX_P) * .162)
         else
             write(6,*)' Error, invalid vymin ',vymin
         endif
@@ -1267,12 +1269,12 @@ c read in laps lat/lon and topo
             call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
      1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
             write(6,*)' calling solid fill cloud plot'
-            call ccpfil(field_vert3,NX_P,NX_P)
+            call ccpfil(field_vert3,NX_P,NX_P,1.0)
 
         elseif(c_field .eq. 'cg' )then ! Cloud Gridded Image
             i_image = 1
@@ -2011,7 +2013,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                     call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
      1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
@@ -2046,7 +2048,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, 11, NX_P-10
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
      1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
@@ -2954,7 +2956,7 @@ c
             call stretch(rylow_out,ryhigh_out,rylow_in,ryhigh_in,arg)
             ryin = arg
 
-            call bilinear_laps(rxin,ryin,nx_in,nx_out,field_in,result)       
+            call bilinear_laps(rxin,ryin,nx_in,ny_in,field_in,result)       
             field_out(ixout,iyout) = result
 
         enddo

@@ -187,9 +187,12 @@ C
 !       if(u .le. umin .or. u .ge. umax .or. v .le. vmin .or. v .ge. vmax)
 !       1                                                       return
 
-        IF (SPD .LT. 1.0) THEN
-        CALL PWRIT (U,V,'O',1,6,0,0)
+        IF (SPD .LT. 1.0) THEN ! calm winds
+!           CALL PWRIT (U,V,'O',1,6,0,0)
+!           CALL PCLOQU(U,V,'O',DU,ANGD,CNTR)
+            call plot_circle(u,v,du*0.8)
         RETURN
+
         END IF
         IF (SPD .LT. 2.5) THEN
         X1=U
@@ -314,3 +317,21 @@ C
         RETURN
         END
 c
+
+        subroutine plot_circle(u,v,size)
+
+        DATA DEGRAD/.01745329/
+
+        do iaz = 0,360,20
+            az = float(iaz) * DEGRAD
+            x = u + size * sin(az)
+            y = v + size * cos(az)
+            if(iaz .eq. 0)then
+                call FRSTPT(x,y)
+            else
+                call VECTOR(x,y)
+            endif
+        enddo
+ 
+        return
+        end

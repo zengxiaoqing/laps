@@ -1192,6 +1192,13 @@ cdoc    Convert Kelvin to Celsius
         k_to_c = (x - 273.15)
         return
         end
+
+        function f_to_c(x)
+cdoc    Convert Fahrenheit to Celsius
+        real*4 f_to_c
+        f_to_c = (x - 32.) / 1.8 
+        return
+        end
 c
 c
 

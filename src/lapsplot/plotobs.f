@@ -677,8 +677,8 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
                 call setusv_dum(2hIN,icol_in)
 
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
-     1                          ,lat,lon,imax,jmax,size_temp,icol_in
-     1                          ,iflag)
+     1                          ,lat,lon,imax,jmax,size_temp,zoom
+     1                          ,icol_in,du_loc,iflag)
 
 
                 write(6,111,err=121)ri,rj,t_c,c8_obstype

@@ -341,6 +341,8 @@ c
 c       SUPMBD subroutine changed to BLOCK DATA
 c     IGDFLT = %LOC(SUPMBD)             !FORCE LOAD OF BLOCK DATA from library
 
+      write(6,*)' Subroutine supmap...'
+
       ROT = RROT
       ILTS = IABS(JJLTS)
       JLTS = JJLTS

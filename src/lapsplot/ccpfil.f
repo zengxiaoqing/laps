@@ -1,4 +1,4 @@
-      subroutine ccpfil(ZREG,MREG,NREG)
+      subroutine ccpfil(ZREG,MREG,NREG,scale)
 
 C 
 C Define error file, Fortran unit number, and workstation type,
@@ -21,7 +21,7 @@ C
 C      
 C Call Conpack color fill routine
 C      
-      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,COLOR2,IWKID)
+      CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,COLOR2,IWKID,scale)
 C      
 C Close frame
 C      
@@ -39,7 +39,7 @@ C
       END
 
       
-      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,COLOR2,IWKID)
+      SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,COLOR2,IWKID,scale)
       
       PARAMETER (LRWK=150000,LIWK=150000,LMAP=1000000,NWRK=150000
      1          ,NOGRPS=5)       
@@ -63,9 +63,9 @@ C
 !      CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
 
       CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
-      CALL CPSETR('CIS',0.1)
-      CALL CPSETR('CMN',0.0)
-      CALL CPSETR('CMX',1.0)
+      CALL CPSETR('CIS',0.1*scale)
+      CALL CPSETR('CMN',0.0*scale)
+      CALL CPSETR('CMX',1.0*scale)
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      

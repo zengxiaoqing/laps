@@ -57,7 +57,10 @@ c
       if(istatus .ne. 1)then
           write(6,*)' no grid spacing, stop in draw_county_map'
           stop
+      else
+          write(6,*)' Subroutine draw_county_map...'
       endif
+
       domsize = (max(ni,nj)-1.) * grid_spacing_m
 
 !     Plot Counties
@@ -70,6 +73,7 @@ c
       endif
 
       if(domsize .le. 2500e3)then
+          write(6,*)' Plotting Counties'
           call setusv_dum(2HIN,icol_cou)
           call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +                jgrid,jus,jdot,ier)
@@ -79,19 +83,21 @@ c
 
       endif
 
-!     Plot States From Counties
+      write(6,*)' Plotting States From Counties'
       jus=-8
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
+      call sflush
 
-!     Plot Continents
+      write(6,*)' Plotting Continents'
       jus=-1
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
+      call sflush
 
       return
       end

@@ -53,9 +53,11 @@ cdis
         character*35 TIME
         logical l_atms
 
-        character*1 c_section
+        character*2 c_section
 
         Common/RamTDims/NXMin,NXMax,NYMin,NYMax
+
+        common /zoom/ zoom
 
 
         include 'lapsparms.cmn'
@@ -143,7 +145,7 @@ cdis
         endif
 
 1100    write(6,1110)
-1110    format(/////'     [h]  Horizontal Plan View '
+1110    format(/////'     [h/hz]  Horizontal Plan View '
      1        ,'   (Const Pressure Level or SFC)'
      1        /'     [x]  Vertical Cross Section'
      1        /' ',60x,'[q] QUIT ? ',$)
@@ -157,9 +159,19 @@ cdis
             write(6,*)' Bad call to get_laps_cycle_time'
         endif
 
-        IF(c_section .eq. 'h' .or. c_section .eq. 'H' .or. c_section .eq
-     1. '1'
+        IF(     c_section .eq. 'h' .or. c_section .eq. 'H' 
+     1     .or. c_section .eq. '1'
+     1     .or. c_section .eq. 'hz'
      1                                                          )THEN
+
+            if(c_section .eq. 'hz')then
+                write(6,101)
+ 101            format('    Zoom/Density (for sfc wind barbs)'
+     1                ,28x,'     ? ',$)
+                read(lun,*)zoom
+            else
+                zoom = 1.0
+            endif
 
             if(MAX_RADARS .ge. 1)then
                 L_RADARS = 1
@@ -169,7 +181,7 @@ cdis
 
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
-     1                         laps_cycle_time)
+     1                         laps_cycle_time,zoom)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
@@ -177,7 +189,7 @@ cdis
             l_atms = .false.
             call xsect(c_display,i4time_ref,lun,l_atms
 !    1                ,standard_longitude,NX_L,NY_L,NZ_L,61,NZ_L,181       
-     1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,181       
+     1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,541       
      1                ,r_missing_data,laps_cycle_time,maxstns)
 
         endif ! c_section
