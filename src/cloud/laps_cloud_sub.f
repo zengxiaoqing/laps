@@ -289,9 +289,8 @@ cdis
         real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
         real*4 cover_s(maxstns)
         real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns), ffg_s(maxst
-     1ns)
-        real*4 vis_s(maxstns)
+        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
+        real*4 ffg_s(maxstns), vis_s(maxstns)
         real*4 pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
         real*4 store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
         real*4 cover_a(maxstns),rad_s(maxstns)
@@ -368,7 +367,6 @@ cdis
 
 !     This should work out to be slightly larger than needed
       n_fnorm =
-!       1     2   * (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
      1      1.6 * ( (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
 
 
@@ -384,9 +382,6 @@ c Determine the source of the radar data
             return
         endif
 
-!       radarext_3d_cloud = radarext_3d
-!       radarext_3d_cloud = 'v02'
-
         write(6,*)' radarext_3d_cloud = ',radarext_3d_cloud
 
 c read in laps lat/lon and topo
@@ -394,6 +389,17 @@ c read in laps lat/lon and topo
      1           ,rlaps_land_frac,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
+            return
+        endif
+
+        icen = NX_L/2 + 1
+        jcen = NY_L/2 + 1
+        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
+     1                              ,grid_spacing_cen_m,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' Actual grid spacing in domain center = '
+     1                              ,grid_spacing_cen_m
+        else
             return
         endif
 
@@ -437,36 +443,9 @@ c read in laps lat/lon and topo
             j_status(i) = sys_no_data
         enddo
 
-!      (-1) DUMMY PROCESS
-!       (0) Normal full Cloud Analysis
-!       (1) Calculate only main fields,
-!           derived fields were moved elsewhere
-!       (2) Reread data, then calc derived fields
-!           (for testing)
-!       (3) means derived prods only
-
-        if(isplit .eq. -1)then
-            write(6,*)' laps_cloud_sub: dummy process --> return'
-            return
-        elseif(isplit .eq. 0)then
-            n_prods = 13
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 1)then
-            n_prods = 4
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 2)then
-            n_prods = 13
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 3)then
-            n_prods = 9
-            iprod_start = 5
-            iprod_end = 13
-            go to 500
-        endif
-
+        n_prods = 4
+        iprod_start = 1
+        iprod_end = n_prods
 
         ext = 'lc3'
 
@@ -478,8 +457,8 @@ c Dynamically adjust the heights of the cloud levels to the terrain
             topo_min = min(topo_min,topo(i,j))
         enddo
         enddo
-        write(6,*)'    OLD ht   NEW ht       Lowest terrain point = ',to
-     1po_min
+        write(6,*)'    OLD ht   NEW ht       Lowest terrain point = '
+     1           ,topo_min
 
         range_orig = cld_hts(KCLOUD) - cld_hts(1)
         range_new =  cld_hts(KCLOUD) - topo_min
@@ -612,12 +591,10 @@ C READ IN AND INSERT SAO DATA
 
 
 C READ IN PIREPS
-!       write(6,*)' Getting pireps from the PROFS database'
         rnorth = 43.
         south = 36.
         west = -108.
         east = -101.
-!       call GET_PIREPS2(I4TIME,rNORTH,SOUTH,EAST,WEST)
 
         write(6,*)' Using Pireps stored in LAPS realtime system'
 
@@ -626,8 +603,8 @@ C READ IN PIREPS
      1      ,lat,lon,NX_L,NY_L,KCLOUD,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
      1      ,N_PIREP,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Bad status from insert_pireps, aborting cloud an
-     1alysis'
+            write(6,*)' Error: Bad status from insert_pireps,'
+     1               ,' aborting cloud analysis'
             goto999
         endif
         I4_elapsed = ishow_timer()
@@ -636,14 +613,13 @@ C READ IN PIREPS
 C DO ANALYSIS on SAO and PIREP data
         write(6,*)
         write(6,*)' Analyzing SAO and PIREP data'
-        call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv,cf_mode
-     1lfg
-     1  ,l_perimeter,cld_snd,wt_snd,r_missing_data
-     1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus
-     1  ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
+        call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv
+     1     ,cf_modelfg,l_perimeter,cld_snd,wt_snd,r_missing_data
+     1     ,grid_spacing_cen_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus      
+     1     ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
         if(istatus .ne. 1)then
-            write(6,*)' Bad status from barnes_r5, aborting cloud analys
-     1is'
+            write(6,*)
+     1      ' Error: Bad status from barnes_r5, aborting cloud analysis'
             goto999
         endif
 
@@ -687,7 +663,7 @@ C READ IN SATELLITE DATA
      1              ,NX_L,NY_L,KCLOUD,r_missing_data,istat_vis)
 
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
-     1        tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
+     1        tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
      1        cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
      1        cloud_frac_co2_a,rlaps_land_frac,
      1        topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,       
@@ -695,7 +671,7 @@ C READ IN SATELLITE DATA
      1        NX_L,NY_L,KCLOUD,NZ_L,istatus,r_missing_data)
 
         if(istatus .ne. 1)then
-            write(6,*)' Bad status returned from insert_sat'
+            write(6,*)' Error: Bad status returned from insert_sat'
             goto999
         endif
 
@@ -750,10 +726,9 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
      1            nint(height_to_zcoord2(cloud_top_m,heights_3d
      1               ,NX_L,NY_L,NZ_L,i,j,istatus)   )
                         if(istatus .ne. 1)then
-                            write(6,*)
-     1                      ' Bad status returned from height_to_zcoord2
-     1'
-     1                      ,cloud_top_m,heights_3d(i,j,NZ_L),i,j
+                            write(6,*)' Error: Bad status returned'
+     1                          ,' from height_to_zcoord2'
+     1                          ,cloud_top_m,heights_3d(i,j,NZ_L),i,j       
                             goto999
                         endif
 
@@ -789,14 +764,15 @@ C INSERT RADAR DATA
             call get_max_ref(radar_ref_3d,NX_L,NY_L,NZ_L,dbz_max_2d)
 
             call insert_radar(i4time,clouds_3d,cld_hts
-     1          ,temp_3d,t_sfc_k,grid_spacing_m,NX_L,NY_L,NZ_L,KCLOUD
-     1          ,cloud_base,cloud_base_buf,ref_base
+     1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
+     1          ,KCLOUD,cloud_base,cloud_base_buf,ref_base
      1          ,radar_ref_3d,dbz_max_2d,vis_radar_thresh_dbz
      1          ,l_unresolved
      1          ,heights_3d,istatus)
 
             if(istatus .ne. 1)then
-                write(6,*)' Bad status returned from insert_radar'
+                write(6,*)
+     1          ' Error: Bad status returned from insert_radar'      
                 goto999
             endif
 
@@ -837,9 +813,8 @@ C       HORIZONTAL SLICES
 401         format(4x,'Lvl',i4,f8.0,' m     Before Satellite/Radar',
      1            20x,'              After Satellite/Radar')
             scale = 1.
-            CALL ARRAY_PLOT(CVHZ1,cvr_max,NX_L,NY_L,'HORZ CV',c1_name_ar
-     1ray
-     1                                  ,KCLOUD,cld_hts,scale)
+            CALL ARRAY_PLOT(CVHZ1,cvr_max,NX_L,NY_L,'HORZ CV'
+     1                     ,c1_name_array,KCLOUD,cld_hts,scale)
         ENDDO ! k
 
 C       EW SLICES
@@ -889,9 +864,8 @@ C       EW SLICES
 701     format('  Max Cloud Cover           VISIBLE SATELLITE     ',
      1            20x,'              Final Analysis')
         scale = 1.
-        CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_max,NX_L,NY_L,'HORZ CV',c1_
-     1name_array
-     1                                  ,KCLOUD,cld_hts,scale)
+        CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_max,NX_L,NY_L,'HORZ CV'
+     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
 
         I4_elapsed = ishow_timer()
 
@@ -978,9 +952,8 @@ C       EW SLICES
 801     format('                            VISIBLE SATELLITE     ',
      1            20x,'                Snow Cover')
         scale = 1.
-        CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_snow_cycle,NX_L,NY_L,'HORZ 
-     1CV'
-     1                  ,c1_name_array,KCLOUD,cld_hts,scale)
+        CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_snow_cycle,NX_L,NY_L
+     1                 ,'HORZ CV',c1_name_array,KCLOUD,cld_hts,scale)       
 
         write(6,901)
 901     format('                     lm2 (overall) Snow Cover      ',
@@ -1353,9 +1326,8 @@ C       EW SLICES
 
 !           Find the model pressure at this location in the cloud height grid
             if(i-1 .eq. (i-1)/10*10)then ! Update every 10th grid point
-                z_laps = height_to_zcoord2(cld_hts(k),heights_3d,ni,nj,k
-     1laps
-     1                                          ,i,j,istatus)
+                z_laps = height_to_zcoord2(cld_hts(k),heights_3d
+     1                  ,ni,nj,klaps,i,j,istatus)
                 if(istatus .ne. 1)then
 !                   Determine if cloud height grid is above pressure grid
                     if(cld_hts(k) .gt. heights_3d(i,j,klaps))then
@@ -1363,7 +1335,8 @@ C       EW SLICES
                         cf_modelfg(i,j,k) = default_clear_cover
                         go to 1000
                     else
-                        write(6,*)' Bad status from height_to_zcoord2'
+                        write(6,*)' Error: Bad status from '
+     1                           ,'height_to_zcoord2'
                         return
                     endif
                 endif
@@ -1702,13 +1675,13 @@ C       EW SLICES
               if(cvr_max(i,j) .eq. cloud_frac_vis_a(i,j))then ! CVR = VIS
 
                 if(dbz_max_2d(i,j) .lt. vis_radar_thresh_dbz)then
-
-                  write(6,1)i,j,cvr_max(i,j),dbz_max_2d(i,j),cloud_frac_
-     1vis_a(i,j)
+                  write(6,1)i,j,cvr_max(i,j),dbz_max_2d(i,j)
+     1                     ,cloud_frac_vis_a(i,j)
 1                 format(' VIS_RDR: cvr/dbz/vis <',2i4,f8.2,f8.1,f8.2)
+
                 else
-                  write(6,11)i,j,cvr_max(i,j),dbz_max_2d(i,j),cloud_frac
-     1_vis_a(i,j)
+                  write(6,11)i,j,cvr_max(i,j),dbz_max_2d(i,j)
+     1                      ,cloud_frac_vis_a(i,j)
 11                format(' VIS_RDR: cvr/dbz/vis >',2i4,f8.2,f8.1,f8.2)
 
                 endif

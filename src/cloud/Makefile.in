@@ -76,7 +76,7 @@ $(EXE): $(SRC)
 
 debug: $(SRC)
 	rm -f $(EXE) *.o;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g -C'
 
 install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)

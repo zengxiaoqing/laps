@@ -104,7 +104,11 @@ c find max and min
 
       nspace = 3
 
-      jskip = 3
+      if(jmax .le. 50)then
+          jskip = 2
+      else
+          jskip = 3
+      endif
 
       do j = 1,jmax
       do i = 1,ihigh,iskip

@@ -123,7 +123,12 @@ cdis
        return
 
   901  print*,'error reading cloud_nl in ',filename
+       write(*,cloud_nl)
        istatus = 0
        return
 
        end
+
+
+
+
