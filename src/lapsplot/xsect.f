@@ -2814,17 +2814,26 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             call curve (xcoord, ycoord, npts)
 
 !           Label Left Axis
-            if(.true.)then ! Label Height (kft msl) on Left Axis
+            if(.true.)then ! Label Pressure on Left Axis
+                if(NZ_C .gt. 60)then
+                    iskip = 2
+                else
+                    iskip = 1
+                endif
+
                 Do i = ibottom,NZ_C
                     y = i
                     call line (rleft, y, rleft + width * .015, y )
 
 !                   Pressure
-                    x = rleft - width * .030
-                    ipres_mb = nint(zcoord_of_level(i)/100.)
-                    write(c4_string,2014)ipres_mb
-                    call pwrity (x, y, c4_string, 4, 0, 0, 0)
-2014                format(i4)
+                    if(i-1 .eq. ((i-1)/iskip)*iskip)then
+                        x = rleft - width * .030
+                        ipres_mb = nint(zcoord_of_level(i)/100.)
+                        write(c4_string,2014)ipres_mb
+                        call pwrity (x, y, c4_string, 4, 0, 0, 0)
+2014                    format(i4)
+                    endif
+
                 end do
                 call pwrity (rleft - .070 * width,bottom + r_height*0.5,
      1          ' PRESSURE (HPA) ',16,1,90,0)
