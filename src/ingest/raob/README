@@ -22,11 +22,12 @@
       have both heights and pressures for all the levels. This can be tricky 
       as the raw RAOB data may have one or the other depending on whether it 
       is mandatory, significant wind, or significant temperature / dewpoint 
-      data. 
+      data. The analyses will do their best to fill in missing heights or
+      pressures as long as one of them is available.
 
-      Note that all the mandatory and significant levels are interleaved
-      together and sorted by height/pressure. 
-
+      Note that all the mandatory and significant levels must be interleaved
+      together and sorted by increasing height (decreasing pressure). 
+   
       The 'snd' files may contain some RAOBS that lie outside the LAPS domain.
 
       The 'a9time' is the time the balloon is in the mid-troposphere, or
