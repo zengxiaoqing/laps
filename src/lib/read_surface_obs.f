@@ -322,7 +322,7 @@ c
 	  read(11,909)   alt(k),                   !altimeter
      &                   stnp(k),                  !station pressure
      &                   mslp(k),                  !MSL pressure
-     &                   dummy,                    !3-h press change character
+     &                   idummy,                   !3-h press change character
      &                   dummy,                    !3-h pressure change
      &                   dummy, dummy              !pressure exp accuracy, alt exp accuracy
 c
@@ -611,7 +611,7 @@ c
 	  read(11,909)   alt(k),                   !altimeter
      &                   stnp(k),                  !station pressure
      &                   mslp(k),                  !MSL pressure
-     &                   dummy,                    !3-h press change character
+     &                   idummy,                   !3-h press change character
      &                   dummy,                    !3-h pressure change
      &                   dummy, dummy              !pressure exp accuracy, alt exp accuracy
 c
