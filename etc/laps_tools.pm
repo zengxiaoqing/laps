@@ -339,7 +339,7 @@ verif verif/noBal verif/Bal verif/Bkgd);
      print "fsf dirs: @fsf_dirs\n";
 
   }else{
-     (@datadirs) = qw (cdl siprd silog static)
+     (@datadirs) = qw (cdl siprd log static)
   }
 
   foreach (@datadirs){
@@ -485,7 +485,7 @@ sub get_system_type {
 
     foreach (@dirs) {
 #      print "'$_',\n";
-       if($_ eq "siprd"   || $_ eq "silog"){$wrfsystem=1;}
+       if($_ eq "siprd"   || $_ eq "wrfprd"){$wrfsystem=1;}
        if($_ eq "lapsprd" || $_ eq "log")  {$lapssystem=1;}
        }
     if($wrfsystem==1 && $lapssystem==1){
