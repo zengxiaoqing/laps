@@ -48,11 +48,7 @@ cdis
         real*4 ri,rj                        ! Output (I,J on LAPS Grid)
         integer istatus                     ! Output
 
-        real*4 slat1,slat2,slon,n,pi
-
-        parameter (pi=3.1415926535897932)
-
-        save init,umin,umax,vmin,vmax,slat1,slat2,slon,cenlon
+        save init,umin,umax,vmin,vmax
         data init/0/
 
         include 'lapsparms.cmn'
@@ -63,50 +59,11 @@ cdis
         endif
 
         if(init .eq. 0)then
-            if(c6_maproj .eq. 'plrstr')then ! polar stereo
-                slat1 = standard_latitude
-                slon = standard_longitude
-
-                call latlon_to_uv_ps(slat1,slon
-     1                              ,lat(1,1),lon(1,1)
-     1                              ,umin,vmin)
-
-                call latlon_to_uv_ps(slat1,slon
-     1                              ,lat(ni,nj),lon(ni,nj)
-     1                              ,umax,vmax)
-
-            elseif(c6_maproj .eq. 'lambrt')then ! lambert
-                slat1 = standard_latitude
-                slat2 = standard_latitude2
-                slon = standard_longitude
-
-                call latlon_to_uv_lc(slat1,slat2,slon
-     1                              ,lat(1,1),lon(1,1)
-     1                              ,umin,vmin)
-
-                call latlon_to_uv_lc(slat1,slat2,slon
-     1                              ,lat(ni,nj),lon(ni,nj)
-     1                              ,umax,vmax)
-
-            elseif(c6_maproj .eq. 'merctr')then ! mercator
-                slat1  = standard_latitude
-                cenlon = grid_cen_lon_cmn
-                call latlon_to_uv_mc
-     1                  (slat1,cenlon,lat(1,1),lon(1,1),umin,vmin)
-
-                call latlon_to_uv_mc
-     1                  (slat1,cenlon,lat(ni,nj),lon(ni,nj),umax,vmax)        
-
-            else
-                write(6,*)'latlon_to_rlaps: unrecognized projection '
-     1                    ,c6_maproj       
-                stop
-
-            endif
-
+            call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
+            call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
 
             write(6,101)umin,umax,vmin,vmax
-101         format(1x,' Initializing latlon_to_rlaps',4f10.5)
+101         format(1x,' Initializing latlon_to_rlapsgrid',4f10.5)
             init = 1
         endif
 
@@ -116,26 +73,9 @@ cdis
         u0 = umin - uscale
         v0 = vmin - vscale
 
-
 !       Compute ulaps and vlaps
 
-        if(c6_maproj .eq. 'plrstr')then ! polar stereo
-            call latlon_to_uv_ps(slat1,slon,rlat,rlon
-     1                          ,ulaps,vlaps)
-
-        elseif(c6_maproj .eq. 'lambrt')then ! lambert
-            call latlon_to_uv_lc(slat1,slat2,slon,rlat,rlon
-     1                          ,ulaps,vlaps)
-
-        elseif(c6_maproj .eq. 'merctr')then ! mercator
-            call latlon_to_uv_mc(slat1,cenlon,rlat,rlon,ulaps,vlaps)       
-
-        else
-            write(6,*)'latlon_to_rlaps: unrecognized projection '
-     1                ,c6_maproj       
-            stop
-
-        endif
+        call latlon_to_uv(rlat,rlon,ulaps,vlaps,istatus)
 
         ri = (ulaps - u0) / uscale
         rj = (vlaps - v0) / vscale
@@ -151,14 +91,109 @@ cdis
         return
         end
 
-        subroutine latlon_to_uv_ps(slat,slon,rlat,rlon,u,v)
+        subroutine rlapsgrid_to_latlon(ri,rj,lat,lon,ni,nj,rlat,rlon
+     1                                ,istatus)
 
-        if(slat .gt. 0.)then
-            polat = +90.
-        elseif(slat .lt. 0.)then
-            polat = -90.
+!       1997            Steve Albers 
+
+!       This routine assumes a polar stereographic, lambert conformal,
+!       or mercator projection.
+
+        real*4 ri,rj                        ! Input (I,J on LAPS Grid)
+        real*4 lat(ni,nj),lon(ni,nj)        ! Input (Arrays of LAT/LON)
+        integer ni,nj                       ! Input (LAPS Dimensions)
+        real*4 rlat                         ! Output Lat
+        real*4 rlon                         ! Output Lon
+        integer istatus                     ! Output
+
+        save init,umin,umax,vmin,vmax
+        data init/0/
+
+        include 'lapsparms.cmn'
+
+        if(iflag_lapsparms_cmn .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not called'
+            stop
+        endif
+
+        if(init .eq. 0)then
+            call latlon_to_uv(lat(1,1),lon(1,1),umin,vmin,istatus)
+            call latlon_to_uv(lat(ni,nj),lon(ni,nj),umax,vmax,istatus)
+
+            write(6,101)umin,umax,vmin,vmax
+101         format(1x,' Initializing rlapsgrid_to_latlon',4f10.5)
+            init = 1
+        endif
+
+        uscale = (umax - umin) / (float(ni) - 1.)
+        vscale = (vmax - vmin) / (float(nj) - 1.)
+
+        u0 = umin - uscale
+        v0 = vmin - vscale
+
+!       Compute lat,lon
+        ulaps = u0 + uscale * ri
+        vlaps = v0 + vscale * rj
+
+        call uv_to_latlon(ulaps,vlaps,rlat,rlon,istatus)
+
+        istatus = 1
+
+        return
+        end
+
+        
+        subroutine latlon_to_uv(rlat,rlon,u,v,istatus)
+
+!       1997            Steve Albers 
+
+!       This routine assumes a polar stereographic, lambert conformal,
+!       or mercator projection.
+
+        include 'lapsparms.cmn'
+
+        if(iflag_lapsparms_cmn .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not called'
+            stop
+        endif
+
+        if(c6_maproj .eq. 'plrstr')then ! polar stereo
+            slat1 = standard_latitude
+            polat = standard_latitude2
+            slon = standard_longitude
+
+            call latlon_to_uv_ps(rlat,rlon,slat1,polat,slon,u,v)
+
+        elseif(c6_maproj .eq. 'lambrt')then ! lambert
+            slat1 = standard_latitude
+            slat2 = standard_latitude2
+            slon = standard_longitude
+
+            call latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
+
+        elseif(c6_maproj .eq. 'merctr')then ! mercator
+            slat1  = standard_latitude
+            cenlon = grid_cen_lon_cmn
+
+            call latlon_to_uv_mc(rlat,rlon,slat1,cenlon,u,v)
+
         else
-            write(6,*)' subroutine latlon_to_uv_ps: error, slat = 0.'
+            write(6,*)'latlon_to_uv: unrecognized projection '
+     1                ,c6_maproj       
+            stop
+
+        endif
+
+        istatus = 1
+
+        return
+        end
+
+
+        subroutine latlon_to_uv_ps(rlat,rlon,slat,polat,slon,u,v)
+
+        if(polat .ne. +90.)then
+            write(6,*)' latlon_to_uv_ps: ERROR, polat .ne. +90 ',polat      
         endif
 
         a=polat-rlat
@@ -172,7 +207,7 @@ cdis
         return
         end
 
-        subroutine latlon_to_uv_lc(slat1,slat2,slon,rlat,rlon,u,v)
+        subroutine latlon_to_uv_lc(rlat,rlon,slat1,slat2,slon,u,v)
 
         real*4 n
 
@@ -199,7 +234,7 @@ cdis
         return
         end
 
-        subroutine latlon_to_uv_mc(slat,cenlon,rlat,rlon,u,v)
+        subroutine latlon_to_uv_mc(rlat,rlon,slat,cenlon,u,v)
 
         real*4 pi, rpd
 
@@ -214,6 +249,133 @@ cdis
 
         u = angdif(rlon,cenlon) * rpd * b
         v = alog(1./tand(a/2.))       * b
+
+        return
+        end
+
+
+        
+        subroutine uv_to_latlon(u,v,rlat,rlon,istatus)
+
+!       1997            Steve Albers 
+
+!       This routine assumes a polar stereographic, lambert conformal,
+!       or mercator projection.
+
+        include 'lapsparms.cmn'
+
+        if(iflag_lapsparms_cmn .ne. 1)then
+            write(6,*)' ERROR, get_laps_config not called'
+            stop
+        endif
+
+        if(c6_maproj .eq. 'plrstr')then ! polar stereo
+            slat1 = standard_latitude
+            polat = standard_latitude2
+            slon = standard_longitude
+
+            call uv_to_latlon_ps(u,v,slat1,polat,slon,rlat,rlon)
+
+        elseif(c6_maproj .eq. 'lambrt')then ! lambert
+            slat1 = standard_latitude
+            slat2 = standard_latitude2
+            slon = standard_longitude
+
+            call uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
+
+        elseif(c6_maproj .eq. 'merctr')then ! mercator
+            slat1  = standard_latitude
+            cenlon = grid_cen_lon_cmn
+
+            call uv_to_latlon_mc(u,v,slat1,cenlon,rlat,rlon)
+
+        else
+            write(6,*)'uv_to_latlon: unrecognized projection '
+     1                ,c6_maproj       
+            stop
+
+        endif
+
+        istatus = 1
+
+        return
+        end
+
+        subroutine uv_to_latlon_ps(u,v,slat,polat,slon,rlat,rlon)
+
+        if(polat .ne. +90.)then
+            write(6,*)' uv_to_latlon_ps: ERROR, polat .ne. +90 ',polat      
+        endif
+
+        dist=sqrt(u**2+v**2)
+
+        if (dist .eq. 0) then
+            rlat=90.
+            rlon=-90.
+
+        else
+            rlat=atand(dist/2.)
+            rlat=90.-2.*rlat
+c
+            if (u .eq. 0.) then
+                rlon=90.
+
+            else
+                if (u .gt. 0.) then
+                    rlon=atand(v/u)
+                else
+                    rlon=atand(v/u)+180.
+                endif
+
+            endif
+
+        endif
+c
+        rlon=amod(rlon+630.,360.) - 180.
+c
+        return
+        end
+
+        subroutine uv_to_latlon_lc(u,v,slat1,slat2,slon,rlat,rlon)
+
+        real*4 n
+
+        if(slat1 .ge. 0)then
+            s = -1.
+        else
+            s = +1.
+        endif
+
+        if(slat1 .eq. slat2)then   ! tangent lambert
+            n = cosd(90.-slat1)
+        else                       ! two standard latitudes
+            n = alog(cosd(slat1)/cosd(slat2))/
+     1          alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
+        endif
+
+        rlon=slon+atand(-s*u/v)/n
+        rlat=(90.- 2.*atand((-v/cosd(n*(rlon-slon)))**(1./n)))/s      
+
+        return
+        end
+
+        subroutine uv_to_latlon_mc(u,v,slat,cenlon,rlat,rlon)
+
+        parameter (pi=3.1415926535897932)
+        parameter (rpd=pi/180.)
+
+        b = cosd(slat)
+
+        rlat_abs = 90. - atand(exp(-abs(v)/b)) * 2.
+
+        if(v .gt. 0)then
+            rlat =  rlat_abs
+        else
+            rlat = -rlat_abs
+        endif
+
+        rlon = u/b/rpd + cenlon
+        rlon = mod(rlon+540.,360.) - 180.
 
         return
         end
@@ -270,4 +432,3 @@ cdis
 
         return
         end
-
