@@ -164,11 +164,11 @@ C
           endif
 
           write(6,1)a9_timeObs,a9_recptTime 
-          write(11,1)a9_timeObs,a9_recptTime 
+          write(31,1)a9_timeObs,a9_recptTime 
  1        format(' Time - prp/rcvd:'/1x,a9,2x,a9) 
 
           write(6,2)latitude(i),longitude(i),altitude(i)
-          write(11,2)latitude(i),longitude(i),altitude(i)
+          write(31,2)latitude(i),longitude(i),altitude(i)
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
 !         Test for bad winds
@@ -186,7 +186,7 @@ C
 
           else ! write out valid wind
               write(6,3)int(windDir(i)),windSpeed(i)
-              write(11,3)int(windDir(i)),windSpeed(i)
+              write(31,3)int(windDir(i)),windSpeed(i)
  3            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
 
           endif
@@ -205,7 +205,7 @@ C
 
           if(abs(temperature(i)) .lt. 400.)then
               write(6,13)temperature(i)
-              write(11,13)temperature(i)
+              write(31,13)temperature(i)
  13           format(' Temp:'/1x,f10.1)
        
           else
@@ -222,7 +222,7 @@ C
      1       waterVaporQC(i) .ge. 0             )then
               write(6,23)downlinkedRH(i)
               write(6,*)' RH QC value = ',waterVaporQC(i)
-              write(11,23)downlinkedRH(i)
+              write(31,23)downlinkedRH(i)
  23           format(' RH:'/1x,f10.3)
 
           else
@@ -1227,7 +1227,11 @@ C
         wind_err = 0  ! no error
         temp_err = 0  ! no error
         temp = temperature(i) - 273.15  ! convert K to C
-        ws = windSpeed(i) * 1.9438      ! convert m/s to knots
+
+        if(abs(windSpeed(i)) .lt. 1000.)then
+            ws = windSpeed(i) * 1.9438 ! convert m/s to knots
+        endif
+
         alt = altitude(i) * 3.280839895 ! convert m to ft
 
         if (alt .gt. 35000.0) then
