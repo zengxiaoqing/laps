@@ -76,7 +76,7 @@ foreach $radar (@radars){
 #                  dprep fsf/mm5 fua/mm5);
 
 my(@lapsDirs) = (lga, lgb, 
-                 "lvd/goes08", "lvd/goes10", "lvd/gmssat", ctp, 
+                 "lvd/goes09", "lvd/goes10", "lvd/goes12", "lvd/gmssat", ctp, 
                  "rdr/001/raw", "rdr/001/vrc", vrc, 
                  pro, lso, lsq, snd, cdw, pin,
                  @vxx, @dxx,
