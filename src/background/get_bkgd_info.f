@@ -4,7 +4,7 @@
       integer maxbgmodels,len
       parameter (maxbgmodels=10)
       character*150 nest7grid
-      character*150 bgpaths(maxbgmodels)
+      character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
       integer oldest_forecast, max_forecast_delta
       logical use_analysis

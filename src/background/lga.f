@@ -142,7 +142,13 @@ c
       call es_ini
       bg_files=0
       i=0
+c *** Get current time from systime.dat
+c
+      call get_systime(i4time_now,a9,lga_status)
+      lga_status = 0 
+
       do while(lga_status.le.0 .and. i.le.nbgmodel)
+c         print *,'HERE:',lga_status, i, bg_files,reject_cnt
          if(bg_files.le.reject_cnt) then
             i=i+1 
             bgmodel = bgmodels(i)
@@ -156,17 +162,14 @@ c
             stop
          endif
 
-c *** Get current time from systime.dat
-c
-         call get_systime(i4time_now,a9,lga_status)
          call get_acceptable_files(i4time_now,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
      +        ,use_analysis,bg_files,0,cmodel,nx_bg,ny_bg,nz_bg
      +        ,reject_files,reject_cnt)
 
         if(bg_files.le.1) then
-           print*,'No Acceptable files found for model: ',bgpaths(i),
-     +          bgmodels(i) 
+           print*,'No Acceptable files found for model: ',bgpath,
+     +          bgmodel 
            lga_status = 0
         else
 
@@ -201,6 +204,7 @@ c
 
 
         endif
+        
       enddo
 
 c
