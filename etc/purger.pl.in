@@ -131,15 +131,15 @@ foreach $dir (keys(%clean_dirs)){
     }else{
 	@filelist = grep(/^\d\d/, readdir(DIR));
     }
-# since the previous commands will return an empty @filelist array,
-# try for other patterns (raw data files) 
+# since the previous commands can return an empty @filelist array for special
+# filenames (and possibly ones that need purging, try for other patterns (raw data files) 
     if($#filelist < 0){
         opendir(SUBDIR,"$DATAROOT/$dir");
         @listoffiles = readdir SUBDIR;
         $j==0;
         foreach (@listoffiles){
 #          print "listoffiles $_\n";
-           if(/^\D+\.\d+/ || /^\D+\d+\./ && ! /^\./ ){
+           if(/^\D+\.\d+/ || /^\D+\d+\./ || /^\D+\.\D+/ && ! /^\./ ){
              @filelist[$j] = $_; 
              $j++;
            }
