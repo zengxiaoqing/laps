@@ -40,7 +40,6 @@ SRC	= machine_dependent.F \
           check_nan1.f \
           check_nan2.f \
           check_nan3.f \
-          read_namelist.f \
           constant.f \
           convc2f.f \
           conversions.f \
@@ -118,11 +117,13 @@ SRC	= machine_dependent.F \
           rd_laps_static.f \
           read-laps-static.f \
           read_acars_ob.f \
+          read_namelist.f \
           read_surface_obs.f \
           read_surface_old.f \
           readlapsdata.f \
           readlapsheader.f \
           rfill.f \
+          rh2cld.f \
           rootfind.f \
           smf_wisp91.f \
           smf_wisp92.f \

@@ -189,7 +189,8 @@ cdis
            endif
 
            if(istatus .ne. 1)then
-              write(6,*)'get_modelfg_3d_sub: Error reading 3-D file'
+              write(6,*)'get_modelfg_3d_sub: Warning - could not read'
+     1                 ,' 3-D file'
            else ! istatus = 1
                call qc_field_3d(var_2d,field_3d_laps
      1                         ,imax,jmax,kmax,istatus)            

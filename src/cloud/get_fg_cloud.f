@@ -1,7 +1,7 @@
 
         subroutine get_modelfg(cf_modelfg,t_modelfg                      ! O
      1                        ,default_clear_cover                       ! I
-     1                        ,temp_3d,model_q_3d,heights_3d,cld_hts       
+     1                        ,temp_3d,heights_3d,cld_hts                ! I
      1                        ,i4time_needed,ilaps_cycle_time            ! I
      1                        ,ni,nj,klaps,KCLOUD                        ! I
      1                        ,istatus)                                  ! O
@@ -199,13 +199,6 @@
      1            ,i_grid_high
         write(6,*)' # points set to cloud based on condensate = '
      1           ,i_condensate
-
-        return
-        end
-
-        function rh_to_cldcv(rh)
-
-        rh_to_cldcv = rh                                ! fractional rh
 
         return
         end

@@ -262,7 +262,6 @@ cdis
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
-        real*4 model_3d(NX_L,NY_L,NZ_L)
 
         real*4 t_sfc_k(NX_L,NY_L)
         real*4 t_gnd_k(NX_L,NY_L)
@@ -496,7 +495,7 @@ C READ IN LAPS HEIGHTS
 
 C OBTAIN MODEL FIRST GUESS CLOUD COVER FIELD
         call get_modelfg(cf_modelfg,t_modelfg,default_clear_cover
-     1           ,temp_3d,model_3d,heights_3d,cld_hts
+     1           ,temp_3d,heights_3d,cld_hts
      1              ,i4time,ilaps_cycle_time
      1                  ,NX_L,NY_L,NZ_L,KCLOUD
      1                  ,istatus)
