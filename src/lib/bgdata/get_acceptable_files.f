@@ -114,7 +114,7 @@ c     elseif(bgmodel.eq.3)then
          elseif(cmodel(l+1:nclen).eq.'GFS')then
             cwb_model_type='gb'
          elseif(cmodel(l+1:nclen).eq.'TFS')then
-            cwb_model_type='tf'
+            cwb_model_type='sb'
          else
             print*,'Not able to determine CWB model type'
             print*,'cmodel = ',cmodel(1:nclen)

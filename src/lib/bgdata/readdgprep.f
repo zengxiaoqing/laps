@@ -196,7 +196,7 @@ c       to covert the FA filename but currently is not.  J.Smart
          if(cwb_type.eq.'gfs')then
             cpref='gb'
          elseif(cwb_type.eq.'tfs')then
-            cpref='gs'
+            cpref='sb'
          else
             cpref='nf'
          endif
@@ -274,7 +274,7 @@ c           enddo
 
       call tcbogus(nx,ny,nz,ht,tp,sh,uw,vw,ht_sfc,
      +             tp_sfc,td_sfc,uw_sfc,vw_sfc,mslp,
-     +             prk,filename,bgmodel)
+     +             prk,filename,bgmodel,cwb_type)
 c qc 
 
       do k=1,nz
