@@ -53,24 +53,22 @@ c       cost and return.
         real psfc
         real emiss
         real gimrad
-        integer ngoes,kan(3)
-      integer ngoes_cost,isnd_cost
-        data kan/23,24,25/
+        integer ngoes,kan(18)
+        integer ngoes_cost,isnd_cost,chan_used
         real radiance (18)
         real theta,tau(40),tskin
 
         integer lsfc_cost
-        real radiance_ob(3),p_cost(40),t_cost(40),
+        real radiance_ob(18),p_cost(40),t_cost(40),
      1  ozo_cost(40),tskin_cost,psfc_cost,
      1  theta_cost,w_cost(40)
         real p(40),t(40),w(40),ozo(40)
         common/atmos/p,t,w,ozo
         common/cost_var/radiance_ob, p_cost, t_cost,ozo_cost,
      1  tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost,
-     1  ngoes_cost,isnd_cost
+     1  ngoes_cost,isnd_cost,chan_used
 
         integer i,j
-
 
 
         ngoes = ngoes_cost
@@ -79,13 +77,27 @@ c  set up for sounder if needed instead of imager
 
         if (isnd_cost.eq.1) then ! sounder radiances used
 
+
+
             kan(1) = 10 ! 7.4 like ch3
             kan(2) = 8  ! 11.02 like ch4
             kan(3) = 7  ! 12.02 like ch5
+            kan(4) = 11
+            kan(5) = 16
+            kan(6) = 6
+            kan(7) = 13
+
+          else  ! imager radiances used
+
+
+            kan(1) = 23 !  7.4  imager ch3
+            kan(2) = 24  ! 11.02  imager ch4
+            kan(3) = 25  ! 12.02  imager ch5
+            
 
         endif
 
-
+ 
         emiss = .99
 
 
@@ -118,7 +130,7 @@ c       set up wisconsin variables in common
 c       perform forward model computation for radiance
 
 
-        do j=1,1
+        do j=1,chan_used
 
         call taugim(t,w,ozo,theta,ngoes,kan(j),tau)
         radiance(j) = gimrad(tau,t,tskin,kan(j),lsfc,psfc,emiss)
@@ -129,11 +141,11 @@ c       compute cost function
 
         func = 0.0
 
-        do j = 1,1
+        do j = 1,chan_used
         func = func + (radiance_ob(j)-radiance(j))**2/2.
         enddo
         do j = 1,3
-        func = func + ((x(j) - 1.)**2 )* .5
+        func = func + ((x(j) - 1.)**2 )
         enddo
 
 c       print *, (radiance(i),i=1,3),x

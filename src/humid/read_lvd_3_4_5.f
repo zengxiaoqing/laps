@@ -31,7 +31,7 @@ cdis
 cdis
 
 
-        subroutine read_lvd_3_4_5(i4time,ch3,ch4,ch5,
+        subroutine read_lvd_3_4_5(dir,i4time,ch3,ch4,ch5,
      1   ii,jj,kk,ngoes, istatus)
 
 
@@ -49,10 +49,10 @@ c parameter variables
         integer i4time
         integer ngoes
         integer istatus
-
-
-
         character*256 dir
+
+
+
         character*31 ext
         integer lapsp(1)
         character*3     var(1)
@@ -76,9 +76,9 @@ c parameter variables
 c real laps data for chan 3
 
         
-c        dir = '../lapsprd/lvd/'
+
         ext = 'lvd'
-        call get_directory('lvd',dir,len)
+c        call get_directory('lvd',dir,len)
         var(1) = 's4a'
         lapsp(1) = 0
 
@@ -105,7 +105,7 @@ c real laps data for chan 4
 
 c        dir = '../lapsprd/lvd/'
         ext = 'lvd'
-        call get_directory('lvd',dir,len)
+c        call get_directory('lvd',dir,len)
         var(1) = 's8a'
         lapsp(1) = 0
 
@@ -124,7 +124,7 @@ c real laps data for chan 5
 
 c        dir = '../lapsprd/lvd/'
         ext = 'lvd'
-        call get_directory('lvd',dir,len)
+c        call get_directory('lvd',dir,len)
 
         var(1) = 'sca'
         lapsp(1) = 0

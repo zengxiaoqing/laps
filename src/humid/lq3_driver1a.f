@@ -439,7 +439,7 @@ c        rams_dir = '../lapsprd/ram/'
         ramsvar(i) = 'sh'
         enddo
 
-        do i = 1, 24 ! try this for 24 hours
+        do i = 1, 48 ! try this for 48 hours
         ramsi4time = save_i4time - 3600*(i-1) + 60*(i-1)
         call make_fnam_lp (ramsi4time,ramsfile,istatus)
         print *, ramsfile
@@ -491,7 +491,7 @@ c first the rh data
         i4time = save_i4time
         filename = savefilename
 
-c use maps spacific humidity  (now contained in maps_rh variable) directly
+c use maps specific humidity  (now contained in maps_rh variable) directly
 
 
         do k = 1,kk

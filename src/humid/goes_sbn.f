@@ -140,6 +140,7 @@ c internal variables
       integer i4time_sat
       integer i,j,k,k2
       real local_model_p(40)
+      integer k500, k700
 
 c climate model variables
       integer*4 julian_day
@@ -150,8 +151,8 @@ c climate model variables
       real rmd
       integer n_snd_ch
       parameter (n_snd_ch = 18)
-      integer kanch(3)
-      data kanch /10,8,7/
+      integer kanch(7)
+      data kanch /10,8,7,11,16,6,13/
 
 
 c dynamic dependent variables
@@ -181,14 +182,14 @@ c       powell specific arrays
       real xi(3,3)
       real ftol,fret
       integer iter(ii,jj)
-      integer ngoes_cost,isnd_cost
-      real radiance_ob(3),p_cost(40),t_cost(40),ozo_cost(40),
+      integer ngoes_cost,isnd_cost,chan_used
+      real radiance_ob(18),p_cost(40),t_cost(40),ozo_cost(40),
      1  tskin_cost,psfc_cost,
      1        theta_cost,w_cost(40)
       integer lsfc_cost
       common/cost_var/radiance_ob, p_cost, t_cost,ozo_cost,
      1        tskin_cost, lsfc_cost,psfc_cost,theta_cost,w_cost,
-     1        ngoes_cost,isnd_cost
+     1        ngoes_cost,isnd_cost,chan_used
       real func, func3          ! function typing for cost function
       external func,func3
 
@@ -212,14 +213,7 @@ c  laplace solver variables
 c  misc variables
       integer failures
       character*4 blank
-cdline        integer*4 mlevel(kk)
-cdline        character*125 commentline
-cdline        character*64 dummy_string
-cdline        real research_output (ii,jj,kk)
-cdline        real s_btemp(ii,jj,18)  !sounder b_temp
-cdline        real s_radiance(ii,jj,18)  ! sounder radiance
-cdline        real w_model (39)  ! forward model weighting function
-cdline        real p_dm (39)  ! derivate pressures
+
       real rads (ii,jj,n_snd_ch)
 
         data local_model_p/.1,.2,.5,1.,1.5,2.,3.,4.,5.,7.,10.,15.,
@@ -258,9 +252,6 @@ c       constants
         d2r = pi/180.
         blank = '  '
 
-cdline              do i = 1,kk
-cdline              mlevel(i) = p(i)
-cdline              enddo
 
 
 
@@ -279,7 +270,24 @@ c       get satellite IMAGE radiance data for the laps grid
 
       if (isnd .eq. 0) then ! seek imager data
 
+       chan_used = 3         
+
          call get_directory('lvd',path,len)
+
+c     install new changes for revised satellite path
+
+ 
+       if (ngoes.eq.8) then
+          path = path(1:len)//'goes08/'
+          len = len + 7
+       elseif (ngoes.eq.9) then
+          path = path(1:len)//'goes09/'
+          len = len + 7
+       elseif (ngoes.eq.10) then
+          path = path(1:len)//'goes10/'
+          len = len + 7
+       endif
+
 
          call get_latest_file (path,i4time,filename1,istatus)
 
@@ -289,7 +297,7 @@ c       get satellite IMAGE radiance data for the laps grid
 c       convert filename to i4time_sat
         call i4time_fname_lp (filename1,i4time_sat,istatus)
         write (6,*) 'Getting satellite radainces (lvd)'
-        call read_lvd_3_4_5 (i4time_sat,ch3,ch4,ch5,
+        call read_lvd_3_4_5 (path,i4time_sat,ch3,ch4,ch5,
      1      ii,jj,kk,ngoes,istatus)
 
         if (istatus.ne.1) then
@@ -311,6 +319,7 @@ c  acquire sounder data (experimental)
 
       if(isnd.eq.1) then ! get SOUNDER data only, still experimental
 
+       chan_used = 7   ! change to 7 for full utilization.       
 
        call rsr (i4time, rads, ii,jj,n_snd_ch,ngoes, istatus)
        if (istatus .ne. 1) then
@@ -320,7 +329,7 @@ c  acquire sounder data (experimental)
 
 
 
-      endif ! only get SOUNDER data , experimental commment out.
+      endif ! only get SOUNDER data
 
 
 c   set up time for regular laps interval
@@ -604,48 +613,11 @@ c perform forward model computation for radiance
           
 
 
-cdline          do kan = 1,n_snd_ch !sounder channels for research
-
-cdline        call taugim(model_t(1,i,j),model_mr(1,i,j),ozo,
-cdline    1                  theta(i,j),ngoes,kan,tau)
-cdline        call weight_func (tau,model_p,40,w_model,p_dm,39)
-cdline        s_radiance(i,j,kan) = gimrad(tau,model_t(1,i,j),tskin(i,j),
-cdline    1                              kan,lsfc(i,j),psfc(i,j),emiss)
-cdline        s_btemp(i,j,kan) = britgo(s_radiance(i,j,kan),kan)
-
-cdline          enddo ! Kan for sounder
 
 
       enddo
       enddo
 
-
-
-
-c  generate table of clear sounder btemps, computed and observed
-
-cdline       open (34,file='sounder.out',form='formatted')
-
-cdline       do j = 1, jj
-cdline       do i = 1, ii
-
-cdline        do kan = 1,n_snd_ch
-cdline        if(rads(i,j,kan).gt.0.0 .and. rads(i,j,kan).lt.500.) then
-cdline        rads(i,j,kan) = britgo(rads(i,j,kan),kan)
-cdline        endif
-cdline        enddo ! kan
-
-
-cdline          write(34,77) i,j,(s_btemp(i,j,kan), rads(i,j,kan) 
-cdline    1                      ,kan=1,n_snd_ch)
-cdline77        format (i2,1x,i2,1x,36(f7.3,1x))
-
-cd          write(34,*) i,j,ch4(i,j),rads(i,j,8)
-
-cdline       enddo
-cdline       enddo
-
-cdline       close(34)
 
 
 
@@ -660,6 +632,12 @@ c   only for starters.
             factor(i,j) = rmd
             factor2(i,j) = rmd
 
+            if (i .eq. 1 .and. j.eq.1) then  !first time set
+                     x(1) = 1.0
+                     x(2) = 1.5
+                     x(3) = 0.8
+            endif
+
 
 
             if (ch3(i,j).eq.rmd) then
@@ -672,6 +650,19 @@ c   only for starters.
                print*, 'missing data in channel 5 abort', i,j
 
             else
+
+              if (isnd.eq.1) then
+                    do k = 4,7
+                       if (rads(i,j,k) .eq. rmd) then
+                         print*, 'missing data in sounder channel ',
+     1                            k,' index ',i,j
+                         go to 145
+                       endif
+                    enddo
+              endif
+
+
+
                continue
 
 c               if( cld(i,j) .eq. 0 .or. cld(i,j).ge.1.) then ! clear
@@ -696,8 +687,10 @@ c                  write (25, *) ch5(i,j), btemp(i,j,3)
 
                   do k = 1,3
                      xi(k,k) = -.0001
-                     x(k) = 1.0
+c                     x(k) = 1.0
                   enddo
+
+
 
 
                   if(isnd.eq.0) then ! USE AS IMAGER DATA
@@ -710,6 +703,10 @@ c                  write (25, *) ch5(i,j), btemp(i,j,3)
                      radiance_ob(1) = plango(ch3(i,j),10)
                      radiance_ob(2) = plango(ch4(i,j),8)
                      radiance_ob(3) = plango(ch5(i,j),7)
+                     radiance_ob(4) = rads(i,j,kanch(4))
+                     radiance_ob(5) = rads(i,j,kanch(5))
+                     radiance_ob(6) = rads(i,j,kanch(6))
+                     radiance_ob(7) = rads(i,j,kanch(7))
                   endif
 
 
@@ -738,18 +735,21 @@ c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
 
 
                   write(6,33) abs(x(1)), abs(x(2)),abs(x(3)),
-     1                 i,j,psfc(i,j),iter(i,j)
+     1                 i,j,fret,iter(i,j)
  33               format(3(f7.2,2x),i3,i3,1x,f7.2,i3)
 
 
 
                   if (cld(i,j) .eq. 0. .and. iter(i,j) .lt. 50
-     1                 .and. abs(abs(x(2))-1.) .lt. .05 ) then
-                     factor(i,j) = abs(x(3))
+     1                 .and. abs(abs(x(1))-1.) .lt. .1 .and.
+     1                  iter(i,j) .gt. 1 ) then
+                     factor(i,j)  = abs(x(3))
                      factor2(i,j) = abs(x(2))
+                  elseif (cld(i,j).gt.0.)then
+                     write(6,*) '  .... coordinate rejected, cloudy'
                   else
                      write(6,*) i,j, '  .... coordinate rejected', 
-     1                    abs(x(2)),iter(i,j), cld(i,j)
+     1                    abs(x(1)),iter(i,j), cld(i,j)
 
                      failures = failures + 1
 
@@ -763,6 +763,8 @@ c               call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
 
 
             endif               ! end of missing data flag test
+
+145          continue !(placed here for sounder missing data flag test)
 
          enddo
       enddo
@@ -783,6 +785,7 @@ c  analyze top level adjustments.
 
        do j = 1,jj
           do i = 1,ii
+             mask(i,j) = 0
              if (factor(i,j).ne.rmd ) then
                 pn = pn+1
                 points(1,pn) = factor(i,j)
@@ -794,37 +797,13 @@ c  analyze top level adjustments.
           enddo
        enddo
 
-c  d-lines that follow are for  RESEARCH purposes!
 
-cdline        commentline = 'Early version without satellite input'
-cdline        path='/data/mdlg/birk/lq3_before/'
-cdline         do k = 1,kk
-cdline         do j = 1,jj
-cdline         do i = 1,ii
-cdline             if(sh(i,j,k) .le. 0.0 ) then
-cdline                 research_output(i,j,k) = rmd
-cdline             else
-cdline                 research_output(i,j,k) = sh(i,j,k)
-cdline             endif
-cdline         enddo
-cdline         enddo
-cdline         enddo
-cdline        call writef_sp
-cdline    1          (i4time,commentline,mlevel,path,research_output,
-cdline    1            ii,jj,kk,istatus)
-
-
-cdline        call opngks
-cdline        call plotfield(sh(1,1,17),ii,jj)
 
       if (pn.ne.0) then
 
          call prep_grid(ii,jj,data_anal,points,pn)
          call slv_laplc (data_anal,mask,ii,jj)
          call smooth_grid2 (ii,jj,data_anal,1)
-cdline        call plotfield (data_anal,ii,jj)
-
-
 
       else
          write(6,*) 
@@ -833,43 +812,83 @@ cdline        call plotfield (data_anal,ii,jj)
 
       endif
 
+
+c  find k500 (level at or above 500)
+
+      do k = 1, kk
+       if (p(k) .le. 500.)then
+        k500 = k
+        go to 475
+       endif
+      enddo
+475   continue
+
+c  find k700 (level at or above 700)
+      do k = 1, kk
+       if (p(k) .le. 700.)then
+        k700 = k
+        go to 476
+       endif
+      enddo
+476   continue
+
+
 c       modify lq3 field  top level
 
       do j = 1,jj
          do i = 1,ii
-            do k = 14,21        !between 475 and 100 mb
+            do k = k500+1, kk        !between 475 and 100 mb
 
                sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
-
 
             enddo
          enddo
       enddo
 
+c  analyze second level adjustments.
+
+       pn = 0
+
+       do j = 1,jj
+          do i = 1,ii
+             mask(i,j) = 0
+             if (factor2(i,j).ne.rmd ) then
+                pn = pn+1
+                points(1,pn) = factor2(i,j)
+                points(2,pn) = i
+                points(3,pn) = j
+                mask(i,j) = 1
+                data_anal(i,j) = factor2(i,j)
+             endif
+          enddo
+       enddo
 
 
-cdline        call plotfield(sh(1,1,17),ii,jj)
-cdline        call clsgks
 
-cdline        dummy_string = 'mv gmeta /data/mdlg/birk/gmeta/'//filename
+      if (pn.ne.0) then
 
-cdline        call system (dummy_string)
-cdline        commentline = 'Final version with satellite input'
-cdline        path='/data/mdlg/birk/lq3_after/'
-cdline         do k = 1,kk
-cdline         do j = 1,jj
-cdline         do i = 1,ii
-cdline             if(sh(i,j,k) .le. 0.0 ) then
-cdline                 research_output(i,j,k) = rmd
-cdline             else
-cdline                 research_output(i,j,k) = sh(i,j,k)
-cdline             endif
-cdline         enddo
-cdline         enddo
-cdline         enddo
-cdline        call writef_sp
-cdline    1     (i4time,commentline,mlevel,path,research_output,
-cdline    1       ii,jj,kk, istatus)
+         call prep_grid(ii,jj,data_anal,points,pn)
+         call slv_laplc (data_anal,mask,ii,jj)
+         call smooth_grid2 (ii,jj,data_anal,1)
+
+      else
+         write(6,*) 
+     1        'pn = 0,no acceptable data to analyze for adjustment'
+         return
+
+      endif
+
+c       modify lq3 field  second level
+
+      do j = 1,jj
+         do i = 1,ii
+            do k = k700,k500        !between 700 and 500 mb
+
+               sh(i,j,k) = sh(i,j,k) * data_anal(i,j)
+
+            enddo
+         enddo
+      enddo      
 
 
 
