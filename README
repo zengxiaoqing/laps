@@ -2254,7 +2254,7 @@ Inputs:
 
         Note that narrowband data (e.g. WSR 88D Level-III RPG)
         can also be used as long as it is converted to the required polar 
-        coordinate, NetCDF format. This is in fact being done for the AWIPS 4.2
+        coordinate, NetCDF format. This is in fact being done for the AWIPS 
         implementation of LAPS for a low-level tilt from a single radar, via 
         the 'etc/LapsRadar.pl' script running in the AWIPS environment. The 
         comment section at the top of this script explains how this 4 bit
