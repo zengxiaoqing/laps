@@ -30,9 +30,10 @@ cdis
 cdis
 cdis
 
-        subroutine get_vis(i4time,vis_in,vis_out,solar_alt
-     1                    ,cloud_frac_vis_a,albedo,ihist_alb
-     1                    ,ni,nj,nk,r_missing_data,istatus)
+        subroutine get_vis(i4time,solar_alt                        ! Input
+     1                    ,cloud_frac_vis_a,albedo,ihist_alb       ! Output
+     1                    ,ni,nj,nk,r_missing_data                 ! Input
+     1                    ,istatus)                                ! Output
 
 !       Steve Albers 1997
 
@@ -41,8 +42,6 @@ cdis
         real*4 albedo(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
-        real*4 vis_in(ni,nj)
-        real*4 vis_out(ni,nj)
         real*4 solar_alt(ni,nj)
         real*4 cloud_frac_vis_a(ni,nj)
         integer*4 mxstn
@@ -62,6 +61,16 @@ cdis
             ihist_alb(i) = 0
             ihist_frac_sat(i) = 0
         enddo ! i
+
+!       Initialize
+        do i = 1,ni
+        do j = 1,nj
+            albedo(i,j) = r_missing_data
+            cloud_frac_vis_a(i,j) = r_missing_data
+        enddo ! j
+        enddo ! i
+
+        n_missing_albedo = ni*nj
 
 !       Read in albedo data
         write(6,*)' Getting the VIS data from LVD file'
@@ -162,7 +171,7 @@ cdis
         return
         end
 
-        subroutine insert_vis(i4time,clouds_3d,vis_in,vis_out,cld_hts
+        subroutine insert_vis(i4time,clouds_3d,cld_hts
      1      ,topo,cloud_frac_vis_a,albedo,ihist_alb
      1      ,ni,nj,nk,r_missing_data
      1      ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
@@ -185,8 +194,6 @@ cdis
         real*4 cld_hts(nk)
 
 !       This stuff is for reading VIS data from LVD file
-        real*4 vis_in(ni,nj)
-        real*4 vis_out(ni,nj)
         real*4 cloud_frac_vis_a(ni,nj)
         integer*4 mxstn
         parameter (mxstn = 100)       ! max number of "stations" in data file
