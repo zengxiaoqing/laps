@@ -274,12 +274,15 @@ cdis
 !       endif ! Data is within time window
 
 !       Calculate and write out Storm Steering Wind Field (ustorm, vstorm)
-        write(6,*)
-        write(6,*)' Calculating Mean Wind'
 
 !       Get layer mean wind
-        call mean_wind(uanl,vanl,topo,imax,jmax,kmax
-     1                ,umean,vmean,ustorm,vstorm,istatus)
+        if(.false.)then
+            call mean_wind(uanl,vanl,topo,imax,jmax,kmax
+     1                    ,umean,vmean,ustorm,vstorm,istatus)
+        else
+            call mean_wind_bunkers(uanl,vanl,topo,imax,jmax,kmax
+     1                    ,heights_3d,umean,vmean,ustorm,vstorm,istatus)       
+        endif
 
         if(istatus .ne. 1)then
             write(6,*)' FATAL ERROR in MEAN_WIND ROUTINE'
