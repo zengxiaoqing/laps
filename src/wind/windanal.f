@@ -174,28 +174,11 @@ csms$serial(default=ignore)  begin
      1            uobs,vobs,wt_p,istatus)
 csms$serial end
 
-      if(i_3d .eq. 1)then
-          l_3d = .true.
-      elseif(i_3d .eq. -1)then
-          l_3d = .false.
-      else ! conditional setting of l_3d when i_3d=0
-          if(n_radars .eq. 0 .and. imax*jmax .le. 40000)then
-              l_3d = .true.
-          else
-              l_3d = .false.
-          endif
-      endif
-
-      write(6,*)' i_3d/n_radars/n_grid_pts/l_3d '
-     1           ,i_3d, n_radars, imax*jmax, l_3d
+      l_3d = .true.
 
       rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
 
-      if(l_3d)then
-          n_iter_wind = 1
-      else
-          n_iter_wind = n_iter_wind_in
-      endif
+      n_iter_wind = 1
 
       do iter = 1,n_iter_wind
 
@@ -487,29 +470,6 @@ csms$>       fnorm, l_analyze, rms_thresh , out>:default=ignore)  begin
  605  format(/' # of Non-Radar  GOOD/BAD QC = ',2i6,7x
      1       ,'% rejected = ',f6.1)
 
-      if(.not. l_3d)then ! we use fnorm_calc for l_3d case now
-!         Initialize fnorm array used in barnes_multivariate
-          write(6,*)' Creating fnorm LUT'
-
-!         When the distance = r0_norm, the fnorm is effectively 1
-          call get_fnorm_max(imax,jmax                                ! I
-     1                  ,r0_norm,r0_value_min_dum,fnorm_max_dum)      ! O
-
-          r0_norm_sq = r0_norm**2
-          exp_offset = 70.
-          expm80 = exp(-80.)
-          do iii = 0,n_fnorm
-              dist_norm_sq = (float(iii)/r0_norm_sq)
-              arg = dist_norm_sq - exp_offset
-              if(arg .le. 80.)then
-                  fnorm(iii) = exp(-arg)
-              else
-                  fnorm(iii) = expm80
-              endif
-          enddo
-
-      endif ! l_3d
-
       I4_elapsed = ishow_timer()
 
 !     Perform 1st pass analysis of non-radar difference obs
@@ -553,22 +513,6 @@ csms$serial(default=ignore)  begin
       call move_3d(varbuff(1,1,1,2),vpass1,imax,jmax,kmax)
 
       I4_elapsed = ishow_timer()
-
-      if(.not. l_3d)then
-        do k = 1,kmax
-          if(n_obs_lvl(k) .eq. 0)then
-              write(6,311)k
-311           format(1x,' No obs at lvl',i3,
-     1                  ' Using Zero array as 1st Pass')
-              do j=1,jmax
-              do i=1,imax
-                  upass1(i,j,k) = 0.
-                  vpass1(i,j,k) = 0.
-              enddo ! i
-              enddo ! j
-          endif
-        enddo ! k
-      endif
 
 !     Perform radar QC by differencing radial velocities and first pass analysis
       do i_radar = 1,n_radars
@@ -630,7 +574,7 @@ csms$serial(default=ignore)  begin
      1        ,n_radarobs_tot_unfltrd                     ! Input
      1        ,istatus                                    ! Input/Output
      1                                                          )
-          if(icount_radar_total .gt. 0 .or. .not. l_3d)then
+          if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
 
 csms$insert      print *, 'Error Parallelization not done for this code section'
 csms$insert      stop
@@ -689,7 +633,7 @@ csms$insert      stop
      1        ,istatus                                    ! Input/Output
      1                                                          )
 
-          if(icount_radar_total .gt. 0 .or. .not. l_3d)then
+          if(icount_radar_total .gt. 0 .or. .not. .true.)then ! l_3d
 
           I4_elapsed = ishow_timer()
 
@@ -719,17 +663,7 @@ csms$insert      stop
 !         Make sure each level of uanl and vanl is initialized in the event it
 !         was not analyzed.
           do k = 1,kmax
-              if(n_obs_lvl(k) .eq. 0 .and. .not. l_3d)then
-                  write(6,411)k
-411               format(1x,' No obs at lvl',i3,
-     1                  ' Insert Zero array into uanl,vanl')
-                  do j=1,jmax
-                  do i=1,imax
-                      uanl(i,j,k) = 0.
-                      vanl(i,j,k) = 0.
-                  enddo ! i
-                  enddo ! j
-              elseif(.not. l_analyze(k)
+              if(.not. l_analyze(k)
      1               .or. icount_radar_total .eq. 0)then
                    write(6,412)k
 412                format(' No multi-radar obs at lvl',i3,
@@ -819,7 +753,7 @@ csms$insert      stop
           enddo ! j
 
 
-          if(l_analyze(k) .OR. (l_3d .and. icount_radar_total .gt. 0)
+          if(l_analyze(k) .OR. (.true. .and. icount_radar_total .gt. 0) ! l_3d
      1                         )then ! This depends on the presence of radar obs
               write(6,511)k
 511           format(' Use 2nd Pass for lvl',i3)
@@ -1462,31 +1396,15 @@ csms$ignore begin
       call get_r_missing_data(r_missing_data, istatus)
       if(istatus .ne. 1)return
 
-      if(l_3d)then
-          vert_rad_pirep = 0
-          vert_rad_sfc   = 0
-          vert_rad_cdw   = 0
-          vert_rad_prof  = 0
+      vert_rad_pirep = 0
+      vert_rad_sfc   = 0
+      vert_rad_cdw   = 0
+      vert_rad_prof  = 0
 
-          pres_range_pirep = 0.
-          pres_range_cdw   = 0.
-          pres_range_sfc   = 0.
-          pres_range_prof  = 0.
-
-      else
-          call get_vert_rads   (vert_rad_pirep,
-     1                          vert_rad_sfc,
-     1                          vert_rad_cdw,
-     1                          vert_rad_prof,
-     1                          istatus)
-          if(istatus .ne. 1)return
-
-          pres_range_pirep = vert_rad_pirep * 5000. + 1.
-          pres_range_cdw   = vert_rad_cdw   * 5000. + 1.
-          pres_range_sfc   = vert_rad_sfc   * 5000. + 1.
-          pres_range_prof  = vert_rad_prof  * 5000. + 1.
-
-      endif
+      pres_range_pirep = 0.
+      pres_range_cdw   = 0.
+      pres_range_sfc   = 0.
+      pres_range_prof  = 0.
 
 !     Initialize the obs_out columns
       do k = 1,kmax
@@ -1496,7 +1414,7 @@ csms$ignore begin
       enddo ! k
 
       do k = 1,kmax
-          if(l_3d)then
+          if(.true.)then ! l_3d
               kklow = k
               kkhigh = k
           else
@@ -1506,7 +1424,7 @@ csms$ignore begin
 
           if(weights(i,j,k) .eq. weight_pirep)then ! Spread this pirep vertically
               do kk = kklow,kkhigh
-                  if(l_3d)then
+                  if(.true.)then ! l_3d
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
@@ -1530,7 +1448,7 @@ csms$ignore begin
 
           if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
               do kk = kklow,kkhigh
-                  if(l_3d)then
+                  if(.true.)then ! l_3d
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
@@ -1554,7 +1472,7 @@ csms$ignore begin
 
           if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
               do kk = kklow,kkhigh
-                  if(l_3d)then
+                  if(.true.)then ! l_3d
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
@@ -1582,7 +1500,7 @@ csms$ignore begin
               kp1 = min(kmax,k+1)
               if(weights(i,j,kp1) .eq. r_missing_data)then
               do kk = kklow,kkhigh
-                  if(l_3d)then
+                  if(.true.)then ! l_3d
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
@@ -1609,7 +1527,7 @@ csms$ignore begin
               km1 = max(1,k-1)
               if(weights(i,j,km1) .eq. r_missing_data)then
               do kk = kklow,kkhigh
-                  if(l_3d)then
+                  if(.true.)then ! l_3d
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
