@@ -1061,14 +1061,18 @@ c
 
              if(ilvd.gt.1)then
               c33_label='LAPS B-Temps (C): '//c_sat_id(k)//'/'//var_2d
+              vasmx=-255.
+              vasmn=255.
               do i = 1,NX_L
               do j = 1,NY_L
                  vas(i,j) = vas(i,j) - 273.15
+                 vasmx=int(max(vas(i,j),vasmx))
+                 vasmn=int(min(vas(i,j),vasmn))
               enddo
               enddo
               clow = -80.
               chigh = +40.
-              cint = 10.
+              cint = (vasmx-vasmn)/10.
               scale = 1e0
              elseif(var_2d.eq.'ALB')then
               c33_label='LAPS Albedo '//c_sat_id(k)
