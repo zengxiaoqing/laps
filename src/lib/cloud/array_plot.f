@@ -30,11 +30,13 @@ cdis
 cdis
 cdis
 
-      subroutine array_plot(a,b,imax,jmax,NAME,name_array,kmax,cld_hts,s
-     1cale)
+      subroutine array_plot(a,b,imax,jmax,NAME,name_array,kmax,cld_hts
+     1                     ,scale)
 
+!    ~1990        S. Albers - Ascii plots of cloud fields
 !     1997 Aug 01 K. Dritz  - Changed NX_L to imax and NY_L to jmax
 !     1997 Aug 01 K. Dritz  - Removed include of lapsparms.for
+!     1997 Oct    S. Albers - Make plots work with variable domain sizes.
 
       dimension a(imax,jmax),b(imax,jmax),ia(imax,jmax)
       character*1 c1a_array(imax,jmax),c1b_array(imax,jmax)
@@ -77,50 +79,66 @@ c find max and min
  1005      FORMAT(1X,2e12.3,' Max min ',a10)
       ENDIF
 
-!     sum=sum/cnt
-!     diffx=amax-sum
-!     diffn=sum-amin
-!     IF(DIFFN.EQ.0.AND.DIFFx.EQ.0) THEN
-!          write(6,1235) CNT,SUM
-! 1235 FORMAT(1X,'ALL 'F6.0,' POINTS HAVE EQUAL VALUE OF ',
-!     1E12.4)
-!         RETURN
-!     ENDIF
-      fact=1.
-      iter=1
-      IFLAG=0
+      ihigh = imax
+
+      if(imax .gt. 80)then
+          iskip = 2
+      else
+          iskip = 1
+      endif
+
+      nplot = (ihigh - 1) / iskip + 1
+
+      if(nplot .gt. 65)then ! Prevent lines from getting too long
+          nplot = 65
+          ihigh = 1 + (nplot-1) * iskip
+      endif
+
+      nspace = 3
+
+      jskip = 3
 
       do j = 1,jmax
-      do i = 1,imax
+      do i = 1,ihigh,iskip
         c1a_array(i,j) = c1_cov(int(min(max(A(I,J)*10.*scale,0.),13.)))
         c1b_array(i,j) = c1_cov(int(min(max(B(I,J)*10.*scale,0.),13.)))
+
         if(NAME(1:4) .eq. 'HORZ')then ! Horizontal Section
-            if(name_array(i,j) .ne. ' ')then
-                c1a_array(i,j) = name_array(i,j)
-                c1b_array(i,j) = name_array(i,j)
-            endif
+            iil = max(i -  iskip    / 2, 1)
+            iih = min(i + (iskip-1) / 2, imax)
+            jjl = max(j -  jskip    / 2, 1)
+            jjh = min(j + (jskip-1) / 2, jmax)
+
+            do ii = iil,iih
+            do jj = jjl,jjh
+                if(name_array(ii,jj) .ne. ' ')then
+                    c1a_array(i,j) = name_array(ii,jj)
+                    c1b_array(i,j) = name_array(ii,jj)
+                endif
+
+            enddo ! jj
+            enddo ! ii
+
         endif
       enddo
       enddo
-
-!     iplot = min(imax,57)
-      iplot = 57
 
       if(NAME(1:4) .eq. 'VERT')then     ! Vertical Section
           do j = jmax,1,-2
               iarg = nint(cld_hts(j))
               write(6,1001)iarg,
-     1   (c1a_array(i,j),i=1,iplot),
-     1   (c1b_array(i,j),i=1,iplot)
- 1001         FORMAT(1X,i6,2x,57A1,4x,57A1)
+     1                     (c1a_array(i,j),i=1,ihigh,iskip),
+     1                     (c1b_array(i,j),i=1,ihigh,iskip)
+ 1001         FORMAT(1X,i6,2x,<nplot>A1,4x,<nplot>A1)
           enddo ! j
+
       elseif(NAME(1:4) .eq. 'HORZ')then ! Horizontal array plot
-          do j = jmax,1,-3
-              write(6,1002)
-     1   (c1a_array(i,j),i=1,iplot),
-     1   (c1b_array(i,j),i=1,iplot)
- 1002         FORMAT(1X,6x,2x,57A1,4x,57A1)
+          do j = jmax,1,-jskip
+              write(6,1002)(c1a_array(i,j),i=1,ihigh,iskip),
+     1                     (c1b_array(i,j),i=1,ihigh,iskip)
+ 1002         FORMAT(1X,<nplot>A1,<nspace>x,<nplot>A1)
           enddo ! j
+
       endif
 
       RETURN

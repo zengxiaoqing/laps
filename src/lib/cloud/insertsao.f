@@ -243,8 +243,8 @@ c place station at proper laps grid point
           else
               l_out_of_bounds = .false.
               name_array(ilaps,jlaps            )=c_stations(i)(1:1)
-              name_array(ilaps,min(jlaps+1,nj))  =c_stations(i)(1:1)
-              name_array(ilaps,max(jlaps-1,1   ))=c_stations(i)(1:1)
+!             name_array(ilaps,min(jlaps+1,nj))  =c_stations(i)(1:1)
+!             name_array(ilaps,max(jlaps-1,1   ))=c_stations(i)(1:1)
           endif
 
 !         if(l .gt. 0)n_cld_snd = n_cld_snd + 1
