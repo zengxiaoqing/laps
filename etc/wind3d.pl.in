@@ -145,84 +145,22 @@ if ($found == 0) {print "none\n";}
 @greplines = grep /multi-doppler grid points/, @lines;
 print "   $greplines[0]";
 
-# Wind profiles, including VADs.
-
-foreach (@lines) {
-  if (/DROPSND/) {
-    @list = split;
-    if(@list == 12){
-        push(@dropsnds,$list[9]);
-        push(@dropsndnums,$list[2]);
+#Print list of profiletypes (only if present)
+@profiletypes = qw(PROFILER RAOB VAD DROPSND TOWER SODAR);
+foreach $profiletype (@profiletypes) {
+# Print $profiletype (only if present)
+  $i=0; $iprint=0; $ihead=0;
+  foreach (@lines) {
+    if (/Remapping profile/ && /$profiletype/) {
+      @list = split;
+      if($ihead == 0){print "\n$profiletype\s: "; $ihead=1;}
+      print "$list[7] "; $iprint=$iprint+1;
+      if ($iprint > 11) {print "\n        "; $iprint=0;} 
+      $i=$i+1; 
     }
-    next; } 
-            }
-
-#Print Profiler
-$i=0; $iprint=0; $ihead=0;
-print "\nProfilers: "; 
-foreach (@lines) {
-  if (/Remapping profile/ && /PROFILER/) {
-    @list = split;
-    print "$list[7] "; $iprint=$iprint+1;
-    if ($iprint > 11) {print "\n        "; $iprint=0;} 
-    $i=$i+1; 
   }
+  if($iprint > 0){print "\n";}
 }
-print "\n";
-
-#Print VAD (only if present)
-$i=0; $iprint=0; $ihead=0;
-foreach (@lines) {
-  if (/Remapping profile/ && /VAD/) {
-    @list = split;
-    if($ihead == 0){print "\nVADs: "; $ihead=1;}
-    print "$list[7] "; $iprint=$iprint+1;
-    if ($iprint > 11) {print "\n        "; $iprint=0;} 
-    $i=$i+1; 
-  }
-}
-if($iprint > 0){print "\n";}
-
-#Print RAOB
-$i=0; $iprint=0; $ihead=0;
-print "\nRAOBs:  ";
-foreach (@lines) {
-  if (/Remapping profile/ && /RAOB/) {
-    @list = split;
-    print "$list[7] "; $iprint=$iprint+1;
-    if ($iprint > 11) {print "\n        "; $iprint=0;} 
-    $i=$i+1; 
-  }
-}
-print "\n";
-
-#Print DROPSND
-$searchstring = "Remapping profile ";
-foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
-    foreach $item (@dropsndnums) {
-#     if ($profilenum eq $item) {print "$dropsnds[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {
-          if($i == 0){print "\nDROPSNDs:  ";}
-          print "$dropsnds[$i] ";
-      }
-      $i=$i+1; } } }
-if($i > 0){print "\n";}
-
-#Print TOWER (only if present)
-$i=0; $iprint=0; $ihead=0;
-foreach (@lines) {
-  if (/Remapping profile/ && /TOWER/) {
-    @list = split;
-    if($ihead == 0){print "\nTOWERs: "; $ihead=1;}
-    print "$list[7] "; $iprint=$iprint+1;
-    if ($iprint > 11) {print "\n        "; $iprint=0;} 
-    $i=$i+1; 
-  }
-}
-if($iprint > 0){print "\n";}
 
 # SAO's (METAR's).
 
