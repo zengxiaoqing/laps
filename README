@@ -3657,7 +3657,7 @@ the '$LAPS_DATA_ROOT/cdl/*.cdl' files.
 
 Process surface:LSX  U    su       1  Surface wind u (grid north)
        		     V    sv       1  Surface wind v (grid east)
-        	     P    fp       1  1500m Pressure
+        	     P    fp       1  Reduced Pressure (constant height sfc)
             	     T    st       1  Temp 
 		     TD   std      1  Dewpt Temp
         	     VV   vv	   1  Vertical Velocity
@@ -3666,7 +3666,7 @@ Process surface:LSX  U    su       1  Surface wind u (grid north)
          	     TAD  ta       1  Temp Advection
         	     TH   pot      1  Potential Temp
 		     THE  ept      1  Equivalent Potential Temp
-           	     PS   sp	   1  Pressure
+           	     PS   sp	   1  Station Pressure (terrain following)
 		     VOR  vor	   1  Vorticity
 		     MR   mr       1  Mixing Ratio  
          	     MRC  mc       1  Moisture Convergence
