@@ -252,7 +252,7 @@ cdis
 !       COMMON /CONRE1/IOFFP,SPVAL,EPSVAL,CNTMIN,CNTMAX,CNTINT,IOFFM
 
         character asc9_tim_3dw*9, asc_tim_24*24
-        character asc9_tim_r*9, asc9_tim*9, asc_tim_9
+        character asc9_tim_r*9, asc9_tim*9, a9time*9
         character asc9_tim_t*9
         character asc9_tim_n*9
         character c9_radarage*9
@@ -1142,7 +1142,7 @@ c       include 'satellite_dims_lvd.inc'
             i4time_plot = i4time_ref ! / laps_cycle_time * laps_cycle_time
             call get_filespec('lso',2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time_ref,i4time_plot)
-            call make_fnam_lp(i4time_plot,asc_tim_9,istatus)
+            call make_fnam_lp(i4time_plot,a9time,istatus)
 
             if(c_type(1:2) .eq. 'st')iflag = 0
             if(c_type(2:2) .eq. 's' )iflag = 0
@@ -1153,7 +1153,7 @@ c       include 'satellite_dims_lvd.inc'
 
             igrid = 0
 
-            call plot_stations(asc_tim_9,c33_label,c_type,i_overlay
+            call plot_stations(a9time,c33_label,c_type,i_overlay
      1                        ,c_display,lat,lon,c_file,iflag
      1                        ,NX_L,NY_L,laps_cycle_time,zoom)
 
@@ -1553,7 +1553,7 @@ c
                     return
                   endif
 
-                  i4time_radar = i4time_radar_a(i_radar)
+                  i4time_radar = i4time_radar_a(1)
 
                 elseif(c_type .eq. 'rv')then
 !                   Ask which radar number (extension)
@@ -5635,7 +5635,7 @@ c                   cint = -1.
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                            ,i_overlay)
+     1                            ,i_overlay,'hsect')
             call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
         endif ! image plot
