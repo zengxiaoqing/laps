@@ -36,16 +36,14 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine insert_pireps(i4time,cldcv,cld_hts,wtcldcv
-     1        ,default_clear_cover
-     1        ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
-     1        ,lat,lon,ni,nj,nk,ix_low,ix_high,iy_low,iy_high,max_pireps
-     1        ,istatus)
+        subroutine insert_pireps(i4time,cld_hts                          ! I
+     1        ,default_clear_cover                                       ! I
+     1        ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd          ! I/O
+     1        ,lat,lon,ni,nj,nk,ix_low,ix_high,iy_low,iy_high,max_pireps ! I
+     1        ,istatus)                                                  ! O
 
         real*4 lat(ni,nj),lon(ni,nj)
 
-        real*4 cldcv(ni,nj,nk)
-        real*4 wtcldcv(ni,nj,nk)
         real*4 cld_hts(nk)
 
 !       Arrays for cloud soundings
