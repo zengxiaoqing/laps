@@ -206,7 +206,7 @@ c      ----------       examing data quality and changing units       ---------
      1             wmoId(i),layerNum(i)
      1            ,latitude(i),longitude(i),elevation(i)
      1            ,'     '             ! Station name (if known)       
-     1            ,a9time_raob,'RAOB'
+     1            ,a9time(i),'RAOB'
   511    format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
          do 900 j= 1,layerNum(i)

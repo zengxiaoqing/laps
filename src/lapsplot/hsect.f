@@ -184,7 +184,7 @@ cdis
         character pcp_type_2d(NX_L,NY_L)
         character b_array(NX_L,NY_L)
 
-        real*4 slwc_2d(NX_L,NY_L)
+        real*4 field2_2d(NX_L,NY_L)
         real*4 cice_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
         real*4 field_2d_buf(NX_L,NY_L)
@@ -195,6 +195,9 @@ cdis
         real*4 precip_2d(NX_L,NY_L)
         real*4 precip_2d_buf(NX_L,NY_L)
         real*4 accum_2d(NX_L,NY_L)
+
+        real*4 dx(NX_L,NY_L)
+        real*4 dy(NX_L,NY_L)
 
 !       Local variables used in
         logical l_mask(NX_L,NY_L)
@@ -591,8 +594,8 @@ c       include 'satellite_dims_lvd.inc'
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1              '  Field [di,sp,u,v,w,dv,vo,vc (barbs), ob (obs))]'       
-     1                                          ,21x,'? ',$)
+     1            '  Field [di,sp,u,v,w,dv,vo,va,vc (barbs), ob (obs))]'     
+     1                                          ,18x,'? ',$)
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
                     if(c_field .ne. 'w ')then
@@ -888,6 +891,23 @@ c       include 'satellite_dims_lvd.inc'
      1                                                  ,zoom,scale)
 
                 call plot_cont(field_2d,scale,clow,chigh,cint,
+     1               asc9_tim_3dw,
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            elseif(c_field .eq. 'va')then ! Vorticity Advection Field
+                call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
+     1                         ,.true.,r_missing_data)
+                call get_grid_spacing_array(lat,lon,NX_L,NY_L,dx,dy)
+                call cpt_advection(field_2d,u_2d,v_2d,dx,dy,NX_L,NY_L
+     1                            ,field2_2d)
+                call mklabel33(k_mb,' VORT ADV    1e-9/s',c33_label)
+
+                scale = 1e-9
+                call contour_settings(field2_2d,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,scale)
+
+                call plot_cont(field2_2d,scale,clow,chigh,cint,
      1               asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2397,7 +2417,7 @@ c
                   if(c_type .ne. 'ci')then
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
      1                                   ext,var_2d,units_2d,
-     1                                   comment_2d,NX_L,NY_L,slwc_2d,
+     1                                   comment_2d,NX_L,NY_L,field2_2d,       
      1                                   k_mb,istatus)
                   else
                     call get_laps_2dgrid(i4time_ref,86400,i4time_cloud,
@@ -2418,7 +2438,7 @@ c
             if(k_level .gt. 0)then ! Plot SLWC on const pressure sfc
                if(c_type .ne. 'ci')then
 !                if(l_pregen)then
-                   call subcon(slwc_2d,1e-30,field_2d,NX_L,NY_L)
+                   call subcon(field2_2d,1e-30,field_2d,NX_L,NY_L)
                    call plot_cont(field_2d,1e-3,clow,chigh,cint
      1                           ,asc9_tim_t,c33_label,i_overlay
      1                           ,c_display,lat,lon,jdot
