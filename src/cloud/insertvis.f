@@ -283,9 +283,9 @@ cdis
                 if(clouds_3d(i,j,k) .gt. 1.0)then
 !                   cloud_frac_in = 1.0
                     cloud_frac_in = clouds_3d(i,j,k)
-                    write(6,*)' Warning, clouds_3d > 1'
+                    write(6,*)' Error, clouds_3d > 1'
      1                       ,i,j,k,clouds_3d(i,j,k)
-!                   stop
+                    stop
                 else
                     cloud_frac_in = clouds_3d(i,j,k)
                 endif
@@ -441,7 +441,11 @@ cdis
         enddo ! i
         enddo ! j
 
+        pct_use_vis = (1.0 - float(n_missing_albedo)/float(ni*nj))*100.       
+
         write(6,*)
+        write(6,101)pct_use_vis
+ 101    format(' Visible albedo data used over ',f6.2,'% of domain'       
         write(6,*)' N_MISSING_ALBEDO = ',n_missing_albedo
         write(6,*)' N_MISSING_UPRB = ',n_missing_uprb
         write(6,*)' N_VIS_MOD = ',n_vis_mod
