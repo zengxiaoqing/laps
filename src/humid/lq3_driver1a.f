@@ -171,7 +171,7 @@ c
      1     t_ref,path_to_gvap8,path_to_gvap10,path_to_gps
       
       integer len
-      character*200 cdomain
+      character cdomain(ii)
       
       data extpw/'lh1'/
       data ext3/'lh2'/
@@ -329,8 +329,10 @@ c     set namelist parameters to defaults
          write(6,*) 'Path is ', path_to_gvap8, ' ',path_to_gvap10
          write(6,*) 'GVAP switch is set to ',gvap_switch
       endif
+
+      write(6,*) 'GPS path is ', path_to_gps
      
-      
+
 c     initialize field to lq3 internal missing data flag.
 c     initialize total pw to laps missing data flag
       
@@ -505,6 +507,7 @@ c     open file for laps temp data
       
       
 c     perform initialquality control check for supersaturation after ingest
+
       write(6,*)  'perform qc for supersaturation'
       counter = 0
       do k = 1,kk
@@ -518,18 +521,18 @@ c     perform initialquality control check for supersaturation after ingest
      1              lt1dat(i,j,k)-273.15, t_ref )/1000.
                
                if ( data(i,j,k)/tempsh .ge. 1.0) then
-                  cdomain(i:i) = 'x'
+                  cdomain(i) = 'x'
                   if(data(i,j,k)/tempsh .gt. 1.01) then
-                     cdomain(i:i) = 's'
+                     cdomain(i) = 's'
                   endif
                   counter = counter + 1
                   data(i,j,k) = tempsh
                else
-                  write (cdomain(i:i),34) int(data(i,j,k)/tempsh*10.)
+                  write (cdomain(i),34) int(data(i,j,k)/tempsh*10.)
  34               format (i1)
                endif
             enddo
-            write(6,*) cdomain(1:ii)
+            write(6,*) (cdomain(i),i=1,ii)
          enddo
       enddo
       
@@ -1044,22 +1047,22 @@ c     repeat quality control check for supersaturation after pre-analysis
      1              lt1dat(i,j,k)-273.15,t_ref )/1000.
                
                if ( data(i,j,k)/tempsh .ge. 1.0) then
-                  cdomain(i:i) = 'x'
+                  cdomain(i) = 'x'
                   if(data(i,j,k)/tempsh .gt. 1.01) cdomain(i:i) = 's'
                   counter = counter + 1
                   data(i,j,k) = tempsh
                elseif (data(i,j,k) .lt. 0.0) then
-                  cdomain(i:i) = 'M'
+                  cdomain(i) = 'M'
                   
                else
-                  write (cdomain(i:i),35) int(data(i,j,k)/tempsh*10.)
+                  write (cdomain(i),35) int(data(i,j,k)/tempsh*10.)
  35               format (i1)
                   
                endif
                
                
             enddo
-            write(6,*) cdomain(1:ii)
+            write(6,*) (cdomain(i),i=1,ii)
          enddo
       enddo
       

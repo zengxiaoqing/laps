@@ -84,6 +84,9 @@ C
      1     NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
+         istatus = 0
+         write(6,*) 'failure getting GPS data'
+         return
       else
          istatus = 1
    
