@@ -1,0 +1,587 @@
+#!@PERL@ -T
+# laps.cgi (script to display LAPS data)
+
+#for security
+#$ENV{'PATH'}="";
+
+#force flush of buffers after each print
+$| = 1; 
+#print "Content-type: text/html\n\n"; 
+
+#redirect stderr to stdout so we can see err msgs on the web BUT use
+#only for debugging - take it out when things are working
+open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
+
+use Cwd 'chdir'; #from the camel book(387): "override chdir; keep PWD up to date"
+use lib "/w3/utilities"; # Bill's utilities (for cgi-lib.pl)
+require "timelocal.pl";   #includes 'timegm' for calculations in gmt
+require "cgi-lib.pl";
+use lib "/w3/lapb/request";
+require "laps_tools.pm"; # comes from $LAPSINSTALLROOT/etc
+
+##As per Bill's code, have form expire in 1 hour
+use HTTP::Date;
+$plusOneHour=time() + 3600;
+my $stringGMT = time2str($plusOneHour); 
+
+#print "Content-type: text/html\n".
+#      "Expires: $stringGMT\n\n";
+
+#get best return address
+$returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
+                  "(Unknown requestor)");
+
+$default_title="FSL/LAPS Data Display (Experimental)";
+###^^^^^^^^^^^^^^^^^^^^^
+
+$web_root = "/w3/lapb";
+$request_root = "/w3/lapb/request";
+$filename = "$request_root/lapsplot/selected.in";
+open(FILE,$filename) or die "Can't open $filename.";
+@lines = <FILE>;
+close FILE;
+my $default_domain = @lines[0];
+chomp $default_domain;
+
+#Define laps_data_root
+my $DomainDir;
+$DomainDir = "$web_root/domains";
+my $laps_data_root;
+$laps_data_root = "$DomainDir/$default_domain/data";
+#print "laps_data_root = $laps_data_root<br>";
+
+#print " test output: Start of laps.cgi \n"; 
+
+#Read pressures for this domain
+if(-e "$laps_data_root/static/pressures.nl"){
+    @domain_pres=&laps_tools::get_pressures($laps_data_root);
+}
+@domain_pres = reverse @domain_pres;
+my $num_pres = @domain_pres;
+my $pres_mb;
+
+#Read model choices for this domain
+my $domain_nl = "nest7grid.parms";
+my $nl_var    = "fdda_model_source_cmn";
+#print "nl_var = $nl_var<br>";
+if(-e "$laps_data_root/static/$domain_nl"){
+    @domain_models=&laps_tools::get_nl_value($domain_nl,$nl_var,$laps_data_root);
+}
+my $num_models = @domain_models;
+my $preferred_model;
+
+if($num_models > 0){
+    $preferred_model = @domain_models[0];
+}else{
+    $preferred_model = "lga";
+}
+
+if($preferred_model eq "" || $preferred_model eq " " || $preferred_model eq " " || $preferred_model eq "   "){
+    $preferred_model = "lga";
+}
+
+#print "<br>num_models = $num_models";
+#print "<br>domain_models = @domain_models";
+#print "<br>preferred_model = $preferred_model";
+
+#Read model directories for this domain
+opendir LAPSPRD, "$laps_data_root/lapsprd/fua";
+@modellist = readdir LAPSPRD;
+close LAPSPRD;
+@modellist = sort @modellist;
+#print "modellist = @modellist<br>";
+
+my $default_time = @lines[4];
+$default_time =~ s/ //g;
+chomp $default_time;
+
+my $default_hhmm = @lines[5];
+$default_hhmm =~ s/ //g;
+chomp $default_hhmm;
+
+#print " test output: laps.cgi - open systime.dat\n"; 
+
+#Get the Day of Year (jjj) from the systime.dat
+my($jjj,$hh,$dd,$MMM,$yyyy,$time,$mm,$yy,$rtime,$yy,$hhmm);
+if(open(LAPSTIME,"$laps_data_root/time/systime.dat")){
+    my @lapstime = <LAPSTIME>;
+    close(LAPSTIME);
+
+    $lapstime[1] =~ /\d\d(\d\d\d)(\d\d)\d\d/;
+    $jjj = $1;
+    $hh=$2;
+    $lapstime[4] =~ /(\d\d*)-(\S\S\S)-(\d\d\d\d)/;
+    $dd = $1;
+    $MMM = $2;
+    $yyyy = $3;
+    $yy = $yyyy - int($yyyy/100)*100;
+    $yy = "0".$yy if(length($yy)<2);
+    $hhmm = "hhmm";
+
+}else{ # error on open
+    $yy = "yy";
+    $jjj = "ddd";
+    $hhmm = "hhmm";
+
+}
+
+#print " test output: laps.cgi - finished reading systime.dat\n"; 
+
+my $default_zoom = @lines[6];
+$default_zoom =~ s/ //g;
+chomp $default_zoom;
+
+my $default_xcen = @lines[7];
+$default_xcen =~ s/ //g;
+chomp $default_xcen;
+
+my $default_ycen = @lines[8];
+$default_ycen =~ s/ //g;
+chomp $default_ycen;
+
+my $default_density = @lines[9];
+$default_density =~ s/ //g;
+chomp $default_density;
+
+$n_choices=8;
+
+&ReadParse(*default);
+$default_title=$default{'title'} ||
+    "FSL/LAPS Data Display (Experimental)";
+
+#$default_density   = $default{'density'} || 1.0;
+$default_CenterLat = $default{'CenterLat'} || "  ";
+$default_CenterLon = $default{'CenterLon'} || -98.;
+#print " default_density = $default_density\n"; 
+
+#Set default sources to be previous choices
+@sources = split(/ /,@lines[1]);
+foreach $fsource (@sources) {
+    $fsource =~ s/ //g;
+    chomp $fsource;
+    $selected{$fsource}="selected";
+}
+
+#Set default fields to be previous choices
+@fields = split(/ /,@lines[2]);
+foreach $field (@fields) {
+    $field =~ s/ //g;
+    chomp $field;
+    $selected{$field}="selected";
+}
+
+#Set default pressure_levels to be previous choices
+@pressure_levels = split(/ /,@lines[3]);
+foreach $pressure_level (@pressure_levels) {
+    $pressure_level =~ s/ //g;
+    chomp $pressure_level;
+    $selected{$pressure_level}="selected";
+}
+
+#print " test output: laps.cgi - read domains \n"; 
+
+opendir LAPSPRD, "$web_root/domains";
+@domainlist = readdir LAPSPRD;
+close LAPSPRD;
+@domainlist = sort @domainlist;
+
+#print " test output: laps.cgi - finished read domains \n"; 
+
+#print "@domainlist\n";
+
+@density_list[0] = "0.25";
+@density_list[1] = "0.5";
+@density_list[2] = "1.0";
+@density_list[3] = "2.0";
+@density_list[4] = "4.0";
+#print "@density_list\n";
+
+##Here's new stuff (sort of)------------------
+
+print <<"EOF";
+
+
+<FORM METHOD="post" ACTION="nph-laps.cgi">
+
+<!--<input type="submit" value="Send Request"><p>
+Use the shift or control(Apple) key (for PCs) or buttons 2 and 3 (for Unix) to 
+select multiple pressure levels.<br>
+-->
+
+
+<table border=0 cellpadding=5>
+<tr>
+
+<td>
+
+<center>
+
+<strong>
+<A HREF="validtime.html">Valid Time</A> 
+</strong>
+<br>
+[<FONT COLOR="#00AA00">$yy$jjj</FONT>$hhmm]
+<br>
+(blank=latest):
+</center>
+<center>
+<INPUT NAME="a9time" VALUE="$default_time" size=9>
+
+<br>
+<strong><A HREF="fcst.html">Forecast</A></strong> [hhmm]
+<br>
+(blank=latest):
+</center>
+<center>
+<INPUT NAME="forecast_time" VALUE="$default_hhmm" size=4> 
+
+</center>
+
+</td>
+
+
+<td align=center>
+<strong>
+<A HREF="/domains/anal2d/domains.html">Domain:</A>
+</strong>
+
+<br>
+
+<!--
+</td>
+
+<td>
+-->
+
+<select name="domain">
+EOF
+  #display available domains
+  foreach $file (@domainlist) {
+
+    if($file ne "anal2d" && $file ne "fcst2d" && $file ne "t2" && $file ne "." && $file ne ".."){
+#     if(-e "$DomainDir/$file/data"){
+        if($file eq $default_domain ) { print "<option selected>$file\n"; } 
+        else               { print "<option>$file\n"; } 
+#     }
+    }
+
+  }
+print <<"EOF";
+</select>
+</td>
+
+<td align="right">
+<strong>
+<A HREF="sources.html">Source(s)</A>:
+</strong>
+</td>
+
+<td align="center">
+<select name="sources" size=$n_choices multiple>
+EOF
+
+$model = "bkgnd";
+my $asterisk = "*";
+
+if($preferred_model eq "lga"){
+    print "<option $selected{$model}> $model\n";  
+    print "*\n";
+}else{
+    print "<option $selected{$model}> $model\n";  
+}
+
+print <<"EOF";
+<option $selected{'analysis'}> analysis
+<option $selected{'balanced'}> balanced
+EOF
+
+foreach $model (@modellist) {
+    if($model ne "." && $model ne ".."){
+        if($model eq $preferred_model){
+            print "<option $selected{$model}> $model\n";  
+            print "*\n";
+        }elsif($model =~ "fua"){ # screen out more of the junk
+        }else{
+            print "<option $selected{$model}> $model\n";  
+        }
+    }
+}
+
+print <<"EOF";
+<option $selected{'DIFF'}> DIFF
+<option $selected{'diff'}> diff
+<option $selected{'obs'}> obs
+<option $selected{'obs_qc'}> obs_qc
+<option $selected{'what-got-in'}> what-got-in
+</select>
+</td>
+
+<td align="right">
+<strong>
+<A HREF="fields.html">Field(s)</A>:
+</strong>
+</td>
+
+<td align="center">
+<select name="fields" size=$n_choices multiple>
+<option $selected{'HT'}> HT
+<option $selected{'TEMP'}> TEMP
+<option $selected{'DEWPOINT'}> DEWPOINT
+<option $selected{'RH'}> RH
+<option $selected{'WINDSPD'}> WINDSPD
+<option $selected{'U'}> U
+<option $selected{'V'}> V
+<option $selected{'DIV'}> DIV
+<option $selected{'VORT'}> VORT
+<option $selected{'OMEGA'}> OMEGA
+<option $selected{'THETAE'}> THETAE
+<option $selected{'CAPE'}> CAPE
+<option $selected{'CIN'}> CIN
+<option $selected{'HELICITY'}> HELICITY
+<option $selected{'HEATINDEX'}> HEATINDEX
+<option $selected{'FIREWX'}> FIREWX
+<option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
+<option $selected{'CLD_TOP'}> CLD_TOP
+<option $selected{'SAT_12U'}> SAT_12U
+<option $selected{'SAT_11U'}> SAT_11U
+<option $selected{'SAT_WV'}>  SAT_WV
+<option $selected{'SAT_39U'}> SAT_39U
+<option $selected{'SAT_D39'}> SAT_D39
+<option $selected{'VIS_ALB'}> VIS_ALB
+<option $selected{'REFLCT'}>  REFLCT
+<option $selected{'REF_MAX'}> REF_MAX
+<option $selected{'PCP_1HR'}> PCP_1HR
+<option $selected{'PCP_STO'}> PCP_STO
+<option $selected{'PRCP_H2O'}> PRCP_H2O
+<option $selected{'SNOW_1HR'}> SNOW_1HR
+<option $selected{'SNOW_STO'}> SNOW_STO
+<option $selected{'SNOW_CVR'}> SNOW_CVR
+<option $selected{'LAND_FRAC'}> LAND_FRAC
+<option $selected{'ht'}> ht
+<option $selected{'temp'}> temp
+<option $selected{'sfct'}> sfct
+<option $selected{'dewpoint'}> dewpoint
+<option $selected{'rh'}> rh
+<option $selected{'wind'}> wind
+<option $selected{'windspd'}> windspd
+<option $selected{'u'}> u
+<option $selected{'v'}> v
+<option $selected{'div'}> div
+<option $selected{'vort'}> vort
+<option $selected{'vort_adv'}> vort_adv
+<option $selected{'omega'}> omega
+<option $selected{'c_omega'}> c_omega
+<option $selected{'msl_p'}> msl_p
+<option $selected{'red_p'}> red_p
+<option $selected{'stn_p'}> stn_p
+<option $selected{'theta'}> theta
+<option $selected{'thetae'}> thetae
+<option $selected{'cape'}> cape
+<option $selected{'cin'}> cin
+<option $selected{'helicity'}> helicity
+<option $selected{'wtblb0'}> wtblb0
+<option $selected{'vsblty'}> vsblty
+<option $selected{'heatindex'}> heatindex
+<option $selected{'firewx'}> firewx
+<option $selected{'cld_cvr'}> cld_cvr
+<option $selected{'cld_base'}> cld_base
+<option $selected{'cld_top'}> cld_top
+<option $selected{'cld_liq'}> cld_liq
+<option $selected{'cld_ice'}> cld_ice
+<option $selected{'cld_type'}> cld_type
+<option $selected{'sat_11u'}> sat_11u
+<option $selected{'sat_d39'}> sat_d39
+<option $selected{'vis_alb'}> vis_alb
+<option $selected{'reflct'}> reflct
+<option $selected{'ref_max'}> ref_max
+<option $selected{'pcp_typ'}> pcp_typ
+<option $selected{'pcp_1hr'}> pcp_1hr
+<option $selected{'pcp_sto'}> pcp_sto
+<option $selected{'prcp_h2o'}> prcp_h2o
+<option $selected{'snow_1hr'}> snow_1hr
+<option $selected{'snow_sto'}> snow_sto
+<option $selected{'snow_cvr'}> snow_cvr
+<option $selected{'land_frac'}> land_frac
+</select>
+</td>
+EOF
+
+
+
+if ($num_pres > 0){ # New method of displaying pressure levels
+
+print <<"EOF";
+<td align="right">
+<strong>
+Level(s):
+</strong>
+</td>
+
+<td align="center">
+<select name="pressure_levels" size=$n_choices multiple>
+
+EOF
+
+#display available domain pressures
+foreach $file (@domain_pres) {
+    $pres_mb = $file / 100;
+    print "<option $selected{$pres_mb}> $pres_mb\n";
+}
+
+
+print <<"EOF";
+<option $selected{'sfc/2d'}> sfc/2d
+<option $selected{'xsect'}> xsect
+<option $selected{'sndg'}> sndg
+</select>
+</td>
+EOF
+
+}else{ # Original method of displaying pressure levels
+
+print <<"EOF";
+<td align="right">
+Level(s):
+</td>
+
+<td align="center">
+<select name="pressure_levels" size=$n_choices multiple>
+<option $selected{'200'}> 200
+<option $selected{'300'}> 300
+<option $selected{'400'}> 400
+<option $selected{'500'}> 500
+<option $selected{'600'}> 600
+<option $selected{'700'}> 700
+<option $selected{'800'}> 800
+<option $selected{'850'}> 850
+<option $selected{'900'}> 900
+<option $selected{'950'}> 950
+<option $selected{'975'}> 975
+<option $selected{'980'}> 980
+<option $selected{'985'}> 985
+<option $selected{'990'}> 990
+<option $selected{'995'}> 995
+<option $selected{'1000'}> 1000
+<option $selected{'1005'}> 1005
+<option $selected{'1010'}> 1010
+<option $selected{'1015'}> 1015
+<option $selected{'1020'}> 1020
+<option $selected{'1025'}> 1025
+<option $selected{'sfc/2d'}> sfc/2d
+<option $selected{'xsect'}> xsect
+<option $selected{'sndg'}> sndg
+</select>
+</td>
+EOF
+
+
+}
+
+
+
+
+print <<"EOF";
+
+<!--
+<td align="center">
+-->
+
+<td>
+<A HREF="azim.html"> Zoom/Az</A>: <INPUT NAME="zoom" VALUE="$default_zoom" size=5>&nbsp;  
+<br>
+<A HREF="xsect.html">X-coord</A>: <INPUT NAME="xcen" VALUE="$default_xcen" size=5>&nbsp;  
+<br>
+<A HREF="ysect.html">Y-coord</A>: <INPUT NAME="ycen" VALUE="$default_ycen" size=5>&nbsp;  
+</td>
+
+
+<td>
+
+
+
+<input type="hidden" name="title" value="$default_title">
+
+<center>
+<strong>
+<input type="submit" value="Load">
+</center>
+
+
+<center>
+<input type="reset" value="Undo">
+</center>
+
+
+<center>
+Density:
+<br>
+
+<select name="density">
+EOF
+  #display available densities
+
+  foreach $density (@density_list) {
+
+    if($density == $default_density ) { print "<option selected>$density\n"; } 
+    else               { print "<option>$density\n"; } 
+
+  }
+
+print <<"EOF";
+</select>
+
+</center>
+
+</td>
+
+</tr>
+</table>
+<br>
+<!--
+
+<strong>Map Parameters:</strong>&nbsp;
+Zoom: <INPUT NAME="density" VALUE=$default_density size=4>&nbsp;   
+Lon: <INPUT NAME="CenterLon" VALUE=$default_CenterLon size=7><br>
+
+<font size="-1">(The Zoom and the center position specify the map
+parameters of ALL subsequent images.  The default zoom of 1.3 shows
+the entire nation; larger values of zoom show smaller sections of the 
+country.)</font>
+<input type="hidden" name="title" value="$default_title">
+<input type="submit" value="Send Request">
+<input type="reset" value="Previous Selections">
+
+-->
+
+
+</FORM>
+
+<IMG SRC="/albers/colorbar.gif">
+
+<p>
+<h4>
+<A HREF="http://www.fsl.noaa.gov/fsl/docs/wthr/fsl-weather.html">FSL Wx</A>
+|
+<A HREF="/cgi/LAPB.homepage.cgi">LAPB home</A>
+|
+<A HREF="/cgi/laps_products.cgi">
+Realtime LAPS Products</A>
+|
+<!--
+<A HREF="/cgi/laps_anal3d.cgi">
+3-D Analyses</A>
+|
+-->
+<A HREF="/forecasts/laps_products.cgi">
+3-D Forecasts</A>
+<p>
+<em>
+    Prepared by <a href="mailto:albers\@fsl.noaa.gov">Steve Albers</a> 
+</em>
+<br>
+
+</center>  
+<p>
+</body>
+</html>
+EOF

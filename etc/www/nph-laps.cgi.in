@@ -1,0 +1,2345 @@
+#!@PERL@ -T
+# nph-laps.cgi (script to display LAPS data)
+
+$DEBUG=0;
+$IDL_DIR = "/usr/local/share/idl";
+$ENV{'IDL_DIR'} =  $IDL_DIR;   
+
+# STANDARD PREAMBLE vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+#for security
+$ENV{'PATH'} = "/usr/bin";
+
+#redirect stderr to stdout so we can see err msgs on the web
+$|=1;  #force flush of buffers after each print
+open (STDERR, ">&STDOUT") || die "can't dup stdout ($!)\n";
+
+use lib "/w3/utilities"; # Bill's utilities (for cgi-lib.pl)
+require "timelocal.pl";   #includes 'timegm' for calculations in gmt
+require "cgi-lib.pl";
+#require "./laps_cgi.pm";
+    
+#set up some nice variables
+@month=(Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec);
+@day=(Sun,Mon,Tue,Wed,Thu,Fri,Sat);
+
+#get directory and URL
+use File::Basename;
+($basename,$thisDir) = fileparse($0);
+#untaint it
+$thisDir =~ /([a-zA-Z0-9\.\/\~]*)/;
+$thisDir = $1;
+($basename,$thisURLDir) = fileparse($ENV{'SCRIPT_NAME'});
+
+$web_root = "/w3/lapb";
+$request_root = "$web_root/request"; # current directory of this script
+$DomainDir = "$web_root/domains";
+#$ScratchDir = "/scratch/frd/laps/www";
+$ScratchDir = "request/lapsplot/scratch";
+
+#change to the proper directory
+chdir ("$thisDir") ||
+          die "Content-type: text/html\n\nCan't cd to $thisDir: $!\n";
+
+# END OF PREAMBLE ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#get calling URL
+$temp = $ENV{'SCRIPT_NAME'};
+#untaint it (the unsafe way!)
+$temp =~ /(.*)/;
+# check for the right-most slash
+$1 =~ m|([^/]*$)|;
+$thisURL = $`;
+chop $thisURL;
+$writeDir = "${thisDir}tmp";
+$writeURL = "$thisURL/tmp";
+
+$plotURL =  "$writeURL/tke.$$.tmp.";
+$plotFile = "$writeDir/tke.$$.tmp.";
+	 
+	 
+#get time 
+$time = time();
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+$mp1=$mon+1;
+$thisMonth=$month[$mon];
+$dayOfWeek=$day[$wday];
+
+#have this expire in 0 hour, so the form won't keep resetting itself.
+use HTTP::Date;
+$plusOneHour=time() + 1*3600;
+my $stringGMT = time2str($plusOneHour);   # Format as GMT ascii time
+$server_protocol = $ENV{'SERVER_PROTOCOL'};
+# since this is 'nph-', print out the whole header
+print "$server_protocol 200 OK\n" .
+    "Content-type: text/html\n" .
+      "Expires: $stringGMT\n\n";
+
+#parse the query string
+&ReadParse(*input) ;
+#clean up old files older than .24 hrs
+opendir PURGEDIR, $writeDir or die "Can't open $writeDir: $!\n";
+while ($dfile = readdir PURGEDIR) {
+    # don't delete hidden files, or *.htaccess files
+    unless ($dfile =~ /^\./ || $dfile =~ /.htaccess/) { 
+	$dfile = "$writeDir/$dfile";
+	$mod = -M $dfile;
+	#printf "$dfile, %4.2f days old\n",$mod;
+	if($mod > 0.01) {
+	    #printf " removing $dfile, %4.2f days old\n", $mod;
+	    unlink($dfile) || print("Couldn't rm $dfile!\n");
+	}
+    }
+}				
+closedir PURGEDIR;	
+
+#useful DEBUGGING info vvvvvvvvvvvvvv
+if ($DEBUG == 1) {
+    print "<pre>\n";
+    print &PrintVariables(%input);
+    print "directories: $thisFile, $writeDir, $writeURL<br>\n";	 
+    print "Plot file is $plotFile<br>\n";
+
+    print "input is $input<br>\n";
+    while (($first,$last) = each(%input)) {
+	@items = split("\0",$last);
+	print " |$first|  ==>  |@items|\n";
+    }
+    print "<P>\n";
+}
+#end debugging info vvvvvvvvvvvvvvvvv
+
+opendir DOMAINS, "/w3/laps/domains";
+@filelist = readdir DOMAINS;
+close DOMAINS;
+@filelist = sort @filelist;
+
+$default_title="FSL/LAPS Data Display (On-the-fly)";
+print<<"EOI";
+<html>
+<head><title>$default_title</title></head>
+<body background="/icons_laps/LongerLAPS.gif">   
+<!--
+<center>
+<h1>$default_title</h1>
+</center>
+-->
+EOI
+
+##construct file name
+$file_in = $input{'domain'};
+$working_file=substr($file_in,12,2).substr($file_in,6,2).
+	substr($file_in,9,2).'_Valid_'.substr($file_in,18,3).'_FLs'.
+	substr($file_in,23,2).'h';
+
+foreach $item (@filelist) {
+  if ($item =~ /$working_file/) {
+    $file = $item;
+       print "Selected file name is $file<br>";
+  }
+} #foreach $file
+
+@sources = split("\0",$input{'sources'});
+$n_sources = @sources;
+print "$n_sources source(s) selected: ";
+print "@sources....";
+$out_sources="[" . join(',',@sources) . "]";
+
+@fields = split("\0",$input{'fields'});
+$n_fields = @fields;
+print "$n_fields field(s) selected: ";
+print "@fields....";
+$out_fields="[" . join(',',@fields) . "]";
+
+@pressure_levels = split("\0",$input{'pressure_levels'});
+$n_levels = @pressure_levels;
+print "$n_levels level(s) selected: ";
+print "@pressure_levels....";
+$out_levels="[" . join(',',@pressure_levels) . "]";
+$ENV{'pressure_levels'} = $out_levels;
+$ENV{'n_levels'}= $n_levels;
+
+$ENV{'file'} = $file;
+$ENV{'file_in'} = $file_in;
+$ENV{'plot_file'} = $plotFile;
+$density=$input{'density'};
+#$ENV{'NewZoom'} = $NewZoom;
+$a9time=$input{'a9time'};
+$forecast_time=$input{'forecast_time'};
+$zoom=$input{'zoom'};
+$xcen=$input{'xcen'};
+$ycen=$input{'ycen'};
+$ENV{'Domain'} = $Domain;
+$CenterLon=$input{'CenterLon'};
+$ENV{'CenterLon'} = $CenterLon;
+
+$default_title="FSL/LAPS Data Display<br>(Experimental)";
+$default_minusHours = 3;
+#get time minus $minusHours hours ago as a default starting time
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+    gmtime($time - $default_minusHours*3600);
+$mp1=$mon+1;
+$file_in =~ s/ /+/g;
+$link_prefix="<a href=\"$thisURL/$basename?domain=$file_in&density=$density&a9time=$a9time&CenterLon=$CenterLon&pressure_levels=";
+
+$file = $file_in;
+$domain = $file_in;
+
+$err=0;
+
+
+my $domain_safe;
+$domain =~ /(.*)/;
+$domain_safe = $1;
+
+my $laps_data_root;
+$laps_data_root = "$DomainDir/$domain_safe/data";
+
+my $xcen_safe;
+$xcen =~ /(.*)/;
+$xcen_safe = $1;
+
+my $ycen_safe;
+$ycen =~ /(.*)/;
+$ycen_safe = $1;
+
+my $zoom_safe;
+$zoom =~ /(.*)/;
+$zoom_safe = $1;
+
+my $zoom_lapsplot;
+
+my $density_safe;
+$density =~ /(.*)/;
+$density_safe = $1;
+
+chomp $a9time;
+
+my $a9time_safe;
+$a9time =~ /(.*)/;
+$a9time_safe = $1;
+
+#my $a9time_wgi_safe;
+my $wgi_file;
+my $wgi_only = 0;
+
+#print "xcen = $xcen $xcen_safe<br>";
+
+#print "domain (safe) = $domain_safe<br>";
+chomp $forecast_time;
+print "time = $a9time$forecast_time<br>";
+
+my $units;
+if($domain_safe =~ "tw_" || $domain_safe =~ "tai" || $domain_safe =~ "th"){
+    $units = "metric";
+}else{
+    $units = "english";
+}
+
+if ($domain eq "") {
+    $err=1;
+    print<<"EOI";
+<h2>Please select a domain...</h2>
+</body></html>
+EOI
+}
+
+if ($n_sources == 0) {
+    $err=1;
+    print<<"EOI";
+<h2>Please select one or more sources...</h2>
+EOI
+}
+
+if ($n_fields == 0) {
+    $err=1;
+    print<<"EOI";
+<h2>Please select one or more fields...</h2>
+EOI
+}
+
+if ($n_levels == 0) {
+    $err=1;
+    print<<"EOI";
+<h2>Please select one or more levels...</h2>
+EOI
+}
+
+if($err == 0) {
+#print "open $IDL_DIR/bin/idl tke-ruc2.idl 2>&1 |\n";
+
+#Write a lapsplot.in file
+$logFile = "$thisDir/lapsplot/lapsplot.in";
+open(LAPSPLOT,">$logFile") ||
+    die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+
+#Determine if one of the sources is a forecast, if so obtain $a9time from the $systime
+$fcst=0;
+foreach $source (@sources) {
+    if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf" || "$source" =~ "bkgnd"){
+        $fcst=1;
+    }
+}
+
+if($fcst == 1 && $a9time eq ""){
+#   print "fcst = $fcst";
+
+#   Get the latest a9time from the systime.dat
+#   my($jjj,$hh,$dd,$MMM,$yyyy,$time,$mm,$yy,$rtime,$yy,$hhmm);
+    if(open(LAPSTIME,"$laps_data_root/time/systime.dat")){
+        my @lapstime = <LAPSTIME>;
+#       print "lapstime = @lapstime";
+        close(LAPSTIME);
+        $lapstime[1] =~ /(\d\d\d\d\d\d\d\d\d)/;
+        $a9time_fcst = $1;
+#       print "a9time_fcst = $a9time_fcst";
+        printf LAPSPLOT "$a9time_fcst\n";
+    }
+
+}else{
+
+#   Blank means latest time
+    printf LAPSPLOT "$a9time\n";
+#   printf LAPSPLOT " \n";
+
+}
+
+my $overlay = 0;
+my $sect = "none";
+my $sounding;
+
+#Print the field
+
+my $obs_sfc = "none";
+my $obs_sfc_qc = 0;
+my $hhmm = $forecast_time;
+
+#Correct zoom_safe if it is invalid
+#if($zoom_safe < 1.00 && @pressure_levels[0] != "xsect"){$zoom_safe = 1.00;}
+
+my $a9time_wgi = $a9time_safe;
+$a9time_wgi =~ /(\d\d\d\d\d\d\d\d\d)/;
+$a9time_wgi = $1;
+
+my $dot = ".";
+
+foreach $source (@sources) {
+  $sounding = 0;
+
+  if ("$source" eq "what-got-in" ) {                                                                             # What-got-in stuff
+      if ($n_sources == 1) {
+          $wgi_only = 1;
+      }
+
+      if($a9time_wgi eq ""){
+
+          print "<h2>What-got-in option selected...</h2>";
+
+#         Get the latest a9time from the systime.dat
+
+          my($jjj,$hh,$dd,$MMM,$yyyy,$time,$mm,$yy,$rtime,$yy,$hhmm);
+          if(open(LAPSTIME,"$laps_data_root/time/systime.dat")){
+              my @lapstime = <LAPSTIME>;
+              close(LAPSTIME);
+              $lapstime[1] =~ /(\d\d\d\d\d\d\d\d\d)/;
+              $a9time_wgi = $1;
+          }
+
+      }else{
+          print "<h2>What-got-in option selected at $a9time_wgi...</h2>";
+
+      }
+
+      if ($out_levels =~ "0" || $out_levels =~ "xsect") {                                                        # Primarily 3D fields
+        if ($out_fields =~ "wind" || $out_fields =~ "WIND") {                                                    # Wind
+          $wgi_file = "$laps_data_root/log/wind3d\.wgi\.$a9time_wgi";
+          if( -e "$wgi_file"){
+              print "<h2>What-got-in wind3d analysis for $a9time_wgi...</h2>";
+              print "<pre>";
+              system("cat $wgi_file");
+              print "</pre>";
+          }else{
+              print "<h2>What-got-in wind3d info N/A for $a9time_wgi...</h2>";
+          }
+        }
+
+        if ($out_fields =~ "temp" || $out_fields =~ "TEMP") {                                                    # Temp
+          $wgi_file = "$laps_data_root/log/temp\.wgi\.$a9time_wgi";
+          if( -e "$wgi_file"){
+              print "<h2>What-got-in temp analysis for $a9time_wgi...</h2>";
+              print "<pre>";
+              system("cat $wgi_file");
+              print "</pre>";
+          }else{
+              print "<h2>What-got-in temp info N/A for $a9time_wgi...</h2>";
+          }
+        }
+
+        if ($out_fields =~ "rh" || $out_fields =~ "RH") {                                                        # Humidity
+          $wgi_file = "$laps_data_root/log/hum3d\.wgi\.$a9time_wgi";
+          if( -e "$wgi_file"){
+              print "<h2>What-got-in hum3d analysis for $a9time_wgi...</h2>";
+              print "<pre>";
+              system("cat $wgi_file");
+              print "</pre>";
+          }else{
+              print "<h2>What-got-in hum3d info N/A for $a9time_wgi...</h2>";
+          }
+        }
+
+      }
+
+      if ($out_fields =~ "cld_" || $out_fields =~ "CLD_" || $out_fields =~ "ref" || $out_fields =~ "REF" || $out_fields =~ "sat_" || $out_fields =~ "SAT_") {    # Cloud fields
+        $wgi_file = "$laps_data_root/log/cloud\.wgi\.$a9time_wgi";
+        if( -e "$wgi_file"){
+            print "<h2>What-got-in cloud analysis for $a9time_wgi...</h2>";
+            print "<pre>";
+            system("cat $wgi_file");
+            print "</pre>";
+        }else{
+            print "<h2>What-got-in cloud info N/A for $a9time_wgi...</h2>";
+        }
+      }
+
+      if ($out_levels =~ "sfc") {                                                                                # Surface
+          $wgi_file = "$laps_data_root/log/sfc\.wgi\.$a9time_wgi";
+          if( -e "$wgi_file"){
+              print "<h2>What-got-in sfc analysis for $a9time_wgi...</h2>";
+              print "<pre>";
+              system("cat $wgi_file");
+              print "</pre>";
+          }else{
+              print "<h2>What-got-in sfc info N/A for $a9time_wgi...</h2>";
+          }
+      }
+
+  }elsif ("$source" eq "DIFF" ) { 
+      if($out_levels =~ "xsect"){
+          printf LAPSPLOT "dfi\n";
+      }else{
+          printf LAPSPLOT "dii\n";
+      } 
+
+  }elsif ("$source" eq "diff" ) {
+      if($out_levels =~ "xsect"){
+          printf LAPSPLOT "df\n"; 
+      }else{
+          printf LAPSPLOT "di\n"; 
+      }
+
+  }else{
+
+    foreach $field (@fields) {
+
+        foreach $level (@pressure_levels) {
+
+            if("$level" eq "sndg" && "$source" =~ "obs"){
+                print "<h2>Error: $source cannot be selected with sndg...</h2>";
+            }
+
+            if ("$level" eq "xsect" && $n_levels > 1){
+                print "<h2>Error: xsect cannot be combined with other levels...</h2>";
+            }
+
+            if ("$level" eq "sndg" && $n_levels > 1){
+                print "<h2>Error: sndg cannot be combined with other levels...</h2>";
+            }
+
+            if($overlay == 0){
+                if("$level" eq "xsect"){
+                    $sect = "xsect";
+                    printf LAPSPLOT "xz\n";
+                    printf LAPSPLOT "$density_safe\n";
+                    printf LAPSPLOT "$zoom_safe\n";
+                    printf LAPSPLOT "$xcen_safe,$ycen_safe\n";
+
+                }elsif("$level" eq "sndg"){
+                    $sect = "sndg";
+                    printf LAPSPLOT "s\n";
+                    printf LAPSPLOT "$xcen_safe\n";
+                    printf LAPSPLOT "$ycen_safe\n";
+                }else{
+                    $sect = "hsect";
+                    printf LAPSPLOT "hz\n";
+                    if($zoom_safe < 1.00){$zoom_safe = 1.00;}
+#                   $zoom_lapsplot = $zoom_safe * ( $density_safe**2 );
+                    printf LAPSPLOT "$zoom_safe,$density_safe\n";
+                }
+            }
+
+            $overlay = $overlay + 1;
+            $sounding = $sounding + 1;
+
+            if("$source" =~ "mm5" || "$source" =~ "eta" || "$source" =~ "sfm" || "$source" =~ "wrf"){
+                if("$level" eq "sfc/2d"){                # fsf sfc forecast
+                    if   ("$field" eq "msl_p" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "slp\n"; 
+
+                    }elsif("$field" eq "stn_p" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "psf\n"; 
+
+                    }elsif("$field" eq "red_p" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "p\n"; 
+
+                    }elsif("$field" eq "TEMP" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tsfi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tsf\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "SFCT" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tgdi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "sfct" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tgd\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "DEWPOINT" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "dsfi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "dewpoint" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "dsf\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "usf\n"; 
+
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "vsf\n"; 
+
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rh\n"; 
+
+                    }elsif("$field" eq "RH" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rhi\n"; 
+
+                    }elsif("$field" eq "prcp_h2o" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tpw\n"; 
+
+                    }elsif("$field" eq "PRCP_H2O" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tpwi\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "thetae" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "the\n"; 
+
+                    }elsif("$field" eq "THETAE" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "thei\n"; 
+
+                    }elsif("$field" eq "CAPE" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "pbei\n"; 
+
+                    }elsif("$field" eq "cape" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "pbe\n"; 
+
+                    }elsif("$field" eq "CIN" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "nbei\n"; 
+
+                    }elsif("$field" eq "cin" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "nbe\n"; 
+
+                    }elsif("$field" eq "HELICITY" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lhei\n"; 
+
+                    }elsif("$field" eq "helicity" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lhe\n"; 
+
+                    }elsif("$field" eq "REF_MAX" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lmri\n"; 
+
+                    }elsif("$field" eq "ref_max" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lmr\n"; 
+
+                    }elsif("$field" eq "REFLCT" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "llri\n"; 
+
+                    }elsif("$field" eq "reflct" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "llr\n"; 
+
+                    }elsif("$field" eq "CLD_CVR" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lcvi\n"; 
+
+                    }elsif("$field" eq "SNOW_1HR") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "s01i\n"; 
+
+                    }elsif("$field" eq "snow_1hr") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "s01\n"; 
+
+                    }elsif("$field" eq "PCP_1HR") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "r01i\n"; 
+
+                    }elsif("$field" eq "pcp_1hr") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "r01\n"; 
+
+                    }elsif("$field" eq "SNOW_STO") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "stoi\n"; 
+
+                    }elsif("$field" eq "snow_sto") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "sto\n"; 
+
+                    }elsif("$field" eq "PCP_STO") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rtoi\n"; 
+
+                    }elsif("$field" eq "pcp_sto") { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "rto\n"; 
+
+                    }elsif("$field" eq "SAT_11U" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lwoi\n"; 
+
+                    }elsif("$field" eq "sat_11u" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "lwo\n"; 
+
+                    }elsif("$field" eq "VIS_ALB" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "swoi\n"; 
+
+                    }elsif("$field" eq "vis_alb" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "fsf\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "swo\n"; 
+
+		    }else{
+                        print "$source $level $field not yet available<br>\n"; 
+
+	            } # if field
+
+                }elsif("$level" eq "xsect"){ # fua xsect forecast
+                    if   ("$field" eq "temp" ){ 
+                        printf LAPSPLOT "t\n";  
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "REFLCT" ){ 
+                        printf LAPSPLOT "ri\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "om\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "OMEGA" ) { 
+                        printf LAPSPLOT "omi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "dvi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "voi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "rh" ){ 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "wind" ){ 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "u" ){ 
+                        printf LAPSPLOT "u\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "U" ){ 
+                        printf LAPSPLOT "ui\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "v" ){ 
+                        printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "V" ){ 
+                        printf LAPSPLOT "vi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "windspd" ){ 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "WINDSPD" ){ 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }else{ 
+                        print "$source $level $field not available\n"; 
+                    }
+
+                }elsif("$level" eq "sndg"){ # FUA Sounding
+                    if($sounding == 1){
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }
+
+                }else{                       # fua level forecast
+                    if   ("$field" eq "ht" ) { 
+                        printf LAPSPLOT "hr\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "HT" ) { 
+                        printf LAPSPLOT "hri\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "tr\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "TEMP" ) { 
+                        printf LAPSPLOT "tri\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "fr\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "-132.\n"; 
+
+                    }elsif("$field" eq "RH" ) { 
+                        printf LAPSPLOT "fri\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "-132.\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "u" || "$field" eq "v") { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "$field\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "wri\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "wri\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "wr\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "va\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "fo\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "OMEGA" ) { 
+                        printf LAPSPLOT "foi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "cld_ice" ) { 
+                        printf LAPSPLOT "ci\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "cld_liq" ) { 
+                        printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+		    }else{
+                        print "$source $level mb $field not yet available<br>\n"; 
+
+	            } # if field
+
+                } # if level
+           
+            }elsif("$source" =~ "bkgnd"){          # lga/lgb
+                if("$level" eq "sfc/2d"){          
+                    if   ("$field" eq "msl_p" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "slp\n"; 
+
+#                   }elsif("$field" eq "red_p" ) { 
+#                        printf LAPSPLOT "bs\n"; 
+#                        printf LAPSPLOT "lgb\n"; 
+#                        printf LAPSPLOT "$hhmm\n";
+#                        printf LAPSPLOT "psf\n"; 
+
+                    }elsif("$field" eq "TEMP" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tsfi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "tsf\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "DEWPOINT" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "dsfi\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "dewpoint" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "dsf\n"; 
+                        if($units eq "english"){
+                            printf LAPSPLOT "f\n"; 
+                        }else{
+                            printf LAPSPLOT "c\n"; 
+                        }
+
+                    }elsif("$field" eq "wind" ) { # lgb
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "usf\n"; 
+
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "vsf\n"; 
+
+                    }elsif("$field" eq "stn_p" ) { 
+                        printf LAPSPLOT "bs\n"; 
+                        printf LAPSPLOT "lgb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "psf\n"; 
+
+                    }elsif("$field" eq "VIS_ALB" ) { 
+                        printf LAPSPLOT "gg\n"; 
+                        printf LAPSPLOT "ali\n"; 
+
+                    }elsif("$field" eq "vis_alb" ) { 
+                        printf LAPSPLOT "gg\n"; 
+                        printf LAPSPLOT "al\n"; 
+
+		    }else{
+                        print "$source $level $field not yet available<br>\n"; 
+
+	            } # if field
+
+                }elsif("$level" eq "xsect"){ # lga xsect background
+                    if   ("$field" eq "wind" ){ 
+                        printf LAPSPLOT "vc\n";  
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "WINDSPD" ){ 
+                        printf LAPSPLOT "spi\n";  
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "windspd" ){ 
+                        printf LAPSPLOT "sp\n";  
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "om\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "dvi\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "va\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "t\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "u\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }else{ 
+                        print "$source $level $field not available\n"; 
+                    }
+
+                }elsif("$level" eq "sndg"){ # LGA Sounding
+                    if($sounding == 1){
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }
+
+                }else{                       # Background lga - 3D levels
+                    if   ("$field" eq "ht" ) { 
+                        printf LAPSPLOT "hb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "HT" ) { 
+                        printf LAPSPLOT "hbi\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "tb\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "TEMP" ) { 
+                        printf LAPSPLOT "tbi\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "br\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "-132.\n"; 
+
+                    }elsif("$field" eq "RH" ) { 
+                        printf LAPSPLOT "bri\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "r\n"; 
+                        printf LAPSPLOT "-132.\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "wbi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "wbi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "va\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "u\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "wb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "lo\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+
+		    }else{
+                        print "$source $level mb $field not yet available<br>\n"; 
+
+	            } # if field
+
+                } # if level
+           
+            }elsif("$source" eq "obs"){
+                if("$level" eq "sfc/2d"){                                                            # Sfc Obs
+                    if($obs_sfc eq "none" || $field eq "sfct" || $field eq "stn_p"  
+                    || $field eq "red_p" || $field eq "ref_max" || $field eq "REF_MAX" 
+                    || $field eq "snow_cvr" || $field eq "SNOW_CVR" 
+#                   || $field eq "cld_cvr" || $field eq "CLD_CVR" 
+                                                                           ){                        # Overlay always for these
+
+                        if("$field" eq "vsblty" ) { 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "vsblty";    # This is set to prevent station model overlays
+
+                        }elsif("$field" =~ "pcp_" || "$field" =~ "PCP_") { 
+                            printf LAPSPLOT "op\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "pcp_1hr";   # This is set to prevent station model overlays
+
+                        }elsif("$field" eq "snow_sto" ) { 
+                            printf LAPSPLOT "op\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "snow_sto";   # This is set to prevent station model overlays
+
+                        }elsif("$field" eq "CLD_CVR" ) { 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                        }elsif("$field" eq "cld_cvr" ) { 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                        }elsif("$field" =~ "SAT_" ) { 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                        }elsif("$field" =~ "sat_" ) { 
+                            printf LAPSPLOT "ov\n"; 
+                            printf LAPSPLOT " \n"; 
+                            $obs_sfc = "vsblty";   # This is set to prevent station model overlays
+
+                        }elsif("$field" eq "vis_alb"){ 
+                            printf LAPSPLOT "lv\n"; 
+                            printf LAPSPLOT "y\n"; 
+                            printf LAPSPLOT "1\n"; 
+                            printf LAPSPLOT "ALB\n";
+                            printf LAPSPLOT "n\n";   
+
+                        }elsif("$field" eq "VIS_ALB"){ 
+                            printf LAPSPLOT "lv\n"; 
+                            printf LAPSPLOT "y\n"; 
+                            printf LAPSPLOT "-1\n"; 
+                            printf LAPSPLOT "ALB\n";
+                            printf LAPSPLOT "n\n";   
+
+                        }elsif("$field" eq "ref_max" ) { 
+                            printf LAPSPLOT "ra\n"; 
+                            printf LAPSPLOT "mr\n"; 
+                            printf LAPSPLOT " \n"; 
+#                           $obs_sfc = "ref_max";
+
+                        }elsif("$field" eq "REF_MAX" ) { 
+                            printf LAPSPLOT "ra\n"; 
+                            printf LAPSPLOT "mri\n"; 
+                            printf LAPSPLOT " \n"; 
+#                           $obs_sfc = "REF_MAX";
+
+                        }elsif("$field" eq "reflct" ) { 
+                            printf LAPSPLOT "ra\n"; 
+                            printf LAPSPLOT "lr\n"; 
+                            printf LAPSPLOT " \n"; 
+#                           $obs_sfc = "ref_max";
+
+                        }elsif("$field" eq "REFLCT" ) { 
+                            printf LAPSPLOT "ra\n"; 
+                            printf LAPSPLOT "lri\n"; 
+                            printf LAPSPLOT " \n"; 
+#                           $obs_sfc = "REF_MAX";
+
+                        }elsif("$field" eq "SNOW_CVR"){
+                            printf LAPSPLOT "csci\n";
+                            printf LAPSPLOT " \n"; 
+
+                        }elsif("$field" eq "snow_cvr"){ 
+                            printf LAPSPLOT "csc\n"; 
+                            printf LAPSPLOT " \n"; 
+
+                        }elsif("$field" eq "sfct"){ 
+                            printf LAPSPLOT "og\n"; 
+                            printf LAPSPLOT " \n"; 
+
+                        }elsif($units eq "english"){
+                            printf LAPSPLOT "of\n"; 
+                            if("$field" eq "stn_p" ) { 
+                                printf LAPSPLOT "stn\n"; 
+                            }elsif("$field" eq "red_p"){
+                                printf LAPSPLOT "alt\n"; 
+                            }else{
+                                printf LAPSPLOT "msl\n"; 
+                                $obs_sfc = "msl_p";
+                            }
+                        }else{ # metric units
+                            printf LAPSPLOT "oc\n"; 
+                            if("$field" eq "stn_p" ) { 
+                                printf LAPSPLOT "stn\n"; 
+                            }elsif("$field" eq "red_p"){
+                                printf LAPSPLOT "alt\n"; 
+                            }else{
+                                printf LAPSPLOT "msl\n"; 
+                                $obs_sfc = "msl_p";
+                            }
+                        }
+                    } # $obs_sfc 
+
+                }else{                                                                                 # Obs Aloft
+                    if("$field" eq "temp" ) { 
+                        printf LAPSPLOT "to\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ob\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "r\n"; 
+
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ob\n"; 
+                        printf LAPSPLOT "1\n"; 
+                        printf LAPSPLOT "n\n"; 
+                        printf LAPSPLOT "\n"; 
+
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ob\n"; 
+                        printf LAPSPLOT "1\n"; 
+                        printf LAPSPLOT "n\n"; 
+                        printf LAPSPLOT "\n"; 
+
+                    }elsif("$field" eq "reflct" ) { 
+                        printf LAPSPLOT "rv\n"; 
+                        if("$hhmm" =~ "v"){
+                            printf LAPSPLOT "$hhmm\n"; 
+		        }else{
+                            printf LAPSPLOT "v01\n"; 
+		        }
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "REFLCT" ) { 
+                        printf LAPSPLOT "rv\n"; 
+                        if("$hhmm" =~ "v"){
+                            printf LAPSPLOT "$hhmm\n"; 
+		        }else{
+                            printf LAPSPLOT "v01\n"; 
+		        }
+                        printf LAPSPLOT "rfi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+		    }else{
+                        print "$source $level mb $field not available<br>\n"; 
+
+	            } # if field
+
+                } # if level
+           
+            }elsif("$source" eq "obs_qc"){
+                if("$level" eq "sfc/2d"){
+                    if($obs_sfc_qc == 0){
+                        if($units eq "english"){
+                            printf LAPSPLOT "qf\n"; 
+                            if("$field" eq "stn_p" ) { 
+                                printf LAPSPLOT "stn\n"; 
+                            }else{
+                                printf LAPSPLOT "msl\n"; 
+                            }
+                        }else{
+                            printf LAPSPLOT "qc\n"; 
+                            if("$field" eq "stn_p" ) { 
+                                printf LAPSPLOT "stn\n"; 
+                            }else{
+                                printf LAPSPLOT "msl\n"; 
+                            }
+                        }
+                        $obs_sfc_qc = 1;
+                    }
+
+                }else{                                                                                 # QC'd Obs Aloft
+                    if("$field" eq "temp" ) { 
+                        print "$source $level mb $field not available<br>\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        print "$source $level mb $field not available<br>\n"; 
+
+                    }elsif("$field" eq "reflct" ) { 
+                        printf LAPSPLOT "rv\n"; 
+                        printf LAPSPLOT "vrz\n"; 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "REFLCT" ) { 
+                        printf LAPSPLOT "rv\n"; 
+                        printf LAPSPLOT "vrz\n"; 
+                        printf LAPSPLOT "rfi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+		    }else{
+                        print "$source $level mb $field not available<br>\n"; 
+
+	            } # if field
+
+                } # if level
+           
+            }elsif("$source" eq "analysis"){
+
+                if("$level" eq "sfc/2d"){            # Surface analyses
+                    if("$field" eq "CLD_CVR"){ 
+                        printf LAPSPLOT "cg\n";  
+                        printf LAPSPLOT "0\n"; 
+
+                    }elsif("$field" eq "CLD_TOP" ){ 
+                        printf LAPSPLOT "cti\n"; 
+
+                    }elsif("$field" eq "cld_top" ){ 
+                        printf LAPSPLOT "ct\n"; 
+
+                    }elsif("$field" eq "cld_base" ){ 
+                        printf LAPSPLOT "cb\n"; 
+
+                    }elsif("$field" eq "cld_type" ){ 
+                        printf LAPSPLOT "cy\n"; 
+                        printf LAPSPLOT "0\n"; 
+
+                    }elsif("$field" eq "HT" ){ 
+                        printf LAPSPLOT "gg\n"; 
+                        printf LAPSPLOT "tni\n"; 
+
+                    }elsif("$field" eq "ht" ){ 
+                        printf LAPSPLOT "gg\n"; 
+                        printf LAPSPLOT "tn\n"; 
+
+                    }elsif("$field" eq "sfct"){     # LSX 
+                        if($units eq "metric"){
+                            printf LAPSPLOT "gf\n"; 
+                        }else{
+                            printf LAPSPLOT "gf\n"; 
+                        }
+
+                    }elsif("$field" eq "temp"){ 
+                        if($units eq "metric"){
+                            printf LAPSPLOT "tc\n"; 
+                        }else{
+                            printf LAPSPLOT "tf\n"; 
+                        }
+
+                    }elsif("$field" eq "TEMP"){ 
+                        if($units eq "metric"){
+                            printf LAPSPLOT "tfi\n"; 
+                        }else{
+                            printf LAPSPLOT "tfi\n"; 
+                        }
+
+                    }elsif("$field" eq "dewpoint"){ 
+                        if($units eq "metric"){
+                            printf LAPSPLOT "dc\n"; 
+                        }else{
+                            printf LAPSPLOT "df\n"; 
+                        }
+
+                    }elsif("$field" eq "DEWPOINT"){ 
+                        if($units eq "metric"){
+                            printf LAPSPLOT "dci\n"; 
+                        }else{
+                            printf LAPSPLOT "dfi\n"; 
+                        }
+                    }
+                    elsif("$field" eq "RH"){ 
+                        printf LAPSPLOT "hui\n"; }
+                    elsif("$field" eq "rh"){ 
+                        printf LAPSPLOT "hu\n"; }
+                    elsif("$field" eq "wind")
+                        { printf LAPSPLOT "ws\n"; }
+                    elsif("$field" eq "U")
+                        { printf LAPSPLOT "ui\n"; }
+                    elsif("$field" eq "u")
+                        { printf LAPSPLOT "u\n"; }
+                    elsif("$field" eq "V")
+                        { printf LAPSPLOT "vi\n"; }
+                    elsif("$field" eq "v")
+                        { printf LAPSPLOT "v\n"; }
+                    elsif("$field" eq "WINDSPD")
+                        { printf LAPSPLOT "spi\n"; }
+                    elsif("$field" eq "windspd")
+                        { printf LAPSPLOT "sp\n"; }
+                    elsif("$field" eq "div")
+                        { printf LAPSPLOT "dv\n"; }
+                    elsif("$field" eq "vort")
+                        { printf LAPSPLOT "vo\n"; }
+                    elsif("$field" eq "msl_p") 
+                        { printf LAPSPLOT "pm\n"; }
+                    elsif("$field" eq "red_p") 
+                        { printf LAPSPLOT "p\n"; }
+                    elsif("$field" eq "stn_p") 
+                        { printf LAPSPLOT "ps\n"; }
+                    elsif("$field" eq "theta") 
+                        { printf LAPSPLOT "th\n"; }
+                    elsif("$field" eq "THETAE") 
+                        { printf LAPSPLOT "tei\n"; }
+                    elsif("$field" eq "thetae") 
+                        { printf LAPSPLOT "te\n"; }
+                    elsif("$field" eq "CAPE") 
+                        { printf LAPSPLOT "pei\n"; }
+                    elsif("$field" eq "cape") 
+                        { printf LAPSPLOT "pe\n"; }
+                    elsif("$field" eq "CIN") 
+                        { printf LAPSPLOT "nei\n"; }
+                    elsif("$field" eq "cin") 
+                        { printf LAPSPLOT "ne\n"; }
+                    elsif("$field" eq "HELICITY") 
+                        { printf LAPSPLOT "hei\n"; }
+                    elsif("$field" eq "helicity") 
+                        { printf LAPSPLOT "he\n"; }
+                    elsif("$field" eq "wtblb0") 
+                        { printf LAPSPLOT "s\n"; 
+                          printf LAPSPLOT "wb0\n"; }
+                    elsif("$field" eq "vsblty") 
+                        { printf LAPSPLOT "vs\n"; }
+                    elsif("$field" eq "HEATINDEX") 
+                        { printf LAPSPLOT "hii\n"; }
+                    elsif("$field" eq "heatindex") 
+                        { printf LAPSPLOT "hi\n"; }
+                    elsif("$field" eq "firewx") 
+                        { printf LAPSPLOT "fw\n"; }
+                    elsif("$field" eq "FIREWX") 
+                        { printf LAPSPLOT "fwi\n"; }
+                    elsif("$field" eq "vis_alb"){ 
+                        printf LAPSPLOT "lc\n"; 
+                        printf LAPSPLOT "alb\n";} 
+                    elsif("$field" eq "VIS_ALB"){ 
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "alb\n";} 
+                    elsif("$field" eq "SAT_11U"){ 
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "s8a\n";} 
+                    elsif("$field" eq "sat_11u"){ 
+                        printf LAPSPLOT "lc\n"; 
+                        printf LAPSPLOT "s8a\n";} 
+                    elsif("$field" eq "SAT_12U"){ 
+                        printf LAPSPLOT "lv\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "-5\n"; 
+                        printf LAPSPLOT "SCA\n";
+                        printf LAPSPLOT "n\n";   }
+                    elsif("$field" eq "sat_12u"){ 
+                        printf LAPSPLOT "lv\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "5\n"; 
+                        printf LAPSPLOT "SCA\n";
+                        printf LAPSPLOT "n\n";   }
+                    elsif("$field" eq "SAT_WV"){ 
+                        printf LAPSPLOT "lv\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "-3\n"; 
+                        printf LAPSPLOT "S4A\n";
+                        printf LAPSPLOT "n\n";   }
+                    elsif("$field" eq "sat_wv"){ 
+                        printf LAPSPLOT "lv\n"; 
+                        printf LAPSPLOT "y\n"; 
+                        printf LAPSPLOT "3\n"; 
+                        printf LAPSPLOT "S4A\n";
+                        printf LAPSPLOT "n\n";   }
+                    elsif("$field" eq "SAT_39U"){ 
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "s3a\n";} 
+                    elsif("$field" eq "SAT_D39"){ 
+                        printf LAPSPLOT "lci\n"; 
+                        printf LAPSPLOT "d39\n";} 
+                    elsif("$field" eq "sat_d39"){ 
+                        printf LAPSPLOT "lc\n"; 
+                        printf LAPSPLOT "d39\n";} 
+                    elsif("$field" eq "cld_cvr"){ 
+                        printf LAPSPLOT "cv\n"; 
+                        printf LAPSPLOT "0\n"; }
+                    elsif("$field" eq "REF_MAX"){ 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "mri\n"; }
+                    elsif("$field" eq "ref_max"){ 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "mr\n"; }
+                    elsif("$field" eq "pcp_typ"){ 
+                        printf LAPSPLOT "tp\n"; 
+                        printf LAPSPLOT "-1\n"; }
+                    elsif("$field" eq "PCP_1HR"){ 
+                        printf LAPSPLOT "pai\n"; 
+                        printf LAPSPLOT "1\n"; }
+                    elsif("$field" eq "pcp_1hr"){ 
+                        printf LAPSPLOT "pa\n"; 
+                        printf LAPSPLOT "1\n"; }
+                    elsif("$field" eq "PCP_STO"){ 
+                        printf LAPSPLOT "pai\n"; 
+                        printf LAPSPLOT "-99\n"; }
+                    elsif("$field" eq "pcp_sto"){ 
+                        printf LAPSPLOT "pa\n"; 
+                        printf LAPSPLOT "-99\n"; }
+                    elsif("$field" eq "prcp_h2o"){ 
+                        printf LAPSPLOT "pw\n";} 
+                    elsif("$field" eq "PRCP_H2O"){ 
+                        printf LAPSPLOT "pwi\n";} 
+                    elsif("$field" eq "SNOW_1HR"){ 
+                        printf LAPSPLOT "sai\n"; 
+                        printf LAPSPLOT "1\n"; }
+                    elsif("$field" eq "snow_1hr"){ 
+                        printf LAPSPLOT "sa\n"; 
+                        printf LAPSPLOT "1\n"; }
+                    elsif("$field" eq "SNOW_STO"){ 
+                        printf LAPSPLOT "sai\n"; 
+                        printf LAPSPLOT "-99\n"; }
+                    elsif("$field" eq "snow_sto"){ 
+                        printf LAPSPLOT "sa\n"; 
+                        printf LAPSPLOT "-99\n"; }
+                    elsif("$field" eq "REFLCT"){ 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "lri\n"; }
+                    elsif("$field" eq "reflct"){ 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "lr\n"; }
+                    elsif("$field" eq "SNOW_CVR"){ 
+                        printf LAPSPLOT "sci\n";} 
+                    elsif("$field" eq "snow_cvr"){ 
+                        printf LAPSPLOT "sc\n"; }
+                    elsif("$field" eq "LAND_FRAC"){ 
+                        printf LAPSPLOT "gg\n";  
+                        printf LAPSPLOT "lfi\n"; }
+                    elsif("$field" eq "land_frac"){ 
+                        printf LAPSPLOT "gg\n";  
+                        printf LAPSPLOT "lf\n"; }
+                    else 
+                        { print "$source $level $field not available\n"; }
+
+                }elsif("$level" eq "xsect"){ # xsect analysis
+                    if   ("$field" eq "temp" ){ 
+                        printf LAPSPLOT "t\n";  
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "theta" ){ 
+                        printf LAPSPLOT "pt\n";  
+                    }elsif("$field" eq "thetae" ){ 
+                        printf LAPSPLOT "ts\n";  
+                    }elsif("$field" eq "CLD_CVR" ){ 
+                        printf LAPSPLOT "cf\n"; 
+                    }elsif("$field" eq "wind" ){ 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "dvi\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "va\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "om\n"; 
+                        printf LAPSPLOT "a\n"; 
+                        printf LAPSPLOT "k\n"; 
+                    }elsif("$field" eq "OMEGA" ) { 
+                        printf LAPSPLOT "omi\n"; 
+                        printf LAPSPLOT "a\n"; 
+                        printf LAPSPLOT "k\n"; 
+                    }elsif("$field" eq "c_omega" ) { 
+                        printf LAPSPLOT "om\n"; 
+                        printf LAPSPLOT "a\n"; 
+                        printf LAPSPLOT "c\n"; 
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "u\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "U" ) { 
+                        printf LAPSPLOT "ui\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "V" ) { 
+                        printf LAPSPLOT "vi\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "rh" ){ 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "cld_liq" ){ 
+                        printf LAPSPLOT "ls\n"; 
+                    }elsif("$field" eq "CLD_LIQ" ){ 
+                        printf LAPSPLOT "lsi\n"; 
+                    }elsif("$field" eq "cld_ice" ){ 
+                        printf LAPSPLOT "ci\n"; 
+                    }elsif("$field" eq "CLD_ICE" ){ 
+                        printf LAPSPLOT "cii\n"; 
+                    }elsif("$field" eq "cld_type" ){ 
+                        printf LAPSPLOT "tc\n"; 
+                    }elsif("$field" eq "cld_cvr" ){ 
+                        printf LAPSPLOT "cv\n"; 
+                    }elsif("$field" eq "REFLCT" ){ 
+                        printf LAPSPLOT "ri\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "reflct" ){ 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "pcp_typ" ){ 
+                        printf LAPSPLOT "tp\n"; 
+                    }else{ 
+                        print "$source $level $field not available\n"; 
+                    }
+
+                }elsif("$level" eq "sndg"){ # analysis
+                    if($sounding == 1){
+                        printf LAPSPLOT "a\n"; 
+                    }
+
+                }else{ # Analyses - 3D
+                    if   ("$field" eq "CLD_CVR" ) {   # LCP
+                        printf LAPSPLOT "cg\n";  
+                        printf LAPSPLOT "-$level\n"; 
+                    }elsif("$field" eq "cld_cvr" ) {  # LCP
+                        printf LAPSPLOT "cv\n"; 
+                        printf LAPSPLOT "-$level\n"; 
+                    }elsif("$field" eq "HT" ) { 
+                        printf LAPSPLOT "hti\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "ht" ) { 
+                        printf LAPSPLOT "ht\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "t\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "theta" ) { 
+                        printf LAPSPLOT "pt\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "RH" ) { 
+                        printf LAPSPLOT "lqi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "l\n"; 
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "lq\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "l\n"; 
+                    }elsif("$field" eq "wind" ) { # LW3
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "spi\n"; 
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "sp\n"; 
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "wdi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "va\n"; 
+                    }elsif("$field" eq "OMEGA" ) { 
+                        printf LAPSPLOT "woi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "wo\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "c_omega" ) { 
+                        printf LAPSPLOT "co\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "U" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "ui\n"; 
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "u\n"; 
+                    }elsif("$field" eq "V" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vi\n"; 
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "v\n"; 
+                    }elsif("$field" eq "REFLCT" ) { 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "rfi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "reflct" ) { 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "rf\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }elsif("$field" eq "cld_liq" ) { 
+                        printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "cld_ice" ) { 
+                        printf LAPSPLOT "ci\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "cld_type" ) { 
+                        printf LAPSPLOT "cy\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                    }else{ 
+                        print "$source $level mb $field not available\n"; 
+
+                    } # if field
+
+                } # if level
+
+            }elsif("$source" eq "balanced"){
+                if("$level" eq "sfc/2d"){
+
+                    if("$field" eq "wind" ) { # lwm as a placeholder
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "vc\n"; 
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "u\n"; 
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "v\n"; 
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "wd\n"; 
+                        printf LAPSPLOT "0\n"; 
+                        printf LAPSPLOT "sp\n"; 
+		    }else{
+                        print "$source sfc $field not available\n"; 
+                    }
+
+                }elsif("$level" eq "xsect"){ # balanced
+                    if   ("$field" eq "temp" ){ 
+                        printf LAPSPLOT "tb\n";  
+#                       printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "theta" ){ 
+                        printf LAPSPLOT "pb\n";  
+                    }elsif("$field" eq "CLD_CVR" ){ 
+                        printf LAPSPLOT "cf\n"; 
+                    }elsif("$field" eq "wind" ){ 
+                        printf LAPSPLOT "vc\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "sp\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "spi\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "dv\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "DIV" ) { 
+                        printf LAPSPLOT "dvi\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "vo\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "voi\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "va\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "om\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "OMEGA" ) { 
+                        printf LAPSPLOT "omi\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "u\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "U" ) { 
+                        printf LAPSPLOT "ui\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "V" ) { 
+                        printf LAPSPLOT "vi\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "rh" ){ 
+                        printf LAPSPLOT "rl\n"; 
+                        printf LAPSPLOT "n\n"; 
+                    }elsif("$field" eq "cld_liq" ){ 
+                        printf LAPSPLOT "ls\n"; 
+                    }elsif("$field" eq "cld_ice" ){ 
+                        printf LAPSPLOT "ci\n"; 
+                    }elsif("$field" eq "REFLCT" ){ 
+                        printf LAPSPLOT "ri\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "pcp_typ" ){ 
+                        printf LAPSPLOT "tp\n"; 
+                    }else{ 
+                        print "$source $level $field not available\n"; 
+                    }
+
+                }elsif("$level" eq "sndg"){ # Balanced Sounding
+                    if($sounding == 1){
+                        printf LAPSPLOT "n\n"; 
+                    }
+
+                }else{               # 3D Balanced analyses
+                    if   ("$field" eq "ht" ) { 
+                        printf LAPSPLOT "bh\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "HT" ) { 
+                        printf LAPSPLOT "hti\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "temp" ) { 
+                        printf LAPSPLOT "bt\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "theta" ) { 
+                        printf LAPSPLOT "pb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "wind" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vc\n"; 
+
+                    }elsif("$field" eq "WINDSPD" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "spi\n"; 
+
+                    }elsif("$field" eq "windspd" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "sp\n"; 
+
+                    }elsif("$field" eq "u" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "u\n"; 
+
+                    }elsif("$field" eq "v" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "v\n"; 
+
+                    }elsif("$field" eq "div" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "dv\n"; 
+
+                    }elsif("$field" eq "vort" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+
+                    }elsif("$field" eq "VORT" ) { 
+                        printf LAPSPLOT "bwi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "vo\n"; 
+
+                    }elsif("$field" eq "vort_adv" ) { 
+                        printf LAPSPLOT "bw\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "va\n"; 
+
+                    }elsif("$field" eq "omega" ) { 
+                        printf LAPSPLOT "bo\n"; 
+                        printf LAPSPLOT "$level\n"; 
+
+                    }elsif("$field" eq "RH" ) { 
+                        printf LAPSPLOT "rbi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "l\n"; 
+
+                    }elsif("$field" eq "rh" ) { 
+                        printf LAPSPLOT "rb\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "rh\n"; 
+                        printf LAPSPLOT "l\n"; 
+
+		    }else{
+                        print "$source $level mb $field not available\n"; 
+
+	            } # if field
+
+                } # if level
+           
+            }else{ 
+                print "$source not yet available...\n"; 
+
+            } # if source
+
+        } # foreach level
+    } # foreach field
+  } # if source eq DIFF
+} # foreach source
+
+printf LAPSPLOT "q\n";
+printf LAPSPLOT "q\n";
+close LAPSPLOT;
+
+#$laps_data_root = $DomainDir/$domain/data;
+
+#print "laps_data_root = $laps_data_root<br>";
+
+my $window;
+my $resolution;
+
+my $xhigh;
+my $xlow;
+my $yhigh;
+my $ylow;
+my $yhigh_thresh;
+my $ylow_thresh;
+my $x_hw;
+my $y_hw;
+
+
+#Run lapsplot and generate the GIF here
+if($sect eq "hsect"){
+    $x_hw  = 0.5 / $zoom_safe;
+    if($domain_safe eq "co" || $domain_safe =~ "co_prl" || $domain_safe =~ "wiap" || $domain_safe =~ "t2" || $domain_safe =~ "goes"){
+        $resolution="792x664";
+        $y_hw  = 0.42 / $zoom_safe;
+        $ylow_thresh  = 0.08;
+        $yhigh_thresh = 0.92;
+    }else{
+        $resolution="664x664";
+        $y_hw  = 0.5 / $zoom_safe;
+        $ylow_thresh  = 0.0;
+        $yhigh_thresh = 1.0;
+    }
+
+    $xlow  = $xcen_safe - $x_hw;
+    $xhigh = $xcen_safe + $x_hw;
+    $ylow  = $ycen_safe - $y_hw;
+    $yhigh = $ycen_safe + $y_hw;
+
+
+#   Correct parms if they are invalid
+#   $window="$xlow:$ylow:$xhigh:$yhigh";
+#   print "window initially is $window<br>\n";
+
+    if($xlow < 0.){
+        $xhigh = $xhigh - $xlow;
+        $xcen_safe  = $xcen_safe  - $xlow;
+        $xlow  = 0.;
+    }elsif($xhigh > 1.){
+        $xlow  = $xlow - ($xhigh - 1.0);
+        $xcen_safe  = $xcen_safe - ($xhigh - 1.0);
+        $xhigh = 1.0;
+    }
+
+    if($ylow < $ylow_thresh){
+        $yhigh =      $yhigh      + ($ylow_thresh - $ylow);
+        $ycen_safe  = $ycen_safe  + ($ylow_thresh - $ylow);
+        $ylow       = $ylow_thresh;
+    }elsif($yhigh > $yhigh_thresh){
+        $ylow       = $ylow -      ($yhigh - $yhigh_thresh);
+        $ycen_safe  = $ycen_safe - ($yhigh - $yhigh_thresh);
+        $yhigh      = $yhigh_thresh;
+    }
+
+#   $xcen_safe = ($xlow + $xhigh) / 2.0;
+#   $ycen_safe = ($ylow + $yhigh) / 2.0;
+
+    $window="$xlow:$ylow:$xhigh:$yhigh";
+#   print "window (corrected) is $window<br>\n";
+
+}elsif($sect eq "sndg"){ # Sounding
+    $resolution="664x664";
+    $window="0.00:0.00:1.00:1.00";
+    if($xcen_safe < 1){
+       $xcen_safe = 1;
+    }
+    if($ycen_safe < 1){
+       $ycen_safe = 1;
+    }
+
+}else{ # xsect
+    $resolution="792x664";
+#   $window="0.06:0.14:0.94:0.86";
+    $window="0.06:0.13:0.94:0.85";
+
+}
+
+
+#Set Up Machine, Shell, and Image Type
+#my $machine = "jayhawk"; # This won't work until we enable ssh on pubweb@arac
+#my $shell = "/usr/local/bin/ssh";
+#my $image_type = "jpg";
+
+my $machine = "toro";      # hugo / ren also works but can have long runtimes
+my $shell = "rsh";
+my $image_type = "gif";
+
+my $exedir;
+my $ncarg_root;
+
+if($machine eq "jayhawk"){
+    $ncarg_root = "/usr/local/apps/ncarg-4.2.2-pgi";
+    $exedir = "/usr/nfs/lapb/builds/laps/bin";
+}else{
+    $ncarg_root = "/usr/local/apps/ncarg-4.0.1";
+    if($domain_safe =~ "co_prl"){
+        $exedir = "/usr/nfs/lapb/parallel/laps/bin";
+    }else{
+#       $exedir = "/usr/nfs/lapb/operational/laps/bin";
+        $exedir = "/usr/nfs/lapb/builds/laps/bin";
+    }
+}
+
+if ($wgi_only == 0) {
+    system("$shell $machine -l oplapb $request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir $exedir $laps_data_root $ncarg_root 8 $resolution 1> $request_root/lapsplot/lapsplot.out 2> $request_root/lapsplot/lapsplot.err"); 
+    print<<"EOI";
+    <p>
+    <center>
+    <img src=\"/$ScratchDir/gmeta_$$.$image_type\">
+    <A HREF=\"/$ScratchDir/gmeta_$$.gm\">gmeta file</A>
+
+    </body></html>
+
+EOI
+}else{
+    print<<"EOI";
+    <p>
+    <center>
+    <IMG SRC="/albers/colorbar.gif">
+    </body></html>
+
+EOI
+}
+
+#This is where the IDL GIF is created?
+#open IDL,"$IDL_DIR/bin/idl tke-ruc2.idl 2>&1 |";
+
+
+#print " test output: write selected.in file \n"; 
+
+
+#Write a selected.in file
+$logFile = "$thisDir/lapsplot/selected.in";
+open(SELECTED,">$logFile") ||
+    die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+printf SELECTED "$domain_safe\n";
+printf SELECTED "@sources\n";
+printf SELECTED "@fields\n";
+printf SELECTED "@pressure_levels\n";
+printf SELECTED "$a9time\n";
+printf SELECTED "$hhmm\n";
+printf SELECTED "$zoom_safe\n";
+printf SELECTED "$xcen_safe\n";
+printf SELECTED "$ycen_safe\n";
+printf SELECTED "$density_safe\n";
+close SELECTED;
+
+
+#get best return address for log
+$returnAddress = ($ENV{'REMOTE_HOST'} || $ENV{REMOTE_ADDR} ||
+                  "(Unknown requestor)");
+
+$logFile = "$thisDir/laps_request.log";
+open(LOG,">>$logFile") ||
+    die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+#get time for log file
+$time = time();
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+$thisMonth=$month[$mon];
+$nHours=($stopSecs+1-$startSecs)/3600;
+printf LOG "%02d-$thisMonth-$year-%02d%02dZ $returnAddress " .
+           "%3.1f (%4.1f,%4.1f) ".
+           " $out_levels %s\n"
+           ,$mday,$hour,$min,$density,$a9time,$CenterLon,
+           $ENV{'REMOTE_USER'};
+close LOG;
+
+$logFile = "$web_root/cgi/laps_anal_products.cgi.log";
+open(LOG,">>$logFile") ||
+    die "Content-type: text/html\n\nCan't open $logFile: $!\n";
+#get time for log file
+$time = time();
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+$thisMonth=$month[$mon];
+$nHours=($stopSecs+1-$startSecs)/3600;
+$year=$year+1900;
+printf LOG "....$thisMonth $mday %02d\:%02d\:%02d UTC $year  $returnAddress " .
+           " $domain_safe $out_sources %s $out_fields %s $out_levels %s\n"
+           ,$hour,$min,$sec,
+           $ENV{'REMOTE_USER'};
+close LOG;
+
+$LOG_USER = $ENV{'REMOTE_USER'};
+
+}
+
+#print " test output: End of nph-laps.cgi - calling laps.cgi \n"; 
+
+
+system("$web_root/request/laps.cgi");
+
+#system("$web_root/cgi/log-access.s $logFile $LOG_USER request_$domain_safe");
+#           "%3.1f".
