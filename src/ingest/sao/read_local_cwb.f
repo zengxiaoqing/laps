@@ -48,7 +48,7 @@ cdis
       integer, parameter :: maxShp = 110
 
       character(*)   stname(maxobs)
-      character(25)  inpath
+      character(*)  inpath
       character(6)   rptTp(maxobs), stnTp(maxobs)
       integer        pcc(maxobs)
       real  lats(maxobs), lons(maxobs), elev(maxobs)
