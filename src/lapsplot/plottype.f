@@ -74,18 +74,18 @@ cdis
         do j = 1,jmax
            barg = cldpcp_type_2d(i,j)
            iarg = byte_to_i4(barg)
-           if(c2_field .eq. 'tc')then
+           if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
                ifield_2d(i,j) = iarg - iarg/16*16
-           elseif(c2_field .eq. 'tp')then
+           elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
                ifield_2d(i,j) = iarg/16
            endif
         enddo ! j
         enddo ! i
 
         do j=jmax,1,-3
-            if(c2_field .eq. 'tc')then
+            if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
                 write(6,500)(c2_cloud_types(ifield_2d(i,j)),i=1,imax,2)
-            elseif(c2_field .eq. 'tp')then
+            elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
                 write(6,500)(c2_precip_types(ifield_2d(i,j)),i=1,imax,2)
             endif
 500         format(1x,29(1x,a2))
@@ -93,7 +93,7 @@ cdis
 
         if(.not. l_meta)return
 
-        if(c2_field .eq. 'tc')then
+        if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
             nc = 2
 
             if(imax .gt. 110 .or. jmax .gt. 110)then
@@ -107,7 +107,7 @@ cdis
                 iskip = 2
             endif
 
-        elseif(c2_field .eq. 'tp')then
+        elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
             nc = 1
 
             if(imax .gt. 110 .or. jmax .gt. 110)then
@@ -135,10 +135,10 @@ cdis
             alon = lon(i,j)
 
             if(ifield_2d(i,j) .ne. 0)then
-                if(c2_field .eq. 'tc')then
+                if(c2_field .eq. 'tc' .or. c2_field .eq. 'cy')then
                     c2_type = c2_cloud_types(ifield_2d(i,j))
                     nc = 2
-                elseif(c2_field .eq. 'tp')then
+                elseif(c2_field .eq. 'tp' .or. c2_field .eq. 'py')then
                     c2_type = c1_precip_types(ifield_2d(i,j))
                     nc = 1
                 endif

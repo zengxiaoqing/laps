@@ -348,7 +348,7 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu,ta,th,te,vo'        
-     1       ,',mr,mc,dv,ha,ma,sp]'
+     1       ,',mr,mc,dv-i,ha,ma,sp]'
      1       /'          [cs,vs,tw,fw-i,hi]'
      1       /'          [of,oc,ov,os,op,qf,qc,qv,qs,qp] obs plots'       
      1       ,'  [bs] Sfc background'
@@ -3945,13 +3945,13 @@ c                   cint = -1.
      1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
      1        NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'dv')then
+        elseif(c_type(1:2) .eq. 'dv')then
             var_2d = 'DIV'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -3960,15 +3960,15 @@ c                   cint = -1.
 
             c33_label = 'LAPS Sfc Divergence  (x 1e-5 s-1)'
 
-            clow = -100.
-            chigh = +100.
-            cint = 5.
+            scale = 1e-5
+            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+     1                                                  ,zoom,scale)
 
-            call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
-
-            call plot_cont(field_2d,1e-5,clow,chigh,cint,
-     1        asc9_tim_t,c33_label,i_overlay,c_display,lat,lon,jdot,
-     1        NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_field_2d(i4time_pw,c_type,field_2d,scale
+     1                        ,chigh,clow,cint,asc9_tim_t,c33_label
+     1                        ,i_overlay,c_display,lat,lon,jdot
+     1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time
+     1                        ,'linear')
 
         elseif(c_type .eq. 'ha')then ! Theta Advection
             var_2d = 'THA'
@@ -5739,3 +5739,47 @@ c
         return
         end
 
+
+        subroutine plot_field_2d(i4time,c_type,field_2d,scale
+     1                        ,clow_in,chigh_in,cint,asc9_tim_t
+     1                        ,c33_label,i_overlay,c_display,lat,lon
+     1                        ,jdot,NX_L,NY_L,r_missing_data
+     1                        ,laps_cycle_time,colortable)
+
+        character*(*) c_type, c33_label, c_display, colortable
+     1              , asc9_tim_t
+
+        real*4 lat(NX_L,NY_L)
+        real*4 lon(NX_L,NY_L)
+
+        common /image/ n_image
+
+        call make_fnam_lp(i4time,asc9_tim_t,istatus)
+
+        if(clow_in .gt. chigh_in)then
+            chigh = clow_in
+            clow = chigh_in
+        else
+            chigh = chigh_in
+            clow = clow_in
+        endif
+
+        if(c_type(3:3) .ne. 'i')then
+            call plot_cont(field_2d,scale,clow,chigh,cint
+     1                        ,asc9_tim_t,c33_label,i_overlay
+     1                        ,c_display,lat,lon,jdot,NX_L,NY_L
+     1                        ,r_missing_data,laps_cycle_time)
+
+        else ! image plot
+            call ccpfil(field_2d,NX_L,NY_L,clow_in*scale,chigh_in*scale       
+     1                     ,colortable,n_image)    
+            call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+            call setusv_dum(2hIN,7)
+            call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                            ,i_overlay)
+            call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+        endif ! image plot
+
+        return
+        end

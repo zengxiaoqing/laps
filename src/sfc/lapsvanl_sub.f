@@ -444,18 +444,21 @@ c
             call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)
             n_fnorm = int(fnorm_max) + 1
 
-            call barnes_multivariate_sfc(t,imax,jmax                
-     1                                    ,to,smsng
-     1                                    ,r_missing_data           ! Input
+            rms_thresh_norm  = 1.0  ! a la wind.nl
+            weight_bkg_const = 5e28 ! a la wind.nl
+
+            call get_grid_spacing(grid_spacing_m,istatus)
+            if(istatus .ne. 1)stop
+
+            call barnes_multivariate_sfc(to,imax,jmax               ! Inputs
+     1                                    ,smsng                    ! Input
      1                                    ,grid_spacing_m           ! Input
      1                                    ,max_snd                  ! Input
-     1                                    ,temp_obs,max_obs,n_obs   ! Input
-     1                                    ,n_var                    ! Input
-     1                                    ,bias_3d                  ! Output
      1                                    ,rms_thresh_norm          ! Input
      1                                    ,weight_bkg_const         ! Input
-     1                                    ,n_fnorm
-     1                                    ,istatus)
+     1                                    ,n_fnorm                  ! Input
+     1                                    ,t                        ! Output
+     1                                    ,istatus)                 ! Output
         endif
 c
 cc	print *,' Using smooth Barnes to start the analysis.'

@@ -1,15 +1,12 @@
 
-        subroutine barnes_multivariate_sfc(t_2d,ni,nj            ! Inputs
-     1                   ,to_2d,r_missing_data                   ! Input
+        subroutine barnes_multivariate_sfc(to_2d,ni,nj           ! Inputs
+     1                   ,r_missing_data                         ! Input
      1                   ,grid_spacing_m                         ! Input
      1                   ,max_snd                                ! Input
-     1                   ,bias
-     1                   ,temp_obs,max_obs,n_obs                 ! Input
-     1                   ,n_var                                  ! Input
-     1                   ,bias_3d                                ! Output
      1                   ,rms_thresh_norm                        ! Input
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
+     1                   ,t_2d                                   ! Output
      1                   ,istatus)                               ! Output
 
 
@@ -32,7 +29,7 @@
 
         dimension fnorm(0:n_fnorm)
 
-        include 'tempobs.inc'
+!       include 'tempobs.inc'
 
         write(6,*)' Subroutine Barnes_univariate_sfc'
 
@@ -69,6 +66,7 @@
      1            ,rms_thresh_norm,rms_thresh      
 
         l_3d = .true. ! Use successive correction even though it's 2D
+        n_var = 1
 
         call barnes_multivariate(
      1                      t_2d                            ! Outputs

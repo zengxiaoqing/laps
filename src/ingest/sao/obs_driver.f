@@ -85,6 +85,8 @@ c
         character*200 path_to_gps_data
         character*8   metar_format, c8_project
 
+        logical l_allow_empty_lso
+
         call get_config(istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error returned from get_config'
@@ -120,6 +122,7 @@ c
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
      1                           ,maxobs
+     1                           ,l_allow_empty_lso
      1                           ,istatus)
         if(istatus .ne. 1)stop
 
@@ -139,6 +142,7 @@ c
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
      1                           ,maxsta
+     1                           ,l_allow_empty_lso
      1                           ,istatus)
 
         end
@@ -154,6 +158,7 @@ c
      1                           ,ick_metar_time
      1                           ,itime_before,itime_after
      1                           ,maxsta
+     1                           ,l_allow_empty_lso
      1                           ,istatus)
 c        
         integer ni, nj, maxsta, maxobs 
@@ -187,6 +192,8 @@ c
         character*200 path_to_gps_data
         character*8   metar_format
         character*8   a9_to_a8, a8_time
+
+        logical l_allow_empty_lso
 c
         integer cnt
         data cnt/0/
@@ -236,14 +243,17 @@ c
 	var_s = 'LAT'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      lat,  grid_spacing,istatus)
+        if(istatus .ne. 1)return
 c
 	var_s = 'LON'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      lon,  grid_spacing,istatus)
+        if(istatus .ne. 1)return
 c
 	var_s = 'AVG'
         call rd_laps_static(dir_s,ext_s,ni,nj,1,var_s,units,comment,
      &                      topo, grid_spacing,istatus)
+        if(istatus .ne. 1)return
 c
 c.....	Find east/west and north/south sides of grid (max extension of grid)
 c
@@ -601,7 +611,7 @@ c
      1                                                 ,nalt_or_msl    
 
 !       Check for no obs
-        if(nn .eq. 0)then
+        if(nn .eq. 0 .and. .not. l_allow_empty_lso)then
             write(6,*)' WARNING: no LSO written due to no obs'
             return
         endif
@@ -636,6 +646,7 @@ c
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
      1                         ,maxobs
+     1                         ,l_allow_empty_lso
      1                         ,istatus)
 
        character*200 path_to_metar
@@ -643,6 +654,7 @@ c
        character*200 path_to_buoy_data
        character*200 path_to_gps_data
        character*8   metar_format
+       logical l_allow_empty_lso
 
        namelist /obs_driver_nl/ path_to_metar
      1                         ,path_to_local_data
@@ -652,6 +664,7 @@ c
      1                         ,minutes_to_wait_for_metars
      1                         ,ick_metar_time
      1                         ,itime_before,itime_after
+     1                         ,l_allow_empty_lso
      1                         ,maxobs
  
        character*150 static_dir,filename
