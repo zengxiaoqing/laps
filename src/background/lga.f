@@ -488,7 +488,8 @@ c
 c ETA grib ingest currently disabled (J. Smart 9-4-98)
 c Also, NOGAPS 2.5 degree obsolete.
 c
-         elseif (bgmodel .eq. 6 .or.
+         elseif (bgmodel .eq. 3 .or.
+     .           bgmodel .eq. 6 .or.
      .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
 
             call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
@@ -508,7 +509,7 @@ c
 c            l=index(bgpath,' ')-1
 
             call s_len(bgpath,l)
-            if (bgmodel .gt. 1 .and. bgmodel .lt. 3) then
+            if (bgmodel .gt. 1 .and. bgmodel .le. 3) then
                fname13=fname//af
             elseif (bgmodel .eq. 4) then
                fname13=fname9_to_wfo_fname13(fname)
