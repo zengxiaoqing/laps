@@ -507,6 +507,7 @@ cdoc                            calls read_multiradar_3dref.
      1   heights_3d,
      1   grid_ra_ref,
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,
+     1   iqc_2dref,                                                     ! O
      1   n_ref_grids,n_2dref,n_3dref,istatus_2dref_a,istatus_3dref_a)       
 
  900    if(    n_2dref .eq. imax*jmax)then    ! Full coverage
@@ -538,6 +539,7 @@ cdoc                            calls read_multiradar_3dref.
      1   heights_3d,                                                    ! I
      1   grid_ra_ref,                                                   ! O
      1   rlat_radar,rlon_radar,rheight_radar,radar_name,                ! O
+     1   iqc_2dref,                                                     ! O
      1   n_ref_grids,n_2dref,n_3dref,istatus_2dref_a,istatus_3dref_a)   ! O 
 
 !       Steve Albers Nov 1998   This routine will read in a 3D radar
@@ -568,6 +570,9 @@ cdoc                            calls read_multiradar_3dref.
 !       2dref=1, 3dref=0 - echo top from radar has less confidence
 !       2dref=0, 3dref=0 - missing data
 
+!       iqc_2dref = 0 ! less confidence in 2dref data QC
+!       iqc_2dref = 1 ! more confidence in 2dref data (e.g. from NOWRAD)
+
         integer*4 istatus_2dref
         integer*4 istatus_3dref
         integer*4 istatus_2dref_a(imax,jmax)
@@ -590,6 +595,7 @@ cdoc                            calls read_multiradar_3dref.
 
         istatus_2dref_a = 0
         istatus_3dref_a = 0
+        iqc_2dref = 0
 
         call get_ref_base(ref_base,istatus)
         if(istatus .ne. 1)then
@@ -769,6 +775,7 @@ cdoc                            calls read_multiradar_3dref.
                     radar_name = 'WSI '
                     write(6,*)' Read radar ',radar_name
      1                       ,' Low Level Mosaic'    
+                    iqc_2dref = 1 ! better quality QC
                 elseif(l_parse(comment_2d,'Radar mosaic'))then
                     radar_name = '    '
                     write(6,*)
