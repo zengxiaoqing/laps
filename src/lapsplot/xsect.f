@@ -248,7 +248,7 @@ cdis
         real*4 mspkt 
         data mspkt /.518/
 
-        character*50 c_label
+        character*100 c_label
         character*1 c_display
         character*1 c1_string,c_wind
         character*2 c_metacode 
@@ -786,6 +786,11 @@ c read in laps lat/lon and topo
      1                             ,i4_valid                ! O
      1                             ,istatus)                ! O
 
+            if(istatus .ne. 1)then
+                write(6,*)' Error: could not determine product time'
+                goto100
+            endif
+
             i4time_3dw = i4_valid
 
             if(c_field .ne. 'w ' .and. c_field(1:2) .ne. 'om')then
@@ -947,17 +952,21 @@ c read in laps lat/lon and topo
             i_contour = 2
 
             if       (c_prodtype .eq. 'N')then
-                c_label = 'LAPS Wind (Balanced)       knots '
+                c_label = 'Wind (Balanced)             (kt) '
             elseif   (c_prodtype .eq. 'A')then
-                c_label = 'LAPS Wind (Analyzed)       knots '
-            elseif   (c_prodtype .eq. 'B')then
-                c_label = 'LAPS Wind (Background)     knots '
-            elseif   (c_prodtype .eq. 'F')then
-                c_label = 'LAPS Wind (Forecast)       knots '
+                c_label = 'Wind (Analyzed)             (kt) '
+            elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then   
+                comment_2d = 'Wind'
+                units_2d = 'kt'
+
+                len_label = len(c_label)                          ! debug
+                write(6,*)' label length = ',len_label            ! debug
+
+                call mk_fcst_xlabel(comment_2d,fcst_hhmm
+     1                             ,ext(1:3),units_2d,c_model,c_label)       
             else
                 c_label = 'LAPS Wind (??????????)     knots '
             endif
-
 
         elseif(c_field(1:2) .eq. 'om' )then
 
@@ -1144,13 +1153,18 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
-                c_label = 'LAPS  U    (balanced)       (kt) '
+                c_label = 'U Component (balanced)      (kt) '
             elseif(c_prodtype .eq. 'A')then   
-                c_label = 'LAPS  U    (analyzed)       (kt) '
-            elseif(c_prodtype .eq. 'B')then   
-                c_label = 'LAPS  U    (background)     (kt) '
-            elseif(c_prodtype .eq. 'F')then   
-                c_label = 'LAPS  U    (forecast)       (kt) '
+                c_label = 'U Component (analyzed)      (kt) '
+            elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then   
+                comment_2d = 'U Component'
+                units_2d = 'kt'
+
+                len_label = len(c_label)                          ! debug
+                write(6,*)' label length = ',len_label            ! debug
+
+                call mk_fcst_xlabel(comment_2d,fcst_hhmm
+     1                             ,ext(1:3),units_2d,c_model,c_label)       
             endif
 
         elseif(c_field .eq. 'v ' )then
@@ -1175,13 +1189,14 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
-                c_label = 'LAPS  V    (balanced)       (kt) '
+                c_label = 'V Component (balanced)      (kt) '
             elseif(c_prodtype .eq. 'A')then   
-                c_label = 'LAPS  V    (analyzed)       (kt) '
-            elseif(c_prodtype .eq. 'B')then   
-                c_label = 'LAPS  V    (background)     (kt) '
-            elseif(c_prodtype .eq. 'F')then   
-                c_label = 'LAPS  V    (forecast)       (kt) '
+                c_label = 'V Component (analyzed)      (kt) '
+            elseif(c_prodtype .eq. 'B' .or. c_prodtype .eq. 'F')then   
+                comment_2d = 'V Component'
+                units_2d = 'kt'
+                call mk_fcst_xlabel(comment_2d,fcst_hhmm
+     1                             ,ext(1:3),units_2d,c_model,c_label)       
             endif
 
         elseif(c_field .eq. 'sp' )then
@@ -2664,7 +2679,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
            endif ! cint > 0
         endif ! i_contour = 1
 
-        call upcase(c_label,c_label)
+!       call upcase(c_label,c_label)
         call set(0., 1., vymin2, vymax2, 0.,1.,0.,1.,1)
 
 !       Write bottom label
@@ -3812,7 +3827,8 @@ c
      1                                ,c_model
      1                                ,c_label)
 
-        character*(*) comment_2d,ext,units_2d,c_model,c_label
+        character*(*) comment_2d,ext,units_2d,c_model
+        character*100 c_label
 
         character*4 fcst_hhmm_in,fcst_hhmm
 
@@ -3835,7 +3851,7 @@ c
             fcst_hhmm = fcst_hhmm_in
         endif
 
-        ist = 37
+        ist = 31
 
         if(len_units .gt. 0)then
             c_label(1:ist-1) = comment_2d(1:len_fcst)
@@ -3853,7 +3869,12 @@ c
             c_label(ist+5:ist+8) = 'Fcst'       
         endif
 
-        write(6,*)' mk_fcst_xlabel:',c_label
+        len_label = len(c_label)
+        if(len_label .le. 200)then
+            write(6,*)' mk_fcst_xlabel:',c_label
+        else
+            write(6,*)' mk_fcst_xlabel: label length = ',len_label
+        endif
 
         return
         end
