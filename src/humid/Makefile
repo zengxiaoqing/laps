@@ -38,13 +38,12 @@ SRC=module_sfc_structure.f    analq.f            lq3_driver1a.f     rsr.f \
     get_rad.f          lh3_compress.f     raob_step.f        writef_sp.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f \
     moment_b.f         two_d_stats.f      process_gvap.f     read_gvap.f \
-    analz_gvap.f       report_change.f    oh_zone.f  \
+    analz_gvap.f       report_change.f \
     process_gps.f      read_gps.f         int_layerpw.f      cloud_sat.f \
     get_newest_file.f  weight_field.f     analz_gps.f        sigma_to_laps.f \
     int_ipw.f          test_cloud.f       correct_gvap_bias.f  \
     precip_water_profile.f \
-    bias_correction.f  snd_step.f         analz_snd.f       impact_assess.f \
-    make_optran_layers.f 
+    bias_correction.f  snd_step.f         analz_snd.f       impact_assess.f
 
 MAIN=lq3driver.f
 
