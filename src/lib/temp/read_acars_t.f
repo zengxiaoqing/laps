@@ -120,12 +120,12 @@ cdis
             iwrite = 0
         endif
 
-        call read_acars_ob(lun_in,'temp',xlat,xlon,elev,temp_ob,arg2
+        call read_acars_ob(lun_in,'temp',xlat,xlon,elev_in,temp_ob,arg2       
      1                                  ,asc9_tim_acars,iwrite,l_eof)
 
         if(l_eof)goto900
 
-        if(elev .eq. 0.)i_qc = 0
+        if(elev_in .eq. 0.)i_qc = 0
 
         n_acars_read = n_acars_read + 1
 
@@ -151,23 +151,28 @@ cdis
 
                     if(ext_in .eq. 'pin')then
 !                       Assume ACARS elev is pressure altitude MSL
-                        arg = ztopsa(elev)
+                        elev_std = elev_in
+                        pres_mb = ztopsa(elev_std)
 
                         if(abs(arg) .lt. 90000.)then ! Within flag value
-                            pres = arg * 100.
-                            rk = zcoord_of_logpressure(pres)
-                            rk_pspace = zcoord_of_pressure(pres)
-                            istatus_rk = 1
+                            pres_pa = pres_mb * 100.
+                            call pressure_to_height(pres_pa,heights_3d       
+     1                                             ,ni,nj,nk
+     1                                             ,i_grid,j_grid
+     1                                             ,elev_geo
+     1                                             ,istatus_rk)      
                         else
                             istatus_rk = 0
                         endif
 
-!                       rk = height_to_zcoord2(elev,heights_3d
-!    1                       ,ni,nj,nk,i_grid,j_grid,istatus_rk)
+                        if(istatus_rk .eq. 1)then
+                            rk = height_to_zcoord2(elev_geo,heights_3d       
+     1                           ,ni,nj,nk,i_grid,j_grid,istatus_rk)       
+                        endif
 
                         if(istatus_rk .ne. 1)then
                             write(6,*)' WARNING: rejecting ACARS ',
-     1                      'elevation questionable ',elev
+     1                      'elevation questionable ',elev_std,elev_geo       
                         endif
 
                     else 
@@ -194,13 +199,13 @@ cdis
                         acars_i(n_acars_obs) = i_grid
                         acars_j(n_acars_obs) = j_grid
 
-                        acars_ht(n_acars_obs) = elev
+                        acars_ht(n_acars_obs) = elev_geo
 
                         t_diff = 0.
 !                       call get_time_term(t_diff)
 
                         call interp_tobs_to_laps(
-     1                             elev,temp_ob,                         ! I
+     1                             elev_geo,temp_ob,                     ! I
      1                             t_diff,temp_bkg_3d,                   ! I
      1                             t_interp,                             ! O
      1                             1,iwrite,k_grid,.true.,               ! I
@@ -209,6 +214,12 @@ cdis
      1                             ni,nj,nk,                             ! I
      1                             1,1,r_missing_data,                   ! I
      1                             heights_3d)                           ! I
+
+                        if(t_interp .eq. r_missing_data)then
+                            write(6,*)' ERROR: t_interp = ',t_interp
+                            istatus = 0
+                            return
+                        endif
 
                         write(lun_tmg,*)ri-1.,rj-1.,k_grid-1,t_interp
      1                                 ,'ACARS'
