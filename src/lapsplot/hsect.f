@@ -1622,6 +1622,7 @@ c
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
 
              endif
+             call move(vas,field_2d,NX_L,NY_L) ! Supports the diff option
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
      1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
@@ -2343,7 +2344,7 @@ c
 
             if(c_type(1:2) .eq. 'pa')then
                 if(abs(r_hours) .gt. 1.0)then
-                    cint = -0.05
+                    cint = -0.01 ! -0.05
                 else
                     cint = -0.01
                 endif
@@ -2357,27 +2358,8 @@ c
                 chigh = 20.
             endif
 
-!           Eliminate "minor" maxima
-            do j = 1,NY_L
-            do i = 1,NX_L
-                if(c_type(1:2) .eq. 'pa')then
-                    if(accum_2d(i,j)/scale .lt. 0.005)then
-                        accum_2d(i,j) = 0.0
-                    elseif(accum_2d(i,j)/scale .gt. .05 .and. 
-     1                     accum_2d(i,j)/scale .lt. 0.5 .and.
-     1                     c_type(1:3) .eq. 'pai'               )then
-                        accum_2d(i,j) = 0.5*scale
-                    endif
-                else
-                    if(accum_2d(i,j)/scale .lt. 0.05)then
-                        accum_2d(i,j) = 0.0
-                    endif
-!                   if(accum_2d(i,j)/scale .le. 0.0001)then
-!                       accum_2d(i,j) = -1e-6
-!                   endif
-                endif
-            enddo ! i
-            enddo ! j
+            call condition_precip(NX_L,NY_L,c_type,accum_2d,scale
+     1                           ,abs(cint))
 
             call plot_field_2d(i4time_accum,c_type,accum_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -3104,13 +3086,7 @@ c
           call make_fnam_lp(i4time_temp,asc9_tim_t,istatus)
 
           if(c_type(1:2) .eq. 'pe')then
-!             Change flag value 
-              do i = 1,NX_L
-              do j = 1,NY_L
-                  if(field_2d(i,j) .eq. r_missing_data)
-     1                field_2d(i,j) = -1.           
-              enddo ! j
-              enddo ! i
+              call condition_cape(NX_L,NY_L,c_type,field_2d)
 
               c33_label = 'LAPS CAPE                (J/KG)  '
               clow = 0.
@@ -4012,13 +3988,17 @@ c                   cint = -1.
                 elseif(var_2d .eq. 'RH')then
                     call ccpfil(field_2d,NX_L,NY_L,220.,-40.
      1                         ,'hues',n_image,scale) 
-                elseif(var_2d(2:3) .eq. '01' .or. 
+                elseif(var_2d(2:3) .eq. '01' .or.           ! Precip
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
                         chigh = +10.
                     else
                         chigh = +20.
                     endif
+
+                    call condition_precip(NX_L,NY_L,'pai',field_2d
+     1                                   ,scale,.01)      
+
                     call ccpfil(field_2d,NX_L,NY_L,0.,chigh*scale
      1                         ,'acc',n_image,scale) 
                 else
@@ -4749,8 +4729,8 @@ c                   cint = -1.
 
            write(6,219)
 219        format(5x,'Select STATIC field:'
-     1/' [tn-i,lf-i,gr,lu,al-i,sn-i,sl-i]'
-     1/'  Ter/LndFrac/Grid/Use/Alb/Slp ? ',$)
+     1/' [tn-i,lf-i,  gr,  lu, al-i,ts-i,gn-i,sn-i,sl-i]'
+     1/'  Ter/LndFrac/Grid/Use/Alb/Temp/Green/Slp ? ',$)
            read(lun,*)cstatic
 
            if(cstatic(1:2).eq.'tn')then
@@ -4848,6 +4828,38 @@ c    1,istatus)
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,0.0,0.5,'linear'
      1                     ,n_image,1e0)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+              else
+                call plot_cont(field_2d,1e0,
+     1               clow,chigh,cint,asc9_tim_t,c33_label,
+     1               i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
+              call move(static_grid,field_2d,NX_L,NY_L) ! Supports diff option
+              i4time_topo = 0
+
+           elseif(cstatic(1:2) .eq. 'ts')then
+
+              var_2d='TMP'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static: Soil Temp'
+                 return
+              endif
+
+              call get_mxmn_2d(NX_L,NY_L,static_grid,chigh
+     1                        ,clow,imx,jmx,imn,jmn)
+
+              cint = (chigh-clow)/10.
+              c33_label = 'Mean Annual Soil Temp    '
+              asc9_tim_t = '         '
+
+              if(cstatic .eq. 'tsi')then
+                write(6,*)' calling solid fill plot'
+                call ccpfil(static_grid,NX_L,NY_L,clow,chigh
+     1               ,'hues',n_image,1e0)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
                 call plot_cont(static_grid,1e0,
