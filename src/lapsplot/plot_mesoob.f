@@ -232,6 +232,7 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
+                call left_justify(stations(i))
                 call s_len(stations(i),len_sta)
 
                 if(len_sta .ge. 3)then
@@ -378,7 +379,7 @@ c
                 call plot_mesoob(w1,w2,w3
      1                 ,temp,dewpoint
      1                 ,pressure,xsta,ysta
-     1                 ,lat,lon,ni,nj,relsize,zoom,nobs,11,du2
+     1                 ,lat,lon,ni,nj,relsize,zoom,n_obs_b,11,du2
      1                 ,wx_s(i)
      1                 ,iflag,iflag_cv)
 
