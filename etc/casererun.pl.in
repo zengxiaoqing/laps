@@ -1,0 +1,254 @@
+#!@PERL@
+#J.Smart 12/03
+
+use strict;
+use English;
+use Getopt::Long;
+my($INSTALL_ROOT,$DATA_ROOT,$beg_time,$end_time,$lapsdriver,$runsched);
+
+my $result = GetOptions('install_root=s',  \$INSTALL_ROOT,
+                        'dataroot=s',      \$DATA_ROOT,
+                        'beg_time=s',      \$beg_time,
+                        'end_time=s',      \$end_time,
+                        'run_sched',       \$runsched,
+                        'laps_driver=s',   \$lapsdriver,
+                        'help',            \&help_sub,
+                        '<>',              \&help_sub);
+
+#beg_time:        beginning time of post analysis period.
+#end_time:        ending time of post analysis period.
+#install_root:    install root for laps binaries.
+#data_root:       dataroot for post analysis runs output.
+#laps_driver: run the laps_driver modules (lvd, vrc, lsr, remap, ln3, or all).
+#run_sched:   run LAPS sched.pl
+
+sub help_sub
+{
+    print "USEAGE \n";
+    print "$0 command line options (default values)\n";
+
+    print "-beg_time:        Beginning time of analysis period: [dd-mmm-yyyy-hhmm] \n";
+    print "-end_time:        Ending    time of analysis period: [dd-mmm-yyyy-hhmm] \n";
+    print "-install_root:    Installroot for LAPS binaries\n";
+    print "-dataroot:        Dataroot [output] for analysis products\n";
+    print "-run_sched:       If defined, then run sched.pl\n";
+    print "-laps_driver: Used to run lvd, vrc, lsr, ln3, remap or all\n";
+    print "                  Enter (lvd, vrc, lsr, ln3, remap, or all) depending on your needs.\n";
+    print "                  You will get the intermediate ingest files between each cycle.\n";
+    print " NOTES:\n";
+    print " 1. the number of cycles for post analysis depends on the input beginning, ending, and\n";
+    print "    the cycle time (see dataroot/static/nest7grid.parms LAPS_CYCLE_TIME)\n";
+    exit;
+}
+
+if (!$INSTALL_ROOT||!$DATA_ROOT)
+{ 
+    $INSTALL_ROOT = $ENV{LAPSINSTALLROOT} if (defined $ENV{LAPSINSTALLROOT});
+    $DATA_ROOT = $ENV{LAPS_DATA_ROOT} if (defined $ENV{LAPS_DATA_ROOT});
+    if(!defined $INSTALL_ROOT || !defined $DATA_ROOT)
+    {
+       print "Environment Variables LAPSINSTALLROOT or LAPS_DATA_ROOT not set\n";
+       &help_sub;
+    }
+}
+
+require "$INSTALL_ROOT/etc/laps_tools.pm";
+
+my @run_ld=split(' ',$lapsdriver);
+
+if(!defined $lapsdriver)
+{
+   print "You did not enter any laps_driver runs (-laps_driver)\n";
+   print "I will sleep for 10 sec ... you might interrupt otherwise I'll continue\n";
+   sleep 10;
+}elsif($run_ld[0] eq "all")
+{
+   @run_ld = qw(lvd vrc lsr ln3 remap);
+}else
+{
+   print "Preparing to run laps_driver for\n";
+   foreach (@run_ld){ print "$_ ";}
+   print "\n";
+}
+
+#1. the beginning and ending time period for post analysis
+#   format dd-mmm-yyyy-hhmm
+#-------------------------------------------------------------
+my ($dd_beg, $mmm_beg, $year_beg, $hour_beg, $min_beg, $jjj_beg, $hhmm_beg);
+my ($dd_end, $mmm_end, $year_end, $hour_end, $min_end, $jjj_end, $hhmm_end);
+
+if(length ($beg_time) != 16 || length ($end_time) != 16)
+{
+   print "your input time spec format must be dd-mmm-yyyy-hhmm: please re-enter\n";
+   print "where: \n";
+   print "     yyyy = year\n";
+   print "      mmm = month (character) \n";
+   print "       dd = day \n";
+   print "       hh = hour (utc)\n";
+   print "       mm = minute\n";
+   &help_sub;
+}
+else
+{
+   ($dd_beg,$mmm_beg,$year_beg,$hhmm_beg)=split('-',$beg_time);
+   ($dd_end,$mmm_end,$year_end,$hhmm_end)=split('-',$beg_time);
+
+   $hour_beg = substr($beg_time,12,2);
+   $min_beg  = substr($beg_time,14,2);
+   $hour_end = substr($end_time,12,2);
+   $min_end  = substr($end_time,14,2);
+
+}
+
+my @remap_times = "00";
+my @lvd_times = qw(00 10 20 30 40 50); #
+my @vrc_times = qw(00 10 20 30 40 50);
+my @ln3_times = qw(00 10 20 30 40 50);
+my @lsr_times = qw(00 30);
+my @months = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+$mmm_beg=uc $mmm_beg;
+$mmm_end=uc $mmm_end;
+
+print "start time: $beg_time ---> $year_beg,$mmm_beg,$dd_beg,$hour_beg,$min_beg \n";
+print "end time:   $end_time ---> $year_end,$mmm_end,$dd_beg,$hour_end,$min_end \n";
+
+my ($imobeg,$imoend);
+while ($mmm_beg ne $months[$imobeg])
+{
+       $imobeg++;
+}
+while ($mmm_end ne $months[$imoend])
+{
+       $imoend++;
+}
+
+#my %time_elem = (day, cmon, year4, hour, min, dmon, julian year2);
+my @cycle_time = &laps_tools::get_nl_value("nest7grid.parms","laps_cycle_time",$DATA_ROOT);
+my $cycle_time = $cycle_time[0];
+print "cycle time (seconds): $cycle_time \n";
+print "beginning month  = $months[$imobeg]\n";
+print "ending    month  = $months[$imoend]\n";
+
+#convert beg/end times to i4time since Jan. 1, 1970
+my $i4time70_beg=&laps_tools::date_to_i4time($year_beg,$imobeg,$dd_beg,$hour_beg,$min_beg,'0');
+my $i4time70_end=&laps_tools::date_to_i4time($year_end,$imoend,$dd_end,$hour_end,$min_end,'0');
+print "beginning/ending i4time70. $i4time70_beg, $i4time70_end\n";
+
+if($i4time70_beg > $i4time70_end)
+{
+   print "The beginning and ending times are equal!\n";
+   print "Reconsider the input beginning and ending times and try again\n";
+   exit;
+}
+
+my $ncycles = ($i4time70_end-$i4time70_beg)/$cycle_time+1;  #includes beginning and ending time!
+
+print "number of LAPS cycles to run = $ncycles\n";
+
+require "$INSTALL_ROOT/etc/run_sys.pm";
+
+my @laps_driver_exe = qw(vrc_driver.x lvd_sat_ingest.exe lsr_driver.exe ln3_driver.exe remap_polar_netcdf.exe);
+
+my $i4time70=$i4time70_beg;
+my ($year, $yr, $mo, $dy, $hr, $mn, $sc);
+my ($yr2, $mo2, $dy2, $hr2, $mn2, $sc2);
+my ($year2,$mon2);
+my ($i,$j,$k,$mon,$command);
+my ($laps_driver_exe, $min_ld, $com_ld, $ldexe);
+my ($driver_incr, $driver_cycles, $i4time70_driver);
+my $i4time70_driver_end;
+
+while ($i4time70<=$i4time70_end)
+{
+     $i++;
+     ($year,$mo,$dy,$hr,$mn,$sc)=&laps_tools::i4time_to_date($i4time70);
+     $mon=$months[$mo];
+     $mo++;
+     $mo='0'.$mo while(length($mo)<2);
+     $hr='0'.$hr while(length($hr)<2);
+     $dy='0'.$dy while(length($dy)<2);
+     $mn='0'.$mn while(length($mn)<2);
+     $sc='0'.$sc while(length($sc)<2);
+     $yr=substr($year,2,2);
+
+     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+     if($#run_ld >= 0)
+     {
+        foreach $ldexe (@run_ld)
+        {
+           foreach $laps_driver_exe (@laps_driver_exe)
+           {
+              if(substr($laps_driver_exe,0,3) eq substr($ldexe,0,3))
+              {
+
+                $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > $DATA_ROOT/time/systime.dat";
+                run_sys::run_sys($command);
+
+                if($laps_driver_exe =~ /^vrc/){
+                   $driver_incr=15;                  #minutes
+                }elsif($laps_driver_exe =~ /^lvd/){
+                   $driver_incr=10;                  #minutes
+                }elsif($laps_driver_exe =~ /^lsr/){
+                   $driver_incr=30;                  #minutes
+                }elsif($laps_driver_exe =~ /^ln3/){
+                   $driver_incr=10;                  #minutes
+                }elsif($laps_driver_exe =~ /^remap/){
+                   $driver_incr=$cycle_time/60;       #minutes
+                }
+
+                $driver_cycles=(($cycle_time/($driver_incr*60))>1)?int($cycle_time/($driver_incr*60)):1;
+#               print "Use laps_driver to run $laps_driver_exe: Increment: $driver_incr; Cycles: $driver_cycles \n";
+
+                $i4time70_driver=$i4time70-($driver_incr*$driver_cycles*60);
+                $i4time70_driver_end=$i4time70+($driver_incr*$driver_cycles*60);
+
+
+                while ($i4time70_driver <= $i4time70_driver_end)   #$k<$driver_cycles)
+                {
+                     ($year2,$mo2,$dy2,$hr2,$mn2,$sc2) = &laps_tools::i4time_to_date($i4time70_driver);
+                     $mon2=$MON[$mo2];
+                     $dy2='0'.$dy2 while(length($dy2)<2);
+                     $mo2++;
+                     $mo2='0'.$mo2 while(length($mo2)<2);
+                     $hr2='0'.$hr2 while(length($hr2)<2);
+                     $mn2='0'.$mn2 while(length($mn2)<2);
+                     $sc2='0'.$sc2 while(length($sc2)<2);
+                     $yr2=substr($year2,2,2);
+
+                     $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $DATA_ROOT/time/systime.dat";
+                     run_sys::run_sys($com_ld);
+
+                     $com_ld="@PERL@ $INSTALL_ROOT/etc/laps_driver.pl -L $dy2-$mon2-$year2-$hr2$mn2 $laps_driver_exe $INSTALL_ROOT $DATA_ROOT";
+                     run_sys::run_sys($com_ld);
+
+                     $i4time70_driver=$i4time70_driver+($driver_incr*60);
+                }
+              }
+           } 
+        }
+     }
+
+     $command = "@PERL@ $INSTALL_ROOT/etc/systime.pl $yr $mo $dy $hr $mn > $DATA_ROOT/time/systime.dat";
+     print "\n";
+     print " ***** Reset or Initialize systime.dat for sched ***** \n";
+     run_sys::run_sys($command);
+
+     print "\n";
+     print "----------------------------------------\n";
+     print "LAPS Cycle $i: Date: $dy-$mon-$yr-$hr$mn:$sc \n";
+     print "----------------------------------------\n\n";
+
+# run laps sched
+#---------------
+
+     if(defined $runsched)
+     {
+        $command="@PERL@ $INSTALL_ROOT/etc/sched.pl -A $dy-$mon-$year-$hr$mn $INSTALL_ROOT $DATA_ROOT";
+        run_sys::run_sys($command);
+     }
+
+     $i4time70+=$cycle_time;
+}
+exit;
