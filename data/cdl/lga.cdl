@@ -18,7 +18,7 @@ netcdf lga {
             ht:_FillValue = 1.e+37f;
             ht:long_name="Background height";
             ht:units="meters";
-            ht:valid_range= -200.f, 200.f;
+            ht:valid_range= -400.f, 20000.f;
             ht:LAPS_var="HT";
             ht:lvl_coord="HPA ";
 	    ht:LAPS_units="METERS";
@@ -32,7 +32,7 @@ netcdf lga {
             t3:_FillValue = 1.e+37f;
             t3:long_name="Background temperature";
             t3:units="degrees Kelvin";
-            t3:valid_range= -200.f, 200.f;
+            t3:valid_range= 100.f, 330.f;
             t3:LAPS_var="T3";
             t3:lvl_coord="HPA ";
             t3:LAPS_units="KELVIN";
@@ -47,7 +47,7 @@ netcdf lga {
             sh:_FillValue = 1.e+37f;
             sh:long_name="Background specific humidity";
             sh:units="none";
-            sh:valid_range= 0.f, 20.f;
+            sh:valid_range= 0.f, 1.f;
             sh:LAPS_var="SH";
             sh:lvl_coord="HPA";
             sh:LAPS_units="NONE";
@@ -74,7 +74,7 @@ netcdf lga {
             v3:record = "valtime, reftime";
             v3:_FillValue= 1.e+37f;
             v3:long_name="Background v wind component";
-            v3:valid_range= -20000.f, 20000.f;
+            v3:valid_range= -200.f, 200.f;
             v3:units="meters/second";
             v3:LAPS_var="V3";
             v3:lvl_coord="HPA";
@@ -88,7 +88,7 @@ netcdf lga {
             om:record = "valtime, reftime";
             om:_FillValue= 1.e+37f;
             om:long_name="Background w wind component";
-            om:valid_range= -20000.f, 20000.f;
+            om:valid_range= -100.f, 100.f;
             om:units="pascals/second";
             om:LAPS_var="OM";
             om:lvl_coord="HPA";
