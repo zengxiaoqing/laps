@@ -140,47 +140,6 @@
       end
 
 !-----------------------------
-      subroutine read_wrfsi_vgridspec (istatus)
-
-      implicit none
-      include 'wrf_vgridspec.cmn'
-      include 'grid_fname.cmn'
-
-      namelist /vgridspec/
-     + verticalcoord, moad_nz, vertical_increment
-     +,vertical_stretch, max_vertical_inc, levels
-     +,vstagger_type
-
-      character*80 filename
-
-      integer      istatus
-      integer      iflag_vgridspec_cmn
-      data         iflag_vgridspec_cmn/0/
-      save         iflag_vgridspec_cmn
-
-      integer      lenr
-
-      istatus = 0
-      call s_len(generic_data_root,lenr)
-      filename = generic_data_root(1:lenr)//'/static/wrfsi.nl'
-      if(iflag_vgridspec_cmn.ne.1)then
-         open(93,file=filename,status='old',err=900)
-         rewind(93)
-         read(93,vgridspec,err=901)
-         close(93)
-         iflag_vgridspec_cmn=1
-      endif
-      istatus = 1
-      return
-
- 900  print*,'error opening namelist file ', filename
-      return
-
- 901  print*,'error reading namelist file for vgridspec'
-      write(*,vgridspec)
-      return
-      end
-!---------------------------------------------------------------
       subroutine read_wrfsi_sfcfiles (istatus)
 
       implicit none
