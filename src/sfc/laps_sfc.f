@@ -582,6 +582,10 @@ c
 	   call move(wt, wt_tgd, ni,nj)
 !          call conv_k2f(tgd_bk,tgd_bk,ni,nj) ! conv K to deg F
 	   back_tgd = 1
+	elseif(back_td .eq. 1)then
+           write(6,*)' Using the dewpoint bkg as a substitute'
+	   call move(td_bk, tgd_bk, ni,nj)
+           call conv_f2k(tgd_bk,tgd_bk,ni,nj) ! conv F to deg K
 	else
 	   print *,'     No background available for ',var_req
 	   call zero(tgd_bk, ni,nj)
@@ -746,7 +750,7 @@ c                                v  in kt
      &     itheta,redp_lvl,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
-     &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,
+     &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g, obs,
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk,
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
