@@ -211,6 +211,7 @@ cdis
         real*4 radar_ref_3d(NX_L,NY_L,NZ_L)
         integer istat_radar_2dref_a(NX_L,NY_L)
         integer istat_radar_3dref_a(NX_L,NY_L)
+        logical lstat_radar_3dref_orig_a(NX_L,NY_L)
        
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
@@ -312,6 +313,8 @@ cdis
         ISTAT = INIT_TIMER()
 
         write(6,*)' Welcome to the LAPS gridded cloud analysis'
+
+        lstat_radar_3dref_orig_a = .false.
 
         call get_i_perimeter(I_PERIMETER,istatus)
         if (istatus .ne. 1) then
@@ -805,6 +808,7 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
                 n_radar_2dref = n_radar_2dref + 1
                 n_radar_3dref = n_radar_3dref + 1
                 n_radar_3dref_orig = n_radar_3dref_orig + 1
+                lstat_radar_3dref_orig_a(i,j) = .true.
 
             endif ! Is this grid point 2-d or 3-d?
 
@@ -1183,6 +1187,27 @@ C       EW SLICES
             call put_laps_3d(i4time,ext,var,units,comment,radar_ref_3d       
      1                                                ,NX_L,NY_L,NZ_L)
             j_status(n_lps) = ss_normal
+
+!           Generate ASCII plot
+            write(6,1201)
+1201        format('                  Radar Coverage',55x
+     1                              ,'Radar Reflectivity')
+
+            do i = 1,NX_L
+            do j = 1,NY_L
+                if(lstat_radar_3dref_orig_a(i,j))then
+                    plot_mask(i,j) = 30.0 ! 3D original data
+                elseif(istat_radar_2dref_a(i,j) .eq. 1)then
+                    plot_mask(i,j) = 20.0 ! 2D data
+                else                    
+                    plot_mask(i,j) = 0.0  ! no data
+                endif
+            enddo ! j
+            enddo ! i
+
+            scale = 0.01
+            CALL ARRAY_PLOT(plot_mask,dbz_max_2d,NX_L,NY_L,'HORZ CV'
+     1                     ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot radar 
 
         endif ! n_radar_3dref
 
