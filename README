@@ -1623,7 +1623,12 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
    approximations when local stereographic is used. These need to be checked
    for their validity and refined if needed. Cases of interest include a 
    projection pole point at the domain center, as well as offset from the
-   center.
+   center. 
+
+     The local stereographic projection also ignores 'standard_latitude' from
+   the namelist so this is internally assumed to be +90. This means that the
+   grid spacing is valid at the projection pole location, regardless of
+   both where on the earth the pole is and the pole's latitude.
 
      The map projection calculations are performed with a spherical earth
    assumption.
@@ -1921,10 +1926,10 @@ since 3 layers are routinely available from NESDIS.
 
    To check what data got into the analyses as well as some QC and error
    (verification) statistics, you can run a series of perl scripts located in
-   '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind3d.pl', 'temp.pl', 
-   'hum3d.pl', and 'cloud.pl'. These scripts operate mainly by distilling other
-   log file output. The output from these scripts is also stored in the files
-   '$LAPS_DATA_ROOT/log/*.wgi.yydddhhmm'.   
+   '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind.pl', 'temp.pl', 
+   'lq3driver.pl', and 'cloud.pl'. These scripts operate mainly by distilling 
+   other log file output. The output from these scripts is also stored in the 
+   files '$LAPS_DATA_ROOT/log/*.wgi.yydddhhmm'.   
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
