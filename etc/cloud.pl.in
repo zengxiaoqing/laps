@@ -194,6 +194,16 @@ foreach (@greplines) {
 print "\n";
 print "\n";
 
+# Surface synop (sfc.pl has a nicer way of printing these out)
+print "SYNOP:\n";
+@greplines = grep /   SYNOP  /, @lines;
+foreach (@greplines) {
+  ($name,@junk) = split;
+  if(@junk > 3){print "$name ";}
+}
+print "\n";
+print "\n";
+
 # Pirep data
 print "Pilot reports:\n";
 $searchstring = "num pireps/num good pireps/cloud layers =";
