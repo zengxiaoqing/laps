@@ -41,7 +41,7 @@ my @LAPS_EXE = qw(lga.exe obs_driver.x sfc_qc.exe
                   ingest_pro.exe
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
-                  laps_sfc.x temp.exe 
+                  laps_sfc.x laps_pbl.x temp.exe 
                   cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe dprep.exe);
 
@@ -218,7 +218,7 @@ sub systime{
     my $yyyy = 1900+$year;
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
     $year= $year-100 if($year>99);
-
+    $year='0'.$year if(length($year)<2);
 
 
 #
