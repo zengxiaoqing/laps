@@ -37,9 +37,9 @@ cdis
 cdis   
 cdis
 
-        subroutine get_istat_39(t39_k,tb8_k,solar_alt
-     1                         ,rlaps_land_frac,r_missing_data,ni,nj
-     1                         ,istat_39_a)
+        subroutine get_istat_39(t39_k,tb8_k,solar_alt,r_missing_data    ! I
+     1                         ,rlaps_land_frac,ni,nj                   ! I
+     1                         ,istat_39_a)                             ! O
 
 !       This routine returns the status of stratus cloud detection for each 
 !       grid point (containing liquid water).
@@ -92,9 +92,15 @@ cdis
                         endif 
                     endif
 
-                    if(t39_diff .gt. -2.5 .and. t39_diff .lt. +2.5
+                    if(t39_diff .gt. +0.0 .and. t39_diff .lt. +2.5
      1                          .AND. tb8_c .gt. 0.    
-     1                          .AND. rlaps_land_frac(i,j) .gt. 0.5)then       
+     1                          .AND. rlaps_land_frac(i,j) .gt. 0.5)then ! land
+                        istat_39_a(i,j) = -1                  ! Warm - no cloud
+                    endif
+
+                    if(t39_diff .gt. +0.0 .and. t39_diff .lt. +5.0
+     1                          .AND. tb8_c .gt. 0.    
+     1                          .AND. rlaps_land_frac(i,j) .lt. 0.5)then ! sea
                         istat_39_a(i,j) = -1                  ! Warm - no cloud
                     endif
 
