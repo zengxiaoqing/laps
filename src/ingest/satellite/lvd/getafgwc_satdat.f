@@ -295,7 +295,8 @@ c
             if(i4time_diff1.lt.i_delta_sat_t_sec)then
                i4time_data=i4time_data_int(1)
             else
-               write(6,*)'Data too old'
+               write(6,*)'Data is old'
+               i4time_data=i4time_data_int(1)
                istatus=1
             endif
          else

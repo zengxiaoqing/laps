@@ -1,72 +1,78 @@
                                               J. Smart
-                                              3-28-98
-                       Overview:
-                     ------------
+                                              2-22-99
 
-The lvd code is written to read a  block of satellite data for
-the laps domain. The software is dynamic and uses i/j start
-end values which are contained in satellite_lvd.nl.
+   The lvd code is written to process the block of satellite data
+that covers a laps domain. The software is dynamic and uses i/j start
+end values contained in satellite_lvd.nl. lvd uses a complex namelist
+file: data/static/satellite_lvd.nl which is rewritten when the
+mapping (domain or satellite navigation) information changes. Although
+complex, the namelist does not require significant understanding to
+modify.  The file has been designed such that a user typically only
+has to modify the PATH_TO_RAW_SAT, ISATS, ITYPES, and ICHANNELS
+parameters. These, and other specific modifications are discussed below.
 
-The lvd_sat_ingest.exe
-process requires mapping look-up-tables that are produced by
-genlvdlut.exe. The genlvdlut code is in subdirectory table. The
-satellite data blocks (for each channel)
-are defined by the start/end values in the
-namelist (static/satellite_lvd.nl).
+   If the raw satellite data does not cover the entire LAPS domain,
+lvd uses the internal missing_data flag to identify these grid points.
+The cloud analysis software uses a namelist parameter (see 
+static/cloud.nl ... pct_req_lvd_s8a) to accept or reject satellite
+data that partially covers a domain. All other analyses use any
+satellite data available in the lvd intermediate files.
 
-lvd no longer requires genlvdlut.exe to run during installation.
-The lut generation code has been incorporated into lvd_sat_ingest.exe.
-lvd_sat_ingest now checks if the luts exist or whether the existing
-lut is accurate for the data type to be processed.  The software in
-table still ports and is available for diagnostics.  The lut generation
-code is in lib/satellite. The localization script removes any lut's
-in static/lvd which forces lvd_sat_ingest to produce the lut's upon
-the first execution. 
+   lvd computes the navigation/remapping (lat-lon to i-j) look-up-
+tables dynamically.  However, a separate executable (genlvdlut.exe)
+is also built (not used) for diagnostic purposes when a user needs
+to check the remapping look-up-table (LUT) generation.  The LUT's
+are written to static/lvd/"satid"-llij-"channel"-"type".lut
 
-An enhancement in lvd is that if the lut's do not exist then
-they will automatically get generated. This was possible by putting
-the lut code into lib/satellite. The genlvdlut.exe process still
-runs as before.  Eventually it will be possible for lvd_sat_ingest.exe
-to test if the satellite mapping table need rebuilding due to
-a relocation of domain or a change in the satellite navigation. This is
-now functional. One drawback though is that all lut's known to the
-system (as specified by the ISATS, ITYPES namelist variables) are
-generated.
+   lvd_sat_ingest checks if the LUT's exist or whether the existing
+LUT is accurate for the data type being processed. The LUT generation
+code is in src/lib/satellite. The localization script removes any
+existing LUT's in static/lvd which forces lvd_sat_ingest.exe to
+produce new LUT's upon first execution.  The new mapping LUT's
+are used thereafter until the satellite navigation or laps domain
+parameters change. Note that for GVAR (gvr) type data, new LUT's are
+generated automatically once per day (at ~ 0000).
 
-The LAPS satellite ingest creates an intermediate file with
-extension "lvd". The process, lvd_sat_ingest (lsi for short)
-uses the satellite namelist data/static/satellite_lvd.nl. The
+   The LAPS satellite ingest creates an intermediate file with
+extension "lvd" (lapsprd/lvd/"satid"/.   The
 namelist works in conjunction with a data include file
 src/include/sat_data_static.inc which contains static information
-relevant to lsi.  LAPS library routine config_satellite_lvd (in file
-lapsgrid.f) loads the common block defined in src/include/satellite
-_common_lvd.inc.  Recall, the information in the common block is
+relevant to the executable.  LAPS library routine config_satellite_lvd
+(in file read_namelist.f) loads the common block defined in src/include
+/satellite_common_lvd.inc.  Recall, the information in the common block is
 referenced by the namelist variables ISATS, ITYPES, and ICHANNELS.
-Therefore, the user only needs to modify those variables
-and everything else is taken care of automatically.
+This is why the user only needs to modify those variables
+and most everything else is taken care of automatically.
 
 The lvd output is in a specific satellite_id subdirectory (currently
-goes08 and goes09. This new output path allows lvd to process more
-that one satellite concurrently.  Both GOES08 and GOES09 will be
-processed if namelist variable ISATS = 1,1. Only GOES08 data is processed
-if ISATS = 1,0.
+there are four satellites known, one is obsolete: goes08, goes09 [obsolete],
+goes10 and GMS).  lvd  processes more that one satellite simultaneously
+depending on ISATS.  The satellite data format is activated with namelist
+parameter ITYPES. There is a maximum of 4 satellite data format types (GVAR
+[gvr], WFO [wfo], FSL-public [cdf], and AFWA [gwc]). lvd can process all
+four data formats for any satellite simultaneously with the appropriate
+settings of ISATS and ITYPES. For example, to process GOES08 GVAR data,
+one sets ISATS=1,0,0,0,  and ITYPES=1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,.  If
+one wishes to also turn on WFO GOES08 format then set ITYPES as follows:
+ITYPES=1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,.  One more example is if one
+wishes to process both GOES08 and GOES10 AFWA (gwc) data then it follows:
+ISATS=1,0,1,0,
+ITYPES=0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,.
+
+A similar functionality exists for the channel processing which uses
+namelist parameter ICHANNELS. The GOES imagers have five channels which
+defines the maximum number of channels possible.  lvd can process any
+one of these five, including all five. Other satellites may have fewer
+channels but the channel switch conforms to the GOES channels as follows:
+1. vis, 2. 3.9u, 3. 6.7u (water vapor), 4. 11.2 (window ir), 5. 12.0u.
 
 
-                      RAW Satellite Data
-                     ------------------
+                      RAW Satellite Data Types
+                     -------------------------
 
 lvd accepts goes08, goes09 and goes10 satellite data in several formats: 
 
-    1. netcdf: (remapped fsl-conus [lambert] and raw gvar).
-    2. wfo: also netcdf and lambert projection. Data from SBN.
-    3. gwc: AirForce Global Weather Center. 
-
-                     Selection of Channels
-                     ---------------------
-
-The lvd can process a variable number of channels, from just 1 to all 5.
-There are 4 IR channels and 1 visible channel. The user can modify the
-ICHANNELS namelist variable to direct lvd_sat_ingest to the desired data.
-The 0's and 1's correspond to the ISATS, ITYPES settings so the user need
-not worry about all values depending on which satellites and which types
-the system is designed to read.
+    1. netcdf public: remapped fsl-conus [lambert] (type=cdf) and 
+                      raw gvar (type=gvr).
+    2. wfo SBN: also netcdf and lambert projection (type=wfo)
+    3. AirForce Global Weather Center (type=gwc).

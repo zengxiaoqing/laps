@@ -323,8 +323,11 @@ c for goes8 - make it look like goes7
              do j=1,jmax
              do i=1,imax
                if(laps_vis_norm(i,j).ne.r_missing_data)then
-c for goes9 - make it look like goes8
-                  call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
+c for goes9 - make it look like goes8; no goes09. New stretch for goes10
+c J. Smart 2-23-99.
+c                 call stretch(0., 255., 0., 193.,laps_vis_norm(i,j))
+
+                  call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 c for goes8 - make it look like goes7
                   call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
                endif
@@ -349,13 +352,16 @@ c for goes8 - make it look like goes7
              enddo
              enddo
           elseif(c_sat_id.eq.'goes09'.or.c_sat_id.eq.'goes10')then
-             write(6,*)'GVAR GOES-9 Vis data'
+             write(6,*)'GVAR ',c_sat_id,' Vis data'
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
              do j=1,jmax
              do i=1,imax
                 if(laps_vis_norm(i,j).ne.r_missing_data)then
-c for goes9 - make it look like goes8
-                   call stretch(0., 255., 0.,193.,laps_vis_norm(i,j))
+c for goes9 - make it look like goes8; no goes09. New stretch for goes10
+c J. Smart 2-23-99.
+c                  call stretch(0., 255., 0.,193.,laps_vis_norm(i,j))
+
+                   call stretch(0.,305.,0.,255.,laps_vis_norm(i,j))
 c for goes8 - make it look like goes7
                    call stretch(0.,303.57,0.,255.,laps_vis_norm(i,j))
                 endif
