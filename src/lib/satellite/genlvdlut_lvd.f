@@ -76,7 +76,8 @@ c
 c        if(itypes(it,js).eq.1)then
 
           if(c_sat_types(it,js).eq.'cdf'.or.
-     &       c_sat_types(it,js).eq.'wfo')then
+     &       c_sat_types(it,js).eq.'wfo'.or.
+     &       c_sat_types(it,js).eq.'twn')then
 
            do lc=1,maxchannel
 

@@ -127,6 +127,11 @@ c
      &             .false.,.false.,.false.,.false./
       save lfirst
 
+      integer nxlc,nylc,nzlc
+      real    lat1,lat2,lon0,sw(2),ne(2)
+      common /lcgrid/nxlc,nylc,nzlc,lat1,lat2,lon0,sw,ne
+
+
       jstatus = -1
       cdtype=c_sat_types(jtype,isat)
 
@@ -203,7 +208,7 @@ c
          endif
 
 c not wfo data type
-      else
+      elseif(cdtype.eq.'cdf')then
 
          if(indx.eq.1)then
 
@@ -246,6 +251,22 @@ c not wfo data type
      +     origin_name, process_name, wavelength, x_dim, y_dim)
 
          rlap=rlatin
+
+      else  !taiwan gms satellite data
+
+         nxlc = 400
+         nylc = 400
+         nx3mx=nxlc
+         ny3mx=nylc
+         lat1=10.
+         lat2=40.
+         lon0=+120.
+         rla100=lat1
+         rlo100=lon0
+         sw(1)=5.119949
+         sw(2)=+104.1190
+         ne(1)=44.09481
+         ne(2)=+153.3814
 
       endif
 
@@ -299,7 +320,7 @@ c
          enddo
          enddo
 
-      else
+      elseif(cdtype.eq.'cdf')then
 
 c use original lambert software for fsl-conus in FSL's /public
 
@@ -316,6 +337,13 @@ c use original lambert software for fsl-conus in FSL's /public
      +,ri(i,j),rj(i,j))
          enddo
          enddo
+
+      elseif(cdtype.eq.'twn')then           !only other type is taiwan gms
+
+         call  latlon_2_lcij(nx*ny,xlat,xlon,ri,rj)
+         dx = 11.23
+         dy = dx
+         
 
       endif
 
