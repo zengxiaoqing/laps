@@ -254,7 +254,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         end
 
         subroutine ref_fill_vert(ref_3d,ni,nj,nk,l_low_fill,l_high_fill
-     1           ,lat,lon,topo,height_3d,rlat_radar,rlon_radar
+     1           ,lat,lon,topo,heights_3d,rlat_radar,rlon_radar
      1           ,rheight_radar,istatus)
 
 !       Called from read_radar, hence from wind analysis, and (cloud/accum
@@ -277,7 +277,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
 
         real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
-        real*4 height_3d(ni,nj,nk)               ! Input
+        real*4 heights_3d(ni,nj,nk)               ! Input
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
 
         integer*4 isum_ref_2d(ni,nj)             ! Local array
@@ -378,8 +378,8 @@ c       write(6,*)' Doing Column ',j
 
 !               Fill in gap if it exists and is small enough
                 gap_thresh = 2000.
-                if(height_3d(i,j,k_bottom) .lt.
-     1                    height_3d(i,j,k_top) + gap_thresh)then
+                if(heights_3d(i,j,k_bottom) .lt.
+     1                    heights_3d(i,j,k_top) + gap_thresh)then
 
 !               if(k_bottom .le. k_top+5)then ! Fill gaps smaller than const-1
 

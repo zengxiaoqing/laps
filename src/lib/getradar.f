@@ -41,9 +41,6 @@ cdis
 !       get_radar_ref
 !           now called from lplot
 !
-!       read_radar_ref
-!           now called from smart
-!
 !       read_radar_3dref
 !           now called from cloud
 !           now called from accum
@@ -417,149 +414,6 @@ cdis
         end
 
 
-        subroutine read_radar_ref(i4time_radar,l_apply_map,
-     1   imax,jmax,kmax,radarext,
-     1   lat,lon,topo,l_low_fill,l_high_fill,
-     1   grid_ra_ref,
-     1   rlat_radar,rlon_radar,rheight_radar,radar_name,
-     1   n_ref_grids,istatus_2dref,istatus_3dref)
-
-!       Steve Albers Dec 1995   Reads Radar data into REF arrays
-!                               This routine will be able to select between
-!                               various sources of radar data over various
-!                               domains
-
-!       USER NOTE: Only one source of radar data per domain is currently
-!       permitted with read_radar. The constraint on this is setting up
-!       the inputted time to work with multiple sources of radar data.
-!       This may be changed in the future. The likely place for the selection
-!       of multiple radars is in the calling routine 'get_radar_ref'.
-!       The domain must be specified using grid_fnam_common
-
-!       Now called from smart
-
-        real*4 grid_ra_ref(imax,jmax,kmax)
-
-        Include   'lapsparms.inc' ! ref_base, msg data
-
-        real*4 lat(imax,jmax)
-        real*4 lon(imax,jmax)
-        real*4 topo(imax,jmax)
-
-        character*3 var_2d
-        character*31  ext
-        character*10  units_2d
-        character*125 comment_2d
-
-        character*31 radarext
-
-        character*4 radar_name
-
-        logical l_low_fill,l_high_fill,l_apply_map
-
-        character*80 grid_fnam_common
-        common / grid_fnam_cmn / grid_fnam_common
-
-        write(6,*)' Subroutine read_radar_ref'
-
-        if(radarext(1:3) .eq. 'vrc')then
-50          write(6,*)' Reading NOWRAD data'
-
-            radar_name = 'WSI '
-
-            var_2d = 'REF'
-            ext = 'vrc'
-            call get_laps_2d(i4time_radar,ext,var_2d
-     1  ,units_2d,comment_2d,imax,jmax,grid_ra_ref,istatus_nowrad)
-
-            if(istatus_nowrad .eq. 1)then
-
-!               Filter out the missing data values
-                if(i4time_radar .lt. 1014450000)then
-                    do i = 1,imax
-                    do j = 1,jmax
-                        if(grid_ra_ref(i,j,1) .eq. r_missing_data)then
-                            grid_ra_ref(i,j,1) = ref_base
-                        endif
-                    enddo ! j
-                    enddo ! i
-                endif
-
-                istatus_2dref = 1
-                istatus_3dref = 0
-
-!               Fill up the 3D reflectivity array just for kicks
-!                          (useful for precip type, get_low_ref)
-
-                if(l_low_fill .or. l_high_fill)then
-                    do k = 2,kmax
-                        do i = 1,imax
-                        do j = 1,jmax
-                            grid_ra_ref(i,j,k) = grid_ra_ref(i,j,k-1)
-                        enddo ! j
-                        enddo ! i
-                    enddo ! k
-                endif
-
-
-            else
-                istatus_2dref = 0
-                istatus_3dref = 0
-
-            endif
-
-        else ! Read Doppler radar ref data from NetCDF files
-            write(6,*)' Reading Reflectivity Data from 3D file '
-     1                                                 ,radarext
-
-            ext = radarext
-
-!           Read Reflectivity
-            var_2d = 'REF'
-            call get_laps_3d(i4time_radar,imax,jmax,kmax,ext,var_2d
-     1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
-
-
-            if(istatus .eq. 1)then
-                istatus_2dref = 1
-
-                read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
-     1                             ,n_ref_grids
-558             format(2f9.3,f8.0,i7)
-
-                if(l_low_fill .or. l_high_fill)then
-                    call rfill(grid_ra_ref,imax,jmax,kmax,l_low_fill
-     1                    ,l_high_fill,lat,lon,topo,rlat_radar
-     1                    ,rlon_radar,rheight_radar,istatus_rfill)
-
-                    if(istatus_rfill .eq. 1)then
-                        write(6,*)' Reflectivity data filled in'
-                        istatus_3dref = 1
-                    else
-                        write(6,*)' Reflectivity data fill error'
-                        istatus_3dref = 0
-                    endif
-
-                else
-                    write(6,*)' Reflectivity not filled in'
-                    istatus_3dref = 1
-
-                endif
-
-
-            else
-                write(6,*)' Radar reflectivity data cannot be read in'
-                istatus_2dref = 0
-                istatus_3dref = 0
-
-            endif ! Success as reflectivity
-
-        endif ! Test of extension (hence radar type )
-
-        return
-        end
-
-
         subroutine read_radar_3dref(i4time_radar,
 !    1   i4_tol,i4_ret,
      1   l_apply_map,
@@ -678,11 +532,19 @@ cdis
 558             format(2f9.3,f8.0,i7)
 
                 if(l_low_fill .or. l_high_fill)then
-                    call rfill(grid_ra_ref,imax,jmax,kmax,l_low_fill
-     1                    ,l_high_fill,lat,lon,topo,rlat_radar
-     1                    ,rlon_radar,rheight_radar,istatus_rfill)
+                    if(.false.)then
+                        call rfill(grid_ra_ref,imax,jmax,kmax,l_low_fill       
+     1                          ,l_high_fill,lat,lon,topo,rlat_radar
+     1                          ,rlon_radar,rheight_radar,istatus_rfill)
 
-!                   Future call to ref_fill_vert???????
+                    else
+                        call ref_fill_vert(grid_ra_ref,imax,jmax,kmax
+     1                          ,l_low_fill,l_high_fill,lat,lon,topo
+     1                          ,heights_3d
+     1                          ,rlat_radar,rlon_radar,rheight_radar
+     1                          ,istatus_rfill)
+
+                    endif
 
                     if(istatus_rfill .eq. 1)then
                         write(6,*)' Reflectivity data filled in'
