@@ -32,7 +32,7 @@ PROGRAM MAIN
   ds(2) = grid_spacingy
   ds(3) = d(3)
   DO id=1,n(4)
-     IF (id .NE. 301) THEN  ! 3 means no analysis for v
+     IF (id .NE. 4) THEN  ! do not analyze station pressure
         CALL Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
         PRINT*,'Variable ',id,' has been analyzed'
      ENDIF
