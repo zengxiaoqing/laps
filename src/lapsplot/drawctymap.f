@@ -59,7 +59,6 @@ c
       pl4(1)=ne(2)
       jjlts=-2
       jgrid=0
-!     jgrid=1 ! Draw lat/lon lines
 
       call get_grid_spacing(grid_spacing_m,istatus)
       if(istatus .ne. 1)then
@@ -70,6 +69,8 @@ c
       endif
 
       domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom
+
+      call get_lapsplot_parms(latlon_int,continent_line_width,istatus)       
 
 !     Plot Counties
       jus=-4
@@ -83,8 +84,10 @@ c
       if(domsize .le. 2500e3)then
           write(6,*)' Plotting Counties'
           call setusv_dum(2HIN,icol_cou)
+          jgrid=latlon_int                        ! Draw lat/lon lines?
           call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +                jgrid,jus,jdot,ier)
+
           call sflush
       else
           write(6,*)' Large domain, omitting counties'
@@ -95,6 +98,7 @@ c
       jus=-8
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
+      jgrid=0                                ! Do not draw lat/lon lines
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
       call sflush
@@ -103,9 +107,51 @@ c
       jus=-1
       call gsln(1)
       call setusv_dum(2HIN,icol_sta)
+
+      jgrid=0                                ! Do not draw lat/lon lines
+      call GSLWSC(continent_line_width)
       call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
      +            jgrid,jus,jdot,ier)
+      call GSLWSC(1.0)
+
       call sflush
 
       return
       end
+
+ 
+       subroutine get_lapsplot_parms(latlon_int,continent_line_width
+     1                              ,istatus)
+
+       namelist /lapsplot_nl/ latlon_int,continent_line_width
+ 
+       character*150 static_dir,filename
+
+!      Set defaults
+       latlon_int = 0
+       continent_line_width = 1.0
+ 
+       call get_directory('static',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/lapsplot.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,lapsplot_nl,err=901)
+       close(1)
+
+       print*,'success reading lapsplot_nl in ',filename
+       write(*,lapsplot_nl)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading lapsplot_nl in ',filename
+       write(*,lapsplot_nl)
+       istatus = 0
+       return
+
+       end

@@ -211,7 +211,7 @@ cdis
 999     continue
 
         write(6,*)
-        write(6,*)' closing GKS, look for your ~/gmeta file'
+        write(6,*)' closing GKS, look for your ./gmeta file'
         call CLSGKS
 
         if(c_display .ne. 'v')then

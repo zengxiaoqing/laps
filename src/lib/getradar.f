@@ -709,10 +709,12 @@ cdoc                            calls read_multiradar_3dref.
                     do k = 1,kmax
                         do i = 1,imax
                         do j = 1,jmax
+                          if(istatus_3dref_a(i,j) .eq. 0)then
                             if(grid_ra_ref(i,j,k) .eq. r_missing_data
      1                                                             )then       
                                 grid_ra_ref(i,j,k) = radar_2dref(i,j)
                             endif
+                          endif ! istatus_3dref_a = 0
                         enddo ! j
                         enddo ! i
                     enddo ! k
@@ -760,7 +762,10 @@ cdoc                            calls read_multiradar_3dref.
         enddo ! j
         enddo ! i
 
+        n_missing = imax*jmax - n_2dref
+
         write(6,*)'n_2dref,n_3dref=',n_2dref,n_3dref
+        write(6,*)'n_missing/ref_missing=',n_missing,ref_missing
 
         return
         end
