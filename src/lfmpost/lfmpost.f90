@@ -186,6 +186,7 @@ PROGRAM lfmpost
     ALLOCATE ( tprs         ( nx , ny , kprs ) )
     ALLOCATE ( tdprs        ( nx , ny , kprs ) )
     ALLOCATE ( shprs        ( nx , ny , kprs ) )
+    ALLOCATE ( tkeprs       ( nx , ny , kprs ) )
     ALLOCATE ( redp         ( nx , ny ) )
     ALLOCATE ( pmsl         ( nx , ny ) )
     ALLOCATE ( usfc         ( nx , ny ) )
@@ -305,7 +306,7 @@ PROGRAM lfmpost
 
       CALL output_laps_format(zprs,uprs,vprs,wprs,omprs,tprs, shprs,rhprs, &
                             cldliqcon_prs,cldicecon_prs,raincon_prs, &
-                            snowcon_prs,graupelcon_prs, &
+                            snowcon_prs,graupelcon_prs, tkeprs, &
                             refl_prs,pcptype_prs,usfc,vsfc,wsfc, &
                             tsfc,tdsfc,rhsfc,cldbase,cldtop,pmsl,redp ,psfc, &
                             intliqwater,totpcpwater,pcp_inc,pcp_tot, &
@@ -364,7 +365,7 @@ PROGRAM lfmpost
              process_id,laps_reftime,laps_valtime,period_sec,igds,nx,ny,kprs, &
              prslvl*0.01,zprs,uprs,vprs,wprs,omprs,tprs,shprs,rhprs,&
              cldliqmr_prs,cldicemr_prs,rainmr_prs,snowmr_prs,graupelmr_prs, &
-             pcptype_prs,refl_prs,funit,startb,nbytes)
+             pcptype_prs,refl_prs,tkeprs,funit,startb,nbytes)
 
         startb = startb+nbytes
       ENDIF
@@ -400,7 +401,7 @@ PROGRAM lfmpost
       PRINT '(A,I3)', 'Populating Vis5D file for time period ', t_v5d
       CALL v5dout(t_v5d,zprs,tprs,tdprs,rhprs,uprs,vprs,wprs,omprs, &
                   abs_vort,shprs,cldliqmr_prs,cldicemr_prs,rainmr_prs, &
-                  snowmr_prs,graupelmr_prs,refl_prs,pcptype_prs, &
+                  snowmr_prs,graupelmr_prs,refl_prs,pcptype_prs, tkeprs,&
                   thick_10_5,tsfc,tdsfc,rhsfc,usfc,vsfc,wsfc, &
                   pmsl,psfc,cldbase,cldtop,cldamt,ceiling, &
                   intliqwater,totpcpwater,pcp_inc,pcp_tot, &
@@ -548,6 +549,7 @@ PROGRAM lfmpost
     DEALLOCATE ( vprs )
     DEALLOCATE ( wsfc )
     DEALLOCATE ( wprs )
+    DEALLOCATE (tkeprs )
     DEALLOCATE ( omprs )
     DEALLOCATE ( cldbase )
     DEALLOCATE ( cldtop )   

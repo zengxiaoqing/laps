@@ -34,7 +34,7 @@
 !dis   
 
   SUBROUTINE output_laps_format ( ht, u3, v3, w3, om, t3, sh, rh3, lwc, ice, &
-                                  rai, sno, pic, ref, pty, u, v, w, t, td, &
+                                  rai, sno, pic, tke, ref, pty, u, v, w,t,td, &
                                   rh, lcb, lct, msl, p, ps, lil, tpw, r01, rto, &
                                   s01, sto, th, the, pbe, nbe, lcv, cce, lmt, &
                                   lmr, llr, spt, lhe, li, hi, vis, terdot, &
@@ -87,6 +87,7 @@
     REAL, INTENT(IN)                :: rai   ( nx , ny , nz )
     REAL, INTENT(IN)                :: sno   ( nx , ny , nz )
     REAL, INTENT(IN)                :: pic   ( nx , ny , nz )
+    REAL, INTENT(IN)                :: tke   ( nx , ny , nz )
     REAL, INTENT(IN)                :: ref   ( nx , ny , nz )
     REAL, INTENT(IN)                :: pty   ( nx , ny , nz )
     REAL, INTENT(IN)                :: u     ( nx , ny )
@@ -138,7 +139,7 @@
     CHARACTER(LEN=32), INTENT(IN)   :: model_name
     ! Locals
     CHARACTER(LEN=2)             :: domnum_str
-    INTEGER, PARAMETER           :: nvar3d = 15 ! Equals # of 3d arrays above!
+    INTEGER, PARAMETER           :: nvar3d = 16 ! Equals # of 3d arrays above!
     INTEGER, PARAMETER           :: nvar2d = 38 ! # of 2d arrays above!
     REAL, ALLOCATABLE               :: laps_data ( : , : , : )
     INTEGER, ALLOCATABLE            :: levels ( : )
@@ -303,6 +304,14 @@
     varname(startind:stopind) = 'PTY'
     levels(startind:stopind) = NINT(press_levels)
     varcomment(startind:stopind) = 'Forecast precip type in coded values'
+
+    ! Turbulent Kinetic Energy
+    startind=stopind+1
+    stopind = startind + nz - 1
+    laps_data(:,:,startind:stopind) = tke
+    varname(startind:stopind) = 'TKE'
+    levels(startind:stopind) = NINT(press_levels)
+    varcomment(startind:stopind) = 'Forecast turbulent kinetic energy   '
 
     ! Write out the 3D stuff using LAPS library routine
     IF (.NOT. write_to_lapsdir) THEN

@@ -269,6 +269,11 @@ CONTAINS
     nlevels(varindex) = kprs
     varindex = varindex + 1
 
+    ! Turbulent kinetic energy (fua/tke)
+    varname(varindex) = 'TKE       '
+    nlevels(varindex) = kprs
+    varindex = varindex + 1
+
     ! Print out number of 3D variables as a sanity check
     num3dvar = varindex - 1
     PRINT '(A,I3)', 'V5DINIT: Number of 3D variables to output: ', num3dvar
@@ -501,7 +506,7 @@ CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE v5dout(timestep,zprs,tprs,tdprs,rhprs,uprs,vprs,wprs,omprs, &
              abs_vort,shprs,cldliqmr_prs,cldicemr_prs,rainmr_prs, &
-                  snowmr_prs,graupelmr_prs,refl_prs,pcptype_prs, &
+                  snowmr_prs,graupelmr_prs,refl_prs,pcptype_prs,tkeprs, &
                   thick_10_5,tsfc,tdsfc,rhsfc,usfc,vsfc,wsfc, &
                   pmsl,psfc,cldbase,cldtop,cldamt,ceiling, &
                   intliqwater,totpcpwater,pcp_inc,pcp_tot, &
@@ -537,6 +542,7 @@ CONTAINS
     REAL                    :: graupelmr_prs(nx,ny,kprs)
     REAL                    :: refl_prs(nx,ny,kprs)
     REAL                    :: pcptype_prs(nx,ny,kprs)
+    REAL                    :: tkeprs(nx,ny,kprs)
     REAL                    :: thick_10_5 (nx,ny)
     REAL                    :: tsfc(nx,ny)
     REAL                    :: tdsfc(nx,ny)
@@ -701,6 +707,12 @@ CONTAINS
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data3d)
     varindex = varindex + 1  
+
+    CALL post2v5d(tkeprs,nx,ny,kprs,data3d)
+    PRINT '(2A)', 'V5DOUT: Writing tkeprs as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data3d)
+    varindex = varindex + 1
 
     DEALLOCATE(data3d)
     ! Now do the 2-d variables 

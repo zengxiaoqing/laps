@@ -91,7 +91,7 @@ MODULE postproc_lfm
   REAL, ALLOCATABLE, PUBLIC  :: refl_prs           ( : , : , : )
   REAL, ALLOCATABLE, PUBLIC  :: pcptype_prs        ( : , : , : )
   REAL, ALLOCATABLE, PUBLIC  :: abs_vort           ( : , : , : )
-
+  REAL, ALLOCATABLE, PUBLIC  :: tkeprs             ( : , : , : )
   REAL, ALLOCATABLE, PUBLIC  :: psfc               ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: pmsl               ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: redp               ( : , : )
@@ -983,6 +983,7 @@ CONTAINS
     REAL, ALLOCATABLE       :: wsig ( : , : , : )
     REAL, ALLOCATABLE       :: wsigf( : , : , : )
     REAL, ALLOCATABLE       :: below_ground ( : , : )
+    REAL, ALLOCATABLE       :: tkesig(:,:,:)
     INTEGER                 :: status
     REAL                    :: recipdx, dudy, dvdx
 
@@ -1111,7 +1112,6 @@ CONTAINS
                     weight_top_lin, below_ground, wprs, &
                     nx, ny, ksigh, kprs)
     DEALLOCATE (wsig)
-    DEALLOCATE (below_ground)
 
     ! Compute omega for LAPS
     DO k = 1,kprs
@@ -1123,13 +1123,35 @@ CONTAINS
 
     DEALLOCATE (usig)
     DEALLOCATE (vsig)
-   
+
+    ! Get TKE
+    PRINT *, 'Getting TKE....'
+    ALLOCATE(tkesig(nx,ny,ksigh))
+    below_ground = 0.0
+    IF (mtype .EQ. 'mm5') THEN
+      CALL get_mm5_3d(current_lun, 'TKE      ', time_to_proc, tkesig, &
+                      'D    ', status)
+    ELSEIF (mtype .EQ. 'wrf') THEN
+      CALL get_wrfnc_3d(current_lun,'TKE','A',nx,ny,ksigf,1,tkesig,status)
+    ENDIF
+    IF (status .EQ. 0) THEN
+      PRINT *, 'Vertically interpolating TKE'
+      CALL vinterp_3d(tkesig,trap_bot_ind,trap_top_ind,&
+                      weight_top_lin, below_ground, tkeprs, &
+                      nx,ny,ksigh,kprs)
+    ELSE
+      PRINT *, 'Setting TKE = 0.0 everywhere'
+      tkeprs = 0.0
+    ENDIF
+    DEALLOCATE(tkesig)
+    DEALLOCATE(below_ground)
+    
     PRINT *, '      Min/Max U wind (m/s):   ', minval(uprs),maxval(uprs)
     PRINT *, '      Min/Max V wind (m/s):   ', minval(vprs),maxval(vprs)
     PRINT *, '      Min/Max W wind (m/s):   ', minval(wprs),maxval(wprs)
     PRINT *, '      Min/Max Omega (Pa/s):   ', minval(omprs),maxval(omprs)
     PRINT *, '      Min/Max SR Helicity:    ', minval(srhel),maxval(srhel)
-
+    PRINT *, '      Min/Max TKE:            ', minval(tkeprs),maxval(tkeprs)
     ! If making Vis5D output, compute vorticity
     IF (make_v5d) THEN
        recipdx = 1.0 / (2.0 * grid_spacing)

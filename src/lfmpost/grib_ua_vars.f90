@@ -2,7 +2,7 @@
              process_id,laps_reftime,laps_valtime,period_sec,igds,nx,ny,kprs, &
              plvlmb,zprs,uprs,vprs,wprs,omprs,tprs,shprs,rhprs,&
              cldliqmr_prs,cldicemr_prs,rainmr_prs,snowmr_prs,graupelmr_prs, &
-             pcptype_prs,refl_prs,funit,startb,nbytes)
+             pcptype_prs,refl_prs,tkeprs,funit,startb,nbytes)
 
     USE grib
     IMPLICIT NONE
@@ -33,6 +33,7 @@
     REAL,INTENT(IN)             :: graupelmr_prs(nx,ny,kprs)
     REAL,INTENT(IN)             :: pcptype_prs(nx,ny,kprs)
     REAL,INTENT(IN)             :: refl_prs(nx,ny,kprs)
+    REAL,INTENT(IN)             :: tkeprs(nx,ny,kprs)
     INTEGER,INTENT(IN)          :: funit
     INTEGER,INTENT(IN)          :: startb
     INTEGER,INTENT(OUT)         :: nbytes
@@ -442,6 +443,30 @@
       CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
       nbytes = nbytes + itot
       startbyte=nbytes+1  
+
+      ! Turbulent kinetic energy
+      DO j = 0,ny-1
+        DO i = 1,nx
+          fld(j*nx + i) = tkeprs(i,j+1,k)
+        ENDDO
+      ENDDO
+      itype = 0
+      param =  158
+      leveltype = 100
+      level1 = lvl
+      level2 = 0
+      timerange = 0
+      timeperiod1 = fcsttime_now
+      timeperiod2 = 0
+      scalep10 = 3
+      CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                   hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                   scalep10,id)
+      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+      nbytes = nbytes + itot
+      startbyte=nbytes+1 
+
       ENDIF ! Only levels 1000mb and higher
     ENDDO levelloop
     RETURN
