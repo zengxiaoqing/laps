@@ -361,6 +361,7 @@ sub update_nl{
     closedir(TDIR);
     push(@nnl,"nest7grid.parms") if($type eq "laps");
     
+    my ($comm, $fnd);
     foreach $nl_file (@nnl){
 	open(INFILE,"$srcroot/static/$nl_file");
 	my @infile = <INFILE>;
@@ -396,12 +397,17 @@ sub update_nl{
 		next;
             }elsif($line =~ /^[!cC]/){
 		chomp($line);
-		my $tmpline = $line;
-		$tmpline =~ s/[(\[\]\\\/\(\)\!\$\^)]/\$1/g;
-                next if(grep(/$tmpline/,@comments)>0);
-		push(@comments,$line);
+                $fnd = 0;
+                foreach $comm (@comments) {
+                  if ($line eq $comm) {
+                    $fnd  = 1;
+                    last;
+                  }
+                }
+                if ($fnd == 0) {
+                  push(@comments,$line);
+                }
 		next;
-#		print OUTFILE $line;		;
             }elsif($line =~ /^\s*&/){
 		print OUTFILE $line;
 		next;
