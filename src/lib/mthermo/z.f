@@ -61,7 +61,7 @@ c   the algorithm involves numerical integration of the hydrostatic
 c   equation from p(1) to pt. it is described on p.15 of stipanuk
 c   (1973).
 
-	dimension t(1),p(1),td(1),tk(100)
+	dimension t(n),p(n),td(n),tk(n)
 
 c	c1 = .001*(1./eps-1.) where eps = .62197 is the ratio of the
 c			      molecular weight of water to that of
