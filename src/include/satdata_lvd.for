@@ -12,17 +12,21 @@
       enddo
       enddo
 
+c first satellite (goes08)
       C_SAT_TYPES(1,1)='gvr'
       C_SAT_TYPES(2,1)='wfo'
       C_SAT_TYPES(3,1)='cdf'
       C_SAT_TYPES(4,1)='gwc'
 
+c second satllite (meteosat)
       C_SAT_TYPES(4,2)='gwc'
 
+c third satllite (goes10)
       C_SAT_TYPES(1,3)='gvr'
       C_SAT_TYPES(2,3)='wfo'
 
-      C_SAT_TYPES(4,3)='gwc'
+c forth satellite (gms)
+      C_SAT_TYPES(3,4)='twn'
       C_SAT_TYPES(4,4)='gwc'
 c ----
 c goes08
@@ -79,6 +83,12 @@ c gmssat
       C_CHANNEL_TYPES(3,4,4)='wvp'
       C_CHANNEL_TYPES(4,4,4)='11u'
       C_CHANNEL_TYPES(5,4,4)='12u'  !<-- end 4th type
+c gmssat for taiwan (JS  and BS Wang 6-7-01)
+      C_CHANNEL_TYPES(1,3,4)='vis'
+      C_CHANNEL_TYPES(3,3,4)='wv '  !water vapor
+      C_CHANNEL_TYPES(4,3,4)='11u'  !ir1 
+      C_CHANNEL_TYPES(5,3,4)='12u'  !<-- end 4th type ... not known yet
+
 c-----
       do j=1,maxsat
       do i=1,maxtype
