@@ -1108,7 +1108,8 @@ c
 c            Max, Min  Absolute Average  Std. Deviation  Mean  Range  
 c
 c     Original: 06-10-98  (from "stats.f").  P.A. Stamus, NOAA/FSL
-c     Changes:  
+c     Changes:  09-24-98  P.A. Stamus, NOAA/FSL
+c                  Added zero to missing field check.
 c
 c========================================================================
 c
@@ -1143,7 +1144,7 @@ c..... Check for an empty field.
 c
       do j=1,nj
       do i=1,ni
-         if(x(i,j) .ne. fill_val) go to 100
+         if(x(i,j).ne.fill_val .and. x(i,j).ne.0.) go to 100
       enddo !i
       enddo !j
       print *,'   ** WARNING. Empty field. **'
