@@ -95,11 +95,10 @@
     
     ! Miscellaneous local variables
                                         
-    INTEGER :: out_loop, loop , var_loop , i, j, k, istatus
+    INTEGER :: out_loop, loop , var_loop , i, j, k, kbot,istatus
     LOGICAL :: file_present
     REAL    :: rhmod, lwcmod, shmod
     REAL    :: rhadj
-    
     ! Beginning of code
  
     ! Check for command line argument containing LAPS valid time
@@ -546,6 +545,31 @@
       enddo
 
 
+    ENDIF
+  
+    ! If make_sfc_uv set, then replace surface winds with 
+    ! winds interpolated from the 3D field.
+    IF (make_sfc_uv) THEN
+      PRINT *, 'Creating surface u/v from 3D field...'
+      DO j = 1,y
+        DO i = 1,x
+          kbot = 0
+          get_lowest: DO k = z3,1,-1
+            IF (ht(i,j,k) .GT. topo(i,j)) THEN
+              kbot = k
+              EXIT get_lowest
+            ENDIF
+          ENDDO get_lowest
+          IF (kbot .NE. 0) THEN
+            u(i,j,z3+1) = u(i,j,kbot)
+            v(i,j,z3+1) = v(i,j,kbot)
+          ELSE
+            print *, 'Problem finding kbot.'
+            STOP
+          ENDIF
+        ENDDO
+      ENDDO
+  
     ENDIF
 
     ! Loop over the each desired output format

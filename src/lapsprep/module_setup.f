@@ -45,16 +45,16 @@ MODULE setup
    INTEGER             :: valid_yyyy, valid_jjj, &
                           valid_hh, valid_min, &
                           i4time
-
+   REAL, PARAMETER     :: missingflag = 1.e37
    ! Namelist items
 
-   LOGICAL            :: hotstart,balance
+   LOGICAL            :: hotstart,balance,make_sfc_uv
    CHARACTER (LEN=4)  :: output_format(10)
    INTEGER            :: num_output
    REAL               :: snow_thresh, lwc2vapor_thresh
    CHARACTER (LEN=256):: output_prefix
   
-  !  Output file info.
+   !  Output file info.
 
    INTEGER , PARAMETER :: output = 10
    CHARACTER (LEN=132) :: name
@@ -94,6 +94,7 @@ CONTAINS
 
       NAMELIST /lapsprep_nl/ hotstart      , &
                          balance           , &
+                         make_sfc_uv       , &
                          output_format     , &
                          snow_thresh       , &
                          lwc2vapor_thresh
@@ -105,6 +106,7 @@ CONTAINS
       balance = .false.
       snow_thresh = 0.5
       lwc2vapor_thresh = 1.1
+      make_sfc_uv = .false.
  
       ! Open the namelist
 
