@@ -1312,11 +1312,13 @@ C   COMPUTE DEW POINT DEPRESSION.
 
        character*13 filename13
 
+       call constant(li,r_missing_data,imax,jmax)
+       call get_laps_cycle_time(laps_cycle_time,istatus)
 !      Get 500 mb temp field
        if(flag .eq. 0.0)then ! Use LT1 (or equivalent) file
            write(6,*)' Reading 500 temp from LT1 (or equivalent) file'
            k_level = 500
-           call get_temp_2d(i4time,7200,i4time_nearest
+           call get_temp_2d(i4time,laps_cycle_time,i4time_nearest
      1                          ,k_level,imax,jmax,t500laps,istatus)
 
            if(istatus .ne. 1)then

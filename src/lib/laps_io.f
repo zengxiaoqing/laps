@@ -297,7 +297,7 @@ c
             if(istatus .eq. 1 .and.
      1                 field_2d(imax/2,jmax/2) .eq. r_missing_data)then
                 write(6,*)' Missing Data Value Detected in 2D Field'
-                istatus = -1
+c               istatus = -1
             endif
 
         else
