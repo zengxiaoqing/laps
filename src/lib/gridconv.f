@@ -760,11 +760,18 @@ c
      .                    ,xmin,ymin
      .                    ,xmax,ymax
      .                    ,pi,dg2rd
-      real*4 dx,dy,r
+
+      double precision     coslatc
+     .                    ,dx,dy
+     .                    ,drlatc,drlonc
+     .                    ,dglat, dglon
+      real*4  r
  
       integer nx,ny,nz             !No. of LL domain grid points
-      real*4 rlatc,rlonc           !Grid center lat, lon
-      real*4 coslatc
+      real*4  rlatc,rlonc          !Grid center lat, lon
+
+c     real*4 coslatc
+
       data r/6.3712e6/             !this earth radius is = to that in lapsgrid.f
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
@@ -778,10 +785,12 @@ c       equation set assumes y-axis is on equator.
 c
       pi=acos(-1.0)
       dg2rd=pi/180.
+      drlatc=rlatc
+      drlonc=rlonc
 
-      xmin=r*((nw(2)-rlonc)*dg2rd)*cosd(rlatc)
+      xmin=r*((nw(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymin=r*se(1)*dg2rd
-      xmax=r*((se(2)-rlonc)*dg2rd)*cosd(rlatc)
+      xmax=r*((se(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymax=r*nw(1)*dg2rd
 
       if(xmax.eq.xmin)xmax=abs(xmin)
@@ -790,9 +799,9 @@ c
       dx=(xmax-xmin)/(nx-1)
       dy=(ymax-ymin)/(ny-1)
 
-      coslatc=cosd(rlatc)
+      coslatc=dcosd(drlatc)
       do n=1,np
-         diff=glon(n)-rlonc
+         diff=glon(n)-drlonc
          if (diff .lt.-180.) diff=diff+360.
          if (diff .ge. 180.) diff=diff-360.
          diff=diff*dg2rd
@@ -817,10 +826,12 @@ c               rlatc= central parallel
 
       pi=acos(-1.0)
       dg2rd=pi/180.
+      drlatc=rlatc
+      drlonc=rlonc
 
-      xmin=r*((nw(2)-rlonc)*dg2rd)*cosd(rlatc)
+      xmin=r*((nw(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymin=r*se(1)*dg2rd
-      xmax=r*((se(2)-rlonc)*dg2rd)*cosd(rlatc)
+      xmax=r*((se(2)-drlonc)*dg2rd)*dcosd(drlatc)
       ymax=r*nw(1)*dg2rd
 
       if(xmax.eq.xmin)xmax=abs(xmin)
@@ -829,16 +840,17 @@ c               rlatc= central parallel
       dx=(xmax-xmin)/(nx-1)
       dy=(ymax-ymin)/(ny-1)
 
-      coslatc=cosd(rlatc)
+      coslatc=dcosd(drlatc)
 
       do n=1,np
 
-         glon(n)=rlonc*dg2rd +
-     &           (xmin+(lli(n)+1.0)*dx)/(r*coslatc)
-         glat(n)=(ymin+(ny-llj(n)+1.0)*dy)/r
+         dglon=rlonc*dg2rd +
+     &         (xmin+(lli(n)+1.0)*dx)/(r*coslatc)
+         dglat=(ymin+(ny-llj(n)+1.0)*dy)/r
 
-         glon(n)=glon(n)/dg2rd
-         glat(n)=glat(n)/dg2rd
+         glon(n)=dglon/dg2rd
+         glat(n)=dglat/dg2rd
+
       enddo
 
       return
