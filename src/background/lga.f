@@ -139,7 +139,7 @@ c      istat = index(laps_domain_file,' ')-1
 c
 c *** Initialize esat table.
 c
-      call esat_init
+      call es_ini
       bg_files=0
       i=0
       do while(lga_status.le.0 .and. i.le.nbgmodel)
@@ -449,7 +449,7 @@ c
      .           nxbg,nybg,nzbg,ntbg,
      .           prbg,htbg,tpbg,shbg,uwbg,vwbg,
      .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
-     .           mslpbg,gproj,istatus)
+     .           mslpbg,gproj,1,istatus)
 c
          elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
             call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg

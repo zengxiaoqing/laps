@@ -18,8 +18,9 @@ c
      .          nrecs,ngatts,ndims,ipr(nz), len, it, i, istatus
 c
       character*2   gproj
-      real*4 xe,esat,mrsat
-      common /estab/esat(15000:45000)
+      real*4 xe,mrsat
+      include 'bgdata.inc'
+
 c
 c *** Common block variables for Lambert-conformal grid.
 c

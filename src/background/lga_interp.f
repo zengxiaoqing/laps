@@ -363,6 +363,12 @@ c
          do j=1,ny
             do i=1,nx
                gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
+
+               if(gridn(i,j,k) .gt. 1.e35) then
+                  print *,'Error in time_interp',
+     +                 i,j,k,grid1(i,j,k),grid2(i,j,k)
+               endif
+
             enddo
          enddo
       enddo
