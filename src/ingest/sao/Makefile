@@ -24,6 +24,7 @@ SRC   = read_metar.f \
 	get_metar_obs.f \
 	read_local.f \
 	get_local_obs.f \
+	get_local_cwb.f \
 	read_buoy.f \
         get_buoy_obs.f \
         write_surface_obs.f

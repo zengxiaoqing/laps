@@ -250,7 +250,6 @@ c
         call s_len(metar_format,len_metar_format)
 
         if(metar_format(1:len_metar_format) .eq. 'FSL')then
-
           do while(.not. exists .and. 
      &              cnt .lt. minutes_to_wait_for_metars)
 c        
@@ -328,12 +327,12 @@ c
 	   print *,' '
 	endif
 c
-c.....  Call the routine that reads the LDAD mesonet data files, then get
-c.....  the data.
+c.....  Call the routine that reads the mesonet data files, then get the data.
 c
 	print*,'Getting mesonet data ', data_file_l
 c
-        call get_local_obs(maxobs,maxsta,i4time,data_file_l,
+        if(metar_format(1:len_metar_format) .ne. 'CWB')then ! LDAD Netcdf
+            call get_local_obs(maxobs,maxsta,i4time,data_file_l,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
@@ -343,9 +342,23 @@ c
      &                      store_5,store_5ea,store_6,store_6ea,
      &                      store_7,store_cldht,store_cldamt,
      &                      provider, laps_cycle_time, jstatus)
+
+        else
+            call get_local_cwb(maxobs,maxsta,i4time,data_file_l,
+     &                      grid_east,grid_west,grid_north,grid_south,
+     &                      lat,lon,ni,nj,grid_spacing,
+     &                      nn,n_local_g,n_local_b,stations,
+     &                      reptype,atype,weather,wmoid,
+     &                      store_1,store_2,store_2ea,
+     &                      store_3,store_3ea,store_4,store_4ea,
+     &                      store_5,store_5ea,store_6,store_6ea,
+     &                      store_7,store_cldht,store_cldamt,
+     &                      provider, laps_cycle_time, jstatus)
+
+        endif
 c
 	if(jstatus .ne. 1) then
-	   print *, ' WARNING. Bad status return from GET_LOCAL_OBS'
+	   print *, ' WARNING. Bad status return from GET_LOCAL_...'
 	   print *,' '
 	endif
 c
