@@ -90,6 +90,11 @@ c                                         (Removes need for 'laps_sfci')
 c                                         Remove equivs.
 c                               09-11-97  Changes for dynamic LAPS.
 c                               01-20-98  Move wt calcs to correct place.
+c	                        07-11-98  New background calls.  Still temp fix
+c                                           until can remove weight code (new 
+c                                           spline doesn't use).
+c                               09-24-98  Carry background flags for each var.
+c                                           Rm ceil QC check.
 c
 c       Notes:
 c
@@ -105,6 +110,7 @@ c*****************************************************************************
 c
 	include 'laps_sfc.inc'
 c
+	real make_td
 	real*4 lat(ni,nj), lon(ni,nj), topo(ni,nj)
 	real*4 x1a(ni), x2a(nj), y2a(ni,nj)
 	real*4 grid_spacing
@@ -124,22 +130,11 @@ c
 	real*4 rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
 	real*4 wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
 	real*4 vis_bk(ni,nj), wt_vis(ni,nj)
-	real*4 wt(ni,nj)  
+	real*4 wt(ni,nj)
 c
-	real*4 background(ni,nj,8)
-	integer*4 lvl_bk(8)
-	character var_bk(8)*3, back*9, unitsl(8)*10, lvlcl(8)*4
-	character coml(8)*125, dir_bk*256, ext_bk*31
-c
-	real*4 bk_rams(ni,nj,5)
-	integer*4 lvl_bkr(5)
-	character var_bkr(5)*3, backrams*9, dir_rams*256, ext_rams*31
-	character unitsr(5)*10, lvlcr(5)*4, comr(5)*125
-c
-	real*4 bk_sw3d(ni,nj,2)
-	integer*4 lvl_sw3d(2)
-	character var_sw3d(2)*3, backsw3d*9, dir_sw3d*256, ext_sw3d*31
-	character units3(2)*10, lvlc3(2)*4, com3(2)*125
+	integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
+	integer back_mp
+	character var_req*4, ext_bk*31, back*9
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -210,7 +205,8 @@ c
 	i4time_last = i4time - ifix( dt )
 	call cv_i4tim_asc_lp(i4time, atime, status)	   ! get the atime
 	call make_fnam_lp(i4time_last,filename_last,istatus)  ! make earlier filename	
-	del = 1.e6
+c
+        del = 1.e6
 	gam = .0008
 	ak = 1.e-6
 c
@@ -270,10 +266,10 @@ c
 	endif
 c
 	print *,' '
-	write(6,320) atime_s,n_sao_g,n_sao_b,n_obs_b
-320	format(' LSO data vaild time: ',a24,' Num obs: ',3i6)
+	write(6,320) atime_s,n_obs_g,n_obs_b
+320	format(' LSO data vaild time: ',a24,' Num obs: ',2i6)
 c
-	if(n_sao_b .lt. 10) then
+	if(n_obs_b .lt. 1) then
 	   jstatus(1) = -2
 	   print *,' Insufficient number of surface observations'
 	   print *,' for a clean analysis.  Stopping.'
@@ -310,186 +306,138 @@ c
         call zero(wt_stnp, ni,nj)
         call zero(wt_vis, ni,nj)
 c
+	back_t = 0
+	back_td = 0
+	back_rp = 0
+	back_sp = 0
+	back_mp = 0
+	back_uv = 0
+	back_vis = 0
+c
 	if(ihours .eq. 0) then     ! skip the backgrounds
-	   irams_bk = 0
 	   ilaps_bk = 0
-	   isw3d_bk = 0
 	   print *,' Skipping backgrounds...'
 	   go to 600
 	endif
 c
-	irams_bk = 1
-	irams_loop = 1
-	do i=1,5
-	   lvl_bkr(i) = 0
-	enddo !i
+c.....  Get the backgrounds.  Convert units while we're here.
 c
-	var_bkr(1) = 'U'       ! u-wind (m/s)
-	var_bkr(2) = 'V'       ! v-wind (m/s)
-	var_bkr(3) = 'RP'      ! reduced pressure (Pa) (1500 m in CO)
-	var_bkr(4) = 'T'       ! temp (K)
-	var_bkr(5) = 'TD'      ! dewpt (K)
-	i4time_rams = i4time_last + 60     ! get the 1-h fcst
-c	dir_rams = '../lapsprd/rsf/'
-	call get_directory('rsf',dir_rams,len)
-	ext_rams = 'rsf'
- 100	call read_laps_data(i4time_rams,dir_rams,ext_rams,ni,nj,5,5,
-     &   var_bkr,lvl_bkr,lvlcr,unitsr,comr,bk_rams,istatus)
-	if(istatus .ne. 1) then
-	   if(irams_loop .gt. 5) then     ! give up
-	      print *,' ++ No RAMS backgound available. ++'
-	      irams_bk = 0
-	      go to 300
-	   else
-	      irams_loop = irams_loop + 1
-	      print *,' RAMS forecast not available...trying earlier.'
-	      i4time_rams = (i4time_rams - 3600) + 60
-	      go to 100
-	   endif
+	call get_bkgwind_sfc(i4time,ext_bk,ibkg_time,u_bk,v_bk,
+     &            laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call move(wt, wt_u, ni,nj)
+	   call move(wt, wt_v, ni,nj)
+	   call conv_ms2kt(u_bk,u_bk,ni,nj)
+	   call conv_ms2kt(v_bk,v_bk,ni,nj)
+	   back_uv = 1
+	else
+	   print *,'     No background available'
+	   call zero(u_bk,ni,nj)
+	   call zero(v_bk,ni,nj)
 	endif
 c
-c.....	Get the previous LSX.
-c
- 300	ilaps_bk = 1
-	ilaps_loop = 1
-	do i=1,8
-	   lvl_bk(i) = 0
-	enddo !i
-	var_bk(1) = 'U'     ! u-wind (m/s)
-	var_bk(2) = 'V'     ! v-wind (m/s)
-	var_bk(3) = 'P'     ! reduced pressure (Pa) (1500 m in CO)
-	var_bk(4) = 'T'     ! temp (K)
-	var_bk(5) = 'TD'    ! dew point (K)
-	var_bk(6) = 'MSL'   ! msl pressure (Pa)
-	var_bk(7) = 'VIS'   ! visibility (m)
-	var_bk(8) = 'PS'    ! station pressure (Pa)
-c	dir_bk = '../lapsprd/lsx/'
-	call get_directory('lsx',dir_bk,len)
-	ext_bk = 'lsx'
-	i4time_bk = i4time_last 
- 200	call read_laps_data(i4time_bk,dir_bk,ext_bk,ni,nj,8,8,var_bk,
-     &     lvl_bk,lvlcl,unitsl,coml,background,istatus)
-	if(istatus .ne. 1) then
-	   if(ilaps_loop .gt. 3) then     ! give up
-	      print *,' ++ No  LSX background available. ++'
-	      ilaps_bk = 0
-	      go to 350
-	   else
-	      ilaps_loop = ilaps_loop + 1
-	      ihours = ihours + 1
-	      dt = 3600. * ihours
-	      i4time_bk = i4time - ifix( dt )
-	      go to 200
-	   endif
+	print *,' '
+	print *,' Getting temperature background....'
+	var_req = 'TEMP'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,t_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   ilaps_bk = 1
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call conv_k2f(t_bk,t_bk,ni,nj) ! conv K to deg F
+	   call move(wt, wt_t, ni,nj)
+	   back_t = 1
+	else
+	   print *,'     No background available'
+	   call zero(t_bk,ni,nj)
 	endif
 c
- 350	continue
- 	isw3d_bk = 1
-	isw3d_loop = 1
-	do i=1,2
-	   lvl_sw3d(i) = 0
-	enddo !i
-	var_sw3d(1) = 'SU'     ! u-wind (m/s)
-	var_sw3d(2) = 'SV'     ! v-wind (m/s)
-c	dir_sw3d = '../lapsprd/lwm/'
-	call get_directory('lwm',dir_sw3d,len)
-	ext_sw3d = 'lwm'
-	i4time_sw3d = i4time_last
- 202	call read_laps_data(i4time_sw3d,dir_sw3d,ext_sw3d,ni,nj,2,2,
-     &     var_sw3d,lvl_sw3d,lvlc3,units3,com3,bk_sw3d,istatus)
-	if(istatus .ne. 1) then
-	   if(isw3d_loop .gt. 3) then     ! give up
-	      print *,' ++ No  LWM background available. ++'
-	      isw3d_bk = 0
-	      go to 370
-	   else
-	      isw3d_loop = isw3d_loop + 1
-	      ihours = ihours + 1
-	      dt = 3600. * ihours
-	      i4time_sw3d = i4time - ifix( dt )
-	      go to 202
-	   endif
+	print *,' '
+	print *,' Getting MSL pressure background....'
+	var_req = 'MSLP'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,mslp_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call multcon(mslp_bk,0.01,ni,nj) ! conv Pa to mb
+	   call move(wt, wt_mslp, ni,nj)
+	   back_mp = 1
+	else
+	   print *,'     No background available'
+	   call zero(mslp_bk,ni,nj)
 	endif
 c
- 370	continue
-c
-c.....  Now convert units and move stuff to the proper arrays.
-c      
-	call constant(u_bk,badflag,ni,nj)
-	call constant(v_bk,badflag,ni,nj)
-	call constant(t_bk,badflag,ni,nj)
-	call constant(td_bk,badflag,ni,nj)
-	call constant(rp_bk,badflag,ni,nj)
-	call constant(mslp_bk,badflag,ni,nj)
-	call constant(stnp_bk,badflag,ni,nj)
-	call constant(vis_bk,badflag,ni,nj)
-c
-	if(ilaps_bk.eq.0 .and. irams_bk.eq.0) then
-	   print *,
-     &     ' ++WARNING. No backgrounds available for the analysis.++'
-	   go to 600
-	endif
-	if(irams_bk .eq. 1) then     ! have RAMS for background
-	   call move_3dto2d(bk_rams,1, u_bk, ni,nj,nk)    !rams u
-	   call move_3dto2d(bk_rams,2, v_bk, ni,nj,nk)    !rams v
-	   call move_3dto2d(bk_rams,3,rp_bk, ni,nj,nk)    !rams 1500 p
-	   call move_3dto2d(bk_rams,4, t_bk, ni,nj,nk)    !rams t
-	   call move_3dto2d(bk_rams,5,td_bk, ni,nj,nk)    !rams td
-c
-           call move(wt, wt_u, ni,nj)
-           call move(wt, wt_v, ni,nj)
-           call move(wt, wt_rp, ni,nj)
-           call move(wt, wt_t, ni,nj)
-           call move(wt, wt_td, ni,nj)
+	print *,' '
+	print *,' Getting station pressure background....'
+	var_req = 'SFCP'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,stnp_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call move(wt, wt_stnp, ni,nj)
+	   call multcon(stnp_bk,0.01,ni,nj) ! conv Pa to mb
+	   back_sp = 1
+	else
+	   print *,'     No background available'
+	   call zero(stnp_bk,ni,nj)
 	endif
 c
-	if(ilaps_bk .eq. 1) then
-	   if(irams_bk .eq. 1) then  ! have RAMS, just fill in the others
-	      call move_3dto2d(background,6, mslp_bk, ni,nj,nk)  !laps msl p
-	      call move_3dto2d(background,7,  vis_bk, ni,nj,nk)  !laps vis
-	      call move_3dto2d(background,8, stnp_bk, ni,nj,nk)  !laps stn p
-c
-              call move(wt, wt_mslp, ni,nj)
-              call move(wt, wt_vis, ni,nj)
-              call move(wt, wt_stnp, ni,nj)
-c
-	   else                      ! only previous laps for background
-c
-	      if(isw3d_bk .eq. 1) then      !but...have 3d sfc wind
-		 call move_3dto2d(bk_sw3d,1, u_bk, ni,nj,nk) !lwm 3d sfc u
-		 call move_3dto2d(bk_sw3d,2, v_bk, ni,nj,nk) !lwm 3d sfc v
-	      else
-		 call move_3dto2d(background,1, u_bk, ni,nj,nk) !laps u
-		 call move_3dto2d(background,2, v_bk, ni,nj,nk) !laps v
-	      endif
-c
-	      call move_3dto2d(background,3,   rp_bk, ni,nj,nk)  !laps reduced p (co: 1500m)
-	      call move_3dto2d(background,4,    t_bk, ni,nj,nk)  !laps t
-	      call move_3dto2d(background,5,   td_bk, ni,nj,nk)  !laps td
-	      call move_3dto2d(background,6, mslp_bk, ni,nj,nk)  !laps msl p
-	      call move_3dto2d(background,7,  vis_bk, ni,nj,nk)  !laps vis
-	      call move_3dto2d(background,8, stnp_bk, ni,nj,nk)  !laps stn p
-c
-              call move(wt, wt_u, ni,nj)
-              call move(wt, wt_v, ni,nj)
-              call move(wt, wt_rp, ni,nj)
-              call move(wt, wt_t, ni,nj)
-              call move(wt, wt_td, ni,nj)
-              call move(wt, wt_mslp, ni,nj)
-              call move(wt, wt_vis, ni,nj)
-              call move(wt, wt_stnp, ni,nj)
-	   endif
+	print *,' '
+	print *,' Getting visibility background....'
+	var_req = 'VISB'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,vis_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call move(wt, wt_vis, ni,nj)
+	   call conv_m2miles(vis_bk,vis_bk,ni,nj)
+	   call visg2log(vis_bk,ni,nj,badflag) ! conv miles to log(miles)
+	   back_vis = 1
+	else
+	   print *,'     No background available'
+	   call zero(vis_bk,ni,nj)
 	endif
 c
-	call conv_ms2kt(u_bk,u_bk,ni,nj)
-	call conv_ms2kt(v_bk,v_bk,ni,nj)
-	call conv_k2f(t_bk,t_bk,ni,nj)
-	call conv_k2f(td_bk,td_bk,ni,nj)
-	call multcon(rp_bk,0.01,ni,nj)          ! conv Pa to mb
-	call multcon(mslp_bk,0.01,ni,nj)        ! conv Pa to mb
-	call multcon(stnp_bk,0.01,ni,nj)        ! conv Pa to mb
-	call conv_m2miles(vis_bk,vis_bk,ni,nj)
-	call visg2log(vis_bk,ni,nj,badflag)     ! conv miles to log(miles)
+	print *,' '
+	print *,' Getting dew point temperature background....'
+	var_req = 'DEWP'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,td_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call move(wt, wt_td, ni,nj)
+	   call conv_k2f(td_bk,td_bk,ni,nj) ! conv K to deg F
+	   back_td = 1
+	else
+	   print *,'     No background available'
+	   call zero(td_bk,ni,nj)
+	endif
+	print *,' '
+c
+	print *,' '
+	print *,' Getting reduced pressure background....'
+	var_req = 'REDP'
+	call get_background_sfc(i4time,var_req,ext_bk,ibkg_time,rp_bk,
+     &          laps_cycle_time,ni,nj,istatus)
+	if(istatus .eq. 1) then
+	   call make_fnam_lp(ibkg_time,back,istatus)
+	   write(6,951) ext_bk(1:6), back
+	   call move(wt, wt_rp, ni,nj)
+	   call multcon(rp_bk,0.01,ni,nj) ! conv Pa to mb
+	   back_rp = 1
+	else
+	   print *,'     No background available'
+	   call zero(rp_bk, ni,nj)
+	endif
+c
+ 951	format(3x,'Using background from ',a6,' at ',a9)
 c
 c.....  Adjust wts for winds; if above 2500 m, increase wt by order of mag
 c.....  so background winds will have more influence.
@@ -503,39 +451,13 @@ c
 	enddo !i
 	enddo !j
 c
-c.....  Print the background times.
-c
-	print *,' '
-	if(ilaps_bk .eq. 1) then
-	   call make_fnam_lp(i4time_bk,back,istatus)
-	   write(6,400) back
- 400	   format(' Using  LSX background from: ',a9)
-	else
-	   print *,' ++ No  LSX background available. ++'
-	endif
-	if(irams_bk .eq. 1) then
-	   call make_fnam_lp(i4time_rams,backrams,istatus)
-	   write(6,405) backrams
- 405	   format(' Using RAMS background from: ',a9)
-	else
-	   print *,' ++ No RAMS background available. ++'
-	endif
-	if(isw3d_bk .eq. 1) then
-	   call make_fnam_lp(i4time_sw3d,backsw3d,istatus)
-	   write(6,407) backsw3d
- 407	   format(' Using LWM sfc wind background from: ',a9)
-	else
-	   print *,' ++ No LWM sfc wind background available. ++'
-	endif
-	print *,' '
-c
  600	continue
 c
 c.....	QC the surface data.
 c
 	if(iskip .gt. 0) then  !check QC flag
-	  print *, ' **  omit qc of data  **  '
-	  goto 521
+	   print *, ' **  omit qc of data  **  '
+	   goto 521
 	endif
 	call get_directory('lso', infile_last, len)
 	infile_last = infile_last(1:len) // filename_last // '.lso'
@@ -549,16 +471,16 @@ c
      &     istatus)
 c
 	if(istatus .eq. 1) then
-	  jstatus(2) = 1
+	   jstatus(2) = 1
 	elseif(istatus .eq. 0) then
-	  jstatus(2) = 0
-	  print *, ' +++ No data for QC routine. +++'
-	  go to 521
+	   jstatus(2) = 0
+	   print *, ' +++ No data for QC routine. +++'
+	   go to 521
 	else
-	  print *,
-     &    ' +++ ERROR.  Problem in QC routine. +++'
-	  jstatus(2) = -2
-	  go to 521
+	   print *,
+     &        ' +++ ERROR.  Problem in QC routine. +++'
+	   jstatus(2) = -2
+	   go to 521
 	endif
 c
 c.....	Check each of the primary analysis variables.
@@ -605,14 +527,6 @@ c
  126	enddo  !mm
 	do mm=1,n_obs_b
 	  nn = ivals1(mm)
-	  if(nn .lt. 1) go to 127
-	  if(rely(17,nn) .lt. 0) then	! ceiling 
-	   print *, 'QC: Bad CEIL at ',stn(mm),' with value ',hgt_ceil(mm)
-	   hgt_ceil(mm) = badflag
-	  endif
- 127	enddo  !mm
-	do mm=1,n_obs_b
-	  nn = ivals1(mm)
 	  if(nn .lt. 1) go to 128
 	  if(rely(25,nn) .lt. 0) then	! visibility 
 	    print *, 'QC: Bad VIS at ',stn(mm),' with value ',vis_s(mm)
@@ -637,10 +551,11 @@ c
      &     lon,grid_east,grid_west,grid_north,grid_south,topo,x1a,x2a,
      &     y2a, lon_s, elev_s, t_s, td_s, dd_s, ff_s, pstn_s, pmsl_s, 
      &     alt_s, vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_g,
-     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk, 
-     &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, irams_bk,
+     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, stnp_bk, vis_bk,
+     &     wt_u, wt_v, wt_rp, wt_mslp, ilaps_bk, 
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
-     &     jstatus)
+     &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
+     &     jstatus) 
 c
 	if(jstatus(1) .ne. 1) then
 	   print *,' From MDAT_LAPS:  Error Return.  Stop.'
@@ -653,14 +568,14 @@ c.....	derived variables, etc.  The output file goes to the lapsprd
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,laps_cycle_time,
-     &        dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
-     &        lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, vis_s, 
-     &        stn, n_obs_b, n_sao_b, n_sao_g,
-     &        u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
-     &        wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, 
-     &        ilaps_bk, irams_bk,
-     &        u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
-     &        x1a,x2a,y2a,ii,jj,jstatus)
+     &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
+     &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
+     &     vis_s, stn, n_obs_b, n_sao_b, n_sao_g,
+     &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, vis_bk, 
+     &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
+     &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
+     &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &     x1a,x2a,y2a,ii,jj,jstatus)
 c
 	if(jstatus(3) .ne. 1) then
 	  print *,' From LAPS_VANL: Error Return.' 
