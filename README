@@ -557,23 +557,18 @@
      localize a LAPS domain. These are: 
 
 		1) terrain elevation 
-		2) land fraction
-		3) landuse category 
+		2) landuse category 
+		3) land fraction
 		4) albedo climatology. 
 
-     The 30" terrain data is found in one of two tar files; 'world_topo_30s'
-     and 'topo_30s'. topo_30s is in file 'laps_terrain.tar.gz'. You must
-     get 'laps_terrain.tar.gz' since it also has both the mandatory land
-     fraction data and the 10 minute global terrain data. Note that the 10 min
-     topo data is being phased out in favor of the 30 sec terrain data.
-     Either topo_30s or world_topo_30s work well; however topo_30s does
-     not cover the entire globe and we recommend using world_topo_30s
-     data instead. Still, you must get 'laps_terrain.tar.gz' which contains
-     database 1) and 2).
+     The 30" terrain elevation data is found in the tar files for 
+     'topo_30s'.
 
      The landuse data is global 30" data and required to compute a
      land/water mask. The mask is used during localization to force consistency
      between the other geography data at land-water boundaries.
+
+     Land fraction is derived from the landuse data, using the water category.
 
      The global albedo climatology database has less resolution than either
      the terrain or landuse data.  The albedo is approximately 8.6 minutes
@@ -588,7 +583,7 @@
      information about gridgen_model). Only one copy of the geography
      data is required no matter how many LAPS 'dataroot' installations you
      are supporting.  The paths to the geography data directories
-     (topo_30s, topo_10m, land_10m, landuse_30s, and albedo_ncep) are defined as
+     (topo_30s, landuse_30s, and albedo_ncep) are defined as
      runtime parameters within the 'nest7grid.parms' file (Sec 2.2.6). 
 
      In addition to the geography being available on the LAPS Home Web page
@@ -609,8 +604,6 @@
      37194099  Aug 24  2001 topo_30s/topo_30s_SE.tar.gz
      29204244  Aug 24  2001 topo_30s/topo_30s_SW.tar.gz
 
-                            pctland_10m.tar.gz
-   
      12324069  Aug 24  2001 landuse_30s/landuse_30s_NE.tar.gz
      6118611   Aug 24  2001 landuse_30s/landuse_30s_NW.tar.gz
      3355822   Aug 24  2001 landuse_30s/landuse_30s_SE.tar.gz
