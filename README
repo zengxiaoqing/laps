@@ -90,11 +90,13 @@
      hope to increase this in the future.
 
 
-     The terrain data files now come in a seperate tar file from the
-     rest of the LAPS distribution.  This is file laps_terrain.tar.gz
-     This file should be installed relative to the installed data/static 
-     directory.  Only one set of topo data is required no matter how 
-     many data installations you are supporting, however, it is required
+     The terrain data files now come in a seperate compressed tar files 
+     from the rest of the LAPS distribution.  There are two databases,
+     one in file 'laps_terrain.tar.gz', the other in our 'world_topo_30s'
+     directory (see section 2.9). You can choose from either database; the 
+     files should be installed relative to the installed data/static 
+     directory.  Only one set of topo data is required no matter how many 
+     data installations you are supporting, however, it is required
      that you make a link from each data/static directory to the location 
      of the terrain data set.  For example, if you install LAPS with 
      --datadir=/usr/local/laps/data, a directory will be created called
@@ -452,19 +454,14 @@
      4. Adjust the horizontal dimensions in 
                                    './data/static/nest7grid.parms'.
 
-                LOCATION OF DOMAIN (STATIC FILE, etc.):
-
+             LOCATION OF DOMAIN (STATIC FILES, TERRAIN, etc.):
 
      The location of the horizontal domain can now be changed at run time. 
      Simply change the lat/lon values in 'data/static/nest7grid.parms'
      and run the './etc/laps_localization.pl' script. This script in turn
-     runs 'gridgen_model.exe'.
+     runs 'gridgen_model.exe' and other programs.
 
-        Steve Albers (albers@fsl.noaa.gov) can try to offer 
-        help on this if you're stuck. The code currently works best if you 
-        are working within the continental United States. Some mods may 
-        occasionally be required to make it work elsewhere in the world. 
-        Two scenarios in particular still need more testing. These are:
+        Two scenarios for processing terrain may need more testing. These are:
 
         a) Near a land/sea border
            In this case a filter that sets a given terrain point to zero
@@ -475,18 +472,19 @@
         b) If you are in the vicinity of a land border of the Continental 
            United States (e.g. Southern Canada or Northern Mexico).
 
-        The './src/grid/gridgen_model.f' program normally utilizes two 
-        terrain data sets (distributed as a seperate tar file available from 
-        the laps www site). One is a worldwide 10' dataset, the other is 30" 
-        data and covers the continental U.S.  The software automatically 
-        chooses the higher resolution data if it covers the domain of interest,
-        otherwise it defaults to the lower resolution data. A ~0.2 degree wide
-        transition zone is used for blending at the boundary between the
-        two datasets. 
+        The './src/grid/gridgen_model.f' program normally utilizes one of
+        two terrain data databases (distributed separately and available from 
+        the laps www site). 
 
-        There is another option to use a global 30" terrain dataset that we
-        have here at FSL. You can inquire directly about this as the data is 
-        not yet on the Web due to its size.
+        The first database has two components; one is a worldwide 10' dataset,
+        the other is 30" data and covers the continental U.S.  The software 
+        automatically chooses the higher resolution data if it covers the 
+        domain of interest, otherwise it defaults to the lower resolution 
+        data. A ~0.2 degree wide transition zone is used for blending at 
+        the boundary between the two datasets. 
+
+        The second database is a global 30" terrain dataset from USGS that we
+        have reformatted here at FSL. 
 
         Prior to running laps_localization.pl, set the following parameters
         in 'data/static/nest7grid.parms' (needed only if you are outside 
