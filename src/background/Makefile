@@ -19,7 +19,7 @@ DBLAPSLIBS = $(DBBGDATALIB) $(DBUTILLIB) $(DBLAPSLIB) $(DBMTHERMOLIB)
 EXE = lga.exe
 
 SRC=lga_interp.f  lga_util.f           \
-    lprep_eta_conusc.f  lprep_ruc2_pub.f   get_bkgd_info.f
+    lprep_eta_conusc.f  lprep_ruc2_pub.f
 
 MAIN=lga.f
 
