@@ -47,17 +47,17 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
 
 RM=rm -f 
 
-.SUFFIXES:              .f .o
+.SUFFIXES:              .f90 .o
 
-.f.o:
+.f90.o:
 			$(RM) $@
-			$(FC) -c $(FFLAGS) $(FREE) $*.f 
+			$(FC) -c $(FFLAGS) $(FREE) $*.f90
 
 EXE=wfoprep.exe
-FSRC=wfoprep.f \
-     fill_missing_levs.f 
+FSRC=wfoprep.f90 \
+     fill_missing_levs.f90
 
-FOBJS=$(FSRC:.f=.o)
+FOBJS=$(FSRC:.f90=.o)
 
 FMOD = module_wfoprep_setup.o  \
        module_wfo_models.o \
