@@ -138,7 +138,7 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_39, l_use_co2
+        logical l_packed_output, l_use_vis, l_use_39, l_use_co2_mode2
         logical l_evap_radar
 
         logical lstat_co2_a(NX_L,NY_L)
@@ -386,7 +386,7 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2
+        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2_mode2
      1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
@@ -539,7 +539,7 @@ C READ IN RADAR DATA
 
 !       endif
 
-C READ IN AND INSERT SAO DATA
+C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
 !       Read in surface pressure
         var = 'PS'
         ext = 'lsx'
@@ -583,10 +583,10 @@ C READ IN AND INSERT SAO DATA
         endif
 
 
-C READ IN PIREPS
+C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
         write(6,*)' Using Pireps stored in LAPS realtime system'
 
-        call insert_pireps(i4time,cldcv1,cld_hts,wtcldcv
+        call insert_pireps(i4time,cld_hts
      1      ,default_clear_cover
      1      ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1      ,lat,lon,NX_L,NY_L,KCLOUD,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH
@@ -598,8 +598,9 @@ C READ IN PIREPS
         endif
         I4_elapsed = ishow_timer()
 
+C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
 
-C DO ANALYSIS on SAO and PIREP data
+C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
         write(6,*)
         write(6,*)' Analyzing SFC Obs and PIREP data'
 
@@ -651,7 +652,7 @@ C DO ANALYSIS on SAO and PIREP data
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
-     1                    l_use_39,l_use_co2,                            ! I
+     1                    l_use_39,l_use_co2_mode2,                      ! I
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O
