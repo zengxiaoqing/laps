@@ -390,6 +390,7 @@ c
      &       pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &       td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
      &       sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,maxsta,       
+     &       lat,lon,imax,jmax,kmax,                                     ! I
      &       istatus)
 
         include 'constants.inc'
@@ -411,6 +412,9 @@ c
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
         real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
         real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)                        ! O
+
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
 
         integer i4time_ob_pr(MAX_PR)
         integer nlevels_obs_pr(MAX_PR)
