@@ -58,7 +58,7 @@ cdis
                 n_snow_pts = n_snow_pts + 1
                 s_2d_out(i,j) = precip_rate(i,j) * ratio
 
-                if(n_snow_pts .eq. (n_snow_pts/20) * 20   )then
+                if(n_snow_pts .eq. (n_snow_pts/200) * 200   )then
                     write(6,*)i,j,temp_col_max(i,j)-273.15, ratio
                 endif
 
