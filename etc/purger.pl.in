@@ -78,6 +78,25 @@ if($min_files>0){
     $clean_dirs{'model/output'} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/varfiles'} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'../log'} = 30.0;
+
+    if(open(OVERRIDES,"$DATAROOT/../static/purger.dat")){
+      foreach(<OVERRIDES>){
+	next if(/^\#/);
+	if(/^\s*(\S+)\s+(\S+)\s+(\S+)/){
+          my $what =  $1;
+	  my $how= lc $2;
+	  my $when= $3;
+	  if($how eq "min"){
+	    $clean_dirs{$what} = $when;
+	  }else{
+	    $clean_dirs{$what} = ($when<$hist_time)?$when:$hist_time;
+	  }
+	  print "Setting purge for $what from purger.dat to $clean_dirs{$what}\n";
+	}
+      }
+      close(OVERRIDES);
+    }
+
 }
 
 
