@@ -1,0 +1,34 @@
+#!@PERL@
+# @configure_input@
+
+# We need all five of these environment variables, and we'll
+# exit if we don't get them.
+
+$FXA_HOME = $ENV{FXA_HOME};
+$FXA_DATA = $ENV{FXA_DATA};
+$FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
+$LAPSROOT = $ENV{LAPSROOT};
+$LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+if (!defined $FXA_HOME) {print "Environment variable FXA_HOME is required.";}
+if (!defined $FXA_DATA) {print "Environment variable FXA_DATA is required.";}
+if (!defined $FXA_INGEST_SITE) {print "Environment variable FXA_INGEST_SITE is required.";}
+if (!defined $LAPSROOT) {print "Environment variable LAPSROOT is required.";}
+if (!defined $LAPS_DATA_ROOT) {print "Environment variable LAPS_DATA_ROOT is required.";}
+if (!defined $FXA_HOME || !defined $FXA_DATA || !defined $FXA_INGEST_SITE ||
+    !defined $LAPSROOT || !defined $LAPS_DATA_ROOT) {exit;}
+
+require "$LAPSROOT/etc/run_sys.pm";
+
+# Run the localization script.  If you want it to run laps_localization,
+# give it an addition argument of -laps.
+
+$scriptline = "$FXA_HOME/data/localization/scripts/mainScript.csh -clipSups -grids";
+$command = "$scriptline > $LAPS_DATA_ROOT/log/wfo_relocalization.log 2>&1";
+run_sys::run_sys($command);
+
+# Copy the bigfile data template to the data area.
+
+$template_home = "$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/laps.cdlTemplate";
+$products = "$FXA_DATA/Grid/FSL/netCDF/LAPS_Grid/LAPS/template";
+$command = "cp $template_home $products";
+run_sys::run_sys($command);
