@@ -40,6 +40,7 @@ cdis
         subroutine get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add ! I
      1                    ,lat                                      ! I
      1                    ,i4_sat_window,i4_sat_window_offset       ! I
+     1                    ,rlaps_land_frac                          ! I
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb    ! O
      1                    ,comment                                  ! O
      1                    ,ni,nj,nk,r_missing_data                  ! I
@@ -56,6 +57,7 @@ cdis
         real*4 lat(ni,nj)
         real*4 sfc_albedo(ni,nj), sfc_albedo_lwrb(ni,nj)
         real*4 vis_albedo(ni,nj)
+        real*4 rlaps_land_frac(ni,nj)
 
 !       This stuff is for reading VIS data from LVD file
         real*4 solar_alt(ni,nj)
@@ -91,6 +93,7 @@ cdis
         enddo ! i
 
         call get_sfc_albedo(ni,nj,lat,r_missing_data,i4time              ! I
+     1                     ,rlaps_land_frac                              ! I
      1                     ,sfc_albedo,sfc_albedo_lwrb,istat_sfc_alb)    ! O   
 
 !       Determine whether to use VIS / ALBEDO data
@@ -213,6 +216,7 @@ cdis
         end
 
         subroutine get_sfc_albedo(ni,nj,lat,r_missing_data,i4time    ! I
+     1                           ,rlaps_land_frac                    ! I
      1                           ,sfc_albedo,sfc_albedo_lwrb         ! O
      1                           ,istat_sfc_alb)                     ! O
 
@@ -231,9 +235,12 @@ cdis
 
         real*4 static_albedo(ni,nj)   ! Static albedo database
 
+        real*4 rlaps_land_frac(ni,nj)
+
         write(6,*)' Subroutine get_sfc_albedo...'
 
         istat_sfc_alb = 0
+        static_albedo = r_missing_data
 
         call get_static_field_interp('albedo',i4time,ni,nj
      1                               ,static_albedo,istat_sfc_alb)       
@@ -248,18 +255,18 @@ cdis
 
         do i = 1,ni
         do j = 1,nj
-            if(istat_sfc_alb .eq. 1)then ! static database available
-                if(static_albedo(i,j) .ne. r_missing_data)then ! over water
-                    sfc_albedo_lwrb(i,j) = static_albedo(i,j)
+            if(istat_sfc_alb .eq. 1 .and. 
+     1         static_albedo(i,j) .ne. r_missing_data)then ! static data avalbl
+                sfc_albedo_lwrb(i,j) = static_albedo(i,j)
 
+                if(rlaps_land_frac(i,j) .le. 0.25)then ! over water
                     if(lat(i,j) .le. 38.)then          ! it's reliable
-                        sfc_albedo(i,j) = sfc_albedo_lwrb(i,j)
+                        sfc_albedo(i,j) = static_albedo(i,j)
                     else                               ! sea/lake ice possible?
                         sfc_albedo(i,j) = r_missing_data
                     endif
 
                 else                                           ! over land
-                    sfc_albedo_lwrb(i,j) = 0.2097063 ! static_albedo(i,j)
                     sfc_albedo(i,j)      = r_missing_data
 
                 endif
