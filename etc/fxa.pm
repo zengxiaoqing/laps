@@ -28,13 +28,15 @@ sub Get_env'fxa{ #'
     push(@fxaenv,<FXA>);
     close(FXA);
     foreach(@fxaenv){
-	next if /^#/;
+	next if /^\#/;
 	next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
         $evar = $1;
         $eval = $2;
-        $eval =~ s#\$\{(.*)\}#$ENV{$1}#g;
-	$eval =~ s#\$([^\s\/]+)#$ENV{$1}#g;    
-        $ENV{$evar} = $eval;
+        $eval =~ s/\${$evar}/$ENV{$evar}/;
+        $eval =~ s#\$\{(.*[^\{])\}#$ENV{$1}#g;
+        $eval =~ s#\$([^\s\/]+)#$ENV{$1}#g;
+
+        $ENV{$evar} .= $eval;
     }
     close(FXA);
     return 1;
