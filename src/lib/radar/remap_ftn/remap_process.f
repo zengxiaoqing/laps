@@ -148,6 +148,10 @@ c
 
       real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
       real*4 r_missing_data
+
+      real*4 lat(NX_L,NY_L)
+      real*4 lon(NX_L,NY_L)
+      real*4 topo(NX_L,NY_L)
 c
       logical l_unfold
 c 
@@ -628,7 +632,28 @@ c
 
         I4_elapsed = ishow_timer()
 
-        if(laps_radar_ext .ne. 'vrc')then
+        if(laps_radar_ext .ne. 'vrc')then ! vxx output
+
+            call get_laps_domain(NX_L,NY_L,'nest7grid'
+     1                          ,lat,lon,topo,istatus)       
+            if(istatus .ne. 1)then
+                write(6,*)' Error calling get_laps_domain'
+                return
+            endif
+
+            I4_elapsed = ishow_timer()
+
+            call ref_fill_horz(out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
+     1                        ,lat,lon
+     1                        ,rlat_radar,rlon_radar,rheight_radar
+     1                        ,istatus)       
+            if(istatus .ne. 1)then
+                write(6,*)' Error calling ref_fill_horz'          
+                return
+            endif
+
+            I4_elapsed = ishow_timer()
+
             call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
 
