@@ -36,12 +36,6 @@ c
 c
       real*4 xe,esat
       common /estab/esat(15000:45000)
-c
-c *** Common block variables for lat-lon grid.
-c
-      integer nx_ll,ny_ll,nz_ll  !No. of LL domain grid points
-      real*4 lat0,lon0,dlat,dlon   !Pol ste. std lat, lon and delta lat, lon
-      common /llgrid/nx_ll,ny_ll,nz_ll,lat0,lon0,dlat,dlon
 c_______________________________________________________________________________
 c
 c *** Open nogaps file.
@@ -69,7 +63,7 @@ c     print*,'Read Td'
 c nvar=4
       nshl=nlevs(4)
       do k=1,nshl
-         read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny) !Read in as dew point.
+         read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny) !Read in as dew point depression.
       enddo
       do k=nshl+1,nz
       do j=1,ny
@@ -90,7 +84,7 @@ c
       read(lun,err=50) ((tp_sfc(i,j),i=1,nx),j=1,ny)
       read(lun,err=50) ((uw_sfc(i,j),i=1,nx),j=1,ny)
       read(lun,err=50) ((vw_sfc(i,j),i=1,nx),j=1,ny)
-      read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny) !dew point temp
+      read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=1,ny) !dew point depression 
       read(lun,err=50) ((mslp(i,j),i=1,nx),j=1,ny)
 c
 c nvar = 12
@@ -100,7 +94,7 @@ c
       if(.false.)then
       do l=12,nvars
         if(ivarid(l).eq.1.and.ivarcoord(l).eq.1)then
-           read(lun,err=50) ((pr_sfc(i,j),i=1,nx),j=ny,1,-1)
+           read(lun,err=50) ((pr_sfc(i,j),i=1,nx),j=1,ny)
            goto  188
         else
            do k=1,nlevs(l)
@@ -116,11 +110,23 @@ c
       close(lun)
 c
 c *** Convert dew point to specific humidity.
-c *** Fill pressure array.
 c this code is now in readdgprep.f (J. Smart 9-2-98)
-c     print*,'Convert Td to q'
+c     print*,'Convert Dew point depression to Td'
 c
-c *** Fill the Lat-Lon common block variables.
+c return dewpoint temperature in "sh" arrays
+      do k=1,nshl
+      do j=1,ny
+      do i=1,nx
+         sh(i,j,k)=tp(i,j,k)-sh(i,j,k)
+      enddo
+      enddo
+      enddo
+
+      do j=1,ny
+      do i=1,nx
+         sh_sfc(i,j)=tp_sfc(i,j)-sh_sfc(i,j)
+      enddo
+      enddo
 c
       istatus=0
       print*
