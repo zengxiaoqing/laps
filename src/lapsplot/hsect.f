@@ -1626,20 +1626,14 @@ c
             c33_label='LCV '//comment_2d(1:24)
 
             if(var_2d_in .eq. 'S8A' .or. var_2d_in .eq. 'S3A')then
-              vasmx=-255.
-              vasmn=255.
               do i = 1,NX_L
               do j = 1,NY_L
                  if(vas(i,j).ne.r_missing_data)then
                     vas(i,j) = vas(i,j) - 273.15
-                    vasmx=int(max(vas(i,j),vasmx))
-                    vasmn=int(min(vas(i,j),vasmn))
                  endif
               enddo
               enddo
-              clow = -80.
-              chigh = +40.
-              cint = (vasmx-vasmn)/10.
+
               scale = 1e0
               scale_l = +40.          ! for image plots
               scale_h = -50.          ! for image plots
@@ -1682,9 +1676,9 @@ c
                     cint = 0.1
                     scale = 1e0
                 else
-                    clow = 0.0
-                    chigh = 256.
-                    cint = 05.
+                    clow = -10.0
+                    chigh = 40.
+                    cint = 10.
                     scale = 1e0
                 endif
 
