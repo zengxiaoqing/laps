@@ -4,6 +4,8 @@ c
        include 'lapsparms.cmn'
        include 'surface_obs.inc'
        character laps_domain*9
+       integer istatus
+       logical lrunqc
 c
        laps_domain = 'nest7grid'
        call get_laps_config(laps_domain,istatus)
@@ -12,9 +14,18 @@ c
           stop
        endif
 c
-       call QC_main_sub(NX_L_CMN,NY_L_CMN,nk_laps,maxstns_cmn,
+       call get_sfcqc_nl(lrunqc,istatus)
+       if (istatus .ne. 1) then
+         write(6,*) 'QC_main: Error getting sfcqc_nl file'
+         stop
+       endif
+       if (lrunqc) then
+         call QC_main_sub(NX_L_CMN,NY_L_CMN,nk_laps,maxstns_cmn,
      &                  laps_cycle_time_cmn,badflag)
-c     
+       else
+         write(6,*) 'QC_main: lrunqc false...exiting.'
+       endif
+ 
        end
 c
 c
