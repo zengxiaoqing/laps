@@ -96,6 +96,11 @@ c           directory = laps_data_root(1:len_lapsroot)//'etc/'
            goto 999
         endif
 
+        if(ext(1:3) .eq. 'cdl')then
+           directory = laps_data_root(1:len_lapsroot)//'data/cdl/'
+           goto 999
+        endif
+
         if(ext(1:3) .eq. 'log')then
            directory = laps_data_root(1:len_lapsroot)//'log/'
            goto 999
@@ -125,41 +130,3 @@ c           directory = laps_data_root(1:len_lapsroot)//'etc/'
 
         return
         end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
