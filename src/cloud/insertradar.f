@@ -39,8 +39,12 @@ cdis
         subroutine insert_radar(i4time,cldcv,cld_hts
      1         ,temp_3d,temp_sfc_k,grid_spacing_m,ni,nj,nk,kcloud
      1         ,cloud_base,cloud_base_buf,ref_base
-     1         ,grid_ra_ref,dbz_max_2d,vis_radar_thresh_dbz,l_unresolved
-     1         ,heights_3d,istatus)
+     1         ,topo                                                 ! I
+     1         ,grid_ra_ref,dbz_max_2d
+     1         ,vis_radar_thresh_dbz                                 ! I
+     1         ,l_unresolved                                         ! O
+     1         ,heights_3d                                           ! I
+     1         ,istatus)                                             ! O
 
 !       Insert radar data into cloud grid
 
@@ -57,6 +61,7 @@ cdis
         real*4 dbz_max_2d(ni,nj)
         real*4 cloud_base(ni,nj)
         real*4 cloud_base_buf(ni,nj) ! Lowest SAO/IR base within search radius
+        real*4 topo(ni,nj)
 
 !       Cloud not filled in unless radar echo is higher than base calculated
 !       with THIS threshold.
@@ -75,7 +80,7 @@ cdis
 
             do k = kcloud-1,1,-1
                 if(cldcv(i,j,k  ) .lt. thresh_cvr .and.
-     1           cldcv(i,j,k+1) .ge. thresh_cvr)then
+     1             cldcv(i,j,k+1) .ge. thresh_cvr       )then
                     cloud_base(i,j) = 0.5 * (cld_hts(k) + cld_hts(k+1))
                 endif
             enddo ! k
@@ -151,8 +156,10 @@ c                   write(6,*)' khigh = ',kk
                     if(k .eq. nk   .or. 
      1                 grid_ra_ref(i,j,kp1) .lt. ref_thresh)then
 
+                        echo_top = heights_3d(i,j,k)
+
 !                       Test if we are below the cloud base
-                        if(heights_3d(i,j,k) .lt. cloud_base_buf(i,j)
+                        if(echo_top .lt. cloud_base_buf(i,j)
      1                                                         )then
 
 !                           Radar Echo Top is below analyzed cloud base
@@ -171,31 +178,43 @@ c                   write(6,*)' khigh = ',kk
                             enddo ! i
                             enddo ! j
 
-                            if(cloud_base_buf(i,j) .lt. 
-     1                                  heights_3d(i,j,k))then
+                            if(cloud_base_buf(i,j) .lt. echo_top)then       
 
                               isearch_base = isearch_base + 1
                               if(isearch_base .lt. 50)then ! limit log output
                                 write(6,71)i,j,k
-     1                                    ,nint(heights_3d(i,j,k))
+     1                                    ,nint(echo_top)
      1                                    ,nint(cloud_base(i,j))
      1                                    ,nint(cloud_base_buf(i,j))
-71                              format(' Rdr Top > Bse ',3i3,3i7
+71                              format(' Rdr Top > Bse ',2i4,i3,3i7
      1                                ,' Resolved')
                               endif
 
-                            else ! Probably Unresolved base
-                                write(6,72)i,j,k
-     1                                    ,nint(heights_3d(i,j,k))
-     1                                    ,nint(cloud_base(i,j))
-     1                                    ,nint(cloud_base_buf(i,j))
-72                              format(' Rdr Top < Bse ',3i3,3i7
-     1                                ,' Prob Unresolved - CLD_RDR')
+                            else ! Potentially Unresolved base
+                                if(cloud_base(i,j) 
+     1                                      .eq. unlimited_ceiling  ! No clds
+     1                                      .OR.
+     1                             echo_top - topo(i,j) .lt. 1000.  ! Gnd Clut
+     1                                                             )then       
 
-                                if(cloud_base(i,j)
-     1                                      .eq. unlimited_ceiling)then
 !                                   We will want to reconcile cloud/radar
                                     l_unresolved(i,j) = .true.
+
+                                    write(6,72)i,j,k
+     1                                    ,nint(echo_top)
+     1                                    ,nint(cloud_base(i,j))
+     1                                    ,nint(cloud_base_buf(i,j))
+72                                  format(' Rdr Top < Bse ',2i4,i3,3i7
+     1                                    ,' Unresolved      - CLD_RDR')
+
+                                else
+                                    write(6,73)i,j,k
+     1                                    ,nint(echo_top)
+     1                                    ,nint(cloud_base(i,j))
+     1                                    ,nint(cloud_base_buf(i,j))
+73                                  format(' Rdr Top < Bse ',2i4,i3,3i7
+     1                                    ,' Potl Unresolved - CLD_RDR')
+
                                 endif
 
                             endif
@@ -224,7 +243,7 @@ c                   write(6,*)' khigh = ',kk
                         if(icount_below .le. 100)then
                             write(6,81)i,j,k,nint(cld_hts(klow))
      1                                  ,nint(cloud_base_buf(i,j))
-81                          format(' Rdr     < Bse ',3i3,2i7)
+81                          format(' Rdr     < Bse ',2i4,i3,2i7)
                         endif
 
                     endif
@@ -240,6 +259,9 @@ c                   write(6,*)' khigh = ',kk
 
 600         continue
         enddo ! k
+
+        write(6,*)' Total cloud grid points modified by radar = '
+     1                                          ,insert_count_tot
 
         do i = 1,ni
         do j = 1,nj
@@ -271,7 +293,7 @@ c                   write(6,*)' khigh = ',kk
 
                     write(6,602)i,j,dbz_max_2d(i,j)
 602                 format(' CLD_RDR - insert_radar: '
-     1                             ,'Blank out radar >  *'
+     1                             ,'Blank out radar > *'
      1                             ,1x,2i4,f6.1,' dbz')
 
                     if(.true.)then ! Block out the radar
@@ -286,9 +308,6 @@ c                   write(6,*)' khigh = ',kk
             endif
         enddo ! j
         enddo ! i
-
-        write(6,*)' Total cloud grid points modified by radar = '
-     1                                          ,insert_count_tot
 
 999     return
 
