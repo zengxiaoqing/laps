@@ -54,7 +54,7 @@ C*********************************************************************
        
         subroutine Gridmap_sub(nnxp,nnyp)
 c       include 'lapsparms.for'
-        logical exist
+        logical exist,new_DEM
         integer nnxp,nnyp
 c       Parameter(nnxp=NX_L,nnyp=NY_L)
 	Real mdlat,mdlon
@@ -231,19 +231,23 @@ c
            write(6,*)
            write(6,*)' Processing 30s topo data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_30,ITOPTFN_30,TOPTWVL,SILAVWT)
+     +         deltax,deltay,TOPT_30,ITOPTFN_30,TOPTWVL,SILAVWT,new_DEM)
 
-           write(6,*)
-           write(6,*)' Processing 10m topo data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_10,ITOPTFN_10,TOPTWVL,SILAVWT)
+           if (.not.new_DEM) then
+             write(6,*)
+             write(6,*)' Processing 10m topo data....'
+             CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
+     +         deltax,deltay,TOPT_10,ITOPTFN_10,TOPTWVL,SILAVWT,new_DEM)
+           endif
 
            write(6,*)
            write(6,*)' Processing 10m land data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_PCTLFN,IPCTLFN,TOPTWVL,SILAVWT)
+     +        deltax,deltay,TOPT_PCTLFN,IPCTLFN,TOPTWVL,SILAVWT,new_DEM)
 
-           do i = 1,nnxp
+         if (.not.new_DEM) then
+
+         do i = 1,nnxp
            do j = 1,nnyp
 
 !              Select 30s or 10m topo data for this grid point (or a blend)
@@ -378,7 +382,14 @@ c
 
            enddo ! j
            enddo ! i
-
+         else
+           do j=1,nnyp
+             do i=1,nnxp
+               topt_out(i,j)=topt_30(i,j)
+             enddo
+           enddo
+           icount_30=nnyp*nnxp
+         endif
        endif
 
        write(6,*)
@@ -460,6 +471,21 @@ C
         close(11)
         close(15)
 
+c SG97  topography.dat is written to be displayed with gnuplot
+c SG97  this will make an elevated view from the SW direction over the domain
+c SG97  start gnuplot and type in the following commands:
+c SG97  set data style lines
+c SG97  set view 30,330
+c SG97  splot 'topography.dat'
+
+	open(666,file=static_dir(1:len)//'topography.dat')
+        do j=1,nnyp
+	  do i=1,nnxp
+	    write(666,*) topt_out(i,j)
+          enddo
+            write(666,'()')
+        enddo
+        close(666)
         call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
         call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
         call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
@@ -472,6 +498,10 @@ C
            stop
 	endif
 
+        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,5,istat_chk)
+
+        write(6,*)'check_domain:status = ',istat_chk
+
         call put_laps_static(grid_spacing_m,model,comment,data
      1                                           ,nnxp,nnyp)
 
@@ -480,7 +510,7 @@ C
 	End
 
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay,
-     1  DATR,OFN,WVLN,SILWT)
+     1  DATR,OFN,WVLN,SILWT,which_data)
       implicit none
       integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
      1  iblksizo,no,iodim
@@ -489,13 +519,16 @@ C
       real vctr1(n23),
      1 vctr21(n23),erad,rlat,wlon1,deltax,deltay,wvln,silwt
       real DATR(N2,N3)
-      PARAMETER(IODIM=59000)
+c      PARAMETER(IODIM=59000)
+c SG97 iodim increased, to be able to read larger blocks of data
+      PARAMETER(IODIM=5800000)
       real DATO(IODIM)
       real xt(N2),YT(N3),deltallo,deltaxq,deltayq,
      1  deltaxp,deltayp
       real std_lon
       integer istatus
       CHARACTER*80 OFN,TITLE
+      logical which_data
 C
 c *********************
       nx=n2-1
@@ -513,6 +546,10 @@ c ****************************
       CLOSE(29)
       DELTALLO=FLOAT(IBLKSIZO)/FLOAT(NO-1)
       MOF=IODIM/(NO*NO)
+c SG97 MOF determines the number of files held in buffer while reading
+c SG97 DEM data; it saves some time when buffer data can be used instead
+c SG97 of reading DEM file again. Originally MOF was 4.
+      if (MOF.gt.10) MOF=5
       DELTAXQ=0.5*WVLN*DELTAX
       DELTAYQ=0.5*WVLN*DELTAY
       print *,'deltaxq,deltayq=',deltaxq,deltayq
@@ -531,7 +568,7 @@ C
       CALL SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,90.,std_lon,ERAD
      +            ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
      +            ,ISBEGO,IWBEGO,DATO,VT3DA,VT3DB,DATR
-     +            ,VCTR1,VCTR21,OFN,WVLN,SILWT)
+     +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data)
       RETURN
       END
 
@@ -542,7 +579,7 @@ C
       SUBROUTINE SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,RLAT,WLON1,ERAD
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
      +          ,ISBEGO,IWBEGO,DATO,DATP,DATQ,DATR,ISO,IWO
-     +          ,OFN,WVLN,SILWT)
+     +          ,OFN,WVLN,SILWT,dem_data)
       real dato(no,no,mof)
       real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3)
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
@@ -553,7 +590,7 @@ C
       CHARACTER*80 OFN,TITLE3
       CHARACTER*3 TITLE1
       CHARACTER*4 TITLE2
-      LOGICAL L1,L2
+      LOGICAL L1,L2,dem_data
 C
       print *,'no,mof,np,niq,njq=',no,mof,np,niq,njq
 c      stop
@@ -571,22 +608,18 @@ c      stop
       DO 15 JQ=1,NJQ
        print *,'jq,njq,niq=',jq,njq,niq
          DO 16 IQ=1,NIQ
-c       print *,'jq,njq,iq,niq=',jq,njq,iq,niq
             XQ=(FLOAT(IQ)-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
             YQ=(FLOAT(JQ)-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
             DO 17 JP=1,NP
                DO 18 IP=1,NP
                   XP=XQ+(FLOAT(IP)-0.5*FLOAT(NP+1))*DELTAXP
                   YP=YQ+(FLOAT(JP)-0.5*FLOAT(NP+1))*DELTAYP
-c          print *,'xp,yp,xq,yq=',xp,yp,xq,yq
-
 !                 CALL XYTOPS(XP,YP,PLA,PLO,ERAD)
 !                 CALL PSTOGE(PLA,PLO,GLATP,GLONP,rlat,wlon1)
 
-!                 call xy_to_latlon(XP,YP,erad,rlat,wlon1,GLATP,GLONP) 
+c                 call xy_to_latlon(XP,YP,erad,rlat,wlon1,GLATP,GLONP) 
                   call xy_to_latlon(XP,YP,erad,GLATP,GLONP) 
 
-c            print *,'glatp,glonp=',glatp,glonp
 c         print *,'rlat,wlon1=',rlat,wlon1
                   ISOC=(INT((GLATP-FLOAT(ISBEGO))/FLOAT(IBLKSIZO)+200.)
      +                -200)*IBLKSIZO+ISBEGO
@@ -616,33 +649,42 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   LB=INDEX(TITLE3,' ')-1
                   INQUIRE(FILE=TITLE3(1:LB),EXIST=L1,OPENED=L2)
                   IF(.NOT.L1)THEN
-!                    PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST'
+                     PRINT*, ' FILE',TITLE3(1:LB),' DOES NOT EXIST'
                      DATP(IP,JP)=0. ! set to missing?
                      GO TO 20
                   ENDIF
+
                   IF(NOFR.GE.MOF)THEN
                      DO 21 IOF=1,MOF
                         ISO(IOF)=0
                         IWO(IOF)=0
- 21                    continue
+21                    continue
                      NOFR=0
                   ENDIF
                   NOFR=NOFR+1
                   JOFR=NOFR
-                  CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0)
-c          print *,title3(1:lb)
-                  CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
+                  len=index(ofn,' ')
+                  if ((ofn(len-1:len).eq.'U').and.(no.eq.1200)) then 
+                    CALL READ_DEM(29,TITLE3(1:LB),no,no,
+     .              DATO(1,1,NOFR))
+                    dem_data=.true.
+                  else
+                    CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0)
+                    CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
+                    if ((ofn(len-1:len).eq.'U').and.(no.eq.121)) then
+                      dem_data=.false.
+                    endif
+                  endif
 c              print *,'nofr,dato=',nofr,dato(1,1,nofr)
                   CLOSE(29)
                   ISO(NOFR)=ISOC
                   IWO(NOFR)=IWOC
-   10             CONTINUE
+10		  continue
                   RIO=(GLONP-FLOAT(IWOC))/DELTALLO+1.
                   RJO=(GLATP-FLOAT(ISOC))/DELTALLO+1.
-
 !                 Prevent Bounds Error (Steve Albers)
                   if(RIO .lt. 1.0)then
-                      if(RIO .gt. 0.995)then
+                      if(RIO .gt. 0.98)then
                           write(6,*)' Reset RIO for Machine Epsilon'      
                           RIO = 1.0
                       else
@@ -652,7 +694,7 @@ c              print *,'nofr,dato=',nofr,dato(1,1,nofr)
                   endif
 
                   if(RJO .lt. 1.0)then
-                      if(RJO .gt. 0.995)then
+                      if(RJO .gt. 0.98)then
                           write(6,*)' Reset RJO for Machine Epsilon'      
                           write(6,*)JQ,IQ,
      1                          IP,JP,IO1,JO1,JOFR,RIO,RJO,GLATP,ISOC
@@ -678,10 +720,9 @@ C
      +                             +WJO2*DATO(IO1,JO2,JOFR))
      +                       +WIO2*(WJO1*DATO(IO2,JO1,JOFR)
      +                             +WJO2*DATO(IO2,JO2,JOFR))
-c          print *,'datp=',datp(ip,jp),dato(io1,jo1,jofr)
- 20               CONTINUE
- 18             continue
- 17           continue
+20               CONTINUE
+18             continue
+17           continue
 C
             SHA=0.
             RHA=0.
@@ -692,23 +733,24 @@ C
 !                 Test for missing - then go to 16?
                   SH=max(SH,DATP(IP,JP)) 
                   RH=RH+DATP(IP,JP)
- 23            continue
+23            continue
                SHA=SHA+SH/(2.*FLOAT(NP))
                RHA=RHA+RH
- 22           continue
+22           continue
             RHA=RHA/FLOAT(NP*NP)
             DO 24 IP=1,NP
                SH=0.
                DO 25 JP=1,NP
                   SH=max(SH,DATP(IP,JP))
- 25              continue
+25              continue
                SHA=SHA+SH/(2.*FLOAT(NP))
- 24           continue
+24           continue
             DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
 c        print *,'datq=',datq(iq,jq)
-  16       continue
- 15     continue
+16       continue
+15     continue
        print *,'after 15'
+c       stop
 C
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
@@ -823,8 +865,9 @@ C
 C      CALL GETOPS(PLAT,PLON,LAT,LON,TLAT,TLON)
 C      CALL PSTOXY(XDIF,YDIF,PLAT,PLON,ERAD)
 
-!      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
+C      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
        call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
+
 C
        X=XDIF+(1.-FLOAT(NX)/2.)*DX
        Y=YDIF+(1.-FLOAT(NY)/2.)*DY
@@ -837,6 +880,7 @@ C +------------------------------------------------------------------+
       CHARACTER*(*) FILENM,FORMT
       CHARACTER CFNAME*16,TEXTSTR*40
       LOGICAL EXANS
+
 C     -------------------------------------------------------
       ENTRY JCLGET(IUNIT,FILENM,FORMT,IPRNT)
 C
@@ -847,7 +891,9 @@ C
       PRINT*,' Opening input unit ',IUNIT,' file name ',FILENM
       PRINT*,'         format  ',FORMT
       ENDIF
+
       OPEN(IUNIT,STATUS='OLD',FILE=FILENM,FORM=FORMT)
+
 C
       RETURN
       END
@@ -937,7 +983,33 @@ c--------------------------------------------------------
   10  continue                                                          
                                                                         
       return                                                            
-      end                                                               
+      end
+
+c ********************************************************************
+
+      subroutine read_dem(unit_no,unit_name,nn1,nn2,data)
+      implicit none
+      integer countx,county,unit_no,nn1,nn2
+      real data(nn1,nn2)
+      integer*2 idata(nn1,nn2)
+      logical l1,l2
+      character*(*) unit_name
+
+      open(unit_no,file=unit_name,status='old',access='direct',
+     . recl=nn2*nn1*2)
+      inquire(unit_no,exist=l1,opened=l2)
+      read(unit_no,rec=1) idata
+      do county=1,nn2
+        do countx=1,nn1
+          if (idata(countx,county).eq.-9999) idata(countx,county)=0
+           data(countx,county)=float(idata(countx,nn2-county+1))
+c SG97 initial data (DEM format) starts in the lower-left corner;
+c SG97 this format is wrapped around to has upper-left corner as its start.
+        enddo
+      enddo
+      close(unit_no)
+      return
+      end
 
 C +------------------------------------------------------------------+
       FUNCTION INTLSHFT(IWORD,NSHFT)
@@ -957,4 +1029,7 @@ C
       INTOR=IOR(IWORD1,IWORD2)
       RETURN
       END
+
+
+
 

@@ -49,7 +49,7 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled 
 
-SRC=gridgen_model.f put_laps_static.f map_proj.f
+SRC=gridgen_model.f put_laps_static.f
 
 all: exe
 
