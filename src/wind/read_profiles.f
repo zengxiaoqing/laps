@@ -42,9 +42,9 @@ cdis
      1                   lat_pr,lon_pr,obstype,                     ! O
      1                   lat,lon,                                   ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
-     1                   l_use_raob,l_use_all_prof_lvls,            ! I
+     1                   l_use_raob,l_use_all_nontower_lvls,        ! I
      1                   ob_pr_u , ob_pr_v ,                        ! O
-     1                   max_obs,obs_point,nobs_point,              ! I/O
+     1                   max_obs,obs_point,nobs_point,weight_prof,  ! I/O
      1                   nlevels_obs_pr, n_profiles,                ! O
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
@@ -113,7 +113,7 @@ c                             time of the current LAPS analysis time.
         character*5 c5_name, c5_name_a(MAX_PR)
         character*9 a9time_ob
 
-        logical l_use_raob, l_use_all_prof_lvls
+        logical l_use_raob, l_use_all_nontower_lvls
 
         r_mspkt = .518
 
@@ -264,11 +264,13 @@ c
 
             if(nlevels_obs_pr(i_pr) .gt. 0)then
 
-              if(l_use_all_prof_lvls .and. 
+              if(l_use_all_nontower_lvls .OR. 
      1           obstype(i_pr)(1:5) .eq. 'TOWER')then
 
-                write(6,*)' Adding all levels for this ',obstype(i_pr)       
-     1                   ,i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
+                write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
+     1                     ,obstype(i_pr)
+ 311            format(1x,' Remapping profile ',4i6,1x,a8
+     1                ,' (all levels)')      
 
                 do lvl = 1,nlevels_obs_pr(i_pr)
                     ob_height = ob_pr_ht_obs(i_pr,lvl)
@@ -313,6 +315,12 @@ c
                         obs_point(nobs_point)%weight = weight_prof       
                         obs_point(nobs_point)%type = 'prof'      
                     endif ! istatus
+
+                    call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)
+
+312                 write(32,313,err=314)ri,rj,rklaps,ob_di,ob_sp
+313                 format(1x,3f10.5,2f10.3)               
+314                 continue
 
                 enddo ! lvl
 
@@ -369,12 +377,17 @@ c       1                ,u_diff
 c       1                ,v_diff
 411                 format(1x,i6,2i4,f8.1,8f7.1)
 
-412                 write(32,*)ri-1.,rj-1.,level-1
+412                 write(32,313,err=414)ri,rj,float(level)
      1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
+414                 continue
 
                 enddo ! level
               
               endif ! use all levels
+
+            else
+              write(6,*)' This profile is set to 0 levels',i_pr
+     1                  ,obstype(i_pr)
 
             endif ! # levels > 0
 
