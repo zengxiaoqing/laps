@@ -31,7 +31,7 @@ cdis
 cdis 
       program lga
 
-      use laps_static
+c     use laps_static
       implicit none
       include 'bgdata.inc'
 
