@@ -76,9 +76,9 @@
   IMPLICIT NONE
 
   integer kk
+  integer mchan
 
   real tau90 (kk,mchan)
-  integer mchan
   real sec_solar
   real flx_tau (kk,mchan)
   real bright_temp (mchan)
@@ -450,32 +450,6 @@
 
 
 
-    ! --------------------------------
-    ! Output the forward model results
-    ! --------------------------------
-
-    ! -- Initialise the channel/profile counter
-    il = 0
-
-    ! -- Loop over the number of ANGLES
-    DO i_angle = 1, N_ANGLES
-
-      ! -- Loop over the channels
-      DO l = 1, n_channels_per_profile( i_angle )
-
-        ! -- Increment the channel counter and output the
-        ! -- channel radiance, and brightness temperature
-        il = il + 1
-        WRITE( lun_FWD, '( 3( 1x, i5 ), 1x, f6.3, 2( 1x, f9.5 ) )' ) &
-                        m, i_angle, l, &
-                        view_angle( i_angle ), &
-                        upwelling_radiance( il ), &
-                        brightness_temperature( il )
-
-      END DO
-
-    END DO
-
 
   !#----------------------------------------------------------------------------#
   !#                           -- DESTROY THE RTM --                            #
@@ -540,6 +514,10 @@ END SUBROUTINE  optran90_fm
 ! $State$
 !
 ! $Log$
+! Revision 1.1  2002/11/15 15:21:32  birk
+! Added to cvs mainly to see how this compiles on other platforms, it currently
+! seems to compile on the IBM
+!
 ! Revision 1.1  2001/09/13 22:08:13  paulv
 ! Initial checkin.
 !
