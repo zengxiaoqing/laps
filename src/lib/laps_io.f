@@ -858,7 +858,7 @@ cc        character*3 var_2d
      1          ,status='old',err=998)
         go to 999
 
- 998    write(6,*)' Error in open_lapsprd_file_read: '
+ 998    write(6,*)' Warning in open_lapsprd_file_read: '
      1           ,'cannot open the file'     
         istatus = 0
         return

@@ -61,7 +61,7 @@ cdis
 
         lun = 11
         ext = 'pin'
-        call open_lapsprd_file(lun,i4time,ext,istatus)
+        call open_lapsprd_file_read(lun,i4time,ext,istatus)
         if(istatus .ne. 1)go to 998
 
         n_cloud = 0
@@ -82,8 +82,8 @@ cdis
         if(string(2:4) .eq. 'Lat')then
             read(11,201)rlat,rlon,ralt
 201         format(2(f8.3,2x), f6.0,2i5)
-            call latlon_to_rlapsgrid(rlat,rlon,lat,lon,ni,nj,ri,rj,istat
-     1us)
+            call latlon_to_rlapsgrid(rlat,rlon,lat,lon,ni,nj,ri,rj
+     1                              ,istatus)
 !           if(istatus.ne.1)return
             ilaps = nint(ri)
             jlaps = nint(rj)
@@ -92,7 +92,7 @@ cdis
 
         if(string(2:5) .eq. 'Clou')then
 
-            if(                           ilaps .ge. ix_low   ! In bounds
+            if(                   ilaps .ge. ix_low   ! In bounds
      1                      .and. ilaps .le. ix_high  ! In bounds
      1                      .and. jlaps .ge. iy_low   ! In bounds
      1                      .and. jlaps .le. iy_high  ! In bounds
@@ -129,17 +129,17 @@ cdis
 
                     n_cloud = n_cloud + 1
                     write(6,*)' Good layer report:      '
-     1          ,nint(cbase_m),nint(ctop_m),cover_rpt
+     1                       ,nint(cbase_m),nint(ctop_m),cover_rpt
 
                     do k=1,nk
                         cover = cover_rpt
 
 !                       Fill in Cloud Layer
                         if(cld_hts(k) .ge. cbase_m .and.
-     1                   cld_hts(k) .lt. ctop_m                  )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. ctop_m                  )then
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
@@ -148,20 +148,20 @@ cdis
 
 !                       Fill in clear buffer under cloud layer
                         if(cld_hts(k) .ge. cbuf_low .and.
-     1                   cld_hts(k) .lt. cbase_m                  )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. cbase_m                 )then       
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
 
 !                       Fill in clear buffer above cloud layer
                         if(cld_hts(k) .ge. ctop_m .and.
-     1                   cld_hts(k) .lt. cbuf_high                )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. cbuf_high               )then       
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
@@ -177,7 +177,7 @@ cdis
                     cover_rpt = float(icover) / 8.0 ! 1.0
 
                     write(6,*)' Only a base reported:'
-     1          ,nint(cbase_m),nint(ctop_m),cover_rpt
+     1                       ,nint(cbase_m),nint(ctop_m),cover_rpt
 
                     n_cloud = n_cloud + 1
 
@@ -186,10 +186,10 @@ cdis
 
 !                       Fill in Cloud Layer
                         if(cld_hts(k) .ge. cbase_m .and.
-     1                   cld_hts(k) .lt. ctop_m                  )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. ctop_m                  )then       
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
@@ -198,10 +198,10 @@ cdis
 
 !                       Fill in clear buffer under cloud layer
                         if(cld_hts(k) .ge. cbuf_low .and.
-     1                   cld_hts(k) .lt. cbase_m                  )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. cbase_m                 )then       
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
@@ -217,7 +217,7 @@ cdis
                     cover_rpt = float(icover) / 8.0 ! 1.0
 
                     write(6,*)' Only a top reported:'
-     1          ,nint(cbase_m),nint(ctop_m),cover_rpt
+     1                       ,nint(cbase_m),nint(ctop_m),cover_rpt
 
                     n_cloud = n_cloud + 1
 
@@ -226,10 +226,10 @@ cdis
 
 !                       Fill in Cloud Layer
                         if(cld_hts(k) .ge. cbase_m .and.
-     1                   cld_hts(k) .lt. ctop_m                  )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. ctop_m                  )then
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
@@ -238,10 +238,10 @@ cdis
 
 !                       Fill in clear buffer above cloud layer
                         if(cld_hts(k) .ge. ctop_m .and.
-     1                   cld_hts(k) .lt. cbuf_high                )then
-                            call spread2(cld_snd,wt_snd,i_snd,j_snd,n_cl
-     1d_snd
-     1                          ,max_cld_snd,nk,ilaps,jlaps,k,cover,1.)
+     1                     cld_hts(k) .lt. cbuf_high               )then      
+                            call spread2(cld_snd,wt_snd,i_snd,j_snd
+     1                                  ,n_cld_snd,max_cld_snd
+     1                                  ,nk,ilaps,jlaps,k,cover,1.)
                             write(6,*)' Fill in k = ',k,cover,cld_hts(k)
                             l_good_pirep = .true.
                         endif
