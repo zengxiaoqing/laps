@@ -88,12 +88,17 @@ c     optran specific arrays for powell function calling
       real cost_theta
       integer cost_isnd
       integer cost_rad_istatus
+      real cost_sec_za          ! secant zenith angle for O90
+      real cost_sfc_emis        ! surface emissivity for O90
+      real cost_sfc_refl        ! surface reflectance for O90
+      real cost_sec_solar       ! solar secant angle for O90
 
 c     optran common 
 
       common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
      1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
-     1     cost_theta, cost_isnd, cost_rad_istatus
+     1     cost_theta, cost_isnd, cost_rad_istatus, cost_sec_za,
+     1     cost_sfc_emis, cost_sfc_refl,cost_sec_solar
 
 c     gvap common
 
@@ -152,6 +157,10 @@ c     local analogs to common block variables for input to parameters
       integer julian_day
       real lat
       real theta
+      real sec_za
+      real sfc_emis
+      real sfc_refl
+      real sec_solar
       real lpw1,lpw2,lpw3
 
 c     local monitor variables
@@ -301,6 +310,10 @@ C     SATELLITE RADIANCE SECTION
          julian_day = cost_julian_day
          lat = cost_lat
          theta = cost_theta
+         sec_za = cost_sec_za
+         sfc_emis = cost_sfc_emis
+         sfc_refl = cost_sfc_refl
+         sec_solar = cost_sec_solar
          
          
 c     perform forward model computation for radiance
@@ -309,7 +322,10 @@ c     time-consuming part of the code.
          
          call ofm ( kk, p, t_l, 
      1        mr_l, tskin, psfc,
-     1        julian_day, lat, theta, tbest) 
+     1        julian_day, lat, theta, tbest, 
+     1        sec_za,sfc_emis,
+     1        sfc_refl,
+     1        sec_solar) 
          
 c     compute cost function
 

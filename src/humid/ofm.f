@@ -35,7 +35,12 @@ cdis
 cdis       
       subroutine ofm (kk,laps_p,laps_t,laps_q,laps_sfc_t,
      1     psfc, jday, lat, ZA,
-     1                                Tbest)
+     1                                Tbest, 
+     1     sec_za,              !optran 90 variable 
+     1     sfc_emis,            !optran 90 variable
+     1     sfc_refl,            !optran 90 variable
+     1     sec_solar            !optran 90 variable
+     1     )
 
 
 c   This routine interfaces GOES 8/10 satellite broadcast network data (and
@@ -77,6 +82,10 @@ c   further recompilation.
       integer start_level       !lowest level of climo used
       real laps_p(kk),laps_t(kk),laps_q(kk), lat, laps_sfc_t, psfc
       real ZA                   !zenith angle (degrees)
+      real sec_za               !secant of ZA (for optran 90)
+      real sfc_emis             !surface emissivity for optran 90
+      real sfc_refl             !surface reflectivity for optran 90
+      real sec_solar            !local secant of solar angle for optran 90
       integer jday, istatus
       logical first_call
       data first_call /.true./

@@ -218,10 +218,21 @@ c     namelist data
       data rhext /'lh3'/
 
 c----------------------code   ------------------
+c     initialization
 c
+
 c     define PI
       pi = acos(-1.0)
       d2r = pi/180.
+c     initialize IR emissivity (1:n) and reflectance (1:n)
+
+      do i = 1,ii
+         do j = 1,jj
+            sfc_data(i,j)%sfc_emiss = 0.98
+            sfc_data(i,j)%sfc_refl
+     1           = (1.0-sfc_data(i,j)%sfc_emiss)/pi ! isotropic
+         enddo
+      enddo
 c     initialize laps field
       
 c     call get_laps congif to fill common block used in pressure assignment

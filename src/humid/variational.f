@@ -211,7 +211,10 @@ c     optran specific arrays for powell function calling
       integer cost_isnd
       integer cost_rad_istatus
       integer goes_good
-      
+      real cost_sec_za
+      real cost_sfc_emis
+      real cost_sfc_refl
+      real cost_sec_solar
       
       real bias_correction      ! function
       
@@ -219,7 +222,8 @@ c     optran common block
       
       common /cost_optran/radiance_ob, cost_kk, cost_p, cost_t_l,
      1     cost_mr_l, cost_tskin, cost_psfc, cost_julian_day, cost_lat,
-     1     cost_theta, cost_isnd, cost_rad_istatus
+     1     cost_theta, cost_isnd, cost_rad_istatus, cost_sec_za,
+     1     cost_sfc_emis, cost_sfc_refl,cost_sec_solar
       
 c     gvap common block
       
@@ -439,22 +443,10 @@ c     generate filename from 14time for julian day extraction later
       
       call make_fnam_lp (i4time, filename, istatus)
       
-c     get laps surface temperature
-      print*, 'getting surface temperature (lsx)'
-      call glst(i4time,tskin,ii,jj,istatus)
-      
-      if(istatus.ne.1) then
-         
-         write(6,*) ' '
-         write(6,*) ' '
-         write(6,*) 'Failed to get LSX temp data for forward model'
-         write(6,*) ' '
-         write(6,*) ' '
-         goes_good = 0
-         
-      endif
-      
-      
+c     fill tskin with laps sfc temp from structure
+
+      tskin = sfc_data%sfc_temp
+
 c     get laps surface pressure now replaced with value from structure sfc_data
       
       print*, 'Transferring surface pressure from structure'
@@ -475,6 +467,7 @@ c     setup cloud test (cloud array passed in)
       enddo
       
       write (6,*) 'Running GOES',ngoes,' forward model OPTRAN vsn'
+      write (6,*) 'Modify tskin and psfc for cloud top if present'
       
       do j = 1,jj
          do i = 1,ii
@@ -592,8 +585,14 @@ c     note that optran is configured to return both sounder and imager
 c     channels used in this algorithm.
             
             call ofm ( kk, p_l(1,i,j), t_l(1,i,j), 
-     1           mr_l(1,i,j), tskin(i,j), psfc(i,j),
-     1           julian_day, sfc_data(i,j)%lat, theta(i,j), tbest)
+     1           mr_l(1,i,j), sfc_data(i,j)%sfc_temp, 
+     1           psfc(i,j),
+     1           julian_day, sfc_data(i,j)%lat, theta(i,j), tbest,
+     1           sfc_data(i,j)%secza(sat_index),
+     1           sfc_data(i,j)%sfc_emiss(sat_index),
+     1           sfc_data(i,j)%sfc_refl(sat_index),
+     1           sfc_data(i,j)%secsola
+     1           )
             
             if(isnd.eq.0) then  ! IMAGER computation
                
@@ -757,7 +756,7 @@ c     fill cost function for background atmosphere
             
             do k = 1, kk
                cost_p(k) = p_l(k,i,j)
-               cost_t_l(k) = t_l(k,i,j)
+               cost_t_l(k) = t_l(k,i,j) 
                cost_mr_l(k) = mr_l (k,i,j)
                cost_p1d(k) = p_3d(i,j,k)
                
@@ -765,11 +764,15 @@ c     fill cost function for background atmosphere
             enddo
 
             cost_kk = kk
-            cost_tskin = tskin (i,j)
-            cost_psfc = psfc (i,j)
+            cost_tskin = tskin(i,j)
+            cost_psfc = psfc(i,j)
             cost_julian_day = julian_day
             cost_lat = sfc_data(i,j)%lat
             cost_theta = theta (i,j)
+            cost_sec_za = sfc_data(i,j)%secza(sat_index)
+            cost_sfc_emis = sfc_data(i,j)%sfc_emiss(sat_index)
+            cost_sfc_refl = sfc_data(i,j)%sfc_refl(sat_index)
+            cost_sec_solar = sfc_data(i,j)%secsola
 
 c     cost function data for gvap
             
