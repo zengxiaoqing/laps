@@ -40,9 +40,10 @@ c
      .      ,p(nz),ps(nx,ny),ter(nx,ny)
      .      ,lat(nx,ny),lon(nx,ny)
      .      ,phi(nx,ny,nz),t(nx,ny,nz)
-     .      ,u(nx,ny,nz),v(nx,ny,nz)
+     .      ,u(nx,ny,nz),v(nx,ny,nz),rh(nx,ny,nz)
      .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0
      .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0-dt
+     .      ,lapsrh(nx,ny,nz)
      .      ,dir(nx,ny),spd(nx,ny)
      .      ,temp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
@@ -70,14 +71,16 @@ c
       integer*4 lends
       integer*4 lendt
       integer*4 lendw
+      integer*4 lendrh
 c
       logical lrunbal
       logical lstagger
       logical lnon_linear
 
-      character*255 staticdir,tempdir,winddir,sfcdir
+      character*255 staticdir,tempdir,winddir,sfcdir,rhdir
       character*125 comment
       character*31  staticext,tempext,windext,sfcext
+      character*31  rhext
       character*10  units
       character*9   a9_time
 c
@@ -123,6 +126,7 @@ c
       endif
 
       staticext='nest7grid'
+      rhext='lh3'
       tempext='lt1'
       windext='lw3'
       sfcext='lsx'
@@ -130,6 +134,7 @@ c
       call get_directory(tempext,tempdir,lendt)
       call get_directory(windext,winddir,lendw)
       call get_directory(sfcext,sfcdir,lends)
+      call get_directory(rhext,rhdir,lendrh)
 
       re=6371220.
       rdpdg=3.141592654/180.
@@ -211,6 +216,16 @@ c
          stop
       endif
 c
+c *** Get laps rel hum
+c
+      call get_laps_3d(masstime,nx,ny,nz
+     1  ,rhext,'rh3',units,comment,lapsrh,istatus)
+
+      if(istatus .ne. 1)then
+         print*,'Error getting LAPS rh  data ... Abort.'
+         stop
+      endif
+c
 c *** Get laps wind data.
 c        Read t=t0 first, then read t=t0-dt.
 c *** Not considering non-linear terms for now, so no need to read t0-dt. 
@@ -288,6 +303,7 @@ c
             xx(i,j,k)=phi(i,j,k)
             xxx(i,j,k)=u(i,j,k)
             t(i,j,k)=v(i,j,k)
+            rh(i,j,k)=lapsrh(i,j,k)
          enddo
          enddo
          enddo
@@ -332,9 +348,11 @@ c
       if(lstagger) then
          call balstagger(u,v,oms,phi,temp,
      &                   nx,ny,nz,wr1,wr2,wr3,p,-1)
-        else
+       else
+
 c will give non-staggered temps from new balanced phis
-         call phigns(phi,temp,nx,ny,nz,0,p,-1)
+
+         call phigns(phi,temp,rh,nx,ny,nz,0,p,-1)
       endif
 
       write(6,*)' Rotating balanced u/v to true north'
@@ -398,9 +416,9 @@ c
       nzm1=nz-1
       cnt=0.
       sum=0.
-      call zero(wa,nx,ny,nz)
-      call zero(wb,nx,ny,nz)
-      call zero(wc,nx,ny,nz)
+      call zero3d(wa,nx,ny,nz)
+      call zero3d(wb,nx,ny,nz)
+      call zero3d(wc,nx,ny,nz)
       do j=1,ny
       do i=1,nx
          wd(i,j)=0
@@ -484,11 +502,11 @@ c
       fo=14.52e-5   !2*omega
       stab=0.
       nzm1=nz-1
-      call zero(om,nx,ny,nz)
-      call zero(xxxxx,nx,ny,nz)
-      call zero(xxxx,nx,ny,nz)
-      call zero(xxx,nx,ny,nz)
-      call zero(vort,nx,ny,nz)
+      call zero3d(om,nx,ny,nz)
+      call zero3d(xxxxx,nx,ny,nz)
+      call zero3d(xxxx,nx,ny,nz)
+      call zero3d(xxx,nx,ny,nz)
+      call zero3d(vort,nx,ny,nz)
       delp=(p(5)-p(13))*100.
       do j=1,ny
       do i=1,nx
@@ -606,9 +624,9 @@ c
      .      ,dldp,dldx,dldy,tsum,r_missing_data
      .      ,usum,vsum
 
-      real*4 ttemp(nx,ny,nz)
-      real*4 utemp(nx,ny,nz)
-      real*4 vtemp(nx,ny,nz)
+      real*4 ttmp(nx,ny,nz)
+      real*4 utmp(nx,ny,nz)
+      real*4 vtmp(nx,ny,nz)
 
 c_______________________________________________________________________________
 c
@@ -726,7 +744,7 @@ c
 12    write(6,1000) it,itt,cotmax,ovr,cotma1
 c     erf=0.
 c     if(icon.eq.1)call prt(t,sc,ci,nx,ny,4,nz,4hgeo,4hpot)
-c69      call zero(slam,nx,ny,nz)
+c69      call zero3d(slam,nx,ny,nz)
 c
 c *** Compute new u, v, omega using eqns. (4), (5), (6) with new phi and
 c        without the lagrange multiplier terms.
@@ -768,8 +786,8 @@ c
 c *** Compute lagrange multiplier (slam) using 3-d relaxtion on eqn. (3).
 c
       if (icon .ne. 0) then
-         call zero(slam,nx,ny,nz)
-         call zero(h,nx,ny,nz)
+         call zero3d(slam,nx,ny,nz)
+         call zero3d(h,nx,ny,nz)
 c
 c ****** Compute a/tau (h) term and rhs terms in eqn. (3)
 c
@@ -817,9 +835,9 @@ c     if (icon .eq. 1) call prt(om,sc,ci,nx,ny,8,nz,4h om ,4h    )
       do j=1,ny
       do i=1,nx
          t(i,j,k)=t(i,j,k)/g
-         ttemp(i,j,k)=t(i,j,k)
-         utemp(i,j,k)=u(i,j,k)
-         vtemp(i,j,k)=v(i,j,k)
+         ttmp(i,j,k)=t(i,j,k)
+         utmp(i,j,k)=u(i,j,k)
+         vtmp(i,j,k)=v(i,j,k)
       enddo
       enddo
       enddo
@@ -918,19 +936,19 @@ c western boundary
                if(icnt.gt.0)then
                   t(1,j,k)=tsum/float(icnt)
                else
-                  t(1,j,k)=ttemp(1,j,k)
+                  t(1,j,k)=ttmp(1,j,k)
                   iwpt=iwpt+1
                endif
                if(ucnt.gt.0)then
                   u(1,j,k)=usum/float(ucnt)
                else
-                  u(1,j,k)=utemp(1,j,k)
+                  u(1,j,k)=utmp(1,j,k)
                   uwpt=uwpt+1
                endif
                if(vcnt.gt.0)then
                   v(1,j,k)=vsum/float(vcnt)
                else
-                  v(1,j,k)=vtemp(1,j,k)
+                  v(1,j,k)=vtmp(1,j,k)
                   vwpt=vwpt+1
                endif
             endif
@@ -998,19 +1016,19 @@ c eastern boundary
                if(icnt.gt.0)then
                   t(nx,j,k)=tsum/float(icnt)
                else
-                  t(nx,j,k)=ttemp(nx,j,k)
+                  t(nx,j,k)=ttmp(nx,j,k)
                   iwpt=iwpt+1
                endif
                if(ucnt.gt.0)then
                   u(nx,j,k)=usum/float(ucnt)
                else
-                  u(nx,j,k)=utemp(nx,j,k)
+                  u(nx,j,k)=utmp(nx,j,k)
                   uwpt=uwpt+1
                endif
                if(vcnt.gt.0)then
                   v(nx,j,k)=vsum/float(vcnt)
                else
-                  v(nx,j,k)=vtemp(nx,j,k)
+                  v(nx,j,k)=vtmp(nx,j,k)
                   vwpt=vwpt+1
                endif
             endif
@@ -1076,19 +1094,19 @@ c southern boundary
                if(icnt.gt.0)then
                   t(i,1,k)=tsum/float(icnt)
                else
-                  t(i,1,k)=ttemp(i,1,k)
+                  t(i,1,k)=ttmp(i,1,k)
                   iwpt=iwpt+1
                endif
                if(ucnt.gt.0)then
                   u(i,1,k)=usum/float(ucnt)
                else
-                  u(i,1,k)=utemp(i,1,k)
+                  u(i,1,k)=utmp(i,1,k)
                   uwpt=uwpt+1
                endif
                if(vcnt.gt.0)then
                   v(i,1,k)=vsum/float(vcnt)
                else
-                  v(i,1,k)=vtemp(i,1,k)
+                  v(i,1,k)=vtmp(i,1,k)
                   vwpt=vwpt+1
                endif
             endif
@@ -1155,19 +1173,19 @@ c northern boundary
                if(icnt.gt.0)then
                   t(i,ny,k)=tsum/float(icnt)
                else
-                  t(i,ny,k)=ttemp(i,ny,k)
+                  t(i,ny,k)=ttmp(i,ny,k)
                   iwpt=iwpt+1
                endif
                if(ucnt.gt.0)then
                   u(i,ny,k)=usum/float(ucnt)
                else
-                  u(i,ny,k)=utemp(i,ny,k)
+                  u(i,ny,k)=utmp(i,ny,k)
                   uwpt=uwpt+1
                endif
                if(vcnt.gt.0)then
                   v(i,ny,k)=vsum/float(vcnt)
                else
-                  v(i,ny,k)=vtemp(i,ny,k)
+                  v(i,ny,k)=vtmp(i,ny,k)
                   vwpt=vwpt+1
                endif
             endif
@@ -1437,8 +1455,8 @@ c
       nxm1=nx-1
       nym1=ny-1
       nzm1=nz-1
-      call zero(nu,nx,ny,nz)
-      call zero(nv,nx,ny,nz)
+      call zero3d(nu,nx,ny,nz)
+      call zero3d(nv,nx,ny,nz)
       do k=2,nzm1
       do j=2,nym1
       do i=2,nxm1
@@ -1653,7 +1671,7 @@ c
 c
 c===============================================================================
 c
-      subroutine zero(a,nx,ny,nz)
+      subroutine zero3d(a,nx,ny,nz)
 c
       implicit none
 c
@@ -2016,11 +2034,15 @@ c
       return
       end
 c
-      subroutine phigns(phi,t,nx,ny,nz,itshif,p,ittop)
-cThis is the version of phig for the AFWA implementation. 
+      subroutine phigns(phi,t,rh,nx,ny,nz,itshif,p,ittop)
+c
+c *** This is the version of phig for the AFWA implementation. 
 c
 c *** phig computes heights from temps or vice versa for
 c        ittop equal to 1 and -1 respectively.
+c
+c     Smart/McGinley 10-98: Added de-virtualization of recovered
+c                           temps.
 c
       implicit none
 c
@@ -2028,9 +2050,12 @@ c
      .         ,itshif,ittop
      .         ,i,j,k
 c
-      real*4 phi(nx,ny,nz),t(nx,ny,nz)
+      real*4 phi(nx,ny,nz),t(nx,ny,nz),rh(nx,ny,nz)
      .      ,p(nz)
      .      ,z(50),r,g,rog,gor,ddz,ddzi,ddzj
+
+      real*4 tvk1,tvk2,td,dwpt,tv
+      real*4 tvkd,tvkm,tdm,tdd
 c
       parameter (r=287.053,g=9.80665,rog=r/g,gor=g/r)
 c_______________________________________________________________________________
@@ -2050,18 +2075,31 @@ c
       endif
 c
 c *** Scheme assumes 1100mb ht is correct.
+c *** Assume input t is dry when recovering phi.
+c *** Temp recovery is dry.
 c
       if (ittop .eq. 1) then
-         do k=2,nz
-            ddz=z(k)-z(k-1)
-            do j=1,ny
-            do i=1,nx
-               phi(i,j,k)=.5*(t(i,j,k)+t(i,j,k-1))*rog*ddz+phi(i,j,k-1)
-            enddo
-            enddo
+
+         do j=1,ny
+         do i=1,nx
+
+             td=dwpt(t(i,j,1)-273.15,rh(i,j,1))
+             tvk1=tv(t(i,j,1)-273.15,td,p(1))
+             do k=2,nz
+                td=dwpt(t(i,j,k)-273.15,rh(i,j,k))
+                tvk2=tv(t(i,j,k)-273.15,td,p(k))
+                ddz=z(k)-z(k-1)
+                phi(i,j,k)=.5*(tvk2+tvk1)*rog*ddz+phi(i,j,k-1)
+                tvk1=tvk2
+             enddo
+
          enddo
+         enddo
+
       elseif (ittop .eq. -1) then
+
 c scheme returns input temps at k=1 and nz
+         tdd=-50.                               !lowest possible Td for esw routine
          do k=2,nz-1 
             ddzi=1./(z(k)-z(k-1))
             ddzj=1./(z(k+1)-z(k))
@@ -2069,6 +2107,11 @@ c scheme returns input temps at k=1 and nz
             do i=1,nx
                t(i,j,k)=.5*gor*(phi(i,j,k)-phi(i,j,k-1))*ddzi+
      &                   .5*gor*(phi(i,j,k+1)-phi(i,j,k))*ddzj
+               tdm=dwpt(t(i,j,k)-273.15,rh(i,j,k))
+               tvkm=tv(t(i,j,k)-273.15,tdm,p(k))
+               tvkd=tv(t(i,j,k)-273.15,tdd,p(k))
+               t(i,j,k)=t(i,j,k)-(tvkm-tvkd)
+
             enddo
             enddo
          enddo
