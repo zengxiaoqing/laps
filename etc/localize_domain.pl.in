@@ -198,7 +198,7 @@ foreach(@cdl_list){
 #
   if($WHICH_TYPE eq "laps"){
      print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
-     run_sys::run_sys("@CSH@ $INSTALL_ROOT/etc/localize_optran.com $INSTALL_ROOT/bin/ $DATA_ROOT/static");
+     run_sys::run_sys("@PERL@ $INSTALL_ROOT/etc/localize_optran.pl $INSTALL_ROOT/bin/ $DATA_ROOT/static");
   }
 
 #
