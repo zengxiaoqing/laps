@@ -110,7 +110,7 @@ for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 #
 #  foreach(@use_for_display){
 #    if($_=~ /true/){
-#    $sys = "/bin/sh -c /awips/fxa/etc/sendLAPS.sh";
+#    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/sendLAPS.pl $LAPSROOT $LAPS_DATA_ROOT";
 #    &run_sys($sys);
 #    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl";
 #    &run_sys($sys);
