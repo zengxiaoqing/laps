@@ -55,7 +55,7 @@ c     parameter variables
       integer ii,jj,kk
       real mdf
       integer lct
-      
+
       
       integer*4
      1     jstatus(3)
@@ -201,6 +201,7 @@ c     initialize laps field
       
 c     call get_laps congif to fill common block used in pressure assignment
 c     routine
+
       
       call get_directory(extpw,dirpw,len)
       call get_directory(ext3,dir3,len)

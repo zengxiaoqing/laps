@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -302,6 +302,20 @@ c     convert filename to i4time_sat
             write(6,*) 'aborting goes_sbn module'
             return
          endif
+
+         do j = 1,jj
+            do i = 1,ii
+               if(ch3(i,j).le.0.0 .or. ch4(i,j).le.0.0 .or.
+     1              ch5(i,j).le.0.0) then
+                  istatus = 0
+                  write(6,*) 'Zero value radiance discovered'
+                  write(6,*) '   aborting satellite moisture'
+                  write(6,*) '   data untrustworthy'
+                  return
+               endif
+            enddo
+         enddo    
+                
                   
          write(6,*) ' '
          write(6,*) ' '
@@ -320,6 +334,21 @@ c     acquire sounder data
           write (6,*) 'error obtaining sounder radiances'
           return
        endif
+
+       do j = 1,jj
+          do i = 1,ii
+             do k = 1,18
+                if(rads(i,j,k) .le. 0.0)then
+                   istatus = 0
+                   write(6,*) 'Zero value radiance discovered'
+                   write(6,*) '   aborting satellite moisture'
+                   write(6,*) '   data untrustworthy'
+                   return
+                endif
+             enddo
+          enddo
+       enddo
+                
 
       endif ! only get SOUNDER data
 
@@ -442,19 +471,22 @@ c     here use goes 8 for reference (goes 10 not avail)
         if(isnd .eq.1) then     ! use sounder data for ch3, ch4, ch5
            do j = 1, jj
               do i = 1, ii
-                 if(rads(i,j,10).eq.rmd) then
+                 if(rads(i,j,10).eq.rmd .or.
+     1                rads(i,j,10).le. 0.0) then
                     ch3(i,j) = rmd
                  else
                     ch3(i,j) = bias_correction (britgo(rads(i,j,10),10),
      1                   ngoes, 1, 10)
                  endif
-                 if(rads(i,j,8).eq.rmd) then
+                 if(rads(i,j,8).eq.rmd .or.
+     1                rads(i,j,8).le.0.0) then
                     ch4(i,j) = rmd
                  else
                     ch4(i,j) = bias_correction (britgo(rads(i,j,8),8),
      1                   ngoes, 1, 8)
                  endif
-                 if(rads(i,j,7).eq.rmd) then
+                 if(rads(i,j,7).eq.rmd .or.
+     1                rads(i,j,7).le.0.0) then
                     ch5(i,j) = rmd
                  else
                     ch5(i,j) = bias_correction (britgo(rads(i,j,7),7),
@@ -473,6 +505,13 @@ c     compute zenith angle for model
 
               theta(i,j) = zenith(lat(i,j)*d2r,
      1             lon(i,j)*d2r,0.*d2r,-75.*d2r)
+
+              if(abs(theta(i,j)) .ge. 70.) then
+                 ch3(i,j) = rmd  ! designed to through out processing
+c     at the location where there is no possiblity of running the forward
+c     model
+                 go to 864      !skip ofm computation here
+              endif
 
 c     insert call for OPTRAN for initial comparison with gimtau.f
 c     note that optran is configured to return both sounder and imager
@@ -501,7 +540,7 @@ c     channels used in this algorithm.
                  enddo          ! kan
 
               endif             ! end SOUNDER computation
-
+ 864          continue
            enddo                ! j
         enddo                   ! i
 
