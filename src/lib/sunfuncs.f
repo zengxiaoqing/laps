@@ -43,7 +43,7 @@ C Argument      I/O     Type                    Description
 C --------      ---     ----    -----------------------------------------------
 C RLAT           I      R*4     Latitude (degrees)
 C RLNG           I      R*4     Longitude (degrees)
-      include 'trigd.inc'
+        include 'trigd.inc'
         character*9 asc9_time
 
         PI=3.14159265
@@ -61,12 +61,12 @@ C RLNG           I      R*4     Longitude (degrees)
 
         is = i4time - ((i4time / 60) * 60)
 
-        EQT=TIMEQ(JD)/rpd               !Equation of Time (Degrees)
-        DEC=SOLDEC(JD)/rpd              !Solar declination
+        EQT=TIMEQ(JD)/rpd               ! Equation of Time (Degrees)
+        DEC=SOLDEC(JD)/rpd              ! Solar declination (Degrees)
         hrangle = (ih-12)*15. + im/4. + is/240. + rlon + EQT
 
         COSZEN=SIND(RLAT)*SIND(DEC)+COSD(RLAT)*COSD(DEC)*COSD(hrangle)
-        alt = 90. - ACOSD(COSZEN)
+        alt = 90. - ACOSD(COSZEN)       ! Solar Altitude (Degrees)
 
         if(hrangle .lt. -180.)hrangle = hrangle + 360.
         if(hrangle .gt. +180.)hrangle = hrangle - 360.
@@ -84,7 +84,7 @@ C Argument      I/O     Type                    Description
 C --------      ---     ----    -----------------------------------------------
 C RLAT           I      R*4     Latitude (degrees)
 C RLNG           I      R*4     Longitude (degrees)
-      include 'trigd.inc'
+       include 'trigd.inc'
         character*9 asc9_time
 
         PI=3.14159265
@@ -100,12 +100,12 @@ C RLNG           I      R*4     Longitude (degrees)
         read(asc9_time,3)im
 3       format(7x,i2)
 
-        EQT=TIMEQ(JD)/rpd               !Equation of Time (Degrees)
-        DEC=SOLDEC(JD)/rpd              !Solar declination
+        EQT=TIMEQ(JD)/rpd               ! Equation of Time (Degrees)
+        DEC=SOLDEC(JD)/rpd              ! Solar declination (Degrees)
         HRANGLE = (ih-12)*15. + im/4. + rlon + EQT
 
         COSZEN=SIND(RLAT)*SIND(DEC)+COSD(RLAT)*COSD(DEC)*COSD(HRANGLE)
-        alt = 90. - ACOSD(COSZEN)
+        alt = 90. - ACOSD(COSZEN)       ! Solar Altitude (Degrees)
 
 !       write(6,*)'jd,ih,im',jd,ih,im
 !       write(6,*)'hrangle,dec,alt',hrangle,dec,alt
