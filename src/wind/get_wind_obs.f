@@ -418,9 +418,9 @@ cdis
 
         do i_pr = 1,MAX_PR
             if(nlevels_obs_pr(i_pr) .gt. 0)then
-                call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
-     1                                  ,lat,lon,ni,nj,ri,rj,istatus)
-                if(istatus .ne. 1)return
+              call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
+     1                                ,lat,lon,ni,nj,ri,rj,istatus)
+              if(istatus .eq. 1)then
 
                 i_ob = nint(ri)
                 j_ob = nint(rj)
@@ -465,8 +465,14 @@ cdis
                      endif ! In bounds vertically (of profile data)
                 enddo ! level
 
+              else
+                write(6,*)' Profile outside domain ',i_pr
+
+              endif ! in domain
+
             endif ! data present
         enddo ! i_pr
+
         I4_elapsed = ishow_timer()
 
         if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
