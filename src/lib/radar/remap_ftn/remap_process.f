@@ -81,7 +81,7 @@ c
 c
 c     Variables for NetCDF I/O
 c
-      character*50 dir
+      character*150 dir
 
       character*9 gtime
       character*4 fhh

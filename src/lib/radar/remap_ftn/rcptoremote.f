@@ -34,7 +34,7 @@ cdis
 
 !     You guessed it, copy forbidden data outside the LAB
 
-      character*50 dir
+      character*150 dir
       character*(*) destination_dir
       character*(*) destination_node
       character*200 command

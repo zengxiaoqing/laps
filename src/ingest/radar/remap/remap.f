@@ -320,7 +320,7 @@
               call fill_common(
      1               b_ref,b_vel,n_rays,i_tilt,
      1               n_ref_gates,n_vel_gates,
-!    1               first_ref_m,gsp_ref,first_vel_m,gsp_vel,
+     1               first_ref_m,gsp_ref,first_vel_m,gsp_vel,
      1               azim,v_nyquist_ray_a,eleva,b_missing_data) 
 
 ! call the FORTRAN remapper module   

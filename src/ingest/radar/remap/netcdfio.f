@@ -15,7 +15,8 @@
        character*2 c2_tilt
        character*3 ext_out, c3_radar_subdir
        character*8 radar_subdir
-       logical l_multi_tilt
+       logical l_multi_tilt,l_exist
+       character*13 a9_to_rsa13
 
        save a9_time
 
@@ -127,13 +128,27 @@ c      Determine filename extension
        endif ! i_tilt_proc = 1
 
 !      Pull in housekeeping data from 1st tilt
+       write(6,*)' radar_init: looking for file... '
 
        filename = path_to_radar(1:len_path)//'/'//a9_time//'_elev'
      1            //c2_tilt
-       write(6,*)' radar_init: we will read this file... '
-       write(6,*)filename(1:len_path+20)
+       call s_len(filename,len_file)
+       write(6,*)filename(1:len_file)
 
-       call get_tilt_netcdf_data(filename
+!      Test existence of yyjjjhhmm file
+       inquire(file=filename,exist=l_exist)
+       if(.not. l_exist)then ! Reset to yyyyjjjhhmmss file
+           filename = path_to_radar(1:len_path)//'/'
+     1              //a9_to_rsa13(a9_time)//'_elev'//c2_tilt
+           call s_len(filename,len_file)
+           write(6,*)filename(1:len_file)
+       endif
+
+
+!      Retest existence of file (either yyjjjhhmm or yyyyjjjhhmmss)
+       inquire(file=filename,exist=l_exist)
+       if(l_exist)then
+           call get_tilt_netcdf_data(filename
      1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
@@ -152,6 +167,11 @@ c      Determine filename extension
      1                               ,MAX_VEL_GATES, MAX_REF_GATES
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
+
+       else
+           istatus = 0
+
+       endif ! file exists
 
        if(istatus .eq. 1
      1             .AND.

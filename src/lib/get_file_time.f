@@ -102,23 +102,28 @@ C
         endif ! i_nbr_files_out > 0
 
         if(i_nbr_files_out .gt. 0)then
-           if(no_laps_diag .eq. 0)then
+            if(no_laps_diag .eq. 0)then
+                if(c20_type .ne. 'yyyymmdd_hhmm')then
+                    call make_fnam_lp(i4time_needed,asc9_tim_needed
+     1                                            ,i_status)
+                    asc13_tim_needed = asc9_tim_needed
+                else
+                    asc13_tim_needed = 
+     1                         cvt_i4time_wfo_fname13(i4time_needed)       
 
-           if(lent.eq.9)then
-              call make_fnam_lp(i4time_needed,asc9_tim_needed,i_status)
-              asc13_tim_needed = asc9_tim_needed
-           else
-              asc13_tim_needed = cvt_i4time_wfo_fname13(i4time_needed)
-           endif
-              write(6,*)'    file time (needed/nearest) = '
+                endif
+
+                write(6,*)'    file time (needed/nearest) = '
      1                  ,asc13_tim_needed,' / ',a20_time(1:lent)
-           endif
+
+            endif
 
         else
             call s_len(c_filespec,len_spec)
             write(6,*)'  No Files Available - ',c_filespec(1:len_spec)
             i4time_nearest = 0
-        endif
+
+        endif ! i_nbr_files_out > 0
 
         return
         end

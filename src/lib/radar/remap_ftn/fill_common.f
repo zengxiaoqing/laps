@@ -30,7 +30,9 @@ cdis
 cdis 
 cdis 
       subroutine fill_common(ref,vel,n_rays,i_tilt,n_ref_gates,
-     :     n_vel_gates,azim,v_nyquist,eleva,rmissing_data)
+     :     n_vel_gates,
+     :     first_ref_m,gsp_ref_m,first_vel_m,gsp_vel_m,
+     :     azim,v_nyquist,eleva,rmissing_data)
 c
 c     Subroutine fill_common
 c
@@ -43,7 +45,6 @@ c
 c     MODIFICATIONS:
 c     Clean-up    Keith Brewster, CAPS, July, 1994
 c
-      implicit none
 c
 c     Sizing parameters
 c
@@ -94,6 +95,11 @@ c
       i_tilt_cmn = i_tilt
       n_ref_gates_cmn = n_ref_gates
       n_vel_gates_cmn = n_vel_gates
+
+      first_ref_m_cmn = first_ref_m
+      first_vel_m_cmn = first_vel_m
+      gsp_ref_m_cmn = gsp_ref_m
+      gsp_vel_m_cmn = gsp_vel_m
 c
       DO 100 i = 1,n_rays
         azim_cmn(i) = azim(i)
