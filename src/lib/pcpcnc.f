@@ -101,7 +101,9 @@ cdis
 
         subroutine cpt_fall_velocity(ipcp_type,p,t,dbz,fall_velocity)
 
-        vvmax = 4.32*dbz**0.0714286      ! Adan add
+        dbz_eff = max(dbz,1.0)
+        vvmax = 4.32*dbz_eff**0.0714286      ! Adan add
+
         if(ipcp_type .eq. 1)then ! Rain
 !            fall_velocity = 5.0
             fall_velocity = vvmax    ! Adan add
