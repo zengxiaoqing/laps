@@ -1318,7 +1318,7 @@ cc	   var(2) = 'MSL'  ! LGB variable
 	endif
 
 
-        if(.true.)then ! old way
+        if(.false.)then ! old way
 c
 c.....  Get the background data.  Try for a SFM forecast first.  If not
 c.....  available, try the LGB file.  If that's not there either, use a
