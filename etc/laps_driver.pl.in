@@ -148,6 +148,10 @@ if($opt_q){
     print TFILE "#!/bin/sh\n";
     print TFILE "#PBS -lnodes=1:$node_type,walltime=30:00 -A $opt_q\n";
     print TFILE "  \n";
+    print TFILE "export PBS_MODE=1\n";
+    print TFILE "  \n";
+    print TFILE "cd $LAPS_LOG_PATH\n";
+    print TFILE "  \n";
     print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
     print " Adding to $LAPS_LOG_PATH/run_qsub_$exe.sh with executable/nodes $exe $opt_q\n";
