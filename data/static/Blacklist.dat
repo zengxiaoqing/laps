@@ -1,4 +1,4 @@
- 00015
+ 00048
  KFCS                  003  ALT  STP  MSL
  WGGNS                 003  TMP  DEW  HUM
  SABS2                 001  ALT  
@@ -14,4 +14,36 @@
  LJNTA                 002  DEW  HUM
  AW001                 002  DEW  HUM
  SBW                   002  DEW  HUM
-
+ KP38                  003  ALT  STP  MSL
+ KMRF                  003  ALT  STP  MSL
+ KGDP                  003  ALT  STP  MSL
+ FLU                   003  ALT  STP  MSL
+ FMNTN                 003  ALT  STP  MSL
+ CMP01                 001  ALT
+ CMP02                 001  ALT
+ CMP03                 001  ALT
+ CMP04                 001  ALT
+ CMP05                 001  ALT
+ CMP06                 001  ALT
+ CMP07                 001  ALT
+ CMP08                 001  ALT
+ CMP09                 001  ALT
+ CMP10                 001  ALT
+ CMP11                 001  ALT
+ CMP12                 001  ALT
+ CMP13                 001  ALT
+ CMP14                 001  ALT
+ CMP15                 001  ALT
+ CMP16                 001  ALT
+ CMP17                 001  ALT
+ CMP18                 001  ALT
+ CMP19                 001  ALT
+ CMP20                 001  ALT
+ CMP21                 001  ALT
+ CMP22                 001  ALT
+ CMP23                 001  ALT
+ CMP24                 001  ALT
+ UDFCD                 101  ALT
+ MNDOT                 101  ALT
+ FTCOLLINS             101  ALT
+ AP020                 001  ALT
