@@ -388,7 +388,7 @@ netcdf rsf {
         float
             fd(record,z,y,x);
             fd:_FillValue = 1.e+37f;
-            fd:long_name="fire index";
+            fd:long_name="LAPS Fire Wx ";
             fd:units="none";
             fd:valid_range= 0.f, 20.f;
             fd:LAPS_var="FD";
@@ -460,7 +460,7 @@ netcdf rsf {
         float
             blh(record,z,y,x);
             blh:_FillValue = 1.e+37f;
-            blh:long_name="Height of PBL";
+            blh:long_name="PBL Depth (m) ";
             blh:units="meters";
             blh:valid_range= 0.f, 10000.f;
             blh:LAPS_var="BLH";
@@ -484,7 +484,7 @@ netcdf rsf {
         float
             vnt(record,z,y,x);
             vnt:_FillValue = 1.e+37f;
-            vnt:long_name="ventilation index";
+            vnt:long_name="Vent Index       ";
             vnt:units="meters**2 / second";
             vnt:valid_range= 0.f, 10000.f;
             vnt:LAPS_var="VNT";
@@ -497,7 +497,7 @@ netcdf rsf {
             ham:navigation_dim = "nav";
             ham:record = "valtime, reftime";
             ham:_FillValue = 1.e+37f;
-            ham:long_name = "mid-level haines index" ;
+            ham:long_name = "Mid Haines Index      " ;
             ham:units = "none" ;
             ham:valid_range = 0.f, 6.0f ;
             ham:LAPS_var = "HAM" ;
@@ -510,7 +510,7 @@ netcdf rsf {
             hah:navigation_dim = "nav";
             hah:record = "valtime, reftime";
             hah:_FillValue = 1.e+37f;
-            hah:long_name = "high-level haines index" ;
+            hah:long_name = "High Haines Index      " ;
             hah:units = "none" ;
             hah:valid_range = 0.f, 6.0f ;
             hah:LAPS_var = "HAH" ;
@@ -523,9 +523,9 @@ netcdf rsf {
             fwi:navigation_dim = "nav";
             fwi:record = "valtime, reftime";
             fwi:_FillValue = 1.e+37f;
-            fwi:long_name = "fire weather index" ;
+            fwi:long_name = "Fosberg Index (0-40)" ;
             fwi:units = "none" ;
-            fwi:valid_range = 0.f, 100.0f ;
+            fwi:valid_range = 0.f, 40.0f ;
             fwi:LAPS_var = "FWI" ;
             fwi:lvl_coord = "MSL" ;
             fwi:LAPS_units = "NONE" ;
