@@ -787,7 +787,19 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
        CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
        made_pbl = .true.
      ENDIF
-
+     IF (minval(pblhgt) .LE. 0.) THEN
+       print *, 'Correcting PBL returned'
+       do j=1,ny
+         do i=1,nx
+           if (pblhgt(i,j) .le. 0) then
+             print *, 'PBL < 0 at i/j/val',i,j,pblhgt(i,j)
+             pblhgt(i,j) = zsig(i,j,1)
+           endif
+         enddo
+       enddo
+     ENDIF
+     print *, 'Min/Max PBL Height: ', minval(pblhgt),maxval(pblhgt)
+     print *, 'Min/Max zsig(:,:,1): ',minval(zsig(:,:,1)),maxval(zsig(:,:,1)) 
      CALL get_mm5_2d(current_lun, 'GROUND T ', time_to_proc, ground_t, &
                     'D   ', status)
      IF (status .NE. 0) ground_t(:,:) = 1.e37
