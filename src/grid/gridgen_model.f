@@ -227,7 +227,7 @@ c calculate delta x and delta y using grid and map projection parameters
 
             elseif(std_lat2 .eq. -90.)then
                 write(6,*)' Note, grid spacing will equal '
-     1                    ,grid_spacing_m,' at a latitude of ',-std_lat       
+     1                    ,grid_spacing_m,' at a latitude of ',std_lat       
 !               write(6,*)' deltax, deltay ',deltax,deltay
 !    1                   ,' at the south pole'
 

@@ -61,8 +61,8 @@ C
 
           if(phi0 .lt. 90.)then
               write(6,*)' Calculate Polar Stereo NetCDF parameters on'
-     1                 ,' equivalent projection tangent to pole.'
-              write(6,*)' Internal LAPS projection is secant'
+     1                 ,' equivalent projection tangent'
+              write(6,*)' to pole. Internal LAPS projection is secant'
               factor = 2. / (1. + sind(phi0))
               deltax_cdf = deltax * factor
               deltay_cdf = deltay * factor

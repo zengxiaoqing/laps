@@ -735,7 +735,7 @@ cdis
       include 'trigd.inc'
 
       logical l_secant
-      data l_secant /.false./
+      data l_secant /.true./
 
 !     Secant projections are described in "Principles of Meteorological 
 !     Analysis", Saucier, p. 33. 'phi_std' is the value of phi at the 

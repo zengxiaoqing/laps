@@ -175,15 +175,8 @@ C
             polon = slon
             rlat_in = rlat
             rlon_in = rlon
-            call GETOPS(rlat_in,rlon_in,rlat,rlon_dum,polat,polon)
-
-!           Check to see if you are at the opposite pole
-            if(slat1 * rlat .lt. 0. .and. abs(rlat) .eq. 90.)then      
-                sigma = 0.
-                istatus = 0
-                write(6,*)'get_sigma: sigma undefined at opposite pole'       
-                return
-            endif
+            call GETOPS(rlat,rlon_dum,rlat_in,rlon_in,polat,polon)
+!                          O     O        I      I      I     I
 
             call get_grid_spacing(grid_spacing_m,istatus)
             if(istatus .ne. 1)then
@@ -196,6 +189,14 @@ C
 
 !           phi0 = slat1
             phi  = rlat
+
+!           Check to see if you are at the opposite pole
+            if(phi .eq. -90.)then      
+                sigma = 0.
+                istatus = 0
+                write(6,*)'get_sigma: sigma undefined at opposite pole'       
+                return
+            endif
 
             sigma = (1. + sind(phi0)) / (1. + sind(phi))               ! eq. 13
 
