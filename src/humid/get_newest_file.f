@@ -72,7 +72,7 @@ c     compute time difference
       if (i4time_difference .lt. time_diff) then !success in finding file
          file = file_new
          write(6,*) 'Found file ', file_new//'.'//ext(1:ei)
-         write(6,*) 'Age of GVAP file is ', time_diff, ' seconds'
+         write(6,*) 'Age of GVAP file is ',i4time_difference, ' seconds'
          return
       else
          istatus = 0 
