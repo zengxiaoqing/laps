@@ -24,7 +24,7 @@
 #define cstr_to_fstr cstr_to_fstr_
 #define read_cdf_v3 read_cdf_v3_
 #define write_val_ref_asctime write_val_ref_asctime_
-#define check_grid_dimensions check_grid_dimensions_
+#define check_grid_dims_v3 check_grid_dims_v3_
 #define get_static_info_v3 get_static_info_v3_
 #define free_file_var free_file_var_
 #define free_write_var free_write_var_
@@ -48,7 +48,7 @@
 #define cstr_to_fstr CSTR_TO_FSTR
 #define read_cdf_v3 READ_CDF_V3
 #define write_val_ref_asctime WRITE_VAL_REF_ASCTIME
-#define check_grid_dimensions CHECK_GRID_DIMENSIONS
+#define check_grid_dims_v3 CHECK_GRID_DIMS_V3
 #define get_static_info_v3 GET_STATIC_INFO_V3
 #define free_file_var FREE_FILE_VAR
 #define free_write_var FREE_WRITE_VAR
@@ -72,7 +72,7 @@
 #define cstr_to_fstr cstr_to_fstr__
 #define read_cdf_v3 read_cdf_v3__
 #define write_val_ref_asctime write_val_ref_asctime__
-#define check_grid_dimensions check_grid_dimensions__
+#define check_grid_dims_v3 check_grid_dims_v3__
 #define get_static_info_v3 get_static_info_v3__
 #define free_file_var free_file_var__
 #define free_write_var free_write_var__
@@ -879,11 +879,11 @@ long *asc_len;
 }
 /************************************************************/
 #ifdef __STDC__
-int check_grid_dimensions(int cdfid, char *ext, long *imax, 
+int check_grid_dims_v3(int cdfid, char *ext, long *imax, 
                           long *jmax, long *n_levels, long lc3_levels,
                           long lm1_levels)
 #else
-int check_grid_dimensions(cdfid, ext, imax, jmax, n_levels, lc3_levels,
+int check_grid_dims_v3(cdfid, ext, imax, jmax, n_levels, lc3_levels,
                           lm1_levels)
 int cdfid;
 char *ext;
@@ -1814,7 +1814,7 @@ long *status;
                          and 2 special cases, LC3 = 42, LM1 = 3.
      set n_levels to match one of the four cases above, or abort   */
 
-        istatus = check_grid_dimensions(cdfid, ext, imax, jmax, n_levels,
+        istatus = check_grid_dims_v3(cdfid, ext, imax, jmax, n_levels,
                                         lc3_levels, lm1_levels);
         if (istatus == -1) {
           *status = -3;
