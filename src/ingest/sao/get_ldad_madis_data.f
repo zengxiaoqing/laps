@@ -63,10 +63,9 @@ C
 
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer filterSetNum, firstOverflow, globalInventory,
-     +     nStaticIds, numPST, numericWMOid(recNum), precipIntensity(
-     +     maxSensor, recNum), precipType( maxSensor, recNum),
-     +     pressChangeChar(recNum)
+      integer firstOverflow, globalInventory, nStaticIds, numPST,
+     +     numericWMOid(recNum), precipIntensity( maxSensor, recNum),
+     +     precipType( maxSensor, recNum), pressChangeChar(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
@@ -82,25 +81,24 @@ C
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     windDirChangeTime(recNum), windGustChangeTime(recNum),
      +     windSpeedChangeTime(recNum)
-      character precipRateDD(recNum)
-      character seaLevelPressureDD(recNum)
-      character visibilityDD(recNum)
-      character*51 stationName(recNum)
-      character temperatureDD(recNum)
-      character windSpeedDD(recNum)
-      character dewpointDD(recNum)
-      character windDirDD(recNum)
-      character pressChange3HourDD(recNum)
-      character*51 test1(recNum)
-      character*11 stationType(recNum)
-      character stationPressureDD(recNum)
       character*12 providerId(recNum)
-      character altimeterDD(recNum)
+      character windSpeedDD(recNum)
+      character seaLevelPressureDD(recNum)
       character*6 stationId(recNum)
-      character relHumidityDD(recNum)
-      character*11 dataProvider(recNum)
-      character*24 staticIds
+      character temperatureDD(recNum)
+      character visibilityDD(recNum)
       character precipAccumDD(recNum)
+      character pressChange3HourDD(recNum)
+      character*11 dataProvider(recNum)
+      character altimeterDD(recNum)
+      character stationPressureDD(recNum)
+      character dewpointDD(recNum)
+      character*25 presWeather(recNum)
+      character precipRateDD(recNum)
+      character relHumidityDD(recNum)
+      character*11 stationType(recNum)
+      character windDirDD(recNum)
+      character*51 stationName(recNum)
 
 !     Declarations for 'write_lso' call
       integer iwmostanum(recNum)
@@ -122,8 +120,8 @@ C
       endif
 
       call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     filterSetNum, firstOverflow, globalInventory, nStaticIds, 
-     +     numPST, numericWMOid, precipIntensity, precipType, 
+     +     firstOverflow, globalInventory, nStaticIds, numPST, 
+     +     numericWMOid, precipIntensity, precipType, 
      +     pressChangeChar, altimeter(ix), dewpoint(ix), 
      +     elevation(ix), latitude(ix), longitude(ix), 
      +     meanWeightedTemperature(ix), precipAccum(ix), 
@@ -133,16 +131,15 @@ C
      +     stationPressure(ix), temperature(ix), visibility(ix), 
      +     windDir(ix), windDirMax(ix), windGust(ix), windSpeed(ix), 
      +     altimeterDD(ix), dataProvider(ix), dewpointDD(ix), 
-     +     precipAccumDD(ix), precipRateDD(ix), 
+     +     precipAccumDD(ix), precipRateDD(ix), presWeather(ix), 
      +     pressChange3HourDD(ix), providerId(ix), relHumidityDD(ix), 
-     +     seaLevelPressureDD(ix), staticIds, stationId(ix), 
-     +     stationName(ix), stationPressureDD(ix), stationType(ix), 
-     +     temperatureDD(ix), test1(ix), visibilityDD(ix), 
-     +     windDirDD(ix), windSpeedDD(ix), observationTime(ix), 
-     +     receivedTime(ix), reportTime(ix), rhChangeTime(ix), 
-     +     stationPressChangeTime(ix), tempChangeTime(ix), 
-     +     windDirChangeTime(ix), windGustChangeTime(ix), 
-     +     windSpeedChangeTime(ix))
+     +     seaLevelPressureDD(ix), stationId(ix), stationName(ix), 
+     +     stationPressureDD(ix), stationType(ix), temperatureDD(ix), 
+     +     visibilityDD(ix), windDirDD(ix), windSpeedDD(ix), 
+     +     observationTime(ix), receivedTime(ix), reportTime(ix), 
+     +     rhChangeTime(ix), stationPressChangeTime(ix), 
+     +     tempChangeTime(ix), windDirChangeTime(ix), 
+     +     windGustChangeTime(ix), windSpeedChangeTime(ix),badflag)
 C
 C The netcdf variables are filled - your lso write call may go here
 C
