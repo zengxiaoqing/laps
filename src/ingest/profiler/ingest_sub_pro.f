@@ -241,8 +241,19 @@ C           Determine file format by looking at the file name convention
                 write(6,*)' Using hourly data'
             endif
             c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
+
         else ! WFO
+            call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+            if(istatus .eq. 1)then
+                lag_time = i4_avg_wdw_sec/2
+            else
+                write(6,*)' ingest_sub_pro: '
+     1                   ,'Error obtaining i4_avg_wdw_sec'
+                return
+            endif
+
             c_filespec = dir_in(1:len_dir_in)//'*'
+
         endif
 
         write(6,*)c_filespec(1:80)
@@ -386,7 +397,7 @@ C
           write(6,*)prof_name(ista),' Lon ',rlon
 
 !         Get the observation time
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,timeObs       
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'timeObs',0,timeObs
      1                      ,status)
 
           if(status.ne.0)then
@@ -401,8 +412,8 @@ C
               write(6,*)
               write(6,*)' timeObs ',a9_timeObs
 
-              call cv_asc_i4time(a9_timeObs,i4time_ob)
-              i4_resid = abs(i4time_ob - i4time_sys)
+              call cv_asc_i4time(a9_timeObs,i4_timeObs)
+              i4_resid = abs(i4_timeObs - i4time_sys)
 !             if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
               if(i4_resid .gt. 0)then
                   write(6,*)' Warning, time is suspect '
@@ -553,7 +564,7 @@ C
                 endif
             enddo ! i
 
-            i4time_ob = i4time_sys - lag_time
+            i4time_ob = i4_timeObs - lag_time ! i4time_sys - lag_time 
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
@@ -603,3 +614,10 @@ C
         end
 
 
+        subroutine prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+
+        i4_avg_wdw_sec = 3600
+        
+        istatus = 1
+        return
+        end
