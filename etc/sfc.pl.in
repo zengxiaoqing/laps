@@ -67,37 +67,48 @@ if ($nlines > 0) {die "$searchstring\n\n";}
 # Determine background model.
 
 $modeltype = "missing";
-$searchstring = "Using background from ";
+$searchstring = "Found LGB background at";
 foreach (@lines) {
-  if (/$searchstring(.*)/) {
-    ($modeltype,$dummy,$modeltime) = split(" ",$1); 
-    last; } }
+  if (/$searchstring(.*)/) {$modeltype = "lgb"; $modeltime = $1; last; } 
+}
+
 if ($modeltype eq "missing") {print "Can't determine model background.\n"}
+
 print "BACKGROUND FIELDS:  ";
 
 if ($modeltype =~ /rsf/) {
-  if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d)(\d\d)/ ) {
-    $runtime = $3 + 0;
-    $fcsthr = $4;
-    print "Using $fcsthr hr fcst from local model started at $runtime UTC \n"; } }
-else {
+  $modelid = "local";
+
+} else {
   $bgmodelfile = $filename;
   $bgmodelfile =~ s/$logname/lga/;
+  $modelid = "???";
   open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
   foreach (<BGMODEL>) {
-    if (/cmodel (\w*)/) {$modelid = $1;}
-    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } 
-    if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } }
+#   if (/cmodel (\w*)/) {$modelid = $1;}
+    if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
+    if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; } 
+    if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } 
+  }
   $basename = $1 if ($pathname =~ /([^\/]*)$/);
+
   if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
     $runtime = $2/100;
     $fcsthr = $4;
-    print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
-  elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
+#   print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; 
+  } elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
     $runtime = $4;
-    print "Using grids from $modelid started at $runtime UTC \n"; }
-  else {
-    print "$modelid (Sorry -- can't decode model filename)\n"; } }
+#   print "Using grids from $modelid started at $runtime UTC \n"; 
+  }
+
+}
+
+if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
+  $runtime = $3;
+  $fcsthr = $4;
+  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
+} 
+
 print "\n";
 
 # METAR and/or mesonet
