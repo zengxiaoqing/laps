@@ -70,6 +70,7 @@ cdis
         logical l_use_vis, l_use_vis_add
 
         l_use_vis_add = .false.
+        icount_vis_add_potl = 0
 
 !       Initialize histograms
         do i = -10,20
@@ -161,6 +162,7 @@ cdis
      1          .and. sfc_albedo(i,j) .le. 0.3              
      1          .and. l_use_vis_add                         )then
                 istat_vis_a(i,j) = 1
+                icount_vis_add_potl = icount_vis_add_potl + 1
             endif
 
           else
@@ -176,12 +178,16 @@ cdis
         write(6,*)' N_MISSING_ALBEDO = ',n_missing_albedo
         write(6,*)
 
+        write(6,*)' Number of potential visible clear/add = '
+     1            ,ni*nj-n_missing_albedo,icount_vis_add_potl
+
         if(n_missing_albedo .eq. ni*nj)then ! Return with status = 0
             write(6,*)' All albedos were missing - return from get_vis'
             istatus = 0
             return
         endif
 
+        write(6,*)
         write(6,*)'              HISTOGRAMS'
         write(6,*)' I          ',
      1  ' Albedo  Cld Frac Sat'
@@ -215,6 +221,8 @@ cdis
 
         real*4 static_albedo(ni,nj)   ! Static albedo database
 
+        write(6,*)' Subroutine get_sfc_albedo...'
+
         istat_sfc_alb = 0
 
         call get_static_field_interp('albedo',i4time,ni,nj
@@ -224,6 +232,9 @@ cdis
             var = 'ALB'
             call read_static_grid(ni,nj,var,static_albedo,istat_sfc_alb)
         endif
+
+        icount_albedo = 0
+        icount_albedo_lwrb = 0
 
         do i = 1,ni
         do j = 1,nj
@@ -248,8 +259,20 @@ cdis
                 sfc_albedo(i,j)      = r_missing_data
 
             endif
+
+            if(sfc_albedo_lwrb(i,j) .ne. r_missing_data)then
+                icount_albedo_lwrb = icount_albedo_lwrb + 1
+            endif
+
+            if(sfc_albedo(i,j) .ne. r_missing_data)then
+                icount_albedo = icount_albedo + 1
+            endif
+
         enddo ! j
         enddo ! i
+
+        write(6,*)' Number of sfc albedo and lower bound points = '       
+     1           ,icount_albedo,icount_albedo_lwrb
 
         return
         end
