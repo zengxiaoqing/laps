@@ -12,6 +12,7 @@ CWD = $(shell pwd)
 MACHDEP = config.log config.status config.cache src/include/config.h
 
 LIBDIRS = src/lib \
+          src/lib/modules \
           src/lib/bgdata \
           src/lib/blas \
           src/lib/fm \
@@ -19,7 +20,6 @@ LIBDIRS = src/lib \
           src/lib/goesinav \
           src/lib/goeslib \
           src/lib/lapack \
-          src/lib/modules \
           src/lib/mthermo \
           src/lib/nav \
           src/lib/powell  \
