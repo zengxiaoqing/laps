@@ -85,7 +85,7 @@ c
       character*200 file
       character*255 path
       character*200 cname
-      character*100 cdir
+      character*150 cdir
       character*4   cid     !Radar id {KFTG, KGLD, KCYS, etc}
 c
 c =================================
