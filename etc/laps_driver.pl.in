@@ -84,12 +84,32 @@ unless(-x "$LAPSROOT/bin/$exe"){
     die "Program $LAPSROOT/bin/$exe not found or not executable";
 }
 
+#
+# Construct 'yyjjjhhmm' for the current time
+#
+my $year = (gmtime)[5];
+$year= $year-100 if($year>99);
+$year='0'.$year if(length($year)<2);
+
+my $month = (gmtime)[4];
+
+my $date = (gmtime)[3];
+$date = '0'.$date if(length($date)<2);
+
 my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
+
+require "$LAPSROOT/etc/laps_tools.pm";
+my $jjj = &laps_tools::julian($year,$month+1,$date);
+$jjj="0".$jjj while(length($jjj)< 3);
+
+my $yyjjjhhmm = "$year$jjj$hhmm";
+
 my $log = $exe;
-$log =~ s/\..*$/\.log\.$hhmm/;
+#$log =~ s/\..*$/\.log\.$hhmm/;
+$log =~ s/\..*$/\.log\.$yyjjjhhmm/;
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
 open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
