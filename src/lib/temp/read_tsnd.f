@@ -59,6 +59,8 @@ c                               not exactly match the LAPS analysis time.
 !                               The a9time is now being read in for both rass
 !                               and raobs. Time thresholding was introduced 
 !                               for rass.
+!       1998 Feb Steve Albers   Added feature to calculate the height from
+!                               the pressure if the height is missing.
 
 !       Note that max_snd needs to be the same throughout insert_tsnd.f
 !                                                     and read_tsnd.f
@@ -351,7 +353,27 @@ c
 
                 read(12,*,err=640)ht_in,pr_in,t_in,td_in,dd_in,ff_in
 
-                if( abs(t_in)        .lt. 99.
+!               Test this by deliberately setting ht_in to missing
+!               ht_in = r_missing_data
+
+!               Determine whether we need to supply our own height 
+!                                                (only pres given)
+                if(ht_in .eq. r_missing_data .and. 
+     1             pr_in .ne. r_missing_data                      )then       
+
+                    if(i_ob .ge. 1 .and. i_ob .le. imax .and.
+     1                 j_ob .ge. 1 .and. j_ob .le. jmax      )then
+                        pr_in_pa = pr_in * 100.
+                        call pressure_to_height(pr_in_pa,heights_3d
+     1                     ,imax,jmax,kmax,i_ob,j_ob,ht_buff,istatus)
+                        if(istatus .ne. 1)goto710
+                        ht_in = ht_buff
+                        write(6,*)' Pressure was given, ht was derived:'       
+     1                            ,pr_in,ht_in
+                    endif
+                endif
+
+710             if( abs(t_in)        .lt. 99.
      1             .and.  abs(ht_in) .lt. 1e6
      1             .and.  level      .le. max_snd_levels )then
                     nlevels_good(i_pr) = nlevels_good(i_pr) + 1
