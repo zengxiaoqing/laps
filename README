@@ -374,7 +374,7 @@
      Some examples based on our experience are as follows:
     
      Solaris...
-     prompt>./configure --fc=f90 --fflags="-Bstatic -fixed" -cc=cc
+     prompt> ./configure --cc=cc
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
      compiler with 'xlf' using the command line option --fc=xlf with suggested 
