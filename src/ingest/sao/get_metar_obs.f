@@ -504,7 +504,7 @@ c
 	  k_layers = 0               ! number of cloud layers
 c
 !         This requires that the first array element has a cloud layer in it
-	  if(cvr(1,i)(1:1) .eq. ' ') then
+	  if(cvr(1,i)(1:1) .eq. ' ' .and. .false.) then
 	     k_layers = 0
 
 !            Test section to help determine whether this if block is needed
@@ -519,7 +519,10 @@ c
 
 	  else
 	     do k=1,5
-		if(cvr(k,i)(1:1) .ne. ' ') k_layers = k_layers + 1       
+		if(cvr(k,i)(1:1) .ne. ' ' .and.        ! Valid layer coverage
+     1             cvr(k,i)(1:2) .ne. '-9'       )then ! CWB error check
+                    k_layers = k_layers + 1       
+                endif
 	     enddo !k
 	  endif
 c
@@ -867,6 +870,10 @@ c
         elseif(c_var .eq. 't_f')then
             if(arg .gt. +145.)arg = badflag
             if(arg .lt. -145.)arg = badflag
+
+        elseif(c_var .eq. 'tgd_k')then
+            if(arg .gt. 340.)arg = badflag
+            if(arg .lt. 200.)arg = badflag
 
         elseif(c_var .eq. 'td_k')then
             if(arg .gt. 320.)arg = badflag
