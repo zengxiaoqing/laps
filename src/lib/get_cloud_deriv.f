@@ -312,7 +312,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
      1                           ,d_thetae_dz_1d(k_1d),cld_base_m
      1                           ,cld_top_m,itype,c2_type)
 
-                                if(radar_3d(i,j,k_1d) .gt. 45.)then
+                                if(radar_3d(i,j,k_1d) .gt. 45.
+     1                       .and. radar_3d(i,j,k_1d) .ne. 
+     1                                              r_missing_data)then       
                                     itype = 10 ! CB
                                 endif
 
