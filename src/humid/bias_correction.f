@@ -48,7 +48,7 @@ c     chief application GIMPAP/AFWA
       integer satellite         ! 8= goes 8,  10 = goes 10 etc
       integer sounder           ! 1= sounder, 0 = imager
       real bias_8 (22), bias_10(22)
-      namelist /bias_coefficients/ bias_8,bias_10
+      namelist /bias_coefficients_nl/ bias_8,bias_10
       save bias_8, bias_10, first_time
       real raw_data
       character*200 fname
@@ -65,7 +65,7 @@ c     read in namelist
          open (23, file=fname(1:len)//'bias_coefficients.nl',
      1        status = 'old', err = 24)
 
-         read(23,bias_coefficients,end=24)
+         read(23,bias_coefficients_nl,end=24)
          close (23)
 
          first_time = 1         ! set to not first time
