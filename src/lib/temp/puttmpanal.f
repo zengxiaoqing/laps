@@ -92,6 +92,10 @@ cdis
         parameter (diff_tol = 25.)
         parameter (cold_thresh = 170.)
 
+        integer*4 max_snd_grid,max_obs
+        parameter (max_snd_grid = 15000)            ! Total number of profiles
+        parameter (max_obs = 100000)                ! # obs in data structure
+
         logical l_fill,l_adjust_heights,l_use_raob
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
@@ -209,18 +213,19 @@ cdis
             return
         endif
 
-        call insert_tsnd(i4time_needed      ! Input
-     1                  ,lat,lon            ! Input
-     1                  ,heights_3d         ! Input
-     1                  ,sh_3d              ! Input
-     1                  ,pres_3d            ! Input
-     1                  ,temp_3d            ! Input/Output
-     1                  ,ilaps_cycle_time   ! Input
-     1                  ,l_use_raob         ! Input
-     1                  ,weight_bkg_const   ! Input
-     1                  ,ni,nj,nk           ! Input
-     1                  ,grid_spacing_m     ! Input
-     1                  ,istatus)           ! Output
+        call insert_tsnd(i4time_needed        ! Input
+     1                  ,lat,lon              ! Input
+     1                  ,heights_3d           ! Input
+     1                  ,sh_3d                ! Input
+     1                  ,pres_3d              ! Input
+     1                  ,temp_3d              ! Input/Output
+     1                  ,ilaps_cycle_time     ! Input
+     1                  ,l_use_raob           ! Input
+     1                  ,weight_bkg_const     ! Input
+     1                  ,ni,nj,nk             ! Input
+     1                  ,max_snd_grid,max_obs ! Input
+     1                  ,grid_spacing_m       ! Input
+     1                  ,istatus)             ! Output
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status returned from insert_tsnd'       
             return

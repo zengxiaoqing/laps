@@ -245,7 +245,7 @@ c311                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
+                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                          t_diff,temp_bkg_3d,
      1                          ob_pr_t(i_pr,level),
      1                          i_pr,iwrite,
@@ -282,10 +282,11 @@ c       1                ,t_diff
 
 
         goto600
-590     write(6,*)' Warning, could not open current LRS file'
+590     write(6,*)' Warning, could not open current file ',ext_uc(1:3)       
         
 600     CONTINUE
-        write(6,*) ' Read ',n_rass,' RASS temperature sounding(s)'
+        write(6,*) ' Read ',n_rass,' ',ext_uc(1:3)
+     1            ,' temperature sounding(s)'
 c
 c       Process sounding data
 c
@@ -302,7 +303,8 @@ c
 ! ***   Read in SND data  ***************************************
 
         ext = 'snd'
-        call get_tempob_time_window('SND',i4_window_ob,istatus)
+        call upcase(ext,ext_uc)
+        call get_tempob_time_window(ext_uc(1:3),i4_window_ob,istatus)
         if(istatus .ne. 1)return
         call get_filespec(ext,2,c_filespec,istatus)
         call get_file_time(c_filespec,i4time_sys,i4time_nearest)
@@ -429,7 +431,7 @@ c611                format(1x,i6,i4,5f8.1)
 
                     t_diff = 0. ! t_maps_inc(i_ob,j_ob,level) * rcycles
 
-                    call interp_tsnd_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
+                    call interp_tobs_to_laps(ob_pr_ht_obs,ob_pr_t_obs,
      1                         t_diff,temp_bkg_3d,
      1                         ob_pr_t(i_pr,level),
      1                         i_pr,iwrite,
@@ -468,7 +470,7 @@ c       1                ,t_diff
 
 900     n_tsnd = n_rass + n_snde
  
-        write(6,*) ' Read ',n_snde,' temperature sonde(s)'
+        write(6,*) ' Read ',n_snde,' SND sounding(s)'
         write(6,*) ' Read ',n_tsnd,' Total LRS+SND sounding(s)'
 
         istatus = 1

@@ -40,6 +40,7 @@ cdis
      1               ,l_use_raob                    ! Input
      1               ,weight_bkg_const              ! Input
      1               ,ni,nj,nk                      ! Input
+     1               ,max_snd_grid,max_obs          ! Input
      1               ,grid_spacing_m                ! Input
      1               ,istatus)                      ! Output
 
@@ -65,12 +66,9 @@ cdis
 !       Added call to get_r_missing_data.  Pass r_missing_data to
 !       read_tsnd and analyze_tsnd.
 
-        integer*4 max_snd_grid,max_obs
-        parameter (max_snd_grid = 5000)             ! Total number of profiles
-        parameter (max_obs = 100000)                ! # obs in data structure
-
         real*4 lat(ni,nj),lon(ni,nj)
-        real*4 temp_3d(ni,nj,nk)
+        real*4 temp_3d(ni,nj,nk)                    ! Input = model temp fg
+                                                    ! Output = analyzed temp
         real*4 sh_3d(ni,nj,nk)
         real*4 pres_3d(ni,nj,nk)
         real*4 heights_3d(ni,nj,nk)
@@ -241,8 +239,9 @@ cdis
 
             endif ! l_3d
 
-            write(6,*)' Vertically blended bias field, old/new temps # '
-     1                ,i_tsnd
+            if(iwrite .eq. 1)write(6,*)
+     1                ' Vertically blended bias field, old/new temps # '       
+     1               ,i_tsnd
             do k = 1,nk
                 if(iwrite .eq. 1)write(6,11,err=12)k,bias_tsnd(i_tsnd,k)       
      1                 ,temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)
@@ -253,16 +252,27 @@ cdis
             enddo ! k
 
 
-!           Apply TSND bias to 3D array
+!           Identify good TSND obs 
             if((.not. l_qc) .and. (.not. l_flag_vv))then
-                write(6,*)' Applying the TSND bias corrections'
+                if(iwrite .eq. 1)
+     1              write(6,*)' Applying the TSND bias corrections'
                 l_good_tsnd(i_tsnd) = .true.
                 n_good_tsnd = n_good_tsnd + 1
 
-!               Add TSND to observation vector
+!               Add TSND to data structure / observation vector
                 do k = 1,nk
                     if(bias_tsnd(i_tsnd,k) .ne. r_missing_data)then
                         n_obs = n_obs + 1
+
+                        if(n_obs .gt. max_obs)then
+                            write(6,*)
+     1                      ' Error - too many obs in data structure'
+                            write(6,*)
+     1                      ' Increase max_obs parameter from',max_obs       
+                            istatus = 0
+                            return
+                        endif
+
                         temp_obs(n_obs,i_ri) = igrid_tsnd(i_tsnd)
                         temp_obs(n_obs,i_rj) = jgrid_tsnd(i_tsnd)
                         temp_obs(n_obs,i_rk) = k
@@ -271,7 +281,7 @@ cdis
                         temp_obs(n_obs,i_k) = k
                         temp_obs(n_obs,i_temp) = 
      1                  temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
-     1                                      + bias_tsnd(i_tsnd,k)
+     1                                            + bias_tsnd(i_tsnd,k)
                         temp_obs(n_obs,i_wt) = wt_tsnd(i_tsnd,k)
                         temp_obs(n_obs,i_bias) = bias_tsnd(i_tsnd,k)
                     endif
@@ -295,12 +305,19 @@ cdis
 
         enddo ! i_tsnd
 
+        write(6,*)'n_good_tsnd = ',n_good_tsnd
+        write(6,*)' # of obs in data structure (tsnds only) = '
+     1            ,n_obs
+
 !       Read ACARS Temps
+
+        write(6,*)' # of obs in data structure (tsnds + acars) = '
+     1            ,n_obs
 
         call analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd
      1      ,weight_bkg_const                                  ! Input
      1      ,grid_spacing_m,max_snd_grid                       ! Input
-     1      ,temp_obs,max_obs                                  ! Input
+     1      ,temp_obs,max_obs,n_obs                            ! Input
      1      ,r_missing_data                                    ! Input
      1      ,l_3d                                              ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
@@ -318,7 +335,7 @@ cdis
         subroutine analyze_tsnd(n_tsnd,n_good_tsnd,ni,nj,nk,l_good_tsnd     
      1      ,weight_bkg_const                                  ! Input
      1      ,grid_spacing_m,max_snd_grid                       ! Input
-     1      ,temp_obs,max_obs                                  ! Input
+     1      ,temp_obs,max_obs,n_obs                            ! Input
      1      ,r_missing_data                                    ! Input
      1      ,l_3d                                              ! Input
      1      ,wt_tsnd,igrid_tsnd,jgrid_tsnd,bias_tsnd,temp_3d,istatus)       
@@ -367,7 +384,7 @@ cdis
      1               ,max_snd_grid                           ! Input
      1               ,l_good_tsnd,n_tsnd                     ! Inputs
      1               ,bias_tsnd                              ! Input
-     1               ,temp_obs,max_obs                       ! Input
+     1               ,temp_obs,max_obs,n_obs                 ! Input
      1               ,bias_3d                                ! Output
      1               ,l_analyze,l_3d                         ! Output
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
@@ -411,7 +428,7 @@ cdis
      1                   ,max_snd_grid                           ! Input
      1                   ,l_good_tsnd,n_tsnd                     ! Inputs
      1                   ,bias_tsnd                              ! Input
-     1                   ,temp_obs,max_obs                       ! Input
+     1                   ,temp_obs,max_obs,n_obs                 ! Input
      1                   ,bias_3d                                ! Output
      1                   ,l_analyze,l_3d                         ! Output/Input
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
@@ -425,7 +442,7 @@ cdis
 !       Jun 16 1997             Ken Dritz
 !       Added r_missing_data as dummy argument.
 
-        logical l_good_tsnd(max_snd_grid)
+        logical l_good_tsnd(max_snd_grid),l_struct
         real*4 bias_tsnd(max_snd_grid,nk)
         integer*4 igrid_tsnd(max_snd_grid),jgrid_tsnd(max_snd_grid)
         real*4 wt_tsnd(max_snd_grid,nk)
@@ -438,6 +455,8 @@ cdis
         logical l_analyze(nk),l_3d
 
         integer*4  n_fnorm
+
+        data l_struct /.false./
 
         dimension fnorm(0:n_fnorm)
 
@@ -460,35 +479,62 @@ cdis
 
         enddo ! k
 
-        write(6,*)' filling bias_obs_3d array from bias soundings'
+        if(l_struct)then
+            write(6,*)' filling bias_obs_3d array from data structure'
+            
+            do i_ob = 1,n_obs
+                if(temp_obs(i_ob,i_bias) .ne. r_missing_data)then     
 
-        do i_tsnd = 1,n_tsnd
+!                   Determine i,j,k of ob and use the ob.
+                    i = temp_obs(i_ob,i_i)
+                    j = temp_obs(i_ob,i_j)
+                    k = temp_obs(i_ob,i_k)
 
-          do k = 1,nk
+                    bias_obs_3d(i,j,k) = temp_obs(i_ob,i_bias)
+                    wt_3d(i,j,k) = temp_obs(i_ob,i_wt)
 
-            if(l_good_tsnd(i_tsnd) .and. 
-     1         bias_tsnd(i_tsnd,k) .ne. r_missing_data)then
+                    l_analyze(k) = .true.
 
-!               Count obs and determine i,j of obs.
+!                   Should we reduce this?
+                    write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
 
-                i = igrid_tsnd(i_tsnd)
-                j = jgrid_tsnd(i_tsnd)
+                endif
 
-                bias_obs_3d(i,j,k) = bias_tsnd(i_tsnd,k)
-                wt_3d(i,j,k) = wt_tsnd(i_tsnd,k)
+            enddo ! Loop through i_ob
 
-                l_analyze(k) = .true.
+        else
+            write(6,*)' filling bias_obs_3d array from bias soundings'
 
-                write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
-71              format(1x,3i4,2e11.4)
+            do i_tsnd = 1,n_tsnd
 
-            endif ! We have an good tsnd
+              do k = 1,nk
 
-          enddo ! k
+                if(l_good_tsnd(i_tsnd) .and. 
+     1             bias_tsnd(i_tsnd,k) .ne. r_missing_data)then
 
-        enddo ! Loop through TSND
+!                   Determine i,j of ob and use the ob.
 
-!        ncnt_total = ncnt_total + ncnt
+                    i = igrid_tsnd(i_tsnd)
+                    j = jgrid_tsnd(i_tsnd)
+
+                    bias_obs_3d(i,j,k) = bias_tsnd(i_tsnd,k)
+                    wt_3d(i,j,k) = wt_tsnd(i_tsnd,k)
+
+                    l_analyze(k) = .true.
+
+!                   Should we reduce this?
+                    write(6,71)i,j,k,bias_obs_3d(i,j,k),wt_3d(i,j,k)
+71                  format(1x,3i4,2e11.4)
+
+                endif ! We have an good tsnd
+
+              enddo ! k
+
+            enddo ! Loop through TSND
+
+        endif ! l_struct
+
+!       ncnt_total = ncnt_total + ncnt
 
 !       Initialize fnorm array used in barnes_new
         write(6,*)' Creating fnorm LUT'
