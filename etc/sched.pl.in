@@ -96,11 +96,7 @@ my @LAPS_EXE;
 
 if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(lga.exe 
-                  ingest_pro.exe obs_driver.x sfc_qc.exe 
-                  ingest_sounding.exe 
-                  ingest_cloud_drift.exe ingest_aircraft.exe 
-		  wind.exe 
-                  ingest_lrs.exe lvd_sat_ingest.exe 
+                  obs_driver.x sfc_qc.exe 
                   laps_sfc.x);
 
 }elsif(defined $opt_K){ # Kalman only
@@ -321,20 +317,20 @@ foreach $exe (@LAPS_EXE){
     $execount = $execount + 1;
 
     if( (! $opt_q) && (! $opt_Q) ){ # Normal run of an executable
-        if($exe eq "qbalpe.exe"){
-            foreach $wgi_script (@WHAT_GOT_IN){
-                print $t." Running what-got-in script $wgi_script.pl\n";
-                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1";
-                &forksub($sys,$lockfile);
-            }
-        }
-
         if(-x  "$LAPSROOT/bin/$exe"){
             print $t." Running $exe\n";
             my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
             &forksub($sys,$lockfile);
         }else{
 	    print $t."WARNING: $exe not found\n";
+        }
+
+        if($execount == $nexe){
+            foreach $wgi_script (@WHAT_GOT_IN){
+                print $t." Running what-got-in script $wgi_script.pl\n";
+                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1";
+                &forksub($sys,$lockfile);
+            }
         }
 
     }else{ # -q or -Q option
