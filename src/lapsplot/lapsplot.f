@@ -174,6 +174,7 @@ cdis
         common /supmp6/ umin,umax,vmin,vmax
         real*4 dummy(8),part
         common /ERROR/ IFRAME, IERRR
+        common /image/ n_image
 
         integer*4       idummy(6),ioffm,istatus
 
@@ -334,13 +335,13 @@ c       set up supmap for plot
         map_mode = 2
 
 !       Set up the colors, draw the county map
-        if(map_mode .eq. 1)then
-            icol_sta = 32
-            icol_cou = 32
-            jdot = jdot_in
-        elseif(map_mode .eq. 2)then
-            icol_sta = 7
-            icol_cou = 34
+        if(n_image .gt. 0)then ! image present
+            icol_sta = 7       ! yellow
+            icol_cou = 17      ! lavender
+            jdot = 0
+        else                   ! no image present
+            icol_sta = 7       ! yellow
+            icol_cou = 34      ! grey
             jdot = 0
         endif
 
