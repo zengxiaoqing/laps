@@ -61,6 +61,7 @@ if($min_files>0){
     $clean_dirs{l1s} = 2.1;
     $clean_dirs{lm2} = 1.5;
     $clean_dirs{lso} = 1.5;
+    $clean_dirs{lwc} = 0.5;
 
     $clean_dirs{v01} = (0.125<$hist_time)?0.125:$hist_time;
     $clean_dirs{v02} = (0.125<$hist_time)?0.125:$hist_time;
@@ -103,6 +104,7 @@ foreach $dir (keys(%clean_dirs)){
 	@filelist = grep(/^\d\d/, readdir(DIR));
     }
     closedir(DIR);
+    next unless(-d $dir);
     print "Purging in $dir\n";
     next if($#filelist < $min_files);
     $i=$#filelist;
