@@ -4200,8 +4200,8 @@ c                   cint = -1.
                     call ccpfil(field_2d,NX_L,NY_L,250.,370.
      1                         ,'hues',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'RH')then
-                    call ccpfil(field_2d,NX_L,NY_L,220.,-40.
-     1                         ,'hues',n_image,scale,'hsect') 
+                    call ccpfil(field_2d,NX_L,NY_L,0.,100.
+     1                         ,'moist',n_image,scale,'hsect') 
                 elseif(var_2d .eq. 'TPW')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,5.5
      1                         ,'tpw',n_image,scale,'hsect') 
@@ -4787,11 +4787,11 @@ c                   cint = -1.
             if(c_type(1:2) .eq. 'sc')then
                 var_2d = 'SC'
                 ext = 'lm2'
-                c33_label = 'Snow Cover Analysis     (TENTHS) '
+                c33_label = 'Snow Cover Analysis    (percent) '
             else
                 var_2d = 'CSC'
                 ext = 'lcv'
-                c33_label = 'SatObs (CSC) Snow Cover (TENTHS) '
+                c33_label = 'SatObs (CSC) Snow Cover (percent)'
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4806,9 +4806,9 @@ c                   cint = -1.
             endif
 
             clow = 0.
-            chigh = +10.
-            cint = 2.
-            scale=0.1
+            chigh = +100.
+            cint = 25.
+            scale=0.01
 
             call plot_field_2d(i4time_pw,c_type,field_2d,scale
      1                        ,namelist_parms
@@ -4920,7 +4920,7 @@ c                   cint = -1.
                 write(6,*)' LVL_CLD = ',lvl_cld
 
             elseif(k_level .eq. 0)then
-                c33_label = 'Cloud Cover                      '
+                c33_label = 'Cloud Cover (fraction)           '
 
             else ! k_level .lt. 0
                 write(c33_label,3517)-k_level
