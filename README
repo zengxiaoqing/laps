@@ -197,7 +197,7 @@
      To build the lapsplot process, access to an NCAR graphics library is 
      needed to be able to run the 'ncargf77' command. Lapsplot is an optional 
      plotting program, thus NCAR graphics is optional. You might wish to check
-     the following World Wide Web location for more info on this licensed
+     the following World Wide Web location for more info on this now free
      software...
 
                    http://ngwww.ucar.edu
