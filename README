@@ -36,7 +36,8 @@
          2.3.5 ..................  PIREPS & ACARS from aircraft
          2.3.6 ..................  RAOB/Dropsonde
          2.3.7 ..................  Satellite
-         2.3.8 ..................  Other Data Sources
+         2.3.8 ..................  GPS
+         2.3.9 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
          2.4.1 ..................  Cron timing considerations
          2.4.2 ..................  Purging Output Files
@@ -90,8 +91,7 @@
          3.3.8 ..................  SOIL MOISTURE
          3.3.9 ..................  BALANCE
          3.4 ..............  Model Initialization
-         3.4.1 ..................  DPREP
-         3.4.2 ..................  LAPSPREP
+         3.4.1 ..................  LAPSPREP
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -1119,7 +1119,19 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            using this product. Currently FSL /public sounder files in netCDF 
            format are processed.
 
-                      ----   2.3.8  Other Data Sources ---
+                      ----   2.3.8  GPS ---
+
+     GPS:
+           LAPS uses GPS data from NIMBUS NetCDF files. The precipitable water
+           is used in the humidity analysis and surface observations are
+           read into the surface analyses.
+
+           There is a second format known as (LDAD) NetCDF that carries GPS 
+           data. This format can supply GPS surface data to the LAPS 
+           intermediate 'lso' file. LAPS does not yet read precipitable water 
+           from the LDAD format.
+
+                      ----   2.3.9  Other Data Sources ---
 
      Radar VAD Algorithm winds (pro)
            FSL NIMBUS database, from WSR-88D algorithm output. FSL obtains
@@ -1138,14 +1150,6 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            We are ingesting the ASCII satellite cloud-drift wind files
            for use in the wind analysis. These come from NESDIS (via NIMBUS)
            as well as from CWB and AFWA.
-
-     GPS:
-           LAPS uses GPS precipitable water data in the humidity analysis
-           that is stored in NIMBUS/NetCDF files. There is a second local
-           data (LDAD) NetCDF file that carries GPS data. This second format
-           can supply GPS surface data to the LAPS intermediate 'lso' file.
-           LAPS does not yet read precipitable water from the LDAD
-           format, only the NIMBUS one.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -3384,42 +3388,7 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
    for RAMS/SFM, and Adrian Marroquin for ETA. The models themselves are not
    included in this tar file.
 
------- 3.4.1 ---------------------DPREP--------------------------------------
-
-Process: dprep.exe - Does some analysis post processing for model 
-                     initialization
-     (authors: Paul Schultz, John Smart)
-
-   This process takes LAPS analysis output to create the forecast model initial
-   conditions for the Scalable Forecast Model (SFM). 
-   It also takes background model fields to generate the forecast
-   model lateral boundary conditions. 
-
-   Note that we are phasing this program out of the main Makefile and this
-   program is mostly not being used anymore.
-
-<pre>
-Inputs: 
-      * lw3                 grid       LAPS 3-d wind analysis
-      * lt1                 grid       LAPS 3-d temperature & height analyses
-      * lq3                 grid       LAPS 3-d humidity analysis
-      * lsx                 grids      LAPS 2-d surface analyses
-      * model backgrounds   grids
-
-Outputs: 
-        LPS                 grid       Initial Condition from LAPS analysis
-        E*  (e.g.)          grid       Lateral Boundary Conditions    
-</pre>
-
-Parameter namelist file: 'static/dprep.nl'
-
-Outputs: 'lapsprd/dprep' directory
-
-Source directory: 'laps/src/dprep'
-
-   Please contact the author for additional information.
-
------- 3.4.2 --------------LAPSPREP------------------------------------------
+------ 3.4.1 --------------LAPSPREP------------------------------------------
 
 Process: lapsprep.exe - Post-processes LAPS analysis files into formats
                         that can be used to initialize a local forecast
