@@ -20,7 +20,7 @@ umask 002;
 
 # We need to make sure ncgen is accessible for gridgen_model.exe
 
-$ENV{PATH}="$ENV{PATH}:/NETCDF//bin";
+$ENV{PATH}="$ENV{PATH}:@NETCDF@/bin";
 
 # --------------- Notes for command line inputs -------------------------------
 # opt_s is LAPS_SRC_ROOT override
@@ -47,12 +47,23 @@ $ENV{PATH}="$ENV{PATH}:/NETCDF//bin";
 # The -m and -c options cannot be used simultaneously.
 #
 # opt_q qsub project name command line input for localize_domain.pl
-# opt_Q Qsub project name command line input for localize_domain.pl
 # -----------------------------------------------------------------------------
 
 
-if(defined $opt_h){print "\nThis command line switch will give you help for using this
-                            script.  This is not active yet.\n\n";}
+if(defined $opt_h){
+   print "\n\n             Help Information:\n";
+   print "   ----------------------------------------------------------\n";
+   print " -s Use to override the Source Root environment variable if set. \n";
+   print " -i Use to override the Install Root environment variable if set. \n";
+   print " -d Use to override the Data Root environment variable if set. \n";
+   print " -w Mandatory input. Set to 'laps' or 'wrfsi'. \n";
+   print " -t Path to template - a subset of namelist variables specific to the domain.\n";
+   print " -c Switch to control complete removal of Data Root. Use with caution. \n";
+   print " -m Switch to relocalize without regenerating a new static file. Namelist updating.\n";
+   print " -q Submit the localization (gridgen_model) to compute node. -q 'project-name'. \n"; 
+   print " -h This list of help command descriptions.\n";
+   print "\n\n";
+   exit;}
 
 if(!defined $opt_w){die "\nYou must decide and use the -w command line input to
                            specify the type of localization desired. Two options:
@@ -300,7 +311,7 @@ if( $CONFIG_DOMAIN eq "true" ) {
   }else{
      print "Make a new DATA_ROOT.\n";
      mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/$DOMAIN_NAME $!\n";
-     mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
+#    mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
      &laps_tools::mkdatadirs("$LAPS_DATA_ROOT","$domain_type");
   }
 
@@ -386,12 +397,20 @@ if( $opt_m ){
 print "Checking for static file \n";
 
 my $restore_files="false";
+my @error_lines;
+open(LOC,"$LAPS_DATA_ROOT/$logname/localize_domain.log");
+my @loc=<LOC>;
+close(LOC);
+
 if( !defined $opt_m ){
     if(!-e "$LAPS_DATA_ROOT/static/$staticfile"){
        print "error detected\n";
        print "$LAPS_DATA_ROOT/static/$staticfile does not exist!\n";
        print "setting variable - restore_files - to true\n";
        $restore_files="true";
+       foreach(@loc){if( /error/i ){
+                     print "$_\n";}
+      }
     }else{
        system ("ls -l $LAPS_DATA_ROOT/static/$staticfile");
     }
@@ -399,9 +418,6 @@ if( !defined $opt_m ){
 
 if($restore_files eq "false" && !defined $opt_m){
    print "checking localize_domain.log\n";
-   open(LOC,"$LAPS_DATA_ROOT/$logname/localize_domain.log");
-   my @loc=<LOC>;
-   close(LOC);
 
    my $world_topo_warn_lines = 0;
    foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
@@ -412,6 +428,9 @@ if($restore_files eq "false" && !defined $opt_m){
       print "Lines with error found in localize_domain.log\n";
       print "Settting variable -- restore_files -- to true\n";
       $restore_files="true";
+      foreach(@loc){if( /error/i ){
+                    print "$_\n";}
+      }
    }
    if($cannot_lines gt 0){print "Lines with cannot found in localize_domain.log\n";}
    if($world_topo_warn_lines gt 0){print "Lines with both world_topo and warning found in localize_domain.log\n";}
@@ -423,7 +442,9 @@ if($restore_files eq "false" && !defined $opt_m){
 if( $restore_files eq "true" ) {
     print "\n";
     print "Save static and cdl to _err for further examination.\n";
-    print "     --> localization incomplete <--   \n";
+    print "***************************************************\n";
+    print "   --> localization failed and is incomplete <--   \n";
+    print "***************************************************\n";
     system("mv $LAPS_DATA_ROOT/static $LAPS_DATA_ROOT/static\_err");
     system("mv $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_err");
     if( ! -e "$DATAROOT/$DOMAIN_NAME/data_rep"){
