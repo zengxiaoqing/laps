@@ -4,19 +4,19 @@
 /
 
 &filetimespec
- start_year     =  2000                               
- start_month    =    08                              
- start_day      =    07                             
- start_hour     =    12                            
+ start_year = 2000
+ start_month = 09
+ start_day = 13
+ start_hour = 12
  start_minute   =    00                              
  start_second   =    00
- end_year       =  2000                           
- end_month      =    08                          
- end_day        =    09                         
- end_hour       =    00                        
+ end_year = 2000
+ end_month = 09
+ end_day = 14
+ end_hour = 03
  end_minute     =    00
  end_second     =    00
- interval       =  3600                       
+ interval       =  10800                       
 /
 
 &hgridspec
@@ -28,15 +28,17 @@
  domain_origin_parent_x = 1,36,36,
  domain_origin_parent_y = 1,36,36,
  stagger_type = 'A-c',
- map_proj_name = 'polar',                                ! 'polar', 'mercator', ''
- latlon_grid = '/data/fxa/laps/laprprd/static/latlon.dat',    ! if map_proj_name=''
+ map_proj_name = 'polar',
+ latlon_grid = '/data/fxa/laps/lapsprd/static/latlon.dat',
  moad_known_lat = 41.0,
  moad_known_lon = -105.5 ,
- moad_known_loc = 'center',                           ! 'swcorner'
+ moad_known_loc = 'center',
  moad_stand_lats = 40.0, 90.0,
  moad_stand_lons = -105.5,
  moad_delta_x = 10000.,
  moad_delta_y = 10000.,
+ silavwt_parm = 0.,
+ toptwvl_parm = 2.,
 /
 
 &sfcfiles
@@ -52,36 +54,36 @@
   new_levels_in_Pa =  ,
   sst_to_ice_threshold = -9999,
   linear_interpolation = .false., 
-  input_root = '/scratch/oplapb/wrf_si/FILE',
-  output_prefix = '/scratch/oplapb/wrf_si/hinterp_out'
-  terrain_file_name = '/scratch/oplapb/wrf_si/data/static/static.wrfsi',
-  constants_full_name = 'sst_file:2000-02-16-09',
-  verbose = .true.,     
-  static_in_output = .true.
+  input_root = 'AVN_FILE',
+  terrain_file_name = 'static.wrfsi',
+  constants_full_name = 'SST_FILE:LATEST','SNOW_FILE:LATEST'
+  output_prefix = 'hinterp'
+  verbose = .true.,    
+  static_in_output = .true.,
 /
 
 &vinterp_control
- input_prefix = 'hinterp_eta'
- output_prefix = 'wrf_input_eta'
- output_coord = 'ZETA',                      !
- stagger_w = .true.
- num_levels = 31,                            ! number of levels
- vertical_increment = 100.,                  ! vertical increment, set
-                                             ! to 0 to explicitly specify levels
- vertical_stretch = 1.1,                     ! Stretch factor starting at ground
- max_vertical_inc = 1000.,                   ! Maximum allowed vertical_inc
+ input_prefix = 'hinterp'
+ output_prefix = 'wrf_input'
+ output_coord = 'ZETA',
+ stagger_w = .true. 
+ num_levels = 31,
+ vertical_increment = 100., 
+ vertical_stretch = 1.1,
+ max_vertical_inc = 1000.,
  max_top = 15000.,
  use_specified_levels = .false.
- levels = 00000., 00050., 00100., 00150., 00200.,  ! Specified levels
-          00250., 00300., 00350., 00400., 00450.,  ! if vertical_inc <= 0
+ levels = 00000., 00050., 00100., 00150., 00200., 
+          00250., 00300., 00350., 00400., 00450.,
           00500., 00600., 00700., 00800., 00900.,
           01000., 01250., 01500., 01750., 02000.,
           02500., 03000., 03500., 04000., 04500.,
           05000., 06000., 07000., 08000., 09000.,
           10000., 11000., 12000., 13000., 14000.,
-          15000.,
- verbose = .true.
- output_nonwrf =.true.
+          15000., 
+ rh_wrt_liquid = .true.
+ verbose = .true. 
+ output_nonwrf =.false.                          
  print_setup_only = .false.
 /
 
@@ -96,6 +98,10 @@
   path_to_qc_acars = '/public/data/acars/qc/netcdf/'
 /
 
+&analysis_control
+  c_analysis_type = 'laps',
+/
+ 
 &laps_analysis_control
   nx_l=125,
   ny_l=105,
@@ -126,4 +132,21 @@
   toptwvl_parm=2.,     
   c8_project='NIMBUS', 
   fdda_model_source=' ',
+/
+
+&si_paths
+ extdataroot = '/scratch/oplapb'
+ analpath  = '/projects/oplapb/ANAL'
+ path_to_AVN = '/public/data/grids/avn/global-65160/grib'
+ path_to_ETA = '/public/data/grids/eta/40km_eta212_isobaric/grib'
+/
+
+&si_controls
+ avail_after_AVN = 6       ! hrs between time of fcst start and availability
+ cyc_AVN = 6               ! hrs between model runs
+ avail_after_ETA = 4
+ cyc_ETA = 6
+ fddalen = 0
+ fcstlen = 15
+ nestinit = 1
 /
