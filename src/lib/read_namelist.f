@@ -162,8 +162,8 @@ c
 c -------------------------------------------------------------
 c
       subroutine get_background_info(bgpaths,bgmodels
-     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
-     +,itime_inc)
+     +,oldest_forecast,max_forecast_delta,forecast_length
+     +,use_analysis,cmodel,itime_inc)
 
 cdoc reads static/background.nl
 
@@ -176,11 +176,12 @@ cdoc reads static/background.nl
       character*132 cmodel(maxbgmodels)
       integer bgmodels(maxbgmodels), len_dir
       integer oldest_forecast, max_forecast_delta
+      integer forecast_length
       integer itime_inc
       logical use_analysis
       namelist /background_nl/bgpaths,bgmodels
-     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
-     +,itime_inc
+     +,oldest_forecast,max_forecast_delta,forecast_length
+     +,use_analysis,cmodel,itime_inc
 
       call get_directory(grid_fnam_common,nest7grid,len_dir)
       if(nest7grid(len_dir:len_dir).ne.'/') then
