@@ -104,6 +104,7 @@ c
       integer i4time_now_lga,i4time_now_gg
       integer max_files,bg_files
       integer itime_inc
+      integer itime
       parameter (max_files=600)
       character*256 names(max_files)
       character*256 reject_names(max_files)
@@ -126,7 +127,7 @@ c
       integer oldest_forecast, max_forecast_delta
       integer forecast_length
       logical use_analysis, use_systime
-      logical time_plus_one,time_minus_one
+      logical ltime(-1:1)
       logical smooth_fields
 c_______________________________________________________________________________
 c
@@ -141,7 +142,7 @@ c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime_inc,smooth_fields)
+     +,itime,smooth_fields)
 
       nbgmodels=0
       do i=1,maxbgmodels
@@ -160,7 +161,7 @@ c
       use_systime=.true.
       if(use_systime)then
          call get_systime(i4time_now,a9,lga_status)
-         print*,'Analysis systime: ',a9,' ',i4time_now
+         print*,'Systime: ',a9,' ',i4time_now
       else
          i4time_now = i4time_now_gg()
          print*,'Using i4time now'
@@ -168,17 +169,31 @@ c
 
       print*,'Time adjustment calc from namelist itime_inc',
      +' (itime_inc) = ',itime_inc
-      i4time_now_lga=i4time_now+(itime_inc*laps_cycle_time)
-      call make_fnam_lp(i4time_now_lga,a9,istatus)
-      print*,'processing background data for ',a9
-      print*
 
-      time_plus_one=.true.
-      time_minus_one=.true.
+      ltime=.true.
 
+      do itime_inc=-1,+1
 
-      bg_files=0
-      i=1
+       print*
+       print*,'----------------------------------------------'
+       if(itime_inc.lt.0)then
+        print*,'Start time-minus-one cycle time interpolation'
+       elseif(itime_inc.eq.0)then
+        print*,'Start cycle time interpolation'
+       else
+        print*,'Start time-plus-one cycle time interpolation'
+       endif
+       print*,'----------------------------------------------'
+       print*
+
+       i4time_now_lga=i4time_now+(itime_inc*laps_cycle_time)
+       call make_fnam_lp(i4time_now_lga,a9,istatus)
+       print*,'processing background data for ',a9
+       print*
+
+       bg_files=0
+       i=1
+
       bgmodel = bgmodels(i)
       bgpath =  bgpaths(i)
       call s_len(bgpath,lbgp)
@@ -187,8 +202,8 @@ c
 
       reject_cnt=0
       bg_files=0
-
       no_infinite_loops=0
+
       do while((lga_status.le.0 .and. i.le.nbgmodels)
      +         .and. (no_infinite_loops.le.nbgmodels))
 
@@ -207,6 +222,7 @@ c
             print*
             print*,' Cannot proceed with model specification in LGA'
             print*,' Check bgpaths in static/background.nl'
+            print*,'bgmodel=',bgmodel,' maxbgmodels=,',maxbgmodels
             print*,' LGA process aborted...'
             stop
          endif
@@ -241,10 +257,6 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
            reject_cnt=reject_cnt+1
            if(i.eq.nbgmodels)lga_status = 0 
 
-c             if(bg_files.eq.0)then
-c                lga_status = 1
-c             endif
-
         elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
 
               reject_cnt=reject_cnt+1
@@ -260,7 +272,7 @@ c             endif
            print *, laps_cycle_time
            print *
 c
-c *** Call lga driver.
+c *** Call lga driver and, if necessary, interpolate acceptable files.
 c
            call lga_driver(nx_laps,ny_laps,nz_laps,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
@@ -271,29 +283,30 @@ c
 c these constructs force t-1 and t+1 cycle time background generation.
 c these should be removed when lga runs outside sched.pl
 c
-           if(lga_status.eq.1.and.time_minus_one)then
-              lga_status = -99 
-              i4time_now_lga = i4time_now-laps_cycle_time
-              time_minus_one = .false.
-              print*
-              print*,'Start time-minus-one cycle time interpolation'
-              print*
+           print*
+           if(lga_status.eq.1.and.ltime(itime_inc))then
+c             lga_status = -99 
+              ltime(itime_inc) = .false.
+              print*,'----------------------------------------------'
+              if(itime_inc.lt.0)then
+                 print*,'Completed time-minus-one cycle time interp'
+              elseif(itime_inc.eq.0)then
+                 print*,'Completed cycle time interpolation'
+              else
+                 print*,'Completed time-plus-one cycle time interp'
+              endif
+              print*,'----------------------------------------------'
            endif
+           print*
 
-           if(lga_status.eq.1.and.time_plus_one)then
-              lga_status = -99
-              i4time_now_lga = i4time_now + laps_cycle_time
-              time_plus_one = .false.
-              print*
-              print*,'Start time-plus-one cycle time interpolation'
-              print*
-           endif
-
-           if(lga_status.eq.0)no_infinite_loops=no_infinite_loops+1
+           if(lga_status.le.0)no_infinite_loops=no_infinite_loops+1
 
         endif
         
-      enddo
+      enddo !do while
+
+      enddo !itime_inc = -1,+1
+
       if(no_infinite_loops.gt.nbgmodels) then
          print*,'ERROR: LGA infinite loop condition found'
       endif
