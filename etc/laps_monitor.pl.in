@@ -22,8 +22,7 @@ my(@order) = qw(AWIPS WFO30 WFO5KM TW/FSL TW/CWB);
 
 my(%min_age,$min_age,%max_age,$max_age,%files_per_hour,$fph,$model,%green,%yellow,%red,$dir,@filelist,$file,$age,$image,$time,$i);
 
-$min_age{vrc} = 0.5;
-$files_per_hour{vrc}=10;
+my($parmfile);
 
 #$min_age{lvd} = 0.5;
 #$files_per_hour{lvd}=3;
@@ -43,6 +42,8 @@ foreach $radar (@radars){
 
     @vxx[$iradar] = "v$radar";
     @dxx[$iradar] = "d$radar";
+    @rdrraw[$iradar] = "rdr/0$radar/raw";
+    @rdrvrc[$iradar] = "rdr/0$radar/vrc";
 
     $min_age{"rdr/0$radar/raw"} = 0.5;
     $min_age{"rdr/0$radar/vrc"} = 0.5;
@@ -60,24 +61,9 @@ foreach $radar (@radars){
 # This defines the order of the products in the table
 #
 
-#my(@lapsDirs) = qw( lga lgb lvd/goes08 
-#                  lvd/goes10 lvd/gmssat
-#                  rdr/001/raw vrc 
-#                  pro lso lsq snd
-#                  cdw pin 
-#                  v01 v02 v03 v04 d01 d02 d03 pig prg sag lw3 lwm 
-#                  lrs lsx tmg lt1 
-#                  lc3 lps lcb lcv  
-#                  lsr/goes08 lsr/goes10 lh3 lh4 lq3 
-#                  lcp lwc lil lct lmd lmt lco lrp lty lst 
-#                  lmr liw lhe 
-#                  l1s lm1 lm2
-#                  balance/lt1 balance/lw3 balance/lh3 balance/lq3 bigfile
-#                  dprep fsf/mm5 fua/mm5);
-
 my(@lapsDirs) = (lga, lgb, 
                  "lvd/goes09", "lvd/goes10", "lvd/goes12", "lvd/gmssat", ctp, 
-                 "rdr/001/raw", "rdr/001/vrc", vrc, 
+                 @rdrraw, @rdrvrc, vrc, 
                  pro, lso, lsq, snd, cdw, pin,
                  @vxx, @dxx,
                  pig, prg, sag, lw3, lwm, 
@@ -88,7 +74,9 @@ my(@lapsDirs) = (lga, lgb,
                  lmr, liw, lhe, lfr,
                  l1s, lm1, lm2,
                  "balance/lt1", "balance/lw3", "balance/lh3", "balance/lq3",
-                 "fua/mm5", "fsf/mm5");
+                 "lapsprep/mm5", "lapsprep/wrf", "fua/mm5", "fsf/mm5");
+
+
 
 #have this expire in 1 hour, so the form won't keep resetting itself.
 #use HTTP::Date;
@@ -128,6 +116,14 @@ foreach $model (keys %lapsprds){
 
     $files_per_hour{dprep}=3./12.;
     $min_age{dprep}=13.;
+
+    $min_age{"fua/mm5"} = 9.0;
+    $files_per_hour{"fua/mm5"} = 15.0/6.0;
+
+    $min_age{"fsf/mm5"} = 9.0;
+    $files_per_hour{"fsf/mm5"} = 15.0/6.0;
+
+    $parmfile = "$lapsprds{$model}/../static/nest7grid.parms";
 
     if($model eq "FSLD"){   # WFO Runs
         $min_age_model = 1.5;
@@ -192,10 +188,11 @@ foreach $model (keys %lapsprds){
 	$dir =~ s/^\.\///;
 #        print "$dir\n";
 	opendir(DIR,"$lapsprds{$model}/$dir");
-	@filelist = grep(/^\d\d\d\d/, readdir(DIR));
+	@filelist = grep(/\d\d\d\d/, readdir(DIR));
+#       if($dir =~ "fua"){print "@filelist\n";}
 	closedir(DIR);       
-#        next if($#filelist <=0);
-        next unless($filelist[0]!='');
+        next if($#filelist <=0);
+#       next unless($filelist[0]!='');
         my($file_count)=$#filelist+1;
         my($minage)=9999;
         my($maxage)=-100;
@@ -318,7 +315,7 @@ sub dodir {
     my($dir,$pattern,$nlink) = @_;
     my($dev,$ino,$mode,$subcount);
     my(@dirlist,$name);
-    my($dev,$ino,$mode);
+#   my($dev,$ino,$mode);
     
     ($dev,$ino,$mode,$nlink) = stat('.') unless $nlink;
 
