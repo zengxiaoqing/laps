@@ -108,6 +108,8 @@ cdis
 !       1997 Aug 01 K. Dritz  - Pass r_missing_data to insert_sat.
 !       1997 Aug 01 K. Dritz  - Pass ref_base to rfill_evap.
 
+        include 'cloud.inc'
+
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
         real*4 surface_sao_buffer
@@ -244,7 +246,7 @@ cdis
 
         logical l_unresolved(NX_L,NY_L)
 
-        character*1 c1_name_array(NX_L,NY_L)
+        character*1 c1_name_array(NX_L,NY_L,KCLOUD)
 
         integer MAX_FIELDS
         parameter (MAX_FIELDS = 10)
@@ -348,7 +350,7 @@ cdis
 
         do j = 1,NY_L
            do i = 1,NX_L
-              c1_name_array(i,j) = ' '
+              c1_name_array(i,j,:) = ' '
            enddo
         enddo
 
@@ -396,11 +398,12 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_vis_add,l_use_vis_partial       
-     1                      ,l_use_39,latency_co2
-     1                      ,pct_req_lvd_s8a
-     1                      ,i4_sat_window,i4_sat_window_offset
-     1                      ,istatus)
+        call get_cloud_parms(l_use_vis,l_use_vis_add,l_use_vis_partial ! O     
+     1                      ,l_use_39,latency_co2                      ! O
+     1                      ,pct_req_lvd_s8a                           ! O
+     1                      ,i4_sat_window,i4_sat_window_offset        ! O
+     1                      ,namelist_parms                            ! O
+     1                      ,istatus)                                  ! O
         if(istatus .ne. 1)then
             write(6,*)' laps_cloud_sub: Error getting cloud parms'
             stop
@@ -594,8 +597,8 @@ C READ IN AND INSERT SAO DATA AS CLOUD SOUNDINGS
         write(6,*)' Call Ingest/Insert SAO routines'
         n_cld_snd = 0
         call insert_sao(i4time,cldcv1,cf_modelfg,t_modelfg             ! I
-     1  ,cld_hts,default_clear_cover                                   ! I
-     1  ,lat,lon,topo,t_sfc_k,wtcldcv
+     1  ,cld_hts,default_clear_cover,namelist_parms                    ! I
+     1  ,lat,lon,topo,t_sfc_k,wtcldcv                                  ! I
      1  ,c1_name_array,l_perimeter,ista_snd
      1  ,cvr_snd,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1  ,NX_L,NY_L,KCLOUD                                              ! I
@@ -764,7 +767,7 @@ C READ IN SATELLITE DATA
 301     format('  Cloud Top (km)             Band 8                ',
      1                 23x,'          Satellite Analysis')
         CALL ARRAY_PLOT(cldtop_tb8_m,cldtop_m,NX_L,NY_L,'HORZ CV'
-     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
+     1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
 
         I4_elapsed = ishow_timer()
 
@@ -907,7 +910,7 @@ C INSERT RADAR DATA
      1                              ,'Prelim Radar Max Reflectivity')       
             scale = 0.01
             CALL ARRAY_PLOT(plot_maskr,dbz_max_2d,NX_L,NY_L,'HORZ CV'
-     1                     ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot radar 
+     1                     ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale) ! radar 
 
             call insert_radar(i4time,clouds_3d,cld_hts
      1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
@@ -954,17 +957,30 @@ C ASCII PLOTS in HORIZONTAL AND VERTICAL SLICES
 
 C       HORIZONTAL SLICES
 
-        DO K=1,KCLOUD,5
+        DO K=4,KCLOUD,4
+            CALL SLICE(cf_modelfg,NX_L,NY_L,KCLOUD,CVHZ1
+     1                ,NX_L,NY_L,1,0,0,K,0,0)
+            CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,cvr_max
+     1                ,NX_L,NY_L,1,0,0,K,0,0)
+            write(6,401)k,cld_hts(k)
+401         format(4x,'Lvl',i4,f8.0,' m     Model First Guess Only',
+     1            20x,'              With Point Data Added')
+            scale = 1.
+            CALL ARRAY_PLOT(CVHZ1,cvr_max,NX_L,NY_L,'HORZ CV'
+     1                     ,c1_name_array(:,:,K),KCLOUD,cld_hts,scale)
+        ENDDO ! k
+
+        DO K=4,KCLOUD,4
             CALL SLICE(cldcv_sao,NX_L,NY_L,KCLOUD,CVHZ1
      1                ,NX_L,NY_L,1,0,0,K,0,0)
             CALL SLICE(clouds_3d,NX_L,NY_L,KCLOUD,cvr_max
      1                ,NX_L,NY_L,1,0,0,K,0,0)
-            write(6,401)k,cld_hts(k)
-401         format(4x,'Lvl',i4,f8.0,' m     Before Satellite/Radar',
+            write(6,402)k,cld_hts(k)
+402         format(4x,'Lvl',i4,f8.0,' m     Before Satellite/Radar',
      1            20x,'              After Satellite/Radar')
             scale = 1.
             CALL ARRAY_PLOT(CVHZ1,cvr_max,NX_L,NY_L,'HORZ CV'
-     1                     ,c1_name_array,KCLOUD,cld_hts,scale)
+     1                     ,c1_name_array(:,:,K),KCLOUD,cld_hts,scale)
         ENDDO ! k
 
 C       EW SLICES
@@ -1074,14 +1090,14 @@ C       EW SLICES
      1            20x,'              Final Analysis')
         scale = 1.
         CALL ARRAY_PLOT(cvr_sao_max,cvr_max,NX_L,NY_L,'HORZ CV'
-     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
+     1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
 
         write(6,701)
 701     format('  Max Cloud Cover           VISIBLE SATELLITE     ',
      1            20x,'              Final Analysis')
         scale = 1.
         CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_max,NX_L,NY_L,'HORZ CV'
-     1                 ,c1_name_array,KCLOUD,cld_hts,scale)
+     1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
 
         I4_elapsed = ishow_timer()
 
@@ -1179,14 +1195,15 @@ C       EW SLICES
      1            20x,'                Snow Cover')
         scale = 1.
         CALL ARRAY_PLOT(cloud_frac_vis_a,cvr_snow_cycle,NX_L,NY_L
-     1                 ,'HORZ CV',c1_name_array,KCLOUD,cld_hts,scale)       
+     1                 ,'HORZ CV',c1_name_array(:,:,1),KCLOUD,cld_hts
+     1                 ,scale)       
 
         write(6,901)
 901     format('                     lm2 (overall) Snow Cover      ',
      1            20x,'      csc  (cycle)  Snow Cover')
         scale = 1.
         CALL ARRAY_PLOT(cvr_snow,cvr_snow_cycle,NX_L,NY_L,'HORZ CV'
-     1                  ,c1_name_array,KCLOUD,cld_hts,scale)
+     1                  ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale)
 
         do i = 1,NX_L
         do j = 1,NY_L
@@ -1205,7 +1222,7 @@ C       EW SLICES
 1001    format('  Cloud Top (km)             Band 8                ',
      1            20x,'              Final Analysis')
         CALL ARRAY_PLOT(cldtop_tb8_m,plot_mask,NX_L,NY_L,'HORZ CV'
-     1                  ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot Band 8 mask
+     1                  ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale) ! Plot Band 8 mask
 
 
         write(6,1101)
@@ -1231,7 +1248,7 @@ C       EW SLICES
 
         scale = 1.
         CALL ARRAY_PLOT(plot_mask,cvr_max,NX_L,NY_L,'HORZ CV'
-     1                 ,c1_name_array,KCLOUD,cld_hts,scale)  ! Plot 3.9u mask
+     1                 ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale) ! 3.9u mask
 
 
 
@@ -1270,7 +1287,7 @@ C       EW SLICES
      1                              ,'Final Radar Max Reflectivity')
             scale = 0.01
             CALL ARRAY_PLOT(plot_maskr,dbz_max_2d,NX_L,NY_L,'HORZ CV'
-     1                     ,c1_name_array,KCLOUD,cld_hts,scale) ! Plot radar 
+     1                     ,c1_name_array(:,:,1),KCLOUD,cld_hts,scale) ! radar 
 
         endif ! n_radar_3dref
 
