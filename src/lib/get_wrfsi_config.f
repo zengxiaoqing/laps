@@ -83,11 +83,11 @@ c       include 'wrf_laps_analysis.cmn'
            return
         endif
 
-        call read_wrfsi_rawdatapaths (istatus)
-        if(istatus.ne.1)then
-           print*,'error reading wrfsi_rawdatapaths'
-           return
-        endif
+c        call read_wrfsi_rawdatapaths (istatus)
+c        if(istatus.ne.1)then
+c           print*,'error reading wrfsi_rawdatapaths'
+c           return
+c        endif
 
 c       call read_wrfsi_vgridspec (istatus)
 c       if(istatus.ne.1)then
@@ -95,30 +95,30 @@ c          print*,'error reading wrfsi_vgridspec'
 c          return
 c       endif
 
-        call read_analysis_control(c_analysis_type,istatus)
-        if(istatus.ne.1)then
-           print*,'error reading wrfsi c_analysis_control'
-           return
-        endif
+c        call read_analysis_control(c_analysis_type,istatus)
+c        if(istatus.ne.1)then
+c           print*,'error reading wrfsi c_analysis_control'
+c           return
+c        endif
 
-        call read_wrfsi_laps_control (
-     +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
-     + ,pressure_bottom,pressure_interval
-     + ,laps_cycle_time
-     + ,l_highres_laps,lpad1,lpad2,lpad3
-     + ,i_perimeter,c50_lowres_dir
-     + ,craddat_type
-     + ,radarext_3d,radarext_3d_accum
-     + ,i2_missing_data,r_missing_data
-     + ,max_radars,ref_base,ref_base_useable
-     + ,maxstns,n_pirep
-     + ,vert_rad_meso,vert_rad_sao,vert_rad_pirep
-     + ,vert_rad_prof,silavwt_parm,toptwvl_parm
-     + ,c8_project,fdda_model_source,istatus)
-        if(istatus.ne.1)then
-           print*,'error reading wrfsi_laps_control'
-           return
-        endif
+c        call read_wrfsi_laps_control (
+c     +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
+c     + ,pressure_bottom,pressure_interval
+c     + ,laps_cycle_time
+c     + ,l_highres_laps,lpad1,lpad2,lpad3
+c     + ,i_perimeter,c50_lowres_dir
+c     + ,craddat_type
+c     + ,radarext_3d,radarext_3d_accum
+c     + ,i2_missing_data,r_missing_data
+c     + ,max_radars,ref_base,ref_base_useable
+c     + ,maxstns,n_pirep
+c     + ,vert_rad_meso,vert_rad_sao,vert_rad_pirep
+c     + ,vert_rad_prof,silavwt_parm,toptwvl_parm
+c     + ,c8_project,fdda_model_source,istatus)
+c        if(istatus.ne.1)then
+c           print*,'error reading wrfsi_laps_control'
+c           return
+c        endif
 c
         standard_latitude  =moad_stand_lats(1)
         standard_latitude2 =moad_stand_lats(2)
