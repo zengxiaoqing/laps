@@ -262,6 +262,11 @@ cdoc    Returns 2-D PBE and NBE in Joules, Parcel is lifted from lowest level
 
         ISTAT = LIB$INIT_TIMER()
 
+!       Initialize pbe array
+        do i = 1,70
+            pbe(i) = 0.
+        enddo ! i
+
         call get_systime_i4(i4time,istatus)
         if(istatus .ne. 1)stop
 
