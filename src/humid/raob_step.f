@@ -147,6 +147,7 @@ c  normal internal parameters
       real tot_diff, tot_weight
       real rspacing_dum
       real rmd
+      real W_cutoff             !weight cutoff
         
 c *** begin routine
 
@@ -248,6 +249,8 @@ c     +++ read raob file
 c     +++ compute the nearest i,j for all sounding locations
 c     also compute weighting function for all locations for given raob
 
+      W_cutoff =  exp ( -1.*(.25 * 6371)**2/101131. )
+
       do k = 1,isound
 
          rmin = 1.e30
@@ -261,13 +264,15 @@ c     also compute weighting function for all locations for given raob
 
                r = acos (r)
 
-               if (r .ge. 0.48) then
-                  weight(i,j,k) = exp ( -1.*(.48 * 6371)**2/101131. ) 
+               if (r .ge. 0.25) then
+                  weight(i,j,k) = W_cutoff
                else
                   weight(i,j,k) = exp ( -1.*(r * 6371)**2/101131. ) 
 c     lam = 600 km
 c     2*lam = 1200km , c = ln(2)*lam**2/4/pi**2 = 25282km**2
 c     denominator = 4*c = 101131.
+c     cutoff of 0.25 results in a weight of 1.275e-11, chosen with care
+c     to eliminate circles.
 
                endif
 
