@@ -96,7 +96,7 @@ C***Local variables
      1          tx_n,ty_n,tz_n,
      1          refx,refy,refz
 
-        Real*4  normfac,
+        Real*4  normfac,imgtmp,
      1          solar_factor(maxlut,maxlut),solar_alt_d,XFrac,YFrac,
      1          SF_UL,SF_UR,SF_LR,SF_LL,SF_U,SF_L,S_F,Weight,
      1                PF_UL,PF_UR,PF_LR,PF_LL,PF_U,PF_L,P_F,RBril,RBrih,
@@ -268,9 +268,12 @@ C   Compute Specular Reflection Angle
 
 
           if(ilut .eq. ilut/10*10 .and. jlut .eq. jlut/10*10)then
+
+              imgtmp=image(i,j)
+              if(imgtmp.eq.r_missing_data)imgtmp=-99.00
               write(lun,50)ilut,jlut,solar_alt_d
      1                  ,emission_angle_d,phase_angle_d(i,j)
-     1                  ,phase_factor(ilut,jlut),image(i,j)
+     1                  ,phase_factor(ilut,jlut),imgtmp
      1                  ,specular_ref_angle_d(i,j)
      1                  ,lat(i,j),lon(i,j)
  50           format(1x,2i5,f7.2,f7.2,f7.2,f6.2,2f6.1,2f7.2,' __')      
