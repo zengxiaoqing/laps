@@ -84,12 +84,12 @@ cdis
         character*5 c5_name(max_snd) 
         character*8 c8_obstype(max_snd) 
 
-        logical l_qc,l_flag_vv,l_good_tsnd(max_snd),l_use_raob,l_3d  
-        logical l_string_contains
+        logical l_qc,l_flag_vv,l_good_tsnd(max_snd),l_use_raob
+        logical l_string_contains,l_struct
 
         include 'tempobs.inc'
 
-        l_3d = .true.
+        l_struct = .true.
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
@@ -117,7 +117,7 @@ cdis
      1                   max_snd,                             ! Input
      1                   tsnd,inst_err_tsnd,                  ! Output
      1                   c5_name,c8_obstype,                  ! Output
-     1                   l_use_raob,l_3d,                     ! Input
+     1                   l_use_raob,l_struct,                 ! Input
      1                   i4time_raob_window,                  ! Input
 !    1                   t_maps_inc,                          ! Input
      1                   bias_htlow,                          ! Output
@@ -323,7 +323,7 @@ cdis
      1      ,grid_spacing_m,rep_pres_intvl,max_snd             ! I
      1      ,temp_obs,max_obs,n_obs                            ! I
      1      ,r_missing_data                                    ! I
-     1      ,l_3d,rms_thresh_norm                              ! I
+     1      ,l_struct,rms_thresh_norm                          ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                   ! I
      1      ,temp_3d                                           ! I/O
      1      ,istatus)                                          ! O
@@ -343,7 +343,7 @@ cdis
      1      ,grid_spacing_m,rep_pres_intvl,max_snd                ! I
      1      ,temp_obs,max_obs,n_obs                               ! I
      1      ,r_missing_data                                       ! I
-     1      ,l_3d,rms_thresh_norm                                 ! I
+     1      ,l_struct,rms_thresh_norm                             ! I
      1      ,igrid_tsnd,jgrid_tsnd,bias_tsnd                      ! I
      1      ,temp_3d                                              ! I/O
      1      ,istatus)                                             ! I
@@ -366,7 +366,7 @@ cdis
 
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 
-        logical l_good_tsnd(max_snd),l_analyze(nk),l_3d
+        logical l_good_tsnd(max_snd),l_analyze(nk),l_struct
 
         include 'tempobs.inc'
 
@@ -393,7 +393,7 @@ cdis
      1               ,temp_obs,max_obs,n_obs                 ! Input
      1               ,bias_3d                                ! Output
      1               ,l_analyze                              ! Output
-     1               ,l_3d,rms_thresh_norm                   ! Input
+     1               ,l_struct,rms_thresh_norm               ! Input
      1               ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1               ,weight_bkg_const                       ! Input
      1               ,n_fnorm                                ! Input
@@ -406,7 +406,7 @@ cdis
 
              write(6,*)' Adding back in the biases'
              do k = 1,nk
-               if(l_analyze(k) .or. l_3d)then
+               if(.true.)then
                  do j = 1,nj
                  do i = 1,ni
                    if(bias_3d(i,j,k) .ne. r_missing_data)then
@@ -438,7 +438,7 @@ cdis
      1                   ,temp_obs,max_obs,n_obs                 ! Input
      1                   ,bias_3d                                ! Output
      1                   ,l_analyze                              ! Output
-     1                   ,l_3d,rms_thresh_norm                   ! Input
+     1                   ,l_struct,rms_thresh_norm               ! Input
      1                   ,igrid_tsnd,jgrid_tsnd                  ! Inputs
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
@@ -455,7 +455,7 @@ cdis
         include 'barnesob.inc'
         type (barnesob) obs_barnes(max_obs_b)                           
 
-        logical l_good_tsnd(max_snd),l_struct
+        logical l_good_tsnd(max_snd),l_struct,l_not_struct
         real*4 bias_tsnd(max_snd,nk)
         integer*4 igrid_tsnd(max_snd),jgrid_tsnd(max_snd)
 !       real*4 wt_tsnd(max_snd,nk)
@@ -465,11 +465,9 @@ cdis
         real*4 wt_3d(ni,nj,nk)
         integer*4 n_obs_lvl(nk)                                ! Local
 
-        logical l_analyze(nk),l_3d
+        logical l_analyze(nk)
 
         integer*4  n_fnorm
-
-        data l_struct /.true./
 
         dimension fnorm(0:n_fnorm)
 
@@ -517,6 +515,13 @@ cdis
                 sumsq_inst = sumsq_inst + temp_obs(i_ob,i_inst_err)**2
                 n_obs_valid = n_obs_valid + 1
 
+!               Place ob from 'temp_obs' structure into 'obs_barnes' structure
+                obs_barnes(n_obs_valid)%i = temp_obs(i_ob,i_i) 
+                obs_barnes(n_obs_valid)%j = temp_obs(i_ob,i_j)
+                obs_barnes(n_obs_valid)%k = temp_obs(i_ob,i_k)
+                obs_barnes(n_obs_valid)%weight = temp_obs(i_ob,i_wt)
+                obs_barnes(n_obs_valid)%value(1) = temp_obs(i_ob,i_bias)
+
             endif
 
         enddo ! Loop through i_ob
@@ -541,42 +546,19 @@ cdis
         write(6,*)'rms_thresh_norm,rms_thresh'
      1            ,rms_thresh_norm,rms_thresh      
 
-!       ncnt_total = ncnt_total + ncnt
-
-        if(.false.)then ! No longer needed since we have fnorm_calc/fnorm_lut
-!           Initialize fnorm array used in barnes_new
-            write(6,*)' Creating fnorm LUT'
-
-!           When the distance = r0_norm, the fnorm is effectively 1
-            call get_fnorm_max(ni,nj                                  ! I
-     1                    ,r0_norm,r0_value_min_dum,fnorm_max_dum)    ! O
-
-            r0_norm_sq = r0_norm**2
-            exp_offset = 70.
-            expm80 = exp(-80.)
-            do iii = 0,n_fnorm
-                dist_norm_sq = (float(iii)/r0_norm_sq)
-                arg = dist_norm_sq - exp_offset
-                if(arg .le. 80.)then
-                    fnorm(iii) = exp(-arg)
-                else
-                    fnorm(iii) = expm80
-                endif
-            enddo
-
-        endif
-
         n_var = 1
 
+        l_not_struct = .not. l_struct
+
         call barnes_multivariate(
-     1                      bias_3d                         ! Outputs
-     1                     ,n_var,max_obs_b,obs_barnes      ! Input
-     1                     ,ni,nj,nk,grid_spacing_m         ! Inputs
-     1                     ,rep_pres_intvl                  ! Input
-     1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm ! Inputs
-     1                     ,l_analyze,l_3d,rms_thresh       ! Input
-     1                     ,weight_bkg_const                ! Input
-     1                     ,n_obs_lvl,istatus)              ! Outputs
+     1                      bias_3d                           ! Outputs
+     1                     ,n_var,n_obs_valid,obs_barnes      ! Input
+     1                     ,ni,nj,nk,grid_spacing_m           ! Inputs
+     1                     ,rep_pres_intvl                    ! Input
+     1                     ,bias_obs_3d,wt_3d,fnorm,n_fnorm   ! Inputs
+     1                     ,l_analyze,l_not_struct,rms_thresh ! Input
+     1                     ,weight_bkg_const                  ! Input
+     1                     ,n_obs_lvl,istatus)                ! Outputs
 
         return
         end
