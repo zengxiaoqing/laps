@@ -546,7 +546,7 @@ c  step.  No good.
       do j = 1, ny
       do i = 1, nx
         if(lapslwc(i,j,k).gt.0. .AND.
-     .        lapslwc(i,j,k).lt.100.)
+     .        rh(i,j,k).lt.100.)
      .                rh(i,j,k)=100.
       enddo
       enddo
