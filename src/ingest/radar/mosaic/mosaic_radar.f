@@ -1,7 +1,5 @@
       program  mosaic_radar
 
-      implicit none
-
       include  'lapsparms.cmn'
       include  'radar_mosaic_dim.inc'
 
@@ -79,28 +77,9 @@ c There is no path to data. The files processed are in the lapsprd subdirectory
 c and get_directory satisfies the pathway requirements.
 c
 
-      Implicit None
-
       Integer       maxfiles
       parameter    (maxfiles=500)
 
-      Integer       nx_l,ny_l,nz_l
-      Integer       mx_radars
-      Integer       i,j,k,l,n,m
-      Integer       jj,kk
-      Integer       nn,nc
-      Integer       lprdr,lenp
-      Integer       i4time_data
-      Integer       i4_tol
-      Integer       min_i4time
-      Integer       max_i4time
-      Integer       itime_diff
-      Integer       numoffiles
-      Integer       i_dbzmax
-      Integer       istatus
-      Integer       imosaic_3d
-      Integer       lvl_2d
-      Integer       n_radars
       Integer       x,y,z,record
 
       Real*4        grid_ra_ref(nx_l,ny_l,nz_l,n_radars)
@@ -321,16 +300,17 @@ c Determine appropriate i4time for these data
 c
       if(i_ra_count.gt.1)then
          itime_diff=max_i4time-min_i4time
-         i4time_data=min_i4time+(itime_diff/i_ra_count)
+         i4time_radar_ave = min_i4time+(itime_diff/i_ra_count)
+         i4time_data = i4time_cur
          call make_fnam_lp(i4time_data,c_ftime_data,istatus)
          do i=1,i_ra_count
             print*,'Radar Info: ',i,' ',c_ra_ext(i),' ',i_ra_i4time(i),
-     &' ',c_ra_ftime(i)
+     &             ' ',c_ra_ftime(i)
          enddo
          print*,'Data filetime: ',c_ftime_data
       elseif(i_ra_count.eq.1)then
-!        i4time_data=max_i4time
-         i4time_data=i4time_cur
+         i4time_radar_ave = max_i4time
+         i4time_data = i4time_cur
          call make_fnam_lp(i4time_data,c_ftime_data,istatus)
          print*,'Radar filetime: ',c_ra_ftime(1)
          print*,'Data filetime: ',c_ftime_data
@@ -400,6 +380,7 @@ c ----------------------------------------------------------
      &     grid_ra_ref,istatus)
 
          if(istatus.ne.1)then
+            call s_len(c_ra_filename(i),nc)
             print*,'Error reading ',c_ra_filename(i)(1:nc)
             return
          endif
@@ -504,13 +485,59 @@ c
          comment_vrz='Radar mosaic. Type = '//c_mosaic_type//' '
      1               //cradars
 
-         call put_laps_3d(i4time_data,
-     &                    ext_vrz,
-     &                    var_vrz,
-     &                    units_vrz,
-     &                    comment_vrz,
-     &                    grid_mosaic_3dref,
-     &                    nx_l,ny_l,nz_l)
+         if(.false.)then ! write radar info into comments
+             call get_directory(ext,directory,len_dir)
+             write(6,11)directory,ext_vrz,var_vrz
+11           format(' Writing 3d ',a50,1x,a5,1x,a3)
+
+             do k = 1,nk
+                 units_3d(k) = units_vrz
+                 lvl_3d(k) = k ! ???
+                 lvl_coord_3d(k) = 'HPA'
+
+                 var_3d(k) = var_vrz
+             enddo ! k
+
+             comment_3d(1) = comment_vrz
+
+             n_ref = 0
+
+             do i_radar = 1,n_radars
+                 ii = i_radar + 1
+                 if(ii .le. nz_l)then
+                     write(comment_3d(ii),1)rlat_radar(i_radar)
+     1                                     ,rlon_radar(i_radar)
+     1                                     ,rheight_radar(i_radar)
+     1                                     ,n_ref
+     1                                     ,c_radar_id(i_radar)
+1                    format(2f9.3,f8.0,i7,a4)
+
+                 else
+                     write(6,*)
+     1               ' Error: too many radars for comment output'
+                     istatus = 0
+                     return
+
+                 endif
+
+             enddo ! i
+
+             CALL WRITE_LAPS_DATA(i4time_data,DIRECTORY,ext_vrz,
+     1                            nx_l,ny_l,nz_l,nz_l,
+     1                            VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1                            COMMENT_3D,grid_mosaic_3dref,ISTATUS)       
+
+         else
+             call put_laps_3d(i4time_data,
+     &                        ext_vrz,
+     &                        var_vrz,
+     &                        units_vrz,
+     &                        comment_vrz,
+     &                        grid_mosaic_3dref,
+     &                        nx_l,ny_l,nz_l)
+
+
+         endif
 
       endif
 
