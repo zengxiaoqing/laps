@@ -47,7 +47,7 @@ foreach $file (@filenames) {
 
 #$tail = `tail -1 $filename`;
 #if ($tail !~ /End of LAPS Wind Analysis/) {
-#  die "Wind analysis is in progress...\n";}
+#  print "Wind analysis is in progress...\n";}
 
 # For the moisture analysis we need to look at selected log files
 # because different data get in at different times (i.e., RAOB).
