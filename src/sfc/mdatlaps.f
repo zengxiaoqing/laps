@@ -444,7 +444,7 @@ cc	       pmsl_s(k) = p_msl
               if(abs(diff) .gt. 10.)then
                   write(6,981)k,stn(k)(1:5),pred_s(k),elev_s(k),diff
  981		  format(' Reduced pressure flagged for ',i5,a,3f9.1)  
-!                 pred_s(k) = badflag
+                  pred_s(k) = badflag
               endif
             endif
           endif
