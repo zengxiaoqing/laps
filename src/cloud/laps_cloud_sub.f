@@ -138,8 +138,10 @@ cdis
         real*4 solar_alt(NX_L,NY_L)
         real*4 solar_ha(NX_L,NY_L)
 
-        logical l_packed_output, l_use_vis, l_use_39
+        logical l_packed_output, l_use_vis, l_use_39, l_use_co2
         logical l_evap_radar
+
+        logical lstat_co2_a(NX_L,NY_L)
 
         data l_packed_output /.false./
         data l_evap_radar /.false./
@@ -384,7 +386,8 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_39,pct_req_lvd_s8a
+        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2
+     1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
         if(istatus .ne. 1)then
@@ -648,11 +651,12 @@ C DO ANALYSIS on SAO and PIREP data
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
-     1                    l_use_39,                                      ! I
+     1                    l_use_39,l_use_co2,                            ! I
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O
-     1                    cldtop_co2_pa_a,cloud_frac_co2_a,istat_co2)    ! O
+     1                    cldtop_co2_pa_a,cloud_frac_co2_a,              ! O
+     1                    istat_co2,lstat_co2_a)                         ! O
 
 !       Calculate solar altitude
         do j = 1,NY_L
