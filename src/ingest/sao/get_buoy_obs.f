@@ -99,7 +99,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer    itime60, i4time_before, i4time_after
+	integer    i4time_ob, i4time_before, i4time_after
         integer    wmoid_in(maxobs), wmoid(maxsta)
 	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 	integer    recNum, nf_fid, nf_vid, nf_status
@@ -369,12 +369,12 @@ c
 c
 c.....  Check to see if its in the desired time window.
 c
-	   itime60 = nint(timeobs(i)) + i4time_offset
-	   if(itime60 .lt. i4time_before 
-     1   .or. itime60 .gt. i4time_after) then
+	   i4time_ob = nint(timeobs(i)) + i4time_offset
+	   if(i4time_ob .lt. i4time_before 
+     1   .or. i4time_ob .gt. i4time_after) then
                if(i .le. max_write)then
                    write(6,91,err=125)i,wmoid_in(i),stname(i)
-     1                               ,itime60,i4time_before
+     1                               ,i4time_ob,i4time_before
      1                               ,i4time_after
  91		   format(i6,i7,1x,a8,' out of time',3i12)
                endif
@@ -383,7 +383,7 @@ c
 c
 c.....  Right time, right location...
 
- 	  call make_fnam_lp(itime60,a9time,istatus)
+ 	  call make_fnam_lp(i4time_ob,a9time,istatus)
 	  time = a9time(6:9)
 	  read(time,*) rtime
 c

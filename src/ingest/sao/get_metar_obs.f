@@ -89,7 +89,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, wmoid(maxobs), wmoid_in(maxobs)
+	integer*4  i4time_ob, wmoid(maxobs), wmoid_in(maxobs)
 	integer*4  i4time_before, i4time_after
 	integer    rtime, dpchar(maxobs)
 	integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
@@ -332,16 +332,16 @@ c
 c.....  Check to see if its in the desired time window (if the flag
 c.....  says to check this).
 c
-	  itime60 = nint(timeobs(i)) + i4time_offset
+	  i4time_ob = nint(timeobs(i)) + i4time_offset
 c
 	  if(ick_METAR_time .eq. 1) then
-	    if(itime60.lt.i4time_before 
-     1    .or. itime60.gt.i4time_after) go to 125
+	    if(i4time_ob.lt.i4time_before 
+     1    .or. i4time_ob.gt.i4time_after) go to 125
 	  endif
 c
 c.....  Right time, right location...
 
- 	  call make_fnam_lp(itime60,timech,istatus)
+ 	  call make_fnam_lp(i4time_ob,timech,istatus)
 	  time = timech(6:9)
 	  read(time,*) rtime
 c

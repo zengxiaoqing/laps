@@ -78,7 +78,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, before, after, wmoid(maxobs)
+	integer*4  i4time_ob, before, after, wmoid(maxobs)
 	integer    rtime, dpchar(maxobs), iplat_type(maxobs)
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
@@ -210,12 +210,12 @@ c
 c
 c.....  Check to see if its in the desired time window.
 c
-	  itime60 = nint(timeobs(i)) + i4time_offset
-	  if(itime60.lt.before .or. itime60.gt.after) go to 125
+	  i4time_ob = nint(timeobs(i)) + i4time_offset
+	  if(i4time_ob.lt.before .or. i4time_ob.gt.after) go to 125
 c
 c.....  Right time, right location...
 
- 	  call make_fnam_lp(itime60,timech,istatus)
+ 	  call make_fnam_lp(i4time_ob,timech,istatus)
 	  time = timech(6:9)
 	  read(time,*) rtime
 c

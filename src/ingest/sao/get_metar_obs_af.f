@@ -83,7 +83,7 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, wmoid(maxsta)
+	integer*4  i4time_ob, wmoid(maxsta)
 	integer*4  rtime, dpchar(maxsta), dp(maxsta)
 c
 	character  path_to_obs*(*) 
@@ -231,8 +231,8 @@ c
 c.....  Figure out the report time.
 c
  151	 continue
-cc 	 itime60 = nint(timeobs(i)) + 315619200
-cc 	 call make_fnam_lp(itime60,timech,istatus)
+cc 	 i4time_ob = nint(timeobs(i)) + 315619200
+cc 	 call make_fnam_lp(i4time_ob,timech,istatus)
 cc	 time = timech(6:9)
 cc	 read(time,*) rtime
 	 rtime = timeobs(i)

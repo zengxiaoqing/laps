@@ -31,7 +31,7 @@ cdis
 cdis 
 c
 c
-	subroutine get_local_obs(maxobs,maxsta,i4time,
+	subroutine get_local_obs(maxobs,maxsta,i4time_sys,
      &                      path_to_local_data,local_format,
      &                      itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
@@ -91,7 +91,8 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-	integer*4  itime60, before, after, wmoid(maxsta)
+	integer*4  before, after, wmoid(maxsta)
+        integer*4  i4time_ob_a(maxobs)
 	integer    rtime
 	integer    recNum, nf_fid, nf_vid, nf_status
 c
@@ -142,8 +143,8 @@ c
 c
 c.....  Set up the time window.
 c
-	before = i4time - itime_before
-	after  = i4time + itime_after
+	before = i4time_sys - itime_before
+	after  = i4time_sys + itime_after
 
 !       Ob times contained in each file
         i4_contains_early = 0 
@@ -224,17 +225,49 @@ c.....  we toss the whole ob since we can't be sure where it is.
 c
         max_write = 100
       
+c
+c..................................
+c.....	First loop over all the obs.
+c..................................
+c
 	do i=1,n_local_all
 c
-c.....  Toss the ob if lat/lon/elev or observation time are bad by setting 
-c.....  lat to badflag (-99.9), which causes the bounds check to think that
-c.....  the ob is outside the LAPS domain.
-c
+c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
+c........  lat to badflag (-99.9), which causes the bounds check to think that
+c........  the ob is outside the LAPS domain.
 	   if( nanf( lats(i) ) .eq. 1 ) lats(i)  = badflag
 	   if( nanf( lons(i) ) .eq. 1 ) lats(i)  = badflag
 	   if( nanf( elev(i) ) .eq. 1 ) lats(i)  = badflag
-c
 	   if( nanf( timeobs(i) ) .eq. 1 ) lats(i) = badflag
+
+	   i4time_ob_a(i) = nint(timeobs(i)) + 315619200
+	   call make_fnam_lp(i4time_ob_a(i),a9time_a(i),istatus)
+
+           call filter_string(stname(i))
+
+           do k = 1,i-1
+             if(       stname(i) .eq. stname(k) 
+     1                          .AND.
+     1           (lats(i) .ne. badflag .and. lats(k) .ne. badflag)
+     1                                                           )then
+                 i_diff = abs(i4time_ob_a(i) - i4time_sys)
+                 k_diff = abs(i4time_ob_a(k) - i4time_sys)
+
+                 if(i_diff .ge. k_diff)then
+                     i_reject = i
+                 else
+                     i_reject = k
+                 endif
+
+                 write(6,51)i,k,stname(i),a9time_a(i),a9time_a(k)
+     1                     ,i_reject
+ 51		 format(' Duplicate detected ',2i6,1x,a6,1x,a9,1x,a9
+     1                 ,1x,i6)
+
+                 lats(i_reject) = badflag ! test with this for now
+             endif
+           enddo ! k
+c
 c
 	   if( nanf( rh_time(i)   ) .eq. 1 ) rh_time(i)   = ibadflag
 	   if( nanf( t_time(i)    ) .eq. 1 ) t_time(i)    = ibadflag
@@ -255,7 +288,7 @@ c
 	enddo !i
 c
 c..................................
-c.....	Now loop over all the obs.
+c.....	Second loop over all the obs.
 c..................................
 c
 	jfirst = 1
@@ -264,8 +297,6 @@ c
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
 	do 125 i=1,n_local_all
-
-           call filter_string(stname(i))
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -289,12 +320,8 @@ c
 c
 c.....  Check to see if its in the desired time window.
 c
-	   itime60 = nint(timeobs(i)) + 315619200
-	   call make_fnam_lp(itime60,timech,istatus)
-           a9time_a(i) = timech
-
-	   if(itime60 .lt. before 
-     1   .or. itime60 .gt. after) then
+	   if(i4time_ob_a(i) .lt. before 
+     1   .or. i4time_ob_a(i) .gt. after) then
                if(i .le. max_write)then
                    write(6,91,err=125)i,wmoid(i),stname(i)
      1                               ,a9time_a(i),before
@@ -306,6 +333,7 @@ c
 c
 c.....  Right time, right location...
 
+           timech = a9time_a(i)
 	   time = timech(6:9)
 	   read(time,*) rtime
 c
