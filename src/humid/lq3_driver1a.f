@@ -286,6 +286,9 @@ c       external rtsys_no_data, rtsys_abort_prod
         integer cloud_switch
         integer tiros_switch
         integer sounder_switch
+        namelist /moisture_switch/ raob_switch,goes_switch, cloud_switch
+     1         ,tiros_switch, sounder_switch
+
         integer len
         character*200 cdomain
 
@@ -320,14 +323,15 @@ c     this mode check enables this routine to run without using
 c     sounding data even if it is present.
 
         call get_directory('static',fname,len)
-        open (23, file=fname(1:len)//'moisture_switch.txt',
-     1        form = 'formatted', err = 24)
+        open (23, file=fname(1:len)//'moisture_switch.nl',
+     1        status = 'old', err = 24)
 
-        read(23,*,end=24) raob_switch
-        read(23,*,end=24) goes_switch
-        read(23,*,end=24) cloud_switch
-        read(23,*,end=24) sounder_switch
-        read(23,*,end=24) tiros_switch
+       read(23,moisture_switch,end=24)
+c        raob_switch
+c        read(23,*,end=24) goes_switch
+c        read(23,*,end=24) cloud_switch
+c        read(23,*,end=24) sounder_switch
+c        read(23,*,end=24) tiros_switch
 
 
         if (cloud_switch.eq.0) then
