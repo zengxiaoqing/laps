@@ -1,0 +1,202 @@
+netcdf ctp {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 125,
+	y = 105,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+        //	Cloud Top Pressure
+
+	float                                  
+            pct(record,z,y,x);
+            pct:navigation_dim = "nav";
+            pct:record = "valtime, reftime";
+            pct:_FillValue = 1.e+37f;
+            pct:long_name="NESDIS 2D cld top pressure";
+            pct:units="mb";
+            pct:valid_range= 1100.f, 10.f;
+            pct:LAPS_var="PCT";
+            pct:lvl_coord="";
+	    pct:LAPS_units="MB";
+
+        //      2D Fractional Cloud Amount
+
+        float
+            lca(record,z,y,x);
+            lca:navigation_dim = "nav";
+            lca:record = "valtime, reftime";
+            lca:_FillValue = 1.e+37f;
+            lca:long_name="NESDIS 2D fractional cloud amount";
+            lca:units="percent";
+            lca:valid_range= 0.f, 100.f;
+            lca:LAPS_var="LCA";
+            lca:lvl_coord="MSL";
+            lca:LAPS_units="percent";
+
+        //      2D Cloud Top Temperature
+
+        float
+            ctt(record,z,y,x);
+            ctt:navigation_dim = "nav";
+            ctt:record = "valtime, reftime";
+            ctt:_FillValue = 1.e+37f;
+            ctt:long_name="NESDIS 2D cloud top temperature";
+            ctt:units="K";
+            ctt:valid_range= 100.f, 400.f;
+            ctt:LAPS_var="CTT";
+            ctt:lvl_coord="MSL";
+            ctt:LAPS_units="K";
+
+        //      I4time of Observation
+
+        float
+            i4t(record,z,y,x);
+            i4t:navigation_dim = "nav";
+            i4t:record = "valtime, reftime";
+            i4t:_FillValue = 1.e+37f;
+            i4t:long_name="NESDIS 2D cloud top time of ob";
+            i4t:units="sec";
+            i4t:valid_range= 1000000000.f, 2000000000.f;
+            i4t:LAPS_var="I4T";
+            i4t:lvl_coord="MSL";
+            i4t:LAPS_units="sec";
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            pct_comment(record,z,namelen),
+            lca_comment(record,z,namelen),
+            ctt_comment(record,z,namelen),
+            i4t_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            pct_fcinv(record, z);
+            pct_fcinv:_FillValue= 0s;
+
+        short
+            lca_fcinv(record, z);
+            lca_fcinv:_FillValue= 0s;
+
+        short
+            ctt_fcinv(record, z);
+            ctt_fcinv:_FillValue= 0s;
+
+        short
+            i4t_fcinv(record, z);
+            i4t_fcinv:_FillValue= 0s;
+
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS ctp file - NESDIS 2D cloud top";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS cpt file - NESDIS 2D cloud top";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+}                       
