@@ -25,7 +25,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/bgdata/libdebugbgdata.a \
 
 EXE = dprep.exe
 
-SRC=dprep_eta_conusc.f dprep_laps.f
+SRC=dprep_eta_conusc.f dprep_laps.f dprep_ruc2_pub.f
 
 MAIN= dprep.f 
 

@@ -163,7 +163,8 @@ c
      +   th( NX,  NY,  NZ), th_sfc( NX,  NY), 
      +   uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
      +   vw( NX,  NY,  NZ), vw_sfc( NX,  NY),
-     +   p(NX,NY,NZ), mslp(NX, NY) 
+     +   p(NX,NY,NZ), mslp(NX, NY), ww(nx,ny,nz)
+
       real lat1, lat2, lon0
       filesfound = 0
       
@@ -194,6 +195,7 @@ c
          else if(bgmodel.eq.2) then
             ext = '.E48'
             gproj='LC'
+
             call read_eta_conusc(fullname,nx,ny,nz,
      +           ht, p, th, uw, vw, rh, ht_sfc, p_sfc,
      +           rh_sfc, th_sfc, uw_sfc, vw_sfc, mslp ,istatus)
@@ -223,16 +225,14 @@ c
          else if(bgmodel.eq.5) then
             ext='.RUC'
             gproj='LC'
-            nx_lc=nx
-            ny_lc=ny
             lat1=25.0
             lat2=25.0
             lon0=-95.0
-
             sw(1)=16.2810
             sw(2)=-126.1378
             ne(1)=55.4818
             ne(2)=-57.3794
+
             call read_ruc2_hybb(fullname,nx,ny,nz
      +           ,mslp,ht,p,rh,uw,vw,th,ww
      +           ,istatus)

@@ -30,26 +30,26 @@ cdis
 cdis 
 cdis 
       subroutine dprep_eta_conusc(nx,ny,nz,
-     +        ht, p, tp, uw, vw, rh, ex, ht_sfc, p_sfc,
-     +        rh_sfc, tp_sfc, uw_sfc, vw_sfc, mslp)
+     +        ht, p, tp, uw, vw, rh, ht_sfc, p_sfc,
+     +        rh_sfc, tp_sfc, uw_sfc, vw_sfc, mslp,istatus)
       implicit none
       real*4    cp,kappa
       parameter(cp=1004.,kappa=287./1004.)
 
       real*4 esat,es
       common /estab/esat(15000:45000),es(15000:45000)
-      integer nx,ny,nz, i, j, k, it
+      integer nx,ny,nz, i, j, k, it, istatus
       real xe, mrsat
       
       real MSLP( NX,  NY),    ht( NX,  NY,  NZ), 
-     +     ht_sfc( NX,  NY),  p(NZ), p_sfc( NX,  NY), 
+     +     ht_sfc( NX,  NY),  p(NX,NY,NZ), p_sfc( NX,  NY), 
      +     rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
      +     tp( NX,  NY,  NZ), tp_sfc( NX,  NY), 
      +     uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
-     +     vw( NX,  NY,  NZ), vw_sfc( NX,  NY),
-     +     ex( NX,  NY,  NZ)
+     +     vw( NX,  NY,  NZ), vw_sfc( NX,  NY)
+
      
-      real pri(NZ), tmp(NX,NY,NZ),
+      real tmp(NX,NY,NZ), factor,
      +     th( NX,  NY,  NZ),  th_sfc( NX,  NY)
 
 c *** Convert surface and 3d temp to theta.
@@ -57,21 +57,32 @@ c *** Compute Exner function.
 c *** Convert sfc pressure and mean sea level pressure from Pa to mb.
 c *** Convert surface and 3d rh (%) to mr.
 c
-
-
+      
+c
+c_______________________________________________________________________________
+c  p is input as a single verticle column output as 3d array
+c
       do k=1,nz
-         pri(k)=1./p(k)
+         p(1,1,k) = p(k,1,1)
       enddo
+
+
       do k=1,nz
          do j=1,ny
             do i=1,nx
-               th(i,j,k)=tp(i,j,k)*(1000.*pri(k))**kappa
-               ex(i,j,k)=cp*tp(i,j,k)/th(i,j,k)
+               p(i,j,k)=p(1,1,k)
+
                it=tp(i,j,k)*100
                it=min(45000,max(15000,it))
                xe=esat(it)
-               mrsat=0.00622*xe/(p(k)-xe) !Assumes units of rh on next line is %
+               mrsat=0.00622*xe/(p(i,j,k)-xe) !Assumes units of rh on next line is %
                rh(i,j,k)=rh(i,j,k)*mrsat
+               rh(i,j,k)=rh(i,j,k)/(1.+rh(i,j,k))
+
+               factor=(1000./p(i,j,k))**kappa
+               tp(i,j,k) = tp(i,j,k)*factor
+               p(i,j,k) = cp/factor
+
             enddo
          enddo
       enddo
@@ -87,17 +98,6 @@ c
             rh_sfc(i,j)=rh_sfc(i,j)*mrsat
          enddo
       enddo
-c
-c  return th in tp array
-c      
-      do k=1,nz
-         do j=1,ny
-            do i=1,nx
-               tp(i,j,k) = th(i,j,k)
-            enddo
-         enddo
-      enddo
-
 
       print *,'sfc:',p_sfc(31,31),ht_sfc(31,31),tp_sfc(31,31)
      .   ,rh_sfc(31,31),uw_sfc(31,31),vw_sfc(31,31),mslp(31,31)
