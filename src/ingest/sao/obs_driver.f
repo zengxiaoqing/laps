@@ -661,7 +661,7 @@ c
             call s_len(stations(i),lensta)
             if(lensta .eq. 0 .or. stations(i)(1:3) .eq. 'UNK')then
                 if(wmoid(i) .ne. ibadflag .and. wmoid(i) .ne. 0)then
-                    write(stations,511,err=512)wmoid(i)
+                    write(stations(i),511,err=512)wmoid(i)
  511		    format(i8)
  512		    continue
                 else

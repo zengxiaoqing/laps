@@ -1,13 +1,5 @@
-
-c There will probably have to be some adjustments made to the
-c read routines (there's one routine for the data and one for 
-c the station metadata), and possibly to the
-c 'get_tmeso_obs' routine too.  I've made some
-c assumptions there, and have tried to document in the 
-c code where they are.  
 c
-c
-        subroutine get_local_cwb(maxobs,maxsta,i4time,
+        subroutine get_local_cwb(maxobs,maxsta,i4time_sys,
      &                 path_to_local_data,
      &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
@@ -101,11 +93,13 @@ c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
 c.....  average number of gridpoints based on the grid spacing.
 c
-	box_length = box_size * 111.137  !km/deg lat (close enough for lon)
-	ibox_points = box_length / (grid_spacing / 1000.)  !in km
+        box_length = box_size * 111.137 !km/deg lat (close enough for lon)
+        ibox_points = box_length / (grid_spacing / 1000.) !in km
 c
-	n_local_g = 0
-	n_local_b = 0
+c.....	Zero out the counters.
+c
+        n_local_g = 0	        ! # of local obs in the laps grid
+        n_local_b = 0	        ! # of local obs in the box
 c
 c.....  Get the mesonet metadata (station information).
 c
@@ -117,8 +111,8 @@ c
 c
 c.....  Get the mesonet data.
 c
-        call read_tmeso_data(path_to_local_data,maxsta,badflag,i4time,       
-     &                  stn,rtime,
+        call read_tmeso_data(path_to_local_data,maxsta,badflag,
+     &                  i4time_sys,stn,rtime,
      &                  t,td,rh,pcp,sfcp,dd,
      &                  ff,num,istatus)
 c
@@ -385,7 +379,7 @@ c
 	end
 
 c
-        subroutine read_tmeso_data(infile,maxsta,badflag,i4time,stn
+        subroutine read_tmeso_data(infile,maxsta,badflag,i4time_sys,stn       
      1                            ,rtime,t,td,rh,pcp,sfcp,dd,ff,num
      1                            ,istatus)
 c
@@ -425,7 +419,7 @@ c
 	   ff(i) = badflag
 	enddo !i
 c
-        a13time = cvt_i4time_wfo_fname13(i4time)
+        a13time = cvt_i4time_wfo_fname13(i4time_sys)
 
         filename = a13time(1:4)//'_'//a13time(5:6)             ! yyyy_mm
      1                         //'_'//a13time(7:8)             ! dd

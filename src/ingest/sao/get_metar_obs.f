@@ -66,7 +66,8 @@ c
 c*****************************************************************************
 c
 	include 'netcdf.inc'
-	include 'surface_obs.inc'
+c
+c.....  Read arrays.
 c
         integer maxobs ! raw data file
         integer maxsta ! output LSO file
@@ -99,6 +100,7 @@ c
         character  path_to_metar*(*), a9time*9, a8time*8, a9_to_a8*8
 	character  cvr(6,maxobs)*8
 	character  stations(maxsta)*20, provider(maxsta)*11
+     1                                , c11_provider*11
 	character  weather(maxobs)*25, wx(maxobs)*25
 	character  reptype(maxobs)*6, atype(maxobs)*6
 	character  reptype_in(maxobs)*6, atype_in(maxobs)*6
@@ -108,6 +110,12 @@ c
 c.....	Set jstatus flag for the sao data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        call get_sfc_badflag(badflag,istatus)
+        if(istatus .ne. 1)return
+
+        call get_box_size(box_size,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -179,6 +187,8 @@ c
 
             i4time_offset = 315619200
 
+            c11_provider = 'NWS        '
+
         else ! Read CWB Metar and Synop Obs
             i4time_file = (i4time_sys/3600) * 3600
             call make_fnam_lp(i4time_file,a9time,istatus)
@@ -242,6 +252,8 @@ c
             if(n_sao_all .le. 0) go to 990
 
             i4time_offset = 0
+
+            c11_provider = 'CWB        '
 
         endif
 c
@@ -366,6 +378,13 @@ c
 	  save_stn(icount) = stname(i) ! only one...save for checking
 c
  150	  nn = nn + 1
+
+          if(nn .gt. maxsta)then
+              write(6,*)' ERROR in get_metar_obs: increase maxsta '
+     1                 ,nn,maxsta
+              stop
+          endif
+
 	  n_sao_b = n_sao_b + 1	!station is in the box
 c
 c.....  Check if its in the LAPS grid.
@@ -610,7 +629,7 @@ c
  	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
          call filter_string(weather(nn))
 
-	 provider(nn)(1:11) = 'NWS        '     ! data provider (all from NWS)
+	 provider(nn)(1:11) = c11_provider      ! data provider 
 	 wmoid(nn) = wmoid_in(i)
 c
 	 store_1(nn,1) = lats(i)                ! station latitude
@@ -692,8 +711,7 @@ c
 
         character(*) c_var
 
-!       call get_sfc_badflag(badflag,istatus)
-        badflag = -99.9
+        call get_sfc_badflag(badflag,istatus)
         
         if(c_var .eq. 'alt_mb' .or. c_var .eq. 'mslp_mb')then
             if(abs(arg) .gt. 1500.)arg = badflag

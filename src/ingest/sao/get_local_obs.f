@@ -1,48 +1,16 @@
-cdis    Forecast Systems Laboratory
-cdis    NOAA/OAR/ERL/FSL
-cdis    325 Broadway
-cdis    Boulder, CO     80303
-cdis 
-cdis    Forecast Research Division
-cdis    Local Analysis and Prediction Branch
-cdis    LAPS 
-cdis 
-cdis    This software and its documentation are in the public domain and 
-cdis    are furnished "as is."  The United States government, its 
-cdis    instrumentalities, officers, employees, and agents make no 
-cdis    warranty, express or implied, as to the usefulness of the software 
-cdis    and documentation for any purpose.  They assume no responsibility 
-cdis    (1) for the use of the software and documentation; or (2) to provide
-cdis     technical support to users.
-cdis    
-cdis    Permission to use, copy, modify, and distribute this software is
-cdis    hereby granted, provided that the entire disclaimer notice appears
-cdis    in all copies.  All modifications to this software must be clearly
-cdis    documented, and are solely the responsibility of the agent making 
-cdis    the modifications.  If significant modifications or enhancements 
-cdis    are made to this software, the FSL Software Policy Manager  
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
-cdis 
 c
-c
-	subroutine get_local_obs(maxobs,maxsta,i4time_sys,
-     &                      path_to_local_data,local_format,
-     &                      itime_before,itime_after,
-     &                      eastg,westg,anorthg,southg,
-     &                      lat,lon,ni,nj,grid_spacing,
-     &                      nn,n_local_g,n_local_b,stations,
-     &                      reptype,atype,weather,wmoid,
-     &                      store_1,store_2,store_2ea,
-     &                      store_3,store_3ea,store_4,store_4ea,
-     &                      store_5,store_5ea,store_6,store_6ea,
-     &                      store_7,store_cldht,store_cldamt,
-     &                      provider, laps_cycle_time, jstatus)
+        subroutine get_local_obs(maxobs,maxsta,i4time_sys,
+     &                 path_to_local_data,local_format,
+     &                 itime_before,itime_after,
+     &                 eastg,westg,anorthg,southg,
+     &                 lat,lon,ni,nj,grid_spacing,
+     &                 nn,n_local_g,n_local_b,stations,
+     &                 reptype,atype,weather,wmoid,
+     &                 store_1,store_2,store_2ea,
+     &                 store_3,store_3ea,store_4,store_4ea,
+     &                 store_5,store_5ea,store_6,store_6ea,
+     &                 store_7,store_cldht,store_cldamt,
+     &                 provider, laps_cycle_time, jstatus)
 
 c
 c*****************************************************************************
@@ -79,6 +47,7 @@ c
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
         real    lat(ni,nj), lon(ni,nj)
+        logical l_dupe(maxobs)
 c
 c.....  Output arrays.
 c
@@ -133,8 +102,8 @@ c
 c
 c.....	Zero out the counters.
 c
-	n_local_g = 0		! # of local obs in the laps grid
-	n_local_b = 0		! # of local obs in the box
+        n_local_g = 0	        ! # of local obs in the laps grid
+        n_local_b = 0	        ! # of local obs in the box
 c
 c.....  Get the data from the NetCDF file.  First, open the file.
 c.....  If not there, return to obs_driver.
@@ -231,6 +200,7 @@ c.....	First loop over all the obs.
 c..................................
 c
 	do i=1,n_local_all
+           l_dupe(i) = .false.
 c
 c........  Toss the ob if lat/lon/elev or observation time are bad by setting 
 c........  lat to badflag (-99.9), which causes the bounds check to think that
@@ -247,8 +217,10 @@ c........  the ob is outside the LAPS domain.
 
            do k = 1,i-1
              if(       stname(i) .eq. stname(k) 
+!    1                          .AND.
+!    1           (lats(i) .ne. badflag .and. lats(k) .ne. badflag)
      1                          .AND.
-     1           (lats(i) .ne. badflag .and. lats(k) .ne. badflag)
+     1           ( (.not. l_dupe(i)) .and. (.not. l_dupe(k)) )
      1                                                           )then
                  i_diff = abs(i4time_ob_a(i) - i4time_sys)
                  k_diff = abs(i4time_ob_a(k) - i4time_sys)
@@ -265,6 +237,8 @@ c........  the ob is outside the LAPS domain.
      1                 ,1x,i6)
 
                  lats(i_reject) = badflag ! test with this for now
+
+                 l_dupe(i_reject) = .true.
              endif
            enddo ! k
 c
