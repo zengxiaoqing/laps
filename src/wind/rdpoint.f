@@ -87,6 +87,7 @@ cdis
 !******************************************************************************
 
         real*4 heights_3d(ni,nj,nk)
+        real*4 pres_3d(ni,nj,nk)
 
         dimension u_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
         dimension v_mdl_bkg_4d(ni,nj,nk,NTMIN:NTMAX)
@@ -101,7 +102,14 @@ cdis
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1) then
           write(6,*) 'Cannot access r_missing_data value'
-          write(6,*) 'Aborting read of pin file'
+          write(6,*) 'Aborting read of file: ',ext_in
+          return
+        endif
+
+        call get_pres_3d(i4time,ni,nj,nk,pres_3d,istatus)
+        if(istatus .ne. 1) then
+          write(6,*) 'Bad status returned from get_pres_3d'
+          write(6,*) 'Aborting read of file: ',ext_in
           return
         endif
 
@@ -184,38 +192,53 @@ cdis
 !                   Point ob is in horizontal domain
 
                     if(ext_in .eq. 'pin')then
-                        if(.false.)then
-!                           Assume ACARS elev is geometric height MSL
-                            rk = height_to_zcoord2(elev,heights_3d
-     1                           ,ni,nj,nk,i_grid,j_grid,istatus_rk)
-                            if(istatus_rk .ne. 1)then
-                                write(6,*)' WARNING: rejecting ACARS ',       
+                       if(.false.)then ! ACARS elev is geometric height MSL
+                          rk = height_to_zcoord2(elev,heights_3d
+     1                        ,ni,nj,nk,i_grid,j_grid,istatus_rk)
+                          if(istatus_rk .ne. 1)then
+                             write(6,*)' WARNING: rejecting ACARS ',       
      1                          'apparently above top of domain ',elev
-                            endif
+                          endif
 
-                        else ! do this instead
-!                           Assume ACARS elev is pressure altitude
-                            if(abs(elev) .lt. 90000.)then
-                              pres_mb = ztopsa(elev)
-                              pres_pa = pres_mb * 100.
-                              rk = zcoord_of_pressure(pres_pa)
+                       else            ! ACARS elev is pressure altitude
+                          if(abs(elev) .lt. 90000.)then
+                             pres_mb = ztopsa(elev)
+                             pres_pa = pres_mb * 100.
+                             if(.false.)then ! Const pressure grid assumption
+                                rk = zcoord_of_pressure(pres_pa)
 
-                              if (rk .eq. r_missing_data) then
-                                write(6,*)' WARNING: rejecting ACARS ',
+                                if (rk .eq. r_missing_data) then
+                                  write(6,*)' WARNING: rejecting ACARS '      
+     1                                ,'apparently above top of domain '       
+     1                                ,elev
+                                   istatus_rk = 0
+                                else
+                                   istatus_rk = 1
+                                endif
+
+                             else ! Arbitrary vertical pressure grid 
+                                rk = rlevel_of_field(pres_pa,pres_3d
+     1                                              ,ni,nj,nk
+     1                                              ,i_grid,j_grid
+     1                                              ,istatus_rk) 
+
+                                if(istatus_rk .ne. 1)then
+                                    write(6,*)
+     1                              ' Bad status from rlevel_of_field'       
+                                endif
+
+                             endif ! vertical grid type
+
+                          else ! way too high
+                             write(6,*)' WARNING: rejecting ACARS ',       
      1                          'apparently above top of domain ',elev
-                                istatus_rk = 0
-                              else
-                                istatus_rk = 1
-                              endif
-                            else
-                                write(6,*)' WARNING: rejecting ACARS ',       
-     1                          'apparently above top of domain ',elev
-                                istatus_rk = 0
-                            endif
+                             istatus_rk = 0
 
-                        endif
+                          endif ! ht < 90000m
 
-                        weight_ob = weight_pirep
+                       endif
+
+                       weight_ob = weight_pirep
 
                     else ! cdw
                         rk = zcoord_of_pressure(pres)
@@ -226,9 +249,9 @@ cdis
 
                     if (istatus_rk .eq. 1) k_grid = nint(rk)
 
-                    if(istatus_rk .eq. 1
-     1             .and. k_grid .le. nk
-     1             .and. k_grid .ge. 1    )then ! Ob is in vertical domain
+                    if(      istatus_rk .eq. 1
+     1                 .and. k_grid     .le. nk
+     1                 .and. k_grid     .ge. 1 )then ! Ob is in vertical domain
 
                         n_point_obs = n_point_obs + 1
 
@@ -300,14 +323,14 @@ cdis
                         obs_point(nobs_point)%valuef(2) = v_temp-v_diff       
                         obs_point(nobs_point)%weight = weight_ob
                         obs_point(nobs_point)%type   = ext_in
+                        obs_point(nobs_point)%file   = ext_in
 
-                    else
-
-c                     Out of vertical bounds
+                    else  ! Out of vertical bounds
                       iwrite = 0
+                       write(6,*)' WARNING: rejecting point ob ',       
+     1                        'apparently outside vertical domain ',elev  
 
                     endif ! In vertical bounds
-
 
                     if(iwrite .eq. 1)write(6,20)n_point_obs,
      1                 point_i(n_point_obs),
