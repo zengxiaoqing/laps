@@ -1159,6 +1159,8 @@ c                   06-16-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
 c                   09-30-98  Housekeeping.
 c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
+c                   01-28-99  Skip LGB until can figure out how to deal 
+c                               with bias in its fields.
 c
 c
 c       Notes:
@@ -1188,7 +1190,7 @@ c
 c
 	integer*4 max_files
 	parameter(max_files = 300)
-	character fnames(max_files)*80
+	character fnames(max_files)*256
 	character filespec*255, filename13*13
 c
 c
@@ -1304,6 +1306,10 @@ c
 c.....  Try LGB.
 c
  200	continue
+	print *,' Skipping LGB file for now.'
+	ilgb_bk = 0
+	go to 300
+c
 	ilgb_bk = 1
 	print *,' Trying for LGB background '
 c	bkg_dir = '../lapsprd/lgb/'
@@ -1433,6 +1439,8 @@ c                   07-10-98  Original version.
 c                   09-10-98  Change SFM filename read to be like LGB.
 c                   09-30-98  Housekeeping.
 c                   12-02-98  Change 'istatus' to 'bkg_status' in call list.
+c                   01-28-99  Skip LGB until can figure out how to deal 
+c                               with bias in its fields.
 c
 c
 c       Notes:
@@ -1461,7 +1469,7 @@ c
 c
 	integer*4 max_files
 	parameter(max_files = 300)
-	character fnames(max_files)*80
+	character fnames(max_files)*256
 	character filespec*255, filename13*13
 c
 c.....	Start here.  
@@ -1552,6 +1560,10 @@ c
 c.....  Try LGB.
 c
  200	continue
+	print *,' Skipping LGB file for now.'
+	ilgb_bk = 0
+	go to 300
+c
 	var_u = 'USF'
 	var_v = 'VSF'
 	ilgb_bk = 1
