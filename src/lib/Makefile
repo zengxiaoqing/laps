@@ -10,15 +10,6 @@ LAPSROOT=../..
 include $(LAPSROOT)/src/include/makefile.inc
 
 
-
-
-
-
-
-
-.SUFFIXES:
-.SUFFIXES: .o .c .f .a
-
 LIB      = liblaps.a
 DEBUGLIB = libdebuglaps.a
 
