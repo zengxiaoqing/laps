@@ -149,7 +149,7 @@ c
             write(6,*)' maxobs/maxobs_in ',maxobs,maxobs_in
 
             call read_local_cwb ( path_to_local_data, maxobs_in,
-     ~         badflag, ibadflag,i4time_file, stname, lats, lons, elev,
+     ~         badflag, ibadflag,i4time_file, stname, lons, lats, elev,
      ~         t, t24max, t24min, td, rh, pcp1hr, pcp3hr, pcp6hr,
      ~         pcp24hr, dd, ff, wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
      ~         num, istatus )
@@ -165,25 +165,24 @@ c    1                 ,num,istatus)                                     ! O
 	    if(istatus .ne. 1)then
                 write(6,*)
      1          '     Warning: bad status return from READ_LOCAL_CWB'       
-                n_local_file = 0
-
+                n_local_file = num
             else
                 n_local_file = num
-                write(6,*)'     n_local_file = ',n_local_file
-
             endif
+
+            write(6,*)'     n_local_file = ',n_local_file
 
 c           ix = ix + n_local_file
 
         enddo ! i4time_file
 
 !       This might make the lines shorter when reading with 'vi'
-        write(*,*)inpath,maxobs,badflag,ibadflag
-        write(*,*)i4time_sys,stname
-        write(*,*)lats,lons,elev                      ! O
-        write(*,*)i4time_ob_a,t,td,rh,pcp             ! O
-        write(*,*)stnp,mslp,dd,ff                     ! O
-        write(*,*)wgdd,wgff,pcc,pc,sr,st              ! O
+        write(*,*)path_to_local_data,maxobs,badflag,ibadflag
+        write(*,*)i4time_sys ! ,stname
+!       write(*,*)lats,lons,elev                      ! O
+!       write(*,*)i4time_ob_a,t,td,rh,pcp1hr          ! O
+!       write(*,*)stnp,mslp,dd,ff                     ! O
+!       write(*,*)wgdd,wgff,pcc,pc,sr,st              ! O
         write(*,*)num,istatus                         ! O
 
 
