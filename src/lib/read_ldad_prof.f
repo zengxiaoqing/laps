@@ -121,6 +121,7 @@ C
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
       real*4 ht_out(200),di_out(200),sp_out(200),temp_out(200)
+      integer iqc1_out(200),iqc2_out(200)
       integer assetId_ref
       real*4 mspkt
       data mspkt/.518/
@@ -249,6 +250,8 @@ C
                         di_out(n_good_levels) = windDir(i,i_pr_cl)
                         sp_out(n_good_levels) = windSpeed(i,i_pr_cl)
      1                                        * mspkt
+                        iqc1_out(n_good_levels) = wdQcFlag(i,i_pr_cl)     
+                        iqc2_out(n_good_levels) = wsQcFlag(i,i_pr_cl)     
                     endif
                 enddo ! i
 
@@ -269,7 +272,9 @@ C
                     write(6  ,411,err=421)ht_out(i)
      1                                   ,di_out(i),sp_out(i)
      1                                   ,rms
-411                 format(1x,f6.0,f6.0,2f6.1)
+     1                                   ,iqc1_out(i)
+     1                                   ,iqc2_out(i)
+411                 format(1x,f6.0,f6.0,2f6.1,2i7)
 421                 continue
                 enddo ! i
 
@@ -293,6 +298,7 @@ C
                         n_good_levels = n_good_levels + 1
                         ht_out(n_good_levels) = levels(i,i_pr_cl)
                         temp_out(n_good_levels) = temperature(i,i_pr_cl)
+                        iqc1_out(n_good_levels) = tempQcFlag(i,i_pr_cl)
                     endif
                 enddo ! i
 
@@ -304,7 +310,7 @@ C
      1                     ,n_good_levels
      1                     ,rlat,rlon,elev,stationId(i_pr_cl)(1:5)
      1                     ,a9time_ob,'RASS    '
-501             format(i12,i12,f11.3,f15.3,f15.0,5x,a6,3x,a9,1x,a8)
+501             format(i12,i12,f11.3,f15.3,f15.0,5x,a5,3x,a9,1x,a8)
 
                 do i = 1,n_good_levels
                     write(lun,511,err=521)ht_out(i)
@@ -313,7 +319,7 @@ C
      1                                   ,rms
                     write(6  ,511,err=521)ht_out(i)
      1                                   ,temp_out(i)
-     1                                   ,iqc
+     1                                   ,iqc1_out(i)
      1                                   ,rms
 511                 format(1x,f6.0,f6.1,i6,f6.1)
 521                 continue
