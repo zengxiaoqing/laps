@@ -28,7 +28,7 @@ run_sys::run_sys($command);
 
 # Copy the bigfile data template to the data area.
 
-$template_home = "$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/laps.cdlTemplate";
+$template_home = "$FXA_HOME/data/localizationDataSets/$FXA_INGEST_SITE/Laps.cdlTemplate";
 $products = "$FXA_DATA/Grid/FSL/netCDF/LAPS_Grid/LAPS/template";
 $command = "cp $template_home $products";
 run_sys::run_sys($command);
