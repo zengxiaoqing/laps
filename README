@@ -289,12 +289,12 @@
 
      Place the tar file in the directory '/home_disk' or '/home_disk/src'.
      Untar the laps source code using a command like...
-     $ zcat laps-m-n-o.tar.gz | tar xf -
+     prompt> zcat laps-m-n-o.tar.gz | tar xf -
  
      OR...
 
-     $ gunzip laps-m-n-o.tar.gz
-     $ tar -xf laps-m-n-o.tar
+     prompt> gunzip laps-m-n-o.tar.gz
+     prompt> tar -xf laps-m-n-o.tar
 
      The $srcroot directory will be set up one level below the tar file.
 
@@ -305,7 +305,7 @@
                 ----   2.2.2  Running Configure ---
 
      Go to the $srcroot directory and run...
-     $ ./configure
+     prompt> ./configure
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
      compiler with 'xlf' using the option --fc=xlf. For Solaris, you will want
@@ -324,10 +324,10 @@
 
      For example, to install laps in directory '/data_disk/laps' with data 
      in '/data_disk/laps/data' use... 
-     $ ./configure --prefix=/data_disk/laps
+     prompt> ./configure --prefix=/data_disk/laps
      
      To install in '/usr/local/laps' with data in '/data_disk/laps/data1' use...
-     $ ./configure --prefix=/usr/local/laps --datadir=/data_disk/laps/data1
+     prompt> ./configure --prefix=/usr/local/laps --datadir=/data_disk/laps/data1
      
      One or more alternate data directories for running laps can be specified 
      at runtime, if desired. A single set of binaries can thus support several 
@@ -360,10 +360,10 @@
      The next step is to build and install the executables, this can be done 
      by running... 
 
-     $ cd $srcroot
-     $ make                  1> make.out 2>&1 
-     $ make install          1> make_install.out 2>&1 
-     $ make install_lapsplot 1> make_install_lapsplot.out 2>&1   
+     prompt> cd $srcroot
+     prompt> make                  1> make.out 2>&1 
+     prompt> make install          1> make_install.out 2>&1 
+     prompt> make install_lapsplot 1> make_install_lapsplot.out 2>&1   
 
      Check that the executables have been placed into the '$lapsroot/bin' 
      directory. The total number should be the number of EXEDIRS in 
@@ -382,7 +382,7 @@
      first one (see 2.2.2 above).  Then, for each additional domain you wish 
      to create, run... 
 
-     $ make DATAROOT=/data_disk/laps/data2 mkdatadirs
+     prompt> make DATAROOT=/data_disk/laps/data2 mkdatadirs
 
      where the subdirectory name 'data2' must be a unique name for each
      additional domain. Then follow the setup and localization steps below.
@@ -443,9 +443,8 @@
      localization for a particular laps domain. This should be repeated for
      each domain if there is more than one. 
 
-     $ cd $lapsroot/etc
-     $ perl laps_localization.pl --dataroot=/data_disk/laps/data \
-                                 --srcroot=$srcroot
+     prompt> cd $lapsroot/etc
+     prompt> perl laps_localization.pl --dataroot=/data_disk/laps/data --srcroot=$srcroot
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
@@ -734,12 +733,12 @@
      One way to supply the analysis inputs is as follows for each input (taken
      from a list of ingest outputs, see section 3.2):
 
-     $cp testdata/lapsprd/input1/*           data/lapsprd/lapsprd/input1
+     prompt> cp testdata/lapsprd/input1/*           data/lapsprd/lapsprd/input1
 
                                    OR
 
-     $cd data/lapsprd
-     $ln -s testdata/lapsprd/input1/*        input1
+     prompt> cd data/lapsprd
+     prompt> ln -s testdata/lapsprd/input1/*        input1
 
 
                 ----  2.5.2  Ingest + Analysis Test ---
@@ -762,7 +761,7 @@
      platform. If you want to change the flags from the default set, you 
      can provide command line arguments to the 'configure' script.
      For more information on passing in command line flags to 'configure' run
-     $ ./configure --help
+     prompt> ./configure --help
 
      A second method of modifying the flags is to edit 
      'src/include/makefile.inc'. If you find that the default compiler flags 
@@ -2266,8 +2265,8 @@ Note that more info on the units of the fields, etc. are contained in the
 'data/*.cdl' files.
 
 
-                File LAPS CDF
-		Ext  Var  Var   #Lvl  Field
+                File LAPS CDF    Num
+		Ext  Var  Var    Lvl  Field
 
 Process surface:
                 LT1  T3   t	  21  Temperature
