@@ -559,7 +559,13 @@ cdis
                     istatus_3dref = 1
 
                 endif
-
+ 
+                call ref_fill_horz(grid_ra_ref,imax,jmax,kmax,lat,lon
+     1                ,rlat_radar,rlon_radar,rheight_radar,istatus)
+                if(istatus .ne. 1)then
+                    istatus_2dref = 0
+                    istatus_3dref = 0
+                endif
 
             else
                 write(6,*)' Radar reflectivity data cannot be read in'
