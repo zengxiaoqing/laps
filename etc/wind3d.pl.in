@@ -167,7 +167,13 @@ foreach (@lines) {
     @list = split;
     push(@dropsnds,$list[9]);
     push(@dropsndnums,$list[2]);
-    next; } }
+    next; } 
+  if (/TOWER/) {
+    @list = split;
+    push(@towers,$list[9]);
+    push(@towernums,$list[2]);
+    next; } 
+            }
 
 print "\nProfilers:  ";
 $searchstring = "Remapping profile ";
@@ -209,19 +215,35 @@ foreach (@lines) {
       $i=$i+1; } } }
 print "\n";
 
-print "\nDROPSNDs:  ";
-#$ndropsnds=@dropsnds; $i=0;
-#while ($i < $ndropsnds) {print "$dropsndnums[$i], $dropsnds[$i] \n"; $i=$i+1;}
+#Print DROPSND
 $searchstring = "Remapping profile ";
+$i=0;
 foreach (@lines) {
   if (/$searchstring(.*)/) {
     ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
     foreach $item (@dropsndnums) {
 #     if ($profilenum eq $item) {print "$dropsnds[$i], $lapsi, $lapsj \n";}
-      if ($profilenum eq $item) {print "$dropsnds[$i] ";}
+      if ($profilenum eq $item) {
+          if($i == 0){print "\nDROPSNDs:  ";}
+          print "$dropsnds[$i] ";
+      }
       $i=$i+1; } } }
-print "\n";
+if($i > 0){print "\n";}
+
+#Print TOWER
+$searchstring = "Remapping profile ";
+$i=0;
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($profilenum,$lapsi,$lapsj) = split(" ",$1);
+    foreach $item (@towernums) {
+#     if ($profilenum eq $item) {print "$towers[$i], $lapsi, $lapsj \n";}
+      if ($profilenum eq $item) {
+          if($i == 0){print "\nTOWERs:  ";}
+          print "$towers[$i] ";
+      }
+      $i=$i+1; } } }
+if($i > 0){print "\n";}
 
 # SAO's (METAR's).
 
