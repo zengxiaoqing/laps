@@ -43,7 +43,7 @@ cdis
      :         grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel, ! (output)
      :         grid_ref,ngrids_ref,n_pot_ref,                        ! (output)
      :         NX_L,NY_L,NZ_L,                             ! Integer   (input)
-     :         ref_min,                                    ! Integer*4 (input)
+     :         ref_min,min_ref_samples,min_vel_samples,dgr,! Integer*4 (input)
      :         laps_radar_ext,c3_radar_subdir,             ! Char*3    (input)
      :         path_to_vrc,                                ! Char      (input)
      :         i_product_i4time,                           ! Integer*4 (input)
@@ -94,7 +94,9 @@ c
       integer*4 i_product_i4time
       integer   NX_L,NY_L,NZ_L
 
-      real*4 ref_min
+      integer min_ref_samples,min_vel_samples
+
+      real*4 ref_min,dgr
 c
 c     LAPS Grid Dimensions
 c
@@ -649,7 +651,7 @@ c
             I4_elapsed = ishow_timer()
 
             call ref_fill_horz(out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
-     1                        ,lat,lon
+     1                        ,lat,lon,dgr
      1                        ,rlat_radar,rlon_radar,rheight_radar
      1                        ,istatus)       
             if(istatus .ne. 1)then
@@ -672,6 +674,7 @@ c
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
      1             ,rlat_radar,rlon_radar,rheight_radar
+     1             ,dgr
      1             ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
      1             ,c3_radar_subdir,path_to_vrc,r_missing_data,istatus)       
 
@@ -772,6 +775,7 @@ c
 
         subroutine put_remap_vrc(i4time,comment_2d 
      1                         ,rlat_radar,rlon_radar,rheight_radar
+     1                         ,dgr
      1                         ,field_3d,imax,jmax,kmax,c3_radar_subdir        
      1                         ,path_to_vrc,r_missing_data,istatus)
 
@@ -818,7 +822,7 @@ c
             return
         endif
 
-        call ref_fill_horz(fields_2d(1,1,1),imax,jmax,1,lat,lon
+        call ref_fill_horz(fields_2d(1,1,1),imax,jmax,1,lat,lon,dgr
      1                    ,rlat_radar,rlon_radar,rheight_radar,istatus)       
         if(istatus .ne. 1)then
             write(6,*)' Error calling ref_fill_horz'          

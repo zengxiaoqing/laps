@@ -57,7 +57,7 @@ cdis
 !     This first call returns only 'n_radars_remap'
       call get_remap_parms(0,n_radars_remap,path_to_radar
      1       ,laps_radar_ext,radar_subdir_dum,path_to_vrc,ref_min
-     1       ,istatus)          
+     1       ,min_ref_samples,min_vel_samples,dgr,istatus)          
       if(istatus .ne. 1)then
           write(6,*)'Warning: bad status return from get_remap_parms'       
           go to 999
@@ -75,7 +75,9 @@ cdis
       do i_radar = 1,n_radars_remap
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
      1                  ,laps_radar_ext,radar_subdir_dum
-     1                  ,path_to_vrc,ref_min,istatus)       
+     1                  ,path_to_vrc
+     1                  ,ref_min,min_ref_samples,min_vel_samples,dgr
+     1                  ,istatus)             
           if(istatus .ne. 1)then
               write(6,*)
      1            'Warning: bad status return from get_remap_parms'       
@@ -92,7 +94,8 @@ cdis
      1                      ,laps_radar_ext       
      1                      ,radar_subdir_dum       
      1                      ,path_to_vrc,path_to_radar,ref_min
-     1                      ,NX_L,NY_L,NZ_L,istatus)
+     1                      ,min_ref_samples,min_vel_samples,dgr
+     1                      ,NX_L,NY_L,NZ_L,istatus)       
               if(istatus .ne. 1)then
                   write(6,*)' remap: istatus returned from remap_sub = '
      1                                             ,istatus
@@ -107,7 +110,7 @@ cdis
      1                    ,ntimes_radar                                ! I/O
      1                    ,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,path_to_radar
-     1                    ,ref_min
+     1                    ,ref_min,min_ref_samples,min_vel_samples,dgr       
      1                    ,NX_L,NY_L,NZ_L
      1                    ,istatus)
 
@@ -420,7 +423,7 @@ cdis
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,  ! O
      :            grid_ref,ngrids_ref,n_pot_ref,                         ! O
      1            NX_L,NY_L,NZ_L,                                        ! I
-     1            ref_min,                                               ! I
+     1            ref_min,min_ref_samples,min_vel_samples,dgr,           ! I
      1            laps_radar_ext,c3_radar_subdir,path_to_vrc,            ! I
      1            i4time_vol,                                            ! I
      1            i_num_finished_products,istatus)                       ! O
@@ -461,7 +464,9 @@ cdis
  
        subroutine get_remap_parms(i_radar,n_radars_remap
      1            ,path_to_radar,laps_radar_ext
-     1            ,c3_radar_subdir,path_to_vrc,ref_min,istatus) 
+     1            ,c3_radar_subdir,path_to_vrc
+     1            ,ref_min,min_ref_samples,min_vel_samples,dgr     
+     1            ,istatus) 
 
        include 'radar_mosaic_dim.inc'      
 
@@ -480,7 +485,8 @@ cdis
        character*3 c3_radar_subdir
 
        namelist /remap_nl/ n_radars_remap,path_to_radar_a     ! ,c4_radarname_a
-     1                    ,laps_radar_ext_a,path_to_vrc_nl,ref_min             
+     1                    ,laps_radar_ext_a,path_to_vrc_nl
+     1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
        character*150 static_dir,filename
 
        call get_directory('nest7grid',static_dir,len_dir)
@@ -530,6 +536,9 @@ cdis
        write(6,*)' c3_radar_subdir = ',c3_radar_subdir
        write(6,*)' path_to_vrc     = ',path_to_vrc
        write(6,*)' ref_min         = ',ref_min
+       write(6,*)' min_ref_samples = ',min_ref_samples
+       write(6,*)' min_vel_samples = ',min_vel_samples
+       write(6,*)' dgr             = ',dgr
 
        istatus = 1
        return
