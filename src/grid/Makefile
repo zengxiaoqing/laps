@@ -8,18 +8,19 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  $(UTILLIB)
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a $(DBUTILLIB) 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = gridgen_model.exe
 
-SRC   = put_laps_static.f showgrid.f \
+SRC   = get_tile_list.f gridgen_utils.f put_laps_static.f showgrid.f proc_geodat.f \
         create_bcd_bkgnd.c setsup.c \
-        gridgen_utils.f getarealim.c xy_to_ll.c ll_to_xy.c 
+        getarealim.c \
+        xy_to_ll.c ll_to_xy.c 
 
 MAIN=gridgen_model.f 
 

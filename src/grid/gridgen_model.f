@@ -176,6 +176,7 @@ c
         character*180 static_dir 
         character*10  c10_grid_fname 
         character*6   c6_maproj
+        character*1   cdatatype
         integer len,lf,lfn,ns
 
         real,  allocatable ::  rmapdata(:,:,:)
@@ -783,15 +784,16 @@ c ----------------------------------------------------------------
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
      +,ytn(1,ns),deltax,deltay,GEODAT2D,GEODAT3D
      +,adum,adum,path_to_green_frac,2.0,0.0,new_DEM,12
-     +,istatus)
+     +,istatus_grn)
 
-        if(istatus.ne.1)then
+        if(istatus_grn.ne.1)then
          print*
          print*,'greenness fraction data not processed completely'
          if(c10_grid_fname(1:lf).eq.'wrfsi')then
             print*,' File(s) missing for green frac data'
             print*,' Error:   Static file not created'
             print*
+            istatus=0
             return
          else
             print*,' File(s) missing for green frac data'
@@ -813,19 +815,24 @@ c ----------------------------------------------------------------
 
 c ------------------------------------------------------------------
         print*
-        print*,' Calling GEODAT: Processing 1 degree soiltemp data.'
+c       print*,' Calling GEODAT: Processing 1 degree soiltemp data.'
 
         CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
      +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,12),adum  !send in landmask to help 
-     +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus)
+     +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
 
-        if(istatus.ne.1)then
+c       call proc_geodat(nnxp,nnyp
+c    1,path_to_soiltemp_1deg,lats(1,1,ns),lons(1,1,ns)
+c    1,1,istatus_tmp)
+
+        if(istatus_tmp.ne.1)then
          print* 
          print*,'soiltemp data not processed completely' 
          if(c10_grid_fname(1:lf).eq.'wrfsi')then 
             print*,' File(s) missing for soiltemp data' 
             print*,' Error:   Static file not created'
             print*
+            istatus=0
             return
          else
             print*,' File(s) missing for soiltemp data'
@@ -860,15 +867,22 @@ c Adjust geog data to conform to landuse data (the most
 c accurate for defining land-water boundaries).
 c Adjust soil temps to terrain elevations.
 
-        call adjust_geog_data(nnxp,nnyp,lats(1,1,ns),topt_out
-     &,path_to_soiltemp_1deg,data(1,1,12),data(1,1,in1),GEODAT3D
-     &,istatus)
+        call adjust_geog_data(nnxp,nnyp,istatus_grn,istatus_tmp
+     &,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
+     &,data(1,1,12),data(1,1,in1),GEODAT3D,istatus)
         if(istatus.ne.1)then
            print*,'Error returned: adjust_geog_data'
            return
         endif
 
-c ok, we're done with GEODAT2D 
+        if(c10_grid_fname(1:lf).eq.'wrfsi')then
+           i=83
+        else
+           i=12
+        endif
+        do j=1,12
+           data(:,:,i+j)=GEODAT3D(:,:,j)
+        enddo
 
         deallocate (GEODAT2D,GEODAT3D)
 
@@ -952,7 +966,7 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
            return
         endif
 
-        call check_domain(lats(1,1,1),lons(1,1,1)
+        call check_domain(lats(1,1,ns),lons(1,1,ns)
      +,nnxp,nnyp,grid_spacing_m,1,istat_chk)
 
         write(6,*)'deltax = ',deltax
@@ -1464,7 +1478,8 @@ C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
 
 ! Calculate average and silhouette terrain, then apply SILWT weight
 
-            if(cdatatype(1:lent).eq.'topography')then
+            if(cdatatype(1:lent).eq.'topography'.or.
+     &         cdatatype(1:lent).eq.'soiltemp'   )then
 
 
              SHA=0.
@@ -1530,11 +1545,10 @@ c dominant greenness fraction for each month
               datqs(iq,jq,lp)=domcat
              enddo
 
-            elseif(cdatatype(1:lent).eq.'soiltemp'    )then
-
-              call compute_categories(cdatatype,np*np,DATP(1,1,1)
-     &                               ,1,domcat,pctcat)
-              datq(iq,jq)=domcat
+c           elseif(cdatatype(1:lent).eq.'soiltemp'    )then
+c             call compute_categories(cdatatype,np*np,DATP(1,1,1)
+c    &                               ,1,domcat,pctcat)
+c             datq(iq,jq)=domcat
 
             endif
 
@@ -1635,19 +1649,30 @@ c let's constrain the landfrac data between 0.0 and 1.0
 
       elseif(cdatatype(1:lent).eq.'soiltemp'  )then
 
+        where(datq .eq. 0.0)datq=r_missing_data
+        datr=r_missing_data
         DO 58 JR=1,N3
          DO 59 IR=1,N2
-            IXR=NINT((XT(IR)-XQ1)/DELTAXQ)+1.
-            IYR=NINT((YT(JR)-YQ1)/DELTAYQ)+1.
-            if(ixr.lt.1)ixr=1
-            if(iyr.lt.1)iyr=1
-            if(ixr.gt.n2)ixr=niq
-            if(iyr.gt.n3)iyr=njq
-            datr(ir,jr)=datq(ixr,iyr)
+c           IXR=NINT((XT(IR)-XQ1)/DELTAXQ)+1.
+c           IYR=NINT((YT(JR)-YQ1)/DELTAYQ)+1.
+c           if(ixr.lt.1)ixr=1
+c           if(iyr.lt.1)iyr=1
+c           if(ixr.gt.n2)ixr=niq
+c           if(iyr.gt.n3)iyr=njq
+c           datr(ir,jr)=datq(ixr,iyr)
+
+            XR=(XT(IR)-XQ1)/DELTAXQ+1.
+            YR=(YT(JR)-YQ1)/DELTAYQ+1.
+            call bilinear_interp_extrap(xr,yr,niq,njq
+     1               ,datq,rval,istatus)
+
+c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
+
+            DATR(IR,JR)=max(0.,RVAL)
+
  59      CONTINUE
  58     CONTINUE
 
-        where(datr .eq. 0.0)datr=r_missing_data
 
       endif
 
@@ -1928,9 +1953,12 @@ c quantitative data types
 
       return
       end
-
-      subroutine adjust_geog_data(nnxp,nnyp,lat,topt_out
-     &,path_to_soiltemp, landmask, soiltemp_1deg, greenfrac)
+c
+c ----------------------------------------------------------
+c
+      subroutine adjust_geog_data(nnxp,nnyp,istatgrn,istattmp
+     &,lat,topt_out,path_to_soiltemp,landmask,soiltemp_1deg
+     &,greenfrac,istatus)
 c
 c This routine uses landmask to refine the course resolution
 c soil temp and green fraction data to conform to water-land
@@ -1944,13 +1972,14 @@ c
       integer i,j,l,ii,jj
       integer is,js
       integer istatus
+      integer istatgrn
+      integer istattmp
       integer ijsthresh
       integer l1,l2
       integer ncat
       parameter (ncat= 12)
 
       integer isc
-      integer igc
       integer ic(ncat) 
 
       character*(*) path_to_soiltemp
@@ -1977,6 +2006,13 @@ c
       real    sum(ncat)
       real    tslp
 
+      istatus=0
+      if(istatgrn.eq.0 .and. istattmp.eq.0)then
+	 print*,'Cannot process greenfrac or soiltemp ',
+     &'in adjust_geog ... no data'
+	 return
+      endif
+
 
 c use moist adiabatic laps rate (6.5 deg/km) to get new temp
  
@@ -1988,7 +2024,7 @@ c use moist adiabatic laps rate (6.5 deg/km) to get new temp
       soiltmp=soiltemp_1deg
       grnfrctmp=greenfrac
 
-      where(greenfrac.eq.0.0)greenfrac=r_missing_data
+      where(grnfrctmp.eq.0.0)grnfrctmp=r_missing_data
 
 c determine average soiltemp and greenfrac in domain
       sumt=0.0
@@ -2005,7 +2041,7 @@ c determine average soiltemp and greenfrac in domain
 c greenfrac is assumed to be continuous globally; only use land points
          do l=1,ncat
             if(landmask(i,j) .ne. 0 .and.
-     &         grnfrctmp(i,j,l).ne.0.0)then
+     &         grnfrctmp(i,j,l).lt.r_missing_data)then
                sum(l)=grnfrctmp(i,j,l)+sum(l)
                ic(l)=ic(l)+1
 
@@ -2027,6 +2063,7 @@ c              icmsng(l)=icmsng(l)+1
          call  get_meanlattemp(path_to_soiltemp,rmeanlattemp,istatus)
          if(istatus.ne.1)then
             print*,'Error returned: get_meanlattemp'
+            return
          endif
          l1=nint(minval(lat(:,1)))
          l2=nint(maxval(lat(:,nnyp)))
@@ -2119,56 +2156,57 @@ c search distance.
 
 ! greenness frac
 
-         if(.true.)then
+         if(grnfrctmp(i,j,1).eq.r_missing_data)then  !an inconsistency exists
 
-         do l=1,12
+          endsearch = .false.
 
-          if(grnfrctmp(i,j,l).eq.0.0)then  !an inconsistency exists
-
-           endsearch = .false.
-
-           sumg=0.0
-           igc=0
-           is=1
-           js=1
-           jj=j
+          sum=0.0
+          ic=0
+          is=1
+          js=1
+          jj=j
         
-           do while (.not.endsearch)
+          do while (.not.endsearch)
+           do ii=i-is,i+is
+           do jj=j-js,j+js
 
-            do ii=i-is,i+is
-            do jj=j-js,j+js
+            if( (ii.ge.1) .and. (ii.le.nnxp)
+     &     .and.(jj.ge.1) .and. (jj.le.nnyp)) then
 
-               if( (ii.ge.1) .and. (ii.le.nnxp)
-     &        .and.(jj.ge.1) .and. (jj.le.nnyp)) then
+             if(landmask(ii,jj).eq.1.and.
+     &         grnfrctmp(ii,jj,1).lt.r_missing_data)then
 
-                  if(landmask(ii,jj).eq.1.and.
-     &               grnfrctmp(ii,jj,l).ne.0.0)then
+               do l=1,12
+                  sum(l)=sum(l)+grnfrctmp(ii,jj,l)
+                  ic(l)=ic(l)+1
+               enddo
+             endif
 
-                     sumg=sumg+grnfrctmp(ii,jj,l)
-                     igc=igc+1
-                  endif
-
-               endif
-
-            enddo
-            enddo
-
-            if(igc.gt.0)then
-               greenfrac(i,j,l)=sumg/float(igc)
-               endsearch=.true.
-            else
-               is=is+1
-               js=js+1
-               if(is.gt.ijsthresh.or.js.gt.ijsthresh)endsearch=.true.
             endif
 
            enddo
+           enddo
 
-          endif
+           if(ic(1).gt.0)then
+              do l=1,12
+                 greenfrac(i,j,l)=sum(l)/float(ic(l))
+              enddo
+              endsearch=.true.
+           else
+              is=is+1
+              js=js+1
+              if(is.gt.ijsthresh.or.js.gt.ijsthresh)endsearch=.true.
+           endif
 
-         enddo
+          enddo
 
-         endif  !disabling 
+         else
+
+          do l=1,12
+           greenfrac(i,j,l)=grnfrctmp(i,j,l)
+          enddo
+
+         endif
 
         else     !this is a water point
 
@@ -2199,8 +2237,8 @@ c then use average value
                soiltemp_1deg(i,j) = avgtmp-0.0065*topt_out(i,j)
             endif
 
-            do l = 1,ncat
-               if(greenfrac(i,j,l).eq.r_missing_data)then
+            do l = 1,12
+               if(greenfrac(i,j,l).eq.0.0)then
                   greenfrac(i,j,l)=float(nint(avggrn(l)))
                endif
             enddo
@@ -2211,6 +2249,8 @@ c then use average value
       enddo
 
       deallocate (grnfrctmp,soiltmp)
+
+      istatus=1
 
       return
       end
