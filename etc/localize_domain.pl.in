@@ -158,7 +158,7 @@ if(-d $FXA_DATA){
 #
 # first get the info from the appropriate namelist
 open(PARMS,"$DATA_ROOT/static/$namelist");
-my($xdim,$ydim,$zdim,$varx,$vary,$varz);
+my(@xdim,@ydim,$zdim,$varx,$vary,$varz);
 if($namelist eq "wrfsi.nl"){
    $varx="xdim";$vary="ydim";$varz="levels";
 }else{
@@ -167,16 +167,16 @@ if($namelist eq "wrfsi.nl"){
 
 while(<PARMS>){
 
-    $xdim = $1 if(/^\s+$varx\s*=\s*(\d+),/i);
-    $ydim = $1 if(/^\s+$vary\s*=\s*(\d+),/i);
-    $zdim = $1 if(/^\s+$varz\s*=\s*(\d+),/i);
+    $xdim[0] = $1 if(/^\s+$varx\s*=\s*(\d+),?/i);
+    $ydim[0] = $1 if(/^\s+$vary\s*=\s*(\d+),?/i);
+    $zdim    = $1 if(/^\s+$varz\s*=\s*(\d+),?/i);
 }
 close(PARMS);
 $zdim = 1 if ($namelist eq "wrfsi.nl");
 
-if($xdim <=0 || $ydim <= 0 || $zdim<=0){
+if($xdim[0] <=0 || $ydim[0] <= 0 || $zdim<=0){
   print "$0: Error Reading grid size from $DATA_ROOT/static/$namelist\n";
-  print "nx=$xdim ny=$ydim nz=$zdim\n";
+  print "nx=$xdim[0] ny=$ydim[0] nz=$zdim\n";
   exit -1;
 }
 
@@ -204,28 +204,80 @@ unless(-d "$DATA_ROOT/cdl"){
 	die "Could not find or create cdl directory in $DATA_ROOT/cdl";
     }
 }
+#
+# Prepare cdl's for wrfsi in the case of nesting
+#
+my @num_doms;
+my @moad_domain_orig_lli;
+my @moad_domain_orig_llj;
+my @moad_domain_orig_uri;
+my @moad_domain_orig_urj;
+my @moad_ratio_2_parent;
+my @parent_id;
+my ($deltai,$deltaj, $dn, $cstring, $i);
+if($WHICH_TYPE eq "wrfsi"){
+   @moad_domain_orig_lli = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_lli",$DATA_ROOT);
+   @moad_domain_orig_llj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_llj",$DATA_ROOT);
+   @moad_domain_orig_uri = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_uri",$DATA_ROOT);
+   @moad_domain_orig_urj = &laps_tools::get_nl_value("wrfsi.nl","domain_origin_urj",$DATA_ROOT);
+   @moad_ratio_2_parent  = &laps_tools::get_nl_value("wrfsi.nl","ratio_to_parent",$DATA_ROOT);
+   @parent_id            = &laps_tools::get_nl_value("wrfsi.nl","parent_id",$DATA_ROOT);
+   @num_doms             = &laps_tools::get_nl_value("wrfsi.nl","num_domains",$DATA_ROOT);
+   if($num_doms[0] > 99){
+      print "Error: Number of domains > 99. Terminating. $num_doms[0]\n";
+   }
+   for ($i=1; $i<=$num_doms[0]; $i++){
+     $cstring=$i;
+     $cstring='0'.$cstring while (length $cstring < 2);
+     run_sys::run_sys("cp $SOURCE_ROOT/data/cdl/wrfsi.cdl $DATA_ROOT/cdl/wrfsi.d$cstring.cdl");
+   }
+}
+
 opendir(CDL_DIR,"$DATA_ROOT/cdl");
 my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
 
 foreach(@cdl_list){
+
 # The next line was commented out on 11 Jan 01 to more closely couple LAPS and any
 #   model using the files fua.cdl and fsf.cdl  fua.cdl and fsf.cdl will now be
 #   edited to match the LAPS x and y dimensions each time laps_localization.pl is run.
 #  \/ The following line no longer applies  \/  11 Jan 01
-# DO not edit the model output cdl files, the user must currently edit these by hand.
-#
-#   next if/^f/;
-    open(CDL,"$DATA_ROOT/cdl/$_");
-    my @cdl = <CDL>;
-    close(CDL);
+# Calculate the grid dimensions for wrfsi when we have more than 1 domain.
+   $dn=0;
+   if(/^wrfsi\.d(\d\d)/){
+      if($1 < 10){
+         $dn = substr($1,1,1)-1;
+     }else{
+         $dn = $1-1;
+     }
+     if($dn > 0){
+        $deltai  = $moad_domain_orig_uri[$dn]-$moad_domain_orig_lli[$dn];
+        $deltaj  = $moad_domain_orig_urj[$dn]-$moad_domain_orig_llj[$dn];
+        if($moad_domain_orig_uri[$dn] > $xdim[$dn-1]){
+           print "Error: Upper right x dim of child outside of parent domain\n";
+           print "       $moad_domain_orig_uri[$dn] $xdim[$dn-1]\n";
+           exit;
+        }elsif($moad_domain_orig_urj[$dn] > $ydim[$dn-1]){
+           print "Error: Upper right y dim of child outside of parent domain\n";
+           print "       $moad_domain_orig_urj[$dn] $ydim[$dn-1]\n";
+           exit;
+        }
+        $xdim[$dn] = $deltai*$moad_ratio_2_parent[$dn]+1;
+        $ydim[$dn] = $deltaj*$moad_ratio_2_parent[$dn]+1;
+     }
+     print "dims for domain $1: x,y = $xdim[$dn],$ydim[$dn]\n";
+   }
+   open(CDL,"$DATA_ROOT/cdl/$_");
+   my @cdl = <CDL>;
+   close(CDL);
 
-    open(CDL,">$DATA_ROOT/cdl/$_");
-    foreach(@cdl){
+   open(CDL,">$DATA_ROOT/cdl/$_");
+   foreach(@cdl){
 	if(/^(\s+)x\s*=/){
-	    print CDL "$1x = $xdim,\n" ;
+	    print CDL "$1x = $xdim[$dn],\n" ;
 	}elsif(/^(\s+)y\s*=/){
-	    print CDL "$1y = $ydim,\n" ;
+	    print CDL "$1y = $ydim[$dn],\n" ;
 	}elsif(/^(\s+)z\s*=\s*(\d+)/){
 	    if($2>5  && $2!=42){
 		print CDL "$1z = $zdim,\n" ;
@@ -235,8 +287,8 @@ foreach(@cdl_list){
 	}else{
 	    print CDL $_;
 	}
-    }
-    close(CDL);
+   }
+   close(CDL);
 }
 #
 # localize optran coefficients
@@ -407,7 +459,7 @@ sub update_nl{
                 if ($fnd == 0) {
                   push(@comments,$line);
                 }
-		next;
+                next;
             }elsif($line =~ /^\s*&/){
 		print OUTFILE $line;
 		next;
