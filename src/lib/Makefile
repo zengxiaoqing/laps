@@ -40,6 +40,7 @@ SRC	= machine_dependent.F \
           check_nan1.f \
           check_nan2.f \
           check_nan3.f \
+          climate_sm.f \
           constant.f \
           convc2f.f \
           conversions.f \
