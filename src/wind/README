@@ -21,7 +21,8 @@ program laps_wind                              main.f
                 get_time_term                  get_time_term.f
         get_fnorm_max
         laps_anl                               windanal.f
-            insert_derived_radar_obs              "
+            qc_radar_obs                       qcradar.f
+            insert_derived_radar_obs           windanal.f
             make_derived_radar_obs                "
             filter_radar_obs                      "
             spread_vert                           "
