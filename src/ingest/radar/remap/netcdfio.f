@@ -66,7 +66,8 @@ cdis
 
 !      This call is still needed for return of 'laps_radar_ext/c3_radar_subdir'
 !      We could change this to pass these in through the 'radar_init' call
-       call get_remap_parms(i_radar,n_radars_remap,path_to_radar       
+       call get_remap_parms(i_radar,n_radars_remap
+     1                    ,max_times,path_to_radar     
      1                    ,laps_radar_ext,c3_radar_subdir
      1                    ,path_to_vrc
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr

@@ -55,7 +55,7 @@ cdis
       endif
 
 !     This first call returns only 'n_radars_remap'
-      call get_remap_parms(0,n_radars_remap,path_to_radar
+      call get_remap_parms(0,n_radars_remap,max_times,path_to_radar
      1       ,laps_radar_ext,radar_subdir_dum,path_to_vrc,ref_min
      1       ,min_ref_samples,min_vel_samples,dgr,istatus)          
       if(istatus .ne. 1)then
@@ -70,10 +70,9 @@ cdis
      1             ,n_radars_remap
       endif
 
-      max_times = 3
-
       do i_radar = 1,n_radars_remap
-          call get_remap_parms(i_radar,n_radars_remap,path_to_radar
+          call get_remap_parms(i_radar,n_radars_remap,max_times
+     1                  ,path_to_radar
      1                  ,laps_radar_ext,radar_subdir_dum
      1                  ,path_to_vrc
      1                  ,ref_min,min_ref_samples,min_vel_samples,dgr
@@ -462,7 +461,7 @@ cdis
       end
 
  
-       subroutine get_remap_parms(i_radar,n_radars_remap
+       subroutine get_remap_parms(i_radar,n_radars_remap,max_times
      1            ,path_to_radar,laps_radar_ext
      1            ,c3_radar_subdir,path_to_vrc
      1            ,ref_min,min_ref_samples,min_vel_samples,dgr     
@@ -484,7 +483,7 @@ cdis
 
        character*3 c3_radar_subdir
 
-       namelist /remap_nl/ n_radars_remap,path_to_radar_a     ! ,c4_radarname_a
+       namelist /remap_nl/ n_radars_remap,max_times,path_to_radar_a ! ,c4_radarname_a
      1                    ,laps_radar_ext_a,path_to_vrc_nl
      1                    ,ref_min,min_ref_samples,min_vel_samples,dgr
        character*150 static_dir,filename
@@ -532,6 +531,8 @@ cdis
 
 !      write(6,*)' c4_radarname    = ',c4_radarname
        call s_len(laps_radar_ext,len_ext)
+       write(6,*)' n_radars_remap  = ',n_radars_remap
+       write(6,*)' max_times       = ',max_times
        write(6,*)' laps_radar_ext  = ',laps_radar_ext(1:len_ext)
        write(6,*)' c3_radar_subdir = ',c3_radar_subdir
        write(6,*)' path_to_vrc     = ',path_to_vrc
