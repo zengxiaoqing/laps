@@ -116,6 +116,7 @@
      +         ,moad_known_lat, moad_known_lon, moad_known_loc
      +         ,moad_stand_lats, moad_stand_lons 
      +         ,moad_delta_x, moad_delta_y
+     +         ,silavwt_parm, toptwvl_parm 
 
 
       istatus = 0
@@ -264,7 +265,46 @@
 c
 c -------------------------------------------------------------------
 c
+      subroutine read_analysis_control(c_analysis_type,istatus)
+
+      implicit none
+      include 'grid_fname.cmn'
+
+      character*80 filename
+      character*10 c_analysis_type
+
+      integer      istatus
+      integer      iflag_anl_control_cmn
+      data         iflag_anl_control_cmn/0/
+      save         iflag_anl_control_cmn
+
+      namelist /analysis_control/
+     +          c_analysis_type
+
+      integer      lenr
+
+      istatus = 0
+      call s_len(generic_data_root,lenr)
+      filename = generic_data_root(1:lenr)//'/static/wrfsi.nl'
+      if(iflag_anl_control_cmn.ne.1)then
+         open(93,file=filename,status='old',err=900)
+         rewind(93)
+         read(93,analysis_control,err=901)
+         close(93)
+         iflag_anl_control_cmn=1
+      endif
+      istatus = 1
+      return
+ 900  print*,'error opening namelist file ', filename
+      return
+
+ 901  print*,'error reading namelist file for paths_to_raw_data'
+      write(*,analysis_control)
+      return
+      end
+!
 !----------------------------
+!
       subroutine read_wrfsi_laps_control(
      +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
      + ,pressure_bottom,pressure_interval

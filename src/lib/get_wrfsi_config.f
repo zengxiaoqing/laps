@@ -35,8 +35,6 @@ c       include 'wrf_dims.inc'
         character*50 c50_lowres_dir
         character*8  radarext_3d
         character*8  radarext_3d_accum
-        real*4       silavwt_parm
-        real*4       toptwvl_parm
         character*8  c8_project
         character*9  fdda_model_source(10)  !models_max)
 
@@ -49,13 +47,13 @@ c       include 'wrf_dims.inc'
 c       include 'wrf_laps_analysis.cmn'
 
  
-        integer       i,nest,lvc
+        integer       i,nest,lvc,ltyp
         integer       istatus
 
         real*4        grid_spacing_wrf_m
         real*4        grid_spacing_m
         character*6   wrftolaps_c6_maprojname
-        character*8   c_analysis_type
+        character*10  c_analysis_type
 
         call read_wrfsi_hgridspec (istatus)
         if(istatus.ne.1)then
@@ -87,6 +85,12 @@ c          print*,'error reading wrfsi_vgridspec'
 c          return
 c       endif
 
+        call read_analysis_control(c_analysis_type,istatus)
+        if(istatus.ne.1)then
+           print*,'error reading wrfsi c_analysis_control'
+           return
+        endif
+
         call read_wrfsi_laps_control (
      +  nx_l,ny_l,nz_l,c_vcoordinate,grid_spacing_m
      + ,pressure_bottom,pressure_interval
@@ -106,9 +110,6 @@ c       endif
            return
         endif
 c
-c somehow we need to determine which nest we are processing
-c
-        nest = 1
         standard_latitude  =moad_stand_lats(1)
         standard_latitude2 =moad_stand_lats(2)
         standard_longitude =moad_stand_lons(1)
@@ -120,12 +121,10 @@ c
         path_to_soil2m = '/null'
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)
-
         c80_description = simulation_name_cmn
 
-c hardwires for the time being since these are not in wrfsi.nl
-        silavwt_parm_cmn = 0.
-        toptwvl_parm_cmn = 2.
+        silavwt_parm_cmn = silavwt_parm
+        toptwvl_parm_cmn = toptwvl_parm
 
         path_to_raw_pirep_cmn = path_to_raw_pirep
         path_to_raw_rass_cmn = path_to_raw_rass
@@ -136,27 +135,24 @@ c hardwires for the time being since these are not in wrfsi.nl
         path_to_wsi_3d_radar_cmn = path_to_wsi_3d_radar
         path_to_qc_acars_cmn = path_to_qc_acars
 
-        c_analysis_type = 'laps'
         call s_len(c_vcoordinate,lvc)
+        call s_len(c_analysis_type,ltyp)
+        vertical_grid = c_vcoordinate(1:lvc)
+        nk_laps = nz_l                     ! moad_nz
 
-        if(c_analysis_type .eq. 'laps')then   !this means that laps will be configured
-!                                              using laps_analysis_control
+        nest = 1
+        if(c_analysis_type(1:ltyp).eq.'laps')then   ! this means that the grid dimensions for lapsparms.cmn
+                                                    ! will be configured using laps_analysis_control
            nx_l_cmn = nx_l
            ny_l_cmn = ny_l
-           nk_laps = nz_l
            grid_spacing_m_cmn = grid_spacing_m
-           vertical_grid = c_vcoordinate(1:lvc)
 
-c       else                                  !this means that laps will be configured
-!                                              with the wrf h/v gridspecs.
-
-c we also need to get the level info (p_bot, p_int, etc)
-c          nx_l_cmn = xdim(nest)
-c          ny_l_cmn = ydim(nest)
-c          nk_laps = moad_nz
-c          vertical_grid = verticalcoord
-c          grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
-
+        else                                        ! this means that the grid dimensions for lapsparms.cmn
+                                                    ! will be configured with the wrf h gridspec.
+           nx_l_cmn = xdim(nest)
+           ny_l_cmn = ydim(nest)
+           grid_spacing_m_cmn = grid_spacing_wrf_m(nest)
+           
         endif
 
         pressure_bottom_l = pressure_bottom
