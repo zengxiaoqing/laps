@@ -2317,6 +2317,8 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 </pre>
 
 Source directory: laps/src/ingest/raob (contains a README file)
+
+Parameter namelist file (for data paths): 'static/snd.nl'
                                         
 Sample Input/Output: May be available in the test data case. If not, the README
                      in the source directory contains a description of the 
