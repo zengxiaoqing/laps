@@ -24,7 +24,7 @@
          2.2.2.1 ...................  Modifying Compiler Flags     
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
-         2.2.5 ..................  Untarring the geography databases
+         2.2.5 ..................  Geography databases
          2.2.6 ..................  Localizing for single or multiple data domains
          2.2.6.1 .....................  Localization Method 1
          2.2.6.2 .....................  Localization Method 2
@@ -537,22 +537,82 @@
      'configure' a second time so that things will run smoothly. 
 
      
-            ----   2.2.5  Untarring the geography databases  ---
+            ----   2.2.5  Geography databases  ---
 
-     Next untar the 'laps_terrain.tar.gz' file anywhere that is convenient
-     on your machine.
+     Currently there are three mandatory geography databases required to
+     localize a LAPS domain. These are: 1) terrain, 2) landuse, and 3) albedo. 
 
-     The terrain data files come in compressed tar files separate
-     from the rest of the LAPS distribution.  There are two 30" topography 
-     databases; 'topo_30s' is in file 'laps_terrain.tar.gz', the other in our 
-     'world_topo_30s' directory. You can choose from either database 
-     (see section 2.7.4). Only one copy of the topo data is required no matter
-     how many data installations you are supporting. The paths to the three 
-     main subdirectories (topo_30s, topo_10m, and land_10m) are defined as
+     The 30" terrain data is found in one of two tar files; 'world_topo_30s'
+     and 'topo_30s'. topo_30s is in file 'laps_terrain.tar.gz'. You must
+     get 'laps_terrain.tar.gz' since it also has both the mandatory land
+     fraction data and the 10 minute global terrain data. Note that the 10 min
+     topo data is being phased out in favor of the 30 sec terrain data.
+     Either topo_30s or world_topo_30s work well; however topo_30s does
+     not cover the entire globe and we recommend using world_topo_30s
+     data instead. Still, you must get 'laps_terrain.tar.gz'.
+
+     The landuse data is global 30" data and required to compute a
+     land/water mask. The mask is used during localization to force consistency
+     between the other geography data at land-water boundaries.
+
+     The global albedo climatology database has less resolution than either
+     the terrain or landuse data.  The albedo is approximately 8.6 minutes
+     (0.144 degs) and was obtained from the National Center for Environmental
+     Prediction (NCEP).  This data is used in the LAPS cloud analysis with
+     visible imagery data.
+
+     The geography data come in compressed tar files separate
+     from the rest of the LAPS distribution. The data are used in
+     process 'gridgen_model' which is the fortran code to process all
+     the geography data as specified by the user (see section 2.7.4 for more
+     information about gridgen_model). Only one copy of the geography
+     data is required no matter how many LAPS 'dataroot' installations you
+     are supporting.  The paths to the geography data directories
+     (topo_30s, topo_10m, land_10m, landuse_30s, and albedo_ncep) are defined as
      runtime parameters within the 'nest7grid.parms' file (Sec 2.2.6). 
 
-     The land fraction database is required for the 'land_10m' subdirectory
-     and is included in the 'laps_terrain.tar.gz' file.
+     In addition to the geography being available on the LAPS Home Web page
+     (software link), the geography data is also available at:
+
+                  -----------------------------------
+                  ftp://ftp.fsl.noaa.gov/pub/frd-laps
+                  -----------------------------------
+
+     You will find the following global data sets at this ftp site. Some of
+     the data have been subdivided into "quartershperes" for easier downloading.
+     Select the files needed for your application or get all of them if you
+     intend to generate localizations around the entire globe.
+     .
+
+     132446109 Aug 24  2001 topo_30s/topo_30s_NE.tar.gz
+     63435504  Aug 24  2001 topo_30s/topo_30s_NW.tar.gz
+     37194099  Aug 24  2001 topo_30s/topo_30s_SE.tar.gz
+     29204244  Aug 24  2001 topo_30s/topo_30s_SW.tar.gz
+
+                            pctland_10m.tar.gz
+   
+     12324069  Aug 24  2001 landuse_30s/landuse_30s_NE.tar.gz
+     6118611   Aug 24  2001 landuse_30s/landuse_30s_NW.tar.gz
+     3355822   Aug 24  2001 landuse_30s/landuse_30s_SE.tar.gz
+     2808861   Aug 24  2001 landuse_30s/landuse_30s_SW.tar.gz
+
+                            albedo_ncep/A90S000E
+                            albedo_ncep/A90S000W
+                            albedo_ncep/AHEADER
+
+     User note:
+
+          The laps process 'gridgen_model' described below in section
+          3.0 can also process soil type, mean annual soil temperature,
+          and greeness fraction but these are not mandatory data required
+          in LAPS and therefore we do no describe them here.  You'll see
+          some reference to these data bases below and we have added
+          paths to this data in our namelist file (nest7grid.parms) but
+          you should enter dummy paths for these data in the event you
+          do not have them available. The gridgen_model
+          process will warn that these data are not available but you
+          should still see the localization run to completion (ie.,
+          static.nest7grid is generated).
 
          --- 2.2.6 Localizing for single or multiple data domains ---
 
@@ -570,7 +630,7 @@
      Below are two mainly equivalent procedures for localizing LAPS to set
      up one or more domains. The first is our original method for localization.
      The second is a newer, more efficient (and highly recommended) method 
-     using "template" directories. You'll want to use either Method 1 or 
+     using domain "template" directories. You'll want to use either Method 1 or 
      Method 2 but not both.
 
                         --- 2.2.6.1 Localization Method 1 ---
@@ -657,20 +717,20 @@
      Generating new localizations, reconfiguring existing localizations, and 
      reconfiguring existing localizations without removing lapsprd or log 
      information is made easier with the perl script 'etc/window_domain_rt.pl' 
-     ("window" hereafter). The window script makes use of namelist templates 
-     that specifically define a users localizations.  The script uses 
+     ("window" hereafter). The window script makes use of namelist domain templates 
+     that specifically define a users localizations.  The window script uses 
      environment variables $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, 
      however, -s, -i, and -d command-line inputs override those environment 
      variables as necessary depending on user needs.  The -t command-line input
-     specifies the TEMPLATE directory and the script saves the log/lapsprd 
-     history when no '-c' is supplied in the command line, or completely 
+     specifies the domain template directory and the script saves the log/lapsprd 
+     history if command line switch '-c' is not used; or, completely 
      removes $LAPS_DATA_ROOT if '-c' is supplied. The '-w laps' is always
      required. The window script can be run manually when configuring or 
-     reconfiguring localizations. Window copies the template namelist subsets 
+     reconfiguring localizations. Window copies the domain template namelists 
      (partial nest7grid.parms or *.nl's) into a new "static" subdirectory which,
-     in turn, are merged with the full namelists by localize_domain.pl. Recall
-     that $LAPSINSTALLROOT contains bin/ and etc/ which $LAPS_SRC_ROOT contains
-     the untarred namelists.  
+     in turn, are merged with the full namelists by script localize_domain.pl.
+     Recall, $LAPSINSTALLROOT contains bin/ and etc/ and $LAPS_SRC_ROOT contains
+     the untarred full namelists from the repository.  
 
      In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
      containing static/ and cdl/ must be available for use by 
@@ -1046,6 +1106,14 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            We are ingesting the ASCII satellite cloud-drift wind files
            for use in the wind analysis. These come from NESDIS (via NIMBUS)
            as well as from CWB and AFWA.
+
+     GPS:
+           LAPS uses GPS precipitable water data in the humidity analysis
+           that is stored in NIMBUS/NetCDF files. There is a second local
+           data (LDAD) NetCDF file that carries GPS data. This second format
+           can supply GPS surface data to the LAPS intermediate 'lso' file.
+           LAPS does not currently read precipitable water from this second
+           format, only the first one.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -1468,7 +1536,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
         The 'gridgen_model.exe' program normally utilizes one of two terrain 
         databases (distributed separately and available from the laps www 
-        site). 
+        site ... refer to section 2.2.5 for up-to-date information about
+        the geography data requirements in LAPS). 
 
         The first database has two components; one is a worldwide 10' dataset,
         (topo_10m directory) the other is 30" data (topo_30s directory) 
@@ -1477,6 +1546,11 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
         otherwise it defaults to the lower resolution data. A ~0.2 degree 
         wide transition zone is used for blending at the boundary between the 
         two datasets. 
+
+        User Note:
+              The functionality described above still exist in gridgen_model,
+              however, it is being phased out in favor of world wide 30 sec
+              terrain data and eventually blending should not be needed.
 
         Two scenarios for processing the first database may need more testing.
         These are:
@@ -1771,7 +1845,7 @@ since 3 layers are routinely available from NESDIS.
    The applicable compiler versions (often a -v or -V option to the compiler)
    The entire output of configure 
    The entire output of make (standard output + error output)
-   The entire output of localize_domain.pl
+   The entire output of localize_domain.pl (found in $LAPS_DATA_ROOT/log/localize_domain.log)
 </pre>
 
                    ----  2.13.1 Runtime Monitoring ---
@@ -1827,7 +1901,9 @@ Contact: John Smart - smart@fsl.noaa.gov
 
 Inputs:
 	Geography databases (topography, land fraction, landuse, soiltype top/bot)
-                             files are typically in 1deg or 10deg tiles.
+                             greenness fraction, mean annual soil temperature, and
+                             albedo. Files are typically in 10, 30, or 180 deg tiles.
+                             See section 2.2.5 for details on the geography data.
         static/nest7grid.parms
 
 <pre>
@@ -1838,10 +1914,11 @@ Outputs:
                                    'LAT'       latitude in degrees
                                    'LON'       longitude in degrees
                                    'AVG'       mean elevation MSL
-                                   'LDF'       land fraction (0=water,1=land)
+                                   'LDF'       land fraction (1.0=land; 0.0=water)
+                                   'LND'       land-water mask (1=land; 0=water)
                                    'USE'       usgs 30s (24 vegetation categories)
                                                landuse data (currently dominant category
-                                                              for each grid point).
+                                                             for each grid point).
 
                                      1:   Urban and Built-Up Land
                                      2:   Dryland Cropland and Pasture
@@ -1868,9 +1945,10 @@ Outputs:
                                     23:   Bare Ground Tundra
                                     24:   Snow or Ice
 
+                                   'U01-U24' Fractional distribution of landuse category (not active).
                                    'STL'    Soil type - top layer (0-30cm)
                                    'SBL'    Soil type - bottom layer (30-90cm)
-                                          (currently dominant category for each grid pt)
+                                            (currently dominant category for each grid pt)
 
                            FAO/WMO 16-category soil texture:
                                      1          SAND
@@ -1890,12 +1968,21 @@ Outputs:
                                     15          BEDROCK
                                     16          OTHER (land-ice)
 
+                                   'T01-T16' Fractional distribution of top layer soil texture class (not active)
+                                   'B01-B16' Fractional distribution of bottom layer soil texture class (not active)
+                                   'TMP'     Mean annual soil temperature
+                                   'G01-G12' Monthly (center of month) greenness fraction
+                                   'A01-A12' Monthly (center of month) albedo climatology
+                                   'ALB'     Not used
+
         static/latlon.dat         Binary grid   latitude
                                                 longitude
 
         static/topo.dat           Binary grid   mean elevation
 
         static/corners.dat        ASCII         lat/lon of 4 corner points
+
+        static/latlon2d.dat       ASCII         latitude/longitude
 </pre>
 
 Source directory: laps/src/grid
