@@ -2,9 +2,10 @@
 
       Below is an example of our ASCII 'snd' files that we use for input into 
       LAPS. The filename for this is '961581200.snd' (yydddhhmm). We store 
-      one of these for each analysis cycle in the 'nest7grid/lapsprd/snd' 
-      directory. A reliable way to populate these files is to call the 
-      subroutine 'write_snd' located in this directory.
+      one of these time stamped files for each analysis cycle in the 
+      'nest7grid/lapsprd/snd' directory. The time stamp on the SND file should
+      thus match the 'systime.dat' file. A reliable way to populate these files
+      is to call the subroutine 'write_snd' located in this directory.
 
       The first row contains Station ID, # of levels, lat, lon (- is West), 
       elevation (meters above MSL), and identifier. This is in a set format 
