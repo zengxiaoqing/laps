@@ -185,22 +185,22 @@ c     parameter variables
 
 
         integer*4
-     1        jstatus(3)
+     1       jstatus(3)
 
 
 
 
-        integer*4
-     1        istatus,
-     1        t_istatus,
-     1        i4time,
-     1        i4timep,
-     1        c_istatus,
-     1        save_i4time,
-     1        ramsi4time
+        integer
+     1       istatus,
+     1       t_istatus,
+     1       i4time,
+     1       i4timep,
+     1       c_istatus,
+     1       save_i4time,
+     1       ramsi4time
 
         real
-     1        ssh2   !function
+     1       ssh2               !function
 c     1        make_ssh !function type
 
 
@@ -280,6 +280,13 @@ c       external rtsys_no_data, rtsys_abort_prod
         real*4 plevel(kk)
         integer*4 mlevel(kk)
 
+c
+c
+c      gvap variables
+c
+ 	real gvap_data(ii,jj)
+
+
 
 
 
@@ -292,9 +299,11 @@ c       external rtsys_no_data, rtsys_abort_prod
         integer tiros_switch
         integer sounder_switch
         integer sat_skip
+        integer gvap_switch
         namelist /moisture_switch/ raob_switch,
-     1  raob_lookback, goes_switch, cloud_switch
-     1         ,tiros_switch, sounder_switch, sat_skip
+     1       raob_lookback, goes_switch, cloud_switch
+     1       ,tiros_switch, sounder_switch, sat_skip
+     1       ,gvap_switch
 
         integer len
         character*200 cdomain
@@ -337,6 +346,7 @@ c set namelist parameters to defaults (no satellite)
         sounder_switch = 0
         tiros_switch = 0
         sat_skip = 0
+        gvap_switch = 0
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
@@ -391,6 +401,12 @@ c set namelist parameters to defaults (no satellite)
           write(6,*) 'Use full resolution satellite'
         else
           write(6,*) 'Using partial satellite resolution ',sat_skip
+      endif
+
+      if (gvap_switch .eq. 1) then
+           write(6,*) 'Using goes derived pw, assume data connection'
+        else
+           write(6,*) 'GVAP not used... nominal state'
       endif
 
 
@@ -823,6 +839,31 @@ c                                        ! still cloudy...put in for albers
            enddo
 
 
+        endif
+
+c gvap data insertion step (currently under test)
+
+        if (gvap_switch.eq.1) then
+           call process_gvap(ii,jj,gvap_data,tpw,
+     1          lat,lon,filename,istatus)
+
+           if(istatus.eq.1) then! apply gvap weights
+
+              do k = 1,kk
+                 do j = 1,jj
+                    do i = 1,ii
+                       if(data(i,j,k).ge.0.0) then
+                          data(i,j,k) = data(i,j,k) * gvap_data(i,j)
+     1                         + data(i,j,k)
+                       endif
+                    enddo
+                 enddo
+              enddo
+           else
+              write(6,*) 'gvap weights not applied, istatus = 0'
+           endif
+        else
+           continue
         endif
 
 

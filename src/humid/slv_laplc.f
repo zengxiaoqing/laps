@@ -45,43 +45,50 @@ c
         integer mask(nx,ny)
         real data(nx,ny),error
         real maxerror
+        real typical_data
 
         integer i,j,k
 
 
 
-        do k = 1,600
+        do k = 1,6000
 
         maxerror =0.0
 
 
         do j = 2,ny -1
-        do i = 2,nx -1
+           do i = 2,nx -1
 
-        if(mask(i,j) .eq. 0) then
+              if(mask(i,j) .eq. 0) then
 
-        error = 0.25 * ( data(i+1,j) + data(i-1,j) +
-     1  data(i,j+1) + data (i,j-1) ) - data (i,j)
+                 error = 0.25 * ( data(i+1,j) + data(i-1,j) +
+     1                data(i,j+1) + data (i,j-1) ) - data (i,j)
 
-        data (i,j) = error + data(i,j)
+                 data (i,j) = error + data(i,j)
 
-        maxerror = max(maxerror,abs(error))
+                 maxerror = max(maxerror,abs(error))
+
+              else 
+                 typical_data = data(i,j)
 
 
-        endif
+              endif
 
-        enddo
+           enddo
         enddo
 
 c       print*, maxerror
 
 
-        if (maxerror.le. 1.e-5) go to 22
+        if (maxerror/typical_data.le. 1.e-3) go to 22
 
 
         enddo
 
-22      write (6,*) 'max error solving dirichlet problem ', maxerror,k
+        write(6,*) 'diriclet terminated on iterations ', k
+
+22      write (6,*) 'max error solving dirichlet problem ', 
+     1       maxerror/typical_data,k
 
         return
         end

@@ -125,7 +125,9 @@ c  dynamic dependent parameters
 
       real  q_r(kk,100)
       real diff(kk,100)
+      real scale(kk,100)
       real weight (ii,jj,100)
+      integer mask(ii,jj)
 
 c  normal internal parameters
 
@@ -144,13 +146,14 @@ c  normal internal parameters
       real temt, temtd, ssh2
       real r, rmin
       real d2r,pi
-      real tot_diff, tot_weight
+      real tot_diff, tot_weight, tot_scale
       real rspacing_dum
       real rmd
       real W_cutoff             !weight cutoff
       real x(ii*jj)
       integer x_sum
       real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
+      real corr
         
 c *** begin routine
 
@@ -291,6 +294,19 @@ c     rmin is the minimum distance to the raob (i,j of raob essentially)
 
       enddo
 
+c     for afwa and other very large domains where cutoff is encountered
+c     it is necessarey to get rid of discontinuities a bit.
+
+      do k = 1, isound
+         do j =1,jj
+            do i =1,ii
+               mask(i,j) = 0
+            enddo
+         enddo
+         mask(i_r(k), j_r(k)) = 1
+         call slv_laplc (weight(1,1,k),mask,ii,jj)
+      enddo
+
 c     *** interpolate q in the vertical at each raob location to the laps
 c     pressure levels
 
@@ -339,7 +355,7 @@ c *** difference the raob data at each gridpoint location and height
             else
 
                diff(k,is) = q_r(k,is) - data(i_r(is),j_r(is),k)
-
+               scale(k,is) = q_r(k,is)/data(i_r(is),j_r(is),k)
             endif
 
          enddo
@@ -381,10 +397,10 @@ c     compare computed diff values with QC thresholding... assign rmd if bad
 
             if(sdev(k).ne.rmd) then
  
-               if(abs(diff(k,is)) .le. 3.*sdev(k) ) then
+               if(abs(diff(k,is)) .le. 1.5*sdev(k) ) then
                   write(6,*) 'accepting ',k,is,diff(k,is)
                elseif (diff(k,is) .lt. 0.0 
-     1                 .and. abs(diff(k,is)) .le. 5.*sdev(k) ) then
+     1                 .and. abs(diff(k,is)) .le. 2.*sdev(k) ) then
                   write (6,*) 'accepting extreme negative value', 
      1                 k,is,diff(k,is)
                else
@@ -403,8 +419,10 @@ c     *** analyze the field (barnes second pass to background)
          do j = 1,jj
             do i = 1,ii
 
-               tot_weight = 0.0
-               tot_diff = 0.0
+c               tot_weight = 0.0
+c               tot_diff = 0.0
+               tot_scale = 0.0
+               corr = 0.0
 
                do is = 1,isound
 
@@ -413,8 +431,11 @@ c     *** analyze the field (barnes second pass to background)
                   elseif(data(i,j,k).eq.rmd) then !dont modify
                      continue
                   else
-                     tot_diff = weight(i,j,is)*diff(k,is) + tot_diff
-                     tot_weight = tot_weight + weight(i,j,is)
+c     tot_diff = weight(i,j,is)*diff(k,is) + tot_diff
+c     tot_weight = tot_weight + weight(i,j,is)
+                     tot_scale = weight(i,j,is)*scale(k,is) + tot_scale
+                     corr = corr + weight(i,j,is)**2 * (scale(k,is)
+     1                    - 1.0)
                   endif
 
                enddo
@@ -422,10 +443,17 @@ c     *** analyze the field (barnes second pass to background)
                if (
      1              (data(i,j,k) .ne. rmd)
      1              .and.
-     1              (tot_weight.ne.0.0) )then
-                  data(i,j,k) = data(i,j,k) + tot_diff/tot_weight
+     1              (tot_scale.ne.0.0) )then
+c     data(i,j,k) = data(i,j,k) + tot_diff/tot_weight
+c     test_ratio = corr/tot_weight
+c                  write(6,*) corr/tot_scale
+                   data(i,j,k) = data(i,j,k)*corr/tot_scale 
+     1                 + data (i,j,k)
 
-                  if (data(i,j,k) .lt. 0.0) data(i,j,k) = 0.0
+                  if (data(i,j,k) .lt. 0.0) then
+                     write(6,*) 'data zeroed out in raob'
+                     data(i,j,k) = 0.0
+                  endif
                endif
 
             enddo

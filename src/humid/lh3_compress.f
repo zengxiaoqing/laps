@@ -121,170 +121,183 @@ c   initialize
 
 c     note that dynamic assignments don't work in data statements
 
-	do k = 1,kk
-	   var(k) = 'rh3'
-           var(k+kk) = 'rhl'
-	   lvl_coord(k) = 'hpa'
-	   lvl_coord(k+kk) = 'hpa'
-	   units(k) = 'percent'
-	   units(k+kk) = 'percent'
-           comment (k) = ' '
-           comment (k+kk) = ' '
-	 enddo
-											    !k
+      do k = 1,kk
+         var(k) = 'rh3'
+         var(k+kk) = 'rhl'
+         lvl_coord(k) = 'hpa'
+         lvl_coord(k+kk) = 'hpa'
+         units(k) = 'percent'
+         units(k+kk) = 'percent'
+         comment (k) = ' '
+         comment (k+kk) = ' '
+      enddo                     !k
 
 
       call get_r_missing_data(rmd, istatus)
 
-        do k = 1,kk
-        double_lvl(k) = lvl(k)
-        enddo
-        do k = kk+1,kk*2
-        double_lvl(k) = lvl(k-kk)
-        enddo
+      do k = 1,kk
+         double_lvl(k) = lvl(k)
+      enddo
+      do k = kk+1,kk*2
+         double_lvl(k) = lvl(k-kk)
+      enddo
 
 
-c....loop for rh computation
-        sum = 0
-        sum2 = 0
+c.... loop for rh computation
+      sum = 0
+      sum2 = 0
+     
 
-        do k = 1,kk
-        do j=1,jj
-        do i=1,ii
+      do k = 1,kk
+         do j=1,jj
+            do i=1,ii
 
 
-        if (tdata(i,j,k) .lt. 50. .or. data(i,j,k) .eq. rmd) then
-        rhdata(i,j,k) = 0   ! pseudo bad data flag for albers routine
-        rhdata_l(i,j,k) = 0   ! pseudo bad data flag for albers routine
-        else
+               if (tdata(i,j,k) .lt. 50. .or. 
+     1              data(i,j,k) .eq. rmd) then
+                  rhdata(i,j,k) = 0 ! pseudo bad data flag for albers routine
+                  rhdata_l(i,j,k) = 0 ! pseudo bad "" " " "
+                  if( k.gt.10) then
+                     write(6,*) 'lh3 wrote high-level zero at ', i,j,k
+                     write(6,*) 'this action is not nominal'
+                  endif
+               else
 
-c       new addition to call make_rh() note: q must be entered as g/kg
-c       as is the convention for the calls thusfar for q.
-c       a t_ref of 0.0c is currently default in all routines for the tran-
-c       sition temperature for ice and liquid vapor reference.
+c     new addition to call make_rh() note: q must be entered as g/kg
+c     as is the convention for the calls thusfar for q.
+c     a t_ref of 0.0c is currently default in all routines for the tran-
+c     sition temperature for ice and liquid vapor reference.
 
-        rhdata(i,j,k) = 100.* make_rh ( float(lvl(k)),tdata(i,j,k)-273.
-     115,
-     1  data(i,j,k)*1000., 0.0)
-        rhdata_l(i,j,k) = 100.* make_rh ( float(lvl(k)),
-     1  tdata(i,j,k)-273.15,
-     1  data(i,j,k)*1000., -50.)
+                  rhdata(i,j,k) = 100.* make_rh 
+     1                 ( float(lvl(k)),tdata(i,j,k)-273.15,
+     1                 data(i,j,k)*1000., 0.0)
+                  rhdata_l(i,j,k) = 100.* make_rh ( float(lvl(k)),
+     1                 tdata(i,j,k)-273.15,
+     1                 data(i,j,k)*1000.,-47.0)
 
-        if (rhdata(i,j,k) .lt. 0.0) sum = sum + 1
-        if (rhdata_l(i,j,k) .lt. 0.0) sum2 = sum2 +1
+                  if (rhdata(i,j,k) .lt. 0.0) then
+                          sum = sum + 1
 
-        rhdata(i,j,k) = max(0.,rhdata(i,j,k) )
-        rhdata(i,j,k) = min(100.,rhdata(i,j,k) )
-        rhdata_l(i,j,k) = max(0.,rhdata_l(i,j,k) )
-        rhdata_l(i,j,k) = min(100.,rhdata_l(i,j,k) )
+                  endif
+                  if (rhdata_l(i,j,k) .lt. 0.0) then
+                          sum2 = sum2 +1
 
-        endif
+                  endif
 
-        enddo
-        enddo
-        enddo
+                           
+                           
+                  rhdata(i,j,k) = max(0.,rhdata(i,j,k) )
+                  rhdata(i,j,k) = min(100.,rhdata(i,j,k) )
+                  rhdata_l(i,j,k) = max(0.,rhdata_l(i,j,k) )
+c                 rhdata_l(i,j,k) = min(100.,rhdata_l(i,j,k) )
 
-c  print QC detection scheme for negative humidity detection
+               endif
 
-        if(sum.gt.0  .or. sum2.gt.0) then
+            enddo
+         enddo
+      enddo
+
+c     print QC detection scheme for negative humidity detection
+
+      if(sum.gt.0  .or. sum2.gt.0) then
          write(6,*) 'Negative RH detection.. may indicate PROBLEMS'
          write(6,*) 'Icephase = ', sum
          write(6,*) 'Liquidphase = ',sum2
-        endif
+      endif
 
-c       put in replication for albers code
+c     put in replication for albers code
 
-c  first pass for regular rh fields
+c     first pass for regular rh fields
 
-        do i = 1,ii
-        do j = 1,jj
+      do i = 1,ii
+         do j = 1,jj
 
-        kbottom = kk
+            kbottom = kk
 
-        do k = 1,kk
-        if(rhdata(i,j,k) .ne. 0.0) then
-                kbottom = k
-                go to 21
-        endif
-        enddo
-21      continue
-
-
-        if (kbottom .eq. kk .or. kbottom .eq. 1) then
-                continue ! not valid bottom found
-        else
-                do k = kbottom-1,1, -1
-                        rhdata(i,j,k) = rhdata(i,j,kbottom)
-                enddo
-        endif
-
-        enddo
-        enddo
+            do k = 1,kk
+               if(rhdata(i,j,k) .ne. 0.0) then
+                  kbottom = k
+                  go to 21
+               endif
+            enddo
+ 21         continue
 
 
-c  second  pass for special rh field
+            if (kbottom .eq. kk .or. kbottom .eq. 1) then
+               continue         ! not valid bottom found
+            else
+               do k = kbottom-1,1, -1
+                  rhdata(i,j,k) = rhdata(i,j,kbottom)
+               enddo
+            endif
 
-        do i = 1,ii
-        do j = 1,jj
-
-        kbottom = kk
-
-        do k = 1,kk
-        if(rhdata_l(i,j,k) .ne. 0.0) then
-                kbottom = k
-                go to 22
-        endif
-        enddo
-22      continue
+         enddo
+      enddo
 
 
-        if (kbottom .eq. kk .or. kbottom .eq. 1) then
-                continue ! not valid bottom found
-        else
-                do k = kbottom-1,1, -1
-                        rhdata_l(i,j,k) = rhdata_l(i,j,kbottom)
-                enddo
-        endif
+c     second  pass for special rh field
 
-        enddo
-        enddo
+      do i = 1,ii
+         do j = 1,jj
 
-c   replace equivalence statments with do loops
+            kbottom = kk
+
+            do k = 1,kk
+               if(rhdata_l(i,j,k) .ne. 0.0) then
+                  kbottom = k
+                  go to 22
+               endif
+            enddo
+ 22         continue
+
+
+            if (kbottom .eq. kk .or. kbottom .eq. 1) then
+               continue         ! not valid bottom found
+            else
+               do k = kbottom-1,1, -1
+                  rhdata_l(i,j,k) = rhdata_l(i,j,kbottom)
+               enddo
+            endif
+
+         enddo
+      enddo
+
+c     replace equivalence statments with do loops
 
       do k = 1,kk
-      do j = 1,jj
-      do i = 1,ii
+         do j = 1,jj
+            do i = 1,ii
 
-        equivalenced_rh(i,j,k) = rhdata(i,j,k)
-        equivalenced_rh(i,j,k+kk) = rhdata_l(i,j,k)
+               equivalenced_rh(i,j,k) = rhdata(i,j,k)
+               equivalenced_rh(i,j,k+kk) = rhdata_l(i,j,k)
 
+            enddo
+         enddo
       enddo
-      enddo
-      enddo
 
-        call write_laps (i4time,i4time,
-     1        rhdir,
-     1        rhext,
-     1        ii,
-     1        jj,
-     1        kk*2,
-     1        kk*2,
-     1        var,
-     1        double_lvl,
-     1        lvl_coord,
-     1        units,
-     1        comment,
-     1        equivalenced_rh,
-     1        istatus)
+      call write_laps (i4time,i4time,
+     1     rhdir,
+     1     rhext,
+     1     ii,
+     1     jj,
+     1     kk*2,
+     1     kk*2,
+     1     var,
+     1     double_lvl,
+     1     lvl_coord,
+     1     units,
+     1     comment,
+     1     equivalenced_rh,
+     1     istatus)
 
-        if(istatus.eq.0) then
-        return
-        endif
+      if(istatus.eq.0) then
+         return
+      endif
 
 
 
-        istatus = 1  ! good
+      istatus = 1               ! good
 
-        return
+      return
 
-        end
+      end
