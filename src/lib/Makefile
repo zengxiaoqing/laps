@@ -132,6 +132,7 @@ SRC	= machine_dependent.F \
           ssh2.f \
           subcon.f \
           sunfuncs.f \
+          time_conversions.f \
           time_now.c \
           trig_dum.f \
           upcase.f \
