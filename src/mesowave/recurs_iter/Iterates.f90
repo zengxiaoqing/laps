@@ -67,14 +67,14 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 	      ! Bad QC:
               IF ((id .EQ. 1) .OR. (id .EQ. 5)) THEN
                  IF (ABS(o(1,iobs)-y0) .GT. 10.0) THEN
-	            PRINT*,'Bad QC: ',o(1,iobs),y0, &
-			vid(iobs),iobs,o(2:4,iobs)
+	            !PRINT*,'Bad QC: ',o(1,iobs),y0, &
+			! vid(iobs),iobs,o(2:4,iobs)
 	            o(1,iobs) = y0
                     w(iobs) = 0.0
 		    nbqc = nbqc+1
-	         ELSE
-		    PRINT*,'God QC: ',o(1,iobs),y0, &
-			vid(iobs),iobs,o(2:4,iobs)
+	         !ELSE
+		 !   PRINT*,'God QC: ',o(1,iobs),y0, &
+		 !	vid(iobs),iobs,o(2:4,iobs)
                  ENDIF
 	      ENDIF
 
@@ -86,11 +86,11 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
 
 	stdv(id) = SQRT(stdv(id)/no_v)
 
-	IF (no_v .GT. 0) THEN
-           PRINT*,'Standard Deviation: ',stdv(id),id
-	ELSE
-	   PRINT*,'Standard Deviation: no observation'
-	ENDIF
+	!IF (no_v .GT. 0) THEN
+        !   PRINT*,'Standard Deviation: ',stdv(id),id
+	!ELSE
+	!   PRINT*,'Standard Deviation: no observation'
+	!ENDIF
 
 	! Standard deviation check: with 4.0*stdv
 	nbqc = 0
@@ -121,13 +121,13 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ds,ncycles,nvlaps,nfic)
               ENDDO
 
               IF (ABS(o(1,iobs)-y0) .GT. 4.0*stdv(id)) THEN
-	         PRINT*,'Standard deviation QC: ', &
-	    	    o(1,iobs),y0,vid(iobs),iobs,stdv(id)
+	         !PRINT*,'Standard deviation QC: ', &
+	    	 !   o(1,iobs),y0,vid(iobs),iobs,stdv(id)
 	         nbqc = nbqc+1
 	         o(1,iobs) = y0
                  w(iobs) = 0.0
-	      ELSE
-		 PRINT*,'PASS STD: ',iobs,o(1,iobs),y0,stdv(id)
+	      !ELSE
+	      !  PRINT*,'PASS STD: ',iobs,o(1,iobs),y0,stdv(id)
               ENDIF
 
 	   ENDIF
