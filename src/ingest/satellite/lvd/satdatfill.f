@@ -7,7 +7,6 @@
 c
       implicit none
 
-      integer    nx,ny
       integer    maxchannels
       integer    maximage
       integer    maxfiles

@@ -19,8 +19,7 @@ c
 c
       implicit none
 
-      integer n,nn,n1,n2
-      integer i,j
+      integer i,j,n
       integer ntf
       integer nlinesir,nelemir
       integer nlinesvis,nelemvis
@@ -49,7 +48,6 @@ c
       character c_filename*200
       character c_wfo_fname*13
       character fname9_to_wfo_fname13*13
-      character c1*100,c2*100
       character csat_id*6
       character csat_type*3
 c
@@ -62,12 +60,6 @@ c
       REAL*4      dy_vis,dy_ir,dy_wv
       REAL*4      latin_vis,latin_ir,latin_wv
       REAL*4      lov_vis,lov_ir,lov_wv
-      Real*4      r_nx1_vis,r_ny1_vis
-      Real*4      r_nx1_ir,r_ny1_ir
-      Real*4      r_nx1_wv,r_ny1_wv
-      Real*4      r_image_res_vis
-      Real*4      r_image_res_ir
-      Real*4      r_image_res_wv
 
       istatus=1
 
@@ -78,10 +70,6 @@ c
             if(csat_type.eq.'wfo')then
                n=index(c_dir_path(ispec),' ')-1
                c_wfo_fname = fname9_to_wfo_fname13(c_fname_data(i))
-c              c1=c_dir_path(ispec)(1:n-12)
-c              c2=c_dir_path(ispec)(n-8:n)
-c              n1=index(c1,' ')-1
-c              n2=index(c2,' ')-1
                c_filename=c_dir_path(ispec)(1:n)//c_wfo_fname
                n=index(c_filename,' ')
                write(6,*)'Reading: ',c_filename(1:n)

@@ -57,9 +57,9 @@ c     Parameter (imagelen_vis=nlines_vis_max*nelem_vis_max)
 c     Parameter (imagelen_wv=nlines_wv_max*nelem_wv_max)
 
       INTEGER SIZE       !Size of the SDHS image including the header
-      INTEGER CELL_NUM   !The number of the cell
-      INTEGER CELL_ROW   !The row number of a cell
-      INTEGER CELL_COLUMN !The column number of a cell
+c     INTEGER CELL_NUM   !The number of the cell
+c     INTEGER CELL_ROW   !The row number of a cell
+c     INTEGER CELL_COLUMN !The column number of a cell
 c     INTEGER*4 XS         !Pixels in width of image
 c     INTEGER*4 YS         !Scanlines depth of image
 

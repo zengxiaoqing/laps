@@ -12,13 +12,11 @@ c
       include 'satellite_dims_lvd.inc'
 
       integer      RCODE
-      Real*4      rdum
 c
       Integer   n_elems,n_lines,nch
       real   data(n_elems, n_lines)
-      Integer   i2dum
 
-      Integer n,nn,n1,n2
+      Integer n,nn
       Integer varid,ncid
       Integer istatus
       Integer NDSIZE_X
@@ -31,21 +29,14 @@ c
       integer iend
       integer jstart
       integer jend
-      integer idum
-      integer lend
 
       Integer START(10)
       Integer COUNT(10)
       Character*31 DUMMY
       Character*40 c_data_type
-      character*100 cname
-      character*100 path
-      character*150 cdir
-      Character*255 filename
       Character*6  csat_id
       Character*3  csat_type
       Character*3  chtype
-      Character*2  cid
       integer i,j 
 c
 C **************************************************************************

@@ -84,18 +84,14 @@ c                                     used for variable in include 'satellite_co
       integer   max_files
       parameter (max_files=1500)
  
-      integer   n1,n2,nn,ns
-      integer   lend,len_lvd
+      integer   len_lvd
 
       character*3 csattype
       character*3 c_type(maxchannels,max_files)
-      character*3 csat_type
       character*3 chtype(maxchannels)
       character*6 csatid
       character*9 c_fname_cur
       character*9 c_fname
-      character*10 cmode
-      character*255 cname
 
       real image_vis (n_vis_elem,n_vis_lines,nimages) 
       real image_ir  (n_ir_elem,n_ir_lines,nimages)
@@ -134,8 +130,7 @@ c                                     used for variable in include 'satellite_co
       logical   l_lut_flag
 
       integer	iskip_bilin
-      integer   i,j,k,l
-      integer   n,nf,np
+      integer   i,j,k,l,n
       integer   ispec
       integer   nlf
       integer   nlf_prev
@@ -149,14 +144,6 @@ c
       real*4      r_llij_lut_ri(nx_l,ny_l,maxchannels)
       real*4      r_llij_lut_rj(nx_l,ny_l,maxchannels)
       real*4      good_vis_data_thresh
-
-      character*100 path
-c
-c dimensions for lat/lon
-c
-      character*125 comment_ll(2)
-      character*10 units_ll(2)
-      character*3 var_ll(2)
 c
 c dimensions for lvd
 c
@@ -178,7 +165,6 @@ c
       integer i_delta_t
       integer i4time_data(max_files)
       integer istat
-      integer gstatus
       integer istatus
       integer istatus_vis(3)
       integer itstatus
@@ -247,7 +233,7 @@ c
       lvis_flag = .false.   !assume that it is available
       call set_vis_flag(i4time_cur,lat,lon,nx_l,ny_l,lvis_flag)
       if(lvis_flag)then
-         write(6,*)'lvis_Flag set indicating no visible data'
+         write(6,*)'lvis_flag set: do not to wait for vis data'
       endif
 c
 c --------------------------------------------------------------------------

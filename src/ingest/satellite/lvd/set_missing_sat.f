@@ -38,18 +38,13 @@ c                        addition to missing sat pixels
 c
       implicit none
 c
-      integer nx,ny,i,j,n,nn,n1,n2
+      integer nx,ny,i,j,n
       integer ii,jj
       integer istatus
-      integer nstatus
       integer mstatus
       integer istat_status
       integer imiss_status
-      integer linestart,lineend
-      integer elemstart,elemend
       integer ibnd,jbnd
-      integer idum
-      integer i2dum
 
       real*4    image_in(nx,ny)
       real*4    image_temp(nx,ny)
@@ -61,10 +56,6 @@ c
       character csattype*(*)
       character chtype*(*)
       character csatid*(*)
-      character cid*2
-      character path*100
-      character cname*255
-      character filename*255
 c
 c note that this quality control step is performed with satellite counts
 c both ir and vis.

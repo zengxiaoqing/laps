@@ -95,7 +95,6 @@ c
        real*4 lon(ni,nj)
 c
        integer n_ir_lines,n_ir_elem
-       integer ib
 
        real*4 r_llij_lut_ri(ni,nj)
        real*4 r_llij_lut_rj(ni,nj)
@@ -105,7 +104,6 @@ c
        integer istatus_a, istatus_f
        integer istatus_r
        integer istatus_w, istatus
-       integer mstatus
        integer i,j,ik
        integer nn
 
@@ -117,7 +115,7 @@ c
        real*4 favgthr_12u
 
        real*4 r_missing_data
-       real*4 ave,adev,sdev,var,skew,curt
+       real*4 ave
        real*4 rmxbtemp,rmnbtemp
        real*4 btempsum
 

@@ -116,7 +116,7 @@ c
       real image_39  (n_ir_elem,n_ir_lines,n_images)
       real image_67  (n_wv_elem,n_wv_lines,n_images)
 
-      integer i,j,k,n,in,jj,is
+      integer i,j,k,n,in,jj
       integer ispec
       integer nft,ntm(max_files)
       integer intm
@@ -153,7 +153,6 @@ c
       integer istatus
       integer jstatus
       integer lstatus
-      integer istatus_l
       integer i4status
       integer gfn_status
 c

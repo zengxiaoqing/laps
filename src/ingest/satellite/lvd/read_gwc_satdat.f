@@ -16,7 +16,7 @@ c
 
       Integer     nlines,nelems
 
-      Integer     i,n
+      Integer     n
       Integer     i4time_current
       Integer     i4time_data
       Integer     i4time_diff
@@ -49,7 +49,6 @@ c
       INTEGER DEPTH      !Tracks in Depth of image
       CHARACTER*2 IMGTYPE  !Image Type
 
-      Character     c_yr*2,c_jday*3,c_hhmm*4
       Character     c_filetime*9
       Character     cfname*9
       Character     chtype*3
@@ -112,7 +111,7 @@ c
          write(6,*)'Data time is more recent than current time!?'
          write(6,*)'This does not make sense!'
       else
-         write(6,*)'Found current data'
+         write(6,*)'Found AFWA data'
       endif
 c
 c read afgwc binary data file

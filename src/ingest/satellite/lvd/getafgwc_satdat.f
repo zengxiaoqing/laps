@@ -128,9 +128,6 @@ c                   name from getgoesdata to getsdhsdata.
        integer nvislines
        integer nchannels
        integer max_channels
-       integer istart,jstart
-       integer iend,jend
-       integer ifiles_sat_raw
        integer ispec,istat
        integer lend
        integer jsave
@@ -157,28 +154,20 @@ c                   name from getgoesdata to getsdhsdata.
        real image_67  (nwvelem,nwvlines)
        real image_vis (nviselem,nvislines)
 
-       real r4timedata
-
        logical   lvis_flag
        logical   lfound1
 
        character c_type(max_channels,max_files)*3
        character chtype(max_channels)*3
-       character cid4*4
        character cmt*3
        character cname*100
-       character csname*6
-       character c_filetime*9
        character c_fname_data(max_channels)*9
        character cfd*9
-       character path*200
        character cfname*100
        character c_afwa_fname*100
        character cfilename*255
 c
       istatus = -1   !bad status return
-
-c     cid4='go'//c_sat_id(isat)(5:6)
 
       do i=1,nft
          ntm(i)=0
@@ -393,7 +382,6 @@ c
       integer isat,jtype
       integer i,j,k,l,m
       integer nf,nc,np
-      integer ierr
       integer nft,ntm(nft)
       integer nelem
       integer nlines

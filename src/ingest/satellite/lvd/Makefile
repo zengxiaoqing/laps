@@ -14,8 +14,8 @@ LAPSLIBS = $(LAPSROOT)/src/lib/satellite/libsatellite.a \
            $(LAPSROOT)/src/lib/nav/libnav.a \
            $(LAPSROOT)/src/lib/util/libutil.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a \
-             $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a \
+DBLAPSLIBS = $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a \
+             $(LAPSROOT)/src/lib/libdebuglaps.a \
              $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a \
              $(LAPSROOT)/src/lib/util/libdebugutil.a

@@ -66,7 +66,6 @@ C
       character*6  csat_id
       integer istatus
       INTEGER   validTime 
-      Integer   ispec,istat
       Integer   iDx
       Integer   iDy
       INTEGER   Nx                             (   1)

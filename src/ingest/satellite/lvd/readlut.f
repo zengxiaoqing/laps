@@ -4,12 +4,10 @@ c
       implicit none
 
       integer nx,ny
-      integer nx_in
-      integer ny_in
       integer maxch
       integer nch
       integer istatus
-      integer i,j,n,np
+      integer i,n
       integer lend,lenf
       integer ispec
       integer istat
