@@ -981,6 +981,7 @@ c
 c       Original:  ??-??-93  Peter A. Stamus
 c       Changes:   02-03-94  Rewritten
 c                  08-26-97  Changes for dynamic LAPS
+c	           08-19-98  Initialize k_hold array.
 c
 c==============================================================================
 c
@@ -1050,6 +1051,7 @@ c..... then start cloud checks at the next level up.
 c
         do j=1,nj
         do i=1,ni
+	   k_hold(i,j) = 0
            do k=1,kcloud
               if(cld_hts(k) .lt. topo(i,j)) k_hold(i,j) = k
            enddo !k
