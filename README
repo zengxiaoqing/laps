@@ -564,9 +564,14 @@
    Please let us know if you encounter any problems.
 
      The polar stereographic projection has a pole that may be set to either
-   earth's north or south geographic poles. Setting the pole to an arbitrary 
-   lat/lon (local stereographic) is an anticipated future enhancement.
+   earth's north or south geographic poles. 
 
+     Setting the pole to an arbitrary lat/lon (local stereographic) is a
+   possible future enhancement. A test local stereographic domain gave an 
+   error of 2km in the grid points. Addressing this includes converting 
+   library subroutines 'GETOPS' and possibly 'PSTOGE' to double precision.
+   The projection rotation routine 'projrot_laps' also has some approximations
+   when local stereographic is used.
 
                        RESOLUTION OF DOMAIN: 
 
