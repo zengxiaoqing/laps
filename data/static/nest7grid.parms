@@ -19,7 +19,7 @@
 
  laps_cycle_time_cmn=3600,           
 
- l_compress_radar=.false.,                  
+ l_compress_radar=.true.,                  
  I_PERIMETER_CMN=10,                  
  c50_lowres_directory='NULL',
 
