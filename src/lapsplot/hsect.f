@@ -862,11 +862,9 @@ cdis
 
             ext = 'lvd'
 
-            if(iflag_lvd_common.ne.1)then
-               call config_satellite_lvd(istatus)
-               if(istatus.ne.1)then
-                  return
-               endif
+            call config_satellite_lvd(istatus)
+            if(istatus.ne.1)then
+               return
             endif
 
             do k=1,maxsat
