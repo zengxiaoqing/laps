@@ -132,10 +132,10 @@ else
 endif
 
 
-#We assume that window_laps_rt.pl will know what to do if $LAPS_SRC_ROOT = $LAPS_DATA_ROOT
+#We assume that window_domain_rt.pl will know what to do if $LAPS_SRC_ROOT = $LAPS_DATA_ROOT
 #                                                      just do localization with no templates
 #
-#We will see if window_laps_rt.pl will know what to do if $LAPS_SRC_ROOT != $LAPS_DATA_ROOT 
+#We will see if window_domain_rt.pl will know what to do if $LAPS_SRC_ROOT != $LAPS_DATA_ROOT 
 #                                                      and there is no $LAPS_SRC_ROOT/data/static/*.nl
 #                                                      and there is no $LAPS_SRC_ROOT/data/cdl/*.cdl
 #                                                      (e.g. precompiled tar file setup at CWB with split tree)
@@ -187,20 +187,20 @@ if ($6 != p) then
     if (-e $LAPS_DATA_ROOT/lapsprd) then
         setenv config_domain f
         echo " "
-        echo "Calling window_laps_rt.pl, config_domain = f"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
+        echo "Calling window_domain_rt.pl, config_domain = f"
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl    -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps
     else
         setenv config_domain t
         echo " "
-        echo "Calling window_laps_rt.pl, config_domain = t"
-        $NEWPERL $LAPSINSTALLROOT/etc/window_laps_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT 
+        echo "Calling window_domain_rt.pl, config_domain = t"
+        $NEWPERL $LAPSINSTALLROOT/etc/window_domain_rt.pl -c -t$TEMPLATEDIR -s$LAPS_SRC_ROOT -i$LAPSINSTALLROOT -d$LAPS_DATA_ROOT -w laps
     endif
 
 #   cd $LAPS_SRC_ROOT
 #   make DATAROOT=$LAPS_DATA_ROOT mkdatadirs 
   
     echo " "
-    echo "Returned from window_laps_rt.pl"
+    echo "Returned from window_domain_rt.pl"
 
     echo " "
     echo "checking LAPS_SRC_ROOT subdirs (static & cdl)..."
