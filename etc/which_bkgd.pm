@@ -18,13 +18,14 @@ sub which_bkgd
        }
     }
 
-    if ($modeltype eq "missing") {print "Can't determine model background.\n"}
+    if ($modeltype eq "missing"){
+        print "Can't determine model background.\n";
+        return;
+    }
 
-    if ($modeltype eq 'fua' || $modeltype eq 'fsf')
-    {
+    if ($modeltype eq 'fua' || $modeltype eq 'fsf') {
         $searchstring = "Reading 3d";
         $searchstring = "Reading 2d" unless ($modeltype eq 'fua');
-
         foreach (@lines)
         {
            if(/$searchstring(.*)/)
@@ -39,28 +40,26 @@ sub which_bkgd
     }
 
     print "BACKGROUND FIELDS:  ";
-    if ($modeltype eq 'fua' || $modeltype eq 'fsf')
+
+    if ($modeltype eq 'lga' || $modeltype eq 'lgb')
     {
-# $modelid = "local";
-    }
-    else
-    {
-        $bgmodelfile = $filename;
-        $bgmodelfile =~ s/$logname/lga/;
+
+        $bgmodelfile = $main::filename;
+        $bgmodelfile =~ s/$main::logname/lga/;
         $modelid = "???";
         if(open(BGMODEL,$bgmodelfile))
         {
            foreach(<BGMODEL>)
            {
 
-#     if(/cmodel (\w*)/) {$modelid = $1;}
-
+              if(/cmodel (\w*)/) {$modelid = $1;}
               if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
               if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; }
               if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; }
            }
            $basename = $1 if ($pathname =~ /([^\/]*)$/);
         }
+
         if($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/)
         {
            $runtime = $2/100;
