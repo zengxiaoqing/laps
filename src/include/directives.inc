@@ -1,1 +1,1 @@
-csms$declare_decomp(grid_dh)
+csms$declare_decomp(grid_dh, 1)
