@@ -851,14 +851,16 @@ c       include 'satellite_dims_lvd.inc'
 
             call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
+            call s_len(comment_2d,len_comment)
             call s_len(units_2d,len_units)
+
             if(len_units .gt. 0)then
-                c33_label = 'LAPS Stability '
-     1                      //var_2d(1:3)
-     1                      //'  ('//units_2d(1:len_units)//')'
+                c33_label = 'LAPS '
+     1                      //comment_2d(1:len_comment)
+     1                      //'   ('//units_2d(1:len_units)//')'
             else
-                c33_label = 'LAPS Stability Field      '
-     1                      //ext(1:3)//'/'//var_2d(1:3)
+                c33_label = 'LAPS '
+     1                      //comment_2d(1:len_comment)
             endif
 
             scale = 1.
