@@ -27,7 +27,7 @@ c
       real image_67  (nwv_elem,nwv_lines,maximage)
 
       Real*4      r_missing_data
-      Real*4      smsng
+      Real*4      smsng,smsng_vis
       Real*4      mstatus(maxchannels,maxfiles)
       Real*4      percent_missing
 
@@ -48,6 +48,7 @@ c
          write(6,*)'Error getting r_missing_data - satdatfill'
          return
       endif
+      smsng_vis=smsng
 c
 c fill missing pixels and pixels determined as bad with r_missing_data
 c
@@ -166,10 +167,10 @@ c -------------------------------------------
             elseif(ispec.eq.1)then
 c -------------------------------------------
             c_satdir=sat_dir_path(ispec)  !Particularly wfo! The channel types are in order.
-            if(csat_type.eq.'cdf')smsng=0.
+            if(csat_type.eq.'cdf')smsng_vis=0.
             call set_missing_sat(csat_id,csat_type,c_type(j,i),
      &               image_vis(1,1,i),nvis_elem,nvis_lines,
-     &               smsng,r_missing_data,
+     &               smsng_vis,r_missing_data,
      &               istatus)
 
             write(6,*)'  Missing status : ',abs(istatus)

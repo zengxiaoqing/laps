@@ -129,6 +129,8 @@ c
 
       real resx,resy
       real rlat00,rlon00
+      real rlatnxny,rlonnxny
+      real rlatdxdy,rlondxdy
       real dx,dy
       real golatsbp,golonsbp,goalpha
      
@@ -176,9 +178,9 @@ c --- WFO ---
 c
       if(c_sat_types(jtype,isat).eq.'wfo')then 
 
-         call get_wfo_nav_parms(path_to_raw_sat(ispec,jtype,isat),
-     &                          chtype(i),rlat00,rlon00,dx,dy,nx,ny,
-     &                          istatus)
+         call get_wfo_nav_parms(path_to_raw_sat(ispec,jtype,isat)
+     &,chtype(i),rlat00,rlon00,rlatnxny,rlonnxny,rlatdxdy,
+     &rlondxdy,dx,dy,nx,ny,istatus)
 
          if(istatus.eq.0)then
 

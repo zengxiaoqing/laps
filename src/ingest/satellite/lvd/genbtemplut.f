@@ -34,7 +34,7 @@ c
 
       else
 
-         if(chid.eq.4.or.chid.eq.5)then
+         if(chid.eq.3.or.chid.eq.4.or.chid.eq.5)then
             do i=0,180
                cnt2btemp(i)=(660.0-float(i))/2.0
             enddo
@@ -53,25 +53,22 @@ c
             do i=217,255
                cnt2btemp(i)=0.0
             enddo
-
-         elseif(chid.eq.3)then
-
+c
+c commented out the separate wv btemp calc. Now the same as ch 4 and 5.
+c 10-21-99.
+c        elseif(chid.eq.3)then
 Count range 255 --> 0, T = (1349.27 - C)/5.141.   4/26/96. Recommendation from D. Birkenheuer
-
 Channel 3 
 Count range 255 --> 0, T = (1354.235 - C)/5.1619  5/14/96.   "
-
-            do i=0,255
-
+c           do i=0,255
 C           cnt2btemp(i) = 249.346 - 0.12945*float(i)
 C           cnt2btemp(i) = (1354.235 - float(i))/5.1619
 C           cnt2btemp(i) = (1349.27 - float(i))/5.141
 C           cnt2btemp(i) = (1344.38 - float(i))/5.12 
 c
 c new as of 10-3-96.
-               cnt2btemp(i) = (1348.925 - float(i) ) / 5.1417
-
-            enddo
+c              cnt2btemp(i) = (1348.925 - float(i) ) / 5.1417
+c           enddo
 
          else
 

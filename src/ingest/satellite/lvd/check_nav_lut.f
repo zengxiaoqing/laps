@@ -23,14 +23,9 @@
       character chtype(maxchannels)*3
 
       logical   lut_flag
-c     logical   ldone_this
-c     data      ldone_this /.false./
-c     save      ldone_this
 
       nstatus=-1
 
-c     if(ldone_this)goto 1000
-c
 c ---------------------------------------------
 c acquiring LAPS latitude and longitude arrays.
 c ---------------------------------------------
@@ -104,6 +99,5 @@ c        call genlvdlut_sub(nx_l,ny_l,gstatus)
 
 910   print*,' error in check_nav_lut '
 
-c1000  ldone_this=.true.
 1000  return
       end

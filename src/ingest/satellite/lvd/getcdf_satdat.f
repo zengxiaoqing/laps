@@ -116,7 +116,8 @@ c
       real image_39  (n_ir_elem,n_ir_lines,n_images)
       real image_67  (n_wv_elem,n_wv_lines,n_images)
 
-      integer i,j,k,n,in,jj
+      integer i,j,k,n,jj
+      integer in(max_channel)
       integer ispec
       integer nft,ntm(max_files)
       integer intm
@@ -163,17 +164,15 @@ c
       call get_directory('lvd',lvd_dir,lend)
       lvd_dir=lvd_dir(1:lend)//c_sat_id//'/'
 
-      do i=200,1,-1
-         if(path_to_raw_sat(1)(i:i).eq.'/')then
-            in=i
-            goto 120
-         endif
+      do j=1,nchannels
+         call lvd_file_specifier(chtype(j),ispec,lstatus)
+         call s_len(path_to_raw_sat(ispec),in(j))
       enddo
 c
 c Adjust time when just past top of hour to insure processing files that are
 c just before top of hour.
  
-120   if(c_sat_type.eq.'wfo')then
+      if(c_sat_type.eq.'wfo')then
          wfo_fname13_in=fname9_to_wfo_fname13(c_fname_in)
          if(wfo_fname13_in(12:12).eq.'0')then
             write(6,*)'Adjusting i4time'
@@ -205,7 +204,8 @@ c
          do j=1,nchannels
 
             call lvd_file_specifier(chtype(j),ispec,lstatus)
-      pathname = path_to_raw_sat(ispec)(1:in)//wfo_fname13_in(1:11)//'*'
+            pathname=
+     &path_to_raw_sat(ispec)(1:in(j))//wfo_fname13_in(1:11)//'*'
             n=index(pathname,' ')
             write(*,*)'Data pathname: ',pathname(1:n-1)
  
@@ -220,9 +220,9 @@ c
             endif
             do i=1,ifiles_sat
                ifiles_sat_raw=ifiles_sat_raw+1
-               wfo_fname13=c_filename(i)(in+1:in+13)
+               wfo_fname13=c_filename(i)(in(j)+1:in(j)+13)
                cfname9=wfo_fname13_to_fname9(wfo_fname13)
-            c_filename_sat(ifiles_sat_raw)=c_filename(i)(1:in)//cfnam
+         c_filename_sat(ifiles_sat_raw)=c_filename(i)(1:in(j))//cfnam
      &e9//'_'//chtype(j)
             i4time_sat_raw(ifiles_sat_raw)=cvt_wfo_fname13_i4time(wfo_fn
      &ame13)
@@ -251,8 +251,11 @@ c
 c ------   End of WFO switch  ------
 c
       else
-
-         pathname=path_to_raw_sat(1)(1:in)//c_fname_in(1:5)//'*'
+c
+c all satellite channels are in files within same directory.
+c assume j=1 represents this for the minimum # of channels to process.
+c
+         pathname=path_to_raw_sat(1)(1:in(1))//c_fname_in(1:5)//'*'
          n=index(pathname,' ')
          write(*,*)'Data pathname: ',pathname(1:n-1)
 c
@@ -287,7 +290,7 @@ c
          endif
 c
          do i=1,ifiles_sat_raw
-            call i4time_fname_lp(c_filename_sat(i)(in+1:in+9),
+            call i4time_fname_lp(c_filename_sat(i)(in(1)+1:in(1)+9),
      &i4time_sat_raw(i),jstatus)
          enddo
 
