@@ -189,7 +189,7 @@ C
           write(6,401)id_num,numlevels(ista),
      1                stalat(ista),stalon(ista),staelev_out,
      1                c4_staname,a9time_ob,'VAD     '
-          write(2,401)id_num,numlevels(ista),
+          write(1,401)id_num,numlevels(ista),
      1                stalat(ista),stalon(ista),staelev_out,
      1                c4_staname,a9time_ob,'VAD     '
 401       format(i12,i12,f11.3,f15.3,f15.0,5x,a4,5x,a9,1x,a8)
@@ -205,7 +205,7 @@ C
               if(rmserror(ilvl,ista)(1:1) .eq. 'F')rms = 6.17
               if(rmserror(ilvl,ista)(1:1) .eq. 'G')rms = 7.20
 
-              write(2,301,err=303)obheight(ilvl,ista),
+              write(1,301,err=303)obheight(ilvl,ista),
      1                            float(winddir(ilvl,ista)), 
      1                            windspeed(ilvl,ista),rms       
               write(6,301,err=303)obheight(ilvl,ista),
