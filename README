@@ -117,7 +117,7 @@
      programs are in your path (e.g. 'which ncdump'), so that 'configure' 
      will find them and provide the laps package with the proper path. You 
      can also provide the path to netcdf to 'configure' by using the command 
-     line argument --netcdf=NETCDF 
+     line argument --netcdf=path_to_ncdump.
    
                       --- 2.1.2  Perl             ---
 
@@ -701,7 +701,7 @@
      would like us to add them to the defaults in 'configure' please let us 
      know via e-mail.
 
----------------- 2.7 ------ I/O of LAPS gridded files-------------------------
+---------------- 2.7 ------ I/O of LAPS gridded files -------------------------
 
      Once the laps library is compiled (as outlined above), laps grids can
      be read. There are three levels of software that can access the data.
@@ -1366,7 +1366,7 @@ Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
 Sample Input/Output: May be available in the test data case.
 
------- 3.2.4 -------------------VRC--------------------------------------------
+------ 3.2.4 ------------------ VRC -------------------------------------------
 
 Process: VRC (vrc_driver.x) Author John Smart (smart@fsl.noaa.gov)
 
@@ -1391,7 +1391,7 @@ the country.
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.5 ----------------RADAR MOSAIC (under development)-----------------
+------ 3.2.5 --------------- RADAR MOSAIC (under development) ----------------
 
 Process: (mosaic_radar.exe) Author John Smart (smart@fsl.noaa.gov)
 
@@ -1407,7 +1407,7 @@ Outputs (Intermediate data file):
 
 The output reflectivity is used by the cloud and precip accumulation analyses.
                                         
------- 3.2.6 -----------------PROFILER (PRO)----------------------------------
+------ 3.2.6 ---------------- PROFILER (PRO) ---------------------------------
 
 Process: PRO (ingest_pro.exe) LAPS Profiler wind ingest 
                                   (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1430,7 +1430,7 @@ Source directory: laps/src/ingest/profiler
 Sample Input/Output: Should be available in the test data case.
 
  
------- 3.2.7 -----------------------VAD----------------------------------------
+------ 3.2.7 ---------------------- VAD ---------------------------------------
 
 Process: (ingest_vad.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1446,7 +1446,7 @@ Outputs: (Feeds wind.exe)
               pro file.
 </pre>
  
------- 3.2.8 ------------------RASS (LRS)-------------------------------------
+------ 3.2.8 ----------------- RASS (LRS) ------------------------------------
 
 Process: (ingest_lrs.exe) LAPS local data RASS ingest
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1465,7 +1465,7 @@ Source directory: laps/src/ingest/rass
 
 Sample Input/Output: Should be available in the test data case.
 
------- 3.2.9 ------------------PIREPS/ACARS-----------------------------------
+------ 3.2.9 ----------------- PIREPS/ACARS ----------------------------------
 
 Processes: (ingest_pirep.exe, ingest_acars.exe) LAPS Pireps / ACARS
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1482,7 +1482,7 @@ Outputs: (The two executables are run sequentially, feeds cloud.exe, wind.exe)
 Sample Input/Output: Should be available in the test data case
 
  
------- 3.2.10 -----------------------RAOB--------------------------------------
+------ 3.2.10 ---------------------- RAOB -------------------------------------
 
 Process: (ingest_raob.exe) LAPS RAOBs
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1502,7 +1502,7 @@ Outputs: (Feeds temp.exe, humid.exe, wind.exe)
               using a dummy path name for the raw raob data in 
               'nest7grid.parms'.
 
------- 3.2.11 ----------Cloud Drift Wind (CDW) Ingest--------------------------
+------ 3.2.11 --------- Cloud Drift Wind (CDW) Ingest -------------------------
 
 Process: (ingest_cloud_drift.exe) LAPS Cloud Drift Winds
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1515,7 +1515,7 @@ Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
 </pre>
                                         
------- 3.2.12 ---------------Surface data Ingest-------------------------------
+------ 3.2.12 -------------- Surface data Ingest ------------------------------
 
 Process: (obs_driver.x) LAPS Surface Ingest
      (author: Pete Stamus - stamus@fsl.noaa.gov)
@@ -1538,7 +1538,7 @@ degrees.
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
------- 3.3.1 ---------------------WIND-----------------------------------------
+------ 3.3.1 -------------------- WIND ----------------------------------------
 
 Process: wind.exe - WIND analysis and related fields
      (author: Steve Albers - albers@fsl.noaa.gov)
@@ -1591,7 +1591,7 @@ Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
 
 
------- 3.3.2 ------------------SFC (LSX)--------------------------------------
+------ 3.3.2 ----------------- SFC (LSX) -------------------------------------
 
 Surface processing - laps_sfc.x (LSX and friends) 
         (author: Pete Stamus - stamus@fsl.noaa.gov)
