@@ -14,6 +14,8 @@ main                                           laps_sfc.f
            dev_ck                                   "
            bkg_chk                                  "
         mdat_laps                              mdatlaps.f
+            splie2                                  "
+            splin2                                  "
             procar                                  "
             set_boundary                            "
                 barnes_wide                    lapsvanl_sub.f
@@ -37,14 +39,14 @@ main                                           laps_sfc.f
             lp_fire_danger                          "
             heat_index                              "
             verify                             lapsvanl_sub.f
+                splie2                         mdatlaps.f
+                splin2                              "
 
 
 .........................PLEASE IGNORE WHAT IS BELOW...........................
 
 mdatlaps.f:	subroutine put_winds(u_in,v_in,max_stn,num_sta,u,v,wwu,wwv,icnt,
 mdatlaps.f:	subroutine put_thermo(var_in,max_stn,num_sta,x,w,icnt,
-mdatlaps.f:      subroutine splie2(x1a,x2a,ya,m,n,y2a)
-mdatlaps.f:      subroutine splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
 mdatlaps.f:      subroutine spline_db(x,y,n,yp1,ypn,y2)
 mdatlaps.f:      subroutine splint(xa,ya,y2a,n,x,y)
 lapsvanl_sub.f:c=====  Here are John's subroutines...(abandon hope, ye who enter)
