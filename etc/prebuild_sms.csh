@@ -6,7 +6,9 @@ setenv srcdir $2
 cd $LAPS_SRC_ROOT/$srcdir
 pwd
 
-setenv SMS ~schaffer/sms.steve
+setenv SMS /home/schaffer/sms.steve
+
+cp $LAPS_SRC_ROOT/src/include/directives.inc .
 
 foreach filename (*.f)
     setenv file `echo $filename | cut -f 1 -d .`

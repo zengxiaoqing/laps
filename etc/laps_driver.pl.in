@@ -1,7 +1,9 @@
 #!@PERL@
 # @configure_input@
 #
-# Insures that no more than $plimit  processes with the same name exist(s)  
+# laps_driver.pl
+#
+# Ensures that no more than $plimit  processes with the same name exist(s)  
 # exits with a warning to stderr if the limit is exceeded  
 #
 # Copyright (C) 1998  James P. Edwards
@@ -135,7 +137,7 @@ if($opt_q){
     print $t." Opening $LAPS_LOG_PATH/run_qsub_$exe.sh starting with executable $exe\n";
     open(TFILE,">$LAPS_LOG_PATH/run_qsub_$exe.sh");
     print TFILE "#!/bin/sh\n";
-    print TFILE "#PBS -lnodes=$opt_q:comp\n";
+    print TFILE "#PBS -lnodes=$opt_q:comp,walltime=60:00\n";
     print TFILE "  \n";
     print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 

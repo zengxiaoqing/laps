@@ -1,6 +1,6 @@
 #!@PERL@
 # @configure_input@
-# Run the LAPS suite of programs 
+# Run the LAPS suite of programs - sched.pl
 #
 # Copyright (C) 1998  James P. Edwards
 #
@@ -145,6 +145,7 @@ my($command);
 my($nodes_last);
 my($nodes_current);
 my($nodes_next);
+my($sms_path);
 
 $nodes_last = 0;
 $nodes_next = 1;
@@ -200,7 +201,14 @@ foreach $exe (@LAPS_EXE){
 #       Set up QSUB so that each process (one or more executables in each) submits the next qsub process at the end
         $execount = $execount + 1;
         $exenext = $execount + 1;
-        $nodes_current = 1;
+
+        $sms_path = "/home/schaffer/sms.steve";
+
+        if($exe =~ "wind"){
+            $nodes_current = 4;
+        }else{
+            $nodes_current = 1;
+        }
 
         if($execount < $nexe){ # Not yet at end of the list
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
@@ -208,7 +216,7 @@ foreach $exe (@LAPS_EXE){
                 if($execount > 1){ # after start
                     print TFILE "  \n";
                     print TFILE "cd $LAPS_LOG_PATH\n";
-                    print TFILE "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptcount.log 2>&1\n";
+                    print TFILE "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptnext.log 2>&1\n";
                     print TFILE "  \n";
                     print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
                     close(TFILE);
@@ -221,9 +229,16 @@ foreach $exe (@LAPS_EXE){
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
-                print TFILE "#PBS -lnodes=$nodes_current:comp\n";
+                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=60:00\n";
                 print TFILE "  \n";
                 print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+
+                if($nodes_current > 1){
+                    print TFILE "SMS_SERVER_MODE=serverless\n";
+                    print TFILE "export SMS_SERVER_MODE\n";
+                    print TFILE "$sms_path/bin/sysSrvr $nodes_current &\n";
+                }
+
 #               print TFILE "  \n";
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
@@ -235,13 +250,11 @@ foreach $exe (@LAPS_EXE){
         print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
 
-        if($nodes_current == 1){
-            print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+        if($nodes_current > 1){
+#           print TFILE "$sms_path/bin/smsRun $nodes_current $LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "$sms_path/bin/smsRun $nodes_current /home/albers/schaffer/laps/src/wind/wind 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }else{
-            print TFILE "SMS_SERVER_MODE=serverless\n";
-            print TFILE "export SMS_SERVER_MODE\n";
-            print TFILE "\$SMS/bin/sysSrvr $nodes_current\n";
-            print TFILE "smsRun $nodes_current $LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+            print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
         }
        
         if($execount == $nexe){ # Last on the list
@@ -258,7 +271,7 @@ foreach $exe (@LAPS_EXE){
 
         $nodes_last = $nodes_current;
 
-    }else{
+    }else{ # no -q option
         if(-x  "$LAPSROOT/bin/$exe"){
             print $t." Running $exe\n";
             my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
