@@ -607,7 +607,7 @@ c
 c
 c.....	Fill in the boundary of each field.
 c
-        i_boundary = 2
+        i_boundary = 0 ! 2
 
 	print *,' Boundary for    U:'
 	call set_boundary(u1,imax,jmax,ii,jj,uu,u_bk,n_obs_b,
