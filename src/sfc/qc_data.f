@@ -34,7 +34,7 @@ c
 	subroutine qcdata(filename,infile_l,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
-     &     ni, nj, mslp_bk_mb, iback_mp,
+     &     ni, nj, t_bk_f, mslp_bk_mb, iback_t, iback_mp,
      &     istatus)
 c
 c=========================================================================
@@ -64,6 +64,7 @@ c
 	character stn(mxstn)*3, c_field*4
 c
 c..... Model background 
+        real t_bk_f(ni,nj)
         real mslp_bk_mb(ni,nj)
 c
 c..... Arrays for the prev hour's OBS file input data
@@ -278,8 +279,16 @@ c
  101	continue
 
 c
-c.....  model background check (for MSLP)
+c.....  model background checks
 c
+        c_field = 'T'
+        ifld = 7
+        thresh = 30.
+
+        call bkg_chk(iback_t,c_field,ifld,thresh,pmsl_s
+     1              ,ii,jj,t_bk_f,rely,badflag,n_obs_curr
+     1              ,stn,mxstn,ni,nj,istatus)
+
         c_field = 'MSLP'
         ifld = 14
         thresh = 10.
