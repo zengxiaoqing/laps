@@ -189,7 +189,7 @@
       include 'grid_fname.cmn'
 
       namelist /sfcfiles/ topo_30s, topo_10m, pctland_10m
-     &,landuse_30s
+     &,landuse_30s, soiltype_top_30s, soiltype_bot_30s
 
       character*80 filename
 

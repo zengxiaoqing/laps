@@ -129,7 +129,8 @@ c
         path_to_topt10m=topo_10m
         path_to_topt30s=topo_30s
         path_to_pctl10m=pctland_10m
-        path_to_soil2m = '/null'
+        path_to_soiltype_top30s = soiltype_top_30s
+        path_to_soiltype_bot30s = soiltype_bot_30s
         path_to_landuse30s = landuse_30s
 
         c6_maproj=wrftolaps_c6_maprojname(map_proj_name)

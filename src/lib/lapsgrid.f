@@ -392,7 +392,8 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,path_to_qc_acars_cmn
      1  ,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
-     1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
+     1  ,path_to_topt10m, path_to_pctl10m
+     1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
      1  ,path_to_landuse30s
      1  ,fdda_model_source_cmn
 
@@ -1295,15 +1296,16 @@ c     erad = 6367000.
       return
       end
 
-      subroutine get_path_to_soil_2m(path_to_soil_2m,istatus)
+      subroutine get_path_to_soiltype_top(path_to_soiltype_top_30s
+     +,istatus)
 
-      include 'lapsparms.cmn' ! path_to_soil_2m
+      include 'lapsparms.cmn' ! path_to_soiltype_top30s
       include 'grid_fname.cmn'! grid_fnam_common
 
-!     This routine accesses the path_to_soil_2m  variable from the
+!     This routine accesses the path_to_soiltype_top30s  variable from the
 !     .parms file via the common block.
 
-      character*200 path_to_soil_2m
+      character*200 path_to_soiltype_top_30s
 
       call get_laps_config(grid_fnam_common,istatus)
 
@@ -1312,7 +1314,30 @@ c     erad = 6367000.
           return
       endif
 
-      path_to_soil_2m =  path_to_soil2m
+      path_to_soiltype_top_30s =  path_to_soiltype_top30s
+
+      return
+      end
+
+      subroutine get_path_to_soiltype_bot(path_to_soiltype_bot_30s
+     +,istatus)
+
+      include 'lapsparms.cmn' ! path_to_soiltype_bot30s
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the path_to_soiltype_bot30s  variable from the
+!     .parms file via the common block.
+
+      character*200 path_to_soiltype_bot_30s
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      path_to_soiltype_bot_30s =  path_to_soiltype_bot30s
 
       return
       end
