@@ -17,7 +17,8 @@ DBLAPSLIBS =
 
 EXE = xfer_laps.exe \
       xfer_model.exe \
-      fname2unixtime.exe
+      fname2unixtime.exe \
+      in_domain.exe
 
 SRC = fill_laps.c \
       fill_bigfile_cmn.c \
