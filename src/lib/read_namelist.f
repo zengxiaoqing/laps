@@ -71,22 +71,17 @@ c
 c
 c-----------------------------------------------------------
 c
-      subroutine get_balance_nl(lrunbal,lstagger,icon,gamo,delo,tau,
-     .                          lnon_linear,istatus)
+      subroutine get_balance_nl(lrunbal,gamo,delo,istatus)
 c
       implicit none
 
-      integer    icon
       integer    istatus
       integer    len_dir
       logical    lrunbal
-      logical    lstagger
-      logical    lnon_linear
-      real*4     gamo,delo,tau
+      real*4     gamo,delo
       character  nest7grid*150
 
-      namelist /balance_nl/lrunbal,lstagger,icon,gamo,delo,tau,
-     1lnon_linear
+      namelist /balance_nl/lrunbal,gamo,delo
 
       istatus = 0
 

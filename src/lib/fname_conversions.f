@@ -40,7 +40,8 @@
 !       Convert a9_time (yydddhhmm) to a10_time (yyyyMMddhh)
 !       John Smart 2000
 
-        integer i4time_sys
+        integer i4time_sys,ilen
+        integer len
 
         character*10 a9_to_yr_a10_time
         character*9  a9_time, a9_time_sys
@@ -52,8 +53,9 @@
         call get_systime_all(i4time_sys,a9_time_sys,anal_hr,
      1             anal_min,asctim_str,yr_jday,istatus)
 
-        a8_time=a9_to_a8(a9_time_sys)
-        a9_to_yr_a10_time=asctim_str(8:11)//a8_time(3:8)
+        a8_time=a9_to_a8(a9_time)
+        ilen=len(asctim_str)
+        a9_to_yr_a10_time=asctim_str(ilen-9:ilen-6)//a8_time(3:8)
 
         istatus = 1
 
