@@ -5,9 +5,10 @@
 !     Steve Albers      Dec-1997        Call to 'open_lapsprd_file_append'
 
 !     Input file 
-      character*70 filename_in
+      character*170 filename_in
       character*9 a9_time
       character*180 dir_in
+      character*3 ext_in
       character*255 c_filespec
       integer max_files
       parameter(max_files = 3000)
@@ -16,7 +17,6 @@
 
 !     Output file
       character*31    ext
-      integer*4       len_dir
 
       character*40 c_vars_req
       character*180 c_values_req
@@ -53,10 +53,12 @@
           stop   
       endif
 
-      call s_len(dir_in,len_dir_in)
-      c_filespec = dir_in(1:len_dir_in)//'/'//'*0q.cdf'
+      ext_in = 'cdf'
 
-!     Wait for latest input data
+      call s_len(dir_in,len_dir_in)
+      c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
+
+!     Wait for latest input data (only for NIMBUS format)
       i4time_now = i4time_now_gg()
       i4_hour = (i4time_now/3600) * 3600        ! i4time at the top of the hour
       minutes_now = (i4time_now - i4_hour) / 60
@@ -80,21 +82,28 @@
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
-!     Open output PIN file
+      if(i_nbr_files_ret .eq. 0)then
+          write(6,*)' No raw *.cdf files (NIMBUS), trying *.ac (AFWA)'       
+          ext_in = 'ac'
+          c_filespec = dir_in(1:len_dir_in)//'/'//'*00q.'//ext_in
+          call get_file_times(c_filespec,max_files,c_fnames
+     1                          ,i4times,i_nbr_files_ret,istatus)
+      endif
+
+!     Open output PIN file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
           call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)       
       else
-          write(6,*)' No raw data files identified, STOP'
-          stop
+          write(6,*)' No raw data files identified:',' *.',ext_in
+          goto999
       endif
 
-!     Loop through /public NetCDF files and choose ones in time window
-      write(6,*)' # of files on /public = ',i_nbr_files_ret
+!     Loop through ACARS files and choose ones in time window
+      write(6,*)' # of raw ACARS files = ',i_nbr_files_ret,' *.',ext_in
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
-          filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'q.cdf'
-!         filename_in = 'test.nc                                 '
+          filename_in = c_fnames(i)
 
 !         Test whether we want the NetCDF file for this time
           i4time_file_earliest = i4time_sys - (ilaps_cycle_time / 2)
@@ -109,10 +118,23 @@
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in
 
-!             Read from the NetCDF pirep file and write to the opened PIN file
-              call get_acars_data(i4time_sys,ilaps_cycle_time
+              if(ext_in .eq. 'cdf')then ! NIMBUS NetCDF
+!                 Read from the ACARS file 
+!                 Write to the opened PIN file
+                  call get_acars_data(i4time_sys,ilaps_cycle_time
      1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
+              elseif(ext_in .eq. 'ac')then ! AFWA ASCII
+!                 Read from the ACARS file 
+!                 Write to the opened PIN file
+                  call get_acars_afwa(i4time_sys,ilaps_cycle_time
+     1                                      ,NX_L,NY_L
+     1                                      ,filename_in,istatus)
+              else
+                  write(6,*)' ERROR, invalid ext_in: ',ext_in
+                  stop
+              endif
+
           endif
       enddo
 
