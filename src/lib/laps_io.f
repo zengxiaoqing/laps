@@ -1213,7 +1213,7 @@ c          return
                  write(6,*)' No field found at ',ext(1:10)
      1                       ,var_2d,' ',asc9_tim
                  go to 50
-
+c
 c we need to expect some missing data in the lvd fields.
 c determine which lvd file within the time window has the best
 c domain coverage.
@@ -1266,8 +1266,8 @@ c             return
         endif
 
         call move(field_2d_save(1,1,jr),field_2d,imax,jmax)
-        print*,'Returning requested field for ', asc9_time(jr),
-     1' from get_laps_lvd'
+        print*,'Returning requested field from',
+     1' get_laps_lvd    ',asc9_time(jr),'     ',var_2d
         istatus = 1
 
         return 
