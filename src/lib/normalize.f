@@ -106,8 +106,12 @@ C***Local variables
         Integer nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
      1            ilut,jlut,ISpace,JSpace, ni2, nj2
 
+        character*9 a9time
 
-        write(lun,*)' Begin normalization routine (V970519)'
+        call make_fnam_lp (i4time,a9time,istatus)
+        if(istatus .ne. 1)return
+
+        write(lun,*)' Begin normalization routine (V970519) for ',a9time       
         write(lun,*)' Sub Lat/Lon/Rng = ',sublat_d,sublon_d,range_m
 
         call zero(phase_angle_d,ni,nj)
