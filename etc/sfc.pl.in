@@ -22,11 +22,9 @@ elsif ($nargs == 2) {
  
 $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 
-if (defined $logdir) {
- if ($logdir = $LAPS_DATA_ROOT) {$logdir=$logdir."/log";}
- elsif (defined $LAPS_DATA_ROOT) {$logdir=$LAPS_DATA_ROOT."/log";}
- else {die "Can't find path to log data.\n";}
- }
+if (defined $logdir) {if ($logdir = $LAPS_DATA_ROOT) {$logdir=$logdir."/log";} }
+elsif (defined $LAPS_DATA_ROOT) {$logdir=$LAPS_DATA_ROOT."/log";}
+else {die "Can't find path to log data.\n";}
 
 if (defined $hr) {$hr="0".$hr if (length($hr)<2);}
 
