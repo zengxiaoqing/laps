@@ -23,12 +23,20 @@ sub Get_env'fxa{ #'
 }
 
 1;
-
 sub Set_logdir'fxa{
     
     if( -d $ENV{LOG_DIR}){
-	local($yymmdd) = `date -u +%y%m%d`;
-	chomp($yymmdd);
+#	local($yymmdd) = `date -u +%y%m%d`;
+#	chomp($yymmdd);
+        local(@gmtime) = gmtime;
+        $gmtime[4]++;
+        for($i=3;$i<=5;$i++){
+          $gmtime[$i]="0".$gmtime[$i] if(length($gmtime[$i]<2));
+        }
+        local($yymmdd) = $gmtime[5].$gmtime[4].$gmtime[3];
+#        print "hera $yymmdd\n"; chomp($yymmdd); print $yymmdd;
+
+
 	$LAPS_LOG_PATH= "$ENV{LOG_DIR}/$yymmdd";
 
 	if(! -d $LAPS_LOG_PATH){
