@@ -51,7 +51,7 @@ sub help_sub{
     print "   --srcroot  = Root directory of the source code    (@top_srcdir@)\n";
     print "   --which_type = Specifies localization for either LAPS or WRFSI\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
-    print "   --satid    = g8 or g10 (guessed based on -100.0W)\n";
+    print "   --satid    = g8/g12 or g10 (guessed based on -100.0W)\n";
     print "   --no_ggm   = if defined then localization does not run gridgen_model\n";
     print "   --quiet    = Do not query user for verification\n";
     print "   --help     = print this message and exit\n";
@@ -100,6 +100,7 @@ require "$INSTALL_ROOT/etc/run_sys.pm";
 require "$INSTALL_ROOT/etc/laps_tools.pm";
 
 my $FXA_DATA = $ENV{"FXA_DATA"};
+my $sys;
 
 if(-d "$SOURCE_ROOT/data"){
     if(-d "$DATA_ROOT"){
@@ -111,7 +112,7 @@ if(-d "$SOURCE_ROOT/data"){
 	    print "$key\n";
 	    exit if($key != 'y');
 	}
-        my $sys ="cp -r $SOURCE_ROOT/data $DATA_ROOT";
+        $sys ="cp -r $SOURCE_ROOT/data $DATA_ROOT";
         print $sys;
 	run_sys::run_sys($sys);
     }
@@ -123,6 +124,12 @@ if(-d "$SOURCE_ROOT/data"){
 
 if(-d $FXA_DATA){
   print "Localizing for WFO $ENV{FXA_INGEST_SITE}\n";
+  run_sys::run_sys("rm -f $DATA_ROOT/static/vxx/radar.lst");
+  my $i;
+  for ($i=1; $i<=9; $i++) {
+    $sys = "rm -f $DATA_ROOT/lapsprd/rdr/00$i/raw/*"; 
+    run_sys::run_sys($sys);
+  }
   $satid = &wfo_localization($SOURCE_ROOT,$INSTALL_ROOT,$DATA_ROOT,$FXA_DATA,$satid);
   $sattype = "wfo";
 }
@@ -427,14 +434,21 @@ sub wfo_localization{
       $goes = 8;
   }elsif($satid eq "g10"){
       $goes = 10;
+# added next two lines when goes8 went away on 4-1-03 LW
+  }elsif($satid eq "g12"){
+      $goes = 12;
   }elsif(-r $file1){
       open(LOCFILE,$file1) or die "Can't find $file1.";
       my $line = <LOCFILE>;
       close(LOCFILE);
       $goes=10 if($line =~ /WEST/i);      
-      $goes=8 if($line =~ /EAST/i);      
+# modified next two lines when goes8 went away on 4-1-03 LW
+#     $goes=8 if($line =~ /EAST/i);
+      $goes=12 if($line =~ /EAST/i);
   }else{
-      $goes = $lon>-100 ? 8:10;  # identifies the goes sat to use based on longitude
+# modified next two lines when goes8 went away on 4-1-03 LW
+#     $goes = $lon>-100 ? 8:10;  # identifies the goes sat to use based on longitude
+      $goes = $lon>-100 ? 12:10;  # identifies the goes sat to use based on longitude
   }
   #First files:  the namelist files.
 
@@ -487,6 +501,9 @@ sub wfo_localization{
           }elsif(/\sISATS\s*=/i){
               if($goes==8){
                   print OUTFILE " ISATS = 1,0,0,0,0,0\n";
+# added next two lines when goes8 went away on 4-1-03 LW
+              }elsif($goes==12){
+                  print OUTFILE " ISATS = 0,0,0,0,1,0\n";
               }else{
                   print OUTFILE " ISATS = 0,0,1,0,0,0\n";
               }
@@ -496,6 +513,9 @@ sub wfo_localization{
           }elsif(/\sITYPES\s*=/i){
               if($goes==8){
                   print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n";
+# added next two lines when goes8 went away on 4-1-03 LW
+              }elsif($goes==12){
+                  print OUTFILE " ITYPES = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0\n";
               }else{
                   print OUTFILE " ITYPES = 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n";
               }
@@ -596,7 +616,7 @@ sub static_parms_to_cdl{
       run_sys::run_sys($sys,1);
    }
    open(NAV,"$LAPS_DATA_ROOT/log/nav.dat");
-   @nav_stuff = <NAV>;
+   my @nav_stuff = <NAV>;
    close NAV;
    unlink "$LAPS_DATA_ROOT/log/nav.dat";
 
