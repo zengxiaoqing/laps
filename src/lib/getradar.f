@@ -548,8 +548,9 @@ cdoc                            calls read_multiradar_3dref.
 !                               is passed back about which data is 2d and which
 !                               is 3d.
 !
-!       SA           Mar 2001   The 'all' option is now being tested that 
-!                               merges 3D (v01) and 2D (vrc) data.
+!       SA           Jan 2003   The 'all' option is now being tested that 
+!                               merges 3D (vrz) and 2D (vrc) data.
+!                               The 'a01' option should merge (v01) with (vrc)
 
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 heights_3d(imax,jmax,kmax)
@@ -618,16 +619,18 @@ cdoc                            calls read_multiradar_3dref.
      1     radarext(1:2) .eq. 'v8' .or.
      1     radarext(1:2) .eq. 'v9' .or.
      1     radarext(1:3) .eq. 'vrz' .or.
-     1     radarext(1:3) .eq. 'all' )then     ! Read Doppler 3-D radar ref data
+     1     radarext(1:1) .eq. 'a'   )then     ! Read Doppler 3-D radar ref data
                                               ! from NetCDF VXX or VRZ file
 
             write(6,*)' Reading Reflectivity Data from 3D file '
      1                                                 ,radarext
 
-            if(radarext(1:3) .ne. 'all')then
-                readext = radarext
+            if(radarext(1:3) .eq. 'all')then
+                readext = 'vrz' 
+            elseif(radarext(1:3) .eq. 'a01')then
+                readext = 'v01' 
             else
-                readext = 'vrz' ! change this to 'vrz' when it is available
+                readext = radarext
             endif
 
 !           Read Reflectivity
@@ -737,7 +740,7 @@ cdoc                            calls read_multiradar_3dref.
 
         endif ! 'vxx' or 'vrz'
 
-        if(radarext(1:3) .eq. 'vrc' .or. radarext(1:3) .eq. 'all')then       
+        if(radarext(1:3) .eq. 'vrc' .or. radarext(1:1) .eq. 'a')then       
 50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
 
             readext = 'vrc'
