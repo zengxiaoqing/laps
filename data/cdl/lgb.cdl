@@ -1,0 +1,241 @@
+netcdf l1s {
+
+    dimensions:
+        record = unlimited,
+        z = 1,
+	x = 41,
+        y = 41,
+        nav = 1,
+        namelen = 132;
+		
+    variables:
+	// Surface fields //
+
+        //	Background sfc u wind component
+
+	float                                  
+            usf(record,z,y,x);
+            usf:navigation_dim = "nav";
+            usf:record = "valtime, reftime";
+            usf:_FillValue = 1.e+37f;
+            usf:long_name="Background sfc u wind component";
+            usf:units="meters/second";
+            usf:valid_range= -200.f, 200.f;
+            usf:LAPS_var="USF";
+            usf:lvl_coord="HPA";
+	    usf:LAPS_units="M/S";
+                	        
+        //	Background sfc v wind component
+
+	float                                  
+            vsf(record,z,y,x);
+            vsf:navigation_dim = "nav";
+            vsf:record = "valtime, reftime";
+            vsf:_FillValue = 1.e+37f;
+            vsf:long_name="Background sfc v wind component";
+            vsf:units="meters/second";
+            vsf:valid_range= -200.f, 200.f;
+            vsf:LAPS_var="VSF";
+            vsf:lvl_coord="HPA";
+	    vsf:LAPS_units="M/S";
+
+                	        
+        //	Background sfc temperature
+
+	float                                  
+            tsf(record,z,y,x);
+            tsf:navigation_dim = "nav";
+            tsf:record = "valtime, reftime";
+            tsf:_FillValue = 1.e+37f;
+            tsf:long_name="Background surface temperature";
+            tsf:units="degrees Kelvin";
+            tsf:valid_range= -200.f, 200.f;
+            tsf:LAPS_var="TSF";
+            tsf:lvl_coord="AGL";
+	    tsf:LAPS_units="K";
+                	        
+        //	Background MSL pressure
+
+	float                                  
+            slp(record,z,y,x);
+            slp:navigation_dim = "nav";
+            slp:record = "valtime, reftime";
+            slp:_FillValue = 1.e+37f;
+            slp:long_name="Background MSL pressure";
+            slp:units="pascals";
+            slp:valid_range= 80000.f, 150000.f;
+            slp:LAPS_var="SLP";
+            slp:lvl_coord="AGL";
+	    slp:LAPS_units="PA";
+                	        
+        //	Background surface pressure
+
+	float                                  
+            psf(record,z,y,x);
+            psf:navigation_dim = "nav";
+            psf:record = "valtime, reftime";
+            psf:_FillValue = 1.e+37f;
+            psf:long_name="Background surface pressure";
+            psf:units="pascals";
+            psf:valid_range= 80000.f, 150000.f;
+            psf:LAPS_var="PSF";
+            psf:lvl_coord="AGL";
+	    psf:LAPS_units="PA";
+                	        
+        //      Background surface specific humidity       //
+
+        float
+            rsf(record,z,y,x);
+            rsf:navigation_dim = "nav";
+            rsf:record = "valtime, reftime";
+            rsf:_FillValue = 1.e+37f;
+            rsf:long_name="Background specific humidity";
+            rsf:units="meters";
+            rsf:valid_range= 0.f, 100.f;
+            rsf:LAPS_var="RSF";
+            rsf:lvl_coord="AGL";
+            rsf:LAPS_units="none";
+
+
+
+        //	LAPS variables
+
+        long
+            imax,
+            jmax,
+            kmax,
+            kdim;
+
+        char
+            usf_comment(record,z,namelen),
+            vsf_comment(record,z,namelen),
+            tsf_comment(record,z,namelen),
+            psf_comment(record,z,namelen),
+            rsf_comment(record,z,namelen),
+            slp_comment(record,z,namelen),
+            asctime(record,namelen);
+
+			
+        //	inventory variables
+
+        short
+            usf_fcinv(record, z);
+            usf_fcinv:_FillValue= 0s;
+        short
+            vsf_fcinv(record, z);
+            vsf_fcinv:_FillValue= 0s;
+        short
+            tsf_fcinv(record, z);
+            tsf_fcinv:_FillValue= 0s;
+        short
+            psf_fcinv(record, z);
+            psf_fcinv:_FillValue= 0s;
+        short
+            rsf_fcinv(record, z);
+            rsf_fcinv:_FillValue= 0s;
+        short
+            slp_fcinv(record, z);
+            slp_fcinv:_FillValue= 0s;
+              	
+        //	list of grid levels
+
+        float 
+            level(z);
+            level:long_name="level of data";
+	    level:units = "hectopascals";
+                    	
+        //      validtime of the grid 
+
+        double
+            valtime(record);
+            valtime:long_name = "valid time";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      reference time of the process
+
+        double
+            reftime(record);
+            reftime:long_name = "reference time";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+        //      nice name for originating center
+
+        char
+            origin_name(namelen);
+
+        //      nice name for process
+
+        char
+            process_name(namelen);
+
+        //      nice name for grid description instance
+        char
+            grid_name(namelen);
+
+        //      basic assumption about earth shape
+        char
+            earth_shape(namelen);
+
+        // navigation variables using 
+        // WMO FM 92-VIII Ext.GRIB specification names
+  
+        char    grid_type(nav, namelen);
+                grid_type:long_name = "GRIB-1 grid type";
+  
+        char    x_dim(nav, namelen);
+                x_dim:long_name = "longitude dimension";
+  
+        char    y_dim(nav, namelen);
+                y_dim:long_name = "latitude dimension";
+  
+        short   Nx(nav);
+                Nx:long_name = "number of x points";
+  
+        short   Ny(nav);
+                Ny:long_name =  "number of y points";
+  
+        float   La1(nav);
+                La1:long_name = "first latitude";
+                La1:units = "degrees_north";
+  
+        float   Lo1(nav);
+                Lo1:long_name = "first longitude";
+                Lo1:units = "degrees_east" ;
+    
+        float   LoV(nav);
+                LoV:long_name = "orientation of grid" ;
+                LoV:units = "degrees_east";
+  
+        float   Latin1(nav);
+                Latin1:long_name = "orientation of grid" ;
+                Latin1:units = "degrees_north";
+
+        float   Latin2(nav);
+                Latin2:long_name = "orientation of grid" ;
+                Latin2:units = "degrees_north";
+
+        float   Dx(nav);
+                Dx:long_name = "x grid increment";
+                Dx:units = "kilometers";
+  
+        float   Dy(nav);
+                Dy:long_name = "y grid increment";
+                Dy:units = "kilometers";
+  
+        // end of navigation variables
+
+        :Conventions = "NUWG";
+        :history = "created by LAPS Branch of FSL";
+        :record = "valtime, reftime";
+        :title = "LAPS l1s file - snow and precip accumulation";
+        :version = 3;
+
+    data:
+
+        earth_shape     = "spherical radius";
+        grid_name       = "LAPS l1s file - snow and precip accumulation";
+        process_name    = "LAPS - Local Analysis and Prediction System";
+        x_dim           = "x";
+        y_dim           = "y";
+
+}                       
