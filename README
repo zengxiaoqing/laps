@@ -473,9 +473,10 @@
      from the 'analysis' code). If we have enough disk space, then several
      consecutive hours are posted, one hour per file. Included are the 
      contents of the 'data/lapsprd', 'data/time' and 'data/log' directories 
-     from an FSL machine. The contents of the various directories are outlined 
-     below in this README file. The data was created with the latest software 
-     release. Our users can download this data at 
+     from an FSL machine. The log files are useful for diagnosing any 
+     differences in output you may observe. The contents of the various 
+     directories are outlined below in this README file. The data was created 
+     using the latest software release. Our users can download this data at 
      'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
 
      If you want to test the 'analysis' code only, you might initiate
@@ -488,9 +489,7 @@
 
      When running LAPS for archived data in this manner, the 
      'data/time/systime.dat' should be updated manually by the user, instead 
-     of by the 'etc/sched.pl' script (that uses wall clock time). To help
-     accomplish this, comment out the 'systime.exe' entry in the 
-     'sched.pl'.  
+     of by the 'etc/sched.pl' script (that uses wall clock time). 
 
      Note that this tar file does not supply "raw" data that are inputted 
      to the ingest processes. In some cases, a user would independently
