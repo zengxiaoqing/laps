@@ -118,7 +118,6 @@ SRC	= cio.c \
           meanlapse.f \
           meanpres.f \
           move.f \
-          move_3d.f \
           multar.f \
           multcon.f \
           my_show_timer.f \
