@@ -1,4 +1,4 @@
-
+           
       subroutine get_satsnd_afwa(i4time_sys,i4_satsnd_window
      1                                     ,NX_L,NY_L
      1                                     ,filename,istatus)
@@ -9,10 +9,10 @@
 
 !.............................................................................
 
-      character*6 C6_A1ACID
+!     character*6 C6_A1ACID
       character*9 a9_timeObs,a9_recptTime,a9time_ob 
       character*1000 c_line
-      character*6 c_read
+      character*9 c_read
       character*5 c5_staid
       character*8 c8_obstype
 
@@ -32,6 +32,12 @@
 
       open(11,file=filename,status='old')
 
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' Error in get_r_missing_data'
+          return
+      endif
+
       call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a, 
      1            topo_a,1.0,rnorth,south,east,west,istatus)
       if(istatus .ne. 1)then
@@ -43,7 +49,8 @@
 
       do while (.true.)
 
-          read(11,*,err=890,end=999)c_line
+          read(11,51,err=890,end=999)c_line
+ 51       format(a)
 
           read(c_line,101,err=890,end=999) !    NAME             UNITS & FACTOR
      1         I_A1CYCC,                       
@@ -94,7 +101,7 @@
               iend = istart+8
               c_read = c_line(istart:iend) 
               read(c_read,102,err=890)I_PRESSURE
-              pressure(lvl) = I_PRESSURE
+              pressure(lvl) = float(I_PRESSURE) / 10.
           enddo ! lvl
 
           iblk = 4
@@ -103,8 +110,17 @@
               iend = istart+8
               c_read = c_line(istart:iend) 
               read(c_read,102,err=890)I_TEMP
-              temp(lvl) = float(I_TEMP)/10.
+              temp(lvl) = float(I_TEMP) / 10.
           enddo ! lvl
+
+!         Read hours & minutes
+          iblk = 5
+          lvl = 2
+          istart = 66 + (iblk-1)*nlvls*11 + (lvl-1)*11 + 1
+          iend = istart+8
+          c_read = c_line(istart:iend) 
+          read(c_read,112,err=890)I_HR,I_MIN
+ 112      format(5x,2i2)
 
           i = i + 1
 
@@ -112,7 +128,7 @@
           write(6,*)' satsnd #',i
 
           stalat =  float(I_A1LAT)/100.
-          stalon = -float(I_A1LON)/100.
+          stalon = +float(I_A1LON)/100.
 
           write(6,*)' location = ',stalat,stalon
 
@@ -125,7 +141,11 @@
               goto 900
           endif
 
-          call afwa_julhr_i4time(I_A1JUL,I_A1MIN,i4time_ob)
+          I_HR_JUL = I_A1JUL - (I_A1JUL/24)*24
+
+          write(6,*)' I_HR, I_HR_JUL, I_MIN ', I_HR, I_HR_JUL, I_MIN       
+
+          call afwa_julhr_i4time(I_A1JUL,I_MIN,i4time_ob)
 
           call make_fnam_lp(i4time_ob,a9_time_ob,istatus)
           if(istatus .ne. 1)goto900
