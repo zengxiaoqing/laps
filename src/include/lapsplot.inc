@@ -1,5 +1,6 @@
 
 
+!       Namelist data structure
 	type namelist_type
           sequence
 
@@ -21,10 +22,13 @@
 
         type (namelist_type) namelist_parms
 
+
+!       Other plot parameters
 	type plot_type
           sequence
 
           real rimage_intensity
+          real zoom
 
           integer contour_line_width
 
