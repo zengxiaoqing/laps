@@ -1,0 +1,15 @@
+!Variables in paths_to_raw_data section of wrfsi.nl
+      character*200 path_to_raw_pirep
+      character*200 path_to_raw_rass
+      character*200 path_to_raw_profiler
+      character*200 path_to_raw_blprass
+      character*200 path_to_raw_blpprofiler
+      character*200 path_to_wsi_2d_radar
+      character*200 path_to_wsi_3d_radar
+      character*200 path_to_qc_acars
+      character*200 path_to_raw_raob
+
+      common  /path_to_raw_data/ path_to_raw_pirep
+     +,path_to_raw_rass, path_to_raw_profiler, path_to_raw_blprass
+     +,path_to_raw_blpprofiler,path_to_wsi_2d_radar
+     +,path_to_wsi_3d_radar, path_to_qc_acars

@@ -1,0 +1,10 @@
+!Variables in filetimespec section of wrfsi.nl
+      character*80 fname, ftype, order
+      integer iflag_timespec_cmn
+      integer start_year, start_month, start_day, start_hour
+      integer end_year, end_month, end_day, end_hour, interval
+
+      common  /wrf_timespec_cmn/ iflag_timespec_cmn
+     +,simulation_namefname, ftype, order
+     +,start_year, start_month, start_day, start_hour
+     +,end_year, end_month, end_day, end_hour, interval

@@ -1,0 +1,27 @@
+!Variables in hgridspec section of wrfsi.nl
+      include 'wrf_dims.inc'
+
+      integer num_domains
+      integer xdim(max_domains), ydim(max_domains)
+      integer parent_id(max_domains)
+      integer ratio_to_parent(max_domains)
+      integer domain_origin_parent_x(max_domains)
+      integer domain_origin_parent_y(max_domains)
+      
+      real moad_known_lat, moad_known_lon,
+     +       moad_stand_lats(4), moad_stand_lons(4),
+     +       moad_delta_x, moad_delta_y
+      character*8 moad_known_loc
+      character*4 stagger_type
+      character*32 map_proj_name
+      character*80 latlon_grid
+
+      common /wrf_hgrid_cmn/ 
+     + xdim, ydim,moad_known_lat, moad_known_lon
+     +,num_domains ,parent_id
+     +,ratio_to_parent
+     +,domain_origin_parent_x
+     +,domain_origin_parent_y
+     +,moad_stand_lats, moad_stand_lons
+     +,moad_delta_x, moad_delta_y
+     +,moad_known_loc,stagger_type,map_proj_name,latlon_grid

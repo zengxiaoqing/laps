@@ -1,0 +1,3 @@
+!Variables in project_id section of wrfsi.nl
+      character*80 simulation_name_cmn
+      common  /wrf_proj_name/ simulation_name_cmn
