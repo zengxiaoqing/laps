@@ -89,6 +89,7 @@ c
 	real*4 snow(maxstns)
 	character filetime*9, infile*256, btime*24
 	character stations_s(maxstns)*20, provider(maxstns)*11
+        character c20_stations*20
 	character dum*132
 
         logical l_parse
@@ -104,10 +105,6 @@ c
         endif
 
         call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
-
-        write(6,*)
-     1  ' Reading Station locations from read_sfc for labeling: '
-     1  ,asc_tim_9
 
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory
@@ -125,7 +122,7 @@ c
 
         endif
 
-        write(6,*)' Calling read_sfc_state...',ext_lso,btime
+        write(6,*)' Calling read_sfc_state...',ext_lso,asc_tim_9
 
 	call read_sfc_state(i4time,ext_lso,btime,n_obs_g,n_obs_b,
      &         stations_s,provider,lat_s,lon_s,elev_s,
@@ -261,13 +258,19 @@ c
 
                 if(iflag .eq. 1)call setusv_dum(2HIN,14)
 
-                call left_justify(stations(i))
-                call s_len(stations(i),len_sta)
+                if(ext_lso .eq. 'lso')then 
+                    c20_stations = stations(i)
+                else ! lso_qc
+                    c20_stations = stations_s(i)
+                endif
+
+                call left_justify(c20_stations)
+                call s_len(c20_stations,len_sta)
 
                 if(len_sta .ge. 3)then
-                    c3_name = stations(i)(len_sta-2:len_sta)
+                    c3_name = c20_stations(len_sta-2:len_sta)
                 else
-                    c3_name = stations(i)
+                    c3_name = c20_stations(1:3)
                 endif
 
                 charsize = .0040 / zoom_eff
