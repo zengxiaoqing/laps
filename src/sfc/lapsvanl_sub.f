@@ -1468,9 +1468,9 @@ c.... Get the average diff over the obs.
 c     
 	ave_diff = badflag
 	amean = badflag
-	if(num .ne. 0) amean = sum / float(num)
-	if(num .ne. 0) ave_diff = abs_diff / float(num)
-	if(num .ne. 0) rms = sumsq / float(num)
+	if(num .gt. 0) amean = sum / float(num)
+	if(num .gt. 0) ave_diff = abs_diff / float(num)
+	if(num .gt. 0 .and. sumsq .ge. 0.)rms = sqrt(sumsq / float(num))       
 
 	write(6,909) amean, num
 	write(iunit,909) amean, num
@@ -1482,7 +1482,7 @@ c
 
 	write(6,915) rms, num
 	write(iunit,915) rms, num
- 915	format(' RMS difference: ',f10.2,' over ',i4,' stations.')
+ 915	format(' RMS difference:     ',f10.2,' over ',i4,' stations.')
 
 	write(iunit,920) diff_mx, stn_mx
  920	format(' Maximum difference of ',f10.2,' at ',a5)
