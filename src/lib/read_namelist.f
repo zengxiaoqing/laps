@@ -337,6 +337,7 @@ c
      1                          ,thresh_2_radarobs_lvl_unfltrd
      1                          ,thresh_4_radarobs_lvl_unfltrd
      1                          ,weight_bkg_const_wind
+     1                          ,weight_radar
      1                          ,rms_thresh_wind
      1                          ,max_pr,max_pr_levels,i_3d
      1                          ,istatus)
@@ -351,6 +352,7 @@ c
      1                   ,thresh_2_radarobs_lvl_unfltrd
      1                   ,thresh_4_radarobs_lvl_unfltrd
      1                   ,weight_bkg_const_wind
+     1                   ,weight_radar
      1                   ,rms_thresh_wind
      1                   ,max_pr,max_pr_levels,i_3d
  
@@ -517,7 +519,7 @@ c
        real    bad_mp,bad_th,bad_the
        real    bad_vis,bad_tb8
        real    thresh_t,thresh_td,thresh_mslp
-       real    rms_wind
+       real    rms_wind, rms_temp, rms_dewpoint
 
        integer istatus
        
@@ -528,7 +530,7 @@ c
      1                              bad_mp,bad_th,bad_the,
      1                              bad_vis,bad_tb8,
      1                              thresh_t,thresh_td,thresh_mslp,
-     1                              rms_wind
+     1                              rms_wind, rms_temp, rms_dewpoint
 
        character*150    static_dir,filename
        integer len_dir
@@ -543,6 +545,8 @@ c
        close(1)
 
        sfc_nl_parms%rms_wind = rms_wind
+       sfc_nl_parms%rms_temp = rms_temp
+       sfc_nl_parms%rms_dewpoint = rms_dewpoint
 
        istatus = 1
        return
