@@ -607,21 +607,6 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
 csms$serial end
 
-      if(.not. l_point_struct)then
-          call arrays_to_barnesobs  (imax,jmax,kmax                   ! I
-     1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p          ! I
-     1                              ,n_var,max_obs,obs_point_qced     ! I/O
-     1                              ,ncnt_total,weight_total          ! O
-     1                              ,istatus)                         ! O
-
-          if(ncnt_total .ne. n_qc_total_good)then
-              write(6,*)' WARNING: ncnt_total .ne. n_qc_total_good'
-     1                 ,ncnt_total,n_qc_total_good
-          endif
-
-      endif
-
       call get_inst_err2(r_missing_data                               ! I
      1                  ,obs_point_qced,max_obs,n_qc_total_good       ! I
      1                  ,rms_thresh_norm                              ! I
@@ -773,15 +758,8 @@ csms$serial end
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
                       obs_barnes(ncnt_total) = obs_radar(i)
+                      obs_barnes(ncnt_total)%type = 'radar'
                   enddo ! i
-
-              else
-                  call arrays_to_barnesobs(imax,jmax,kmax             ! I
-     1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_radar    ! I
-     1                              ,n_var,max_obs,obs_barnes         ! I/O
-     1                              ,ncnt_total,weight_total          ! O
-     1                              ,istatus)                         ! O
               endif
 
               call get_inst_err2(r_missing_data                       ! I
@@ -886,15 +864,8 @@ csms$serial end
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
                       obs_barnes(ncnt_total) = obs_radar(i)
+                      obs_barnes(ncnt_total)%type = 'radar'
                   enddo ! i
-
-              else
-                  call arrays_to_barnesobs(imax,jmax,kmax               ! I
-     1                                ,r_missing_data                   ! I
-     1                                ,varobs_diff_spread,wt_p_radar    ! I
-     1                                ,n_var,max_obs,obs_barnes         ! I/O
-     1                                ,ncnt_total,weight_total          ! O
-     1                                ,istatus)                         ! O
 
               endif
 
@@ -1011,15 +982,8 @@ csms$insert      print *, 'got to 10 processor=',me
               do i = 1,ncnt_radar
                   ncnt_total = ncnt_total + 1
                   obs_barnes(ncnt_total) = obs_radar(i)
+                  obs_barnes(ncnt_total)%type = 'radar'
               enddo ! i
-
-          else
-              call arrays_to_barnesobs  (imax,jmax,kmax               ! I
-     1                              ,r_missing_data                   ! I
-     1                              ,varobs_diff_spread,wt_p_radar    ! I
-     1                              ,n_var,max_obs,obs_barnes         ! I/O
-     1                              ,ncnt_total,weight_total          ! O
-     1                              ,istatus)                         ! O
 
           endif
 
