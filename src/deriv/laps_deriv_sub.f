@@ -391,20 +391,9 @@ c Determine the source of the radar data
 
 c read in laps lat/lon and topo
         call get_laps_domain_95(NX_L,NY_L,'nest7grid',lat,lon,topo
-     1           ,rlaps_land_frac,grid_spacing_m,istatus)
+     1           ,rlaps_land_frac,grid_spacing_cen_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
-            return
-        endif
-
-        icen = NX_L/2 + 1
-        jcen = NY_L/2 + 1
-        call get_grid_spacing_actual(lat(icen,jcen),lon(icen,jcen)
-     1                              ,grid_spacing_cen_m,istatus)
-        if(istatus .eq. 1)then
-            write(6,*)' Actual grid spacing in domain center = '
-     1                              ,grid_spacing_cen_m
-        else
             return
         endif
 
@@ -901,6 +890,8 @@ c read in laps lat/lon and topo
                     else
                         c1_r = ' '
                     endif
+
+                    call filter_string(wx_s(i))
 
                     write(6,1101,err=1102)c_stations(i)(1:3)
      1                          ,c2_precip_types(i_pty)

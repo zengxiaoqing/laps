@@ -32,7 +32,7 @@ cdis
 
         subroutine get_cloud_deriv(ni,nj,nk,clouds_3d,cld_hts,
      1                          temp_3d,rh_3d_pct,heights_3d,
-     1                          istat_radar,radar_3d,grid_spacing_m,
+     1                          istat_radar,radar_3d,grid_spacing_cen_m,       
      1                          l_mask_pcptype,ibase_array,itop_array,
      1                          iflag_slwc,slwc_3d,cice_3d,thresh_cvr,
      1                          l_flag_cloud_type,cldpcp_type_3d,
@@ -513,7 +513,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
             write(6,*)' Computing 3D Precip type'
 
             call cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
-     1                  ,radar_3d,l_mask_pcptype,grid_spacing_m
+     1                  ,radar_3d,l_mask_pcptype,grid_spacing_cen_m       
      1                  ,ni,nj,nk,cldpcp_type_3d,istatus)
             if(istatus .ne. 1)then
                 write(6,*)'Bad status returned from cpt_pcp_type_3d'
@@ -561,7 +561,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
 
         subroutine cpt_pcp_type_3d(temp_3d,rh_3d_pct,pressures_mb
-     1  ,radar_3d,l_mask,grid_spacing_m
+     1  ,radar_3d,l_mask,grid_spacing_cen_m
      1  ,ni,nj,nk,cldpcp_type_3d,istatus)
 
 !       1991    Steve Albers
@@ -571,8 +571,6 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 !       This program modifies the most significant 4 bits of the integer
 !       array by inserting multiples of 16.
 
-        include 'lapsparms.cmn'
-
         real*4 temp_3d(ni,nj,nk)
         real*4 rh_3d_pct(ni,nj,nk)
         real*4 pressures_mb(nk)
@@ -581,12 +579,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         integer*4 itype
         logical l_mask(ni,nj) ! Used for "Potential" Precip Type
 
-        if(iflag_lapsparms_cmn .ne. 1)then
-            write(6,*)' ERROR, get_laps_config not called'
-            istatus = 0
-            return
-!           stop
-        endif
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+       
+        call get_ref_base_useable(ref_base_useable,istatus)
+        if(istatus .ne. 1)return
 
 !       Stuff precip type into cloud type array
 !       0 - No Precip
@@ -599,7 +596,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         zero_c = 273.15
         rlayer_refreez_max = 0.0
 
-        hail_ref_thresh = 55. - grid_spacing_m/1000.
+!       Ramp the hail_ref_thresh between 0-10km grid spacing
+        arg = min(grid_spacing_cen_m,10000.)
+        hail_ref_thresh = 55. - arg/1000.
 
         n_zr = 0
         n_sl = 0
@@ -618,8 +617,10 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             do k = nk,1,-1
 
-!               if(radar_3d(i,j,k) .gt. 0. .or. l_mask(i,j))then
-                if(radar_3d(i,j,k) .ge. 0. .or. l_mask(i,j))then
+                if( (radar_3d(i,j,k) .ge. ref_base_useable .and.  ! Above Noise
+     1               radar_3d(i,j,k) .ge. 0.               .and.  ! Sig Echo
+     1               radar_3d(i,j,k) .ne. r_missing_data         )
+     1                               .OR. l_mask(i,j)            )then        
 
 !                   Set refreezing flag
                     t_c         = temp_3d(i,j,k) - zero_c
@@ -725,10 +726,10 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                                     endif
                                     iprecip_type = 3
 
-                                else  ! (iflag_refreez = 1)   ! Sleet
+                                else  ! (iflag_refreez = 1)      ! Sleet
                                     n_sl = n_sl + 1
                                     iprecip_type = 4
-                                    iflag_melt = 0            ! Reset flags
+                                    iflag_melt = 0               ! Reset flags
                                     iflag_refreez = 0
                                     rlayer_refreez = 0.0
 
@@ -745,12 +746,15 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                         endif ! t_wb_c
 
                     else ! >= hail_ref_thresh
-                        iprecip_type = 5                      ! Hail
+                        iprecip_type = 5                         ! Hail
 
                     endif ! Intense enough for hail
 
                 else ! No Radar Echo
                     iprecip_type = 0
+                    iflag_melt = 0                               ! Reset
+                    iflag_refreez = 0   
+                    rlayer_refreez = 0.
 
                 endif ! Radar Echo?
 
@@ -844,8 +848,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                 tw_sfc_c = twet_fast(t_sfc_c,td_sfc_c,pres_mb)
 
 !               Note that the dbz value has not been passed in yet
-                thresh_melt_c = wb_melting_threshold(t_sfc_c,dbz_2d(i,j)
-     1)
+                thresh_melt_c = 
+     1                         wb_melting_threshold(t_sfc_c,dbz_2d(i,j))       
 
                 n_precip = n_precip + 1
                 if(iprecip_type .ne. 1)then       ! Not Rain
@@ -892,11 +896,11 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         enddo ! i
         enddo ! j
 
-        write(6,*)' # Sfc pts with precip =                   ',n_precip
-        write(6,*)' # Sfc pts changed to frozen by sfc data = ',n_chg_fr
-     1z
-        write(6,*)' # Sfc pts changed to rain by sfc data  =  ',n_chg_ml
-     1t
+        write(6,*)' # Sfc pts with precip =                   ',n_precip       
+        write(6,*)' # Sfc pts changed to frozen by sfc data = '
+     1                                                        ,n_chg_frz
+        write(6,*)' # Sfc pts changed to rain by sfc data  =  '
+     1                                                        ,n_chg_mlt      
         write(6,*)' # Sfc pts with hail =                     ',n_hail
 
         return
@@ -1086,8 +1090,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             if (d_thetae_dz .ge. +.0005) then
                 itype = 7 ! Cs
-            elseif (d_thetae_dz .lt. +.0005 .and. d_thetae_dz .ge. -.000
-     15) then
+            elseif (d_thetae_dz .lt. +.0005 .and. 
+     1              d_thetae_dz .ge. -.0005) then
                 itype = 8 ! Ci
             else ! d_thetae_dz .lt. -.0005
                 itype = 9 ! Cc
