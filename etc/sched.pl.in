@@ -29,7 +29,9 @@
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
-# -q                   Use QSUB (e.g. on 'jet'), the value is the project name
+# -q  A                Use QSUB (e.g. on 'jet') where A is the project name
+#
+# -n                   Node type to be used with -q (default=comp)
 #
 # -w                   Option for creating the WFO big file when LAPS is 
 #                      running outside of the WFO environment.
@@ -41,7 +43,6 @@
 #
 # -s                   runs surface (all LSX variables) and 3-D wind analyses only
 #
-#
 # -l                   Write logs in LAPS_DATA_ROOT/log, even if on AWIPS
 
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
@@ -52,12 +53,12 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w 
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_n $opt_w 
             $opt_s $opt_l);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:q:wsl');
+getopts('d:c:a:rm:t:e:q:n:wsl');
 
 my $initial_time = time();
 #
@@ -115,6 +116,7 @@ my $archive_time = 0;
 $archive_time = $opt_a if($opt_a > 0);
 #print "$opt_a $archive_time\n";
 
+my $node_type = "comp";
 #
 #  The second argument is the time delay in hours to 
 #  set the systime.dat file, if you're data arrives more than 1 hour 
@@ -233,6 +235,10 @@ foreach $exe (@LAPS_EXE){
             $nodes_current = 1;
         }
 
+        if($opt_n){
+            $node_type = $opt_n;
+        }
+
         if($execount < $nexe){ # Not yet at end of the list
             if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
 
@@ -251,7 +257,7 @@ foreach $exe (@LAPS_EXE){
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
-                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=$cycle_time_min:00 -A $opt_q\n";
+                print TFILE "#PBS -lnodes=$nodes_current:$node_type,walltime=$cycle_time_min:00 -A $opt_q\n";
                 print TFILE "  \n";
 
                 if($nodes_current > 1){
