@@ -4298,6 +4298,7 @@ c                   cint = -1.
 
             if(var_2d .eq. 'TSF' .or.
      1         var_2d .eq. 'DSF' .or.
+     1         var_2d .eq. 'TGD' .or.
      1         var_2d .eq. 'T'   .or.
      1         var_2d .eq. 'TD'       )then
 
