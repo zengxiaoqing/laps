@@ -1,134 +1,62 @@
 C
 C  Subroutine to read the file "LDAD automated mesonet data " 
 C
-      subroutine read_ldadmadis_netcdf(nf_fid, ICcheckNum, QCcheckNum, 
-     +     maxPSTEntries, maxSensor, maxStaticIds, nInventoryBins, 
-     +     recNum, altimeterQCA, altimeterQCR, code1PST, code2PST, 
-     +     code3PST, dewpointICA, dewpointICR, dewpointQCA, 
-     +     dewpointQCR, filterSetNum, firstInBin, firstOverflow, 
-     +     globalInventory, invTime, inventory, isOverflow, 
-     +     lastInBin, lastRecord, nStaticIds, numPST, numericWMOid, 
-     +     precipAccumICA, precipAccumICR, precipAccumQCA, 
-     +     precipAccumQCR, precipIntensity, precipRateQCA, 
-     +     precipRateQCR, precipType, pressChange3HourICA, 
-     +     pressChange3HourICR, pressChange3HourQCA, 
-     +     pressChange3HourQCR, pressChangeChar, prevRecord, 
-     +     relHumidityQCA, relHumidityQCR, roadState1, roadState2, 
-     +     roadState3, roadState4, seaLevelPressureICA, 
-     +     seaLevelPressureICR, seaLevelPressureQCA, 
-     +     seaLevelPressureQCR, stationPressureICA, 
-     +     stationPressureICR, stationPressureQCA, 
-     +     stationPressureQCR, temperatureICA, temperatureICR, 
-     +     temperatureQCA, temperatureQCR, visibilityICA, 
-     +     visibilityICR, visibilityQCA, visibilityQCR, windDirICA, 
-     +     windDirICR, windDirQCA, windDirQCR, windSpeedICA, 
-     +     windSpeedICR, windSpeedQCA, windSpeedQCR, altimeter, 
-     +     capPi, dewpoint, drySignalDelay, elevation, 
-     +     fuelTemperature, latitude, longitude, 
+      subroutine read_ldadmadis_netcdf(nf_fid, QCcheckNum, maxSensor, 
+     +     recNum, filterSetNum, firstOverflow, globalInventory, 
+     +     nStaticIds, numPST, numericWMOid, precipIntensity, 
+     +     precipRateQCA, precipRateQCR, precipType, pressChangeChar, 
+     +     altimeter, dewpoint, elevation, latitude, longitude, 
      +     meanWeightedTemperature, precipAccum, precipRate, 
      +     pressChange3Hour, rawPrecip, relHumidity, relHumidityQCD, 
      +     seaLevelPressure, seaLevelPressureQCD, soilMoisture, 
      +     soilTemperature, solarRadiation, stationPressure, 
-     +     stationPressureQCD, temperature, temperatureQCD, 
-     +     totalColumnPWV, totalSignalDelay, visibility, 
-     +     visibilityQCD, windDir, windDirMax, windGust, windSpeed, 
-     +     fuelMoistChangeTime, fuelTempChangeTime, observationTime, 
-     +     receivedTime, reportTime, rhChangeTime, 
-     +     solarRadChangeTime, stationPressChangeTime, 
-     +     tempChangeTime, timeSinceLastPcp, windDirChangeTime, 
-     +     windGustChangeTime, windSpeedChangeTime, ICT, QCT, 
-     +     altimeterDD, dataProvider, dewpointDD, handbook5Id, 
-     +     homeWFO, namePST, precipAccumDD, precipRateDD, 
-     +     pressChange3HourDD, providerId, rawMessage, relHumidityDD, 
-     +     seaLevelPressureDD, staticIds, stationId, stationName, 
-     +     stationPressureDD, stationType, temperatureDD, test1, 
-     +     typePST, visibilityDD, windDirDD, windSpeedDD)
+     +     temperature, visibility, windDir, windDirMax, windGust, 
+     +     windSpeed, observationTime, receivedTime, reportTime, 
+     +     altimeterDD, dataProvider, dewpointDD, precipAccumDD, 
+     +     precipRateDD, pressChange3HourDD, providerId, 
+     +     relHumidityDD, seaLevelPressureDD, staticIds, stationId, 
+     +     stationName, stationPressureDD, stationType, 
+     +     temperatureDD, test1, visibilityDD, windDirDD, windSpeedDD)
 C
       include 'netcdf.inc'
-      integer ICcheckNum, QCcheckNum, maxPSTEntries, maxSensor, 
-     +     maxStaticIds, nInventoryBins, recNum,nf_fid, nf_vid, 
-     +     nf_status
-      integer altimeterQCA(recNum), altimeterQCR(recNum),
-     +     code1PST(maxPSTEntries), code2PST(maxPSTEntries),
-     +     code3PST(maxPSTEntries), dewpointICA(recNum),
-     +     dewpointICR(recNum), dewpointQCA(recNum),
-     +     dewpointQCR(recNum), filterSetNum,
-     +     firstInBin(nInventoryBins), firstOverflow,
-     +     globalInventory, invTime(recNum), inventory(maxStaticIds),
-     +     isOverflow(recNum), lastInBin(nInventoryBins),
-     +     lastRecord(maxStaticIds), nStaticIds, numPST,
-     +     numericWMOid(recNum), precipAccumICA(recNum),
-     +     precipAccumICR(recNum), precipAccumQCA(recNum),
-     +     precipAccumQCR(recNum), precipIntensity( maxSensor,
-     +     recNum), precipRateQCA(recNum), precipRateQCR(recNum),
-     +     precipType( maxSensor, recNum),
-     +     pressChange3HourICA(recNum), pressChange3HourICR(recNum),
-     +     pressChange3HourQCA(recNum), pressChange3HourQCR(recNum),
-     +     pressChangeChar(recNum), prevRecord(recNum),
-     +     relHumidityQCA(recNum), relHumidityQCR(recNum),
-     +     roadState1(recNum), roadState2(recNum),
-     +     roadState3(recNum), roadState4(recNum),
-     +     seaLevelPressureICA(recNum), seaLevelPressureICR(recNum),
-     +     seaLevelPressureQCA(recNum), seaLevelPressureQCR(recNum),
-     +     stationPressureICA(recNum), stationPressureICR(recNum),
-     +     stationPressureQCA(recNum), stationPressureQCR(recNum),
-     +     temperatureICA(recNum), temperatureICR(recNum),
-     +     temperatureQCA(recNum), temperatureQCR(recNum),
-     +     visibilityICA(recNum), visibilityICR(recNum),
-     +     visibilityQCA(recNum), visibilityQCR(recNum),
-     +     windDirICA(recNum), windDirICR(recNum),
-     +     windDirQCA(recNum), windDirQCR(recNum),
-     +     windSpeedICA(recNum), windSpeedICR(recNum),
-     +     windSpeedQCA(recNum), windSpeedQCR(recNum)
-      real altimeter(recNum), capPi(recNum), dewpoint(recNum),
-     +     drySignalDelay(recNum), elevation(recNum),
-     +     fuelTemperature(recNum), latitude(recNum),
-     +     longitude(recNum), meanWeightedTemperature(recNum),
-     +     precipAccum(recNum), precipRate(recNum),
-     +     pressChange3Hour(recNum), rawPrecip(recNum),
-     +     relHumidity(recNum), relHumidityQCD( QCcheckNum, recNum),
-     +     seaLevelPressure(recNum), seaLevelPressureQCD( QCcheckNum,
-     +     recNum), soilMoisture(recNum), soilTemperature(recNum),
+      integer QCcheckNum, maxSensor, recNum,nf_fid, nf_vid, nf_status
+      integer filterSetNum, firstOverflow, globalInventory,
+     +     nStaticIds, numPST, numericWMOid(recNum), precipIntensity(
+     +     maxSensor, recNum), precipRateQCA(recNum),
+     +     precipRateQCR(recNum), precipType( maxSensor, recNum),
+     +     pressChangeChar(recNum)
+      real altimeter(recNum), dewpoint(recNum), elevation(recNum),
+     +     latitude(recNum), longitude(recNum),
+     +     meanWeightedTemperature(recNum), precipAccum(recNum),
+     +     precipRate(recNum), pressChange3Hour(recNum),
+     +     rawPrecip(recNum), relHumidity(recNum), relHumidityQCD(
+     +     QCcheckNum, recNum), seaLevelPressure(recNum),
+     +     seaLevelPressureQCD( QCcheckNum, recNum),
+     +     soilMoisture(recNum), soilTemperature(recNum),
      +     solarRadiation(recNum), stationPressure(recNum),
-     +     stationPressureQCD( QCcheckNum, recNum),
-     +     temperature(recNum), temperatureQCD( QCcheckNum, recNum),
-     +     totalColumnPWV(recNum), totalSignalDelay(recNum),
-     +     visibility(recNum), visibilityQCD( QCcheckNum, recNum),
-     +     windDir(recNum), windDirMax(recNum), windGust(recNum),
-     +     windSpeed(recNum)
-      double precision fuelMoistChangeTime(recNum),
-     +     fuelTempChangeTime(recNum), observationTime(recNum),
-     +     receivedTime(recNum), reportTime(recNum),
-     +     rhChangeTime(recNum), solarRadChangeTime(recNum),
-     +     stationPressChangeTime(recNum), tempChangeTime(recNum),
-     +     timeSinceLastPcp(recNum), windDirChangeTime(recNum),
-     +     windGustChangeTime(recNum), windSpeedChangeTime(recNum)
-      character*12 providerId(recNum)
+     +     temperature(recNum), visibility(recNum), windDir(recNum),
+     +     windDirMax(recNum), windGust(recNum), windSpeed(recNum)
+      double precision observationTime(recNum), receivedTime(recNum),
+     +     reportTime(recNum)
       character pressChange3HourDD(recNum)
-      character visibilityDD(recNum)
-      character precipRateDD(recNum)
-      character*24 staticIds(maxStaticIds)
-      character*4 homeWFO(recNum)
-      character seaLevelPressureDD(recNum)
       character windDirDD(recNum)
-      character*72 ICT(ICcheckNum)
-      character*60 QCT(QCcheckNum)
-      character precipAccumDD(recNum)
-      character*6 handbook5Id(recNum)
-      character typePST(maxPSTEntries)
-      character*512 rawMessage(recNum)
-      character*11 dataProvider(recNum)
       character relHumidityDD(recNum)
-      character windSpeedDD(recNum)
       character dewpointDD(recNum)
-      character stationPressureDD(recNum)
-      character*6 stationId(recNum)
-      character*51 test1(recNum)
-      character altimeterDD(recNum)
       character temperatureDD(recNum)
-      character*51 stationName(recNum)
+      character stationPressureDD(recNum)
+      character precipAccumDD(recNum)
       character*11 stationType(recNum)
-      character*11 namePST(maxPSTEntries)
+      character*51 test1(recNum)
+      character visibilityDD(recNum)
+      character*51 stationName(recNum)
+      character*12 providerId(recNum)
+      character*6 stationId(recNum)
+      character*24 staticIds
+      character windSpeedDD(recNum)
+      character altimeterDD(recNum)
+      character*11 dataProvider(recNum)
+      character precipRateDD(recNum)
+      character seaLevelPressureDD(recNum)
 
 
 C   Variables of type REAL
@@ -141,25 +69,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var altimeter'
       endif
+      call ck_array_real(altimeter,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,altimeter)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var altimeter'
       endif
-C
-C     Variable        NETCDF Long Name
-C      capPi        "Wet delay mapping function"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'capPi',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var capPi'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,capPi)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var capPi'
-      endif
+      call ck_array_real(altimeter,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      dewpoint     "dew point temperature"
@@ -169,25 +85,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var dewpoint'
       endif
+      call ck_array_real(dewpoint,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,dewpoint)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dewpoint'
       endif
-C
-C     Variable        NETCDF Long Name
-C      drySignalDelay"Dry component GPS signal delay"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'drySignalDelay',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var drySignalDelay'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,drySignalDelay)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var drySignalDelay'
-      endif
+      call ck_array_real(dewpoint,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      elevation    "elevation"
@@ -197,25 +101,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var elevation'
       endif
+      call ck_array_real(elevation,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,elevation)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var elevation'
       endif
-C
-C     Variable        NETCDF Long Name
-C      fuelTemperature"Fuel temperature"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'fuelTemperature',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelTemperature'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,fuelTemperature)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelTemperature'
-      endif
+      call ck_array_real(elevation,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      latitude     "latitude"
@@ -225,11 +117,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var latitude'
       endif
+      call ck_array_real(latitude,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,latitude)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var latitude'
       endif
+      call ck_array_real(latitude,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      longitude    "longitude"
@@ -239,11 +133,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var longitude'
       endif
+      call ck_array_real(longitude,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,longitude)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var longitude'
       endif
+      call ck_array_real(longitude,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      meanWeightedTemperature"Mean weighted temperature"
@@ -253,11 +149,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var meanWeightedTemperature'
       endif
+      call ck_array_real(meanWeightedTemperature,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,meanWeightedTemperature)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var meanWeightedTemperature'
       endif
+      call ck_array_real(meanWeightedTemperature,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      precipAccum  "precip accumulation"
@@ -267,11 +165,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var precipAccum'
       endif
+      call ck_array_real(precipAccum,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,precipAccum)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var precipAccum'
       endif
+      call ck_array_real(precipAccum,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      precipRate   "precipitation rate"
@@ -281,11 +181,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var precipRate'
       endif
+      call ck_array_real(precipRate,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,precipRate)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var precipRate'
       endif
+      call ck_array_real(precipRate,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      pressChange3Hour"3 hour pressure change"
@@ -295,11 +197,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var pressChange3Hour'
       endif
+      call ck_array_real(pressChange3Hour,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,pressChange3Hour)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var pressChange3Hour'
       endif
+      call ck_array_real(pressChange3Hour,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      rawPrecip    "raw precip accumulation"
@@ -309,11 +213,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var rawPrecip'
       endif
+      call ck_array_real(rawPrecip,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,rawPrecip)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var rawPrecip'
       endif
+      call ck_array_real(rawPrecip,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      relHumidity  "relative humidity"
@@ -323,11 +229,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var relHumidity'
       endif
+      call ck_array_real(relHumidity,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,relHumidity)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var relHumidity'
       endif
+      call ck_array_real(relHumidity,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      relHumidityQCD"relative humidity QC departures"
@@ -337,11 +245,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var relHumidityQCD'
       endif
+      call ck_array_real(relHumidityQCD,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,relHumidityQCD)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var relHumidityQCD'
       endif
+      call ck_array_real(relHumidityQCD,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      seaLevelPressure"sea level pressure"
@@ -351,11 +261,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var seaLevelPressure'
       endif
+      call ck_array_real(seaLevelPressure,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,seaLevelPressure)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var seaLevelPressure'
       endif
+      call ck_array_real(seaLevelPressure,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      seaLevelPressureQCD"sea level pressure QC departures"
@@ -365,11 +277,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var seaLevelPressureQCD'
       endif
+      call ck_array_real(seaLevelPressureQCD,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,seaLevelPressureQCD)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var seaLevelPressureQCD'
       endif
+      call ck_array_real(seaLevelPressureQCD,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      soilMoisture "Soil moisture"
@@ -379,11 +293,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var soilMoisture'
       endif
+      call ck_array_real(soilMoisture,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,soilMoisture)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var soilMoisture'
       endif
+      call ck_array_real(soilMoisture,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      soilTemperature"Soil temperature"
@@ -393,11 +309,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var soilTemperature'
       endif
+      call ck_array_real(soilTemperature,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,soilTemperature)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var soilTemperature'
       endif
+      call ck_array_real(soilTemperature,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      solarRadiation"solar radiation"
@@ -407,11 +325,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var solarRadiation'
       endif
+      call ck_array_real(solarRadiation,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,solarRadiation)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var solarRadiation'
       endif
+      call ck_array_real(solarRadiation,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      stationPressure"station pressure"
@@ -421,25 +341,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var stationPressure'
       endif
+      call ck_array_real(stationPressure,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,stationPressure)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var stationPressure'
       endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressureQCD"station pressure QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressureQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,stationPressureQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCD'
-      endif
+      call ck_array_real(stationPressure,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      temperature  "temperature"
@@ -449,53 +357,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var temperature'
       endif
+      call ck_array_real(temperature,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,temperature)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var temperature'
       endif
-C
-C     Variable        NETCDF Long Name
-C      temperatureQCD"temperature QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,temperatureQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCD'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      totalColumnPWV"Total column precipitable water vapor"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'totalColumnPWV',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var totalColumnPWV'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,totalColumnPWV)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var totalColumnPWV'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      totalSignalDelay"Total GPS signal delay"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'totalSignalDelay',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var totalSignalDelay'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,totalSignalDelay)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var totalSignalDelay'
-      endif
+      call ck_array_real(temperature,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      visibility   "visibility"
@@ -505,25 +373,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var visibility'
       endif
+      call ck_array_real(visibility,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,visibility)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var visibility'
       endif
-C
-C     Variable        NETCDF Long Name
-C      visibilityQCD"visibility QC departures"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'visibilityQCD',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCD'
-      endif
-      nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,visibilityQCD)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCD'
-      endif
+      call ck_array_real(visibility,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      windDir      "wind direction"
@@ -533,11 +389,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var windDir'
       endif
+      call ck_array_real(windDir,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windDir)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windDir'
       endif
+      call ck_array_real(windDir,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      windDirMax   "wind direction at gust"
@@ -547,11 +405,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var windDirMax'
       endif
+      call ck_array_real(windDirMax,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windDirMax)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windDirMax'
       endif
+      call ck_array_real(windDirMax,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      windGust     "wind gust"
@@ -561,11 +421,13 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var windGust'
       endif
+      call ck_array_real(windGust,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windGust)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windGust'
       endif
+      call ck_array_real(windGust,recNum,misval,badflag)
 C
 C     Variable        NETCDF Long Name
 C      windSpeed    "wind speed"
@@ -575,140 +437,16 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var windSpeed'
       endif
+      call ck_array_real(windSpeed,recNum,filval,badflag)
       nf_status=NF_GET_VAR_REAL(nf_fid,nf_vid,windSpeed)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var windSpeed'
       endif
+      call ck_array_real(windSpeed,recNum,misval,badflag)
 
 C   Variables of type INT
 C
-C
-C     Variable        NETCDF Long Name
-C      altimeterQCA "altimeter setting QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'altimeterQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,altimeterQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      altimeterQCR "altimeter setting QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'altimeterQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,altimeterQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var altimeterQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      code1PST     "precipAccum variable definition"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'code1PST',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code1PST'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,code1PST)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code1PST'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      code2PST     "solarRadiation variable definition"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'code2PST',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code2PST'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,code2PST)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code2PST'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      code3PST     "PST code1/code2 usage definition"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'code3PST',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code3PST'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,code3PST)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var code3PST'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      dewpointICA  "dew point IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'dewpointICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,dewpointICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      dewpointICR  "dew point IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'dewpointICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,dewpointICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      dewpointQCA  "dew point QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'dewpointQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,dewpointQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      dewpointQCR  "dew point QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'dewpointQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,dewpointQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var dewpointQCR'
-      endif
 C
 C     Variable        NETCDF Long Name
 C      filterSetNum 
@@ -722,20 +460,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var filterSetNum'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      firstInBin   
-C
-      nf_status=NF_INQ_VARID(nf_fid,'firstInBin',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var firstInBin'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,firstInBin)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var firstInBin'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -764,76 +488,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var globalInventory'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      invTime      
-C
-      nf_status=NF_INQ_VARID(nf_fid,'invTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var invTime'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,invTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var invTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      inventory    
-C
-      nf_status=NF_INQ_VARID(nf_fid,'inventory',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var inventory'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,inventory)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var inventory'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      isOverflow   
-C
-      nf_status=NF_INQ_VARID(nf_fid,'isOverflow',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var isOverflow'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,isOverflow)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var isOverflow'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      lastInBin    
-C
-      nf_status=NF_INQ_VARID(nf_fid,'lastInBin',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastInBin'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,lastInBin)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastInBin'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      lastRecord   
-C
-      nf_status=NF_INQ_VARID(nf_fid,'lastRecord',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastRecord'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,lastRecord)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var lastRecord'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -876,62 +530,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var numericWMOid'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      precipAccumICA"precip amount IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipAccumICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipAccumICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      precipAccumICR"precip amount IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipAccumICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipAccumICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      precipAccumQCA"precip amount QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipAccumQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipAccumQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      precipAccumQCR"precip amount QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'precipAccumQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,precipAccumQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var precipAccumQCR'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -991,62 +589,6 @@ C
       endif
 C
 C     Variable        NETCDF Long Name
-C      pressChange3HourICA"3h pressure change IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChange3HourICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      pressChange3HourICR"3h pressure change IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChange3HourICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      pressChange3HourQCA"3h pressure change QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChange3HourQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      pressChange3HourQCR"3h pressure change QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'pressChange3HourQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,pressChange3HourQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var pressChange3HourQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
 C      pressChangeChar"character of pressure change"
 C
       nf_status=NF_INQ_VARID(nf_fid,'pressChangeChar',nf_vid)
@@ -1059,471 +601,9 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var pressChangeChar'
       endif
-C
-C     Variable        NETCDF Long Name
-C      prevRecord   
-C
-      nf_status=NF_INQ_VARID(nf_fid,'prevRecord',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var prevRecord'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,prevRecord)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var prevRecord'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      relHumidityQCA"relative humidity QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,relHumidityQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      relHumidityQCR"relative humidity QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'relHumidityQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,relHumidityQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var relHumidityQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadState1   "Road State - sensor 1"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadState1',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState1'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,roadState1)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadState2   "Road State - sensor 2"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadState2',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState2'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,roadState2)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState2'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadState3   "Road State - sensor 3"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadState3',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState3'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,roadState3)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState3'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      roadState4   "Road State - sensor 4"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'roadState4',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState4'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,roadState4)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var roadState4'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      seaLevelPressureICA"sea level pressure IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,seaLevelPressureICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      seaLevelPressureICR"sea level pressure IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,seaLevelPressureICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      seaLevelPressureQCA"sea level pressure QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,seaLevelPressureQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      seaLevelPressureQCR"sea level pressure QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'seaLevelPressureQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,seaLevelPressureQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var seaLevelPressureQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressureICA"station pressure IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressureICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,stationPressureICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressureICR"station pressure IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressureICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,stationPressureICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressureQCA"station pressure QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressureQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,stationPressureQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressureQCR"station pressure QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressureQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,stationPressureQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressureQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      temperatureICA"temperature IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'temperatureICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      temperatureICR"temperature IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'temperatureICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      temperatureQCA"temperature QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      temperatureQCR"Temperature QC Results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'temperatureQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,temperatureQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var temperatureQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      visibilityICA"visibility QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'visibilityICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,visibilityICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      visibilityICR"visibility IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'visibilityICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,visibilityICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      visibilityQCA"visibility QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'visibilityQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,visibilityQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      visibilityQCR"visibility QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'visibilityQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,visibilityQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var visibilityQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windDirICA   "wind direction IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windDirICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windDirICR   "wind direction IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windDirICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windDirQCA   "wind direction QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windDirQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windDirQCR   "wind direction QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windDirQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirQCR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedICA "wind speed IC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedICA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedICA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedICA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedICA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedICR "wind speed IC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedICR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedICR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedICR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedICR'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedQCA "wind speed QC applied word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedQCA',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCA'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedQCA)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCA'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedQCR "wind speed QC results word"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedQCR',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCR'
-      endif
-      nf_status=NF_GET_VAR_INT(nf_fid,nf_vid,windSpeedQCR)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedQCR'
-      endif
 
 C   Variables of type DOUBLE
 C
-C
-C     Variable        NETCDF Long Name
-C      fuelMoistChangeTime"fuel moisture time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'fuelMoistChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelMoistChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,fuelMoistChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelMoistChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      fuelTempChangeTime"fuel temperature time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'fuelTempChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelTempChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,fuelTempChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var fuelTempChangeTime'
-      endif
 C
 C     Variable        NETCDF Long Name
 C      observationTime"time of observation"
@@ -1566,150 +646,10 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var reportTime'
       endif
-C
-C     Variable        NETCDF Long Name
-C      rhChangeTime "relative humidity time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'rhChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rhChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,rhChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rhChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      solarRadChangeTime"solar radiation time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'solarRadChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var solarRadChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,solarRadChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var solarRadChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      stationPressChangeTime"station press time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'stationPressChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,stationPressChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var stationPressChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      tempChangeTime"temperature time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'tempChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var tempChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,tempChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var tempChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      timeSinceLastPcp"time since last precip"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'timeSinceLastPcp',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeSinceLastPcp'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeSinceLastPcp)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var timeSinceLastPcp'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windDirChangeTime"wind direction time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windDirChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windDirChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windDirChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windGustChangeTime"wind gust time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windGustChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windGustChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windGustChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windGustChangeTime'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      windSpeedChangeTime"wind speed time of last change"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'windSpeedChangeTime',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedChangeTime'
-      endif
-      nf_status=NF_GET_VAR_DOUBLE(nf_fid,nf_vid,windSpeedChangeTime)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var windSpeedChangeTime'
-      endif
 
 
 C   Variables of type CHAR
 C
-C
-C     Variable        NETCDF Long Name
-C      ICT          "list of possible IC checks"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'ICT',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var ICT'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,ICT)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var ICT'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      QCT          "list of possible QC checks"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'QCT',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var QCT'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,QCT)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var QCT'
-      endif
 C
 C     Variable        NETCDF Long Name
 C      altimeterDD  "altimeter setting QC summary value"
@@ -1751,48 +691,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dewpointDD'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      handbook5Id  "Handbook5 Id (AFOS or SHEF id)"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'handbook5Id',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var handbook5Id'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,handbook5Id)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var handbook5Id'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      homeWFO      "home WFO Id"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'homeWFO',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var homeWFO'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,homeWFO)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var homeWFO'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      namePST      "PST Provider or Subprovider name"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'namePST',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var namePST'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,namePST)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var namePST'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -1849,20 +747,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var providerId'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      rawMessage   "raw text LDAD mesonet message"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'rawMessage',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawMessage'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,rawMessage)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var rawMessage'
       endif
 C
 C     Variable        NETCDF Long Name
@@ -1989,20 +873,6 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var test1'
-      endif
-C
-C     Variable        NETCDF Long Name
-C      typePST      "PST type"
-C
-      nf_status=NF_INQ_VARID(nf_fid,'typePST',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var typePST'
-      endif
-      nf_status=NF_GET_VAR_TEXT(nf_fid,nf_vid,typePST)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'in var typePST'
       endif
 C
 C     Variable        NETCDF Long Name
