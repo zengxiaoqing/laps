@@ -114,7 +114,7 @@ cdis
 !                 Open output PRO file
                   iopen = 1
                   ext = 'pro' ! 'vad'
-                  call open_lapsprd_file_append(2,i4time_sys,ext(1:3)
+                  call open_ext(1,i4time_sys,ext(1:3)
      1                                         ,istatus)
                   if(istatus .ne. 1)return
               endif
@@ -125,8 +125,6 @@ cdis
      1                                      ,filename_in,istatus)
           endif
       enddo
-
- 990  close(2) ! Output VAD file
 
  999  continue
 
@@ -148,9 +146,9 @@ cdis
 
        filename = static_dir(1:len_dir)//'/vad.nl'
  
-       open(1,file=filename,status='old',err=900)
-       read(1,vad_nl,err=901)
-       close(1)
+       open(21,file=filename,status='old',err=900)
+       read(21,vad_nl,err=901)
+       close(21)
 
        istatus = 1
        return
