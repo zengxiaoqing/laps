@@ -239,9 +239,10 @@
      Various "root" directories are mentioned in the form of environment 
      variables for easy reference. The three main environment variables are:
  
-     $SRCROOT - The full path of the LAPS tar file / source code.
+     $LAPS_SRC_ROOT - The full path of the LAPS tar file / source code.
 
-     $LAPSROOT - The full path of installed binaries and scripts (bin and etc).
+     $INSTALLROOT - The full path of installed binaries and scripts (bin and 
+     etc).
 
      $LAPS_DATA_ROOT - The full path of output data and namelists. This 
      includes lapsprd subdirectories containing both LAPS output grids and 
@@ -258,7 +259,7 @@
          geog/
              laps_terrain.tar
          laps-m-n-o.tar
-         laps-m-n-o/                                                 ($SRCROOT)
+         laps-m-n-o/                                           ($LAPS_SRC_ROOT)
              Makefile
              src/
                  ingest/
@@ -287,7 +288,7 @@
      /home_disk/
          src/
              laps-m-n-o.tar
-             laps-m-n-o/                                             ($SRCROOT)
+             laps-m-n-o/                                       ($LAPS_SRC_ROOT)
                  Makefile
                  src/                                             (source code)
                      ingest/
@@ -297,7 +298,7 @@
          geog/
              laps_terrain.tar
          raw_data/
-         laps/                            ($LAPSROOT / --prefix in 'configure')
+         laps/                         ($INSTALLROOT / --prefix in 'configure')
              etc/                                                (laps scripts)
              bin/                                                 (executables)
              data*/                        ($LAPS_DATA_ROOT, can be duplicated)
@@ -327,7 +328,7 @@
      prompt> gunzip laps-m-n-o.tar.gz
      prompt> tar -xf laps-m-n-o.tar
 
-     The $SRCROOT directory will be set up one level below the tar file.
+     The $LAPS_SRC_ROOT directory will be set up one level below the tar file.
 
      If you are having trouble running 'gunzip', the problem could be that
      the 'laps-m-n-o.tar.gz' file was corrupted during the download. In that
@@ -335,7 +336,7 @@
 
                 ----   2.2.2  Running Configure ---
 
-     Go to the $SRCROOT directory and run...
+     Go to the $LAPS_SRC_ROOT directory and run...
      prompt> ./configure
 
      'configure' supports many options, the most important is the
@@ -401,7 +402,7 @@
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
-     '$LAPSROOT/etc/laps_localization.pl', especially if one is using ingest 
+     '$INSTALLROOT/etc/laps_localization.pl', especially if one is using ingest
      data formats other than "standard" ones used at FSL. After becoming 
      familiar with the changes needed for your implementation, it is 
      recommended that you develop a method to save the hand edited files in a 
@@ -417,14 +418,14 @@
      The next step is to build and install the executables, this can be done 
      by running... 
 
-     prompt> cd $SRCROOT
+     prompt> cd $LAPS_SRC_ROOT
      prompt> make                  1> make.out 2>&1 
      prompt> make install          1> make_install.out 2>&1 
      prompt> make install_lapsplot 1> make_install_lapsplot.out 2>&1   
 
-     Check that the executables have been placed into the '$LAPSROOT/bin' 
+     Check that the executables have been placed into the '$INSTALLROOT/bin' 
      directory. The total number should be the number of EXEDIRS in 
-     '$SRCROOT/Makefile' plus 2; this includes 'lapsplot.exe'.
+     '$LAPS_SRC_ROOT/Makefile' plus 2; this includes 'lapsplot.exe'.
 
      Lapsplot can be installed only if you have NCAR graphics.
 
@@ -449,7 +450,7 @@
 
      If a DATAROOT is not supplied, the dataroot tree location will default
      to where the LAPS binaries are installed via configure. Thus, the
-     default value of $LAPS_DATA_ROOT is '$LAPSROOT/data'.
+     default value of $LAPS_DATA_ROOT is '$INSTALLROOT/data'.
 
      
             ----   2.2.5  Untarring the geography databases  ---
@@ -488,7 +489,7 @@
      of setting up those runtime parameter files with only those parameters 
      that are unique to the domain(s) (e.g. map projection parameters,
      data paths). The remaining parameters are automatically merged in from
-     the '$SRCROOT/data/static' directory tree by the localization script. 
+     the '$LAPS_SRC_ROOT/data/static' directory tree by the localization script. 
      As an example, 'nest7grid.parms' only needs to contain the subset of 
      parameters that are unique to your domain(s). The rest can be 
      omitted from the file; they are automatically added in as a result of 
@@ -511,8 +512,9 @@
      localization for a particular laps domain. This should be repeated 
      (with a unique dataroot) for each domain if there is more than one. 
 
-     prompt> cd $LAPSROOT/etc
-     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$SRCROOT
+     prompt> cd $INSTALLROOT/etc
+     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT \
+                                       --srcroot=$LAPS_SRC_ROOT
 
      The localization involves several operations.  The parameter files are 
      merged/updated with the repository versions if needed. The dimensions
