@@ -1,0 +1,113 @@
+#!@PERL@
+#
+# create the ram and rsf files
+#
+use English;
+use strict;
+
+# this is the length of time I should wait for each hours file.
+
+my $timeout=60;
+my $LAPSROOT=shift;
+my $LAPS_DATA_ROOT=shift;
+
+require "$LAPSROOT/etc/fxa.pm";
+my $fxa_sys =  &Get_env'fxa; #'
+my($LAPS_LOG_PATH);
+if($fxa_sys!=0){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
+my $modelout = "$LAPS_DATA_ROOT/lapsprd/model/output";
+$ENV{FXA_DATA}="/data/fxa" unless defined($ENV{FXA_DATA});
+
+my $makeprods = "$LAPSROOT/model/bin/makeprods.exe";
+my $fname = shift;
+my $ffreq = shift;
+my $flast = shift;
+
+#exit 0 unless ($fname =~ /\.a(\d+)s\.head/);
+my $hh = (gmtime())[2];
+$hh = "0".$hh if(length($hh)<2);
+open(STDOUT, ">$LAPS_LOG_PATH/ramrsf.log.$hh") || die "Can't redirect stdout to $LAPS_LOG_PATH/ramrsf.log.$hh , stopped";
+open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+
+select(STDERR); $| = 1;
+select(STDOUT); $| = 1;
+
+$ENV{PATH}.=":@NETCDFBIN@";
+print "$0 running  for $fname\n";
+
+for(my $ftime=0;$ftime<=$flast;$ftime+=$ffreq){
+
+    my $head = "$modelout/$fname.a$ftime"."s.head";
+    my $size = 0;
+    my($cnt) = 0;
+    while($size < 4400){
+        $cnt++;
+#        print "Looking for $head\n";
+	stat($head);
+        $size = -s _;
+        sleep(60) if($size < 4400 && $cnt < $timeout);
+        last if($cnt>=$timeout);
+    }
+    if($cnt>=$timeout){
+      print "Timed out while waiting for file $head"; 
+      last;
+    }
+    chdir("$LAPSROOT/model/usr");
+
+    open(LPTR,"lapsinterface.nl");
+    my @lapsinterface=<LPTR>;
+    close(LPTR);
+    open(LPTR,">lapsinterface.nl");
+    foreach(@lapsinterface){
+	if(/^\s*anpref_in/){
+            my $anpref = $head;
+	    $anpref =~ s/\.head//;
+	    print LPTR " anpref_in=\'$anpref\',\n";
+	    next;
+	}
+	print LPTR $_;
+    }
+    close(LPTR);
+
+    &run_sys($makeprods);
+#
+# Insert command to send files to remote machine here.
+#
+#    $sys = "/bin/sh -c /awips/fxa/etc/sendLAPS.sh";
+#    &run_sys($sys);
+#    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl";
+#    &run_sys($sys);
+    
+
+}
+
+
+sub run_sys{
+    my($sys) = @_;
+    my $rc = 0xffff & system($sys);
+    if($rc == 0){
+	print "$sys completed \n";
+    }elsif($rc == 0xff00){
+	print "$rc Command $sys failed: $! ";
+    }elsif($rc > 0x80){
+	$rc >>= 8; 
+	print "$sys returned non-zero exit status $rc\n";
+#        exit;
+    }else{
+	print "$sys ran with ";
+	if($rc & 0x80){
+	    $rc &= ~0x80;
+	    print "coredump from ";
+	    exit -1;
+	}
+	print "signal $rc\n";
+
+    }
+}
+
+

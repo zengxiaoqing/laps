@@ -1,0 +1,1001 @@
+#!@PERL@
+#
+# realtime.pl -> run the prediction portion of LAPS
+# Copyright (C) 1998  James P. Edwards
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+use strict;
+use English;
+use Getopt::Std;
+require "timelocal.pl";
+
+use vars qw($opt_h $opt_j $opt_H $opt_o $opt_q);
+getopt('hj');
+
+my $LAPSROOT=shift || die "LAPS root directory required";
+
+require "$LAPSROOT/etc/fxa.pm";
+
+my $fxa_sys =  &Get_env'fxa; #'
+$ENV{PATH}.=":@NETCDFBIN@:@MPIBIN@";
+$ENV{LAPS_DATA_ROOT} = shift ;
+$ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
+my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+my($LAPS_LOG_PATH);
+if($fxa_sys!=0){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
+
+my $month = (gmtime())[4];
+my $sfcfile = "$LAPS_DATA_ROOT/lapsprd/model/sfc/sfc$month"."b";
+my $S_MODEL = "$LAPSROOT/model/bin/rams";
+my $P_MODEL = "$LAPSROOT/model/bin/sfm";
+
+$ENV{MPI_ROOT}="/home/lapb/jedwards/mpich/bin/";
+$ENV{PATH}="$ENV{MPI_ROOT}/bin:$LAPSROOT/bin:$ENV{PATH}";
+
+if($opt_H>0){
+    print "USAGE: $0 [-Hqo] [-h] hour [-j] day\n";
+    print "  where -H : print this message and exit\n";
+    print "        -q : quick mode start the model assuming all preliminaries are complete\n";
+    print "        -o : output to tty instead of $LAPS_LOG_PATH\n";
+    print "        -h hour : Run for hour instead of current hour\n";
+    print "        -j day  : Run for julian date instead of current date\n"; 
+    print "        \n";
+    exit 0;
+}
+
+
+#
+# Get the time of the current run
+#
+# To use system time instead of laps time 
+# comment out the next block and uncomment the assignment below it
+#
+#
+my($jjj,$hh,$dd,$MMM,$yyyy,$time,$mm,$yy,$rtime);
+if(open(LAPSTIME,"$LAPS_DATA_ROOT/time/systime.dat")){
+    my @lapstime = <LAPSTIME>;
+    close(LAPSTIME);
+
+    $lapstime[1] =~ /\d\d(\d\d\d)(\d\d)\d\d/;
+    $jjj = $1;
+    $hh=$2;
+    $lapstime[4] =~ /(\d\d*)-(\S\S\S)-(\d\d\d\d)/;
+    $dd = $1;
+    $MMM = $2;
+    $yyyy = $3;
+
+    $mm = &Mmmtomm($MMM);
+
+}else{ # error on open
+#
+    print "Could not get LAPS time - getting system time\n";
+    exit;
+    $time = time;
+#
+    ($yyyy, $mm, $dd, $hh) = &unix_to_time($time); 
+    $jjj = &julian($yyyy, $mm, $dd);
+    $hh = $opt_h if($opt_h);
+    if($opt_j){
+	$jjj = $opt_j;
+	my ($mm,$dd) = &JJJ2MMDD($jjj,$yyyy);
+    }
+    $MMM = &Mmmtomm($mm);
+    $MMM =~ tr/a-z/A-Z/;
+}
+
+$yy = $yyyy - int($yyyy/100)*100;
+$mm = "0".$mm if(length($mm)<2);
+$dd = "0".$dd if(length($dd)<2);
+$hh = "0".$hh if(length($hh)<2);
+$yy = "0".$yy if(length($yy)<2);
+$jjj = "0".$jjj while(length($jjj)<3);
+$yyyy = "0".$yyyy while(length($yyyy)<4);
+
+
+$rtime = &time_to_unix($mm,$dd,$yyyy,$hh,0,0);
+my $mytime = time;
+#print "$time $rtime yy=$yy mm=$mm dd=$dd hh=$hh jjj=$jjj $yyyy\n";
+#exit;
+
+#
+# Redirect standard out and standard error to a log file
+#
+unless($opt_o){
+    open(SAVEOUT,">&STDOUT");
+    open(SAVEERR,">&STDERR");
+    unless(open(STDOUT,">$LAPS_LOG_PATH/realtime.log.$hh") ) {
+       system("rm -f $LAPS_LOG_PATH/realtime.log.*");
+       open(STDOUT, ">$LAPS_LOG_PATH/realtime.log.$hh") || die "Can't redirect stdout to $LAPS_LOG_PATH/realtime.log.$hh , stopped";
+    }
+    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+    select(STDERR); $| = 1;
+    select(STDOUT); $| = 1;
+}
+
+#system("$EXECUTABLE_NAME $modelroot/etc/purger.pl $modelroot/data");
+
+chdir("$LAPS_DATA_ROOT/static/model/usr");
+
+open(SCHED,"lapsinterface.nl") || die "Could not open $LAPS_DATA_ROOT/static/model/usr/lapsinterface.nl, stopped";
+my @sched = <SCHED>;
+close(SCHED);
+my $sh=-1;
+my( $runlength, $nprocs);
+my(@shours,@runlength,@nprocs);	 
+for(my $i=0;$i<=$#sched;$i++){
+    next if($sched[$i] =~ /^\s*&/);
+    next if($sched[$i] =~ /^\s*\//);
+    next if($sched[$i] =~ /^[\!c]/i);
+
+    
+    if($sched[$i] =~ /^\s+forecast_start_time\s*=(.*)$/i){
+	my $shours = $1;
+	$i++;
+	while($sched[$i++]=~/^\s*([\d\,].*)$/){
+	    $shours.=$1;
+	}
+	$i--;
+        @shours = split(',',$shours);
+#	print @shours;
+    }
+    if($sched[$i] =~ /^\s+forecast_length\s*=(.*)$/i){
+	$runlength = $1;
+	$i++;
+	while($sched[$i++]=~/^\s*([\d\,].*)$/){
+	    $runlength.=$1;
+	    
+	}
+	$i--;
+        @runlength = split(',',$runlength);
+    }
+    if($sched[$i] =~ /^\s+number_of_processors\s*=(.*)$/i){
+	$nprocs = $1;
+	$i++;
+	while($sched[$i++]=~/^\s*([\d\,].*)$/){
+	    $nprocs.=$1;
+	    
+	}
+	$i--;
+        @nprocs = split(',',$nprocs);
+    }
+
+}
+for(my $i=0; $i<=$#shours;$i++){
+    if($hh==$shours[$i]){
+	$sh = $hh;
+	$runlength=$runlength[$i];
+	$nprocs=$nprocs[$i];
+    }
+}
+        
+
+if($sh<0 or $sh eq $hh and $runlength<=0){
+    print "No run scheduled this hour\n";
+    exit 0;
+}
+print "starthour=$sh Z, runlength=$runlength hours, number of processors=$nprocs\n";
+
+my(@locks);
+opendir(LOCKDIR,"$LAPS_LOG_PATH");
+@locks = grep /^\.lockmodel/, readdir(LOCKDIR);
+closedir(LOCKDIR);
+
+foreach(@locks){
+    $_ =~ /^\.lockmodel\.(\d+)$/;
+    my $jpid = $1;
+    open(LFH,"$LAPS_LOG_PATH/$_");
+    my $cid = <LFH>;
+    close(LFH);
+    
+    print "WARNING Found LOCK file for $0 with pid $jpid and child $cid - killing process $cid\n";
+    kill -9,$cid if($cid>0);
+    unlink "$LAPS_LOG_PATH/$_";
+}
+
+my $machine = `uname`;
+chomp($machine);
+if($machine eq "HP-UX"){
+    system("$LAPSROOT/model/bin/kipc") ;
+}
+
+print "Initializing forecast of $runlength hours\n"; # centered at $clat $clon\n"; 
+system("wall \"Initializing the forecast model - for $LAPS_DATA_ROOT\"") unless($opt_o) ;
+
+# Get the lat and lon from the outer grid laps nest7grid.parms file
+
+open(LAPS,"$LAPS_DATA_ROOT/static/nest7grid.parms");
+my ($clat, $clon, $slon);
+while(<LAPS>)
+{
+    if(/grid_cen_lat_cmn\s*=\s*(-?\d+\.\d*),/){
+	$clat=$1;
+    }elsif(/grid_cen_lon_cmn\s*=\s*(-?\d+\.\d*),/){
+        $clon=$1;
+    }elsif(/standard_longitude\s*=\s*(-?\d+\.\d*),/){
+        $slon=$1;
+    }
+}
+close(LAPS);
+  
+unless($opt_q>0 || -e "$sfcfile.g01"){
+#
+# Set up the surface file for the given lat lon and date
+#
+    print "Run Surface file generation\n";
+
+    open(SFMIN,"SFMIN");
+    my @sfmin = <SFMIN>;
+    close(SFMIN);
+    open(SFMOUT,">SFMIN");
+
+    foreach (@sfmin){
+	if(/RUNTYPE/){
+	    print SFMOUT "  RUNTYPE = \'MAKESFC\',\n";
+	    next;
+	}
+#	if(/CENTLAT/){
+#	    print SFMOUT "   CENTLAT = $clat,\n";
+#	    next;
+#	}    
+#	if(/CENTLON/){
+#	    print SFMOUT "   CENTLON = $clon,\n";
+#	    next;
+#	}
+#	if(/POLELON/){
+#	    print SFMOUT "   POLELON = $slon,\n";
+#	    next;
+#	}
+        if(/SFCFILES/){
+            print SFMOUT "   SFCFILES = '$sfcfile',\n";
+            next;
+        }
+	if(/^(.*sst\/S)\w\w\w(.*)$/){
+	    print SFMOUT "$1$MMM$2\n";
+	    next;
+	}
+	print SFMOUT $_;
+    }
+    close(SFMOUT);
+
+#
+# Remove the current sfc file
+#
+
+#    unlink($sfcfile);
+#
+# Create the new surface file
+#
+
+
+    open(RSFM,"$S_MODEL |");
+    my @r_out = <RSFM>;
+    close(RSFM);
+
+    print @r_out;
+    
+    if(grep(/ MAKESFC run complete/,@r_out)==0){
+	print STDERR "sfm MAKESFC failed aborting\n";
+	exit -1;
+    }
+}
+
+my(%vfiles,$vtime,$rl);
+
+unless($opt_q>0){
+#
+# Edit SFMIN for a MAKEVFILE run
+#
+#
+# Look for the boundary files
+# Take the latest available files
+# The last directory listed will be used if more than one directory has files 
+# valid at the same time.
+# Return an associative array of files with valid time in seconds after rtime
+#
+#
+    sub numerically { $a <=> $b; }
+
+    my %ifiles = &valid_bndys($rtime,$runlength,"$LAPS_DATA_ROOT/lapsprd/dprep","LPS");
+    print "laps = $ifiles{0}\n"; 
+    %vfiles = &valid_bndys($rtime,$runlength,"$LAPS_DATA_ROOT/lapsprd/dprep","SBN");
+    if(defined($ifiles{0})){
+	$vfiles{0} = $ifiles{0};
+    }elsif(defined($vfiles{0})){
+	print "WARNING NO INITIAL LAPS DATA FOUND\n";
+
+    }else{
+	print "ERROR: NO INITIAL DATA FOUND\n";
+	exit -1;
+    }
+   foreach $vtime (sort numerically  keys(%vfiles)){
+	print "found $vfiles{$vtime} $vtime\n";
+    }
+
+    print "rtime = $rtime runlength = $runlength\n";
+
+#    exit;
+#
+# Create the initial file from laps.
+#
+
+    foreach $vtime (sort numerically  keys(%vfiles)){
+	print "Using background file $vfiles{$vtime}\n";
+    }
+
+    open(SFMIN,"SFMIN");
+    my @sfmin = <SFMIN>;
+    close(SFMIN);
+    open(SFMOUT,">SFMIN");
+
+    foreach (@sfmin){
+	if(/RUNTYPE/){
+	    print SFMOUT "  RUNTYPE = \'MAKEVFILE\',\n";
+	    next;
+	}
+	if(/IMONTH1/){
+	    print SFMOUT "   IMONTH1 = $mm,\n";
+	    next;
+	}
+	if(/IDATE1/){
+	    print SFMOUT "   IDATE1 = $dd,\n";
+	    next;
+	}
+	if(/IYEAR1/){
+	    print SFMOUT "   IYEAR1 = $yy,\n";
+	    next;
+	}
+	
+	if(/STRTIM/){
+	    print SFMOUT "   STRTIM = $hh,\n";
+	    next;
+	}
+        if(/SFCFILES/){
+	    print SFMOUT "   SFCFILES = '$sfcfile',\n";
+            next;
+        }	
+    print SFMOUT $_;
+    }
+    close(SFMOUT);
+
+#
+# Write the ISANIN 
+#
+
+
+    open(ISAN,">ISANIN");
+    print ISAN " \$ISAN_CONTROL\n";
+    print ISAN " NIGRIDS = 1,\n";
+    print ISAN " NFEEDVAR = 0,\n";
+    print ISAN " IFNVAR = \'$LAPS_DATA_ROOT/lapsprd/model/varfiles/',\n";
+    print ISAN " IOFLGV = 1,\n";
+    my $cnt = 0;
+    my $hrstr   = " IAHOUR = ";
+    my $datestr = " IADATE = ";
+    my $monstr  = " IAMONTH = ";
+    my $yrstr   = " IAYEAR = ";
+    my $fstr    = " IAPR = ";
+    my $sfcinf = " SFCINF = ";
+    my $ispcsfc = " ISPCSFC = ";
+    my $nspass1 = " NSPASS1 = ";
+    my $nspass2 = " NSPASS2 = ";
+    my $iglbflg = " IGLBFLG = ";
+    foreach $vtime (sort numerically  keys(%vfiles)){
+	$cnt++;
+	my ($fy, $fm, $fd, $fh) = &unix_to_time($rtime+$vtime);
+	$fy -= 100 while($fy>=100); 
+	$hrstr   .= "$fh,";
+	$datestr .= "$fd,";
+	$monstr  .= "$fm,";
+	$yrstr   .= "$fy,";
+        if($vfiles{$vtime} =~ /LPS$/){
+	    $sfcinf .= "500., ";
+            $ispcsfc .= "1,";
+        }else{
+	    $sfcinf .= "0., ";
+            $ispcsfc .= "0,";
+	}
+         
+	$fstr    .= "\'$vfiles{$vtime}\',\n        ";
+        $nspass1 .= "1, ";
+        $nspass2 .= "0, ";
+        $iglbflg .= "0, ";
+
+    }    
+    print ISAN " NATIMES = $cnt,\n";
+    print ISAN "$fstr\n";
+    print ISAN "$hrstr\n";
+    print ISAN "$datestr\n";
+    print ISAN "$monstr\n";
+    print ISAN "$yrstr\n";
+    print ISAN "$sfcinf\n";
+    print ISAN "$ispcsfc\n";
+    print ISAN "$nspass1\n";
+    print ISAN "$nspass2\n";
+    print ISAN "$iglbflg\n";
+    print ISAN " \$END\n";
+    
+    close(ISAN);
+    
+    
+#
+# Create the boundary files from the eta model
+#
+    
+    print "Creating the boundary files\n";
+    open(RSFM,"$S_MODEL |");
+    my @r_out = <RSFM>;
+    close(RSFM);
+    
+    print @r_out;
+
+    if(grep(/ISAN complete/,@r_out)==0){
+	print STDERR "sfm ISAN failed - aborting\n";
+	exit -1;
+    }
+    my $varfil = "  VARFIL = ";
+    foreach (@r_out){
+	if(/^\s*Writing var file (.*)\.g1\s*/){
+	    $varfil .= "\'$1\',\n      ";
+	}
+    }
+    
+#
+# Should this be a history or an initial run?
+#   
+opendir(DDIR,"$LAPS_DATA_ROOT/lapsprd/model/output");
+my @flist = grep(/head$/, readdir(DDIR));
+closedir(DDIR);
+my ($hfile,$hfl);
+foreach(sort numerically @flist){
+    /(\d\d)(\d\d\d)(\d\d)\d\d\.a(\d+)s/;
+    my $hyy = $1;
+    my $hjj = $2;
+    my $hhh = $3+$4/3600;
+    if($hhh>23){
+	$hhh=$hhh-24;
+	$hjj=$hjj+1;
+    }
+    if($hyy==$yy && $hjj==$jjj && $hhh==$hh){
+	$hfile = $_;
+	$hfile =~ s/\.head$//;
+	$hfile =~ /a(\d+)s$/;
+	$hfl = $1;
+    }
+}
+
+#
+# Edit the SFMIN for model run
+#
+open(SFMIN,"SFMIN");
+@sfmin = <SFMIN>;
+close(SFMIN);
+open(SFMOUT,">SFMIN");
+my $cutflag=0;
+foreach (@sfmin){
+    next if(/^\s*$/);
+    if($cutflag==1){
+	next if(/^\s+\'/);
+	$cutflag=0;
+    }
+    if(/TIMMAX/){
+	$rl=3600*$runlength;
+	print SFMOUT "  TIMMAX = $rl\.,\n";
+	next;
+    }
+    if(/RUNTYPE/){
+	if($hfile){
+	    print SFMOUT "  RUNTYPE = \'HISTORY\',\n";
+	}else{
+	    print SFMOUT "  RUNTYPE = \'INITIAL\',\n";
+	}
+	next;
+    }
+    if(/HFILIN/){
+	if($hfile){
+	    $_=~ s/\d\d\d\d\d\d\d\d\d\.a\d+s/$hfile/;    
+	}
+    }
+    if(/TIMSTR/){
+	print SFMOUT "  TIMSTR = $hfl\.,\n";
+	next;
+    }
+    if(/([AH])FILOUT/){
+	$_ =~ s/\d\d\d\d\d\d\d/$yy$jjj$hh/g;    
+    }
+    if(/VTIME/){
+	print SFMOUT "  VTIME = ";
+	foreach $vtime (sort numerically  keys(%vfiles)){
+	    print SFMOUT "$vtime\., ";
+	}
+	print SFMOUT "\n";
+	next;
+    }
+    if(/VARFIL/){
+	print SFMOUT "$varfil\n";
+	$cutflag=1;
+	next;
+    }
+    
+    print SFMOUT $_;
+}
+close(SFMOUT);
+}
+#
+# Start the postprocessing script
+#
+my $lockfile= "$LAPS_LOG_PATH/\.lockmodel\.$$";
+
+my $child_pid=0;
+$child_pid = &postproc("$yy$jjj$hh",$LAPSROOT,$rl,$lockfile);
+
+#my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/postprod.pl $yy$jjj$hh 3600 $rl &";
+#system($sys);
+#print "$sys\n";
+
+#
+# Finally run the model
+#
+
+print "Starting the model\n";
+
+#system("wall \"Starting the SFM forecast model\"");
+if($nprocs==1){
+    &forksub("$S_MODEL",$lockfile);
+}else{
+    &run_parallel($nprocs,$P_MODEL,$lockfile);
+}
+system("wall \"SFM forecast model done: $LAPS_DATA_ROOT \"") unless($opt_o);
+print `time`;
+
+#
+# End of main program - subroutines follow
+#
+if($child_pid>0){
+    waitpid $child_pid,0;
+}
+exit 0; 
+
+sub forksub{
+    my($sys,$lockfile) = @_;
+  FORK: {      
+      my $pid;
+      if($pid = fork) {
+	  # parent process
+	  open(LOCK,">>$lockfile");
+	  print LOCK "$pid\n";
+	  close(LOCK);
+	
+	  waitpid $pid,0;
+	  unlink "$lockfile";
+
+
+      }elsif (defined $pid) { 
+	  #child here
+	  exec($sys);
+	  unlink "$lockfile";
+	  exit;
+      }elsif ($! =~ /No more process/){
+	  # EAGAIN, recoverable fork error
+	  sleep 5;
+	  redo FORK;
+      }else{
+	  die "Can't fork: $!\n";
+      }
+  }
+}
+
+
+
+sub valid_bndys{
+    my($rtime,$runlength,$dir,$ext) = @_;
+    my(%vfiles)='';
+    my($fh,$fy,$fj,$fd,$fm);
+    my(%inittime,$inittime,$newest);
+    $newest = -1;
+
+    print "Looking for boundary data in $dir with extension $ext\n";
+    opendir(BNDY,$dir);
+    my(@files) = grep(/$ext?/, readdir(BNDY));
+    closedir(BNDY);
+
+    foreach (sort @files){
+	/(\d\d)(\d\d\d)(\d\d)\d\d(\d\d)\d\d/;
+#            /(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)/;  
+	$fy = ($1<95) ? 2000+$1 : 1900+$1;  
+#            my $im = $2;
+#            my $id = $3;
+#            my $fih= $4;
+#            my $fh = $5;
+	my $fj = $2;
+	my $fih = $3;
+	my $fh = $4;
+	my ($im,$id) = &JJJ2MMDD($fj,$fy);
+	my $inittime = &time_to_unix($im,$id,$fy,$fih,0,0);
+	my $fj = &julian($fy,$im,$id); 
+#
+#	print "her $inittime, $rtime, $newest\n";
+#
+# This line insures that thebackground data is at least as old as the run requested
+# so that test runs use the same boundaries as those available for the real thing.
+#
+	next if($inittime>$rtime);
+#
+# This insure that the bndy data used is the latest available.  
+#
+
+	next if($inittime<$newest);
+
+	$newest = $inittime;            
+
+
+	while($fih+$fh>24){
+	    $fj++;
+	    $fh-=24;
+	}
+	
+            
+	($fm,$fd) = &JJJ2MMDD($fj,$fy);
+	$vtime  = &time_to_unix($fm,$fd,$fy,$fih+$fh,0,0);
+#	print "$vtime: fm=$fm fd=$fd fy=$fy, fih=$fih, fh=$fh\n";
+
+	next if($vtime<$rtime);
+
+#	print "here2 $vtime $rtime $runlength $_ \n";
+#
+#   This prevents creating boundary files for times further out than the end of
+#   the model run.
+#
+#
+            
+#	next if($vtime>$rtime+($runlength+6)*3600);
+
+
+	$inittime{$vtime-$rtime} = $inittime;
+	$vfiles{$vtime-$rtime} = "$dir/$_";         
+#            print "$vtime $rtime select $vfiles{$vtime-$rtime}\n";
+        
+    } 
+
+
+    $newest = 0;
+    foreach $time (keys %inittime){
+	$newest = $inittime{$time} if($time>$newest);
+    }
+    foreach $time (keys %vfiles){
+	delete $vfiles{$time} if ($inittime{$time}<$newest);
+    }
+
+
+    return(%vfiles);
+}
+
+sub postproc{
+    my($yyjjjhh,$LAPSROOT,$runlength,$lockfile) = @_;
+  FORK: {      
+      my $pid;
+      if($pid = fork) {
+	  # parent process
+	  open(LOCK,">>$lockfile");
+	  print LOCK "$pid\n";
+	  close(LOCK);
+	  return($pid);
+      }elsif (defined $pid) { 
+	  #child here
+          $yyjjjhh=$yyjjjhh."00";
+	  system("$EXECUTABLE_NAME $LAPSROOT/etc/ramrsf.pl $LAPSROOT $LAPS_DATA_ROOT $yyjjjhh 3600 $runlength");
+	  exit;
+      }elsif ($! =~ /No more process/){
+	  # EAGAIN, recoverable fork error
+	  sleep 5;
+	  redo FORK;
+      }else{
+	  die "Can't fork: $!\n";
+      }
+  }
+  die "SEVERE ERROR in FORK\n";  
+}
+
+sub run_parallel{
+    my($procs,$exe,$lockfile) = @_;
+    my($smsSrvr) = "$LAPSROOT/model/bin/smsSrvr";
+    my($rundir) = `pwd`;
+    $rundir =~ s/\s*$//;
+    my($sys);
+    $ENV{'USER'} = 'fxa';
+    system("$LAPSROOT/model/bin/kipc");
+
+    open(PG,">procsfm");
+    my($host) = `hostname`;
+    chomp($host);
+    $host =~ s/\..*$//;
+    print PG "$host 0\n";
+    my($i); 
+    for($i=0;$i<$procs;$i++){
+	print PG "$host 1 $exe\n";
+    }
+    close(PG);
+#    $sys = "$LAPSROOT/model/bin/mpirun -p4pg $rundir/procsfm $smsSrvr $rundir $procs $exe";
+#    $sys = "/opt/mpi/bin/mpirun $smsSrvr $rundir $procs $exe -np $procs $exe";
+    $sys = "$LAPSROOT/model/bin/smsRun $procs $exe";
+    print $sys;
+    &forksub($sys,$lockfile);
+
+}
+
+
+sub run_parallel_sp2{
+    my($nprocs,$exe) = @_;
+    
+    my(@machines) = (
+             "f01n01","f01n02","f01n03","f01n04",
+             "f01n05","f01n06","f01n07","f01n08",
+             "f01n09","f01n10","f01n11","f01n12",
+             "f01n13","f01n14","f03n03",
+             "f02n01","f02n02",
+             "f02n05","f02n06","f02n07","f02n08");
+
+    my($ionode) = "f03n01";
+# f03n04 reserved for LAPS             
+
+    my(@usednodes);
+    open(AVAIL,"jm_status -j |");
+    while(<AVAIL>){
+	if(/(f\d\dn\d\d)/){
+	    push(@usednodes,$1);
+	}
+    }
+
+    close(AVAIL);
+    
+    if($nprocs > $#machines-$#usednodes){
+	print "Only $#machines compute nodes available on this system\n";
+	exit -1;
+    }
+
+    $ENV{'MP_RESD'}="yes";
+    $ENV{'MP_EUILIB'}="us";
+    $ENV{'MP_PROCS'}=2+$nprocs;
+    $ENV{'MP_RMPOOL'}=1;
+    $ENV{'MP_REMOTEDIR'}='/u/sfm/bin/echodir';
+    $ENV{'MP_PGMMODEL'}='mpmd';
+
+    $exe =~ /^(.*\/)[^\/]*$/;
+    my $exepath = "/u/sfm/usr";
+    
+    
+    open(HOST,">host.list");
+    my $poecmd = "poe << EOF\n/u/sfm/bin/smsSrvr  $exepath $nprocs $exe 1 /u/sfm/bin/nnt_srvr_ioc\n";
+    my $i=0;
+    my $j=0;
+    while($j==0){
+	unless(grep(/$machines[$i]/,@usednodes)){
+	    print HOST "$machines[$i]\n";
+#            system("rsh $machines[$i] pwd");
+	    $j++;
+	}      
+	$i++;
+    }
+    $j=0;
+    while($j<$nprocs){
+	unless(grep(/$machines[$i]/,@usednodes)){
+	    $poecmd .= "$exe\n";
+	    print HOST "$machines[$i]\n";
+#            system("rsh $machines[$i] pwd");
+
+	    $j++;
+	}      
+	$i++;
+    }
+    print HOST "$ionode\n";
+#    system("rsh $ionode pwd");
+    $poecmd .= "/u/sfm/bin/nnt_srvr_ioc\n";
+    $poecmd .= "EOF\n";
+    close(HOST);
+     
+#    print `env`;    
+
+    system($poecmd);
+}
+
+
+
+#!/my/bin/perl
+#
+;# &time_to_unix: Calculate unix time from month, day, year, hour, min, sec
+;# Arguments: month, day, year, hour, min, sec
+;# Returns: unix time
+
+sub time_to_unix {
+    my($month, $day, $year, $hour, $minute, $second) = @_;
+    my($b, $g, $d, $e, $f, $today);
+
+    $b = int ( ($month - 14) / 12 );
+    $g = $year + 4900 + $b;
+    $b = $month - 2 - 12*$b;
+
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+
+    $today = $d + $e - $f + $day - 2432076;
+
+    86400*($today-40587) + 3600*$hour + 60*$minute + $second;
+}
+1;
+;#
+;#+--+------------------------------------------------------------------+
+;#
+;# &unix_to_time: Calculate month, day, year, hour, min, sec from unix time
+;# Arguments: unix time
+;# Returns: month, day, year, hour, min, sec
+
+sub unix_to_time {
+    my($utm) = @_;
+    my($i, $j, $n, $l, $d, $m, $y);
+
+    $n = int($utm/86400);
+
+    $utm -= 86400*$n;
+    $l    = $n + 2509157;
+    $n    = int((4*$l)/146097);
+    $l   -= int( (146097*$n + 3)/4);
+    $i    = int( (4000*($l+1))/1461001);
+    $l   += 31 - int((1461*$i)/4);
+    $j    = int((80*$l)/2447);
+    $d    = $l - int( (2447*$j)/80);
+    $l    = int($j/11);
+    $m    = $j + 2 - 12*$l;
+    $y    = 100*($n-49) + $i + $l;
+
+    my @answer = ($y, $m, $d, int($utm/3600), int(($utm%3600)/60), int($utm%60));
+ 
+    @answer
+}
+1;
+;#
+;#+--+------------------------------------------------------------------+
+;#
+;# &julian: Calculate julian day from year, month, day
+;# Arguments: year, month, day
+;# Returns: julian day
+
+sub julian {
+    my($yr,$mo,$dy) = @_;
+ 
+    my($b,$g,$d,$e,$f,$today,$first_of_year);
+    ($yr < 70) ? $yr += 2000 : $yr += 1900;
+ 
+    # Use temporary vars to compute num of days since Oct 1, 1582 to today
+    $b = int ( ($mo - 14) / 12 );
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+ 
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+ 
+    $today = $d + $e - $f + $dy - 2432076;
+ 
+    # Now compute number of days from Oct 1, 1582 to Jan 1, $yr
+    $mo = 1;
+    $dy = 1;
+    $b = int( ($mo - 14) / 12);
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+ 
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+ 
+    $first_of_year = $d + $e - $f + $dy - 2432076;
+ 
+    # Julian day from 1st of year is $today-$first_of_year+1
+ 
+    $today - $first_of_year + 1;
+}
+1;
+
+sub current_date {
+    my($JJJ,@date);
+    
+    $JJJ = `date -u +%j%y%h%m%d%H`;
+#    print ">$JJJ<\n";
+    $JJJ =~ /(\d{3,3})(\d{2,2})(\w{3,3})(\d{2,2})(\d{2,2})(\d{2,2})/;
+    @date = ($1,$2,$3,$4,$5,$6);
+
+#  $JJJ = $1;
+#  $YY = $2;
+#  $Mmm = $3;
+#  $DD = $4;
+#  $MM = $5;
+}
+1;
+
+#
+#  Mmmtomm swap month number for 3 digit or vis versa
+#
+
+sub Mmmtomm {
+    my($Mmm) = @_;
+    my(@month_names) = ('Jan','Feb','Mar','Apr','May','Jun',
+                'Jul','Aug','Sep','Oct','Nov','Dec');
+    my($mm);
+    if($Mmm>0 && $Mmm<=12){
+	return ($month_names[$Mmm-1]);
+    }else{
+	for($mm=0;$mm<=$#month_names;$mm++){
+	    return ($mm+1) if($month_names[$mm] =~ /$Mmm/i);
+	}
+    }
+    print STDERR "Error in Mmmtomm $Mmm\n";
+}
+1;
+
+
+sub JJJ2MMDD {
+  my($jjj,$yy) = @_;
+  my(@daysinmon) = (31,0,31,30,31,30,31,31,30,31,30,31);
+  my(@mmmdd) = (-1,-1);  
+  $yy=1900+$yy if($yy<100);
+
+  my($leap) = $yy%4;
+  my($jmax);
+  if($leap==0){
+    $jmax = 366;
+    $daysinmon[1]=29;  
+  }else{
+    $jmax = 365;
+    $daysinmon[1]=28;  
+  }
+  if($jjj<1 || $jjj > $jmax){
+    print STDERR "Invalid Julian date passed to JJJ2MMDD\n";
+    return @mmmdd;
+  }
+  
+#
+#  Addition of 0 removes any leading zeros  
+#
+
+  $mmmdd[0]=1+0;
+  $mmmdd[1]=$jjj+0; 
+  while($mmmdd[1] > $daysinmon[$mmmdd[0]-1]){
+    $mmmdd[1] = $mmmdd[1]-$daysinmon[$mmmdd[0]-1];
+    $mmmdd[0]++;
+  } 
+  return @mmmdd;
+}1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
