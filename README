@@ -1046,30 +1046,27 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 -------------- 2.7 ----  CHANGING THE HORIZONTAL DOMAIN-----------------------
 
      Laps will allow you to change the horizontal domain after compilation
-     and before the running of the localization script. Below is a list of 
+     and before the running of the localization scripts. Below is a list of 
      the relevant changes.
+
+     The dimensions and location of the horizontal domain can be changed at 
+     run time. Prior to running 'window_laps_rt.pl', set the following 
+     parameters in 'data/static/nest7grid.parms' or in the corresponding 
+     template directory (needed only if you are outside the default Colorado 
+     domain). This script in turn runs 'gridgen_model.exe' and other programs.
 
                 ----  2.7.1 Number of Grid Points ---
 
-     Adjust the horizontal dimensions (NX_L, NY_L) in 
+     Adjust the horizontal dimensions (NX_L_CMN, NY_L_CMN) in 
                                               './data/static/nest7grid.parms'.
 
 
-     NOTE: The file './data/static/nest7grid.cdl' is now automatically edited
+     NOTE: The file './data/static/nest7grid.cdl' is automatically edited
            by ./etc/laps_localization.pl using the values found in 
            './data/static/nest7grid.parms'.
 
 
           ----  2.7.2 Location of Domain (Map projections) ---
-
-     The location of the horizontal domain can now be changed at run time. 
-     Simply change the lat/lon values in 'data/static/nest7grid.parms'
-     and run the './etc/laps_localization.pl' script. This script in turn
-     runs 'gridgen_model.exe' and other programs.
-
-        Prior to running 'laps_localization.pl', set the following parameters
-        in 'data/static/nest7grid.parms' (needed only if you are outside 
-        the default Colorado domain).
 
 <pre>
                       
@@ -1249,6 +1246,9 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
    for their validity and refined if needed. Cases of interest include a 
    projection pole point at the domain center, as well as offset from the
    center.
+
+     The map projection calculations are performed with a spherical earth
+   assumption.
 
                    ----  2.7.3 Domain Resolution  ---
 
