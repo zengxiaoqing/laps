@@ -58,6 +58,7 @@ c                                      Figure box size in gridpoint space from
 c                                      user-defined size (deg) and grid_spacing.
 c                          10-19-99  Added checks on each variable when doing
 c                                      units conversion.
+c                          01-11-00  Fixed check on ob time (overall).                      
 c
 c*****************************************************************************
 c
@@ -226,14 +227,10 @@ c.....  Elevation ok?
 c
 	   if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
 c
-c.....  Check to see if its in the desired time window (if the flag
-c.....  says to check this).
+c.....  Check to see if its in the desired time window.
 c
 	   itime60 = nint(timeobs(i)) + 315619200
-c
-	   if(ick_METAR_time .eq. 1) then
-	      if(itime60.lt.before .or. itime60.gt.after) go to 125
-	   endif
+	   if(itime60.lt.before .or. itime60.gt.after) go to 125
 c
 c.....  Right time, right location...
 
