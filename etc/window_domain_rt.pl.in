@@ -248,6 +248,12 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
      if($all_roots_equal eq "F") {
         print "Save static and cdl subdirectories\n";
+        if(-e "$LAPS_DATA_ROOT/static\_save"){
+           print "Found static_save and removing\n";
+           system("rm -rf $LAPS_DATA_ROOT/static_save");}
+        if(-e "$LAPS_DATA_ROOT/cdl\_save"){
+           print "Found cdl_save and removing\n";
+           system("rm -rf $LAPS_DATA_ROOT/cdl_save");}
         rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
         rename ("$LAPS_DATA_ROOT/cdl","$LAPS_DATA_ROOT/cdl\_save");
         mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
