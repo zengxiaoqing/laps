@@ -254,6 +254,7 @@ c ----------
             nzbg_ww=nz
             gproj='LL'
             Lat0=90.0
+            sw(1)=Lat0
             Lon0=0.0
             dlat=1.0
             dlon=1.0
