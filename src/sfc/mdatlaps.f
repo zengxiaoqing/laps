@@ -501,36 +501,43 @@ c
 c
 c.....	Temperatures:
 c
+	print *,' put_thermo for T:'
 	call put_thermo(t_s,mxstn,n_obs_b,t1,wt,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Dew points: 
 c
+	print *,' put_thermo for TD:'
 	call put_thermo(td_s,mxstn,n_obs_b,td1,wtd,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Put the reduced pressure on the grid
 c
+	print *,' put_thermo for P:'
 	call put_thermo(pred_s,mxstn,n_obs_b,rp1,wp,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Put the station pressure on the grid
 c
+	print *,' put_thermo for PS:'
 	call put_thermo(pstn_s,mxstn,n_obs_b,sp1,wsp,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Put the MSL pressure on the grid
 c
+	print *,' put_thermo for MSL:'
 	call put_thermo(pmsl_s,mxstn,n_obs_b,mslp1,wmslp,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Visibility:
 c
+	print *,' put_thermo for VIS:'
 	call put_thermo(vis_s,mxstn,n_obs_b,vis1,wvis,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
 c.....	Station elevation:
 c
+	print *,' put_thermo for ELEV:'
 	call put_thermo(elev_s,mxstn,n_obs_b,elev1,welev,icnt,
      &                  imax,jmax,ii,jj,badflag)
 c
@@ -796,6 +803,8 @@ c
 c
 	zeros = 1.e-30
         call zero(w,ni,nj)
+
+        icnt_var = 0
 c
 	do 10 ista=1,num_sta
 c
@@ -811,8 +820,12 @@ c
 	  if(var_in(ista) .eq. 0.) var_in(ista) = zeros
 	  x(ixx,iyy) = var_in(ista) + x(ixx,iyy)
 	  w(ixx,iyy) = w(ixx,iyy) + 1.
+          icnt_var = icnt_var + 1
 10	continue
 c
+        write(6,*)' Number of obs for this field (in put_thermo) = '        
+     1           ,icnt_var
+
 	return
 	end
 c
