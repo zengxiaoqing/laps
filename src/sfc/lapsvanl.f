@@ -538,38 +538,40 @@ c
 
  7119	format(2i5,f10.2)
 
-c	return
-	alf = 10000.
-	alf2a = 0.
-	beta = 100.
-	gamma = 5.
-	if(ibt .eq. 0) gamma = 0.
-        call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,err,
-     &        imax,jmax,rms_thresh_norm,bad_tm,imiss,mxstn,obs_error_t,
-     &        name,topo,ldf)
-c
-cc	go to 887
-c
-c.....	Now call the solution algorithm for the dew point.
-c
-c	beta_td = 3.0
-!	write(6,19999)
-!19999	format(' Enter beta for dewpoints: ',$)
-!	read(5,*) beta_td
-!	write(6,19998) beta_td
-19998	format(' Using beta_td of: ',f10.2)
+        if(.true.)then
+	    alf = 10000.
+	    alf2a = 0.
+	    beta = 100.
+	    gamma = 5.
+	    if(ibt .eq. 0) gamma = 0.
+            call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,
+     &        err,imax,jmax,rms_thresh_norm,bad_tm,imiss,mxstn,
+     &        obs_error_t,name,topo,ldf)
+        else ! use data structures for handling obs
+            call barnes_multivariate_sfc_jacket('t',obs,mxstn,t_bk
+     1                                     ,badflag,imax,jmax
+     1                                     ,rms_thresh_norm,bad_tm
+     1                                     ,topo,ldf,t,istatus)
+        endif
+
 	print *,' '
 	print *,'  At spline call for td (F)'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
-	alf = 10000.
-	alf2a = 0.
-	beta = 100.  
-        call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,err, !gamma = 0
-     &        imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
+
+        if(.true.)then
+	    alf = 10000.
+	    alf2a = 0.
+	    beta = 100.  
+            call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,
+     &        err,imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
      &        obs_error_td,name,topo,ldf)
-c
- 887	continue
+        else ! use data structures for handling obs
+            call barnes_multivariate_sfc_jacket('td',obs,mxstn,td_bk
+     1                                     ,badflag,imax,jmax
+     1                                     ,rms_thresh_norm,bad_tmd
+     1                                     ,topo,ldf,td,istatus)
+        endif
 c
 c
 c.....	Check to make sure that td is not greater than t...1st time.

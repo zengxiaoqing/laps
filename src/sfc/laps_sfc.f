@@ -393,8 +393,13 @@ c
             endif
 
 !           Put obs into data structure 
-            obs(i)%sfct_f = sfct(i)
-            obs(i)%t_ea_f = t_ea(i)
+            obs(i)%stn3    = stn3(i)
+            obs(i)%stn20   = stations(i)
+            obs(i)%t_f     = t_s(i)
+            obs(i)%t_ea_f  = t_ea(i)
+            obs(i)%td_f    = td_s(i)
+            obs(i)%td_ea_f = td_ea(i)
+            obs(i)%sfct_f  = sfct(i)
         enddo ! i
 
         if(i_rh_convert .gt. 0)then
@@ -688,14 +693,16 @@ c
 	     print *, 'QC: Bad T at ',stations(mm),' with rely/value '       
      1              ,rely(7,mm),t_s(mm)
 	     t_s(mm) = badflag
+             obs(i)%t_f = badflag
 	  endif
  121	enddo  !mm
 
 	do mm=1,n_obs_b
 	  if(rely(8,mm) .lt. 0) then	! dewpt
-	      print *, 'QC: Bad TD at ',stations(mm)
-     1               ,' with rely/value ',rely(8,mm),td_s(mm)
-	      td_s(mm) = badflag
+	     print *, 'QC: Bad TD at ',stations(mm)
+     1              ,' with rely/value ',rely(8,mm),td_s(mm)
+	     td_s(mm) = badflag
+             obs(i)%td_f = badflag
 	  endif
  122	enddo  !mm
 

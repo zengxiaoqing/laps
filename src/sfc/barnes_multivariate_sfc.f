@@ -348,6 +348,27 @@
             do i = 1,mxstn
                 ob_1d(i) = obs(i)%sfct_f
             enddo ! i
+
+        elseif(c_field .eq. 't_f')then
+            do i = 1,mxstn
+                ob_1d(i) = obs(i)%t_f
+            enddo ! i
+
+        elseif(c_field .eq. 't_ea_f')then
+            do i = 1,mxstn
+                ob_1d(i) = obs(i)%t_ea_f
+            enddo ! i
+
+        elseif(c_field .eq. 'td_f')then
+            do i = 1,mxstn
+                ob_1d(i) = obs(i)%td_f
+            enddo ! i
+
+        elseif(c_field .eq. 'td_ea_f')then
+            do i = 1,mxstn
+                ob_1d(i) = obs(i)%td_ea_f
+            enddo ! i
+
         else
             write(6,*)' Error, unknown field in get_sfcob_field'
             istatus = 0
