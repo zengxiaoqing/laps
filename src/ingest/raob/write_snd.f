@@ -24,7 +24,7 @@
       integer iwmostanum(maxsnd),nlvl(maxsnd)
       real stalat(maxsnd,maxlvl),stalon(maxsnd,maxlvl),staelev(maxsnd)       
       character c5_staid(maxsnd)*5,a9time_ob(maxsnd,maxlvl)*9
-     1         ,c8_obstype(maxsnd)*8,c_line*150
+     1         ,c8_obstype(maxsnd)*8,c_line*200
 
       character*5 c5_sta
 
@@ -67,26 +67,23 @@
 
         do lvl = 1,nlvl(isnd)
 
-!         Write Sounding Level
+!         Write Sounding Level (the character array helps keep everything
+!                               in one line when using free format)
 
-          write(c_line,*)height_m(isnd,lvl),pressure_mb(isnd,lvl)
-     1              ,temp_c(isnd,lvl)
-     1              ,dewpoint_c(isnd,lvl)
-     1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
-     1              ,a9time_ob(isnd,lvl)
-     1              ,stalat(isnd,lvl),stalon(isnd,lvl)
+          write(c_line,*)height_m(isnd,lvl)," "
+     1              ,pressure_mb(isnd,lvl)," "
+     1              ,temp_c(isnd,lvl)," "
+     1              ,dewpoint_c(isnd,lvl)," "
+     1              ,dir_deg(isnd,lvl)," "
+     1              ,spd_mps(isnd,lvl)," "
+     1              ,a9time_ob(isnd,lvl)," "
+     1              ,stalat(isnd,lvl)," "
+     1              ,stalon(isnd,lvl)
           call s_len2(c_line,len_line)
           write(lun_out,521)c_line(1:len_line)
   521     format(a)
 
           if(isnd .le. 100)then
-              write(c_line,*)height_m(isnd,lvl),pressure_mb(isnd,lvl)
-     1              ,temp_c(isnd,lvl)
-     1              ,dewpoint_c(isnd,lvl)
-     1              ,dir_deg(isnd,lvl),spd_mps(isnd,lvl)
-     1              ,a9time_ob(isnd,lvl)
-     1              ,stalat(isnd,lvl),stalon(isnd,lvl)
-              call s_len2(c_line,len_line)
               write(6,521)c_line(1:len_line)
           endif
 
