@@ -1,6 +1,6 @@
 c
 c
-      subroutine kalman(dta,F,Y,p,it,w,v,x,xt,imax,m,atime)
+      subroutine kalman(F,dta,Y,p,it,w,v,x,xt,imax,m,atime)
 c
 c*********************************************************************
 c
@@ -10,7 +10,8 @@ c     Original: John McGinley, NOAA/FSL  Spring 1998
 c     Changes:
 c       21 Aug 1998  Peter Stamus, NOAA/FSL
 c          Make code dynamic, housekeeping changes, for use in LAPS.
-c
+c       09 Dec 1999  John McGinley and Peter Stamus, NOAA/FSL
+c          New version; additional housekeeping changes too.
 c
 c*********************************************************************
 c
@@ -28,6 +29,7 @@ c Initialize arrays
 c
       on=1
       off=0
+      iiii=20998
 c
 c     fill initial matrix values
 c
@@ -56,22 +58,23 @@ c     Set obs
 c first guess - initial
 c
       Do i=1,imax
-         x(i) = dta(i)  
+         X(i) = dta(i)  
       enddo !i
 c
 c XT=FX
 c
       Call mvmult(F,X,XT,imax,imax,1,m)
       call trans(F,FT,imax,imax,m)
-      call writev(F,imax,imax,m,'   F        ',atime,off,0.)
-      call writev(XT,imax,1,m,'   XT       ',atime,off,0.)
+c     call writev(F,imax,imax,m,'   F        ',atime,on ,1.0)
+c     call writev(X,imax,1,m,'   X       ',atime,on,10000.)
+c     call writev(XT,imax,1,m,'   XT       ',atime,on,10000.)
 c
 c PT=FPFT+T
 c
       call mvmult(F,P,A,imax,imax,imax,m)
       call mvmult(A,FT,PT,imax,imax,imax,m)
       call addmv(PT,W,PT,imax,imax,m)
-      call writev(PT,imax,imax,m,'   PT       ',atime,off,0.)
+c     call writev(PT,imax,imax,m,'   PT       ',atime,off,0.)
 c
 c K=PTH/(HPTHT+V)
 c
@@ -79,12 +82,12 @@ c
       call trans(H,HT,imax,imax,m)
       Call mvmult(A,HT,E,imax,imax,imax,m)
       call addmv(E,V,ZZ,imax,imax,m)
-      call writev(ZZ,imax,imax,m,'HPTHT+V 2INV',atime,off,0.)
+c     call writev(ZZ,imax,imax,m,'HPTHT+V 2INV',atime,off,0.)
       call matrixanal(ZZ,imax,imax,m, ' A ')
       call trans(ZZ,A,imax,imax,m)
       call replace(A,UU,imax,imax,m,m)
-      call svdcmp(UU,imax,imax,m,m,B,VV)
-      call writev(B ,imax,1,m,'DIAG WJ     ',atime,on,0.)
+      call svdcmp(UU,imax,imax,m,m,B,VV,m)
+c     call writev(B ,imax,1,m,'DIAG WJ     ',atime,on,0.)
 c     call writev(UU,imax,imax,m,'  UU svdcmp ',atime,off,0.)
 c     call writev(VV,imax,imax,m,'  VV svdcmp ',atime,off,0.)
       wmax=0.
@@ -98,22 +101,31 @@ c     call writev(VV,imax,imax,m,'  VV svdcmp ',atime,off,0.)
       enddo !j
       call mvmult(PT,H,A,imax,imax,imax,m)
       call trans(A,D ,imax,imax,m)
+
       do j=1,imax
          do i=1,imax
             c(i) = d(i,j)
          enddo !i 
-         call svbksb(UU,b,VV,imax,imax,m,m,c,z)
+         call svbksb(UU,b,VV,imax,imax,m,m,c,z,m)
          do i=1,imax
             zz(i,j) = z(i)
          enddo !i
       enddo!on j
       call trans(ZZ,K,imax,imax,m)
+c     call invert(A,imax,m,E,m)  
+c     
+c.....  This is single value decomposition solution for A
 c
-c ZZ is single value decomposition solution for A
-c
+      call trans(UU,zz,imax,imax,m)
+      call zero(E,m,m)     
+      call mvmult(E,ZZ,UU,imax,imax,imax,m)
+      call mvmult(VV,UU,ZZ,imax,imax,imax,m) 
+      call trans(ZZ,A ,imax,imax,m)
+c     call writev(D,imax,imax,m,'PT TRANS    ',atime,off,0.)
+c     call writev(A,imax,imax,m,'AT INVERTED ',atime,off,0.)
       call writev(K,imax,imax,m,'KALMAN GAIN ',atime,off,0.)
 c
-c     est obs loop
+c.....  Estimate obs loop
 c
 c X=XT+K(Y-HXT)      
 c
@@ -121,14 +133,64 @@ c
       call submv(Y,C,B,imax,1,m)
       call mvmult(K,B,C,imax,imax,1,m)
       call addmv(XT,C,X,imax,1,m)
-      call mvmult(k,H,E,imax,imax,imax,m)
+c
+c P=(I-K)PT
+c
+      call mvmult(K,H,E,imax,imax,imax,m)
       call submv(II,E,A,imax,imax,m)
       call mvmult(A,PT,P,imax,imax,imax,m)
+c
+      sum = 0.
       do i=1,imax
-         write(*,*) 'i,x,xt,y,k,w,v ',i,x(i),xt(i),
-     &              y(i),k(i,i),w(i,i),v(i,i)
+         write(6,*) 'i,x,xt,y,k,w,v ',i,X(i),XT(i),
+     &              Y(i),K(i,i),w(i,i),v(i,i)
+         sum=sum+K(i,i)
       enddo !i
+      print*, 'MEAN KALMAN ',sum/float(imax)
+      write(6,*) 'MEAN KALMAN ',sum/float(imax)
       call writev(P,imax,imax,m,'ANAL COV ERR',atime,off,0.)
 c
       return
       end
+c
+c
+      Subroutine kalmod(F,yta,byta,dta,ta,wmt,wot,wbt,offset,
+     &                  imax,mwt,m)
+c
+c*********************************************************************
+c
+c     Kalman Filter tool.
+c     
+c     Original: John McGinley, NOAA/FSL  December 1999
+c     Changes:
+c
+c       09 Dec 1999  Peter Stamus, NOAA/FSL
+c          Housekeeping changes.
+c
+c*********************************************************************
+c
+      real yta(m),byta(m),dta(m),ta(m),wmt(m),wot(m),wbt(m)
+      real mwt(m,m),F(m,m),a,b,c
+c
+      do i=1,imax
+         sum=wmt(i)+wot(i)+wbt(i)
+         a=0.5*(wmt(i)+wbt(i))/sum
+         b=0.5*(wot(i)+wmt(i))/sum
+         c=0.5*(wbt(i)+wot(i))/sum
+         sum=0.
+         sum1=0.
+         do j = 1,imax
+            if(i.eq.j) go to 1
+            sum=mwt(i,j)/(1.-mwt(i,i))*yta(j)+sum
+            F(i,j)=0.
+ 1          continue
+         enddo
+         byta(i)=sum
+         F(i,i)=a*(1.+yta(i)/(ta(i)+offset)) + 
+     &          c*(1.+dta(i)/(ta(i)+offset)) +
+     &          b*(1+byta(i)/(ta(i)+offset))
+      enddo
+c
+      return
+      end
+
