@@ -939,6 +939,10 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      directory structure; this path defaults to '/fullpathto/laps/data' if not
      provided.
 
+     There is also a script called 'etc/cronfile.pl' that creates a cronfile
+     tailored to your domain. This script can be run manually and the output 
+     location of the cronfile is directly under $LAPS_DATA_ROOT.
+
                ----   2.4.1  Purging Output Files ---
 
      The script '/etc/purger.pl' purges the 'lapsprd' output files and
