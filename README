@@ -1835,7 +1835,7 @@ since 3 layers are routinely available from NESDIS.
    http://laps.fsl.noaa.gov/software/release_notes.html URL.
 
    If you don't find the answer in these documents, send mail to 
-   laps-bugs@fsl.noaa.gov   Include in your mail:
+   oplapb@fsl.noaa.gov   Include in your mail:
 <pre>
    LAPS version number (hopefully you're using the latest version?)
    The type of system (often, uname -a)
