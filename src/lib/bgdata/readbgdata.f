@@ -11,6 +11,8 @@
 
       integer nx_bg
       integer ny_bg
+      integer nx_l
+      integer ny_l
       integer nzbg_ht
       integer nzbg_tp
       integer nzbg_sh
@@ -190,21 +192,19 @@ c domain fua/fsf but we'll try the get_lapsdata stuff first.
             enddo
             enddo
 
-         else
+         else  ! cmodel = LAPS_FUA: Same domain!
 
-c        call get_modelfg_2d(i4_valid,'USF',nx_bg,ny_bg,uwbg_sfc
-c    .,istatus)
-c        call get_modelfg_2d(i4_valid,'VSF',nx_bg,ny_bg,vwbg_sfc
-c    .,istatus)
-c        call get_modelfg_2d(i4_valid,'TSF',nx_bg,ny_bg,tpbg_sfc
-c    .,istatus)
-c        call get_modelfg_2d(i4_valid,'DSF',nx_bg,ny_bg,shbg_sfc
-c    .,istatus)
-c        call get_modelfg_2d(i4_valid,'SLP',nx_bg,ny_bg,mslpbg
-c    .,istatus)
-c        call get_modelfg_2d(i4_valid,'PSF',nx_bg,ny_bg,prbg_sfc
-c    .,istatus)
-c       elseif(cmodel.eq.'MODEL_FUA')then
+           call get_grid_dim_xy(nx_l,ny_l,istatus)
+
+           if(nx_l .ne. nx_bg .or. ny_l .ne. ny_bg)then
+              print*
+              print*,' ***********************************'
+              print*,' Error: nx-laps ne nx_bg '
+              print*,' background.nl var cmodel = ',cmodel
+              print*,' ***********************************'
+              print*
+              return
+           endif
 
            call s_len(fullname,lend)
            fullname=fullname(1:lend)//".fua"
@@ -403,6 +403,11 @@ c convert rh to sh.
              call lprep_eta_conusc(nx_bg,ny_bg,nzbg_ht
      +,prbght,tpbg,shbg,tpbg_sfc,prbg_sfc,shbg_sfc,istatus)
  
+          endif
+          if(cmodel(1:lencm).eq.'ORSM_HKO')then
+             print*,'In read_bgdata'
+             print*,'Convert ww to pa/sec for ORSM_HKO'
+             wwbg=wwbg/36.
           endif
 
           prbgsh=prbght
