@@ -6,6 +6,8 @@
 
 !       Convert fractional rh into fractional cloud cover. This is defined
 !       as a total cloud cover through a particular cloud layer.
+!       It is recommended that the input RH be calculated with subroutine
+!       'make_rh' using a 't_ref' between 0C and -10C.
 
         ramp_thresh = 0.60
 
