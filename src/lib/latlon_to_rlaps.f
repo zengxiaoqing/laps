@@ -201,9 +201,9 @@ c           slon = standard_longitude
                print*,'Error returned from get_standard_latitudes'
                return
             endif
-            call get_standard_longitude(cenlon,istatus)
+            call get_grid_center(cenlat_dum,cenlon,istatus)
             if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
+               print*,'Error returned from get_grid_center'
                return
             endif
 c           slat1  = standard_latitude
@@ -359,9 +359,9 @@ c           slon = standard_longitude
                print*,'Error returned from get_standard_latitudes'
                return
             endif
-            call get_standard_longitude(cenlon,istatus)
+            call get_grid_center(cenlat_dum,cenlon,istatus)
             if(istatus.ne.1)then
-               print*,'Error returned from get_standard_longitude'
+               print*,'Error returned from get_grid_center'
                return
             endif
 c           slat1  = standard_latitude
