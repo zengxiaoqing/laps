@@ -121,14 +121,13 @@ sub forksub{
 	  print LOCK "$pid\n";
 	  close(LOCK);
 	
-	  while(-e "$lockfile"){
-	      sleep 10;
-	  }
+	  waitpid $pid,0;
+	  unlink "$lockfile";
 
 
       }elsif (defined $pid) { 
 	  #child here
-	  system($sys);
+	  exec($sys);
 	  unlink "$lockfile";
 	  exit;
       }elsif ($! =~ /No more process/){
