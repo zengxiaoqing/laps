@@ -1,11 +1,13 @@
 
 
       Below is an example of our ASCII 'snd' files that we use for input into 
-      LAPS. The filename for this is '961581200.snd' (yydddhhmm).
-      We store it in the 'nest7grid/lapsprd/snd' directory.
+      LAPS. The filename for this is '961581200.snd' (yydddhhmm). We store 
+      one of these for each analysis cycle in the 'nest7grid/lapsprd/snd' 
+      directory.
 
       The first row contains Station ID, # of levels, lat, lon (- is West), 
-      elevation (m), and identifier. This is in a set format as shown below.
+      elevation (meters above MSL), and identifier. This is in a set format 
+      as shown below.
 
       write(11,511,err=998)
      1             wmostanum(isnd),n_good_levels,stalat(isnd)
@@ -25,13 +27,12 @@
       data. The analyses will do their best to fill in missing heights or
       pressures as long as one of them is available.
 
-      Note that all the mandatory and significant levels must be interleaved
-      together and sorted by increasing height (decreasing pressure). 
+      Note that all the RAOB mandatory and significant levels must be 
+      interleaved together and sorted by increasing height (decreasing  
+      pressure). 
    
-      The 'snd' files may contain some RAOBS that lie outside the LAPS domain.
-
-      The 'a9time' is the time the balloon is in the mid-troposphere, or
-      release time plus 30min.
+      The 'snd' files may contain some soundings that lie outside the LAPS 
+      domain. These are generally screened out during the analysis step.
 
       Allowed values of 'obstype' are as follows:
 
@@ -39,6 +40,25 @@
                            'SATSND  '
                            'GOES12  '
                            'DROPSND '
+
+      The 'a9time' is the time the balloon is in the mid-troposphere, or
+      release time plus 30min.
+
+      There can be as many observations in a particular SND file
+      as you want. The only limitation is that the observation times
+      be within +/-laps_cycle_time of the nominal analysis time 
+      (in systime.dat). This would ensure that the data fits within the 
+      time window checks in the analyses.
+
+      Dropsonde station elevation should probably be set to a missing value
+      of -999. I think for IHOP it actually was the height of the lowest 
+      sonde measurement. A missing data value (-999.) may work better to 
+      ensure that the lowest dropsonde measurement doesn't somehow slip 
+      into the surface analyses.
+
+      It is advisable to name dropsondes and satellite soundings with sequential
+      names (within each file) to help in tracking their processing in the 
+      various log files.
 
 -------------------------------------------------------------------------------
 
