@@ -243,6 +243,9 @@ c     if(istatus .ne. 1)then
 c         write(6,*)' Error return from get_grid_spacing'     
 c         return
 c     endif
+
+      gssum1=0
+      gssum2=0
       do i=1,nx_l
          call get_grid_spacing_actual(lat(i,1),lon(i,1)
      1             ,grid_spacing_actual_m,istatus)
@@ -712,7 +715,7 @@ c
 
       endif
  
-      call write_orb_att(path,c_sat_id(isat),336,orbAt)
+      if(.false.)call write_orb_att(path,c_sat_id(isat),336,orbAt)
 
       istatus = 1
 
