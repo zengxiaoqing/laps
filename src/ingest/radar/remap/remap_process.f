@@ -345,7 +345,7 @@ c
             k_eff(i,j) = nint(height_to_zcoord(height_grid,i_status))
 
           else
-            k_eff(i,j) = r_missing_data
+            k_eff(i,j) = 0
 
           endif
 
@@ -410,14 +410,16 @@ c
             i = azran_to_igrid_lut(nazi,iran)
             j = azran_to_jgrid_lut(nazi,iran)
 
-            if(k_eff(i,j) .ne. r_missing_data)then
+            IF (i .eq. 0 .OR. j .eq. 0) GO TO 180
+
+            if(k_eff(i,j) .ne. 0)then
                 k = k_eff(i,j)
-                k = gate_elev_to_z_lut(igate_lut,ielev)
+!               k = gate_elev_to_z_lut(igate_lut,ielev)
             else
                 k = gate_elev_to_z_lut(igate_lut,ielev)
             endif
 
-            IF (i .eq. 0 .OR. j.eq.0 .OR. k.eq.0 ) GO TO 180
+            IF (k .eq. 0) GO TO 180
 
             IF( lgate_vel_lut(igate) ) THEN
 
