@@ -463,13 +463,12 @@ c        rams_dir = '../lapsprd/ram/'
         enddo
 
         do i = 1, 48 ! try this for 48 hours
-        ramsi4time = save_i4time - 3600*(i-1) + 60*(i-1)
-        call make_fnam_lp (ramsi4time,ramsfile,istatus)
-        print *, ramsfile
+
 
 c  attempt to get data from the ramsfile
 
-        call read_laps (ramsi4time,ramsi4time,rams_dir,rams_ext,
+        call read_laps ( save_i4time-3600*(i-1), save_i4time,
+     1        rams_dir,rams_ext,
      1        ii,jj,kk,kk,
      1        ramsvar(1),lvllm,ramslvlcoord(1), ramsunits(1),
      1        ramscomments(1),data,istatus)
