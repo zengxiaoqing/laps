@@ -190,7 +190,8 @@ if(($fxa_sys!=0)and(! $opt_l)){
 
 open(SAVEOUT,">&STDOUT");
 open(SAVEERR,">&STDERR");
-unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm"))
+#unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$hhmm"))
+unless(open(STDOUT, ">$LAPS_LOG_PATH/sched.log.$yyjjjhhmm"))
 { 
   print "WARNING: $0 Can't redirect stdout\n";
 }
@@ -276,7 +277,8 @@ foreach $exe (@LAPS_EXE){
 
     $t=gmtime(); 
     my $log = $exe;
-    $log =~ s/\..*$/\.log\.$hhmm/;
+#   $log =~ s/\..*$/\.log\.$hhmm/;
+    $log =~ s/\..*$/\.log\.$yyjjjhhmm/;
 
     if( (! $opt_q) && (! $opt_Q) ){ # Normal run of an executable
         if($exe eq "qbalpe.exe"){
