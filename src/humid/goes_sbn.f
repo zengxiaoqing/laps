@@ -635,6 +635,9 @@ c   attempt powell method correction of layer humidity in clear areas
 c   only for starters.
 
 
+      failures = 0
+
+
       do j = 1,jj
          do i = 1,ii
 
