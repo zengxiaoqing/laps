@@ -133,9 +133,9 @@ C
         n7g_nx = NX_L_CMN 
         n7g_ny =  NY_L_CMN
         j = base
-        do i = 1, n_levels
+        do i = n_levels, 1, -1 
           cdl_levels(i) = j
-          j = j + interval
+          j = j - interval
         enddo
 C
 C ****  Various checks on input data.
