@@ -66,8 +66,12 @@ c
 c
 c reads model ".index" file. returns pressure of levels, variable id
 c and number of levels for each model variable in file.  (J. Smart 7-6-98).
+c
 c_______________________________________________________________________________
 c
+c *** Open data file.
+c
+      call s_len(path,l)
       filename=path(1:l)//'/'//fname//af//'.index'
       call s_len(filename,l)
       call readindexfile(filename,nvarsmax,nz,nvars,nlevs
@@ -81,40 +85,6 @@ c
             enddo
          endif
       enddo
-
-c     if(bgmodel.eq.6)then
-c        prk( 1)=1000.
-c        prk( 2)= 975.
-c        prk( 3)= 950.
-c        prk( 4)= 925.
-c        prk( 5)= 900.
-c        prk( 6)= 850.
-c        prk( 7)= 800.
-c        prk( 8)= 750.
-c        prk( 9)= 700.
-c        prk(10)= 650.
-c        prk(11)= 600.
-c        prk(12)= 550.
-c        prk(13)= 500.
-c        prk(14)= 450.
-c        prk(15)= 400.
-c        prk(16)= 350.
-c        prk(17)= 300.
-c        prk(18)= 250.
-c        prk(19)= 200.
-c        prk(20)= 150.
-c        prk(21)= 100.
-c        prk(22)=  70.
-c        prk(23)=  50.
-c        prk(24)=  30.
-c        prk(25)=  20.
-c        prk(26)=  10.
-c     else
-c        rp_init=1000.
-c        do k=1,nz
-c           prk(k)=rp_init-((k-1)*25.)
-c        enddo
-c     endif
 c
 c_______________________________________________________________________________
 c
@@ -140,14 +110,27 @@ c     endif
 c     read(1) prk
 
       if(bgmodel.eq.6)then
+
          call read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
-      else
-         call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
-     +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
-     +,istatus)
+
+      elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
+
+         call read_nogaps(lun,nx,ny,nz
+     + ,nvarsmax,nvars,nlevs,ivarcoord,ivarid
+     + ,ht,tp,sh,uw,vw,ht_sfc,pr_sfc,sh_sfc,tp_sfc
+     + ,uw_sfc,vw_sfc,mslp,istatus)
+
+c      else
+c
+c eta ingest currently disabled. J. Smart (9-2-98)
+c
+c        call read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
+c    +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
+c    +,istatus)
+
       endif
  
       if(istatus .ne. 0)then
@@ -156,35 +139,24 @@ c     read(1) prk
       endif
 c
 c *** Fill pressure array and
+c *** Convert rh to specific humidity.
 c
+      if(bgmodel.eq.6)then
+
       print*,'convert rh to sh'
       do k=1,nz
       do j=1,ny
       do i=1,nx
          pr(i,j,k)=prk(k)
+         it=tp(i,j,k)*100
+         it=min(45000,max(15000,it))
+         xe=esat(it)
+         mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
+         sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
+         sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
       enddo
       enddo
       enddo
-c
-c *** convert rh to specific humidity.
-c
-      if(bgmodel.eq.6)then
-         do k=1,nz
-         do j=1,ny
-         do i=1,nx
-            it=tp(i,j,k)*100
-            it=min(45000,max(15000,it))
-            xe=esat(it)
-            mrsat=0.00622*xe/(prk(k)-xe)        !Assumes that rh units are %
-            sh(i,j,k)=sh(i,j,k)*mrsat           !rh --> mr
-            sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
-         enddo
-         enddo
-         enddo
-      else       !then it is nogaps
-c convert nogaps dewpoint to sh
-
-      endif
 
       do j=1,ny
       do i=1,nx
@@ -197,6 +169,44 @@ c convert nogaps dewpoint to sh
          sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))  !mr --> sh
       enddo
       enddo
+
+      elseif(bgmodel.eq.8.or.bgmodel.eq.3)then
+
+c *** Convert dew point to specific humidity.
+c *** Fill pressure array.
+c
+         print*,'Convert Td to q'
+         do k=1,nz
+         do j=1,ny
+         do i=1,nx
+            pr(i,j,k)=prk(k)
+            if (sh(i,j,k) .gt. -99999.) then
+               it=sh(i,j,k)*100
+               it=min(45000,max(15000,it))
+               xe=esat(it)
+               sh(i,j,k)=0.622*xe/(pr(i,j,k)-xe)
+               sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))
+            else
+               if (pr(i,j,k) .lt. 300.) sh(i,j,k)=0.00001
+            endif
+         enddo
+         enddo
+         enddo
+
+         if(.false.)then
+         do j=1,ny
+         do i=1,nx
+            pr_sfc(i,j)=pr_sfc(i,j)/100.
+            it=sh_sfc(i,j)*100
+            it=min(45000,max(15000,it))
+            xe=esat(it)
+            sh_sfc(i,j)=0.622*xe/(pr_sfc(i,j)-xe)
+            sh_sfc(i,j)=sh_sfc(i,j)/(1.+sh_sfc(i,j))
+         enddo
+         enddo
+         endif
+
+      endif
 c
 c *** Fill the common block variables.
 c
@@ -221,6 +231,20 @@ c
          sw(2)=-133.459
          ne(1)=57.29
          ne(2)=-49.3849
+      elseif (bgmodel.eq.3.or.bgmodel.eq.8)then
+         gproj='LL'
+         nx_ll=nx
+         ny_ll=ny
+         nz_ll=nz
+         lat0=-90.0
+         lon0_ll=0.0
+         if(bgmodel.eq.8)then
+            dlat=1.0
+            dlon=1.0
+         else
+            dlat=2.5
+            dlon=2.5
+         endif
       endif
 c
       istatus=1
@@ -299,14 +323,13 @@ c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
 c     print*,'Read RH'
 c = 5
       nshl=nlevs(5)
-      do k=1,nshl  !  adjust number of rh levels using index info.
+      do k=1,nshl    ! -> prk(17)=300mb = last moisture level.
          read(lun,err=50) ((sh(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c
 c read sfc avn variables
 c
 c = 6,7,8,9,10,11
-c
       print*,'read sfc variables'
       read(lun,err=50) ((tp_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((uw_sfc(i,j),i=1,nx),j=ny,1,-1)
@@ -314,7 +337,6 @@ c
       read(lun,err=50) ((ht_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((sh_sfc(i,j),i=1,nx),j=ny,1,-1)
       read(lun,err=50) ((mslp(i,j),i=1,nx),j=ny,1,-1)
-c
 c nvar = 12
 c
       do l=12,nvars
@@ -327,24 +349,20 @@ c
            enddo
         endif
       enddo
-      print*,'Did not find surface pressure data!'
+      print*,'Did not find mslp data!'
 
 188   continue
 c
 c As at AFWA, rh above level  (300mb)=10%
 c
 c     print*,'set upper level rh to 10%'
-      if(nshl.lt.nz)then
-
-         do k=nshl+1,nz
-         do j=1,ny
-         do i=1,nx
-            sh(i,j,k)=10.0
-         enddo
-         enddo
-         enddo
-
-      endif
+      do k=nshl+1,nz
+      do j=1,ny
+      do i=1,nx
+         sh(i,j,k)=10.0
+      enddo
+      enddo
+      enddo
 
       istatus=0
       return
