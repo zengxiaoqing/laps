@@ -127,6 +127,8 @@ c     note that dynamic assignments don't work in data statements
 	   lvl_coord(k+kk) = 'hpa'
 	   units(k) = 'percent'
 	   units(k+kk) = 'percent'
+           comment (k) = ' '
+           comment (k+kk) = ' '
 	 enddo
 											    !k
 
