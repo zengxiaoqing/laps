@@ -10,11 +10,13 @@ include $(LAPSROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
            $(LAPSROOT)/src/lib/nav/libnav.a \
-           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a 
+           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a \
+           $(LAPSROOT)/src/lib/radar/wsi_ingest/libwsi.a
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a \
-             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a 
+             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a \
+             $(LAPSROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .x .exe
