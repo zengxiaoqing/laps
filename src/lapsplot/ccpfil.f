@@ -77,14 +77,19 @@ C
       do i = 1,MREG
       do j = 1,NREG
           if(field_in(i,j) .eq. r_missing_data)then
-!             Test for 'linear' is proxy for rejecting X-sects
-!             We only want to color missing data values for H-sects
-              if(colortable(1:3) .ne. 'lin')then
-                  ZREG(i,j) = scale_loc * 0.96
+!             Test for 'linear' used to be proxy for rejecting X-sects?
+!             We may only want to color missing data values for H-sects
+              if(colortable(1:3) .eq. 'lin')then
+                  ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
+              else
+                  ZREG(i,j) = scale_loc * 0.96 ! e.g. CIN
               endif
+
           elseif(ireverse .eq. 1)then
               ZREG(i,j) = scale_loc - ZREG(i,j)
+
           endif
+
       enddo 
       enddo
 
@@ -104,8 +109,9 @@ C
 C      
 C Call Conpack color fill routine
 C      
+      icol_offset = 40 ! Offset new colortable to preserve previous low end
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale_loc,ireverse
-     1                                        ,colortable,ncols)      
+     1                               ,colortable,ncols,icol_offset)      
 C      
 C Close frame
 C      
@@ -121,7 +127,7 @@ c     Call local colorbar routine
       write(6,*)' Drawing colorbar: ',MREG,NREG
       call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
       call colorbar(MREG, NREG, ncols, ireverse_colorbar, 
-     1              scale_l, scale_h, colortable, scale)
+     1              scale_l, scale_h, colortable, scale,icol_offset)
 
       jdot = 1
       
@@ -130,7 +136,7 @@ c     Call local colorbar routine
 
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
-     1                                              ,colortable,ncols)      
+     1                                ,colortable,ncols,icol_offset)      
       
       PARAMETER (LRWK=300000,LIWK=300000,LMAP=16000000,NWRK=300000
      1          ,NOGRPS=5)       
@@ -146,11 +152,22 @@ C
 C Set up color table
       write(6,*)' ccpfil_sub - scale = ',scale
 C      
-      CALL set_image_colortable(IWKID,ncols,ireverse,colortable)
+      CALL set_image_colortable(IWKID,ncols,ireverse,colortable
+     1                                              ,icol_offset)
 C      
 C Initialize Areas
 C      
       CALL ARINAM(MAP, LMAP)
+
+      col_offset = float(icol_offset) / float(ncols)
+      write(6,*)' col_offset / scale = ',col_offset,scale
+
+      do m = 1,MREG
+      do n = 1,NREG
+          ZREG(m,n) = ZREG(m,n) + (col_offset * scale)
+      enddo ! n
+      enddo ! m
+
 C      
 C Set number of contour levels and initialize Conpack
 C      
@@ -158,8 +175,8 @@ C
 
       CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
       CALL CPSETR('CIS', abs(scale) / float(ncols))
-      CALL CPSETR('CMN',0.0 * abs(scale))
-      CALL CPSETR('CMX',1.0 * abs(scale))
+      CALL CPSETR('CMN',(0.0           ) * abs(scale))
+      CALL CPSETR('CMX',(1.0+col_offset) * abs(scale))
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
@@ -187,7 +204,8 @@ C
       RETURN
       END
       
-      SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable)    
+      SUBROUTINE set_image_colortable(IWKID,ncols,ireverse,colortable
+     1                                                    ,icol_offset)    
 
       character*(*) colortable
 C 
@@ -195,7 +213,7 @@ C BACKGROUND COLOR
 C BLACK
 
 C
-      CALL GSCR(IWKID,0,0.,0.,0.)
+!     CALL GSCR(IWKID,0,0.,0.,0.)
 
       if(colortable(1:3) .eq. 'lin')then
           if(colortable .eq. 'linear_reduced')then
@@ -205,7 +223,7 @@ C
           endif
 
           rcols = ncols - 1
-          do i = 1,255
+          do i = 1,ncols+10 ! 255-icol_offset
               if(colortable .eq. 'linear_reduced')then
                   rintens = min(max( (float(i) / rcols) - 0.4 ,0.),1.)       
               else
@@ -213,58 +231,59 @@ C
               endif
 
               if(ireverse .eq. 1)rintens = 1.0 - rintens
-              call GSCR(IWKID, i, rintens, rintens, rintens)
+              call GSCR(IWKID, i+icol_offset, rintens, rintens, rintens)
           enddo ! i
 
       elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
      1  .or. colortable .eq. 'acc'  .or. colortable .eq. 'cpe')then       
           ncols1 = 50
           ncols = 60
-          call color_ramp(1,ncols1/8,IWKID
+          call color_ramp(1,ncols1/8,IWKID,icol_offset
      1                   ,0.5,0.15,0.6                 ! Pink
      1                   ,0.5,0.5,0.7)                ! Violet
-          call color_ramp(ncols1/8,59*ncols1/120,IWKID
+          call color_ramp(ncols1/8,59*ncols1/120,IWKID,icol_offset
      1                   ,0.5,0.5,0.7                 ! Violet
      1                   ,1.5,1.0,0.7)                ! Aqua
-          call color_ramp(59*ncols1/120,73*ncols1/120,IWKID
+          call color_ramp(59*ncols1/120,73*ncols1/120,IWKID,icol_offset       
      1                   ,1.5,1.0,0.7                 ! Aqua
      1                   ,2.0,0.4,0.4)                ! Green
-          call color_ramp(73*ncols1/120,90*ncols1/100,IWKID
+          call color_ramp(73*ncols1/120,90*ncols1/100,IWKID,icol_offset
      1                   ,2.0,0.4,0.4                 ! Green
      1                   ,3.0,0.9,0.7)                ! Red
-          call color_ramp(90*ncols1/100,ncols1,IWKID
+          call color_ramp(90*ncols1/100,ncols1,IWKID,icol_offset
      1                   ,3.0,0.9,0.7                 ! Red
      1                   ,3.0,0.9,0.2)                ! Hot
-          call color_ramp(100*ncols1/100,ncols,IWKID
+          call color_ramp(100*ncols1/100,ncols,IWKID,icol_offset
      1                   ,3.0,0.9,0.2                 ! White
      1                   ,3.0,0.15,0.6)               ! Hot
 
           if(colortable .eq. 'ref')then
               do i = 1,3
-                  call GSCR(IWKID, i, 0., 0., 0.)
+                  call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
               do i = ncols,ncols
-                  call GSCR(IWKID, i, 0.3, 0.3, 0.3)
+                  call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
               enddo
 
           elseif(colortable .eq. 'acc')then
-              do i = 1,2
-                  call GSCR(IWKID, i, 0., 0., 0.)
+!             do i = 1,2
+              do i = 1,3
+                  call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
               do i = ncols,ncols
-                  call GSCR(IWKID, i, 0.3, 0.3, 0.3)
+                  call GSCR(IWKID, i+icol_offset, 0.3, 0.3, 0.3)
               enddo
 
           elseif(colortable .eq. 'cpe')then
               do i = 1,2
-                  call GSCR(IWKID, i, 0., 0., 0.)
+                  call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
               ncols = 48
 
-!             call GSCR(IWKID, ncols, 0.3, 0.3, 0.3)
+!             call GSCR(IWKID, ncols+icol_offset, 0.3, 0.3, 0.3)
 
           endif
 
@@ -276,9 +295,9 @@ C
       RETURN
       END
 
-      subroutine color_ramp(ncol1,ncol2,IWKID       ! I
-     1                     ,hue1,sat1,rintens1      ! I
-     1                     ,hue2,sat2,rintens2)     ! I
+      subroutine color_ramp(ncol1,ncol2,IWKID,icol_offset       ! I
+     1                     ,hue1,sat1,rintens1                  ! I
+     1                     ,hue2,sat2,rintens2)                 ! I
 
       write(6,*)' Subroutine color_ramp...'
 
@@ -294,7 +313,7 @@ C
           write(6,1)icol,hue,sat,rintens,red,grn,blu
  1        format(i5,6f8.3)
           
-          call GSCR(IWKID,icol,red,grn,blu)
+          call GSCR(IWKID,icol+icol_offset,red,grn,blu)
       enddo
 
       return
@@ -331,7 +350,7 @@ C
 
 
       subroutine colorbar(ni,nj,ncols,ireverse,scale_l,scale_h
-     1                   ,colortable,scale)
+     1                   ,colortable,scale,icol_offset)
 
       character*8 ch_low, ch_high, ch_mid
       character*(*)colortable
@@ -363,7 +382,7 @@ C
 
           icol = nint(rcol)
 
-          call setusv_dum(2hIN,icol)
+          call setusv_dum(2hIN,icol+icol_offset)
 
           y1 = ylow
           y2 = yhigh
@@ -371,7 +390,7 @@ C
       enddo ! i
 
 c     Restore original color table
-      call color
+!     call color
 
 !     Write labels at middle and ends of colorbar
       call setusv_dum(2hIN,34) ! Gray
@@ -403,7 +422,8 @@ c     Restore original color table
 
 !     Midpoint
       rmid = ((scale_l+scale_h) / scale)/2.0
-      if(abs(rmid) .gt. 1.0)then
+      if(abs(rmid) .gt. 1.0 .or. abs(scale_l) .gt. 1.0
+     1                      .or. abs(scale_h) .gt. 1.0)then
           write(ch_mid,1)nint(rmid)
       else
           write(ch_mid,2)rmid
