@@ -45,8 +45,10 @@ cdis
 !       1997 Jun    Ken Dritz     Removed include of 'lapsparms.for'.
 !       1997 Oct    Steve Albers  Pass lon to fflxc. Misc Cleanup.
 !       1997 Dec    Steve Albers  Changed NX_L_MAX/NY_L_MAX to ni/nj
+!       1998 Nov    Steve Albers  Change to M, hopefully cancels out change to
+!                                 fflxc/sigma
 
-      include 'trigd.inc'
+        include 'trigd.inc'
         real m ! Grid points per meter
 
         real*4 wsum(ni,nj)
@@ -56,7 +58,6 @@ cdis
 
         integer k_terrain(ni,nj)
 
-!       DATA PHI0,scale/90.,1./
         DATA scale/1./
 
         real*4 uanl(ni,nj,nk),vanl(ni,nj,nk)
@@ -80,17 +81,14 @@ cdis
         real*4 radius_earth
         parameter (radius_earth = 6371e3)
 
+        character*6 c6_maproj
+
         do i=1,ni
            do j=1,nj
               wsum(i,j) = 0.0
               one(i,j) = 1.0
            enddo
         enddo
-
-        call get_standard_latitude(std_lat,istatus)
-        if(istatus .ne. 1)return
-
-        PHI0 = std_lat
 
         ierrcnt = 0
         istatus = 1
@@ -100,9 +98,27 @@ cdis
 !       1                    + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2
 !       1                                       )    * 111317. ! Grid spacing m
 
-        write(6,*)' Grid spacing (m) = ',grid_spacing_m
+        call get_standard_latitudes(slat1,slat2,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
 
-        m = 1.0 / grid_spacing_m
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus .ne. 1)then
+            return
+        endif
+
+        if(c6_maproj .eq. 'plrstr')then
+            call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                                 ,grid_spacing_proj_m)
+        else
+            grid_spacing_proj_m = grid_spacing_m
+        endif
+
+        write(6,*)' Grid spacings (m) = ',grid_spacing_m
+     1                                   ,grid_spacing_proj_m
+
+        m = 1.0 / grid_spacing_proj_m
 
         imaxm1 = ni - 1
         jmaxm1 = nj - 1
@@ -195,7 +211,7 @@ cdis
      1corr'
 
         do k = 1,nk
-            call FFLXC(ni,nj,M,PHI0,SCALE
+            call FFLXC(ni,nj,M,SCALE
      1                ,uanl(1,1,k),vanl(1,1,k),one,conv,lat,lon
      1                ,flu,flv,sigma,r_missing_data)
 

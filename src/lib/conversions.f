@@ -189,11 +189,11 @@ c       1                       ,hor_dist,curvature
 
         implicit real*4 (a-z)
 
+        integer i,j,k,ni,nj,nk,kref,istatus
+
         real*4 heights_3d(ni,nj,nk)
 
         logical ltest_vertical_grid
-
-        integer i,j,k,ni,nj,nk,kref,istatus
 
         data k_ref /1/
         save k_ref

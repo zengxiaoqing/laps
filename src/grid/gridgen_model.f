@@ -49,17 +49,17 @@ C*********************************************************************
 	call get_grid_dim_xy(NX_L,NY_L,istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error getting horizontal domain dimensions'
-	   stop
+	   goto999
 	endif
 
-        call Gridmap_sub(NX_L,NY_L)
+        call Gridmap_sub(NX_L,NY_L,istatus)
 
-        write(6,*)' gridgen_model: finish'
+ 999	write(6,*)' gridgen_model finish: istatus = ',istatus
         write(6,*)
 
         end
        
-        subroutine Gridmap_sub(nnxp,nnyp)
+        subroutine Gridmap_sub(nnxp,nnyp,istatus)
 
         include 'trigd.inc'
 
@@ -148,11 +148,16 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         call s_len(path_to_soil2m,len)
 	path_to_soil2m(len+1:len+2)='/O'
 
-
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error getting terrain smoothing parms'
-	   stop
+	   return
+	endif
+
+        call get_r_missing_data(r_missing_data,istatus)
+	if (istatus .ne. 1) then
+           write (6,*) 'Error getting r_missing_data'
+	   return
 	endif
 
 !       Silhouette weighting parameter
@@ -170,35 +175,35 @@ c calculate delta x and delta y using grid and map projection parameters
         call get_standard_latitudes(std_lat,std_lat2,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
-            stop 
+            return
         endif
         write(6,*)' standard_lats = ',std_lat,std_lat2
 
         call get_grid_spacing(grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
-            stop 
+            return
         endif
         write(6,*)' grid_spacing = ',grid_spacing_m
 
         call get_grid_center(mdlat,mdlon,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
-            stop 
+            return
         endif
         write(6,*)' grid_center = ',mdlat,mdlon
 
         call get_c6_maproj(c6_maproj,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
-            stop 
+            return
         endif
         write(6,*)' c6_maproj = ',c6_maproj
 
         call get_standard_longitude(std_lon,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
-            stop 
+            return
         endif
         write(6,*)' std_lon = ',std_lon
 
@@ -207,6 +212,12 @@ c calculate delta x and delta y using grid and map projection parameters
      1                       ,grid_spacing_proj_m)
 
             deltax = grid_spacing_proj_m
+
+            if(phi0 .eq. 90.)then
+                write(6,*)' Projection is tangent to earths surface'
+            else
+                write(6,*)' Projection is secant to earths surface'
+            endif
 
             if(std_lat2 .eq. +90.)then
                 write(6,*)' Note, grid spacing will equal '
@@ -240,7 +251,8 @@ c calculate delta x and delta y using grid and map projection parameters
         endif ! c6_maproj .eq. 'plrstr'
 
         deltay = deltax
-        write(6,*)' deltax, deltay ',deltax,deltay
+        write(6,*)' deltax, deltay (in projection plane) '
+     1             ,deltax,deltay
  
 c*********************************************************************
 c       Get X/Y for lower left corner
@@ -300,19 +312,21 @@ c
        if(iplttopo.eq.1)then
 
            if(.false.)then
+               write(6,*)
+               write(6,*)' Processing 2m soil type data....'
+               CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
+     +                    ,deltax,deltay,soil,PATH_TO_SOIL2M,1.,0.       
+     +                    ,new_DEM,istatus)
 
-           write(6,*)
-           write(6,*)' Processing 2m soil type data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_SOIL2M,1.,0.
-     +         ,new_DEM,istatus)
+               if(istatus .ne. 1)then
+                   write(6,*)' Warning: '
+     1                      ,'File(s) missing for 2m soil type data'       
+                   write(6,*)' Static file not created.......ERROR'
+                   return
+               endif
 
-           if(istatus .ne. 1)then
-               write(6,*)' Warning: '
-     1                  ,'File(s) missing for 2m soil type data'       
-!              write(6,*)' Static file not created.......ERROR'
-!              return
-           endif
+           else
+               call constant(soil,r_missing_data,nnxp,nnyp)
 
            endif ! .false.
 
@@ -597,6 +611,7 @@ c SG97  splot 'topography.dat'
         if(.not.exist) then
 	   print*,'Error: Could not find file '
      +           ,static_dir(1:len)//'nest7grid.cdl '
+           istatus = 0
            return
 	endif
 
@@ -614,7 +629,7 @@ c SG97  splot 'topography.dat'
      1       ,nnxp,nnyp,nf,std_lat,std_lat2,std_lon
      1       ,c6_maproj,deltax,deltay)
 
-
+        istatus = istat_chk
 	return
 	End
 
@@ -906,7 +921,7 @@ C
          DO 27 IR=1,N2
             XR=(XT(IR)-XQ1)/DELTAXQ+1.
             YR=(YT(JR)-YQ1)/DELTAYQ+1.
-            CALL GDTOST(DATQ,NIQ,NJQ,XR,YR,RVAL)
+            CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
             DATR(IR,JR)=max(0.,RVAL)
  27        continue
  26     continue
@@ -914,7 +929,7 @@ C
       RETURN
       END
 
-      SUBROUTINE GDTOST(A,IX,IY,STAX,STAY,STAVAL)
+      SUBROUTINE GDTOST2(A,IX,IY,STAX,STAY,STAVAL)
 *  SUBROUTINE TO RETURN STATIONS BACK-INTERPOLATED VALUES(STAVAL)
 *  FROM UNIFORM GRID POINTS USING OVERLAPPING-QUADRATICS.
 *  GRIDDED VALUES OF INPUT ARRAY A DIMENSIONED A(IX,IY),WHERE

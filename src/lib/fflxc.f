@@ -30,13 +30,14 @@ cdis
 cdis 
 cdis 
 
-        SUBROUTINE FFLXC(NI,NJ,M,PHI0,SCALE,uh,vh,field,flxcnv,lat,lon 
+        SUBROUTINE FFLXC(NI,NJ,M,SCALE,uh,vh,field,flxcnv,lat,lon 
      1  ,flu,flv,sigma,r_missing_data)
 
-!       Original Version S. Albers                      1986
-!       Made more general                               1989
-!       Made even more general (Adjustable Dims)        1991
-!       Added new map projections for sigma calc        1997
+!       Original Version S. Albers                                      1986
+!       Made more general                                               1989
+!       Made even more general (Adjustable Dims)                        1991
+!       Added new map projections for sigma calc                        1997
+!       Input M is changed, hopefully balances changes in get_sigma     1998
 
         include 'trigd.inc'
         REAL M
@@ -190,10 +191,10 @@ C
                 return
             endif
 
-!           call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
-!    1                       ,grid_spacing_proj_m)
+            call get_ps_parms(slat1,slat2,grid_spacing_m,phi0
+     1                       ,grid_spacing_proj_m)
 
-            phi0 = slat1 ! Remove this line and replace with above line
+!           phi0 = slat1
             phi  = rlat
 
             sigma = (1. + sind(phi0)) / (1. + sind(phi))               ! eq. 13

@@ -721,7 +721,7 @@ cdis
           return
       endif
 
-      grid_spacing_actual_m = grid_spacing_m / sigma ! grid_spacing_proj_m
+      grid_spacing_actual_m = grid_spacing_proj_m / sigma
 
       return
       end
