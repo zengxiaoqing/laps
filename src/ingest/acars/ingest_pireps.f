@@ -15,6 +15,7 @@
       parameter(max_files = 3000)
       character*255 c_fnames(max_files)
       integer i4times(max_files)
+      character*8 c8_project
 
 !     Output file
       character*13 filename13
@@ -34,6 +35,14 @@
           write (6,*) 'Error getting horizontal domain dimensions'
           go to 999
       endif
+
+      call get_c8_project(c8_project,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting c8_project'
+          go to 999
+      endif
+
+      
 
       call get_laps_cycle_time(ilaps_cycle_time,istatus)
       if(istatus .eq. 1)then
@@ -59,7 +68,14 @@
 !     dir_in = path_to_raw_pirep
 
       call s_len(dir_in,len_dir_in)
-      c_filespec = dir_in(1:len_dir_in)//'*0005r'
+
+
+      if(c8_project .eq. 'WFO')then
+        c_filespec = dir_in(1:len_dir_in)
+      else
+        c_filespec = dir_in(1:len_dir_in)//'*0005r'
+      endif
+
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
@@ -78,10 +94,14 @@
 
 
 !     Loop through /public NetCDF files and choose ones in time window
-      write(6,*)' # of files on /public = ',i_nbr_files_ret
+      write(6,*)' # of files = ',i_nbr_files_ret
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
-          filename_in = dir_in(1:len_dir_in)//a9_time//'0005r'
+          if(c8_project .eq. 'WFO')then
+            filename_in = c_fnames(i)
+          else
+            filename_in = dir_in(1:len_dir_in)//a9_time//'0005r'
+          endif
 !         filename_in = 'test.nc                                 '
 
 !         Test whether we want the NetCDF file for this time
@@ -96,11 +116,25 @@
           else
               write(6,*)' File is in time window ',a9_time,i
               write(6,*)' Input file ',filename_in
+
 !             Read from the NetCDF pirep file and write to the opened PIN file
-              call get_pirep_data(i4time,ilaps_cycle_time,filename_in
+              if(c8_project .eq. 'WFO')then
+                write(6,*)' Beginning AWIPS PIREP ingest - ',filename_in
+                write(6,*)
+                call get_pirep_data_WFO(i4time,ilaps_cycle_time
+     1                                      ,filename_in
      1                                      ,ext
      1                                      ,NX_L,NY_L
      1                                      ,istatus)
+                write(6,*)
+                write(6,*)' End of AWIPS PIREP ingest - ', filename_in
+                write(6,*)
+              else
+                call get_pirep_data(i4time,ilaps_cycle_time,filename_in
+     1                                      ,ext
+     1                                      ,NX_L,NY_L
+     1                                      ,istatus)
+              endif
           endif
       enddo
 

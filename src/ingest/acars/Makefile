@@ -20,6 +20,7 @@ EXE = ingest_aircraft.exe
 SRC=ingest_aircraft.f \
     ingest_pireps.f \
     ingest_pireps_sub.f \
+    ingest_pireps_WFO_sub.f \
     skycover_to_frac.f \
     ingest_acars.f \
     ingest_acars_sub.f \
