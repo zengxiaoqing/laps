@@ -125,18 +125,24 @@ c
 
         endif
 
-	call read_sfc_state(i4time,ext,btime,n_obs_g,n_obs_b,
+        write(6,*)' Calling read_sfc_state...',ext_lso,btime
+
+	call read_sfc_state(i4time,ext_lso,btime,n_obs_g,n_obs_b,
      &         stations_s,provider,lat_s,lon_s,elev_s,
      &         t_s,td_s,rh_s,dd_s,ff_s,
      &         alt,pstn,pmsl,maxstns,istatus)
 
-        call read_surface_sa(infile,maxstns,atime,
+        write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+
+        if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
+            write(6,*)' Calling read_surface_sa...',infile,atime
+            call read_surface_sa(infile,maxstns,atime,
      &         n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
      &         elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,ffg_s,pstn,pmsl,
      &         alt,kloud,ceil,lowcld,cover_a,rad,sfct_s,idp3,      
      &         store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
-
-100     write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+            write(6,*)'     n_obs_b:',n_obs_b,'      n_obs_g:',n_obs_g       
+        endif
 
         if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
             write(6,*)' Too many stations, or no file present'
