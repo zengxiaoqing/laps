@@ -40,6 +40,7 @@ cdis
      1          ,rh_3d_pct                       ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
+     1          ,td_3d_k                         ! Output
      1          ,istatus)                        ! Output
 
 cdoc    Calculate and write out set of 2-D stability grids
@@ -52,8 +53,10 @@ cdoc    Calculate and write out set of 2-D stability grids
         real*4 pres_sfc_pa(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
-!       Local declarations for stability 
+!       Output
         real*4 td_3d_k(NX_L,NY_L,NZ_L)
+
+!       Local declarations for stability 
         real*4 t_sfc_f(NX_L,NY_L)
         real*4 td_sfc_k(NX_L,NY_L)
         real*4 td_sfc_f(NX_L,NY_L)
