@@ -435,28 +435,22 @@ c
       return
       end
 
-      subroutine erase_file(inittime,validtime,dir,ext)
-      integer inittime,validtime, istatus, rename
-      character*(*) dir, ext
-      character*256 filename
-      character*13 fname
-
-      call make_fnam13_lp(inittime,validtime, fname, istatus)
-
-      print*,inittime,validtime, fname
-
-      call s_len(dir,len_dir)
-      if(dir(len_dir:len_dir) .ne. '/') then
-         dir(len_dir:len_dir)='/'
-         len_dir=len_dir+1
-      endif
-      write(filename,*) dir(1:len_dir)//fname//'.'
-      
-      istatus = rename(filename(1:len_dir+15)//ext(1:3)
-     +     ,filename(1:len_dir+15)//'bad')
-      
-      print*,'renamed ',filename(1:len_dir+15)//ext(1:3),
-     +     ' with istatus= ',istatus
-
-      return
-      end
+c     subroutine erase_file(inittime,validtime,dir,ext)
+c     integer inittime,validtime, istatus, rename
+c     character*(*) dir, ext
+c     character*256 filename
+c     character*13 fname
+c     call make_fnam13_lp(inittime,validtime, fname, istatus)
+c     print*,inittime,validtime, fname
+c     call s_len(dir,len_dir)
+c     if(dir(len_dir:len_dir) .ne. '/') then
+c        dir(len_dir:len_dir)='/'
+c        len_dir=len_dir+1
+c     endif
+c     write(filename,*) dir(1:len_dir)//fname//'.'
+c     istatus = rename(filename(1:len_dir+15)//ext(1:3)
+c    +     ,filename(1:len_dir+15)//'bad')
+c     print*,'renamed ',filename(1:len_dir+15)//ext(1:3),
+c    +     ' with istatus= ',istatus
+c     return
+c     end
