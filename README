@@ -77,6 +77,8 @@
          3.3.6 ..................  DERIV
          3.3.7 ..................  ACCUM 
          3.3.8 ..................  BALANCE
+         3.4 ..............  Analysis Post Processing
+         3.4.1 ..................  DPREP
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
 
@@ -2619,6 +2621,17 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
                   off meaning that the ported software does not run qbalpe.exe.
 ********************************************************************************
 ********************************************************************************
+
+------- 3.4  -------------  Analysis Post Processing --------------------------
+
+------ 3.4.1 ---------------------DPREP--------------------------------------
+
+Process: dprep.exe - Does some analysis post processing for model 
+                     initialization
+     (authors: Jim Edwards / Paul Schultz [schultz@fsl.noaa.gov])
+
+Sorry we don't have too much of a writeup for this yet. Please contact the
+authors for additional information.
 
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
