@@ -1,7 +1,16 @@
 
+
+MODULE NAME                                             FILE
+......................                                  ................
+
 main                                                    remap.f
     remap_sub                                              "
         get_longitude                                   netcfdio.f
     remap_process                                       remap_process.f
         read_data_88d                                   readdata.f
             ld_ray                                      ld_ray.f
+
+
+Note: Source code files are mainly in this directory and in
+      'src/lib/radar/remap_ftn'.
+
