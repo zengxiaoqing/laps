@@ -575,6 +575,7 @@ c
      1                                ,smsng                        ! Input
      1                                ,rms_thresh_norm              ! Input
      1                                ,rinst_err                    ! Input
+     1                                ,bad                          ! Input
      1                                ,weight_bkg_const             ! Input
      1                                ,n_fnorm                      ! Input
      1                                ,l_boundary,.true.,.false.    ! Input

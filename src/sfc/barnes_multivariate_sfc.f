@@ -119,6 +119,7 @@
      1                   ,r_missing_data                         ! Input
      1                   ,rms_thresh_norm                        ! Input
      1                   ,rinst_err                              ! Input
+     1                   ,bad                                    ! Input
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,.false.,.true.              ! Input
@@ -136,6 +137,7 @@
      1                   ,r_missing_data                         ! Input
      1                   ,rms_thresh_norm                        ! Input
      1                   ,rinst_err                              ! Input
+     1                   ,bad                                    ! Input
      1                   ,weight_bkg_const                       ! Input
      1                   ,n_fnorm                                ! Input
      1                   ,l_boundary,l_barnes_wide,l_struct_in   ! Input
@@ -281,6 +283,10 @@
      1                     ,l_analyze,l_not_struct_out,rms_thresh ! Input
      1                     ,weight_bkg_const                      ! Input
      1                     ,n_obs_lvl,istatus)                    ! Outputs
+
+        call stats(t_2d,ni,nj)
+
+        write(6,*)' Limit of allowed increment should be ',bad
 
         return
         end
