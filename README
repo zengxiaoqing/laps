@@ -2173,14 +2173,19 @@ located in the .../log/qc subdirectory.
 
 Inputs:
          LSO    surface observations
-	 LGA	Background model on LAPS grid
+                  - or -
+         LSO_QC QC'd surface observations
+
+	 LGB	Background model on LAPS grid
                   - or -
          RSF    Background local model
                   - or -
 	 LSX    (previous hour's LSX)
+                  - or -
+         LWM    (background sfc wind from 3-D analysis - used for wind only)
+
 	 LM1    Soil moisture (for fire wx calc)
          LM2    Snow cover (for fire wx calc)
-         LWM    latest surface winds from 3D wind analysis
 
 Outputs: (Feeds L1S, LBA)
 
