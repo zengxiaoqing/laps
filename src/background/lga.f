@@ -1086,11 +1086,12 @@ c
             do j=1,ny_laps
                do i=1,nx_laps
                   if((abs(ht(i,j,k)) .gt. 100000.) .or.
-     +                 (tp(i,j,k) .gt. 1000.) .or.
-     +                 (tp(i,j,k) .le. 0.) .or.
-     +                 (abs(sh(i,j,k)) .gt. 1.) .or.
-     +                 (abs(uw(i,j,k)) .gt. 150.) .or.
-     +                 (abs(vw(i,j,k)) .gt. 150.))then
+     +                   (ht(i,j,k)  .lt.-3000)  .or.
+     +                   (tp(i,j,k)  .gt. 1000.) .or.
+     +                   (tp(i,j,k)  .le. 0.) .or.
+     +               (abs(sh(i,j,k)) .gt. 1.) .or.
+     +               (abs(uw(i,j,k)) .gt. 150.) .or.
+     +               (abs(vw(i,j,k)) .gt. 150.))then
 c
 c ww may be missing from some models! Don't stop just because of that.
 C    +             .or.(abs(ww(i,j,k)) .gt. 100.) )then
@@ -1318,7 +1319,7 @@ c ---------
             if(pr_sfc(i,j) .lt. missingflag) then
                qsfc(i,j)=ssh2(pr_sfc(i,j)*0.01,
      +                   tp_sfc(i,j)-273.15,
-     +                   sh_sfc(i,j)-273.15,-47.)*0.001
+     +                   sh_sfc(i,j)-273.15,-132.)*0.001
 c              sfcgrid(i,j,kk+4)=qsfc(i,j)
             else
                qsfc(i,j) = missingflag
