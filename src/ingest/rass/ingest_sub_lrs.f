@@ -180,16 +180,16 @@ C
 !       if(.true.)then
             c5_data_interval = '0006o'
             write(6,*)' Using 6 minute data'
+            i4time_desired = (i4time_sys / 360) * 360
         else
             c5_data_interval = '0100o'
             write(6,*)' Using hourly data'
+            i4time_desired = i4time_sys
         endif
         c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
 
 C       Wait for the data
         write(6,*)c_filespec(1:80)
-
-        i4time_desired = i4time_sys
 
         i4_check_interval = 10
         i4_total_wait = 300
