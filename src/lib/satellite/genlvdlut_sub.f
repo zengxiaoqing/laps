@@ -44,6 +44,7 @@ c
 c
 c dimensions for lat/lon
 c
+      character cgrid_fname*10
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
@@ -51,8 +52,13 @@ c
 c ======================== START ==============================
 c Acquiring LAPS latitude and longitude arrays.
 c -------------------------------------------------------------------
-      write(6,*)'Get LAPS lat/lon grid'
-      call get_laps_domain(nx_l,ny_l,'nest7grid',lat,lon,topo,istatus)
+      call find_domain_name(cgrid_fname,istatus)
+      if(istatus.ne.1)then
+         print*,'Error returned: find_domain_name'
+         goto 900
+      endif
+      write(6,*)'Get lat/lon grid'
+      call get_laps_domain(nx_l,ny_l,cgrid_fname,lat,lon,topo,istatus)
       if(istatus.ne.1)Then
          write(6,*)'Error - Unable to get lat/lon data'
          goto 900 
