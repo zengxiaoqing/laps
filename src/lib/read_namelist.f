@@ -110,7 +110,7 @@ c
 c ---------------------------------------------------------
 c
       subroutine mosaic_radar_nl(c_radar_mosaic_type,n_radars,
-     & c_radar_ext,i_window,imosaic,istatus)
+     & c_radar_ext,i_window,imosaic_3d,istatus)
 c
       implicit none
 
@@ -120,13 +120,13 @@ c
       integer    len_dir
       integer    n_radars
       integer    i_window
-      integer    imosaic
+      integer    imosaic_3d
       character  c_radar_mosaic_type*3
       character  c_radar_ext(max_radars_mosaic)*3
       character  nest7grid*150
 
       namelist /radar_mosaic_nl/c_radar_mosaic_type,n_radars,
-     & c_radar_ext,i_window,imosaic
+     & c_radar_ext,i_window,imosaic_3d
 
       istatus = 0
 
