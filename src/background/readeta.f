@@ -123,7 +123,7 @@ c
          count(j)=ndsize
       enddo
       call ncvgt(ncid,31,start,count,ipr,istatus)
-      if(ipr(1).gt.ipr(k)) then 
+      if(ipr(1).gt.ipr(nz)) then 
          print*,'pressure here ',ipr      
          print*,'Pressure data indicates that netcdf format may',
      +           ' have changed'
