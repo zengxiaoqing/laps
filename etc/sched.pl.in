@@ -200,15 +200,19 @@ select(STDOUT); $| = 1;
 
 my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
-
-my $t=gmtime(); print $t." Running purger\n";
+my $t=gmtime(); 
 my $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl ";
-$sys .= "-r " if($opt_r);
-$sys .= "-m $opt_m " if($opt_m);
-$sys .= "-t $opt_t " if($opt_t);
-$sys .= " $LAPS_DATA_ROOT/lapsprd";
 
-system($sys);
+if(! defined $opt_A && ! defined $opt_a){
+    print $t." Running purger\n";
+    $sys .= "-r " if($opt_r);
+    $sys .= "-m $opt_m " if($opt_m);
+    $sys .= "-t $opt_t " if($opt_t);
+    $sys .= " $LAPS_DATA_ROOT/lapsprd";
+
+    system($sys);
+}
+
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 my($nexe);
 my($exe);
