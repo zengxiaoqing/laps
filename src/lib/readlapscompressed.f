@@ -229,7 +229,7 @@ C
      1                     ,data                                        ! O
      1                     ,istatus)                                    ! O
 
-        real*4 array(n_cmprs_max,2)
+        real*4 array(n_cmprs,2)
         real*4 data(ngrids)
 
 !       Setup for first point
