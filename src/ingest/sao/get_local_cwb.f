@@ -83,12 +83,14 @@ c
 	real priority(maxsta)
 c
 	character stn_master(maxsta)*5
-
 c
+c.....  Start.
 c
-c.....  Start here.
+	ibadflag = int(badflag)
 c
-	jstatus = -1  !set to bad to start
+c.....	Set jstatus flag for the local data to bad until we find otherwise.
+c
+	jstatus = -1
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -209,14 +211,24 @@ c
 c
 c.....  Output the data to the storage arrays.
 c
-     	  call s_len(stn_in(i), len)
-	  stations(nn)(1:len) = stn_in(i)(1:len)
+!    	  call s_len(stn_in(i), len)
+!         stations(nn)(1:len) = stn_in(i)(1:len)
+
+ 	  call s_len(stn_in(i), len)
+          if(len .ne. 0)then
+              stations(nn)(1:len) = stn_in(i)(1:len) ! station name
+          else
+              write(6,*)' Warning in get_local_cwb: blank station name.'
+     1                 ,' Assigning name ',i
+              write(stations(nn),101)i
+ 101	      format(i5,15x)
+          endif
 c
 	  atype(nn)(1:6) = 'MESONT'
 c
-	  reptype(nn)(1:6) = '      '
+	  reptype(nn)(1:6) = 'UNK   '
 c
-	  weather(nn)(1:25) = '                        '
+	  weather(nn)(1:25) = 'UNK                     '
 	  provider(nn)(1:11) = 'CWB        '
 	  wmoid(nn) = ibadflag
 c 

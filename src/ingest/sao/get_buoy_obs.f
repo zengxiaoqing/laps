@@ -457,6 +457,7 @@ c
 	 endif
 	 wmoid(nn) = ibadflag                   ! WMO id...not applicable here
 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+         call filter_string(weather(nn))
 c       
 	 store_1(nn,1) = lats(i)                ! station latitude
 	 store_1(nn,2) = lons(i)                ! station longitude
@@ -475,7 +476,13 @@ c
 	 store_4(nn,1) = badflag                ! altimeter setting (mb)
 	 store_4(nn,2) = badflag                ! station pressure (mb)
 	 store_4(nn,3) = mslp(i)                ! MSL pressure (mb)
-	 store_4(nn,4) = float(dpchar(i))       ! 3-h press change character
+
+         if(dpchar(i) .ne. ibadflag)then        ! 3-h press change character
+  	     store_4(nn,4) = float(dpchar(i))       
+         else
+  	     store_4(nn,4) = badflag
+         endif
+
          store_4(nn,5) = dp(i)                  ! 3-h press change (mb)
 c
 	 store_5(nn,1) = vis(i)                 ! visibility (miles)

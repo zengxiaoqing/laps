@@ -1,43 +1,3 @@
-      program    read_metar
-
-      integer maxSkyCover, recNum
-      real badflag
-      parameter (recNum=120,maxSkyCover=10)
-      parameter (badflag=-9999.)
- 
-      character*6 autoStationType(recNum)
-      character*25 presWeather(recNum)
-      character*6 reportType(recNum)
-      character*8 skyCover( maxSkyCover, recNum)
-      character*5 stationName(recNum)
-      integer*4   pressChangeChar(recNum), wmoId(recNum)
-
-      double precision timeObs(recNum)
-
-      real*4 altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
-      real*4 elevation(recNum), latitude(recNum), longitude(recNum)
-      real*4 maxTemp24Hour(recNum), minTemp24Hour(recNum)
-      real*4 precip1Hour(recNum), precip24Hour(recNum)
-      real*4 precip3Hour(recNum), precip6Hour(recNum)
-      real*4 pressChange3Hour(recNum), seaLevelPress(recNum)
-      real*4 skyLayerBase( maxSkyCover, recNum), snowCover(recNum)
-      real*4 tempFromTenths(recNum), temperature(recNum)
-      real*4 visibility(recNum), windDir(recNum), windGust(recNum)
-      real*4 windSpeed(recNum)
-
-      character*17  filename
-      filename="metar00020708.dat"
-      call read_metar_cwb( filename, maxSkyCover, recNum, altimeter,
-     &     autoStationType, dewpoint, dpFromTenths, elevation,
-     &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
-     &     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
-     &     presWeather, pressChange3Hour, pressChangeChar,
-     &     reportType, seaLevelPress, skyCover, skyLayerBase,
-     &     snowCover, stationName, tempFromTenths, temperature,
-     &     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
-     &     badflag, istatus )
-      end
-
       subroutine read_metar_cwb(
      &     filename, maxSkyCover, recNum, altimeter,
      &     autoStationType, dewpoint, dpFromTenths, elevation,
@@ -79,7 +39,7 @@
       integer   recNumm
       parameter ( recNumm=200 )
 
-      integer windSpeedQua(recNumm), windGustQua(recNumm)
+      integer windQua(recNumm), windGustQua(recNumm)
       integer temperatureQua(recNumm), dewpointQua(recNumm)
       integer altimeterQua(recNumm)
       integer i, j, n, i4time
@@ -112,7 +72,7 @@
       do j= 1,recNum
          read ( 1, 10, end=99, err=999 )
      *   hh(j), m2(j), stationName(j), latitude(j),
-     *   longitude(j), windDir(j), windSpeed(j), windSpeedQua(j),
+     *   longitude(j), windDir(j), windSpeed(j), windQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
      *   ( skyCover(i,j), skyLayerBase(i,j), i=1,10 ), temperature(j),
      *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),
@@ -134,7 +94,10 @@ c         -------       read the elevations of all stations      -------
 c      ----------       examing data quality and changing units       ---------
       do j= 1,n
 
-         if ( windSpeedQua(j) .ne. 1 )  windSpeed(j)= badflag
+         if ( windQua(j) .ne. 1 )  then
+            windDir(j)= badflag
+            windSpeed(j)= badflag
+         endif
          if ( windGustQua(j) .ne. 1 )  windGust(j)= badflag
          if ( visibility(j) .eq. -9999. )  visibility(j)= badflag
          if ( precip1Hour(j) .eq. -9.999 )  precip1Hour(j)= badflag
@@ -201,7 +164,7 @@ c               -------      dealing with lacking of data      -------
 999   do j= 1,n
          write(6,*)
      *   hh(j), m2(j), stationName(j), latitude(j), longitude(j),
-     *   windDir(j), windSpeed(j), windSpeedQua(j),
+     *   windDir(j), windSpeed(j), windQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
      *   ( skyCover(i,j), skyLayerBase(i,j), i=1,10), temperature(j),
      *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),

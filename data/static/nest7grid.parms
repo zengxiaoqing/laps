@@ -54,7 +54,6 @@
  vert_rad_prof_cmn=1,     
  silavwt_parm_cmn=0.,     
  toptwvl_parm_cmn=2.,     
- maxobs_cmn=6000,  
  c8_project_common='NIMBUS', 
  /
 c OVERALL LAPS PARAMETERS
@@ -66,6 +65,4 @@ c
 c path_to_soil_2m - this parameter is not yet active since we do not yet
 c                   supply the soil type database. It is there only for
 c                   software testing at this time.
-c
-c maxobs_cmn - max number of stations to be processed in obs_driver.x
 

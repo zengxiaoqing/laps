@@ -472,9 +472,10 @@ c
          if(len .ne. 0)then
              stations(nn)(1:len) = stname(i)(1:len) ! station name
          else
-             write(6,*)' Error in get_local_obs: blank station name'
-             write(6,*)' STOP without writing LSO'
-             stop
+             write(6,*)' Warning in get_local_obs: blank station name.'
+     1                ,' Assigning name ',i
+             write(stations(nn),101)i
+ 101	     format(i5,15x)
          endif
 c
 	 call s_len(pro(i), len)
