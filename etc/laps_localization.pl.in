@@ -87,34 +87,34 @@ if($xdim <=0 || $ydim <= 0){
   exit -1;
 }
 
+#
+# Edit the cdl files for xdim and ydim
+#
+opendir(CDL_DIR,"$LAPS_DATA_ROOT/cdl");
 
-open(CDL,"$LAPS_DATA_ROOT/cdl/nest7grid.cdl");
-@cdl = <CDL>;
-close(CDL);
+@cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 
-open(CDL,">$LAPS_DATA_ROOT/cdl/nest7grid.cdl");
-foreach(@cdl){
-    if(/^\s+x\s*=/){
-	print CDL "      x = $xdim,\n" ;
-    }elsif(/^\s+y\s*=/){
-	print CDL "      y = $ydim,\n" ;
-    }elsif(/^\s+Nx\s*=/){
-	print CDL "      Nx = $xdim;\n" ;
-    }elsif(/^\s+Ny\s*=/){
-	print CDL "      Ny = $ydim;\n";
-    }elsif(/^\s+imax\s*=/){
-	print CDL "      imax = $xdim;\n";
-    }elsif(/^\s+jmax\s*=/){
-	print CDL "      jmax = $ydim;\n" ;
-#    }elsif(/^\s+Dx\s*=/){
-#	print CDL "      Dx = $dx\n";
-#    }elsif(/^\s+Dy\s*=/){
-#	print CDL "      Dy = $dy\n";
-    }else{
-	print CDL $_;
+closedir CDL_DIR;
+
+foreach(@cdl_list){
+    open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
+    @cdl = <CDL>;
+    close(CDL);
+
+    open(CDL,">$LAPS_DATA_ROOT/cdl/$_");
+    foreach(@cdl){
+	if(/^\s+x\s*=/){
+	    print CDL "      x = $xdim,\n" ;
+	}elsif(/^\s+y\s*=/){
+	    print CDL "      y = $ydim,\n" ;
+	}else{
+	    print CDL $_;
+	}
     }
+    close(CDL);
 }
-close(CDL);
+
+
 system("$LAPSROOT/bin/gridgen_model.exe");	
 
 print "gridgen_model.exe complete - building sfc lookup tables\n";
