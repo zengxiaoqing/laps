@@ -66,7 +66,7 @@ C
       character*6 destAirport(recNum)
       character*30 minDate
       character*6 origAirport(recNum)
-      character*6 tailNumber(recNum)
+      character*9 tailNumber(recNum)
       character*30 maxDate
       character*13 flight(recNum)
 
@@ -236,7 +236,7 @@ C
       character*6 destAirport(recNum)
       character*30 minDate
       character*6 origAirport(recNum)
-      character*6 tailNumber(recNum)
+      character*9 tailNumber(recNum)
       character*30 maxDate
       character*13 flight(recNum)
 
