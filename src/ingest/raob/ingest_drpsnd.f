@@ -81,7 +81,8 @@
      1                       ,i4times,i_nbr_files_ret,istatus)
 
       elseif(c8_drpsnd_format(1:3) .eq. 'WFO' .or.
-     1       c8_drpsnd_format(1:3) .eq. 'RSA'      )then
+     1       c8_drpsnd_format(1:3) .eq. 'RSA' .or.
+     1       c8_drpsnd_format(1:3) .eq. 'SND'      )then
           c_filespec = dir_in(1:len_dir_in)
           call get_file_times(c_filespec,max_files,c_fnames
      1                       ,i4times,i_nbr_files_ret,istatus)
@@ -136,6 +137,11 @@
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
               i4_contains_early = 0
               i4_contains_late  = 10800
+
+          elseif(c8_drpsnd_format(1:5) .eq. 'SND')then
+              filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'.snd'       
+              i4_contains_early = 0
+              i4_contains_late  = 0
 
           elseif(c8_drpsnd_format(1:3) .eq. 'WFO')then
               filename13 = cvt_i4time_wfo_fname13(i4times(i))
@@ -222,6 +228,13 @@
 !    1                ,i4time_drpsnd_earliest,i4time_drpsnd_latest
 !    1                ,filename_in,istatus)
 
+              elseif(c8_drpsnd_format(1:3) .eq. 'SND')then
+
+                  write(6,*)' combine_snd_file routine not fully set up'       
+
+!                 Call combine_snd_file
+                  call combine_snd_file(i4times(i),istatus)
+
               elseif(c8_drpsnd_format(1:3) .eq. 'CWB')then
                   call get_drpsnd_data_cwb(i4time_sys, ilaps_cycle_time,       
      ~                 NX_L, NY_L, 
@@ -251,6 +264,59 @@
  999  continue
 
       write(6,*)' End of dropsonde ingest routine'
+
+      return
+      end
+
+      subroutine combine_snd_file(i4time_file,istatus)
+
+      integer MAX_PR, MAX_PR_LEVELS
+      parameter (MAX_PR=100)
+      parameter (MAX_PR_LEVELS=1000)
+
+      real height_m(MAX_PR,MAX_PR_LEVELS)
+      real pressure_mb(MAX_PR,MAX_PR_LEVELS)
+      real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)
+      real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)
+      real dir_deg(MAX_PR,MAX_PR_LEVELS)
+      real spd_mps(MAX_PR,MAX_PR_LEVELS)
+      real temp_c(MAX_PR,MAX_PR_LEVELS)
+      real dewpoint_c(MAX_PR,MAX_PR_LEVELS)
+
+      lun_in = 59
+      n_profiles = 0
+
+!     Call Read Routine for input SND file
+!     call read_snd_data(lun_in,i4time_file,'SND'                      ! I
+!    1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
+!    1                         ,lat,lon,imax,jmax,kmax                 ! I
+!    1                         ,heights_3d                             ! I
+!    1                         ,mode                                   ! I
+!    1                         ,n_profiles                             ! I/O
+!    1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
+!    1                         ,c5_name,i4time_ob_pr,obstype           ! O
+!    1                         ,height_m,pressure_mb                   ! O
+!    1                         ,ob_pr_u_obs,ob_pr_v_obs                ! O
+!    1                         ,ob_pr_t_obs,ob_pr_td_obs               ! O
+!    1                         ,istatus)                               ! O
+
+      do i = 1,n_profiles
+!         Call Write Routine to append to output SND file
+!         call write_snd(lun_out                           ! I
+!    1                    ,maxsnd,maxlvl,nsnd              ! I
+!    1                    ,iwmostanum                      ! I
+!    1                    ,stalat,stalon,staelev           ! I
+!    1                    ,c5_staid,a9time_ob,c8_obstype   ! I
+!    1                    ,nlvl                            ! I
+!    1                    ,height_m                        ! I
+!    1                    ,pressure_mb                     ! I
+!    1                    ,temp_c                          ! I
+!    1                    ,dewpoint_c                      ! I
+!    1                    ,dir_deg                         ! I
+!    1                    ,spd_mps                         ! I
+!    1                    ,istatus)                        ! O
+
+      enddo ! i
 
       return
       end
