@@ -40,7 +40,7 @@ my @LAPS_EXE = qw(lga.exe obs_driver.x
                   ingest_cloud_drift.exe ingest_pireps.exe ingest_acars.exe 
                   ingest_pro.exe ingest_vad.exe
 		  wind.exe 
-                  ingest_lrs.exe ingest_blplrs.exe lvd_sat_ingest.exe 
+                  ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x temp.exe 
                   cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe dprep.exe);

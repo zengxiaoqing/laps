@@ -60,7 +60,7 @@ C
         character*1 qc_char(3)
         data qc_char/'G','B','M'/
         character*6 staname
-        character*1 submode
+C       character*1 submode
         character*6 pltc2_name
         data pltc2_name/'PLTC2 '/
         character*100 fnam_in
@@ -96,7 +96,6 @@ C
         character*100 c_values_req
 
         character*31    ext
-        integer*4       len_dir
         character*6 prof_name(max_profilers)
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
@@ -416,25 +415,25 @@ C           Get the station name for White Sands.  This shows how to get a
 C           character string:  use the number of characters as the number of
 C           array elements.
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staName',1,
-     $                     staname,status)
-            if(status.ne.0)then
-                write(*,*)'bad staName read ',status
-                go to 900
-            endif
-            write(6,*)
-            write(6,*)prof_name(ista),' staName ',staname
+C           CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staName',1,
+C    $                     staname,status)
+C           if(status.ne.0)then
+C               write(*,*)'bad staName read ',status
+C               go to 900
+C           endif
+C           write(6,*)
+C           write(6,*)prof_name(ista),' staName ',staname
 C
 C           Get submode (should be 1 character, A.)
 C
-            CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'submode',1,
-     $                     submode,status)
-            if(status.ne.0)then
-                write(*,*)'bad submode read ',status
-                go to 900
-            endif
-            write(6,*)
-            write(6,*)prof_name(ista),' submode ',submode
+C           CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'submode',1,
+C    $                     submode,status)
+C           if(status.ne.0)then
+C               write(*,*)'bad submode read ',status
+C               go to 900
+C           endif
+C           write(6,*)
+C           write(6,*)prof_name(ista),' submode ',submode
 
           else !
             write(6,*)prof_name(ista),' is outside of domain'

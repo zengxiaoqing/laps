@@ -62,7 +62,6 @@ C
         character*1 qc_char(3)
         data qc_char/'G','B','M'/
         character*6 staname
-        character*1 submode
         character*100 fnam_in
         character*80 dir_in
         character*255 c_filespec
@@ -94,7 +93,6 @@ C
         character*9 asc9_tim,a9time_ob
 
         character*31    ext
-        integer*4       len_dir
 
         character*40 c_vars_req
         character*100 c_values_req

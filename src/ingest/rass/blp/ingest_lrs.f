@@ -44,7 +44,7 @@ cdis
                write (6,*) 'Error getting horizontal domain dimensions'
                go to 999
             endif
-            call ingest_blplrs(i4time,NX_L,NY_L,j_status)
+!           call ingest_blplrs(i4time,NX_L,NY_L,j_status)
 
         else
             write(6,*)' Not on the hour, no blp rass ingest run'

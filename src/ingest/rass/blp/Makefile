@@ -17,8 +17,7 @@ DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a
 
 EXE = ingest_blplrs.exe
 
-SRC= ingest_lrs.f \
-     ingest_sub_blplrs.f
+SRC= ingest_lrs.f 
 
 all: exe
 

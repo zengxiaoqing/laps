@@ -48,7 +48,6 @@ EXEDIRS = src/accum \
           src/ingest/radar/wsiremap/vrc/table \
           src/ingest/raob \
           src/ingest/rass \
-          src/ingest/rass/blp \
           src/ingest/sao \
           src/ingest/satellite/cloud_drift \
           src/ingest/satellite/lvd \

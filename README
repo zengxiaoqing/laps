@@ -577,10 +577,11 @@
 
            The conversion from GRIB to NetCDF is done by FSL's facility 
            division (NIMBUS). You may wish to contact them for more info. 
+           The Atlanta WFO has done this as well, John Snook (FSL) would have 
+           info on this.
            The Seattle WFO (for a time) read this type of GRIB data and filled
            the LAPS arrays directly in a modified lga process, bypassing the 
-           NetCDF step. The Atlanta WFO has done this as well, John Snook (FSL)
-           would have info on this.
+           NetCDF step. 
 
 
      Further information on specific LAPS ingest processes is found in Section

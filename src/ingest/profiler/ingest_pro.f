@@ -44,18 +44,18 @@ cdis
            go to 999
         endif
 
-        if(i4time .eq. (i4time / 3600) * 3600)then
+!       if(i4time .eq. (i4time / 3600) * 3600)then
             write(6,*)
-            write(6,*)' Running WPDN profiler ingest'
+            write(6,*)' Running WPDN (NIMBUS/WFO) profiler ingest'       
             call ingest_pro(i4time,NX_L,NY_L,j_status)
 
-        else
-            write(6,*)' Not on the hour, no WPDN profiler ingest run'       
+!       else
+!           write(6,*)' Not on the hour, no WPDN profiler ingest run'       
 
-        endif
+!       endif
 
         write(6,*)
-        write(6,*)' Running BLP profiler ingest'
+        write(6,*)' Running BLP (NIMBUS) profiler ingest'
         call ingest_blppro(i4time,NX_L,NY_L,j_status)
 
  999    continue
