@@ -268,7 +268,7 @@ c
       implicit none
 
       character*13 fname13
-      character*13 fname13_to_FA_filename
+      character*16 fname13_to_FA_filename
       character*10 fname10,a9_to_yr_a10_time
       character*9  a9_string
       character*4  a4_string
