@@ -64,7 +64,7 @@ cdis
 !       1997 Jun     Ken Dritz       Removed include of 'lapsparms.for'.
 
         include 'barnesob.inc'
-        type (barnesob_qc) obs_point(max_obs)                           
+        type (barnesob) obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
                                                    
@@ -301,7 +301,7 @@ cdis
 !       They have already been vertically remapped
 
         include 'barnesob.inc'
-        type (barnesob_qc) obs_point(max_obs)                           
+        type (barnesob) obs_point(max_obs)                           
 
 !       Profile Observations
 

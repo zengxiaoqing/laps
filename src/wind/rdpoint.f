@@ -59,7 +59,7 @@ cdis
 !******************************************************************************
 
         include 'barnesob.inc'
-        type (barnesob_qc) obs_point(max_obs)                           
+        type (barnesob) obs_point(max_obs)                           
 
 !       LAPS Grid Dimensions
 
