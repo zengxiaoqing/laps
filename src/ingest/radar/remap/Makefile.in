@@ -25,15 +25,11 @@ INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 
 # Define local library name, this houses the module's code
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
-           $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a  
+LAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
+           $(LAPSROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a  
+DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
+             $(LAPSROOT)/src/lib/libdebuglaps.a  
 
 
 OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@

@@ -58,7 +58,7 @@ c
       real rlat_radar,rlon_radar,rheight_radar
       real elev,elev_deg,coselev,azimuth,azi_deg
       real slant_range,sl_range_m,ri,rj,dbz,z
-
+      real cosd
       character*4 c4_radarname
 c
 c     Fill arrays with initial values

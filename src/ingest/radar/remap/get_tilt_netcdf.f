@@ -15,14 +15,23 @@
      1                               ,V_bin_max, Z_bin_max, radial_max
      1                               ,istatus)
 
-!     Non automatic declarations
+!     Argument List
       character*70 filename
       integer V_bin_max, Z_bin_max, radial_max
+      integer V(V_bin_max,radial_max), Z(Z_bin_max,radial_max)
+      integer radialAzim(radial_max)
+
+!     Local
+      integer radialElev(radial_max)
+      integer radialTime(radial_max)
 
 !.............................................................................
 
       include 'netcdf.inc'
       integer V_bin, Z_bin, radial,nf_fid, nf_vid, nf_status
+
+!     include 'remap_constants.dat' ! for debugging only
+!     include 'remap.cmn' ! for debugging only
 C
 C  Open netcdf File for reading
 C
@@ -78,13 +87,13 @@ C
 
 !.....Test whether dimensions of NetCDF file are within bounds...............
 
-      if(V_bin .gt. V_bin_max)then
-          write(6,*)' V_bin > permitted dimensions ',V_bin,V_bin_max
+      if(V_bin .ne. V_bin_max)then
+          write(6,*)' V_bin != permitted dimensions ',V_bin,V_bin_max
           stop
       endif
 
-      if(Z_bin .gt. Z_bin_max)then
-          write(6,*)' Z_bin > permitted dimensions ',Z_bin,Z_bin_max     
+      if(Z_bin .ne. Z_bin_max)then
+          write(6,*)' Z_bin != permitted dimensions ',Z_bin,Z_bin_max     
           stop
       endif
 
@@ -121,6 +130,8 @@ C
      +     esEndTime, esStartTime, radialTime, radarName, siteName)
 C
       include 'netcdf.inc'
+!     include 'remap_constants.dat' ! for debugging only
+!     include 'remap.cmn' ! for debugging only
       integer V_bin, Z_bin, radial,nf_fid, nf_vid, nf_status
       integer V( V_bin, radial), VCP, Z( Z_bin,
      +     radial), elevationNumber, numGatesV, numGatesZ, numRadials

@@ -49,6 +49,8 @@ c     Sizing parameters
 c
       include 'remap_dims.inc'
       include 'remap_buffer.cmn'
+!     include 'remap_constants.dat' ! for debugging only
+!     include 'remap.cmn' ! for debugging only
 
       integer n_ref,n_vel
       parameter (n_ref=(max_ray_tilt*max_ref_gates),

@@ -57,7 +57,7 @@ c
       integer*4 i_last_scan
       integer*4 i_first_scan
       integer*4 i_product_i4time
-      integer*4 NX_L,NY_L,NZ_L
+      integer   NX_L,NY_L,NZ_L
 c
 c     Output variables
 c
@@ -91,6 +91,7 @@ c
 c
 c     Functions
 c
+      real sind
       real height_to_zcoord
       real height_of_level
 c
@@ -129,7 +130,7 @@ c
       real rmax,height_max,rlat_radar,rlon_radar,rheight_radar
       real vknt,rknt,variance
 
-      character*7 c7_radarname
+      character*4 c4_radarname
       character*7 c7_laps_xmit
       character*7 c7_laps_purge
       character*7 c7_laps_sleep
@@ -140,7 +141,7 @@ c
       rlat_radar = rlat_radar_cmn
       rlon_radar = rlon_radar_cmn
       rheight_radar = rheight_radar_cmn
-      c7_radarname = c4_radarname_cmn
+      c4_radarname = c4_radarname_cmn
 
       i_num_finished_products = 0
 
@@ -431,7 +432,7 @@ c
                 IF (grid_ref(i,j,k) .ge. REF_MIN) THEN
 
                   n_ref_grids = n_ref_grids + 1
-                  IF(n_ref_grids .lt. 20)
+                  IF(n_ref_grids .lt. 200)
      :               write(6,835) i,j,k,grid_ref(i,j,k)
   835                format(' Grid loc: ',3(i4,','),'  Refl: ',f6.1)
 
@@ -504,8 +505,8 @@ c     Prepare to write out data
 c
         I4_elapsed = ishow_timer()
 
-        write(6,865) c7_radarname,ext(1:3)
-  865   format(' REMAP_PROCESS > Calling write_laps_data ',a7,2x,a3)       
+        write(6,865) c4_radarname,ext(1:3)
+  865   format(' REMAP_PROCESS > Calling write_laps_data ',a4,2x,a3)       
 c
         var_a(1) = 'REF'
         var_a(2) = 'VEL'
@@ -544,7 +545,7 @@ c
 c
         DO 600 i = 1,i_tilt
           write(6,880) i,v_nyquist_tilt(i)
-  880     format(' i_tilt:',I6,'  v_nyquist_tilt:',F10.2)
+  880     format(' i_tilt:',I6,'  v_nyquist_tilt:',e12.4)
           IF (v_nyquist_tilt(i) .gt. 0.) THEN
             IF (v_nyquist_vol .gt. 0.) THEN
               IF (v_nyquist_tilt(i) .ne. v_nyquist_vol) THEN
@@ -565,11 +566,11 @@ c     Write out header type info into the comment array
 c
         l_unfold=.false.
         write(comment_a(1),888)rlat_radar,rlon_radar,rheight_radar
-     1       ,n_ref_grids,c7_radarname
+     1       ,n_ref_grids,c4_radarname
         write(comment_a(2),889)rlat_radar,rlon_radar,rheight_radar
-     1       ,n_vel_grids_final,c7_radarname,v_nyquist_vol,l_unfold
+     1       ,n_vel_grids_final,c4_radarname,v_nyquist_vol,l_unfold
         write(comment_a(3),888)rlat_radar,rlon_radar,rheight_radar
-     1       ,n_vel_grids_final,c7_radarname
+     1       ,n_vel_grids_final,c4_radarname
 
   888   format(2f9.3,f8.0,i7,a7)
   889   format(2f9.3,f8.0,i7,a7,e12.4,l2)
@@ -581,8 +582,16 @@ c
 
         I4_elapsed = ishow_timer()
 
-        call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,
+        if(.true.)then
+            call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
      1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
+
+        else ! Single level of data (as per WFO)
+!           call put_laps_vrc(i_product_i4time,comment_a(1),
+!    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
+!    1               out_array_4d(1,1,1),NX_L,NY_L,NZ_L,istatus)
+
+        endif
 
         I4_elapsed = ishow_timer()
 
@@ -740,3 +749,14 @@ c            ext = 'v01'
         return
         end
 
+
+!       suborutine put_laps_vrc(i_product_i4time,comment_a(1),
+!    1               c4_radarname,rlat_radar,rlon_radar,rheight_radar
+!    1               out_array_4d(1,1,1),NX_L,NY_L,NZ_L,istatus)
+
+!       Get column max reflectivity
+!       call ref_fill_horz()
+!       call put_laps_2d()           ! Except how do we handle radar subdir?
+
+!       return
+!       end

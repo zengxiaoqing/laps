@@ -136,7 +136,8 @@
       write(6,*)' Radar longitude (degrees): ',radar_lon  
 
 !     call lut_gen FORTRAN routine 
-      call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt,NX_L,NY_L)        
+      call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
+     1                                          ,NX_L,NY_L,NZ_L)
 
       I4_elapsed = ishow_timer()
 

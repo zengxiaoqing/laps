@@ -15,6 +15,8 @@
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
+!      include 'remap_constants.dat' ! for debugging only
+!      include 'remap.cmn' ! for debugging only
 
 c
 c     Determine filename extension
@@ -325,11 +327,11 @@ c     Determine filename extension
                    stop
                endif
                if(data(i) .lt. 0.) then
-                   data(i) = 256. - data(i)
+                   data(i) = 256. + data(i)
                endif
 
                if(data(i) .ne. b_missing_data)then ! Scale
-                   data(i) = (count - 2.)/2.0 - 32.
+                   data(i) = (data(i) - 2.)/2.0 - 32.
                endif
 
            enddo
@@ -344,10 +346,18 @@ c     Determine filename extension
                    stop
                endif
                if(data(i) .lt. 0.) then
-                   data(i) = 256. - data(i)
+                   data(i) = 256. + data(i)
                endif
 
-               if(data(i) .ne. b_missing_data)then ! Scale
+               if(data(i) .eq. 1. .or. data(i) .eq. 0.)then 
+                   data(i) = b_missing_data  ! Invalid Measurement
+               endif
+
+               if(resolutionV .eq. 0.)then ! QC Check
+                   data(i) = b_missing_data
+               endif
+
+               if(data(i) .ne. b_missing_data)then ! Scale valid V
                    data(i) = (data(i) - 129.) * resolutionV
                endif
 
