@@ -143,12 +143,13 @@ cdis
         write(6,*)' Calling read_profiles'
 
         call read_profiles(
-     1            i4time_lapswind,heights_3d,lat_pr,lon_pr,         ! I
+     1            i4time_lapswind,heights_3d,                       ! I
+     1            lat_pr,lon_pr,                                    ! O
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
      1            l_use_raob,                                       ! I
      1            ob_pr_u , ob_pr_v ,                               ! O
-     1            nlevels_obs_pr,                                   ! O
+     1            nlevels_obs_pr,n_profiles,                        ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
      1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
@@ -171,7 +172,7 @@ cdis
      1          ,max_obs,obs_point,nobs_point                     ! I/O
      1          ,lat,lon                                          ! I
      1          ,NX_L,NY_L,NZ_L,MAX_PR                            ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr                     ! I
+     1          ,nlevels_obs_pr,lat_pr,lon_pr,n_profiles          ! I
      1          ,r_missing_data                                   ! I
      1          ,weight_prof                                      ! O
      1          ,l_profiler                                       ! I
@@ -291,7 +292,7 @@ cdis
      1          ,max_obs,obs_point,nobs_point                        ! I/O
      1          ,lat,lon                                             ! I
      1          ,ni,nj,nk,MAX_PR                                     ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr                        ! I
+     1          ,nlevels_obs_pr,lat_pr,lon_pr,n_profiles             ! I
      1          ,r_missing_data                                      ! I
      1          ,weight_prof                                         ! O
      1          ,l_profiler                                          ! I
@@ -322,9 +323,10 @@ cdis
         logical l_profiler
 
         write(6,*)
-        write(6,*)' Subroutine remap_profiles'
+        write(6,*)' Subroutine remap_profiles: # of profiles = '
+     1           ,n_profiles
 
-        do i_pr = 1,MAX_PR
+        do i_pr = 1,n_profiles ! MAX_PR
             if(nlevels_obs_pr(i_pr) .gt. 0)then
                 call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
      1                                  ,lat,lon,ni,nj,ri,rj,istatus)       
