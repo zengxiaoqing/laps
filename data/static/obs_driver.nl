@@ -9,6 +9,7 @@
  itime_before=900,
  itime_after=900,
  maxobs=6000,
+ l_allow_empty_lso=.false.,
  /
 
 c Obs Driver ingest (obs_driver.exe)
@@ -48,4 +49,6 @@ c.....      time_beforeand time_after, respectively.
 c
 c 'maxobs' - max number of surface stations in raw data
 c
-c
+c 'l_allow_empty_lso' - .true. means we will write out an empty LSO file
+c                       even if there are no obs. .false. means no LSO file
+c                       will be written when there are no obs.
