@@ -32,7 +32,7 @@ SRC=analq.f            ghbry.f            lq3_driver1a.f     rsr.f \
     get_rad.f          lh3_compress.f     raob_step.f        writef_sp.f \
     getmapsdf.f        locate.f           read_lvd_3_4_5.f   writefile.f \
     moment_b.f         two_d_stats.f      process_gvap.f     read_gvap.f \
-    analz_gvap.f
+    analz_gvap.f       report_change.f
 
 MAIN=lq3driver.f
 
