@@ -63,93 +63,96 @@ c
       do k=1,nz_laps
          prilaps=1./prlaps(k)
          do j=1,ny
-         do i=1,nx
-          do kk=1,nz_bg
+            do i=1,nx
+               do kk=1,nz_bg
 
 
-            if (prlaps(k) .gt. prbg(i,j,1)) then
-              datmsg = max(htbg(i,j,1),tpbg(i,j,1),shbg(i,j,1),
-     +                  uwbg(i,j,1),vwbg(i,j,1))
-             if (datmsg .lt. msgflg) then
-               fact2=14.642857*alog(prbg(i,j,1)*prilaps)
-               tpvi(i,j,k)=tpbg(i,j,1)+(prlaps(k)-prbg(i,j,1))*0.056
-               htvi(i,j,k)=htbg(i,j,1)+(tpvi(i,j,k)+tpbg(i,j,1))*fact2
-               shvi(i,j,k)=shbg(i,j,1)
-               uwvi(i,j,k)=uwbg(i,j,1)
-               vwvi(i,j,k)=vwbg(i,j,1)
-             else
-               htvi(i,j,k)=msgflg
-               tpvi(i,j,k)=msgflg
-               shvi(i,j,k)=msgflg
-               uwvi(i,j,k)=msgflg
-               vwvi(i,j,k)=msgflg
-             endif
-             goto 10
-            elseif (prlaps(k) .lt. prbg(i,j,nz_bg)) then
-              datmsg = max(htbg(i,j,nz_bg),tpbg(i,j,nz_bg)
-     +          ,shbg(i,j,nz_bg),uwbg(i,j,nz_bg),vwbg(i,j,nz_bg))
-             if (datmsg .lt. msgflg) then
-               fact2=29.285714*alog(prbg(i,j,nz_bg)*prilaps)
-               tpvi(i,j,k)=tpbg(i,j,nz_bg)
-               htvi(i,j,k)=htbg(i,j,nz_bg)+tpbg(i,j,nz_bg)*fact2
-               shvi(i,j,k)=shbg(i,j,nz_bg)
-               uwvi(i,j,k)=uwbg(i,j,nz_bg)
-               vwvi(i,j,k)=vwbg(i,j,nz_bg)
-             else
-               htvi(i,j,k)=msgflg
-               tpvi(i,j,k)=msgflg
-               shvi(i,j,k)=msgflg
-               uwvi(i,j,k)=msgflg
-               vwvi(i,j,k)=msgflg
-             endif
-             goto 10
-            elseif (prlaps(k) .eq. prbg(i,j,kk)) then
-              datmsg = max(htbg(i,j,kk),tpbg(i,j,kk),shbg(i,j,kk),
-     +                  uwbg(i,j,kk),vwbg(i,j,kk))
-             if (datmsg .lt. msgflg) then
-               htvi(i,j,k)=htbg(i,j,kk)
-               tpvi(i,j,k)=tpbg(i,j,kk)
-               shvi(i,j,k)=shbg(i,j,kk)
-               uwvi(i,j,k)=uwbg(i,j,kk)
-               vwvi(i,j,k)=vwbg(i,j,kk)
-             else
-               htvi(i,j,k)=msgflg
-               tpvi(i,j,k)=msgflg
-               shvi(i,j,k)=msgflg
-               uwvi(i,j,k)=msgflg
-               vwvi(i,j,k)=msgflg
-             endif
-             goto 10
-            elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
-     .              prlaps(k) .gt. prbg(i,j,kk+1)) then
-             if (datmsg .lt. msgflg) then
-               fact1=alog(prlaps(k)/prbg(i,j,kk))/
-     .               alog(prbg(i,j,kk+1)/prbg(i,j,kk))
-               fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
-               fact3=(prlaps(k)-prbg(i,j,kk))/
-     .               (prbg(i,j,kk+1)-prbg(i,j,kk))
-               tpvi(i,j,k)=tpbg(i,j,kk)
-     .                    +(tpbg(i,j,kk+1)-tpbg(i,j,kk))*fact1
-               htvi(i,j,k)=htbg(i,j,kk)
-     .                    +(tpvi(i,j,k)+tpbg(i,j,kk))*fact2
-               shvi(i,j,k)=shbg(i,j,kk)
-     .                    +(shbg(i,j,kk+1)-shbg(i,j,kk))*fact3
-               uwvi(i,j,k)=uwbg(i,j,kk)
-     .                    +(uwbg(i,j,kk+1)-uwbg(i,j,kk))*fact3
-               vwvi(i,j,k)=vwbg(i,j,kk)
-     .                    +(vwbg(i,j,kk+1)-vwbg(i,j,kk))*fact3
-             else
-               htvi(i,j,k)=msgflg
-               tpvi(i,j,k)=msgflg
-               shvi(i,j,k)=msgflg
-               uwvi(i,j,k)=msgflg
-               vwvi(i,j,k)=msgflg
-             endif
-             goto 10
-            endif
-          enddo
-10        continue
-         enddo
+                  if (prlaps(k) .gt. prbg(i,j,1)) then
+                     datmsg = max(htbg(i,j,1),tpbg(i,j,1),shbg(i,j,1),
+     +                    uwbg(i,j,1),vwbg(i,j,1))
+                     if (datmsg .lt. msgflg) then
+                        fact2=14.642857*alog(prbg(i,j,1)*prilaps)
+                        tpvi(i,j,k)=tpbg(i,j,1)
+     +                       +(prlaps(k)-prbg(i,j,1))*0.056
+                        htvi(i,j,k)=htbg(i,j,1)
+     +                       +(tpvi(i,j,k)+tpbg(i,j,1))*fact2
+                        shvi(i,j,k)=shbg(i,j,1)
+                        uwvi(i,j,k)=uwbg(i,j,1)
+                        vwvi(i,j,k)=vwbg(i,j,1)
+                     else
+                        htvi(i,j,k)=msgflg
+                        tpvi(i,j,k)=msgflg
+                        shvi(i,j,k)=msgflg
+                        uwvi(i,j,k)=msgflg
+                        vwvi(i,j,k)=msgflg
+                     endif
+                     goto 10
+                  elseif (prlaps(k) .lt. prbg(i,j,nz_bg)) then
+                     datmsg = max(htbg(i,j,nz_bg),tpbg(i,j,nz_bg)
+     +                ,shbg(i,j,nz_bg),uwbg(i,j,nz_bg),vwbg(i,j,nz_bg))
+                     if (datmsg .lt. msgflg) then
+                        fact2=29.285714*alog(prbg(i,j,nz_bg)*prilaps)
+                        tpvi(i,j,k)=tpbg(i,j,nz_bg)
+                        htvi(i,j,k)=htbg(i,j,nz_bg)
+     +                       +tpbg(i,j,nz_bg)*fact2
+                        shvi(i,j,k)=shbg(i,j,nz_bg)
+                        uwvi(i,j,k)=uwbg(i,j,nz_bg)
+                        vwvi(i,j,k)=vwbg(i,j,nz_bg)
+                     else
+                        htvi(i,j,k)=msgflg
+                        tpvi(i,j,k)=msgflg
+                        shvi(i,j,k)=msgflg
+                        uwvi(i,j,k)=msgflg
+                        vwvi(i,j,k)=msgflg
+                     endif
+                     goto 10
+                  elseif (prlaps(k) .eq. prbg(i,j,kk)) then
+                     datmsg = max(htbg(i,j,kk),tpbg(i,j,kk),
+     +                    shbg(i,j,kk),uwbg(i,j,kk),vwbg(i,j,kk))
+                     if (datmsg .lt. msgflg) then
+                        htvi(i,j,k)=htbg(i,j,kk)
+                        tpvi(i,j,k)=tpbg(i,j,kk)
+                        shvi(i,j,k)=shbg(i,j,kk)
+                        uwvi(i,j,k)=uwbg(i,j,kk)
+                        vwvi(i,j,k)=vwbg(i,j,kk)
+                     else
+                        htvi(i,j,k)=msgflg
+                        tpvi(i,j,k)=msgflg
+                        shvi(i,j,k)=msgflg
+                        uwvi(i,j,k)=msgflg
+                        vwvi(i,j,k)=msgflg
+                     endif
+                     goto 10
+                  elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
+     .                    prlaps(k) .gt. prbg(i,j,kk+1)) then
+                     if (datmsg .lt. msgflg) then
+                        fact1=alog(prlaps(k)/prbg(i,j,kk))/
+     .                       alog(prbg(i,j,kk+1)/prbg(i,j,kk))
+                        fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
+                        fact3=(prlaps(k)-prbg(i,j,kk))/
+     .                       (prbg(i,j,kk+1)-prbg(i,j,kk))
+                        tpvi(i,j,k)=tpbg(i,j,kk)
+     .                       +(tpbg(i,j,kk+1)-tpbg(i,j,kk))*fact1
+                        htvi(i,j,k)=htbg(i,j,kk)
+     .                       +(tpvi(i,j,k)+tpbg(i,j,kk))*fact2
+                        shvi(i,j,k)=shbg(i,j,kk)
+     .                       +(shbg(i,j,kk+1)-shbg(i,j,kk))*fact3
+                        uwvi(i,j,k)=uwbg(i,j,kk)
+     .                       +(uwbg(i,j,kk+1)-uwbg(i,j,kk))*fact3
+                        vwvi(i,j,k)=vwbg(i,j,kk)
+     .                       +(vwbg(i,j,kk+1)-vwbg(i,j,kk))*fact3
+                     else
+                        htvi(i,j,k)=msgflg
+                        tpvi(i,j,k)=msgflg
+                        shvi(i,j,k)=msgflg
+                        uwvi(i,j,k)=msgflg
+                        vwvi(i,j,k)=msgflg
+                     endif
+                     goto 10
+                  endif
+               enddo
+ 10            continue
+            enddo
          enddo
       enddo
 c
@@ -209,60 +212,65 @@ c
 c
 c *** Check that all LAPS grid points are within the background data coverage.
 c
-      do j=1,ny_laps
-      do i=1,nx_laps
 c
 c ****** Check for wrapping if a global data set.
 c
-         if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
-     .       bgmodel .eq. 8) then
-            if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
-            if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-            if (gry(i,j) .lt. 1) then
-               gry(i,j)=2.-gry(i,j)
-               grx(i,j)=grx(i,j)-float(nx_bg/2)
+      if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
+     .     bgmodel .eq. 8) then
+         do j=1,ny_laps
+            do i=1,nx_laps
                if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
                if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-            endif
-            if (gry(i,j) .gt. ny_bg) then
-               gry(i,j)=float(2*ny_bg)-gry(i,j)
-               grx(i,j)=grx(i,j)-float(nx_bg/2)
-               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
-               if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-            endif
+               if (gry(i,j) .lt. 1) then
+                  gry(i,j)=2.-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+               if (gry(i,j) .gt. ny_bg) then
+                  gry(i,j)=float(2*ny_bg)-gry(i,j)
+                  grx(i,j)=grx(i,j)-float(nx_bg/2)
+                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+            enddo
+         enddo
 c
 c ****** If not a global data set, then check that LAPS domain is fully
 c           within background domain.
 c
-         else
-            if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
-     .          gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
-            print*,'LAPS gridpoint outside of background data coverage.'
-               print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
-               print*,'   grx, gry:',grx(i,j),gry(i,j)
-               stop 'hinterp'
-            endif
-         endif
-      enddo
-      enddo
+      else
+         do j=1,ny_laps
+            do i=1,nx_laps
+
+               if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
+     .              gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
+          print*,'LAPS gridpoint outside of background data coverage.'
+                  print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
+                  print*,'   grx, gry:',grx(i,j),gry(i,j)
+                  stop 'hinterp'
+               endif
+            enddo
+         enddo
+      endif
 c
 c *** Horizontally interpolate variables.
 c
       do k=1,nz
-      do j=1,ny_laps
-      do i=1,nx_laps
-            call gdtost(htvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),ht(i,j,k),bgmodel)
-            call gdtost(tpvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),tp(i,j,k),bgmodel)
-            call gdtost(shvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),sh(i,j,k),bgmodel)
-            call gdtost(uwvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),uw(i,j,k),bgmodel)
-            call gdtost(vwvi(1,1,k),nx_bg,ny_bg,
-     .                  grx(i,j),gry(i,j),vw(i,j,k),bgmodel)
-      enddo
-      enddo
+         do j=1,ny_laps
+            do i=1,nx_laps
+               call gdtost(htvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),ht(i,j,k),bgmodel)
+               call gdtost(tpvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),tp(i,j,k),bgmodel)
+               call gdtost(shvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),sh(i,j,k),bgmodel)
+               call gdtost(uwvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),uw(i,j,k),bgmodel)
+               call gdtost(vwvi(1,1,k),nx_bg,ny_bg,
+     .              grx(i,j),gry(i,j),vw(i,j,k),bgmodel)
+            enddo
+         enddo
       enddo
 c
       return
@@ -343,11 +351,11 @@ c
       weight=float(newfcst-fcst1)/float(fcst2-fcst1)
 c
       do k=1,nz*5
-      do j=1,ny
-      do i=1,nx
-         gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
-      enddo
-      enddo
+         do j=1,ny
+            do i=1,nx
+               gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
+            enddo
+         enddo
       enddo
 c
 c *** Write out file.
@@ -357,6 +365,8 @@ c
       ihour=newfcst/3600
       write(af,'(2i2.2)') ihour,imin
       print *,'Writing - ',fname//af,'.lga  (Backfill)'
+      comment(1)='LI: '//comment(1)
+
       call write_laps(time1,time1+newfcst,dir,ext,
      .                nx,ny,nz*5,nz*5,var,
      .                ip,lvl_coord,units,comment,gridn,istatus)

@@ -27,9 +27,11 @@ INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 # Define local library name, this houses the module's code
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/bgdata/libbgdata.a \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/bgdata/libdebugbgdata.a \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
 
 OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
@@ -48,9 +50,8 @@ INSTALL=@INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=gridconv.f         lga_interp.f       readnogaps.f       readconus211.f\
-    lga_util.f         readruc40native.f  readruc60native.f  readeta.f \
-    readdgprep.f       readconusnws.f     
+SRC=gridconv.f    lga_interp.f  lga_util.f           \
+    lprep_eta_conusc.f  lprep_ruc2_pub.f
 
 MAIN=lga.f
 
