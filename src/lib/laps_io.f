@@ -214,6 +214,9 @@ cdis
 !       This routine tries to read in the desired variable from all files
 !       having the proper extension, picking the closest one within the
 !       specified time window.
+!
+!       J Smart                 1998
+!       added lvd subdirectory flexibility. Only one 2d satellite field returned.
 
         include 'lapsparms.inc'
 
@@ -237,16 +240,44 @@ cdis
         integer i4times(max_files)
         integer i_selected(max_files)
 
-        call get_directory(ext,directory,len_dir)
-
-        do i = 1,max_files
-            i_selected(i) = 0
-        enddo ! i
+        include 'satellite_dims_lvd.inc'
+        include 'satellite_common_lvd.inc'
 
         do i = 1,31
             if(ext(i:i) .eq. ' ')goto20
         enddo
 20      lenext = i-1
+
+c
+c lvd switch
+c
+        if(ext(1:lenext).eq.'lvd')then
+
+           if(iflag_lvd_common.ne.1)then
+              call config_satellite_lvd(istatus)
+              if(istatus.ne.1)then
+                 return
+              endif
+           endif
+
+           call get_laps_sat(maxsat,c_sat_id,isats
+     1     ,i4time_needed,i4tol,i4time_nearest
+     1     ,var_2d,units_2d,comment_2d,imax,jmax
+     1     ,field_2d,istatus)
+
+           if(istatus.ne.1)then
+              write(6,*)'No data returned from get_laps_sat'
+              return
+           else
+              return
+           endif
+        endif
+
+        call get_directory(ext,directory,len_dir)
+
+        do i = 1,max_files
+            i_selected(i) = 0
+        enddo ! i
 
         c_filespec = directory(1:len_dir)//'*.'//ext(1:lenext)
 
@@ -760,3 +791,201 @@ cdis
 
         return
         end
+c
+c J Smart 3/98.
+c
+        subroutine get_laps_sat(maxsat,c_sat_id,isats
+     1     ,i4time_needed,i4tol,i4time_nearest
+     1     ,var_2d,units_2d,comment_2d,imax,jmax
+     1     ,field_2d,istatus)
+c
+c J. Smart 2-98.
+c This routine acquires satellite data from the lvd subdirectories
+c and makes decisions about what the best data is to return as the
+c 2d field (for var_2d).
+c
+        implicit none
+
+        integer imax,jmax,maxsat
+
+        real*4    field_2d_lvd(imax,jmax,maxsat)
+        real*4    field_2d(imax,jmax)
+
+        integer   isats(maxsat)
+        integer   nsats
+
+        integer   i4time_needed
+        integer   i4time_nearest
+        integer   i4tol
+
+        integer   i
+        integer   istatus 
+
+        character comment_2d*125
+        character units_2d*10
+        character var_2d*3
+        character c_sat_id(maxsat)*6   !satellite id's known to system
+        character csatid(maxsat)*6   !satellite id's returned from routine
+
+        nsats=0
+        do i=1,maxsat
+           if(isats(i).eq.1)then
+              call get_laps_lvd(c_sat_id(i),
+     &                 i4time_needed,i4tol,i4time_nearest,
+     &                 var_2d,units_2d,comment_2d,
+     &                 imax,jmax,field_2d,istatus)
+
+              if(istatus.ne.1)then
+                 write(6,*)'No data returned from get_laps_lvd',
+     &               ' for ',c_sat_id(i)
+              else
+                 nsats=nsats+1
+                 csatid(nsats)=c_sat_id(i)
+                 call move(field_2d,field_2d_lvd(1,1,nsats),imax,jmax)
+              endif
+           endif
+        enddo
+c
+c this section can make decisions about which satellite data
+c to return in the event there is more than 1 2d field.
+c
+        if(nsats.gt.1)then
+           write(6,*)'Found lvd for ',nsats,' satellites'
+           write(6,*)'Returning lvd for ',csatid(1),' only'
+        elseif(nsats.eq.1)then
+           write(6,*)'Found lvd for ',nsats,' satellite'
+        elseif(nsats.le.0)then
+           write(6,*)'No lvd fields found. Return with no data'
+           return
+        endif
+
+c       call move_3dto2d(field_2d_lvd,1,field_2d,imax,jmax,maxsat)
+        call move(field_2d_lvd(1,1,1),field_2d,imax,jmax)
+
+        return
+        end
+c
+c--------------------------------------------------------------------
+c
+        subroutine get_laps_lvd(c_sat_id,
+     1      i4time_needed,i4tol,i4time_nearest
+     1     ,var_2d,units_2d,comment_2d
+     1     ,imax,jmax,field_2d,istatus)
+
+!       Steve Albers            1996
+!       This routine tries to read in the desired variable from all files
+!       having the proper extension, picking the closest one within the
+!       specified time window.
+!
+!       John Smart              1998
+!       Modified original get_laps_2dvar for satellite lvd files in
+!       lvd subdirectories. Subdirectories are those satellites
+!       known to the laps system (see src/include/sat_data_static_lvd.inc,
+!       and data/static/satellite_lvd.nl). As many as 'maxsat' 2d fields
+!       can be returned depending on configuration specified in satellite_lvd.nl
+
+        character*9 asc9_tim
+
+        character*150 dir
+        character*150 satdir
+        character*31  EXT
+
+        character*125 comment_2d
+        character*10 units_2d
+        character*3 var_2d
+        integer*4 LVL_2d
+        character*4 LVL_COORD_2d
+
+        real*4 field_2d(imax,jmax)
+
+        integer max_files
+        parameter (max_files = 600)
+        character*255 c_filespec
+        character*120 c_fnames(max_files)
+        integer i4times(max_files)
+        integer i_selected(max_files)
+        character*6 c_sat_id          !input satellite id's known to system
+
+        ext = 'lvd'
+        call get_directory(ext,dir,ldir)
+
+        do i = 1,31
+            if(ext(i:i) .eq. ' ')goto20
+        enddo
+20      lext = i-1
+
+        do j = 1,max_files
+           i_selected(j) = 0
+        enddo ! j
+
+        satdir=dir(1:ldir)//c_sat_id//'/'
+        lsdir=index(satdir,' ')-1
+        c_filespec = satdir(1:lsdir)//'*.'//ext(1:lext)
+
+        call get_file_times(c_filespec,max_files,c_fnames
+     1                     ,i4times,i_nbr_files_ret,istatus)
+        if(istatus .ne. 1)then
+           write(6,*)'get_laps_2dvar: Bad status returned '
+     1              ,'from get_file_times'
+           return
+        endif
+
+50      i4_diff_min = 999999999
+        do j = 1,i_nbr_files_ret
+           i4_diff = abs(i4times(j) - i4time_needed)
+           if(i_selected(j) .eq. 0)then
+            i4_diff_min = min(i4_diff,i4_diff_min)
+           endif
+        enddo ! j
+
+        if(i4_diff_min .gt. i4tol)then
+           write(6,*)' No remaining files found within time window '
+     1                  ,ext(1:5),var_2d
+           istatus = 0
+           return
+        endif
+
+        do j=1,i_nbr_files_ret
+
+           i4_diff=abs(i4times(j)-i4time_needed)
+           if(i4_diff .eq. i4_diff_min .and. i_selected(j) .eq. 0)then
+
+              i_selected(j) = 1
+              lvl_2d = 0
+              lvl_coord_2d = 'MSL'
+              call make_fnam_lp(i4times(j),asc9_tim,istatus)
+
+              write(6,11)satdir(1:lsdir),asc9_tim,ext(1:5),var_2d
+11            format(' Reading 2d ',a51,1x,a9,1x,a5,1x,a3)
+
+              CALL READ_LAPS_DATA(i4times(j),satdir,EXT,imax
+     1            ,jmax,1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D
+     1            ,COMMENT_2D,field_2d,ISTATUS)
+
+              if(istatus .ne. 1)then
+                 write(6,*)' No field found at ',ext(1:10)
+     1                       ,var_2d,' ',asc9_tim
+                 go to 50
+
+              else   !  istatus = 1, check for missing data
+                 do il = 1,imax
+                 do jl = 1,jmax
+                    if(field_2d(il,jl) .eq. r_missing_data)then
+                            write(6,*)il,jl,
+     1                        ' Missing Data Value Detected in 2D Field'
+                            istatus = -1
+                            return
+                    endif
+                 enddo ! j
+                 enddo ! i
+              endif
+
+              return
+
+           endif ! File is closest unread file to desired time
+
+        enddo ! ith file
+
+        return 
+        end
+
