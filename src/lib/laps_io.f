@@ -1703,17 +1703,17 @@ cdoc    Returns a 3-D grid. Inputs include a directory, ext, and time.
         call get_l_compress_radar(l_compress_radar,istatus)
         if(istatus .ne. 1)return
 
-        if(l_is_vxx(EXT) .and. l_compress_radar)then
+        CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
+     1          kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1          COMMENT_3D,field_3d,ISTATUS)
+
+        if(l_is_vxx(EXT) .and. l_compress_radar 
+     1                   .and. ISTATUS .ne. 1   )then
             write(6,*)' Attempting compressed radar data read'
             call read_laps_compressed(i4time,directory,ext,imax,jmax
      1                               ,kmax,var_3d,lvl_3d,lvl_coord_3d       
      1                               ,units_3d,comment_3d,field_3d
      1                               ,istatus)
-        else ! normal NetCDF read
-            CALL READ_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
-     1          kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
-     1          COMMENT_3D,field_3d,ISTATUS)
-
         endif
 
         comment_2d=comment_3d(1)
