@@ -17,13 +17,13 @@
       integer ivaltimes(ntbg)
       character*4   af,c4valtime,c4_FA_valtime
       character*3   c_fa_ext
-      character*100 bg_names(max_files), fullname
+      character*200 bg_names(max_files), fullname
       integer istatus
       integer i4time_fa
       logical use_analysis
       character*9   fname,wfo_fname13_to_fname9,fname9
       integer i4time_now,bgtime,bgtime2,previous_time,next_time,len
-      integer lenf
+      integer lenf,bg_len
       integer bigint, ihour, n, accepted_files, final_time, lend
       parameter(bigint=2000000000)
       logical print_message
@@ -49,7 +49,7 @@ C
       endif
 
       do bg_files=1,max_files
-         do i=1,100
+         do i=1,200
             bg_names(i:i) = char(0)
          enddo
       enddo
@@ -79,16 +79,20 @@ C
             return
          endif
 
+         print*,'bg_files = ',bg_files
          do i=1,bg_files
             call get_directory_length(names(i),lend)
             call s_len(names(i),lens)
             if(names(i)(lend+1:lend+2).eq.cwb_model_type)then
+c              print*
+c              print*,'i/names(i) = ',i,names(i)(1:lens)
                call i4time_fname_lp(names(i),i4time_fa,istatus)
                call make_fnam_lp(i4time_fa,fname9,istatus)
                lentodot=index(names(i),'.')
                c_fa_ext=names(i)(lentodot+1:lens)
                c4valtime=c4_FA_valtime(c_fa_ext)
                bg_names(i)=fname9//c4valtime
+c              print*,'i/bg_names(i) ',i,bg_names(i)(1:14)
             endif
          enddo
 
@@ -140,6 +144,7 @@ c     print*,'NOTSBN: ',bg_names(bg_files),bg_files
       
       endif
 c      print *,bg_names(bg_files),bg_files
+
       bgtime2=0
       accepted_files = 0
       n=bg_files+1
@@ -152,9 +157,19 @@ c      print *,bg_names(bg_files),bg_files
             if(bg_names(n).eq.rejected_files(i)) goto 40
          enddo
             
-         fname=bg_names(n)(1:9)
-         af=bg_names(n)(10:13)
-         read(af,'(i4)') ihour
+         call s_len(bg_names(n),bg_len)
+	 if(bg_len.gt.0.and.bg_len.le.13)then
+	    if(bg_names(n)(1:1).eq.'0'.or.
+     +         bg_names(n)(1:1).eq.'1'.or.
+     +         bg_names(n)(1:1).eq.'2')then
+                  fname=bg_names(n)(1:9)
+                  af=bg_names(n)(10:13)
+                  read(af,'(i4)',err=888) ihour
+	    else
+	       print*,'Ignoring weird filename ',bg_names(n)(1:bg_len)
+	    endif 
+         endif
+
          call i4time_fname_lp(fname,bgtime,istatus)
 
          if(bgtime.lt.bgtime2.and. .not.use_analysis) then
@@ -262,7 +277,7 @@ c     +     forecast_length,bg_files,n
 
 
       do i=1,accepted_files
-         print*,  names(i)
+         print*,'Accepted name ',i, '= ',names(i)
       enddo
 
       bg_files = accepted_files
@@ -335,6 +350,11 @@ c     NZ = 40
       else
        print*,'Names array is empty. Cannot set nx/ny/nz'
       endif
-      
+      return
+
+888   print*,'Error decoding fname ',fname
+      print*,'n/bg_names(n) = ',n,bg_names(n)
+      print*,'af = ',af
+
       return 
       end

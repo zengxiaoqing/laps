@@ -56,7 +56,7 @@ c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q
 c 
-      t_ref=-47.0
+      t_ref=-132.0
       if(bgmodel.eq.3.or.bgmodel.eq.9)then
          do k=1,kx
             do j=1,jmx
@@ -93,15 +93,16 @@ c              qsfc=0.622*xe/(p_sfc-xe)
 c              qsfc=qsfc/(1.+qsfc)
 c --------------------------------------------------
 
-               if(k.gt.1)then
+               if(k.gt.0)then
 
                   call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
      &,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j),tdsfc(i,j))
 
-               else
-                  tsfc(i,j)=t(i,j,k)
-                  tdsfc(i,j)=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
-     &,t_ref)+273.15
+c              else
+c                 tsfc(i,j)=t(i,j,k)
+c                 tdsfc(i,j)=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
+c    &,t_ref)+273.15
+
                endif
 
             endif
@@ -125,6 +126,7 @@ c
       integer nx,ny,nz
       integer i,j,k            !I, i,j,k coordinate of point for calculation
       integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
+      integer istatus
 
       real*4 p(nz)             !I, pressure of levels
       real*4 ter               !I, Terrain height at i,j
@@ -137,7 +139,7 @@ c
       real*4 tsfc              !I/O input model T, output recomputed T
       real*4 tdsfc             !I/O input model Td, output  recomputed Td
 
-      real*4 qsfc              ! surface spec hum, Input as q or computed internally
+      real*4 qsfc              !I/O surface spec hum, Input as q or computed internally
 
       real*4 tbar
       real*4 td1,td2
@@ -145,44 +147,73 @@ c
       real*4 ssh2,make_ssh,make_td
       real*4 dz,dzp,dtdz
       real*4 tvsfc,tvk,tbarv
+      real*4 r_missing_data
 
       parameter (G         = 9.8,
      &           R         = 287.04)
 c
+c if first guess values are missing data then return missing data
+c
+       call get_r_missing_data(r_missing_data,istatus)
+       if(tsfc.lt.500.0.and.t(i,j,k).lt.500.0.and.
+     .tdsfc.lt.500.0)then
+c
 c first guess psfc without moisture consideration
 c
-       tbar=(tsfc+t(i,j,k))*0.5
-       dz=height(i,j,k)-ter
-       psfc=p(k)*exp(G/(R*tbar)*dz)
 
-       if(bgm.eq.6.or.bgm.eq.8)then      !Td
-          qsfc=ssh2(psfc,tsfc-273.15
+          tbar=(tsfc+t(i,j,k))*0.5
+          dz=height(i,j,k)-ter
+          psfc=p(k)*exp(G/(R*tbar)*dz)
+
+          if(bgm.eq.6.or.bgm.eq.8)then      !Td
+             qsfc=ssh2(psfc,tsfc-273.15
      &                  ,tdsfc-273.15,t_ref)*.001  !kg/kg
 
-       elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then  !RH
-          qsfc=make_ssh(psfc,tsfc-273.15
+          elseif(bgm.eq.3.or.bgm.eq.4.or.bgm.eq.9)then  !RH
+             qsfc=make_ssh(psfc,tsfc-273.15
      &                      ,tdsfc/100.,t_ref)*.001  !kg/kg
 
-       else                              !q
-          qsfc=tdsfc
-       endif
+          else                              !q
+             qsfc=tdsfc
+          endif
 
 c pressure
-       tvsfc=tsfc*(1.+0.608*qsfc)
-       tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
-       tbarv=(tvsfc+tvk)*.5
-       psfc=(p(k)*exp(G/(R*tbarv)*dz))*100.  !return units = pa
+          tvsfc=tsfc*(1.+0.608*qsfc)
+          tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
+          tbarv=(tvsfc+tvk)*.5
+          psfc=(p(k)*exp(G/(R*tbarv)*dz))*100.  !return units = pa
 
+          if(k.gt.1)then
 
-       dzp=height(i,j,k)-height(i,j,k-1)
+             dzp=height(i,j,k)-height(i,j,k-1)
 c temp
-       dtdz=(t(i,j,k-1)-t(i,j,k))/dzp
-       tsfc=t(i,j,k)+dtdz*dz
+             dtdz=(t(i,j,k-1)-t(i,j,k))/dzp
+             tsfc=t(i,j,k)+dtdz*dz
 
 c dew point temp
-       td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.,t_ref)
-       td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.,t_ref)
-       tdsfc=td2+((td1-td2)/dzp)*dz+273.15
+             td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.,t_ref)
+             td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
+     .,t_ref)
+             tdsfc=td2+((td1-td2)/dzp)*dz+273.15
 c
+          else
+
+             dzp=height(i,j,k+1)-height(i,j,k)
+             td2=make_td(p(k),t(i,j,k)-273.15
+     &,q(i,j,k)*1000.,t_ref)+273.15
+             td1=make_td(p(k+1),t(i,j,k+1)-273.15
+     &,q(i,j,k+1)*1000.,t_ref)+273.15
+             dtdz=(t(i,j,k)-t(i,j,k+1))/dzp
+             tsfc=t(i,j,k)+dtdz*dz
+             tbar=(tsfc+t(i,j,k))*0.5
+             psfc=p(k)*exp(G/(R*tbar)*dz)
+             tdsfc=td2+((td1-td2)/dzp)*dz
+
+          endif
+       else
+          psfc =r_missing_data
+          tsfc =r_missing_data
+          tdsfc=r_missing_data
+       endif
        return
        end

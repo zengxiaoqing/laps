@@ -1,12 +1,12 @@
       subroutine lprep_ruc2_hybrid(nx,ny,nz,ht,pr,sh,uw,vw,th,usfc,vsfc,
-     +     tsfc,prsfc,shsfc,gproj)
+     +     tsfc,prsfc,shsfc,htsfc,gproj)
       implicit none
       include 'bgdata.inc'
       integer nx,ny,nz,i,j,k
       real ht(nx,ny,nz),pr(nx,ny,nz),sh(nx,ny,nz),uw(nx,ny,nz)
      +     ,vw(nx,ny,nz),th(nx,ny,nz)
       real usfc(nx,ny), vsfc(nx,ny), tsfc(nx,ny), prsfc(nx,ny),
-     +     shsfc(nx,ny)
+     +     shsfc(nx,ny),htsfc(nx,ny)
       real cp,g,r,cpog,kappa
       parameter (cp=1004.686,g=9.80665,r=287.053,cpog=cp/g,kappa=r/cp)
       real tv, psi(nx,ny),psj(nx,ny),lat(nx,ny),lon(nx,ny),
@@ -52,6 +52,7 @@ c
             vsfc(i,j) = vw(i,j,1)
             tsfc(i,j) = th(i,j,1)
             shsfc(i,j) = sh(i,j,1)
+            htsfc(i,j) = ht(i,j,1)
          enddo
       enddo
 

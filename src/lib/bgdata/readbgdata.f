@@ -76,7 +76,7 @@ c
              print*,'Read complete: entering prep'
              call lprep_ruc2_hybrid(nx_bg,ny_bg,nz_bg,htbg,prbg,shbg,
      +            uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc,tpbg_sfc,prbg_sfc,
-     +            shbg_sfc,gproj)
+     +            shbg_sfc,htbg_sfc,gproj)
              print*,'Data prep complete'
           else
              print*,'lprep_ruc not called'
