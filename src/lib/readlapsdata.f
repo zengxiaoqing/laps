@@ -85,7 +85,7 @@ C
 C
       character*4       fcst_hh_mm
       character*9       gtime
-      character*128     file_name
+      character*150     file_name
 C
       common            /prt/flag
 C
@@ -111,6 +111,7 @@ C
 
       call cvt_fname_v3(dir,gtime,fcst_hh_mm,ext,ext_len,
      1                  file_name,fn_length,istatus)
+      if (istatus .eq. error(2)) goto 930
 C
 C **** get actual reftime from gtime...
 C
@@ -154,6 +155,11 @@ C
 999     return
 C
 C ****  Error trapping.
+C
+930     if (flag .ne. 1)
+     1    write (6,*) 'file_name variable too short...read aborted.'
+        istatus=error(2)
+        goto 999
 C
 950     if (flag .ne. 1)
      1    write (6,*) 'Error opening netCDF file...read aborted.'
@@ -227,7 +233,7 @@ C#endif
       error(2)=0
 
 C **** Convert string data so it can be used by C programs
-C ******  find end of dir and add to b_filname
+C ******  find end of dir 
 C
       call s_len(dir,end_dir)
 C
@@ -235,20 +241,30 @@ C ******  find end of ext_dn
 C
       call s_len(ext_dn,end_ext)
 C
+C ******  find end of file_name
+C
+      fn_length = len(file_name)
+C
 C ****  make fortran file_name
 C
 
-      if (ext_dn(1:2) .eq. 'lg' .or.
+      if (end_dir+end_ext+14 .gt. fn_length) then
+        write (6,*) 'Length of dir+file-name exceeds file_name length.'
+        istatus = error(2)
+        goto 999
+      else
+        if (ext_dn(1:2) .eq. 'lg' .or.
      +     ext_dn(1:3).eq.'fua' .or.
      +     ext_dn(1:3).eq.'fsf' .or.
      +     ext_dn(1:3).eq.'ram' .or.
      +     ext_dn(1:3).eq.'rsf') then
-        file_name=dir(1:end_dir)//gtime//fhh//'.'//ext_dn(1:end_ext)
-      else
-        file_name = dir(1:end_dir)//gtime//'.'//ext_dn(1:end_ext)
-      endif
+          file_name=dir(1:end_dir)//gtime//fhh//'.'//ext_dn(1:end_ext)
+        else
+          file_name = dir(1:end_dir)//gtime//'.'//ext_dn(1:end_ext)
+        endif
 
-      call s_len(file_name,fn_length)
+        call s_len(file_name,fn_length)
+      endif
 
 C
 C ****  Return normally.
