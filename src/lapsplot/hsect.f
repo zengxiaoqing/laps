@@ -151,8 +151,6 @@ cdis
         character*4 radar_name,radar_name_a(MAX_RADARS)
         character*31 ext_radar_a(MAX_RADARS)
 
-        real*4 u_3d(NX_L,NY_L,NZ_L) ! WRT True North
-        real*4 v_3d(NX_L,NY_L,NZ_L) ! WRT True North
 !       real*4 omega_3d(NX_L,NY_L,NZ_L)
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
         real*4 grid_ra_vel(NX_L,NY_L,NZ_L,MAX_RADARS)
@@ -165,10 +163,8 @@ cdis
         real*4 tw_sfc_k(NX_L,NY_L)
         real*4 td_2d(NX_L,NY_L)
         real*4 pres_2d(NX_L,NY_L)
-!       real*4 pres_3d(NX_L,NY_L,NZ_L)
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 temp_col_max(NX_L,NY_L)
-        real*4 rh_3d(NX_L,NY_L,NZ_L)
         real*4 pressures_mb(NZ_L)
 
 !       real*4 slwc_int(NX_L,NY_L)
@@ -188,18 +184,9 @@ cdis
         real*4 accum_2d_buf(NX_L,NY_L)
 
 !       Local variables used in
-        real*4 snow_accum_pd(NX_L,NY_L)
-        real*4 snow_rate(NX_L,NY_L) ! M/S
-        real*4 precip_rate(NX_L,NY_L) ! M/S
-        real*4 dbz_2d(NX_L,NY_L)
-        real*4 temp_sfc_k(NX_L,NY_L)
-        real*4 td_sfc_k(NX_L,NY_L)
-        real*4 pres_sta_pa(NX_L,NY_L)
         logical l_mask(NX_L,NY_L)
         integer ipcp_1d(NZ_L)
 
-
-        character cldpcp_type_3d(NX_L,NY_L,NZ_L)
         integer*4 iarg
 
         real*4 cloud_cvr(NX_L,NY_L)
@@ -230,7 +217,7 @@ cdis
         logical lapsplot_pregen,l_precip_pregen,l_pregen,l_radar_read
         data lapsplot_pregen /.true./
 
-        real*4 heights_3d(NX_L,NY_L,NZ_L)
+!       real*4 heights_3d(NX_L,NY_L,NZ_L)
 
         real*4 p_1d_pa(NZ_L)
         real*4 pbe_2d(NX_L,NY_L)
@@ -1312,7 +1299,7 @@ c
                 call get_laps_3dgrid(
      1                   i4time_get,10000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,heights_3d,istatus)
+     1                  ,units_2d,comment_2d,field_3d,istatus)
                 if(istatus .ne. 1)then
                     write(6,*)' Error locating height field'
                     return
@@ -1320,7 +1307,7 @@ c
 
                 call get_radar_ref(i4time_get,100000,i4time_radar,mode
      1            ,.true.,NX_L,NY_L,NZ_L,lat,lon,topo,.true.,.true.
-     1            ,heights_3d
+     1            ,field_3d
      1            ,grid_ra_ref,n_ref
      1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
      1            ,istat_3dref)
@@ -1367,7 +1354,7 @@ c
                 call get_laps_3dgrid(
      1                   i4time_radar_a(i_radar),1000000,i4time_ht,
      1                   NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,heights_3d,istatus)
+     1                  ,units_2d,comment_2d,field_3d,istatus)
 
                 write(6,*)
 
@@ -1375,7 +1362,7 @@ c
 !    1               0,i4_dum
      1               .true.,NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
      1               lat,lon,topo,.true.,.true.,
-     1               heights_3d,
+     1               field_3d,
      1               grid_ra_ref,
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
      1               n_ref_grids,istat_radar_2dref,istat_radar_3dref)
@@ -1583,39 +1570,8 @@ c
                     i4time_hour = (i4time_radar+laps_cycle_time/2)
      1                          /laps_cycle_time * laps_cycle_time
                     call make_fnam_lp(i4time_hour,asc9_tim_r,istatus)
-                    call get_laps_2d(i4time_hour,ext,var_2d
-     1         ,units_2d,comment_2d,NX_L,NY_L,radar_array_adv,istatus)
-
-                else
-
-                    call get_max_ref(grid_ra_ref,NX_L,NY_L,NZ_L,radar_ar
-     1ray)
-
-                    kmax = nint(height_to_zcoord(5000.,istatus))
-
-
-!                   Match the i4time of the wind analysis to the Radar Data
-                    write(6,*)
-                    write(6,*)'    Looking for 3D laps wind data:'
-                    call get_file_time
-     1          (c_filespec,i4time_radar,i4time_3dw)
-                    call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
-
-                    write(6,*)' Using Latest 3D laps data at '
-     1                           ,Asc9_tim_3dw
-                    call get_uv_3d(i4time_3dw,NX_L,NY_L
-     1                          ,kmax,u_3d,v_3d,ext,istatus)
-!                   call mean_wind(u_3d,v_3d,topo,NX_L,NY_L,NZ_L
-!       1               ,dum1_array,dum2_array,dum3_array,idum1_array
-!       1                                               ,umean,vmean,,,istatus)
-                    grid_spacing_m = sqrt(
-     1                 (  lat(1,2) - lat(1,1)                  )**2
-     1               + ( (lon(1,2) - lon(1,1))*cosd(lat(1,1))  )**2
-     1                                  )    * 111317. ! Grid spacing m
-
-                    call advect(umean,vmean,radar_array
-     1                  ,dummy_array,grid_spacing_m,NX_L,NY_L
-     1                  ,radar_array_adv,float(laps_cycle_time),1.,lon)
+                    call get_laps_2d(i4time_hour,ext,var_2d,units_2d
+     1                    ,comment_2d,NX_L,NY_L,radar_array_adv,istatus)       
 
                 endif ! Pregenerated file
 
@@ -1624,7 +1580,7 @@ c
                 call plot_cont(radar_array_adv,1e0,0.,chigh,cint_ref
      1         ,asc9_tim_r,'LAPS Max Reflectivity  1 HR Fcst',
      1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
 !           elseif(c_field .eq. 'nt')then
 !               l_radar_read = .false.
@@ -2518,10 +2474,10 @@ c
 
                     write(6,*)' Reading pregenerated precip type field'
                     ext = 'lty'
-                    call get_laps_2dgrid(i4time_pcp,laps_cycle_time,i4ti
-     1me_nearest,
-     1                  ext,var_2d
-     1        ,units_2d,comment_2d,NX_L,NY_L,field_2d,k_mb,istatus)
+                    call get_laps_2dgrid(i4time_pcp,laps_cycle_time
+     1                    ,i4time_nearest,ext,var_2d
+     1                    ,units_2d,comment_2d,NX_L,NY_L
+     1                    ,field_2d,k_mb,istatus)
 
 !                   Convert from real to byte
                     do i = 1,NX_L
@@ -2536,15 +2492,9 @@ c
                     call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
                     call plot_cldpcp_type(pcp_type_2d
-     1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1         ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
-
-                else
-                    call plot_cldpcp_type(cldpcp_type_3d(1,1,k_level)
-     1         ,asc9_tim,c33_label,c_type,k_level,i_overlay,c_display
-     1         ,lat,lon,idum1_array,'nest7grid'
-     1     ,NX_L,NY_L,laps_cycle_time,jdot)
+     1              ,asc9_tim,c33_label,c_type,k_level,i_overlay
+     1              ,c_display,lat,lon,idum1_array,'nest7grid'
+     1              ,NX_L,NY_L,laps_cycle_time,jdot)
 
                 endif
 
@@ -2553,8 +2503,10 @@ c
                 if(l_precip_pregen)then
 
                   ! Read SFC precip type from lty field
-                    write(6,*)' Reading pregenerated SFC precip type fie
-     1ld ',var_2d
+                    write(6,*)
+     1              ' Reading pregenerated SFC precip type field '
+     1                  ,var_2d      
+
 !                   var_2d was defined earlier in the if block
                     ext = 'lct'
                     call get_laps_2dgrid(i4time_pcp,laps_cycle_time
@@ -2573,38 +2525,6 @@ c
                         pcp_type_2d(i,j) = i4_to_byte(iarg)
                     enddo ! i
                     enddo ! j
-
-                else ! Calculate Precip Type on the Fly
-!                   Read in surface temp data
-                    var_2d = 'T'
-                    ext = 'lsx'
-                    call get_laps_2dgrid(i4time_pcp,laps_cycle_time
-     1                                  ,i4time_temp,
-     1                     ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,temp_2d,0,istatus)
-
-                    if(istatus .ne. 1)then
-                        write(6,*)' LAPS Sfc Temp not available'
-                        goto1200
-                    endif
-
-!                   Read in surface dewpoint data
-                    var_2d = 'TD'
-                    ext = 'lsx'
-                    call get_laps_2d(i4time_pcp,
-     1              ext,var_2d,units_2d,comment_2d,
-     1                          NX_L,NY_L,td_2d,istatus)
-
-                    if(istatus .ne. 1)then
-                        write(6,*)' LAPS Sfc Dewpoint not available'
-                        goto1200
-                    endif
-
-                    call get_sfc_preciptype(pres_2d,temp_2d,td_2d
-     1                                     ,cldpcp_type_3d
-     1                                     ,pcp_type_2d,NX_L,NY_L,NZ_L)       
-
-!                   call make_fnam_lp(i4time_pcp,asc9_tim,istatus)
 
                 endif ! l_precip_pregen
 
@@ -2762,10 +2682,10 @@ c             cint = -1.
                  write(6,*)' Reading rhl / ',var_2d
               endif
 
-              call get_laps_3dgrid
-     1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
-     1          ,ext,var_2d,units_2d,comment_2d
-     1                                  ,rh_3d,istatus)
+              call get_laps_3dgrid(i4time_ref,1000000,i4time_nearest
+     1                            ,NX_L,NY_L,NZ_L
+     1                            ,ext,var_2d,units_2d,comment_2d
+     1                            ,field_3d,istatus)
               if(istatus.ne. 1)then
                  print*,'No plotting for the requested time period'
               else
@@ -2778,15 +2698,7 @@ c             cint = -1.
 
               call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
-!           do i = 1,NX_L
-!           do j = 1,NY_L      
-!               if(rh_3d(i,j,k_level) .eq. r_missing_data)then
-!                  rh_3d(i,j,k_level) = 0.
-!               endif              
-!           enddo ! j
-!           enddo ! i
-
-              call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
+              call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
      1           asc9_tim_t,c33_label,i_overlay,
      1           c_display,'nest7grid',lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2874,13 +2786,13 @@ c             cint = -1.
 
               do i = 1,NX_L
               do j = 1,NY_L
-                rh_3d(i,j,k_level)=make_rh(float(k_mb)
+                field_3d(i,j,k_level)=make_rh(float(k_mb)
      1                         ,temp_3d(i,j,k_level)-273.15
      1                         ,field_3d(i,j,k_level)*1000.,t_ref)*100. ! q_3d
               enddo ! j
               enddo ! i
 
-              call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
+              call plot_cont(field_3d(1,1,k_level),1e0,clow,chigh,cint,       
      1           asc9_tim_t,c33_label,i_overlay,
      1           c_display,'nest7grid',lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -2903,10 +2815,10 @@ c             cint = -1.
             i4time_tol = 0
             var_2d = 'PS'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_nearest,i4time_tol,i4time_neares
-     1t,
-     1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,pres_2d,0,istatus)
+            call get_laps_2dgrid(i4time_nearest,i4time_tol
+     1                          ,i4time_nearest,ext,var_2d
+     1                          ,units_2d,comment_2d,NX_L,NY_L
+     1                          ,pres_2d,0,istatus)
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface Pres Analyses'
      1                  ,' - no hydrostatic heights calculated'
@@ -2915,9 +2827,7 @@ c             cint = -1.
 
             call get_heights_hydrostatic(temp_3d,pres_2d,topo,
      1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_L,NY_L,NZ_L,heights_3d)
-
-!           call get_laps_heights(i4time_ref,temp_3d,heights_3d)
+     1                                  NX_L,NY_L,NZ_L,field_3d)
 
             call mklabel33(k_level,' LAPS Heights    dm',c33_label)
 
@@ -2929,7 +2839,7 @@ c             cint = -1.
 
             call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
 
-            call plot_cont(heights_3d(1,1,k_level),1e1,clow,chigh,cint       
+            call plot_cont(field_3d(1,1,k_level),1e1,clow,chigh,cint       
      1          ,asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1          ,lat,lon,jdot
      1          ,NX_L,NY_L,r_missing_data,laps_cycle_time)
