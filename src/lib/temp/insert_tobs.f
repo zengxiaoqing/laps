@@ -297,7 +297,7 @@ cdis
 !       Read ACARS Temps
         n_obs_before = n_obs
 
-        call get_meso_sao_pirep(dum,dum,MAX_ACARS,istatus)
+        call get_meso_sao_pirep(MAX_SFC,dum,MAX_ACARS,istatus)
         if(istatus .ne. 1)return
 
         call rd_acars_t(i4time,heights_3d,temp_3d                   ! I
@@ -311,6 +311,18 @@ cdis
      1                       ,istatus)                              ! O
 
 !       n_obs = n_obs_before   ! Temporary for testing
+
+        if(.false.)then ! Read in surface obs
+            call rd_sfc_t(i4time,heights_3d,temp_3d                 ! I
+     1                       ,MAX_SFC                               ! I
+     1                       ,n_good_sfc                            ! O
+     1                       ,'dum'                                 ! I
+!    1                       ,u_maps_inc,v_maps_inc                 ! I
+     1                       ,ni,nj,nk                              ! I
+     1                       ,lat,lon,r_missing_data                ! I
+     1                       ,temp_obs,max_obs,n_obs                ! I/O
+     1                       ,istatus)                              ! O
+        endif
 
         write(6,*)' # of obs in data structure (tsnds + acars) = '
      1            ,n_obs
