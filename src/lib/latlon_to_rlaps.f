@@ -196,11 +196,10 @@ cdis
             write(6,*)' latlon_to_uv_ps: ERROR, polat .ne. +90 ',polat      
         endif
 
-        a=polat-rlat
+        a=90.-rlat
+        r = tand(a/2.)      ! Consistent with Haltiner & Williams 1-21
+
         b=180.-rlon+slon
-
-        r = tand(a/2.)
-
         u=r*sind(b)
         v=r*cosd(b)
 
@@ -307,31 +306,31 @@ cdis
             write(6,*)' uv_to_latlon_ps: ERROR, polat .ne. +90 ',polat      
         endif
 
-        dist=sqrt(u**2+v**2)
+        r=sqrt(u**2+v**2)
 
-        if (dist .eq. 0) then
+        if (r .eq. 0) then
             rlat=90.
-            rlon=-90.
+            rlon=0.
 
-        else
-            rlat=atand(dist/2.)
-            rlat=90.-2.*rlat
+        else                           ! From Haltiner & Williams 1-21
+            a=2.* atand(r)
+            rlat=90.- a
 c
             if (u .eq. 0.) then
                 rlon=90.
 
             else
                 if (u .gt. 0.) then
-                    rlon=atand(v/u)
+                    rlon=atand(v/u)      + slon
                 else
-                    rlon=atand(v/u)+180.
+                    rlon=atand(v/u)+180. + slon
                 endif
+
+                rlon=amod(rlon+630.,360.) - 180.
 
             endif
 
         endif
-c
-        rlon=amod(rlon+630.,360.) - 180.
 c
         return
         end
@@ -432,3 +431,131 @@ c
 
         return
         end
+
+
+      subroutine check_domain(lat,lon,ni,nj,grid_spacing_m,intvl
+     1                                                       ,istatus)
+
+!     This routine checks whether the lat/lon grid is consistent with
+!     map projection parameters as processed by latlon_to_rlapsgrid,
+!     and rlapsgrid_to_latlon. The grid size is also checked.
+!     This is a good sanity check of the NetCDF static file, nest7grid.parms,
+!     as well as various grid conversion routines.
+
+!     1997 Steve Albers
+
+      real*4 lat(ni,nj),lon(ni,nj)
+
+      istatus = 1
+      tolerance_m = 1000.
+
+      diff_grid_max = 0.
+
+      write(6,*)
+      write(6,*)' subroutine check_domain: checking latlon_to_rlapsgrid'
+
+      do i = 1,ni,intvl
+      do j = 1,nj,intvl
+          call latlon_to_rlapsgrid(lat(i,j),lon(i,j),lat,lon,ni,nj
+     1                                              ,ri,rj,istat)
+
+          if(istat .ne. 1)return
+
+          diff_gridi = ri - float(i)
+          diff_gridj = rj - float(j)
+          diff_grid = sqrt(diff_gridi**2 + diff_gridj**2)
+          diff_grid_max = max(diff_grid,diff_grid_max)
+          diff_grid_max_m = diff_grid_max * grid_spacing_m
+
+      enddo
+      enddo
+
+      write(6,*)' check_domain: max_diff (gridpoints) = ',diff_grid_max
+      write(6,*)' check_domain: max_diff (approx m)   = '
+     1                                                 ,diff_grid_max_m      
+
+      if(diff_grid_max_m .gt. tolerance_m)then
+          write(6,*)' WARNING: exceeded tolerance in check_domain'
+     1               ,tolerance_m
+          istatus = 0
+      endif
+
+!...........................................................................
+
+      diff_ll_max = 0.
+
+      write(6,*)' Checking rlapsgrid_to_latlon'
+
+      do i = 1,ni,intvl
+      do j = 1,nj,intvl
+          ri = i
+          rj = j
+          call rlapsgrid_to_latlon(ri,rj,lat,lon,ni,nj
+     1                                  ,rlat,rlon,istat)
+
+          if(istat .ne. 1)return
+
+          diff_lli =  rlat - lat(i,j)
+          diff_llj = (rlon - lon(i,j)) * cosd(lat(i,j))
+          diff_ll = sqrt(diff_lli**2 + diff_llj**2)
+          diff_ll_max = max(diff_ll,diff_ll_max)
+          diff_ll_max_m = diff_ll_max * 110000. ! meters per degree
+
+      enddo
+      enddo
+
+      write(6,*)' check_domain: max_diff (degrees) = ',diff_ll_max
+      write(6,*)' check_domain: max_diff (approx m)   = ',diff_ll_max_m
+
+      if(diff_ll_max_m .gt. tolerance_m)then
+          write(6,*)' WARNING: exceeded tolerance in check_domain'
+     1               ,tolerance_m
+          istatus = 0
+      endif
+
+!...........................................................................
+
+      call check_grid_dimensions(ni,nj,istat_dim)
+
+      istatus = istatus * istat_dim
+
+!...........................................................................
+
+!     We can uncomment this after maproj is in library...
+
+      write(6,*)' check_domain: test of latlon_to_xy not yet in place'
+      write(6,*)'               implement this when maproj.f is in lib'       
+
+!     call latlon_to_xy(lat(1,1),lon(1,1),x1,y1)
+!     call latlon_to_xy(lat(2,1),lon(2,1),x2,y2)
+
+!     dist = sqrt((x2-x1)**2 + (y2-y1)**2)
+
+!     write(6,*)'grid_spacing_m according to latlon_to_xy is:',dist
+      
+!...........................................................................
+
+      write(6,*)
+
+      return
+      end
+
+      subroutine check_grid_dimensions(ni,nj,istatus)
+
+      include 'lapsparms.inc'
+
+      istatus = 1
+
+      if(ni .gt. NX_L_MAX)then
+          write(6,*)' ERROR: NX_L > NX_L_MAX', NX_L, NX_L_MAX
+          istatus = 0
+      endif
+
+      if(nj .gt. NY_L_MAX)then
+          write(6,*)' ERROR: NY_L > NY_L_MAX', NY_L, NY_L_MAX
+          istatus = 0
+      endif
+
+      return
+      end
+
