@@ -109,32 +109,34 @@ cdis
         dubase = 2.4
 
         i_low_offset  = -nint(pix_per_km * 1.51 * grid_scale)
-        i_high_offset = i_low_offset + nint(pix_per_km * 3.02 * grid_sca
-     1le)
+        i_high_offset = i_low_offset 
+     1                + nint(pix_per_km * 3.02 * grid_scale)
         dusmall = dubase * pix_per_km/1.65
 
-        size_prof = 3.
-        size_pirep = 3.
-        size_maps = 2.
-        size_vad = 2.
-        size_anl = 0.7
-        size_suw = 1.
-        size_radar = 1.
-        size_meso = 2.
+        size_factor = float(max(imax,jmax)) / 300.
 
+        size_prof = 3.  * size_factor
+        size_pirep = 3. * size_factor
+        size_maps = 2.  * size_factor
+        size_vad = 2.   * size_factor
+        size_anl = 0.7  * size_factor
+        size_suw = 1.   * size_factor
+        size_radar = 1. * size_factor
+        size_meso = 2.  * size_factor
 
         LUN_IN = 5
 
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
 
-        write(6,*)' Plot_obs at ',asc9_tim,': Level ',k_level
+        write(6,*)' Subroutine plot_obs at ',asc9_tim,': Level '
+     1           ,k_level
 
         call setusv_dum(2hIN,201)
 
 !       Plot Radar Obs   *********************************************************************
 
         write(6,95)
-95      format('$ Want Radial Velocities     [y,n,a,<RET>=y] ? ')
+95      format(' Want Radial Velocities     [y,n,a,<RET>=y] ? '$)
         if(l_ask_questions)read(lun_in,211)c_radial
 
         if(c_radial(1:1) .eq. 'n')goto205
@@ -144,14 +146,26 @@ cdis
         c1_plottype = 'y'
 
         if(mode .eq. 1)then
-
             call cv_asc_i4time(asc9_tim,i4time_needed)
 
-            ext = 'v01'
+!            write(6,110)
+!110         format(' Radar #',30x,'? '$)
+!            if(l_ask_questions)read(lun_in,*)i_radar
+
+            if(i_radar .le. 9)then
+                write(ext,151)i_radar
+151             format('v0',i1)
+            else
+                write(ext,152)i_radar
+152             format('v',i2)
+            endif
+
             var_2d = 'VEL'
 
-            call get_laps_3dgrid(i4time_needed,200000000,i4time_found,
-     1          imax,jmax,kmax,ext,var_2d
+            write(6,*)' mode 1, calling get_laps_3dgrid'
+
+            call get_laps_3dgrid(i4time_needed,200000000,i4time_found
+     1          ,imax,jmax,kmax,ext,var_2d
      1          ,units_2d,comment_2d,grid_ra_vel,istatus)
 
             if(istatus.ne.1)goto221
@@ -193,7 +207,7 @@ cdis
 205     call cv_asc_i4time(asc9_tim,i4time)
 
         write(6,210)
-210     format('$ Radar obs  [r, Ret = None]',30x,'? ')    
+210     format(' Derived radar obs  [r, Ret = None]',30x,'? '$)    
         if(l_ask_questions)read(lun_in,211)c_obs_type
 211     format(a1)
 

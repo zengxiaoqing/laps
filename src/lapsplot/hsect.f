@@ -305,7 +305,7 @@ cdis
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
      1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
      1       /
-     1       /'     SFC: [p,tt,td,ws,vv,hu,ta,th,te,ps,vo,mr,mc,dv'
+     1       /'     SFC: [p,pm,ps,tt,td,ws,vv,hu,ta,th,te,vo,mr,mc,dv'       
      1       ,',ha,ma,sp,cs,vs,tw,fw,hi]'
      1       /'          [ob,st] obs plot/station locations'
      1       /
@@ -1123,35 +1123,38 @@ cdis
 
                 var_2d = 'LLR'
                 ext = 'lmt'
-                call get_laps_2dgrid(i4time_hour,laps_cycle_time*100,i4t
-     1ime_lr,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                             ,radar_array,0,istatus)
+                call get_laps_2dgrid(i4time_hour,laps_cycle_time*100
+     1                              ,i4time_lr,ext,var_2d,units_2d
+     1                              ,comment_2d,NX_L,NY_L
+     1                              ,radar_array,0,istatus)
 
                 call make_fnam_lp(i4time_lr,asc9_tim_r,istatus)
 !               call get__low__ref(grid_ra_ref,topo,NX_L,NY_L,NZ_L,radar_array)
 
 !               Display R field
-                call plot_cont(radar_array,1e0,0.,chigh,cint_ref,
-!    1        asc9_tim_r,'LAPS Low Level Reflectivity      ',
-     1        asc9_tim_r,'LAPS Low LVL Reflectivity   (DBZ)',
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(radar_array,1e0,0.,chigh,cint_ref
+     1                        ,asc9_tim_r
+     1                        ,'LAPS Low LVL Reflectivity   (DBZ)'
+     1                        ,i_overlay,c_display,'nest7grid',lat,lon
+     1                        ,jdot,NX_L,NY_L,r_missing_data
+     1                        ,laps_cycle_time)
 
             elseif(c_field .eq. 've')then
                 call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
 
                 write(6,2031)
-2031            format('         Enter Radar #   ',47x,'? '$)
+2031            format('         Enter Radar # (of ones available)  '
+     1                                                    ,28x,'? '$)
                 read(lun,*)i_radar
 
                 call make_fnam_lp(i4time_radar_a(i_radar),asc9_tim_r
      1                                                      ,istatus)
 
-                call plot_cont(grid_ra_vel(1,1,k_level,i_radar),.518,
-     1               clow,chigh,5.,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(grid_ra_vel(1,1,k_level,i_radar),.518
+     1                        ,clow,chigh,5.,asc9_tim_r,c33_label
+     1                        ,i_overlay,c_display,'nest7grid',lat,lon        
+     1                        ,jdot,NX_L,NY_L,r_missing_data
+     1                        ,laps_cycle_time)                          
 
             elseif(c_field .eq. 'vi')then
                 call mklabel33(k_level,'  Radial Vel  (kt) ',c33_label)
@@ -1166,10 +1169,10 @@ cdis
             elseif(c_field .eq. 'rf')then
                 call mklabel33(k_level,'   Reflectivity    ',c33_label)
 
-                call plot_cont(grid_ra_ref(1,1,k_level),1e0,
-     1             0.,chigh,cint_ref,asc9_tim_r,c33_label,
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(grid_ra_ref(1,1,k_level),1e0,0.,chigh
+     1                        ,cint_ref,asc9_tim_r,c33_label,i_overlay
+     1                        ,c_display,'nest7grid',lat,lon,jdot,NX_L        
+     1                        ,NY_L,r_missing_data,laps_cycle_time)
 
             elseif(c_field .eq. 'vl')then ! Do VIL
 
@@ -1193,14 +1196,25 @@ cdis
                 write(6,*)' Calculating VIL'
 !               Call VIL(grid_ra_ref,radar_array)
 
-                call plot_cont(radar_array,1e0,clow,chigh,10.,
-     1        asc9_tim_r,'LAPS DUMMY VIL                   ',
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(radar_array,1e0,clow,chigh,10.
+     1                        ,asc9_tim_r
+     1                        ,'LAPS DUMMY VIL                   '
+     1                        ,i_overlay,c_display,'nest7grid',lat,lon
+     1                        ,jdot
+     1                        ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
 
             elseif(c_field .eq. 'mt')then ! Do Max Tops
+                i4time_hour = (i4time_radar+laps_cycle_time/2)
+     1                          /laps_cycle_time * laps_cycle_time
 
-                call get_maxtops(grid_ra_ref,NX_L,NY_L,NZ_L,radar_array)
+                var_2d = 'LMT'
+                ext = 'lmt'
+                call get_laps_2dgrid(i4time_hour,laps_cycle_time*100
+     1                              ,i4time_lr,ext,var_2d,units_2d
+     1                              ,comment_2d,NX_L,NY_L
+     1                              ,radar_array,0,istatus)
+
+!               call get_maxtops(grid_ra_ref,NX_L,NY_L,NZ_L,radar_array)
 
                 highest_top_m = 0.
 
@@ -1233,11 +1247,12 @@ cdis
 !               Display Max Tops
                 write(6,*)' Displaying Max Tops, cint = '
      1                          ,cont_low,cont_high,cint
-                call plot_cont(radar_array,1e0,cont_low,
-     1            cont_high,cint,asc9_tim_r,
-     1          'LAPS Max Echo Tops    (km MSL)   ',
-     1          i_overlay,c_display,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+                call plot_cont(radar_array,1e0,cont_low
+     1                        ,cont_high,cint,asc9_tim_r
+     1                        ,'LAPS Max Echo Tops    (km MSL)   '
+     1                        ,i_overlay,c_display,'nest7grid',lat,lon
+     1                        ,jdot,NX_L,NY_L,r_missing_data
+     1                        ,laps_cycle_time)
 
             elseif(c_field .eq. 'f1')then ! Fcst Max Reflectivity
 
@@ -2822,26 +2837,32 @@ cdis
             enddo ! j
             enddo ! i
 
-            call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval,asc9_ti
-     1m_t
-     1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
-     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
-     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
+            call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval
+     1                     ,asc9_tim_t,c33_label,c_field,k_level
+     1                     ,i_overlay,c_display,'nest7grid'
+     1                     ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
+     1                     ,NX_L,NY_L,r_missing_data,laps_cycle_time
+     1                     ,jdot)
 
-        elseif(c_type .eq. 'p')then ! 1500m Pressure (or other hight level)
-            var_2d = 'P'
+        elseif(c_type .eq. 'p' .or. c_type .eq. 'pm')then ! 1500m or MSL Pres
+            if(c_type .eq. 'p')then
+                var_2d = 'P'
+                c33_label = 'LAPS 1500m Pressure          (mb)'
+            else
+                var_2d = 'MSL'
+                c33_label = 'LAPS MSL Pressure            (mb)'
+            endif
+
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L,field_2d,0
+     1                          ,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
                 goto1200
             endif
-
-            c33_label = 'LAPS 1500m Pressure          (mb)'
 
             pres_low_mb = 2000.
             pres_high_mb = 0.
@@ -2861,10 +2882,10 @@ cdis
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e+2,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,1e+2,clow,chigh,cint,asc9_tim_t
+     1                    ,c33_label,i_overlay,c_display,'nest7grid'
+     1                    ,lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'ps')then ! Surface Pressure
             var_2d = 'PS'
@@ -3771,7 +3792,7 @@ cdis
                     read(5,*)i_radar
 
                     call plot_obs(k_level,.true.,asc_tim_9(1:7)//'00'
-     1                  ,i_radar,NX_L,NY_L,NZ_L
+     1                  ,i_radar,imax,jmax,kmax
      1                  ,grid_ra_ref,grid_ra_vel,lat,lon,topo,1)
                     return
                 endif

@@ -44,7 +44,7 @@ cdis
 !     du=(imax)/200. * relsize   
 
 !     This tries to keep the same size of barbs relative to the grid points
-      du = 61. / 200.
+      du = relsize
 
       call get_border(imax,jmax,x_1,x_2,y_1,y_2)
       call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))

@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-        subroutine plot_winds_2d(u,v,interval,size
+        subroutine plot_winds_2d(u,v,interval,size_in
      1          ,imax,jmax,lat,lon,r_missing_data)
 
 !       include 'lapsparms.for'
@@ -45,6 +45,8 @@ cdis
 
 !       This variable keeps the barbs away from the boundary
         isize = 0 ! interval + 1
+
+        relsize = 61. / 200.
 
         do j = 1+isize,jmax-isize,interval
         do i = 1+isize,imax-isize,interval
@@ -65,8 +67,8 @@ cdis
                 spd_kt = speed / mspkt
                 call latlon_to_rlapsgrid(alat,alon,lat,lon,imax,jmax
      1                                                  ,ri,rj,istatus)
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                          ,relsize)
 
             endif
 
