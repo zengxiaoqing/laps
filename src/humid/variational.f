@@ -130,6 +130,8 @@ c     parameter list variables
       real :: q_snd(ii,jj,kk)
       real :: weight_snd(ii,jj,kk)
       integer :: raob_switch
+      real, dimension(18)  :: testestrad,testbest
+      character *256 cpath,tpath
 
 
 
@@ -848,6 +850,20 @@ c     cost function data for SND, fill with mixing ratio
                cost_snd_wt(k) = weight_snd(i,j,k)
             enddo
             cost_snd_istatus = raob_switch
+            
+
+ccccccccccccccccccccccccccc  test module cccccccccccccccccccccccccccc
+
+c            cpath = 
+c     1  '/usr/nfs/common/lapb/parallel/laps/data/static/optranlib/'  
+c            tpath = cpath
+
+c            call gen_btemps_rads(kk,cost_t_l,cost_p,cost_tskin,cost_psfc
+c     1           ,cost_data,133,i4time,cost_lat,-95.,12,
+c     1           cpath,tpath,
+c     1           testbest,testestrad)
+
+ccccccccccccccccccccccccccc end test ccccccccccccccccccccccccccccccccc
             
             
 c     executed variational search
