@@ -517,7 +517,8 @@ c SG97  splot 'topography.dat'
         call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
         call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
 
-        INQUIRE(FILE=static_dir(1:len)//'nest7grid.cdl',EXIST=exist)
+        call get_directory('cdl',static_dir,len)
+	INQUIRE(FILE=static_dir(1:len)//'nest7grid.cdl',EXIST=exist)
         if(.not.exist) then
 	   print*,'Could not find file '
      +           ,static_dir(1:len)//'nest7grid.cdl '
