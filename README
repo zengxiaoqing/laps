@@ -560,17 +560,11 @@
         your domain runs outside the available 30" data, and should still be 
         covered by the 10' worldwide data, if available.
 
-                     MAP PROJECTION STATUS / LIMITATIONS
+                MAP PROJECTION FUNCTIONALITY / LIMITATIONS
 
      LAPS runs with the polar stereographic, lambert, and mercator projections.
-   Run-time testing for the various projections is in progress and initial 
-   results are promising. Please let us know of any problems you encounter;
-   the known limitations (which are being worked on) are as follows. 
-
-     The lambert projection is constrained to operate in the northern
-   hemisphere.
-
-     'Lapsplot' has problems with the lambert projection.
+   Please let us know if you encounter any problems; the known limitations 
+   (which are being worked on) are as follows. 
 
      The polar stereographic projection has a pole constrained to be at the
    earth's north geographic pole. Setting the pole to the South Pole or
