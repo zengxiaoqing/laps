@@ -435,21 +435,16 @@ c
                       cldcv(i,j,k) = 1.0
                   endif
 
-                  tb8_calculated_rad = 
-     1                temp_to_rad(temp_grid_point) * cldcv(i,j,k) +
-     1                temp_to_rad(t_gnd_k(i,j))    * (1.-cldcv(i,j,k))       
+                  call get_tb8_fwd(temp_grid_point,t_gnd_k(i,j)         ! I   
+     1                            ,cldcv(i,j,k)                         ! I
+     1                            ,tb8_calculated,istatus)              ! O
 
-                  if(tb8_calculated_rad .lt. 0.)then
-                      write(6,*)' Error, tb8_calculated_rad < 0 '
-     1                                  ,tb8_calculated_rad
-                      write(6,*)'i,j,k,cldcv',i,j,k,cldcv(i,j,k)
-                      write(6,*)'temp_grid_point,t_gnd_k'
-     1                          ,temp_grid_point,t_gnd_k(i,j)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Error in get_tb8_fwd'
+                      write(6,*)'i,j,k',i,j,k
                       istatus = 0
                       return
                   endif
-
-                  tb8_calculated = rad_to_temp(tb8_calculated_rad)
 
                   tb8_calculated_test = temp_grid_point *  cldcv(i,j,k) 
      1                                + t_gnd_k(i,j) * (1.-cldcv(i,j,k))
@@ -1519,6 +1514,8 @@ c
      1                                 ,heights_3d,t_effective,nlyr
      1                                 ,istatus)
 
+!       Forward model for multiple cloud layers
+
         real*4 thresh_cvr
         parameter (thresh_cvr = 0.1)
 
@@ -1648,6 +1645,57 @@ c
                 istatus = 1                
             endif
         endif
+
+        return
+        end
+
+        subroutine correct_cldtop_t_rad(tb8_k,t_gnd_k,cloud_frac_vis      ! I
+     1                                 ,istat_vis_potl                    ! I
+     1                                 ,cldtop_temp_k,istatus)            ! O
+
+        cldtop_temp_k = tb8_k ! default value
+        istatus = 0
+
+!       Correct the cloud top temperature for thin clouds using VIS data
+        if(cloud_frac_vis .ge. 0. .and. cloud_frac_vis .le. 1.
+     1                            .and. istat_vis_potl .eq. 1)then
+            tb8_rad = temp_to_rad(tb8_k)
+            t_gnd_rad = temp_to_rad(t_gnd_k)
+
+            diff = tb8_rad - t_gnd_rad
+            if(diff .lt. 0.)then            
+                diff2 = diff * 1./cloud_frac_vis
+                cldtop_temp_rad = t_gnd_rad + diff2
+                cldtop_temp_k = rad_to_temp(cldtop_temp_rad)
+                istatus = 1                
+            endif
+        endif
+
+        return
+        end
+
+        subroutine get_tb8_fwd(t_ambient_k,t_gnd_k,cldcv               ! I
+     1                        ,tb8_fwd_k,istatus)                      ! O
+
+!       Forward model for single cloud layer
+
+        tb8_calculated_rad = 
+     1                temp_to_rad(t_ambient_k)     * cldcv +
+     1                temp_to_rad(t_gnd_k)         * (1.-cldcv)       
+
+        if(tb8_calculated_rad .lt. 0.)then
+            write(6,*)' Error, tb8_calculated_rad < 0 '
+     1                ,tb8_calculated_rad
+            write(6,*)'cldcv',cldcv
+            write(6,*)'t_ambient_k,t_gnd_k'
+     1                ,t_ambient_k,t_gnd_k
+            istatus = 0
+            return
+        endif
+
+        tb8_fwd_k = rad_to_temp(tb8_calculated_rad)
+
+        istatus = 1
 
         return
         end
