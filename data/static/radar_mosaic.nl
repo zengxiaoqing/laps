@@ -1,6 +1,6 @@
  &radar_mosaic_nl
  c_radar_mosaic_type='vxx',
- n_radars=1,
+ n_radars=2,
  c_radar_ext='v01','v02','v04',
  i_window=2700,
  imosaic_3d=1,
