@@ -2368,6 +2368,8 @@ Outputs:
 </pre>
 Source directory: laps/src/cloud
 
+Parameter file: static/nest7grid.parms 
+
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
            precipitation, and temperature. Weather and Forecasting, 11, 
@@ -2757,6 +2759,8 @@ Outputs:
 				Storm Total Rain/Liquid Pcp   (RTO field)
 </pre>
 Source directory: laps/src/accum
+
+Parameter file: static/nest7grid.parms 
 
 Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            Analysis and Prediction System (LAPS): Analyses of clouds, 
