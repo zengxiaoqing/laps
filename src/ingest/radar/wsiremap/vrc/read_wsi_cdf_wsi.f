@@ -207,7 +207,8 @@ ccc      call c_scan_adjust(image,lines,elems,bad_data_flag)
       do j=1,lines
          do i=1,elems
             if(image(i,j).ne.bad_data_flag) 
-     +           image(i,j)=modulo(image(i,j),16)
+     +           image(i,j)=mod(image(i,j),16)
+cc     +           image(i,j)=modulo(image(i,j),16)
          enddo
       enddo
 
