@@ -113,7 +113,7 @@ cdis
      1         rh_3d_pct(i,j,k) .le. 100.       )then    ! RH in valid range
 
                 t_c = temp_3d(i,j,k)-273.15
-                td_c = dwpt(t_c,rh_pct)
+                td_c = dwpt(t_c,rh_3d_pct(i,j,k))
                 td_3d_k(i,j,k) = td_c + 273.15
 
 !               ew = pres_3d(i,j,k)/100. * sh_3d(i,j,k)
@@ -147,7 +147,8 @@ cdis
         call laps_be(NX_L,NY_L,NZ_L
      1              ,temp_sfc_k,td_sfc_k,pres_sfc_pa
      1              ,temp_3d,td_3d_k,heights_3d,topo   
-     1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d)
+     1              ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
+     1              ,r_missing_data)
 
 !       Fill pres_sfc_mb
         call move(pres_sfc_pa,pres_sfc_mb,NX_L,NY_L)
@@ -220,8 +221,9 @@ cdis
 
 
         subroutine laps_be(ni,nj,nk
-     1  ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
-     1        ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d)
+     1        ,t_sfc_k,td_sfc_k,p_sfc_pa,t_3d_k,td_3d_k,ht_3d_m,topo       
+     1        ,pbe_2d,nbe_2d,si_2d,tt_2d,k_2d,lcl_2d,wb0_2d
+     1        ,r_missing_data)
 
 !       1991    Steve Albers
 !       Returns PBE and NBE in Joules, Parcel is lifted from lowest level
@@ -312,11 +314,24 @@ c       write(6,*)' i = ',i
             si_2d(i,j) = SI
             tt_2d(i,j) = TT
             k_2d(i,j)  = K_INDEX
-            lcl_2d(i,j)= LCL *304.8006            ! KFT to M
-            wb0_2d(i,j)= HWB0*304.8006            ! KFT to M
 
-            IF(i .eq. ni/2 .and. j .eq. nj/2)then
-!           IF(i .eq. i/8*8 .and. j .eq. 12)then
+            if(LCL .ne. r_missing_data)then
+                lcl_2d(i,j) = LCL *304.8006            ! KFT to M
+            else
+                lcl_2d(i,j) = r_missing_data
+            endif
+
+            if(HWB0 .ne. r_missing_data)then
+                wb0_2d(i,j) = HWB0*304.8006            ! KFT to M
+            else
+                wb0_2d(i,j) = r_missing_data
+            endif
+
+!           IF(i .eq. ni/2    .and. j .eq. nj/2)then
+            IF(i .eq. i/10*10 .and. j .eq. nj/2)then
+
+                write(6,*)
+                write(6,*)' Indices at:',i,j
 
                 write(6,*)' n    p         t         td'
      1                   ,'         ht       tdif       be'
