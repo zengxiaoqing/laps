@@ -20,8 +20,8 @@ c
       Real*8        radtodeg
       Real*8        pi
       Real*4        r_res_m
-      Real*4        resscln
-      Real*4        reselev
+c     Real*4        resscln
+c     Real*4        reselev
       Real*8        rl_div
       Real*8        rp_div
 

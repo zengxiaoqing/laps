@@ -22,7 +22,7 @@ C***********************************************************************
 
       INTEGER*4 INTEGRIN   !The input integer that contains the bit string
       REAL*4 REALOUT    !The output floating point number
-      INTEGER*4 INTEGRTEMP  !A temporary integer that contains the swapped
+c     INTEGER*4 INTEGRTEMP  !A temporary integer that contains the swapped
                             !bytes of the input interger INTEGRIN 
 
 C***********************************************************************

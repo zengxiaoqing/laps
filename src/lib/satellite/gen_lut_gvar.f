@@ -75,14 +75,15 @@ c
       Integer     IERR
       Integer     instr
       Integer     i,j,ii,jj
-      Integer     n1,n2,nn,nc
+c     Integer     n1,n2,nn,nc
+      Integer     n1,n2,nc
       Integer     ils,ile
       Integer     nsCycles,nsIncs
       Integer     ewCycles,ewIncs
       Integer     time_spec(2)
       Integer     npoints_out
       Integer     nijout
-      Integer     ispec
+c     Integer     ispec
       Integer     lend
 
       logical     lwrite 
@@ -102,13 +103,13 @@ c
       Integer     jdiff_new
       integer     indx
 
-      Character     filename*255
-      Character     filename_sat*200
+c     Character     filename*255
+c     Character     filename_sat*200
       Character     path*255
       Character     cname*100
-      Character     cdir*100
+c     Character     cdir*100
       Character     table_path*200
-      Character     cmode*10
+c     Character     cmode*10
       character     c_imc(4)*1
       character     ct*3,csattype*3
 c
