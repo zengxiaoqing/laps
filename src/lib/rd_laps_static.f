@@ -21,8 +21,7 @@ C Passed in variables
 C Local variables
 
       character*91   file_name
-      integer*4      i,
-     1               var_len, com_len, unit_len,
+      integer*4      var_len, com_len, unit_len,
      1               ERROR(3),
      1               no_laps_diag,
      1               flag
@@ -119,16 +118,13 @@ C**********************************************************************
 
       integer*4 end_dir, end_dom,
      1          ERROR(2),
-     1          i, j,
      1          status
 
-      integer*4 f_len,length
+      integer*4 f_len
 
       character       dir*(*)       !Directory to read data from
       character       laps_dom_file*(*)
       character*30    dn_laps_dom   !downcase of laps_dom_file
-
-      Logical         space
 
       character*91    file_name
 

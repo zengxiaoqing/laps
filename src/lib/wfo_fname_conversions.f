@@ -143,8 +143,8 @@ c
        character*9  fname9
        integer*4    cvt_wfo_fname13_i4time
        integer*4    i4time
-       INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
-       INTEGER*4 I4TIME_INT_LP
+C      INTEGER*4 INT_FILE(9), I, NYEAR, JDAY, NHOUR, MIN, MONTH, NDAY
+C      INTEGER*4 I4TIME_INT_LP
 
 c
 c first convert wfo filename *13 to filename 'yyjjjhhmm'

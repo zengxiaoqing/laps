@@ -299,7 +299,6 @@ C
      1          KDIM,
      1          NUM_LEVELS,
      1          num_variables,
-     1          start,
      1          ERROR(3),
      1          pos,
      1          ISTATUS                     !OUTPUT

@@ -73,9 +73,7 @@ C
       integer*4 fn_length,
      1          i_reftime,              !UNIX time of data
      1          i_valtime,              !UNIX time of data
-     1          fcst_sec,
      1          flag,                   !Print flag (1 = off)
-     1          i,j,k,kk,
      1          error(3),
      1          called_from,
      1          var_len,
@@ -87,7 +85,6 @@ C
 C
       character*4       fcst_hh_mm
       character*9       gtime
-      character*9       g_reftime
       character*128     file_name
 C
       common            /prt/flag

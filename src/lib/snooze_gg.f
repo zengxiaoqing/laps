@@ -32,7 +32,7 @@ cdis
 
         subroutine snooze_gg(rseconds,istatus)
 
-        character*20 command
+C       character*20 command
 
         itime = nint(rseconds)
 

@@ -79,7 +79,6 @@ C
       integer*4      flag,                 !Print flag (1 = off)
      1               i_reftime,            !UNIX time of data
      1               i_valtime,            !UNIX time of data
-     1               fcst_sec,
      1               error(2),
      1               i,j,n7g_nx, n7g_ny,
      1               fn_length,
@@ -101,7 +100,6 @@ C
 C
       character*4    fcst_hh_mm
       character*9    gtime
-      character*9    g_reftime
       character*128  file_name
       character*128  cdl_path
       character*128  static_path
