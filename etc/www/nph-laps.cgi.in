@@ -268,7 +268,8 @@ if($err == 0) {
 #print "open $IDL_DIR/bin/idl tke-ruc2.idl 2>&1 |\n";
 
 #Write a lapsplot.in file
-$logFile = "$thisDir/lapsplot/lapsplot.in";
+#$logFile = "$thisDir/lapsplot/lapsplot.in";
+$logFile = "$web_root/$ScratchDir/lapsplot.in_$$";
 open(LAPSPLOT,">$logFile") ||
     die "Content-type: text/html\n\nCan't open $logFile: $!\n";
 
@@ -888,6 +889,26 @@ foreach $source (@sources) {
                         printf LAPSPLOT "f\n"; 
                         printf LAPSPLOT "$source\n"; 
                         printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "cld_liq" ){ 
+                        printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "CLD_LIQ" ){ 
+                        printf LAPSPLOT "lsi\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "cld_ice" ){ 
+                        printf LAPSPLOT "ci\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "CLD_ICE" ){ 
+                        printf LAPSPLOT "cii\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n"; 
+                        printf LAPSPLOT "$hhmm\n";
                     }else{ 
                         print "$source $level $field not available\n"; 
                     }
@@ -1022,6 +1043,20 @@ foreach $source (@sources) {
                         printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
 
+                    }elsif("$field" eq "cld_liq" ) { 
+                        printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
+                    }elsif("$field" eq "CLD_LIQ" ) { 
+                        printf LAPSPLOT "lsi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "f\n"; 
+                        printf LAPSPLOT "$source\n";
+                        printf LAPSPLOT "$hhmm\n";
+
                     }elsif("$field" eq "cld_ice" ) { 
                         printf LAPSPLOT "ci\n"; 
                         printf LAPSPLOT "$level\n"; 
@@ -1029,8 +1064,8 @@ foreach $source (@sources) {
                         printf LAPSPLOT "$source\n";
                         printf LAPSPLOT "$hhmm\n";
 
-                    }elsif("$field" eq "cld_liq" ) { 
-                        printf LAPSPLOT "ls\n"; 
+                    }elsif("$field" eq "CLD_ICE" ) { 
+                        printf LAPSPLOT "cii\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "f\n"; 
                         printf LAPSPLOT "$source\n";
@@ -1195,8 +1230,16 @@ foreach $source (@sources) {
                         printf LAPSPLOT "u\n"; 
                         printf LAPSPLOT "b\n"; 
                         printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "U" ) { 
+                        printf LAPSPLOT "ui\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
                     }elsif("$field" eq "v" ) { 
                         printf LAPSPLOT "v\n"; 
+                        printf LAPSPLOT "b\n"; 
+                        printf LAPSPLOT "$hhmm\n";
+                    }elsif("$field" eq "V" ) { 
+                        printf LAPSPLOT "vi\n"; 
                         printf LAPSPLOT "b\n"; 
                         printf LAPSPLOT "$hhmm\n";
                     }else{ 
@@ -1431,6 +1474,16 @@ foreach $source (@sources) {
                             }
                         }
                     } # $obs_sfc 
+
+                }elsif("$level" eq "xsect"){                                                           # Xsect Obs (radar)
+                    if("$field" eq "REFLCT" ) { 
+                        printf LAPSPLOT "rv\n"; 
+                        if("$hhmm" =~ "v"){
+                            printf LAPSPLOT "$hhmm\n"; 
+		        }else{
+                            printf LAPSPLOT "vrz\n"; 
+		        }
+                    }
 
                 }else{                                                                                 # Obs Aloft
                     if("$field" eq "temp" ) { 
@@ -1821,12 +1874,16 @@ foreach $source (@sources) {
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_liq" ){ 
                         printf LAPSPLOT "ls\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "CLD_LIQ" ){ 
                         printf LAPSPLOT "lsi\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_ice" ){ 
                         printf LAPSPLOT "ci\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "CLD_ICE" ){ 
                         printf LAPSPLOT "cii\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_type" ){ 
                         printf LAPSPLOT "tc\n"; 
                     }elsif("$field" eq "cld_cvr" ){ 
@@ -1942,8 +1999,16 @@ foreach $source (@sources) {
                         printf LAPSPLOT "ls\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "CLD_LIQ" ) { 
+                        printf LAPSPLOT "lsi\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_ice" ) { 
                         printf LAPSPLOT "ci\n"; 
+                        printf LAPSPLOT "$level\n"; 
+                        printf LAPSPLOT "a\n"; 
+                    }elsif("$field" eq "CLD_ICE" ) { 
+                        printf LAPSPLOT "cii\n"; 
                         printf LAPSPLOT "$level\n"; 
                         printf LAPSPLOT "a\n"; 
                     }elsif("$field" eq "cld_type" ) { 
@@ -2261,7 +2326,8 @@ if($machine eq "jayhawk"){
 }
 
 if ($wgi_only == 0) {
-    system("$shell $machine -l oplapb $request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir $exedir $laps_data_root $ncarg_root 8 $resolution 1> $request_root/lapsplot/lapsplot.out 2> $request_root/lapsplot/lapsplot.err"); 
+    system("$shell $machine -l oplapb $request_root/lapsplot/lapsplot_gifs.sh $$ $window $request_root/lapsplot $web_root/$ScratchDir/lapsplot.in_$$ $exedir $laps_data_root $ncarg_root 8 $resolution 1> $web_root/$ScratchDir/lapsplot.out_$$ 2> $web_root/$ScratchDir/lapsplot.err_$$"); 
+    system("rm -f $request_root/lapsplot/lapsplot.in; ln -s $web_root/$ScratchDir/lapsplot.in_$$ $request_root/lapsplot/lapsplot.in; rm -f $request_root/lapsplot/lapsplot.out; ln -s $web_root/$ScratchDir/lapsplot.out_$$ $request_root/lapsplot/lapsplot.out; rm -f $request_root/lapsplot/lapsplot.err; ln -s $web_root/$ScratchDir/lapsplot.err_$$ $request_root/lapsplot/lapsplot.err");
     print<<"EOI";
     <p>
     <center>

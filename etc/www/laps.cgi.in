@@ -342,6 +342,8 @@ print <<"EOF";
 <option $selected{'FIREWX'}> FIREWX
 <option $selected{'CLD_CVR'}> <FONT COLOR="#AA0000">CLD_CVR</FONT>
 <option $selected{'CLD_TOP'}> CLD_TOP
+<option $selected{'CLD_LIQ'}> CLD_LIQ
+<option $selected{'CLD_ICE'}> CLD_ICE
 <option $selected{'SAT_12U'}> SAT_12U
 <option $selected{'SAT_11U'}> SAT_11U
 <option $selected{'SAT_WV'}>  SAT_WV
