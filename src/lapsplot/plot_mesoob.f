@@ -68,16 +68,16 @@ cdis
 
 !       Declarations for 'read_sfc_state' call
         real*4 pr_s(maxsta), sr_s(maxsta)
-        character c3_stations_a(maxsta)*3, c8_wx_a(maxsta)*8
+        character c3_stations_a(maxsta)*3
 
 !       Declarations for 'read_surface_sa' call
 !       New arrays for reading in the SAO data from the LSO files
         real*4   ceil(maxsta),lowcld(maxsta),cover_a(maxsta)
      1          ,vis(maxsta)
 
-        Integer*4   kloud(maxsta)
+!       Integer*4   kloud(maxsta)
 
-        character atype(maxsta)*6
+!       character atype(maxsta)*6
 
 !       Declarations for 'read_sfc_precip' call
 	character filetime*9, infile*256, btime*24
@@ -108,7 +108,20 @@ cdis
 
  15         n_obs_b = i-1
 
-        else ! Read LSO or LSO_QC 
+        elseif(c_field(1:2) .eq. 'ov')then ! Read Cloud Obs
+            write(6,*)' Calling read_cloud_obs...'
+            i4time_lso = i4time
+            call read_cloud_obs(i4time,maxsta,                           ! I
+     &            n_obs_b,stations,reptype,                              ! O
+     &            autostntype,                                           ! O
+     &            lat_s,lon_s,elev_s,wx_s,t_s,td_s,vis_s,                ! O
+     &            kloud_s,store_amt,store_hgt,obstime,istatus)           ! O
+
+            write(6,*)'      n_obs_b:',n_obs_b       
+            call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
+            n_obs_g = n_obs_b
+
+        else ! Read LSO or LSO_QC plus SND 
 
             call get_filespec('lso',2,c_filespec,istatus)
             call get_file_time(c_filespec,i4time,i4time_lso)
@@ -147,8 +160,8 @@ cdis
      &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
-     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
-     &         istatus)
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,     
+     &         maxsta,istatus)
             else
               write(6,*)' Calling read_surface_dataqc...',ext_lso
      1                                                 ,asc_tim_9      
@@ -158,23 +171,8 @@ cdis
      &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
      &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
      &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
-     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
-     &         istatus)
-
-            endif
-
-            write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
-
-            if(ext_lso .eq. 'lso')then ! this routine may not yet work for QC obs?
-!               write(6,*)' Calling read_surface_sa...',infile,atime_s
-!               call read_surface_sa(infile,maxsta,atime_s,n_obs_g, ! Not needed
-!    &             n_obs_b,c3_stations_a,reptype,atype,     ! Not needed
-!    &             lat_s,lon_s,elev_s,c8_wx_a,t_s,td_s,     ! Not needed
-!    &             kloud,ceil,lowcld,cover_a,               ! Not needed
-!    &             store_amt,store_hgt,obstime,istatus)     ! Not needed
-
-            else                       ! QC case
-                if(n_obs_g .eq. 0)n_obs_g = n_obs_b         ! Bug recovery
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
+     &         maxsta,istatus)
 
             endif
 
@@ -186,16 +184,15 @@ cdis
                 return
             endif
 
-            if(.true.)then
-	      call read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
-     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
-     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
-     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
-     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
-     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
-     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
-     &         istatus)
-            endif
+            write(6,*)' Calling read_sfc_snd...'
+ 	    call read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
+     &        obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &        lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &        alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &        pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,       
+     &        td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &        sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
+     &        maxsta,istatus)
 
             write(6,*)'     n_obs_g:',n_obs_g,'      n_obs_b:',n_obs_b       
 
@@ -222,7 +219,7 @@ cdis
      1                   ,i_rh_convert       
             endif
 
-        endif ! Mesowx or LSO
+        endif ! Mesowx, Cloud obs, or LSO/SND
 
         size = 0.5
         call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
@@ -301,8 +298,6 @@ cdis
 
 !       Plot Stations
         do i = 1,n_obs_b ! num_sfc
-!           wx_s(i) = c8_wx_a(i)
-
             call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
      1                          ,ni,nj,xsta,ysta,istatus)
 
@@ -360,9 +355,21 @@ cdis
 
                     nlyr = kloud_s(i)
 
-                    if(nlyr .ge. 1)then
+!                   Plot station name
+                    if(nlyr .ge. 1 .or. vis_s(i) .ne. badflag)then
                         CALL PCLOQU(xsta, ysta-du2*3.5, c_staname, 
      1                              charsize,ANGD,CNTR)
+                    endif
+
+                    if(nlyr .ge. 1)then
+                        write(6,*)i,c20_stations(1:min(len_sta+1,20))       
+     1                           ,c_staname,nint(xsta),nint(ysta)
+     1                           ,reptype(i)(1:5),nlyr,vis_s(i)
+     1                           ,store_amt(i,nlyr)
+                    else
+                        write(6,*)i,c20_stations(1:min(len_sta+1,20))       
+     1                           ,c_staname,nint(xsta),nint(ysta)
+     1                           ,reptype(i)(1:5),nlyr,vis_s(i)
                     endif
 
                     pressure = float(nlyr)        ! number of cloud layers
@@ -560,8 +567,8 @@ c
 
         jsize = nint(0.4 * relsize) - 1
 
-        write(6,*)' relsize,du_b,jsize,zoom,obs_size,zoom_eff = '
-     1             ,relsize,du_b,jsize,zoom,obs_size,zoom_eff
+!       write(6,*)' relsize,du_b,jsize,zoom,obs_size,zoom_eff = '
+!    1             ,relsize,du_b,jsize,zoom,obs_size,zoom_eff
 
         call get_border(imax,jmax,x_1,x_2,y_1,y_2)
         call set(x_1,x_2,y_1,y_2,1.,float(imax),1.,float(jmax))
