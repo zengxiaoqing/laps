@@ -41,6 +41,8 @@ c
       real*8        rl_div
       real*8        rp_div
       real*8        radtodeg
+      real*8        degtorad
+      real*4        r4lat,r4lon
       real*4        r_img_res_m
       real*4        rls,rle,res,ree
       real*4        r_thin
@@ -48,6 +50,8 @@ c
       real*4        nepixabs,nelinabs
       real*4        swpixabs,swlinabs
       real*4        sepixabs,selinabs
+      real*4        rmetx,rmety
+      real*4        golonsbp,golatsbp,goalpha
       real*4        r_missing_data
 
       real*8        r8lat,r8lon
@@ -69,24 +73,28 @@ c
       Integer     xres,yres
       Integer     cstatus
       Integer     istatus
+      Integer     gstatus
       Integer     ustatus
       Integer     wstatus
       Integer     IERR
       Integer     instr
       Integer     i,j,ii,jj
 c     Integer     n1,n2,nn,nc
-      Integer     n1,n2,nc
+      Integer     n,n1,n2,nc,nl
       Integer     ils,ile
       Integer     nsCycles,nsIncs
       Integer     ewCycles,ewIncs
       Integer     time_spec(2)
       Integer     npoints_out
       Integer     nijout
-c     Integer     ispec
       Integer     lend
+      Integer     strpix,strscnl,stppix,stpscnl 
+      Integer     reqobstm,decimat
+      Integer     istrbdy1,istrbdy2,istpbdy1,istpbdy2
+      Integer     bepixfc,bescnfc,iwidth,idepth,fsci
 
       logical     lwrite 
-      data lwrite/.false./
+      data lwrite/.true./
 
       Integer     linestart,lineend
       Integer     elemstart,elemend
@@ -102,15 +110,21 @@ c     Integer     ispec
       Integer     jdiff_new
       integer     indx
 
-c     Character     filename*255
+      Real*4      rdum
+      Integer     strtpix,strtline
+      Integer     stoppix,stopline
+
+      Character     cfilename*255
 c     Character     filename_sat*200
       Character     path*255
       Character     cname*100
-c     Character     cdir*100
+      Character     c_afwa_fname*100
+      Character     cdir*200
       Character     table_path*200
 c     Character     cmode*10
       character     c_imc(4)*1
-      character     ct*3,csattype*3
+      character     ct*3,csattype*3,cty*3
+      Character     image_type*2
 c
 c The technique used here is to make a slightly larger domain
 c (1 grid point larger on each side) and use this to compute
@@ -226,96 +240,177 @@ c
 c currently AFWA goespatch is every other pixel and every scan line.
 c use r_thin to adjust appropriately
 c
-      r_thin = 1.0
-      if(csattype.eq.'gwc')r_thin=2.0
-      x_step=x_step*r_thin
+      print*,'Earth Location to line/elem look-up-table: '
+     &,c_sat_id(isat)
+      print*
 
-      ewCycles=i_ewCycles(jtype,isat)
-      ewIncs=i_ewIncs(jtype,isat)
-      nsCycles=i_nsCycles(jtype,isat)
-      nsIncs=i_nsIncs(jtype,isat)
+      if(c_sat_id(isat)(1:4).eq.'goes')then
 
-      rp_div = 4.0*x_step
-      rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
-      if(ct(1:nc).eq.'wv ') then
-         rl_div = 8.0*y_step         !channel 3 = water vapor
-      elseif (ct(1:nc).eq.'vis') then
-         rp_div = x_step             !channel 1 = visible
-         rl_div = y_step
-      endif
+        r_thin = 1.0
+        if(csattype.eq.'gwc')r_thin=2.0
+        x_step=x_step*r_thin
 
-      instr=1          !1=Imager, 2=Sounder
-      pi=3.141592653589793
-      radtodeg=180.d0/pi
+        ewCycles=i_ewCycles(jtype,isat)
+        ewIncs=i_ewIncs(jtype,isat)
+        nsCycles=i_nsCycles(jtype,isat)
+        nsIncs=i_nsIncs(jtype,isat)
 
-      call bcd_to_int(orbAt(12),time_spec)
-      time_50 = time50(time_spec)
-      t50_8=time_50
-      t = f_time /60. + 7305. * 24. * 60.
+        rp_div = 4.0*x_step
+        rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
+        if(ct(1:nc).eq.'wv ') then
+          rl_div = 8.0*y_step         !channel 3 = water vapor
+        elseif (ct(1:nc).eq.'vis') then
+          rp_div = x_step             !channel 1 = visible
+          rl_div = y_step
+        endif
 
-      call SETCON(instr,nsCycles,nsIncs,ewCycles,ewIncs)
-      call LMODEL(t,t50_8,OrbAt,imc,SatSubLAT,SatSubLON)
+        instr=1          !1=Imager, 2=Sounder
+        pi=3.141592653589793
+        radtodeg=180.d0/pi
+        degtorad=1./radtodeg
 
-      write(6,*)'Sat Subpoint lat (deg) ',SatSubLAT*radtodeg
-      write(6,*)'Sat Subpoint lon (deg) ',SatSubLON*radtodeg
-      write(6,*)'***********************************'
+        call bcd_to_int(orbAt(12),time_spec)
+        time_50 = time50(time_spec)
+        t50_8=time_50
+        t = f_time /60. + 7305. * 24. * 60.
 
-      cstatus = 0
-      npoints_out = 0
+        call SETCON(instr,nsCycles,nsIncs,ewCycles,ewIncs)
+        call LMODEL(t,t50_8,OrbAt,imc,SatSubLAT,SatSubLON)
 
-      do j=1,nyl2
-      do i=1,nxl2
+        write(6,*)'Sat Subpoint lat (deg) ',SatSubLAT*radtodeg
+        write(6,*)'Sat Subpoint lon (deg) ',SatSubLON*radtodeg
+        write(6,*)'***********************************'
+
+        cstatus = 0
+        npoints_out = 0
+
+        do j=1,nyl2
+        do i=1,nxl2
  
-         r8lat=xlat2(i,j)*(pi/180.d0)
-         r8lon=xlon2(i,j)*(pi/180.d0)
+          r8lat=xlat2(i,j)*degtorad
+          r8lon=xlon2(i,j)*degtorad
 
-         call GPOINT(r8lat,r8lon,ELEV,SCAN,IERR)
-         if(IERR.ne.0)then
+          call GPOINT(r8lat,r8lon,ELEV,SCAN,IERR)
+          if(IERR.ne.0)then
 
 c           write(6,*)'Error computing Elev/Scan in GPOINT from'
 c           write(6,*)'Lat/Lon ', xlat2(i,j),xlon2(i,j)
-            rline(i,j)=-2.
-            rpix(i,j)=-2.
-            cstatus=cstatus-1
+             rline(i,j)=-2.
+             rpix(i,j)=-2.
+             cstatus=cstatus-1
 
-         else
+          else
 
-            call EVSC2L(instr,ELEV,SCAN,RL,RP)
+             call EVSC2L(instr,ELEV,SCAN,RL,RP)
 
 c save corners
-            if(i.eq.1.and.j.eq.1)then
-               swpixabs=RP
-               swlinabs=RL
-            endif
-            if(i.eq.1.and.j.eq.nyl)then
+             if(i.eq.1.and.j.eq.1)then
+                swpixabs=RP
+                swlinabs=RL
+             endif
+             if(i.eq.1.and.j.eq.nyl)then
                nwpixabs=RP
                nwlinabs=RL
-            endif
-            if(i.eq.nxl.and.j.eq.1)then
-               sepixabs=RP
-               selinabs=RL
-            endif
-            if(i.eq.nxl.and.j.eq.nyl)then
-               nepixabs=RP
-               nelinabs=RL
-            endif
+             endif
+             if(i.eq.nxl.and.j.eq.1)then
+                sepixabs=RP
+                selinabs=RL
+             endif
+             if(i.eq.nxl.and.j.eq.nyl)then
+                nepixabs=RP
+                nelinabs=RL
+             endif
 
-            if( idnint(rl).gt.0 .and. idnint(rl).le.25000 .and.
-     &          idnint(rp).gt.0 .and. idnint(rp).le.30000) then
+             if( idnint(rl).gt.0 .and. idnint(rl).le.25000 .and.
+     &           idnint(rp).gt.0 .and. idnint(rp).le.30000) then
 
-               rline(i,j)=(RL-start_line+rl_div)/rl_div 
-               rpix(i,j)= (RP-start_pix+rp_div)/rp_div
+                rline(i,j)=(RL-start_line+rl_div)/rl_div 
+                rpix(i,j)= (RP-start_pix+rp_div)/rp_div
 
-            else
+             else
 
-               npoints_out = npoints_out+1
+                npoints_out = npoints_out+1
 
-            endif
+             endif
 
-         endif
+          endif
 
-      enddo
-      enddo
+        enddo
+        enddo
+
+      else
+c
+c METEOSAT
+c
+        cdir=path_to_raw_sat(kchl,jtype,isat)
+        cty=c_channel_types(kchl,jtype,isat)
+        n=index(cdir,' ')-1
+        cname=c_afwa_fname(c_sat_id(isat),cty)
+        call s_len(cname,nl)
+        cfilename=cdir(1:n)//cname(1:nl)
+
+        call read_gwc_header(cfilename,l_cell_afwa,strtpix,
+     &strtline,stoppix,stopline,reqobstm,image_type,golatsbp,golonsbp,
+     &iwidth,idepth,goalpha,istrbdy1,istrbdy2,istpbdy1,
+     &istpbdy2,bepixfc,bescnfc,fsci,decimat,gstatus)
+        if(gstatus.ne.0)then
+           write(6,*)'Error in read_gwc_header'
+           istatus=-1
+           goto 900
+        endif
+
+        pi=3.141592653589793
+        radtodeg=180.d0/pi
+        degtorad=pi/180.
+
+        do j=1,nyl2
+        do i=1,nxl2
+
+          call fc01_conv_pts_el_to_met_1(golonsbp,
+     &                        stoppix,fsci,
+     &                        strtline,decimat,
+     &                        cty,
+     &                        xlat2(i,j),
+     &                        xlon2(i,j),
+     &                        rmetx,
+     &                        rmety,
+     &                        istatus)
+
+          rline(i,j)=rmety
+          rpix(i,j)= rmetx
+
+          if(istatus.ne.0)then
+             print*,'Error in fc01_conv_pts_el_to_met_1'
+             goto 903
+          endif
+
+        enddo
+        enddo
+
+        print*,'lat/lon/x/y (1,1) = ',xlat2(1,1),xlon2(1,1),
+     .rpix(1,1),rline(1,1)
+        print*,'lat/lon/x/y (nx,1) = ',xlat2(nxl2,1),xlon2(nxl2,1),
+     .rpix(nxl2,1),rline(nxl2,1)
+        print*,'lat/lon/x/y (1,ny) = ',xlat2(1,nyl2),xlon2(1,nyl2),
+     .rpix(1,nyl2),rline(1,nyl2)
+        print*,'lat/lon/x/y (nx,ny) = ',xlat2(nxl2,nyl2),
+     .xlon2(nxl2,nyl2),rpix(nxl2,nyl2),rline(nxl2,nyl2)
+
+      endif
+
+      if(lwrite)then
+
+         print*,'Absolute Satellite Pix/Line Coords:'
+         print*,'-----------------------------------'
+         do j = 1,ny_l,10
+         do i = 1,nx_l,10
+            write(6,*)'i,j,ri,rj: ',i,j,rpix(i,j),rline(i,j)
+         enddo
+         enddo
+
+      endif
+
+c     if(c_sat_id(isat) .eq. 'meteos')goto 777
 
       if(cstatus.lt.0)then
         write(6,*)'WARNING! Some rl/rp values not computed '
@@ -385,8 +480,7 @@ c
          write(6,*)'Line End .ne. Original'
       endif
 c
-c compute ri, rj relative look up table for the block of data surrounding
-c the laps domain.
+c compute ri, rj relative look up table for expanded domain.
 c
       call get_r_missing_data(r_missing_data,istatus)
       if(istatus.ne.1)return
@@ -412,7 +506,7 @@ c
       enddo
       enddo
 c
-c put the rel ri/rj lut into the laps domain size
+c adjust relative ri/rj for laps domain
 c
       ils=idx2/2+1
       ile=idx2/2
@@ -431,7 +525,7 @@ c
          print*,'Found ',nijout,' points outside domain'
       endif
 
-      if(lwrite)then
+777   if(lwrite)then
 
          do j = 1,ny_l,10
          do i = 1,nx_l,10
@@ -468,9 +562,13 @@ c compute image resolution in meters. This done with the original line/pix
 c values since we use gimloc here.
 c ------------------------------------------------------------------------
 c
-      call compute_sat_res_m(rp_div,rl_div,
+      if(csattype.eq.'gvr')then
+         call compute_sat_res_m(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &instr,r_img_res_m,istatus)
+      else
+         r_img_res_m=5000.0
+      endif
 
       if(indx.eq.1)then
 

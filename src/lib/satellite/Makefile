@@ -27,6 +27,7 @@ SRC=bcdtoint.F \
     convert_to_real.f \
     convert_to_double.f \
     expand_domain.f \
+    fc01_conv_pts_el_to_met_1.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
     genlvdlut_sub.f \
