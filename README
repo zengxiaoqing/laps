@@ -1586,7 +1586,7 @@ SATELLITE ALGORITHM:
 Process: deriv.exe - Derived products
      (author: Steve Albers - albers@fsl.noaa.gov)
 
-        These derived products are mostly cloud related.
+        These derived products are mostly cloud and wind related.
 <pre>
 Inputs:                                          '*' = essential input
       * lc3     3d grid	(ht)    3d clouds (fractional cover) 
@@ -1666,22 +1666,41 @@ Outputs:
                                     threshold for cloud cover in CTY is 0.65.
 
 	lwm	2d grid		interpolated surface winds
-	lhe	2d grid		helicity (derived from 3-D winds)
-                                mean winds (sfc - 300mb layer)
+
+	lhe	2d grid		Helicity (Storm Relative Environmental). This 
+                                is integrated from the sfc to 3-km AGL. It
+                                is numerically equal to -2. times the hodograph
+                                area.
+
+                                A calculated storm motion vector is used. First
+                                a layer from the sfc to 300mb is used to 
+                                calculate the mean wind. A shear vector through
+                                the layer is also calculated. The storm motion
+                                is assumed to equal the mean wind + .15 times
+                                the shear vector (rotated for a right mover 
+                                by 90 degrees).
+
+                                Mean Winds (sfc - 300mb layer)
+
 	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
 	lmr	2d grid		2-D column max radar ref      
 	lf1	2d grid		2-D column max radar ref history (maximum 
                                 over time since the previous analysis cycle)
 </pre>
-Source directory: laps/nest7grid/source/cloud
+Source directory: laps/nest7grid/source/deriv
 
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
+References: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The 
+            Local Analysis and Prediction System (LAPS): Analyses of clouds, 
+            precipitation, and temperature. Weather and Forecasting, 11, 
+            273-287.
 
-           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
+
+            Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 
+            10, 342-352. 
+
+            Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
 
 ------ 3.2.7 ---------------------ACCUM---------------------------------------
 
