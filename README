@@ -1112,8 +1112,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            that is stored in NIMBUS/NetCDF files. There is a second local
            data (LDAD) NetCDF file that carries GPS data. This second format
            can supply GPS surface data to the LAPS intermediate 'lso' file.
-           LAPS does not currently read precipitable water from this second
-           format, only the first one.
+           LAPS does not yet read precipitable water from the LDAD
+           format, only the NIMBUS one.
 
                ---  2.4  Running LAPS Analyses  ---
 
@@ -2063,9 +2063,10 @@ LSO process - obs_driver.x - Ingest surface data
 
 Input:
 	METAR/SYNOP data
-	LDAD mesonet data
         Buoy/ship (maritime) data
-        GPS and Profiler surface data (via LDAD)       
+	LDAD mesonet data
+        GPS (sfc obs - without precipitable water) 
+        Profiler surface data (via LDAD)       
 
 Output:
          LSO	ascii	LAPS surface obs intermediate data file: METAR, Mesonet,
