@@ -365,17 +365,17 @@ fint4 *kmax;
 #ifdef __STDC__
 int retrieve_grid_v3(int i_cdfid,int i_level,int record_indx,
                      char *var, float *dptr, char *cptr,
-                     fint4 *comm_len, char *lvlptr, char *uptr)
+                     int name_len, char *lvlptr, char *uptr)
 #else
 int retrieve_grid_v3(i_cdfid, i_level, record_indx, var,
-                           dptr, cptr, comm_len, lvlptr, uptr)
+                           dptr, cptr, name_len, lvlptr, uptr)
 int i_cdfid;
 int i_level;
 int record_indx;
 char *var;
 float *dptr;
 char *cptr;
-fint4 *comm_len;
+int name_len;
 char *lvlptr;
 char *uptr;
 #endif
@@ -470,7 +470,7 @@ char *uptr;
  
         count_c[0] = 1;
         count_c[1] = 1;
-        count_c[2] = *comm_len + 1;
+        count_c[2] = name_len;
  
 /* read the comment from the netcdf file */
         i_status = nc_get_vara_text (i_cdfid,i_varid,start_c,count_c,cptr);
@@ -489,16 +489,18 @@ char *uptr;
 /************************************************************/
 #ifdef __STDC__
 void cstr_to_fstr(char *f_comment, char *comment, fint4 *comm_len,
+                  int name_len,
                   char *f_lvl_coord, char *lvl_coord, 
                   fint4 *lvl_coord_len, char *f_units, char *units,
                   fint4 *units_len, fint4 *kdim)
 #else
-void cstr_to_fstr(f_comment, comment, comm_len, f_lvl_coord, 
+void cstr_to_fstr(f_comment, comment, comm_len, name_len, f_lvl_coord, 
                   lvl_coord, lvl_coord_len, f_units, units,
                   units_len, kdim)
 char *f_comment; 
 char *comment; 
 fint4 *comm_len;
+int  name_len;
 char *f_lvl_coord; 
 char *lvl_coord;
 fint4 *lvl_coord_len; 
@@ -519,8 +521,8 @@ fint4 *kdim;
         hld_unit = malloc(*units_len + 1);
         pc = hld_unit + (*units_len);
         *pc = '\0';
-        hld_comm = malloc(*comm_len + 1);
-        pc = hld_comm + (*comm_len);
+        hld_comm = malloc(name_len);
+        pc = hld_comm + (name_len - 1);
         *pc = '\0';
         hld_lvl = malloc(*lvl_coord_len + 1);
         pc = hld_lvl + (*lvl_coord_len);
@@ -647,7 +649,7 @@ fint4 *called_from;
 fint4 *status;
 #endif
 {
-        int cdfid, istatus;
+        int cdfid, istatus, name_len, name_len_null;
         int i,j, t_level, i_record, unconv_var;
         int val_id,dim_id, t_record, int_1, int_2, found,t_var_id;
         long num_record;
@@ -704,13 +706,43 @@ fint4 *status;
             i_record = (int) (num_record - 1);
         }
 
+/* determine value of namelen dimension in file */
+
+        istatus = nc_inq_dimid(cdfid,"namelen",&dim_id);
+        if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
+          istatus = nc_close(cdfid);
+          *status = -2; /* error in reading header info */
+          return;
+        }
+        
+        istatus = nc_inq_dimlen(cdfid, dim_id, &dim_len);
+        name_len = (int) dim_len;
+        name_len_null = name_len;
+        if (istatus != NC_NOERR) { /* no "namelen" dimension */
+          printf("%s\n",nc_strerror(istatus));
+          istatus = nc_close(cdfid);
+          *status = -2; /* error in reading header info */
+          return;
+        }
+
 /* allocate space for c strings */
 	var = malloc((*var_len + 1) * sizeof(char) * (*kdim));
-        comment = malloc((*comm_len + 1) * sizeof(char) * (*kdim));
 	ext = malloc((*ext_len + 1) * sizeof(char));
         lvl_coord = malloc((*lvl_coord_len + 1) * sizeof(char) * (*kdim));
         units = malloc((*units_len + 1) * sizeof(char) * (*kdim));
         
+/* set length of comment to shortest of namelen dimension or comm_len */ 
+        if (*comm_len  < name_len ) {
+          name_len = *comm_len + 1; /* number of characters to pull */
+          name_len_null = *comm_len;  /* location to write null in comment */
+          comment = malloc((*comm_len + 1) * sizeof(char) * (*kdim));
+        }
+        else {  /* *comm_len >= name_len */
+          name_len_null = name_len - 1;
+          comment = malloc(name_len * sizeof(char) * (*kdim));
+        }
+
 /* allocate space for comment variable: ""var"_comment\0" = var_len + 9 */
         comm_var = malloc((*var_len + 9) * sizeof(char));
 
@@ -741,7 +773,7 @@ fint4 *status;
             *uptr = '\0';
             uptr++;
           }
-          for ( j = 0; j < (*comm_len + 1); j++) {
+          for ( j = 0; j < name_len; j++) {
             *cptr = '\0';
             cptr++;
           }
@@ -840,14 +872,14 @@ fint4 *status;
 
           istatus = retrieve_grid_v3(cdfid, t_level, t_record, 
                                      t_var, dptr, cptr, 
-                                     comm_len, lptr, uptr); 
+                                     name_len, lptr, uptr); 
 
           if (istatus == -1)  {
             unconv_var += 1;
           }
           dptr += (*iimax)*(*jjmax);
           vptr += (*var_len) + 1;
-          cptr += (*comm_len) + 1;
+          cptr += name_len;
           uptr += (*units_len) + 1;
           lptr += (*lvl_coord_len) + 1;
  
@@ -856,9 +888,9 @@ fint4 *status;
         istatus = nc_close(cdfid);
 
         if (*called_from == 0) {
-          cstr_to_fstr(f_comment, comment, comm_len, f_lvl_coord, 
-                       lvl_coord, lvl_coord_len, f_units, units,
-                       units_len, kdim);
+          cstr_to_fstr(f_comment, comment, comm_len, name_len,
+                       f_lvl_coord, lvl_coord, lvl_coord_len, f_units, 
+                       units, units_len, kdim);
         }
  
         free_read_var(var, comment, ext, lvl_coord, units,
@@ -871,16 +903,17 @@ fint4 *status;
 #ifdef __STDC__
 int write_val_ref_asctime(int cdfid, int i_record, double *valtime,
                           double *reftime, char *asctime,
-                          fint4 *asc_len)
+                          fint4 *asc_len, int name_len)
 #else
 int write_val_ref_asctime(cdfid, i_record, valtime, reftime, 
-                          asctime, asc_len)
+                          asctime, asc_len, name_len)
 int cdfid; 
 int i_record;
 double *valtime; 
 double *reftime;
 char *asctime;
 fint4 *asc_len;
+int name_len;
 #endif
 {
         int varid, istatus;
@@ -931,7 +964,13 @@ fint4 *asc_len;
 	start_2[0] = i_record;
         start_2[1] = 0;
         count_2[0] = 1;
-        count_2[1] = *asc_len;
+        if (name_len < *asc_len) {
+          count_2[1] = name_len;
+          asctime[name_len-1] = '\0';
+        }
+        else {
+          count_2[1] = *asc_len;
+        }
         if (DEBUG == 1) { 
           printf("start = [%d][%d] | count = [%d][%d] \n", start_2[0],start_2[1],count_2[0],count_2[1]);
           printf("asctime = [%s]\n",asctime);
@@ -1043,10 +1082,10 @@ fint4 lm1_levels;
 int get_static_info_v3(char *static_grid, float *Dx, float *Dy, 
                       float *La1, float *Lo1, float *LoV, 
                       float *Latin1, float *Latin2, char *map_proj, 
-                      char *origin)
+                      char *origin, int name_len)
 #else
 int get_static_info_v3(static_grid, Dx, Dy, La1, Lo1, LoV, Latin1,
-                       Latin2, map_proj, origin)
+                       Latin2, map_proj, origin, name_len)
 char *static_grid; 
 float *Dx; 
 float *Dy; 
@@ -1057,6 +1096,7 @@ float *Latin1;
 float *Latin2; 
 char *map_proj; 
 char *origin;
+int name_len;
 #endif
 {
         int cdfid_stat, dimid, varid, istatus, ret_status;
@@ -1090,6 +1130,7 @@ char *origin;
             ret_status = -1;
           }
         }
+/* namelen is length in static.nest7grid; name_len is length in LAPS output files */
         namelen = (long)dim_len;
 
         mindex[0] = 0;
@@ -1195,7 +1236,12 @@ char *origin;
         start_g[0] = 0;
         start_g[1] = 0;
         count_g[0] = 1;
-        count_g[1] = namelen;
+        if (name_len > namelen) {
+          count_g[1] = namelen;
+        }
+        else {
+          count_g[1] = name_len;
+        }
 
 /* read grid_type */
         istatus = nc_inq_varid(cdfid_stat,"grid_type",&varid);
@@ -1209,10 +1255,16 @@ char *origin;
             printf("Error reading grid_type from  static.nest7grid.\n");
             ret_status = -1;
           }
+          if (name_len < namelen) map_proj[name_len-1] = '\0';
         }
 
         start[0] = 0;
-        count[0] = namelen;
+        if (name_len > namelen) {
+          count[0] = namelen;
+        }
+        else {
+          count[0] = name_len;
+        }
         
 /* read origin_name */
         istatus = nc_inq_varid(cdfid_stat,"origin_name",&varid);
@@ -1226,6 +1278,7 @@ char *origin;
             printf("Error reading origin_name from  static.nest7grid.\n");
             ret_status = -1;
           }
+          if (name_len < namelen) origin[name_len-1] = '\0';
         }
         
         istatus = nc_close(cdfid_stat);
@@ -1332,11 +1385,11 @@ int  write_hdr_v3(int cdfid, char *ext, int i_record, fint4 *imax,
                   float *interval, fint4 *n_levels, float *Dx, 
                   float *Dy, float *La1, float *Lo1, float *LoV, 
                   float *Latin1, float *Latin2, char *map_proj, 
-                  char *origin) 
+                  char *origin, int name_len) 
 #else
 int  write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, base, 
                   interval,n_levels, Dx, Dy, La1, Lo1, LoV, Latin1, 
-                  Latin2, map_proj, origin) 
+                  Latin2, map_proj, origin, name_len) 
 int cdfid; 
 char *ext;
 int i_record; 
@@ -1356,6 +1409,7 @@ float *Latin1;
 float *Latin2;
 char *map_proj; 
 char *origin;
+int  name_len;
 #endif
 {
         short Nx, Ny;
@@ -1638,7 +1692,13 @@ char *origin;
 	start_2[0] = i_record;
         start_2[1] = 0;
         count_2[0] = 1;
-        count_2[1] = strlen(map_proj);
+        if (strlen(map_proj) > name_len) {
+          count_2[1] = name_len;
+          map_proj[name_len - 1] = '\0';
+        }
+        else {
+          count_2[1] = strlen(map_proj);
+        }
 
         istatus = nc_put_vara_text(cdfid,varid,start_2,count_2,map_proj);
         if (istatus != NC_NOERR){
@@ -1656,7 +1716,14 @@ char *origin;
         if (DEBUG==1) printf("found varid for origin_name\n");
 
         start[0] = 0;
-        count[0] = strlen(origin);
+        if (strlen(origin) > name_len) {
+          count[0] = name_len;
+          origin[name_len - 1] = '\0';
+        }
+        else {
+          count[0] = strlen(origin);
+        }
+
         istatus = nc_put_vara_text(cdfid,varid,start,count,origin);
         if (istatus != NC_NOERR){
           printf("%s\n",nc_strerror(istatus));
@@ -1769,10 +1836,10 @@ float match_level;
 int update_laps_v3(int cdfid,fint4 i_level,int i_record,
                    fint4 *imax, fint4 *jmax, int var_id, 
                    int inv_id,float *dptr,
-                   int comm_id, char *cptr)
+                   int comm_id, char *cptr,int name_len)
 #else
 int update_laps_v3(cdfid,i_level,i_record,imax,jmax, 
-                   var_id,inv_id,dptr,comm_id,cptr)
+                   var_id,inv_id,dptr,comm_id,cptr, name_len)
 int cdfid;
 fint4 i_level;
 int i_record;
@@ -1783,6 +1850,7 @@ int inv_id;
 float *dptr;
 int comm_id;
 char *cptr;
+int name_len;
 #endif
 {
 	int x_dim, y_dim, z_dim, istatus, dim_id;
@@ -1826,7 +1894,13 @@ char *cptr;
  
 	c_count[0] = 1;
 	c_count[1] = 1;
-	c_count[2] = strlen(cptr);
+        if (strlen(cptr) > name_len) {
+          c_count[2] = name_len;
+          cptr[name_len - 1] = '\0';
+        }
+        else {
+          c_count[2] = strlen(cptr);
+        }
 
 	istatus = nc_put_vara_text(cdfid,comm_id,c_start,
 				   c_count,cptr);
@@ -1892,7 +1966,7 @@ fint4 *status;
 #endif
 {
 	int i, j, istatus, cdl_len, cdfid, i_record, var_id;
-        int dim_id, comm_id, old_record, int1, int2;
+        int dim_id, comm_id, old_record, int1, int2, name_len;
         int missing_grids, inv_id, lc3_levels, lm1_levels;
         fint4 i_level, i4time;
         size_t mindex[1], dim_len;
@@ -2035,6 +2109,25 @@ fint4 *status;
           }
         }
 
+/* determine value of namelen dimension in output file  */
+
+        istatus = nc_inq_dimid(cdfid,"namelen", &dim_id);
+        if (istatus != NC_NOERR) {
+	  *status = -2; /* error in file creation */ 
+          istatus = nc_close(cdfid);
+          free(ext);
+          return;
+        }
+
+        istatus = nc_inq_dimlen(cdfid,dim_id,&dim_len);
+        if (istatus != NC_NOERR) {
+	  *status = -2; /* error in file creation */ 
+          istatus = nc_close(cdfid);
+          free(ext);
+          return;
+        }
+        name_len = (int)dim_len;
+
 /* file is now open and ready for writing.    */
 /* verify x and y in output file match imax and jmax */
 /* verify that z is correct: 
@@ -2060,11 +2153,12 @@ fint4 *status;
           nstrncpy(static_grid,f_static_path,*stat_len);
           strcat(static_grid,"static.nest7grid");
 
-          map_proj = malloc(256 * sizeof(char));
-          origin = malloc(256 * sizeof(char));
+          map_proj = malloc(name_len * sizeof(char));
+          origin = malloc(name_len * sizeof(char));
 
-          istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, &LoV, 
-                                       &Latin1, &Latin2, map_proj, origin);
+          istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, 
+                                       &LoV, &Latin1, &Latin2, map_proj, 
+                                       origin, name_len);
           free(static_grid);
 
           if (istatus == -1) {
@@ -2076,7 +2170,7 @@ fint4 *status;
 
 	  istatus = write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, 
                                  base, interval, n_levels, &Dx, &Dy, &La1, &Lo1, 
-                                 &LoV, &Latin1, &Latin2, map_proj, origin);
+                                 &LoV, &Latin1, &Latin2, map_proj, origin,name_len);
 
           free_static_var(map_proj, origin);
           if (istatus == -1) {
@@ -2148,7 +2242,7 @@ fint4 *status;
 /* write out valtime and reftime if old_record != i_record */
           if (i_record != old_record) {
             istatus = write_val_ref_asctime(cdfid, i_record, &valtime, &reftime, 
-                          asctime, asc_len);
+                          asctime, asc_len, name_len);
             if (istatus == -1) {
 	      *status = -5; /* error writing out header */ 
               istatus = nc_close(cdfid);
@@ -2182,7 +2276,7 @@ fint4 *status;
             cptr = (comment + (i*(*comm_len + 1)));
             istatus = update_laps_v3(cdfid,i_level,i_record,imax,
                                      jmax,var_id,inv_id,dptr,
-                                     comm_id,cptr);
+                                     comm_id,cptr,name_len);
             if (istatus == (-1)) missing_grids++;
 
             if ((strcmp(ext,"lmr") == 0) || (strcmp(ext,"lf1") == 0))
