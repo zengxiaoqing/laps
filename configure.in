@@ -273,6 +273,6 @@ AC_OUTPUT(src/include/trigd.inc
           etc/temp.pl
           etc/wfo_post.pl
           etc/wind3d.pl
-          etc/window_laps_rt.pl
+          etc/window_domain_rt.pl
           etc/xferData.pl)
 
