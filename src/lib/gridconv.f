@@ -1170,37 +1170,40 @@ c
      .     bgmodel .eq. 8) then
          do j=1,ny_laps
             do i=1,nx_laps
-               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               if (gry(i,j) .lt. 1) then
+               if (gry(i,j) .lt. 1.) then
                   gry(i,j)=2.-gry(i,j)
                   grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                   if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
                endif
                if (gry(i,j) .gt. ny_bg) then
                   gry(i,j)=float(2*ny_bg)-gry(i,j)
                   grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                   if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
+               endif
+               if (grx(i,j) .lt. 1) then
+                  grx(i,j)=grx(i,j)+1.
                endif
             enddo
          enddo
       elseif(bgmodel.eq.4.and.cmodel(1:lenc).eq.'AVN_SBN_CYLEQ')then
          do j=1,ny_laps
             do i=1,nx_laps
-               if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+               if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                if (grx(i,j) .gt. nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
-               if (gry(i,j) .lt. 1) then
+               if (gry(i,j) .lt. 1.) then
                   gry(i,j)=2.-gry(i,j)
                   grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                   if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
                endif
                if (gry(i,j) .gt. ny_bg) then
                   gry(i,j)=float(2*ny_bg)-gry(i,j)
                   grx(i,j)=grx(i,j)-float(nx_bg/2)
-                  if (grx(i,j) .lt. 1) grx(i,j)=grx(i,j)+float(nx_bg)
+                  if (grx(i,j) .lt. 1.) grx(i,j)=grx(i,j)+float(nx_bg)
                   if (grx(i,j).gt.nx_bg) grx(i,j)=grx(i,j)-float(nx_bg)
                endif
             enddo
