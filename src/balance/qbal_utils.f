@@ -434,10 +434,10 @@ c     terscl=sqrt(sumt/(nx*ny))
      .       ,istatus
      .       ,lga_status
 
-      print*,'************************'
-      print*,'Subroutine advance_grids'
-      print*,'************************'
-
+c-------------------------------------------------------
+c                 \
+c              ^=====>  (<- airplane)
+c                 /
 c
 c                dropsonde          payload drop
 c                  (ta)                (td)
@@ -448,18 +448,26 @@ c              1     !     2       3     !     4
 c        - - - - - - - - - - - - - - - - - - - - - 
 c              |     !     |       |frac1!frac2|
 c                    !                   !
-c                    ^                   !
+c                    ^                   ^
 c                 analysis            airdrop
 c                   (A)                 (D)
 c                 input:lga,anal
 c 
-c    background at D (Note: this happens automatically in lga_driver):
+c ----------------------- time -> ---------------------
+c    background at D (this happens in lga_driver):
 c       bkgd_lga-D = (frac2*bkgd4 + frac1*bkgd3)
+c
+c        where bkgd is defined in background.nl (lga namelist)
 c
 c    analysis at D:
 c       analysis-D = analysis-A + (bkgd_lga-D - input_lga-A)
 c
-c    return bkgd_lga-D
+c    return bkgd_lga-D and analysis-D for qbalpe.
+c
+
+      print*,'************************'
+      print*,'Subroutine advance_grids'
+      print*,'************************'
 
       call get_laps_cycle_time(laps_cycle_time,istatus)
       if(istatus.ne.1)then

@@ -343,9 +343,12 @@ c
       integer   lendw
       integer   lendsh
       integer   i,j,k
+      real*4  r_missing_data
       real*4  phi(nx,ny,nz),t(nx,ny,nz)
      .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
      .       ,omo(nx,ny,nz)
+
+      real*4, allocatable :: om(:,:,:)
 
 
       character*255 tempdir,winddir,sfcdir,shdir,lcodir
@@ -353,6 +356,12 @@ c
       character*31  tempext,windext,sfcext,shext,lcoext
       character*10  units
       logical found_lowest
+
+      call get_r_missing_data(r_missing_data,istatus)
+      if (istatus .ne. 1) then
+         print *,'Error getting r_missing_data...Abort.'
+         return
+      endif
 
       shext='lq3'
       tempext='lt1'
@@ -455,5 +464,18 @@ c
          return
       endif
 
+      allocate (om(nx,ny,nz))
+
+      call get_laps_3d(i4time,nx,ny,nz
+     1	,windext,'om ',units,comment,om,istatus)
+
+      if (istatus .ne. 1) then
+	 print *,'Error getting LAPS time 0 v3 data...Abort.'
+	 return
+      endif
+
+      where(omo .eq. r_missing_data)omo=om
+
+      deallocate(om)
       return
       end
