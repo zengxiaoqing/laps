@@ -8,7 +8,7 @@
         parameter (hor_radius = 35.)
 
         integer MAX_PR,MAX_PR_LEVELS
-        parameter (MAX_PR = 300)
+        parameter (MAX_PR = 500)
         parameter (MAX_PR_LEVELS = 128)
 
 !       Weights in wind analysis
@@ -32,9 +32,6 @@
 
         integer iradar_cycle_time
         parameter (iradar_cycle_time = 600)
-
-        integer i4time_raob_window
-        parameter (i4time_raob_window = 0)
 
 !       If this is true, then we rotate the first guess and obs arrays to
 !       Grid North U+V just prior to the call to 'laps_anl'. They are rotated

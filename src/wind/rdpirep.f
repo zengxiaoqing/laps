@@ -107,8 +107,13 @@ cdis
             return
         endif
 
-        call get_windob_time_window(i4_window_pirep)
-        write(6,*)' i4_window_pirep = ',i4_window_pirep
+        call get_windob_time_window('PIREP',i4_window_pirep,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' i4_window_pirep = ',i4_window_pirep
+        else
+            write(6,*)' Error getting i4_window_pirep'
+            return
+        endif
 
         write(6,*)
         write(6,*)'             Reading Pirep Obs: ',ext_in

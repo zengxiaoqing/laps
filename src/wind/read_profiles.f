@@ -1,20 +1,21 @@
  
-        subroutine read_profiles(i4time,heights_3d,lat_pr,lon_pr,
-     1                   lat,lon,
-     1                   ob_pr_ht,
-     1                   ob_pr_di, ob_pr_sp,
-     1                   ob_pr_u , ob_pr_v ,
-     1                   ob_pr_r , ob_pr_t ,
-     1                   nlevels_obs_pr,
-     1                   ob_pr_ht_obs,
-     1                   ob_pr_di_obs,ob_pr_sp_obs,
-     1                   ob_pr_u_obs ,ob_pr_v_obs ,
-     1                   rlat_radar,rlon_radar,rheight_radar,
-     1                   n_vel_grids,
-     1                   u_maps_inc,v_maps_inc,
-     1                   ilaps_cycle_time,r_missing_data,
-     1                   imax,jmax,kmax,
-     1                   istatus                )
+        subroutine read_profiles(i4time,heights_3d,lat_pr,lon_pr,   ! I
+     1                   lat,lon,                                   ! I
+     1                   MAX_PR,MAX_PR_LEVELS,                      ! I
+     1                   ob_pr_ht,                                  ! O
+     1                   ob_pr_di, ob_pr_sp,                        ! O
+     1                   ob_pr_u , ob_pr_v ,                        ! O
+     1                   ob_pr_r , ob_pr_t ,                        ! O
+     1                   nlevels_obs_pr,                            ! O
+     1                   ob_pr_ht_obs,                              ! O
+     1                   ob_pr_di_obs,ob_pr_sp_obs,                 ! O
+     1                   ob_pr_u_obs ,ob_pr_v_obs ,                 ! O
+     1                   rlat_radar,rlon_radar,rheight_radar,       ! I
+     1                   n_vel_grids,                               ! I
+     1                   u_maps_inc,v_maps_inc,                     ! I
+     1                   ilaps_cycle_time,r_missing_data,           ! I
+     1                   imax,jmax,kmax,                            ! I
+     1                   istatus                )                   ! O
 
 !       1992 Steve Albers
 !       Note that the profiler data in the .PRO files are in knots...
@@ -33,8 +34,6 @@ c                             time of the current LAPS analysis time.
 
 !       LAPS Grid Dimensions
 
-        include 'windparms.inc' ! MAX_PR, MAX_PR_LEVELS
-c
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
 
@@ -203,19 +202,19 @@ c
           go to 600
       endif
 
-!     i4time_raob_window = ilaps_cycle_time
+      i4time_raob_file_window = 0
 
       ext = 'snd'
       call get_filespec(ext,2,c_filespec,istatus)
       call get_file_time(c_filespec,i4time,i4time_nearest)
 
       i4time_diff = abs(i4time - i4time_nearest)
-      if(i4time_diff .le. i4time_raob_window)then
+      if(i4time_diff .le. i4time_raob_file_window)then
           write(6,*)' Nearest SND file is within time window'
-     1                ,i4time_diff,i4time_raob_window
+     1                ,i4time_diff,i4time_raob_file_window
       else
           write(6,*)' Warning: Nearest SND file is outside time window'       
-     1                ,i4time_diff,i4time_raob_window
+     1                ,i4time_diff,i4time_raob_file_window
           go to 600
       endif
 
@@ -394,8 +393,8 @@ c
                     v_diff = v_maps_inc(i_ob,j_ob,level) 
      1                                              * rcycles_pr(i_pr)
 
-                    call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,ob_pr_v_ob
-     1s,
+                    call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,
+     1                             ob_pr_v_obs,
      1                             u_diff,
      1                             v_diff,
      1                             ob_pr_u(i_pr,level),
@@ -408,6 +407,7 @@ c
      1                             lat_pr,lon_pr,i_ob,j_ob,
      1                             azimuth,r_missing_data,
      1                             heights_3d,imax,jmax,kmax,
+     1                             MAX_PR,MAX_PR_LEVELS,
      1                             n_vel_grids,istatus)
 
 c                   write(6,411,err=412)ista,i_pr,level

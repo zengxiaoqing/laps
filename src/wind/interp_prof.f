@@ -39,13 +39,10 @@ cdis
      1                             lat_pr,lon_pr,i_ob,j_ob,
      1                             azimuth,r_missing_data,
      1                             heights_3d,ni,nj,nk,
+     1                             MAX_PR,MAX_PR_LEVELS,
      1                             n_vel_grids,istatus)
 
 !************************ARRAYS.FOR******************************************
-
-!       LAPS Grid Dimensions
-
-        include 'windparms.inc' ! MAX_PR, MAX_PR_LEVELS
 
 !       Profiler Observations
 

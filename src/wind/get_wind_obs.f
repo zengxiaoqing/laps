@@ -49,7 +49,8 @@
         call read_profiles(
      1            i4time_lapswind,heights_3d,lat_pr,lon_pr,         ! I
      1            lat,lon,                                          ! I
-     1            ob_pr_ht,
+     1            MAX_PR,MAX_PR_LEVELS,                             ! I
+     1            ob_pr_ht,                                         ! O
      1            ob_pr_di, ob_pr_sp,                               ! O
      1            ob_pr_u , ob_pr_v ,                               ! O
      1            ob_pr_r , ob_pr_t ,                               ! O
