@@ -52,7 +52,7 @@ cdis
       character*1 name_array(imax,jmax)
       real*4 cld_hts(kmax)
       CHARACTER NAME*10
-      character*1 c1_cov(0:13)
+      character*1 c1_cov(-1:13)
 
       integer max_plot
       parameter(max_plot=65)
@@ -60,7 +60,7 @@ cdis
       character c_mxp_b*(max_plot)
 
       data c1_cov
-     1   /'.','1','2','3','4','5','6','7','8','9','#','*',')','.'/
+     1   /' ','.','1','2','3','4','5','6','7','8','9','#','*',')','.'/       
 
 c find max and min
       amax=-1.e30
@@ -111,8 +111,8 @@ c find max and min
 
       do j = 1,jmax
       do i = 1,ihigh,iskip
-        c1a_array(i,j) = c1_cov(int(min(max(A(I,J)*10.*scale,0.),13.)))
-        c1b_array(i,j) = c1_cov(int(min(max(B(I,J)*10.*scale,0.),13.)))
+        c1a_array(i,j)=c1_cov(int(min(max(A(I,J)*10.*scale,-1.),13.)))
+        c1b_array(i,j)=c1_cov(int(min(max(B(I,J)*10.*scale,-1.),13.)))      
 
         if(NAME(1:4) .eq. 'HORZ')then ! Horizontal Section
             iil = max(i -  iskip    / 2, 1)
