@@ -152,13 +152,13 @@ c
        subroutine get_lapsplot_parms(namelist_parms,istatus)
 
        include 'lapsplot.inc'
-
-       namelist /lapsplot_nl/ latlon_int,continent_line_width
-     1                       ,c3_time_zone,time_zone
  
        character*150 static_dir,filename
        character*3 c3_time_zone
        real*4 time_zone
+
+       namelist /lapsplot_nl/ latlon_int,continent_line_width
+     1                       ,c3_time_zone,time_zone
 
 !      Set defaults
        latlon_int = 0
