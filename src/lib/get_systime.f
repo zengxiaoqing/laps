@@ -35,7 +35,7 @@ C&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
       call get_directory('time',dir,length)
 
-      open(11,file=dir(1:length)//'systime.dat',status='old')
+      open(11,file=dir(1:length)//'systime.dat',status='old',err=999)
 
       read(11,*,err=999)i4time_sys
       close(11)
