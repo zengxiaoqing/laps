@@ -108,7 +108,7 @@ cdis
         i4time_raob_window = 0 ! 43200
 
         call get_temp_parms(l_use_raob,l_adjust_heights,weight_bkg_const
-     1                     ,istatus)
+     1                     ,pres_mix_thresh,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status return from put_temp_anal'
             return
@@ -236,8 +236,33 @@ cdis
         write(6,*)' Inserting Surface Data in Lower Levels'
      1             ,blayer_thk_pres
 
+!       Set up stuff for mixed layer top
+        iwarn = 0
+        diff_temp_max = 0.
+        sum_pres = 0.
+
         do i = 1,ni
         do j = 1,nj
+            sum_pres = sum_pres + pres_sfc_pa(i,j)
+        enddo ! j
+        enddo ! i
+
+        pres_ave_domain = sum_pres / float(ni*nj)
+        pres_mix_top = pres_ave_domain - pres_mix_thresh
+        write(6,*)' Average sfc pressure over the domain = '
+     1            ,pres_ave_domain
+        write(6,*)' pres_mix_thresh = ',pres_mix_thresh
+        write(6,*)' pres_mix_top = ',pres_mix_top
+
+        do i = 1,ni
+        do j = 1,nj
+            if(pres_mix_top .lt. pres_3d(i,j,nk))then ! QC check
+                pres_mix_top = pres_3d(i,j,nk)
+            endif
+
+            rk_mix = zcoord_of_pressure(pres_mix_top)
+            k_mix  = int(rk_mix)
+            frac_k_mix = rk_mix - k_mix
 
 !           Find Temp at Top of Boundary Lyr According to Upper Level Anal
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
@@ -257,45 +282,59 @@ cdis
 
 !           QC Check (Compare MODEL Temps to LAPS Sfc Temp)
 !           For this check, interpolation in P space is sufficient
-            k_sfc_qc = max(k_sfc,1)
-            frac_k_sfc = rk_sfc - k_sfc_qc
-            temp_sfc_intrpl = temp_3d(i,j,k_sfc_qc) * (1.0 - frac_k_sfc)       
-     1                      + temp_3d(i,j,k_sfc_qc+1)  *     frac_k_sfc
+            frac_k_sfc = rk_sfc - k_sfc
+            temp_sfc_intrpl = temp_3d(i,j,k_sfc) * (1.0 - frac_k_sfc)       
+     1                      + temp_3d(i,j,k_sfc+1)  *     frac_k_sfc
 
 !           Store the sfc temperature in a local variable
             temp_sfc_eff = temp_sfc_k(i,j)
 
-            if(.false.)then ! Use sfc only if when terrain is below about 750mb
-                frac_sfc = (pres_sfc_pa(i,j) - 72500.) / 5000.
-                frac_sfc = min(max(frac_sfc,0.0),1.0)
-                temp_sfc_eff = frac_sfc * temp_sfc_eff
-     1                       + (1.0 - frac_sfc) * temp_sfc_intrpl
-            endif
-
             diff_intrpl = temp_sfc_eff - temp_sfc_intrpl ! LAPS - MODEL
             if(diff_intrpl .gt. diff_tol)then
                 write(6,111)i,j,temp_sfc_eff,temp_sfc_intrpl,diff_intrpl
-     1                     ,k_sfc_qc,temp_3d(i,j,k_sfc_qc)
-     1                              ,temp_3d(i,j,k_sfc_qc+1)
+     1                     ,k_sfc,temp_3d(i,j,k_sfc)
+     1                           ,temp_3d(i,j,k_sfc+1)
 111             format('  LAPS Sfc Temps disagree with MDL',2i4,3f8.1
      1                ,i4,2f8.1)
                 temp_sfc_eff = temp_sfc_intrpl + diff_tol
 
             elseif(diff_intrpl .lt. -25.)then
                 write(6,111)i,j,temp_sfc_eff,temp_sfc_intrpl,diff_intrpl
-     1                     ,k_sfc_qc,temp_3d(i,j,k_sfc_qc)
-     1                              ,temp_3d(i,j,k_sfc_qc+1)
+     1                     ,k_sfc,temp_3d(i,j,k_sfc)
+     1                           ,temp_3d(i,j,k_sfc+1)
                 temp_sfc_eff = temp_sfc_intrpl - diff_tol
 
             endif
 
-            pres_top_pa = pres_sfc_pa(i,j) - blayer_thk_pres
+!           Apply "theta check" upper bound to 'temp_sfc_eff'
+            temp_mix_intrpl = temp_3d(i,j,k_mix) * (1.0 - frac_k_mix)       
+     1                      + temp_3d(i,j,k_mix+1)  *     frac_k_mix
 
-            height_top = psatoz(pres_top_pa      * .01)
-            height_sfc = psatoz(pres_sfc_pa(i,j) * .01)
+            theta_max_sfc = O_K(temp_mix_intrpl,pres_mix_top)            
+            theta_now_sfc = O_K(temp_sfc_eff,pres_sfc_pa(i,j))
+            temp_sfc_now = temp_sfc_eff
 
-            rk_top = zcoord_of_pressure(pres_top_pa)
-            k_top = int(rk_top)
+            if(pres_sfc_pa(i,j) .lt. pres_mix_top)then    ! sfc above mix top
+
+!               Constrain the sfc temp to <= 3-d interpolated temp
+                if(temp_sfc_now .gt. temp_sfc_intrpl)then 
+                    temp_sfc_eff = temp_sfc_intrpl
+                    diff_temp = temp_sfc_now - temp_sfc_eff
+                    diff_temp_max = max(diff_temp,diff_temp_max)
+                    iwarn = 1
+                endif                        
+
+            else                                         ! sfc below mix top
+
+!               Constrain the sfc theta to <= theta at top of the mixing layer
+                if(theta_now_sfc .gt. theta_max_sfc)then 
+                    temp_sfc_eff = TDA_K(theta_max_sfc,pres_sfc_pa(i,j))
+                    diff_temp = temp_sfc_now - temp_sfc_eff
+                    diff_temp_max = max(diff_temp,diff_temp_max)
+                    iwarn = 1
+                endif                        
+
+            endif                                        ! sfc above mix top?
 
 !           Fill in from level 1 (even if below the terrain) up through top of
 !           boundary layer using the surface temperature and the first guess
@@ -307,12 +346,13 @@ cdis
 !           insuring consistency between the final LT1 temps and the LAPS sfc
 !           temp analysis.
 
-            rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
-            k_sfc = int(rk_sfc)
-            k_sfc = max(k_sfc,1)
-            frac_k_sfc = rk_sfc - k_sfc
-            temp_sfc_intrpl = temp_3d(i,j,k_sfc  ) * (1.0 - frac_k_sfc)
-     1                      + temp_3d(i,j,k_sfc+1) *        frac_k_sfc
+            pres_top_pa = pres_sfc_pa(i,j) - blayer_thk_pres
+
+            height_top = psatoz(pres_top_pa      * .01)
+            height_sfc = psatoz(pres_sfc_pa(i,j) * .01)
+
+            rk_top = zcoord_of_pressure(pres_top_pa)
+            k_top = int(rk_top)
 
             sfc_bias = temp_sfc_eff - temp_sfc_intrpl
 
@@ -447,35 +487,31 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! j
         enddo ! i
 
-        write(6,*)' Temperature Analyses Read In and Adjusted'
+        write(6,*)
+        write(6,*)' Temperature Analysis Complete'
+        write(6,*)' Checking consistency of sfc and 3-D temps'
 
-        write(6,201)diff_thmax,theta_diff_thmax,i_diff_thmax,
-     1                          j_diff_thmax,k_diff_thmax
-201     format('  Maximum Adiabatic Adjustment of ',f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
-
-        write(6,211)diff_min,t_diff_min,i_diff_min,
-     1                          j_diff_min,k_diff_min
-211     format('  Largest Cold Adjustment of ',5x,f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
-
-        write(6,221)diff_max,t_diff_max,i_diff_max,
-     1                          j_diff_max,k_diff_max
-221     format('  Largest Warm Adjustment of ',5x,f8.1,' to ',f8.1
-     1        ,' at ',i3,i4,i3)
+        if(iwarn .eq. 1)then
+            write(6,*)' WARNING: sfc temps had to be reduced to be'
+     1               ,' within adiabatic/3d tolerances, max change = '       
+     1               ,diff_temp_max
+        else
+            write(6,*)' Input sfc temps were adiabatically/3D'
+     1               ,' consistent with other data within tolerances '
+     1               ,diff_temp_max
+        endif
 
 !       Double Check 3D Temps against Sfc Temps
-!       Here, interpolation in standard atmosphere height space is done
+        write(6,*)' Double checking consistency of sfc and 3-D temps'
         diffmax = 0.
         do i = 1,ni
         do j = 1,nj
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
             k_sfc = int(rk_sfc)
-            k_sfc_qc = max(k_sfc,1)
-            frac_k_sfc = rk_sfc - k_sfc_qc
+            frac_k_sfc = rk_sfc - k_sfc
             temp_sfc_intrpl = 
-     1                temp_3d(i,j,k_sfc_qc  ) * (1.0 - frac_k_sfc)
-     1              + temp_3d(i,j,k_sfc_qc+1) *        frac_k_sfc
+     1                temp_3d(i,j,k_sfc  ) * (1.0 - frac_k_sfc)
+     1              + temp_3d(i,j,k_sfc+1) *        frac_k_sfc
 
             diff = abs(temp_sfc_k(i,j) - temp_sfc_intrpl)
 
@@ -492,9 +528,30 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! j
         enddo ! i
 
-        write(6,*)' Max difference of sfc T - interpolated 3D T = '
-     1           ,d_diff,i_diff,j_diff,rm_diff,t_diff,p_diff
+!       This should be fairly close to diff_temp_max
+        write(6,*)' Max diff of input surface T - interpolated 3D T = '       
+     1           ,d_diff,i_diff,j_diff,t_diff,rm_diff,p_diff
 
+        write(6,*)' Checking adjustments to 3-D temps from adiabatic'
+     1           ,' and surface considerations'
+
+        write(6,201)diff_thmax,theta_diff_thmax,i_diff_thmax,
+     1                          j_diff_thmax,k_diff_thmax
+201     format('  Maximum Adiabatic Adjustment of ',f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
+
+        write(6,211)diff_min,t_diff_min,i_diff_min,
+     1                       j_diff_min,k_diff_min
+211     format('  Largest Cold Adjustment of ',5x,f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
+
+        write(6,221)diff_max,t_diff_max,i_diff_max,
+     1                       j_diff_max,k_diff_max
+221     format('  Largest Warm Adjustment of ',5x,f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
+
+!       Height Analysis
+        write(6,*)
         if(l_adjust_heights)then ! Store model fg 500 heights
             k_ref = nint(zcoord_of_pressure(50000.))
             write(6,*)' Storing bkg ht level ',k_ref
@@ -511,6 +568,10 @@ c       1                               j_diff_thmax,k_diff_thmax
             enddo ! j
             enddo ! i
         endif
+
+!       Hydrostatically integrate the temps to get heights using the surface
+!       pressure as a reference. The heights_3d array will now contain the
+!       integrated heights instead of the model background heights.
 
         write(6,*)' Calling get_heights_hydrostatic'
         call get_heights_hydrostatic(temp_3d,pres_sfc_pa,topo,
@@ -610,12 +671,12 @@ c       1                               j_diff_thmax,k_diff_thmax
 
 
        subroutine get_temp_parms(l_use_raob_t,l_adjust_heights
-     1                          ,weight_bkg_const_temp,istatus)
+     1                 ,weight_bkg_const_temp,pres_mix_thresh,istatus)       
 
        logical l_use_raob_t,l_adjust_heights
 
        namelist /temp_nl/ l_use_raob_t,l_adjust_heights
-     1                   ,weight_bkg_const_temp
+     1                   ,weight_bkg_const_temp,pres_mix_thresh       
  
        character*150 static_dir,filename
  
