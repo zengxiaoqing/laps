@@ -89,7 +89,7 @@ c
 	real*4  t(maxobs), td(maxobs), rh(maxobs), stnp(maxobs)
 	real*4  dd(maxobs), ff(maxobs), ddg(maxobs), ffg(maxobs)
 	real*4  mslp(maxobs), alt(maxobs), vis(maxobs)
-        real*4  solar(maxobs), sea_temp(maxobs)
+        real*4  solar(maxobs), sea_temp(maxobs), soil_temp(maxobs)
         integer*4  i4time_ob_a(maxobs), before, after
         character*9 a9time_before, a9time_after, a9time_a(maxobs)
         logical l_dupe(maxobs)
@@ -208,7 +208,7 @@ c
 c.....  Call the read routine.
 c
 	    call read_local_obs(nf_fid, recNum, alt(ix),
-     &         pro(ix), solar(ix), sea_temp(ix), td(ix), 
+     &         pro(ix), solar(ix), sea_temp(ix), soil_temp(ix), td(ix),        
      &         elev(ix), lats(ix), lons(ix),       
      &         timeobs(ix), wx(ix), rh(ix), rh_time(ix),
      &         mslp(ix), stname(ix), p_time(ix), stnp(ix), 
@@ -305,6 +305,7 @@ c
 	   if( nanf( td(i)   ) .eq. 1 )    td(i)    = badflag
 	   if( nanf( solar(i)) .eq. 1 )    solar(i) = badflag
 	   if( nanf( sea_temp(i)) .eq. 1 ) sea_temp(i) = badflag
+	   if( nanf( soil_temp(i)) .eq. 1 ) soil_temp(i) = badflag
 	   if( nanf( dd(i)   ) .eq. 1 )    dd(i)    = badflag
 	   if( nanf( ff(i)   ) .eq. 1 )    ff(i)    = badflag
 	   if( nanf( ffg(i)  ) .eq. 1 )    ffg(i)   = badflag
@@ -508,10 +509,22 @@ c
 c..... Sea Surface Temperature
 c
          seatemp_k = sea_temp(i)                         
-         if(seatemp_k .le. badflag) then          !  t bad?
-            seatemp_f = badflag                   !  bag
-         else
+         call sfc_climo_qc_r('tgd_k',seatemp_k)
+         if(seatemp_k .ne. badflag) then          
             seatemp_f = k_to_f(seatemp_k)
+         else
+            seatemp_f = badflag
+         endif
+
+c
+c..... Soil Surface Temperature
+c
+         soiltemp_k = soil_temp(i)                         
+         call sfc_climo_qc_r('tgd_k',soiltemp_k)
+         if(soiltemp_k .ne. badflag) then          
+            soiltemp_f = k_to_f(soiltemp_k)
+         else
+            soiltemp_f = badflag
          endif
 c
 c
@@ -665,7 +678,13 @@ c
 c
          store_5(nn,1) = vis(i)                 ! visibility (miles)
          store_5(nn,2) = solar_rad              ! solar radiation 
-	 store_5(nn,3) = seatemp_f              ! soil/water temperature (F)
+
+         if(seatemp_f .ne. badflag)then
+	     store_5(nn,3) = seatemp_f          ! soil/water temperature (F)
+         else
+	     store_5(nn,3) = soiltemp_f         ! soil/water temperature (F)
+         endif
+
          store_5(nn,4) = badflag                ! soil moisture 
 c
          store_6(nn,1) = badflag                ! 1-h precipitation
