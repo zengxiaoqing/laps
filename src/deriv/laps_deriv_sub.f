@@ -233,6 +233,7 @@ cdis
 
         character*3 c3_pt_flag
         character*1 c1_r,c1_s
+        character*8 c8_project
 
         integer i2_pcp_type_2d(NX_L,NY_L)
         real*4 r_pcp_type_2d(NX_L,NY_L)
@@ -526,14 +527,33 @@ c read in laps lat/lon and topo
             call read_surface_old(infile,maxstns,atime,n_meso_g,
      1           n_meso_pos,
      1           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,n_obs_g,
-     1           n_obs_pos_g,
-     1           n_obs_b,n_obs_pos_b,c_stations,obstype,        
+     1           n_obs_pos_g,n_obs_b,
+     1           n_obs_pos_b,                   ! We use this as an obs count
+     1           c_stations,obstype,        
      1           lat_s,lon_s,elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
      1           ffg_s,pstn_s,pmsl_s,alt_s,kloud,ceil,lowcld,cover_a,
      1           rad_s,idp3,store_emv,
      1           store_amt,store_hgt,vis_s,obstime,istat_sfc)
 
             I4_elapsed = ishow_timer()
+
+            call get_c8_project(c8_project,istatus)
+            if(istatus .ne. 1)return
+
+            do i = 1,n_obs_pos_b 
+
+!               Does this station not report precip?
+                if(obstype(i)(1:4) .eq. 'MESO'     .OR.
+     1             obstype(i)(1:4) .eq. 'CDOT'     .OR.
+     1             obstype(i)(7:8) .eq. '1A'       .OR.
+     1             wx_s(i)(1:7)    .eq. 'UNKNOWN'  .OR.       ! Already in LSO
+     1             c8_project(1:5) .eq. 'AFGWC'        )then
+                    wx_s(i) = 'UNKNOWN'
+
+                endif
+
+            enddo ! i
+
         endif
 
 !       Calculate derived fields
@@ -825,9 +845,10 @@ c read in laps lat/lon and topo
                     if(  (i_pty .gt. 0 .or. wx_s(i) .ne. '        ')
 
 !                        and is this an SAO station that reports precip?
-     1                  .AND.  obstype(i)(1:4) .ne. 'MESO'
-     1                  .AND.  obstype(i)(1:4) .ne. 'CDOT'
-     1                  .AND.  obstype(i)(7:8) .ne. '1A'
+!    1                  .AND.  obstype(i)(1:4) .ne. 'MESO'
+!    1                  .AND.  obstype(i)(1:4) .ne. 'CDOT'
+!    1                  .AND.  obstype(i)(7:8) .ne. '1A'
+     1                  .AND.  wx_s(i)(1:7)    .ne. 'UNKNOWN'
      1                                                         )then
                         c3_pt_flag = ' __'
                     else
@@ -1344,9 +1365,11 @@ c read in laps lat/lon and topo
 
                     do ista = 1,n_obs_pos_b
 !                       Does this station report precip?
-                        if(      obstype(ista)(1:4) .ne. 'MESO'
-     1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-     1                     .and. obstype(ista)(7:8) .ne. '1A'
+                        if(      
+!    1                           obstype(ista)(1:4) .ne. 'MESO'
+!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
+!    1                     .and. obstype(ista)(7:8) .ne. '1A'
+     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
      1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
@@ -1456,9 +1479,11 @@ c read in laps lat/lon and topo
      1                 .and. j_sta .ge. 1 .and. j_sta .le. nj)then
 
 !                       Does this station report precip?
-                        if(      obstype(ista)(1:4) .ne. 'MESO'
-     1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-     1                     .and. obstype(ista)(7:8) .ne. '1A'
+                        if(      
+!    1                           obstype(ista)(1:4) .ne. 'MESO'
+!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
+!    1                     .and. obstype(ista)(7:8) .ne. '1A'
+     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
      1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
@@ -1571,9 +1596,11 @@ c read in laps lat/lon and topo
      1                 .and. j_sta .ge. 1 .and. j_sta .le. nj)then
 
 !                       Does this station report precip?
-                        if(      obstype(ista)(1:4) .ne. 'MESO'
-     1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-     1                     .and. obstype(ista)(7:8) .ne. '1A'
+                        if(      
+!    1                           obstype(ista)(1:4) .ne. 'MESO'
+!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
+!    1                     .and. obstype(ista)(7:8) .ne. '1A'
+     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
      1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2
@@ -1711,9 +1738,11 @@ c read in laps lat/lon and topo
      1                 .and. j_sta .ge. 1 .and. j_sta .le. nj)then
 
 !                       Does this station report precip?
-                        if(      obstype(ista)(1:4) .ne. 'MESO'
-     1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
-     1                     .and. obstype(ista)(7:8) .ne. '1A'
+                        if(      
+!    1                           obstype(ista)(1:4) .ne. 'MESO'
+!    1                     .and. obstype(ista)(1:4) .ne. 'CDOT'
+!    1                     .and. obstype(ista)(7:8) .ne. '1A'
+     1                           wx_s(ista)(1:7)    .ne. 'UNKNOWN'
      1                                                           )then
 !                           Calculate distance of stations (grid points **2)
                             distsq = (float(i) - ri_s(ista))**2

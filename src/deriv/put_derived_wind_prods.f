@@ -425,7 +425,7 @@ ccc202              format('H',i2)
 
 !           Read in LI data
             var_2d = 'LI'
-            ext = 'lsx'
+            ext = 'lst'
             call get_laps_2dgrid(i4time_sys,0,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,lifted,0,istatus)
