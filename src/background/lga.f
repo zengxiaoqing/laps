@@ -1,4 +1,4 @@
-ddis    Forecast Systems Laboratory
+cdis    Forecast Systems Laboratory
 cdis    NOAA/OAR/ERL/FSL
 cdis    325 Broadway
 cdis    Boulder, CO     80303
@@ -72,7 +72,6 @@ c                                            ! 1=good 0=bad
       real*4    prbot,delpr                  !LAPS bottom and delta pressures
 c
       character*255 lapsroot                 !LAPS root path
-      character*31  laps_domain_file         !LAPS domain desinator
 c
 c------------------> BACKGROUND GRID DATA PATH <--------------------------------
 c
@@ -111,32 +110,31 @@ c-------------------------------------------------------------------------------
 c
 c *** Comments used in writing netcdf files only.
 c
-      integer istat, i, no_infinite_loops
+      integer istat, i,l, no_infinite_loops
 c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
+      character*31  laps_domain_file
       character*132 cmodel(maxbgmodels)
       character*255 cfname
-      include 'lapsparms.cmn'
       integer oldest_forecast, max_forecast_delta
       logical use_analysis, use_systime
       logical time_plus_one,time_minus_one
 c_______________________________________________________________________________
 c
-c Read background model from nest7grid.parms
-      laps_domain_file = 'nest7grid'
+c Read information from static/nest7grid.parms
 
-      call s_len(laps_domain_file,istat)
-      call get_laps_config(laps_domain_file(1:istat),istat)
-      nx_laps = NX_L_CMN
-      ny_laps = NY_L_CMN
-      nz_laps = nk_laps
-      prbot = PRESSURE_BOTTOM_L/100.
-      delpr = PRESSURE_INTERVAL_L/100.
-      laps_cycle_time = laps_cycle_time_cmn
+      call get_grid_dim_xy(nx_laps,ny_laps,istatus)
+      call get_laps_dimensions(nz_laps,istatus)
+      call get_laps_cycle_time(laps_cycle_time,istatus)
+      call get_pressure_interval(delpr,istatus)
+      call get_pressure_bottom(prbot,istatus)
 
-      i=1
-
+      prbot=prbot/100.
+      delpr=delpr/100.
+c
+c Read information from static/background.nl
+c
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,use_analysis,cmodel,itime_inc)
 
@@ -215,7 +213,6 @@ c
            print *, nx_laps,ny_laps,nz_laps,prbot,delpr
            print *, laps_cycle_time
 ccc   print *, lapsroot
-           print *, laps_domain_file
            print *, nx_bg,ny_bg,nz_bg
            print *, 'bgpath ', bgpath(1:bglen)
            print *, 'cmodel ',cmodel(i)
@@ -226,11 +223,14 @@ c
            call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .          laps_cycle_time,lapsroot,laps_domain_file,
      .          bgmodel,bgpath,names,cmodel(i),max_files,bg_files,
-     .          nx_bg,ny_bg,nz_bg,i4time_now_lga,  lga_status)
+     .          nx_bg, ny_bg, nz_bg, i4time_now_lga, lga_status)
 
            if(lga_status.lt.0) then
-              reject_cnt=reject_cnt+1
-              reject_files(reject_cnt)=names(-lga_status)
+              do l = 1,bg_files
+                 reject_cnt=reject_cnt+1
+                 reject_files(reject_cnt)=names(l)       ! (-lga_status), name was names(-lga_status)
+              enddo
+              bg_files = 0                               ! reset the counter
            endif
 c
 c these constructs force t-1 and t+1 cycle time background generation.
@@ -398,7 +398,7 @@ c
      .          valid_bg(max_files),time_bg(max_files),
      .          bgvalid,
      .          i,ic,ii,j,jj,k,kk,l,ldl,
-     .          istatus
+     .          istatus,istatus_prep
 
       integer   i4lgatime(max_files)
       integer   i4bgtime
@@ -432,7 +432,7 @@ c
 
       call get_directory('static',outdir,len_dir)    
 
-      call get_laps_lat_lon(outdir(1:len_dir),laps_domain_file,
+      call get_laps_lat_lon(outdir(1:len_dir),'nest7grid',
      .                      nx_laps,ny_laps,lat,lon,topo,istatus)
 
       if (istatus.lt.1)print *,'Error reading lat, lon, topo data.'
@@ -531,18 +531,18 @@ c        fullname = bgpath(1:i)//'/'//bg_names(nf)
          if (bgmodel .eq. 1) then     ! Process 60 km RUC data
             call read_ruc60_native(bgpath,fname_bg(nf),af_bg(nf),
      .               nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .               gproj,istatus)
+     .               gproj,istatus_prep)
  
          elseif (bgmodel .eq. 2) then ! Process 48 km ETA conus-c grid data
             call read_eta_conusC(fullname,nx_bg,ny_bg,nz_bg,
      .                          htbg, prbg,tpbg,uwbg,vwbg,shbg,wwbg,
      .                          htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc,
      .                          uwbg_sfc,vwbg_sfc,mslpbg,
-     .                          istatus)
+     .                          istatus_prep)
 
-            if(istatus.gt.0) then
+            if(istatus_prep.eq.0) then
                call lprep_eta_conusc(nx_bg,ny_bg,nz_bg,prbg,tpbg,shbg,
-     +              tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus)
+     +              tpbg_sfc,prbg_sfc,shbg_sfc,gproj,istatus_prep)
             endif
 c
          elseif (bgmodel .eq. 4) then ! Process SBN Conus 211 data (Eta or RUC)
@@ -556,20 +556,21 @@ c
      .           nx_bg,ny_bg,nz_bg, nxbg,nybg,nzbg,ntbg,
      .           prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg,
      .           prbg_sfc,uwbg_sfc,vwbg_sfc,shbg_sfc,tpbg_sfc,
-     .           mslpbg,gproj,1,istatus)
+     .           mslpbg,gproj,1,istatus_prep)
 c
          elseif (bgmodel .eq. 5) then ! Process 40 km RUC data
 
             call read_ruc2_hybb(fullname,nx_bg,ny_bg,nz_bg,
-     +           mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg,istatus)
-            if(istatus.ge.1) then
+     +           mslpbg,htbg,prbg,shbg,uwbg,vwbg,tpbg,wwbg,istatus_prep)
+            if(istatus_prep.eq.0) then
                print*,'Read complete: entering prep'
                call lprep_ruc2_hybrid(nx_bg,ny_bg,nz_bg,htbg,prbg,shbg,
      +              uwbg,vwbg,tpbg,uwbg_sfc,vwbg_sfc,tpbg_sfc,prbg_sfc,
      +              shbg_sfc,gproj)
-
+               print*,'Data prep complete'
+            else 
+              print*,'lprep_ruc not called'
             endif
-            print*,'Data prep complete'
 c
 c ETA grib ingest currently disabled (J. Smart 9-4-98)
 c Also, NOGAPS 2.5 degree obsolete.
@@ -583,16 +584,16 @@ c
      .                  ,fname_bg(nf),af_bg(nf),nx_bg,ny_bg,nz_bg
      .                  ,prbg,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .                  ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
-     .                  ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus)
+     .                  ,uwbg_sfc,vwbg_sfc,mslpbg,gproj,istatus_prep)
 
          elseif (bgmodel .eq. 9) then ! Process NWS Conus data (RUC,ETA,NGM,AVN)
             call read_conus_nws(bgpath,fname_bg(nf),af_bg(nf),
      .                 nx_bg,ny_bg,nz_bg,prbg,htbg,tpbg,shbg,uwbg,vwbg,
-     .                 gproj,istatus)
+     .                 gproj,istatus_prep)
 c
          endif
          
-         if (istatus .lt. 1) then
+         if (istatus_prep .ne. 0) then
 c            l=index(bgpath,' ')-1
 
             call s_len(bgpath,l)

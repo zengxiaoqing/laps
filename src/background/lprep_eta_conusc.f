@@ -31,6 +31,8 @@ c
 c_______________________________________________________________________________
 c  pr is input as a single verticle column output as 3d array
 c
+      istatus = 1
+
       do k=1,nz
          pr(1,1,k) = pr(k,1,1)
       enddo
@@ -84,7 +86,7 @@ c
       ne(1)=57.29
       ne(2)=-49.3849
 c
-      istatus = 1
+      istatus = 0
       return
       end
 

@@ -188,10 +188,8 @@ c
 c
       integer nx,ny,nz
       integer n,ngrids
+      integer warncnt
 c
-c     integer time1,time2,
-c    .          fcst1,fcst2,
-
       integer   i4time_valid1,
      .          i4time_valid2,
      .          i4time_now,
@@ -282,6 +280,7 @@ c
 c
 c *** Do interpolation with time for each new file.
 c
+         warncnt = 0
          do k=1,nz
          do j=1,ny
             do i=1,nx
@@ -289,9 +288,12 @@ c
      +              grid1(i,j,k).ge.missingflag .or.
      +              grid2(i,j,k).ge.missingflag) then
 
-                  print*,'Missingflag at ',i,j,k,grid1(i,j,k),
-     +                 grid2(i,j,k)
-                  gridn(i,j,k) = missingflag
+                    if(warncnt.eq. 0)then
+                       print*,'Missingflag at ',i,j,k,
+     +                 grid1(i,j,k),grid2(i,j,k)
+                       warncnt = 1
+                    endif
+                    gridn(i,j,k) = missingflag
                else
                
                   gridn(i,j,k)= (1.- weight)*grid1(i,j,k) +
