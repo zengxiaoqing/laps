@@ -76,7 +76,7 @@ cdis
 !       Profiler Stuff
         real lat_pr(MAX_PR)                        
         real lon_pr(MAX_PR)                        
-
+        character*8 obstype(MAX_PR)
 
 !       Profiler Observations
 
@@ -105,7 +105,9 @@ cdis
 
         character*3 ext_in
 
-        logical l_use_raob,l_use_cdw
+        logical l_use_raob,l_use_cdw,l_use_all_prof_lvls
+
+        l_use_all_prof_lvls = .false.
 
 !  ***  Read in Model First Guess Data  **************************************
 
@@ -144,11 +146,12 @@ cdis
 
         call read_profiles(
      1            i4time_lapswind,heights_3d,                       ! I
-     1            lat_pr,lon_pr,                                    ! O
+     1            lat_pr,lon_pr,obstype,                            ! O
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
-     1            l_use_raob,                                       ! I
+     1            l_use_raob,l_use_all_prof_lvls,                   ! I
      1            ob_pr_u , ob_pr_v ,                               ! O
+     1            max_obs,obs_point,nobs_point,                     ! I/O
      1            nlevels_obs_pr,n_profiles,                        ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
@@ -172,35 +175,11 @@ cdis
      1          ,max_obs,obs_point,nobs_point                     ! I/O
      1          ,lat,lon                                          ! I
      1          ,NX_L,NY_L,NZ_L,MAX_PR                            ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr,n_profiles          ! I
+     1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles  ! I
      1          ,r_missing_data                                   ! I
      1          ,weight_prof                                      ! O
-     1          ,l_profiler                                       ! I
+     1          ,l_profiler,l_use_all_prof_lvls                   ! I
      1          ,istatus_remap_pro)                               ! O
-
-
-
-!       It would be interesting to see if this routine affects the LW3 file in
-!       the presence of radar velocity data. If it doesn't as expected, then it
-!       would simplify things to eliminate this call.
-        if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
-            call prof_anal(istat_radar_vel                         ! I
-     1          ,n_vel_grids                                       ! I
-     1          ,ob_pr_u,ob_pr_v                                   ! I
-     1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar ! I
-     1          ,i2_missing_data                                   ! I
-     1          ,NX_L,NY_L,NZ_L,MAX_PR                             ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr                      ! I
-     1          ,r_missing_data,weight_prof                        ! I
-     1          ,heights_1d                                        ! I
-     1          ,istatus)                                          ! O
-
-            if(istatus .ne. 1)then
-                write(6,*)' Error in prof_anal'
-                return
-            endif
-        endif ! valid radar data
-
 
 !  ***  Read in SFC wind data   *******************************************
 
@@ -292,10 +271,10 @@ cdis
      1          ,max_obs,obs_point,nobs_point                        ! I/O
      1          ,lat,lon                                             ! I
      1          ,ni,nj,nk,MAX_PR                                     ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr,n_profiles             ! I
+     1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles     ! I
      1          ,r_missing_data                                      ! I
      1          ,weight_prof                                         ! O
-     1          ,l_profiler                                          ! I
+     1          ,l_profiler,l_use_all_prof_lvls                      ! I
      1          ,istatus)                                            ! O
 
 !       Perform horizontal remapping of profile obs onto LAPS grid
@@ -309,6 +288,7 @@ cdis
         integer nlevels_obs_pr(MAX_PR)
         real*4 lat_pr(MAX_PR)
         real*4 lon_pr(MAX_PR)
+        character*8 obstype(MAX_PR)
         real*4 ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
         real*4 ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
 
@@ -320,7 +300,7 @@ cdis
         real*4 grid_laps_v(ni,nj,nk)
         real*4 grid_laps_wt(ni,nj,nk)
 
-        logical l_profiler
+        logical l_profiler, l_use_all_prof_lvls
 
         write(6,*)
         write(6,*)' Subroutine remap_profiles: # of profiles = '
@@ -354,17 +334,20 @@ cdis
                                 write(6,11)k,ob_u,ob_v
  11                             format(10x,i4,2f8.1)
 
-!                               Add to data structure (still is subsampling)
-                                nobs_point = nobs_point + 1
-                                obs_point(nobs_point)%i = i_ob
-                                obs_point(nobs_point)%j = j_ob
-                                obs_point(nobs_point)%k = k
-                                obs_point(nobs_point)%rk = k
-                                obs_point(nobs_point)%valuef(1) = ob_u
-                                obs_point(nobs_point)%valuef(2) = ob_v
-                                obs_point(nobs_point)%weight = 
-     1                                                weight_prof       
-                                obs_point(nobs_point)%type = 'prof'      
+                                if(.not. l_use_all_prof_lvls .and.
+     1                             obstype(i_pr)(1:5) .ne. 'TOWER')then       
+!                                   Add to data structure (still is subsampling)
+                                    nobs_point = nobs_point + 1
+                                    obs_point(nobs_point)%i = i_ob
+                                    obs_point(nobs_point)%j = j_ob
+                                    obs_point(nobs_point)%k = k
+                                    obs_point(nobs_point)%rk = k
+                                    obs_point(nobs_point)%valuef(1)=ob_u       
+                                    obs_point(nobs_point)%valuef(2)=ob_v
+                                    obs_point(nobs_point)%weight = 
+     1                                                    weight_prof       
+                                    obs_point(nobs_point)%type = 'prof'      
+                                endif
 
                             endif
 
@@ -386,212 +369,4 @@ cdis
         return
         end
 
-
-
-        subroutine prof_anal(istat_radar_vel                            ! I
-     1          ,n_vel_grids                                            ! I
-     1          ,ob_pr_u,ob_pr_v                                        ! I
-     1          ,grid_ra_vel,lat,lon,rlat_radar,rlon_radar,rheight_radar! I
-     1          ,i2_missing_data                                        ! I
-     1          ,ni,nj,nk,MAX_PR                                        ! I
-     1          ,nlevels_obs_pr,lat_pr,lon_pr                           ! I
-     1          ,r_missing_data,weight_prof                             ! I/O
-     1          ,heights_1d                                             ! I
-     1          ,istatus)                                               ! O
-
-!          Do a rough analysis of profile data for comparison with radial
-!          velocities. Only one radar (#1) is used.
-
-!          It is questionable whether this routine actually passes in
-!          the nyquist velocity - or does anything else useful for that matter
-
-!       Profile Observations
-
-        integer nlevels_obs_pr(MAX_PR)
-        real*4 lat_pr(MAX_PR)
-        real*4 lon_pr(MAX_PR)
-        real*4 ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
-        real*4 ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
-
-!       Barnes Profile analysis
-
-        real*4 weights_pr(ni,nj)
-        real*4 lat(ni,nj),lon(ni,nj)
-        real*4 max_weights_pr(ni,nj,nk)
-        integer i_profiler_nearest(ni,nj,nk)
-
-        real*4 sum_pr_u(ni,nj,nk)
-        real*4 sum_pr_v(ni,nj,nk)
-        real*4 sum_wt_pr(ni,nj,nk)
-
-        real*4 grid_pr_u(ni,nj,nk) ! Barnes anal. Profile (u)
-        real*4 grid_pr_v(ni,nj,nk) ! Barnes anal. Profile (v)
-!       real*4 grid_pr_t(ni,nj,nk) ! Barnes anal. Profile (u)
-        real*4 grid_pr_r(ni,nj,nk) ! Barnes anal. Profile (v)
-
-        real*4 grid_ra_vel(ni,nj,nk)
-
-        real*4 heights_1d(nk)
-
-        write(6,*)
-        write(6,*)' Subroutine prof_anal'
-
-        if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
-            write(6,*)' Initializing profile weight arrays'
-            do k = 1,nk
-                do j = 1,nj
-                do i = 1,ni
-                    sum_pr_u(i,j,k) = 0.
-                    sum_pr_v(i,j,k) = 0.
-                    sum_wt_pr(i,j,k) = 0.
-                    max_weights_pr(i,j,k) = 0.
-                    i_profiler_nearest(i,j,k) = 0
-                enddo ! i
-                enddo ! j
-            enddo ! k
-        endif ! Valid radar data (then initialize profile weight arrays)
-
-        I4_elapsed = ishow_timer()
-
-        do i_pr = 1,MAX_PR
-            if(nlevels_obs_pr(i_pr) .gt. 0)then
-              call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
-     1                                ,lat,lon,ni,nj,ri,rj,istatus)
-              if(istatus .eq. 1)then
-
-                i_ob = nint(ri)
-                j_ob = nint(rj)
-
-                write(6,*)' Analyzing profile',i_pr,i_ob,j_ob
-
-                if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)the
-     1n
-                    write(6,*)' Determining weights for profile',i_pr
-                    call weights_hor(i_ob,j_ob,weights_pr,i_pr,ni,nj)
-                endif
-
-                do k = 1,nk
-
-                     if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
-
-                         ob_u = ob_pr_u (i_pr,k)
-                         ob_v = ob_pr_v (i_pr,k)
-
-                         if(istat_radar_vel .eq. 1 .and. n_vel_grids
-     1                                                      .gt. 0)then
-
-                           do j = 1,nj
-                           do i = 1,ni
-                             sum_pr_u(i,j,k) = sum_pr_u(i,j,k) +
-     1                                         weights_pr(i,j) * ob_u
-                             sum_pr_v(i,j,k) = sum_pr_v(i,j,k) +
-     1                                         weights_pr(i,j) * ob_v
-                             sum_wt_pr(i,j,k) = sum_wt_pr(i,j,k) +
-     1                                          weights_pr(i,j)
-
-                             if(weights_pr(i,j) .gt. 
-     1                          max_weights_pr(i,j,k))then
-                                 max_weights_pr(i,j,k) = weights_pr(i,j)
-                                 i_profiler_nearest(i,j,k) = i_pr
-                             endif
-
-                           enddo ! i
-                           enddo ! j
-
-                         endif ! Valid radar data present
-                     endif ! In bounds vertically (of profile data)
-                enddo ! level
-
-              else
-                write(6,*)' Profile outside domain ',i_pr
-
-              endif ! in domain
-
-            endif ! data present
-        enddo ! i_pr
-
-        I4_elapsed = ishow_timer()
-
-        if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
-          write(6,*)' Dividing weights'
-          do k = 1,nk
-            do j = 1,nj
-                 do i = 1,ni
-
-                      if(sum_wt_pr(i,j,k) .gt. 0.)then
-                          grid_pr_u(i,j,k)
-     1                  = sum_pr_u(i,j,k) / sum_wt_pr(i,j,k)
-                          grid_pr_v(i,j,k)
-     1                  = sum_pr_v(i,j,k) / sum_wt_pr(i,j,k)
-                      else
-                          grid_pr_u(i,j,k) = r_missing_data
-                          grid_pr_v(i,j,k) = r_missing_data
-                          i_profiler_nearest(i,j,k) = i2_missing_data
-                      endif
-
-                enddo ! i
-            enddo ! j
-          enddo ! k
-        endif ! Valid velocity data
-
-        I4_elapsed = ishow_timer()
-
-! ***   Convert profile to radial and tangential radar coordinates   ********************************
-        write(6,*)' n_vel_grids/istat = ',n_vel_grids,istat_radar_vel       
-
-        if(istat_radar_vel .eq. 1 .and. n_vel_grids .gt. 0)then
-          write(6,*)' Generating radar coordinates'
-!         do l = 1,n_radars
-          do k = 1,nk
-            do j = 1,nj
-            do i = 1,ni
-
-              if(grid_ra_vel(i,j,k) .ne. r_missing_data)then ! for efficiency
-
-                call latlon_to_radar(lat(i,j),lon(i,j),height_of_level(k
-     1)
-     1                  ,azimuth,slant_range,elev
-     1                  ,rlat_radar,rlon_radar,rheight_radar)
-
-                if(grid_pr_u(i,j,k) .ne. r_missing_data)then
-                    call uvtrue_to_radar(grid_pr_u(i,j,k),
-     1                           grid_pr_v(i,j,k),
-     1                           dum_t, !            grid_pr_t(i,j,k),
-     1                           grid_pr_r(i,j,k),
-     1                           azimuth,
-     1                           lon(i,j))
-
-                else ! grid_pr_u(i,j,k) = r_missing_data
-                    grid_pr_r(i,j,k) = r_missing_data
-
-                endif
-
-              else
-                grid_pr_r(i,j,k) = r_missing_data
-
-              endif ! efficiency check
-
-            enddo ! j
-            enddo ! i
-          enddo ! k
-!         enddo ! l
-
-          I4_elapsed = ishow_timer()
-
-!         Compare Remapped Radial Velocities to Profile Obs
-!         do l = 1,n_radars
-              write(6,*)' Radar # ',1
-              call comp_vr_prof(grid_ra_vel
-     1                 ,grid_pr_r,r_missing_data,ni,nj,nk
-     1                 ,lat,lon,max_weights_pr,i_profiler_nearest
-     1                       ,v_nyquist_2,unfolding_thresh
-     1                 ,heights_1d,rlat_radar,rlon_radar,rheight_radar)
-!         enddo ! l
-
-        endif ! We have radar data
-        I4_elapsed = ishow_timer()
-
-        istatus = 1
-        return
-        end
 
