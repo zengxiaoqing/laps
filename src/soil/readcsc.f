@@ -73,11 +73,8 @@ c           if(time(13:14).eq.'13')goto 52
 c
 	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
      &ISTATUS)
-	   IF (ISTATUS .NE. 1) THEN
-	      WRITE(6,*) 'Error getting LAPS LCV at ',i4time
-              write(6,*) 'Not using this lcv file'
-              go to 522
-           ENDIF
+	   IF (ISTATUS .NE. 1)go to 522
+
            icsc=icsc+1
            do i=1,imax
            do j=1,jmax
@@ -111,6 +108,9 @@ c  point, then the csctot point is set to the csc ob.
 c
         i4time=i4time-48*3600
         ncycle_times=48*int(3600./float(laps_cycle_time))+1
+        write(6,*)'---------------------------------------'
+        write(6,*)
+
         do itime=1,ncycle_times
 c
            call cv_i4tim_asc_lp(i4time,time,istatus)
@@ -121,11 +121,8 @@ c First get csc field again. Will not analyze - just use this to
 c   write over any previous time's snow_total obs.
 	   CALL GETLAPSLCV(I4TIME,LCV,CSC,IMAX,JMAX,
      &ISTATUS)
-	   IF (ISTATUS .NE. 1) THEN
-	      WRITE(6,*) 'Error getting LAPS LCV at ',i4time
-              write(6,*) 'Not using this lcv file'
-              go to 52
-           ENDIF
+	   IF (ISTATUS .NE. 1)goto 52
+
            do i=1,imax
            do j=1,jmax
              if(csc(i,j).le.1.1)cscnew(i,j)=csc(i,j)  
@@ -138,11 +135,8 @@ c now get snow_total obs
 c
 	   CALL GETLAPSL1S(I4TIME,snow_total,imax,jmax,1,
      &ISTATUS)
-	   IF (ISTATUS .NE. 1) THEN
-	      WRITE(6,*) 'Error getting LAPS L1S at ',i4time
-              write(6,*) 'Not using this l1s file'
-              go to 51
-           ENDIF
+	   IF (ISTATUS .NE. 1)goto 51
+
 c Adjust snow cover field based upon snow total 
 c   if snowfall total >= 2cm, then set snow cover to 1.
 c   if snowfall total  = 1cm, then set snow cover to 0.5
@@ -208,7 +202,6 @@ C
      1      LVL_COORD,UNITS,COMMENT,readv,ISTATUS)
 C
 	IF (ISTATUS .NE. 1) THEN
-		PRINT *,'Error reading LAPS lcv data.'
 		ISTATUS=ERROR(2)
 		RETURN
 	ENDIF
@@ -273,7 +266,6 @@ C
      1      LVL_COORD,UNITS,COMMENT,readv,ISTATUS)
 C
 	IF (ISTATUS .NE. 1) THEN
-		PRINT *,'Error reading LAPS l1s data.'
 		ISTATUS=ERROR(2)
 		RETURN
 	ENDIF
