@@ -252,6 +252,12 @@ CONTAINS
       ! Set up WRF model
       CALL make_wrf_file_name(lfmprd_dir, domain_num,0,data_file)
       print *, 'Initial WRF file: ', TRIM(data_file)
+      INQUIRE(FILE=data_file,EXIST=file_ready)
+      IF (.NOT.file_ready) THEN
+        CALL wrfio_wait (data_file,max_wait_sec)
+      ELSE
+        IF (realtime) CALL sleep(60)
+      ENDIF
       CALL open_wrfnc(data_file,lun_data,status)
       CALL wrf_time_setup
       CALL model_setup(lun_data,lun_terrain)
