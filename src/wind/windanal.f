@@ -53,6 +53,7 @@ cdis
      1     ,imax,jmax,kmax,lat,lon                                     ! I
      1     ,i4time,grid_spacing_m                                      ! I
      1     ,r_missing_data                                             ! I
+     1     ,heights_3d                                                 ! I
 !    1     ,i_3d                                                       ! I
      1     ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding  ! I
 !    1     ,n_iter_wind_in
@@ -137,6 +138,7 @@ cdis
 
 !     # of radar obs before filtering for each radar (modified by QC)
       integer*4 n_radarobs_tot_unfltrd(max_radars)                     ! Input/Modified
+      real*4   heights_3d(imax,jmax,kmax)                              ! Input
 
 !--------------------------------------------------------------------------------
 
@@ -711,6 +713,7 @@ csms$>       icount_radar_total, out>:default=ignore)  begin
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
+     1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
      1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
@@ -814,6 +817,7 @@ csms$>                    out>:default=ignore) begin
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
+     1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
      1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
@@ -938,6 +942,7 @@ csms$>                                     :default=ignore)  begin
      1        ,n_radars,max_radars,idx_radar_a            ! Input
      1        ,imax,jmax,kmax                             ! Input
      1        ,r_missing_data                             ! Input
+     1        ,heights_3d                                 ! Input
      1        ,vr_obs_unfltrd                             ! Input
      1        ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1        ,thresh_4_radarobs_lvl_unfltrd              ! Input
