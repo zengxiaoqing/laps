@@ -48,7 +48,7 @@ c
       real*4    u_orig,v_orig
       real*4    pi
       real*4    u1,v1
-      real*4    resx,resy
+c     real*4    resx,resy
 
       real*4    ri1,rj1
       real*4    ri2,rj2
@@ -61,8 +61,8 @@ c
       real*4    lonterm
       real*4    dxterm
       real*4    dyterm
-      real*4    wdw_lat
-      real*4    wdw_lon
+c     real*4    wdw_lat
+c     real*4    wdw_lon
       real*4    rls,rle,res,ree
       real*4    rlatin,rlap,rlov
       real*4    rla1,rlo1
@@ -77,12 +77,13 @@ c
       real*4    v
 
       integer isat,jtype,kchl
-      integer i,j,n,nc
+c     integer i,j,n,nc
+      integer i,j,nc
       integer ii,jj
       integer indx
       integer n1
       integer nx,ny
-      integer lend
+c     integer lend
       integer istatus
       integer jstatus
       integer istatus_wp
@@ -90,12 +91,12 @@ c
       integer nx3mx,ny3mx
       integer linestart,lineend
       integer elemstart,elemend
-      integer idum
+c     integer idum
 
       character*200 table_path
       character*255 path
       character*200 cname
-      character*6   csatid  !satellite data identifier {goes08, goes09, meteos, etc}
+c     character*6   csatid  !satellite data identifier {goes08, goes09, meteos, etc}
       character*3   cdtype !satellite data type       {'cdf', 'gvr', 'gwc', 'asc', etc}
       character*3   ct     !                         {'vis', 'ir', or 'wv'}
 c

@@ -9,7 +9,7 @@ C
       integer   dim_id
       integer   nx,ny
       integer   rcode
-      integer   ncid
+c     integer   ncid
       integer   lenf
       integer   nf_status
       real      rlat00

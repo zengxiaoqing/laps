@@ -37,8 +37,8 @@ C
       INTEGER   northSouthCycles               
       INTEGER   northSouthIncs                 
       REAL*8      orbitAttitude                  (   1, 336)
-      CHARACTER*1 x_dim                          (   1,   8)
-      CHARACTER*1 y_dim                          (   1,   8)
+c     CHARACTER*1 x_dim                          (   1,   8)
+c     CHARACTER*1 y_dim                          (   1,   8)
       INTEGER   Nx                             (   1)
       INTEGER   Ny                             (   1)
       REAL*4      Lap                            (   1)
