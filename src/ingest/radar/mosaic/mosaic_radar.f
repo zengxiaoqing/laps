@@ -321,6 +321,7 @@ c              write(6,*)c_filename_vxx(l,i)(1:nn)
 
       do i4time_mos = i4time_start,i4time_end,mosaic_cycle_time
 
+          i_ra_count = 0
           write(6,*)' mosaic time loop = ',i4time_start
      1                                    ,i4time_mos,i4time_end
 
@@ -536,7 +537,9 @@ c
              units_vrc(1) = 'DBZ'
              units_vrc(2) = 'M'
 
-             read(cradars,*)n_radars
+!comment next line...shouldn't reset n_radars LW 4-2-03
+!            read(cradars,*)n_radars
+
              do ic = 1,2
                  comment_vrc(ic)='Radar mosaic. Type = '//c_mosaic_type       
      1                           //' '//cradars
