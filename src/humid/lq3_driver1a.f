@@ -880,7 +880,7 @@ c     make call to goes moisture insertion
          if(c_istatus.eq.1 .and. t_istatus.eq.1) then
 
             write (6,*) 'begin goes insertion step'
-            call goes_sbn (
+            call variational (
      1           data,          ! 3-d specific humidity g/g
      1           lat,lon,       ! 2-d lat and longitude
      1           i4time,        ! i4time of run
@@ -890,6 +890,9 @@ c     make call to goes moisture insertion
      1           goes_switch,   ! goes switch and satellite number
      1           sounder_switch, ! sounder switch, 0=imager,1=sndr
      1           sat_skip,      ! normally 1 for full resolution
+     1           gw1,gw2,gw3,
+     1           gww1,gww2,gww3,
+     1           gvap_p,
      1           ii,jj,kk
      1           )
             
