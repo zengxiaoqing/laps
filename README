@@ -348,7 +348,7 @@
          geog/
              laps_terrain.tar
          laps-m-n-o.tar
-         laps-m-n-o/                                           ($LAPS_SRC_ROOT)
+         laps-m-n-o/                          ($LAPS_SRC_ROOT=$LAPSINSTALLROOT)
              Makefile
              src/
                  ingest/
@@ -375,7 +375,7 @@
 
      <pre>
      /home_disk/
-         src/
+         builds/
              laps-m-n-o.tar
              laps-m-n-o/                                       ($LAPS_SRC_ROOT)
                  Makefile
@@ -408,7 +408,7 @@
 
             ----   2.2.1  Untarring the Source Code  ---
 
-     Place the tar file in the directory '/home_disk' or '/home_disk/src'.
+     Place the tar file in the directory '/home_disk' or '/home_disk/builds'.
      Untar the laps source code using a command like...
      prompt> gzcat laps-m-n-o.tar.gz | tar xf -
  
