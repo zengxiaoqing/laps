@@ -255,8 +255,6 @@ cdis
           write(6,50)k,nstart,nstop,nobs
 50        format(' lvl,nstart,nstop,nobs=',4i6)
 
-!         height_level = height_of_level(k)
-
 !         Analyze every few grid points
           do j=1,jmax,nskip
           do i=1,imax,nskip
