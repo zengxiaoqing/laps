@@ -70,7 +70,7 @@ C phase_angle_d  O        R*4  A  Phase Angle (sparse array if iskip_bilin > 1)
 C Specular_ref_angle_d O  R*4  A  Distance from specular reflection pt to sun
 C istatus        O        I*4     Standard status return.
 
-
+        integer         ni,nj
 C***Parameter list variables
         real*4          lat(ni,nj),lon(ni,nj)
         Real*4          sublat_d,sublon_d,range_m
@@ -99,7 +99,7 @@ C***Local variables
      1          Phase_factor(maxlut,maxlut),Phase_angle_d(ni,nj),
      1          sat_radius,Emission_angle_d,Specular_ref_angle_d(ni,nj)       
         Integer*2 nilut,njlut,I,J,img_i(maxlut),img_j(maxlut),
-     1            ilut,jlut,ISpace,JSpace
+     1            ilut,jlut,ISpace,JSpace, ni2, nj2
 
 
         write(lun,*)' Begin normalization routine (V970519)'
@@ -160,16 +160,18 @@ C***Fill the solar brightness and phase angle arrays
         else
             write(lun,*)' Dimension for maxlut',maxlut,nilut,njlut
         endif
-
+        nj2 = nj
+        ni2 = ni
         Do jlut=1,njlut
          j = ((jlut-1) * iskip_bilin) + 1
-         j = min(j,nj)
+         
+         j = min(j,nj2)
          img_j(jlut) = j
 
          Do ilut=1,nilut
 
           i = ((ilut-1) * iskip_bilin) + 1
-          i = min(i,ni)
+          i = min(i,ni2)
           img_i(ilut) = i
 
 C   Compute equatorial coordinates of point on sfc of earth
