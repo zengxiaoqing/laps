@@ -407,11 +407,15 @@ cc	       pmsl_s(k) = p_msl
  983    format(1x,i5,2x,a8,':',3f12.2)
 	print *,' '
 c
-c.....  If we have good background fields from LGB (or similar), use them
+c.....  If we have good background T, Td, and Station P fields from LGB (or 
+c.....  FSF), and there is no reduced pressure background, use them
 c.....  to calculate a reduced pressure background.  Otherwise, skip this
 c.....  section to used what we've already found above.
 c
-	if(back_t.eq.1 .and. back_td.eq.1 .and. back_sp.eq.1) then
+        write(6,*)' back_rp = ',back_rp
+
+	if(back_t.eq.1 .and. back_td.eq.1 .and. back_sp.eq.1
+     1                 .and. back_rp.ne.1) then
 	   print *,' Have good backgrounds...calculating RP_BK from them.'
 	   do j=1,jmax
 	   do i=1,imax
