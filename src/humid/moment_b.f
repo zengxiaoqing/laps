@@ -37,6 +37,10 @@ c found under the satellite library area.
 12    continue
       adev=adev/n
       var=(var-ep**2/n)/(n-1)
+      if(var.lt.0.) then
+         write(6,*) 'negative VAR detected, taking absolute value'
+         var = abs(var)
+      endif
       sdev=sqrt(var)
       if(var.ne.0.)then
         skew=skew/(n*sdev**3)
