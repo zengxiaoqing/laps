@@ -201,7 +201,7 @@ C
           enddo ! i
 
       elseif(colortable .eq. 'hues' .or. colortable .eq. 'ref'
-     1                              .or. colortable .eq. 'cpe')then       
+     1  .or. colortable .eq. 'acc'  .or. colortable .eq. 'cpe')then       
           ncols1 = 50
           ncols = 60
           call color_ramp(1,ncols1/8,IWKID
@@ -225,6 +225,15 @@ C
 
           if(colortable .eq. 'ref')then
               do i = 1,3
+                  call GSCR(IWKID, i, 0., 0., 0.)
+              enddo 
+
+              do i = ncols,ncols
+                  call GSCR(IWKID, i, 0.3, 0.3, 0.3)
+              enddo
+
+          elseif(colortable .eq. 'acc')then
+              do i = 1,2
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
 
