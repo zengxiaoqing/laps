@@ -9,6 +9,7 @@
  JEND = 479,
  /
 c
+c Author: J. Smart (9-22-98)
 c ln3_driver.exe runtime parameters
 c
 c msng_radar = as defined by the netCDF fill value (signed)
