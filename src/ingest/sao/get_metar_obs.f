@@ -503,8 +503,20 @@ c.....	Figure out the cloud data.
 c
 	  k_layers = 0               ! number of cloud layers
 c
+!         This requires that the first array element has a cloud layer in it
 	  if(cvr(1,i)(1:1) .eq. ' ') then
 	     k_layers = 0
+
+!            Test section to help determine whether this if block is needed
+             k_layers1 = 0
+	     do k=1,5
+		if(cvr(k,i)(1:1) .ne. ' ') k_layers1 = k_layers1 + 1       
+	     enddo !k
+
+             if(k_layers1 .ne. 0)then
+                 write(6,*)' WARNING: k_layers1 is > 0',k_layers1
+             endif
+
 	  else
 	     do k=1,5
 		if(cvr(k,i)(1:1) .ne. ' ') k_layers = k_layers + 1       
