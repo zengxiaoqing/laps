@@ -11,7 +11,7 @@
      1                   ,istatus)
        if(istatus .ne. 1)goto999
  
-       wrote(6,*)
+       write(6,*)
        write(6,*)' Call ingest_raob'
        call ingest_raob(path_to_raw_raob)
 
