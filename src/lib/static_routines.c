@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "netcdf.h"
-#include "grid_info.h"
-#include "laps_grid_def.h"
 
 #define SYSCMD "ncgen -o %s %s"
+#define LAT "lat"
+#define LON "lon"
 
 #ifdef FORTRANCAPS
 #define read_cdf_static READ_CDF_STATIC
@@ -13,15 +13,14 @@
 #endif
 
 #ifdef FORTRANUNDERSCORE
-#define cre_static cre_static_
-#define cre_loss cre_loss_
 #define cdf_update_stat cdf_update_stat_
+#define free_static_malloc free_static_malloc_
+#define cdf_wrt_hdr_stat cdf_wrt_hdr_stat_
 #define write_cdf_static write_cdf_static_
 #define cdf_retr_grid_stat cdf_retr_grid_stat_
 #define cdf_retr_hdr_stat cdf_retr_hdr_stat_
 #define read_cdf_static read_cdf_static_
 #define open_cdf open_cdf_
-#define itoa itoa_
 #define cdf_dim_size cdf_dim_size_
 #define log_diag log_diag_
 #define nstrncpy nstrncpy_
@@ -64,18 +63,19 @@
 *		-1 if an error occurs
 ***************************************************************************/
 #ifdef __STDC__
-int cdf_update_stat (int i_cdfid,char *s_field,char *gptr,char *commnt,
-		     char *comm_ptr)
+int cdf_update_stat (int i_cdfid,int i_varid, char *s_field,char *gptr,
+                     char *commnt, char *comm_ptr)
 #else
-int cdf_update_stat (i_cdfid, s_field, gptr, commnt, comm_ptr)
+int cdf_update_stat (i_cdfid, i_varid, s_field, gptr, commnt, comm_ptr)
 int i_cdfid;
+int i_varid;
 char *s_field;
 char *gptr;
 char *commnt;
 char *comm_ptr;
 #endif
 {
-	int i_status, i_comid, i_varid;
+	int i_status, i_comid;
 #ifdef __alpha
 	long start[4], count[4], start_c[3], count_c[3];
 #else
@@ -108,8 +108,6 @@ char *comm_ptr;
 
 /* get the variable ids */
 	log_diag (2, "Data variable name = %s\n", s_field);
-	if ((i_varid = ncvarid (i_cdfid, s_field)) == (-1))
-		return -1;
 	if ((i_comid = ncvarid (i_cdfid, commnt)) == (-1))
 		return -1;
 
@@ -130,6 +128,327 @@ char *comm_ptr;
 	}
 
 	return i_status;
+}
+/*************************************************************************
+*       FREE_STATIC_MALLOC
+*       Category        Product Management
+*       Group           General Purpose Database
+*       Module          Write Static Grid data 
+*       Purpose         Frees memory mallocd within write_cdf_static
+*
+*       Designer/Programmer : Linda Wharton
+*       Modifications : original 7/97
+*
+*       Input:
+*               prefix     String variable mallocd in write_cdf_static
+*               comm_var   String variable mallocd in write_cdf_static
+*               model      String variable mallocd in write_cdf_static
+*               asctime    String variable mallocd in write_cdf_static
+*               var        String variable mallocd in write_cdf_static
+*               comment    String variable mallocd in write_cdf_static
+*               fname      String variable mallocd in write_cdf_static
+*       Output:
+*               none
+*       Globals:
+*               none
+*       Returns:
+*               none
+*****************************************************************************/
+#ifdef __STDC__
+        free_static_malloc(char *prefix, char *comm_var, char *model,
+                           char *asctime, char *var, char *comment,
+                           char *units, char *fname)
+#else
+        free_static_malloc(prefix, comm_var, model, asctime, var, 
+                           comment, units, fname)
+char *prefix; 
+char *comm_var;
+char *model;
+char *asctime;
+char *var;
+char *comment;
+char *units;
+char *fname;
+#endif
+
+{
+        free(prefix);
+        free(comm_var); 
+	free(model);
+	free(asctime);
+	free(var);
+	free(comment);
+        free(units);
+	free(fname);
+        return;
+}
+/*************************************************************************
+*	CDF_WRT_HDR_STAT
+*	Category	Product Management
+*	Group		General Purpose Database
+*	Module		Write header data
+*	Purpose		Write header data into netCDF static file.
+*
+*	Designer/Programmer : Linda Wharton
+*	Modifications : original 7/97
+*
+*	Input:
+*               cdf_id          netCDF id of open file to write to
+*		n_grids		Number of grids available in file  
+*		grid_spacing	size of grid box in METERS
+*		asctime		Ascii time file was generated
+*		model		Model generating static data
+*		Nx		X dimension of data in file
+*		Ny		Y dimension of data in file
+*               Dx		delta X in km of grid 
+*               Dy              delta Y in km of grid
+*               LoV             standard longitude
+*               Latin1          first standard latitude
+*               Latin2          second standard latitude
+*               origin          site where LAPS being run
+*               map_proj	map projection
+*	Output:
+*		none
+*	Globals:
+*		none
+*	Returns:
+*		status		Returns status to calling subroutine
+**************************************************************************/
+#ifdef __STDC__
+#ifdef __alpha
+int cdf_wrt_hdr_stat(int cdf_id, int *n_grids, float *grid_spacing,
+                     char *asctime, char *model, int *nx, int *ny,
+                     float *dx, float *dy, float *la1, float *lo1, 
+                     float *lov, float *latin1, float *latin2, 
+                     char *origin, char *map_proj, double unixtime,
+                     int *status)
+#else
+int cdf_wrt_hdr_stat(int cdf_id, long *n_grids, float *grid_spacing,
+                     char *asctime, char *model, long *nx, long *ny,
+                     float *dx, float *dy, float *la1, float *lo1, 
+                     float *lov, float *latin1, float *latin2, 
+                     char *origin, char *map_proj, double unixtime,
+                     long *status)
+#endif
+#else
+#ifdef __alpha
+int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, model, nx, 
+                     ny, dx, dy, la1, lo1, lov, latin1, latin2, origin, 
+                     map_proj, unixtime, status)
+int cdf_id; 
+int *n_grids; 
+float *grid_spacing;
+char *asctime; 
+char *model; 
+int *nx; 
+int *ny;
+float *dx; 
+float *dy; 
+float *la1;
+float *lo1;
+float *lov; 
+float *latin1;
+float *latin2; 
+char *origin; 
+char *map_proj;
+double unixtime;
+int *status;
+#else
+int cdf_wrt_hdr_stat(cdf_id, n_grids, grid_spacing, asctime, model, nx, 
+                     ny, dx, dy, la1, lo1, lov, latin1, latin2, origin, 
+                     map_proj, unixtime, status)
+int cdf_id; 
+long *n_grids; 
+float *grid_spacing;
+char *asctime; 
+char *model; 
+long *nx; 
+long *ny;
+float *dx; 
+float *dy; 
+float *la1;
+float *lo1;
+float *lov; 
+float *latin1;
+float *latin2; 
+char *origin; 
+char *map_proj;
+double unixtime;
+long *status;
+#endif
+#endif
+{
+
+    int i_varid;
+    long start[1], edges[1];
+    long start_map[2], edges_map[2];
+    short nx_in, ny_in;
+
+/* store n_grids */
+    if ((i_varid = ncvarid (cdf_id, "n_grids")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+#ifdef __alpha
+    ncvarput1(cdf_id, i_varid, (long *)0, (void *)n_grids);
+#else
+    ncvarput1(cdf_id, i_varid, (int *)0, (void *)n_grids);
+#endif
+
+/* store imax */
+    if ((i_varid = ncvarid (cdf_id, "imax")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+#ifdef __alpha
+    ncvarput1(cdf_id, i_varid, (long *)0, (void *)nx);
+#else
+    ncvarput1(cdf_id, i_varid, (int *)0, (void *)nx);
+#endif
+
+/* store jmax */
+    if ((i_varid = ncvarid (cdf_id, "jmax")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+#ifdef __alpha
+    ncvarput1(cdf_id, i_varid, (long *)0, (void *)ny);
+#else
+    ncvarput1(cdf_id, i_varid, (int *)0, (void *)ny);
+#endif
+
+  /* store grid_spacing */
+    if ((i_varid = ncvarid (cdf_id, "grid_spacing")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+#ifdef __alpha
+    ncvarput1(cdf_id, i_varid, (long *)0, (void *)grid_spacing);
+#else
+    ncvarput1(cdf_id, i_varid, (int *)0, (void *)grid_spacing);
+#endif
+      
+    start[0] = 0;
+
+/* store asctime */
+    edges[0] = strlen(asctime);
+    if ((i_varid = ncvarid (cdf_id, "asctime")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)asctime);
+ 
+  /* store model */
+    edges[0] = strlen(model);
+    if ((i_varid = ncvarid (cdf_id, "process_name")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+
+    ncvarput(cdf_id, i_varid, start, edges, (void *)model);
+
+    edges[0] = 1;
+/* store Nx */
+    if ((i_varid = ncvarid (cdf_id, "Nx")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    nx_in = (short)*nx;
+    ncvarput(cdf_id, i_varid, start, edges, (void *)&nx_in);
+      
+/* store Ny */
+    if ((i_varid = ncvarid (cdf_id, "Ny")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ny_in = (short)*ny;
+    ncvarput(cdf_id, i_varid, start, edges, (void *)&ny_in);
+      
+/* store Dx */
+    if ((i_varid = ncvarid (cdf_id, "Dx")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)dx);
+      
+/* store Dy */
+    if ((i_varid = ncvarid (cdf_id, "Dy")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)dy);
+      
+/* store La1 */
+    if ((i_varid = ncvarid (cdf_id, "La1")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)la1);
+      
+/* store Lo1 */
+    if ((i_varid = ncvarid (cdf_id, "Lo1")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)lo1);
+      
+/* store LoV */
+    if ((i_varid = ncvarid (cdf_id, "LoV")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)lov);
+      
+/* store Latin1 */
+    if ((i_varid = ncvarid (cdf_id, "Latin1")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)latin1);
+
+/* store Latin2 */
+    if ((i_varid = ncvarid (cdf_id, "Latin2")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)latin2);
+
+/* store valtime */
+    if ((i_varid = ncvarid (cdf_id, "valtime")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)&unixtime);
+
+/* store reftime */
+    if ((i_varid = ncvarid (cdf_id, "reftime")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+    ncvarput(cdf_id, i_varid, start, edges, (void *)&unixtime);
+
+/* store origin */
+    edges[0] = strlen(origin);
+    if ((i_varid = ncvarid (cdf_id, "origin_name")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+
+    ncvarput(cdf_id, i_varid, start, edges, (void *)origin);
+
+/* store map_proj */
+    start_map[0] = 0;
+    start_map[1] = 0;
+    edges_map[0] = 1;
+    edges_map[1] = strlen(map_proj);
+    if ((i_varid = ncvarid (cdf_id, "grid_type")) == (-1)) {
+      *status = -5;	/* returns "error writing header" */
+      return;
+    }
+
+    ncvarput(cdf_id, i_varid, start_map, edges_map, (void *)map_proj);
+
+    return 0;
 }
 /*************************************************************************
 *	WRITE_CDF_STATIC
@@ -164,132 +483,172 @@ char *comm_ptr;
 *****************************************************************************/
 #ifdef __STDC__
 #ifdef __alpha
-void write_cdf_static(char *filname,short *s_length,char *f_asctime,
-                      char *f_dir, int *dir_len,
-		      char *f_var,char *f_comment,char *f_ldf,
-                      int *ldf_len,int *imax,int *jmax, int *n_grids,
-                      float *data,float *zin,char *f_model,
-		      float *grid_spacing,int *status)
+void write_cdf_static(char *filname, short *s_length, char *f_asctime,
+                      char *f_cdl_dir, int *cdl_len, char *f_var, int *var_len,
+                      char *f_comment, int *com_len, char *f_ldf,
+                      int *ldf_len, int *imax, int *jmax, int *n_grids,
+                      int *nx_lp, int *ny_lp, float *data, char *f_model, 
+                      float *grid_spacing, float *dx, float *dy, float *lov, 
+                      float *latin1, float *latin2, char *f_origin, 
+                      int *origin_len, char *f_map_proj, int *map_len, 
+                      int *unixtime, int *status)
 #else
-void write_cdf_static(char *filname,short *s_length,char *f_asctime,
-                      char *f_dir, long *dir_len,
-		      char *f_var,char *f_comment,char *f_ldf,
-                      long *ldf_len,long *imax,long *jmax, long *n_grids,
-                      float *data,float *zin,char *f_model,
-		      float *grid_spacing,long *status)
+void write_cdf_static(char *filname, short *s_length, char *f_asctime,
+                      char *f_cdl_dir, long *cdl_len, char *f_var, long *var_len,
+                      char *f_comment, long *comm_len, char *f_ldf,
+                      long *ldf_len, long *imax, long *jmax, long *n_grids,
+                      long *nx_lp, long *ny_lp, float *data, char *f_model, 
+                      float *grid_spacing, float *dx, float *dy, float *lov, 
+                      float *latin1, float *latin2, char *f_origin, 
+                      long *origin_len, char *f_map_proj, long *map_len, 
+                      long *unixtime, long *status)
 #endif
 #else
 #ifdef __alpha
-void write_cdf_static(filname,s_length,f_asctime,f_dir,dir_len,
-                      f_var,f_comment,f_ldf,ldf_len,imax,jmax,
-                      n_grids,data,zin,f_model, grid_spacing,
-                      status)
+void write_cdf_static(filname, s_length, f_asctime, f_cdl_dir, cdl_len,
+                      f_var, var_len, f_comment, com_len, f_ldf, ldf_len,
+                      imax, jmax, n_grids, nx_lp, ny_lp, data, f_model, 
+                      grid_spacing, dx, dy, lov, latin1, latin2, f_origin, 
+                      origin_len, f_map_proj, map_len, unixtime, status)
 char *filname;
 short *s_length;
 char *f_asctime;
-char *f_dir;
-int *dir_len;
+char *f_cdl_dir;
+int *cdl_len;
 char *f_var;
+int *var_len;
 char *f_comment;
+int *com_len;
 char *f_ldf;
 int *ldf_len;
 int *imax;
 int *jmax;
 int *n_grids;
+int *nx_lp;
+int *ny_lp;
 float *data;
-float *zin;
 char *f_model;
 float *grid_spacing;
+float *dx;
+float *dy;
+float *lov;
+float *latin1;
+float *latin2;
+char *f_origin;
+int *origin_len;
+char *f_map_proj;
+int *map_len;
+int *unixtime;
 int *status;
 #else
-void write_cdf_static(filname,s_length,f_asctime,f_dir,dir_len,
-                      f_var,f_comment,f_ldf,ldf_len,imax,jmax,
-                      n_grids,data,zin,f_model, grid_spacing,
-                      status)
+void write_cdf_static(filname, s_length, f_asctime, f_cdl_dir, cdl_len,
+                      f_var, var_len, f_comment, com_len, f_ldf, ldf_len,
+                      imax, jmax, n_grids, nx_lp, ny_lp, data, f_model, 
+                      grid_spacing, dx, dy, lov, latin1, latin2, f_origin, 
+                      origin_len, f_map_proj, map_len, unixtime, status)
+
 char *filname;
 short *s_length;
 char *f_asctime;
-char *f_dir;
-long *dir_len;
+char *f_cdl_dir;
+long *cdl_len;
 char *f_var;
+long *var_len;
 char *f_comment;
+long *com_len;
 char *f_ldf;
 long *ldf_len;
 long *imax;
 long *jmax;
 long *n_grids;
+long *nx_lp;
+long *ny_lp;
 float *data;
-float *zin;
 char *f_model;
 float *grid_spacing;
+float *dx; 
+float *dy;
+float *lov;
+float *latin1;
+float *latin2;
+char *f_origin;
+long *origin_len;
+char *f_map_proj;
+long *map_len;
+long *unixtime;
 long *status;
 #endif
 #endif
 {
-	char prefix[5];
-	char comm_var[13];                
+
+	char *prefix, *comm_var, *model, *asctime, *fname, *map_proj;
+	char *var, *comment, *ldf, *p_var, *pf_var, *p_com, *pf_com;
+        char *origin, *units;
+	int mod_len, asc_len, c_var_len, c_com_len;
 	int out_file, istat, i_varid, i, process_vr, count;
-        char model[132],asctime[18],var[8][4],comment[8][126];
-	char fname[92],*ldf;
-	char zin_comment[126];
-	long start[1], edges[1];
-	int grid_done[8]; /* 0=LAT,1=LON,2=AVG,3=ZIN,4=STD,5=ENV,6=LDF,7=USE */
+        int lat_index, lon_index, hdr_status;
+        int xdimid, ydimid;
         static char *syscmd, *cdlfile;
-        int cdl_len;
+        float la1, lo1;
+        double d_unixtime;
+#ifdef __alpha
+        int nx_cdl, ny_cdl;
+#else
+        long nx_cdl, ny_cdl;
+#endif
 
 /* turn off the error handling done by the netCDF routines */
         ncopts = NC_VERBOSE;
 
-/****  Header info set in cre_static subroutine
-	   1)  Record length (IMAX), 
-	   2)  Number of lines (JMAX),
-	   3)  Version number of write static routine.
-     
-       Header info set when header is written
-	   1)  Number of grids written (n_grids),
-	   2)  Ascii time,
-	   3)  Model generating topo data.
-****/
+/* malloc space for c-strings */
+        c_var_len = *var_len + 1;
+	prefix = malloc(c_var_len * sizeof(char));
+	comm_var = malloc((c_var_len+8) * sizeof(char));
+        mod_len = strlen(f_model);
+	model = malloc(((mod_len)+1) * sizeof(char));
+        asc_len = strlen(f_asctime);
+	asctime = malloc(((asc_len)+1) * sizeof(char));
+        map_proj = malloc(((*map_len)+1) * sizeof(char));
+        origin = malloc(((*origin_len)+1) * sizeof(char));
+        var = malloc(c_var_len * (*n_grids) * sizeof(char));
+        c_com_len = *com_len + 1;
+	comment = malloc(c_com_len * (*n_grids) * sizeof(char));
+	fname = malloc(((*s_length)+1) * sizeof(char));
 
-	for (i = 0; i < 8; i++)
-	  grid_done[i] = 0;
-	for (i = 0; i < 126; i++)
-	   zin_comment[i] = '\0';
-	  
 /* convert fortran string f_var to c string var */
  
         for (i = 0; i < *n_grids; i++) {
-          nstrncpy(var[i],(f_var+i*3),3);
-          fstrncpy(comment[i],(f_comment+i*125),125);
+          p_var = var + (i * c_var_len);
+          pf_var = f_var + (i * (*var_len));
+          nstrncpy(p_var, pf_var, *var_len);
+          downcase_c(p_var,p_var);
+          p_com = comment + (i * c_com_len);
+          pf_com = f_comment + (i * (*com_len));
+          fstrncpy(p_com,pf_com, *com_len);
         }
-        fstrncpy(model,f_model,131);
-        fstrncpy(asctime,f_asctime,17);
 
-/* convert fortran file_name into C fname, and fortran f_ext into C ext  */
+        fstrncpy(model,f_model,mod_len);
+        fstrncpy(asctime,f_asctime,asc_len);
+        fstrncpy(map_proj,f_map_proj,*map_len);
+        fstrncpy(origin,f_origin,*origin_len);
+
+/* convert fortran file_name into C fname  */
         nstrncpy(fname,filname,s_length);
-
-/* make sure grids to write will fit in file */
-        if (*imax <= NX && *jmax <= NY && *n_grids <= 7)
-          {}
-        else {
-          *status = -3;	/* returns dimension error */
-          return;
-        }
 
 /* allocate space for syscmd and cdlfile and fill up */
         /* cdl file contains domain name + ".cdl\0" */
-        cdlfile = malloc(((*dir_len)+(*ldf_len)+5) * sizeof(char));
-        nstrncpy(cdlfile,f_dir,*dir_len);
-        ldf = malloc((*ldf_len + 1) * sizeof(char));
+        cdlfile = malloc(((*cdl_len)+(*ldf_len)+5) * sizeof(char));
+        nstrncpy(cdlfile,f_cdl_dir,*cdl_len);
+        ldf = malloc(((*ldf_len) + 1) * sizeof(char));
         nstrncpy(ldf,f_ldf,*ldf_len);
         strcat(cdlfile,ldf,*ldf_len);
         free(ldf);
         strcat(cdlfile,".cdl");
-        cdl_len = strlen(cdlfile);
+        *cdl_len = strlen(cdlfile);
  
-        /* SYSCMD contains "/usr/local/netcdf/bin/ncgen -o %s %s\0" which
-           is 33 char, cdlfile, and fname  + 10 extra  */
-        syscmd = malloc((strlen(SYSCMD)+cdl_len+*s_length+10) * sizeof(char));
+        /* SYSCMD contains "ncgen -o %s %s\0" which
+           is 16 char, cdlfile, and fname  + 10 extra  */
+        syscmd = malloc((strlen(SYSCMD)+*cdl_len+*s_length+10) * sizeof(char));
         sprintf(syscmd,SYSCMD, fname, cdlfile);
         free(cdlfile);
  
@@ -299,123 +658,90 @@ long *status;
         out_file = ncopen(fname,NC_WRITE);
         if (out_file == -1) {
           *status = -2; /* error in file creation */
+          free_static_malloc(prefix, comm_var, model, asctime, var, 
+                             comment, fname);
           return;
         }
 
- /*  update header */
-    start[0] = 0;
-  /* store n_grids */
-    if ((i_varid = ncvarid (out_file, "n_grids")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return;
-    }
-#ifdef __alpha
-    ncvarput1(out_file, i_varid, (long *)0, (void *)n_grids);
-#else
-    ncvarput1(out_file, i_varid, (int *)0, (void *)n_grids);
-#endif
+/* get x and y dimensions from output file and make sure they are the same
+   as nx_lp and ny_lp  */
+        xdimid = ncdimid(out_file,"x");
+        ydimid = ncdimid(out_file,"y");
+        ncdiminq(out_file,xdimid, (char *) 0, &nx_cdl);
+        ncdiminq(out_file,ydimid, (char *) 0, &ny_cdl);
 
-  /* store grid_spacing */
-    if ((i_varid = ncvarid (out_file, "grid_spacing")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return;
-    }
-#ifdef __alpha
-    ncvarput1(out_file, i_varid, (long *)0, (void *)grid_spacing);
-#else
-    ncvarput1(out_file, i_varid, (int *)0, (void *)grid_spacing);
-#endif
-      
-  /* store asctime */
-    edges[0] = 18;
-    if ((i_varid = ncvarid (out_file, "asctime")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return;
-    }
-    ncvarput(out_file, i_varid, start, edges, (void *)asctime);
- 
-  /* store model */
-    edges[0] = 132;
-    if ((i_varid = ncvarid (out_file, "process_name")) == (-1)) {
-      *status = -5;	/* returns "error writing header" */
-      return;
-    }
-    ncvarput(out_file, i_varid, start, edges, (void *)model);
- 
+        if ((nx_cdl == *nx_lp) && (ny_cdl == *ny_lp)) {
+        } else
+        {
+          *status = -6; /* nest7grid.cdl & nest7grid.parms disagree */
+          free_static_malloc(prefix, comm_var, model, asctime, var, 
+                             comment, fname);
+          return;
+        }
+
+/* get La1 and Lo1 (first lat and lon) from data array */
+        lat_index = -1; 
+        lon_index = -1;
+        for (i = 0; i < *n_grids; i++) {
+          p_var = var + (i * c_var_len);
+          if (strcmp(p_var, LAT) == 0) lat_index = i;
+          if (strcmp(p_var, LON) == 0) lon_index = i;
+        }
+
+        if (lat_index == (-1)) {
+          la1 = -999.99;
+        }
+        else {
+          la1 = *(data + (lat_index*(*imax)*(*jmax)));
+          if (la1 < 0.0) la1 = 360.0 + la1;
+        }
+
+        if (lon_index == (-1)) {
+          lo1 = -999.99;
+        }
+        else {
+          lo1 = *(data + (lon_index*(*imax)*(*jmax)));
+          if (lo1 < 0.0) lo1 = 360.0 + lo1;
+        }
+
+/* write header info to output file */
+        d_unixtime = (double)*unixtime;
+        hdr_status = cdf_wrt_hdr_stat(out_file, n_grids, grid_spacing, 
+                                      asctime, model, imax, jmax, dx, dy, 
+                                      &la1, &lo1, lov, latin1, latin2, 
+                                      origin, map_proj,d_unixtime, status);
+        if (hdr_status != 0) {
+          *status = hdr_status;
+          free_static_malloc(prefix, comm_var, model, asctime, var,
+                             comment, fname);
+          return;
+        }
+
 /* write data to grid and write out comment */
 	count = 0;
         for (i = 0; i < *n_grids; i++) {
-          process_vr = 1;
-          if (strncmp(var[i], "LAT",3) ==  0) {
-            strcpy(prefix,"lat");
-            strcpy(comm_var,"lat_comment");
-            grid_done[0] = 1;
+          p_var = var + (i * c_var_len);
+          p_com = comment + (i * c_com_len);
+          strcpy(prefix,p_var);
+          strcpy(comm_var,p_var);
+          strcat(comm_var,"_comment");
+	  if ((i_varid = ncvarid (out_file , prefix)) == (-1)) {
+	    printf("write_cdf_static: no variable %s in file.\n", prefix);
           }
-          else if (strncmp(var[i], "LON",3) ==  0) {
-            strcpy(prefix,"lon");
-            strcpy(comm_var,"lon_comment");
-            grid_done[1] = 1;
-          }
-          else if (strncmp(var[i], "AVG",3) ==  0) {
-            strcpy(prefix,"avg");
-            strcpy(comm_var,"avg_comment");
-            grid_done[2] = 1;
-          }
-          else if (strncmp(var[i], "STD",3) ==  0) {
-            strcpy(prefix,"std");
-            strcpy(comm_var,"std_comment");
-            grid_done[4] = 1;
-          }
-          else if (strncmp(var[i], "ENV",3) ==  0) {
-            strcpy(prefix,"env");
-            strcpy(comm_var,"env_comment");
-            grid_done[5] = 1;
-          }
-          else if (strncmp(var[i], "LDF",3) ==  0) {
-            strcpy(prefix,"ldf");
-            strcpy(comm_var,"ldf_comment");
-            grid_done[6] = 1;
-          }
-          else if (strncmp(var[i], "USE",3) ==  0) {
-            strcpy(prefix,"use");
-            strcpy(comm_var,"use_comment");
-            grid_done[7] = 1;
-          }
-          else  {
-            process_vr = 0;
-            count += 1;
-          }
-          
-          if (process_vr == 1) {
-            istat = cdf_update_stat(out_file,prefix,
+          else {
+            istat = cdf_update_stat(out_file,i_varid, prefix,
                	 		    (data + (i*(*imax)*(*jmax))),
-                	 	    comm_var,comment[i]);
+                	 	    comm_var,p_com);
             if (istat == -1) {
               *status = -4;
               ncclose(out_file);
               return;
             }
+            count++;
           }
         }
-   
-/* write out zin if LAT, LON and AVG were written */
-        if (grid_done[0]==1 && grid_done[1]==1 && grid_done[2]== 1) {
-            strcpy(zin_comment,
-"Grid contains AVG data converted from meters to pressure in mb, then\
- mapped from 1100mb=0 to 100mb=20");
-            strcpy(prefix,"zin");
-            strcpy(comm_var,"zin_comment");
-            istat = cdf_update_stat(out_file,prefix,zin,comm_var,
-            			    zin_comment);
-          grid_done[3] = 1;
-        }  
         
-        if (grid_done[0]==1 && grid_done[1]==1 && grid_done[2]== 1
-            && grid_done[3]==1) {
-          *status = *n_grids - count;  /* returns number of grids written */
-        }
-        else
-          *status = -6;  /* returns missing LAT,LON or AVG grids error  */
+        *status = count;  /* returns number of grids written */
         
         ncclose(out_file);          	
         return;
@@ -448,26 +774,29 @@ long *status;
 *****************************************************************************/
 
 #ifdef __STDC__
-int cdf_retr_grid_stat(int i_cdfid, char *s_field, char version[], float *gptr,
-		       char *cptr, char *uptr)
+int cdf_retr_grid_stat(int i_cdfid, int i_varid, char *s_field, float *gptr,
+		       char *cptr, int c_com_len, char *uptr,
+                       int c_unit_len)
 #else
-int cdf_retr_grid_stat(i_cdfid, s_field, version, gptr, cptr, uptr)
+int cdf_retr_grid_stat(i_cdfid, i_varid, s_field, gptr, cptr, c_com_len, 
+                       uptr, c_unit_len)
 
 int i_cdfid;
+int i_varid;
 char *s_field;
-char version[];
 float *gptr;
 char *cptr;
+int c_com_len;
 char *uptr;
+int c_unit_len;
 #endif
 {
-	int i_status, j, i_varid, ver;
+	int i_status, j;
+        char units[132], *p_unit;
 #ifdef __alpha
 	long start[4],count[4],start_c[3],count_c[3];
-	long v2_start[2],v2_count[2],v2_start_c[1],v2_count_c[1];
 #else
 	int start[4],count[4],start_c[3],count_c[3];
-	int v2_start[2],v2_count[2],v2_start_c[1],v2_count_c[1];
 #endif
 	char var_name[13];
 
@@ -478,39 +807,17 @@ char *uptr;
 	ncopts = NC_VERBOSE;
 
 /* get the x and y dimension sizes */
-        i_status = strncmp(version,"V2",2);
-        if (i_status == 0) {
-          ver = 2;
-	  v2_count[0] = cdf_dim_size (i_cdfid, "lat");
-	  v2_count[1] = cdf_dim_size (i_cdfid, "lon");
-	  v2_start[0] = 0;
-	  v2_start[1] = 0;
-        }
-        else {
-          ver = 3;
-          count[0] = 1;
-          count[1] = 1;
-          count[2] = cdf_dim_size (i_cdfid, "y");
-          count[3] = cdf_dim_size (i_cdfid, "x");
-          start[0] = 0;
-          start[1] = 0;
-          start[2] = 0;
-          start[3] = 0;
-        }
-
-/* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", s_field);
-	if ((i_varid = ncvarid (i_cdfid, s_field)) == (-1)) {
-		printf("cdf_retrieve_laps: no grid available.\n");
-		return -1;
-	}
-			   
+        count[0] = 1;
+        count[1] = 1;
+        count[2] = cdf_dim_size (i_cdfid, "y");
+        count[3] = cdf_dim_size (i_cdfid, "x");
+        start[0] = 0;
+        start[1] = 0;
+        start[2] = 0;
+        start[3] = 0;
 
 /* read the grid from the netcdf file */
-        if (ver == 2)
-	  i_status = ncvarget (i_cdfid, i_varid, v2_start, v2_count, gptr);
-        else
-	  i_status = ncvarget (i_cdfid, i_varid, start, count, gptr);
+	i_status = ncvarget (i_cdfid, i_varid, start, count, gptr);
 
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving data %s grid.\n", 
@@ -519,13 +826,14 @@ char *uptr;
 	}
 
 /* retrieve units */
-	for (j = 0; j < 11; j++) 
-	  *(uptr + j) = '\0';
-	i_status = ncattget (i_cdfid, i_varid, "LAPS_units", uptr);
+	i_status = ncattget (i_cdfid, i_varid, "LAPS_units", units);
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving LAPS_units.\n");
 	   return -1;
 	}
+        strncpy(uptr,units,(c_unit_len-1));
+        p_unit = uptr + c_unit_len - 1;
+        p_unit = '\0';
 
 /* setup to read the comment from the netcdf file */
 
@@ -534,24 +842,15 @@ char *uptr;
 	   printf("cdf_retrieve_laps: no comment field available.\n");
 	   return -1;
 	}
-	for (j = 0; j < 132; j++) 
-	  *(cptr + j) = '\0';
 
 /* construct the arrays needed to read the grid */
-        if (ver == 2) {
-	  v2_start_c[0] = 0;
-	  v2_count_c[0] = 126;
-	  i_status = ncvarget (i_cdfid, i_varid, v2_start_c, v2_count_c, cptr);
-        }
-        else {
-	  start_c[0] = 0;
-	  start_c[1] = 0;
-	  start_c[2] = 0;
-	  count_c[0] = 1;
-	  count_c[1] = 1;
-	  count_c[2] = 126;
-	  i_status = ncvarget (i_cdfid, i_varid, start_c, count_c, cptr);
-        }
+	start_c[0] = 0;
+	start_c[1] = 0;
+	start_c[2] = 0;
+	count_c[0] = 1;
+	count_c[1] = 1;
+	count_c[2] = c_com_len;
+	i_status = ncvarget (i_cdfid, i_varid, start_c, count_c, cptr);
 
 	if (i_status == (-1)) {
 	   printf("cdf_retrieve_laps: error retrieving comment.\n");
@@ -579,11 +878,6 @@ char *uptr;
 *		jmaxn		number of y gridpoints
 *		kmaxn		number of grids in the file
 *		laps_dom_file	name of laps domain for this file
-*		asctime		ascii time netCDF file was written
-*		version		version of WRITELAPSDATA used to make grid
-*		model		meteorological model in file
-*		origin		location where file was created
-*		num_variables   number of variables in this file
 *	Globals:
 *		NC_NOWRITE	A NetCDF global that opens the NetCDF file for
 *				    reading only.
@@ -594,44 +888,30 @@ char *uptr;
 #ifdef __STDC__
 #ifdef __alpha
 int cdf_retr_hdr_stat(int i_cdfid,int *imaxn, int *jmaxn, int *n_grids_n,
-		      float *grid_spacing_n,char *asctime, char *version,
-		      char *model, char *origin, long *num_variables)
+		      float *grid_spacing_n)
 #else
 int cdf_retr_hdr_stat(int i_cdfid,long *imaxn, long *jmaxn, long *n_grids_n,
-		      float *grid_spacing_n,char *asctime, char *version,
-		      char *model, char *origin, long *num_variables)
+		      float *grid_spacing_n)
 #endif
 #else
 #ifdef __alpha
-int cdf_retr_hdr_stat(i_cdfid,imaxn,jmaxn,n_grids_n,grid_spacing_n,asctime, 
-		      version,model,origin,num_variables)
+int cdf_retr_hdr_stat(i_cdfid,imaxn,jmaxn,n_grids_n,grid_spacing_n)
 int i_cdfid;                               
 int *imaxn;
 int *jmaxn;
 int *n_grids_n;
 float *grid_spacing_n;
-char *asctime;
-char *version;
-char *model;
-char *origin;
-long *num_variables;
 #else
-int cdf_retr_hdr_stat(i_cdfid,imaxn,jmaxn,n_grids_n,grid_spacing_n,asctime, 
-		      version,model,origin,num_variables)
+int cdf_retr_hdr_stat(i_cdfid,imaxn,jmaxn,n_grids_n,grid_spacing_n)
 int i_cdfid;                               
 long *imaxn;
 long *jmaxn;
 long *n_grids_n;
 float *grid_spacing_n;
-char *asctime;
-char *version;
-char *model;
-char *origin;
-long *num_variables;
 #endif
 #endif
 {
-	int i_status, i_varid, i, i_version, temp, str_len;
+	int i_status, i_varid, i, temp, str_len;
 #ifdef __alpha
         long mindex[1], start[1], count_asc[1], count_long[1];
 #else
@@ -642,6 +922,7 @@ long *num_variables;
 
 /* turn off the error handling done by the netCDF routines */
 	ncopts = NC_VERBOSE;
+
 	mindex[0] = 0;
 	start[0] = 0;
 	count_asc[0] = 18;
@@ -688,98 +969,6 @@ long *num_variables;
 	if (i_status == (-1))
 	   return -1;
 
-/* read the version from the netcdf file */
-        if (ncattget (i_cdfid, NC_GLOBAL, "version", (void *)&i_version) == -1) {
-          i_varid = ncvarid(i_cdfid,"version");
-          if (i_varid == -1) {
-            printf("error reading version");
-            return -1;
-          }
-          else {
-            if (ncvarget1(i_cdfid, i_varid, mindex, (void *)&i_version) == -1) {
-              return -1;
-            }
-          }
-        }
-
-/* convert integer value of version to character string */
-	if (i_version < 10) {
-	   strcpy(version,"V");
-	   itoa(i_version,c_ver,2);
-	   strcat(version,c_ver);
-	}
-	else if (i_version < 100) {
-	   strcpy(version,"V");
-	   itoa(i_version,c_ver,3);
-	   strcat(version,c_ver);
-	}
-	else {
-	   strcpy(version,"V");
-	   itoa(i_version,c_ver,4);
-	   strcat(version,c_ver);
-	}
-	
-/* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "asctime");
-	if ((i_varid = ncvarid (i_cdfid, "asctime")) == (-1))
-		return -1;
-	   
-/* read the asctime from the netcdf file */
-	i_status = ncvarget (i_cdfid, i_varid, start, count_asc, asctime);
-	if (i_status == (-1))
-	   return -1;
-
-/* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "model");
-	if ((i_varid = ncvarid (i_cdfid, "process_name")) == (-1)) {
-	  i_varid = ncvarid (i_cdfid, "model");
-          if (i_varid == -1) return -1;
-        }
-	   
-/* read the model from the netcdf file */
-	i_status = ncvarget (i_cdfid, i_varid, start, count_long, model);
-	if (i_status == (-1)) 
-	   return -1;
-	else {
-	   str_len = strlen(model);
-	   if (str_len < 131) {
-	      for (i = str_len+1; i < 132; i++)
-	         strcat(model," ");
-	   }
-        }
-
-/* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", "origin");
-	if ((i_varid = ncvarid (i_cdfid, "origin_name")) == (-1)) {
-          i_varid = ncvarid (i_cdfid, "origin");
-          if (i_varid == -1) return -1;
-        }
-
-/* read the asctime from the netcdf file */
-	i_status = ncvarget (i_cdfid, i_varid, start, count_long, origin);
-	if (i_status == (-1))
-	   return -1;
-	else {
-	   str_len = strlen(origin);
-	   if (str_len < 131) {
-	      for (i = str_len+1; i < 132; i++)
-	         strcat(origin," ");
-	   }
-        }
-
-/* get the data variable id */
-	log_diag (2, "cdf_read_grid: data variable name = %s\n", 
-		  "num_variables");
-	if ((i_varid = ncvarid (i_cdfid, "num_variables")) == (-1)) {
-          i_varid = ncvarid (i_cdfid, "n_laps_var");
-          if (i_varid == -1) return -1;
-        }
-
-/* read the var from the netcdf file */
-	  i_status = ncvarget1 (i_cdfid, i_varid, mindex, num_variables);
-	if (i_status == (-1))
-	   return -1;
-   	   
 /* normal return */
 
 	return 0;
@@ -796,27 +985,23 @@ long *num_variables;
 *	Modifications : original 4/93
 *
 *	Input:
-*		iimax      	Expected X dimension of data
-*		jjmax      	Expected Y dimension of data
-*		kkmax      	Expected number of data grids to retrieve
-*		kdim 		Dimension  of the var_req, lvl_req, comment,
-*				  lvl_coord, units in the calling program
-*		var_req		Array of LAPS variables to retrieve from the file
-*		lvl_req		Levels of LAPS variables to retrieve
-*		fname		NetCDF filename to open
-*		ext		Extension identifying data to be read
-*	Output:
-*		imax		Actual X dimension of data in file
-*		jmax		Actual Y dimension of data in file
-*		kmax		Actual number of grids available in file
-*		lvl_coord	Level coordinates of each level read
-*		units		Units of each level read
-*		comment		Comments for each level read
-*		asctime		Ascii time of file
-*		version		Version of WRITELAPSDATA that wrote the file
+*		filname		NetCDF filename to open
+*               s_length 	length of the filname string
+*		f_var		Array of static variables to retrieve 
+*               var_len		length of one f_var string
+*               f_comment	Array to hold comment info retrieved
+*               com_len		length of one f_comment string
+*		f_units		Array to hold units info retrieved
+*               unit_len	length of one f_units string
+*		imax      	Expected X dimension of data
+*		jmax      	Expected Y dimension of data
+*		n_grids		Dimension  of the f_var, comment,
 *		data		3D grid containing data requested
-*		process_var	Array containing 1 if variable was processed,
 *				  otherwise contains 0
+*				  and units arrays in the calling program
+*	Output:
+*		imax_n		Actual X dimension of data in file
+*		jmax_n		Actual Y dimension of data in file
 *		status		Returns status to calling subroutine
 *	Globals:
 *		none
@@ -826,24 +1011,30 @@ long *num_variables;
 #ifdef __STDC__
 #ifdef __alpha
 void read_cdf_static(char *filname, short *s_length,char *f_var,
-		     char *f_comment,char *f_units,int *imax,int *jmax,
+		     int *var_len, char *f_comment,int *com_len, 
+                     char *f_units, int *unit_len, int *imax,int *jmax,
 		     int *n_grids,float *data,float *grid_spacing,
 		     int *no_laps_diag,int *status)
 #else
 void read_cdf_static(char *filname, short *s_length,char *f_var,
-		     char *f_comment,char *f_units,long *imax,long *jmax,
+		     long *var_len, char *f_comment, long *com_len,
+                     char *f_units,long *unit_len, long *imax,long *jmax,
 		     long *n_grids,float *data,float *grid_spacing,
 		     long *no_laps_diag,long *status)
 #endif
 #else
 #ifdef __alpha
-void read_cdf_static(filname,s_length,f_var,f_comment,f_units,imax,jmax,
-		     n_grids,data,grid_spacing,no_laps_diag,status)
+void read_cdf_static(filname,s_length,f_var,var_len,f_comment,com_len,
+                     f_units,unit_len,imax,jmax, n_grids,data,
+                     grid_spacing,no_laps_diag,status)
 char *filname;
 short *s_length;
 char *f_var;
+int *var_len;
 char *f_comment;
+int *com_len;
 char *f_units;
+int *unit_len;
 int *imax;
 int *jmax;
 int *n_grids;
@@ -852,13 +1043,17 @@ float *grid_spacing;
 int *no_laps_diag;
 int *status;
 #else
-void read_cdf_static(filname,s_length,f_var,f_comment,f_units,imax,jmax,
-		     n_grids,data,grid_spacing,no_laps_diag,status)
+void read_cdf_static(filname,s_length,f_var,var_len,f_comment,com_len,
+                     f_units,unit_len,imax,jmax, n_grids,data,
+                     grid_spacing,no_laps_diag,status)
 char *filname;
 short *s_length;
 char *f_var;
+int *var_len;
 char *f_comment;
+int *com_len;
 char *f_units;
+int *unit_len;
 long *imax;
 long *jmax;
 long *n_grids;
@@ -869,33 +1064,49 @@ long *status;
 #endif
 #endif
 {		   
-	int istat, i, unconv_var, process_vr, cdfid;
-        char var[8][4],comment[8][126],units[8][11];
-	char prefix[5];
+
+/*char model[132], asctime[18], origin[132], version[5]; */
+
+        char *var, *comment, *units, *prefix, *fname;
+        char *p_var, *pf_var, *p_com, *pf_com, *p_unit, *pf_unit;
+        char *comm_var, *model, *asctime;
+        float *p_data;
+	int istat, i, j, unconv_var, process_vr, cdfid, varid;
+        int c_var_len, c_com_len, c_unit_len, s_len;
 #ifdef __alpha
 	int imaxn, jmaxn, n_grids_n;
 #else
 	long imaxn, jmaxn, n_grids_n;
 #endif
-	char model[132], asctime[18], origin[132], version[5];
-	long num_variables;
-	char fname[92];
 	
 /* turn off the error handling done by the netCDF routines */
         ncopts = NC_VERBOSE;
 
+/* malloc space for c-strings */
+        c_var_len = *var_len + 1;
+        prefix = malloc(c_var_len * sizeof(char));
+        var = malloc(c_var_len * (*n_grids) * sizeof(char));
+        c_com_len = *com_len + 1;
+        comment = malloc(c_com_len * (*n_grids) * sizeof(char));
+        c_unit_len = *unit_len + 1;
+        units = malloc(c_unit_len * (*n_grids) * sizeof(char));
+        fname = malloc(((*s_length)+1) * sizeof(char));
+
+
 /* null out arrays for units,comment before using   */
+/* convert fortran string f_var to c string var and downcase */
  
         for (i = 0; i < *n_grids; i++) {
-          strncpy(units[i],"          ",10);
-          strncpy(comment[i],"                                                                                                                             ",125);
+          p_unit = units + (i * c_unit_len);
+          p_unit = '\0';
+          p_com = comment + (i * c_com_len);
+          p_com = '\0';
+          p_var = var + (i * c_var_len);
+          pf_var = f_var + (i * (*var_len));
+          nstrncpy(p_var, pf_var, *var_len);
+          downcase_c(p_var,p_var);
         }
 
-/* convert fortran string f_var to c string var */
- 
-        for (i = 0; i < *n_grids; i++)
-          nstrncpy(var[i],(f_var+i*4),3);
- 
 /* convert fortran filname into C fname */
         nstrncpy(fname,filname,s_length);
  
@@ -903,77 +1114,82 @@ long *status;
 	cdfid = open_cdf(NC_NOWRITE,fname,no_laps_diag);
 	if (cdfid == -1) {
 		*status = -1;	/* error opening file */
+                free_static_malloc(prefix, comm_var, model, asctime, 
+                                   var, comment, units, fname);
 		return;
 	}
 
 /* get header info */
 	istat = cdf_retr_hdr_stat(cdfid,&imaxn,&jmaxn,&n_grids_n,
-				  grid_spacing,asctime,version,
-				  model,origin,&num_variables);
+				  grid_spacing);
 	if (istat == -1) {
 	   *status = -5;
 	   ncclose(cdfid);
+           free_static_malloc(prefix, comm_var, model, asctime, 
+                              var, comment, units, fname);
 	   return;
 	}
-	if (imaxn > *imax || jmaxn > *jmax || *n_grids > n_grids_n) {
+	if (imaxn > *imax || jmaxn > *jmax ) {
 	   *status = -3;
 	   ncclose(cdfid);
+           free_static_malloc(prefix, comm_var, model, asctime, 
+                              var, comment, units, fname);
 	   return;
 	}
 	
 	unconv_var = 0;
 	for (i = 0; i < *n_grids; i++) {
-          process_vr = 1;
-          if (strncmp(var[i], "LAT",3) ==  0) {
-            strcpy(prefix,"lat");
-          }
-          else if (strncmp(var[i], "LON",3) ==  0) {
-            strcpy(prefix,"lon");
-          }
-          else if (strncmp(var[i], "AVG",3) ==  0) {
-            strcpy(prefix,"avg");
-          }
-          else if (strncmp(var[i], "STD",3) ==  0) {
-            strcpy(prefix,"std");
-          }
-          else if (strncmp(var[i], "ENV",3) ==  0) {
-            strcpy(prefix,"env");
-          }
-          else if (strncmp(var[i], "ZIN",3) ==  0) {
-            strcpy(prefix,"zin");
-          }
-          else if (strncmp(var[i], "LDF",3) ==  0) {
-            strcpy(prefix,"ldf");
-          }
-          else if (strncmp(var[i], "USE",3) ==  0) {
-            strcpy(prefix,"use");
+          p_var = var + (i * c_var_len);
+          p_com = comment + (i * c_com_len);
+          p_unit = units + (i * c_unit_len);
+          p_data = data + (i*(*imax)*(*jmax));
+          strcpy(prefix,p_var);
+          if ((varid = ncvarid (cdfid , prefix)) == (-1)) {
+            printf("write_cdf_static: no variable %s in file.\n", prefix);
+            unconv_var += 1;
           }
           else  {
-            process_vr = 0;
-	    unconv_var += 1;
-          }
-          
-          if (process_vr == 1) {
-   	    istat = cdf_retr_grid_stat(cdfid,prefix,version,
-	   		               (data + i*(*imax)*(*jmax)),
-				       comment[i],units[i]);
+            istat = cdf_retr_grid_stat(cdfid,varid,prefix,p_data,
+                                       p_com,c_com_len,p_unit,
+                                       c_unit_len);
             if (istat == -1) {
               *status = -4;
               ncclose(cdfid);
+              free_static_malloc(prefix, comm_var, model, asctime, 
+                                 var, comment, units, fname);
               return;
             }
           }
         }
-   	
-	ncclose(cdfid);
-	
+   
+        ncclose(cdfid);
+
         for (i = 0; i < *n_grids; i++) {
-          fstrncpy((f_comment+(i*126)),comment[i],125);
-          fstrncpy((f_units+(i*11)),units[i],10);
+          p_com = comment + (i * c_com_len);
+          pf_com = f_comment + (i * (*com_len));
+          s_len = strlen(p_com);
+          strncpy(pf_com, p_com, s_len);
+          pf_com += s_len;
+          if (s_len < (*com_len)) {
+            for ( j = 0; j < (*com_len - s_len); j++) 
+              strncat(pf_com, " ", 1);
+              pf_com++;
+          }
+          p_unit = units + (i * c_unit_len);
+          pf_unit = f_units + (i * (*unit_len));
+          s_len = strlen(p_unit);
+          strncpy(pf_unit, p_unit, s_len);
+          pf_unit += s_len;
+          if (s_len < (*unit_len)) {
+            for ( j = 0; j < (*unit_len - s_len); j++) 
+              strncat(pf_unit, " ", 1);
+              pf_unit++;
+          }
         }
 
-	*status = unconv_var;
-	return;
+        free_static_malloc(prefix, comm_var, model, asctime, 
+                           var, comment, units, fname);
+        *status = unconv_var;
+        return;
 }
-                                                        
 
