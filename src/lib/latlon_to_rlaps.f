@@ -914,7 +914,7 @@ cdoc  as well as various grid conversion routines.
 
           if(slat1 .eq. slat2)then ! tangent lambert
               n = cosd(90.-s*slat1)
-              rconst =  s *  tand(colat1)    / tand(colat1/2.)**n
+              rconst =       tand(colat1)    / tand(colat1/2.)**n
 
           else                     ! two standard latitudes
               n = alog(cosd(slat1)/cosd(slat2))/
