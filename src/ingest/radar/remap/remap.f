@@ -82,10 +82,14 @@ cdis
               go to 999
           endif
 
+          ntimes_radar = 0
+
           do itimes = 1,max_times
               write(6,*)
               write(6,*)' Looping through radar/time # ',i_radar,itimes       
-              call remap_sub(i_radar,itimes,laps_radar_ext
+              call remap_sub(i_radar,itimes
+     1                      ,ntimes_radar                              ! I/O 
+     1                      ,laps_radar_ext       
      1                      ,radar_subdir_dum       
      1                      ,path_to_vrc,path_to_radar,ref_min
      1                      ,NX_L,NY_L,NZ_L,istatus)
@@ -99,7 +103,9 @@ cdis
 
  999  end
 
-      subroutine remap_sub(i_radar,itimes,laps_radar_ext
+      subroutine remap_sub(i_radar,itimes
+     1                    ,ntimes_radar                                ! I/O
+     1                    ,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,path_to_radar
      1                    ,ref_min
      1                    ,NX_L,NY_L,NZ_L
@@ -219,8 +225,10 @@ cdis
           return
       endif
 
+      ntimes_radar = ntimes_radar + 1
+
 !     call lut_gen FORTRAN routine 
-      if(itimes .eq. 1)then
+      if(ntimes_radar .eq. 1)then ! first time we have data from this radar
           call lut_gen(rname_ptr,radar_lat,radar_lon,radar_alt
      1                ,NX_L,NY_L,NZ_L)
       endif
