@@ -65,6 +65,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
      ELSE
 	a(nfic+1:n(1)-nfic,nfic+1:n(2)-nfic,1:n(3),id) = &
                                  bkgd(1:nx,1:ny,1:n(3),id)
+
 	! Fictitious points:
 	DO i=1,nfic
 	   a(i,nfic+1:n(2)-nfic,1:n(3),id) = &
@@ -116,7 +117,13 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
      !ENDIF
 
      ! Filter:
-     IF (iter .GT. 1)al(1:3,id) = al(1:3,id)*0.8
+     IF (iter .GT. 1) THEN
+        IF (id .EQ. 6) THEN
+	   al(1:3,id) = al(1:3,id)*0.9
+        ELSE
+           al(1:3,id) = al(1:3,id)*0.8
+	ENDIF
+     ENDIF
 
      ! Accumulate:
      s(1:n(1),1:n(2),1:n(3),id) = s(1:n(1),1:n(2),1:n(3),id)+ &
@@ -125,6 +132,7 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
   ENDDO
 
   ! Land/water weight:
+  IF (id .NE. 6) THEN
   DO j=1,ny
      DO i=1,nx
   	s(nfic+i,nfic+j,1:n(3),id) = &
@@ -132,5 +140,12 @@ SUBROUTINE Iterates(id,bkgd,ldf,nx,ny,ncycles,nvlaps,nfic)
                 (1.0-ldf(i,j))*bkgd(i,j,1:n(3),id)
      ENDDO
   ENDDO
+  ELSE 
+  DO j=1,ny
+     DO i=1,nx
+        ! s(nfic+i,nfic+j,1:n(3),id) = bkgd(i,j,1:n(3),id)
+     ENDDO
+  ENDDO
+  ENDIF
 
 END SUBROUTINE Iterates
