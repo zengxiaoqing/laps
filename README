@@ -255,8 +255,20 @@
            questions about surface data to Pete Stamus (stamus@fsl.noaa.gov).
 
      Radar (vrc)                 - WSI-NOWRAD, stored at FSL in NetCDF.
-           (v01, v02, ... > VRC) - WSR-88Ds, Remappers run on NSSL 
-                                   "RIDDS"/"RISC" Boxes.
+
+                                 - single level reflectivity, possibly a mosaic
+                                   from multiple radars.
+
+           (v01, v02, ... )      - WSR-88Ds or other Doppler radar, Remappers 
+                                   run on NSSL "RIDDS"/"RISC" Boxes.
+
+                                 - each v## file has 3-d reflectivity,
+                                   velocity, and nyquist velocity for one radar.
+                                   multiple v## files are allowed and are
+                                   especially useful for velocity.
+
+           (vrz)                 - 3-D reflectivity mosaic from multiple 
+                                   radars (v## files).
 
      Satellite (lvd): GOES-8 groundstation feed, stored at FSL in NetCDF. 
            Also used is the NOAA/SBN data feed. Another option under 
@@ -787,8 +799,8 @@ April 1996
 ------ 2.14 --------VRC (NOWRAD/WSR-88D ETC RADAR INGEST) CHANGES--------------
 
    Depending on where the raw radar data is coming from, you will want to
-   set the 'radarext_3d' parameter in the 'nest7grid.parms' file as 
-   follows:
+   set the 'radarext_3d_cmn' and 'radarext_3d_accum_cmn' parameters in the 
+   'nest7grid.parms' file as follows:
  
    'vrz'     Use this if you have mosaiced 3-D reflectivity 'vrz' files
              available. If you have vrc files with better areal coverage, 
@@ -1059,10 +1071,17 @@ Outputs (LAPS intermediate files):
      v02      "                                  "
      etc. (for each radar)
 
-Source directory: laps/nest7grid/source/ingest/radar/remap
+Source directory: Must be obtained separately from LAPS. This software runs
+                  on SUNOS and uses 'oldlaps' software conventions. The
+                  input is the wide-band data stored in memory as a 
+                  "circular buffer".
 
-This process runs on special hardware that is connected to the 88D radar.
-The source code in the LAPS source directory contains the upper level
+                  "Under Construction" is a 'newlaps' version of this remapper
+                  that utilizes wide-band data stored in NetCDF files as input.
+                  The source code for this is in 'src/ingest/radar/remap'.
+
+This 'oldlaps' version runs on special hardware that is connected to the 88D 
+radar. The source code in the LAPS source directory contains the upper level
 cartesian remapping routines. These must be linked with the lower level 
 routines running on the actual RIDDS box to access the raw wideband radar
 data. This hardware is currently being developed by NSSL (contact Mike Jain), 
@@ -1112,7 +1131,8 @@ There is another version of the remapper that runs simulated data.
 To run this remapper, do 'cd nest7grid/exe; ./remapc_fake.exe'.
 
 The radar remapper is being run in the context of the Regional Radar Volume
-(RRV) Project. For more info please see the file './README_rrv'.
+(RRV) Project. For more info please see the file './README_rrv', available
+by contacting Steve Albers (albers@fsl.noaa.gov).
 
 ------ 3.3 ---------------------VRC--------------------------------------------
 
