@@ -70,3 +70,38 @@
       return
       end
 
+      subroutine convert_array_i2r(array_in,array_out,n,string
+     1                        ,r_missing_data,istatus)       
+
+!     QC the observation array and convert units if needed
+!     If 'string' is 'none', then do just the QC without conversion
+
+      character*(*) string
+
+      real*4 k_to_c
+
+      integer*4 array_in(n)
+      real*4 array_out(n)
+
+      do i = 1,n
+          if(abs(array_in(i)) .ge. 1000000 .or. 
+     1       abs(array_in(i)) .eq. 9999 )then
+              array_out(i) = r_missing_data
+          elseif(string .eq. 'k_to_c')then
+              array_out(i) = k_to_c(array_in(i))
+          elseif(string .eq. 'pa_to_mb')then
+              array_out(i) = array_in(i) / 100.
+          elseif(string .eq. 'none')then
+              array_out(i) = array_in(i)
+          else
+              write(6,*)' Unknown operator in convert_array: ',string
+              istatus = 0
+              return
+          endif
+      enddo ! i
+     
+      istatus = 1
+
+      return
+      end
+
