@@ -29,63 +29,63 @@ cdis
 cdis
 cdis
 cdis
-        subroutine get_file_names(pathname_in,numoffiles,c_filenames
-     1        ,max_files,istatus)
+      subroutine get_file_names(pathname_in,numoffiles,c_filenames,
+     1     max_files,istatus)
 
 c
-c       Author : Dan Birkenheuer
+c     Author : Dan Birkenheuer
 c
-c       Date: 5/22/95
-c       12/2/96 modified error output. DB
+c     Date: 5/22/95
+c     12/2/96 modified error output. DB
+c     
+c     to be used with C-routine getfilenames_c.. this is the Fortran
+c     wrapper for that routine.
 c
-c       to be used with C-routine getfilenames_c.. this is the Fortran
-c       wrapper for that routine.
-c
 
-        implicit none
+      implicit none
 
-        integer numoffiles,max_files
-        character*(*) pathname_in
-        character*(*) c_filenames(max_files)
-
-
-        character*256 file_names(3000)
-        character*256 dirpath
-        character*256 filter
-        integer istatus,i,nc,nindx,status,nindx2
-
-        nindx = index (pathname_in, '*')
-
-        if( nindx .eq. 0) then
-
-           dirpath = pathname_in
-           filter = '*'
-
-        else
-
-           nc = len(pathname_in)
-           i = nc
-           do while (pathname_in(i:i) .ne. '/' .and. i .gt. 0)
-              i = i-1
-              if (i.eq.0) goto 122
-           enddo
- 122       continue
-
-           if (i.gt.0) then
-              dirpath = pathname_in(1:i)
-              filter = pathname_in(i+1:nc)
-           else
-              dirpath = '.'
-              filter = pathname_in(i+1:nc)
-           endif
-
+      integer numoffiles,max_files
+      character*(*) pathname_in
+      character*(*) c_filenames(max_files)
+      
+      
+      character*256 file_names(3000)
+      character*256 dirpath
+      character*256 filter
+      integer istatus,i,nc,nindx,status,nindx2
+      
+      nindx = index (pathname_in, '*')
+      
+      if( nindx .eq. 0) then
+         
+         dirpath = pathname_in
+         filter = '*'
+         
+      else
+         
+         nc = len(pathname_in)
+         i = nc
+         do while (pathname_in(i:i) .ne. '/' .and. i .gt. 0)
+            i = i-1
+            if (i.eq.0) goto 122
+         enddo
+ 122     continue
+         
+         if (i.gt.0) then
+            dirpath = pathname_in(1:i)
+            filter = pathname_in(i+1:nc)
+         else
+            dirpath = '.'
+            filter = pathname_in(i+1:nc)
+         endif
+         
         endif
-
-
-        call getfilenames_c (dirpath,file_names,numoffiles,filter
-     1       , status)
-
-
+        
+        
+        call getfilenames_c (dirpath,file_names,numoffiles,filter,
+     1       status)
+        
+        
         if(numoffiles.gt.max_files) then
            print *, 'Error calling Get_file_names'
            print *, 'number of files returned exceeds array allocation'
@@ -96,11 +96,11 @@ c
            return
         endif
         call s_len(dirpath,nindx2)
-c        print*,'>',dirpath,'<',
-c        print*,'nindx2 ',nindx2,string_space(dirpath)
+c     print*,'>',dirpath,'<',
+c     print*,'nindx2 ',nindx2,string_space(dirpath)
         
         do i = 1, numoffiles
-c           nindx = index(file_names(i), ' ')
+c     nindx = index(file_names(i), ' ')
            call s_len(file_names(i),nindx)
            if( dirpath(nindx2:nindx2) .ne. '/')then
               c_filenames(i) = dirpath(1:nindx2)//'/'
@@ -109,36 +109,36 @@ c           nindx = index(file_names(i), ' ')
               c_filenames(i) = dirpath(1:nindx2)
      1             //file_names(i)(1:nindx)
            endif
-
+           
         enddo
-
+        
         istatus = status
-
+        
         if (istatus.ne.1) then
            return
         endif
-
-c       sort data
-
+        
+c     sort data
+        
         call sort_fn (c_filenames,numoffiles,istatus)
-
+        
         return
         end
-
-
-
-
-
-        subroutine sort_fn (names,number,istatus)
-
-        integer number                  ! Input
-        integer istatus                 ! Output
-        character*(*) names(number)     ! Input/Output
-
-        integer i4time(number)          ! Local
-        character*500 names_buf         ! Local
-        logical l_switch                ! Local
-
+      
+      
+      
+      
+      
+      subroutine sort_fn (names,number,istatus)
+      
+      integer number            ! Input
+      integer istatus           ! Output
+      character*(*) names(number) ! Input/Output
+      
+      integer i4time(number)    ! Local
+      character*500 names_buf   ! Local
+      logical l_switch          ! Local
+      
 !       This does a Bubble Sort on the list of names.
 !       Note that this is relatively inefficient, more efficient
 !       alternatives include a "tree" sort or various C sorting utilities.
@@ -147,60 +147,60 @@ c       sort data
 !       Steve Albers    June 1995       Original Version
 !       Steve Albers    July 1998       Fix for Y2K problem
 
-        if(number .eq. 0)then
-            istatus = 1
-            return
-        endif
-
-        n_non_numeric = 0
+      if(number .eq. 0)then
+         istatus = 1
+         return
+      endif
+      
+      n_non_numeric = 0
 
 !       Set up array of i4times for the files, 0 is used for non-numeric files
 
-        do i = 1,number
+      do i = 1,number
 
-            call i4time_fname_lp(names(i),i4time(i),istatus)
+         call i4time_fname_lp(names(i),i4time(i),istatus)
+         
+         if(istatus .ne. 1)then
+            i4time(i) = 0       ! File is non-numeric and has no i4time
+            n_non_numeric = n_non_numeric + 1
+         endif
+         
+      enddo                     ! i
 
-            if(istatus .ne. 1)then
-                i4time(i) = 0      ! File is non-numeric and has no i4time
-                n_non_numeric = n_non_numeric + 1
-            endif
+ 10   l_switch = .false.
 
-        enddo ! i
-
-10      l_switch = .false.
-
-        do i=1,number-1
-
+      do i=1,number-1
+         
 !           Compare two names
-            if( (i4time(i) .gt. i4time(i+1) ) .OR.
-     1          (i4time(i) .eq. i4time(i+1) .and. 
-     1           names(i)  .gt. names(i+1)  )      )then
-
+         if( (i4time(i) .gt. i4time(i+1) ) .OR.
+     1        (i4time(i) .eq. i4time(i+1) .and. 
+     1        names(i)  .gt. names(i+1)  )      )then
+            
 !               Switch the names
-                names_buf = names(i)
-                names(i) = names(i+1)
-                names(i+1) = names_buf
+            names_buf = names(i)
+            names(i) = names(i+1)
+            names(i+1) = names_buf
+            
+            i4time_buf = i4time(i)
+            i4time(i) = i4time(i+1)
+            i4time(i+1) = i4time_buf
+            
+            l_switch = .true.
 
-                i4time_buf = i4time(i)
-                i4time(i) = i4time(i+1)
-                i4time(i+1) = i4time_buf
+         endif
 
-                l_switch = .true.
-
-            endif
-
-        enddo
-
-        if(l_switch)then
+      enddo
+      
+      if(l_switch)then
 !           write(6,*)' Sort_fn: switched one or more names'
-            go to 10
-        else
-            write(6,*)' Sort_fn: names sorted,'
-     1               ,' non_numeric/total = ',n_non_numeric,number
-        endif
-
-        istatus = 1
-
-        return
-        end
+         go to 10
+      else
+         write(6,*)' Sort_fn: names sorted,'
+     1        ,' non_numeric/total = ',n_non_numeric,number
+      endif
+      
+      istatus = 1
+      
+      return
+      end
 
