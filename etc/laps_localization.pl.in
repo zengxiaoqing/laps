@@ -49,8 +49,14 @@ umask 002;
 my $thisdir = 'pwd';
 chomp($thisdir);
 
+if(! $LAPS_SRC_ROOT){
+    if(-d "@top_srcdir@/src/lib/util"){
+	$LAPS_SRC_ROOT="@top_srcdir@" ;
+    }else{
+	$LAPS_SRC_ROOT='/dev/null';
+    }
+}
 
-$LAPS_SRC_ROOT="@top_srcdir@" unless($LAPS_SRC_ROOT);
 $LAPSROOT="@prefix@" unless($LAPSROOT);
 $LAPS_DATA_ROOT = "@datadir@" unless($LAPS_DATA_ROOT);
 $ENV{LAPS_DATA_ROOT} = $LAPS_DATA_ROOT;
