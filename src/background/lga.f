@@ -357,7 +357,6 @@ c
       integer len_dir, ntime, nf
       integer nxbg, nybg, nzbg(5),ntbg
       integer nsfc_fields, warncnt
-      real make_td
       parameter (nsfc_fields=7)
 c
 
@@ -789,22 +788,20 @@ c
          do j=1,ny_laps
          do i=1,nx_laps
             shsat=ssh2(pr(k),tp(i,j,k)-273.15,
-     .             tp(i,j,k)-273.15,0.0)*0.001
+     .             tp(i,j,k)-273.15,-47.0)*0.001
             sh(i,j,k)=max(1.0e-6,min(sh(i,j,k),shsat))
          enddo
          enddo
       enddo
 c
 c
-      if(bgmodel.ne.6.and.bgmodel.ne.8)then
-         do j=1,ny_laps
-         do i=1,nx_laps
-            shsat=ssh2(pr_sfc(i,j)*0.01,tp_sfc(i,j)-273.15,
-     .             tp_sfc(i,j)-273.15,0.0)*0.001
-            sh_sfc(i,j)=max(1.0e-6,min(sh_sfc(i,j),shsat))
-         enddo
-         enddo
-      endif
+      do j=1,ny_laps
+      do i=1,nx_laps
+         if(sh_sfc(i,j).gt.tp_sfc(i,j))then
+            sh_sfc(i,j)=tp_sfc(i,j)
+         endif
+      enddo
+      enddo
 c
 c ****** Fill grid for LAPS write routine.
 c
@@ -964,36 +961,21 @@ c
                enddo
             enddo
 c
-c sfc Td already taken care of in readdgprep for AFWA AVN and NOGAPS.
-c However, we need sh_sfc since we have Td in sh_sfc array.
-c
-            if(bgmodel.ne.6.and.bgmodel.ne.8)then
-               do j=1,ny_laps
-               do i=1,nx_laps
-                  if(pr_sfc(i,j) .lt. missingflag) then
-                     grid(i,j,kk+7) = make_td(pr_sfc(i,j)/100.,
-     +                 tp_sfc(i,j)-273.15,sh_sfc(i,j)*1000.0,0.0)+273.15
-                  else
-                     grid(i,j,kk+7) = missingflag
-                  endif
-               enddo
-               enddo
-            else
-               do j=1,ny_laps
-               do i=1,nx_laps
+            do j=1,ny_laps
+            do i=1,nx_laps
+               if(pr_sfc(i,j) .lt. missingflag) then
                   Tdsfc=sh_sfc(i,j)
                   qsfc=ssh2(pr_sfc(i,j)*0.01,
      +                          tp_sfc(i,j)-273.15,
-     +                          Tdsfc-273.15,0.)*0.001
-                  shsat=ssh2(pr_sfc(i,j)*0.01,tp_sfc(i,j)-273.15,
-     .                       tp_sfc(i,j)-273.15,0.0)*0.001
-                  qsfc=max(1.0e-6,min(qsfc,shsat))
-
+     +                          Tdsfc-273.15,-47.)*0.001
                   grid(i,j,kk+7)=Tdsfc
                   grid(i,j,kk+4)=qsfc
-               enddo
-               enddo
-            endif
+               else
+                  grid(i,j,kk+7) = missingflag
+                  grid(i,j,kk+4)=qsfc
+               endif
+            enddo
+            enddo
 
             do kk=1,nsfc_fields
                ip(kk)=0
