@@ -4,31 +4,28 @@
 #
 #
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
-           $(LAPSROOT)/src/lib/util/libutil.a \
-           $(LAPSROOT)/src/lib/nav/libnav.a
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a   \
+           $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/nav/libnav.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a \
-             $(LAPSROOT)/src/lib/nav/libdebugnav.a
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/util/libdebugutil.a \
+             $(SRCROOT)/src/lib/nav/libdebugnav.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .x .exe
 
 EXE = ingest_rrv.exe
 
-SRC =  genv01lut_sub.f \
-       gen_llij_lut_v01.f \
-       readradar_v01_cdf.f \
-       rrvdat2laps_v01.f \
-       buildcomment.f \
-       config_rrv_common.f
+SRC =  buildcomment.f    get_rrv_parms.f \
+       genv01lut_sub.f   gen_llij_lut_v01.f    getradarinfo.f \
+       read_radar_info.f readradar_v01_cdf.f   rrvdat2laps_v01.f
 
-MAIN=ingest_rrv.f $(LAPSROOT)/src/lib/block_data.f
+MAIN=ingest_rrv.f
 
 LIB=libgenrrv.a
 

@@ -4,15 +4,15 @@
 #
 #
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
-           $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/radar/remap_ftn/libremap_ftn.a  \
+           $(SRCROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
-             $(LAPSROOT)/src/lib/libdebuglaps.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a  
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a

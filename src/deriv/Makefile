@@ -4,19 +4,19 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/cloud/libcloud.a  \
-           $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a  
+LAPSLIBS = $(SRCROOT)/src/lib/cloud/libcloud.a  \
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a  \
+           $(SRCROOT)/src/lib/util/libutil.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/cloud/libdebugcloud.a  \
-             $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a 
+DBLAPSLIBS = $(SRCROOT)/src/lib/cloud/libdebugcloud.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  \
+             $(SRCROOT)/src/lib/util/libdebugutil.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a

@@ -3,10 +3,10 @@
 # Please report problems to lapsbugs@fsl.noaa.gov
 
 
-LAPSROOT=.
-include $(LAPSROOT)/src/include/makefile.inc
+SRCROOT=.
+include $(SRCROOT)/src/include/makefile.inc
 
-LINK=$(LAPSROOT)/util/link.pl
+LINK=$(SRCROOT)/util/link.pl
 CWD = $(shell pwd)
 
 MACHDEP = config.log config.status config.cache src/include/config.h
@@ -72,8 +72,8 @@ prebuild:
 
 
 localize: mkdatadirs
-	$(PERL) $(LAPSROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
-               --dataroot=$(DATAROOT) --srcroot=$(LAPSROOT)
+	$(PERL) $(SRCROOT)/etc/laps_localization.pl --lapsroot=$(INSTALLROOT) \
+               --dataroot=$(DATAROOT) --srcroot=$(SRCROOT)
 
 exe: lib
 	@for dir in $(EXEDIRS) ;\
@@ -122,9 +122,9 @@ install_ldmtools:
 
 
 ridds: 	
-	cd $(LAPSROOT)/src/lib/radar/nexrad_nssl; $(MAKE)
-	cd $(LAPSROOT)/src/lib/radar/a2io; $(MAKE)
-	cd $(LAPSROOT)/src/ingest/radar/circbuff_to_nc; $(MAKE)
+	cd $(SRCROOT)/src/lib/radar/nexrad_nssl; $(MAKE)
+	cd $(SRCROOT)/src/lib/radar/a2io; $(MAKE)
+	cd $(SRCROOT)/src/ingest/radar/circbuff_to_nc; $(MAKE)
 
 install: mkdirs mkdatadirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
@@ -139,11 +139,11 @@ install: mkdirs mkdatadirs
 
 mkdirs:
 	mkdir -p $(INSTALLROOT)
-	ls -l  $(LAPSROOT)/util; cp -r $(LAPSROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
-	ls -l  $(LAPSROOT)/etc;  cp -r $(LAPSROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
+	ls -l  $(SRCROOT)/util; cp -r $(SRCROOT)/util $(INSTALLROOT) ; ls -l $(INSTALLROOT)/util 
+	ls -l  $(SRCROOT)/etc;  cp -r $(SRCROOT)/etc  $(INSTALLROOT) ; ls -l $(INSTALLROOT)/etc 
 
 mkdatadirs:
-	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
+	$(PERL) $(SRCROOT)/etc/makedatadirs.pl --srcroot=$(SRCROOT) --installroot=$(INSTALLROOT) \
                          --dataroot=$(DATAROOT)
 
 
@@ -186,10 +186,10 @@ distclean: realclean cleandirs
 	$(RM) -r ./bin ./log
 
 cleandirs:
-	$(PERL) $(LAPSROOT)/etc/makedatadirs.pl --srcroot=$(LAPSROOT) --installroot=$(INSTALLROOT) \
+	$(PERL) $(SRCROOT)/etc/makedatadirs.pl --srcroot=$(SRCROOT) --installroot=$(INSTALLROOT) \
                          --dataroot=$(DATAROOT) --cleandirs
 links:
-	$(LINK) $(CWD) $(LAPSROOT) $(INSTALLROOT)/lib $(MACHDEP)
+	$(LINK) $(CWD) $(SRCROOT) $(INSTALLROOT)/lib $(MACHDEP)
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
 	  do \
 	  echo " ";\

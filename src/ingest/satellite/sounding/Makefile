@@ -3,19 +3,19 @@
 # Please report problems to lapsbugs@fsl.noaa.gov
 #
 #
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/satellite/libsatellite.a \
-           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a  
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/satellite/libsatellite.a \
+           $(SRCROOT)/src/lib/goesinav/libgoesinav.a  \
+           $(SRCROOT)/src/lib/util/libutil.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/satellite/libdebugsatellite.a \
-             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/satellite/libdebugsatellite.a \
+             $(SRCROOT)/src/lib/goesinav/libdebuggoesinav.a  \
+             $(SRCROOT)/src/lib/util/libdebugutil.a  
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe

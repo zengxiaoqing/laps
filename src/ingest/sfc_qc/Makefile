@@ -3,10 +3,11 @@
 # Please report problems to lapsbugs@fsl.noaa.gov
 #
 
-LAPSROOT=../../..
+SRCROOT=../../..
 
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
+
 
 LAPSLIBS=$(BGDATALIB) $(UTILLIB) $(LAPSLIB) $(MTHERMOLIB)
 DBLAPSLIBS=$(DBBGDATALIB) $(DBUTILLIB) $(DBLAPSLIB) $(DBMTHERMOLIB)
@@ -16,7 +17,11 @@ EXE = sfc_qc.exe
 
 SRC   = kalman.f    matrix_tools.f   \
         QC_tools.f       model_tools.f    write_qc.c    \
-        write_tools.f     
+        write_tools.f 
+
+#FFLAGS+=-pg
+
+#DBFFLAGS+=-pg
 
 
 MAIN=QC_main.f

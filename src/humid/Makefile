@@ -4,23 +4,23 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 #FFLAGS+=-pg
 
 DBFFLAGS+=-pg
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/fm/libfm.a \
-	   $(LAPSROOT)/src/lib/powell/libpowell.a \
-	   $(LAPSROOT)/src/lib/mthermo/libmthermo.a   
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/fm/libfm.a \
+	   $(SRCROOT)/src/lib/powell/libpowell.a \
+	   $(SRCROOT)/src/lib/mthermo/libmthermo.a   
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
-             $(LAPSROOT)/src/lib/fm/libdebugfm.a \
-             $(LAPSROOT)/src/lib/powell/libdebugpowell.a \
-	     $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a   
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/fm/libdebugfm.a \
+             $(SRCROOT)/src/lib/powell/libdebugpowell.a \
+	     $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a   
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe

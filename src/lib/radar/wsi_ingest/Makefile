@@ -3,9 +3,9 @@
 # Please report problems to lapsbugs@fsl.noaa.gov
 #
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 KRCFLAGS=-g $(INC)
 

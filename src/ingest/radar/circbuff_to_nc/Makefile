@@ -4,23 +4,23 @@
 #
 #
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/radar/a2io/liba2rt.a  \
-           $(LAPSROOT)/src/lib/radar/a2io/liba2tp.a  \
-           $(LAPSROOT)/src/lib/radar/nexrad_nssl/libnexrad.a \
-           $(LAPSROOT)/src/lib/radar/nexrad_nssl/libnssl.a \
-           $(LAPSROOT)/src/lib/radar/remap_ftn/libremap_ftn.a \
-           $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/radar/a2io/liba2rt.a  \
+           $(SRCROOT)/src/lib/radar/a2io/liba2tp.a  \
+           $(SRCROOT)/src/lib/radar/nexrad_nssl/libnexrad.a \
+           $(SRCROOT)/src/lib/radar/nexrad_nssl/libnssl.a \
+           $(SRCROOT)/src/lib/radar/remap_ftn/libremap_ftn.a \
+           $(SRCROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/a2io/liba2rt.a  \
-             $(LAPSROOT)/src/lib/radar/a2io/liba2tp.a  \
-             $(LAPSROOT)/src/lib/radar/nexrad_nssl/libdebugnexrad.a \
-             $(LAPSROOT)/src/lib/radar/nexrad_nssl/libdebugnssl.a \
-             $(LAPSROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
-             $(LAPSROOT)/src/lib/libdebuglaps.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/radar/a2io/liba2rt.a  \
+             $(SRCROOT)/src/lib/radar/a2io/liba2tp.a  \
+             $(SRCROOT)/src/lib/radar/nexrad_nssl/libdebugnexrad.a \
+             $(SRCROOT)/src/lib/radar/nexrad_nssl/libdebugnssl.a \
+             $(SRCROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a  
 
 CMAIN_FSUB=-lxlf90
 OTHERLIBS2=$(OTHERLIBS) $(CMAIN_FSUB)
@@ -37,7 +37,7 @@ all: exe
 exe: $(EXE)
 
 $(EXE): $(SRC)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -I$(LAPSROOT)/src/include $(SRC) $(LAPSLIBS) $(OTHERLIBS2) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -I$(SRCROOT)/src/include $(SRC) $(LAPSLIBS) $(OTHERLIBS2) -o $@
 	rm -f *.o
 
 debug: $(SRC)

@@ -4,14 +4,14 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  
 
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a 
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a 
 
 
 .SUFFIXES:

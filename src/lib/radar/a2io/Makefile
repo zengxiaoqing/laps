@@ -9,9 +9,9 @@
 
 #CC=		acc $(FAST)
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 OBJA2TP=	a2io_tp.o precip_tp.o read88da2.o merge.o
 OBJA2RT=	a2io_rt.o precip_rt.o read88da2.o merge.o

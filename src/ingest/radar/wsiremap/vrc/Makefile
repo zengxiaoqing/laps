@@ -4,19 +4,19 @@
 #
 #
 
-LAPSROOT=../../../../..
+SRCROOT=../../../../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/radar/wsi_ingest/libwsi.a \
-           $(LAPSROOT)/src/lib/liblaps.a \
-           $(LAPSROOT)/src/lib/util/libutil.a \
-           $(LAPSROOT)/src/lib/nav/libnav.a
+LAPSLIBS = $(SRCROOT)/src/lib/radar/wsi_ingest/libwsi.a \
+           $(SRCROOT)/src/lib/liblaps.a \
+           $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/nav/libnav.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a \
-             $(LAPSROOT)/src/lib/libdebuglaps.a   \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a \
-             $(LAPSROOT)/src/lib/nav/libdebugnav.a
+DBLAPSLIBS = $(SRCROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/util/libdebugutil.a \
+             $(SRCROOT)/src/lib/nav/libdebugnav.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .x .exe

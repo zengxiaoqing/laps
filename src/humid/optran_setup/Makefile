@@ -4,20 +4,20 @@
 #
 #
 
-LAPSROOT=../../../
+SRCROOT=../../../
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 #FFLAGS+=-pg
 
 DBFFLAGS+=-pg
 
 LAPSLIBS = 
-#$(LAPSROOT)/src/lib/liblaps.a
+#$(SRCROOT)/src/lib/liblaps.a
 
 
 DBLAPSLIBS = 
-#$(LAPSROOT)/src/lib/libdebuglaps.a 
+#$(SRCROOT)/src/lib/libdebuglaps.a 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe

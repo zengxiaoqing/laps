@@ -4,17 +4,17 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/temp/libtemp.a  \
-           $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  
+LAPSLIBS = $(SRCROOT)/src/lib/temp/libtemp.a  \
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/temp/libdebugtemp.a  \
-             $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  
+DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
+             $(SRCROOT)/src/lib/libdebuglaps.a  \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  
 
 
 .SUFFIXES:

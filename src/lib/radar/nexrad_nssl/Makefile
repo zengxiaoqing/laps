@@ -4,10 +4,10 @@
 #
 #
 
-LAPSROOT=../../../..
+SRCROOT=../../../..
 
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a

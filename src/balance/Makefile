@@ -4,22 +4,22 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe .x
 
 EXE = qbalpe.exe
 
-SRC= laps.f writeballaps.f 
+SRC= lapsio.f writeballaps.f 
 
 MAIN=qbalpe.f 
 

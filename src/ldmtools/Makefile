@@ -4,9 +4,9 @@
 #
 #
 
-LAPSROOT=../..
+SRCROOT=../..
 
-include $(LAPSROOT)/src/include/makefile.inc
+include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = 
 
@@ -15,8 +15,9 @@ DBLAPSLIBS =
 LDMBASE=/usr/local/ldm
 
 LOSLIBS=
-OTHERLIBS.=-L$(LDMBASE)/lib -lldm $(LOSLIBS)
-CFLAGS.=-I$(LDMBASE)/include
+
+LDMLIB=-L$(LDMBASE)/lib -lldm $(LOSLIBS)
+LDMINC=-I$(LDMBASE)/include
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a
@@ -30,7 +31,7 @@ all: exe
 exe: $(EXE)
 
 $(EXE): $(SRC)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(SRC) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDMINC) $(SRC) $(LAPSLIBS) $(LDMLIB) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
