@@ -40,8 +40,8 @@ cdis
      +     dataPlatformType, dewpoint, elevation, equivWindSpeed10m,
      +     latitude, longitude, precip1Hour, precip24Hour, precip3Hour,
      +     precip6Hour, presWeather, pressChange3Hour, pressChangeChar,
-     +     seaLevelPress, seaSurfaceTemp, skyCover, skyLayerBase, 
-     +     stationName, temperature, timeObs, visibility, 
+     +     seaLevelPress, seaSurfaceTemp, skyCover, skyLayerBase,
+     +     stationName, temperature, timeObs, visibility,
      +     wetBulbTemperature, windDir, windGust, windSpeed, wmoId,
      +     badflag, n, istatus )
  
@@ -49,8 +49,7 @@ cdis
 
       character*(*)  filename
       character*25   presWeather(recNum)
-      character*8    skyCover(maxSkyCover,recNum)
-      character*8    stationName(recNum)
+      character*8    skyCover(maxSkyCover,recNum), stationName(recNum)
 
       integer  dataPlatformType(recNum), pressChangeChar(recNum)
       integer  wmoId(recNum)
@@ -172,12 +171,12 @@ c      ----------       examing data quality and changing units       ---------
 c               -------      dealing with lacking of data      -------
       do j= 1,n
          presWeather(j)= "UNK"
-         skyCover(1,j)= "UNK"
-         skyCover(2,j)= "UNK"
+         skyCover(1,j)=  "UNK"
+         skyCover(2,j)=  "UNK"
          stationName(j)= "UNK"
 
          pressChangeChar(j)= int(badflag)
-         dataPlatformType(j)= int(badflag)
+         dataPlatformType(j)= 0
 
          elevation(j)= 0.
          equivWindSpeed10m(j)= badflag

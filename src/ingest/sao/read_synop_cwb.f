@@ -17,7 +17,7 @@
       character(13)  cvt_i4time_wfo_fname13,a13time_eat
       character(9)   a9time
       character(8)   skyCvr(maxSkyCvr,maxobs)
-      character(6)   StnTp(maxobs), rptTp(maxobs)
+      character(6)   rptTp(maxobs), stnTp(maxobs)
       character(5)   stname(maxobs), stnNo(maxobs)
 
       integer  pcc(maxobs), wmoId(maxobs), flag
@@ -33,8 +33,8 @@
       real  vis(maxobs), dd(maxobs), wgdd(maxobs), wgff(maxobs)
       real  ff(maxobs), sr(maxobs), st(maxobs)
 
+      character(6)   rptTpMso(maxobs), stnTpMso(maxobs)
       character(5)   stnNoMso(maxMso)
-      character(3)   rptTpMso(maxMso)
       integer  pccMso(maxMso)
 
       real  latsMso(maxMso), lonsMso(maxMso)
@@ -47,9 +47,8 @@
 
       double precision  timeObs(maxobs)
 
+      rptTp   = 'SYNOP'
       stnTp   = 'UNK'
-      rptTpMso= 'Mso'
-      rptTp   = '      '
       skyCvr  = '        '
       stname  = 'UNK'
       stnNo   = '     '
@@ -104,24 +103,27 @@
 
       do i= 1,numSynop
          write(stnNo(i),'(i5)') wmoId(i)      
+         write(*,*) wmoId(i)      
       enddo
 
       np= numSynop +1
       nq= numSynop +maxMso
 
-      call read_meso_cwb (path_to_local, maxMso, badflag, ibadflag, 
-     ~     i4time_sys, stnNoMso, latsMso, lonsMso, elevMso,
-     ~     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
-     ~     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
-     ~     ddMso, ffMso, wgddMso, wgffMso, pMso, 
-     ~     mslpMso, pccMso, pcMso, srMso, stMso, 
-     ~     numMso, istatusMso)
+      call read_meso_cwb ( path_to_local, maxMso, badflag, ibadflag, 
+     ~                     i4time_sys, rptTpMso, stnTpMso,
+     ~                     stnNoMso, latsMso, lonsMso, elevMso,
+     ~                     tMso, t24maxMso, t24minMso, tdMso, rhMso, 
+     ~                     pcp1hrMso, pcp3hrMso, pcp6hrMso, pcp24hrMso,
+     ~                     ddMso, ffMso, wgddMso, wgffMso, pMso, 
+     ~                     mslpMso, pccMso, pcMso, srMso, stMso, 
+     ~                     numMso, istatusMso )
 
 c                    combine synop data and mesonet data 
       k= numSynop
       do i= 1,numMso
          flag= 0
 
+	 write(*,*) i,stnNoMso(i),rptTpMso(i),stnTpMso(i)
          do j= 1,numSynop
             if ( stnNoMso(i) .eq. stnNo(j) ) then
                rh(j)=   rhMso(i)
@@ -141,8 +143,9 @@ c                    combine synop data and mesonet data
          if ( flag /= 1 ) then
             k= k +1
 
-            stnNo(k)=   stnNoMso(i)
             rptTp(k)=   rptTpMso(i)
+            stnTp(k)=   stnTpMso(i)
+            stnNo(k)=   stnNoMso(i)
             td(k)=      tdMso(i)
             tdTths(k)=  tdMso(i)
             elev(k)=    elevMso(i)
@@ -170,6 +173,9 @@ c                    combine synop data and mesonet data
          endif
       enddo
 
+      do i= 1,k
+	 write(*,*) i,stnNo(i),rptTp(i),stnTp(i)
+      enddo
       num = k
 
       end
@@ -592,10 +598,12 @@ c        presWeather(j)= "UNK"
 
 
       subroutine read_meso_cwb (inpath, maxobs, badflag, ibadflag,
-     ~                          i4time_sys, stname, lats, lons, elev,
-     ~                          t, t24max, t24min, td, rh, pcp1hr,
-     ~                          pcp3hr, pcp6hr, pcp24hr, dd, ff,
-     ~                          wgdd, wgff, stnp, mslp, pcc, pc, sr, st,
+     ~                          i4time_sys, rptTp, stnTp, 
+     ~                          stname, lats, lons, elev,
+     ~                          t, t24max, t24min, td, rh, 
+     ~                          pcp1hr, pcp3hr, pcp6hr, pcp24hr, 
+     ~                          dd, ff, wgdd, wgff,
+     ~                          stnp, mslp, pcc, pc, sr, st,
      ~                          num, istatus)                    
  
 c======================================================================
@@ -620,8 +628,10 @@ c    larger arrays for istart and iend to read data to make processes smooth
  
       character(*)  :: inpath
       character(13) :: cvt_i4time_wfo_fname13, a13time_eat
-      character     :: cstn_id*3, stn_id(maxobs)*3, stname(maxobs)*5
-      character     :: filename*80, line*320, c5_blank*5
+      character(6)  :: rptTp(maxobs), stnTp(maxobs)
+      character(5)  :: stname(maxobs), c5_blank
+      character(3)  :: cstn_id, stn_id(maxobs)
+      character     :: filename*80, line*320
  
 c                      Stuff for the mesonet metadata.
       real  lat_master(maxobs), lon_master(maxobs), elev_master(maxobs)
@@ -640,21 +650,23 @@ c               Get the mesonet metadata (station information).
 
 c    Fill the output arrays with something, then open the file to read.
  
-      istatus= 0
+      istatus=  0
       c5_blank= '     '
-      stname= c5_blank 
-      pcc = ibadflag
-      t   = badflag
-      td  = badflag
-      rh  = badflag
-      stnp= badflag
-      dd  = badflag
-      ff  = badflag
-      wgdd= badflag
-      wgff= badflag
-      pc  = badflag
-      sr  = badflag
-      st  = badflag
+      rptTp=    'LDAD'
+      stnTp=    'MESO'
+      stname=   c5_blank 
+      pcc =     ibadflag
+      t   =     badflag
+      td  =     badflag
+      rh  =     badflag
+      stnp=     badflag
+      dd  =     badflag
+      ff  =     badflag
+      wgdd=     badflag
+      wgff=     badflag
+      pc  =     badflag
+      sr  =     badflag
+      st  =     badflag
 
       i4time_file_eat= i4time_sys +8*3600             ! convert GMT to EAT
       a13time_eat= cvt_i4time_wfo_fname13(i4time_file_eat)
