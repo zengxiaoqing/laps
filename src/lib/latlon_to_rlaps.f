@@ -613,12 +613,12 @@ c
       istatus = 1
 
       if(ni .gt. NX_L_MAX)then
-          write(6,*)' ERROR: NX_L > NX_L_MAX', NX_L, NX_L_MAX
+          write(6,*)' ERROR: ni > NX_L_MAX', ni, NX_L_MAX
           istatus = 0
       endif
 
       if(nj .gt. NY_L_MAX)then
-          write(6,*)' ERROR: NY_L > NY_L_MAX', NY_L, NY_L_MAX
+          write(6,*)' ERROR: nj > NY_L_MAX', nj, NY_L_MAX
           istatus = 0
       endif
 
