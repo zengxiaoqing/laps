@@ -199,3 +199,15 @@ cdis
  998  istat=0
       return
       end
+
+#if defined(hpux) && !defined(F90)
+      real function transfer(in,out)
+      integer in
+      real out
+      print*, 'TRANSFER is not supported by this compiler'
+      print*, 'Please report this error to laps_bugs@fsl.noaa.gov'
+      stop
+      transfer=0
+      return
+      end
+#endif
