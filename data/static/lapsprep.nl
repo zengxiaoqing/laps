@@ -3,10 +3,8 @@
   balance  = .true., 
   output_format = 'mm5',
   snow_thresh = 1.1,
-  lwc2vapor_thresh = 1.0,
+  lwc2vapor_thresh = 1.02,
   make_sfc_uv = .false.,
-  rai_frac = 1.0,
-  sno_frac = 1.0,
 /
  
 c
@@ -45,10 +43,3 @@ c  make_sfc_uv:
 c    Logical flag. If set to true, then the surface u/v fields from lsx
 c    will be replaced with winds interpolated from the 3D isobaric 
 c    u/v fields.
-c
-c  rai_frac:
-c    Value from 0->1 that tells what fraction of the original
-c    LAPS rain concentration field to pass into MM5.
-c
-c  sno_frac:
-c    Same as rai_frac but for snow concentration.
