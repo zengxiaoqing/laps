@@ -655,7 +655,7 @@
      For each domain you wish to create, run... 
 
      prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl makedatadirs.pl --srcroot=$LAPS_SRC_ROOT --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT
+     prompt> perl makedatadirs.pl --srcroot=$LAPS_SRC_ROOT --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT --system_type=laps
 
      where the path name $LAPS_DATA_ROOT must be named differently for each 
      data domain if there is more than one. Recall that each domain can be set
@@ -673,8 +673,11 @@
      More details on 'nest7grid.parms' and other parameter files are 
      discussed in subsequent parts of Section 2. 
 
-     In most cases, you can simply edit the parameter files that are already
-     there to tailor LAPS for your domain.
+     As one option you can edit the parameter files that are in 
+     '$LAPS_SRC_ROOT/data/static' and tailor them for your domain. If you have
+     '$LAPS_DATA_ROOT' different from '$LAPS_SRC_ROOT/data/static', then a
+     good alternative may be to copy any parameter files you need to edit into 
+     '$LAPS_DATA_ROOT/static' from '$LAPS_SRC_ROOT/data/static'.
 
      Finally, you can create the static data files and look up tables specific 
      to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
