@@ -1193,6 +1193,7 @@ c       include 'satellite_dims_lvd.inc'
             igrid = 0
 
             call plot_stations(a9time,c33_label,c_type,i_overlay
+     1                        ,namelist_parms
      1                        ,c_display,lat,lon,c_file,iflag
      1                        ,NX_L,NY_L,laps_cycle_time,zoom)
 
@@ -4066,21 +4067,23 @@ c                   cint = -1.
 
             endif
 
+            len_fcst = 30
+
             if(ext(1:3) .eq. 'fsf')then
                 if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:28)//' '
+                    c_label = comment_2d(1:len_fcst)//' '
      1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
                 else
-                    c_label = comment_2d(1:28)//' '
+                    c_label = comment_2d(1:len_fcst)//' '
      1                                       //fcst_hhmm(1:4)//' Fcst'
                 endif
             else ! lgb
                 if(fcst_hhmm(3:4) .eq. '00')then
-                    c_label = comment_2d(1:25)
+                    c_label = comment_2d(1:len_fcst-5)
      1                      //' '//var_2d(1:3)//' '
      1                                       //fcst_hhmm(1:2)//'Hr Fcst'       
                 else
-                    c_label = comment_2d(1:25)
+                    c_label = comment_2d(1:len_fcst-5)
      1                      //' '//var_2d(1:3)//' '
      1                                       //fcst_hhmm(1:4)//' Fcst'
                 endif
@@ -5712,6 +5715,7 @@ c             if(cint.eq.0.0)cint=0.1
         end
 
         subroutine plot_stations(asc_tim_9,c33_label,c_field,i_overlay
+     1   ,namelist_parms
      1   ,c_display,lat,lon,c_file,iflag
      1   ,NX_L,NY_L,laps_cycle_time,zoom)
 
@@ -5732,6 +5736,7 @@ c             if(cint.eq.0.0)cint=0.1
 !       data ity/35/,ily/1010/
 
         include 'icolors.inc'
+        include 'lapsplot.inc'
 
         logical l_obs
 
@@ -5840,6 +5845,7 @@ c             if(cint.eq.0.0)cint=0.1
      1                   ,iflag,c_metacode       
                 call plot_station_locations(i4time_file,lat,lon
      1                      ,NX_L,NY_L,iflag,maxstns,c_field,zoom
+     1                      ,namelist_parms
      1                      ,asc_tim_24,c33_label,i_overlay)       
             endif
 
