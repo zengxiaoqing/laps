@@ -206,7 +206,7 @@ C*  Convert it to lat/lon using the library routines.            *
 !	         call xytops(xtn(i),ytn(j),pla,plo,erad)
 !                call pstoge(pla,plo,lat(I,J),lon(I,J),90.,std_lon)           
 
-                 call xy_to_latlon(xtn(i),ytn(j),erad,90.,std_lon
+                 call xy_to_latlon(xtn(i),ytn(j),erad ! ,90.,std_lon
      1                                          ,lat(I,J),lon(I,J))
 
 c              print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
@@ -583,7 +583,8 @@ c          print *,'xp,yp,xq,yq=',xp,yp,xq,yq
 !                 CALL XYTOPS(XP,YP,PLA,PLO,ERAD)
 !                 CALL PSTOGE(PLA,PLO,GLATP,GLONP,rlat,wlon1)
 
-                  call xy_to_latlon(XP,YP,erad,rlat,wlon1,GLATP,GLONP) 
+!                 call xy_to_latlon(XP,YP,erad,rlat,wlon1,GLATP,GLONP) 
+                  call xy_to_latlon(XP,YP,erad,GLATP,GLONP) 
 
 c            print *,'glatp,glonp=',glatp,glonp
 c         print *,'rlat,wlon1=',rlat,wlon1
@@ -822,7 +823,8 @@ C
 C      CALL GETOPS(PLAT,PLON,LAT,LON,TLAT,TLON)
 C      CALL PSTOXY(XDIF,YDIF,PLAT,PLON,ERAD)
 
-       call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
+!      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
+       call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
 C
        X=XDIF+(1.-FLOAT(NX)/2.)*DX
        Y=YDIF+(1.-FLOAT(NY)/2.)*DY

@@ -361,7 +361,7 @@ C
       RETURN
       END
 
-      subroutine latlon_to_xy(glat,glon,rlat,wlon1,erad,x,y)
+      subroutine latlon_to_xy_old(glat,glon,rlat,wlon1,erad,x,y)
 
 !     combines getops + pstoxy
 
@@ -376,18 +376,18 @@ C
       return
       end
 
-      subroutine latlon_to_xy_exp(glat,glon,rlat,wlon1,erad,x,y)
+      subroutine latlon_to_xy(glat,glon,erad,x,y)
 
 !     combines getops + pstoxy
 
-      call latlon_to_uv_ps(rlat,wlon1,glat,glon,u,v)
+      call latlon_to_uv(glat,glon,u,v,istatus)
 
       call uv_to_xy(u,v,erad,x,y)
 
       return
       end
 
-      subroutine xy_to_latlon(x,y,erad,rlat,wlon1,glat,glon)
+      subroutine xy_to_latlon_old(x,y,erad,rlat,wlon1,glat,glon)
 
 !     combines xytops + pstoge
 
@@ -401,12 +401,47 @@ C
       end
 
 
+      subroutine xy_to_latlon(x,y,erad,glat,glon)
+
+!     combines xytops + pstoge
+
+      call xy_to_uv(x,y,erad,u,v)
+
+      call uv_to_latlon(u,v,glat,glon,istatus)
+
+      return
+      end
+
+
       subroutine xy_to_uv(x,y,erad,u,v)
 
 !     This routine appears valid for polar stereo, need to test for others
 
-      u = x / (2. * erad)
-      v = y / (2. * erad)
+      character*6 c6_maproj
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' xy_to_uv: Error obtaining c6_maproj'
+          stop
+      endif
+
+      if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
+          u = x / (2. * erad)
+          v = y / (2. * erad)
+
+      elseif(c6_maproj .eq. 'lambrt')then ! Try validating this on CONUS grid
+          u = x / erad
+          v = y / erad
+
+      elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
+          u = x / erad
+          v = y / erad
+
+      else
+          write(6,*)'xy_to_uv - Error: invalid map projection',c6_maproj       
+          stop
+
+      endif
 
       return
       end
@@ -416,8 +451,31 @@ C
 
 !     This routine appears valid for polar stereo, need to test for others
 
-      x = u * 2. * erad
-      y = v * 2. * erad
+      character*6 c6_maproj
+
+      call get_c6_maproj(c6_maproj,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' xy_to_uv: Error obtaining c6_maproj'
+          stop
+      endif
+
+      if(c6_maproj .eq. 'plrstr')then     ! Haltiner & Williams 1-21
+          x = u * 2. * erad
+          y = v * 2. * erad
+
+      elseif(c6_maproj .eq. 'lambrt')then ! Try validating this on CONUS grid
+          x = u * erad
+          y = v * erad
+
+      elseif(c6_maproj .eq. 'merctr')then ! Haltiner & Williams 1-8-2
+          x = u * erad
+          y = v * erad
+
+      else
+          write(6,*)'uv_to_xy - Error: invalid map projection',c6_maproj       
+          stop
+
+      endif
 
       return
       end
