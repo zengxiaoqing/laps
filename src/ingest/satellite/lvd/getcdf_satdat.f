@@ -177,7 +177,11 @@ c just before top of hour.
          if(wfo_fname13_in(12:12).eq.'0')then
             write(6,*)'Adjusting i4time'
             i4time_in=cvt_wfo_fname13_i4time(wfo_fname13_in)
-            i4time_in = i4time_in-480
+C           i4time_in = i4time_in-480
+C            480 seconds is not enough to subtract if running at
+C            more than 7 minutes past the hour...make it
+C            10 minutes to be safe...BLS 19 Jul 2002
+            i4time_in = i4time_in - 600
             wfo_fname13_in = cvt_i4time_wfo_fname13(i4time_in)
             write(6,*)'New time: ',wfo_fname13_in
          endif
