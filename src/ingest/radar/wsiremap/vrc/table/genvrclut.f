@@ -64,7 +64,8 @@ c
       integer   istatus
       integer   len
       integer   nlines,nelems
-      logical   test/.false./
+      logical   test
+      data      test/.false./
 c
 c dimensions for lat/lon
 c

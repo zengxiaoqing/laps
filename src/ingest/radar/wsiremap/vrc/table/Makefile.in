@@ -53,8 +53,7 @@ INSTALL = @INSTALL@
 SRC = gen_llij_lut_wfo.f \
       gen_llij_lut_wsi.f \
       gen_llij_lut_ll.f \
-      get_radar_bounds.f \
-      gridconv.f
+      get_radar_bounds.f 
 
 MAIN=genvrclut.f
 
