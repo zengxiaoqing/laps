@@ -72,7 +72,7 @@ foreach (@lines) {
   if (/$searchstring(.*)/) {
     ($modeltype,$dummy,$modeltime) = split(" ",$1); 
     last; } }
-if ($modeltype eq "missing") {die "Can't determine model background ..."}
+if ($modeltype eq "missing") {print "Can't determine model background.\n"}
 print "BACKGROUND FIELDS:  ";
 
 if ($modeltype =~ /rsf/) {
