@@ -710,20 +710,21 @@
            append them to our intermediate "PIN" file.
 
      Profilers/RASS (pro/lrs) - These are obtained from FSL's NIMBUS database
-           in NetCDF format where they are stored in 4 different directories. 
-           These data come in turn from FSL's demonstration division from
-           two main networks. The 30+ WPDN profiler network is located mostly 
-           in the central U.S. We are also using a network of experimental 
-           boundary (NOAAnet) layer profilers for both wind and temperature. 
-           The profiler data for wind goes into the 'pro' file, and RASS 
-           temperature profiles go into the 'lrs' file. To summarize...
+           and/or AWIPS in NetCDF format where they are stored in 4 different 
+           directories. These data come in turn from FSL's demonstration 
+           division from two main networks. The 30+ WPDN profiler network is 
+           located mostly in the central U.S. We are also using a network of   
+           experimental boundary (NOAAnet) layer profilers for both wind and 
+           temperature. The profiler data for wind goes into the 'pro' file, 
+           and RASS temperature profiles go into the 'lrs' file. 
+           To summarize...
 <pre>
-                      Network            file        frequency
-                      -------            ----        ---------
-                    WPDN wind            PRO          404 MHz
-                    WPDN RASS            LRS
-                    NOAAnet wind         PRO          915 MHz
-                    NOAAnet RASS         LRS
+             Network       Database(s)       file        frequency
+             -------       -----------       ----        ---------
+           WPDN wind       NIMBUS/AWIPS      PRO          404 MHz
+           WPDN RASS       NIMBUS            LRS
+           NOAAnet wind    NIMBUS            PRO          915 MHz
+           NOAAnet RASS    NIMBUS            LRS
 </pre>                 
 
      Radar VAD Algorithm winds (pro)
@@ -1638,7 +1639,7 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 <pre>
 Inputs: (located in two separate NetCDF directories)
 	WPDN 404-MHz profiler wind data in netCDF format 
-            NetCDF CDLs from both FSL-NIMBUS and WFO-Advanced are accepted. 
+            NetCDF CDLs from both FSL-NIMBUS and AWIPS are accepted. 
 
 	Boundary layer 915-MHz profiler wind data in netCDF format
             NetCDF CDL from FSL-NIMBUS. 
