@@ -65,10 +65,8 @@ C*********************************************************************
         real  topt_10(nnxp,nnyp)
         real  topt_out(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
-        character*80 itoptfn_10,itoptfn_30,ipctlfn
         character*3 swt,twt
-        character*6 c6_maproj
-
+        include 'lapsparms.cmn'
 c********************************************************************
 c       Declarations for wrt_laps_static
         integer*4    ni,nj,nf
@@ -116,11 +114,20 @@ C*********************************************************************
 c ipltgrid is 1 if you want to plot the grid itself
 c iplttopo is 1 if you want to plot the topography
 c   the 30s topo covers the continental US
-        itoptfn_30=static_dir(1:len)//'model/topo_30s/U'
+cc        itoptfn_30=static_dir(1:len)//'model/topo_30s/U'
 c   the 10m topo covers the world
-        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
+cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
 c   the 10m pctl covers the world
-        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
+cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
+        call s_len(path_to_topt30s,len)
+	path_to_topt30s(len+1:len+2)='/U'
+        call s_len(path_to_topt10m,len)
+	path_to_topt10m(len+1:len+2)='/H'
+        call s_len(path_to_pctl10m,len)
+	path_to_pctl10m(len+1:len+2)='/L'
+
+
+
 
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
 	if (istatus .ne. 1) then
@@ -257,22 +264,22 @@ c
            write(6,*)
            write(6,*)' Processing 30s topo data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_30,ITOPTFN_30,TOPTWVL,SILAVWT,new_DEM,
-     +         istatus)
+     +         deltax,deltay,TOPT_30,PATH_TO_TOPT30S,TOPTWVL,SILAVWT
+     +         ,new_DEM,istatus)
 
            if (.not.new_DEM) then
              write(6,*)
              write(6,*)' Processing 10m topo data....'
              CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_10,ITOPTFN_10,TOPTWVL,SILAVWT,new_DEM,
-     +         istatus)
+     +         deltax,deltay,TOPT_10,PATH_TO_TOPT10M,TOPTWVL,SILAVWT
+     +         ,new_DEM,istatus)
            endif
 
            write(6,*)
            write(6,*)' Processing 10m land data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,IPCTLFN,TOPTWVL,SILAVWT,new_DEM,
-     +         istatus)
+     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_PCTL10M,TOPTWVL,SILAVWT
+     +         ,new_DEM,istatus)
 
            if(istatus .ne. 1)then
                write(6,*)' File(s) missing for 10m land data'
@@ -565,7 +572,8 @@ c SG97 iodim increased, to be able to read larger blocks of data
      1  deltaxp,deltayp
       real std_lon
       integer istatus
-      CHARACTER*80 OFN,TITLE
+      CHARACTER*(*) OFN
+      character*80 TITLE
       logical which_data
 C
 c *********************
