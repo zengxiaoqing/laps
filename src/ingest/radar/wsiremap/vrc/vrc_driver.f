@@ -84,19 +84,21 @@ c
        character*200 dir_static
        character*(*) c_grid_fname
 
-       character*125 comment_ll(2),comment_vrc
-       character*10 units_ll(2),units_vrc
-       character*3 var_ll(2),var_vrc
+       character*125 comment_ll(2)
+       character*125 comment_vrc(2)
+       character*10  units_ll(2)
+       character*10  units_vrc(2)
+       character*3   var_ll(2)
+       character*3   var_vrc(2)
 
-       character*4 lvl_coord_2d
+       character*4 lvl_coord_2d(2)
 
        real*4 lat(nx_l,ny_l)
        real*4 lon(nx_l,ny_l)
        real*4 rdbz(nx_l,ny_l)
        real*4 grid_spacing
        real*4 data(nx_l,ny_l,2)
-       real*4 radar_lat(maxradars)
-       real*4 radar_lon(maxradars)
+       real*4 radar_dist_min(nx_l,ny_l)
        real*4 rdum
 
        real*4 percent_extreme_47
@@ -110,10 +112,9 @@ c
        integer i4time_now_gg
        integer i4_validTime
        integer istatus
-       integer lvl_2d
+       integer lvl_2d(2)
        integer n,nn,nd, len
        integer n_vars_req
-       integer nradars_dom
        integer irad
        integer msngrad,i4_check_interval
        integer i4_total_wait,i4_thresh_age
@@ -132,7 +133,7 @@ c
        character*200 c_filenames_proc(max_files)
        character*3   c_raddat_type
      
-       data lvl_2d/0/
+       data lvl_2d/0,0/
 
 c
 c get vrc runtime parameters
@@ -254,9 +255,12 @@ c
 c This for output.  LAPS VRC files as indicated.
 c
        ext_vrc = 'VRC'
-       var_vrc = 'REF'
-       units_vrc = 'DBZ'
-       comment_vrc = 'WSI Nowrad data remapped to LAPS domain'
+       var_vrc(1) = 'REF'
+       var_vrc(2) = 'DIS'
+       units_vrc(1) = 'DBZ'
+       units_vrc(2) = 'M'
+       comment_vrc(1) = 'WSI Nowrad data remapped to LAPS domain'
+       comment_vrc(2) = 'WSI Nowrad data: minimum radar distance'
 c
 c Definitions needed for acquiring LAPS latitude and longitude arrays.
 c
@@ -304,9 +308,7 @@ c    +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,istatus)
      &                     i4_validTime,
      &                     rdbz,
      &                     maxradars,
-     &                     nradars_dom,
-     &                     radar_lat,
-     &                     radar_lon,
+     &                     radar_dist_min,
      &                     istatus )
 
          if(istatus .eq. 1)then
@@ -344,16 +346,19 @@ c   Output ... adjust i4time to 1960.
 c
             i4time_data=i4_validTime+315619200
 
+            data(:,:,1)=rdbz
+            data(:,:,2)=radar_dist_min
+
             call write_laps_data(i4time_data,
      &                         dir_vrc,
      &                         ext_vrc,
-     &                         nx_l,ny_l,1,1,
+     &                         nx_l,ny_l,1,2,
      &                         var_vrc,
      &                         lvl_2d,
      &                         lvl_coord_2d,
      &                         units_vrc,
      &                         comment_vrc,
-     &                         rdbz,
+     &                         data,
      &                         istatus)
 
             if(istatus.eq.1)then

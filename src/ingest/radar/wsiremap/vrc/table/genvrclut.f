@@ -57,9 +57,12 @@ c
       character*3 c_raddat_type
       real*4    lat(nx_l,ny_l)
       real*4    lon(nx_l,ny_l)
+      real*4    ri(nx_l,ny_l)
+      real*4    rj(nx_l,ny_l)
       real*4    grid_spacing
       real*4    data(nx_l,ny_l,2)
-      real*4    rdum
+      real*4    la1,lo1,la2,lo2,latin,lov,rlat,rlon,dx,dy
+      integer   imax,jmax,nelems,nlines
       integer   i,j
       integer   istatus
       integer   len
@@ -106,6 +109,7 @@ c      do i=1,n_radar_types
          write(6,*)'Gen LUT for Conus lambert (WFO) WSI data '
 c        call gen_vrc_wfo_cdf_lut(2,nx_l,ny_l,lat,lon,istatus)
 c        call 
+
          call gen_rirj_lam(imax,jmax,lat,lon,nelems,nlines
      &        ,la1,lo1,la2,lo2,latin,lov,rlat,rlon,dx,dy,ri,rj
      &        ,istatus)
