@@ -1,10 +1,14 @@
-      subroutine rotate_lga_winds(ldir,nx,ny,nz,lon
-     1,uw3d,vw3d,uw2d,vw2d)
-
+      subroutine rotate_lga_winds(ldir,bgmodel,cmodel,fullname
+     1,gproj,nx,ny,nz,lon,uw3d,vw3d,uw2d,vw2d)
 
       implicit none
+
+      character fullname*200
+      character cmodel*132
+      character gproj*2
       integer nx,ny,nz
       integer i,j,k
+      integer bgmodel
       integer istatus
       logical ldir
       real*4  u_true,v_true
@@ -17,16 +21,23 @@
       real*4  angle(nx,ny,2)  !both grid to true N and true to grid N.
       real*4  latitude
       real*4  projrot_latlon
+
+      include 'lapsparms.cmn'
 c
-c build look-up-tables for rotation vector 2D grid and
-c apply this to all 3D/2D grid winds
+c reset or restore common projection parameters
+c
+      call reset_lapsparms_common(ldir,bgmodel,cmodel,fullname
+     1,gproj,istatus)
+c
+c build look-up-tables for rotation angles in 2D grid and
+c apply this to grid winds
 c
       latitude = -999. ! Since lat is not yet passed in
       do j = 1, ny
       do i = 1, nx
 
-         angle(i,j,1)= -projrot_latlon(latitude,lon(i,j),istatus)
-         angle(i,j,2)= -angle(i,j,1)
+         angle(i,j,1)= -projrot_latlon(latitude,lon(i,j),istatus)  !grid 2 true
+         angle(i,j,2)= -angle(i,j,1)                               !true 2 grid
 
       enddo
       enddo
@@ -99,16 +110,18 @@ c 2d
       return
       end
 c
-c===============================================================================
+c=======================================================================
 c
-      subroutine rotate_background_uv(nx,ny,nz,lon,gproj,slon0
-     +               ,slat1,slat2,uw,vw,uw_sfc,vw_sfc,istatus)
+      subroutine rotate_background_uv(nx,ny,nz,lon,bgmodel,cmodel
+     +,fullname,gproj,slon0,slat1,slat2,uw,vw,uw_sfc,vw_sfc,istatus)
 c
 c
 c
 
       implicit none
+
       integer nx,ny,nz
+      integer bgmodel
       integer istatus
 
       real    slon0,slat1,slat2
@@ -121,14 +134,27 @@ c
       real    lon(nx,ny)
 
       character  gproj*2
-      character  c6_maproj*6
+      character  fullname*200
+      character  cmodel*132
 
-      call get_c6_maproj(c6_maproj,istatus)
-      call get_standard_longitude(std_lon,istatus)
-      call get_standard_latitudes(std_lat1,std_lat2,istatus)
+c     character  c6_maproj*6
+
+c     call get_c6_maproj(c6_maproj,istatus)
+c     call get_standard_longitude(std_lon,istatus)
+c     call get_standard_latitudes(std_lat1,std_lat2,istatus)
+
+      include 'lapsparms.cmn'
 
       print*,'Rotate u/v components'
       print*
+
+c For the case when rotating the bkgd grid winds, we use subroutine
+c reset_lapsparms_common to reset the appropriate projection parameters
+c within lapsparms.cmn.
+
+      std_lon =standard_longitude
+      std_lat1=standard_latitude
+      std_lat2=standard_latitude2
 
 c ----------------------------------------------------------------
       if(c6_maproj.eq.'merctr')then
@@ -141,16 +167,19 @@ c ----------------------------------------------------------------
             print*,'no rotation required for background'
 
          else
+
 c rotate from grid north to LAPS true north (this subroutine uses
 c std_lon by virtue of library routines.
+
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate from grid-north to true-north only'
 
-            call rotate_lga_winds(.true.,nx,ny,nz,lon
-     +                   ,uw,vw,uw_sfc,vw_sfc)
+            print*,'Rotate grid-north (bkgd) to true-north (LAPS)'
+
+            call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+
          endif
-
 c ----------------------------------------------------------------
       elseif(c6_maproj.eq.'plrstr')then
 c ----------------------------------------------------------------
@@ -160,14 +189,21 @@ c ----------------------------------------------------------------
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
 
-            print*,'Rotate Bkgd winds: true-north to grid-north'
+            print*,'Rotate true-north (bkgd) to grid-north (LAPS)'
 
-            call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +                   ,uw,vw,uw_sfc,vw_sfc)
+            call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+
+c this call used to reset lapsparms.cmn back to original settings
+
+            call reset_lapsparms_common(.true.,bgmodel,cmodel
+     1,fullname,gproj,istatus)
 
          elseif(gproj.eq.'PS')then
 
              if(slon0.eq.std_lon)then
+
+c this only good if both domains share a common pole point
 
                 call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
@@ -178,28 +214,32 @@ c ----------------------------------------------------------------
                 call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
 
-                print*,'Rotate Bkgd winds: grid-north to true-north'
-                call rotate_lga_winds(.true.,nx,ny,nz,lon
-     +,uw,vw,uw_sfc,vw_sfc)
+                print*,'Rotate grid-north (bkgd) to true-north'
+                call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
-                print*,'Rotate again: true-north to LAPS grid-north'
-                call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +,uw,vw,uw_sfc,vw_sfc)
+                print*,'Rotate true-north to grid-north (LAPS)'
+                call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
              endif
 
          else
 
 c background is lambert
+
              call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
 
-             print*,'Rotate Bkgd winds: grid-north to true-north'
-             call rotate_lga_winds(.true.,nx,ny,nz,lon
-     +                   ,uw,vw,uw_sfc,vw_sfc)
-             print*,'Rotate again: true-north to LAPS grid-north'
-             call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +,uw,vw,uw_sfc,vw_sfc)
+             print*,'Rotate grid-north (bkgd) to true-north'
+
+             call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+
+             print*,'Rotate true-north to grid-north (LAPS)'
+
+             call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
          endif
 
@@ -213,20 +253,26 @@ c ----------------------------------------------------------------
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate Bkgd winds: true-north to grid-north'   ! because MC/LL/LE grids are true north
-            call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +                   ,uw,vw,uw_sfc,vw_sfc)
+
+            print*,'Rotate true-north (bkgd) to grid-north (LAPS)'   ! because MC/LL/LE grids are true north
+
+            call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
          elseif(gproj.eq.'PS'.or.gproj.eq.'LC')then
 
             call print_rotproj(gproj,c6_maproj,slon0,slat1,slat2
      +,std_lon,std_lat1,std_lat2)
-            print*,'Rotate Bkgd winds: grid-north to true-north'
-            call rotate_lga_winds(.true.,nx,ny,nz,lon
-     +,uw,vw,uw_sfc,vw_sfc)
-             print*,'Rotate again: true-north to LAPS grid-north'
-             call rotate_lga_winds(.false.,nx,ny,nz,lon
-     +,uw,vw,uw_sfc,vw_sfc)
+
+            print*,'Rotate grid-north (bkgd) to true-north'
+
+            call rotate_lga_winds(.true.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
+
+             print*,'Rotate true-north to grid-north (LAPS)'
+
+             call rotate_lga_winds(.false.,bgmodel,cmodel,fullname
+     +,gproj,nx,ny,nz,lon,uw,vw,uw_sfc,vw_sfc)
 
          endif
 
@@ -395,5 +441,123 @@ c
 77    continue
       t=t2
 c
+      return
+      end
+c
+c ---------------------------------
+c
+      subroutine reset_lapsparms_common(ldir,bgmodel,cmodel
+     1,fullname,gproj,istatus)
+c
+c acquires background projection parameters and uses them to
+c temporarily replace lapsparms_cmn parameters. It is then possible
+c to use the library projection routines to calculate wind rotation
+c angles for the background.
+c
+      implicit none
+
+      character*200 fullname
+      character*132 cmodel
+      character*2   gproj
+      character*1   cgrddef
+      integer       istatus
+      integer       bgmodel
+      integer       nxbg,nybg
+      integer       nzbg_ht
+      integer       nzbg_tp
+      integer       nzbg_sh
+      integer       nzbg_uv
+      integer       nzbg_ww
+      logical       ldir
+      real          dlat,dlon
+      real          sw(2),ne(2)
+      real          dxbg,dybg
+      real          La1,Lo1,La2,Lo2
+      real          Xcen,Ycen
+      real          Xsw,Ysw,Xne,Yne
+      real          erad
+      real          rlatcen,rloncen
+
+      character*6   c6_maproj_save
+      save          c6_maproj_save
+      real          centrallat_save
+      save          centrallat_save
+      real          centrallon_save
+      save          centrallon_save
+      real          Lat0_save
+      save          Lat0_save
+      real          Lat1_save
+      save          Lat1_save
+      real          Lon0_save
+      save          Lon0_save
+
+      integer       isave
+      data          isave/0/
+      save          isave
+
+
+      include 'lapsparms.cmn'
+
+      if(isave.eq.0)then
+         if(ldir)then
+            c6_maproj_save=c6_maproj
+            centrallat_save=grid_cen_lat_cmn
+            centrallon_save=grid_cen_lon_cmn
+            Lat0_save=standard_latitude
+            Lat1_save=standard_latitude2
+            Lon0_save=standard_longitude
+            isave=1
+         endif
+      elseif(isave.eq.1)then        !restore original nest7grid.parms settings
+         c6_maproj=c6_maproj_save
+         grid_cen_lat_cmn=centrallat_save
+         grid_cen_lon_cmn=centrallon_save
+         standard_latitude=Lat0_save
+         standard_latitude2=Lat1_save
+         standard_longitude=Lon0_save
+         isave=0
+         return
+      endif
+
+      print*
+      print*,'reset_lapsparms_common: isave = ',isave
+      print*
+      print*,'bgmodel: ',bgmodel
+      print*,'cmodel: ', TRIM(cmodel)
+      print*,'fullname:',TRIM(fullname)
+      print*
+
+      call get_bkgd_mdl_info(bgmodel,cmodel,fullname
+     &,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
+     &,gproj,dlat,dlon,grid_cen_lat_cmn,grid_cen_lon_cmn
+     &,dxbg,dybg,standard_latitude,standard_latitude2
+     &,standard_longitude,sw,ne,cgrddef,istatus)
+
+      if(gproj.eq.'LC')c6_maproj='lambrt'
+      if(gproj.eq.'PS')c6_maproj='pltstr'
+      if(gproj.eq.'MC')c6_maproj='merctr' 
+cc
+c if RUC_NATIVE
+      if(bgmodel.eq.5 .or. bgmodel.eq.3)then
+         if(TRIM(cmodel).eq.'CWB_20FA_LAMBERT_NF'.or.
+     +      TRIM(cmodel).eq.'CWB_20FA_LAMBERT_RE'.or.
+     +      TRIM(cmodel).eq.'RUC40_NATIVE')then
+            La1=sw(1)
+            Lo1=sw(2)
+            La2=ne(1)
+            Lo2=ne(2)
+            print*,'*** SW lat/lon = ',La1,Lo1,'***'
+            print*,'*** NE lat/lon = ',La2,Lo2,'***'
+            call get_earth_radius(erad,istatus)
+c Get X/Y for grid center
+            call latlon_to_xy(La1,Lo1,ERAD,Xsw,Ysw) 
+            call latlon_to_xy(La2,Lo2,ERAD,Xne,Yne) 
+            Xcen=(Xne+Xsw)/2.
+            Ycen=(Yne+Ysw)/2.
+            call xy_to_latlon(Xcen,Ycen,erad,rlatcen,rloncen)
+            print*,'*** Center lat/lon= ',rlatcen,rloncen,' ***'
+         endif
+      endif
+
       return
       end

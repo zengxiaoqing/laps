@@ -345,7 +345,6 @@ c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
       print *,'in lga_sub'
-      itstatus=init_timer()
       linterp=.true.
       lga_status=0
 
@@ -659,6 +658,7 @@ c ****** Vertically interpolate background data to LAPS isobaric levels.
 c
          if(linterp)then   ! this switch determines if we are going to h/v-interp or not
 
+           itstatus(1)=init_timer()
 
            allocate( htvi(nx_bg,ny_bg,nz_laps),!Height (m)
      .          tpvi(nx_bg,ny_bg,nz_laps),   !Temperature (K)
@@ -673,8 +673,8 @@ c
      .       ,htbg,tpbg,shbg,uwbg,vwbg,wwbg
      .       ,htvi,tpvi,shvi,uwvi,vwvi,wwvi)
 
-           itstatus=ishow_timer()
-c          print*,' Vinterp elapsed time (sec): ',itstatus(1)
+           itstatus(1)=ishow_timer()
+           print*,' Vinterp elapsed time (sec): ',itstatus(1)
 
            deallocate (htbg, tpbg, shbg, uwbg, vwbg, wwbg
      +,prbght, prbguv, prbgsh, prbgww )
@@ -778,6 +778,7 @@ c
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
+           itstatus(2)=init_timer()
 
            call init_hinterp(nx_bg,ny_bg,nx_laps,ny_laps,gproj,
      .        lat,lon,grx,gry,bgmodel,cmodel)
@@ -811,8 +812,8 @@ c
      .           grx,gry,wwvi,ww,bgmodel)
            endif
 
-           print*,'Done with Hinterp (3D) '
            itstatus(2)=ishow_timer()
+           print*,'Hinterp (3D) elapsed time (sec): ',itstatus(2)
            print*
 c
 c ****** Check for missing value flag in any of the fields.
@@ -924,6 +925,7 @@ c
 c
 c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
+           itstatus(3)=init_timer()
 
            if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
@@ -1047,22 +1049,25 @@ c
             print*,'         checking for supersaturations'
            endif
 c
-           print*,'Done with Hinterp (2D)'
-           itstatus=ishow_timer()
+           itstatus(3)=ishow_timer()
+           print*,'Hinterp (2D) elapsed time (sec): ',itstatus(3)
            print*
 c
 c the wind components are still on the native grid projection;
 c rotate them to the LAPS (output) domain as necessary.
 
+           itstatus_rot=ishow_timer()
+
            call rotate_background_uv(nx_laps,ny_laps,nz_laps,lon
-     &,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc,istatus)
+     &,bgmodel,cmodel,fullname,gproj,lon0,lat0,lat1,uw,vw,uw_sfc,vw_sfc
+     &,istatus)
            if(istatus.ne.1)then
               print*,'Error in rotate_background_uv '
               return
            endif
 
-           print*,'Finished rotations'
-           itstatus=ishow_timer()
+           itstatus_rot=ishow_timer()
+           print*,'After rotation: elapsed time (sec): ',itstatus_rot
            print*
 
          else
@@ -1120,6 +1125,7 @@ c
 c
 c Write LGA
 c ---------
+        itstatus(4)=init_timer()
 
         bgvalid=time_bg(nf)+valid_bg(nf)
         call write_lga(nx_laps,ny_laps,nz_laps,time_bg(nf),
@@ -1156,8 +1162,8 @@ c              sfcgrid(i,j,kk+4)=missingflag
             return
          endif
 
-         print*,'finished writing grids '
-         itstatus=ishow_timer()
+         itstatus(4)=ishow_timer()
+         print*,'Elapsed time - write grids (sec): ',itstatus(4)
          print*
 
         endif
@@ -1172,6 +1178,7 @@ c time interpolate between existing lga (bg) files.
 c-------------------------------------------------------------------------------
 c
       if(lga_status.eq.1)then
+       itstatus(5)=init_timer()
        do i=1,nbg
           call s_len(bg_names(i),j)
           print*,'bg_name: ',i,bg_names(i)(1:j)
@@ -1220,8 +1227,8 @@ c interp 2D fields
             print*,'Time Interpolation Not Necessary!'
          endif
 
-         print*,'Finished time interp grids '
-         itstatus=ishow_timer()
+         itstatus(5)=ishow_timer()
+         print*,'Elapsed time - interp grids (sec): ',itstatus(5)
          print*
 
        elseif(accepted_files.eq.1)then

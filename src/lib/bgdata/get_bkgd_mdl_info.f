@@ -158,10 +158,10 @@ c        call s_len(grid_type,leng)
 
          call s_len(projname,leng)
 
-         if(projname(1:5).eq. 'polar')gproj='PS'
-         if(projname(12:18).eq.'lambert')gproj='LC'
-         if(projname(1:8).eq. 'mercator')gproj='MC'
-         if(projname(1:14).eq.'secant lambert')gproj='LC'
+         if(TRIM(projname).eq. 'polar')gproj='PS'
+         if(TRIM(projname).eq.'lambert')gproj='LC'
+         if(TRIM(projname).eq. 'mercator')gproj='MC'
+         if(TRIM(projname).eq.'secant lambert')gproj='LC'
 
          if(Lo1.gt.180)Lo1=Lo1-360
          if(Lo2.gt.180)Lo2=Lo2-360
@@ -198,11 +198,13 @@ c        call s_len(grid_type,leng)
 
          print*,'Error: lga currently not able to use LAPS'
          print*,'analysis for background ... not tested'
-         return
+         print*,'Modify cmodel variable in background.nl'
+         stop
 
        endif
 
       endif
+
 c ETA Public
 c ----------
       if(bgmodel.eq.2.and.cmodel(1:nclen).eq.'ETA48_CONUS'.or.
@@ -227,6 +229,7 @@ c ----------
             nzbg_sh=nzbg
             nzbg_uv=nzbg
             nzbg_ww=nzbg
+            centrallon=Lon0
             sw(1)=La1in
             sw(2)=Lo1in
             ne(1)=La2in
@@ -277,11 +280,9 @@ c           fullname=fullname(1:j)//fname13//cf
 
 c set projection type for gridconv.f
 
-         call s_len(projname,lenn)
-         if(projname(1:lenn).eq.'LAMBERT_CONFORMAL')gproj='LC'
-         if(projname(1:lenn).eq.'STEREOGRAPHIC')gproj='PS'
-         if(projname(1:lenn).eq.'CYLINDRICAL_EQUIDISTANT')
-     .gproj='LE'
+         if(TRIM(projname).eq.'LAMBERT_CONFORMAL')gproj='LC'
+         if(TRIM(projname).eq.'STEREOGRAPHIC')gproj='PS'
+         if(TRIM(projname).eq.'CYLINDRICAL_EQUIDISTANT')gproj='LE'
 
          if(cmodel(1:nclen).eq.'RUC40_NATIVE'.or.
      .      cmodel(1:nclen).eq.'ETA48_CONUS')then
