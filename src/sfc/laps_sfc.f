@@ -363,10 +363,11 @@ c
 	   stn3(i)(1:3) = '   '
 	enddo !i
 c
-	do i=1,n_obs_b ! Put last three chars of large string into small string
+	do i=1,n_obs_b ! Rearrange station strings
            stn20 = stations(i)
            call right_justify(stn20)
 	   stn3(i) = stn20(18:20)
+           call left_justify(stations(i))
 	enddo !i
 c
 c.....	Find the i,j location of each station, then calculate the
