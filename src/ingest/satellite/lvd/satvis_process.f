@@ -219,13 +219,16 @@ c 	  						       that is a pre-normalized display-ready image.
 
           write(6,*)'These vis data are already normalized'
           i_dir = -1
-          l_national = .true.
+
+c override the namelist value for these data. The fsl-conus data
+c have been normalized with l_national = .true.
+
           write(6,*)'Reverse the normalization'
 
-          call normalize_brightness(i4time,lat,lon,laps_vis_norm,
-     &imax,jmax,sublat_d,sublon_d,range_m,l_national,iskip_bilin,
-     &r_missing_data,
-     &6,i_dir,phase_angle_d,specular_ref_angle_d,istatus_n)
+          call normalize_brightness(i4time,lat,lon,laps_vis_norm
+     &,imax,jmax,sublat_d,sublon_d,range_m,.true.,iskip_bilin
+     &,r_missing_data,6,i_dir,phase_angle_d,specular_ref_angle_d
+     &,istatus_n)
 c
           if(istatus_n .ne. 1) then
              write(*,*)'+++WARNING+++ Bad status returned from
@@ -257,7 +260,6 @@ c laps_vis_norm is now ready for local normalization
  
           write(6,*)
           i_dir = 1
-          l_national = .false.
 c
 c compute differences between the two difference normalizations
 c
@@ -303,8 +305,8 @@ c
 c================================================
 c WFO Switch
 c
-       elseif(c_sat_type.eq.'wfo')then !Note: we need to somehow know whether this is goes-9
-c 						       or goes-8!
+       elseif(c_sat_type.eq.'wfo')then 
+
           write(6,*)'These vis data will get normalized - WFO'
           if(c_sat_id.eq.'goes08')then
              write(6,*)'Stretch ',c_sat_id,' to goes7 look-a-like'
@@ -330,20 +332,7 @@ c for goes8 - make it look like goes7
              enddo
           endif
           i_dir = 1
-
-c      else !ispan no longer an option. This would be GVAR ground station. NOT -> !assume this to be ispan data
-
-c         write(6,*)'These vis data will get normalized'
-
-c         do j=1,jmax
-c         do i=1,imax
-c            laps_vis_norm(i,j)=laps_vis_raw(i,j)
-c for goes8 - make it look like goes7
-c            call stretch(0., 303.57, 0., 255., laps_vis_norm(i,j))
-c         enddo             !i
-c         enddo
-
-c         i_dir = 1
+c
 c=======================================
 c GVAR Switch
 c
