@@ -263,27 +263,3 @@
 
       return
       end
- 
-      subroutine open_ext(i4time_sys,ext,lun,istatus)
-
-      integer iopen
-      save iopen
-      data iopen /0/
-
-      character*3 ext
-
-!     Open output SND file
-      if(iopen .eq. 0)then
-          call open_lapsprd_file(lun,i4time_sys,ext,istatus)
-          if(istatus .ne. 1)then
-              write(6,*)' ERROR: could not open lapsprd file ',ext
-              stop
-          else
-              write(6,*)' Successfully Opened lapsprd file for ',ext
-          endif
-
-          iopen = 1
-      endif
-
-      return
-      end
