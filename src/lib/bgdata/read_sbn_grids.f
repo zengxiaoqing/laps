@@ -274,7 +274,10 @@ c     if(.not.l2)then
 
 c     endif
          
-      nf_status = NF_INQ_DIMID(nf_fid,'n_valtimes',nf_vid)
+c switched from n_valtimes to record to handle incomplete files
+c LW 7-9-03
+c     nf_status = NF_INQ_DIMID(nf_fid,'n_valtimes',nf_vid)
+      nf_status = NF_INQ_DIMID(nf_fid,'record',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim n_valtimes'
