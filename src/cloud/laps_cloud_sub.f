@@ -210,8 +210,8 @@ cdis
        
         real*4 heights_3d(NX_L,NY_L,NZ_L)
 
-!       Output array declarations (equivalences are used to share space)
-        real*4 out_array_3d(NX_L,NY_L,3)
+!       Output array declarations
+        real*4 out_array_3d(NX_L,NY_L,5)
 
 !       real*4 snow_2d(NX_L,NY_L)
 
@@ -1124,19 +1124,27 @@ C       EW SLICES
         var_a(1) = 'LCV'
         var_a(2) = 'CSC'
         var_a(3) = 'CWT'
+        var_a(4) = 'S8A'
+        var_a(5) = 'S3A'
         units_a(1) = 'UNDIM'
         units_a(2) = 'UNDIM'
         units_a(3) = 'K'
+        units_a(4) = 'K'
+        units_a(5) = 'K'
         comment_a(1) = 'LAPS Cloud Cover'
         comment_a(2) = 'LAPS Cloud Analysis Implied Snow Cover'
         comment_a(3) = 'LAPS Clear Sky Water Temp'
+        comment_a(4) = 'Satellite 11u used'
+        comment_a(5) = 'Satellite 3.9u used'
 
         call move(cvr_max       ,out_array_3d(1,1,1),NX_L,NY_L)
         call move(cvr_snow_cycle,out_array_3d(1,1,2),NX_L,NY_L)
         call move(cvr_water_temp,out_array_3d(1,1,3),NX_L,NY_L)
+        call move(tb8_k         ,out_array_3d(1,1,4),NX_L,NY_L)
+        call move(t39_k         ,out_array_3d(1,1,5),NX_L,NY_L)
 
         call put_laps_multi_2d(i4time,ext,var_a,units_a,
-     1          comment_a,out_array_3d,NX_L,NY_L,3,istatus)
+     1          comment_a,out_array_3d,NX_L,NY_L,5,istatus)
 
         if(istatus .eq. 1)j_status(n_lcv) = ss_normal
 
