@@ -94,7 +94,7 @@ c     Integer     n1,n2,nn,nc
       Integer     bepixfc,bescnfc,iwidth,idepth,fsci
 
       logical     lwrite 
-      data lwrite/.true./
+      data lwrite/.false./
 
       Integer     linestart,lineend
       Integer     elemstart,elemend
@@ -257,10 +257,10 @@ c
 
         rp_div = 4.0*x_step
         rl_div = 4.0*y_step            !channels 2, 4, and 5 (3.9u, 11u, and 12u)
-        if(ct(1:nc).eq.'wv ') then
-          rl_div = 8.0*y_step         !channel 3 = water vapor
+        if(ct(1:nc).eq.'wv '.and.csattype.ne.'gwc') then
+          rl_div = 8.0*y_step          !channel 3 = water vapor; only FSL public
         elseif (ct(1:nc).eq.'vis') then
-          rp_div = x_step             !channel 1 = visible
+          rp_div = x_step              !channel 1 = visible
           rl_div = y_step
         endif
 
@@ -562,7 +562,7 @@ c compute image resolution in meters. This done with the original line/pix
 c values since we use gimloc here.
 c ------------------------------------------------------------------------
 c
-      if(csattype.eq.'gvr')then
+      if(c_sat_id(isat)(1:4).eq.'goes')then
          call compute_sat_res_m(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
      &instr,r_img_res_m,istatus)

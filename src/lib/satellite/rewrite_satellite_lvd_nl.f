@@ -164,7 +164,7 @@ c    &j=1,maxsat)
 64    format(1x,'IFLAG_LVD_COMMON= ',i1,",")
 65    format(1x,'L_CELL_AFWA= ',a,",")
 66    format(1x,'L_NATIONAL= ',a,",")
-2     format(1x,'I_DELTA_SAT_T_SEC=',i5,",")
+2     format(1x,'I_DELTA_SAT_T_SEC=',i6,",")
 3     format(1x,'I_MSNG_SAT_FLAG=',4(i4,","))
 5     format(1x,'SAT_RANGE_M=',4(1x,f11.2,','))       !maxsat = 4
 7     format(1x,'N_IMAGES=',i2,',')

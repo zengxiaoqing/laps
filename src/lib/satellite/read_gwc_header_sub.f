@@ -129,6 +129,9 @@ cc      REAL*4 PMA           !Pitch Misalignment Angle
 
       real*8   r8dttop
       real*8   r8dtbot
+      real*8   r8time1
+      real*8   r8time2
+      real*8   r8timeavg
       real     rdttop
       real     rdtbot
 
@@ -328,8 +331,13 @@ c
       cfname2=cfname_cur(1:2)//cjjj2//c_hm2
       call i4time_fname_lp(cfname1,i4time1,istatus)
       call i4time_fname_lp(cfname2,i4time2,istatus)
-      i4timediff=int(abs(i4time2-i4time1)/2.)
-      reqobstm=i4time1+i4timediff 
+      r8time1=float(i4time1)/1.e6
+      r8time2=float(i4time2)/1.e6 
+      r8timeavg=r8time1+r8time2
+      reqobstm=int((r8timeavg/2.0)*1.e6)
+      
+c     i4timediff=int(abs(i4time2-i4time1)/2.)
+c     reqobstm=i4time1+i4timediff 
 c
 c   No further header variables are required - return here.
 c
