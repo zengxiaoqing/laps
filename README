@@ -274,7 +274,8 @@
                  ingest/
              etc/                                                (laps scripts)
              bin/                                                 (executables)
-             data/                   ($LAPS_DATA_ROOT, can be moved/duplicated)
+             data/           (default $LAPS_DATA_ROOT, can be moved/duplicated 
+                                   original data tree that comes with tar file)
                  lapsprd/
                      product_list/                                (laps output)
                  log/
@@ -493,16 +494,17 @@
      In most cases, you can simply edit the parameter files that are already
      there to tailor LAPS for your domain.
 
-     If you are working in a separated data directory, you have the option
-     of setting up those runtime parameter files with only those parameters 
-     that are unique to the domain(s) (e.g. map projection parameters,
-     data paths). The remaining parameters are automatically merged in from
-     the '$LAPS_SRC_ROOT/data/static' directory tree by the localization script. 
-     As an example, 'nest7grid.parms' only needs to contain the subset of 
-     parameters that are unique to your domain(s). The rest can be 
-     omitted from the file; they are automatically added in as a result of 
-     the merging operation performed within the localization (next step).
-     This "template" procedure provides an end result equivalent to that 
+     If you are working in a separated data directory (e.g. using the
+     second tree shown above), you have the option of setting up those runtime
+     parameter files with only those parameters that need to be changed for 
+     each of the domain(s). These generally include map projection parameters,
+     data paths, etc. The remaining fixed parameters are automatically merged 
+     in from the '$LAPS_SRC_ROOT/data/static' directory tree by the 
+     localization script. As an example, 'nest7grid.parms' only needs to 
+     contain the subset of parameters that are unique to your domain(s). 
+     The rest can be omitted from the file; they are automatically added in as
+     a result of the merging operation performed within the localization (next
+     step). This "template" procedure provides an end result equivalent to that
      from the previous paragraph and is described to provide an alternative
      method of modifying the parameters. Templates can be a time saver, 
      especially if you are managing parameters in multiple windows and are
