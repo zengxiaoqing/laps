@@ -1171,9 +1171,10 @@ long *status;
           strncpy(pf_com, p_com, s_len);
           pf_com += s_len;
           if (s_len < (*com_len)) {
-            for ( j = 0; j < (*com_len - s_len); j++) 
-              strncat(pf_com, " ", 1);
+            for ( j = 0; j < (*com_len - s_len); j++) {
+              *pf_com = ' ';
               pf_com++;
+            }
           }
           p_unit = units + (i * c_unit_len);
           pf_unit = f_units + (i * (*unit_len));
@@ -1181,9 +1182,10 @@ long *status;
           strncpy(pf_unit, p_unit, s_len);
           pf_unit += s_len;
           if (s_len < (*unit_len)) {
-            for ( j = 0; j < (*unit_len - s_len); j++) 
-              strncat(pf_unit, " ", 1);
+            for ( j = 0; j < (*unit_len - s_len); j++) {
+              *pf_unit = ' ';
               pf_unit++;
+            }
           }
         }
 
