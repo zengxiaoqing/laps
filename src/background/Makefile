@@ -8,10 +8,15 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(BGDATALIB) $(UTILLIB) $(LAPSLIB) $(MTHERMOLIB) 
+LAPSLIBS = $(SRCROOT)/src/lib/bgdata/libbgdata.a \
+           $(SRCROOT)/src/lib/util/libutil.a \
+           $(SRCROOT)/src/lib/liblaps.a  \
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a
 
-DBLAPSLIBS = $(DBBGDATALIB) $(DBLAPSLIB) $(DBUTILLIB) $(DBMTHERMOLIB) 
-
+DBLAPSLIBS = $(SRCROOT)/src/lib/bgdata/libdebugbgdata.a \
+             $(SRCROOT)/src/lib/util/libdebugutil.a \
+             $(SRCROOT)/src/lib/libdebuglaps.a   \
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
