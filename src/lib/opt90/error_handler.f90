@@ -103,8 +103,13 @@ MODULE error_handler
   ! ---------------------
   ! Module use statements
   ! ---------------------
-
-  USE file_utility, ONLY: get_lun
+  ! FSL Modification (BLS, 26 Nov 02):
+  !  Commented out the USE file_utility statement here, because
+  !  it causes problems when using PGF90.  It appears to pgf90
+  !  that get_lun is defined in two different modules.  This
+  !  USE statement is instead placed into the subroutine below
+  !  that actually calls "get_lun"
+  !USE file_utility, ONLY: get_lun
 
 
   ! ---------------------------
@@ -243,7 +248,10 @@ CONTAINS
     !#--------------------------------------------------------------------------#
     !#                         -- Type declarations --                          #
     !#--------------------------------------------------------------------------#
-
+    ! FSL Modification (BLS, 26 Nov 02)
+    !  Added the USE file_utility statement originally at top of
+    !  module to this private subroutine.
+    USE file_utility, ONLY: get_lun
     ! ---------
     ! Arguments
     ! ---------
@@ -361,6 +369,10 @@ END MODULE error_handler
 ! $State$
 !
 ! $Log$
+! Revision 1.1  2002/11/15 15:21:31  birk
+! Added to cvs mainly to see how this compiles on other platforms, it currently
+! seems to compile on the IBM
+!
 ! Revision 1.3  2000/08/31 19:36:32  paulv
 ! - Added documentation delimiters.
 ! - Updated documentation headers.
