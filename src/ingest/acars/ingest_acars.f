@@ -100,7 +100,6 @@
 !     Open output PIN file for appending
       if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
           ext = 'pin'
-          call open_ext(31,i4time_sys,ext(1:3),istatus)       
       else
           write(6,*)' No raw data files identified:',' *.',ext_in
           goto999
@@ -140,6 +139,7 @@
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,c8_project
+     1                                      ,ext
      1                                      ,filename_in,istatus)
               elseif(ext_in .eq. 'wfo')then ! WFO NetCDF
 !                 Read from the ACARS file 
@@ -148,12 +148,14 @@
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,c8_project
+     1                                      ,ext
      1                                      ,filename_in,status)
               elseif(ext_in .eq. 'ac')then ! AFWA ASCII
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
                   call get_acars_afwa(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
+     1                                      ,ext
      1                                      ,filename_in,istatus)
               else
                   write(6,*)' ERROR, invalid ext_in: ',ext_in
