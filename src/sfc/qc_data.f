@@ -35,6 +35,7 @@ c
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
      &     ni, nj, t_bk_f, td_bk_f, mslp_bk_mb, 
+     &     thresh_t,thresh_td,thresh_mslp,
      &     iback_t, iback_td, iback_mp,
      &     istatus)
 c
@@ -277,7 +278,7 @@ c.....  model background checks
 c
         c_field = 'T'
         ifld = 7
-        thresh = 30.
+        thresh = thresh_t
 
         call bkg_chk(iback_t,c_field,ifld,thresh,t_s
      1              ,ii,jj,t_bk_f,rely,badflag,n_obs_curr
@@ -285,7 +286,7 @@ c
 
         c_field = 'TD'
         ifld = 8
-        thresh = 40.
+        thresh = thresh_td
 
         call bkg_chk(iback_t,c_field,ifld,thresh,td_s
      1              ,ii,jj,td_bk_f,rely,badflag,n_obs_curr
@@ -293,7 +294,7 @@ c
 
         c_field = 'MSLP'
         ifld = 14
-        thresh = 10.
+        thresh = thresh_mslp
 
         call bkg_chk(iback_mp,c_field,ifld,thresh,pmsl_s
      1              ,ii,jj,mslp_bk_mb,rely,badflag,n_obs_curr
