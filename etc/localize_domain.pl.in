@@ -238,7 +238,8 @@ if($WHICH_TYPE eq "laps"){
    }else{
     print "Creating directory $DATA_ROOT/static/lvd\n";
     run_sys::run_sys("mkdir $DATA_ROOT/static/lvd");
-  }
+   }
+   &static_parms_to_cdl("$DATA_ROOT");
 }
 
 print "$0 complete\n";
@@ -493,4 +494,90 @@ sub wfo_localization{
 
   $goes = "g".$goes;
 
+}
+
+sub static_parms_to_cdl{
+
+#J Smart 8-13-02: routine reads LAPS static.nest7grid navigation
+#attributes (uses ncdump) and puts these into fua/fsf cdl's.
+
+   my ($LAPS_DATA_ROOT) = @_ ;
+   umask 002;
+
+#  $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if(defined $ENV{LAPS_DATA_ROOT});
+#  if(defined $opt_d) {$LAPS_DATA_ROOT = $opt_d;}
+   if( ! defined $LAPS_DATA_ROOT) {
+       print "LAPS_DATA_ROOT not defined in sub static_parms_to_cdl\n";
+#      print "set env var or use -d command line input\n";
+       return;}
+
+   if( !-e "$LAPS_DATA_ROOT/static/static.nest7grid"){
+       print "No static file in dataroot. Exit\n";
+       exit;
+   }
+
+#  require "/usr/nfs/common/lapb/parallel/laps/etc/run_sys.pm";
+   my $sys;
+   open(SAVEOUT,">&STDOUT");
+   select(STDOUT); $| = 1;
+   my $OUT_FILE = $LAPS_DATA_ROOT."/log/nav.dat";
+
+#find the grid type (ie., polar, lambert, mercator)
+   my @nav_stuff = qw(polar lambert mercator);
+   foreach (@nav_stuff) {
+     $sys="ncdump -v grid_type $LAPS_DATA_ROOT/static/static.nest7grid | grep $_ 1> $OUT_FILE ";
+     run_sys::run_sys($sys,1);
+     if(-e "$LAPS_DATA_ROOT/log/nav.dat"){ last;}
+   }
+#reformat the grid_type output in nav.dat
+   open(NAV,"$LAPS_DATA_ROOT/log/nav.dat");
+   my $nav_stuff = <NAV>;
+   close NAV;
+   unlink "$LAPS_DATA_ROOT/log/nav.dat";
+   $nav_stuff=" grid_type = ".$nav_stuff;
+   open(NAV,">$LAPS_DATA_ROOT/log/nav.dat");
+   print NAV $nav_stuff;
+   close NAV;
+   @nav_stuff = qw(Nx Ny La1 Lo1 La2 Lo2 LoV Latin1 Latin2 Dx Dy);
+   my $cdfvar;
+   foreach (@nav_stuff) {
+      $cdfvar = "\"$_ =\"";
+      print "cdfvar = $cdfvar\n";
+      $sys="ncdump -v $_ $LAPS_DATA_ROOT/static/static.nest7grid | grep $cdfvar 1>> $OUT_FILE ";
+      run_sys::run_sys($sys,1);
+   }
+   open(NAV,"$LAPS_DATA_ROOT/log/nav.dat");
+   my @nav_stuff = <NAV>;
+   close NAV;
+   unlink "$LAPS_DATA_ROOT/log/nav.dat";
+
+#now append new nav info to fua/fsf cdl files
+   my @fuafsf = qw(fua fsf);
+   my $cdlfile;
+   foreach $cdlfile (@fuafsf){
+      open(CDL,"$LAPS_DATA_ROOT/cdl/$cdlfile.cdl");
+      my @fuafsf = <CDL>;
+      close CDL;
+      unlink "$LAPS_DATA_ROOT/cdl/$cdlfile.cdl";
+      open(CDL,">$LAPS_DATA_ROOT/cdl/$cdlfile.cdl");
+      my $i=0;
+      my $ii=0;
+      my $nav;
+      my @newfuafsf;
+      foreach (@fuafsf){
+         if($i==$#fuafsf){
+            $ii=$i;
+            foreach $nav (@nav_stuff){
+               @newfuafsf[$ii]="       ".$nav;
+               $ii++;
+            }
+            $i=$ii;
+         }
+         @newfuafsf[$i]=$_;
+         $i++;
+      }
+      print CDL @newfuafsf;
+   }
+
+   return;
 }
