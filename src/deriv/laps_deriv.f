@@ -77,6 +77,7 @@ cdis
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
         real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
+        real*4 td_3d_k(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
@@ -219,7 +220,8 @@ cdis
      1          ,rh_3d_pct                       ! I
      1          ,temp_sfc_k                      ! I
      1          ,pres_sfc_pa                     ! I
-     1          ,istatus)                        ! O
+     1          ,td_3d_k                         ! O
+     1          ,istat_lst)                      ! O
         else
             write(6,*)' put_stability not called for LST file'
 
@@ -231,6 +233,15 @@ cdis
      1          ,NX_L,NY_L,NZ_L                              ! Input (sic)
      1          ,max_radars_dum,r_missing_data               ! Input
      1          ,i4time)                                     ! Input
+
+        write(6,*)
+        if(istat_lst .eq. 1)then
+            write(6,*)' Calling cpt_fire_fields'
+            call cpt_fire_fields(NX_L,NY_L,NZ_L,pres_3d,temp_3d,td_3d_k  ! I
+     1                          ,istatus)                                ! O
+        else
+            write(6,*)' Skipping call to cpt_fire_fields'
+        endif
 
  999    write(6,*)' End of subroutine laps_deriv'
 
