@@ -26,17 +26,17 @@
  /
 
 c
-c 'n_radars_remap'   - Number of radars to loop through and process. For each
-c                      radar, one radar time will be processed. This time 
-c                      represents the most recent time that we have new input 
-c                      data for. The cron should therefore run at least as often
-c                      as the most frequently updated radar. Note that there
-c                      is an upper limit of 10 to this parameter; this is
-c                      also the number of array elements for each subsequent
-c                      parameter.
+c 'n_radars_remap'   - Number of radars (and/or radar types) to loop through 
+c                      and process. For each radar, one radar time will be 
+c                      processed. This time represents the most recent time 
+c                      that we have new input data for. The cron should 
+c                      therefore run at least as often as the most frequently 
+c                      updated radar. Note that there is an upper limit of 10
+c                      to this parameter; this is also the number of array 
+c                      elements for each subsequent parameter.
 c
-c 'path_to_radar_a'  - Full path to each directory containing a set of radar
-c                      tilts. Max of 10 elements. 
+c 'path_to_radar_a'  - Full path to each directory containing a set of input
+c                      radar tilts/volumes. Max of 10 elements. 
 c
 c 'path_to_vrc_nl'   - Path used if we have 'vrc' output. Can be either 'rdr' 
 c                      or 'lapsprd'. If we're using the mosaicing program 

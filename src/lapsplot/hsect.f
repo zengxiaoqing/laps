@@ -160,7 +160,7 @@ cdis
         integer*4 i4time_radar_a(MAX_RADARS)
         integer*4 n_vel_grids_a(MAX_RADARS)
         character*4 radar_name,radar_name_a(MAX_RADARS)
-        character*31 ext_radar_a(MAX_RADARS)
+        character*31 ext_radar,ext_radar_a(MAX_RADARS)
 
 !       real*4 omega_3d(NX_L,NY_L,NZ_L)
         real*4 grid_ra_ref(NX_L,NY_L,NZ_L,L_RADARS)
@@ -343,9 +343,9 @@ c       include 'satellite_dims_lvd.inc'
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd,wb,wr,wf,bw] Wind'
      1       ,' (LW3/LWM, LGA/LGB, FUA/FSF, LAPS-BKG, QBAL), '
-     1       /'     [wo,co,bo,lo] Anlyz/Cloud/Balance/Background Omega'       
+     1       /'     [wo,co,bo,lo,fo] Anlyz/Cloud/Balance/Bkg/Fcst Omega'       
      1       /'     [ra/rf] Radar Interm./Anal. Data,  [rx] Max Radar'
-     1       /'     [rd] Radar Data - Doppler Ref-Vel (v01-v02...)'
+     1       /'     [rv/rd] Radar Interm. Doppler Ref-Vel (v01-v02...)'       
      1       /
      1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu,ta,th,te,vo'        
      1       ,',mr,mc,dv-i,ha,ma,sp]'
@@ -378,7 +378,7 @@ c       include 'satellite_dims_lvd.inc'
      1      //'     STATIC INFO: [gg] '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
      1       ,'Polar Orbiter'
-     1      //'     Difference field: [di] '
+     1      //'     Difference field: [di-i] '
      1      //' ',52x,'[q] quit/display ? ',$)
 
  15     format(a2)
@@ -391,7 +391,7 @@ c       include 'satellite_dims_lvd.inc'
 
         if(c_type(1:2) .eq. 'di')then
             write(6,*)' Plotting difference field of last two entries'       
-            call diff(field_2d_buf,field_2d,field_2d_diff,NX_L,NY_L)       
+            call diff(field_2d,field_2d_buf,field_2d_diff,NX_L,NY_L)       
 
             c33_label = 'difference field'
 
@@ -433,7 +433,7 @@ c       include 'satellite_dims_lvd.inc'
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
      1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw'
      1    .or. c_type .eq. 'bo' .or. c_type .eq. 'lo'
-     1    .or. c_type .eq. 'wo'                           )then
+     1    .or. c_type .eq. 'fo' .or. c_type .eq. 'wo'         )then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
@@ -458,6 +458,9 @@ c       include 'satellite_dims_lvd.inc'
 
             elseif(c_type .eq. 'lo')then
                 ext = 'lga'
+
+            elseif(c_type .eq. 'fo')then
+                ext = 'fua'
 
             elseif(c_type .eq. 'wf')then
                 ext = 'lw3'
@@ -489,7 +492,8 @@ c       include 'satellite_dims_lvd.inc'
 
             call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
 
-            if(c_type.ne.'lo' .and. c_type .ne. 'wr'
+            if(c_type.ne.'lo' .and. c_type .ne. 'fo' 
+     1                        .and. c_type .ne. 'wr'
      1                        .and. c_type .ne. 'wb')then
                write(6,*)
                write(6,*)'    Looking for laps wind data: ',ext(1:3)
@@ -502,9 +506,11 @@ c       include 'satellite_dims_lvd.inc'
 
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
 
-            if(c_type.eq.'bw'.or.c_type.eq.'bo')ext='balance'
-            if(c_type.eq.'co'.or.c_type.eq.'bo'
-     1     .or.c_type.eq.'lo'.or.c_type.eq.'wo')then
+            if(c_type.eq.'bw' .or. c_type.eq.'bo')ext='balance'
+
+            if(c_type.eq.'co' .or. c_type.eq.'bo' .or.
+     1         c_type.eq.'lo' .or. c_type.eq.'fo' .or. 
+     1         c_type.eq.'wo'                                  )then
                 c_field = 'w'
                 goto115
             endif
@@ -824,7 +830,7 @@ c       include 'satellite_dims_lvd.inc'
                     call mklabel33(k_mb
      1                     ,' Balnc Omega ubar/s',c33_label)       
 
-                else if(c_type .eq. 'lo')then
+                else if(c_type .eq. 'lo' .or. c_type .eq. 'fo')then
                     call input_background_info(
      1                              ext                     ! I
      1                             ,directory               ! O
@@ -838,19 +844,14 @@ c       include 'satellite_dims_lvd.inc'
                    if(istatus.ne.1)goto1200
 
                    write(6,211)ext(1:3)
-!                  read(5,221)a13_time
-!                  call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
-!                  call get_directory(ext,directory,lend)
                    var_2d = 'OM'
 
                    CALL READ_LAPS(i4_initial,i4_valid,DIRECTORY,EXT
      1             ,NX_L,NY_L,1,1,VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d
      1             ,COMMENT_2d,w_2d,ISTATUS)
 
-                    call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)
-                    call mklabel33(k_mb
-     1                     ,' Bkgd Omega ubar/s',c33_label)
-
+                   call mklabel33(k_mb,' '//fcst_hhmm
+     1                         //' '//ext(1:3)//' OM ubar/s',c33_label)
                 endif
 
                 do j = 1,NY_L
@@ -1463,7 +1464,7 @@ c
 
         elseif( c_type .eq. 'ra' .or. c_type .eq. 'gc'
      1    .or.  c_type .eq. 'rr' .or. c_type .eq. 'rf'
-     1    .or.  c_type .eq. 'rd'                          )then
+     1    .or.  c_type .eq. 'rd' .or. c_type .eq. 'rv')then
 
             if(c_type .eq. 'ra')mode = 1
             if(c_type .eq. 'gc')mode = 2
@@ -1486,7 +1487,7 @@ c
 
               if(.not. l_radar_read)then
 
-                if(c_type .ne. 'rd')then ! Read data from vrc files
+                if(c_type .eq. 'ra')then ! Read data from vrc files
 
 !                 Obtain height field
                   ext = 'lt1'
@@ -1509,7 +1510,7 @@ c
      1            ,rlat_radar,rlon_radar,rheight_radar,istat_2dref
      1            ,istat_3dref)
 
-                else ! 'rd' option: read data from v01, v02, etc.
+                elseif(c_type .eq. 'rd')then ! read data from v01, v02, etc.
 
                   write(6,*)' Reading velocity data from the radars'
 
@@ -1533,19 +1534,16 @@ c
 
                   i4time_radar = i4time_radar_a(i_radar)
 
-                endif ! c_type .ne. 'rd'
-
-
-                if(.false.)then
+                elseif(c_type .eq. 'rv')then
 !                   Ask which radar number (extension)
                     write(6,*)
                     write(6,2026)
-2026                format('         Enter Radar # (for reflectivity)'      
-     1                                                     ,29x,'? ',$)       
-                    read(lun,*)i_radar
+2026                format('  Enter Radar extension (for reflectivity)'      
+     1                                                     ,28x,'? ',$)       
+                    read(lun,*)ext_radar
 
                     write(6,*)' Reading reflectivity data from radar '
-     1                                                       ,i_radar
+     1                                          ,ext_radar
 
 !                   Obtain height field
                     ext = 'lt1'
@@ -1559,16 +1557,18 @@ c
 
                     call get_ref_base(ref_base,istatus)
 
-                    call read_radar_3dref(i4time_radar,
+                    call read_radar_3dref(i4time_get,
      1               .true.,ref_base,
-     1               NX_L,NY_L,NZ_L,ext_radar_a(i_radar),
+     1               NX_L,NY_L,NZ_L,ext_radar,
      1               lat,lon,topo,.true.,.true.,
      1               field_3d,
      1               grid_ra_ref,
      1               rlat_radar,rlon_radar,rheight_radar,radar_name,
      1               n_ref_grids,istat_radar_2dref,istat_radar_3dref)
 
-                  endif
+                    i4time_radar = i4time_get
+
+                endif ! c_type
 
               endif ! l_radar_read
 
@@ -1588,8 +1588,9 @@ c
      1             /' ',61x,' [q] Quit ? ',$)
             read(lun,824)c_field
 
-            if(c_type .eq. 'rf' .and. c_field(1:2) .ne. 'mr'
-     1                          .and. c_field(1:2) .ne. 'lr')then
+            if(      c_type .eq. 'rf' .or. c_type .eq. 'rv'
+     1         .and. c_field(1:2) .ne. 'mr'
+     1         .and. c_field(1:2) .ne. 'lr')then
 !             Obtain LPS reflectivity field
               write(6,*)' Reading LPS radar volume reflectivity'
               ext = 'lps'
@@ -3590,7 +3591,7 @@ c                   cint = -1.
                write(6,725)
  725           format(/'  SELECT FIELD (var_2d-i):  '
      1          /
-     1          /'  SFC: [u,v,ps,t,td,rh,msl,th,the'       
+     1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
      1                 ,',pbe,nbe,lhe,llr,lmr,lcv] ? ',$)       
 
             endif
@@ -5470,7 +5471,7 @@ c
 
         character*2 c2_dum
 
-        common /icol_index/ icol_current
+        common /icol_index/ icol
 
 !       icol = min(icol_in,35)
         icol = icol_in
@@ -5482,7 +5483,9 @@ c
         call GSPMCI(icol)           
         call GSFACI(icol)                 
 
-        icol_current = icol
+        call pcseti('CC',icol)
+        call pcseti('OC',icol)
+        call pcseti('SC',icol)
 
         return
         end
@@ -5495,6 +5498,7 @@ c
         character*9 a9time
 
         common /image/ n_image
+        common /icol_index/ icol_common
 
         call upcase(c33_label,c33_label)
 
@@ -5516,9 +5520,18 @@ c
 !       Top label
         y_2 = y_2 + .0225 ! .025
 
-        ix = 115
+        rsize = .013
+
+        icol_save = icol_common
+
+        call setusv_dum('  ',7)
+
+        ix = 135
         iy = y_2 * 1024
-        call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
+!       call pwrity(cpux(ix),cpux(iy),'NOAA/FSL',8,jsize_t,0,0)
+        CALL PCHIQU (cpux(ix),cpux(iy),'NOAA/FSL',rsize,0,0)
+
+        call setusv_dum('  ',icol_save)
 
 !       Bottom label
         jsize_b = 1 ! [valid range is 0-2]
@@ -5531,13 +5544,18 @@ c
      1                              * float(i_label-1)
         endif
 
-        ix = 320
-        iy = y_1 * 1024
-        call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
+        rsize = .011
 
-        ix = 800
+!       ix = 320
+        ix = 120
         iy = y_1 * 1024
-        call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
+!       call pwrity(cpux(ix),cpux(iy),c33_label,33,jsize_b,0,0)
+        CALL PCHIQU (cpux(ix),cpux(iy),c33_label,rsize,0,-1.0)
+
+        ix = 710
+        iy = y_1 * 1024
+!       call pwrity(cpux(ix),cpux(iy),asc_tim_24(1:17),17,jsize_b,0,0)
+        CALL PCHIQU (cpux(ix),cpux(iy),asc_tim_24(1:17),rsize,0,-1.0)
 
 
         return

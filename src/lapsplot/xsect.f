@@ -225,6 +225,8 @@ cdis
         real*4 slwc_2d(NX_C,NZ_C)
         real*4 cice_2d(NX_C,NZ_C)
         real*4 field_vert(NX_C,NZ_C)
+        real*4 field_vert_buf(NX_C,NZ_C)
+        real*4 field_vert_diff(NX_C,NZ_C)
         real*4 field_vert2(NX_C,NZ_C)
         real*4 field_vert3(NX_P,NX_P)
         real*4 w_2d(NX_C,NZ_C)
@@ -243,11 +245,11 @@ cdis
         character*33 c33_label
         character*1 c_display
         character*1 c1_string
-        character*2 c_metacode,c_field,c_wind
+        character*2 c_metacode,c_wind
         character*3 c3_string,c3_sta,c3_type
         character*3 c3_ylow,c3_xlow
         character*5 c5_arrival_gate
-        character*4 c4_string
+        character*4 c4_string,c_field
         character*7 c7_string
         character*24 asc_tim_24
         character*9 a9time,c9_string
@@ -647,6 +649,7 @@ c read in laps lat/lon and topo
      1  /
      1  /'           cv (cloud cover contours)'
      1  /'           rf (reflectivity-graphic), ri (ref-image)'
+     1  //'     Difference field: [dif-i] '
      1  /' ',49x,'q (quit/display)]   ? ',$)
 
         NULBLL = 3 ! for conrec (number of lines between labels)
@@ -672,6 +675,47 @@ c read in laps lat/lon and topo
 
         call interp_2d(topo,terrain_vert1d,xlow,xhigh,ylow,yhigh,
      1                 NX_L,NY_L,NX_C,r_missing_data)
+
+        if(c_field(1:3) .eq. 'dif')then
+            write(6,*)' Plotting difference field of last two entries'       
+            call diff(field_vert,field_vert_buf,field_vert_diff
+     1               ,NX_C,NZ_C)       
+
+            c33_label = 'difference field'
+
+            scale = 1.
+
+            if(c_field(4:4) .ne. 'i')then ! contour plot
+                call contour_settings(field_vert_diff,NX_C,NZ_C
+     1                               ,clow,chigh,cint,zoom,scale)
+
+                call plot_cont(field_vert_diff,scale,clow,chigh,cint,
+     1               asc9_tim_3dw,       
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            else ! image plot
+                call array_range(field_vert_diff,NX_L,NY_L,rmin,rmax
+     1                          ,r_missing_data)
+
+                call ccpfil(field_vert_diff,NX_L,NY_L,rmin,rmax,'hues'
+     1                     ,n_image)    
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
+
+        else
+            if(igrid .eq. 1)then
+                write(6,*)' Copying field to field_buf'
+                call move(field_vert,field_vert_buf,NX_C,NZ_C)       
+            endif
+        endif
+
+        igrid = 1
 
         if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
      1    .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
@@ -700,19 +744,15 @@ c read in laps lat/lon and topo
                     c_wind = 'k'
                 endif
 
-            elseif(c_field .eq. 'om')then
+            elseif(c_field .eq. 'om' .and. c_prodtype .eq. 'A')then
                 write(6,105)
-105             format('  Omega field: Kinematic (lw3), Balanced, '
+105             format('  Omega field: Kinematic (lw3), '
      1                ,'Cloud Bogused'
-     1                  ,' [k,b,c]  ',5x,'? ',$)
+     1                  ,' [k,c]  ',7x,'? ',$)
 
                 read(lun,1301)c_wind
                 if(c_wind .eq. 'k' .or. c_wind .eq. 'K')c_wind = 'k'
-                if(c_wind .eq. 'b' .or. c_wind .eq. 'B')c_wind = 'b'
                 if(c_wind .eq. 'c' .or. c_wind .eq. 'C')c_wind = 'c'
-
-            else
-                write(6,*)' ERROR: bad c_field'
 
             endif
 
@@ -792,7 +832,7 @@ c read in laps lat/lon and topo
                     write(6,*)' a9time = ',a9time
 
                 elseif(c_field .eq. 'w ' .or. c_field .eq. 'om')then ! Omega
-                    write(6,*)' Reading Omega/W'
+                    write(6,*)' Reading Omega/W ',c_wind,c_prodtype
                     call get_file_time(c_filespec,i4time_ref,i4time_3dw)
 
                     if(c_wind .eq. 'c')then
@@ -812,6 +852,15 @@ c read in laps lat/lon and topo
      1                  ,i4time_ref,laps_cycle_time*10000,i4time_3dw
      1                  ,ext,var_2d,units_2d
      1                  ,comment_2d,NX_L,NY_L,NZ_L,field_3d,istatus)       
+
+                    elseif(c_prodtype .eq. 'B' .or. 
+     1                     c_prodtype .eq. 'F')then
+                        var_2d = 'OM'
+                        call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,field_3d
+     1                              ,istatus)
 
                     endif
 
@@ -922,8 +971,16 @@ c read in laps lat/lon and topo
                 c33_label = 'LAPS Omega (balanced)      ubar/s'
             else   if(c_wind .eq. 'c')then
                 c33_label = 'LAPS Omega (cloud)         ubar/s'
-            else ! if(c_prodtype .eq. 'A')then
+            else   if(c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Omega (analyzed)      ubar/s'
+            else   if(c_prodtype .eq. 'B')then
+                c33_label = 'LAPS  Bkgnd   Omega  '//fcst_hhmm
+     1                                             //'  ubar/s'
+            else   if(c_prodtype .eq. 'F')then
+                c33_label = 'LAPS  FUA     Omega  '//fcst_hhmm
+     1                                             //'  ubar/s'
+            else
+                c33_label = '                                 '
             endif
 
         elseif(c_field .eq. 'w ' )then
@@ -2111,8 +2168,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1          ,units_2d,comment_2d,pcp_type_3d,istatus)
 
-                call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh,ylow,yhi
-     1gh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
+                call interp_3dn(pcp_type_3d,field_2d,xlow,xhigh
+     1                         ,ylow,yhigh,NX_L,NY_L,NZ_L,NX_C,NZ_C)
 
             else ! Calculate Precip Type on the Fly
 
@@ -2316,12 +2373,11 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 endif
 
-            else
+            else ! logarithmic plot
               if(.false.)then
                 call conrec(field_vert(1,ibottom)
      1                     ,NX_C,NX_C,(NZ_C-ibottom+1)
      1                     ,0.,1e8,1e8,-1,0,-1848,0)
-                cbase = 1e-4
 
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
@@ -2343,21 +2399,26 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                           ,NX_P, iyl_remap, NX_P-iyh_remap
      1                           ,field_vert,field_vert3,r_missing_data)
 
+
+                call array_range(field_vert3,NX_P,NX_P,rmin,rmax
+     1                          ,r_missing_data)
+
+                cmax = max(abs(rmin),abs(rmax))
+
                 call conrec_line
      1              (field_vert3(1,ibottom),NX_P,NX_P,NX_P
      1                             ,0.,0.,cint,-1,0,-1848,0)
 
-                cbase = 1e-4
-
                 do i = 1,N_CONTOURS
                     cvalue = factor(i)
-                    if(cvalue .ge. abs(cint))then
+                    if(cvalue .ge. abs(cint) .and. cvalue .le. cmax)then       
+                        cint_in = 2 * cvalue
                         call conrec_line
      1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
-     1                             ,cvalue,cvalue,cint,-1,0,-1848,0)
-                        call conrec_line
-     1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
-     1                             ,-cvalue,-cvalue,cint,-1,0,-1848,0)
+     1                             ,-cvalue,cvalue,cint_in,-1,0,-1848,0)       
+!                       call conrec_line
+!    1                      (field_vert3(1,ibottom),NX_P,NX_P,NX_P
+!    1                             ,-cvalue,-cvalue,cint,-1,0,-1848,0)
                     endif
                 enddo ! i
  

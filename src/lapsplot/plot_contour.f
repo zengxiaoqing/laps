@@ -204,7 +204,7 @@ C
 !       CALL SET (0.,1.,0.,1.,0.,1.,0.,1.,1)
 
         IF (NC.EQ.1) CALL PLCHHQ (0.0,0.88,TIMELABEL,0.018,0.,-1.)
-        CALL PCSETI ('CC - CHARACTER COLOR', 7+NC)
+!       CALL PCSETI ('CC - CHARACTER COLOR', 7+NC)
 !       CALL PLCHHQ (0.45,0.14-(NC-1)*0.02, LAB3   , .01,
 !    1       0., -1.)
         CALL PLCHHQ (0.05,0.14-(NC-1)*0.02, LAB1   , .01,
@@ -223,7 +223,8 @@ C --- Do contouring
 !       if (ihl.ge.1) then
 
         if (.true.) then
-          call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.020)
+!         call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.020)
+          call CPSETR('HLS  - HIGH/LOW LABEL SIZE',.013)
           call CPSETC('ILT',' ')
           call cpseti('NSD',2)
 !         call cpseti('NLS',2)
@@ -232,7 +233,7 @@ C --- Do contouring
           CALL CPSETI ('LOC', icol_current)
           CALL CPSETI ('HLC', icol_current)
 
-          if (ihl.ge.2) call cpsetc('HLT',' ')
+!         if (ihl.ge.2) call cpsetc('HLT',' ')
 
         end if
 
@@ -246,10 +247,11 @@ C --- Do contouring
         call cpsetr ('CMN',clow)
         call cpsetr ('CMX',chigh)
         call cpsetr ('SPV',SPVALU)
-        call cpsetr ('LLS - LINE LABEL SIZE',.025/sqrt(zoom))
+!       call cpsetr ('LLS - LINE LABEL SIZE',.025/sqrt(zoom))
+        call cpsetr ('LLS - LINE LABEL SIZE',.025)
         call cpgetr ('LLS - LINE LABEL SIZE',clls)           
         call cpgetr ('HLS',hls)           
-        call cpsetr ('CWM',1.00/zoom)
+        call cpsetr ('CWM',1.00/sqrt(zoom))
 
 
         CALL CPRECT (F,NX,NX,NY,RWRK,LRWK,IWRK,LIWK)

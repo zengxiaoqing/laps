@@ -484,7 +484,7 @@ C MERCATOR                              [12]
 
 C DUMMY  --  ERROR EXIT                 [7]
    67 IIER = 33
-      CALL ULIBER (IIER,
+      CALL ULIBER2 (IIER,
      1             46H SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION,46)
       GO TO 700
 
@@ -563,7 +563,7 @@ C ORTHOGRAPHIC                          [2]
 
 C LAMBERT CONFORMAL CONIC               [3]
   403 IIER = 34
-      CALL ULIBER (IIER,32H SUPMAP-MAP LIMITS INAPPROPRIATE,32)
+      CALL ULIBER2 (IIER,32H SUPMAP-MAP LIMITS INAPPROPRIATE,32)
       GO TO 700
 
 C LAMBERT EQUAL AREA                    [4]
@@ -709,10 +709,10 @@ C RETURN IER
 
 C ERROR RETURNS
   900 IIER = 35
-      CALL ULIBER (IIER,32H SUPMAP-ANGULAR LIMITS TOO GREAT,32)
+      CALL ULIBER2 (IIER,32H SUPMAP-ANGULAR LIMITS TOO GREAT,32)
       GO TO 700
   905 IIER = 36
-      CALL ULIBER (IIER,25H SUPMAP-MAP HAS ZERO AREA,25)
+      CALL ULIBER2 (IIER,25H SUPMAP-MAP HAS ZERO AREA,25)
       GO TO 700
 
       END
@@ -1414,7 +1414,7 @@ C AZIMUTHAL EQUIDIDSANT                 [6]
 
 C DUMMY   --  ERROR                     [7]
   170 IIER = 33
-      CALL ULIBER (IIER,
+      CALL ULIBER2 (IIER,
      1             46H SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION,46)
       GO TO 320
 
@@ -1935,19 +1935,13 @@ c       end
 
 
 
-        subroutine uliber (ier, chars, nchars)
+        subroutine uliber2 (ier, chars, nchars)
 
-        integer*4       ier, chars(*), nchars
+        integer*4       ier, nchars
 
+        character       chars*(*)
 
-        character       str*256
-
-
-
-        call ichar_to_str (chars, nchars, str)
-
-        write (*, '(''SUPMAP Error '',i5,'' '',a)') ierr, str
-
+        write(6,*)' Supmap error: ',ier,chars
 
         return
         end

@@ -202,6 +202,7 @@ cdoc    Called from wind/lapsplot
      1                       istatus_vel,istatus_nyq)
 
                 if(n_vel_a(n_radars) .eq. 0 .or. istatus_vel .ne. 1)then       
+                    write(6,*)' No valid velocities for radar ',n_radars
                   ! Don't count in a valid radar
                     n_radars = n_radars - 1
                 endif
