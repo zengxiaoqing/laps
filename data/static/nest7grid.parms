@@ -25,7 +25,7 @@
 
  c_raddat_type='wsi',
  radarext_3d_cmn='all',
- radarext_3d_accum_cmn='vrc',
+ radarext_3d_accum_cmn='xxx',
  
  path_to_topt30s='/data/lapb/geog/world_topo_30s',
  path_to_topt10m='/data/lapb/geog/topo_10m',
@@ -81,7 +81,8 @@ c
 c c8_project_common - Depends on which "realization" of LAPS you are running.
 c                     This sends information to various programs on things
 c                     like file formats, filename conventions, etc.
-c                     Allowed values are 'NIMBUS', 'WFO', 'AFWA', 'CWB'.
+c                     Allowed values are 'NIMBUS', 'WFO', 'AFWA', 'CWB', 'RSA',
+c                     and 'AIRDROP'.
 c
 c radarext_3d_cmn - Determines input radar source for the cloud analysis.
 c                   Intermediate files used are already on the LAPS grid.
@@ -93,12 +94,16 @@ c                   'vrc' (2d radar data [e.g. NOWRAD, NEXRAD Lvl 3 narrowband])
 c
 c radarext_3d_accum_cmn - Determines input radar source for precip accum analysis.
 c                         Intermediate files used are already on the LAPS grid.
+c                         'xxx' Choose 'vrc' or 'all' automatically based on
+c                               availability and frequency of 'vrc/vrz'.
 c                         'vrc' (2d radar data in lapsprd directory [e.g. NOWRAD, 
 c                                                     NEXRAD Lvl 3, narrowband]  )
+c                         'vrz' (radar volume mosaic data)
+c                         'all' first use 'vrz', then merge in 'lapsprd/vrc'
+c                               at the times 'vrz' is present
 c                         'v01' (radar #1  volume data)
 c                         'v02' (radar #2  volume data)
 c                         'vxx' (radar #xx volume data)
-c                         'all' first use 'v01', then merge in 'lapsprd/vrc'
 c
 c ref_base_cmn - Reflectivity dbZ value assigned to areas with no echoes.
 c
