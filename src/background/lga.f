@@ -128,6 +128,7 @@ c
       integer forecast_length
       logical use_analysis, use_systime
       logical ltime(-1:1)
+      logical luse_sfc_bkgd
       logical smooth_fields
 c_______________________________________________________________________________
 c
@@ -142,7 +143,7 @@ c Read information from static/background.nl
 c
       call get_background_info(bgpaths,bgmodels,oldest_forecast
      +,max_forecast_delta,forecast_length,use_analysis,cmodels
-     +,itime,smooth_fields)
+     +,itime,smooth_fields,luse_sfc_bkgd)
 
       nbgmodels=0
       do i=1,maxbgmodels
@@ -271,10 +272,17 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
            print *, nx_laps,ny_laps,nz_laps
            print *, laps_cycle_time
            print *
+
+           if(luse_sfc_bkgd.and.cmodel.ne.'ETA48_CONUS')then
+              print*,'Error: Inconsistency Found'
+              print*,'Error: You must have namelist parameters '
+              print*,'luse_sfc_bkgd=true and cmodel eq to ETA48_CONUS'
+              stop
+           endif
 c
 c *** Call lga driver and, if necessary, interpolate acceptable files.
 c
-           call lga_driver(nx_laps,ny_laps,nz_laps,
+           call lga_driver(nx_laps,ny_laps,nz_laps,luse_sfc_bkgd,
      .          laps_cycle_time,bgmodel,bgpath,cmodel,reject_cnt,
      .          reject_names,names,max_files,accepted_files,
      .          i4time_now_lga, smooth_fields,lga_status)
