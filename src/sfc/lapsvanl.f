@@ -174,6 +174,7 @@ c                                           sat data in T spline if no bkg.
 c                               08-13-99  Change spline call to allow diff wts
 c                                           for diff variables.  Fix for SGI..
 c                                           constants passed to subroutines.
+c                               09-19-99  Turn off range check for p_a on output.
 c
 c*****************************************************************************
 cx
@@ -1061,16 +1062,17 @@ c
  181	format(i4)
 	comment(3)(5:23) = ' M REDUCED PRESSURE'
 	call check_field_2d(p_a, imax,jmax,fill_val,istatus)
-	do j=1,jmax
-	do i=1,imax
-	  if(p_a(i,j).lt.80000. .or. p_a(i,j).gt.105000.) then
-	     istatus = 0
-	     print *,' Value out of range at ',i,j
-	     go to 1181
-	  endif
-	enddo !i
-	enddo !j
+cc	do j=1,jmax
+cc	do i=1,imax
+cc	  if(p_a(i,j).lt.80000. .or. p_a(i,j).gt.105000.) then
+cc	     istatus = 0
+cc	     print *,' Value out of range at ',i,j
+cc	     go to 1181
+cc	  endif
+cc	enddo !i
+cc	enddo !j
 1181    continue
+	print *, 'rp istatus = ', istatus
 	if(istatus .eq. 1)
      &     call move_2dto3d(   p_a, data,  3, imax, jmax, num_var)
 c
