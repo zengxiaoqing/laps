@@ -59,7 +59,7 @@ cdis
         integer*4 ihist_colmaxin_sat(-10:20,-10:20)
         integer*4 ihist_colmaxout_sat(-10:20,-10:20)
         integer*4 istat_39_a(ni,nj)
-        logical l_use_39
+        logical l_use_39, l_39_clr_2d
         real*4 albedo(ni,nj)
         real*4 topo(ni,nj)
         real*4 dbz_max_2d(ni,nj)
@@ -97,6 +97,7 @@ cdis
         n_missing_uprb = 0
         n_vis_mod = 0
         n_39_clr = 0
+        n_39_clr_2d = 0
 
         diffin_sum  = 0.
         diffout_sum = 0.
@@ -140,6 +141,8 @@ cdis
 
             iblank_radar = 0
             iset_vis = 0
+
+            l_39_clr_2d = .false.
 
             do k = 1,nk
                 if(clouds_3d(i,j,k) .gt. 1.0)then
@@ -186,6 +189,7 @@ cdis
                            n_vis_mod = n_vis_mod + 1
                        else
                            n_39_clr = n_39_clr + 1
+                           l_39_clr_2d = .true.
                        endif
                    endif
 
@@ -213,6 +217,8 @@ cdis
                 colmaxout = max(colmaxout,cloud_frac_out)
 
             enddo ! k
+
+            if(l_39_clr_2d)n_39_clr_2d = n_39_clr_2d + 1
 
 !           Reconcile VIS with radar
             if(iblank_radar .eq. 1)then ! NO VIS / WEAK ECHO
@@ -309,6 +315,7 @@ cdis
         write(6,*)' N_MISSING_UPRB = ',n_missing_uprb
         write(6,*)' N_VIS_MOD = ',n_vis_mod
         write(6,*)' N_39_CLR = ',n_39_clr
+        write(6,*)' N_39_CLR_2D = ',n_39_clr_2d
         write(6,*)
 
         write(6,*)'              HISTOGRAMS'
