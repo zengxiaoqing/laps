@@ -62,7 +62,8 @@
      1          ,' MDL forecast cycles are ',itime_start,itime_stop
 
             write(6,*)' Reading u_mdl_prev'
-            var_2d = 'U'
+c           var_2d = 'U'  changed to U3 LW 9/97
+            var_2d = 'U3'
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind-ilaps_cycle_time      
      1          ,var_2d,NX_L,NY_L,NZ_L
@@ -76,7 +77,8 @@
      1                ,u_mdl_prev(NX_L/2+1,NY_L/2+1,1)
 
             write(6,*)' Reading v_mdl_prev'
-            var_2d = 'V'
+c           var_2d = 'V'  changed to V3 LW 9/97
+            var_2d = 'V3'
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind-ilaps_cycle_time
      1          ,var_2d,NX_L,NY_L,NZ_L
@@ -90,7 +92,8 @@
      1                ,v_mdl_prev(NX_L/2+1,NY_L/2+1,1)
 
             write(6,*)' Reading u_mdl_curr'
-            var_2d = 'U'
+c           var_2d = 'U'  changed to U3 LW 9/97
+            var_2d = 'U3
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1          ,u_mdl_curr,istatus)
@@ -103,7 +106,8 @@
      1              ,u_mdl_curr(NX_L/2+1,NY_L/2+1,1)
 
             write(6,*)' Reading v_mdl_curr'
-            var_2d = 'V'
+c           var_2d = 'V'  changed to V3 LW 9/97
+            var_2d = 'V3
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1               ,v_mdl_curr,istatus)
