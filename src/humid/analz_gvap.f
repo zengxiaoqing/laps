@@ -43,11 +43,15 @@ cdis
 cdis
 cdis
       subroutine analz_gvap (lat,lon,wt,w1,w2,w3,gvap_pres,nn,
-     1     glat,glon,data_out,
+     1     glat,glon,sfc_data,data_out,
      1     gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,
      1     data_weights,ii,jj,istatus)
 
+      USE module_sfc_structure
+
       implicit none
+
+      type (lbsi), dimension(ii,jj) :: sfc_data
 
       integer ii,jj,nn,istatus
       real lat(nn),lon(nn),wt(nn),w1(nn),w2(nn),w3(nn),gvap_pres(nn)
@@ -73,7 +77,11 @@ c     volitile array points
 c
       istatus =  0
 
-c     initialaize data_out on first call  (-1 used as missing)
+c     initialize gvap_p with laps sfc pressure
+
+      gvap_p = sfc_data%sfc_pres
+
+c     initialize data_out on first call  (-1 used as missing)
 c     since zero water is valid number
 
       do i = 1,ii
@@ -174,6 +182,8 @@ c     now have fairly full data array.  now analyze
       call slv_laplc (gw2,mask,ii,jj)
       call prep_grid (ii,jj,gw3,nn,point3,ncount,istatus)
       call slv_laplc (gw3,mask,ii,jj)
+      call slv_laplc (gvap_p,mask,ii,jj)
+
 
 
 c     prep the weighting array for the above analyzed sheet

@@ -428,13 +428,17 @@ c     test for weight of measurement
             
 c     integrate q for gvap layers
 c     determine sigma level pressure analogs
+
+            if (cost_gvap_p == cost_mdf) then
+               cost_gvap_p  = cost_ps ! substitute for missing gvap press
+            endif
             
-            call sigma_to_p (0.1, cost_ps, 0.9, p1)
-            call sigma_to_p (0.1, cost_ps, 0.7, p2)
-            call sigma_to_p (0.1, cost_ps, 0.3, p3)
+            call sigma_to_p (0.1, cost_gvap_p, 0.9, p1)
+            call sigma_to_p (0.1, cost_gvap_p, 0.7, p2)
+            call sigma_to_p (0.1, cost_gvap_p, 0.3, p3)
 
             call int_layerpw(x,cost_data,cost_kstart,
-     1           cost_qs,cost_ps,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
+     1           cost_qs,cost_gvap_p,cost_p1d,p1,p2,p3,lpw1,lpw2,lpw3,
      1           cost_kk,cost_mdf)
             
             if (p1 <= 300.0) then

@@ -960,7 +960,7 @@ c     gvap data acquisition
          write(6,*) 'Begin GVAP insertion setep'
          write(6,*) 
          
-         call process_gvap(ii,jj,gvap_data,gvap_w,
+         call process_gvap(ii,jj,sfc_data,gvap_data,gvap_w,
      1        gw1,gw2,gw3,gww1,gww2,gww3,gvap_p,mdf,
      1        lat,lon,time_diff,IHOP_flag,
      1        path_to_gvap12,path_to_gvap10,filename,istatus_gvap)
