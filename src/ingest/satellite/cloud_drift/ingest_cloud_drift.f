@@ -7,6 +7,7 @@
 !     Input file 
       character*70 filename_in
       character*150 dir_in, path_to_cloud_drift(max_paths)
+      character*20  cloud_drift_format(max_paths)
       character*255 c_filespec
       integer max_files
       parameter(max_files = 3000)
@@ -44,9 +45,9 @@
       call get_windob_time_window('CDW',i4_window,istatus)
       if(istatus .ne. 1)stop
 
-      lag_time_report = 1800
-
-      call get_cloud_drift_parms(n_paths_drift,path_to_cloud_drift
+      call get_cloud_drift_parms(n_paths_drift
+     1                          ,path_to_cloud_drift
+     1                          ,cloud_drift_format
      1                          ,istatus)
       if(istatus .ne. 1)stop
 
@@ -57,6 +58,7 @@
           if(len_dir_in .gt. 0)then
               write(6,*)' path for cloud drift winds = '
      1                   ,dir_in(1:len_dir_in)      
+              write(6,*)' data format = ',cloud_drift_format(ipath)
           else
               write(6,*)' Warning: no cloud_drift_path'
               stop
@@ -77,24 +79,40 @@
               i_open = 1
           endif
 
-!         Obtain file times from file names
-          do i = 1,i_nbr_files_ret
-              call s_len(c_fnames(i),len_fname)
-              call get_directory_length(c_fnames(i),len_dir)
-              a10_time = c_fnames(i)(len_dir+2:len_fname)
+          if(cloud_drift_format(ipath) .eq. 'NESDIS')then
+              lag_time_report = 1800
 
-              a9_time = a10_to_a9(a10_time,istatus)
-              if(istatus .ne. 1)then
-                  write(6,*)' Bad value for a10_time ',a10_time
-                  stop
-              endif
+!             Obtain file times from file names
+              do i = 1,i_nbr_files_ret
+                  call s_len(c_fnames(i),len_fname)
+                  call get_directory_length(c_fnames(i),len_dir)
+                  a10_time = c_fnames(i)(len_dir+2:len_fname)
 
-              call i4time_fname_lp(a9_time,i4times(i),istatus)
-              write(6,*)c_fnames(i)(1:len_fname),i4times(i)
-          enddo ! i
+                  a9_time = a10_to_a9(a10_time,istatus)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Bad value for a10_time ',a10_time
+                      stop
+                  endif
+
+                  call i4time_fname_lp(a9_time,i4times(i),istatus)
+                  write(6,*)c_fnames(i)(1:len_fname),i4times(i)
+              enddo ! i
+
+          elseif(cloud_drift_format(ipath) .eq. 'AFWA')then
+              lag_time_report = 3600
+
+              call get_file_times(c_filespec,max_files,c_fnames
+     1                           ,i4times,i_nbr_files_ret
+     1                           ,istatus)
+
+          else
+              write(6,*)' ERROR, unknown cloud_drift_format '
+     1                 ,cloud_drift_format(ipath)
+
+          endif ! cloud_drift_format
 
 !         Loop through ASCII E/W files and choose ones in time window
-          write(6,*)' # of ascii data files = ',i_nbr_files_ret
+          write(6,*)' # of data files = ',i_nbr_files_ret
           do i = 1,i_nbr_files_ret
               call make_fnam_lp(i4times(i),a9_time,istatus)
               filename_in = c_fnames(i)
@@ -112,10 +130,23 @@
                   write(6,*)' File is in time window ',a9_time,i
                   write(6,*)' Input file ',filename_in
 
-!                 Read from the ASCII pirep file and write to the opened PIN file
-                  call get_cloud_drift_data(i4time_sys,i4_window
-     1                                      ,NX_L,NY_L
-     1                                      ,filename_in,istatus)
+                  if(cloud_drift_format(ipath) .eq. 'NESDIS')then
+!                     Read from the ASCII pirep file
+!                     Write to the opened PIN file
+                      call get_cloud_drift_data(i4time_sys,i4_window
+     1                                          ,NX_L,NY_L
+     1                                          ,filename_in,istatus)
+
+                  elseif(cloud_drift_format(ipath) .eq. 'AFWA')then       
+!                     Placeholder call
+                      call get_cloud_drift_data(i4time_sys,i4_window
+     1                                          ,NX_L,NY_L
+     1                                          ,filename_in,istatus)
+                  else
+                      write(6,*)' ERROR, unknown cloud_drift_format '       
+     1                          ,cloud_drift_format(ipath)
+
+                  endif ! cloud_drift_format
               endif ! i4times(i)
           enddo ! i
       enddo ! ipath
@@ -130,13 +161,17 @@
  
  
        subroutine get_cloud_drift_parms(n_paths_drift
-     1                                 ,path_to_cloud_drift,istatus)
+     1                                 ,path_to_cloud_drift
+     1                                 ,cloud_drift_format,istatus)
 
        integer max_paths
        parameter(max_paths=10)
 
-       character*150 path_to_cloud_drift(max_paths)
+       character*(150) path_to_cloud_drift(max_paths)
+       character*(20) cloud_drift_format(max_paths)
+
        namelist /cloud_drift_nl/ n_paths_drift, path_to_cloud_drift
+     1                                        , cloud_drift_format
  
        character*150 static_dir,filename
  
