@@ -458,7 +458,8 @@ c
             IF(ngrids_vel(i,j,k) .ge. MIN_VEL_SAMPLES) THEN ! Good gates
               vknt=float(ngrids_vel(i,j,k))
 
-              IF (vknt .ge. float(n_pot_vel(i,j,k))*COVERAGE_MIN) THEN
+              IF (vknt .ge. float(n_pot_vel(i,j,k))
+     1                                          * COVERAGE_MIN_VEL) THEN       
 
                 n_vel_grids_prelim = n_vel_grids_prelim + 1
                 variance =(  grid_rvel_sq(i,j,k) - 
@@ -507,7 +508,8 @@ c
 
             IF(ngrids_ref(i,j,k) .ge. MIN_REF_SAMPLES) THEN ! Good gates
               rknt=float(ngrids_ref(i,j,k))
-              IF (rknt .ge. float(n_pot_ref(i,j,k)) * COVERAGE_MIN) THEN
+              IF (rknt .ge. float(n_pot_ref(i,j,k)) 
+     1                                          * COVERAGE_MIN_REF) THEN       
 
 !               Calculate mean value of Z
                 grid_ref(i,j,k) = grid_ref(i,j,k)/rknt
@@ -835,6 +837,7 @@ c
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
+        real*4 dist(imax,jmax)
 
         character*9 a9time
         character*8 radar_subdir
@@ -860,6 +863,20 @@ c
             return
         endif
 
+!       Calculate closest radar array
+        write(6,*)' Calculating closest radar array (dist to vrc radar)'       
+        do i = 1,imax
+        do j = 1,jmax
+            call latlon_to_radar(lat(i,j),lon(i,j),topo(i,j)
+     1                          ,azimuth,dist(i,j),elev
+     1                          ,rlat_radar,rlon_radar,rheight_radar)       
+        enddo ! j
+        enddo ! i
+
+!       call vrc_clutter_thresh(      fields_2d(1,1,1)                   ! I/O
+!    1                               ,dist                               ! I
+!    1                               ,imax,jmax,ref_base,r_missing_data) ! I
+
         call ref_fill_horz(fields_2d(1,1,1),imax,jmax,1,lat,lon,dgr
      1                    ,rlat_radar,rlon_radar,rheight_radar,istatus)       
         if(istatus .ne. 1)then
@@ -867,16 +884,12 @@ c
             return
         endif
 
-!       Calculate closest radar array
-        write(6,*)' Calculating closest radar array (dist to vrc radar)'       
+!       Utilize closest radar array
+        write(6,*)' Utilizing closest radar array (dist to vrc radar)'       
         do i = 1,imax
         do j = 1,jmax
-            call latlon_to_radar(lat(i,j),lon(i,j),topo(i,j)
-     1                          ,azimuth,dist,elev
-     1                          ,rlat_radar,rlon_radar,rheight_radar)       
-
             if(fields_2d(i,j,1) .ne. r_missing_data)then
-                fields_2d(i,j,2) = dist
+                fields_2d(i,j,2) = dist(i,j)
             else
                 fields_2d(i,j,2) = r_missing_data
             endif
@@ -923,16 +936,42 @@ c
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
      1                       2,2,vars,LVL_2D,LVL_COORD_2D,units,
      1                       comments_2d,fields_2d,ISTATUS)
-
-!       call put_laps_multi_2d(i4time,ext,vars,units
-!    1                         ,comments_2d,fields_2d
-!    1                         ,imax,jmax,2,istatus)
         if(istatus .eq. 1)then
             write(6,*)' VRC successfully written'
         else
             write(6,*)' VRC not successfully written', istatus
         endif
 
+
+        return
+        end
+
+        subroutine vrc_clutter_thresh(ref                             ! I/O
+     1                               ,dist                            ! I
+     1                               ,ni,nj,ref_base,r_missing_data)  ! I
+
+!       Apply a range dependent reflectivity threshold to filter ground clutter
+
+        real*4 ref(ni,nj), dist(ni,nj)
+
+        do i = 1,ni
+        do j = 1,nj
+            if(dist(i,j) .lt. 80000.)then
+                thresh = 10.
+            elseif(dist(i,j) .gt. 100000.)then
+                thresh = 0.
+            else
+                thresh = 10. * (100000. - dist(i,j)) / 20000.
+            endif             
+
+            if(      ref(i,j) .lt. thresh 
+     1         .and. ref(i,j) .gt. ref_base
+     1         .and. ref(i,j) .ne. r_missing_data )then       
+                ref(i,j) = ref_base
+            endif
+        
+        enddo ! j
+        enddo ! i
 
         return
         end
