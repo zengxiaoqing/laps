@@ -471,6 +471,7 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
 
           call dfconstr(nxx,nyy,r_miss,ref_2d,icon,ierdf,dx1)
           if (ierdf .eq. 0 ) then
+           write(*,*)'No radar echo to define convective region'
            ier = 0
            return
           endif
