@@ -2668,19 +2668,29 @@ c
                 write(c9_string,2029)r_hours
 2029            format(f5.1,' Hr ')
 
-                if(c_type(1:2) .eq. 'sa')then
-                    c33_label = c9_string//' Snow Accum  (in)       '
-                else
-                    c33_label = c9_string//' Prcp Accum  (in)       '
-                endif
-
             endif
 
             if(istatus .ne. 1)goto1200
 
             call make_fnam_lp(I4time_accum,asc9_tim_r,istatus)
 
-            scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
+            if(c_units_type .eq. 'english')then
+                scale = 1. / ((100./2.54)) ! DENOMINATOR = (IN/M)
+                if(c_type(1:2) .eq. 'sa')then
+                    c_label = c9_string//' Snow Accum  (in)'
+                else
+                    c_label = c9_string//' Prcp Accum  (in)'
+                endif
+
+            else ! metric
+                scale = .001               ! NUMERATOR   = (M/MM)
+                if(c_type(1:2) .eq. 'sa')then
+                    c_label = c9_string//' Snow Accum  (mm)'
+                else
+                    c_label = c9_string//' Prcp Accum  (mm)'
+                endif
+
+            endif
 
             clow = 0.
 
@@ -4362,8 +4372,13 @@ c                   cint = -1.
                 units_2d = 'hPa'
 
             elseif(var_2d(2:3) .eq. '01' .or. var_2d(2:3) .eq. 'TO')then       
-                scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
-                units_2d = 'in'
+                if(c_units_type .eq. 'english')then
+                    scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
+                    units_2d = 'in'
+                else ! metric
+                    scale = .001               ! NUMER = (M/MM)
+                    units_2d = 'mm'
+                endif
 
             elseif(var_2d .eq. 'TPW')then       
 !               scale = 10.     ! Convert from KG/M**2 (mm) to cm

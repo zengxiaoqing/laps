@@ -1171,21 +1171,41 @@ c     Restore original color table
 
       real*4 vals(maxvals)
 
-      vals(1) = 0.
-      vals(2) = .01
-      vals(3) = .02
-      vals(4) = .05
-      vals(5) = .10
-      vals(6) = .20
-      vals(7) = .50
-      vals(8) = 1.0
-      vals(9) = 1.5
-      vals(10) = 2.0
-      vals(11) = 3.0
-      vals(12) = 4.0
-      vals(13) = 5.0
-      vals(14) = 7.0
-      vals(15) = 10.0
+      if(namelist_parms%c_units_type .eq. 'english')then ! (inches)
+          vals(1) = 0.
+          vals(2) = .01
+          vals(3) = .02
+          vals(4) = .05
+          vals(5) = .10
+          vals(6) = .20
+          vals(7) = .50
+          vals(8) = 1.0
+          vals(9) = 1.5
+          vals(10) = 2.0
+          vals(11) = 3.0
+          vals(12) = 4.0
+          vals(13) = 5.0
+          vals(14) = 7.0
+          vals(15) = 10.0
+
+      else ! metric (mm)
+          vals(1) = 0.
+          vals(2) = .2
+          vals(3) = .5
+          vals(4) = 1.0
+          vals(5) = 2.0
+          vals(6) = 5.0
+          vals(7) = 10.
+          vals(8) = 20.
+          vals(9) = 30.
+          vals(10) = 50.
+          vals(11) = 75.
+          vals(12) = 100.
+          vals(13) = 150.
+          vals(14) = 200.
+          vals(15) = 400.
+
+      endif
 
       nvals = 15
 
