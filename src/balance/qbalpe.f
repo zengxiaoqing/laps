@@ -313,12 +313,20 @@ c set model scale - a low end wave resolvable by the grid
          call terrain_scale_vartau(nx,ny,nz,ter,lapsphi
      &,ks,kf,terscl)
       else
-         ks(1,1)=6
-         kf(1,1)=11
+         do k=1,nz
+            if(p(k).eq.85000)ks(1,1)=k
+            if(p(k).eq.50000)kf(1,1)=k
+c        ks(1,1)=6
+c        kf(1,1)=11
+         enddo
+
          call terrain_scale(nx,ny,ter,terscl(1,1))
       endif
 
       print*,'terrain scale = ',terscl(1,1)
+      print*,'ks/p = ',ks(1,1),p(ks(1,1))
+      print*,'kf/p = ',kf(1,1),p(kf(1,1))
+
 
       do i=1,nx
       do j=1,ny
@@ -377,15 +385,16 @@ c we seek to replicate the background vertical motions
          dpp=p(ksij)-p(kfij)
          ro(i,j)=sqrt(sumv2)/(sumf*sldata)  ! rossby number for dynamic adjustment
          if (ro(i,j).gt.1) ro(i,j)=1. 
-c scale tau as of 1/(.1*omega)**2 where omega is ro*terscl*g*rho*velocity/wavelen      
-         tau(i,j)= 100.*sl**2/(ro(i,j)*den*g*terscl(i,j))**2/sumv2
+c scale tau as of 1/(omega)**2 where omega is the background rms omega              
+         tau(i,j)= 1./sumom2 
 
 
       enddo
       enddo
 c     delo is scaled as 10% of expected eqn of motion residual ro*U**2/L
       rog=sqrt(sumv2)/(sumf*sl)
-      delo=sl**2*100./sumv2/rog**2           
+      if(rog.gt.1.) rog=1.
+      delo=100.*sl**2/sumv2**2/rog**2           
 c
 c print these arrays now.
       print*,'/dthet/thet/dz/den/N/V/f/delo/tau:' 
@@ -400,12 +409,19 @@ c
       lmax=2 
 
 c put lapsphi into phi, lapsu into u, etc
-      call move_3d(lapsphi,phi,nx,ny,nz)
-      call move_3d(lapsu,u,nx,ny,nz)     
-      call move_3d(lapsv,v,nx,ny,nz)    
-      call move_3d(lapstemp,t,nx,ny,nz)
-      call move_3d(omo,om,nx,ny,nz)
-      call move_3d(lapssh,sh,nx,ny,nz)
+      phi = lapsphi
+      u   = lapsu
+      v   = lapsv
+      t   = lapstemp
+      om  = omo
+      sh  = lapssh
+
+c     call move_3d(lapsphi,phi,nx,ny,nz)
+c     call move_3d(lapsu,u,nx,ny,nz)     
+c     call move_3d(lapsv,v,nx,ny,nz)    
+c     call move_3d(lapstemp,t,nx,ny,nz)
+c     call move_3d(omo,om,nx,ny,nz)
+c     call move_3d(lapssh,sh,nx,ny,nz)
 c
 c
       if(larray_diag)then
@@ -466,7 +482,7 @@ c
 c ****** Compute non-linear terms (nu,nv) from observed field.
 c
       call nonlin(nu,nv,us,vs,ubs,vbs,oms,ombs
-     .           ,nx,ny,nz,dx,dy,dp,dt,bnd)
+     .           ,nx,ny,nz,dx,dy,dp,dt,bnd,rog)
       call frict(fu,fv,ubs,vbs,us,vs,p,ps,ts
      .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
 
@@ -492,7 +508,7 @@ c
 c returns staggered grids of full fields u,v,phi
 
       call balcon(phis,us,vs,oms,phi,u,v,om,phibs,ubs,vbs,ombs,
-     .         ro,delo,tau,itmax,err,erru,errphi,errub,errphib
+     .         rog,delo,tau,itmax,err,erru,errphi,errub,errphib
      .           ,nu,nv,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 
       if(larray_diag)then
@@ -621,6 +637,22 @@ c       modified sh field
       enddo
       enddo     
 c
+c     New section added by to replicate the values of u/v at 
+c     from the lowest p-level still above ground to all levels
+c     below ground  (B. Shaw, 12 Apr 02) 
+
+      do j = 1,ny
+        do i = 1, nx
+          findsfclev:  do k = 1,nz
+            IF (phi(i,j,k) .GT. ter(i,j)) EXIT findsfclev
+          enddo findsfclev
+          IF (k .gt. 1) THEN
+            u(i,j,1:k-1) = u(i,j,k)
+            v(i,j,1:k-1) = v(i,j,k)
+          ENDIF
+        enddo
+      enddo
+
       call write_bal_laps(masstime,phi,u,v,t,om,lapsrh,lapssh
      .                   ,nx,ny,nz
      .                   ,p,istatus)
@@ -762,7 +794,7 @@ c===============================================================================
 c
 c
       subroutine balcon(to,uo,vo,omo,t,u,v,om,tb,ub,vb,omb,
-     .   ro,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
+     .   rog,delo,tau,itmax,err,erru,errph,errub,errphb,nu,nv
      .     ,fu,fv,nx,ny,nz,lat,dx,dy,ps,p,dp,lmax)
 c
 c *** Balcon executes the mass/wind balance computations as described
@@ -770,13 +802,9 @@ c        mcginley (Meteor and Appl Phys, 1987) except that
 c        this scheme operates on perturbations from background "b"
 c        fields. The dynamic constraint is formulated from this 
 c        perturbation field. The constraint equation is
-c          du'/dt= -ro*nonlin'-d phi'/dx +fv' + friction' 
-c        ro is a measure of how well the observation field determines
-c        non linear structure. ro is similar to the rossby number
-c        V/fL where L is the resolved wavelength and V is a representative
-c        velocity.  If obs were everywhere ro =1;
-c        very sparse obs ro ~ 0. If data doesn't support it the 
-c        adjustment perturbation will be geostrophic.
+c        partial  du'/dt= -ro*nonlin'-d phi'/dx +fv' + friction' 
+c        delo determines the magnitude of the residual and is based on
+c        scaled non linear term U**2/length* rossby number
 c        Both o and b fields arrive staggered .  A perturbation is 
 c        computed prior to the dynamic balance.  A new
 c        geopotential(t) is computed using relaxation on eqn. (2).  New
@@ -817,7 +845,7 @@ c
 
       real*4 err,rdpdg,bnd,g,fo,r,re,ovr
      .      ,ang,f,cotmax,sin1,fs,cos1,beta
-     .      ,a,bb,cortmt
+     .      ,a,bb,cortmt,rog
      .      ,dudy,dvdx,dnudx,dnvdy,tt,uot,vot,tot
      .      ,dt2dx2,dt2dy2,slap,force,rest,cot
      .      ,cotma1,cotm5,rho,cotm0,erf,dtdx,dtdy,nuu,nvv
@@ -833,7 +861,6 @@ c
 
 c 2d arrays now (JS 2-20-01)
       real*4 tau(nx,ny)
-      real*4 ro(nx,ny)
 
 c these are used for diagnostics
       integer nf
@@ -1014,8 +1041,8 @@ c
                uot=(uo(i-1,j,k)+uo(i-1,j-1,k))*.5
                vot=(vo(i,j-1,k)+vo(i-1,j-1,k))*.5
                force=term4*tot+term5*uot+term6*vot+term7*(dvdx-dudy)
-     &         +ro(i,j)*(term8*snu+term9*snv)+term10*fuu+term11*fvv
-     &         -ro(i,j)*(dnudx+dnvdy)+dfudx+dfvdy
+     &         +(term8*snu+term9*snv)+term10*fuu+term11*fvv
+     &         -(dnudx+dnvdy)+dfudx+dfvdy
 25              tt=t(i,j,k)
                dt2dx2=(t(i+1,j,k)+t(i-1,j,k)-2.*tt)/dxs(i,j)
                dt2dy2=(t(i,j+1,k)+t(i,j-1,k)-tt*2.)/dys(i,j)
@@ -1088,7 +1115,7 @@ c
           if (uot .ne. bnd) then
            fu2=(fuangu*fuangu)
            u(i,j,k)=(uot*erru(i,j,k)
-     &     -fuangu*delo*(ro(i,j)*nvv-fvv+dtdy))/aaa(i,j,k)      
+     &     -fuangu*delo*(nvv-fvv+dtdy))/aaa(i,j,k)      
 
            data(1)=nvv
            data(2)=fvv
@@ -1104,7 +1131,7 @@ c
           if ( vot .ne. bnd) then
            fv2=(fvangv*fvangv)
            v(i,j,k)=(vot*erru(i,j,k)
-     &     +fvangv*delo*(ro(i,j)*nuu-fuu+dtdx))/aaa(i,j,k)       
+     &     +fvangv*delo*(nuu-fuu+dtdx))/aaa(i,j,k)       
 
            data(5)=nuu
            data(6)=fuu
@@ -1906,13 +1933,14 @@ c    &,' ',gdtvdp_save(nx,j),': ',j=1,ny,2)
 c===============================================================================
 c
       subroutine nonlin(nu,nv,u,v,ub,vb,om,omb
-     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd)
+     .                 ,nx,ny,nz,dx,dy,dp,dt,bnd,rog)
 c
 c *** Nonlin computes the non-linear terms (nu,nv) from staggered input.
 c     The non linear terms are linearized with a background/perturbation
 c     combination. The eularian time terms are assumed to be zero.
 c     The non-linear terms nu,nv, are computed on the 
-c     u, v grids, respectively
+c     u, v grids, respectively. The nonlin term is scaled by the rossby number
+c     rog
 c
       implicit none
 c
@@ -1929,7 +1957,7 @@ c
      .      ,dudp,dvdp,dudt,dvdt
      .      ,dvbdy,dubdp,dvbdp,dudby
      .      ,dubdx,dvbdx,dubdy
-     .      ,omu,ombu,omv,ombv,vvu,uuv,vvbu,uubv
+     .      ,omu,ombu,omv,ombv,vvu,uuv,vvbu,uubv,rog
 c_______________________________________________________________________________
 c
 c
@@ -1968,8 +1996,8 @@ c create perturbations in the u,v,om variables
           dubdp=(ub(i,j,k+1)-ub(i,j,k-1))/(dp(k)+dp(k+1))
           dudp=(u(i,j,k+1)-u(i,j,k-1))/(dp(k)+dp(k+1))
           dudt=0.
-          nu(i,j,k)=dudt+ub(i,j,k)*dudx+vvbu*dudy+ombu*dudp
-     &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp
+          nu(i,j,k)=(dudt+ub(i,j,k)*dudx+vvbu*dudy+ombu*dudp
+     &                 +u(i,j,k)*dubdx+vvu*dubdy+omu*dubdp)*rog
          endif
          if(v(i,j,k).eq.bnd) then
           nv(i,j,k)=0.
@@ -1987,8 +2015,8 @@ c create perturbations in the u,v,om variables
           dvbdp=(vb(i,j,k+1)-vb(i,j,k-1))/(dp(k)+dp(k+1))
           dvdp=(v(i,j,k+1)-v(i,j,k-1))/(dp(k)+dp(k+1))
           dvdt=0.           
-          nv(i,j,k)=dvdt+uubv*dvdx+vb(i,j,k)*dvdy+ombv*dvdp
-     &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp
+          nv(i,j,k)=(dvdt+uubv*dvdx+vb(i,j,k)*dvdy+ombv*dvdp
+     &                 +uuv*dvbdx+v(i,j,k)*dvbdy+omv*dvbdp)*rog
          endif
       enddo
       enddo
