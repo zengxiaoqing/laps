@@ -2152,7 +2152,7 @@ Outputs: (LW3 is main output)
 	lwm	2d grid		surface winds
 
 </pre>                                        
-Source directory: laps/src/wind
+Source directory: laps/src/wind (contains a README file)
 Compile-time parameters: laps/src/include/windparms.inc
 
 CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
