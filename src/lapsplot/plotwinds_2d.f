@@ -39,17 +39,15 @@ cdis
         subroutine plot_winds_2d(u,v,interval,size_in,zoom
      1          ,imax,jmax,lat,lon,r_missing_data)
 
-!       include 'lapsparms.for'
-!       include 'lapsgrid.cmmn'
-
-        logical l_atms
-
-        common /atms/ l_atms
-
         real*4 u(imax,jmax),v(imax,jmax)
         real*4 lat(imax,jmax),lon(imax,jmax)
         real*4 mspkt
+
+        logical l_barbs
+
         data mspkt/.518/
+
+        l_barbs = .true.
 
 !       This variable keeps the barbs away from the boundary
         isize = 0 ! interval + 1
@@ -80,18 +78,21 @@ cdis
                 spd_kt = speed / mspkt
                 call latlon_to_rlapsgrid(alat,alon,lat,lon,imax,jmax
      1                                                  ,ri,rj,istatus)
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
-     1                          ,relsize,'grid')
+
+                if(l_barbs)then 
+                    call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax
+     1                              ,relsize,'grid')
+
+                else ! plot wind arrows
+!                   call plot_windarrow()
+
+                endif
 
             endif
 
 
         enddo ! i
         enddo ! j
-
-        if(l_atms)then
-            call setusv_dum(2HSR,0) ! Turn off relative addressing for Apollo
-        endif
 
         return
         end
