@@ -148,11 +148,11 @@ netcdf rsf {
             lil(record,z,y,x);
             lil:_FillValue = 1.e+37f;
             lil:long_name="LAPS Fcst integrated liquid water depth";
-            lil:units="m";
+            lil:units="kg/m**2";
             lil:valid_range= 0.f, 1.f;
             lil:LAPS_var="LIL";
             lil:lvl_coord="AGL";
-            lil:LAPS_units="M";
+            lil:LAPS_units="KG/M**2";
 
         //      LAPS Fcst integrated total precip water depth        
         //      bigfile name = tpw
@@ -160,11 +160,11 @@ netcdf rsf {
             tpw(record,z,y,x);
             tpw:_FillValue = 1.e+37f;
             tpw:long_name="LAPS Fcst precipitable water depth";
-            tpw:units="m";
+            tpw:units="KG/M**2";
             tpw:valid_range= 0.f, 1.f;
             tpw:LAPS_var="TPW";
             tpw:lvl_coord="AGL";
-            tpw:LAPS_units="M";
+            tpw:LAPS_units="KG/M**2";
 
         //      LAPS Fcst increment precip accumulation depth        
         //      bigfile name = pc
@@ -478,7 +478,57 @@ netcdf rsf {
             tgd:LAPS_var="TGD";
             tgd:lvl_coord="AGL";
             tgd:LAPS_units="K";
+     
+        //      Ventilation index      //
+        //      bigfile name =      
+        float
+            vnt(record,z,y,x);
+            vnt:_FillValue = 1.e+37f;
+            vnt:long_name="ventilation index";
+            vnt:units="meters**2 / second";
+            vnt:valid_range= 0.f, 10000.f;
+            vnt:LAPS_var="VNT";
+            vnt:lvl_coord="MSL";
+            vnt:LAPS_units="M**2/S";
 
+        //      mid-level haines index
+        float
+            ham(record,z,y,x) ;
+            ham:navigation_dim = "nav";
+            ham:record = "valtime, reftime";
+            ham:_FillValue = 1.e+37f;
+            ham:long_name = "mid-level haines index" ;
+            ham:units = "none" ;
+            ham:valid_range = 0.f, 6.0f ;
+            ham:LAPS_var = "HAM" ;
+            ham:lvl_coord = "MSL" ;
+            ham:LAPS_units = "NONE" ;
+
+        //      high-level haines index
+        float
+            hah(record,z,y,x) ;
+            hah:navigation_dim = "nav";
+            hah:record = "valtime, reftime";
+            hah:_FillValue = 1.e+37f;
+            hah:long_name = "high-level haines index" ;
+            hah:units = "none" ;
+            hah:valid_range = 0.f, 6.0f ;
+            hah:LAPS_var = "HAH" ;
+            hah:lvl_coord = "MSL" ;
+            hah:LAPS_units = "NONE" ;
+
+        //      Fosberg fire weather index
+        float
+            fwi(record,z,y,x) ;
+            fwi:navigation_dim = "nav";
+            fwi:record = "valtime, reftime";
+            fwi:_FillValue = 1.e+37f;
+            fwi:long_name = "fire weather index" ;
+            fwi:units = "none" ;
+            fwi:valid_range = 0.f, 100.0f ;
+            fwi:LAPS_var = "FWI" ;
+            fwi:lvl_coord = "MSL" ;
+            fwi:LAPS_units = "NONE" ;
 
 
 
@@ -530,8 +580,11 @@ netcdf rsf {
             lhf_comment(record,z,namelen),
             blh_comment(record,z,namelen),
             tgd_comment(record,z,namelen),
+            vnt_comment(record,z,namelen),
+            ham_comment(record,z,namelen),
+            hah_comment(record,z,namelen),
+            fwi_comment(record,z,namelen),
             asctime(record,namelen);
-
 			
         //	inventory variables
 
@@ -690,6 +743,23 @@ netcdf rsf {
         short
             tgd_fcinv(record, z);
             tgd_fcinv:_FillValue= 0s;
+
+        short
+            vnt_fcinv(record, z);
+            vnt_fcinv:_FillValue= 0s;
+
+        short
+            ham_fcinv(record, z);
+            ham_fcinv:_FillValue= 0s;
+
+        short
+            hah_fcinv(record, z);
+            hah_fcinv:_FillValue= 0s;
+
+        short
+            fwi_fcinv(record, z);
+            fwi_fcinv:_FillValue= 0s;
+
 
         //	list of grid levels
 
