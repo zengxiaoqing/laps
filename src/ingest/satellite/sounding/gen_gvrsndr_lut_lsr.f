@@ -21,11 +21,13 @@ c
       real*4        rline(nxl,nyl)
       real*4        rpix(nxl,nyl)
       real*4        pi
-      real*4        rl_div
-      real*4        rp_div
+      real*8        rl_div
+      real*8        rp_div
       real*4        radtodeg
       real*4        rsndr_res_m
       real*4        r_missing_data
+      real*4        rnx,rny,rnp
+      real*4        rpct_out
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
@@ -47,8 +49,6 @@ c
       Integer     resolution_x
       Integer     resolution_y
 
-      Logical       sBsG_OA_read
-      Logical       sBsG_OA_write
 
       Integer     i1,j1
       Integer     ndsize_ch
@@ -80,8 +80,7 @@ c
 c ---------------------------------------------------------
 c read static information for gvarimage navigation
 c
-      sBsG_OA_read=.true.
-      sBsG_OA_write=.true.
+      istatus = -1 
 c
 c need a loop for this from i=1,nch
 c
@@ -104,7 +103,7 @@ c    &                         orbAt,
 c    &                         SatSubLAT,
 c    &                         SatSubLON,
 c    &                         wavelength(i),
-c    &                         r_sndr_res_m,
+c    &                         rsndr_res_m,
 c    &                         nstatus)
 
 c        if(nstatus.ne.0)then
@@ -196,7 +195,8 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
 
                rline(k,j)=(RL-start_line+rl_div)*rl_div
                rpix(k,j)= (RP-start_pix+rp_div )*rp_div
-
+               i1=k
+               j1=j
             else
 
                npoints_out = npoints_out+1
@@ -219,8 +219,18 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
 
       if(npoints_out .gt. 0)then
 
+         rnx=float(nxl)
+         rny=float(nyl)
+         rnp=float(npoints_out)
          write(6,*)'WARNING! Some rl/rp values out of bounds'
-
+         rpct_out=rnp/(rnx*rny)
+         if(rpct_out.gt.0.50)then
+            write(6,*)'More than 50% of domain not covered ',rpct_out
+            return
+         else
+            write(6,*)'Percent out of domain = ',rpct_out
+         endif
+        
       endif
 c
 c     do j = 1,nyl,20
@@ -231,62 +241,17 @@ c     enddo
 c
 c compute image resolution in meters
 c
-c     i1=nxl/2
-c     j1=nyl/2
+      if(rpix(nxl/2,nyl/2).ne.r_missing_data.and.
+     &   rline(nxl/2,nyl/2).ne.r_missing_data)then
+         i1=nxl/2
+         j1=nyl/2
+      endif
+      call compute_sat_res_m(rp_div,rl_div,
+     &rpix(i1,j1),rline(i1,j1),start_pix,start_line,instr,
+     &rsndr_res_m,istatus)
 
-c     call compute_gvarsndr_resolution(rp_div,rl_div,
-c    &rpix(1,1),rline(1,1),start_pix,start_line,
-c    &r_sndr_res_m,istatus)
-
-c     do i = 1,nch
-
-c        ctype=c_sndrch_types(i,isat)
-c        table_path='../static/lsr/gv8sndr-llij-'//ctype//'.lut'
-
-c        table_path='../static/lsr/gv8sndr-llij.lut'
-c        n=index(table_path,' ')
-
-c        write(6,*)'Writing ',table_path(1:n)
-c        call write_table (table_path,nxl,nyl,lat,lon,rpix,rline,
-c    &wstatus)
-
-c        filename_parm=cname(1:n2)//ctype//'.parms'
-c        filename_parm=cname(1:n2)//'.parms'
-c        call  write_sndr_parmfile(filename_parm,
-c    &                         sBsG_OA_write,
-c    &                         ewCycles,
-c    &                         ewIncs,
-c    &                         nsCycles,
-c    &                         nsIncs,
-c    &                         f_time,
-c    &                         imc,
-c    &                         start_line,
-c    &                         start_pix,
-c    &                         nlines,
-c    &                         scalingBias,
-c    &                         scalingGain,
-c    &                         orbAt,
-c    &                         SatSubLAT,
-c    &                         SatSubLON,
-c    &                         wavelength(i),
-c    &                         r_sndr_res_m,
-c    &                         istatus)      
-c        if(istatus.ne.0)then
-c           goto 902
-c        else
-c           sBsG_OA_write=.false.
-c        endif
-
-c     enddo
-
+      istatus = 0
       goto 1000
-
-c901   write(6,*)'Error in  read_gvarimg_parmfile'
-c     istatus = -1
-c     goto 1000
-
-902   write(6,*)'Error writing sounder parmfile'
-      istatus = -1
 
 1000  return
       end

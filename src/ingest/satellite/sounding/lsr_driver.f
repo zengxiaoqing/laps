@@ -41,7 +41,7 @@ c
          call lsr_driver_sub(NX_L_CMN,NY_L_CMN,n_channels,
      &     n_elems(i),n_lines(i),ismsng,c_sat_id(i),c_sounding_path(i),
      &     r_channel_wavelengths(i,1),istatus)
-         if(istatus.ne.1)then
+         if(istatus.eq.1)then
             if(i.eq.n_sat)then
                write(6,*)'No data processed in lsr_driver_sub'
                write(6,*)'Finished in lsr_driver'
@@ -50,7 +50,6 @@ c
             endif
          else
             write(6,*)'Data processed in lsr_driver_sub'
-            goto 1000
          endif
 
       enddo
@@ -276,7 +275,8 @@ c
       if(istatus.eq.0)then
          write(6,*)'Sounder Nav computed'
       else
-         write(6,*)'Found points outside of domain '
+         write(6,*)'Found too many points outside of domain '
+         goto 1000
       endif
 c
 c Next is to scale the sounder counts to radiances.
@@ -351,7 +351,8 @@ c
      &                  sa,sc,st,
      &                  istatus)
      
-         call load_array(sa,nx_l,ny_l,laps_data(1,1,i))
+         call move(sa,laps_data(1,1,i),nx_l,ny_l)
+
       enddo
 
       call write_lsr(nx_l,ny_l,n_channels,c_sat_id,rch_wvlngth,

@@ -28,7 +28,6 @@ SRC =  getsnddata.f \
        gen_gvrsndr_lut_lsr.f \
        rddata_line_elem_sub.f \
        read_sounding_db_cdf.f \
-       get_lsr_process_parms.f \
        satsndr2laps.f \
        set_missing_sndr.f \
        count_range.f \
