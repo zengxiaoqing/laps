@@ -255,19 +255,28 @@ c
            write(6,*)
            write(6,*)' Processing 30s topo data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_30,ITOPTFN_30,TOPTWVL,SILAVWT,new_DEM)
+     +         deltax,deltay,TOPT_30,ITOPTFN_30,TOPTWVL,SILAVWT,new_DEM,
+     +         istatus)
 
            if (.not.new_DEM) then
              write(6,*)
              write(6,*)' Processing 10m topo data....'
              CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +         deltax,deltay,TOPT_10,ITOPTFN_10,TOPTWVL,SILAVWT,new_DEM)
+     +         deltax,deltay,TOPT_10,ITOPTFN_10,TOPTWVL,SILAVWT,new_DEM,
+     +         istatus)
            endif
 
            write(6,*)
            write(6,*)' Processing 10m land data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
-     +        deltax,deltay,TOPT_PCTLFN,IPCTLFN,TOPTWVL,SILAVWT,new_DEM)
+     +        deltax,deltay,TOPT_PCTLFN,IPCTLFN,TOPTWVL,SILAVWT,new_DEM,
+     +         istatus)
+
+           if(istatus .ne. 1)then
+               write(6,*)' File(s) missing for 10m land data'
+               write(6,*)' Static file not created.......STOP'
+               stop
+           endif
 
          if (.not.new_DEM) then
 
@@ -537,10 +546,10 @@ c SG97  splot 'topography.dat'
 	End
 
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay,
-     1  DATR,OFN,WVLN,SILWT,which_data)
+     1  DATR,OFN,WVLN,SILWT,which_data,istat_files)
       implicit none
       integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
-     1  iblksizo,no,iodim
+     1  iblksizo,no,iodim,istat_files
       parameter (n23=20000)
       real vt3da(500),vt3db(n23)
       real vctr1(n23),
@@ -595,7 +604,7 @@ C
       CALL SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,90.,std_lon,ERAD
      +            ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
      +            ,ISBEGO,IWBEGO,DATO,VT3DA,VT3DB,DATR
-     +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data)
+     +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data,istat_files)       
       RETURN
       END
 
@@ -606,7 +615,7 @@ C
       SUBROUTINE SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,RLAT,WLON1,ERAD
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
      +          ,ISBEGO,IWBEGO,DATO,DATP,DATQ,DATR,ISO,IWO
-     +          ,OFN,WVLN,SILWT,dem_data)
+     +          ,OFN,WVLN,SILWT,dem_data,istat_files)
       real dato(no,no,mof)
       real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3)
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
@@ -623,6 +632,8 @@ C
 C
       print *,'no,mof,np,niq,njq=',no,mof,np,niq,njq
 c      stop
+
+      istat_files = 1
 
       NONO=NO*NO
       XCENTR=0.5*(XT(1)+XT(N2))
@@ -684,7 +695,8 @@ c         print *,'rlat,wlon1=',rlat,wlon1
      1                        ,icnt
                      endif ! icnt
                      icnt = icnt + 1
-                     DATP(IP,JP)=0. ! set to missing?
+                     DATP(IP,JP) = 0. ! set to missing?
+                     istat_files = 0
                      GO TO 20
                   ENDIF
 
