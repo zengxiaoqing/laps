@@ -173,6 +173,7 @@ print "\n";
 
 $searchstring = "Mapping Sfc Obs";
 $i=0; $found=0;
+$nlines = @lines;
 foreach (@lines) {
   if (/$searchstring/) {$found=1; last;}
   else {$i=$i+1;} }
@@ -181,7 +182,7 @@ if ($found == 1) {
   $end=0;
   $i=$i+2;
   while ($end == 0) {
-    if ($lines[$i] =~ /Elapsed/) {$end=1;}
+    if (($lines[$i] =~ /Elapsed/) || ($i>=$nlines)) {$end=1;}
     else {
       ($dummy,$num,$name,$lapsi,$lapsj) = split /\s+/,$lines[$i] ;
       if ($lapsi > 0) {push(@saos,$name); } }
