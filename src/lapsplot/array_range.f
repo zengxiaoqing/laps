@@ -43,6 +43,8 @@ cdis
 
        real*4 a(ni,nj)
 
+       write(6,*)' Subroutine contour_settings...'
+
        scale_pcp = 1. / ((100./2.54))
        if(abs(scale-scale_pcp) .le. .0001) then ! DENOM = (IN/M) for precip
            clow = 0.0
@@ -56,8 +58,12 @@ cdis
 
        call array_range(a,ni,nj,rmin,rmax,r_missing_data)
 
+       write(6,*)' rmax/rmin prior to scaling = ',rmax,rmin
+
        rmax = rmax / scale
        rmin = rmin / scale
+
+       write(6,*)' rmax/rmin after scaling = ',rmax,rmin
 
        range = (rmax-rmin) / (sqrt(zoom) * density)
 
@@ -69,8 +75,10 @@ cdis
            cint = 400.
        elseif(range .gt. 600)then
            cint = 100.
-       elseif(range .gt. 200)then
+       elseif(range .gt. 250)then
            cint = 50.
+       elseif(range .gt. 200)then
+           cint = 20.
        elseif(range .gt. 60)then ! From 60-200, cint = 10 (6  - 20 contours)
            cint = 10.
        elseif(range .gt. 30)then ! From  30-60, cint = 5  (6  - 12 contours)
@@ -93,8 +101,7 @@ cdis
            chigh = nint(rmax/cint) * cint + cint
        endif
  
-       write(6,*)' Subroutine contour_settings....',range,zoom,cint
-     1                                             ,scale      
+       write(6,*)' range/zoom/cint/scale = ',range,zoom,cint,scale      
 
        return
        end
