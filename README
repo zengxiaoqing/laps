@@ -77,7 +77,7 @@
          3.3.6 ..................  DERIV
          3.3.7 ..................  ACCUM 
          3.3.8 ..................  BALANCE
-         3.4 ..............  Analysis Post Processing
+         3.4 ..............  Model Initialization
          3.4.1 ..................  DPREP
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Variables and netCDF File Organization 
@@ -89,7 +89,7 @@
      Below is a description of the tar file containing the LAPS data ingest and
      analysis code. The predictive component of LAPS (MM5 or RAMS) is
      distributed separately. The main FSL contact for this is 
-     Paul Schultz (schultz@fsl.noaa.gov).
+     Paul Schultz (schultz@fsl.noaa.gov). 
 
      Please note that FSL provides support for LAPS software only if a prior
      agreement is made to that effect. Additionally, questions concerning LAPS
@@ -2625,7 +2625,7 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 ********************************************************************************
 ********************************************************************************
 
-------- 3.4  -------------  Analysis Post Processing --------------------------
+------- 3.4  -------------  Model Initialization --------------------------
 
 ------ 3.4.1 ---------------------DPREP--------------------------------------
 
@@ -2633,8 +2633,11 @@ Process: dprep.exe - Does some analysis post processing for model
                      initialization
      (authors: Jim Edwards / Paul Schultz [schultz@fsl.noaa.gov])
 
-Sorry we don't have too much of a writeup for this yet. Please contact the
-authors for additional information.
+   This process takes LAPS analysis output to create the forecast model initial
+   conditions. It also takes background model fields to generate the forecast
+   model lateral boundary conditions.
+
+   Please contact the authors for additional information.
 
 -------- 4.0 --  Porting code mods from LAPS users back to FSL --------------
 
