@@ -13,6 +13,7 @@ main                                                    remap.f
         radar_init                                      netcdfio.f
         fill_common                                     fill_common.f
         radar_init                                      netcdfio.f
+            get_tilt_netcdf_data                        get_tilt_netcdf.f
         remap_process                                   remap_process.f
             read_data_88d                               readdata.f
                 ld_ray                                  ld_ray.f
