@@ -650,7 +650,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
 
         subroutine plot_temp_obs(k_level,i4time,imax,jmax,kmax
-     1                          ,r_missing_data,lat,lon,topo)
+     1                          ,r_missing_data,lat,lon,topo,zoom)
 
         character*3 ext
         character*8 c8_obstype
@@ -660,7 +660,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 !       Plot Temperature Obs  ***********************************************
 
 !       size_temp = 8. * float(max(imax,jmax)) / 300.
-        size_temp = 3.33
+        size_temp = 1.1 ! 3.33
 
         write(6,*)
         write(6,*)' Plot Temperature Obs, size_temp = ',size_temp
@@ -677,9 +677,42 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         spd_kt = r_missing_data
         gust = r_missing_data
 
-        do while (.true.)
+        nobs_temp = 0
+
+        do while (.true.) ! Count the temperature obs
             read(32,*,end=41,err=50)ri,rj,rk,t_k,c8_obstype
  50         continue
+
+            ri = ri + 1.
+            rj = rj + 1.
+            rk = rk + 1.
+
+            k = nint(rk)
+            k_sfc = 2
+
+            if( k .eq. k_level  
+     1                      .OR.
+     1         (k_level .eq. 0 .and. k .eq. k_sfc)  )then
+
+              if(t_k .ne. r_missing_data)then
+
+                nobs_temp = nobs_temp + 1
+ 
+              endif ! t_k .ne. r_missing_data
+
+            endif ! k .eq. k_level
+
+        enddo
+
+41      continue
+
+        rewind(32)
+
+        write(6,*)' Number of temperature obs = ',nobs_temp
+
+        do while (.true.) ! Plot the temp obs
+            read(32,*,end=141,err=150)ri,rj,rk,t_k,c8_obstype
+150         continue
 
             ri = ri + 1.
             rj = rj + 1.
@@ -699,7 +732,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 !               spd_kt = SPEED_ms  / mspkt
 
                 iflag = 3
- 
+
                 if(c8_obstype(1:2) .eq. 'RA')then       ! RASS, RAOB
                     icol_in = 12
                 elseif(c8_obstype(1:2) .eq. 'SA')then   ! SATSND
@@ -712,11 +745,9 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
                 iflag_cv = 0
 
-                nobs_dum = 500
-
                 call plot_mesoob(dir,spd_kt,gust,t_c,td,p,ri,rj
      1                          ,lat,lon,imax,jmax,size_temp
-     1                          ,zoom,nobs_dum
+     1                          ,zoom,nobs_temp
      1                          ,icol_in,du_loc,wx
      1                          ,iflag,iflag_cv)
 
@@ -731,7 +762,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         enddo
 
-41      continue
+141     continue
 
         close(32)
 
