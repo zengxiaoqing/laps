@@ -41,7 +41,6 @@ cdis
      1     ,obs_point,max_obs,nobs_point                               ! I
      1     ,n_radars,istat_radar_vel                                   ! I
      1     ,vr_obs_unfltrd,vr_nyq,v_nyquist_in,idx_radar_a             ! I
-!    1     ,upass1,vpass1                                              ! O
      1     ,n_var                                                      ! I
      1     ,uanl,vanl                                                  ! O
      1     ,wt_p,weight_bkg_const,rms_thresh_wind                      ! I/L
@@ -94,9 +93,6 @@ cdis
 
       integer*4 n_radars   ! Actual number of radars having data     Input
 
-!     First pass analyzed winds
-!     real*4 upass1(imax,jmax,kmax), vpass1(imax,jmax,kmax)        ! Output
-
 !     Final pass analyzed winds
       real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)             ! Output
       real*4 varbuff(imax,jmax,kmax,n_var)                         ! Equiv Abv
@@ -145,8 +141,11 @@ cdis
 !     real*4 uobs_diff(imax,jmax,kmax),vobs_diff(imax,jmax,kmax)       ! Local
       real*4, allocatable, dimension(:,:,:) :: uobs_diff               ! Local
       real*4, allocatable, dimension(:,:,:) :: vobs_diff               ! Local
+
+!     First pass analyzed winds (innovation analysis with non-radar data)
       real*4, allocatable, dimension(:,:,:) :: upass1                  ! Local
       real*4, allocatable, dimension(:,:,:) :: vpass1                  ! Local
+
       real*4, allocatable, dimension(:,:,:) :: pres_3d                 ! Local
 
       real*4 varobs_diff_spread(imax,jmax,kmax,n_var)                  ! Local
