@@ -13,6 +13,7 @@
      1                   rlat_radar,rlon_radar,rheight_radar,       ! I
      1                   n_vel_grids,                               ! I
      1                   u_maps_inc,v_maps_inc,                     ! I
+     1                   u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,     ! I
      1                   ilaps_cycle_time,r_missing_data,           ! I
      1                   imax,jmax,kmax,                            ! I
      1                   istatus                )                   ! O
@@ -42,6 +43,7 @@ c                             time of the current LAPS analysis time.
         real lon_pr(MAX_PR)
         real elev_pr(MAX_PR)
         real rcycles_pr(MAX_PR)
+        integer i4time_ob_pr(MAX_PR)
 
 !       Profiler Observations
 
@@ -68,6 +70,9 @@ c                             time of the current LAPS analysis time.
 !       date profiler obs according to the model rates of change.
         real*4 u_maps_inc(imax,jmax,kmax)
         real*4 v_maps_inc(imax,jmax,kmax)
+
+        dimension u_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)
+        dimension v_mdl_bkg_4d(imax,jmax,kmax,NTMIN:NTMAX)
 
         character*255 c_filespec
         character ext*31
@@ -135,6 +140,7 @@ c                             time of the current LAPS analysis time.
             obstype(i_pr) = 'PROFILER'
 
             call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
+            i4time_ob_pr(i_pr) = i4time_ob
 
             rcycles_pr(i_pr) = float(i4time - i4time_ob)       
      1                                      / float(ilaps_cycle_time)
@@ -143,7 +149,7 @@ c                             time of the current LAPS analysis time.
             write(6,407)i_pr,ista,nlevels_obs_pr(i_pr),lat_pr(i_pr)
      1                 ,lon_pr(i_pr)
      1                 ,elev_pr(i_pr),rcycles_pr(i_pr),c5_name,a9time_ob       
-407         format(/' Profiler #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,3x,a9)
+407         format(/' Profile #',i3,i6,i5,2f8.2,e10.3,f8.2,1x,a6,3x,a9)
 
             do level = 1,nlevels_obs_pr(i_pr)
 
@@ -241,8 +247,9 @@ c
         obstype(i_pr) = 'RAOB'
 
         call i4time_fname_lp(a9time_ob,i4time_ob,istatus)
-        rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
+        i4time_ob_pr(i_pr) = i4time_ob
 
+        rcycsnd = float(i4time - i4time_ob) / float(ilaps_cycle_time)
         rcycles_pr(i_pr) = max(min(rcycsnd,1.0),-1.0)
 
         write(6,512)i_pr,ista,nlevels_in,lat_pr(i_pr)
@@ -403,6 +410,22 @@ c
                     ht = heights_3d(i_ob,j_ob,level)
 
                     ob_pr_ht(i_pr,level) = ht
+
+                    call get_time_term(u_mdl_bkg_4d,imax,jmax,kmax
+     1                                ,NTMIN,NTMAX
+     1                                ,i_ob,j_ob,level
+     1                                ,i4time,i4time_ob_pr(i_pr)
+     1                                ,u_time_interp,u_diff_term
+     1                                ,istatus)
+                    u_diff = -u_diff_term
+
+                    call get_time_term(v_mdl_bkg_4d,imax,jmax,kmax
+     1                                ,NTMIN,NTMAX
+     1                                ,i_ob,j_ob,level
+     1                                ,i4time,i4time_ob_pr(i_pr)
+     1                                ,v_time_interp,v_diff_term
+     1                                ,istatus)
+                    v_diff = -v_diff_term
 
                     u_diff = u_maps_inc(i_ob,j_ob,level) 
      1                                              * rcycles_pr(i_pr)       

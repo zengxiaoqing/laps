@@ -218,13 +218,13 @@ cdis
      1                                    ,i4time,i4time_pirep
      1                                    ,v_time_interp,v_diff,istatus)       
 
-                        u_diff = u_maps_inc(i_grid,j_grid,k_grid) 
-     1                                                         * rcycles
-                        v_diff = v_maps_inc(i_grid,j_grid,k_grid)
-     1                                                         * rcycles       
+!                       u_diff = u_maps_inc(i_grid,j_grid,k_grid) 
+!    1                                                         * rcycles
+!                       v_diff = v_maps_inc(i_grid,j_grid,k_grid)
+!    1                                                         * rcycles       
 
-                        pirep_u(n_pirep_obs) = u_temp + u_diff
-                        pirep_v(n_pirep_obs) = v_temp + v_diff
+                        pirep_u(n_pirep_obs) = u_temp - u_diff
+                        pirep_v(n_pirep_obs) = v_temp - v_diff
 
                         write(lun_pig,*)ri-1.,rj-1.,rk-1.,dd,ff
 

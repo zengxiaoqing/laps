@@ -286,10 +286,10 @@
             do k = 1,NZ_L
             do j = 1,NY_L
             do i = 1,NX_L
-                u_mdl_bkg_4d(1,1,1,1) = 2. * u_mdl_bkg_4d(1,1,1,0) 
-     1                                -      u_mdl_bkg_4d(1,1,1,-1) 
-                v_mdl_bkg_4d(1,1,1,1) = 2. * v_mdl_bkg_4d(1,1,1,0) 
-     1                                -      v_mdl_bkg_4d(1,1,1,-1)    
+                u_mdl_bkg_4d(i,j,k,1) = 2. * u_mdl_bkg_4d(i,j,k,0) 
+     1                                -      u_mdl_bkg_4d(i,j,k,-1) 
+                v_mdl_bkg_4d(i,j,k,1) = 2. * v_mdl_bkg_4d(i,j,k,0) 
+     1                                -      v_mdl_bkg_4d(i,j,k,-1)    
             enddo ! i
             enddo ! j
             enddo ! k

@@ -59,6 +59,7 @@
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
      1            u_mdl_diff,v_mdl_diff,                            ! I
+     1            u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX,            ! I
      1            ilaps_cycle_time,r_missing_data,                  ! I
      1            NX_L,NY_L,NZ_L,                                   ! I
      1            istatus                )                          ! O
@@ -70,7 +71,7 @@
 
         I4_elapsed = ishow_timer()
 
-! ***   Remapping + Barnes Analysis of Profiler Data in u & v ******************************
+! ***   Remapping + Barnes Analysis of Profiler Data in u & v *****************
 
         call remap_profiler(
      1           ob_pr_u,ob_pr_v                                  ! I
