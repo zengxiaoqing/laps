@@ -17,11 +17,11 @@ netcdf lhe {
             lhe:record = "valtime, reftime";
             lhe:_FillValue = 1.e+37f;
             lhe:long_name="helicity";
-            lhe:units="meters / second**2";
+            lhe:units="meters**2 / second**2";
             lhe:valid_range= 0.f, 0.100f;
             lhe:LAPS_var="LHE";
             lhe:lvl_coord="MSL ";
-	    lhe:LAPS_units="M/S**2";
+	    lhe:LAPS_units="M**2/S**2";
                 	        
         //	SFC-300mb mean wind-u component
         float 
