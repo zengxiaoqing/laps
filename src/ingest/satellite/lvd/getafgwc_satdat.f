@@ -49,38 +49,38 @@ c
        istatus = 0
 
        if(isat.eq.4 .and. jtype.eq.4)then
-          call getgmsdata_afwa(isat,jtype,
-     &                         max_channels,nchannels,chtype,
-     &                         i4time_current,lvis_flag,
-     &                         nirlines, nirelem,
-     &                         nvislines,nviselem,
-     &                         nwvlines,nwvelem,
-     &                         ntm,max_files,c_type,
-     &                         image_11,image_vis,
-     &                         image_12,           !image_39,
-     &                         image_67,
-     &                         i4time_data,
-     &                         istatus)
+          call getgmsdata(isat,jtype,
+     &                    max_channels,nchannels,chtype,
+     &                    i4time_current,lvis_flag,
+     &                    nirlines, nirelem,
+     &                    nvislines,nviselem,
+     &                    nwvlines,nwvelem,
+     &                    ntm,max_files,c_type,
+     &                    image_11,image_vis,
+     &                    image_12,           !image_39,
+     &                    image_67,
+     &                    i4time_data,
+     &                    istatus)
           if(istatus.ne.0)then
-             print*,'Error returned from getgmsdata_afwa'
+             print*,'Error returned from getgmsdata'
              istatus=1
           endif
 
        else
 
-          call getgoesdata_afwa(isat,jtype,
-     &                        max_channels,nchannels,chtype,
-     &                        i4time_current,lvis_flag,
-     &                        nirlines, nirelem,
-     &                        nvislines,nviselem,
-     &                        nwvlines,nwvelem,
-     &                        ntm,max_files,c_type,
-     &                        image_11,image_vis,
-     &                        image_12,image_39,image_67,
-     &                        i4time_data,
-     &                        istatus)
+          call getgoesdata(isat,jtype,
+     &                     max_channels,nchannels,chtype,
+     &                     i4time_current,lvis_flag,
+     &                     nirlines, nirelem,
+     &                     nvislines,nviselem,
+     &                     nwvlines,nwvelem,
+     &                     ntm,max_files,c_type,
+     &                     image_11,image_vis,
+     &                     image_12,image_39,image_67,
+     &                     i4time_data,
+     &                     istatus)
           if(istatus.ne.0)then 
-             print*,'Error returned from getgoesdata_afwa'
+             print*,'Error returned from getgoesdata'
              istatus=1
           endif
 
@@ -90,7 +90,7 @@ c
        end
 c
 c =====================================================================
-       subroutine getgoesdata_afwa(isat,jtype,
+       subroutine getgoesdata(isat,jtype,
      &                        max_channels,nchannels,chtype,
      &                        i4time_current,lvis_flag,
      &                        nirlines, nirelem,
@@ -347,18 +347,18 @@ c
 c
 c ============================================================
 c
-      subroutine getgmsdata_afwa(isat,jtype,
-     &                        max_channels,nchannels,chtype,
-     &                        i4time_current,lvis_flag,
-     &                        nirlines, nirelem,
-     &                        nvislines,nviselem,
-     &                        nwvlines,nwvelem,
-     &                        ntm,max_files,c_type,
-     &                        image_11,image_vis,
-     &                        image_12,           !image_39,
-     &                        image_67,
-     &                        i4time_data,
-     &                        istatus)
+      subroutine getgmsdata(isat,jtype,
+     &                      max_channels,nchannels,chtype,
+     &                      i4time_current,lvis_flag,
+     &                      nirlines, nirelem,
+     &                      nvislines,nviselem,
+     &                      nwvlines,nwvelem,
+     &                      ntm,max_files,c_type,
+     &                      image_11,image_vis,
+     &                      image_12,           !no image_39 data!,
+     &                      image_67,
+     &                      i4time_data,
+     &                      istatus)
 c
 c
 c
@@ -415,14 +415,15 @@ c     real image_39  (nirelem,nirlines)
       character cdir_lvd*150
       character cfilenames(max_files)*255
 
+      print*,'Subroutine getgmsdata'
       print*,'This is just a test subroutine currently'
 
 c get latest lvd file in lvd directory
 
       call get_directory('lvd',cdir_lvd,lend)
-      cdir_lvd=cdir_lvd(1:lend)//c_sat_id(isat)
+      cdir_lvd=cdir_lvd(1:lend)//c_sat_id(isat)//'/*'
       call make_fnam_lp(i4time_current,cfname_cur,istatus)
-      call get_latest_file_time(cdir_lvd,cfiletime,istatus)
+      call get_latest_file_time(cdir_lvd,cfiletime)
       call i4time_fname_lp(cfiletime,i4time_latest_lvd,istatus)
       cjjjhr=cfname_cur(3:7)
 
@@ -430,18 +431,17 @@ c get latest lvd file in lvd directory
 
       do i=1,nchannels
 
-        if(c_channel_types(i,jtype,isat).eq.'vis'.and.
-     +lvis_flag)goto 90
+        if(chtype(i).eq.'vis'.and.lvis_flag)goto 90
 
         cpath=path_to_raw_sat(i,jtype,isat)
         np=index(cpath,' ')-1
-        ct=c_channel_types(i,jtype,isat)
+        ct=chtype(i)
         c_afwa_fname=cpath(1:np)//'GM5_'//cjjjhr//'*'//ct//'.unf'
         np=index(c_afwa_fname,' ')-1
         call get_file_names(c_afwa_fname,nfiles,cfilenames,
      +max_files,istatus)
 
-        if(istatus.ne.0)then
+        if(istatus.ne.1)then
           print*,'Error status returned from get_file_names'
           print*,'Error getting filename for: ',c_afwa_fname(1:np)
           goto 1000
@@ -501,7 +501,7 @@ c
 
 19          close(111)
             ntm=ntm+1
-            c_type(ntm)=chtype(i)
+            c_type(ntm)=ct
             call make_fnam_lp(i4time_data,c_fname_data(ntm),fstatus)
 
 88          print*,'error reading file ',cfilenames(nfiles)(1:nf)

@@ -115,6 +115,8 @@ c
       integer        ispec
       integer        ilat00,ilon00
       integer        i_la1,i_lo1
+      integer        idx,idy,iresx,iresy
+      integer        nw_line,nw_pix
       integer        lenf
 
       integer        strpix,strscnl,stppix,stpscnl
@@ -149,18 +151,25 @@ c
          resy=r_resolution_y_vis(jtype,isat)
          nlin=n_lines_vis(jtype,isat)
          npix=n_pixels_vis(jtype,isat)
+         nw_line=i_nwline_vis(jtype,isat)
+         nw_pix=i_nwpix_vis(jtype,isat)
          goto 13
 
 11       resx=r_resolution_x_ir(jtype,isat)
          resy=r_resolution_y_ir(jtype,isat)
          nlin=n_lines_ir(jtype,isat)
          npix=n_pixels_ir(jtype,isat)
+         nw_line=i_nwline_ir(jtype,isat)
+         nw_pix=i_nwpix_ir(jtype,isat)
+
          goto 13
 
 12       resx=r_resolution_x_wv(jtype,isat)
          resy=r_resolution_y_wv(jtype,isat)
          nlin=n_lines_wv(jtype,isat)
          npix=n_pixels_wv(jtype,isat)
+         nw_line=i_nwline_wv(jtype,isat)
+         nw_pix=i_nwpix_wv(jtype,isat)
          goto 13
 
 13    continue
@@ -180,6 +189,10 @@ c
          ilon00=nint(rlon00*1000.)
          i_la1 =nint(r_la1(jtype,isat)*1000.)
          i_lo1 =nint(r_lo1(jtype,isat)*1000.)
+         iresx =nint(resx)
+         iresy =nint(resy)
+         idx   =nint(dx)
+         idy   =nint(dy)
 
          if((ilat00.ne.i_la1).or.
      &      (ilon00.ne.i_lo1) )then
@@ -187,7 +200,7 @@ c
      &r_la1(jtype,isat),r_lo1(jtype,isat)
             l_lut_flag=.true.
          endif
-         if( dx.ne.resx .or. dy.ne.resy )then
+         if( idx.ne.iresx .or. idy.ne.iresy )then
             write(6,*)'dx/dy/resx/resy/ ',dx,dy,resx,resy
             l_lut_flag=.true.
          endif
@@ -199,7 +212,7 @@ c
       elseif(c_sat_types(jtype,isat).eq.'gwc')then
 c
 c --- AFWA ---
-c
+c for GOES data only
          cname=c_afwa_fname(c_sat_id(isat),chtype(i))
          lenf=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
          cfname=path_to_raw_sat(ispec,jtype,isat)(1:lenf)//cname
@@ -216,10 +229,15 @@ c
                l_lut_flag=.true.
             endif
 c
-c this test will help for both the old and new SDHS data files.
+c NOTE: nw_line and nw_pix are hardwired by src/include/sat_data_static
+c       however, gen_lut_gvar.f uses the new values for these variables.
+c       this will always trip the lut regeneration unless nw_line/pix match.
 c
             istrtline = nw_vis_line_gwc(chtype(i),bescnfc,fsci)
             istrtpix =  nw_vis_pix_gwc(chtype(i),bepixfc,goalpha)
+            if(istrtline.ne.nw_line.or.istrtpix.ne.nw_pix)then
+               l_lut_flag=.true.
+            endif
 
          else
             print*,'gwc header not read. No lut update'

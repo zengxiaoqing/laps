@@ -5,10 +5,14 @@
 c
 c
       dimension data(n)
-      parameter (r_missing_data = +1e37)
+
       istatus=0
 
-      call get_r_missing_data(r_missing_data,istatus)
+      call get_r_missing_data(r_missing_data,mstatus)
+      if(mstatus.ne.1)then
+         print*,'error - get_r_missing_data'
+         return
+      endif
       if(n.le.1)then
             print *, 'n must be at least 2'
             istatus=1

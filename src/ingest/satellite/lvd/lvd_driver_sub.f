@@ -35,6 +35,7 @@ cdis
      &               n_wv_lines,n_wv_elem,
      &               n_vis_lines,n_vis_elem,
      &               chtype,maxchannels,nchannels,
+     &               i4time_cur,
      &               lvd_status)
 c
 c Program drives generation of LAPS lvd.  Processes satellite data.
@@ -174,7 +175,6 @@ c
       integer ishow_timer
       integer init_timer
       integer i4time_cur
-      integer i4time_now_gg
       integer i4time_data(max_files)
       integer istat
       integer gstatus
@@ -194,16 +194,12 @@ c
       csatid = c_sat_id(isat)
       csattype = c_sat_types(jtype,isat)
       smsng = float(i_msng_sat_flag(jtype,isat))
-c -----------------
-c get current time.
-c -----------------
-      i4time_cur = i4time_now_gg()
-      call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
-c
+c ----------------------------------------------------------------------
 c if current time is at beginning of new day, then adjust time back just
 c a few seconds to allow any data just before top of hour to have a chance
 c at being processed now.
-c
+c ---------------------------------------------------------------------
+      call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
       if(c_fname_cur(6:9).eq.'0000')then
          i4time_cur=i4time_cur-15
          call make_fnam_lp(i4time_cur,c_fname_cur,istatus)
@@ -226,67 +222,76 @@ c ---------------------------------------------
 c --------------------------------------------------------------------
 c Read look-up table for mapping lat/lon data pixels to real i/j pairs
 c --------------------------------------------------------------------
+c     if(csatid.ne.'gmssat')then
+
       call readlut(csatid,csattype,maxchannels,nchannels,
      &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
 
       if(istatus.eq.1)then
 
          write(6,*)'LUT not obtained: ',csatid,'/',csattype
-         write(6,*)'Computing lut using genlvdlut_lvd'
+
+c           write(6,*)'Computing lut using genlvdlut_lvd'
 c        call genlvdlut_sub(nx_l,ny_l,gstatus)
-         call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
-     +gstatus)
-         if(gstatus.lt.0)then
-            write(6,*)'Error generating LUT - terminating'
-            goto 910
-         else
-            write(6,*)'**********************************'
-            write(6,*)
-            call rewrite_satellite_lvd_nl(istatus)
-            call readlut(csatid,csattype,maxchannels,nchannels,
-     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-            if(istatus.eq.1)then
-               write(6,*)'Error reading new luts - terminating'
-               goto 909
-            endif
-         endif
+c           call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
+c    +gstatus)
+c           if(gstatus.lt.0)then
+c              write(6,*)'Error generating LUT - terminating'
+c              goto 910
+c           else
+c              write(6,*)'rewrite satellite_lvd.nl'
+c              write(6,*)
+c              call rewrite_satellite_lvd_nl(istatus)
+c              call readlut(csatid,csattype,maxchannels,nchannels,
+c    &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+c              if(istatus.eq.1)then
+c                 write(6,*)'Error reading new luts - terminating'
+c                 goto 909
+c              endif
+c           endif
 
       else
-
          write(6,*)'Got the mapping look-up-tables '
-         write(6,*)'Check if luts are up-to-date'
 
-         call check_luts(c_fname_cur,isat,jtype,
-     &chtype,maxchannels,nchannels,l_lut_flag,istatus)
+c           write(6,*)'Check if luts are up-to-date'
 
-         if(l_lut_flag.and.istatus.eq.0)then
-            write(6,*)'Found difference in nav parms',
-     +' - rebuild the lut'
-            call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
-     +gstatus)
-            if(gstatus.lt.0)then
-               write(6,*)'Error generating LUT - terminating'
-               goto 910
-            else
-               write(6,*)'**********************************'
-               write(6,*)
-               call rewrite_satellite_lvd_nl(istatus)
-               call readlut(csatid,csattype,maxchannels,nchannels,
-     &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-               if(istatus.eq.1)then
-                  write(6,*)'Error reading new luts - terminating'
-                  goto 909
-               endif
-            endif
-         elseif(istatus.eq.0)then
-            write(6,*)'Lut checked out ok'
-            write(6,*)
-         else
-            write(6,*)'Error status returned from check_lut'
-            goto 910
-         endif
+c           call check_luts(c_fname_cur,isat,jtype,
+c    &chtype,maxchannels,nchannels,l_lut_flag,istatus)
+
+c           if(l_lut_flag.and.istatus.eq.0)then
+c              print*,'*******************************************'
+c              write(6,*)'Found difference in nav parms',
+c    +' - rebuild the lut'
+c              print*,'*******************************************'
+c              call genlvdlut_lvd(nx_l,ny_l,lat,lon,jtype,isat,
+c    +gstatus)
+c              if(gstatus.lt.0)then
+c                 write(6,*)'Error generating LUT - terminating'
+c                 goto 910
+c              else
+c                 write(6,*)'**********************************'
+c                 write(6,*)
+c                 call rewrite_satellite_lvd_nl(istatus)
+c                 call readlut(csatid,csattype,maxchannels,nchannels,
+c    &chtype,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
+c                 if(istatus.eq.1)then
+c                    print*,'Error reading new luts - terminating'
+c                    goto 909
+c                 endif
+c              endif
+c           elseif(istatus.eq.0)then
+c              write(6,*)'Lut checked out ok'
+c              write(6,*)
+c           else
+c              write(6,*)'Error status returned from check_lut'
+c              goto 910
+c           endif
 
       endif
+
+c     else
+c        print*,'sat id = ',csatid, 'no lut needed'
+c     endif
 c
 c -------------------------------------------------------------------------
 c Determine solar-altitude and set flag for visible sat data availability.
@@ -443,7 +448,9 @@ c
 
          goto(1,2,3,4,5)ispec     !ispec = 1 is visible data
 
-1           call read_gvarimg_cnt2btemp_lut(csatid,
+1           if(csatid.eq.'gmssat')goto 6    
+
+            call read_gvarimg_cnt2btemp_lut(csatid,
      &c_type(i,j),vis_cnt_to_cnt_lut,istatus)
             goto 6
 
@@ -532,7 +539,7 @@ c -------------------------------------------------
 
          if(r_image_status(j,i) .gt. 0.0)then
             write(6,*)'Some Bad data found = ', c_type(j,i)
-            write(6,*)r_image_status(j,i)
+     &,r_image_status(j,i)
          else
             write(6,*)'Good data type/status: ',c_type(j,i)
      &,r_image_status(j,i)
@@ -600,6 +607,7 @@ c ------------------------------------------------------------
              goto 17
 
 15           if(csattype.eq.'gvr'.or.csattype.eq.'gwc')then
+                if(csatid.eq.'gmssat')goto 17
                 call btemp_convert(n_vis_elem,n_vis_lines,
      &                          vis_cnt_to_cnt_lut,
      &                          r_missing_data,
@@ -678,24 +686,29 @@ c
          enddo
          enddo
       enddo
+
+      do i = 1,nft
+
+         nlf = 0
+         nlf_prev = 1
+
+         call make_fnam_lp(i4time_data(i),c_fname,istatus)
+
 c
-       do i = 1,nft
+c ----------  GMS SATELLITE SWITCH -------
+         if(csatid.eq.'gmssat')goto 310
 
-          nlf = 0
-          nlf_prev = 1
 
-          call make_fnam_lp(i4time_data(i),c_fname,istatus)
+         do j = 1,ntm(i)
 
-          do j = 1,ntm(i)
+            n=index(c_type(j,i),' ')-1
+            if(n.le.0)n=3
+            call lvd_file_specifier(c_type(j,i),ispec,istat)
 
-             n=index(c_type(j,i),' ')-1
-             if(n.le.0)n=3
-             call lvd_file_specifier(c_type(j,i),ispec,istat)
+            if(ispec.eq.4)then
+            if(r_image_status(j,i).le.0.3333)then
 
-             if(ispec.eq.4)then
-             if(r_image_status(j,i).le.0.3333)then
-
-                call process_ir_satellite(i4time_data(i),
+               call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
@@ -706,31 +719,31 @@ c
      &                      ta8,tb8,tc8,
      &                      istatus)
 
-                if(istatus .ne. 1)then
-                   write(*,*)'Error processing IR Satillite Data'
-                else
-                   nlf=nlf+1
-                   call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf)  = 'S8A'       ! satellite, channel-4, averaged
-                   c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - AVERAGED'
-                   nlf=nlf+1
-                   call move(tb8,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf)='S8W'       ! satellite, channel-4, warm pixel
-                   c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS; WARM PIX'
-                   nlf=nlf+1
-                   call move(tc8,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf)='S8C'       ! satellite, channel-4, warm pixel
-                   c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - FILTERED'
-                end if
+               if(istatus .ne. 1)then
+                  write(*,*)'Error processing IR Satillite Data'
+               else
+                  nlf=nlf+1
+                  call move(ta8,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf)  = 'S8A'       ! satellite, channel-4, averaged
+                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - AVERAGED'
+                  nlf=nlf+1
+                  call move(tb8,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf)='S8W'       ! satellite, channel-4, warm pixel
+                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS; WARM PIX'
+                  nlf=nlf+1
+                  call move(tc8,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf)='S8C'       ! satellite, channel-4, warm pixel
+                  c_lvd(nlf)=csatid//' (11.2u) IR B-TEMPS - FILTERED'
+               endif
 
-             else
-                write(6,*)'IR image not processed: missing ir data'
-             endif
+            else
+               write(6,*)'IR image not processed: missing ir data'
+            endif
 
-             elseif(ispec.eq.2)then
-             if(r_image_status(j,i).lt.0.3333)then
+            elseif(ispec.eq.2)then
+            if(r_image_status(j,i).lt.0.3333)then
 
-                call process_ir_satellite(i4time_data(i),
+               call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
@@ -741,25 +754,25 @@ c
      &                      ta4,tb4,tb4,
      &                      istatus)
 
-                if(istatus .ne. 1)then
-                   write(*,*)'Error processing IR Satillite Data'
-                else
-                   nlf=nlf+1
-                   call move(ta4,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'S3A'       ! satellite, , averaged
-                   c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - AVERAGED'
-                   nlf=nlf+1
-                   call move(tb4,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf)  = 'S3C'       ! satellite, , filtered
-                   c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - FILTERED'
-                end if
-             else
+               if(istatus .ne. 1)then
+                  write(*,*)'Error processing IR Satillite Data'
+               else
+                  nlf=nlf+1
+                  call move(ta4,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'S3A'       ! satellite, , averaged
+                  c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - AVERAGED'
+                  nlf=nlf+1
+                  call move(tb4,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf)  = 'S3C'       ! satellite, , filtered
+                  c_lvd(nlf)=csatid//' (3.9u) IR B-TEMPS - FILTERED'
+               end if
+            else
                    write(6,*)'39u image not processed: missing data'
-             endif
-             elseif(ispec.eq.5)then
-             if(r_image_status(j,i).lt.0.3333)then
+            endif
+            elseif(ispec.eq.5)then
+            if(r_image_status(j,i).lt.0.3333)then
 
-                call process_ir_satellite(i4time_data(i),
+               call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_ir_lines,n_ir_elem,
      &                      r_grid_ratio(j,i),
@@ -770,25 +783,25 @@ c
      &                      ta12,tb12,tb12,
      &                      istatus)
 
-                if(istatus .ne. 1)then
-                   write(*,*)'Error processing IR Satillite Data'
-                else
-                   nlf=nlf+1
-                   call move(ta12,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'SCA'       ! satellite, averaged
-                   c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - AVERAGED'
-                   nlf=nlf+1
-                   call move(tb12,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'SCC'       ! satellite, averaged
-                   c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - FILTERED'
-                end if
-             else
+               if(istatus .ne. 1)then
+                  write(*,*)'Error processing IR Satillite Data'
+               else
+                  nlf=nlf+1
+                  call move(ta12,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'SCA'       ! satellite, averaged
+                  c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - AVERAGED'
+                  nlf=nlf+1
+                  call move(tb12,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'SCC'       ! satellite, averaged
+                  c_lvd(nlf)=csatid//' (12.0u) IR B-TEMPS - FILTERED'
+               endif
+            else
                    write(6,*)'12u image not processed: missing data'
-             endif
-             elseif(ispec.eq.3)then
-             if(r_image_status(j,i).lt.0.3333)then
+            endif
+            elseif(ispec.eq.3)then
+            if(r_image_status(j,i).lt.0.3333)then
 
-                call process_ir_satellite(i4time_data(i),
+               call process_ir_satellite(i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
      &                      n_wv_lines,n_wv_elem,
      &                      r_grid_ratio(j,i),
@@ -799,25 +812,25 @@ c
      &                      ta6,tb6,tb6,
      &                      istatus)
 
-                if(istatus .ne. 1)then
-                   write(*,*)'Error processing wv Satillite Data'
-                else
-                   nlf=nlf+1
-                   call move(ta6,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'S4A'       ! satellite, averaged
-                   c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - AVERAGED'
-                   nlf=nlf+1
-                   call move(tb6,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'S4C'       ! satellite, filtered
-                   c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - FILTERED'
-                end if
-             else
-                   write(6,*)'wv image not processed: missing data'
-             endif
-             elseif(ispec.eq.1)then
-             if(r_image_status(j,i).lt.0.3333)then
+               if(istatus .ne. 1)then
+                  write(*,*)'Error processing wv Satillite Data'
+               else
+                  nlf=nlf+1
+                  call move(ta6,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'S4A'       ! satellite, averaged
+                  c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - AVERAGED'
+                  nlf=nlf+1
+                  call move(tb6,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'S4C'       ! satellite, filtered
+                  c_lvd(nlf)=csatid//' (6.7u) IR B-TEMPS - FILTERED'
+               end if
+            else
+                  write(6,*)'wv image not processed: missing data'
+            endif
+            elseif(ispec.eq.1)then
+            if(r_image_status(j,i).lt.0.3333)then
 
-                call process_vis_satellite(csatid,
+               call process_vis_satellite(csatid,
      &                      csattype,
      &                      i4time_data(i),
      &                      nx_l,ny_l,lat,lon,
@@ -831,51 +844,63 @@ c
      &                      visraw,visnorm,albedo,
      &                      istatus_vis)
 
-                good_vis_data_thresh=(nx_l*ny_l)*0.3333
+               good_vis_data_thresh=(nx_l*ny_l)*0.3333
 
-                if(istatus_vis(1).eq.0)then
-                   nlf=nlf+1
-                   call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'SVS'       ! satellite, visible
-                   c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - RAW'
-                   units_lvd(nlf) = 'COUNTS'
-                endif
+               if(abs(istatus_vis(1)).lt.good_vis_data_thresh)then
+                  nlf=nlf+1
+                  call move(visraw,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'SVS'       ! satellite, visible
+                  c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - RAW'
+                  units_lvd(nlf) = 'COUNTS'
+               endif
 
-                if(abs(istatus_vis(2)).lt.good_vis_data_thresh)then
-                   nlf=nlf+1
-                   call move(visnorm,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'SVN'       ! satellite, visible, normalized
-                   c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - NORM'
-                   units_lvd(nlf) = 'COUNTS'
-                endif
+               if(abs(istatus_vis(2)).lt.good_vis_data_thresh)then
+                  nlf=nlf+1
+                  call move(visnorm,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'SVN'       ! satellite, visible, normalized
+                  c_lvd(nlf)=csatid//' (VISIBLE) SATELLITE - NORM'
+                  units_lvd(nlf) = 'COUNTS'
+               endif
 
-                if(abs(istatus_vis(3)).lt.good_vis_data_thresh)then
-                   nlf=nlf+1
-                   call move(albedo,laps_data(1,1,nlf),nx_l,ny_l)
-                   var_lvd(nlf) = 'ALB'       ! albedo
-                   c_lvd(nlf)= csatid//' (VISIBLE) ALBEDO'
-                endif
+               if(abs(istatus_vis(3)).lt.good_vis_data_thresh)then
+                  nlf=nlf+1
+                  call move(albedo,laps_data(1,1,nlf),nx_l,ny_l)
+                  var_lvd(nlf) = 'ALB'       ! albedo
+                  c_lvd(nlf)= csatid//' (VISIBLE) ALBEDO'
+               endif
 
-             else
-                   write(6,*)'vis not processed: too much missing data'
-             endif
+            else
+               write(6,*)'vis not processed: too much missing data'
+            endif
 
-             endif
+            endif
 
-             write(6,*)'Number of lvd fields so far: ',nlf
-             write(6,*)'     New Fields Written:'
-             do k=nlf_prev,nlf
-                write(6,132)var_lvd(k)
-132             format(8x,a3)
-             enddo
-             nlf_prev = nlf+1
-             write(6,*)
+            write(6,*)'Number of lvd fields so far: ',nlf
+            write(6,*)'     New Fields Written:'
+            do k=nlf_prev,nlf
+               write(6,132)var_lvd(k)
+132            format(8x,a3)
+            enddo
+            nlf_prev = nlf+1
+            write(6,*)
 
-          enddo
+         enddo
+         goto 311
+c
+c following routine handles the case for which the data have already
+c been mapped to the laps domain. AFWA's GMS so far.
 
-          write(6,*)' Writing lvd. Total # of fields: ',nlf
-          write(6,*)'    to ',dir_lvd(1:len_lvd)
-          call write_laps_data(i4time_data(i),
+310      call loadlapsdata(nx_l,ny_l,maxchannels,n_lvd_fields_max,
+     &                     ntm(i),c_type(1,i),r_image_status(1,i),
+     &                     csatid,image_vis(1,1,i),
+     &                     image_39(1,1,i),image_67(1,1,i),
+     &                     image_ir(1,1,i),image_12(1,1,i),
+     &                     var_lvd,c_lvd,units_lvd,
+     &                     nlf,laps_data,istatus)
+
+311      write(6,*)' Writing lvd. Total # of fields: ',nlf
+         write(6,*)'    to ',dir_lvd(1:len_lvd)
+         call write_laps_data(i4time_data(i),
      &                      dir_lvd,
      &                      ext_lvd,
      &                      nx_l,ny_l,
@@ -888,17 +913,17 @@ c
      &                      c_lvd,
      &                      laps_data,
      &                      istatus)
-          if(istatus.eq.1)then
-             write(6,*)'*****************************'
-             write(*,*)'lvd file successfully written'
-             write(*,*)'for: ',c_fname
-             write(*,*)'i4 time: ',i4time_data(i)
-             write(6,*)'*****************************'
-          else
-             write(*,*)' Error writing lvd file for this time'
-             write(*,*)' i4Time: ',i4time_data(i)
-             write(*,*)' File Time: ',c_fname
-          endif
+         if(istatus.eq.1)then
+            write(6,*)'*****************************'
+            write(*,*)'lvd file successfully written'
+            write(*,*)'for: ',c_fname
+            write(*,*)'i4 time: ',i4time_data(i)
+            write(6,*)'*****************************'
+         else
+            write(*,*)' Error writing lvd file for this time'
+            write(*,*)' i4Time: ',i4time_data(i)
+            write(*,*)' File Time: ',c_fname
+         endif
 
 997   enddo
 
@@ -912,7 +937,7 @@ c
 909   write(6,*)'Error opening ll/ij look up table'
       goto 16
 
-910   write(6,*)'Error computing new mapping lut'
+910   write(6,*)'Error getting mapping lut'
       goto 16
 
 998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),

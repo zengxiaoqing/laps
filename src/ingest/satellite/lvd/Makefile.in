@@ -68,6 +68,7 @@ SRC = lvd_driver_sub.f \
   bcd_to_int.f \
   compute_gvarimg_res.f \
   c_time_fnc.f \
+  ldlapsdata.f \
   Process_SDHS_GVAR_sub.f \
   satir_process.f \
   satvis_process.f \
@@ -80,6 +81,7 @@ SRC = lvd_driver_sub.f \
   satfill1.f \
   imagecomp.f \
   check_data.f \
+  check_nav_lut.f \
   genbtemplut.f \
   btempconvert.f \
   btempconv_asc.f \

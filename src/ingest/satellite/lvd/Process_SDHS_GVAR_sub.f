@@ -1,5 +1,5 @@
       Subroutine Process_SDHS_GVAR_sub(filename,chtype,isat,jtype,
-     &nelem,nlines,image,nlfi,nefi,depth,width,istatus)
+     &nelem,nlines,image_out,nlfi,nefi,depth,width,istatus)
 
 C**********************************************************************
 C  Purpose:  Convert the SDHS image data from a cellular format to an 
@@ -86,10 +86,9 @@ c     INTEGER*2,DIMENSION(:,:),ALLOCATABLE:: IMAGE
 c static case: JSmart 5-12-97
 c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
 
-      character      IMAGEB(nlfi*nefi)*1
-      Integer        Image_data(nefi,nlfi)
-
-      real           IMAGE(nelem,nlines)
+      character      IMAGEC(nlfi*nefi)*1
+      Integer        image_decell(nefi,nlfi)
+      real           image_out(nelem,nlines)
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
@@ -140,14 +139,16 @@ C**********************************************************************
       nf=index(filename,' ')-1
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
      & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= SIZE)
-      READ (8,REC=1,ERR=99)HEADER,IMAGEB
+      READ (8,REC=1,ERR=99)HEADER,IMAGEC
 
       Close(8)
       imagelen=nlfi*nefi/4
       if(imagelen .ne. float(nlfi*nefi)/4.) imagelen=imagelen+1
 
-      call decellularize_image(IMAGEB,imagelen,width,depth,
-     &pixels_per_cell,cell_width,cell_depth,nefi,nlfi,image_data)
+      call decellularize_image(IMAGEC,imagelen,width,depth,
+     &pixels_per_cell,cell_width,cell_depth,nefi,nlfi,image_decell)
+
+c back as floating 10-bit info for the sector in domain.
 
       jj=0
       do j=jstart,jend
@@ -155,7 +156,7 @@ C**********************************************************************
          ii=0
       do i=istart,iend
          ii=ii+1
-         image(ii,jj)=float(image_data(i,j))*4.0
+         image_out(ii,jj)=float(image_decell(i,j))*4.0
       enddo
       enddo
 

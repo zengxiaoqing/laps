@@ -23,12 +23,16 @@ c                               Made this the main program once again.
       Integer i,j,k
       Integer ispec
       Integer nchannels
+      Integer i4time_now_gg
+      integer i4time_cur
       Integer istatus
+      Integer nav_status
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
 
-      Character*3 channeltypes(maxchannel)
+      Character*3 chtype(maxchannel)
+      character*9 cfname_cur
 c
 c ========================== START ==============================
 c 
@@ -42,10 +46,13 @@ c
 c
       call config_satellite_lvd(istatus)
       if(istatus.ne.1)then
-         write(*,*)'Error - Cannot continue'
+         write(*,*)'Error config_satellite - Cannot continue'
          stop
       endif
-c
+
+      i4time_cur = i4time_now_gg()
+      call make_fnam_lp(i4time_cur,cfname_cur,istatus)
+
 c---------------------------------------------------------------
 c Compute array dimensions for ir, vis, and wv.
 c
@@ -55,11 +62,13 @@ c
        do j=1,maxtype
         if(itypes(j,k).eq.1)then
 
-        nchannels=0
+        nav_status=0
+
+50      nchannels=0
         do 4 i=1,maxchannel
          if(ichannels(i,j,k).eq.1)then
           nchannels=nchannels+1
-          channeltypes(nchannels)=c_channel_types(i,j,k)
+          chtype(nchannels)=c_channel_types(i,j,k)
           call lvd_file_specifier(c_channel_types(i,j,k),ispec,istatus)
           if(istatus.ne.0)then
              write(6,*)'Error status returned from lvd_file_specifier'
@@ -83,13 +92,36 @@ c
         write(6,*)'==============================='
         write(6,*)'Satellite ID: ',c_sat_id(k)
         write(6,*)'Satellite TYPE: ',c_sat_types(j,k)
-        write(6,39)(channeltypes(i),i=1,nchannels)
-39      format(1x,'Satellite CHANNELS:',5(1x,a3))
+        write(6,40)(chtype(i),i=1,nchannels)
+40      format(1x,'Satellite CHANNELS:',5(1x,a3))
 
         write(6,*)'line/elem dimensions: '
         write(6,*)'VIS: ',nlinesvis,nelemvis
         write(6,*)'IR:  ',nlinesir,nelemir
         write(6,*)'WV:  ',nlineswv,nelemwv
+c
+
+        if(c_sat_id(k).ne.'gmssat')then
+
+          if(nav_status.eq.0)then
+            call check_nav_lut(nx_l,ny_l,maxchannel,nchannels,
+     &c_sat_id(k),c_sat_types(j,k),chtype,k,j,cfname_cur,
+     &nav_status)
+
+            if(nav_status.eq.1)then
+              print*,'configure satellite common ',c_sat_id(k)
+     +,'/',c_sat_types(j,k)
+              call config_satellite_lvd(istatus)
+              goto 50
+            elseif(nav_status.lt.0)then
+              print*,'error returned from check_nav_lut - stop'
+              goto 1000
+            endif
+          endif
+
+        else
+          print*,'sat id = ',c_sat_id(k), 'no lut needed'
+        endif
 c
 c ================================================================
 c
@@ -97,7 +129,8 @@ c
      &                      nlinesir,nelemir,
      &                      nlineswv,nelemwv,
      &                      nlinesvis,nelemvis,
-     &                      channeltypes,maxchannel,nchannels,
+     &                      chtype,maxchannel,nchannels,
+     &                      i4time_cur,
      &                      istatus)
 
         if(istatus.ne.1)then

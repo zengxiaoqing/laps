@@ -28,10 +28,15 @@ c
        open(22,file=filename,status='old',form='formatted',
      &err=900)
 
-       do i=0,1023
-          read (22,*) idummy,rdummy,cnt2btemp(i)
-c         read(22,*,err=901)icnt,rdummy,cnt2btemp(i),idummy
-       enddo
+       if(csatid.eq.'gmssat')then
+          do i=255,0,-1
+             read(22,*)idummy,cnt2btemp(i)
+          enddo
+       else
+          do i=0,1023
+             read (22,*) idummy,rdummy,cnt2btemp(i)
+          enddo
+       endif
 
        close(22)
 
