@@ -125,7 +125,9 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      call slv_laplc (data_weights, mask, ii,jj)
+      call weight_field (data_weights, mask,  ii,jj, 15.e+3, istatus)
+
+c      call slv_laplc (data_weights, mask, ii,jj)
 
 
       istatus = 1
