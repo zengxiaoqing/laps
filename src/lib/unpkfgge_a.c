@@ -107,7 +107,7 @@ void swap64(char *b1,int size)
 
 #endif
 /*---------------------------------------------------------------------------*/
-void gbyte(p, u, q, b)
+void ggbyte(p, u, q, b)
 long  *p, *u, q, b;
 { register long   j, jq = q, jb = b, lb, qb;
 
@@ -130,13 +130,13 @@ long  *p, *u, q, b;
   { *u = (G1BYTE(*(p + j), jq, jb)); }
 }
 /*---------------------------------------------------------------------------*/
-void gbytes(p, u, q, b, s, n)
+void ggbytes(p, u, q, b, s, n)
 long   *p, *u, q, b, s, n;
 { register long   i = 0, jp = 0;
   long		  jq = q;
   if (n > 0)
   { while (1)
-    { gbyte(p + jp, u + i, jq, b);
+    { ggbyte(p + jp, u + i, jq, b);
       if (++i == n) break;
       jq += b + s;
       jp += jq / SWORD;
@@ -200,7 +200,7 @@ void read_fgge_record(char *obuf, int *status)
   SWAP_BYTE(obuf,need_len);
 #endif
 
-  gbyte(obuf,&npts,240,16);
+  ggbyte(obuf,&npts,240,16);
   
   /* printf("Total %d data points to read\n",npts); */
 
@@ -216,44 +216,44 @@ void read_fgge_record(char *obuf, int *status)
 void decode_fgge_header(char *ibuf, FGGE_HEAD *header, int *status)
 {
   *status = 0 ;
-  ;gbyte(ibuf,&header->Q ,  0,12);
-  ;gbyte(ibuf,&header->S1, 12,12);
-  ;gbyte(ibuf,&header->F1, 24, 8);
-  ;gbyte(ibuf,&header->T , 32, 4);
-  ;gbyte(ibuf,&header->C1, 36,20);
-  ;gbyte(ibuf,&header->E1, 56, 8);  if( header->E1 > 127 ) header->E1 -= 256 ;
-  gbyte(ibuf,&header->M , 64, 4);
-  gbyte(ibuf,&header->X , 68, 8);
-  gbyte(ibuf,&header->S2, 76,12);
-  gbyte(ibuf,&header->F2, 88, 8);
-  gbyte(ibuf,&header->N , 96, 4);
-  gbyte(ibuf,&header->C2,100,20);
-  gbyte(ibuf,&header->E2,120, 8);  if( header->E2 > 127 ) header->E2 -= 256 ;
-  gbyte(ibuf,&header->CD,128, 8);
-  gbyte(ibuf,&header->CM,136, 8);
-  gbyte(ibuf,&header->KS,144, 8);
-  gbyte(ibuf,&header->K ,152, 8);
-  gbyte(ibuf,&header->U1,160,16);
-  ;gbyte(ibuf,&header->NW,176,16);
-  ;gbyte(ibuf,&header->JJ,192, 8);
-  ;gbyte(ibuf,&header->MM,200, 8);
-  ;gbyte(ibuf,&header->YY,208, 8);
-  gbyte(ibuf,&header->GG,216, 8);
-  gbyte(ibuf,&header->R ,224, 8);
-  gbyte(ibuf,&header->G ,232, 8);
-  ;gbyte(ibuf,&header->J ,240,16);
-  ;gbyte(ibuf,&header->B ,256,16);
-  gbyte(ibuf,&header->Z ,272,16);
-  ;gbyte(ibuf,&header->A ,288,32);
+  ;ggbyte(ibuf,&header->Q ,  0,12);
+  ;ggbyte(ibuf,&header->S1, 12,12);
+  ;ggbyte(ibuf,&header->F1, 24, 8);
+  ;ggbyte(ibuf,&header->T , 32, 4);
+  ;ggbyte(ibuf,&header->C1, 36,20);
+  ;ggbyte(ibuf,&header->E1, 56, 8);  if( header->E1 > 127 ) header->E1 -= 256 ;
+  ggbyte(ibuf,&header->M , 64, 4);
+  ggbyte(ibuf,&header->X , 68, 8);
+  ggbyte(ibuf,&header->S2, 76,12);
+  ggbyte(ibuf,&header->F2, 88, 8);
+  ggbyte(ibuf,&header->N , 96, 4);
+  ggbyte(ibuf,&header->C2,100,20);
+  ggbyte(ibuf,&header->E2,120, 8);  if( header->E2 > 127 ) header->E2 -= 256 ;
+  ggbyte(ibuf,&header->CD,128, 8);
+  ggbyte(ibuf,&header->CM,136, 8);
+  ggbyte(ibuf,&header->KS,144, 8);
+  ggbyte(ibuf,&header->K ,152, 8);
+  ggbyte(ibuf,&header->U1,160,16);
+  ;ggbyte(ibuf,&header->NW,176,16);
+  ;ggbyte(ibuf,&header->JJ,192, 8);
+  ;ggbyte(ibuf,&header->MM,200, 8);
+  ;ggbyte(ibuf,&header->YY,208, 8);
+  ggbyte(ibuf,&header->GG,216, 8);
+  ggbyte(ibuf,&header->R ,224, 8);
+  ggbyte(ibuf,&header->G ,232, 8);
+  ;ggbyte(ibuf,&header->J ,240,16);
+  ;ggbyte(ibuf,&header->B ,256,16);
+  ggbyte(ibuf,&header->Z ,272,16);
+  ;ggbyte(ibuf,&header->A ,288,32);
 #ifdef  LONG64
   if( header->A > 0x3fffffffl ) header->A -= 0x100000000 ;
 #endif
-  gbyte(ibuf,&header->U2,320,16);
-  ;gbyte(ibuf,&header->SN,336,16);
-  ;gbyte(ibuf,&header->MN,352, 8);
-  ;gbyte(ibuf,&header->RT,360, 8);
-  ;gbyte(ibuf,&header->DO,368, 8);
-  gbyte(ibuf,&header->U3,376, 8);
+  ggbyte(ibuf,&header->U2,320,16);
+  ;ggbyte(ibuf,&header->SN,336,16);
+  ;ggbyte(ibuf,&header->MN,352, 8);
+  ;ggbyte(ibuf,&header->RT,360, 8);
+  ;ggbyte(ibuf,&header->DO,368, 8);
+  ggbyte(ibuf,&header->U3,376, 8);
 }
 /*---------------------------------------------------------------------------*/
 float rtran_mia(long mia)
@@ -277,7 +277,7 @@ void decode_fgge_data(char *ibuf, FGGE_HEAD *header, float *data, int *status)
 
   rmia	= rtran_mia( header->A );
   ddosn = pow( (double)2.0 , (double)(15 - header->SN) );
-  gbytes(ibuf,wbuf,384,16,0,header->J);
+  ggbytes(ibuf,wbuf,384,16,0,header->J);
   for( i=0 ; i < header->J ; i++)
   {
     if( wbuf[i] > 0x7fff ) wbuf[i] -= 0x10000 ;

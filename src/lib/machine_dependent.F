@@ -218,19 +218,19 @@ cdis
 C Below are some Taiwan FGGE routines
 
 #if defined(hpux) || defined(alpha)
-
-      subroutine read_fa(lun,filename                   ! I
-     .               ,nx,ny,nz                          ! I
-     .               ,r_missing_data                    ! I
-     .               ,pressures_pa                      ! O
-     .               ,ht,tp,rh,uw,vw                    ! O
-     .               ,mslp                              ! O
-     .               ,istatus)                          ! O
+      subroutine read_fa ( lun, filename,                   ! I
+     .                     nx, ny, nz,                      ! I
+     .                     r_missing_data,                  ! I
+     .                     pressures_pa,                    ! O
+     .                     ht, tp, rh, uw, vw,              ! O
+     .                     mslpr,                           ! O
+     .                     istatus)                         ! O
 
       parameter ( i_record=86 )
+      parameter ( nlevel=16, nvar=5 )  ! nlevel=nz
 
-      PARAMETER ( MAX_BUF=320000,MAX_PTS=160000 )
-      CHARACTER FGGE_TEMP*80,FGGE_NAME*40,FGGE_IPT*30,ANS
+      PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
+      CHARACTER FGGE_TEMP*80, FGGE_NAME*40, FGGE_IPT*30, ANS
       BYTE      FGGE_BUF(MAX_BUF)
       REAL*4    FDATA(MAX_PTS)
  
@@ -259,36 +259,75 @@ c     3D fields (pressure grid OR sigma grid. What are the level values?)
 c                           Sfc field
       real*4 mslp(nx,ny)
 
-      integer     c1(nz), e1(nz)
-      integer     var1(5)
-      character*3 var2(5)
+      integer  c1(nlevel), e1(nlevel)
+      integer  var1(nvar)
 
-      read (1,'(i5,i3)')  ( c1(i), e1(i), i=1,nz )
-      read (2,'(i4,a3)')  ( var1(i), var2(i), i=1,5 )
+      data c1  / 10000, 92500, 85000, 70000, 50000, 40000, 30000,
+     .           25000, 20000, 15000, 10000, 70000, 50000, 30000,
+     .           20000, 10000 /
+      data e1  / -1, 10*-2, 5*-3 /
+      data var1  / 1001, 1016, 1048, 1049, 1088 /
 
+      do 10 i= 1,nz
+10       pressures_pa(i)= c1(i) *10.**e1(i)
+ 
       CALL OPEN_FGGE_FILE(filename,ISTAT)
       IF( ISTAT .NE. 0 ) STOP 'open_fgge_file error !!!'
  
-      DO I=1,i_record
+      do l= 1,i_record
  
          CALL READ_FGGE_RECORD(FGGE_BUF,ISTAT)
          IF( ISTAT .NE. 0 ) STOP 'read_fgge_record error !!!'
  
          CALL DECODE_FGGE_HEADER(FGGE_BUF,HEADER,ISTAT)
          IF( ISTAT .NE. 0 ) STOP 'decode_fgge_header error !!!'
-         CALL read_FGGE_HEADER( nx, ny, nz,
-     .                          ht, tp, uw, vw, rh, mslp, 
-     .                          fgge_buf, header, fdata,
-     .                          c1, e1,
-     .                          var1, var2,
-     .                          k )
+
+         if ( header.s1 .eq. 1 )  then
+            CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+            do 50 j= 1,ny
+            do 50 i= 1,nx
+50             mslp(i,j)= fdata( i +nx*(j-1) )
+         endif
+
+         do k= 1,nz
+            if ( header.c1 .eq. c1(k) .and. header.e1 .eq. e1(k) ) then
+
+               CALL DECODE_FGGE_DATA(FGGE_BUF,HEADER,FDATA,ISTAT)
+               if ( header.q .eq. var1(1) )  then
+                  do 100 j= 1,ny
+                  do 100 i= 1,nx
+100                  ht(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var1(2) )  then
+                  do 200 j= 1,ny
+                  do 200 i= 1,nx
+200                  tp(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var1(3) )  then
+                  do 300 j= 1,ny
+                  do 300 i= 1,nx
+300                  uw(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var1(4) )  then
+                  do 400 j= 1,ny
+                  do 400 i= 1,nx
+400                  vw(i,j,k)= fdata( i +nx*(j-1) )
+
+               elseif ( header.q .eq. var1(5) )  then
+                  do 500 j= 1,ny
+                  do 500 i= 1,nx
+500                  rh(i,j,k)= fdata( i +nx*(j-1) )
+               endif
  
+            endif
+         enddo
+
       enddo
 
       CALL CLOSE_FGGE_FILE(ISTAT)
 
-      RETURN
-      END
+      return
+      end
 
 
 
@@ -422,7 +461,6 @@ c                              Sfc field
 
       return 
       end
-
 
 C---------------------------------------------------------------------------
 C PURPOSE :
