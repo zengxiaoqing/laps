@@ -163,7 +163,7 @@ CONTAINS
           ENDDO
 
           deltat = tmkb - tmkt
-          dpdep  = tmkb - (tdkb + 273.15)
+          dpdep  = tmkb - tdkb
 
           IF (NINT(pmbbot) .EQ. 700) THEN ! High Haines
             IF (deltat.LE. 17.5) THEN
