@@ -106,11 +106,13 @@
      IRIX64          6.4               Works using f77 but requires namelist 
                                        end delimiter be changed from / to $
      DEC (Alpha)
+     LINUX (elf)
 </pre>
 
      We are working on adding more supported platforms. We welcome suggestions
-     on how to modify LAPS for other platforms, though we cannot yet guarantee
-     the portability of LAPS to these additional platforms.
+     on how to modify LAPS for other platforms. Note that we cannot yet 
+     guarantee the portability of LAPS to these additional platforms 
+     (e.g. Windows NT).
 
                       --- 2.1.1   NetCDF library   ---
  
