@@ -244,8 +244,7 @@
      LAPS implementation is working. We do not have any other plotting or 
      visualization packages available with LAPS at this time.
 
-     Lapsplot is designed to work with version 3.2 of NCAR graphics, it may
-     not yet work with version 4.
+     Lapsplot is designed to work with version 3.2 (or higher) of NCAR graphics.
 
                     ---  2.2.5  C Compiler ---
 
