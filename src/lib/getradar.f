@@ -600,8 +600,16 @@ cdoc                            calls read_multiradar_3dref.
         if(radarext(1:2) .eq. 'v0' .or.
      1     radarext(1:2) .eq. 'v1' .or.
      1     radarext(1:2) .eq. 'v2' .or.
-     1     radarext(1:3) .eq. 'all' )then     ! Read Doppler radar ref data
-                                              ! from NetCDF files
+     1     radarext(1:2) .eq. 'v3' .or.
+     1     radarext(1:2) .eq. 'v4' .or.
+     1     radarext(1:2) .eq. 'v5' .or.
+     1     radarext(1:2) .eq. 'v6' .or.
+     1     radarext(1:2) .eq. 'v7' .or.
+     1     radarext(1:2) .eq. 'v8' .or.
+     1     radarext(1:2) .eq. 'v9' .or.
+     1     radarext(1:3) .eq. 'vrz' .or.
+     1     radarext(1:3) .eq. 'all' )then     ! Read Doppler 3-D radar ref data
+                                              ! from NetCDF VXX/VRZ files
 
             write(6,*)' Reading Reflectivity Data from 3D file '
      1                                                 ,radarext
@@ -609,7 +617,7 @@ cdoc                            calls read_multiradar_3dref.
             if(radarext(1:3) .ne. 'all')then
                 ext = radarext
             else
-                ext = 'v01'
+                ext = 'v01' ! change this to 'vrz' when it becomes available
             endif
 
 !           Read Reflectivity
@@ -619,9 +627,20 @@ cdoc                            calls read_multiradar_3dref.
      1                    ,units_2d,comment_2d,grid_ra_ref,istatus)
 
             if(istatus .eq. 1)then
-                read(comment_2d,558)rlat_radar,rlon_radar,rheight_radar
-     1                             ,n_ref_grids,radar_name
-558             format(2f9.3,f8.0,i7,a4)
+                if(radarext(1:3) .ne. 'vrz')then
+                    read(comment_2d,558)
+     1                             rlat_radar,rlon_radar,rheight_radar       
+     1                            ,n_ref_grids,radar_name
+558                 format(2f9.3,f8.0,i7,a4)
+
+                else ! vrz mosaic
+                    n_ref_grids = 0
+                    rlat_radar = r_missing_data
+                    rlon_radar = r_missing_data
+                    rheight_radar = r_missing_data
+                    radar_name = 'MOSC' 
+
+                endif
 
                 write(6,*)' Read radar ',radar_name,' Volume'
 
@@ -653,7 +672,8 @@ cdoc                            calls read_multiradar_3dref.
                     endif
                 endif
 
-                if(l_low_fill .or. l_high_fill)then
+                if(l_low_fill .or. l_high_fill .or. 
+     1             radarext(1:3) .eq. 'vrz'                )then
                     do j = 1,jmax
                     do i = 1,imax
                         istat_g = 0
@@ -667,10 +687,15 @@ cdoc                            calls read_multiradar_3dref.
                         if(istat_g .eq. 1)then ! valid radar data at this point
                             istatus_2dref_a(i,j) = 1
                             istatus_3dref_a(i,j) = 1
-                            call latlon_to_radar(
+
+                            if(radarext(1:3) .ne. 'vrz')then
+                                call latlon_to_radar(
      1                          lat(i,j),lon(i,j),topo(i,j)
      1                         ,azimuth,closest_vxx(i,j),elev
      1                         ,rlat_radar,rlon_radar,rheight_radar)       
+                            else
+                                closest_vxx(i,j) = 180000.! default value
+                            endif
 
                         endif
 
@@ -685,7 +710,7 @@ cdoc                            calls read_multiradar_3dref.
 
             endif ! Success as reflectivity
 
-        endif ! 'vxx'
+        endif ! 'vxx' or 'vrz'
 
         if(radarext(1:3) .eq. 'vrc' .or. radarext(1:3) .eq. 'all')then       
 50          write(6,*)' Reading NOWRAD/vrc data' ! lumped together for now?
@@ -752,14 +777,6 @@ cdoc                            calls read_multiradar_3dref.
             endif
 
         endif ! vrc
-
-        if(radarext(1:3) .eq. 'vrz')then
-!           call read_raw_conus_ref()
-            write(6,*)' Radar vrz reflectivity data cannot be read in'
-            istatus_2dref_a = 0
-            istatus_3dref_a = 0
-
-        endif ! 'vrz'
 
         if(radarext(1:3) .eq. 'ln3')then
             call read_nowrad_3dref(i4time_radar
