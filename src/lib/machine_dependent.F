@@ -138,7 +138,7 @@ cdis
 
             real function ratan2d(val1,val2)
             real, intent(in) ::  val1,val2
-              ratan2d = atan2(val1,val2)*invpi_180
+              ratan2d = atan2(val1,val2)/pi_180()
             return
             end function ratan2d
 
@@ -178,7 +178,7 @@ cdis
 
             double precision function datan2d(val1,val2)
             double precision, intent(in) ::  val1,val2
-              datan2d = atan2(val1,val2)*invpi_180
+              datan2d = atan2(val1,val2)/pi_180()
             return
             end function datan2d
       end module
