@@ -996,9 +996,9 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
                                    well as echo tops (MSL).
 </pre>
 
-     More details about radar data usage in LAPS are on the World Wide Web at:
+     A flow chart showing radar data usage in LAPS are on the Web at:
      'http://laps.fsl.noaa.gov/albers/radar_decision_tree.txt',
-     together with an accompanying flow chart at 
+     together with some text details in:
      'http://laps.fsl.noaa.gov/albers/laps/radar/laps_radar_ingest.html'.
      These include information on which types of radar data are processed 
      via the various intermediate data files.
