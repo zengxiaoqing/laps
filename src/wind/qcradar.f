@@ -59,7 +59,8 @@
      1                       vpass1(i,j,k) + v_laps_bkg(i,j,k),
      1                       t_pass1,
      1                       r_pass1,
-     1                       azimuth)
+     1                       azimuth,
+     1                       lon(i,j))
 
                 else
                     call uvtrue_to_radar(

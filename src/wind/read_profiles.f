@@ -75,7 +75,16 @@ c
         character*5 c5_name
         character*9 a9time_ob
 
+        logical l_fill, l_use_raob, l_use_cdw, l_use_radial_vel
+
         r_mspkt = .518
+
+        call get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
+     1                                          ,istatus)     
+        if(istatus .ne. 1)then
+            write(6,*)' Error getting wind parms'
+            return
+        endif
 
         write(6,*)' Subroutine read_profiles: i4time = ',i4time
 
@@ -188,6 +197,11 @@ c ***   Read in sonde data    ***************************************
 c
 
       write(6,*)
+
+      if(.not. l_use_raob)then
+          write(6,*)' Not using raobs, l_use_raob = ',l_use_raob
+          go to 600
+      endif
 
 !     i4time_raob_window = ilaps_cycle_time
 
