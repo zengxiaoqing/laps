@@ -10,6 +10,7 @@ c
       integer    lun
       integer    i,j,k
       integer    nc
+      integer    slen
 
       character  nest7grid*150
 
@@ -28,14 +29,17 @@ c -----
       open(lun,file=nest7grid,status='old',form='formatted',err=900)
       rewind(lun)
 
+      nc=0
       do k=1,maxsat
       do j=1,maxtype
       do i=1,maxchannel
-         nc=max(index(path_to_raw_sat(i,j,k),' ')-1,nc)
+         call s_len(path_to_raw_sat(i,j,k),slen)
+         nc=max(slen,nc)
       enddo
       enddo
       enddo
       write(lun,*,err=950)' &satellite_lvd_nl'
+      if(nc.eq.200)print*,'WARNING! Max string length = ',nc
       write(lun,1,err=950)(((path_to_raw_sat(i,j,k)(1:nc),
      &i=1,maxchannel),j=1,maxtype),k=1,maxsat)
       write(lun,64)iflag_lvd_common

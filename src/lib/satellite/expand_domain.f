@@ -56,8 +56,6 @@ c
       nxl = kmax
       nyl = lmax
 c
-c parameters needed to generate the liberal goes8 lookup table
-c
       g_space_deg = sqrt( 
      1       (  xlat(1,2) - xlat(1,1)                   )**2
      1     + ( (xlon(1,2) - xlon(1,1))*cosd(xlat(1,1))  )**2 

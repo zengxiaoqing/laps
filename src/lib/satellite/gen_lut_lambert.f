@@ -406,9 +406,6 @@ c
          n_lines_wv(jtype,isat)  = ny3mx
 
 75    continue
-c
-c rewrite the satellite namelist with new i/j start/end values.
-c
       jstatus = 1
 
 1000  return

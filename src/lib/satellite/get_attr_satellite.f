@@ -135,3 +135,62 @@ C
       istatus = 0
 100   return
       end
+c
+c============================================================
+c
+      function c_afwa_fname(csatid,chtype)
+
+      character csatid*(*)
+      character chtype*(*)
+      character cs1*1
+      character cs2*2
+      character cs3*2
+      character c_afwa_fname*11
+
+      cs1='i'
+      if(chtype.eq.'vis')cs1='v'
+
+      cs2=csatid(1:2)
+      cs3=csatid(5:6)
+
+      c_afwa_fname='u'//cs2//cs3//cs1//'1_'//chtype
+
+      return 
+      end
+
+c
+c ===========================================================
+c
+      function nw_vis_line_gwc(chtype,bescnfc,fsci)
+
+      integer   nw_vis_line_gwc
+      integer   fsci
+      integer   bescnfc
+      character chtype*3
+
+      if(chtype.eq.'vis')then
+         nw_vis_line_gwc=(bescnfc+fsci)
+      else
+         nw_vis_line_gwc=(bescnfc+fsci)*4 
+      endif
+
+      return
+      end
+c
+c ===========================================================
+c
+      function nw_vis_pix_gwc(chtype,bepixfc,goalpha)
+
+      integer    nw_vis_pix_gwc
+      integer    bepixfc
+      real       goalpha
+      character  chtype*3
+
+      if(chtype.eq.'vis')then
+         nw_vis_pix_gwc=(bepixfc/4+int(goalpha))*8
+      else
+         nw_vis_pix_gwc=(bepixfc+int(goalpha))*8
+      endif 
+
+      return
+      end

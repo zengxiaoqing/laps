@@ -1,5 +1,5 @@
       Subroutine gen_gvarimage_lut(isat,jtype,kchl,
-     &nx_l,ny_l,xlat,xlon,istatus)
+     &nx_l,ny_l,lat,lon,istatus)
 c
       implicit none
 c
@@ -10,26 +10,32 @@ c
       Integer     jtype
       Integer     kchl
 
-      Integer     idx
-      parameter  (idx=2)
+      Integer       idx
+      parameter    (idx=2)
 
-      Integer     nxl,nyl
-      Integer     nx,ny
+      Integer       idx2
+      Integer       nxl,nyl
+      Integer       nxl2,nyl2
+
+      Integer       nx,ny
 c
-      real*4        xlat(nx_l,ny_l)
-      real*4        xlon(nx_l,ny_l)
-      real*4        lat(nx_l+idx,ny_l+idx)
-      real*4        lon(nx_l+idx,ny_l+idx)
+      real*4        lat(nx_l,ny_l)
+      real*4        lon(nx_l,ny_l)
 
-      real*4        rline(nx_l+idx,ny_l+idx)
-      real*4        rpix(nx_l+idx,ny_l+idx)
-      real*4        rel_ri(nx_l+idx,ny_l+idx)
-      real*4        rel_rj(nx_l+idx,ny_l+idx)
+      real*4        xlat (nx_l+idx,ny_l+idx)
+      real*4        xlon (nx_l+idx,ny_l+idx)
+
+      real*4        xlat2 (nx_l+2*idx,ny_l+2*idx)
+      real*4        xlon2 (nx_l+2*idx,ny_l+2*idx)
+      real*4        rline (nx_l+2*idx,ny_l+2*idx)
+      real*4        rpix  (nx_l+2*idx,ny_l+2*idx)
+      real*4        rel_ri(nx_l+2*idx,ny_l+2*idx)
+      real*4        rel_rj(nx_l+2*idx,ny_l+2*idx)
+      real*4        rl_abs(nx_l+2*idx,ny_l+2*idx)
+      real*4        rp_abs(nx_l+2*idx,ny_l+2*idx)
+
       real*4        ri_laps(nx_l,ny_l)
       real*4        rj_laps(nx_l,ny_l)
-
-      real*4        rl_abs(nx_l+idx,ny_l+idx)
-      real*4        rp_abs(nx_l+idx,ny_l+idx)
 
       real*8        pi
       real*8        rl_div
@@ -41,6 +47,7 @@ c
       real*4        nepixabs,nelinabs
       real*4        swpixabs,swlinabs
       real*4        sepixabs,selinabs
+      real*4        r_missing_data
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
@@ -72,6 +79,7 @@ c
       Integer     ewCycles,ewIncs
       Integer     time_spec(2)
       Integer     npoints_out
+      Integer     nijout
       Integer     ispec
       Integer     lend
       Integer     iwrite 
@@ -178,16 +186,26 @@ c
      &                         ustatus)
 
       if(ustatus.ne.0)then
-         goto 901
+         if(ustatus.eq.1)then
+            print*,'GVAR parameters not obtained cannot proceed'
+            goto 1000
+         else
+            goto 901
+         endif
       endif
 c
 c get expanded domain lats/lons
 c
+      idx2=idx*2
       nxl=nx_l+idx
       nyl=ny_l+idx
+      nxl2=nx_l+idx2
+      nyl2=ny_l+idx2
 
-      call expand_domain(nx_l,ny_l,xlat,xlon,nxl,nyl,lat,lon,
-     &istatus)
+      call expand_domain(nx_l,ny_l,lat,lon,nxl,nyl,xlat,xlon,
+     +istatus)
+      call expand_domain(nxl,nyl,xlat,xlon,nxl2,nyl2,xlat2,xlon2,
+     +istatus)
 c
 c if the gvar image data file ever changes, for example, data thinning is
 c applied, then the following values should change as well.
@@ -241,17 +259,17 @@ c
       cstatus = 0
       npoints_out = 0
 
-      do j=1,nyl
-      do i=1,nxl
+      do j=1,nyl2
+      do i=1,nxl2
  
-         r8lat=lat(i,j)*(pi/180.d0)
-         r8lon=lon(i,j)*(pi/180.d0)
+         r8lat=xlat2(i,j)*(pi/180.d0)
+         r8lon=xlon2(i,j)*(pi/180.d0)
 
          call GPOINT(r8lat,r8lon,ELEV,SCAN,IERR)
          if(IERR.ne.0)then
 
 c           write(6,*)'Error computing Elev/Scan in GPOINT from'
-c           write(6,*)'Lat/Lon ', lat(i,j),lon(i,j)
+c           write(6,*)'Lat/Lon ', xlat2(i,j),xlon2(i,j)
             rline(i,j)=-2.
             rpix(i,j)=-2.
             cstatus=cstatus-1
@@ -278,8 +296,8 @@ c save corners
                nelinabs=RL
             endif
 
-            if( nint(rl).gt.0.0. and. nint(rl).le.25000 .and.
-     &         nint(rp).gt.0.0 .and. nint(rp).le.30000) then
+            if( idnint(rl).gt.0 .and. idnint(rl).le.25000 .and.
+     &          idnint(rp).gt.0 .and. idnint(rp).le.30000) then
 
                rline(i,j)=(RL-start_line+rl_div)/rl_div 
                rpix(i,j)= (RP-start_pix+rp_div)/rp_div
@@ -320,13 +338,11 @@ c
 c
 c compute relative lut
 c
-      call get_sat_boundary(nxl,nyl,ny,nx,rpix,rline,
+      call get_sat_boundary(nxl2,nyl2,ny,nx,rpix,rline,
      &linestart,lineend,elemstart,elemend,
      &rls,rle,res,ree,istatus)
       if(istatus.ne.1)then
-         write(6,*)'Fatal Error in get_sat_boundary - gen_gvarimg_lut'
-         write(6,*)'Laps domain apparently outside satellite data!'
-         goto 1000
+         write(6,*)'Note: Laps domain outside satellite data!'
       endif
 c
       idiff_org = elemend_orig - elemstart_orig
@@ -363,47 +379,44 @@ c
 c compute ri, rj relative look up table for the block of data surrounding
 c the laps domain.
 c
-      npoints_out = 0
+      call get_r_missing_data(r_missing_data,istatus)
+      if(istatus.ne.1)return
 
-      do j = 1,nyl
-      do i = 1,nxl
+      nijout = 0
 
-         if(rpix(i,j).gt.0.0.and.rpix(i,j).lt.nx.and.
-     &rline(i,j).gt.0.0.and.rline(i,j).lt.ny)then
-
-            rel_ri(i,j) = rpix(i,j)  - float(elemstart)
-            rel_rj(i,j) = rline(i,j) - float(linestart)
-
+      do j = 1,nyl2
+      do i = 1,nxl2
+         if(rpix(i,j).ne.r_missing_data.and.
+     &rline(i,j).ne.r_missing_data)then
+            rel_ri(i,j) = rpix(i,j)  - res  !float(elemstart)
+            rel_rj(i,j) = rline(i,j) - rls  !float(linestart)
          else
-
-            npoints_out = npoints_out + 1
-
+            rel_ri(i,j) = r_missing_data
+            rel_rj(i,j) = r_missing_data
+            nijout=nijout+1
          endif
-
       enddo
       enddo
-
-      if(npoints_out .gt. 0)then
-         write(6,*)'Relative pix/line coords not correct'
-         write(6,*)'LUT not computed'
-         goto  1000
-      endif
 c
 c put the rel ri/rj lut into the laps domain size
 c
-      ils=idx/2+1
-      ile=idx/2
+      ils=idx2/2+1
+      ile=idx2/2
       jj = 0
-      do j = ils,nyl-ile
+      do j = ils,nyl2-ile
          jj = jj+1
          ii = 0
-         do i = ils,nxl-ile
+         do i = ils,nxl2-ile
             ii = ii+1
             ri_laps(ii,jj) = rel_ri(i,j)
             rj_laps(ii,jj) = rel_rj(i,j)
          enddo
       enddo
 c
+      if(nijout.gt.0)then
+         print*,'Found ',nijout,' points outside domain'
+      endif
+
       if(iwrite.eq.1)then
 
          do j = 1,ny_l,10
@@ -425,21 +438,25 @@ c
       table_path = cname(1:n2)//'-'//csattype//'.lut'
       n2=index(table_path,' ')
 
-      call write_table (table_path,nx_l,ny_l,xlat,xlon,
+      call write_table (table_path,nx_l,ny_l,lat,lon,
      &ri_laps,rj_laps,wstatus)
-c
-c compute image resolution in meters. This done with the original line/pix
-c values since we use gimloc here.
-c
-      i1=nx_l/2
-      j1=ny_l/2
-
-      call compute_gvarimage_resolution(rp_div,rl_div,
-     &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
-     &r_img_res_m,istatus)
 
       r_sat_sub_lat(isat) = SatSubLAT
       r_sat_sub_lon(isat) = SatSubLON
+
+      if(elemstart.le.0)elemstart=1
+      if(elemend.gt.nx)elemend=nx
+      if(linestart.le.0)linestart=1
+      if(lineend.gt.ny)lineend=ny
+c ------------------------------------------------------------------------
+c compute image resolution in meters. This done with the original line/pix
+c values since we use gimloc here.
+c ------------------------------------------------------------------------
+      i1=elemstart   !nx_l/2
+      j1=linestart   !ny_l/2
+      call compute_gvarimage_resolution(rp_div,rl_div,
+     &rpix(i1,j1),rline(i1,j1),start_pix,start_line,
+     &r_img_res_m,istatus)
 
       goto(71,72,73,72,72)indx
 
@@ -507,8 +524,6 @@ c
 908   write(6,*)'Error in update_gvarimage_parmfile'
       istatus = -1
       goto 1000
-
-999   write(6,*)'No update to parameter file: ',cmode
 
 1000  return
       end

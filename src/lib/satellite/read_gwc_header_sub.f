@@ -134,8 +134,6 @@ C  record length in the direct access read is 1024 bytes (the number of
 C  bytes that make up the header).
 C***********************************************************************
 
-      IOSTATUS = 1
-
       write(6,*)'Opening ',FILENAME
       inquire(file=filename,opened=lopen,number=lun)
       if(lopen)write(6,*)'File already open',lun
@@ -164,7 +162,7 @@ C  the negative integers were stored in complement form).
 C***********************************************************************
       do i=1,3
          datatyp(i:i) = input(i)
-         datasbtp(i+3:i+3) = input(i+3)
+         datasbtp(i:i) = input(i+3)
       enddo
       hdrsize = byteswp4(input(9))
       datastr = byteswp4(input(13))

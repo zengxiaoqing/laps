@@ -23,6 +23,7 @@ c     real*4 grid_spacing
       real*4 rlineend
       real*4 relemstart
       real*4 relemend
+      real*4 r_missing_data
 
       integer i,j
 c
@@ -56,18 +57,41 @@ c
       enddo
 
       if(ilinestart.lt.0)then
-         write(6,*)'WARNING: LAPS bndry outside Sat bndry!'
+         write(6,*)'WARNING: LAPS exceeds nrthrn Sat bndry!'
+         print*,'linestart = ',ilinestart
          istatus = 0
-      elseif(ilineend.gt.max_lines)then
-         write(6,*)'WARNING: LAPS bndry outside Sat bndry!'
+      endif
+      if(ilineend.gt.max_lines)then
+         write(6,*)'WARNING: LAPS exceeds sothrn Sat bndry!'
+         print*,'lineend = ',ilineend
          istatus = 0
-      elseif(ielemstart.lt.0)then
-         write(6,*)'WARNING: LAPS bndry outside Sat bndry!'
+      endif
+      if(ielemstart.lt.0)then
+         write(6,*)'WARNING: LAPS exceeds westrn Sat bndry!'
+         print*,'elemstart = ',ielemstart
          istatus = 0
-      elseif(ielemend.gt.max_elems)then
-         write(6,*)'WARNING: LAPS bndry outside Sat bndry!'
+      endif
+      if(ielemend.gt.max_elems)then
+         write(6,*)'WARNING: LAPS exceeds eastrn Sat bndry!'
+         print*,'elemend = ',ielemend
          istatus = 0
       endif
 
+      if(istatus.eq.0)then
+         print*,'setting lut values outside of domain to missing'
+         call get_r_missing_data(r_missing_data,istatus)
+         do j=1,ny
+         do i=1,nx
+            if(r_llij_lut_rj(i,j).le.0.0.or.
+     &         r_llij_lut_rj(i,j).ge.max_lines)then
+               r_llij_lut_rj(i,j)=r_missing_data
+            endif
+            if(r_llij_lut_ri(i,j).le.0.0.or.
+     &         r_llij_lut_ri(i,j).ge.max_elems)then
+               r_llij_lut_ri(i,j)=r_missing_data
+            endif
+         enddo
+         enddo
+      endif
       return
       end

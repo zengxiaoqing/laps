@@ -31,6 +31,8 @@ c
 
       INTEGER   nw_vis_pix
       INTEGER   nw_vis_line
+      INTEGER   nw_vis_pix_gwc
+      INTEGER   nw_vis_line_gwc
       INTEGER   se_vis_pix
       INTEGER   se_vis_line
       Integer   image_depth
@@ -84,6 +86,8 @@ c
       character*255 fname_sat
       character*255 c_filenames(max_files)
       character*200 cdum
+      character     cfname*11
+      character     c_afwa_fname*11
       character*10  cmode
       character*9   c_fname_cur
       character*9   c_fname
@@ -192,23 +196,11 @@ c === gwc switch ===
 c
       elseif(cstype .eq. 'gwc')then
 
-         nn=index(chtype,' ')-1
-         if(nn.le.0)nn=3
-         call lvd_file_specifier(chtype,indx,lstatus)
-         goto(5,6,6,6,6)indx
-
-5        ct='i'      !visible
-         goto 8
-6        ct='i'      !ir - either 3.9, 6.7, 11.2, or 12.0
-8        continue
-
-         fname_sat='u'//cd6(1:2)//cd6(5:6)//ct//'1_'//chtype(1:nn)
-         nf=index(fname_sat,' ')
          n=index(cdir_path,' ')-1
-         filename_cdf=cdir_path(1:n)//fname_sat(1:nf)
-         nf=index(filename_cdf,' ')-1
+         cfname=c_afwa_fname(cd6,chtype)
+         filename_cdf=cdir_path(1:n)//cfname
 
-         call read_gwc_header(filename_cdf(1:nf),strtpix,strtline,
+         call read_gwc_header(filename_cdf,strtpix,strtline,
      &stoppix,stopline,i_obstime,image_type,golatsbp,golonsbp,
      &image_width,image_depth,goalpha,strbdy1,strbdy2,stpbdy1,
      &stpbdy2,bepixfc,bescnfc,fsci,decimat,gstatus)
@@ -223,13 +215,17 @@ c
 c
 c no water vapor switch atm
 c
-         if(ct.eq.'i')then
-            nw_vis_pix=(bepixfc+goalpha)*8
-            nw_vis_line=(bescnfc+fsci)*4 
-         elseif(ct.eq.'v')then
-            nw_vis_pix= (bepixfc/4+goalpha)*8
-            nw_vis_line=(bescnfc+fsci)
-         endif
+         nw_vis_pix = nw_vis_pix_gwc(chtype,bepixfc,goalpha)
+         nw_vis_line= nw_vis_line_gwc(chtype,bescnfc,fsci)
+
+c        if(chtype.eq.'vis')then
+c           nw_vis_pix= (bepixfc/4+goalpha)*8
+c           nw_vis_line=(bescnfc+fsci)
+c        else
+c           nw_vis_pix=(bepixfc+goalpha)*8
+c           nw_vis_line=(bescnfc+fsci)*4 
+c        endif
+
          nx = image_width*256
          ny = image_depth*64
          
@@ -358,7 +354,7 @@ c
       dx=dx*1000.0
       dy=dy*1000.0
 
-      istatus = 1
+      istatus = 0
       goto 1000
 
 900   write(6,*)'Returning without new attributes'
