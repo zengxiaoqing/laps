@@ -154,7 +154,7 @@ cdis
       logical  l_grid_north     ! Flag for grid north or true north    ! Input
       logical  l_3pass          ! Flag for doing 3 pass analysis       ! Input
       logical  l_correct_unfolding ! Flag for dealiasing               ! Input
-      logical  l_point_struct
+      logical  l_point_struct, l_variational
 
       real*4   rms_thresh                                              ! Input
       real*4   weight_bkg_const                                        ! Input
@@ -174,6 +174,7 @@ cdis
       write(6,*)' Subroutine laps_anl...'
 
       l_point_struct = .true. 
+      l_variational = .false.
 
       ialloc_varobs_diff_spread = 0
 
@@ -199,21 +200,6 @@ csms$serial end
 
 csms$serial(<wt_p_radar, 
 csms$>       rms_thresh , out>:default=ignore)  begin
-      if(.true.)then ! Experimental
-          if(iter .ge. 2)then
-              write(6,*)
-     1        ' Replacing background with the analyzed winds, iter=',ite
-     1r
-              do i = 1,imax
-              do j = 1,jmax
-              do k = 1,kmax
-                  u_laps_bkg(i,j,k) = uanl(i,j,k)
-                  v_laps_bkg(i,j,k) = vanl(i,j,k)
-              enddo ! k
-              enddo ! j
-              enddo ! i
-          endif
-      endif
 
 !     Subtract the background from the non-radar obs, then apply QC thresholds
 !     and spread the obs vertically.
@@ -413,6 +399,10 @@ csms$>       rms_thresh , out>:default=ignore)  begin
       I4_elapsed = ishow_timer()
 
 csms$serial end
+
+      if(l_variational)then ! call variational routine
+          return
+      endif
 
       call get_inst_err2(r_missing_data                               ! I
      1                  ,obs_point_qced,max_obs,n_qc_total_good       ! I
