@@ -28,10 +28,19 @@
            write(6,*)' Call ingest_raob, format=',c8_raob_format
            call ingest_raob(path_to_raw_raob,c8_raob_format)
 
-           c8_raob_format = c8_project
-           write(6,*)
-           write(6,*)' Call ingest_drpsnd, format=',c8_raob_format
-           call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
+           if(c8_project .eq. 'CWB')then
+               c8_raob_format = c8_project
+               write(6,*)
+               write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
+               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
+
+           else
+               c8_raob_format = 'AVAPS'
+               write(6,*)
+               write(6,*)' Call ingest_drpsnd, format=',c8_raob_format       
+               call ingest_drpsnd(path_to_raw_drpsnd,c8_raob_format)
+
+           endif
 
        else ! RSA project
            c8_raob_format = 'WFO'
