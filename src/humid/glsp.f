@@ -48,8 +48,7 @@ c       input i4time
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'parmtrs.inc' removed dependency 7/29/97 db
 
 c parameter variables
 
@@ -60,7 +59,7 @@ c parameter variables
 
 c variables with dynamic dependence
 
-      real data(igrid,jgrid,1)
+      real data(ii,jj,1)
 
 
 c internal variables
@@ -73,12 +72,12 @@ c internal variables
         character*4 lvl_coord  (1)
         character*10 units (1)
         character*125 comment (1)
-        integer*4 kmax, len
+        integer*4 kmax, ksurf, len
 
         real*4 numel,sum
-        data ext /'lsx'/
-
-        call get_directory(ext,dir,len)
+        data ext/'lsx'/
+ 
+        call get_directory (ext,dir,len)
 
         sum = 0.0
         numel = 0.0
@@ -90,8 +89,9 @@ c internal variables
 
         var(1) = 'ps'
         kmax = 1
+        ksurf = 1
 
-        call read_laps (i4time,i4time,dir,ext,igrid,jgrid,
+        call read_laps (i4time,i4time,dir,ext,ii,jj,
      1  kmax,ksurf,var,lvl,
      1  lvl_coord,units,comment,data,istatus)
 
@@ -103,8 +103,8 @@ c internal variables
         write (6,*) lvl_coord,units,comment
 
 
-        do j = 1,jgrid
-        do i = 1,igrid
+        do j = 1,jj
+        do i = 1,ii
 
         numel = numel + 1.
         sum = sum + data(i,j,1)
