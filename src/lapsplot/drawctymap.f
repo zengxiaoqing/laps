@@ -61,7 +61,7 @@ c
       jjlts=-2
       jgrid=0
 
-      call get_lapsplot_parms(namelist_parms,istatus)       
+!     call get_lapsplot_parms(namelist_parms,istatus)       
 
 !     1 means use local version of supmap, 2 means use the NCARGlib version
 !     3 means to try newer (ezmap) routines
@@ -72,7 +72,7 @@ c
           write(6,*)' no grid spacing, stop in draw_county_map'
           stop
       else
-          write(6,*)' Subroutine draw_county_map...',jproj
+          write(6,*)' Subroutine draw_county_map...',mode_supmap,jproj
       endif
 
       domsize = (float(nj)-1.) * grid_spacing_m / zoom
