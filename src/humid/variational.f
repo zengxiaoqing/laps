@@ -182,6 +182,7 @@ c     old gimtau.f variables
       real btemp(ii,jj,18),britgo,plango
       real zenith               ! function call
       real pi, d2r
+      external britgo
       
 c     powell specific arrays
       real x(3)
@@ -662,6 +663,11 @@ c     Execute powell method correction of layer humidity in clear areas
                   if (rads(i,j,kanch(k)) .eq. rmd) then
                      print*, 'missing data in sounder channel ',
      1                    kanch(k),' index ',i,j
+                     cost_rad_istatus = 0 ! fail using radiance
+                  endif
+                  if (rads(i,j,kanch(k)) .le. 0.0) then
+                     write(6,*) 'negative radiance,r,chan,i,j'
+                     write(6,*) rads(i,j,kanch(k)), kanch(k),i,j
                      cost_rad_istatus = 0 ! fail using radiance
                   endif
                enddo
