@@ -73,7 +73,7 @@ c     input variables
       real data_weights(ii,jj)
 
       integer nstations,nn
-      parameter (nstations = 22000)
+      parameter (nstations = 100000)
       real lat(nstations)
       real lon(nstations)
       real wt(nstations)

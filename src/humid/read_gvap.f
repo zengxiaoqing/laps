@@ -107,7 +107,7 @@ c     reading goes 12
 c     get most recent file in directory
 
       write (6,*)
-      write (6,*) 'Acquiring GOES 12 GVAP info'
+      write (6,*) 'Acquiring GOES WEST info'
       write (6,*)
 
 
@@ -149,14 +149,15 @@ c     get most recent file in directory
       nn = i-1
       n8 = nn ! number of goes 12 stations read
       if (nn .eq. 0) go to 666
-      write(6,*) nn, ' number of records read GOES 8'
+      write(6,*) nn, ' number of records read GOES-east ',
+     1     const_file(1:cf)
       istatus_8 = 1             !assign success to reading goes 8
 c     write(6,*) (wt(i),i=1,nn)
 
       go to 669
 
  668  close (22)
-      write(6,*) 'failed reading GOES 12'
+      write(6,*) 'failed reading GOES-east, ',const_file(1:cf)
       istatus_8 = 0
 
 
@@ -165,7 +166,7 @@ c     write(6,*) (wt(i),i=1,nn)
 c     reading goes 10
 c     skip reading goes 10 if IHOP flag is set to on
 c      if(IHOP_flag .eq. 1) then
-c         write (6,*) 'IHOP activated, skipping GOES 10'
+c         write (6,*) 'IHOP activated, skipping GOES-west'
 c         istatus_10 = 0
 c         go to 700
 c      endif
@@ -173,7 +174,7 @@ c      endif
 c     get most recent file in directory
 
       write (6,*)
-      write (6,*) 'Acquiring GOES 10 GVAP info'
+      write (6,*) 'Acquiring GOES west GVAP info'
       write (6,*)
 
       istatus_10 = 1
@@ -208,14 +209,18 @@ c     get most recent file in directory
 
       enddo
 
+      write (6,*) 'Loop reading GOES west ended on dimension limit'
+      write (6,*) 'consider expanding dimension size'
+      write (6,*) 'current dimension limit is.... ', nstations
+
 
  667  close(23)
 
  700  if (istatus_8.eq.0) then
-         write(6,*) 'GOES 8 failed'
+         write(6,*) 'GOES east failed'
       endif
       if (istatus_10.eq.0) then
-         write(6,*) 'GOES 10 failed'
+         write(6,*) 'GOES west failed'
       endif
 
       if(istatus_8+istatus_10.eq.0) then
