@@ -9,11 +9,12 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$followup,$LAPS_SRC_ROOT,$webdir);
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$qsubproj,$followup,$LAPS_SRC_ROOT,$webdir);
 my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT, # (required)
                         "dataroot=s" => \$LAPS_DATA_ROOT,     # (required)
                         "schedtime=s" => \$schedtime,         # e.g. 20,50 (optional)
                         "numfiles=s" => \$numfiles,           # number of files to keep with purger (optional)
+                        "qsubproj=s" => \$qsubproj,           # qsub project (if qsub is being used)
                         "followup=s" => \$followup);          # domain name for running followup_ncarg.com script (optional - FSL only)
 
 print "Starting cronfile.pl...\n";
@@ -72,6 +73,16 @@ if(-e "$LAPS_DATA_ROOT/cronfile"){
                s/\@followup\@/ /;
            }
        }
+
+       if(defined($qsubproj)){
+           if( /sched\.pl/ ){
+               s/sched\.pl/sched\.pl -q $qsubproj/;
+           }
+           if( /laps_driver\.pl/ ){
+               s/laps_driver\.pl/laps_driver\.pl -q $qsubproj/;
+           }
+       }
+
     }
 
     open(OUT,">$LAPS_DATA_ROOT/cronfile");
