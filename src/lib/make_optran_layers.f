@@ -1,4 +1,4 @@
-cdis   
+cdis
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
 cdis    
@@ -80,9 +80,9 @@ c     here a test is done to compare the values and if the pp(kk) is larger
 c     than p(kk), and average approximation is used for pp(kk)
 
       if (pp(kk) .gt. p(kk) .or. pp(kk) .lt. p(kk-1)) then ! error condition
-c         write (6,*) 'savedppkk', pp(kk), p(kk-1), p(kk)
+         write (6,*) 'ppkk too close', pp(kk), p(kk-1), p(kk)
          pp(kk) = (p(kk)+p(kk-1)) /2.
-c         write (6,*) 'savedppkk', pp(kk), p(kk-1), p(kk)
+         write (6,*) 'ppkk changed to: ', pp(kk), p(kk-1), p(kk)
       endif
 
 c     use the above pressure to derive the temp and other parameter values
@@ -98,7 +98,12 @@ c     space
      1        c(k-1), c(k), cc(k) )
       enddo ! k
 
-c     
+c     remove numerical artifacts
+      where (aa < 0.0) aa = 0.0
+      where (bb < 0.0) bb = 0.0
+      where (cc < 0.0) cc = 0.0
+
+c     test for fault condition -- may now be superfluous
 
       if ( any ( aa < 0.0 ) .or.
      1     any ( bb < 0.0 ) .or.
