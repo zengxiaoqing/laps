@@ -77,7 +77,7 @@ if($min_files>0){
     $clean_dirs{dprep} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/output'} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/varfiles'} = (0.25<$hist_time)?0.25:$hist_time;;
-    $clean_dirs{'../log'} = 30.0;
+    $clean_dirs{'../log'} = 10.0;
 
     if(open(OVERRIDES,"$DATAROOT/../static/purger.dat")){
       foreach(<OVERRIDES>){
