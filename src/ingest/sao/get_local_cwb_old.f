@@ -40,6 +40,7 @@ c	3. The 'priority' array is not used at this time.
 c
 c======================================================================
 c
+	include 'surface_obs.inc'
 c
 c.....  Input 
 c
@@ -86,20 +87,12 @@ c
 c
 c.....  Start.
 c
+	ibadflag = int(badflag)
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
 	jstatus = -1
-
-        call get_ibadflag(ibadflag,istatus)
-        if(istatus .ne. 1)return
-
-        call get_sfc_badflag(badflag,istatus)
-        if(istatus .ne. 1)return
-
-        call get_box_size(box_size,istatus)
-        if(istatus .ne. 1)return
-
+c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
 c.....  average number of gridpoints based on the grid spacing.
@@ -306,7 +299,7 @@ c
 c     Routine to read the CWB ASCII Mesonet files.
 c     
 c     Original:  P. Stamus, NOAA/FSL  08 Sep 1999
-c     Changes:   S. Albers                         (New format)
+c     Changes:
 c
 c======================================================================
 c
@@ -463,7 +456,7 @@ c     Routine to read station information for the CWB ASCII Mesonet
 c	data.
 c     
 c     Original:  P. Stamus, NOAA/FSL  08 Sep 1999
-c     Changes:   S. Albers                            (New Format)
+c     Changes:
 c
 c======================================================================
 c
@@ -493,7 +486,7 @@ c
         num = 0
 
 !       Skip header comments at the top of the file
-        do iread = 1,2
+        do iread = 1,6
             read(11,*,end=550,err=990)
         enddo
 c
@@ -502,19 +495,14 @@ c.....  stations we have, read until we hit the end of file.
 c     
  500    continue
 c
-        read(11,900,end=550,err=990)stn_name,stn_id
-     1                             ,lat_deg,lat_min,alat_sec
-     1                             ,lon_deg,lon_min,alon_sec
-     1                             ,ielev,aprior 
- 900    format(a5,1x,i5,14x,f7.4,2x,f8.4,2x,i4,1x,f9.3)
+        read(11,900,end=550,err=990) stn_id,stn_name,alat,alon,ielev,
+     &                               aprior 
+ 900    format(i5,1x,a5,2x,f7.4,2x,f8.4,2x,i4,1x,f9.3)
 c
 c.....  Move station info to arrays for sending to calling routine.
 c
-        alat = float(lat_deg) + float(lat_min)/60. + alat_sec/3600.
-        alon = float(lon_deg) + float(lon_min)/60. + alon_sec/3600.
-
 	num = num + 1
-	stn(num) = stn_name(3:5)//'  '
+	stn(num)(1:5) = stn_name(1:5)
 	lat(num) = alat
 	lon(num) = alon
 	elev(num) = float(ielev)
@@ -542,10 +530,3 @@ c
 	end
 
 
-        subroutine get_box_size(box_size,istatus)
-
-        istatus = 1
-        box_size = 1.1
-
-        return
-        end

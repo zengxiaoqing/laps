@@ -116,11 +116,13 @@ c
 c
 c.....  Start.
 c
-	ibadflag = int( badflag )
 c
 c.....	Set jstatus flag for the buoy data to bad until we find otherwise.
 c
 	jstatus = -1
+
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
@@ -189,8 +191,14 @@ c
 
             ix = 1
 
-            i4time_file_b = ( (i4time_before+3600) / 10800) * 10800
-            i4time_file_a = ( (i4time_after+3600) / 10800) * 10800
+!           Ob times contained in each file
+            i4_contains_early = 7200 
+            i4_contains_late = 3600
+
+            call get_filetime_range(i4time_before,i4time_after                
+     1                             ,i4_contains_early,i4_contains_late       
+     1                             ,10800                                     
+     1                             ,i4time_file_b,i4time_file_a)              
 
             recNum = maxobs
 
@@ -226,6 +234,15 @@ c
                 ix = ix + n_buoy_file
 
             enddo ! i4time_file
+
+!           Ob times contained in each file
+            i4_contains_early = 0 
+            i4_contains_late = 0
+
+            call get_filetime_range(i4time_before,i4time_after                
+     1                             ,i4_contains_early,i4_contains_late       
+     1                             ,10800                                     
+     1                             ,i4time_file_b,i4time_file_a)              
 
             do i4time_file = i4time_file_b, i4time_file_a, 10800
    	        call make_fnam_lp(i4time_file,a9time,istatus)
@@ -320,6 +337,8 @@ c
         box_jdir = float( nj + ibox_points)  !buffer on north
 c
 	do 125 i=1,n_maritime_all
+
+           call filter_string(stname(i))
 c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
@@ -330,28 +349,37 @@ c
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir
      1   .or. rj_loc.lt.box_low .or. rj_loc.gt.box_jdir) then
                if(i .le. max_write)then
-                   write(6,81,err=125)i,nint(ri_loc),nint(rj_loc)
- 81		   format(i6,' out of box ',2i12)
+                   write(6,81,err=125)i,wmoid_in(i),stname(i)
+     1                               ,nint(ri_loc),nint(rj_loc)
+ 81                format(i6,i7,1x,a8,' out of box ',2i12)
                endif
                go to 125
            endif
 c
 c.....  Elevation ok?
 c
-          if(elev(i).gt.5200. .or. elev(i).lt.-400.) go to 125
+           if(elev(i).gt.5200. .or. elev(i).lt.-400.) then
+               if(i .le. max_write)then
+                   write(6,82,err=125)i,wmoid_in(i),stname(i)
+     1                               ,elev(i)
+ 82                format(i6,i7,1x,a8,' bad elevation ',e15.4)
+               endif 
+               go to 125
+           endif
 c
 c.....  Check to see if its in the desired time window.
 c
-	  itime60 = nint(timeobs(i)) + i4time_offset
-	  if(itime60 .lt. i4time_before 
-     1  .or. itime60 .gt. i4time_after) then
+	   itime60 = nint(timeobs(i)) + i4time_offset
+	   if(itime60 .lt. i4time_before 
+     1   .or. itime60 .gt. i4time_after) then
                if(i .le. max_write)then
-                   write(6,91,err=125)i,itime60,i4time_before
-     1                                         ,i4time_after
- 91		   format(i6,' out of time',3i12)
+                   write(6,91,err=125)i,wmoid_in(i),stname(i)
+     1                               ,itime60,i4time_before
+     1                               ,i4time_after
+ 91		   format(i6,i7,1x,a8,' out of time',3i12)
                endif
                go to 125
-          endif
+           endif
 c
 c.....  Right time, right location...
 
@@ -636,3 +664,29 @@ c
 	 return
 c
 	 end
+
+         subroutine get_filetime_range(
+     1                i4time_ob_b,i4time_ob_a                   ! I
+     1               ,i4_contains_early,i4_contains_late        ! I
+     1               ,intvl                                     ! I
+     1               ,i4time_file_b,i4time_file_a)              ! O
+
+cdoc     Determine the range of needed filetimes, given observation time range
+cdoc     and other info about the files.
+
+         integer i4time_ob_b        ! Earliest ob we want
+         integer i4time_ob_a        ! Latest ob we want
+         integer i4_contains_early  ! Earliest contained ob relative to filetime
+         integer i4_contains_late   ! Latest contained ob relative to filetime
+         integer intvl              ! Regular time interval of files
+
+!        Range of file times we want to read
+         i4time_file_b = i4time_ob_b - i4_contains_late
+         i4time_file_a = i4time_ob_a + i4_contains_early
+
+!        Range of filenames at fixed intervals
+         i4time_file_b = ( (i4time_file_b + intvl - 1) / intvl)*intvl     
+         i4time_file_a = ( (i4time_file_a            ) / intvl)*intvl
+
+         return
+         end

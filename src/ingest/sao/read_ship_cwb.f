@@ -12,7 +12,7 @@
       character*(*)  filename
       character*25   presWeather(recNum)
       character*8    skyCover(maxSkyCover,recNum)
-      character*5    stationName(recNum)
+      character*4    stationName(recNum)
 
       integer  dataPlatformType(recNum), pressChangeChar(recNum)
       integer  wmoId(recNum)
@@ -73,7 +73,7 @@
          n= n+1
       enddo
 
-10    format ( a3, a5, 4x, 2f5.2, 2x, 5a2 )
+10    format ( a3, a4, 5x, 2f5.2, 2x, 5a2 )
 20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
 30    format ( f3.1, i1, x, i2, f3.1, i1, x, f4.1, 10x, f4.1, i1, 3x,

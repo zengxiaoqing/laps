@@ -650,7 +650,32 @@ c
 	print *,' '
 	print *,'  Done with blacklisting.'
  505	continue
-	print *,'  Writing LSO file.'
+
+!       Final QC check 
+        call get_ibadflag(ibadflag,istatus)
+        if(istatus .ne. 1)return
+
+!       Replace blank/UNK station names with wmoid if possible, else set blank
+        iblank = 0
+        do i = 1,n_obs_b
+            call s_len(stations(i),lensta)
+            if(lensta .eq. 0 .or. stations(i)(1:3) .eq. 'UNK')then
+                if(wmoid(i) .ne. ibadflag .and. wmoid(i) .ne. 0)then
+                    write(stations,511,err=512)wmoid(i)
+ 511		    format(i8)
+ 512		    continue
+                else
+                    stations(i) = 'UNK                 '
+                    iblank = iblank + 1
+                endif
+            endif
+        enddo
+
+        if(iblank .gt. 0)then
+            write(6,*)' Warning: number of UNK stanames = ',iblank       
+        endif
+
+	print *,'  Writing LSO file, # of obs (in box) = ',n_obs_b
 c
         call write_surface_obs(atime,outfile,n_obs_g,
      &    n_obs_b,wmoid,stations,provider,weather,reptype,atype,
