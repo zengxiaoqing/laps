@@ -110,8 +110,8 @@ c
 
         implicit none
 
-        include 'lapsparms.for'
-        include 'parmtrs.inc'
+c        include 'lapsparms.for'
+c        include 'parmtrs.inc'
 
 
 c  input parameters
@@ -120,11 +120,11 @@ c  input parameters
       real data(ii,jj,kk), laps_pressure (kk)
       real lat(ii, jj), lon(ii, jj)
 
-c  internal parameters dependent on lapsparms.inc
+c  dynamic dependent parameters                     
 
-      real  q_r(nz_l,100)
-      real diff(nz_l,100)
-      real weight (nx_l,ny_l,100)
+      real  q_r(kk,100)
+      real diff(kk,100)
+      real weight (ii,jj,100)
 
 c  normal internal parameters
 
