@@ -96,6 +96,15 @@ cdis
 
         logical l_eof
 
+        real r_missing_data
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1) then
+          write(6,*) 'Cannot access r_missing_data value'
+          write(6,*) 'Aborting read of pin file'
+          return
+        endif
+
 !       Open input intermediate data file
         lun_in = 31
         call open_lapsprd_file_read(lun_in,i4time,ext_in,istatus)
@@ -187,10 +196,17 @@ cdis
                         else ! do this instead
 !                           Assume ACARS elev is pressure altitude
                             if(abs(elev) .lt. 90000.)then
-                                pres_mb = ztopsa(elev)
-                                pres_pa = pres_mb * 100.
-                                rk = zcoord_of_pressure(pres_pa)
+                              pres_mb = ztopsa(elev)
+                              pres_pa = pres_mb * 100.
+                              rk = zcoord_of_pressure(pres_pa)
+
+                              if (rk .eq. r_missing_data) then
+                                write(6,*)' WARNING: rejecting ACARS ',
+     1                          'apparently above top of domain ',elev
+                                istatus_rk = 0
+                              else
                                 istatus_rk = 1
+                              endif
                             else
                                 write(6,*)' WARNING: rejecting ACARS ',       
      1                          'apparently above top of domain ',elev
@@ -208,7 +224,7 @@ cdis
 
                     endif
 
-                    k_grid = nint(rk)
+                    if (istatus_rk .eq. 1) k_grid = nint(rk)
 
                     if(istatus_rk .eq. 1
      1             .and. k_grid .le. nk
@@ -284,6 +300,11 @@ cdis
                         obs_point(nobs_point)%valuef(2) = v_temp-v_diff       
                         obs_point(nobs_point)%weight = weight_ob
                         obs_point(nobs_point)%type   = ext_in
+
+                    else
+
+c                     Out of vertical bounds
+                      iwrite = 0
 
                     endif ! In vertical bounds
 
