@@ -23,11 +23,10 @@
                2.2.2.1 ..............  Modifying Compiler Flags     
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
-               2.2.4.1 ............... Creating single or multiple data domains
          2.2.5 ..................  Untarring the geography databases
-         2.2.6 ..................  Setting Runtime Parameters
-         2.2.7 ..................  Running the Localization
-         2.2.8 ..................  Localizing with window_laps_rt.pl
+         2.2.6 ..................  Localizing for single or multiple data domains
+               2.2.6.1 ..............  Localization Method 1
+               2.2.6.2 ..............  Localization Method 2
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Model Background (lga/lgb)
          2.3.2 ..................  Radar ingest
@@ -447,21 +446,6 @@
      In particular, note that a 'make distclean' is recommended before running
      'configure' a second time so that things will run smoothly. 
 
-            --- 2.2.4.1 Creating single or multiple data domains ---
-
-     For each domain you wish to create, run... 
-
-     prompt> make DATAROOT=$LAPS_DATA_ROOT mkdatadirs
-
-     where the path name $LAPS_DATA_ROOT must be named differently for each 
-     data domain if there is more than one. Recall that each domain can be set
-     up in a separate subdirectory under '/data_disk/laps'. Next, follow the 
-     setup and localization steps below.
-
-     If a DATAROOT is not supplied, the dataroot tree location will default
-     to where the LAPS binaries are installed via configure. Thus, the
-     default value of $LAPS_DATA_ROOT is '$LAPSINSTALLROOT/data'.
-
      
             ----   2.2.5  Untarring the geography databases  ---
 
@@ -480,20 +464,64 @@
      The land fraction database is required for the 'land_10m' subdirectory
      and is included in the 'laps_terrain.tar.gz' file.
 
-
-                --- 2.2.6   Setting Runtime Parameters ---
+         --- 2.2.6 Localizing for single or multiple data domains ---
 
      Runtime parameter changes may be needed to tailor LAPS for your
      domain(s); this includes ingest and geography data path names, 
      grid dimensions, grid location, and potentially other aspects of the 
      data processing. The parameter files are 'data/static/nest7grid.parms',
-     'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
-     and/or modified within each $LAPS_DATA_ROOT directory tree prior 
-     to running the localization. More details on 'nest7grid.parms' and 
-     other parameter files are discussed in subsequent parts of Section 2. 
+     'data/static/*.nl', and 'data/static/*/*.parms'. 
+
+     The localization involves several operations.  The parameter files are 
+     merged/updated with the repository versions if needed. The dimensions
+     in the 'cdl' files are also adjusted. Then several executable programs are
+     run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
+
+     Below are two mainly equivalent procedures for localizing LAPS to set
+     up one or more domains. Only one of these are necessary to follow.
+
+                        --- 2.2.6.1 Localization Method 1 ---
+
+     For each domain you wish to create, run... 
+
+     prompt> cd $LAPSINSTALLROOT/etc
+     prompt> perl makedatadirs.pl $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT
+
+     where the path name $LAPS_DATA_ROOT must be named differently for each 
+     data domain if there is more than one. Recall that each domain can be set
+     up in a separate subdirectory under '/data_disk/laps'. Next, follow the 
+     setup and localization steps below.
+
+     The order of the command line arguments is important, but only the
+     first one is required. If for example a $LAPS_DATA_ROOT is not supplied, 
+     the dataroot tree location will default to where the LAPS binaries are 
+     installed via configure. Thus, the default value of $LAPS_DATA_ROOT is 
+     '$LAPSINSTALLROOT/data'.
+
+     The runtime parameters should be emplaced and/or modified within 
+     each $LAPS_DATA_ROOT directory tree prior to running the localization. 
+     More details on 'nest7grid.parms' and other parameter files are 
+     discussed in subsequent parts of Section 2. 
 
      In most cases, you can simply edit the parameter files that are already
      there to tailor LAPS for your domain.
+
+     Finally, you can create the static data files and look up tables specific 
+     to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
+     other runtime parameter files. Shown below is an example of running the 
+     localization for a particular laps domain. This should be repeated 
+     (with a unique dataroot) for each domain if there is more than one. 
+
+     prompt> cd $LAPSINSTALLROOT/etc
+     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT
+
+                    --- 2.2.6.2 Localization Method 2 ---
+
+     The second method is especially useful if you are using a separated
+     data tree and/or multiple domains, or if you are performing frequent
+     software updates.
+
+                         SETTING RUNTIME PARAMETERS
 
      If you are working in a separated data directory (e.g. using the
      second tree shown above), you have the option of setting up those runtime
@@ -518,28 +546,11 @@
      can be done manually or via the 'window_laps_rt.pl' script (described 
      later).
 
-
-                ----   2.2.7  Running the Localization ---
-
-     Finally, you can create the static data files and look up tables specific 
-     to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
-     other runtime parameter files. Shown below is an example of running the 
-     localization for a particular laps domain. This should be repeated 
-     (with a unique dataroot) for each domain if there is more than one. 
-
-     prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT
-
-     The localization involves several operations.  The parameter files are 
-     merged/updated with the repository versions if needed. The dimensions
-     in the 'cdl' files are also adjusted. Then several executable programs are
-     run including 'gridgen_model.exe' and 'gensfclut.exe' as per section 3.1.
-
-                ----   2.2.8  Localizing with window_laps_rt.pl ---
+                        LOCALIZING with 'window_laps_rt.pl'
 
      Generating new localizations, reconfiguring existing localizations, and 
      reconfiguring existing localizations without removing lapsprd or log 
-     information is made easier with the perl script etc/window_laps_rt.pl 
+     information is made easier with the perl script 'etc/window_laps_rt.pl' 
      ("window" hereafter). The window script makes use of namelist templates 
      that specifically define a users localizations.  The script uses 
      environment variables $LAPS_SRC_ROOT, $LAPSINSTALLROOT, and $LAPS_DATA_ROOT, 
@@ -554,7 +565,7 @@
      namelists by laps_localization.pl. Recall that $LAPSINSTALLROOT contains 
      bin/ and etc/ which $LAPS_SRC_ROOT constains the untarred namelists.  If 
      $LAPS_SRC_ROOT does not exist then a data/ subdirectory containing static/
-     and cdl/ must exist for use by laps_localization.pl (ie., $LAPS_SRC_ROOT =
+     and cdl/ must exist for use by 'laps_localization.pl' (ie., $LAPS_SRC_ROOT =
      $LAPSINSTALLROOT). Even though it is possible to have $LAPS_SRC_ROOT/data = 
      $LAPSINSTALLROOT/data = $LAPS_DATA_ROOT, this is not recommended since it 
      does not allow multiple localizations. Templates always ensure that 
