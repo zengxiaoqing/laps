@@ -21,16 +21,16 @@
 
       integer NUM_REF_GATES
       integer NUM_VEL_GATES
-      integer N_REF_TILT
-      integer N_VEL_TILT
-      integer N_RAY_TILT
+      integer MAX_REF_TILT
+      integer MAX_VEL_TILT
+      integer MAX_RAY_TILT
       integer NSIZE
 
       parameter (NUM_REF_GATES = 460)
       parameter (NUM_VEL_GATES = 920)
-      parameter (N_REF_TILT = 174800)
-      parameter (N_VEL_TILT = 349600)
-      parameter (N_RAY_TILT = 380)
+      parameter (MAX_RAY_TILT = 380)
+      parameter (MAX_REF_TILT = NUM_REF_GATES * MAX_RAY_TILT)
+      parameter (MAX_VEL_TILT = NUM_VEL_GATES * MAX_RAY_TILT)
       parameter (NSIZE = 920)
 
 !     Variables used only in remap_process
@@ -40,16 +40,16 @@
 
 !     Variables used for data access and in fill_common 
    
-      real b_ref(N_REF_TILT)
-      real b_vel(N_VEL_TILT)
+      logical*1 b_ref(MAX_REF_TILT)
+      logical*1 b_vel(MAX_VEL_TILT)
+      logical*1 b_missing_data, i4_to_byte
 
-      real v_nyquist_ray_a(N_RAY_TILT)
-      real azim(N_RAY_TILT)
+      real v_nyquist_ray_a(MAX_RAY_TILT)
+      real azim(MAX_RAY_TILT)
       real eleva 
 
       integer ref_index, vel_index, io_stat
       integer n_rays, i_scan, i_tilt, n_ref_gates, n_vel_gates
-      real b_missing_data
 
 !     Radar Location variables
 
@@ -74,6 +74,7 @@
       integer compr_on, xmit_on, write_and_exit
       integer i_mode, i
       integer i_vcp
+      integer ref_ptr, vel_ptr
 
       integer VERBOSE
 
@@ -85,7 +86,10 @@
       integer get_fixed_angle
       integer get_scan
       integer get_tilt
-
+      integer get_num_rays
+      integer get_azi
+      integer get_nyquist
+      integer get_data_field
 
 !     Beginning of Executable Code 
 !     Some initializations  
@@ -93,7 +97,7 @@
 
       n_vel_gates = NUM_VEL_GATES
       n_ref_gates = NUM_REF_GATES
-      b_missing_data = MISSING
+      b_missing_data = i4_to_byte(255)
 
 !     strtm_ptr = string_time
 !     fnm_ptr = full_fname
@@ -119,8 +123,11 @@
       endif
 
 !     call Archive II initialization routine  
+      i_tilt_proc = 1
 
-      call radar_init() 
+      call radar_init(i_tilt_proc,i_last_scan)
+
+      i_first_scan = 1
 
       i_alt=389. 
       i_alt=get_altitude() 
@@ -148,9 +155,6 @@
 
       initial_ray  = 1
       n_rays=0 
-      i_first_scan = 1
-      i_tilt_proc = 0
-      i_last_scan = 0
       write_and_exit = 0
       read_next = 1
       alls_well = 1
@@ -159,10 +163,12 @@
 
       do while(alls_well .eq. 1) 
 
+
 !       Begin loop to fill buffer arrays with data from the circular buffer.
 !       Call remap routines and reset pointers at the end of a volume scan  
 
-        if (read_next .eq. 1) then
+!       if (read_next .eq. 1) then
+        if (.false.) then
           if(VERBOSE .eq. 1)then
             write(6,*)'  Calling read_radial '
           endif
@@ -189,9 +195,10 @@
             i_angle = get_fixed_angle() 
             i_scan = get_scan() 
             i_tilt = get_tilt() 
+            num_rays = get_num_rays() 
 
             if(VERBOSE .eq. 1)then
-              write(6,*)'  Good status received'
+!             write(6,*)'  Good status received'
               write(6,*)'  i_angle, i_tilt = ', i_angle, i_tilt
             endif
 
@@ -214,20 +221,26 @@
               write(6,*)' Time is ',string_time
               initial_ray = 0
 
+              ref_ptr = 1
+              vel_ptr = 1
+
             endif ! initial_ray = 1
 
-            if( i_tilt .eq. past_tilt .and. i_scan .eq. past_scan .and.
-     1          n_rays .lt. N_RAY_TILT ) then
+!           Test for end of tilt
+            if( i_tilt .eq. past_tilt .and. i_scan .eq. past_scan 
+     1                                .and. n_rays .lt. MAX_RAY_TILT 
+     1                                .and. n_rays .lt. num_rays) then
 
+!             Not end of tilt
               n_rays = n_rays + 1
-              azim(n_rays-1) = 0.01 * get_azi()
-              v_nyquist_ray_a(n_rays-1) = 0.01 * get_nyquist() 
+              azim(n_rays) = 0.01 * get_azi(n_rays)
+              v_nyquist_ray_a(n_rays) = 0.01 * get_nyquist() 
 
-!             if(VERBOSE .eq. 1)then
-!               write(6,*)'    INFO FOR n_rays = %i \n",n_rays  
-!               write(6,*)'    ref_ptr = %i    vel_ptr = %i\n",
-!                              ref_ptr,vel_ptr) 
-!             endif
+              if(VERBOSE .eq. 1)then
+                write(6,*)'    n_rays = ',n_rays  
+     1                   ,'    ref_ptr / vel_ptr = ' 
+     1                   ,     ref_ptr,vel_ptr  
+              endif
 
 !             if ( (n_rays-1) % 60 .eq. 0)
 !               write(6,*)'  eleva = %f  azim = %f  Nyqst = %f\n",
@@ -244,11 +257,16 @@
 !                     ng_vel,gsp_vel) 
               endif
 
-              io_stat = get_data_field(ref_index, ref_ptr, n_ref_gates) 
-              io_stat = get_data_field(vel_index, vel_ptr, n_vel_gates) 
+              io_stat = get_data_field(ref_index, b_ref(ref_ptr)
+     1                                ,ref_ptr  , NUM_REF_GATES) 
+              io_stat = get_data_field(vel_index, b_vel(vel_ptr)
+     1                                ,vel_ptr  , NUM_VEL_GATES) 
 
-!             ref_ptr += NUM_REF_GATES 
-!             vel_ptr += NUM_VEL_GATES 
+!             parameter (MAX_REF_TILT = NUM_REF_GATES * MAX_RAY_TILT)
+!             parameter (MAX_VEL_TILT = NUM_VEL_GATES * MAX_RAY_TILT)
+
+              ref_ptr = ref_ptr + NUM_REF_GATES 
+              vel_ptr = vel_ptr + NUM_VEL_GATES 
 
             else ! end of tilt
 
@@ -258,7 +276,7 @@
 ! call the FORTRAN routine to fill up the common data area   
 
               write(6,*)'  Calling fill_common, i_angle, past_angle ',
-     1                                          i_angle,past_angle
+     1                                          i_angle, past_angle
 
               write(6,*)'  n_rays, past_tilt, b_missing_data ',
      1                     n_rays, past_tilt, b_missing_data
@@ -274,8 +292,9 @@
      1               azim,v_nyquist_ray_a,eleva,b_missing_data) 
 
 ! call the FORTRAN remapper module   
-
-              i_tilt_proc = i_tilt_proc + 1
+!             Read next tilt
+              i_tilt_proc_new = i_tilt_proc + 1
+              call radar_init(i_tilt_proc_new,i_last_scan)
 
               write(6,*)'  Calling remap_process past_tilt '
      1                                         , past_tilt  
@@ -294,11 +313,18 @@
      1            i4time_vol,full_fname,len_fname,
      1            i_num_finished_products,i_status) 
 
-              i_last_scan = 0
+
+              if(i_last_scan .eq. 1)then
+                  write(6,*)' Volume completed, exit program'
+                  call exit(0)
+              endif
+
+              i_tilt_proc = i_tilt_proc_new
               i_first_scan = 0
 
               if( i_angle .lt. past_angle .or. 
-     1            i_scan  .ne. past_scan ) then
+     1            i_scan  .ne. past_scan ) then 
+                write(6,*)' Reset to beginning of volume'
                 i_first_scan = 1
                 i_tilt_proc = 0  
                 past_angle= i_angle 
@@ -308,75 +334,9 @@
               initial_ray = 1
               read_next = 0
 
-            endif
-
-!         For bad status, increment bad status counter and try again.  
-
-          elseif( knt_bad_stat .lt. MAX_BAD_STAT .and. 
-     1            write_and_exit .eq. 0 ) then
-
-            if(VERBOSE .eq. 1)then
-              write(6,*)'  Bad status received for data'
-            endif
-
-            knt_bad_stat = knt_bad_stat + 1
-
-!           Once 1000 consecutive bad stati have been received, assume end
-!           of data and dump what might be in the buffer.  
-
-          else
-            write(6,*)knt_bad_stat, 'bad read status reports received'
-                   
-            knt_bad_stat = 0 
-
-            if (n_rays .gt. 0) then
-
-              write(6,*)' Transferring available radials ', n_rays  
-
-              if( i_angle .lt. past_angle )i_last_scan = 1
-
-!             call the FORTRAN routine to fill up the common data area   
-              call fill_common(
-     1             b_ref,b_vel,n_rays,past_tilt,
-     1             n_ref_gates,n_vel_gates,
-     1             azim,v_nyquist_ray_a,eleva,b_missing_data) 
-
-!             call the FORTRAN remapper module   
-
-              i_tilt_proc = i_tilt_proc + 1
-
-              write(6,*)' Calling remap_process past_tilt = ', past_tilt
-              write(6,*)' Calling remap_process i_tilt_proc = '
-     1                                                  , i_tilt_proc  
-              write(6,*)' i_last, i_first',i_last_scan,i_first_scan
-              write(6,*)' i4time_vol, i_num, i_status',
-     1              i4time_vol,i_num_finished_products,i_status  
-
-              call remap_process(
-     1            i_tilt_proc,i_last_scan,i_first_scan,
-     :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,
-     :            grid_ref,ngrids_ref,n_pot_ref,
-     1            NX_L,NY_L,NZ_L,
-     1            i4time_vol,full_fname,len_fname,
-     1            i_num_finished_products,i_status) 
-
-              if(write_and_exit .eq. 1) call exit(0) 
-
-              i_last_scan = 0
-              i_first_scan = 0
-
-              if( i_angle .lt. past_angle ) then
-                i_first_scan = 1
-                i_tilt_proc = 0 
-                past_angle = i_angle 
-              endif
-
-              n_rays = 0 
-              initial_ray = 1
-
-            endif ! close n_rays .gt. 0 block  
-          endif   ! close velocity status block   
+            endif ! test for end of tilt 
+          endif   ! close velocity status block 
         endif     ! close read_next block
-      enddo       ! close infinite while loop  
+      enddo       ! close infinite while loop    (increment tilt)
 
       end

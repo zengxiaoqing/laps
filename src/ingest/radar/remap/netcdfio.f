@@ -1,6 +1,8 @@
  
-       subroutine radar_init()       ! Open Polar NetCDF file for the proper time
+       subroutine radar_init(i_tilt_proc,i_last_scan)       
+!                                 I           O     
  
+! Open/Read Polar NetCDF file for the proper time
        integer max_files
        parameter(max_files=1000)
 
@@ -8,60 +10,92 @@
      1              ,c_fnames(max_files)
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
+       character*2 c2_tilt
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
 
- !     Get path to file
-       call get_remap_parms(path_to_wideband,istatus)
-       call s_len(path_to_wideband,len_path)
- 
- !     Get i4time of 01 elevation file nearest to 15 minutes ago
-       i4time_now = i4time_now_gg() 
-       c_filespec = path_to_wideband//'/*_elev01'
+       i_last_scan = 0
 
-       call get_file_times(c_filespec,max_files,c_fnames
-     1                    ,i4times,i_nbr_files_out,istatus)
-       if(istatus .ne. 1)then
-           stop
+       if(i_tilt_proc .lt. 10)then
+           write(c2_tilt,101)i_tilt_proc
+ 101       format('0',i1)
+       else
+           write(c2_tilt,102)i_tilt_proc
+ 102       format(i2)
        endif
 
-       call get_filespec('v01',1,c_filespec,istatus)
-       call get_file_times(c_filespec,max_files,c_fnames
+       if(i_tilt_proc .eq. 1)then
+
+!          Get path to file
+           call get_remap_parms(path_to_wideband,istatus)
+           call s_len(path_to_wideband,len_path)
+ 
+!          Get i4time of 01 elevation file nearest to 15 minutes ago
+           i4time_now = i4time_now_gg() 
+           c_filespec = path_to_wideband//'/*_elev'//c2_tilt
+
+           call get_file_times(c_filespec,max_files,c_fnames
+     1                        ,i4times,i_nbr_files_out,istatus)
+           if(istatus .ne. 1)then
+               stop
+           endif
+
+           call get_filespec('v01',1,c_filespec,istatus)
+           call get_file_times(c_filespec,max_files,c_fnames
      1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
 
-       if(i_nbr_files_out .ge. 2)then
-           i4time_process = i4times(i_nbr_files_out-1)
-           call make_fnam_lp(i4time_process,a9_time,istatus)
-           do i = 1,i_nbr_lapsprd_files
-               if(i4time_process .eq. i4times(i))then
-                   write(6,*)' Product file already exists ',a9time
-               endif
-           enddo ! i
-       else
-           write(6,*)' # of files = ',i_nbr_files_out
+           if(i_nbr_files_out .ge. 2)then
+               i4time_process = i4times(i_nbr_files_out-1)
+               call make_fnam_lp(i4time_process,a9_time,istatus)
+               do i = 1,i_nbr_lapsprd_files
+                   if(i4time_process .eq. i4times(i))then
+                       write(6,*)' Product file already exists ',a9time      
+                   endif
+               enddo ! i
+           else
+               write(6,*)' # of files = ',i_nbr_files_out
+           endif
+
        endif
 
 !      Pull in housekeeping data from 1st tilt
-       filename = path_to_wideband(1:len_path)//'/'//a9_time//'_elev01'
-       write(6,*)' We will read this file for housekeeping: '
-       write(6,*)filename
+
+       filename = path_to_wideband(1:len_path)//'/'//a9_time//'_elev'
+     1            //c2_tilt
+       write(6,*)' radar_init: we will read this file... '
+       write(6,*)filename(1:len_path+20)
 
        call get_tilt_netcdf_data(filename
      1                               ,siteLat                        
      1                               ,siteLon                        
      1                               ,siteAlt                        
      1                               ,elevationAngle
+     1                               ,numRadials
      1                               ,elevationNumber
      1                               ,VCP
+     1                               ,r_nyquist
+     1                               ,radialAzim
+     1                               ,Z
+     1                               ,V
      1                               ,istatus)
+
+       if(istatus .eq. 1)then
+           if(i_tilt_proc .eq. 1)then
+               write(6,201)elevationNumber, i_tilt_proc
+ 201           format(' elevationNumber, i_tilt_proc',2i4)
+           else
+               write(6,202)elevationNumber, i_tilt_proc
+ 202           format(' elevationNumber, i_tilt_proc',2i4
+     1               ,' (upcoming tilt)')
+           endif
+
+       else
+           write(6,*)' Could not read tilt # ',i_tilt_proc
+           i_last_scan = 1
+
+       endif
+
+       write(6,*)
       
        return
        end
@@ -98,15 +132,7 @@
        function get_altitude()
        integer get_altitude          ! Site altitude (meters)
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_altitude = nint(siteAlt)
 
@@ -117,15 +143,7 @@
        function get_latitude()
        integer get_latitude          ! Site latitude (degrees * 100000)
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_latitude = nint(siteLat*100000)
        return
@@ -135,16 +153,8 @@
        function get_longitude()
        integer get_longitude         ! Site longitude (degrees * 100000)
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
- 
+       include 'netcdfio_radar_common.inc'
+
        get_longitude = nint(siteLon*100000)
        return
        end
@@ -178,15 +188,7 @@
        function get_fixed_angle()
        integer get_fixed_angle     ! Beam tilt angle (degrees * 100)
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_fixed_angle = nint(elevationAngle * 100.)
        return
@@ -196,15 +198,7 @@
        function get_scan()
        integer get_scan            ! Scan #
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_scan = elevationNumber
        return
@@ -214,35 +208,28 @@
        function get_tilt()
        integer get_tilt            ! Tilt #
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_tilt = elevationNumber
        return
        end
  
  
-       function get_volume_time()
-       integer get_volume_time
+       function get_num_rays()
+       integer get_num_rays
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
-       get_volume_time = i4time_process
+       get_num_rays = numRadials
+       return
+       end
+ 
+ 
+       subroutine get_volume_time(i4time_process_ret)
+
+       include 'netcdfio_radar_common.inc'
+ 
+       i4time_process_ret = i4time_process
        return
        end
  
@@ -250,32 +237,29 @@
        function get_vcp()
        integer get_vcp
 
-       integer*2 VCP, elevationNumber
-       common/radar_housekeeping/
-     1                                siteLat                        
-     1                               ,siteLon                        
-     1                               ,siteAlt                        
-     1                               ,elevationAngle
-     1                               ,elevationNumber
-     1                               ,VCP
-     1                               ,i4time_process
+       include 'netcdfio_radar_common.inc'
  
        get_vcp = VCP
        return
        end
  
  
-       function get_azi()
+       function get_azi(iray) ! azimuth * 100.
+       integer get_azi
+
+       include 'netcdfio_radar_common.inc'
  
-       get_azi = 0
+       get_azi = nint(radialAzim(iray)*100.)
        return
        end
  
  
        function get_nyquist()
        integer get_nyquist        ! Nyquist velocity of the radial (M/S*100)
+
+       include 'netcdfio_radar_common.inc'
  
-       get_nyquist = 0
+       get_nyquist = nint(r_nyquist*100.)
        return
        end
  
@@ -295,9 +279,26 @@
        end
  
  
-       function get_data_field(index, n_gates)
+       function get_data_field(index, data, n_ptr, n_gates)
+       integer get_data_field
+
+       include 'netcdfio_radar_common.inc'
  
-       get_data_field = 0
+       logical*1 data(n_gates)
+
+       if(index .eq. 1)then ! reflectivity
+           do i = 1,n_gates
+               data(i) = Z(n_ptr + (i-1))
+           enddo
+
+       elseif(index .eq. 2)then ! velocity
+           do i = 1,n_gates
+               data(i) = V(n_ptr + (i-1))
+           enddo
+
+       endif
+
+       get_data_field = 1
        return
        end
  

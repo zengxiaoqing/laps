@@ -4,15 +4,20 @@
      1                               ,siteLon                        
      1                               ,siteAlt                        
      1                               ,elevationAngle
+     1                               ,numRadials 
      1                               ,elevationNumber
      1                               ,VCP
+     1                               ,nyquist
+     1                               ,radialAzim
+     1                               ,Z  
+     1                               ,V
      1                               ,istatus)
 
 !.............................................................................
 
 C     FORTRAN TEMPLATE FOR FILE= test.nc                                 
       PARAMETER (NVARS=29) !NUMBER OF VARIABLES
-      PARAMETER (NREC=   367)   !CHANGE THIS TO GENERALIZE
+      PARAMETER (NREC=   380)   !CHANGE THIS TO GENERALIZE
 C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 29
       INTEGER*4 RCODE
       INTEGER*4 RECDIM
