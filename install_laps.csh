@@ -1,34 +1,34 @@
 #!/bin/csh -x
 
 #This script sets up the pre-compiled tar file and localizes it at CWB
-#Optional Command line argument "p" does the configure/install for the pre-compiled tar file
-#Optional Command line argument "w" does the localization for the particular window
+#Usage: install_laps.csh $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT $TEMPLATE `which perl` [w/p]
 
 setenv LAPS_SRC_ROOT      $1
 setenv LAPSINSTALLROOT    $2
 setenv LAPS_DATA_ROOT     $3
+setenv TEMPLATEDIR        $4
+setenv NEWPERL            $5
 
-set arg1 = np
-set arg2 = nw
+#Last argument is optional
+#    Default is to do entire install (if omitted)
+#    p does binary (configure/install) setup only
+#    w does window localization only
 
-foreach i ($argv)
-    echo $i
-    if ($i == p) then
-        set arg1 = p
-    endif
+#if ($i == p) then
+#    set arg1 = p
+#endif
 
-    if ($i == w) then
-        set arg2 = w
-    endif
-end
+#if ($i == w) then
+#    set arg2 = w
+#endif
 
 #Primary LAPS environment variables
-setenv TEMPLATEDIR        /pj/fsl/albers/src/template
+#setenv TEMPLATEDIR        /pj/fsl/albers/src/template
 #setenv NEWPERL            /pj/fsl/albers/bin/perl
-setenv NEWPERL            `which perl`
+#setenv NEWPERL            `which perl`
 
 #Configure/install a precompiled tar file
-if ($arg1 == p) then
+if (! -e $LAPS_SRC_ROOT/Makefile && $6 != w) then
 
 #   This section does what "configure" would normally do on a precompiled tar file,
 #   (i.e. a substitution for section 2.2.2 in the README)
@@ -113,7 +113,7 @@ endif
 #                                                      and there is no $LAPS_SRC_ROOT/data/cdl/*.cdl
 #                                                      (e.g. precompiled tar file setup at CWB with split tree)
 #See the README section 2.2.6.2
-if ($arg2 == w) then
+if ($6 != p) then
     echo "Starting the window setup step"
 
     if ($LAPS_SRC_ROOT/data != $LAPS_DATA_ROOT) then
