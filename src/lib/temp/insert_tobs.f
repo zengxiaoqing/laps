@@ -333,7 +333,7 @@ cdis
      1                       ,temp_obs,max_obs,n_obs                ! I/O
      1                       ,istatus)                              ! O
 
-        n_obs = n_obs_before   ! Temporary for testing
+!       n_obs = n_obs_before   ! Temporary for testing
 
         write(6,*)' # of obs in data structure (tsnds + acars) = '
      1            ,n_obs
