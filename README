@@ -565,15 +565,21 @@
 
                         MAP PROJECTION LIMITATIONS
 
-     LAPS has only been partially run-time tested for projections other than 
-   Polar stereographic. Mercator looks fairly good so far in testing, lambert
-   has some known bugs that need attention.
+     Run-time testing for the various projections is in progress; initial 
+   results are promising. Please let us know of any problems you encounter. 
+
+     The lambert projection may have problems in the southern hemisphere.
+
+     'Gridgen_model' has scaling problems for the lambert map projection. This
+   however should not impact the AFGWC port as they are presumably not using
+   this module.
 
      'Lapsplot' works only for the polar stereographic projection at this time.
 
      The polar stereographic projection has a pole constrained to be at the
    earth's north geographic pole. Setting the pole to the South Pole or
-   an arbitrary lat/lon (local stereographic) are future enhancements.
+   an arbitrary lat/lon (local stereographic) are anticipated future 
+   enhancements.
 
 
                        RESOLUTION OF DOMAIN: 
