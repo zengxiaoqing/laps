@@ -26,65 +26,66 @@ unless($opt_o==1){
     select(STDOUT); $| = 1;
 }
 
-print "Running systime.exe\n";
+print  `date -u +%H:%M:%S`." Running systime.exe\n";
 system("$LAPSROOT/bin/systime.exe");
 
-print "\nRunning c_time.exe\n";
+print `date -u +%H:%M:%S`." Running c_time.exe\n";
 system("$LAPSROOT/bin/c_time.exe > $LAPS_DATA_ROOT/time/c_time.dat");
 
-print "\nRunning purger\n";
+print `date -u +%H:%M:%S`." Running purger\n";
 system("@PERL@ $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
 
-print "\nRunning obs_driver\n";
+print `date -u +%H:%M:%S`." Running obs_driver\n";
 system("$LAPSROOT/bin/obs_driver.x 1> $LAPS_DATA_ROOT/log/obs_driver.log.$hhmm 2>&1");
 
-print "\nRunning rass ingest\n";
+print `date -u +%H:%M:%S`." Running rass ingest\n";
 system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_DATA_ROOT/log/rass.log.$hhmm 2>&1");
 
-print "\nRunning BLP rass ingest\n";
+print `date -u +%H:%M:%S`." Running BLP rass ingest\n";
 system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_DATA_ROOT/log/rass_blp.log.$hhmm 2>&1");
 
-print "\nRunning ingest_pro\n";
+print `date -u +%H:%M:%S`." Running ingest_pro\n";
 system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_DATA_ROOT/log/ingest_pro.log.$hhmm 2>&1");
 
-print "\nRunning ingest_blppro\n";
+print `date -u +%H:%M:%S`." Running ingest_blppro\n";
 system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_DATA_ROOT/log/ingest_blppro.log.$hhmm 2>&1");
 
-print "\nRunning raob ingest\n";
+print `date -u +%H:%M:%S`." Running raob ingest\n";
 system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_DATA_ROOT/log/raob.log.$hhmm 2>&1");
 
-print "\nRunning laps_sfc\n";
+print `date -u +%H:%M:%S`." Running laps_sfc\n";
 system("$LAPSROOT/bin/laps_sfc.x 1> $LAPS_DATA_ROOT/log/laps_sfc.log.$hhmm 2>&1");
 
-print "\nRunning temp.exe\n";
+print `date -u +%H:%M:%S`." Running temp.exe\n";
 system("$LAPSROOT/bin/temp.exe 1> $LAPS_DATA_ROOT/log/temp.log.$hhmm 2>&1");
 
-print "\nRunning ingest_pireps\n";
+print `date -u +%H:%M:%S`." Running ingest_pireps\n";
 system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_DATA_ROOT/log/ingest_pireps.log.$hhmm 2>&1");
 
-print "\nRunning ingest_acars\n";
+print `date -u +%H:%M:%S`." Running ingest_acars\n";
 system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_DATA_ROOT/log/ingest_acars.log.$hhmm 2>&1");
 
-print "\nRunning wind\n";
+print `date -u +%H:%M:%S`." Running wind\n";
 system("$LAPSROOT/bin/wind.exe 1> $LAPS_DATA_ROOT/log/wind.log.$hhmm 2>&1");
 
-print "\nRunning cloud\n";
+print `date -u +%H:%M:%S`." Running cloud\n";
 system("$LAPSROOT/bin/cloud.exe 1> $LAPS_DATA_ROOT/log/cloud.log.$hhmm 2>&1");
 
-print "\nRunning lq3driver\n";
+print `date -u +%H:%M:%S`." Running lq3driver\n";
 system("$LAPSROOT/bin/lq3driver.x 1> $LAPS_DATA_ROOT/log/lq3.log.$hhmm 2>&1");
 
-print "\nRunning deriv\n";
+print `date -u +%H:%M:%S`." Running deriv\n";
 system("$LAPSROOT/bin/deriv.exe 1> $LAPS_DATA_ROOT/log/deriv.log.$hhmm 2>&1");
 
-print "\nRunning accum\n";
+print `date -u +%H:%M:%S`." Running accum\n";
 system("$LAPSROOT/bin/accum.exe 1> $LAPS_DATA_ROOT/log/accum.log.$hhmm 2>&1");
 
-print "\nRunning lsm5\n";
+print `date -u +%H:%M:%S`." Running lsm5\n";
 system("$LAPSROOT/bin/lsm5.exe 1> $LAPS_DATA_ROOT/log/lsm5.log.$hhmm 2>&1");
 
-print "$0 completed at ".`date`;
-
+open(LOG,">>$LAPS_DATA_ROOT/log/runtime.log");
+print LOG "$0 completed at ".`date -u +%H:%M:%S`;
+close(LOG);
 
 
 
