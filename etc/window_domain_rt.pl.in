@@ -78,12 +78,13 @@ $LAPSINSTALLROOT = $opt_i if( $opt_i);
 $LAPS_DATA_ROOT = $opt_d if( $opt_d);
 
 my $logname = "log";
-
+my $logfile;
 #This should take care of laps and wrfsi. Use LAPS type variables thereafter.
 if($domain_type eq "laps"){
    $LAPS_SRC_ROOT = $ENV{LAPS_SRC_ROOT} if( $ENV{LAPS_SRC_ROOT} && !defined $LAPS_SRC_ROOT);
    $LAPSINSTALLROOT = $ENV{LAPSINSTALLROOT} if( $ENV{LAPSINSTALLROOT} && !defined $LAPSINSTALLROOT);
    $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT} if( $ENV{LAPS_DATA_ROOT} && !defined $LAPS_DATA_ROOT);
+   $logfile = "localize_domain.log";
 }elsif($domain_type eq "wrfsi"){
    $LAPS_SRC_ROOT = $ENV{SOURCE_ROOT} if( $ENV{SOURCE_ROOT} && !defined $LAPS_SRC_ROOT);
    $LAPSINSTALLROOT = $ENV{INSTALLROOT} if( $ENV{INSTALLROOT} && !defined $LAPSINSTALLROOT);
@@ -229,6 +230,7 @@ if( defined $ENV{FXA_LOCAL_DATA} &&  $all_roots_equal eq "F" ) {
    $LAPS_DATA_ROOT = $FXA_LOCAL_DATA."/laps";
 }
 
+my $success;
 
 if( $CONFIG_DOMAIN eq "true" ) {
   if( $all_roots_equal eq "F" ){
@@ -263,21 +265,27 @@ if( $CONFIG_DOMAIN eq "true" ) {
   if(-e $LAPS_DATA_ROOT ){
 
      if($all_roots_equal eq "F") {
-        print "Save static and cdl subdirectories\n";
+
+        print "\n Save static and cdl subdirectories\n";
+        print " --------------------------------------\n";
+
 #Note: some "static" directories might be busy and the constructs
 #      below do not allow for a safe directory move (rename).
+# First check to see if there are leftover static_save and cdl_save.
+
         if(-e "$LAPS_DATA_ROOT/static\_save"){
            print "Found static_save and removing\n";
-           system("rm -rf $LAPS_DATA_ROOT/static_save");}
+           system("rm -rf $LAPS_DATA_ROOT/static_save");
+        }
         if(-e "$LAPS_DATA_ROOT/cdl\_save"){
            print "Found cdl_save and removing\n";
-           system("rm -rf $LAPS_DATA_ROOT/cdl_save");}
-#       rename ("$LAPS_DATA_ROOT/static","$LAPS_DATA_ROOT/static\_save");
-#       rename ("$LAPS_DATA_ROOT/cdl","$LAPS_DATA_ROOT/cdl\_save");
-        system ("cp -r $LAPS_DATA_ROOT/static  $LAPS_DATA_ROOT/static\_save");
-        system ("cp -r $LAPS_DATA_ROOT/cdl $LAPS_DATA_ROOT/cdl\_save");
-#       mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
-#       mkdir "$LAPS_DATA_ROOT/cdl", 0777 or die "Can't make $LAPS_DATA_ROOT/cdl $!\n";
+           system("rm -rf $LAPS_DATA_ROOT/cdl_save");
+        }
+# Move existing static and cdl to "_save" and prepare new ones!
+        $success=rename "$LAPS_DATA_ROOT/static",  "$LAPS_DATA_ROOT/static\_save";
+        $success=rename "$LAPS_DATA_ROOT/cdl",  "$LAPS_DATA_ROOT/cdl\_save";
+        mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make $LAPS_DATA_ROOT/static $!\n";
+        mkdir "$LAPS_DATA_ROOT/cdl", 0777 or die "Can't make $LAPS_DATA_ROOT/cdl $!\n";
 
      }else{
 
@@ -311,7 +319,7 @@ if( $CONFIG_DOMAIN eq "true" ) {
      }
 
   }else{
-     print "Make a new DATA_ROOT.\n";
+     print "\nMake a new DATA_ROOT since it did not exit in first place.\n";
      mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/$DOMAIN_NAME $!\n";
      &laps_tools::mkdatadirs($LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$domain_type);
   }
@@ -320,26 +328,29 @@ if( $CONFIG_DOMAIN eq "true" ) {
 
 my @filelist;
 if( defined($LAPS_TEMPLATE) ){
-    if( -e $LAPS_TEMPLATE ){
-        print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
-        opendir(TEMPDIR, $LAPS_TEMPLATE);
-        @filelist = readdir TEMPDIR;
-        closedir TEMPDIR;
-        foreach (@filelist){
-           if( ! /^\./ && ! /dataroot/ && ! /domain/ ){
-              if(-d "$LAPS_TEMPLATE/$_"){
+    print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
+    opendir(TEMPDIR, $LAPS_TEMPLATE);
+    @filelist = readdir TEMPDIR;
+    closedir TEMPDIR;
+    foreach (@filelist){
+            if( ! /^\./ && ! /dataroot/ && ! /domain/ ){
+               if(-d "$LAPS_TEMPLATE/$_"){
+#                 if(!-d "$LAPS_DATA_ROOT/static/$_"){
+#                    mkdir "$LAPS_DATA_ROOT/static/$_", 0777 or die "Can't make directory $LAPS_DATA_ROOT/static";
+#                 }
                   print "Copy $LAPS_TEMPLATE/$_ directory to $LAPS_DATA_ROOT/static \n";
                   system("cp -pr $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
               }else{
                   print "Copy $LAPS_TEMPLATE/$_ file to $LAPS_DATA_ROOT/static \n";
                   system("cp -p  $LAPS_TEMPLATE/$_ $LAPS_DATA_ROOT/static");
               }
-           }
-        }
-
-    }else{print "The template subdirectory you specified does not exist: $LAPS_TEMPLATE\n";
-          print "Terminating.\n"; exit;}
-
+            }
+    }
+    if(defined $opt_m){
+       $success = &restorefiles("ggm");
+    }else{
+       $success = &restorefiles("static");
+    }
 }else{
    print "No template subdirectory. All roots equal(?): $all_roots_equal.\n";
 }
@@ -421,6 +432,18 @@ print "$command\n";
 
 run_sys::run_sys($command);
 
+# --------------------------------------------------
+
+my $day = `date +%d`;
+my $Mon = `date +%h`;
+my $yr  = `date +%y`;
+my $hr  = `date +%H`;
+my $min = `date +%M`;
+my $AP  = `date +%p`;
+chomp ($day,$Mon,$yr,$hr,$min,$AP);
+my $datestring = "$day-$Mon-$yr-$hr:$min-$AP";
+my $logfilename = "localize_domain.log.$datestring";
+
 #
 # post process static files for WRFSI
 # -----------------------------------
@@ -432,6 +455,9 @@ if($domain_type eq "wrfsi" && !defined $opt_m)
    $command = "$LAPSINSTALLROOT/bin/staticpost.exe > $LAPS_DATA_ROOT/log/staticpost.log";
    run_sys::run_sys($command);
    print "\n";
+   $command = "$LAPSINSTALLROOT/etc/sync_wrfnl.pl $ENV{MOAD_DATAROOT}";
+   run_sys::run_sys($command);
+   print "\n";
    undef $ENV{MOAD_DATAROOT};
 }
 
@@ -439,12 +465,12 @@ if( $all_roots_equal eq "T" && -e "$DATAROOT/$DOMAIN_NAME/data_loc" ){
     print "copy data_loc/static and data_loc/cdl to data\n";
     system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/static  $DATAROOT/$DOMAIN_NAME/data/");
     system("cp -rf $DATAROOT/$DOMAIN_NAME/data_loc/cdl  $DATAROOT/$DOMAIN_NAME/data/");
-    system("cp $DATAROOT/$DOMAIN_NAME/data_loc/$logname/localize_domain.log $DATAROOT/$DOMAIN_NAME/data/$logname/.");
+    system("cp $DATAROOT/$DOMAIN_NAME/data_loc/$logname/localize_domain.log $DATAROOT/$DOMAIN_NAME/data/$logname/$logfilename");
     system("rm -rf $DATAROOT/$DOMAIN_NAME/data_loc");
     $LAPS_DATA_ROOT = "$DATAROOT/$DOMAIN_NAME/data";
 }
 
-my (@staticfile, $dnum, $namelist, $i);
+my ($success, @staticfile, $dnum, $namelist, $i);
 if($domain_type eq "laps")
 {
    $staticfile[0]="static.nest7grid";
@@ -463,52 +489,17 @@ else
 }
 
 if( $opt_m ){
-    print "restoring gridgen files. Move from  static_save  to  static \n";
-    if($domain_type eq "laps")
-    {
-       system ("mv $LAPS_DATA_ROOT/static\_save/\*.dat $LAPS_DATA_ROOT/static/.");
+    print "Did not run gridgen_model\n";
+    print "Restore gridgen files: move files from static_save to static \n";
 
-#       if(-e "$LAPS_DATA_ROOT/static\_save/topo.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topo.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/latlon.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/latlon.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/corners.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/corners.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/topography.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/$staticfile[0]"){system ("mv $LAPS_DATA_ROOT/static\_save/$staticfile[0] $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/drag_coef.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");}
+   $success = &restorefiles("ggm");
 
-    }else{
-
-      system ("mv $LAPS_DATA_ROOT/static\_save/\*.dat $LAPS_DATA_ROOT/static/.");
-
-#     if(-e "$LAPS_DATA_ROOT/static\_save/topo-mass.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topo-mass.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#     if(-e "$LAPS_DATA_ROOT/static\_save/latlon.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/latlon.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#     if(-e "$LAPS_DATA_ROOT/static\_save/latlon-mass.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/latlon-mass.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/corners.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/corners.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/corners-mass.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/corners-mass.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/topography.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topography.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/topography-mass.$dnum.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topography-mass.$dnum.dat $LAPS_DATA_ROOT/static/");}
-#       if(-e "$LAPS_DATA_ROOT/static\_save/$staticfile[$i-1]"){system ("mv $LAPS_DATA_ROOT/static\_save/$staticfile[$i-1] $LAPS_DATA_ROOT/static/");}
-    }
-
-   opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
-   @filelist = readdir STATICDIR;
-   closedir STATICDIR;
-   foreach (@filelist){
-     if( /ncgm/  ){
-         system("cp -p $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/.");
-     }
-   }
-   opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
-   @filelist = readdir CDLDIR;
-   closedir CDLDIR;
-   foreach (@filelist)
-   {
-      if(/^wrfsi\.d(\d\d)/)
-      {
-         if($1 > $num_domains[0])
-         {
-            `rm -f $LAPS_DATA_ROOT/cdl\_save/$_`;
-         }
-      } 
+   if($success != 1){
+      print "<!> Failed to restore original ggm dataroot files <!>\n";
+      print "<!>  Terminating <!>\n";
+      system("mv $LAPS_DATA_ROOT/$logname/localize_domain.log $LAPS_DATA_ROOT/$logname/$logfilename");
+      print "\n log file: $LAPS_DATA_ROOT/$logname/$logfilename \n";
+      exit;
    }
 }
 
@@ -559,7 +550,7 @@ if($restore_files eq "false" && !defined $opt_m){
 
 if( $restore_files eq "true" ) {
     print "\n";
-    print "Save static and cdl to _err for further examination.\n";
+    print "Rename static and cdl to _err for further examination.\n";
     print "***************************************************\n";
     print "   --> localization failed and is incomplete <--   \n";
     print "***************************************************\n";
@@ -573,16 +564,25 @@ if( $restore_files eq "true" ) {
     if(!-e "$LAPS_DATA_ROOT/static"){
        mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make directory $LAPS_DATA_ROOT/static";
     }
-    if( defined $ENV{FXA_LOCAL_DATA}){
-        system("cp -p $DATAROOT/laps_data/static/$namelist $LAPS_DATA_ROOT/static/");
-        system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
-    }
+
+    $success = &restorefiles("all");
+
+#   if( defined $ENV{FXA_LOCAL_DATA}){
+#       system("cp -p $DATAROOT/laps_data/static/$namelist $LAPS_DATA_ROOT/static/");
+#       system("cp -p $DATAROOT/laps_data/static/corners.dat $LAPS_DATA_ROOT/static/");
+#   }
+
+    system("mv $LAPS_DATA_ROOT/$logname/localize_domain.log $LAPS_DATA_ROOT/$logname/$logfilename");
+    print "\nlog file: $LAPS_DATA_ROOT/$logname/$logfilename \n";
     print "\n";
-    print "window_domain_rt incomplete\n";
+    print "     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+    print "     Localization is Incomplete\n";
+    print "     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     exit;
 }
 
-my $success;
+$success = &restorefiles("ncgm");
+
 if( -e "$LAPS_DATA_ROOT/static\_save"){
     print "removing $LAPS_DATA_ROOT/static\_save\n";
     $success=system("rm -rf $LAPS_DATA_ROOT/static\_save");
@@ -601,8 +601,75 @@ if( -e "$LAPS_DATA_ROOT/cdl\_save"){
 print "update prod subdirectory - synchronize with repository\n";
 &laps_tools::mkdatadirs($LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$domain_type);
 
-print "\n";
-print "****************************************** \n";
-print "*******   window_domain_rt complete ****** \n";
-print "****************************************** \n";
+system("mv $LAPS_DATA_ROOT/$logname/localize_domain.log $LAPS_DATA_ROOT/$logname/$logfilename");
+
+print "\n log file: $LAPS_DATA_ROOT/$logname/$logfilename \n";
+print "         ********************************************** \n";
+print "         *******   Domain Localization complete ****** \n";
+print "         ********************************************** \n";
 exit;
+#-------------------------------------------------------------------------
+
+sub restorefiles
+{
+    my ($type)=@_;
+    opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
+    @filelist = grep !/^\.\.?$/,readdir STATICDIR;
+    closedir STATICDIR;
+    my($subf, @subflist);
+    if($type eq "all"){
+            foreach (@filelist){
+               if( -d "$LAPS_DATA_ROOT/static\_save/$_") {
+                   opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
+                   @subflist = readdir SUBDIR;
+                   closedir SUBDIR;
+                   foreach $subf (@subflist){
+                           `cp $LAPS_DATA_ROOT/static\_save/$_/$subf $LAPS_DATA_ROOT/static/$_/$subf`;
+                   }
+               }else{
+                   `cp -p $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
+               }
+            }
+    }elsif($type eq "ncgm"){
+            foreach (@filelist){
+                     if( /ncgm/){
+                         `mv $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
+                     }
+            }
+    }elsif($type eq "static"){
+            foreach (@filelist){
+                     if( /^static\./){
+                         `cp $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
+                     }
+            }
+    }elsif($type eq "ggm"){
+           foreach (@filelist){
+                    next if(/\.nl$/ || /nest7grid.parms/);
+                    if( /\.dat$/ || /^static/ || /wrfstatic/){
+                       `cp $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/$_`;
+                    }elsif(-d "$LAPS_DATA_ROOT/static\_save/$_"){
+                       opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
+                       @subflist = grep !/^\.\.?$/, readdir SUBDIR;
+                       closedir SUBDIR;
+                       if(!-e "LAPS_DATA_ROOT/static/$_/$subf"){
+                          mkdir "LAPS_DATA_ROOT/static/$_/$subf",0777 or die "cant make directory LAPS_DATA_ROOT/static/$_/$subf";
+                       }
+                       foreach $subf (@subflist){
+                               `cp $LAPS_DATA_ROOT/static\_save/$_/$subf $LAPS_DATA_ROOT/static/$_/$subf`;
+                       }
+                    }
+           }
+    }
+    opendir(CDLDIR, "$LAPS_DATA_ROOT/cdl\_save");
+    @filelist = grep !/^\.\.?$/, readdir CDLDIR;
+    closedir CDLDIR;
+    foreach (@filelist)
+    {
+            if(/^wrfsi\.d(\d\d)/)
+            {
+               next if($1 > $num_domains[0])
+            }
+            `cp $LAPS_DATA_ROOT/cdl\_save/$_ $LAPS_DATA_ROOT/cdl/$_`;
+    }
+    return 1;
+}
