@@ -99,6 +99,7 @@ c internal variables
      1  dirlt1*50,dir*50,rhdir*50,dirpw*50,dir3*50
       real make_rh   !function
       external make_rh
+      integer sum, sum2 ! QC parameters for neg humidity condition
 
       integer i,j,k,kbottom, len
       real rmd
@@ -144,6 +145,8 @@ c     note that dynamic assignments don't work in data statements
 
 
 c....loop for rh computation
+        sum = 0
+        sum2 = 0
 
         do k = 1,kk
         do j=1,jj
@@ -167,6 +170,9 @@ c       sition temperature for ice and liquid vapor reference.
      1  tdata(i,j,k)-273.15,
      1  data(i,j,k)*1000., -50.)
 
+        if (rhdata(i,j,k) .lt. 0.0) sum = sum + 1
+        if (rhdata_l(i,j,k) .lt. 0.0) sum2 = sum2 +1
+
         rhdata(i,j,k) = max(0.,rhdata(i,j,k) )
         rhdata(i,j,k) = min(100.,rhdata(i,j,k) )
         rhdata_l(i,j,k) = max(0.,rhdata_l(i,j,k) )
@@ -177,6 +183,14 @@ c       sition temperature for ice and liquid vapor reference.
         enddo
         enddo
         enddo
+
+c  print QC detection scheme for negative humidity detection
+
+        if(sum.gt.0  .or. sum2.gt.0) then
+         write(6,*) 'Negative RH detection.. may indicate PROBLEMS'
+         write(6,*) 'Icephase = ', sum
+         write(6,*) 'Liquidphase = ',sum2
+        endif
 
 c       put in replication for albers code
 
