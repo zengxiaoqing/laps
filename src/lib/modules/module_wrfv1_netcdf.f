@@ -688,4 +688,46 @@ CONTAINS
     RETURN
   END SUBROUTINE make_wrf_file_name
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE wrfio_wait(filename,max_wait_sec)
+
+    IMPLICIT NONE
+    CHARACTER(LEN=255)  :: filename
+    CHARACTER(LEN=8)    :: date_ready
+    CHARACTER(LEN=10)    :: time_ready
+    LOGICAL             :: file_ready
+    INTEGER             :: num_checks
+    INTEGER             :: max_wait_sec
+    INTEGER, PARAMETER  :: pause_sec = 30
+    INTEGER             :: secs_waited
+    file_ready = .false.
+    num_checks = 0
+    DO WHILE (.NOT.file_ready)
+      INQUIRE(FILE=TRIM(filename), EXIST=file_ready)
+      ! In case this file was just created, wait to 
+      ! give the file a chance to be completely written.  Also, this
+      ! keeps us from banging on the disk unnecessarily.
+      IF (.NOT. file_ready) THEN
+        print *, 'File not ready: ', TRIM(filename)
+        print '(A,I3,A)', 'Sleeping for ', pause_sec, ' seconds'
+        CALL sleep(pause_sec)
+        num_checks = num_checks + 1
+        secs_waited = num_checks * pause_sec
+        print '(A,I5,A)', 'Total sleep time now ', secs_waited, ' seconds'
+        IF (secs_waited .GE. max_wait_sec) THEN
+          PRINT *, 'IO_WAIT:  Timeout waiting for file: ', TRIM(filename)
+          PRINT '(A,I5,A)', '    Maximum wait time set to ', max_wait_sec, 's'
+          CALL ABORT
+        ENDIF
+      ELSE 
+        ! Give a little slop time to make sure file is completely written
+        CALL sleep(pause_sec)
+        CALL date_and_time(date_ready,time_ready) 
+        PRINT *, TRIM(filename), ' ready at ', date_ready, '/',time_ready
+        
+      ENDIF
+    ENDDO 
+    RETURN
+  END SUBROUTINE wrfio_wait
+
+
 END MODULE wrfv1_netcdf
