@@ -2,7 +2,7 @@
        subroutine read_laps_compressed(i4time,dir,ext,
      1                    iimax,jjmax,kdim,
      1                    var_req,lvl_req,lvl_coord_req,
-     1                    units_req,comment_req,data_o,istatus)
+     1                    units_req_o,comment_req_o,data_o,istatus)
 
 C**********************************************************************
 C
@@ -23,19 +23,25 @@ C
       integer nf
       parameter (nf=3)
 
-      integer*4       i4time,              !INPUT I4time of data
-     1                iimax,jjmax,         !INPUT # cols, # rows
-     1                kdim,                !INPUT K dimension of DATA array
-     1                lvl_req(kdim),       !INPUT Requested levels
-     1                istatus              !OUTPUT
-      character*(*)   dir                  !INPUT Directory to read data from
-      character*(*)   ext                  !INPUT File name ext 
-      character*(*)   var_req(kdim)        !INPUT 3 letter ID of requested fields
-      character*(*)   lvl_coord_req(kdim)  !OUTPUT Vertical coordinate of fields
-      character*(*)   units_req(kdim)      !OUTPUT Units of requested fields
-      character*(*)   comment_req(kdim*nf) !OUTPUT Comments for requested fields
+      integer*4       i4time,               !INPUT I4time of data
+     1                iimax,jjmax,          !INPUT # cols, # rows
+     1                kdim,                 !INPUT K dimension of DATA array
+     1                lvl_req(kdim*nf),     !INPUT Requested levels
+     1                istatus               !OUTPUT
+      character*(*)   dir                   !INPUT Directory to read data from
+      character*(*)   ext                   !INPUT File name ext 
+      character*(*)   var_req(kdim)         !INPUT 3 letter ID of requested fields
+      character*(*)   lvl_coord_req(kdim)   !OUTPUT Vertical coordinate of fields
+
+      character*(*)   units_req_o(kdim)     !OUTPUT Units of requested fields
+      character*(10)  units_req_l(kdim,nf)  !LOCAL  Units of requested fields
+
+      character*(*)   comment_req_o(kdim)   !OUTPUT Comments for requested fields
+      character*(125) comment_req_l(kdim,nf)!LOCAL  Comments for requested fields
+
       real*4        data_o(iimax,jjmax,kdim)       !OUTPUT data
       real*4        data_l(iimax,jjmax,kdim,nf)    !LOCAL data
+
       real*4, allocatable, dimension(:,:) :: array !LOCAL Compressed array
 C
       integer*4 fn_length,
@@ -89,14 +95,12 @@ C
       called_from = 0   !called from FORTRAN
 
       var_len = len(var_req(1))
-      comm_len = len(comment_req(1))
+      comm_len = len(comment_req_o(1))
       lvl_coord_len = len(lvl_coord_req(1))
-      units_len = len(units_req(1))
+      units_len = len(units_req_o(1))
 C
 C **** read in compressed file
 C
-      write(6,*) 'laps_dom_file= ',laps_dom_file
-
       lun = 65
       call open_lapsprd_file(lun,i4time,ext,istatus)
       if(istatus .ne. 1)goto 950
@@ -109,10 +113,13 @@ C
       endif
 
       write(6,*)' Reading comments, length = ',comm_len
-      do k = 1,kkdim
-          read(lun,*)comment_req(k)
-          write(6,*)comment_req(k)
-      enddo ! k
+      do l = 1,nf
+          do k = 1,kdim
+              read(lun,1)comment_req_l(k,l)
+              write(6,1)comment_req_l(k,l)
+1             format(a)
+          enddo ! k
+      enddo ! l
 
       read(lun,*)n_cmprs
 
@@ -163,11 +170,15 @@ C
       endif
 
       do k = 1,kdim
+!         Assign Comment
+          comment_req_o(k) = comment_req_l(k,ifield)
+
 !         Assign Level Coord?
+
 !         Assign Units?
 
-          do i = 1,imax
-          do j = 1,jmax
+          do i = 1,iimax
+          do j = 1,jjmax
               data_o(i,j,k) = data_l(i,j,k,ifield)
           enddo ! j
           enddo ! i
