@@ -1044,6 +1044,7 @@ c
 
         character comment_2d*125
         character units_2d*10
+        character asc9_tim*9
         character var_2d*3
         character c_sat_id(maxsat)*6   !satellite id's known to system
         character csatid(maxsat)*6   !satellite id's returned from routine
@@ -1071,11 +1072,13 @@ c
 c this section can make decisions about which satellite data
 c to return in the event there is more than 1 2d field.
 c
+        call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
+
         if(nsats.gt.1)then
            write(6,*)'Found data for ',nsats,' satellites'
-           write(6,*)'Returning ',var_2d,' for ',csatid(1),' only'
+           write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
         elseif(nsats.eq.1)then
-           write(6,*)'Found ',var_2d,' for ',nsats,' satellite'
+           write(6,*)'Returning ',var_2d,' for ',csatid(1),' ',asc9_tim
         elseif(nsats.le.0)then
            write(6,*)'No lvd fields found. Returning  no data'
            return
@@ -1289,6 +1292,7 @@ c
         call move(field_2d_save(1,1,jf),field_2d,imax,jmax)
         print*,'Returning requested field from',
      1' get_laps_lvd    ',asc9_time(jf),'     ',var_2d
+        i4time_nearest=i4times_data(jf)
         istatus = 1
 
         return 
