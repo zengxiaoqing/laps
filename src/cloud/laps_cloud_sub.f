@@ -696,6 +696,7 @@ C READ IN SATELLITE DATA
 
         call get_vis(i4time,solar_alt,l_use_vis,l_use_vis_add,lat        ! I
      1              ,i4_sat_window,i4_sat_window_offset                  ! I
+     1              ,rlaps_land_frac                                     ! I
      1              ,cloud_frac_vis_a,albedo,ihist_alb                   ! O
      1              ,comment_alb                                         ! O
      1              ,NX_L,NY_L,KCLOUD,r_missing_data                     ! O
