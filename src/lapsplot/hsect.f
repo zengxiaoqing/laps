@@ -302,6 +302,7 @@ c       include 'satellite_dims_lvd.inc'
         n_image = 0
         jdot = 1   ! 1 = Dotted County Boundaries, 0 = Solid County Boundaries
         part = 0.9 ! For plotting routines
+        igrid = 0
 
         ioffm = 1 ! Don't plot label stuff in conrec
 
@@ -616,9 +617,9 @@ c       include 'satellite_dims_lvd.inc'
                 else if(k_level .gt. 0)then
                     write(6,103)
 103                 format(/
-     1                       '  Field [di,spi,ui,vi,om,dv,vo,va,vc'      
+     1                       '  Field [di,sp,u,v,om,dv,vo,va,vc'      
      1                      ,' (barbs), ob (obs))]'   
-     1                                          ,11x,'? ',$)
+     1                                          ,14x,'? ',$)
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
 
