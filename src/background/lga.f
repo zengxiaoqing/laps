@@ -615,8 +615,6 @@ c
             enddo
             enddo
          endif
-         
-
 c
 c ****** Horizontally interpolate background data to LAPS grid points.
 c
@@ -633,25 +631,6 @@ c
      .        grx,gry,vwvi,vw,bgmodel)
          call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,nz_laps,
      .        grx,gry,tpvi,tp,bgmodel)
-
-c
-c ****** Horizontally interpolate background surface data to LAPS grid points.
-c
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,uwbg_sfc,uw_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,vwbg_sfc,vw_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
-         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
-     .        grx,gry,mslpbg,mslp,bgmodel)
-
 
 c
 c ****** Check for missing value flag in any of the fields.
@@ -725,67 +704,62 @@ c
          return
       endif
 c
-c compute sfc p for NOGAPS background
-c    "      "   for AVN. Takes advantage of LAPS terrain.
-c Now trying all models....
+c ****** Horizontally interpolate background surface data to LAPS grid points.
 c
-cc      if(bgmodel.eq.6.or.bgmodel.eq.8)then
+      if(bgmodel.ne.1.and.bgmodel.ne.9)then
 
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,htbg_sfc,ht_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,tpbg_sfc,tp_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,shbg_sfc,sh_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,uwbg_sfc,uw_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,vwbg_sfc,vw_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,prbg_sfc,pr_sfc,bgmodel)
+         call hinterp_field(nx_bg,ny_bg,nx_laps,ny_laps,1,
+     .        grx,gry,mslpbg,mslp,bgmodel)
+c
 c check for T > Td before sfc p computation. Due to large scale
 c interpolation we can have slightly larger (fractional) Td than T.
 c
-         icnt=0
-         diff_mx = -1.e30
-         diff_mn =  1.e30
-         i_mx = 0
-         j_mx = 0
-         i_mn = 0
-         j_mn = 0
-         do j=1,ny_laps
-         do i=1,nx_laps
-            if(sh_sfc(i,j).gt.tp_sfc(i,j))then
-               diff = sh_sfc(i,j) - tp_sfc(i,j)
-               sh_sfc(i,j)=tp_sfc(i,j)
-               icnt=icnt+1
-               if(diff .gt. diff_mx) then
-                  diff_mx = diff
-                  i_mx = i
-                  j_mx = j
-               endif
-               if(diff .lt. diff_mn) then
-                  diff_mn = diff
-                  i_mn = i
-                  j_mn = j
-               endif
-            endif
-         enddo
-         enddo
+         call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+     &icnt,i_mx,j_mx,diff_mx,diff_mn)
 
-cc         if(icnt.gt.0)then
-cc            print*,'Found ',icnt, 'points, Td > T'
-cc         endif
-
-         print *,' Dewpoint check:'
+         print *,' Dewpoint check (before call sfcbkgd):'
          print *,'     Dewpt greater than temp at ',icnt,' points.'
          if(icnt .gt. 0) then
             write(6,9901) 'Max', diff_mx, i_mx, j_mx
-            write(6,9901) 'Min', diff_mx, i_mx, j_mx
+            write(6,9901) 'Min', diff_mn, i_mx, j_mx
          endif
- 9901    format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
+
+      endif
 c
-c..... Do the temp, moisture, and pressures
+c... Do the temp, moisture (sh_sfc returns with Td), and pressures
 c
-         call sfcprs(bgmodel, tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
-     .               nx_laps, ny_laps, nz_laps, pr_sfc)
+      call sfcbkgd(bgmodel, tp, sh, ht, tp_sfc, sh_sfc, topo, pr,
+     .            nx_laps, ny_laps, nz_laps, pr_sfc)
+
+      call tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+     &icnt,i_mx,j_mx,diff_mx,diff_mn)
+
+      print *,' Dewpoint check (after call sfcbkgd):'
+      print *,'     Dewpt greater than temp at ',icnt,' points.'
+      if(icnt .gt. 0) then
+         write(6,9901) 'Max', diff_mx, i_mx, j_mx
+         write(6,9901) 'Min', diff_mn, i_mx, j_mx
+      endif
+9901  format(8x,a3,' difference of ',f12.4,' at i,j ',i5,',',i5)
 c
 c..... Do the winds
 c
-         call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
+      call interp_to_sfc(topo,uw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,uw_sfc)
-         call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
+      call interp_to_sfc(topo,vw,ht,nx_laps,ny_laps,
      &                         nz_laps,missingflag,vw_sfc)
-
-cc      endif
 c
 c ****** Eliminate any supersaturations or negative sh generated 
 c           through interpolation (set min sh to 1.e-6).
@@ -813,199 +787,198 @@ c ****** Fill grid for LAPS write routine.
 c
 c         i=index(cmodel,' ')-1
 
-         call s_len(cmodel,ic)
-         do k=1,nz_laps                 ! Height
-            do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,k)=ht(i,j,k)
-               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+      call s_len(cmodel,ic)
+      do k=1,nz_laps                 ! Height
+         do j=1,ny_laps
+         do i=1,nx_laps
+            grid(i,j,k)=ht(i,j,k)
+            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
      +              then
-                  print*,'Missingflag at ',i,j,k,' in ht'
-                  warncnt=warncnt+1
-               endif
-            enddo
-            enddo
-            ip(k)=int(pr(k))
-            var(k)='HT '
-            lvl_coord(k)='mb  '
-            units(k)='Meters'
-            comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+               print*,'Missingflag at ',i,j,k,' in ht'
+               warncnt=warncnt+1
+            endif
          enddo
-c
-         do k=1,nz_laps                 ! Temperature
-            kk=k+nz_laps
-            do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,kk)=tp(i,j,k)
-               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-                  print*,'Missingflag at ',i,j,k,' in tp'
-                  warncnt=warncnt+1
-               endif
-            enddo
-            enddo
-            ip(kk)=int(pr(k))
-            var(kk)='T3 '
-            lvl_coord(kk)='mb  '
-            units(kk)='Kelvin'
-            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
          enddo
-c
-         do k=1,nz_laps                 ! Specific humidity
-            kk=k+2*nz_laps
-            do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,kk)=sh(i,j,k)
-               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-                  print*,'Missingflag at ',i,j,k,' in sh'
-                  warncnt=warncnt+1
-               endif
-            enddo
-            enddo
-            ip(kk)=int(pr(k))
-            var(kk)='SH '
-            lvl_coord(kk)='mb  '
-            units(kk)='kg/kg'
-            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-         enddo
-c
-         do k=1,nz_laps                 ! u-component wind
-            kk=k+3*nz_laps
-            do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,kk)=uw(i,j,k)
-               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-                  print*,'Missingflag at ',i,j,k,' in uw'
-                  warncnt=warncnt+1
-               endif
-            enddo
-            enddo
-            ip(kk)=int(pr(k))
-            var(kk)='U3 '
-            lvl_coord(kk)='mb  '
-            units(kk)='m/s'
-            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-         enddo
-c
-         do k=1,nz_laps                 ! v-component wind
-            kk=k+4*nz_laps
-            do j=1,ny_laps
-            do i=1,nx_laps
-               grid(i,j,kk)=vw(i,j,k)
-               if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
-     +              then
-                  print*,'Missingflag at ',i,j,k,' in vw'
-                  warncnt=warncnt+1
-               endif
-            enddo
-            enddo
-            ip(kk)=int(pr(k))
-            var(kk)='V3 '
-            lvl_coord(kk)='mb  '
-            units(kk)='m/s'
-            comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
-         enddo
-c
-         read(af,'(i4)') ihour
-         bgvalid=bgtime+ihour*3600
-c
-         ext = 'lga'
-         call get_directory(ext,outdir,len_dir) 
-         print *,'Writing - ',fname//af(3:4),'00.',ext
+         ip(k)=int(pr(k))
+         var(k)='HT '
+         lvl_coord(k)='mb  '
+         units(k)='Meters'
+         comment(k)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+      enddo
 
-         if(bgmodel.eq.4) then
-            lga_names(3-nf) = fname//af(3:4)//'00.'//ext
-            lga_files=2
-         endif
+      do k=1,nz_laps                 ! Temperature
+         kk=k+nz_laps
+         do j=1,ny_laps
+         do i=1,nx_laps
+            grid(i,j,kk)=tp(i,j,k)
+            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in tp'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         ip(kk)=int(pr(k))
+         var(kk)='T3 '
+         lvl_coord(kk)='mb  '
+         units(kk)='Kelvin'
+         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+      enddo
+c
+      do k=1,nz_laps                 ! Specific humidity
+         kk=k+2*nz_laps
+         do j=1,ny_laps
+         do i=1,nx_laps
+            grid(i,j,kk)=sh(i,j,k)
+            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +           then
+               print*,'Missingflag at ',i,j,k,' in sh'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         ip(kk)=int(pr(k))
+         var(kk)='SH '
+         lvl_coord(kk)='mb  '
+         units(kk)='kg/kg'
+         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+      enddo
+c
+      do k=1,nz_laps                 ! u-component wind
+         kk=k+3*nz_laps
+         do j=1,ny_laps
+         do i=1,nx_laps
+            grid(i,j,kk)=uw(i,j,k)
+            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in uw'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         ip(kk)=int(pr(k))
+         var(kk)='U3 '
+         lvl_coord(kk)='mb  '
+         units(kk)='m/s'
+         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+      enddo
+c
+      do k=1,nz_laps                 ! v-component wind
+         kk=k+4*nz_laps
+         do j=1,ny_laps
+         do i=1,nx_laps
+            grid(i,j,kk)=vw(i,j,k)
+            if(grid(i,j,kk) .ge. missingflag .and. warncnt.lt.100) 
+     +              then
+               print*,'Missingflag at ',i,j,k,' in vw'
+               warncnt=warncnt+1
+            endif
+         enddo
+         enddo
+         ip(kk)=int(pr(k))
+         var(kk)='V3 '
+         lvl_coord(kk)='mb  '
+         units(kk)='m/s'
+         comment(kk)=cmodel(1:ic)//' interpolated to LAPS isobaric.'
+      enddo
+c
+      read(af,'(i4)') ihour
+      bgvalid=bgtime+ihour*3600
+c
+      ext = 'lga'
+      call get_directory(ext,outdir,len_dir) 
+      print *,'Writing - ',fname//af(3:4),'00.',ext
+
+      if(bgmodel.eq.4) then
+         lga_names(3-nf) = fname//af(3:4)//'00.'//ext
+         lga_files=2
+      endif
          
 
+      call write_laps(bgtime,bgvalid,outdir,ext,
+     .                nx_laps,ny_laps,nz_laps,kdim,var,
+     .                ip,lvl_coord,units,comment,grid,istatus)
+        
+
+      if (istatus .eq. 1) then
+          lga_status = 1
+      else
+          print *,'Error writing interpolated data to LAPS database.'
+      endif
+
+      if(bgmodel.eq.2.or.
+     +   bgmodel.eq.4.or.
+     +   bgmodel.eq.5.or.
+     +   bgmodel.eq.6.or.
+     +   bgmodel.eq.8.or.
+     +   bgmodel.eq.9) then
+
+c
+c Write the 2d fields to lgb
+c
+         kk=0
+         var(kk+1)='USF'
+         units(kk+1)='m/s'
+         var(kk+2)='VSF'
+         units(kk+2)='m/s'
+         var(kk+3)='TSF'
+         units(kk+3)='K'
+         var(kk+4)='RSF'
+         units(kk+4)='none'
+         var(kk+5)='PSF'
+         units(kk+5)='PA'
+         var(kk+6)='SLP'
+         units(kk+6)='PA'
+         var(kk+7)='DSF'
+         units(kk+7)='K'
+         do j=1,ny_laps
+            do i=1,nx_laps
+               grid(i,j,kk+1) = uw_sfc(i,j)
+               grid(i,j,kk+2) = vw_sfc(i,j)
+               grid(i,j,kk+3) = tp_sfc(i,j)
+               grid(i,j,kk+4) = sh_sfc(i,j)
+               grid(i,j,kk+5) = pr_sfc(i,j)
+               grid(i,j,kk+6) = mslp(i,j)
+            enddo
+         enddo
+c
+         do j=1,ny_laps
+         do i=1,nx_laps
+            if(pr_sfc(i,j) .lt. missingflag) then
+               Tdsfc=sh_sfc(i,j)
+               qsfc=ssh2(pr_sfc(i,j)*0.01,
+     +                   tp_sfc(i,j)-273.15,
+     +                   Tdsfc-273.15,-47.)*0.001
+               grid(i,j,kk+7)=Tdsfc
+               grid(i,j,kk+4)=qsfc
+            else
+               grid(i,j,kk+7) = missingflag
+               grid(i,j,kk+4)=qsfc
+            endif
+         enddo
+         enddo
+
+         do kk=1,nsfc_fields
+            ip(kk)=0
+         enddo
+         
+         ext = 'lgb'
+         call get_directory(ext,outdir,len_dir)
+         print *,'writing to dir ',outdir
+         print *,'Writing - ',fname//af(3:4),'00.',ext
          call write_laps(bgtime,bgvalid,outdir,ext,
-     .                   nx_laps,ny_laps,nz_laps,kdim,var,
-     .                   ip,lvl_coord,units,comment,grid,istatus)
+     .           nx_laps,ny_laps,nsfc_fields,nsfc_fields,var,
+     .           ip,lvl_coord,units,comment,grid,istatus)
          
 
          if (istatus .eq. 1) then
             lga_status = 1
          else
-           print *,'Error writing interpolated data to LAPS database.'
+            print*,'Error writing interpolated data to LAPS lgb'
          endif
-
-         if(bgmodel.eq.2.or.
-     +      bgmodel.eq.4.or.
-     +      bgmodel.eq.5.or.
-     +      bgmodel.eq.6.or.
-     +      bgmodel.eq.8) then
-
+      endif
 c
-c Write the 2d fields to lgb
-c
-            kk=0
-            var(kk+1)='USF'
-            units(kk+1)='m/s'
-            var(kk+2)='VSF'
-            units(kk+2)='m/s'
-            var(kk+3)='TSF'
-            units(kk+3)='K'
-            var(kk+4)='RSF'
-            units(kk+4)='none'
-            var(kk+5)='PSF'
-            units(kk+5)='PA'
-            var(kk+6)='SLP'
-            units(kk+6)='PA'
-            var(kk+7)='DSF'
-            units(kk+7)='K'
-            do j=1,ny_laps
-               do i=1,nx_laps
-                  grid(i,j,kk+1) = uw_sfc(i,j)
-                  grid(i,j,kk+2) = vw_sfc(i,j)
-                  grid(i,j,kk+3) = tp_sfc(i,j)
-                  grid(i,j,kk+4) = sh_sfc(i,j)
-                  grid(i,j,kk+5) = pr_sfc(i,j)
-                  grid(i,j,kk+6) = mslp(i,j)
-               enddo
-            enddo
-c
-            do j=1,ny_laps
-            do i=1,nx_laps
-               if(pr_sfc(i,j) .lt. missingflag) then
-                  Tdsfc=sh_sfc(i,j)
-                  qsfc=ssh2(pr_sfc(i,j)*0.01,
-     +                          tp_sfc(i,j)-273.15,
-     +                          Tdsfc-273.15,-47.)*0.001
-                  grid(i,j,kk+7)=Tdsfc
-                  grid(i,j,kk+4)=qsfc
-               else
-                  grid(i,j,kk+7) = missingflag
-                  grid(i,j,kk+4)=qsfc
-               endif
-            enddo
-            enddo
-
-            do kk=1,nsfc_fields
-               ip(kk)=0
-            enddo
-         
-
-            ext = 'lgb'
-            call get_directory(ext,outdir,len_dir)
-            print *,'writing to dir ',outdir
-            print *,'Writing - ',fname//af(3:4),'00.',ext
-            call write_laps(bgtime,bgvalid,outdir,ext,
-     .           nx_laps,ny_laps,nsfc_fields,nsfc_fields,var,
-     .           ip,lvl_coord,units,comment,grid,istatus)
-         
-
-            if (istatus .eq. 1) then
-               lga_status = 1
-            else
-               print*,'Error writing interpolated data to LAPS lgb'
-            endif
-         endif
-
-c
- 80      continue
+80    continue
 
       enddo  !Main loop through two model backgrounds
 
@@ -1060,7 +1033,7 @@ c
      .           lga_times(i-1),lga_valid(i-1),
      .           lga_times(i  ),lga_valid(i  ))
             if(bgmodel.eq.2.or.bgmodel.eq.4.or.bgmodel.eq.5
-     +         .or.bgmodel.eq.6.or.bgmodel.eq.8) then
+     +         .or.bgmodel.eq.6.or.bgmodel.eq.8.or.bgmodel.eq.9)then
                ext = 'lgb'
                call get_directory(ext,outdir,len_dir) 
                print*,outdir,ext
@@ -1153,70 +1126,41 @@ c
       end
 c
 c
-      subroutine interp_to_sfc(sfc_2d,field_3d,heights_3d,ni,nj,nk,
-     &                         badflag,interp_2d)
-c
-c=================================================================
-c     
-c     Routine to interpolate a 3-d field to a 2-d surface.  The
-c     2-d surface can be the actual "surface" (the topography),
-c     or any other 2-d surface within the grid.
-c
-c     Based on code in the LAPS wind analysis, Steve Albers, FSL.
-c
-c     Original: 04-09-99  Peter A. Stamus, NOAA/FSL
-c     Changes:
-c
-c=================================================================
-c
-      real sfc_2d(ni,nj), field_3d(ni,nj,nk), heights_3d(ni,nj,nk)
-      real interp_2d(ni,nj)
-c
+      subroutine tdcheck(nx_laps,ny_laps,sh_sfc,tp_sfc,
+     &icnt,i_mx,j_mx,dmax,dmin)
 
-      write(6,*)' Interpolating 3-d field to 2-d surface.'
+      integer icnt,i_mx,j_mx
 
-cc      i_sfc_bad = 0
-c
-c..... Interpolate from the 3-d grid to the 2-d surface at each point.
-c
-      do j=1,nj
-      do i=1,ni
-c
-         zlow = height_to_zcoord2(sfc_2d(i,j),heights_3d,ni,nj,nk,
-     &                                                  i,j,istatus)
-         if(istatus .ne. 1)then
-            write(6,*) ' Error in height_to_zcoord2 in interp_to_sfc',
-     &                 istatus       
-            write(6,*) i,j,zlow,sfc_2d(i,j),(heights_3d(i,j,k),k=1,nk)     
-            return
+      real sh_sfc(nx_laps,ny_laps)
+      real tp_sfc(nx_laps,ny_laps)
+      real dmax,dmin
+
+      icnt=0
+      diff_mx = -1.e30
+      diff_mn =  1.e30
+      i_mx = 0
+      j_mx = 0
+      i_mn = 0
+      j_mn = 0
+      do j=1,ny_laps
+      do i=1,nx_laps
+         if(sh_sfc(i,j).gt.tp_sfc(i,j))then
+            diff = sh_sfc(i,j) - tp_sfc(i,j)
+            sh_sfc(i,j)=tp_sfc(i,j)
+            icnt=icnt+1
+            if(diff .gt. diff_mx) then
+               diff_mx = diff
+               i_mx = i
+               j_mx = j
+            endif
+            if(diff .lt. diff_mn) then
+               diff_mn = diff
+               i_mn = i
+              j_mn = j
+            endif
          endif
-c
-         klow = max(zlow, 1.)
-         khigh = klow + 1
-         fraclow = float(khigh) - zlow
-         frachigh = 1.0 - fraclow
-c
-         if( field_3d(i,j,klow)  .eq. badflag .or.
-     &       field_3d(i,j,khigh) .eq. badflag) then
+      enddo
+      enddo
 
-            write(6,3333)i,j
- 3333       format(' Warning: cannot interpolate to sfc at ',2i5)       
-cc            i_sfc_bad = 1
-            interp_2d(i,j) = badflag
-
-         else
-
-            interp_2d(i,j) = field_3d(i,j,klow ) * fraclow  +  
-     &                       field_3d(i,j,khigh) * frachigh
-
-         endif
-c
-      enddo !i
-      enddo !j
-c
-c..... That's all.
-c
       return
       end
-
-
