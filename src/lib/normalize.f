@@ -211,17 +211,16 @@ C   Compute Emission Angle (Emission_angle_d = satellite angular altitude)
                   write(6,*)'i,j,lat(i,j),lon(i,j),sublat_d,sublon_d'        
                   write(6,*)i,j,lat(i,j),lon(i,j),sublat_d,sublon_d
                   iwrite = iwrite + 1
-                  Emission_angle_d(i,j) = 0.0
                 else ! iwrite .le. 1
                   write(6,*)
      1'Warning, Emission_angle_d < 0 (i/j/lat/lon/E): ',i,j,lat(i,j)
      1,lon(i,j),Emission_angle_d(i,j)
                   iwrite=iwrite+1
-                  Emission_angle_d(i,j) = 0.0
                 endif
 
               endif ! valid image pixel intensity
- 
+              Emission_angle_d(i,j) = 0.0
+  
           endif ! emission angle < 0 (looking beyond the limb)
 
 C   Compute Phase Angle
