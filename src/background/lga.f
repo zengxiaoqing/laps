@@ -44,10 +44,10 @@ c        bgmodel = 3 ---> NOGAPS
 c        bgmodel = 4 ---> SBN Conus211 (Eta or RUC)
 c        bgmodel = 5 ---> RUC (40 km native grid)
 c
-      integer*4 nbgmodel
+      integer nbgmodel
       parameter (nbgmodel=5)
 c
-      integer*4 bgmodel
+      integer bgmodel
 c
 c------------------> GRID DIMENSION SPECIFICATION <-----------------------------
 c
@@ -60,7 +60,7 @@ c *** The fourth line specifies the LAPS domain designation.
 c *** Each following line specifies the grid dimensions for each corresponding
 c        bgmodel defined above.
 c
-      integer*4 nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
+      integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          laps_cycle_time,             !LAPS cycle time
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
      .          lga_status                      !status returned from lga_driver
@@ -136,17 +136,17 @@ c         len = index(bgpaths(i),' ')
             nx_bg = 144
             ny_bg = 73
             nz_bg = 16        
-            cmodel = 'RUC60_NATIVE'   	   
+            cmodel = 'RUC60_NATIVE'            
          else if(bgmodel.eq.4) then
             nx_bg = 93
             ny_bg = 65
             nz_bg = 19        
-            cmodel = 'SBN CONUS211'   	   
+            cmodel = 'SBN CONUS211'            
          else if(bgmodel.eq.5) then
             nx_bg = 151
             ny_bg = 113
             nz_bg = 40       
-            cmodel = 'RUC40_NATIVE'   	   
+            cmodel = 'RUC40_NATIVE'            
          endif
          
 
@@ -240,10 +240,11 @@ c
 
 c
       implicit none
+      include 'netcdf.inc'
 c
-      integer*4 nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
+      integer nx_laps,ny_laps,nz_laps,     !LAPS grid dimensions
      .          nx_bg  ,ny_bg  ,nz_bg,       !Background model grid dimensions
-     .          max_files, lga_status
+     .          max_files, lga_status, ncid
 c
       parameter (max_files=2000)
 
@@ -264,7 +265,7 @@ c
      .          shvi(nx_bg,ny_bg,nz_laps),   !Specific humidity (kg/kg)
      .          uwvi(nx_bg,ny_bg,nz_laps),   !U-wind (m/s)
      .          vwvi(nx_bg,ny_bg,nz_laps)    !V-wind (m/s)
-      integer*4 msgpt(nx_bg,ny_bg)
+      integer msgpt(nx_bg,ny_bg)
 c
 c *** Background data interpolated to LAPS grid.
 c
@@ -284,7 +285,7 @@ c
      .          htave,tpave,shave,uwave,vwave,
      .          msgflg                       !Missing data value
 c
-      integer*4 bgmodel,laps_cycle_time,
+      integer bgmodel,laps_cycle_time,
      .          i4time_now,ct4,ct,
      .          ihour,imin,
      .          lga_files,lga_times(max_files),lga_valid(max_files),
@@ -309,7 +310,6 @@ c
       character*10  units(5*nz_laps)
       character*125 comment(5*nz_laps)
       character*12  cmodel
-      integer*4 ncid       
       integer len_dir, ntime, last_time,next_time, nf
       integer nxbg, nybg, nzbg(5),ntbg, ivaltimes(20)
 c
@@ -364,7 +364,7 @@ c         j=index(names(i),' ')-14
          if (j .ge. 0) then
             if (names(i)(j+1:j+1) .eq. '1' .or. 
      .          names(i)(j+1:j+1) .eq. '9') then
-	        if (bgmodel .eq. 4) then
+              if (bgmodel .eq. 4) then
                    fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
 
                    call open_sbn_netcdf(bgpath,fname,ncid,ntbg
@@ -380,7 +380,7 @@ c         j=index(names(i),' ')-14
                          cmodel='ETA SBN'
                       endif
 
-                      call ncclos(ncid,istatus)
+                      istatus= NF_CLOSE(ncid)
                       do k=1,ntbg
                          write(af,'(i4.4)') ivaltimes(k)/3600
                          ct4=ct4+1

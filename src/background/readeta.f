@@ -2,8 +2,9 @@
      .                           pr, ht,tp,rh,uw,vw,gproj,istatus)
 c
       implicit none
+      include 'netcdf.inc'
 c
-      integer*4 nx,ny,nz,nvars,recdim,start(10),count(10),k
+      integer nx,ny,nz,nvars,recdim,start(10),count(10),k
 c
       real*4 ht(nx,ny,nz),
      .       tp(nx,ny,nz),
@@ -14,7 +15,7 @@ c
      .      tmp(nx,ny,nz)
 c
       integer vdims(10) !Allow up to 10 dimensions
-      integer*4 nvs,nvdim,ntp,ndsize,j,lenstr,ncnowrit,ncopn,ncid,
+      integer nvs,nvdim,ntp,ndsize,j,lenstr,ncid,
      .          nrecs,ngatts,ndims,ipr(nz), len, it, i, istatus
 c
       character*2   gproj
@@ -28,7 +29,7 @@ c
 c
 c *** Common block variables for Lambert-conformal grid.
 c
-      integer*4 nx_lc,ny_lc,nz_lc  !No. of LC domain grid points
+      integer nx_lc,ny_lc,nz_lc  !No. of LC domain grid points
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
@@ -40,89 +41,89 @@ c
       call s_len(bgpath,len)
       etafile = bgpath(1:len)//'/'//fname//af
 
-      ncid=ncopn(etafile,ncnowrit,istatus)
-      call ncinq(ncid,ndims,nvars,ngatts,recdim,istatus)
-      call ncdinq(ncid,recdim,dummy,nrecs,istatus)
+      istatus=NF_OPEN(etafile,NF_NOWRITE,ncid)
+      call NCINQ(ncid,ndims,nvars,ngatts,recdim,istatus)
+      call NCDINQ(ncid,recdim,dummy,nrecs,istatus)
       print *,'Reading - ',etafile
 c
 c *** Statements to fill uw.                            
 c
-      call ncvinq(ncid,10,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,10,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,10,start,count,tmp,istatus)
+      istatus=NF_GET_VARA_REAL(ncid,10,start,count,tmp)
       call swap_array(nx*ny,nz,tmp,uw)
 
 
 c
 c *** Statements to fill vw.                             
 c
-      call ncvinq(ncid,12,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,12,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,12,start,count,tmp,istatus)
+      istatus=NF_GET_VARA_REAL(ncid,12,start,count,tmp)
       call swap_array(nx*ny,nz,tmp,vw)
 c
 c *** Statements to fill ht.                             
 c
-      call ncvinq(ncid,2,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,2,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,2,start,count,tmp,istatus)
+      istatus=NF_GET_VARA_REAL(ncid,2,start,count,tmp)
       call swap_array(nx*ny,nz,tmp,ht)
 c
 c *** Statements to fill rh.                             
 c
-      call ncvinq(ncid,4,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,4,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,4,start,count,tmp,istatus)
+      istatus=NF_GET_VARA_REAL(ncid,4,start,count,tmp)
       call swap_array(nx*ny,nz,tmp,rh)
 c
 c *** Statements to fill tp.                             
 c
-      call ncvinq(ncid,7,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,7,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,7,start,count,tmp,istatus)
+      istatus=NF_GET_VARA_REAL(ncid,7,start,count,tmp)
       call swap_array(nx*ny,nz,tmp,tp)
 c
 c *** Statements to fill ipr.                       
 c
-      call ncvinq(ncid,31,dummy,ntp,nvdim,vdims,nvs,istatus)
+      call NCVINQ(ncid,31,dummy,ntp,nvdim,vdims,nvs,istatus)
       lenstr=1
       do j=1,nvdim
-         call ncdinq(ncid,vdims(j),dummy,ndsize,istatus)
+         call NCDINQ(ncid,vdims(j),dummy,ndsize,istatus)
          lenstr=lenstr*ndsize
          start(j)=1
          count(j)=ndsize
       enddo
-      call ncvgt(ncid,31,start,count,ipr,istatus)
+      istatus=NF_GET_VARA_INT(ncid,31,start,count,ipr)
       if(ipr(1).gt.ipr(nz)) then 
          print*,'pressure here ',ipr      
          print*,'Pressure data indicates that netcdf format may',

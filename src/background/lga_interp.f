@@ -35,7 +35,7 @@ cdis
 c
       implicit none
 c
-      integer*4 nx,ny,nz_bg,nz_laps
+      integer nx,ny,nz_bg,nz_laps
 c
 c *** Input background variables.
 c
@@ -56,7 +56,7 @@ c
 c
       real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3,msgflg
       real*4 datmsg
-      integer*4 i,j,k,kk
+      integer i,j,k,kk
 c_______________________________________________________________________________
 c
       msgflg=1.e30
@@ -168,7 +168,7 @@ c
 c
       implicit none
 c
-      integer*4 nx_bg,ny_bg,nx_laps,ny_laps,nz
+      integer nx_bg,ny_bg,nx_laps,ny_laps,nz
 c
 c *** Input vertically interpolated fields.
 c
@@ -189,7 +189,7 @@ c
       real*4 lat(nx_laps,ny_laps),lon(nx_laps,ny_laps),
      .       grx(nx_laps,ny_laps),gry(nx_laps,ny_laps)
 c
-      integer*4 i,j,k
+      integer i,j,k
 c
       character*2 gproj
 c_______________________________________________________________________________
@@ -250,9 +250,9 @@ c
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
 c
-      integer*4 time1,time2,
+      integer time1,time2,
      .          fcst1,fcst2,
      .          cycle_time,
      .          ip(5*nz),

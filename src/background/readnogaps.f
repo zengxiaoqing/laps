@@ -5,7 +5,7 @@
 c
       implicit none
 c
-      integer*4 nx,ny,nz,i,j,k,l,it,istatus
+      integer nx,ny,nz,i,j,k,l,it,istatus
 c
 c
       real*4 ht(nx,ny,nz),     !NOGAPS height (m)
@@ -27,7 +27,7 @@ c
 c
 c *** Common block variables for lat-lon grid.
 c
-      integer*4 nx_ll,ny_ll,nz_ll  !No. of LL domain grid points
+      integer nx_ll,ny_ll,nz_ll  !No. of LL domain grid points
       real*4 lat0,lon0,dlat,dlon   !Pol ste. std lat, lon and delta lat, lon
       common /llgrid/nx_ll,ny_ll,nz_ll,lat0,lon0,dlat,dlon
 c_______________________________________________________________________________

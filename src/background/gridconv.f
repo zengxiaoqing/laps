@@ -7,7 +7,7 @@ c     snook (12/20/95)
 c
 ccc      implicit none
 c
-      integer*4 np,n
+      integer np,n
 c
       real*4 glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
      .       pslat,pslon,          !Pol ste. lat, lon (deg N, deg +E)
@@ -63,7 +63,7 @@ C     TSP 20/06-89
       double precision pi180,c1,c2,c3,c4,c5,c6,arg2a,bb,pla1,alpha
      +   ,plo1,pla90,argu2
 c
-      integer*4 nx,ny,nz           !No. of PS domain grid points
+      integer nx,ny,nz           !No. of PS domain grid points
       real*4 RLAT,WLON1,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,RLAT,WLON1,rota,sw,ne
@@ -294,7 +294,7 @@ C     rotated to the standard format with 0 degrees longitude along wlon1
 C
 C     TSP 21 JUNE 89
 c
-      integer*4 nx,ny,nz           !No. of PS domain grid points
+      integer nx,ny,nz           !No. of PS domain grid points
       real*4 RLAT,WLON1,rota,      !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,RLAT,WLON1,rota,sw,ne
@@ -314,7 +314,7 @@ C
 C     test for a n/s pole case
 C
       IF(RLAT.EQ.90.0) THEN
-	 GLAT=PLA
+       GLAT=PLA
          GLON=MOD(PLO+WLON1,360.0)
          GO TO 2000
       END IF
@@ -413,7 +413,7 @@ c
      .       xmin,xmax,ymin,ymax,
      .       dx,dy,mag
 c
-      integer*4 nx,ny,nz           !No. of PS domain grid points
+      integer nx,ny,nz           !No. of PS domain grid points
       real*4 lat0,lon0,rota,       !Pol ste. std lat, lon and rotation
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
       common /psgrid/nx,ny,nz,lat0,lon0,rota,sw,ne
@@ -446,7 +446,7 @@ c     snook (12/20/95)
 c
 ccc      implicit none
 c
-      integer*4 np,n
+      integer np,n
 c
       real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       celat,celon,            !Con eq. lat, lon (deg N, deg +E)
@@ -486,7 +486,7 @@ c
      .       celat,celon,    !Con eq. lat, lon (deg N, deg +E)
      .       x,y,z
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
       real*4 lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
@@ -511,9 +511,9 @@ c
       real*4 celat,celon,      !Con eq. lat, lon (deg N, deg +E)
      .       cei,cej           !Con eq. i,j
 c
-      integer*4 nxt
+      integer nxt
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
       real*4 lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
@@ -534,9 +534,9 @@ c
       real*4 cei,cej,          !Con eq. i,j
      .       celat,celon       !Con eq. lat, lon (deg N, deg +E)
 c
-      integer*4 nyt
+      integer nyt
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
       real*4 lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
@@ -557,7 +557,7 @@ c
       real*4 celat,celon,    !Con eq. lat, lon (deg N, deg +E)
      .       glat,glon       !Earth lat, lon (deg N, deg +E)
 c
-      integer*4 nx,ny,nz
+      integer nx,ny,nz
       real*4 lat0,lon0,dphi,dlam
       common /coneqgrid/nx,ny,nz,lat0,lon0,dphi,dlam
 c_______________________________________________________________________________
@@ -587,7 +587,7 @@ c     snook (12/20/95)
 c
 ccc      implicit none
 c
-      integer*4 np,n
+      integer np,n
 c
       real*4 glat(np),glon(np),    !Earth lat (deg N), lon (deg +E)
      .       lci(np),lcj(np),      !Lambert-confomal i, j
@@ -596,7 +596,7 @@ c
 c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
-      integer*4 nx,ny,nz           !No. of LC domain grid points
+      integer nx,ny,nz           !No. of LC domain grid points
       common /lcgrid/nx,ny,nz,lat1,lat2,lon0,sw,ne
 c
 c===============================================================================
@@ -647,7 +647,7 @@ c
 c
       real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat2, lon
      .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
-      integer*4 nx,ny,nz           !No. of LC domain grid points
+      integer nx,ny,nz           !No. of LC domain grid points
       common /lcgrid/nx,ny,nz,lat1,lat2,lon0,sw,ne
 c_______________________________________________________________________________
 c
@@ -686,13 +686,13 @@ c     snook (11/5/96)
 c
 ccc      implicit none
 c
-      integer*4 np,n
+      integer np,n
 c
       real*4 glat(np),glon(np),      !Earth lat, lon (deg N, deg +E)
      .       lli(np),llj(np),        !Lat-lon grid i,j
      .       diff
 c
-      integer*4 nx,ny,nz             !No. of LL domain grid points
+      integer nx,ny,nz             !No. of LL domain grid points
       real*4 lat0,lon0,dlat,dlon     !SW corner lat, lon, lat, lon spacing
       common /llgrid/nx,ny,nz,lat0,lon0,dlat,dlon
 c
