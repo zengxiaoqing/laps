@@ -55,7 +55,7 @@
 
         a8_time=a9_to_a8(a9_time)
         ilen=len(asctim_str)
-        a9_to_yr_a10_time=asctim_str(ilen-9:ilen-6)//a8_time(3:8)
+        a9_to_yr_a10_time=asctim_str(ilen-8:ilen-5)//a8_time(3:8)
 
         istatus = 1
 

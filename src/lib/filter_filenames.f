@@ -80,6 +80,10 @@ c
 
        enddo
 
+       do i=1,i_nbr_files_in
+          c_fnames(i)=' '
+       enddo
+
        if(i_fnames_filtered.gt.0)then
           write(6,*)'Filenames have been filtered'
           do i=1,i_fnames_filtered
