@@ -390,7 +390,7 @@ C
       subroutine colorbar(ni,nj,ncols,ireverse,scale_l,scale_h
      1                   ,colortable,scale,icol_offset)
 
-      character*8 ch_low, ch_high, ch_mid
+      character*8 ch_low, ch_high, ch_mid, ch_frac
       character*(*)colortable
 
       call get_border(ni,nj,x_1,x_2,y_1,y_2)
@@ -492,6 +492,20 @@ c     Restore original color table
 
       ixm = (ixl+ixh)/2
       CALL PCHIQU (cpux(ixm),cpux(iy),ch_mid(1:len_mid),rsize,0 , 0.0)       
+
+      if(colortable .ne. 'spectral')return
+
+!     Other fractions
+      do frac = 0.25,0.75,0.50
+          rfrac = scale_l + (scale_h-scale_l) * frac
+          write(ch_frac,1)nint(rfrac)
+          call left_justify(ch_frac)
+          call s_len(ch_frac,len_frac)
+
+          ixm = ixl + (ixh-ixl)*frac
+          CALL PCHIQU (cpux(ixm),cpux(iy),ch_frac(1:len_frac)
+     1                ,rsize,0 , 0.0)       
+      enddo
 
       return
       end 
