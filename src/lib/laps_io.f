@@ -992,9 +992,10 @@ c
 !       John Smart              1998
 !       Modified original get_laps_2dvar for satellite lvd files in
 !       lvd subdirectories. Subdirectories are those satellites
-!       known to the laps system (see src/include/sat_data_static_lvd.inc,
+!       known to the laps system (see src/include/satdata_lvd.for,
 !       and data/static/satellite_lvd.nl). As many as 'maxsat' 2d fields
-!       can be returned depending on configuration specified in satellite_lvd.nl
+!       can be returned depending on configuration specified in satellite_lvd.nl.
+!       max_sat is defined in src/include/satellite_dims_lvd.inc.
 
         character*9 asc9_tim
 
@@ -1080,17 +1081,20 @@ c
      1                       ,var_2d,' ',asc9_tim
                  go to 50
 
-              else   !  istatus = 1, check for missing data
-                 do il = 1,imax
-                 do jl = 1,jmax
-                    if(field_2d(il,jl) .eq. r_missing_data)then
-                            write(6,*)il,jl,
-     1                        ' Missing Data Value Detected in 2D Field'
-                            istatus = -1
-                            return
-                    endif
-                 enddo ! j
-                 enddo ! i
+c we need to expect some missing data in the lvd fields.
+c
+c             else   !  istatus = 1, check for missing data
+c                do il = 1,imax
+c                do jl = 1,jmax
+c                   if(field_2d(il,jl) .eq. r_missing_data)then
+c                           write(6,*)il,jl,
+c    1                        ' Missing Data Value Detected in 2D Field'
+c                           istatus = -1
+c                           return
+c                   endif
+c                enddo ! j
+c                enddo ! i
+
               endif
 
               return
