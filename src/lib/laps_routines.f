@@ -1337,137 +1337,7 @@ cc	   var(2) = 'MSL'  ! LGB variable
 	endif
 
 
-        if(.false.)then ! old way
-c
-c.....  Get the background data.  Try for a SFM forecast first.  If not
-c.....  available, try the LGB file.  If that's not there either, use a
-c.....  previous LAPS analysis.  If nothings available, print a warning.
-c
-	isfm_bk = 1
-	print *,' Trying for SFM background '
-c
-c	bkg_dir = '../lapsprd/rsf/'
-	bkg_ext = 'rsf'
-	i4time_bk = i4time_in
-
-	call get_directory('rsf',bkg_dir,len)
-	filespec = bkg_dir(1:len) // '*.'// bkg_ext
-	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
-
-	i_best_file = 0
-	i4_ftime_min = 9999999
-
-	do i=1,numfiles
-	   call get_directory_length(fnames(i), lend)
-	   call get_time_length(fnames(i), lenf)
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
-	   if(i4valid .eq. i4time_in) then
-	      i4_fcst_time = i4valid - i4init
-	      if(i4_fcst_time .lt. i4_ftime_min) then
-		 i4_fcst_time = i4_ftime_min
-		 i_best_file = i
-	      endif
-	   endif
-	enddo !i
-c
-	if(i_best_file .gt. 0) then !found one
-
-	   i = i_best_file
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
-c
- 110	   call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
-     &        var(1),lvl_in,lvlc,units,comment,bkg_field,istatus)
-  	   if(istatus .ne. 1) then
-	      print *,' ERROR reading SFM file at ', filename13
-	      isfm_bk = 0
-	      go to 200
-	   endif
-c
-	else
-c
-	   print *,' No SFM file with proper valid time.'
-	   isfm_bk = 0
-	   go to 200
-
-	endif
-c
-c.....  Check the field for NaN's and other bad stuff.
-c
-	print *,'  Found SFM background at ',filename13,
-     &          '...checking field.'
-	call check_field_2d(bkg_field,ni,nj,fill_val,istatus)
-	if(istatus .eq. 1) then
-	   bkg_status = 1
-	   bkg_time = i4time_bk
-	   return
-	else
-	   print *,
-     &    '  Problem with SFM background, check status = ', istatus
-	endif
-c
-c.....  Try LGB.
-c
- 200	imodel_bk = 1
-	print *,' Trying for LGB background '
-c	bkg_dir = '../lapsprd/lgb/'
-	bkg_ext = 'lgb'
-	i4time_bk = i4time_in
-
-	call get_directory('lgb',bkg_dir,len)
-	filespec = bkg_dir(1:len) // '*.'// bkg_ext
-	call get_file_names(filespec,numfiles,fnames,max_files,istatus)
-
-	i_best_file = 0
-	i4_ftime_min = 9999999
-
-	do i=1,numfiles
-	   call get_directory_length(fnames(i), lend)
-	   call get_time_length(fnames(i), lenf)
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
-	   if(i4valid .eq. i4time_in) then
-	      i4_fcst_time = i4valid - i4init
-	      if(i4_fcst_time .lt. i4_ftime_min) then
-		 i4_fcst_time = i4_ftime_min
-		 i_best_file = i
-	      endif
-	   endif
-	enddo !i
-c
-	if(i_best_file .gt. 0) then !found one
-
-	   i = i_best_file
-	   filename13 = fnames(i)(lend+1:lenf)
-	   call get_fcst_times(filename13,i4init,i4valid,i4fn)
-c
- 210	   call read_laps(i4init,i4valid,bkg_dir,bkg_ext,ni,nj,1,1,
-     &        var(2),lvl_in,lvlc,units,comment,bkg_field,istatus)
-  	   if(istatus .ne. 1) then
-	      print *,' LGB field ',var(2),' not available at '
-     1               , filename13
-	      imodel_bk = 0
-	      go to 300
-	   endif
-c
-	else
-c
-	   print *,' No LGB file with proper valid time.'
-	   imodel_bk = 0
-	   go to 300
-
-	endif
-
-	print *,'  Found background at ',filename13
-
-!       write(6,*)' Test of new call'
-!       call get_modelfg_2d(i4time_in,var(2),ni,nj,bkg_field_dum
-!    1                                            ,istat_dum)      
-!       print *,'...test checking field.'
-!	call check_field_2d(bkg_field_dum,ni,nj,fill_val,istat_dum)
-
-        else ! new way
+        if(.true.)then ! new way
            call get_modelfg_2d(i4time_in,var(2),ni,nj,bkg_field,istatus)
            if(istatus .ne. 1)then
 	       print *,' No LGB/RSF file with proper valid time.'
@@ -1807,7 +1677,14 @@ c
      &    '  Problem with LGB backgrounds, check status = ', 
      &    istatus_u, istatus_v
 	endif
- 300	continue
+
+ 300	if(.true.)return ! Using the previous LSX analysis as a background can
+                         ! promote gradient overshoots so we'll turn this off
+                         ! for now. One future option would be a climo field or
+                         ! to analyze only on larger scales with this type of
+                         ! cycling. The latter could be accomplished by setting
+                         ! an artifically high value to the rms iteration 
+                         ! thresholds.
 c
 c.....	Try the previous LSX.
 c
@@ -1840,7 +1717,7 @@ c
 c
 c.....  Check the field for NaN's and other bad stuff.
 c
-	print *,'  Found LSX backgrounds...checking fields.'
+ 	print *,'  Found LSX backgrounds...checking fields.'
 	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
 	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
 	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
