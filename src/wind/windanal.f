@@ -437,12 +437,6 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
         enddo ! k
 
-!       Initialize the obs_out columns
-!       do k = 1,kmax
-!         varobs_diff_spread(i,j,k,1) = uobs_diff(i,j,k)
-!         varobs_diff_spread(i,j,k,2) = vobs_diff(i,j,k)
-!       enddo ! k
-
        enddo ! i
        enddo ! j
 
@@ -496,7 +490,37 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
      1                                                          )then
 
-                  continue
+!                 Throw out the ob
+                  if(obs_point(i_ob)%type .eq. 'pirep')then
+                      n_qc_pirep_bad = n_qc_pirep_bad + 1
+                  elseif(obs_point(i_ob)%type .eq. 'cdw')then
+                      n_qc_cdw_bad = n_qc_cdw_bad + 1
+                  elseif(obs_point(i_ob)%type .eq. 'sfc')then
+                      n_qc_sfc_bad = n_qc_sfc_bad + 1
+                  elseif(obs_point(i_ob)%type .eq. 'prof')then
+                      n_qc_prof_bad = n_qc_prof_bad + 1
+                  endif
+
+                  write(6,231,err=232)obs_point(i_ob)%type(1:5)
+     1                  ,i,j,k
+     1                  ,u_diff
+     1                  ,v_diff
+     1                  ,u
+     1                  ,v
+     1                  ,u_laps_bkg(i,j,k)
+     1                  ,v_laps_bkg(i,j,k)
+     1                  ,speed_diff
+     1                  ,obs_point(i_ob)%weight
+231               format(a5,' QCed out - ',2i5,i4,1x,3(2x,2f5.0)
+     1                                        ,f5.0,f5.2)
+232               continue
+
+!                 Set the difference OB to missing (original ob left alone)
+!                 uobs_diff(i,j,k) = r_missing_data
+!                 vobs_diff(i,j,k) = r_missing_data
+!                 wt_p(i,j,k) = r_missing_data
+
+                  n_qc_total_bad = n_qc_total_bad + 1
 
               endif
 
@@ -1292,10 +1316,10 @@ csms$ignore begin
 
 
 c  convert radar obs into u & v by using tangential component of first pass
-      write(6,*)' Generating derived radar obs, opening dxx file, i4time
-     1 = '
+      write(6,*)
+     1   ' Generating derived radar obs, opening dxx file, i4time = '       
      1                  ,i4time
-      write(6,*)'  i   j   k    df    vr    fgr'
+      write(6,*)'  i   j   k    df    vr    fgr   vt'
 
       if(l_derived_output)then
           if(i_radar .le. 99)then
@@ -1374,11 +1398,14 @@ c  convert radar obs into u & v by using tangential component of first pass
 !               Compare radar radial velocity to 1st pass analysis
                 diff_radial = vr_obs_fltrd(i,j,k) - r_radar
 
+                if(icount_output .eq. (icount_output/50)*50)then
+                    write(6,310)i,j,k
+     1                         ,diff_radial
+     1                         ,vr_obs_fltrd(i,j,k),r_radar
+     1                         ,t_radar
+                endif
                 icount_output = icount_output + 1
-                if(icount_output .le. 3)write(6,310)i,j,k
-     1                                 ,diff_radial
-     1                                 ,vr_obs_fltrd(i,j,k),r_radar
-310             format(3i4,3f6.1)
+310             format(3i4,4f6.1)
 
 !               if(k .eq. 13 .and. i .eq. 29 .and. j .eq. 23)then
 !                   write(6,*)' Magic Pt: t_radar',t_radar
