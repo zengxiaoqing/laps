@@ -206,7 +206,7 @@ c from Brent Shaw pseudocode
       if(istatus .ne. 1)then
          write(6,*)'Error: proc_geodat_tiles opening HEADER: check'
      1            ,'geog paths and HEADER file'
-           stop
+         return
       endif
 
       READ(29,*)IBLKSIZO,NO,ISBEGO,IWBEGO,RWOFF,RSOFF
