@@ -23,7 +23,7 @@ sub Get_env'fxa{ #'
 }
 
 1;
-sub Set_logdir'fxa{
+sub Set_logdir'fxa{ #'
     
     if( -d $ENV{LOG_DIR}){
 #	local($yymmdd) = `date -u +%y%m%d`;
@@ -31,7 +31,7 @@ sub Set_logdir'fxa{
         local(@gmtime) = gmtime;
         $gmtime[4]++;
         for($i=3;$i<=5;$i++){
-          $gmtime[$i]="0".$gmtime[$i] if(length($gmtime[$i]<2));
+          $gmtime[$i]="0".$gmtime[$i] if(length($gmtime[$i])<2);
         }
         local($yymmdd) = $gmtime[5].$gmtime[4].$gmtime[3];
 #        print "hera $yymmdd\n"; chomp($yymmdd); print $yymmdd;
