@@ -384,9 +384,20 @@ char *uptr;
         size_t start[4],count[4],start_c[3],count_c[3];
         char var_name[13];
  
+/* get the data variable id */
+        i_status = nc_inq_varid (i_cdfid,var,&i_varid);
+        if (i_status != NC_NOERR) {
+          printf("Variable %s not found in input file.\n",var);
+          if (DEBUG == 1)
+            printf("%s\n",nc_strerror(i_status));
+            printf("cdf_retrieve_laps: no grid available.\n");
+          return -1;
+        }
+ 
 /* get the level index of the data array */
         lvl_indx = get_index_v3 (i_cdfid, i_level, "z");
         if (lvl_indx == (-1)){
+          printf("Level %d for variable %s not found in input file.\n",i_level, var);
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: no level %d\n", i_level);
           return -1;
@@ -405,15 +416,6 @@ char *uptr;
         x_dim = dim_size_v3 (i_cdfid, "x");
         y_dim = dim_size_v3 (i_cdfid, "y");
  
-/* get the data variable id */
-        i_status = nc_inq_varid (i_cdfid,var,&i_varid);
-        if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
-          if (DEBUG == 1)
-            printf("cdf_retrieve_laps: no grid available.\n");
-          return -1;
-        }
- 
 /* construct the arrays needed to read the grid */
         start[0] = record_indx;
         start[1] = lvl_indx;
@@ -428,8 +430,9 @@ char *uptr;
 /* read the grid from the netcdf file */
         i_status = nc_get_vara_float (i_cdfid,i_varid,start,count,dptr);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("Error reading grid %s from input file.\n",var);
           if (DEBUG == 1)
+            printf("%s\n",nc_strerror(i_status));
             printf("cdf_retrieve_laps: error retrieving data %s grid.\n",
                          *var);
           return -1;
@@ -457,8 +460,9 @@ char *uptr;
         sprintf(var_name, "%s%s", var, "_comment");
         i_status = nc_inq_varid (i_cdfid,var_name,&i_varid);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("Error finding variable %s.\n",var_name);
           if (DEBUG == 1)
+            printf("%s\n",nc_strerror(i_status));
             printf("cdf_retrieve_laps: no comment field available.\n");
           return -1;
         }
@@ -475,8 +479,9 @@ char *uptr;
 /* read the comment from the netcdf file */
         i_status = nc_get_vara_text (i_cdfid,i_varid,start_c,count_c,cptr);
         if (i_status != NC_NOERR) {
-          printf("%s\n",nc_strerror(i_status));
+          printf("Error reading %s.\n",var_name);
           if (DEBUG == 1)
+            printf("%s\n",nc_strerror(i_status));
             printf("cdf_retrieve_laps: error retrieving comment.\n");
           return -1;
         }
@@ -2258,25 +2263,31 @@ fint4 *status;
           sprintf(comm_var,"%s_comment",vptr);
           sprintf(inv_var,"%s_fcinv",vptr);
 	  istatus = nc_inq_varid(cdfid,vptr,&var_id);
-          if (istatus != NC_NOERR) 
+          if (istatus != NC_NOERR) {
+            printf("Variable %s not found in output file.\n",vptr);
             var_id = -1;
-          vptr += (*var_len + 1);
+          }
 
           istatus = nc_inq_varid(cdfid,comm_var,&comm_id);
-          if (istatus != NC_NOERR) 
+          if (istatus != NC_NOERR) {
+            printf("Variable %s not found in output file.\n",comm_var);
             comm_id = -1;
+          }
             
           istatus = nc_inq_varid(cdfid,inv_var,&inv_id);
-          if (istatus != NC_NOERR) 
+          if (istatus != NC_NOERR) {
+            printf("Variable %s not found in output file.\n",inv_var);
             inv_id = -1;
+          }
             
           if ((var_id == (-1)) || (comm_id == (-1)) || (inv_id == (-1))) {
+            printf("Grid %s not written to file.\n",vptr);
+            missing_grids++;
           }
           else {
             i_level = lvl[i];
             dptr = (data + (i*(*imax)*(*jmax)));
             cptr = (comment + (i*(*comm_len + 1)));
-
             istatus = update_laps_v3(cdfid,i_level,i_record,imax,
                                      jmax,var_id,inv_id,dptr,
                                      comm_id,cptr,name_len);
@@ -2288,6 +2299,7 @@ fint4 *status;
             if ((strcmp(ext,"lmr") == 0) || (strcmp(ext,"lf1") == 0))
               i_record++;
           }
+          vptr += (*var_len + 1);
         }
 
         istatus = nc_close(cdfid);
