@@ -252,8 +252,8 @@ cdis
 !       integrated heights instead of the model background heights.
 
         write(6,*)' Calling get_heights_hydrostatic'
-        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,sh_3d,topo
-     1                              ,ni,nj,nk,heights_3d)
+        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,pres_3d,sh_3d
+     1                              ,topo,ni,nj,nk,heights_3d)
 
         if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
             call adjust_heights(temp_3d,heights_3d,bkg_500
