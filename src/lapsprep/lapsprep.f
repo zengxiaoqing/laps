@@ -483,11 +483,11 @@
                     print *, '  LWC/SH/RH: ', lwc(i,j,k),sh(i,j,k),rh(i,j,k)
                     print *, '  MODIFIED:  ', lwcmod, shmod, rhmod
                   endif
-                  if ((rhmod .LT. lwc2vapor_thresh*100.).and.(lwcmod>0.)) then 
-                    print *, 'WARNING: Cloud water in non-saturated box...'
-                    print *, '  lwcmod = ',lwcmod
-                    print *, '  rhmod  = ', rhmod
-                  endif
+                  !if ((rhmod .LT. lwc2vapor_thresh*100.).and.(lwcmod>0.)) then 
+                  !  print *, 'WARNING: Cloud water in non-saturated box...'
+                  !  print *, '  lwcmod = ',lwcmod
+                  !  print *, '  rhmod  = ', rhmod
+                  !endif
                   lwc(i,j,k) = lwcmod
                   sh(i,j,k) = shmod
                   rh(i,j,k) = rhmod
