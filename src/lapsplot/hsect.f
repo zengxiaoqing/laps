@@ -358,7 +358,7 @@ c       include 'satellite_dims_lvd.inc'
      1       ,',  [ct] Highest Cld Top'
      1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
      1       /
-     1       /'     [br,fr,lq] Humidity (LGA/RAM LAPS-BKG/lq3; q/rh) '
+     1       /'     [br,fr,lq] Humidity (lga;ram;lq3: [q or rh]) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
      1       ,' [sc] Snow Cover,  [tn,lf,gr,so] Ter/LndFrac/Grid, '
      1       /'     [lv(d),lr(lsr),v3,v5,po] lvd; lsr; VCF; Tsfc-11u;'
