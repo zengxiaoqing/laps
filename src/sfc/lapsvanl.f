@@ -1080,6 +1080,7 @@ c
 	print *,' u-wind (m/s):'
 	var(1) = 'U'		! u-wind (m/s)
 	units(1) = 'M/S'
+	comment(1)= 'U (10m AGL)'
 	call check_field_2d(u_a, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(   u_a, data,  1, imax, jmax, num_var)
@@ -1088,6 +1089,7 @@ c
 	print *,' v-wind (m/s):'
 	var(2) = 'V'		! v-wind (m/s)
 	units(2) = 'M/S'
+	comment(2)= 'V (10m AGL)'
 	call check_field_2d(v_a, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(   v_a, data,  2, imax, jmax, num_var)
@@ -1118,6 +1120,7 @@ c
 	print *,' temp (k):'
 	var(4) = 'T'		! temp (K)
 	units(4) = 'K'
+	comment(4)= 'T (2m AGL)'
 	call check_field_2d(t, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(     t, data,  4, imax, jmax, num_var)
@@ -1126,6 +1129,7 @@ c
 	print *,' dewpt (k):'
 	var(5) = 'TD'		! dew point (K)
 	units(5) = 'K'
+	comment(5)= 'TD (2m AGL)'
 	call check_field_2d(td, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(    td, data,  5, imax, jmax, num_var)
@@ -1142,6 +1146,7 @@ c
 	print *,' rel hum:'
 	var(7) = 'RH'		! relative humidity (%)
 	units(7) = '%'
+	comment(7)= 'RH (2m AGL)'
 	call check_field_2d(rh, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(    rh, data,  7, imax, jmax, num_var)
@@ -1198,14 +1203,16 @@ c
 	print *,' sfc p (pa)'
 	var(13) = 'PS'		! surface press (Pa)
 	units(13) = 'PA'
+	comment(13) = 'UNREDUCED SURFACE PRESSURE (0m AGL)'
 	call check_field_2d(psfc, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(  psfc, data, 13, imax, jmax, num_var)
 c
 	print *,' -------------------------------'
 	print *,' vort (/s)'
-	var(14) = 'VOR'		! sfc vortincity (/s)
+	var(14) = 'VOR'		! sfc vorticity (/s)
 	units(14) = '/S'
+	comment(14) = 'VORTICITY (10m AGL)'
 	call check_field_2d(vort, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(  vort, data, 14, imax, jmax, num_var)
@@ -1214,6 +1221,7 @@ c
 	print *,' mix ratio (g/kg)'
 	var(15) = 'MR'		! mixing ratio (g/kg)
 	units(15) = 'G/KG'
+	comment(15) = 'MR (2m AGL)'
 	call check_field_2d(q, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(     q, data, 15, imax, jmax, num_var)
@@ -1230,6 +1238,7 @@ c
 	print *,' div (/s)'
 	var(17) = 'DIV'		! sfc divergence (/s)
 	units(17) = '/S'
+	comment(17) = 'DIV (10m AGL)'
 	call check_field_2d(div, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(   div, data, 17, imax, jmax, num_var)
@@ -1254,6 +1263,7 @@ c
 	print *,' wind spd (m/s):'
 	var(20) = 'SPD'		! wind speed (m/s)
 	units(20) = 'M/S'
+	comment(20) = 'SPD (10m AGL)'
 	call check_field_2d(spd, imax,jmax,fill_val,istatus)
 	if(istatus .eq. 1)
      &     call move_2dto3d(   spd, data, 20, imax, jmax, num_var)
@@ -1280,6 +1290,7 @@ c
 c
 	var(24) = 'TGD'		! Ground Temperature
 	units(24) = 'K'
+	comment(24) = 'TGD (0m AGL)'
 	call move_2dto3d(  tgd_k, data, 24, imax, jmax, num_var)       
 c
 	print *,' ======================================================='
