@@ -155,17 +155,17 @@ C
      1                c4_staname,a9time_ob,'VAD     '
 401       format(i12,i12,f11.3,f15.3,f15.0,5x,a4,5x,a9,1x,a8)
 
-!         Set the rms error
-          rms = 10.
-          if(rmserror(ilvl,ista)(1:1) .eq. 'A')rms = 1.03
-          if(rmserror(ilvl,ista)(1:1) .eq. 'B')rms = 2.06
-          if(rmserror(ilvl,ista)(1:1) .eq. 'C')rms = 3.09
-          if(rmserror(ilvl,ista)(1:1) .eq. 'D')rms = 4.12
-          if(rmserror(ilvl,ista)(1:1) .eq. 'E')rms = 5.14
-          if(rmserror(ilvl,ista)(1:1) .eq. 'F')rms = 6.17
-          if(rmserror(ilvl,ista)(1:1) .eq. 'G')rms = 7.20
-
           do ilvl = 1,numlevels(ista)
+!             Set the rms error for the level
+              rms = 10.
+              if(rmserror(ilvl,ista)(1:1) .eq. 'A')rms = 1.03
+              if(rmserror(ilvl,ista)(1:1) .eq. 'B')rms = 2.06
+              if(rmserror(ilvl,ista)(1:1) .eq. 'C')rms = 3.09
+              if(rmserror(ilvl,ista)(1:1) .eq. 'D')rms = 4.12
+              if(rmserror(ilvl,ista)(1:1) .eq. 'E')rms = 5.14
+              if(rmserror(ilvl,ista)(1:1) .eq. 'F')rms = 6.17
+              if(rmserror(ilvl,ista)(1:1) .eq. 'G')rms = 7.20
+
               write(2,301,err=303)obheight(ilvl,ista),
      1                            float(winddir(ilvl,ista)), 
      1                            windspeed(ilvl,ista),rms       
@@ -174,7 +174,7 @@ C
      1                            windspeed(ilvl,ista),rms       
 301           format(1x,f6.0,f6.0,2f6.1)
 303           continue
-          enddo ! i
+          enddo ! ilvl
 
  900  enddo ! i
 

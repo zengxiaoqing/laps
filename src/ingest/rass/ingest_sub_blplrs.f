@@ -212,6 +212,16 @@ C
             return
         endif
 
+! added to read from file and set lag_time 
+C 	read global attribute avgTimePeriod from input file and set lag_time
+        call prof_i4_avg_wdw(i4_avg_wdw_sec,cdfid,istatus)
+        if(istatus .eq. 1)then
+            lag_time = i4_avg_wdw_sec/2
+        else
+            write(6,*)' ingest_sub_blplrs: '
+     1               ,'Error obtaining i4_avg_wdw_sec'
+            return
+        endif
 C
 C       Open an output file.
 C
@@ -222,8 +232,6 @@ C
             istatus = 0
             return
         endif
-
-        lag_time = 1800
 
 !       Get the number of levels from the NetCDF file
         varid = NCDID(cdfid,'level',status)

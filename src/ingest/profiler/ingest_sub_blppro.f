@@ -240,6 +240,21 @@ C
             write(6,*)' Warning: bad open ',status
             return
         endif
+
+        call prof_i4_avg_wdw(i4_avg_wdw_sec,cdfid,istatus)
+!       This is hard-wired until 'prof_i4_avg_wdw' can be made more
+!       general for BLP profilers.
+            
+!       istatus = 1
+!       i4_avg_wdw_sec = 3600
+
+        if(istatus .eq. 1)then
+            lag_time = i4_avg_wdw_sec/2
+        else
+            write(6,*)' ingest_sub_blppro: '
+     1                   ,'Error obtaining i4_avg_wdw_sec'
+            return
+        endif
 C
 C       Open an output file.
 C
@@ -509,21 +524,6 @@ C
             enddo ! im
 
             write(6,*)
-
-!           call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
-!           This is hard-wired until 'prof_i4_avg_wdw' can be made more
-!           general for BLP profilers.
-            
-            istatus = 1
-            i4_avg_wdw_sec = 3600
-
-            if(istatus .eq. 1)then
-                lag_time = i4_avg_wdw_sec/2
-            else
-                write(6,*)' ingest_sub_blppro: '
-     1                   ,'Error obtaining i4_avg_wdw_sec'
-                return
-            endif
 
             i4time_ob = i4_timeObs - lag_time ! i4time_sys - lag_time
 
