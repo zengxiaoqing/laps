@@ -91,7 +91,7 @@ c
       integer maxbgmodels
       parameter (maxbgmodels=10)
       character*150 bgpaths(maxbgmodels)
-      integer bgmodels(maxbgmodels), len
+      integer bgmodels(maxbgmodels), bglen
 c
       character*9 a9
       integer i4time_now
@@ -147,7 +147,7 @@ c
             i=i+1 
             bgmodel = bgmodels(i)
             if(bgmodel .eq. 0) goto 965
-            call s_len(bgpaths(i),len)
+            call s_len(bgpaths(i),bglen)
             bgpath =  bgpaths(i)
          endif
          if (bgmodel .lt. 1 .or. bgmodel .gt. nbgmodel) then
@@ -181,7 +181,7 @@ c
 ccc   print *, lapsroot
            print *, laps_domain_file
            print *, nx_bg,ny_bg,nz_bg
-           print *, 'bgpath ', bgpath(1:len)
+           print *, 'bgpath ', bgpath(1:bglen)
            print *, 'cmodel ',cmodel
  970       continue
 c
@@ -326,14 +326,14 @@ c
      .          bgtime,bgvalid,
      .          ip(kdim),
      .          i,ic,ii,j,jj,k,kk,l,
-     .          istatus, nf_fid
+     .          istatus
 c
       character*255 lgapath
       character*100 lga_names(max_files)
       character*13  fname13,fname9_to_wfo_fname13
       character*9   fname
       character*2   gproj
-      character*150  outdir, fullname, fullname2
+      character*150  outdir, fullname
       character*31  ext
       character*3   var(kdim)
       character*4   af
