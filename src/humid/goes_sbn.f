@@ -309,6 +309,7 @@ c     convert filename to i4time_sat
      1              ch5(i,j).le.0.0) then
                   istatus = 0
                   write(6,*) 'Zero value radiance discovered'
+                  write(6,*) 'IMAGER DATA'
                   write(6,*) '   aborting satellite moisture'
                   write(6,*) '   data untrustworthy'
                   return
@@ -334,21 +335,6 @@ c     acquire sounder data
           write (6,*) 'error obtaining sounder radiances'
           return
        endif
-
-       do j = 1,jj
-          do i = 1,ii
-             do k = 1,18
-                if(rads(i,j,k) .le. 0.0)then
-                   istatus = 0
-                   write(6,*) 'Zero value radiance discovered'
-                   write(6,*) '   aborting satellite moisture'
-                   write(6,*) '   data untrustworthy'
-                   return
-                endif
-             enddo
-          enddo
-       enddo
-                
 
       endif ! only get SOUNDER data
 
@@ -427,9 +413,7 @@ c     setup cloud test (cloud array passed in)
                        cld(i,j) = cloud(i,j,k)
 
                     else
-
                        print*, 'cloud below ground'
-
                     endif
                     go to 55
                  endif
@@ -474,6 +458,9 @@ c     here use goes 8 for reference (goes 10 not avail)
                  if(rads(i,j,10).eq.rmd .or.
      1                rads(i,j,10).le. 0.0) then
                     ch3(i,j) = rmd
+                    if (rads(i,j,10).le.0.0) then
+                       write(6,*) 'Zero in ch10 ',rads(i,j,10), i,j
+                    endif
                  else
                     ch3(i,j) = bias_correction (britgo(rads(i,j,10),10),
      1                   ngoes, 1, 10)
@@ -481,6 +468,9 @@ c     here use goes 8 for reference (goes 10 not avail)
                  if(rads(i,j,8).eq.rmd .or.
      1                rads(i,j,8).le.0.0) then
                     ch4(i,j) = rmd
+                    if (rads(i,j,8).le.0.0) then
+                       write(6,*) 'Zero in ch8 ',rads(i,j,8), i,j
+                    endif
                  else
                     ch4(i,j) = bias_correction (britgo(rads(i,j,8),8),
      1                   ngoes, 1, 8)
@@ -488,6 +478,9 @@ c     here use goes 8 for reference (goes 10 not avail)
                  if(rads(i,j,7).eq.rmd .or.
      1                rads(i,j,7).le.0.0) then
                     ch5(i,j) = rmd
+                    if (rads(i,j,7).le.0.0) then
+                       write(6,*) 'Zero in ch7 ',rads(i,j,7), i,j
+                    endif
                  else
                     ch5(i,j) = bias_correction (britgo(rads(i,j,7),7),
      1                   ngoes, 1, 7)
@@ -638,7 +631,20 @@ c     and compare these to the forward model radiances
                      radiance_ob(7) = bias_correction(britgo(
      1                    rads(i,j,kanch(7)),kanch(7)),ngoes,1,kanch(7))
 
+c check for bad data in radiance_ob
+
+                     do k = 1,7
+                        if (radiance_ob(k) .le.0.0 ) then
+                           write(6,*) 'bad radiance_ob', radiance_ob(k),
+     1                          kanch(k), filename1,' aborting'
+                           istatus = 0
+                           return
+                        endif
+                     enddo
+
                   endif
+
+
 
 c fill powell common block with profile data for optran
 

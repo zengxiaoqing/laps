@@ -32,16 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
-cdis
+
        subroutine rsr (i4time_in, rad, ii,jj,kk,ngoes, 
      1                 istatus)
 
@@ -86,6 +77,9 @@ c     install new changes for revise satellite path
           len = len + 7
        elseif (ngoes.eq.10) then
           dir = dir(1:len)//'goes10/'
+          len = len + 7
+       elseif (ngoes.eq.11) then
+          dir = dir(1:len)//'goes11/'
           len = len + 7
        endif
 
@@ -136,11 +130,15 @@ c fill ngoes from comment line
        if(comment(1)(5:5) .eq. '8') ngoes = 8
        if(comment(1)(5:5) .eq. '9') ngoes = 9
        if(comment(1)(5:5) .eq. 'a') ngoes = 10
+       if(comment(1)(5:5) .eq. 'b') ngoes = 11
 
        do k = 1,kk
           do j = 1,jj
              do i = 1,ii
                 rad(i,j,k) = local_rad_data(i,j,k)
+                if (rad(i,j,k) .le. 0.0) then
+                   write(6,*) 'Zero error ',rad(i,j,k), i,j,k,filename1
+                endif
              enddo
           enddo
        enddo
