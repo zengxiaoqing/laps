@@ -100,8 +100,9 @@ c      ----------       examine data quality and change units       ---------
 
       do 900 i= 1,inNum
          call open_ext(11,i4time_sys,'cdw',istatus)
-900      write (11,*) latitude(i), longitude(i), pressure(i), 
-     ~                windDir(i), windSpeed(i), a9timeObs(i)
+900      write (11,21) latitude(i), longitude(i), pressure(i), 
+     ~                 windDir(i), windSpeed(i), a9timeObs(i)
+ 21      format(f8.3,f10.3,f8.0,f6.0,f6.1,2x,a9)
 
       write (6,*) 'found', inNum,'satob data within time window in',      
      ~            recNum, ' satob codes'
