@@ -140,8 +140,8 @@ my @sched = <SCHED>;
 close(SCHED);
 my $sh=-1;
 my( $runlength, $nprocs);
-my(@shours,@runlength,@nprocs);	 
-for(my $i=0;$i<=$#sched;$i++){
+my(@shours,@runlength,@nprocs,$i);	 
+for($i=0;$i<=$#sched;$i++){
     next if($sched[$i] =~ /^\s*&/);
     next if($sched[$i] =~ /^\s*\//);
     next if($sched[$i] =~ /^[\!c]/i);
@@ -179,7 +179,7 @@ for(my $i=0;$i<=$#sched;$i++){
     }
 
 }
-for(my $i=0; $i<=$#shours;$i++){
+for($i=0; $i<=$#shours;$i++){
     if($hh==$shours[$i]){
 	$sh = $hh;
 	$runlength=$runlength[$i];

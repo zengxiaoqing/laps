@@ -22,8 +22,13 @@
 
 use strict;
 use English;
+use vars qw($opt_d $opt_c);
+use Getopt::Std;
+
 umask 002;
-my $cycle_time = 3600;
+getopts('d:c:');
+
+
 my $initial_time = time();
 #
 # List here the laps products to be executed in the order that they should 
@@ -50,12 +55,22 @@ my $fxa_sys =  &Get_env'fxa; #'
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
+
+my @cycle_time=&parse_namelist("$LAPS_DATA_ROOT/static/nest7grid.parms",'laps_cycle_time_cmn');
+$cycle_time[0]=~/^(\d+),/;
+my $cycle_time = ($1>0)?$1:3600;
+
+
+$cycle_time = $opt_c if($opt_c>0);
+my $delay_time = 0;
+$delay_time = $opt_d if($opt_d > 0);
+
 #
 #  The second argument is the time delay in hours to 
 #  set the systime.dat file, if you're data arrives more than 1 hour 
 #  behind it's valid time set this variable to delay the laps cycle.
 #
-&systime($LAPS_DATA_ROOT,0);
+&systime($LAPS_DATA_ROOT,$delay_time,$cycle_time);
 #
 # This sends the stdout to the run log file
 #
@@ -84,7 +99,7 @@ my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
 
 my $t=gmtime(); print $t." Running purger\n";
-system("$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl $LAPS_DATA_ROOT/lapsprd");
+system("$EXECUTABLE_NAME $LAPSROOT/etc/purger.pl -r -m 30 $LAPS_DATA_ROOT/lapsprd");
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
 my($exe);
 foreach $exe (@LAPS_EXE){
@@ -103,7 +118,7 @@ foreach $exe (@LAPS_EXE){
 	$prevproc = ~/^(\d+) (.*)$/;
 	my $cid = $1;
 	$prevproc = $2;
-	
+	next unless ($cid>1);	
 	print "WARNING Found LOCK file for sched.pl with pid $jpid and child $cid - killing $prevproc\n";
         open(PS,"ps -ef |");
 	my @ps = <PS>;
@@ -192,18 +207,28 @@ sub forksub{
 
 sub systime{
     use Time::Local;
-    my($DATAROOT,$delay) = @_;
+    my($DATAROOT,$delay,$cycle_time) = @_;
     my $ctime = time - $delay*3600;
     my($sec,$min,$hour,$mday,$mon,$year) = gmtime($ctime);
     my @MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
     my $CEN = ($year < 70)?20:19;
 #
-#  This resets to the top of the hour
+#  This resets to the top of the cycle
 #
-    $min = '00';
+    my $minute=$min;
+    my $i=0;
+    while($i<60){
+	my $mod = $i%int($cycle_time/60);
+	$min = $i if($i<$minute && $mod==0);
+	$i++;
+	#     print "$i $mod\n";
+    }
+  
     
-    $ctime = timegm(0,0,$hour,$mday,$mon,$year);
+    $ctime = timegm(0,$min,$hour,$mday,$mon,$year);
+
     my $ftime = $ctime +  315619200;
+    $min = '0'.$min if(length($min)<2);
     $hour = '0'.$hour if(length($hour)<2);
 
     my $jjj = &julian($year,$mon+1,$mday);
@@ -265,4 +290,35 @@ sub julian {
     # Julian day from 1st of year is $today-$first_of_year+1
  
     $today - $first_of_year + 1;
+}
+
+sub parse_namelist{
+    my($namelist,@variables) = @_;
+    my(@ans);
+    open(NL,$namelist);
+    my @nl = <NL>;
+    close(NL);
+    my $i;
+    for($i=0;$i<=$#nl;$i++){
+	next if($nl[$i] =~ /^\s*&/);
+	next if($nl[$i] =~ /^\s*\//);
+	next if($nl[$i] =~ /^[\!c]/i);
+
+	my $j;
+	for($j=0;$j<=$#variables;$j++){
+
+#	    print "here $variables[$j] $nl[$i]\n";
+            
+	    if($nl[$i] =~ /^\s+$variables[$j]\s*=\s*(.*)$/i){
+		my $ans = $1;
+		$i++;
+		while($nl[$i++]=~/^\s*([^=]+)$/){
+		    $ans.=$1;
+		}
+		$i--;
+		$ans[$j]=$ans;
+	    }
+	}	
+    }
+    return(@ans);
 }

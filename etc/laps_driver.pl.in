@@ -90,6 +90,7 @@ foreach(@locks){
     open(LFH,"$LAPS_LOG_PATH/$_");
     my $cid = <LFH>;
     close(LFH);
+    next unless ($cid>1);
     open(PS,"ps -ef |");
     my @ps = <PS>;
     close(PS);

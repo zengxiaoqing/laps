@@ -37,7 +37,7 @@ my(%clean_dirs, $hist_time, $min_files);
 
 if($opt_r){
     $hist_time = 0;
-    $min_files = 0;
+    $min_files = ($opt_m)?$opt_m:0;
 }else{
     $hist_time = ($opt_t)?$opt_t:1.5;
     $clean_dirs{lga} = 0.5;
