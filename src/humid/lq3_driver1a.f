@@ -138,7 +138,8 @@ c     external rtsys_no_data, rtsys_abort_prod
       
       real*4 plevel(kk)
       integer*4 mlevel(kk)
-      
+
+
 c    
 c     gps variables
 
@@ -209,7 +210,8 @@ c     routine
          write(6,*)' error in get_laps_config'
          return
       endif
-      
+
+
 c     
 c     set namelist parameters to defaults 
       cloud_switch = 1
@@ -383,67 +385,20 @@ c     preserve the i4time
 
       save_i4time = i4time
 
-c     get the rams first guess field (4dda code)
-c     construct rams background i4time and file name.
-
-        
-c     rams_dir = '../lapsprd/ram/'
-      rams_ext = 'ram'
-      call get_directory('ram',rams_dir,len)
-
-      do i = 1,kk
-         ramsvar(i) = 'sh'
-      enddo
-
-c     go to 150  !bypass 4dda
-
-      do i = 1, 48              ! try this for 48 hours
-
-
-c     attempt to get data from the ramsfile
-
-         call read_laps ( save_i4time-3600*(i-1), save_i4time,
-     1        rams_dir,rams_ext,
-     1        ii,jj,kk,kk,
-     1        ramsvar(1),lvllm,ramslvlcoord(1), ramsunits(1),
-     1        ramscomments(1),data,istatus)
-         
-         if (istatus.eq.1) then
-            write(6,*) 'Acquired RAMS data for 4DDA run'
-            call check_nan3(data,ii,jj,kk,istatus)
-            if(istatus.ne.1) then
-               write(6,*) 'NaN detected from rams...abort'
-               return
-            endif
-            go to 151           !skip the lga background, doing 4dda
-         endif
-         
-      enddo
+c     Get background field
       
-      if (istatus.ne.1) go to 150
+      call get_modelfg_3d(i4time,'sh ',ii,jj,kk
+     1     ,data,istatus)
       
-c     get the background field for analysis
- 150  continue                  ! go to this point if no rams background
-      write(6,*)  '4dda background data not avail... default to lga'
-      write(6,*)  'switching off 4DDA mode if on'
-      mod_4dda_1 = 0            !  switches 4dda "drying" to off
-      write(6,*)  'mod_4dda_1 = ', mod_4dda_1
-        
-
-c     first the rh data
-      
-      desired_field = 'sh '
-      
-      call get_maps_df (i4time,desired_field,maps_rh,
-     1     ii,jj,kk,lct,istatus)
-      
-      if(istatus.ne.1) then
-         print*, 'reading maps rh file failed'
+      if (istatus.ne.1) then 
+         write (6,*) 'getting background field failed... abort'
          return
       endif
       
       
-      call check_nan3 (maps_rh,ii,jj,kk,istatus)
+      
+      
+      call check_nan3 (data,ii,jj,kk,istatus)
       if (istatus.ne.1) then
          write(6,*) 'NaN detected from RUC/MAPS...abort'
          return
@@ -453,22 +408,7 @@ c     first the rh data
       i4time = save_i4time
       filename = savefilename
       
-c     specific humidity  (now contained in maps_rh variable) directly
       
-      
-      do k = 1,kk
-         do j = 1,jj
-            do i = 1,ii
-               
-               data (i,j,k) = maps_rh(i,j,k)
-               
-            enddo
-         enddo
-         
-         
-      enddo
-      
- 151  continue                  ! go here if using rams data as background
       
 c     check for negative input and warn
       
