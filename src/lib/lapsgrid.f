@@ -136,7 +136,7 @@ c       1994 Steve Albers
        
         call array_minmax(topo,ni,nj,rmin,rmax,r_missing_data)
         if(rmin .lt. -1000. .or. rmax .gt. 9000.)then
-            write(6,*)' Error, topo range out of bounds',rmin,max
+            write(6,*)' Error, topo range out of bounds',rmin,rmax
             istatus = 0
             return
         endif
@@ -394,7 +394,8 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
-     1  ,path_to_landuse30s
+     1  ,path_to_landuse30s,path_to_green_frac10m
+     1  ,path_to_soiltemp1deg
      1  ,fdda_model_source_cmn
 
 
@@ -1363,8 +1364,56 @@ c     erad = 6367000.
 
       return
       end
+c
+c-------------------------------------------------------------
+      subroutine get_path_to_green_frac_10m(path_to_green_frac_10m
+     &,istatus)
 
+      include 'lapsparms.cmn' ! path_to_green_frac10m
+      include 'grid_fname.cmn'! grid_fnam_common
 
+!     This routine accesses the path_to_green_frac10m variable from the
+!     .parms file via the common block.
+
+      character*200 path_to_green_frac_10m
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      path_to_green_frac_10m =  path_to_green_frac10m
+
+      return
+      end
+c
+c---------------------------------------------------------------
+      subroutine get_path_to_soiltemp_1deg(path_to_soiltemp_1deg
+     &,istatus)
+
+      include 'lapsparms.cmn' ! path_to_soiltemp1deg
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the path_to_landuse30s  variable from the
+!     .parms file via the common block.
+
+      character*200 path_to_soiltemp_1deg
+
+      call get_laps_config(grid_fnam_common,istatus)
+
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      path_to_soiltemp_1deg =  path_to_soiltemp1deg
+
+      return
+      end
+c
+c --------------------------------------------------------------
       subroutine array_minmax(a,ni,nj,rmin,rmax,r_missing_data)
 
       real*4 a(ni,nj)
