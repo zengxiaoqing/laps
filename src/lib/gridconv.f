@@ -802,10 +802,10 @@ c
       integer i,j,k
 c
       character*2 gproj
-
-      real sw(2),ne(2),nxc,nyc,nzc,rota,lat0,lon0
+      integer nxc,nyc,nzc
+      real sw(2),ne(2),rota,lat0,lon0
       real tol
-      parameter (tol=.03)
+      parameter (tol=.01)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
 
 
@@ -868,10 +868,10 @@ c
                if(grx(i,j).gt.1.-tol) grx(i,j) = max(1.,grx(i,j))
                if(gry(i,j).gt.1.-tol) gry(i,j) = max(1.,gry(i,j))
 
-               if(grx(i,j).lt.float(nx_bg)+1.-tol) 
-     +              grx(i,j) = min(float(nx_bg),grx(i,j))
-               if(gry(i,j).lt.float(ny_bg)+1.-tol) 
-     +              gry(i,j) = min(float(ny_bg),gry(i,j))
+               if(grx(i,j).lt.float(nx_bg)+tol) 
+     +              grx(i,j) = min(float(nx_bg)-tol,grx(i,j))
+               if(gry(i,j).lt.float(ny_bg)+tol) 
+     +              gry(i,j) = min(float(ny_bg)-tol,gry(i,j))
 
                if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
      .              gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
@@ -997,6 +997,9 @@ c
       if (xx .eq. 2.0) then
          staval=scr(2)
       else
+
+
+
          call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval)
       endif
 c
