@@ -47,6 +47,7 @@ c       Original by C. Hartsough, FSL  c. 1992
 c       Changes:  
 c           P.Stamus  20 Dec 1996  Porting changes for go anywhere LAPS
 c                     25 Aug 1997  Changes for dynamic LAPS.
+c                     17 Nov 1997  Fill empty arrays (HP compiler prob).
 c       
 c=========================================================================
 c
@@ -99,6 +100,15 @@ c
 	n_meso_g = 0          !old mesonet gone...
 	n_meso_pos = 0
 c
+	do n=1,mxstn
+	   ivals1(n) = imising
+	   ivals2(n) = imising
+	do i=1,26
+	   rely(i,n)   = imissing
+	   rely_l(i,n) = imissing
+	enddo !i
+	enddo !n
+c
 c.....	OPEN QC FILE
 c
 	call get_directory('log', outfile, len)
@@ -124,13 +134,6 @@ c
 c
 c.....  climatological extreme test            
 c                 
-	do n=1,mxstn
-	do i=1,26
-	  rely(i,n)   = imissing
-	  rely_l(i,n) = imissing
-	enddo !i
-	enddo !n
-c
 	write(60,*) ' # of stns available: ',
      &                         n_obs_b, n_obs_b_l, n_obs_pos_b
 	if(n_obs_b.le.0 .or. n_obs_b_l.le.0) then
