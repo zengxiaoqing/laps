@@ -227,7 +227,8 @@ AC_OUTPUT(src/include/trigd.inc
           etc/ramrsf.pl
 	  etc/laps_localization.pl
           etc/sendLAPS.pl
-          etc/wfo_post.pl)
+          etc/wfo_post.pl
+          etc/xferData.pl)
 
 
 

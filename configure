@@ -2802,7 +2802,8 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/ramrsf.pl
 	  etc/laps_localization.pl
           etc/sendLAPS.pl
-          etc/wfo_post.pl src/include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+          etc/wfo_post.pl
+          etc/xferData.pl src/include/config.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -2904,7 +2905,8 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/ramrsf.pl
 	  etc/laps_localization.pl
           etc/sendLAPS.pl
-          etc/wfo_post.pl"}
+          etc/wfo_post.pl
+          etc/xferData.pl"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

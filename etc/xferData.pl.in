@@ -1,0 +1,119 @@
+#!@PERL@
+use strict;
+#
+# Expected arguments: LAPSROOT LAPS_DATA_ROOT OUTPUTDIR
+#
+#  1 - read contents of $fcstprd/ram and $fcstprd/rsf directories
+#  2 - fill bigfile located in WFO_FCSTPRD; log errors and diagnostics
+#  3 - remove files in $fcstprd/ram and $fcstprd/rsf after processing
+#  4 - notify that transfer has occurred
+
+# Set up environment variables.
+my $LAPSROOT = shift;
+my $xfer_home = "$LAPSROOT/bin";
+require "$LAPSROOT/etc/fxa.pm";
+
+my $LAPS_DATA_ROOT=shift;
+
+my $OUTDIR=shift || die "LAPSROOT, LAPS_DATA_ROOT, and OUTDIR, required as inputs";
+
+my $fxa_sys =  &Get_env'fxa; #'
+$ENV{PATH}.=":@NETCDF@/bin";
+my($LAPS_LOG_PATH);
+if($fxa_sys!=0){
+    $LAPS_LOG_PATH = &Set_logdir'fxa; #'
+}else{
+    $LAPS_LOG_PATH = "$LAPS_DATA_ROOT/log";
+}
+
+
+
+my $fcstprd = "$LAPS_DATA_ROOT/lapsprd";
+$ENV{XFR_HOME} =     "$xfer_home";
+$ENV{FCSTPRD} =      "$fcstprd";
+$ENV{WFO_FCSTPRD}= "$ENV{FXA_DATA}/Grid/FSL/netCDF/LAPS_Grid/$OUTDIR/";        
+$ENV{TRANS_TBL} =    "$LAPS_DATA_ROOT/static/model/usr/public_rams2wfo.tbl";
+
+#opendir(FCSTPRD,"$LAPS_DATA_ROOT/lapsprd/fua") 
+#    or die "Cannot opendir $LAPS_DATA_ROOT/lapsprd/fua";
+#my $filename;
+#foreach $filename (sort readdir(FCSTPRD)) 
+
+#  Globbing returns complete paths.  We will operate on only the most
+#  recent file.   $filename =~ s#.*/## returns the basename.
+
+my @filenames = <$LAPS_DATA_ROOT/lapsprd/fsf/9*>;
+@filenames = reverse sort @filenames;
+my $filename = $filenames[0];
+$filename =~ s#.*/##;
+
+  if($filename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d\d\d)\.fsf$/){
+    $filename = "$1$2$3";
+    my $yyjjjhh = "$1$2";
+    my $fcsthr = $3;
+    my $logfile = "$LAPS_LOG_PATH/xferlog.$2$3";
+
+    $fcsthr = $fcsthr + 0;             #convert string to number (02 -> 2)
+    my $runtime = $yyjjjhh."00";
+#    print "$filename $yyjjjhh $runtime\n";
+#    exit;
+    
+    my $unixtimeRun = `$xfer_home/fname2unixtime.exe $filename`;
+    chomp($unixtimeRun);
+    my($inittime,$fcsttime);
+    if($unixtimeRun =~ /^\s+(\d+)\s+(\d+)\s*$/){
+	$inittime = $1;
+	$fcsttime = ($2 - $1)/3600;
+#	print "$unixtimeRun $filename $inittime $fcsttime\n";
+#	exit;
+    }else{
+	print "ERROR: failed in call to $xfer_home/fname2unixtime.exe $filename $0";
+	next;
+    }
+
+    &run_sys("$xfer_home/xfer_model.exe $filename >> $logfile");
+#    print "$filename\n";
+    &run_sys("chmod go+w $ENV{WFO_FCSTPRD}/19*"); 
+#    print "$unixtimeRun<>$fcsthr\n";
+    my $sys = "/bin/csh -c '$ENV{FXA_HOME}/bin/GridNotify $OUTDIR $inittime $fcsttime'";
+#    print "Calling $sys\n";
+    &run_sys($sys);
+
+#  Starting a new cycle (model run)?  Clean up previous model runs.
+
+if($fcsthr==0){
+  foreach (<$LAPS_DATA_ROOT/lapsprd/fua/*>) {if (!/$yyjjjhh/) {unlink}}
+  foreach (<$LAPS_DATA_ROOT/lapsprd/fsf/*>) {if (!/$yyjjjhh/) {unlink}}
+              }
+
+  }
+
+
+sub run_sys{
+    my($sys) = @_;
+    my $rc = 0xffff & system($sys);
+    if($rc == 0){
+#	print "$sys completed \n";
+    }elsif($rc == 0xff00){
+	die "$rc Command $sys failed: $! ";
+    }elsif($rc > 0x80){
+	$rc >>= 8; 
+	print "$sys returned non-zero exit status $rc\n";
+        exit;
+    }else{
+	print "$sys ran with ";
+	if($rc & 0x80){
+	    $rc &= ~0x80;
+	    print "coredump from ";
+	}
+	print "signal $rc\n";
+	exit -1;
+    }
+}
+
+
+
+
+
+
+
