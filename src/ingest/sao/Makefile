@@ -29,6 +29,8 @@ SRC   = obs_driver_sub_af.f \
         read_synop_cwb.f \
         get_local_obs.f \
         read_local_obs.f \
+        get_ldad_madis_data.f \
+        read_ldad_madis_data.f \
         get_local_cwb.f \
         read_local_cwb.f \
         get_maritime_obs.f \
