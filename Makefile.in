@@ -45,6 +45,7 @@ EXEDIRS = src/accum \
           src/lapsplot \
           src/sched \
           src/sfc \
+          src/sfc/table \
           src/soil \
           src/temp \
           src/wind \

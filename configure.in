@@ -222,6 +222,7 @@ AC_OUTPUT(src/lib/Makefile
           src/lapsplot/Makefile
           src/sched/Makefile
           src/sfc/Makefile
+          src/sfc/table/Makefile
           src/soil/Makefile
           src/static/Makefile
           src/temp/Makefile
