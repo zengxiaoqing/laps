@@ -114,11 +114,11 @@ cdis
 
 
 
-        function i4time_to_a11(i4time)
+        function i4time_to_a11_dummy(i4time)
 
 !       dd_mon_hhmm
 
-        character*11 i4time_to_a11
+        character*11 i4time_to_a11_dummy
         character*11 a11
 !       character*9 a9_time
         character*24 asc_tim_vol
@@ -142,7 +142,7 @@ cdis
         a11(8:9) = asc_tim_vol(13:14) ! hr
         a11(10:11) = asc_tim_vol(16:17) ! mn
 
-        i4time_to_a11 = a11
+        i4time_to_a11_dummy = a11
 
         return
         end

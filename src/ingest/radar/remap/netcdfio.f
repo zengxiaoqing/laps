@@ -171,7 +171,7 @@ c      Determine filename extension
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
 
-       get_longitude = nint(siteLon*100000)
+       get_longitude = -abs(nint(siteLon*100000))
        return
        end
 
@@ -293,12 +293,12 @@ c      Determine filename extension
  
  
        function get_nyquist()
-       integer get_nyquist        ! Nyquist velocity of the radial (M/S*100)
+       real get_nyquist                 ! Nyquist velocity of the radial (M/S)
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
-       get_nyquist = nint(r_nyquist*100.)
+       get_nyquist = r_nyquist
        return
        end
  
@@ -317,11 +317,11 @@ c      Determine filename extension
        include 'netcdfio_radar_common.inc'
  
        if(index .eq. 1)then
-           first_gate_m = firstGateRangeZ
-           gate_spacing_m = gateSizeZ
+           first_gate_m = firstGateRangeZ * 1000.
+           gate_spacing_m = gateSizeZ * 1000.
        elseif(index .eq. 2)then
-           first_gate_m = firstGateRangeV
-           gate_spacing_m = gateSizeV
+           first_gate_m = firstGateRangeV * 1000.
+           gate_spacing_m = gateSizeV * 1000.
        endif
 
        return

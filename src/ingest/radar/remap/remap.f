@@ -97,10 +97,11 @@
       integer get_scan
       integer get_tilt
       integer get_num_rays
+      integer get_vcp
       integer get_azi
-      integer get_nyquist
       integer get_data_field
       integer get_status
+      real    get_nyquist
 
 !     Beginning of Executable Code 
 !     Some initializations  
@@ -155,7 +156,7 @@
 
       radar_alt=  float(i_alt)
       radar_lat=  0.00001 * float(i_lat)
-      radar_lon= -0.00001 * float(i_lon) 
+      radar_lon=  0.00001 * float(i_lon) 
       write(6,*)' Radar altitude (m): ',radar_alt  
       write(6,*)' Radar latitude (degrees): ',radar_lat  
       write(6,*)' Radar longitude (degrees): ',radar_lon  
@@ -257,7 +258,7 @@
 !             Not end of tilt
               n_rays = n_rays + 1
               azim(n_rays) = 0.01 * get_azi(n_rays)
-              v_nyquist_ray_a(n_rays) = 0.01 * get_nyquist() 
+              v_nyquist_ray_a(n_rays) = get_nyquist() 
 
               if(n_rays-1 .eq. n_rays/10 * 10)then
                 write(6,*)'    n_rays = ',n_rays  
