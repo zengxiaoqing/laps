@@ -396,7 +396,7 @@ netcdf fsf {
             fd:LAPS_units="NONE";
 
         //      Model Topography                    //
-        //      bigfile name = 
+        //      bigfile name = staticTopo
         float
             ter(record,z,y,x);
             ter:_FillValue = 1.e+37f;
