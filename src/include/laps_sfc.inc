@@ -9,3 +9,15 @@ c.....  Most, if not all, porting changes will be done automatically
 c.....  when 'lapsparms.for' is changed.
 c
       parameter(badflag = -99.9)
+
+
+!       Namelist data structure
+	type sfc_nl_type
+          sequence
+
+          real rms_wind
+
+	end type sfc_nl_type
+
+        type (sfc_nl_type) sfc_nl_parms
+
