@@ -1,7 +1,8 @@
        Subroutine gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,
      &wavelength,resolution_x,resolution_y,rsndr_res_km,start_pix,
      &start_line,end_pix,end_line,ewCycles,ewIncs,nsCycles,nsIncs,
-     &f_time,orbAt,nch,nxl,nyl,lat,lon,rpix,rline,istatus)
+     &f_time,orbAt,nch,nxl,nyl,lat,lon,rpix,rline,pct_req_lsr,
+     &istatus)
 c
 c
 c
@@ -28,7 +29,8 @@ c
       real*4        rsndr_res_km
       real*4        r_missing_data
       real*4        rnx,rny,rnp
-      real*4        rpct_out
+      real*4        pct_covered
+      real*4        pct_req_lsr
 
       real*8        r8lat,r8lon
       real*8        ELEV,SCAN
@@ -223,15 +225,17 @@ c           write(6,*)'Lat/Lon ', lat(k,j),lon(k,j)
          rnx=float(nxl)
          rny=float(nyl)
          rnp=float(npoints_out)
-         write(6,*)'WARNING! Some rl/rp values out of bounds'
-         rpct_out=rnp/(rnx*rny)
-         if(rpct_out.gt.0.50)then
-            write(6,*)'More than 50% of domain not covered ',rpct_out
+         write(6,*)'WARNING! Some rl/rp values out of domain'
+         pct_covered=((rnx*rny)-rnp)/(rnx*rny)*100.
+         if(pct_covered.lt.pct_req_lsr*100.)then
+            print*,'Exceeded domain cover namelist parameter',
+     +' pct_req_lsr: % req/% covered:',pct_req_lsr,'/',pct_covered
             return
          else
-            write(6,*)'Percent out of domain = ',rpct_out
+            write(6,*)'Percent of domain covered = ',pct_covered
          endif
-        
+      else
+         write(6,*)'100% Percent of domain covered = ',pct_covered
       endif
 c
 c     do j = 1,nyl,20
@@ -248,7 +252,8 @@ c
          j1=nyl/2
       endif
 
-      if(.true.)then
+      if(i1.gt.0 .and. i1.lt.nelems .and.
+     +   j1.gt.0 .and. j1.le.nlines)then
          call compute_sat_res_m(rp_div,rl_div,
      &rpix(i1,j1),rline(i1,j1),start_pix,start_line,instr,
      &rsndr_res_m,istatus)

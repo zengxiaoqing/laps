@@ -25,7 +25,7 @@ c get the number of satellites and channels data/static/sat_sounder.nl
 c
       call get_sat_sounder_info(n_sat,c_sat_id,
      &n_channels,c_sounding_path,n_elems,n_lines,r_channel_wave
-     &lengths,ismsng,istatus)
+     &lengths,ismsng,pct_req_lsr,istatus)
 
       if(istatus.ne.1)then
          write(6,*)'Error returned from get_sat_sounder_info'
@@ -36,8 +36,8 @@ c
 
          call lsr_driver_sub(NX_L_CMN,NY_L_CMN,n_channels,
      &     n_elems(i),n_lines(i),ismsng,c_sat_id(i),c_sounding_path(i),
-     &     r_channel_wavelengths(i,1),istatus)
-         if(istatus.eq.1)then
+     &     r_channel_wavelengths(i,1),pct_req_lsr,istatus)
+         if(istatus.ne.1)then
             if(i.eq.n_sat)then
                write(6,*)'No data processed in lsr_driver_sub'
                write(6,*)'Finished in lsr_driver'
@@ -57,7 +57,7 @@ c=======================================================
 c
       subroutine lsr_driver_sub(nx_l,ny_l,n_channels,
      &nelems,nlines,ismsng,c_sat_id,c_sounding_path,rch_wvlngth,
-     &istatus)
+     &pct_req_lsr,istatus)
 c
       implicit none
 c
@@ -104,6 +104,7 @@ c
       real*4        r_missing_data
       real*4        rmintime,rmaxtime
       real*4        rltb,rlte
+      real*4        pct_req_lsr
 
       real*4        scalingBias(nlines,n_channels)
       real*4        scalingGain(nlines,n_channels)
@@ -247,9 +248,8 @@ c
       write(6,*)'Compute sat-2-laps look-up-table'
       call gen_gvrsndr_lut_lsr(c_filename_sat,nlines,nelems,wavelength,
      &ires_x,ires_y,r_sndr_res_km,nw_pix,nw_line,se_pix,se_line,
-     &ewCycles,ewIncs,nsCycles,nsIncs,
-     &f_time,orbitattitude,n_channels,nx_l,ny_l,
-     &lat,lon,r_llij_lut_ri,r_llij_lut_rj,istatus)
+     &ewCycles,ewIncs,nsCycles,nsIncs,f_time,orbitattitude,n_channels,
+     &nx_l,ny_l,lat,lon,r_llij_lut_ri,r_llij_lut_rj,pct_req_lsr,istatus)
 
       if(istatus.eq.0)then
          write(6,*)'Sounder Nav computed'
@@ -332,7 +332,7 @@ c
       do i=1,nx_l
          if(r_llij_lut_ri(i,j).ne.r_missing_data.and.
      &      r_llij_lut_rj(i,j).ne.r_missing_data)then
-            ltindex=int(r_llij_lut_rj(i,j))
+            ltindex=int(r_llij_lut_rj(i,j)+0.5)
             rltb=lineTimeBeg(ltindex,1)
             rlte=lineTimeEnd(ltindex,1)
             rmintime=min(rmintime,rltb)
