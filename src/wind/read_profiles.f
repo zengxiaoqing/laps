@@ -40,7 +40,7 @@ cdis
  
         subroutine read_profiles(i4time_sys,heights_3d,             ! I
      1                   lat_pr,lon_pr,obstype,c5_name_a,           ! O
-     1                   lat,lon,                                   ! I
+     1                   lat,lon,i4time_ob_pr,                      ! I
      1                   MAX_PR,MAX_PR_LEVELS,                      ! I
      1                   l_use_raob,l_use_all_nontower_lvls,        ! I
      1                   ob_pr_u , ob_pr_v ,                        ! O
@@ -334,6 +334,8 @@ c
                             obs_point(nobs_point)%type = 'prof'      
                         endif 
                         obs_point(nobs_point)%file = 'pro'      
+                        obs_point(nobs_point)%i4time = 
+     1                                        i4time_ob_pr(i_pr)           
                     endif ! istatus
 
                     call uv_to_disp(ob_u,ob_v,ob_di,ob_sp)
