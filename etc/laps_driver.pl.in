@@ -60,39 +60,49 @@ unless(-x "$LAPSROOT/bin/$exe"){
     die "Program $LAPSROOT/bin/$exe not found or not executable";
 }
 
-
-
-#
-# using 2 here makes sure that this process will run but also prevents cascading
-#
-my $plimit = 2;
-
-
-my $machine = `uname`;
-$machine =~ s/\s*$//;
-
-if($machine eq "SunOS"){
-    open(PIDF,"ps -a |");
-}else{
-    open(PIDF,"ps -ef |");
-}
-my @pid = grep(/$exe/,<PIDF>);
-close(PIDF);
-
-if($#pid>=$plimit){
-    die "$exe already running with pid=$pid[0]";
-}
-
 my $hh = (gmtime)[2];
 my $mm = (gmtime)[1];
 my $hhmm = 100*$hh+$mm;
 $hhmm = "0".$hhmm while(length($hhmm)<4);
 my $log = $exe;
 $log =~ s/\..*$/\.log\.$hhmm/;
+open(SAVEOUT,">&STDOUT");
+open(SAVEERR,">&STDERR");
+open(STDOUT, ">$LAPS_LOG_PATH/$log") || die "Can't redirect stdout";
+open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+select(STDERR); $| = 1;
+select(STDOUT); $| = 1;
+#
+# Look for a previous lock for this exe in the log directory
+#
 
-my $sys = "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
 
-exec($sys);
+
+
+my(@locks);
+opendir(LOCKDIR,"$LAPS_LOG_PATH");
+@locks = grep /^\.\#$exe/, readdir(LOCKDIR);
+closedir(LOCKDIR);
+
+
+foreach(@locks){
+    $_ =~ /^\.lock$exe(\d+)$/;
+    my $jpid = $1;
+    print "WARNING Found LOCK file for $exe with pid $jpid - killing previous job\n";
+    kill 9,$jpid;
+    unlink "$LAPS_LOG_PATH/$_";
+}
+
+my $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
+open(LOCK,">$lockfile");
+close(LOCK);
+
+
+my $sys = "$LAPSROOT/bin/$exe ";
+
+system($sys);
+
+unlink "$lockfile";
 
 
 
