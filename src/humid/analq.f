@@ -115,6 +115,7 @@ c regular internal variables
         integer irad,jrad
         integer i,j,k
         real cgsum ! cloud grid sum for vertical cloud check
+        real frac ! fraction used in linear interpolation BL moisture
         integer
      1  npts,  !npfilepts in calling routine
      1  istatus
@@ -178,7 +179,28 @@ c boundary at this time  2.2.93
         do k = kstart(i,j),qk(i,j)
                 if (kstart (i,j) .ge. qk(i,j) ) goto 11 ! skip loop
 
-                data(i,j,k) = (data(i,j,k) + data(i,j,k+1) )/2.
+c new method is simple linear approximation in pressure space.
+c this method is independent of grid spacing, the old method was
+c not going to be consistent if vertical grid were to vary.  However, 
+c the old method didn't overestimate Q so badily.  So to emulate that
+c aspect, the new analysis will average the "backgraound" with the
+c linear approximation at all levels.
+
+             frac = (float(k) - float(qk(i,j)) )/
+     1              (float(kstart(i,j) ) -  float(qk(i,j)) )
+
+             frac = abs (frac)
+
+
+             data(i,j,k) = data(i,j,kstart(i,j)) * frac +
+     1             (1. - frac) * data(i,j,qk(i,j)) 
+     1       + data(i,j,k)
+
+             data (i,j,k) = data (i,j,k) /2.
+
+
+c old method replaced 6/9/98 DB, new method is grid independent.
+c                data(i,j,k) = (data(i,j,k) + data(i,j,k+1) )/2.
         enddo
         endif
 11      continue  ! loop skipped  no boundary layer, no mixing
