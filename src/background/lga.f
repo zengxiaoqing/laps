@@ -1380,9 +1380,9 @@ c
        if(accepted_files.gt.1)then
 
          i=accepted_files
-         if(accepted_files.gt.2)then
-            i=2
-         endif
+c        if(accepted_files.gt.2)then
+c           i=2
+c        endif
 
          print*,i,bg_times(i),bg_times(i-1),
      +     bg_valid(i),bg_valid(i-1),laps_cycle_time,
