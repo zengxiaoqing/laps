@@ -3,7 +3,7 @@ netcdf rsf {
     dimensions:
         record = unlimited,
         z = 1,
-	x =125,
+	x = 125,
 	y = 105,
         nav = 1,
         namelen = 132;
@@ -401,11 +401,86 @@ netcdf rsf {
             ter(record,z,y,x);
             ter:_FillValue = 1.e+37f;
             ter:long_name="Terrain Height";
-            ter:units="none";
+            ter:units="meters";
             ter:valid_range= 0.f, 20.f;
             ter:LAPS_var="TER";
             ter:lvl_coord="MSL";
             ter:LAPS_units="meters";
+
+        //      Predicted outgoing LW radiation     //
+        //      bigfile name = not used
+        float
+            lwo(record,z,y,x);
+            lwo:_FillValue = 1.e+37f;
+            lwo:long_name="Outgoing LW Radiation";
+            lwo:units="w/m{-2}";
+            lwo:valid_range= 0.f, 10000.f;
+            lwo:LAPS_var="LWO";
+            lwo:lvl_coord="AGL";
+            lwo:LAPS_units="w/m{-2}";
+
+        //      Predicted outgoing SW radiation     //
+        //      bigfile name = not used
+        float
+            swo(record,z,y,x);
+            swo:_FillValue = 1.e+37f;
+            swo:long_name="Outgoing SW Radiation";
+            swo:units="w/m{-2}";
+            swo:valid_range= 0.f, 10000.f;
+            swo:LAPS_var="SWO";
+            swo:lvl_coord="AGL";
+            swo:LAPS_units="w/m{-2}";
+
+        //      Predicted surface sensible heat flux //
+        //      bigfile name = not used
+        float
+            shf(record,z,y,x);
+            shf:_FillValue = 1.e+37f;
+            shf:long_name="Sensible Heat Flux";
+            shf:units="w/m{-2}";
+            shf:valid_range= -1000.f, 1000.f;
+            shf:LAPS_var="SHF";
+            shf:lvl_coord="AGL";
+            shf:LAPS_units="w/m{-2}";
+
+        //      Predicted surface latent heat flux //
+        //      bigfile name = not used
+        float
+            lhf(record,z,y,x);
+            lhf:_FillValue = 1.e+37f;
+            lhf:long_name="Latent Heat Flux";
+            lhf:units="w/m{-2}";
+            lhf:valid_range= -1000.f, 1000.f;
+            lhf:LAPS_var="LHF";
+            lhf:lvl_coord="AGL";
+            lhf:LAPS_units="w/m{-2}";
+
+        //      Predicted PBL height //
+        //      bigfile name = not used
+        float
+            blh(record,z,y,x);
+            blh:_FillValue = 1.e+37f;
+            blh:long_name="Height of PBL";
+            blh:units="meters";
+            blh:valid_range= 0.f, 10000.f;
+            blh:LAPS_var="BLH";
+            blh:lvl_coord="AGL";
+            blh:LAPS_units="meters";
+
+        //      Predicted Ground Temperature //
+        //      bigfile name = not used
+        float
+            tgd(record,z,y,x);
+            tgd:_FillValue = 1.e+37f;
+            tgd:long_name="Ground Temperature";
+            tgd:units="K";
+            tgd:valid_range= 0.f, 400.f;
+            tgd:LAPS_var="TGD";
+            tgd:lvl_coord="AGL";
+            tgd:LAPS_units="K";
+
+
+
 
         //	LAPS variables
                 	        
@@ -449,6 +524,12 @@ netcdf rsf {
             vis_comment(record,z,namelen),
             fd_comment(record,z,namelen),
             ter_comment(record,z,namelen),
+            lwo_comment(record,z,namelen),
+            swo_comment(record,z,namelen),
+            shf_comment(record,z,namelen),
+            lhf_comment(record,z,namelen),
+            blh_comment(record,z,namelen),
+            tgd_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -582,10 +663,33 @@ netcdf rsf {
             fd_fcinv(record, z);
             fd_fcinv:_FillValue= 0s;
 
-         short
+        short
             ter_fcinv(record, z);
             ter_fcinv:_FillValue= 0s;
 
+        short
+            lwo_fcinv(record, z);
+            lwo_fcinv:_FillValue= 0s;
+
+        short
+            swo_fcinv(record, z);
+            swo_fcinv:_FillValue= 0s;
+
+        short
+            shf_fcinv(record, z);
+            shf_fcinv:_FillValue= 0s;
+
+        short
+            lhf_fcinv(record, z);
+            lhf_fcinv:_FillValue= 0s;
+
+        short
+            blh_fcinv(record, z);
+            blh_fcinv:_FillValue= 0s;
+
+        short
+            tgd_fcinv(record, z);
+            tgd_fcinv:_FillValue= 0s;
 
         //	list of grid levels
 
