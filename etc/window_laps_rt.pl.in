@@ -89,13 +89,16 @@ if( $CONFIG_DOMAIN eq "t") {
   } 
   mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
   print "Use mkdatadir.pm to generate lapsdataroot directory structure\n";
-  mkdatadirs::mkdatadirs($LAPS_DATA_ROOT);
+  &mkdatadirs::mkdatadirs($LAPS_DATA_ROOT);
 }else{
   print "Keep lapsprd and log subdirectories\n";
-  system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
-  rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
-  mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
-  mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make static in $LAPS_DATA_ROOT $!\n";
+  if(-e $LAPS_DATA_ROOT ){
+     system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
+     rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+     mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
+     &mkdatadirs::mkdatadirs.pm($LAPS_DATA_ROOT);
+  }else{print "You want to save these but there is no dataroot. I'm terminating\n";
+        exit;}
 }
 
 if( $LAPS_TEMPLATE ){
