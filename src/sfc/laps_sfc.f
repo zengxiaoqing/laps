@@ -196,10 +196,10 @@ c
 c
 c.....  Namelist stuff
 c
-	integer use_lso_qc, skip_internal_qc
+	integer use_lso_qc, skip_internal_qc, itheta
 	character nl_file*256
 c
-	namelist /surface_analysis/ use_lso_qc, skip_internal_qc
+	namelist /surface_analysis/ use_lso_qc, skip_internal_qc, itheta
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
@@ -566,6 +566,7 @@ c
 	call qcdata(filename,infile_last,rely,ivals1,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn3, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     ni,nj,mslp_bk,back_mp,
      &     istatus)
 c
 	if(istatus .eq. 1) then
@@ -675,6 +676,7 @@ c.....	derived variables, etc.  The output file goes to the lapsprd
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,laps_cycle_time,
+     &     itheta,
      &     dt,del,gam,ak,lat,lon,topo,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g,

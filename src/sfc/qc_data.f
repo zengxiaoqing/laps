@@ -34,6 +34,7 @@ c
 	subroutine qcdata(filename,infile_l,rely,ivals1,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
+     &     ni, nj, mslp_bk_mb, iback_mp,
      &     istatus)
 c
 c=========================================================================
@@ -60,7 +61,10 @@ c
 c
 	integer ii(mxstn), jj(mxstn)
 c
-	character stn(mxstn)*3
+	character stn(mxstn)*3, c_field*4
+c
+c..... Model background 
+        real mslp_bk_mb(ni,nj)
 c
 c..... Arrays for the prev hour's OBS file input data
 c                            
@@ -86,8 +90,12 @@ c
 c
 c.....  Start here.
 c
+        write(6,*)
+        write(6,*)' Subroutine qc_data...'
+
 	n_obs_curr = n_obs_b
-	missing = -99.9
+!       missing = -99.9
+        badflag = -99.9
 	imissing = -99
 	jstatus = 0
 c
@@ -113,7 +121,7 @@ c
 	write(60,*)' ** LAPS Surface Quality Control **'
 	write(60,*)' ** begin qc on surface data ',filename ,' ** '
 c
-c.....  Get previous sfc data (current passed in via common)
+c.....  Get previous sfc data (current passed in via argument list)
 c
 	call read_surface_old(infile_l,mxstn,atime_l,n_meso_g_l,
      &  n_meso_pos_l,n_sao_g_l,n_sao_pos_g_l,n_sao_b_l,n_sao_pos_b_l,
@@ -268,11 +276,56 @@ c
 	do 101 j = 1,n_obs_curr
 	 write(60,900) j, stn(j), (rely(i,j),i=1,26)
  101	continue
+
+c
+c.....  model background check (for MSLP)
+c
+        c_field = 'MSLP'
+        if(iback_mp .eq. 1)then
+            write(6,*)' BKG '//c_field//' check'
+            thresh = 10.
+            do j = 1,n_obs_curr
+                observation = pmsl_s(j)
+
+                if(observation .ne. badflag)then
+                    ista = ii(j)
+                    jsta = jj(j)
+
+                    if(ista .ge. 1 .and. ista .le. ni .and. 
+     1                 jsta .ge. 1 .and. jsta .le. nj)then ! Inside the domain
+                        background = mslp_bk_mb(ista,jsta)
+                        diff = observation - background
+
+                        if(abs(diff) .le. thresh)then
+!                           write(6,911)j, stn(j), observation, 
+!    1                                  background, diff       
+ 911                        format('QC: ',i5,1x,a3,1x,3f9.1)     
+
+                        else
+                            write(6,912)j, stn(j), observation, 
+     1                                  background, diff       
+ 912                        format('QC: ',i5,1x,a3,1x,3f9.1
+     1                            ,' Exceeds threshold')     
+
+                        endif
+
+                    endif ! Inside the domain
+
+                endif ! Station has missing data
+
+            enddo ! j
+
+        else
+            write(6,*)' Skipping BKG '//c_field//' check'
+
+        endif
+
 c
 c.....  qc finished
 c
 	jstatus = 1
  999	write(60,*) ' ** qc of surface data complete. ** '
+        write(6,*)  ' ** qc of surface data complete. ** '
 c
 	return
 	end

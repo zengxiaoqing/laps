@@ -35,6 +35,6 @@ c
 c..........     Recommended:  Use 700 mb most places, 500 mb over higher
 c..........                   terrain areas (like Colorado).
 c
-      	parameter(itheta = 5)
+c     	parameter(itheta = 5)
 c
 c

@@ -401,7 +401,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -491,7 +491,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -600,7 +600,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -693,7 +693,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -785,7 +785,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -884,7 +884,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -984,7 +984,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...
@@ -1124,7 +1124,7 @@ c
 c
 	enddo !k
 c
-	endfile(11)
+!       endfile(11)
 	close(11)	
 c
 c..... End of data reading.  Let's go home...

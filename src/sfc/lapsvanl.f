@@ -32,6 +32,7 @@ cdis
 c
 c
 	subroutine laps_vanl(i4time,filename,ni,nj,nk,mxstn,
+     &     itheta,
      &     laps_cycle_time,dt,del,gam,ak,lat,lon,topo,grid_spacing, 
      &     laps_domain,lat_s,lon_s,elev_s,t_s,td_s,ff_s,pstn_s,
      &     mslp_s,vis_s,stn,n_obs_b,n_sao_b,n_sao_g,

@@ -71,7 +71,7 @@ c
 	implicit none
 	integer num_sfc
 	real a_t, b_t, a_td, b_td, hbar, badflag
-	real elev(num_sfc), t(num_sfc), td(num_sfc)
+	real elev(num_sfc), t(num_sfc), td(num_sfc), elev_i
 	real cnt, cntd, sumht, sumh, sumt, sumh2, sumt2, sumtd, sumhtd
 	integer i
 c
@@ -94,25 +94,39 @@ c.....	Also calculate the mean elevation of the stations.
 c
 	do 10 i=1,num_sfc
 	  if(elev(i).le.badflag .or. t(i).le.badflag) go to 10
-	  sumht = (elev(i) * t(i)) + sumht
-	  sumh = elev(i) + sumh
-	  sumh2 = (elev(i) * elev(i)) + sumh2
+
+          if(abs(elev(i)) .lt. 1e-10)then ! prevents underflow if elev is zeros
+              elev_i = 0.
+          else
+              elev_i = elev(i)
+          endif
+
+	  sumht = (elev_i * t(i)) + sumht
+	  sumh = elev_i + sumh
+	  sumh2 = (elev_i * elev_i) + sumh2
 	  sumt = t(i) + sumt
 	  cnt = cnt + 1.
 c
 	  if(td(i) .le. badflag) go to 10
 	  sumtd = td(i) + sumtd
-	  sumhtd = (elev(i) * td(i)) + sumhtd
+	  sumhtd = (elev_i * td(i)) + sumhtd
 	  cntd = cntd + 1.
 10	continue
+c
+	hbar = sumh / cnt
+
+        if(hbar .eq. 0.)then
+            write(6,*)' WARNING in mean_lapse: station elevations'
+     1               ,' and hbar = 0.'
+            write(6,*)' Skipping lapse rate regression'
+            goto990
+        endif
 c
 	b_t = (cnt*sumht - sumh*sumt) / (cnt*sumh2 - sumh*sumh)
 	a_t = (sumt - b_t * sumh) / cnt
 c
 	b_td = (cntd*sumhtd - sumh*sumtd) / (cntd*sumh2 - sumh*sumh)
 	a_td = (sumtd - b_td * sumh) / cntd
-c
-	hbar = sumh / cnt
 c
 c.....	Do a consistency check on the dewpoint regression.  If msl intercept 
 c.....	is below zero or if the dewpoint lapse rate is positive, set td slope 
@@ -132,6 +146,7 @@ c
 c
 c.....	Now change that stuff to std lapse rate...in deg F...temp. fix
 c
+990     write(6,*)' mean_lapse: Using std lapse rate...'
 	b_t = -.01167
 	a_t = 59.
 	b_td = -.007
