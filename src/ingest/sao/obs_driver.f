@@ -87,6 +87,8 @@ c
 
         logical l_allow_empty_lso
 
+        ISTAT = INIT_TIMER()
+
         call get_config(istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error returned from get_config'
