@@ -218,8 +218,20 @@
      To introduce this section, here is a hierarchical listing of some primary 
      directories and files in the laps tree. The default LAPS structure is
      shown. These are created/addressed in various portions of section 2.2 
-     and beyond. Various "root" directories are mentioned in the form of
-     environment variables for easy reference.
+     and beyond. 
+
+     Various "root" directories are mentioned in the form of environment 
+     variables for easy reference. The three main environment variables are:
+ 
+     $srcroot - The location of the LAPS tar file / source code.
+
+     $lapsroot - The location of installed binaries and scripts (bin and etc).
+
+     $laps_data_root - The location of output data and namelists.
+
+     All three of these environment variables can either be part of one
+     directory tree or split out into separate trees as discussed at various
+     times below.
 
      <pre>
      /home_disk/
