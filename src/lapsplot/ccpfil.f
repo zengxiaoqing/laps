@@ -81,6 +81,8 @@ C
 !             We may only want to color missing data values for H-sects
               if(colortable(1:3) .eq. 'lin')then
                   ZREG(i,j) = scale_loc * 0.50 ! e.g. CSC 
+              elseif(colortable(1:3) .eq. 'cpe')then
+                  ZREG(i,j) = scale_loc * 0.00 ! e.g. CAPE
               else
                   ZREG(i,j) = scale_loc * 0.96 ! e.g. CIN
               endif
@@ -173,10 +175,11 @@ C Set number of contour levels and initialize Conpack
 C      
 !      CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',NCL)
 
+      cis = abs(scale) / float(ncols)
       CALL CPSETI('CLS - CONTOUR LEVEL SELECTION FLAG',+1)
-      CALL CPSETR('CIS', abs(scale) / float(ncols))
-      CALL CPSETR('CMN',(0.0           ) * abs(scale))
-      CALL CPSETR('CMX',(1.0+col_offset) * abs(scale))
+      CALL CPSETR('CIS', cis)
+      CALL CPSETR('CMN',(0.0           ) * abs(scale) + 2.0*cis)
+      CALL CPSETR('CMX',(1.0+col_offset) * abs(scale) + 2.0*cis)
 
       CALL CPRECT(ZREG, MREG, MREG, NREG, RWRK, LRWK, IWRK, LIWK)
 C      
@@ -267,8 +270,8 @@ C
               enddo
 
           elseif(colortable .eq. 'acc')then
-!             do i = 1,2
-              do i = 1,3
+              do i = 1,1
+!             do i = 1,3
                   call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
@@ -277,7 +280,7 @@ C
               enddo
 
           elseif(colortable .eq. 'cpe')then
-              do i = 1,2
+              do i = 1,1
                   call GSCR(IWKID, i+icol_offset, 0., 0., 0.)
               enddo 
 
@@ -315,6 +318,11 @@ C
           
           call GSCR(IWKID,icol+icol_offset,red,grn,blu)
       enddo
+
+      if(ncol2+2+icol_offset .le. 255)then
+          call GSCR(IWKID,ncol2+1+icol_offset,red,grn,blu)
+          call GSCR(IWKID,ncol2+2+icol_offset,red,grn,blu)
+      endif
 
       return
       end
@@ -406,28 +414,41 @@ c     Restore original color table
       iy = (y_2+.021) * 1024
 
 !     Left Edge
-      write(ch_low, 1)nint(scale_l/scale)
-      call right_justify(ch_low)
+      if(abs(scale_l/scale) .gt. 0.0 .and. 
+     1   abs(scale_l/scale) .le. 0.5                  )then
+          write(ch_low,3)scale_l/scale
+          call right_justify(ch_low)
+      else
+          write(ch_low, 1)nint(scale_l/scale)
+          call right_justify(ch_low)
+      endif
 
       ixl = 353
       CALL PCHIQU (  cpux(ixl),cpux(iy),ch_low,rsize ,0,+1.0)
 
 !     Right Edge
-      write(ch_high,1)nint(scale_h/scale)
+      if(abs(scale_h/scale) .ge. 1.0)then
+          write(ch_high,1)nint(scale_h/scale)
+ 1        format(i8)
+      else
+          write(ch_high,3)scale_h/scale
+ 3        format(f8.2)
+      endif
       call left_justify(ch_high)
- 1    format(i8)
 
       ixh = 878
       CALL PCHIQU (cpux(ixh),cpux(iy),ch_high,rsize,0,-1.0)
 
 !     Midpoint
       rmid = ((scale_l+scale_h) / scale)/2.0
-      if(abs(rmid) .gt. 1.0 .or. abs(scale_l) .gt. 1.0
-     1                      .or. abs(scale_h) .gt. 1.0)then
+      if(abs(rmid) .gt. 1.0 .or. abs(scale_l/scale) .gt. 1.0
+     1                      .or. abs(scale_h/scale) .gt. 1.0)then
           write(ch_mid,1)nint(rmid)
-      else
+      elseif(abs(scale_h/scale) .ge. 1.0)then
           write(ch_mid,2)rmid
  2        format(f8.1)
+      else
+          write(ch_mid,3)rmid
       endif 
       call left_justify(ch_mid)
       call s_len(ch_mid,len_mid)
