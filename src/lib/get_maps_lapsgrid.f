@@ -264,9 +264,12 @@ c new: changed variable name "ext" to "directory".
            if(istatus .ne. 1)then
               write(6,*)'get_modelfg_3d_sub: Warning - could not read'
      1                 ,' model file'
-           else ! istatus = 1
+           elseif(kmax.gt.1)then ! istatus = 1
                call qc_field_3d(var_2d,field_3d_laps
      1                         ,imax,jmax,kmax,istatus)            
+           else
+               call qc_field_2d(var_2d,field_3d_laps(1,1,1)
+     1                         ,imax,jmax,istatus)
            endif
 
        else ! i_best_file = 0

@@ -763,7 +763,7 @@ c
       real*4 rlatc,rlonc           !Grid center lat, lon
       real*4 xmin,ymin,xmax,ymax
       real*4 coslatc
-      data r/6.3712e6/
+      data r/6.3712e6/             !this earth radius is = to that in lapsgrid.f
       common /cegrid/nx,ny,nz,nw,se,rlatc,rlonc
 c
 c===============================================================================
@@ -818,8 +818,9 @@ cc     implicit none
       real*4 dx,dy
       real*4 R,PI
       real*4 deg2rad
-      parameter (R=6367000.)
       common /mcgrid/rlonc,rlatc,nx,ny,sw,ne,dx,dy
+
+      call get_earth_radius(R,istatus)
 
       PI=acos(-1.)
       deg2rad=PI/180.

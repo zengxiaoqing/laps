@@ -15,12 +15,17 @@
       real field_3d(ni,nj,nk), lower_bound, upper_bound
       real r_missing_data
 
-      if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
+      if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3'.or.
+     1   var_2d .eq.'USF' .or. var_2d .eq. 'VSF')then
           lower_bound = -200.
           upper_bound = +200.
-      elseif(var_2d .eq. 'T3')then
+      elseif(var_2d .eq. 'T3'.or.var_2d.eq.'TSF'.or.
+     1       var_2d .eq. 'DSF')then
           lower_bound = +173.
           upper_bound = +400.
+      elseif(var_2d .eq.'PSF'.or.var_2d.eq.'SLP')then
+          lower_bound = 4000.
+          upper_bound = 11000.
       else
           lower_bound = -1e10
           upper_bound = +1e10

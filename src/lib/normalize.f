@@ -74,8 +74,6 @@ C phase_angle_d  O        R*4  A  Phase Angle (sparse array if iskip_bilin > 1)
 C Specular_ref_angle_d O  R*4  A  Distance from specular reflection pt to sun
       include 'trigd.inc'
 C istatus        O        I*4     Standard status return.
-
-      include 'trigd.inc'
         integer         ni,nj
 C***Parameter list variables
         real*4          lat(ni,nj),lon(ni,nj)
@@ -111,6 +109,10 @@ C***Local variables
 
         write(lun,*)' Begin normalization routine (V970519)'
         write(lun,*)' Sub Lat/Lon/Rng = ',sublat_d,sublon_d,range_m
+
+        call zero(phase_angle_d,ni,nj)
+        call zero(emission_angle_d,ni,nj)
+        call zero(specular_ref_angle_d,ni,nj)
 
         iwrite = 0
 
