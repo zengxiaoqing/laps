@@ -45,8 +45,8 @@ c                   vi   <-----computed value (output)
         real*4 li,l1,l2,v1,v2,output, range
         
         range = l2-l1
-        if (range == 0.0) then
-           output = li
+        if (abs(range/li) .le.  1.0e-4) then
+           output = (v1+v2)*0.5
         else
            output = (li-l1)/range * v2 + (l2-li)/range*v1
         endif
