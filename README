@@ -1909,7 +1909,7 @@ control routines sometime in the future.  The lat/lons are in decimal degrees.
 
 ------ 3.2.2.2   sfc_qc.exe --- 
 
-Process: (sfc_qc.exe) LAPS Surface Ingest
+Process: (sfc_qc.exe) LAPS Surface Ingest Quality Control
 
 <pre>
 LSO QC process - sfc_qc.exe - QC the ingest surface data
@@ -1943,8 +1943,8 @@ This new QC package compares the observations temporally and fills in
 predicted values for an observation when it is only intermittently available.
 This helps compensate for temporal changes in data density.
 
-More information is in a 2001 NWP conference paper abstract 
-at http://laps.fsl.noaa.gov/qc/qc_abstract.txt
+More information is in the NWP conference paper on Kalman Filtering 
+(McGinley 2001) at http://laps.fsl.noaa.gov/cgi/LAPB.pubs_01.cgi
 
 ------ 3.2.2.3   How to Blacklist stations ---
 
