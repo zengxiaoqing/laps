@@ -87,7 +87,7 @@ c*********************************************************************
         call get_stagger_index(istag,istatus)
         if(istatus.ne.1)then
            print*,'Error getting num_staggers_wrf from wrfsi.nl'
-           return
+           stop
         endif
 
         call Gridmap_sub(NX_L,NY_L,n_staggers,istag,istatus)
@@ -1485,7 +1485,6 @@ C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
                   RHN=RHN+DELTA_LN(IP,JP)
                   RHT=RHT+DELTA_LT(IP,JP)
 23             continue ! IP
-
                SHA=SHA+SH/(2.*FLOAT(NP))
                RHA=RHA+RH
                RHLN=RHLN+RHN
@@ -1495,15 +1494,13 @@ C Nearest grid point for greenfrac (NOT), landuse, soiltype, soiltemp
  
              RHA=RHA/FLOAT(NP*NP)
              RMS=0.0
-             DO 24 IP=1,NP ! The reason for this second SHA loop is (unclear)
-c              SH=0.       ! for std dev of terrain
+             DO 24 IP=1,NP 
+               SH=0.
                DO 25 JP=1,NP
-c                 SH=max(SH,DATP(IP,JP,1))
+                  SH=max(SH,DATP(IP,JP,1))
                   RMS=RMS+((DATP(IP,JP,1)-RHA)*(DATP(IP,JP,1)-RHA))
 25             continue ! JP
-
-c              SHA=SHA+SH/(2.*FLOAT(NP))
-
+               SHA=SHA+SH/(2.*FLOAT(NP))
 24           continue ! IP
 
              DATQS(IQ,JQ,1)=SQRT(RMS/FLOAT(NP*NP))
@@ -1991,6 +1988,8 @@ c use moist adiabatic laps rate (6.5 deg/km) to get new temp
       soiltmp=soiltemp_1deg
       grnfrctmp=greenfrac
 
+      where(greenfrac.eq.0.0)greenfrac=r_missing_data
+
 c determine average soiltemp and greenfrac in domain
       sumt=0.0
       sum=0.0
@@ -2005,8 +2004,8 @@ c determine average soiltemp and greenfrac in domain
 
 c greenfrac is assumed to be continuous globally; only use land points
          do l=1,ncat
-            if(landmask(i,j) .ne. 0.and.
-     &         grnfrctmp(i,j,l).ne.r_missing_data)then
+            if(landmask(i,j) .ne. 0 .and.
+     &         grnfrctmp(i,j,l).ne.0.0)then
                sum(l)=grnfrctmp(i,j,l)+sum(l)
                ic(l)=ic(l)+1
 
@@ -2143,7 +2142,7 @@ c search distance.
      &        .and.(jj.ge.1) .and. (jj.le.nnyp)) then
 
                   if(landmask(ii,jj).eq.1.and.
-     &               grnfrctmp(ii,jj,l).ne.r_missing_data)then
+     &               grnfrctmp(ii,jj,l).ne.0.0)then
 
                      sumg=sumg+grnfrctmp(ii,jj,l)
                      igc=igc+1
