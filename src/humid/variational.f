@@ -959,21 +959,13 @@ c     derive field statistics to determine outliers
             
          else
             write(6,*) 'TEMP not enough data, skipping slv_lapc'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+            data_anal = 1.0
          endif
          
       else
          write(6,*) 
      1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+         data_anal = 1.0
          return
          
       endif
@@ -1068,21 +1060,13 @@ c     derive field statistics to determine outliers
             
          else
             write(6,*) 'TEMP not enough data, skipping slv_lapc'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+            data_anal = 1.0
          endif
          
       else
          write(6,*) 
      1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+         data_anal = 1.0
          return
          
       endif
@@ -1153,21 +1137,13 @@ c     derive field statistics to determine outliers
             
          else
             write(6,*) 'TEMP not enough data, skipping slv_lapc'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+            data_anal = 1.0
          endif
          
       else
          write(6,*) 
      1        'TEMP pn = 0,no acceptable data to analyze for adjustment'
-            do j = 1,jj
-               do i = 1,ii
-                  data_anal(i,j) = 1.0
-               enddo
-            enddo
+         data_anal = 1.0        ! assign entire array 1.0
          return
          
       endif
