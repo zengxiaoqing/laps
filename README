@@ -49,8 +49,7 @@
          2.7.2 ..................  Location of Domain (Map projections)
          2.7.2.1 ...................... MAP PROJECTION FUNCTIONALITY/LIMITATIONS
          2.7.3 ..................  Domain Resolution 
-         2.7.4 ..................  Terrain Databases
-         2.7.5 ..................  Terrain Smoothing/Filtering  
+         2.7.4 ..................  Terrain Smoothing/Filtering  
          2.8 ..............  CHANGING THE VERTICAL DOMAIN
          2.9 ..............  CHANGING THE CYCLE TIME 
          2.10 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
@@ -1560,54 +1559,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
    above). To date, we have run LAPS with resolutions ranging from 1000m to 
    48000m.
 
-
-                   ----  2.7.4 Terrain Databases ---
-
-        The 'gridgen_model.exe' program normally utilizes one of two terrain 
-        databases (distributed separately and available from the laps www 
-        site ... refer to section 2.2.5 for up-to-date information about
-        the geography data requirements in LAPS). 
-
-        The first database has two components; one is a worldwide 10' dataset,
-        (topo_10m directory) the other is 30" data (topo_30s directory) 
-        and covers the continental U.S.  The software automatically chooses 
-        the higher resolution data if it covers the domain of interest, 
-        otherwise it defaults to the lower resolution data. A ~0.2 degree 
-        wide transition zone is used for blending at the boundary between the 
-        two datasets. 
-
-        User Note:
-              The functionality described above still exist in gridgen_model,
-              however, it is being phased out in favor of world wide 30 sec
-              terrain data and eventually blending should not be needed.
-
-        Two scenarios for processing the first database may need more testing.
-        These are:
-
-        1) Near a land/sea border
-           In this case a filter that sets a given terrain point to zero
-           if the absolute value of the point is less than 1 meter may
-           help as a post processing step to reduce noise just off of
-           the coast. 
-           
-        2) If you are in the vicinity of a land border of the Continental 
-           United States (e.g. Southern Canada or Northern Mexico).
-
-        The second database is a global 30" terrain dataset (world_topo_30s
-        directory) from USGS that we have reformatted here at FSL. This
-        data comes in 10x10 degree tiles. Since there is no automated blending
-        between this dataset and the 10' data, it is suggested that all the 
-        tiles be in place to cover the domain.
-
-        Summarizing the allowable combinations of database choices...
-<pre>
-        land_10m topo_10m
-        land_10m topo_10m topo_30s   (10m automatically blends for 30s holes)
-        land_10m topo_30s
-        land_10m world_topo_30s
-</pre>
-
-                 ----  2.7.5 Terrain Smoothing/Filtering  ---
+                 ----  2.7.4 Terrain Smoothing/Filtering  ---
 
     Edit the file 'data/static/nest7grid.parms'...
 <pre>
