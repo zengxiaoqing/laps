@@ -8,7 +8,7 @@
      1                uanl,vanl,u_mdl_curr,v_mdl_curr,
      1                istat_bal,
      1                ni,nj,nk,r_missing_data,
-     1                weight_pirep,weight_prof,weight_sfc,
+     1                weight_pirep,weight_prof,weight_sfc,weight_cdw,       
      1                grid_laps_u,grid_laps_v,grid_laps_wt,
 !    1                meso_i,meso_j,meso_k,meso_u,meso_v,N_MESO,
 !    1                n_meso_obs,
@@ -41,10 +41,6 @@ C  outputs: None
 C
 C*********************************************************************
 
-         implicit none
-
-C************* Include Section ***************************************
-
 C***************** Declarations **************************************
 
         integer istat_radar_vel,istat_bal
@@ -64,36 +60,37 @@ C***************** Declarations **************************************
         real*4 uanl(ni,nj,nk),vanl(ni,nj,nk)
         real*4 u_mdl_curr(ni,nj,nk),v_mdl_curr(ni,nj,nk)
 
-        real*4 rms_fg_cdw,rms_fg_sfc,rms_laps_cdw,rms_laps_sfc
-        real*4 rms_fg_vr,rms_laps_vr,rms_laps_prof,rms_fg_pirep
-        real*4 rms_laps_pirep,rms_maps_prof,rms_maps_pirep,rms_fg_laps
-        real*4 rms_laps_maps,rms_maps_sfc
-
 C********************************************************************
 
         write(6,*)
+        write(6,*)'  Comparing Model Background to CDW Obs (passing QC)'       
+        call comp_grid_windobs(u_mdl_curr,v_mdl_curr,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
+     1        ,' FG ','CDW ',r_missing_data,rms)
+
+        write(6,*)
         write(6,*)'  Comparing LAPS Analysis to CDW Obs (passing QC)'       
         call comp_grid_windobs(uanl,vanl,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
-     1        ,' FG ','CDW ',r_missing_data,rms_fg_cdw)
+     1        ,'LAPS','CDW ',r_missing_data,rms)
+
+        write(6,*)
+        write(6,*)'  Comparing Model Background to SFC Obs'
+        call comp_grid_windobs(u_mdl_curr,v_mdl_curr,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
+     1        ,' FG ','SFC ',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS First Pass to SFC Obs (passing QC)'       
-        call comp_laps_sfc(upass1,vpass1,ni,nj,nk
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
-     1        ,r_missing_data,rms_fg_sfc)
-
-        write(6,*)
-        write(6,*)'  Comparing LAPS Analysis to CDW Obs (passing QC)'       
-        call comp_grid_windobs(uanl,vanl,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
-     1        ,'LAPS','CDW ',r_missing_data,rms_laps_cdw)
+     1        ,'PS1 ','SFC ',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS Analysis to SFC Obs (passing QC)'       
-        call comp_laps_sfc(uanl,vanl,ni,nj,nk
+        call comp_grid_windobs(uanl,vanl,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
-     1        ,r_missing_data,rms_laps_sfc)
+     1        ,'LAPS','SFC ',r_missing_data,rms)
 
         do l = 1,n_radars
 
@@ -118,45 +115,39 @@ C********************************************************************
 
         write(6,*)
         write(6,*)'  Comparing LAPS First Pass to Profiler'
-        call comp_laps_prof(upass1,vpass1,ni,nj,nk
-     1        ,r_missing_data,weight_prof,grid_laps_u,grid_laps_v
-     1        ,grid_laps_wt,rms_laps_prof)
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
+     1        ,'PS1 ','PROF',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS Analysis to Profiler'
-        call comp_laps_prof(uanl,vanl,ni,nj,nk
-     1        ,r_missing_data,weight_prof,grid_laps_u,grid_laps_v
-     1        ,grid_laps_wt,rms_laps_prof)
+        call comp_grid_windobs(uanl,vanl,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
+     1        ,'LAPS','PROF',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS First Pass to Pireps'
-        call comp_laps_pirep(upass1,vpass1,ni,nj,nk
-     1        ,r_missing_data,weight_pirep,grid_laps_u,grid_laps_v
-     1        ,grid_laps_wt,rms_fg_pirep)
+        call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
+     1        ,'PS1 ','PRP ',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS Analysis to Pireps'
-        call comp_laps_pirep(uanl,vanl,ni,nj,nk,r_missing_data
-     1         ,weight_pirep,grid_laps_u,grid_laps_v,grid_laps_wt
-     1         ,rms_laps_pirep)
+        call comp_grid_windobs(uanl,vanl,ni,nj,nk
+     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
+     1        ,'LAPS','PRP ',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing Model Background to Profiler'
-        call comp_maps_prof(u_mdl_curr,v_mdl_curr,ni,nj,nk
+        call comp_grid_windobs(u_mdl_curr,v_mdl_curr,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_prof
-     1        ,r_missing_data,rms_maps_prof)
-
-        write(6,*)
-        write(6,*)'  Comparing Model Background to SFC Obs'
-        call comp_maps_sao(u_mdl_curr,v_mdl_curr,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
-     1        ,r_missing_data,rms_maps_sfc)
+     1        ,' FG ','PROF',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing Model Background Analysis to Pireps'
-        call comp_maps_pirep(u_mdl_curr,v_mdl_curr,ni,nj,nk
+        call comp_grid_windobs(u_mdl_curr,v_mdl_curr,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_pirep
-     1        ,r_missing_data,rms_maps_pirep)
+     1        ,' FG ','PRP ',r_missing_data,rms)
 
         write(6,*)
         write(6,*)'  Comparing LAPS First Pass & Analysis'
@@ -191,8 +182,8 @@ C********************************************************************
         write(6,*)'Comparing ',c_ob,' Wind Obs (passing QC) to '
      1                       ,c_grid,' Grid'
         write(6,2)c_ob,c_grid
-2       format(1x,'   i   j   k      ',a,'                 '
-     1                                ,a,' Analysis diff')
+2       format(1x,'   i   j   k      ',a,' Ob          '
+     1                                ,a,' Analysis     diff')
 
         do jl = 1,nj
 
@@ -208,11 +199,14 @@ C********************************************************************
                   diffv = v_3d(il,jl,k) - grid_laps_v(il,jl,k)
                   residualu = residualu + diffu ** 2
                   residualv = residualv + diffv ** 2
-                  write(6,101)il,jl,k
-     1              ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)
-     1              ,u_3d(il,jl,k),v_3d(il,jl,k)
-     1              ,-diffu,-diffv
-101               format(1x,3i4,3(2x,2f7.1))
+
+                  if(nobs .le. 200 .OR. nobs .eq. (nobs/10)*10)then
+                      write(6,101)il,jl,k
+     1                  ,grid_laps_u(il,jl,k),grid_laps_v(il,jl,k)
+     1                  ,u_3d(il,jl,k),v_3d(il,jl,k)
+     1                  ,-diffu,-diffv
+101                   format(1x,3i4,3(2x,2f7.1))
+                  endif
 
                 endif
 

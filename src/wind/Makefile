@@ -24,13 +24,7 @@ SRC= main_sub.f \
      weights.f \
      comparisons.f \
      comp_vr_prof.f \
-     comp_laps_sao.f \
-     comp_maps_sao.f \
      comp_laps_vr.f \
-     comp_laps_prof.f \
-     comp_maps_prof.f \
-     comp_laps_pirep.f \
-     comp_maps_pirep.f \
      comp_laps1_laps2.f \
      comp_laps_maps.f \
      vertwind.f \

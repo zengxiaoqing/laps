@@ -44,8 +44,8 @@ c                             time of the current LAPS analysis time.
         integer nlevels_obs_pr(MAX_PR)
         character*8 obstype(MAX_PR)
         real ob_pr_ht_obs(MAX_PR,MAX_PR_LEVELS)
-        real ob_pr_di_obs(MAX_PR,MAX_PR_LEVELS)
-        real ob_pr_sp_obs(MAX_PR,MAX_PR_LEVELS)
+        real ob_pr_di_obs(MAX_PR_LEVELS)
+        real ob_pr_sp_obs(MAX_PR_LEVELS)
         real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)
         real ob_pr_ht(MAX_PR,kmax)
@@ -142,21 +142,21 @@ c                             time of the current LAPS analysis time.
             do level = 1,nlevels_obs_pr(i_pr)
 
                 read(12,*,err=312)ob_pr_ht_obs(i_pr,level)
-     1           ,ob_pr_di_obs(i_pr,level)
-     1           ,ob_pr_sp_obs(i_pr,level)
+     1           ,ob_pr_di_obs(level)
+     1           ,ob_pr_sp_obs(level)
 
-                ob_pr_sp_obs(i_pr,level) = ob_pr_sp_obs(i_pr,level)
+                ob_pr_sp_obs(level) = ob_pr_sp_obs(level)
 !    1                                          * r_mspkt
 
-                call disp_to_uv(ob_pr_di_obs(i_pr,level),
-     1                  ob_pr_sp_obs(i_pr,level),
+                call disp_to_uv(ob_pr_di_obs(level),
+     1                  ob_pr_sp_obs(level),
      1                  ob_pr_u_obs(i_pr,level),
      1                  ob_pr_v_obs(i_pr,level))
 
 !d              write(6,311,err=312)ista,i_pr
 !d      1                ,ob_pr_ht_obs(i_pr,level)
-!d      1                ,ob_pr_di_obs(i_pr,level)
-!d      1                ,ob_pr_sp_obs(i_pr,level)
+!d      1                ,ob_pr_di_obs(level)
+!d      1                ,ob_pr_sp_obs(level)
 !d      1                ,ob_pr_u_obs(i_pr,level)
 !d      1                ,ob_pr_v_obs(i_pr,level)
 311             format(1x,2i4,5f8.1)
@@ -298,11 +298,11 @@ c
 
               nlevels_obs_pr(i_pr) = n_good_levels
               ob_pr_ht_obs(i_pr,n_good_levels) = ht_in
-              ob_pr_di_obs(i_pr,n_good_levels) = di_in
-              ob_pr_sp_obs(i_pr,n_good_levels) = sp_in
+              ob_pr_di_obs(n_good_levels) = di_in
+              ob_pr_sp_obs(n_good_levels) = sp_in
 
-              call disp_to_uv(ob_pr_di_obs(i_pr,n_good_levels),
-     1                        ob_pr_sp_obs(i_pr,n_good_levels),
+              call disp_to_uv(ob_pr_di_obs(n_good_levels),
+     1                        ob_pr_sp_obs(n_good_levels),
      1                        ob_pr_u_obs(i_pr,n_good_levels),
      1                        ob_pr_v_obs(i_pr,n_good_levels))
 
