@@ -36,9 +36,8 @@ C
       call main_sub(nf_fid, recNum,
 !.............................................................................
      1              i4time_sys,ilaps_cycle_time,NX_L,NY_L,istatus)
-!.............................................................................
-
       return
+!.............................................................................
       end
 C
 C
@@ -50,8 +49,8 @@ C
       include 'netcdf.inc'
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
-     +     correctedFlag(recNum), 
-     +     interpolatedLL(recNum),
+     +     correctedFlag(recNum), dataDescriptor(recNum),
+     +     errorType(recNum), interpolatedLL(recNum),
      +     interpolatedTime(recNum), missingInputMinutes,
      +     rollFlag(recNum), speedError(recNum), tempError(recNum),
      +     waterVaporQC(recNum), windDirError(recNum),
@@ -72,9 +71,6 @@ C
       character*13 flight(recNum)
 
 !.............................................................................
-
-      character*1 dataDescriptor                 (recNum)
-      character*1 errorType                      (recNum)
 
       character*9 a9_timeObs,a9_recptTime 
       character*7 c7_skycover
@@ -111,16 +107,16 @@ C
       do i = 1,num_acars
 
           write(6,*)
-          write(6,*)' acars #',i,'  ',dataDescriptor(i)
-     1                               ,errorType(i)
+          write(6,*)' acars #',i,'  ',char(dataDescriptor(i))
+     1                               ,char(errorType(i))
 !         write(6,*)' location = '
 !    1             ,latitude(i),longitude(i),altitude(i)
 
-          if(dataDescriptor(i) .eq. 'X')then
-            if(errorType(i) .eq. 'W' .or. 
-     1         errorType(i) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject ',dataDescriptor(i)   
-     1                                             ,errorType(i)
+          if(char(dataDescriptor(i)) .eq. 'X')then
+            if(char(errorType(i)) .eq. 'W' .or. 
+     1         char(errorType(i)) .eq. 'B'                         )then
+              write(6,*)' QC flag is bad - reject '
+     1                 ,char(dataDescriptor(i)),char(errorType(i))
               goto 900
             endif
           endif
@@ -207,8 +203,8 @@ C
       include 'netcdf.inc'
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
-     +     correctedFlag(recNum), ! dataDescriptor(recNum),
-     +     interpolatedLL(recNum),
+     +     correctedFlag(recNum), dataDescriptor(recNum),
+     +     errorType(recNum), interpolatedLL(recNum),
      +     interpolatedTime(recNum), missingInputMinutes,
      +     rollFlag(recNum), speedError(recNum), tempError(recNum),
      +     waterVaporQC(recNum), windDirError(recNum),
@@ -228,12 +224,6 @@ C
       character*30 maxDate
       character*13 flight(recNum)
 
-!.............................................................................
-
-      character*1 dataDescriptor                 (recNum)
-      character*1 errorType                      (recNum) 
-
-!.............................................................................
 
 C   Variables of type REAL
 C
@@ -444,7 +434,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var dataDescriptor'
       endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,dataDescriptor)
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,dataDescriptor)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var dataDescriptor'
@@ -458,7 +448,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in var errorType'
       endif
-        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,errorType)
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,errorType)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var errorType'

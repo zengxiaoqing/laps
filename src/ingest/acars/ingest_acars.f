@@ -58,7 +58,7 @@
       endif
 
       call s_len(dir_in,len_dir_in)
-      c_filespec = dir_in(1:len_dir_in)//'*0q.cdf'
+      c_filespec = dir_in(1:len_dir_in)//'/'//'*0q.cdf'
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
 
@@ -66,7 +66,7 @@
       write(6,*)' # of files on /public = ',i_nbr_files_ret
       do i = 1,i_nbr_files_ret
           call make_fnam_lp(i4times(i),a9_time,istatus)
-          filename_in = dir_in(1:len_dir_in)//a9_time//'q.cdf'
+          filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'q.cdf'
 !         filename_in = 'test.nc                                 '
 
 !         Test whether we want the NetCDF file for this time
