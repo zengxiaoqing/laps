@@ -1,10 +1,11 @@
 
 
       subroutine qc_field_3d(var_2d,field_3d,ni,nj,nk,istatus)
-
+      implicit none
+      integer ni,nj,nk, istatus, i, j, k
       character(*) var_2d
-
-      real*4 field_3d(ni,nj,nk)
+      real field_3d(ni,nj,nk), lower_bound, upper_bound
+      real r_missing_data
 
       if(var_2d .eq. 'U3' .or. var_2d .eq. 'V3')then
           lower_bound = -200.
