@@ -108,10 +108,6 @@ cdis
 
         data mode_radar/1/
 
-        radarext_3d_accum = 'vrc'
-
-!       istatus = .true.
-
         max_radar_gap = float(ilaps_cycle_time) + 1200. ! * 1.33334
 
         im = imax/2 ! 15
@@ -157,9 +153,8 @@ cdis
             endif
         enddo
 
-        call get_fracs(i4time_beg,i4time_end,max_radar_gap,i_nbr_files_r
-     1et
-     1            ,i4time_file,frac,frac_sum,istatus)
+        call get_fracs(i4time_beg,i4time_end,max_radar_gap
+     1               ,i_nbr_files_ret,i4time_file,frac,frac_sum,istatus)    
 
         if(istatus .ne. 1)then
             return
@@ -241,8 +236,9 @@ cdis
                     write(6,*)' Compute 3D precip type over masked area'
 
 !                   Note that the reflectivities here are valid at the end
-!                   of the accumulating period. This means that the wb threshold!                   is calculated using reflectivities that may not be
-!                   representative for the entire accumulation subperiod
+!                   of the accumulating period. This means that the wb 
+!                   threshold is calculated using reflectivities that may not 
+!                   be representative for the entire accumulation subperiod
 !                   (typically one half of the laps cycle time).
 
                     call cpt_pcp_type_3d(temp_3d,rh_3d,pressures_mb
@@ -261,8 +257,8 @@ cdis
 
                     I4_elapsed = ishow_timer()
 
-                    write(6,*)' Adding in accumulation for intervening p
-     1eriod'
+                    write(6,*)
+     1                  ' Adding in accumulation for intervening period'
 
                     n_pcp_pts = 0
                     n_snw_pts = 0
@@ -277,7 +273,6 @@ cdis
                             iarg = i2_pcp_type_2d(i,j)/16
 
                             if(iarg .eq. 2)then     ! precip type is snow
-
                                 r_pcp_type        = iarg
                                 r_pcp_type_thresh = iarg
 
@@ -295,16 +290,18 @@ cdis
      1                          = snow_accum(i,j) + snow_accum_pd(i,j)
                                     n_snw_pts = n_snw_pts + 1
                                 else
-                                    write(6,*)' Nowrad_virga thresh out 
-     1#1',i,j
+                                    write(6,*)
+     1                              ' Nowrad_virga thresh out #1',i,j       
                                 endif
 
                             elseif(iarg .eq. 0)then ! precip type is no precip
                                 n_nopcp_pts = n_nopcp_pts + 1
                                 if(n_nopcp_pts .le. 20)
      1                          write(6,*)' No2dPcpType pt at',i,j
+
                             elseif(iarg .eq. 3)then ! precip type is freezing rain
                                 n_zr_pts = n_zr_pts + 1
+
                             endif
 
                         endif
@@ -348,7 +345,8 @@ cdis
                 var_2d = 'T'
                 ext = 'lsx'
                 call get_laps_2dgrid(i4time_radar,i4_tol,i4time_temp
-     1   ,ext,var_2d,units_2d,comment_2d,imax,jmax,t_sfc_k,0,istatus)
+     1                              ,ext,var_2d,units_2d,comment_2d
+     1                              ,imax,jmax,t_sfc_k,0,istatus)
                 if(istatus .ne. 1)then
                     write(6,*)' WARNING: LAPS Sfc Temp not available'       
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
