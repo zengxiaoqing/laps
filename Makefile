@@ -31,6 +31,7 @@ EXEDIRS = src/accum \
           src/background \
           src/cloud \
           src/deriv \
+	  src/dprep \
           src/grid \
           src/humid \
           src/ingest/acars \
@@ -63,6 +64,7 @@ DATADIRS = log/qc \
            time \
            cdl \
            lapsprd/cdw \
+           lapsprd/dprep \
            lapsprd/d01 \
            lapsprd/d02 \
            lapsprd/d03 \
@@ -83,6 +85,8 @@ DATADIRS = log/qc \
            lapsprd/d18 \
            lapsprd/d19 \
            lapsprd/d20 \
+           lapsprd/fsf \
+           lapsprd/fua \
            lapsprd/l1s \
            lapsprd/lc3 \
            lapsprd/lcb \
@@ -131,6 +135,8 @@ DATADIRS = log/qc \
            lapsprd/pin \
            lapsprd/prg \
            lapsprd/pro \
+	   lapsprd/ram \
+	   lapsprd/rsf \
            lapsprd/rdr \
            lapsprd/rdr/001 \
            lapsprd/rdr/002 \
