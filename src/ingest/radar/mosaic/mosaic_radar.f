@@ -264,7 +264,7 @@ c
       do i=1,n_radars
          first_time=.true.
          do l=1,nfiles_vxx(i)
-            if(i4timefile_vxx(l,i).gt.i4time_window_beg.and.
+            if(i4timefile_vxx(l,i).ge.i4time_window_beg.and.
      &         i4timefile_vxx(l,i).le.i4time_window_end)then
 
                if(first_time)then
@@ -305,8 +305,6 @@ c
 c Determine appropriate i4time for these data
 c
       if(i_ra_count.gt.1)then
-         itime_diff=max_i4time-min_i4time
-         i4time_radar_ave = min_i4time+(itime_diff/i_ra_count)
          i4time_data = i4time_cur
          call make_fnam_lp(i4time_data,c_ftime_data,istatus)
          do i=1,i_ra_count
@@ -315,7 +313,6 @@ c
          enddo
          print*,'Data filetime: ',c_ftime_data
       elseif(i_ra_count.eq.1)then
-         i4time_radar_ave = max_i4time
          i4time_data = i4time_cur
          call make_fnam_lp(i4time_data,c_ftime_data,istatus)
          print*,'Radar filetime: ',c_ra_ftime(1)
@@ -371,12 +368,12 @@ c ----------------------------------------------------------
 
 !        Read 'vxx' file within 300s tolerance of 'i4time_cur'
 
-         call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,
-     &      i_ra_count,c_ra_ext,i4time_cur,i_window_size,
-     &      rheight_laps,lat,lon,topo,
-     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,
-     &      grid_ra_ref,grid_ra_vel,       
-     &      istatus)
+         call getlapsvxx(nx_l,ny_l,nz_l,n_radars,c_radar_id,             ! I
+     &      i_ra_count,c_ra_ext,i4time_cur,i_window_size,                ! I
+     &      rheight_laps,lat,lon,topo,                                   ! I
+     &      rlat_radar,rlon_radar,rheight_radar,n_valid_radars,          ! O
+     &      grid_ra_ref,grid_ra_vel,                                     ! O
+     &      istatus)                                                     ! O
 
       elseif(c_mosaic_type(1:3).eq.'rdr')then
 
