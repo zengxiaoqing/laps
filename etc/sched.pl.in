@@ -79,7 +79,7 @@ if($opt_s){ # "surface only"
                   ingest_cloud_drift.exe ingest_aircraft.exe 
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
-                  laps_sfc.x laps_pbl.x temp.exe 
+                  laps_sfc.x temp.exe 
                   cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe lapsprep.exe);
 }
