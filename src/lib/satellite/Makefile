@@ -36,7 +36,7 @@ SRC=bcd_to_int.f \
     cnvtint.f \
     cnvtvxfl.f \
     cnvvxdb.f \
-    compute_gvarimg_res.f \
+    cmpsatres_m.f \
     expand_domain.f \
     gen_lut_gvar.f \
     gen_lut_lambert.f \
@@ -51,6 +51,7 @@ SRC=bcd_to_int.f \
     read_orb_att.f \
     rewrite_satellite_lvd_nl.f \
     satsublatlon.f \
+    stats.f \
     update_gvarimg_parms.f \
     write_orb_att.f \
     write_att_c.c
