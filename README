@@ -1694,27 +1694,16 @@ since 3 layers are routinely available from NESDIS.
    of 'make'.
 
    Similarly, check the output of the localization script.
-
-   Check if output files are being placed in the various 'lapsprd' 
-   subdirectories. A graphical product monitor that can help with this is 
-   available in 'etc/laps_monitor.pl'. This script may need some simple editing
-   to suit your needs (e.g. to specify the $LAPS_DATA_ROOT). The monitor 
-   script writes HTML output to 'stdout'. This HTML output, if routed to a file
-   or hooked up to a Web server, can be viewed with a browser. An example of 
-   the monitor output can be seen at 
-   http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi.
-   Green means optimum product continuity, red means the product is failing
-   to generate, yellow means it is generating now but has been interrupted
-   in the past.
-
-   Check the log files in the 'log' directory for occurrences of the string
-   'error' and 'warning'. The errors are generally more significant.
    
    If you have any problems during the configure, install and localization
-   process, first check this README file and the FAQ available at the
-   http://laps.fsl.noaa.gov/birk/LAPS_FACTS.htm URL. Also check the
-   release notes at the http://laps.fsl.noaa.gov/software/release_notes.html
-   URL.
+   process, there are several things to check. For certain platforms, you can 
+   compare your build output with ours by clicking on "Results of Latest LAPS 
+   Builds" on the LAPS Software page. Also double check that you've followed
+   all the installation steps in this section of the README. There is also a 
+   FAQ available at http://laps.fsl.noaa.gov/birk/LAPS_FACTS.htm 
+   Finally, check the release notes at the 
+   http://laps.fsl.noaa.gov/software/release_notes.html URL.
+
    If you don't find the answer in these documents, send mail to 
    laps-bugs@fsl.noaa.gov   Include in your mail:
 <pre>
@@ -1726,6 +1715,21 @@ since 3 layers are routinely available from NESDIS.
    The entire output of make (standard output + error output)
    The entire output of laps_localization.pl 
 </pre>
+
+   To see how well LAPS is running, check if output files are being placed in 
+   the various 'lapsprd' subdirectories. A graphical product monitor that can 
+   help with this is available in 'etc/laps_monitor.pl'. This script may need 
+   some simple editing to suit your needs (e.g. to specify the $LAPS_DATA_ROOT).
+   The monitor script writes HTML output to 'stdout'. This HTML output, if 
+   routed to a file or hooked up to a Web server, can be viewed with a browser.
+   An example of the monitor output can be seen at 
+   http://laps.fsl.noaa.gov/monitors/Laps_Monitor.cgi.
+   Green means optimum product continuity, red means the product is failing
+   to generate, yellow means it is generating now but has been interrupted
+   in the past.
+
+   Check the log files in the 'log' directory for occurrences of the string
+   'error' and 'warning'. The errors are generally more significant.
 
 ---------- 3.0 ---- DESCRIPTION OF LAPS PROCESSES  ---------------------------
 
