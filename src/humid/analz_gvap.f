@@ -32,6 +32,8 @@ cdis
       subroutine analz_gvap (lat,lon,wt,nn,glat,glon,
      1                       data_out,data_weights,ii,jj,istatus)
 
+      implicit none
+
       integer ii,jj,nn,istatus
       real lat(nn),lon(nn),wt(nn)
       real data_out(ii,jj)
@@ -42,6 +44,8 @@ cdis
 c     volitile array points
       real points (nn,3)
       integer mask (ii,jj)
+      real r50
+      real ri, rj
 
 
       integer i,j,n,ncount
@@ -125,7 +129,9 @@ c     now have fairly full data array.  now analyze
 
 c     prep the weighting array for the above analyzed sheet
 
-      call weight_field (data_weights, mask,  ii,jj, 15.e+3, istatus)
+      r50 = 15.e+3
+
+      call weight_field (data_weights, mask,  ii,jj,r50 , istatus)
 
       if (istatus .ne. 1) then! test weight_field
          write (6,*) 'Failure in weight_field from analz_gvap'
