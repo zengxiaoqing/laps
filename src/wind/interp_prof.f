@@ -37,17 +37,17 @@ cdis
 cdis   
 cdis
 
-        subroutine interp_prof(ob_pr_ht_obs,ob_pr_u_obs,ob_pr_v_obs,
-     1                             u_diff       , v_diff,
-     1                             u_interp     , v_interp,
-     1                             r_interp     , t_interp,
-     1                             di_interp    , sp_interp,
-     1                             i_pr,ht,level,nlevels_obs_pr,
-     1                             lat_pr,lon_pr,i_ob,j_ob,
-     1                             azimuth,r_missing_data,
-     1                             heights_3d,ni,nj,nk,
-     1                             MAX_PR,MAX_PR_LEVELS,
-     1                             n_vel_grids,istatus)
+        subroutine interp_prof(ob_pr_ht_obs,ob_pr_u_obs,ob_pr_v_obs, ! I
+     1                             u_diff       , v_diff,            ! I
+     1                             u_interp     , v_interp,          ! O
+     1                             r_interp     , t_interp,          ! O
+     1                             di_interp    , sp_interp,         ! O
+     1                             i_pr,ht,level,nlevels_obs_pr,     ! I
+     1                             lat_pr,lon_pr,i_ob,j_ob,          ! I
+     1                             azimuth,r_missing_data,           ! I
+     1                             heights_3d,ni,nj,nk,              ! I
+     1                             MAX_PR,MAX_PR_LEVELS,             ! I
+     1                             n_vel_grids,istatus)              ! I/O
 
 !************************ARRAYS.FOR******************************************
 
@@ -74,7 +74,7 @@ cdis
           if(i_obs .gt. 1)then
 
             if(ob_pr_ht_obs(i_pr,i_obs-1) .le. ht .and.
-     1       ob_pr_ht_obs(i_pr,i_obs  ) .ge. ht)then
+     1         ob_pr_ht_obs(i_pr,i_obs  ) .ge. ht       )then
 
                 h_lower  = ob_pr_ht_obs(i_pr,i_obs-1)
                 h_upper =  ob_pr_ht_obs(i_pr,i_obs  )
@@ -158,8 +158,8 @@ cdis
         endif
 
         if(istatus .ne. 1)then
-            write(6,*)' Warning, out of bounds in height_to_zcoord2/inte
-     1rp_prof'
+            write(6,*)
+     1        ' Warning, out of bounds in height_to_zcoord2/interp_prof'       
         endif
 
 !       Upper Tail

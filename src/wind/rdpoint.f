@@ -36,14 +36,14 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine rdpoint(i4time,heights_3d
-     1  ,N_POINT,n_point_obs,ext_in
-     1  ,ni,nj,nk
+        subroutine rdpoint(i4time,heights_3d                           ! I
+     1  ,N_POINT,n_point_obs,ext_in                                    ! I
+     1  ,ni,nj,nk                                                      ! I
      1  ,u_mdl_bkg_4d,v_mdl_bkg_4d,NTMIN,NTMAX                         ! I
-     1  ,lat,lon
+     1  ,lat,lon                                                       ! I
 !    1  ,point_i,point_j,point_k,point_u,point_v
-     1  ,grid_laps_wt,grid_laps_u,grid_laps_v
-     1  ,istatus)
+     1  ,grid_laps_wt,grid_laps_u,grid_laps_v                          ! O
+     1  ,istatus)                                                      ! O
 
 !      ~1990        Steve Albers  Original Version
 !       Modified 2/1993 by Steve Albers to fix check on pirep being in the

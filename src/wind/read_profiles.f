@@ -296,22 +296,22 @@ c
      1                                ,istatus)
                     v_diff = -v_diff_term
 
-                    call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,
-     1                             ob_pr_v_obs,
-     1                             u_diff,
-     1                             v_diff,
-     1                             ob_pr_u(i_pr,level),
-     1                             ob_pr_v(i_pr,level),
-     1                             ob_pr_r(i_pr,level),
-     1                             ob_pr_t(i_pr,level),
-     1                             ob_pr_di(i_pr,level),
-     1                             ob_pr_sp(i_pr,level),
-     1                             i_pr,ht,level,nlevels_obs_pr,
-     1                             lat_pr,lon_pr,i_ob,j_ob,
-     1                             azimuth,r_missing_data,
-     1                             heights_3d,imax,jmax,kmax,
-     1                             MAX_PR,MAX_PR_LEVELS,
-     1                             n_vel_grids,istatus)
+                    call interp_prof(ob_pr_ht_obs,ob_pr_u_obs,     ! I
+     1                               ob_pr_v_obs,                  ! I
+     1                               u_diff,                       ! I
+     1                               v_diff,                       ! I
+     1                               ob_pr_u(i_pr,level),          ! O
+     1                               ob_pr_v(i_pr,level),          ! O
+     1                               ob_pr_r(i_pr,level),          ! O
+     1                               ob_pr_t(i_pr,level),          ! O
+     1                               ob_pr_di(i_pr,level),         ! O
+     1                               ob_pr_sp(i_pr,level),         ! O
+     1                               i_pr,ht,level,nlevels_obs_pr, ! I
+     1                               lat_pr,lon_pr,i_ob,j_ob,      ! I
+     1                               azimuth,r_missing_data,       ! I
+     1                               heights_3d,imax,jmax,kmax,    ! I
+     1                               MAX_PR,MAX_PR_LEVELS,         ! I
+     1                               n_vel_grids,istatus)          ! I/O
 
 c                   write(6,411,err=412)ista,i_pr,level
 c       1                ,ob_pr_ht(i_pr,level)
