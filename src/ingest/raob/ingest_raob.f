@@ -2,11 +2,9 @@
       subroutine ingest_raob(path_to_raw_raob,c8_raob_format)
 
 !     Steve Albers FSL   1999       Original Version
-!           "            2003       Ingest RAOB and dropsonde data
 
 !     Input file 
       character*200 filename_in
-      character*200 dropsonde_in
       character*9 a9_time
       character*180 dir_in
       character*255 c_filespec
@@ -166,10 +164,6 @@
               i4_contains_early = 19800         
               i4_contains_late  = 23400       
 
-!             This may need to be adjusted
-              dropsonde_in = dir_in(1:len_dir_in)//'/drpsnd'//
-     1                       a8_time_orig(i)//'.dat'
-
           else
               write(6,*)' Error - Invalid c8_raob_format '
      1                 ,c8_raob_format    
@@ -212,12 +206,17 @@
 !             Read from the raw file and write to the opened SND file
               if(c8_raob_format(1:6) .eq. 'NIMBUS' .or.
      1           c8_raob_format(1:3) .eq. 'WFO'         )then
+
+                  call open_ext(11,i4time_sys,'snd',istatus)
+
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest
      1                ,filename_in,istatus)
 
               elseif(c8_raob_format(1:3) .eq. 'RSA')then
+                  call open_ext(11,i4time_sys,'snd',istatus)
+
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest
@@ -230,13 +229,9 @@
 
               elseif(      l_parse(c8_raob_format,'AFGWC')
      1                .or. l_parse(c8_raob_format,'AFWA')   )then
-!                 Open output SND file (we can phase in 'open_ext' later)
-                  if(iopen .eq. 0)then
-                      ext = 'snd'
-                      call open_lapsprd_file(11,i4time_sys,ext,istatus)
-                      if(istatus .ne. 1)go to 998
-                      iopen = 1
-                  endif
+
+!                 Open output SND file 
+                  call open_ext(11,i4time_sys,'snd',istatus)
 
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
@@ -244,23 +239,13 @@
      1                ,filename_in,istatus)
 
               elseif(c8_raob_format(1:3) .eq. 'CWB')then
-!                 Open output SND file (we can phase in 'open_ext' later)
-                  if(iopen .eq. 0)then
-                      ext = 'snd'
-                      call open_lapsprd_file(11,i4time_sys,ext,istatus)
-                      if(istatus .ne. 1)go to 998
-                      iopen = 1
-                  endif
+!                 Open output SND file 
+                  call open_ext(11,i4time_sys,'snd',istatus)
 
                   call get_raob_data_cwb(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
      1                ,i4time_raob_earliest,i4time_raob_latest,a9_time       
      1                ,filename_in,istatus)
-
-                  call get_drpsnd_data_cwb(i4time_sys, ilaps_cycle_time,       
-     ~                 NX_L, NY_L, 
-     ~                 i4time_raob_earliest,i4time_raob_latest,
-     ~                 a9_time, dropsonde_in, istatus)
 
               else
                   write(6,*)' Error - Invalid c8_raob_format '
