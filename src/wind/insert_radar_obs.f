@@ -4,7 +4,7 @@
      1  ,n_radars,max_radars,idx_radar_a            ! Input
      1  ,imax,jmax,kmax                             ! Input
      1  ,r_missing_data                             ! Input
-!    1  ,height_3d                                  ! Input
+     1  ,heights_3d                                 ! Input
      1  ,vr_obs_unfltrd                             ! Input
      1  ,thresh_2_radarobs_lvl_unfltrd              ! Input
      1  ,thresh_4_radarobs_lvl_unfltrd              ! Input
@@ -23,35 +23,48 @@
      1  ,istatus                                    ! Input/Output
      1                                                          )
 
-      real*4   vr_obs_unfltrd(imax,jmax,kmax,max_radars)
-      real*4   rlat_radar(max_radars),rlon_radar(max_radars)
-      real*4   rheight_radar(max_radars)
-      real*4   lat(imax,jmax),lon(imax,jmax)
-      real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)
-      real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax)
-      real*4   uobs_diff_spread(imax,jmax,kmax)
+      real*4   vr_obs_unfltrd(imax,jmax,kmax,max_radars)             ! Input
+      real*4   rlat_radar(max_radars),rlon_radar(max_radars)         ! Input
+      real*4   rheight_radar(max_radars)                             ! Input
+      real*4   lat(imax,jmax),lon(imax,jmax)                         ! Input
+      real*4   upass1(imax,jmax,kmax),vpass1(imax,jmax,kmax)         ! Input
+      real*4   u_laps_bkg(imax,jmax,kmax),v_laps_bkg(imax,jmax,kmax) ! Input
+      real*4   uobs_diff_spread(imax,jmax,kmax)                      ! I/O
      1        ,vobs_diff_spread(imax,jmax,kmax)
-      real*4   wt_p_radar(imax,jmax,kmax)
+      real*4   wt_p_radar(imax,jmax,kmax)                            ! I/O
+      real*4   heights_3d(imax,jmax,kmax)                            ! Input
 
       real*4   vr_obs_fltrd(imax,jmax,kmax)                          ! Local
       real*4   upass1_buf(imax,jmax,kmax)                            ! Local
       real*4   vpass1_buf(imax,jmax,kmax)                            ! Local
 
-      real*4   xx(max_radars),yy(max_radars)
-      real*4   xx2(max_radars),yy2(max_radars)
-      real*4   vr(max_radars),ht(max_radars)
-      real*4   x(imax,jmax),y(imax,jmax)
+      real*4   xx(max_radars),yy(max_radars)                         ! Local
+      real*4   xx2(max_radars),yy2(max_radars)                       ! Local
+      real*4   vr(max_radars),ht(max_radars)                         ! Local
+      real*4   x(imax,jmax),y(imax,jmax)                             ! Local
 
-      integer*4 n_radarobs_tot_unfltrd(max_radars)
-      integer*4 idx_radar_a(max_radars)
+      integer*4 n_radarobs_tot_unfltrd(max_radars)                   ! Input
+      integer*4 n_radarobs_tot_fltrd(max_radars)                     ! Local
+      integer*4 i_radar_reject(max_radars)                           ! Local
+      integer*4 idx_radar_a(max_radars)                              ! Input
       integer*4 thresh_2_radarobs_lvl_unfltrd
      1         ,thresh_4_radarobs_lvl_unfltrd
 
       logical  l_good_multi_doppler_ob(imax,jmax,kmax)               ! Local
       logical  l_analyze(kmax),l_derived_output,l_grid_north
-      logical  l_multi_doppler_new
+      logical  l_multi_doppler_new, l_first_call, l_write_dxx        ! Local
+
+      save l_first_call
 
       data l_multi_doppler_new /.false./ ! Flag for new CWB routine
+      data l_first_call /.true./ ! Flag for new CWB routine
+
+      if(l_first_call)then
+          l_write_dxx = .true.
+          l_first_call = .false.
+      else
+          l_write_dxx = .false.
+      endif
 
 csms$ignore begin
       write(6,*)' Entering insert_derived_radar_obs, mode =',mode
@@ -72,8 +85,8 @@ csms$ignore begin
 !         Begin Filtering Section
           write(6,*)' Filtering radar obs into superobs'
      1             ,rlat_radar(i_radar),rlon_radar(i_radar)
-          n_radarobs_tot_fltrd = 0
-          i_radar_reject = 0
+          n_radarobs_tot_fltrd(i_radar) = 0
+          i_radar_reject(i_radar) = 0
 
           write(6,*)' LVL  # Obs  Intvl  # FLTR'
 
@@ -88,13 +101,13 @@ csms$ignore begin
      1                  thresh_4_radarobs_lvl_unfltrd, ! Input
      1                  r_missing_data,                ! Input
      1                  vr_obs_fltrd(1,1,k),           ! Input/Output
-     1                  i_radar_reject,                ! Input/Output
+     1                  i_radar_reject(i_radar),       ! Input/Output
      1                  n_radarobs_lvl_unfltrd,        ! Output
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
 
-            n_radarobs_tot_fltrd = n_radarobs_tot_fltrd 
-     1                           + n_radarobs_lvl_fltrd
+            n_radarobs_tot_fltrd(i_radar) 
+     1          = n_radarobs_tot_fltrd(i_radar) + n_radarobs_lvl_fltrd       
 
             write(6,501)k,n_radarobs_lvl_unfltrd,intvl_rad
      1                 ,n_radarobs_lvl_fltrd
@@ -103,9 +116,9 @@ csms$ignore begin
           enddo ! k
 
           write(6,*)' # Radar Obs Rejected due to other data = '
-     1             ,i_radar_reject
+     1             ,i_radar_reject(i_radar)
           write(6,502)n_radarobs_tot_unfltrd(i_radar)
-     1               ,n_radarobs_tot_fltrd
+     1               ,n_radarobs_tot_fltrd(i_radar)
 502       format(1x,' # Radar Obs TOTAL UNFILTERED / FILTERED = ',2i7)       
 
 !         End filter section
@@ -223,10 +236,20 @@ csms$ignore begin
      1                  thresh_4_radarobs_lvl_unfltrd, ! Input
      1                  r_missing_data,                ! Input
      1                  vr_obs_fltrd(1,1,i_radar),     ! Input/Output
-     1                  i_radar_reject,                ! Input/Output
+     1                  i_radar_reject(i_radar),       ! Input/Output
      1                  n_radarobs_lvl_unfltrd,        ! Output
      1                  n_radarobs_lvl_fltrd,          ! Output
      1                  intvl_rad)                     ! Output
+
+              n_radarobs_tot_fltrd(i_radar) =
+     1        n_radarobs_tot_fltrd(i_radar) + n_radarobs_lvl_fltrd       
+
+              if(k .eq. kmax)then
+                  write(6,*)' # Radar Obs Rejected due to other data = '
+     1                     ,i_radar_reject(i_radar)
+                  write(6,502)n_radarobs_tot_unfltrd(i_radar)
+     1                       ,n_radarobs_tot_fltrd(i_radar)
+              endif ! k
 
               call latlon_to_xy(rlat_radar(i_radar),rlon_radar(i_radar)       
      1                         ,earth_radius,xx(i_radar),yy(i_radar))
@@ -245,18 +268,36 @@ csms$ignore begin
                       ht(n_illuminated) = rheight_radar(i_radar)
                       xx2(n_illuminated) = xx(i_radar)
                       yy2(n_illuminated) = yy(i_radar)
+
+!                     pointer for dxx file                     
+                      i_illuminated_last = idx_radar_a(i_radar) 
+
                   endif
+
               enddo ! i_radar
 
               call multiwind_noz(u,v,rms,upass1(i,j,k),vpass1(i,j,k)
-     1                          ,x(i,j),y(i,j),htdum ! ,height_3d(i,j,k)
+     1                          ,x(i,j),y(i,j),heights_3d(i,j,k)
      1                          ,n_illuminated,xx2,yy2,ht,vr,rmsmax,ier)       
 
               if(ier .eq. 0)then
-                  uobs_diff_spread(i,j,k) = u
-                  vobs_diff_spread(i,j,k) = v
+!                 Subtract background from radar ob to get difference radar ob
+                  uobs_diff_spread(i,j,k) = u - u_laps_bkg(i,j,k)
+                  vobs_diff_spread(i,j,k) = v - v_laps_bkg(i,j,k)
+
+                  if(n_illuminated .ge. 1 .and. l_write_dxx)then
+                      call uv_to_disp(u,
+     1                                v,
+     1                                di_wind,
+     1                                speed)
+
+                      call open_dxx(idx_radar,i4time,lun_dxx,istatus)
+                      write(lun_dxx,321)i-1,j-1,k-1,di_wind,speed
+321                   format(1x,3i4,2f6.1,2f6.1)
+                  endif
+
                   wt_p_radar(i,j,k) = weight_radar
-                  if(n_radars_used .ge. 2)then
+                  if(n_radars_used .ge. 2 .and. mode .eq. 2)then
                       l_good_multi_doppler_ob(i,j,k) = .true.
                   endif
               endif
@@ -358,9 +399,6 @@ csms$ignore end
 !     integer*4 thresh_2_radarobs_lvl_unfltrd
 !    1         ,thresh_4_radarobs_lvl_unfltrd
 
-      character*31 ext
-
-      data l_multi_doppler_new /.false./
 
 csms$ignore begin
 
@@ -370,15 +408,7 @@ c  convert radar obs into u & v by using tangential component of first pass
      1                  ,i4time
       write(6,*)'  i   j   k    df    vr    fgr   vt'
 
-      if(l_derived_output)then
-          if(i_radar .le. 99)then
-              write(ext,531)idx_radar ! i_radar
- 531          format('d',i2.2)
-          else
-              ext = 'dxx'
-          endif
-          call open_lapsprd_file(61,i4time,ext,istatus)
-      endif
+      call open_dxx(idx_radar,i4time,lun_dxx,istatus)
 
       height_grid = 0. ! This approximation won't hurt the azimuth
 
@@ -480,7 +510,7 @@ c  convert radar obs into u & v by using tangential component of first pass
 !320              format(1x,3i2,2f6.1,2f6.1)
 
                   if(l_derived_output)then
-                      write(61,321)i-1,j-1,k-1,di_wind,speed
+                      write(lun_dxx,321)i-1,j-1,k-1,di_wind,speed
 321                   format(1x,3i4,2f6.1,2f6.1)
                   endif
 
@@ -496,7 +526,7 @@ c  convert radar obs into u & v by using tangential component of first pass
       enddo ! k
 
       if(l_derived_output)then
-          close(61)
+          close(lun_dxx)
       endif
 
 csms$ignore end
@@ -640,3 +670,33 @@ csms$ignore end
       return
       end
 
+      subroutine open_dxx(idx_radar,i4time,lun_dxx,istatus)
+
+      integer*4 i_open(200)
+
+      save i_open
+      data i_open /200*0/
+
+      character*31 ext
+
+      lun_dxx = 60 + idx_radar
+
+      if(i_open(idx_radar) .eq. 0)then
+          if(idx_radar .le. 99)then
+              write(ext,531)idx_radar 
+ 531          format('d',i2.2)
+          else
+              write(ext,532)idx_radar 
+ 532          format('d',i3.3)
+          endif
+          
+          write(6,*)' Open dxx file for ',ext(1:4)
+          call open_lapsprd_file(lun_dxx,i4time,ext,istatus)
+
+          if(istatus .eq. 1)then
+              i_open(idx_radar) = 1
+          endif
+      endif
+
+      return
+      end
