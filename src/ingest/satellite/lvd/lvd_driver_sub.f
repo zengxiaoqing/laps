@@ -92,6 +92,7 @@ c                                     used for variable in include 'satellite_co
       character*6 csatid
       character*9 c_fname_cur
       character*9 c_fname
+      character*9 fname_ctp
       character*50 c_gridfname
       character*255 c_generic_dataroot
 
@@ -100,6 +101,28 @@ c                                     used for variable in include 'satellite_co
       real image_12  (n_ir_elem,n_ir_lines,nimages)
       real image_39  (n_ir_elem,n_ir_lines,nimages)
       real image_67  (n_wv_elem,n_wv_lines,nimages)
+c
+c this stuff for cloud top pressure
+c
+      real,     allocatable  :: rlctp(:,:)
+      real,     allocatable  :: rlca(:,:)
+      real,     allocatable  :: rlct(:,:)
+      real,     allocatable  :: ri4time_ob(:,:)
+      real,     allocatable  :: ctp_data(:,:,:)
+c
+c netCDF for cloud top pressure
+c
+      character*125 c_ctp(4)
+      character*10 units_ctp(4)
+      character*3 var_ctp(4)
+      character*4 lvl_coord_ctp(4)
+      integer lvl_ctp(4)
+      integer ldctp
+      character*150 dir_ctp
+      character*31 ext_ctp
+
+      character path_to_ctp*256
+      character c8_project*8
 
       real laps_data(nx_l,ny_l,n_lvd_fields_max)
       real visnorm(nx_l,ny_l)
@@ -130,6 +153,7 @@ c                                     used for variable in include 'satellite_co
       logical   lvis_flag
       logical   lsatqc
       logical   l_lut_flag
+      logical   objects_allocated
 
       integer   i,j,k,l,n
       integer   ispec
@@ -165,9 +189,12 @@ c
       integer i4time_cur
       integer i_delta_t
       integer i4time_data(max_files)
+      integer i4time_ctp_data
+      integer iwindow_ctp
       integer istat
       integer istatus
       integer istatus_vis(3)
+      integer istatus_ctp
       integer itstatus
       integer lvd_status
       integer nft,ntm(max_files),nft_prior
@@ -192,6 +219,8 @@ c ----------------------------- START -------------------------------------
 c
       itstatus=init_timer()
       itstatus=ishow_timer()
+
+      objects_allocated = .false.  !used for NIMBUS cloud_top_pressure processing
 
       do i=1,nimages
          call zero(image_ir(1,1,i),n_ir_elem,n_ir_lines)
@@ -980,6 +1009,103 @@ c been mapped to the laps domain. AFWA's GMS so far.
 
 997   enddo
 
+      goto 17
+
+998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),
+     &' satellite image data.'
+
+
+17    call get_c8_project(c8_project,istatus)
+      if(c8_project.eq.'NIMBUS')then
+
+         print*,'check for new cloud top pressure (C02) files'
+         iwindow_ctp=4000
+         print*,'ctp time window (sec) = ',iwindow_ctp
+         path_to_ctp='/public/data/sat/nesdis/goes8/cloudtop/ascii'
+         call check_for_new_ctp(iwindow_ctp,istatus_ctp)
+
+         if(istatus_ctp.eq.1)then
+            ext_ctp='ctp'
+            if(.not. objects_allocated)then
+               allocate (rlctp(nx_l,ny_l),rlca(nx_l,ny_l)
+     &                  ,rlct(nx_l,ny_l),ctp_data(nx_l,ny_l,4))
+               allocate (ri4time_ob(nx_l,ny_l))
+               objects_allocated = .true.
+            endif
+
+            print*,'calling read_cld_top_p'
+
+            call read_cld_top_p(nx_l,ny_l,path_to_ctp
+     &,rlctp,rlca,rlct,ri4time_ob,iwindow_ctp,i4time_ctp_data
+     &,fname_ctp,istatus)
+            if(istatus.ne. 1)then
+               print*,'error returned from read_cld_top_p'
+               print*,'no data returned'
+            else
+c
+c setup for writing ctp
+c
+             call get_directory('ctp',dir_ctp,ldctp)
+c            call move(rlctp,ctp_data(1,1,1),nx_l,ny_l)
+             ctp_data(:,:,1)=rlctp
+             var_ctp(1) = 'PCT'
+             c_ctp(1)=csatid//' NESDIS derived cloud top pressure'
+             units_ctp(1)='PA'
+             lvl_ctp(1) = 0
+             lvl_coord_ctp(1)='AGL'
+
+             ctp_data(:,:,2)=rlca
+             var_ctp(2) = 'LCA'
+             c_ctp(2)=csatid//' NESDIS derived cloud amount'
+             units_ctp(2)='%'
+             lvl_ctp(2) = 0
+             lvl_coord_ctp(2)='AGL'
+
+c            call move(rlct,ctp_data(1,1,3),nx_l,ny_l)
+             ctp_data(:,:,3)=rlct
+             var_ctp(3)='CTT'
+             c_ctp(3)=csatid//' NESDIS derived cloud top temperature'
+             units_ctp(3)='K'
+             lvl_ctp(3) = 0
+             lvl_coord_ctp(3)='AGL'
+
+c            call move(ri4time_ob,ctp_data(1,1,4),nx_l,ny_l)
+             ctp_data(:,:,4)=ri4time_ob
+             var_ctp(4)='I4T'
+             c_ctp(4)=csatid//' i4time of obs'
+             units_ctp(4)='sec'
+             lvl_ctp(4) = 0
+             lvl_coord_ctp(4)='AGL'
+
+             print*,'writing cld top pressure file ',ext_ctp
+             print*,'dir = ',dir_ctp(1:ldctp)
+c            dir_ctp=dir_ctp(1:ldctp)//'/'//fname_ctp
+c            print*,'path/filename out: ',dir_ctp
+
+             call write_laps_data(i4time_ctp_data
+     &,dir_ctp,ext_ctp,nx_l,ny_l,4,4,var_ctp,lvl_ctp
+     &,lvl_coord_ctp,units_ctp,c_ctp,ctp_data,istatus)
+             if(istatus.eq.1)then
+                write(6,*)'*****************************'
+                write(*,*)'ctp file successfully written'
+                write(*,*)'for: ',fname_ctp
+                write(*,*)'i4 time: ',i4time_ctp_data
+                write(6,*)'*****************************'
+             else
+                write(*,*)' Error writing ctp file for this time'
+                write(*,*)' i4Time: ',i4time_ctp_data
+                write(*,*)' File Time: ',fname_ctp
+             endif
+
+            endif
+
+         else
+            print*,'No new cld top pressure files to process'
+            print*
+         endif
+
+      endif
+
       lvd_status = 1
 
       goto 16
@@ -991,10 +1117,6 @@ c been mapped to the laps domain. AFWA's GMS so far.
       goto 16
 
 910   write(6,*)'Error getting mapping lut'
-      goto 16
-
-998   write(*,*)'No ',c_sat_id(isat),"/",c_sat_types(jtype,isat),
-     &' satellite data.'
 
  16   write(*,*)' lvd driver sub completed'
       itstatus=ishow_timer()

@@ -34,6 +34,7 @@ SRC = lvd_driver_sub.f \
   readlut.f \
   read_gvarimg_cnt2btemp_lut.f \
   rdcdfblock.f \
+  get_cldtop_p.f \
   getcdf_satdat.f \
   getsat_attributes.f \
   getafgwc_satdat.f \
