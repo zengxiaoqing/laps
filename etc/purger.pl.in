@@ -89,6 +89,8 @@ if($min_files>0){
     foreach $radar (@radars){
         $dir="v$radar";
         $clean_dirs{$dir} = $vxx_time;
+        $dir="rdr/0$radar/raw";
+        $clean_dirs{$dir} = $vrc_time;
         $dir="rdr/0$radar/vrc";
         $clean_dirs{$dir} = $vrc_time;
     }
