@@ -872,7 +872,7 @@ C INSERT RADAR DATA
             call insert_radar(i4time,clouds_3d,cld_hts
      1          ,temp_3d,t_sfc_k,grid_spacing_cen_m,NX_L,NY_L,NZ_L
      1          ,KCLOUD,cloud_base,cloud_base_buf,ref_base
-     1          ,topo                                                ! I
+     1          ,topo,r_missing_data                                 ! I
      1          ,radar_ref_3d,dbz_max_2d
      1          ,vis_radar_thresh_dbz                                ! I
      1          ,l_unresolved                                        ! O
