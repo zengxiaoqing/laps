@@ -103,7 +103,7 @@ C
 C Call Conpack color fill routine
 C      
       CALL CCPFIL_SUB(ZREG,MREG,NREG,-15,IWKID,scale,ireverse
-     1                                              ,colortable)      
+     1                                        ,colortable,ncols)      
 C      
 C Close frame
 C      
@@ -115,6 +115,12 @@ C
 !     CALL GCLWK (IWKID)
 !     CALL GCLKS
 
+c     Call local colorbar routine
+      write(6,*)' Drawing colorbar: ',MREG,NREG
+      call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+      call colorbar(MREG, NREG, ncols)
+
+c     Restore original color table
       call color
 
       jdot = 1
@@ -124,7 +130,7 @@ C
 
       
       SUBROUTINE CCPFIL_SUB(ZREG,MREG,NREG,NCL,IWKID,scale,ireverse
-     1                                                    ,colortable)      
+     1                                              ,colortable,ncols)      
       
       PARAMETER (LRWK=300000,LIWK=300000,LMAP=16000000,NWRK=300000
      1          ,NOGRPS=5)       
@@ -322,3 +328,37 @@ C
 
       return
       end
+
+
+      subroutine colorbar(ni,nj,ncols)
+
+      call get_border(ni,nj,x_1,x_2,y_1,y_2)
+
+      xlow =  0.3
+      xhigh = 0.8
+      ylow =  y_2 + .01
+      yhigh = y_2 + .03
+
+      ilow = 1
+      ihigh = 999
+
+      xrange = xhigh - xlow
+      irange = ihigh - ilow
+
+      do i = ilow,ihigh
+          frac = float(i-ilow) / float(irange)
+          x1   = xlow + frac*xrange 
+          x2   = xlow + frac*xrange 
+          rcol = 1.0 + float(ncols-1) * frac
+          icol = nint(rcol)
+
+          call setusv_dum(2hIN,icol)
+
+!         Put Colorbar
+          y1 = ylow
+          y2 = yhigh
+          call line(x1,y1,x2,y2)
+      enddo ! i
+
+      return
+      end 
