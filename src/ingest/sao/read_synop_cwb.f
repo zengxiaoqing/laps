@@ -9,12 +9,11 @@
      ~                          dd, wgdd, ff, wgff, wmoId, badflag,
      ~                          num, istatusSynop )
 
-      integer, parameter :: maxSynop = 120
-      integer, parameter :: maxMso =    40
+      integer, parameter :: maxSynop = 150
+      integer, parameter :: maxMso =    50
 
-      character*(*)  filename
+      character*(*)  filename, path_to_local
       character(25)  prsWth(maxobs)
-      character*(*)  path_to_local
       character(13)  cvt_i4time_wfo_fname13,a13time_eat
       character(9)   a9time
       character(8)   skyCvr(maxSkyCvr,maxobs)
@@ -56,6 +55,7 @@
       stnNo   = '     '
       wmoId   = ibadflag
       pcc     = ibadflag
+      timeObs = badflag
       lats    = badflag
       lons    = badflag
       elev    = badflag
