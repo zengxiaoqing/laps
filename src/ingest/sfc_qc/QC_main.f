@@ -96,7 +96,7 @@ c
 c
 c.....  Need two sets of past obs  and a raw array -- a and b, and r
 c
-        real   ta(m),tda(m),dda(m),ffa(m),ua(m),va(m)
+        real   ta(m),tda(m),dda(m),ffa(m),ua(m),va(m),fff(m)
         real   tb(m),tdb(m),ddb(m),ffb(m),ub(m),vb(m)
         real   tr(m),tdr(m),ddr(m),ffr(m),ur(m),vw(m)
         real   lata(m),lona(m),eleva(m)
@@ -238,11 +238,11 @@ c observation and model error assumptions
         moderru=3.0
         moderrpm=1.5
         moderral=1.5
-        grosst=20.
+        grosst=30.
         grosstd=35.
         grossuv=40.
-        grosspm=10.
-        grossal=10.0
+        grosspm=5.
+        grossal=5.
 c  offset for model operator (>> than ob-fg)
 c
         offset=10000.
@@ -696,13 +696,6 @@ c make tf all missing flag values
         call perturb(tf,zot,tf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman T quality check'
-           call grosserr(tf,ta,stn,maxstaa,m,badflag,badthr,grosst
-     &           ,qcstat,on)
-        call thet(tf,thetaa,maxstaa,eleva,m)
-           call fillqc(stna,thetaa,lata,lona,eleva,thetaa,sl,
-     &             maxstaa,m,8./1000.,-1./1000.,200000.,30.,grosst)       
-        call thet2T(tf,thetaa,maxstaa,eleva,m)
         write(6,*) 'Process dewpoint***************************'
         call project(2,ytda,monster,2,nvar,
      &               maxstaa,m,ncycles,nn,atime,it,icyc,oberrtd,badthr,
@@ -722,11 +715,6 @@ c make tdf all missing flag values
         call perturb(tdf,zot,tdf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman TD quality check'
-          call grosserr(tdf,tda,stn,maxstaa,m,badflag,badthr,grosstd
-     &           ,qcstat,on)
-           call fillqc(stna,tdf,lata,lona,eleva,thetaa,sl,
-     &          maxstaa,m,15./1000.,-35./1000.,200000.,30.,grosstd)        
         write(6,*) 'Process u wind*******************************'
         call project(2,yua,monster,3,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr,
@@ -746,11 +734,6 @@ c make uf all missing flag values
         call perturb(uf,zot,uf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman U quality check'
-           call grosserr(uf,ua,stn,maxstaa,m,badflag,badthr,grossuv
-     &           ,qcstat,on)
-           call fillqc(stna,uf,lata,lona,eleva,thetaa,sl,
-     &          maxstaa,m,10./1000.,-10./1000.,200000.,30.,grossuv)        
         write(6,*) 'Process v wind*******************************'
         call project(2,yva,monster,4,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberruv,badthr,
@@ -770,11 +753,6 @@ c make vf all missing flag values
         call perturb(vf,zot,vf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman V quality check'
-           call grosserr(vf,va,stn,maxstaa,m,badflag,badthr,grossuv
-     &           ,qcstat,on)
-           call fillqc(stna,vf,lata,lona,eleva,thetaa,sl,
-     &          maxstaa,m,10./1000.,-10./1000.,200000.,30.,grossuv)        
         write(6,*) 'Process msl P****************************** '
         call project(2,ypma,monster,5,nvar,
      &                maxstaa,m,ncycles,nn,atime,it,icyc,oberrpm,badthr,
@@ -794,11 +772,6 @@ c make pmslf all missing flag values
         call perturb(pmslf,zot,pmslf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman PMSL quality check'
-         call grosserr(pmslf,pmsla,stn,maxstaa,m,badflag,badthr,grosspm
-     &           ,qcstat,on)
-         call fillqc(stna,pmslf,lata,lona,eleva,thetaa,sl,
-     &       maxstaa,m,2./1000.,-2./1000.,200000.,1000.,grosspm)    
         write(6,*) 'Process Alstg*********************************'
         call project(2,yalta,monster,6,nvar,
      &       maxstaa,m,ncycles,nn,atime,it,icyc,oberral,badthr,
@@ -818,11 +791,6 @@ c make altf all missing flag values
         call perturb(altf,zot,altf,maxstaa,m,offset,off)      
 c validate the kalman estimate and usekalman buddy if it is not consistent
 c with last cycles values
-        write(6,*) 'Kalman ALSTG quality check'
-         call grosserr(altf,alta,stn,maxstaa,m,badflag,badthr,grossal
-     &           ,qcstat,on)
-         call fillqc(stna,altf,lata,lona,eleva,thetaa,sl,
-     &       maxstaa,m,2./1000.,-2./1000.,200000.,1000.,grosspm)    
 c
 c.....  Read in new (current) obs.....maxstaa will go up
 c      
@@ -891,6 +859,11 @@ c put data into "r"arrays to save raw data
            call replace(ff,ffr,maxsta,1,m,1)
            call replace(pmsl,pmslr,maxsta,1,m,1)
            call replace(alt,altr,maxsta,1,m,1)
+           call replace(t,te,maxsta,1,m,1)
+           call replace(td,tde,maxsta,1,m,1)
+           call replace(ff,ue,maxsta,1,m,1)
+           call replace(pmsl,pmsle,maxsta,1,m,1)
+           call replace(alt,alte,maxsta,1,m,1)
 c these grosserror checks are against the kalman estimate
 c ensure kalman values are missing for new stations
            do i=maxstab+1,maxstaa
@@ -902,22 +875,56 @@ c ensure kalman values are missing for new stations
             altf(i)=badflag
            enddo 
            Write(6,*) 'New T gross error check'
+c   te is now the buddy value at the stn without using stn value
            call grosserr(t,tf,stn,maxsta,m,badflag,badthr,grosst
      &           ,qcstat,on)
+           call fillone(stn,te,lat,lon,elev,theta,sl,maxsta,m
+     &                  ,8./1000.,-1./1000.,200000.,30.)
+           call recover(stn,wx,index,t,tr,te,ncmt,qcstat,
+     &          tr,tf,tdr,tdf,ddr,ffr,
+     &          uf,vf,pmslr,pmslf,badflag,grosst/2.,maxsta,m)
+
            Write(6,*) 'New TD gross error check'
            call grosserr(td,tdf,stn,maxsta,m,badflag,badthr,grosstd
      &           ,qcstatd,on)
+           call fillone(stn,tde,lat,lon,elev,theta,sl,maxsta,m
+     &                  ,8./1000.,-1./1000.,200000.,30.)
+           call recover(stn,wx,index,td,tdr,tde,ncmtd,qcstatd,
+     &          tr,tf,tdr,tdf,ddr,ffr,
+     &          uf,vf,pmslr,pmslf,badflag,grosstd/2.,maxsta,m)
            Write(6,*) 'New WIND SPEED gross error check'
-c except winds
-           call grosserr(ff,ff,stn,maxsta,m,badflag,badthr,grossuv
-     &           ,qcstau,off)
+           do i=1,maxsta
+            if(uf(i).ne.badflag) then
+             fff(i)=sqrt(uf(i)*uf(i)+vf(i)*vf(i))
+             if(fff(i).ge.99.) fff(i)=badflag
+            else
+             fff(i)=badflag
+            endif
+           enddo
+           call grosserr(ff,fff,stn,maxsta,m,badflag,badthr,grossuv
+     &           ,qcstau,on)
+           call fillone(stn,ue,lat,lon,elev,theta,sl,maxsta,m
+     &                  ,10./1000.,-10/1000.,200000.,30.)
+           call recover(stn,wx,index,ff,ffr,ue,ncmu,qcstau,
+     &          tr,tf,tdr,tdf,ddr,ffr,
+     &          uf,vf,pmslr,pmslf,badflag,grossuv/2.,maxsta,m)
            call replacei(qcstau,qcstav,maxsta,m)
            Write(6,*) 'New PMSL gross error check'
            call grosserr(pmsl,pmslf,stn,maxsta,m,badflag,badthr,
      &           grosspm,qcstapm,on)
+           call fillone(stn,pmsle,lat,lon,elev,theta,sl,maxsta,m
+     &                  ,2./1000.,-2/1000.,200000.,1000.)
+           call recover(stn,wx,index,pmsl,pmslr,pmsle,ncmpm,qcstapm,
+     &          tr,tf,tdr,tdf,ddr,ffr,
+     &          uf,vf,pmslr,pmslf,badflag,grosspm/2.,maxsta,m)
            Write(6,*) 'New ALT gross error check'
            call grosserr(alt,altf,stn,maxsta,m,badflag,badthr,
      &           grossal,qcstal,on)
+           call fillone(stn,alte,lat,lon,elev,theta,sl,maxsta,m
+     &                  ,2./1000.,-2/1000.,200000.,1000.)
+           call recover(stn,wx,index,alt,altr,alte,ncmalt,qcstal,
+     &          tr,tf,tdr,tdf,ddr,ffr,
+     &          uf,vf,pmslr,pmslf,badflag,grossal/2.,maxsta,m)
 c reorder new obs
 c
 c.....  Convert new winds to u,v

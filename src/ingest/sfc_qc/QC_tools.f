@@ -898,7 +898,7 @@ c
         slp=(sum*sum12-sum1*sum2)/(sum*sum11-sum1*sum1)    
         sint=(sum2-slp*sum1)/sum 
         if (slp.lt.smn) then
-           write(6,1001) slp,smn
+c          write(6,1001) slp,smn
            slp=smn
         endif
         if(slp.gt.smx) then
@@ -1628,4 +1628,66 @@ cc     &      dewp.gt.90.) then
 c
 	return
 	end
-c
+
+
+        Subroutine recover(stn,wx,index,b,br,bb,ncm,qcsta,
+     &   tr,tf,tdr,tdf,ddr,ffr,
+     &   uf,vf,pmslr,pmslf,badflag,grosserr,maxsta,m)
+
+c       This subroutine checks a variable that has a suspected gross
+c       error failure, by determining if the gross failure was due to
+c       a local weather event, a discontinuity, or due to the reappearance
+c       of the ob after a long string of missings. If criteria are met
+c       the ob passes the gross error check
+
+        real b(m),br(m),tr(m),tf(m),tdr(m),tdf(m),ddr(m),ffr(m)
+        real uf(m),vf(m),pmslr(m),pmslf(m),ncm(m),bb(m)
+        integer qcsta(m),index(m)
+        character stn(m)*5,wx(m)*25,blank*25
+ 
+        blank='                         '
+   
+        do i=1,maxsta
+         ii=index(i)
+         if(qcsta(i).eq.10) then 
+          if(ncm(i).gt.0.) then! failed because it reappeared aft it was msng
+           if(abs(b(i)-bb(i)).lt.grosserr) then ! it is cnstnt with buds
+            write(6,*) 'QC reversal due to reappearance of ob at stn ',
+     &      i,' ',stn(i),' after ',ncm(i),' missing cycles'
+            write(6,*) '...reset to raw value of ', br(i)
+            go to 1
+           else
+            go to 2 ! gross error failure stands
+           endif
+          endif
+          if(wx(ii).ne.blank) then ! likely failed due to local weather
+           write(6,*) 'QC reversal due to local weather at stn ' 
+     &     ,i,' ',stn(i),'...reset to raw value of ', br(i),
+     &     ' weather is ',wx(ii)
+           go to 1
+          endif 
+          ic=0
+          if(tr(i).ne.badflag.and.abs(tr(i)-tf(i)).gt.10.) ic=ic+1
+          if(tdr(i).ne.badflag.and.abs(tdr(i)-tdf(i)).gt.10.) ic=ic+1
+
+          spd = sqrt(uf(i)*uf(i) + vf(i)*vf(i) )   !speed
+          dir = 57.2957795 * (atan2(uf(i),vf(i))) + 180.   !dir
+       
+          if(ffr(i).ne.badflag.and.abs(ffr(i)-spd).gt.15.) ic=ic+1
+          if(ddr(i).ne.badflag.and.abs(ddr(i)-dir).gt.60.) ic=ic+1
+          if(pmslr(i).ne.badflag.and.abs(pmslr(i)-pmslf(i)).gt.10.)
+     &             ic=ic+1
+          if(ic.ge.3) then
+           write(6,*) 'QC reversal due to ',ic,' variables undergoing '
+     &     , 'sig change at stn ',i,' ',stn(i),'...reset to ',br(i)
+           go to 1
+          endif
+          go to 2
+   1      b(i)=br(i)
+          qcsta(i)=0
+         endif
+   2    enddo
+        return
+        end
+ 
+           
