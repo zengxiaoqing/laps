@@ -14,7 +14,7 @@
       character*256 rejected_files(max_files)
       character*132 cmodel
       integer oldest_forecast, bg_files,forecast_length
-      integer i, j, k, kk, ij, jj
+      integer i, j, k, kk, ij, jj,l,nclen
       integer max_forecast_delta
       integer ntbg,nvt
       parameter (ntbg=100)
@@ -63,6 +63,8 @@ C
 
       if(.not.allocated(bg_names))allocate(bg_names(max_files))
 
+      call s_len(cmodel,nclen)
+
       bg_files=0
        
       call s_len(bgpath,len)
@@ -94,10 +96,26 @@ c     elseif(bgmodel.eq.3)then
 
       if(bgmodel.eq.3)then
 
+         search_mdltype: do l=nclen,1,-1
+            if(cmodel(l:l).eq.'_')then
+               exit search_mdltype
+            endif
+         enddo search_mdltype
+         if(cmodel(l+1:nclen).eq.'NF'.or.
+     &      cmodel(l+1:nclen).eq.'NF15'.or.
+     &      cmodel(l+1:nclen).eq.'NF45')then
+            cwb_model_type='nf'
+         elseif(cmodel(l+1:nclen).eq.'GFS')then
+            cwb_model_type='gb'
+         elseif(cmodel(l+1:nclen).eq.'TFS')then
+            cwb_model_type='tf'
+         else
+            print*,'Not able to determine CWB model type'
+            print*,'cmodel = ',cmodel(1:nclen)
+            stop
+         endif
+
          nvt=0
-         call s_len(cmodel,nc)
-         cwb_model_type = cmodel(nc-1:nc)
-         call downcase(cwb_model_type,cwb_model_type)
          final_time=i4time_anal+3600*max(0,forecast_length)
 c        final_time=i4time_anal+3600*max(0,oldest_forecast)
          call get_file_times(cfilespec,max_files,names,itimes

@@ -46,9 +46,9 @@ c
      .      ,vw_sfc(nx,ny)
      .      ,mslp(nx,ny)
      .      ,accs(nx,ny)       !accum snow for /public AVN
-     .      ,sfc_dummy(nx,ny)  !only used for /public AVN ... holds T @ sfc
-
-      real*4 p_levels(nz,nvarsmax)
+     .      ,sfc_dummy(nx,ny)  !only used for /public AVN  and CWB NF15... holds T @ sfc
+        
+      real   p_levels(nz,nvarsmax)
 
       double precision isoLevel(nz),reftime,valtime
 
@@ -78,7 +78,7 @@ c
  
       character*16  cFA_filename
       character*3   c3ext,  c3_FA_ext
-      character*2   cwb_type
+      character*8   cwb_type
       character*132 origin,model,nav,grid,version
       character*255 filename,fname_index
 c
@@ -182,19 +182,26 @@ c    +,istatus)
 c note: library function fname13_to_FA_filename could be used
 c       to covert the FA filename but currently is not.  J.Smart
 
-         call downcase(cmodel(nclen-1:nclen),cwb_type)
+         search_mdltype: do l=nclen,1,-1
+            if(cmodel(l:l).eq.'_')then
+               exit search_mdltype
+            endif
+         enddo search_mdltype
+         cwb_type=cmodel(l+1:nclen)
+
+         call downcase(cwb_type,cwb_type)
          c3ext=c3_FA_ext(af) 
          cfname10=a9_to_yr_a10_time(fname,istatus)
-         cFA_filename=cwb_type//cfname10(1:8)//fname(6:7)//'.'//c3ext
+         cFA_filename="nf"//cfname10(1:8)//fname(6:7)//'.'//c3ext
          call s_len(path,l)
          filename=path(1:l)//'/'//cFA_filename
          call s_len(filename,l)
 
-         print*,'Opening FA file: ',filename(1:l)
-         open(lun,file=filename(1:l),status='old'
+         if(cwb_type .eq. 're')then
+            print*,'Opening FA file: ',filename(1:l)
+            open(lun,file=filename(1:l),status='old'
      +,IOSTAT=IOSTATUS,err=990)
 
-         if(cwb_type .eq. 're')then
             call read_fa(lun,filename                   ! I
      .               ,nx,ny,nz                          ! I
      .               ,r_missing_data                    ! I
@@ -203,9 +210,13 @@ c       to covert the FA filename but currently is not.  J.Smart
      .               ,mslp                              ! O
      .               ,istatus)                          ! O
 
+            close(lun)
             call qcmodel_sh(nx,ny,nz,sh)
          elseif (cwb_type.eq.'nf')then
             print *,'read nf model with read_fa_nf' 
+            open(lun,file=filename(1:l),status='old'
+     +,IOSTAT=IOSTATUS,err=990)
+
             call read_fa_nf(lun,filename,              ! I
      .                nx, ny, nz,                      ! I
      .                r_missing_data,                  ! I
@@ -214,6 +225,7 @@ c       to covert the FA filename but currently is not.  J.Smart
      .                ht_sfc, tp_sfc, td_sfc,          ! O
      .                uw_sfc, vw_sfc, mslp,            ! O
      .                istatus )                        ! O
+            close(lun)
             call qcmodel_sh(nx,ny,nz,sh)
 c           do k=1,nz
 c              call get_mxmn_2d(nx,ny,ww,rmx2d,rmn2d
@@ -223,6 +235,21 @@ c           enddo
 
             ww=ww/36.
 
+         elseif (cwb_type.eq.'nf15'.or.cwb_type.eq.'gfs')then
+
+            call read_nf15km(nx,ny,nz,filename,
+     &                       ht,tp,sh,uw,vw,ww,        !Note: sh contains 3D rh
+     &                       pr_sfc,tp_sfc,td_sfc,     !Note: tp_sfc contains sfc rh
+     &                       uw_sfc,vw_sfc,mslp,
+     &                       prk,sfc_dummy,
+     &                       istatus)
+
+            ww=ww/36.  !convert to pa/s
+
+         else
+            print*,'cwb model type currently unknown ',cmodel(1:nclen)
+            print*,'return without data'
+            return
          endif
 
          nzsh=nz
@@ -511,6 +538,7 @@ c
       end
 c
 c ********************************************************
+c
       subroutine read_avn(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,nvarsmax,nvars,nlevs,ivarcoord,ivarid
      +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
@@ -618,6 +646,7 @@ c
       end
 c
 c********************************************************
+c
       subroutine read_eta(lun,nx,ny,nz,tp,uw,vw,ht,sh
      +,ht_sfc,pr_sfc,sh_sfc,tp_sfc,uw_sfc,vw_sfc,mslp
      +,istatus)
@@ -683,7 +712,7 @@ c
       return
       end
 C
-C
+C ---------------------------------------------------------------
 C
       subroutine qcmodel_sh(nx,ny,nz,sh)
 
@@ -719,3 +748,124 @@ C
 
       return
       end
+
+! ---------------------------------------------------------
+
+      subroutine read_nf15km(mx,my,nz,full_name
+     &,ht_ou,tp_ou,rh_ou,uw_ou,vw_ou,ww_ou
+     &,pss_ou,tps_ou,rhs_ou,uws_ou,vws_ou,mslp_ou
+     &,prk,tmp_ou,istatus)
+
+c
+c  GFS and NEW NFS_15km model information 
+c  
+c  GFS had been interpolatted to NEW NFS_15 same domain and projection
+c
+c               mx=181,my=193,nz=11 
+c  SW corner (9.28194 N, 109.7727E), NE corner (35.26665N,137.7342E), 
+c  map projection same as now NF model . 
+c    nz : 1-> 1000mb,2-> 925mb ,3-> 850mb,4->700mb, 5 -> 500mb, 6-> 400mb
+c    nz : 7-> 300mb,8-> 250mb ,9-> 200mb,10->150mb,11 -> 100mb
+c 
+c
+c               3D Output fields (pressure grid)
+      REAL      :: ht_ou(mx,my,nz)     ! nfs height (m)
+      REAL      :: tp_ou(mx,my,nz)     ! nfs temperature (K)
+      REAL      :: rh_ou(mx,my,nz)     ! nfs relative humidity (%)
+      REAL      :: uw_ou(mx,my,nz)     ! nfs u-wind (m/s)
+      REAL      :: vw_ou(mx,my,nz)     ! nfs v-wind (m/s)
+      REAL      :: ww_ou(mx,my,nz)     ! nfs w-wind (hPa/hr)
+c!                    2D Output fields (Sfc field)
+      REAL      :: pss_ou(mx,my)       ! nfs surface pressure (hPa)
+      REAL      :: tps_ou(mx,my)       ! nfs temperature (K)
+      REAL      :: rhs_ou(mx,my)       ! nfs relative humidity (%)
+      REAL      :: uws_ou(mx,my)       ! nfs u-wind (m/s)
+      REAL      :: vws_ou(mx,my)       ! nfs v-wind (m/s)
+      REAL      :: mslp_ou(mx,my)      ! nfs mean sea level presures (pa)
+      REAL      :: tmp_smt(mx,my)
+c                     pressures of the levels
+      REAL      :: prk(nz) 	       ! pressure of each level (pa)
+c
+      CHARACTER(LEN=256)  :: header_ht
+      CHARACTER(LEN=256)  :: header_tp
+      CHARACTER(LEN=256)  :: header_rh
+      CHARACTER(LEN=256)  :: header_uw
+      CHARACTER(LEN=256)  :: header_vw
+      CHARACTER(LEN=256)  :: header_ww
+      CHARACTER(LEN=256)  :: header_pss
+      CHARACTER(LEN=256)  :: header_tps
+      CHARACTER(LEN=256)  :: header_rhs
+      CHARACTER(LEN=256)  :: header_uws
+      CHARACTER(LEN=256)  :: header_vws
+      CHARACTER(LEN=256)  :: header_mslp
+
+      CHARACTER*(*)       :: full_name
+
+      integer istatus,l
+c
+     
+c
+      header_ht  ='nfs height (m)'
+      header_tp  ='nfs temperature (K)'
+      header_rh  ='nfs relative humidity (%)'
+      header_uw  ='nfs u-wind (m/s)'
+      header_vw  ='nfs v-wind (m/s)'
+      header_ww  ='nfs w-wind (hPa/hr)'
+      header_pss ='nfs surface pressure (hPa)'
+      header_tps ='nfs temperature (K)'
+      header_rhs ='nfs relative humidity (%)'
+      header_uws ='nfs u-wind (m/s)'
+      header_vws ='nfs v-wind (m/s)'
+      header_mslp='nfs mean sea level presures (pa)'
+
+      prk(1) = 100000.
+      prk(2) = 92500.
+      prk(3) = 85000.
+      prk(4) = 70000.
+      prk(5) = 50000.
+      prk(6) = 40000.
+      prk(7) = 30000.
+      prk(8) = 25000.
+      prk(9) = 20000.
+      prk(10)= 15000.
+      prk(11)= 10000.
+
+c   header and  data
+c
+      call s_len(full_name,l)
+      istatus = 1
+      open(18,file=full_name,status='old',form='unformatted')
+      read(18,err=10)header_ht
+      read(18,err=10)ht_ou
+      read(18,err=10)header_tp
+      read(18,err=10)tp_ou
+      read(18,err=10)header_rh
+      read(18,err=10)rh_ou
+      read(18,err=10)header_uw
+      read(18,err=10)uw_ou
+      read(18,err=10)header_vw
+      read(18,err=10)vw_ou
+      read(18,err=10)header_ww
+      read(18,err=10)ww_ou
+      read(18,err=10)header_pss
+      read(18,err=10)pss_ou
+      read(18,err=10)header_tps
+      read(18,err=10)tps_ou
+      read(18,err=10)header_rhs
+      read(18,err=10)rhs_ou
+      read(18,err=10)header_uws
+      read(18,err=10)uws_ou
+      read(18,err=10)header_vws
+      read(18,err=10)vws_ou
+      read(18,err=10)header_mslp
+      read(18,err=10)mslp_ou
+      close(18)
+
+      istatus = 0
+      return
+
+10    print*,'Error reading file ',full_name(1:l)
+      return
+      end
+
+

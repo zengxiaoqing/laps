@@ -52,6 +52,7 @@ c
 c
 c if bgmodel = 6 or 8 then tdsfc is indeed td sfc
 c if bgmodel = 4      then tdsfc is rh (WFO - RUC)
+c if bgmodel = 3      then tdsfc is rh and q is rh
 c if bgmodel = 9      then no surface fields input. Compute all from 3d
 c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q

@@ -132,7 +132,9 @@ c     USE laps_static
       call s_len(cmodel,nclen)
       print*,'cmodel = ',TRIM(cmodel)
       print*,'-----------------------'
+
       istatus=1
+
       call s_len(fullname,lenfn)
 
       if(bgmodel.eq.0)then 
@@ -390,10 +392,10 @@ c --------------------
          cgrddef='S'
       endif
 
-c Taiwan FA and NF models
-c -----------------------
-      if(bgmodel.eq.3.and.cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_RE')
-     &then
+c Taiwan FA and NF models: Added NF_15KM, GFS, NF45 and TFS 4-27-04:
+c -----------------------------------------------------------------
+      if(bgmodel.eq.3)then
+       if(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_RE')then
          nxbg  = 91
          nybg  = 91
          nzbg  = 16
@@ -410,9 +412,7 @@ c -----------------------
          sw(2)=+112.545
          ne(1)=32.384
          ne(2)=+131.172
-      endif
-      if(bgmodel.eq.3.and.cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF')
-     &then
+       elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF')then
          nxbg = 145
          nybg = 139
          nzbg = 11
@@ -429,6 +429,64 @@ c -----------------------
          sw(2)=+109.24
          ne(1)=34.987
          ne(2)=+131.60
+       elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF15'.or.
+     &        cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_GFS')then
+         nxbg = 181
+         nybg = 193
+         nzbg = 11
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+         gproj='LC'
+         Lat0=10.0
+         Lat1=40.0
+         Lon0=+120.
+         sw(1)=9.28194
+         sw(2)=+109.7727
+         ne(1)=35.26665
+         ne(2)=+137.7342
+       elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_NF45')then
+         nxbg = 221
+         nybg = 127
+         nzbg = 11
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+         gproj='LC'
+         Lat0=10.0
+         Lat1=40.0
+         Lon0=+120.
+         sw(1)=-5.34068
+         sw(2)=+77.9186
+         ne(1)=42.92812
+         ne(2)=+180.2034
+       elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_TFS')then
+         nxbg = 211
+         nybg = 211
+         nzbg = 11
+         nzbg_ht=nzbg
+         nzbg_tp=nzbg
+         nzbg_sh=nzbg
+         nzbg_uv=nzbg
+         nzbg_ww=nzbg
+         gproj='LC'
+         Lat0=10.0
+         Lat1=40.0
+         Lon0=+120.
+         sw(1)=+4.543
+         sw(2)=+110.526
+         ne(1)=32.129
+         ne(2)=+142.701
+       else
+         print*,'bgmodel = 3, but unknown cmodel spec'
+         print*,'cmodel = ',cmodel(1:nclen)
+         print*,'returning without current bkgd mdl info'
+       endif
+
       endif
 
 c     if (bgmodel .eq. 7) then
