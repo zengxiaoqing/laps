@@ -88,7 +88,7 @@ c
       elevation_deg = elev_cmn
       i_scan_mode = 1
 c
-c     Transfer nyquist info from coomon to output array
+c     Transfer nyquist info from common to output array
 c
       DO 100 i = 1,n_rays
         IF (v_nyquist_ray_a_cmn(i) .eq. 0.) THEN
