@@ -11,7 +11,6 @@ lsx  li    z  sli      levels_1   SFC 0
 lsx  hi    z  hidx     levels_1   SFC 0
 lsx  vis   z  vis      levels_1   SFC 0
 lsx  th    z  pot      levels_1   SFC 0
-lsx  cce   z  cc       levels_2   SFC 0
 lsx  tad   z  tadv     levels_1   SFC 0
 lsx  the   z  ept      levels_1   SFC 0
 lsx  pbe   z  pbe      levels_1   SFC 0
@@ -36,6 +35,7 @@ lty  cty   z  ctyp     levels_21  MB  0
 lps  ref   z  rr       levels_21  MB  0
 lcb  lcb   z  cb       levels_1   SFC 0
 lcb  lct   z  ctop     levels_1   SFC 0
+lcb  cce   z  cc       levels_2   SFC 0
 lil  lil   z  ilw      levels_1   SFC 0
 lh4  tpw   z  tpw      levels_1   SFC 0
 l1s  r01   z  pc       levels_1   SFC 0
