@@ -175,6 +175,104 @@ c       1                       ,hor_dist,curvature
         function height_to_zcoord2(height_m,heights_3d
      1                                          ,ni,nj,nk,i,j,istatus)
 
+!       1994 Steve Albers FSL (Original)
+!       1998 Steve Albers FSL (Overhaul)
+
+!       Note that this routine works with the real atmosphere.
+!       The type of interpolation is similar to that in 'height_to_zcoord'.
+!       When the vertical grid is pressure, the height is converted to
+!       pressure, then the interpolation to the vertical grid is performed.
+!       Thus if the height is midway between two LAPS levels in height space,
+!       the value of 'height_to_zcoord2' will not have a fraction of 0.5.
+!       If the pressure is midway between two LAPS levels, then the
+!       value of 'height_to_zcoord2' will have a fraction of 0.5.
+
+        implicit real*4 (a-z)
+
+        real*4 heights_3d(ni,nj,nk)
+
+        logical ltest_vertical_grid
+
+        integer i,j,k,ni,nj,nk,kref,istatus
+
+        data k_ref /1/
+        save k_ref
+
+        if(ltest_vertical_grid('HEIGHT'))then
+           print*, 'Call is obsolete, please report this message to '
+           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!          height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+
+        elseif(ltest_vertical_grid('PRESSURE'))then
+            height_to_zcoord2 = nk+1 ! Default value is off the grid
+
+            k = k_ref
+
+            if(height_m .gt. heights_3d(i,j,nk))then
+                height_to_zcoord2 = nk+1 
+!               write(6,101)kref,height_m,heights_3d(i,j,nk)
+!101            format('  Note: above domain in height_to_zcoord2,'       
+!    1                ,' kref,h,h(nk)',i3,2e11.4)
+                istatus = 0
+                return
+
+            elseif(height_m .lt. heights_3d(i,j,1))then
+                height_to_zcoord2 = 0
+                write(6,102)kref,height_m,heights_3d(i,j,1)
+102             format('  Warning: below domain in height_to_zcoord2,'
+     1                ,' kref,h,h(1)',i3,2e11.4)
+                istatus = 0
+                return
+
+            endif ! input height is outside domain
+
+            do iter = 1,nk
+                if(heights_3d(i,j,k+1) .ge. height_m .and.
+     1             heights_3d(i,j,k)   .le. height_m         )then
+                    thickness = heights_3d(i,j,k+1) - heights_3d(i,j,k)
+                    fraction = (height_m - heights_3d(i,j,k))/thickness
+                    pressure_low  = zcoord_of_level(k)
+                    pressure_high = zcoord_of_level(k+1)
+                    diff_log_space = log(pressure_high/pressure_low)
+                    pressure = pressure_low 
+     1                         * exp(diff_log_space*fraction)
+                    height_to_zcoord2 = zcoord_of_pressure(pressure)
+
+                    goto999
+
+                elseif(height_m .gt. heights_3d(i,j,k+1))then
+                    k = min(k+1,nk-1)
+
+                elseif(height_m .lt. heights_3d(i,j,k))then
+                    k = max(k-1,1)
+
+                endif
+
+            enddo ! iter
+
+            height_to_zcoord2 = 0
+            write(6,*)' Error, iteration limit in height_to_zcoord2'
+            istatus = 0
+            return
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
+        endif
+
+999     k_ref = k       ! Successful return
+        istatus = 1
+        return
+
+        end
+
+
+        function height_to_zcoord2_old(height_m,heights_3d
+     1                                          ,ni,nj,nk,i,j,istatus)
+
 !       WARNING: This routine is designed to be efficient. As a result, it
 !       will fail if the input heights differ too much from the standard
 !       atmosphere. In such a case, the istatus will be returned as zero.
@@ -203,13 +301,13 @@ c       1                       ,hor_dist,curvature
         if(ltest_vertical_grid('HEIGHT'))then
            print*, 'Call is obsolete, please report this message to '
            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord2 = height_m / HEIGHT_INTERVAL
+!            height_to_zcoord2_old = height_m / HEIGHT_INTERVAL
 
         elseif(ltest_vertical_grid('PRESSURE'))then
-            height_to_zcoord2 = nk+1 ! Default value is off the grid
+            height_to_zcoord2_old = nk+1 ! Default value is off the grid
 
           ! Standard Atmosphere Guess + a cushion
-!           This must always be >= height_to_zcoord2
+!           This must always be >= height_to_zcoord2_old
             kref = min(int(height_to_zcoord((height_m+600.)*1.2,istatus)
      1),nk)
 
@@ -230,7 +328,7 @@ c       1                       ,hor_dist,curvature
                     diff_log_space = log(pressure_high/pressure_low)
                     pressure = pressure_low * exp(diff_log_space*fractio
      1n)
-                    height_to_zcoord2 = zcoord_of_pressure(pressure)
+                    height_to_zcoord2_old = zcoord_of_pressure(pressure)
 
 !                   if(j .eq. 29)then
 !                       write(6,*)' height_to_zcoord2: kref,k,kref-k+1'
@@ -246,7 +344,7 @@ c       1                       ,hor_dist,curvature
             enddo ! k
 
             istatus = 0
-            height_to_zcoord2 = 0
+            height_to_zcoord2_old = 0
             write(6,101)kref,height_m,heights_3d(i,j,1)
 101         format('  Error: below domain in height_to_zcoord2, kref,h,h
      1(1)',

@@ -176,7 +176,11 @@ c
      1              ,sao_i(n_sao_obs),sao_j(n_sao_obs),istatus)
                 if(istatus .ne. 1)then
                     write(6,*)
-     1              ' Error: sfc ob may be outside range of ht field'      
+     1              ' Error: sfc ob is outside range of ht field'        
+                    write(6,*)rk,i,elev_s(i),sao_i(n_sao_obs),
+     1                                       sao_j(n_sao_obs),
+     1                        (heights_3d(sao_i(n_sao_obs)
+     1                                   ,sao_j(n_sao_obs),k),k=1,nk)       
                     return
                 endif
 
