@@ -346,8 +346,8 @@ c
 	 store_1(nn,4) = rtime                  ! observation time
 c	
 	 store_2(nn,1) = t(i)                   ! temperature (deg F)
-	 store_2(nn,1) = td(i)                  ! dew point (deg F)
-	 store_2(nn,1) = rh(i)                  ! Relative Humidity
+	 store_2(nn,2) = td(i)                  ! dew point (deg F)
+	 store_2(nn,3) = rh(i)                  ! Relative Humidity
 c
          store_3(nn,1) = dd(i)                  ! wind dir (deg)
          store_3(nn,2) = ff(i)                  ! wind speed (kt)
