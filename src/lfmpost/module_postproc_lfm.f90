@@ -137,6 +137,7 @@ MODULE postproc_lfm
   REAL, ALLOCATABLE, PUBLIC  :: swout              ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: lwdown             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: swdown             ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: albedo             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: shflux             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: lhflux             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: pblhgt             ( : , : )
@@ -324,6 +325,7 @@ CONTAINS
     IF (.NOT.ALLOCATED(swout) )        ALLOCATE (swout      ( nx , ny ) )
     IF (.NOT.ALLOCATED(lwdown) )        ALLOCATE (lwdown      ( nx , ny ) )
     IF (.NOT.ALLOCATED(swdown) )        ALLOCATE (swdown      ( nx , ny ) )
+    IF (.NOT.ALLOCATED(albedo) )        ALLOCATE (albedo      ( nx , ny ) )
     IF (.NOT.ALLOCATED(shflux))        ALLOCATE (shflux  ( nx , ny ) )
     IF (.NOT.ALLOCATED(lhflux) )       ALLOCATE (lhflux      ( nx , ny ) )
     IF (.NOT.ALLOCATED(pblhgt) )       ALLOCATE (pblhgt      ( nx , ny ) )
@@ -834,9 +836,28 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      swout(:,:) = 1.e37
      lwdown(:,:) = 1.e37
      swdown(:,:) = 1.e37
+     albedo(:,:) = 1.e37
      CALL get_wrfnc_2d(current_lun,'HFX','A',nx,ny,1,shflux,status)
      CALL get_wrfnc_2d(current_lun,'QFX','A',nx,ny,1,lhflux,status)
      CALL get_wrfnc_2d(current_lun,'GSW','A',nx,ny,1,swdown,status)
+
+     ! Unlike mm5, wrf downward shortwave is net...i.e., albedo
+     ! effect has been removed.  Lets get the WRF albedo (required
+     ! making albedo an output variable in the WRF registry) and
+     ! divide it back out.
+     CALL get_wrfnc_2d(current_lun,'ALBEDO','A',nx,ny,1,albedo,status)
+     IF (.NOT. status) THEN
+       ! make sure destaggering did not create values outside the range
+       WHERE (albedo .LT. 0.) albedo = 0.
+       WHERE (albedo .GT. 1.0) albedo = 1.0
+       PRINT '(A)', '  SWDOWN being changed from net to total'
+       PRINT '(A,2F10.1)', 'Min/Max net SWDOWN:',MINVAL(swdown),MAXVAL(swdown)
+       swdown = swdown / (1. - albedo)
+       PRINT '(A,2F10.1)', 'Min/Max tot SWDOWN:',MINVAL(swdown),MAXVAL(swdown)
+     ELSE
+       PRINT '(A)', 'SWDOWN is still net value...ALBEDO not obtained!'
+     ENDIF
+
      CALL get_wrfnc_2d(current_lun,'GLW','A',nx,ny,1,lwdown,status) 
      CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
      made_pbl = .true.
