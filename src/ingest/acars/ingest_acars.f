@@ -153,7 +153,7 @@
                   call get_acars_data(i4time_sys,i4_acars_window
      1                                      ,NX_L,NY_L
      1                                      ,c8_project
-     1                                      ,filename13,status)
+     1                                      ,filename_in,status)
               elseif(ext_in .eq. 'ac')then ! AFWA ASCII
 !                 Read from the ACARS file 
 !                 Write to the opened PIN file
