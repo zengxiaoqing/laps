@@ -38,7 +38,7 @@ RANLIB   = @RANLIB@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC	= readwritelaps.c \
+SRC	= rwl_v3.c \
           fort2c_str.c \
           static_routines.c \
           waiting_c.c  \
@@ -193,7 +193,7 @@ install: lib
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
 
-#$(LIB)(readwritelaps.o static_routines.o): readwritelaps.c static_routines.c
+#$(LIB)(rwl_v3.o static_routines.o): rwl_v3.c static_routines.c
 #	$(CC) $(KRCFLAGS) $(CPPFLAGS) -c $*.c -o $*.o
 #	$(AR) r $@ $*.o
 #	rm  -f $*.o
@@ -265,7 +265,7 @@ radar_to_latlon.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
 
 read_tsnd.f:  $(LAPSROOT)/src/include/lapsparms.inc@F77INC@
 
-readwritelaps.c:  @NETCDFINC@/netcdf.h $(LAPSROOT)/src/include/grid_info.h $(LAPSROOT)/src/include/laps_grid_def.h
+rwl_v3.c:  @NETCDFINC@/netcdf.h
 
 regex.c:  $(LAPSROOT)/src/include/regex.h
 
