@@ -232,7 +232,7 @@ c      format f15.0 in snd files
 900   continue
 
 !     Call write_snd routine
-      call write_snd(      11                                 ! I
+      call write_snd(      21                                 ! I
      1                    ,loopNum,levelNum,inNum             ! I
      1                    ,wmoId                              ! I
      1                    ,latitude_out,longitude_out,staelev ! I
