@@ -29,6 +29,8 @@
 #
 # -e                   Extend time in hours (allow for long runs beyond cycle time)
 #
+# -q                   Use QSUB (e.g. on 'jet'), no value is needed
+#
 # -r -m N              where "N" is the (default) maximum number of files 
 #                      to be kept in each product directory by the purger
 #
@@ -40,11 +42,11 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_t $opt_r $opt_m $opt_e);
+use vars qw($opt_d $opt_c $opt_t $opt_r $opt_m $opt_e $opt_q);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:t:rm:e:');
+getopts('d:c:t:rm:e:q');
 
 my $initial_time = time();
 #
@@ -52,10 +54,10 @@ my $initial_time = time();
 # be executed.
 #
 
-my @LAPS_EXE = qw(lga.exe obs_driver.x sfc_qc.exe
+my @LAPS_EXE = qw(lga.exe 
+                  ingest_pro.exe obs_driver.x sfc_qc.exe
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
-                  ingest_pro.exe
 		  wind.exe 
                   ingest_lrs.exe lvd_sat_ingest.exe 
                   laps_sfc.x laps_pbl.x temp.exe 
@@ -130,7 +132,26 @@ $sys .= " $LAPS_DATA_ROOT/lapsprd";
 
 system($sys);
 open(LOG,">>$LAPS_LOG_PATH/runtime.log");
+my($nexe);
 my($exe);
+my($exenext);
+my($execount);
+my($scriptcount);
+my($scriptnext);
+my($command);
+my($nodes_last);
+my($nodes_current);
+my($nodes_next);
+
+$nodes_last = 0;
+$nodes_next = 1;
+
+$execount = 0;
+$scriptcount = 0;
+
+$nexe = @LAPS_EXE;
+print "Number of executables = $nexe\n";
+
 foreach $exe (@LAPS_EXE){
 
     my(@locks);
@@ -172,14 +193,69 @@ foreach $exe (@LAPS_EXE){
     $t=gmtime(); 
     my $log = $exe;
     $log =~ s/\..*$/\.log\.$hhmm/;
-    if(-x  "$LAPSROOT/bin/$exe"){
-	print $t." Running $exe\n";
-#	system("$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1");
-	my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
-	&forksub($sys,$lockfile);
+    if($opt_q){
+#       Set up QSUB so that each process (one or more executables in each) submits the next qsub process at the end
+        $execount = $execount + 1;
+        $exenext = $execount + 1;
+        $nodes_current = 1;
+
+        if($execount < $nexe){ # Not yet at end of the list
+            if($nodes_last != $nodes_current){ # of nodes has changed OR we are starting
+
+                if($execount > 1){ # after start
+                    print TFILE "  \n";
+                    print TFILE "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_$scriptnext.sh 1> $LAPS_LOG_PATH/run_qsub_$scriptcount.log 2>&1\n";
+                    print TFILE "  \n";
+                    print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh before executable # $execount\n";
+                    close(TFILE);
+                }
+
+#               Start new qsub script
+                $scriptcount = $scriptcount + 1;
+                $scriptnext = $scriptcount + 1;
+
+                print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
+                open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
+                print TFILE "#!/bin/sh\n";
+                print TFILE "#PBS -lnodes=$nodes_current:comp\n";
+                print TFILE "  \n";
+                print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
+#               print TFILE "  \n";
+#               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
+#               print TFILE "  \n";
+#               print TFILE "echo 'Running (from qsub) $LAPSROOT/bin/$exe' >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
+            }
+
+	}
+
+        print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
+        print TFILE "  \n";
+        print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+       
+        if($execount == $nexe){ # Last on the list
+            print TFILE "  \n";
+            print $t." Closing $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable # $execount\n";
+            close(TFILE);
+
+            $command = "/usr/local/bin/qsub $LAPS_LOG_PATH/run_qsub_1.sh";
+            print "Executing $command\n";
+            system("$command");
+
+	}
+
+        $nodes_last = $nodes_current;
+
     }else{
-	print $t."WARNING: $exe not found\n";
+        if(-x  "$LAPSROOT/bin/$exe"){
+            print $t." Running $exe\n";
+            my $sys="$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1";
+            &forksub($sys,$lockfile);
+        }else{
+	    print $t."WARNING: $exe not found\n";
+        }
+
     }
+
     my $cur_time = time();
     if($cur_time-$initial_time>($cycle_time-$cycle_time*0.01)+$extend_time*3600){
 	print "ERROR: Exceeding LAPS cycle time in $0 exiting after $exe\n";
