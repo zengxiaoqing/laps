@@ -134,9 +134,9 @@ c
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
 c
-	outfile = filename9 // '.lso'
-cc        call get_directory('lso',outfile,len)
-cc	outfile = outfile(1:len)//filename9(1:9)//'.lso'
+cc	outfile = filename9 // '.lso'
+        call get_directory('lso',outfile,len)
+	outfile = outfile(1:len)//filename9(1:9)//'.lso'
 
 cc	outfile = '/home/peaks1/stamus/laps/obs/' // filename // '.lso'
 c
