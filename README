@@ -206,7 +206,7 @@
              Makefile
              /src
                  /ingest
-             /etc                    
+             /etc                                                (laps scripts)                    
              /bin                                                 (executables)
              /data                   (=LAPS_DATA_ROOT, can be moved/duplicated)
                  /lapsprd
@@ -234,6 +234,7 @@
              /laps-m-n-o                                            (laps_root)
                  Makefile
                  /src                                             (source code)
+                 /etc                                            (laps scripts)
                      /ingest
          /laps   ----------------->  soft linked to /data_disk/laps
 
@@ -241,7 +242,6 @@
          /geog
          /raw_data
          /laps                                        (--prefix in 'configure')
-             /etc                                     
              /bin                                                 (executables)
              /data*                         (LAPS_DATA_ROOT, can be duplicated)
                  /lapsprd
@@ -288,12 +288,12 @@
      on this later).  You can also separate the data (read/write) from
      the binary executables (read only) using the --datadir option.  
 
-     For example, to install laps in directory '/data/fxa/laps' with data 
-     in '/data/fxa/laps/data' use... 
-     $ ./configure --prefix=/data/fxa/laps
+     For example, to install laps in directory '/data_disk/laps' with data 
+     in '/data_disk/laps/data' use... 
+     $ ./configure --prefix=/data_disk/laps
      
-     To install in /usr/local/laps with data in /data/fxa/laps use...
-     $ ./configure --prefix=/usr/local/laps --datadir=/data/fxa/laps
+     To install in '/usr/local/laps' with data in '/data_disk/laps/data1' use...
+     $ ./configure --prefix=/usr/local/laps --datadir=/data_disk/laps/data1
      
      One or more alternate data directories for running laps can be specified 
      at runtime, if desired. A single set of binaries can thus support several 
@@ -328,6 +328,8 @@
      $ make                  1> make.out 2>&1 
      $ make install          1> make_install.out 2>&1 
      $ make install_lapsplot 1> make_install_lapsplot.out 2>&1   
+
+     Check the executables in the 'bin' directory.
 
      Lapsplot can be installed only if you have NCAR graphics.
 
@@ -591,16 +593,20 @@
 
                ---  2.5  Test data case  ---
 
-     A tar file containing test data is available that contains a 1 hour
-     run of laps data (intermediate files from the 'ingest' code plus outputs
-     from the 'analysis' code). Several consecutive hours are posted, one 
-     hour per file (e.g. 'm3', 'm2', 'm1', '0' represent consecutive hours
-     of data). Included are the contents of the 'data/lapsprd', 'data/time' 
-     and 'data/log' directories from an FSL machine. The log files are useful 
-     for diagnosing any differences in output you may observe. The contents of
-     the various directories are outlined below in this README file. The data 
-     was created using the latest software release. Our users can download 
-     this data at 'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
+     Tar files containing test data are available that contain 1 hour runs of 
+     laps data on the Colorado domain (intermediate files from the 'ingest' 
+     code plus outputs from the 'analysis' code). Several consecutive hours 
+     are posted, one hour per file (e.g. 'm3', 'm2', 'm1', '0' represent 
+     consecutive hours of data). Included are the contents of the 'lapsprd', 
+     'time', 'static', and 'log' subdirectories under 'data'. The log files 
+     are useful for diagnosing any differences in output you may observe. 
+     The contents of the various directories are outlined below in this 
+     README file. The data was created using the latest software release. Our 
+     users can download this data at 
+     'http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi'.
+
+     If you want to test the localization procedure, make sure the paths
+     to the geography data are correct in 'data/static/nest7grid.parms'.
 
      If you want to test the 'analysis' code only, you might initiate
      appopriate portions of the 'sched.pl' to run for the test data at 
@@ -1077,7 +1083,8 @@ April 1996
 ------ 2.15 -----Detecting and Reporting Installation Errors-------------------
 
    To determine how well LAPS was installed, verify that all (33 at last check)
-   executables were built OK with no errors in the output of 'make'.
+   executables were built OK ('bin' directory) with no errors in the output 
+   of 'make'.
 
    Similarly, check the output of the localization script.
 
