@@ -455,8 +455,9 @@ c           write(1,*)'virtualTemp'
             write(line,*)elev,t_sfc,' ',i_qc_sfc,rms
      1                                 ,rh_sfc,di_sfc,sp_sfc,prs      
 
-            write(1,*)line
-            write(6,*)line
+            write(1,11)line
+            write(6,11)line
+ 11         format(1x,a150)
 
             do i = 1, n_levels
                 iqc_flag  = i_qc_flag(i)
