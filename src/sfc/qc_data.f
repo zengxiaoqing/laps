@@ -34,7 +34,8 @@ c
 	subroutine qcdata(filename,infile_l,rely,mxstn,
      &     t_s, td_s, dd_s, ff_s, ddg_s, ffg_s, pstn_s, pmsl_s, alt_s, 
      &     vis_s, stn, rii, rjj, ii, jj, n_obs_b, n_sao_b, n_sao_g,
-     &     ni, nj, t_bk_f, mslp_bk_mb, iback_t, iback_mp,
+     &     ni, nj, t_bk_f, td_bk_f, mslp_bk_mb, 
+     &     iback_t, iback_td, iback_mp,
      &     istatus)
 c
 c=========================================================================
@@ -65,6 +66,7 @@ c
 c
 c..... Model background 
         real t_bk_f(ni,nj)
+        real td_bk_f(ni,nj)
         real mslp_bk_mb(ni,nj)
 c
 c..... Arrays for the prev hour's OBS file input data
@@ -271,14 +273,6 @@ cc     +	       n_obs_b_l, elev_l, rely_l, ivals)
 	call dev_ck(15, n_meso_pos, n_obs_b, alt_s, rely, 
      +	       n_obs_b_l, alt_l, rely_l, ivals)
 c
-	write(60,*) '  '
-	write(60,*) ' --- Reliability after standard deviation test --- '
-	write(60,*) '  '
-	do 101 j = 1,n_obs_curr
-	 write(60,900) j, stn(j), (rely(i,j),i=1,26)
- 101	continue
-
-c
 c.....  model background checks
 c
         c_field = 'T'
@@ -289,6 +283,14 @@ c
      1              ,ii,jj,t_bk_f,rely,badflag,n_obs_curr
      1              ,stn,mxstn,ni,nj,istatus)
 
+        c_field = 'TD'
+        ifld = 8
+        thresh = 40.
+
+        call bkg_chk(iback_t,c_field,ifld,thresh,t_s
+     1              ,ii,jj,td_bk_f,rely,badflag,n_obs_curr
+     1              ,stn,mxstn,ni,nj,istatus)
+
         c_field = 'MSLP'
         ifld = 14
         thresh = 10.
@@ -296,6 +298,14 @@ c
         call bkg_chk(iback_mp,c_field,ifld,thresh,pmsl_s
      1              ,ii,jj,mslp_bk_mb,rely,badflag,n_obs_curr
      1              ,stn,mxstn,ni,nj,istatus)
+
+c
+	write(60,*) '  '
+	write(60,*) ' --- Reliability after std dev & bkg tests --- '
+	write(60,*) '  '
+	do 101 j = 1,n_obs_curr
+	 write(60,900) j, stn(j), (rely(i,j),i=1,26)
+ 101	continue
 
 c
 c.....  qc finished
