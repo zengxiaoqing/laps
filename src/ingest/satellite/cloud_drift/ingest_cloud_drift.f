@@ -108,16 +108,40 @@
           elseif(cloud_drift_format(ipath) .eq. 'CWB_SATOB')then
               lag_time_report = 3600
 
-              call get_file_times(c_filespec,max_files,c_fnames
-     1                           ,i4times,i_nbr_files_ret
-     1                           ,istatus)
+!             Obtain file times from file names
+              do i = 1,i_nbr_files_ret
+                  call s_len(c_fnames(i),len_fname)
+                  a10_time = c_fnames(i)(len_fname-11:len_fname-4)//'00'       
+
+                  a9_time = a10_to_a9(a10_time,istatus)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Bad value for a10_time ',a10_time
+                      stop
+                  endif
+
+                  call i4time_fname_lp(a9_time,i4times(i),istatus)
+                  write(6,*)c_fnames(i)(1:len_fname),i4times(i)
+              enddo ! i
 
           elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
               lag_time_report = 0
 
-              call get_file_times(c_filespec,max_files,c_fnames
-     1                           ,i4times,i_nbr_files_ret
-     1                           ,istatus)
+!             Obtain file times from file names
+              do i = 1,i_nbr_files_ret
+                  call s_len(c_fnames(i),len_fname)
+                  call get_directory_length(c_fnames(i),len_dir)
+                  a10_time = c_fnames(i)(len_fname-11:len_fname-4)//'00'       
+
+                  a9_time = a10_to_a9(a10_time,istatus)
+                  if(istatus .ne. 1)then
+                      write(6,*)' Bad value for a10_time ',a10_time
+                      stop
+                  endif
+
+                  call i4time_fname_lp(a9_time,i4times(i),istatus)
+                  write(6,*)c_fnames(i)(1:len_fname),i4times(i)
+              enddo ! i
+
 
           else
               write(6,*)' ERROR, unknown cloud_drift_format '

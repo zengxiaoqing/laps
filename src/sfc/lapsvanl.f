@@ -458,7 +458,18 @@ cc	call mean_pres(n_obs_b,pstn_s,pbar)
 	do j=1,jmax
 	do i=1,imax
 c
-c.....    Departures of obs at stn elevations
+c.....     Departures of gridded obs (t1,td1) at gridded stn elevations (elev1)
+c          An estimate of the t/td is made at the station elevation using the
+c          background 700mb t/td and lapse rates. These estimates are 
+c          subtracted from the observation values to yield incremental
+c          t/td obs.
+c
+c          The same departure procedure is followed for the background t/td,
+c          except that t/td estimates are made at the laps terrain elevations.
+c          The net result of both corrections is that the gridded obs are
+c          corrected differently from the gridded background by an amount
+c          equivalent to the lapse rates times the deviation of the station
+c          elevation from the LAPS terrain.
 c
 	   ter = elev1(i,j)     ! departures at stn elev
 c

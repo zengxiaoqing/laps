@@ -347,7 +347,7 @@ c
 c
 	print *,' '
 	write(6,320) use,atime_s,n_obs_g,n_obs_b
-320	format(1x,a6,' data vaild time: ',a24,' Num obs: ',2i6)
+320	format(1x,a6,' data valid time: ',a24,' Num obs: ',2i6)
 c
 !	if(n_obs_b .lt. 1) then
 !	   jstatus(1) = -2

@@ -427,6 +427,59 @@ c
      &       '  WARNING. No observations in data array after QC check.'
 	   go to 950
 	endif
+
+
+c.....  Subtract background from satellite obs and calculate sat stats
+c
+	isat_flag = 0
+        num_sat_bkg = 0
+        sum_sat_bkg = 0.
+        sumsq_sat_bkg = 0.
+        num_sat_obs = 0
+        sum_sat_obs = 0.
+        sumsq_sat_obs = 0.
+
+	do j=1,jmax
+	do i=1,imax
+	   if(s(i,j) .ne. 0.) then
+	      isat_flag = 1
+	      s(i,j) = s(i,j) - tb(i,j) ! diff from background
+              num_sat_bkg = num_sat_bkg + 1
+              sum_sat_bkg = sum_sat_bkg + s(i,j)
+              sumsq_sat_bkg = sumsq_sat_bkg + s(i,j)**2
+
+              if(t(i,j) .ne. 0)then
+                 diff_sat_obs = s(i,j) - t(i,j)
+                 num_sat_obs = num_sat_obs + 1
+                 sum_sat_obs = sum_sat_obs + diff_sat_obs
+                 sumsq_sat_obs = sumsq_sat_obs + diff_sat_obs**2
+              endif
+	   endif
+	enddo !i
+	enddo !j
+
+        write(6,*)' Num sat tb8 points = ',num_sat_bkg
+
+        if(num_sat_bkg .gt. 0)then
+            rmean = sum_sat_bkg   / float(num_sat_bkg)
+            rms   = sqrt(sumsq_sat_bkg / float(num_sat_bkg))
+            rms_abm = sqrt(rms**2 - rmean**2)
+            write(6,*)
+     1          ' Mean/RMS/RMS about mean: Sat vs. Background = '
+     1          ,rmean,rms,rms_abm       
+
+            write(6,*)' Num of sat/obs comparisons = ',num_sat_obs
+
+            if(num_sat_obs .gt. 0)then
+                rmean = sum_sat_obs   / float(num_sat_obs)
+                rms   = sqrt(sumsq_sat_obs / float(num_sat_obs))
+                rms_abm = sqrt(rms**2 - rmean**2)
+                write(6,*)
+     1              ' Mean/RMS/RMS about mean: Sat vs. Obs = '
+     1              ,rmean,rms,rms_abm       
+            endif
+
+        endif
 c
 c.....  Have obs, so set starting field so spline converges faster.
 c
@@ -464,33 +517,6 @@ cc	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 cc	call barnes2(t,imax,jmax,to,smsng,idum,npass,fnorm)
 cc	print *,' Done.'
 c       
-c.....  Subtract background from satellite obs and calculate sat stats
-c
-	isat_flag = 0
-        num_sat = 0
-        sum_sat = 0.
-        sumsq_sat = 0.
-
-	do j=1,jmax
-	do i=1,imax
-	   if(s(i,j) .ne. 0.) then
-	      isat_flag = 1
-	      s(i,j) = s(i,j) - tb(i,j) !diff from background
-              num_sat = num_sat + 1
-              sum_sat = sum_sat + s(i,j)
-              sumsq_sat = sumsq_sat + s(i,j)**2
-	   endif
-	enddo !i
-	enddo !j
-
-        write(6,*)' Num tb8 points = ',num_sat
-
-        if(num_sat .gt. 0)then
-            rmean = sum_sat   / float(num_sat)
-            rms   = sqrt(sumsq_sat / float(num_sat))
-            write(6,*)' Mean/RMS Sat diff from background = ',rmean,rms       
-        endif
-
         if(analysis_mode .le. 2)then
 c
 c.....      Set the weights for the spline.
@@ -1064,202 +1090,6 @@ c
 	return
 	end
 c
-c
-        subroutine enhance_vis(i4time,vis,hum,topo,ni,nj,kcloud)
-c
-c==============================================================================
-c
-c       Routine to call other routines to adjust the visibility analysis
-c       based on other data (radar, cloud, etc.).
-c            ** May want to put the spline call in here someday...
-c
-c       Original:  ??-??-93  Peter A. Stamus  NOAA/FSL
-c       Changes:   02-03-94  Rewritten
-c                  08-26-97  Changes for dynamic LAPS.
-c       
-c       Notes:
-c          1.  The variables here are:
-c                  i4time = Time for this analysis.
-c                  vis    = Visibility (units are not changed) 
-c                  hum    = Relative humidity (0 to 100 percent)
-c                  topo   = LAPS topography (meters)
-c                  ni,nj  = LAPS grid dimensions
-c                  kcloud = Cloud grid dimension in vertical
-c          2.  Units of visibility (miles, meters) are not changed
-c              in this routine.
-c
-c==============================================================================
-c
-        real vis(ni,nj), hum(ni,nj), topo(ni,nj)
-        real vismod(ni,nj)  !work array
-c
-        print *,' In enhance_vis routine...'
-c
-c..... Radar adjustment.            ! still disabled...2-3-94 pas (no data)
-c
-c       call constant(vis,-10.,ni,nj)
-c       call get_radar_visibility(i4time,vis,istatus)
-c
-c
-c..... Low cloud/humidity adjustment.
-c.....................................
-c..... Get the modification array using the cloud data from LC3 and the
-c..... surface relative humidity.  The multiply the visibilities by the
-c..... modification factor to get the adjusted visibility.
-c
-        call get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
-c
-        do j=1,nj
-        do i=1,ni
-           vis(i,j) = vis(i,j) * vismod(i,j)
-        enddo !i
-        enddo !j
-c
-c..... that's it...
-c
-        print *,' Enhance_vis routine...done.'
-        return
-        end
-c
-c
-        subroutine get_vismods(i4time,hum,topo,vismod,ni,nj,kcloud)
-c
-c==============================================================================
-c
-c       Routine to set a visibility adjustment based on low cloud data from
-c       the LAPS 3-D cloud analysis and the LAPS surface humidity analysis.
-c       The adjustment is the percentage (0-1) that the visibility is 
-c       reduced for given cloud amounts/humidities.  The adjustment is put
-c       into the vismod array, and is multiplied by the vis array in the
-c       calling routine (enhance_vis).
-c
-c       Original:  ??-??-93  Peter A. Stamus
-c       Changes:   02-03-94  Rewritten
-c                  08-26-97  Changes for dynamic LAPS
-c	           08-19-98  Initialize k_hold array.
-c
-c==============================================================================
-c
-        real hum(ni,nj), vismod(ni,nj), topo(ni,nj)
-	real cld_hts(kcloud), cld_pres(kcloud)
-        real clouds_3d(ni,nj,kcloud)
-c
-        integer k_hold(ni,nj), lvl(kcloud)
-c
-        character ext*31, var(kcloud)*3, comment(kcloud)*125
-        character units(kcloud)*10, lvl_coord(kcloud)*4, dir*256
-c
-c..... Start by setting up the default values for vismod (1.0=no adjustment)
-c
-        call constant(vismod,1.0,ni,nj)
-c
-c..... Get the low cloud data from the nearest LC3 file (timewise).
-c
-        icnt = 0
-        i4time_c = i4time
-        do k=1,kcloud
-           lvl(k) = k
-           var(k) = 'lc3'
-        enddo !k
-        ext = 'lc3'
-	call get_directory('lc3', dir, len)
- 500    call read_laps_data(i4time_c,dir,ext,ni,nj,kcloud,kcloud,
-     &       var,lvl,lvl_coord,units,comment,clouds_3d,istatus)
-c
-        if(istatus .ne. 1) then
-           if(istatus .eq. 0) then  !no data
-              if(icnt .lt. 1) then  !just try 1-hr for now.
-           print *,' No data for given i4time...trying 1-hr earlier.'
-               i4time_c = i4time_c - 3600
-               icnt = icnt + 1
-               go to 500
-              else
-               print *,' LC3 data too old.'
-               print *,' No visibility modification done.'
-               return
-              endif 
-           else
-              print *,' Bad return from LC3 read: istatus = ',istatus
-              print *,' No visibility modification done.'
-              return
-           endif
-        endif
-c
-c..... Check time difference.  Don't use if cloud analysis is too old.
-c
-c        if((i4time - i4time_nearest) .gt. 5400) then  !1.5 hours
-c           print *,' LC3 data too old.'
-c           print *,' No visibility modification done.'
-c           return
-c        endif
-c
-c..... Decode the cloud heights and pressures.
-c
-        print *,' Got cloud data.'
-        do k=1,kcloud
-           read(comment(k),100,err=999) cld_hts(k), cld_pres(k)
-100        format(2e20.7)
-        enddo !k
-c
-c..... Find the vertical level from 'cld_hts' just below the surface.  Will
-c..... then start cloud checks at the next level up.
-c
-        do j=1,nj
-        do i=1,ni
-	   k_hold(i,j) = 0
-           do k=1,kcloud
-              if(cld_hts(k) .lt. topo(i,j)) k_hold(i,j) = k
-           enddo !k
-        enddo !i
-        enddo !j
-c
-c..... Now loop over the grid and check the lowest 3 levels above the 
-c..... surface.  Check for fog first, then check for low clouds.
-c
-        do j=1,nj
-        do i=1,ni
-           k_start = k_hold(i,j) + 1     ! 1st level above the surface
-           k_end = k_start + 3           ! this is usually within 300 m
-c
-c.....     Check for fog in the layer just above the surface.
-c
-           if(clouds_3d(i,j,k_start) .gt. 0.65) then
-              if(hum(i,j) .gt. 70.) vismod(i,j) = 0.90
-              if(hum(i,j) .gt. 80.) vismod(i,j) = 0.75
-              if(hum(i,j) .gt. 90.) vismod(i,j) = 0.55
-              if(hum(i,j) .gt. 95.) vismod(i,j) = 0.35
-              go to 200
-           endif
-c
-c.....     If no fog in lowest layer, find the maximum value in the 3 levels
-c.....     above the surface.  Then adjust the vismod based on humidity.
-c
-           amax_layer = 0.
-           do k=k_start,k_end
-              if(clouds_3d(i,j,k) .gt. amax_layer) then
-                 amax_layer = clouds_3d(i,j,k)
-              endif
-           enddo !k
-c
-           if(amax_layer .gt. 0.65) then
-              if(hum(i,j) .gt. 70.) vismod(i,j) = 0.95
-              if(hum(i,j) .gt. 80.) vismod(i,j) = 0.80
-              if(hum(i,j) .gt. 90.) vismod(i,j) = 0.60
-              if(hum(i,j) .gt. 95.) vismod(i,j) = 0.40
-           endif
-c
-200     continue
-        enddo !i
-        enddo !j
-c
-c..... That is all.
-c
-        return ! normal return
-c
- 999    print *,' Error reading comment field from LC3.'
-        print *,' No visibility modification done.'
-        return
-        end
 c
 c
 	subroutine dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
