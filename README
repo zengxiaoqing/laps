@@ -82,6 +82,7 @@
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
          3.3.6 ..................  DERIV
          3.3.7 ..................  ACCUM 
+         3.3.8 ..................  SOIL MOISTURE
          3.3.9 ..................  BALANCE
          3.4 ..............  Model Initialization
          3.4.1 ..................  DPREP
@@ -2128,9 +2129,9 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 
 <pre>
 Inputs:
-	RAOBs in NetCDF format (FSL-NIMBUS CDL)
-                               (Should also work with WFO-Advanced CDL)
-                               (AFWA format also allowed)
+	RAOBs in various formats (FSL-NIMBUS CDL - NetCDF)
+                                 (Should work with WFO-Advanced CDL)
+                                 (AFWA and CWB ASCII formats also allowed)
 
         Satellite Soundings in AFWA format
 
