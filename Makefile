@@ -118,6 +118,7 @@ DATADIRS = log/qc \
            lapsprd/lrp \
            lapsprd/lrs \
            lapsprd/lso \
+           lapsprd/lsq \
            lapsprd/lsr \
            lapsprd/lsr/dmsp01 \
            lapsprd/lsr/dmsp02 \
@@ -168,6 +169,7 @@ DATADIRS = log/qc \
            lapsprd/rdr/009/vrc \
            lapsprd/sag \
            lapsprd/snd \
+           lapsprd/tmg \
            lapsprd/v01 \
            lapsprd/v02 \
            lapsprd/v03 \
