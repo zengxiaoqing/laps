@@ -2333,21 +2333,24 @@ Author Steve Albers (albers@fsl.noaa.gov) / John Smart (smart@fsl.noaa.gov)
 <pre>
 Inputs:
         v01, v02, etc.                        3-D reflectivity  
+        rdr/001/vrc, rdr/002/vrc, etc.        2-D reflectivity
 
-Outputs (Intermediate data file):
-        vrc     grid                          2-D reflectivity
+Outputs (Radar Mosaic - intermediate data file):
         vrz     grid                          3-D reflectivity  
+        vrc     grid                          2-D reflectivity
 </pre>
 
-This program runs once per LAPS cycle in the 'sched.pl'. It produces just
-one output file for the cycle valid at 'systime'. A future enhancement
-would be to allow this to produce multiple outputs within a given LAPS
-cycle.
+This program runs once per LAPS cycle in the 'sched.pl'. The default is to 
+write just one mosaic file for the cycle valid at 'systime'. A namelist option
+allows this program to produce multiple mosaic outputs within a given LAPS
+cycle. The multiple mosaics are all run at the same wall clock time, while the
+valid mosaic times are spaced throughout the previous LAPS cycle.
 
 The nearest radar with valid data is the one chosen to contribute at each
 grid-point.
 
-The output reflectivity is used by the cloud and precip accumulation analyses.
+The output reflectivity mosaic is used by the cloud and precip accumulation 
+analyses. Further QC is done within these analyses.
                                         
 Parameter namelist file: 'static/radar_mosaic.nl'
 
@@ -2842,15 +2845,15 @@ Process: temp.exe - Temperature-Height analysis
         a threshold (~10 deg), the entire sounding is rejected.
 <pre>
 Inputs: (from LGA, LSX, FUA [if available], LRS)       '*' = essential input
-      * lga/ram grid            model data analysis / forecast
+      * lga/fua grid            model data analysis / forecast
 	lrs	inter data      RASS vertical temp profile 
         snd     inter data      RAOB data including temperatures
 	pin	inter data	ACARS Temperatures (using pressure altitude)
       * lsx     grid            LAPS surface data grids
 
-Outputs: (LW3 used by LBA)
+Outputs: 
 	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
-
+        pbl     2d grid         2-D Boundary Layer Depth (m), and BL top (Pa)
         tmg     inter data      temperature obs used for lapsplot plotting
 </pre>
 Source directory: laps/src/temp
