@@ -106,10 +106,12 @@
               filename_in = dir_in(1:len_dir_in)//a9_time//'0300o'
               i4_raob_window = 2 * ilaps_cycle_time
 !             i4_raob_window = 60000  ! Temporary for testing
+              i4_raob_lag = 10800
           else ! AFGWC
               filename_in = dir_in(1:len_dir_in)//'/raob.'//
      1                                            a8_time_orig(i)
               i4_raob_window = 21600
+              i4_raob_lag = 3600
           endif
 
 !         filename_in = 'test.nc                                 '
@@ -121,9 +123,18 @@
 !         Define limits of NetCDF file times we are interested in. This 
 !         assumes NetCDF files have RAOBs for 3 hours ending at the NetCDF
 !         file time.
-          i4time_file_latest =   i4time_raob_latest + 10800
+          i4time_file_latest =   i4time_raob_latest + i4_raob_lag
           i4time_file_earliest = i4time_raob_earliest 
           
+          if(i .eq. 1)then
+              write(6,*)' i4 raob sys/window'
+     1                   ,i4time_sys,i4_raob_window
+              write(6,*)' i4 raob range     '
+     1                   ,i4time_raob_earliest,i4time_raob_latest
+              write(6,*)' i4 file range     '
+     1                   ,i4time_file_earliest,i4time_file_latest
+          endif
+
           if(i4times(i) .lt. i4time_file_earliest)then
               write(6,*)' File is too early ',a9_time,i
           elseif(i4times(i) .gt. i4time_file_latest)then
@@ -152,7 +163,7 @@
               else
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
      1                ,NX_L,NY_L
-     1                ,i4time_raob_earliest,i4time_raob_latest,a9time
+     1                ,i4time_raob_earliest,i4time_raob_latest,a9_time       
      1                ,filename_in,istatus)
               endif
           endif
