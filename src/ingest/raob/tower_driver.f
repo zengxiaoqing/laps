@@ -1,5 +1,5 @@
 
-        subroutine tower_driver_sub(ni,nj
+        subroutine tower_driver_sub(ni,nj,lun_out
      1                           ,maxobs,laps_cycle_time
      1                           ,path_to_local_data
      1                           ,itime_before,itime_after
@@ -62,7 +62,7 @@ c
         write(6,*)
 	write(6,*)'Getting Mesonet Tower Data...'
 c
-        call get_local_towerobs(maxsta,i4time_sys,
+        call get_local_towerobs(maxsta,i4time_sys,lun_out,
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
 !    &                      grid_east,grid_west,grid_north,grid_south,
