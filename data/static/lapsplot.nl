@@ -4,6 +4,7 @@
  c3_time_zone='UTC',
  c_institution='NOAA/FSL',
  time_zone=0.,
+ c_vnt_units='FT-KT',
  /
 
 c LAPSPLOT PARAMETERS
@@ -20,3 +21,7 @@ c c_institution - institution used in label (up to 9 characters)
 c
 c time_zone - local time minus UTC in hours (real number)
 c
+c c_vnt_units - units for use in Ventilation Index (valid values are 
+c               'FT-KT' or 'M**2/S')
+c
+
