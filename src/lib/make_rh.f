@@ -48,6 +48,8 @@ c       Dan Birkenheuer    14 May 1993
         external eslo
         external esice
         external es
+        integer istatus
+        real rmd
         real eslo  !function type
         real esice !function type
         real es    !function type
@@ -80,8 +82,11 @@ c                                               eslo approx
 
         else ! situation not covered (impossible)
 
-           write(6,*) 'Make_rh .. t and t_ref conflict, NaN'
-           esat = 1./0.0
+           write(6,*) 'Warning.. t and t_ref conflict, missing data
+     1 returned'
+           call get_r_missing_data(rmd, istatus)
+
+           esat = rmd
 
         endif
 
