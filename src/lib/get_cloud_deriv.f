@@ -685,8 +685,10 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                             iflag_melt = 1
 
                         elseif(t_wb_c .ge. 0.0)then ! Between 0C and Melt threshold
-                            if(iprecip_type_last .eq. 0)then  ! Generating lyr
-                                iprecip_type = 1              ! Rain
+                            if(iprecip_type_last .eq. 0       ! Generating lyr
+     1                    .or. iprecip_type_last .eq. 3       ! Freezing Rain
+     1                                                 )then  ! Set to Rain
+                                iprecip_type = 1              
                                 iflag_melt = 1
 
                             else                              ! Unchanged pcp
