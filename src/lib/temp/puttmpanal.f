@@ -167,7 +167,8 @@ cdis
         t_diff_min = 0.
 
 !       Get RAMS/MODEL Data
-        var_2d = 'T'
+c  following line changed from T to T3 for v3 readlapsdata LW 9/97
+        var_2d = 'T3'
         l_fill = .true.
 
         call get_modelfg_3d(i4time_needed,var_2d,ni,nj,nk
