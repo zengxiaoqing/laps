@@ -234,7 +234,15 @@ foreach $exe (@LAPS_EXE){
 
         print " Adding to $LAPS_LOG_PATH/run_qsub_$scriptcount.sh with executable #/nodes $execount $nodes_current $exe\n";
         print TFILE "  \n";
-        print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+
+        if($nodes_current == 1){
+            print TFILE "$LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+        }else{
+            print TFILE "SMS_SERVER_MODE=serverless\n";
+            print TFILE "export SMS_SERVER_MODE\n";
+            print TFILE "\$SMS/bin/sysSrvr $nodes_current\n";
+            print TFILE "smsRun $nodes_current $LAPSROOT/bin/$exe 1> $LAPS_LOG_PATH/$log 2>&1\n";
+        }
        
         if($execount == $nexe){ # Last on the list
             print TFILE "  \n";
@@ -279,9 +287,9 @@ if($fxa_sys!=0 || $opt_w){
     print LOG $t." Running wfo postprocessing\n";
 
     if($opt_w){
-        my $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl -w $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
     }else{
-        my $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
+        $sys="$EXECUTABLE_NAME $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1";
     }
 
 #   system("/usr/nfs/bin/perl $LAPSROOT/etc/wfo_post.pl $LAPSROOT $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/wfo_post.log.$hhmm 2>&1");
