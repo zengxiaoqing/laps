@@ -119,9 +119,9 @@ c              endif
          enddo
 
       enddo
-         if(jdiff.eq.0.00)then
-           itstatus=ishow_timer()
-         end if
+      if(jdiff.eq.0.00)then
+         itstatus=ishow_timer()
+      end if
       enddo
 c ------------------------------------------------------------------------------
 900   return

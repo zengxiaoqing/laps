@@ -35,7 +35,7 @@ cdis
      &               n_wv_lines,n_wv_elem,
      &               n_vis_lines,n_vis_elem,
      &               chtype,maxchannels,nchannels,
-     &               i4time_cur,
+     &               i4time_cur,i_delta_t,
      &               lvd_status)
 c
 c Program drives generation of LAPS lvd.  Processes satellite data.
@@ -174,6 +174,7 @@ c
       integer ishow_timer
       integer init_timer
       integer i4time_cur
+      integer i_delta_t
       integer i4time_data(max_files)
       integer istat
       integer gstatus
@@ -313,7 +314,7 @@ c --------------------------------------------------------------------------
      &                      nchannels,chtype,
      &                      path_to_raw_sat(1,jtype,isat),
      &                      c_fname_cur,lvis_flag,
-     &                      i_delta_sat_t_sec,
+     &                      i_delta_t,
      &                      n_ir_lines, n_ir_elem,
      &                      n_vis_lines,n_vis_elem,
      &                      n_wv_lines,n_wv_elem,
@@ -340,7 +341,7 @@ c  matches for this time (ntm) >= 0 depending on the result in getascii_satdat.
          nft=1
          write(6,*)'ascii satellite data ingest currently disabled'
 
-c        call getascii_satdat(i4time_cur,lvis_flag,
+c        call getascii_satdat(i4time_cur,lvis_flag,i_delta_t,
 c    &                        nchannels,chtype,
 c    &                        n_ir_lines, n_ir_elem,
 c    &                        n_vis_lines,n_vis_elem,

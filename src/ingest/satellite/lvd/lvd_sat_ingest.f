@@ -13,6 +13,8 @@ c       2-19-98 J. Smart        Incorporate satellite_master.nl. This eliminates
 c                               all the separate files containing nav info for each sat and
 c                               each format type.
 c                               Made this the main program once again.
+c       12-28-98   "            Added 'include lapsparms.cmn' and call get_laps_config
+c
       Implicit None
 
       Integer nx_l
@@ -30,20 +32,22 @@ c                               Made this the main program once again.
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
+      include 'lapsparms.cmn'
 
       Character*3 chtype(maxchannel)
       character*9 cfname_cur
 c
 c ========================== START ==============================
 c 
-      call get_grid_dim_xy(nx_l,ny_l,istatus)
+      call get_laps_config('nest7grid',istatus)
       if(istatus.ne.1)then
-         write(6,*)'Error getting nx_l/ny_l'
          goto 1000
-      else
-         write(6,*)'LAPS nx_l and ny_l obtained'
       endif
+      write(6,*)'LAPS nest7grid.parms obtained'
 c
+      nx_l=nx_l_cmn
+      ny_l=ny_l_cmn
+
       call config_satellite_lvd(istatus)
       if(istatus.ne.1)then
          write(*,*)'Error config_satellite - Cannot continue'
@@ -130,7 +134,7 @@ c
      &                      nlineswv,nelemwv,
      &                      nlinesvis,nelemvis,
      &                      chtype,maxchannel,nchannels,
-     &                      i4time_cur,
+     &                      i4time_cur,i_delta_sat_t_sec,
      &                      istatus)
 
         if(istatus.ne.1)then

@@ -1,6 +1,6 @@
       subroutine read_ascii_satdat(c_filename,
      &                       i4time_current,
-     &                       c_filetime,
+     &                       c_filetime,i_delta_t,
      &                       nlines,nelems,
      &                       i,j,
      &                       rlat,rlon,
@@ -46,22 +46,6 @@ c
       Character     c_filename*255
 
       istatus=1
-c
-c get i_delta_t
-c
-      n_vars_req = 1
-      c_vars_req = 'i_delta_sat_t_sec'
-      call get_static_info(c_vars_req,c_values_req,n_vars_req
-     1                                                      ,istatus)
-      if(istatus .eq. 1)then
-         write(6,*)'Got static info = i_delta_sat_t_sec'
-         write(6,*)'c_vars_req = ',c_vars_req
-         read(c_values_req,'(i10)')i_delta_t
-         write(6,*)'i_delta_sat_t_sec = ',i_delta_t
-      else
-         write(6,*)'Error getting static info = i_delta_sat_t_sec'
-         write(6,*)'Probably no new satellite will be processed'
-      endif
 c
 c open ascii file
 c

@@ -1,5 +1,5 @@
        subroutine getascii_satdat(i4time_current,
-     &                        lvis_flag,
+     &                        lvis_flag,i_delta_t,
      &                        nirlines, nirelem,
      &                        nvislines,nviselem,
      &                        nwvlines,nwvelem,
@@ -32,6 +32,7 @@ c
        integer i4time_data_ir
        integer i4time_data_vis
        integer i4time_diff
+       integer i_delta_t
        integer nelem_ir
        integer nlines_ir
        integer nelem_vis
@@ -80,7 +81,7 @@ c
        write(6,*)'Reading: ',c_filename(1:n)
        call read_ascii_satdat(c_filename,
      &                        i4time_current,
-     &                        c_filetime,
+     &                        c_filetime,i_delta_t,
      &                        n_ir_lines,
      &                        n_ir_elem,
      &                        nelem_ir,nlines_ir,
@@ -110,7 +111,7 @@ c
           write(6,*)'Reading: ',c_filename(1:n)
           call read_ascii_satdat(c_filename,
      &                        i4time_current,
-     &                        c_filetime,
+     &                        c_filetime,i_delta_t,
      &                        n_vis_lines,
      &                        n_vis_elem,
      &                        nelem_vis,nlines_vis,

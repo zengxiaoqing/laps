@@ -42,9 +42,6 @@ c
       real*4 img_elem(nelem,nlines)
       real*4 image_data(nelem,nlines)
 
-      integer ishow_timer
-      integer init_timer
-      integer itstatus
       integer gfn_status
 
       integer n_vars_req
@@ -162,10 +159,6 @@ c ------------------------------------------------------------------------------
       goto 900
 
 997   write(6,*)'No files of type: ',chtype
-      goto 900
-
-      itstatus=ishow_timer()
-      write(6,*)'Elapsed time (sec): ',itstatus
 
 900   return
       end
