@@ -1,4 +1,4 @@
-#!/usr/local/perl5/bin/perl
+#!/usr/local/apps/bin/perl
 
 package laps_tools;
 use strict;
@@ -288,12 +288,14 @@ sub mkdatadirs{
   my (@datadirs, @lapsprddirs);
   my (@fua_dirs, @fsf_dirs);
   my (@fdda_dirs);
+  my (@lga_dirs, @lgb_dirs);
+  my (@bkgd_dirs);
 
   if($domain_type eq "laps"){
 
      (@datadirs) = qw (cdl lapsprd log log/qc static time);
      (@lapsprddirs) = qw (l1s lc3 lcb lco lcp lct lcv 
-lf1 lga lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
+lf1  lh3 lh4 lhe lil liw lm1 lm2 lmd lmr lmt 
 lpbl lps lq3 lrp lrs lso lsx lt1 lty lfr
 lvd lvd/goes08 lvd/goes09 lvd/goes10 lvd/goes12 lvd/meteos lvd/gmssat
 lw3 lwc lwm ctp msg pig pin prg pro sag vrc vrz snd 
@@ -308,7 +310,7 @@ rdr/001 rdr/002 rdr/003 rdr/004 rdr/005 rdr/006 rdr/007 rdr/008 rdr/009
 rdr/001/vrc rdr/001/raw rdr/002/vrc rdr/002/raw rdr/003/vrc rdr/003/raw
 rdr/004/vrc rdr/004/raw rdr/005/vrc rdr/005/raw rdr/006/vrc rdr/006/raw
 rdr/007/vrc rdr/007/raw rdr/008/vrc rdr/008/raw rdr/009/vrc rdr/009/raw 
-lgb ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
+ls2 lapsprep lapsprep/mm5 lapsprep/rams lapsprep/wrf lapsprep/cdf 
 dprep stats balance balance/lt1 balance/lw3 balance/lh3 balance/lq3 balance/air
 grid ram rsf lsq tmg lst pbl model model/varfiles model/output model/sfc
 verif verif/noBal verif/Bal verif/Bkgd);
@@ -321,10 +323,13 @@ verif verif/noBal verif/Bal verif/Bkgd);
             @fdda_dirs = &laps_tools::get_nl_value('nest7grid.parms','fdda_model_source_cmn',"$LAPS_SRC_ROOT/data");
      }else{
            print "file nest7grid.parms not available in dataroot or source root\n";
-           print "terminating\n";
+           print "for acquiring fdda directories.  Terminating.\n";
            exit;
      }
-     print "adding fdda_model_source subdirectories to lapsprddirs\n";
+
+     @bkgd_dirs = &get_bkgd_models($LAPS_SRC_ROOT);
+
+     print "adding fdda_model_source subdirectories to lapsprd dirs\n";
      my $ii = 0;
      @fua_dirs[$ii] = 'fua';
      @fsf_dirs[$ii] = 'fsf';
@@ -337,6 +342,19 @@ verif verif/noBal verif/Bal verif/Bkgd);
      }
      print "fua dirs: @fua_dirs\n";
      print "fsf dirs: @fsf_dirs\n";
+
+     print "adding background model subdirectories to lapsprd dirs\n";
+     $lga_dirs[0]='lga';
+     $lgb_dirs[0]='lgb';
+
+     $ii=0;
+     foreach (@bkgd_dirs){
+              $ii++;
+              @lga_dirs[$ii]=$lga_dirs[0]."/".$_;
+              @lgb_dirs[$ii]=$lgb_dirs[0]."/".$_;
+     }
+     print "lga dirs: @lga_dirs\n";
+     print "lgb dirs: @lgb_dirs\n";
 
   }else{
      (@datadirs) = qw (cdl siprd log static)
@@ -355,6 +373,12 @@ verif verif/noBal verif/Bal verif/Bkgd);
   foreach (@lapsprddirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
+  foreach (@lga_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+  }
+  foreach (@lgb_dirs) {
+     mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
+  }
   foreach (@fua_dirs) {
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
@@ -362,9 +386,31 @@ verif verif/noBal verif/Bal verif/Bkgd);
      mkdir "$LAPS_DATA_ROOT/lapsprd/$_",0777 if(! -e "$LAPS_DATA_ROOT/lapsprd/$_");
   }
 
- 
-
   return;
+}
+1;
+#
+# ---------------------------------------------------------------------
+sub get_bkgd_models{
+
+  my ($SRCROOT) = @_;
+  my $bgdata_inc = "$SRCROOT/src/include/bgdata.inc";
+  open(BGD,$bgdata_inc) or die "Can't open $bgdata_inc file";
+  my @bgdata_inc = <BGD>;
+  my ($models,$i,@models);
+  foreach (@bgdata_inc){
+   if(/data/){
+      $models = substr($_,26,length($_)); 
+      chomp $models;
+      @models = split(",",$models);
+      for ($i=0; $i<=$#models; $i++){
+         @models[$i]=~s/'//g;
+      }
+      last; 
+   }
+  }
+# print "\n # of models = $#models + 1: @models\n";
+  return @models;
 }
 1;
 #
@@ -399,6 +445,7 @@ sub write_namelist {
 }
 #
 #---------------------------------------------------------------------
+#
 sub get_pressures {
 
     my $LAPS_DATA_ROOT = shift(@_);
@@ -425,6 +472,9 @@ sub get_pressures {
 #foreach (@pressures){
 #   print "$_\n";
 #}
+#
+#
+#---------------------------------------------------------------------
 #
 sub julian {
     my($yr,$mo,$dy) = @_;
@@ -460,7 +510,9 @@ sub julian {
 
     $today - $first_of_year + 1;
 }
-
+#
+#---------------------------------------------------------------------
+#
 sub get_system_type {
 
     my $dataroot = shift(@_);
@@ -498,8 +550,10 @@ sub get_system_type {
     }
 }
 1;
-
+#
+#---------------------------------------------------------------------
 # given coordinates of two places in radians, compute distance in meters
+#
 sub great_circle_distance {
     my ($lat1,$long1,$lat2,$long2) = @_;
 
@@ -521,5 +575,250 @@ sub great_circle_distance {
     #               + cos($lat1) * cos($lat2) * cos($long1-$long2));
 
     return $earth_radius * $d;
+}
+1;
+#
+#---------------------------------------------------------------------
+#
+sub date_to_i4time {
+ 
+# This subroutine will accept as input the elements of the date (i.e.
+# day, month, year, hours, minutes, seconds)
+# and return the corresponding integer time in seconds since
+# January 1, 1970. (Brian Jamison)
+#
+# example call:
+#
+#   $yr = 2000;
+#   $mo = 6;
+#   $dy = 3;
+#   $hr = 12;
+#   $mn = 0;
+#   $sc = 0;
+#   ($i4time) = &date_to_i4time($yr,$mo,$dy,$hr,$mn,$sc);
+#   print "after calling sub, i4time is $i4time\n";
+#
+# Notes on input:
+#
+#   year ($yr)  -  must be 4 digit integer (i.e. 1992 instead of 92)
+#
+ 
+    my ($year,$month,$day,$hours,$minutes,$seconds)=@_;
+    my ($i4time);
+    my ($start,$jul,$jul_minus_1);
+    my ($secs_per_day,$secs_per_hour,$secs_per_minute);
+    my ($ly);
+ 
+    $start = 1970;
+    $i4time = 0;
+ 
+    while ($start != $year) {
+     
+          ($ly) = &leapyear_tf($start);
+ 
+          if ($ly) {
+              $i4time = $i4time + 31622400;
+          } else {
+              $i4time = $i4time + 31536000;
+          }
+ 
+          $start++;
+       
+    }
+ 
+#
+# Get the julian day to add the seconds per day
+#
+    ($jul) = &get_julian_day($day,$month,$year);
+ 
+    $jul_minus_1 = $jul - 1;
+    $secs_per_day = $jul_minus_1 * 86400;
+    $i4time = $i4time + $secs_per_day;
+#
+# Add in the seconds per hour, seconds per minute, and the seconds
+#
+    $secs_per_hour = $hours * 3600;
+    $secs_per_minute = $minutes * 60;
+    $i4time = $i4time + $secs_per_hour + $secs_per_minute + $seconds;
+
+    return ($i4time);
+ 
+}
+#
+#-------------------------------------------------------------------
+#
+sub i4time_to_date {
+   
+# This subroutine will accept as input the integer time in seconds since
+# January 1, 1970 and return the elements of the date (i.e.
+# day, month, year, hours, minutes, seconds) (Brian Jamison)
+#
+# example call:
+#
+#   $i4time = 1055894400;
+#   ($yr,$mo,$dy,$hr,$mn,$sc) = &i4time_to_date($i4time);
+#   print "after calling sub,\n
+#            yr is $yr\n
+#            mo is $mo\n
+#            dy is $dy\n
+#            hr is $hr\n
+#            mn is $mn\n
+#            sc is $sc\n";
+#
+# Notes on output:
+#
+#   year ($yr)  -  will be output as a 4 digit integer
+#
+                                                                                
+  my ($i4time)=@_;
+  my ($year,$month,$day,$hours,$minutes,$seconds);
+  my ($count,$lastcount,$jday);
+  my ($start,$jul,$jul_minus_1);
+  my ($secs_per_day,$secs_per_hour,$secs_per_minute);
+  my ($ly);
+                                                                                
+  my @nmonth = qw(31 28 31 30 31 30 31 31 30 31 30 31);
+  my @nmonth_ly = qw(31 29 31 30 31 30 31 31 30 31 30 31);
+   
+  $count = 0;
+  $year = 1970;
+   
+  while ($i4time >= $count) {
+       
+    ($ly) = &leapyear_tf($year);
+   
+    if ($ly) {
+      $count += 31622400;
+      $lastcount = 31622400;
+    } else {
+      $count += 31536000;
+      $lastcount = 31536000;
+    }
+   
+    $year++;
+         
+  }
+                                                                                
+  $count -= $lastcount;
+  $year--;
+   
+  my $daycount = 0;
+   
+  while ($i4time >= $count) {
+   
+    $daycount++;
+    $count += 86400;
+   
+  }
+   
+  $jday = $daycount;
+  $daycount--;
+  $count -= 86400;
+   
+  $month = 0;
+  ($ly) = &leapyear_tf($year);
+   
+  while ($daycount >= 0) {
+   
+    $month++;
+   
+    if ($ly) {
+      $daycount -= $nmonth_ly[$month - 1];
+      if ($daycount <= 0) {
+        $day = $nmonth_ly[$month - 1] + $daycount + 1;
+      }
+    } else {
+      $daycount -= $nmonth[$month - 1];
+      if ($daycount <= 0) {
+        $day = $nmonth[$month - 1] + $daycount + 1;
+      }
+    }
+  }
+                                                                                
+  $hours = 0;
+   
+  while ($i4time >= $count) {
+    $count += 3600;
+    $hours++;
+  }
+     
+  $count -= 3600;
+  $hours--;
+   
+  $minutes = 0;
+   
+  while ($i4time >= $count) {
+    $count += 60;
+    $minutes++;
+  }
+   
+  $count -= 60;
+  $minutes--;
+   
+  $seconds = $i4time - $count;
+                                                                                
+  return ($year,$month,$day,$hours,$minutes,$seconds);
+   
+}
+#
+#-------------------------------------------------------------------
+#
+sub leapyear_tf {
+ 
+# This subroutine will accept as input the 4 digit year and
+# return the variable "ly" which will have a value of 1 for leap years
+# and 0 for other years. (Brian Jamison)
+ 
+  my ($year)=@_;
+  my ($yeardiv4,$yeardiv100,$yeardiv400);
+ 
+# Initialize some logical variables to be false (0=false,1=true)
+ 
+  $yeardiv4 = 0;
+  $yeardiv100 = 0;
+  $yeardiv400 = 0;
+ 
+# Test to see if the year is a leap year
+# Leap year definition: If the year is evenly divisible by 4, it is a
+# leap year unless it is a centenary year (i.e. 1800,1900, etc.).  However
+# centenary years evenly divisible by 400 are leap years (e.g. 2000).
+ 
+  if ($year % 4 == 0) {$yeardiv4 = 1;}
+  if ($year % 100 == 0) {$yeardiv100 = 1;}
+  if ($year % 400 == 0) {$yeardiv400 = 1;}
+ 
+  my $ly = 0;
+  if ($yeardiv4) {
+    $ly = 1;
+    if ($yeardiv100 && !$yeardiv400) {$ly = 0;}
+  }
+ 
+  return ($ly);
+ 
+}
+# 
+#-------------------------------------------------------------------
+#
+sub get_julian_day {
+ 
+# This subroutine will accept as input the day, month, and year and
+# return the corresponding julian day. (Brian Jamison)
+#
+# Notes on input:
+#
+#   iyear  -  must be 4 digit integer (i.e. 1992 instead of 92)
+ 
+  my ($iday,$imonth,$iyear)=@_;
+ 
+  my ($ly) = &leapyear_tf($iyear);
+ 
+  my @noleap = (0,31,59,90,120,151,181,212,243,273,304,334);
+  my @leap = (0,31,60,91,121,152,182,213,244,274,305,335);
+ 
+  my $ijul = $iday + $noleap[$imonth-1];
+  if ($ly) {$ijul = $iday + $leap[$imonth-1]};
+ 
+  return ($ijul);
+ 
 }
 1;
