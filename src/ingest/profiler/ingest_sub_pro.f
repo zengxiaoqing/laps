@@ -322,7 +322,7 @@ C 	read global attribute avgTimePeriod from input file and set lag_time
 C
 C       Open an output file.
         ext = 'pro'
-        call open_lapsprd_file(1,i4time_sys,ext,istatus)
+        call open_ext(1,i4time_sys,ext,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening product file',ext
             return
@@ -594,7 +594,7 @@ C
 
 900     enddo ! stations
 
-        close(1)
+!       close(1)
 
 
 C       Close the netCDF file.  This isn't necessary, but here's a sample of

@@ -265,7 +265,7 @@ C
 C       Open an output file.
 C
         ext = 'pro'
-        call open_lapsprd_file_append(1,i4time_sys,ext,istatus)
+        call open_ext(1,i4time_sys,ext,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening product file',ext
             return
@@ -593,7 +593,7 @@ C
 
 900     enddo ! ista
 
-        close(1)
+!       close(1)
 
 C       Close the netCDF file.  This isn't necessary, but here's a sample of
 C       the call.  A program could have up to 4 profiler netCDF files open at
