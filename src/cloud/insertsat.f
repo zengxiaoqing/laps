@@ -47,7 +47,8 @@ c
      1  istat_39_add_a,                                                  ! O
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
-     1  cloud_frac_vis_a,istat_vis_a,                                    ! I
+     1  cloud_frac_vis_a,istat_vis_potl_a,                               ! I
+     1  istat_vis_added_a,                                               ! O
      1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  lstat_co2_a, cloud_frac_co2_a, cldtop_co2_pa_a,                  ! I
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
@@ -122,7 +123,8 @@ c
 
         integer*4 istat_39_a(imax,jmax)
         integer*4 istat_39_add_a(imax,jmax)
-        integer*4 istat_vis_a(imax,jmax)     ! Used for cloud building with vis
+        integer*4 istat_vis_potl_a(imax,jmax)  ! Pot'l cloud building with vis
+        integer*4 istat_vis_added_a(imax,jmax) ! Actual cloud building with vis
 
 !       Output
         real*4 t_gnd_k(imax,jmax)
@@ -140,7 +142,7 @@ c
         character*31 ext
         character var*3,comment*125,units*10
 
-        logical  l_tb8,l_cloud_present,l_use_39
+        logical  l_tb8,l_cloud_present,l_use_39,l_poss_extrap
 
         logical lstat_co2_a(imax,jmax)
 
@@ -293,8 +295,16 @@ c
         n_no_sao2 = 0
         n_no_sao3 = 0
 
+        nskip_max = 4 ! 'See barnes_r5'
+
         do j=1,jmax
         do i=1,imax
+
+         if(imax-i .le. nskip_max .and. jmax-j .le. nskip_max)then
+             l_poss_extrap = .true. ! Extrapolation edge effects possible
+         else
+             l_poss_extrap = .false.
+         endif
 
          if(tb8_k(i,j) .ne. r_missing_data)then
 
@@ -312,8 +322,8 @@ c
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
-     1     ,istat_39_add_a(i,j),istat_vis_added                           ! O
-     1     ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                        ! I
+     1     ,istat_39_add_a(i,j),istat_vis_added_a(i,j)                    ! O
+     1     ,cloud_frac_vis_a(i,j),istat_vis_potl_a(i,j)                   ! I
      1     ,lstat_co2_a(i,j)                                              ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2         ! O
      1     ,cldtop_tb8_m(i,j),l_tb8                                       ! O
@@ -369,9 +379,11 @@ c
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
                 if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.070)then   ! excessively over 1.0
-                      write(6,*)' Error in insert_sat, cldcv > 1.070'
-     1                         ,i,j,k,cldcv(i,j,k)
+                  if(cldcv(i,j,k) .gt. 1.070 
+     1                    .and. .not. l_poss_extrap)then ! excessively over 1.0
+                      write(6,*)
+     1                    ' Error in insert_sat, interior cldcv > 1.070'     
+     1                    ,i,j,k,cldcv(i,j,k)
                       istatus = 0
                       return
                   elseif(cldcv(i,j,k) .gt. 1.0)then ! slightly over 1.0
@@ -533,8 +545,8 @@ c
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
-     1            ,istat_39_add_dum,istat_vis_added                      ! O
-     1            ,cloud_frac_vis_a(i,j),istat_vis_a(i,j)                ! I
+     1            ,istat_39_add_dum,istat_vis_added_dum                  ! O
+     1            ,cloud_frac_vis_a(i,j),istat_vis_potl_a(i,j)           ! I
      1            ,lstat_co2_a(i,j)                                      ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_co2_m(i,j),istat_co2 ! O
      1            ,cldtop_tb8_m(i,j),l_tb8                               ! O
@@ -680,7 +692,7 @@ c
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p       ! I
      1  ,istat_39, l_use_39                                            ! I
      1  ,istat_39_add,istat_vis_added                                  ! O
-     1  ,cloud_frac_vis,istat_vis                                      ! I
+     1  ,cloud_frac_vis,istat_vis_potl                                 ! I
      1  ,lstat_co2                                                     ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_co2_m,istat_co2              ! O
      1  ,cldtop_tb8_m,l_tb8                                            ! O
@@ -707,7 +719,7 @@ c
         real*4 thresh_ir_diff1                  ! Input
         real*4 topo                             ! Input
         real*4 r_missing_data                   ! Input
-        integer*4 istat_vis                     ! Input (vis cloud building)
+        integer*4 istat_vis_potl                ! Input (vis cloud building)
         real*4 heights_3d(imax,jmax,klaps)      ! Input
         real*4 temp_3d(imax,jmax,klaps)         ! Input
         real*4 k_terrain                        ! Input
@@ -780,12 +792,14 @@ c
      1                     .OR. 
      1       (l_use_39 .and. istat_39 .eq. 1)
      1                     .OR. 
-     1       (istat_vis .eq. 1 .and. cloud_frac_vis .ne. r_missing_data)       
+     1       (istat_vis_potl .eq. 1 .and. 
+     1        cloud_frac_vis .ne. r_missing_data)       
      1                                              )then ! get 11u cloud top
             cldtop_temp_k = tb8_k
 
 !           Correct the cloud top temperature for thin clouds using VIS data
-!!!!!       call correct(tb8_k,tb8_cold_k,cloud_frac_vis,istat_vis,cldtop_temp_k)
+!!!!!       call correct(tb8_k,tb8_cold_k,cloud_frac_vis
+!!!!!                   ,istat_vis_potl,cldtop_temp_k)
 
 !           Locate cloud top in 3-D Temperature Grid (Using lowest crossing point)
             temp_above = temp_3d(i,j,klaps)
@@ -855,7 +869,7 @@ c
             sat_cover = 1.0 
             istat_39_add = 1
 
-        elseif( (.not. l_tb8) .AND. istat_vis .eq. 1 
+        elseif( (.not. l_tb8) .AND. istat_vis_potl .eq. 1 
      1                        .AND. cloud_frac_vis .ne. r_missing_data        
      1                        .AND. cldtop_tb8_m .ne. r_missing_data 
      1                                                            ) then      
