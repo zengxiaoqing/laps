@@ -101,7 +101,7 @@ then
 fi
 if test "$arch" = "alpha"
 then
-  FFLAGS="$FFLAGS -convert big_endian"
+  FFLAGS="$FFLAGS -convert big_endian -fpe3"
   FIXED="-fixed"
   FREE="-free"
   OPTIMIZE="-O4"
@@ -177,7 +177,7 @@ if test $? -eq 0
 then
   if test "$arch" = "mpif90"
   then
-    FFLAGS="$FFLAGS -w90 -w95 -cm -fpe3"
+    FFLAGS="$FFLAGS -w90 -w95 -cm"
     FREE="-FR"
     OPTIMIZE=""
   fi
