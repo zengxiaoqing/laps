@@ -26,12 +26,12 @@ INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
 # Define local library name, this houses the module's code
 
 LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
-           $(LAPSROOT)/src/lib/util/libutil.a 
+           $(LAPSROOT)/src/lib/util/libutil.a \
            $(LAPSROOT)/src/lib/nav/libnav.a
 
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a 
+             $(LAPSROOT)/src/lib/util/libdebugutil.a \
              $(LAPSROOT)/src/lib/nav/libdebugnav.a
 
 OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
