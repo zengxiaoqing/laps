@@ -37,9 +37,14 @@
 c
 c ------------------ start ----------------------
 c
+
+      write(6,*)' Subroutine get_laps_rdr:'
+
       istatus = 0
 
       do i=1,i_ra_count
+
+         write(6,*)' Reading radar # ',i
 
          call s_len(cfname(i),nc)
 
@@ -52,6 +57,8 @@ c
          if(istatus .ne. 1)then
             print*,'Error reading ',cfname(i)(1:nc)
             return
+         else
+            print*,'Success reading ',cfname(i)(1:nc)
          endif
 
          call move(ref(1,1,1,1),grid_ra_ref(1,1,1,i),nx_l,ny_l)
