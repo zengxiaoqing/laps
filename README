@@ -1008,13 +1008,13 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
                ---  2.4  Running LAPS Analyses  ---
 
-     LAPS runs under cron; there is a sample cron script in './util/cronfile.in'.
-     Referring to this cron, you can see that once each hour (or other cycle 
-     time), the main './etc/sched.pl' runs. As an example at FSL, we run the 
-     'sched.pl' hourly at :20 after the top of the hour. By inspecting the 
-     'sched.pl' file you can see the various executables that are run in a 
-     certain order. You might want to modify the 'sched.pl' file for your 
-     needs.
+     LAPS runs under cron; there is a sample cron script in 
+     '$LAPSINSTALLROOT/util/cronfile'. Referring to this cron, you can 
+     see that once each hour (or other cycle time), the main './etc/sched.pl' 
+     runs. As an example at FSL, we run the 'sched.pl' hourly at :20 after the
+     top of the hour. By inspecting the 'sched.pl' file you can see the various
+     executables that are run in a certain order. You might want to modify the 
+     'sched.pl' file for your needs. 
 
      In the sample cron script several ingest processes are run separately
      from the 'sched.pl'. For example the satellite ingest (lvd) is run 
@@ -1034,9 +1034,19 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      directory structure; this path defaults to '/fullpathto/laps/data' if not
      provided.
 
-     There is also a script called 'etc/cronfile.pl' that creates a cronfile
-     tailored to your domain. This script can be run manually and the output 
-     location of the cronfile is directly under $LAPS_DATA_ROOT.
+     The 'util/cronfile' is created by the configure step. Much of the needed
+     editing has already been done in the creation of this file. You might see
+     some remaining '@....@' constructs though that can be edited either 
+     manually or by running the 'cronfile.pl' (next paragraph). The 
+     @laps_data_root@ can be replaced with your path to $LAPS_DATA_ROOT and the
+     optional @followup@ can be replaced with anything you wish to run after 
+     the 'sched.pl' has completed (using a semicolon to separate the two 
+     commands).
+
+     There is also a script called 'etc/cronfile.pl' that creates a modified
+     version of 'util/cronfile' tailored to your domain. This script can be 
+     run manually and the output location of the cronfile is directly under 
+     $LAPS_DATA_ROOT.
 
                ----   2.4.1  Cron timing considerations ---
 
