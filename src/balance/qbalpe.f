@@ -702,8 +702,44 @@ c         ENDIF
 c       enddo
 c     enddo
 c 
+c Write balance output (balance/lt1 and balance/lw3).
+c ---------------------------------------------------
+c
+      if(c8_project .eq. 'AIRDROP')then
+         i4time_sys = i4time_airdrop
+      endif
+
+      call write_bal_laps(i4time_sys,phi,u,v,t,om,lapsrh,lapssh
+     .                   ,nx,ny,nz,p,istatus)
+      if(istatus.ne.1)then
+         write(6,*)'error writing balance fields'
+         return
+      endif
+
       if(c8_project .eq. 'AIRDROP')then
 
+c ----------------------------------------------------------------
+c -----------    AIRDROP ANALYSIS ERROR SECTION ------------------
+c Output required: turbulent compontents of u, v, and w;
+c analysis error of u,v,wc t, rh
+c compute dropsone wind difference from background
+c simple solution is to read from .pig and tmg files, then create a
+c truth profile and compute an average analysis error
+
+         write(6,*)' Rotate u/v to true north for AIRDROP analysis'
+
+         do k = 1, nz
+            do j = 1, ny
+            do i = 1, nx
+               call uvgrid_to_uvtrue(
+     1            u(i,j,k),v(i,j,k)
+     1           ,u_true   ,v_true
+     1           ,lon(i,j)           )
+               u(i,j,k) = u_true
+               v(i,j,k) = v_true
+            enddo
+            enddo
+         enddo
 c ----------------------------------------------------------------
 c  AIRDROP ANALYSIS ERROR SECTION
 c Output required: turbulent compontents of u, v, and w; analysis error of u,v,wc t, rh
@@ -719,7 +755,6 @@ c  create dropsond profiles for testing....comment out read pig,tmg
          if(istatus.eq.-3)then
             print*,'Error returned: readpig.'
             print*,'Dropsonde analysis not performed.'
-            goto 89
          elseif(istatus.eq.-1)then
             print*,'Only tmg exists: generate u/v drop profiles
      1 from analysis with gaussian error'
@@ -730,7 +765,7 @@ c  create dropsond profiles for testing....comment out read pig,tmg
 
 c routine to create drop and rr arrays when either pig or tmg
 c do not exist
-         if(istatus.ne.1)then
+         if(istatus.lt.1.and.istatus.gt.-3)then
             iii=382983
             do k=1,nz
                if(rri(k).ne.smsng .and. rrj(k).ne.smsng)then
@@ -761,10 +796,16 @@ c do not exist
                   endif
                endif
             enddo
-c we should always do this?
+c we need values above and below for the Airdrop analysis
             if(k1.gt.1) tdrop(k1-1)=tdrop(k1)
             if(k2.lt.nz)tdrop(k2+1)=tdrop(k2)
-
+         else
+            print*,'Error:--------------------------------------'
+            print*,'Error:No dropsonde (.pin) or temp (tmg) data'
+            print*,'Error:    unable to perform Airdrop analysis'
+            print*,'Error:--------------------------------------'
+c return to main!
+            return
          endif
 
 c subr profile fills array erru(u),errub(v) with analysis error 
@@ -785,17 +826,11 @@ c  the s arrays are used to hold the turbulent components of u,v, and w
          call write_errors(a9_time_airdrop,p,erru,errv,errw,errt,
      1 nx,ny,nz,rri,rrj,zter)
 
-89       i4time_sys = i4time_airdrop
 
       endif
 
-      call write_bal_laps(i4time_sys,phi,u,v,t,om,lapsrh,lapssh
-     .                   ,nx,ny,nz,p,istatus)
-      if(istatus.ne.1)then
-         write(6,*)'error writing balance fields'
-         return
-      endif
       deallocate(lapsrh)
+
  999  return
       end
 
@@ -3094,7 +3129,7 @@ c
       real lat(nx,ny),lon(nx,ny)
 
       integer mxz
-      parameter(mxz=300)
+      parameter(mxz=500)
       
       allocate(ri(mxz),rj(mxz),rk(mxz))
       allocate(dd(mxz),ff(mxz),tt(mxz))
@@ -3133,17 +3168,20 @@ c
         endif
 c convert dd ff to u,v
         do n=1,nsave
+
            call disp_to_uv(dd(n),ff(n),uu(n),vv(n))
-           call rlapsgrid_to_latlon(ri(n),rj(n),lat,lon,nx,ny
-     1,rlat,rlon,istatll)
-           call uvtrue_to_uvgrid(
-     1            uu(n),vv(n)
-     1           ,uu(n),vv(n)
-     1           ,rlon)
+
+c          call rlapsgrid_to_latlon(ri(n),rj(n),lat,lon,nx,ny
+c    1,rlat,rlon,istatll)
+c          call uvtrue_to_uvgrid(
+c    1            uu(n),vv(n)
+c    1           ,uu(n),vv(n)
+c    1           ,rlon)
 
 c        ang=rdpdg*(dd(n)-270.)
 c        uu(n)=ff(n)/.515*cos(ang)
 c        vv(n)=-ff(n)/.515*sin(ang)
+
         enddo
 c since dropsonde is reverse order, flip it.
         if(rk(1).gt.rk(nsave))then
