@@ -1,20 +1,15 @@
        subroutine laps_anl(uobs,vobs,n_radars,
      1        vr_obs_unfltrd,vr_nyq,v_nyquist_in
      1       ,upass1,vpass1                                        ! Output
-!    1       ,varpass1                                             ! Local
-     1       ,n_var                                                ! Input
+     1       ,n_var,n_fnorm                                        ! Input
      1       ,uanl,vanl,varanl                                     ! Output
      1       ,wt_p,wt_p_spread,weight_bkg_const                    ! Input/Local
      1       ,max_radars
      1       ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
      1       ,u_laps_bkg,v_laps_bkg                                ! Input/Output
-!    1       ,r0_array_out,density_array_in,vr_obs_fltrd           ! Local
-!    1       ,uobs_diff,vobs_diff                                  ! Local
-!    1       ,uobs_diff_spread,vobs_diff_spread,varobs_diff_spread ! Local
      1       ,imax,jmax,kmax,lat,lon
      1       ,i4time,grid_spacing_m
      1       ,r_missing_data
-!    1       ,n_obs_lvl,upass1_buf,vpass1_buf                      ! Local
      1       ,l_good_multi_doppler_ob,l_analyze
      1       ,l_derived_output,l_grid_north,l_3pass,l_correct_unfolding
      1       ,n_iter_wind
@@ -120,7 +115,6 @@
 !****************END ARGUMENT LIST *******************************************
 
       integer*4  n_fnorm
-      parameter (n_fnorm = 1000000)
 
       dimension fnorm(0:n_fnorm)
 
@@ -335,7 +329,7 @@
      1        ,varobs_diff_spread
      1        ,wt_p_spread,fnorm,n_fnorm
      1        ,l_analyze,weight_bkg_const,r0_array_out
-     1        ,density_array_in,n_obs_lvl,istatus)
+     1        ,n_obs_lvl,istatus)
       if(istatus .ne. 1)return
 
       call move_3d(varpass1(1,1,1,1),upass1,imax,jmax,kmax)
@@ -443,7 +437,7 @@
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,weight_bkg_const,r0_array_out
-     1       ,density_array_in,n_obs_lvl,istatus)
+     1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)
@@ -504,7 +498,7 @@
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,weight_bkg_const,r0_array_out
-     1       ,density_array_in,n_obs_lvl,istatus)
+     1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)
@@ -590,7 +584,7 @@
      1       ,varobs_diff_spread
      1       ,wt_p_spread,fnorm,n_fnorm
      1       ,l_analyze,weight_bkg_const,r0_array_out
-     1       ,density_array_in,n_obs_lvl,istatus)
+     1       ,n_obs_lvl,istatus)
 
           call move_3d(varanl(1,1,1,1),uanl,imax,jmax,kmax)
           call move_3d(varanl(1,1,1,2),uanl,imax,jmax,kmax)

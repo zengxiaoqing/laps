@@ -81,7 +81,6 @@ cdis
 
 !       These arrays are passed in
         real*4 bias_3d(ni,nj,nk)
-        real*4    r0_array_in(ni,nj)
         real*4    r0_array_out(ni,nj)
 
         real*4 bias_tsnd(max_snd,nk),bias_htlow(max_snd)
@@ -255,7 +254,7 @@ cdis
      1  ,bias_3d
      1  ,wt_3d                                             ! Dummy
      1  ,bias_obs_3d                                       ! Dummy
-     1  ,r0_array_in,r0_array_out                          ! Dummy
+     1  ,r0_array_out                                      ! Dummy
      1  ,weight_bkg_const                                  ! Input
      1  ,grid_spacing_m,max_snd                            ! Input
      1  ,r_missing_data                                    ! Input
@@ -269,7 +268,7 @@ cdis
      1  ,bias_3d
      1  ,wt_3d                                             ! Dummy
      1  ,bias_obs_3d                                       ! Dummy
-     1  ,r0_array_in,r0_array_out                          ! Dummy
+     1  ,r0_array_out                                      ! Dummy
      1  ,weight_bkg_const                                  ! Input
      1  ,grid_spacing_m,max_snd                            ! Input
      1  ,r_missing_data                                    ! Input
@@ -290,7 +289,6 @@ cdis
         real*4 bias_3d(ni,nj,nk)
         real*4 wt_3d(ni,nj,nk)
         real*4 bias_obs_3d(ni,nj,nk)
-        real*4    r0_array_in(ni,nj)
         real*4    r0_array_out(ni,nj)
 
         real*4 bias_tsnd(max_snd,nk)
@@ -362,6 +360,9 @@ cdis
            ! This is in effect a single pass Barnes with an spatially varying
            ! radius of influence to account for clustering of data
 
+             call get_fnorm_max(ni,nj,r0_norm,r0_value_min,fnorm_max)
+             n_fnorm = int(fnorm_max) + 1
+
              write(6,*)' Calling new barnes_univariate_shell routine'
 
              call barnes_univariate_shell(ni,nj,nk           ! Inputs
@@ -376,7 +377,7 @@ cdis
      1               ,wt_3d                                  ! Dummy
      1               ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1               ,weight_bkg_const                       ! Input
-     1               ,r0_array_in                            ! Dummy
+     1               ,n_fnorm                                ! Input
      1               ,r0_array_out                           ! Dummy
      1               ,istatus)                               ! Output
 
@@ -422,7 +423,7 @@ cdis
      1                   ,wt_3d                                  ! Local
      1                   ,wt_tsnd,igrid_tsnd,jgrid_tsnd          ! Inputs
      1                   ,weight_bkg_const                       ! Input
-     1                   ,density_array_in                       ! Dummy
+     1                   ,n_fnorm                                ! Input
      1                   ,r0_array_out                           ! Dummy
      1                   ,istatus)                               ! Output
 
@@ -446,7 +447,6 @@ cdis
         logical l_analyze(nk)
 
         integer*4  n_fnorm
-        parameter (n_fnorm = 1000000)
 
         dimension fnorm(0:n_fnorm)
 
@@ -520,7 +520,6 @@ cdis
      1                     ,l_analyze                       ! Input
      1                     ,weight_bkg_const                ! Input
      1                     ,r0_array_out                    ! Output
-     1                     ,density_array_in                ! Dummy
      1                     ,n_obs_lvl,istatus)              ! Outputs
 
         return
