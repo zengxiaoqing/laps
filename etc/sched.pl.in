@@ -16,10 +16,13 @@ my $initial_time = time();
 #
 
 my @LAPS_EXE = qw(lga.exe systime.exe obs_driver.x 
-                  ingest_lrs.exe ingest_blplrs.exe ingest_raob.exe laps_sfc.x temp.exe 
+                  ingest_raob.exe 
                   ingest_cloud_drift.exe ingest_pireps.exe ingest_acars.exe 
                   ingest_pro.exe ingest_blppro.exe ingest_vad.exe
-		  wind.exe cloud.exe lq3driver.x deriv.exe accum.exe  
+		  wind.exe 
+                  ingest_lrs.exe ingest_blplrs.exe 
+                  laps_sfc.x temp.exe 
+                  cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe);
 
 my $LAPSROOT=shift || die "LAPS root directory required\n";
