@@ -9,9 +9,13 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$cleandirs);
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$LAPS_SRC_ROOT,$cleandirs);
 my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT,
-                        "dataroot=s" => \$LAPS_DATA_ROOT);
+                        "dataroot=s" => \$LAPS_DATA_ROOT,
+                        "schedtime=s" => \$schedtime,       # e.g. 20,50
+                        "numfiles=s" => \$numfiles);        # number of files to keep with purger
+
+print "Starting cronfile.pl...\n";
 
 print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
 
@@ -22,6 +26,18 @@ print "LAPS_DATA_ROOT = $LAPS_DATA_ROOT\n";
 system("cp $LAPSINSTALLROOT/util/cronfile $LAPS_DATA_ROOT/cronfile");
 
 #String edit the cronfile to set the proper LAPS_DATA_ROOT path
-system("$LAPSINSTALLROOT/util/fix_net \@LAPS_DATA_ROOT@ $LAPS_DATA_ROOT $LAPS_DATA_ROOT/cronfile");
+system("$LAPSINSTALLROOT/util/fix_net \@laps_data_root@ $LAPS_DATA_ROOT $LAPS_DATA_ROOT/cronfile");
+
+print "schedtime = $schedtime\n";
+if(defined($schedtime)){ 
+    print "modifying schedtime\n";
+    system("$LAPSINSTALLROOT/util/fix_net \'20 \' $schedtime $LAPS_DATA_ROOT/cronfile");
+}
+
+print "numfiles = $numfiles\n";
+if(defined($numfiles)){
+    print "modifying numfiles\n";
+    system("$LAPSINSTALLROOT/util/fix_net sched.pl \'sched.pl -r -m $numfiles \' $LAPS_DATA_ROOT/cronfile");
+}
 
 exit;

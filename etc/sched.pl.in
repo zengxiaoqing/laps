@@ -231,14 +231,15 @@ foreach $exe (@LAPS_EXE){
                 print TFILE "#!/bin/sh\n";
                 print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=60:00\n";
                 print TFILE "  \n";
-                print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 
                 if($nodes_current > 1){
+                    print TFILE "export GMPIENVVAR=LAPS_DATA_ROOT:LAPS_SRC_ROOT\n";
                     print TFILE "SMS_SERVER_MODE=serverless\n";
                     print TFILE "export SMS_SERVER_MODE\n";
                     print TFILE "$sms_path/bin/sysSrvr $nodes_current &\n";
                 }
 
+                print TFILE "export LAPS_DATA_ROOT=$LAPS_DATA_ROOT\n";
 #               print TFILE "  \n";
 #               print TFILE "date >> $LAPS_LOG_PATH/sched.log.$hhmm\n";
 #               print TFILE "  \n";
