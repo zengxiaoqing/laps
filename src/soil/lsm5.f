@@ -104,16 +104,16 @@ c     REAL      Laps_SM(Imax,Jmax)    !Snow Melt, undefined currently
      &          lvl_s(4),lvl_1(3),lvl_2(7),lvl_l
       Character ftime_smcur*9
 c laps precip
-      Character ext_l*31, dir_l*50, var_l*3, lvl_coord_l*4,
+      Character ext_l*31, dir_l*150, var_l*3, lvl_coord_l*4,
      &          units_l*10, comment_l*125
 c laps surface
-      Character ext_s*31, dir_s*50, var_s(4)*3, lvl_coord_s(4)*4,
+      Character ext_s*31, dir_s*150, var_s(4)*3, lvl_coord_s(4)*4,
      &          units_s(4)*10, comment_s(4)*125
 c laps lm1...3-layer % soil saturation
-      Character dir_1*50, ext1*31, var_1(3)*3, lvl_coord1(3)*4,
+      Character dir_1*150, ext1*31, var_1(3)*3, lvl_coord1(3)*4,
      &          units1(3)*10, comment1(3)*125
 c laps lm2...variety of soil characteristic variables
-      Character dir_2*50, ext2*31, var_2(7)*3, lvl_coord2(7)*4, 
+      Character dir_2*150, ext2*31, var_2(7)*3, lvl_coord2(7)*4, 
      &          units2(7)*10, comment2(7)*125
       Character atime_smpre(25)*24
       Character fname*200

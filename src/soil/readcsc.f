@@ -214,7 +214,7 @@ C
       REAL*4 lcv(imax,jmax),csc(imax,jmax)
       Real*4 readv(imax,jmax,kmax)		
 C
-      CHARACTER*50 LDIR
+      CHARACTER*150 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
       CHARACTER*4 LVL_COORD(KMAX)
@@ -280,7 +280,7 @@ c
 C
       REAL*4 snow_accum(imax,jmax),readv(imax,jmax,kmax)		
 C
-      CHARACTER*50 LDIR
+      CHARACTER*150 LDIR
       CHARACTER*31 EXT
       CHARACTER*3 VAR(KMAX)
       CHARACTER*4 LVL_COORD(KMAX)
