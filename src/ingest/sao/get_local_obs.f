@@ -95,6 +95,7 @@ c
 	if(nf_status .ne. NF_NOERR) then
 	   print *, NF_STRERROR(nf_status)
 	   print *, data_file
+           return
 	endif
 c
 c.....  Get size of recNum
@@ -103,11 +104,13 @@ c
 	if(nf_status .ne. NF_NOERR) then
 	   print *, NF_STRERROR(nf_status)
 	   print *, 'dim recNum'
+           return
 	endif
 	nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
 	if(nf_status .ne. NF_NOERR) then
 	   print *, NF_STRERROR(nf_status)
 	   print *, 'dim recNum'
+           return
 	endif
 c
 c.....  Call the read routine.
