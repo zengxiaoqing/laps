@@ -795,33 +795,32 @@
         5) standard_latitude:
                                          
                 Polar Stereographic:
-                    This parameter (that we also denote as 'phi0') is often set
-                    to +90, regardless of which hemisphere your domain is in. 
-                    The actual grid spacing then matches the 
-                    'grid_spacing_m_cmn' parameter at the projection pole, 
-                    which may or may not be located within your domain.
-                    For domains distant from the projection pole, the actual
-                    grid spacing inside the domain becomes noticeably less. 
-                    The value of 'grid_spacing_m_cmn' can be increased to 
-                    compensate.
+                    This parameter is often set to +/-90 degrees to match
+                    the location of the projection pole, given that the 
+                    projection pole is at one of earth's geographic poles. 
+                    The actual grid spacing (measured on the earth's surface)
+                    matches the 'grid_spacing_m_cmn' parameter at the 
+                    projection pole, which may or may not be located within 
+                    your domain. For domains distant from the projection pole,
+                    the actual grid spacing inside the domain becomes 
+                    noticeably less. The value of 'grid_spacing_m_cmn' can be 
+                    increased to compensate.
+                    
+                    When the projection pole is at a geographic pole, 
+                    'standard_latitude' can be set to values other than +/-90.
+                    The 'grid_spacing_m_cmn' parameter then represents the 
+                    true grid spacing (measured on the earth's surface) at a 
+                    latitude of 'standard_latitude'. 
                      
                     Consider the angle 'psi' which is the angular distance from
                     the pole of the projection. 'phi' = 90 - 'psi'. The map
                     factor 'sigma' is (1+sin(phi0))/(1+sin(phi)) and becomes
                     unity when 'phi' for a particular grid point is equal to 
-                    'phi0'. 
-                    
-                    'phi0' can be set to values less than +90 (but should
-                    almost always be > 0) as follows. When the projection pole
-                    is located at the north geographic pole, the 
-                    'grid_spacing_m_cmn' parameter represents the true grid 
-                    spacing at a latitude of 'standard_latitude'. If the 
-                    projection pole is at the south geographic pole, then 
-                    'grid_spacing_m_cmn' becomes the true spacing at a latitude
-                    of -'standard_latitude'.
-                  
+                    'phi0'. This occurs when you are located at the 
+                    'standard_latitude' for the case of a "secant" projection.
                     Note that the grid spacing for a particular location in
                     the domain is equal to 'grid_spacing_m_cmn'/'sigma'.
+
                      
                     Example 1: grid_spacing_m_cmn = 10000.
                                standard_latitude  =   +90.
@@ -841,7 +840,7 @@
                                grid_spacing at domain center (+40)     = 10km
                                                      
                     Example 3: grid_spacing_m_cmn = 10000.
-                               standard_latitude  =   +90.
+                               standard_latitude  =   -90.
                                standard_latitude2 =   -90.
                                grid_cen_lat_cmn   =   +40.
                           
@@ -849,7 +848,7 @@
                                grid_spacing at domain center (-40)     ~  8km
                      
                     Example 4: grid_spacing_m_cmn = 10000.
-                               standard_latitude  =   +40.
+                               standard_latitude  =   -40.
                                standard_latitude2 =   -90.
                                grid_cen_lat_cmn   =   -40.
                         
@@ -904,7 +903,7 @@
 
      Setting the pole to an arbitrary lat/lon (local stereographic) is a
    possible future enhancement. A test local stereographic domain gave an 
-   error of 2km in the grid points. Addressing this includes converting 
+   error of 2km in the grid points. Addressing this may include converting 
    library subroutines 'GETOPS' and possibly 'PSTOGE' to double precision.
    The projection rotation routine 'projrot_laps' also has some approximations
    when local stereographic is used.
