@@ -69,10 +69,10 @@ if($min_files>0){
     $clean_dirs{v04} = (0.125<$hist_time)?0.125:$hist_time;
     $clean_dirs{'rdr/001/raw'} = 0.08;
 
-    $clean_dirs{'lvd/goes08'} = (0.25<$hist_time)?0.25:$hist_time;;
-    $clean_dirs{'lvd/goes09'} = (0.25<$hist_time)?0.25:$hist_time;;
-    $clean_dirs{'lvd/goes10'} = (0.25<$hist_time)?0.25:$hist_time;;
-    $clean_dirs{'lvd/gmssat'} = (0.25<$hist_time)?0.25:$hist_time;;
+    $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
+    $clean_dirs{'lvd/goes09'} = (0.5<$hist_time)?0.5:$hist_time;;
+    $clean_dirs{'lvd/goes10'} = (0.5<$hist_time)?0.5:$hist_time;;
+    $clean_dirs{'lvd/gmssat'} = (0.5<$hist_time)?0.5:$hist_time;;
 
     $clean_dirs{dprep} = (0.25<$hist_time)?0.25:$hist_time;;
     $clean_dirs{'model/output'} = (0.25<$hist_time)?0.25:$hist_time;;
