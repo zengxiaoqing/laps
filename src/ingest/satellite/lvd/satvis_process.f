@@ -338,12 +338,14 @@ c for goes8 - make it look like goes7
 
        elseif(c_sat_id.eq.'gmssat'.and.c_sat_type.eq.'twn')then
 
-          print*,'stretch twn visible: 40.,250.,68.,220.'
+c         print*,'stretch twn visible: 40.,250.,68.,220.'
+c         print*,'stretch twn visible: 38.,320.,68.,220.' !11-12-02
+          print*,'stretch twn visible: 38.,350.,68.,220.' !11-15-02
           do j=1,jmax
           do i=1,imax
              if(laps_vis_norm(i,j).ne.r_missing_data)then
 c J. Smart 1-25-02.
-                call stretch(38.,320.,68.,220.,laps_vis_norm(i,j))
+                call stretch(38.,350.,68.,220.,laps_vis_norm(i,j))
              endif
           enddo
           enddo
