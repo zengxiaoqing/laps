@@ -121,6 +121,7 @@ DATADIRS = log/qc \
            lapsprd/lty \
            lapsprd/lvd/goes08 \
            lapsprd/lvd/goes09 \
+           lapsprd/lvd/goes10 \
            lapsprd/lw3 \
            lapsprd/lwc \
            lapsprd/lwm \
