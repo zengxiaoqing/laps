@@ -329,7 +329,7 @@ c       include 'satellite_dims_lvd.inc'
 11      format(//'  SELECT FIELD:  ',
      1       /'     [wd] Wind (LW3/LWM),'
      1       ,' [wb,wr,wf,bw] (LGA/LGB, RAM/RSF, LAPS-BKG, QBAL), '
-     1       /'     [co,bo] Cloud/Balance Omega,'
+     1       /'     [co,bo,lo] Cloud/Balance/Background Omega,'
      1       ,' [lw] li*w, [li,he,pe,ne] li, helcty, CAPE, CIN'
      1       /'     [s] Other Stability Indices'
      1       /'     [ra] Radar Data - NOWRAD vrc files,  [rx] Max Radar'
@@ -374,7 +374,7 @@ c       include 'satellite_dims_lvd.inc'
         if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
      1    .or. c_type .eq. 'wf' .or. c_type .eq. 'bw'
-     1    .or. c_type .eq. 'bo')then
+     1    .or. c_type .eq. 'bo' .or. c_type .eq. 'lo')then
 
             if(c_type .eq. 'wd')then
                 ext = 'lw3'
@@ -401,6 +401,9 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'lco'
 !               call get_directory(ext,directory,len_dir)
 !               c_filespec = directory(1:len_dir)//'*.'//ext(1:3)
+
+            elseif(c_type .eq. 'lo')then
+                ext = 'lga'
 
             elseif(c_type .eq. 'wf')then
                 ext = 'lw3'
@@ -438,13 +441,15 @@ c       include 'satellite_dims_lvd.inc'
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
 
-            write(6,*)
-            write(6,*)'    Looking for laps wind data: ',ext(1:3)
-            call get_file_time(c_filespec,i4time_ref,i4time_3dw)
-            call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            if(c_type.ne.'lo')then
+               write(6,*)
+               write(6,*)'    Looking for laps wind data: ',ext(1:3)
+               call get_file_time(c_filespec,i4time_ref,i4time_3dw)
+               call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
+            endif
 
-            if(c_type .eq. 'bw' .or. c_type.eq.'bo')ext='balance'
-            if(c_type .eq. 'co' .or. c_type.eq.'bo')then
+            if(c_type.eq.'bw'.or.c_type.eq.'bo')ext='balance'
+            if(c_type.eq.'co'.or.c_type.eq.'bo'.or.c_type.eq.'lo')then
                 c_field = 'w'
                 goto115
             endif
@@ -530,6 +535,7 @@ c       include 'satellite_dims_lvd.inc'
                     endif
 
                 else if(k_level .gt. 0)then
+
                     write(6,103)
 103                 format(/
      1              '  Field [di,sp,u,v,w,dv,vc (barbs), ob (obs))]'
@@ -564,11 +570,10 @@ c       include 'satellite_dims_lvd.inc'
                         call move(uv_2d(1,1,2),v_2d,NX_L,NY_L)
 
                       endif ! c_type .eq. 'wf'
-
+ 
                     endif ! c_field = 'w'
 
                 endif
-
 
             elseif(k_level .eq. -1)then ! Read mean winds from 3d grids
 
@@ -713,6 +718,21 @@ c       include 'satellite_dims_lvd.inc'
 
                     call mklabel33(k_level
      1                     ,' Balnc Omega ubar/s',c33_label)       
+
+                else if(c_type .eq. 'lo')then
+                   write(6,211)ext(1:3)
+                   read(5,221)a13_time
+                   call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+                   call get_directory(ext,directory,lend)
+                   var_2d = 'OM'
+
+                   CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L
+     1         ,NY_L,1,1,VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d
+     1         ,COMMENT_2d,w_2d,ISTATUS)
+
+                    call make_fnam_lp(i4_valid,asc9_tim_3dw,istatus)
+                    call mklabel33(k_level
+     1                     ,' Bkgd Omega ubar/s',c33_label)
 
                 endif
 
