@@ -1,0 +1,18 @@
+netcdf sat {
+
+    dimensions:
+        num_att = 336,
+        namelen = 7;
+		
+    variables:
+        //	satellite name	
+        char
+            sat_name(namelen);
+
+        //	orbit attitudes	
+
+	double                                  
+            orb_att(num_att);
+            orb_att:_FillValue = -99999.d;
+            orb_att:long_name="orbit attitudes";
+}                       
