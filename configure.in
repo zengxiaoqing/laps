@@ -104,6 +104,12 @@ then
   FFLAGS90="$FFLAGS90 -qfree=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
+if test "$arch" = "alpha"
+then
+  FFLAGS="$FFLAGS -fixed"
+  FFLAGS90="$FFLAGS90 -free"
+  OPTIMIZE="-O4"
+fi  
 if test "$arch" = "sun4" 
 then
     AC_MSG_ERROR(LAPS no longer supports the sun4 OS)

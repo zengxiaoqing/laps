@@ -1193,6 +1193,12 @@ then
   FFLAGS90="$FFLAGS90 -qfree=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
+if test "$arch" = "alpha"
+then
+  FFLAGS="$FFLAGS -fixed"
+  FFLAGS90="$FFLAGS90 -free"
+  OPTIMIZE="-O4"
+fi 
 if test "$arch" = "sun4" 
 then
     { echo "configure: error: LAPS no longer supports the sun4 OS" 1>&2; exit 1; }
