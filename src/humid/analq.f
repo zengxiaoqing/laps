@@ -44,7 +44,7 @@ cdis
 cdis
       subroutine analq
      1     (i4time,p_3d,ps,t,ph,td,data,cg,tpw,bias_one,
-     1     kstart,qs,glat,glon,ii,jj,kk)
+     1     kstart,qs,glat,glon,mdf,ii,jj,kk)
 
 c     variables
 c     
@@ -80,19 +80,11 @@ c     preliminary computations
 c     input variables
       
       integer i4time,ii,jj,kk
-      real p_3d (ii,jj,kk)
-      real ps (ii,jj)
-      real t (ii,jj)
-      real ph (ii,jj)
-      real td (ii,jj)
-      real data (ii,jj,kk)
-      real cg (ii,jj,kk)
-      real tpw (ii,jj)
+      real, dimension(ii,jj,kk) :: p_3d, data,cg
+      real, dimension(ii,jj) :: ps,t,ph,td,tpw,qs,glat,glon
       real bias_one
       integer kstart (ii,jj)
-      real qs (ii,jj)
-      real glat (ii,jj)
-      real glon (ii,jj)
+      real mdf                  ! missing data flag
       
 c     internal variables requiring dynamic dimensions
       
@@ -233,7 +225,7 @@ c     0.11982929 <-->  5% at 25 hpa
       endif
 c     integrate the tpw field
          
-      call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+      call int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
 
       call check_nan2(tpw,ii,jj,istatus)
       if(istatus.ne.1) then
@@ -268,7 +260,7 @@ c     tpw_point, irad and jrad
          
 c     integrate the tpw field
          
-         call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+         call int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
          
 c     determine the radiometer with the lowest bias correction and assume
 c     that it is "true"
@@ -325,7 +317,7 @@ c     the value of bias will cause the code to branch at this point
             
 c     integrate the tpw field
             
-            call int_tpw (data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+            call int_tpw (data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
             
 c     compute the bias at the radiometer site
             
@@ -371,7 +363,7 @@ c     integrate the tpw field one pass and beleive it to be good
          write(6,*) 'radiometer un-avail, no bias correction to tpw'
          write (6,*) 'computing ipw from laps field for later comps'
          
-         call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+         call int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
 
          call check_nan2(tpw,ii,jj,istatus)
          if(istatus.ne.1) then

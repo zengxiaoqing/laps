@@ -38,7 +38,7 @@ cdis
 cdis
 
       subroutine lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
-     1     kstart,qs,p,glat,glon,ii,jj,kk,istatus)
+     1     kstart,qs,p,glat,glon,mdf,ii,jj,kk,istatus)
 
 c     this routine is the laps surface interface for water vapor
 c     its function is to get the relevant boundary layer moisture
@@ -82,6 +82,7 @@ c     input variables
       real p (ii,jj)            !surface pressure (topo level)
       real glat (ii,jj)
       real glon (ii,jj)
+      real mdf
       
 c     internal variables with lapsparms.inc dependence
       
@@ -241,7 +242,7 @@ c     radiometer data
       
       print*, 'call routine analq'
       call analq(i4time,p_3d,p,t,pu,td,data,cg,tpw,bias_one,kstart,
-     1     qs, glat,glon,ii,jj,kk)
+     1     qs, glat,glon,mdf,ii,jj,kk)
       
       print*, 'done with routine analq'
       

@@ -472,7 +472,8 @@ c     GPS SECTION
       
       if (cost_gps_istatus == 1) then
 
-         call int_ipw (x,cost_p1d,cost_data,ipw,cost_mdf,cost_kk)
+         call int_ipw (x,cost_p1d,cost_data,cost_kstart,
+     1        cost_qs,cost_ps,ipw,cost_mdf,cost_kk)
 
          max_func_gps = 0.0
          

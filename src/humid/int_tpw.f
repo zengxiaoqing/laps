@@ -42,7 +42,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine  int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+      subroutine  int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
 
 c     subroutine to integrate the total precipitable water from the
 c     specific humidity data.  consolodating this process, since it is
@@ -57,16 +57,16 @@ c     include 'parmtrs.inc'
       
 c     parameter variables
       
-      integer ii,jj,kk
-      real data(ii,jj,kk)
+      integer ::  ii,jj,kk
+      real, dimension(ii,jj,kk) :: data,p_3d
       integer kstart (ii,jj)
-      real qs(ii,jj)
-      real ps(ii,jj)
-      real p_3d (ii,jj,kk)
-      real tpw (ii,jj)
+      real, dimension(ii,jj) :: qs, ps, tpw
+      real :: mdf               !laps missing data flag
+      real, dimension (500) :: p_vert,data_vert
+      real, dimension(3) :: xdum = (/1.,1.,1./) !dummy variable for call
       
       
-c     variables requireing dynamic allocation
+c     variables requiring dynamic allocation
       
 c     NONE
       
@@ -78,23 +78,40 @@ c     integrate the tpw field
       
       do j = 1,jj
          do i = 1,ii
-c     integrate q
-            tpw(i,j) = 0.0
-            do k = kstart(i,j),kk-1
-               tpw(i,j) = tpw(i,j) + ( data(i,j,k)+data(i,j,k+1) )/2. 
-     1              * (p_3d(i,j,k)-p_3d(i,j,k+1))
-            enddo
-c     change units of q to g/kg
-            tpw(i,j) = tpw(i,j) *1.e3 
-c     add surface layer (already in g/kg)
-            tpw(i,j) = tpw(i,j)
-     1           + ( qs(i,j) + data(i,j,kstart(i,j)) *1.e3 ) /2.
-     1           * (ps(i,j)-p_3d(i,j,kstart(i,j)) )
-c     comvert g/kg to cm
-            tpw(i,j) = tpw(i,j) / 100. / 9.8
             
-         enddo
-      enddo
+            tpw(i,j) = 0.0
+
+c     fill vertical specific arrays
+            do k = 1,kk
+               p_vert(k) = p_3d(i,j,k)
+               data_vert(k) = data(i,j,k)
+            enddo               !end k
+
+            call int_ipw (xdum,p_vert,data_vert,kstart,
+     1           qs(i,j),ps(i,j),tpw(i,j),mdf,kk)
+
+         enddo                  !i
+      enddo                     !j
+
+
+c     commented out relic code replaced by int_ipw.f
+c     integrate q
+c            tpw(i,j) = 0.0
+c            do k = kstart(i,j),kk-1
+c               tpw(i,j) = tpw(i,j) + ( data(i,j,k)+data(i,j,k+1) )/2. 
+c     1              * (p_3d(i,j,k)-p_3d(i,j,k+1))
+c            enddo
+c     change units of q to g/kg
+c            tpw(i,j) = tpw(i,j) *1.e3 
+c     add surface layer (already in g/kg)
+c            tpw(i,j) = tpw(i,j)
+c     1           + ( qs(i,j) + data(i,j,kstart(i,j)) *1.e3 ) /2.
+c     1           * (ps(i,j)-p_3d(i,j,kstart(i,j)) )
+c     comvert g/kg to cm
+c            tpw(i,j) = tpw(i,j) / 100. / 9.8
+c            
+c         enddo
+c      enddo
       
       return
       

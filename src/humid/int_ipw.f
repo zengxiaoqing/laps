@@ -38,16 +38,23 @@ cdis
 cdis
 cdis
 cdis
-      subroutine int_ipw (x,p,data,ipw,mdf,kk)
+      subroutine int_ipw (x,p,data,kstart,qs,ps,ipw,mdf,kk)
+
+
 c     subroutine int_ipw generates single column total integrated water for
 c     comparison with GPS data for the variational minimizaiton technique.
 c     basically the forward model for this data source.
+
+      implicit none
 
 c     input variables
       real ::  x(3)             !adjustment vector
       integer ::  kk            !vertical dimension
       real ::  p(500)           !pressure (hPa) through the column
       real :: data(500)         !data vector (actually sh)
+      integer :: kstart         !first k in vertical with real data 
+      real :: qs                !surface q
+      real :: ps                !surface pressure
       real :: mdf               !missing data flag
       real :: ipw               !returned computed ipw
 
@@ -57,8 +64,6 @@ c     internal variables
       
 
 c     code
-
-
 c     modify data vector
 
       do k = 1,kk
@@ -88,7 +93,7 @@ c     integrate
 
       ipw = 0.0
 
-      do k = 1,kk-1
+      do k = kstart,kk-1
          if(d(k) /= mdf) then   ! skip if missing data flag
             if(d(k) >= 0.0) then !skip if negative
                ipw = ipw + (d(k)+d(k+1))/2.*(p(k)-p(k+1))
@@ -100,9 +105,13 @@ c     change units of q ti g/kg
 
       ipw = ipw * 1.e3
 
+c     add surface layer (already in g/kg)
+
+      ipw = ipw + (qs + d(kstart))/2. * (ps - p(kstart))
+
 c     convert from g/kg to cm
 
-      ipw = ipw/100/9.8
+      ipw = ipw/100./9.8
 
       return
       end

@@ -79,7 +79,7 @@ c     1        make_ssh !function type
       
       real*4
      1     data(ii,jj,kk),
-     1     tpw(ii,jj),
+     1     tpw(ii,jj), tpw1(ii,jj), tpw2(ii,jj),
      1     tempsh
       
       integer kstart (ii,jj)
@@ -707,7 +707,7 @@ c     ***   insert bl moisture
       print*, 'calling lsin'
 c     insert boundary layer data
       call lsin (i4time,p_3d,lt1dat,data,cg,tpw,bias_one,
-     1     kstart,qs,ps,lat,lon,ii,jj,kk,istatus)
+     1     kstart,qs,ps,lat,lon,mdf,ii,jj,kk,istatus)
 
 c     check for supersaturation
 
@@ -948,6 +948,8 @@ c     make call to TIROS moisture insertion
          
       endif
 
+      call int_tpw (data,kstart,qs,ps,p_3d,tpw1,mdf,ii,jj,kk)
+
 
 c     make call to goes moisture insertion
 
@@ -1027,6 +1029,14 @@ c     end report moisture change block
          write(6,*) 'goes switch is off... goes step skipped...'
          
       endif
+
+c     assess impact of system compared to GPS sites
+
+      call int_tpw (data,kstart,qs,ps,p_3d,tpw2,mdf,ii,jj,kk)
+
+      call impact_assess (data_start, data_in, tpw1,tpw2,
+     1     ii,jj,kk,
+     1     gps_data, gps_w, p_3d, mdf)
 
 
 c     *** insert cloud moisture, this section now controled by a switch
@@ -1165,7 +1175,7 @@ c     1              lt1dat(i,j,k)-273.15,t_ref )/1000.
       
 c     recompute tpw including clouds and supersat corrections
       
-      call int_tpw(data,kstart,qs,ps,p_3d,tpw,ii,jj,kk)
+      call int_tpw(data,kstart,qs,ps,p_3d,tpw,mdf,ii,jj,kk)
       
 c     place the accepted missing data flag in output field
 c     sum over the entire grid for a total water sum value for 
