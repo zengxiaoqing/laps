@@ -28,7 +28,8 @@ SRC   = mdatlaps.f \
 	lapsvanl_sub.f \
 	laps_routines.f \
         barnes_multivariate_sfc.f \
-	qc_data.f 
+	qc_data.f \
+        visibility.f 
 
 MAIN=laps_sfc.f 
 

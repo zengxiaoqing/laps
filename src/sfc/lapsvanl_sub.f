@@ -464,17 +464,32 @@ cc	call dynamic_wts(imax,jmax,n_obs_var,rom2,d,fnorm)
 cc	call barnes2(t,imax,jmax,to,smsng,idum,npass,fnorm)
 cc	print *,' Done.'
 c       
-c.....  Ensure that HSM weights are zero if there is no HSM field
+c.....  Subtract background from satellite obs and calculate sat stats
 c
 	isat_flag = 0
+        num_sat = 0
+        sum_sat = 0.
+        sumsq_sat = 0.
+
 	do j=1,jmax
 	do i=1,imax
 	   if(s(i,j) .ne. 0.) then
 	      isat_flag = 1
 	      s(i,j) = s(i,j) - tb(i,j) !diff from background
+              num_sat = num_sat + 1
+              sum_sat = sum_sat + s(i,j)
+              sumsq_sat = sumsq_sat + s(i,j)**2
 	   endif
 	enddo !i
 	enddo !j
+
+        write(6,*)' Num tb8 points = ',num_sat
+
+        if(num_sat .gt. 0)then
+            rmean = sum_sat   / float(num_sat)
+            rms   = sqrt(sumsq_sat / float(num_sat))
+            write(6,*)' Mean/RMS Sat diff from background = ',rmean,rms       
+        endif
 
         if(analysis_mode .le. 2)then
 c

@@ -605,7 +605,8 @@ c
 c
 c.....	That's about it...let's go home.
 c
-	stop 'Normal completion of OBS_DRIVER_SUB_AF'
+	write(6,*)'Normal completion of OBS_DRIVER_SUB_AF'
+
 	end
 c
 c

@@ -31,6 +31,61 @@ cdis
 cdis
 c
 c
+        subroutine vlog2vis(lvis,vis,ni,nj)
+c
+c       Routine to convert gridded visibility from log( miles ) to
+c       miles.  If the analyzed log (vis) is less that -2, set the
+c       visibility to zero.
+c
+c       01-14-92        P. Stamus
+c
+        real*4 vis(ni,nj), lvis(ni,nj)
+
+        vis_scale = 1.
+ 
+        do j=1,nj
+        do i=1,ni
+          if(lvis(i,j) .le. -1.5) then
+            vis(i,j) = 0.
+          else
+            vis(i,j) = 10. ** ( lvis(i,j) / vis_scale )
+          endif
+        enddo !i
+        enddo !j
+c
+        return
+        end
+
+
+
+        subroutine viss2log(vis_s,mxstn,numsfc,smsng)
+c
+c       Routine to convert visibility from miles to log( miles ) for
+c       the individual observations.  If the observed visibility is
+c       zero, the set the log( vis ) to -10 for the analysis (so that
+c       its a very small number).
+c
+c       01-14-92        P. Stamus
+c
+        real*4 vis_s(mxstn)
+ 
+        vis_scale = 1.
+
+        do i=1,numsfc
+          if(vis_s(i) .lt. 0.) then
+            vis_s(i) = smsng
+          elseif(vis_s(i) .eq. 0.) then
+            vis_s(i) = -10.
+          else
+            vis_s(i) = log10( vis_s(i) ) * vis_scale
+          endif
+        enddo !i
+c
+        return
+        end
+
+
+
         subroutine visg2log(vis,ni,nj,smsng)
 c
 c       Routine to convert visibility from miles to log( miles ) for
@@ -40,7 +95,9 @@ c
 c       01-14-92        P. Stamus
 c
         real*4 vis(ni,nj)
-c
+
+        vis_scale = 1.
+
         do j=1,nj
         do i=1,ni
           if(vis(i,j) .lt. 0.) then
@@ -48,7 +105,7 @@ c
           elseif(vis(i,j) .eq. 0.) then
             vis(i,j) = -10.
           else
-            vis(i,j) = log10( vis(i,j) )
+            vis(i,j) = log10( vis(i,j) ) * vis_scale
           endif
         enddo !i
         enddo !j

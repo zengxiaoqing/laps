@@ -132,7 +132,7 @@ c
      &	pmsl_l,alt_l,kloud_l,ceil_l,lowcld_l,cover_l,rad_l,idp3_l,
      &	store_emv_l,store_amt_l,store_hgt_l,vis_l,obstime_l,istatus)
 	if(istatus .ne. 1) then
-	 write(60,*) ' ERROR: could not read in data. Stop.'
+	 write(60,*) ' ERROR: could not read in data. Abort.'
 	 goto 999
 	end if
 c
@@ -141,7 +141,7 @@ c
 	write(60,*) ' # of stns available: ',
      &                         n_obs_b, n_obs_b_l, n_obs_pos_b
 	if(n_obs_b.le.0 .or. n_obs_b_l.le.0) then
-	 write(60,*) ' No data for current and/or previous hr..stop QC.'
+	 write(60,*) ' No data for current and/or previous hr..Abort QC'      
 	 return
 	endif
 c

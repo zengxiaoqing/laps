@@ -360,8 +360,9 @@ c
      &                path_to_buoy_data(1:len_path) // filename13
 
             else
-                write(6,*)' ERROR'
-                stop
+                write(6,*)' ERROR: unknown metar format ',metar_format  
+                istatus = 0
+                return
 
             endif
 
@@ -373,7 +374,8 @@ c
 
         else
             write(6,*)' ERROR: unknown metar format ',metar_format
-            stop
+            istatus=0
+            return
        
         endif ! FSL format
 c

@@ -143,9 +143,6 @@ SRC	= machine_dependent.F \
           upcase.f \
           vectors.f \
           vis2albedo.f \
-          visg2log.f \
-          viss2log.f \
-          vlog2vis.f \
           vv.f \
           wait_for_data.f \
           wfo_fname_conversions.f \
