@@ -19,7 +19,7 @@ netcdf static {
             lat:navigation_dim = "nav";
             lat:record = "valtime, reftime";
             lat:_FillValue = 1.e+37f;
-            lat:long_name="LAPS grid latitudes";
+            lat:long_name="non-staggered grid latitudes";
             lat:units="degrees";
             lat:valid_range= 0.f, 90.f;
 	    lat:LAPS_units="DEGREES";
@@ -31,10 +31,34 @@ netcdf static {
             lon:navigation_dim = "nav";
             lon:record = "valtime, reftime";
             lon:_FillValue = 1.e+37f;
-            lon:long_name="LAPS grid longitudes";
+            lon:long_name="non-staggered grid longitudes";
             lon:units="degrees";
             lon:valid_range= -180.f, 180.f;
 	    lon:LAPS_units="DEGREES";
+
+        //      A-stagger grid latitudes
+
+        float
+            laa(record,z,y,x);
+            laa:navigation_dim = "nav";
+            laa:record = "valtime, reftime";
+            laa:_FillValue = 1.e+37f;
+            laa:long_name="a-stagger grid latitudes";
+            laa:units="degrees";
+            laa:valid_range= 0.f, 90.f;
+            laa:LAPS_units="DEGREES";
+
+        //      A-stagger grid longitudes
+
+        float
+            loa(record,z,y,x);
+            loa:navigation_dim = "nav";
+            loa:record = "valtime, reftime";
+            loa:_FillValue = 1.e+37f;
+            loa:long_name="a-stagger grid longitudes";
+            loa:units="degrees";
+            loa:valid_range= -180.f, 180.f;
+            loa:LAPS_units="DEGREES";
 
         //      B-stagger grid latitudes
 
@@ -43,7 +67,7 @@ netcdf static {
             lab:navigation_dim = "nav";
             lab:record = "valtime, reftime";
             lab:_FillValue = 1.e+37f;
-            lab:long_name="LAPS grid latitudes";
+            lab:long_name="b-stagger grid latitudes";
             lab:units="degrees";
             lab:valid_range= 0.f, 90.f;
             lab:LAPS_units="DEGREES";
@@ -55,7 +79,7 @@ netcdf static {
             lob:navigation_dim = "nav";
             lob:record = "valtime, reftime";
             lob:_FillValue = 1.e+37f;
-            lob:long_name="LAPS grid longitudes";
+            lob:long_name="b-stagger grid longitudes";
             lob:units="degrees";
             lob:valid_range= -180.f, 180.f;
             lob:LAPS_units="DEGREES";
@@ -67,7 +91,7 @@ netcdf static {
             lac:navigation_dim = "nav";
             lac:record = "valtime, reftime";
             lac:_FillValue = 1.e+37f;
-            lac:long_name="LAPS grid latitudes";
+            lac:long_name="c-stagger grid latitudes";
             lac:units="degrees";
             lac:valid_range= 0.f, 90.f;
             lac:LAPS_units="DEGREES";
@@ -79,24 +103,24 @@ netcdf static {
             loc:navigation_dim = "nav";
             loc:record = "valtime, reftime";
             loc:_FillValue = 1.e+37f;
-            loc:long_name="LAPS grid longitudes";
+            loc:long_name="c-stagger grid longitudes";
             loc:units="degrees";
             loc:valid_range= -180.f, 180.f;
             loc:LAPS_units="DEGREES";
 
-        //	LAPS grid average elevation 
+        //	Analysis grid average elevation 
 
 	float                                  
             avg(record,z,y,x);
             avg:navigation_dim = "nav";
             avg:record = "valtime, reftime";
             avg:_FillValue = 1.e+37f;
-            avg:long_name="LAPS grid average elevation";
+            avg:long_name="Analysis grid average elevation";
             avg:units="meters MSL";
             avg:valid_range= 0.f, 5000.f;
 	    avg:LAPS_units="METERS MSL";
                 	        
-        //	LAPS grid std dev of elevation
+        //	Analysis grid std dev of elevation
 
 	float                                  
             std(record,z,y,x);
@@ -108,14 +132,14 @@ netcdf static {
             std:valid_range= -5000.f, 5000.f;
 	    std:LAPS_units="METERS";
                 	        
-        //	LAPS grid envelope
+        //	Analysis grid envelope
 
 	float                                  
             env(record,z,y,x);
             env:navigation_dim = "nav";
             env:record = "valtime, reftime";
             env:_FillValue = 1.e+37f;
-            env:long_name="LAPS grid envelope";
+            env:long_name="Analysis grid envelope";
             env:units="meters MSL";
             env:valid_range= -5000.f, 5000.f;
 	    env:LAPS_units="METERS MSL";
@@ -180,6 +204,18 @@ netcdf static {
             cpr:valid_range= -1.0f, 1.0f;
             cpr:LAPS_units="radians";
 
+        //      map factor non-staggered grid
+
+        float
+            mfl(record,z,y,x);
+            mfl:navigation_dim = "nav";
+            mfl:record = "valtime, reftime";
+            mfl:_FillValue = 1.e+37f;
+            mfl:long_name="map factor analysis-grid";
+            mfl:units="none";
+            mfl:valid_range= 0.f, 2.0f;
+            mfl:LAPS_units="none";
+
         //      map factor A-grid
 
         float
@@ -192,26 +228,26 @@ netcdf static {
             mfa:valid_range= 0.f, 2.0f;
             mfa:LAPS_units="none";
 
-        //      map factor b-grid
+        //      map factor B-grid
 
         float
             mfb(record,z,y,x);
             mfb:navigation_dim = "nav";
             mfb:record = "valtime, reftime";
             mfb:_FillValue = 1.e+37f;
-            mfb:long_name="map factor b-grid";
+            mfb:long_name="map factor B-grid";
             mfb:units="none";
             mfb:valid_range= 0.f, 2.0f;
             mfb:LAPS_units="none";
 
-        //      map factor c-grid
+        //      map factor C-grid
 
         float
             mfc(record,z,y,x);
             mfc:navigation_dim = "nav";
             mfc:record = "valtime, reftime";
             mfc:_FillValue = 1.e+37f;
-            mfc:long_name="map factor c-grid";
+            mfc:long_name="map factor C-grid";
             mfc:units="none";
             mfc:valid_range= 0.f, 2.0f;
             mfc:LAPS_units="none";
@@ -252,7 +288,7 @@ netcdf static {
             alb:valid_range= 0.f, 1.f;
             alb:LAPS_units="none";
 
-        //      lon component mean terrain slope
+        //      mean long slope
 
         float
             sln(record,z,y,x);
@@ -264,7 +300,7 @@ netcdf static {
             sln:valid_range= -1.f, 1.f;
             sln:LAPS_units="M/M";
 
-        //      lat component mean terrain slope
+        //      mean lat slope
 
         float
             slt(record,z,y,x);
@@ -276,6 +312,17 @@ netcdf static {
             slt:valid_range= -1.f, 1.f;
             slt:LAPS_units="M/M";
 
+        //      LAPS grid average elevation
+
+        float
+            avc(record,z,y,x);
+            avc:navigation_dim = "nav";
+            avc:record = "valtime, reftime";
+            avc:_FillValue = 1.e+37f;
+            avc:long_name="c-stagger grid average elevation";
+            avc:units="meters MSL";
+            avc:valid_range= -200.f, 5000.f;
+            avc:LAPS_units="METERS MSL";
 
         //	LAPS variables
 
@@ -290,6 +337,8 @@ netcdf static {
         char
             lat_comment(record,z,namelen),
             lon_comment(record,z,namelen),
+            laa_comment(record,z,namelen),
+            loa_comment(record,z,namelen),
             lab_comment(record,z,namelen),
             lob_comment(record,z,namelen),
             lac_comment(record,z,namelen),
@@ -302,14 +351,16 @@ netcdf static {
             use_comment(record,z,namelen),
             spr_comment(record,z,namelen),
             cpr_comment(record,z,namelen),
+            mfl_comment(record,z,namelen),
             mfa_comment(record,z,namelen),
             mfb_comment(record,z,namelen),
             mfc_comment(record,z,namelen),
             cph_comment(record,z,namelen),
             cpv_comment(record,z,namelen),
+            alb_comment(record,z,namelen),
             sln_comment(record,z,namelen),
             slt_comment(record,z,namelen),
-            alb_comment(record,z,namelen),
+            avc_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
