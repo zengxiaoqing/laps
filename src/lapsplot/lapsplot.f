@@ -338,7 +338,7 @@ c       set up supmap for plot
         endif
 
         call draw_county_map(PLM3,PLM4,jproj,polat,polon,rrot,jdot
-     1                                             ,icol_sta,icol_cou)
+     1                      ,icol_sta,icol_cou,ni,nj)
 
 !       Set up colors, draw the state map?
  

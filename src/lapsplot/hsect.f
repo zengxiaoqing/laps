@@ -3415,8 +3415,10 @@ cdis
 
 !           Get Cloud Cover
             if(k_level .gt. 0)then
+                read(comment_2d,3515)cloud_height
+3515            format(e20.8)
 
-                write(c33_label,3516)nint(cld_hts(k_level))
+                write(c33_label,3516)nint(cloud_height)
 3516            format('LAPS ',i5,'  M MSL   Cloud Cover  ')
 
                 write(6,*)' LVL_CLD = ',lvl_cld

@@ -30,7 +30,7 @@ cdis
 cdis
 cdis
       subroutine draw_county_map(sw,ne,jproj,polat,polon,rrot,jdot
-     1                                             ,icol_sta,icol_cou)
+     1                          ,icol_sta,icol_cou,ni,nj)
 c
 c
       real*4 sw(2),ne(2),pl1(2),pl2(2),pl3(2),pl4(2),
@@ -53,6 +53,13 @@ c
       jgrid=0
 !     jgrid=1 ! Draw lat/lon lines
 
+      call get_grid_spacing(grid_spacing_m,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' no grid spacing, stop in draw_county_map'
+          stop
+      endif
+      domsize = (max(ni,nj)-1.) * grid_spacing_m
+
 !     Plot Counties
       jus=-4
 
@@ -62,10 +69,15 @@ c
           call gsln(1) ! Solid
       endif
 
-      call setusv_dum(2HIN,icol_cou)
-      call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
-     +            jgrid,jus,jdot,ier)
-      call sflush
+      if(domsize .le. 2500e3)then
+          call setusv_dum(2HIN,icol_cou)
+          call supmap(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,jjlts,
+     +                jgrid,jus,jdot,ier)
+          call sflush
+      else
+          write(6,*)' Large domain, omitting counties'
+
+      endif
 
 !     Plot States From Counties
       jus=-8

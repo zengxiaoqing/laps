@@ -29,14 +29,13 @@ cdis
 cdis 
 cdis 
 cdis 
-#ifndef solaris
         function i4_to_byte(i4_in)
 
         character i4_to_byte
 
         integer*4 i4_in,i4
 
-        byte barg(4)
+        character barg(4)
         equivalence (barg,i4)
 
         i4 = i4_in
@@ -45,7 +44,6 @@ cdis
         return
 
         end
-#endif
 
         function byte_to_i4(b_in)
 
