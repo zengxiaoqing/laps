@@ -38,90 +38,16 @@ cdis
 cdis
 c
 c
-        subroutine read_surface_sa(infile,maxsta,atime,n_obs_g,
-     &   n_obs_b,stn,reptype,atype,lat,lon,elev,wx,
-     &   t,td,dd,ff,ddg,ffg,pstn,pmsl,alt,kloud,ceil,lowcld,cover,rad,
-     &   sfct,idp3,store_emv,store_amt,store_hgt,vis,obstime,istatus)       
+        subroutine read_surface_sa(infile,maxsta,atime,               ! I
+     &   n_obs_g,n_obs_b,stn,reptype,atype,                           ! O
+     &   lat,lon,elev,wx,t,td,                                        ! O
+     &   kloud,store_amt,store_hgt,                                   ! O
+     &   obstime,istatus)                                             ! O
 c
 cdoc    This routine calls 'read_surface_data' and is used primarily to read
 cdoc    in cloud info along the lines of the arrays in the "old" LSO format.
+cdoc    This is called only from the cloud analysis at present.
 c
-c*******************************************************************************
-c
-c       Routine to read mesonet and SAO data for LAPS that has been written
-c       into the .LSO file by the 'get_surface_obs' routine.
-c
-c       Changes:
-c               P. Stamus  12-30-92  Original version.
-c                          01-07-93  Add/change obs counters.
-c                          01-08-93  Add read_header entry.
-c                          12-21-95  Change format in prep of C*5 stn arrays.
-c
-c                      *** 09-03-98  MAJOR CHANGE...Now reading new format LSO
-c                                        and passing arrays back with things as
-c                                        close to old version as possible.
-c               S. Albers        99  Rename to 'read_surface_sa'
-c
-c       Input/Output:
-c
-c        Variable        Var type   I/O   Description
-c       ----------      ---------- ----- -------------
-c        infile            A*70      I    Directory where LSO file is.
-c        maxsta             I        I    Max Number of stations allowed.
-c        atime             A*24      O    Data time in dd-mmm-yyyy hh:mm
-c        n_obs_g            I        O    Number of obs in the laps grid
-c        n_obs_b            I        O    Number of obs in the box
-c        stn               A*3 A     O    Station names (array)
-c        lat                RA       O    Station latitude (deg)
-c        lon                RA       O    Station longitude (deg)
-c        elev               RA       O    Station elevation (m)
-c        obstime            IA       O    Time of observation (hhmm)
-c        wx                A*8 A     O    Observed weather
-c        t                  RA       O    Temperature (F)
-c        td                 RA       O    Dewpoint (F)
-c        dd                 RA       O    Wind direction (deg)
-c        ff                 RA       O    Wind speed (kt)
-c        ddg                RA       O    Gust wind direction (deg)
-c        ffg                RA       O    Gust wind speed (kt)
-c        pstn               RA       O    Station pressure (mb)
-c        pmsl               RA       O    MSL pressure (mb)
-c        alt                RA       O    Altimeter setting (mb)
-c        kloud              IA       O    Number of cloud layers...max of 5.
-c        ceil               RA       O    Ceiling height (m)
-c        lowcld             RA       O    Height lowest cloud (m)
-c        cover              RA       O    Cloud cover (tenths)
-c        vis                RA       O    Visibility (miles)
-c        rad                RA       O    Solar radiation.
-c        idp3               IA       O    3-h coded pressure change (e.g.,608)
-c        store_emv         A*1 A     O    Cloud descriptors: ea. layer, ea. stn
-c        store_amt         A*4 A     O    Cloud layer coverage.
-c        store_hgt          RA       O    Height of each cloud layer.
-c        istatus            I        O    Status flag: 1 = normal
-c                                                     -1 = file not found
-c                                                     -2 = Arrays too small
-c
-c       User Notes:
-c
-c       1.  Arrays should be dimensioned 'maxsta' in the calling program,
-c           with maxsta *at least* 120 (for CO domain).
-c
-c       2.  Pressures are stored as reported, except that altimeters are
-c           converted to millibars.
-c
-c       3.  The 'kloud' variable tells whether there are clouds and how
-c           many layers if there are:
-c               a) kloud = 0    means   No cloud DATA (but NOT "no clouds").
-c               b) kloud = 1    means   CLR or 1 cloud layer.  A height is
-c                                       given for CLR which is the maximum valid
-c                                       height of the observation (automatic
-c                                       stations have limited valid heights).
-c               c) kloud = 2-5  means   Two to five cloud layers.
-c
-c       4.  Thin obscured (-X) is a cloud layer and is given a 'badflag'
-c           height, since it is not supposed to have a height (you're supposed
-c           to be able to see other clouds and/or sky).
-c
-c*******************************************************************************
 c
         real*4          badflag
 c
@@ -152,9 +78,7 @@ c
 c
 c.....  Output arrays (as old format LSO if different)
 c
-        real*4   ceil(maxsta),lowcld(maxsta),cover(maxsta)
-c
-        Integer*4   obstime(maxsta),idp3(maxsta)
+        Integer*4   obstime(maxsta)
 c
         Character   atime*24,stn(maxsta)*3     
         character   store_emv(maxsta,5)*1, wx(maxsta)*8
@@ -180,14 +104,17 @@ c
            stn(i)(1:3) = '   '
            wx(i)(1:8) = '        '
         enddo !i
+
+
+        if(.true.)then
 c
-c.....  Figure out the i4time and call the read routine.
+c.....     Figure out the i4time and call the read routine.
 c
-        call s_len(infile, len)
-        filetime(1:9) = infile(len-12:len-4)
-        call i4time_fname_lp(filetime,i4time,status)
+           call s_len(infile, len)
+           filetime(1:9) = infile(len-12:len-4)
+           call i4time_fname_lp(filetime,i4time,status)
 c
-	call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
+	   call read_surface_data(i4time,atime,n_obs_g,n_obs_b,time,
      &    wmoid,stations,provider,wx_in,reptype,atype,lat,lon,
      &    elev,t,td,rh,dd,ff,ddg,ffg,alt,pstn,pmsl,delpch,delp,vis,rad,
      &    sfct,sfcm,pcp1,pcp3,pcp6,pcp24,snow,kloud,max24t,min24t,t_ea,
@@ -195,6 +122,16 @@ c
      &    sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,
      &    maxsta,jstatus)
 c
+
+        else
+           call read_cloud_obs(i4time,maxsta,atime,                ! I
+     &      n_obs_g,n_obs_b,stations,reptype,                      ! O
+     &      atype,                                                 ! O
+     &      lat,lon,elev,wx_in,t,td,                               ! O
+     &      kloud,store_amt,store_hgt,obstime,jstatus)             ! O
+
+        endif
+
         if(jstatus .ne. 1 .and. jstatus .ne. -1) then
            print *,' ERROR: No valid LSO file found for ', filetime       
            istatus = -1
@@ -205,11 +142,6 @@ c.....  Shuffle data for the differences between old and new formats.
 c.....  Now the station data.
 c
         do i=1,n_obs_b
-           idp3(i) = ibadflag
-           cover(i) = badflag
-           lowcld(i) = badflag
-           ceil(i) = badflag
-c
            wx(i)(1:8) = wx_in(i)(1:8)
 c
            if(reptype(i)(1:4) .eq. 'LDAD') then
@@ -237,6 +169,150 @@ c..... End of data gathering. Let's go home...
 c
         istatus = 1             ! everything's ok...
         print *, ' Normal completion of new READ_SURFACE_SA'
+c
+        return
+        end
+
+c
+c
+        subroutine read_cloud_obs(i4time,maxsta,atime_s_out,          ! I
+     &   n_obs_g_out,n_obs_b_out,stations_out,reptype_out,            ! O
+     &   autostntype_out,                                             ! O
+     &   lat_s_out,lon_s_out,elev_s_out,wx_s_out,t_s_out,td_s_out,    ! O
+     &   kloud_s_out,store_amt_out,store_hgt_out,obstime_out,istatus) ! O
+c
+c       The argument list is or should be consistent with 'read_sfc.inc' except
+c       that a duplicate subset of '_out' arrays are used
+c
+cdoc    This routine calls 'read_surface_data' and is used primarily to read
+cdoc    in cloud info from the current LSO file and potentially SYNOP obs from
+cdoc    a wider time window. The initial design is to call this from the
+cdoc    'read_surface_sa' routine.
+
+        include 'read_sfc.inc'
+c
+c.....  Output arrays (duplicate declarations with _out suffix)
+c
+	real lat_s_out(maxsta), lon_s_out(maxsta), elev_s_out(maxsta)
+	real t_s_out(maxsta), td_s_out(maxsta)
+
+	real store_hgt_out(maxsta,5) 
+
+	character atime_s_out*24
+	character store_amt_out(maxsta,5)*4
+        character stations_out(maxsta)*20
+        character reptype_out(maxsta)*6, autostntype_out(maxsta)*6
+        character wx_s_out(maxsta)*25 
+
+	integer kloud_s_out(maxsta), obstime_out(maxsta)
+
+c       End of output arrays
+
+        real*4          badflag
+c
+	character filetime*9
+c
+c.....  Start here.  Set the status to nothing, zero out the cloud storage
+c.....  and character arrays.
+c
+        call get_sfc_badflag(badflag,istatus)
+
+        istatus = 0
+        ibadflag = int(badflag)
+c
+c.....  Figure out the i4time and call the read routine.
+c
+        call read_surface_data(i4time,atime_s,n_obs_g,n_obs_b, !regular LSO
+     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &         jstatus)
+c
+        if(jstatus .ne. 1 .and. jstatus .ne. -1) then
+           print *,' ERROR: No valid LSO file found for ', filetime       
+           istatus = -1
+           return
+        endif
+c
+c.....  Place main cloud obs into output arrays
+
+        atime_s_out = atime_s
+        n_obs_g_out = n_obs_g
+        n_obs_b_out = n_obs_b
+        stations_out = stations
+        reptype_out = reptype
+        autostntype_out = autostntype
+        lat_s_out = lat_s
+        lon_s_out = lon_s
+        elev_s_out = elev_s
+        wx_s_out = wx_s
+        t_s_out = t_s
+        td_s_out = td_s
+        kloud_s_out = kloud_s
+        store_amt_out = store_amt
+        store_hgt_out = store_hgt
+        obstime_out = obstime
+
+        write(6,*)' n_obs_g_out,n_obs_b_out = ',n_obs_g_out,n_obs_b_out       
+c
+c.....  Figure out the i4time and call the read routine for SYNOPs.
+c
+        i4time_synop = (i4time / 10800) * 10800
+
+        if(i4time_synop .ne. i4time)then
+
+           write(6,*)' Reading 3 hourly sfc data for SYNOPs...'
+
+           call read_surface_data(i4time_synop,atime_s,n_obs_g,n_obs_b, !regular LSO
+     &         obstime,wmoid,stations,provider,wx_s,reptype,autostntype,       
+     &         lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
+     &         alt_s,pstn_s,pmsl_s,delpch,delp,vis_s,solar_s,sfct,sfcm,
+     &         pcp1,pcp3,pcp6,pcp24,snow,kloud_s,max24t,min24t,t_ea,
+     &         td_ea,rh_ea,dd_ea,ff_ea,alt_ea,p_ea,vis_ea,solar_ea,
+     &         sfct_ea,sfcm_ea,pcp_ea,snow_ea,store_amt,store_hgt,mxstn,
+     &         jstatus)
+c
+           if(jstatus .ne. 1 .and. jstatus .ne. -1) then
+              print *,' ERROR: No valid LSO file found for ', filetime       
+              istatus = -1
+              return
+           endif
+
+c
+c.....     Place synop cloud obs into output arrays
+
+           do i=1,n_obs_b
+              if(reptype(i)(1:4) .eq. 'SYNOP') then
+                 n_obs_g_out = 0 ! unknown at present
+                 n_obs_b_out = n_obs_b_out + 1
+                 stations_out(n_obs_b_out) = stations(i)
+                 reptype_out(n_obs_b_out) = reptype(i)
+                 autostntype_out(n_obs_b_out) = autostntype(i)
+                 lat_s_out(n_obs_b_out) = lat_s(i)
+                 lon_s_out(n_obs_b_out) = lon_s(i)
+                 elev_s_out(n_obs_b_out) = elev_s(i)
+                 wx_s_out(n_obs_b_out) = wx_s(i)
+                 t_s_out(n_obs_b_out) = t_s(i)
+                 td_s_out(n_obs_b_out) = td_s(i)
+                 kloud_s_out(n_obs_b_out) = kloud_s(i)
+                 store_amt_out(n_obs_b_out,:) = store_amt(i,:)
+                 store_hgt_out(n_obs_b_out,:) = store_hgt(i,:)
+                 obstime_out(n_obs_b_out) = obstime(i)
+              endif
+           enddo !i
+
+           write(6,*)' n_obs_g_out,n_obs_b_out = '
+     1                ,n_obs_g_out,n_obs_b_out       
+
+        endif ! SYNOP time is different from current systime
+c
+c.....End of data gathering. Let's go home...
+c
+        istatus = 1             ! everything's ok...
+        print *, ' Normal completion of new READ_CLOUD_OBS'
 c
         return
         end
