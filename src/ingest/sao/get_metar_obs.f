@@ -32,9 +32,9 @@ cdis
 c
 c
 	subroutine get_metar_obs(maxobs,maxsta,i4time_sys,
-     &                      path_to_metar,data_file,
-     &                      metar_format,ick_metar_time,
-     &                      itime_before,itime_after,
+     &                      path_to_metar,data_file,metar_format,
+     &                      minutes_to_wait_for_metars,
+     &                      ick_metar_time,itime_before,itime_after,
      &                      eastg,westg,anorthg,southg,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
@@ -107,7 +107,7 @@ c
 	character  store_cldamt(maxsta,5)*4
 c
         integer cnt
-	logical exists
+	logical exists, l_parse
         data exists/.false./
         data cnt/0/
 c
@@ -136,7 +136,28 @@ c
 
         call s_len(metar_format,len_metar_format)
 
-        if(metar_format(1:len_metar_format) .eq. 'FSL')then
+        if(     l_parse(metar_format,'FSL') 
+     1     .or. l_parse(metar_format,'NIMBUS')
+     1     .or. l_parse(metar_format,'WFO')     )then
+
+            if(     l_parse(metar_format,'NIMBUS')
+     1         .or. l_parse(metar_format,'WFO')     )then
+
+                do while(.not. exists .and. 
+     &                    cnt .le. minutes_to_wait_for_metars)
+c
+	            INQUIRE(FILE=data_file,EXIST=exists)
+                    if(.not. exists) then
+                        if(cnt .lt. minutes_to_wait_for_metars)then
+                            print*,'Waiting for file ', data_file
+                            call waiting_c(60)
+                        endif
+                        cnt = cnt+1               
+	            endif
+
+	        enddo ! While in waiting loop
+
+            endif
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c

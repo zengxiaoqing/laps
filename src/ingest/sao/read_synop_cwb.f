@@ -57,16 +57,16 @@
          read ( 1, 10, end=99, err=999 ) reportFlag(j), wmoId(j),
      ~               elevation(j), latitude(j), longitude(j),
      ~               yy(j), mo(j), dd(j), hh(j), mn(j)
-         read (1,20) windDir(j), windSpeed(j), windQua(j),
+         read ( 1, 20, err=999 )  windDir(j), windSpeed(j), windQua(j),
      ~               visibility(j), presWeather(j),
      ~               seaLevelPress(j), seaLevelPressQua(j),
      ~               temperature(j), temperatureQua(j),
      ~               skyCover(1,j), skyLayerBase(1,j)
-         read (1,30) tempDewDiff(j), dewpointQua(j),
+         read ( 1, 30, err=999 )  tempDewDiff(j), dewpointQua(j),
      ~               pressChangeChar(j), pressChange3Hour(j),
      ~               pressChange3HourQua(j), precip3Hour(j),
      ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         read (1,40) skyCover(2,j), skyLayerBase(2,j),
+         read ( 1, 40, err=999 )  skyCover(2,j), skyLayerBase(2,j),
      ~               precip24Hour(j)
          read (1,*)
 

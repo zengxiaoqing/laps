@@ -2,7 +2,6 @@
  path_to_metar='/public/data/metar/netcdf/',
  path_to_local_data='/public/data/ldad/mesonet/netcdf/',
  path_to_buoy_data='/data/fxa/point/maritime/netcdf/',
- metar_format='FSL',
  minutes_to_wait_for_metars=10,
  ick_metar_time=0,
  itime_before=900,
@@ -18,8 +17,12 @@ c 'path_to_local_data' - Directory for local data
 c
 c 'path_to_buoy data' - Directory for buoy data
 c
-c 'metar_format' - Format of metar data. Valid values are listed as follows:
-c                  'FSL' denotes NetCDF format used by NIMBUS and AWIPS/WFO
+c 'metar_format' - Normally not specified here since it defaults to 
+c                  'c8_project' in 'nest7grid.parms'. An override to this 
+c                  can be specified as follows:
+c
+c                  'NIMBUS' denotes FSL NetCDF format and NIMBUS file timestamp
+c                  'WFO' denotes FSL NetCDF format and WFO file timestamp
 c                  'CWB' is Central Weather Bureau in Taiwan
 c                  'AFWA' is Air Force Weather Agency
 c

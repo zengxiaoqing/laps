@@ -142,7 +142,7 @@ c
 	i4time_after  = i4time_sys + itime_after
 
         call s_len(buoy_format, len_buoy_format)
-        if(buoy_format(1:len_buoy_format) .eq. 'FSL')then ! FSL NetCDF format
+        if(buoy_format(1:len_buoy_format) .ne. 'CWB')then ! FSL NetCDF format
 c
 c.....      Get the data from the NetCDF file.  First, open the file.
 c.....      If not there, return.

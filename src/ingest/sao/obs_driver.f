@@ -96,6 +96,11 @@ c
         call get_laps_cycle_time(laps_cycle_time,istatus)
         if(istatus .ne. 1)stop
 
+!       Get default value for metar_format
+        call get_c8_project(metar_format,istatus)
+        if(istatus .ne. 1)stop
+
+!       Note that metar_format will be updated only if specified in namelist
         call get_obs_driver_parms(
      1                            path_to_metar
      1                           ,path_to_local_data
@@ -398,25 +403,6 @@ c
 
             endif
 
-            do while(.not. exists .and. 
-     &                cnt .le. minutes_to_wait_for_metars)
-c
-	        INQUIRE(FILE=data_file_m,EXIST=exists)
-                if(.not. exists) then
-                    if(cnt .lt. minutes_to_wait_for_metars)then
-                        print*,'Waiting for file ', data_file_m
-                        call waiting_c(60)
-                    endif
-                    cnt = cnt+1               
-	        endif
-
-	    enddo ! While in waiting loop
-
-	    if(.not.exists) then
-	        print *,' WARNING: File not Found: ', data_file_m
-	        continue
-            endif
-
         elseif(metar_format(1:len_metar_format) .eq. 'CWB')then
             continue
 
@@ -424,7 +410,7 @@ c
             continue
 
         else
-            write(6,*)' ERROR, unknown metar format'
+            write(6,*)' ERROR: unknown metar format ',metar_format
             stop
        
         endif ! FSL format
@@ -437,6 +423,7 @@ c
         if(metar_format(1:len_metar_format) .ne. 'AFWA')then
            call get_metar_obs(maxobs,maxsta,i4time_sys,
      &                        path_to_metar,data_file_m,metar_format,   
+     &                        minutes_to_wait_for_metars,
      &                        ick_metar_time,itime_before,itime_after,
      &                        grid_east,grid_west,grid_north,grid_south,       
      &                        lat,lon,ni,nj,grid_spacing,
