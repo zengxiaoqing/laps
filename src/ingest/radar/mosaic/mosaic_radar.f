@@ -451,7 +451,7 @@ c
       enddo
 
       if(imosaic_3d.eq.0.or.imosaic_3d.eq.2)then
-         ext_vrc = 'VRC'
+         ext_vrc = 'vrc'
          var_vrc = 'REF'
          units_vrc = 'DBZ'
          read(cradars,*)n_radars
@@ -487,7 +487,7 @@ c vrz output.
 c
       if(imosaic_3d.eq.1.or.imosaic_3d.eq.2)then
          write(6,*)' Output VRZ file'
-         ext_vrz = 'VRZ'
+         ext_vrz = 'vrz'
          var_vrz = 'REF'
          units_vrz = 'DBZ'
          read(cradars,*)n_radars
