@@ -2596,12 +2596,10 @@ Source directory: laps/src/cloud
 
 Parameter namelist files: static/cloud.nl, static/nest7grid.parms 
 
-Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
-           Analysis and Prediction System (LAPS): Analyses of clouds, 
-           precipitation, and temperature. Weather and Forecasting, 11, 
-           273-287.
+Further description and reference is at:
 
-           Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
+http://laps.fsl.noaa.gov/albers/laps/talks/cloud/sld001.htm
+
 
  ------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
@@ -2955,18 +2953,13 @@ Outputs:
 </pre>
 Source directory: laps/src/deriv
 
-References: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The 
-            Local Analysis and Prediction System (LAPS): Analyses of clouds, 
-            precipitation, and temperature. Weather and Forecasting, 11, 
-            273-287.
+Further description and references are at:
 
-            Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi
+http://laps.fsl.noaa.gov/albers/laps/talks/cloud/sld005.htm
 
+and
 
-            Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 
-            10, 342-352. 
-
-            Available at http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi
+http://laps.fsl.noaa.gov/albers/laps/talks/wind/sld007.htm
 
 ------ 3.3.7 ---------------------ACCUM---------------------------------------
 
