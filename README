@@ -1177,7 +1177,6 @@ Inputs: (from PRO, PIN, LGA/RAM, CDW)       '*' = essential input
 
         (remapped from raw radar data)
 	v01-v20 grid            3-D radar reflectivity/radial velocity 
-        vrc/v01/vrz             2-D or 3-D radar reflectivity
 
 Outputs: (LW3 is main output)
 	msg	inter data	mesonet winds  (none of these five really have
@@ -1356,6 +1355,10 @@ Inputs:                                          '*' = essential input
         lh3     grid            LAPS 3-d Relative Humidity (normally previous 
                                                                           file)
         lso     inter data      SAO obs (for precip type verification)
+
+	lw3	3d grid		3-D winds (U and V are wrt TRUE NORTH)
+	lwm	2d grid		surface winds
+        vrc/v01/vrz             2-D or 3-D radar reflectivity
 
 Outputs: 
 	lcp     3d grid	(pres)	3d clouds (fractional cover) (pressure grid)
