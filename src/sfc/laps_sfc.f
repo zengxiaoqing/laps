@@ -142,8 +142,9 @@ c
 	real rp_bk(ni,nj), mslp_bk(ni,nj), stnp_bk(ni,nj)
 	real wt_rp(ni,nj), wt_mslp(ni,nj), wt_stnp(ni,nj)
 	real vis_bk(ni,nj), wt_vis(ni,nj)
-	real tgd_bk(ni,nj), wt_tgd(ni,nj)
+	real tgd_bk_f(ni,nj), wt_tgd(ni,nj)
 	real wt(ni,nj)
+        real dum_2d(ni,nj)
 c
 	integer back_t, back_td, back_rp, back_uv, back_vis, back_sp
 	integer back_mp, back_tgd
@@ -482,7 +483,7 @@ c
 	if(istatus .eq. 1) then
 	   ilaps_bk = 1
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!          write(6,951) ext_bk(1:6), back
 	   call conv_k2f(t_bk,t_bk,ni,nj) ! conv K to deg F
 	   call move(wt, wt_t, ni,nj)
 	   back_t = 1
@@ -498,7 +499,7 @@ c
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!	   write(6,951) ext_bk(1:6), back
 	   call multcon(mslp_bk,0.01,ni,nj) ! conv Pa to mb
 	   call move(wt, wt_mslp, ni,nj)
 	   back_mp = 1
@@ -514,7 +515,7 @@ c
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!          write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_stnp, ni,nj)
 	   call multcon(stnp_bk,0.01,ni,nj) ! conv Pa to mb
 	   back_sp = 1
@@ -530,7 +531,7 @@ c
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!	   write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_vis, ni,nj)
 	   call conv_m2miles(vis_bk,vis_bk,ni,nj)
 	   call visg2log(vis_bk,ni,nj,badflag) ! conv miles to log(miles)
@@ -547,7 +548,7 @@ c
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!	   write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_td, ni,nj)
 	   call conv_k2f(td_bk,td_bk,ni,nj) ! conv K to deg F
 	   back_td = 1
@@ -564,7 +565,7 @@ c
      &          laps_cycle_time,ni,nj,istatus)
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(ibkg_time,back,istatus)
-	   write(6,951) ext_bk(1:6), back
+!	   write(6,951) ext_bk(1:6), back
 	   call move(wt, wt_rp, ni,nj)
 	   call multcon(rp_bk,0.01,ni,nj) ! conv Pa to mb
 	   back_rp = 1
@@ -576,20 +577,21 @@ c
 	print *,' '
 	print *,' Getting ground temperature background....'
 	var_req = 'tgd'
-        call get_modelfg_2d(i4time,var_req,ni,nj,tgd_bk,istatus)       
+!       call get_modelfg_2d(i4time,var_req,ni,nj,dum_2d,istatus)       
+        istatus = 0 ! Temporary statement until 'get_modelfg_2d' is fixed
 	if(istatus .eq. 1) then
 	   call make_fnam_lp(i4time,back,istatus)
 	   write(6,*) 'Read successful for ',var_req
 	   call move(wt, wt_tgd, ni,nj)
-!          call conv_k2f(tgd_bk,tgd_bk,ni,nj) ! conv K to deg F
+           call conv_k2f(dum_2d,tgd_bk_f,ni,nj) ! conv K to deg F
 	   back_tgd = 1
 	elseif(back_td .eq. 1)then
            write(6,*)' Using the dewpoint bkg as a substitute'
-	   call move(td_bk, tgd_bk, ni,nj)
-           call conv_f2k(tgd_bk,tgd_bk,ni,nj) ! conv F to deg K
+	   call move(td_bk, tgd_bk_f, ni,nj)
+!          call conv_f2k(tgd_bk,tgd_bk,ni,nj)   ! conv F to deg K
 	else
 	   print *,'     No background available for ',var_req
-	   call zero(tgd_bk, ni,nj)
+	   call zero(tgd_bk_f, ni,nj)
 	endif
 c
  951	format(3x,'Using background from ',a6,' at ',a9)
@@ -752,7 +754,7 @@ c                                v  in kt
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,
      &     lat_s, lon_s, elev_s, t_s, td_s, ff_s, pstn_s, pmsl_s,
      &     vis_s, stations, n_obs_b, n_sao_b, n_sao_g, obs,
-     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk,
+     &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk_f,   
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
