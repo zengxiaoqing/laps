@@ -1,9 +1,5 @@
  &balance_nl
  lrunbal=.false.
- lstagger=.false.,
- icon=0,
  gamo=1.e-2,
  delo=1.e9,
- tau=800.
- lnon_linear=.false.
  /
