@@ -107,20 +107,6 @@ netcdf lsx {
             rh:lvl_coord="AGL";
             rh:LAPS_units="M";
 
-        //      Cloud Ceiling           //
-
-        float
-            cce(record,z,y,x);
-            cce:navigation_dim = "nav";
-            cce:record = "valtime, reftime";
-            cce:_FillValue = 1.e+37f;
-            cce:long_name="cloud ceiling";
-            cce:units="meters";
-            cce:valid_range= -20000.f, 20000.f;
-            cce:LAPS_var="CCE";
-            cce:lvl_coord="AGL";
-            cce:LAPS_units="M";
- 
         //      MSL Pressure            //
 
         float
@@ -275,20 +261,6 @@ netcdf lsx {
             mra:lvl_coord="AGL";
             mra:LAPS_units="G/KG/S";
  
-        //      lifted index            //
-
-        float
-            li(record,z,y,x);
-            li:navigation_dim = "nav";
-            li:record = "valtime, reftime";
-            li:_FillValue = 1.e+37f;
-            li:long_name="lifted index";
-            li:units="degrees Kelvin";
-            li:valid_range= -20000.f, 20000.f;
-            li:LAPS_var="LI";
-            li:lvl_coord="AGL";
-            li:LAPS_units="K";
- 
         //      surface wind speed      //
         float
             spd(record,z,y,x);
@@ -315,33 +287,6 @@ netcdf lsx {
             css:LAPS_var="CSS";
             css:lvl_coord="AGL";
             css:LAPS_units="          ";
- 
-        //      positive buoyant energy         //
-        float
-            pbe(record,z,y,x);
-            pbe:navigation_dim = "nav";
-            pbe:record = "valtime, reftime";
-            pbe:_FillValue = 1.e+37f;
-            pbe:long_name="positive buoyant energy";
-            pbe:units="joules/kilogram";
-            pbe:valid_range= -20000.f, 20000.f;
-            pbe:LAPS_var="PBE";
-            pbe:lvl_coord="AGL";
-            pbe:LAPS_units="J/KG";
- 
-         //      negative buoyant energy         //
-
-         float
-            nbe(record,z,y,x);
-            nbe:navigation_dim = "nav";
-            nbe:record = "valtime, reftime";
-            nbe:_FillValue = 1.e+37f;
-            nbe:long_name="negative buoyant energy";
-            nbe:units="joules/kilogram";
-            nbe:valid_range= -20000.f, 20000.f;
-            nbe:LAPS_var="NBE";
-            nbe:lvl_coord="AGL";
-            nbe:LAPS_units="J/KG";
  
          //      visability              //
 
@@ -401,7 +346,6 @@ netcdf lsx {
             td_comment(record,z,namelen),
             vv_comment(record,z,namelen),
             rh_comment(record,z,namelen),
-            cce_comment(record,z,namelen),
             msl_comment(record,z,namelen),
             tad_comment(record,z,namelen),
             th_comment(record,z,namelen),
@@ -413,11 +357,8 @@ netcdf lsx {
             div_comment(record,z,namelen),
             tha_comment(record,z,namelen),
             mra_comment(record,z,namelen),
-            li_comment(record,z,namelen),
             spd_comment(record,z,namelen),
             css_comment(record,z,namelen),
-            pbe_comment(record,z,namelen),
-            nbe_comment(record,z,namelen),
             vis_comment(record,z,namelen),
             fwx_comment(record,z,namelen),
             hi_comment(record,z,namelen),
@@ -453,10 +394,6 @@ netcdf lsx {
         short
             rh_fcinv(record, z);
             rh_fcinv:_FillValue= 0s;
-              	
-        short
-            cce_fcinv(record, z);
-            cce_fcinv:_FillValue= 0s;
               	
         short
             msl_fcinv(record, z);
@@ -503,24 +440,12 @@ netcdf lsx {
             mra_fcinv:_FillValue= 0s;
               	
         short
-            li_fcinv(record, z);
-            li_fcinv:_FillValue= 0s;
-              	
-        short
             spd_fcinv(record, z);
             spd_fcinv:_FillValue= 0s;
               	
         short
             css_fcinv(record, z);
             css_fcinv:_FillValue= 0s;
-              	
-        short
-            pbe_fcinv(record, z);
-            pbe_fcinv:_FillValue= 0s;
-              	
-        short
-            nbe_fcinv(record, z);
-            nbe_fcinv:_FillValue= 0s;
               	
         short
             vis_fcinv(record, z);
