@@ -47,7 +47,7 @@
 
  i2_missing_data_cmn=-99,
  r_missing_data_cmn=+1e37,
- MAX_RADARS_CMN=5,        
+ MAX_RADARS_CMN=13,        
  ref_base_cmn=-10.,       
  ref_base_useable_cmn=0., 
  r_hybrid_first_gate_cmn=0.,
