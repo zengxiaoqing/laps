@@ -466,7 +466,7 @@ cdis
 
         enddo ! Loop through TSND
 
-        ncnt_total = ncnt_total + ncnt
+!        ncnt_total = ncnt_total + ncnt
 
 !       Initialize fnorm array used in barnes_new
         write(6,*)' Creating fnorm LUT'
