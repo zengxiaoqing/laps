@@ -74,21 +74,21 @@ if ($modeltype =~ /ram/) {
     $runtime = $2+0;
     $fcsthr = $3/100;
     print "Using $fcsthr hr fcst from local model started at $runtime UTC \n";
-    print "(local model file timestamp = $modeltime)\n"; } } 
+    print "(local model file timestamp = $modeltime)\n"; } }
 else {
   $bgmodelfile = $filename;
   $bgmodelfile =~ s/$logname/lga/;
-  open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
-  foreach (<BGMODEL>) {
-    if (/cmodel (\w*)/) {$modelid = $1;}
-    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } }
-  $basename = $1 if ($pathname =~ /([^\/]*)$/);
-  if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
-    $runtime = $2/100;
-    $fcsthr = $4;
-    print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
-  else {
-    print "$modelid (Sorry -- can't decode model filename)\n"; } }
+  if (open(BGMODEL,$bgmodelfile)) {
+    foreach (<BGMODEL>) {
+      if (/cmodel (\w*)/) {$modelid = $1;}
+      if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL;} }
+    $basename = $1 if ($pathname =~ /([^\/]*)$/);
+    if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
+      $runtime = $2/100;
+      $fcsthr = $4;
+      print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; }
+    else {print "$modelid (Sorry -- can't decode model filename)\n";} }
+  else {print "Background model file $bgmodelfile not found\n";} }
 
 # Doppler radars.
 
@@ -191,31 +191,43 @@ if ($found2 == 1) {print "$nclouddriftwinds \n";}
 else {print "none \n";}
 print "\n";
 
-# Observation QC
 print "Observation QC:\n";
 @greplines = grep /QC/, @lines;
-@greplines = grep /GOOD/, @greplines;
-print "@greplines[0]";
-print "@greplines[1]";
-print "@greplines[2]";
-print "@greplines[3]";
-print "@greplines[4]";
+$nlines=0;
+foreach (@greplines) {
+ if (/GOOD/) {
+  @list=split;
+  $src=$list[2]; $good=$list[6]; $bad=$list[7]; $pct=$list[11];
+  print "$src:  $good good, $bad bad, $pct\% rejected\n";
+  $nlines=$nlines+1; if ($nlines==5) {last;}
+  }
+ }
 print "\n";
 
-# RMS Ob-First Guess Grid differences
-print "Obs-First Guess difference stats, before QC (m/s):\n";
+print "Obs minus First Guess, before QC (m/s):\n";
 @greplines = grep /BIAS\/RMS/, @lines;
-@greplines = grep /FG/, @greplines;
-print "@greplines[0]";
-print "@greplines[1]";
-print "@greplines[2]";
-print "@greplines[3]";
-print "\n";
+$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS";
+write;
+foreach (@greplines) {
+ if (/FG/) {
+  @list = split; $src = $list[2];
+  ($label,$statstring) = split /\=/, $_ ;
+  ($dummy0,$nobs,$dummy2,$dummy3,$speedbias,$dummy5,$dummy6,$vecrms) = split /\s+/, $statstring;
+  write;
+  }  }
 
-print "Obs-LAPS Analysis difference stats, after QC (m/s):\n";
-@greplines = grep /BIAS\/RMS/, @lines;
-@greplines = grep /LAPS/, @greplines;
-print "@greplines[0]";
-print "@greplines[1]";
-print "@greplines[2]";
-print "@greplines[3]";
+print "\nObs minus LAPS Analysis, after QC (m/s):\n";
+$src=""; $nobs="obs"; $speedbias="speed bias"; $vecrms="vector RMS";
+write;
+foreach (@greplines) {
+ if (/LAPS/) {
+  @list = split; $src = $list[2];
+  ($label,$statstring) = split /\=/, $_ ;
+  ($dummy0,$nobs,$dummy2,$dummy3,$speedbias,$dummy5,$dummy6,$vecrms) = split /\s+/, $statstring;
+  write;
+  }  }
+
+format STDOUT =
+  @|||||  @|||||  @|||||||||||  @|||||||||||
+$src, $nobs, $speedbias, $vecrms
+.
