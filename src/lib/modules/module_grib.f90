@@ -195,7 +195,7 @@ CONTAINS
     INTEGER,INTENT(OUT)           :: itot    ! Number of bytes written
     INTEGER,INTENT(OUT)           :: istatus ! Status (0=OK)
 
-    INTEGER,PARAMETER             :: maxbuf=128000
+    INTEGER,PARAMETER             :: maxbuf=512000
     INTEGER,ALLOCATABLE           :: ifld(:)
     INTEGER,ALLOCATABLE           :: ibmap(:)
     CHARACTER(LEN=1)              :: kbuf(maxbuf)
@@ -257,7 +257,6 @@ CONTAINS
                 icomp,ibflag,ibmap,iblen,ibdsfl,npts,kbuf,itot,jerr)
     DEALLOCATE(ibmap)
     DEALLOCATE(ifld)
-
     ! Check error status
     IF (jerr .NE. 0) THEN
       PRINT *, 'Error creating GRIB message...jerr = ', jerr
@@ -265,13 +264,11 @@ CONTAINS
       istatus = 1
       RETURN
     ENDIF
-  
     IF (itot .GT. maxbuf) THEN
       PRINT *, 'Message size larger than buffer allocation!'
       istatus = 1
       RETURN
     ENDIF
-
     ! Ready to write the message
     !print *,'Writing ',itot,'bytes starting at ', startb
 
@@ -279,7 +276,6 @@ CONTAINS
     !DO i = 1,itot
     !  WRITE(funit,REC=i+startb-1) kbuf(i)
     !ENDDO
-
     ! C method
     iwrite = c_write_g(0,itot,kbuf,funit)
     IF (iwrite .NE. 0) THEN
@@ -287,7 +283,6 @@ CONTAINS
       istatus = 1
       RETURN
     ENDIF
-    
     !print *,'Write completed.'
     RETURN
   END SUBROUTINE write_grib
