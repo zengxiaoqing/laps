@@ -358,7 +358,14 @@ c      Determine filename extension
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
  
-       get_azi = nint(radialAzim(iray)*100.)
+       if( abs(radialAzim(iray)) .le. 1e10 )then
+           get_azi = nint(radialAzim(iray)*100.)
+       else
+           write(6,*)' warning in get_azi, azimuth = ',iray
+     1                                   , radialAzim(iray)
+           get_azi = -99
+       endif
+
        return
        end
  

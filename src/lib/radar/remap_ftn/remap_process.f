@@ -584,9 +584,9 @@ c
 
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
-     1                  ,rlat_radar,rlon_radar,rheight_radar
-     1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
-     1                  ,c3_radar_subdir,path_to_vrc,istatus)   
+     1             ,rlat_radar,rlon_radar,rheight_radar
+     1             ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L
+     1             ,c3_radar_subdir,path_to_vrc,r_missing_data,istatus)       
 
         endif
 
@@ -594,85 +594,7 @@ c
 
 !       go to 900
 
-        if(.false.)then
-
-!       This code is disabled for now as we cannot get to this point
-        call make_fnam_lp(i_product_i4time,gtime,istatus)
-        call downcase(ext,ext_in)
-        call s_len(ext_in,end_ext)
-        dir='../lapsprd/'//ext_in(1:end_ext)//'/'
-        call cvt_fname_data(dir,gtime,fhh,ext_in,full_fname
-     1                                     ,i4_fn_length,istatus)
-
-
-!       call s_len(full_fname,i4_fn_length)
-
-        write(6,895) n_vel_grids_prelim,n_vel_grids_final,
-     1               n_ref_grids,v_nyquist_vol,
-     1               full_fname(1:i4_fn_length)
-
-  895   format(
-     1    ' REMAP_PROCESS > File written: '
-     1   ,'n_vel_grids prelim/final/ref/v_nyq_vol = '
-     1          ,3i7,e10.2,/,
-     1    ' REMAP_PROCESS > File name: ',a91)
-
-         I4_elapsed = ishow_timer()
-
-!        FTP the output file if the environment variable LAPS_XMIT is set
-         call getenv('LAPS_PURGE',c7_laps_purge)
-         call downcase(c7_laps_purge,c7_laps_purge)
-         write(6,*)' REMAP_PROCESS > laps_purge = ',c7_laps_purge
-
-         if(c7_laps_purge(1:1) .ne. '0')then
-
-             read(c7_laps_purge,*,err=901)i_purge
-
-             write(6,*)' REMAP_PROCESS > Calling purger', c7_laps_purge      
-     1                                                  , i_purge       
-c            call system('purger.exe')
-c            ext = 'v01'
-             
-             call purge(ext,i_purge,0,i_product_i4time)
-
- 901     endif
-
-!        Sleep if desired (with simulated data)
-         call getenv('LAPS_SLEEP',c7_laps_sleep)
-         call downcase(c7_laps_sleep,c7_laps_sleep)
-         write(6,*)' REMAP_PROCESS > laps_sleep = ',c7_laps_sleep
-
-         if(c7_laps_sleep(1:2) .eq. 'ye')then
-             write(6,*)' REMAP_PROCESS > Sleep'
-             if(ext(1:3) .eq. 'v01')then
-                 call snooze_gg(900.0,istatus)       
-             elseif(ext(1:3) .eq. 'v02')then
-                 call snooze_gg(950.0,istatus)       
-             else
-                 call snooze_gg(850.0,istatus)       
-             endif
-         endif
-
-!        FTP the output file if the environment variable LAPS_XMIT is set
-         call getenv('LAPS_XMIT',c7_laps_xmit)
-         call downcase(c7_laps_xmit,c7_laps_xmit)
-         write(6,*)' REMAP_PROCESS > laps_xmit = ',c7_laps_xmit
-
-         if(c7_laps_xmit(1:7) .eq. 'ftp_sys')then
-             write(6,*)' REMAP_PROCESS > '
-     :                ,'ftp output by calling system (in background)'
-             call system('./ftp_remap.com&')
-         endif 
-
-         write(6,*)' REMAP_PROCESS > end of subroutine (last scan)'       
-
-         I4_elapsed = ishow_timer()
-
-         i_num_finished_products = 1
-
-         endif ! .false.
-
-900      continue
+900     continue
 
       END IF ! i_last_scan
 
@@ -764,7 +686,7 @@ c            ext = 'v01'
         subroutine put_remap_vrc(i4time,comment_2d 
      1                         ,rlat_radar,rlon_radar,rheight_radar
      1                         ,field_3d,imax,jmax,kmax,c3_radar_subdir        
-     1                         ,path_to_vrc,istatus)
+     1                         ,path_to_vrc,r_missing_data,istatus)
 
 !       Stuff from 'put_laps_2d' except how do we handle radar subdir?
 
@@ -790,8 +712,12 @@ c            ext = 'v01'
 
         write(6,*)' Subroutine put_remap_vrc'
 
-!       Get column max reflectivity
-        call get_max_ref(field_3d,imax,jmax,kmax,field_2d)
+        call get_ref_base(ref_base,istatus)
+        if(istatus .ne. 1)return
+
+!       Get column max reflectivity (eventually pass in r_missing_data)
+        call get_max_reflect(field_3d,imax,jmax,kmax,ref_base ! r_missing_data
+     1                      ,field_2d)
 
         call get_laps_domain(imax,jmax,'nest7grid',lat,lon,topo,istatus)       
         if(istatus .ne. 1)then

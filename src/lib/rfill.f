@@ -560,7 +560,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 !       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
 !       Input field ref_3d is assumed to either equal ref_base or 
 !       r_missing_data or a valid value.
-!       Output is either ref_base or a valid value.
+!       Output is either filled in value or original reflectivity
 
         real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflct grid
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
@@ -645,7 +645,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     ref_2d_buf(i,j) = ref_sum / float(n_neighbors)
                     n_add_lvl = n_add_lvl + 1
                 else
-                    ref_2d_buf(i,j) = ref_base
+                    ref_2d_buf(i,j) = ref_3d(i,j,k) ! ref_base
                 endif
 
             enddo ! j
