@@ -53,6 +53,7 @@ C*********************************************************************
         end
        
         subroutine Gridmap_sub(nnxp,nnyp)
+      include 'trigd.inc'
         logical exist,new_DEM
         integer nnxp,nnyp
 	Real mdlat,mdlon
@@ -564,6 +565,7 @@ c SG97  splot 'topography.dat'
 
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay,
      1  DATR,OFN,WVLN,SILWT,which_data,istat_files)
+      include 'trigd.inc'
       implicit none
       integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
      1  iblksizo,no,iodim,istat_files
@@ -910,6 +912,7 @@ c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
 
        SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
 C
+      include 'trigd.inc'
        REAL*4 LAT,LON,X,Y,DX,DY,
      1 ERAD,TLAT,TLON,PLAT,PLON,
      1 XDIF,YDIF
