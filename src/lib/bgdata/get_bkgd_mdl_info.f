@@ -174,10 +174,21 @@ c        call s_len(projname,leng)
             return
          endif
 
-         if(projname(1:l).eq. 'polar')gproj='PS'
-         if(projname(1:l).eq.'lambert')gproj='LC'
-         if(projname(1:l).eq. 'mercator')gproj='MC'
-         if(projname(1:l).eq.'secant lambert conformal')gproj='LC'
+         if(projname(1:l).eq. 'polar'.or.
+     &projname(1:l).eq.'polar stereographic')then
+            gproj='PS'
+         elseif(projname(1:l).eq.'lambert')then
+            gproj='LC'
+         elseif(projname(1:l).eq. 'mercator')then
+            gproj='MC'
+         elseif(projname(1:l).eq.'secant lambert conformal')then
+           gproj='LC'
+         else
+           print*,'ERROR: unable to determine gproj setting ',gproj
+           print*,'ERROR: in get_bkgd_mdl_info. '
+           print*,'ERROR: l/projname ',l,projname(1:l)
+           return
+         endif
 
          if(Lo1.gt.180)Lo1=Lo1-360
          if(Lo2.gt.180)Lo2=Lo2-360
