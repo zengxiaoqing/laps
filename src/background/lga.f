@@ -210,7 +210,7 @@ c
 
 
          print *,'HERE:',lga_status, i, bg_files,reject_cnt
-
+c        if(i.eq.nbgmodels)i=0
          if(reject_cnt.gt.bg_files )then    !.and. bg_files.gt.0) then
             i=i+1
             bgmodel = bgmodels(i)
@@ -248,7 +248,7 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
      +        ,cmodel,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
 
 
-        if(accepted_files.eq.0.and.bg_files.eq.0) then
+         if(accepted_files.eq.0.and.bg_files.eq.0) then
 
            print*,'No Acceptable files found for background model:'
            print*,'bgpath =  ',bgpath(1:lbgp)
@@ -258,11 +258,11 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
            reject_cnt=reject_cnt+1
            if(i.eq.nbgmodels)lga_status = 0 
 
-        elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
+         elseif(accepted_files.eq.0.and.reject_cnt.eq.bg_files)then
 
               reject_cnt=reject_cnt+1
 
-        else
+         else
 
            print *, ' '
            print *, 'Input Parameters'
@@ -302,8 +302,8 @@ c             lga_status = -99
 
            if(lga_status.le.0)no_infinite_loops=no_infinite_loops+1
 
-        endif
-        
+         endif
+
       enddo !do while
 
       enddo !itime_inc = -1,+1
