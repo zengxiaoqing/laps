@@ -138,8 +138,8 @@ c
      +i4time_nearest_lsr)
 
       if(i4time_latest-i4time_nearest_lsr.le.0)then
-         write(6,*)'lsr has the same time as the sat data.'
-         write(6,*)'Returning to Main without new sounding data.'
+         write(6,*)'lsr has already processed this sounder data.'
+         write(6,*)'Return to main without new data.'
          istatus = -1
          goto 1000
       endif

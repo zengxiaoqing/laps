@@ -34,7 +34,7 @@ c
      &r_channel_wavelengths(i,1),pct_req_lsr,istatus)
 
          print*
-         if(istatus.ne.0)then
+         if(istatus.ne.1)then
             if(i.eq.n_sat)then
                print*,'Data was not processed in lsr_driver_sub'
                print*,'Finished in lsr_driver'
@@ -48,6 +48,8 @@ c
          print*
 
       enddo
+
+      print*,' *** Finished in lsr_driver ***'
 
 1000  stop
       end
@@ -68,6 +70,7 @@ c
 
       integer     icnt(n_channels)
       integer     jcnt(n_channels)
+      integer     nradcnt(n_channels)
       integer     icount
       integer     ismsng
 
@@ -176,20 +179,25 @@ c
          write(6,*)'Data NOT obtained for ',c_sounding_path(1:n)
          goto 1000
       endif
+
+      call get_r_missing_data(r_missing_data,iostatus)
+      call get_i2_missing_data(i2_missing_data,iostatus)
+      if(iostatus.ne.1)then
+         write(6,*)'Error getting missing_data flag'
+         goto 1000
+      endif
+c
 c =============================================================
 c read sounder data
 c =============================================================
 c
       write(6,*)'Read sounder database '
 
-      if(.not.allocated(isndrdata))then
-         print*,'Allocate raw sounder data arrays'
-         allocate (isndrdata(ndimx,ndimy,ndimch)
+      allocate (isndrdata(ndimx,ndimy,ndimch)
      &         ,linetimebeg(ndimy,ndimch)
      &         ,linetimeend(ndimy,ndimch)
      &         ,scalingBias(ndimy,ndimch)
      &         ,scalingGain(ndimy,ndimch) )
-      endif
 
       itstatus=init_timer()
       itstatus=ishow_timer()
@@ -226,12 +234,6 @@ c
 c
 c !for sounder data the image motion compensation is off (ie.,=1)
 c
-      call get_i2_missing_data(i2_missing_data,iostatus)
-      if(iostatus.ne.1)then
-         write(6,*)'Error getting i2_missing_data'
-         goto 1000
-      endif
-
       write(6,*)'Set missing sat-sndr to i2_missing'
       write(6,*)'----------------------------------'
       do i=1,n_channels
@@ -285,26 +287,29 @@ c
      &ewCycles,ewIncs,nsCycles,nsIncs,f_time,orbitattitude,ndimch,
      &nx_l,ny_l,lat,lon,r_llij_lut_ri,r_llij_lut_rj,pct_req_lsr,istatus)
 
-      if(istatus.eq.0)then
+      if(istatus.eq.1)then
+
          write(6,*)'Sounder Nav computed'
+
       else
 
          print*,'Found too many points outside of domain '
 
-c        deallocate (isndrdata,lineTimeBeg,lineTimeEnd
-c    &,scalingBias,scalingGain)
-
+         deallocate (isndrdata
+     &              ,lineTimeBeg
+     &              ,lineTimeEnd
+     &              ,scalingBias
+     &              ,scalingGain)
          goto 1000
+
       endif
 c
 c ===================================================================
 c       compute count to radiance look up table
 c ===================================================================
 c
-      if(.not. allocated(sndr_rad))then
-         print*,'Allocate real sndr_rad array'
-         allocate (sndr_rad(ndimx,ndimy,n_channels))
-      endif
+      print*,'Allocate real sndr_rad array'
+      allocate (sndr_rad(ndimx,ndimy,n_channels))
 
       call count_range(ndimx,ndimy,ndimch,isndrdata
      &,imaximum,iminimum,istatus)
@@ -322,29 +327,29 @@ c ===================================================================
 c scale sounder counts to radiances. load channels desired for proc.
 c ===================================================================
 c
-      call get_r_missing_data(r_missing_data,iostatus)
-
-      print*,'Scaling counts to radiance with rsb/rsg'
+      print*,'Scale counts to radiance with rsb/rsg'
       print*,'---------------------------------------'
+
       do k=1,n_channels
 
-        do j=1,ndimy
-        do i=1,ndimx
-           sndr_rad(i,j,k)=r_missing_data
-        enddo
-        enddo
+       do j=1,ndimy
+       do i=1,ndimx
+          sndr_rad(i,j,k)=r_missing_data
+       enddo
+       enddo
 
-        icnt(k) = 0
-        jcnt(k) = 0
-        rsb=scalingBias(1,k)
-        rsg=scalingGain(1,k)
+       icnt(k) = 0
+       jcnt(k) = 0
+       nradcnt(k)=0
+       rsb=scalingBias(1,k)
+       rsg=scalingGain(1,k)
 
-c       if(rsg.gt.1.0e-10)then           !vis channel rsg is small. no rad conversion.
-c                                         this test doesn't work on linux-alpha (jet).
+       if(rsg.gt.0.0)then 
 
         if(k.lt.n_channels)then          !the last channel is visible, so no radiance calc.
 
-           write(6,*)'Scaling Bias/Gain ',k,rsb,rsg
+           print*,'Scaling Bias/Gain ',k,rsb,rsg
+
            do j=1,ndimy
            do i=1,ndimx
 
@@ -357,17 +362,29 @@ c                                         this test doesn't work on linux-alpha 
               endif
 
               if(sndr_rad(i,j,k).le. 0.0)then
-                 print*,'rcount/rsb/rsg: ',rcount,rsb,rsg
+c                print*,'rcount/rsb/rsg: ',rcount,rsb,rsg
+                 nradcnt(k)=nradcnt(k)+1
               endif
 
            enddo
            enddo
 
+           print*
            print*,'Ch ',k,' # not used (gt imax or < 0): ',icnt(k)
-c       print*,'Points Used: Sndrdata < imax and > 0: ',jcnt(k)
+           if(nradcnt(k).gt.0)then
+              print*,' Neg rad found: channel/# ',k,nradcnt(k)
+           endif
 c       write(6,*)
 
         endif
+
+       else
+
+        print*,' Scaling Gain = 0.'
+        print*,' Radiance not computed for channel ',k
+
+       endif
+
       enddo
 c 
 c ================================================================
@@ -395,13 +412,18 @@ c
       if(rmaxtime.gt.0.0.and.rmintime.gt.0.0)then
          i4time_data=nint((rmaxtime+rmintime)/2.)+315619200
       elseif(rmaxtime.gt.0.0)then
+         print*,' Using max line time for filetime'
          i4time_data=int(rmaxtime)+315619200
       else
+         print*,' Using min line time for filetime'
          i4time_data=int(rmintime)+315619200
       endif
 
-c     deallocate (isndrdata,lineTimeBeg,lineTimeEnd
-c    &,scalingBias,scalingGain)
+      deallocate (isndrdata
+     &           ,lineTimeBeg
+     &           ,lineTimeEnd
+     &           ,scalingBias
+     &           ,scalingGain)
 
 c
 c ================================================================
@@ -434,10 +456,20 @@ c
          write(6,*)'Failed to write lsr'
       else
          call make_fnam_lp(i4time_data_orig,f9time,istatus)
-         write(6,*)'Original Data Filetime: ',f9time
+         if(istatus.ne.1)then
+            print*,'Failed to make f9time original'
+         else
+            print*,'Original Data Filetime: ',f9time
+         endif
          call make_fnam_lp(i4time_data,f9time,istatus)
-         write(6,*)'Computed Data Filetime: ',f9time
+         if(istatus.ne.1)then
+            print*,'Failed to make f9time computed'
+         else
+            print*,'Computed Data Filetime: ',f9time
+         endif
       endif
+
+      deallocate (sndr_rad)
 
       goto 1000
 

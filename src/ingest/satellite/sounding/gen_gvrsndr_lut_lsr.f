@@ -206,7 +206,7 @@ c
       endif
       rsndr_res_km=rsndr_res_m/1000.
 
-      istatus = 0
+      istatus = 1
       goto 1000
 
 1000  return
