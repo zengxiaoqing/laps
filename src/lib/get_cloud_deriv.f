@@ -50,7 +50,8 @@ cdoc    This routine also does the Cloud Bogussed Omega and the Snow Potential.
 !       Steve Albers Oct 1992 Add Haines cloud-ice modification
 !                    Apr 1994 Remove byte usage
 !                    Dec 1996 Clean up error handling
-
+!                    Jun 2002 Added dx to calling arguments for
+!                             cloud_bogus_w
 
 !       LWC Flags
 !       iflag_slwc =  1 : Adiabatic LWC
@@ -465,7 +466,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
             if(l_flag_bogus_w)then
               if(l_cloud)then
-                  call cloud_bogus_w(cloud_type_1d,heights_1d,nk,w_1d)       
+                  call cloud_bogus_w
+     1            (grid_spacing_cen_m,cloud_type_1d,heights_1d,nk,w_1d)
 
                   do k = 1,nk ! Transfer the 1D w into the output omega array
                       if(w_1d(k) .ne. r_missing_data)then
