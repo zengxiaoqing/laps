@@ -150,6 +150,7 @@ c                               12-17-96  More porting changes...common for
 c                                           sfc data, LGS grids. 
 c                               08-07-97  Dynamic changes..rm equivs.
 c                               08-27-97  Changes for dynamic LAPS.
+c                               11-06-97  New puttmp call;rm some work arrays.
 c
 c*****************************************************************************
 cx
@@ -215,8 +216,8 @@ c
 c
 c.....  Grids for PUT_TEMP_ANAL and related stuff.
 c
-        real*4 LT1_out(ni,nj,nk,2), grid_spacing
-	real*4 t_3d_k(ni,nj,nk), ht_3d_m(ni,nj,nk), rh_3d(ni,nj,nk)
+        real*4 grid_spacing
+	real*4 t_3d_k(ni,nj,nk), ht_3d_m(ni,nj,nk)
 c
 c.....	Grids for variables derived by the MESO_ANL subroutine.
 c
@@ -249,9 +250,8 @@ c
 c
 c.....	dummy work arrays
 c
-	real*4 d1(ni,nj),d2(ni,nj),d3(ni,nj),d4(ni,nj),d5(ni,nj)
-        real*4 d6(ni,nj), d7(ni,nj)
-	real*4 dm1(ni,nj,nk),dm2(ni,nj,nk),dm3(ni,nj,nk)
+	real*4 d1(ni,nj), d2(ni,nj)
+	real*4 dm1(ni,nj,nk)
 	real*4 dums(mxstn)
 c
 	real*4 lapse_t, lapse_td
@@ -281,7 +281,6 @@ c
 	grid_fnam_common = laps_domain
 	jstatus(3) = -1		 ! start w/this until changed
 	pi = 4. * atan(1.)
-	smsng = badflag
 	imax = ni
 	jmax = nj
 	kmax = nk
@@ -293,9 +292,7 @@ c
 	err = .1
 	ovr = 1.4
 	scale = 0.
-	ci = 0.
 	npass = 1
-	dpbl = 5000.
 	rho = 1.25
 	rho2 = rho * rho
 	omg2 = 2. * 7.292e-5
@@ -502,6 +499,7 @@ c.....  the upper theta, pick a level that is above your highest data,
 c.....  that takes into account mixing, etc.  For Colorado, use 500 mb;
 c.....  lower elevations try 700 mb.
 c
+	print *,' '
 	itheta_all = 1
 	if(itheta .eq. 0) then
 	   print *,' Skipping theta check for surface temperatures.'
@@ -697,7 +695,6 @@ c
 	  enddo !i
 	  enddo !j
 	  scale=0.
-	  ci=0.
 c
 	  call leib(p_a,f,60,.1,imax,jmax,z,z,z,z,a,dx,dy,1.)
 c
@@ -809,8 +806,8 @@ c
 	isnow = 1
 	ismoist = 1
 	call zero(fire,imax,jmax)
-	call zero(d6,imax,jmax)
-	call zero(d7,imax,jmax)
+	call zero(d1,imax,jmax)
+	call zero(d2,imax,jmax)
 c
 	i4time_tol = 7200
 	i4time_f = i4time - 3600
@@ -818,7 +815,7 @@ c
 	var_fire = 'LSM'                   ! soil moisture
 	ext_f = 'lm1'
 	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
-     &                    units_fire,com_fire,imax,jmax,d6,ilev,istatus)
+     &                    units_fire,com_fire,imax,jmax,d1,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting soil moisture.'
 	   ismoist = 0
@@ -827,13 +824,13 @@ c
 	var_fire = 'SC '                   ! snow cover
 	ext_f = 'lm2'
 	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
-     &                    units_fire,com_fire,imax,jmax,d7,ilev,istatus)
+     &                    units_fire,com_fire,imax,jmax,d2,ilev,istatus)
 	if(istatus .ne. 1) then
 	   print *,' Error getting snow cover.'
 	   isnow = 0
 	endif
 c
-	call lp_fire_danger(imax,jmax,rh,t,spd,d6,d7,topo,ismoist,isnow,
+	call lp_fire_danger(imax,jmax,rh,t,spd,d1,d2,topo,ismoist,isnow,
      &                                            fire,istatus)
 	print *,' Fire: ',ismoist, isnow, istatus
 	print *,' '
@@ -851,20 +848,13 @@ c
         LT1_write_flag = 0     ! flag for writing the LT1 file: 1-yes,0-no
 c
 	call move(t,d1,imax,jmax)     ! move temps into dummy array
-	call zero(d2,imax,jmax)
-	call zero(d3,imax,jmax)
-	call zero(d4,imax,jmax)
-	call zero(d5,imax,jmax)
-	call zero(d6,imax,jmax)
-	call zero(d7,imax,jmax)
 c
-        call put_temp_anal_97(i4time,imax,jmax,kmax,
-     &                 dm1,dm2,dm3,
-     &                 d2,d3,d4,d5,d6,d7,
-     &                 ht_3d_m,LT1_out,
-     &                 lat,lon,topo,d1,psfc,
+	call put_temp_anal(i4time,imax,jmax,kmax,
+     &                 ht_3d_m,                                     !3d hts - returned
+     &                 lat,lon,topo,
+     &                 d1,psfc,                                     !2d t and sfc p
      &                 LT1_write_flag,laps_cycle_time,grid_spacing,
-     &                 rh_3d,t_3d_k,istatus)
+     &                 t_3d_k,istatus)                              !3d t - returned
 c
 	print *,' From put_temp_anal: istatus = ', istatus
 	if(istatus .ne. 1) then
@@ -1012,7 +1002,7 @@ c
 	units(13) = 'PA'
 	call move_2dto3d(  psfc, data, 13, imax, jmax, num_var)
 c
-	var(14) = 'VOR'		! sfc vorticity (/s)
+	var(14) = 'VOR'		! sfc vortincity (/s)
 	units(14) = '/S'
 	call move_2dto3d(  vort, data, 14, imax, jmax, num_var)
 c
