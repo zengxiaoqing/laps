@@ -158,7 +158,7 @@ C
      +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
       double precision relTime(recNum), synTime(recNum)
       character*6 staName(recNum)
-      character   staNameFile(recNum,staNameLen)
+      character   staNameFile(staNameLen,recNum)
 !..............................................................................
 
       real*4 lat_a(NX_L,NY_L)
@@ -530,7 +530,7 @@ C
      +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
       double precision relTime(recNum), synTime(recNum)
       character*6 staName(recNum), name
-      character   staNameFile(recNum,staNameLen)
+      character   staNameFile(staNameLen,recNum)
 
 
 C   Variables of type REAL
@@ -1016,8 +1016,9 @@ C
 
         do i = 1, recNum
           do j = 1, 6
-            name(j:j) = staNameFile(i,j)
+            name(j:j) = staNameFile(j,i)
           enddo
+          call filter_string(name)
           staName(i) = name
         enddo
       endif
