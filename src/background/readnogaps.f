@@ -34,22 +34,22 @@ c_______________________________________________________________________________
 c
 c *** Fill NOGAPS pressure levels.
 c
-      prk( 1)=1000.
-      prk( 2)= 925.
-      prk( 3)= 850.
-      prk( 4)= 700.
-      prk( 5)= 500.
-      prk( 6)= 400.
-      prk( 7)= 300.
-      prk( 8)= 250.
-      prk( 9)= 200.
-      prk(10)= 150.
-      prk(11)= 100.
-      prk(12)=  70.
-      prk(13)=  50.
-      prk(14)=  30.
-      prk(15)=  20.
-      prk(16)=  10.
+c     prk( 1)=1000.
+c     prk( 2)= 925.
+c     prk( 3)= 850.
+c     prk( 4)= 700.
+c     prk( 5)= 500.
+c     prk( 6)= 400.
+c     prk( 7)= 300.
+c     prk( 8)= 250.
+c     prk( 9)= 200.
+c     prk(10)= 150.
+c     prk(11)= 100.
+c     prk(12)=  70.
+c     prk(13)=  50.
+c     prk(14)=  30.
+c     prk(15)=  20.
+c     prk(16)=  10.
 c
 c *** Open nogaps file.
 c
@@ -62,6 +62,11 @@ c      l=index(path//' ',' ')-1
       open(16,file=filename(1:l),status='old',
      .     form='unformatted',err=990)
       rewind(16)
+
+c     the next line inserted by John Smart & Capt Bob Williams, 12/17/97
+      read(16) (prk(k),k=1,nz)
+c     end of insert
+
       read(16) (((ht(i,j,k),i=1,nx),j=1,ny),k=1,nz)
       read(16) (((tp(i,j,k),i=1,nx),j=1,ny),k=1,nz)
       read(16) (((sh(i,j,k),i=1,nx),j=1,ny),k=1,nz)  !Read in as dew point.
