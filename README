@@ -2171,9 +2171,9 @@ Most backgrounds can come from locally-run model, the national-scale models
 (RUC, ETA, AVN), or a previous analysis (if all else fails).  For wind fields,
 the background comes from the 3-D wind interpolated to the surface or LWM file.
 Data, both inside and outside the LAPS grid is used via an initial Barnes 
-analysis to improve boundary conditions.  The next step in the analyses are 
-done using a cubic spline technique. Observation increments are used for T, Td
-and straight observations are used for other variables.
+analysis of the observations to set the boundary conditions.  The next step in
+the analyses are done using a cubic spline technique. Observation increments 
+are used for T, Td and straight observations are used for other variables.
 
 Satellite IR gives relative temperatures, not absolute temps.  The temperature 
 gradients from the satellite are used with surface observations and backgrounds 
