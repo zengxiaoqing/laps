@@ -536,15 +536,21 @@ c
               enddo ! jj
             endif
 
-201         if(      ht_sao_base           .eq. 1e30 
-     1         .and. istat_vis_potl_a(i,j) .eq. 1    )then ! VIS Sat but no SAO
+!201         if(      ht_sao_base           .eq. 1e30 
+!     1         .and. istat_vis_potl_a(i,j) .eq. 1    )then ! VIS Sat but no SAO
+
+201         if(          istat_vis_potl_a(i,j) .eq. 1   ! Vis Sat present 
+     1                                .AND.             ! and
+     1                 ( ht_sao_base .eq. 1e30 .or.     ! No obvious SAO base
+     1                   ht_sao_base .gt. cldtop_m(i,j) )
+     1                                                      )then 
               n_no_sao_vis = n_no_sao_vis + 1
 
 !             Calculate/Utilize cloud top based on vis cover and tb8 temp
               cover=sat_cover
               htbase = max( topo(i,j), cldtop_m(i,j)-1000. )
 
-            elseif(ht_sao_base .eq. 1e30)then ! Satellite but no SAO cloud
+            elseif(ht_sao_base .eq. 1e30)then ! Non-vis Sat with no SAO cloud
               n_no_sao2 = n_no_sao2 + 1
               cover=sat_cover
               htbase_init = ht_sao_base
