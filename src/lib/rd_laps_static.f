@@ -209,7 +209,7 @@ C
 ! midmonth_day is the julian day of the year corresponding to the 15th day
 ! of each month for a standard (non-leap) year
 
-      istatus = 0
+c     istatus = 0
 
       DATA midmonth_day / 15, 43, 74, 105, 135, 166, 196,
      &  227, 258, 288, 319, 349 /
@@ -222,7 +222,7 @@ C
       endif
       read(ctime9(3:5),'(i3)')valid_day
 
-      PRINT*,'Time-interp monthly albedo to day: ',valid_day
+      PRINT*,'Time-interp monthly static field to day: ',valid_day
 
     ! Find bounding months
       IF ((valid_day .LT. midmonth_day(1)) .OR.
@@ -259,10 +259,12 @@ C
       IF ( d1 .EQ. d2) THEN
            IF(ctype.eq.'albedo')THEN
               WRITE(var_2d, '("a",I2.2)') m1
+           ELSEIF(ctype.eq.'green')THEN
+              WRITE(var_2d, '("g",I2.2)') m1
            ENDIF
            call read_static_grid(nx,ny,var_2d,data,istatus)
-           if(istatus .ne. 0 .and. istatus.ne.1)then
-              print*,' Error reading LAPS static: ',var_2d
+           if(istatus.ne.1)then
+c             print*,' Error reading LAPS static: ',var_2d
               return
            endif
       ELSE
@@ -271,18 +273,22 @@ C
          ALLOCATE(data2 (nx,ny))
          IF(ctype.eq.'albedo')THEN
             WRITE(var_2d, '("a",I2.2)') m1
+         ELSEIF(ctype.eq.'green')THEN
+            WRITE(var_2d, '("g",I2.2)') m1
          ENDIF
          call read_static_grid(nx,ny,var_2d,data1,istatus)
-         if(istatus.ne.0 .and. istatus .ne. 1)then
-            print*,' Error reading LAPS static: ',var_2d
+         if(istatus .ne. 1)then
+c           print*,' Error reading LAPS static: ',var_2d
             return
          endif
          IF(ctype.eq.'albedo')THEN
             WRITE(var_2d, '("a",I2.2)') m2
+         ELSEIF(ctype.eq.'green')THEN
+            WRITE(var_2d, '("g",I2.2)') m2
          ENDIF
          call read_static_grid(nx,ny,var_2d,data2,istatus)
-         if(istatus.ne.0 .and. istatus .ne. 1)then
-            print*,' Error reading LAPS static: ',var_2d
+         if(istatus .ne. 1)then
+c           print*,' Error reading LAPS static: ',var_2d
             return
          endif
 
@@ -303,6 +309,6 @@ C
         DEALLOCATE(data2)
       ENDIF
 
-      istatus=1
+c     istatus=1
       RETURN
       END SUBROUTINE get_static_field_interp
