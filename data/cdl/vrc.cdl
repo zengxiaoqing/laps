@@ -22,6 +22,20 @@ netcdf vrc {
             ref:LAPS_var="REF";
             ref:lvl_coord="MSL";
 	    ref:LAPS_units="DBZ";
+
+        //      2D minimum radar distance
+
+        float
+            dis(record,z,y,x);
+            dis:navigation_dim = "nav";
+            dis:record = "valtime, reftime";
+            dis:_FillValue = 1.e+37f;
+            dis:long_name="NOWRAD 2D minimum radar distance";
+            dis:units="dBZ";
+            dis:valid_range= 0.f, 1000000.f;
+            dis:LAPS_var="DIS";
+            dis:lvl_coord="MSL";
+            dis:LAPS_units="m";
                 	        
         //	LAPS variables
 
@@ -33,6 +47,7 @@ netcdf vrc {
 
         char
             ref_comment(record,z,namelen),
+            dis_comment(record,z,namelen),
             asctime(record,namelen);
 
 			
@@ -41,6 +56,10 @@ netcdf vrc {
         short
             ref_fcinv(record, z);
             ref_fcinv:_FillValue= 0s;
+              	
+        short
+            dis_fcinv(record, z);
+            dis_fcinv:_FillValue= 0s;
               	
         //	list of grid levels
 
