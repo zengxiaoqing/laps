@@ -39,6 +39,8 @@ c
       integer nft,ntm(nimages)
       integer istatus
       integer istat
+
+      logical lcf
 c
 c =====================================================
 c
@@ -50,6 +52,9 @@ c
       tot_ir_pix   = float(nir_lines*nir_elem)
       tot_vis_pix  = float(nvis_lines*nvis_elem)
       tot_wv_pix   = float(nwv_lines*nwv_elem)
+
+      lcf=.false.
+      if(csatid.eq.'gmssat'.and.csat_type.eq.'hko')lcf=.true.
 
       do i=1,nft
          do j=1,ntm(i)
@@ -76,6 +81,7 @@ c
 
             if(ispec.eq.2.or.ispec.eq.4.or.ispec.eq.5)then
 
+               if(lcf)smsng=350.
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_ir,
      &               nir_elem,nir_lines,
@@ -87,6 +93,7 @@ c
 
             elseif(ispec.eq.3)then
 
+               if(lcf)smsng=350.
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_wv,
      &               nwv_elem,nwv_lines,
@@ -98,6 +105,7 @@ c
 
             else    !must be the vis data
 
+               if(lcf)smsng=256.
                call set_missing_sat(csatid,csat_type,c_type(j,i),
      &               image_data_vis,
      &               nvis_elem,nvis_lines,

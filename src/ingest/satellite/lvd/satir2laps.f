@@ -229,6 +229,9 @@ c              write(6,1112) wm,wc
 
              endif   !r_llij's .ne. r_missing_data
 
+             if(sa(i,j).eq.r_missing_data)then
+                print*,'found missing data in ir remapping'
+             endif
 ccd           if(i .eq. i/10*10 .and. j .eq. j/10*10)then
 ccd              write(6,5555)i,j,wm,wc,npix,nwarm,sc(i,j)
 ccd5555         format(1x,2i4,2f10.2,2i5,f10.2)

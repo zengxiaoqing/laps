@@ -217,7 +217,7 @@ c
 
             call lvd_file_specifier(chtype(j),ispec,lstatus)
             pathname=
-     &path_to_raw_sat(ispec)(1:in(j))//wfo_fname13_in(1:11)//'*'
+     &path_to_raw_sat(ispec)(1:in(j))//wfo_fname13_in(1:9)//'*'
             n=index(pathname,' ')
             write(*,*)'Data pathname: ',pathname(1:n-1)
  
