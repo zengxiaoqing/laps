@@ -99,8 +99,8 @@ my $wgi_log;
 @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
 if(defined $opt_s){ # "surface only"
-    @LAPS_EXE = qw(lga.exe 
-                  obs_driver.x sfc_qc.exe 
+    @LAPS_EXE = qw(obs_driver.x lga.exe 
+                  sfc_qc.exe 
                   laps_sfc.x);
     @WHAT_GOT_IN = qw(sfc);
 
@@ -108,7 +108,7 @@ if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave
-    @LAPS_EXE = ("lga\.exe", "obs_driver\.x", "sfc_qc\.exe", $opt_M);
+    @LAPS_EXE = ("obs_driver\.x", "lga\.exe", "sfc_qc\.exe", $opt_M);
     @WHAT_GOT_IN = qw(rcsv);
 
 }elsif($c8_project eq "AIRDROP"){
