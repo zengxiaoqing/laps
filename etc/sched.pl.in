@@ -56,12 +56,6 @@ system("$LAPSROOT/bin/ingest_lrs.exe 1> $LAPS_LOG_PATH/rass.log.$hhmm 2>&1");
 print `date -u +%H:%M:%S`." Running BLP rass ingest\n";
 system("$LAPSROOT/bin/ingest_blplrs.exe 1> $LAPS_LOG_PATH/rass_blp.log.$hhmm 2>&1");
 
-print `date -u +%H:%M:%S`." Running ingest_pro\n";
-system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_LOG_PATH/ingest_pro.log.$hhmm 2>&1");
-
-print `date -u +%H:%M:%S`." Running ingest_blppro\n";
-system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_LOG_PATH/ingest_blppro.log.$hhmm 2>&1");
-
 print `date -u +%H:%M:%S`." Running raob ingest\n";
 system("$LAPSROOT/bin/ingest_raob.exe 1> $LAPS_LOG_PATH/raob.log.$hhmm 2>&1");
 
@@ -76,6 +70,12 @@ system("$LAPSROOT/bin/ingest_pireps.exe 1> $LAPS_LOG_PATH/ingest_pireps.log.$hhm
 
 print `date -u +%H:%M:%S`." Running ingest_acars\n";
 system("$LAPSROOT/bin/ingest_acars.exe 1> $LAPS_LOG_PATH/ingest_acars.log.$hhmm 2>&1");
+
+print `date -u +%H:%M:%S`." Running ingest_pro\n";
+system("$LAPSROOT/bin/ingest_pro.exe 1> $LAPS_LOG_PATH/ingest_pro.log.$hhmm 2>&1");
+
+print `date -u +%H:%M:%S`." Running ingest_blppro\n";
+system("$LAPSROOT/bin/ingest_blppro.exe 1> $LAPS_LOG_PATH/ingest_blppro.log.$hhmm 2>&1");
 
 print `date -u +%H:%M:%S`." Running wind\n";
 system("$LAPSROOT/bin/wind.exe 1> $LAPS_LOG_PATH/wind.log.$hhmm 2>&1");
