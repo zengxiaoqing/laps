@@ -137,7 +137,8 @@ CONTAINS
 
   IF      ( grid_type(1:8)  .EQ. 'mercator'                 ) THEN
     llflag = 1
-  ELSE IF ( grid_type(1:24) .EQ. 'secant lambert conformal' ) THEN
+  ELSE IF ( ( grid_type(1:24) .EQ. 'secant lambert conformal' ) .or. &
+            ( grid_type(1:28) .EQ. 'tangential lambert conformal') ) THEN
     llflag = 3
   ELSE IF ( grid_type(1:19) .EQ. 'polar stereographic'      ) THEN
     llflag = 5
