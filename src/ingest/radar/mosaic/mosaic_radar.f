@@ -440,16 +440,15 @@ c
  
       I4_elapsed = ishow_timer()
 
-c
-c vrc output. there should be a corresponding vrz output as well.
-c
-      write(cradars,100)n_radars
+      write(cradars,100)n_valid_radars
 100   format(i3)
 
       do i=1,3
          if(cradars(i:i).eq.' ')cradars(i:i)='0'
       enddo
-
+c
+c vrc output. there should be a corresponding vrz output as well.
+c
       if(imosaic_3d.eq.0.or.imosaic_3d.eq.2)then
          ext_vrc = 'vrc'
          var_vrc = 'REF'
@@ -492,7 +491,6 @@ c
          ext_vrz = 'vrz'
          var_vrz = 'REF'
          units_vrz = 'DBZ'
-         read(cradars,*)n_valid_radars
          comment_vrz='Radar mosaic. Type = '//c_mosaic_type//' '
      1               //cradars
 
@@ -512,7 +510,7 @@ c
 
              n_ref = 0
 
-             do i_radar = 1,n_radars
+             do i_radar = 1,n_valid_radars
                  ii = i_radar + 1
                  if(ii .le. nz_l)then
                      write(comment_3d(ii),1)rlat_radar(i_radar)
