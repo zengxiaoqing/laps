@@ -5,7 +5,7 @@
 
 !     Input file 
       character*200 filename_in
-      character*200 dropsonde_in
+!     character*200 dropsonde_in
       character*9 a9_time
       character*180 dir_in
       character*255 c_filespec
@@ -78,7 +78,7 @@
      1                       ,i4times,i_nbr_files_ret,istatus)
 
       elseif(c8_drpsnd_format(1:3) .eq. 'CWB')then
-          c_filespec = dir_in(1:len_dir_in)//'/temp*'
+          c_filespec = dir_in(1:len_dir_in)//'/drpsnd*'
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                      ,max_files,istatus)
 
@@ -86,7 +86,7 @@
           do i = 1,i_nbr_files_ret
               call s_len(c_fnames(i),len_fname)
               call get_directory_length(c_fnames(i),len_dir)
-              a8_time = c_fnames(i)(len_dir+5:len_fname)
+              a8_time = c_fnames(i)(len_dir+7:len_fname)
               a8_time_orig(i) = a8_time
 
               a9_time = a8_to_a9(a8_time)
@@ -136,14 +136,13 @@
               i4_contains_late  = 0
 
           elseif(c8_drpsnd_format(1:3) .eq. 'CWB')then 
-              filename_in = dir_in(1:len_dir_in)//'/temp'//
-     1                      a8_time_orig(i)//'.dat'
+!             filename_in = dir_in(1:len_dir_in)//'/temp'//
+!    1                      a8_time_orig(i)//'.dat'
+!             This may need to be adjusted
+              filename_in = dir_in(1:len_dir_in)//'/drpsnd'//
+     1                       a8_time_orig(i)//'.dat'
               i4_contains_early = 19800         
               i4_contains_late  = 23400       
-
-!             This may need to be adjusted
-              dropsonde_in = dir_in(1:len_dir_in)//'/drpsnd'//
-     1                       a8_time_orig(i)//'.dat'
 
           else
               write(6,*)' Error - Invalid c8_drpsnd_format '
@@ -211,7 +210,7 @@
                   call get_drpsnd_data_cwb(i4time_sys, ilaps_cycle_time,       
      ~                 NX_L, NY_L, 
      ~                 i4time_drpsnd_earliest,i4time_drpsnd_latest,
-     ~                 a9_time, dropsonde_in, istatus)
+     ~                 a9_time, filename_in, istatus)
 
               else
                   write(6,*)' Error - Invalid c8_drpsnd_format '
