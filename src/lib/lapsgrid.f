@@ -284,20 +284,32 @@ c
               call getarg(narg,generic_data_root)
               call s_len(generic_data_root,len_root)
               if(generic_data_root(len_root-1:len_root).eq.'.x'.or.
-     1generic_data_root(len_root-3:len_root).eq.'.exe')then 
+     1           generic_data_root(len_root-3:len_root).eq.'.exe')
+     1        then 
                  print*,'Not a typical dataroot on command line'
                  print*,'Trying LAPS_DATA_ROOT environment variable'
                  call GETENV('LAPS_DATA_ROOT',generic_data_root)
+                 call get_directory_length(generic_data_root
+     1                 ,len_root)
+                 if(len_root.eq.0)then
+                    call GETENV('MOAD_DATAROOT',generic_data_root)
+                    call get_directory_length(generic_data_root
+     1,len_root)
+                 endif
               endif
            else
               call GETENV('LAPS_DATA_ROOT',generic_data_root)
+              call get_directory_length(generic_data_root,len_root)
+              if(len_root.eq.0)then
+                 call GETENV('MOAD_DATAROOT',generic_data_root)
+                 call get_directory_length(generic_data_root,len_root)
+              endif
            endif
-           call get_directory_length(generic_data_root,len_root)
            if(len_root.eq.0)then
               call s_len(generic_data_root,len_root)
               if(len_root.eq.0)then
                  print*,'Use either command line or ENV variable for ',
-     +'system DATA_ROOT'
+     +'system DATAROOT'
                  stop
               endif
            endif

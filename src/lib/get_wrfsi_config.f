@@ -37,7 +37,7 @@ c       include 'wrf_dims.inc'
         character*8  radarext_3d
         character*8  radarext_3d_accum
         character*8  c8_project
-        character*9  fdda_model_source(10)  !models_max)
+        character*9  fdda_model_source(10) !maxbgmodels = 9 in src/include/bgdata.inc
 
         include 'wrf_horzgrid.cmn'
         include 'wrf_vgridspec.cmn'
@@ -191,7 +191,7 @@ c
         vert_rad_prof_cmn = vert_rad_prof
         c8_project_common = c8_project
 
-        do i=1,10
+        do i=1,maxbgmodels
            fdda_model_source_cmn(i) = fdda_model_source(i)
         enddo
 
