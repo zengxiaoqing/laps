@@ -42,7 +42,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine ghbry (i4time,p_3d,pb,lt1dat,htby,
+      subroutine ghbry (i4time,p_3d,pb,sfc_t,lt1dat,htby,
      1     ii,jj,kk,istatus)
     
 c     routine to return boundary layer top in pressure units
@@ -54,13 +54,16 @@ c     input parameters
       integer i4time
       integer ii,jj,kk,istatus
       real p_3d (ii,jj,kk)
-      real pb (ii,jj)           ! surface station pressure
+      real pb (ii,jj)           ! surface station pressure (hPa)
+      real sfc_t(ii,jj)         ! surface station temperature (k)
       real lt1dat(ii,jj,kk)
       real htby (ii,jj)
+      
       
 c     dynamic allocation 
       
       real n2(ii,jj,kk)         ! brunt-vaisala frequency
+      real theta (ii,jj,kk)     ! potential temperature (k)
       
 c     internal variables
 
@@ -69,6 +72,7 @@ c     internal variables
       real g                    ! gravity
       real r                    ! gas constant of dry air
       real kkk                  ! (r/cp) where cp is the specific heat
+      real pdepth (ii,jj)
 
       save g,r,kkk              ! inserted save to be safe, probably not needed
 
@@ -83,16 +87,71 @@ c     1  mb = 1000 cgs units does not have to be applied.
       
 c     ------------begin exe last revised 10/26/99 db
       
-      do j = 1,jj
-         do i = 1,ii
-            
-            htby(i,j) = pb(i,j) !put surface pressure in as first guess of
-c     boundary level top
-            
+c     put surface pressure in as first guess of boundary level top
+c     matrix algebra assignment
+
+      htby = pb 
+
+c     alternate method of boundary layer analysis (~ from RUC), 
+c     look for the level at which the upper level theta exceeds the surface
+c     theta.  This does not use virtual temperature at this time to reduce
+c     changes to code.
+
+c     compute theta for all levels, reference pressure (p_naught) is pb or 
+c     surface pressure at that location.
+
+      do k = 1,kk
+         do j = 1, jj
+            do i = 1,ii
+
+               theta(i,j,k) = lt1dat(i,j,k) *
+     1              ( pb(i,j) / p_3d(i,j,k) )**kkk
+
+            enddo
          enddo
       enddo
 
-c     section is for better boundary layer analysis
+c     now seek out the level at which the surface temperature is greater than 
+c     theta from the bottom up
+
+      do i = 1,ii
+         do j = 1,jj
+            do k = 1,kk
+
+c     note that 3K are added here in this test to the sfc temperature 
+c     to give some flexibility to the logic due to roundoff error and
+c     surface temperature measurement uncertainty
+               if( theta (i,j,k) .ge. sfc_t(i,j)+3.0 ) then
+                  htby(i,j) = p_3d(i,j,k)
+                  htby(i,j) = min (htby(i,j), pb(i,j) )
+c     overwrite this entry with interpolated (linear density) value
+c     note that the level (k) is at this time the upper bound of the
+c     interpolated computation, the interpolation begins to test whether
+c     the hight of the boundary is equal to the surface pressure.  if
+c     this is the case, then things will be left alone
+                  if(pb(i,j) .eq. htby(i,j) .or. k .eq. 1) then ! continue
+                     continue
+                  else! compute the interpolated value
+                     call interp (sfc_t(i,j),theta(i,j,k-1),
+     1                    theta(i,j,k),log(p_3d(i,j,k-1)),
+     1                    log(p_3d(i,j,k)),htby(i,j))
+                     htby(i,j) = exp (htby(i,j))
+                  endif
+                  go to 432     !skip out of this loop
+               endif
+            enddo               ! k
+ 432        continue            ! height has been found here.
+         enddo                  ! j
+      enddo                     ! i
+
+                  
+         go to 444
+
+
+
+
+c     SKIP THIS SECTION OF OLD CODE
+c     section is for original boundary layer analysis (currently skipped over)
       
       do j = 1,jj
          do i = 1,ii
@@ -178,6 +237,20 @@ c     check for runaway adjustment, assign to base value
       enddo
       
 c     write out the pbl pressure top
+C     END OF SKIPPED SECTION
+
+
+
+
+
+ 444  continue ! skip over old code up to here
+
+      pdepth = pb-htby
+c     put in check for below ground pressures (assign as sfc pressure)
+      where (pdepth < 0.0) 
+         htby = pb
+         pdepth = pb-htby
+      end where
 
       call check_nan2 (htby,ii,jj,istatus)
       if(istatus.ne.1) then
