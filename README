@@ -164,16 +164,17 @@
      available at 'ftp://prep.ai.mit.edu/pub/gnu'. Check that the C compiler
      is in your path.
 
+     For Solaris platforms, 'cc' is recommended.
+
+
                   ---  2.1.5  FORTRAN Compiler ---
 
      Please note that LAPS uses dynamic memory within the FORTRAN code in
-     the form of automatic arrays. This implies that you will need a FORTRAN
-     90 compiler, or at least an f77 compiler that has f90 extensions
-     allowing for automatic and allocatable arrays. LAPS will not work on a 
-     strict f77 compiler that does not allow automatic and allocatable arrays. 
-     Conversely, we are using only a subset of f90 constructs to help ensure 
-     some compatability with f77 compilers. Check that the FORTRAN compiler 
-     is in your path.
+     the form of automatic and allocatable arrays. This implies that you will 
+     need a FORTRAN 90 compiler, or at least an f77 compiler that has f90 
+     extensions allowing for automatic and allocatable arrays. LAPS will not 
+     work on a strict f77 compiler that does not allow automatic and 
+     allocatable arrays. Check that the FORTRAN compiler is in your path.
 
      For IBM/AIX platforms 'xlf' is recommended.
 
@@ -392,7 +393,7 @@
 
                ---  2.2.2.1  Modifying Compiler Flags       ---
 
-     The 'configure' script automatically modifies the compilation 
+     The 'configure' script automatically modifies the compiler and compilation 
      flags by modifying 'src/include/makefile.inc' according to what type of 
      platform you are on. Hopefully the flags will work OK on your particular
      platform. If you want to change the flags from the default set, you 
@@ -404,14 +405,13 @@
      prompt> ./configure --cc=cc
 
      For IBM/AIX platforms, you will want to override the default FORTRAN
-     compiler with 'xlf' using the command line option --fc=xlf with suggested 
-     flags as follows... 
-     prompt>./configure --fc=xlf --fflags=\'-O3 -qstrict \' --cflags=\'-O3 -qstrict\' 
+     compiler with 'xlf' using the command line option --fc=xlf as follows... 
+     prompt>./configure --fc=xlf 
 
      For SGI platforms, certain flags may be needed. '-mips3' seems to help
      on IRIX64 v6.2.
 
-     A second method of modifying the flags is to edit 
+     A second method of modifying the compiler flags is to edit 
      'src/include/makefile.inc', after running configure. If you find that the
      default compiler flags don't work for your platform or that your platform
      has no default, you'll need to experiment to find the right set of flags.
