@@ -268,6 +268,7 @@ cdis
         character*200 c_dataroot
 
         character*6 c_vnt_units
+        character*7 c_units_type
 
 c       include 'satellite_dims_lvd.inc'
         include 'satellite_common_lvd.inc'
@@ -282,6 +283,7 @@ c       include 'satellite_dims_lvd.inc'
         jcen = NY_L/2+1
 
         c_vnt_units = namelist_parms%c_vnt_units
+        c_units_type = namelist_parms%c_units_type
 
         call get_pres_3d(i4time_ref,NX_L,NY_L,NZ_L,pres_3d,istatus)       
 
@@ -420,7 +422,7 @@ c       include 'satellite_dims_lvd.inc'
      1                          ,r_missing_data)
 
                 call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
-     1                     ,n_image,scale,'hsect')    
+     1                     ,n_image,scale,'hsect',namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -1595,7 +1597,7 @@ c
 
              if(l_plot_image)then
                  call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,'linear'
-     1                      ,n_image,scale,'hsect')
+     1                      ,n_image,scale,'hsect',namelist_parms)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -1837,7 +1839,7 @@ c
 
             if(c_type(3:3) .eq. 'i')then
                 call ccpfil(vas,NX_L,NY_L,scale_l,scale_h,colortable
-     1                     ,n_image,scale,'hsect')
+     1                     ,n_image,scale,'hsect',namelist_parms)
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -2133,7 +2135,7 @@ c
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image,1e0,'hsect')
+     1                         ,n_image,1e0,'hsect',namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -2181,7 +2183,7 @@ c
 
                 else
                     call ccpfil(radar_array,NX_L,NY_L,-10.,70.,'ref'
-     1                         ,n_image,1e0,'hsect')
+     1                         ,n_image,1e0,'hsect',namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -2213,7 +2215,7 @@ c
                 else
                     call ccpfil(grid_ra_ref(1,1,k_level,1)
      1                         ,NX_L,NY_L,-10.,70.,'ref',n_image,1e0
-     1                         ,'hsect')
+     1                         ,'hsect',namelist_parms)
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
@@ -3404,8 +3406,8 @@ c
 
               c33_label = 'CAPE                (J/KG)       '
               clow = 0.
-              chigh = 7200.
-              cint = +400.
+              chigh = 7000.
+              cint = +500.
 
           elseif(c_type(1:2) .eq. 'ne')then
 !             Change flag value (for now)
@@ -3451,7 +3453,7 @@ c
 
           else ! image plot
               call ccpfil(field_2d,NX_L,NY_L,clow,chigh,'cpe'
-     1                     ,n_image,scale,'hsect')    
+     1                     ,n_image,scale,'hsect',namelist_parms)    
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
               call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4019,7 +4021,7 @@ c                   cint = -1.
 
             else ! image plot
                 call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
-     1                     ,n_image,1e-0,'hsect')    
+     1                     ,n_image,1e-0,'hsect',namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4073,7 +4075,7 @@ c                   cint = -1.
             else ! image plot
 !               call ccpfil(field_2d,NX_L,NY_L,-20.,125.,'hues'
                 call ccpfil(field_2d,NX_L,NY_L,125.,-20.,'hues'
-     1                     ,n_image,1e-0,'hsect')    
+     1                     ,n_image,1e-0,'hsect',namelist_parms)    
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -4277,6 +4279,8 @@ c                   cint = -1.
                 goto1200
             endif
 
+            scale = 1. ! Default value
+
             if(var_2d .eq. 'TSF' .or.
      1         var_2d .eq. 'DSF' .or.
      1         var_2d .eq. 'T'   .or.
@@ -4301,9 +4305,6 @@ c                   cint = -1.
                 enddo ! j
                 enddo ! i
 
-
-                scale = 1.
-
             elseif(var_2d .eq. 'PS'  .or. var_2d .eq. 'PSF'
      1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
                 scale = 100.
@@ -4318,6 +4319,12 @@ c                   cint = -1.
                 scale = 1e-2    ! Convert from M (mm) to cm (inverse)
                 units_2d = 'cm'
 
+            elseif(var_2d .eq. 'PDM')then 
+                if(c_units_type .eq. 'english')then
+                    units_2d = 'FT'
+                    scale = 1. / ft_per_m
+                endif
+
             elseif(var_2d .eq. 'VNT')then 
                 if(c_vnt_units .eq. 'KT-FT')then
                     scale = 1000. / (ft_per_m / mspkt) ! Convert from M**2/S 
@@ -4327,10 +4334,6 @@ c                   cint = -1.
 
             elseif(units_2d(1:4) .eq. 'NONE')then
                 units_2d = '          '
-                scale = 1.
-
-            else
-                scale = 1.
 
             endif
 
@@ -4395,53 +4398,72 @@ c                   cint = -1.
             else                  ! Surface background images
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
-     1                         ,n_image,scale,'hsect') 
+     1                         ,n_image,scale,'hsect',namelist_parms)        
                 elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
                     call ccpfil(field_2d,NX_L,NY_L,-20.0,125.0,'hues'
-     1                         ,n_image,scale,'hsect') 
+     1                         ,n_image,scale,'hsect',namelist_parms) 
                 elseif(var_2d .eq. 'LWO')then
                     call ccpfil(field_2d,NX_L,NY_L,313.15,223.15
-     1                         ,'linear',n_image,scale,'hsect') 
+     1                         ,'linear',n_image,scale,'hsect'
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'SWO')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,500.
-     1                         ,'linear',n_image,scale,'hsect') 
+     1                         ,'linear',n_image,scale,'hsect'
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'PBE')then
 !                   call condition_cape(NX_L,NY_L,'pei',r_missing_data
 !    1                                 ,field_2d)
-                    call ccpfil(field_2d,NX_L,NY_L,0.0,7200.
-     1                         ,'cpe',n_image,scale,'hsect') 
+                    call ccpfil(field_2d,NX_L,NY_L,0.0,7000.
+     1                         ,'cpe',n_image,scale,'hsect'
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'NBE')then
                     call ccpfil(field_2d,NX_L,NY_L,-500.,+50.
-     1                         ,'cpe',n_image,scale,'hsect') 
+     1                         ,'cpe',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'THE')then
                     call ccpfil(field_2d,NX_L,NY_L,250.,370.
-     1                         ,'hues',n_image,scale,'hsect') 
+     1                         ,'hues',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'RH')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,100.
-     1                         ,'moist',n_image,scale,'hsect') 
+     1                         ,'moist',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'TPW')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,5.5
-     1                         ,'tpw',n_image,scale,'hsect') 
+     1                         ,'tpw',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'VNT')then
                     if(c_vnt_units .eq. 'KT-FT')then
                         call ccpfil(field_2d,NX_L,NY_L,150.,0.
-     1                             ,'vnt',n_image,scale,'hsect') 
+     1                             ,'vnt',n_image,scale,'hsect' 
+     1                             ,namelist_parms) 
                     else
                         call ccpfil(field_2d,NX_L,NY_L,5000.,0.
-     1                             ,'vnt',n_image,scale,'hsect') 
+     1                             ,'vnt',n_image,scale,'hsect' 
+     1                             ,namelist_parms) 
                     endif
                 elseif(var_2d(1:2) .eq. 'HA')then
                     call ccpfil(field_2d,NX_L,NY_L,2.,6.
-     1                         ,'haines',n_image,scale,'hsect') 
+     1                         ,'haines',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'FWI')then
                     call ccpfil(field_2d,NX_L,NY_L,0.,40.
-     1                         ,'spectralr',n_image,scale,'hsect') 
+     1                         ,'spectralr',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'PTP')then
                     call ccpfil(field_2d,NX_L,NY_L,50000.,110000.
-     1                         ,'spectral',n_image,scale,'hsect') 
+     1                         ,'spectral',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d .eq. 'PDM' .or. var_2d .eq. 'BLH')then       
-                    call ccpfil(field_2d,NX_L,NY_L,0.,2400.
-     1                         ,'spectral',n_image,scale,'hsect') 
+                    if(c_units_type .eq. 'metric')then
+                        chigh = 2400.
+                    else ! english
+                        chigh = 8000.
+                    endif
+
+                    call ccpfil(field_2d,NX_L,NY_L,0.,chigh
+     1                         ,'spectral',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 elseif(var_2d(2:3) .eq. '01' .or.           ! Precip
      1                 var_2d(2:3) .eq. 'TO')then
                     if(var_2d(1:1) .eq. 'R')then
@@ -4454,20 +4476,22 @@ c                   cint = -1.
      1                                   ,scale,.01)      
 
                     call ccpfil(field_2d,NX_L,NY_L,0.,chigh ! *scale
-     1                         ,'acc',n_image,scale,'hsect') 
+     1                         ,'acc',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
 
                 elseif(var_2d .eq. 'LCV')then
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
-     1                         ,n_image,scale,'hsect') 
+     1                         ,n_image,scale,'hsect',namelist_parms)        
                 elseif(var_2d .eq. 'LHF')then
                     call ccpfil(field_2d,NX_L,NY_L,-100.,+500.
-     1                         ,'spectral',n_image,scale,'hsect') 
+     1                         ,'spectral',n_image,scale,'hsect' 
+     1                         ,namelist_parms) 
                 else
                     call array_range(field_2d,NX_L,NY_L,rmin,rmax
      1                              ,r_missing_data)
 
                     call ccpfil(field_2d,NX_L,NY_L,rmin,rmax,'spectral'       
-     1                         ,n_image,scale,'hsect') 
+     1                         ,n_image,scale,'hsect',namelist_parms)        
                 endif
 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
@@ -4618,7 +4642,7 @@ c                   cint = -1.
             else ! image plot
 !               call ccpfil(field_2d,NX_L,NY_L,220.,-40.,'hues'
                 call ccpfil(field_2d,NX_L,NY_L,0.,100.,'moist'
-     1                     ,n_image,1e-0,'hsect')    
+     1                     ,n_image,1e-0,'hsect',namelist_parms) 
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -5011,9 +5035,9 @@ c                   cint = -1.
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
             else
 !               call ccpfil(field_2d,NX_L,NY_L,-8.0,20.0,'cpe'
-!    1                     ,n_image,1.,'hsect')      
+!    1                     ,n_image,1.,'hsect',namelist_parms)      
                 call ccpfil(field_2d,NX_L,NY_L,0.0,20.0,'spectral'
-     1                     ,n_image,1.,'hsect')      
+     1                     ,n_image,1.,'hsect',namelist_parms)      
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
@@ -5105,7 +5129,7 @@ c                   cint = -1.
 
             else
                 call ccpfil(field_2d,NX_L,NY_L,clow,chigh_img,'linear'
-     1                     ,n_image,1e0,'hsect')       
+     1                     ,n_image,1e0,'hsect',namelist_parms)       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -5186,7 +5210,7 @@ c                   cint = -1.
                 endif
 
                 call ccpfil(cloud_cvr,NX_L,NY_L,0.0,1.0,colortable     
-     1                     ,n_image,1e0,'hsect')     
+     1                     ,n_image,1e0,'hsect',namelist_parms)     
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
@@ -5219,7 +5243,8 @@ c                   cint = -1.
                 write(6,*)' calling solid fill plot'
                 scale = 3000.
                 call ccpfil(topo,NX_L,NY_L,0.0,scale,'linear',n_image
-     1                                              ,1e0,'hsect')            
+     1                                              ,1e0,'hsect'
+     1                                              ,namelist_parms)     
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5252,7 +5277,7 @@ c                   cint = -1.
                 write(6,*)' calling solid fill plot'
                 scale = 1.
                 call ccpfil(static_grid,NX_L,NY_L,0.0,scale,'linear'
-     1                     ,n_image,1e0,'hsect')
+     1                     ,n_image,1e0,'hsect',namelist_parms)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5309,7 +5334,7 @@ c             cint = .05
               if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'linear'
-     1                     ,n_image,1e0,'hsect')
+     1                     ,n_image,1e0,'hsect',namelist_parms)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5350,7 +5375,7 @@ c             if(cint.eq.0.0)cint=0.1
 
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh,'hues'
-     1                     ,n_image,1e0,'hsect')
+     1                     ,n_image,1e0,'hsect',namelist_parms)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5385,7 +5410,7 @@ c             if(cint.eq.0.0)cint=0.1
               if(cstatic .eq. 'tsi')then
                 write(6,*)' calling solid fill plot'
                 call ccpfil(static_grid,NX_L,NY_L,clow,chigh
-     1               ,'hues',n_image,1e0,'hsect')
+     1               ,'hues',n_image,1e0,'hsect',namelist_parms)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5417,7 +5442,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image,1e0,'hsect')
+     1                     ,'linear',n_image,1e0,'hsect',namelist_parms)       
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -5449,7 +5474,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
                 call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
-     1                     ,'linear',n_image,1e0,'hsect')
+     1                     ,'linear',n_image,1e0,'hsect',namelist_parms)       
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
      1                                ,namelist_parms,i_overlay,'hsect')       
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
@@ -6721,7 +6746,7 @@ c             if(cint.eq.0.0)cint=0.1
 
             call ccpfil(field_2d,NX_L,NY_L
      1                 ,clow_img,chigh_img ! *scale      
-     1                 ,colortable,n_image,scale,'hsect')    
+     1                 ,colortable,n_image,scale,'hsect',namelist_parms)       
             call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
             call setusv_dum(2hIN,7)
             call write_label_lplot(NX_L,NY_L,c_label,asc9_tim_t
