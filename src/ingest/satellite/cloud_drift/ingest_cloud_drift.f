@@ -42,12 +42,10 @@
           stop
       endif
 
+      i_open = 0
+
       i4_window = 7200
       lag_time_report = 1800
-
-!     Open output PIN file to append
-      ext = 'cdw'
-      call open_lapsprd_file(11,i4time_sys,ext(1:3),istatus)
 
       call get_cloud_drift_parms(path_to_cloud_drift,istatus)
 
@@ -64,9 +62,19 @@
           endif
 
           c_filespec = dir_in(1:len_dir_in)
-
           call get_file_names(c_filespec,i_nbr_files_ret,c_fnames
      1                       ,max_files,istatus)
+
+!         Open output CDW file 
+          if(i_nbr_files_ret .gt. 0 .and. i_open .eq. 0)then
+              ext = 'cdw'
+              call open_lapsprd_file(11,i4time_sys,ext(1:3),istatus)
+              if(istatus .ne. 1)then
+                  write(6,*)' Error opening output file ',ext
+                  stop
+              endif
+              i_open = 1
+          endif
 
 !         Obtain file times from file names
           do i = 1,i_nbr_files_ret

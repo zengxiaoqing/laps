@@ -42,11 +42,7 @@
 
       lag_time_report = 3600
 
-!     Open output PIN file
-      ext = 'pin'
-      call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)
-
-!     Get List of input /public NetCDF files
+!     Get path to input files (/public NetCDF format)
       c_vars_req = 'path_to_qc_acars'
       call get_static_info(c_vars_req,c_values_req,1,istatus)
       if(istatus .eq. 1)then
@@ -59,8 +55,39 @@
 
       call s_len(dir_in,len_dir_in)
       c_filespec = dir_in(1:len_dir_in)//'/'//'*0q.cdf'
+
+!     Wait for latest input data
+      i4time_now = i4time_now_gg()
+      i4_hour = (i4time_now/3600) * 3600        ! i4time at the top of the hour
+      minutes_now = (i4time_now - i4_hour) / 60
+
+      if(minutes_now .ge. 19 .and. minutes_now .lt. 22)then
+          i4time_desired = i4_hour
+          i4_check_interval = 10
+          i4time_stop_waiting = i4_hour + 22*60
+          i4_total_wait = min(i4time_stop_waiting - i4time_now, 120)
+          i4_thresh_age = 3600
+
+          call wait_for_data(c_filespec,i4time_desired
+     1               ,i4_check_interval,i4_total_wait
+     1               ,i4_thresh_age       ! Only loop through the waiting
+                                          ! if data is younger than this
+                                          ! threshold
+     1               ,istatus)
+      endif ! within time range to wait for data
+
+!     Get list of files
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
+
+!     Open output PIN file
+      if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
+          ext = 'pin'
+          call open_lapsprd_file_append(11,i4time_sys,ext(1:3),istatus)       
+      else
+          write(6,*)' No raw data files identified, STOP'
+          stop
+      endif
 
 !     Loop through /public NetCDF files and choose ones in time window
       write(6,*)' # of files on /public = ',i_nbr_files_ret

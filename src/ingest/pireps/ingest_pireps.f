@@ -43,14 +43,6 @@
 
       lag_time_report = 3600
 
-!     Open output PIN file
-      ext = 'pin'
-      call open_lapsprd_file(11,i4time,ext(1:3),istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Error opening output file'
-          go to 999
-      endif
-
 !     Get List of input /public NetCDF files
       c_vars_req = 'path_to_raw_pirep'
       call get_static_info(c_vars_req,c_values_req,1,istatus)
@@ -68,6 +60,21 @@
       c_filespec = dir_in(1:len_dir_in)//'*0005r'
       call get_file_times(c_filespec,max_files,c_fnames
      1                      ,i4times,i_nbr_files_ret,istatus)
+
+!     Open output PIN file
+      if(i_nbr_files_ret .gt. 0 .and. istatus .eq. 1)then
+          ext = 'pin'
+          call open_lapsprd_file(11,i4time,ext(1:3),istatus)
+          if(istatus .ne. 1)then
+              write(6,*)' Error opening output file'
+              go to 999
+          endif
+      
+      else
+          write(6,*)' No raw data files identified, STOP'
+          stop
+      endif
+
 
 !     Loop through /public NetCDF files and choose ones in time window
       write(6,*)' # of files on /public = ',i_nbr_files_ret

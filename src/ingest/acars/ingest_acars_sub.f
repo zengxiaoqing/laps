@@ -112,15 +112,6 @@ C
 !         write(6,*)' location = '
 !    1             ,latitude(i),longitude(i),altitude(i)
 
-          if(char(dataDescriptor(i)) .eq. 'X')then
-            if(char(errorType(i)) .eq. 'W' .or. 
-     1         char(errorType(i)) .eq. 'B'                         )then
-              write(6,*)' QC flag is bad - reject '
-     1                 ,char(dataDescriptor(i)),char(errorType(i))
-              goto 900
-            endif
-          endif
-
 
           if(latitude(i) .le. rnorth .and. latitude(i)  .ge. south .and.
      1       longitude(i) .ge. west  .and. longitude(i) .le. east      
@@ -132,6 +123,10 @@ C
               goto 900
           endif
 
+          if(altitude(i) .gt. 20000.)then
+              write(6,*)' Altitude is suspect - reject',altitude(i)
+              goto 900
+          endif
 
           if(abs(timeObs(i))      .lt. 3d9       .and.
      1       abs(timereceived(i)) .lt. 3d9              )then
@@ -160,25 +155,36 @@ C
           write(11,2)latitude(i),longitude(i),altitude(i)
  2        format(' Lat, lon, altitude'/f8.3,f10.3,f8.0)  
 
-          write(6,*)' Wind = ',windDir(i),windSpeed(i)
- 
-          if(abs(windSpeed(i)) .gt. 250.)then
-              write(6,*)' Above wind speed is suspect - reject'
-              go to 900
+!         Test for bad winds
+          if(char(dataDescriptor(i)) .eq. 'X')then
+            if(char(errorType(i)) .eq. 'W' .or. 
+     1         char(errorType(i)) .eq. 'B'                         )then
+              write(6,*)' QC flag is bad - reject '
+     1                 ,char(dataDescriptor(i)),char(errorType(i))
+              goto 850
+            endif
           endif
 
-          write(6,3)int(windDir(i)),windSpeed(i)
-          write(11,3)int(windDir(i)),windSpeed(i)
- 3        format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
+          if(abs(windSpeed(i)) .gt. 250.)then
+              write(6,*)' wind speed is suspect - reject',windSpeed(i)
 
-!        if(string(2:5) .eq. 'Wind')then
-!            read(lun,202)idir_deg,ispd_kt
-!202         format (' ', i3, ' deg @ ', i3, ' kt.')
-!            write(6,202)idir_deg,ispd_kt
-!            dd = idir_deg
-!            ff = ispd_kt * .518
-!            return
-!        endif
+          else ! write out valid wind
+              write(6,3)int(windDir(i)),windSpeed(i)
+              write(11,3)int(windDir(i)),windSpeed(i)
+ 3            format(' Wind:'/' ', i3, ' deg @ ', f6.1, ' m/s')
+
+          endif
+
+ 850      if(abs(temperature(i)) .lt. 400.)then
+              write(6,13)temperature(i)
+              write(11,13)temperature(i)
+ 13           format(' Temp:'/1x,f10.1)
+       
+          else
+              write(6,*)' Temperature is suspect - reject'
+     1                , temperature(i)
+
+          endif
 
 
  900  enddo ! i
