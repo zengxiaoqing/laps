@@ -66,11 +66,11 @@ MODULE setup
    !  into lapsprep.nl in the future.  Mandatory extensions must be
    !  listed first
 
-   INTEGER , PARAMETER :: num_ext = 8
+   INTEGER , PARAMETER :: num_ext = 9
    CHARACTER(LEN=3),DIMENSION(num_ext) :: ext = (/ 'lt1' , 'lw3' , &
                                                    'lh3' , 'lsx',  &
                                                    'lsx' , 'lq3',  &
-                                                   'lwc' , 'lm2' /)
+                                                   'lwc' , 'lm2', 'lcp' /)
 
    CHARACTER(LEN=3),DIMENSION(5,num_ext) :: cdf_var_name = RESHAPE ( &
                            (/ 'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , & 
@@ -80,10 +80,11 @@ MODULE setup
                               'ps ',  'msl' , 'mr ' , 'vv ' , 'xxx' , &
                               'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
-                              'sc ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
+                              'sc ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
+                              'lcp' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,3,1,5,4,1,5,1/) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,3,1,5,4,1,5,1,1/) 
 
 CONTAINS
 

@@ -88,8 +88,8 @@
     ! Arrays for data
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
                                              lwc,rai,sno,pic,ice, sh, mr, w, & 
-                                             virtual_t, rho
-    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin 
+                                             virtual_t, rho,lcp
+    REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
     REAL , PARAMETER                       :: tiny = 1.0e-20
     
@@ -155,10 +155,12 @@
 
     PRINT '(A)', 'Starting Loop for each LAPS file'
     file_loop : DO loop = 1 , num_ext
+      
+      PRINT *, 'Looking for ',ext(loop)
       !  If this is a microphysical species but not doing 
       !  a hotstart, then cycle over this file.
 
-      IF ( (TRIM(ext(loop)).EQ.'lwc') .AND. &
+      IF (((TRIM(ext(loop)).EQ.'lwc').OR.(TRIM(ext(loop)).EQ.'lcp')) .AND. &
           (.NOT.hotstart) ) THEN
         CYCLE file_loop
       ENDIF
@@ -217,7 +219,7 @@
       CALL NCDINQ ( cdfid , zid , dum , z , rcode )
 
       IF ( ( ext(loop) .EQ. 'lsx' ) .OR. &
-           ( ext(loop) .EQ. 'lm2' ) ) THEN
+           ( ext(loop) .EQ. 'lm2') ) THEN
          z2 = z
       ELSE
          z3 = z
@@ -240,14 +242,14 @@
         ALLOCATE ( d2d ( x , y         ) )
         ALLOCATE ( tskin ( x , y       ) )
         ALLOCATE ( p   (         z3 + 1 ) ) 
-        ! The followin variables are not "mandatory"
+        ! The following variables are not "mandatory"
         ALLOCATE ( lwc ( x , y , z3 ) ) 
         ALLOCATE ( rai ( x , y , z3 ) ) 
         ALLOCATE ( sno ( x , y , z3 ) ) 
         ALLOCATE ( pic ( x , y , z3 ) ) 
         ALLOCATE ( ice ( x , y , z3 ) )
         ALLOCATE ( snocov ( x , y ) ) 
- 
+        ALLOCATE ( lcp ( x , y , z3 ) ) 
         ! The following variables are only used
         ! for converting non-mandatory cloud variables
         ! to mixing ratio values 
@@ -263,7 +265,7 @@
         sno(:,:,:) = -999.
         pic(:,:,:) = -999.
         snocov(:,:) = -999.
-        
+        lcp(:,:,:) = 0.
       END IF
 
       IF       ( ext(loop) .EQ. 'lh3' ) THEN
@@ -424,6 +426,24 @@
 
         END DO var_lwc1    
 
+      ELSE IF (( ext(loop) .EQ. 'lcp' ).AND.(hotstart)) THEN
+
+        !  Loop over the number of variables for this data file.
+
+        var_lvc : DO var_loop = 1 , num_cdf_var(loop)
+
+          !  Get the variable ID.
+
+          vid = NCVID ( cdfid , TRIM(cdf_var_name(var_loop,loop)) , rcode )
+          start = (/ 1 , 1 , 1 , 1 /)
+          count = (/ x , y , z , 1 /)
+          IF      ( cdf_var_name(var_loop,loop) .EQ. 'lcp' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , lcp, rcode )
+            print *, 'Got cloud cover...min/max = ',minval(lcp),maxval(lcp)
+          END IF
+
+        END DO var_lvc  
+
       END IF
 
     END DO file_loop
@@ -477,11 +497,14 @@
         lwc(:,:,:) = lwc(:,:,:)/rho(:,:,:)   ! Cloud liquid mixing ratio
 
         ! Convert lwc mixing ratio to vapor mixing ratio
-        IF (lwc2vapor_thresh .GT. 0.000001) THEN
+        IF (lwc2vapor_thresh .GT. 0.) THEN
           DO k=1,z3
             DO j=1,y
               DO i=1,x  
-                IF (lwc(i,j,k).GT.0.) THEN
+                IF( (lcp(i,j,k).GE.lcp_min).AND.&
+                    (t(i,j,k).GE.263.0).AND.&
+                    (lwc(i,j,k).GT.lwc_min))THEN  
+                !IF (lwc(i,j,k).GT.0.00010) THEN
                   !CALL lwc2vapor(lwc(i,j,k),sh(i,j,k),t(i,j,k), &
                   !               p(k),lwc2vapor_thresh, &
                   !               lwcmod,shmod,rhmod)
@@ -534,7 +557,10 @@
           DO k=1,z3
             DO j=1,y
               DO i=1,x
-                IF (ice(i,j,k).GT.0.000001) THEN
+                IF ((lcp(i,j,k).GE.lcp_min).AND. &
+                    (t(i,j,k).LT.263.).AND. &
+                    (ice(i,j,k).GT.ice_min)) THEN  
+                !IF (ice(i,j,k).GT.0.00002) THEN
                   !CALL ice2vapor(ice(i,j,k),sh(i,j,k),t(i,j,k), &
                   !               p(k),lwc2vapor_thresh, &
                   !               icemod,shmod,rhmod)
@@ -543,14 +569,10 @@
                   CALL saturate_ice_points(sh(i,j,k),t(i,j,k), &
                                            p(k),lwc2vapor_thresh, &
                                            shmod,rhmod)
-                  IF (t(i,j,k).gt. 253) THEN
-                    sh(i,j,k) = MAX(shmod,sh(i,j,k))
-                    rh(i,j,k) = MAX(rhmod,rh(i,j,k))
-                  ELSE
-                    sh(i,j,k) = shmod
-                    rh(i,j,k) = rhmod
-                  ENDIF 
-                   mr(i,j,k) = sh(i,j,k)/(1.-sh(i,j,k))
+                  
+                  sh(i,j,k) = MAX(shmod,sh(i,j,k))
+                  rh(i,j,k) = MAX(rhmod,rh(i,j,k))
+                  mr(i,j,k) = sh(i,j,k)/(1.-sh(i,j,k))
                 ENDIF
               ENDDO
             ENDDO
