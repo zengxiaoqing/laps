@@ -189,11 +189,14 @@ clean:
 	$(RM) $(LIB) $(DEBUGLIB) *.o *~ *#
 
 distclean: clean
-%.f : %.F
-	$(RM) $*.f
+
+ifdef USECPP
+%.o : %.F
+	rm -f $*.f
 	$(CPP) $(CPPFLAGS) $< 
 	mv $*.i $*.f
-
+	$(FC) $(FFLAGS) -c $*.f
+endif
 
 
 

@@ -44,11 +44,10 @@ Last modified: 3/24/94
 #include <config.h>
 
 #include <stdio.h>
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#ifndef TM_IN_SYS_TIME
-#include <time.h>
+#if defined(HAVE_SYS_TIME_H) || defined(TM_IN_SYS_TIME)
+#  include <sys/time.h>
+#else
+#  include <time.h>
 #endif
 
 
@@ -87,3 +86,36 @@ char *c_time;
 	return;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
