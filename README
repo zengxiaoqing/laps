@@ -1783,6 +1783,8 @@ Inputs: (from LGA, LSX, RAM [if available], LRS)       '*' = essential input
 
 Outputs: (LW3 used by LBA)
 	lt1	3d grid		3-D temperature (K), 3-D Heights (M-MSL)
+        lst     2d grids        CAPE, CIN, LI (Stability Indices)
+        tmg     inter data      temperature obs used for lapsplot plotting
 </pre>
 Source directory: laps/src/temp
 
@@ -2291,10 +2293,7 @@ Note that more info on the units of the fields, etc. are contained in the
                 File LAPS CDF    Num
 		Ext  Var  Var    Lvl  Field
 
-Process surface:
-                LT1  T3   t	  21  Temperature
-		     HT   z       21  Height
-            	LSX  U    su       1  Surface wind u 
+Process surface:LSX  U    su       1  Surface wind u 
        		     V    sv       1  Surface wind v
         	     P    fp       1  1500m Pressure
             	     T    st       1  Temp 
@@ -2312,14 +2311,18 @@ Process surface:
         	     DIV  d	   1  Divergence
 		     THA  pta      1  Potential Temp Advection
 		     MRA  ma       1  Moisture Advection
-		     LI   li       1  Lifted Index
 		     SPD  spd	   1  Surface Wind Speed
 		     CSS  cssi     1  CSSI
-		     PBE  pbe      1  Positive Bouyant Energy
-		     NBE  nbe      1  Negative Bouyant Energy
 		     VIS  vis 	   1  Surface Visibility
                      FWX  fwx      1  Fire Danger
 		     HI   hi       1  Heat Index
+
+Process temp:   LT1  T3   t	  21  Temperature
+		     HT   z       21  Height
+                LST
+		     LI   li       1  Lifted Index
+		     PBE  pbe      1  Positive Bouyant Energy
+		     NBE  nbe      1  Negative Bouyant Energy
 
 Process accum:	L1S  S01  s1hr     1  Snow Accum Cycle 
 		     STO  stot     1  Snow Accum Storm Tot 
