@@ -2000,7 +2000,7 @@ Process: (sfc_qc.exe) LAPS Surface Ingest Quality Control
 
 <pre>
 LSO QC process - sfc_qc.exe - QC the ingest surface data
-        (author: Pete Stamus)
+        (author: John McGinley / Pete Stamus)
 
 Input:
 	 lso    ascii
