@@ -254,7 +254,7 @@ C
 	ERROR(1)=1
 	ERROR(2)=0
 C
-        call get_directory('lls',ldir,len)
+        call get_directory('l1s',ldir,len)
 
 	EXT='L1S'
 	VAR(1)='STO'
