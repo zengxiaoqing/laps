@@ -608,8 +608,8 @@
                     --- 2.2.6.2 Localization Method 2 ---
 
      The second method is especially useful if you are using a separated
-     data tree and/or multiple domains, or if you are performing frequent
-     software updates.
+     data tree and/or multiple domains. It is also recommended if you are 
+     performing frequent software updates.
 
                          SETTING RUNTIME PARAMETERS
 
