@@ -199,13 +199,17 @@ c
 	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real vis1(ni,nj), elev1(ni,nj)
 c
+c
 c.....  Namelist stuff
 c
 	integer use_lso_qc, skip_internal_qc, itheta
 	character nl_file*256
 c
-	namelist /surface_analysis/ use_lso_qc,skip_internal_qc
-     1                             ,itheta, redp_lvl, del, gam, ak       
+	namelist /surface_analysis/ use_lso_qc,skip_internal_qc,
+     1                              itheta, redp_lvl, del, gam, ak,       
+     1                              bad_t,bad_td,bad_u,bad_v,bad_p,
+     1                              bad_mp,bad_th,bad_the,
+     1                              bad_vis,bad_tb8      
 c
 c*************************************************************
 c.....	Start here.  First see if this is an interactive run.
@@ -252,15 +256,27 @@ c
 	call cv_i4tim_asc_lp(i4time, atime, status)	   ! get the atime
 	call make_fnam_lp(i4time_last,filename_last,istatus)  ! make earlier filename	
 c
+c.....  Set the namelist variables to their defaults.  If there's a problem reading
+c.....  the namelist, at least we can continue.
+c
         del = 1.3e5
 	gam = .000004
 	ak = 1.e-6
 c
-c.....  Set the namelist variables to their defaults.  If there's a problem reading
-c.....  the namelist, at least we can continue.
-c
-	use_lso_qc = 0        !use normal LSO
-	skip_internal_qc = 0  !use internal QC routine
+	use_lso_qc = 0          ! use normal LSO
+	skip_internal_qc = 0    ! use internal QC routine
+
+c       QC parms: # of standard deviations 
+        bad_p  = 3.0 	        ! for reduced pressure
+        bad_mp = 4.0 	        ! for MSL pressure
+        bad_t  = 2.5 	        ! for temperature
+        bad_td = 2.0 	        ! for dewpoint
+        bad_u  = 4.0 	        ! for u-wind
+        bad_v  = 4.0 	        ! for v-wind
+        bad_th = 3.5 	        ! for theta
+        bad_the = 2.5           ! for theta-e
+        bad_vis = 500. 	        ! for visibility
+        bad_tb8 = 5.0 	        ! for tb8 Brightness temps.
 c
 c.....  Read the namelist and get that info, then get the LAPS lat/lon and topo 
 c.....  data so we can pass them to the routines that need them. 
@@ -763,6 +779,8 @@ c                                v  in kt
      &     u_bk,v_bk,t_bk,td_bk,rp_bk,mslp_bk,stnp_bk,vis_bk,tgd_bk_f,   
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
+     &     bad_t,bad_td,bad_u,bad_v,bad_p,bad_mp,bad_th,bad_the,
+     &     bad_vis,bad_tb8,
      &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
      &     x1a,x2a,y2a,ii,jj,jstatus)
 c
