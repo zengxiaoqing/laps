@@ -1,6 +1,6 @@
 
      This LAPS README file is viewable on the WWW via the LAPB home 
-     page at http://www.fsl.noaa.gov/frd-bin/LAPB.homepage.cgi   
+     page at http://laps.fsl.noaa.gov/
 
 
                        TABLE OF CONTENTS  
@@ -330,7 +330,7 @@
      The contents of the various directories are outlined below in this README 
      file. The data was created with the latest software release. Our users 
      can download this data at 
-     http://www.fsl.noaa.gov/frd-bin/LAPSDATA.tarfile.cgi.
+     http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi.
 
      If you want to test the 'analysis' code only, you might initiate
      the 'sched.pl' to run for the test data at 1000 UTC (as indicated
@@ -1252,7 +1252,7 @@ CPU USAGE (SUN SPARC 10 - 4 processor): About 1 minute
 Reference: Albers S. 1995: The LAPS wind analysis. Weather and Forecasting, 10,
            342-352. 
 
-           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_95.cgi'
 
 ------ 3.8 ---------------------TEMP-------------------------------------------
 
@@ -1278,7 +1278,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
 ------ 3.9 ---------------------CLOUD------------------------------------------
 
@@ -1335,7 +1335,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
 ------ 3.10 ---------------------DERIV-----------------------------------------
 
@@ -1415,7 +1415,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
 ------ 3.11 ---------------------ACCUM-----------------------------------------
 
@@ -1444,7 +1444,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
            precipitation, and temperature. Weather and Forecasting, 11, 
            273-287.
 
-           Available at 'http://www.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
+           Available at 'http://laps.fsl.noaa.gov/frd-bin/LAPB.pubs_96.cgi'
 
 ------ 3.12 ---------------------LGA-------------------------------------------
 
