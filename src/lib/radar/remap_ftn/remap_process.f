@@ -770,13 +770,13 @@ c
         character*31 EXT
 
         character*125 comment_2d
-        character*10 units_2d
-        character*3 var_2d
-        integer*4 LVL_2d
-        character*4 LVL_COORD_2d
+        character*10 units(2)
+        character*3 vars(2)
+
+        integer LVL_2D(2)
 
         real*4 field_3d(imax,jmax,kmax)
-        real*4 field_2d(imax,jmax)
+        real*4 fields_2d(imax,jmax,2)
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
@@ -785,6 +785,7 @@ c
         character*8 radar_subdir
         character*3 c3_radar_subdir
         character*(*) path_to_vrc
+        character*4 LVL_COORD_2D(2)
 
         call make_fnam_lp(i4time,a9time,istatus)
         if(istatus .ne. 1)return
@@ -796,7 +797,7 @@ c
 
 !       Get column max reflectivity (now passing in r_missing_data)
         call get_max_reflect(field_3d,imax,jmax,kmax,r_missing_data
-     1                      ,field_2d)
+     1                      ,fields_2d(1,1,1) )
 
         call get_laps_domain(imax,jmax,'nest7grid',lat,lon,topo,istatus)       
         if(istatus .ne. 1)then
@@ -804,16 +805,42 @@ c
             return
         endif
 
-        call ref_fill_horz(field_2d,imax,jmax,1,lat,lon
+        call ref_fill_horz(fields_2d(1,1,1),imax,jmax,1,lat,lon
      1                    ,rlat_radar,rlon_radar,rheight_radar,istatus)       
         if(istatus .ne. 1)then
             write(6,*)' Error calling ref_fill_horz'          
             return
         endif
 
+!       Calculate closest radar array
+        write(6,*)' Calculating closest radar array (dist to vrc radar)'       
+        do i = 1,imax
+        do j = 1,jmax
+            call latlon_to_radar(lat(i,j),lon(i,j),topo(i,j)
+     1                          ,azimuth,dist,elev
+     1                          ,rlat_radar,rlon_radar,rheight_radar)       
+
+            if(fields_2d(i,j,1) .ne. r_missing_data)then
+                fields_2d(i,j,2) = dist
+            else
+                fields_2d(i,j,2) = r_missing_data
+            endif
+        enddo ! j
+        enddo ! i
+
         ext = 'vrc'
-        var_2d = 'REF'
-        units_2d = 'DBZ'
+
+        vars(1) = 'REF'
+        vars(2) = 'DIS'
+
+        units(1) = 'DBZ'
+        units(2) = 'M'
+
+        lvl_2d(1) = 0
+        lvl_2d(2) = 0
+        
+        lvl_coord_2d(1) = 'MSL'
+        lvl_coord_2d(2) = 'MSL'
 
         write(6,*)'path_to_vrc = ',path_to_vrc
 
@@ -832,15 +859,22 @@ c
 
         endif            
 
-        write(6,11)directory(1:len_dir),ext(1:5),var_2d
-11      format(' Writing 2d ',a,1x,a5,1x,a3)
-
-        lvl_2d = 0
-        lvl_coord_2d = 'MSL'
+        write(6,11)directory(1:len_dir),ext(1:5),vars
+11      format(' Writing 2d ',a,1x,a5,2(1x,a3))
 
         CALL WRITE_LAPS_DATA(I4TIME,DIRECTORY,EXT,imax,jmax,
-     1  1,1,VAR_2D,LVL_2D,LVL_COORD_2D,UNITS_2D,
-     1                     COMMENT_2D,field_2d,ISTATUS)
+     1                       2,2,vars,LVL_2D,LVL_COORD_2D,units,
+     1                       comments_2d,fields_2d,ISTATUS)
+
+!       call put_laps_multi_2d(i4time,ext,vars,units
+!    1                         ,comments_2d,fields_2d
+!    1                         ,imax,jmax,2,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)' VRC successfully written'
+        else
+            write(6,*)' VRC not successfully written', istatus
+        endif
+
 
         return
         end
