@@ -53,7 +53,6 @@ c     given input array xx, dimensioned by n, and value x
 c     the routine returns the index j such that x exists
 c     between xx(j) and xx(j+1).
 c     
-c     the routine returns 0 if x does not exist inside the array
 c     
 c     
       
