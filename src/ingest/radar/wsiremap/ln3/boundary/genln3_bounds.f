@@ -70,7 +70,10 @@ c               header stuff directly from NIMBUS data file.
       call get_file_names(cfilespec,numoffiles,c_filenames
      1        ,max_files,istatus)
       if(istatus.ne.1.or.numoffiles.eq.0)then
-         print*,'Error returned from get_file_names'
+         call s_len(cfilespec,nn)
+         print*,'No files found for cfilespec:'
+         print*,cfilespec(1:nn)
+         print*,'boundary info not updated - Terminating'
          stop
       endif
 
@@ -120,6 +123,11 @@ c
       character*3 var_ll(2)
 
       integer dataLevel
+
+      logical       lnorth_flag
+      logical       lsouth_flag
+      logical       lwest_flag
+      logical       least_flag
 
       character*50  grid_name
       character*50  grid_type
@@ -176,18 +184,32 @@ c     &rdlat,rdlon,rlat2,rlon1,istart,iend,jstart,jend,istatus_io)
       dlat_deg=rdlat*rdtodg
       dlon_deg=rdlon*rdtodg
 
-      istart=0
-      jstart=0
+      istart=999999
+      jstart=999999
       iend  =0
       jend  =0
-      istart1=0
-      jstart1=0
+      istart1=999999
+      jstart1=999999
       iend1  =0
       jend1  =0
-      istart2=0
-      jstart2=0
+      istart2=999999
+      jstart2=999999
       iend2  =0
       jend2  =0
+      lnorth_flag=.false.
+      lsouth_flag=.false.
+      lwest_flag=.false.
+      least_flag=.false.
+
+
+      do i=1,nx_l
+         if(lat(i,ny_l).gt.rlat1)lnorth_flag=.true.
+         if(lat(i,1).lt.rlat2)lsouth_flag=.true.
+      enddo
+      do j=1,ny_l
+         if(lon(1,j).lt.rlon1)lwest_flag=.true.
+         if(lon(nx_l,j).gt.rlon2)least_flag=.true.
+      enddo
 
       do j =1,lines
 
@@ -208,7 +230,7 @@ c
      &          (wsi_lat.ge.lat(1,1)) .and.
      &          (wsi_lon.le.lon(2,1)) .and.
      &          (wsi_lon.ge.lon(1,1)) .and.
-     &         istart1 .eq. 0)then
+     &         istart1 .eq. 999999)then
                istart1 = i-15
                rstartlon1=wsi_lon
             endif
@@ -216,7 +238,7 @@ c
      &          (wsi_lat.ge.lat(1,ny_l-1)) .and.
      &          (wsi_lon.ge.lon(1,ny_l)) .and.
      &          (wsi_lon.le.lon(2,ny_l)) .and.
-     &         istart2 .eq. 0)then
+     &         istart2 .eq. 999999)then
                istart2=i-15
                rstartlon2=wsi_lon
             endif
@@ -227,7 +249,7 @@ c
      &          (wsi_lat.ge.lat(1,ny_l-1)) .and.
      &          (wsi_lon.ge.lon(1,ny_l))   .and.
      &          (wsi_lon.le.lon(2,ny_l))   .and.
-     &         jstart1 .eq. 0)then
+     &         jstart1 .eq. 999999)then
                jstart1 = j-15
                rstartlat1=wsi_lat
             endif
@@ -235,7 +257,7 @@ c
      &          (wsi_lat.ge.lat(nx_l,ny_l-1)).and.
      &          (wsi_lon.le.lon(nx_l,ny_l)) .and.
      &          (wsi_lon.ge.lon(nx_l-1,ny_l)).and.
-     &         jstart2 .eq.0)then
+     &         jstart2 .eq.999999)then
                jstart2=j-15
                rstartlat2=wsi_lat
             endif
@@ -280,6 +302,20 @@ c
 
 34       end do    !all elems
 35    end do      !all lines
+
+      if(lnorth_flag)then
+         jstart1=1
+      endif
+      if(lsouth_flag)then
+         jend1=ny
+      endif
+      if(lwest_flag)then
+         istart1=1
+      endif
+      if(least_flag)then
+         iend1=nx
+      endif
+
       write(6,*)'istart1,jstart1,iend1,jend1:',
      &istart1,jstart1,iend1,jend1
       write(6,*)'istart2,jstart2,iend2,jend2:',
@@ -295,25 +331,17 @@ c
       istart=min(istart1,istart2)
       iend=max(iend1,iend2)
 
-      if(jstart .le. 0)then
-         write(6,*)'Northern Bndry Outside Domain'
-         write(6,*)'Cannot write new jstart - terminating'
-         goto 997
+      if(jstart .le. 1)then
+         write(6,*)'Nrthn LAPS Bndry may be out of radar Domain'
       endif
-      if(jend .gt. lines)then
-         write(6,*)'Southern Bndry Outside Domain'
-         write(6,*)'Cannot write new jend - terminating'
-         goto 997
+      if(jend .ge. ny)then
+         write(6,*)'Sthrn LAPS Bndry may be out of radar Domain'
       endif
-      if(istart .le. 0)then
-         write(6,*)'Western Bndry Outside Domain'
-         write(6,*)'Cannot write new istart - terminating'
-         goto 997
+      if(istart .le. 1)then
+         write(6,*)'Wstrn LAPS Bndry may be out of radar Domain'
       endif
-      if(iend .gt. elems)then
-         write(6,*)'Eastern Bndry Outside Domain'
-         write(6,*)'Cannot write new jend - terminating'
-         goto 997
+      if(iend .ge. nx)then
+         write(6,*)'Estrn LAPS Bndry may be out of radar Domain'
       endif
 
 c     call readwrite_ln3_parms('install',nlines,nelements,
