@@ -330,7 +330,7 @@ c
 c ============================================================
 c
       subroutine get_laps_analysis_data(i4time,nx,ny,nz
-     +,phi,t,u,v,sh,omo,lwc,istatus)
+     +,phi,t,u,v,sh,omo,istatus)
 c
       implicit none
 
@@ -342,16 +342,15 @@ c
       integer   lendt
       integer   lendw
       integer   lendsh
-      integer   lendlwc
       integer   i,j,k
       real*4  phi(nx,ny,nz),t(nx,ny,nz)
      .       ,u(nx,ny,nz),v(nx,ny,nz),sh(nx,ny,nz)
-     .       ,omo(nx,ny,nz),lwc(nx,ny,nz)
+     .       ,omo(nx,ny,nz)
 
 
-      character*255 tempdir,winddir,sfcdir,shdir,lcodir,lwcdir
+      character*255 tempdir,winddir,sfcdir,shdir,lcodir
       character*125 comment
-      character*31  tempext,windext,sfcext,shext,lcoext,lwcext
+      character*31  tempext,windext,sfcext,shext,lcoext
       character*10  units
       logical found_lowest
 
@@ -360,14 +359,12 @@ c
       windext='lw3'
       sfcext='lsx'
       lcoext='lco'
-      lwcext='lwc'
 
       call get_directory(tempext,tempdir,lendt)
       call get_directory(windext,winddir,lendw)
       call get_directory(sfcext,sfcdir,lends)
       call get_directory(shext,shdir,lendsh)
       call get_directory(lcoext,lcodir,lendlco)
-      call get_directory(lwcext,lwcdir,lendlwc)
 
       call get_laps_3d(i4time,nx,ny,nz
      1  ,tempext,'ht ',units,comment,phi,istatus)
@@ -438,16 +435,6 @@ c
          print*,'No LAPS Cld Omega data ....'
          print*,'Initializing omo array with zero'
          call zero3d(omo,nx,ny,nz)
-      endif
-c
-c *** Get laps cloud liquid
-c
-      call get_laps_3d(i4time,nx,ny,nz
-     1  ,lwcext,'lwc',units,comment,lwc,istatus)
-
-      if(istatus .ne. 1)then
-         print*,'Error getting LAPS cloud liquid data ... Abort.'
-         return
       endif
 c
 c *** Get laps wind data.

@@ -49,7 +49,7 @@ c
      .      ,us(nx,ny,nz),vs(nx,ny,nz),shs(nx,ny,nz)
 c    .      ,lapsuo(nx,ny,nz),lapsvo(nx,ny,nz) !t=t0-dt currently not used
      .      ,lapsu(nx,ny,nz),lapsv(nx,ny,nz)   !t=t0
-     .      ,lapssh(nx,ny,nz),lapslwc(nx,ny,nz)
+     .      ,lapssh(nx,ny,nz)
      .      ,lapstemp(nx,ny,nz)
      .      ,lapsphi(nx,ny,nz)
 
@@ -212,7 +212,7 @@ c
 c *** Get laps analysis grids.
 c
       call get_laps_analysis_data(masstime,nx,ny,nz
-     +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,lapslwc,istatus)
+     +,lapsphi,lapstemp,lapsu,lapsv,lapssh,omo,istatus)
 c omo is the cloud vertical motion from lco
       if (istatus .ne. 1) then
          print *,'Error getting LAPS analysis data...Abort.'
@@ -578,37 +578,16 @@ c       the saturation value for this temperature
 
         lapssh(i,j,k) = MIN(shsat,lapssh(i,j,k))
 c
-c       If cloud water is present, set the sh equal
-c       to the saturation value
-
-        if (lapslwc(i,j,k).gt.0.) lapssh(i,j,k)=shsat
-
-c       Finally, rediagnose RH wrt liquid from the 
-c       modified sh field
+c       Rediagnose RH wrt liquid from the 
+c       modified sh field, but do not let RH go below a very
+c       small value (1%)
 
         lapsrh(i,j,k) = make_rh(p(k)*0.01,t(i,j,k)-273.15
      .                    ,lapssh(i,j,k)*1000.,-132.)*100.         
-        lapsrh(i,j,k) = MIN(lapsrh(i,j,k),100.)
         lapsrh(i,j,k) = MAX(lapsrh(i,j,k),1.0)
       enddo
       enddo
       enddo     
-c
-c     New section added by to replicate the values of u/v at 
-c     from the lowest p-level still above ground to all levels
-c     below ground  (B. Shaw, 12 Apr 02) 
-
-c     do j = 1,ny
-c       do i = 1, nx
-c         findsfclev:  do k = 1,nz
-c           IF (phi(i,j,k) .GT. ter(i,j)) EXIT findsfclev
-c         enddo findsfclev
-c         IF (k .gt. 1) THEN
-c           u(i,j,1:k-1) = u(i,j,k)
-c           v(i,j,1:k-1) = v(i,j,k)
-c         ENDIF
-c       enddo
-c     enddo
 
       call write_bal_laps(masstime,phi,u,v,t,om,lapsrh,lapssh
      .                   ,nx,ny,nz
