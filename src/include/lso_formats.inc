@@ -12,7 +12,7 @@ c903	  format(5x,a10,2x,a10,2x,a30) !variables are char a6 in code
  905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
  907	  format(5x,4(f8.1,2x),2(f6.2,2x))
  909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f8.2,2x,f8.2,2x,f8.2)
- 911	  format(5x,f8.2,2x,f6.3,2x,f8.0,2x,f6.1,2x,4f8.2)
+ 911	  format(5x,f8.2,2x,f6.3,2x,f8.1,2x,f6.1,2x,4f8.2)
  913	  format(5x,4(f8.2,2x),f6.1,2x,f8.2,2x,f4.1)
  915	  format(5x,i4,2x,f8.2,2x,f8.2)
  917	  format(10x,a8,2x,f8.0)
