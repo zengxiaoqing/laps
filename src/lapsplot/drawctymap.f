@@ -62,6 +62,7 @@ c
       jgrid=0
 
 !     1 means use local version of supmap, 2 means use the NCARGlib version
+!     3 means to try new routines
       mode_supmap=1
 
       call get_grid_spacing(grid_spacing_m,istatus)
@@ -92,7 +93,7 @@ c
               jus=-4
               call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                          jjlts,jgrid,jus,jdot,ier)
-          else
+          elseif(mode_supmap .eq. 2)then
               iout = 0
               call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                          jjlts,jgrid,iout,jdot,ier)
@@ -114,10 +115,13 @@ c
           jus=-8
           call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,jus,jdot,ier)
-      else
+      elseif(mode_supmap .eq. 2)then
           iout = 0
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,iout,jdot,ier)
+      elseif(mode_supmap .eq. 3)then
+          write(6,*)' Calling MAPDRW and related routines...'
+          call mapdrw()
       endif
       if(ier .ne. 0)write(6,*)' ier = ',ier
 
@@ -134,7 +138,7 @@ c
           jus=-1
           call supmap_local(jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,jus,jdot,ier)
-      else
+      elseif(mode_supmap .eq. 2)then
           iout = 2
           call supmap      (jproj,polat,polon,rrot,pl1,pl2,pl3,pl4,
      +                      jjlts,jgrid,iout,jdot,ier)
