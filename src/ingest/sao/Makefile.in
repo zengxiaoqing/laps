@@ -52,8 +52,8 @@ INSTALL=@INSTALL@
 
 SRC   = get_metar_obs.f \
 	read_metar.f \
-	get_cdot_obs.f \
-	read_cdot.f \
+	get_local_obs.f \
+	read_local.f \
 	write_surface_obs.f
 
 MAIN=obs_driver.f
@@ -108,13 +108,13 @@ distclean: clean
 
 
 
-get_cdot_obs.f:  $(LAPSROOT)/src/include/surface_obs.inc@F77INC@
+get_local_obs.f:  $(LAPSROOT)/src/include/surface_obs.inc@F77INC@
 
 get_metar_obs.f:  $(LAPSROOT)/src/include/surface_obs.inc@F77INC@
 
 obs_driver.f:  $(LAPSROOT)/src/include/surface_obs.inc@F77INC@
 
-read_cdot.f:  @NETCDFINC@/netcdf.inc@F77INC@
+read_local.f:  @NETCDFINC@/netcdf.inc@F77INC@
 
 read_metar.f:  @NETCDFINC@/netcdf.inc@F77INC@
 

@@ -134,9 +134,9 @@ c
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
 c
-cc	outfile = filename//'.lso'
-        call get_directory('lso',outfile,len)
-	outfile = outfile(1:len)//filename9(1:9)//'.lso'
+	outfile = filename9 // '.lso'
+cc        call get_directory('lso',outfile,len)
+cc	outfile = outfile(1:len)//filename9(1:9)//'.lso'
 
 cc	outfile = '/home/peaks1/stamus/laps/obs/' // filename // '.lso'
 c
@@ -242,7 +242,7 @@ c
 	print*, 'Getting local data',data_file_c
 
 c
-	call get_cdot_obs(maxobs,maxsta,i4time,data_file_c,
+	call get_local_obs(maxobs,maxsta,i4time,data_file_c,
      &                   grid_east,grid_west,grid_north,
      &                   grid_south,nn,n_cdot,
      &                   stations,store,wx,obstype,
