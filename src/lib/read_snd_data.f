@@ -2,7 +2,7 @@
         subroutine read_snd_data(lun,i4time_snd,ext                    ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
-     1                         ,heights_3d                             ! I
+     1                         ,heights_3d,l_fill_ht                   ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
@@ -12,21 +12,21 @@
      1                         ,ob_pr_t_obs,ob_pr_td_obs               ! O
      1                         ,istatus)                               ! O
 
-cdoc    Returns sounding wind data from the SND file
+cdoc    Returns sounding wind, T, Td data from the SND file
 
 !       Profile Stuff
         real lat_pr(MAX_PR)
         real lon_pr(MAX_PR)
         real elev_pr(MAX_PR)
 
-        real ob_pr_ht_obs(MAX_PR,MAX_PR_LEVELS)                        ! O
-        real ob_pr_pr_obs(MAX_PR,MAX_PR_LEVELS)                        ! O
-        real ob_pr_di_obs(MAX_PR_LEVELS)                               ! L
-        real ob_pr_sp_obs(MAX_PR_LEVELS)                               ! L
-        real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
-        real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
-        real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)                         ! O
-        real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)                        ! O
+        real ob_pr_ht_obs(MAX_PR,MAX_PR_LEVELS)         ! O
+        real ob_pr_pr_obs(MAX_PR,MAX_PR_LEVELS)         ! O (mb)
+        real ob_pr_di_obs(MAX_PR_LEVELS)                ! L
+        real ob_pr_sp_obs(MAX_PR_LEVELS)                ! L
+        real ob_pr_u_obs(MAX_PR,MAX_PR_LEVELS)          ! O (m/s)
+        real ob_pr_v_obs(MAX_PR,MAX_PR_LEVELS)          ! O (m/s)
+        real ob_pr_t_obs(MAX_PR,MAX_PR_LEVELS)          ! O (deg C)
+        real ob_pr_td_obs(MAX_PR,MAX_PR_LEVELS)         ! O (deg C)
 
         integer i4time_ob_pr(MAX_PR)
         integer nlevels_obs_pr(MAX_PR)
@@ -40,7 +40,7 @@ cdoc    Returns sounding wind data from the SND file
         real*4 lon(imax,jmax)
         real*4 heights_3d(imax,jmax,kmax)
 
-        logical l_good_level
+        logical l_good_level, l_fill_ht
 
         IPR_TIMES_LVLS = MAX_PR*MAX_PR_LEVELS
 
@@ -105,10 +105,10 @@ cdoc    Returns sounding wind data from the SND file
 
 !         Determine whether we need to supply our own height (only pres given)
           if(ht_in .eq. r_missing_data .and. 
-     1       pr_in .ne. r_missing_data                      )then
+     1       pr_in .ne. r_missing_data .and. l_fill_ht)then
 
               call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr),lat,lon       
-     1                              ,imax,jmax,ri,rj,istatus)
+     1                                ,imax,jmax,ri,rj,istatus)
 
               if(istatus .ne. 1)goto505
 
@@ -182,6 +182,7 @@ cdoc    Returns sounding wind data from the SND file
   515     write(6,*)' Error reading RAOB, raw level # =',level
           write(6,*)' While reading sounding # ',(i_pr-n_profiles)
           n_profiles=i_pr-1
+          istatus = 0
           go to 600
 
   516   END DO                   ! level
@@ -191,17 +192,20 @@ cdoc    Returns sounding wind data from the SND file
      1         ,' dimensions of MAX_PR ',MAX_PR
 
       n_profiles=MAX_PR
+      istatus = 0
       GO TO 600
 c
 c     Sounding reading error handling
 c
-  530 write(6,*) ' Error during read of SND file'
+  530 write(6,*) ' Error during read of SND file (sounding header)'       
       write(6,*) ' While reading sounding number ',(i_pr-n_profiles)
       n_profiles=i_pr-1
+      istatus = 0
       GO TO 600
 
   550 CONTINUE ! Used for end of file
       n_profiles=i_pr-1
+      istatus = 1
 
   600 CONTINUE 
 
@@ -260,6 +264,7 @@ cdoc    Returns sounding metadata from the SND file
       call open_lapsprd_file_read(lun,i4time_snd,ext,istatus)
       if(istatus .ne. 1)then
           write(6,*) ' Error opening SND file'
+          istatus = 0
           GO TO 600
       endif
 
@@ -355,6 +360,7 @@ cdoc    Returns sounding metadata from the SND file
   515     write(6,*)' Error reading RAOB, raw level # =',level
           write(6,*)' While reading sounding # ',(i_pr-n_profiles)
           n_profiles=i_pr-1
+          istatus = 0
           go to 600
 
   516   END DO                   ! level
@@ -364,17 +370,21 @@ cdoc    Returns sounding metadata from the SND file
      1         ,' dimensions of MAX_PR ',MAX_PR
 
       n_profiles=MAX_PR
+      istatus = 0
       GO TO 600
 c
 c     Sounding reading error handling
 c
-  530 write(6,*) ' Error during read of SND file'
+  530 write(6,*) ' Error during read of SND file (sounding header)'
       write(6,*) ' While reading sounding number ',(i_pr-n_profiles)
       n_profiles=i_pr-1
+      istatus = 0
       GO TO 600
 
   550 CONTINUE ! Used for end of file
       n_profiles=i_pr-1
+
+      istatus = 1
 
   600 CONTINUE 
 
@@ -416,6 +426,8 @@ c
         real*4 lat(imax,jmax)
         real*4 lon(imax,jmax)
 
+        real*4 heights_3d_dum(imax,jmax,kmax)
+
         integer i4time_ob_pr(MAX_PR)
         integer nlevels_obs_pr(MAX_PR)
 
@@ -440,7 +452,7 @@ c
         call read_snd_data(lun,i4time,ext                              ! I
      1                         ,MAX_PR,MAX_PR_LEVELS                   ! I
      1                         ,lat,lon,imax,jmax,kmax                 ! I
-     1                         ,heights_3d                             ! I
+     1                         ,heights_3d_dum,.false.                 ! I
      1                         ,mode                                   ! I
      1                         ,n_profiles                             ! I/O
      1                         ,nlevels_obs_pr,lat_pr,lon_pr,elev_pr   ! O
