@@ -9,13 +9,16 @@ use strict;
 umask 002;
 use Getopt::Long;
 
-my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$LAPS_SRC_ROOT,$cleandirs);
-my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT,
-                        "dataroot=s" => \$LAPS_DATA_ROOT,
-                        "schedtime=s" => \$schedtime,       # e.g. 20,50
-                        "numfiles=s" => \$numfiles);        # number of files to keep with purger
+my($LAPSINSTALLROOT,$LAPS_DATA_ROOT,$schedtime,$numfiles,$followup,$LAPS_SRC_ROOT,$webdir);
+my $result = GetOptions("installroot=s" => \$LAPSINSTALLROOT, # (required)
+                        "dataroot=s" => \$LAPS_DATA_ROOT,     # (required)
+                        "schedtime=s" => \$schedtime,         # e.g. 20,50 (optional)
+                        "numfiles=s" => \$numfiles,           # number of files to keep with purger (optional)
+                        "followup=s" => \$followup);          # domain name for running followup_ncarg.com script (optional - FSL only)
 
 print "Starting cronfile.pl...\n";
+
+my @lines;
 
 print "LAPSINSTALLROOT = $LAPSINSTALLROOT \n";
 
@@ -49,6 +52,30 @@ print "numfiles = $numfiles\n";
 if(defined($numfiles)){
     print "modifying numfiles\n";
     system("$LAPSINSTALLROOT/util/fix_net sched.pl \'sched.pl -r -m $numfiles \' $LAPS_DATA_ROOT/cronfile");
+}
+
+print "followup = $followup\n";
+if(defined($followup)){
+    print "adding followup\n";
+
+    $webdir="/usr/nfs/common/lapb/www";
+
+    if(-e "$LAPS_DATA_ROOT/cronfile"){
+        open(IN,"$LAPS_DATA_ROOT/cronfile");
+        @lines= <IN>;
+        close IN;
+
+        foreach (@lines) {
+           if( /\@followup\@/ ){
+               s/\@followup\@/\; $webdir\/followup_ncarg.com $LAPS_DATA_ROOT $followup $LAPSINSTALLROOT 1> $webdir\/followup_$followup\.log 2> $webdir\/followup_$followup\.err /;
+           }
+        }
+
+        open(OUT,">$LAPS_DATA_ROOT/cronfile");
+        foreach (@lines) {print OUT "$_";}
+        close OUT;
+    }
+
 }
 
 exit;
