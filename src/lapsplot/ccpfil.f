@@ -406,7 +406,8 @@ C
 C      
 C Draw Perimeter
 C      
-!     CALL CPBACK(ZREG, RWRK, IWRK)
+      call setusv_dum(2hIN,34) ! Gray
+      CALL PERIM(1,1,1,1)
 C      
 C Draw Labels
 C      
