@@ -23,7 +23,7 @@ EXE = binary_coeff.x
 
 SRC= binary_coeff.f
 
-MAIN = binary_coeff.f
+MAIN =
 
 LIB= libbinary.a
 
