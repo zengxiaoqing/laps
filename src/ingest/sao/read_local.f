@@ -17,6 +17,8 @@ c
 c     Original:  P. Stamus, NOAA/FSL  28 Aug 1998
 c	         09-30-98  P. Stamus
 c                     Housekeeping changes.
+c                10-18-99  P. Stamus
+c                     Add check for missing values.
 c
 c**********************************************************************
 c
@@ -32,12 +34,12 @@ c
      +     seaLevelPressure(recNum), stationPressure(recNum),
      +     temperature(recNum), visibility(recNum), windDir(recNum),
      +     windDirMax(recNum), windGust(recNum), windSpeed(recNum)
-      real filval
+      real filval, misval
 
       double precision observationTime(recNum), rhChangeTime(recNum),
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     windDirChangeTime(recNum), windGustChangeTime(recNum),
-     +     windSpeedChangeTime(recNum), dfilval
+     +     windSpeedChangeTime(recNum), dfilval, dmisval
 c
 c..... Start here.
 c
@@ -118,6 +120,12 @@ C
          print *, ' in var altimeter'
       endif
       call ck_array_real(altimeter, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var altimeter'
+      endif
+      call ck_array_real(altimeter, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      dewpoint     "dew point temperature" 
@@ -138,6 +146,12 @@ C
          print *, ' in var dewpoint'
       endif
       call ck_array_real(dewpoint, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var dewpoint'
+      endif
+      call ck_array_real(dewpoint, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      elevation    "elevation" 
@@ -158,6 +172,12 @@ C
          print *, ' in var elevation'
       endif
       call ck_array_real(elevation, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var elevation'
+      endif
+      call ck_array_real(elevation, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      latitude     "latitude" 
@@ -178,6 +198,12 @@ C
          print *, ' in var latitude'
       endif
       call ck_array_real(latitude, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var latitude'
+      endif
+      call ck_array_real(latitude, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      longitude    "longitude" 
@@ -198,6 +224,12 @@ C
          print *, ' in var longitude'
       endif
       call ck_array_real(longitude, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var longitude'
+      endif
+      call ck_array_real(longitude, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      relHumidity  "relative humidity" 
@@ -218,6 +250,12 @@ C
          print *, ' in var relHumidity'
       endif
       call ck_array_real(relHumidity, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var relHumidity'
+      endif
+      call ck_array_real(relHumidity, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      seaLevelPressure"sea level pressure" 
@@ -238,6 +276,12 @@ C
          print *, ' in var seaLevelPressure'
       endif
       call ck_array_real(seaLevelPressure, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var seaLevelPressure'
+      endif
+      call ck_array_real(seaLevelPressure, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      stationPressure"station pressure" 
@@ -258,6 +302,12 @@ C
          print *, ' in var stationPressure'
       endif
       call ck_array_real(stationPressure, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var stationPressure'
+      endif
+      call ck_array_real(stationPressure, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      temperature  "temperature" 
@@ -278,6 +328,12 @@ C
          print *, ' in var temperature'
       endif
       call ck_array_real(temperature, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var temperature'
+      endif
+      call ck_array_real(temperature, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      visibility   "visibility" 
@@ -298,6 +354,12 @@ C
          print *, ' in var visibility'
       endif
       call ck_array_real(visibility, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var visibility'
+      endif
+      call ck_array_real(visibility, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      windDir      "wind direction" 
@@ -318,6 +380,12 @@ C
          print *, ' in var windDir'
       endif
       call ck_array_real(windDir, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windDir'
+      endif
+      call ck_array_real(windDir, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      windDirMax   "wind direction at gust" 
@@ -338,6 +406,12 @@ C
          print *, ' in var windDirMax'
       endif
       call ck_array_real(windDirMax, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windDirMax'
+      endif
+      call ck_array_real(windDirMax, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      windGust     "wind gust" 
@@ -358,6 +432,12 @@ C
          print *, ' in var windGust'
       endif
       call ck_array_real(windGust, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windGust'
+      endif
+      call ck_array_real(windGust, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      windSpeed    "wind speed" 
@@ -372,12 +452,18 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'in NF_GET_VAR_ windSpeed '
       endif
-        nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'_FillValue',filval)
       if(nf_status .ne. NF_NOERR) then
          print *, NF_STRERROR(nf_status)
          print *, ' in var windSpeed'
       endif
       call ck_array_real(windSpeed, recNum, filval, badflag)
+       nf_status = NF_GET_ATT_REAL(nf_fid,nf_vid,'missing_value',misval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windSpeed'
+      endif
+      call ck_array_real(windSpeed, recNum, misval, badflag)
 C
 C     Variable        NETCDF Long Name
 C      observationTime"time of observation" 
@@ -400,6 +486,14 @@ C
       do i=1,recNum
         if(observationTime(i) .eq. dfilval) observationTime(i) = badflag
       enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var observationTime'
+      endif
+      do i=1,recNum
+        if(observationTime(i) .eq. dmisval) observationTime(i) = badflag
+      enddo !i
 C
 C     Variable        NETCDF Long Name
 C      rhChangeTime "relative humidity time of last change" 
@@ -421,6 +515,14 @@ C
       endif
       do i=1,recNum
          if(rhChangeTime(i) .eq. dfilval) rhChangeTime(i) = badflag
+      enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var rhChangeTime'
+      endif
+      do i=1,recNum
+         if(rhChangeTime(i) .eq. dmisval) rhChangeTime(i) = badflag
       enddo !i
 C
 C     Variable        NETCDF Long Name
@@ -446,6 +548,15 @@ C
          if(stationPressChangeTime(i) .eq. dfilval) 
      &                             stationPressChangeTime(i) = badflag
       enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var stationPressChangeTime'
+      endif
+      do i=1,recNum
+         if(stationPressChangeTime(i) .eq. dmisval) 
+     &                             stationPressChangeTime(i) = badflag
+      enddo !i
 C
 C     Variable        NETCDF Long Name
 C      tempChangeTime"temperature time of last change" 
@@ -468,6 +579,14 @@ C
       do i=1,recNum
          if(tempChangeTime(i) .eq. dfilval) tempChangeTime(i) = badflag
       enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var tempChangeTime'
+      endif
+      do i=1,recNum
+         if(tempChangeTime(i) .eq. dmisval) tempChangeTime(i) = badflag
+      enddo !i
 C
 C     Variable        NETCDF Long Name
 C      windDirChangeTime"wind direction time of last change" 
@@ -489,6 +608,15 @@ C
       endif
       do i=1,recNum
          if(windDirChangeTime(i) .eq. dfilval) 
+     &                                 windDirChangeTime(i) = badflag
+      enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windDirChangeTime'
+      endif
+      do i=1,recNum
+         if(windDirChangeTime(i) .eq. dmisval) 
      &                                 windDirChangeTime(i) = badflag
       enddo !i
 C
@@ -514,6 +642,15 @@ C
          if(windGustChangeTime(i) .eq. dfilval) 
      &                               windGustChangeTime(i) = badflag
       enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windGustChangeTime'
+      endif
+      do i=1,recNum
+         if(windGustChangeTime(i) .eq. dmisval) 
+     &                               windGustChangeTime(i) = badflag
+      enddo !i
 C
 C     Variable        NETCDF Long Name
 C      windSpeedChangeTime"wind speed time of last change" 
@@ -535,6 +672,15 @@ C
       endif
       do i=1,recNum
          if(windSpeedChangeTime(i) .eq. dfilval) 
+     &                                windSpeedChangeTime(i) = badflag
+      enddo !i
+      nf_status=NF_GET_ATT_DOUBLE(nf_fid,nf_vid,'missing_value',dmisval)
+      if(nf_status .ne. NF_NOERR) then
+         print *, NF_STRERROR(nf_status)
+         print *, ' in var windSpeedChangeTime'
+      endif
+      do i=1,recNum
+         if(windSpeedChangeTime(i) .eq. dmisval) 
      &                                windSpeedChangeTime(i) = badflag
       enddo !i
 c
