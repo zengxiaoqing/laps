@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
-#include "/usr/local/netcdf/include/netcdf.h"
-#define SYSCMD "/usr/local/netcdf/bin/ncgen -o %s %s"
+#include <netcdf.h>
+#define SYSCMD "ncgen -o %s %s"
 
 #define LC3_LEVELS 42
 #define LM1_LEVELS 3
@@ -36,6 +36,9 @@
 #define update_laps_v3 update_laps_v3_
 #define write_cdf_v3 write_cdf_v3_
 #define open_cdf open_cdf_
+#define nstrncpy nstrncpy_
+#define fstrncpy fstrncpy_
+#define cv_i4_tim_asc_lp cv_i4tm_asc_lp_
 #endif
 #ifdef FORTRANCAPS
 #define dim_size_v3 DIM_SIZE_V3
@@ -60,6 +63,9 @@
 #define update_laps_v3 UPDATE_LAPS_V3
 #define write_cdf_v3 WRITE_CDF_V3
 #define open_cdf OPEN_CDF
+#define nstrncpy NSTRNCPY
+#define fstrncpy FSTRNCPY
+#define cv_i4_tim_asc_lp CV_I4_TIM_ASC_LP
 #endif
 #ifdef FORTRANDOUBLEUNDERSCORE
 #define dim_size_v3 dim_size_v3__
@@ -84,6 +90,9 @@
 #define update_laps_v3 update_laps_v3__
 #define write_cdf_v3 write_cdf_v3__
 #define open_cdf open_cdf__
+#define nstrncpy nstrncpy__
+#define fstrncpy fstrncpy__
+#define cv_i4_tim_asc_lp cv_i4tm_asc_lp__
 #endif
 
 /************************************************************/
@@ -1764,8 +1773,11 @@ long *status;
             return;
           }
         }
-        else { /* file is there....10/14/97 write over it anyway*/
-          system(syscmd); /* added 10/14/97 */
+        else { /* file is there...*/
+          /* 10/14/97 for write_laps_data with no append, write over it anyway*/
+          if (((*called_from == 0) || (*called_from == 1)) && (*append == 0)){
+            system(syscmd); /* added 10/14/97 */
+          }
           cdfid = ncopen(filename,NC_WRITE);
           if (cdfid == -1) {    /* error opening file */ 
             printf("File %s exists, but cannot be opened.\n",filename);
@@ -1778,7 +1790,7 @@ long *status;
 
         free_file_var(syscmd, filename);
 
-/* set i_record to value returned by ncdiminq */
+/* set i_record to value returned by ncdiminq...if value > 0, set to (value - 1)  */
 
         if ((dim_id = ncdimid(cdfid,"record")) == (-1)) {
 	  *status = -2; /* error in file creation */ 
@@ -1798,11 +1810,40 @@ long *status;
           i_record = (int)num_record;
         }
         else {
-          if (*append == 0) {  /* only one analysis allowed in a file */
-            *status = -6;
-            ncclose(cdfid);
-            free(ext);
-            return; 
+          i_record = (int)num_record - 1;
+          if (*called_from == 2) { /* ok to write into existing record */
+            if (*append == 0) { /* if only one analysis allowed in a file */
+              if (i_record == 0) {  /* things are OK */
+              }
+              else {
+                *status = -6;
+                ncclose(cdfid);
+                free(ext);
+                return; 
+              }
+            }
+            else {
+              printf("Append option not currently implemented.\n");
+              *status = -6;
+              ncclose(cdfid);
+              free(ext);
+              return; 
+            }
+          }
+          else {
+            if (*append == 0) {  /* only one analysis allowed in a file */
+              *status = -6;
+              ncclose(cdfid);
+              free(ext);
+              return; 
+            }
+            else {
+              printf("Append option not currently implemented.\n");
+              *status = -6;
+              ncclose(cdfid);
+              free(ext);
+              return; 
+            }
           }
         }
 
@@ -1822,27 +1863,47 @@ long *status;
           return;
         }
 
+/* write header info only if num_record == 0 */
+
+        if (num_record == 0) {
+
 /* get info from static.nest7grid for writing to output files */
-	static_grid = malloc((*stat_len + 20) * sizeof(char));
-        nstrncpy(static_grid,f_static_path,*stat_len);
-        strcat(static_grid,"static.nest7grid");
+	  static_grid = malloc((*stat_len + 20) * sizeof(char));
+          nstrncpy(static_grid,f_static_path,*stat_len);
+          strcat(static_grid,"static.nest7grid");
 
-        map_proj = malloc(256 * sizeof(char));
-        origin = malloc(256 * sizeof(char));
+          map_proj = malloc(256 * sizeof(char));
+          origin = malloc(256 * sizeof(char));
 
-        istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, &LoV, 
-                                     &Latin1, &Latin2, map_proj, origin);
-        free(static_grid);
+          istatus = get_static_info_v3(static_grid, &Dx, &Dy, &La1, &Lo1, &LoV, 
+                                       &Latin1, &Latin2, map_proj, origin);
+          free(static_grid);
 
-        if (istatus == -1) {
-          printf("Error reading info from static.nest7grid.\n");
-          printf("  Some navigation data will be missing from file.\n");
-        }
+          if (istatus == -1) {
+            printf("Error reading info from static.nest7grid.\n");
+            printf("  Some navigation data will be missing from file.\n");
+          }
 
+/* write out header information into file */
+
+	  istatus = write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, 
+                                 base, interval, n_levels, &Dx, &Dy, &La1, &Lo1, 
+                                 &LoV, &Latin1, &Latin2, map_proj, origin);
+
+          free_static_var(map_proj, origin);
+          if (istatus == -1) {
+	    *status = -5; /* error writing out header */ 
+            ncclose(cdfid);
+            free(ext);
+            free_write_var(var, comment, asctime, comm_var, inv_var);
+            return;
+          }
+        } /* end if num_record == 0  */
+       
 /* convert i_reftime to reftime */
-	reftime = (double)(*i_reftime);
-        /* default case for analysis: valtime == reftime */
-        valtime = (double)(*i_valtime);
+	  reftime = (double)(*i_reftime);
+          /* default case for analysis: valtime == reftime */
+          valtime = (double)(*i_valtime);
 
 /* transfer fortran strings to c strings */
 	var = malloc((*var_len + 1) * sizeof(char) * (*kdim));
@@ -1858,22 +1919,17 @@ long *status;
         fill_c_var(kdim,f_var,var,var_len,f_comment,comment,comm_len,
                    f_asctime,asctime,asc_len);
 
-/* write out header information into file */
-
-	istatus = write_hdr_v3(cdfid, ext, i_record, imax, jmax, kmax, kdim, 
-                               base, interval, n_levels, &Dx, &Dy, &La1, &Lo1, 
-                               &LoV, &Latin1, &Latin2, map_proj, origin);
-
-        free_static_var(map_proj, origin);
-        if (istatus == -1) {
-	  *status = -5; /* error writing out header */ 
-          ncclose(cdfid);
-          free(ext);
-          free_write_var(var, comment, asctime, comm_var, inv_var);
-          return;
+        if (*called_from == 2) {
+          if (num_record == 0) {
+            old_record = -1;
+          }
+          else {
+            old_record = i_record;
+          }
         }
-       
-        old_record = -1;
+        else { 
+          old_record = -1;
+        }
 	missing_grids = 0;
         vptr = var;
 
