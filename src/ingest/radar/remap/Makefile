@@ -19,7 +19,7 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/radar/remap_ftn/libdebugremap_ftn.a  \
 
 EXE = remap_polar_netcdf.exe
 
-SRC=remap.f netcdfio.f get_tilt_netcdf.f rayqckz.f remap_process.f
+SRC=remap.f netcdfio.f get_tilt_netcdf.f rayqckz.f remap_process.f unfold.f
 
 all: exe
 
