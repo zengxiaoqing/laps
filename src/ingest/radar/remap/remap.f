@@ -121,7 +121,7 @@ cdis
 
       include 'remap.inc'
       include 'remap_dims.inc'
-!     include 'remap_constants.dat'      
+      include 'remap_constants.dat'      
 
       integer MAX_REF_TILT
       integer MAX_VEL_TILT
@@ -143,6 +143,13 @@ cdis
       real v_nyquist_ray_a(MAX_RAY_TILT)
       real azim(MAX_RAY_TILT)
       real eleva 
+
+!     Declarations for call to 'Read_data_88d'
+      Real*4  Slant_ranges_m (max_gates),
+     :        Elevation_deg,
+     :        Az_array(max_rays) 
+      real*4, allocatable, dimension(:,:) :: Velocity
+      real*4, allocatable, dimension(:,:) :: Reflect
 
       integer ref_index, vel_index, io_stat
       integer n_rays, i_scan, i_tilt, n_ref_gates, n_vel_gates
@@ -261,7 +268,6 @@ cdis
       write_and_exit = 0
       read_next = 1
       alls_well = 1
-      i_missing_data = -999
 
 !     Begin infinite loop to continuously read radar data  
 
@@ -453,16 +459,59 @@ cdis
               write(6,*)'  i4time_vol, i_num,  istatus',
      1                i4time_vol,i_num_finished_products,istatus
 
+c     Get radar data from the storage area (formerly in remap_process)
+c
+      allocate( Velocity(max_gates,max_rays), STAT=istat_alloc )       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate Velocity'
+          stop
+      endif
+
+      allocate( Reflect(max_gates,max_rays), STAT=istat_alloc )       
+      if(istat_alloc .ne. 0)then
+          write(6,*)' ERROR: Could not allocate Reflect'
+          stop
+      endif
+
+      call Read_Data_88D(
+     :               i_tilt_proc_curr,
+     :               vel_thr_rtau,
+     :               r_missing_data,       ! Input
+     :               namelist_parms,
+     :               gate_spacing_m_ret,   ! Output
+     :               i_scan_mode,
+     :               Num_sweeps,
+     :               Elevation_deg,
+     :               n_rays_88d,
+     :               n_gates_88d,     ! Ref and Vel are on the same # of gates
+     :               Slant_ranges_m,
+     :               Velocity,
+     :               Reflect,
+     :               Az_Array,
+     :               vel_nyquist,
+     :               istatus_tilt)
+
               call remap_process(
      1            i_tilt_proc_curr,i_last_scan,i_first_scan,             ! I
      :            grid_rvel,grid_rvel_sq,grid_nyq,ngrids_vel,n_pot_vel,  ! O
      :            grid_ref,ngrids_ref,n_pot_ref,                         ! O
      1            NX_L,NY_L,NZ_L,                                        ! I
+     1            i_scan_mode,                                           ! I
+     :            Slant_ranges_m,                                        ! I
+     :            n_rays_88d,                                            ! I
+     :            n_gates_88d,                                           ! I
+     1            Velocity,Reflect,                                      ! I
+     1            Az_Array,Elevation_deg,                                ! I
+     1            vel_nyquist,                                           ! I
      1            ref_min,min_ref_samples,min_vel_samples,dgr,           ! I
      1            laps_radar_ext,c3_radar_subdir,path_to_vrc,            ! I
      1            namelist_parms,                                        ! I
      1            i4time_vol,                                            ! I
-     1            i_num_finished_products,istatus)                       ! O
+     1            i_num_finished_products,istatus_tilt,istatus)          ! O
+
+              deallocate(Velocity)
+              deallocate(Reflect)
+
               if(istatus .ne. 1)then
                   write(6,*)
      1            ' remap_sub: remap_process returned istatus =',istatus     
