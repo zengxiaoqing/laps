@@ -387,13 +387,19 @@ c read in laps lat/lon and topo
             return
         endif
 
-        call get_cloud_parms(l_use_vis,l_use_39,l_use_co2_mode1
+        call get_cloud_parms(l_use_vis,l_use_39,latency_co2
      1                      ,pct_req_lvd_s8a
      1                      ,i4_sat_window,i4_sat_window_offset
      1                      ,istatus)
         if(istatus .ne. 1)then
             write(6,*)' laps_cloud_sub: Error getting cloud parms'
             stop
+        endif
+
+        if(latency_co2 .ge. 0)then
+            l_use_co2_mode1 = .true.
+        else
+            l_use_co2_mode1 = .false.
         endif
 
         l_use_co2_mode2 = .false.
@@ -604,7 +610,8 @@ C READ IN AND INSERT PIREP DATA AS CLOUD SOUNDINGS
 C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
         if(l_use_co2_mode1)then
             call insert_co2ctp(i4time,cld_hts,heights_3d                  ! I
-     1            ,NX_L,NY_L,NZ_L,KCLOUD,r_missing_data,l_use_co2_mode1   ! I
+     1            ,NX_L,NY_L,NZ_L,KCLOUD,r_missing_data                   ! I
+     1            ,l_use_co2_mode1,latency_co2                            ! I
      1            ,default_clear_cover                                    ! I
      1            ,lat,lon,ix_low,ix_high,iy_low,iy_high                  ! I
      1            ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd       ! I/O
@@ -613,7 +620,11 @@ C READ IN AND INSERT CO2 SLICING DATA AS CLOUD SOUNDINGS
 
 C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
         write(6,*)
-        write(6,*)' Analyzing SFC Obs and PIREP data'
+        if(l_use_co2_mode1)then
+            write(6,*)' Analyzing SFC Obs, PIREP, and CO2-Slicing data'       
+        else
+            write(6,*)' Analyzing SFC Obs and PIREP data'
+        endif
 
         max_obs = n_cld_snd * KCLOUD
 
@@ -663,7 +674,7 @@ C DO ANALYSIS to horizontally spread SAO, PIREP, and optionally CO2 data
 C READ IN SATELLITE DATA
         call get_sat_data(i4time,i4_sat_window,i4_sat_window_offset,     ! I
      1                    NX_L,NY_L,r_missing_data,                      ! I
-     1                    l_use_39,l_use_co2_mode2,                      ! I
+     1                    l_use_39,l_use_co2_mode2,latency_co2,          ! I
      1                    tb8_k,istat_tb8,comment_tb8,                   ! O
      1                    t39_k,istat_t39,comment_t39,                   ! O
      1                    sst_k,istat_sst,comment_sst,                   ! O

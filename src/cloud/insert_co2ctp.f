@@ -40,7 +40,8 @@ c
 c
 
         subroutine insert_co2ctp(i4time,cld_hts,heights_3d                ! I
-     1            ,imax,jmax,kmax,kcloud,r_missing_data,l_use_co2         ! I
+     1            ,imax,jmax,kmax,kcloud,r_missing_data                   ! I
+     1            ,l_use_co2,latency_co2                                  ! I 
      1            ,default_clear_cover                                    ! I
      1            ,lat,lon,ix_low,ix_high,iy_low,iy_high                  ! I
      1            ,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd       ! I/O
@@ -74,7 +75,7 @@ c
 
 !       Obtain NESDIS Cloud-top pressure
         if(l_use_co2)then
-            i4_co2_window = 4000
+            i4_co2_window = latency_co2
 
             write(6,*)' Getting NESDIS Cloud-top pressure'
             ext = 'ctp'
@@ -153,6 +154,7 @@ c
                     write(6,*)' Working with CO2 cloud top:'
      1                       ,nint(cldtop_co2_pa_a(i,j))
      1                       ,nint(cbase_m),nint(ctop_m),cover_rpt
+     1                       ,' at ',i,j
                 endif
 
                 n_cloud = n_cloud + 1

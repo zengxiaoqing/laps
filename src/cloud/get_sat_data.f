@@ -42,7 +42,7 @@ c
         subroutine get_sat_data(i4time,
      1  i4_sat_window,i4_sat_window_offset,                              ! I
      1  imax,jmax,r_missing_data,                                        ! I
-     1  l_use_39,l_use_co2,                                              ! I
+     1  l_use_39,l_use_co2,latency_co2,                                  ! I
      1  s8a_k,istat_s8a,comment_s8a,                                     ! O
      1  s3a_k,istat_s3a,comment_s3a,                                     ! O
      1  sst_k,istat_sst,comment_sst,                                     ! O
@@ -138,7 +138,7 @@ c
 
 !       Obtain NESDIS Cloud-top pressure
         if(l_use_co2)then ! This is the "mode 2" type of CO2 usage
-            i4_co2_window = 4000
+            i4_co2_window = latency_co2
 
             write(6,*)' Getting NESDIS Cloud-top pressure'
             ext = 'ctp'
