@@ -189,7 +189,9 @@
 
      'ulimit' settings should be placed at 'unlimited' if possible. Memory
      requirements vary for LAPS. As a general guide, 128MB is needed and
-     256MB is preferred. More is needed for large domains.
+     256MB is preferred. More is needed for large domains. For very large
+     domains, a rough guide to the memory needed would be 100 x NX x NY x NZ
+     bytes.
    
             ---  2.1.8  Plotting / NCAR graphics library (optional)  ---
 
