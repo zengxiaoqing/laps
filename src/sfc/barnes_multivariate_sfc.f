@@ -52,9 +52,9 @@
         sumsq_inst = 0.
         n_obs_valid = 0
         ibound = 0
-        iskip_bound = 1 ! How far to skip between boundary obs that get used.
-                        ! 1 means use all boundary obs, 2 means use every
-                        ! other boundary ob, 3 means use every 3rd boundary ob.
+        iskip_bound = 10 ! How far to skip between boundary obs that get used.
+                         ! 1 means use all boundary obs, 2 means use every
+                         ! other boundary ob, 3 means use every 3rd boundary ob.
 
         boundary_err = rinst_err
             
