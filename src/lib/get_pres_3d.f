@@ -142,9 +142,18 @@ cdoc  there are more levels in the boundary layer.
 
       i = ni/2
       j = nj/2
-      k = nk
 
-      rep_pres_intvl = nint( pres_3d(i,j,k-1) - pres_3d(i,j,k) )
+      free_atmos_pres = max(70000.,pres_3d(i,j,nk-1))
+
+      free_atmos_zcoord = zcoord_of_field(free_atmos_pres,pres_3d
+     1                                   ,ni,nj,nk,i,j,istatus)
+      if(istatus .ne. 1)return
+
+      klow = nint(free_atmos_zcoord)
+
+      pres_diff = pres_3d(i,j,klow) - pres_3d(i,j,nk) 
+
+      rep_pres_intvl = nint( pres_diff / float(nk-klow) )
 
       if(rep_pres_intvl .le. 0.)then
           write(6,*)' ERROR in get_rep_pres_intvl: rep_pres_intvl < 0 '

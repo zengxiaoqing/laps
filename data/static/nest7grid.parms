@@ -78,6 +78,15 @@ c                        Areas with reflectivities < 'ref_base_useable_cmn'
 c                        are generally reset to 'ref_base_cmn' (no echo 
 c                        value).
 c
+c fdda_model_source_cmn - Enter the forecast model if you'd like to use
+c                         one for 4DDA (as a substitute for lga/lgb input
+c                         to the analyses). Examples are 'mm5', 'eta', etc. 
+c                         This corresponds to the available 'lapsprd/fua/*'
+c                         subdirectories. If more than one is added, then
+c                         we assume it's an ensemble and the initial element
+c                         would be 'ens'. Lapsplot will plot only among those
+c                         listed elements.
+c
 c TERRAIN SMOOTHING
 c           
 c toptwvl_parm_cmn: 
@@ -91,3 +100,5 @@ c     the maximum elevation in the local area. Useful range is anywhere
 c     between 0-1. A value of zero uses the average terrain instead of the 
 c     maximum. Note that a value of 1 may reduce the apparent effect of 
 c     filtering with 'toptwvl_parm'.
+c
+

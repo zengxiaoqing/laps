@@ -189,7 +189,6 @@ cdoc    value of height_to_zcoord will have a fraction of 0.5.
 cdoc    Convert from Height to fractional Z-coordinate. 3-D Heights 
 cdoc    are used as a reference.
 cdoc    Note that this routine works with the real atmosphere.
-cdoc    The type of interpolation is similar to that in 'height_to_zcoord2'.
 cdoc    When the vertical grid is pressure (e.g.), the height is converted to
 cdoc    pressure, then the interpolation to the vertical grid is performed.
 cdoc    Thus if the height is midway between two LAPS levels in height space,
@@ -278,89 +277,6 @@ cdoc    value of 'height_to_zcoord3' will have a fraction of 0.5.
         return
 
         end
-
-
-        function height_to_zcoord2_lin(height_m,heights_3d
-     1                                  ,ni,nj,nk,i,j,istatus)
-
-cdoc    Convert Height to fractional Z-coordinate, using 3-D heights as a 
-cdoc    reference. 
-
-cdoc    WARNING: This routine is designed to be efficient. As a result, it
-cdoc    will fail if the input heights differ too much from the standard
-cdoc    atmosphere. In such a case, the istatus will be returned as zero.
-
-!       1994 Steve Albers
-
-        implicit real*4 (a-z)
-
-        integer i,j,k,ni,nj,nk,kref,istatus
-
-        real*4 heights_3d(ni,nj,nk)
-
-        logical ltest_vertical_grid
-
-        istatus = 1
-
-        if(ltest_vertical_grid('HEIGHT'))then
-           print*, 'Call is obsolete, please report this message to '
-           print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
-!            height_to_zcoord2_lin = height_m / HEIGHT_INTERVAL
-
-        elseif(ltest_vertical_grid('PRESSURE'))then
-            height_to_zcoord2_lin = nk+1 ! Default value is off the grid
-
-          ! Standard Atmosphere Guess + a cushion
-!           This must always be >= height_to_zcoord2_lin
-            kref = min(int(height_to_zcoord((height_m+600.)*1.2,istatus)
-     1),nk)
-
-            heights_above = heights_3d(i,j,kref)
-
-            if(height_m .gt. heights_above)then
-                istatus = 0
-                goto999
-            endif
-
-            do k = kref-1,1,-1
-                if(heights_above     .ge. height_m .and.
-     1           heights_3d(i,j,k) .le. height_m         )then
-                    thickness = heights_above - heights_3d(i,j,k)
-                    fraction = (height_m - heights_3d(i,j,k))/thickness
-
-                    height_to_zcoord2_lin = k + fraction
-
-!                   if(j .eq. 29)then
-!                       write(6,*)' height_to_zcoord2_lin: kref,k,kref-k+1'
-!       1                                             ,kref,k,kref-k+1
-!                   endif
-
-                    goto999
-
-                endif
-
-                heights_above = heights_3d(i,j,k)
-
-            enddo ! k
-
-            istatus = 0
-            height_to_zcoord2_lin = 0
-            write(6,101)kref,height_m,heights_3d(i,j,1)
-101         format(
-     1    ' Error: below domain in height_to_zcoord2_lin, kref,h,h(1)'
-     1             ,i3,2e11.4)
-
-        else
-            write(6,*)' Error, vertical grid not supported,'
-     1               ,' this routine supports PRESSURE or HEIGHT'
-            istatus = 0
-            return
-
-        endif
-
-999     return
-        end
-
 
 
         function height_to_zcoord3(height_m,heights_3d,zcoords_1d
@@ -774,6 +690,99 @@ cdoc    Obtain pressure of a given real (fractional) level. Being phased out?
      1                  - PRESSURE_INTERVAL_L * rlevel
 
         istatus = 1
+        return
+        end
+
+        function zcoord_of_field(value,field_3d,ni,nj,nk,i,j,istatus)       
+
+cdoc    Find z coordinate given a field value, i, j, and the whole 3-D field
+
+        implicit real*4 (a-z)
+
+        real*4 field_3d(ni,nj,nk)
+
+        integer i,j,k,ni,nj,nk,kref,istatus,isign
+
+        logical ltest_vertical_grid
+
+        data k_ref /1/
+        save k_ref
+
+        if(ltest_vertical_grid('HEIGHT'))then
+            print*, 'Call is obsolete, please report this message to '       
+            print*, 'and how it occured to laps-bugs@fsl.noaa.gov'
+!           zcoord_of_field = value / HEIGHT_INTERVAL
+
+        elseif(ltest_vertical_grid('PRESSURE'))then
+            if(field_3d(i,j,nk) .gt. field_3d(i,j,1))then
+                rsign = 1.0
+                isign = 1
+            else
+                rsign = -1.0
+                isign = -1
+            endif
+
+            zcoord_of_field = nk+1 ! Default value is off the grid
+
+            k = k_ref
+
+            if((value - field_3d(i,j,nk)) * rsign .gt. 0.)then
+                zcoord_of_field = nk+1 
+!               write(6,101)kref,value,field_3d(i,j,nk)
+!101            format('  Note: above domain in zcoord_of_field,'       
+!    1                ,' kref,h,h(nk)',i3,2e11.4)
+                istatus = 0
+                return
+
+            elseif((value - field_3d(i,j,1)) * rsign .lt. 0.)then
+                zcoord_of_field = 0
+                write(6,102)kref,value,field_3d(i,j,1)
+102             format('  Warning: below domain in zcoord_of_field,'
+     1                ,' kref,h,h(1)',i3,2e11.4)
+                istatus = 0
+                return
+
+            endif ! input height is outside domain
+
+            do iter = 1,nk
+                if( (field_3d(i,j,k+1) - value) * rsign .ge. 0. .and.
+     1              (field_3d(i,j,k)   - value) * rsign .le. 0.  )then
+                    thickness = field_3d(i,j,k+1) - field_3d(i,j,k)
+                    fraction = (value - field_3d(i,j,k))/thickness
+
+                    zcoord_of_field = k + fraction
+
+                    goto999
+
+                elseif((value - field_3d(i,j,k+1)) * rsign .gt. 0.)then
+                    k = min(k+1,nk-1)
+
+                elseif((value - field_3d(i,j,k))   * rsign .lt. 0.)then
+                    k = max(k-1,1)
+
+                endif
+
+            enddo ! iter
+
+            zcoord_of_field = 0
+            write(6,*)' Error, iteration limit in zcoord_of_field'
+            istatus = 0
+            return
+
+        else
+            write(6,*)' Error, vertical grid not supported,'
+     1               ,' this routine supports PRESSURE or HEIGHT'
+            istatus = 0
+            return
+
+        endif
+
+999     k_ref = k       ! Successful return
+        istatus = 1
+        return
+
+        end
+
         return
         end
 
