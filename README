@@ -49,11 +49,10 @@
          2.7.5 ..................  Terrain Smoothing/Filtering  
          2.8 ..............  CHANGING THE VERTICAL DOMAIN
          2.9 ..............  CHANGING THE CYCLE TIME 
-         2.10 .............  SURFACE ANALYSIS CHANGES
-         2.11 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
-         2.12 .............  LVD (SATELLITE INGEST) CHANGES
-         2.13 .............  OTHER RUNTIME PARAMETERS
-         2.14 .............  Detecting and Reporting Installation Errors
+         2.10 .............  LQ3 (HUMIDITY ANALYSIS) CHANGES
+         2.11 .............  LVD (SATELLITE INGEST) CHANGES
+         2.12 .............  OTHER RUNTIME PARAMETERS
+         2.13 .............  Detecting and Reporting Installation Errors
      3.0 ............  Description of LAPS Processes
          3.1 ..............  Localization Processes
          3.1.1 ..................  Gridgen_model (static.nest7grid generation)
@@ -76,6 +75,7 @@
          3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
+         3.3.2.1 .....................  SURFACE ANALYSIS RUNTIME PARAMETERS
          3.3.3 ..................  TEMP 
          3.3.4 ..................  CLOUD
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
@@ -1433,46 +1433,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      1. Edit runtime parameter file 'data/static/nest7grid.parms' 
         to change the value of 'laps_cycle_time'.
 
---------- 2.10 ------SURFACE ANALYSIS CHANGES---------------------------------
-
-   PRESSURE REDUCTION
-
-     1. You will need to select an elevation for the reduced pressure analysis.
-	The reduced pressure is the only one really used in the variational
-	portion of LAPS, and the idea is to select an elevation that is 
-	representative of the domain (or portion of the domain) you are
-	interested in.  For example, the Colorado LAPS domain includes 4000m
-	high mountains over the western 1/3, and plains that slope below 
-	1000m at the eastern boundary.  We use 1500m as the Colorado LAPS
-	reduced pressure.  This is close to the elevations over the eastern
-	2/3's of the domain, and requires a smaller reduction over the 
-        mountains compared to MSL, for example.  Change the namelist variable 
-        in '/data/static/surface_analysis.nl' when you localize LAPS.
-
-   SURFACE THETA CHECK	
-
-     1. In the 'surface_analysis.nl' file, set the 'itheta' flag for the 
-        surface theta check.  This check adjusts the surface potential 
-        temperatures so they are not greater than the potential temperature at
-        an upper level.  Set this variable equal to the desired upper level 
-        (or if you don't want to do this check):
-
-	                0 = No sfc theta check done
-	                7 = Use 700 mb level
-	                5 = Use 500 mb level
-
-	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
-	areas (like Colorado).
-
-   QUALITY CONTROL
-
-     1. A still fairly simple quality control is included in the surface
-	package.  If you wish to skip over this step, you can change 
-    	the 'surface_analysis.nl' namelist file. This namelist also has a 
-        separate flag to use the new quality control files (lso_qc), generated
-        by 'sfc_qc.exe'.
-
- ----- 2.11 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
+ ----- 2.10 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
 NAMELIST
 
@@ -1611,14 +1572,14 @@ At this time the only TPW full column adjustment is made.  At a future
 time, it may be worthwhile to design an adjustment based on layer PW
 since 3 layers are routinely available from NESDIS.  
 
------- 2.12 -------------LVD (SATELLITE INGEST) CHANGES------------------------
+------ 2.11 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
    There may be some parameters in the satellite code that change when 
    the domain is moved. The latest info documented in the file
    './src/ingest/satellite/lvd/README'. Please contact John Smart 
    (smart@fsl.noaa.gov) for more details. 
 
------- 2.13 ----------------OTHER RUNTIME PARAMETERS---------------------------
+------ 2.12 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' and other namelist
    files in 'data/static' to make sure all the runtime parameters are
@@ -1645,7 +1606,7 @@ since 3 layers are routinely available from NESDIS.
                        normalization.
 </pre>
 
------- 2.14 -----Detecting and Reporting Installation Errors-------------------
+------ 2.13 -----Detecting and Reporting Installation Errors-------------------
 
    To determine how well LAPS was installed, verify that all (31 at last check)
    executables were built OK ('bin' directory) with no errors in the output 
@@ -1866,6 +1827,10 @@ based on "offical" NWS numbers where possible.  For LDAD observations, they're
 just a best guess, since no one really knows how good the obs are.  These 
 expected accuracies will be used in the quality control routines sometime in 
 the future.  The lat/lons are in decimal degrees.
+
+This new QC package compares the observations temporally and fills in 
+predicted values for an observation when it is only intermittently available.
+This helps compensate for temporal changes in data density.
 
 ------ 3.2.2.3   How to Blacklist stations ---
 
@@ -2353,6 +2318,58 @@ Output:
 Source directory: laps/src/sfc
 
 Parameter namelist file: 'static/surface_analysis.nl'
+
+--------- 3.3.2.1 ------SURFACE ANALYSIS RUNTIME PARAMETERS ------------------------
+
+   PRESSURE REDUCTION
+
+     1. You will need to select an elevation for the reduced pressure analysis.
+	The reduced pressure is the only one really used in the variational
+	portion of LAPS, and the idea is to select an elevation that is 
+	representative of the domain (or portion of the domain) you are
+	interested in.  For example, the Colorado LAPS domain includes 4000m
+	high mountains over the western 1/3, and plains that slope below 
+	1000m at the eastern boundary.  We use 1500m as the Colorado LAPS
+	reduced pressure.  This is close to the elevations over the eastern
+	2/3's of the domain, and requires a smaller reduction over the 
+        mountains compared to MSL, for example.  Change the namelist variable 
+        in '/data/static/surface_analysis.nl' when you localize LAPS.
+
+   SURFACE THETA CHECK	
+
+     1. In the 'surface_analysis.nl' file, set the 'itheta' flag for the 
+        surface theta check.  This check adjusts the surface potential 
+        temperatures so they are not greater than the potential temperature at
+        an upper level.  Set this variable equal to the desired upper level 
+        (or if you don't want to do this check):
+
+	                0 = No sfc theta check done
+	                7 = Use 700 mb level
+	                5 = Use 500 mb level
+
+	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
+	areas (like Colorado).
+
+   QUALITY CONTROL
+
+     1. A still fairly simple quality control is included in the surface
+	package.  This first checks the observations against climatologically
+        reasonable ranges. Next, the observations are checked to see which
+        ones are outliers relative to the other observations. Also, the
+        MSL pressures are checked to see if they deviate from the background
+        field by more than a threshold amount. The output from these checks
+        is in both 'laps_sfc.log' and 'sfcqc.log'.
+
+        If you wish to skip over this step, you can change the 
+        'surface_analysis.nl' namelist file. This is recommended when using 
+        the separate flag to use the new quality control observation file 
+        (lso_qc), generated by 'sfc_qc.exe'. 
+
+        The new QC package (outlined in 3.2.2.2) compares the observations 
+        temporally and fills in predicted values for an observation when it 
+        is only intermittently available. This helps compensate for temporal 
+        changes in data density. The log file for this new program is in 
+        'sfc_qc.log'.
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
