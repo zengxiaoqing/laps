@@ -34,7 +34,8 @@
          2.3.3 ..................  Surface Data
          2.3.4 ..................  Profiler / RASS
          2.3.5 ..................  PIREPS & ACARS from aircraft
-         2.3.6 ..................  Other Data Sources
+         2.3.6 ..................  RAOBs
+         2.3.7 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
          2.4.1 ..................  Cron timing considerations
          2.4.2 ..................  Purging Output Files
@@ -499,7 +500,7 @@
 
      In this file (mainly Sec 2.3), a number of potential manual changes to 
      ingest code are outlined prior to running 'make' and 
-     '$LAPSINSTALLROOT/etc/laps_localization.pl', especially if one is using 
+     '$LAPSINSTALLROOT/etc/localize_domain.pl', especially if one is using 
      ingest data formats other than "standard" ones used at FSL. After becoming
      familiar with the changes needed for your implementation, it is 
      recommended that you develop a method to save the hand edited files in a 
@@ -604,7 +605,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl laps_localization.pl --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT 
+     prompt> perl localize_domain.pl --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT 
 
                     --- 2.2.6.2 Localization Method 2 ---
 
@@ -666,13 +667,13 @@
      required. The window script can be run manually when configuring or 
      reconfiguring localizations. Window copies the template namelist subsets 
      (partial nest7grid.parms or *.nl's) into a new "static" subdirectory which,
-     in turn, are merged with the full namelists by laps_localization.pl. Recall
+     in turn, are merged with the full namelists by localize_domain.pl. Recall
      that $LAPSINSTALLROOT contains bin/ and etc/ which $LAPS_SRC_ROOT contains
      the untarred namelists.  
 
      In the event that $LAPS_SRC_ROOT does not exist, a data/ subdirectory 
      containing static/ and cdl/ must be available for use by 
-     'laps_localization.pl' (i.e. $LAPS_SRC_ROOT = $LAPSINSTALLROOT). Even 
+     'localize_domain.pl' (i.e. $LAPS_SRC_ROOT = $LAPSINSTALLROOT). Even 
      though it is possible to have $LAPS_SRC_ROOT/data = $LAPSINSTALLROOT/data
      = $LAPS_DATA_ROOT, this is not recommended since it does not allow multiple 
      localizations. Templates will ensure that specific namelist modifications
@@ -726,7 +727,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            laps_data/; $LAPS_DATA_ROOT is removed; new $LAPS_DATA_ROOT is 
            generated and subdirectory structure created by 
            "etc/makedatadirs.pm"; laps_template namelist are copied to new 
-           $LAPS_DATA_ROOT; laps_localization.pl merges $LAPSINSTALLROOT/ and
+           $LAPS_DATA_ROOT; localize_domain.pl merges $LAPSINSTALLROOT/ and
            regenerates static.nest7grid.
 </pre>
 
@@ -985,7 +986,15 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            file. An equivalent NetCDF database is available (with some
            restrictions) on the Web at http://acweb.fsl.noaa.gov.
 
-                      ----   2.3.6  Other Data Sources ---
+                      ----   2.3.6  RAOBs ---
+
+     RAOBs (snd):
+           FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
+           These are available in real-time from FSL with some restrictions. 
+           The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
+           Patty Miller at miller@fsl.noaa.gov for more information.   
+
+                      ----   2.3.7  Other Data Sources ---
 
      Satellite Image Ingest (lvd): GOES-8 or GOES-9 data ingest. Data stored at
            FSL in NetCDF or SBN data (also in netcdf). Ingest of Air Force 
@@ -1010,12 +1019,6 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
      SODAR data (pro) - This is treated in a similar manner to wind profilers 
            and can be processed by LAPS ingest to appear in the PRO file.
-
-     RAOBs (snd):
-           FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
-           These are available in real-time from FSL with some restrictions. 
-           The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
-           Patty Miller at miller@fsl.noaa.gov for more information.   
 
      Satellite derived soundings (snd):
            AFWA database format. 
@@ -1232,12 +1235,12 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                 ----  2.7.1 Number of Grid Points ---
 
-     Adjust the horizontal dimensions (NX_L_CMN, NY_L_CMN) in 
-                                              './data/static/nest7grid.parms'.
+     Adjust the horizontal dimensions in terms of the number of grid points
+           (NX_L_CMN, NY_L_CMN) in './data/static/nest7grid.parms'.
 
 
      NOTE: The file './data/static/nest7grid.cdl' is automatically edited
-           by ./etc/laps_localization.pl using the values found in 
+           by ./etc/localize_domain.pl using the values found in 
            './data/static/nest7grid.parms'.
 
 
@@ -1245,8 +1248,8 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 <pre>
                       
-        1) Modify the 'grid_spacing_m_cmn' parameter (only if you are not 
-                using the default 10000m for the grid spacing).
+        1) Modify the 'grid_spacing_m_cmn' parameter (only if you want to 
+                change from the default 10000m for the grid spacing).
 
                 Grid spacing in meters on the projection plane. Used for all 
                 projections.
@@ -1394,7 +1397,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
 </pre>
 
-        When you run ./etc/laps_localization.pl, the NetCDF static 
+        When you run ./etc/localize_domain.pl, the NetCDF static 
         file 'static.nest7grid' will be automatically generated by process
         'gridgen_model.exe'. This contains grids of latitude, longitude, 
         elevation, and land (vs. water) fraction.
@@ -1431,9 +1434,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
 
                    ----  2.7.3 Domain Resolution  ---
 
-     The default value is 10000m. This is one of the items used in 
-   constructing the static file (see above). To date, we have run LAPS with
-   resolutions ranging from 1000m to 48000m.
+     The default value of the 'grid_spacing_m_cmn' parameter is 10000m. This is
+   one of the parameters used in constructing the static file (as mentioned 
+   above). To date, we have run LAPS with resolutions ranging from 1000m to 
+   48000m.
 
 
                    ----  2.7.4 Terrain Databases ---
@@ -1743,7 +1747,7 @@ since 3 layers are routinely available from NESDIS.
    The applicable compiler versions (often a -v or -V option to the compiler)
    The entire output of configure 
    The entire output of make (standard output + error output)
-   The entire output of laps_localization.pl 
+   The entire output of localize_domain.pl
 </pre>
 
                    ----  2.13.1 Runtime Monitoring ---
