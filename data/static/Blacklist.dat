@@ -1,9 +1,17 @@
- 00008
+ 00015
  KFCS                  003  ALT  STP  MSL
- WGGNS                 002  TMP  DEW 
+ WGGNS                 003  TMP  DEW  HUM
  SABS2                 001  ALT  
  KLLES                 001  ALT  
  KRRLS                 001  ALT  
  VRH                   001  ALT  
  TES                   001  ALT  
  DPG07                 001  ALT  
+ H0489                 002  DEW  HUM
+ SHUS2                 002  DEW  HUM
+ C0702                 002  DEW  HUM
+ AP611                 002  DEW  HUM
+ LJNTA                 002  DEW  HUM
+ AW001                 002  DEW  HUM
+ SBW                   002  DEW  HUM
+
