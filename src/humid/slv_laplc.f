@@ -96,6 +96,29 @@ c       print*, maxerror
 22      write (6,*) 'max error solving dirichlet problem ', 
      1       maxerror/typical_data,k
 
+c     fill boarders (normally zero) with nearest neighbor values
+
+        do j = 1,ny
+           do i = 1,nx
+              if(i .eq. 1 ) then !boarder
+                 data(i,j) = data(i+1, j)
+              elseif(i .eq. nx) then
+                 data(i,j) = data(i-1,j)
+              endif
+           enddo
+        enddo
+     
+        do j = 1,ny
+           do i = 1,nx
+              if(j .eq. 1 ) then !boarder
+                 data(i,j) = data(i, j+1)
+              elseif(j .eq. ny) then
+                 data(i,j) = data(i,j-1)
+              endif
+           enddo
+        enddo
+                   
+
         return
         end
 
