@@ -51,6 +51,8 @@ c     foreach n element of wt, determine its location in ii,jj space
             points(ncount,1) = wt(n)
             points(ncount,2) = i
             points(ncount,3) = j
+
+            write(6,*)lat(n),lon(n), glat(i,j), glon(i,j)
          else
             continue
          endif
@@ -73,6 +75,7 @@ c     compute the fraction of data_out that is empty
          enddo
       enddo
 
+      write (6,*) ncount, ' out of ', n, ' total avial data used'
       write (6,*) 'gvap field fraction empty = ', sum/ii/jj
 
 c      if (sum/ii/jj .gt. 0.75) return ! return if not enough data

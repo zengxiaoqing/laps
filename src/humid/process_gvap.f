@@ -26,19 +26,35 @@ c     volitile arrays
 
       integer i,j
 
-      filename = '990531220' 
+      filename = filetime(1:7)//'20'
 
 
       call read_gvap (filename, nstations, lat,lon, wt,w1,w2,w3, nn,
      1 istatus)
 
-      write(6,*) nn, ' number of stations read in file'
-      write(6,*) w3(nn)
+      if (
+     1     istatus .ne. 1
+     1     .or.
+     1     nn .eq. 0
+     1     ) then               ! failure
+
+         write(6,*) 'failure to acquire gvap data'
+         istatus = 0
+         return                 !istatus = fail
+
+      else
+
+
+         write(6,*) nn, ' number of stations read in file'
+         write(6,*) w3(nn)
+
+      endif
 
       call analz_gvap (lat,lon,wt,nn,glat,glon,data_out,
      1     data_weights,ii,jj,istatus)
 
       if(istatus.eq.1) then ! data_out can be used to normalize field
+c     note that the 0.1 factor is to convert mm (gvap) to cm (tpw).
          do i   = 1,ii
             do j  = 1,jj
                data_out(i,j) = data_out(i,j)*0.1/tpw(i,j)
@@ -56,8 +72,6 @@ c     convert data_out to incremental weighted adjustment
             data_out(i,j) = (data_out(i,j)-1.0) * data_weights(i,j)
          enddo
       enddo
-
-      write(6,*) 'routine stopping for gvap testing'
 
       istatus = 1
 
