@@ -88,19 +88,19 @@ C     Created by Groves.
       call get_r_missing_data(rmiss,istat)
       if(istat.ne.1)goto 1000
 
-      Write(*,*)'Calculating Pan Evaporation'
+      Write(6,*)'Calculating Pan Evaporation'
       Call Calc_Evap(imax,jmax,Laps_u,Laps_v,
      &               Laps_T,Laps_TD,    !Input to here.
      &               Laps_Evap,IStatus)
       If (IStatus.eq.1) Then
- 	 Write(*,*)'Completed Calculating Evaporation'
+ 	 Write(6,*)'Completed Calculating Evaporation'
       Else
-         Write(*,*)'Error computing evaporation, returning'
+         Write(6,*)'Error computing evaporation, returning'
          istatus = -1
          return
       Endif
 
-      Write(*,*)' Begin Soil Moisture Calculation for grid'
+      Write(6,*)' Begin Soil Moisture Calculation for grid'
 
       Do J = 1, Jmax
       Do I = 1, Imax
@@ -167,7 +167,7 @@ C	    IF(OLDWEA.LE.0.)XTHI=THI     ! I'm Not Sure  about this statement
 
       Enddo
       Enddo	
-      Write(*,*)' Completed SM Calculation for grid'
+      Write(6,*)' Completed SM Calculation for grid'
       istatus = 1
 C
 100   WRITE(6,*)'End of Simulation'
