@@ -124,6 +124,8 @@ c     compute the solar zenith secant
       sol_sub_lon = lon-hour_angle
 
       sza = zenith(lat*d2r,lon*d2r,sol_sub_lat*d2r,sol_sub_lon*d2r)
+      sza = abs(sza)
+      if (sza .gt. 85.) sza  = 85.
 
       sec_solar = 1./cos(sza*d2r)
 
