@@ -915,6 +915,70 @@ cdoc    Writes multiple 3-D grids. Inputs include the extension and time.
         return
         end
 
+        subroutine put_compressed_multi_3d(i4time,EXT,var_2d,units_2d,
+     1                          comment_2d,field_3d,ni,nj,nk,nf,istatus)       
+
+cdoc    Writes multiple 3-D compressed grids. Inputs include the extension and
+cdoc    time.
+
+        logical ltest_vertical_grid
+
+        character*150 DIRECTORY
+        character*(*) EXT
+
+        character*125 comment_3d(nk*nf),comment_2d(nf)
+        character*10 units_3d(nk*nf),units_2d(nf)
+        character*3 var_3d(nk*nf),var_2d(nf)
+        integer*4 LVL_3d(nk*nf)
+        character*4 LVL_COORD_3d(nk*nf)
+
+        real*4 field_3d(ni,nj,nk,nf)
+
+        istatus = 0
+
+        call get_directory(ext,directory,len_dir)
+
+        do l = 1,nf
+            write(6,11)directory(1:min(len_dir,50)),ext,var_2d(l)       
+11          format(' Writing 3d ',a50,1x,a5,1x,a3)
+        enddo ! l
+
+        do l = 1,nf
+          do k = 1,nk
+
+            iscript_3d = (l-1) * nk + k
+
+            units_3d(iscript_3d)   = units_2d(l)
+            comment_3d(iscript_3d) = comment_2d(l)
+            if(ltest_vertical_grid('HEIGHT'))then
+                lvl_3d(iscript_3d) = zcoord_of_level(k)/10
+                lvl_coord_3d(iscript_3d) = 'MSL'
+            elseif(ltest_vertical_grid('PRESSURE'))then
+                lvl_3d(iscript_3d) = nint(zcoord_of_level(k))/100
+                lvl_coord_3d(iscript_3d) = 'HPA'
+            else
+                write(6,*)' Error, vertical grid not supported,'
+     1                   ,' this routine supports PRESSURE or HEIGHT'
+                istatus = 0
+                return
+            endif
+
+            var_3d(iscript_3d) = var_2d(l)
+
+          enddo ! k
+        enddo ! l
+
+        CALL WRITE_LAPS_COMPRESSED(I4TIME,DIRECTORY,EXT,ni,nj,
+     1  nk*nf,nk*nf,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
+     1                     COMMENT_3D,field_3d,ISTATUS)
+
+        if(istatus .ne. 1)return
+
+        istatus = 1
+
+        return
+        end
+
         subroutine put_laps_multi_2d(i4time,EXT,var_a,units_a,
      1                          comment_a,field_2d,ni,nj,nf,istatus)
 
