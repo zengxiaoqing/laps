@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 
-        subroutine laps_cloud(i4time,
+        subroutine laps_cloud_deriv(i4time,
      1                        NX_L,NY_L,
      1                        NZ_L,
      1                        N_PIREP,
@@ -437,43 +437,11 @@ c read in laps lat/lon and topo
             j_status(i) = sys_no_data
         enddo
 
-!      (-1) DUMMY PROCESS
-!       (0) Normal full Cloud Analysis
-!       (1) Calculate only main fields,
-!           derived fields were moved elsewhere
-!       (2) Reread data, then calc derived fields
-!           (for testing)
-!       (3) means derived prods only
+        n_prods = 9
+        iprod_start = 5
+        iprod_end = 13
 
-        if(isplit .eq. -1)then
-            write(6,*)' laps_cloud_sub: dummy process --> return'
-            return
-        elseif(isplit .eq. 0)then
-            n_prods = 13
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 1)then
-            n_prods = 4
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 2)then
-            n_prods = 13
-            iprod_start = 1
-            iprod_end = n_prods
-        elseif(isplit .eq. 3)then
-            n_prods = 9
-            iprod_start = 5
-            iprod_end = 13
-            go to 500
-        endif
-
-                                    ! (0) Normal full Cloud Analysis
- 500    if(isplit .eq. 1)goto999    ! (1) Calculate only main fields,
-                                    !     derived fields were moved elsewhere
-        if(isplit .ge. 2)then       ! (2) Reread data, then calc derived fields
-                                    !     (for testing)
-                                    ! (3) means derived prods only
-
+        if(.true.)then                    ! Read data, then calc derived fields
             I4_elapsed = ishow_timer()
 
             write(6,*)
@@ -514,13 +482,22 @@ c read in laps lat/lon and topo
             ext = 'lps'
             call get_laps_3d(i4time,NX_L,NY_L,NZ_L
      1       ,ext,var,units,comment,radar_ref_3d,istatus_lps)
+
             if(istatus_lps .ne. 1)then
-                write(6,*)' Error reading 3D REF'
-                return
-            endif
-            read(comment,510)istat_radar_2dref,istat_radar_3dref
-     1                      ,istat_radar_3dref_orig
- 510        format(23x,3i3)
+                write(6,*)' Warning: could not read lps 3d ref, filling'
+     1                   ,' array with r_missing_data'
+                call constant_3d(radar_ref_3d,r_missing_data
+     1                          ,NX_L,NY_L,NZ_L)           
+                istat_radar_2dref = 0
+                istat_radar_3dref = 0
+                istat_radar_3dref_orig = 0
+
+            else  ! istatus_lps = 1
+                read(comment,510)istat_radar_2dref,istat_radar_3dref
+     1                          ,istat_radar_3dref_orig
+ 510            format(23x,3i3)
+
+            endif ! istatus_lps
 
 !           Read in surface pressure (lsx - pres_sfc_pa)
             var = 'PS'

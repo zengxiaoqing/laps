@@ -45,3 +45,21 @@ c
 c
         return
         end
+c
+c
+        subroutine constant_3d(a,const,imax,jmax,kmax)
+c
+c.....  routine to set a 3d array to a real constant.
+c
+        real*4 a(imax,jmax,kmax)
+c
+        do k=1,kmax
+        do j=1,jmax
+        do i=1,imax
+          a(i,j,k) = const
+        enddo !i
+        enddo !j
+        enddo !k
+c
+        return
+        end

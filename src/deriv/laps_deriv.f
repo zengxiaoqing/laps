@@ -85,7 +85,7 @@ cdis
 
         max_cld_snd = maxstns + N_PIREP
           
-        call laps_cloud(i4time,
+        call laps_cloud_deriv(i4time,
      1                  NX_L,NY_L,
      1                  NZ_L,
      1                  N_PIREP,
