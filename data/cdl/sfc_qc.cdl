@@ -1,0 +1,295 @@
+netcdf sfc_qc {
+
+    dimensions:
+        recNum         = unlimited;
+        maxProviderLen = 11;        // Provider length
+        maxStaTypeLen  =  6;        // Station type length (lso = reptype)
+	maxStaIdLen    = 20;        // Station id length (lso = stations)
+		
+    variables:
+
+    // Station type.
+
+    char    stationType(recNum, maxStaTypeLen);
+            stationType:long_name    = "Station type"; 
+
+    // Data provider
+
+    char    dataProvider(recNum, maxProviderLen);
+            dataProvider:long_name    = "Data provider";
+
+    // Alphanumeric station Id
+
+    char    stationId(recNum, maxStaIdLen);
+            stationId:long_name   = "alphanumeric station Id";
+
+    // Latitude
+
+    float   latitude(recNum);
+            latitude:long_name = "latitude";
+            latitude:units      = "degree_north";
+            latitude:_FillValue = 1.0e+37f;
+
+    // Longitude
+
+    float   longitude(recNum);
+            longitude:long_name = "longitude";
+            longitude:units     = "degree_east";
+            longitude:_FillValue = 1.0e+37f;
+
+    // Elevation
+
+    float   elevation(recNum);
+            elevation:long_name = "elevation";
+            elevation:units     = "meter";
+            elevation:_FillValue = 1.0e+37f;
+
+//----------------------------------------------------------
+//  The qcsta variables range in value from 0 to 111111, with 
+//    each position holding a 0 or 1 and representing the status 
+//    of an individual qc check as follows:
+//      XXXXX1 = missing ob
+//      XXXX1X = gross error check failed
+//      XXX1XX = buddy check failed
+//      XX1XXX = ob projection failed
+//      X1XXXX = model guess failed
+//      1XXXXX = ob checked against kalman estimate and failed
+//      111111 = error condition
+//
+//  If an ob passes qc fully, the value will be 000000, (or 0);
+
+//----------------------------------------------------------
+// Variables pertaining to temperature
+
+    int     qcstat(recNum);
+            qcstat:long_name="QC status flag for temperature";
+            qcstat:_FillValue = 111111;
+
+    float   t(recNum);
+            t:_FillValue = 1.e+37f;
+            t:long_name="temperature - raw observation";
+            t:units="degrees  kelvin";
+                	        
+    float   tb(recNum);
+            tb:_FillValue = 1.e+37f;
+            tb:long_name="temperature - observation based guess";
+            tb:units="degrees  kelvin";
+                	        
+    float   ta(recNum);
+            ta:_FillValue = 1.e+37f;
+            ta:long_name="temperature - model based guess";
+            ta:units="degrees  kelvin";
+                	        
+    float   tc(recNum);
+            tc:_FillValue = 1.e+37f;
+            tc:long_name="temperature - kalman (combined) guess";
+            tc:units="degrees  kelvin";
+                	        
+    float   tf(recNum);
+            tf:_FillValue = 1.e+37f;
+            tf:long_name="temperature - buddy check";
+            tf:units="degrees  kelvin";
+                	        
+    float   te(recNum);
+            te:_FillValue = 1.e+37f;
+            te:long_name="temperature - estimated value to use";
+            te:units="degrees  kelvin";
+//----------------------------------------------------------
+// Variables pertaining to dewpoint temperature
+
+    int     qcstatd(recNum);
+            qcstatd:long_name="QC status flag for dewpoint temperature";
+            qcstatd:_FillValue = 111111;
+
+    float   td(recNum);
+            td:_FillValue = 1.e+37f;
+            td:long_name="dewpoint temperature - raw observation";
+            td:units="degrees  kelvin";
+                	        
+    float   tdb(recNum);
+            tdb:_FillValue = 1.e+37f;
+            tdb:long_name="dewpoint temperature - observation based guess";
+            tdb:units="degrees  kelvin";
+                	        
+    float   tda(recNum);
+            tda:_FillValue = 1.e+37f;
+            tda:long_name="dewpoint temperature - model based guess";
+            tda:units="degrees  kelvin";
+                	        
+    float   tdc(recNum);
+            tdc:_FillValue = 1.e+37f;
+            tdc:long_name="dewpoint temperature - kalman (combined) guess";
+            tdc:units="degrees  kelvin";
+                	        
+    float   tdf(recNum);
+            tdf:_FillValue = 1.e+37f;
+            tdf:long_name="dewpoint temperature - buddy check";
+            tdf:units="degrees  kelvin";
+                	        
+    float   tde(recNum);
+            tde:_FillValue = 1.e+37f;
+            tde:long_name="dewpoint temperature - estimated value to use";
+            tde:units="degrees  kelvin";
+
+//----------------------------------------------------------
+// Variables pertaining to wind 
+
+    int     qcstauv(recNum);
+            qcstauv:long_name="QC status flag for wind u and v ";
+            qcstauv:_FillValue = 111111;
+
+    float   u(recNum);
+            u:_FillValue = 1.e+37f;
+            u:long_name="wind u - raw observation";
+            u:units="meters/second";
+                	        
+    float   ub(recNum);
+            ub:_FillValue = 1.e+37f;
+            ub:long_name="wind u - observation based guess";
+            ub:units="meters/second";
+                	        
+    float   ua(recNum);
+            ua:_FillValue = 1.e+37f;
+            ua:long_name="wind u - model based guess";
+            ua:units="meters/second";
+                	        
+    float   uc(recNum);
+            uc:_FillValue = 1.e+37f;
+            uc:long_name="wind u - kalman (combined) guess";
+            uc:units="meters/second";
+                	        
+    float   uf(recNum);
+            uf:_FillValue = 1.e+37f;
+            uf:long_name="wind u - buddy check";
+            uf:units="meters/second";
+                	        
+    float   ue(recNum);
+            ue:_FillValue = 1.e+37f;
+            ue:long_name="wind u - estimated value to use";
+            ue:units="meters/second";
+
+    float   v(recNum);
+            v:_FillValue = 1.e+37f;
+            v:long_name="wind v - raw observation";
+            v:units="meters/second";
+                	        
+    float   vb(recNum);
+            vb:_FillValue = 1.e+37f;
+            vb:long_name="wind v - observation based guess";
+            vb:units="meters/second";
+                	        
+    float   va(recNum);
+            va:_FillValue = 1.e+37f;
+            va:long_name="wind v - model based guess";
+            va:units="meters/second";
+                	        
+    float   vc(recNum);
+            vc:_FillValue = 1.e+37f;
+            vc:long_name="wind v - kalman (combined) guess";
+            vc:units="meters/second";
+                	        
+    float   vf(recNum);
+            vf:_FillValue = 1.e+37f;
+            vf:long_name="wind v - buddy check";
+            vf:units="meters/second";
+                	        
+    float   ve(recNum);
+            ve:_FillValue = 1.e+37f;
+            ve:long_name="wind v - estimated value to use";
+            ve:units="meters/second";
+
+//----------------------------------------------------------
+// Variables pertaining to MSL (mean-sea-level) pressure
+
+    int     qcstapm(recNum);
+            qcstapm:long_name="QC status flag";
+            qcstapm:_FillValue = 111111;
+
+    float   pmsl(recNum);
+            pmsl:_FillValue = 1.e+37f;
+            pmsl:long_name="MSL pressure - raw observation";
+            pmsl:units="pascals";
+                	        
+    float   pmslb(recNum);
+            pmslb:_FillValue = 1.e+37f;
+            pmslb:long_name="MSL pressure - observation based guess";
+            pmslb:units="pascals";
+                	        
+    float   pmsla(recNum);
+            pmsla:_FillValue = 1.e+37f;
+            pmsla:long_name="MSL pressure - model based guess";
+            pmsla:units="pascals";
+                	        
+    float   pmslc(recNum);
+            pmslc:_FillValue = 1.e+37f;
+            pmslc:long_name="MSL pressure - kalman (combined) guess";
+            pmslc:units="pascals";
+                	        
+    float   pmslf(recNum);
+            pmslf:_FillValue = 1.e+37f;
+            pmslf:long_name="MSL pressure - buddy check";
+            pmslf:units="pascals";
+                	        
+    float   pmsle(recNum);
+            pmsle:_FillValue = 1.e+37f;
+            pmsle:long_name="MSL pressure - estimated value to use";
+            pmsle:units="pascals";
+                	        
+//----------------------------------------------------------
+// Variables pertaining to altimeter 
+
+    int     qcstal(recNum);
+            qcstal:long_name="QC status flag";
+            qcstal:_FillValue = 111111;
+
+    float   alt(recNum);
+            alt:_FillValue = 1.e+37f;
+            alt:long_name="altimeter - raw observation";
+            alt:units="pascals";
+                	        
+    float   altb(recNum);
+            altb:_FillValue = 1.e+37f;
+            altb:long_name="altimeter - observation based guess";
+            altb:units="pascals";
+                	        
+    float   alta(recNum);
+            alta:_FillValue = 1.e+37f;
+            alta:long_name="altimeter - model based guess";
+            alta:units="pascals";
+                	        
+    float   altc(recNum);
+            altc:_FillValue = 1.e+37f;
+            altc:long_name="altimeter - kalman (combined) guess";
+            altc:units="pascals";
+                	        
+    float   altf(recNum);
+            altf:_FillValue = 1.e+37f;
+            altf:long_name="altimeter - buddy check";
+            altf:units="pascals";
+                	        
+    float   alte(recNum);
+            alte:_FillValue = 1.e+37f;
+            alte:long_name="altimeter - estimated value to use";
+            alte:units="pascals";
+                	        
+//----------------------------------------------------------
+                	        
+    // valid time of the file
+
+    double  valtime;
+            valtime:long_name = "valid time of file";
+            valtime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+    // reference time of the file 
+
+    double  reftime;
+            reftime:long_name = "reference time of the file";
+            reftime:units = "seconds since (1970-1-1 00:00:00.0)";
+
+    // GLOBAL ATTRIBUTES:
+        :title =   "LAPS surface QC output file ";
+        :history = "created by LAPS Branch of FSL";
+        :version = "1.0, October 1998";
+        :Conventions = "NUWG";
+
+}                       
