@@ -1,6 +1,7 @@
 
       subroutine get_acars_data(i4time_sys,i4_acars_window
      1                                    ,NX_L,NY_L
+     1                                    ,c8_project
      1                                    ,filename,istatus)
 
       character*(*) filename
@@ -9,6 +10,8 @@
 
       include 'netcdf.inc'
       integer recNum,nf_fid, nf_vid, nf_status
+      character*8 c8_project
+
 C
 C  Open netcdf File for reading
 C
@@ -33,7 +36,7 @@ C
         print *, NF_STRERROR(nf_status)
         print *,'dim recNum'
       endif
-      call acars_sub(nf_fid, recNum,
+      call acars_sub(nf_fid, recNum, c8_project,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
       return
@@ -41,12 +44,13 @@ C
       end
 C
 C
-      subroutine acars_sub(nf_fid, recNum,
+      subroutine acars_sub(nf_fid, recNum, c8_project,
 !.............................................................................
      1              i4time_sys,i4_acars_window,NX_L,NY_L,istatus)
 !.............................................................................
 
       include 'netcdf.inc'
+      character*8 c8_project
       integer recNum,nf_fid, nf_vid, nf_status
       integer airline(recNum), bounceError(recNum),
      +     correctedFlag(recNum), dataDescriptor(recNum),
@@ -80,7 +84,8 @@ C
 
 !............................................................................
 
-      call read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
+      if (c8_project(1:3) .eq. 'WFO') then
+        call read_acars_netcdf_wfo(nf_fid, recNum, airline, bounceError, 
      +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
      +     interpolatedTime, missingInputMinutes, rollFlag, 
      +     speedError, tempError, waterVaporQC, windDirError, 
@@ -89,6 +94,17 @@ C
      +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
      +     timeObs, timeReceived, destAirport, flight, maxDate, 
      +     minDate, origAirport, rptStation, tailNumber)
+      else
+        call read_acars_netcdf(nf_fid, recNum, airline, bounceError, 
+     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     interpolatedTime, missingInputMinutes, rollFlag, 
+     +     speedError, tempError, waterVaporQC, windDirError, 
+     +     windSpeedError, altitude, heading, latitude, longitude, 
+     +     maxTurbulence, medTurbulence, temperature, vertAccel, 
+     +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
+     +     timeObs, timeReceived, destAirport, flight, maxDate, 
+     +     minDate, origAirport, rptStation, tailNumber)
+      endif
 C
 C The netcdf variables are filled - your code goes here
 C
@@ -774,6 +790,503 @@ C
         print *,'in var tailNumber'
       endif
 
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
+
+      return
+      end
+C
+C  Subroutine to read WFO format file "ACARS data" 
+C
+      subroutine read_acars_netcdf_wfo(nf_fid, recNum, airline, 
+     +     bounceError, 
+     +     correctedFlag, dataDescriptor, errorType, interpolatedLL, 
+     +     interpolatedTime, missingInputMinutes, rollFlag, 
+     +     speedError, tempError, waterVaporQC, windDirError, 
+     +     windSpeedError, altitude, heading, latitude, longitude, 
+     +     maxTurbulence, medTurbulence, temperature, vertAccel, 
+     +     downlinkedRH, windDir, windSpeed, maxSecs, minSecs, 
+     +     timeObs, timeReceived, destAirport, flight, maxDate, 
+     +     minDate, origAirport, rptStation, tailNumber)
+C
+      include 'netcdf.inc'
+      integer recNum,nf_fid, nf_vid, nf_status
+      integer airline(recNum), bounceError(recNum),
+     +     correctedFlag(recNum), dataDescriptor(recNum),
+     +     errorType(recNum), interpolatedLL(recNum),
+     +     interpolatedTime(recNum), missingInputMinutes,
+     +     rollFlag(recNum), speedError(recNum), tempError(recNum),
+     +     waterVaporQC(recNum), windDirError(recNum),
+     +     windSpeedError(recNum)
+      real altitude(recNum), heading(recNum), latitude(recNum),
+     +     longitude(recNum), maxTurbulence(recNum),
+     +     medTurbulence(recNum), temperature(recNum),
+     +     vertAccel(recNum), downlinkedRH(recNum), windDir(recNum),
+     +     windSpeed(recNum)
+      double precision maxSecs, minSecs, timeObs(recNum),
+     +     timeReceived(recNum)
+      character*4 rptStation(recNum)
+      character*6 destAirport(recNum)
+      character*30 minDate
+      character*6 origAirport(recNum)
+      character*9 tailNumber(recNum)
+      character*30 maxDate
+      character*13 flight(recNum)
+      integer i, wind_err, temp_err
+      real ws, temp, alt, max_temp, min_temp, wmax
+
+C   Variables of type REAL
+C
+C     Variable        NETCDF Long Name
+C      altitude     
+C
+        nf_status = NF_INQ_VARID(nf_fid,'indAltitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var altitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,altitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var altitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      heading      "heading of flight path over ground"
+C      heading not available in WFO file....fill with 99999.0
+C
+      do i = 1, recNum
+        heading(i) = 99999.0
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      latitude     
+C
+        nf_status = NF_INQ_VARID(nf_fid,'latitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var latitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,latitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var latitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      longitude    
+C
+        nf_status = NF_INQ_VARID(nf_fid,'longitude',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var longitude'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,longitude)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var longitude'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      maxTurbulence"Maximum eddy dissipation rate"
+C      maxTurbulence not available in WFO file....fill with -9.99 
+C
+      do i = 1, recNum
+        maxTurbulence(i) = -9.99
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      medTurbulence"Median eddy dissipation rate"
+C      medTurbulence not available in WFO file....fill with -9.99 
+C
+      do i = 1, recNum
+        medTurbulence(i) = -9.99
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      temperature  
+C
+        nf_status = NF_INQ_VARID(nf_fid,'temperature',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,temperature)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var temperature'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      vertAccel    "peak vertical acceleration"
+C      vertAccel not available in WFO file....fill with 0.0  
+C
+      do i = 1, recNum
+        vertAccel(i) = 0.0 
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      downlinkedRH "downlinked relative humidity"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'relHumidity',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relHumidity'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,downlinkedRH)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relHumidity'
+      endif
+C
+C reset values in downlinkedRH to 0-1 range from percent
+C
+      do i = 1, recNum
+        downlinkedRH(i) = downlinkedRH(i)/100.0
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      windDir      "Wind Direction"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windDir',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,windDir)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windDir'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      windSpeed    "Wind Speed"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'windSpeed',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeed'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,windSpeed)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var windSpeed'
+      endif
+
+C   Variables of type INT
+C
+C
+C     Variable        NETCDF Long Name
+C      airline      "Airline"
+C      airline not available in WFO file....fill with 0
+C
+      do i = 1, recNum
+        airline(i) = 0
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      bounceError  "Aircraft altitude variance error"
+C      bounceError not available in WFO file....fill with 45
+C
+      do i = 1, recNum
+        bounceError(i) = 45
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      correctedFlag"Corrected data indicator"
+C      correctedFlag not available in WFO file....fill with 114
+C
+      do i = 1, recNum
+        correctedFlag(i) = 114
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      interpolatedLL "UPS ascent/descent lat&lon interpolation indicator"
+C      interpolatedLL not available in WFO file....fill with 114
+C
+      do i = 1, recNum
+        interpolatedLL(i) = 114
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      interpolatedTime "UPS ascent/descent time interpolation indicator"
+C      interpolatedTime not available in WFO file....fill with 114
+C
+      do i = 1, recNum
+        interpolatedTime(i) = 114
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      missingInputMinutes "missing minutes of input data"
+C      missingInputMinutes not available in WFO file....fill with 0
+C
+      missingInputMinutes = 0
+C
+C     Variable        NETCDF Long Name
+C      rollFlag     "Aircraft roll angle flag "
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rollQuality',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rollQuality'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,rollFlag)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rollFlag'
+      endif
+
+      do i = 1, recNum
+        if (rollFlag(i) .eq. 0) then
+          rollFlag(i) = 71
+        elseif (rollFlag(i) .eq. 1) then
+          rollFlag(i) = 66
+        else
+          rollFlag(i) = 78
+        endif
+      enddo
+ 
+C
+C     Variable        NETCDF Long Name
+C      speedError   "Aircraft ground speed error"
+C      speedError not available in WFO file....fill with 45
+C
+      do i = 1, recNum
+        speedError(i) = 45
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      tempError    
+C      tempError not available in WFO file....fill with 45
+C
+      do i = 1, recNum
+        tempError(i) = 45
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      windDirError 
+C      windDirError not available in WFO file....fill with 45
+C
+      do i = 1, recNum
+        windDirError(i) = 45
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      windSpeedError
+C      windSpeedError not available in WFO file....fill with 45
+C
+      do i = 1, recNum
+        windSpeedError(i) = 45
+      enddo
+C
+C   Variables of type DOUBLE
+C
+C
+C     Variable        NETCDF Long Name
+C      maxSecs      "maximum observation time"
+C      maxSecs not available in WFO file....fill with 0
+C
+      maxSecs = 0
+C
+C     Variable        NETCDF Long Name
+C      minSecs      "minimum observation time"
+C      minSecs not available in WFO file....fill with 0
+C
+      minSecs = 0
+C
+C     Variable        NETCDF Long Name
+C      timeObs      "time of observation"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'timeObs',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeObs)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeObs'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      timeReceived "time data was received at ground station"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'timeReceived',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeReceived'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,timeReceived)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var timeReceived'
+      endif
+
+
+C   Variables of type CHAR
+C
+C
+C     Variable        NETCDF Long Name
+C      destAirport  "Destination Airport"
+C      destAirport not available in WFO file....fill with "   " (3 spaces)
+C
+      do i = 1, recNum
+        destAirport(i) = "   "
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      flight       "Flight number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'flight',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var flight'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,flight)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var flight'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      maxDate      "maximum observation date"
+C      maxDate not available in WFO file....fill with 30 blank spaces
+C
+C     Variable        NETCDF Long Name
+C      minDate      "minimum observation date"
+C      minDate not available in WFO file....fill with 30 blank spaces
+C
+      maxDate = "                              "
+      minDate = "                              "
+C
+C     Variable        NETCDF Long Name
+C      origAirport  "Originating Airport"
+C      origAirport not available in WFO file....fill with "   " (3 spaces)
+C
+      do i = 1, recNum
+        origAirport(i) = "   "
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      rptStation   "Station reporting through"
+C      rptStation not available in WFO file....fill with "    " (4 spaces)
+C
+      do i = 1, recNum
+        rptStation(i) = "    "
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      tailNumber   "tail number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tailNumber',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tailNumber'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,tailNumber)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tailNumber'
+      endif
+
+C     used by acars program...not available on wfo
+C       use FSL ACARS Quality Controls to fill
+C
+C     Max temp:  if altitude > 35000ft, T < -20C
+C                else   T < 60 - 80 * (altitude / 35000)
+C     Min temp:  if altitude < 18000ft, T > -60C
+C                if altitude > 35000ft, T > -100C
+C                else T > 60 - 40 * (altitude -18000) / 17000
+C     Wind dir:  0 <= windDir <= 360
+C     Wind Spd:  windSpeed(knots) >= 0
+C     Max wind Spd:  bad = 0
+C                    if (altitude < 30000.) {
+C                      wmax = 70. + 230.*altitude / 30000.;
+C                    } else if (altitude < 40000.) {
+C                      wmax = 300.;
+C                    } else if (altitude < 45000.) {
+C                      wmax = 300. - 100 * (altitude - 40000.) / 5000. ;
+C                    } else {
+C                      wmax = 200.;
+C                    }
+C                    if (windSpeed > wmax) {
+C                      bad = 1;
+C                    }
+C
+C     dataDescriptor: 'R' if temp and wind within ranges above
+C                     'X' if temp and wind failed any test    
+C     if dataDescriptor = 'X':
+C     errorType:      'W' for wind
+C                     'T' for temperature
+C                     'B' for both
+C
+      do i = 1, recNum
+        wind_err = 0  ! no error
+        temp_err = 0  ! no error
+        temp = temperature(i) - 273.15  ! convert K to C
+        ws = windSpeed(i) * 1.9438      ! convert m/s to knots
+        alt = altitude(i) * 3.280839895 ! convert m to ft
+
+        if (alt .gt. 35000.0) then
+          max_temp = -20.0
+        else
+          max_temp = 80 * (alt / 35000.)
+        endif
+        
+        if (alt .lt. 18000.0) then
+          min_temp = -60.0
+        elseif (alt .gt. 35000.0) then
+          min_temp = -100.0
+        else
+          min_temp = 40 * (alt - 18000.) / 17000.
+        endif
+        
+        if ((temp .le. min_temp) .or. (temp .ge. max_temp)) 
+     1    temp_err = 1    ! bad temp
+
+        if ((windDir(i) .lt. 0.0) .or. (windDir(i) .gt. 360.0))
+     1    wind_err = 1    ! bad wind dir
+
+        if (alt .lt. 30000.) then
+          wmax = 70. + 230.*alt / 30000.
+        elseif (alt .lt. 40000.) then
+          wmax = 300.
+        elseif (alt .lt. 45000.) then
+          wmax = 300. - 100 * (alt - 40000.) / 5000. 
+        else 
+          wmax = 200.
+        endif 
+
+        if ((ws .lt. 0.0) .or. (ws .gt. wmax))
+     1    wind_err = 1  ! bad wind speed
+
+        if ((temp_err .eq. 0) .and. (wind_err .eq. 0)) then
+          dataDescriptor(i) = 82
+          errorType(i) = 46
+        elseif ((temp_err .eq. 1) .and. (wind_err .eq. 1)) then
+          dataDescriptor(i) = 88
+          errorType(i) = 66
+        elseif (temp_err .eq. 1) then
+          dataDescriptor(i) = 88
+          errorType(i) = 84
+        else  ! (wind_err .eq. 1)
+          dataDescriptor(i) = 88
+          errorType(i) = 87
+        endif
+ 
+      enddo
+C
+C     Variable        NETCDF Long Name
+C      waterVaporQC "water vapor mixing ratio QC character"
+C      waterVaporQC not available in WFO file....fill with 0
+C
+      do i = 1, recNum
+        waterVaporQC(i) = 0
+      enddo
+C
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
