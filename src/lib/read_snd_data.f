@@ -399,8 +399,8 @@ c
 
 !       Declarations for 'read_snd_data' call
         integer MAX_PR,MAX_PR_LEVELS
-        parameter (MAX_PR = 100)
-        parameter (MAX_PR_LEVELS = 100)
+        parameter (MAX_PR = 1500)
+        parameter (MAX_PR_LEVELS = 300)
 
         real lat_pr(MAX_PR)
         real lon_pr(MAX_PR)
