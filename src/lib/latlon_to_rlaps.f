@@ -307,23 +307,11 @@ cdis
             rlat=90.
             rlon=0.
 
-        else                           ! From Haltiner & Williams 1-21
-            a=2.* atand(r)
+        else                           
+            a=2.* atand(r)               ! From Haltiner & Williams 1-21
             rlat=90.- a
-c
-            if (u .eq. 0.) then
-                rlon=90.
-
-            else
-                if (u .gt. 0.) then
-                    rlon=atand(v/u)      
-                else
-                    rlon=atand(v/u)+180. 
-                endif
-
-                rlon=rlon + 90.
-
-            endif
+            rlon = atan2d(v,u)
+            rlon = rlon + 90.
 
         endif
 
@@ -347,9 +335,14 @@ c
 
         call lambert_parms(slat1,slat2,n,s,rconst)
 
-        rlon=slon+atand(-s*u/v)/n
+!       rlon=slon + atand(-s*u/v) /n
 !       rlat=(90.- 2.*atand((-  v/cosd(n*(rlon-slon)))**(1./n)))/s      
-        rlat=(90.- 2.*atand((-s*v/cosd(n*(rlon-slon)))**(1./n)))/s      
+
+        arg  = atan2d(-s*u,v)
+        rlat = (90.- 2.*atand((-s*v/cosd(arg))**(1./n))) / s      
+        rlon = slon + arg / n
+
+        rlon = mod(rlon+540.,360.) - 180.          ! Convert to -180/+180 range
 
         return
         end
@@ -370,7 +363,7 @@ c
         endif
 
         rlon = u/b/rpd + cenlon
-        rlon = mod(rlon+540.,360.) - 180.
+        rlon = mod(rlon+540.,360.) - 180.          ! Convert to -180/+180 range
 
         return
         end
