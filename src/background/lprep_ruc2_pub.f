@@ -30,7 +30,7 @@ c
          do j=1,ny
             do i=1,nx
                missing = max(pr(i,j,k),th(i,j,k),sh(i,j,k))
-               if(missing.eq.missingflag) then
+               if(missing.lt.missingflag) then
                   pr(i,j,k)=pr(i,j,k)*0.01
                   tv=th(i,j,k)*(pr(i,j,k)*0.001)**kappa
                   th(i,j,k)=tv/(1.+0.61*sh(i,j,k))
