@@ -38,13 +38,6 @@ $host = $1;
 my $key = "LAPB.netCDF.$host.SFM.";
 
 
-if($host =~ /B52/){
-    if($LAPS_DATA_ROOT=~/data1/){
-	$key.="G1.";
-    }else{
-	$key.="G2.";
-    }
-}
 
 my $fxa_sys =  &Get_env'fxa; #'
 my($LAPS_LOG_PATH);
@@ -73,7 +66,16 @@ print LOCK $$;
 close(LOCK);
 
 foreach(@fext){
-    &sendfile($root,$_,$feed,$key.$_,$sendscript, $LAPS_LOG_PATH);
+  my $tkey = $key.$_;
+  if($host =~ /B52/){
+    if($LAPS_DATA_ROOT=~/data1/){
+      $tkey.="G1.";
+    }else{
+      $tkey.="G2.";
+    }
+  }
+  
+  &sendfile($root,$_,$feed,$tkey,$sendscript, $LAPS_LOG_PATH);
 }
 unlink "/tmp/lock.$0";
 
