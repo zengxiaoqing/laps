@@ -2858,6 +2858,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
+          etc/rcsv.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
@@ -2985,6 +2986,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
+          etc/rcsv.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl

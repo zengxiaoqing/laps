@@ -287,6 +287,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/purger.pl
           etc/purge_wideband.pl
           etc/putFile_fire1.pl
+          etc/rcsv.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
           etc/sfc.pl
