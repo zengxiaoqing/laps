@@ -145,12 +145,6 @@ c     check integrity
          return
       endif
 
-      call check_nan2(qk,ii,jj,istatus)
-      if(istatus.ne.1) then
-         write(6,*) 'NaN detected in var:qk  routine:analq.f'
-         return
-      endif
-      
       
 c     ----------  mixing step
       
