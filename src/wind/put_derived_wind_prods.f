@@ -15,11 +15,11 @@
         include 'windparms.inc'
 
 !       Housekeeping
-        integer*4 ss_normal,rtsys_no_data
+        integer ss_normal,rtsys_no_data
         parameter (ss_normal        =1, ! success
      1             rtsys_no_data    =3) ! no data
 
-        integer*4 j_status(20),i4time_array(20)
+        integer j_status(20),i4time_array(20)
         character*3 exts(20)
 
 !       Input Variables
@@ -47,7 +47,7 @@
         real*4 dum1_2d(NX_L,NY_L)
         real*4 dum2_2d(NX_L,NY_L)
         real*4 dum3_2d(NX_L,NY_L)
-        integer*4 idum1_2d(NX_L,NY_L)
+        integer idum1_2d(NX_L,NY_L)
 
 !       Used for Steer Grid
 !       real*4 iiilut(-NX_L:NX_L,-NY_L:NY_L)
@@ -57,7 +57,7 @@
         real*4 field_array(NX_L,NY_L,2)
 
 !       Radar Stuff
-        integer*4  n_fcst_radar
+        integer  n_fcst_radar
 !       parameter (n_fcst_radar = 7200 / laps_cycle_time) ! Out to 2 hours
         parameter (n_fcst_radar = 0) ! No forecasts for now
 
@@ -235,15 +235,17 @@
      1vity'
             do ifcst = 0,n_fcst_radar
                 minutes_10 = (ilaps_cycle_time * ifcst) / 600
+                write(var_a(ifcst),101) 'R',minutes_10 
+ 101            format(a,i2.2)
                 if(minutes_10 .lt. 10)then
 !                   write(var_a(ifcst),101)minutes_10
 !101                format('R0',i1)
-                    var_a(ifcst) = 'R'
+cc                    var_a(ifcst) = 'R'
                     write(comment_a(ifcst),111)minutes_10
 111                 format('LAPS Max Reflectivity  ',i1,'0 Min Fcst')
                 else
-                    write(var_a(ifcst),102)minutes_10
-102                 format('R',i2)
+cc                    write(var_a(ifcst),102)minutes_10
+cc102                 format('R',i2)
                     write(comment_a(ifcst),112)minutes_10
 112                 format('LAPS Max Reflectivity ' ,i2,'0 Min Fcst')
                 endif
@@ -300,16 +302,17 @@
 
             do ifcst = 0,n_fcst_radar
                 minutes_10 = (ilaps_cycle_time * ifcst) / 600
+                write(var_a(ifcst),101) 'H',minutes_10
                 if(minutes_10 .lt. 10)then
 !                   write(var_a(ifcst),201)minutes_10
 !201                format('H0',i1)
-                    var_a(ifcst) = 'H'
+ccc                    var_a(ifcst) = 'H'
                     write(comment_a(ifcst),211)minutes_10
 211                 format('LAPS Max Reflectivity History  ',i1,'0 Min F
      1cst')
                 else
-                    write(var_a(ifcst),202)minutes_10
-202                 format('H',i2)
+ccc                    write(var_a(ifcst),202)minutes_10
+ccc202                 format('H',i2)
                     write(comment_a(ifcst),212)minutes_10
 212                 format('LAPS Max Reflectivity History ' ,i2,'0 Min F
      1cst')

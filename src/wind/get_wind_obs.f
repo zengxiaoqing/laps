@@ -227,7 +227,7 @@
         real*4 weights_pr(ni,nj)
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 max_weights_pr(ni,nj,nk)
-        integer*2 i_profiler_nearest(ni,nj,nk)
+        integer i_profiler_nearest(ni,nj,nk)
 
         real*4 sum_pr_u(ni,nj,nk)
         real*4 sum_pr_v(ni,nj,nk)

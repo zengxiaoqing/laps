@@ -298,8 +298,9 @@ cdis
 
         if(string(2:5) .eq. 'Wind')then
             read(lun,202)idir_deg,ff
-202         format (' ', i3, ' deg @ ', f6.1, ' m/s')
-            write(6,202)idir_deg,ff
+ 202        format (1x, i3,7x, f6.1)
+ 220        format (' ', i3, ' deg @ ', f6.1, ' m/s')
+            write(6,220)idir_deg,ff
             dd = idir_deg
 !           ff = ispd_kt * .518
             return

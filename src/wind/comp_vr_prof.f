@@ -58,7 +58,7 @@ cdis
         real*4 lat(ni,nj)
         real*4 lon(ni,nj)
         real max_weights_pr(ni,nj,nk)
-        integer*2 i_profiler_nearest(ni,nj,nk)
+        integer i_profiler_nearest(ni,nj,nk)
 
         write(6,2)
 2       format(/'                  Comparing Radial Velocities to Profil

@@ -53,7 +53,7 @@ cdis
 
         logical laps_rotate_winds
 
-        integer*2 k_terrain(ni,nj)
+        integer k_terrain(ni,nj)
 
 !       DATA PHI0,scale/90.,1./
         DATA scale/1./
