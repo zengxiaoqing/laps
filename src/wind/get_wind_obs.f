@@ -105,9 +105,9 @@ cdis
 
         character*3 ext_in
 
-        logical l_use_raob,l_use_cdw,l_use_all_prof_lvls
+        logical l_use_raob,l_use_cdw,l_use_all_nontower_lvls
 
-        l_use_all_prof_lvls = .false.
+        l_use_all_nontower_lvls = .false.
 
 !  ***  Read in Model First Guess Data  **************************************
 
@@ -149,9 +149,9 @@ cdis
      1            lat_pr,lon_pr,obstype,                            ! O
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
-     1            l_use_raob,l_use_all_prof_lvls,                   ! I
+     1            l_use_raob,l_use_all_nontower_lvls,               ! I
      1            ob_pr_u , ob_pr_v ,                               ! O
-     1            max_obs,obs_point,nobs_point,                     ! I/O
+     1            max_obs,obs_point,nobs_point,weight_prof,         ! I/O
      1            nlevels_obs_pr,n_profiles,                        ! O
      1            rlat_radar,rlon_radar,rheight_radar,              ! I
      1            n_vel_grids,                                      ! I
@@ -178,7 +178,7 @@ cdis
      1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles  ! I
      1          ,r_missing_data                                   ! I
      1          ,weight_prof                                      ! O
-     1          ,l_profiler,l_use_all_prof_lvls                   ! I
+     1          ,l_profiler,l_use_all_nontower_lvls               ! I
      1          ,istatus_remap_pro)                               ! O
 
 !  ***  Read in SFC wind data   *******************************************
@@ -274,11 +274,11 @@ cdis
      1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles     ! I
      1          ,r_missing_data                                      ! I
      1          ,weight_prof                                         ! O
-     1          ,l_profiler,l_use_all_prof_lvls                      ! I
+     1          ,l_profiler,l_use_all_nontower_lvls                  ! I
      1          ,istatus)                                            ! O
 
 !       Perform horizontal remapping of profile obs onto LAPS grid
-!       They have already been vertically remapped
+!       They have already been vertically interpolated
 
         include 'barnesob.inc'
         type (barnesob) obs_point(max_obs)                           
@@ -300,42 +300,46 @@ cdis
         real*4 grid_laps_v(ni,nj,nk)
         real*4 grid_laps_wt(ni,nj,nk)
 
-        logical l_profiler, l_use_all_prof_lvls
+        logical l_profiler, l_use_all_nontower_lvls
 
         write(6,*)
         write(6,*)' Subroutine remap_profiles: # of profiles = '
      1           ,n_profiles
 
         do i_pr = 1,n_profiles ! MAX_PR
-            if(nlevels_obs_pr(i_pr) .gt. 0)then
-                call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
-     1                                  ,lat,lon,ni,nj,ri,rj,istatus)       
-                if(istatus .ne. 1)then
-                    write(6,*)' NOTE... Profile is outside domain'  
-     1                       ,i_pr,i_ob,j_ob
 
-                else ! inside domain
-                    i_ob = nint(ri)
-                    j_ob = nint(rj)
+            if(.not. l_use_all_nontower_lvls .and.
+     1        obstype(i_pr)(1:5) .ne. 'TOWER'     )then       
 
-                    write(6,*)' Remapping profile',i_pr,i_ob,j_ob
+                if(nlevels_obs_pr(i_pr) .gt. 0)then
+                    call latlon_to_rlapsgrid(lat_pr(i_pr),lon_pr(i_pr)
+     1                                      ,lat,lon,ni,nj,ri,rj
+     1                                      ,istatus)     
+                    if(istatus .ne. 1)then
+                        write(6,*)' NOTE... Profile is outside domain'  
+     1                           ,i_pr,i_ob,j_ob,' ',obstype(i_pr)
 
-                    do k = 1,nk
-                        if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
+                    else ! inside domain
+                        i_ob = nint(ri)
+                        j_ob = nint(rj)
 
-                            ob_u = ob_pr_u (i_pr,k)
-                            ob_v = ob_pr_v (i_pr,k)
+                        write(6,*)' Remapping profile',i_pr,i_ob,j_ob
+     1                           ,nlevels_obs_pr(i_pr),' ',obstype(i_pr)       
 
-!                 ***       Map Observation onto LAPS grid   ***
-                            if(l_profiler)then
-                                grid_laps_u(i_ob,j_ob,k) = ob_u
-                                grid_laps_v(i_ob,j_ob,k) = ob_v
-                                grid_laps_wt(i_ob,j_ob,k) = weight_prof       
-                                write(6,11)k,ob_u,ob_v
- 11                             format(10x,i4,2f8.1)
+                        do k = 1,nk
+                            if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
 
-                                if(.not. l_use_all_prof_lvls .and.
-     1                             obstype(i_pr)(1:5) .ne. 'TOWER')then       
+                                ob_u = ob_pr_u (i_pr,k)
+                                ob_v = ob_pr_v (i_pr,k)
+
+!                 ***           Map Observation onto LAPS grid   ***
+                                if(l_profiler)then
+!                                   grid_laps_u(i_ob,j_ob,k) = ob_u
+!                                   grid_laps_v(i_ob,j_ob,k) = ob_v
+!                                   grid_laps_wt(i_ob,j_ob,k) = weight_prof
+                                    write(6,11)k,ob_u,ob_v
+ 11                                 format(10x,i4,2f8.1)
+
 !                                   Add to data structure (still is subsampling)
                                     nobs_point = nobs_point + 1
                                     obs_point(nobs_point)%i = i_ob
@@ -347,18 +351,20 @@ cdis
                                     obs_point(nobs_point)%weight = 
      1                                                    weight_prof       
                                     obs_point(nobs_point)%type = 'prof'      
-                                endif
 
-                            endif
+                                endif ! l_profiler
 
-                        endif ! In bounds vertically (of profile data)
-                   enddo ! level
-               endif ! istatus
+                            endif ! not missing data
+                        enddo ! k
+                    endif ! istatus (in/out of domain)
 
-            else
-               write(6,*)' Zero levels in profile',i_pr,i_ob,j_ob
+                else
+                    write(6,*)' Zero levels / outside domain'
+     1                       ,i_pr,i_ob,j_ob,' ',obstype(i_pr)
 
-            endif ! data present
+                endif ! data present
+
+            endif ! remapping with vertical interpolation
 
         enddo ! i_pr
 
