@@ -33,6 +33,7 @@ SRC=array_plot.f \
     insertsao.f \
     insertsat.f \
     insertvis.f \
+    insert_co2ctp.f \
     laps_cloud.f \
     laps_cloud_sub.f \
     slice.f \
