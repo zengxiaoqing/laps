@@ -12,6 +12,7 @@ c     USE laps_static
       include 'grid_fname.cmn'
 
       character*200 fullname
+      character*200 cfname_internal
       character*132 cmodel
       character*30  projname
       character*13  fname13
@@ -136,13 +137,13 @@ c     USE laps_static
 
       if(bgmodel.eq.0)then 
        if(cmodel(1:nclen).eq.'MODEL_FUA')then
-          fullname=fullname(1:lenfn)//".fua"
-          call getdims_lapsprd(fullname,nxbg,nybg,nzbg,istatus)
+          cfname_internal=fullname(1:lenfn)//".fua"
+          call getdims_lapsprd(cfname_internal,nxbg,nybg,nzbg,istatus)
           if(istatus.ne.1)then
              print*,'error returned: getdims_lapsprd'
              return
           endif
-          call read_lapsprd_attr(fullname, 
+          call read_lapsprd_attr(cfname_internal, 
      +     dxbg, dybg, La1, Lo1, La1in, La2in, LoV,
      +     projname, La2,Lo2, istatus)
           if(istatus.ne.1)then
@@ -249,14 +250,15 @@ c ----------------
             fname13=fname9_to_wfo_fname13(fullname(j+1:j+9))
 c           cf=fullname(j+6:j+9)
 c           fullname=fullname(1:j)//fname13//cf
-            fullname=fullname(1:j)//fname13            !//cf
+
+            cfname_internal=fullname(1:j)//fname13            !//cf
          else
             print*,'didnt convert fullname to WFO format'
             print*,'in get_bkgd_mdl_info ',fullname(1:lenfn)
          endif
 
-         call s_len(fullname,lenfn)
-         call get_sbn_dims(fullname,cmodel
+         call s_len(cfname_internal,lenfn)
+         call get_sbn_dims(cfname_internal,cmodel
      +,nxbg,nybg,nzbg_ht,nzbg_tp,nzbg_sh,nzbg_uv,nzbg_ww
      +,n_valtimes,istatus)
 
@@ -267,7 +269,7 @@ c           fullname=fullname(1:j)//fname13//cf
          endif
 
          print*,'call get_attribute_sbn'
-         call get_attribute_sbn(fullname,centralLat
+         call get_attribute_sbn(cfname_internal,centralLat
      +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy
      +,londxdy,dxbg,dybg,nxbg,nybg,rotation,projname,istatus)
 
