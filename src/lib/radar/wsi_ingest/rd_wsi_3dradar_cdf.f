@@ -3,7 +3,8 @@
      &data_levels,num_levels,level_prefix,image,istatus)
 
       include 'netcdf.inc'
-      integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+c     integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+      integer dataLevel, elems, lines
       integer image(elems,lines)
       integer istatus
       integer validtime
@@ -11,8 +12,8 @@
       character*(*) cfname
       character  level_prefix(dataLevel)*50
 
-      real Dx,Dy,La1,Lo1,centerLon,radsPerElem,
-     +   radsPerLine, topLat
+      real Dx,Dy,La1,Lo1,centerLon,radsPerElem,radsPerLine
+c    +   , topLat
 
       istatus = 1
 
@@ -37,7 +38,8 @@ C
 
 
       include 'netcdf.inc'
-      integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+c     integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+      integer dataLevel, elems, lines
       character*50 grid_name
       character*50 grid_type
       character*50 level_prefix(dataLevel)
@@ -70,7 +72,8 @@ C
      +    num_levels, product_units, radsPerElem, radsPerLine,
      +    topLat, validTime, x_dim, y_dim,istatus)
       include 'netcdf.inc'
-      integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+c     integer dataLevel, elems, lines, nf_fid, nf_vid, nf_status
+      integer dataLevel, nf_fid, nf_vid, nf_status
 
       character*50 grid_name
       character*50 grid_type
