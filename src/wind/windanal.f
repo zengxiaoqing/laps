@@ -223,13 +223,13 @@ csms$>       rms_thresh , out>:default=ignore)  begin
      1         /'       i    j    k  kk   udf   vdf     '
      1         ,'uob   vob     ubg   vbg vcdf  wt')
 
-      n_qc_pirep_bad = 0
+      n_qc_acrft_bad = 0
       n_qc_cdw_bad = 0
       n_qc_sfc_bad = 0
       n_qc_prof_bad = 0
       n_qc_total_bad = 0
 
-      n_qc_pirep_good = 0
+      n_qc_acrft_good = 0
       n_qc_cdw_good = 0
       n_qc_sfc_good = 0
       n_qc_prof_good = 0
@@ -307,7 +307,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
                 ! Throw out the ob
                   if(wt_p(i,j,k) .eq. weight_pirep)then
-                      n_qc_pirep_bad = n_qc_pirep_bad + 1
+                      n_qc_acrft_bad = n_qc_acrft_bad + 1
                       write(6,101,err=199)i,j,k
      1                  ,uobs_diff(i,j,k)
      1                  ,vobs_diff(i,j,k)
@@ -373,7 +373,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
               else ! write out the good OB
                   if(wt_p(i,j,k) .eq. weight_pirep)then
-                      n_qc_pirep_good = n_qc_pirep_good + 1
+                      n_qc_acrft_good = n_qc_acrft_good + 1
                       c3_string = 'Prp'
                   endif
 
@@ -495,7 +495,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
 !                 Throw out the ob
                   if(obs_point(i_ob)%type .eq. 'pin')then
-                      n_qc_pirep_bad = n_qc_pirep_bad + 1
+                      n_qc_acrft_bad = n_qc_acrft_bad + 1
                   elseif(obs_point(i_ob)%type .eq. 'cdw')then
                       n_qc_cdw_bad = n_qc_cdw_bad + 1
                   elseif(obs_point(i_ob)%type .eq. 'sfc')then
@@ -522,7 +522,7 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
               else ! keep and write out the good OB
                   if(obs_point(i_ob)%type .eq. 'pin')then
-                      n_qc_pirep_good = n_qc_pirep_good + 1
+                      n_qc_acrft_good = n_qc_acrft_good + 1
                       c3_string = 'Prp'
                   endif
 
@@ -578,9 +578,9 @@ csms$>       rms_thresh , out>:default=ignore)  begin
 
       write(6,*)
       write(6,*)' QC info for non-radar data (after remapping to grid)'
-      write(6,601)n_qc_pirep_good,n_qc_pirep_bad
-     1           ,pct_rejected(n_qc_pirep_good,n_qc_pirep_bad)
- 601  format(' # of PIREPs     GOOD/BAD QC = ',2i6,7x
+      write(6,601)n_qc_acrft_good,n_qc_acrft_bad
+     1           ,pct_rejected(n_qc_acrft_good,n_qc_acrft_bad)
+ 601  format(' # of Aircraft   GOOD/BAD QC = ',2i6,7x
      1      ,'% rejected = ',f6.1)
 
       write(6,602)n_qc_cdw_good,n_qc_cdw_bad
