@@ -74,7 +74,7 @@ cdis
         n_missing_albedo = ni*nj
 
 !       Read in parms
-        call get_cloud_parms(l_use_vis,istatus)
+        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
         if(istatus .eq. 1)then
             write(6,*)'l_use_vis = ',l_use_vis
         else

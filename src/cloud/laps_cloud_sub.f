@@ -774,12 +774,12 @@ C       THREE DIMENSIONALIZE RADAR DATA IF NECESSARY (E.G. NOWRAD)
 
             I4_elapsed = ishow_timer()
 
-        elseif(istat_radar_2dref .eq. 1 .and. istat_radar_3dref .eq. 1)t
-     1hen
+        elseif(istat_radar_2dref .eq. 1 .and. istat_radar_3dref .eq. 1
+     1                                                             )then       
             write(6,*)' Radar data is already three dimensional'
 
-        elseif(istat_radar_2dref .eq. 0 .and. istat_radar_3dref .eq. 0)t
-     1hen
+        elseif(istat_radar_2dref .eq. 0 .and. istat_radar_3dref .eq. 0
+     1                                                             )then
             write(6,*)' Radar data is unavailable for insertion'
 
         endif ! Do we have 3-d or 2-d radar data?
@@ -1024,20 +1024,20 @@ C       EW SLICES
 !       This is where we will eventually split the routines, additional data
 !       is necessary for more derived fields
 
-!       Write out data (lps - radar_ref_3d)
+        if(istat_radar_3dref .eq. 1)then ! Write out data (lps - radar_ref_3d)
+            write(6,*)' Writing out 3D Radar Reflectivity field'
 
-        write(6,*)' Writing out 3D Radar Reflectivity field'
-
-        var = 'REF'
-        ext = 'lps'
-        units = 'dBZ'
-        write(comment,490)istat_radar_2dref,istat_radar_3dref
-     1                   ,istat_radar_3dref_orig
- 490    format('LAPS Radar Reflectivity',3i3)
-        call put_laps_3d(i4time,ext,var,units,comment,radar_ref_3d
+            var = 'REF'
+            ext = 'lps'
+            units = 'dBZ'
+            write(comment,490)istat_radar_2dref,istat_radar_3dref
+     1                       ,istat_radar_3dref_orig
+ 490        format('LAPS Radar Reflectivity',3i3)
+            call put_laps_3d(i4time,ext,var,units,comment,radar_ref_3d       
      1                                                ,NX_L,NY_L,NZ_L)
-        j_status(n_lps) = ss_normal
+            j_status(n_lps) = ss_normal
 
+        endif ! istat_radar_3dref
 
         call compare_analysis_to_saos(NX_L,NY_L,cvr_sao_max
      1  ,cloud_frac_vis_a,tb8_k,t_gnd_k,t_sfc_k,cvr_max,r_missing_data

@@ -126,7 +126,7 @@ c
         character*31 ext
         character var*3,comment*125,units*10
 
-        logical  l_tb8,l_cloud_present
+        logical  l_tb8,l_cloud_present,l_use_vis
         logical l_co2
         data l_co2 /.false./ ! Attempt to use co2 slicing method?
 
@@ -179,22 +179,41 @@ c
             return
         endif
 
+!       Read in parms
+        call get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)'pct_req_lvd_s8a = ',pct_req_lvd_s8a
+        else
+            write(6,*)' Error in obtaining pct_req_lvd_s8a parameter'       
+            istatus = 0
+            return
+        endif
 
 !       Final QC check on band 8 (11.2 mm) brightness temps
 !       Hopefully, bad/missing  values were filtered out in the creation of LVD
-!       Any remaining bad/missing pixels will trigger this QC check
+!       Any remaining bad/missing pixels will be evaluated in this QC check
+        icount = 0
         do j = 1,jmax
         do i = 1,imax
             if(tb8_k(i,j) .lt. 173. .or. tb8_k(i,j) .gt. 350.)then
-                write(6,*)' Bad LVD/S8A Satellite Brightness '
-     1                   ,'Temperature of'
-     1                   ,tb8_k(i,j),' at',i,j
-     1                   ,', aborting Insertsat'
-                istatus = 0
-                return
+                if(icount .le. 100)then
+                    write(6,*)' Bad LVD/S8A Satellite Brightness '       
+     1                       ,'Temperature of'
+     1                       ,tb8_k(i,j),' at',i,j
+                endif
+                icount = icount + 1
+                tb8_k(i,j) = r_missing_data
             endif
         enddo
         enddo
+
+        valid_pct = (1.- float(icount)/float(imax*jmax) ) * 100.
+        if(valid_pct .lt. pct_req_lvd_s8a)then
+            write(6,*)' insufficient lvd s8a data',valid_pct
+     1                                            ,pct_req_lvd_s8a
+            istatus = 0
+            return
+        endif
 
 !       Calculate cold filtered temperatures
         i_delt = max(1,nint(grid_spacing_m/10000.))
@@ -209,7 +228,9 @@ c
 
                 do jj = jl,jh,i_delt
                 do ii = il,ih,i_delt
+                  if(tb8_k(ii,jj) .ne. r_missing_data)then
                     tb8_cold_k(i,j) = min(tb8_cold_k(i,j),tb8_k(ii,jj))
+                  endif
                 enddo ! ii
                 enddo ! jj
             enddo ! i
@@ -287,6 +308,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
         do j=1,jmax
         do i=1,imax
+
+         if(tb8_k(i,j) .ne. r_missing_data)then
 
 !         Compare brightness temp to surface temperature
           if(j .eq. 29)then
@@ -591,13 +614,15 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
 !           Add satellite cloud to array
             do k=kcld,1,-1
-              if(       cld_hts(k) .ge. htbase
-     1   .and.  cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
-                cldcv(i,j,k)=cover
+              if(cld_hts(k) .ge. htbase  .and.
+     1           cld_hts(k) .le. cldtop_m(i,j) )then ! in satellite layer
+                 cldcv(i,j,k)=cover
               endif
             enddo
 
           ENDIF ! l_cloud_present (Cloudy)
+
+         endif ! tb8_k(i,j) .ne. r_missing_data
 
         enddo ! imax
         enddo ! jmax

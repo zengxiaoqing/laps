@@ -374,8 +374,8 @@ c
         enddo ! i
 
         if(i4_diff_min .gt. i4tol)then
-            write(6,*)' No remaining files found within time window '
-     1                ,ext(1:5),var_2d
+            write(6,*)' No remaining files found within ',i4tol
+     1               ,' sec time window ',ext(1:5),var_2d
             istatus = 0
             return
         endif
@@ -1018,8 +1018,9 @@ c
         enddo ! j
 
         if(i4_diff_min .gt. i4tol)then
-           write(6,*)' No remaining files found within time window '
-     1                  ,ext(1:5),var_2d
+           write(6,*)' No remaining files found within ',i4tol
+     1              ,' sec time window ',ext(1:5),var_2d
+
            istatus = 0
            return
         endif

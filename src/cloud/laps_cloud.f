@@ -100,10 +100,10 @@ cdis
         end
 
  
-       subroutine get_cloud_parms(l_use_vis,istatus)
+       subroutine get_cloud_parms(l_use_vis,pct_req_lvd_s8a,istatus)
 
        logical l_use_vis
-       namelist /cloud_nl/ l_use_vis
+       namelist /cloud_nl/ l_use_vis, pct_req_lvd_s8a
  
        character*150 static_dir,filename
  
