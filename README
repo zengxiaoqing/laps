@@ -640,9 +640,11 @@
 </pre>
 
      More details about radar data usage in LAPS are on the World Wide Web at:
-     'http://laps.fsl.noaa.gov/frd/laps/albers/radar_decision_tree.txt'. This
-     includes information on which types of radar data are processed via the
-     various intermediate data files.
+     'http://laps.fsl.noaa.gov/albers/radar_decision_tree.txt',
+     together with an accompanying flow chart at 
+     'http://laps.fsl.noaa.gov/albers/laps/radar/laps_radar_ingest.html'.
+     These include information on which types of radar data are processed 
+     via the various intermediate data files.
 
      An important thing to establish is whether your raw data is in polar 
      or Cartesian form. If polar, please take a look at the "Polar Radar Data"
@@ -1305,7 +1307,7 @@ April 1996
    
    If you have any problems during the configure, install and localization
    process, first check this README file and the FAQ available at the
-   http://laps.fsl.noaa.gov/frd/laps/birk/LAPS_FACTS.htm URL. Also check the
+   http://laps.fsl.noaa.gov/birk/LAPS_FACTS.htm URL. Also check the
    release notes at the http://laps.fsl.noaa.gov/software/release_notes.html
    URL.
    If you don't find the answer in these documents, send mail to 
@@ -1423,7 +1425,7 @@ Inputs:
         be obtained from a WSR 88-D Level-II data feed. 
         A description of how
         we obtain these Polar NetCDF files for Level-II is at 
-        'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_raw.html'.
+        'http://laps.fsl.noaa.gov/albers/remapper_raw.html'.
 
         Note that narrowband data (e.g. WSR 88D Level-III RPG)
         can also be used as long as 
@@ -1448,7 +1450,7 @@ When running the remapper, files such as v01, v02, vrc, etc. are produced
 depending on which radar is being used and on the input parameters. 
 A further description of how the remapper software functions may be found on 
 the World Wide Web at 
-'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_laps.html'.
+'http://laps.fsl.noaa.gov/albers/remapper_laps.html'.
 
 Source directory: The source code for this is in 'src/ingest/radar/remap'.
 
