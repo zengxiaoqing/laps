@@ -146,6 +146,7 @@ c internal variables
       real :: dummy
       real :: qadjust(ii,jj,kk)
       integer :: k500, k700
+      integer :: sat_index
 
 c climate model variables
       integer :: julian_day
@@ -312,6 +313,8 @@ c     assign sounder/imager parameter for powell method
 c     assign goes number for common block to make avail where needed for OPTRAN
       
       goes_number = ngoes
+      if (goes_number == 8) sat_index = 1
+      if (goes_number == 10) sat_index = 2
       
       
 c     assign pressure to global array
@@ -565,7 +568,7 @@ c     do for each gridpoint
             
 c     retrieve zenith angle for model from sfc_data structure
             
-            theta(i,j) = 1./ sfc_data(i,j)%secza(1) ! (cos of zen)
+            theta(i,j) = 1./ sfc_data(i,j)%secza(sat_index) ! (cos of zen)
             theta(i,j) = acos(theta(i,j))/d2r
             
             if(abs(theta(i,j)) .ge. 70.) then
@@ -612,15 +615,11 @@ c     Execute powell method correction of layer humidity in clear areas
       
       failures = 0
       
-      do j = 1,jj
-         do i = 1,ii
+
+      factor  = rmd
+      factor2 = rmd
+      factor3 = rmd
             
-            factor (i,j) = rmd
-            factor2(i,j) = rmd
-            factor3(i,j) = rmd
-            
-         enddo                  ! i
-      enddo                     ! j
 
       restore_cost_rad_istatus = cost_rad_istatus
       
