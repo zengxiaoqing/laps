@@ -381,7 +381,7 @@
 
      $ make DATAROOT=/data_disk/laps/data2 mkdatadirs
 
-     where the subdirectory name 'data2' can be given a unique name for each
+     where the subdirectory name 'data2' must be a unique name for each
      additional domain. Then follow the setup and localization steps below.
 
      
