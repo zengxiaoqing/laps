@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "netcdf.h"
+#include <netcdf.h>
 
 #define SYSCMD "ncgen -o %s %s"
 #define LAT "lat"
