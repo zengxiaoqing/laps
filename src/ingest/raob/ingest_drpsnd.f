@@ -129,13 +129,13 @@
           if(c8_drpsnd_format(1:6) .eq. 'NIMBUS')then
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
 !             i4_drpsnd_window = 60000  ! Temporary for testing
-              i4_contains_early = 10800
-              i4_contains_late  = 0
+              i4_contains_early = 7200
+              i4_contains_late  = 3600
 
           elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
               filename_in = dir_in(1:len_dir_in)//'/'//a9_time//'0300o'       
-              i4_contains_early = 10800
-              i4_contains_late  = 0
+              i4_contains_early = 0
+              i4_contains_late  = 10800
 
           elseif(c8_drpsnd_format(1:3) .eq. 'WFO')then
               filename13 = cvt_i4time_wfo_fname13(i4times(i))
