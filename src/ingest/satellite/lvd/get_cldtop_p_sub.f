@@ -65,6 +65,7 @@ c cld-top-p files we read from FSL's /public data base.
       integer   i4time_obs
       integer   i4time_file
       integer   i4timefile_min
+      integer   i4timemx,i4timemn
       integer   inobs
       integer   lenp,lenf,lend
       integer   numoffiles
@@ -88,7 +89,8 @@ c cld-top-p files we read from FSL's /public data base.
       real      topo(nxl,nyl)
       real      ri,rj
       real*8    rtime
-      real*8    rtimesum
+      real*8    rtimemx
+      real*8    rtimemn
       real      r_missing_data
       real      pctobs
       real      ri4time_ob(nxl,nyl)
@@ -185,7 +187,8 @@ c determine cld top p data spacing
         rlctp=r_missing_data
         rlct=r_missing_data
         rlca=r_missing_data
-        rtimesum=0
+        i4timemx=0
+        i4timemn=2000000000
 
         do ii=1,iobs
       
@@ -226,8 +229,8 @@ c make and save i4time
 
             call cv_asc_i4time(c9timestring,i4time_obs)
             ri4time_ob(i,j)=float(i4time_obs+isec)
-            rtime=ri4time_ob(i,j)/1.0e6
-            rtimesum=rtimesum+rtime
+            i4timemx=max(int(ri4time_ob(i,j)),i4timemx)
+            i4timemn=min(int(ri4time_ob(i,j)),i4timemn)
 
          endif
 
@@ -243,7 +246,9 @@ c make and save i4time
         enddo
         pctobs=float(inobs)/float(nxl*nyl)
         if(pctobs.gt.0.0)then
-           i4time_data=int((rtimesum/inobs)*1.0e6)
+           rtimemx=float(i4timemx)/1.0e6
+           rtimemn=float(i4timemn)/1.0e6
+           i4time_data=int(((rtimemx+rtimemn)*1.0e6)/2.0)
            call cv_i4tim_asc_lp(i4time_data,a24time_data,istatus)
            call make_fnam_lp(i4time_data,a9time_data,istatus)
            print*,'num/pct obs for domain ',inobs,pctobs

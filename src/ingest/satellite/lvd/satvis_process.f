@@ -343,7 +343,7 @@ c for goes8 - make it look like goes7
           do i=1,imax
              if(laps_vis_norm(i,j).ne.r_missing_data)then
 c J. Smart 1-25-02.
-                call stretch(40.,250.,68.,220.,laps_vis_norm(i,j))
+                call stretch(35.,300.,68.,220.,laps_vis_norm(i,j))
              endif
           enddo
           enddo
