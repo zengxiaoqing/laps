@@ -2,6 +2,7 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
+RM=rm -f 
 
 .SUFFIXES:              .f .o
 
@@ -9,21 +10,25 @@ include $(SRCROOT)/src/include/makefile.inc
 			$(RM) $@
 			$(FC) -c $(FFLAGS90) $*.f
 
-FSRC		=	lapsprep.f   
+EXE=lapsprep.exe
+FSRC=lapsprep.f   
 
-FOBJS		=	$(FSRC:.f=.o)
+FOBJS=$(FSRC:.f=.o)
 
-FMOD		=	module_constants.o module_date_pack.o module_laps_static.o \
-			module_lapsprep_output.o module_setup.o
+FMOD = module_constants.o \
+       module_date_pack.o \
+       module_laps_static.o \
+       module_lapsprep_output.o \
+       module_setup.o
 
 
-all:			lapsprep.exe
+all:			$(EXE)
 
-lapsprep.exe:		$(FOBJS) $(FMOD)
+$(EXE):			$(FOBJS) $(FMOD)
 			$(FC) -o $@ $(FOBJS) $(FMOD)  $(LAPSLIB) $(OTHERLIBS) 
 
 debug:	
-	($(RM) *.o *.exe *.mod ; $(MAKE) lapsprep.exe 	\
+	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) 	\
  	"LAPSLIBS	=	$(DBLAPSLIB)" 	\
 	"FFLAGS90	=	$(DBFLAGS90)" 	)
 
@@ -33,7 +38,10 @@ module_lapsprep_output.o:	module_setup.o module_laps_static.o module_date_pack.o
 
 
 clean:
-			$(RM) $(FOBJS) $(FMOD) lapsprep.exe core
+			$(RM) $(FOBJS) $(FMOD) $(EXE) core
 			$(RM) *.mod
 			$(RM) *.kmo
 			$(RM) *.ctmi
+
+install:	$(EXE) 
+		$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)  
