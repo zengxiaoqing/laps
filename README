@@ -1601,6 +1601,11 @@ Inputs:
 Outputs: (Feeds temp.exe, humid.exe, wind.exe)
 	snd	inter data (ASCII)              RAOB temp, dewpoint, wind
 </pre>
+
+Source directory: laps/src/ingest/raob
+                                        
+Sample Input/Output: May be available in the test data case. If not, there is 
+                     also a README on the 'snd' file in the source directory.
                                         
         Note: If you have good profiler or rass data, you may want to disable
               the RAOB ingest as they would then perhaps hurt as much as they
