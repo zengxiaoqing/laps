@@ -240,7 +240,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,path_to_buoy_data_cmn,c8_project_common
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
-     1  ,fdda_model_source
+     1  ,fdda_model_source_cmn
 
 
         if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
