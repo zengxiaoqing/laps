@@ -95,7 +95,7 @@ c
         if(istatus .ne. 1)stop
 
         call obs_driver_sub(NX_L_CMN,NY_L_CMN
-     1                           ,maxobs_cmn,laps_cycle_time_cmn
+     1                           ,maxsta,laps_cycle_time_cmn
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
@@ -106,7 +106,8 @@ c
 
         end
 
-        subroutine obs_driver_sub(ni,nj,maxobs,laps_cycle_time
+        subroutine obs_driver_sub(ni,nj
+     1                           ,maxobs,laps_cycle_time
      1                           ,path_to_metar
      1                           ,path_to_local_data
      1                           ,path_to_buoy_data
@@ -365,7 +366,7 @@ c
      &                      provider, laps_cycle_time, jstatus)
 
         else
-            call get_local_cwb(maxobs,maxsta,i4time,data_file_l,
+            call get_local_cwb(maxobs,maxsta,i4time,path_to_local_data,
      &                      grid_east,grid_west,grid_north,grid_south,
      &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,

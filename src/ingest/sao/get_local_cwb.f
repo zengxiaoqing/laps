@@ -7,7 +7,8 @@ c assumptions there, and have tried to document in the
 c code where they are.  
 c
 c
-        subroutine get_local_cwb(maxobs,maxsta,i4time,infile,
+        subroutine get_local_cwb(maxobs,maxsta,i4time,
+     &                 path_to_local_data,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_local_g,n_local_b,stations,
@@ -40,9 +41,10 @@ c======================================================================
 c
 	include 'surface_obs.inc'
 c
-c.....  Input arrays
+c.....  Input 
 c
 	real lat(ni,nj), lon(ni,nj)
+        character path_to_local_data*(*)
 c
 c.....  Output arrays
 c
@@ -100,14 +102,16 @@ c
 c
 c.....  Get the mesonet metadata (station information).
 c
-        call read_tmeso_stntbl(infile,maxsta,badflag,stn_master,
+        call read_tmeso_stntbl(path_to_local_data,maxsta,badflag,
+     &                         stn_master,
      &                         lat_master,lon_master,elev_master,
      &                         priority,num_master,istatus)
 	if(istatus .ne. 1) go to 990
 c
 c.....  Get the mesonet data.
 c
-        call read_tmeso(infile,maxsta,badflag,stn_in,rtime_in,
+        call read_tmeso(path_to_local_data,maxsta,badflag,i4time,
+     &                  stn_in,rtime_in,
      &                  t_in,td_in,rh_in,pcp_in,sfcp_in,dd_in,
      &                  ff_in,num_in,istatus)
 c
@@ -262,18 +266,19 @@ c
         print *,' Found ',n_local_g,' mesonet stations in the LAPS grid'
         print *,' '
         jstatus = 1            ! everything's ok...
+      	write(6,*)' GET_LOCAL_CWB: exit'
       	return
 c
  990  	continue
 c
-      	print *,' ERROR reading mesonet data.'
+      	write(6,*)' GET_LOCAL_CWB: exit without reading data'
      	return
 c
    	end
 
 c
 c
-        subroutine read_tmeso(infile,maxsta,badflag,stn,rtime,
+        subroutine read_tmeso(infile,maxsta,badflag,i4time,stn,rtime,       
      &                        t,td,rh,pcp,sfcp,dd,ff,num,istatus)
 c
 c======================================================================
@@ -290,7 +295,8 @@ c
         real sfcp(maxsta), pcp(maxsta)
         real rtime(maxsta)
 c
-        character infile*(*), stn_id*5, stn(maxsta)*5
+        character infile*(*), stn_id*5, stn(maxsta)*5, 
+     1            a9_to_a8*8, a9time*9, a6time*6, filename*11
 c
 c
 c.....  Start here.  Fill the output arrays with something, then open
@@ -309,9 +315,24 @@ c
 	   ff(i) = badflag
 	enddo !i
 c
-        open(11,file=infile,status='old',err=990)
+        call make_fnam_lp(i4time,a9time,istatus)
+        if(istatus .ne. 1)go to 990
+
+        a6time = a9_to_a8(a9time)(3:8)
+!       a6time = '050826'
+
+        filename = 'MSO.m'//a6time
+
+        call s_len(infile,len_infile)
+        open(11,file=infile(1:len_infile)//filename,status='old'       
+     1                                                     ,err=980)
 c
         num = 0
+
+!       Skip header comments at the top of the file
+        do iread = 1,16
+            read(11,*,end=550,err=990)
+        enddo
 c
 c.....  This starts the read loop.  Since we don't know how many 
 c.....  stations we have, read until we hit the end of file.
@@ -320,13 +341,13 @@ c
 c
         read(11,900,end=550,err=990) idum,stn_id,iyr,imth,idy,ihr,imin, 
      &                               ispd,idir,irh,isfcp,it,itd,iprecip
- 900    format(i2,1x,a5,4(1x,i2),1x,i3,1x,i2,1x,i3,1x,i4,1x,2(i3,1x),i5)
+ 900    format(i2,1x,a5,5(1x,i2),1x,i3,1x,i2,1x,i3,1x,i4,2(1x,i3),1x,i5)
 c
 c.....  Check for valid date/time...if bad, toss this ob.
 c
         if(iyr.lt.0 .or. imth.le.0 .or. idy.le.0 .or. 
      &     ihr.lt.0 .or. imin.lt.0) then 
-           print *, ' Bad date/time at station: ', stn_id
+           print *, ' Bad date/time at station: ', stn_id, idum
            go to 500
         endif
 c
@@ -397,6 +418,12 @@ c
 	istatus = 1
         return
 c     
+ 980    continue
+c
+        write(6,*)' WARNING: could not open mesonet data file ',filename
+	istatus = -1
+        return
+c     
  990    continue
 c
         print *,' ** ERROR reading mesonet data.'
@@ -438,11 +465,18 @@ c
 	   stn(i)(1:5) = '     '
 	enddo !i
 c
-        open(11,file=infile,status='old',err=990)
+        call s_len(infile,len_infile)
+        open(11,file=infile(1:len_infile)//'stn.table',status='old'
+     1                                                ,err=990)
 c
         num = 0
+
+!       Skip header comments at the top of the file
+        do iread = 1,6
+            read(11,*,end=550,err=990)
+        enddo
 c
-c.....  This starts the read loop.  Since we don't know how many 
+c.....  This starts the station read loop.  Since we don't know how many 
 c.....  stations we have, read until we hit the end of file.
 c     
  500    continue

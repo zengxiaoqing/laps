@@ -226,7 +226,7 @@ C Below are some Taiwan FGGE routines
      .                     mslp,                            ! O
      .                     istatus)                         ! O
 
-      parameter ( i_record=83 )
+      parameter ( i_record=86 )
       parameter ( nlevel=16, nvar=5 )  ! nlevel=nz
 
       PARAMETER ( MAX_BUF=320000, MAX_PTS=160000 )
