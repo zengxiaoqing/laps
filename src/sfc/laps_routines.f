@@ -1164,6 +1164,7 @@ c                   01-28-99  Skip LGB until can figure out how to deal
 c                               with bias in its fields.
 c                   06-11-99  Turn LGB back on.
 c                   07-25-99  Set LGB MSL variable to MSL so won't use for now.
+c                   09-16-99  Try LGB MSL again.
 c
 c
 c       Notes:
@@ -1219,8 +1220,8 @@ c
 	   var(3) = 'PS '  ! LSX variable
 	elseif(var_in .eq. 'MSLP') then
 	   var(1) = 'MSL'  ! SFM variable
-c	   var(2) = 'SLP'  ! LGB variable
-	   var(2) = 'MSL'  ! LGB variable
+	   var(2) = 'SLP'  ! LGB variable
+cc	   var(2) = 'MSL'  ! LGB variable
 	   var(3) = 'MSL'  ! LSX variable
 	elseif(var_in .eq. 'DEWP') then
 	   var(1) = 'TD '  ! SFM variable
@@ -1545,7 +1546,8 @@ c
 c
 c.....  Check the field for NaN's and other bad stuff.
 c
-	print *,'  Found SFM backgrounds...checking fields.'
+	print *,'  Found SFM background at ',filename13,
+     &          '...checking field.'
 	call check_field_2d(bkg_u,ni,nj,fill_val,istatus_u)
 	call check_field_2d(bkg_v,ni,nj,fill_val,istatus_v)
 	if(istatus_u.eq.1 .and. istatus_v.eq.1) then
