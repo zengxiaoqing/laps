@@ -356,6 +356,8 @@ while ($i4time70<=$i4time70_end)
                         }
                      }
 
+                     if($i4time70_driver == $i4time70 && $laps_driver_exe =~ /^remap/){last;}
+
 #                    $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > $DATA_ROOT/time/systime.dat";
                      $com_ld="@PERL@ $INSTALL_ROOT/etc/systime.pl $yr2 $mo2 $dy2 $hr2 $mn2 > /tmp/time/systime.dat";
                      run_sys::run_sys($com_ld);
@@ -457,6 +459,19 @@ sub mktmplinks
   }else{
      print "Sub mktmplinks in casererun.pl does not account for year boundaries\n";
      die "Terminating\n";
+  }
+
+  my $dirread;
+  my $time_of_term;
+  foreach (@mon){
+           my $dirread = `ls /data/ihop/$_`;
+           if(length $dirread <= 0){
+              print "ERROR: /data/ihop/$_ is not readable!!\n";
+              print "Termininating\n";
+              $time_of_term = `date`;
+              print "\n Time of termination: $time_of_term \n";
+              exit;
+           }
   }
 
  my @datatypes=qw(acars/qc
