@@ -72,13 +72,14 @@ c               ------ creat a9time in yydddhhmm format ------
                   id= id -1
 
                   if ( id .lt. 1 )  then
-                     id= d(m1)
                      m1= m1 -1
                          
                      if ( m1 .lt. 1 )  then
                         m1= 12
                         iy= iy -1
                      endif
+
+                     id= d(m1)
                   endif
                endif
             endif
