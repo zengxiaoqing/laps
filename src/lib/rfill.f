@@ -401,7 +401,9 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
 !               Assess neighbors to see if we should fill in this grid point
                 if(   ngrids(i,j)   .ge. 1 
-     !                         .AND. 
+     1                         .AND. 
+     1                radar_dist(i,j) .le. 500000.
+     1                         .AND. 
      1                ref_3d(i,j,k) .eq. r_missing_data       )then       
 
                     ref_sum = 0.
