@@ -160,7 +160,7 @@ c     convert p to mb
       endif
       
       
-      call ghbry (i4time,p_3d,p,lt1dat,pu,ii,jj,kk,
+      call ghbry (i4time,p_3d,p,t,lt1dat,pu,ii,jj,kk,
      1     istatus)
       if(istatus.ne.1) return
 
