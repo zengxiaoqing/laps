@@ -35,7 +35,8 @@
          2.3.4 ..................  Profiler / RASS
          2.3.5 ..................  Other Data Sources
          2.4 ..............  Running LAPS Analyses 
-         2.4.1 ..................  Purging Output Files
+         2.4.1 ..................  Cron timing considerations
+         2.4.2 ..................  Purging Output Files
          2.5 ..............  Test data case
          2.5.1 ..................  Analysis Only Test
          2.5.2 ..................  Ingest + Analysis Test
@@ -982,7 +983,20 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      tailored to your domain. This script can be run manually and the output 
      location of the cronfile is directly under $LAPS_DATA_ROOT.
 
-               ----   2.4.1  Purging Output Files ---
+               ----   2.4.1  Cron timing considerations ---
+
+     The best timing of the cron is often related to the arrival time
+     of the raw surface observations. For example, if most of the surface
+     data arrives within 20 minutes of the observation time, then running
+     the cron 20 minutes after the 'systime' would be optimum. 
+
+     Once we get the 'sfc_qc.exe' Kalman module operating in LAPS, we may be 
+     able to recommend running LAPS earlier. In that future mode, LAPS would
+     process each most recent observation available and project ahead if
+     needed any observations that did not yet arrive for the current 
+     'systime'.
+
+               ----   2.4.2  Purging Output Files ---
 
      The script '/etc/purger.pl' purges the 'lapsprd' output files and
      is in turn run by the 'sched.pl'. There are default settings in place for
