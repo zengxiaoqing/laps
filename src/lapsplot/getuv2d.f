@@ -37,7 +37,7 @@ cdis
 !                                   accessing VERTICAL_GRID)
 !       97-Aug-17     Ken Dritz     Removed include of lapsparms.for
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d(2)

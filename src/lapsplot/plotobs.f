@@ -41,7 +41,7 @@ cdis
         real*4 lon(imax,jmax)
         real*4 topo(imax,jmax)
 
-        character*50 directory
+        character*150 directory
         character*31 ext
         character*10  units_2d
         character*125 comment_2d

@@ -300,20 +300,23 @@ c       set up supmap for plot
         if(c6_maproj .eq. 'plrstr')then
             polat = std_lat2
             polon = std_lon
-            call maproj('ST',polat,polon,0.0)
+            rrot  = 0.
+            call maproj('ST',polat,polon,rrot)
             jproj = 1
 
         elseif(c6_maproj .eq. 'lambrt')then
-            call maproj('LC',std_lat1,polon,std_lat2)   
             jproj = 3
-            polat = std_lat2
+            polat = std_lat1
             polon = std_lon
+            rrot  = std_lat2
+            call maproj('LC',polat,polon,rrot)   
 
         elseif(c6_maproj .eq. 'merctr')then
-            call maproj('ME',90.,0.0,0.0)
             jproj = 9
             polat = std_lat2
             polon = std_lon
+            rrot  = 0.
+            call maproj('ME',polat,polon,rrot)
 
         else
             write(6,*)' lapsplot_setup: Error, maproj = ',c6_maproj
@@ -330,11 +333,11 @@ c       set up supmap for plot
             jdot = jdot_in
         elseif(map_mode .eq. 2)then
             icol_sta = 7
-            icol_cou = 29
+            icol_cou = 34
             jdot = 0
         endif
 
-        call draw_county_map(PLM3,PLM4,jproj,polat,polon,jdot
+        call draw_county_map(PLM3,PLM4,jproj,polat,polon,rrot,jdot
      1                                             ,icol_sta,icol_cou)
 
 !       Set up colors, draw the state map?

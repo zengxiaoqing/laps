@@ -134,7 +134,7 @@ cdis
         character*4 radar_name
 
         character*3 var_2d
-        character*50  directory
+        character*150  directory
         character*31  ext
         character*10  units_2d
         character*125 comment_2d
@@ -4288,7 +4288,7 @@ cdis
 !    1                ,t_s,td_s,pr_s,sr_s,dd_s,ff_s,ddg_s,ffg_s,vis_s
 c
         character atime*24, infile*70
-        character directory*50,ext*31
+        character directory*150,ext*31
 
         character*9 c9_string
         character*13 filename13

@@ -29,7 +29,7 @@ cdis
 cdis
 cdis
 cdis
-      subroutine draw_county_map(sw,ne,jproj,polat,polon,jdot
+      subroutine draw_county_map(sw,ne,jproj,polat,polon,rrot,jdot
      1                                             ,icol_sta,icol_cou)
 c
 c
@@ -42,8 +42,8 @@ c
       COMMON/SUPMP9/DS,DI,DSRDI
 
 !     DI = 50.
-      jproj=1
-      polat=90.
+!     polat=90.
+
       rrot=0.
       pl1(1)=sw(1)
       pl2(1)=sw(2)
