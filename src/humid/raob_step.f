@@ -230,7 +230,8 @@ c     +++ read raob file
          isound = isound + 1
                 
 
- 15      read (12,511,end=16) idummy,idx, lat_r(isound),lon_r (isound),
+ 15      read (12,511,end=16,err=18) idummy,idx, 
+     1        lat_r(isound),lon_r (isound),
      1        rdummy, cdummy,r_filename(isound),snd_type(isound)
  511     format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
          print*, idx
