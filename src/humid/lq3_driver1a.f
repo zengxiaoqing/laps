@@ -328,6 +328,8 @@ c        real eslo,esice
 c----------------------    code   ------------------
 c        initialize laps field
 
+        write (6,*) 'version 1.31; 6/18/99; passing temp to raob_step'
+
 c call get_laps congif to fill common block used in pressure assignment
 c                                                               routine
 
@@ -733,7 +735,7 @@ c     ****  execute raob step if switch is on
       if(raob_switch.eq.1) then
          write (6,*) 'begin raob insertion'
          call raob_step (i4time,data,plevel, raob_lookback,
-     1        lat,lon, ii,jj,kk)
+     1        lat,lon, lt1dat, ii,jj,kk)
          
          
          write(6,*) 'Reporting effects of RAOB insertion'

@@ -31,7 +31,7 @@ cdis
 cdis
       subroutine raob_step (i4time, data, laps_pressure, 
      1     raob_lookback,
-     1     lat,lon,  ii,jj,kk)
+     1     lat,lon,  laps_t, ii,jj,kk)
 
 
 
@@ -105,6 +105,7 @@ c     input parameters
       integer i4time, ii,jj,kk, raob_lookback
       real data(ii,jj,kk), laps_pressure (kk)
       real lat(ii, jj), lon(ii, jj)
+      real laps_t (ii,jj,kk)  ! laps temp field for QC checking
 
 c  dynamic dependent parameters                     
 
@@ -149,7 +150,7 @@ c  normal internal parameters
         
 c *** begin routine
 
-      write(6,*) '1.17 temperature control acceptance 6.8.99'
+      write(6,*) '1.18; temperature QC, 10C criteria, 6.19.99'
 
       pi = acos(-1.0)
       d2r = pi/180.
@@ -410,12 +411,18 @@ c     pressure levels
 
                q_r(k,is) = ssh2 (laps_pressure(k),temt,temtd,0.0)/1000.
 
-c     accept only valid raob data (temp must be > -40 c)  DB 1.17 change
-               if(temt.lt.-40. .or. laps_pressure(k).le. 300.)
-     1              q_r(k,is) = rmd
-               if (temt.ge.-40. .and. k.ge.18) then
-                       write(6,*) 'SOMETHING STRANGE', temt, k
+c     accept only valid raob data (temp must be > -40 c
+c     and +/- 3c temp check on laps background to raob temp)  DB 1.18 change
+               if(  temt.lt.-40. ! raob is not effective .lt. -40c
+     1              .or. 
+     1              abs(temt+273.-laps_t(i_r(is),j_r(is),k)).ge.3.!tight check
+     1              ) then  !qc failure on temp
+                  write(6,*) 'qc failure on temp, raob_step 1.18'
+                  write(6,*) laps_pressure(k), temt,
+     1                 abs(temt+273.-laps_t(i_r(is),j_r(is),k)), is
+                  q_r(k,is) = rmd
                endif
+ 
 
                call check_nan(q_r(k,is),istatus)
                if(istatus.eq.0) then ! nan detected bail
