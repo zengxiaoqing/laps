@@ -26,6 +26,8 @@
       character c5_staid(maxsnd)*5,a9time_ob(maxsnd,maxlvl)*9
      1         ,c8_obstype(maxsnd)*8,c_line*150
 
+      character*5 c5_sta
+
       real height_m(maxsnd,maxlvl)
       real pressure_mb(maxsnd,maxlvl)
       real temp_c(maxsnd,maxlvl)
@@ -37,17 +39,29 @@
 
       do isnd = 1,nsnd
 
+        call s_len(c5_staid(isnd),len_sta)
+        if(len_sta .gt. 0)then
+            c5_sta = c5_staid(isnd)
+        else
+            if(iwmostanum(isnd) .gt. 0 .and. 
+     1         iwmostanum(isnd) .le. 99999)then
+                write(6,*)' Filling in blank staid with WMOID'
+                write(c5_sta,101)iwmostanum(isnd)
+ 101            format(i5)
+            endif
+        endif
+
 !       Write Sounding Header
 
         write(6,511,err=990)
      1             iwmostanum(isnd),nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
-     1            ,c5_staid(isnd),a9time_ob(isnd,1),c8_obstype(isnd)
+     1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
         write(lun_out,511,err=990)
      1             iwmostanum(isnd),nlvl(isnd)
      1            ,stalat(isnd,1),stalon(isnd,1),staelev(isnd)
-     1            ,c5_staid(isnd),a9time_ob(isnd,1),c8_obstype(isnd)
+     1            ,c5_sta,a9time_ob(isnd,1),c8_obstype(isnd)
 
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
