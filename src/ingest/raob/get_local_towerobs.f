@@ -46,7 +46,7 @@ c
         real*4     dir_deg(maxobs,maxlvls),spd_mps(maxobs,maxlvls)
 	character  stname(maxobs)*6
 
-        logical    l_closest_time(maxobs)
+        logical    l_closest_time(maxobs), l_closest_timef
 c
 c.....  Output arrays.
 c
@@ -184,27 +184,8 @@ c
 
 !       Flag those reports that are the closest times for the station
         do i = 1,nsnd_all
-            i4_closest = 99999
-
-            do j = 1,nsnd_all
-                if(wmoid(j) .eq. wmoid(i))then
-!                   Calculate time of station j
-                    call i4time_fname_lp(a9time_ob(j),i4time_j,istatus)
-                    i4_diff = abs(i4time_j - i4time_sys)
-                    if(i4_diff .lt. i4_closest)then
-                        j_closest = j
-                        i4_closest = i4_diff
-                    endif
-                endif
-            enddo ! j
-
-            if(i .eq. j_closest)then
-                l_closest_time(i) = .true.
-                write(6,*)' Closest time: ',i,nlvl(i),a9time_ob(i)
-            else
-                l_closest_time(i) = .false.
-            endif
-
+            l_closest_time(i) = l_closest_timef(wmoid,a9time_ob,nsnd_all       
+     1                                         ,i4time_sys,istatus)       
         enddo ! i
 
 !       Transfer arrays (with various QC steps)
@@ -922,3 +903,37 @@ c           read var windDir(recNum,level) -> dd(lvl,obno)
       return
       end
 
+
+      function l_closest_timef(wmoid,a9time_ob,nobs,i4time_sys,istatus)       
+
+!     Determine if the ob time is the closest time for that station to systime
+
+      logical l_closest_timef
+
+      character*9 a9time_ob(nobs)
+!     integer wmoid(nobs)
+      character*(*)wmoid(nobs)    ! Allows arbitrary variable type to compare
+
+      i4_closest = 99999
+
+      do j = 1,nobs
+          if(wmoid(j) .eq. wmoid(i))then
+!             Calculate time of station j
+              call i4time_fname_lp(a9time_ob(j),i4time_j,istatus)
+              i4_diff = abs(i4time_j - i4time_sys)
+              if(i4_diff .lt. i4_closest)then
+                  j_closest = j
+                  i4_closest = i4_diff
+              endif
+          endif
+      enddo ! j
+
+      if(i .eq. j_closest)then
+          l_closest_timef = .true.
+          write(6,*)' Closest time: ',a9time_ob(i)
+      else
+          l_closest_timef = .false.
+      endif
+
+      return
+      end
