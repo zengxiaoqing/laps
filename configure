@@ -1166,16 +1166,16 @@ fi
 LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
-  FFLAGS="$FFLAGS +FPVZO -K -O2" 
+  FFLAGS="$FFLAGS +FPVZO -K" 
   FIXED="+source=fixed"
   FREE="+source=free +langlvl=90"
-  OPTIMIZE="+Onolimit"
+  OPTIMIZE="-O2 +Onolimit"
   LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
   if test -z "$GCC"
   then
       OTHERLIBS="$OTHERLIBS -lm"
-      CFLAGS="$CFLAGS -Aa -O"
+      CFLAGS="$CFLAGS -Aa"
       CPPFLAGS="$CPPFLAGS "
   fi
 fi
