@@ -49,8 +49,6 @@ c        bgmodel = 7 ---> ETA (48 km from grib file)
 c        bgmodel = 8 ---> NOGAPS (1.0 deg)
 c        bgmodel = 9 ---> NWS Conus (RUC, ETA, NGM, AVN)
 c
-      integer nbgmodel
-      parameter (nbgmodel=9)
 c
       integer bgmodel
 c
@@ -88,8 +86,6 @@ c
 c  This is the max number of paths allowed in nest7grid.parms
 c  and should match the value in lib/lapsgrid.f 
 c 
-      integer maxbgmodels
-      parameter (maxbgmodels=10)
       character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), bglen
 c
@@ -111,7 +107,7 @@ c
 c
 c cmodel is really only 12 chars but the SBN netcdf carrys 132
 c
-      character*132 cmodel
+      character*132 cmodel(maxbgmodels)
       include 'lapsparms.cmn'
       integer oldest_forecast, max_forecast_delta
       logical use_analysis
@@ -133,7 +129,7 @@ c      istat = index(laps_domain_file,' ')-1
       i=1
 
       call get_background_info(bgpaths,bgmodels
-     +     ,oldest_forecast,max_forecast_delta,use_analysis) 
+     +,oldest_forecast,max_forecast_delta,use_analysis,cmodel) 
       lga_status = 0
 
 c
@@ -148,7 +144,7 @@ c
       lga_status = 0 
 
       no_infinite_loops=0
-      do while(lga_status.le.0 .and. i.le.nbgmodel
+      do while(lga_status.le.0 .and. i.le.maxbgmodels
      +     .and. no_infinite_loops.lt.30)
          no_infinite_loops=no_infinite_loops+1
          print *,'HERE:',lga_status, i, bg_files,reject_cnt
@@ -159,7 +155,7 @@ c
             call s_len(bgpaths(i),bglen)
             bgpath =  bgpaths(i)
          endif
-         if (bgmodel .lt. 1 .or. bgmodel .gt. nbgmodel) then
+         if (bgmodel .lt. 1 .or. bgmodel .gt. maxbgmodels) then
             print*,'Bad model specification in LGA, bgmodel =',bgmodel
             print*,'   LGA process aborted...'
             stop
@@ -167,8 +163,8 @@ c
 
          call get_acceptable_files(i4time_now,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,0,cmodel,nx_bg,ny_bg,nz_bg
-     +        ,reject_files,reject_cnt)
+     +        ,use_analysis,bg_files,0,cmodel(i)
+     +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
 
         if(bg_files.le.1) then
            print*,'No Acceptable files found for model: ',bgpath,
@@ -188,7 +184,7 @@ ccc   print *, lapsroot
            print *, laps_domain_file
            print *, nx_bg,ny_bg,nz_bg
            print *, 'bgpath ', bgpath(1:bglen)
-           print *, 'cmodel ',cmodel
+           print *, 'cmodel ',cmodel(i)
  970       continue
 c
 c *** Call lga driver.
@@ -196,7 +192,7 @@ c
 
            call lga_driver(nx_laps,ny_laps,nz_laps,prbot,delpr,
      .          laps_cycle_time,lapsroot,laps_domain_file,
-     .          bgmodel,bgpath,names,cmodel,
+     .          bgmodel,bgpath,names,cmodel(i),
      .          nx_bg,ny_bg,nz_bg, 5*nz_laps, lga_status)
 
            if(lga_status.lt.0) then
@@ -493,7 +489,8 @@ c
      .           bgmodel .eq. 6 .or.
      .           bgmodel .eq. 8) then ! Process AVN or NOGAPS1.0 grib data
 
-            call read_dgprep(bgmodel,bgpath,fname,af,nx_bg,ny_bg,nz_bg
+            call read_dgprep(bgmodel,cmodel,bgpath,fname,af
+     .                      ,nx_bg,ny_bg,nz_bg
      .                      ,prbg,htbg,tpbg,shbg,uwbg,vwbg
      .                      ,htbg_sfc,prbg_sfc,shbg_sfc,tpbg_sfc
      .                      ,uwbg_sfc,vwbg_sfc,mslpbg
