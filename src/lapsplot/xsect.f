@@ -248,7 +248,7 @@ cdis
         real*4 mspkt 
         data mspkt /.518/
 
-        character*33 c33_label
+        character*50 c_label
         character*1 c_display
         character*1 c1_string,c_wind
         character*2 c_metacode 
@@ -728,7 +728,7 @@ c read in laps lat/lon and topo
             call diff(field_vert,field_vert_buf,field_vert ! _diff
      1               ,NX_C,NZ_C)       
 
-            c33_label = 'difference field'
+            c_label = 'difference field'
 
             scale = 1.
 
@@ -741,7 +741,7 @@ c read in laps lat/lon and topo
 
 !               call plot_cont(field_vert_diff,scale,clow,chigh,cint,
 !    1               asc9_tim_3dw,namelist_parms,       
-!    1               c33_label,i_overlay,c_display,lat,lon,jdot,
+!    1               c_label,i_overlay,c_display,lat,lon,jdot,
 !    1               NX_C,NZ_C,r_missing_data,laps_cycle_time)
 
 !           else ! image plot
@@ -753,7 +753,7 @@ c read in laps lat/lon and topo
 !    1                     ,n_image,scale,'xsect')    
 !               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
 !               call setusv_dum(2hIN,7)
-!               call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
+!               call write_label_lplot(NX_C,NZ_C,c_label,asc9_tim_t
 !    1                                ,namelist_parms,i_overlay,'xsect')       
 !               call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
 
@@ -947,15 +947,15 @@ c read in laps lat/lon and topo
             i_contour = 2
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Wind (Balanced)       knots '
+                c_label = 'LAPS Wind (Balanced)       knots '
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Wind (Analyzed)       knots '
+                c_label = 'LAPS Wind (Analyzed)       knots '
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Wind (Background)     knots '
+                c_label = 'LAPS Wind (Background)     knots '
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Wind (Forecast)       knots '
+                c_label = 'LAPS Wind (Forecast)       knots '
             else
-                c33_label = 'LAPS Wind (??????????)     knots '
+                c_label = 'LAPS Wind (??????????)     knots '
             endif
 
 
@@ -1028,19 +1028,19 @@ c read in laps lat/lon and topo
             endif
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Omega (balanced)      ubar/s'
+                c_label = 'LAPS Omega (balanced)      ubar/s'
             else   if(c_wind .eq. 'c')then
-                c33_label = 'LAPS Omega (cloud)         ubar/s'
+                c_label = 'LAPS Omega (cloud)         ubar/s'
             else   if(c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Omega (analyzed)      ubar/s'
+                c_label = 'LAPS Omega (analyzed)      ubar/s'
             else   if(c_prodtype .eq. 'B')then
-                c33_label = 'LAPS  Bkgnd   Omega  '//fcst_hhmm
+                c_label = 'LAPS  Bkgnd   Omega  '//fcst_hhmm
      1                                             //'  ubar/s'
             else   if(c_prodtype .eq. 'F')then
-                c33_label = 'LAPS  FUA     Omega  '//fcst_hhmm
+                c_label = 'LAPS  FUA     Omega  '//fcst_hhmm
      1                                             //'  ubar/s'
             else
-                c33_label = '                                 '
+                c_label = '                                 '
             endif
 
         elseif(c_field .eq. 'w ' )then
@@ -1114,11 +1114,11 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
+                c_label = 'LAPS W (bal)   Vert X-Sect (cm/s)'
             else   if(c_wind .eq. 'c')then
-                c33_label = 'LAPS W (cloud) Vert X-Sect (cm/s)'
+                c_label = 'LAPS W (cloud) Vert X-Sect (cm/s)'
             else ! if(c_prodtype .eq. 'A')then
-                c33_label = 'LAPS W (kinem) Vert X-Sect (cm/s)'
+                c_label = 'LAPS W (kinem) Vert X-Sect (cm/s)'
             endif
 
 
@@ -1144,13 +1144,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS  U    (balanced)       (kt) '
+                c_label = 'LAPS  U    (balanced)       (kt) '
             elseif(c_prodtype .eq. 'A')then   
-                c33_label = 'LAPS  U    (analyzed)       (kt) '
+                c_label = 'LAPS  U    (analyzed)       (kt) '
             elseif(c_prodtype .eq. 'B')then   
-                c33_label = 'LAPS  U    (background)     (kt) '
+                c_label = 'LAPS  U    (background)     (kt) '
             elseif(c_prodtype .eq. 'F')then   
-                c33_label = 'LAPS  U    (forecast)       (kt) '
+                c_label = 'LAPS  U    (forecast)       (kt) '
             endif
 
         elseif(c_field .eq. 'v ' )then
@@ -1175,13 +1175,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if    (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS  V    (balanced)       (kt) '
+                c_label = 'LAPS  V    (balanced)       (kt) '
             elseif(c_prodtype .eq. 'A')then   
-                c33_label = 'LAPS  V    (analyzed)       (kt) '
+                c_label = 'LAPS  V    (analyzed)       (kt) '
             elseif(c_prodtype .eq. 'B')then   
-                c33_label = 'LAPS  V    (background)     (kt) '
+                c_label = 'LAPS  V    (background)     (kt) '
             elseif(c_prodtype .eq. 'F')then   
-                c33_label = 'LAPS  V    (forecast)       (kt) '
+                c_label = 'LAPS  V    (forecast)       (kt) '
             endif
 
         elseif(c_field .eq. 'sp' )then
@@ -1210,13 +1210,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Isotachs (Balanced)   knots '
+                c_label = 'LAPS Isotachs (Balanced)   knots '
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Isotachs (Analyzed)   knots '
+                c_label = 'LAPS Isotachs (Analyzed)   knots '
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Isotachs (Background) knots '
+                c_label = 'LAPS Isotachs (Background) knots '
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Isotachs (Forecast)   knots '
+                c_label = 'LAPS Isotachs (Forecast)   knots '
             endif
 
         elseif(c_field .eq. 'di' )then
@@ -1243,13 +1243,13 @@ c read in laps lat/lon and topo
             cint = 10. / density
             i_contour = 1
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Isogons (Balanced)    knots '
+                c_label = 'LAPS Isogons (Balanced)    knots '
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Isogons (Analysis)    knots '
+                c_label = 'LAPS Isogons (Analysis)    knots '
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Isogons (Background)  knots '
+                c_label = 'LAPS Isogons (Background)  knots '
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Isogons (Forecast)    knots '
+                c_label = 'LAPS Isogons (Forecast)    knots '
             endif
 
         elseif(c_field .eq. 'dv' )then
@@ -1278,13 +1278,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Divergence  (Bal)   [1e-5/s]'
+                c_label = 'LAPS Divergence  (Bal)   [1e-5/s]'
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Divergence  (Anal)  [1e-5/s]'
+                c_label = 'LAPS Divergence  (Anal)  [1e-5/s]'
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Divergence  (Bkgnd) [1e-5/s]'
+                c_label = 'LAPS Divergence  (Bkgnd) [1e-5/s]'
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
+                c_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
             endif
 
         elseif(c_field .eq. 'vo' )then
@@ -1314,13 +1314,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Abs Vort  (Bal)     [1e-5/s]'
+                c_label = 'LAPS Abs Vort  (Bal)     [1e-5/s]'
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Abs Vort  (Anal)    [1e-5/s]'
+                c_label = 'LAPS Abs Vort  (Anal)    [1e-5/s]'
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Abs Vort  (Bkgnd)   [1e-5/s]'
+                c_label = 'LAPS Abs Vort  (Bkgnd)   [1e-5/s]'
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
+                c_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
             endif
 
         elseif(c_field .eq. 'va' )then
@@ -1356,13 +1356,13 @@ c read in laps lat/lon and topo
             i_contour = 1
 
             if       (c_prodtype .eq. 'N')then
-                c33_label = 'LAPS Vort Adv  (Bal)   [1e-8/s^2]'
+                c_label = 'LAPS Vort Adv  (Bal)   [1e-8/s^2]'
             elseif   (c_prodtype .eq. 'A')then
-                c33_label = 'LAPS Vort Adv  (Anal)  [1e-8/s^2]'
+                c_label = 'LAPS Vort Adv  (Anal)  [1e-8/s^2]'
             elseif   (c_prodtype .eq. 'B')then
-                c33_label = 'LAPS Vort Adv  (Bkgnd) [1e-8/s^2]'
+                c_label = 'LAPS Vort Adv  (Bkgnd) [1e-8/s^2]'
             elseif   (c_prodtype .eq. 'F')then
-                c33_label = 'LAPS Vort Adv  (Fcst)  [1e-8/s^2]'
+                c_label = 'LAPS Vort Adv  (Fcst)  [1e-8/s^2]'
             endif
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
@@ -1408,7 +1408,7 @@ c read in laps lat/lon and topo
                 endif
 
                 call make_fnam_lp(i4time_radar,a9time,istatus)
-                c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+                c_label = 'LAPS  Reflectivity  Vert X-Sect  '
 
             elseif(c_prodtype .eq. 'F')then
                 call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
@@ -1419,7 +1419,7 @@ c read in laps lat/lon and topo
                     write(6,*)' Could not read forecast ref'       
                     goto100
                 endif
-                c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
+                c_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
      1                    //'   dbz'
 
             else
@@ -1433,7 +1433,7 @@ c read in laps lat/lon and topo
             chigh = +100.
             cint = 10. / density
             i_contour = 1
-!           c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+!           c_label = 'LAPS  Reflectivity  Vert X-Sect  '
 !           call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' 
@@ -1481,6 +1481,10 @@ c read in laps lat/lon and topo
      1                   n_ref_grids,istat_radar_2dref,
      1                   istat_radar_3dref)      
 
+                        call make_fnam_lp(i4time_radar,a9time,istatus)
+                        c_label = 'Reflectivity dBz             '
+     1                              //ext_radar(1:3)
+
                     else
                         write(6,*)
      1                  ' Getting Radar VRZ mosaic via get_laps_3dgrid'       
@@ -1499,7 +1503,7 @@ c read in laps lat/lon and topo
                         endif
 
                         call make_fnam_lp(i4time_radar,a9time,istatus)
-                        c33_label = 'Reflectivity dBz             '
+                        c_label = 'Reflectivity dBz             '
      1                              //ext_radar(1:3)
 
                     endif
@@ -1569,7 +1573,7 @@ c read in laps lat/lon and topo
                     endif
 
                     call make_fnam_lp(i4time_radar,a9time,istatus)
-                    c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+                    c_label = 'LAPS  Reflectivity  Vert X-Sect  '
 
                 elseif(c_prodtype .eq. 'F')then
                     call get_lapsdata_3d(i4_initial,i4_valid
@@ -1581,7 +1585,7 @@ c read in laps lat/lon and topo
                         write(6,*)' Could not read forecast ref'       
                         goto100
                     endif
-                    c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
+                    c_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
      1                        //'   dbz'
 
                 else
@@ -1720,7 +1724,7 @@ c read in laps lat/lon and topo
             call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
 
-            c33_label = 'Gridded Cloud Cover        X-Sect'
+            c_label = 'Gridded Cloud Cover        X-Sect'
 
             call remap_field_2d(
      1                            NX_C,1,NX_C
@@ -1871,7 +1875,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 enddo ! ii
               enddo ! i
 
-              c33_label = 'LAPS Gridded Cloud Cover   X-Sect'
+              c_label = 'LAPS Gridded Cloud Cover   X-Sect'
 
             endif ! l_atms
 
@@ -1889,7 +1893,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +500.
             cint = 5. / density
             i_contour = 1
-            c33_label = 'LAPS Potl Temp Vert X-Sect    K  '
+            c_label = 'LAPS Potl Temp Vert X-Sect    K  '
 
         elseif(c_field .eq. 'pb')then
             iflag_temp = 3 ! Returns Balanced Potential Temperature
@@ -1905,7 +1909,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +500.
             cint = 5. / density
             i_contour = 1
-            c33_label = 'LAPS Potl Temp (Balanced)     K  '
+            c_label = 'LAPS Potl Temp (Balanced)     K  '
 
         elseif(c_field .eq. 't ')then
             call input_product_info(i4time_ref              ! I
@@ -1926,7 +1930,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
      1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
 
-                c33_label = 'LAPS Temp      Vert X-Sect  Deg C'
+                c_label = 'LAPS Temp      Vert X-Sect  Deg C'
 
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
 
@@ -1941,10 +1945,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 if(istatus .ne. 1)goto100
 
                 if(c_prodtype .eq. 'B')then
-                    c33_label = 'LAPS  Bkgnd   T      '//fcst_hhmm
+                    c_label = 'LAPS  Bkgnd   T      '//fcst_hhmm
      1                                                 //'  Deg C '
                 elseif(c_prodtype .eq. 'F')then
-                    c33_label = 'LAPS  FUA     T      '//fcst_hhmm
+                    c_label = 'LAPS  FUA     T      '//fcst_hhmm
      1                                                 //'  Deg C '
                 endif
 
@@ -1995,7 +1999,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +100.
             cint = 5. / density
             i_contour = 1
-            c33_label = 'LAPS Temp (Balanced)        Deg C'
+            c_label = 'LAPS Temp (Balanced)        Deg C'
 
         elseif(c_field .eq. 'ts')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
@@ -2025,7 +2029,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +600.
             cint = 5. / density
             i_contour = 1
-            c33_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
+            c_label = 'LAPS Theta(e) Sat   X-Sect  Deg K'
 
         elseif(c_field .eq. 'tw')then
             iflag_temp = 1 ! Returns Ambient Temp (K)
@@ -2072,7 +2076,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +100.
             cint = 5. / density
             i_contour = 1
-            c33_label = 'LAPS Wet Bulb       X-Sect  Deg K'
+            c_label = 'LAPS Wet Bulb       X-Sect  Deg K'
 
         elseif(c_field .eq. 'sh')then
             var_2d = 'SH '
@@ -2100,7 +2104,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             cint = 0.4 / density
             cint = -1.
             i_contour = 1
-            c33_label = 'LAPS Specific Humidity     x1e3  '
+            c_label = 'LAPS Specific Humidity     x1e3  '
 
         elseif(c_field(1:2) .eq. 'rh' .or. c_field(1:2) .eq. 'rl')then
             call input_product_info(i4time_ref              ! I
@@ -2135,7 +2139,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call interp_3d(rh_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                         NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)      
 
-                c33_label = 'LAPS Relative Humidity (Anl)    %'
+                c_label = 'LAPS Relative Humidity (Anl)    %'
 
             elseif(c_prodtype .eq. 'B' .or. 
      1             c_prodtype .eq. 'F')then
@@ -2161,10 +2165,10 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                        ,r_missing_data)      
 
                 if(c_prodtype .eq. 'B')then
-                    c33_label = 'LAPS  Bkgnd   RH     '//fcst_hhmm
+                    c_label = 'LAPS  Bkgnd   RH     '//fcst_hhmm
      1                                                 //'    %   '
                 elseif(c_prodtype .eq. 'F')then
-                    c33_label = 'LAPS  FUA     RH     '//fcst_hhmm
+                    c_label = 'LAPS  FUA     RH     '//fcst_hhmm
      1                                                 //'    %   '
                 endif
 
@@ -2209,7 +2213,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
                 call make_fnam_lp(i4time_nearest,a9time,istatus)
 
-                c33_label = 'LAPS Relative Humidity (Bal)    %'
+                c_label = 'LAPS Relative Humidity (Bal)    %'
 
             endif ! c_prodtype
 
@@ -2256,7 +2260,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             chigh = +1.
             cint = 0.2 / density
             i_contour = 1
-            c33_label = 'LAPS Cloud Fraction              '
+            c_label = 'LAPS Cloud Fraction              '
 
             NULBLL = 1 ! for conrec (number of lines between labels)
 
@@ -2268,29 +2272,43 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
      1                         .or. c_field .eq. 'pc'
      1                                          )then
 
-            if(c_field .eq. 'la')then
-                iflag_slwc = 1
-                c33_label = 'LAPS Adiabatic LWC      g/m^3    '
-            elseif(c_field .eq. 'lj')then
-                iflag_slwc = 2
-                c33_label = 'LAPS Adjusted  LWC      g/m^3    '
-            elseif(c_field .eq. 'sj')then
-                iflag_slwc = 3
-                c33_label = 'LAPS Adjusted  SLWC     g/m^3    '
-            elseif(c_field .eq. 'ls')then
-                iflag_slwc = 13
-                c33_label = 'LAPS Smith-Feddes LWC   g/m^3    '
-            elseif(c_field .eq. 'ci')then
-                iflag_slwc = 13
-                c33_label = 'LAPS Cloud Ice          g/m^3    '
-            elseif(c_field .eq. 'ss')then
-                iflag_slwc = 14
-                c33_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
-            elseif(c_field .eq. 'pc')then
-                c33_label = 'LAPS Precip Concen      g/m^3    '
-            endif
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
 
-            i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
+            i4time_lwc = i4_valid
+
+            if(c_prodtype .eq. 'A')then   
+                if(c_field .eq. 'la')then
+                    iflag_slwc = 1
+                    c_label = 'LAPS Adiabatic LWC      g/m^3    '
+                elseif(c_field .eq. 'lj')then
+                    iflag_slwc = 2
+                    c_label = 'LAPS Adjusted  LWC      g/m^3    '
+                elseif(c_field .eq. 'sj')then
+                    iflag_slwc = 3
+                    c_label = 'LAPS Adjusted  SLWC     g/m^3    '
+                elseif(c_field .eq. 'ls')then
+                    iflag_slwc = 13
+                    c_label = 'LAPS Smith-Feddes LWC   g/m^3    '
+                elseif(c_field .eq. 'ci')then
+                    iflag_slwc = 13
+                    c_label = 'LAPS Cloud Ice          g/m^3    '
+                elseif(c_field .eq. 'ss')then
+                    iflag_slwc = 14
+                    c_label = 'LAPS Smith-Feddes SLWC  g/m^3    '
+                elseif(c_field .eq. 'pc')then
+                    c_label = 'LAPS Precip Concen      g/m^3    '
+                endif
+            endif
 
             l_pregen = lapsplot_pregen
 
@@ -2302,10 +2320,31 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
             elseif(c_field .eq. 'pc')then
                 var_2d = 'PCN'
             endif
-            ext = 'lwc'
-            call get_laps_3dgrid(i4time_lwc,86400,i4time_nearest,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
+
+            if(c_prodtype .eq. 'A')then   
+                ext = 'lwc'
+                call get_laps_3dgrid(i4time_lwc,86400,i4time_valid,
+     1              NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,slwc_3d,istatus)
+
+                call make_fnam_lp(i4time_valid,a9time,istatus)
+
+            elseif(c_prodtype .eq. 'B' .or. 
+     1             c_prodtype .eq. 'F')then
+
+                call get_lapsdata_3d(i4_initial,i4_valid
+     1                              ,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,slwc_3d
+     1                              ,istatus)
+                if(istatus .ne. 1)goto100
+
+                call mk_fcst_xlabel(comment_2d,fcst_hhmm
+     1                                 ,ext(1:3),units_2d
+     1                                 ,c_model,c_label)
+
+
+            endif
 
             call interp_3d(slwc_3d,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
@@ -2324,12 +2363,11 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 cint = -0.01
             endif
             i_contour = 1
-            call make_fnam_lp(i4time_nearest,a9time,istatus)
 
         elseif(c_field .eq. 'ic')then
 
             iflag_slwc = 13
-            c33_label = '    LAPS Icing Index             '
+            c_label = '    LAPS Icing Index             '
 
             i4time_lrp = i4time_ref/laps_cycle_time * laps_cycle_time
 
@@ -2363,7 +2401,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'mv')then
             iflag_slwc = 0
-            c33_label = 'LAPS Mean Volume Diameter  m^-6  '
+            c_label = 'LAPS Mean Volume Diameter  m^-6  '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
@@ -2396,7 +2434,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'tc')then
             iflag_slwc = 0
-            c33_label = '        LAPS Cloud Type          '
+            c_label = '        LAPS Cloud Type          '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
@@ -2415,7 +2453,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'tp')then
             iflag_slwc = 0
-            c33_label = 'LAPS Precip Type                  '
+            c_label = 'LAPS Precip Type                  '
 
             i4time_pcp = i4time_ref
 
@@ -2441,7 +2479,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         elseif(c_field .eq. 'ic')then
             iflag_slwc = 0
-            c33_label = '     LAPS Icing Severity Index   '
+            c_label = '     LAPS Icing Severity Index   '
 
             i4time_lwc = i4time_ref/laps_cycle_time * laps_cycle_time
 
@@ -2453,7 +2491,7 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         endif ! c_field
 
-        write(6,1605)c33_label,a9time
+        write(6,1605)c_label,a9time
 1605    format(2x,a33,2x,a9)
 
         call lib$set_symbol('DATE_LAPSPLOT',a9time)
@@ -2626,17 +2664,17 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
            endif ! cint > 0
         endif ! i_contour = 1
 
-        call upcase(c33_label,c33_label)
+        call upcase(c_label,c_label)
         call set(0., 1., vymin2, vymax2, 0.,1.,0.,1.,1)
 
 !       Write bottom label
 !       if(i_label_overlay .le. 1)then
 !           ity = 35
-!           call pwrity(cpux(320),cpux(ity),c33_label,33,1,0,0)
+!           call pwrity(cpux(320),cpux(ity),c_label,33,1,0,0)
 !           call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
 !       endif
 
-        call write_label_lplot(100,94,c33_label,a9time,namelist_parms
+        call write_label_lplot(100,94,c_label,a9time,namelist_parms
      1                        ,i_label_overlay,'xsect')       
 
         if(i_map .eq. 0)then
@@ -3768,3 +3806,54 @@ c
         return
         end
 
+        subroutine mk_fcst_xlabel(comment_2d,fcst_hhmm_in
+     1                                ,ext
+     1                                ,units_2d
+     1                                ,c_model
+     1                                ,c_label)
+
+        character*(*) comment_2d,ext,units_2d,c_model,c_label
+
+        character*4 fcst_hhmm_in,fcst_hhmm
+
+        call s_len2(comment_2d,len_fcst)
+        call s_len2(units_2d,len_units)
+
+        if(ext .eq. 'lga')then
+            c_model = 'lga'
+        endif
+
+        call s_len2(c_model,len_model)
+        call upcase(c_model,c_model)
+
+!        write(c_label,102)k_mb
+!102     format(I5,' hPa ')
+
+        if(fcst_hhmm_in(3:4) .eq. '00')then
+            fcst_hhmm = fcst_hhmm_in(1:2)//'Hr '
+        else
+            fcst_hhmm = fcst_hhmm_in
+        endif
+
+        ist = 37
+
+        if(len_units .gt. 0)then
+            c_label(1:ist-1) = comment_2d(1:len_fcst)
+     1                         //' ('//units_2d(1:len_units)//')'
+        else
+            c_label(1:ist-1) = comment_2d(1:len_fcst)
+        endif
+
+        c_label(ist:ist+5) = fcst_hhmm(1:4)//' '
+
+        if(len_model .gt. 0)then
+            c_label(ist+5:ist+11+len_model) = 
+     1                            c_model(1:len_model)//' Fcst'       
+        else
+            c_label(ist+5:ist+8) = 'Fcst'       
+        endif
+
+        write(6,*)' mk_fcst_xlabel:',c_label
+
+        return
+        end
