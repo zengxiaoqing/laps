@@ -38,31 +38,34 @@ SRCROOT=../..
 include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
-           $(SRCROOT)/src/lib/mthermo/libmthermo.a
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a \
+           $(SRCROOT)/src/lib/modules/libmodules.a
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
-             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a \
+             $(SRCROOT)/src/lib/modules/libdebugmodules.a
 
 RM=rm -f 
 
-.SUFFIXES:              .f .o
+.SUFFIXES:              .f90 .o
 
-.f.o:
+.f90.o:
 			$(RM) $@
-			$(FC) -c $(FFLAGS) $(FREE) $*.f
+			$(FC) -c $(FFLAGS) $(FREE) $*.f90
+
 
 EXE=lapsprep.exe
-FSRC=lapsprep.f lwc2vapor.f   
+FSRC=lapsprep.f90 lwc2vapor.f90   
 
-FOBJS=$(FSRC:.f=.o)
+FOBJS=$(FSRC:.f90=.o)
 
 FMOD = module_constants.o \
        module_date_pack.o \
-       module_laps_static.o \
        module_lapsprep_mm5.o \
        module_lapsprep_rams.o \
        module_lapsprep_wrf.o \
        module_lapsprep_netcdf.o \
+       module_laps_static.o \
        module_setup.o
 
 
