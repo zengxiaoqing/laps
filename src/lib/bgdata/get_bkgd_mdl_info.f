@@ -21,7 +21,7 @@ c     USE laps_static
       character*2   gproj
       character*1   cgrddef
       
-      integer       i,j
+      integer       i,j,l
       integer       istatus
       integer       nxbg,nybg,nzbg
       integer       nzbg_ht
@@ -62,9 +62,10 @@ c     USE laps_static
 
         end subroutine
 
-        subroutine get_ruc2_dims(filename,NX,NY,NZ
+        subroutine get_ruc2_dims(filename,cmodel,NX,NY,NZ
      &,StdLat1,StdLat2,Lon0,La1,Lo1,La2,Lo2,istatus)
           character*200 filename
+          character     cmodel*(*)
           integer NZ, NX, NY
           integer istatus
           real    StdLat1,StdLat2
@@ -159,12 +160,24 @@ c    &istatus)
 c        call get_horiz_grid_spec(generic_data_root)
 c        call s_len(grid_type,leng)
 
-         call s_len(projname,leng)
+c        call s_len(projname,leng)
+         
+         search_length: do l=30,1,-1
+            if(projname(l:l).ne.' ')then
+               exit search_length
+            endif
+         enddo search_length
 
-         if(projname(1:leng).eq. 'polar')gproj='PS'
-         if(projname(1:leng).eq.'lambert')gproj='LC'
-         if(projname(1:leng).eq. 'mercator')gproj='MC'
-         if(projname(1:leng).eq.'secant lambert')gproj='LC'
+         if(l.eq.1)then
+            print*,'Unable to determine string length'
+            print*,'get_mdl_bkgd_info: ',cmodel
+            return
+         endif
+
+         if(projname(1:l).eq. 'polar')gproj='PS'
+         if(projname(1:l).eq.'lambert')gproj='LC'
+         if(projname(1:l).eq. 'mercator')gproj='MC'
+         if(projname(1:l).eq.'secant lambert conformal')gproj='LC'
 
          if(Lo1.gt.180)Lo1=Lo1-360
          if(Lo2.gt.180)Lo2=Lo2-360
@@ -329,8 +342,9 @@ c for global AVN, nav code expects grid 1,1 in nw corner
 
 c RUC Public
 c ----------
-      if(bgmodel.eq.5.and.cmodel(1:nclen).eq.'RUC40_NATIVE')then
-         call get_ruc2_dims(fullname,nxbg,nybg,nzbg
+      if(bgmodel.eq.5.and.cmodel(1:nclen).eq.'RUC40_NATIVE'
+     &                .or.cmodel(1:nclen).eq.'RUC20_NATIVE')then
+         call get_ruc2_dims(fullname,cmodel,nxbg,nybg,nzbg
      &              ,Lat0,Lat1,Lon0,La1in,Lo1in,La2in,Lo2in,istatus)
          if(istatus.eq.1)then
             nzbg_ht=nzbg
@@ -466,8 +480,8 @@ c -----------------------------------------------------------------
          ne(1)=42.92812
          ne(2)=+180.2034
        elseif(cmodel(1:nclen).eq.'CWB_20FA_LAMBERT_TFS')then
-         nxbg = 211
-         nybg = 211
+         nxbg = 229
+         nybg = 181
          nzbg = 11
          nzbg_ht=nzbg
          nzbg_tp=nzbg
@@ -478,10 +492,10 @@ c -----------------------------------------------------------------
          Lat0=10.0
          Lat1=40.0
          Lon0=+120.
-         sw(1)=+4.543
-         sw(2)=+110.526
-         ne(1)=32.129
-         ne(2)=+142.701
+         sw(1)=-9.902
+         sw(2)=+82.854
+         ne(1)=+52.219
+         ne(2)=+199.610
        else
          print*,'bgmodel = 3, but unknown cmodel spec'
          print*,'cmodel = ',cmodel(1:nclen)
