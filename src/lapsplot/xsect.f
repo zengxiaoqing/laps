@@ -670,7 +670,8 @@ c read in laps lat/lon and topo
         if(    c_field .eq. 'di' .or. c_field .eq. 'sp'
      1    .or. c_field .eq. 'u ' .or. c_field .eq. 'v '
      1    .or. c_field .eq. 'w ' .or. c_field .eq. 'dv'
-     1    .or. c_field .eq. 'vc' .or. c_field .eq. 'om')then
+     1    .or. c_field .eq. 'vo' .or. c_field .eq. 'vc' 
+     1    .or. c_field .eq. 'om'                        )then
 
             call input_product_info(i4time_ref              ! I
      1                             ,laps_cycle_time         ! I
@@ -1019,10 +1020,14 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
 
-            if       (c_prodtype .eq. 'N')then
+            if    (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS  U    (balanced)       (kt) '
-            else
+            elseif(c_prodtype .eq. 'A')then   
                 c33_label = 'LAPS  U    (analyzed)       (kt) '
+            elseif(c_prodtype .eq. 'B')then   
+                c33_label = 'LAPS  U    (background)     (kt) '
+            elseif(c_prodtype .eq. 'F')then   
+                c33_label = 'LAPS  U    (forecast)       (kt) '
             endif
 
         elseif(c_field .eq. 'v ' )then
@@ -1046,10 +1051,14 @@ c read in laps lat/lon and topo
             cint = 10.
             i_contour = 1
 
-            if       (c_prodtype .eq. 'N')then
+            if    (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS  V    (balanced)       (kt) '
-            else
+            elseif(c_prodtype .eq. 'A')then   
                 c33_label = 'LAPS  V    (analyzed)       (kt) '
+            elseif(c_prodtype .eq. 'B')then   
+                c33_label = 'LAPS  V    (background)     (kt) '
+            elseif(c_prodtype .eq. 'F')then   
+                c33_label = 'LAPS  V    (forecast)       (kt) '
             endif
 
         elseif(c_field .eq. 'sp' )then
@@ -1079,8 +1088,12 @@ c read in laps lat/lon and topo
 
             if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Isotachs (Balanced)   knots '
-            else ! if(c_prodtype .eq. 'A')then
+            elseif   (c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Isotachs (Analyzed)   knots '
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Isotachs (Background) knots '
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Isotachs (Forecast)   knots '
             endif
 
         elseif(c_field .eq. 'di' )then
@@ -1108,34 +1121,155 @@ c read in laps lat/lon and topo
             i_contour = 1
             if       (c_prodtype .eq. 'N')then
                 c33_label = 'LAPS Isogons (Balanced)    knots '
-            else ! if(c_prodtype .eq. 'A')then
+            elseif   (c_prodtype .eq. 'A')then
                 c33_label = 'LAPS Isogons (Analysis)    knots '
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Isogons (Background)  knots '
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Isogons (Forecast)    knots '
+            endif
+
+        elseif(c_field .eq. 'dv' )then
+            do k = 1,NZ_L
+                call divergence(u_3d(1,1,k),v_3d(1,1,k),field_3d(1,1,k)       
+     1                         ,lat,lon,NX_L,NY_L,.true.,r_missing_data)       
+            enddo
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = NZ_C,1,-1
+              do i = 1,NX_C
+                if(field_vert(i,k) .eq. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                else
+                    field_vert(i,k) = field_vert(i,k) * 1e5
+                endif
+              enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +1000.
+            cint = 2.
+
+            i_contour = 1
+
+            if       (c_prodtype .eq. 'N')then
+                c33_label = 'LAPS Divergence  (Bal)   [1e-5/s]'
+            elseif   (c_prodtype .eq. 'A')then
+                c33_label = 'LAPS Divergence  (Anal)  [1e-5/s]'
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Divergence  (Bkgnd) [1e-5/s]'
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Divergence  (Fcst)  [1e-5/s]'
+            endif
+
+        elseif(c_field .eq. 'vo' )then
+            do k = 1,NZ_L
+                call vorticity_abs(u_3d(1,1,k),v_3d(1,1,k)
+     1                            ,field_3d(1,1,k),lat,lon
+     1                            ,NX_L,NY_L,.true.,r_missing_data)       
+            enddo
+
+            call interp_3d(field_3d,field_vert,xlow,xhigh,ylow,yhigh,
+     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+
+            do k = NZ_C,1,-1
+              do i = 1,NX_C
+                if(field_vert(i,k) .eq. r_missing_data)then
+                    field_vert(i,k) = field_vert(i,min(k+1,NZ_C))
+                else
+                    field_vert(i,k) = field_vert(i,k) * 1e5
+                endif
+              enddo ! i
+            enddo ! k
+
+            clow = -100.
+            chigh = +1000.
+            cint = 2.
+
+            i_contour = 1
+
+            if       (c_prodtype .eq. 'N')then
+                c33_label = 'LAPS Abs Vort  (Bal)     [1e-5/s]'
+            elseif   (c_prodtype .eq. 'A')then
+                c33_label = 'LAPS Abs Vort  (Anal)    [1e-5/s]'
+            elseif   (c_prodtype .eq. 'B')then
+                c33_label = 'LAPS Abs Vort  (Bkgnd)   [1e-5/s]'
+            elseif   (c_prodtype .eq. 'F')then
+                c33_label = 'LAPS Abs Vort  (Fcst)    [1e-5/s]'
             endif
 
         elseif(c_field .eq. 'rf' .or. c_field .eq. 'rg'
-     1                   .or. c_field .eq. 'rk')then
-            if(c_field .eq. 'rk')then
-                i4time_get = i4time_ref/laps_cycle_time * laps_cycle_tim
-     1e
+     1                           .or. c_field .eq. 'rk')then
+            if(c_field .ne. 'rg')then
+                i4time_get = i4time_ref/laps_cycle_time 
+     1                     * laps_cycle_time
                 goto1300
             endif
 
 1300        write(6,*)' Getting Radar data via get_laps_3dgrid'
+!           var_2d = 'REF'
+!           ext = 'lps'
+
+!           call get_laps_3dgrid(i4time_ref,86400,i4time_radar,
+!    1          NX_L,NY_L,NZ_L,ext,var_2d
+!    1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+
+            call input_product_info(i4time_ref              ! I
+     1                             ,laps_cycle_time         ! I
+     1                             ,3                       ! I
+     1                             ,c_prodtype              ! O
+     1                             ,ext                     ! O
+     1                             ,directory               ! O
+     1                             ,a9time                  ! O
+     1                             ,fcst_hhmm               ! O
+     1                             ,i4_initial              ! O
+     1                             ,i4_valid                ! O
+     1                             ,istatus)                ! O
+
             var_2d = 'REF'
-            ext = 'lps'
 
-            call get_laps_3dgrid(i4time_ref,86400,i4time_radar,
-     1          NX_L,NY_L,NZ_L,ext,var_2d
-     1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+            if(c_prodtype .eq. 'A')then
+                write(6,*)' Getting Radar data via get_laps_3dgrid'
+                ext = 'lps'
 
-1310        call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,
+                call get_laps_3dgrid(i4time_get,86400,i4time_radar
+     1              ,NX_L,NY_L,NZ_L,ext,var_2d
+     1              ,units_2d,comment_2d,grid_ra_ref,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read lps via get_laps_3dgrid'       
+                    goto100
+                endif
+
+                call make_fnam_lp(i4time_radar,a9time,istatus)
+                c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+
+            elseif(c_prodtype .eq. 'F')then
+                call get_lapsdata_3d(i4_initial,i4_valid,NX_L,NY_L,NZ_L       
+     1                              ,directory,var_2d
+     1                              ,units_2d,comment_2d,grid_ra_ref
+     1                              ,istatus)
+                if(istatus .ne. 1)then
+                    write(6,*)' Could not read forecast ref'       
+                    goto100
+                endif
+                c33_label = 'LAPS  FUA Reflectivity '//fcst_hhmm
+     1                    //'   dbz'
+
+            else
+                goto100
+
+            endif
+
+            call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,
      1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
             clow = 0.
             chigh = +100.
             cint = 10.
             i_contour = 1
-            c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
-            call make_fnam_lp(i4time_radar,a9time,istatus)
+!           c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
+!           call make_fnam_lp(i4time_radar,a9time,istatus)
 
         elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' 
      1    .or. c_field .eq. 'rs')then ! Reflectivity Image

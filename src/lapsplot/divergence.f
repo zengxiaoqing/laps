@@ -38,8 +38,7 @@ cdis
 cdis
 
         subroutine divergence(uanl,vanl,div,lat,lon,ni,nj
-     1  ,one,dum1,dum2,dum3,uanl_grid,vanl_grid,l_grid_north
-     1  ,r_missing_data)
+     1                       ,l_grid_north,r_missing_data)
 
 !      ~90            Steve Albers  Original Version
 !       97-Aug-17     Ken Dritz     Added r_missing_data as dummy argument
@@ -50,14 +49,17 @@ cdis
 
         real m ! Grid points per meter
 
-        real one(ni,nj)
-
         DATA scale/1./
 
         real*4 lat(ni,nj),lon(ni,nj)
         real*4 uanl(ni,nj),vanl(ni,nj)
         real*4 uanl_grid(ni,nj),vanl_grid(ni,nj)
         real*4 div(ni,nj)
+        real*4 one(ni,nj)
+
+        real*4 dum1(ni,nj)
+        real*4 dum2(ni,nj)
+        real*4 dum3(ni,nj)
 
         character*6 c6_maproj
 
@@ -131,3 +133,48 @@ cdis
 
         return
         end
+
+
+        subroutine vorticity_abs(uanl,vanl,vort,lat,lon,ni,nj
+     1                          ,l_grid_north,r_missing_data)
+
+        real*4 lat(ni,nj),lon(ni,nj)
+        real*4 uanl(ni,nj),vanl(ni,nj)
+        real*4 coriolis(ni,nj)
+        real*4 dx(ni,nj), dy(ni,nj)
+
+        call get_grid_spacing_array(lat,lon,ni,nj,dx,dy)
+
+        call vortdiv(uanl,vanl,vort,div,ni,nj,dx,dy)
+
+        call get_coriolis_rotation(ni,nj,lat,coriolis)
+
+        call add(vort,coriolis,vort,ni,nj)
+
+        return
+        end
+
+
+        subroutine get_coriolis_rotation(nx,ny,lat,coriolis_rotation)
+c
+        include 'trigd.inc'
+        implicit none
+
+        integer nx,ny
+        integer i,j
+
+        real    lat(nx,ny)
+        real    coriolis_rotation(nx,ny)
+
+        real    omega_ear
+        data    omega_ear/7.292e-5/
+
+        do j=1,ny
+        do i=1,nx
+           coriolis_rotation(i,j)=2*omega_ear*sind(lat(i,j))
+        enddo
+        enddo
+
+        return
+        end
+

@@ -1,41 +1,3 @@
-cdis   
-cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
-cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
-cdis    
-cdis    This software is distributed under the Open Source Definition,
-cdis    which may be found at http://www.opensource.org/osd.html.
-cdis    
-cdis    In particular, redistribution and use in source and binary forms,
-cdis    with or without modification, are permitted provided that the
-cdis    following conditions are met:
-cdis    
-cdis    - Redistributions of source code must retain this notice, this
-cdis    list of conditions and the following disclaimer.
-cdis    
-cdis    - Redistributions in binary form must provide access to this
-cdis    notice, this list of conditions and the following disclaimer, and
-cdis    the underlying source code.
-cdis    
-cdis    - All modifications to this software must be clearly documented,
-cdis    and are solely the responsibility of the agent making the
-cdis    modifications.
-cdis    
-cdis    - If significant modifications or enhancements are made to this
-cdis    software, the FSL Software Policy Manager
-cdis    (softwaremgr@fsl.noaa.gov) should be notified.
-cdis    
-cdis    THIS SOFTWARE AND ITS DOCUMENTATION ARE IN THE PUBLIC DOMAIN
-cdis    AND ARE FURNISHED "AS IS."  THE AUTHORS, THE UNITED STATES
-cdis    GOVERNMENT, ITS INSTRUMENTALITIES, OFFICERS, EMPLOYEES, AND
-cdis    AGENTS MAKE NO WARRANTY, EXPRESS OR IMPLIED, AS TO THE USEFULNESS
-cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
-cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
-cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
-cdis   
-cdis
-cdis
-cdis   
-cdis
       subroutine read_synop_cwb (
      ~     filename, maxSkyCover, recNum, altimeter,
      ~     autoStationType, dewpoint, dpFromTenths, elevation,
@@ -98,35 +60,66 @@ c      ------   give initial values to avoid data stack problem  ------
 5        skyLayerBase(i,j)= badflag
 
       do j= 1,recNum
-         read ( 1, 10, end=99, err=999 ) reportFlag(j), wmoId(j),
-     ~               elevation(j), latitude(j), longitude(j),
-     ~               yy(j), mo(j), dd(j), hh(j), mn(j)
-         read ( 1, 20, err=999 )  windDir(j), windSpeed(j), windQua(j),
-     ~               visibility(j), presWeather(j),
-     ~               seaLevelPress(j), seaLevelPressQua(j),
-     ~               temperature(j), temperatureQua(j),
-     ~               skyCover(1,j), skyLayerBase(1,j)
-         read ( 1, 30, err=999 )  tempDewDiff(j), dewpointQua(j),
-     ~               pressChangeChar(j), pressChange3Hour(j),
-     ~               pressChange3HourQua(j), precip3Hour(j),
-     ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         read ( 1, 40, err=999 )  skyCover(2,j), skyLayerBase(2,j),
-     ~               precip24Hour(j)
+         read (1,20,end=99,err=9) reportFlag(j), wmoId(j),
+     ~                   elevation(j), latitude(j), longitude(j),
+     ~                   yy(j), mo(j), dd(j), hh(j), mn(j)
+         read (1,30,end=9,err=9) windDir(j), windSpeed(j), windQua(j),
+     ~                   visibility(j), presWeather(j),
+     ~                   seaLevelPress(j), seaLevelPressQua(j),
+     ~                   temperature(j), temperatureQua(j),
+     ~                   skyCover(1,j), skyLayerBase(1,j)
+         read (1,40,end=9,err=9) tempDewDiff(j), dewpointQua(j),       
+     ~                   pressChangeChar(j), pressChange3Hour(j),
+     ~                   pressChange3HourQua(j), precip3Hour(j),
+     ~                   maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
+         read (1,50,end=9,err=9) skyCover(2,j), skyLayerBase(2,j),
+     ~                   precip24Hour(j)
          read (1,*)
 
          if ( reportFlag(j) .ne. '*31' )  then
             write (6,*) 'read synop data heading error'
             go to 1000
          endif
+	 go to 10
 
-         n= n+1
+9        write (6,*) ' Reading error of synop data'
+         write (6,*) reportFlag(j), wmoId(j), elevation(j),
+     ~               latitude(j), longitude(j), ' ',
+     ~               yy(j), mo(j), dd(j), hh(j), mn(j), ' ', timeobs(j)
+         write (6,*) windDir(j), windSpeed(j), windQua(j),
+     ~               visibility(j), presWeather(j),
+     ~               seaLevelPress(j), seaLevelPressQua(j),
+     ~               temperature(j), temperatureQua(j),
+     ~               skyCover(1,j), skyLayerBase(1,j)
+         write (6,*) dewpoint(j), dewpointQua(j),
+     ~               pressChangeChar(j), pressChange3Hour(j),
+     ~               pressChange3HourQua(j), precip3Hour(j),
+     ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
+         write (6,*) skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
+
+10       n= n+1
       enddo
 
-10    format ( a3, i5, f4.0, 2f5.2, 2x, 5a2 )
-20    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
+20    format ( a3, i5, f4.0, 2f5.2, 2x, 5a2 )
+30    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
-30    format ( f3.1, i1, 1x, i2, f3.1, i1, 3(1x, f4.1), 8x, f3.0 )
-40    format ( a2, 2x, f2.0, 14x, f4.1 )
+40    format ( f3.1, i1, 1x, i2, f3.1, i1, 3(1x, f4.1), 8x, f3.0 )
+50    format ( a2, 2x, f2.0, 14x, f4.1 )
+
+89    write (6,*) ' Abnormal codes of synop data'
+      write (6,*) reportFlag(j), wmoId(j), elevation(j),
+     ~            latitude(j), longitude(j), ' ',
+     ~            yy(j), mo(j), dd(j), hh(j), mn(j), ' ', timeobs(j)        
+      write (6,*) windDir(j), windSpeed(j), windQua(j),
+     ~            visibility(j), presWeather(j),
+     ~            seaLevelPress(j), seaLevelPressQua(j),
+     ~            temperature(j), temperatureQua(j),
+     ~            skyCover(1,j), skyLayerBase(1,j)
+      write (6,*) dewpoint(j), dewpointQua(j),
+     ~            pressChangeChar(j), pressChange3Hour(j),
+     ~            pressChange3HourQua(j), precip3Hour(j), 
+     ~            maxTemp24Hour(j), minTemp24Hour(j), windGust(j)
+      write (6,*) skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
 
 c      ----------       examing data quality and changing units       ---------
 99    do j= 1,n
@@ -338,24 +331,6 @@ c               -------      dealing with lacking of data      -------
          precip1Hour(j)= badflag
          precip6Hour(j)= badflag
          snowCover(j)= badflag
-      enddo
-
-      go to 1000
-
-999   do j= 1,n
-         write (6,*) reportFlag(j), wmoId(j), elevation(j),
-     ~               latitude(j), longitude(j), ' ',
-     ~               yy(j), mo(j), dd(j), hh(j), mn(j), ' ', timeobs(j)
-         write (6,*) windDir(j), windSpeed(j), windQua(j),
-     ~               visibility(j), presWeather(j),
-     ~               seaLevelPress(j), seaLevelPressQua(j),
-     ~               temperature(j), temperatureQua(j),
-     ~               skyCover(1,j), skyLayerBase(1,j)
-         write (6,*) dewpoint(j), dewpointQua(j),
-     ~               pressChangeChar(j), pressChange3Hour(j),
-     ~               pressChange3HourQua(j), precip3Hour(j),
-     ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         write (6,*) skyCover(2,j), skyLayerBase(2,j), precip24Hour(j)
       enddo
 
 1000  return

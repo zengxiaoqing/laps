@@ -33,27 +33,6 @@ cdis
 c
 c=====  Here are John's subroutines...(abandon hope, ye who enter)
 c
-	subroutine vortdiv(u,v,vort,div,imax,jmax,dx,dy)
-c this routine computes vorticity and divergence from u and v winds
-c using centered differences.
-	real u(imax,jmax),v(imax,jmax),vort(imax,jmax)
-	real div(imax,jmax),dx(imax,jmax),dy(imax,jmax)
-c
-	do j=2,jmax-1
-	do i=2,imax-1
-	    div(i,j) = (u(i,j-1) - u(i-1,j-1)) / dx(i,j)
-     &               + (v(i-1,j) - v(i-1,j-1)) / dy(i,j)
-	    vort(i,j) = (v(i,j) - v(i-1,j)) / dx(i,j)
-     &                - (u(i,j) - u(i,j-1)) / dy(i,j)
-	enddo !i
-	enddo !j
-	call bounds(div,imax,jmax)
-	call bounds(vort,imax,jmax)
-c
-	return
-	end
-c
-c
 	subroutine channel(u,v,topo,imax,jmax,top,pblht,dx,dy,
      &                     z,div)
 c
@@ -922,32 +901,6 @@ c
 	istatus = 1
 	return
 	end
-c
-c
-	subroutine bounds(x,imax,jmax)
-c
-c.....	Routine to fill in the boundaries of an array.  Just uses the
-c.....	interior points for now.
-c
-	real x(imax,jmax)
-c
-	do i=1,imax
-	  x(i,1) = x(i,2)
-	  x(i,jmax) = x(i,jmax-1)
-	enddo !i
-	do j=1,jmax
-	  x(1,j) = x(2,j)
-	  x(imax,j) = x(imax-1,j)
-	enddo !j
-c
-	x(1,1) = x(2,2)
-	x(1,jmax) = x(2,jmax-1)
-	x(imax,1) = x(imax-1,2)
-	x(imax,jmax) = x(imax-1,jmax-1)
-c
-	return
-	end
-c
 c
 	subroutine make_cssi(t,td,pmsl,u,v,cssi,ni,nj,badflag)
 c

@@ -1,0 +1,155 @@
+#!@PERL@
+# @configure_input@
+use strict;
+use Time::Local;
+use English;
+#
+# Given a date in the form yy mm dd hh mm
+#                       or hh mm dd mm yyyy  (this option needs testing)
+#                       or hh jul yy         (not according to latest test)
+#                       or hh jul yyyy       (not according to latest test)
+# returns a systime.dat file appropriate for that time.
+# 
+
+my(@MON, $hh, $min, $mm, $dd, $yy, $yyyy, $jjj, $jday);
+@MON = qw(JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC);
+
+$yy = shift || goto USAGE;
+
+$jday=0;
+if(length($yy)==7){
+    my @num = split //,$yy;
+    $hh     = $num[0].$num[1];    
+    $min    = "00";
+    $jday   = $num[2].$num[3].$num[4];
+    $yy     = $num[5].$num[6];
+}elsif(length($yy)==2){
+    $mm     = shift || goto USAGE;
+    $dd     = shift || goto USAGE;
+    $hh     = shift || goto USAGE;
+    $min    = shift || goto USAGE;
+}elsif(length($yy)==10){
+    my @num = split //,$hh;
+    $hh     = $num[0].$num[1];    
+    $min    = $num[2].$num[3];
+    $dd     = $num[4].$num[5];
+    $mm     = $num[6].$num[7];
+    $yy     = $num[8].$num[9];
+}else{
+  USAGE:
+    print "USAGE: $EXECUTABLE_NAME $0 yy mon day hour min (yy mm dd hh mm)\n";
+    exit;
+}
+
+if(length($yy) > 2){
+    $yyyy = $yy;
+    $yy = $yy % (100*int($yy/100));
+}elsif($yy>70){
+    $yyyy = 1900+$yy;
+}else{
+    $yyyy = 2000+$yy;
+}
+if($jday!=0){
+    $jjj        = $jday;
+    my $daymo   = &j2daymo($jday, $yyyy);
+    my @daylist = split(/ /, $daymo);
+    $dd         = $daylist[0];
+    $mm         = $daylist[1];
+} else {
+    $jjj = &julian($yy,$mm,$dd);
+}
+
+
+
+my $ctime = timegm(0,$min, $hh, $dd, $mm-1, $yy);
+
+my $ftime = $ctime + 315619200;
+$jjj="0".$jjj while(length($jjj)< 3);
+$yy="0".$yy while(length($yy)< 2);
+
+print "  $ftime\n";
+print " $yy$jjj$hh$min\n";
+print "$hh\n";
+print "$min\n";
+print "$dd-$MON[$mm-1]-$yyyy $hh$min\n";
+print "$yy$jjj\n";
+
+;#
+;#+--+------------------------------------------------------------------+
+;#
+;# &julian: Calculate julian day from year, month, day
+;# Arguments: year, month, day
+;# Returns: julian day
+#sub julian {
+#   my($yr,$mo,$dy) = @_;
+#
+#   my @cumulative_day = (0,   0,  31,  59,  90, 120, 151,
+#                            181, 212, 243, 273, 304, 334);
+#   my($today);
+#   ($yr < 70) ? ($yr += 2000) : ($yr += 1900);
+#   $today = $cumulative_day[$mo] + $dy;
+#   if(($yr%4==0 && $yr%100!=0) || $yr%400==0) {
+#       $today++;
+#   }
+#   $today; 
+#
+;# &julian: Calculate julian day from year, month, day
+;# Arguments: year, month, day
+;# Returns: julian day
+
+sub julian {
+    my($yr,$mo,$dy) = @_;
+ 
+    my($b,$g,$d,$e,$f,$today,$first_of_year);
+    $yr = ($yr < 70) ? ($yr + 2000) : ($yr + 1900);
+ 
+    # Use temporary vars to compute num of days since Oct 1, 1582 to today
+    $b = int ( ($mo - 14) / 12 );
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+ 
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+ 
+    $today = $d + $e - $f + $dy - 2432076;
+ 
+    # Now compute number of days from Oct 1, 1582 to Jan 1, $yr
+    $mo = 1;
+    $dy = 1;
+    $b = int( ($mo - 14) / 12);
+    $g = $yr + 4900 + $b;
+    $b = $mo - 2 - 12*$b;
+ 
+    $d = int( (1461*($g-100))/4);
+    $e = int( (367*$b)/12);
+    $f = int( (3*int($g/100))/4);
+ 
+    $first_of_year = $d + $e - $f + $dy - 2432076;
+ 
+    # Julian day from 1st of year is $today-$first_of_year+1
+ 
+    $today - $first_of_year + 1;
+}
+
+;#
+;#+--+------------------------------------------------------------------+
+;#
+;# &j2daymo: Calculate year, month, day from julian day
+;# Arguments: julian day
+;# Returns: day, month
+sub j2daymo {
+    my($jdy,$yr) = @_;
+    my @monthsize = (0, 31, 28, 31, 30, 31, 30,
+                        31, 31, 30, 31, 30, 31);
+    if(($yr%4==0 && $yr%100!=0) || $yr%400==0) {
+        $monthsize[2]++;
+    }
+    my $index = 1;
+    while($jdy > $monthsize[$index]){
+        $jdy -= $monthsize[$index];
+        $index++;
+    }
+    my $rvalue = join(" ", $jdy, $index);
+}
+1;

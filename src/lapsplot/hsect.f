@@ -135,7 +135,6 @@ cdis
         real*4 cint
         real*4 uv_2d(NX_L,NY_L,2)
 
-        real*4 div(NX_L,NY_L)
         real*4 dir(NX_L,NY_L)
         real*4 spds(NX_L,NY_L)
         real*4 umean(NX_L,NY_L) ! WRT True North
@@ -590,11 +589,10 @@ c       include 'satellite_dims_lvd.inc'
                     endif
 
                 else if(k_level .gt. 0)then
-
                     write(6,103)
 103                 format(/
-     1              '  Field [di,sp,u,v,w,dv,vc (barbs), ob (obs))]'
-     1                                          ,24x,'? ',$)
+     1              '  Field [di,sp,u,v,w,dv,vo,vc (barbs), ob (obs))]'       
+     1                                          ,21x,'? ',$)
                     read(lun,15)c_field
                     write(6,*)' ext = ',ext
                     if(c_field .ne. 'w ')then
@@ -867,17 +865,30 @@ c       include 'satellite_dims_lvd.inc'
                 call move(w_2d,field_2d,NX_L,NY_L)
 
             elseif(c_field .eq. 'dv')then ! Display Divergence Field
-                call divergence(u_2d,v_2d,div,lat,lon,NX_L,NY_L
-     1                         ,dum1_array,dum2_array
-     1                         ,dum3_array,dum4_array,dummy_array
-     1                         ,radar_array,.true.,r_missing_data)
+                call divergence(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L
+     1                         ,.true.,r_missing_data)
                 call mklabel33(k_mb,' DVRG (CPTD) 1e-5/s',c33_label)
 
                 scale = 1e-5
-                call contour_settings(div,NX_L,NY_L,clow,chigh,cint
+                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
      1                                                  ,zoom,scale)
 
-                call plot_cont(div,scale,clow,chigh,cint,asc9_tim_3dw,
+                call plot_cont(field_2d,scale,clow,chigh,cint,
+     1               asc9_tim_3dw,
+     1               c33_label,i_overlay,c_display,lat,lon,jdot,
+     1               NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            elseif(c_field .eq. 'vo')then ! Display Vorticity Field
+                call vorticity_abs(u_2d,v_2d,field_2d,lat,lon,NX_L,NY_L       
+     1                         ,.true.,r_missing_data)
+                call mklabel33(k_mb,' VORT (abs)  1e-5/s',c33_label)
+
+                scale = 1e-5
+                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+     1                                                  ,zoom,scale)
+
+                call plot_cont(field_2d,scale,clow,chigh,cint,
+     1               asc9_tim_3dw,
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -3868,7 +3879,7 @@ c                   cint = -1.
                 goto1200
             endif
 
-            c33_label = 'LAPS Sfc Vorticity  (x 1e-5 s^-1)'
+            c33_label = 'LAPS Sfc Rel Vorticity   (1e-5/s)'
 
             clow = -100.
             chigh = +100.

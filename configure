@@ -2841,6 +2841,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
+          etc/systime.pl
           etc/temp.pl
           etc/wfo_post.pl
           etc/wind3d.pl
@@ -2957,6 +2958,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
+          etc/systime.pl
           etc/temp.pl
           etc/wfo_post.pl
           etc/wind3d.pl

@@ -202,7 +202,7 @@ c      ----------       examing data quality and changing units       ---------
 !        write (11,*) wmoId(i), elevation(i), latitude(i), longitude(i),
 !    ~                a9time(i), layerNum(i)
 
-         write(6,511)
+         write(11,511)
      1             wmoId(i),layerNum(i)
      1            ,latitude(i),longitude(i),elevation(i)
      1            ,'     '             ! Station name (if known)       

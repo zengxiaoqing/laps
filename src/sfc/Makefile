@@ -10,11 +10,13 @@ include $(SRCROOT)/src/include/makefile.inc
 
 LAPSLIBS = $(SRCROOT)/src/lib/temp/libtemp.a  \
            $(SRCROOT)/src/lib/liblaps.a  \
-           $(SRCROOT)/src/lib/mthermo/libmthermo.a
+           $(SRCROOT)/src/lib/mthermo/libmthermo.a \
+           $(SRCROOT)/src/lib/util/libutil.a \
 
 DBLAPSLIBS = $(SRCROOT)/src/lib/temp/libdebugtemp.a  \
              $(SRCROOT)/src/lib/libdebuglaps.a  \
-             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a  
+             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a \
+             $(SRCROOT)/src/lib/util/libdebugutil.a  
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
@@ -38,7 +40,7 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(FC) $(MAIN) $(FFLAGS) $(FIXED) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 	rm -f *.o
 
 debug: $(SRC)
