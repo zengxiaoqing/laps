@@ -1091,9 +1091,10 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            'WFO/AWIPS' NetCDF format is distributed via FSL's MADIS project at 
            http://www-sdd.fsl.noaa.gov/MADIS/
 
-           In most cases, dropsondes can be combined with the raw RAOB data
-           or combined by adding modules to LAPS ingest for merging in the 
-           'snd' file.
+     Dropsondes (snd):
+           A Dropsonde ingest module is currently being developed for the
+           CWB database. We may include modules for other databases in the 
+           future, such as NIMBUS, WFO/AWIPS, and AVAPS.          
 
                       ----   2.3.7  Satellite ---
 
