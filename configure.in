@@ -222,55 +222,9 @@ AC_CHECK_FUNCS(gettimeofday re_comp regcomp)
 #LAPS_PARMS_CONFIG
 
 
-AC_OUTPUT(src/lib/Makefile 
-	  src/lib/bgdata/Makefile
-          src/lib/blas/Makefile 
-          src/lib/cloud/Makefile
-          src/lib/fm/Makefile
-          src/lib/goesinav/Makefile 
-          src/lib/goeslib/Makefile 
-          src/lib/lapack/Makefile 
-          src/lib/mthermo/Makefile 
-          src/lib/nav/Makefile
-          src/lib/powell/Makefile
-          src/lib/radar/remap_ftn/Makefile
-          src/lib/satellite/Makefile
-          src/lib/temp/Makefile
-          src/lib/util/Makefile
-          src/accum/Makefile 
-          src/background/Makefile 
-          src/cloud/Makefile
-          src/deriv/Makefile
-          src/grid/Makefile
-          src/humid/Makefile
-          src/include/trigd.inc
-          src/ingest/acars/Makefile
-          src/ingest/pireps/Makefile
-          src/ingest/profiler/Makefile
-          src/ingest/radar/ingest_rrv/Makefile
-          src/ingest/radar/remap/Makefile
-          src/ingest/radar/vad/Makefile
-          src/ingest/radar/wsiremap/vrc/Makefile
-          src/ingest/radar/wsiremap/vrc/table/Makefile
-          src/ingest/raob/Makefile
-          src/ingest/rass/Makefile
-          src/ingest/rass/blp/Makefile
-          src/ingest/sao/Makefile
-          src/ingest/satellite/cloud_drift/Makefile
-          src/ingest/satellite/lvd/Makefile
-          src/ingest/satellite/lvd/table/Makefile
-          src/ingest/satellite/sounding/Makefile
-          src/lapsplot/Makefile
-          src/sched/Makefile
-          src/sfc/Makefile
-          src/sfc/table/Makefile
-          src/soil/Makefile
-          src/static/Makefile
-          src/temp/Makefile
-          src/wind/Makefile
-          src/WFO/post/Makefile
+AC_OUTPUT(src/include/trigd.inc
+          src/include/makefile.inc
           util/cronfile
-          Makefile
           etc/laps_driver.pl
           etc/purger.pl
           etc/sched.pl
