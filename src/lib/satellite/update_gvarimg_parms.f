@@ -82,7 +82,7 @@ c     Integer   nstypes
 c     Integer   indx
 c     Integer   idum
 
-c     character*100 dir
+c     character*150 dir
       character*150 c_filespec
       character*255 filename_cdf
       character*200 cdir_path
