@@ -56,6 +56,7 @@ c          P. Stamus  03-23-98  Changes for stand-alone QC; LS2 format.
 c                     05-01-98  Added soil moisture variables.
 c                     08-28-98  Added buoy and LDAD mesonet reads.
 c                     09-04-98  Install as LSO, using new 'ls2' format.
+c                     09-30-98  Housekeeping changes.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -94,11 +95,8 @@ c
      &          store_7(maxsta,3),
      &          store_cldht(maxsta,5)
 c
-        integer*4  itime60, wmoid(maxobs)
-        integer*4  before, after
-	integer*4  jstatus, grid_spacing 
-        integer    rtime, dpchar(maxobs), narg, iargc
-        integer    maxSkyCover, recNum, nf_fid, nf_vid, nf_status
+        integer*4  wmoid(maxobs), jstatus, grid_spacing 
+        integer    dpchar(maxobs), narg, iargc
 c
         character  stations(maxsta)*20, provider(maxsta)*11
         character  weather(maxobs)*25 

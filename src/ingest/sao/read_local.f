@@ -15,11 +15,13 @@ c     Routine to read the LDAD NetCDF mesonet observation files at FSL.
 c     Code created with 'xgennet.pl' by J. Edwards, NOAA/FSL.
 c     
 c     Original:  P. Stamus, NOAA/FSL  28 Aug 1998
+c	         09-30-98  P. Stamus
+c                     Housekeeping changes.
 c
 c**********************************************************************
 c
       include 'netcdf.inc'
-      integer recNum, nf_fid, nf_vid, nf_status, ifilval
+      integer recNum, nf_fid, nf_vid, nf_status !, ifilval
 
       character*11 dataProvider(recNum)
       character*25 presWeather(recNum)
