@@ -31,7 +31,7 @@ cdis
 
 
 
-        subroutine ingest_blplrs(i4time,NX_L,NY_L,istatus)
+        subroutine ingest_blplrs(i4time_sys,NX_L,NY_L,istatus)
 
 C       Steve Albers               Apr-1996    BLP LAPS ingest
 !       Ken Dritz                1-Jul-1997  Added NX_L, NY_L as dummy
@@ -98,6 +98,9 @@ C
         character*31    ext
         character*6 prof_name(max_profilers)
 
+        character*9 a9_timeObs
+        double precision timeObs
+
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
@@ -113,7 +116,7 @@ C
                 return
         endif
 
-        c13_dum = filename13(i4time,'lrs')
+        c13_dum = filename13(i4time_sys,'lrs')
         asc9_tim = c13_dum(1:9)
 C
 C       Open a 60-minute RASS netCDF file for 20:00:00.00 on Julian date 217,
@@ -160,9 +163,9 @@ C       Wait for the data
 
         write(6,*)c_filespec(1:80)
 
-        i4time_desired = i4time
+        i4time_desired = i4time_sys
 
-        i4time_stop_waiting = i4time + 25 * 60
+        i4time_stop_waiting = i4time_sys + 25 * 60
         i4time_now = i4time_now_gg()
         i4_wait_period = i4time_stop_waiting - i4time_now
 
@@ -213,7 +216,7 @@ C
 C       Open an output file.
 C
         ext = 'lrs'
-        call open_lapsprd_file_append(1,i4time,ext(1:3),istatus)
+        call open_lapsprd_file_append(1,i4time_sys,ext(1:3),istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening output file'
             istatus = 0
@@ -269,8 +272,8 @@ C         Get the surface pressure.  This time we'll use the 5-character
 C         site name (plus a terminating blank) to select the station.
 C
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat,sta       
-     1tus)
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLat',0,rlat
+     1                      ,status)
           if(status.ne.0)then
                 write(6,*)'bad lat read ',prof_name(ista),status
                 go to 900
@@ -278,14 +281,40 @@ C
           write(6,*)
           write(6,*)prof_name(ista),' Lat ',rlat
 
-          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon,sta
-     1tus)
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'staLon',0,rlon
+     1                      ,status)
           if(status.ne.0)then
                 write(6,*)'bad lon read ',status
                 go to 900
           endif
           write(6,*)
           write(6,*)prof_name(ista),' Lon ',rlon
+
+!         Get the observation time
+          CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'timeObs',0,timeObs
+     1                      ,status)
+
+          if(status.ne.0)then
+              write(6,*)' Warning: bad timeObs read ',status,timeObs
+
+          elseif(abs(timeObs) .gt. 3d9)then
+              write(6,*)' Warning: Bad observation time',timeObs
+
+          else
+              call c_time2fname(nint(timeObs),a9_timeObs)
+
+              write(6,*)
+              write(6,*)' timeObs ',a9_timeObs
+
+              call cv_asc_i4time(a9_timeObs,i4_timeObs)
+              i4_resid = abs(i4_timeObs - i4time_sys)
+!             if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+              if(i4_resid .gt. 0)then
+                  write(6,*)' Warning, time is suspect '
+     1                     ,a9_timeObs,i4_resid       
+              endif
+
+          endif
 
           if(rlat .le. rnorth .and. rlat .ge. south .and.
      1       rlon .ge. west   .and. rlon .le. east            )then
@@ -294,7 +323,7 @@ C
 
 
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0,'pressure',0,prs       
-     1,status)
+     1                        ,status)
             if(status.ne.0)then
                 write(*,*)'bad pressure read ',status
                 prs = r_missing_data
@@ -331,7 +360,8 @@ C
 
             n_levels_tot = n_levels
 
-            i4time_ob = i4time - lag_time
+!           i4time_ob = i4time_sys - lag_time
+            i4time_ob = i4_timeObs - lag_time 
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 

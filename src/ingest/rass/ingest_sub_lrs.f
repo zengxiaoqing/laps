@@ -32,7 +32,7 @@ cdis
 
 
 
-        subroutine ingest_lrs(i4time,NX_L,NY_L,istatus)
+        subroutine ingest_lrs(i4time_sys,NX_L,NY_L,istatus)
 
 C       Michael Barth           12-Aug-1993
 C       Steve Albers               Nov-1993         Reworked for LAPS ingest
@@ -97,6 +97,9 @@ C
         character*40 c_vars_req
         character*100 c_values_req
 
+        character*9 a9_timeObs
+        double precision timeObs
+
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L)
         real*4 topo(NX_L,NY_L)
 
@@ -112,7 +115,7 @@ C
                 return
         endif
 
-        c13_dum = filename13(i4time,'lrs')
+        c13_dum = filename13(i4time_sys,'lrs')
         asc9_tim = c13_dum(1:9)
 C
 C       Open a 60-minute RASS netCDF file for 20:00:00.00 on Julian date 217,
@@ -180,7 +183,7 @@ C
 C       Wait for the data
         write(6,*)c_filespec(1:80)
 
-        i4time_desired = i4time
+        i4time_desired = i4time_sys
 
         i4_check_interval = 10
         i4_total_wait = 300
@@ -239,7 +242,7 @@ C
 C       Open an output file.
 C
         ext = 'lrs'
-        call open_lapsprd_file(1,i4time,ext(1:3),istatus)
+        call open_lapsprd_file(1,i4time_sys,ext(1:3),istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error opening output file'
             istatus = 0
@@ -308,7 +311,7 @@ C         Get the surface pressure.  This time we'll use the
 C         5-character site name (plus a terminating blank) to select the station.
 C
           CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'pressure',0,prs       
-     1,status)
+     1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad pressure read ',status
                 prs = r_missing_data
@@ -317,8 +320,8 @@ C
           write(6,*)
           write(6,*)'pressure ',prs
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'temperature',0,       
-     1t_sfc,status)
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'temperature',0
+     1                      ,t_sfc,status)
           i_qc_sfc = 1
           if(status.ne.0)then
                 write(*,*)'bad t_sfc read ',status
@@ -327,15 +330,15 @@ C
           write(6,*)
           write(6,*)'t_sfc ',t_sfc,i_qc_sfc
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'relHumidity',0,       
-     1rh_sfc,status)
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'relHumidity',0
+     1                      ,rh_sfc,status)
           CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windSpeedSfc',0
-     1,sp_sfc,status)
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windDirSfc',0,d
-     1i_sfc,status)
+     1                      ,sp_sfc,status)
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'windDirSfc',0
+     1                      ,di_sfc,status)
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLat',0,rlat,       
-     1status)
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLat',0,rlat
+     1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad lat read ',status
                 return
@@ -343,14 +346,39 @@ C
           write(6,*)
           write(6,*)'Lat ',rlat
 
-          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLon',0,rlon,       
-     1status)
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'staLon',0,rlon
+     1                      ,status)
           if(status.ne.0)then
                 write(*,*)'bad lon read ',status
                 return
           endif
           write(6,*)'Lon ',rlon
 
+!         Get the observation time
+          CALL PROF_CDF_READ(cdfid,'      ',wsmr_wmo_id,'timeObs',0
+     1                      ,timeObs,status)
+
+          if(status.ne.0)then
+              write(6,*)' Warning: bad timeObs read ',status,timeObs
+
+          elseif(abs(timeObs) .gt. 3d9)then
+              write(6,*)' Warning: Bad observation time',timeObs
+
+          else
+              call c_time2fname(nint(timeObs),a9_timeObs)
+
+              write(6,*)
+              write(6,*)' timeObs ',a9_timeObs
+
+              call cv_asc_i4time(a9_timeObs,i4_timeObs)
+              i4_resid = abs(i4_timeObs - i4time_sys)
+!             if(i4_resid .gt. (ilaps_cycle_time / 2) )then ! outside time window
+              if(i4_resid .gt. 0)then
+                  write(6,*)' Warning, time is suspect '
+     1                     ,a9_timeObs,i4_resid       
+              endif
+
+          endif
 
           if(rlat .le. rnorth .and. rlat .ge. south .and.
      1       rlon .ge. west   .and. rlon .le. east            )then
@@ -368,7 +396,8 @@ C
             write(6,*)
             write(6,*)'elev ',elev
 
-            i4time_ob = i4time - lag_time
+!           i4time_ob = i4time_sys - lag_time
+            i4time_ob = i4_timeObs - lag_time 
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
 
