@@ -14,7 +14,7 @@ c**************new routine as adapted at FSL**************************
       character*3 var_2d
 
       integer MAX_FIELDS
-      parameter (MAX_FIELDS = 3)
+      parameter (MAX_FIELDS = 4)
       real*4 field_array(ni,nj,MAX_FIELDS)
       character*3 var_a(MAX_FIELDS)
       character*125 comment_a(MAX_FIELDS)
@@ -36,6 +36,7 @@ c**************new routine as adapted at FSL**************************
       real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                   ! L
       real*4 pres_3d_pa(ni,nj,nk)                                   ! L
       real*4 haines_mid_2d(ni,nj)                                   ! L
+      real*4 haines_hi_2d(ni,nj)                                    ! L
       real*4 vent_2d(ni,nj)                                         ! L
       real*4 fosberg_2d(ni,nj)                                      ! L
 
@@ -83,6 +84,7 @@ c**************new routine as adapted at FSL**************************
      1                          ,p_sfc_pa                           ! I
      1                          ,fosberg_2d                         ! O
      1                          ,haines_mid_2d                      ! O
+     1                          ,haines_hi_2d                       ! O
      1                          ,vent_2d                            ! O
      1                          ,istatus)                           ! O
 
@@ -91,21 +93,25 @@ c**************new routine as adapted at FSL**************************
 
           call move(vent_2d      ,field_array(1,1,1),ni,nj)
           call move(haines_mid_2d,field_array(1,1,2),ni,nj)
-          call move(fosberg_2d   ,field_array(1,1,3),ni,nj)
+          call move(haines_hi_2d, field_array(1,1,3),ni,nj)
+          call move(fosberg_2d   ,field_array(1,1,4),ni,nj)
 
           ext = 'lfr'
           var_a(1) = 'VNT'
           var_a(2) = 'HAM'
-          var_a(3) = 'FWI'
+          var_a(3) = 'HAH'
+          var_a(4) = 'FWI'
           units_a(1) = 'M**2/S'
           units_a(2) = '      '
           units_a(3) = '      '
+          units_a(4) = '      '
           comment_a(1) = 'Ventilation Index'
-          comment_a(2) = 'Mid-Level Haines Index'
-          comment_a(3) = 'Fosberg Fire Wx Index'
+          comment_a(2) = 'Haines Index (850-700hPa)'
+          comment_a(3) = 'Haines Index (700-500hPa)'
+          comment_a(4) = 'Fosberg Fire Wx Index'
           call put_laps_multi_2d(i4time,ext,var_a,units_a
      1                          ,comment_a,field_array,ni,nj
-     1                          ,3,istatus)
+     1                          ,4,istatus)
 
       else
           write(6,*)' Skipping write of LFR file'
@@ -128,6 +134,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,p_sfc_pa                           ! I
      1                           ,fosberg_2d                         ! O
      1                           ,haines_mid_2d                      ! O
+     1                           ,haines_hi_2d                       ! O
      1                           ,vent_2d                            ! O
      1                           ,istatus)                           ! O
 
@@ -149,6 +156,7 @@ c**************new routine as adapted at FSL**************************
        real*4 p_sfc_mb(ni,nj)
 
        real*4 haines_mid_2d(ni,nj)                                   ! O
+       real*4 haines_hi_2d(ni,nj)                                    ! O
        real*4 vent_2d(ni,nj)                                         ! O
        real*4 fosberg_2d(ni,nj)                                      ! O
 
@@ -159,8 +167,10 @@ c**************new routine as adapted at FSL**************************
 !      Calculate Haines Index
        write(6,*)' Calculate Mid-Level Haines Index'
        pres_3d_mb = pres_3d_pa / 100.
-       call hainesindex(pres_3d_mb,temp_3d,td_3d,haines_mid_2d,ni,nj,nk
+       call hainesindex(pres_3d_mb,temp_3d,td_3d,haines_mid_2d,ni,nj,nk       
      1                 ,850.,700.) 
+       call hainesindex(pres_3d_mb,temp_3d,td_3d,haines_hi_2d,ni,nj,nk
+     1                 ,700.,500.) 
 
 !      Calculate Fosberg Fireweather Index
        write(6,*)' Calculate Fosberg Fireweather Index'
