@@ -903,9 +903,10 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
            in the '.../src/ingest/sao' directory should provide enough 
            information to get you started on any needed modifications.
 
-           The mesonet (LDAD/local) data over much of the U.S. is available 
-           from FSL with some restrictions. Please contact Patty Miller at
-           miller@fsl.noaa.gov for more information.   
+           The surface data, including all the types mentioned above, over much
+           of the U.S. is available in realtime from FSL with some restrictions. 
+           This data is in 'WFO/AWIPS' NetCDF format. Please contact Patty 
+           Miller at miller@fsl.noaa.gov for more information.   
       
                       ----   2.3.4  Profiler / RASS ---
 
@@ -947,6 +948,12 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
              ingest code would need modification to process it.
 </pre>                 
 
+           The profiler data is also available via another route from FSL with
+           some restrictions. This data is in 'WFO/AWIPS' NetCDF format. 
+           Please contact Patty Miller at miller@fsl.noaa.gov for more 
+           information.   
+
+
                       ----   2.3.5  PIREPS & ACARS from aircraft ---
 
      PIREPS (pin) - We are ingesting FSL NetCDF pirep files to translate the 
@@ -986,6 +993,10 @@ e) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
      RAOBs (snd):
            FSL NIMBUS, WFO Advanced, CWB, or AFWA databases. 
+
+           These are available in real-time from FSL with some restrictions. 
+           The data is supplied in 'WFO/AWIPS' NetCDF format. Please contact 
+           Patty Miller at miller@fsl.noaa.gov for more information.   
 
      Satellite derived soundings (snd):
            AFWA database format. 
