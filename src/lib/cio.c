@@ -13,10 +13,12 @@
 #ifdef FORTRANCAPS
 #define read_binary_field READ_BINARY_FIELD
 #define in_to_im          IN_TO_IM
+/* #define i4_to_byte        I4_TO_BYTE */
 #endif
 #ifdef FORTRANUNDERSCORE
 #define read_binary_field read_binary_field_
 #define in_to_im          in_to_im_
+/* #define i4_to_byte        i4_to_byte_ */
 #endif
 
 
@@ -125,3 +127,13 @@ int in_to_fm(fint4 *insize, fint4 *outsize,char *data, fint4 *nitems)
   fprintf(stderr,"Failed to find type match in in_to_fm %d %d\n",m,n);
   return -1;
 }
+/*
+char i4_to_byte(fint4 *i4)
+{
+  if((int) (*i4) < 0 || (int) (*i4) > 256){
+    fprintf(stderr,"Value out of range in i4_to_byte %d\n",(int) *i4);
+  }
+    
+  return((char) (*i4));
+}
+*/

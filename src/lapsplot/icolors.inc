@@ -1,6 +1,7 @@
 
 !       integer*4 icolors(8)/252,245,202,15,110,253,205,206/
-        integer*4 icolors(8)/11,5,13,3,8,9,10,16/
+        integer*4 icolors(8)
+        data icolors/11,5,13,3,8,9,10,16/
 
 !       icolors_tt(0)  = deep blue    (   )     Map background
 !       icolors_tt(1)  = green        (   )     Overlay 1
@@ -11,4 +12,4 @@
 !       icolors_tt(15) = white        (229)
 
         integer*4 icolors_tt(0:15)
-     1  /4,3,8,11,4,5,6,7,8,9,10,11,12,2,7,1/
+        data icolors_tt/4,3,8,11,4,5,6,7,8,9,10,11,12,2,7,1/

@@ -50,12 +50,15 @@ cdis
 !       1       /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 
         character*2 c2_cloud_types(0:10)
+        data c2_cloud_types
      1  /'  ','ST','SC','CU','NS','AC','AS','CS','CI','CC','CB'/
 
         character*2 c2_precip_types(0:10)
+        data c2_precip_types
      1  /'  ','Rn','Sn','Zr','Sl','Ha','L ','Zl','  ','  ','  '/
 
         character*1 c1_precip_types(0:10)
+        data c1_precip_types
      1  /' ','R','*','Z','I','H','L','F',' ',' ',' '/
 
 

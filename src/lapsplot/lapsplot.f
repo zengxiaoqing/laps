@@ -57,7 +57,8 @@ cdis
 
         integer*4 N_CONTOURS
         parameter (N_CONTOURS = 20)
-        real*4 factor(N_CONTOURS)/
+        real*4 factor(N_CONTOURS)
+        data factor/
      1  .01,
      1  .02,
      1  .05,
@@ -180,7 +181,8 @@ c           set up supmap for plot
 
         integer*4 N_CONTOURS
         parameter (N_CONTOURS = 20)
-        real*4 factor(N_CONTOURS)/
+        real*4 factor(N_CONTOURS)
+        data factor/
      1  .01,
      1  .02,
      1  .05,

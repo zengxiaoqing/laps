@@ -83,12 +83,15 @@ cdis
         real*4 cld_pres(KCLOUD)
 
         character*2 c2_cloud_type,c2_cloud_types(0:10)
+        data c2_cloud_types
      1  /'  ','St','Sc','Cu','Ns','Ac','As','Cs','Ci','Cc','Cb'/
 
         character*2 c2_precip_type,c2_precip_types(0:10)
+        data c2_precip_types
      1  /'  ','Rn','Sn','Zr','Sl','Ha','  ','  ','  ','  ','  '/
 
         character*1 c1_precip_types(0:10)
+        data c1_precip_types
      1       /' ','R','*','Z','I','H',' ',' ',' ',' ',' '/
 
 
@@ -104,8 +107,10 @@ cdis
 !       character*255 c_filespec_wd/'*.lw3'/
 !       character*255 c_filespec_wc/'*.lco'/
 !       character*255 c_filespec_wb/'*.lba'/
-        character*255 c_filespec_qg/'USER_DATA:*.lqo'/
+        character*255 c_filespec_qg
         character*255 c_filespec
+
+        data c_filespec_qg/'USER_DATA:*.lqo'/
 
         character*31 ext_wind
 
@@ -117,8 +122,8 @@ cdis
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_C,1)
-        integer*2 ibase_array(NX_C,1)
-        integer*2 itop_array(NX_C,1)
+        integer*4 ibase_array(NX_C,1)
+        integer*4 itop_array(NX_C,1)
 
         real*4 u_3d(NX_L,NY_L,NZ_L)
         real*4 v_3d(NX_L,NY_L,NZ_L)
@@ -167,7 +172,8 @@ cdis
 
         integer*4 N_CONTOURS
         parameter (N_CONTOURS = 20)
-        real*4 factor(N_CONTOURS)/
+        real*4 factor(N_CONTOURS)
+        data factor/
      1  .01,
      1  .02,
      1  .05,
@@ -217,7 +223,8 @@ cdis
 
         integer*4 iarg
 
-        real*4 mspkt /.518/
+        real*4 mspkt 
+        data mspkt /.518/
 
         character*33 c33_label
         character*1 c_display
@@ -231,12 +238,13 @@ cdis
         character*24 asc_tim_24
         character*9 asc_tim_9,c9_string
         character*20 c20_sta
-        integer*4 ity/35/
+        integer*4 ity
 
         integer*4 N_STATIONS
         parameter (N_STATIONS = 32)
 
         character*3 c3_sta_array(N_STATIONS)
+        data c3_sta_array
      1  /'WIG','FTC','LOV','ELB','FLG','PTV','STP',
      1         'ELB','BJC','DEN','APA','COS','CYS','LAR',
      1         'LIC','AKO','GLD','LHX','BOU','KIO','GXY',
@@ -244,6 +252,7 @@ cdis
      1   'ICT','DSM','GRI','ASE'/
 
         real*4 sta_lat(N_STATIONS)
+        data sta_lat
      1    /  40.29,  40.59,  40.59,  39.20,  39.36,  40.26,  39.75,
      1       39.23,  39.90,  39.75,  39.57,  38.82,  41.15,  41.32,
      1       39.18,  40.17,  39.37,  38.05,  40.01,  39.35,  40.42,
@@ -251,6 +260,7 @@ cdis
      1       37.65,  41.53,  40.97,  39.22/
 
         real*4 sta_lon(N_STATIONS)
+        data sta_lon
      1    /-103.05,-105.14,-105.14,-104.50,-103.04,-104.87,-104.87,
      1     -104.63,-105.12,-104.87,-104.85,-104.72,-104.82,-105.68,
      1     -103.70,-103.22,-101.70,-103.52,-105.25,-104.42,-104.63,
@@ -1724,8 +1734,13 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
         call upcase(c33_label,c33_label)
         call set(0.,1.,0.,1.,0.,1.,0.,1.,1)
-        call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
-        call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+
+!       Write bottom label
+        if(i_graphics_overlay .le. 1)then
+            ity = 35
+            call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
+            call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+        endif
 
         if(i_map .eq. 0)then
 
@@ -1846,6 +1861,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 
             mini = icolors(i_graphics_overlay)
             maxi = icolors(i_graphics_overlay)
+
+            call setusv_dum(2hIN,icolors(i_graphics_overlay)) ! Is this effective?
 
             vmax = -1e30
             vmin = 1e30
@@ -2686,10 +2703,11 @@ c
         character*9 c9_string
         character*13 filename13
 
-        character*2 icompass(8)/'N ','NE','E ','SE','S ','SW','W ','NW'/
+        character*2 icompass(8)
+        data icompass/'N ','NE','E ','SE','S ','SW','W ','NW'/
 
-        write(6,*)' Reading Station locations from read_sfc for labellin
-     1g '
+        write(6,*)
+     1  ' Reading Station locations from read_sfc for labelling '
 !       1                                       ,asc_tim_9
         ext = 'lso'
         call get_directory(ext,directory,len_dir) ! Returns top level directory

@@ -41,7 +41,8 @@ cdis
 
         real*4 u(imax,jmax),v(imax,jmax)
         real*4 lat(imax,jmax),lon(imax,jmax)
-        real*4 mspkt/.518/
+        real*4 mspkt
+        data mspkt/.518/
 
 !       This variable keeps the barbs away from the boundary
         isize = 0 ! interval + 1
@@ -54,7 +55,7 @@ cdis
             alat = lat(i,j)
             alon = lon(i,j)
 
-            if(   u(i,j) .ne. r_missing_data
+            if( u(i,j) .ne. r_missing_data
      1    .and. v(i,j) .ne. r_missing_data
      1    .and. abs(u(i,j)) .lt. 1e6               ! Deals with old data
      1    .and. abs(v(i,j)) .lt. 1e6

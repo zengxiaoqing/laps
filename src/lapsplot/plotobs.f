@@ -54,9 +54,7 @@ cdis
         character*9 asc9_tim,asc9_tim_radar
         logical l_ask_questions
 
-        Integer*4
-     1  init/0/,
-     1  ISTATUS
+        data init/0/
 
         Real*4
      1  azimuth_deg,
@@ -66,9 +64,13 @@ cdis
      1  SPEED_ms,
      1  DIR,
      1  DU,
-     1  PROJROT/0./,
+     1  PROJROT,
      1  range_km,
      1  pix_per_km,
+     1  mspkt
+
+        data
+     1  PROJROT/0./,
      1  mspkt/.518/
 
         Character

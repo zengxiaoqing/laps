@@ -78,7 +78,8 @@ cdis
 
         character i4_to_byte
 
-        real*4 clow/-200./,chigh/+400/,cint_ref/10./
+        real clow,chigh,cint_ref
+        data clow/-200./,chigh/+400/,cint_ref/10./
 
         integer*4 idum1_array(NX_L,NY_L)
 
@@ -89,22 +90,21 @@ cdis
 
       ! Used for "Potential" Precip Type
 !       logical l_mask(NX_L,NY_L)
-        logical iflag_mvd,iflag_icing_index,iflag_cloud_type,iflag_bogus
-     1_w
+        logical iflag_mvd,iflag_icing_index,iflag_cloud_type
+     1         ,iflag_bogus_w
         logical iflag_snow_potential
 
-        integer*2 ibase_array(NX_L,NY_L)
-        integer*2 itop_array(NX_L,NY_L)
+        integer*4 ibase_array(NX_L,NY_L)
+        integer*4 itop_array(NX_L,NY_L)
 
         character*2 c_field,c_metacode,c_type
-
         character*33 c33_label
-        integer*4 ity/35/,ily/1010/,istatus
 
-!       real*4 dir(NX_L,NY_L,NZ_L)
-!       real*4 spds(NX_L,NY_L,NZ_L)
-        real*4 mspkt/.518/
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
+        real*4 mspkt
+        data mspkt/.518/
 
 !       Stuff to read in WIND file
         integer*4 KWND
@@ -211,9 +211,12 @@ cdis
         character asc9_tim_t*9
         character asc9_tim_n*9
         character c9_radarage*9
-        character*255 c_filespec_ra/
-     1        '/data/laps/nest7grid/lapsprd/vrc/*.vrc'/
-        character*255 c_filespec_src/'*.src'/
+
+        character*255 c_filespec_ra
+        character*255 c_filespec_src
+        data c_filespec_ra /'/data/laps/nest7grid/lapsprd/vrc/*.vrc'/       
+        data c_filespec_src/'*.src'/
+
         character*255 c_filespec
         character*255 cfname
         character*2   cchan
@@ -513,19 +516,19 @@ cdis
                 call mklabel33
      1      (k_level,' WINDS    (kt)     ',c33_label)
 
-                size = float(max(NX_L,NY_L)) / 60.
+                if(max(NX_L,NY_L) .gt. 50)then
+                    interval = 2
+                else
+                    interval = 1
+                endif
 
-!               This tries to keep the same # of barbs over the domain
-!               interval = size * 2.9
+                size = ( float(max(NX_L,NY_L)) / 30. ) / float(interval)       
 
-!               This tries to keep the same # of grid points per barb
-                interval = 2
-
-                call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval,asc
-     19_tim_3dw
-     1  ,c33_label,c_field,k_level,i_overlay,c_display,'nest7grid'
-     1  ,NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel
-     1  ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
+                call plot_barbs(u_2d,v_2d,lat,lon,topo,size,interval
+     1               ,asc9_tim_3dw
+     1               ,c33_label,c_field,k_level,i_overlay,c_display       
+     1               ,'nest7grid',NX_L,NY_L,NZ_L,grid_ra_ref,grid_ra_vel      
+     1               ,NX_L,NY_L,r_missing_data,laps_cycle_time,jdot)
 
             else if(c_field .eq. 'w')then ! Display W fields
 !               if(lapsplot_pregen .and. k_level .eq. 7)then
@@ -2846,13 +2849,13 @@ cdis
 
             c33_label = 'LAPS Surface Wind            (kt)'
 
-            size = float(max(NX_L,NY_L)) / 60.
+            if(max(NX_L,NY_L) .gt. 50)then
+                interval = 2
+            else
+                interval = 1
+            endif
 
-!           This tries to keep the same # of barbs over the domain
-!           interval = size * 2.9
-
-!           This tries to keep the same # of grid points per barb
-            interval = 2
+            size = ( float(max(NX_L,NY_L)) / 30. ) / float(interval)
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
@@ -3571,7 +3574,9 @@ cdis
 
         real*4 array(NX_L,NY_L)
         real*4 array_plot(NX_L,NY_L)
-        integer*4 ity/35/,ily/1010/,istatus
+
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
         include 'icolors.inc'
 
@@ -3687,10 +3692,8 @@ cdis
 !                c33_label = 'FSL/'//c33_label(1:29)
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-!                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)
-!                call pwrity
-!    1               (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                      ,i_overlay)
             endif
 
             if(c_display .ne. 't')then
@@ -3735,7 +3738,8 @@ cdis
         real*4 grid_ra_ref(imax,jmax,kmax)
         real*4 grid_ra_vel(imax,jmax,kmax)
 
-        integer*4 ity/35/,ily/1010/,istatus
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
         include 'icolors.inc'
 
@@ -3809,11 +3813,8 @@ cdis
      1  .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-!                call pwrity
-!    1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-!                call pwrity
-!    1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)       
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                      ,i_overlay)
             endif
 
 
@@ -3863,7 +3864,8 @@ cdis
         real*4 lat(NX_L,NY_L)
         real*4 lon(NX_L,NY_L)
 
-        integer*4 ity/35/,ily/1010/,istatus
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
         include 'icolors.inc'
 
@@ -3920,10 +3922,11 @@ cdis
      1  .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call pwrity
-     1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-                 call pwrity
-     1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+!                call pwrity(cpux(320),cpux(ity),c33_label,33,2,0,0)      
+!                call pwrity
+!    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                      ,i_overlay)
             endif
 
 
@@ -3964,7 +3967,8 @@ cdis
 
         integer*4 iarg
 
-        integer*4 ity/35/,ily/1010/,istatus
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
         include 'icolors.inc'
 
@@ -4041,14 +4045,11 @@ cdis
 
         if(c_metacode .ne. 'n ')then
             if(c_metacode .eq. 'y '
-     1  .or. c_metacode .eq. 'c ')then
+     1    .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-!                call pwrity
-!    1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-!                call pwrity
-!    1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
-                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                      ,i_overlay)
             endif
 
 
@@ -4063,8 +4064,7 @@ cdis
 
                 size = 1.0
                 call plot_types_2d(cldpcp_type_2d,interval,size,c_field,
-     1.true.
-     1                                  ,NX_L,NY_L,lat,lon,ifield_2d)
+     1                       .true.,NX_L,NY_L,lat,lon,ifield_2d)
 !               call frame
 
             endif
@@ -4091,7 +4091,8 @@ cdis
 
         integer*4 iarg
 
-        integer*4 ity/35/,ily/1010/,istatus
+!       integer*4 ity,ily,istatus
+!       data ity/35/,ily/1010/
 
         include 'icolors.inc'
 
@@ -4162,12 +4163,13 @@ cdis
      1  .or. c_metacode .eq. 'c ')then
                  call upcase(c33_label,c33_label)
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-                 call pwrity
-     1  (cpux(320),cpux(ity),c33_label,33,2,0,0)
-                 call pwrity
-     1  (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+!                call pwrity
+!    1                (cpux(320),cpux(ity),c33_label,33,2,0,0)
+!                call pwrity
+!    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
+                 call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_24
+     1                                                      ,i_overlay)
             endif
-
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
                 call setusv_dum(2hIN,icolors(i_overlay))
@@ -4180,9 +4182,9 @@ cdis
 
                 size = 1.0
 
-            write(6,*)' Call plot_station_locations ',c_metacode
-            call plot_station_locations(i4time_file,lat,lon,NX_L,NY_L,if
-     1lag,maxstns)
+                write(6,*)' Call plot_station_locations ',c_metacode
+                call plot_station_locations(i4time_file,lat,lon
+     1                    ,NX_L,NY_L,iflag,maxstns)
             endif
 
         endif
@@ -4403,15 +4405,19 @@ c
         end
 
 
-        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24)
+        subroutine write_label_lplot(ni,nj,c33_label,asc_tim_24
+     1                                                      ,i_overlay)        
 
         character*33 c33_label
         character*24 asc_tim_24
 
         call get_border(ni,nj,x_1,x_2,y_1,y_2)
 
-        y_1 = y_1 - .025
+!       Top label
         y_2 = y_2 + .025
+
+!       Bottom label
+        y_1 = y_1 - .025 - .035 * float(i_overlay-1)
 
         ix = 115
         iy = y_2 * 1024
