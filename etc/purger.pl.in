@@ -40,7 +40,15 @@ my $DATAROOT=shift || die "LAPS_DATA_ROOT required";
 #
 # -t  default maximum time (days) to keep files in each directory
 #
-# Exceptions can be listed below...
+# Overrides can be kept in a file called 'purger.dat' that in the LAPS
+# context is placed in the $TEMPLATE and/or $LAPS_DATA_ROOT/static directory.
+# Each line in this file has three entries 'a b c' where 'a' is the 'lapsprd'
+# subdirectory, 'b' is 'min' or 'max' (not sure how that works myself), and
+# 'c' is the purge time in days. An example line in the file would be...
+#
+# lwc min 1.0
+#
+# Other exceptions can be listed below...
 #
 my(%clean_dirs, $hist_time, $min_files);
 
