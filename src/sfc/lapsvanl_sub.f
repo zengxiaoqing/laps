@@ -229,8 +229,8 @@ c
 c
 c
 	subroutine spline(t,to,tb,alf_in,alf2a_in,beta_in,a_in,s_in,
-     &                    cormax,err,imax,jmax,roi,bad_mult,imiss,
-     &                    mxstn,obs_error,name)
+     &                    cormax,err,imax,jmax,rms_thresh_norm,bad_mult,
+     &                    imiss,mxstn,obs_error,name)
 c
 c*******************************************************************************
 c	LAPS spline routine...based on one by J. McGinley.
@@ -429,7 +429,7 @@ c
 	endif
 
 
-c.....  Subtract background from satellite obs and calculate sat stats
+c.....  Subtract background from satellite obs and calculate sat stats (deg F)
 c
 	isat_flag = 0
         num_sat_bkg = 0
@@ -443,13 +443,13 @@ c
 	do i=1,imax
 	   if(s(i,j) .ne. 0.) then
 	      isat_flag = 1
-	      s(i,j) = s(i,j) - tb(i,j) ! diff from background
+	      s(i,j) = s(i,j) - tb(i,j)           ! sat diff from background
               num_sat_bkg = num_sat_bkg + 1
               sum_sat_bkg = sum_sat_bkg + s(i,j)
               sumsq_sat_bkg = sumsq_sat_bkg + s(i,j)**2
 
-              if(t(i,j) .ne. 0)then
-                 diff_sat_obs = s(i,j) - t(i,j)
+              if(to(i,j) .ne. 0)then
+                 diff_sat_obs = s(i,j) - to(i,j)  ! sat diff from obs
                  num_sat_obs = num_sat_obs + 1
                  sum_sat_obs = sum_sat_obs + diff_sat_obs
                  sumsq_sat_obs = sumsq_sat_obs + diff_sat_obs**2
@@ -496,7 +496,7 @@ c
             call get_fnorm_max(imax,jmax,r0_norm,r0_value_min,fnorm_max)   
             n_fnorm = int(fnorm_max) + 1
 
-            rms_thresh_norm  = 1.0  ! a la wind.nl
+!           rms_thresh_norm  = 1.0  ! a la wind.nl
             weight_bkg_const = 5e28 ! a la wind.nl
 
             call barnes_multivariate_sfc(to,imax,jmax               ! Inputs

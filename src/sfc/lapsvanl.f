@@ -39,7 +39,7 @@ c
      &     u_bk, v_bk, t_bk, td_bk, rp_bk, mslp_bk, sp_bk, vis_bk, 
      &     wt_u, wt_v, wt_t, wt_td, wt_rp, wt_mslp, wt_vis, ilaps_bk, 
      &     back_t,back_td,back_uv,back_sp,back_rp,back_mp,back_vis,
-     &     u1, v1, rp1, t1, td1, sp1, tb81, mslp1, vis1, elev1,
+     &     u1, v1, rp1, t1_f, td1_f, sp1, tb81, mslp1, vis1, elev1,
      &     x1a,x2a,y2a,ii,jj,jstatus)
 c
 c
@@ -184,7 +184,6 @@ cx
 	include 'laps_sfc.inc'
         include 'laps_cloud.inc'
 c
-	parameter(roi = 20)	  !radius of influence for Barnes 
 	parameter( 	          !QC parameters: # of standard deviations 
      &            bad_p  = 3.0,		! for reduced pressure
      &            bad_mp = 4.0,		! for MSL pressure
@@ -218,7 +217,7 @@ c
 c.....  Stuff for intermediate grids (old LGS file)
 c
 	real u1(ni,nj), v1(ni,nj)
-	real t1(ni,nj), td1(ni,nj), tb81(ni,nj)
+	real t1_f(ni,nj), td1_f(ni,nj), tb81(ni,nj)                 ! Deg F
 	real rp1(ni,nj), sp1(ni,nj), mslp1(ni,nj)
 	real vis1(ni,nj), elev1(ni,nj)
 c
@@ -263,8 +262,8 @@ c
 	real ddiv(ni,nj), vort(ni,nj) 
 	real f(ni,nj), fu(ni,nj), fv(ni,nj), div(ni,nj)
 	real a(ni,nj), z(ni,nj), dx(ni,nj), dy(ni,nj)
-	real nu(ni,nj),nv(ni,nj), t7(ni,nj), h7(ni,nj), td7(ni,nj)
-	real t5(ni,nj)
+	real nu(ni,nj),nv(ni,nj), h7(ni,nj)
+	real t5(ni,nj), t7(ni,nj), td7(ni,nj)                  ! Deg K
 c
 c..... Stuff for the sfc data and other station info (LSO +)
 c
@@ -305,6 +304,7 @@ c
 c.....	Start...set up constants, initialize arrays, etc.
 c
 	call tagit('laps_vanl', 19991123)
+        rms_thresh_norm = 1.0    ! used for barnes_multivariate
 	zcon = 0.
 	ibt = 1      !assume have sat data...code cks later.
 	grid_fnam_common = laps_domain
@@ -410,9 +410,9 @@ c
 	else
 	   do j=1,nj
 	   do i=1,ni
-	    t7c = t7(i,j) - 273.15  !K to C
+	    t7_c = t7(i,j) - 273.15  !K to C
 	    qgkg = dm1(i,j,9) * 1000.   !lvl 9 = 700 hPa
-	    td7(i,j) = make_td(700., t7c, qgkg, 0.) + 273.15 !in K
+	    td7(i,j) = make_td(700., t7_c, qgkg, 0.) + 273.15   ! in K
 	   enddo !i
 	   enddo !j
 	endif
@@ -434,8 +434,8 @@ c
 c
 c.....  Convert units.
 c
-	call conv_k2f(td7,td7,imax,jmax)  ! conv K to F
-	call conv_k2f(t7,t7,imax,jmax)	  ! conv K to F
+!       call conv_k2f(td7,td7,imax,jmax)  ! conv K to F
+!	call conv_k2f(t7,t7,imax,jmax)	  ! conv K to F
 c
 c.....  Get lapse rate (usually std), and mean pressure.
 c
@@ -458,29 +458,19 @@ cc	call mean_pres(n_obs_b,pstn_s,pbar)
 	do j=1,jmax
 	do i=1,imax
 c
-c.....     Departures of gridded obs (t1,td1) at gridded stn elevations (elev1)
-c          An estimate of the t/td is made at the station elevation using the
-c          background 700mb t/td and lapse rates. These estimates are 
-c          subtracted from the observation values to yield incremental
-c          t/td obs.
-c
-c          The same departure procedure is followed for the background t/td,
-c          except that t/td estimates are made at the laps terrain elevations.
-c          The net result of both corrections is that the gridded obs are
-c          corrected differently from the gridded background by an amount
-c          equivalent to the lapse rates times the deviation of the station
-c          elevation from the LAPS terrain.
+c.....     Correct gridded obs (t1_f,td1_f) using lapse rate and difference
+c          between gridded stn elevations (elev1) and laps terrain (topo)
 c
 	   ter_s = elev1(i,j)     ! departures at stn elev
 c
 	   dz = ter_s - topo(i,j)
-	   if(t1(i,j) .ne. 0.) then
+	   if(t1_f(i,j) .ne. 0.) then
 	      tts = (lapse_t * dz)
-	      t1(i,j) = t1(i,j) - tts
+	      t1_f(i,j) = t1_f(i,j) - tts
 	   endif
-	   if(td1(i,j) .ne. 0.) then
+	   if(td1_f(i,j) .ne. 0.) then
 	      ttds = (lapse_td * dz)
-	      td1(i,j) = td1(i,j) - ttds
+	      td1_f(i,j) = td1_f(i,j) - ttds
 	   endif
 c
 c.....    Departures of other stuff on laps topo
@@ -494,13 +484,13 @@ c
                                                      ! variation       
 
 !          Use LGA 700mb t/td and lapse rates to estimate sfc t/td
-	   dz = ter_g - ter_g
-	   tt(i,j) = (lapse_t * dz)   
-	   ttd(i,j) = (lapse_td * dz)	
+	   dz = 0. ! ter_g - ter_g
+	   tt(i,j) = 0. ! (lapse_t * dz)   
+	   ttd(i,j) = 0. ! (lapse_td * dz)	
 c
-	   if(tb81(i,j) .ne. 0.) then
-	       tb81(i,j) = tb81(i,j) - tt(i,j)
-	   endif
+!          if(tb81(i,j) .ne. 0.) then
+!              tb81(i,j) = tb81(i,j) - tt(i,j)
+!          endif
 
 c.....     Using laps sfc p and background model sfc p,  
 c.....     move background temps from background model 
@@ -512,12 +502,12 @@ c
 !    1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
 !              t_bk(i,j) = t_bk_ltopo - tt(i,j)
 !          else
-	       t_bk(i,j) = t_bk(i,j) - tt(i,j)
+!!             t_bk(i,j) = t_bk(i,j) - tt(i,j)
 !	   endif
 
-	   if(td_bk(i,j) .ne. 0.) then
-	       td_bk(i,j) = td_bk(i,j) - ttd(i,j)
-	   endif
+!	   if(td_bk(i,j) .ne. 0.) then
+!	       td_bk(i,j) = td_bk(i,j) - ttd(i,j)
+!	   endif
 
            if(sp_bk(i,j) .ne. 0. .and. back_sp .eq. 1)then ! psfc from bkgnd  
                                                            ! can be used as it
@@ -558,8 +548,8 @@ c	call check_field_2d(tb8,imax,jmax,fill_val,istatus)
 c	if(istatus .eq. 0) ibt = 0       !empty field
 c
 c	name = 'TB8   '	
-c        call spline(tb8,tb81,tb8_bk,alf,z,beta,0.,z,cormax,.3,imax,jmax,
-c     &        roi,bad_tb8,imiss,mxstn,obs_error_tb8,name)
+c       call spline(tb8,tb81,tb8_bk,alf,z,beta,0.,z,cormax,.3,imax,jmax,
+c     &        rms_thresh_norm,bad_tb8,imiss,mxstn,obs_error_tb8,name)       
 c	if(imiss .ne. 0) ibt = 0 ! all zeros in tb8 array
 c
 c.....	Now force the t analysis with the tb8 and background data.
@@ -578,8 +568,9 @@ c	return
 	beta = 100.
 	gamma = 5.
 	if(ibt .eq. 0) gamma = 0.
-        call spline(t,t1,t_bk,alf,alf2a,beta,gamma,tb81,cormax,err,
-     &        imax,jmax,roi,bad_tm,imiss,mxstn,obs_error_t,name)
+        call spline(t,t1_f,t_bk,alf,alf2a,beta,gamma,tb81,cormax,err,
+     &        imax,jmax,rms_thresh_norm,bad_tm,imiss,mxstn,obs_error_t,
+     &        name)
 c
 cc	go to 887
 c
@@ -598,23 +589,21 @@ c	beta_td = 3.0
 	alf = 10000.
 	alf2a = 0.
 	beta = 100.  
-        call spline(td,td1,td_bk,alf,alf2a,beta,zcon,z,cormax,err,  !gamma = 0
-     &        imax,jmax,roi,bad_tmd,imiss,mxstn,obs_error_td,name)
+        call spline(td,td1_f,td_bk,alf,alf2a,beta,zcon,z,cormax,err, !gamma = 0
+     &        imax,jmax,rms_thresh_norm,bad_tmd,imiss,mxstn,
+     &        obs_error_td,name)
 c
 c.....	Convert the analysed perturbations back to t, td, and tb8 (do the
 c.....	t and td backgrounds for a verification check).
 c
-	call add(t,tt,t,imax,jmax)
-	call add(t_bk,tt,t_bk,imax,jmax)
-	call add(td,ttd,td,imax,jmax)
-	call add(tb8,tt,tb8,imax,jmax)
-	call add(td_bk,ttd,td_bk,imax,jmax)
+!	call add(t,tt,t,imax,jmax)
+!	call add(t_bk,tt,t_bk,imax,jmax)
+!	call add(td,ttd,td,imax,jmax)
+!	call add(tb8,tt,tb8,imax,jmax)
+!	call add(td_bk,ttd,td_bk,imax,jmax)
 c
  887	continue
 c
-cc	call conv_f2k(t, t, imax,jmax)
-cc	call conv_f2k(td, td, imax,jmax)
-cc	go to 888
 c
 c.....	Check to make sure that td is not greater than t...1st time.
 c
@@ -644,7 +633,7 @@ c
 	      itheta_all = 0
 	   else
 	      call zero(d1,imax,jmax)
-	      call conv_f2k(t7,t7,imax,jmax)
+!             call conv_f2k(t7,t7,imax,jmax)
 	      ratio = (1000. / 700.) ** (.286)
 	      do j=1,jmax
 	      do i=1,imax
@@ -678,16 +667,16 @@ c
 	do j=1,jmax
 	do i=1,imax
 	   torg_f = t(i,j)
-	   tc = (t(i,j) - 32.) * fon            ! sfc T in F to C
-	   theta_c = o(tc,psfc(i,j))            ! sfc Th in C
+	   t_c = (t(i,j) - 32.) * fon           ! sfc T in F to C
+	   theta_c = o(t_c,psfc(i,j))           ! sfc Th in C
 	   theta_old = theta_c
 	   theta_k = theta_c + 273.15           ! sfc Th in K
 	   if(itheta_all .ne. 0) then
 	     if(theta_k .gt. d1(i,j)) then      ! if sfc Th > Upper Th...
 		theta_k = d1(i,j)               ! set sfc Th = Upper Th
 		theta_c = theta_k - 273.15      ! adj sfc Th in C
-		tc = tda(theta_c,psfc(i,j))     ! adj sfc T in C
-		tnew_f = (tc * anof) + 32.      ! replace sfc T in F
+		t_c = tda(theta_c,psfc(i,j))    ! adj sfc T in C
+		tnew_f = (t_c * anof) + 32.     ! replace sfc T in F
 		t(i,j) = tnew_f
 		icnt_th = icnt_th + 1
 		dff_t = tnew_f - torg_f
@@ -705,8 +694,8 @@ c
 	     endif
 	  endif
 	  theta(i,j) = theta_c                  ! sfc Th in C
-	  tdc = (td(i,j) - 32.) * fon           ! sfc Td in F to C
-	  thetae(i,j) = oe(tc,tdc,psfc(i,j))	! in C
+	  td_c = (td(i,j) - 32.) * fon          ! sfc Td in F to C
+	  thetae(i,j) = oe(t_c,td_c,psfc(i,j))	! in C
 	enddo !i
 	enddo !j
  2244	format(' Adjusting sfc TH at ',2i4,/,'  Old/New TH(C): ',
@@ -740,7 +729,7 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(u,u1,u_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
+     &        rms_thresh_norm,bad_uw,imiss,mxstn,obs_error_wind,name)       
 c
 	print *,' '
 	print *,'  At spline call for v (kt)'
@@ -750,7 +739,7 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(v,v1,v_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,jmax,
-     &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
+     &        rms_thresh_norm,bad_vw,imiss,mxstn,obs_error_wind,name)        
 c
 	print *,' '
 	print *,'  At spline call for red_p (mb)'
@@ -760,7 +749,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(rp,rp1,rp_bk,alf,alf2a,beta,zcon,z,cormax,err,imax,
-     &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
+     &        jmax,rms_thresh_norm,bad_rp,imiss,mxstn,obs_error_redp,
+     &        name)     
 c
 	print *,' '
 	print *,'  At spline call for msl p (mb)'
@@ -769,7 +759,8 @@ cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	alf2a = 0.
 	beta = 100.
 	call spline(mslp,mslp1,mslp_bk,alf,alf2a,beta,zcon,z,cormax,
-     &      err,imax,jmax,roi,bad_mp,imiss,mxstn,obs_error_mslp,name)
+     &      err,imax,jmax,rms_thresh_norm,bad_mp,imiss,mxstn,
+     &      obs_error_mslp,name)
 c
 !       Call routine to check pres arrays and adjust psfc based on mslp/mslp_bk
         call pstn_anal(back_mp,back_sp,mslp_bk,mslp,imax,jmax
@@ -783,7 +774,8 @@ c
 	alf2a = 0.
 	beta = 100.
 	call spline(vis,vis1,vis_bk,alf,alf2a,beta,zcon,z,cormax,err,
-     &        imax,jmax,roi,bad_vs,imiss,mxstn,obs_error_vis,name)
+     &        imax,jmax,rms_thresh_norm,bad_vs,imiss,mxstn,
+     &        obs_error_vis,name)
 c
 c.....	If no background fields are available, skip over the variational
 c.....	section.  Fields will be Barnes/splines, and derived values will be
