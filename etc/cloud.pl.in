@@ -156,6 +156,8 @@ print "   $greplines[0]";
 print "\n";
 
 print "Satellite (CO2-Slicing Cloud-tops):\n";
+@greplines = grep /Number of valid CO2-Slicing soundings/, @lines;
+print "  $greplines[0]";
 @greplines = grep /CO2-Slicing data potentially used/, @lines;
 print "   $greplines[0]";
 print "\n";
