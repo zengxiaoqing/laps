@@ -68,7 +68,7 @@ FMOD = module_wfoprep_setup.o  \
 all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(FMOD) $(LAPSLIBS)
-			$(FC) -o $@ $(FOBJS) $(FMOD) $(LAPSLIBS) $(OTHERLIBS)
+			$(FC) -o $@ $(FFLAGS) $(FOBJS) $(FMOD) $(LAPSLIBS) $(OTHERLIBS)
 
 debug:	
 	($(RM) *.o *.exe *.mod ; $(MAKE) $(EXE) \

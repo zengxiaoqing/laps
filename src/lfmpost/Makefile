@@ -74,7 +74,7 @@ FMOD = module_constants.o \
 all:			$(EXE)
 
 $(EXE):			$(FOBJS) $(COBJS) $(FMOD)
-			$(FC) $(FREE) -o $@ $(FOBJS) $(COBJS) $(FMOD) \
+			$(FC) $(FREE) -o $@ $(FFLAGS) $(FOBJS) $(COBJS) $(FMOD) \
 			$(EXTMODS) $(GRIBLIB) $(LAPSLIB) $(OTHERLIBS) $(INC)
 
 debug:	
