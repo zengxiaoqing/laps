@@ -91,7 +91,6 @@ c       parameter (nj = NY_L)
         character*180 static_dir 
         integer len
         real*4 data(nnxp,nnyp,nf)
-        real*4 zin_dum(nnxp,nnyp)
 c       equivalence(data(1,1,1),lat)
 c       equivalence(data(1,1,2),lon)
 c       equivalence(data(1,1,3),topt_out)
@@ -148,7 +147,7 @@ c calculate delta x and delta y using grid and map projection parameters
             write(6,*)' Error calling laps routine'
             stop 
         endif
-        write(6,*)' standard_lat = ',std_lat
+        write(6,*)' standard_lats = ',std_lat,std_lat2
 
         call get_grid_spacing(grid_spacing_m,istatus)
         if(istatus .ne. 1)then
@@ -532,7 +531,8 @@ c SG97  splot 'topography.dat'
         write(6,*)'check_domain:status = ',istat_chk
 
         call put_laps_static(grid_spacing_m,model,comment,data
-     1                                           ,nnxp,nnyp)
+     1                      ,nnxp,nnyp,std_lat,std_lat2,std_lon
+     1                      ,c6_maproj,deltax,deltay)
 
 
 	Stop
