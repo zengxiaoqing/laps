@@ -83,6 +83,7 @@
          3.3.2 ..................  SFC (LSX) 
          3.3.2.1 .....................  SURFACE ANALYSIS RUNTIME PARAMETERS
          3.3.2.2 .....................  SURFACE ANALYSIS QUALITY CONTROL
+         3.3.2.3 .....................  SURFACE ANALYSIS VERIFICATION
          3.3.3 ..................  TEMP 
          3.3.4 ..................  CLOUD
          3.3.5 ..................  WATER VAPOR (HUMIDITY PROCESSING)
@@ -1859,7 +1860,7 @@ since 3 layers are routinely available from NESDIS.
    string in 'sched.log.*'.
 
    To check what data got into the analyses as well as some QC and error
-   statistics, you can run a series of perl scripts located in
+   (verification) statistics, you can run a series of perl scripts located in
    '$LAPSINSTALLROOT/etc'. This includes 'sfc.pl', 'wind3d.pl', 'temp.pl', 
    'hum3d.pl', and 'cloud.pl'. These scripts operate mainly by distilling other
    log file output. The output from these scripts is also stored in the files
@@ -2840,6 +2841,15 @@ Parameter namelist file: 'static/surface_analysis.nl'
         compensate for temporal changes in data density. The log file for this
         new program is in 'sfc_qc.log'. 
 
+--------- 3.3.2.3 ------SURFACE ANALYSIS VERIFICATION -------------------
+
+        Verification statistics for the surface analyses are written to the
+        'log/qc/laps_sfc.ver.hhmm' files. These contain information of
+        obs differences relative to the background and the analysis. The
+        obs listed have had most of the QC checks already applied, though
+        an ob may have been rejected in the analysis by the final "spline 
+        standard deviation" check yet still have a non-missing value listed
+        in the QC files. 
 
 ------ 3.3.3 ---------------------TEMP----------------------------------------
 
