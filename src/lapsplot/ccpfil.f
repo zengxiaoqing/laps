@@ -615,6 +615,8 @@ C
 !         enddo
       endif
 C 
+      write(6,*)' leaving set_image_colortable: ncols = ',ncols
+
       RETURN
       END
 
@@ -1057,6 +1059,13 @@ c     Restore original color table
       real*4 hue_a(300)
       real*4 sat_a(300)
       real*4 rint_a(300)
+
+      write(6,*)' subroutine generate_colortable: ncols = ',ncols
+
+      if(plot_parms%ncols .gt. 0)then
+          ncols = plot_parms%ncols
+          write(6,*)' Resetting ncols to plot_parms value of ',ncols       
+      endif
 
       lun = 41
       nramp = 0
