@@ -354,6 +354,31 @@ C
 
           endif
 
+      elseif(colortable .eq. 'vnt')then       
+          ncols = 60
+          call color_ramp(1,7,IWKID,icol_offset
+     1                   ,0.5,0.15,0.6                ! Pink
+     1                   ,0.5,0.5,0.7)                ! Violet
+          call color_ramp(7,29,IWKID,icol_offset
+     1                   ,0.5,0.5,0.7                 ! Violet
+     1                   ,1.5,1.0,0.7)                ! Aqua
+          call color_ramp(29,36,IWKID,icol_offset       
+     1                   ,1.5,1.0,0.7                 ! Aqua
+     1                   ,2.0,0.4,0.4)                ! Green
+          call color_ramp(36,42,IWKID,icol_offset
+     1                   ,2.0,0.4,0.4                 ! Green
+!    1                   ,2.5,0.65,0.55)              ! Yellow Orig
+     1                   ,2.45,0.95,0.65)             ! Yellow New
+          call color_ramp(42,49,IWKID,icol_offset
+     1                   ,2.45,0.95,0.65              ! Yellow 
+     1                   ,2.72,0.9,0.7)               ! Orange
+          call color_ramp(49,54,IWKID,icol_offset
+     1                   ,2.72,0.9,0.7                ! Orange 
+     1                   ,3.0,0.9,0.7)                ! Red
+          call color_ramp(54,60,IWKID,icol_offset
+     1                   ,3.0,0.9,0.7                 ! Red
+     1                   ,3.0,0.9,0.2)                ! Dark Hot
+
       elseif(colortable .eq. 'tpw')then
           ncols = 60
           call color_ramp(1,8,IWKID,icol_offset
@@ -512,6 +537,7 @@ C
 
       if(scale_l .eq. -20. .or. scale_h .eq. 7200. 
      1                     .or. colortable .eq. 'tpw'    ! TPW
+     1                     .or. colortable .eq. 'vnt'    ! VNT
      1                     .or. range .eq. 100.    )then ! SFC T, Td, RH, CAPE
           l_loop = .true.
       else
