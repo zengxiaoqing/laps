@@ -8,8 +8,7 @@ INSTALLROOT=@prefix@
 
 CC=@CC@
 
-CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@ -D_INCLUDE_POSIX_SOURCE
-#KRCFLAGS=@KRCFLAGS@ $(INC)
+CFLAGS=@CFLAGS@ $(INC) @OPTIMIZE@ 
 
 FC       = @FC@
 
@@ -185,18 +184,13 @@ $(LIB): $(ARCHIVE)
 	$(RANLIB) $@
 
 debug: 
-	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -D_INCLUDE_POSIX_SOURCE -DDEBUG=1' \
+	rm -f *.o; $(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' CFLAGS='@CFLAGS@ $(INC) -g -DDEBUG=1' \
         FFLAGS='@FFLAGS@ $(INC) -g' KRCFLAGS='$(KRCFLAGS) -g' 
 
 install: lib
 
 clean:
 	rm -f $(LIB) $(DEBUGLIB) *.o *~ *#
-
-#$(LIB)(rwl_v3.o static_routines.o): rwl_v3.c static_routines.c
-#	$(CC) $(KRCFLAGS) $(CPPFLAGS) -c $*.c -o $*.o
-#	$(AR) r $@ $*.o
-#	rm  -f $*.o
 
 distclean: clean
 	rm -f Makefile
