@@ -4875,14 +4875,14 @@ c                   cint = -1.
            elseif(cstatic(1:2) .eq. 'lf')then
               var_2d='LDF'
               call read_static_grid(nx_l,ny_l,var_2d,static_grid
-     1,istatus)
+     1                             ,istatus)
               if(istatus .ne. 1)then
                  print*,' Warning: could not read LAPS static-slope-lat'
               endif
 
-              clow = .5
-              chigh = .5
-              cint = .5
+              clow = .01
+              chigh = .99
+              cint = .49
               c33_label = 'Static Land Fraction         '
               if(cstatic .eq. 'lfi')then
                 write(6,*)' calling solid fill plot'
