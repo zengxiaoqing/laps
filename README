@@ -20,13 +20,13 @@
          2.2 ..............  Installation Procedure Summary
          2.2.1 ..................  Untarring the Source Code
          2.2.2 ..................  Running Configure
-               2.2.2.1 ..............  Modifying Compiler Flags     
+         2.2.2.1 ...................  Modifying Compiler Flags     
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
          2.2.5 ..................  Untarring the geography databases
          2.2.6 ..................  Localizing for single or multiple data domains
-               2.2.6.1 ..............  Localization Method 1
-               2.2.6.2 ..............  Localization Method 2
+         2.2.6.1 .....................  Localization Method 1
+         2.2.6.2 .....................  Localization Method 2
          2.3 ..............  Raw data ingest 
          2.3.1 ..................  Model Background (lga/lgb)
          2.3.2 ..................  Radar ingest
@@ -41,7 +41,7 @@
          2.7 ..............  CHANGING THE HORIZONTAL DOMAIN
          2.7.1 ..................  Number of Grid Points
          2.7.2 ..................  Location of Domain (Map projections)
-               2.7.2.1 ............... MAP PROJECTION FUNCTIONALITY/LIMITATIONS
+         2.7.2.1 ...................... MAP PROJECTION FUNCTIONALITY/LIMITATIONS
          2.7.3 ..................  Domain Resolution 
          2.7.4 ..................  Terrain Databases
          2.7.5 ..................  Terrain Smoothing/Filtering  
@@ -58,7 +58,10 @@
          3.1.2 ..................  Surface Lookup Tables (gensfclut.exe)
          3.2 ..............  Ingest Processes
          3.2.1 ..................  LGA Model
-         3.2.2 ..................  LVD 
+         3.2.2 ..................  Surface Data Ingest
+         3.2.2.1 .....................  obs_driver.x
+         3.2.2.2 .....................  sfc_qc.exe
+         3.2.2.3 .....................  How to Blacklist stations 
          3.2.3 ..................  Polar Radar Data (e.g. WSR 88D Level II, Level III)
          3.2.4 ..................  WSI / NOWRAD RADAR PREPROCESSING (VRC)
          3.2.5 ..................  Radar Mosaic (Under development)
@@ -67,9 +70,7 @@
          3.2.8 ..................  PIREPS/ACARS Ingest
          3.2.9 ..................  RAOB + Satellite Sounding (SND) Ingest
          3.2.10 .................  Cloud Drift Wind (CDW) Ingest
-         3.2.11 .................  Surface Data Ingest
-                3.2.11.1 ............. Ingest routines
-                3.2.11.2 ............. How to Blacklist stations 
+         3.2.11 .................. LVD 
          3.3 ..............  ANALYSIS PROCESSES
          3.3.1 ..................  WIND
          3.3.2 ..................  SFC (LSX) 
@@ -1348,37 +1349,7 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
 --------- 2.10 ------SURFACE ANALYSIS CHANGES---------------------------------
 
-	Updated: 16 Jan 1997.  Pete Stamus
-
-   For the laps_sfc.x (LSX) process, perform the following between untarring 
-   the tar file and running the localization.
-
-   STATIC FILES
-
-     1. Before running the surface analysis, the surface static files will
-	have to be created.  The localization script does this by running 
-        'build_sfc_static.x' in  '.../static/surface'.  Two files are
-	created in the '.../static/surface' directory that the surface
-	analysis uses: 'pbl_top.dat' and 'drag_coef.dat'
-
-        Note that 'build_sfc_static.x' is run *after* the 'static.nest7grid'
-	file (located in '.../data/static' and containing latitude, 
-	longitude, and elevation for the domain) is created for your location.
-        Both are run within the localization script.
-
-     2. In 'build_sfc_static', the friction parameter has been configured
-	by automatically producing a scaling factor based on the range of
-	elevations across the domain.  This factor can be changed in the
-	'drag_coef' section of 'build_sfc_static', if so desired.  More 
-	details on this might be had from Pete Stamus.
-
-   QUALITY CONTROL
-
-     1. A still fairly simple quality control is included in the surface
-	package.  If you wish to skip over this step, you can change 
-    	the 'laps_sfc.inc' file in '.../source/sfc' prior to compilation of 
-        the surface analysis by the localization script (or recompilation
-	by hand at a later date).
+	Updated: Feb 2000  
 
    PRESSURE REDUCTION
 
@@ -1409,6 +1380,13 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
 	areas (like Colorado).
 
+   QUALITY CONTROL
+
+     1. A still fairly simple quality control is included in the surface
+	package.  If you wish to skip over this step, you can change 
+    	the 'data/static/surface_analysis.nl' namelist file. This same
+        namelist has a separate flag to use the new quality control files 
+        (lso_qc), generated by 'sfc_qc.exe'.
 
  ----- 2.11 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
@@ -1674,6 +1652,11 @@ Output:
         static/drag_coef.dat      Binary grid   Drag Coefficients
 </pre>
 
+In 'gensfclut.exe', the friction parameter has been configured by automatically
+producing a scaling factor based on the range of elevations across the domain.
+This factor can be changed in the 'drag_coef' section of 'build_sfc_static.f', 
+if so desired.  
+
 ------- 3.2  ------------------  Ingest Processes ---------------------------
 
 As mentioned above, a flow chart for the ingest processes may be found at
@@ -1709,18 +1692,128 @@ relates to which model you're using is 'bgmodel'.
 Note that time interpolation is used if the required LAPS analysis time(s) are
 between the valid forecast times for two of the set of input files.
 
------- 3.2.2 -------------------- LVD ----------------------------------------
+                                        
+------ 3.2.2 -------------- Surface Data Ingest ------------------------------
 
-LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
-              grid.
-        (author: John Smart - smart@fsl.noaa.gov)
+------ 3.2.2.1   obs_driver.x --- 
+
+Process: (obs_driver.x) LAPS Surface Ingest
+     (author: Pete Stamus)
+     (description updated: 20 Dec 1999)
+
+<pre>
+LSO process - obs_driver.x - Ingest surface data
+        (author: Pete Stamus)
 
 Input:
- 	 GOES 8 or GOES 9 Data
+	raw METAR data
+	raw LDAD mesonet data
+        raw Buoy/ship data
 
 Output:
-         LVD/"SATID"	grid	LAPS satellite data file
-			`	SATID currently can be either goes08 or goes09
+         LSO	ascii	LAPS surface obs file: METAR, Mesonet and Buoy/ship obs.
+                        The format of this file may be gleaned from looking
+                        at the obs_driver code, or by looking at sample LSO 
+                        files in the test data case.
+
+Sample Input/Output: May be available in the test data case.
+</pre>
+
+Source directory: laps/src/ingest/sao
+
+The LSO file is fairly self explanatory...the comments in the 
+'write_surface_obs' routine detail everything.  The expected accuracies are 
+based on "offical" NWS numbers where possible.  For LDAD observations, they're
+just a best guess, since no one really knows how good the obs are.  These 
+expected accuracies will be used in the quality control routines sometime in 
+the future.  The lat/lons are in decimal degrees.
+
+------ 3.2.2.2   sfc_qc.exe --- 
+
+Process: (sfc_qc.exe) LAPS Surface Ingest
+     (author: Pete Stamus)
+
+<pre>
+LSO QC process - sfc_qc.exe - QC the ingest surface data
+        (author: Pete Stamus)
+
+Input:
+	 lso    ascii
+
+Output:
+         lso_qc	ascii	QC'd LAPS surface obs file: METAR, Mesonet and 
+                        Buoy/ship obs. 
+
+Sample Input/Output: May be available in the test data case.
+</pre>
+
+Source directory: 'laps/src/ingest/sfc_qc'
+
+The 'lso_qc' file is fairly self explanatory...the comments in the 
+'write_surface_obs' routine detail everything.  The expected accuracies are 
+based on "offical" NWS numbers where possible.  For LDAD observations, they're
+just a best guess, since no one really knows how good the obs are.  These 
+expected accuracies will be used in the quality control routines sometime in 
+the future.  The lat/lons are in decimal degrees.
+
+------ 3.2.2.3   How to Blacklist stations ---
+
+     (author: Pete Stamus )
+     (description updated: 20 Dec 1999)
+
+As part of the 'obs_driver' code, a Blacklisting function has been added.  This
+allows users to tell LAPS to skip stations with known bad variables (one or several),
+or to skip a station completely.  As of this writing, the user will have to edit
+a "Blacklist.dat" file...in the future we hope to include this function in the 
+LAPS GUI.
+
+An example file, called "Blacklist.example" has been included in the same directory
+as this README file.  It shows the format that *must* be followed for the Blacklist
+to work properly.  An error in the format will either allow the bad station(s)
+through, or crash the program completely.  Let's decode the "Blacklist.example" 
+file:
+     The first line is the number of obs to blacklist...in this case, 4.
+     Each station goes on a new line.  The number of variables to blacklist
+     for that station is next, then the codes for the variable follow.  For
+     the first station (KFCS), we are blacklisting the 3 pressure variables.
+     To blacklist the entire station (KDTW) use 1 for the number of variables,
+     and "ALL" as the variable.  The last two examples show 1 and 2 individual
+     variables, respectively.
+
+These are the valid codes for variables to blacklist:
+
+<pre>
+        "ALL" - Set all variables at this station to bad
+        "TMP" - Set temperature bad
+        "DEW" - Set dew point temperature bad
+        "HUM" - Set relative humidity bad
+        "WND" - Set wind bad (this does both speed and direction, and gusts)
+        "ALT" - Set altimeter bad
+        "STP" - Set station pressure bad
+        "MSL" - Set MSL pressure bad
+        "VIS" - Set visibility bad
+        "CLD" - Set clouds to bad (this does all cloud layers reported)
+        "PCP" - Set precipitation amount to bad (all reported, 1-12 hrs)
+        "SNW" - Set snow cover to bad
+        "SOL" - Set solar to bad (if reported)
+        "SWT" - Set soil/water temperature to bad (if reported)
+        "SWM" - Set soil moisture to bad (if reported)
+</pre>
+
+An incorrect variable code generates a warning message, and the code should
+continue without acting on the station in question.
+
+Note that when a station is blacklisted, its name, latitude, longitude, elevation,
+and time, will still be stored in the LSO file.  However, the selected variables
+(up to "ALL" of them) will be set to the 'badflag' value and skipped in the
+analyses.
+
+To actually get this stuff working, edit the file called "Blacklist.dat" in the
+'data/static' directory. The "Blacklist.dat" being used at FSL is supplied in
+this directory as a default. Format the file *exactly* as the 
+'Blacklist.example' file (using your station information, of course).  Save the
+file, and the next time 'obs_driver' runs, it will use the blacklist 
+information.  This will be noted in the 'obs_driver.log' file.  
 
 ------ 3.2.3 --- Polar Radar Data (e.g. WSR 88D Level II, Level III) ---
 
@@ -1973,94 +2066,19 @@ Parameter file: 'static/cloud_drift.nl'
 Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
 </pre>
-                                        
------- 3.2.11 -------------- Surface Data Ingest ------------------------------
 
------- 3.2.11.1   Ingest routines --- 
+------ 3.2.11 ------------------- LVD ----------------------------------------
 
-Process: (obs_driver.x) LAPS Surface Ingest
-     (author: Pete Stamus)
-     (description updated: 20 Dec 1999)
+LVD process - lvd_sat_ingest.exe - takes raw sat. data and puts it on LAPS 
+              grid.
+        (author: John Smart - smart@fsl.noaa.gov)
 
-<pre>
-Inputs:
-	Surface METARS, local data via LDAD, and buoy/ship data in NetCDF 
-             (NIMBUS) format
+Input:
+ 	 GOES 8 or GOES 9 Data
 
-Outputs: (Feeds laps_sfc.x, cloud.exe, deriv.exe, lapsplot.exe)
-
-	lso     intermediate data (ASCII) 
-
-Sample Input/Output: May be available in the test data case.
-</pre>
-
-Source directory: laps/src/ingest/sao
-
-The LSO file is fairly self explanatory...the comments in the 'write_surface_obs'
-routine detail everything.  The expected accuracies are based on "offical" NWS
-numbers where possible.  For LDAD observations, they're just a best guess, since
-no one really knows how good the obs are.  These expected accuracies will be used 
-in the quality control routines sometime in the future.  The lat/lons are in decimal 
-degrees.
-
------- 3.2.11.2   How to Blacklist stations ---
-
-     (author: Pete Stamus )
-     (description updated: 20 Dec 1999)
-
-As part of the 'obs_driver' code, a Blacklisting function has been added.  This
-allows users to tell LAPS to skip stations with known bad variables (one or several),
-or to skip a station completely.  As of this writing, the user will have to edit
-a "Blacklist.dat" file...in the future we hope to include this function in the 
-LAPS GUI.
-
-An example file, called "Blacklist.example" has been included in the same directory
-as this README file.  It shows the format that *must* be followed for the Blacklist
-to work properly.  An error in the format will either allow the bad station(s)
-through, or crash the program completely.  Let's decode the "Blacklist.example" 
-file:
-     The first line is the number of obs to blacklist...in this case, 4.
-     Each station goes on a new line.  The number of variables to blacklist
-     for that station is next, then the codes for the variable follow.  For
-     the first station (KFCS), we are blacklisting the 3 pressure variables.
-     To blacklist the entire station (KDTW) use 1 for the number of variables,
-     and "ALL" as the variable.  The last two examples show 1 and 2 individual
-     variables, respectively.
-
-These are the valid codes for variables to blacklist:
-
-<pre>
-        "ALL" - Set all variables at this station to bad
-        "TMP" - Set temperature bad
-        "DEW" - Set dew point temperature bad
-        "HUM" - Set relative humidity bad
-        "WND" - Set wind bad (this does both speed and direction, and gusts)
-        "ALT" - Set altimeter bad
-        "STP" - Set station pressure bad
-        "MSL" - Set MSL pressure bad
-        "VIS" - Set visibility bad
-        "CLD" - Set clouds to bad (this does all cloud layers reported)
-        "PCP" - Set precipitation amount to bad (all reported, 1-12 hrs)
-        "SNW" - Set snow cover to bad
-        "SOL" - Set solar to bad (if reported)
-        "SWT" - Set soil/water temperature to bad (if reported)
-        "SWM" - Set soil moisture to bad (if reported)
-</pre>
-
-An incorrect variable code generates a warning message, and the code should
-continue without acting on the station in question.
-
-Note that when a station is blacklisted, its name, latitude, longitude, elevation,
-and time, will still be stored in the LSO file.  However, the selected variables
-(up to "ALL" of them) will be set to the 'badflag' value and skipped in the
-analyses.
-
-To actually get this stuff working, edit the file called "Blacklist.dat" in the
-'data/static' directory. The "Blacklist.dat" being used at FSL is supplied in
-this directory as a default. Format the file *exactly* as the 
-'Blacklist.example' file (using your station information, of course).  Save the
-file, and the next time 'obs_driver' runs, it will use the blacklist 
-information.  This will be noted in the 'obs_driver.log' file.  
+Output:
+         LVD/"SATID"	grid	LAPS satellite data file
+			`	SATID currently can be either goes08 or goes09
 
 ------- 3.3  -------------  ANALYSIS PROCESSES --------------------------------
 
@@ -2147,20 +2165,6 @@ located in the .../log/qc subdirectory.
 
 
 <pre>
-
-LSO process - obs_driver.x - Ingest surface data
-        (author: Pete Stamus)
-
-Input:
-	raw METAR data
-	raw LDAD mesonet data
-        raw Buoy/ship data
-
-Output:
-         LSO	ascii	LAPS surface obs file: METAR, Mesonet and Buoy/ship obs.
-                        The format of this file may be gleaned from looking
-                        at the obs_driver code, or by looking at sample LSO 
-                        files in the test data case.
 
 
 
