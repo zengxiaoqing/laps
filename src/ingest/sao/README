@@ -15,7 +15,7 @@ main                                      obs_driver.f
             read_metar_af                 read_metar_af.f        AFWA
 
         get_local_obs                     get_local_obs.f        mesonet 
-            read_local                    src/lib/sfc_routines.f NIMBUS/WFO
+            read_local_obs                read_local_obs.f       NIMBUS/WFO
 
         get_local_cwb                     get_local_cwb.f        mesonet
             read_local_cwb                read_local_cwb.f       CWB
