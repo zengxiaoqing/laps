@@ -127,7 +127,7 @@ c                    combine synop data and mesonet data
          flag= 0
 
          do j= 1,numSynop
-            if ( stnNoMso(i) .eq. stnNo(j) ) then
+            if ( stnNoMso(i) == stnNo(j) ) then
                rh(j)=   rhMso(i)
                dd(j)=   ddMso(i)
                ff(j)=   ffMso(i)
@@ -225,13 +225,17 @@ c                    combine synop data and mesonet data
       character(2)   hh(recNum), mn(recNum)
       character(10)  time(recNum)
       character(9)   a10_to_a9
+      character(8)   skyCoverDmy(recNum)
 
       integer  windQua(recNum), seaLevelPressQua(recNum)
       integer  temperatureQua(recNum), dewpointQua(recNum)
       integer  pressChange3HourQua(recNum)
       integer  dupliStation(9), staNum, dummy
 
-      real  tempDewDiff(recNum), lowestCloudHeight(0:10)
+c     real  tempDewDiff(recNum), lowestCloudHeight(0:10)
+c     real  skyLayerBaseDmy(recNum)
+      real  skyLayerBaseDmy(recNum), tempDewDiff(recNum)
+      real  lowestCloudHeight(0:10)
 
       istatus= 0
       staNum= 0
@@ -259,17 +263,18 @@ c      ------   give initial values to avoid data stack problem  ------
      ~                   visibility(j), presWeather(j),
      ~                   seaLevelPress(j), seaLevelPressQua(j),
      ~                   temperature(j), temperatureQua(j),
-     ~                   skyCover(1,j), skyLayerBase(1,j)
+     ~                   skyCoverDmy(j), skyLayerBaseDmy(j)
          read (1,40,end=9,err=9) tempDewDiff(j), dewpointQua(j),       
      ~                   pressChangeChar(j), pressChange3Hour(j),
      ~                   pressChange3HourQua(j), precip3Hour(j),
      ~                   maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         read (1,50,end=9,err=9) skyCover(2,j), skyLayerBase(2,j),
+         read (1,50,end=9,err=9) skyCover(1,j), skyLayerBase(1,j),
+     ~                   skyCover(2,j), skyLayerBase(2,j), 
      ~                   skyCover(3,j), skyLayerBase(3,j), 
      ~                   precip24Hour(j)
-         read (1,*)
+         read (1,60,end=9,err=9) skyCover(4,j), skyLayerBase(4,j)
 
-         if ( reportFlag(j) .ne. '*31' )  then
+         if ( reportFlag(j) /= '*31' )  then
             write (6,*) 'read synop data heading error'
             go to 1000
          endif
@@ -283,13 +288,15 @@ c      ------   give initial values to avoid data stack problem  ------
      ~               visibility(j), presWeather(j),
      ~               seaLevelPress(j), seaLevelPressQua(j),
      ~               temperature(j), temperatureQua(j),
-     ~               skyCover(1,j), skyLayerBase(1,j)
+     ~               skyCoverDmy(j), skyLayerBaseDmy(j)
          write (6,*) dewpoint(j), dewpointQua(j),
      ~               pressChangeChar(j), pressChange3Hour(j),
      ~               pressChange3HourQua(j), precip3Hour(j),
      ~               maxTemp24Hour(j), minTemp24Hour(j), windGust(j) 
-         write (6,*) skyCover(2,j), skyLayerBase(2,j), 
+         write (6,*) skyCover(1,j), skyLayerBase(1,j),
+     ~               skyCover(2,j), skyLayerBase(2,j), 
      ~               skyCover(3,j), skyLayerBase(3,j), precip24Hour(j)
+         write (6,*) skyCover(4,j), skyLayerBase(4,j)
 
 10       staNum= staNum +1
       enddo
@@ -298,49 +305,50 @@ c      ------   give initial values to avoid data stack problem  ------
 30    format ( 2x, 2f3.0, i1, f2.0, a2, 3x, f5.1, i1, f4.1, i1, a2, 2x,
      ~         f2.0 )
 40    format ( f3.1, i1, 1x, i2, f3.1, i1, 3(1x, f4.1), 8x, f3.0 )
-50    format ( 2(a2, 2x, f2.0), 8x, f4.1 )
+50    format ( 3(a2, 2x, f2.0), 8x, f4.1 )
+60    format ( a2, 2x, f2.0 )
 
 c     --- eliminate duplicate data coming from international broadcast ---
 99    do 100 k= 1,9
       do 100 j= 1,staNum
-         if ( wmoId(j) .eq. dupliStation(k) )  then
+         if ( wmoId(j) == dupliStation(k) )  then
             staNum= staNum -1
             do i= j,staNum
                reportFlag(i)= reportFlag(i+1)
-	       wmoId(i)= wmoId(i+1)
-	       elevation(i)= elevation(i+1)
-	       latitude(i)= latitude(i+1)
-	       longitude(i)= longitude(i+1)
+	       wmoId(i)     = wmoId(i+1)
+	       elevation(i) = elevation(i+1)
+	       latitude(i)  = latitude(i+1)
+	       longitude(i) = longitude(i+1)
 	       yy(i)= yy(i+1)
 	       mo(i)= mo(i+1) 
 	       dd(i)= dd(i+1)
 	       hh(i)= hh(i+1)
 	       mn(i)= mn(i+1)
-	       windDir(i)= windDir(i+1)
-	       windSpeed(i)= windSpeed(i+1)
-	       windQua(i)= windQua(i+1)
-	       visibility(i)= visibility(i+1)
-	       presWeather(i)= presWeather(i+1)
-	       seaLevelPress(i)= seaLevelPress(i+1)
-	       seaLevelPressQua(i)= seaLevelPressQua(i+1)
-	       temperature(i)= temperature(i+1)
-	       temperatureQua(i)= temperatureQua(i+1)
-	       skyCover(1,i)= skyCover(1,i+1)
-	       skyLayerBase(1,i)= skyLayerBase(1,i+1)
-	       tempDewDiff(i)= tempDewDiff(i+1)
-	       dewpointQua(i)= dewpointQua(i+1)
-	       pressChangeChar(i)= pressChangeChar(i+1)
-	       pressChange3Hour(i)= pressChange3Hour(i+1)
+	       windDir(i)            = windDir(i+1)
+	       windSpeed(i)          = windSpeed(i+1)
+	       windQua(i)            = windQua(i+1)
+	       visibility(i)         = visibility(i+1)
+	       presWeather(i)        = presWeather(i+1)
+	       seaLevelPress(i)      = seaLevelPress(i+1)
+	       seaLevelPressQua(i)   = seaLevelPressQua(i+1)
+	       temperature(i)        = temperature(i+1)
+	       temperatureQua(i)     = temperatureQua(i+1)
+               skyCoverDmy(i)        = skyCoverDmy(i+1)
+               skyLayerBaseDmy(i)    = skyLayerBaseDmy(i+1)
+	       tempDewDiff(i)        = tempDewDiff(i+1)
+	       dewpointQua(i)        = dewpointQua(i+1)
+	       pressChangeChar(i)    = pressChangeChar(i+1)
+	       pressChange3Hour(i)   = pressChange3Hour(i+1)
 	       pressChange3HourQua(i)= pressChange3HourQua(i+1)
-	       precip3Hour(i)= precip3Hour(i+1)
-	       maxTemp24Hour(i)= maxTemp24Hour(i+1)
-	       minTemp24Hour(i)= minTemp24Hour(i+1)
-	       windGust(i)= windGust(i+1)
-               skyCover(2,i)= skyCover(2,i+1)
-	       skyLayerBase(2,i)= skyLayerBase(2,i+1)
-	       skyCover(3,i)= skyCover(3,i+1)
-	       skyLayerBase(3,i)= skyLayerBase(3,i+1)
-	       precip24Hour(i)= precip24Hour(i+1)
+	       precip3Hour(i)        = precip3Hour(i+1)
+	       maxTemp24Hour(i)      = maxTemp24Hour(i+1)
+	       minTemp24Hour(i)      = minTemp24Hour(i+1)
+	       windGust(i)           = windGust(i+1)
+	       precip24Hour(i)       = precip24Hour(i+1)
+               do l= 1,maxSkyCover
+	          skyCover(l,i)=     skyCover(l,i+1)
+		  skyLayerBase(l,i)= skyLayerBase(l,i+1)
+	       enddo	
             enddo
          endif
 100   continue
@@ -348,30 +356,30 @@ c     --- eliminate duplicate data coming from international broadcast ---
 
 c      ----------       examine data quality and change units       ---------
       do j= 1,staNum
-         if ( windQua(j) .ne. 1 )  then
+         if ( windQua(j) /= 1 )  then
             windDir(j)= badflag
             windSpeed(j)= badflag
          endif
 
-         if ( windGust(j) .eq. -99. )  windGust(j)= badflag
-         if ( elevation(j) .eq. -999. )  elevation(j)= badflag
-         if ( pressChangeChar(j).eq.-9 ) pressChangeChar(j)=int(badflag)
-         if ( presWeather(j) .eq. '-9' )  presWeather(j)= 'UNK'
+         if ( windGust(j) == -99. )  windGust(j)= badflag
+         if ( elevation(j) == -999. )  elevation(j)= badflag
+         if ( pressChangeChar(j)==-9 ) pressChangeChar(j)=int(badflag)
+         if ( presWeather(j) == '-9' )  presWeather(j)= 'UNK'
 
-         if ( seaLevelPressQua(j) .eq. 1 )  then
+         if ( seaLevelPressQua(j) == 1 )  then
                seaLevelPress(j)= seaLevelPress(j) *100.   ! millibar -> pascal
             else
                seaLevelPress(j)= badflag
          endif
 
-         if ( pressChange3HourQua(j) .eq. 1 )  then
+         if ( pressChange3HourQua(j) == 1 )  then
             pressChange3Hour(j)= pressChange3Hour(j) *100. ! millibar -> pascal
           else
             pressChange3Hour(j)= badflag
             pressChangeChar(j)= int(badflag)
          endif
 
-         if ( temperatureQua(j) .eq. 1 )  then
+         if ( temperatureQua(j) == 1 )  then
                temperature(j)= temperature(j) +273.15           ! degC -> degK
             else
                temperature(j)= badflag
@@ -379,7 +387,7 @@ c      ----------       examine data quality and change units       ---------
 
          tempFromTenths(j)= temperature(j)
 
-         if ( dewpointQua(j) .eq. 1 )  then
+         if ( dewpointQua(j) == 1 )  then
                dewpoint(j)= temperature(j) -tempDewDiff(j)        ! unit: degK
             else
                dewpoint(j)= badflag
@@ -387,35 +395,35 @@ c      ----------       examine data quality and change units       ---------
 
          dpFromTenths(j)= dewpoint(j)
 
-         if ( maxTemp24Hour(j) .eq. -99.9 )  then
+         if ( maxTemp24Hour(j) == -99.9 )  then
                maxTemp24Hour(j)= badflag
             else
                maxTemp24Hour(j)= maxTemp24Hour(j) +273.15       ! degC -> degK
          endif
 
-         if ( minTemp24Hour(j) .eq. -99.9 )  then
+         if ( minTemp24Hour(j) == -99.9 )  then
                minTemp24Hour(j)= badflag
             else
                minTemp24Hour(j)= minTemp24Hour(j) +273.15       ! degC -> degK
          endif
 
-         if ( precip24Hour(j) .eq. -99.9 )  then
+         if ( precip24Hour(j) == -99.9 )  then
                precip24Hour(j)= badflag
             else
                precip24Hour(j)= precip24Hour(j) *0.001   ! millimeter -> meter
          endif
 
-         if ( precip3Hour(j) .eq. -99.9 )  then
+         if ( precip3Hour(j) == -99.9 )  then
                precip3Hour(j)= badflag
             else
                precip3Hour(j)= precip3Hour(j) *0.001     ! millimeter -> meter
          endif
 
-         if ( yy(j)(1:1) .eq. ' ' )  yy(j)= '0'//yy(j)(2:2)
-         if ( mo(j)(1:1) .eq. ' ' )  mo(j)= '0'//mo(j)(2:2)
-         if ( dd(j)(1:1) .eq. ' ' )  dd(j)= '0'//dd(j)(2:2)
-         if ( hh(j)(1:1) .eq. ' ' )  hh(j)= '0'//hh(j)(2:2)
-         if ( mn(j)(1:1) .eq. ' ' )  mn(j)= '0'//mn(j)(2:2)
+         if ( yy(j)(1:1) == ' ' )  yy(j)= '0'//yy(j)(2:2)
+         if ( mo(j)(1:1) == ' ' )  mo(j)= '0'//mo(j)(2:2)
+         if ( dd(j)(1:1) == ' ' )  dd(j)= '0'//dd(j)(2:2)
+         if ( hh(j)(1:1) == ' ' )  hh(j)= '0'//hh(j)(2:2)
+         if ( mn(j)(1:1) == ' ' )  mn(j)= '0'//mn(j)(2:2)
          time(j)= yy(j)//mo(j)//dd(j)//hh(j)//mn(j)
          call cv_asc_i4time( a10_to_a9(time(j),istatus), i4time )
          timeObs(j)= dble( i4time )                       ! seconds since 1960
@@ -423,36 +431,36 @@ c      ----------       examine data quality and change units       ---------
 
 c    -------    transform code figure into visibility ( unit: m )  -------
       do j= 1,staNum
-         if     ( visibility(j) .eq.  0. )  then
+         if     ( visibility(j) ==  0. )  then
                visibility(j)= 50.
-         elseif ( visibility(j) .gt.  0.  .and. 
-     ~            visibility(j) .lt. 51. )  then
+         elseif ( visibility(j) >  0.  .and. 
+     ~            visibility(j) < 51. )  then
                visibility(j)= visibility(j) *100.
-         elseif ( visibility(j) .gt. 55.  .and. 
-     ~            visibility(j) .lt. 81. )  then
+         elseif ( visibility(j) > 55.  .and. 
+     ~            visibility(j) < 81. )  then
                visibility(j)= ( visibility(j) -50. ) *1000.
-         elseif ( visibility(j) .gt. 80.  .and. 
-     ~            visibility(j) .lt. 90. )  then
+         elseif ( visibility(j) > 80.  .and. 
+     ~            visibility(j) < 90. )  then
                visibility(j)= ( visibility(j) -74. ) *5000.
-         elseif ( visibility(j) .eq. 90. )  then
+         elseif ( visibility(j) == 90. )  then
                visibility(j)= 25.
-         elseif ( visibility(j) .eq. 91. )  then
+         elseif ( visibility(j) == 91. )  then
                visibility(j)= 50.
-         elseif ( visibility(j) .eq. 92. )  then
+         elseif ( visibility(j) == 92. )  then
                visibility(j)= 200.
-         elseif ( visibility(j) .eq. 93. )  then
+         elseif ( visibility(j) == 93. )  then
                visibility(j)= 500.
-         elseif ( visibility(j) .eq. 94. )  then
+         elseif ( visibility(j) == 94. )  then
                visibility(j)= 1000.
-         elseif ( visibility(j) .eq. 95. )  then
+         elseif ( visibility(j) == 95. )  then
                visibility(j)= 2000.
-         elseif ( visibility(j) .eq. 96. )  then
+         elseif ( visibility(j) == 96. )  then
                visibility(j)= 4000.
-         elseif ( visibility(j) .eq. 97. )  then
+         elseif ( visibility(j) == 97. )  then
                visibility(j)= 10000.
-         elseif ( visibility(j) .eq. 98. )  then
+         elseif ( visibility(j) == 98. )  then
                visibility(j)= 20000.
-         elseif ( visibility(j) .eq. 99. )  then
+         elseif ( visibility(j) == 99. )  then
                visibility(j)= 50000.
          else
                visibility(j)= badflag
@@ -460,121 +468,123 @@ c    -------    transform code figure into visibility ( unit: m )  -------
       enddo
 
 c ---- transform code figure into base of cloud layer indicated (unit: m) ----
-      do 200 i= 2,maxSkyCover
+      do 200 i= 1,maxSkyCover
       do 200 j= 1,staNum
-         if     ( skyLayerBase(i,j) .eq.  0. )  then
+         if     ( skyLayerBase(i,j) ==  0. )  then
                skyLayerBase(i,j)= 15.
-         elseif ( skyLayerBase(i,j) .gt.  0.  .and.  
-     ~            skyLayerBase(i,j) .lt. 51. )  then
+         elseif ( skyLayerBase(i,j) >  0.  .and.  
+     ~            skyLayerBase(i,j) < 51. )  then
                skyLayerBase(i,j)= skyLayerBase(i,j) *30.
-         elseif ( skyLayerBase(i,j) .gt. 55.  .and.  
-     ~            skyLayerBase(i,j) .lt. 81. )  then
+         elseif ( skyLayerBase(i,j) > 55.  .and.  
+     ~            skyLayerBase(i,j) < 81. )  then
                skyLayerBase(i,j)= ( skyLayerBase(i,j) -50. ) *300.
-         elseif ( skyLayerBase(i,j) .gt. 80.  .and. 
-     ~            skyLayerBase(i,j) .lt. 90. )  then
+         elseif ( skyLayerBase(i,j) > 80.  .and. 
+     ~            skyLayerBase(i,j) < 90. )  then
                skyLayerBase(i,j)= ( skyLayerBase(i,j) -74. ) *1500.
-         elseif ( skyLayerBase(i,j) .eq. 90. )  then
+         elseif ( skyLayerBase(i,j) == 90. )  then
                skyLayerBase(i,j)= 25.
-         elseif ( skyLayerBase(i,j) .eq. 91. )  then
+         elseif ( skyLayerBase(i,j) == 91. )  then
                skyLayerBase(i,j)= 75.
-         elseif ( skyLayerBase(i,j) .eq. 92. )  then
+         elseif ( skyLayerBase(i,j) == 92. )  then
                skyLayerBase(i,j)= 150.
-         elseif ( skyLayerBase(i,j) .eq. 93. )  then
+         elseif ( skyLayerBase(i,j) == 93. )  then
                skyLayerBase(i,j)= 250.
-         elseif ( skyLayerBase(i,j) .eq. 94. )  then
+         elseif ( skyLayerBase(i,j) == 94. )  then
                skyLayerBase(i,j)= 450.
-         elseif ( skyLayerBase(i,j) .eq. 95. )  then
+         elseif ( skyLayerBase(i,j) == 95. )  then
                skyLayerBase(i,j)= 800.
-         elseif ( skyLayerBase(i,j) .eq. 96. )  then
+         elseif ( skyLayerBase(i,j) == 96. )  then
                skyLayerBase(i,j)= 1250.
-         elseif ( skyLayerBase(i,j) .eq. 97. )  then
+         elseif ( skyLayerBase(i,j) == 97. )  then
                skyLayerBase(i,j)= 1750.
-         elseif ( skyLayerBase(i,j) .eq. 98. )  then
+         elseif ( skyLayerBase(i,j) == 98. )  then
                skyLayerBase(i,j)= 2250.
-         elseif ( skyLayerBase(i,j) .eq. 99. )  then
+         elseif ( skyLayerBase(i,j) == 99. )  then
                skyLayerBase(i,j)= 3000.
          else
                skyLayerBase(i,j)= badflag
          endif
 200   continue
 
-      do 300 i= 2,maxSkyCover
       do 300 j= 1,staNum
-
-!        Modified by Steve Albers  5/9/2001
-!        if ( skyCover(i,j).eq.'-9' .or. skyLayerBase(i,j).eq.'-9' )
-         if ( skyCover(i,j).eq.'-9' .or. skyLayerBase(i,j).eq.-9 )
-     ~      go to 300
+         if (skyCover(1,j) == '-9' .or. skyLayerBase(1,j) == -9.)  cycle       
 
 c          ----- eliminate duplicate skyCovers and skyLayerBases -----
-         dummy= int( skyLayerBase(1,j) )
-         if ( dummy .gt. 0 )  then
-            if ( skyCover(i,j) .eq. skyCover(1,j)  .and.
-     ~           skyLayerBase(i,j) .ge. lowestCloudHeight(dummy) )  then
-               if ( dummy .ne. 9  .and.
-     ~              skyLayerBase(i,j) .gt. lowestCloudHeight(dummy+1) )
+         dummy= int( skyLayerBaseDmy(j) )
+         skyLayerBaseDf= abs(skyLayerBase(1,j)-lowestCloudHeight(dummy))     
+         if ( dummy >= 0 )  then
+            if ( skyCover(1,j) <= skyCoverDmy(j)  .and.
+     ~           (skyLayerBase(1,j) >= lowestCloudHeight(dummy) .or.
+     ~            skyLayerBaseDf < 30.) )  then
+               if ( dummy /= 9  .and.
+     ~              skyLayerBase(1,j) > lowestCloudHeight(dummy+1) )
      ~            go to 250
-               skyCover(1,j)= '   '
-	       skyLayerBase(1,j)= badflag
+               skyCoverDmy(j)= '   '
+	       skyLayerBaseDmy(j)= badflag
             endif
          endif
 
 c        ----- eliminate unreasonable skyCovers and skyLayerBases -----
-250      if ( skyCover(i,j).eq.' 8' .and. skyCover(1,j).eq.' 8' )  then
-	    if ( skyLayerBase(i,j) .gt. skyLayerBase(1,j) )  then
-               skyCover(i,j)= '   '
-               skyLayerBase(i,j)= badflag
-            else
-	       skyCover(1,j)= '   '
-	       skyLayerBase(1,j)= badflag
-            endif
+250      if ( skyCover(1,j)==' 8' .and. skyCoverDmy(j)==' 8' )  then
+            skyCoverDmy(j)= '   '
+            skyLayerBaseDmy(j)= badflag
          endif
 300   continue
 
 c  -----  transform code figure into base of lowest cloud ( unit: m )  -----
       do j= 1,staNum
-	 if     ( skyLayerBase(1,j) .eq. 0. )  then
-       	       skyLayerBase(1,j)= 25.
-         elseif ( skyLayerBase(1,j) .eq. 1. )  then
-               skyLayerBase(1,j)= 75.
-	 elseif ( skyLayerBase(1,j) .eq. 2. )  then
-	       skyLayerBase(1,j)= 150.
-         elseif ( skyLayerBase(1,j) .eq. 3. )  then
-	       skyLayerBase(1,j)= 250.
-	 elseif ( skyLayerBase(1,j) .eq. 4. )  then
-	       skyLayerBase(1,j)= 450.
-	 elseif ( skyLayerBase(1,j) .eq. 5. )  then
-	       skyLayerBase(1,j)= 800.
-	 elseif ( skyLayerBase(1,j) .eq. 6. )  then
-	       skyLayerBase(1,j)= 1250.
-	 elseif ( skyLayerBase(1,j) .eq. 7. )  then
-	       skyLayerBase(1,j)= 1750.
-	 elseif ( skyLayerBase(1,j) .eq. 8. )  then
-	       skyLayerBase(1,j)= 2250.
-	 elseif ( skyLayerBase(1,j).eq.9. .and. skyCover(1,j).ne.' 0'
-     ~             .and. skyCover(1,j).ne.'-9' )  then
-	       skyLayerBase(1,j)= 3000.
+	 if     ( skyLayerBaseDmy(j) == 0. )  then
+       	       skyLayerBaseDmy(j)= 25.
+         elseif ( skyLayerBaseDmy(j) == 1. )  then
+               skyLayerBaseDmy(j)= 75.
+	 elseif ( skyLayerBaseDmy(j) == 2. )  then
+	       skyLayerBaseDmy(j)= 150.
+         elseif ( skyLayerBaseDmy(j) == 3. )  then
+	       skyLayerBaseDmy(j)= 250.
+	 elseif ( skyLayerBaseDmy(j) == 4. )  then
+	       skyLayerBaseDmy(j)= 450.
+	 elseif ( skyLayerBaseDmy(j) == 5. )  then
+	       skyLayerBaseDmy(j)= 800.
+	 elseif ( skyLayerBaseDmy(j) == 6. )  then
+	       skyLayerBaseDmy(j)= 1250.
+	 elseif ( skyLayerBaseDmy(j) == 7. )  then
+	       skyLayerBaseDmy(j)= 1750.
+	 elseif ( skyLayerBaseDmy(j) == 8. )  then
+	       skyLayerBaseDmy(j)= 2250.
+	 elseif ( skyLayerBaseDmy(j) == 9. .and. skyCoverDmy(j) /= ' 0'
+     ~             .and. skyCoverDmy(j) /= '-9' )  then
+	       skyLayerBaseDmy(j)= 3000.
 	 else
-	       skyLayerBase(1,j)= badflag
+	       skyLayerBaseDmy(j)= badflag
   	 endif
       enddo
  
+c   assign the lowest cloud data to the first array when the latter is missing 
+      do j= 1,staNum
+	 if ( skyLayerBaseDmy(j) /= badflag .and. 
+     ~        skyLayerBase(1,j) == badflag )  then
+            skyLayerBase(1,j)= skyLayerBaseDmy(j)
+            skyCover(1,j)=     skyCoverDmy(j)
+         endif
+      enddo
+	    
 c        --- transform code figure of cloud cover into metar format ---
       do 400 i= 1,maxSkyCover
       do 400 j= 1,staNum
-         if     ( skyCover(i,j) .eq. ' 0' )  then
-            skyCover(i,j)= 'CLR'
-         elseif ( skyCover(i,j) .eq. ' 1'  .or.
-     ~            skyCover(i,j) .eq. ' 2' )  then
+         if     ( skyCover(i,j) == ' 0' )  then
+            skyCover(i,j)= 'SKC'
+	    skyLayerBase(i,j)= 22500.
+         elseif ( skyCover(i,j) == ' 1'  .or.
+     ~            skyCover(i,j) == ' 2' )  then
             skyCover(i,j)= 'FEW'
-         elseif ( skyCover(i,j) .eq. ' 3'  .or.
-     ~            skyCover(i,j) .eq. ' 4' )  then
+         elseif ( skyCover(i,j) == ' 3'  .or.
+     ~            skyCover(i,j) == ' 4' )  then
             skyCover(i,j)= 'SCT'
-         elseif ( skyCover(i,j) .eq. ' 5'  .or.
-     ~            skyCover(i,j) .eq. ' 6'  .or.
-     ~            skyCover(i,j) .eq. ' 7' )  then
+         elseif ( skyCover(i,j) == ' 5'  .or.
+     ~            skyCover(i,j) == ' 6'  .or.
+     ~            skyCover(i,j) == ' 7' )  then
             skyCover(i,j)= 'BKN'
-         elseif ( skyCover(i,j) .eq. ' 8' )  then
+         elseif ( skyCover(i,j) == ' 8' )  then
             skyCover(i,j)= 'OVC'
          else
             skyCover(i,j)= '   '
