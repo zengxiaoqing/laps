@@ -1535,7 +1535,7 @@ since 3 layers are routinely available from NESDIS.
 ------ 2.13 ----------------OTHER RUNTIME PARAMETERS---------------------------
 
    It is worthwhile to check the 'nest7grid.parms' and other namelist
-   files in data/static to make sure all the runtime parameters are
+   files in 'data/static' to make sure all the runtime parameters are
    correct. Some parameters worth noting are:
 
 <pre>
@@ -1544,9 +1544,7 @@ since 3 layers are routinely available from NESDIS.
    _______________
 
    c8_project_common - Depends on which "realization" of LAPS you are running.
-                       Allowed values are 'NIMBUS', 'WFOADV', 'AFGWC', 'RSA'.
-                       This is currently used by the WPDN wind profiler ingest
-                       software.
+                       Allowed values are listed within 'nest7grid.parms'.
 
 
 
