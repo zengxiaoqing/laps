@@ -2838,6 +2838,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           etc/localize_optran.com
 	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
+          etc/laps_tools.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
@@ -2955,6 +2956,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/localize_optran.com
 	  etc/laps_localization.pl
 	  etc/laps_monitor.pl
+          etc/laps_tools.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/sfc.pl
