@@ -1,0 +1,140 @@
+#
+#
+
+LAPSROOT=@top_srcdir@
+INSTALLROOT=@prefix@
+
+# Specify Fortran, C, and loader options for default SUN configuration.
+
+CC=@CC@
+
+CFLAGS=@CFLAGS@ $(INC)  @OPTIMIZE@
+
+FC       = @FC@
+
+
+FFLAGS = @FFLAGS@ $(INC)  @OPTIMIZE@
+
+# Define pre-processor command line options for .F files.
+
+CPP = @CPP@
+CPPFLAGS=@CPPFLAGS@
+
+# Define include paths.
+
+INC = -I$(LAPSROOT)/src/include -I@NETCDFINC@
+
+# Define local library name, this houses the module's code
+
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
+           $(LAPSROOT)/src/lib/goesinav/libgoesinav.a  \
+           $(LAPSROOT)/src/lib/nav/libnav.a  \
+           $(LAPSROOT)/src/lib/util/libutil.a \
+           $(LAPSROOT)/src/lib/satelllite/libsatellite.a 
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
+             $(LAPSROOT)/src/lib/goesinav/libdebuggoesinav.a  \
+             $(LAPSROOT)/src/lib/nav/libdebugnav.a  \
+             $(LAPSROOT)/src/lib/util/libdebugutil.a \
+             $(LAPSROOT)/src/lib/satelllite/libdebugsatellite.a 
+
+
+OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
+
+.SUFFIXES:
+.SUFFIXES: .o .c .f .a .F .i .exe
+
+EXE = genlvdlut.exe
+
+
+# Define other variables 
+
+AR  = @ARCHIVE@
+RANLIB   = @RANLIB@
+INSTALL=@INSTALL@
+
+# Define all source code to be compiled and placed in local library.
+
+SRC = genlvdlut_sub.f \
+      gen_lut_lambert.f \
+      gen_lut_ascii.f \
+      getsat_boundary.f \
+      read_ascii_satdat.f \
+      gen_lut_gvar.f \
+      rdgvarimg_cdf_header.f \
+      satsublatlon.f \
+      compute_gvarimg_res.f \
+      compute_rirj.f \
+      update_gvarimg_parms.f \
+      read_gwc_header_sub.f \
+      c_time_fnc.f \
+      bcd_to_int.f \
+      get_gwc_oa.f \
+      expand_domain.f \
+      get_ascii_dimensions.f \
+      rewrite_satellite_lvd_nl.f
+
+MAIN=genlvdlut.f
+
+LIB=libgenlvdlut.a
+
+ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+
+all: exe
+
+exe: $(ARCHIVE) $(EXE)
+
+$(EXE): $(ARCHIVE) $(MAIN)
+	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	rm -f *.o
+
+#$(EXE.F): $(MAIN) $(ARCHIVE)
+#	rm -f $*.f
+#	$(CPP) $(CPPFLAGS) $*.F 
+#	mv $*.i $*.f
+#	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+#	rm -f *.o $*.f
+
+debug: clean 
+	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
+
+install: exe
+	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
+
+clean:
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i
+
+
+distclean: clean
+	rm -f Makefile
+
+
+%.f : %.F
+	rm -f $*.f
+	$(CPP) $(CPPFLAGS) $< 
+	mv $*.i $*.f
+
+%.o : %.F
+
+
+
+
+
+
+
+
+
+gen_gvarimage_lut.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc $(LAPSROOT)/src/include/instco.inc@F77INC@
+
+gen_llij_lut_asc.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+gen_llij_lut_cdf.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/satsector.inc@F77INC@
+
+gen_llij_lut_wfo.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+genlvdlut.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+read_gvarimg_parmfile.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
+write_gvarimg_parms.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
+
