@@ -107,6 +107,7 @@ c  internal variables
      1          i,k
 
         character*9 filetry
+        integer iter ! iterations reqd to go back 48 hour
 
         real pressure_of_level ! function call
 c
@@ -151,7 +152,15 @@ c     managed at runtime.
            return
          endif
 
-        do i = 0,48
+c figure iterations to go back 48 hours
+
+        write(6,*) 'laps cycle time is, ', laps_cycle_time
+    
+        iter = 48. / ( float(laps_cycle_time)/3600. )
+
+        write(6,*) 'iterations to attempt = ',iter
+
+        do i = 0,iter
 
         i4time1 = i4time - i*laps_cycle_time
 
