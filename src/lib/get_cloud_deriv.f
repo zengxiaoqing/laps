@@ -603,7 +603,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         do j = 1,nj
         do i = 1,ni
 
-            iflag_melt = 0
+            iflag_melt = 0       ! Currently equivalent to iprecip_type = 1/3
+                                 ! (present or last), depending on where it
+                                 ! appears.
             iflag_refreez = 0
             rlayer_refreez = 0.0
 
@@ -672,7 +674,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                     endif ! Temp is freezing
 
-                    if(radar_3d(i,j,k) .lt. 50.)then
+                    if(radar_3d(i,j,k) .lt. 50.)then          ! Below Hail Thr
                         if(t_wb_c .ge. thresh_melt_c)then     ! Warm, got rain
                             iprecip_type = 1
                             iflag_melt = 1
@@ -691,12 +693,22 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                             endif
 
                         else ! below 0C (Freezing Precip or Snow)
-                            if(iprecip_type_last .eq. 0 .and. ! Generating lyr
-     1                                    t_wb_c .ge. -6.)then! Supercooled pcp
-                                iflag_melt = 1
-                            endif
+                            if(iprecip_type_last .eq. 0)then  ! Generating lyr
+                                if(t_wb_c .ge. -6.)then       ! Supercooled pcp
+                                    iflag_melt = 1
+                                    iprecip_type = 3          ! Freezing Rain
+ 
+                                else
+                                    iprecip_type = 2          ! Snow
 
-                            if(iflag_melt .eq. 1)then         ! Refreezing Scenario
+                                endif
+
+                            elseif(iprecip_type_last .eq. 1 .or.
+     1                             iprecip_type_last .eq. 3
+     1                                                 )then  ! Liquid
+                                                              ! Now Supercooled
+
+                              ! Is it freezing rain or sleet?
                                 if(iflag_refreez .eq. 0)then  ! Freezing Rain
                                     n_zr = n_zr + 1
                                     if(n_zr .lt. 30)then
@@ -709,17 +721,24 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                                 else  ! (iflag_refreez = 1)   ! Sleet
                                     n_sl = n_sl + 1
                                     iprecip_type = 4
+                                    iflag_melt = 0            ! Reset flags
+                                    iflag_refreez = 0
+                                    rlayer_refreez = 0.0
 
                                 endif
 
-                            else                             ! Snow
-                                iprecip_type = 2
+                            elseif(iprecip_type_last .eq. 5)then ! Hail
+                                iprecip_type = 2                 ! Snow
+
+                            else                                 ! Not Hail
+                                iprecip_type = iprecip_type_last ! Unchanged
 
                             endif ! iflag_melt = 1
-                        endif
+
+                        endif ! t_wb_c
 
                     else ! >= 50 dbz
-                        iprecip_type = 5                     ! Hail
+                        iprecip_type = 5                      ! Hail
 
                     endif ! Intense enough for hail
 
