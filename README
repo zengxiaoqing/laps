@@ -467,9 +467,8 @@
 
      Runtime parameter changes may be needed to tailor LAPS for your
      domain(s); this includes ingest and geography data path names, 
-     grid dimension, grid location, and potentially other aspects of the 
-     data processing. These changes should be made prior to running the 
-     localization. The parameter files are 'data/static/nest7grid.parms',
+     grid dimensions, grid location, and potentially other aspects of the 
+     data processing. The parameter files are 'data/static/nest7grid.parms',
      'data/static/*.nl', and 'data/static/*/*.parms'. These should be emplaced
      and/or modified within each $LAPS_DATA_ROOT directory tree prior 
      to running the localization. More details on 'nest7grid.parms' and 
@@ -491,7 +490,10 @@
      from the previous paragraph and is described to provide an alternative
      method of modifying the parameters. Templates can be a time saver, 
      especially if you are managing parameters in multiple windows and are
-     performing frequent software updates.
+     performing frequent software updates. Templates are normally maintained
+     by the user independent of the LAPS distribution. They tend to contain
+     parameters dependent on the local implementation and relatively 
+     independent of software updates.
 
 
                 ----   2.2.7  Running the Localization ---
