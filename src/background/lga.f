@@ -317,6 +317,7 @@ c
       data ntime/0/
       data last_time/0/
       data next_time/2000000000/
+      data ext/'lga'/
 c_______________________________________________________________________________
 c *** Get LAPS lat, lons.
 c
