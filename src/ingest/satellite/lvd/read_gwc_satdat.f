@@ -129,7 +129,7 @@ c
      &nelems,nlines,image_data,nlfi,nefi,depth,width,istatus)
 
       if(istatus.eq.1)then
-         write(6,*)'Got gwc satellite data'
+         write(6,*)'Got AFWA satellite data'
       else
          write(6,*)'Error reading gwc sat data - Process_SDHS_sub'
       endif

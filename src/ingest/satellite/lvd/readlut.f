@@ -100,11 +100,11 @@ c
 
       character      cfname_cur*(*)
       character      chtype(maxchannels)*3
-      character      cname*11
-      character      c_afwa_fname*11
+      character      cname*100
+      character      c_afwa_fname*100
       character      cfname*200
 
-      integer        i
+      integer        i,il
       integer        isat,jtype,kch
       integer        istatus
       integer        nlin,npix
@@ -215,8 +215,9 @@ c
 c --- AFWA ---
 c for GOES data only
          cname=c_afwa_fname(c_sat_id(isat),chtype(i))
+         call s_len(cname,il)
          lenf=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
-         cfname=path_to_raw_sat(ispec,jtype,isat)(1:lenf)//cname
+         cfname=path_to_raw_sat(ispec,jtype,isat)(1:lenf)//cname(1:il)
 
          call read_gwc_header(cfname,l_cell_afwa,
      &strpix,strscnl,stppix,stpscnl,

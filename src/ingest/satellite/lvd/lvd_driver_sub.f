@@ -127,6 +127,7 @@ c                                     used for variable in include 'satellite_co
       real      smsng
       real      r_missing_data
       real      radtodeg
+      real      rcal
 
       logical   lvis_flag
       logical   lsatqc
@@ -183,6 +184,8 @@ c
       integer itstatus
       integer lvd_status
       integer nft,ntm(max_files)
+
+      data rcal/0.106178/  !as specified by EUMETSAT User Services 5-May-99.
 
       include 'satellite_common_lvd.inc'
 c =========================================================================
@@ -410,25 +413,44 @@ c -----------------------------------------------------------------------
 c Compute or read ir/vis count to brightness temp (Tb)/vis count-to-count.
 c -----------------------------------------------------------------------
 c
-      if(csattype.eq.'cdf'.or.csattype.eq.'wfo')then
+      if(csattype.eq.'cdf'.or.csattype.eq.'wfo'.or.
+     &   csatid.eq.'meteos')then
 
          write(6,*)'Compute ',csatid,' cnt-to-btemp lookup tables'
-         call genbtemplut(2,r39_cnt_to_btemp_lut,istatus)
-         if(istatus.ne.1)then
-            write(6,*)'Error computing 39 lut'
-         endif
-         call genbtemplut(3,r67_cnt_to_btemp_lut,istatus)
-         if(istatus.ne.1)then
-            write(6,*)'Error computing 67 lut'
-         endif
-         call genbtemplut(4,ir_cnt_to_btemp_lut,istatus)
-         if(istatus.ne.1)then
-            write(6,*)'Error computing ir lut'
-         endif
-         call genbtemplut(5,r12_cnt_to_btemp_lut,istatus)
-         if(istatus.ne.1)then
-            write(6,*)'Error computing 12 lut'
-         endif
+
+         do j = 1,nft
+         do i = 1,ntm(j)
+
+            call lvd_file_specifier(c_type(i,j),ispec,istat)
+
+            if(ispec.eq.2)then
+               call genbtemplut(csatid,ispec,rcal,r39_cnt_to_btemp_lut
+     &                         ,istatus)
+               if(istatus.ne.1)then
+                  write(6,*)'Error computing 39 lut'
+               endif
+            elseif(ispec.eq.3)then
+               call genbtemplut(csatid,ispec,rcal,r67_cnt_to_btemp_lut
+     &                         ,istatus)
+               if(istatus.ne.1)then
+                  write(6,*)'Error computing 67 lut'
+               endif
+            elseif(ispec.eq.4)then
+               call genbtemplut(csatid,ispec,rcal,ir_cnt_to_btemp_lut
+     &                         ,istatus)
+               if(istatus.ne.1)then
+                  write(6,*)'Error computing ir lut'
+               endif
+            elseif(ispec.eq.5)then
+               call genbtemplut(csatid,ispec,rcal,r12_cnt_to_btemp_lut
+     &                         ,istatus)
+               if(istatus.ne.1)then
+                  write(6,*)'Error computing 12 lut'
+               endif
+            endif
+
+         enddo
+         enddo
 
       elseif(csattype.eq.'gvr'
      &.or.csattype.eq.'gwc')then

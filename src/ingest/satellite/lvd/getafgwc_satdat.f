@@ -12,7 +12,8 @@
 c
 c
 c Note: if isat and jtype are both = 4, this indicates the
-c       processing of GMS satellite data from AFWA. These settings
+c       processing of GMS satellite data from AFWA. Meteosat
+c       data from AFWA is also jtype = 4.   These settings
 c       are defined in /data/static/satellite_lvd.nl.
 c
        implicit none
@@ -49,6 +50,8 @@ c
        istatus = 0
 
        if(isat.eq.4 .and. jtype.eq.4)then
+c
+c GMS data
           call getgmsdata(isat,jtype,
      &                    max_channels,nchannels,chtype,
      &                    i4time_current,lvis_flag,
@@ -63,9 +66,12 @@ c
              print*,'Error returned from getgmsdata'
           endif
 
-       else
+       elseif( (isat.eq.2 .and. jtype.eq.4) .or.
+     .         (isat.eq.3 .and. jtype.eq.4) )then
 
-          call getgoesdata(isat,jtype,
+c          
+c GOES08, GOES10, and METEOSAT.
+          call getsdhsdata(isat,jtype,
      &                     max_channels,nchannels,chtype,
      &                     i4time_current,lvis_flag,
      &                     nirlines, nirelem,
@@ -77,7 +83,7 @@ c
      &                     i4time_data,
      &                     istatus)
           if(istatus.ne.0)then 
-             print*,'Error returned from getgoesdata'
+             print*,'Error returned from getsdhsdata'
           endif
 
        endif
@@ -86,7 +92,7 @@ c
        end
 c
 c =====================================================================
-       subroutine getgoesdata(isat,jtype,
+       subroutine getsdhsdata(isat,jtype,
      &                        max_channels,nchannels,chtype,
      &                        i4time_current,lvis_flag,
      &                        nirlines, nirelem,
@@ -103,13 +109,16 @@ c       we are dealing with GMS satellite data from AFWA. Since
 c       /data/static/satellite_lvd.nl will not change (other than
 c       to add another satellite), this will remain a hardwire situtation.
 c
+c 5-11-99: J.Smart  Added METEOSAT from SDHS to this routine. Changed
+c                   name from getgoesdata to getsdhsdata.
+
        implicit none
 
        include 'satellite_dims_lvd.inc'
        include 'satellite_common_lvd.inc'
 
        integer isat,jtype
-       integer i,j,n,nn
+       integer i,j,n,nn,il
        integer nt
        integer ntm
        integer nirelem
@@ -147,9 +156,6 @@ c
        real image_67  (nwvelem,nwvlines)
        real image_vis (nviselem,nvislines)
 
-       real*4    grid_spacing_ir
-       real*4    grid_spacing_wv
-       real*4    grid_spacing_vis
        real*4    r4time_data_ir
        real*4    r4time_data_wv
        real*4    r4time_data_vis
@@ -167,8 +173,8 @@ c
        character c_fname_data(max_channels)*9
        character cfd*9
        character path*200
-       character cfname*11
-       character c_afwa_fname*11
+       character cfname*100
+       character c_afwa_fname*100
        character cfilename*255
 c
       istatus = -1   !bad status return
@@ -180,8 +186,9 @@ c     cid4='go'//c_sat_id(isat)(5:6)
 
          call lvd_file_specifier(chtype(i),ispec,istat)
          cfname=c_afwa_fname(c_sat_id(isat),chtype(i))
+         call s_len(cfname,il)
          n=index(path_to_raw_sat(ispec,jtype,isat),' ')-1
-         cfilename=path_to_raw_sat(ispec,jtype,isat)(1:n)//cfname
+      cfilename=path_to_raw_sat(ispec,jtype,isat)(1:n)//cfname(1:il)
 
          n=index(cfilename,' ')
          write(6,*)'Reading: ',cfilename(1:n)

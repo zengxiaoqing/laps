@@ -89,8 +89,10 @@ c     Integer*1 IMAGEI1(WIDTH*CELL_WIDTH*DEPTH*CELL_DEPTH)
 
       character      IMAGEC(nlfi*nefi)*1
       Integer        image_decell_2d(nefi,nlfi)
+      Integer        image_temp(nefi,nlfi)
       Integer        image_decell_1d(nefi*nlfi+HEADER_SIZE*4)
       real           image_out(nelem,nlines)
+      real           r8to10
 
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
@@ -131,7 +133,8 @@ C Original constructs:
 C     XS =WIDTH*CELL_WIDTH
 C     YS = DEPTH*CELL_DEPTH
 C     SIZE = YS*XS+HEADER_SIZE
-      SIZE = nlfi*nefi+HEADER_SIZE*4   !note HEADER_SIZE = 256
+
+      SIZE = nlfi*nefi+HEADER_SIZE*4   !note HEADER_SIZE = 256*4=1024
 C
 C**********************************************************************
 C  Open the file that contains the GVAR header and pixel data.  The
@@ -172,6 +175,10 @@ c back as floating 10-bit info for the sector in domain.
 
       else ! afwa data not cellularized but bits need moving
 
+c GOES data = 10 bit; METEOSAT data = 8 bit.
+         r8to10=4.0
+         if(isat.eq.2 .and. jtype.eq.4)r8to10=1.0
+
          m=HEADER_SIZE*4
          do j=1,nlfi
          do i=1,nefi
@@ -180,6 +187,24 @@ c back as floating 10-bit info for the sector in domain.
          enddo
          enddo
 
+         if(isat.eq.2 .and. jtype.eq.4)then
+
+c METEOSAT origin is SW corner (wrt ri/rj lut). Make it NW corner
+            do j=1,nlfi
+            do i=1,nefi
+               image_temp(nefi-i+1,j)=image_decell_2d(i,j)
+            enddo
+            enddo
+            do j=1,nlfi
+            do i=1,nefi
+               image_decell_2d(i,j)=image_temp(i,j)
+            enddo
+            enddo
+
+         endif
+c
+c now load that part within the LAPS domain
+c
          jj=0
          do j=jstart,jend
             jj=jj+1
@@ -187,7 +212,7 @@ c back as floating 10-bit info for the sector in domain.
          do i=istart,iend
             ii=ii+1
             itempintgr=IBITS(image_decell_2d(i,j),0,8)
-            image_out(ii,jj)=float(itempintgr)*4.0
+            image_out(ii,jj)=float(itempintgr)*r8to10
          enddo
          enddo
 
