@@ -94,10 +94,8 @@ select(STDOUT); $| = 1;
   my $false = 1;
   my $FXA_HOME = $ENV{FXA_HOME};
 
-  my $process;
-
   my $FXA_LOCALIZATION_ROOT = $ENV{FXA_LOCALIZATION_ROOT};
-  my $FXA_LOCAL_SITE = $ENV{FXA_LOCAL_SITE};
+  my $FXA_INGEST_SITE = $ENV{FXA_INGEST_SITE};
   my $FXA_DATA = $ENV{FXA_DATA};
 
   my @oldrad;
@@ -107,6 +105,13 @@ select(STDOUT); $| = 1;
   my $prevRadar;
 
   my @allrad;
+  my @portinfo;
+  my @lapsrad;
+  my $port;
+  my $radNo;
+  my $radNo_c;
+  my $numrad;
+
   my @currad;
   my $currName;
   my $currName_U;
@@ -117,6 +122,7 @@ select(STDOUT); $| = 1;
   my $lat;
   my $lon;
   my $junk;
+  my $junk1;
   my $closest;
   my $lat_diff;
   my $lon_diff;
@@ -124,9 +130,10 @@ select(STDOUT); $| = 1;
   my $lon_laps;
   my $found;
 
+  my $version = 4;  # AWIPS base version number
   my $endWin = time;
   my $startWin = $endWin - 3600;  #look back 1 hour 
-  my $inputDir = "$FXA_DATA/radar/$homeRadar/Z/elev0_5/res2/level16";
+  my $inputDir;
   my $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/001/raw";
 #=====================================================================
 if($fxa_sys!=0){
@@ -178,135 +185,228 @@ if($fxa_sys!=0){
 
   $lockfile = "$LAPS_LOG_PATH/\.lock$exe\.$$";
 
-#---------------------------------------------------------------------
-# $process determines whether or not tfrNarrowband2netCDF runs...set to false initially
-  $process = $false;
-
-# Determine $homeRadar
-#
-#  Determine previous $homeRadar
-
-  opendir(VXX,"$LAPS_DATA_ROOT/static/vxx") or die "Can't open $LAPS_DATA_ROOT/static/vxx\n";
-  @oldrad = grep !/^\.\.?$/, readdir(VXX);  #skip . and ..
-  closedir(VXX);
-
-  my $numrad = scalar(@oldrad);
-  if ($numrad >= 1) {
-    my $tmp = splice @oldrad, -1;  # pop an element off of @oldrad
-    ($name, $homeRadar_U) = split /\./, $tmp;
-    $homeRadar = $homeRadar_U;
-    $homeRadar =~ tr/A-Z/a-z/;
-  } else {  # no home radar set up...find the closest radar
-    $homeRadar = "none";
-    $homeRadar_U = "NONE";  
+#=====================================================================
+# read file ${FXA_LOCALIZATION_ROOT}/${FXA_INGEST_SITE}/portInfo.txt to see what radars on-line
+  open(PORTINFO, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/portInfo.txt") or die "Can't open portInfo.txt";
+  my $lineNo = 1;
+  while (<PORTINFO>) {
+    ($junk1, $junk, $junk, $radar) = split(" ");
+    if ($junk1 eq "#") {
+    }
+    else {
+      push @portinfo, $radar;
+      $lineNo++;
+    }
   }
-  $prevRadar = $homeRadar;
-  print "Previous homeRadar = $prevRadar\n";
+  close(PORTINFO);
+  $numrad = scalar(@portinfo);  # get number of elements in @portinfo
 
-# Determine which radars have "current" RPS lists
+  if ($numrad < 1) {
+    print "No radars available to process.\n";
+    exit;
+  } else {
+    print "Radars on line: @portinfo \n";
+  }
+
+#---------------------------------------------------------------------
+# Determine which radars have "current" RPS lists 
+
   opendir(RPS,"$FXA_DATA/radar/lists") or die "Can't open directory $FXA_DATA/radar/lists\n";
   @allrad = readdir(RPS);
   closedir(RPS);
 
   my $newadd = 0;
   my $status;
-  foreach (@allrad) {
-    ($currName_U, $status) = split /\./; 
-    if ($status eq "current") {
-      @currad[$newadd] = $currName_U;
-      $newadd += 1;
+  foreach (@portinfo) {
+    $port = $_;
+    foreach (@allrad) {
+      ($currName_U, $status) = split /\./;
+      if (($status eq "current") && ($currName_U eq $port)) {
+        @currad[$newadd] = $currName_U;
+        $newadd += 1;
+      }
     }
   }
   $numrad = scalar(@currad);  # get number of elements in @currad
-  print "homeRadar_U: $homeRadar_U \n";
-  print "Current Radars: @currad \n";
 
-# if $homeRadar is not "none", see if it matches any radar with a current RPS list
-  if ($homeRadar ne "none") {
-    if ($numrad >= 1) {
-      foreach(@currad){
-        if ($_ eq  $homeRadar_U) {
-          $process = $true;
-        }
-      }
-    } else {    # no current radars
-      print "No radars with current RPS lists...no radar processed.\n";
-    }
-  } 
-  if ($process == $false ) {   #either $homeRadar is "none" or previous radar is not on line
-#                               ...find current radar in @currad closest to LAPS centerpoint
+  if ($numrad < 1) {
+    print "No radars with current RPS lists to process.\n";
+    exit;
+  } else {
+    print "Radars available: @currad \n";
+  }
 
-# open file $FXA_LOCALIZATION_ROOT/$FXA_LOCAL_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
-    open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_LOCAL_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
+#---------------------------------------------------------------------
+# read file $LAPS_DATA_ROOT/static/vxx/radar.lst to determine $homeRadar and radars LAPS knows about
+  open(RADARLST, "$LAPS_DATA_ROOT/static/vxx/radar.lst");
+  
+  while (<RADARLST>) {
+    chomp($_);
+    push @lapsrad, $_;
+  }
+  my $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+  close(RADARLST);
+  open(RADARLST, ">>$LAPS_DATA_ROOT/static/vxx/radar.lst");  # open for append
+
+  if ($lapsradarNo < 1) { #no radar.lst file, generate file with radar closest to LAPS centerpoint
+
+#   open file $FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
+    open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
     while (<LAPSCTR>) {
       ($lat_laps, $lon_laps) = split(" ");
     }
     close(LAPSCTR);
 
-# open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
+#   open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
     open(LATLON,"$FXA_HOME/data/localization/nationalData/radarInfoMaster.txt") or die "Can't read radarInfoMaster.txt";
-    foreach (@currad) {
-      $currName = $_;
-      $currName =~ tr/A-Z/a-z/;
-      seek (LATLON, 0, 0);
-      $found = $false;
-      $lat_diff = 91;
-      $lon_diff = 361;
-      while (($line = <LATLON>) && ($found == $false)) {
-        ($radar, $lat, $lon, $junk) = split(" ", $line);
-        if ($radar eq $currName) {
-          if ((abs($lat_laps - $lat) <= $lat_diff) && (abs($lon_laps - $lon) <= $lon_diff)) {
-	    $closest = $radar;
-            $lat_diff = abs($lat_laps - $lat);
-            $lon_diff = abs($lon_laps - $lon);
-	    $found = $true;
-          }
-	}
+    $lat_diff = 91;
+    $lon_diff = 361;
+    foreach (<LATLON>) {
+      ($radar, $lat, $lon, $junk) = split(" ");
+      if ((abs($lat_laps - $lat) <= $lat_diff) && (abs($lon_laps - $lon) <= $lon_diff)) {
+        $closest = $radar;
+        $lat_diff = abs($lat_laps - $lat);
+        $lon_diff = abs($lon_laps - $lon);
       }
     }
     close(LATLON);
+    $closest =~ tr/a-z/A-Z/;
 
-    if($closest==''){
-      print "Error finding @currad in $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt\n";
-      exit;
-    }
+# write closest radar out to file $LAPS_DATA_ROOT/static/vxx/radar.lst
+    print RADARLST "$closest\n";
+    push @lapsrad, $closest;
+    $homeRadar_U = $closest;
 
-    if (($homeRadar ne "none") && ($prevRadar ne "none")) {
-      opendir(VXX,"$LAPS_DATA_ROOT/static/vxx") or die "Can't open $LAPS_DATA_ROOT/static/vxx\n";
-      @oldrad = grep !/^\.\.?$/, readdir(VXX);  #skip . and ..
-      closedir(VXX);
+  } else {  #file radar.lst already exists and @lapsrad is full
+    $homeRadar_U = @lapsrad[0];
+  }
 
-      foreach (@oldrad) {
-        print "Deleting file: $LAPS_DATA_ROOT/static/vxx/$_ \n";
-        unlink "$LAPS_DATA_ROOT/static/vxx/$_";
-      }
-    }
-    $homeRadar = $closest;
-    $process = $true;
-  } 
-    
-  if ($process == $false) {
-    print "tfrNarrowband2netCDF not executed!\n";
-  } else {
+  $homeRadar = $homeRadar_U;
+  $homeRadar =~ tr/A-Z/a-z/;
+  $lapsradarNo = scalar(@lapsrad);  # get number of elements in @lapsrad
+
+  print "homeRadar_U: $homeRadar_U\n";
+  print "Current Radars: @currad \n";
+
+  $endWin = time;
+  $startWin = $endWin - 3600;  #look back 1 hour 
 
 #---------------------------------------------------------------------
-#
-# tfrNarrowband2netCDF requires $homeRadar, $startWin, $endWin, $inputDir, $outputDir on command line
-#
-    $endWin = time;
-    $startWin = $endWin - 3600;  #look back 1 hour 
-    $inputDir = "$FXA_DATA/radar/$homeRadar/Z/elev0_5/res2/level16";
-    $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/001/raw";
-    print "Calling parameters:\n";
-    print "homeRadar = $homeRadar\n";
-    print "startWin = $startWin\n";
-    print "endWin = $endWin\n";
-    print "inputDir = $inputDir\n";
-    print "outputDir = $outputDir\n";
+  if ($version == 4) { 
+#   see if $homeRadar is on line, if not, choose closest radar to Laps Center
+    $found = $false;
+    foreach (@currad) {
+      chomp($_);
+      if (($homeRadar_U eq $_) && ($found == $false)) {
+        $found = $true;
+      }
+    }
 
-    $sys = "$FXA_HOME/bin/$exe $homeRadar $startWin $endWin $inputDir $outputDir";
+    if ($found == $false) {  #$homeRadar is not on line...choose closest on-line radar to Laps Center
+# open file $FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt and read $lat_laps, $lon_laps
+      open(LAPSCTR, "$FXA_LOCALIZATION_ROOT/$FXA_INGEST_SITE/Laps_Center_Point.txt") or die "Can't get LAPS Center";
+      while (<LAPSCTR>) {
+        ($lat_laps, $lon_laps) = split(" ");
+      }
+      close(LAPSCTR);
+
+# open file $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt (contains lat and lon of all radars)
+      open(LATLON,"$FXA_HOME/data/localization/nationalData/radarInfoMaster.txt") or die "Can't read radarInfoMaster.txt";
+      $lat_diff = 91;
+      $lon_diff = 361;
+      foreach (@currad) {
+        chomp($_);
+        $currName = $_;
+        $currName =~ tr/A-Z/a-z/;
+        seek (LATLON, 0, 0);
+        while ($line = <LATLON>) {
+          ($radar, $lat, $lon, $junk) = split(" ", $line);
+          if ($radar eq $currName) {
+            if ((abs($lat_laps - $lat) <= $lat_diff) && (abs($lon_laps - $lon) <= $lon_diff)) {
+              $closest = $radar;
+              $lat_diff = abs($lat_laps - $lat);
+              $lon_diff = abs($lon_laps - $lon);
+              last;
+            }
+          }
+        }
+      }
+      close(LATLON);
+
+      if($closest eq ''){
+        print "Error finding @currad in $FXA_HOME/data/localization/nationalData/radarInfoMaster.txt\n";
+        print "No radar processed.\n";
+        exit;
+      } else {
+        $#currad = -1;
+        $closest =~ tr/a-z/A-Z/;
+        @currad[0] = $closest;
+      }
+
+    } else {  #$homeRadar is on-line
+      $#currad = -1;
+      @currad[0] = $homeRadar_U;
+    }
+  }  #if version == 4
+
+#---------------------------------------------------------------------
+  foreach (@currad) {
+    $radar = $_;
+
+#   find $radar in @lapsrad...if not there, add it
+    $lineNo = 0;
+    $radNo = 0;
+    foreach (@lapsrad) {
+      $lineNo++;
+      if ($radar eq $_) {
+        $radNo = $lineNo;
+      }
+    }
+    
+    if ($radNo == 0) {  # $radar not in @lapsrad...add it to radar.lst and @lapsrad
+      $lineNo++;
+      $radNo = $lineNo;
+      print RADARLST "$radar\n";
+      push @lapsrad, $radar;
+      $lapsradarNo++;
+    } 
+   
+    $radar =~ tr/A-Z/a-z/;
+    $inputDir = "$FXA_DATA/radar/$radar/Z/elev0_5/res2/level16";
+
+    if ($radNo < 10) {
+      $radNo_c = "00".$radNo;
+    } elsif ($radNo < 100) {
+      $radNo_c = "0".$radNo;
+    } else {
+      $radNo_c = $radNo."/";
+      chop($radNo_c);
+    }
+    if ($version == 4) {
+      $radNo_c = "001";
+    }
+
+    $outputDir = "$LAPS_DATA_ROOT/lapsprd/rdr/$radNo_c/raw";
+
+#---------------------------------------------------------------------
+# tfrNarrowband2netCDF requires $radar, $startWin, $endWin, $inputDir, $outputDir on command line
+#---------------------------------------------------------------------
+
+    print "Calling parameters:\n";
+    print "  radar = $radar\n";
+    print "  startWin = $startWin\n";
+    print "  endWin = $endWin\n";
+    print "  inputDir = $inputDir\n";
+    print "  outputDir = $outputDir\n";
+
+    $sys = "$FXA_HOME/bin/$exe $radar $startWin $endWin $inputDir $outputDir";
     &forksub($sys,$lockfile);
-  }
+
+  }  # end while (@currad)
+
+  close(RADARLST);
+#---------------------------------------------------------------------
+  
 }
 #=====================================================================
 #
