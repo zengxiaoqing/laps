@@ -63,42 +63,42 @@ C
 
       include 'netcdf.inc'
       integer maxSensor, recNum,nf_fid, nf_vid, nf_status
-      integer firstOverflow, globalInventory, nStaticIds, numPST,
+      integer firstOverflow, globalInventory, nStaticIds,
      +     numericWMOid(recNum), precipIntensity( maxSensor, recNum),
      +     precipType( maxSensor, recNum), pressChangeChar(recNum)
       real altimeter(recNum), dewpoint(recNum), elevation(recNum),
      +     latitude(recNum), longitude(recNum),
      +     meanWeightedTemperature(recNum), precipAccum(recNum),
      +     precipRate(recNum), pressChange3Hour(recNum),
-     +     rawPrecip(recNum), relHumidity(recNum),
-     +     seaLevelPressure(recNum), seaSurfaceTemp(recNum),
-     +     soilMoisture(recNum), soilTemperature(recNum),
-     +     solarRadiation(recNum), stationPressure(recNum),
-     +     temperature(recNum), visibility(recNum), windDir(recNum),
-     +     windDirMax(recNum), windGust(recNum), windSpeed(recNum)
+     +     relHumidity(recNum), seaLevelPressure(recNum),
+     +     seaSurfaceTemp(recNum), soilMoisture(recNum),
+     +     soilTemperature(recNum), solarRadiation(recNum),
+     +     stationPressure(recNum), temperature(recNum),
+     +     visibility(recNum), windDir(recNum), windDirMax(recNum),
+     +     windGust(recNum), windSpeed(recNum)
       double precision observationTime(recNum), receivedTime(recNum),
      +     reportTime(recNum), rhChangeTime(recNum),
      +     stationPressChangeTime(recNum), tempChangeTime(recNum),
      +     windDirChangeTime(recNum), windGustChangeTime(recNum),
      +     windSpeedChangeTime(recNum)
-      character seaLevelPressureDD(recNum)
-      character precipRateDD(recNum)
-      character*11 stationType(recNum)
-      character windSpeedDD(recNum)
-      character dewpointDD(recNum)
-      character*11 dataProvider(recNum)
-      character pressChange3HourDD(recNum)
-      character visibilityDD(recNum)
       character*51 stationName(recNum)
-      character windDirDD(recNum)
-      character altimeterDD(recNum)
-      character temperatureDD(recNum)
+      character*11 dataProvider(recNum)
       character*12 providerId(recNum)
+      character pressChange3HourDD(recNum)
+      character temperatureDD(recNum)
       character precipAccumDD(recNum)
-      character stationPressureDD(recNum)
-      character*6 stationId(recNum)
-      character relHumidityDD(recNum)
       character*25 presWeather(recNum)
+      character seaLevelPressureDD(recNum)
+      character windDirDD(recNum)
+      character*11 stationType(recNum)
+      character visibilityDD(recNum)
+      character precipRateDD(recNum)
+      character altimeterDD(recNum)
+      character relHumidityDD(recNum)
+      character stationPressureDD(recNum)
+      character windSpeedDD(recNum)
+      character*6 stationId(recNum)
+      character dewpointDD(recNum)
 
 !     Declarations for 'write_lso' call
       integer iwmostanum(recNum)
@@ -120,12 +120,11 @@ C
       endif
 
       call read_ldad_madis_netcdf(nf_fid, maxSensor, recNum, 
-     +     firstOverflow, globalInventory, nStaticIds, numPST, 
-     +     numericWMOid, precipIntensity, precipType, 
-     +     pressChangeChar, altimeter(ix), dewpoint(ix), 
-     +     elevation(ix), latitude(ix), longitude(ix), 
-     +     meanWeightedTemperature(ix), precipAccum(ix), 
-     +     precipRate(ix), pressChange3Hour(ix), rawPrecip(ix), 
+     +     firstOverflow, globalInventory, nStaticIds, numericWMOid, 
+     +     precipIntensity, precipType, pressChangeChar, 
+     +     altimeter(ix), dewpoint(ix), elevation(ix), latitude(ix), 
+     +     longitude(ix), meanWeightedTemperature(ix), 
+     +     precipAccum(ix), precipRate(ix), pressChange3Hour(ix), 
      +     relHumidity(ix), seaLevelPressure(ix), seaSurfaceTemp(ix), 
      +     soilMoisture(ix), soilTemperature(ix), solarRadiation(ix), 
      +     stationPressure(ix), temperature(ix), visibility(ix), 
