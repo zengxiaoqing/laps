@@ -85,7 +85,8 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
         data error_code/1/
         logical l_in_box
         data l_in_box/.true./
-        logical l_public
+        character*8 c8_project
+        character*5 c5_data_interval
 
         integer varid
         integer n_levels 
@@ -131,6 +132,22 @@ C
         if (istatus .ne. 1) then
            write (6,*) 'Error getting r_missing_data'
            return
+        endif
+
+        call get_laps_cycle_time(laps_cycle_time,istatus)
+        if (istatus .ne. 1) then
+           write(6,*)'Error getting laps_cycle_time'
+           return
+        else
+           write(6,*)'laps_cycle_time = ',laps_cycle_time
+        endif
+
+        call get_c8_project(c8_project,istatus)
+        if (istatus .ne. 1) then
+           write(6,*)'Error getting c8_project'
+           return
+        else
+           write(6,*)'c8_project = ',c8_project
         endif
 
         r_mspkt = .518
@@ -195,21 +212,22 @@ C       Wait for the data
 !       len_dir_in = 25
 
 !       Determine whether we are using /public or WFO Advanced filenames...
-        if(len_dir_in .ge. 7)then
-            if(dir_in(1:7) .eq. '/public')then
-                l_public = .true.
-                write(6,*)' Assumming /public filename format'
-            else
-                l_public = .false.
-                write(6,*)' Assumming WFO filename format'
-            endif
+        if(c8_project(1:6) .eq. 'NIMBUS')then
+            write(6,*)' Assumming /public filename format'
         else
-            l_public = .false.
             write(6,*)' Assumming WFO filename format'
         endif
 
-        if(l_public)then
-            c_filespec = dir_in(1:len_dir_in)//'*0100o'
+        if(c8_project(1:6) .eq. 'NIMBUS')then
+!           if(laps_cycle_time .le. 1800)then
+            if(.false.)then
+                c5_data_interval = '0006o'
+                lag_time = 180
+            else
+                c5_data_interval = '0100o'
+                lag_time = 1800
+            endif
+            c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
         else ! WFO
             c_filespec = dir_in(1:len_dir_in)//'*'
         endif
@@ -243,8 +261,8 @@ C       Wait for the data
         endif
 
 C       READ IN THE RAW PROFILER DATA
-        if(l_public)then
-            fnam_in = dir_in(1:len_dir_in)//asc9_tim//'0100o'
+        if(c8_project(1:6) .eq. 'NIMBUS')then
+            fnam_in = dir_in(1:len_dir_in)//asc9_tim//c5_data_interval
         else ! WFO
 !           Convert from asc9_tim to asc13_tim
 !           asc13_tim = '19960903_2200'                 ! Hardwired for testing.
@@ -359,7 +377,7 @@ C
             CALL PROF_CDF_READ(cdfid,prof_name(ista),0
      1                         ,'windSpeedSfc',0,sp_sfc,istatus1)
 
-            if(l_public)then
+            if(c8_project(1:6) .eq. 'NIMBUS')then
                 CALL PROF_CDF_READ(cdfid,prof_name(ista),0
      1                         ,'windDirSfc',0,di_sfc,istatus2)
             else
@@ -400,7 +418,7 @@ C
 C
 C           Get the associated quality control flags.
 C
-            if(l_public)then
+            if(c8_project(1:6) .eq. 'NIMBUS')then
                 CALL PROF_CDF_READ(cdfid,prof_name(ista),0
      $                     ,'uvQualityCode',0,c1_qc_flag,status)
                 if(status.ne.0)then
@@ -434,7 +452,7 @@ C
 
             do i = n_levels, 1, -1
 
-                if(l_public)then
+                if(c8_project(1:6) .eq. 'NIMBUS')then
                     iqc_flag = byte_to_i4(c1_qc_flag(i))
                 else
                     iqc_flag = i4_qc_flag(i)
@@ -483,7 +501,6 @@ C
                 endif
             enddo ! i
 
-            lag_time = 1800
             i4time_ob = i4time - lag_time
 
             call make_fnam_lp(i4time_ob,a9time_ob,istatus)
