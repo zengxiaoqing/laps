@@ -62,25 +62,23 @@ cdis
 !       iflag_slwc = 13 : New Smith-Feddes LWC
 !       iflag_slwc = 14 : New Smith-Feddes SLWC
 
-        include 'lapsparms.inc'
+        real*4 temp_3d(ni,nj,nk)         ! Input
+        real*4 rh_3d_pct(ni,nj,nk)       ! Input
+        real*4 heights_3d(ni,nj,nk)      ! Input
+        real*4 radar_3d(ni,nj,nk)        ! Input
 
-        real*4 temp_3d(ni,nj,nk)           ! Input
-        real*4 rh_3d_pct(ni,nj,nk)         ! Input
-        real*4 heights_3d(ni,nj,nk)        ! Input
-        real*4 radar_3d(ni,nj,nk)          ! Input
+        real*4 omega_3d(ni,nj,nk)        ! Input / Output (if l_flag_bogus_w = .true.)
+        real*4 slwc_3d(ni,nj,nk)         ! Output
+        real*4 cice_3d(ni,nj,nk)         ! Output
+        integer cldpcp_type_3d(ni,nj,nk) ! Output (1st 4bits pcp, 2nd 4 are cld)
 
-        real*4 omega_3d(ni,nj,nk)           ! Input / Output (if l_flag_bogus_w = .true.)
-        real*4 slwc_3d(ni,nj,nk)            ! Output
-        real*4 cice_3d(ni,nj,nk)            ! Output
-        integer cldpcp_type_3d(ni,nj,nk)  ! Output (1st 4bits pcp, 2nd 4 are cld)
+        real*4 mvd_3d(ni,nj,nk)          ! Output
+        integer icing_index_3d(ni,nj,nk) ! Output
+!       real*4 lwc_res_3d(ni,nj,nk)      ! Output
 
-        real*4 mvd_3d(ni,nj,nk)             ! Output
-        integer icing_index_3d(ni,nj,nk)  ! Output
-!       real*4 lwc_res_3d(ni,nj,nk)         ! Output
+!       real*4 snow_2d(ni,nj)            ! Output
 
-!       real*4 snow_2d(ni,nj)               ! Output
-
-        real*4 temp_1d(nk)                  ! Local
+        real*4 temp_1d(nk)               ! Local
         real*4 slwc_1d(nk)
         real*4 cice_1d(nk)
         real*4 heights_1d(nk)
@@ -124,6 +122,12 @@ cdis
 
         write(6,*)' Start LWC/Omega/Snow Potential Routine'
 
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading r_missing_data'
+            stop
+        endif
+
 !       Check consistency of input flags
         if(l_flag_icing_index)then
             iflag_slwc = 13
@@ -131,8 +135,8 @@ cdis
         endif
 
         if(l_flag_mvd .or. l_flag_bogus_w
-!       1            .or. iflag_slwc .ge. 10
-     1       .or. iflag_slwc .ge. 1
+!       1             .or. iflag_slwc .ge. 10
+     1                .or. iflag_slwc .ge. 1
      1                                          )then
             l_flag_cloud_type = .true.
         endif
@@ -290,12 +294,12 @@ c                   if(i .eq. 1)write(6,*)i,j,k,' Cloud Base'
                         k_top = k
 
 !                       We have now defined a cloud base and top
-                        k_1d_base = int(height_to_zcoord3(cld_base_m,hei
-     1ghts_3d
-     1                  ,pressures_pa,ni,nj,nk,i,j,istatus)) + 1
-                        k_1d_top  = int(height_to_zcoord3(cld_top_m ,hei
-     1ghts_3d
-     1                  ,pressures_pa,ni,nj,nk,i,j,istatus))
+                        k_1d_base = int(height_to_zcoord3(
+     1                              cld_base_m,heights_3d
+     1                         ,pressures_pa,ni,nj,nk,i,j,istatus)) + 1       
+                        k_1d_top  = int(height_to_zcoord3(
+     1                              cld_top_m ,heights_3d
+     1                         ,pressures_pa,ni,nj,nk,i,j,istatus))
 
                         if(istatus .ne. 1)then
                             write(6,*)
@@ -318,8 +322,8 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                             do k_1d = k_1d_base,k_1d_top
                                 call get_cloudtype(temp_1d(k_1d)
-     1                     ,d_thetae_dz_1d(k_1d),cld_base_m,cld_top_m
-     1                     ,itype,c2_type)
+     1                        ,d_thetae_dz_1d(k_1d),cld_base_m,cld_top_m
+     1                        ,itype,c2_type)
 
                                 if(radar_3d(i,j,k_1d) .gt. 45.)then
                                     itype = 10 ! CB
@@ -603,9 +607,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
         do j = 1,nj
         do i = 1,ni
 
-            iflag_melt = 0       ! Currently equivalent to iprecip_type = 1/3
-                                 ! (present or last), depending on where it
-                                 ! appears.
+            iflag_melt = 0       ! Equivalent to iprecip_type = liquid while
+                                 ! t_wb_c > 0 (present or past), depending on 
+                                 ! where we are in the loop.
             iflag_refreez = 0
             rlayer_refreez = 0.0
 
@@ -682,6 +686,7 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
                         elseif(t_wb_c .ge. 0.0)then ! Between 0C and Melt threshold
                             if(iprecip_type_last .eq. 0)then  ! Generating lyr
                                 iprecip_type = 1              ! Rain
+                                iflag_melt = 1
 
                             else                              ! Unchanged pcp
                                 iprecip_type = iprecip_type_last
@@ -694,8 +699,9 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
                         else ! below 0C (Freezing Precip or Snow)
                             if(iprecip_type_last .eq. 0)then  ! Generating lyr
-                                if(t_wb_c .ge. -6.)then       ! Supercooled pcp
-                                    iflag_melt = 1
+!                               if(t_wb_c .ge. -6.)then       ! Supercooled pcp
+                                if(.false.)then               ! Supercooled pcp
+                                    iflag_melt = 0
                                     iprecip_type = 3          ! Freezing Rain
  
                                 else
@@ -974,8 +980,6 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine integrate_slwc(slwc,imax,jmax,kmax,slwc_int)
 
-        include 'lapsparms.inc'
-
         real*4 slwc(imax,jmax,kmax)
         real*4 slwc_int(imax,jmax) ! Output in g/m**2 (~10**-3 mm or microns)
         real*4 depth(kmax)         ! Local
@@ -1103,8 +1107,6 @@ c                       if(i .eq. 1)write(6,*)i,j,k,' Cloud Top',k_base,k_top
 
         subroutine get_stability(nk,temp_1d,heights_1d,pressures_mb
      1                           ,kbottom,ktop,d_thetae_dz_1d)
-
-        include 'lapsparms.inc'
 
 !       This routine returns stability at a given level given 1D array inputs
 
