@@ -78,8 +78,14 @@ cdoc    or mercator projection.
 
         call latlon_to_uv(rlat,rlon,ulaps,vlaps,istatus)
 
-        ri = (ulaps - u0) / uscale
-        rj = (vlaps - v0) / vscale
+        if(uscale .eq. 0. .or. vscale .eq. 0.)then
+            write(6,*)
+     1      ' SEVERE ERROR: (u|v)scale = 0 in latlon_to_rlapsgrid'     
+            stop
+        else
+            ri = (ulaps - u0) / uscale
+            rj = (vlaps - v0) / vscale
+        endif
 
 !       Set status if location of point rounded off is on the LAPS grid
         if(nint(ri) .ge. 1 .and. nint(ri) .le. ni .and.
