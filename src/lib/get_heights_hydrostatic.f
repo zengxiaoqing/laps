@@ -33,11 +33,8 @@ cdis
         subroutine get_heights_hydrostatic
      1              (temp_3d_k          ! Input (3d temp K)
      1              ,pres_sfc_pa        ! Input (surface pressure pa)
+     1              ,sh_3d              ! Input (3d specific humidity)
      1              ,topo               ! Input (terrain m)
-     1              ,heights_below      ! Local array
-     1              ,a_below            ! Local array
-     1              ,pres_sfc_mb        ! Local array
-     1              ,z_correction       ! Local array
      1              ,ni,nj,nk           ! Input (Dimensions)
      1              ,heights_3d)        ! Output (m)
 
@@ -52,6 +49,7 @@ cdis
         real*4 pres_sfc_pa(ni,nj)
         real*4 topo(ni,nj)
         real*4 heights_3d(ni,nj,nk)
+        real*4 sh_3d(ni,nj,nk)
 
         real*4 heights_below(ni,nj)
         real*4 a_below(ni,nj)
@@ -61,8 +59,11 @@ cdis
         real*4 p_1d_mb(nk)                        ! Local
         real*4 alog_array(nk)                     ! Local
 
+        real*4 make_td, k_to_c
+
+        include 'constants.inc'
         real*4 C2
-        PARAMETER (C2 = 14.64285)
+        PARAMETER (C2 = r_d / (2. * grav) )
 
 cdoc    Generate heights of grid points using laps data and hydrostatic equation
         write(6,*)' Generating 3D height grid'
@@ -83,10 +84,12 @@ c       write(6,*)' Initialize and calculate first level'
         do i = 1,ni
             pres_sfc_mb(i,j) = pres_sfc_pa(i,j) / 100.
             heights_below(i,j) = 0.
-            t_2d_c_below = temp_3d_k(i,j,1) - 273.15
+            t_2d_c_below = k_to_c(temp_3d_k(i,j,1))
             td_2d_c_below = t_2d_c_below - 10.
+            td_2d_c_below = make_td(p_1d_mb(1),t_2d_c_below
+     1                             ,sh_3d(i,j,1)*1000.,-132.)
             A_below(i,j)= temp_3d_k(i,j,1)
-     1  * (C2 + W_laps(TD_2D_c_below,P_1d_mb(1  ),esat_lut))
+     1           * (C2 + W_laps(TD_2D_c_below,P_1d_mb(1  ),esat_lut))       
         enddo ! i
         enddo ! j
 
@@ -96,8 +99,10 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
             do j = 1,nj
             do i = 1,ni
-                t_1d_c  = temp_3d_k(i,j,k) - 273.15
+                t_1d_c  = k_to_c(temp_3d_k(i,j,k))
                 td_1d_c = t_1d_c - 10. ! Typical Dewpoint Depression
+                td_1d_c = make_td(p_1d_mb(k),t_1d_c
+     1                           ,sh_3d(i,j,k)*1000.,-132.)       
 
                 A1= temp_3d_k(i,j,k) *
      1          (C2 + W_laps(TD_1D_c,P_1d_mb(K  ),esat_lut))
@@ -108,7 +113,7 @@ cCCCCCCCCCCCCCCCCCC                         ISTAT = LIB$SHOW_TIMER(,,,)
 
 !               Test whether this layer contains the surface
                 if(p_1d_mb(k)   .le. pres_sfc_mb(i,j)     .and.
-     1           p_1d_mb(k-1) .ge. pres_sfc_mb(i,j)           )then
+     1             p_1d_mb(k-1) .ge. pres_sfc_mb(i,j)           )then    
 
                     alog_factor = alog(p_1d_mb(k-1)/pres_sfc_mb(i,j))
                     z_to_sfc = z_add * (alog_factor / alog_array(k-1))
@@ -200,7 +205,7 @@ C                     TEMPERATURES.
         PARAMETER (C2 = r_d / (2. * grav) )
 
         DO 5 I= 1,N
-           TK(I)= T(I)+273.16
+           TK(I)= c_to_k(T(I))
     5   CONTINUE
 
         do i = 1,N-1
