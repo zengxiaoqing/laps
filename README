@@ -3138,7 +3138,8 @@ Process: deriv.exe - Derived products
 
 Author: Steve Albers (albers@fsl.noaa.gov)
 
-        These derived products are mostly cloud and wind related.
+        These derived products are cloud, wind, stability, and fireweather 
+        related.
 <pre>
 Inputs:                                          '*' = essential input
       * lc3     3d grid	(ht)    3d clouds (fractional cover) 
@@ -3271,7 +3272,14 @@ Outputs:
                                 Mean Winds (sfc - 300mb layer)
 
 	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
+
 	lmr	2d grid		2-D column max radar ref      
+
+        lfr     2d grids        Fire weather indices as follows:
+                                HAH  (High Level Haines Index)
+                                HAM  (Mid Level Haines Index)
+                                FWI  (Fosberg Fireweather Index)
+                                VNT  (Ventilation Index)
 </pre>
 Source directory: laps/src/deriv
 
