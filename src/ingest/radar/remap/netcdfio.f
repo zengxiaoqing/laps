@@ -285,14 +285,6 @@ c      Determine filename extension
      1                               ,MAX_RAY_TILT
      1                               ,istatus)
 
-           if(istatus .eq. 1 .and. namelist_parms%l_line_ref_qc)then
-               write(6,*)' radar_init: calling rayqckz...'
-               iscale = 2
-               miss = nint(b_missing_data)
-               call rayqckz(MAX_REF_GATES,numRadials,iscale
-     1                     ,miss,Z,radialAzim)
-           endif
-
        elseif(i_tilt_proc .le. 20)then
            i_tilt_proc = i_tilt_proc + 1
            i_skip = 1
