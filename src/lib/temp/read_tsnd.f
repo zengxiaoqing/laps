@@ -30,18 +30,19 @@ cdis
 cdis 
 cdis 
 
-        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,sh_3d,
-     1                   lat_pr,lon_pr,
-     1                   lat,lon,
-     1                   ob_pr_t,
-     1                   c5_name,
-     1                   i4_window_raob_file,
-!    1                   t_maps_inc,
-     1                   bias_htlow,
-     1                   n_rass,n_snde,n_tsnd,
-     1                   ilaps_cycle_time,
-     1                   imax,jmax,kmax,
-     1                   r_missing_data
+        subroutine read_tsnd(i4time_sys,heights_3d,temp_3d,sh_3d, ! Input
+     1                   lat_pr,lon_pr,                           ! Input
+     1                   lat,lon,                                 ! Input
+     1                   ob_pr_t,                                 ! Output
+     1                   c5_name,                                 ! Output
+     1                   l_use_raob,                              ! Input
+     1                   i4_window_raob_file,                     ! Input
+!    1                   t_maps_inc,                              ! Input
+     1                   bias_htlow,                              ! Output
+     1                   n_rass,n_snde,n_tsnd,                    ! Output
+     1                   ilaps_cycle_time,                        ! Input
+     1                   imax,jmax,kmax,                          ! Input
+     1                   r_missing_data                           ! Input
      1                                  )
 
 !       1992     Steve Albers   Read RASS data from lrs files
@@ -100,9 +101,11 @@ c                               not exactly match the LAPS analysis time.
         character ext*31
         character*255 c_filespec
 
+        logical l_use_raob
+
 !       Initialize
 
-        write(6,*)' Subroutine read_rass -- reads RASS and Sondes'
+        write(6,*)' Subroutine read_tsnd -- reads RASS and Sondes'
 
         n_rass = 0
         n_snde = 0
@@ -302,6 +305,11 @@ c       1                ,t_diff
 c
 c       Process sounding data
 c
+        if(.not. l_use_raob)then
+            write(6,*)' Skipping read of sonde data'
+            goto 900
+        endif
+
         i4time_snd = i4time_sys
         lag_time = 0 ! sounding files are time stamped hourly
         rcycles = float(i4time_sys - i4time_snd + lag_time)

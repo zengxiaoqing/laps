@@ -34,12 +34,9 @@ cdis
      1               ,lat,lon                       ! Input
      1               ,heights_3d                    ! Input
      1               ,sh_3d                         ! Input
-     1               ,wt_3d                         ! Dummy
-     1               ,bias_obs_3d                   ! Dummy
      1               ,temp_3d                       ! Input/Output
-     1               ,bias_3d                       ! Dummy
-     1               ,r0_array_in,r0_array_out      ! Dummy
      1               ,ilaps_cycle_time              ! Input
+     1               ,l_use_raob                    ! Input
      1               ,i4time_raob_window            ! Input
      1               ,ni,nj,nk                      ! Input
      1               ,grid_spacing_m                ! Input
@@ -91,7 +88,7 @@ cdis
         real*4 tsnd (max_snd,nk) ! Vertically interpolated TSND temp
         character*5 c5_name(max_snd) 
 
-        logical l_qc,l_flag_vv,l_good_tsnd(max_snd)
+        logical l_qc,l_flag_vv,l_good_tsnd(max_snd),l_use_raob
 
 !       Weight for Model Background. Recommended values: 0. to 1e+30.
 !       This will make the output values match the background if far from obs.
@@ -121,6 +118,7 @@ cdis
      1                   lat,lon,               ! Input
      1                   tsnd,                  ! Output
      1                   c5_name,               ! Output
+     1                   l_use_raob,            ! Input
      1                   i4time_raob_window,    ! Input
 !    1                   t_maps_inc,            ! Input
      1                   bias_htlow,            ! Output

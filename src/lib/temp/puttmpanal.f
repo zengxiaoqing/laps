@@ -80,13 +80,7 @@ cdis
         real*4 theta(nk)
         real*4 height(nk)
 
-        real*4 dum1_3d(ni,nj,nk)          ! Local
-        real*4 dum2_3d(ni,nj,nk)          ! Local
-
-!       These Dummy arrays are passed in
-        real*4 bias_3d(ni,nj,nk)
-        real*4    r0_array_in(ni,nj)
-        real*4    r0_array_out(ni,nj)
+        real*4 bkg_500(ni,nj)
 
         real*4 dum1_array(ni,nj)
         real*4 dum2_array(ni,nj)
@@ -101,7 +95,7 @@ cdis
         parameter (diff_tol = 25.)
         parameter (cold_thresh = 170.)
 
-        logical l_fill,l_adjust_heights
+        logical l_fill,l_adjust_heights,l_use_raob
 
         O_K(T_K,P_PA)   =   O( T_K-273.15 , P_PA/100. )  + 273.15
         TDA_K(T_K,P_PA) = TDA( T_K-273.15 , P_PA/100. )  + 273.15
@@ -111,6 +105,12 @@ cdis
         write(6,*)' Welcome to subroutine put_temp_anal'
 
         i4time_raob_window = 0 ! 43200
+
+        call get_temp_parms(l_use_raob,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error: Bad status return from put_temp_anal'
+            return
+        endif
 
         l_adjust_heights = .true.
 
@@ -137,8 +137,10 @@ cdis
         k_diff_min = 0
         t_diff_min = 0.
 
-!       Get RAMS/MODEL Data
-c  following line changed from T to T3 for v3 readlapsdata LW 9/97
+!       Get BACKGROUND MODEL Data
+
+        write(6,*)' Getting BACKGROUND MODEL temperatures'
+
         var_2d = 'T3'
         l_fill = .true.
 
@@ -151,7 +153,22 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
             return
         endif
 
-        write(6,*)' Getting RAMS/MODEL heights'
+!       QC check for bad temperatures
+        do k = 1,nk
+        do j = 1,nj
+        do i = 1,ni
+            if(temp_3d(i,j,k) .lt. 173. .or.
+     1         temp_3d(i,j,k) .gt. 400.      )then
+                write(6,*)' Error: Bad data from interpolated'     
+     1               ,' Background Temps LGA/RAM, no LT1 output written'
+                istatus = 0
+                return
+            endif
+        enddo ! i
+        enddo ! j
+        enddo ! k
+
+        write(6,*)' Getting BACKGROUND MODEL heights'
 
         var_2d = 'HT'
         l_fill = .true.
@@ -165,7 +182,21 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
             return
         endif
 
-        write(6,*)' Getting RAMS/MODEL SH'
+!       QC check the background model heights against the topo field
+        do i = 1,ni
+        do j = 1,nj
+            if(heights_3d(i,j,1) .gt. topo(i,j))then
+                write(6,*)' WARNING: QC check failed, lowest background'
+     1                   ,' height level extends above terrain field '  
+                write(6,*)'i,j,height,topo'
+     1                    ,i,j,heights_3d(i,j,1),topo(i,j)
+                go to 150
+            endif
+        enddo ! j
+        enddo ! i
+ 150    continue
+
+        write(6,*)' Getting BACKGROUND MODEL SH'
 
         var_2d = 'SH'
         l_fill = .true.
@@ -175,8 +206,7 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 
         if(istatus .ne. 1)then
             write(6,*)
-     1     ' Returning from PUT_TEMP_ANAL without writing LT1 (or equiva
-     1lent) file'
+     1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
         endif
 !!
@@ -191,32 +221,20 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
         write(6,*) ' i4_filename = ', i4_filename
         write(6,*) ' asc9_tim = ', asc9_tim
 
-!       Test for bad temperatures
-        if(temp_3d(29,29,13) .lt. 173.)then
-            istatus = 0
-            write(6,*)
-     1   ' Bad data from interpolated Background Temps LGA/LGF/RAM, '
-     1          ,'no LT1 (or equiv) written'
-            return
-        endif
-
-        call insert_tsnd      (i4time_needed        ! Input
+        call insert_tsnd(i4time_needed   ! Input
      1               ,lat,lon            ! Input
      1               ,heights_3d         ! Input
      1               ,sh_3d              ! Input
-     1               ,dum1_3d            ! Used as wt_3d dummy
-     1               ,dum2_3d            ! Used as bias_obs_3d dummy
      1               ,temp_3d            ! Input/Output
-     1               ,bias_3d            ! Dummy
-     1               ,r0_array_in,r0_array_out                 ! Dummy
      1               ,ilaps_cycle_time   ! Input
+     1               ,l_use_raob         ! Input
      1               ,i4time_raob_window ! Input
      1               ,ni,nj,nk           ! Input
      1               ,grid_spacing_m     ! Input
      1               ,istatus)           ! Output
 
         if(istatus .ne. 1)then
-            write(6,*)' Bad status returned from insert_tsnd'
+            write(6,*)' Warning: Bad status returned from insert_tsnd'       
             return
         endif
 
@@ -228,15 +246,13 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 !       are below the ground so things don't get too out of hand.
         frac_bias_max = (pres_intvl + blayer_thk_pres) / blayer_thk_pres
 
-        write(6,*)' Inserting Surface Data in Lower Levels',blayer_thk_p
-     1res
-     1                                             ,frac_bias_max
+        write(6,*)' Inserting Surface Data in Lower Levels'
+     1             ,blayer_thk_pres,frac_bias_max
 
         do i = 1,ni
         do j = 1,nj
 
-!           Find Temperature at Top of Boundary Layer According to
-!                                                             Upper Level Anal
+!           Find Temp at Top of Boundary Lyr According to Upper Level Anal
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
             k_sfc = int(rk_sfc)
 
@@ -265,11 +281,13 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 111             format('  LAPS Sfc Temps disagree with MDL',2i4,3f8.1
      1                ,i4,2f8.1)
                 temp_sfc_eff = temp_sfc_intrpl + diff_tol
+
             elseif(diff_intrpl .lt. -25.)then
                 write(6,111)i,j,temp_sfc_eff,temp_sfc_intrpl,diff_intrpl
      1                     ,k_sfc_qc,temp_3d(i,j,k_sfc_qc)
      1                              ,temp_3d(i,j,k_sfc_qc+1)
                 temp_sfc_eff = temp_sfc_intrpl - diff_tol
+
             endif
 
             pres_top_pa = pres_sfc_pa(i,j) - blayer_thk_pres
@@ -301,8 +319,8 @@ c  following line changed from T to T3 for v3 readlapsdata LW 9/97
 
             do k = 1,k_top
 
-                frac_bias = (height_top - height(k)) / (height_top - hei
-     1ght_sfc)
+                frac_bias = (height_top - height(k)) / 
+     1                      (height_top - height_sfc)
                 frac_bias = min(frac_bias, frac_bias_max) ! Prevent overshooting below sfc
 
                 temp_ref = temp_3d(i,j,k)
@@ -332,14 +350,15 @@ c       1                               j_diff_max,k_diff_max
                 endif
             enddo ! k
 
-!           Insure that dtheta/dz > 0; Adjust Temps if Necessary to adiabatic
-
+!           QC check of temp_sfc_eff - note this might be different from LSX T
             if(temp_sfc_eff .lt. 200. .or. temp_sfc_eff .gt. 400.)then
-                write(6,*)' Bad Sfc Temp',i,j,temp_sfc_eff
+                write(6,*)' Error: Bad Sfc or MDL Temp'
+     1                    ,i,j,temp_sfc_eff
                 istatus = 0
                 return
             endif
 
+!           Ensure that dtheta/dz > 0; Adjust Temps if Necessary to adiabatic
             theta_sfc_k = O_K(temp_sfc_eff,pres_sfc_pa(i,j))
 
 !           ichk = 27
@@ -358,8 +377,8 @@ c       1                               j_diff_max,k_diff_max
             do k = 1,nk
                 if(temp_3d(i,j,k) .lt. cold_thresh
      1                          .or. temp_3d(i,j,k) .gt. 400.)then
-                    write(6,*)' Bad 3D/sfc Temp',i,j,k,temp_3d(i,j,k)
-     1                                          ,temp_sfc_eff
+                    write(6,*)' Error: Bad 3D/sfc Temp',i,j,k
+     1                        ,temp_3d(i,j,k),temp_sfc_eff
 !                   write(6,111)i,j,temp_sfc_eff,temp_sfc_intrpl,diff_intrpl
                     if(k .ge. k_sfc)then
                         istatus = 0
@@ -383,7 +402,7 @@ c       1                               j_diff_max,k_diff_max
 c                   if(i .eq. 1)
 c       1               write(6,101)i,j,k,theta(k),theta_ref,rk_sfc
 101                 format(' Adiabatic Lapse Rt Adj',3i3,1x,f8.1,4x,f8.1
-     1,f8.2)
+     1                    ,f8.2)
                     theta(k) = theta_ref
                 endif
 
@@ -433,21 +452,18 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         write(6,201)diff_thmax,theta_diff_thmax,i_diff_thmax,
      1                          j_diff_thmax,k_diff_thmax
-201     format('  Maximum Adiabatic Adjustment of ',f8.1,' to ',f8.1,' a
-     1t ',
-     1                     i3,i4,i3)
+201     format('  Maximum Adiabatic Adjustment of ',f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
 
         write(6,211)diff_min,t_diff_min,i_diff_min,
      1                          j_diff_min,k_diff_min
-211     format('  Largest Cold Adjustment of ',5x,f8.1,' to ',f8.1,' at 
-     1',
-     1                     i3,i4,i3)
+211     format('  Largest Cold Adjustment of ',5x,f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
 
         write(6,221)diff_max,t_diff_max,i_diff_max,
      1                          j_diff_max,k_diff_max
-221     format('  Largest Warm Adjustment of ',5x,f8.1,' to ',f8.1,' at 
-     1',
-     1                     i3,i4,i3)
+221     format('  Largest Warm Adjustment of ',5x,f8.1,' to ',f8.1
+     1        ,' at ',i3,i4,i3)
 
 !       Double Check 3D Temps against Sfc Temps
 !       Here, interpolation in standard atmosphere height space is done
@@ -458,8 +474,8 @@ c       1                               j_diff_thmax,k_diff_thmax
             k_sfc = int(rk_sfc)
             k_sfc_qc = max(k_sfc,1)
             frac_k_sfc = rk_sfc - k_sfc_qc
-            temp_sfc_intrpl = temp_3d(i,j,k_sfc_qc  ) * (1.0 - frac_k_sf
-     1c)
+            temp_sfc_intrpl = 
+     1                temp_3d(i,j,k_sfc_qc  ) * (1.0 - frac_k_sfc)
      1              + temp_3d(i,j,k_sfc_qc+1) *        frac_k_sfc
 
             diff = abs(temp_sfc_k(i,j) - temp_sfc_intrpl)
@@ -477,15 +493,22 @@ c       1                               j_diff_thmax,k_diff_thmax
         enddo ! j
         enddo ! i
 
-        write(6,*)' Max difference of sfc temps - interpolated 3D temps 
-     1= '
-     1  ,d_diff,i_diff,j_diff,rm_diff,t_diff,p_diff
+        write(6,*)' Max difference of sfc T - interpolated 3D T = '
+     1           ,d_diff,i_diff,j_diff,rm_diff,t_diff,p_diff
 
         if(l_adjust_heights)then ! Store model fg 500 heights
-            k_ref = zcoord_of_pressure(50000.)
+            k_ref = nint(zcoord_of_pressure(50000.))
+            write(6,*)' Storing bkg ht level ',k_ref
             do i = 1,ni
             do j = 1,nj
-                r0_array_in(i,j) = heights_3d(i,j,k_ref) ! Using up a dummy array
+                bkg_500(i,j) = heights_3d(i,j,k_ref) 
+                if(bkg_500(i,j) .lt. 3000. .or. 
+     1             bkg_500(i,j) .gt. 6500.       )then
+                    write(6,*)' Error: bkg ht failed QC check at level'       
+     1                       ,' nearest 500mb ',i,j,k_ref,bkg_500(i,j)
+                    istatus = 0
+                    return
+                endif ! QC check
             enddo ! j
             enddo ! i
         endif
@@ -496,14 +519,14 @@ c       1                               j_diff_thmax,k_diff_thmax
      1                                  ni,nj,nk,heights_3d)
 
         if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
-            call adjust_heights(temp_3d,heights_3d,r0_array_in
+            call adjust_heights(temp_3d,heights_3d,bkg_500
      1                         ,ni,nj,nk,k_ref,istatus)
 
         endif
 
 
-        write(6,*)' Final temp/ht column at (ichk,jchk,k) with LAPS sfc 
-     1t/p in'
+        write(6,*)
+     1    ' Final temp/ht column at (ichk,jchk,k) with LAPS sfc t/p in'       
      1                                  ,temp_sfc_k(ichk,jchk)
      1                                  ,pres_sfc_pa(ichk,jchk)
         do k = 1,nk
@@ -517,8 +540,8 @@ c       1                               j_diff_thmax,k_diff_thmax
         do i = 1,ni
         do j = 1,nj
             if(heights_3d(i,j,1) .gt. topo(i,j))then
-                write(6,*)' QC check failed, lowest height level '
-     1                   ,' extends above terrain field '  
+                write(6,*)' ERROR: QC check failed, lowest height'
+     1                   ,' level extends above terrain field '  
                 write(6,*)'i,j,height,topo'
      1                    ,i,j,heights_3d(i,j,1),topo(i,j)
                 write(6,*)
@@ -585,3 +608,33 @@ c       1                               j_diff_thmax,k_diff_thmax
 
         return
         end
+
+
+       subroutine get_temp_parms(l_use_raob_t,istatus)
+
+       logical l_use_raob_t
+       namelist /temp_nl/ l_use_raob_t
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/temp.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,temp_nl,err=901)
+       close(1)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading temp_nl in ',filename
+       write(*,temp_nl)
+       istatus = 0
+       return
+
+       end
