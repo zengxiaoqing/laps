@@ -1,4 +1,4 @@
-comparisons.f.cdis   
+cdis   
 cdis    Open Source License/Disclaimer, Forecast Systems Laboratory
 cdis    NOAA/OAR/FSL, 325 Broadway Boulder, CO 80305
 cdis    
@@ -97,33 +97,42 @@ C********************************************************************
 
         write(6,*)' Subroutine compare_wind...',cgrid
 
-!       call get_obstypes      (obs_barnes,max_obs,ncnt_total        ! I
-!    1                         ,c_obstype_a,max_obstypes,n_obstypes  ! I/O
-!    1                         ,istatus)                             ! O
-!       if(istatus .ne. 1)stop
+        call get_obstypes      (obs_barnes,max_obs,ncnt_total        ! I
+     1                         ,c_obstype_a,max_obstypes,n_obstypes  ! I/O
+     1                         ,istatus)                             ! O
+        if(istatus .ne. 1)stop
 
-        n_obstypes = 4
-        c_obstype_a(1) = 'SFC '
-        c_obstype_a(2) = 'PROF'
-        c_obstype_a(3) = 'PIN '
-        c_obstype_a(4) = 'CDW '
+!       n_obstypes = 4
+!       c_obstype_a(1) = 'SFC '
+!       c_obstype_a(2) = 'PROF'
+!       c_obstype_a(3) = 'PIN '
+!       c_obstype_a(4) = 'CDW '
 
         do i_obstype = 1,n_obstypes
             call s_len(c_obstype_a(i_obstype),len_obstype)
             write(6,*)
-            if(l_parse(cgrid,'FG'))then
+
+            if(c_obstype_a(i_obstype) .ne. 'radar')then
+
+              if(l_parse(cgrid,'FG'))then
                 write(6,11)cgrid,c_obstype_a(i_obstype)(1:len_obstype)       
  11             format(1x,'  Comparing ',a,' to ',a4
      1                   ,' Obs (prior to QC)')    
-            else
+              else
                 write(6,12)cgrid,c_obstype_a(i_obstype)(1:len_obstype)
  12             format(1x,'  Comparing ',a,' to ',a4
      1                   ,' Obs (passing QC)')    
+              endif
+
+              call comp_grid_windobs(upass1,vpass1,ni,nj,nk
+     1          ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
+     1          ,obs_barnes,max_obs,ncnt_total,l_point_struct
+     1          ,cgrid,c_obstype_a(i_obstype),r_missing_data,rms)
+
+            else
+              write(6,*)' Skip comparison for ',c_obstype_a(i_obstype)       
+
             endif
-            call comp_grid_windobs(upass1,vpass1,ni,nj,nk
-     1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
-     1        ,obs_barnes,max_obs,ncnt_total,l_point_struct
-     1        ,cgrid,c_obstype_a(i_obstype),r_missing_data,rms)
 
         enddo
 
@@ -329,8 +338,12 @@ C********************************************************************
             return
         endif        
 
+        write(6,*)' Subroutine get_obstypes, obstypes found...'
+
+        i = 1
         n_obstypes = 1
-        c_obstype_a(1) = obs_barnes(1)%type
+        write(6,*)n_obstypes,i,obs_barnes(i)%type
+        c_obstype_a(i) = obs_barnes(i)%type
 
         if(ncnt_total .ge. 2)then
             do i = 1,ncnt_total
@@ -342,6 +355,7 @@ C********************************************************************
                 enddo ! j
                 if(.not. l_match_found)then
                     n_obstypes = n_obstypes + 1
+                    write(6,*)n_obstypes,i,obs_barnes(i)%type
                     if(n_obstypes .gt. max_obstypes)then
                         write(6,*)' ERROR: too many obstypes'
                         istatus = 0
@@ -351,11 +365,6 @@ C********************************************************************
                 endif
             enddo ! i
         endif
-
-        write(6,*)' Subroutine get_obstypes, obstypes found...'
-        do j = 1,n_obstypes
-            write(6,*)j,c_obstype_a(j)
-        enddo ! j
 
         istatus = 1
 
