@@ -308,13 +308,15 @@
      to use --fc=f90.
 
      'configure' supports many other options, the most important is the
-     --prefix option which tells make where to install the laps system.
-     The default is to install whereever the source is. A fully
-     operational laps system can require up to 1 GB of disk space,
-     this will vary depending on domain size and purge interval (more
-     on this later).  You can also separate the data (read/write) from
-     the binary executables, (i.e. /bin, /etc - read only) using the --datadir 
-     option.  
+     --prefix option which tells make where to install the laps system. 
+     The default (if you did not use --prefix) is to install whereever 
+     the source is. A fully operational laps system can require up to 1 GB 
+     of disk space, this will vary depending on domain size and purge 
+     interval (more on this later).  You can also separate the data 
+     (read/write) from the binary executables, (i.e. /bin, /etc - read only) 
+     using the --datadir option. The use of the --prefix and/or --datadir 
+     options is recommended to make it easier to add multiple domains and to 
+     update your source code. 
 
      For example, to install laps in directory '/data_disk/laps' with data 
      in '/data_disk/laps/data' use... 
