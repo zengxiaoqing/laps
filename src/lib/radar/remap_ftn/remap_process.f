@@ -303,8 +303,12 @@ c
 
       DO 200 jray=1, n_rays
 
-        nazi = nint(az_array(jray))
-        nazi = mod(nazi,360)
+        if(az_array(jray) .ne. r_missing_data)then
+            nazi = nint(az_array(jray))
+            nazi = mod(nazi,360)
+        else
+            goto200
+        endif
 
         igate_interval=1
 
