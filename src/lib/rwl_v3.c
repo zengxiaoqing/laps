@@ -124,12 +124,16 @@ char *d_name;
  
 /* read in the dimension id and size */
         i_status = nc_inq_dimid (i_cdfid, d_name, &i_dimid);
-        if (i_status != NC_NOERR)
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
- 
+	} 
         i_status = nc_inq_dimlen(i_cdfid,i_dimid,&dim_len);
-        if (i_status != NC_NOERR)
+        if (i_status != NC_NOERR){
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	} 
+
         i_dsize = (int) dim_len;
 
         return i_dsize;
@@ -155,15 +159,19 @@ char *g_name;
         sprintf (var_name, "%s%s", g_name, "_fcinv");
  
         i_status = nc_inq_varid (i_cdfid, var_name, &i_varid);
-        if (i_status != NC_NOERR)
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
         start[0] = i_fcindx;
         start[1] = i_lindx;
  
         i_status = nc_get_var1_short (i_cdfid,i_varid,start,&i_flag);
-        if (i_status != NC_NOERR)
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
         if (i_flag == 1)
           return 1;
@@ -192,6 +200,7 @@ int i_size;
 /* get the variable id for this dimension */
         i_status = nc_inq_varid (i_cdfid,v_name,&i_varid);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("error reading values for array index %s\n", v_name);
           i_status = -1;
@@ -203,6 +212,7 @@ int i_size;
         count[0] = (size_t) i_size;
         i_status = nc_get_vara_float (i_cdfid,i_varid,start,count,f_ptr);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("error reading values for array index %s\n", v_name);
           i_status = -1;
@@ -229,12 +239,17 @@ char *d_name;
 
 /* read in the dimension id and size */
         i_status = nc_inq_dimid (i_cdfid, d_name, &i_dimid);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
- 
+	} 
         i_status = nc_inq_dimlen(i_cdfid,i_dimid,&dim_len);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	} 
+
+
 
         i_dsize = (int)dim_len;
 
@@ -302,33 +317,44 @@ fint4 *kmax;
  
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "imax",&i_varid);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
- 
+	}
 /* read the var from the netcdf file */
         i_status = ncgetvar1(cdfid,i_varid,mindex,imax);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "jmax",&i_varid);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
 /* read the var from the netcdf file */
         i_status = ncgetvar1(cdfid,i_varid,mindex,jmax);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
 /* get the data variable id */
         i_status = nc_inq_varid (cdfid, "kmax",&i_varid);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
 /* read the var from the netcdf file */
         i_status = ncgetvar1(cdfid,i_varid,mindex,kmax);
-        if (i_status != NC_NOERR) 
+        if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           return -1;
+	}
  
 /* normal return */
  
@@ -382,6 +408,7 @@ char *uptr;
 /* get the data variable id */
         i_status = nc_inq_varid (i_cdfid,var,&i_varid);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: no grid available.\n");
           return -1;
@@ -401,6 +428,7 @@ char *uptr;
 /* read the grid from the netcdf file */
         i_status = nc_get_vara_float (i_cdfid,i_varid,start,count,dptr);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: error retrieving data %s grid.\n",
                          *var);
@@ -410,6 +438,7 @@ char *uptr;
 /* get attributes lvl_coord and LAPS_units */
         i_status = nc_get_att_text (i_cdfid,i_varid,"lvl_coord",lvlptr);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: error retrieving lvl_coord.\n");
           return -1;
@@ -417,6 +446,7 @@ char *uptr;
  
         i_status = nc_get_att_text (i_cdfid,i_varid,"LAPS_units",uptr);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: error retrieving LAPS_units.\n");
           return -1;
@@ -427,6 +457,7 @@ char *uptr;
         sprintf(var_name, "%s%s", var, "_comment");
         i_status = nc_inq_varid (i_cdfid,var_name,&i_varid);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: no comment field available.\n");
           return -1;
@@ -444,6 +475,7 @@ char *uptr;
 /* read the comment from the netcdf file */
         i_status = nc_get_vara_text (i_cdfid,i_varid,start_c,count_c,cptr);
         if (i_status != NC_NOERR) {
+          printf("%s\n",nc_strerror(i_status));
           if (DEBUG == 1)
             printf("cdf_retrieve_laps: error retrieving comment.\n");
           return -1;
@@ -644,6 +676,7 @@ fint4 *status;
         istatus = nc_open((const char*)filename,NC_NOWRITE, &cdfid);
         free(filename);
         if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           *status = -1; /* error opening file */
           return;
         }
@@ -652,19 +685,21 @@ fint4 *status;
 
         istatus = nc_inq_dimid(cdfid,"record",&dim_id);
         if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
           return;
         }
         
         istatus = nc_inq_dimlen(cdfid, dim_id, &dim_len);
+        num_record = (long) dim_len;
         if ((istatus != NC_NOERR) || (num_record == 0)) { /* no data in file */
+          printf("%s\n",nc_strerror(istatus));
           istatus = nc_close(cdfid);
           *status = -2; /* error in reading header info */
           return;
         }
         else {
-          num_record = (long)dim_len;
           if (num_record >= 1)
             i_record = (int) (num_record - 1);
         }
@@ -857,7 +892,7 @@ fint4 *asc_len;
           return -1;
         }
         else {
-        if (DEBUG==1) printf("found varid for valtime\n");
+          if (DEBUG==1) printf("found varid for valtime\n");
         }
 
         istatus = nc_put_var1_double(cdfid,varid,mindex, valtime);
@@ -949,9 +984,7 @@ fint4 lm1_levels;
         }
         dim_val = (long)dim_len;
 
-        if (*imax == dim_val) {
-        }
-        else {
+        if (*imax != dim_val) {
           printf("x dimension in output file does not match IMAX passed in.\n");
           return -1;
         }
@@ -969,9 +1002,7 @@ fint4 lm1_levels;
         }
         dim_val = (long)dim_len;
 
-        if (*jmax == dim_val) {
-        }
-        else {
+        if (*jmax != dim_val) {
           printf("y dimension in output file does not match JMAX passed in.\n");
           return -1;
         }
@@ -989,10 +1020,7 @@ fint4 lm1_levels;
         }
         dim_val = (long)dim_len;
 
-        if (dim_val == *n_levels) {
-          /* file is LAPS standard 3D file */
-        }
-        else if (dim_val == 1) {
+	if (dim_val == 1) {
           *n_levels = 1;
         }
         else if ((strncmp(ext,"lc3",3) == 0) && (dim_val == (long) LC3_LEVELS)) {
@@ -1001,7 +1029,7 @@ fint4 lm1_levels;
         else if ((strncmp(ext,"lm1",3) == 0) && (dim_val == (long) LM1_LEVELS)) {
           *n_levels = (fint4) LM1_LEVELS;
         }
-        else {
+        else if(dim_val != *n_levels) {
           printf("z dimension in output file does not match n_levels passed in.\n");
           return -1;
         }
@@ -1340,46 +1368,62 @@ char *origin;
 
 /* write out imax */
         istatus = nc_inq_varid(cdfid,"imax",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for imax\n");
        
         istatus = ncputvar1(cdfid,varid,mindex,(const fint4 *)imax);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote imax\n");
 
 /* write out jmax */
         istatus = nc_inq_varid(cdfid,"jmax",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for jmax\n");
 
         istatus = ncputvar1(cdfid,varid,mindex,(const fint4 *)jmax);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote jmax\n");
 
 /* write out kmax */
         istatus = nc_inq_varid(cdfid,"kmax",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for kmax\n");
 
         istatus = ncputvar1(cdfid,varid,mindex,(const fint4 *)kmax);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote kmax\n");
 
 /* write out kdim */
         istatus = nc_inq_varid(cdfid,"kdim",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for kdim\n");
 
         istatus = ncputvar1(cdfid,varid,mindex,(const fint4 *)kdim);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote kdim\n");
 
 /* write out levels */
@@ -1429,13 +1473,17 @@ char *origin;
         count[0] = *n_levels;
 
         istatus = nc_inq_varid(cdfid,"level",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for level\n");
 
         istatus = nc_put_vara_float(cdfid,varid,start,count,levels);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote level\n");
 
         free (levels);
@@ -1444,109 +1492,147 @@ char *origin;
 
 /* write out Nx */
         istatus = nc_inq_varid(cdfid,"Nx",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Nx\n");
 
         Nx = (short) *imax;
         istatus = nc_put_var1_short(cdfid,varid,mindex,&Nx);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Nx\n");
 
 /* write out Ny */
         istatus = nc_inq_varid(cdfid,"Ny",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Ny\n");
 
         Ny = (short) *jmax;
         istatus = nc_put_var1_short(cdfid,varid,mindex,&Ny);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Ny\n");
 
 /* write out Dx */
         istatus = nc_inq_varid(cdfid,"Dx",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Dx\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,Dx);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Dx\n");
 
 /* write out Dy */
         istatus = nc_inq_varid(cdfid,"Dy",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Dy\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,Dy);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Dy\n");
 
 /* write out La1 */
         istatus = nc_inq_varid(cdfid,"La1",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for La1\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,La1);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote La1\n");
 
 /* write out Lo1 */
         istatus = nc_inq_varid(cdfid,"Lo1",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Lo1\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,Lo1);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Lo1\n");
 
 /* write out LoV */
         istatus = nc_inq_varid(cdfid,"LoV",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for LoV\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,LoV);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote LoV\n");
 
 /* write out Latin1 */
         istatus = nc_inq_varid(cdfid,"Latin1",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Latin1\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,Latin1);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Latin1\n");
 
 /* write out Latin2 */
         istatus = nc_inq_varid(cdfid,"Latin2",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for Latin2\n");
 
         istatus = nc_put_var1_float(cdfid,varid,mindex,Latin2);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote Latin2\n");
 
 /* write out map_proj */
         istatus = nc_inq_varid(cdfid,"grid_type",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for grid_type\n");
 
 	start_2[0] = i_record;
@@ -1555,28 +1641,36 @@ char *origin;
         count_2[1] = strlen(map_proj);
 
         istatus = nc_put_vara_text(cdfid,varid,start_2,count_2,map_proj);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote map_proj\n");
 
 /* write out origin */
         istatus = nc_inq_varid(cdfid,"origin_name",&varid);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("found varid for origin_name\n");
 
         start[0] = 0;
         count[0] = strlen(origin);
         istatus = nc_put_vara_text(cdfid,varid,start,count,origin);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
+	}
         if (DEBUG==1) printf("correctly wrote origin\n");
 
 
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
-        else
-          return 0;
+	}
+
+	return 0;
 }
 /************************************************************/
 #ifdef __STDC__
@@ -1598,10 +1692,11 @@ int inv_id;
 
         i_flag = 1;
         istatus = nc_put_var1_short(cdfid,inv_id,start,&i_flag);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR){
+          printf("%s\n",nc_strerror(istatus));
           return istatus;
-        else
-          return 0;
+	}
+	return 0;
 }
 /************************************************************/
 #ifdef __STDC__
@@ -1622,25 +1717,33 @@ float match_level;
 
 /* determine value in dimension z */
         istatus = nc_inq_dimid(cdfid,dim,&dim_id);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           return -1;
+	}
 
         istatus = nc_inq_dimlen(cdfid,dim_id,&dim_len);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           return -1;
+	}
         dim_val = (long)dim_len;
 
 /* allocate space for dim_val floats, and pull levels */
         file_lvls = (float *) malloc(dim_val * sizeof(float));
         istatus = nc_inq_varid(cdfid,"level",&var_id);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           return -1;
+	}
 
         start[0] = 0;
         count[0] = dim_val;
         istatus = nc_get_vara_float(cdfid,var_id,start,count,file_lvls);
-        if (istatus != NC_NOERR)
+        if (istatus != NC_NOERR) {
+          printf("%s\n",nc_strerror(istatus));
           return -1;
+	}
 
         found = 0;
         i = 0;
@@ -1690,7 +1793,7 @@ char *cptr;
         
 /* try to reduce overhead here */
         z_dim = get_level_index(cdfid,"level","z",(float)i_level);
-        if (istatus != NC_NOERR)
+
         if (z_dim == (-1))
           return (-1);
 
@@ -1706,29 +1809,34 @@ char *cptr;
 	count[3] = x_dim;
 
         istatus = nc_put_vara_float(cdfid,var_id,start,count,dptr);
-        if (istatus != NC_NOERR) /* error writing out grid */
+        if (istatus != NC_NOERR){ /* error writing out grid */
+          printf("%s\n",nc_strerror(istatus));
           return (-1);
-
-        else {
-
-	  istatus = update_inv_v3(cdfid,i_record,z_dim,inv_id);
-          if (istatus == (-1)) /* error writing out grid */
-            return (-1);
-
-          c_start[0] = i_record;
-          c_start[1] = z_dim;
-          c_start[2] = 0;
- 
-          c_count[0] = 1;
-          c_count[1] = 1;
-          c_count[2] = strlen(cptr);
-
-          istatus = nc_put_vara_text(cdfid,comm_id,c_start,
-                                     c_count,cptr);
-
-          if (istatus != NC_NOERR) /* error writing out grid */
-            return (-1);
         }
+
+	istatus = update_inv_v3(cdfid,i_record,z_dim,inv_id);
+	if (istatus == (-1)) /* error writing out grid */{
+          printf("%s\n",nc_strerror(istatus));
+          return (-1);
+        }
+
+	c_start[0] = i_record;
+	c_start[1] = z_dim;
+	c_start[2] = 0;
+ 
+	c_count[0] = 1;
+	c_count[1] = 1;
+	c_count[2] = strlen(cptr);
+
+	istatus = nc_put_vara_text(cdfid,comm_id,c_start,
+				   c_count,cptr);
+
+	if (istatus != NC_NOERR){ /* error writing out grid */
+          printf("%s\n",nc_strerror(istatus));
+          return (-1);
+        }
+
+       
 
 /* normal return */
 
