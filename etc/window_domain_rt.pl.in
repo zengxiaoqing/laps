@@ -9,12 +9,12 @@
 #
 use strict;
 use English;
-use vars qw($opt_s $opt_i $opt_d $opt_t $opt_w $opt_c $opt_m $opt_h $opt_q $opt_Q);
+use vars qw($opt_s $opt_i $opt_d $opt_t $opt_w $opt_c $opt_m $opt_h $opt_q);
 use Getopt::Std;
 use File::Copy 'cp';
 use Cwd;
 
-getopts('s:i:d:t:w:q:Q:hmc');
+getopts('s:i:d:t:w:q:hmc');
 
 umask 002;
 
@@ -345,10 +345,6 @@ if( $opt_m ){
 }elsif(defined $opt_q){
 
    $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --qspn=$opt_q > $LAPS_DATA_ROOT/$logname/localize_domain.log";
-
-}elsif(defined $opt_Q){
-
-   $command = "@PERL@ $LAPSINSTALLROOT/etc/localize_domain.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --install_root=$LAPSINSTALLROOT --which_type=$domain_type --Qspn=$opt_Q > $LAPS_DATA_ROOT/$logname/localize_domain.log";
 
 }else{
 
