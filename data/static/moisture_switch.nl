@@ -6,7 +6,7 @@
  CLOUD_D = 0,
  SOUNDER_SWITCH = 1,
  TIROS_SWITCH = 0,
- SAT_SKIP = 2,
+ SAT_SKIP = 1,
  GVAP_SWITCH = 1,
  TIME_DIFF = 70800, 
  GPS_SWITCH = 1,
@@ -28,14 +28,17 @@ c   values used.
 
 c  RAOB_SWITCH = 0,    raob on/off
 c  RAOB_LOOKBACK = 3600, raob latency seconds
-c  GOES_SWITCH = 8,  goes switch on/off assign sat
+c  GOES_SWITCH = 8,  goes switch on/off assign sat, 0=nogoes 
 c  CLOUD_SWITCH = 1, cloud usage on/off
 c  CLOUD_D = 1, cloud field presence is mandated to produce output
 c  SOUNDER_SWITCH = 1,  sounder switch  on/off
 c  TIROS_SWITCH = 0,   use of tiros on/off (inactive)
 c  SAT_SKIP = 2,      process every 2nd, 3rd, 10th... whatever gridpoint
-c  GVAP_SWITCH = 1,    gvap on/off
+c  GVAP_SWITCH = 1,    gvap on/off, if on must assign path below
+c                      note that both sats will be attempted and this is
+c                      independent of GOES_SWITCH above
 c  TIME_DIFF = 70800,  gvap latency seconds
+c  GPS_SWITCH = 1 (on)  = 0 (off) if on must assign path below
 c  SFC_MIX = 0,        surface mixing on/off
 c  MOD_4DDA_1 = 0,     4dda airforce compounded drying factor on/off
 c  MOD_4DDA_FACTOR = 0.02,  drying value (+ = drying)
