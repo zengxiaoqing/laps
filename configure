@@ -1227,7 +1227,7 @@ fi
 if test -z "$FC"
 then
   
-for ac_prog in f90 xlf90 xlf f77  gf77
+for ac_prog in f90 xlf90 pgf90 xlf f77  gf77
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2

@@ -3,7 +3,7 @@ dnl tests specific to fortran and it's interface to C
 dnl AC_PROG_FC(additional_fortran_compilers)
 dnl
 AC_DEFUN(AC_PROG_FC,[
-AC_CHECK_PROGS(FC,$1 f90 xlf90 xlf f77  gf77,,$PATH)
+AC_CHECK_PROGS(FC,$1 f90 xlf90 pgf90 xlf f77  gf77,,$PATH)
 test -z "$FC" && AC_MSG_ERROR([no acceptable fortran found in \$PATH])
 cat >conftest.f <<EOF
           program main
