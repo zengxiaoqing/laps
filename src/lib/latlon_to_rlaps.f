@@ -137,9 +137,10 @@ cdoc    or mercator projection.
 cdoc    This routine assumes a polar stereographic, lambert conformal,
 cdoc    or mercator projection.
 
+        include 'trigd.inc'
+
         character*6  c6_maproj
 
-        include 'trigd.inc'
         include 'grid_fname.cmn'
 
         call get_c6_maproj(c6_maproj,istatus)
@@ -294,9 +295,10 @@ c           cenlon = grid_cen_lon_cmn
 !       This routine assumes a polar stereographic, lambert conformal,
 !       or mercator projection.
 
+        include 'trigd.inc'
+
         character*6  c6_maproj
 
-        include 'trigd.inc'
         include 'grid_fname.cmn'
 
         call get_c6_maproj(c6_maproj,istatus)
