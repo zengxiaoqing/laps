@@ -4,7 +4,7 @@
      1     ,upass1,vpass1                                        ! Output
      1     ,n_var,n_fnorm                                        ! Input
      1     ,uanl,vanl                                            ! Output
-     1     ,wt_p,weight_bkg_const                                ! Input/Local
+     1     ,wt_p,weight_bkg_const,rms_thresh_wind                ! Input/Local
      1     ,max_radars
      1     ,n_radarobs_tot_unfltrd,rlat_radar,rlon_radar,rheight_radar
      1     ,u_laps_bkg,v_laps_bkg                                ! Input/Local
@@ -122,7 +122,7 @@
 
       l_3d = .true. ! .false.
 
-      rms_thresh_norm = 0.5                      ! Not used if l_3d = .false.
+      rms_thresh_norm = rms_thresh_wind          ! Not used if l_3d = .false.
 
       if(l_3d)then
           n_iter_wind = 1
