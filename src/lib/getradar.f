@@ -500,7 +500,10 @@ cdoc                            calls read_multiradar_3dref.
             goto900
         endif
 
+        i4_tol = 1200
+
         call read_multiradar_3dref(i4time_radar,
+     1   i4_tol,i4_ret,
      1   l_apply_map,ref_missing,
      1   imax,jmax,kmax,radarext,
      1   lat,lon,topo,l_low_fill,l_high_fill,
@@ -533,6 +536,7 @@ cdoc                            calls read_multiradar_3dref.
 
 
         subroutine read_multiradar_3dref(i4time_radar,                  ! I
+     1   i4_tol,i4_ret,                                                 ! I
      1   l_apply_map,ref_missing,                                       ! I
      1   imax,jmax,kmax,radarext,                                       ! I
      1   lat,lon,topo,l_low_fill,l_high_fill,                           ! I
@@ -590,8 +594,6 @@ cdoc                            calls read_multiradar_3dref.
         logical l_low_fill,l_high_fill,l_apply_map, l_parse
 
         write(6,*)' Subroutine read_multiradar_3dref'
-
-        i4_tol = 1200
 
         istatus_2dref_a = 0
         istatus_3dref_a = 0
