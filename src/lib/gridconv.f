@@ -820,7 +820,7 @@ c
       integer nxc,nyc,nzc
       real sw(2),ne(2),rota,lat0,lon0
       real tol
-      parameter (tol=0.1)
+      parameter (tol=0.10)
       common /psgrid/nxc,nyc,nzc,lat0,lon0,rota,sw,ne
 
 
@@ -848,7 +848,7 @@ c
 c
 c ****** Check for wrapping if a global data set.
 c
-      if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or. 
+      if ( bgmodel .eq. 6 .or. 
      .     bgmodel .eq. 8) then
          do j=1,ny_laps
             do i=1,nx_laps
@@ -964,7 +964,7 @@ c
 c
 c ****** Account for wrapping around effect of global data at Greenwich.
 c
-         if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+         if (bgmodel .eq. 6 .or.
      .       bgmodel .eq. 8) then
             if (i .lt. 1) i=i+ix
             if (i .gt. ix) i=i-ix
@@ -977,7 +977,7 @@ c
 c
 c ************ Account for N-S wrapping effect of global data.
 c
-               if (bgmodel .eq. 3 .or. bgmodel .eq. 6 .or.
+               if (bgmodel .eq. 6 .or.
      .             bgmodel .eq. 8) then
                   if (j .lt. 1) then
                      j=2-j
