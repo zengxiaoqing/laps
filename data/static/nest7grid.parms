@@ -27,7 +27,10 @@
  radarext_3d_cmn='vrc',
 
  radarext_3d_accum_cmn='vrc',
-
+ 
+ path_to_topt30s='/data/lapb/geog/world_topo_30s',
+ path_to_topt10m='/data/lapb/geog/topo_10m',
+ path_to_pctl10m='/data/lapb/geog/land_10m',
  path_to_raw_pirep_cmn='/public/data/pirep/netcdf/',
  path_to_raw_rass_cmn='/public/data/profiler/rass/noaanet/netcdf/',
  path_to_raw_profiler_cmn='/public/data/profiler/wind/noaanet/netcdf/',
