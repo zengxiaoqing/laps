@@ -81,10 +81,14 @@ cdoc    Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
 
         data imon_a/0,31,59,90,120,151,181,212,243,273,304,334/
 
-        read(a8_time,1)iyr,imn,idy,ih
+        read(a8_time,1,err=2)iyr,imn,idy,ih
 1       format(i2,i2,i2,i2)
+        go to 3
 
-        id = imon_a(imn)
+2       write(6,*)' Input Error in a8_to_a9, a8_time = ',a8_time
+        stop     
+
+3       id = imon_a(imn)
 
         idays = id + idy
 
@@ -97,8 +101,8 @@ cdoc    Convert a8_time (yyMMddhh) to a9_time (yydddhhmm)
 
         im = 0
 
-        write(a9,2)iyr,idays,ih,im
-2       format(i2,i3,i2,i2)
+        write(a9,4)iyr,idays,ih,im
+4       format(i2,i3,i2,i2)
 
         if(a9(1:1) .eq. ' ')a9(1:1) = '0'    ! y
         if(a9(3:3) .eq. ' ')a9(3:3) = '0'    ! d
