@@ -199,6 +199,7 @@ AC_CHECK_FUNCS(gettimeofday re_comp regcomp)
 
 
 AC_OUTPUT(src/lib/Makefile 
+	  src/lib/bgdata/Makefile
           src/lib/blas/Makefile 
           src/lib/cloud/Makefile
           src/lib/fm/Makefile

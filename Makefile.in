@@ -11,6 +11,7 @@ CWD = $(shell pwd)
 MACHDEP = config.status config.cache Makefile src/include/config.h
 
 LIBDIRS = src/lib \
+          src/lib/bgdata \
           src/lib/blas \
           src/lib/cloud \
           src/lib/fm \

@@ -2735,6 +2735,7 @@ done
 ac_given_srcdir=$srcdir
 
 trap 'rm -fr `echo "src/lib/Makefile 
+	  src/lib/bgdata/Makefile
           src/lib/blas/Makefile 
           src/lib/cloud/Makefile
           src/lib/fm/Makefile
@@ -2879,6 +2880,7 @@ EOF
 cat >> $CONFIG_STATUS <<EOF
 
 CONFIG_FILES=\${CONFIG_FILES-"src/lib/Makefile 
+	  src/lib/bgdata/Makefile
           src/lib/blas/Makefile 
           src/lib/cloud/Makefile
           src/lib/fm/Makefile
