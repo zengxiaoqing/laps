@@ -1,10 +1,8 @@
       Program lsr_driver
 c
       include      'lapsparms.cmn'
+      include      'lsr_dims.inc'
 
-      integer     max_sat
-      integer     max_ch
-      parameter     (max_sat=4,max_ch=19)
       integer     n_elems(max_sat)
       integer     n_lines(max_sat)
       integer     ismsng
@@ -25,9 +23,9 @@ c
 c
 c get the number of satellites and channels data/static/sat_sounder.nl
 c
-      call get_sat_sounder_info(n_sat,c_sat_id,n_channels,
-     &c_sounding_path,n_elems,n_lines,r_channel_wavelengths,
-     &ismsng,istatus)
+      call get_sat_sounder_info(n_sat,c_sat_id,
+     &n_channels,c_sounding_path,n_elems,n_lines,r_channel_wave
+     &lengths,ismsng,istatus)
 
       if(istatus.ne.1)then
          write(6,*)'Error returned from get_sat_sounder_info'
