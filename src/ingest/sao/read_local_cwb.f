@@ -47,9 +47,10 @@ cdis
       integer, parameter :: maxCum = 400
       integer, parameter :: maxShp = 110
 
-      character(*)  stname(maxobs), inpath
-      character(6)  rptTp(maxobs), stnTp(maxobs)
-      integer       pcc(maxobs)
+      character(*)   stname(maxobs)
+      character(25)  inpath
+      character(6)   rptTp(maxobs), stnTp(maxobs)
+      integer        pcc(maxobs)
       real  lats(maxobs), lons(maxobs), elev(maxobs)
       real  t(maxobs), t24max(maxobs), t24min(maxobs), td(maxobs)
       real  rh(maxobs), pcp1hr(maxobs), pcp3hr(maxobs), pcp6hr(maxobs)
@@ -92,6 +93,9 @@ cdis
       np= 1
       nq= maxAgr
 
+      call s_len ( inpath, len_inpath )
+      inpath= inpath(1:len_inpath)//'agr/'
+
       call read_agr_cwb (inpath, maxAgr, badflag, i4time_sys,
      ~                   stnTp(np:nq), stname(np:nq), 
      ~                   lats(np:nq), lons(np:nq), elev(np:nq), 
@@ -105,6 +109,7 @@ cdis
 
       np= np +numAgr
       nq= np +maxCum
+      inpath= inpath(1:len_inpath)//'cum/'
 
       call read_cum_cwb (inpath, maxCum, badflag, i4time_sys,
      ~                   stnTp(np:nq), stname(np:nq), 
@@ -117,6 +122,7 @@ cdis
       num= numAgr +numCum
       np=  np +numCum
       nq=  np +maxShp
+      inpath= inpath(1:len_inpath)//'shp/'
 
       call read_shp_cwb (inpath, maxShp, badflag, i4time_sys,
      ~                   stnTp(np:nq), stname(np:nq),
@@ -137,9 +143,6 @@ cdis
          endif
       enddo 
       enddo 
-      do i= 1,num
-         write(*,*) i,rptTp(i), stnTp(i), stname(i), lats(i), lons(i)
-      enddo
 
       if ( istatusAgr == 1 .and. istatusCum == 1 
      ~                     .and. istatusShp == 1 ) then

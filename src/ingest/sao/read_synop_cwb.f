@@ -12,7 +12,8 @@
       integer, parameter :: maxSynop = 150
       integer, parameter :: maxMso =    50
 
-      character*(*)  filename, path_to_local
+      character*(*)  filename
+      character(30)  path_to_local
       character(25)  prsWth(maxobs)
       character(13)  cvt_i4time_wfo_fname13,a13time_eat
       character(9)   a9time
@@ -107,6 +108,9 @@
 
       np= numSynop +1
       nq= numSynop +maxMso
+
+      call s_len ( path_to_local, len_inpath )
+      path_to_local= path_to_local(1:len_inpath)//'mso/'
 
       call read_meso_cwb ( path_to_local, maxMso, badflag, ibadflag, 
      ~                     i4time_sys, timeObsMso, rptTpMso, stnTpMso,
