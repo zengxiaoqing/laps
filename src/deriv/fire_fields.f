@@ -14,7 +14,7 @@ c**************new routine as adapted at FSL**************************
       character*3 var_2d
 
       integer MAX_FIELDS
-      parameter (MAX_FIELDS = 4)
+      parameter (MAX_FIELDS = 6)
       real*4 field_array(ni,nj,MAX_FIELDS)
       character*3 var_a(MAX_FIELDS)
       character*125 comment_a(MAX_FIELDS)
@@ -39,6 +39,7 @@ c**************new routine as adapted at FSL**************************
       real*4 haines_hi_2d(ni,nj)                                    ! L
       real*4 vent_2d(ni,nj)                                         ! L
       real*4 fosberg_2d(ni,nj)                                      ! L
+      real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! L
 
       write(6,*)' Subroutine fire_fields (under construction)'
 
@@ -87,6 +88,7 @@ c**************new routine as adapted at FSL**************************
      1                          ,haines_mid_2d                      ! O
      1                          ,haines_hi_2d                       ! O
      1                          ,vent_2d                            ! O
+     1                          ,umean_2d,vmean_2d                  ! O
      1                          ,istatus)                           ! O
 
       if(istatus .eq. 1)then ! write out LFR fire fields file
@@ -96,23 +98,31 @@ c**************new routine as adapted at FSL**************************
           call move(haines_mid_2d,field_array(1,1,2),ni,nj)
           call move(haines_hi_2d, field_array(1,1,3),ni,nj)
           call move(fosberg_2d   ,field_array(1,1,4),ni,nj)
+          call move(umean_2d     ,field_array(1,1,5),ni,nj)
+          call move(vmean_2d     ,field_array(1,1,6),ni,nj)
 
           ext = 'lfr'
           var_a(1) = 'VNT'
           var_a(2) = 'HAM'
           var_a(3) = 'HAH'
           var_a(4) = 'FWI'
+          var_a(5) = 'UPB'
+          var_a(6) = 'VPB'
           units_a(1) = 'M**2/S'
           units_a(2) = '      '
           units_a(3) = '      '
           units_a(4) = '      '
+          units_a(5) = 'M/S'
+          units_a(6) = 'M/S'
           comment_a(1) = 'Ventilation Index'
           comment_a(2) = 'Haines Index (850-700hPa)'
           comment_a(3) = 'Haines Index (700-500hPa)'
           comment_a(4) = 'Fosberg Fire Wx Index'
+          comment_a(5) = 'Boundary Layer Mean U Component'
+          comment_a(6) = 'Boundary Layer Mean V Component'
           call put_laps_multi_2d(i4time,ext,var_a,units_a
      1                          ,comment_a,field_array,ni,nj
-     1                          ,4,istatus)
+     1                          ,6,istatus)
 
       else
           write(6,*)' Skipping write of LFR file'
@@ -138,6 +148,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,haines_mid_2d                      ! O
      1                           ,haines_hi_2d                       ! O
      1                           ,vent_2d                            ! O
+     1                           ,umean_2d,vmean_2d                  ! O
      1                           ,istatus)                           ! O
 
        real*4 pres_3d_pa(ni,nj,nk)                                   ! I
@@ -160,6 +171,7 @@ c**************new routine as adapted at FSL**************************
        real*4 haines_mid_2d(ni,nj)                                   ! O
        real*4 haines_hi_2d(ni,nj)                                    ! O
        real*4 vent_2d(ni,nj)                                         ! O
+       real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                        ! O
        real*4 fosberg_2d(ni,nj)                                      ! O
 
        real*4 pres_3d_mb(ni,nj,nk)                                   ! L
@@ -204,6 +216,7 @@ c**************new routine as adapted at FSL**************************
      1                           ,pres_3d_pa,p_sfc_pa                     ! I
      1                           ,ni,nj,nk                                ! I
 !    1                           ,heights_3d                              ! I
+     1                           ,umean_2d,vmean_2d                       ! O
      1                           ,vent_2d,istatus)                        ! O
        else
            write(6,*)' Skip ventilation index due to no PBL'
@@ -217,6 +230,7 @@ c**************new routine as adapted at FSL**************************
      1                             ,pres_3d_pa,p_sfc_pa                   ! I
      1                             ,ni,nj,nk                              ! I
 !    1                             ,heights_3d                            ! I
+     1                             ,umean_2d,vmean_2d                     ! O
      1                             ,vent_2d,istatus)                      ! O
 
 !      real*4 heights_3d(ni,nj,nk)                                        ! I
@@ -225,7 +239,7 @@ c**************new routine as adapted at FSL**************************
        real*4 v_3d(ni,nj,nk)                                              ! I
 
        real*4 pbl_top_pa(ni,nj),pbl_depth_m(ni,nj)                        ! I
-       real*4 umean(ni,nj),vmean(ni,nj)                                   ! L
+       real*4 umean_2d(ni,nj),vmean_2d(ni,nj)                             ! O
        real*4 vent_2d(ni,nj)                                              ! O
 
        real*4 topo(ni,nj)           ! Switch to sfc_pres_pa?
@@ -236,26 +250,26 @@ c**************new routine as adapted at FSL**************************
 !      Calculate mean wind within the PBL
        call pbl_mean_wind(u_3d,v_3d,topo,pbl_top_pa,ni,nj,nk              ! I
      1                   ,pres_3d_pa,p_sfc_pa                             ! I
-     1                   ,umean,vmean,istatus)                            ! O
+     1                   ,umean_2d,vmean_2d,istatus)                      ! O
 
        write(6,*)' Compute VI from mean wind speed and PBL Depth'
 
 !      Multiply PBL depth by mean wind to obtain ventilation index
        do i = 1,ni
        do j = 1,nj
-           if(abs(umean(i,j)) .gt. 1000.)then
-               write(6,*)' ERROR, umean out of bounds',i,j,umean(i,j)
+           if(abs(umean_2d(i,j)) .gt. 1000.)then
+               write(6,*)' ERROR, umean out of bounds',i,j,umean_2d(i,j)
                istatus = 0
                return
            endif
 
-           if(abs(vmean(i,j)) .gt. 1000.)then
-               write(6,*)' ERROR, vmean out of bounds',i,j,vmean(i,j)
+           if(abs(vmean_2d(i,j)) .gt. 1000.)then
+               write(6,*)' ERROR, vmean out of bounds',i,j,vmean_2d(i,j)       
                istatus = 0
                return
            endif
 
-           spmean = sqrt(umean(i,j)**2 + vmean(i,j)**2)
+           spmean = sqrt(umean_2d(i,j)**2 + vmean_2d(i,j)**2)
            vent_2d(i,j) = pbl_depth_m(i,j) * spmean
 
        enddo ! j
@@ -269,11 +283,11 @@ c**************new routine as adapted at FSL**************************
         subroutine pbl_mean_wind(uanl,vanl,topo,pbl_top_pa        ! I
      1                          ,imax,jmax,kmax                   ! I
      1                          ,pres_3d_pa,p_sfc_pa              ! I
-     1                          ,umean,vmean,istatus)             ! O
+     1                          ,umean_2d,vmean_2d,istatus)       ! O
 
         logical ltest_vertical_grid
 
-        real*4 umean(imax,jmax),vmean(imax,jmax)                  ! Output
+        real*4 umean_2d(imax,jmax),vmean_2d(imax,jmax)            ! Output
         real*4 uanl(imax,jmax,kmax),vanl(imax,jmax,kmax)          ! Input
         real*4 pres_3d_pa(imax,jmax,kmax)                         ! Input
 
@@ -292,8 +306,8 @@ c**************new routine as adapted at FSL**************************
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
-        umean = r_missing_data
-        vmean = r_missing_data
+        umean_2d = r_missing_data
+        vmean_2d = r_missing_data
 
         do j = 1,jmax
           do i = 1,imax
@@ -344,8 +358,8 @@ c**************new routine as adapted at FSL**************************
              endif
 
 !            Mean wind through the layer
-             umean(i,j) = usum(i,j) / sum(i,j)
-             vmean(i,j) = vsum(i,j) / sum(i,j)
+             umean_2d(i,j) = usum(i,j) / sum(i,j)
+             vmean_2d(i,j) = vsum(i,j) / sum(i,j)
 
           enddo ! i
         enddo ! j
