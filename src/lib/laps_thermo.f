@@ -37,14 +37,14 @@ cdis
      1          ,topo                            ! Input
      1          ,laps_cycle_time                 ! Input
      1          ,temp_3d                         ! Input
-     1          ,sh_3d                           ! Input
+     1          ,rh_3d_pct                       ! Input
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,istatus)                        ! Output
 
 !       Arrays passed in
         real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 sh_3d(NX_L,NY_L,NZ_L)
+        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
@@ -94,14 +94,20 @@ cdis
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
-        call get_pres_3d(i4time_needed,NX_L,NY_L,NZ_L,pres_3d,istatus)       
-        if(istatus .ne. 1)return
+!       call get_pres_3d(i4time_needed,NX_L,NY_L,NZ_L,pres_3d,istatus)       
+!       if(istatus .ne. 1)return
 
-!       Convert SH to Td
+!       Convert RH to Td
         do k = 1,NZ_L
         do j = 1,NY_L
         do i = 1,NX_L
-            if(sh_3d(i,j,k) .ne. r_missing_data)then
+            if(rh_3d_pct(i,j,k) .ge. 1. .and.
+     1         rh_3d_pct(i,j,k) .le. 100.       )then
+
+                t_c = temp_3d(i,j,k)-273.15
+                td_c = dwpt(t_c,rh_pct)
+                td_3d_k(i,j,k) = td_c + 273.15
+
 !               ew = pres_3d(i,j,k)/100. * sh_3d(i,j,k)
 !               td_c = dpt(ew)                        ! Check valid input range
 
@@ -110,7 +116,8 @@ cdis
 !    1                        ,sh_3d(i,j,k)*1000.
 !    1                        ,-100.)
 
-                td_3d_k(i,j,k) = temp_3d(i,j,k)       ! Temporary Placeholder
+            else ! invalid value of rh to pass into dwpt
+                td_3d_k(i,j,k) = r_missing_data
 
             endif
 

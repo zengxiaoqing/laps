@@ -168,7 +168,7 @@ c read in LAPS_DOMAIN
 !       This code is here just in case we need it due to a change in stability
 !       index strategy.
 
-        if(.true. .and. istatus .eq. 1)then
+        if(.false. .and. istatus .eq. 1)then
             call put_stability(
      1           i4time_needed                   ! Input
      1          ,NX_L,NY_L,NZ_L                  ! Input

@@ -69,7 +69,7 @@ cdis
         integer j_status(20),iprod_number(20)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 sh_3d_dum(NX_L,NY_L,NZ_L)
+        real*4 rh_3d_pct(NX_L,NY_L,NZ_L)
         real*4 heights_3d(NX_L,NY_L,NZ_L)
         real*4 temp_sfc_k(NX_L,NY_L)
         real*4 pres_sfc_pa(NX_L,NY_L)
@@ -84,7 +84,7 @@ cdis
         character*125 comment_2d
         character*3 var_2d
 
-!       Get parameters for put_derived_wind_prods call
+!       Get parameters for laps_deriv_sub call
         call get_meso_sao_pirep(N_MESO,N_SAO,N_PIREP,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error getting N_PIREP'
@@ -98,13 +98,6 @@ cdis
         endif
 
         max_cld_snd = maxstns + N_PIREP
-
-        write(6,*)
-        write(6,*)' Calling put_derived_wind_prods'
-        call put_derived_wind_prods(NX_L,NY_L,NZ_L           ! Input
-     1          ,NX_L,NY_L,NZ_L                              ! Input (sic)
-     1          ,max_radars_dum,r_missing_data               ! Input
-     1          ,i4time)                                     ! Input
 
 !       Read data for laps_deriv_sub and put_stability calls
 
@@ -124,6 +117,16 @@ cdis
      1      ,ext,var_2d,units_2d,comment_2d,heights_3d,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error reading 3D Heights'
+            return
+        endif
+
+!       Read RH
+        var_2d = 'RHL'
+        ext = 'lh3'
+        call get_laps_3d(i4time,NX_L,NY_L,NZ_L
+     1      ,ext,var_2d,units_2d,comment_2d,rh_3d_pct,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading 3D RH'
             return
         endif
 
@@ -161,12 +164,13 @@ cdis
      1                  iprod_number,
      1                  temp_3d,                 ! I
      1                  heights_3d,              ! I
+     1                  rh_3d_pct,               ! I
      1                  pres_sfc_pa,             ! I
      1                  temp_sfc_k,              ! I
      1                  j_status,                ! O
      1                  istatus1)                ! O
 
-        if(.false. .and. istatus1 .eq. 1)then
+        if(.true. .and. istatus1 .eq. 1)then
             call get_domain_laps(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo       
      1                          ,grid_spacing_m,istatus)
             if(istatus .ne. 1)then
@@ -183,13 +187,13 @@ cdis
             write(6,*)
             write(6,*)' Calling put_stability'
             call put_stability(
-     1           i4time_needed                   ! I
+     1           i4time                          ! I
      1          ,NX_L,NY_L,NZ_L                  ! I
      1          ,heights_3d                      ! I
      1          ,topo                            ! I
      1          ,laps_cycle_time                 ! I
      1          ,temp_3d                         ! I
-     1          ,sh_3d_dum                       ! I
+     1          ,rh_3d_pct                       ! I
      1          ,temp_sfc_k                      ! I
      1          ,pres_sfc_pa                     ! I
      1          ,istatus)                        ! O
@@ -197,6 +201,13 @@ cdis
             write(6,*)' put_stability not called for LST file'
 
         endif
+
+        write(6,*)
+        write(6,*)' Calling put_derived_wind_prods'
+        call put_derived_wind_prods(NX_L,NY_L,NZ_L           ! Input
+     1          ,NX_L,NY_L,NZ_L                              ! Input (sic)
+     1          ,max_radars_dum,r_missing_data               ! Input
+     1          ,i4time)                                     ! Input
 
  999    write(6,*)' End of subroutine laps_deriv'
 

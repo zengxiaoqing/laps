@@ -39,6 +39,7 @@ cdis
      1                        iprod_number,
      1                        temp_3d,
      1                        heights_3d,
+     1                        rh_3d_pct,
      1                        pres_sfc_pa,
      1                        t_sfc_k,
      1                        j_status,istatus)
@@ -521,22 +522,6 @@ c read in laps lat/lon and topo
 !       Calculate derived fields
         write(6,*)
         write(6,*)' Calculating Derived Fields'
-
-!       Read in RH field (Used for 3D Precip Type which in turn is used for
-!                         Icing Severity Index and 2D Precip type)
-        if(istat_radar_3dref .eq. 1)then
-            var = 'RHL'
-            ext = 'lh3'
-            call get_laps_3dgrid(i4time,ilaps_cycle_time*2,i4time_rh
-     1       ,NX_L,NY_L,NZ_L,ext,var,units,comment,rh_3d_pct,istatus_rh)     
-
-            if(istatus_rh .ne. 1)then
-                write(6,*)' Error reading 3D RH - '
-     1                   ,'get_cloud_deriv not called'
-                goto999
-            endif
-        endif
-
 
 !       Write out cloud grid in pressure coordinates
         write(6,*)' Writing out grid in pressure coordinates'
