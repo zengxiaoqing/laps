@@ -68,6 +68,7 @@
         integer laps_background_model_cmn
         integer maxstations_cmn, maxobs_cmn
         character*3 c_raddat_type
+        character*80 c80_description
 
         common  /lapsparms_cmn/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
@@ -98,7 +99,7 @@
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
      1  ,laps_background_model_cmn
      1  ,maxstations_cmn,maxobs_cmn
-     1  ,c_raddat_type
+     1  ,c_raddat_type, c80_description
 
         NAMELIST /lapsparms_NL/ iflag_lapsparms_cmn
      1  ,PRESSURE_BOTTOM_L,PRESSURE_INTERVAL_L,PRESSURE_0_L
@@ -129,7 +130,7 @@
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
      1  ,laps_background_model_cmn
      1  ,maxstations_cmn,maxobs_cmn
-     1  ,c_raddat_type
+     1  ,c_raddat_type, c80_description
 
 	
 
