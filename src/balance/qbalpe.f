@@ -574,11 +574,10 @@ c        term with the new lagrange multiplier.
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,itmax,icon,ks,kf,ittr
      .         ,ibnd(nx,ny,nz)
-     .         ,iwp(nx*ny)
      .         ,i,j,k,is,ip,js,jp,kp,it,itt
      .         ,icnt,iwpt,istatus
      .         ,ucnt,vcnt,uwpt,vwpt
@@ -821,13 +820,14 @@ c     if (icon .eq. 1) call prt(om,sc,ci,nx,ny,8,nz,4h om ,4h    )
       enddo
 c
 c insure that we don't have boundary pressure gradients due to
-c boundary terrain/pressure intersections.
+c boundary terrain/pressure intersections. Also check u/v components
+c on the boundary.
 c
       call get_r_missing_data(r_missing_data,istatus)
 
       do k=1,nz-1
 c w/e sides
-         do j=2,ny-1
+         do j=1,ny
             if(ps(1,j).le.p(k+1)) then 
                t(1,j,k)=r_missing_data
                u(1,j,k)=r_missing_data
@@ -840,7 +840,7 @@ c w/e sides
             endif
          enddo
 c s/n sides
-         do i=2,nx-1
+         do i=1,nx
             if(ps(i,1).le.p(k+1)) then
                t(i,1,k)=r_missing_data
                u(i,1,k)=r_missing_data
@@ -866,7 +866,7 @@ c western boundary
                ucnt=0
                vcnt=0
                jp=1
-               if(j.ne.ny.or.j.ne.1)jp=0
+               if(j.eq.ny.or.j.eq.1)jp=0
                if(ps(1,j+jp).gt.p(k))then
                   if(t(1,j+jp,k).ne.r_missing_data)then
                      tsum=t(1,j+jp,k)+tsum
@@ -915,7 +915,6 @@ c western boundary
                else
                   t(1,j,k)=ttemp(1,j,k)
                   iwpt=iwpt+1
-                  iwp(iwpt)=j
                endif
                if(ucnt.gt.0)then
                   u(1,j,k)=usum/float(ucnt)
@@ -931,9 +930,9 @@ c western boundary
                endif
             endif
          enddo
-c        print*,'weird hgt pts on western bndry = ',iwpt
-c        print*,'weird u pts on western bndry = ',uwpt
-c        print*,'weird v pts on western bndry = ',vwpt
+c        print*,'no hgt pts on western bndry for avg = ',iwpt
+c        print*,'no u pts on western bndry for avg = ',uwpt
+c        print*,'no v pts on western bndry for avg = ',vwpt
 c eastern boundary
          iwpt=0
          uwpt=0
@@ -996,7 +995,6 @@ c eastern boundary
                else
                   t(nx,j,k)=ttemp(nx,j,k)
                   iwpt=iwpt+1
-                  iwp(iwpt)=j
                endif
                if(ucnt.gt.0)then
                   u(nx,j,k)=usum/float(ucnt)
@@ -1012,9 +1010,9 @@ c eastern boundary
                endif
             endif
          enddo
-c        print*,'weird pts on eastern bndry = ',iwpt
-c        print*,'weird u pts on eastern bndry = ',uwpt
-c        print*,'weird v pts on eastern bndry = ',vwpt
+c        print*,'no pts on eastern bndry for avg = ',iwpt
+c        print*,'no u pts on eastern bndry for avg = ',uwpt
+c        print*,'no v pts on eastern bndry for avg = ',vwpt
 c southern boundary
          iwpt=0
          do i=1,nx
@@ -1075,7 +1073,6 @@ c southern boundary
                else
                   t(i,1,k)=ttemp(i,1,k)
                   iwpt=iwpt+1
-                  iwp(iwpt)=j
                endif
                if(ucnt.gt.0)then
                   u(i,1,k)=usum/float(ucnt)
@@ -1091,9 +1088,9 @@ c southern boundary
                endif
             endif
          enddo
-c        print*,'weird hgt pts on southern bndry = ',iwpt
-c        print*,'weird u pts on southern bndry = ',uwpt
-c        print*,'weird v pts on southern bndry = ',vwpt
+c        print*,'no hgt pts on southern bndry for avg = ',iwpt
+c        print*,'no u pts on southern bndry for avg = ',uwpt
+c        print*,'no v pts on southern bndry for avg = ',vwpt
 c northern boundary
          iwpt=0
          uwpt=0
@@ -1155,7 +1152,6 @@ c northern boundary
                else
                   t(i,ny,k)=ttemp(i,ny,k)
                   iwpt=iwpt+1
-                  iwp(iwpt)=j
                endif
                if(ucnt.gt.0)then
                   u(i,ny,k)=usum/float(ucnt)
@@ -1171,9 +1167,9 @@ c northern boundary
                endif
             endif
          enddo
-c        print*,'weird hgt pts on northern bndry = ',iwpt
-c        print*,'weird u pts on northern bndry = ',uwpt
-c        print*,'weird v pts on northern bndry = ',vwpt
+c        print*,'no hgt pts on northern bndry for avg = ',iwpt
+c        print*,'no u pts on northern bndry for avg = ',uwpt
+c        print*,'no v pts on northern bndry for avg = ',vwpt
 c        print*,'--------------------------------------'
 c        print*
       enddo
@@ -1188,7 +1184,7 @@ c
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,ibnd(nx,ny,nz)
      .         ,nzm1,nxm2,nym2
      .         ,isv,jsv,ksv
@@ -1417,7 +1413,7 @@ c        time difference.
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,i,j,k
 c
@@ -1470,7 +1466,7 @@ c *** Fthree computes a/tau (h) and rhs terms in eqn. (3).
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,i,j,k,is,js,ks
 c
       real*4 f3(nx,ny,nz),h(nx,ny,nz)
@@ -1536,7 +1532,7 @@ c *** Leibp3 performs 3-d relaxation.
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,ittr
      .         ,i,j,k,it,itmax,ia
@@ -1656,7 +1652,7 @@ c
 c
       implicit none
 c
-      integer*4 nx,ny,nz,i,j,k
+      integer   nx,ny,nz,i,j,k
 c
       real*4 a(nx,ny,nz)
 c_______________________________________________________________________________
@@ -1681,7 +1677,7 @@ c *** Leib performs 2-d relaxation.
 c
       implicit none
 c
-      integer*4 nx,ny,nz
+      integer   nx,ny,nz
      .         ,nxm1,nym1,nzm1
      .         ,lpress,ittr,itmax,ia
      .         ,i,j,k,kk,it
@@ -1778,58 +1774,6 @@ c
 c
 c===============================================================================
 c
-      subroutine file(i4time,x,nx,ny,nz,ext)
-c
-      implicit none
-c
-      integer*4 i4time,nx,ny,nz,istatus
-c
-      real*4 x(nx,ny,nz)
-c
-      character*3 ext
-      character*9 gtime
-c_______________________________________________________________________________
-c
-      call make_fnam_gq(i4time,gtime,istatus)
-      if (istatus .ne. 0) then
-         print *,'Error converting i4time to file name...save aborted.'
-         return
-      endif
-c
-      open(1,file=gtime//'.'//ext,status='new',form='unformatted')
-      write(1) x
-      close(1)
-c
-      return
-      end
-c
-c===============================================================================
-c
-      subroutine fetch(i4time,x,nx,ny,nz,ext)
-c
-      implicit none
-c
-      integer*4 i4time,nx,ny,nz,istatus
-c
-      real*4 x(nx,ny,nz)
-c
-      character*3 ext
-      character*9 gtime
-c_______________________________________________________________________________
-c
-      call make_fnam_gq(i4time,gtime,istatus)
-      if (istatus .ne. 0) then
-         print *,'Error converting i4time to file name...fetch aborted.'
-         return
-      endif
-c
-      open(1,file=gtime//'.'//ext,status='old',form='unformatted')
-      read(1) x
-      close(1)
-c
-      return
-      end
-
       Subroutine balstagger(u,v,om,phi,t,nx,ny,nz,
      &                      wr1,wr2,wr3,p,idstag)
 c
