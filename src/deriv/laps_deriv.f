@@ -29,6 +29,20 @@ cdis
 cdis
 cdis
 cdis
+
+!                   S. Albers - Original Version
+
+!       1997 Jul 31 K. Dritz  - Added call to get_grid_dim_xy to get the
+!                               values of NX_L, NY_L.
+!       1997 Jul 31 K. Dritz  - Now pass NX_L, NY_L as arguments to laps_cloud.
+!       1997 Jul 31 K. Dritz  - Added call to get_meso_sao_pirep to get the
+!                               value of N_PIREP, which is passed to
+!                               laps_cloud.
+!       1997 Jul 31 K. Dritz  - Added call to get_maxstns, and pass the value
+!                               of maxstns to laps_cloud.
+!       1997 Jul 31 K. Dritz  - Compute max_cld_snd as maxstns + N_PIREP and
+!                               pass to laps_cloud.
+
         integer*4 j_status(20),iprod_number(20),i4time_array(20)
         character*9 a9_time
 
@@ -45,7 +59,38 @@ cdis
 
         isplit = 3
 
-	call laps_cloud(i4time,
+        call get_grid_dim_xy(NX_L,NY_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting horizontal domain dimensions'
+           go to 999
+        endif
+
+        call get_laps_dimensions(NZ_L,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting vertical domain dimension'
+           go to 999
+        endif
+
+        call get_meso_sao_pirep(N_MESO,N_SAO,N_PIREP,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting N_PIREP'
+           go to 999
+        endif
+
+        call get_maxstns(maxstns,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting maxstns'
+           go to 999
+        endif
+
+        max_cld_snd = maxstns + N_PIREP
+          
+        call laps_cloud(i4time,
+     1                  NX_L,NY_L,
+     1                  NZ_L,
+     1                  N_PIREP,
+     1                  maxstns,
+     1                  max_cld_snd,
      1                  i_diag,
      1                  n_prods,
      1                  iprod_number,

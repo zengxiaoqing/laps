@@ -30,6 +30,11 @@ cdis
 cdis
 
         subroutine laps_cloud(i4time,
+     1                        NX_L,NY_L,
+     1                        NZ_L,
+     1                        N_PIREP,
+     1                        maxstns,
+     1                        max_cld_snd,
      1                        i_diag,
      1                        n_prods,
      1                        iprod_number,
@@ -65,12 +70,36 @@ cdis
 !       1996 Aug 22 S. Albers - Now calls read_radar_3dref
 !       1996 Oct 10 S. Albers - Max SAO cloud cover is now 1.00 + some other
 !                               misc cleanup.
-
-        include 'lapsparms.for'
-        parameter (IX_LOW  = 1    - I_PERIMETER)
-        parameter (IX_HIGH = NX_L + I_PERIMETER)
-        parameter (IY_LOW  = 1    - I_PERIMETER)
-        parameter (IY_HIGH = NY_L + I_PERIMETER)
+!       1997 Jul 31 K. Dritz  - Removed include of lapsparms.for.
+!       1997 Jul 31 K. Dritz  - Added call to get_i_perimeter.
+!       1997 Jul 31 K. Dritz  - Removed PARAMETER statements for IX_LOW,
+!                               IX_HIGH, IY_LOW, and IY_HIGH, and instead
+!                               compute them dynamically (they are not used
+!                               as array bounds, only passed in a call).
+!       1997 Jul 31 K. Dritz  - Added NX_L, NY_L as dummy arguments.
+!       1997 Jul 31 K. Dritz  - Added call to get_r_missing_data.
+!       1997 Jul 31 K. Dritz  - Removed PARAMETER statements for default_base,
+!                               default_top, and default_ceiling, and instead
+!                               compute them dynamically.
+!       1997 Jul 31 K. Dritz  - Removed PARAMETER statement for Nhor.  Now
+!                               initialize c1_name_array dynamically instead
+!                               of with a DATA statement.
+!       1997 Jul 31 K. Dritz  - Added NZ_L as dummy argument.
+!       1997 Jul 31 K. Dritz  - Added N_PIREP, maxstns, and max_cld_snd as
+!                               dummy arguments.  Removed the PARAMETER
+!                               statement for max_cld_snd.
+!       1997 Jul 31 K. Dritz  - Changed LAPS_DOMAIN_FILE to 'nest7grid'.
+!       1997 Jul 31 K. Dritz  - Added call to get_ref_base.
+!       1997 Aug 01 K. Dritz  - Compute NX_DIM_LUT, NY_DIM_LUT, and n_fnorm as
+!                               they were previously computed in barnes_r5.
+!       1997 Aug 01 K. Dritz  - Added NX_DIM_LUT, NY_DIM_LUT, IX_LOW, IX_HIGH,
+!                               IY_LOW, IY_HIGH, and n_fnorm as arguments in
+!                               call to barnes_r5.
+!       1997 Aug 01 K. Dritz  - Added maxstns, IX_LOW, IX_HIGH, IY_LOW, and
+!                               IY_HIGH as arguments in call to insert_sao.
+!       1997 Aug 01 K. Dritz  - Also now pass r_missing_data to barnes_r5.
+!       1997 Aug 01 K. Dritz  - Pass r_missing_data to insert_sat.
+!       1997 Aug 01 K. Dritz  - Pass ref_base to rfill_evap.
 
 !       Prevents clearing out using satellite (hence letting SAOs dominate)
 !       below this altitude (M AGL)
@@ -81,9 +110,6 @@ cdis
      1                   ,default_ceiling
 
         parameter       (thresh_cvr = 0.65) ! Used to "binaryize" cloud cover
-        parameter       (default_base     = r_missing_data)
-        parameter       (default_top      = r_missing_data)
-        parameter       (default_ceiling  = r_missing_data)
 
         parameter       (default_clear_cover = .01)
 
@@ -138,12 +164,6 @@ cdis
         integer*4 iarg
 
         equivalence (cld_hts,cld_hts_new)
-
-        integer*4 Nhor
-        parameter (Nhor = NX_L*NY_L)
-
-        integer*4 max_cld_snd
-        Parameter (max_cld_snd = maxstns + N_PIREP)
 
         REAL*4 cldcv1(NX_L,NY_L,KCLOUD)
         REAL*4 cf_modelfg(NX_L,NY_L,KCLOUD)
@@ -231,7 +251,6 @@ cdis
         logical l_unresolved(NX_L,NY_L)
 
         character*1 c1_name_array(NX_L,NY_L)
-        data c1_name_array /nhor*' '/
         character*9 filename
 
         character*35 TIME
@@ -311,6 +330,48 @@ cdis
 
         write(6,*)' Welcome to the LAPS gridded cloud analysis'
 
+        call get_i_perimeter(I_PERIMETER,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error calling get_i_perimeter'
+           stop
+        endif
+
+        IX_LOW  = 1    - I_PERIMETER
+        IX_HIGH = NX_L + I_PERIMETER
+        IY_LOW  = 1    - I_PERIMETER
+        IY_HIGH = NY_L + I_PERIMETER
+
+        NX_DIM_LUT = NX_L + I_PERIMETER - 1
+        NY_DIM_LUT = NY_L + I_PERIMETER - 1
+
+        call get_r_missing_data(r_missing_data,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error calling get_r_missing_data'
+           stop
+        endif
+
+        default_base     = r_missing_data
+        default_top      = r_missing_data
+        default_ceiling  = r_missing_data
+
+        do j = 1,NY_L
+           do i = 1,NX_L
+              c1_name_array(i,j) = ' '
+           enddo
+        enddo
+
+        call get_ref_base(ref_base,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error getting ref_base'
+           stop
+        endif
+
+!     This should work out to be slightly larger than needed
+      n_fnorm =
+!       1     2   * (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
+     1      1.6 * ( (NX_DIM_LUT*NX_DIM_LUT) + (NY_DIM_LUT*NY_DIM_LUT) )
+
+
 c Determine the source of the radar data
         c_vars_req = 'radarext_3d'
 
@@ -329,7 +390,7 @@ c Determine the source of the radar data
         write(6,*)' radarext_3d_cloud = ',radarext_3d_cloud
 
 c read in laps lat/lon and topo
-        call get_laps_domain_95(NX_L,NY_L,LAPS_DOMAIN_FILE,lat,lon,topo
+        call get_laps_domain_95(NX_L,NY_L,'nest7grid',lat,lon,topo
      1           ,rlaps_land_frac,grid_spacing_m,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error getting LAPS domain'
@@ -544,7 +605,7 @@ C READ IN AND INSERT SAO DATA
      1  ,n_obs_pos_b,lat_s,lon_s,c_stations    ! returned for precip type comp
      1  ,wx_s,t_s,td_s,obstype                 !    "      "    "     "
      1  ,elev_s                                ! ret for comparisons
-     1                                                  ,istat_sfc)
+     1  ,istat_sfc,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
         if(istat_sfc .ne. 1)then
             write(6,*)' No SAO data inserted: Aborting cloud analysis'
@@ -579,8 +640,9 @@ C DO ANALYSIS on SAO and PIREP data
         write(6,*)' Analyzing SAO and PIREP data'
         call barnes_r5(clouds_3d,NX_L,NY_L,KCLOUD,cldcv1,wtcldcv,cf_mode
      1lfg
-     1  ,l_perimeter,cld_snd,wt_snd
-     1        ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus)
+     1  ,l_perimeter,cld_snd,wt_snd,r_missing_data
+     1  ,grid_spacing_m,i_snd,j_snd,n_cld_snd,max_cld_snd,istatus
+     1  ,NX_DIM_LUT,NY_DIM_LUT,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH,n_fnorm)
         if(istatus .ne. 1)then
             write(6,*)' Bad status from barnes_r5, aborting cloud analys
      1is'
@@ -632,7 +694,7 @@ C READ IN SATELLITE DATA
      1        cloud_frac_co2_a,rlaps_land_frac,
      1        topo,heights_3d,temp_3d,t_sfc_k,t_gnd_k,sst_k,pres_sfc_pa,       
      1        dum_3d,cldtop_m_co2,cldtop_m_tb8,cldtop_m,cvr_snow,
-     1        NX_L,NY_L,KCLOUD,NZ_L,istatus)
+     1        NX_L,NY_L,KCLOUD,NZ_L,istatus,r_missing_data)
 
         if(istatus .ne. 1)then
             write(6,*)' Bad status returned from insert_sat'
@@ -1247,7 +1309,7 @@ C       EW SLICES
                 call rfill_evap(radar_ref_3d,NX_L,NY_L,NZ_L,.true.,.true
      1.
      1          ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
-     1          ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus)
+     1          ,temp_3d,rh_3d_pct,cldpcp_type_3d,istatus,ref_base)
 
                 I4_elapsed = ishow_timer()
 
@@ -1736,7 +1798,8 @@ C       EW SLICES
      1d
      1                                          ,ni,nj,nk,istatus)
 
-        include 'lapsparms.for'
+!       1997 Jul 31 K. Dritz  - Removed include of lapsparms.for, which was
+!                               not actually needed for anything.
 
         character*50 DIRECTORY
         character*31 ext
