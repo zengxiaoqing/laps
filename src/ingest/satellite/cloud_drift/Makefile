@@ -20,7 +20,8 @@ EXE = ingest_cloud_drift.exe
 SRC=ingest_cloud_drift.f  \
     cloud_drift_sub.f  \
     cloud_drift_sub_af.f \
-    cloud_drift_sub_cwb.f
+    cloud_drift_sub_cwb_hdsw.f \
+    cloud_drift_sub_cwb_satob.f 
 
 all: exe
 

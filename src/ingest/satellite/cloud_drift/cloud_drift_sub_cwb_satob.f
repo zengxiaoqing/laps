@@ -1,12 +1,12 @@
-      subroutine get_cloud_drift_cwb (i4time_sys, i4_window, nx_l, ny_l,     
-     ~                                filename, istatus)
+      subroutine get_cloud_drift_cwb_satob 
+     ~           (i4time_sys, i4_window, nx_l, ny_l, filename, istatus)     
 
-      parameter ( loopNum=30 )
+      parameter ( loopNum=35 )
 
       character*(*)  filename
-      character*9    a9timeObs(loopNum), a10_to_a9
       character*3    reportFlag
       character*2    yy, mo, dd, hh, mn
+      character*9    a9timeObs(loopNum), a10_to_a9
       character*10   time
 
       real  lat_a(nx_l,ny_l), lon_a(nx_l,ny_l), topo_a(nx_l,ny_l)
@@ -22,19 +22,19 @@
       endif
 
       recNum= 0
-      inNum= 0       !     inNum : the record number within time window
+      inNum= 0              !  inNum : the record number within time window
       istatus= 0
 
       open ( 1, file=filename, status='old', err=1000 )
-      open ( 2, file='err', err=1000 )
 
       istatus= 1
 
       do i= 1,loopNum
-         read (1,40,err=8,end=99) reportFlag, yy, mo, dd, hh, mn
+         read (1,40,end=99,err=8) reportFlag, yy, mo, dd, hh, mn
 
          if ( reportFlag .ne. '*61' )  then
-            write (6,*) 'read satob code heading error'
+            write (6,*) 'Error reading satob code heading ', reportFlag
+	    read (1,*)
             go to 10
          endif
 
@@ -63,18 +63,18 @@ c          ----------    test if raob is within time window    ----------
      ~                  pressure(inNum), pressureQua(inNum),      
      ~                  windDir(inNum), windSpeed(inNum), windQua(inNum)
          else
-            write (6,*) 'Outside time window -reject ', 
-     ~                  a9timeObs(i), i4_window
+            write (6,*) 'Outside time window -reject ', time, i4_window
 	    read (1,*)
          endif
          go to 10
 
-8        write (2,*) 'Error reading actual time of satob code ',
+8        write (6,*) 'Error reading actual time of satob code ',
      ~               reportFlag, yy, mo, dd, hh, mn
+	 read (1,*)
 	 go to 10
 
-9        write (*,*) 'Error reading variables of satob code '
-         write (*,*) latitude(inNum), longitude(inNum),
+9        write (6,*) 'Error reading variables of satob code '
+         write (6,*) latitude(inNum), longitude(inNum),
      ~               pressure(inNum), pressureQua(inNum),
      ~               windDir(inNum), windSpeed(inNum), windQua(inNum)
 
@@ -84,7 +84,7 @@ c          ----------    test if raob is within time window    ----------
 40    format ( a3, 21x, 5a2 )
 50    format ( 2f4.1, 2x, f3.0, i1, 4x, 2f3.0, i1 )
 
-c      ----------       examing data quality and changing units       ---------
+c      ----------       examine data quality and change units       ---------
 99    do 100 i= 1,inNum
          if ( pressureQua(i) .eq. 1 )  then
 	    pressure(i)= pressure(i) *100.          !  unit: mb --> hpa

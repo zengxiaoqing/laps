@@ -39,6 +39,8 @@
 #
 # -t                   override default purge time expressed in days
 #
+# -s                   runs surface (all LSX variables) and 3-D wind analyses only
+#
 # second to last arg   $LAPSINSTALLROOT, one level above bin directory
 #
 # last arg             $LAPS_DATA_ROOT, path to data directory
@@ -47,11 +49,11 @@
               
 use strict;
 use English;
-use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w);
+use vars qw($opt_d $opt_c $opt_a $opt_r $opt_m $opt_t $opt_e $opt_q $opt_w $opt_s);
 use Getopt::Std;
 
 umask 002;
-getopts('d:c:a:rm:t:e:qw');
+getopts('d:c:a:rm:t:e:qws');
 
 my $initial_time = time();
 #
@@ -59,7 +61,19 @@ my $initial_time = time();
 # be executed.
 #
 
-my @LAPS_EXE = qw(lga.exe 
+my @LAPS_EXE;
+
+if($opt_s){ # "surface only"
+    @LAPS_EXE = qw(lga.exe 
+                  ingest_pro.exe obs_driver.x 
+                  ingest_sounding.exe 
+                  ingest_cloud_drift.exe ingest_aircraft.exe 
+		  wind.exe 
+                  ingest_lrs.exe lvd_sat_ingest.exe 
+                  laps_sfc.x);
+
+}else{      # Full product set
+    @LAPS_EXE = qw(lga.exe 
                   ingest_pro.exe obs_driver.x 
                   ingest_sounding.exe 
                   ingest_cloud_drift.exe ingest_aircraft.exe 
@@ -68,6 +82,7 @@ my @LAPS_EXE = qw(lga.exe
                   laps_sfc.x laps_pbl.x temp.exe 
                   cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe qbalpe.exe lapsprep.exe);
+}
 
 my $LAPSROOT=shift || die "LAPS root directory required\n";
 require "$LAPSROOT/etc/fxa.pm";
@@ -231,7 +246,7 @@ foreach $exe (@LAPS_EXE){
                 print $t." Opening $LAPS_LOG_PATH/run_qsub_$scriptcount.sh starting with executable # $execount\n";
                 open(TFILE,">$LAPS_LOG_PATH/run_qsub_$scriptcount.sh");
                 print TFILE "#!/bin/sh\n";
-                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=60:00\n";
+                print TFILE "#PBS -lnodes=$nodes_current:comp,walltime=60:00 -A oplapb\n";
                 print TFILE "  \n";
 
                 if($nodes_current > 1){

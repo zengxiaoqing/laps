@@ -19,13 +19,14 @@
       real  tempDewDiff(loopNum,levelNum), dewpoint(loopNum,levelNum)
       real  windDir(loopNum,levelNum), windSpeed(loopNum,levelNum)
 
-      integer recNum, inNum, jumpNum, logicRecNum, wmoIdDummy
       integer wmoId(loopNum), layerNum(loopNum)
-      integer heightQua(loopNum,levelNum),dewpointQua(loopNum,levelNum)       
+      integer heightQua(loopNum,levelNum), dewpointQua(loopNum,levelNum)       
       integer temperatureQua(loopNum,levelNum),windQua(loopNum,levelNum)
+      integer recNum, inNum, jumpNum, logicRecNum
+      integer d(12), wmoIdDummy, dupliStation
 
-      integer  d(12)
-      data     d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
+      data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
+      data  dupliStation / 58968 /
 
       call get_r_missing_data(r_missing_data,istatus)
       if ( istatus .ne. 1 ) then
@@ -52,6 +53,8 @@
      ~          ' Error reading sounding data of identification -reject'
 	    write (6,*) reportFlag, wmoIdDummy
             go to 40
+         elseif ( wmoIdDummy .eq. dupliStation )  then
+	    go to 40
          endif
 
 c               ------ creat a9time in yydddhhmm format ------

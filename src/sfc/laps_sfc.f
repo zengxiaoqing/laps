@@ -716,6 +716,11 @@ c.....	Call LAPSVANL to do the actual variational analysis, and calculate
 c.....	derived variables, etc.  The output file goes to the lapsprd 
 c.....	directory (machine dependent) and has the extension '.lsx'.
 c
+c       Units at this stage are: p  in mb
+c                                t  in F
+c                                td in F
+c                                u  in kt
+c                                v  in kt
 	call laps_vanl(i4time,filename,ni,nj,nk,mxstn,
      &     itheta,redp_lvl,laps_cycle_time,
      &     dt,del,gam,ak,lat,lon,topo,ldf,grid_spacing, laps_domain,

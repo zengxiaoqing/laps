@@ -557,7 +557,7 @@ c
 	bad_tm = bad_t
 	if(back_t .ne. 1) bad_tm = bad_t * 2.
 	print *,' '
-	print *,'  At spline call for t'
+	print *,'  At spline call for t (F)'
 
  7119	format(2i5,f10.2)
 
@@ -581,7 +581,7 @@ c	beta_td = 3.0
 !	write(6,19998) beta_td
 19998	format(' Using beta_td of: ',f10.2)
 	print *,' '
-	print *,'  At spline call for td'
+	print *,'  At spline call for td (F)'
 	bad_tmd = bad_td
 	if(back_t .ne. 1) bad_tmd = bad_td * 2.
 	alf = 10000.
@@ -722,7 +722,7 @@ c..... Call the solution algorithm for the rest of the fields.
 c..... Note: 'gamma' (satellite weight) is zero for these.
 c
 	print *,' '
-	print *,'  At spline call for u'
+	print *,'  At spline call for u (kt)'
 	bad_uw = bad_u
 	if(back_uv .ne. 1) bad_uw = bad_u * 2.
 	alf = 10000.
@@ -732,7 +732,7 @@ c
      &        roi,bad_uw,imiss,mxstn,obs_error_wind,name)
 c
 	print *,' '
-	print *,'  At spline call for v'
+	print *,'  At spline call for v (kt)'
 	bad_vw = bad_v
 	if(back_uv .ne. 1) bad_vw = bad_v * 2.
 	alf = 10000.
@@ -742,7 +742,7 @@ c
      &        roi,bad_vw,imiss,mxstn,obs_error_wind,name)
 c
 	print *,' '
-	print *,'  At spline call for red_p'
+	print *,'  At spline call for red_p (mb)'
 	bad_rp = bad_p
 	if(back_rp .ne. 1) bad_rp = bad_p * 2.
 	alf = 10000.
@@ -752,7 +752,7 @@ c
      &        jmax,roi,bad_rp,imiss,mxstn,obs_error_redp,name)
 c
 	print *,' '
-	print *,'  At spline call for msl p'
+	print *,'  At spline call for msl p (mb)'
 cc	if(back_mp .ne. 1) bad_mp = bad_p * 2.
 	alf = 10000.
 	alf2a = 0.
@@ -765,7 +765,7 @@ c
      1                ,sp_bk,psfc)       
 
 	print *,' '
-	print *,'  At spline call for visibility'
+	print *,'  At spline call for visibility (log)'
 	bad_vs = bad_vis
 	if(back_vis .ne. 1) bad_vs = bad_vis * 2.
 	alf = 10000.

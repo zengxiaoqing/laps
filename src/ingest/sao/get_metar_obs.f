@@ -452,16 +452,26 @@ c
 c
 	    if(cvr(ii,i)(1:3) .eq. 'SKC') then
 	       ht(ii,i) = 22500.0    ! Manual Ob
+
 	    elseif(cvr(ii,i)(1:3) .eq. 'CLR') then
 	       ht(ii,i) = 3657.4     ! Automatic Ob
-            else                     ! Check for bad height
-               if(ht(ii,i) .gt. 17000.0) then
+
+            elseif(ht(ii,i) .gt. 17000.0) then ! Check for bad height
+               write(6,*)' WARNING in get_metar_obs: '      
+     1                   ,' reject cloud ob, height = '
+     1                   ,ht(ii,i),stname(i)
+               ht(ii,i) = badflag
+               k_layers = 0
+
+            elseif(ii .ge. 2)then              ! Check for out of order heights
+               if(ht(ii,i) .lt. ht(ii-1,i))then 
                    write(6,*)' WARNING in get_metar_obs: '      
-     1                      ,' reject cloud ob, height = '
-     1                      ,ht(ii,i),stname(i)
+     1                      ,' reject cloud ob, out of order heights = '       
+     1                      ,ht(ii-1,i),ht(ii,i),stname(i)
                    ht(ii,i) = badflag
                    k_layers = 0
                endif
+
 	    endif
 
 	  enddo !ii

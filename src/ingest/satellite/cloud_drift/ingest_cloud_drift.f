@@ -105,6 +105,20 @@
      1                           ,i4times,i_nbr_files_ret
      1                           ,istatus)
 
+          elseif(cloud_drift_format(ipath) .eq. 'CWB_SATOB')then
+              lag_time_report = 3600
+
+              call get_file_times(c_filespec,max_files,c_fnames
+     1                           ,i4times,i_nbr_files_ret
+     1                           ,istatus)
+
+          elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then
+              lag_time_report = 0
+
+              call get_file_times(c_filespec,max_files,c_fnames
+     1                           ,i4times,i_nbr_files_ret
+     1                           ,istatus)
+
           else
               write(6,*)' ERROR, unknown cloud_drift_format '
      1                 ,cloud_drift_format(ipath)
@@ -142,9 +156,14 @@
      1                                          ,NX_L,NY_L
      1                                          ,filename_in,istatus)
 
-                  elseif(cloud_drift_format(ipath) .eq. 'CWB')then       
-                      call get_cloud_drift_cwb(i4time_sys,i4_window
-     1                                          ,NX_L,NY_L
+                  elseif(cloud_drift_format(ipath) .eq. 'CWB_SATOB')then
+                      call get_cloud_drift_cwb_satob(i4time_sys
+     1                                          ,i4_window,NX_L,NY_L
+     1                                          ,filename_in,istatus)
+
+                  elseif(cloud_drift_format(ipath) .eq. 'CWB_HDSW')then        
+                      call get_cloud_drift_cwb_hdsw(i4time_sys
+     1                                          ,i4_window,NX_L,NY_L
      1                                          ,filename_in,istatus)
                   else
                       write(6,*)' ERROR, unknown cloud_drift_format '       
