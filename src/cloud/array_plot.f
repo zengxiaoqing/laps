@@ -37,8 +37,9 @@ cdis
 !     1997 Aug 01 K. Dritz  - Changed NX_L to imax and NY_L to jmax
 !     1997 Aug 01 K. Dritz  - Removed include of lapsparms.for
 !     1997 Oct    S. Albers - Make plots work with variable domain sizes.
-
-      dimension a(imax,jmax),b(imax,jmax),ia(imax,jmax)
+      integer imax, jmax
+      real a(imax,jmax),b(imax,jmax)
+      integer ia(imax,jmax)
       character*1 c1a_array(imax,jmax),c1b_array(imax,jmax)
       character*1 name_array(imax,jmax)
       real*4 cld_hts(kmax)
@@ -129,14 +130,16 @@ c find max and min
               write(6,1001)iarg,
      1                     (c1a_array(i,j),i=1,ihigh,iskip),
      1                     (c1b_array(i,j),i=1,ihigh,iskip)
- 1001         FORMAT(1X,i6,2x,<nplot>A1,4x,<nplot>A1)
+cc 1001         FORMAT(1X,i6,2x,<nplot>A1,4x,<nplot>A1)
+ 1001         FORMAT(1X,i6,2x,65A1,4x,65A1)
           enddo ! j
 
       elseif(NAME(1:4) .eq. 'HORZ')then ! Horizontal array plot
           do j = jmax,1,-jskip
               write(6,1002)(c1a_array(i,j),i=1,ihigh,iskip),
      1                     (c1b_array(i,j),i=1,ihigh,iskip)
- 1002         FORMAT(1X,<nplot>A1,<nspace>x,<nplot>A1)
+ccc 1002         FORMAT(1X,<nplot>A1,<nspace>x,<nplot>A1)
+ 1002         FORMAT(1X,65A1,1x,65A1)
           enddo ! j
 
       endif

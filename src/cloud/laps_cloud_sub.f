@@ -41,7 +41,7 @@ cdis
      1                        isplit,
      1                        j_status)
 
-        integer*4       ss_normal,sys_bad_prod,sys_no_data,
+        integer       ss_normal,sys_bad_prod,sys_no_data,
      1                  sys_abort_prod
 
         parameter (ss_normal      =1, ! success
@@ -161,7 +161,7 @@ cdis
      37000.,7500.,8000.,8500.,9000.,9500.,10000.,11000.,12000.,
      413000.,14000.,15000.,16000.,17000.,18000.,19000.,20000./
 
-        integer*4 iarg
+        integer iarg
 
         equivalence (cld_hts,cld_hts_new)
 
@@ -171,14 +171,14 @@ cdis
 
         real*4 clouds_3d(NX_L,NY_L,KCLOUD)
 
-        integer*4 ista_snd(max_cld_snd)
+        integer ista_snd(max_cld_snd)
         real*4 cld_snd(max_cld_snd,KCLOUD)
         real*4 wt_snd(max_cld_snd,KCLOUD)
         real*4 cvr_snd(max_cld_snd)
-        integer*4 i_snd(max_cld_snd)
-        integer*4 j_snd(max_cld_snd)
+        integer i_snd(max_cld_snd)
+        integer j_snd(max_cld_snd)
 
-        integer*4 ihist_alb(-10:20)
+        integer ihist_alb(-10:20)
 
         real*4 cloud_top(NX_L,NY_L)
         real*4 cloud_base(NX_L,NY_L)
@@ -215,9 +215,9 @@ cdis
 !       real*4 lwc_res_3d(NX_L,NY_L,NZ_L)
         real*4 w_3d(NX_L,NY_L,NZ_L)
 
-        integer*2 icing_index_3d(NX_L,NY_L,NZ_L)
+        integer icing_index_3d(NX_L,NY_L,NZ_L)
 
-        integer*2 cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
+        integer cldpcp_type_3d(NX_L,NY_L,NZ_L) ! Also contains 3D precip type
 
 !       Output array declarations (equivalences are used to share space)
         real*4 out_array_4d(NX_L,NY_L,NZ_L,3)
@@ -237,7 +237,7 @@ cdis
         character*3 c3_pt_flag
         character*1 c1_r,c1_s
 
-        integer*2 i2_pcp_type_2d(NX_L,NY_L)
+        integer i2_pcp_type_2d(NX_L,NY_L)
         real*4 r_pcp_type_2d(NX_L,NY_L)
 
         real*4 dum1_array(NX_L,NY_L)
@@ -247,8 +247,8 @@ cdis
 
       ! Used for "Potential" Precip Type
         logical l_mask_pcptype(NX_L,NY_L)
-        integer*2 ibase_array(NX_L,NY_L)
-        integer*2 itop_array(NX_L,NY_L)
+        integer ibase_array(NX_L,NY_L)
+        integer itop_array(NX_L,NY_L)
 
         logical l_unresolved(NX_L,NY_L)
 
@@ -258,7 +258,7 @@ cdis
         character*35 TIME
         character*13 filename13
 
-        integer*4 MAX_FIELDS
+        integer MAX_FIELDS
         parameter (MAX_FIELDS = 10)
 
         character*255 c_filespec
@@ -295,12 +295,12 @@ cdis
         real*4 pstn_s(maxstns),pmsl_s(maxstns),alt_s(maxstns)
         real*4 store_hgt(maxstns,5),ceil(maxstns),lowcld(maxstns)
         real*4 cover_a(maxstns),rad_s(maxstns)
-        integer*4 obstime(maxstns),kloud(maxstns),idp3(maxstns)
+        integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
         character wx_s(maxstns)*8, obstype(maxstns)*8
         character atime*24, infile*70
 
-        integer*4 STATION_NAME_LEN
+        integer STATION_NAME_LEN
         parameter (STATION_NAME_LEN = 3)                   
         character c_stations(maxstns)*(STATION_NAME_LEN)    
 
@@ -309,7 +309,7 @@ cdis
         real*4 ri_s(maxstns), rj_s(maxstns)
 
 !       Product # notification declarations
-        integer*4 j_status(20),iprod_number(20)
+        integer j_status(20),iprod_number(20)
 
 !       Stuff for 2d fields
         real*4 ref_mt_2d(NX_L,NY_L)
@@ -1091,7 +1091,7 @@ C       EW SLICES
         subroutine put_clouds_2d(i4time,DIRECTORY,ext,imax,jmax
      1                          ,field_2dcloud,istatus)
 
-        integer*4  nfields
+        integer  nfields
         parameter (nfields = 3)
 
         character*(*) DIRECTORY
@@ -1100,7 +1100,7 @@ C       EW SLICES
         character*125 comment_2d(nfields)
         character*10 units_2d(nfields)
         character*3 var_2d(nfields)
-        integer*4 LVL,LVL_2d(nfields)
+        integer LVL,LVL_2d(nfields)
         character*4 LVL_COORD,LVL_COORD_2d(nfields)
 
         real*4 field_2dcloud(imax,jmax,nfields)
@@ -1144,13 +1144,13 @@ C       EW SLICES
         character*150 DIRECTORY
         character*31 ext
 
-        integer*4 NZ_CLOUD_MAX
+        integer NZ_CLOUD_MAX
         parameter (NZ_CLOUD_MAX = 42)
 
         character*125 comment_3d(NZ_CLOUD_MAX),comment_2d
         character*10 units_3d(NZ_CLOUD_MAX),units_2d
         character*3 var_3d(NZ_CLOUD_MAX),var_2d
-        integer*4 LVL_3d(NZ_CLOUD_MAX)
+        integer LVL_3d(NZ_CLOUD_MAX)
         character*4 LVL_COORD_3d(NZ_CLOUD_MAX)
 
         real*4 clouds_3d(ni,nj,nk)
@@ -1450,7 +1450,7 @@ C       EW SLICES
      1        ,t_sfc_k(ni,nj),cvr_max(ni,nj),cvr_sao_max(ni,nj)
 
         real*4 cld_snd(max_cld_snd,KCLOUD)
-        integer*4 ista_snd(max_cld_snd)
+        integer ista_snd(max_cld_snd)
         real*4 cld_hts(KCLOUD)
 
         character c_stations(maxstns)*(*)

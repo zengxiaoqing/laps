@@ -1039,23 +1039,28 @@ c ********************************************************************
       implicit none
       integer countx,county,unit_no,nn1,nn2
       real data(nn1,nn2)
-      integer*2 idata(nn1,nn2)
+      integer idata(nn1,nn2), len
       logical l1,l2
       character*(*) unit_name
 
-      open(unit_no,file=unit_name,status='old',access='direct',
-     . recl=nn2*nn1*2)
-      inquire(unit_no,exist=l1,opened=l2)
-      read(unit_no,rec=1) idata
+C      open(unit_no,file=unit_name,status='old',access='direct',
+C     . recl=nn2*nn1*2)
+C      inquire(unit_no,exist=l1,opened=l2)
+C      read(unit_no,rec=1) idata
+
+      call s_len(unit_name,len) 
+
+      call read_binary_field(idata,2,4,nn1*nn2,unit_name,len)
+
       do county=1,nn2
         do countx=1,nn1
           if (idata(countx,county).eq.-9999) idata(countx,county)=0
            data(countx,county)=float(idata(countx,nn2-county+1))
 c SG97 initial data (DEM format) starts in the lower-left corner;
-c SG97 this format is wrapped around to has upper-left corner as its start.
+c SG97 this format is wrapped around to have upper-left corner as its start.
         enddo
       enddo
-      close(unit_no)
+ccc      close(unit_no)
       return
       end
 
