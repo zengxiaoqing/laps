@@ -259,38 +259,13 @@ c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
           dbz_to_z_lut(i) = z
       enddo ! i
 
-c     These lookup tables flag which gates actually need processing
-      do i = 1,MAX_GATES
-           
-          if(i .le. 920       .and. i .ge. INITIAL_VEL_GATE)then
-              lgate_vel_lut(i) = .true.
-          else
-              lgate_vel_lut(i) = .false.
-          endif
-
-          if(i .eq. (i/4) * 4 .and. i .ge. INITIAL_REF_GATE)then
-              lgate_ref_lut(i) = .true.
-          else
-              lgate_ref_lut(i) = .false.
-          endif
-
-          if(lgate_vel_lut(i) .or. lgate_ref_lut(i))then
-              lgate_lut(i) = .true.
-          else
-              lgate_lut(i) = .false.
-          endif
-
-      enddo ! i
-
+      call lgate_lut_gen()
 
       write(6,850)
   850 format(' REMAP > Lookup Tables Complete')
 
       RETURN
       END
-
-   
-
 
       subroutine read_radar_info(c4_radarname,rlat_radar,rlon_radar
      :                                       ,rheight_radar,istatus)
@@ -332,6 +307,42 @@ c     These lookup tables flag which gates actually need processing
       return
 
  999  istatus = 1
+
+      return
+      end
+
+
+      subroutine lgate_lut_gen()
+
+!     This routine is currently called from 'lut_gen'. We may want to move
+!     the call to 'ld_ray' (closer to where these luts are used) to help 
+!     make things more dynamic and understandable.
+
+      include 'remap_constants.dat'
+      include 'remap.cmn'
+
+c     These lookup tables flag which gates actually need processing
+      do i = 1,MAX_GATES
+           
+          if(i .le. 920       .and. i .ge. INITIAL_VEL_GATE)then
+              lgate_vel_lut(i) = .true.
+          else
+              lgate_vel_lut(i) = .false.
+          endif
+
+          if(i .eq. (i/4) * 4 .and. i .ge. INITIAL_REF_GATE)then
+              lgate_ref_lut(i) = .true.
+          else
+              lgate_ref_lut(i) = .false.
+          endif
+
+          if(lgate_vel_lut(i) .or. lgate_ref_lut(i))then
+              lgate_lut(i) = .true.
+          else
+              lgate_lut(i) = .false.
+          endif
+
+      enddo ! i
 
       return
       end
