@@ -503,7 +503,7 @@ c
           endif
          if(bgtime+ihour*3600.le.i4time_now.and.
      +        bgtime+ihour*3600.gt.last_time) then
-            if(next_time<bigint) then
+            if(next_time.lt.bigint) then
                last_time = bgtime+ihour*3600
                file_list(2) = bg_names(n)
             else
