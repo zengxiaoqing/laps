@@ -1396,115 +1396,95 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
 
  ----- 2.11 ----------LQ3 (HUMIDITY ANALYSIS) CHANGES---------------------
 
-Major Updates (from most recent to oldest mods)
-Last updated: 5/28/99 by Daniel Birkenheuer
+NAMELIST
 
-NAMELIST ISSUES:
+The namelist file ./laps/static/moisture_switch.nl controls the data
+assimilation within the moisture analysis.  This file is
+self-documented, refer to it for details.
 
-  The moisture_switch.txt file was refashioned to a NAMELIST called
-  moisture_switch.nl.  This files contents are basically the same as 
-  the .txt file except with a slight change in format.  It can be hand
-  edited to configure the operation of the moisture analysis if needed.
-  The namelist (moisture_swtich.nl) is self documented, refer to it for 
-  details on usage.
+OPTRAN
 
-April 1997:
+The NESDIS forward radiance model called OPTRAN is incorporated into
+the current release of LAPS.  Details of OPTRAN are available from:
 
-  On the 15th of April an upgrade to enable the moisture analysis to
-  process GOES sounder data was deemed ready for export.  Though this
-  module has not yet been tested with sounder data since that particular
-  data interface will not be ready for approximately another month, the
-  code is ready to accept the data when available.
+Tom Kleespies
+NOAA/NESDIS
+tkleespies@nesdis.noaa.gov
 
-  The main impact to our users is that the moisture switch file under LAPS
-  static must be adjusted to take advantage of this feature.  For the time
-  being the new switch should be (0).  Later when sounder data is routinely
-  available and this module has been checked out, it can be set to (1).
-  This is now the 4th switch in the moisture_switch file.
+Also OPTRAN can be used by any U.S. Government or U.S. Military
+entity without problem.  ALL other users need to contact NESDIS (Tom
+Kleespies) and receive authorization to use this software.  Generally a
+simple acknowledgement to give full credit to the program author is all
+that is required.  FSL assumes no obligation or responsibility in
+integrating this software as part of LAPS.  To disable the use of
+OPTRAN in LAPS, simply assign the GOES option in the moisture_switch.nl
+namelist file to zero.
 
-October 1996:
+The version of OPTRAN in LAPS is configured to work with GOES 8 and 10
+sounder or imager at this time.  Note also that GOES imager channel 3
+(water vapor) is currently not working for both satellites. 
+Furthermore sounder radiances for GOES 10 are deemed about 98%
+reliable, they are 100% reliable for GOES 8.  NaN values have been
+observed being generated from the GOES 10 sounder coefficients that
+currently accompany this software.  At this time there are only basic
+provisions to handle the NaN state conditions.  They have not been
+observed to crash the moisture analysis and seem to be handled
+gracefully to date.  Any observation otherwise needs to be communicated
+to:
 
-   Added a switch for enabling cloud data to be used in saturating the air
-   in cloudy areas. This is included as the last item in the
-   moisture_switch.txt file that is maintained under the static area.  To
-   enable cloud data for saturating the air this is (1) to disable the
-   feature, set the character to (0).
+Dan Birkenheuer
+NOAA/FSL
+birk@fsl.noaa.gov
 
-   You might wonder why we need such a switch.  During October we
-   experienced problems with the cloud analysis.  This was inadvertently
-   causing problems in the moisture analysis through the cloud saturation
-   adjustment.  The incorrect moisture was in turn causing the models to
-   blow up.  Hence we added this switch so that we could easily reactivate
-   the feature once the cloud analysis was repaired without having to worry
-   about recompiling any code.
+To model the atmosphere with OPTRAN, an atmosphere is formulated that
+extends to 0.1 hPa.  This is a composite of the normal LAPS analyzed
+vertical domain (nominally extending to 100 hPa), spliced together with
+a climatological atmosphere of 20 levels that extends to 0.1 hPa.  The
+joining of the two vertical coordinate systems is computed
+automatically and is continuous.  This will automatically take place
+even if the nominal LAPS levels are extended beyond 100 hPa.  In this
+upper region, temperature, and mixing ratio are functions of latitude
+and Julian day.  Ozone is based on the U.S.  Standard Atmosphere.
 
-August 1996:
+CLOUD DATA
 
-   Satellite sounding processing was reestablished in the LAPS moisture
-   processing adapting to the GOES-I series data.  At this time, a journal
-   article is in preparation to fully document this aspect of the analysis.
-   Until this is formally published, a brief summary of the
-   moisture/satellite algorithm is provided at the end of this section.
+Added a switch for enabling cloud data to be used in saturating the air
+in cloudy areas.  This is included as the last item in the
+moisture_switch.nl file that is maintained under the static area.  To
+enable cloud data for saturating the air this is (1) to disable the
+feature, set the character to (0).
 
-   You have the option of running this portion of the software without
-   having to do anything to the code itself.  If you wish to run this code,
-   you will need LVD files (LAPS satellite data files).  In addition you
-   need to verify the SECOND record of the ASCII file
-   ./data/static/moisture_switch.txt contains the numeral 8 or 9.  The
-   numeral 8 signifies to use the GOES-8 coefficients in the forward model,
-   a numeral 9 will cause the software to use the GOES-9 coefficients in
-   the forward model.  It is currently imperative for the user to set this
-   parameter.  Unfortunately, at the time of this writing, the SBN data
-   stream does not contain an indicator of which satellite is used to fill
-   the CONUS frames, therefore the user needs to supply this information
-   and this is the way to do it.
+You might wonder why we need such a switch.  During October (96) we
+experienced problems with the cloud analysis.  This was inadvertently
+causing problems in the moisture analysis through the cloud saturation
+adjustment.  The incorrect moisture was in turn causing the models to
+blow up.  Hence we added this switch so that we could easily reactivate
+the feature once the cloud analysis was repaired without having to
+worry about recompiling any code.
 
-   If you wish to disable the satellite usage, you merely need to edit the
-   "switch" file to contain the numeral 0 as its second record.  Further
-   documentation on what to do is contained at the end of the ASCII file.
-   It should also be noted that the LVD files MUST contain simultaneous
-   data from 6.7, 11, and 12 microns for this algorithm to work.  If one or
-   more bands are lacking the algorithm will gracefully fail.
+RAOB DATA
 
+The capability to ingest RAOB data into the moisture module has been
+available since 1996.
 
+There are two important items to know about:
 
-June 1996
+1) The RAOB data are contained in lapsprd/snd/*.snd files.  The
+moisture module will automatically use .snd data if present.  If you do
+not wish to use sounding data there are 2 ways to exclude these data,
+the most obvious is to not provide .snd files.
 
-   Included the capability to ingest RAOB data into the moisture module.
-   There are two important items to know about:
+2) In the event that you wish to exclude the use of sounding data and
+want them to be present in the data directory (possibly for some other
+application) you can avoid using them in the moisture code by modifying
+the file: ./data/static/moisture_switch.nl
 
-   (1) The RAOB data are contained in lapsprd/snd/*.snd files.  The
-   moisture module will automatically use .snd data if present.  If you do
-   not wish to use sounding data there are 2 ways to exclude these data,
-   the most obvious is to not provide .snd files.
-
-   (2) In the event that you wish to exclude the use of sounding data and
-   want them to be present in the data directory (possibly for some other
-   application) you can avoid using them in the moisture code by modifying
-   the file:
-   ./data/static/moisture_switch.txt
-
-   The first record of this ASCII file is used for the RAOB data inclusion.
-   The file itself is documented internally following the second record.
-   If the first record is "1" (nominal case), the use of sounding data will
-   be on, and .snd files will be processed if present.  If this character
-   is "0", the moisture code will not process sounding data.  Note that
-   this ASCII file is now used for other purposes and that its name has
-   been modified to be more generic (it was formerly used only for RAOB
-   data and named raob_moisture_switch.txt).
-
-April 1996
-
-   Radiometer data is currently unavailable from this laboratory.  The old
-   path to the data was addressed in this humidity include file:
-
-   ./nest7grid/source/humid/get_rad.inc
-
-   path to radiometer data (not a laps file)
-
-   This include file will be removed if and when the prospects of acquiring
-   radiometer data are forever lost.  For now treat this as orphan code, if
-   ignored, it will not cause problems.
+The first record of this ASCII file is used for the RAOB data
+inclusion.  The file itself is documented internally following the
+second record.  If the first record is "1" (nominal case), the use of
+sounding data will be on, and .snd files will be processed if present. 
+If this character is "0", the moisture code will not process sounding
+data.
 
 ------ 2.12 -------------LVD (SATELLITE INGEST) CHANGES------------------------
 
