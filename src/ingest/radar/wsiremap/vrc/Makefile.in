@@ -75,7 +75,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 #	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 #	rm -f *.o $*.f
 
-debug: clean $(ARCHIVE) $(MAIN)
+debug: clean 
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
 
 clean:
