@@ -215,7 +215,7 @@ c     parameter variables
 
         real bias_one
 
-        include 'setup.inc'
+c        include 'setup.inc'
 
 
         real*4 mask (ii,jj),cg(ii,jj,kk)
@@ -363,7 +363,7 @@ c        initialize total pw to laps missing data flag
         enddo
         enddo
 
-        print*, 'running version 9.0 set up for  ,', domain_name
+        print*, 'running NEWLAPS Dynamicized Moisture' 
 
 
 
