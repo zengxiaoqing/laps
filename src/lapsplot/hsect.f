@@ -2511,7 +2511,8 @@ c
                     c33_label = 'Stm Tot Prcp Acc (in)'//c7_string
                 endif
 
-            else ! Near Realtime - look for snow accumulation files
+            elseif(.false.)then ! Phasing this out
+!               Near Realtime - look for snow accumulation files
                 if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
                    !Find latest time of radar data
                     if(.true.)then ! Read MHR packed data
@@ -2618,19 +2619,42 @@ c
                  write(6,*)' Sorry, no L1S files present'
                  goto 1200
 
-!                write(6,*)
-!    1       ' Getting Entire Time Span of Accumulation from Radar Data,
-!    1 etc.'
-
-!                   if(c_type(1:2) .eq. 'sa')then
-!                       call move(snow_2d,accum_2d,NX_L,NY_L)
-!                   else
-!                       call move(precip_2d,accum_2d,NX_L,NY_L)
-!                   endif
-
                 endif
 
 !               encode(9,2029,c9_string)r_hours
+                write(c9_string,2029)r_hours
+
+                if(c_type(1:2) .eq. 'sa')then
+                    c33_label = c9_string//' Snow Accum  (in)       '
+                else
+                    c33_label = c9_string//' Prcp Accum  (in)       '
+                endif
+
+            elseif(.true.)then ! under construction
+!               Near Realtime - look for snow accumulation files
+                if(i4time_now_gg() - i4time_ref1 .lt. 300)then ! Real Time Radar
+                   !Find latest time of radar data
+                    if(.true.)then ! Read MHR packed data
+                        c_filespec = c_filespec_ra
+                    endif
+
+                    call get_file_time(c_filespec,i4time_ref1
+     1                                ,i4time_accum)
+                else
+                    i4time_accum = i4time_ref1
+                endif
+
+                i4time_end = i4time_accum
+                i4time_interval = nint(r_hours * 3600.)
+                i4time_start = i4time_end - i4time_interval
+
+                nf = 1
+
+                call get_interval_precip(var_2d(1:1),ext(1:3)
+     1                                  ,i4time_start,i4time_end
+     1                                  ,laps_cycle_time,r_missing_data       
+     1                                  ,NX_L,NY_L,nf,accum_2d,istatus)
+
                 write(c9_string,2029)r_hours
 2029            format(f5.1,' Hr ')
 
@@ -6859,6 +6883,73 @@ c             if(cint.eq.0.0)cint=0.1
         else
             c_label(ist+5:ist+8) = 'Fcst'       
         endif
+
+        return
+        end
+
+
+        subroutine get_interval_precip(c_pcp,ext,i4time_start,i4time_end       
+     1                                ,laps_cycle_time,r_missing_data
+     1                                ,ni,nj,nf,pcp_2d,istatus)
+
+!       This is written for just one field at present, though it can be
+!       readily expanded to two fields. 
+
+        real*4 pcp_2d(ni,nj,nf)
+        real*4 pcp_buf_2d(ni,nj,nf)
+        character*3 var_2d(nf)
+        character*(*)ext
+        character*1 c_pcp ! Used only if a single field is chosen
+        character*10  units_2d(nf)
+        character*125 comment_2d(nf)
+
+        pcp_2d = 0.
+
+        if(nf .eq. 2)then
+            var_2d(1) = 'R01'
+            var_2d(2) = 'S01'
+        else
+            var_2d(1) = c_pcp(1:1)//'01'
+        endif
+
+        i4time_interval = i4time_end - i4time_start
+
+        if(i4time_interval .ne. 
+     1       (i4time_interval/laps_cycle_time) *laps_cycle_time)then
+            write(6,*)' ERROR: Interval is not an integral # of cycles'
+            pcp_2d = r_missing_data
+            istatus = 0
+            return
+        endif
+
+        do i4time = i4time_start+laps_cycle_time,i4time_end
+     1             ,laps_cycle_time
+
+            if(nf .le. 2)then
+                call get_laps_multi_2d(i4time,ext,var_2d
+     1                                ,units_2d,comment_2d,ni,nj,nf
+     1                                ,pcp_buf_2d,istatus_file)
+            else ! this can be turned on for testing if needed
+                call get_laps_2d(i4time,ext,var_2d
+     1                          ,units_2d,comment_2d,ni,nj
+     1                          ,pcp_buf_2d,istatus_file)
+
+            endif
+            if(istatus_file .ne. 1)then
+                write(6,*)' ERROR: Missing precip file'
+                pcp_2d = r_missing_data
+                istatus = 0
+                return
+            endif                
+
+            do i = 1,nf
+                call add_miss(pcp_2d(1,1,nf),pcp_buf_2d(1,1,nf)
+     1                       ,pcp_2d(1,1,nf),ni,nj)
+!               call add_miss(pcp_2d,pcp_buf_2d
+!    1                       ,pcp_2d,ni,nj)
+            enddo ! i
+
+        enddo ! i4time
 
         return
         end
