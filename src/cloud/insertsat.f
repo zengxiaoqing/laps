@@ -423,8 +423,9 @@ c
                         if(cldcv(i,j,k) .gt. 0.9)then ! Lower top of solid cld
                             cldcv(i,j,k)=default_clear_cover
                         else                          ! Cover < 0.9, correct it
-                            cldcv(i,j,k) = band8_cover( tb8_k(i,j)
-     1                          ,t_gnd_k(i,j),temp_grid_point)
+                            call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)       
+     1                                          ,temp_grid_point
+     1                                          ,cldcv(i,j,k),istatus)
                             if(cldcv(i,j,k) .gt. 1.0 .or.
      1                         cldcv(i,j,k) .lt. 0.0       )then
                                 write(6,*)' ERROR--cover out of bounds'
@@ -544,9 +545,9 @@ c
 
 !             Calculate the cover (opacity) given the brightness temperature,
 !             ground temperature, and assumed ambient cloud-top temperature.
-              cover = 
-     1              band8_cover(tb8_k(i,j),t_gnd_k(i,j),tb8_cold_k(i,j))       
-
+              call get_band8_cover(tb8_k(i,j),t_gnd_k(i,j)
+     1                            ,tb8_cold_k(i,j),cover,istatus)       
+              if(istatus .ne. 1)write(6,*)' Bad band8_cover status #1'      
               htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_def )
 
               if(htbase .gt. cldtop_m(i,j))then
@@ -995,7 +996,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
      1  (tb8_k - t_gnd_k) / (temp_new - t_gnd_k)
 
 !       This one utilizes the sigma T**4 relationship
-        cover_new_f = band8_cover(tb8_k,t_gnd_k,temp_new)
+        call get_band8_cover(tb8_k,t_gnd_k,temp_new,cover_new_f,istatus)
+        if(istatus .ne. 1)write(6,*)' Bad band8_cover status #2'      
 
         if(j .eq. int(j-9)/10*10+9)then
             iwrite = iwrite + 1
@@ -1010,7 +1012,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
         end
 
 
-        function band8_cover(tb8_k,t_gnd_k,t_cld)
+        subroutine get_band8_cover(tb8_k,t_gnd_k,t_cld          ! I
+     1                            ,band8_cover,istatus)         ! O
 
         r_sfc = temp_to_rad(t_gnd_k)
         r_sat = temp_to_rad(tb8_k)
@@ -1018,11 +1021,14 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
         band8_cover = (r_sat - r_sfc) / (r_cld - r_sfc)
 
+        istatus = 1
+
         if(band8_cover .gt. 1.0)then
             write(6,*)' WARNING: resetting band8_cover down to 1.0'
             write(6,*)' tb8_k,t_gnd_k,t_cld,band8_cover'
      1                 ,tb8_k,t_gnd_k,t_cld,band8_cover
             band8_cover = 1.0 
+            istatus = 0
         endif
 
         return
