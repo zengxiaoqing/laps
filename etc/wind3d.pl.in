@@ -126,6 +126,9 @@ foreach (@lines) {
     print "$1\n"; $found=1; last; }}
 if ($found == 0) {print "none\n";}
 
+@greplines = grep /multi-doppler grid points/, @lines;
+print "   $greplines[0]";
+
 # Radar profiles, including VADs.
 
 foreach (@lines) {
