@@ -245,7 +245,12 @@ c -------------------------------------------------------------------
             fcst(ibkgd,ifcst)=bg_names(n)(10:13) !4 character time (ffff) of forecast time assoc with initial.
             ifcst=ifcst+1
          else
-            fcst(ibkgd,ifcst)=bg_names(n)(10:13)
+            if(bgmodel.eq.0 .and. cmodel.eq.'LAPS_FUA'.or.
+     +cmodel.eq.'MODEL_FUA')then
+               fcst(ibkgd,ifcst)=bg_names(n)(10:11)
+            else
+               fcst(ibkgd,ifcst)=bg_names(n)(10:13)
+            endif
             bkgd(ibkgd)=bg_names(n)(1:9) !9 character name of the background initial time
             ifcst_bkgd(ibkgd)=ifcst        !number of fcsts for this initial background time
             call i4time_fname_lp(bkgd(ibkgd),i4timeinit(ibkgd),istatus)
@@ -277,27 +282,57 @@ c ------------------------------------------------------------------------------
             print*,'Found bkgd init that corresp to anal: ',bkgd(n)
             print*,'Num of fcst = ',ifcst_bkgd(n)
 
-            do jj=2,ifcst_bkgd(n)
-               af=fcst(n,jj-1)
-               read(af,'(i4)',err=888) ihour
-               valid_time_1=i4timeinit(n)+ihour*3600
-               af=fcst(n,jj)
-               read(af,'(i4)',err=888) ihour
-               valid_time_2=i4timeinit(n)+ihour*3600
-               if(valid_time_1.le.i4time_anal.and.
-     +            valid_time_2.ge.i4time_anal)then
-                  if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
-     +            then
-                     i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
-                     indx_for_best_init=n
-                     indx_for_best_fcst=jj-1
+c this separate (near identical section) is due to local model having ffff = hhmm format
+c whereas the second section below is ffff = hhhh.
+
+            if(bgmodel.eq.0.and.
+     +(cmodel.eq.'LAPS_FUA'.or.cmodel.eq.'MODEL_FUA'))then
+               do jj=2,ifcst_bkgd(n)
+                  af=fcst(n,jj-1)(1:2)
+                  read(af,'(i2)',err=888) ihour
+                  valid_time_1=i4timeinit(n)+ihour*3600
+                  af=fcst(n,jj)(1:2)
+                  read(af,'(i2)',err=888) ihour
+                  valid_time_2=i4timeinit(n)+ihour*3600
+                  if(valid_time_1.le.i4time_anal.and.
+     +valid_time_2.ge.i4time_anal)then
+                   if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
+     +             then
+                      i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
+                      indx_for_best_init=n
+                      indx_for_best_fcst=jj-1
+                   endif
+                   print*,'Found fcsts bounding anal'
+c                  print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
+c                  print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                   print*
                   endif
-                  print*,'Found fcsts bounding anal'
-c                 print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
-c                 print*,'Full name 2: ', bkgd(n),fcst(n,jj)
-                  print*
-               endif
-            enddo
+               enddo
+
+            else
+
+             do jj=2,ifcst_bkgd(n)
+                af=fcst(n,jj-1)
+                read(af,'(i4)',err=888) ihour
+                valid_time_1=i4timeinit(n)+ihour*3600
+                af=fcst(n,jj)
+                read(af,'(i4)',err=888) ihour
+                valid_time_2=i4timeinit(n)+ihour*3600
+                if(valid_time_1.le.i4time_anal.and.
+     +             valid_time_2.ge.i4time_anal)then
+                 if(abs(i4timeinit(n)-i4time_anal).lt.i4time_min_diff)
+     +then
+                    i4time_min_diff=abs(i4timeinit(n)-i4time_anal)
+                    indx_for_best_init=n
+                    indx_for_best_fcst=jj-1
+                 endif
+                 print*,'Found fcsts bounding anal'
+c                print*,'Full name 1: ', bkgd(n),fcst(n,jj-1)
+c                print*,'Full name 2: ', bkgd(n),fcst(n,jj)
+                 print*
+              endif
+             enddo
+            endif
 
          endif
          n=n+1
