@@ -265,9 +265,9 @@ cdis
                         if(iwrite .eq. 1)write(6,20,err=21)
      1                                    n_acars_read,n_acars_obs       
      1                                   ,i_grid,j_grid,k_grid       
-     1                                   ,rk,rk_pspace
+     1                                   ,rk ! ,rk_pspace
      1                                   ,temp_ob,t_interp,bias
-20                      format(2i5,1x,3i4,2x,2f8.3,2x,3f7.1)
+20                      format(2i5,1x,3i4,2x,f8.3,2x,3f7.1)
 21                      continue
 
                     else
