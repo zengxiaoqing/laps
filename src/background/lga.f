@@ -371,23 +371,22 @@ c         j=index(names(i),' ')-14
      +                  ,istatus)
                    if(istatus.eq.0) then
                       print*,'Not enough records in file ',fname
-                      istatus=0
-                      ntime=0
-                   endif
-                   call get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg,ivaltimes)
-                   if(nxbg.lt.nx_bg.and.nybg.lt.ny_bg)then
-                      cmodel='RUC 60 SBN'
                    else
-                      cmodel='ETA SBN'
+                      call get_sbn_dims(ncid,nxbg,nybg,nzbg,ntbg
+     +                                ,ivaltimes)
+                      if(nxbg.lt.nx_bg.and.nybg.lt.ny_bg)then
+                         cmodel='RUC 60 SBN'
+                      else
+                         cmodel='ETA SBN'
+                      endif
+
+                      call ncclos(ncid,istatus)
+                      do k=1,ntbg
+                         write(af,'(i4.4)') ivaltimes(k)/3600
+                         ct4=ct4+1
+                         bg_names(ct4)=fname//af
+                      enddo
                    endif
-
-                   call ncclos(ncid,istatus)
-
-                   do k=1,ntbg
-                     write(af,'(i4.4)') ivaltimes(k)/3600
-                     ct4=ct4+1
-                     bg_names(ct4)=fname//af
-                  enddo
                else
                  ct4=ct4+1
                  bg_names(ct4)=names(i)(j+1:j+13)

@@ -71,9 +71,6 @@ c      stop
      .                            pr,ht,tp,sh,uw,vw,gproj,istatus)
 
 c
-c *** Subroutine to read 60 km ruc data on the conus-c grid.
-c *** Code modified from B. Schwartz auto netcdf generator.
-c
       implicit none
 c
       include 'netcdf.inc'
@@ -89,11 +86,11 @@ cc      integer nxbg, nybg, nzbg1,nzbg2, nzbg3, nzbg4, ntbg
 cc      parameter(nxbg=75,nybg=56,nzbg1=35,nzbg2=38,nzbg3=39)
 cc      parameter(nzbg4=40,ntbg=5)
 
-      real*4 htn(nxbg,nybg,nzbg(1),ntbg),
-     .       tpn(nxbg,nybg,nzbg(2),ntbg),
-     .       rhn(nxbg,nybg,nzbg(3),ntbg),
-     .       uwn(nxbg,nybg,nzbg(4),ntbg),
-     .       vwn(nxbg,nybg,nzbg(5),ntbg),
+      real*4 htn(nxbg,nybg,nzbg(1)),
+     .       rhn(nxbg,nybg,nzbg(2)),
+     .       tpn(nxbg,nybg,nzbg(3)),
+     .       uwn(nxbg,nybg,nzbg(4)),
+     .       vwn(nxbg,nybg,nzbg(5)),
      .       prn(19)
 c
       data prn/1000.,950.,900.,850.,800.,750.,700.,650.,600.,550.,
@@ -151,6 +148,10 @@ c
 c ****** Read netcdf data.
 c ****** Statements to fill htn.
 c
+         read(af,'(i4)') n
+         n=n/3+1
+         if(n.gt.ntbg) return
+
          call ncvinq(ncid,1,dummy,ntp,nvdim,vdims,nvs,rcode)
          lenstr=1
          do j=1,nvdim
@@ -159,10 +160,13 @@ c
             start(j)=1
             count(j)=ndsize
          enddo
+         
          if(count(1).ne.nxbg.or.count(2).ne.nybg.or.
      +      count(3).ne.nzbg(1).or.count(4).ne.ntbg) then
             goto 900
          endif         
+         start(4)=n
+         count(4)=1
          call ncvgt(ncid,1,start,count,htn,rcode)
 c
 c ****** Statements to fill rhn.                           
@@ -179,7 +183,10 @@ c
      +      count(3).ne.nzbg(2).or.count(4).ne.ntbg) then
             goto 900
          endif         
+         start(4)=n
+         count(4)=1
          call ncvgt(ncid,4,start,count,rhn,rcode)
+
 c
 c ****** Statements to fill tpn.                              
 c
@@ -195,6 +202,8 @@ c
      +      count(3).ne.nzbg(3).or.count(4).ne.ntbg) then
             goto 900
          endif         
+         start(4)=n
+         count(4)=1
          call ncvgt(ncid,7,start,count,tpn,rcode)
 c
 c ****** Statements to fill uwn.                           
@@ -211,7 +220,8 @@ c
      +      count(3).ne.nzbg(4).or.count(4).ne.ntbg) then
             goto 900
          endif         
-
+         start(4)=n
+         count(4)=1
          call ncvgt(ncid,10,start,count,uwn,rcode)
 c
 c ****** Statements to fill vwn.                           
@@ -228,6 +238,8 @@ c
      +      count(3).ne.nzbg(5).or.count(4).ne.ntbg) then
             goto 900
          endif         
+         start(4)=n
+         count(4)=1
          call ncvgt(ncid,13,start,count,vwn,rcode)
 c
 c *** Close netcdf file.
@@ -264,8 +276,7 @@ c
          jp=0
       endif
 
-      read(af,'(i4)') n
-      n=n/3+1
+      n=1
       istatus=0
       do k=1,19
       do j=1,nybg
@@ -273,19 +284,19 @@ c
          ii=i+ip
          jj=j+jp
          kp1=k+1
-         if (htn(i,j,k,n) .gt. -1000. .and. 
-     .       htn(i,j,k,n) .lt. 99999.) then
-            ht(ii,jj,k)=htn(i,j,k,n)
-            tp(ii,jj,k)=tpn(i,j,kp1,n)
-            sh(ii,jj,k)=rhn(i,j,kp1,n)
+         if (htn(i,j,k) .gt. -1000. .and. 
+     .       htn(i,j,k) .lt. 99999.) then
+            ht(ii,jj,k)=htn(i,j,k)
+            tp(ii,jj,k)=tpn(i,j,kp1)
+            sh(ii,jj,k)=rhn(i,j,kp1)
             it=tp(ii,jj,k)*100
             it=min(45000,max(15000,it))
             xe=esat(it)
             mrsat=0.00622*xe/(prn(k)-xe)
             sh(ii,jj,k)=sh(ii,jj,k)*mrsat
             sh(ii,jj,k)=sh(ii,jj,k)/(1.+sh(ii,jj,k))
-            uw(ii,jj,k)=uwn(i,j,kp1,n)
-            vw(ii,jj,k)=vwn(i,j,kp1,n)
+            uw(ii,jj,k)=uwn(i,j,kp1)
+            vw(ii,jj,k)=vwn(i,j,kp1)
             istatus = 1
          endif
       enddo
@@ -338,9 +349,10 @@ cc      call uvgrid_to_uvtrue_a(uw,vw,lon,lon0,nx,ny,nz,angle)
 c
 cc      oldfname=fname
       istatus=1
-      return
- 900  print*,'ERROR: bad dimension specified in netcdf file'
-      print*, (count(i),i=1,4)
-      istatus=-1
+      if(istatus.ne.1) then
+ 900     print*,'ERROR: bad dimension specified in netcdf file'
+         print*, (count(i),i=1,4)
+         istatus=-1
+      endif
       return
       end
