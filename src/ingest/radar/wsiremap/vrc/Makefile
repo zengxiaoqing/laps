@@ -8,15 +8,15 @@ LAPSROOT=../../../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a   \
+LAPSLIBS = $(LAPSROOT)/src/lib/radar/wsi_ingest/libwsi.a \
+           $(LAPSROOT)/src/lib/liblaps.a \
            $(LAPSROOT)/src/lib/util/libutil.a \
-           $(LAPSROOT)/src/lib/nav/libnav.a \
-           $(LAPSROOT)/src/lib/radar/wsi_ingest/libwsi.a
+           $(LAPSROOT)/src/lib/nav/libnav.a
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a   \
+DBLAPSLIBS = $(LAPSROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a \
+             $(LAPSROOT)/src/lib/libdebuglaps.a   \
              $(LAPSROOT)/src/lib/util/libdebugutil.a \
-             $(LAPSROOT)/src/lib/nav/libdebugnav.a \
-             $(LAPSROOT)/src/lib/radar/wsi_ingest/libdebugwsi.a
+             $(LAPSROOT)/src/lib/nav/libdebugnav.a
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .x .exe
