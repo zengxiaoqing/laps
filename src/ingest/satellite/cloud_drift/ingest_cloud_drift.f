@@ -2,7 +2,7 @@
 !     Steve Albers      Jan-1998        
 
       integer max_paths
-      parameter(max_paths=2)
+      parameter(max_paths=10)
 
 !     Input file 
       character*70 filename_in
@@ -19,9 +19,6 @@
 !     Output file
       character*31    ext
       integer*4       len_dir
-
-      character*40 c_vars_req
-      character*100 c_values_req
 
       call get_systime(i4time_sys,a9_time,istatus)
       if(istatus .ne. 1)go to 999
@@ -47,10 +44,11 @@
       i4_window = 7200
       lag_time_report = 1800
 
-      call get_cloud_drift_parms(path_to_cloud_drift,istatus)
+      call get_cloud_drift_parms(n_paths_drift,path_to_cloud_drift
+     1                          ,istatus)
       if(istatus .ne. 1)stop
 
-      do ipath = 1,max_paths
+      do ipath = 1,n_paths_drift
           dir_in = path_to_cloud_drift(ipath)
 
           call s_len(dir_in,len_dir_in)
@@ -129,13 +127,14 @@
       end
  
  
-       subroutine get_cloud_drift_parms(path_to_cloud_drift,istatus)
+       subroutine get_cloud_drift_parms(n_paths_drift
+     1                                 ,path_to_cloud_drift,istatus)
 
        integer max_paths
-       parameter(max_paths=2)
+       parameter(max_paths=10)
 
        character*150 path_to_cloud_drift(max_paths)
-       namelist /cloud_drift_nl/ path_to_cloud_drift
+       namelist /cloud_drift_nl/ n_paths_drift, path_to_cloud_drift
  
        character*150 static_dir,filename
  
