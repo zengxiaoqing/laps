@@ -5562,6 +5562,8 @@ c             if(cint.eq.0.0)cint=0.1
 
         include 'icolors.inc'
 
+        write(6,*)' Subroutine plot_cont...',clow,chigh,cint,scale
+
         Y_SPACING = 3
 
         write(6,1505)c_label,scale,asc_tim_9
@@ -6697,6 +6699,8 @@ c             if(cint.eq.0.0)cint=0.1
 !       i_image: whether this particular plot is an image
         common /image/ n_image, i_image 
         common /zoom/  zoom, density
+
+        write(6,*)' Subroutine plot_field_2d...'
 
         c_type = c_type_in
 
