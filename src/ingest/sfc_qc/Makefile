@@ -9,6 +9,7 @@ LAPSROOT=../../..
 include $(LAPSROOT)/src/include/makefile.inc
 
 LAPSLIBS=$(LAPSLIB)
+DBLAPSLIBS=$(DBLAPSLIB)
 
 
 EXE = sfc_qc.exe
