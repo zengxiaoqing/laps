@@ -1,5 +1,5 @@
-      SUBROUTINE SFCPRS (T,Q,HEIGHT,tsfc,tdsfc,TER,P,IMX,JMX,KX,
-     &                   PSFC)
+      SUBROUTINE SFCPRS (bgmodel,T,Q,HEIGHT,tsfc,tdsfc,TER,P,
+     &IMX,JMX,KX,PSFC)
 
 c inputs are from laps analyzed 2- 3d fields
 C     INPUT       T        ANALYZED TEMPERATURE     3D
@@ -34,6 +34,7 @@ c
       INTEGER    K
       INTEGER    KX
       INTEGER    it
+      INTEGER    bgmodel
 
       LOGICAL    lfndz
 
@@ -61,23 +62,29 @@ c
          do while(.not.lfndz)
             k=k+1
             if(height(i,j,k).gt.ter(i,j))then
-
                lfndz=.true.
-
+c
 c first guess psfc without moisture consideration
+c
                tbar=(tsfc(i,j)+t(i,j,k))*0.5
                dz=height(i,j,k)-ter(i,j)
                p_sfc=p(k)*exp(G/(R*tbar)*dz)
 
-c recompute psfc with moisture consideration
+c
+c recompute psfc with moisture consideration. snook's orig code.
 c              it=tdsfc(i,j)*100.
 c              it=min(45000,max(15000,it))
 c              xe=esat(it)
 c              qsfc=0.622*xe/(p_sfc-xe)
 c              qsfc=qsfc/(1.+qsfc)
+c --------------------------------------------------
 
-               qsfc=ssh2(p_sfc,tsfc(i,j)-273.15,tdsfc(i,j)-273.15,0.)
-     &              *.001  !kg/kg
+               if(bgmodel.eq.6.or.bgmodel.eq.8)then
+                  qsfc=ssh2(p_sfc,tsfc(i,j)-273.15
+     &                          ,tdsfc(i,j)-273.15,-47.)*.001  !kg/kg
+               else
+                  qsfc=tdsfc(i,j)
+               endif
 
                tvsfc=tsfc(i,j)*(1.+0.608*qsfc)
                tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
@@ -86,7 +93,8 @@ c              qsfc=qsfc/(1.+qsfc)
                p_sfc=(p(k)*exp(G/(R*tbarv)*dz))
 c
 c recompute Td sfc using recomputed p and Tv
-               tdsfc(i,j)=make_td(p_sfc,tvsfc-273.15,qsfc*1000.,0.)
+c
+               tdsfc(i,j)=make_td(p_sfc,tvsfc-273.15,qsfc*1000.,-47.)
      &                    +273.15
 c
 c recompute sfc T with new sfc p. "devirtualize" and return dry T.
