@@ -40,7 +40,7 @@ RANLIB   = @RANLIB@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=array_plot.f    insertradar.f   insertvis.f     slice.f \
+SRC=array_plot.f    insertradar.f   slice.f \
     barnes_r5.f     insertsao.f     rfill_evap.f    spread.f \
     insertpireps.f  insertsat.f     schultz.f
 

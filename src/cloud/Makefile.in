@@ -54,7 +54,8 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=laps_cloud.f      laps_cloud_sub.f
+SRC=laps_cloud.f      laps_cloud_sub.f \
+    insertvis.f
 
 
 all: exe
