@@ -53,6 +53,7 @@ EXEDIRS = src/accum \
           src/ingest/satellite/lvd \
           src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
+          src/ingest/sfc_qc \
           src/sfc \
           src/sfc/table \
           src/soil \
