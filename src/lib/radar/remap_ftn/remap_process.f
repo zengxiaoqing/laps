@@ -154,7 +154,7 @@ c
       real*4 lon(NX_L,NY_L)
       real*4 topo(NX_L,NY_L)
 c
-      logical l_unfold
+      logical l_unfold, l_compress_output
 c 
       real*4 avgvel,vel_nyquist,vel_value,ref_value
       real*4 v_nyquist_tilt(max_tilts)
@@ -186,6 +186,8 @@ c
       write(6,*)
       write(6,805) i_first_scan,i_last_scan,i_tilt
   805 format(' REMAP_PROCESS > ifirst,ilast,tilt',4i5)
+
+      l_compress_output = .false.
 
       rlat_radar = rlat_radar_cmn
       rlon_radar = rlon_radar_cmn
@@ -664,12 +666,26 @@ c
             call make_fnam_lp(i_product_i4time,a9time,istatus)
             if(istatus .ne. 1)return
 
-            write(6,865) c4_radarname,ext(1:3),a9time
-  865       format(' REMAP_PROCESS > Calling put_laps_multi_3d '
-     1             ,a4,2x,a3,2x,a9)          
+            if(l_compress_output)then
+                write(6,865) c4_radarname,ext(1:3),a9time
+ 865            format(
+     1             ' REMAP_PROCESS > Calling put_compressed_multi_3d'          
+     1             ,1x,a4,2x,a3,2x,a9)          
 
-            call put_laps_multi_3d(i_product_i4time,ext,var_a,units_a,       
-     1              comment_a,out_array_4d,NX_L,NY_L,NZ_L,nf,istatus)
+                call put_compressed_multi_3d(i_product_i4time,ext,var_a       
+     1                                ,units_a,comment_a,out_array_4d
+     1                                ,NX_L,NY_L,NZ_L,nf,istatus)
+
+            else
+                write(6,866) c4_radarname,ext(1:3),a9time
+ 866            format(' REMAP_PROCESS > Calling put_laps_multi_3d'
+     1                 ,1x,a4,2x,a3,2x,a9)          
+
+                call put_laps_multi_3d(i_product_i4time,ext,var_a
+     1                                ,units_a,comment_a,out_array_4d
+     1                                ,NX_L,NY_L,NZ_L,nf,istatus)
+
+            endif
 
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
