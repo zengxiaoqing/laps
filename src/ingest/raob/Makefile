@@ -32,6 +32,8 @@ SRC=ingest_sounding.f \
     ingest_satsnd_af.f \
     tower_driver.f \
     get_local_towerobs.f \
+    get_rtamps_data.f \
+    read_rtamps_data.f \
     get_radiometer_data.f \
     write_snd.f
 
