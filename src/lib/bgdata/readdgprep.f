@@ -234,6 +234,35 @@ c           enddo
          endif
 
       endif
+
+      if(istatus .eq. 1)then
+         print*,'Error reading dgprep data file: ',cmodel(1:nclen),
+     +' ',filename(1:l)
+         return
+      endif
+
+c qc
+
+      do k=1,nz
+         do j=1,ny
+         do i=1,nx
+            if((abs(ht(i,j,k)) .gt. 100000.) .or.
+     +         (abs(tp(i,j,k)) .gt. 1000.)   .or.
+     +             (tp(i,j,k)  .le. 0.)      .or.
+     +         (abs(sh(i,j,k)) .ge. 101.)    .or.   !rh
+     +         (abs(uw(i,j,k)) .gt. 150.)    .or.
+     +         (abs(vw(i,j,k)) .gt. 150.)        )then
+ 
+               print*,'ERROR: Missing or bad value detected: ',i,j,k
+               print*,'ht/tp/sh/uw/vw/ww: ',ht(i,j,k),tp(i,j,k)
+     +                  ,sh(i,j,k), uw(i,j,k),vw(i,j,k),ww(i,j,k)
+
+               istatus = 1
+               return
+            endif
+         enddo
+         enddo
+      enddo
  
       if(istatus .eq. 1)then
          print*,'Error reading dgprep data file: ',cmodel(1:nclen),
@@ -435,35 +464,7 @@ c
 c
 c *** Fill the common block variables.
 c
-      if(bgmodel .eq. 3)then
-         gproj='LC'
-         nx_lc=nx
-         ny_lc=ny
-         nz_lc=nz
-         if(cwb_type .eq. 're')then
-            lat1=10.0
-            lat1_lc=lat1
-            lat2=40.0
-            lat2_lc=lat2
-            lon0=+120.
-            lon0_lc=lon0
-            sw(1)=15.879
-            sw(2)=+112.545
-            ne(1)=32.384
-            ne(2)=+131.172 
-         else
-            lat1=10.0
-            lat1_lc=lat1
-            lat2=40.0
-            lat2_lc=lat2
-            lon0=+120.
-            lon0_lc=lon0
-            sw(1)=15.80
-            sw(2)=+109.24
-            ne(1)=34.987
-            ne(2)=+131.60
-         endif
-      elseif (bgmodel .eq. 6) then
+      if (bgmodel .eq. 6) then
          gproj='LL'
          nx_ll=nx
          ny_ll=ny

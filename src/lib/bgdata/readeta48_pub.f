@@ -1,7 +1,18 @@
-      subroutine get_eta48_dims(filename,NX,NY,NZ,nf_status)
+      subroutine get_eta48_dims(filename,NX,NY,NZ
+     &,StdLat1,StdLat2,Lon0,La1,Lo1,La2,Lo2,istatus)
+c
+c updated to get all nav info - JS 4-01
+c
       implicit none
       include 'netcdf.inc'
-      integer NZ, nrecs, NX, NY, nf_fid, nf_vid, nf_status
+
+      integer NZ, nrecs, NX, NY, nf_fid, nf_vid
+      integer nf_status,istatus
+      real    StdLat1,StdLat2
+      real    Lon0
+      real    La1,Lo1
+      real    La2,Lo2
+
       character*(*) filename
 C
 C  Open netcdf File for reading
@@ -12,26 +23,23 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ', filename
-        return
       endif
 C
 C  Fill all dimension values
 C
 C
-C Get size of isoLevel
+C  Get size of isoLevel (returned as NZ)
 C
       nf_status = NF_INQ_DIMID(nf_fid,'isoLevel',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim isoLevel'
-        return
       endif
 
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,NZ)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim isoLevel'
-        return
       endif
 
 C
@@ -41,14 +49,12 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim record'
-        return
       endif
 
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,nrecs)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim record'
-        return
       endif
 
       if(nrecs.ne.1) then
@@ -56,73 +62,170 @@ C
          STOP
       endif
 C
-C Get size of x
+C Get size of x (returned as NX)
 C
       nf_status = NF_INQ_DIMID(nf_fid,'x',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
-        return
       endif
 
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,NX)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim x'
-        return
       endif
 
 C
-C Get size of y
+C Get size of y (returned as NY)
 C
       nf_status = NF_INQ_DIMID(nf_fid,'y',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
-        return
       endif
 
       nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,NY)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim y'
-        return
       endif
-
+C
+C     Variable        NETCDF Long Name
+C      IntLat1      "1st latitude of intersect earth-cone"
+C                    returned as StdLat1
+C
+        nf_status = NF_INQ_VARID(nf_fid,'IntLat1',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var IntLat1'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,StdLat1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var IntLat1'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      IntLat2      "2nd latitude of intersect earth-cone"
+C                    returned as StdLat2
+C
+        nf_status = NF_INQ_VARID(nf_fid,'IntLat2',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var IntLat2'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,StdLat2)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var IntLat2'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      La1          "first latitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'La1',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La1'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,La1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La1'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      La2          "last latitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'La2',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La2'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,La2)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La2'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Lo1          "first longitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Lo1',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo1'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Lo1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo1'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Lo2          "last longitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Lo2',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo2'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Lo2)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo2'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Lon0         "true longitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Lon0',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lon0'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Lon0)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lon0'
+      endif
 
       nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'nf_close'
-        return
       endif
 
+      if(nf_status.ne.0)then
+         print*,'Set istatus to Error condition'
+         istatus = 0
+         return
+      endif
 
+      istatus = 1
       return
       end
-C
-
-
-
-
 C
 C
 C  Subroutine to read the file "ETA 48 km AWIPS Regional CONUS " 
 C
-      subroutine read_eta_conusc(fname , NX,NY,NZ, ht, p, t, uw, vw,
+      subroutine read_eta_conusc(fname, NX,NY,NZ, ht,p,t,uw,vw,
      +     rh, pvv, ht_sfc, p_sfc, rh_sfc, t_sfc, uw_sfc, vw_sfc,
      +     mslp,istatus)
 
       include 'netcdf.inc'
       integer NX,NY,NZ, nf_fid, nf_status, k
       character*(*) fname
-      real MSLP( NX,  NY),    ht( NX,  NY,  NZ), 
-     +     ht_sfc( NX,  NY),  p(NZ), p_sfc( NX,  NY), 
-     +     rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
+      real MSLP( NX,  NY),
+     +    ht( NX, NY, NZ), ht_sfc( NX,  NY),
+     +     p( NX, NY, NZ),  p_sfc( NX,  NY), 
+     +    rh( NX,  NY,  NZ), rh_sfc( NX,  NY), 
      +     t( NX,  NY,  NZ),  t_sfc( NX,  NY), 
-     +     uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
-     +     vw( NX,  NY,  NZ), vw_sfc( NX,  NY), tmp(nz),
-     +     pvv(NX,  NY,  NZ)
+     +    uw( NX,  NY,  NZ), uw_sfc( NX,  NY), 
+     +    vw( NX,  NY,  NZ), vw_sfc( NX,  NY),
+     +    pvv(NX,  NY,  NZ),
+     +    tmp(nz)
       integer nxny,nxnynz
       logical reverse_fields
       data reverse_fields/.false./
@@ -142,7 +245,7 @@ C
 C     Variable        NETCDF Long Name
 C      p            "isobaric levels" 
 C
-      call read_netcdf_real(nf_fid,'isoLevel',nz,p,0,0,nf_status)
+      call read_netcdf_real(nf_fid,'isoLevel',nz,tmp,0,0,nf_status)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'dim isoLevel'
@@ -153,14 +256,24 @@ c
 c If p is going from top to bottom, reverse it and set a flag to 
 c also reverse the other fields
 c 
-      if(p(1).lt.p(nz)) then
+      if(tmp(1).lt.tmp(nz)) then
+
          do k=1,nz
-            tmp(nz-k+1) = p(k)
+         do j=1,ny
+         do i=1,nx
+            p(i,j,nz-k+1) = tmp(k)
          enddo
-         do k=1,nz
-            p(k) = tmp(k)
+         enddo
          enddo
          reverse_fields=.true.
+      else
+         do k=1,nz
+         do j=1,nx
+         do i=1,ny
+            p(i,j,k) = tmp(k)
+         enddo
+         enddo 
+         enddo
       endif
 
 

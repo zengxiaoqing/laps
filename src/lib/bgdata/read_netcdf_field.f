@@ -3,7 +3,8 @@
 
       include 'netcdf.inc'
       include 'bgdata.inc'
-      integer n1,i, nf_fid, nf_vid,istatus,nf_status,start(*),count(*)
+      integer n1,i, nf_fid, nf_vid,istatus,nf_status
+      integer start(10),count(10)
       real f(n1) , nfmissing
       character*(*) fname
 

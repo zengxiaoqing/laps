@@ -36,6 +36,14 @@ cdis
 
       implicit none
       include 'bgdata.inc'
+
+c eventually these parameters should go into bgdata.inc
+      integer mxvars,mxlvls
+      parameter(mxvars=10,mxlvls=10)
+     
+      character*10 cvars(mxvars)
+      integer      levels(mxlvls,mxvars)
+
 c
 c
 c------------------> BACKGROUND MODEL DESIGNATION <-----------------------------
@@ -105,10 +113,11 @@ c
       character*256 bgpaths(maxbgmodels)
       integer bgmodels(maxbgmodels), bglen
       integer istatus
- 
+
       character*13 cvt_i4time_wfo_fname13
-c
       character*9 a9
+
+      integer  plvls(mxvars,mxlvls)
       integer i4time_now,i4time_latest
       integer i4time_now_lga,i4time_now_gg
       integer max_files,bg_files
@@ -119,7 +128,12 @@ c
       integer reject_cnt
       data reject_cnt/0/
       integer ntbg
+      integer nvars
+      integer nx,ny
       integer idum,jdum,kdum
+      integer idims(mxvars,mxlvls)
+      real centralLat,centralLon,rlat00,rlon00
+     +,latNxNy,lonNxNy,latdxdy,londxdy,dx,dy
 c
 c-------------------------------------------------------------------------------
 c
@@ -133,6 +147,9 @@ c
       character*255 cfname
       integer oldest_forecast, max_forecast_delta
       logical use_analysis, use_systime
+
+      character*2   gproj
+      real          dlat,dlon,Lat1,Lat2,Lon0,sw(2),ne(2)
 c_______________________________________________________________________________
 c
 c Read information from static/background.nl
@@ -187,8 +204,22 @@ c
                cfilespec=bgpath(1:bglen)//'/*'
                call get_latest_file_time(cfilespec,i4time_latest)
                cfname = cvt_i4time_wfo_fname13(i4time_latest)
-               call get_sbn_dims(bgpath,cfname,idum,jdum,kdum
-     .,ntbg)
+               cfilespec=bgpath(1:bglen)//cfname
+
+c              call get_sbn_dims(cfilespec,cmodel,mxvars,
+c    +                  mxlvls,idims,cvars,plvls,ntbg,istatus)
+c              if(istatus .ne. 1)then
+c                 print*,'Error - get_sbn_dims'
+c                 return
+c              endif
+c              call get_attribute_sbn(cfilespec,centralLat
+c    +,centralLon,rlat00,rlon00,latNxNy,lonNxNy,latdxdy,londxdy
+c    +,dx,dy,nx,ny,istatus)
+c              if(istatus .ne. 1)then
+c                 print*,'Error - get_attribute_sbn'
+c                 return
+c              endif
+
             endif
          endif
          if (bgmodel .lt. 1 .or. bgmodel .gt. maxbgmodels) then
@@ -199,7 +230,7 @@ c
 
          call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
      +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,0,cmodel(i),ntbg
+     +        ,use_analysis,bg_files,0,cmodel(i)
      +        ,nx_bg,ny_bg,nz_bg,reject_files,reject_cnt)
 
 
@@ -217,6 +248,14 @@ c
            print *, 'bgpath ', bgpath(1:bglen)
            print *, 'cmodel ',cmodel(i)
  970       continue
+
+           call get_bkgd_mdl_info(bgmodel,cmodel,cfname
+     &,mxvars,mxlvls,nvars,cvars,levels,gproj,nx_bg,ny_bg,nz_bg
+     &,dlat,dlon,Lat1,Lat2,Lon0,sw,ne,istatus)
+           if(istatus.ne.1)then
+              print*,'Error getting background model information'
+              return
+           endif
 c
 c *** Call bkgd driver.
 c

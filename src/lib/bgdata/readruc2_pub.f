@@ -1,12 +1,21 @@
-      subroutine get_ruc2_dims(filename,NX,NY,NZ,istatus)
+      subroutine get_ruc2_dims(filename,NX,NY,NZ
+     &,StdLat1,StdLat2,Lon0,La1,Lo1,La2,Lo2,istatus)
+c
+c updated to get all nav info - JS 4-01
+c
       implicit none
       include 'netcdf.inc'
+
+      real    StdLat1,StdLat2
+      real    Lon0
+      real    La1,Lo1
+      real    La2,Lo2
+
       integer  NX, NY, NZ, nf_fid, nf_vid, nf_status
       character*(*) filename
       integer istatus
 
-      istatus = 1
-
+      istatus = 0
 C
 C  Open netcdf File for reading
 C
@@ -83,6 +92,69 @@ C
         return
       endif
 
+C
+C     Variable        NETCDF Long Name
+C      La1          "first latitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'La1',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La1'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,La1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var La1'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Latin        "conic tangent latitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Latin',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Latin'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,StdLat1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Latin - StdLat'
+      endif
+
+c not in netcdf file
+      StdLat2=StdLat1
+C
+C     Variable        NETCDF Long Name
+C      Lo1          "first longitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Lo1',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo1'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Lo1)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lo1'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      Lov          "orientation of grid"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'Lov',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lov'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,Lon0)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var Lov - Lon0'
+      endif
+
+c these not in netcdf file!
+      La2=55.4818
+      Lo2=-57.3794
 
       nf_status = NF_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
@@ -91,8 +163,7 @@ C
         return
       endif
 
-      istatus = 0
-      
+      istatus=1 
       return
       end
 C

@@ -5,7 +5,7 @@
       integer numIsoLevel, record, x, y,nf_fid, nf_vid, nf_status
       character*(*) fname
 C
-      istatus=1
+      istatus=0
 C
 C  Open netcdf File for reading
 C
@@ -87,7 +87,7 @@ C
         return
       endif
 
-      istatus=0
+      istatus=1
 
 C     call main_sub(nf_fid, numIsoLevel, record, x, y)
 

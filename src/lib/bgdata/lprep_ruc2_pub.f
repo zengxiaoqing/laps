@@ -1,6 +1,7 @@
       subroutine lprep_ruc2_hybrid(nx,ny,nz,ht,pr,sh,uw,vw,th
-     +     ,usfc,vsfc,tsfc,prsfc,shsfc,htsfc
-     +     ,gproj,lon0_lc,lat1_lc,lat2_lc)
+     +     ,usfc,vsfc,tsfc,prsfc,shsfc,htsfc)
+
+c    +     ,gproj,lon0_lc,lat1_lc,lat2_lc)
 c
       implicit none
       include 'bgdata.inc'
@@ -12,19 +13,12 @@ c
       real cp,g,r,cpog,kappa
       parameter (cp=1004.686,g=9.80665,r=287.053,cpog=cp/g,kappa=r/cp)
       real tv, psi(nx,ny),psj(nx,ny),lat(nx,ny),lon(nx,ny)
-      character*(*) gproj
       real missing
       
       
 c
 c *** Common block variables for Lambert-conformal grid.
-c
-      integer nx_lc,ny_lc,nz_lc  !No. of LC domain grid points
-      real*4 lat1,lat2,lon0,       !Lambert-conformal std lat1, lat, lon
-     .       sw(2),ne(2)           !SW lat, lon, NE lat, lon
-      common /lcgrid/nx_lc,ny_lc,nz_lc,lat1,lat2,lon0,sw,ne
-      real*4 lon0_lc             !returned for wind rotations
-      real*4 lat1_lc,lat2_lc     !       "
+c *** removed JS (4-01)
 
 c *** Convert Pascals to mb.
 c *** Compute tv from thetav.
@@ -61,20 +55,8 @@ c
 
 c
 c *** Fill Lambert-conformal common block variables.
-c
-      gproj='LC'
-      nx_lc=nx
-      ny_lc=ny
-      lat1=25.0
-      lat1_lc=lat1
-      lat2=25.0
-      lat2_lc=lat2
-      lon0=-95.0
-      lon0_lc=lon0
-      sw(1)=16.2810
-      sw(2)=-126.1378
-      ne(1)=55.4818
-      ne(2)=-57.3794
+c *** removed JS (4-01)
+
 c **** No Longer Needed *****
 c *** Convert ruc winds from grid north to true north.
 c

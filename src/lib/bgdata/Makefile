@@ -20,11 +20,13 @@ DEBUGLIB = libdebugbgdata.a
 
 
 
-SRC= bkgd_stn_interp.f   lprep_eta_conusc.f        lprep_ruc2_pub.f \
-     readavnpublic.f     readbgdata.f              readeta48_pub.f \
-     readconusnws.f      readruc2_pub.f            get_acceptable_files.f \
-     read_netcdf_field.f read_conus211.f           readdgprep.f \
-     readnogaps.f        readruc60native.f         es_table.f \
+SRC= bkgd_stn_interp.f   bkgd_util.f            get_acceptable_files.f \
+     get_bkgd_mdl_info.f get_attr_sbn.f         get_bkgd_files.f       \
+     es_table.f          lprep_eta_conusc.f     lprep_ruc2_pub.f          \
+     readavnpublic.f     readbgdata.f           readeta48_pub.f     \
+     readconusnws.f      readruc2_pub.f                              \
+     read_netcdf_field.f read_sbn_grids.f        readdgprep.f        \
+     readnogaps.f        readruc60native.f      es_table.f          \
      rdmodelindex.f      sfcbkgd.f 
 
 
