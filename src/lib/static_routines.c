@@ -24,7 +24,7 @@
 #define cdf_retr_hdr_stat cdf_retr_hdr_stat_
 #define read_cdf_static read_cdf_static_
 #define open_cdf open_cdf_
-#define cdf_dim_size cdf_dim_size_
+#define dim_size_v3 dim_size_v3_
 #define nstrncpy nstrncpy_
 #define fstrncpy fstrncpy_
 #endif
@@ -98,8 +98,8 @@ char *comm_ptr;
 /* get the x and y dimension sizes */
         count[0] = 1;
         count[1] = 1;
-	count[2] = cdf_dim_size (i_cdfid, "y");
-	count[3] = cdf_dim_size (i_cdfid, "x");
+	count[2] = dim_size_v3 (i_cdfid, "y");
+	count[3] = dim_size_v3 (i_cdfid, "x");
 
 /* construct the arrays needed by the netcdf write routine */
 	start[0] = 0;
@@ -734,8 +734,8 @@ int c_unit_len;
 /* get the x and y dimension sizes */
         count[0] = 1;
         count[1] = 1;
-        count[2] = cdf_dim_size (i_cdfid, "y");
-        count[3] = cdf_dim_size (i_cdfid, "x");
+        count[2] = dim_size_v3 (i_cdfid, "y");
+        count[3] = dim_size_v3 (i_cdfid, "x");
         start[0] = 0;
         start[1] = 0;
         start[2] = 0;
