@@ -68,7 +68,7 @@ cdis
         real*4 rlaps_land_frac(NX_L,NY_L)
         real*4 soil_type(NX_L,NY_L)
 
-        character*1 c_display
+        character*1 c_display, qtype
         character*1 cansw
         character*13 filename,a13_time
         character*3 c3_site
@@ -230,6 +230,7 @@ cdis
         real*4 nbe_2d(NX_L,NY_L)
 
         real*4 k_to_f
+        real*4 make_rh
 
         include 'laps_cloud.inc'
 
@@ -348,10 +349,9 @@ cdis
      1       ,',  [ct] Highest Cld Top'
      1       /'     [cv] Cloud Cover (2-D), [pw] Precipitable Water'
      1       /
+     1       /'     [br,fr,lq] Humidity (LGA/RAM LAPS-BKG/lq3; q/rh) '
      1       /'     [sa/pa] Snow/Pcp Accum,'
-     1       ,'     [sc] Snow Cover'
-     1       /'     [sh,rh,rl] Specific/Rel Humidity'
-     1       ,'     [tn,lf,gr,so] Terrain/Land Frac/Grid, '
+     1       ,'     [sc] Snow Cover    [tn,lf,gr,so] Ter/LndFrac/Grid, '
      1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
      1       ,'; Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -2575,30 +2575,47 @@ cdis
      1                      ,lat,lon,jdot,NX_L,NY_L,r_missing_data
      1                      ,laps_cycle_time)
           endif
+c
+c J. Smart - 4/19/99. Updated moisture plotting. In addition, added two
+c                     more switches for lga/ram plotting.
+c
+        elseif(c_type .eq. 'lq')then
+c
+c J. Smart - 4/19/99. lq is LAPS-lq3 either sh or rh
+c
+            print*,'You selected plotting of lq3 data '
 
-        elseif(c_type .eq. 'sh')then
             write(6,1513)
             read(lun,*)k_level
             if(k_level .gt. 0)then
                k_level = nint(zcoord_of_pressure(float(k_level*100)))
             endif
 
-            var_2d = 'SH '
-            ext = 'lq3'
+            write(6,1615)
+1615        format(10x,'plot rh or q [r/q]? ',$)
+            read(5,*)qtype
 
-            call get_laps_3dgrid
+            if(qtype.eq.'q')then
+
+              var_2d = 'SH '
+              ext = 'lq3'
+
+              call get_laps_3dgrid
      1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
      1          ,ext,var_2d,units_2d,comment_2d
      1                                  ,q_3d,istatus)
+              if(istatus.ne. 1)then
+                 print*,'No plotting for the requested time period'
+              else   
 
-            call mklabel33(k_level,' Spec Humidity x1e3',c33_label)
+              call mklabel33(k_level,' LAPS Spec Hum x1e3',c33_label)
 
-            clow = 0.
-            chigh = +40.
-            cint = 0.2
-            cint = -1.
+              clow = 0.
+              chigh = +40.
+              cint = 0.2
+c             cint = -1.
 
-            call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
 !           do i = 1,NX_L
 !           do j = 1,NY_L      
@@ -2608,40 +2625,43 @@ cdis
 !           enddo ! j
 !           enddo ! i
 
-            call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
+              call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
      1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
      1             ,lat,lon,jdot,
      1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+              endif
 
-        elseif(c_type .eq. 'rh' .or. c_type .eq. 'rl')then
-            write(6,1513)
-            read(lun,*)k_level
-            if(k_level .gt. 0)then
-               k_level = nint(zcoord_of_pressure(float(k_level*100)))
-            endif
+            elseif(qtype .eq. 'r')then
 
-            ext = 'lh3'
+              write(6,1616)
+1616          format(10x,'plot rh3 or rhl [3/l]? ',$)
+              read(5,*)qtype
 
-            if(c_type .eq. 'rh')then
-                var_2d = 'RH3'
-            elseif(c_type .eq. 'rl')then
-                var_2d = 'RHL'
-            endif
+              ext = 'lh3'
 
-            write(6,*)' Reading lh3 / ',var_2d
+              if(qtype .eq. '3')then
+                 var_2d = 'RH3'
+                 write(6,*)' Reading rh3 / ',var_2d
+              elseif(qtype .eq. 'l')then
+                 var_2d = 'RHL'
+                 write(6,*)' Reading rhl / ',var_2d
+              endif
 
-            call get_laps_3dgrid
+              call get_laps_3dgrid
      1  (i4time_ref,1000000,i4time_nearest,NX_L,NY_L,NZ_L
      1          ,ext,var_2d,units_2d,comment_2d
      1                                  ,rh_3d,istatus)
+              if(istatus.ne. 1)then
+                 print*,'No plotting for the requested time period'
+              else
 
-            call mklabel33(k_level,' Relative Humidity %',c33_label)
+              call mklabel33(k_level,' LAPS Rel Humidity %',c33_label)
 
-            clow = 0.
-            chigh = +100.
-            cint = 10.
+              clow = 0.
+              chigh = +100.
+              cint = 10.
 
-            call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
 
 !           do i = 1,NX_L
 !           do j = 1,NY_L      
@@ -2651,10 +2671,111 @@ cdis
 !           enddo ! j
 !           enddo ! i
 
-            call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
+              call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
      1           asc9_tim_t,c33_label,i_overlay,
      1           c_display,'nest7grid',lat,lon,jdot,
      1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+              endif
+            endif
+
+        elseif(c_type .eq. 'br'.or.c_type.eq.'fr')then
+c
+c J. Smart - 4/19/99. br is LAPS-lga either sh or rh (sh is converted to rh).
+c
+            ext='lga'
+            if(c_type.eq.'fr')ext='ram'
+
+            print*,'      plotting ',ext(1:3),' humidity data'
+            write(6,211)ext(1:3)
+            read(5,221)a13_time
+
+            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+
+            write(6,1513)
+            read(lun,*)k_level
+            k_mb=k_level
+            if(k_level .gt. 0)then
+               k_level = nint(zcoord_of_pressure(float(k_level*100)))
+            endif
+
+            write(6,1615)
+            read(5,*)qtype
+
+            var_2d = 'SH '
+            call get_modelfg_3d_sub(i4_valid,var_2d,ext
+     1             ,nx_l,ny_l,nz_l,q_3d,istatus)
+            if(istatus.ne.1)then
+               print*,var_2d, ' not obtained from ',ext(1:3)
+               print*,'no plotting of data for requested time period'
+            else
+
+            if(qtype.eq.'q')then
+
+              call mklabel33(k_level,' LGA Spec Hum (x1e3)'
+     1,c33_label)
+              if(c_type.eq.'fr')then
+                 call mklabel33(k_level,' RAM Spec Hum (x1e3)'
+     1,c33_label)
+              endif
+
+              clow = 0.
+              chigh = +40.
+              cint = 0.2
+c             cint = -1.
+
+              call make_fnam_lp(i4time_nearest,asc9_tim_t,istatus)
+
+!           do i = 1,NX_L
+!           do j = 1,NY_L
+!               if(q_3d(i,j,k_level) .eq. r_missing_data)then
+!                   q_3d(i,j,k_level) = 0.
+!               endif
+!           enddo ! j
+!           enddo ! i
+
+              call plot_cont(q_3d(1,1,k_level),1e-3,clow,chigh,cint,
+     1             asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
+     1             ,lat,lon,jdot,
+     1             NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+            elseif(qtype .eq. 'r')then
+
+              var_2d = 'T3 '
+              call get_modelfg_3d_sub(i4_valid,var_2d,ext
+     1             ,nx_l,ny_l,nz_l,temp_3d,istatus)
+              if(istatus.ne.1)then
+                  print*,var_2d, ' not obtained from ',ext(1:3)
+              endif
+
+              call mklabel33(k_level,'  LGA rh (computed) (%) '
+     1,c33_label)
+              if(c_type.eq.'fr')then
+                 call mklabel33(k_level,'  RAM rh (computed) (%) '
+     1,c33_label)
+              endif
+
+              clow = 0.
+              chigh = +100.
+              cint = 10.
+
+              call make_fnam_lp(i4_valid,asc9_tim_t,istatus)
+
+              do i = 1,NX_L
+              do j = 1,NY_L
+                rh_3d(i,j,k_level)=make_rh(float(k_mb)
+     1                               ,temp_3d(i,j,k_level)-273.15
+     1                               ,q_3d(i,j,k_level)*1000.,0.)*100.
+              enddo ! j
+              enddo ! i
+
+              call plot_cont(rh_3d(1,1,k_level),1e0,clow,chigh,cint,
+     1           asc9_tim_t,c33_label,i_overlay,
+     1           c_display,'nest7grid',lat,lon,jdot,
+     1           NX_L,NY_L,r_missing_data,laps_cycle_time)
+
+              endif
+            endif
 
         elseif(c_type .eq. 'hy')then
             write(6,1513)
