@@ -185,6 +185,7 @@ c
      .       grid2(nx,ny,kdim),
      .       gridn(nx,ny,kdim)
 c
+      integer nan
       character*(*)  dir
       character*(*)  ext
       character*3   var(kdim)
@@ -254,19 +255,14 @@ c
       do k=1,kdim
          do j=1,ny
             do i=1,nx
-               gridn(i,j,k)=(1.-weight)*grid1(i,j,k)+weight*grid2(i,j,k)
-
-               if(gridn(i,j,k) .ge. missingflag .or.
-     +              gridn(i,j,k).ne.gridn(i,j,k)) then
-                  print *,'SEVERE Error in time_interp',
-     +                 i,j,k,k/nz,grid1(i,j,k),grid2(i,j,k),weight
-c
-c haven't figured out a good way to do this yet.
-c
-c                  call erase_file(time1,fcst1,dir,ext)
-c                  call erase_file(time2,fcst2,dir,ext)
-
-                  stop
+               if(nan(grid1(i,j,k))+nan(grid2(i,j,k)).gt.0 .or.
+     +              grid1(i,j,k).ge.missingflag .or.
+     +              grid2(i,j,k).ge.missingflag) then
+                  gridn(i,j,k) = missingflag
+               else
+               
+                  gridn(i,j,k)= (1.-weight)*grid1(i,j,k) +
+     +                 weight*grid2(i,j,k)
                endif
 
             enddo
