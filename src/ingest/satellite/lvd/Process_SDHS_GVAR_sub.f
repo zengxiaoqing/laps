@@ -140,6 +140,7 @@ C**********************************************************************
      & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= SIZE)
       READ (8,REC=1,ERR=99)HEADER,IMAGEB
 
+      Close(8)
       imagelen=nlines*nelem/4
       if(imagelen .ne. float(nlines*nelem)/4.) imagelen=imagelen+1
 
@@ -213,6 +214,7 @@ C     CLOSE(9)
 
 99    Write(6,*)'Error Reading GWC file'
       Write(6,*)'Filename = ',filename(1:nf)
+      Close(8)
       stop 
 100   IF (IOSTATUS .NE. 0)THEN
         PRINT *, 'ERROR READING ',FILENAME, ' IO status is', 

@@ -24,7 +24,7 @@ c
        character*3   chtype(max_channels)
 c
        character*200 data_dir(max_channels)
-       character*100 path
+       character*255 path
 
        logical   foundit(max_channels)
        logical   lvis_flag

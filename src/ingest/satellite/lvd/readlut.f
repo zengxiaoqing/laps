@@ -4,6 +4,8 @@ c
       implicit none
 
       integer nx,ny
+      integer nx_in
+      integer ny_in
       integer maxch
       integer istatus
       integer i,j,n,np
@@ -30,7 +32,7 @@ c
 c
 c-----------------------------------------------------------------------
 c
-      istatus = -1
+      istatus = 1
 
       call get_directory('static',cpath,lend)
       cpath=cpath(1:lend)//'lvd/'
@@ -68,10 +70,9 @@ c
               read(12,err=23,end=23) ri_in
               read(12,err=23,end=23) rj_in
               close (12)
-
               call move(ri_in,ri(1,1,ispec),nx,ny)
               call move(rj_in,rj(1,1,ispec),nx,ny)
-           endif
+            endif
          endif
       enddo
       enddo
@@ -83,7 +84,6 @@ c
       goto 1000
 
 101   write(6,*)'Error opening file ',file(1:n)
-      istatus = 1
 
 1000  return
       end
@@ -107,6 +107,8 @@ c
       integer        nlin,npix
       integer        nx,ny
       integer        ispec
+      integer        ilat00,ilon00
+      integer        i_la1,i_lo1
 
       logical        l_lut_flag
 
@@ -144,7 +146,7 @@ c
 
 13    continue
 
-c first check if namelist parameters are current
+c check if namelist parameters are current
 
       l_lut_flag=.false.
       if(c_sat_types(jtype,isat).eq.'wfo')then 
@@ -152,18 +154,32 @@ c first check if namelist parameters are current
          call get_wfo_nav_parms(path_to_raw_sat(ispec,jtype,isat),
      &                          chtype(i),rlat00,rlon00,dx,dy,nx,ny,
      &                          istatus)
-         if(rlat00.ne.r_la1(jtype,isat).or.
-     &      rlon00.ne.r_lo1(jtype,isat).or.
-     &      dx.ne.resx.or.dy.ne.resy.or.
-     &      nlin.ne.nx.or.npix.ne.ny)then
 
+         ilat00=nint(rlat00*1000.)
+         ilon00=nint(rlon00*1000.)
+         i_la1 =nint(r_la1(jtype,isat)*1000.)
+         i_lo1 =nint(r_lo1(jtype,isat)*1000.)
+
+         if((ilat00.ne.i_la1).or.
+     &      (ilon00.ne.i_lo1) )then
+            write(6,*)'rlat00/rlon00/r_la1/rlo1 ',rlat00,rlon00,
+     &r_la1(jtype,isat),r_lo1(jtype,isat)
             l_lut_flag=.true.
          endif
+         if( dx.ne.resx .or. dy.ne.resy )then
+            write(6,*)'dx/dy/resx/resy/ ',dx,dy,resx,resy
+            l_lut_flag=.true.
+         endif
+         if( nlin.ne.ny .or. npix.ne.nx )then
+            write(6,*)'nx/ny/npix/nlin ',nx,ny,npix,nlin
+            l_lut_flag=.true.
+         endif
+
       endif
 
       enddo
 
-      if(cfname_cur(6:9).eq.'0000'.and.
+      if(cfname_cur(6:8).eq.'000'.and.
      &c_sat_types(jtype,isat).eq.'gvr'.or.
      &c_sat_types(jtype,isat).eq.'gwc')then
          l_lut_flag=.true.

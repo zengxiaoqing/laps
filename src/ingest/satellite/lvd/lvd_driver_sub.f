@@ -129,7 +129,6 @@ c                                     used for variable in include 'satellite_co
 
       logical	l_national
       logical   lvis_flag
-      logical   found_data
       logical   lsatqc
       logical   l_lut_flag
 
@@ -238,8 +237,6 @@ c
 c Find and read current satellite files... as many as 4 ir channels and vis.
 c --------------------------------------------------------------------------
 c 
-      found_data=.false.
-
       if(csattype.eq.'cdf'.or.csattype.eq.'gvr'.or.
      &   csattype.eq.'wfo')then
 
@@ -264,25 +261,6 @@ c
          if(istatus .ne. 1)then
             write(6,*)'Did not get data for ',c_fname_cur
             goto 998
-         else
-            found_data = .true.
-            do j = 1,nft
-            do i = 1,ntm(j)
-
-              call lvd_file_specifier(c_type(i,j),ispec,istatus)
-              goto(301,302,303,302,302)ispec
-
-301           r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
-              goto 304
-302           r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
-              goto 304
-303           r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
-
-304           continue
-
-            enddo
-            enddo   
-
          endif
 
       elseif(csattype.eq.'asc')then   !then we are using ascii files for raw ingest sat data
@@ -313,8 +291,6 @@ c    &                        r_image_res_m(1,1),
 c    &                        istatus)
 
 c        if(istatus .eq. 1)then
-c           found_data = .true.
-c        else
 c           write(6,*)'Did not get data for ',c_fname_cur
 c           goto 998
 c        end if
@@ -344,33 +320,16 @@ c
             goto 998
          endif 
 
-         do j = 1,nft
-         do i = 1,ntm(nft)
-
-            call lvd_file_specifier(c_type(i,j),ispec,istatus)
-            goto(311,312,313,312,312)ispec
-
-311           r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
-              goto 314
-312           r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
-              goto 314
-313           r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
-
-314         continue
-
-         enddo
-         enddo
-
       endif
 c
 c Read look-up table for mapping lat/lon data pixels to real i/j pairs
 c ----------------------------------------------------------------------
-c
       call readlut(csatid,csattype,maxchannels,
      &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
 
       if(istatus.eq.1)then
-         write(6,*)'LUT apparently not available: ',csatid,'/',csattype
+
+         write(6,*)'LUT not obtained: ',csatid,'/',csattype
          write(6,*)'Computing lut using genlvdlut_sub'
          call genlvdlut_sub(nx_l,ny_l,gstatus)
          if(gstatus.lt.0)then
@@ -379,35 +338,14 @@ c
          else
             write(6,*)'**********************************'
             write(6,*)
+            call rewrite_satellite_lvd_nl(istatus)
             call readlut(csatid,csattype,maxchannels,
      &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-            if(istatus.lt.0)then
+            if(istatus.eq.1)then
                write(6,*)'Error reading new luts - terminating'
                goto 909
             endif
          endif
-         call rewrite_satellite_lvd_nl(istatus)
-
-      elseif(istatus.lt.0)then
- 
-         write(6,*)'Error in readlut'
-         write(6,*)'Possibly the domain has changed',
-     +' try rebuilding the luts'
-         call genlvdlut_sub(nx_l,ny_l,gstatus)
-         if(gstatus.lt.0)then
-            write(6,*)'Error generating LUT - terminating'
-            goto 910
-         else
-            write(6,*)'**********************************'
-            write(6,*)
-            call readlut(csatid,csattype,maxchannels,
-     &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-            if(istatus.lt.0)then
-               write(6,*)'Error reading new luts - terminating'
-               goto 909
-            endif
-         endif
-         call rewrite_satellite_lvd_nl(istatus)
 
       else
 
@@ -418,7 +356,7 @@ c
 
          if(l_lut_flag.and.istatus.eq.1)then
             write(6,*)'Found difference in nav parms',
-     +' rebuild the lut'
+     +' - rebuild the lut'
             call genlvdlut_sub(nx_l,ny_l,gstatus)
             if(gstatus.lt.0)then
                write(6,*)'Error generating LUT - terminating'
@@ -426,9 +364,10 @@ c
             else
                write(6,*)'**********************************'
                write(6,*)
+               call rewrite_satellite_lvd_nl(istatus)
                call readlut(csatid,csattype,maxchannels,
      &nimages,ntm,c_type,nx_l,ny_l,r_llij_lut_ri,r_llij_lut_rj,istatus)
-               if(istatus.lt.0)then
+               if(istatus.eq.1)then
                   write(6,*)'Error reading new luts - terminating'
                   goto 909
                endif
@@ -437,9 +376,27 @@ c
             write(6,*)'Lut checked out ok'
             write(6,*)
          endif
-         call rewrite_satellite_lvd_nl(istatus)
 
       endif
+c
+c Get image resolution information
+c
+      do j = 1,nft
+      do i = 1,ntm(j)
+
+         call lvd_file_specifier(c_type(i,j),ispec,istatus)
+         goto(301,302,303,302,302)ispec
+
+301           r_image_res_m(i,j)=r_resolution_x_vis(jtype,isat)
+              goto 304
+302           r_image_res_m(i,j)=r_resolution_x_ir(jtype,isat)
+              goto 304
+303           r_image_res_m(i,j)=r_resolution_x_wv(jtype,isat)
+
+304      continue
+
+      enddo
+      enddo
 c
 c Compute look-up table for converting ir counts to brightness temp (Tb).
 c ----------------------------------------------------------------------

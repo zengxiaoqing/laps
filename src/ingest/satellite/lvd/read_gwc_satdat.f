@@ -16,7 +16,7 @@ c
 
       Integer     nlines,nelems
 
-      Integer     i
+      Integer     i,n
       Integer     i4time_current
       Integer     i4time_data
       Integer     i4time_diff
@@ -56,9 +56,12 @@ c
 
       istatus=0
  
-      call read_gwc_header(c_filename,STRPIX,STRSCNL,STPPIX,STPSCNL,
-     &REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH,GOALPHA,STRBDY1,
-     &STRBDY2,STPBDY1,STPBDY2,BEPIXFC,BESCNFC,FSCI,DECIMAT,istatus)
+      n=index(c_filename,' ')-1
+
+      call read_gwc_header(c_filename(1:n),STRPIX,STRSCNL,STPPIX,
+     +    STPSCNL,REQOBSTM,IMGTYPE,GOLATSBP,GOLONSBP,WIDTH,DEPTH,
+     +   GOALPHA,STRBDY1,STRBDY2,STPBDY1,STPBDY2,BEPIXFC,BESCNFC,
+     +   FSCI,DECIMAT,istatus)
       if(istatus.eq.0)then
          write(6,*)'Got gwc header info'
       else
