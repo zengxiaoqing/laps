@@ -86,5 +86,7 @@ cdis
 
  999    continue
 
+        close(1)
+
         end
 
