@@ -64,6 +64,13 @@
 *		 0 if successful
 *		-1 if an error occurs
 ***************************************************************************/
+int isprintable(char c)
+{
+  if((unsigned int) c >= 28 && (unsigned int) c < 128)
+    return(1);
+  return(0);
+}
+
 #ifdef __STDC__
 int cdf_update_stat (int i_cdfid,int i_varid, char *s_field,char *gptr,
                      char *commnt, char *comm_ptr)
@@ -1089,7 +1096,8 @@ long *status;
         c_unit_len = *unit_len + 1;
         units = malloc(c_unit_len * (*n_grids) * sizeof(char));
         fname = malloc(((*s_length)+1) * sizeof(char));
-
+        
+        
 
 /* null out arrays for units,comment before using   */
 /* convert fortran string f_var to c string var and downcase */
@@ -1165,7 +1173,18 @@ long *status;
         for (i = 0; i < *n_grids; i++) {
           p_com = comment + (i * c_com_len);
           pf_com = f_comment + (i * (*com_len));
-          s_len = strlen(p_com);
+
+          for(j=0;j<(*com_len); j++){
+	    if(isprintable(*p_com)){
+	      (*pf_com) = (*p_com);
+	    }else{
+	      (*pf_com) = ' ';
+	    }
+	    p_com++;
+	    pf_com++;
+	  }
+
+	  /*          s_len = strlen(p_com);
           strncpy(pf_com, p_com, s_len);
           pf_com += s_len;
           if (s_len < (*com_len)) {
@@ -1174,8 +1193,20 @@ long *status;
               pf_com++;
             }
           }
+	  */
           p_unit = units + (i * c_unit_len);
           pf_unit = f_units + (i * (*unit_len));
+
+          for(j=0;j<(*unit_len); j++){
+	    if(isprintable(*p_unit)){
+	      (*pf_unit) = (*p_unit);
+	    }else{
+	      (*pf_unit) = ' ';
+	    }
+	    p_unit++;
+	    pf_unit++;
+	  }
+	  /*
           s_len = strlen(p_unit);
           strncpy(pf_unit, p_unit, s_len);
           pf_unit += s_len;
@@ -1185,6 +1216,7 @@ long *status;
               pf_unit++;
             }
           }
+	  */
         }
 
         free_static_malloc(prefix, NULL, NULL, NULL, 
@@ -1192,4 +1224,5 @@ long *status;
         *status = unconv_var;
         return;
 }
+
 
