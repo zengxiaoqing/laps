@@ -82,10 +82,6 @@ c
       parameter (RV_STDV_LIM = 3.0)
       parameter (RV_VAR_LIM = RV_STDV_LIM * RV_STDV_LIM)
 
-      integer*4  MIN_VEL_SAMPLES,MIN_REF_SAMPLES
-      parameter (MIN_VEL_SAMPLES = 4)
-      parameter (MIN_REF_SAMPLES = 4)
-
       real*4 ABS_VEL_MIN,VEL_MIS_CHECK
       parameter (ABS_VEL_MIN = 2.0)
       parameter (VEL_MIS_CHECK = 100.)
