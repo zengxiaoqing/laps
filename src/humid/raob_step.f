@@ -120,14 +120,15 @@ c  normal internal parameters
       real lat_r(100), lon_r(100)
       integer  i_r(100), j_r(100)
       integer lev_r(100), dummy, isound
+      real rdummy
       real p_r(70,100), td_r(70,100), t_r(70,100)
       real temt, temtd, ssh2
       real r, rmin
       real d2r,pi
       real tot_weight,tot_scale_weight,scale_used,weight_avg,counter
+      real wt_ck(ii,jj) ! weight check to test for ample RAOB data
       real rspacing_dum
       real rmd
-      real W_cutoff             !weight cutoff
       real x(ii*jj)
       integer x_sum
       real ave(kk),adev(kk),sdev(kk),var(kk),skew(kk),curt(kk)
@@ -139,6 +140,11 @@ c *** begin routine
       d2r = pi/180.
       look_back_time = raob_lookback
       maxfiles = 200
+      do j = 1,jj
+         do i = 1,ii
+            wt_ck(i,j) = 0.0
+         enddo
+      enddo
       call get_r_missing_data(rmd, istatus)   
 
 c     *** read in the raob data
@@ -179,6 +185,7 @@ c     +++ validate the raob time
          raob_i4time = i4time
          call make_fnam_lp (raob_i4time, filename, istatus)
       endif
+
 
 c     +++ read raob file
       call get_directory('snd',fname,len)
@@ -225,7 +232,8 @@ c     +++ read raob file
       isound = isound -1
 
       if (isound .le. 0 ) then ! no data found
-         write(6,*) 'No RAOB data available in database'
+         write(6,*) 'No usable RAOB data in database'
+         return
       else
          write(6,*) isound, ' Number of RAOBs considered in analysis'
       endif
@@ -233,7 +241,6 @@ c     +++ read raob file
 c     +++ compute the nearest i,j for all sounding locations
 c     also compute weighting function for all locations for given raob
 
-      W_cutoff =  exp ( -1.*(.25 * 6371)**2/101131. )
 
       do k = 1,isound
 
@@ -255,25 +262,32 @@ c     also compute weighting function for all locations for given raob
                   return
                endif
 
-               if (r .ge. 0.25) then
-                  weight(i,j,k) = W_cutoff
-               else
-                  weight(i,j,k) = exp ( -1.*(r * 6371)**2/101131. )
-                  call check_nan(weight(i,j,k),istatus)
-                  if(istatus.eq.0) then ! nan detected bail
-                     write(6,*) 'nan detected in reading raobs (weight)'
-                     write(6,*) i,j,k, 'i,j,k'
-                     return
-                  endif                  
-                  
-c     lam = 600 km
-c     2*lam = 1200km , c = ln(2)*lam**2/4/pi**2 = 25282km**2
-c     denominator = 4*c = 101131.
-c     cutoff of 0.25 results in a weight of 1.275e-11, chosen with care
-c     to eliminate circles.
-
-               endif
-               
+               weight(i,j,k) = exp ( -1.*(r * 6419)**2/519370.)
+               wt_ck(i,j) = wt_ck(i,j) + weight(i,j,k)
+               call check_nan(weight(i,j,k),istatus)
+               if(istatus.eq.0) then ! nan detected bail
+                  write(6,*) 'nan detected in reading raobs (weight)'
+                  write(6,*) i,j,k, 'i,j,k'
+                  return
+               endif 
+                 
+c     r is in radians, convert to degrees
+c     r = r/d2r
+c     r is in degrees convert to nautical miles
+c     r = r * 60.  ! one minute = 1 nautical mile
+c     r is in n. miles, convert to km
+c     r = r * 1.852  ! km
+c     note the factor 6419 converts radians to km.                  
+c     used value of 519370 came from r=600km ---> 0.5 weight
+c     using 600 km as "cutoff" distance, it was assumed that a reasonable
+c     distance for haveing enough raob influence was about 1800 miles
+c     this relates to R=1800*1.6 km or R = 2880 km.  at this distance
+c     the associated weight is 1.159e-7.  The algorithm will accumulate
+c     the weight for each gridpoint and see if there is enough influence
+c     (sum >= 1.159e-7). this is the criteria used for determining enough
+c     raob data to continue.
+c     this step was inserted at this point in the code to avoid further
+c     computations if there were not enough raobs.
 
 c     rmin is the minimum distance to the raob (i,j of raob essentially)
                rmin = min (rmin,r)
@@ -286,19 +300,40 @@ c     rmin is the minimum distance to the raob (i,j of raob essentially)
          enddo
 
       enddo
+c     now check for enough raob data
+
+      rdummy = 1000000.
+
+      do j = 1,jj
+         do i = 1,ii
+            rdummy = min(wt_ck(i,j),rdummy)
+         enddo
+      enddo
+
+      write(6,*) rdummy/float(isound), 'value of min weight in domian'
+
+      if (rdummy/float(isound) .lt. 1.159e-7) then
+         write(6,*) 'Not enough raob weighting in the domain'
+         write(6,*) 'raob step aborting with no mods to field'
+         return
+      endif
 
 c     for afwa and other very large domains where cutoff is encountered
-c     it is necessarey to get rid of discontinuities a bit.
+c     it is necessarey to get rid of discontinuities a bit.  
+c     this is skipped for the moment given the test for data in the
+c     domain... not enough... too bad
 
-      do k = 1, isound
-         do j =1,jj
-            do i =1,ii
-               mask(i,j) = 0
-            enddo
-         enddo
-         mask(i_r(k), j_r(k)) = 1
-         call slv_laplc (weight(1,1,k),mask,ii,jj)
-      enddo
+
+
+c      do k = 1, isound
+c         do j =1,jj
+c            do i =1,ii
+c               mask(i,j) = 0
+c            enddo
+c         enddo
+c         mask(i_r(k), j_r(k)) = 1
+c         call slv_laplc (weight(1,1,k),mask,ii,jj)
+c      enddo
 
 c     *** interpolate q in the vertical at each raob location to the laps
 c     pressure levels
@@ -396,10 +431,10 @@ c     compare computed diff values with QC thresholding... assign rmd if bad
 
             if(sdev(k).ne.rmd) then
  
-               if(abs(diff(k,is)) .le. 1.*sdev(k) ) then
+               if(abs(diff(k,is)) .le. 2.*sdev(k) ) then
                   write(6,*) 'accepting ',k,is,diff(k,is)
                elseif (diff(k,is) .lt. 0.0 
-     1                 .and. abs(diff(k,is)) .le. 1.*sdev(k) ) then
+     1                 .and. abs(diff(k,is)) .le. 3.5*sdev(k) ) then
                   write (6,*) 'accepting extreme negative value', 
      1                 k,is,diff(k,is)
                else
@@ -459,7 +494,9 @@ c     into regions that are near saturation already
 
 c     apply the computed weights and averages to the data point in question
 
-             data(i,j,k) = data(i,j,k)*(scale_used-1.)*weight_avg 
+c             data(i,j,k) = data(i,j,k)*(scale_used-1.)*weight_avg 
+c     1                 + data (i,j,k)
+             data(i,j,k) = data(i,j,k)*(scale_used-1.)
      1                 + data (i,j,k)
 
                   if (data(i,j,k) .lt. 0.0) then
@@ -474,6 +511,18 @@ c     if conditions are not met, data is unchanged
          enddo
       enddo
 
+c      do k = 1, isound
+c         do j =1,jj
+c            do i =1,ii
+c               mask(i,j) = 0
+c            enddo
+c         enddo
+c         mask(i_r(k), j_r(k)) = 1
+c      enddo
+c      do k = 1,kk
+c         call slv_laplc (data(1,1,k),mask,ii,jj)
+c      enddo
+
 c     *** return modified data array
 
       write(6,*) 'end RAOB step'
@@ -485,6 +534,13 @@ c     *** return modified data array
 
  24   write(6,*)  'raob moisture switch missing!, ignoring raobs'
       return
+
+c     old notes kept here for reference.
+c     at this time, these have no bearing on the current algorithm
+c     Dan
+c     lam = 600 km
+c     2*lam = 1200km , c = ln(2)*lam**2/4/pi**2 = 25282km**2
+c     denominator = 4*c = 101131.
 
       end
 

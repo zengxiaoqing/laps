@@ -242,6 +242,7 @@ c lat lon variables
         character*3 var_2d
         integer len_dir
         character*200 fname
+        real factor
  
 c rams stuff--------
         character*9
@@ -302,10 +303,12 @@ c
         integer sat_skip
         integer gvap_switch
 	integer sfc_mix
+        integer mod_4dda_1
+        real    mod_4dda_factor
         namelist /moisture_switch/ raob_switch,
      1       raob_lookback, goes_switch, cloud_switch
      1       ,tiros_switch, sounder_switch, sat_skip
-     1       ,gvap_switch, sfc_mix
+     1       ,gvap_switch, sfc_mix, mod_4dda_1,mod_4dda_factor
 
         integer len
         character*200 cdomain
@@ -350,6 +353,8 @@ c set namelist parameters to defaults (no satellite)
         sat_skip = 0
         gvap_switch = 0
         sfc_mix = 0
+        mod_4dda_1 = 0
+        mod_4dda_factor = 0.02
 
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
@@ -418,9 +423,14 @@ c set namelist parameters to defaults (no satellite)
            write(6,*) 'Sfc moisture field ignored'
       endif
 
+      if (mod_4dda_1 .eq.1) then
+         write(6,*) 'Mod 4dda active, modifying moisture on output'
+         write(6,*) 'Mod 4dda factor is set to, ',mod_4dda_factor
+      else
+         write(6,*) 'Mod 4dda turned off ... nominal state'
+      endif
 
-
-
+      
 c        initialize field to lq3 internal missing data flag.
 c        initialize total pw to laps missing data flag
 
@@ -966,6 +976,22 @@ c       recompute tpw including clouds and supersat corrections
 
 1234    continue  ! goes here if no 3-d temp data...also skips b.l. stuff
 
+c     mod_4dda_1 to decrease overall water in 4dda mode running at AFWA
+
+        if(mod_4dda_1 .eq. 1) then ! act to decrease overall water
+
+           do k=1,kk
+              factor=1.-(float(k)*mod_4dda_factor)
+              do j=1,jj
+                 do i=1,ii
+                    data(i,j,k)=data(i,j,k)*factor
+                 enddo
+              enddo
+           enddo
+   
+
+        endif
+
 c       place the accepted missing data flag in output field
 c       sum over the entire grid for a total water sum value for 
 c       QC study.
@@ -985,6 +1011,9 @@ c       QC study.
         enddo
         enddo
         enddo
+
+
+
 
 c       log the amount of water vapor
 
