@@ -1,6 +1,6 @@
            
       subroutine write_snd(lun_out                         ! I
-     1                    ,maxsnd,maxlvl                   ! I
+     1                    ,maxsnd,maxlvl,nsnd              ! I
      1                    ,iwmostanum                      ! I
      1                    ,stalat,stalon,staelev           ! I
      1                    ,c5_staid,a9time_ob,c8_obstype   ! I
