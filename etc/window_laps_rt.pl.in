@@ -7,11 +7,11 @@
 #
 use strict;
 use English;
-use vars qw($opt_s $opt_i $opt_d $opt_t $opt_c);
+use vars qw($opt_s $opt_i $opt_d $opt_t $opt_c $opt_m);
 use Getopt::Std;
 use File::Copy 'cp';
 
-getopts('s:i:d:t:c:');
+getopts('s:i:d:t:c:m:');
 
 umask 002;
 
@@ -28,6 +28,10 @@ umask 002;
 #
 # opt_c controls the removal of entire data root (=t, for true) or saves the
 # log and lapsprd directories (=f, for false)
+#
+# opt_m controls laps_localization.pl no_ggm switch. ggm = gridgen_model.
+#       if $opt_m is not defined then laps_localization updates the namelists
+#       and also runs gridgen_model.
 #
 # In some cases LAPSINSTALLROOT = LAPS_SRC_ROOT. This is made possible
 # by perl module mkdatadirs in laps_tools.pm. It removes Makefile dependence.
@@ -121,11 +125,12 @@ if( $CONFIG_DOMAIN eq "t" ) {
 
       print "Removing dataroot: $LAPS_DATA_ROOT\n";
       if( -e $LAPS_DATA_ROOT ){
-          if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data"){
+          if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data"||
+              $LAPS_DATA_ROOT ne "/data/lapb/parallel/laps/data"){
               system("rm -rf $LAPS_DATA_ROOT");
           }
       } 
-      if( !-e $DATAROOT/$DOMAIN_NAME ){
+      if( !-e "$DATAROOT/$DOMAIN_NAME" ){
           mkdir "$DATAROOT/$DOMAIN_NAME", 0777 or die "Can't make $DATAROOT/DOMAIN_NAME $!\n";
       }
 
@@ -141,9 +146,14 @@ if( $CONFIG_DOMAIN eq "t" ) {
 
   if(-e $LAPS_DATA_ROOT ){
      if($all_roots_equal eq "F") {
-        print "Keep lapsprd and log subdirectories\n";
-        system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
-        rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+        if(defined $opt_m ){
+           print "Save entire data root\n";
+           rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+        }else{
+           print "Only save lapsprd and log subdirectories\n";
+           system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
+           rename ("$LAPS_DATA_ROOT","$LAPS_DATA_ROOT\_save");
+        }
         mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
         &laps_tools::mkdatadirs($LAPS_DATA_ROOT);
      }else{
@@ -187,20 +197,33 @@ if( defined($LAPS_TEMPLATE) ){
 if( -e $LAPSINSTALLROOT ){chdir "$LAPSINSTALLROOT/etc";
     print "Running $LAPSINSTALLROOT/laps_localization.pl\n";
 }elsif ( -e "LAPS_SRC_ROOT/etc") {chdir "$LAPS_SRC_ROOT/etc" or die "Can't chdir to LAPS INSTALL or SRC_ROOTs $!\n";
-    print "Running $LAPS_SRC_ROOT/laps_localization.pl\n";}
-
+    print "Running $LAPS_SRC_ROOT/laps_localization.pl\n";
+}
 # ***** Run laps_localization.pl *****
 # ------------------------------------
-system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/laps_localization.log");
+if( $opt_m ){
+   print "--no_ggm switch on\n";
+   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --no_ggm='t' > $LAPS_DATA_ROOT/laps_localization.log");
+}else{
+   system("@PERL@ ./laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT > $LAPS_DATA_ROOT/laps_localization.log");
+}
+
+if( defined $opt_m ){
+    rename ("$LAPS_DATA_ROOT\_save/static/topo.dat","$LAPS_DATA_ROOT/static/");
+    rename ("$LAPS_DATA_ROOT\_save/static/latlon.dat","$LAPS_DATA_ROOT/static/");
+    rename ("$LAPS_DATA_ROOT\_save/static/corners.dat","$LAPS_DATA_ROOT/static/");
+    rename ("$LAPS_DATA_ROOT\_save/static/topography.dat","$LAPS_DATA_ROOT/static/");
+    rename ("$LAPS_DATA_ROOT\_save/static/static.nest7grid","$LAPS_DATA_ROOT/static/");
+    rename ("$LAPS_DATA_ROOT\_save/static/drag_coef.dat","$LAPS_DATA_ROOT/static/");
+}
 
 print ("Checking for static.nest7grid");
 system("ls -l $LAPS_DATA_ROOT/static/static.nest7grid"); print "\n";
+
 print "checking laps_localization.log\n";
 open(LOC,"$LAPS_DATA_ROOT/laps_localization.log");
 my @loc=<LOC>;
 close(LOC);
-
-#foreach(@loc){print $_ if(/error/i || /warning/i || /cannot/i);}
 
 my $world_topo_warn_lines = 0;
 foreach(@loc){if(/world/i && /warning/i){$world_topo_warn_lines = 1;}}
