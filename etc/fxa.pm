@@ -4,7 +4,7 @@ sub Get_env'fxa{ #'
     open(FXA,"$fxa_env_file") || return 0;
 
     while(<FXA>){
-#	next if /^#/;
+	next if /^#/;
 	next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
         $evar = $1;
         $eval = $2;
