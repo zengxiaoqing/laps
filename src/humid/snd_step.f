@@ -183,13 +183,24 @@ c     pathname_in = '../lapsprd/snd/*'
          return
          
       endif
-      
-      idx = index(c_filenames(numoffiles), ' ')
-      
-      filename = c_filenames(numoffiles)(idx-13:idx-4)
-      
-      call i4time_fname_lp (filename, raob_i4time, istatus)
-      
+
+c     
+c     NEW CODE TO SET UP FOR RERUNS
+c     
+      do i =  numoffiles, 1, -1
+         
+         idx = index(c_filenames(i), ' ')
+         filename = c_filenames(i)(idx-13:idx-4)
+         call i4time_fname_lp (filename, raob_i4time, istatus)
+         if (
+     1        (i4time-look_back_time) .lt. raob_i4time
+     1        .and.
+     1        raob_i4time .le. i4time
+     1        ) go to 27
+
+      enddo
+ 27   continue
+
 c     +++ validate the raob time
       
       if (raob_i4time + look_back_time .lt. i4time) then ! too old
@@ -200,10 +211,11 @@ c     +++ validate the raob time
       
       if (raob_i4time .gt. i4time) then ! too new
          write (6,*) 'warning raob data found is too new to be used'
-         write (6,*) 'assigning current file time for .snd'
-         raob_i4time = i4time
-         call make_fnam_lp (raob_i4time, filename, istatus)
+         abort = 0              !do not include in variational system
+         return
       endif
+
+      write (6,*) 'Succeeded in finding RAOB file, ',filename
 
 
 c     +++ read SND file  ++++++++++++++  SelectSnd Modify N section++++++++
@@ -273,7 +285,7 @@ c     reject on time condition (one hour lookback)
                write(6,*) 'rejecting on time bounds', r_filename
                n = n - 1 !reject -- out of time bounds
             else
-               write(6,*) 'accepting.. ', r_filename,
+               write(6,*) 'accepting.. ', r_filename,' ',
      1              snd_type
             endif
          else                   ! accept implicitly
