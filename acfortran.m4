@@ -2,7 +2,7 @@ dnl
 dnl tests specific to fortran and it's interface to C
 dnl
 AC_DEFUN(AC_PROG_FC,[
-AC_CHECK_PROGS(FC, f90 xlf f77  gf77,,$PATH)
+AC_CHECK_PROGS(FC, f90 xlf90 xlf f77  gf77,,$PATH)
 test -z "$FC" && AC_MSG_ERROR([no acceptable fortran found in \$PATH])
 cat >conftest.f <<EOF
           program main
@@ -28,6 +28,113 @@ fi
 rm -f conftest* 
 AC_SUBST(FC)
 ])
+
+AC_DEFUN(AC_FC_FUNC_ALLOC,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(For allocate feature in fortran)
+  cat << EOF > testalloc.f
+       program testalloc
+       real,allocatable:: a(:,:)
+       integer i
+       
+       read(5,*) i
+       allocate(A(i,i))
+       deallocate(a)
+       print*, 'allocate works'
+       end
+EOF
+/bin/rm -f testalloc.out
+$FC $FFLAGS testalloc.f -o testalloc > testalloc.out 2>&1
+if test $? != 0
+then
+  AC_MSG_RESULT(no)
+  HAVE_FC_ALLOC=0
+else
+  AC_MSG_RESULT(yes)
+  HAVE_FC_ALLOC=1
+fi
+rm -f testalloc.*
+])
+
+
+AC_DEFUN(AC_FC_BYTE_UNSIGNED,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(to see if $FC recognizes type byte as unsigned)
+  /bin/rm -f testbyte*
+  cat << EOF > testbyte.f
+       program testbyte
+       byte a
+       data a/255/
+       print *, a
+       end
+EOF
+/bin/rm -f testbyte.out
+$FC $FFLAGS testbyte.f -o testbyte > testbyte.out 2>&1
+if test $? != 0
+then
+  AC_MSG_RESULT(no)
+  HAVE_FC_BYTE=0
+else
+  AC_MSG_RESULT(yes)
+  FC_BYTE_MISSING=255
+  HAVE_FC_BYTE=1
+fi
+])
+
+
+AC_DEFUN(AC_FC_BYTE_SIGNED,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(to see if $FC recognizes type byte as signed)
+  /bin/rm -f testbyte*
+  cat << EOF > testbyte.f
+       program testbyte
+       byte a
+       data a/-1/
+       print *, a
+       end
+EOF
+  /bin/rm -f testbyte.out
+  $FC $FFLAGS testbyte.f -o testbyte > testbyte.out 2>&1
+  if test $? != 0	
+  then
+    AC_MSG_RESULT(no)
+    HAVE_FC_BYTE=0
+  else
+    AC_MSG_RESULT(yes)
+    FC_BYTE_MISSING=-1
+    HAVE_FC_BYTE=1
+  fi
+
+])
+
+
+
+AC_DEFUN(AC_FC_INT1,[
+  AC_REQUIRE([AC_PROG_FC])dnl
+  AC_MSG_CHECKING(to see if $FC recognizes type integer*1)
+
+  /bin/rm -f testbyte*
+  cat << EOF > testbyte.f
+       program testbyte
+       integer*1 a
+       data a/-1/
+       print *, a
+       end
+EOF
+  /bin/rm -f testbyte.out
+  $FC $FFLAGS testbyte.f -o testbyte > testbyte.out 2>&1
+  if test $? != 0	
+  then
+    AC_MSG_RESULT(no)
+    HAVE_FC_INT1=0
+  else
+    AC_MSG_RESULT(yes)
+    FC_BYTE_MISSING=-1
+    HAVE_FC_INT1=1
+  fi
+
+])
+
 
 AC_DEFUN(AC_FC_FUNC_GETENV,[
   AC_REQUIRE([AC_PROG_FC])dnl
@@ -176,7 +283,7 @@ else
     DYNAMIC=1
   fi
 fi
-rm -f memtest.f memtest
+rm -f memtest.* memtest
 ])
 dnl
 dnl How to use the preprocessor with fortran
@@ -216,7 +323,7 @@ rm -f cpptest.* cpptest
 AC_DEFUN(AC_FC_INC,[
 dnl test -I command line option
   AC_REQUIRE([AC_PROG_FC])dnl
-  cat > util/inctest.inc << EOF
+  cat > /tmp/inctest.inc << EOF
        integer a
        data a/1/
 EOF
@@ -229,7 +336,7 @@ EOF
 dnl
 dnl  
 dnl
-$FC $FFLAGS -Iutil inctest.f -o inctest 1>/dev/null 2>&1
+$FC $FFLAGS -I/tmp inctest.f -o inctest 1>/dev/null 2>&1
 if test ! -x inctest ; then
   AC_MSG_RESULT(It appears that -I cannot be used with Fortran include
 	        statement. Will add links for include files)
@@ -247,7 +354,7 @@ else
     ac_fc_inc_val=1
   fi
 fi
-rm -f inctest.f inctest util/inctest.inc
+rm -f inctest.f inctest /tmp/inctest.inc
 
 ])
 

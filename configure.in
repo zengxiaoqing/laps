@@ -104,6 +104,11 @@ fi
 AC_FC_CPP
 AC_FC_INC
 
+AC_FC_BYTE_UNSIGNED
+AC_FC_BYTE_SIGNED
+AC_FC_INT1
+
+exit
 if test $ac_fc_inc_val -eq 0
 then
   F77INC="util/f77inc.in"
