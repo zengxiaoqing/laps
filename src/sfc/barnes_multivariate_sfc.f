@@ -51,6 +51,17 @@
             obs_barnes(i)%weight = 1. / rinst_err**2
 
             obs_barnes(i)%ldf = obs(i)%ldf
+C
+C TH: 29 November 2002 Begin hack.
+C
+            if ((c_field .eq. 'p') .or. (c_field .eq. 'msl')) then
+               obs_barnes(i)%mask_sea = 0
+            else
+               obs_barnes(i)%mask_sea = 1
+            endif
+C
+C TH: End hack.
+C
 
             if(obs(i)%sfct_f .ne. badflag)then
                 obs_barnes(i)%qc = .true.
@@ -213,7 +224,7 @@
                     if(l_boundary(i,j))then
                         ibound = ibound + 1
                         if(ibound .ne. (ibound/iskip_bound)*iskip_bound
-     1                                                            )then        
+     1                                                            )then
                             l_use_ob = .false.
                         endif
                     endif
@@ -229,15 +240,23 @@
                 obs_barnes_valid(n_obs_valid)%j = obs_barnes(iob)%j
                 obs_barnes_valid(n_obs_valid)%k = obs_barnes(iob)%k
                 obs_barnes_valid(n_obs_valid)%weight 
-     1                                        = obs_barnes(iob)%weight       
+     1                                        = obs_barnes(iob)%weight
                 obs_barnes_valid(n_obs_valid)%value(1) 
-     1                                        = obs_barnes(iob)%value(1)       
+     1                                        = obs_barnes(iob)%value(1)
                 sumsq_inst = sumsq_inst 
      1                     + 1. / obs_barnes_valid(n_obs_valid)%weight
 
                 obs_barnes_valid(n_obs_valid)%elev 
-     1                                        = obs_barnes(iob)%elev       
-                obs_barnes_valid(n_obs_valid)%ldf = obs_barnes(iob)%ldf        
+     1                                        = obs_barnes(iob)%elev
+                obs_barnes_valid(n_obs_valid)%ldf = obs_barnes(iob)%ldf
+C
+C TH: 29 November 2002 Begin Hack
+C
+                obs_barnes_valid(n_obs_valid)%mask_sea =
+     1             obs_barnes(iob)%mask_sea
+C
+C TH: End hack.
+C
 
             endif ! valid ob
           enddo ! iob
@@ -251,7 +270,7 @@
             if(l_barnes_wide)then
                 if(l_boundary(i,j))then
                     ibound = ibound + 1
-                    if(ibound .ne. (ibound/iskip_bound)*iskip_bound)then       
+                    if(ibound .ne. (ibound/iskip_bound)*iskip_bound)then
                         l_use_ob = .false.
                     endif
                 endif
@@ -266,10 +285,18 @@
                 obs_barnes_valid(n_obs_valid)%i = i
                 obs_barnes_valid(n_obs_valid)%j = j
                 obs_barnes_valid(n_obs_valid)%k = 1
-                obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2       
+                obs_barnes_valid(n_obs_valid)%weight=1.0 / rinst_err**2
                 obs_barnes_valid(n_obs_valid)%value(1) = to_2d_in(i,j)
                 obs_barnes_valid(n_obs_valid)%elev = topo(i,j)
                 obs_barnes_valid(n_obs_valid)%ldf = ldf(i,j)
+C
+C TH: 29 November 2002 Begin hack.
+C
+                obs_barnes_valid(n_obs_valid)%mask_sea =
+     1             obs_barnes(1)%mask_sea 
+C
+C TH: End hack.
+C
 
             endif
 

@@ -323,6 +323,17 @@ c
                     obs_barnes(n_obs)%weight   = 1./rinst_err**2       
                     obs_barnes(n_obs)%value(1) = to(i,j)
                     obs_barnes(n_obs)%qc = .true.
+C
+C TH: 29 November 2002 Begin hack.
+C
+                    if (name .eq. 'PRESSURE') then
+                       obs_barnes(n_obs)%mask_sea = 0
+                    else
+                       obs_barnes(n_obs)%mask_sea = 1
+                    endif
+C
+C TH: 29 November 2002 End hack.
+C
                 endif
             enddo ! j
             enddo ! i
@@ -1015,11 +1026,11 @@ c
 	    enddo !n
 	    if(sumwt2 .eq. 0.) then
 	      if(ipass .eq. 1) then
-                print *,' barneswide weird loop....'
+!               print *,' barneswide weird loop....'
 
-!               print *,' barneswide weird loop....skip rest of routine'
-!               istatus = 0
-!               if(.true.)return
+                print *,' barneswide weird loop....skip rest of routine'
+                istatus = 0
+                if(.true.)return
 
 	        sum2 = 0.
 	        sumwt2 = 0.
