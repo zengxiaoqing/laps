@@ -93,7 +93,7 @@ c           var_2d = 'V'  changed to V3 LW 9/97
 
             write(6,*)' Reading u_mdl_curr'
 c           var_2d = 'U'  changed to U3 LW 9/97
-            var_2d = 'U3
+            var_2d = 'U3'
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1          ,u_mdl_curr,istatus)
@@ -107,7 +107,7 @@ c           var_2d = 'U'  changed to U3 LW 9/97
 
             write(6,*)' Reading v_mdl_curr'
 c           var_2d = 'V'  changed to V3 LW 9/97
-            var_2d = 'V3
+            var_2d = 'V3'
             l_fill = .true.
             call get_modelfg_3d(i4time_lapswind,var_2d,NX_L,NY_L,NZ_L
      1               ,v_mdl_curr,istatus)
