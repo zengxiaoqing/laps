@@ -1408,7 +1408,16 @@ Outputs:
 	lmt	2d grid	        max echo tops (LMT), 
                                 Low level reflectivity (LLR)
 	lco     3d grid         cloud omega       
-	lrp     3d grid         3D icing index 
+	lrp     3d grid         3D icing index (integers 0-6)
+
+                                0 is no icing
+                                1 is light continuous
+                                2 is mod   continuous
+                                3 is heavy continuous
+                                4 is light intermittent
+                                5 is mod   intermittent
+                                6 is heavy intermittent
+
 	lty     3d grid         3D cloud & precip type (CTY,PTY) 
                                     threshold for cloud cover in CTY is 0.65.
 
