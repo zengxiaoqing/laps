@@ -158,7 +158,7 @@ if test $? -eq 0
 then
   if test "$arch" = "i686"
   then
-    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4"
+    FFLAGS="$FFLAGS -Mnofree -byteswapio -i4 -Bstatic"
     FIXED="-Mnofree"
     FREE="-Mfree"
     CPP="$FC"
@@ -170,12 +170,12 @@ fi
 dnl  Check to see if we are running the mpif90
 dnl  compiler on a PC. If so, set flags appropriately.
 
-grep 'pgf' << EOF
+grep 'mpif90' << EOF
 $FC
 EOF
 if test $? -eq 0
 then
-  if test "$arch" = "mpif90"
+  if test "$arch" = "i686"
   then
     FFLAGS="$FFLAGS -w90 -w95 -cm"
     FREE="-FR"
