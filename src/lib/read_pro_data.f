@@ -144,11 +144,22 @@ cdoc    Returns wind profile data from the PRO file
                 l_sfc = .false.
 
                 if( abs(ob_pr_ht_obs_in - elev_pr(i_pr)) .lt. 1.)then
-                    write(6,*)' ERROR: elevation agrees with sfc'
+                    write(6,*)' Note: elevation agrees with sfc'
      1                       ,ob_pr_ht_obs_in,elev_pr(i_pr)
-                    istatus = 0
-                    return
-                endif                    
+
+                    if(level .gt. 1)then
+                        write(6,*)' ERROR: elevation agrees with sfc'
+     1                       ,ob_pr_ht_obs_in,elev_pr(i_pr)
+                        istatus = 0
+                        return
+                    else
+                        write(6,*)' Note: no P, T, RH present at sfc'       
+                        sfc_p(i_pr) = badflag
+                        sfc_t(i_pr) = badflag
+                        sfc_rh(i_pr) = badflag
+                    endif
+
+                endif ! gate elevation matches the surface
 
  415            if(    ob_pr_di_obs_in .ne. badflag 
      1           .and. ob_pr_sp_obs_in .ne. badflag )then    ! good wind
