@@ -116,7 +116,7 @@ if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
   print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
 } 
 
-@profiletypes = qw(RASS TOWER);
+@profiletypes = qw(RASS TOWER RAOB RADIOMTR);
 foreach $profiletype (@profiletypes) {
 # Print $profiletype (only if present)
   $i=0; $iprint=0; $ihead=0;
