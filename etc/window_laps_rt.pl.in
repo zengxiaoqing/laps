@@ -64,6 +64,14 @@ print "Laps_Data_Root = $LAPS_DATA_ROOT\n";
 print "Laps Template = $LAPS_TEMPLATE \n";
 print "Config Domain = $CONFIG_DOMAIN \n";
 
+# WFO: 1st time - save the existing LAPS_DATA_ROOT (in $FXA_HOME/../laps/data) before removing it.
+my $FXA_HOME = $ENV{"FXA_HOME"};
+if(-d $FXA_HOME && ! -d "$FXA_HOME/../laps/data"){
+   mkdir "$FXA_HOME/../laps/data", 0777 or die "Can't make directory $FXA_HOME/../laps/data";
+   system("mv $LAPS_DATA_ROOT/static $FXA_HOME/../laps/data/.");
+   system("mv $LAPS_DATA_ROOT/cdl $FXA_HOME/../laps/data/.");
+}
+
 require "makedatadirs.pm";
 
 if( $CONFIG_DOMAIN eq "t") {
@@ -71,15 +79,14 @@ if( $CONFIG_DOMAIN eq "t") {
   system("rm -rf $LAPS_DATA_ROOT") if( $LAPS_DATA_ROOT ne "/data/lapb/operational/laps/data");
   mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make directory in $LAPS_DATA_ROOT $!\n";
   print "Using makedatadir.pm to generate lapsdataroot directory structure\n";
-  makedatadirs::makedatadirs($LAPS_SRC_ROOT,$LAPS_DATA_ROOT);
-  }
-else{
+  makedatadirs::makedatadirs($LAPS_DATA_ROOT);
+}else{
   print "Keep lapsprd and log subdirectories\n";
   system ("rm -rf $LAPS_DATA_ROOT/static");system ("rm -rf $LAPS_DATA_ROOT/cdl");
   rename ("$LAPS_DATA_ROOT", "$LAPS_DATA_ROOT\_save");
   mkdir "$LAPS_DATA_ROOT", 0777 or die "Can't make $LAPS_DATA_ROOT $!\n";
   mkdir "$LAPS_DATA_ROOT/static", 0777 or die "Can't make static in $LAPS_DATA_ROOT $!\n";
-  }
+}
 
 if( $LAPS_TEMPLATE ){
     print "Copy template namelist files from $LAPS_TEMPLATE to $LAPS_DATA_ROOT/static\n";
