@@ -52,6 +52,7 @@ EXEDIRS = src/accum \
           src/ingest/satellite/sounding \
           src/ingest/sfc_qc \
 	  src/lapsprep \
+	  src/lfmpost \
           src/wfoprep \
           src/sfc \
           src/sfc/table \
