@@ -6127,7 +6127,7 @@ c             if(cint.eq.0.0)cint=0.1
 990     return
         end
 
-        subroutine plot_stations(asc_tim_9,c33_label,c_field,i_overlay
+        subroutine plot_stations(asc_tim_9,c_label,c_field,i_overlay
      1   ,namelist_parms,plot_parms
      1   ,c_display,lat,lon,c_file,iflag
      1   ,NX_L,NY_L,laps_cycle_time,zoom)
@@ -6136,7 +6136,7 @@ c             if(cint.eq.0.0)cint=0.1
 !                                   dummy arguments
 !       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
 
-        character c33_label*33,asc_tim_9*9,c_metacode*2,asc_tim_24*24
+        character c_label*(*),asc_tim_9*9,c_metacode*2,asc_tim_24*24
         character c_field*2,c_display*1
         character*(*) c_file
 
@@ -6153,7 +6153,7 @@ c             if(cint.eq.0.0)cint=0.1
 
         logical l_obs
 
-        write(6,1505)c33_label,asc_tim_9
+        write(6,1505)c_label(1:33),asc_tim_9
 1505    format(2x,a33,2x,a9)
 
         call i4time_fname_lp(asc_tim_9,I4time_file,istatus)
@@ -6258,7 +6258,7 @@ c             if(cint.eq.0.0)cint=0.1
                 call plot_station_locations(i4time_file,lat,lon
      1                      ,NX_L,NY_L,iflag,maxstns,c_field,zoom
      1                      ,namelist_parms,plot_parms
-     1                      ,asc_tim_24,c33_label,i_overlay)       
+     1                      ,asc_tim_24,c_label,i_overlay)       
             endif
 
         endif
