@@ -394,14 +394,17 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,c_raddat_type, c80_description, path_to_topt30s
      1  ,path_to_topt10m, path_to_pctl10m
      1  ,path_to_soiltype_top30s, path_to_soiltype_bot30s
-     1  ,path_to_landuse30s,path_to_green_frac10m
+     1  ,path_to_landuse30s,path_to_greenfrac_10m
      1  ,path_to_soiltemp1deg
      1  ,fdda_model_source_cmn
 
 
         if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
 !          print *, 'It works'
-           goto999                                           ! Normal Return
+!          goto999                                           ! Normal Return
+!          ipass = 1
+           istatus = 1
+           return
         endif
 
 !       While we are here, let's put the grid name into the common area
@@ -1384,7 +1387,7 @@ c-------------------------------------------------------------
           return
       endif
 
-      path_to_green_frac_10m =  path_to_green_frac10m
+      path_to_green_frac_10m =  path_to_greenfrac_10m
 
       return
       end
