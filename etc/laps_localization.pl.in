@@ -154,8 +154,12 @@ foreach(@cdl_list){
 #
 # localize optran coefficients
 #
-print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
-run_sys::run_sys("@CSH@ $LAPSROOT/etc/localize_optran.com $LAPSROOT/bin/ $LAPS_DATA_ROOT/static");
+  print "Localizing Optran Coefficients based on moisture_switch.nl namelist settings\n";
+  run_sys::run_sys("@CSH@ $LAPSROOT/etc/localize_optran.com $LAPSROOT/bin/ $LAPS_DATA_ROOT/static");
+
+#
+# run gridgen model
+#
 
 run_sys::run_sys("$LAPSROOT/bin/gridgen_model.exe");	
 
@@ -398,31 +402,28 @@ sub wfo_localization{
       foreach (@template)
       {
 	  $_ =~ s/\$FXA_DATA/$FXA_DATA/g;
-	  if(/standard_latitude\s*=/){
+	  if(/standard_latitude\s*=/i){
 	      print OUTFILE " standard_latitude=$lat,\n";
-	  }elsif(/standard_longitude\s*=/){
+	  }elsif(/standard_longitude\s*=/i){
 	      print OUTFILE " standard_longitude=$lon,\n";
-	  }elsif(/grid_cen_lat_cmn\s*=/){
+	  }elsif(/grid_cen_lat_cmn\s*=/i){
 	      print OUTFILE " grid_cen_lat_cmn=$lat,\n";
-	  }elsif(/grid_cen_lon_cmn\s*=/){
+	  }elsif(/grid_cen_lon_cmn\s*=/i){
 	      print OUTFILE " grid_cen_lon_cmn=$lon,\n";
-	  }elsif(/\sISATS\s*=/){
+	  }elsif(/\sISATS\s*=/i){
 	      if($goes==8){
 		  print OUTFILE " ISATS = 1,0,0,0,\n";
 	      }else{
 		  print OUTFILE " ISATS = 0,0,1,0,\n";
 	      }
 	      
-          }elsif(/\sgoes_switch\s*=/){
+          }elsif(/\sgoes_switch\s*=/i){
 	      print OUTFILE " goes_switch = $goes,\n";
-	  }elsif(/\sITYPES\s*=/){
+	  }elsif(/\sITYPES\s*=/i){
 	      if($goes==8){
 		  print OUTFILE " ITYPES = 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,\n";
 	      }else{
-		  print OUTFILE " ITYPES = 0,0,0,0,
-                                           0,0,0,0,
-                                           0,1,0,0,
-                                           0,0,0,0,\n";
+		  print OUTFILE " ITYPES = 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,\n";
 	      }
 
 	  }else{
@@ -433,6 +434,5 @@ sub wfo_localization{
   }
 
   $goes = "g".$goes;
-
 
 }
