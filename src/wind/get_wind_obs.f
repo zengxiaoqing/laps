@@ -77,6 +77,7 @@ cdis
         real lat_pr(MAX_PR)                        
         real lon_pr(MAX_PR)                        
         character*8 obstype(MAX_PR)
+        character*5 c5_name_a(MAX_PR)
 
 !       Profiler Observations
 
@@ -146,7 +147,7 @@ cdis
 
         call read_profiles(
      1            i4time_lapswind,heights_3d,                       ! I
-     1            lat_pr,lon_pr,obstype,                            ! O
+     1            lat_pr,lon_pr,obstype,c5_name_a,                  ! O
      1            lat,lon,                                          ! I
      1            MAX_PR,MAX_PR_LEVELS,                             ! I
      1            l_use_raob,l_use_all_nontower_lvls,               ! I
@@ -176,6 +177,7 @@ cdis
      1          ,lat,lon                                          ! I
      1          ,NX_L,NY_L,NZ_L,MAX_PR                            ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles  ! I
+     1          ,c5_name_a                                        ! I
      1          ,r_missing_data                                   ! I
      1          ,weight_prof                                      ! O
      1          ,l_profiler,l_use_all_nontower_lvls               ! I
@@ -272,6 +274,7 @@ cdis
      1          ,lat,lon                                             ! I
      1          ,ni,nj,nk,MAX_PR                                     ! I
      1          ,nlevels_obs_pr,lat_pr,lon_pr,obstype,n_profiles     ! I
+     1          ,c5_name_a
      1          ,r_missing_data                                      ! I
      1          ,weight_prof                                         ! O
      1          ,l_profiler,l_use_all_nontower_lvls                  ! I
@@ -289,6 +292,7 @@ cdis
         real*4 lat_pr(MAX_PR)
         real*4 lon_pr(MAX_PR)
         character*8 obstype(MAX_PR)
+        character*5 c5_name_a(MAX_PR)
         real*4 ob_pr_u (MAX_PR,nk) ! Vertically interpolated Profile wind
         real*4 ob_pr_v (MAX_PR,nk) ! Vertically interpolated Profile wind
 
@@ -324,7 +328,9 @@ cdis
                         j_ob = nint(rj)
 
                         write(6,*)' Remapping profile',i_pr,i_ob,j_ob
-     1                           ,nlevels_obs_pr(i_pr),' ',obstype(i_pr)       
+     1                           ,nlevels_obs_pr(i_pr)
+     1                           ,' ',obstype(i_pr)       
+     1                           ,' ',c5_name_a(i_pr)       
 
                         do k = 1,nk
                             if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
