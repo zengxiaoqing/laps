@@ -439,7 +439,7 @@ C
 
       if(iswitch .eq. 1)go to 400
 
-      call open_ext(i4time_sys,'snd',11,istatus)
+      call open_ext(11,i4time_sys,'snd',istatus)
 
       write(6,*)
       write(6,511,err=998)
@@ -473,8 +473,8 @@ C
               td_c = tpout(ilevel) - 273.15 - tdout(ilevel)
           endif
 
-          if(wdout(ilevel) .eq. 99999. .or.
-     1       wsout(ilevel) .eq. 99999.)then
+          if(abs(wdout(ilevel)) .ge. 99999. .or.
+     1       abs(wsout(ilevel)) .ge. 99999.)then
               wdout(ilevel) = r_missing_data
               wsout(ilevel) = r_missing_data
           endif
