@@ -1,23 +1,67 @@
  
        subroutine radar_init()       ! Open Polar NetCDF file for the proper time
  
-       character*150 path_to_wideband,filename
+       integer max_files
+       parameter(max_files=1000)
+
+       character*150 path_to_wideband,c_filespec,filename
+     1              ,c_fnames(max_files)
        character*9 a9_time
+       integer*4 i4times(max_files),i4times_lapsprd(max_files)
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
 
  !     Get path to file
        call get_remap_parms(path_to_wideband,istatus)
        call s_len(path_to_wideband,len_path)
  
- !     Get i4time of file
-       i4time_now = i4time_now_gg()
-       call get_file_time(path_to_wideband,i4time_now,i4time_nearest)
-       call make_fnam_lp(i4time_nearest,a9_time,istatus)
+ !     Get i4time of 01 elevation file nearest to 15 minutes ago
+       i4time_now = i4time_now_gg() 
+       c_filespec = path_to_wideband//'/*_elev01'
+
+       call get_file_times(c_filespec,max_files,c_fnames
+     1                    ,i4times,i_nbr_files_out,istatus)
        if(istatus .ne. 1)then
            stop
        endif
 
-       filename = path_to_wideband(1:len_path)//'/'//a9_time
-       write(6,*)' We should here open this file: ',filename
+       call get_filespec('v01',1,c_filespec,istatus)
+       call get_file_times(c_filespec,max_files,c_fnames
+     1                   ,i4times_lapsprd,i_nbr_lapsprd_files,istatus)
+
+       if(i_nbr_files_out .ge. 2)then
+           i4time_process = i4times(i_nbr_files_out-1)
+           call make_fnam_lp(i4time_process,a9_time,istatus)
+           do i = 1,i_nbr_lapsprd_files
+               if(i4time_process .eq. i4times(i))then
+                   write(6,*)' Product file already exists ',a9time
+               endif
+           enddo ! i
+       else
+           write(6,*)' # of files = ',i_nbr_files_out
+       endif
+
+!      Pull in housekeeping data from 1st tilt
+       filename = path_to_wideband(1:len_path)//'/'//a9_time//'_elev01'
+       write(6,*)' We will read this file for housekeeping: '
+       write(6,*)filename
+
+       call get_tilt_netcdf_data(filename
+     1                               ,siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,istatus)
       
        return
        end
@@ -52,25 +96,56 @@
 
  
        function get_altitude()
-       integer get_altitude          ! Site altitude (meters * 100000)
+       integer get_altitude          ! Site altitude (meters)
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_altitude = 0
+       get_altitude = nint(siteAlt)
+
        return
        end
  
  
        function get_latitude()
-       integer get_latitude          ! Site latitude (meters * 100000)
+       integer get_latitude          ! Site latitude (degrees * 100000)
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_latitude = 0
+       get_latitude = nint(siteLat*100000)
        return
        end
  
  
        function get_longitude()
-       integer get_longitude         ! Site longitude (meters * 100000)
+       integer get_longitude         ! Site longitude (degrees * 100000)
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_longitude = 0
+       get_longitude = nint(siteLon*100000)
        return
        end
  
@@ -102,73 +177,90 @@
  
        function get_fixed_angle()
        integer get_fixed_angle     ! Beam tilt angle (degrees * 100)
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_fixed_angle = 0
+       get_fixed_angle = nint(elevationAngle * 100.)
        return
        end
  
  
        function get_scan()
        integer get_scan            ! Scan #
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_scan = 0
+       get_scan = elevationNumber
        return
        end
  
  
        function get_tilt()
        integer get_tilt            ! Tilt #
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_tilt = 0
+       get_tilt = elevationNumber
        return
        end
  
  
-       function get_year()
+       function get_volume_time()
+       integer get_volume_time
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_year = 0
-       return
-       end
- 
- 
-       function get_month()
- 
-       get_month = 0
-       return
-       end
- 
-       function get_day()
- 
-       get_day = 0
-       return
-       end
- 
- 
-       function get_hour()
- 
-       get_hour = 0
-       return
-       end
- 
- 
-       function get_min()
- 
-       get_min = 0
-       return
-       end
- 
- 
-       function get_sec()
- 
-       get_sec = 0
+       get_volume_time = i4time_process
        return
        end
  
  
        function get_vcp()
        integer get_vcp
+
+       integer*2 VCP, elevationNumber
+       common/radar_housekeeping/
+     1                                siteLat                        
+     1                               ,siteLon                        
+     1                               ,siteAlt                        
+     1                               ,elevationAngle
+     1                               ,elevationNumber
+     1                               ,VCP
+     1                               ,i4time_process
  
-       get_vcp = 0
+       get_vcp = VCP
        return
        end
  

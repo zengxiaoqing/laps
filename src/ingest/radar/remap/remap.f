@@ -77,6 +77,16 @@
 
       integer VERBOSE
 
+!     Function call declarations
+      integer get_field_num
+      integer get_altitude
+      integer get_latitude
+      integer get_longitude
+      integer get_fixed_angle
+      integer get_scan
+      integer get_tilt
+
+
 !     Beginning of Executable Code 
 !     Some initializations  
       VERBOSE = 1
@@ -191,26 +201,19 @@
               past_angle = i_angle 
               eleva = 0.01 * float(i_angle)
 
-              iyr = get_year() 
-              imon = get_month() 
-              iday = get_day() 
-              ihour = get_hour() 
-              imin = get_min() 
-              isec = get_sec() 
-              i4time_vol = int_to_i4time(iyr,imon,iday,ihour,imin,isec) 
+              call get_volume_time(i4time_vol)
               call make_fnam_lp (i4time_vol,string_time,i_status) 
 
               i_vcp=get_vcp() 
               write(6,*)'   VCP number for this volume: ',i_vcp
 
               if(VERBOSE .eq. 1)then
-                write(6,*)'   iyr, imon, iday ',iyr,imon,iday
                 write(6,*)' i4time_vol returned ',i4time_vol
               endif
 
-              write(6,*)' ihour, imin, isec ',ihour,imin,isec
               write(6,*)' Time is ',string_time
               initial_ray = 0
+
             endif ! initial_ray = 1
 
             if( i_tilt .eq. past_tilt .and. i_scan .eq. past_scan .and.
@@ -247,7 +250,7 @@
 !             ref_ptr += NUM_REF_GATES 
 !             vel_ptr += NUM_VEL_GATES 
 
-            else
+            else ! end of tilt
 
               if( i_angle .lt. past_angle .or. i_scan .ne. past_scan )
      1             i_last_scan = 1

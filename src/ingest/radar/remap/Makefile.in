@@ -52,7 +52,7 @@ INSTALL = @INSTALL@
 
 # Define all source code to be compiled and placed in local library.
 
-SRC=remap.f netcdfio.f
+SRC=remap.f netcdfio.f get_tilt_netcdf.f
 
 
 all: exe
