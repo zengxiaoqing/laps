@@ -270,8 +270,6 @@ cdis
 !       Arrays used to read in satellite data
         real*4 tb8_k(NX_L,NY_L)
         real*4 tb8_cold_k(NX_L,NY_L)
-        real*4 vis_in(NX_L,NY_L)
-        real*4 vis_out(NX_L,NY_L)
         real*4 albedo(NX_L,NY_L)
         real*4 cloud_frac_vis_a(NX_L,NY_L)
         real*4 cloud_frac_co2_a(NX_L,NY_L)
@@ -683,7 +681,7 @@ C READ IN SATELLITE DATA
         enddo
         enddo
 
-        call get_vis(i4time,vis_in,vis_out,solar_alt
+        call get_vis(i4time,solar_alt
      1              ,cloud_frac_vis_a,albedo,ihist_alb
      1              ,NX_L,NY_L,KCLOUD,r_missing_data,istat_vis)
 
@@ -807,7 +805,7 @@ C INSERT RADAR DATA
 
 C       INSERT VISIBLE SATELLITE DATA
         if(istat_vis .eq. 1)then
-            call insert_vis(i4time,clouds_3d,vis_in,vis_out,cld_hts
+            call insert_vis(i4time,clouds_3d,cld_hts
      1        ,topo,cloud_frac_vis_a,albedo,ihist_alb
      1        ,NX_L,NY_L,KCLOUD,r_missing_data
      1        ,vis_radar_thresh_cvr,vis_radar_thresh_dbz
@@ -1888,7 +1886,7 @@ C       EW SLICES
 
                 n_csc_pts = n_csc_pts + 1
 
-            else                                              ! Poss Clouds
+            else                               ! Cloud Cover or missing albedo
                 cvr_snow_cycle(i,j) = r_missing_data
                 n_no_csc_pts = n_no_csc_pts + 1
 
