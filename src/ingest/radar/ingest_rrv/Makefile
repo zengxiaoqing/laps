@@ -21,11 +21,14 @@ DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a   \
 
 EXE = ingest_rrv.exe
 
-SRC =  buildcomment.f    get_rrv_parms.f \
-       genv01lut_sub.f   gen_llij_lut_v01.f    getradarinfo.f \
-       read_radar_info.f readradar_v01_cdf.f   rrvdat2laps_v01.f
+SRC =  genv01lut_sub.f \
+       gen_llij_lut_v01.f \
+       readradar_v01_cdf.f \
+       rrvdat2laps_v01.f \
+       buildcomment.f \
+       config_rrv_common.f
 
-MAIN=ingest_rrv.f
+MAIN=ingest_rrv.f $(SRCROOT)/src/lib/block_data.f
 
 LIB=libgenrrv.a
 
