@@ -84,7 +84,7 @@ cdis
       end
 
 
-      subroutine plot_vr(i,j,vel,imax,jmax,c1_plottype)
+      subroutine plot_vr(i,j,vel,imax,jmax,c1_plottype,n_plotted)
 
       character*1 c1_plottype
 
@@ -135,9 +135,17 @@ cdis
 
           write(6,*)i,j
 
-          do uu = u-du/2.,u+du/2.,du/25.
-              call line(uu,v-dv/2.,uu,v+dv/2.)
-          enddo
+          if(n_plotted .eq. 1)then
+              do uu = u-du/2.,u+du/2.,du/25.
+                  call line(uu,v-dv/2.,uu,v+dv/2.)
+              enddo
+
+          else ! 2 or more
+              do uu = u-du/2.,u,du/25.
+                  call line(uu,v-dv/2.,uu,v+dv/2.)
+              enddo
+
+          endif
 
       elseif(c1_plottype .eq. 'a')then ! Plot arrows
 
