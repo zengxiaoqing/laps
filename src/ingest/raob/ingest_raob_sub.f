@@ -1,70 +1,155 @@
-      subroutine get_raob_data(i4time_sys,ilaps_cycle_time,NX_L,NY_L
+
+      subroutine get_raob_data(
+     1                         i4time_sys,ilaps_cycle_time,NX_L,NY_L
      1                        ,i4time_raob_earliest,i4time_raob_latest       
      1                        ,filename
      1                        ,istatus)
 
-!     Ken Dritz     28-Jul-1997       Added NX_L, NY_L to dummy argument list.
-!     Ken Dritz     28-Jul-1997       Added call to get_r_missing_data.
-!     Ken Dritz     28-Jul-1997       Changed LAPS_DOMAIN_FILE to 'nest7grid'.
-!     Ken Dritz     28-Jul-1997       Removed include of lapsparms.for.
-!     Ken Dritz     28-Jul-1997       Removed comment about "non-automatic
-!                                     declarations" (above arrays dimensioned
-!                                     by NX_L, NY_L); they are now automatic.
-
-C     FORTRAN TEMPLATE FOR FILE= 9614912000300o                          
-      PARAMETER (NVARS=39) !NUMBER OF VARIABLES
-      PARAMETER (NREC=   200)   !CHANGE THIS TO GENERALIZE
-C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 39
-      INTEGER*4 RCODE
-      INTEGER*4 RECDIM
-C     ****VARIABLES FOR THIS NETCDF FILE****
-C
-      INTEGER*4   wmoStaNum                      (NREC)
-      CHARACTER*1 staName                        (   6,NREC)
-      REAL*4      staLat                         (NREC)
-      REAL*4      staLon                         (NREC)
-      REAL*4      staElev                        (NREC)
-      REAL*8      synTime                        (NREC)
-      INTEGER*4   numMand                        (NREC)
-      INTEGER*4   numSigT                        (NREC)
-      INTEGER*4   numSigW                        (NREC)
-      INTEGER*4   numMwnd                        (NREC)
-      INTEGER*4   numTrop                        (NREC)
-      REAL*8      relTime                        (NREC)
-      INTEGER*4   sondTyp                        (NREC)
-      REAL*4      prMan                          (  22,NREC)
-      REAL*4      htMan                          (  22,NREC)
-      REAL*4      tpMan                          (  22,NREC)
-      REAL*4      tdMan                          (  22,NREC)
-      REAL*4      wdMan                          (  22,NREC)
-      REAL*4      wsMan                          (  22,NREC)
-      REAL*4      prSigT                         ( 150,NREC)
-      REAL*4      tpSigT                         ( 150,NREC)
-      REAL*4      tdSigT                         ( 150,NREC)
-      REAL*4      htSigW                         (  75,NREC)
-      REAL*4      wdSigW                         (  75,NREC)
-      REAL*4      wsSigW                         (  75,NREC)
-      REAL*4      prTrop                         (   3,NREC)
-      REAL*4      tpTrop                         (   3,NREC)
-      REAL*4      tdTrop                         (   3,NREC)
-      REAL*4      wdTrop                         (   3,NREC)
-      REAL*4      wsTrop                         (   3,NREC)
-      REAL*4      prMaxW                         (   4,NREC)
-      REAL*4      wdMaxW                         (   4,NREC)
-      REAL*4      wsMaxW                         (   4,NREC)
-      CHARACTER*1 rawTTAA                        ( 601,NREC)
-      CHARACTER*1 rawTTBB                        ( 601,NREC)
-      CHARACTER*1 rawTTCC                        ( 601,NREC)
-      CHARACTER*1 rawTTDD                        ( 601,NREC)
-      CHARACTER*1 rawPPBB                        ( 601,NREC)
-      CHARACTER*1 rawPPDD                        ( 601,NREC)
-C*************************************
-      INTEGER*4 START(10)
-      INTEGER*4 COUNT(10)
-      INTEGER VDIMS(10) !ALLOW UP TO 10 DIMENSIONS
-      CHARACTER*31 DUMMY
-
       character*70 filename
+
+!.............................................................................
+
+      include 'netcdf.inc'
+      integer mTropNum, mWndNum, manLevel, recNum, sigTLevel,
+     +     sigWLevel,nf_fid, nf_vid, nf_status
+
+C
+C  Open netcdf File for reading
+C
+      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'NF_OPEN ',filename
+      endif
+C
+C  Fill all dimension values
+C
+C
+C Get size of mTropNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'mTropNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim mTropNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,mTropNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim mTropNum'
+      endif
+C
+C Get size of mWndNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'mWndNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim mWndNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,mWndNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim mWndNum'
+      endif
+C
+C Get size of manLevel
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'manLevel',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim manLevel'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,manLevel)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim manLevel'
+      endif
+C
+C Get size of recNum
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'recNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,recNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim recNum'
+      endif
+C
+C Get size of sigTLevel
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'sigTLevel',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim sigTLevel'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,sigTLevel)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim sigTLevel'
+      endif
+C
+C Get size of sigWLevel
+C
+      nf_status = NF_INQ_DIMID(nf_fid,'sigWLevel',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim sigWLevel'
+      endif
+      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,sigWLevel)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'dim sigWLevel'
+      endif
+      call main_sub(nf_fid, mTropNum, mWndNum, manLevel, recNum,
+     +     sigTLevel, sigWLevel
+!.............................................................................
+     1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     1                        ,i4time_raob_earliest,i4time_raob_latest       
+     1                        ,istatus)
+
+
+      return
+!.............................................................................
+      end
+C
+C
+      subroutine main_sub(nf_fid, mTropNum, mWndNum, manLevel, recNum,
+     +     sigTLevel, sigWLevel
+!.............................................................................
+     1                        ,i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     1                        ,i4time_raob_earliest,i4time_raob_latest       
+     1                        ,istatus)
+!.............................................................................
+
+      include 'netcdf.inc'
+      integer mTropNum, mWndNum, manLevel, recNum, sigTLevel,
+     +     sigWLevel,nf_fid, nf_vid, nf_status
+      integer numMand(recNum), numMwnd(recNum), numSigT(recNum),
+     +     numSigW(recNum), numTrop(recNum), sondTyp(recNum),
+     +     wmoStaNum(recNum)
+      real htMan( manLevel, recNum), htSigW( sigWLevel, recNum),
+     +     prMan( manLevel, recNum), prMaxW( mWndNum, recNum),
+     +     prSigT( sigTLevel, recNum), prTrop( mTropNum, recNum),
+     +     staElev(recNum), staLat(recNum), staLon(recNum), tdMan(
+     +     manLevel, recNum), tdSigT( sigTLevel, recNum), tdTrop(
+     +     mTropNum, recNum), tpMan( manLevel, recNum), tpSigT(
+     +     sigTLevel, recNum), tpTrop( mTropNum, recNum), wdMan(
+     +     manLevel, recNum), wdMaxW( mWndNum, recNum), wdSigW(
+     +     sigWLevel, recNum), wdTrop( mTropNum, recNum), wsMan(
+     +     manLevel, recNum), wsMaxW( mWndNum, recNum), wsSigW(
+     +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
+      double precision relTime(recNum), synTime(recNum)
+      character*601 rawTTCC(recNum)
+      character*6 staName(recNum)
+      character*601 rawTTDD(recNum)
+      character*601 rawPPDD(recNum)
+      character*601 rawTTAA(recNum)
+      character*601 rawTTBB(recNum)
+      character*601 rawPPBB(recNum)
+!..............................................................................
+
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
       real*4 topo_a(NX_L,NY_L)
@@ -83,528 +168,25 @@ C*************************************
           return
       endif
 
-      NCID=NCOPN(filename
-     +,NCNOWRIT,RCODE)
-      CALL NCINQ(NCID,NDIMS,NVARS,NGATTS,RECDIM,RCODE)
-      CALL NCDINQ(NCID,RECDIM,DUMMY,NRECS,RCODE)
-C     !NRECS! NOW CONTAINS NUM RECORDS FOR THIS FILE
-C
-C    statements to fill wmoStaNum                      
-C
-      CALL NCVINQ(NCID, 1,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  10 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  10  CONTINUE
-      CALL NCVGT(NCID, 1,START,COUNT,
-     +wmoStaNum                      ,RCODE)
-C
-C    statements to fill staName                        
-C
-      CALL NCVINQ(NCID, 2,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  20 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  20  CONTINUE
-      CALL NCVGTC(NCID, 2,START,COUNT,
-     +staName                        ,LENSTR,RCODE)
-C
-C    statements to fill staLat                         
-C
-      CALL NCVINQ(NCID, 3,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  30 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  30  CONTINUE
-      CALL NCVGT(NCID, 3,START,COUNT,
-     +staLat                         ,RCODE)
-C
-C    statements to fill staLon                         
-C
-      CALL NCVINQ(NCID, 4,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  40 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  40  CONTINUE
-      CALL NCVGT(NCID, 4,START,COUNT,
-     +staLon                         ,RCODE)
-C
-C    statements to fill staElev                        
-C
-      CALL NCVINQ(NCID, 5,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  50 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  50  CONTINUE
-      CALL NCVGT(NCID, 5,START,COUNT,
-     +staElev                        ,RCODE)
-C
-C    statements to fill synTime                        
-C
-      CALL NCVINQ(NCID, 6,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  60 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  60  CONTINUE
-      CALL NCVGT(NCID, 6,START,COUNT,
-     +synTime                        ,RCODE)
-C
-C    statements to fill numMand                        
-C
-      CALL NCVINQ(NCID, 7,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  70 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  70  CONTINUE
-      CALL NCVGT(NCID, 7,START,COUNT,
-     +numMand                        ,RCODE)
-C
-C    statements to fill numSigT                        
-C
-      CALL NCVINQ(NCID, 8,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  80 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  80  CONTINUE
-      CALL NCVGT(NCID, 8,START,COUNT,
-     +numSigT                        ,RCODE)
-C
-C    statements to fill numSigW                        
-C
-      CALL NCVINQ(NCID, 9,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO  90 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
-  90  CONTINUE
-      CALL NCVGT(NCID, 9,START,COUNT,
-     +numSigW                        ,RCODE)
-C
-C    statements to fill numMwnd                        
-C
-      CALL NCVINQ(NCID,10,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 100 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 100  CONTINUE
-      CALL NCVGT(NCID,10,START,COUNT,
-     +numMwnd                        ,RCODE)
-C
-C    statements to fill numTrop                        
-C
-      CALL NCVINQ(NCID,11,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 110 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 110  CONTINUE
-      CALL NCVGT(NCID,11,START,COUNT,
-     +numTrop                        ,RCODE)
-C
-C    statements to fill relTime                        
-C
-      CALL NCVINQ(NCID,12,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 120 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 120  CONTINUE
-      CALL NCVGT(NCID,12,START,COUNT,
-     +relTime                        ,RCODE)
-C
-C    statements to fill sondTyp                        
-C
-      CALL NCVINQ(NCID,13,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 130 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 130  CONTINUE
-      CALL NCVGT(NCID,13,START,COUNT,
-     +sondTyp                        ,RCODE)
-C
-C    statements to fill prMan                          
-C
-      CALL NCVINQ(NCID,14,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 140 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 140  CONTINUE
-      CALL NCVGT(NCID,14,START,COUNT,
-     +prMan                          ,RCODE)
-C
-C    statements to fill htMan                          
-C
-      CALL NCVINQ(NCID,15,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 150 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 150  CONTINUE
-      CALL NCVGT(NCID,15,START,COUNT,
-     +htMan                          ,RCODE)
-C
-C    statements to fill tpMan                          
-C
-      CALL NCVINQ(NCID,16,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 160 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 160  CONTINUE
-      CALL NCVGT(NCID,16,START,COUNT,
-     +tpMan                          ,RCODE)
-C
-C    statements to fill tdMan                          
-C
-      CALL NCVINQ(NCID,17,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 170 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 170  CONTINUE
-      CALL NCVGT(NCID,17,START,COUNT,
-     +tdMan                          ,RCODE)
-C
-C    statements to fill wdMan                          
-C
-      CALL NCVINQ(NCID,18,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 180 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 180  CONTINUE
-      CALL NCVGT(NCID,18,START,COUNT,
-     +wdMan                          ,RCODE)
-C
-C    statements to fill wsMan                          
-C
-      CALL NCVINQ(NCID,19,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 190 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 190  CONTINUE
-      CALL NCVGT(NCID,19,START,COUNT,
-     +wsMan                          ,RCODE)
-C
-C    statements to fill prSigT                         
-C
-      CALL NCVINQ(NCID,20,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 200 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 200  CONTINUE
-      CALL NCVGT(NCID,20,START,COUNT,
-     +prSigT                         ,RCODE)
-C
-C    statements to fill tpSigT                         
-C
-      CALL NCVINQ(NCID,21,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 210 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 210  CONTINUE
-      CALL NCVGT(NCID,21,START,COUNT,
-     +tpSigT                         ,RCODE)
-C
-C    statements to fill tdSigT                         
-C
-      CALL NCVINQ(NCID,22,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 220 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 220  CONTINUE
-      CALL NCVGT(NCID,22,START,COUNT,
-     +tdSigT                         ,RCODE)
-C
-C    statements to fill htSigW                         
-C
-      CALL NCVINQ(NCID,23,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 230 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 230  CONTINUE
-      CALL NCVGT(NCID,23,START,COUNT,
-     +htSigW                         ,RCODE)
-C
-C    statements to fill wdSigW                         
-C
-      CALL NCVINQ(NCID,24,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 240 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 240  CONTINUE
-      CALL NCVGT(NCID,24,START,COUNT,
-     +wdSigW                         ,RCODE)
-C
-C    statements to fill wsSigW                         
-C
-      CALL NCVINQ(NCID,25,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 250 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 250  CONTINUE
-      CALL NCVGT(NCID,25,START,COUNT,
-     +wsSigW                         ,RCODE)
-C
-C    statements to fill prTrop                         
-C
-      CALL NCVINQ(NCID,26,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 260 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 260  CONTINUE
-      CALL NCVGT(NCID,26,START,COUNT,
-     +prTrop                         ,RCODE)
-C
-C    statements to fill tpTrop                         
-C
-      CALL NCVINQ(NCID,27,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 270 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 270  CONTINUE
-      CALL NCVGT(NCID,27,START,COUNT,
-     +tpTrop                         ,RCODE)
-C
-C    statements to fill tdTrop                         
-C
-      CALL NCVINQ(NCID,28,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 280 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 280  CONTINUE
-      CALL NCVGT(NCID,28,START,COUNT,
-     +tdTrop                         ,RCODE)
-C
-C    statements to fill wdTrop                         
-C
-      CALL NCVINQ(NCID,29,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 290 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 290  CONTINUE
-      CALL NCVGT(NCID,29,START,COUNT,
-     +wdTrop                         ,RCODE)
-C
-C    statements to fill wsTrop                         
-C
-      CALL NCVINQ(NCID,30,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 300 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 300  CONTINUE
-      CALL NCVGT(NCID,30,START,COUNT,
-     +wsTrop                         ,RCODE)
-C
-C    statements to fill prMaxW                         
-C
-      CALL NCVINQ(NCID,31,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 310 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 310  CONTINUE
-      CALL NCVGT(NCID,31,START,COUNT,
-     +prMaxW                         ,RCODE)
-C
-C    statements to fill wdMaxW                         
-C
-      CALL NCVINQ(NCID,32,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 320 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 320  CONTINUE
-      CALL NCVGT(NCID,32,START,COUNT,
-     +wdMaxW                         ,RCODE)
-C
-C    statements to fill wsMaxW                         
-C
-      CALL NCVINQ(NCID,33,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 330 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 330  CONTINUE
-      CALL NCVGT(NCID,33,START,COUNT,
-     +wsMaxW                         ,RCODE)
-C
-C    statements to fill rawTTAA                        
-C
-      CALL NCVINQ(NCID,34,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 340 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 340  CONTINUE
-      CALL NCVGTC(NCID,34,START,COUNT,
-     +rawTTAA                        ,LENSTR,RCODE)
-C
-C    statements to fill rawTTBB                        
-C
-      CALL NCVINQ(NCID,35,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 350 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 350  CONTINUE
-      CALL NCVGTC(NCID,35,START,COUNT,
-     +rawTTBB                        ,LENSTR,RCODE)
-C
-C    statements to fill rawTTCC                        
-C
-      CALL NCVINQ(NCID,36,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 360 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 360  CONTINUE
-      CALL NCVGTC(NCID,36,START,COUNT,
-     +rawTTCC                        ,LENSTR,RCODE)
-C
-C    statements to fill rawTTDD                        
-C
-      CALL NCVINQ(NCID,37,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 370 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 370  CONTINUE
-      CALL NCVGTC(NCID,37,START,COUNT,
-     +rawTTDD                        ,LENSTR,RCODE)
-C
-C    statements to fill rawPPBB                        
-C
-      CALL NCVINQ(NCID,38,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 380 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 380  CONTINUE
-      CALL NCVGTC(NCID,38,START,COUNT,
-     +rawPPBB                        ,LENSTR,RCODE)
-C
-C    statements to fill rawPPDD                        
-C
-      CALL NCVINQ(NCID,39,DUMMY,NTP,NVDIM,VDIMS,NVS,RCODE)
-      LENSTR=1
-      DO 390 J=1,NVDIM
-      CALL NCDINQ(NCID,VDIMS(J),DUMMY,NDSIZE,RCODE)
-      LENSTR=LENSTR*NDSIZE
-      START(J)=1
-      COUNT(J)=NDSIZE
- 390  CONTINUE
-      CALL NCVGTC(NCID,39,START,COUNT,
-     +rawPPDD                        ,LENSTR,RCODE)
-C
-C     HERE IS WHERE YOU WRITE STATEMENTS TO USE THE DATA
-C
-C
+!.............................................................................
+
+
+      call read_netcdf(nf_fid, mTropNum, mWndNum, manLevel, recNum, 
+     +     sigTLevel, sigWLevel, numMand, numMwnd, numSigT, numSigW, 
+     +     numTrop, sondTyp, wmoStaNum, htMan, htSigW, prMan, prMaxW, 
+     +     prSigT, prTrop, staElev, staLat, staLon, tdMan, tdSigT, 
+     +     tdTrop, tpMan, tpSigT, tpTrop, wdMan, wdMaxW, wdSigW, 
+     +     wdTrop, wsMan, wsMaxW, wsSigW, wsTrop, relTime, synTime, 
+     +     rawPPBB, rawPPDD, rawTTAA, rawTTBB, rawTTCC, rawTTDD, 
+     +     staName)
+C
+C The netcdf variables are filled - your code goes here
 C
 !     Write All Raobs to LAPS SND file
 
       r_nc_missing_data = 1e20
 
-      n_snd = min(NREC,NRECS)
+      n_snd = recNum
 
       do isnd = 1,n_snd
 
@@ -670,7 +252,7 @@ C
           endif
 
           call sort_and_write(
-     1                        NREC,isnd,r_missing_data,a9time_raob
+     1                        recNum,isnd,r_missing_data,a9time_raob
      1                       ,wmostanum,staname,stalat,stalon,staelev
      1                       ,nummand,htman,prman,tpman,tdman      
      1                       ,wdman,wsman
@@ -687,7 +269,7 @@ C
       enddo ! i
 
       return
-      END
+      end
 
 
       subroutine sort_and_write(
@@ -845,4 +427,609 @@ C
       return
       end
 
+!.............................................................................
+C
+C  Subroutine to read the file "RAOB data : selected by ob time : time range from 887191200 to 887202000" 
+C
+      subroutine read_netcdf(nf_fid, mTropNum, mWndNum, manLevel, 
+     +     recNum, sigTLevel, sigWLevel, numMand, numMwnd, numSigT, 
+     +     numSigW, numTrop, sondTyp, wmoStaNum, htMan, htSigW, 
+     +     prMan, prMaxW, prSigT, prTrop, staElev, staLat, staLon, 
+     +     tdMan, tdSigT, tdTrop, tpMan, tpSigT, tpTrop, wdMan, 
+     +     wdMaxW, wdSigW, wdTrop, wsMan, wsMaxW, wsSigW, wsTrop, 
+     +     relTime, synTime, rawPPBB, rawPPDD, rawTTAA, rawTTBB, 
+     +     rawTTCC, rawTTDD, staName)
+C
+      include 'netcdf.inc'
+      integer mTropNum, mWndNum, manLevel, recNum, sigTLevel, 
+     +     sigWLevel,nf_fid, nf_vid, nf_status
+      integer numMand(recNum), numMwnd(recNum), numSigT(recNum),
+     +     numSigW(recNum), numTrop(recNum), sondTyp(recNum),
+     +     wmoStaNum(recNum)
+      real htMan( manLevel, recNum), htSigW( sigWLevel, recNum),
+     +     prMan( manLevel, recNum), prMaxW( mWndNum, recNum),
+     +     prSigT( sigTLevel, recNum), prTrop( mTropNum, recNum),
+     +     staElev(recNum), staLat(recNum), staLon(recNum), tdMan(
+     +     manLevel, recNum), tdSigT( sigTLevel, recNum), tdTrop(
+     +     mTropNum, recNum), tpMan( manLevel, recNum), tpSigT(
+     +     sigTLevel, recNum), tpTrop( mTropNum, recNum), wdMan(
+     +     manLevel, recNum), wdMaxW( mWndNum, recNum), wdSigW(
+     +     sigWLevel, recNum), wdTrop( mTropNum, recNum), wsMan(
+     +     manLevel, recNum), wsMaxW( mWndNum, recNum), wsSigW(
+     +     sigWLevel, recNum), wsTrop( mTropNum, recNum)
+      double precision relTime(recNum), synTime(recNum)
+      character*601 rawTTCC(recNum)
+      character*6 staName(recNum)
+      character*601 rawTTDD(recNum)
+      character*601 rawPPDD(recNum)
+      character*601 rawTTAA(recNum)
+      character*601 rawTTBB(recNum)
+      character*601 rawPPBB(recNum)
 
+
+C   Variables of type REAL
+C
+C     Variable        NETCDF Long Name
+C      htMan        "Geopotential - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'htMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var htMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,htMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var htMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      htSigW       "Geopotential - Significant level wrt W"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'htSigW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var htSigW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,htSigW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var htSigW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      prMan        "Pressure - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'prMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,prMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      prMaxW       "Pressure - Maximum wind level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'prMaxW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prMaxW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,prMaxW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prMaxW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      prSigT       "Pressure - Significant level wrt T"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'prSigT',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prSigT'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,prSigT)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prSigT'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      prTrop       "Pressure - Tropopause level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'prTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prTrop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,prTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var prTrop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      staElev      "Station Elevation"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'staElev',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staElev'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,staElev)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staElev'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      staLat       "Station Latitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'staLat',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staLat'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,staLat)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staLat'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      staLon       "Station Longitude"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'staLon',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staLon'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,staLon)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staLon'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tdMan        "Dew Point Depression - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tdMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tdMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tdSigT       "Dew Point Depression - Significant level wrt T"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tdSigT',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdSigT'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tdSigT)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdSigT'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tdTrop       "Dew Point Depression - Tropopause level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tdTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdTrop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tdTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tdTrop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tpMan        "Temperature - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tpMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tpSigT       "Temperature - Significant level wrt T"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tpSigT',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpSigT'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpSigT)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpSigT'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      tpTrop       "Temperature - Tropopause level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'tpTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpTrop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,tpTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var tpTrop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wdMan        "Wind Direction - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wdMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wdMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wdMaxW       "Wind Direction - Maximum wind level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wdMaxW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdMaxW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wdMaxW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdMaxW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wdSigW       "Wind Direction - Significant level wrt W"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wdSigW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdSigW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wdSigW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdSigW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wdTrop       "Wind Direction - Tropopause level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wdTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdTrop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wdTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wdTrop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wsMan        "Wind Speed - Mandatory level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wsMan',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsMan'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wsMan)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsMan'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wsMaxW       "Wind Speed - Maximum wind level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wsMaxW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsMaxW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wsMaxW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsMaxW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wsSigW       "Wind Speed - Significant level wrt W"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wsSigW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsSigW'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wsSigW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsSigW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wsTrop       "Wind Speed - Tropopause level"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wsTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsTrop'
+      endif
+        nf_status = NF_GET_VAR_REAL(nf_fid,nf_vid,wsTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wsTrop'
+      endif
+
+C   Variables of type INT
+C
+C
+C     Variable        NETCDF Long Name
+C      numMand      "Number of Mandatory Levels"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numMand',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numMand'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numMand)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numMand'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numMwnd      "Number of Maximum Wind Levels"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numMwnd',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numMwnd'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numMwnd)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numMwnd'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numSigT      "Number of Significant Levels wrt T"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numSigT',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numSigT'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numSigT)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numSigT'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numSigW      "Number of Significant Levels wrt W"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numSigW',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numSigW'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numSigW)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numSigW'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      numTrop      "Number of Tropopause Levels"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'numTrop',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numTrop'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,numTrop)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var numTrop'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      sondTyp      "Instrument Type"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'sondTyp',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var sondTyp'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,sondTyp)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var sondTyp'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      wmoStaNum    "WMO Station Number"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'wmoStaNum',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wmoStaNum'
+      endif
+        nf_status = NF_GET_VAR_INT(nf_fid,nf_vid,wmoStaNum)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var wmoStaNum'
+      endif
+
+C   Variables of type DOUBLE
+C
+C
+C     Variable        NETCDF Long Name
+C      relTime      "Sounding Release Time"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'relTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,relTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var relTime'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      synTime      "Synoptic Time"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'synTime',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var synTime'
+      endif
+        nf_status = NF_GET_VAR_DOUBLE(nf_fid,nf_vid,synTime)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var synTime'
+      endif
+
+
+C   Variables of type CHAR
+C
+C
+C     Variable        NETCDF Long Name
+C      rawPPBB      "PPBB: Sig level wrt W up to 100 mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawPPBB',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawPPBB'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawPPBB)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawPPBB'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rawPPDD      "PPDD: Sig level wrt W above 100mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawPPDD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawPPDD'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawPPDD)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawPPDD'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rawTTAA      "TTAA: Std isobaric sfcs up to 100 mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawTTAA',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTAA'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTAA)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTAA'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rawTTBB      "TTBB: Sig level wrt T up to 100 mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawTTBB',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTBB'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTBB)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTBB'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rawTTCC      "TTCC: Std isobaric sfcs above 100 mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawTTCC',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTCC'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTCC)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTCC'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      rawTTDD      "TTDD: Sig level wrt T above 100 mb"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'rawTTDD',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTDD'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,rawTTDD)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var rawTTDD'
+      endif
+C
+C     Variable        NETCDF Long Name
+C      staName      "Station Identifier"
+C
+        nf_status = NF_INQ_VARID(nf_fid,'staName',nf_vid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staName'
+      endif
+        nf_status = NF_GET_VAR_TEXT(nf_fid,nf_vid,staName)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'in var staName'
+      endif
+
+      nf_status = nf_close(nf_fid)
+      if(nf_status.ne.NF_NOERR) then
+        print *, NF_STRERROR(nf_status)
+        print *,'nf_close'
+      endif
+
+      return
+      end
