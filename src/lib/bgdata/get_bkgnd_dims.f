@@ -66,7 +66,7 @@ cdis
       else if(bgmodel.eq.6) then
          nx_bg = 360
          ny_bg = 181
-         nz_bg = 27
+         nz_bg = 26
          cmodel = 'AVN_LL_GRIB'
       else if(bgmodel.eq.7) then
          nx_bg = 185

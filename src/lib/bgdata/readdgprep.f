@@ -19,8 +19,6 @@ c
      .      ,pr(nx,ny,nz)      !pressures (mb)
      .      ,prk(nz)
 
-      real*4 dummy(nx,ny)
-
       real*4 mrsat
       real*4 esat,xe
       real*4 rp_init
@@ -110,7 +108,7 @@ c     read(1) prk
      +,istatus)
       endif
  
-      if(istatus .eq. 0)then
+      if(istatus .ne. 0)then
          print*,'data not read properly'
          return
       endif
@@ -183,33 +181,33 @@ c
      .      ,uw(nx,ny,nz)      !u-wind (m/s)
      .      ,vw(nx,ny,nz)      !v-wind (m/s)
 
-      real*4 dummy(nx,ny)
+c     real*4 dummy(nx,ny)
 
       istatus=1
 
       print*,'Read T'
-      do k=nz,2,-1
-         read(lun,err=50) ((tp(i,j,k-1),i=1,nx),j=1,ny)
+      do k=1,nz
+         read(lun,err=50) ((tp(i,j,k),i=1,nx),j=1,ny)
       enddo
-      read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
+c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read u'
-      do k=nz,2,-1
-         read(lun,err=50) ((uw(i,j,k-1),i=1,nx),j=1,ny)
+      do k=1,nz
+         read(lun,err=50) ((uw(i,j,k),i=1,nx),j=1,ny)
       enddo
-      read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
+c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read v'
-      do k=nz,2,-1
-         read(lun,err=50) ((vw(i,j,k-1),i=1,nx),j=1,ny)
+      do k=1,nz
+         read(lun,err=50) ((vw(i,j,k),i=1,nx),j=1,ny)
       enddo
-      read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
+c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read Height'
-      do k=nz,2,-1
-         read(lun,err=50) ((ht(i,j,k-1),i=1,nx),j=1,ny)
+      do k=1,nz
+         read(lun,err=50) ((ht(i,j,k),i=1,nx),j=1,ny)
       enddo
-      read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
+c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read RH'
-      do k=nz-10,2,-1    !27-10=17 -> prk(17)=300mb = first moisture level.
-         read(lun,err=50) ((sh(i,j,k-1),i=1,nx),j=1,ny)
+      do k=1,nz-10+1    ! -> prk(17)=300mb = last moisture level.
+         read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny)
       enddo
 c
 c As at AFWA, rh above level  (300mb)=10%
@@ -223,6 +221,7 @@ c     print*,'set upper level rh to 10%'
       enddo
       enddo
 
+      istatus=0
       return
 
 50    print*,'error during read'
@@ -248,30 +247,29 @@ c
       istatus=1
 
       print*,'Read T'
-      do k=nz,1,-1
+      do k=1,nz
          read(lun,err=50) ((tp(i,j,k),i=1,nx),j=1,ny)
       enddo
       print*,'Read u'
-      do k=nz,1,-1
+      do k=1,nz
          read(lun,err=50) ((uw(i,j,k),i=1,nx),j=1,ny)
       enddo
       print*,'Read v'
-      do k=nz,1,-1
+      do k=1,nz
          read(lun,err=50) ((vw(i,j,k),i=1,nx),j=1,ny)
       enddo
       print*,'Read Height'
-      do k=nz,1,-1
+      do k=1,nz
          read(lun,err=50) ((ht(i,j,k),i=1,nx),j=1,ny)
       enddo
       print*,'Read RH'
-      do k=nz,1,-1
+      do k=1,nz
          read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny)
       enddo
 
+      istatus=0
       return
 
 50    print*,'error during read'
-      istatus=0
-
       return
       end
