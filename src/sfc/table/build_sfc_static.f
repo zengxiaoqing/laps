@@ -298,10 +298,9 @@ c
 ccc	include '../../source/sfc/laps_sfc.inc'
         implicit none
         integer maxobs, imax, jmax
-	parameter(maxobs=15000)
-	real*4 to(imax,jmax), t(imax,jmax), val(maxobs)
+	real*4 to(imax,jmax), t(imax,jmax), val(imax*jmax)
 	real*4 h1(imax,jmax), h2(imax,jmax)
-	integer*4 iob(maxobs), job(maxobs), dx, dy
+	integer*4 iob(imax*jmax), job(imax*jmax), dx, dy
         real badd
 	parameter(badd = 1.e6 - 2.)	! bad data value
         real sum, sumwt, sum2, sumwt2, smsng
