@@ -1,4 +1,5 @@
-      subroutine dualwind(u,v,x,y,ht,vr1,vr2,x1,y1,x2,y2,ht1,ht2,dz,ier)
+      subroutine dualwind_yesz
+     1           (u,v,x,y,ht,vr1,vr2,x1,y1,x2,y2,ht1,ht2,dz,ier)
 c***********************************************************************
 c description      : To derive Dual-Doppler wind from radar radial
 c                    velocity and reflectivity factor at constant height.
