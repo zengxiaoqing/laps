@@ -53,9 +53,13 @@ C*********************************************************************
         end
        
         subroutine Gridmap_sub(nnxp,nnyp)
-      include 'trigd.inc'
+
+        include 'trigd.inc'
+
         logical exist,new_DEM
+
         integer nnxp,nnyp
+
 	Real mdlat,mdlon
 	Real xmn(nnxp),ymn(nnyp)
 	Real xtn(nnxp),ytn(nnyp)
@@ -66,15 +70,19 @@ C*********************************************************************
         real  topt_10(nnxp,nnyp)
         real  topt_out(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
+        real  soil(nnxp,nnyp)
+
         character*3 swt,twt
         include 'lapsparms.cmn'
+
 c********************************************************************
+
 c       Declarations for wrt_laps_static
         integer*4    ni,nj,nf
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
 c
-c  only 4 used here but 8 needed in put_laps_static
+c  only 5 used here but 8 needed in put_laps_static
 c
         parameter (nf = 8)
         
@@ -120,14 +128,18 @@ c   the 10m topo covers the world
 cc        itoptfn_10=static_dir(1:len)//'model/topo_10m/H'
 c   the 10m pctl covers the world
 cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
+
         call s_len(path_to_topt30s,len)
 	path_to_topt30s(len+1:len+2)='/U'
+
         call s_len(path_to_topt10m,len)
 	path_to_topt10m(len+1:len+2)='/H'
+
         call s_len(path_to_pctl10m,len)
 	path_to_pctl10m(len+1:len+2)='/L'
 
-
+        call s_len(path_to_soil2m,len)
+	path_to_soil2m(len+1:len+2)='/O'
 
 
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
@@ -262,6 +274,24 @@ C*****************************************************************
 c calculate topography
 c
        if(iplttopo.eq.1)then
+
+           if(.false.)then
+
+           write(6,*)
+           write(6,*)' Processing 2m soil type data....'
+           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
+     +        deltax,deltay,TOPT_PCTLFN,PATH_TO_SOIL2M,1.,1.
+     +         ,new_DEM,istatus)
+
+           if(istatus .ne. 1)then
+               write(6,*)' Warning: '
+     1                  ,'File(s) missing for 2m soil type data'       
+!              write(6,*)' Static file not created.......STOP'
+!              stop
+           endif
+
+           endif ! .false.
+
            write(6,*)
            write(6,*)' Processing 30s topo data....'
            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn,
@@ -288,8 +318,7 @@ c
                stop
            endif
 
-           if (.not.new_DEM) then
-
+           if (.not.new_DEM) then ! Blend 30" and 10' topo data
              do i = 1,nnxp
              do j = 1,nnyp
 
@@ -426,7 +455,7 @@ c
              enddo ! j
              enddo ! i
 
-           else ! new_DEM
+           else ! new_DEM, go with 30s topo data
              do j=1,nnyp
              do i=1,nnxp
                topt_out(i,j)=topt_30(i,j)
@@ -532,10 +561,12 @@ c SG97  splot 'topography.dat'
             write(666,'()')
         enddo
         close(666)
+
         call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
         call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
         call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
         call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
+        call move(soil,data(1,1,5),nnxp,nnyp)           ! SA
 
         call get_directory('cdl',static_dir,len)
 	INQUIRE(FILE=static_dir(1:len)//'nest7grid.cdl',EXIST=exist)
@@ -730,17 +761,24 @@ c         print *,'rlat,wlon1=',rlat,wlon1
                   NOFR=NOFR+1
                   JOFR=NOFR
                   len=index(ofn,' ')
-                  if ((ofn(len-1:len).eq.'U').and.(no.eq.1200)) then 
-                    CALL READ_DEM(29,TITLE3(1:LB),no,no,
+
+!                 Read the tile
+                  if( (ofn(len-1:len).eq.'U').and.(no.eq.1200) )then
+                    CALL READ_DEM(29,TITLE3(1:LB),no,no,2,4,   ! world topo_30s
      .              DATO(1,1,NOFR))
                     dem_data=.true.
-                  else
+                  elseif( (ofn(len-1:len).eq.'O') )then        ! soil
+                    CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
+     .              DATO(1,1,NOFR))
+                    dem_data=.true.
+                  else                                         ! other
                     CALL JCLGET(29,TITLE3(1:LB),'FORMATTED',0)
                     CALL VFIREC(29,DATO(1,1,NOFR),NONO,'LIN')
                     if ((ofn(len-1:len).eq.'U').and.(no.eq.121)) then
-                      dem_data=.false.
+                      dem_data=.false.                         ! topo_30s
                     endif
                   endif
+
 c              print *,'nofr,dato=',nofr,dato(1,1,nofr)
                   CLOSE(29)
                   ISO(NOFR)=ISOC
@@ -833,43 +871,6 @@ C
       RETURN
       END
 
-      SUBROUTINE BINOM(X1,X2,X3,X4,Y1,Y2,Y3,Y4,XXX,YYY)
-      implicit none
-      real x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy,
-     +   wt1,wt2,yz22,yz23,yz24,yz11,yz12,yz13,yoo
-      integer istend
-c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
-       YYY=1E30
-       IF(X2.GT.1.E19.OR.X3.GT.1.E19.OR.
-     +   Y2.GT.1.E19.OR.Y3.GT.1.E19)RETURN
-      WT1=(XXX-X3)/(X2-X3)
-      WT2=1.0-WT1
-      ISTEND=0
-      IF(Y4.LT.1.E19.AND.X4.LT.1.E19) GO TO 410
-      YZ22=WT1
-      YZ23=WT2
-      YZ24=0.0
-      ISTEND= 1
-410   IF(Y1.LT.1.E19.AND.X1.LT.1.E19) GO TO 430
-      YZ11=0.0
-      YZ12=WT1
-      YZ13=WT2
-      IF(ISTEND.EQ.1)GO TO 480
-      GO TO 450
-430   YZ11=(XXX-X2)*(XXX-X3)/((X1-X2)*(X1-X3))
-      YZ12=(XXX-X1)*(XXX-X3)/((X2-X1)*(X2-X3))
-      YZ13=(XXX-X1)*(XXX-X2)/((X3-X1)*(X3-X2))
-      IF(ISTEND.EQ.  1    ) GO TO 470
-450   YZ22=(XXX-X3)*(XXX-X4)/((X2-X3)*(X2-X4))
-      YZ23=(XXX-X2)*(XXX-X4)/((X3-X2)*(X3-X4))
-      YZ24=(XXX-X2)*(XXX-X3)/((X4-X2)*(X4-X3))
-470   YYY=WT1*(YZ11*Y1+YZ12*Y2+YZ13*Y3)+WT2*(YZ22*Y2+YZ23*Y3+YZ24*Y4)
-       GO TO 490
-480      YYY=WT1*Y2+WT2*Y3
-490   YOO=YYY
-      RETURN
-      END
-
       SUBROUTINE GDTOST(A,IX,IY,STAX,STAY,STAVAL)
 *  SUBROUTINE TO RETURN STATIONS BACK-INTERPOLATED VALUES(STAVAL)
 *  FROM UNIFORM GRID POINTS USING OVERLAPPING-QUADRATICS.
@@ -903,10 +904,10 @@ c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
 112   R(JJ)=A(I,J)
 111   CONTINUE
       YY=STAY-FIYM2
-      CALL BINOM(1.,2.,3.,4.,R(1),R(2),R(3),R(4),YY,SCR(II))
+      CALL BINOM2(1.,2.,3.,4.,R(1),R(2),R(3),R(4),YY,SCR(II))
 100   CONTINUE
       XX=STAX-FIXM2
-      CALL BINOM(1.,2.,3.,4.,SCR(1),SCR(2),SCR(3),SCR(4),XX,STAVAL)
+      CALL BINOM2(1.,2.,3.,4.,SCR(1),SCR(2),SCR(3),SCR(4),XX,STAVAL)
       RETURN
       END
 
@@ -1054,11 +1055,11 @@ c--------------------------------------------------------
 
 c ********************************************************************
 
-      subroutine read_dem(unit_no,unit_name,nn1,nn2,data)
+      subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2,data)
       implicit none
       integer countx,county,unit_no,nn1,nn2
       real data(nn1,nn2)
-      integer idata(nn1,nn2), len
+      integer idata(nn1,nn2), len, i1, i2
       logical l1,l2
       character*(*) unit_name
 
@@ -1069,7 +1070,7 @@ C      read(unit_no,rec=1) idata
 
       call s_len(unit_name,len) 
 
-      call read_binary_field(idata,2,4,nn1*nn2,unit_name,len)
+      call read_binary_field(idata,i1,i2,nn1*nn2,unit_name,len)
 
       do county=1,nn2
         do countx=1,nn1
@@ -1103,5 +1104,39 @@ C
       END
 
 
-
-
+      SUBROUTINE BINOM2(X1,X2,X3,X4,Y1,Y2,Y3,Y4,XXX,YYY)
+      implicit none
+      real x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy,
+     +   wt1,wt2,yz22,yz23,yz24,yz11,yz12,yz13,yoo
+      integer istend
+c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
+       YYY=1E30
+       IF(X2.GT.1.E19.OR.X3.GT.1.E19.OR.
+     +   Y2.GT.1.E19.OR.Y3.GT.1.E19)RETURN
+      WT1=(XXX-X3)/(X2-X3)
+      WT2=1.0-WT1
+      ISTEND=0
+      IF(Y4.LT.1.E19.AND.X4.LT.1.E19) GO TO 410
+      YZ22=WT1
+      YZ23=WT2
+      YZ24=0.0
+      ISTEND= 1
+410   IF(Y1.LT.1.E19.AND.X1.LT.1.E19) GO TO 430
+      YZ11=0.0
+      YZ12=WT1
+      YZ13=WT2
+      IF(ISTEND.EQ.1)GO TO 480
+      GO TO 450
+430   YZ11=(XXX-X2)*(XXX-X3)/((X1-X2)*(X1-X3))
+      YZ12=(XXX-X1)*(XXX-X3)/((X2-X1)*(X2-X3))
+      YZ13=(XXX-X1)*(XXX-X2)/((X3-X1)*(X3-X2))
+      IF(ISTEND.EQ.  1    ) GO TO 470
+450   YZ22=(XXX-X3)*(XXX-X4)/((X2-X3)*(X2-X4))
+      YZ23=(XXX-X2)*(XXX-X4)/((X3-X2)*(X3-X4))
+      YZ24=(XXX-X2)*(XXX-X3)/((X4-X2)*(X4-X3))
+470   YYY=WT1*(YZ11*Y1+YZ12*Y2+YZ13*Y3)+WT2*(YZ22*Y2+YZ23*Y3+YZ24*Y4)
+       GO TO 490
+480      YYY=WT1*Y2+WT2*Y3
+490   YOO=YYY
+      RETURN
+      END

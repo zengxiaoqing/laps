@@ -304,8 +304,16 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         return
         end
 
-
-        subroutine get_laps_config(grid_fnam,istatus)
+      subroutine force_get_laps_config(grid_fnam,istatus)
+      include 'lapsparms.cmn'
+      character*(*) grid_fnam
+      integer istatus
+      iflag_lapsparms_cmn=0
+      call get_laps_config(grid_fnam,istatus)
+      return
+      end
+      
+      subroutine get_laps_config(grid_fnam,istatus)
 
 !       1992 Steve Albers
 
@@ -352,7 +360,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
      1  ,maxstations_cmn,maxobs_cmn
      1  ,c_raddat_type, c80_description, path_to_topt30s
-     1  ,path_to_topt10m, path_to_pctl10m
+     1  ,path_to_topt10m, path_to_pctl10m, path_to_soil2m
 
 
         if(ipass.eq.1 .and. iflag_lapsparms_cmn .eq. 1) then ! Data already read in
@@ -365,12 +373,22 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
                                       ! extension based on the grid domain
 
 !       Get the location of the parameter directory
-        ext = grid_fnam
-        call get_directory(ext,directory,len_dir)
-        if(directory(len_dir:len_dir).ne.'/') then
-          tempchar = directory(1:len_dir)//'/'//grid_fnam//'.parms'
+        call s_len(grid_fnam,len_grid_fnam)
+        len_dir = index(grid_fnam_common,'/',.true.)
+        if(len_dir.gt.0) then
+           ext='nest7grid'
         else
-          tempchar = directory(1:len_dir)//grid_fnam//'.parms'
+           ext=grid_fnam
+        endif
+
+
+        call get_directory(ext,directory,len_dir)
+
+        call s_len(ext,len_ext)
+        if(directory(len_dir:len_dir).ne.'/') then
+          tempchar = directory(1:len_dir)//'/'//ext(1:len_ext)//'.parms'
+        else
+          tempchar = directory(1:len_dir)//ext(1:len_ext)//'.parms'
         endif
         call s_len(tempchar,len_dir)
  
@@ -383,7 +401,8 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 
         else                                                    ! Normal Return
             PRESSURE_0_L = PRESSURE_BOTTOM_L + PRESSURE_INTERVAL_L
-            write(6,*)' get_laps_config - parameters read in OK'
+            write(6,*)tempchar(1:len_dir),
+     +            ' get_laps_config - parameters read in OK'
             goto999                                     
 
         endif
@@ -1177,3 +1196,5 @@ c
 
       return
       end
+
+      

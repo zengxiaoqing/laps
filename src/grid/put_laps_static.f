@@ -28,24 +28,25 @@ C
 
       call get_directory('static',dir_out,len) 
       ext = 'nest7grid'
-      kmax = mkmax-3
-      kdim = mkmax-3
+      kmax = 6
+      kdim = kmax
 
       laps_dom_file = 'nest7grid'
 
       call get_c80_description(origin,istatus)
 
-      var(1) = 'LAT'
-      var(2) = 'LON'
-      var(3) = 'AVG'
-      var(4) = 'LDF'
-      var(5) = 'ZIN'
+      var(1)    = 'LAT'
+      var(2)    = 'LON'
+      var(3)    = 'AVG'
+      var(4)    = 'LDF'
+      var(5)    = 'USE' ! Actually, this is soil type
+      var(kmax) = 'ZIN'
 
-!     Do zin calc (note this is 5th element in data array)
+!     Do zin calc (note this is last [kmax] element in data array)
       do i = 1,imax
       do j = 1,jmax
           psa = ztopsa(data(i,j,3)) ! This is the AVG data (3rd element)
-          data(i,j,5) = (20.0 - ((psa - 100.0) * 0.02))
+          data(i,j,kmax) = (20.0 - ((psa - 100.0) * 0.02))
       enddo ! j
       enddo ! i
 
