@@ -159,18 +159,26 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
          if (rand_index .eq. 2) then
           ratio_radar=0.
           depth = ztop - zbase
-          if(radar_ref_max .gt. 0. ) then
-           vvmax=4.32*radar_ref_max**0.0714286
-           ratio_radar=vvmax / depth / 1.1
-           if(ratio_radar .gt. ratio) ratio = ratio_radar
+          if (depth.ne.0) then
+           if(radar_ref_max .gt. 0. ) then
+            vvmax=4.32*radar_ref_max**0.0714286
+            ratio_radar=vvmax / depth / 1.1
+            if(ratio_radar .gt. ratio) ratio = ratio_radar
+           endif
+          else
+           write(6,*) 'depth =',depth, 'No changes to ratio'
           endif
          else          ! for rand_index = 1
           ratio_radar=0.
           depth = ztop - zbase
-          if(radar_ref_max .gt. 0. ) then
-!           vvmax=4.32*radar_ref_max**0.0714286
-           ratio_radar=vvmax / depth / 1.1
-!           if(ratio_radar .gt. ratio) ratio = ratio_radar
+          if (depth.ne.0) then
+           if(radar_ref_max .gt. 0. ) then
+!            vvmax=4.32*radar_ref_max**0.0714286
+            ratio_radar=vvmax / depth / 1.1
+!            if(ratio_radar .gt. ratio) ratio = ratio_radar
+           endif
+          else
+           write(6,*) 'depth =',depth, 'No changes to ratio'
           endif
          endif
  
@@ -186,16 +194,24 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           if (rand_index .eq. 2) then
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 1.
-           ratio_radar=vvmax / depth / 1.1
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 1.
+            ratio_radar=vvmax / depth / 1.1
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           else     !  for rand_index = 1
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 0.001
-           ratio_radar=vvmax / depth / 1.1
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 0.001
+            ratio_radar=vvmax / depth / 1.1
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           endif
           Do k = 1, ktop
             vv = Parabolic_vv_profile (zbase, ztop, ratio, heights(k))
@@ -215,16 +231,24 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           if( rand_index .eq. 2) then
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 1.
-           ratio_radar=vvmax / depth /1.1 
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 1.
+            ratio_radar=vvmax / depth /1.1 
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           else    ! for rand_index = 1
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 0.001
-           ratio_radar=vvmax / depth /1.1
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 0.001
+            ratio_radar=vvmax / depth /1.1
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           endif
           do k = 1, kmiddle
            vv = Parabolic_vv_profile (zbase, ztop, ratio, heights(k))
@@ -238,16 +262,24 @@ c        If (cloud_type(k) .eq. 3  .OR.  cloud_type(k) .eq. 10) then
           if (rand_index .eq. 2) then
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 1.
-           ratio_radar=vvmax / depth 
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 1.
+            ratio_radar=vvmax / depth 
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           else      ! for rand_index = 1
            ratio = ratio * 0.001
            ratio_radar=0.
            depth = ztop - zbase
-           vvmax = 0.001
-           ratio_radar=vvmax / depth
-           if(ratio_radar .lt. ratio) ratio = ratio_radar
+           if (depth.ne.0) then
+            vvmax = 0.001
+            ratio_radar=vvmax / depth
+            if(ratio_radar .lt. ratio) ratio = ratio_radar
+           else
+            write(6,*) 'depth =',depth, 'No changes to ratio'
+           endif
           endif
           do k = kmiddle, ktop
            vv = Parabolic_vv_profile1 (zbase, ztop, ratio, heights(k))
