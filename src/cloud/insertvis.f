@@ -55,6 +55,7 @@ cdis
         data lvd_ext /'lvd'/
 
         character var*3,comment*125,units*10
+        logical l_use_vis
 
 !       Initialize histograms
         do i = -10,20
@@ -71,6 +72,23 @@ cdis
         enddo ! i
 
         n_missing_albedo = ni*nj
+
+!       Read in parms
+        call get_cloud_parms(l_use_vis,istatus)
+        if(istatus .eq. 1)then
+            write(6,*)'l_use_vis = ',l_use_vis
+        else
+            write(6,*)' Error in obtaining l_use_vis parameter'
+            istatus = 0
+            return
+        endif
+
+!       Determine whether to use VIS / ALBEDO data
+        if(.not. l_use_vis)then
+            write(6,*)' Warning: l_use_vis set to not use vis data'
+            istatus = 0
+            return
+        endif
 
 !       Read in albedo data
         write(6,*)' Getting the VIS data from LVD file'

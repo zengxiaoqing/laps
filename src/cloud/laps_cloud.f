@@ -99,3 +99,31 @@ cdis
 
         end
 
+ 
+       subroutine get_cloud_parms(l_use_vis,istatus)
+
+       logical l_use_vis
+       namelist /cloud_nl/ l_use_vis
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/cloud.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,cloud_nl,err=901)
+       close(1)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading cloud_nl in ',filename
+       istatus = 0
+       return
+
+       end
