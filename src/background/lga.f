@@ -120,11 +120,10 @@ c *** Comments used in writing netcdf files only.
 c
       integer istat, i,l, no_infinite_loops
 c
-c cmodel is really only 12 chars but the SBN netcdf carrys 132
+c cmodel is really only 12 chars but the SBN netcdf carries 132
 c
       character*132 cmodels(maxbgmodels)
       character*132 cmodel
-      integer oldest_forecast, max_forecast_delta
       integer forecast_length
       logical use_analysis, use_systime
       logical ltime(-1:1)
@@ -141,8 +140,8 @@ c Read information from static/nest7grid.parms
 c
 c Read information from static/background.nl
 c
-      call get_background_info(bgpaths,bgmodels,oldest_forecast
-     +,max_forecast_delta,forecast_length,use_analysis,cmodels
+      call get_background_info(bgpaths,bgmodels
+     +,forecast_length,use_analysis,cmodels
      +,itime,smooth_fields,luse_sfc_bkgd)
 
       nbgmodels=0
@@ -243,9 +242,9 @@ c        call get_bkgd_files(i4time_now_lga,bgpath,bgmodel
          print*
 
          call get_acceptable_files(i4time_now_lga,bgpath,bgmodel
-     +        ,names,max_files,oldest_forecast,max_forecast_delta
-     +        ,use_analysis,bg_files,accepted_files,forecast_length
-     +        ,cmodel,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
+     +        ,names,max_files,use_analysis,bg_files,accepted_files
+     +        ,forecast_length,cmodel
+     +        ,nx_bg,ny_bg,nz_bg,reject_names,reject_cnt)
 
 
          if(accepted_files.eq.0.and.bg_files.eq.0) then
