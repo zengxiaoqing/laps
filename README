@@ -487,7 +487,7 @@
      For each domain you wish to create, run... 
 
      prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl makedatadirs.pl $LAPS_SRC_ROOT $LAPSINSTALLROOT $LAPS_DATA_ROOT
+     prompt> perl makedatadirs.pl --srcroot=$LAPS_SRC_ROOT --installroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT
 
      where the path name $LAPS_DATA_ROOT must be named differently for each 
      data domain if there is more than one. Recall that each domain can be set
@@ -515,7 +515,7 @@
      (with a unique dataroot) for each domain if there is more than one. 
 
      prompt> cd $LAPSINSTALLROOT/etc
-     prompt> perl laps_localization.pl --dataroot=$LAPS_DATA_ROOT --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT
+     prompt> perl laps_localization.pl --srcroot=$LAPS_SRC_ROOT --lapsroot=$LAPSINSTALLROOT --dataroot=$LAPS_DATA_ROOT 
 
                     --- 2.2.6.2 Localization Method 2 ---
 
@@ -878,13 +878,16 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      choose to run 'remap_polar_netcdf.exe' for radar ingest in this manner.
 
      On many unix systems jobs that run in cron do not have access to the 
-     environment defined by the user. They instead they use a system default 
-     environment defined in '/etc/profile'; thus 'perl' may not be in the path.
-     Specifying the full path to 'perl' in your cron ensures that this will 
-     not be a problem. Each script in the cron requires the path to laps 
-     as a command line argument. A second optional argument specifies the path
-     to the laps data directory structure; this path defaults to 
-     '/fullpathto/laps/data' if not provided.
+     environment defined by the user. They instead use a system default 
+     environment defined in '/etc/profile'; thus 'perl' may not be in the $PATH..
+     The cron file uses the full path to 'perl' to ensure that this will 
+     not be a problem. If the path to 'ncgen' is not in '/etc/profile', then
+     you may want to add this to your own '.profile' file.
+
+     Each script in the cron requires the path to laps as a command line 
+     argument. A second optional argument specifies the path to the laps data 
+     directory structure; this path defaults to '/fullpathto/laps/data' if not
+     provided.
 
                ----   2.4.1  Purging Output Files ---
 
