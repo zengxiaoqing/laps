@@ -606,7 +606,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
                   if(istatus .ne. 1)then
                       write(6,*)' Error in correct_cover'
                       write(6,*)cldtop_old,cldtop_m(i,j)
-     1                         ,(heights_3d(i,j,k),k=1,klaps)
+     1                         ,htbase_init,thk_def,cover
+                      write(6,*)(heights_3d(i,j,k),k=1,klaps)
                       return
                   endif
                   cover = cover_new

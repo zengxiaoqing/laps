@@ -206,10 +206,14 @@ C
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
 
+              call GSCR(IWKID, ncols, 0.3, 0.3, 0.3)
+
           elseif(colortable .eq. 'cpe')then
               do i = 1,2
                   call GSCR(IWKID, i, 0., 0., 0.)
               enddo 
+
+!             call GSCR(IWKID, ncols, 0.3, 0.3, 0.3)
 
           endif
 

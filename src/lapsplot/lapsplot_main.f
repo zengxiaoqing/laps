@@ -36,6 +36,8 @@ cdis
 cdis
 cdis   
 cdis
+        call supmap_block_data()
+
         call lapsplot_3d()
 
         end

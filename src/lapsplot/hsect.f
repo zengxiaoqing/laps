@@ -347,8 +347,8 @@ c       include 'satellite_dims_lvd.inc'
      1       /'     [ra/rf] Radar Interm./Anal. Data,  [rx] Max Radar'
      1       /'     [rv/rd] Radar Interm. Doppler Ref-Vel (v01-v02...)'       
      1       /
-     1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu,ta,th,te,vo'        
-     1       ,',mr,mc,dv-i,ha,ma,sp]'
+     1       /'     SFC: [p,pm,ps,tf-i,tc,df-i,dc,ws,vv,hu-i,ta,th,te'         
+     1       ,',vo,mr,mc,dv-i,ha,ma,sp]'
      1       /'          [cs,vs,tw,fw-i,hi]'
      1       /'          [of,oc,ov,os,op,qf,qc,qv,qs,qp] obs plots'       
      1       ,'  [bs] Sfc background'
@@ -415,7 +415,7 @@ c       include 'satellite_dims_lvd.inc'
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -1312,7 +1312,7 @@ c
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call setusv_dum(2hIN,7)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                                    ,i_overlay)
+     1                                           ,i_overlay,'hsect')
                  call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
              else ! contours
@@ -1648,7 +1648,7 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay)
+     1                              ,asc9_tim_r,i_overlay,'hsect')
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -1685,7 +1685,7 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay)
+     1                                    ,asc9_tim_r,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -1706,7 +1706,7 @@ c
                     call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                     call setusv_dum(2hIN,7)
                     call write_label_lplot(NX_L,NY_L,c33_label
-     1                                    ,asc9_tim_r,i_overlay)
+     1                                    ,asc9_tim_r,i_overlay,'hsect')       
                     call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
                 endif
@@ -2850,18 +2850,27 @@ c
 !             Change flag value (for now)
               do i = 1,NX_L
               do j = 1,NY_L
-                  if(field_2d(i,j) .eq. -1e6)
-     1                field_2d(i,j) = r_missing_data
-                  if(field_2d(i,j) .ge. -2. .and. 
-     1               field_2d(i,j) .ne. r_missing_data)
-     1                                   field_2d(i,j) = +.0001
+
+!                 if(field_2d(i,j) .eq. -1e6)then
+!                 if(abs(field_2d(i,j)) .ge. +1e6)then
+!                     field_2d(i,j) = r_missing_data
+!                 endif
+
+                  if(field_2d(i,j) .ge. -2.)then
+                      if(field_2d(i,j) .eq. r_missing_data)then
+                          field_2d(i,j) = +999.
+                      else
+                          field_2d(i,j) = +0.1
+                      endif
+                  endif
+
               enddo ! j
               enddo ! i
 
               c33_label = 'LAPS CIN                 (J/KG)  '
-              clow = -500 !   0.
-              chigh = 0.  !   0.
-              cint = 50.  ! -10.
+              clow = -500  !   0.
+              chigh = +50 !   0.
+              cint =  50.  ! -10.
 
 !             call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_t    
 !    1                      ,c33_label,i_overlay,c_display
@@ -2886,7 +2895,7 @@ c
               call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
               call setusv_dum(2hIN,7)
               call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                              ,i_overlay,'hsect')
               call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
           endif ! image plot
@@ -3394,7 +3403,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -3446,7 +3455,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -3592,7 +3601,7 @@ c                   cint = -1.
  725           format(/'  SELECT FIELD (var_2d-i):  '
      1          /
      1          /'  SFC: [usf,vsf,psf,tsf,dsf,rh,slp,th,the'       
-     1                 ,',pbe,nbe,lhe,llr,lmr,lcv] ? ',$)       
+     1                 ,',pbe,nbe,lhe,llr,lmr,lcv,s01,sto] ? ',$)       
 
             endif
 
@@ -3631,12 +3640,12 @@ c                   cint = -1.
  726            format(10x,'plot Fahrenheit or Celsius [f/c]  ? ',$)
                 read(5,*)tunits
 
-                write(6,*)' Converting sfc data to Fahrenheit'
+                write(6,*)' Converting sfc data to F/C'
 
 !               Kelvin conversion to F or C
                 do i = 1,NX_L
                 do j = 1,NY_L
-                    if(tunits .ne. 'c')then
+                    if(tunits .ne. 'c' .or. l_image)then
                         field_2d(i,j) = k_to_f(field_2d(i,j))
                     else
                         field_2d(i,j) = k_to_c(field_2d(i,j))
@@ -3651,6 +3660,9 @@ c                   cint = -1.
      1        .or. var_2d .eq. 'MSL' .or. var_2d .eq. 'SLP')then
                 scale = 100.
 
+            elseif(var_2d .eq. 'S01'  .or. var_2d .eq. 'STO')then
+                scale = 1. / ((100./2.54)) ! DENOM = (IN/M)
+
             else
                 scale = 1.
 
@@ -3660,6 +3672,8 @@ c                   cint = -1.
      1                  //ext(1:3)//'/'//var_2d(1:3)
 
             call make_fnam_lp(i4_valid,asc9_tim,istatus)
+
+            write(6,*)' l_image = ',l_image
 
             if(.not. l_image)then
                 call contour_settings(field_2d,NX_L,NY_L
@@ -3674,14 +3688,18 @@ c                   cint = -1.
                 if(var_2d .eq. 'LLR' .or. var_2d .eq. 'LMR')then
                     call ccpfil(field_2d,NX_L,NY_L,-10.0,70.0,'ref'
      1                         ,n_image) 
+                elseif(var_2d .eq. 'TSF' .or. var_2d .eq. 'DSF')then
+                    call ccpfil(field_2d,NX_L,NY_L,-20.0,100.0,'hues'
+     1                         ,n_image) 
                 else
                     call ccpfil(field_2d,NX_L,NY_L,0.0,1.0,'linear'
      1                         ,n_image) 
                 endif
+
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -3794,11 +3812,11 @@ c                   cint = -1.
      1                    ,c_display,lat,lon,jdot
      1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'hu')then
+        elseif(c_type(1:2) .eq. 'hu')then
             var_2d = 'RH'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,
      1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                     ,field_2d,0,istatus)
 
@@ -3810,18 +3828,27 @@ c                   cint = -1.
 !           c33_label = 'LAPS Sfc  Rel Hum       (PERCENT)'
             c33_label = 'LAPS Sfc Rel Humidity   (PERCENT)'
 
-!           clow = 0.
-!           chigh = +100.
-!           cint = 10.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                     ,zoom,1.)       
-
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1      asc9_tim_t,c33_label,i_overlay,c_display
-     1                                          ,lat,lon,jdot,
-     1      NX_L,NY_L,r_missing_data,laps_cycle_time)
+            if(c_type(3:3) .ne. 'i')then ! contour plot
+                call contour_settings(field_2d,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,1.)       
+
+                call plot_cont(field_2d,1e-0,clow,chigh,cint
+     1                        ,asc9_tim_t,c33_label,i_overlay,c_display        
+     1                        ,lat,lon,jdot,NX_L,NY_L,r_missing_data
+     1                        ,laps_cycle_time)
+
+            else ! image plot
+                call ccpfil(field_2d,NX_L,NY_L,100.,-20.,'hues'
+     1                     ,n_image)    
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                          ,i_overlay,'hsect')
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
 
         elseif(c_type .eq. 'ta')then
             var_2d = 'TAD'
@@ -4154,7 +4181,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4245,7 +4272,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4319,7 +4346,7 @@ c                   cint = -1.
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'hsect')
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
 
             endif
@@ -4618,7 +4645,7 @@ c                   cint = -1.
             if(c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                                      ,i_overlay)
+     1                                           ,i_overlay,'hsect')
             endif
 
             if(c_display .ne. 't')then
@@ -4737,7 +4764,7 @@ c                   cint = -1.
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                                      ,i_overlay)
+     1                                           ,i_overlay,'hsect')
             endif
 
 
@@ -4848,7 +4875,7 @@ c                   cint = -1.
 !                call pwrity
 !    1                (cpux(800),cpux(ity),asc_tim_24(1:17),17,2,0,0)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                                      ,i_overlay)
+     1                                           ,i_overlay,'hsect')
             endif
 
 
@@ -4970,7 +4997,7 @@ c                   cint = -1.
      1    .or. c_metacode .eq. 'c ')then
                  call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                  call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-     1                                                      ,i_overlay)
+     1                                           ,i_overlay,'hsect')
             endif
 
 
@@ -5095,7 +5122,7 @@ c                   cint = -1.
 !                endif
 
 !                call write_label_lplot(NX_L,NY_L,c33_label,asc_tim_9
-!    1                                                      ,i_overlay)
+!    1                                           ,i_overlay,'hsect')
             endif
 
             if(c_metacode .eq. 'y ' .or. c_metacode .eq. 'c ')then
@@ -5173,320 +5200,6 @@ c                   cint = -1.
         return
         end
 
-        subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag
-     1                                   ,maxstns,c_field,zoom,atime
-     1                                   ,c33_label,i_overlay)
-
-!       97-Aug-14     Ken Dritz     Added maxstns as dummy argument
-!       97-Aug-14     Ken Dritz     Removed include of lapsparms.for
-!       97-Aug-25     Steve Albers  Removed /read_sfc_cmn/.
-
-!       This routine labels station locations on the H-sect
-
-        real*4 lat(ni,nj),lon(ni,nj)
-
-        real*4 lat_s(maxstns), lon_s(maxstns), elev_s(maxstns)
-        real*4 cover_s(maxstns), hgt_ceil(maxstns), hgt_low(maxstns)
-        real*4 t_s(maxstns), td_s(maxstns), pr_s(maxstns), sr_s(maxstns)
-        real*4 dd_s(maxstns), ff_s(maxstns), ddg_s(maxstns)
-     1       , ffg_s(maxstns)
-        real*4 vis_s(maxstns)
-        character stations(maxstns)*3, wx_s(maxstns)*8      ! c5_stamus
-
-c
-        character atime*24, c33_label*33
-        character directory*150,ext*31
-        character*255 c_filespec
-        character*9 c9_string, asc_tim_9
-        character*13 filename13
-        character*2 c_field
-        character*3 c3_name, c3_presob
-
-!       Declarations for 'read_surface_sa' call
-!       New arrays for reading in the SAO data from the LSO files
-        real*4   pstn(maxstns),pmsl(maxstns),alt(maxstns)
-     1          ,store_hgt(maxstns,5)
-        real*4   ceil(maxstns),lowcld(maxstns),cover_a(maxstns)
-     1          ,vis(maxstns),rad(maxstns)
-
-        Integer*4   obstime(maxstns),kloud(maxstns),idp3(maxstns)
-
-        Character   obstype(maxstns)*8
-     1             ,store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
-
-        character reptype(maxstns)*6, atype(maxstns)*6
-
-!       Declarations for 'read_sfc_precip' call
-	real*4 pcp1(maxstns), pcp3(maxstns), pcp6(maxstns)
-	real*4 pcp24(maxstns)
-	real*4 snow(maxstns)
-	character filetime*9, infile*256, btime*24
-	character stations_s(maxstns)*20, provider(maxstns)*11
-	character dum*132
-
-        logical l_parse
-
-        call get_filespec('lso',2,c_filespec,istatus)
-        call get_file_time(c_filespec,i4time,i4time_lso)
-
-        if(i4time_lso .eq. 0)then
-            write(6,*)' No LSO files available for station plotting'
-            return
-        endif
-
-        call make_fnam_lp(i4time_lso,asc_tim_9,istatus)
-
-        write(6,*)
-     1  ' Reading Station locations from read_sfc for labeling: '
-     1  ,asc_tim_9
-
-        ext = 'lso'
-        call get_directory(ext,directory,len_dir) ! Returns top level directory
-        if(c_field(1:1) .eq. 'q')then ! LSO_QC file
-            infile = 
-     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))//'_qc'    
-
-        else ! Regular LSO file
-            infile = 
-     1      directory(1:len_dir)//filename13(i4time_lso,ext(1:3))  
-
-        endif
-
-!       call read_surface_old(infile,maxstns,atime,n_meso_g,
-!    &           n_meso_pos,
-!    &           n_sao_g,n_sao_pos_g,n_sao_b,n_sao_pos_b,
-!    &           n_obs_g,n_obs_pos_g,
-!    &           n_obs_b,n_obs_pos_b,stations,obstype,lat_s,lon_s,
-!    &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-!    &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
-!    &           store_emv,
-!    &           store_amt,store_hgt,vis_s,obstime,istatus)
-
-        call read_surface_sa(infile,maxstns,atime,
-     &           n_obs_g,n_obs_b,stations,reptype,atype,lat_s,lon_s,
-     &           elev_s,wx_s,t_s,td_s,dd_s,ff_s,ddg_s,
-     &           ffg_s,pstn,pmsl,alt,kloud,ceil,lowcld,cover_a,rad,idp3,      
-     &           store_emv,store_amt,store_hgt,vis_s,obstime,istatus)
-
-100     write(6,*)'     n_obs_b',n_obs_b
-
-        if(n_obs_b .gt. maxstns .or. istatus .ne. 1)then
-            write(6,*)' Too many stations, or no file present'
-            istatus = 0
-            return
-        endif
-
-        size = 0.5
-        call getset(mxa,mxb,mya,myb,umin,umax,vmin,vmax,ltype)
-        du = float(ni) / 300.
-
-        zoom_eff = max((zoom / 3.0),1.0)
-        du2 = du / zoom_eff
-
-!       call setusv_dum(2HIN,11)
-
-        if(c_field(2:2) .eq. 'p')then     ! Precip
-            write(6,*)' Reading precip obs'
-	    call read_sfc_precip(i4time,btime,n_obs_g,n_obs_b,
-     &        stations_s,provider,lat_s,lon_s,elev_s,
-     &        pcp1,pcp3,pcp6,pcp24,snow,       
-     &        maxstns,jstatus)
-            iflag_cv = 2
-        elseif(c_field(2:2) .eq. 'v')then ! Ceiling & Visibility
-            iflag_cv = 1
-        else
-            iflag_cv = 0
-        endif
-
-        write(6,*)' plot_station_locations... ',iflag
-
-        c3_presob = '   '
-
-        if(iflag .ge. 1)then
-            if(iflag_cv .eq. 0)then
-                write(6,13)
-13              format(' Select type of pressure ob [msl,alt,stn]'
-     1                ,4x,'default=none      ? ',$)
-                read(5,14)c3_presob
-14              format(a)
-            endif
-
-            if(c_field(1:1) .eq. 'q')then ! LSO_QC file
-                c33_label = 'Sfc QC Obs   ('//c3_presob//' pres)'
-            else
-                c33_label = 'Sfc Obs      ('//c3_presob//' pres)'
-            endif
-
-            if(iflag_cv .eq. 2)then
-                c33_label(13:33) = '     1 Hr Precip (in)'
-            elseif(iflag_cv .eq. 1)then
-                c33_label(14:33) =  '          Ceil & Vis'
-            endif
-
-            call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
-            call write_label_lplot(ni,nj,c33_label,asc_tim_9,i_overlay)       
-
-        endif
-
-        call get_border(ni,nj,x_1,x_2,y_1,y_2)
-        call set(x_1,x_2,y_1,y_2,1.,float(ni),1.,float(nj),1)
-
-        call get_r_missing_data(r_missing_data,istatus)
-        call get_sfc_badflag(badflag,istatus)
-
-!       Plot Stations
-        do i = 1,n_obs_b ! num_sfc
-            call latlon_to_rlapsgrid(lat_s(i),lon_s(i),lat,lon
-     1                          ,ni,nj,xsta,ysta,istatus)
-
-            if(xsta .lt. 1. .or. xsta .gt. float(ni) .OR.
-     1         ysta .lt. 1. .or. ysta .gt. float(nj)          )then       
-                    goto80
-            endif
-!           call supcon(lat_s(i),lon_s(i),usta,vsta)
-
-!           IFLAG = 0        --        Station locations only
-!           IFLAG = 1        --        FSL Mesonet only (for WWW)
-!           IFLAG = 2        --        All Sfc Obs
-
-            if(iflag .ge. 1)then
-
-                w1 = dd_s(i)
-                w2 = ff_s(i)
-                w3 = ffg_s(i)
-
-                if(iflag .eq. 1)call setusv_dum(2HIN,14)
-
-                call s_len(stations(i),len_sta)
-
-                if(len_sta .ge. 3)then
-                    c3_name = stations(i)(len_sta-2:len_sta)
-                else
-                    c3_name = stations(i)
-                endif
-
-                charsize = .0040 / zoom_eff
-
-!               call pwrity(xsta, ysta-du*3.5, c3_name, 3, -1, 0, 0)     
-
-                if(iflag_cv .ne. 1)then
-                    CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
-     1                          charsize,ANGD,CNTR)
-                endif
-
-                relsize = 1.1
-
-                if(iflag .eq. 1)call setusv_dum(2HIN,11)
-
-                if(iflag_cv .eq. 2)then     ! Precip
-                    temp = badflag
-                    if(pcp1(i) .ne. badflag)then
-                        dewpoint = pcp1(i)
-                        write(6,*)' Precip ob ',i,pcp1(i)
-                    else
-                        dewpoint = badflag
-                    endif
-
-                    pressure = r_missing_data
-
-                elseif(iflag_cv .eq. 1)then ! Ceiling & Visibility
-                    if(vis_s(i) .ne. badflag)then
-                        dewpoint = vis_s(i)
-                    else
-                        dewpoint = badflag
-                    endif
-
-                    nlyr = kloud(i)
-
-                    if(nlyr .ge. 1)then
-                        CALL PCLOQU(xsta, ysta-du2*3.5, c3_name, 
-     1                              charsize,ANGD,CNTR)
-                    endif
-
-                    pressure = float(nlyr)        ! number of cloud layers
-                    w1       = store_hgt(i,1)     ! height of 1st layer
-                    if(nlyr .ge. 2)w2 = store_hgt(i,2)      ! 2nd layer
-                    if(nlyr .ge. 3)w3 = store_hgt(i,3)      ! 3rd layer
-
-                    if(nlyr .ge. 1)then                    
-                        if(l_parse(store_amt(i,nlyr),'CLR'))then
-                            temp = 0.0
-                        elseif(l_parse(store_amt(i,nlyr),'SKC'))then
-                            temp = 0.0
-                        elseif(l_parse(store_amt(i,nlyr),'FEW'))then
-                            temp = 0.1
-                        elseif(l_parse(store_amt(i,nlyr),'SCT'))then
-                            temp = 0.3
-                        elseif(l_parse(store_amt(i,nlyr),'BKN'))then
-                            temp = 0.7
-                        elseif(l_parse(store_amt(i,nlyr),'OVC'))then
-                            temp = 1.0
-                        else
-                            write(6,*)' Unrecognized cloud fraction'
-     1                               ,store_amt(i,nlyr)
-                            temp = 0.0
-                        endif
-                    endif
-
-                elseif(c_field(2:2) .ne. 'c')then ! Fahrenheit
-                    temp = t_s(i)
-                    dewpoint = td_s(i)
-
-                else                          ! Celsius
-                    if(t_s(i) .ne. badflag)then
-                        temp = f_to_c(t_s(i))
-                    else
-                        temp = badflag
-                    endif
-
-                    if(td_s(i) .ne. badflag)then
-                        dewpoint = f_to_c(td_s(i))
-                    else
-                        dewpoint = badflag
-                    endif
-                endif
-
-                if(iflag_cv .eq. 0)then
-                    if(c3_presob .eq. 'msl')then
-                        pressure = pmsl(i)
-                    elseif(c3_presob .eq. 'alt')then
-                        pressure = alt(i)
-                    elseif(c3_presob .eq. 'stn')then 
-                        pressure = pstn(i)
-                    else
-                        pressure = r_missing_data
-                    endif
-
-                endif
-
-                call plot_mesoob(w1,w2,w3
-     1                 ,temp,dewpoint
-     1                 ,pressure,xsta,ysta
-     1                 ,lat,lon,ni,nj,relsize,zoom,11,du2
-     1                 ,iflag,iflag_cv)
-
-                if(iflag .eq. 1)call setusv_dum(2HIN,33)
-
-            else ! Write station location only
-                call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
-                call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
-
-            endif
-
-80      enddo ! i
-
-        if(iflag .eq. 1)then ! special mesonet label 
-            call setusv_dum(2hIN,2)
-            call cv_i4tim_asc_lp(i4time,atime,istatus)
-            atime = atime(1:14)//atime(16:17)//' '
-            ix = 590
-            iy = 270
-            call pwrity(cpux(ix),cpux(iy),atime(1:17),17,-1,0,-1)
-        endif
-
-        return
-        end
-
         subroutine get_border(ni,nj,x_1,x_2,y_1,y_2)
 
         if(ni .eq. nj)then
@@ -5537,10 +5250,12 @@ c
         end
 
 
-        subroutine write_label_lplot(ni,nj,c33_label,a9time,i_overlay)        
+        subroutine write_label_lplot(ni,nj,c33_label,a9time
+     1                              ,i_overlay,c5_sect)        
 
         character*33 c33_label
         character*24 asc_tim_24,asc_tim_24_in
+        character*5 c5_sect
         character*9 a9time
 
         common /image/ n_image
@@ -5583,10 +5298,18 @@ c
         jsize_b = 1 ! [valid range is 0-2]
         rsize_b = jsize_b + 2.
 
+        if(c5_sect .eq. 'hsect')then
+            vspace=.0065
+            v1=.0040
+        else
+            vspace=.0075
+            v1=.0045
+        endif
+
         if(jsize_b .eq. 2)then
             y_1 = y_1 - .025 - .035 * float(i_label-1)
         else
-            y_1 = y_1 - rsize_b*.0045 - rsize_b*.0075 ! .0072
+            y_1 = y_1 - rsize_b*v1 - rsize_b * vspace
      1                              * float(i_label-1)
         endif
 
@@ -5679,8 +5402,11 @@ c
         enddo
 
         if(n_fdda_models.eq.0)then
-           print*,'fdda is not turned on in static file'
-           return 
+!          print*,'fdda is not turned on in static file'
+!          return 
+           write(6,*)' Assuming LGA only since n_fdda_models was zero'       
+           n_fdda_models = 1
+           c_fdda_mdl_src(1) = 'lga'
         endif
 
         write(6,*)' Available models are...'
@@ -5805,7 +5531,7 @@ c
 
 
         subroutine plot_field_2d(i4time,c_type,field_2d,scale
-     1                        ,clow_in,chigh_in,cint
+     1                        ,clow_in,chigh_in,cint_in
      1                        ,c33_label,i_overlay,c_display,lat,lon
      1                        ,jdot,NX_L,NY_L,r_missing_data,colortable)
 
@@ -5818,6 +5544,7 @@ c
         real*4 lon(NX_L,NY_L)
 
         common /image/ n_image
+        common /zoom/  zoom
 
         call make_fnam_lp(i4time,asc9_tim_t,istatus)
 
@@ -5832,6 +5559,13 @@ c
         call s_len(c_type,len_type)
 
         if(c_type(len_type:len_type) .ne. 'i')then
+            if(cint_in .eq. 0.)then
+                call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint       
+     1                                                  ,zoom,scale)
+            else
+                cint = cint_in
+            endif
+
             call plot_cont(field_2d,scale,clow,chigh,cint
      1                        ,asc9_tim_t,c33_label,i_overlay
      1                        ,c_display,lat,lon,jdot,NX_L,NY_L

@@ -238,3 +238,34 @@ cdis
 
         end
 
+ 
+       subroutine get_deriv_parms(mode_evap,istatus)
+
+       namelist /deriv_nl/ mode_evap
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('static',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/deriv.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,deriv_nl,err=901)
+       close(1)
+
+       print*,'success reading deriv_nl in ',filename
+       write(*,deriv_nl)
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading deriv_nl in ',filename
+       write(*,deriv_nl)
+       istatus = 0
+       return
+
+       end

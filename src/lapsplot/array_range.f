@@ -79,7 +79,7 @@ cdis
            chigh = nint(rmax/cint) * cint + cint
        endif
  
-       write(6,*)' Subroutine contour_settings....',range,zoom,cint
+       write(6,*)' Subroutine contour_settings....',range,zoom,cint,scale
 
        return
        end

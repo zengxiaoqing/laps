@@ -706,7 +706,7 @@ c read in laps lat/lon and topo
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
                 call write_label_lplot(NX_C,NZ_C,c33_label,asc9_tim_t
-     1                                                    ,i_overlay)
+     1                                          ,i_overlay,'xsect')
                 call lapsplot_setup(NX_C,NZ_C,lat,lon,jdot)
 
             endif
@@ -2230,7 +2230,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !           call pwrity(cpux(800),cpux(ity),asc_tim_24(1:17),17,1,0,0)
 !       endif
 
-        call write_label_lplot(100,94,c33_label,a9time,i_label_overlay)       
+        call write_label_lplot(100,94,c33_label,a9time,i_label_overlay
+     1                        ,'xsect')       
 
         if(i_map .eq. 0)then
 

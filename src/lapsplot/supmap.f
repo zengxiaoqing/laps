@@ -348,7 +348,7 @@ c
 c       SUPMBD subroutine changed to BLOCK DATA
 c     IGDFLT = %LOC(SUPMBD)             !FORCE LOAD OF BLOCK DATA from library
 
-      write(6,*)' Subroutine supmap...'
+      write(6,*)' Subroutine supmap...',jproj
 
       ROT = RROT
       ILTS = IABS(JJLTS)
@@ -484,8 +484,8 @@ C MERCATOR                              [12]
 
 C DUMMY  --  ERROR EXIT                 [7]
    67 IIER = 33
-      CALL ULIBER2 (IIER,
-     1             46H SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION,46)
+      CALL ULIBER2 (IIER
+     1           ,' SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION')     
       GO TO 700
 
 C CYLINDRICAL EQUIDISTANT               [8,11]
@@ -563,7 +563,7 @@ C ORTHOGRAPHIC                          [2]
 
 C LAMBERT CONFORMAL CONIC               [3]
   403 IIER = 34
-      CALL ULIBER2 (IIER,32H SUPMAP-MAP LIMITS INAPPROPRIATE,32)
+      CALL ULIBER2 (IIER,' SUPMAP-MAP LIMITS INAPPROPRIATE')
       GO TO 700
 
 C LAMBERT EQUAL AREA                    [4]
@@ -709,10 +709,10 @@ C RETURN IER
 
 C ERROR RETURNS
   900 IIER = 35
-      CALL ULIBER2 (IIER,32H SUPMAP-ANGULAR LIMITS TOO GREAT,32)
+      CALL ULIBER2 (IIER,' SUPMAP-ANGULAR LIMITS TOO GREAT')
       GO TO 700
   905 IIER = 36
-      CALL ULIBER2 (IIER,25H SUPMAP-MAP HAS ZERO AREA,25)
+      CALL ULIBER2 (IIER,' SUPMAP-MAP HAS ZERO AREA')
       GO TO 700
 
       END
@@ -826,7 +826,9 @@ c  20   NamFil='SupMap_UserFile3'               !64
 
 C***Open file
 c  25   Open(3,Name=NamFil,Type='Old',Form='UnFormatted',ReadOnly,Err=26)
-   25   Open(3,file=NamFil,status='Old',Form='UnFormatted',err=26)
+   25   continue
+        write(6,*)Namfil(1:60)
+        Open(3,file=NamFil,status='Old',Form='UnFormatted',err=26)
         GoTo 30
 
 C***Error opening file -- return
@@ -837,13 +839,13 @@ C***Error opening file -- return
 C***Read next line
    30   continue
 
-        if(.false.)then
+        if(.true.)then
             if(iwrite .eq. 0)
      1        write(6,*)' Using simple read to read binary map info...'
             Read(3,End=99)NPts,MaxLat,MinLat,MaxLon,MinLon
      1                   ,(Pts(M),M=1,NPts)
 
-        else
+        else ! This may be needed for DEC Alpha but will not work on LINUX
             if(iwrite .eq. 0)
      1        write(6,*)' Using cio.c to read binary map info...'
             Read(3,End=99,err=41)NPts,MaxLat,MinLat,MaxLon,MinLon
@@ -1415,7 +1417,7 @@ C AZIMUTHAL EQUIDIDSANT                 [6]
 C DUMMY   --  ERROR                     [7]
   170 IIER = 33
       CALL ULIBER2 (IIER,
-     1             46H SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION,46)
+     1             ' SUPMAP-ATTEMPT TO USE NON-EXISTENT PROJECTION')
       GO TO 320
 
 C CYLINDRICAL EQUIDISTANT,  ARBITRARY POLE AND ORIENTATION.
@@ -1935,13 +1937,68 @@ c       end
 
 
 
-        subroutine uliber2 (ier, chars, nchars)
+        subroutine uliber2 (ier, chars)
 
-        integer*4       ier, nchars
+        integer*4       ier
 
         character       chars*(*)
 
         write(6,*)' Supmap error: ',ier,chars
+
+        return
+        end
+
+
+        subroutine supmap_block_data()
+
+c     routine supmap.f
+
+        COMMON/SUPMP1/PI,TOVPI,DTR,RTD,EPS,OV90,CON1,CON2,PART
+        COMMON/SUPMP2/NPTS,MAXLAT,MINLAT,MAXLON,MINLON,PTS(200)
+        COMMON/SUPMP3/POLONG,CONE,RLAT,RLON,JGR,ILF,SGN
+        COMMON/SUPMP4/IFST,IGO,IGOLD,ICROSS,IOUT,UOLD,VOLD
+        COMMON/SUPMP5/PHIOC,SINO,COSO,SINR,COSR,IPROJ
+        COMMON/SUPMP6/UMIN,UMAX,VMIN,VMAX,UEPS,VEPS
+        COMMON/SUPMP7/PHIO,PHIA,IGRID,IDOT,ILTS
+        COMMON/SUPMP8/U,V,U1,V1,U2,V2
+        COMMON/SUPMPA/IIER
+        COMMON/MAPCOL/MPCOL1,MPCOL2,MPCOL3,MPCOL4
+        COMMON/MAPDAS/LDASH1,LDASH2,LDASH3,LDASH4
+
+!       DATA                    !Default line intensities and dash patterns
+!    1          MPCOL1,LDash1   /255,1023/,  !Map lines
+!    2          MPCOL2,LDash2   /128,1006/,  !Grid lines
+!    3          MPCOL3,LDash3   /192,1023/,  !Limb lines
+!    4          MPCOL4,LDash4   /255,1023/   !Perimeter
+
+
+c       COMMON/SUPMP1/PI,TOVPI,DTR,RTD,EPS,OV90,CON1,CON2,PART
+c       COMMON/SUPMP4/IFST,IGO,IGOLD,ICROSS,IOUT,UOLD,VOLD
+        COMMON/SUPMP9/DS,DI,DSRDI
+
+        MPCOL1 = 255
+        MPCOL2 = 128
+        MPCOL3 = 192
+        MPCOL4 = 255
+
+        LDash1 = 1023 
+        LDash2 = 1006
+        LDash3 = 1023
+        LDash4 = 1023
+
+        CON1 = 1.00001
+        CON2 = 179.99999
+        DI = 16.
+        DTR = 1.7453292519943E-2
+        EPS = 1.E-6
+        OV90 = 1.11111111111111E-2
+        PI = 3.1415926535898
+        RTD = 57.295779513082
+        TOVPI = 0.63661977236758
+        UOLD = 0.0 
+        VOLD = 0.0 
+        PART   = 1.0           !SIZE OF PICTURE (90% OF SCREEN)
+  
 
         return
         end

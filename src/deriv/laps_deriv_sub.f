@@ -178,7 +178,6 @@ cdis
         real*4 cloud_top(NX_L,NY_L)
         real*4 cloud_base(NX_L,NY_L)
         real*4 cloud_ceiling(NX_L,NY_L)
-        real*4 cloud_base_buf(NX_L,NY_L)
 
         real*4 cldtop_m(NX_L,NY_L)
         real*4 cldtop_m_co2(NX_L,NY_L)
@@ -325,13 +324,21 @@ cdis
 
         ISTAT = INIT_TIMER()
 
-        write(6,*)' Welcome to the LAPS gridded cloud analysis'
+        write(6,*)' Welcome to the laps_deriv_sub (derived cloud prods)'       
 
         call get_r_missing_data(r_missing_data,istatus)
         if (istatus .ne. 1) then
            write (6,*) 'Error calling get_r_missing_data'
            stop
         endif
+
+        call get_deriv_parms(mode_evap,istatus)
+        if (istatus .ne. 1) then
+           write (6,*) 'Error calling get_deriv_parms'
+           stop
+        endif
+
+        if(mode_evap .gt. 0)l_evap_radar = .true.
 
         default_base     = r_missing_data
         default_top      = r_missing_data
@@ -479,6 +486,15 @@ c read in laps lat/lon and topo
                 goto999
             endif
 
+            var = 'LCB'
+            ext = 'lcb'
+            call get_laps_2d(i4time,ext,var,units,comment
+     1                   ,NX_L,NY_L,cloud_base,istatus)
+            if(istatus .ne. 1 .and. istatus .ne. -1)THEN
+                write(6,*)' Error Reading cld_base Analysis - abort'       
+                goto999
+            endif
+
 !           Access SAO data from LSO files
             ext = 'lso'
             call get_directory(ext,directory,len_dir) ! Returns directory
@@ -595,34 +611,19 @@ c read in laps lat/lon and topo
 !       DERIVED RADAR/PRECIP STUFF
         if(istat_radar_3dref .eq. 1)then ! LMT
 
-            if(l_evap_radar 
-!    1             .and. istatus_rh .eq. 1
-     1             .and. istat_radar_3dref_orig .eq. 1)then ! Reread radar data
+            if(l_evap_radar)then 
 
-                write(6,*)
-     1              ' Rereading radar data to apply evaporation/fill'
+                write(6,*)' Calling rfill_evap: mode_evap = ',mode_evap       
 
-!               Get time of radar file of the indicated appropriate extension
-!               call get_filespec(radarext_3d_cloud(1:3),2,c_filespec
-!    1                                                    ,istatus)
-!               call get_file_time(c_filespec,i4time,i4time_radar)
+!               Use LPS reflectivity field
 
-                call read_radar_3dref(i4time, !          i4time_radar,
-!    1                 1200,i4time_radar,
-     1                 .true.,ref_base,                                 ! I
-     1                 NX_L,NY_L,NZ_L,radarext_3d_cloud,
-     1                 lat,lon,topo,.true.,.true.,
-     1                 heights_3d,
-     1                 radar_ref_3d,
-     1                 rlat_radar,rlon_radar,rheight_radar,radar_name,     
-     1                 n_ref_grids,istat_radar_2dref,istat_radar_3dref)       
+!               Use Cloud Base field
 
                 I4_elapsed = ishow_timer()
 
 !               Apply evaporation subroutine
                 call rfill_evap(radar_ref_3d,NX_L,NY_L,NZ_L
-     1          ,.true.,.true.
-     1          ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
+     1          ,cloud_base,lat,lon,topo,mode_evap
      1          ,temp_3d,rh_3d_pct,cldpcp_type_3d,heights_3d,istatus
      1          ,ref_base)
 

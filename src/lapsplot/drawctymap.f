@@ -66,7 +66,7 @@ c
           write(6,*)' no grid spacing, stop in draw_county_map'
           stop
       else
-          write(6,*)' Subroutine draw_county_map...'
+          write(6,*)' Subroutine draw_county_map...',jproj
       endif
 
       domsize = (max(ni,nj)-1.) * grid_spacing_m / zoom

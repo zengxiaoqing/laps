@@ -13,4 +13,5 @@ c
 c 'path_to_cloud_drift' - Directory for each source of data
 c
 c 'cloud_drift_format' - Format of data contained in each directory
-c                        Valid values are 'NESDIS', 'CWB', and 'AFWA'
+c                        Valid values are 'NESDIS', 'CWB_SATOB', 'CWB_HDSW', 
+c                        and 'AFWA'

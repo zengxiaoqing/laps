@@ -36,153 +36,81 @@ cdis
 cdis
 cdis   
 cdis
-        subroutine rfill_evap(ref_3d,ni,nj,nk,l_low_fill,l_high_fill
-     1  ,lat,lon,topo,rlat_radar,rlon_radar,rheight_radar
+        subroutine rfill_evap(ref_3d,ni,nj,nk,cloud_base
+     1  ,lat,lon,topo,mode_evap
      1  ,temp_3d,rh_3d_pct,cldpcp_type_3d,heights_3d,istatus,ref_base)       
 
-!       This Routine Fills in the gaps in a 3D radar volume that has been
-!       stored as a sparse array. A linear interpolation in the vertical
-!       direction is used. An additional option 'l_low_fill' can be set to
-!       .true.. This will fill in low level echoes that might have been
-!       missed because the grid points are below the radar horizon or too
-!       close to the terrain. This is done if radar echo is detected not
-!       too far above such grid points.
-
-!       Steve Albers            1992          Original rfill subroutine
-!       Steve Albers            1993          Add low level evaporation
-!       Ken Dritz           1997 Aug 01       Changed NX_L_MAX to ni,
-!                                             NY_L_MAX to nj, and
-!                                             NZ_L_MAX to nk
-!       Ken Dritz           1997 Aug 01       Added ref_base as dummy arg.
-!       Ken Dritz           1997 Aug 01       Removed include of lapsparms.for
+!       This Routine works with reflectivity read in from the LPS file. This
+!       is originally either 2D or 3D and may have been further processed
+!       within the cloud analysis.
 
 !       ni,nj,nk are input LAPS grid dimensions
-!       rlat_radar,rlon_radar,rheight_radar are input radar coordinates
 
-        real*4 ref_3d(ni,nj,nk)                  ! Input/Output 3D reflctvy grid
-        real*4 temp_3d(ni,nj,nk)                 ! Input 3D temp grid
-        real*4 rh_3d_pct(ni,nj,nk)               ! Input 3D rh grid
-        real*4 heights_3d(ni,nj,nk)              ! Input 
-        integer cldpcp_type_3d(ni,nj,nk)         ! Input 3D pcp type grid
-        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! Input 2D grids
+        real*4 ref_3d(ni,nj,nk)                  ! I/O 3D reflctvy grid
+        real*4 temp_3d(ni,nj,nk)                 ! I
+        real*4 rh_3d_pct(ni,nj,nk)               ! I
+        real*4 heights_3d(ni,nj,nk)              ! I
+        integer cldpcp_type_3d(ni,nj,nk)         ! I
+        real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj) ! I
+        real*4 cloud_base(ni,nj)                 ! I
 
-        integer isum_ref_2d(ni,nj)               ! Local array
-        real*4 heights_1d(nk)                    ! Local array
+        real*4 heights_1d(nk)                    ! L
 
         logical l_low_fill,l_high_fill,l_test
 
-        write(6,*)' Interpolating vertically through gaps with evaporati
-     1on'
-        write(6,*)'i,j,k_upper,dbz_upper,dbz_lower'
-     1           ,',rh_3d_pct(i,j,k_upper),r_upper'
-     1           ,',delta_t,r_lower,ptype'
+        write(6,*)' subroutine rfill_evap'
 
-        n_low_fill = 0
+        n_low_attenuate = 0
 
         isum_test = nint(ref_base) * nk
-
-        do j = 1,nj
-        do i = 1,ni
-            isum_ref_2d(i,j) = 0
-        enddo
-        enddo
-
-        do k = 1,nk
-        do j = 1,nj
-        do i = 1,ni
-            isum_ref_2d(i,j) = isum_ref_2d(i,j) + nint(ref_3d(i,j,k))
-        enddo
-        enddo
-        enddo
-
-        do k = 1,nk
-            heights_1d(k) = psatoz(pressure_of_level(k)/100.)
-        enddo ! k
-
-        if(l_low_fill)then
-          if(lat(1,1) .eq. 0. .or. lon(1,1) .eq. 0. .or. topo(1,1) .eq. 
-     10.)then
-            write(6,*)' Error in RFILL, lat/lon/topo has zero value'
-            return
-          endif
-        endif
 
         do j = 1,nj
 c       write(6,*)' Doing Column ',j
 
         do i = 1,ni
 
-          if(isum_ref_2d(i,j) .ne. isum_test)then ! Test for presence of echo
+!           Test for vertical existance/variance to characterize reflectivity
+            reference = r_missing_data
+            iref_dim = 0
 
-            if(l_high_fill)then ! Fill in between high level echoes
-                k = 1
-
-!               Test for presence of top
-15              l_test = .false.
-                ref_below = ref_3d(i,j,k)
-
-                do while (k .lt. nk .and. (.not. l_test))
-                    ref_above = ref_3d(i,j,k+1)
-
-                    if(ref_below .gt. ref_base
-     1         .and. ref_above .eq. ref_base)then
-                        k_top = k
-                        l_test = .true.
+            do k = 1,nk
+                if(ref_3d(i,j,k) .ne. ref_base 
+     1       .and. ref_3d(i,j,k) .ne. r_missing_data)then
+                    if(reference .eq. r_missing_data)then ! initial ref
+                        iref_dim = 2
+                        reference = ref_3d(i,j,k)
+                    else                                  ! subsequent ref
+                        if(ref_3d(i,j,k) .ne. reference)then
+                            iref_dim = 3
+                        endif
                     endif
+                endif
+            enddo ! k
 
-                    k = k + 1
-                    ref_below = ref_above
+            if(iref_dim .eq. 2 .and. mode_evap .eq. 3)then 
+                goto 900                              ! don't evaporate 2d data
+            endif
 
-                enddo
+!           Determine "Radar Base" to be Cloud Base for 2dref points
+!           and Radar Horizon for 3dref points.
 
-                if(.not. l_test)goto100 ! No Top exists
+            if(iref_dim .eq. 2)then 
+                k_cloud_base = height_to_zcoord2(cloud_base(i,j)
+     1                               ,heights_3d,ni,nj,nk,i,j,istatus)
 
-!               Top exists, Search for next bottom
-                l_test = .false.
-                ref_below = ref_3d(i,j,k)
+                if(cloud_base(i,j) .ne. r_missing_data .and.
+     1             k_cloud_base    .ne. r_missing_data .and. 
+     1             istatus         .eq. 1                    )then     
 
-                do while(k .lt. nk .and. (.not. l_test))
-                    k = k + 1
-                    ref_above = ref_3d(i,j,k)
+                    k_bottom = k_cloud_base
 
-                    if(ref_above .gt. ref_base
-     1         .and. ref_below .eq. ref_base)then
-                        k_bottom = k
-                        l_test = .true.
-                    endif
-
-                    ref_below = ref_above
-
-                enddo
-
-                if(.not. l_test)goto100 ! No Bottom exists
-
-!               Fill in gap if it exists and is small enough
-!               if(.true.)then
-                if(k_bottom .le. k_top+5)then ! Fill gaps smaller than const-1
-c                   write(6,*)' Filling gap between',i,j,k_bottom,k_top
-c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
-101                 format(1x,17i4)
-
-                    do k_bet = k_top+1,k_bottom-1
-                        frac = float(k_bet-k_bottom)/float(k_top-k_botto
-     1m)
-                        ref_3d(i,j,k_bet) = ref_3d(i,j,k_bottom)*(1.-fra
-     1c)
-     1                            + ref_3d(i,j,k_top)*(frac)
-                    enddo ! k
-
-c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
-
+                else
+                    write(6,*)' Warning, radar echo without cloud base'
+                    k_bottom = 0
+ 
                 endif
 
-                if(k .le. nk-2)then ! Look for another gap
-                    goto15
-                endif
-
-            endif ! l_high_fill
-
-100         if(l_low_fill)then ! Fill below low level echoes
+            elseif(iref_dim .eq. 3)then
 
 !               Search for bottom of detected echo
                 k_bottom = 0
@@ -196,7 +124,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     ref_above = ref_3d(i,j,k)
 
                     if(ref_above .gt. ref_base
-     1         .and. ref_below .eq. ref_base)then
+     1           .and. ref_below .eq. ref_base)then
                         k_bottom = k
                         dbz_bottom = ref_above
                         l_test = .true.
@@ -207,9 +135,16 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
                 enddo
 
+            else
+                k_bottom = 0
+
+            endif
+
+            if(iref_dim .gt. 0)then    ! We have an echo
                 istatus = 1
 
-                k_topo = max(int(height_to_zcoord(topo(i,j),istatus)),1)
+                k_topo = max(int(height_to_zcoord2(topo(i,j),heights_3d       
+     1                           ,ni,nj,nk,i,j,istatus)),1)
 
                 if(istatus .ne. 1)then
                     write(6,*)' ERROR return in rfill'
@@ -228,8 +163,8 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
                     if(k_bottom .le. k_topo+2 ! Echo base near ground
-!       1               .or. elev_bottom .lt. (elev_topo + 1.5) ! Echo below radar horizon
-     1          .or. elev_bottom .lt. 1.5 ! Echo base near radar horizon
+!       1         .or. elev_bottom .lt. (elev_topo + 1.5) ! Echo below radar horizon
+     1            .or. elev_bottom .lt. 1.5 ! Echo base near radar horizon
      1                                                  )then ! Fill in
 
                         do k = k_bottom-1,k_topo,-1
@@ -248,7 +183,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 !       1                       ,slant_range,ref_3d(i,j,k_bottom)
 211                     format(' low fill ',4i5,2f6.1,2f8.0)
 
-                        n_low_fill = n_low_fill + 1
+                        n_low_attenuate = n_low_attenuate + 1
 
                     endif ! Fill in from ground to bottom of echo
 
@@ -256,12 +191,12 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
 
             endif ! l_low_fill
 
-          endif ! echo present
+ 900        continue ! Skipped this grid point
 
         enddo ! i
         enddo ! j
 
-        write(6,*)' n_low_fill = ',n_low_fill
+        write(6,*)' n_low_attenuate = ',n_low_attenuate
 
         return
         end
