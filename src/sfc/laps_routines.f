@@ -143,6 +143,82 @@ c
 	end
 c
 c
+        subroutine mean_pressure(p_s,n_sfc,p_bk,ni,nj,badflag,pbar)
+c
+c*******************************************************************************
+c
+c       Routine to calculate the mean surface or reduced pressure.
+c       Based on 'mean_press' routine.
+c
+c       Changes:
+c               P.A.Stamus    11-23-99       Original
+c
+c       Inputs/Outputs:
+c
+c          Variable     Var Type     I/O     Description
+c         ----------   ----------   -----   -------------
+c          p_s             RA         I      Pressure observations.
+c          n_sfc           I          I      Number of surface observations.
+c          p_bk            RA         I      Pressure background array.
+c          ni, nj          I          I      Domain dimensions
+c          badflag         R          I      Bad flag value.
+c          pbar            R          O      Mean pressure of all obs or bkg.
+c
+c       User Notes:
+c
+c       1.  Units are not changed in this routine.
+c
+c*******************************************************************************
+c
+        real p_s(n_sfc), p_bk(ni,nj)
+c
+c.....  Find the mean pressure of the observations.
+c
+        sump = 0.
+        cntp = 0.
+c
+        do i=1,n_sfc
+          if(p_s(i) .le. 0.) go to 1
+          sump = sump + p_s(i)
+          cntp = cntp + 1.
+ 1	  continue
+	enddo !i
+c
+	if(cntp .eq. 0.) then
+	   print *,
+     &     '  WARNING. No pressure observations. Trying background.'
+	else
+	   pbar = sump / cntp
+	   return
+	endif
+c
+c.....  If no pressure obs, try the background.  If bkg no good,
+c.....  set the pbar to badflag.
+c
+	sump = 0.
+	cntp = 0.
+c
+	do j=1,nj
+	do i=1,ni
+	   if(p_bk(i,j) .le. 0.) go to 2
+	   sump = sump + p_bk(i,j)
+	   cntp = cntp + 1.
+ 2	   continue
+	enddo !i
+	enddo !j
+c
+	if(cntp .eq. 0.) then
+	   print *,
+     &     '  WARNING. No pressure background either.'
+	   pbar = badflag
+	else
+	   pbar = sump / cntp
+	endif
+c
+        return
+        end
+c
+c
 	real function alt_2_sfc_press(alt,elev)
 c
 c*****************************************************************************
