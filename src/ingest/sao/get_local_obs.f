@@ -446,9 +446,9 @@ c
 c..... Wind speed and direction
 c
 	  dir = dd(i) 
-	  if(dir.lt.0. .or. dir.gt.360.) dir = badflag
+          call sfc_climo_qc_r('dir_deg',dir)
 	  spd = ff(i)
-	  if(spd.lt.0 .or. spd.gt.100.) spd = badflag
+          call sfc_climo_qc_r('spd_ms',spd)
 	  if(dd_time(i).ge.0. .and. ff_time(i).ge.0.) then
 	     if( ((timeobs(i) - dd_time(i)) .gt. laps_cycle_time) .or.
      &           ((timeobs(i) - ff_time(i)) .gt. laps_cycle_time) ) then
@@ -459,9 +459,9 @@ c
 	  if(spd .ne. badflag) spd = 1.94254 * spd !m/s to kt
 c
 	  dirgust = ddg(i)
-	  if(dirgust.lt.0. .or. dirgust.gt.360.) dirgust = badflag
+          call sfc_climo_qc_r('dir_deg',dir_gust)
 	  spdgust = ffg(i)
-	  if(spdgust.lt.0 .or. spdgust.gt.120.) spdgust = badflag
+          call sfc_climo_qc_r('spd_ms',spd_gust)
 	  if(gust_time(i) .ne. badflag) then
 	     if( (timeobs(i) - gust_time(i)) .gt. laps_cycle_time) then
 		dirgust = badflag
