@@ -693,13 +693,13 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      A flow chart for the ingest processes may be found at
      'http://laps.fsl.noaa.gov/wharton/slide1.html'.
 
-     The default LAPS ingest code obtains "raw" data from the FSL NIMBUS 
-     system. The raw data can either be in ASCII, NetCDF (as point data), or
-     NetCDF (as gridded data - generally not on the LAPS grid). Note that the 
-     ingest code is also generally compatable with raw SBN/NOAAPORT data as 
-     stored in NetCDF files on the WFO-Advanced system. The ingest code 
-     processes the raw data and outputs the LAPS "intermediate" data files. 
-     The intermediate files are generally in ASCII for point data and 
+     The default LAPS ingest code obtains "raw" data, generally from the FSL 
+     NIMBUS system. The raw data can either be in ASCII, NetCDF (as point 
+     data), or NetCDF (as gridded data - generally not on the LAPS grid). Note
+     that the ingest code is also generally compatable with raw SBN/NOAAPORT 
+     data as stored in NetCDF files on the WFO-Advanced system. The ingest 
+     code processes the raw data and outputs the LAPS "intermediate" data 
+     files. The intermediate files are generally in ASCII for point data and 
      NetCDF format for gridded data that have now been remapped onto the LAPS 
      grid. Most ingest code is located under the 'src/ingest directory'. When 
      NetCDf format is used for the raw data, a cdl file for the raw data is 
@@ -721,11 +721,11 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
          3) Convert your raw data to NetCDF format then run the LAPS ingest
             code as is. The CDLs and sample "raw" NetCDF files supplied with
             our test dataset can serve as a guide to writing the software
-            to do this. We generally do not maintain any software for writing
-            "raw" NetCDF files as this is done outside of LAPS by the FSL 
-            Facility Division and others. Sometimes by posting a message to 
-            'laps-users', you can obtain information from other LAPS users as 
-            to how they may have implemented this step.
+            to do this. We generally do not maintain or support any software 
+            for writing "raw" NetCDF files as this is done external to LAPS.
+            Sometimes by posting a message to 'laps-users' you can obtain 
+            information from other LAPS users as to how they may have 
+            implemented this step.
 
      For gridded data sources such as the model background, generally (1) or
      (3) is easiest. For surface and other point data sources option (2) is 
@@ -774,13 +774,15 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      RUC is also available from UNIDATA and distributed to universities 
      through private companies like Alden. 
 
-     The conversion from GRIB to NetCDF is done by FSL's facility 
-     division (NIMBUS). You may wish to contact them for more info. 
-     The Atlanta, Sterling, and Seattle WFOs have followed a more direct
-     route, going from the RUC/Eta to the intermediate "lga" file,
-     bypassing the NetCDF file on the model grid. This includes RUC
-     on isobaric surfaces. Pete Stamus (FSL) would have 
-     more info on this.
+     The conversion from GRIB to NetCDF is done outside of LAPS by FSL's 
+     Facility division (NIMBUS). If you have the CDL, this should mostly be 
+     sufficient along with knowledge of NetCDF to write out the data. Beyond 
+     that, you may wish to contact the Facility Division for more info (given
+     that some type of funding arrangement with them exists). The Atlanta, 
+     Sterling, and Seattle WFOs have followed a more direct route, going from
+     the RUC/Eta to the intermediate "lga" file, bypassing the NetCDF file on 
+     the model grid. This includes RUC on isobaric surfaces. Pete Stamus (FSL) 
+     would have more info on this.
 
                        ----   2.3.2  Radar ingest ---
 
@@ -1085,8 +1087,8 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      (one example being the raw background data files). In many cases, a user
      could independently generate the intermediate data files (ingest output)
      and could then compare them with ours. If other "raw" files are needed 
-     as they appear on FSL's NIMBUS system, they can be obtained directly from
-     FSL's facility division at 'http://www-fd.fsl.noaa.gov/'.
+     as they appear on FSL's NIMBUS system, please let us know and we can
+     try to add them to our test data case or send them separately.
 
 ---------------- 2.6 ------ I/O of LAPS gridded files -------------------------
 
@@ -1991,9 +1993,9 @@ Outputs (Intermediate data file):
         vrz     grid                          3-D reflectivity  (proposed)
 </pre>
 
-The WSI data are decoded by our Facilities Division and written as
-netCDF files. The vrc_driver.x process reads these netCDF files.
-WSI sends out many types of radar data. We use the files
+The WSI data are decoded externally to LAPS and written as
+netCDF files in NIMBUS format. The vrc_driver.x process reads these netCDF 
+files. WSI sends out many types of radar data. We use the files
 that are labeled "_hd" (15 min freq). They also send out an "_hf"
 (5 min freq) file.  We use hd because WSI hand edits these for
 ground clutter. The hf files are not edited. The hd and hf files
