@@ -32,7 +32,7 @@ cdis    OF THE SOFTWARE AND DOCUMENTATION FOR ANY PURPOSE.  THEY ASSUME
 cdis    NO RESPONSIBILITY (1) FOR THE USE OF THE SOFTWARE AND
 cdis    DOCUMENTATION; OR (2) TO PROVIDE TECHNICAL SUPPORT TO USERS.
 cdis   
-cdis cdis
+cdis
 cdis
 cdis
 cdis
@@ -63,44 +63,48 @@ c date: 8/14/96
         character*9 filename,f_save
         integer i4time
         integer istatus
-
+        
         integer numoffiles,maxfiles
         parameter (maxfiles = 3000)
         character*256 c_filenames(maxfiles),dum
         integer i4time_test,i,mintime
-
-
-
-
+        
+        
+        
+        
         call get_file_names (path, numoffiles,
-     1  c_filenames, maxfiles, istatus)
-
+     1       c_filenames, maxfiles, istatus)
+        
         if (istatus.eq.1 .and. numoffiles.gt.0) then
+           
+           mintime = 1000000000
+           
+           do i = 1,numoffiles
+              
+              dum = c_filenames(i)
+              
+              filename = dum (index(dum,' ')-13:index(dum,' ')-4)
+              
+              call i4time_fname_lp (filename, i4time_test, istatus)
+              
+              mintime = min(abs(i4time_test-i4time),mintime)
+              
+              if(mintime.eq.abs(i4time_test-i4time) ) f_save = filename
+              
+           enddo
+           
+           filename = f_save
 
-        mintime = 1000000000
-
-        do i = 1,numoffiles
-
-        dum = c_filenames(i)
-
-        filename = dum (index(dum,' ')-13:index(dum,' ')-4)
-
-        call i4time_fname_lp (filename, i4time_test, istatus)
-
-        mintime = min(abs(i4time_test-i4time),mintime)
-
-        if(mintime.eq.abs(i4time_test-i4time) ) f_save = filename
-
-        enddo
-
-        filename = f_save
-
-        if (mintime.lt.3600) return
-
+           write (6,*) 'File found is ',mintime,'(sec) old'
+           
+           if (mintime.lt.3600) return
+           
         endif
 
+        write (6,*) 'File found is ',mintime,'(sec) old'
+        
         istatus = 0
-
+        
         return
         end
 

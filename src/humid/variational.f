@@ -375,7 +375,11 @@ c     install new changes for revised satellite path
          
          call get_latest_file (path,i4time,filename1,istatus)
          
-         if (istatus.ne.1) return
+         if (istatus.ne.1) then
+            write(6,*) 'variational.f::
+     1           Failure on call to get_latest_file'
+            return
+         endif
          
          write (6,*) 'Attempting: ', filename1
 c     convert filename to i4time_sat

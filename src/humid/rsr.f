@@ -83,10 +83,27 @@ c     install new changes for revise satellite path
           len = len + 7
        endif
 
+c     insertion of wait for data   10/8/02 db
+       call wait_for_data (
+     1      dir,                !path to data
+     1      i4time_in-3600/2,   !data lookback (use data after this time)
+     1      5,                  !frequency to check for data arrival (sec)
+     1      600,                !amount of time to wait before giving up 
+     1      3600*4,             !if data are not there at this lookback
+                                !dont bother to even wait, assume no chance
+     1      istatus)
+
+       if (istatus.ne.1) then
+          write (6,*) 'rsr.f:: Failure in waitfordata'
+       endif
+
 
        call get_latest_file (dir,i4time_in,filename1,istatus)
 
-       if (istatus.ne.1) return
+       if (istatus.ne.1)then
+          write(6,*) 'rsr.f:: Failure in call to get_latest_file'
+          return
+       endif
 
        write (6,*) ' ' 
        write (6,*) ' ' 
