@@ -18,6 +18,7 @@
       C_SAT_TYPES(4,1)='gwc'
       C_SAT_TYPES(4,2)='gwc'
       C_SAT_TYPES(1,3)='gvr'
+      C_SAT_TYPES(2,3)='wfo'
       C_SAT_TYPES(4,3)='gwc'
       C_SAT_TYPES(4,4)='gwc'
 c ----
@@ -58,6 +59,12 @@ c goes10
       C_CHANNEL_TYPES(3,1,3)='wv '
       C_CHANNEL_TYPES(4,1,3)='11u'
       C_CHANNEL_TYPES(5,1,3)='12u'
+
+      C_CHANNEL_TYPES(1,2,3)='vis'
+      C_CHANNEL_TYPES(2,2,3)='i39'
+      C_CHANNEL_TYPES(3,2,3)='iwv'
+      C_CHANNEL_TYPES(4,2,3)='i11'
+      C_CHANNEL_TYPES(5,2,3)='i12'
 
       C_CHANNEL_TYPES(1,4,3)='vis'
       C_CHANNEL_TYPES(2,4,3)='4u '
