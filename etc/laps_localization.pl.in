@@ -9,7 +9,6 @@ use Getopt::Long;
 $result = GetOptions("lapsroot=s" => \$LAPSROOT,
                      "dataroot=s" => \$LAPS_DATA_ROOT,
                      "srcroot=s"  => \$LAPS_SRC_ROOT,
-                     "compile!" => \$compile,
                      "site=s" => \$localization_site,
                      "help" => \&help_sub,
                      "<>" => \&help_sub);
@@ -18,9 +17,6 @@ sub help_sub{
     print "$0 command line options (default values)\n";
     print "   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n";
     print "   --dataroot = Root directory of the installed laps data (@prefix@/data)\n";
-    print "   --compile  = Performs a new compile for localization, \n";
-    print "                previously installed laps normally does not require compile for relocalization (nocompile)\n";
-    print "   --srcroot  = Root directory of the laps source code (@top_srcdir@) used for compile option only\n";
     print "   --site     = localization site (guessed)\n";
     print "   --help     = print this message and exit\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
@@ -28,8 +24,6 @@ sub help_sub{
     exit;
 }
 umask 002;
-
-$compile = ($compile==1)? "compile":"nocompile";
 
 
 $thisdir = 'pwd';
@@ -128,7 +122,7 @@ system("$LAPSROOT/bin/gensfclut.exe");
 chdir($thisdir);
 chmod 0755, "./install_lvd.csh";
 chmod 0755, "./update_nav_file.csh";
-$sys = "./install_lvd.csh $LAPSROOT $LAPS_DATA_ROOT $compile $satid $sattype";
+$sys = "./install_lvd.csh $LAPSROOT $LAPS_DATA_ROOT $satid $sattype";
 
 print "$0 running $sys\n";
 system($sys);
