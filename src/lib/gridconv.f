@@ -933,13 +933,14 @@ c *** Values greater than 1.0e30 indicate missing data.
 c
       dimension ab(ix,iy),r(4),scr(4)
       integer bgmodel
+      include 'bgdata.inc'
 c_______________________________________________________________________________
 c
       iy1=int(stay)-1
       iy2=iy1+3
       ix1=int(stax)-1
       ix2=ix1+3
-      staval=1e30
+      staval=missingflag
       fiym2=float(iy1)-1
       fixm2=float(ix1)-1
       ii=0
@@ -980,7 +981,7 @@ c
                if (j .ge. 1 .and. j .le. iy) then
                   r(jj)=ab(i,j)
                else
-                  r(jj)=1e30
+                  r(jj)=missingflag
                endif
             enddo
             yy=stay-fiym2
@@ -990,16 +991,13 @@ c
                call binom(1.,2.,3.,4.,r(1),r(2),r(3),r(4),yy,scr(ii))
             endif
          else 
-            scr(ii)=1e30
+            scr(ii)=missingflag
          endif
       enddo
       xx=stax-fixm2
       if (xx .eq. 2.0) then
          staval=scr(2)
       else
-
-
-
          call binom(1.,2.,3.,4.,scr(1),scr(2),scr(3),scr(4),xx,staval)
       endif
 c
@@ -1010,7 +1008,8 @@ c===============================================================================
 c
       subroutine binom(x1,x2,x3,x4,y1,y2,y3,y4,xxx,yyy)
 c
-      yyy=1e30
+      include 'bgdata.inc'
+      yyy=missingflag
       if (x2 .gt. 1.e19 .or. x3 .gt. 1.e19 .or.
      .    y2 .gt. 1.e19 .or. y3 .gt. 1.e19) return
 c
