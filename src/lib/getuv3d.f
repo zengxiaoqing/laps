@@ -38,7 +38,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT      ! Input extension of file (normally 3 characters)
 
         character*125 comment_3d(NZ_L_MAX)

@@ -63,7 +63,7 @@ cdis
         real*4 grid_ra_ref(imax,jmax,kmax)
 
 !       character*3 var_2d
-        character*50  directory
+        character*150  directory
         character*31  ext
 !       character*10  units_2d
 !       character*125 comment_2d

@@ -75,7 +75,7 @@ cdis
         character*10 units_2d
 
         character*31 ext,ext_a,ext_f
-        character*50  directory
+        character*150  directory
         character*255 c_filespec
 
         integer*4 MAX_FILES

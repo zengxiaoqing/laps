@@ -106,7 +106,7 @@ cdis
         character*31 ext_a(max_radars)
 
         character*255 c_filespec
-        character*50  directory
+        character*150  directory
 
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
@@ -281,7 +281,7 @@ cdis
 !       The domain must be specified using grid_fnam_common
 
         character*255 c_filespec
-        character*50  directory
+        character*150  directory
 
         character*80 grid_fnam_common
         common / grid_fnam_cmn / grid_fnam_common
@@ -881,7 +881,7 @@ cdis
         character*3  ext_gc
         character*31 radarext,ext
         real*4 grid_ra_ref(imax,jmax,kmax)
-        character*50 directory
+        character*150 directory
 
         common / grid_fnam_cmn / grid_fnam_common
         common /laps_diag/ no_laps_diag

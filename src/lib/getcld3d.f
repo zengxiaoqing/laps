@@ -77,7 +77,7 @@ cdis
 
         character*255 c_filespec
         character*13 filename13
-        character*50 directory
+        character*150 directory
 
 !       Stuff for readlapsdata
         character*125 comment_3d(KCLOUD),comment_2d

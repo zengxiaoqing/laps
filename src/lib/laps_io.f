@@ -706,3 +706,68 @@ cdis
         return
         end
 
+
+        subroutine open_lapsprd_file(lun,i4time,ext,istatus)
+
+!       1997   Steve Albers
+
+        character*(*)    ext
+        character*150    directory
+        character*13 filename13
+
+!       Test for proper length of extension
+        call s_len(ext,len_ext)
+        if(len_ext .ne. 3)then
+           write(6,*)' Error in open_lapsprd_file: ext has length'
+     1               ,len_ext
+           istatus = 0
+           return
+        endif
+
+        call get_directory(ext,directory,len_dir)
+
+        open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))       
+     1          ,status='unknown',err=998)
+        go to 999
+
+ 998    write(6,*)' Error in open_lapsprd_file: cannot open the file'       
+        istatus = 0
+        return
+
+ 999    istatus = 1
+        return
+        end
+
+        subroutine get_filespec(ext,mode,c_filespec,istatus)
+
+!       1997   Steve Albers
+
+        character*(*)    ext         ! input
+        integer          mode        ! input
+        character*(*)    c_filespec  ! output
+
+        character*150    directory
+
+        istatus = 1
+
+        call s_len(ext,len_ext)
+        call get_directory(ext,directory,len_dir)
+
+        if(mode .eq. 1)then ! short form
+            if(len(c_filespec) .lt. len_dir)then
+                istatus = 0
+                write(6,*)' Error in get_filespec, c_filespec too short'       
+            else
+                c_filespec = directory(1:len_dir)
+            endif
+        else                ! long form
+            if(len(c_filespec) .lt. len_dir+len_ext+2)then
+                istatus = 0
+                write(6,*)' Error in get_filespec, c_filespec too short'
+            else
+                c_filespec = directory(1:len_dir)//'*.'//ext(1:len_ext)       
+            endif
+        endif
+
+        return
+        end

@@ -36,7 +36,7 @@ cdis
 
         include 'lapsparms.inc'
 
-        character*50 DIRECTORY
+        character*150 DIRECTORY
         character*31 EXT
 
         character*125 comment_2d
