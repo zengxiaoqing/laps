@@ -68,6 +68,7 @@
     USE lapsprep_mm5
     USE lapsprep_wrf
     USE lapsprep_rams
+    USE lapsprep_netcdf
 
     ! Variable Declarations
 
@@ -86,7 +87,7 @@
 
     ! Arrays for data
     REAL , ALLOCATABLE , DIMENSION (:,:,:) :: u , v , t , rh , ht, &   
-                                             lwc,rai,sno,pic,ice, sh, mr, & 
+                                             lwc,rai,sno,pic,ice, sh, mr, w, & 
                                              virtual_t, rho
     REAL , ALLOCATABLE , DIMENSION (:,:)   :: slp , psfc, snocov, d2d,tskin 
     REAL , ALLOCATABLE , DIMENSION (:)     :: p
@@ -94,7 +95,7 @@
     
     ! Miscellaneous local variables
                                         
-    INTEGER :: out_loop, loop , var_loop , k, istatus
+    INTEGER :: out_loop, loop , var_loop , i, j, k, istatus
     LOGICAL :: file_present
 
     ! Beginning of code
@@ -147,7 +148,7 @@
       !  If this is a microphysical species but not doing 
       !  a hotstart, then cycle over this file.
 
-      IF ( ( (TRIM(ext(loop)).EQ.'lq3').OR.(TRIM(ext(loop)).EQ.'lwc') ).AND. &
+      IF ( (TRIM(ext(loop)).EQ.'lwc') .AND. &
           (.NOT.hotstart) ) THEN
         CYCLE file_loop
       ENDIF
@@ -156,6 +157,7 @@
 
       IF ((TRIM(ext(loop)) .NE. 'lw3' ).AND. &
           (TRIM(ext(loop)) .NE. 'lt1' ).AND. &
+          (TRIM(ext(loop)) .NE. 'lq3' ).AND. &
           (TRIM(ext(loop)) .NE. 'lh3' )) THEN
         input_laps_file = TRIM(laps_data_root) //'/lapsprd/' // &
             TRIM(ext(loop)) // '/' // laps_file_time // '.' // &
@@ -226,6 +228,7 @@
 
         ALLOCATE ( u   ( x , y , z3 + 1 ) )
         ALLOCATE ( v   ( x , y , z3 + 1 ) )
+        ALLOCATE ( w   ( x , y , z3 + 1 ) )
         ALLOCATE ( t   ( x , y , z3 + 1 ) )
         ALLOCATE ( rh  ( x , y , z3 + 1 ) )
         ALLOCATE ( ht  ( x , y , z3 + 1 ) )
@@ -248,7 +251,7 @@
         ALLOCATE ( rho ( x , y , z3 ) )
         ALLOCATE ( virtual_t ( x , y , z3 ) )
         ALLOCATE ( sh ( x , y , z ) )
-        ALLOCATE ( mr ( x , y , z ) )
+        ALLOCATE ( mr ( x , y , z3+1 ) )
 
         ! Initialize the non-mandatory values
 
@@ -285,14 +288,9 @@
 
         END DO var_lh3 
 
-      ELSE IF (( ext(loop) .EQ. 'lq3' ).AND.(hotstart))THEN
+      ELSE IF ( ext(loop) .EQ. 'lq3' )THEN
 
         !  Loop over the number of variables for this data file.
-        ! Currently the lq3 file is only used to provide
-        ! the specific humidity, which is only used to calculate
-        ! virtual temperature so we can calculate density to
-        ! scale the microphysical mixing ratios from volume to
-        ! dimensionless by mass
         var_lq3 : DO var_loop = 1 , num_cdf_var(loop)
 
           !  Get the variable ID.
@@ -303,7 +301,7 @@
           CALL NCVGT ( cdfid , vid , start , count , sh , rcode )
 
         END DO var_lq3
-           
+
       ELSE IF ( ext(loop) .EQ. 'lsx' ) THEN
 
         !  Loop over the number of variables for this data file.
@@ -315,15 +313,19 @@
           vid = NCVID ( cdfid , TRIM(cdf_var_name(var_loop,loop)) , rcode )
           start = (/ 1 , 1 , 1 , 1 /)
           count = (/ x , y , 1 , 1 /)
-            
+
           IF      ( cdf_var_name(var_loop,loop) .EQ. 'u  ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , u  (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'v  ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , v  (1,1,z3+1) , rcode )
+          ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'vv ' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , w  (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 't  ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , t  (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'rh ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , rh (1,1,z3+1) , rcode )
+          ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'mr ' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , mr (1,1,z3+1) , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'msl' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , slp           , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'ps ' ) THEN
@@ -333,6 +335,11 @@
           END IF
 
         END DO var_lsx
+
+        ! Convert sfc mixing ratio from g/kg to kg/kg.
+
+        mr(:,:,z3+1)=mr(:,:,z3+1)*0.001
+
       ELSE IF ( ext(loop) .EQ. 'lm2' ) THEN
 
         var_l1s : DO var_loop = 1 , num_cdf_var(loop)
@@ -383,6 +390,8 @@
             CALL NCVGT ( cdfid , vid , start , count , u , rcode )
           ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'v3 ' ) THEN
             CALL NCVGT ( cdfid , vid , start , count , v , rcode )
+          ELSE IF ( cdf_var_name(var_loop,loop) .EQ. 'om ' ) THEN
+            CALL NCVGT ( cdfid , vid , start , count , w , rcode )
           END IF
 
         END DO var_lw3
@@ -416,6 +425,23 @@
 
     END DO file_loop
 
+    ! Compute mixing ratio from spec hum.
+    ! Fill missing values with sfc value.
+
+    do k=1,z3
+    do j=1,y
+    do i=1,x
+      if (sh(i,j,k) .ge. 0. .and. sh(i,j,k) .lt. 1.) then
+        mr(i,j,k)=sh(i,j,k)/(1.-sh(i,j,k))
+      else
+        mr(i,j,k)=mr(i,j,z3+1)
+      endif
+      if (u(i,j,k) .eq. 1.e-30 .or. abs(u(i,j,k)) .gt. 200.) u(i,j,k)=u(i,j,z3+1)
+      if (v(i,j,k) .eq. 1.e-30 .or. abs(v(i,j,k)) .gt. 200.) v(i,j,k)=v(i,j,z3+1)
+    enddo
+    enddo
+    enddo
+
     !  Set the lowest level of the geopotential height to topographic height
 
     ht(:,:,z3+1) = topo 
@@ -426,16 +452,27 @@
       ! requires that we compute the air density from virtual temperature
       ! and divide each species by the air density.
        
-      ! Convert the specific humidity into mixing ratio.
-      mr(:,:,:) = sh(:,:,:) / (1.- sh(:,:,:))
- 
       ! Compute virtual temperature from mixing ratio and temperature
-      virtual_t(:,:,:)=( 1. + 0.61*mr(:,:,:))*t(:,:,1:z3)
+      virtual_t(:,:,:)=( 1. + 0.61*mr(:,:,1:z3))*t(:,:,1:z3)
  
       ! Compute density from virtual temperature and gas constant for dry air
       DO k = 1, z3
         rho(:,:,k) = p(k)*100. / (rdry * virtual_t(:,:,k))
       ENDDO
+
+      ! Convert 3d omega from Pa/s to m/s, or fill with sfc value if missing.
+
+      do k=1,z3
+      do j=1,y
+      do i=1,x
+        if (w(i,j,k) .eq. 1.e-30 .or. abs(w(i,j,k)) .gt. 100.) then
+          w(i,j,k)=w(i,j,z3+1)
+        else
+          w(i,j,k)=-w(i,j,k)/(rho(i,j,k)*g)
+        endif
+      enddo
+      enddo
+      enddo
 
       ! For each of the species, ensure they are not "missing".  If missing
       ! then set their values to 0.000.  Otherwise, divide by the density to 
@@ -497,13 +534,16 @@
                              lwc, rai, sno, ice, pic,snocov, tskin)
      
         CASE ('rams') 
-          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov, tskin)
+          CALL output_ralph2_format(p,u,v,t,ht,rh,slp,psfc,snocov,tskin)
         CASE ('sfm ')
           PRINT '(A)', 'Support for SFM (RAMS 3b) coming soon...check back later!'
 
+        CASE ('cdf ')
+          CALL output_netcdf_format(p,ht,t,mr,u,v,w,slp,psfc,lwc,ice,rai,sno,pic)
+
         CASE DEFAULT
           PRINT '(2A)', 'Unrecognized output format: ', output_format
-          PRINT '(A)', 'Recognized formats include mm5, rams, wrf, and sfm'
+          PRINT '(A)', 'Recognized formats include mm5, rams, wrf, sfm, and cdf'
 
       END SELECT select_output
     ENDDO 

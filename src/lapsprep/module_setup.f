@@ -73,16 +73,16 @@ MODULE setup
 
    CHARACTER(LEN=3),DIMENSION(5,num_ext) :: cdf_var_name = RESHAPE ( &
                            (/ 'ht ' , 't3 ' , 'xxx' , 'xxx' , 'xxx' , & 
-                              'u3 ' , 'v3 ' , 'xxx' , 'xxx' , 'xxx' , & 
+                              'u3 ' , 'v3 ' , 'om ' , 'xxx' , 'xxx' , & 
                               'rhl' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'u  ' , 'v  ' , 't  ' , 'rh ' , 'tgd' , &
-                              'ps ',  'msl' , 'xxx' , 'xxx' , 'xxx' , &
+                              'ps ',  'msl' , 'mr ' , 'vv ' , 'xxx' , &
                               'lwc' , 'rai' , 'sno' , 'pic' , 'ice' , &
                               'sh ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' , &
                               'sc ' , 'xxx' , 'xxx' , 'xxx' , 'xxx' /) , &
                                                (/ 5 , num_ext /) )
 
-   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,2,1,5,2,5,1,1/) 
+   INTEGER,DIMENSION(num_ext) :: num_cdf_var = (/2,3,1,5,4,5,1,1/) 
 
 CONTAINS
 

@@ -41,4 +41,5 @@ MODULE constants
    REAL , PARAMETER :: radius_of_earth = 6367. ! LAPS
    REAL , PARAMETER :: radians_per_degree = pi / 180.
    REAL , PARAMETER :: rdry = 287.1  ! Dry air gas constant
+   REAL , PARAMETER :: g = 9.81      ! Gravity
 END MODULE constants
