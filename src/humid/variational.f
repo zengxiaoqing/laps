@@ -253,6 +253,10 @@ c     SND common block
       real cost_snd_data(500)
       real cost_snd_wt(500)
       integer cost_snd_istatus
+
+c     Science common block
+      common/cost_science/cost_comment_switch
+      integer cost_comment_switch
       
 c     analysis of the factor field
       integer pn
@@ -820,6 +824,8 @@ c     cost function data for SND, fill with mixing ratio
 c     executed variational search
 
             ftol = 0.01
+
+            cost_comment_switch = 1 ! turn on for one print of gps&cloud
             
             call powell (x,xi,3,3,ftol,iter(i,j),fret,func)
             

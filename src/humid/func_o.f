@@ -129,7 +129,10 @@ c     SND common block
       real cost_snd_data(500)   !mixing ratio
       real cost_snd_wt(500)
       integer cost_snd_istatus
-      
+
+c     Science common block
+      common/cost_science/cost_comment_switch
+      integer cost_comment_switch
 
 c     local analogs to common block variables for input to parameters
 
@@ -171,12 +174,15 @@ c     lcal variables
       real p1,p2,p3             !pressure tops for gvap layers
       real GT,G  ! cloud functions
       real ipw                  !integrated water for GPS minimization
+      real cloud_integral
       
 c     externals
       
       real plango
       
 c     code
+
+      cloud_integral = 0.0
 
 c     simulate current variational code... remove when new cloud
 c     routine is implemented this just tests good cloud i/o read
@@ -414,6 +420,7 @@ c     minimize with respect to partly cloudy data
       if (cost_cloud_istatus.eq.1) then ! cloud data present
          max_func_cloud = 0.0
          do k = 1,cost_kk
+            cloud_integral = cloud_integral + cost_cloud(k)
             if (cost_data(k).ne.cost_mdf) then
                if(cost_data(k).ge.0.0) then
                   cloud_temp = cost_data(k)
@@ -440,17 +447,33 @@ c     GPS section
 
       if (cost_gps_istatus .eq. 1) then
 
-      call int_ipw (x,cost_p1d,cost_data,ipw,cost_mdf,cost_kk)
+         call int_ipw (x,cost_p1d,cost_data,ipw,cost_mdf,cost_kk)
 
-      max_func_gps = 0.0
-
-      max_func_gps = (cost_gps_data-ipw)**2*cost_gps_weight
-c      write(6,*) 'TEMPM max_func_gps,',max_func_gps
+         max_func_gps = 0.0
+         
+         max_func_gps = (cost_gps_data-ipw)**2*cost_gps_weight
+c     write(6,*) 'TEMPM max_func_gps,',max_func_gps
       else
-c         write(6,*) 'NO GPS in func'
+c     write(6,*) 'NO GPS in func'
       endif
 
-      func = func + max_func_gps
+c     avoid using gps where we have cloud (cloud_integral .ne. 0)
+c     if( max_func_cloud .lt. max_func_gps) then
+      if (cloud_integral .eq. 0.0) then
+         if(cost_comment_switch.eq.1) then
+            write(6,*) 'TEMU gps cloud', max_func_gps, max_func_cloud,
+     1           cloud_integral
+            cost_comment_switch = 0
+         endif
+         func = func + max_func_gps
+      else
+         if(cost_comment_switch.eq.1) then
+            write(6,*) 'TEMS gps cloud', max_func_gps, max_func_cloud,
+     1           cloud_integral
+            cost_comment_switch = 0
+         endif
+      endif
+
 
 c     snd addition
 
