@@ -453,7 +453,7 @@ c
 	end
 c
 c
-        subroutine read_sfc_wind(i4time,ext,n_obs_g,n_obs_b
+        subroutine read_sfc_wind(i4time,ext,n_obs_g,n_obs_b,obstime
      1                          ,stations,provider,lat,lon,elev
      1                          ,dd,ff,dd_ea,ff_ea,maxsta,jstatus)
 c
@@ -474,6 +474,7 @@ c
 	real*4 ff_ea(maxsta)
 c
 	integer*4 i4time, jstatus
+        integer*4 obstime(maxsta)
 c
 	character filetime*9, infile*256, btime*24
 	character stations(maxsta)*20, provider(maxsta)*11
@@ -504,7 +505,7 @@ c
      &                   idummy,                   !WMO id number
      &                   provider(k),              !data provider
      &                   lat(k), lon(k), elev(k),  !lat, lon, elev
-     &                   idummy                    !obs time
+     &                   obstime(k)                !obs time
 c
 	  read(11,919) dum
 c
