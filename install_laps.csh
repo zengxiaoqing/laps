@@ -101,6 +101,21 @@ if ($6 != w) then
     cd $LAPS_SRC_ROOT
 
     echo " "
+    echo "make"
+    make >& make.out 
+    ls -l make.out 
+
+    echo " "
+    echo "make install"
+    make install >& make_install.out 
+    ls -l make_install.out 
+
+    echo " "
+    echo "make install_lapsplot"
+    make install_lapsplot >& make_install_lapsplot.out 
+    ls -l make_install_lapsplot.out 
+
+    echo " "
     echo "make debug"
     make debug >& make_debug.out 
     ls -l make_debug.out
