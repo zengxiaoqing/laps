@@ -69,6 +69,7 @@ c       Parameter(nnxp=NX_L,nnyp=NY_L)
         real  topt_pctlfn(nnxp,nnyp)
         character*80 itoptfn_10,itoptfn_30,ipctlfn
         character*3 swt,twt
+        character*6 c6_maproj
 
 C*********************************************************************
 c set nnxp,nnyp,mdlat,deltax,deltay, and ngrids
@@ -141,8 +142,8 @@ c   the 10m pctl covers the world
 
 C*********************************************************************
 
-c calculate delta x and delta y
-        call get_standard_latitude(std_lat,istatus)
+c calculate delta x and delta y using grid and map projection parameters
+        call get_standard_latitudes(std_lat,std_lat2,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error calling laps routine'
             stop 
@@ -163,9 +164,41 @@ c calculate delta x and delta y
         endif
         write(6,*)' grid_center = ',mdlat,mdlon
 
-        deltax = 2.0 / (1. + sind(std_lat)) * grid_spacing_m
-        deltay = deltax
-        write(6,*)' deltax, deltay ',deltax,deltay
+        call get_c6_maproj(c6_maproj,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling laps routine'
+            stop 
+        endif
+        write(6,*)' c6_maproj = ',c6_maproj
+
+        call get_standard_longitude(std_lon,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling laps routine'
+            stop 
+        endif
+        write(6,*)' std_lon = ',std_lon
+
+        if(c6_maproj .eq. 'plrstr')then
+            deltax = 2.0 / (1. + sind(std_lat)) * grid_spacing_m
+            deltay = deltax
+            if(std_lat2 .eq. +90.)then
+                write(6,*)' Note, grid spacing will equal '
+     1                    ,grid_spacing_m,' at a latitude of ',std_lat
+                write(6,*)' deltax, deltay ',deltax,deltay
+     1                   ,' at the north pole'
+            else
+                write(6,*)' This latitude is relative to where the pole'
+     1                   ,' of the map projection is: lat/lon '
+     1                   ,std_lat,std_lon
+                write(6,*)' deltax, deltay ',deltax,deltay
+     1                   ,' at the projection pole'
+            endif
+        else
+            deltax = grid_spacing_m
+            deltay = deltax
+            write(6,*)' deltax, deltay ',deltax,deltay
+        endif
+
 
 c*********************************************************************
 
@@ -197,12 +230,6 @@ C*  Convert it to lat/lon using the library routines.            *
         
            Do J = 1,nnyp
 	      Do I = 1,nnxp
-                 call get_standard_longitude(std_lon,istatus)
-                 if(istatus .ne. 1)then
-                     write(6,*)' Error calling laps routine'
-                     stop 
-                 endif
-
 !	         call xytops(xtn(i),ytn(j),pla,plo,erad)
 !                call pstoge(pla,plo,lat(I,J),lon(I,J),90.,std_lon)           
 
@@ -499,6 +526,8 @@ c SG97  splot 'topography.dat'
 	endif
 
         call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,5,istat_chk)
+
+        write(6,*)'deltax = ',deltax
 
         write(6,*)'check_domain:status = ',istat_chk
 
