@@ -3395,8 +3395,8 @@ c    1                ,field_3d,istatus)
                 chigh = -40.
                 cint = 10.
                 call plot_field_2d(i4time_heights,c_type
-     1                        ,namelist_parms
      1                        ,field_2d,scale
+     1                        ,namelist_parms
      1                        ,clow,chigh,cint,c33_label
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
