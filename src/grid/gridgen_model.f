@@ -2077,7 +2077,7 @@ c
 
       istatus=0
       if(istatgrn.eq.0 .and. istattmp.eq.0)then
-	 print*,'Cannot process greenfrac or soiltemp ',
+	 print*,'Unable to process greenfrac or soiltemp ',
      &'in adjust_geog ... no data'
 	 return
       endif

@@ -45,14 +45,17 @@
 
       num_tiles_needed=0
 
+      print*,'Noddy IWOC1, IWOC2 ',IWOC1,IWOC2
       do IWOC = IWOC1,IWOC2,itilesize
 
          IWOCPH=ABS(IWOC)/100
          IWOCPT=(ABS(IWOC)-IWOCPH*100)/10
          IWOCPO=ABS(IWOC)-IWOCPH*100-IWOCPT*10
-         IF(IWOC.GE.0
-     1               .and. IWOC .ne. 180 
-     1                                      )THEN
+!
+! TH: 8 Aug 2002 We now allow 180E longitudes (and greater). The only 
+! time we want to assign W is when the longitude is less than 0.
+!
+         IF(IWOC.GE.0) THEN
             WRITE(EWTITLE,'(3I1,A1)')IWOCPH,IWOCPT,IWOCPO,'E'
          ELSE
             WRITE(EWTITLE,'(3I1,A1)')IWOCPH,IWOCPT,IWOCPO,'W'

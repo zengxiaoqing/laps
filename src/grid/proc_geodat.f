@@ -63,9 +63,15 @@ c-----------------------------------------------
 
 
       subroutine proc_geodat(nx_dom,ny_dom,ncat
-     1,path_to_tile_data,dom_lats,dom_lons,lmask_out
+     1,path_to_tile_data,ext_dom_lats,ext_dom_lons,lmask_out
      1,geodat,istatus)
 !    1,cat_pct)
+!
+! J. Smart (NOAA/FSL) : 2002            original version
+! T. Hume/T. Simmers Meteorological Service of New Zealand
+!                     : 2002
+!                    Corrected problems with crossing the dateline
+!                    and constrained albedo to one tile.
 
       use horiz_interp
 
@@ -104,6 +110,8 @@ c-----------------------------------------------
       integer ilon,ilat
       integer method
 
+      real    ext_dom_lats(nx_dom,ny_dom)
+      real    ext_dom_lons(nx_dom,ny_dom)
       real    dom_lats(nx_dom,ny_dom)
       real    dom_lons(nx_dom,ny_dom)
       real    grx(nx_dom,ny_dom)
@@ -183,6 +191,41 @@ c from Brent Shaw pseudocode
 
 !Define Model Grid - nx,ny, projection, etc.
 
+      dom_lats(:,:) = ext_dom_lats(:,:)
+      dom_lons(:,:) = ext_dom_lons(:,:)
+
+! TH: 8 Aug 2002 Now we may need to adjust the longitude values in 
+! dom_lons so that they are always monotonically increasing, even if 
+! we have the bad fortune to cross the date line.
+      DO ii=1,ny_dom
+         DO jj=1,(nx_dom - 1)
+            IF ((dom_lons(ii,jj+1) - dom_lons(ii,jj)) < -180.) THEN
+               dom_lons(ii,jj+1) = dom_lons(ii,jj+1) + 360.
+            ELSE IF ((dom_lons(ii,jj+1) - dom_lons(ii,jj)) > 180.) THEN
+               dom_lons(ii,jj+1) = dom_lons(ii,jj+1) - 360.
+            END IF
+         END DO
+      END DO
+! TH: 8 Aug 2002 We also have to cope with spastic grids that have
+! "horizontal" date lines (where we might cross the date line by
+! moving up and down the grid rather than left and right).
+      DO ii=1,nx_dom
+         DO jj=1,(ny_dom - 1)
+            IF ((dom_lons(jj+1,ii) - dom_lons(jj,ii)) < -180.) THEN
+               dom_lons(jj+1,ii) = dom_lons(jj+1,ii) + 360.
+            ELSE IF ((dom_lons(jj+1,ii) - dom_lons(jj,ii)) > 180.) THEN
+               dom_lons(jj+1,ii) = dom_lons(jj+1,ii) - 360.
+            END IF
+         END DO
+      END DO
+! TH: 8 Aug 2002 Now we want to make sure our longitudes don't fall
+! outside the range (-360,360).
+      IF (MAXVAL(dom_lons(:,:)) > 360.) dom_lons(:,:) = dom_lons(:,:)
+     1   - 360
+      max_lat = MAXVAL(dom_lats)
+      IF (MINVAL(dom_lons(:,:)) < -360.) dom_lons(:,:) = dom_lons(:,:)
+     1   + 360
+
 ! nx_dom = number of East-West points in anal/model domain   I
 ! ny_dom = number of North-south points      "               I
 ! dom_lats(nx_dom,ny_dom)  ! Latitude array                  I
@@ -252,8 +295,8 @@ c from Brent Shaw pseudocode
 ! which data points in the tiles map to the domain.
       min_lat =  max(-89.9999,min(89.9999,min_lat + rsoff))
       max_lat =  max(-89.9999,min(89.9999,max_lat)+ rsoff)
-      min_lon =  max(-179.9999,min(179.9999,min_lon + rwoff))
-      max_lon =  max(-179.9999,min(179.9999,max_lon + rwoff))
+      min_lon =  max(-359.9999,min(359.9999,min_lon + rwoff))
+      max_lon =  max(-359.9999,min(359.9999,max_lon + rwoff))
 
 !  Compute a list of tiles needed to fulfill lat/lon range just computed
 
@@ -351,7 +394,22 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
       DO itile = 1, ntn  !number of tiles needed
  
        ctilename=ctile_name_list(itile)
-       cfname = path_to_tile_data(1:lenp)//ctilename
+       cfname = path_to_tile_data(1:lenp)//ctilename(1:3)
+       read(ctilename(4:6),'(i3.3)')icurEW
+       read(ctilename(7:7),'(a1)')curEW
+       IF (icurEW > 180) THEN
+          icurEW = icurEW - 180
+          IF (curEW == 'W') THEN
+             curEW = 'E'
+          ELSE
+             curEW = 'W'
+          ENDIF
+       ELSE IF (icurEW == 180) THEN
+          curEW = 'W' 
+       END IF 
+       write(cfname(lenp+4:lenp+6),'(i3.3)')icurEW
+       write(cfname(lenp+7:lenp+7),'(a1)')curEW
+
        call s_len(cfname,lenf)
        print*,'processing tile: ',cfname(1:lenf)
 
@@ -377,7 +435,7 @@ c     if(lgotE .and. lgotW)min_lon=360+min_lon+rwoff
            CALL READ_DEM(29,cfname,no,no,1,4,raw_data)
            dem_data=.true.
        elseif( (ctiletype.eq.'G').or.(ctiletype.eq.'A') )then      ! greenfrac/albedo
-           CALL READ_DEM_G(29,cfname,no,no,1,ncat,itile,1,4,raw_data)
+           CALL READ_DEM_G(29,cfname,no,no,1,ncat,1,1,4,raw_data)
            dem_data=.true.
        elseif( ctiletype.eq.'T' )then      ! soiltemp
            CALL READ_DEM(29,cfname,no,no,2,2,raw_data)
