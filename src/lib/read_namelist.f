@@ -77,7 +77,7 @@ c
 c-----------------------------------------------------------
 c
       subroutine get_balance_nl(lrunbal,adv_anal_by_t_min
-     .,istatus)
+     .,cpads_type,istatus)
 c
 cdoc  Reads static/balance.nl file.
 
@@ -88,10 +88,11 @@ cdoc  Reads static/balance.nl file.
       integer    adv_anal_by_t_min
       logical    lrunbal
       character  nest7grid*150
+      character  cpads_type*3
 
       include   'grid_fname.cmn'       !grid_fnam_common
 
-      namelist /balance_nl/lrunbal,adv_anal_by_t_min
+      namelist /balance_nl/lrunbal,adv_anal_by_t_min,cpads_type
 
       istatus = 0
 

@@ -1105,6 +1105,7 @@ c
 
       integer nxc,nyc,nzc
       integer nx,ny
+      logical lprintmessage
       real sw(2),ne(2),rota,lat0,lon0
       real nw(2),se(2),rlatc,rlonc
       real tolx,toly
@@ -1161,6 +1162,7 @@ c set tolerance based upon the grid spacing as a function of grx/gry
       toly=(abs(grydifsum1)/nx_laps+abs(grydifsum2)/nx_laps)*0.5
 
       print*,'horiz mapping tolerance x/y: ',tolx,toly
+      lprintmessage=.true.
 c
 c *** First, check for wrapping if a global data set.
 c
@@ -1232,14 +1234,16 @@ c
                if (grx(i,j) .lt. 1 .or. grx(i,j) .gt. nx_bg .or.
      .             gry(i,j) .lt. 1 .or. gry(i,j) .gt. ny_bg) then
 
-c         print*,'LAPS gridpoint outside of background data coverage.'
-c                 print*,'   data i,j,lat,lon-',i,j,lat(i,j),lon(i,j)
-c                 print*,'   grx, gry:',grx(i,j),gry(i,j)
-
                   grx(i,j) = r_missing_data
                   gry(i,j) = r_missing_data
 
+           if(lprintmessage)then
+              print*,'LAPS gridpt outside of background data coverage.'
+              print*,'   data i,j,lat,lon - ',i,j,lat(i,j),lon(i,j)
+              print*,'   grx, gry:',grx(i,j),gry(i,j)
+              lprintmessage=.false.
 c                 stop 'init_hinterp'
+           endif
 
                endif
             enddo
