@@ -43,6 +43,7 @@ c                     given satellites.
       character*255 c_sounding_path
       character*9   c_filetime_sat
       character*9   c_filetime_lsr
+      character*9   a9_time_sys
       character*9   c_fname
       character*6   csat_id
 
@@ -53,6 +54,7 @@ c                     given satellites.
       integer     nfiles_sat
       integer     numoffiles
       integer     lend
+      integer     laps_cycle_time
       integer     ndimx,ndimy,ndimch
       integer     imcI4
       integer     itstatus
@@ -60,10 +62,12 @@ c                     given satellites.
       integer     ishow_timer
 
       integer     i4time
+      integer     i4time_min
       integer     i4time_proc
       integer     i4time_latest
       integer     i4time_nearest_lsr
       integer     i4time_now_gg
+      integer     i4time_sys
 
 c
       Character*1   imc(4)
@@ -75,7 +79,16 @@ c
 c Find files for GOES-8 sounding data sector over Colorado. This is
 c the _sdr file at ~ 45 or 46 past the hour..
 c
+      call get_systime(i4time_sys,a9_time_sys,istatus)
       i4time_proc=i4time_now_gg()
+
+c this is designed to allow archive data runs!
+      call get_laps_cycle_time(laps_cycle_time,istatus)
+      if(i4time_proc-i4time_sys .gt. 2*laps_cycle_time)then
+         print*,'Set i4time to contents of systime.dat'
+         i4time_proc=i4time_sys
+      endif
+
 
       call get_directory('lsr',c_lsr_dir,lend)
       c_lsr_dir=c_lsr_dir(1:lend)//'/'//csat_id//'/'
@@ -84,12 +97,13 @@ c
       c_filename_sat=c_sounding_path(1:n)//'*_sdr'
       call get_file_names(c_filename_sat,numoffiles,c_filename
      1        ,max_files,istatus)
-      i4time_latest=0
+      i4time_min=99999
       do i = 1,numoffiles
          j=index(c_filename(i),' ')-5
          jj=j-8
          call cv_asc_i4time(c_filename(i)(jj:j),i4time)
-         if(i4time.gt.i4time_latest)then
+         if(abs(i4time-i4time_proc).lt.i4time_min)then
+            i4time_min=abs(i4time-i4time_proc)
             i4time_latest = i4time
          endif
       enddo
