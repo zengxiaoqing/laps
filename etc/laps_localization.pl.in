@@ -1,73 +1,94 @@
 #!@PERL@
 # @configure_input@
 #
-# Feb 97 by Paul Schultz.
+# ******** laps_localization.pl.in  ************************
+# Copyright (C) 1998  James P. Edwards
 #
-# modified for newlaps by Jim Edwards July 1997
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
 #
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#
+use strict;
 use Getopt::Long;
-$result = GetOptions("lapsroot=s" => \$LAPSROOT,
-                     "dataroot=s" => \$LAPS_DATA_ROOT,
-                     "srcroot=s"  => \$LAPS_SRC_ROOT,
-                     "quiet" => \$quiet, 
-                     "site=s" => \$localization_site,
-                     "help" => \&help_sub,
-                     "<>" => \&help_sub);
+my($LAPSROOT,$LAPS_DATA_ROOT,$LAPS_SRC_ROOT,$quiet,$localization_site,$sattype,$satid);
+
+my $result = GetOptions("lapsroot=s" => \$LAPSROOT,
+			"dataroot=s" => \$LAPS_DATA_ROOT,
+			"srcroot=s"  => \$LAPS_SRC_ROOT,
+			"quiet" => \$quiet, 
+			"site=s" => \$localization_site,
+			"sattype=s" => \$sattype,
+			"satid=s" => \$satid,
+			"help" => \&help_sub,
+			"<>" => \&help_sub);
 
 sub help_sub{
     print "$0 command line options (default values)\n";
     print "   --lapsroot = Root directory of the installed laps binarys (@prefix@)\n";
-    print "   --dataroot = Root directory of the installed laps data (@prefix@/data)\n";
+    print "   --dataroot = Root directory of the installed laps data (@datadir@)\n";
+    print "   --srcroot  = Root directory of the laps source code    (@top_srcdir@)\n";
     print "   --site     = localization site (guessed)\n";
-    print "   --help     = print this message and exit\n";
     print "   --sattype  = cdf, wfo, gvr, or gwc (guessed based on site)\n";
     print "   --satid    = g8 or g9 (guessed based on site)\n";
+    print "   --quiet    = Do not query user for verification\n";
+    print "   --help     = print this message and exit\n";
     exit;
 }
 umask 002;
 
 
-$thisdir = 'pwd';
+my $thisdir = 'pwd';
 chomp($thisdir);
 
 
 $LAPS_SRC_ROOT="@top_srcdir@" unless($LAPS_SRC_ROOT);
 $LAPSROOT="@prefix@" unless($LAPSROOT);
-$LAPS_DATA_ROOT = "$LAPSROOT/data" unless($LAPS_DATA_ROOT);
+$LAPS_DATA_ROOT = "@datadir@" unless($LAPS_DATA_ROOT);
 $ENV{LAPS_DATA_ROOT} = $LAPS_DATA_ROOT;
 
-$FXA_DATA = $ENV{"FXA_DATA"};
+my $FXA_DATA = $ENV{"FXA_DATA"};
 
-unless(-d "$LAPS_DATA_ROOT"){
-    die "You must run make install or otherwise create directory $LAPS_DATA_ROOT";
+if(-d "$LAPS_SRC_ROOT/data"){
+    if(-d "$LAPS_DATA_ROOT"){
+	&safe_cp("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
+    }else{
+	unless($quiet){
+	    print "Directory $LAPS_DATA_ROOT not found - create from $LAPS_SRC_ROOT/data? (y or n)\n";
+	    my $key = getc;
+	    print "$key\n";
+	    exit if($key != 'y');
+	}
+	run_sys("cp -r $LAPS_SRC_ROOT/data $LAPS_DATA_ROOT");
+    }
+    &update_nl("$LAPS_SRC_ROOT/data","$LAPS_DATA_ROOT");
+
+
+}else{
+    print "Template directory $LAPS_SRC_ROOT/data not found - proceding assuming all namelists are up to date\n";
 }
-unless(-d "$LAPS_DATA_ROOT/static/model"){
-    die "You must install the LAPS terrain files in $LAPS_DATA_ROOT/static/model";
-}
-
-
 
 if(-d $FXA_DATA){
   print "Localizing for WFO $ENV{FXA_INGEST_SITE}\n";
-
-  $satid = &wfo_localization($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA);
+  $satid = &wfo_localization($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA,$satid);
   $sattype = "wfo";
-}else{  
-  print "$0 Could not identify your site for localization\n";
-  print "please refer to the file $LAPS_SRC_ROOT/README\n";
-  print "For complete instructions on a custom install\n\n";
-  unless($quiet){
-      print "Assume all files have been edited and continue with install? (y or n)\n";
-      $key = getc;
-      print "$key\n";
-      exit if($key != 'y');
-  }
 }
 #
 # run gridgen_model to set up the static.nest7grid file 
 #
 # first get the info from nest7grid.parms
 open(PARMS,"$LAPS_DATA_ROOT/static/nest7grid.parms");
+my($xdim,$ydim);
 while(<PARMS>){
     $xdim = $1 if(/^\s+NX_L_CMN\s*=\s*(\d+),/i);
     $ydim = $1 if(/^\s+NY_L_CMN\s*=\s*(\d+),/i);
@@ -83,15 +104,20 @@ if($xdim <=0 || $ydim <= 0){
 #
 # Edit the cdl files for xdim and ydim
 #
+unless(-d "$LAPS_DATA_ROOT/cdl"){
+    if(-d "$LAPS_SRC_ROOT/data/cdl") {
+	system("cp -r $LAPS_SRC_ROOT/data/cdl $LAPS_DATA_ROOT/cdl");
+    }else{
+	die "Could not find or create cdl directory in $LAPS_DATA_ROOT/cdl";
+    }
+}
 opendir(CDL_DIR,"$LAPS_DATA_ROOT/cdl");
-
-@cdl_list = grep /\.cdl$/, readdir CDL_DIR;
-
+my @cdl_list = grep /\.cdl$/, readdir CDL_DIR;
 closedir CDL_DIR;
 
 foreach(@cdl_list){
     open(CDL,"$LAPS_DATA_ROOT/cdl/$_");
-    @cdl = <CDL>;
+    my @cdl = <CDL>;
     close(CDL);
 
     open(CDL,">$LAPS_DATA_ROOT/cdl/$_");
@@ -115,23 +141,9 @@ print "gridgen_model.exe complete - building sfc lookup tables\n";
 system("$LAPSROOT/bin/gensfclut.exe");
 
 #
-# now install the lvd stuff
-#
-
-chdir($thisdir);
-chmod 0755, "./install_lvd.csh";
-chmod 0755, "./update_nav_file.csh";
-$sys = "./install_lvd.csh $LAPSROOT $LAPS_DATA_ROOT $satid $sattype";
-
-print "$0 running $sys\n";
-system($sys);
-chmod 0544, "./install_lvd.csh";
-chmod 0544, "./update_nav_file.csh";
-
-
-#
 # Generate new vrc lookup tables
 #
+
 if(-x "$LAPSROOT/bin/genvrclut.exe"){
   print "Running $LAPSROOT/bin/genvrclut.exe with stdout to $LAPS_DATA_ROOT/log/genvrclut.log\n";
   print "This could take an hour or more...\n" unless($sattype eq "wfo"); 
@@ -148,56 +160,155 @@ if(-x "$LAPSROOT/bin/genvrclut.exe"){
 print "cleaning out static/vxx directory of any old luts\n";
 system("rm -f $LAPS_DATA_ROOT/static/vxx/*lut*");
 
-
-
 #
 # finally initialize the systime.dat file
 #
-
 system("$LAPSROOT/bin/systime.exe");
-
 print "$0 complete\n";
 
+sub update_nl{
+    my($srcroot,$dataroot) = @_;
+#
+# open and compare nest7grid.parms and *.nl in $srcroot/static and $dataroot/static
+# Add variables and files found in $srcroot/static but not $dataroot/static 
+# Retain the values of variables found in $dataroot/static for variables in both files
+#
+# First find all of the variable values in $dataroot/static
+#
+
+    opendir(TDIR,"$dataroot/static");
+    my @nl = grep(/\.nl$/,readdir(TDIR));
+    closedir(TDIR);
+    push(@nl,"nest7grid.parms");
+    my $nl_file;
+    my %nl_vals;
+    foreach $nl_file (@nl){
+	open(FILE,"$dataroot/static/$nl_file");
+	
+	my $var;
+	while(<FILE>){
+	    if(/^\s*(\S+)\s*=\s*(.*)$/){
+		$var = $1;
+                $var =~ tr/a-z/A-Z/;
+		$nl_vals{$var} = $2;
+	    }elsif(/^(\s*[^&\/].*)$/ && $var ne ''){
+		$nl_vals{$var} .= "\n$1";
+	    }elsif(/^\s*[&\/]/){
+		$var = '';
+	    }
+	}
+        
+	close(FILE);
+        system("cp $dataroot/static/$nl_file $dataroot/static/$nl_file.bak");
+    }
+    
+    opendir(TDIR,"$srcroot/static");
+    my @nnl = grep(/\.nl$/,readdir(TDIR));
+    closedir(TDIR);
+    push(@nnl,"nest7grid.parms");
+    
+    foreach $nl_file (@nnl){
+	open(INFILE,"$srcroot/static/$nl_file");
+	my @infile = <INFILE>;
+	close(INFILE);
+	open(OUTFILE,">$dataroot/static/$nl_file") or die "Could not open $dataroot/static/$nl_file to write";
+        my($var, $val);
+	foreach(@infile){
+	    if(/^\s*(\S+)\s*=\s*(.*)$/){
+		$var = $1;
+                
+                $var =~ tr/a-z/A-Z/;
+		$val = $2;
+		if(exists $nl_vals{$var}){
+#                    print "Found $var = $val\n";
+		    $val = $nl_vals{$var};
+		}
+		print OUTFILE " $var = $val\n";
+		next;
+            }elsif(/^[!cC]/){
+		;
+	    }elsif(/^(\s*[^&\/].*)$/ && exists $nl_vals{$var}){
+		next;
+	    }
+	    print OUTFILE $_;
+	}
+	close(OUTFILE);
+    }
+
+}
+
+sub safe_cp{
+    my($indir,$outdir) = @_;
+    
+    opendir(INDIR,$indir);
+    my(@files) = grep !/^\.\.?$/,readdir INDIR;
+    close(INDIR);
+    my $file;   
+    foreach $file (@files){
+        next if($file =~ /^CVS$/);
+	next if($file =~ /^\#/);
+	next if($file =~ /~$/);
+
+	if(-d "$indir/$file"){
+	    if(-d "$outdir/$file") {
+		&safe_cp("$indir/$file","$outdir/$file");
+	    }else{
+                print "Copying Directory $indir/$file to $outdir/$file\n";
+		system("cp -r $indir/$file $outdir/$file");
+	    }
+	    next;
+	}
+	next if(-e "$outdir/$file");
+        print "Copying file $indir/$file to $outdir/$file\n";
+	system("cp $indir/$file $outdir/$file");
+    }	
+}
 
 sub wfo_localization{
-  local($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA) = @_;
-  local($root) = $ENV{"FXA_LOCALIZATION_ROOT"};
-  local($site) = $ENV{"FXA_INGEST_SITE"};
-  local($file) = "$root/$site/Laps_Center_Point.txt";
-
-  open(LOCFILE,$file) or die "Can't find $file.";
-  $line = <LOCFILE>;
-  chop($line);
-  $line =~ s/ +/,/;
-  ($lat,$lon) = split(",",$line);
-  $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
-
+  my($LAPS_SRC_ROOT,$LAPSROOT,$LAPS_DATA_ROOT,$FXA_DATA,$satid) = @_;
+  my($root) = $ENV{"FXA_LOCALIZATION_ROOT"};
+  my($site) = $ENV{"FXA_INGEST_SITE"};
+  my($file1) = "$ENV{FXA_HOME}/data/localizationDataSets/$ENV{FXA_LOCAL_SITE}/whichSat.txt";
+  my($file2) = "$root/$site/Laps_Center_Point.txt";
+  my($goes) = 0;
+  my($lat,$lon);  
+  if($satid eq "g8"){
+      $goes = 8;
+  }elsif($satid eq "g9"){
+      $goes = 9;
+  }elsif(-r $file1){
+      open(LOCFILE,$file1) or die "Can't find $file1.";
+      my $line = <LOCFILE>;
+      close(LOCFILE);
+      $goes=9 if($line eq "WEST");      
+      $goes=8 if($line eq "EAST");      
+  }
+    
+  if($goes==0){
+      open(LOCFILE,$file1) or die "Can't find $file1.";
+      my $line = <LOCFILE>;
+      chop($line);
+      $line =~ s/ +/,/;
+      ($lat,$lon) = split(",",$line);
+      $goes = $lon>-100 ? 8:9;  # identifies the goes sat to use based on longitude
+  }
   #First files:  the namelist files.
 
 
-  opendir(NL,"$LAPS_SRC_ROOT/data/static");
-  my(@srctemplates) = grep(/\.nl/,readdir(NL));
+  opendir(NL,"$LAPS_DATA_ROOT/static");
+  my(@templates) = grep(/\.nl/,readdir(NL));
   closedir(NL);
-  push(@srctemplates,"nest7grid.parms");
-  foreach $srctemplate (@srctemplates){
-      $outfile = "$LAPS_DATA_ROOT/static/$srctemplate";
-      $srctemplate = "$LAPS_SRC_ROOT/data/static/$srctemplate";
+  push(@templates,"nest7grid.parms");
+  my $template;
+  foreach $template (@templates){
+      $template = "$LAPS_DATA_ROOT/static/$template";
 
-
-      if(! -d "$LAPS_DATA_ROOT/static"){
-	  system("mkdir -p $LAPS_DATA_ROOT");
-	  mkdir "$LAPS_DATA_ROOT/static", 0755 || die "$0 Could not create $LAPS_DATA_ROOT/static" ;
-      }
-
-      $template = &get_best_template($srctemplate,$outfile);
-
-
-      open(TEMPLATE,"$template") or die "$0: Can't find template file in $srctemplate or $outfile";
-      @template = <TEMPLATE>;
+      open(TEMPLATE,"$template") or die "$0: Can't find template file in $template";
+      my @template = <TEMPLATE>;
       close(TEMPLATE);
       print "Using static template file $template\n";
 
-      open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
+      open(OUTFILE,">$template") or die "$0: Can't open $template to write";
       
       foreach (@template)
       {
@@ -210,13 +321,14 @@ sub wfo_localization{
 	      print OUTFILE " grid_cen_lat_cmn=$lat,\n";
 	  }elsif(/grid_cen_lon_cmn\s*=/){
 	      print OUTFILE " grid_cen_lon_cmn=$lon,\n";
-	  }elsif(/path_to_raw_sat/){
+	  }elsif(/\sISATS\s*=/){
 	      if($goes==8){
-		  $_ =~ s/west/east/;
+		  print OUTFILE " ISATS = 1,0,\n";
 	      }else{
-		  $_ =~ s/east/west/;
+		  print OUTFILE " ISATS = 0,1,\n";
 	      }
-	      print OUTFILE $_;
+          }elsif(/\sgoes_switch\s*=/){
+	      print OUTFILE " goes_switch = $goes,\n";
 	  }else{
 	      print OUTFILE $_;
 	  }
@@ -224,28 +336,6 @@ sub wfo_localization{
       close(OUTFILE); 
   }
 
-#Second file.  Are we using GOES-E or GOES-W?  Ramer says the distinction
-#is only position relative to 100 deg W longitude.  This information goes
-#into a file used by the moisture analysis.
-  $goes = $lon>-100 ? 8:9;
-  $src_template= "$LAPS_SRC_ROOT/data/static/moisture_switch.txt";
-  $outfile = "$LAPS_DATA_ROOT/static/moisture_switch.txt";
-  $template = &get_best_template($src_template,$outfile);
-  if(open(TEMPLATE,"$template")){
-    @template=<TEMPLATE>;
-    close(TEMPLATE);
-    print "Using $template for moisture file internal documentation\n";
-  }else{
-    print "Cannot find moisture parameter template in $src_template or $outfile\n";
-    print "This file will be created without internal documentation\n";
-  }
-  print "Creating moisture parameter file $outfile\n";
-
-  open(OUTFILE,">$outfile") or die "$0: Can't open $outfile to write";
-  print OUTFILE "0\n$goes\n1\n0\n0\n\n";
-  print OUTFILE @template;
-  close(OUTFILE);
-  
   $goes = "g".$goes;
 
 
@@ -261,29 +351,3 @@ sub wfo_localization{
 
 
 }
-#
-# This subroutine test the files $template and $newfile
-# if neither file exists an empty var is returned 
-# if $newfile exists and is newer than $template, it is returned
-# otherwise  $template is returned
-#
-
-sub get_best_template{
-    local($template, $newfile) = @_;
-    local($t_age) = 0;
-    local($n_age) = 0;
-    local($best_file)='';
-
-    $t_age = -M $template if(-e $template);
-    $n_age = -M $newfile if(-e $newfile);
-    if($t_age>0 && ($t_age<$n_age || $n_age<=0)){
-	$best_file=$template ;
-    }elsif($n_age>0){
-	$best_file=$newfile ;
-    }else{
-	$best_file='';
-    }
-}
-
-
-  
