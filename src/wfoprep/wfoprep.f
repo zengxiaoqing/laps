@@ -654,7 +654,7 @@ PROGRAM wfoprep
       CALL read_wfomodel_data(nfid,v_id,proj,time_index(ta), &
                               v_kbotp,v_ktopp,v3d1,istatus)
       CALL read_wfomodel_data(nfid,v_id,proj,time_index(ta+1), &
-                              v_kbotp,v_ktopp,u3d2,istatus) 
+                              v_kbotp,v_ktopp,v3d2,istatus) 
     ENDIF
     IF ((model_code(m).EQ.1).OR.(model_code(m).EQ.3))THEN 
       CALL read_wfomodel_data(nfid,t_id,proj,time_index(ta), &
@@ -723,7 +723,7 @@ PROGRAM wfoprep
           CALL read_wfomodel_data(nfid,v_id,proj,time_index(ta), &
                               v_kbotp,v_ktopp,v3d1,istatus)
           CALL read_wfomodel_data(nfid,v_id,proj,time_index(ta+1), &
-                              v_kbotp,v_ktopp,u3d2,istatus)
+                              v_kbotp,v_ktopp,v3d2,istatus)
         ENDIF  
         IF ((model_code(m).EQ.1).OR.(model_code(m).EQ.3))THEN
           CALL read_wfomodel_data(nfid,t_id,proj,time_index(ta), &
