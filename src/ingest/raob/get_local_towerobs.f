@@ -3,7 +3,7 @@ c
      &                 path_to_local_data,local_format,
      &                 itime_before,itime_after,
      &                 eastg,westg,anorthg,southg,
-     &                 lat,lon,ni,nj,grid_spacing,
+     &                 lat,lon,ni,nj,
      &                 nobs,stations,
      &                 reptype,atype,wmoid,
      &                 laps_cycle_time, istatus)
@@ -77,13 +77,16 @@ c
 !       if(istatus .ne. 1)return
 
         box_size = 1.0
+
 c
 c.....  Figure out the size of the "box" in gridpoints.  User defines
 c.....  the 'box_size' variable in degrees, then we convert that to an
 c.....  average number of gridpoints based on the grid spacing.
 c
+
+        call get_grid_spacing_cen(grid_spacing_m,istatus)
         box_length = box_size * 111.137 !km/deg lat (close enough for lon)
-        ibox_points = box_length / (grid_spacing / 1000.) !in km
+        ibox_points = box_length / (grid_spacing_m / 1000.) !in km
 c
 c.....	Zero out the counters.
 c
@@ -164,9 +167,7 @@ c
 c.....  Bounds check: is station in the box?  Find the ob i,j location
 c.....  on the LAPS grid, then check if outside past box boundary.
 c
-!          Test for badflag OR (close to S Pole but not quite at it)
-!          Check can also be generalized in 'latlon_to_rlapsgrid' for 'lambert'
-           if(lats(i) .lt. -89.999 .and. lats(i) .ne. -90.) go to 125 
+!          Test for badflag 
            call latlon_to_rlapsgrid(lats(i),lons(i),lat,lon,ni,nj,       
      &                              ri_loc,rj_loc,istatus)
            if(ri_loc.lt.box_low .or. ri_loc.gt.box_idir

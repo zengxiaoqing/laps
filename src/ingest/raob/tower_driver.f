@@ -10,7 +10,7 @@ c
 c
 	real    lat(ni,nj), lon(ni,nj), topo(ni,nj)
 c
-        integer    wmoid(maxsta), istatus, grid_spacing 
+        integer    wmoid(maxsta), istatus
         integer    dpchar(maxsta), narg, iargc
 c
         character  stations(maxsta)*20
@@ -66,7 +66,7 @@ c
      &                      path_to_local_data,metar_format,
      &                      itime_before,itime_after,
      &                      grid_east,grid_west,grid_north,grid_south,
-     &                      lat,lon,ni,nj,grid_spacing,
+     &                      lat,lon,ni,nj,
      &                      nobs,stations,
      &                      reptype,atype,wmoid,
      &                      laps_cycle_time, istatus)
