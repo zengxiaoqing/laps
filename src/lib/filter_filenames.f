@@ -26,7 +26,7 @@ c
        integer*4 max_numeric_char
        parameter(max_numeric_char = 10)
        integer*4 max_2letter_strings
-       parameter(max_2letter_strings = 1)
+       parameter(max_2letter_strings = 2)
        integer*4 max_files_filtered
        parameter(max_files_filtered=3000)
 
@@ -49,7 +49,7 @@ c
 
        data c_qualifying_numeric_char/'0','1','2','3','4','5'
      &,'6','7','8','9'/
-       data c_qualifying_2letter_string/'nf'/ 
+       data c_qualifying_2letter_string/'nf','re'/ 
 
        i_fnames_filtered = 0
        i_files_qualifying= 0

@@ -291,7 +291,8 @@ c initialize
                leni = lend+5
                lent=8
                return
-            elseif(c_fname(lend+1:lend+2) .eq. 'nf')then         ! Taiwan FA model
+            elseif(c_fname(lend+1:lend+2) .eq. 'nf' .or.
+     +             c_fname(lend+1:lend+2) .eq. 're' )then         ! Taiwan FA model
                c20_type = 'ymmddhh'
                leni = lend+2
                lent = 7

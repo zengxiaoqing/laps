@@ -162,10 +162,10 @@ c----------------------------------------------------------------------------
       function a7_to_a9_time(a7_time)
 
 c
-c Routine takes fa model intial time, as described below, and converts it
+c Routine takes FA (CWB) model intial time, as described below, and converts it
 c to 9 character ascii format for laps. Routines below this (make_fa_valtime,
 c a9_to_a7_time, make_fa_ext, and fname13_to_FA_filename) take the FA model
-c filename extension and coverts it to a 4 character valid time, or vice versa.
+c filename extension and convert it to a 4 character valid time, or vice versa.
 c
 c===========================================================================
 cFA Model File description :
@@ -219,7 +219,7 @@ c
 c
 c ---------------------------------------------------------------------------
 c
-      function fname13_to_FA_filename(fname13)
+      function fname13_to_FA_filename(fname13,cmodel)
 
       implicit none
 
@@ -227,16 +227,22 @@ c
       character*13 fname13_to_FA_filename
       character*9  a9_string
       character*7  fname7,a9_to_a7_time
-      character*3  c3_FA_ext,c3_ext
       character*4  a4_string
+      character*(*) cmodel
+      character*3  c3_FA_ext,c3_ext
+      integer      lenc
 
       a9_string=fname13(1:9)
       a4_string=fname13(10:13)
 
       fname7=a9_to_a7_time(a9_string)
       c3_ext=c3_FA_ext(a4_string)
-
-      fname13_to_FA_filename='nf'//fname7//'.'//c3_ext
+      call s_len(cmodel,lenc)
+      if(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_NF')then
+         fname13_to_FA_filename='nf'//fname7//'.'//c3_ext
+      elseif(cmodel(1:lenc).eq.'CWB_20FA_LAMBERT_RE')then
+         fname13_to_FA_filename='re'//fname7//'.'//c3_ext
+      endif
 
       return
       end

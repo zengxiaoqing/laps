@@ -29,7 +29,8 @@ c =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 c
       subroutine get_sat_sounder_info(n_sndr,
      +c_sndr_id,n_sndr_channels,path_to_sat_sounder,n_elems,
-     +n_lines,channel_wavelength_u,imsng_sndr_pix,istatus)
+     +n_lines,channel_wavelength_u,imsng_sndr_pix,pct_req_lsr,
+     +istatus)
 
       include 'lsr_dims.inc'
 
@@ -45,10 +46,11 @@ c
       character*200 path_to_sat_sounder(max_sat)
 
       real*4 channel_wavelength_u(max_ch,max_sat)
+      real*4 pct_req_lsr
 
       namelist /satellite_sounder_nl/ n_sndr,c_sndr_id,path_to_sat_sound
      +er,n_elems,n_lines,n_sndr_channels,channel_wavelength_u,imsng_sndr
-     +_pix
+     +_pix,pct_req_lsr
 
       call get_directory('nest7grid',nest7grid,len_dir)
 
