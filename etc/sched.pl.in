@@ -201,6 +201,9 @@ select(STDOUT); $| = 1;
 
 my $lockfile = "$LAPS_LOG_PATH/\.locklaps\.$$";
 
+my $sched_lockfile = "$LAPS_LOG_PATH/sched\.lock";
+system("touch $sched_lockfile");
+
 system("uname -ns");
 
 my $t=gmtime(); 
@@ -425,6 +428,7 @@ my $date = `date`;
 print "$date\n";
 
 print LOG "$t\n";
+unlink "$sched_lockfile";
 
 if($fxa_sys!=0 || ($opt_w && ( ! ($opt_q || $opt_Q) ) ) ){
     print LOG $t." Running wfo postprocessing\n";
