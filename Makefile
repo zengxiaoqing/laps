@@ -51,7 +51,6 @@ EXEDIRS = src/accum \
           src/ingest/satellite/lvd \
           src/ingest/satellite/lvd/table \
           src/ingest/satellite/sounding \
-          src/lapsplot \
           src/sched \
           src/sfc \
           src/sfc/table \
@@ -222,6 +221,10 @@ debuglib:
 	  $(MAKE) debug ; if [ $$? != 0 ] ; then \
 	        echo "Exit status from make was $$?" ; exit 1 ; fi ;) ;\
 	  done
+
+lapsplot: lib
+	cd src/lapsplot; $(MAKE)
+
 
 install: mkdirs
 	@for dir in $(LIBDIRS) $(EXEDIRS);\
