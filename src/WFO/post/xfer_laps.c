@@ -8,7 +8,7 @@
 
 main()
 {
-       int xfr_status, numElements;
+       int xfr_status, numElements,xstatus;
        PARAMETER_LIST_T paramInfo[MAX_PARAMETER_LIST_LEN];
        FILE *fp;
        time_t unix_filetime;
@@ -30,7 +30,7 @@ main()
        else {
 
 /* read in parameter file for passing into processLAPS */
-         get_Laps_to_WFO_parameter_list(paramInfo, &numElements);
+         xstatus = get_Laps_to_WFO_parameter_list(paramInfo, &numElements);
 
 /* open laps/nest7grid/sched/systime.dat */
 
