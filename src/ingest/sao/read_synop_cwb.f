@@ -10,7 +10,7 @@
      ~                          num, istatusSynop )
 
       integer, parameter :: maxSynop = 150
-      integer, parameter :: maxMso =    50
+      integer, parameter :: maxMso =    60
 
       character*(*)  filename
       character(*)   path_to_local
