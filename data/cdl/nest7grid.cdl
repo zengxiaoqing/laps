@@ -1311,12 +1311,20 @@ netcdf static {
                 Dy:units = "kilometers";
   
         float   La1(nav);
-                La1:long_name = "first latitude";
+                La1:long_name = "latitude SW corner";
                 La1:units = "degrees_north";
-  
+ 
         float   Lo1(nav);
-                Lo1:long_name = "first longitude";
+                Lo1:long_name = "longitude SW corner";
                 Lo1:units = "degrees_east" ;
+   
+        float   La2(nav);
+                La2:long_name = "latitude NE corner";
+                La2:units = "degrees_north";
+ 
+        float   Lo2(nav);
+                Lo2:long_name = "longitude NE corner";
+                Lo2:units = "degrees_east" ;
     
         float   LoV(nav);
                 LoV:long_name = "orientation of grid" ;
