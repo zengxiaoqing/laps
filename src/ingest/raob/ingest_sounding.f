@@ -107,11 +107,16 @@
        endif ! RSA project
  
 
-!      Satellite soundings
+!      Satellite soundings -- added goes (7/26/04 db)
        write(6,*)
-       write(6,*)' Call ingest_satsnd...'
-       call ingest_satsnd(path_to_raw_satsnd)
-
+       if(c8_project .eq. 'AFWA')then
+           write(6,*)' Call ingest_satsnd...'
+           call ingest_satsnd(path_to_raw_satsnd)
+       else
+           write(6,*)' Call ingest_goessnd...'
+           call ingest_goessnd (path_to_raw_satsnd, i4time_sys, 
+     1                          lun_out, istatus)
+       endif
 
 !      Radiometer data
        write(6,*)

@@ -28,6 +28,8 @@ SRC=ingest_sounding.f \
     ingest_drpsnd.f \
     ingest_drpsnd_sub_cwb.f \
     avapsread_sub.f \
+    ingest_goessnd.f \
+    process_goes_snd.f \
     ingest_satsnd.f \
     ingest_satsnd_af.f \
     tower_driver.f \
