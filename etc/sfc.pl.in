@@ -139,6 +139,8 @@ if (open(ODLOG,$odfilename)) {
   foreach (@lines) {
     if (/(.*)is at/) {
     ($dummy,$obnum,$staname,$source,$type) = split /\s+/, $1;
+    if ($type eq "") {$type="$source";}
+    if ($type eq "UNK") {$type="$source";}
     if ($type eq "") {$type="unknown";}
     push(@stanames,$staname);
     push(@types,$type);}}
