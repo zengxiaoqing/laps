@@ -344,7 +344,8 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn,c8_project_common
      1  ,maxstations_cmn,maxobs_cmn
-     1  ,c_raddat_type, c80_description
+     1  ,c_raddat_type, c80_description, path_to_topt30s
+     1  ,path_to_topt10m, path_to_pctl10m
 
 
         if(iflag_lapsparms_cmn .eq. 1)goto999
@@ -364,11 +365,8 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
         call s_len(tempchar,len_dir)
  
         open(92,file=tempchar(1:len_dir),status='old',err=900)
-ccc this code doesn't work on hpux 
-ccc        inquire(unit=92,read=a8)
-ccc        print*, a8
+
         read(92,lapsparms_nl,err=910)
-ccc         print *,'here ',iflag_lapsparms_cmn
 
 1       format(a)
 2       format(a6)
