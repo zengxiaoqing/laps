@@ -1,5 +1,6 @@
 
       subroutine get_tilt_netcdf_data(filename
+     1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
      1                               ,siteAlt                        
@@ -17,13 +18,15 @@
 
 !     Argument List
       character*70 filename
+      character*5  radarName
       integer V_bin_max, Z_bin_max, radial_max
       integer V(V_bin_max,radial_max), Z(Z_bin_max,radial_max)
-      integer radialAzim(radial_max)
+      real radialAzim(radial_max)
 
 !     Local
-      integer radialElev(radial_max)
-      integer radialTime(radial_max)
+      real radialElev(radial_max)
+      character*132 siteName
+      double precision esEndTime, esStartTime, radialTime(radial_max)
 
 !.............................................................................
 

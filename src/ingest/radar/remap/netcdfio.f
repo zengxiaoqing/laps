@@ -1,7 +1,7 @@
 
  
-       subroutine radar_init(i_radar,i_tilt_proc,i_last_scan)       
-!                                 I       I           O     
+       subroutine radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)       
+!                                 I       I           O         O
  
 !      Open/Read Polar NetCDF file for the proper time
        integer max_files
@@ -10,7 +10,7 @@
        character*150 path_to_radar,c_filespec,filename,directory
      1              ,c_fnames(max_files)
        character*15 path_to_vrc
-       character*4 c4_radarname
+       character*4 c4_radarname ! Not used in this file
        character*9 a9_time
        integer*4 i4times(max_files),i4times_lapsprd(max_files)
        character*2 c2_tilt
@@ -53,21 +53,25 @@ c      Determine filename extension
 
            call s_len(path_to_radar,len_path)
  
-!          Get i4time of 01 elevation file nearest to 15 minutes ago
-           i4time_now = i4time_now_gg() 
+!          Get i4time of 01 elevation files
            c_filespec = path_to_radar(1:len_path)//'/*_elev'//c2_tilt       
 
            call get_file_times(c_filespec,max_files,c_fnames
      1                        ,i4times,i_nbr_files_out,istatus)
-           if(istatus .ne. 1)then
-               stop
+
+           write(6,*)' # of raw files = ',i_nbr_files_out
+           if(istatus .ne. 1 .or. i_nbr_files_out .eq. 0)then
+               istatus = 0
+               return
            endif
 
            if(ext_out .ne. 'vrc')then
                call get_filespec(ext_out,1,c_filespec,istatus)
-           else
+
+           else ! We should add path_to_vrc
                call get_directory('rdr',directory,len_dir)
                c_filespec = directory(1:len_dir)//radar_subdir(1:3)     
+
            endif
 
 
@@ -82,8 +86,6 @@ c      Determine filename extension
                        write(6,*)' Product file already exists ',a9time      
                    endif
                enddo ! i
-           else
-               write(6,*)' # of files = ',i_nbr_files_out
            endif
 
        endif
@@ -96,6 +98,7 @@ c      Determine filename extension
        write(6,*)filename(1:len_path+20)
 
        call get_tilt_netcdf_data(filename
+     1                               ,radarName
      1                               ,siteLat                        
      1                               ,siteLon                        
      1                               ,siteAlt                        
@@ -132,7 +135,8 @@ c      Determine filename extension
        endif
 
        write(6,*)
-      
+
+       istatus = 1
        return
        end
  
@@ -168,7 +172,21 @@ c      Determine filename extension
        get_longitude = nint(siteLon*100000)
        return
        end
- 
+
+       subroutine get_radarname(c4_radarname,istatus)
+
+       include 'remap_dims.inc'
+       include 'netcdfio_radar_common.inc'
+       character*4 c4_radarname
+
+       c4_radarname = radarName
+       call upcase(c4_radarname,c4_radarname)
+       write(6,*)' c4_radarname = ',c4_radarname
+
+       istatus = 1
+       return
+       end
+       
  
        function get_field_num(c3_field)
        integer get_field_num

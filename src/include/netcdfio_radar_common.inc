@@ -2,6 +2,8 @@
        real radialAzim(MAX_RAY_TILT)
        integer VCP, elevationNumber, numRadials
 
+       character*5 radarName
+
        integer   Z(MAX_REF_GATES*MAX_RAY_TILT)
        integer   V(MAX_VEL_GATES*MAX_RAY_TILT)
 
@@ -19,3 +21,4 @@
      1                               ,resolutionV
      1                               ,i4time_process
      1                               ,numRadials
+     1                               ,radarName

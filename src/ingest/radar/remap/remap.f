@@ -26,13 +26,13 @@
           call get_remap_parms(i_radar,n_radars_remap,path_to_radar
      1                  ,c4_radarname,ext_dum,radar_subdir_dum
      1                  ,path_to_vrc,istatus)       
-          call remap_sub(i_radar,c4_radarname,ext_dum,radar_subdir_dum       
+          call remap_sub(i_radar,ext_dum,radar_subdir_dum       
      1                  ,path_to_vrc,NX_L,NY_L,NZ_L,istatus)
       enddo
 
  999  end
 
-      subroutine remap_sub(i_radar,rname_ptr,laps_radar_ext
+      subroutine remap_sub(i_radar,laps_radar_ext
      1                    ,c3_radar_subdir,path_to_vrc,NX_L,NY_L,NZ_L
      1                    ,istatus)
 
@@ -130,20 +130,29 @@
 !     Get Radar name environment variable 
 !     call getenv('RADARNAME',rname_ptr) 
 
-      if (rname_ptr .eq. ' ')then
-        write(6,*)' Could not evaluate RADARNAME environment variable.'
-        write(6,*)' Set the 4-character radar name before running remap'       
-        call exit(1) 
-      endif
+!     if (rname_ptr .eq. ' ')then
+!       write(6,*)' Could not evaluate RADARNAME environment variable.'
+!       write(6,*)' Set the 4-character radar name before running remap'       
+!       call exit(1) 
+!     endif
 
 !     call Archive II initialization routine  
       i_tilt_proc = 1
 
-      call radar_init(i_radar,i_tilt_proc,i_last_scan)
+      call radar_init(i_radar,i_tilt_proc,i_last_scan,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' remap_sub: ERROR returned from radar_init'      
+          return
+      endif
+
+      call get_radarname(rname_ptr,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' remap_sub: ERROR returned from get_radarname'      
+          return
+      endif
 
       i_first_scan = 1
 
-      i_alt=389. 
       i_alt=get_altitude() 
       i_lat=get_latitude() 
       i_lon=get_longitude() 
@@ -314,7 +323,8 @@
 ! call the FORTRAN remapper module   
 !             Read next tilt
               i_tilt_proc_new = i_tilt_proc + 1
-              call radar_init(i_radar,i_tilt_proc_new,i_last_scan)
+              call radar_init(i_radar,i_tilt_proc_new,i_last_scan
+     1                                               ,istatus)
 
               write(6,*)'  Calling remap_process past_tilt '
      1                                         , past_tilt  
