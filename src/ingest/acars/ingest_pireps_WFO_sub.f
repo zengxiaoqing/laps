@@ -264,7 +264,7 @@ C
  3            format(' Cloud layer',2f8.0,i5)
 
               if ((rbase .ne. -1000.) .and. (rtop .ne. -1000.) .and.
-     +            (ieights .ne. -999)) then
+     +            (ieighths .ne. -999)) then
                 if (written .eq. 0) then   ! write timeObs, lat, lon, etc
                   call open_ext(31,i4time_sys,ext(1:3),istatus)
 
