@@ -37,6 +37,7 @@ c
      1  tb8_k,istat_tb8,                                                 ! I
      1  sst_k,istat_sst,                                                 ! I
      1  istat_39_a, l_use_39,                                            ! I
+     1  istat_39_add_a,                                                  ! O
      1  tb8_cold_k,                                                      ! O
      1  grid_spacing_m,surface_sao_buffer,                               ! I
 !    1  cloud_frac_vis_a,istat_vis,
@@ -119,6 +120,7 @@ c
         real*4 heights_3d(imax,jmax,klaps)
 
         integer*4 istat_39_a(imax,jmax)
+        integer*4 istat_39_add_a(imax,jmax)
 
 !       Output
         real*4 t_gnd_k(imax,jmax)
@@ -330,6 +332,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,istat_39_a(i,j), l_use_39                                     ! I
+     1     ,istat_39_add_a(i,j)                                           ! O
      1     ,l_co2                                                         ! I
      1     ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2         ! O
      1     ,cldtop_m_tb8(i,j),l_tb8                                       ! O
@@ -391,8 +394,8 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1                          + temp_3d(i,j,iz_temp+1)  * frac
 
                 if(cldcv(i,j,k) .ne. r_missing_data)then
-                  if(cldcv(i,j,k) .gt. 1.020)then   ! excessively over 1.0
-                      write(6,*)' Error in insert_sat, cldcv > 1.020'
+                  if(cldcv(i,j,k) .gt. 1.030)then   ! excessively over 1.0
+                      write(6,*)' Error in insert_sat, cldcv > 1.030'
      1                         ,i,j,k,cldcv(i,j,k)
                       istatus = 0
                       return
@@ -550,6 +553,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
      1            ,istat_39_a(i,j), l_use_39                             ! I
+     1            ,istat_39_add_dum                                      ! O
      1            ,l_co2                                                 ! I
      1            ,n_valid_co2,n_missing_co2,cldtop_m_co2(i,j),istat_co2 ! O
      1            ,cldtop_m_tb8(i,j),l_tb8                               ! O
@@ -673,6 +677,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
      1  ,istat_39, l_use_39                                            ! I
+     1  ,istat_39_add                                                  ! O
      1  ,l_co2                                                         ! I
      1  ,n_valid_co2,n_missing_co2,cldtop_m_co2,istat_co2              ! O
      1  ,cldtop_m_tb8,l_tb8                                            ! O
@@ -868,6 +873,8 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 
         endif ! We will want to use a 11u determined cloud top
 
+        istat_39_add = 0
+
 !       Set variables depending on whether in Band 8 or CO2 mode
         if(l_co2 .and. istat_co2 .eq. 1)then ! Using CO2 method
             if(cldtop_m_co2 .ne. r_missing_data)then
@@ -889,6 +896,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
             l_cloud_present = .true.
             cldtop_m = cldtop_m_tb8
             sat_cover = 1.0 
+            istat_39_add = 1
 
         else                          ! Using Band 8 (11.2mm) data only
             l_cloud_present = l_tb8

@@ -247,7 +247,9 @@ cdis
         real*4 albedo(NX_L,NY_L)
         real*4 cloud_frac_vis_a(NX_L,NY_L)
         real*4 cloud_frac_co2_a(NX_L,NY_L)
+
         integer*4 istat_39_a(NX_L,NY_L)
+        integer*4 istat_39_add_a(NX_L,NY_L)
 
         real*4 temp_3d(NX_L,NY_L,NZ_L)
 
@@ -653,6 +655,7 @@ C READ IN SATELLITE DATA
      1       tb8_k,istat_tb8,                                           ! I
      1       sst_k,istat_sst,                                           ! I
      1       istat_39_a, l_use_39,                                      ! I
+     1       istat_39_add_a,                                            ! O
      1       tb8_cold_k,                                                ! O
      1       grid_spacing_cen_m,surface_sao_buffer,                     ! I
      1       solar_alt,solar_ha,solar_dec,                              ! I
@@ -830,7 +833,7 @@ C Clear out stuff below ground
         enddo
         enddo
 
-C OUTPUT ARRAY in HORIZONTAL AND VERTICAL SLICES
+C ASCII PLOTS in HORIZONTAL AND VERTICAL SLICES
 
 C       HORIZONTAL SLICES
 
@@ -980,6 +983,7 @@ C       EW SLICES
         call cloud_snow_cvr(cvr_max,cloud_frac_vis_a,cldtop_m_tb8
      1          ,tb8_k,NX_L,NY_L,r_missing_data,cvr_snow_cycle)
 
+!       MORE ASCII PLOTS
         write(6,801)
 801     format('                            VISIBLE SATELLITE     ',
      1            20x,'                Snow Cover')
@@ -1018,10 +1022,20 @@ C       EW SLICES
 1101    format('  Max Cloud Cover              3.9 micron         ',
      1            20x,'              Final Analysis')
 
-!       Set 3.9 micron mask
+!       Set 3.9 micron plot mask
         do i = 1,NX_L
         do j = 1,NY_L
-            plot_mask(i,j) = 0.5 + float(istat_39_a(i,j)) * .4
+            if(istat_39_a(i,j) .eq. -1)then
+                plot_mask(i,j) = 0.3 
+            elseif(istat_39_a(i,j) .eq. 0)then
+                plot_mask(i,j) = 0.0 
+            elseif(istat_39_a(i,j) .eq. 1)then
+                if(istat_39_add_a(i,j) .eq. 1)then
+                    plot_mask(i,j) = 0.9
+                else
+                    plot_mask(i,j) = 0.7
+                endif
+            endif
         enddo ! j
         enddo ! i
 
