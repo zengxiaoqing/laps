@@ -306,8 +306,8 @@ cdis
 c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 112             format(1x,f6.1,i4,2f7.0,4x,2f7.0,i4)
 
-                call plot_windob(dir,spd_kt,ri,rj,lat,lon,imax,jmax,size
-     1_suw)
+                call plot_windob(dir,spd_kt,ri,rj,lat,lon
+     1                          ,imax,jmax,size_suw)
                 endif
 
 
@@ -362,10 +362,12 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
             endif
         enddo
 
-
+ 30     continue
 
 !       Plot Mesonet winds  ***********************************************
-30      write(6,*)' Mesonet Data'
+        if(.false.)then
+
+        write(6,*)' Mesonet Data'
 
         call setusv_dum(2hIN,14)
 
@@ -373,7 +375,7 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
         ext = 'msg'
         call get_directory(ext,directory,len_dir)
         open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))
-     1  ,status='old',err=811)
+     1  ,status='old',err=50)
 
 !35     read(32,*,end=40)alat,alon,dir,speed_ms,retheight
 35      read(32,*,end=40)ri,rj,rk,dir,speed_ms
@@ -410,8 +412,10 @@ c               write(6,112)elev_deg,k,range_km,azimuth_deg,dir,spd_kt
 
         close(32)
 
-!       Plot SAO winds  ***********************************************
-50      write(6,*)' SAO Data'
+        endif ! .false.
+
+!       Plot Sfc/METAR winds  ***********************************************
+50      write(6,*)' Sfc/METAR Data'
 
         call setusv_dum(2hIN,14)
 

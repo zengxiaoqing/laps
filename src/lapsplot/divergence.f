@@ -69,7 +69,7 @@ cdis
         enddo ! i
         enddo ! j
 
-        call FFLXC(ni,nj,M,PHI0,SCALE
+        call FFLXC(ni,nj,M,SCALE
      1  ,uanl_grid,vanl_grid,one,div,lat,lon
      1  ,dum1,dum2,dum3,r_missing_data)
 

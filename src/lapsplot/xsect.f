@@ -955,13 +955,12 @@ c read in laps lat/lon and topo
             c33_label = 'LAPS  Reflectivity  Vert X-Sect  '
             call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
 
-        elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' .or. c_field .eq
-     1. 'rs'
-     1                                  )then ! Reflectivity Image
+        elseif(c_field .eq. 'ri' .or. c_field .eq. 'rj' 
+     1    .or. c_field .eq. 'rs')then ! Reflectivity Image
             i_image = 1
             if(c_field .eq. 'ri')then
-                i4time_get = i4time_ref/laps_cycle_time * laps_cycle_tim
-     1e
+                i4time_get = i4time_ref/laps_cycle_time 
+     1                                * laps_cycle_time
             else
                 i4time_get = i4time_ref
             endif
@@ -996,8 +995,8 @@ c read in laps lat/lon and topo
 
             if(istat_3dref .le. 0)then
                 if(istat_2dref .eq. 1)then
-                    write(6,*)' Radar Xsect unavailable, try earlier tim
-     1e'
+                    write(6,*)
+     1              ' Radar Xsect unavailable, try earlier time'
                 endif
                 goto 100
             endif
@@ -1011,15 +1010,19 @@ c read in laps lat/lon and topo
             call get_laps_3dgrid(i4time_get,86400,i4time_radar,
      1          NX_L,NY_L,NZ_L,ext,var_2d
      1                  ,units_2d,comment_2d,grid_ra_ref,istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Could not read lps via get_laps_3dgrid'       
+                goto100
+            endif
 
 1510        continue
 
             call make_fnam_lp(i4time_radar,asc_tim_9,istatus)
 
             if(c_field .ne. 'rs')then
-                call interp_3d(grid_ra_ref,field_vert,xlow,xhigh,ylow,yh
-     1igh,
-     1                     NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)
+                call interp_3d(grid_ra_ref,field_vert
+     1                        ,xlow,xhigh,ylow,yhigh
+     1                        ,NX_L,NY_L,NZ_L,NX_C,NZ_C,r_missing_data)       
             else ! Get Spread Out Data
                 call interp_3d_spread
      1          (grid_ra_ref,field_vert,xlow,xhigh,ylow,yhigh,

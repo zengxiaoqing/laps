@@ -348,7 +348,7 @@ cdis
      1       /'     [sa/pa] Snow/Pcp Accum,'
      1       ,'     [sc] Snow Cover'
      1       /'     [sh,rh] Specific/Rel Humidity'
-     1       ,'     [tr,lf,gr,so] Terrain/Land Frac/Grid, '
+     1       ,'     [tn,lf,gr,so] Terrain/Land Frac/Grid, '
      1       /'     [v1,v2,v3,v4,v5,po] IR Twm/av; VCF/VIS; Tsfc-11u'
      1       ,'; Polar Orbiter'
      1       //' ',52x,'[q] quit/display ? ',$)
@@ -1664,15 +1664,15 @@ cdis
                  write(6,*)' Sorry, no L1S files present'
                  goto 1200
 
-                 write(6,*)
-     1       ' Getting Entire Time Span of Accumulation from Radar Data,
-     1 etc.'
+!                write(6,*)
+!    1       ' Getting Entire Time Span of Accumulation from Radar Data,
+!    1 etc.'
 
-                    if(c_type .eq. 'sa')then
-                        call move(snow_2d,accum_2d,NX_L,NY_L)
-                    else
-                        call move(precip_2d,accum_2d,NX_L,NY_L)
-                    endif
+!                   if(c_type .eq. 'sa')then
+!                       call move(snow_2d,accum_2d,NX_L,NY_L)
+!                   else
+!                       call move(precip_2d,accum_2d,NX_L,NY_L)
+!                   endif
 
                 endif
 
@@ -3236,18 +3236,18 @@ cdis
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,1e-0,clow,chigh,cint,asc9_tim_t
+     1                    ,c33_label,i_overlay,c_display,'nest7grid'       
+     1                    ,lat,lon,jdot,NX_L,NY_L,r_missing_data
+     1                    ,laps_cycle_time)
 
         elseif(c_type .eq. 'te')then
             var_2d = 'THE'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw,ext,var_2d,units_2d
+     1                          ,comment_2d,NX_L,NY_L
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -3262,18 +3262,19 @@ cdis
 
             call make_fnam_lp(i4time_pw,asc9_tim_t,istatus)
 
-            call plot_cont(field_2d,1e-0,clow,chigh,cint,
-     1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
-     1                                          ,lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+            call plot_cont(field_2d,1e-0,clow,chigh,cint
+     1                    ,asc9_tim_t,c33_label,i_overlay
+     1                    ,c_display,'nest7grid'
+     1                    ,lat,lon,jdot
+     1                    ,NX_L,NY_L,r_missing_data,laps_cycle_time)       
 
         elseif(c_type .eq. 'vo')then
             var_2d = 'VOR'
             ext = 'lsx'
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_p
-     1w,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,0,istatus)
+            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
+     1                          ,i4time_pw
+     1                          ,ext,var_2d,units_2d,comment_2d
+     1                          ,NX_L,NY_L,field_2d,0,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Surface ',var_2d
@@ -3685,7 +3686,7 @@ cdis
      1               i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'tr')then
+        elseif(c_type .eq. 'tn')then
             clow = -400.
             chigh = +5000.
             cint = +200.
