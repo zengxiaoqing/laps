@@ -14,8 +14,8 @@ sub Get_env'fxa{ #'
 	next unless(/\s*([^\s]+)\s+([^\s]+)\s*$/);
         $evar = $1;
         $eval = $2;
-        $eval =~ s#\$\{(.*)\}#$ENV{$1}#;
-	$eval =~ s#\$([^\s\/]+)#$ENV{$1}#;    
+        $eval =~ s#\$\{(.*)\}#$ENV{$1}#g;
+	$eval =~ s#\$([^\s\/]+)#$ENV{$1}#g;    
         $ENV{$evar} = $eval;
     }
     close(FXA);
