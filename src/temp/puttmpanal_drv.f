@@ -166,7 +166,7 @@ c read in LAPS_DOMAIN
 !       This code is here just in case we need it due to a change in stability
 !       index strategy.
 
-        if(.true.)then
+        if(.true. .and. istatus .eq. 1)then
             call put_stability(
      1           i4time_needed                   ! Input
      1          ,NX_L,NY_L,NZ_L                  ! Input
@@ -177,6 +177,9 @@ c read in LAPS_DOMAIN
      1          ,temp_sfc_k                      ! Input
      1          ,pres_sfc_pa                     ! Input
      1          ,istatus)                        ! Output
+        else
+            write(6,*)' No stability calculation done for LST file'
+
         endif
 
 ! ************* NOTIFICATION STUFF *********************************************

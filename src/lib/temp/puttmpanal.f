@@ -144,6 +144,7 @@ cdis
      1                                   ,temp_3d,istatus)
 
         if(istatus .ne. 1)then
+            write(6,*)' ERROR: No Model First Guess for ',var_2d
             write(6,*)
      1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
@@ -158,6 +159,7 @@ cdis
      1                                   ,heights_3d,istatus)
 
         if(istatus .ne. 1)then
+            write(6,*)' ERROR: No Model First Guess for ',var_2d
             write(6,*)
      1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
@@ -186,6 +188,7 @@ cdis
      1                               ,sh_3d,istatus)
 
         if(istatus .ne. 1)then
+            write(6,*)' ERROR: No Model First Guess for ',var_2d
             write(6,*)
      1     ' Returning from PUT_TEMP_ANAL without writing LT1 file'
             return
@@ -204,7 +207,7 @@ cdis
 
         call get_pres_3d(i4time_needed,ni,nj,nk,pres_3d,istatus)
         if(istatus .ne. 1)then
-            write(6,*)' Warning: Bad status returned from get_pres_3d'       
+            write(6,*)' Error: Bad status returned from get_pres_3d'       
             return
         endif
 
@@ -222,7 +225,7 @@ cdis
      1                  ,grid_spacing_m     ! Input
      1                  ,istatus)           ! Output
         if(istatus .ne. 1)then
-            write(6,*)' Warning: Bad status returned from insert_tsnd'       
+            write(6,*)' Error: Bad status returned from insert_tsnd'       
             return
         endif
 
@@ -263,8 +266,8 @@ cdis
 !           Find Temp at Top of Boundary Lyr According to Upper Level Anal
             rk_sfc = zcoord_of_pressure(pres_sfc_pa(i,j))
             k_sfc = int(rk_sfc)
-            if(k_sfc .lt. 1)then
-                write(6,*)' Error, k_sfc = ',k_sfc
+            if(k_sfc .lt. 1 .or. k_sfc .ge. nk)then
+                write(6,*)' Error, k_sfc/rk_sfc = ',k_sfc,rk_sfc
                 istatus = 0
                 return
             endif
@@ -396,7 +399,8 @@ c       1                               j_diff_max,k_diff_max
 !           QC check of temp_sfc_eff - note this might be different from LSX T
             if(temp_sfc_eff .lt. 200. .or. temp_sfc_eff .gt. 400.)then
                 write(6,*)' Error: Bad Sfc or MDL Temp'
-     1                    ,i,j,temp_sfc_eff
+     1                    ,i,j,temp_sfc_eff,temp_sfc_k(i,j)
+     1                    ,temp_sfc_intrpl
                 istatus = 0
                 return
             endif
@@ -419,11 +423,12 @@ c       1                               j_diff_max,k_diff_max
 !           QC the 3D temps and calculate theta in the column
             do k = 1,nk
                 if(temp_3d(i,j,k) .lt. cold_thresh
-     1                          .or. temp_3d(i,j,k) .gt. 400.)then
+     1                            .or. temp_3d(i,j,k) .gt. 400.)then
                     write(6,*)' Error: Bad 3D/sfc Temp',i,j,k
      1                        ,temp_3d(i,j,k),temp_sfc_eff
 !                   write(6,111)i,j,temp_sfc_eff,temp_sfc_intrpl,diff_intrpl
                     if(k .ge. k_sfc)then
+                        write(6,*)' k >= k_sfc --> return'
                         istatus = 0
                         return
                     endif

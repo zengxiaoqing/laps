@@ -89,7 +89,7 @@ cdis
                  endif
 
                  if(   (float(level) - rk_ob) 
-     1               * (float(k2)    - rk_ob) .lt. 0.)then
+     1               * (float(k2)    - rk_ob) .gt. 0.)then
                      write(6,*)' Error: k1/k2 does not bracket ob in '
      1                        ,'interp_tsnd_to_laps'
                      return
