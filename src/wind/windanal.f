@@ -174,7 +174,7 @@ cdis
 
       write(6,*)' Subroutine laps_anl...'
 
-      l_point_struct = .false. 
+      l_point_struct = .true. 
 
 csms$serial(default=ignore)  begin              
 
