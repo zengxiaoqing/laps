@@ -47,23 +47,24 @@ c
 
       stop
       end
+c
+c-------------------------------------------------------------
       subroutine gen_vrc_llij_lut_sub(nx_l,ny_l,c_raddat_type)
 c
-c
-c
       implicit none
+
       integer nx_l, ny_l
-ccc      include 'lapsparms.for'
       character*3 c_raddat_type
       real*4    lat(nx_l,ny_l)
       real*4    lon(nx_l,ny_l)
       real*4    grid_spacing
       real*4    data(nx_l,ny_l,2)
-
-      integer*4 i,j
-      integer*4 istatus
-      integer*4 len
-      integer*4 ich
+      real*4    rdum
+      integer   i,j
+      integer   istatus
+      integer   len
+      integer   nlines,nelems
+      logical   test/.false./
 c
 c dimensions for lat/lon
 c
@@ -75,7 +76,6 @@ c
 c
 c Definitions needed for acquiring LAPS latitude and longitude arrays.
 c -------------------------------------------------------------------
-c      dir_static = '../static/'
       call get_directory('static',dir_static,len)
 
       var_ll(1) = 'LAT'
@@ -104,11 +104,10 @@ c
 c
 c      do i=1,n_radar_types
       
-
       if(c_raddat_type.eq.'wfo')then
 
-         write(6,*)'Gen LUT netCDF Conus_c wsi (WFO) data '
-         call gen_vrc_wfo_cdf_lut(ich,nx_l,ny_l,lat,lon,istatus)
+         write(6,*)'Gen LUT for Conus (lambert) wsi (WFO) data '
+         call gen_vrc_wfo_cdf_lut(2,nx_l,ny_l,lat,lon,istatus)
 
          if(istatus.eq.1)then
             write(6,*)'CDF look-up table generated'
@@ -119,10 +118,26 @@ c      do i=1,n_radar_types
 
       elseif(c_raddat_type.eq.'wsi')then
 
-         write(6,*)'Gen LUT for wsi - polar stereo'
+         write(6,*)'Gen LUT for wsi - Cylindrical Equidistant'
 
-         call gen_llij_lut_polar(i,nx_l,ny_l,lat,lon,c_raddat_type
-     +                        ,istatus)
+         if(test)then
+
+            print*,'Using latlon_to_ceij routine'
+            call gen_llij_lut_wsi(1,nx_l,ny_l,lat,lon,c_raddat_type
+     +,istatus)
+
+         else
+
+            print*,'Using inefficient latlon_to_ll routine'
+            call get_wsi_parms_vrc(1,nlines,nelems,
+     +rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,rdum,
+     +istatus) 
+
+            call gen_llij_lut_ll(1,nx_l,ny_l,lat,lon,c_raddat_type
+     +,nlines,nelems,istatus)
+
+         endif
+
          if(istatus.eq.1)then
             write(6,*)'CDF look-up table generated'
          else

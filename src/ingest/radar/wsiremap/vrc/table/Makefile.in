@@ -42,7 +42,6 @@ OTHERLIBS = @NETCDFLIB@/libnetcdf.a @OTHERLIBS@
 
 EXE = genvrclut.exe
 
-
 # Define other variables 
 
 AR  = @ARCHIVE@
@@ -52,14 +51,12 @@ INSTALL = @INSTALL@
 # Define all source code to be compiled and placed in local library.
 
 SRC = gen_llij_lut_wfo.f \
-      gen_llij_lut_polar.f \
+      gen_llij_lut_wsi.f \
+      gen_llij_lut_ll.f \
       get_radar_bounds.f \
-      get_rirj_pol.f \
-      getuv_pol.f 
-
+      gridconv.f
 
 MAIN=genvrclut.f
-
 
 LIB=libvrclut.a
 
@@ -80,7 +77,7 @@ $(EXE): $(ARCHIVE) $(MAIN)
 #	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
 #	rm -f *.o $*.f
 
-debug: clean $(ARCHIVE) $(MAIN)
+debug: clean
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' FFLAGS='@FFLAGS@ $(INC) -g'
 
 clean:
@@ -99,20 +96,4 @@ install: exe
 	mv $*.i $*.f
 
 %.o : %.F
-
-
-
-
-
-
-
-
-
-gen_llij_lut_polar.f:  $(LAPSROOT)/src/include/lapsparms.for $(LAPSROOT)/src/include/vrc.inc@F77INC@
-
-gen_llij_lut_wfo.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-genvrclut.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
-
-get_radar_bounds.f:  $(LAPSROOT)/src/include/lapsparms.for@F77INC@
 

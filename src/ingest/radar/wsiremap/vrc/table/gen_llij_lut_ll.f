@@ -29,8 +29,8 @@ cdis
 cdis 
 cdis 
 cdis 
-      subroutine gen_llij_lut_polar(irad,imax,jmax,lat,lon
-     +    ,c_raddat_type,istatus)
+      subroutine gen_llij_lut_ll(irad,imax,jmax,lat,lon
+     +    ,c_raddat_type,nlines,nelems,istatus)
 c
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -42,10 +42,8 @@ c confines.
 c
        implicit none
 
-ccc       include 'lapsparms.for'
-       include 'vrc.inc'
-
-       integer*4 imax,jmax
+       integer     imax,jmax
+       integer     nlines,nelems
        character*3 c_raddat_type
        real*4 lat(imax,jmax)
        real*4 lon(imax,jmax)
@@ -59,8 +57,9 @@ ccc       include 'lapsparms.for'
        real*4 dgtord
        real*4 dgtokm
        real*4 dx,dy
-       real*4 la1,lo1,Lov
-       real*4 latin,lap
+       real*4 rla1,rlo1,rlon
+       real*4 rla2,rlo2
+       real*4 rlatin,rlat
 
        real*4    fraclat
        real*4    fraclon
@@ -69,16 +68,17 @@ ccc       include 'lapsparms.for'
        real*4    iline,jline
        real*4    idiff,jdiff
 
-       integer*4 i,j
-       integer*4 k,l
-       integer*4 n,n1,n2
-       integer*4 irad
-       integer*4 istart,jstart
-       integer*4 iend,jend
-       integer*4 ishow_timer
-       integer*4 init_timer
-       integer*4 itstatus
-       integer*4 istatus
+       integer i,j
+       integer k,l
+       integer n,n1,n2
+       integer irad
+       integer idum
+       integer istart,jstart
+       integer iend,jend
+       integer ishow_timer
+       integer init_timer
+       integer itstatus
+       integer istatus
 
        logical   found_line
        logical   found_elem
@@ -87,8 +87,6 @@ ccc       include 'lapsparms.for'
        character cname*100
        character file*255
 
-       integer lines
-       integer nelements
 c
 c ***************************************************************************
 c
@@ -97,44 +95,24 @@ c
       dgtord=1./rdtodg
       dgtokm=111.1
       istatus=1
-      call get_directory('static',path,n1)
-      path=path(1:n1)//'vrc/ '
-      n1=index(path,' ')-1
-      cname='wsi_cdf_lut_wsi'
-      n2=index(cname,' ')-1
-      file=path(1:n1)//cname(1:n2)//'.parms'
-      n=index(file,' ')-1
 
-      open(22,file=file(1:n),
-     &     form='formatted',status='old',err=901)
+      call get_wsi_parms_vrc(irad,idum,idum,
+     +dx,dy,rla1,rlo1,rla2,rlo2,rlat,rlon,rlatin,
+     +istatus)
 
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,50)dx           !meters
-      read(22,50)dy           !meters
-      read(22,51)nelements    !integer
-      read(22,51)lines        !integer
-      read(22,50)la1          !degrees
-      read(22,50)lo1          !degrees
-      read(22,50)latin        !not used
-      read(22,50)Lov          !degrees
-      read(22,50)lap          !not used
-50    format(f10.5)
-51    format(i4)
+      write(6,*)'Parameters from vrc_nl namelist'
+      write(6,*)'dx     ',dx
+      write(6,*)'dy     ',dy
+      write(6,*)'nelems ',nelems
+      write(6,*)'nlines ',nlines
+      write(6,*)'rla1   ',rla1
+      write(6,*)'rlo1   ',rlo1
+      write(6,*)'rla2   ',rla2
+      write(6,*)'rlo2   ',rlo2
+      write(6,*)'rlon   ',rlon
+      write(6,*)'rlat   ',rlat
+      write(6,*)'rlatin ',rlatin
 
-      close(22)
-
-      write(6,*)'Parameters from ',file(1:n)
-      write(6,*)'dx    ',dx
-      write(6,*)'dy    ',dy
-      write(6,*)'nelems',nelements
-      write(6,*)'nlines',lines
-      write(6,*)'la1   ',la1
-      write(6,*)'lo1   ',lo1
-      write(6,*)'Lov   ',Lov
 c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
@@ -262,9 +240,6 @@ c
        goto 16
 
 900    write(6,*)'Error writting table ',file(1:n)
-       goto 16
-
-901    write(6,*)'Error reading parm file ',file(1:n)
 
 16     write(6,*)'Finished in get_llij_lut_polar'
        return

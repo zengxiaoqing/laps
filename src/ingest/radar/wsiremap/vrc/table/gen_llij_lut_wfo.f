@@ -29,7 +29,7 @@ cdis
 cdis 
 cdis 
 cdis 
-       subroutine gen_vrc_wfo_cdf_lut(ich,imax,jmax,lat,lon,istatus)
+       subroutine gen_vrc_wfo_cdf_lut(irad,imax,jmax,lat,lon,istatus)
 c
       implicit none
 
@@ -37,13 +37,15 @@ c
 
       real*4    lat(imax,jmax)
       real*4    lon(imax,jmax)
-      real*4    la1, lo1, lap
+      real*4    rla1,rlo1
+      real*4    rla2,rlo2
+      real*4    rlat,rlon
       real*4    dx,dy
       real*4    du,dv
       real*4    u_orig,v_orig
-      real*4    latin,lov
+      real*4    rlatin
       real*4    pi
-      real*4    u1,v1
+      real*4    u,v
 
       real*4    ri1,rj1
       real*4    ri2,rj2
@@ -59,15 +61,12 @@ c
 
       real*4    ri(imax,jmax)
       real*4    rj(imax,jmax)
-      real*4    u(imax,jmax)
-      real*4    v(imax,jmax)
 
-      integer*4 i,j,n,nn
-      integer*4 n1,n2
-      integer*4 ich
-      integer*4 isat
-      integer*4 istatus
-      integer*4 nx3,ny3
+      integer   i,j,n,nn
+      integer   n1,n2
+      integer   nlines,nelems
+      integer   irad
+      integer   istatus
 
       character*200 table_path
       character*200 file
@@ -78,50 +77,24 @@ c
 c =================================
       pi = acos(-1.0)
 c
-c parameters needed to generate the liberal goes8 lookup table
-c
-c     nn=index(c_channel_type(ich,isat),' ')-1
-c     if(nn.lt.0)nn=3
-c     ctype=c_channel_type(ich,isat)
-      call get_directory('static',path,n1)
-      path=path(1:n1)//'vrc/ '
-      n1=index(path,' ')-1
-      cname='wsi_cdf_lut_wfo'
-      n2=index(cname,' ')-1
-      file=path(1:n1)//cname(1:n2)//'.parms'
-      n=index(file,' ')-1
 
-      open(22,file=file(1:n),
-     &     form='formatted',status='old',err=901)
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,*)
-      read(22,50)dx
-      read(22,50)dy
-      read(22,51)nx3
-      read(22,51)ny3
-      read(22,50)la1
-      read(22,50)lo1
-      read(22,50)latin
-      read(22,50)Lov
-      read(22,50)lap
-50    format(f10.5)
-51    format(i4)
-      close(22)
+      call get_wsi_parms_vrc(irad,nlines,nelems,
+     +dx,dy,rla1,rlo1,rla2,rlo2,rlat,rlon,rlatin,
+     +istatus)
 
-      write(6,*)'Parameters from ',file(1:n)
-      write(6,*)'dx    ',dx
-      write(6,*)'dy    ',dy
-      write(6,*)'nx3   ',nx3
-      write(6,*)'ny3   ',ny3
-      write(6,*)'la1   ',la1
-      write(6,*)'lo1   ',lo1
-      write(6,*)'latin ',latin
-      write(6,*)'Lov   ',Lov
-      write(6,*)'lap   ',lap
-  
+      write(6,*)'Parameters from vrc_nl namelist'
+      write(6,*)'dx     ',dx
+      write(6,*)'dy     ',dy
+      write(6,*)'nelems ',nelems
+      write(6,*)'nlines ',nlines
+      write(6,*)'rla1   ',rla1
+      write(6,*)'rlo1   ',rlo1
+      write(6,*)'rla2   ',rla2
+      write(6,*)'rlo2   ',rlo2
+      write(6,*)'rlon   ',rlon
+      write(6,*)'rlat   ',rlat
+      write(6,*)'rlatin ',rlatin
+
 c compute lat lons  fsl conus grid (or read fm disk)
 c determine ri/rj pair for the four laps domain corners.
 c compute i,j  in lambert grid for desired points.
@@ -129,48 +102,48 @@ c get delta u and delta v in the lambert grid
 
          dxterm = dx/1000.
          dyterm = dy/1000.
-         call getdudv_lam(lov,lap,dxterm,dyterm,
-     &       la1,lo1,du,dv,u_orig,v_orig)
+         call getdudv_lam(rlon,rlat,dxterm,dyterm,
+     &       rla1,rlo1,du,dv,u_orig,v_orig)
 c
 c compute corner point ri/rj pairs used to determine # of i and j
 c
          write(6,*)'Compute corner points'
 
-         lapterm=(lap*pi)/180.
-         lovterm=(lov*pi)/180.
+         lapterm=(rlat*pi)/180.
+         lovterm=(rlon*pi)/180.
          latterm=(lat(1,1)*pi)/180.
          lonterm=(lon(1,1)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
-     &       latterm,lonterm,u1,v1)
-            call uv_ij (ny3,u_orig,v_orig,du,dv,
-     &       u1,v1,ri1,rj1)
+     &       latterm,lonterm,u,v)
+            call uv_ij (nlines,u_orig,v_orig,du,dv,
+     &       u,v,ri1,rj1)
 
          latterm=(lat(imax,1)*pi)/180.
          lonterm=(lon(imax,1)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
-     &       latterm,lonterm,u1,v1)
-            call uv_ij (ny3,u_orig,v_orig,du,dv,
-     &       u1,v1,ri2,rj2)
+     &       latterm,lonterm,u,v)
+            call uv_ij (nlines,u_orig,v_orig,du,dv,
+     &       u,v,ri2,rj2)
 
          latterm=(lat(1,jmax)*pi)/180.
          lonterm=(lon(1,jmax)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
-     &       latterm,lonterm,u1,v1)
-            call uv_ij (ny3,u_orig,v_orig,du,dv,
-     &       u1,v1,ri3,rj3)
+     &       latterm,lonterm,u,v)
+            call uv_ij (nlines,u_orig,v_orig,du,dv,
+     &       u,v,ri3,rj3)
 
          latterm=(lat(imax,jmax)*pi)/180.
          lonterm=(lon(imax,jmax)*pi)/180.
 
          call getuv_lam (lapterm,lovterm,
-     &       latterm,lonterm,u1,v1)
-            call uv_ij (ny3,u_orig,v_orig,du,dv,
-     &       u1,v1,ri4,rj4)
+     &       latterm,lonterm,u,v)
+            call uv_ij (nlines,u_orig,v_orig,du,dv,
+     &       u,v,ri4,rj4)
 c
-         write(6,*)'Sat ri/rj corners for domain: '
+         write(6,*)'WFO/WSI ri/rj corners for domain: '
 ccc     &laps_domain_file
          write(6,*)'ri1/rj1 (SW) ',ri1,rj1
          write(6,*)'ri2/rj2 (SE) ',ri2,rj2
@@ -187,23 +160,13 @@ c
             lonterm=(lon(i,j)*pi)/180.
 
             call getuv_lam (lapterm,lovterm,
-     &       latterm,lonterm,u(i,j),v(i,j) )
+     &       latterm,lonterm,u,v)
+            call uv_ij (nlines,u_orig,v_orig,du,dv,
+     &       u,v,ri(i,j),rj(i,j))
 
          enddo
          enddo
 c
-c compute ri, rj look uptables for ispan file (for each point in 
-c LAPS domain)
-c
-         do i = 1, imax
-         do j = 1, jmax
-
-            call uv_ij (ny3,u_orig,v_orig,du,dv,
-     &       u(i,j),v(i,j),ri(i,j),rj(i,j))
-
-         enddo
-         enddo
-
          do i = 1,imax,10
          do j = 1,jmax,10
 
