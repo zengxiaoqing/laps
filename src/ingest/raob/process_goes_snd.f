@@ -71,7 +71,9 @@ c     variables for output writing
 c     internal variables
       real lat,lon
       integer i4time_record,nbuf_1,nbuf_2
+      integer avg_i4time_record ! to create modified time rec
       character*9 c_time_record
+      character*9 m_time_record ! modified time record
       character*11 c_time_record_long
       real lat_a(iii,jjj), lon_a(iii,jjj), topo_a (iii,jjj)
       real rnorth,south,east,west
@@ -153,6 +155,8 @@ c-------------------------------------------------------------------------------
 C
 
       istatus = 0 ! set initially as bad
+      avg_i4time_record = nint((float(i4time_begin)+
+     1     float(i4time_end))/2.)
 
 c     get perimeter values for the domain
       call get_domain_perimeter(iii,jjj,'nest7grid',lat_a,
@@ -217,6 +221,7 @@ c     set up time window compare
         nbuf_2=int(rbuf(2))
         write (c_time_record_long,34) nbuf_1,nbuf_2
         c_time_record = c_time_record_long(1:9)
+        call make_fnam_lp(avg_i4time_record,m_time_record,istatus)
  34     format (i5.5,i6.6)
         call i4time_fname_lp(c_time_record,i4time_record,istatus)
         if (i4time_record.ge.i4time_begin 
@@ -274,7 +279,8 @@ c     Fill variables for calling the routine to write SND
             write(c5_staid(1)(2:5),44) ob_counter
  44         format(i4.4)
             c5_staid(1)(1:1) = 'S'
-            a9time_ob (1,count_level) = c_time_record
+c            a9time_ob (1,count_level) = c_time_record
+            a9time_ob (1,count_level) = m_time_record
             c8_obstype(1) = 'GOES    '
             write (c8_obstype(1)(5:6),45)id_sat
  45         format(i2.2)
