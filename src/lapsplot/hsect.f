@@ -345,7 +345,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1      ,',   [pt,pb] Theta, Blnc Theta'
      1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,QBAL),'
-     1      /'           [hh,bl] Ht of Const Temp Sfc, PBL'      )
+     1      /'           [hh,bl,lf] Ht of Const Temp Sfc, PBL, Fire Wx')       
 
         write(6,12)
  12     format(
@@ -1247,21 +1247,25 @@ c       include 'satellite_dims_lvd.inc'
      1                        ,i_overlay,c_display,lat,lon,jdot
      1                        ,NX_L,NY_L,r_missing_data,'hues')
 
-        elseif(c_type(1:2) .eq. 'bl')then
+        elseif(c_type(1:2) .eq. 'bl' .or. c_type(1:2) .eq. 'lf')then       
             write(6,*)
 
             write(6,826)
  826        format(/'  SELECT FIELD (VAR_2D):  '
      1       /
-     1       /'     PBL (stability): [ptp,pdm] ? ',$)       
+     1       /'     PBL | FIREWX: [ptp,pdm | vnt,ham,fwi] ? ',$)       
 
             read(lun,824)var_2d
 !824        format(a)
             call upcase(var_2d,var_2d)
 
-            ext = 'pbl'
+            if(c_type(1:2) .eq. 'bl')then
+                ext = 'pbl'
+            else
+                ext = 'lfr'
+            endif
 
-            write(6,*)' Getting pregenerated file',ext(1:3),' ',var_2d       
+            write(6,*)' Getting pregenerated file ',ext(1:3),' ',var_2d       
 
             call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -1287,7 +1291,7 @@ c       include 'satellite_dims_lvd.inc'
 
             cint = 0.
 
-            c33_label = comment_2d(1:29)//' '//units_2d(1:3)
+            c33_label = comment_2d(1:26)//' '//units_2d(1:6)
 
             call plot_field_2d(i4time_3dw,c_type,field_2d,scale
      1                        ,clow,chigh,cint,c33_label
@@ -1639,6 +1643,8 @@ c
               scale_l = 30.           ! for image plots
               scale_h = 230.          ! for image plots
             endif
+
+            scale = 1.0 
 
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
