@@ -43,7 +43,7 @@ foreach $file (@filenames) {
 
 $tail = `tail -1 $filename`;
 if ($tail !~ /No stability calculation done for LST file/) {
-  die "Temperature analysis is in progress...\n";}
+  print "Temperature analysis is in progress...\n";}
 
 # This is a bit more kosher...
 if (defined $hr) { 

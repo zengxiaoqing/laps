@@ -50,7 +50,7 @@ if (defined $hr) {
 
 @greplines = `grep "Normal completion of LAPSVANL" $filename`;
 $nlines = @greplines;
-if ($nlines == 0) {die "Surface analysis is in progress...\n";}
+if ($nlines == 0) {print "Surface analysis is in progress...\n";}
 
 open(FILE,$filename) or die "Can't open $filename.";
 @lines = <FILE>;
