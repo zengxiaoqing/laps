@@ -1017,6 +1017,7 @@ c
 	   ismoist = 0
 	endif
 c
+        ilev = 0
 	var_fire = 'SC '                   ! snow cover
 	ext_f = 'lm2'
 	call get_laps_2dvar(i4time,i4time_tol,i4time_near,ext_f,var_fire,
