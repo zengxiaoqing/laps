@@ -280,7 +280,7 @@ cdis
         real*4 cover_a(maxstns),rad_s(maxstns)
         integer obstime(maxstns),kloud(maxstns),idp3(maxstns)
         character store_emv(maxstns,5)*1,store_amt(maxstns,5)*4
-        character wx_s(maxstns)*8, obstype(maxstns)*8
+        character wx_s(maxstns)*8
 
         integer STATION_NAME_LEN
         parameter (STATION_NAME_LEN = 3)                   
@@ -559,7 +559,7 @@ C READ IN AND INSERT SAO DATA
      1  ,cvr_snd,cld_snd,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1  ,NX_L,NY_L,KCLOUD                                              ! I
      1  ,n_obs_pos_b,lat_s,lon_s,c_stations    ! returned for precip type comp
-     1  ,wx_s,t_s,td_s,obstype                 !    "      "    "     "
+     1  ,wx_s,t_s,td_s                         !    "      "    "     "
      1  ,elev_s                                ! ret for comparisons
      1  ,istat_sfc,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
 
@@ -638,7 +638,6 @@ C READ IN SATELLITE DATA
 !       Calculate solar altitude
         do j = 1,NY_L
         do i = 1,NX_L
-!           call solalt(lat(i,j),lon(i,j),i4time,solar_alt(i,j))
             call solar_position(lat(i,j),lon(i,j),i4time,solar_alt(i,j)
      1                                     ,solar_dec,solar_ha(i,j))
         enddo
@@ -652,7 +651,7 @@ C READ IN SATELLITE DATA
         call insert_sat(i4time,clouds_3d,cldcv_sao,cld_hts,lat,lon,
      1       pct_req_lvd_s8a,default_clear_cover,                       ! I
      1       tb8_cold_k,tb8_k,grid_spacing_cen_m,surface_sao_buffer,
-     1       cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
+     1       solar_alt,solar_ha,solar_dec,                              ! I
      1       cloud_frac_co2_a,                                          ! O
      1       rlaps_land_frac,                                           ! I
      1       topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,               ! I

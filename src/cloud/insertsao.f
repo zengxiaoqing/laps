@@ -35,7 +35,7 @@ cdis
      1          ,wt_snd,i_snd,j_snd,n_cld_snd,max_cld_snd
      1          ,ni,nj,nk                                                 ! I
      1          ,n_obs_b,lat_sta_ret,lon_sta_ret,c_stations
-     1          ,wx,t,td,obstype
+     1          ,wx,t,td
      1          ,elev
      1          ,istatus
      1          ,maxstns,IX_LOW,IX_HIGH,IY_LOW,IY_HIGH)
@@ -87,7 +87,7 @@ c
      1                              ,idp3(maxstns)
 c
         Character   infile*170,atime*24 
-     1             ,obstype(maxstns)*8
+     1             ,obstype(maxstns)*6,atype(maxstns)*6
      1             ,wx(maxstns)*8
         character   store_emv(maxstns,5)*1,amt_ret(maxstns,5)*4
 
@@ -140,8 +140,8 @@ c
 !       Access SAO data from LSO files
         infile = c150_filename
         call read_surface_sa(infile,maxstns,atime,
-     1   n_obs_g,n_obs_b,c_stations,obstype,lat_sta_ret,lon_sta_ret,       
-     1   elev,wx,t,td,dd,ff,ddg,
+     1   n_obs_g,n_obs_b,c_stations,obstype,atype,
+     1   lat_sta_ret,lon_sta_ret,elev,wx,t,td,dd,ff,ddg,
      1   ffg,pstn,pmsl,alt,n_cloud_layers_ret,ceil,lowcld,cover_a,
      1   rad,idp3,store_emv,       
      1   amt_ret,ht_base_ret,vis,obstime,istatus)
@@ -166,7 +166,7 @@ c
           call filter_string(obstype(i))
 
           if(l_parse(c8_project,'AFGWC'))then
-              obstype(i)=obstype(i)(1:7)//'U'
+              atype(i)='U'//atype(i)(2:6)
           endif
 
 !         Determine whether we want to analyze cloud layers from this station
@@ -193,7 +193,7 @@ c place station at proper laps grid point
                                                ! reporting clouds this time
               write(6,*)' No cloud layers reported - '
      1          ,'CLR?/MSG?/AMOS? - goto end of loop '       
-     1          ,c_stations(i),' ',obstype(i)
+     1          ,c_stations(i),' ',obstype(i),' ',atype(i)
               goto 125
           endif
 
@@ -204,10 +204,10 @@ c place station at proper laps grid point
      1        .or. obstype(i)(1:5) .eq. 'TESTS' 
      1        .or. obstype(i)(1:5) .eq. 'SYNOP' )then  ! New LSO file format
 
-              if(  obstype(i)(8:8) .eq. 'A'
-     1        .or. obstype(i)(8:8) .eq. 'U' )then      ! use 12000' limit
+              if(  atype(i)(1:1) .eq. 'A'
+     1        .or. atype(i)(1:1) .eq. 'U' )then      ! use 12000' limit
 
-                  if(obstype(i)(8:8) .eq. 'A')then     ! Automated station
+                  if(atype(i)(1:1) .eq. 'A')then     ! Automated station
                       i_auto = 1                       
                   else                                 ! Indeterminate
                       i_auto = 0
@@ -246,8 +246,8 @@ c place station at proper laps grid point
 
           write(6,1,err=110)c5_outstring,lat_sta_ret(i)
      1         ,lon_sta_ret(i),n_cloud_layers_ret(i)
-     1         ,ilaps,jlaps,obstype(i),ht_defined ! ,obstime(i)
-1         format(1x,a5,2f8.2,i3,2i4,1x,a8,f8.0,i5)
+     1         ,ilaps,jlaps,obstype(i),atype(i),ht_defined ! ,obstime(i)
+1         format(1x,a5,2f8.2,i3,2i4,1x,a8,1x,a6,f8.0,i5)
 
 110       do l = 1,n_cloud_layers_ret(i)
               write(6,2,err=3)amt_ret(i,l),ht_base_ret(i,l)
@@ -285,6 +285,7 @@ c place station at proper laps grid point
      1              //' reported to be too high for this sensor type'       
 
                     write(6,*)ht_base,ht_defined,' ',obstype(i)
+     1                                          ,' ',atype(i)
 
                     write(6,*)' Please check cloud layer heights in the'       
      1              //' LSO file to see that they are compatable with'     
@@ -299,7 +300,8 @@ c place station at proper laps grid point
      1                ' Error, inconsistent SAO data, cloud base is'      
      1              //' reported to be too high for this sensor type'       
 
-                    write(6,*)ht_base,ht_defined,obstype(i)
+                    write(6,*)ht_base,ht_defined,' ',obstype(i)
+     1                                          ,' ',atype(i)
                     write(6,*)
      1                ' Please check cloud layer heights in the LSO'
      1              //' file to see that they are compatable with the'       
@@ -313,7 +315,8 @@ c place station at proper laps grid point
                 else ! CLR
                   write(6,*)' WARNING, CLR sky cloud base does not'
      1            //' reflect this sensor type'
-                  write(6,*)ht_base,ht_defined,obstype(i)
+                  write(6,*)ht_base,ht_defined,' ',obstype(i)
+     1                                        ,' ',atype(i)
 
                 endif ! Clouds
 

@@ -34,7 +34,8 @@ c
         subroutine insert_sat(i4time,cldcv,cldcv_sao,cld_hts,rlat,rlon,
      1  pct_req_lvd_s8a,default_clear_cover,                             ! I
      1  tb8_cold_k,tb8_k,grid_spacing_m,surface_sao_buffer,
-     1  cloud_frac_vis_a,istat_vis,solar_alt,solar_ha,solar_dec,
+!    1  cloud_frac_vis_a,istat_vis,
+     1  solar_alt,solar_ha,solar_dec,                                    ! I
      1  cloud_frac_co2_a,                                                ! O
      1  rlaps_land_frac,topo,heights_3d,temp_3d,t_sfc_k,pres_sfc_pa,     ! I
      1  cvr_snow,imax,jmax,kcld,klaps,r_missing_data,                    ! I
@@ -80,8 +81,12 @@ c
         parameter (thr_sao_cvr = 0.1)
 
 !       Threshold for IR cloud detection (SFC temp - IR temp)
-        real*4 thresh2
-        parameter (thresh2 = 8.)
+        real*4 thresh_ir_diff1
+        parameter (thresh_ir_diff1 = 8.)
+
+!       Second threshold for IR cloud detection (SFC temp - IR temp)
+        real*4 thresh_ir_diff2
+        parameter (thresh_ir_diff2 = 21.)
 
         character*3 lvd_ext
         data lvd_ext /'lvd'/
@@ -99,7 +104,7 @@ c
         real*4 tb8_cold_k(imax,jmax)
         real*4 topo(imax,jmax)
         real*4 rlaps_land_frac(imax,jmax)
-        real*4 cloud_frac_vis_a(imax,jmax)
+!       real*4 cloud_frac_vis_a(imax,jmax)
         real*4 solar_alt(imax,jmax)
         real*4 solar_ha(imax,jmax)
         real*4 temp_3d(imax,jmax,klaps)
@@ -107,7 +112,6 @@ c
         real*4 cvr_snow(imax,jmax)
         real*4 pres_sfc_pa(imax,jmax)
         real*4 heights_3d(imax,jmax,klaps)
-        real*4 dum_3d(imax,jmax,klaps)
 
 !       Output
         real*4 t_gnd_k(imax,jmax)
@@ -246,7 +250,7 @@ c
         enddo ! j
 
 
-!       Calculate ground temperature (for now equate to sfc air temp)
+!       Calculate ground temperature
         write(6,*)' Getting Sea Sfc Temps data from SST file'
         ext = 'sst'
         var = 'SST'
@@ -280,7 +284,7 @@ c
 !       for IR navigation errors
         thresh1 = 5.
 !       call correlation(t_gnd_k,tb8_k,thresh1,imax,jmax)
-        call correlation(t_gnd_k,tb8_k,thresh2,imax,jmax)
+        call correlation(t_gnd_k,tb8_k,thresh_ir_diff1,imax,jmax)
         thresh3 = 15.
 !       call correlation(t_gnd_k,tb8_k,thresh3,imax,jmax)
 
@@ -328,9 +332,9 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
 
 !         Calculate cloud top height from Band 8 and/or CO2 slicing method
           call cloud_top( init_co2,i4time,tb8_k(i,j)
-     1     ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_vis_a(i,j)
-     1     ,t_gnd_k,pres_sfc_pa,dum_3d
-     1     ,thresh2,topo(i,j),r_missing_data
+!    1     ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_vis_a(i,j)
+     1     ,t_gnd_k,pres_sfc_pa
+     1     ,thresh_ir_diff1,topo(i,j),r_missing_data
      1     ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain(i,j),laps_p       
      1     ,n_valid_co2,n_missing_co2
      1     ,cldtop_m_co2(i,j),l_co2,istat_co2
@@ -521,19 +525,21 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
               cover=sat_cover
               htbase_init = ht_sao_base
 
-              if(tb8_k(i,j) - t_gnd_k(i,j) .lt. -21.)then ! We more likely have
-                                                          ! a cloud
-                  buffer = 2100.
-              else                               ! Weed out IR tops < ~5000m AGL
-                  buffer = surface_ir_buffer
+              if(tb8_k(i,j) - t_gnd_k(i,j) .lt. -thresh_ir_diff2)then 
+                  buffer = 2100.             ! We more likely have a cloud
+              else                            
+                  buffer = surface_ir_buffer ! Weed out IR tops w/higher buffer
               endif
 
-!             Calculate new cloud top and cover
+!             Calculate new cloud top and cover (based on filtered tb8)
+!             This gives a cloud edge with more uniform height for an isolated
+!             cloud when the edge has a "soft" appearance in the imagery.
+
               cldtop_m_old = cldtop_m(i,j)
               call cloud_top(init_co2,i4time,tb8_cold_k(i,j)
-     1            ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
-     1            ,t_gnd_k,pres_sfc_pa,dum_3d
-     1            ,thresh2,topo(i,j),r_missing_data
+!    1            ,cloud_frac_vis_a(i,j),istat_vis,cloud_frac_co2_dum
+     1            ,t_gnd_k,pres_sfc_pa
+     1            ,thresh_ir_diff1,topo(i,j),r_missing_data
      1            ,i,j,imax,jmax,klaps,heights_3d,temp_3d
      1            ,k_terrain(i,j),laps_p
      1            ,n_valid_co2,n_missing_co2
@@ -541,11 +547,12 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
      1            ,cldtop_m_tb8(i,j),l_tb8
      1            ,cldtop_m(i,j),l_cloud_present
 !    1            ,cldtop_m_cold,l_cloud_present
-     1            ,sat_cover
-     1                                                          )
-!             Change to cover
+     1            ,sat_cover)
+
+!             Calculate the cover (opacity) given the brightness temperature,
+!             ground temperature, and assumed ambient cloud-top temperature.
               cover = 
-     1        band8_cover(tb8_k(i,j),t_gnd_k(i,j),tb8_cold_k(i,j))
+     1              band8_cover(tb8_k(i,j),t_gnd_k(i,j),tb8_cold_k(i,j))       
 
               htbase = max( topo(i,j) + buffer , cldtop_m(i,j)-thk_def )
 
@@ -653,15 +660,14 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
         end
 
         subroutine cloud_top( init_co2,i4time,tb8_k
-     1  ,cloud_frac_vis,istat_vis,cloud_frac_co2,t_gnd_k
-     1  ,pres_sfc_pa,dum_3d,thresh2,topo,r_missing_data
+!    1  ,cloud_frac_vis,istat_vis,cloud_frac_co2
+     1  ,t_gnd_k,pres_sfc_pa,thresh_ir_diff1,topo,r_missing_data
      1  ,i,j,imax,jmax,klaps,heights_3d,temp_3d,k_terrain,laps_p
      1  ,n_valid_co2,n_missing_co2
      1  ,cldtop_m_co2,l_co2,istat_co2
      1  ,cldtop_m_tb8,l_tb8
      1  ,cldtop_m,l_cloud_present
-     1  ,sat_cover
-     1                                                          )
+     1  ,sat_cover)
 
 !       This routine computes the cloud top height given a band 8 brightness
 !       temperature and 3D fields of temp and height. The CO2 method is also
@@ -675,15 +681,14 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
         integer*4 init_co2                      ! Input/Output
         integer*4 i4time                        ! Input
         real*4 tb8_k                            ! Input
-        real*4 cloud_frac_vis                   ! Input
+!       real*4 cloud_frac_vis                   ! Input
         integer*4 i,j,imax,jmax,klaps           ! Input
         real*4 t_gnd_k(imax,jmax)               ! Input
         real*4 pres_sfc_pa(imax,jmax)           ! Input
-        real*4 dum_3d(imax,jmax,klaps)          ! Input (Dummy array for Q)
-        real*4 thresh2                          ! Input
+        real*4 thresh_ir_diff1                  ! Input
         real*4 topo                             ! Input
         real*4 r_missing_data                   ! Input
-        integer*4 istat_vis                     ! Input
+!       integer*4 istat_vis                     ! Input
         real*4 heights_3d(imax,jmax,klaps)      ! Input
         real*4 temp_3d(imax,jmax,klaps)         ! Input
         real*4 k_terrain                        ! Input
@@ -699,6 +704,7 @@ C       ISTAT = LIB$SHOW_TIMER(my_show_timer)
         real*4 sat_cover                        ! Output
 
 !       Local
+!       real*4 dum_3d(imax,jmax,klaps)          ! Local (Dummy array for Q)
         real*4 arg,frac_k,temp_above,cldtop_temp_k
         integer*4 kl
 !       real*4 ppcc(8)
@@ -795,7 +801,7 @@ C                  PPCC(8) = EFFECTIVE CLOUD AMOUNT FROM 5/8 RATIO
 !       This section finds the cloud top using Band 8 data and temperatures
 !       Estimate whether tb8_k - t < threshold
         cldtop_m_tb8 = r_missing_data ! zeros
-        if(tb8_k - t_gnd_k(i,j) .lt. -thresh2) then ! probably clds
+        if(tb8_k - t_gnd_k(i,j) .lt. -thresh_ir_diff1) then ! probably clds
 
             l_tb8 = .true.
 

@@ -32,7 +32,7 @@ cdis
 c
 c
         subroutine read_surface_sa(infile,maxsta,atime,n_obs_g,
-     &   n_obs_b,stn,obstype,lat,lon,elev,wx,
+     &   n_obs_b,stn,reptype,atype,lat,lon,elev,wx,
      &   t,td,dd,ff,ddg,ffg,pstn,pmsl,alt,kloud,ceil,lowcld,cover,rad,
      &   idp3,store_emv,store_amt,store_hgt,vis,obstime,istatus)
 c
@@ -148,7 +148,7 @@ c
 c
         Integer*4   obstime(maxsta),idp3(maxsta)
 c
-        Character   atime*24,stn(maxsta)*3,obstype(maxsta)*8
+        Character   atime*24,stn(maxsta)*3     !  ,obstype(maxsta)*8
         character   store_emv(maxsta,5)*1, wx(maxsta)*8
 c
 c
@@ -168,7 +168,7 @@ c
 c
         do i=1,maxsta
            stn(i)(1:3) = '   '
-           obstype(i)(1:8) = '        '
+!          obstype(i)(1:8) = '        '
            wx(i)(1:8) = '        '
         enddo !i
 c
@@ -219,29 +219,29 @@ c
               stn(i)(1:3) = stations(i)(2:4)
            endif
 c
-           if(reptype(i)(1:4) .eq. 'LDAD') then
-              obstype(i)(1:8) = provider(i)(1:8)
-              do k=8,1,-1
-                 if(ichar(obstype(i)(k:k)) .eq. 0) then
-                    obstype(i)(k:k) = ' '
-                 else
-                    go to 150
-                 endif
-              enddo !k
- 150          continue
-           else
-              obstype(i)(1:5) = reptype(i)(1:5)
-              if(atype(i)(1:1) .eq. 'A') obstype(i)(8:8) = 'A'
-              if(atype(i)(3:3) .eq. '1') obstype(i)(7:7) = '1'
-              if(atype(i)(3:3) .eq. '2') obstype(i)(7:7) = '2'
-           endif
+!          if(reptype(i)(1:4) .eq. 'LDAD') then
+!             obstype(i)(1:8) = provider(i)(1:8)
+!             do k=8,1,-1
+!                if(ichar(obstype(i)(k:k)) .eq. 0) then
+!                   obstype(i)(k:k) = ' '
+!                else
+!                   go to 150
+!                endif
+!             enddo !k
+!150          continue
+!          else
+!             obstype(i)(1:5) = reptype(i)(1:5)
+!             if(atype(i)(1:1) .eq. 'A') obstype(i)(8:8) = 'A'
+!             if(atype(i)(3:3) .eq. '1') obstype(i)(7:7) = '1'
+!             if(atype(i)(3:3) .eq. '2') obstype(i)(7:7) = '2'
+!          endif
 c
         enddo !i
 c
 c..... End of data gathering. Let's go home...
 c
         istatus = 1             ! everything's ok...
-        print *, ' Normal completion of new READ_SURFACE_OLD'
+        print *, ' Normal completion of new READ_SURFACE_SA'
 c
         return
         end
