@@ -82,7 +82,7 @@ c
  path_to_raw_sat_wfo_iwv='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_iwv/regClip/',
  path_to_raw_sat_wfo_i11='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_i11/regClip/',
  path_to_raw_sat_wfo_i12='/scratch/peaks1/smart/wfo_data/SBN/netCDF/westCONUS/conus_i12/regClip/',
- path_to_raw_satellite_gvr='/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/',
+ path_to_raw_satellite_gvr='/public/data/sat/fsl-gs/goes8/raw/image/fsl-conus/netcdf/'
  path_to_raw_satellite_cdf='/public/data/sat/fsl-conus/gs/netcdf/',
  i_delta_sat_t_sec=1500,         
  r_msng_sat_flag_cdf=255,       
@@ -114,5 +114,11 @@ c
 c Wideband remapper that reads polar NetCDF files (remap_polar_netcdf.exe)
  &remap_nl
  path_to_wideband='/public/data/radar/wsr88d/wideband/kftg/netcdf',
+ $end
+
+
+c VAD ingest (ingest_vad.exe)
+ &vad_nl
+ path_to_vad='/public/data/radar/vad/netcdf',
  $end
 
