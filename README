@@ -2305,7 +2305,9 @@ Inputs:
 
         ACARS data 
             NetCDF files using FSL-NIMBUS CDLs (uses pressure altitude)
-            AFWA format also allowed for ACARS
+            Hourly NetCDF filename convention is 'yydddhh00q.cdf'
+
+            AFWA ASCII format also allowed for ACARS
 
 Outputs: (Intermediate output written to the 'pin' file. Feeds cloud.exe, 
           wind.exe, lq3driver.x)
