@@ -851,6 +851,18 @@ C
       if(iflag .eq.    11)iqc_rsa =  0 ! reserved for MFFG but not used
       if(iflag .eq.    12)iqc_rsa = -1 ! MFFG Manual Mode Algorithm bad data 
                                        ! Operator flagged as bad data
+      if(iflag .eq.    13)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    14)iqc_rsa = +1 ! MFFG Manual Mode Algorithm good data 
+                                       ! Operator no action
+      if(iflag .eq.    15)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    16)iqc_rsa = -1 ! MFFG Manual Mode Algorithm bad data 
+                                       ! Operator no action
+      if(iflag .eq.    17)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    18)iqc_rsa = -1 ! MFFG Manual Mode Algorithm good data 
+                                       ! Operator flagged as bad data
+      if(iflag .eq.    19)iqc_rsa =  0 ! reserved for MFFG but not used
+      if(iflag .eq.    20)iqc_rsa = -1 ! MFFG Manual Mode Algorithm bad data 
+                                       ! Operator flagged as bad data
       if(iflag .eq. -9999)iqc_rsa = -1 ! Missing Data
 
       return
