@@ -221,9 +221,9 @@ c
 c
 c.....	Grids for the variational analyses of rp, u, v
 c
-	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj)
-	real p_a_orig(ni,nj), u_a_orig(ni,nj), v_a_orig(ni,nj) ! Reference
-c                                                              ! Pascals & M/S
+	real p_a(ni,nj), u_a(ni,nj), v_a(ni,nj) ! Post Variational Pa & M/S
+	real p_a_orig(ni,nj), u_a_orig(ni,nj), v_a_orig(ni,nj)   ! Reference
+c                                                                ! Pa & M/S
 c.....	Grids for the derived quantities.
 c
 	real du(ni,nj), dv(ni,nj), spd(ni,nj)
@@ -1385,7 +1385,7 @@ c
 	title = 'Reduced pressure verification (mb)'   
 	ea = 0.68
 	call zero(d1,imax,jmax)
-	call move(rp,d1,imax,jmax)
+	call move(p_a,d1,imax,jmax)
 	call multcon(d1,.01,imax,jmax)
 	call verify(d1,pred_s,stn,n_obs_b,title,iunit,
      &              ni,nj,mxstn,x1a,x2a,y2a,ii,jj,ea,badflag)
