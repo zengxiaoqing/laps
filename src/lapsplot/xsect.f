@@ -303,12 +303,12 @@ cdis
             iyl_remap = 10
             iyh_remap = 10
         elseif(vymin .eq. .20)then
-            ixl_remap = nint(float(NX_P-1) * .0590)
-            ixh_remap = nint(float(NX_P-1) * .0590)
+            ixl_remap = nint(float(NX_P-1) * .0630)
+            ixh_remap = nint(float(NX_P-1) * .0630)
 !           iyl_remap = nint(float(NX_P) * .174)
 !           iyh_remap = nint(float(NX_P) * .162)
-            iyl_remap = nint(float(NX_P-1) * .170)
-            iyh_remap = nint(float(NX_P-1) * .170)
+            iyl_remap = nint(float(NX_P-1) * .175)
+            iyh_remap = nint(float(NX_P-1) * .175)
         else
             write(6,*)' Error, invalid vymin ',vymin
         endif
