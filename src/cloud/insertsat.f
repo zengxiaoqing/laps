@@ -463,22 +463,21 @@ c
             htbase_init=cldtop_m(i,j) - thk_def
             htbase = htbase_init
 
-!           Locate lowest SAO cloud base
+!           Initialize lowest SAO cloud base
             ht_sao_base = 1e30
 
-            cldcv_above = cldcv_sao(i,j,kcld)
-
-            do k=kcld-1,1,-1
-              if(cldcv_sao(i,j,k) .le. thr_sao_cvr .and.
-     1         cldcv_above      .gt. thr_sao_cvr)then
-                    ht_sao_base = cld_hts(k+1)
+!           Locate lowest SAO cloud base
+            cldcv_below = 0.
+            do k=1,kcld
+              if(cldcv_below      .le. thr_sao_cvr .and.
+     1           cldcv_sao(i,j,k) .gt. thr_sao_cvr)then
+                    ht_sao_base = cld_hts(k)
+                    goto181
               endif
-
-              cldcv_above = cldcv_sao(i,j,k)
-
+              cldcv_below = cldcv_sao(i,j,k)
             enddo ! k
 
-            i_sao = i
+ 181        i_sao = i
             j_sao = j
 
 !           if(.false.)then ! Search for nearby SAO cloud layers
@@ -493,20 +492,25 @@ c
               do idelt_index = 1,nidelt
               ii = i + idelt(idelt_index)
                 if(ii .ge. 1 .and. ii .le. imax .and.
-     1             jj .ge. 1 .and. jj .le. jmax          )then
-                    cldcv_above = cldcv_sao(ii,jj,kcld)
-                    do k=kcld-1,1,-1
-                      if(cldcv_sao(ii,jj,k) .le. thr_sao_cvr .and.
-     1                 cldcv_above        .gt. thr_sao_cvr)then
-                          ht_sao_base = cld_hts(k+1)
+     1             jj .ge. 1 .and. jj .le. jmax        )then ! in bounds
+
+!                   Locate lowest neighboring SAO cloud base
+                    cldcv_below = 0. 
+                    do k=1,kcld
+                      if(cldcv_below        .le. thr_sao_cvr .and.
+     1                   cldcv_sao(ii,jj,k) .gt. thr_sao_cvr)then
+                          ht_sao_base = cld_hts(k)
+                          goto191
                       endif
-                      cldcv_above = cldcv_sao(ii,jj,k)
+                      cldcv_below = cldcv_sao(ii,jj,k)
                     enddo ! k
-                    if(ht_sao_base .ne. 1e30)then
+
+ 191                if(ht_sao_base .ne. 1e30)then
                         i_sao = ii
                         j_sao = jj
                         goto201
                     endif
+
                 endif  ! In bounds
               enddo ! ii
               enddo ! jj
@@ -1412,7 +1416,10 @@ c
             k = ik(n)
             z_temp = height_to_zcoord2(cld_hts(k),heights_3d,ni,nj,klaps
      1                                          ,i,j,istatus)
-            if(istatus .ne. 1)then
+
+            if(istatus .ne. 1)then ! layer is above height grid?
+                write(6,*)' Note: istatus=0 in cvr_to_tb8_effective'       
+                write(6,*)' i,j,k,cld_hts(k)',i,j,k,cld_hts(k)
                 return
             endif
 
