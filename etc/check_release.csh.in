@@ -16,7 +16,7 @@ echo " "
 echo "checking executables - should be 34 (counting lapsplot.exe)"
 cd $LAPS_BIN
 ls -lrt *.x *.exe
-echo " Actual number is... `ls -l *.x *.exe | wc -l`"
+echo " Actual number is... `ls -l *.x *.exe | grep -i -v total | wc -l`"
 
 echo " "
 echo "checking make.out"
