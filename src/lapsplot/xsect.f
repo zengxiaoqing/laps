@@ -303,12 +303,12 @@ cdis
             iyl_remap = 10
             iyh_remap = 10
         elseif(vymin .eq. .20)then
-            ixl_remap = nint(float(NX_P) * .0580)
-            ixh_remap = nint(float(NX_P) * .0575)
+            ixl_remap = nint(float(NX_P-1) * .0590)
+            ixh_remap = nint(float(NX_P-1) * .0590)
 !           iyl_remap = nint(float(NX_P) * .174)
 !           iyh_remap = nint(float(NX_P) * .162)
-            iyl_remap = nint(float(NX_P) * .168)
-            iyh_remap = nint(float(NX_P) * .168)
+            iyl_remap = nint(float(NX_P-1) * .170)
+            iyh_remap = nint(float(NX_P-1) * .170)
         else
             write(6,*)' Error, invalid vymin ',vymin
         endif
@@ -1623,8 +1623,8 @@ c read in laps lat/lon and topo
             call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
      1                           ,field_vert,field_vert3,r_missing_data)
 
 !           Blank out the edges external to the X-section
@@ -2555,11 +2555,18 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
 !                   call set(.20, .80, .20, .80
 !    1                     , 1., 61., 1., 21. ,1)
 
+
+!        subroutine remap_field_2d(nx_in,ixlow_in,ixhigh_in
+!     1                           ,ny_in,iylow_in,iyhigh_in
+!     1                           ,nx_out,ixlow_out,ixhigh_out
+!     1                           ,ny_out,iylow_out,iyhigh_out
+!     1                           ,field_in,field_out,r_missing_data)
+
                     call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
      1                           ,field_vert,field_vert3,r_missing_data)
 
 
@@ -2601,8 +2608,8 @@ c                 write(6,1101)i_eighths_ref,nint(clow),nint(chigh)
                 call remap_field_2d(
      1                            NX_C,1,NX_C
      1                           ,NZ_C,ibottom,NZ_C
-     1                           ,NX_P, ixl_remap, NX_P-ixh_remap
-     1                           ,NX_P, iyl_remap, NX_P-iyh_remap
+     1                           ,NX_P, ixl_remap, NX_P-ixh_remap+1
+     1                           ,NX_P, iyl_remap, NX_P-iyh_remap+1
      1                           ,field_vert,field_vert3,r_missing_data)
 
 
@@ -3512,8 +3519,16 @@ c
         rylow_in   = iylow_in 
         ryhigh_in  = iyhigh_in
 
+        write(6,*)' remap_field_2d X:'
+     1            ,rxlow_out,rxhigh_out,rxlow_in,rxhigh_in
+        write(6,*)' remap_field_2d Y:'
+     1            ,rylow_out,ryhigh_out,rylow_in,ryhigh_in
+
+!       Loop over subset of output (large square) array
         do ixout = ixlow_out, ixhigh_out
         do iyout = iylow_out, iyhigh_out
+
+!           Determine indices of input (smaller) array
             rxout = ixout
             ryout = iyout
 
@@ -3525,6 +3540,7 @@ c
             call stretch(rylow_out,ryhigh_out,rylow_in,ryhigh_in,arg)
             ryin = arg
 
+!           Interpolate input array to find value of output field array element
             call bilinear_laps(rxin,ryin,nx_in,ny_in,field_in,result)       
             field_out(ixout,iyout) = result
 
