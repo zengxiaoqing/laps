@@ -150,30 +150,43 @@ print "   $greplines[0]";
 foreach (@lines) {
   if (/PROFILER/) {
     @list = split;
-    push(@profilers,$list[9]);
-    push(@profilernums,$list[2]);
+    if(@list == 12){
+        push(@profilers,$list[9]);
+        push(@profilernums,$list[2]);
+    }
     next;}
   if (/VAD/) {
     @list = split;
-    push(@vads,$list[9]);
-    push(@vadnums,$list[2]);
+    if(@list == 12){
+        push(@vads,$list[9]);
+        push(@vadnums,$list[2]);
+    }
     next; } 
   if (/RAOB/) {
     @list = split;
-    push(@raobs,$list[9]);
-    push(@raobnums,$list[2]);
+    if(@list == 12){
+        push(@raobs,$list[9]);
+        push(@raobnums,$list[2]);
+    }
     next; } 
   if (/DROPSND/) {
     @list = split;
-    push(@dropsnds,$list[9]);
-    push(@dropsndnums,$list[2]);
+    if(@list == 12){
+        push(@dropsnds,$list[9]);
+        push(@dropsndnums,$list[2]);
+    }
     next; } 
   if (/TOWER/) {
     @list = split;
-    push(@towers,$list[9]);
-    push(@towernums,$list[2]);
+    if(@list == 12){
+        push(@towers,$list[9]);
+        push(@towernums,$list[2]);
+    }
     next; } 
             }
+
+#print "@profilers\n";
+#print "@profilernums\n";
 
 print "\nProfilers:  ";
 $searchstring = "Remapping profile ";
@@ -182,6 +195,7 @@ foreach (@lines) {
     ($profilenum,$lapsi,$lapsj) = split(" ",$1);
     $i=0;
     foreach $item (@profilernums) {
+#     print "$profilenum $item\n";
 #     if ($profilenum eq $item) {print "$profilers[$i], $lapsi, $lapsj \n";}
       if ($profilenum eq $item) {print "$profilers[$i] ";}
       $i=$i+1; } } }
@@ -232,18 +246,24 @@ if($i > 0){print "\n";}
 
 #Print TOWER
 $searchstring = "Remapping profile ";
+$i=0; $iprint=0; $ihead=0;
 foreach (@lines) {
   if (/$searchstring(.*)/) {
     ($profilenum,$lapsi,$lapsj) = split(" ",$1);
-    $i=0;
     foreach $item (@towernums) {
 #     if ($profilenum eq $item) {print "$towers[$i], $lapsi, $lapsj \n";}
       if ($profilenum eq $item) {
-          if($i == 0){print "\nTOWERs:  ";}
-          print "$towers[$i] ";
+          if($ihead == 0){print "\nTOWERs: "; $ihead=1;}
+          print "$towers[$i] "; $iprint=$iprint+1;
+#         if ($iprint > 12) {print "\n  line feed $profilenum $item $i $iprint "; $iprint=1;} 
+          if ($iprint > 11) {print "\n        "; $iprint=0;} 
+          $i=$i+1; 
       }
-      $i=$i+1; } } }
-if($i > 0){print "\n";}
+    } 
+  }
+}
+#print "End of Tower Section\n";
+if($iprint > 0){print "\n";}
 
 # SAO's (METAR's).
 
@@ -273,7 +293,7 @@ else {
   foreach (@saos) {
     print "$_ "; 
     $count=$count+1;
-    if ($count > 15) {print "\n       "; $count=0; } } }
+    if ($count > 12) {print "\n       "; $count=0; } } }
 print "\n";
 
 # ACARS and cloud-drift winds.
