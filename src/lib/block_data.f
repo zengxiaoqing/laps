@@ -5,14 +5,6 @@ c     routine lapsgrid.f
         include 'lapsparms.cmn'
         data iflag_lapsparms_cmn /0/
 
-c     routine zs.f
-
-        logical compute_bias_factor
-        common/zs_comm/ compute_bias_factor
-        data compute_bias_factor /.true./
-
-
-
 c     routine laps_thermo.f
 
         COMMON/INDX/ P(70),T(70),TD(70),HT(70),PBECR(20,4),TDFCR(20,2)

@@ -168,7 +168,7 @@ c read in laps lat/lon and topo
                 goto50
 
             else ! Will not wait for radar data
-                write(6,*)' WARNING: Insufficient radar data available'
+                write(6,*)' WARNING: Insufficient data for accum'
                 write(6,*)' No accum output being generated'
                 return
 
@@ -191,13 +191,24 @@ c read in laps lat/lon and topo
                 call get_laps_2d(i4time-ilaps_cycle_time,ext,var,units
      1                  ,comment_r,NX_L,NY_L,precip_2d_tot,istatus_tot)
             endif
+
+            if(istatus_tot .ne. 1)then
+                write(6,*)' WARNING: could not read previous storm'
+     1                   ,' total accumulations'
+            endif
         endif
 
 !       Set rate threshold based on length of storm total so far 
         rate_thresh = .0001
         filename_start = comment_r(1:9)
 
-        call i4time_fname_lp(filename_start, i4time_start_tot, istatus)       
+        if(istatus_tot .eq. 1)then
+            call i4time_fname_lp(filename_start, i4time_start_tot
+     1                         , istatus)       
+        else
+            istatus = 0
+        endif
+
         if(istatus .ne. 1)then
             write(6,*)' Could not get start time for storm total'
      1                 ,comment_r

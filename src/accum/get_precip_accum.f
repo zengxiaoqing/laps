@@ -141,8 +141,8 @@ cdis
         if(i_nbr_files_ret .gt. 0)then
             call get_directory_length(c_fnames(1),lenf)
         else ! Error Condition
-            write(6,*)' No Radar Data Available for Snow/Precip Accumula
-     1tion'
+            write(6,*)' WARNING: No Radar Data Available for'
+     1               ,' Snow/Precip Accumulation'
             istatus = 0
             return
         endif
@@ -350,7 +350,7 @@ cdis
                 call get_laps_2dgrid(i4time_radar,i4_tol,i4time_temp
      1   ,ext,var_2d,units_2d,comment_2d,imax,jmax,t_sfc_k,0,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS Sfc Temp not available'
+                    write(6,*)' WARNING: LAPS Sfc Temp not available'       
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
@@ -361,7 +361,8 @@ cdis
                 call get_laps_2d(i4time_temp,ext,var_2d
      1                ,units_2d,comment_2d,imax,jmax,td_sfc_k,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS Sfc Dewpoint not available'
+                    write(6,*)' WARNING: LAPS Sfc Dewpoint'
+     1                       ,' not available'      
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
@@ -372,7 +373,8 @@ cdis
                 call get_laps_2d(i4time_temp,ext,var_2d
      1             ,units_2d,comment_2d,imax,jmax,pres_sfc_pa,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS Sfc Pressure not available'
+                    write(6,*)' Warning: LAPS Sfc Pressure '
+     1                       ,'not available'      
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
@@ -387,7 +389,7 @@ cdis
      1                  ,imax,jmax,kmax,ext,var_2d
      1                  ,units_2d,comment_2d,height_3d,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS 3D Height not available'
+                    write(6,*)' Warning: LAPS 3D Height not available'       
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
@@ -399,7 +401,7 @@ cdis
      1                  ,imax,jmax,kmax,ext,var_2d
      1                  ,units_2d,comment_2d,temp_3d,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS 3D Temp not available'
+                    write(6,*)' Warning: LAPS 3D Temp not available'       
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
@@ -425,7 +427,7 @@ cdis
      1          ,imax,jmax,kmax,ext,var_2d
      1                  ,units_2d,comment_2d,rh_3d,istatus)
                 if(istatus .ne. 1)then
-                    write(6,*)' LAPS 3D RH not available'
+                    write(6,*)' Warning: LAPS 3D RH not available'
                     frac_sum = -1.0 ! Turns off the wait loop for more radar
                     return
                 endif
