@@ -100,6 +100,8 @@ c                               12-02-98  Remove status check for LT1.
 c                               07-07-99  General upgrades and cleanup.  Change
 c                                           read_surface_obs to read_surface_data.
 c                                           Rm *4 from all declarations.
+c                               09-19-99  Check T/Td bkgs until LGB can do it.
+c
 c
 c       Notes:
 c
@@ -556,6 +558,15 @@ c
 	  endif
  128	enddo  !mm
  521	continue                          
+c
+c.....  QC the backgrounds.  If Td > T, set Td = T...temporary fix until LGB
+c.....  can do this....
+c
+	do j=1,nj
+	do i=1,ni
+	   if(td_bk(i,j) .gt. t_bk(i,j)) td_bk(i,j) = t_bk(i,j)
+	enddo !i
+	enddo !j
 c
 c.....  Set up arrays for the verify routine.
 c
