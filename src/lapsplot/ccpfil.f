@@ -1102,6 +1102,8 @@ c     Restore original color table
           colorbar_int = 100.
       elseif(range .gt. 200.)then
           colorbar_int = 50.
+      elseif(range .gt. 170.)then
+          colorbar_int = 20.
       elseif(range .gt. 45.)then
           colorbar_int = 10.
       elseif(range .gt. 25.)then
