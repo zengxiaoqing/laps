@@ -1,4 +1,4 @@
-      subroutine get_ruc2_dims(filename,NX,NY,NZ
+      subroutine get_ruc2_dims(filename,cmodel,NX,NY,NZ
      &,StdLat1,StdLat2,Lon0,La1,Lo1,La2,Lo2,istatus)
 c
 c updated to get all nav info - JS 4-01
@@ -13,6 +13,7 @@ c
 
       integer  NX, NY, NZ, nf_fid, nf_vid, nf_status
       character filename*200
+      character cmodel*(*)
       integer istatus
 
       istatus = 0
@@ -110,7 +111,11 @@ C
 C     Variable        NETCDF Long Name
 C      Latin        "conic tangent latitude"
 C
+      if(cmodel.eq.'RUC40_NATIVE')then
         nf_status = NF_INQ_VARID(nf_fid,'Latin',nf_vid)
+      else
+        nf_status = NF_INQ_VARID(nf_fid,'Latin1',nf_vid)
+      endif
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var Latin'
