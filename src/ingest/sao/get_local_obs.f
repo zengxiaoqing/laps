@@ -281,7 +281,7 @@ c.....  Temperature, dewpoint and RH.
 c
 	  temp_k = t(i) 
 	  if(temp_k.lt.190. .or. temp_k.gt.345.) temp_k = badflag
-	  if(t_time(i) .ge. 0.) then
+	  if(t_time(i) .ge. 0.) then ! implies that it is not set to ibadflag
 	     if( (timeobs(i) - t_time(i)) .gt. laps_cycle_time) then
 		temp_k = badflag
 	     endif
@@ -326,7 +326,7 @@ c
 	  dirgust = ddg(i)
 	  if(dirgust.lt.0. .or. dirgust.gt.360.) dirgust = badflag
 	  spdgust = ffg(i)
-	  if(spdgust.lt.0 .or. spdgust.gt.120.) spd = badflag
+	  if(spdgust.lt.0 .or. spdgust.gt.120.) spdgust = badflag
 	  if(gust_time(i) .ne. badflag) then
 	     if( (timeobs(i) - gust_time(i)) .gt. laps_cycle_time) then
 		dirgust = badflag
@@ -488,7 +488,9 @@ c
             atype(nn)(1:ilen) = stn_type(i)(1:ilen) ! auto stn type
          endif
 c
-	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+         weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+         call filter_string(weather(nn))
+
 	 reptype(nn)(1:6) = 'LDAD  '            ! report type
 	 wmoid(nn) = ibadflag                   ! WMO ID
 c
@@ -551,7 +553,7 @@ c
 c
  990	 continue		! no data available
 	 jstatus = 0
-	 print *,' ERROR.  No data available from READ_LOCAL.'
+	 print *,' WARNING: No data available from GET_LOCAL_OBS'
 	 return
 c
 	 end

@@ -72,18 +72,48 @@ c            user to enter the run time.
 c
 c******************************************************************************
 c
+        character*200 path_to_metar
+        character*200 path_to_local_data
+        character*200 path_to_buoy_data
+        character*8   metar_format
+
         include 'lapsparms.cmn'
         call get_laps_config('nest7grid',istatus)
 	if (istatus .ne. 1) then
            write (6,*) 'Error getting horizontal domain dimensions'
 	   stop
 	endif
-        call obs_driver_sub(NX_L_CMN,NY_L_CMN,maxstations_cmn,
-     &                      maxobs_cmn,laps_cycle_time_cmn)
+
+        call get_obs_driver_parms(
+     1                            path_to_metar
+     1                           ,path_to_local_data
+     1                           ,path_to_buoy_data
+     1                           ,metar_format
+     1                           ,minutes_to_wait_for_metars
+     1                           ,maxsta
+     1                           ,istatus)
+        if(istatus .ne. 1)stop
+
+        call obs_driver_sub(NX_L_CMN,NY_L_CMN
+     1                           ,maxobs_cmn,laps_cycle_time_cmn
+     1                           ,path_to_metar
+     1                           ,path_to_local_data
+     1                           ,path_to_buoy_data
+     1                           ,metar_format
+     1                           ,minutes_to_wait_for_metars
+     1                           ,maxsta
+     1                           ,istatus)
 
         end
 
-        subroutine obs_driver_sub(ni,nj,maxsta,maxobs,laps_cycle_time)
+        subroutine obs_driver_sub(ni,nj,maxobs,laps_cycle_time
+     1                           ,path_to_metar
+     1                           ,path_to_local_data
+     1                           ,path_to_buoy_data
+     1                           ,metar_format
+     1                           ,minutes_to_wait_for_metars
+     1                           ,maxsta
+     1                           ,istatus)
 c        
         include 'surface_obs.inc'
         integer ni, nj, maxsta, maxobs 
@@ -151,15 +181,6 @@ c
 	   i4time = i4time / laps_cycle_time * laps_cycle_time
 	   call cv_i4tim_asc_lp(i4time, atime, istatus) !find the atime
 	endif
-
-        call get_obs_driver_parms(path_to_metar
-     1                           ,path_to_local_data
-     1                           ,path_to_buoy_data
-     1                           ,metar_format
-     1                           ,minutes_to_wait_for_metars
-     1                           ,istatus)
-        if(istatus .ne. 1)stop
-
 c
 	call get_directory('lso',outfile,len)
 	outfile = outfile(1:len)//filename9(1:9)//'.lso'
@@ -531,6 +552,7 @@ c
      1                         ,path_to_buoy_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
+     1                         ,maxsta
      1                         ,istatus)
 
        character*200 path_to_metar
@@ -544,6 +566,7 @@ c
      1                         ,path_to_buoy_data
      1                         ,metar_format
      1                         ,minutes_to_wait_for_metars
+     1                         ,maxsta
  
        character*150 static_dir,filename
  

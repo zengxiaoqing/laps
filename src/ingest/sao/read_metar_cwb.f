@@ -1,4 +1,44 @@
-      subroutine read_metar_cwb( 
+      program    read_metar
+
+      integer maxSkyCover, recNum
+      real badflag
+      parameter (recNum=120,maxSkyCover=10)
+      parameter (badflag=-9999.)
+ 
+      character*6 autoStationType(recNum)
+      character*25 presWeather(recNum)
+      character*6 reportType(recNum)
+      character*8 skyCover( maxSkyCover, recNum)
+      character*5 stationName(recNum)
+      integer*4   pressChangeChar(recNum), wmoId(recNum)
+
+      double precision timeObs(recNum)
+
+      real*4 altimeter(recNum), dewpoint(recNum), dpFromTenths(recNum)
+      real*4 elevation(recNum), latitude(recNum), longitude(recNum)
+      real*4 maxTemp24Hour(recNum), minTemp24Hour(recNum)
+      real*4 precip1Hour(recNum), precip24Hour(recNum)
+      real*4 precip3Hour(recNum), precip6Hour(recNum)
+      real*4 pressChange3Hour(recNum), seaLevelPress(recNum)
+      real*4 skyLayerBase( maxSkyCover, recNum), snowCover(recNum)
+      real*4 tempFromTenths(recNum), temperature(recNum)
+      real*4 visibility(recNum), windDir(recNum), windGust(recNum)
+      real*4 windSpeed(recNum)
+
+      character*17  filename
+      filename="metar00020708.dat"
+      call read_metar_cwb( filename, maxSkyCover, recNum, altimeter,
+     &     autoStationType, dewpoint, dpFromTenths, elevation,
+     &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
+     &     precip1Hour, precip24Hour, precip3Hour, precip6Hour,
+     &     presWeather, pressChange3Hour, pressChangeChar,
+     &     reportType, seaLevelPress, skyCover, skyLayerBase,
+     &     snowCover, stationName, tempFromTenths, temperature,
+     &     timeObs, visibility, windDir, windGust, windSpeed, wmoId,
+     &     badflag, istatus )
+      end
+
+      subroutine read_metar_cwb(
      &     filename, maxSkyCover, recNum, altimeter,
      &     autoStationType, dewpoint, dpFromTenths, elevation,
      &     latitude, longitude, maxTemp24Hour, minTemp24Hour,
@@ -11,13 +51,13 @@
 
       implicit none
 
-      integer maxSkyCover, recNum
- 
-      character*6  autoStationType(recNum)
-      character*25 presWeather(recNum)
-      character*6  reportType(recNum)
-      character*8  skyCover( maxSkyCover, recNum)
-      character*5  stationName(recNum)
+      integer  maxSkyCover, recNum
+
+      character*6   autoStationType(recNum)
+      character*25  presWeather(recNum)
+      character*6   reportType(recNum)
+      character*8   skyCover( maxSkyCover, recNum)
+      character*5   stationName(recNum)
 
       integer  pressChangeChar(recNum), wmoId(recNum)
       integer  istatus
@@ -36,8 +76,8 @@
       real  windSpeed(recNum)
       real  badflag
 
-      integer recNumm
-      parameter ( recNumm=150 )
+      integer   recNumm
+      parameter ( recNumm=200 )
 
       integer windSpeedQua(recNumm), windGustQua(recNumm)
       integer temperatureQua(recNumm), dewpointQua(recNumm)
@@ -45,15 +85,27 @@
       integer i, j, n, i4time
 
       character*(*) filename
-      character*2  yy(recNumm), m1(recNumm), dd(recNumm)
-      character*2  hh(recNumm), m2(recNumm)
-      character*10 time(recNumm)
-      character*9  a10_to_a9
+      character*2   yy(recNumm), m1(recNumm), dd(recNumm)
+      character*2   hh(recNumm), m2(recNumm)
+      character*10  time(recNumm)
+      character*9   a10_to_a9
+
+      integer    stnNum, len_dir
+      parameter  ( stnNum=4503 )
+
+      character*4  stn(stnNum)
+      real         stnElevation(stnNum)
+
+      character*100  stn_directory
+      character*100  stn_filename
 
       istatus= 0
 
       open ( 1, file=filename, status='old', err=1000 )
-      
+      call get_directory ( 'static', stn_directory, len_dir )
+      stn_filename= stn_directory(1:len_dir) // 'metarstn.dat'
+      open ( 2, file=stn_filename, status='old', err=1000 )
+
       istatus= 1
 
       n= 0
@@ -70,29 +122,38 @@
 10    format( 2a2, a4, 2f5.2, 2f5.0, i1, f5.0, i1, 2x, f5.0, 5x, a2,
      *        10(a3,f5.0), 3(f5.0,i1), 10x, f5.3, 12x, 3a2 )
 
+c         -------       read the elevations of all stations      -------
+99    read (2,*)
+      read (2,*)
+      read (2,'(a4,11x,f4.0)') ( stn(j), stnElevation(j), j=1,stnNum )
+
+      do 20 j= 1,n
+      do 20 i= 1,stnNum
+20       if ( stationName(j) .eq. stn(i) )  elevation(j)=stnElevation(i)
+
 c      ----------       examing data quality and changing units       ---------
-99    do j= 1,n
+      do j= 1,n
 
          if ( windSpeedQua(j) .ne. 1 )  windSpeed(j)= badflag
          if ( windGustQua(j) .ne. 1 )  windGust(j)= badflag
          if ( visibility(j) .eq. -9999. )  visibility(j)= badflag
-         if ( precip1Hour(j) .eq. -9.999 )  precip1Hour(j)= 0.
+         if ( precip1Hour(j) .eq. -9.999 )  precip1Hour(j)= badflag
          if ( presWeather(j) .eq. '-9' )  presWeather(j)= '  '
 
          if ( temperatureQua(j) .eq. 1 )  then
-               temperature(j)= temperature(j) +273.15
+               temperature(j)= temperature(j) +273.15  ! degC -> degK
             else
                temperature(j)= badflag
          endif
 
          if ( dewpointQua(j) .eq. 1 )  then
-               dewpoint(j)= dewpoint(j) +273.15
+               dewpoint(j)= dewpoint(j) +273.15        ! degC -> degK
             else
                dewpoint(j)= badflag
          endif
 
          if ( altimeterQua(j) .eq. 1 )  then
-               altimeter(j)= altimeter(j) *100
+               altimeter(j)= altimeter(j) *100         ! mb -> pascal
             else
                altimeter(j)= badflag
          endif
@@ -102,30 +163,31 @@ c      ----------       examing data quality and changing units       ---------
          if ( dd(j)(1:1) .eq. ' ' )  dd(j)= '0'//dd(j)(2:2)
          time(j)= yy(j)//m1(j)//dd(j)//hh(j)//m2(j)
          call cv_asc_i4time( a10_to_a9(time(j),istatus), i4time )
-         timeObs(j)= dble( i4time )
+         timeObs(j)= dble( i4time )                    ! seconds since 1960
 
       enddo
 
-      do 20 j= 1,n
-      do 20 i= 1,maxSkyCover
+      do 30 j= 1,n
+      do 30 i= 1,maxSkyCover
          if ( skyCover(i,j) .eq. '-99' )  skyCover(i,j)= '   '
          if ( skyLayerBase(i,j) .eq. -9999. )  then
                skyLayerBase(i,j)= badflag
             else
-               skyLayerBase(i,j)= skyLayerBase(i,j) *30
+               skyLayerBase(i,j)= skyLayerBase(i,j) *30    ! unit: m
          endif
-20    continue
+30    continue
 
+c               -------      dealing with lacking of data      -------
       do j= 1,n
          autoStationType(j)= "UNK"
          reportType(j)= "METAR"
 
-         pressChangeChar(j)= int(badflag) 
-         wmoId(j)= int(badflag) 
+         pressChangeChar(j)= int(badflag)
+         wmoId(j)= int(badflag)
 
          dpFromTenths(j)= badflag
          maxTemp24Hour(j)= badflag
-         minTemp24Hour(j)= badflag  
+         minTemp24Hour(j)= badflag
          precip24Hour(j)= badflag
          precip3Hour(j)= badflag
          precip6Hour(j)= badflag
@@ -133,26 +195,26 @@ c      ----------       examing data quality and changing units       ---------
          seaLevelPress(j)= badflag
          snowCover(j)= badflag
          tempFromTenths(j)= badflag
-         wmoId(j)= badflag
       enddo
       go to 1000
 
 999   do j= 1,n
          write(6,*)
-     *   hh(j), m2(j), stationName(j), latitude(j), longitude(j), 
+     *   hh(j), m2(j), stationName(j), latitude(j), longitude(j),
      *   windDir(j), windSpeed(j), windSpeedQua(j),
      *   windGust(j), windGustQua(j), visibility(j), presWeather(j),
      *   ( skyCover(i,j), skyLayerBase(i,j), i=1,10), temperature(j),
      *   temperatureQua(j), dewpoint(j), dewpointQua(j), altimeter(j),
      *   altimeterQua(j), precip1Hour(j), yy(j), m1(j), dd(j), hh(j),
-     *   m2(j), time(j), timeObs(j)
+     *   m2(j), time(j), timeObs(j), elevation(j)
       enddo
       write(6,*)
      *      autoStationType, reportType,
-     *      pressChangeChar, wmoId,    
+     *      pressChangeChar, wmoId,
      *      dpFromTenths, maxTemp24Hour, minTemp24Hour,
      *      precip24Hour, precip3Hour, precip6Hour, pressChange3Hour,
      *      seaLevelPress, snowCover, tempFromTenths, wmoId
 
 1000  return
       end
+

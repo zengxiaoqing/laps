@@ -4,6 +4,7 @@
  path_to_buoy_data='/data/fxa/point/maritime/netcdf/',
  metar_format='FSL',
  minutes_to_wait_for_metars=10,
+ maxsta=6000,
  /
 
 c Obs Driver ingest (obs_driver.exe)
@@ -17,3 +18,5 @@ c
 c 'metar_format' - Format of metar data. Valid values are 'FSL' and 'CWB'
 c
 c 'minutes_to_wait_for_metars' - Especially helpful on WFO
+c
+c 'maxsta' - max number of surface stations in raw data

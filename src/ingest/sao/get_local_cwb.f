@@ -7,7 +7,7 @@ c assumptions there, and have tried to document in the
 c code where they are.  
 c
 c
-        subroutine get_local_cwb(maxobs,maxsta,infile,
+        subroutine get_local_cwb(maxobs,maxsta,i4time,infile,
      &                 eastg,westg,anorthg,southg,
      &                 lat,lon,ni,nj,grid_spacing,
      &                 nn,n_local_g,n_local_b,stations,
@@ -16,7 +16,7 @@ c
      &                 store_3,store_3ea,store_4,store_4ea,
      &                 store_5,store_5ea,store_6,store_6ea,
      &                 store_7,store_cldht,store_cldamt,
-     &                 provider,jstatus)
+     &                 provider, laps_cycle_time, jstatus)
 c
 c======================================================================
 c
@@ -102,7 +102,8 @@ c.....  Get the mesonet metadata (station information).
 c
         call read_tmeso_stntbl(infile,maxsta,badflag,stn_master,
      &                         lat_master,lon_master,elev_master,
-     &                         priority,num_master)
+     &                         priority,num_master,istatus)
+	if(istatus .ne. 1) go to 990
 c
 c.....  Get the mesonet data.
 c
@@ -406,7 +407,7 @@ c
 c
 c
         subroutine read_tmeso_stntbl(infile,maxsta,badflag,stn,
-     &                               lat,lon,elev,prior,num)
+     &                               lat,lon,elev,prior,num,istatus)
 c
 c======================================================================
 c
@@ -469,11 +470,13 @@ c
 c
         print *,' Found ', num
      1         , ' mesonet stations in the station table.' 
+        istatus = 1
         return
 c     
  990    continue
 c
-        print *,' ** ERROR reading mesonet station information.'
+        print *,' ** ERROR reading mesonet station table'
+        istatus = 0
         return
 c     
 	end

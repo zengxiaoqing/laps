@@ -523,7 +523,9 @@ c
 	    reptype(nn)(1:len) = reptype_in(i)(1:len) ! report type
 	 endif
 c
-	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+ 	 weather(nn)(1:25) = wx(i)(1:25)        ! present weather
+         call filter_string(weather(nn))
+
 	 provider(nn)(1:11) = 'NWS        '     ! data provider (all from NWS)
 	 wmoid(nn) = wmoid_in(i)
 c
