@@ -45,8 +45,8 @@ c
        if(istatus.eq.1)then
          write(*,*)'LAPS Parameters obtained'
        else
-          write(*,*)'IStatus = ',IStatus,'Error - Get_LAPS_Config'
-          write(*,*)'Terminating LAPS-VRC. WSI remapping'
+          write(*,*)'IStatus = ',IStatus,' Error - Get_laps_config'
+          write(*,*)'Terminating LAPS-Satellite Sounder Ingest.'
           stop
        end if
        call ln3_driver_sub(NX_L_CMN,NY_L_CMN,PATH_TO_WSI_3D_RADAR_CMN)
