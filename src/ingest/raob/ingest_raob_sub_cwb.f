@@ -236,7 +236,7 @@ c      format f15.0 in snd files
      1                    ,loopNum,levelNum,inNum             ! I
      1                    ,wmoId                              ! I
      1                    ,latitude_out,longitude_out,staelev ! I
-     1                    ,c5_staid,a9time_ob,c8_obstype      ! I
+     1                    ,c5_staid,a9time_out,c8_obstype     ! I
      1                    ,layerNum                           ! I
      1                    ,height                             ! I
      1                    ,pressure                           ! I
