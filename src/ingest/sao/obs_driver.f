@@ -533,6 +533,12 @@ c       Call subroutine to blacklist the stations in the "store" arrays
      1                            ,store_4,store_5,store_6
      1                            ,store_7,badflag)
 
+c       Call subroutine to check for duplicate obs
+        call check_for_dupes(      maxsta,n_obs_b,stations
+     1                            ,store_1,store_2,store_3
+     1                            ,store_4,store_5,store_6
+     1                            ,store_7,badflag)
+
 c
 !       Final QC check 
         call get_ibadflag(ibadflag,istatus)
@@ -827,6 +833,78 @@ c
 	print *,' '
 	print *,'  Done with blacklisting.'
  505	continue
+
+        return
+        end
+
+
+        subroutine check_for_dupes(maxsta,n_obs_b,stations
+     1                            ,store_1,store_2,store_3
+     1                            ,store_4,store_5,store_6
+     1                            ,store_7,badflag)
+
+	character  stations(maxsta)*20
+        logical l_identical_a(maxsta),l_identical
+
+	real    store_1(maxsta,4), 
+     &          store_2(maxsta,3), 
+     &          store_3(maxsta,4), 
+     &          store_4(maxsta,5), 
+     &          store_5(maxsta,4), 
+     &          store_6(maxsta,5), 
+     &          store_7(maxsta,3)
+
+        write(6,*)
+        write(6,*)' Checking for identical stations...'
+
+        l_identical_a = .false.
+
+        do i=1,n_obs_b-1 ! loop over all stations
+            if(.not. l_identical_a(i))then
+	        do j=i+1,n_obs_b ! loop over all stations
+                    l_identical = .true.
+
+                    do k = 1,4
+                        if(store_1(i,k) .ne. store_1(j,k)) then ! different sta
+                            l_identical = .false.
+                        endif
+	            enddo ! k
+
+                    if(l_identical)then
+                        write(6,*)' Location/Time are identical: '
+     1                       ,i,stations(i),j,stations(j)
+
+                        if(store_2(i,1) .eq. store_2(j,1))then
+                            write(6,*)' Temp is also identical'
+     1                               ,store_2(i,1),store_2(j,1)
+                        else
+                            write(6,*)' Temp is not identical'
+     1                               ,store_2(i,1),store_2(j,1)
+                            l_identical = .false.
+                        endif
+                    endif ! l_identical
+
+                    if(l_identical)then
+                        l_identical_a(j) = .true.
+                    endif
+
+	        enddo ! j
+            endif ! not already flagged as identical
+
+	enddo ! i
+
+        n_identical = 0
+
+        do i=1,n_obs_b ! loop over all stations
+            if(l_identical_a(i))then
+                n_identical = n_identical + 1
+                write(6,*)' Identical station ',i
+            endif
+        enddo ! i
+
+	print *,' '
+	print *,'  Duplicate check: # of identical stations = '
+     1         ,n_identical     
 
         return
         end
