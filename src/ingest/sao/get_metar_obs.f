@@ -604,6 +604,9 @@ c
 	if(mslp(i) .ne. badflag) mslp(i) = mslp(i) * 0.01   !Pa to mb
         call sfc_climo_qc_r('mslp_mb',mslp(i))
 
+	if(stnp(i) .ne. badflag) stnp(i) = stnp(i) * 0.01   !Pa to mb
+        call sfc_climo_qc_r('stnp_mb',stnp(i))
+
 	if(dp(i)   .ne. badflag)   dp(i) =   dp(i) * 0.01   !Pa to mb
 c
 c..... Visibility
@@ -836,6 +839,10 @@ c
         if(c_var .eq. 'alt_mb' .or. c_var .eq. 'mslp_mb')then
             if(arg .gt. 1100.)arg = badflag
             if(arg .lt.  850.)arg = badflag
+
+        elseif(c_var .eq. 'stnp_mb')then
+            if(arg .gt. 1100.)arg = badflag
+            if(arg .lt.  400.)arg = badflag
 
         elseif(c_var .eq. 'alt_pa' .or. c_var .eq. 'mslp_pa')then
             if(arg .gt. 110000.)arg = badflag
