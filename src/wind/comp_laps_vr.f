@@ -99,7 +99,7 @@ cdis
 
         write(6,102)cgrid,nobs,bias,rms
  102    format(' BIAS/RMS between radial velocities & ',a,' = '
-     1        ,i4,' . . ',f6.1,' . . ',f6.1)
+     1        ,i5,' . . ',f6.1,' . . ',f6.1)
 
         return
 
