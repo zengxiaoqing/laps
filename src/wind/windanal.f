@@ -759,6 +759,7 @@ csms$serial end
                   ncnt_total = n_qc_total_good
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
+                      obs_radar(i)%i4time = i4time
                       obs_barnes(ncnt_total) = obs_radar(i)
                       obs_barnes(ncnt_total)%type = 'radar'
                   enddo ! i
@@ -866,6 +867,7 @@ csms$serial end
                   ncnt_total = n_qc_total_good
                   do i = 1,ncnt_radar
                       ncnt_total = ncnt_total + 1
+                      obs_radar(i)%i4time = i4time
                       obs_barnes(ncnt_total) = obs_radar(i)
                       obs_barnes(ncnt_total)%type = 'radar'
                   enddo ! i
@@ -985,6 +987,7 @@ csms$insert      print *, 'got to 10 processor=',me
 
               do i = 1,ncnt_radar
                   ncnt_total = ncnt_total + 1
+                  obs_radar(i)%i4time = i4time
                   obs_barnes(ncnt_total) = obs_radar(i)
                   obs_barnes(ncnt_total)%type = 'radar'
               enddo ! i
@@ -1176,12 +1179,17 @@ csms$ignore begin
       write(6,*)
       write(6,*)' subroutine get_inst_err2...'
 
+      call get_systime_i4(i4time_sys,istatus)
+
       n_obs_total = 0
       wt_p_inv_total = 0.
 
       do i = 1,nobs_barnes
           n_obs_total = n_obs_total + 1
-          wt_p_inv_total = wt_p_inv_total + 1.0 / obs_barnes(i)%weight       
+          call get_time_wt(i4time_sys,obs_barnes(i)%i4time,time_wt
+     1                    ,istatus)
+          wt_p_inv_total = wt_p_inv_total + 1.0 
+     1                   / (obs_barnes(i)%weight * time_wt)
       enddo ! i
 
       if(n_obs_total .gt. 0)then
