@@ -8,17 +8,11 @@ LAPSROOT=../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  \
-           $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
-           $(LAPSROOT)/src/lib/lapack/liblapack.a  \
-           $(LAPSROOT)/src/lib/blas/libblas.a  \
-           $(LAPSROOT)/src/lib/util/libutil.a  \
+LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  \
-             $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(LAPSROOT)/src/lib/lapack/libdebuglapack.a  \
-             $(LAPSROOT)/src/lib/blas/libdebugblas.a  \
-             $(LAPSROOT)/src/lib/util/libdebugutil.a  \
+
+DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a 
+
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe

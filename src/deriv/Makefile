@@ -11,13 +11,11 @@ include $(LAPSROOT)/src/include/makefile.inc
 LAPSLIBS = $(LAPSROOT)/src/lib/cloud/libcloud.a  \
            $(LAPSROOT)/src/lib/liblaps.a  \
            $(LAPSROOT)/src/lib/mthermo/libmthermo.a  \
-           $(LAPSROOT)/src/lib/goeslib/libgoeslib.a  \
            $(LAPSROOT)/src/lib/util/libutil.a  
 
 DBLAPSLIBS = $(LAPSROOT)/src/lib/cloud/libdebugcloud.a  \
              $(LAPSROOT)/src/lib/libdebuglaps.a  \
              $(LAPSROOT)/src/lib/mthermo/libdebugmthermo.a  \
-             $(LAPSROOT)/src/lib/goeslib/libdebuggoeslib.a  \
              $(LAPSROOT)/src/lib/util/libdebugutil.a 
 
 .SUFFIXES:

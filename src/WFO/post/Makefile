@@ -8,9 +8,9 @@ LAPSROOT=../../..
 
 include $(LAPSROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(LAPSROOT)/src/lib/liblaps.a  
+LAPSLIBS = 
 
-DBLAPSLIBS = $(LAPSROOT)/src/lib/libdebuglaps.a  
+DBLAPSLIBS = 
 
 .SUFFIXES:
 .SUFFIXES: .o .c .f .a .exe

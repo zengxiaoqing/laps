@@ -11,10 +11,14 @@
 #endif
 
 #ifdef FORTRANUNDERSCORE
+#define write_qc write_qc_
+#define nstrncpy nstrncpy_
 #endif
 #ifdef FORTRANCAPS
+#define write_qc WRITE_QC
 #endif
 #ifdef FORTRANDOUBLEUNDERSCORE
+#define write_qc write_qc__
 #endif
 
 #define SUCCESS 1
