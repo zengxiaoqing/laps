@@ -651,8 +651,8 @@ sub restorefiles
                        opendir(SUBDIR, "$LAPS_DATA_ROOT/static\_save/$_");
                        @subflist = grep !/^\.\.?$/, readdir SUBDIR;
                        closedir SUBDIR;
-                       if(!-e "LAPS_DATA_ROOT/static/$_/$subf"){
-                          mkdir "LAPS_DATA_ROOT/static/$_/$subf",0777 or die "cant make directory LAPS_DATA_ROOT/static/$_/$subf";
+                       if(!-e "$LAPS_DATA_ROOT/static/$_/$subf"){
+                          mkdir "$LAPS_DATA_ROOT/static/$_/$subf",0777 or die "cant make directory $LAPS_DATA_ROOT/static/$_/$subf";
                        }
                        foreach $subf (@subflist){
                                `cp $LAPS_DATA_ROOT/static\_save/$_/$subf $LAPS_DATA_ROOT/static/$_/$subf`;
