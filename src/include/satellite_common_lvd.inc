@@ -8,13 +8,6 @@
       integer i_msng_sat_flag(maxtype,maxsat)
       integer n_images
 
-      integer image_width_ir(maxtype,maxsat)
-      integer image_depth_ir(maxtype,maxsat)
-      integer image_width_vis(maxtype,maxsat)
-      integer image_depth_vis(maxtype,maxsat)
-      integer image_width_wv(maxtype,maxsat)
-      integer image_depth_wv(maxtype,maxsat)
-
       character c_sat_id(maxsat)*6
       character c_sat_types(maxtype,maxsat)*3
       character c_channel_types(maxchannel,maxtype,maxsat)*3
@@ -58,7 +51,7 @@
       integer i_nwpix_vis(maxtype,maxsat)
       integer i_nwpix_ir(maxtype,maxsat)
       integer i_nwpix_wv(maxtype,maxsat)
-      integer imc
+      integer imc(maxsat)
 
       real*4  r_resolution_x_vis(maxtype,maxsat)
       real*4  r_resolution_y_vis(maxtype,maxsat)
@@ -67,14 +60,10 @@
       real*4  r_resolution_x_wv(maxtype,maxsat)
       real*4  r_resolution_y_wv(maxtype,maxsat)
 
-
       common /lvd_namelist_cmn/path_to_raw_sat,
      +iflag_lvd_common,isats,itypes,ichannels,
      +i_delta_sat_t_sec,i_msng_sat_flag,
      +sat_range_m,n_images,
-     +image_width_ir,image_depth_ir,
-     +image_width_vis,image_depth_vis,
-     +image_width_wv,image_depth_wv,
      +c_sat_id, c_sat_types,c_channel_types,
      +r_sat_sub_lat, r_sat_sub_lon,
      +r_la1, r_lo1,
