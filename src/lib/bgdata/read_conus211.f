@@ -1,17 +1,17 @@
-      subroutine get_sbn_model_id(filename,model,ivaltimes,ntbg)
+      subroutine get_sbn_model_id(filename,model,ivaltimes,mtbg)
       implicit none
       include 'netcdf.inc'
       character*(*) model, filename
       integer ivaltimes(*)
-      integer nf_fid, nf_vid, nf_status, ntbg
-
+      integer nf_fid, nf_vid, nf_status, ntbg, mtbg
+      common /conus211/ ntbg
 C
 C  Open netcdf File for reading
 C
       nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'NF_OPEN rucsbn'
+        print *,'NF_OPEN ', filename
       endif
 
       nf_status=NF_INQ_UNLIMDIM(nf_fid,nf_vid)
@@ -25,7 +25,7 @@ C
       if(nf_status.ne.NF_NOERR) then
          print *, NF_STRERROR(nf_status)
       endif
-
+      mtbg=ntbg
 
       nf_status = NF_INQ_VARID(nf_fid,'model',nf_vid)
       if(nf_status.ne.NF_NOERR) then
@@ -59,124 +59,71 @@ C
       return
       end
 
-      subroutine get_sbn_dims
+      subroutine get_sbn_dims(path,fname,nxbg,nybg,nzbg,mtbg)
+      implicit none
+      include 'netcdf.inc'
+      integer slen, nf_status,nf_fid, i, istat
+      character*(*) path, fname
+      character*100 cdfname
+      integer ncid,nxbg,nybg,nzbg(5),ntbg , mtbg
+      integer ntp, nvdim, nvs, lenstr, ndsize
+      character*31 dummy
+      integer id_fields(5), vdims(10)
+      data id_fields/1,4,7,10,13/
+      common /conus211/ntbg
+      character*13 fname9_to_wfo_fname13, fname13
 C
 C  Fill all dimension values
 C
 C
 C  Open netcdf File for reading
 C
-      nf_status = NF_OPEN(filename,NF_NOWRITE,nf_fid)
+C
+C  Open netcdf File for reading
+C
+      fname13=fname9_to_wfo_fname13(fname)
+
+      call s_len(path,slen)
+      cdfname=path(1:slen)//'/'//fname13
+
+
+
+      nf_status = NF_OPEN(cdfname,NF_NOWRITE,nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN rucsbn'
       endif
 
-C
-C Get size of levels_19
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'levels_19',nf_vid)
+      mtbg=ntbg
+
+cc      istat=NF_INQ_VARID(ncid,'valtimeMINUSreftime            ',i)
+cc      istat=NF_GET_VARA_INT(ncid,i,1,ntbg,ivaltimes)
+cc      print *, ivaltimes
+      do i=1,5
+        call NCVINQ(nf_fid,id_fields(i),dummy,ntp,nvdim,vdims,nvs,istat)
+
+        call NCDINQ(nf_fid,vdims(1),dummy,nxbg,nf_status)
+c        print *,'ndsize = ', ndsize
+        call NCDINQ(nf_fid,vdims(2),dummy,nybg,nf_status)
+c        print *,'ndsize = ', ndsize
+        call NCDINQ(nf_fid,vdims(3),dummy,nzbg(i),nf_status)
+c        print *,'ndsize = ', ndsize
+cc        call ncdinq(nf_fid,vdims(4),dummy,ntbg,nf_status)
+c        print *,'ndsize = ', ndsize
+        
+c        print*, 'ntp = ',ntp
+c        print*, 'nvdim = ',nvdim
+c        print*, 'vdims = ',vdims
+c        print*, 'nvs = ',nvs
+      enddo
+c      stop
+      nf_status = nf_close(nf_fid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
-        print *,'dim levels_19'
+        print *,'nf_close'
       endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,levels_19)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_19'
-      endif
-C
-C Get size of levels_35
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'levels_35',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_35'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,levels_35)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_35'
-      endif
-C
-C Get size of levels_38
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'levels_38',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_38'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,levels_38)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_38'
-      endif
-C
-C Get size of levels_39
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'levels_39',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_39'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,levels_39)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_39'
-      endif
-C
-C Get size of levels_40
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'levels_40',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_40'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,levels_40)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim levels_40'
-      endif
-C
-C Get size of record
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'record',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim record'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,record)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim record'
-      endif
-C
-C Get size of x
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'x',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim x'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,x)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim x'
-      endif
-C
-C Get size of y
-C
-      nf_status = NF_INQ_DIMID(nf_fid,'y',nf_vid)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim y'
-      endif
-      nf_status = NF_INQ_DIMLEN(nf_fid,nf_vid,y)
-      if(nf_status.ne.NF_NOERR) then
-        print *, NF_STRERROR(nf_status)
-        print *,'dim y'
-      endif
-      return
+      return 
+
       end
 C
 C
@@ -271,7 +218,7 @@ C
       rcode = NF_OPEN(cdfname,NF_NOWRITE,ncid)
       if(rcode.ne.NF_NOERR) then
          print *, NF_STRERROR(rcode)
-         print *,'NF_OPEN rucsbn'
+         print *,'NF_OPEN ',cdfname
       endif
 
 c

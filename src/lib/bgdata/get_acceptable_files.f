@@ -8,7 +8,7 @@
      +     ,rejected_files(rejected_cnt)
       integer oldest_forecast, bg_files, forecast_length, i, j, k
      + ,rejected_cnt
-      integer valtimes(20)
+      integer ivaltimes(20), ntbg
       character*4   af
       character*100 bg_names(max_files), fullname
       integer nf_status, nf_vid, nf_fid, istatus
@@ -57,7 +57,7 @@ C
                   if (bgmodel .eq. 4) then
                      fname=wfo_fname13_to_fname9(names(i)(j+1:j+13))
                      call get_sbn_model_id(names(i),cmodel,ivaltimes
-     +                    ,ntbg)
+     .               ,ntbg)
 c     print *,fname, ntbg
 c                   print*, names(i)(j+1:j+13)
 c                   print*,cmodel,ivaltimes
