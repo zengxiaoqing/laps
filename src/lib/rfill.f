@@ -390,6 +390,13 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
         enddo ! j
         enddo ! i
 
+!       Fill weight_a array (we can make this a Barnes weight later)
+        do iw = -ngrids_max,+ngrids_max
+        do jw = -ngrids_max,+ngrids_max
+             weight_a(iw,jw) = 1.0
+        enddo ! jw
+        enddo ! iw
+
         do k = 1,nk
             call move(ref_3d(1,1,k),ref_2d_buf,ni,nj) ! Initialize Buffer Array
             n_add_lvl = 0
@@ -409,7 +416,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     ref_sum = 0.
                     wt_sum = 0.
 
-                    weight = 1.0
+!                   weight = 1.0
 
                     iil = max(i-ngrids(i,j),1)
                     jjl = max(j-ngrids(i,j),1)
@@ -417,7 +424,12 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                     jjh = min(j+ngrids(i,j),nj)
 
                     do ii = iil,iih
-                    do jj = jjl,jjh
+                      iw = ii-i
+                      do jj = jjl,jjh
+                        jw = jj-j
+
+                        weight = weight_a(iw,jw)
+
                         n_neighbors_pot = n_neighbors_pot + 1
                         if(ref_3d(ii,jj,k) .ne. r_missing_data   )then
                             n_neighbors = n_neighbors + 1
@@ -430,7 +442,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
                             endif
                         endif
 
-                    enddo ! jj
+                      enddo ! jj
                     enddo ! ii
 
                 endif
