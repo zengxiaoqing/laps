@@ -1013,7 +1013,9 @@ Initiation: Completion of volume scan
 Inputs:
 	Wideband Radar Data (reflectivity and velocity in polar NetCDF 
         format - one file per tilt). Note: narrowband data can be used if it is
-        converted to the required NetCDF format.
+        converted to the required NetCDF format. A description of how we
+        obtain this raw data is at 
+        'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_raw.html'.
 
 Outputs (LAPS intermediate files):
 <pre>
@@ -1034,7 +1036,8 @@ potentially by cloud and precip accumulation analyses.
 When running the remapper, files such as v01, v02, vrc, etc. are produced 
 depending on which radar is being used and on the input parameters. 
 A further description of how the remapper software functions may be found on 
-the World Wide Web at 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper.html'.
+the World Wide Web at 
+'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_laps.html'.
 
 ------ 3.1.4 -------------------VRC--------------------------------------------
 <pre>
