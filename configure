@@ -919,7 +919,7 @@ then
 fi
 
 
-for ac_prog in perl5 perl
+for ac_prog in perl perl5
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2993,6 +2993,7 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/wfo-relocalization.pl
           etc/wind3d.pl
           etc/window_domain_rt.pl
+          etc/wait4lapsprep.pl
           etc/xferData.pl"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
