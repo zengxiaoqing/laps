@@ -50,7 +50,7 @@ C
 !       Steve Albers            1998            Slightly more generic
        
         integer max_files
-        parameter (max_files = 3000)
+        parameter (max_files = 20000)
 
         character*13 asc_time,asc_tim_nearest,asc13_tim_needed
         character*13 cvt_i4time_wfo_fname13
@@ -141,7 +141,7 @@ C       use a directory name only, the ls command can't handle it otherwise.
 C       More generic
 
         integer max_files
-        parameter (max_files = 3000)
+        parameter (max_files = 20000)
 
         character*9 asc_tim_latest
         character*(*) c_filespec                                   ! Input

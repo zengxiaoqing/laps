@@ -38,8 +38,8 @@ cdis
 !       1992         Steve Albers
 !       1996 Feb     Steve Albers  Call read_radar_2dref for radar data
 
-        integer*4 MAX_FILES
-        parameter (MAX_FILES = 3000)
+        integer*4 MAX_RADAR_FILES
+        parameter (MAX_RADAR_FILES = 20000)
 
 !       Input
         real*4 lat(imax,jmax)
@@ -53,9 +53,9 @@ cdis
         real*4 dbz_2d(imax,jmax)
 
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
-        integer*4 i4time_file(MAX_FILES)
-        real*4 frac(MAX_FILES)
-        character c_fnames(MAX_FILES)*80
+        integer*4 i4time_file(MAX_RADAR_FILES)
+        real*4 frac(MAX_RADAR_FILES)
+        character c_fnames(MAX_RADAR_FILES)*80
 
         character*255 c255_radar_filename
         character*255 c_filespec
@@ -89,7 +89,7 @@ c       rmax_so_far = 0.
         call Get_file_names(c_filespec,
      1                      i_nbr_files_ret,
      1                      c_fnames,
-     1                      max_files,
+     1                      max_radar_files,
      1                      i_status )
 
         min_diff = 1999999999
@@ -108,6 +108,7 @@ c       rmax_so_far = 0.
         enddo
 
         call get_fracs_radar(i4time_beg,i4time_end,max_radar_gap
+     1                      ,MAX_RADAR_FILES
      1                      ,i_nbr_files_ret
      1                      ,i4time_file,frac,frac_sum,istatus)
 
@@ -198,14 +199,14 @@ c         write(6,*)' Cycle to next file',rmax_so_far
         end
 
         subroutine get_fracs_radar(i4time_beg,i4time_end,max_radar_gap
+     1          ,MAX_RADAR_FILES
      1          ,i_nbr_files_ret,i4time_file,frac,frac_sum,istatus)
 
-        integer*4 MAX_FILES
-        parameter (MAX_FILES = 3000)
+        integer*4 MAX_RADAR_FILES
 
         character*9 asc_tim_9
-        real*4 frac(MAX_FILES)
-        integer*4 i4time_file(MAX_FILES)
+        real*4 frac(MAX_RADAR_FILES)
+        integer*4 i4time_file(MAX_RADAR_FILES)
 
         i4_interval = i4time_end - i4time_beg
 
