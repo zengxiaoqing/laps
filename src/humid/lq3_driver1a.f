@@ -1075,7 +1075,7 @@ c     generate lh3 file (RH true, RH liquid)
       
  24   write(6,*) 'error finding moisture switch file'
       write(6,*) 'check to see it is under'
-      write(6,*) fname(1:len)//'moisture_switch.txt'
+      write(6,*) fname(1:len)//'moisture_switch.nl'
       write(6,*) 'aborting'
       
       return
