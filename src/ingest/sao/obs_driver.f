@@ -58,6 +58,8 @@ c                     08-28-98  Added buoy and LDAD mesonet reads.
 c                     09-04-98  Install as LSO, using new 'ls2' format.
 c                     09-30-98  Housekeeping changes.
 c	              12-03-98  Increase dir_s to 256 characters.
+c                     06-21-99  Pass lat/lon, grid size and grid spacing
+c                                 to get_ routines to calculate box size.
 c
 c       Notes:
 c         1. When run "operationally", 'obs_driver.x' uses the time from
@@ -144,7 +146,7 @@ c
 c
         call get_directory('lso',outfile,len)
 	outfile = outfile(1:len)//filename9(1:9)//'.lso'
-
+cc      outfile = filename9(1:9)//'.lso'
 c
 c.....	Get the LAPS lat/lon and topo data here so we can pass them to the 
 c.....	routines that need them.
@@ -275,6 +277,7 @@ c
 c
         call get_metar_obs(maxobs,maxsta,i4time,data_file_m,
      &                      grid_east,grid_west,grid_north,grid_south,
+     &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_sao_g,n_sao_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
@@ -295,6 +298,7 @@ c
 c
         call get_local_obs(maxobs,maxsta,i4time,data_file_l,
      &                      grid_east,grid_west,grid_north,grid_south,
+     &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_local_g,n_local_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
@@ -316,6 +320,7 @@ cc	data_file_b = '/data/fxa/point/maritime/netcdf/' // filename13
 c
         call get_buoy_obs(maxobs,maxsta,i4time,data_file_b,
      &                      grid_east,grid_west,grid_north,grid_south,
+     &                      lat,lon,ni,nj,grid_spacing,
      &                      nn,n_buoy_g,n_buoy_b,stations,
      &                      reptype,atype,weather,wmoid,
      &                      store_1,store_2,store_2ea,
