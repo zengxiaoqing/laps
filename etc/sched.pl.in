@@ -22,7 +22,7 @@ my @LAPS_EXE = qw(lga.exe systime.exe obs_driver.x
 		  wind.exe 
                   ingest_lrs.exe ingest_blplrs.exe 
                   laps_sfc.x temp.exe 
-                  cloud.exe lq3driver.x deriv.exe accum.exe  
+                  lvd_sat_ingest.exe cloud.exe lq3driver.x deriv.exe accum.exe  
 		  lsm5.exe ingest_lsr_tiros.exe);
 
 my $LAPSROOT=shift || die "LAPS root directory required\n";
