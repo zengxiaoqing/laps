@@ -58,51 +58,73 @@ open(FILE,$filename) or die "Can't open $filename.";
 close FILE;
 print "\nReading from log file $filename\n\n";
 
+# Determine analysis validtime.
+$searchstring = "systime =";
+foreach (@lines) {
+  if (/$searchstring(.*)/) {
+    ($validtime) = split(" ",$1); 
+    last; } 
+}
+print "ANALYSIS VALID TIME (yydddhhmm): $validtime UTC\n\n";
+
 # Determine background model.
 
 $modeltype = "missing";
+
+#Newer way with using 'get_modelfg_3d'
 $searchstring = "Successfully obtained: ";
 foreach (@lines) {
   if (/$searchstring(.*)/) {
     ($modeltime,$modeltype) = split(" ",$1); 
-    last; } }
-if ($modeltype eq "missing") {print "Can't determine model background.\n";}
-print "BACKGROUND FIELDS:  ";
+    last; } 
+}
 
+if ($modeltype eq "missing") {print "Can't determine model background.\n"}
+
+print "BACKGROUND FIELDS:  ";
 if ($modeltype =~ /ram/) {
-  if ($modeltime =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
-    $runtime = $2+0;
-    $fcsthr = $3/100;
-    print "Using $fcsthr hr fcst from local model started at $runtime UTC \n";
-    print "(local model file timestamp = $modeltime)\n"; } } 
-else {
+  $modelid = "local";
+
+} else {
   $bgmodelfile = $filename;
   $bgmodelfile =~ s/$logname/lga/;
-  open(BGMODEL,$bgmodelfile) or die "Can't open $bgmodelfile.";
-  foreach (<BGMODEL>) {
-    if (/cmodel (\w*)/) {$modelid = $1;}
-    if (/Reading - (.*)/) {$pathname = $1; last; close BGMODEL; } 
-    if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } }
-  $basename = $1 if ($pathname =~ /([^\/]*)$/);
+  $modelid = "???";
+  if (open(BGMODEL,$bgmodelfile)) {
+    foreach (<BGMODEL>) {
+#     if (/cmodel (\w*)/) {$modelid = $1;}
+      if (/cmodel: (.*)/)           {(@modelid) = split(" ", $1); $modelid = @modelid[0];}
+      if (/Reading - (.*)/)         {$pathname = $1; last; close BGMODEL; } 
+      if (/reading cdfname\: (.*)/) {$pathname = $1; last; close BGMODEL; } 
+    }
+    $basename = $1 if ($pathname =~ /([^\/]*)$/);
+  }
+
   if ($basename =~ /(\d\d\d\d\d)(\d\d\d\d)(\d\d)(\d\d)/) {
     $runtime = $2/100;
     $fcsthr = $4;
-    print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; } 
-  elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
+#   print "Using $fcsthr hr fcst from $modelid started at $runtime UTC \n"; 
+  } elsif ($basename =~ /(\d\d\d\d)(\d\d)(\d\d)\_(\d\d)(\d\d)/) {
     $runtime = $4;
-    print "Using grids from $modelid started at $runtime UTC \n"; }
-  else {
-    print "$modelid (Sorry -- can't decode model filename)\n"; } }
+#   print "Using grids from $modelid started at $runtime UTC \n"; 
+  }
+
+}
+
+if ($modeltime =~ /(\d\d)(\d\d\d)(\d\d\d\d)(\d\d\d\d)/ ) {
+  $runtime = $3;
+  $fcsthr = $4;
+  print "Using $fcsthr fcst from $modelid model started at $runtime UTC \n"; 
+} 
 
 print "\nSFC temperature analysis was blended in at lower boundary\n";
 
-print "\nQC:\n";
+print "\nQC (Soundings, RASS):\n";
 @greplines = grep /QC/, @lines;
 @greplines = grep /of/, @greplines;
 print "@greplines[0]";
 print "@greplines[1]";
 print "@greplines[2]";
-print "\n";
+print "\nQC (ACARS):\n";
 print "@greplines[3]";
 print "@greplines[4]";
 print "@greplines[5]";
