@@ -259,7 +259,7 @@ c     Generate DbZ Lookup Table (graduated for each tenth of a dbz)
           dbz_to_z_lut(i) = z
       enddo ! i
 
-      call lgate_lut_gen()
+!     call lgate_lut_gen()
 
       write(6,850)
   850 format(' REMAP > Lookup Tables Complete')
