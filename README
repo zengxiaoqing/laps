@@ -22,7 +22,7 @@
          2.2.2 ..................  Running Configure
          2.2.3 ..................  Ingest Software changes
          2.2.4 ..................  Running make
-               2.2.4.1 ............... Creating multiple data domains
+               2.2.4.1 ............... Creating single or multiple data domains
          2.2.5 ..................  Untarring the geography databases
          2.2.6 ..................  Setting Runtime Parameters
          2.2.7 ..................  Running the Localization
