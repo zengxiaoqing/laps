@@ -101,6 +101,7 @@ foreach (@lines) {if (/$searchstring(.*)/) {print "$1\n";}}
 
 # Satellite data
 print "\nSatellite (IR):\n";
+
 @greplines = grep /Returning S8A/, @lines;
 foreach (@greplines) {
   ($junk,@rest) = split;
@@ -128,6 +129,17 @@ print "$greplines[0]";
 print " $greplines[0]";
 print "\n";
 
+print "Satellite (3.9 micron - used for nighttime stratus):\n";
+@greplines = grep /Returning S3A/, @lines;
+foreach (@greplines) {
+  ($junk,@rest) = split;
+  print "  Using @rest ";
+  print "\n";
+}
+@greplines = grep /No S3A/, @lines;
+print " $greplines[0]";
+print "\n";
+
 # Radar data
 print "Radar:\n";
 @greplines = grep /Read radar/, @lines;
@@ -137,6 +149,8 @@ foreach (@greplines) {
   print "  @rest ";
   print "\n";
 }
+@greplines = grep /coverage/, @lines;
+print " $greplines[0]";
 print "\n";
 
 # Surface metars (sfc.pl has a nicer way of printing these out)
