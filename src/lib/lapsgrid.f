@@ -313,7 +313,7 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 !       Read in parameters from parameter file
 
         character*(*) grid_fnam   ! Input (Warning: trailing blanks won't work)
-        character*50  directory
+        character*150  directory
         character*31  ext
         character*200 tempchar
 
@@ -363,9 +363,11 @@ c       write(6,*)' LAT/LON Corner > ',lat(ni,nj),lon(ni,nj)
 !       Get the location of the parameter directory
         ext = grid_fnam
         call get_directory(ext,directory,len_dir)
-
-        tempchar = directory(1:len_dir)//'/'//grid_fnam//'.parms'
-
+        if(directory(len_dir:len_dir).ne.'/') then
+          tempchar = directory(1:len_dir)//'/'//grid_fnam//'.parms'
+        else
+          tempchar = directory(1:len_dir)//grid_fnam//'.parms'
+        endif
         open(1,file=tempchar,status='old',err=900)
 
         read(1,lapsparms_nl,err=910)

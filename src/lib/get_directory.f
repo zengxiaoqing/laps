@@ -64,6 +64,12 @@ cdis
         call s_len(grid_fnam_common,len_grid_fnam_common)
         call s_len(laps_data_root,len_lapsroot)
 
+
+        if(len_lapsroot.gt.(len(directory)-10)) then
+          print*,'directory string passed to get_directory',
+     +       ' is too short lengthen to at least: ',len_lapsroot+10
+          stop
+        endif 
 c        print *, laps_data_root(1:len_lapsroot),len_lapsroot
 
         if(laps_data_root(len_lapsroot:len_lapsroot).ne.'/') then
