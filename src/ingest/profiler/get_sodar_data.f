@@ -113,8 +113,8 @@ C
       double precision observationTime(recNum), receiptTime(recNum),
      +     reportTime(recNum)
       character*6 providerId(recNum)
-      character*30 staticIds(maxStaticIds)
       character*24 dataProvider(recNum)
+      character*30 staticIds(maxStaticIds)
 
 !     Declarations for 'write_pro' call
       integer iwmostanum(recNum)
@@ -173,6 +173,9 @@ C
 
           call addcon_miss(height_m,elevation(iob),height_m,level,1)
 
+          call convert_array_i2r(windDir(:,iob),dir_deg,level
+     1                      ,'none',r_missing_data,istatus)
+
           l_closest_time = l_closest_time_i(iwmostanum,a9time_ob_r
      1                                     ,recNum,iob,i4time_sys
      1                                     ,istatus)
@@ -188,8 +191,8 @@ C
      +                      ,providerId(iob)
      +                      ,a9time_ob_r(iob),c8_obstype
      +                      ,level
-     +                      ,height_m(iob)
-     +                      ,windDir(:,iob)
+     +                      ,height_m
+     +                      ,dir_deg
      +                      ,windSpeed(:,iob)
      +                      ,istatus)
           endif ! valid profile
@@ -235,8 +238,8 @@ C
       double precision observationTime(recNum), receiptTime(recNum),
      +     reportTime(recNum)
       character*6 providerId(recNum)
-      character*30 staticIds(maxStaticIds)
       character*24 dataProvider(recNum)
+      character*30 staticIds(maxStaticIds)
 
 
 C   Variables of type REAL

@@ -29,9 +29,13 @@
 
 !............................................................................
 
+      rms = 1.0
+
       do ipro = 1,npro
 
 !       Write Sounding Header
+
+        call filter_string(c6_staid(ipro))
 
         write(6      ,401)iwmostanum,nlvl(ipro),stalat(ipro)
      1                   ,stalon(ipro),staelev(ipro),c6_staid(ipro)
@@ -45,14 +49,16 @@
 
 !         Write Profile Level
           write(lun_out,301,err=303)height_m(ipro,lvl)
-     1                             ,dir_deg(ipro,lvl),spd_mps(ipro,lvl)
+     1                             ,dir_deg(ipro,lvl)
+     1                             ,spd_mps(ipro,lvl)
      1                             ,rms       
 301       format(1x,f6.0,f6.0,2f6.1,3f7.1)
 303       continue
 
           if(ipro .le. 100)then
               write(6,301,err=313)height_m(ipro,lvl)
-     1                           ,dir_deg(ipro,lvl),spd_mps(ipro,lvl)
+     1                           ,dir_deg(ipro,lvl)
+     1                           ,spd_mps(ipro,lvl)
      1                           ,rms       
 313           continue
           endif
