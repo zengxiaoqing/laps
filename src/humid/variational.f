@@ -46,6 +46,7 @@ c FORTRAN 90 CONSTRUCTS USED OVER F77 CODE
 
       subroutine variational (
      1     sh,                  ! specific humidity g/g
+     1     sfc_data,            ! struct type lbsi surface data
      1     lat,lon,             ! lat and longitude (deg)
      1     i4time,              ! i4time of run (seconds)
      1     p_3d,                ! pressure hpa (laps vert grid)
@@ -97,6 +98,7 @@ c   the imager or sounding instrument can be used with the software without
 c   further recompilation. 
 
 c   
+      use module_sfc_structure
       implicit none
       include 'Constants.inc'
       include 'grid_fname.cmn'
@@ -106,6 +108,7 @@ c     include 'lapsparms.for'
 c     parameter list variables
 
       integer ::  ii,jj,kk
+      type (lbsi), dimension (ii,jj) :: sfc_data
       real :: sh(ii,jj,kk)
       real ::  lat(ii,jj),lon(ii,jj)
       integer :: i4time
@@ -442,28 +445,13 @@ c     get laps surface temperature
       endif
       
       
-c     get laps surface pressure
+c     get laps surface pressure now replaced with value from structure sfc_data
       
-      print*, 'getting surface pressure (lsx)'
-      call glsp(i4time,psfc,ii,jj,istatus)
-      
-      if(istatus.ne.1) then
-         
-         write(6,*) ' '
-         write(6,*) ' '
-         write(6,*) 'Failed getting LSX pres for forward model'
-         write(6,*) ' '
-         write(6,*) ' '
-         goes_good = 0
-         
-      endif
+      print*, 'Transferring surface pressure from structure'
 
-c     if (goes_good .eq. 0) go to 865
-      
-c     convert pressure to hpa
       do j = 1,jj
-         do i = 1,ii
-            psfc(i,j) = psfc(i,j)/100.
+         do i = 1, ii
+            psfc(i,j) = sfc_data(i,j)%sfc_pres
          enddo
       enddo
       
@@ -581,10 +569,10 @@ c     do for each gridpoint
       do j = 1,jj,sat_skip
          do i = 1,ii,sat_skip
             
-c     compute zenith angle for model
+c     retrieve zenith angle for model from sfc_data structure
             
-            theta(i,j) = zenith(lat(i,j)*d2r,
-     1           lon(i,j)*d2r,0.*d2r,-75.*d2r)
+            theta(i,j) = 1./ sfc_data(i,j)%secza(1) ! (cos of zen)
+            theta(i,j) = acos(theta(i,j))/d2r
             
             if(abs(theta(i,j)) .ge. 70.) then
                ch3(i,j) = rmd   ! designed to through out processing

@@ -191,6 +191,7 @@ c     convert td to c then compute surface specific h.
          do i = 1,ii
             
             td(i,j) = td(i,j) - 273.15
+            sfc_data(i,j)%sfc_temp = t(i,j) ! temp in K degrees
             t(i,j)  = t(i,j)  - 273.15
             
             qs (i,j) = ssh2 (p(i,j),t(i,j),

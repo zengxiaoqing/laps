@@ -57,6 +57,8 @@ c     parameter variables
       real mdf
       integer lct
       type (lbsi), dimension(ii,jj) :: sfc_data
+      real :: pi, d2r, tempz(2,ii,jj)
+      real zenith ! function
 
      
       
@@ -215,6 +217,10 @@ c     namelist data
       data rhext /'lh3'/
 
 c----------------------code   ------------------
+c
+c     define PI
+      pi = acos(-1.0)
+      d2r = pi/180.
 c     initialize laps field
       
 c     call get_laps congif to fill common block used in pressure assignment
@@ -557,6 +563,20 @@ c     fill new data structure surface data
          do j = 1,jj
             sfc_data(i,j)%lat = lat(i,j)
             sfc_data(i,j)%lon = lon(i,j)
+c     compute the secant of zenith angle for each goes satellite
+c     (1) is goes east
+c     (2) is goes west
+c     (x) add additional satellites as needed
+            tempz(1,i,j) =  zenith(lat(i,j)*d2r,lon(i,j)*d2r,
+     1           0.0,-75.*d2r)
+            tempz(2,i,j) = zenith(lat(i,j)*d2r,lon(i,j)*d2r,
+     1           0.0,-135.*d2r)
+
+            do k = 1,2
+               tempz(k,i,j) = 1./cos(tempz(k,i,j)*d2r)
+               sfc_data(i,j)%secza(k) = tempz(k,i,j)
+            enddo               !k
+
          enddo
       enddo
 
@@ -973,6 +993,7 @@ c     make call to goes moisture insertion
             write (6,*) 'Begin variational assimilation'
             call variational (
      1           data,          ! 3-d specific humidity g/g
+     1           sfc_data,      ! struct surface data (type lbsi)
      1           lat,lon,       ! 2-d lat and longitude
      1           i4time,        ! i4time of run
      1           p_3d,          ! pressure mb
