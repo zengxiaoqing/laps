@@ -98,6 +98,7 @@ c
 c
 c.....  Start.
 c
+        write(6,*)' Subroutine get_local_cwb'
 c
 c.....	Set jstatus flag for the local data to bad until we find otherwise.
 c
@@ -146,7 +147,8 @@ c
 
             maxobs_in = maxobs-ix+1
 
-            write(6,*)' maxobs/maxobs_in ',maxobs,maxobs_in
+            write(6,*)' maxobs/maxobs_in (read_local_cwb call)'
+     1                 ,maxobs,maxobs_in
 
             call read_local_cwb ( path_to_local_data, maxobs_in,
      ~         badflag, ibadflag,i4time_file, stname, lons, lats, elev,
@@ -165,14 +167,15 @@ c    1                 ,num,istatus)                                     ! O
 	    if(istatus .ne. 1)then
                 write(6,*)
      1          '     Warning: bad status return from READ_LOCAL_CWB'       
-                n_local_file = num
+                n_local_time = num
             else
-                n_local_file = num
+                write(6,*)' Good status return from READ_LOCAL_CWB'
+                n_local_time = num
             endif
 
-            write(6,*)'     n_local_file = ',n_local_file
+            write(6,*)'     n_local_time = ',n_local_time
 
-c           ix = ix + n_local_file
+c           ix = ix + n_local_time
 
         enddo ! i4time_file
 
