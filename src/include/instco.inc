@@ -28,7 +28,7 @@ C        CONSTANTS NEEDED TO PERFORM TRANSFORMATIONS BETWEEN THE
 C        LATITUDE/LONGITUDE, LINE/PIXEL AND INSTRUMENT CYCLES/INCREMENTS        
 C        COORDINATES.                                                           
 C                                                                               
-      INTEGER*4 INCMAX(2)                                                       
+      INTEGER INCMAX(2)                                                       
 C                       NUMBER OF INCREMENTS PER CYCLE                          
       REAL*4 ELVMAX(2)                                                          
 C                       BOUNDS IN ELEVATION (RADIANS)                           

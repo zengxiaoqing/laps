@@ -14,7 +14,7 @@
         real*4 height_interval   !  Not actively used
         parameter (height_interval = 1000.)
 
-        integer*4 i2_missing_data
+        integer i2_missing_data
         parameter (i2_missing_data = -99)
         real*4    r_missing_data
         parameter (r_missing_data = +1e37)

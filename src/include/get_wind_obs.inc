@@ -61,7 +61,7 @@ cdis
 
         real weights_pr(NX_L,NY_L)                                      
         real max_weights_pr(NX_L,NY_L,NZ_L)                             
-        integer*2 i_profiler_nearest(NX_L,NY_L,NZ_L)                    
+        integer i_profiler_nearest(NX_L,NY_L,NZ_L)                    
 
         real sum_pr_u (NX_L,NY_L,NZ_L)                                  
         real sum_pr_v (NX_L,NY_L,NZ_L)                                  

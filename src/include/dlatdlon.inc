@@ -1,4 +1,4 @@
-      integer*4 lines,elements
+      integer lines,elements
       real*4   lat2
       real*4   lon1
       real*4   dlat

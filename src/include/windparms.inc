@@ -1,13 +1,13 @@
 
 
 !       1 = NO Successive correction, > 1 indicates successive correction
-        integer*4 n_iter_wind
+        integer n_iter_wind
         parameter (n_iter_wind = 2)
 
         real*4 hor_radius
         parameter (hor_radius = 35.)
 
-        integer*4 MAX_PR,MAX_PR_LEVELS
+        integer MAX_PR,MAX_PR_LEVELS
         parameter (MAX_PR = 300)
         parameter (MAX_PR_LEVELS = 128)
 
@@ -27,13 +27,13 @@
         real*4 weight_radar
         parameter (weight_radar = 0.05)
 
-        integer*4 n_var
+        integer n_var
         parameter (n_var = 2)
 
-        integer*4 iradar_cycle_time
+        integer iradar_cycle_time
         parameter (iradar_cycle_time = 600)
 
-        integer*4 i4time_raob_window
+        integer i4time_raob_window
         parameter (i4time_raob_window = 0)
 
 !       Weight for Model Background. Recommended values: 0. to 1e+30.

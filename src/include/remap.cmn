@@ -3,10 +3,10 @@ c       File: remap.cmn
 c
 c       Look Up Table Stuff
 c
-        integer*2 gate_elev_to_z_lut(LUT_GATES,0:LUT_ELEVS)
-        integer*2 gate_elev_to_projran_lut(LUT_GATES,0:LUT_ELEVS)
-        integer*2 azran_to_igrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
-        integer*2 azran_to_jgrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
+        integer gate_elev_to_z_lut(LUT_GATES,0:LUT_ELEVS)
+        integer gate_elev_to_projran_lut(LUT_GATES,0:LUT_ELEVS)
+        integer azran_to_igrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
+        integer azran_to_jgrid_lut(0:LUT_AZIMUTHS,0:LUT_RANGES)
         real*4    dbz_to_z_lut(-1000:+1000)
         logical*1 lgate_vel_lut(MAX_GATES)
         logical*1 lgate_ref_lut(MAX_GATES)
@@ -32,5 +32,5 @@ c
 c
 c       History Stuff for QC
 c
-        integer*4 i4time_old(10),n_ref_obs_old(10)
+        integer i4time_old(10),n_ref_obs_old(10)
         common /radar_history/ i4time_old,n_ref_obs_old

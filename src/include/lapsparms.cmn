@@ -6,25 +6,25 @@
 
 
 
-        integer*4    iflag_lapsparms_cmn
+        integer    iflag_lapsparms_cmn
         real*4       PRESSURE_BOTTOM_L
         real*4       PRESSURE_INTERVAL_L
         real*4       PRESSURE_0_L
         character*40 vertical_grid
-        integer*4    nk_laps
+        integer    nk_laps
         real*4       standard_latitude
         real*4       standard_latitude2
         real*4       standard_longitude
         logical*1    l_highres,l_pad1,l_pad2,l_pad3
-        integer*4    NX_L_CMN
-        integer*4    NY_L_CMN
-        integer*4    I_PERIMETER_CMN
+        integer    NX_L_CMN
+        integer    NY_L_CMN
+        integer    I_PERIMETER_CMN
         character*50 c50_lowres_directory
         character*6  c6_maproj
         real*4 grid_spacing_m_cmn
         real*4 grid_cen_lat_cmn
         real*4 grid_cen_lon_cmn
-        integer*4    laps_cycle_time_cmn
+        integer    laps_cycle_time_cmn
         character*8  radarext_3d_cmn
         character*8  radarext_3d_accum_cmn
         character*100 path_to_raw_pirep_cmn
@@ -38,17 +38,17 @@
         character*100 path_to_raw_raob_cmn
         character*100 path_to_metar_data_cmn
         character*100 path_to_local_data_cmn
-        integer*4 i2_missing_data_cmn
+        integer i2_missing_data_cmn
         real*4    r_missing_data_cmn
-        integer*4  MAX_RADARS_CMN
+        integer  MAX_RADARS_CMN
         real*4 ref_base_cmn
         real*4 ref_base_useable_cmn
-        integer*4  maxstns_cmn
-        integer*4  N_PIREP_CMN
-        integer*4 vert_rad_meso_cmn
-        integer*4 vert_rad_sao_cmn
-        integer*4 vert_rad_pirep_cmn
-        integer*4 vert_rad_prof_cmn     
+        integer  maxstns_cmn
+        integer  N_PIREP_CMN
+        integer vert_rad_meso_cmn
+        integer vert_rad_sao_cmn
+        integer vert_rad_pirep_cmn
+        integer vert_rad_prof_cmn     
         real*4 silavwt_parm_cmn
         real*4 toptwvl_parm_cmn
         character*8 c8_project_common
@@ -80,7 +80,7 @@
      1  ,c_raddat_type, c80_description
 
 
-	
+      
 
 
 
