@@ -28,6 +28,12 @@
       integer recNum, inNum, jumpNum, logicRecNum
       integer d(12)
 
+      real latitude_out(loopNum,levelNum)
+      real longitude_out(loopNum,levelNum)
+      character*9 a9time_out(loopNum,levelNum)
+      character c8_obstype(loopNum)*8
+      character c5_staid(loopNum)*5
+
       data  d / 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /
 
       call get_r_missing_data(r_missing_data,istatus)
@@ -221,15 +227,38 @@ c      format f15.0 in snd files
          endif
 100   continue
 
-      do 900 i= 1,inNum
-	 write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
-     ~                 elevation(i), taskName(i), a9time(i), 'DRPSND'
-895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
+!     do 900 i= 1,inNum
+!        write(11,895) wmoId(i), layerNum(i), latitude(i), longitude(i),
+!    ~                 elevation(i), taskName(i), a9time(i), 'DRPSND'
+!895      format (i12, i12, f11.4, f15.4, f15.0, 1x, a5, 3x, a9, 1x, a8)
 
-         do 900 j= 1,layerNum(i)
-            write (11,*) height(i,j), pressure(i,j), temperature(i,j),
-     ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
+!        do 900 j= 1,layerNum(i)
+!           write (11,*) height(i,j), pressure(i,j), temperature(i,j),
+!    ~                   dewpoint(i,j), windDir(i,j), windSpeed(i,j)
+!900   continue
+
+      do 900 i= 1,inNum
+          latitude_out(i,:) = latitude(i)
+          longitude_out(i,:) = longitude(i)
+          a9time_out(i,:) = a9time(i)
+          c8_obstype(i) = 'DROPSND '            ! Note revised spelling
+          c5_staid(i) = '     '
 900   continue
+
+!     Call write_snd routine
+      call write_snd(      11                                 ! I
+     1                    ,loopNum,levelNum,inNum             ! I
+     1                    ,wmoId                              ! I
+     1                    ,latitude_out,longitude_out,staelev ! I
+     1                    ,c5_staid,a9time_ob,c8_obstype      ! I
+     1                    ,layerNum                           ! I
+     1                    ,height                             ! I
+     1                    ,pressure                           ! I
+     1                    ,temperature                        ! I
+     1                    ,dewpoint                           ! I
+     1                    ,windDir                            ! I
+     1                    ,windSpeed                          ! I
+     1                    ,istatus)                           ! O
 
       write (6,*) ' found', inNum, 
      ~            'stations available within time window in',
