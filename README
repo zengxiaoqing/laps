@@ -1831,7 +1831,7 @@ Reference: Albers S., J. Mcginley, D. Birkenheuer, and J. Smart 1996: The Local
 
  ------ 3.3.5 -----------WATER VAPOR (HUMIDITY PROCESSING)----------------
 
-Last updated: August 1996 by Daniel Birkenheuer
+Last updated: 5/27/99 by Daniel Birkenheuer
 
 Code organization:
 
@@ -1873,13 +1873,13 @@ Input files:
    Inputs (status as of August 1996) ("grid" designates LAPS netCDF grid
    file unless otherwise stated):
 <pre>
-   LGA         grid    MAPS/RUC background analysis or forecast
+  *LGA/RAM     grid    MAPS/RUC background analysis or forecast (RAM)
 
    LSX         grid    LAPS surface analysis
 
    LC3         grid    LAPS 3-D clouds
 
-   LT1         grid    LAPS 3-D temperatures
+  *LT1         grid    LAPS 3-D temperatures
 
    SND         ASCII   RAOB observation file
 
@@ -1904,7 +1904,7 @@ Outputs (note LH3 contains 2 fields):
 
    LH3         grid2   3D (RHL field) Relative Humidity units of percent   
                           0-100 (floating point number) with respect to
-                          liquid water at all temperatures
+                          liquid water at all temperatures 
 
    LH4         grid    2D Total precipitable water (meters) (floating point
                                   number)
