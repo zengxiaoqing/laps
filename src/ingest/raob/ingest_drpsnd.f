@@ -209,7 +209,9 @@
 !    1                ,filename_in,istatus)
 !tt -- Tiziana: Sep, 27
               elseif(c8_drpsnd_format(1:5) .eq. 'AVAPS')then
-                  call avapsread_sub(filename_in, lun_out, istatus)
+                  call avapsread_sub(filename_in, lun_out
+     1                          ,i4time_drpsnd_earliest
+     1                          ,i4time_drpsnd_latest,istatus)
 
               elseif(c8_drpsnd_format(1:3) .eq. 'RSA')then
 
