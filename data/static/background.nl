@@ -13,6 +13,12 @@
 c
 c bgpaths is a list of paths to background models in order of preference
 c
+c sample paths for SBN grids:
+c          '/data/fxa/Grid/SBN/netCDF/CONUS211/RUC/',
+c          '/data/fxa/Grid/SBN/netCDF/CONUS211/Eta/',
+c          '/data/fxa/Grid/SBN/netCDF/CONUS212/MesoEta/',
+c          '/data/fxa/fd/Grid/SBN/netCDF/LATLON/AVN/',
+c
 c bgmodels describes the model type for the files found in each path
 c          this variable works in conjunction with cmodel as indicated.
 c 
@@ -20,9 +26,12 @@ c allowable values are:    (cmodel)
 c        bgmodels = 0 ----> LAPS                                 (not tested)
 c        bgmodels = 1 ----> RUC60_NATIVE                         (obsolete!)
 c        bgmodels = 2 ----> ETA48_CONUS                          (tested)
-c        bgmodels = 3 ----> CWB_20FA_LAMBERT (_NF or _RE)        (not tested)
-c        bgmodels = 4 ----> RUC,          ETA,        AVN:       (all tested)
-c                          {RUC40_NATIVE, ETA48_CONUS, AVN_SBN_CYLEQ}
+c        bgmodels = 3 ----> CWB_20FA_LAMBERT (_NF or _RE)        (tested)
+c        bgmodels = 4 ----> SBN: RUC, ETA, AVN, MesoEta:         (all tested)
+c                          {RUC40_NATIVE,
+c                           ETA48_CONUS,
+c                           MesoEta_SBN,
+c                           AVN_SBN_CYLEQ}
 c        bgmodels = 5 ----> RUC40_NATIVE                         (tested)
 c        bgmodels = 6 ----> AVN (_AFWA_DEGRIB or _FSL_NETCDF)    (AVN_FSL_NETCDF tested)
 c        bgmodels = 7 ----> ETA48_GRIB                           (not tested)
@@ -46,6 +55,7 @@ c                 Note: this logical does not necessarily work as intended
 c
 c cmodel: this variable describes the specific type for a given value of bgmodel:
 c         allowable values are included above with the allowable values of bgmodel.
+c         new SBN (bgmodel=4) grid available 5-02 - MesoEta_SBN
 c               
 c
 c itime_inc = controls time increment for model background.
