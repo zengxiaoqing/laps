@@ -2283,7 +2283,8 @@ Output:
 
          Colorado Severe Storms Index: 
              Severe storm potential mostly geared to the Colorado area. This
-             uses a decision tree and various empirical functions.
+             uses a decision tree and various empirical functions. For more
+             info please check the documentation in subroutine 'make_cssi'.
 
          Heat Index:
              A function of temperature and humidity for discomfort due to heat.
