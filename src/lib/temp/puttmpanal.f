@@ -78,11 +78,6 @@ cdis
 
         real*4 bkg_500(ni,nj)
 
-        real*4 dum1_array(ni,nj)
-        real*4 dum2_array(ni,nj)
-        real*4 dum3_array(ni,nj)
-        real*4 dum4_array(ni,nj)
-
         real*4 lat(ni,nj),lon(ni,nj),topo(ni,nj)
 
         character*9 asc9_tim
@@ -257,9 +252,8 @@ cdis
 !       integrated heights instead of the model background heights.
 
         write(6,*)' Calling get_heights_hydrostatic'
-        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,topo,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  ni,nj,nk,heights_3d)
+        call get_heights_hydrostatic(temp_3d,pres_sfc_pa,sh_3d,topo
+     1                              ,ni,nj,nk,heights_3d)
 
         if(l_adjust_heights)then ! Adjust height field to model fg 500 heights
             call adjust_heights(temp_3d,heights_3d,bkg_500
@@ -323,7 +317,7 @@ cdis
 !           are below the ground so things don't get too out of hand.
             frac_bias_max = (pres_intvl + blayer_thk_pres) 
      1                     / blayer_thk_pres
-!           frac_bias_max = 1.0 ! Potential mod for AFWA concerns
+            frac_bias_max = 1.0 ! Potential mod for AFWA concerns
 
 !           QC Check (Compare MODEL Temps to LAPS Sfc Temp)
 !           For this check, interpolation in P space is sufficient
@@ -412,10 +406,10 @@ cdis
      1                      (height_top - height_sfc)
 
 !               Potential mod for AFWA concerns - apply reverse ramp underground
-!               if(frac_bias .gt. frac_bias_max)then
-!                   frac_bias = (2. * frac_bias_max) - frac_bias
-!                   frac_bias = max(frac_bias,0.)
-!               endif
+                if(frac_bias .gt. frac_bias_max)then
+                    frac_bias = (2. * frac_bias_max) - frac_bias
+                    frac_bias = max(frac_bias,0.)
+                endif
 
                 frac_bias = min(frac_bias, frac_bias_max) ! Prevent overshooting below sfc
 
