@@ -36,6 +36,9 @@
 #
 # -Q  P                Use QSUB (SGE syntax on 'jet/ijet') where P is the project name
 #
+# -w                   Submits via qsub_wait to wait for processes to finish before exiting
+#                      (default without -w submits via qsub to background)
+#
 # -n                   Node type to be used with -q (default=ncomp)
 #
 # -e  e1,e2,...        Environment variables (if any) to pass into the executable
@@ -51,10 +54,10 @@
 #
 
 use strict;
-use vars qw($opt_L $opt_g $opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n);
+use vars qw($opt_L $opt_g $opt_o $opt_e $opt_l $opt_q $opt_Q $opt_n $opt_w);
 use Getopt::Std;
 
-getopts('e:lq:Q:n:L:g:');
+getopts('e:lwq:Q:n:L:g:');
 
 #flush buffer; ie., prevent buffering of output
 $|=1;
@@ -230,7 +233,11 @@ if($opt_q || $opt_Q){
     close(TFILE);
 
     chdir($LAPS_LOG_PATH) || die "could not chdir to $LAPS_LOG_PATH";
-    $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
+    if(defined $opt_w){
+       $command = "/PBSHOME/bin/qsub_wait $LAPS_LOG_PATH/run_qsub_$exe.sh";
+    }else{
+       $command = "/PBSHOME/bin/qsub $LAPS_LOG_PATH/run_qsub_$exe.sh";
+    }
     print "Executing $command\n";
     system("$command");
 
