@@ -513,7 +513,13 @@ C
 
             write(6,*)
 
-            call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+!           call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+!           This is hard-wired until 'prof_i4_avg_wdw' can be made more
+!           general for BLP profilers.
+            
+            istatus = 1
+            i4_avg_wdw_sec = 3600
+
             if(istatus .eq. 1)then
                 lag_time = i4_avg_wdw_sec/2
             else

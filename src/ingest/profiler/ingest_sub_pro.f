@@ -56,7 +56,9 @@ C       NOTE: Profiler winds are written out in KNOTS, and are sorted by HEIGHT
      1         ,file_n_prof
         parameter (max_levels = 72)
         parameter (max_levels_out = 72)
-        parameter (n_profilers = 33)
+! number of profilers upped to 100 from 33 to accomodate RSA project
+!       parameter (n_profilers = 33)
+        parameter (n_profilers = 100)
 
         real u(max_levels),v(max_levels),prs
         real ht_out(max_levels_out),di_out(max_levels_out)
@@ -233,24 +235,27 @@ C           Determine file format by looking at the file name convention
             if(laps_cycle_time .le. 1800)then
 !           if(.true.)then
                 c5_data_interval = '0006o'
-                lag_time = 180
+! the following line commented LW 8-27-98...calculated from file data after PROF_CDF_OPEN
+!                lag_time = 180
                 write(6,*)' Using 6 minute data'
             else
                 c5_data_interval = '0100o'
-                lag_time = 1800
+! the following line commented LW 8-27-98...calculated from file data after PROF_CDF_OPEN
+!                lag_time = 1800
                 write(6,*)' Using hourly data'
             endif
             c_filespec = dir_in(1:len_dir_in)//'*'//c5_data_interval
 
         else ! WFO
-            call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
-            if(istatus .eq. 1)then
-                lag_time = i4_avg_wdw_sec/2
-            else
-                write(6,*)' ingest_sub_pro: '
-     1                   ,'Error obtaining i4_avg_wdw_sec'
-                return
-            endif
+! the following lines commented LW 8-27-98...moved to below PROF_CDF_OPEN
+!           call prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+!           if(istatus .eq. 1)then
+!               lag_time = i4_avg_wdw_sec/2
+!           else
+!               write(6,*)' ingest_sub_pro: '
+!    1                   ,'Error obtaining i4_avg_wdw_sec'
+!               return
+!           endif
 
             c_filespec = dir_in(1:len_dir_in)//'*'
 
@@ -309,6 +314,17 @@ C       the documentation for each PROF_CDF routine.
 C
         if(status.ne.0)then
             write(6,*)' Warning: bad open ',status
+            return
+        endif
+
+! added to read from file and set lag_time LW 8-27-98
+C 	read global attribute avgTimePeriod from input file and set lag_time
+        call prof_i4_avg_wdw(i4_avg_wdw_sec,cdfid,istatus)
+        if(istatus .eq. 1)then
+            lag_time = i4_avg_wdw_sec/2
+        else
+            write(6,*)' ingest_sub_pro: '
+     1               ,'Error obtaining i4_avg_wdw_sec'
             return
         endif
 C
@@ -614,10 +630,94 @@ C
         end
 
 
-        subroutine prof_i4_avg_wdw(i4_avg_wdw_sec,istatus)
+        subroutine prof_i4_avg_wdw(i4_avg_wdw_sec, cdfid, istatus)
+!  modified to pass in cdfid, and actually read file for data LW 8-27-98
 
-        i4_avg_wdw_sec = 3600
+        integer cdfid
+	character*20 timestr
+        character*13 attname
+	integer*4    lenstr, sp_loc, units_loc, to_seconds, itime
+
+C       netCDF file is opened, and accessed via cdfid
+C	read "avgTimePeriod" global attribute into timestr 
+
+        lenstr = len(timestr)  
+        attname = 'avgTimePeriod'
+C looking for a character string
+	CALL NCAGTC(cdfid,ncglobal,attname,timestr,lenstr,istatus)
+
+	if (istatus .ne. 0) then   !didn't get a character string....look for an integer
+	  CALL NCAGT(cdfid,ncglobal,attname,itime,istatus)
+
+	  if (istatus .ne. 0) then   !error retrieving avgTimePeriod from file
+            istatus = 0
+            return
+          endif
+	  
+C  units assumed to be minutes
+	  to_seconds = 60
+
+        else  !got character string
+
+C	  format of avgTimeString should be a number followed by a space and
+C           then a lower case string of units, ie. "60 minutes" or "6 minutes"
+C	    Verify that the units are minutes, seconds or hour, and convert
+C	    the number string into an integer.  Return value is via i4_avg_wdw_sec
+C  	    and is in seconds 
+
+	  sp_loc = index(timestr,' ')  !everything to the left should be number
+	
+C	  convert numerical string to number
+101	  format(i1)
+102	  format(i2)
+103	  format(i3)
+104	  format(i4)
+          itime = -1 ! check at end to see if set
+
+	  if (sp_loc .eq. 2) then !one digit number
+ 	    read(timestr(1:1),101)itime
+          endif
+
+	  if (sp_loc .eq. 3) then !two digit number
+ 	    read(timestr(1:2),102)itime
+          endif
+
+	  if (sp_loc .eq. 4) then !three digit number
+ 	    read(timestr(1:3),103)itime
+          endif
+
+	  if (sp_loc .eq. 5) then !four digit number
+ 	    read(timestr(1:4),104)itime
+          endif
+
+	  if (itime .eq. -1) then   ! couldn't convert timestr to itime, return error
+            write(6,*)
+     1' Error: couldnt convert avgTimePeriod string to integer: ', timestr
+	    istatus = 0
+            return
+	  endif
+
+C	  determine units in timestr
+          to_seconds = 0 !will check after looking for units to see if set
+   	  units_loc = index(timestr,'minute')
+          if (units_loc .gt. 0) to_seconds = 60
+ 
+	  units_loc = index(timestr,'second')
+          if (units_loc .gt. 0) to_seconds = 1
+ 
+	  units_loc = index(timestr,'hour')
+          if (units_loc .gt. 0) to_seconds = 3600
+
+        endif
+
+	if (to_seconds .eq. 0) then   ! couldn't identify units, return error
+          write(6,*)' Error: couldnt decode avgTimePeriod from file ', timestr
+	  istatus = 0
+          return
+        else
+          i4_avg_wdw_sec = itime * to_seconds
+          istatus = 1
+	endif
         
-        istatus = 1
         return
         end
