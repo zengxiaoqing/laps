@@ -452,3 +452,8 @@ changes: Uncommented the line in 'get_laps_config' that tests for
          is called multiple times.
          Added new parameter access subroutine 'get_c80_description'.
 
+file(s): source/humid/goes_sbn.f
+changed by: Dan Birkenheuer
+date:  8-12-97 2000 UTC
+changes: Modifed for dynamic memory allocation.  Removed dependency on 
+         lapsparms.for. 
