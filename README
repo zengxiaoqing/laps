@@ -1316,7 +1316,7 @@ April 1996
 
 ------ 2.14 -----Detecting and Reporting Installation Errors-------------------
 
-   To determine how well LAPS was installed, verify that all (35 at last check)
+   To determine how well LAPS was installed, verify that all (31 at last check)
    executables were built OK ('bin' directory) with no errors in the output 
    of 'make'.
 
@@ -1326,7 +1326,7 @@ April 1996
    A Web based monitor might be useful here. Examples of these are at:
 
        "http://laps.fsl.noaa.gov/~jedwards/Laps_Monitor.cgi"
-       "http://fics.fsl.noaa.gov:4267/PRODS/LapsComparison.shtml"
+       "http://fics.fsl.noaa.gov/PRODS/LapsComparison.shtml"
 
    Check the log files in the 'log' directory for occurrences of errors and 
    warnings. The errors are generally more significant.
