@@ -223,9 +223,9 @@ cdis
         angdif(X,Y)=MOD(X-Y+540.,360.)-180.
 
         if(slat1 .ge. 0)then
-            s = -1.
-        else
             s = +1.
+        else
+            s = -1.
         endif
 
         if(slat1 .eq. slat2)then ! tangent lambert
@@ -235,9 +235,9 @@ cdis
      1          alog(tand(45.-s*slat1/2.)/tand(45.-s*slat2/2.))
         endif
 
-        r = (tand(45.-rlat/2.))**n
-        u = r* sind(n*angdif(rlon,slon))
-        v = s*r*cosd(n*angdif(rlon,slon))
+        r = (tand(45.-s*rlat/2.))**n
+        u =    r*sind(n*angdif(rlon,slon))
+        v = -s*r*cosd(n*angdif(rlon,slon))
 
         return
         end
@@ -357,9 +357,9 @@ c
         real*4 n
 
         if(slat1 .ge. 0)then
-            s = -1.
-        else
             s = +1.
+        else
+            s = -1.
         endif
 
         if(slat1 .eq. slat2)then   ! tangent lambert
@@ -399,6 +399,8 @@ c
 
         function projrot_laps(rlon)
 
+        entry projrot_latlon(rlat,rlon,istatus)
+
 !       1997 Steve Albers       Calculate map projection rotation, this is the
 !                               angle between the y-axis "grid north" and
 !                               true north.
@@ -419,28 +421,49 @@ c
         endif
 
         if(c6_maproj .eq. 'plrstr')then ! polar stereographic
+            polat = standard_latitude2
+            polon = standard_longitude
 
             if(polat .eq. +90.)then
                 projrot_laps = standard_longitude - rlon
 
-            else
-                polat = standard_latitude2
+            elseif(polat .eq. -90.)then
+                projrot_laps = rlon - standard_longitude 
 
-                if(init .eq. 0)then
-                    write(6,*)' WARNING: polar stereo pole lat in'
-     1                       ,' function "projrot_laps" should be +90.'       
-                    write(6,*)' Using approximation for "projrot_laps",'
-     1                       ,' accurate calculation not yet in place.'
-                    write(6,*)' Check standard_latitude2 in'
-     1                       ,' "nest7grid.parms".'
-                    init = 1
+            else ! abs(polat) .ne. 90.
+                if(grid_cen_lat_cmn .eq. polat .and. 
+     1             grid_cen_lon_cmn .eq. polon)then ! grid centered on proj pole
+
+                    if(init .eq. 0)then
+                        write(6,*)
+     1                   ' NOTE: local stereographic projection.'
+                        write(6,*)
+     1                   ' Using approximation for "projrot_laps",'
+     1                  ,' accurate calculation not yet in place.'
+                        init = 1
+                    endif
+
+                    n = cosd(90.-polat)
+                    projrot_laps = n * angdif(standard_longitude,rlon)     
+
+                elseif(.true.)then
+                    if(init .eq. 0)then
+                        write(6,*)' ERROR in projrot_laps: '
+                        write(6,*)' This type of local'
+     1                  ,' stereographic projection not yet supported.'
+                        write(6,*)' Grid should be centered on'
+     1                  ,' projection pole.'
+                        init = 1
+                    endif
+
+                    projrot_laps = 0.
+         
+                else ! .false.
+!                   Find dx/lat and dy/lat, then determine projrot_laps
+
                 endif
 
-                n = cosd(90.-polat)
-                projrot_laps_exp = n * angdif(standard_longitude,rlon)       
-                projrot_laps = projrot_laps_exp
-
-            endif
+            endif ! polat
 
         elseif(c6_maproj .eq. 'lambrt')then ! lambert conformal
 
@@ -448,9 +471,9 @@ c
             slat2 = standard_latitude2
 
             if(slat1 .ge. 0)then
-                s = -1.
-            else
                 s = +1.
+            else
+                s = -1.
             endif
 
             if(slat1 .eq. slat2)then        ! tangent lambert
@@ -485,6 +508,10 @@ c
 !     as well as various grid conversion routines.
 
 !     1997 Steve Albers
+
+      real*4 pi, rpd
+      parameter (pi=3.1415926535897932)
+      parameter (rpd=pi/180.)
 
       real*4 lat(ni,nj),lon(ni,nj)
 
@@ -568,6 +595,23 @@ c
       call check_grid_dimensions(ni,nj,istat_dim)
 
       istatus = istatus * istat_dim
+
+!...........................................................................
+
+      erad=6367000.
+      icen = ni/2+1
+      jcen = nj/2+1
+
+      diff_lat =  lat(icen,jcen+1) - lat(icen,jcen-1)
+      diff_lon = (lon(icen,jcen+1) - lon(icen,jcen-1)) 
+     1                        * cosd(lat(icen,jcen))
+
+      dist = sqrt((diff_lat)**2 + (diff_lon)**2) / 2. * rpd * erad   
+
+      if(abs(lat(icen,jcen)) .lt. 89.)then ! should be reasonably accurate
+          write(6,*)
+     1    ' grid spacing on earths surface at domain center is:',dist       
+      endif
 
 !...........................................................................
 
