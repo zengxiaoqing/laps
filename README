@@ -1352,7 +1352,7 @@ e) window_domain_rt.pl -t /data/fxa/laps_template -s /awips/laps \
            (NX_L_CMN, NY_L_CMN) in './data/static/nest7grid.parms'.
 
 
-     NOTE: The file './data/static/nest7grid.cdl' is automatically edited
+     NOTE: Various files in the ./data/cdl directory are automatically edited
            by ./etc/localize_domain.pl using the values found in 
            './data/static/nest7grid.parms'.
 
