@@ -90,5 +90,6 @@ c
       parameter (REF_MIS_CHECK = 100.)
       parameter (REF_GRIDS_CHECK = 0)
 
-      real*4 COVERAGE_MIN
-      parameter (COVERAGE_MIN = 0.4)
+      real*4 COVERAGE_MIN_REF, COVERAGE_MIN_VEL
+      parameter (COVERAGE_MIN_REF = 0.4)
+      parameter (COVERAGE_MIN_VEL = 0.4)
