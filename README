@@ -2628,6 +2628,9 @@ Parameter namelist file: 'static/surface_analysis.nl'
 	                0 = No sfc theta check done
 	                7 = Use 700 mb level
 	                5 = Use 500 mb level
+                       -1 = Automatically choose 5 or 7 based on terrain info
+                            7 is used if center grid point is below 1000m
+                            5 is used if center grid point is above 1000m
 
 	Recommended:  Use 700 mb most places, 500 mb over higher terrain 
 	areas (like Colorado).
