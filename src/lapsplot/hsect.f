@@ -188,6 +188,7 @@ cdis
         real*4 cice_2d(NX_L,NY_L)
         real*4 field_2d(NX_L,NY_L)
         real*4 field_2d_buf(NX_L,NY_L)
+        real*4 field_2d_diff(NX_L,NY_L)
 
         real*4 snow_2d(NX_L,NY_L)
         real*4 snow_2d_buf(NX_L,NY_L)
@@ -383,24 +384,45 @@ c       include 'satellite_dims_lvd.inc'
 !       c4_log = 'h '//c_type
 !       if(lun .eq. 5 .and. c_type .ne. 'q ')call logit(c4_log)
 
-        if(c_type .eq. 'di')then
+        if(c_type(1:2) .eq. 'di')then
             write(6,*)' Plotting difference field of last two entries'       
-            call diff(field_2d_buf,field_2d,field_2d,NX_L,NY_L)
+            call diff(field_2d_buf,field_2d,field_2d_diff,NX_L,NY_L)       
 
             c33_label = 'difference field'
 
             scale = 1.
-            call contour_settings(field_2d,NX_L,NY_L,clow,chigh,cint
-     1                                                  ,zoom,scale)
 
-            call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw,       
+            if(c_type(3:3) .ne. 'i')then ! contour plot
+                call contour_settings(field_2d_diff,NX_L,NY_L
+     1                               ,clow,chigh,cint,zoom,scale)
+
+                call plot_cont(field_2d_diff,scale,clow,chigh,cint,
+     1               asc9_tim_3dw,       
      1               c33_label,i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        else
-            call move(field_2d,field_2d_buf,NX_L,NY_L)
+            else ! image plot
+                call array_range(field_2d_diff,NX_L,NY_L,rmin,rmax
+     1                          ,r_missing_data)
 
+                call ccpfil(field_2d_diff,NX_L,NY_L,rmin,rmax,'hues'
+     1                     ,n_image)    
+                call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
+                call setusv_dum(2hIN,7)
+                call write_label_lplot(NX_L,NY_L,c33_label,asc9_tim_t
+     1                                                    ,i_overlay)
+                call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
+
+            endif
+
+        else
+            if(igrid .eq. 1)then
+                write(6,*)' Copying field to field_buf'
+                call move(field_2d,field_2d_buf,NX_L,NY_L)       
+            endif
         endif
+
+        igrid = 1
 
         if(    c_type .eq. 'wd' .or. c_type .eq. 'wb'     ! Wind fields
      1    .or. c_type .eq. 'co' .or. c_type .eq. 'wr'
@@ -680,15 +702,15 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'u ')then
                 if(c_type .eq. 'wf')then
-                    c19_label = ' U   Diff      '
+                    c19_label = ' U  Diff        M/S'
                 elseif(c_type .eq. 'wb')then
-                    c19_label = ' U   (lga)     '
+                    c19_label = ' U  (lga)       M/S'
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' U   (fua)     '
+                    c19_label = ' U  (fua)       M/S'
                 elseif(c_type .eq. 'bw')then
-                    c19_label = ' U   (bal)     '
+                    c19_label = ' U  (bal)       M/S'
                 else
-                    c19_label = ' U   (anal)    '
+                    c19_label = ' U  (anal)      M/S'
                 endif
 
                 call mklabel33(k_level,c19_label,c33_label)
@@ -701,16 +723,17 @@ c       include 'satellite_dims_lvd.inc'
 
             else if(c_field .eq. 'v ')then
                 if(c_type .eq. 'wf')then
-                    c19_label = ' V - Diff       '
+                    c19_label = ' V  Diff        M/S'
                 elseif(c_type .eq. 'wb')then
-                    c19_label = ' V (lga) - Comp '
+                    c19_label = ' V  (lga)       M/S'
                 elseif(c_type .eq. 'wr')then
-                    c19_label = ' V (fua) - Comp '
+                    c19_label = ' V  (fua)       M/S'
                 elseif(c_type .eq. 'bw')then
-                    c19_label = ' V - Comp (bal)'
+                    c19_label = ' V  (bal)       M/S'
                 else
-                    c19_label = ' V - Comp (anal) '
+                    c19_label = ' V  (anal)      M/S'
                 endif
+
                 call mklabel33(k_level,c19_label,c33_label)
 
                 call plot_cont(v_2d,1e0,clow,chigh,10.,asc9_tim_3dw,
@@ -744,6 +767,10 @@ c       include 'satellite_dims_lvd.inc'
                     interval = int(max(nxz,nyz) / 65.) + 1
                     size = float(interval) * .15
 
+                endif
+
+                if(c_field .eq. 'ob')then
+                    igrid = 0
                 endif
 
                 call plot_barbs(u_2d,v_2d,lat,lon,topo,size,zoom
@@ -1070,6 +1097,8 @@ c       include 'satellite_dims_lvd.inc'
             if(c_type(2:2) .ne. 's' )iflag = 2
 
             c33_label = '                                 '
+
+            igrid = 0
 
             call plot_stations(asc_tim_9,c33_label,c_type,i_overlay
      1                        ,c_display,lat,lon,c_file,iflag
@@ -2135,6 +2164,12 @@ c
      1           ,i4time_ref,laps_cycle_time*10000,i4time_nearest
      1           ,ext,var_2d,units_2d,comment_2d
      1           ,NX_L,NY_L,field_2d,level_mb,istatus)       
+
+                do i = 1,NX_L
+                do j = 1,NY_L
+                    field_2d(i,j) = k_to_c(field_2d(i,j))
+                enddo ! j
+                enddo ! i
 
                 call mklabel33(k_level,' Temp (Bal)       C',c33_label)
 
@@ -3500,6 +3535,10 @@ c                   cint = -1.
                 var_2d = var_2d(1:len_var-1)
             else
                 l_image = .false.
+            endif
+
+            if(var_2d .eq. 'LCV')then
+                l_image = .true.
             endif
 
             level=0
