@@ -327,10 +327,10 @@ cdis
                         i_ob = nint(ri)
                         j_ob = nint(rj)
 
-                        write(6,*)' Remapping profile',i_pr,i_ob,j_ob
-     1                           ,nlevels_obs_pr(i_pr)
-     1                           ,' ',obstype(i_pr)       
-     1                           ,' ',c5_name_a(i_pr)       
+                        write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
+     1                           ,obstype(i_pr),c5_name_a(i_pr)       
+ 311                    format(1x,' Remapping profile ',4i6,1x,a8,1x,a5
+     1                        ,' (intrp LAPS lvls)')      
 
                         do k = 1,nk
                             if(ob_pr_u(i_pr,k) .ne. r_missing_data)then
