@@ -480,6 +480,8 @@ c       and store
 
         savefilename = filename
 
+        write(6,*) 'FILENAME = ',filename
+
 c       preserve the i4time
 
         save_i4time = i4time
