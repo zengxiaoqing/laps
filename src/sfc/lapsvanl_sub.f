@@ -1415,7 +1415,8 @@ c
 	print *,' '
 	write(6,900) title
 	write(iunit,900) title
- 900	format(/,2x,a,/)
+ 900	format(/,2x,a,/'          sta      i   j       '
+     1        ,'grid      obs       diff')
 c
 	ea1 = field_ea
 	ea2 = field_ea * 2.
