@@ -475,7 +475,7 @@ c                   write(6,101)(nint(max(ref_3d(i,j,kwrt),ref_base)),kwrt=1,nk)
      1              max(int(height_to_zcoord(topo_buffer,istatus)),1)
 
                 if(istatus .ne. 1)then
-                    write(6,*)' ERROR return in ref_fill_horz'
+                    write(6,*)' ERROR return in ref_fill_vert'
                     return
                 endif
 

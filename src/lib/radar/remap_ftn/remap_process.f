@@ -588,6 +588,7 @@ c
 
         else ! Single level of data (as per WFO)
             call put_remap_vrc(i_product_i4time,comment_a(1)
+     1                  ,rlat_radar,rlon_radar,rheight_radar
      1                  ,out_array_4d(1,1,1,1),NX_L,NY_L,NZ_L,istatus)   
 
         endif
@@ -753,6 +754,7 @@ c            ext = 'v01'
 
 
         subroutine put_remap_vrc(i4time,comment_2d 
+     1                         ,rlat_radar,rlon_radar,rheight_radar
      1                         ,field_3d,imax,jmax,kmax,istatus)
 
         character*7 c7_ext
@@ -771,13 +773,29 @@ c            ext = 'v01'
 
         real*4 field_3d(imax,jmax,kmax)
         real*4 field_2d(imax,jmax)
+        real*4 lat(imax,jmax)
+        real*4 lon(imax,jmax)
+        real*4 topo(imax,jmax)
 
         character*8 radar_subdir
+
+        write(6,*)' Subroutine put_remap_vrc'
 
 !       Get column max reflectivity
         call get_max_ref(field_3d,imax,jmax,kmax,field_2d)
 
-!       call ref_fill_horz()
+        call get_laps_domain(imax,jmax,'nest7grid',lat,lon,topo,istatus)       
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling get_laps_domain'
+            return
+        endif
+
+        call ref_fill_horz(field_2d,imax,jmax,1,lat,lon
+     1                    ,rlat_radar,rlon_radar,rheight_radar,istatus)       
+        if(istatus .ne. 1)then
+            write(6,*)' Error calling ref_fill_horz'          
+            return
+        endif
 
         ext = 'vrc'
         var_2d = 'REF'
