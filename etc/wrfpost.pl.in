@@ -48,23 +48,17 @@ use strict;
 $ENV{PATH}="@NETCDF@/bin:$ENV{PATH}";
 
 my $runtime = `date -u +%y%j%H%M`; chomp $runtime;
-use vars qw($opt_a $opt_c $opt_d $opt_e $opt_h $opt_i 
-            $opt_l $opt_q $opt_v $opt_w $opt_u 
-            $opt_z);
+use vars qw($opt_d $opt_h $opt_i 
+            $opt_l $opt_v $opt_w );
 use Getopt::Std;   
 print "Routine: wrfpost.pl\n";
 my $mydir = `pwd`; chomp $mydir; 
-getopts('a:c:d:e:hi:l:q:u:v:w:z');
+getopts('d:hi:l:v:w:');
 if ($opt_h){    
   print "Usage:  wrfpost.pl [options]
 
           Valid Options:
           ===============================================================
-          -a LAPSINSTALLROOT
-
-          -c nodetype
-             When using PBS, this allows you to specify type of node to
-             use
 
           -d {MOAD_DATAROOT}
              Overrides MOAD_DATAROOT environment variable
@@ -77,12 +71,6 @@ if ($opt_h){
 
           -l {laps_data_root}
 
-          -q {walltime that run should not exceed in hh:mm:ss}
-            Set to run using qsub (on jet)
-
-          -u UserID
-             Sets optional user ID when using qsub
-
           -v Version
              WRF model version begin processed (1 or 2)
              If not set, 2 is assumed.
@@ -94,16 +82,31 @@ if ($opt_h){
 # Get user specified installroot and dataroot.  If they are not
 # present, then use environment variables.
 
-my ($lapsroot, $installroot, $wrfdataroot, $lapsdataroot);
+my ( $installroot, $wrfdataroot, $lapsdataroot);
 if (! defined $opt_i){
-  if (! $ENV{INSTALLROOT}){
-    die "No INSTALLROOT environment variable set! \n";
+  if (! $ENV{LAPSINSTALLROOT}){
+    print "No LAPSINSTALLROOT environment variable set! \n";
+    print " ... will determine from relative path.\n";
+    my $curdir = `pwd`; chomp $curdir;
+    my $script = $0;
+    if ($script =~ /^(\S{1,})\/wrfpost.pl$/){
+      chdir "$1/..";
+    }else{
+      chdir "..";
+    }
+    $installroot = `pwd`; chomp $installroot;
+    chdir "$curdir";
+    if (! -e "$installroot/bin/lfmpost.exe") {
+      die "Cannot determine installroot\n";
+    }else{
+      $ENV{INSTALLROOT} = $installroot;
+    }
   }else{
-    $installroot = $ENV{INSTALLROOT};
+    $installroot = $ENV{LAPSINSTALLROOT};
   }
 }else{
   $installroot = $opt_i;
-  $ENV{INSTALLROOT}=$installroot;
+  $ENV{LAPSINSTALLROOT}=$installroot;
 }                                                                         
 if (! defined $opt_d){
   if (! $ENV{MOAD_DATAROOT}){
@@ -118,30 +121,29 @@ if (! defined $opt_d){
 
 my ($domain_num);
 if ($opt_w){$domain_num = $opt_w}else{$domain_num = 1}
+my $domnum2 = $domain_num;
+$domnum2 = "0".$domnum2 while(length($domnum2)<2);
 
 # Check for some mandatory files and die if not found.  
 my $lfmpostnl = "$wrfdataroot/static/lfmpost.nl";
 if (! -f $lfmpostnl){ die "$lfmpostnl not found! \n";}
 my $workdir = "$wrfdataroot/wrfprd";
 if (! -d $workdir){ die "$workdir not found! \n";}
-
+my $domdir = "$workdir/d".$domnum2;
+if (! -d "$domdir"){
+  print "Creating $domdir\n";
+  mkdir "$domdir";
+}
+my @subdirs = qw ( awips fsf fua grib points v5d );
+foreach (@subdirs) {
+  if (! -d "$domdir/$_"){
+    print "Creating $domdir/$_\n";
+    mkdir "$domdir/$_";
+  }
+}
 my $logfile = "$wrfdataroot/log/lfmpost_d$domain_num.$runtime.log";
 my $lfmpostlog = "$logfile.exe";
 chdir $workdir;
-
-
-# To run lfmpost, we now must have a LAPSINSTALLROOT
-
-if ($opt_a) {
-  $lapsroot = $opt_a;
-  $ENV{LAPSINSTALLROOT}=$lapsroot;
-}else{
-  if ($ENV{LAPSINSTALLROOT}){
-    $lapsroot = $ENV{LAPSINSTALLROOT};
-  }else{
-    die "No LAPSINSTALLROOT set, required to find lfmpost executable!\n";
-  }
-}
 
 if ($opt_l){
   $lapsdataroot=$opt_l;  
@@ -151,19 +153,19 @@ if ($opt_l){
     $lapsdataroot = $ENV{LAPS_DATA_ROOT};
   }else{
     print "No LAPS_DATA_ROOT set.\n";
-    die;
+    print "If LAPS output is requested, LFMPOST will die!\n";
   }
 }
 print "LAPS_DATA_ROOT=$lapsdataroot\n";
 
 # Set WRF version
-my ($version, $exearg1);
+my ($wrfversion, $exearg1);
 if ($opt_v) {
-  $version = $opt_v;
-  if (($version != 1) and ($version != 2)){  
-    die "-v used to specify incorrect WRF version.\n";
+  $wrfversion = $opt_v;
+  if (($wrfversion != 1) and ($wrfversion != 2)){  
+    die "Specified incorrect WRF version.\n";
   }
-  if ($version == 1){
+  if ($wrfversion == 1){
     print "Assuming WRFV1 output.\n";
     $exearg1 = "wrf";
   }else{
@@ -172,13 +174,13 @@ if ($opt_v) {
   }
 }else{
   print "Assuming WRFV2 output.\n";
-  $version = 2;
+  $wrfversion = 2;
   $exearg1 = "wrf2";
 }
 
 # For version 2 output, we need to build the wrftimes
 # namelist file from MOAD_DATAROOT/wrfprd/namelist.input
-if ($version == 2){
+if ($wrfversion == 2){
   print "Building $wrfdataroot/wrfprd/wrftimes.nl file\n";
   if (! -f "$wrfdataroot/wrfprd/namelist.input"){
     die "No valid namelist.input found.\n";
@@ -186,12 +188,13 @@ if ($version == 2){
   open(WNL,"$wrfdataroot/wrfprd/namelist.input");
   my @lines = <WNL> ;
   close(WNL);
-  open (WTNL, ">$wrfdataroot/wrfprd/wrftime.nl");
-  print WTNL "\&wrftime\n";
+  open (WTNL, ">$wrfdataroot/wrfprd/wrftimes.nl");
+  print WTNL "\&wrftimes\n";
   foreach(@lines){
     if ( (/start_year/i) or (/end_year/i) or
          (/start_month/i) or (/end_month/i) or
          (/start_day/i) or (/end_day/i) or
+         (/start_hour/i) or (/end_hour/i) or
          (/start_minute/i) or (/end_minute/i) or
          (/start_second/i) or (/end_second/i) or
          (/history_interval/i) or (/frames_per_outfile/i)){
@@ -203,160 +206,22 @@ if ($version == 2){
   close (WTNL);
 }
     
-# See if we are running using qsub on jet.  If so, we need
-# to build a temporary script.  For now, we will use
-# /bin/sh for the shell.
-
 my $command;
-$command = "$lapsroot/bin/lfmpost.exe $exearg1 1 >> $lfmpostlog";
-if ($opt_q){
-  my $nodetype;
-  if ($opt_c) {
-    $nodetype = $opt_c;
-  }else{
-    $nodetype = "comp";
-  }
-  if ($opt_e) {
-    $nodetype = "$nodetype:ppn=$opt_e";
-  }
-  open (QS, ">qsub_lfmpost.ksh");
-  print QS "#!/bin/ksh\n";
-
-  # PBS directives
-  print QS "#PBS -l walltime=$opt_q,nodes=1:$nodetype\n";
-
-  # SGE directives
-  print QS "#\$ -S /bin/ksh\n";
-  print QS "#\$ -l h_rt=$opt_q\n";
-  print QS "#\$ -pe $nodetype 1\n";
-
-  # Basic commands
-  print QS "cd $workdir\n";
-  print QS "$command\n";
-  print QS "exit\n";
-  close(QS);
-  chmod 0777, "qsub_lfmpost.ksh";
-}
+$command = "$installroot/bin/lfmpost.exe $exearg1 $domain_num >> $lfmpostlog";
 
 # Set up the log file
 open (LOG, ">$logfile");
 
-
 my ($startdate, $enddate);
 $startdate = `date -u +%H%M"Z"`; chomp $startdate;
-
 print LOG "----------------------------------------\n";
 print LOG "Job submitted at $startdate\n";
-my ($jobid,$jobserver);
-my $stdout;
-my $result;
-my $exepid;
-if ($opt_q) {
-  print LOG "(Job submitted using qsub on the PBS queueing system,\n";
-  print LOG "using a max wall time of $opt_q)\n";   
-  my $qcommand;
-  if ($opt_u){
-    $qcommand = "/PBSHOME//bin/qsub -A $opt_u -V -N lfmpost $workdir/qsub_lfmpost.ksh"
-  }else{
-    $qcommand = "/PBSHOME//bin/qsub -V -N lfmpost $workdir/qsub_lfmpost.ksh"
-  } 
-  system ("$qcommand > jobfile.post");
-  if (! -f "jobfile.post"){
-    print LOG "Problem running qsub!\n";
-    print LOG "No output from the qsub command found\n";
-    close (LOG);
-    die;
-  }
-  open(JF,"jobfile.post");
-  my @joblines = <JF>;
-  close(JF);
-  unlink "jobfile.post";
-  # Get the job ID number
-  foreach (@joblines){
-    if (/^(\d*)\.(\S*)/i) {
-      $jobid = $1;
-      $jobserver = $2;
-    }elsif(/^(\d*)$/) {
-      $jobid = $1;
-    }
-  }
-  print LOG "  QSUB Job ID# = $jobid.$jobserver\n";
-  print LOG "  Std out will be $workdir/lfmpost.o$jobid\n"; 
-}
-
-my $finalcheck = 0;
-my $jobcheck;
-while ($finalcheck < 2){
-  sleep 10;
-  if ($opt_q){
-    if ( -f "/PBSHOME//bin/ping_job") {
-       if ($jobserver){
-         $jobcheck = system("/PBSHOME//bin/ping_job $jobid.$jobserver");
-       }else{
-          $jobcheck = system("/PBSHOME//bin/ping_job $jobid");
-       }
-    }
-  }
-  if (! $jobcheck){
-    print "Program may not be running...\n";
-    if ( ( ($opt_q)and(-f "$workdir/lfmpost.o$jobid") )  or 
-        ( ($opt_q)and(-f "/PBSHOME//bin/ping_job") ) or
-        (! $opt_q) ){
-      
-      # The program is no longer running
-      # Make one more pass through the data to catch any final files
-      sleep 60;
-      $finalcheck++;
-    }
-  }
-}
-
-# 
-
-$enddate = `date -u +%H%M"Z"`; chomp $enddate; 
-print LOG "Job completed at $enddate \n"; 
-if (-f "$workdir/lfmpost.o$jobid"){
-  print LOG "\n";
-  print LOG "===============================================\n";
-  print LOG "lfmpost.o$jobid\n";
-  print LOG "===============================================\n";
-  open (SO, "$workdir/lfmpost.o$jobid");
-  foreach (readline *SO){
-    print LOG "$_";
-  }
-  print LOG "\n";
-  close SO;
-  chmod 0666, "$workdir/lfmpost.o$jobid";
-}
-if (-f "$workdir/lfmpost.e$jobid"){
-  print LOG "\n";
-  print LOG "===============================================\n";
-  print LOG "lfmpost.e$jobid\n";
-  print LOG "===============================================\n";
-  open (SE, "$workdir/lfmpost.e$jobid");
-  foreach (readline *SE){
-    print LOG "$_";
-  }
-  print LOG "\n";
-  close SE;
-  chmod 0666, "$workdir/lfmpost.e$jobid";
-}                   
-
-if (-f "$lfmpostlog") {
-  print LOG "\n";
-  print LOG "===============================================\n";
-  print LOG "WRFPOST Execution LOG\n";
-  print LOG "===============================================\n";
-  open (ML, "$lfmpostlog");
-  foreach (readline *ML){
-    print LOG "$_";
-  }
-  print LOG "\n";
-  close ML;
-  unlink "$lfmpostlog";
-}                     
-
+system("$command >> $lfmpostlog");
+$enddate = `date -u +%H%M"Z"`; chomp $enddate;
+print LOG "Job ended at $enddate\n";
+print LOG "Standard output from lfmpost follows:\n\n";
 close(LOG);
-
+system ("cat $lfmpostlog >> $logfile");
+system ("rm $lfmpostlog");
 chdir "$mydir";
 exit;
