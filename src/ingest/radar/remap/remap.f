@@ -201,11 +201,12 @@ cdis
       i_tilt_proc_curr = 1
 
       call radar_init(i_radar,path_to_radar,path_to_vrc,itimes         ! I
+     1               ,b_missing_data                                   ! I
      1               ,i_tilt_proc_curr                                 ! I/O
      1               ,i_last_scan,istatus)                             ! O
+      write(6,*)' remap_sub: istatus from radar_init (1st call) ='
+     1         ,istatus    
       if(istatus .ne. 1)then
-          write(6,*)' remap_sub: istatus returned from radar_init ='
-     1              ,istatus      
           return
       endif
 
@@ -413,8 +414,11 @@ cdis
 ! call RADAR_INIT to assess the current tilt (first/last) and read next tilt
               i_tilt_proc_next = i_tilt_proc_curr + 1
               call radar_init(i_radar,path_to_radar,path_to_vrc,itimes   ! I
+     1                       ,b_missing_data                             ! I
      1                       ,i_tilt_proc_next,i_last_scan
-     1                                                ,istatus)
+     1                                                ,istatus)          ! O
+              write(6,*)
+     1        ' remap_sub: istatus from radar_init (2nd call) =',istatus    
 
 ! call REMAP_PROCESS with the current tilt
               write(6,*)
