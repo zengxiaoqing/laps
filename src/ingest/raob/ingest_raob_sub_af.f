@@ -1,5 +1,14 @@
-      subroutine get_raob_data_af(i4time_sys,ilaps_cycle_time,filename       
+      subroutine get_raob_data_af(i4time_sys,ilaps_cycle_time,NX_L,NY_L
+     1                                                     ,filename       
      1                                                     ,istatus)
+
+!     Ken Dritz     28-Jul-1997       Added NX_L, NY_L to dummy argument list.
+!     Ken Dritz     28-Jul-1997       Added call to get_r_missing_data.
+!     Ken Dritz     28-Jul-1997       Changed LAPS_DOMAIN_FILE to 'nest7grid'.
+!     Ken Dritz     28-Jul-1997       Removed include of lapsparms.for.
+!     Ken Dritz     28-Jul-1997       Removed comment about "non-automatic
+!                                     declarations" (above arrays dimensioned
+!                                     by NX_L, NY_L); they are now automatic.
 
 C     FORTRAN TEMPLATE FOR FILE= 9614912000300o                          
       PARAMETER (NVARS=39) !NUMBER OF VARIABLES
@@ -10,8 +19,6 @@ C     VARIABLE IDS RUN SEQUENTIALLY FROM 1 TO NVARS= 39
 C     ****VARIABLES FOR THIS NETCDF FILE****
 C
 
-!     Non-automatic declarations
-      include 'lapsparms.for'
       character*70 filename
       real*4 lat_a(NX_L,NY_L)
       real*4 lon_a(NX_L,NY_L)
@@ -20,7 +27,12 @@ C
       character*5 c5_staid
       character*11 a11_raob_reltime,a11_pibal_reltime
 
-      call get_domain_perimeter(NX_L,NY_L,LAPS_DOMAIN_FILE,lat_a,lon_a,   
+      call get_r_missing_data(r_missing_data,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting r_missing_data'
+          return
+      endif
+      call get_domain_perimeter(NX_L,NY_L,'nest7grid',lat_a,lon_a,   
      1            topo_a,1.0,rnorth,south,east,west,istatus)
       if(istatus .ne. 1)then
           write(6,*)' Error in get_domain_perimeter'

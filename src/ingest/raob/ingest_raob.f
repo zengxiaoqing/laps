@@ -1,4 +1,8 @@
 
+!     Ken Dritz     28-Jul-1997         Added call to get_grid_dim_xy to
+!                                       get the values of NX_L, NY_L.
+!     Ken Dritz     28-Jul-1997         Pass the values of NX_L and NY_L to
+!                                       get_raob_data and get_raob_data_af.
 
 !     Input file 
       character*70 filename_in
@@ -37,9 +41,15 @@
       c8_project = 'nimbus'
 
       call get_systime(i4time_sys,a9_time,istatus)
-
+      if(istatus .ne. 1)go to 999
 
       i4time_sys = (i4time_sys/i4_snd_interval) * i4_snd_interval ! For testing only
+
+      call get_grid_dim_xy(NX_L,NY_L,istatus)
+      if (istatus .ne. 1) then
+          write (6,*) 'Error getting horizontal domain dimensions'
+          go to 999
+      endif
 
       call get_laps_cycle_time(ilaps_cycle_time,istatus)
       if(istatus .eq. 1)then
@@ -147,9 +157,11 @@
 !             Read from the NetCDF pirep file and write to the opened PIN file
               if(c8_project(1:6) .eq. 'nimbus')then
                   call get_raob_data   (i4time_sys,ilaps_cycle_time
+     1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
               else
                   call get_raob_data_af(i4time_sys,ilaps_cycle_time
+     1                                      ,NX_L,NY_L
      1                                      ,filename_in,istatus)
               endif
           endif
