@@ -61,7 +61,7 @@ c     input variables
       real gps_data_weights(ii,jj)
       
       integer gps_n, gps_num
-      parameter (gps_n = 1000)
+      parameter (gps_n = 20000)
       real gps_tpw(gps_n)
       real gps_error(gps_n)
       real gps_lat(gps_n)
