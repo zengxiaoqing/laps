@@ -27,6 +27,8 @@ SRC= main_sub.f \
      comp_laps_vr.f \
      comp_laps1_laps2.f \
      comp_laps_maps.f \
+     dualwind_noZ.f \
+     dualwind_yesZ.f \
      vertwind.f \
      rdpoint.f \
      rdsfc.f \
