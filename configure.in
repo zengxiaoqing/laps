@@ -253,9 +253,10 @@ AC_OUTPUT(src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
 	  etc/LapsRadar.pl
-          etc/change-center.pl
+          etc/LapsRadar_RSA.pl
           etc/check_release.csh
           etc/cloud.pl
+          etc/change-center.pl
           etc/cronfile.pl
           etc/fxalogdir.pl
           etc/hum3d.pl
@@ -276,7 +277,7 @@ AC_OUTPUT(src/include/trigd.inc
           etc/temp.pl
           etc/wfo-cwa-latlon-bounds.pl
           etc/wfo_post.pl
-          etc/wfo_relocalization.pl
+          etc/wfo-relocalization.pl
           etc/wind3d.pl
           etc/window_domain_rt.pl
           etc/xferData.pl)

@@ -2924,6 +2924,7 @@ trap 'rm -fr `echo "src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
 	  etc/LapsRadar.pl
+          etc/LapsRadar_RSA.pl
           etc/check_release.csh
           etc/cloud.pl
           etc/change-center.pl
@@ -3047,7 +3048,8 @@ cat >> $CONFIG_STATUS <<EOF
 CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           src/include/makefile.inc
           util/cronfile
-          etc/LapsRadar.pl
+	  etc/LapsRadar.pl
+          etc/LapsRadar_RSA.pl
           etc/check_release.csh
           etc/cloud.pl
           etc/change-center.pl
@@ -3061,8 +3063,8 @@ CONFIG_FILES=\${CONFIG_FILES-"src/include/trigd.inc
           etc/ramrsf.pl
           etc/localize_optran.pl
           etc/localize_domain.pl
-          etc/laps_localization.pl
-          etc/laps_monitor.pl
+	  etc/laps_localization.pl
+	  etc/laps_monitor.pl
           etc/makedatadirs.pl
           etc/sendLAPS.pl
           etc/send_lapsprep.pl
