@@ -1649,6 +1649,8 @@ Output: (feeds wind)
 
 Source directory: laps/src/ingest/profiler
 
+Parameter files: static/nest7grid.parms, static/vad.nl
+
 Sample Input/Output: Should be available in the test data case.
 
 For the 'pro' output, each profile starts with an ASCII header and the
@@ -1772,6 +1774,8 @@ Author: Steve Albers (albers@fsl.noaa.gov)
 Inputs:
 	GOES 8/9 cloud drift winds in ASCII format
         AFWA format also allowed.
+
+Parameter file: 'static/cloud_drift.nl'
 
 Outputs: (Feeds wind.exe)
 	cdw	intermediate data (ASCII)       Satellte cloud drift winds
