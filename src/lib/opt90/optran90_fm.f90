@@ -48,7 +48,11 @@
           flx_tau, &
           sol_tau, &
           up_radiance, &
-          bright_temp &
+          bright_temp, & 
+          sndr_coeff,&
+          sndr_trans, &
+          sndr_coeff_len, &
+          sndr_trans_len &
           )
 
 
@@ -101,8 +105,7 @@
 
   character*256 sndr_coeff, sndr_trans
   integer sndr_coeff_len, sndr_trans_len
-  common /optn_coef/ sndr_coeff, sndr_trans, sndr_coeff_len, &
-                     sndr_trans_len
+
 
 
   ! ------------------
@@ -487,6 +490,9 @@ END SUBROUTINE optran_deallocate
 ! $State$
 !
 ! $Log$
+! Revision 1.3  2003/07/10 17:09:24  birk
+! ready for laps optran90
+!
 ! Revision 1.2  2002/11/18 20:01:39  birk
 ! changes made to avoid compilation errors on jet, statement order specifics.
 !
