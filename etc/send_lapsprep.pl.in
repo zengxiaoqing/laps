@@ -1,0 +1,141 @@
+#!@PERL@
+#
+# send_lapsprep.pl 
+#
+#  Perl script to transfer a lapsprep output file to a remote system
+#  using FTP. This may be useful when the forecast model is running
+#  on a separate machine from LAPS and the file systems are not 
+#  cross-mounted.
+
+require 5;
+use strict;
+umask 002;
+use vars qw($opt_h $opt_o);
+use Getopt::Std;
+
+
+my $mydir = `pwd`; chomp $mydir ;
+getopts('ho:');
+if ($opt_h){
+  print "Usage:  send_lapsprep.pl [options] model localdir remote_host remote_dir
+  
+                 Valid Options:
+                 ======================================================
+                 -h
+                   Prints this help message
+
+                 -o hours
+                   Send lapsprep file valid hours from current time\n";;
+
+  exit;
+}
+
+# Process the required arguments
+
+my ($model, $localdir, $remotehost, $remotedir) = @ARGV;
+if ( ($model ne 'mm5') and ($model ne 'rams') and ($model ne 'wrf')){
+  die "Model must be mm5, rams, or wrf\n";
+}
+
+
+# Compute file time to use from system clock and optional offset
+
+my ($year, $month, $day, $hour, $timestr, $filetimestr);
+
+$timestr = `date -u +%Y%m%d%H`;
+if ($opt_o) {
+  $timestr = compute_time($timestr, $opt_o);
+}
+if ($timestr =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)$/ ) {
+  $year = $1;
+  $month = $2;
+  $day = $3;
+  $hour = $4;
+}
+
+my ($filename, $localfile, $remotefile);
+if ($model eq 'mm5'){
+  $filename = 'mm5_laps:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+}elsif($model eq 'wrf'){
+  $filename = 'wrf_laps:'.$year.'-'.$month.'-'.$day.'_'.$hour;
+}elsif($model eq 'rams'){
+  $filename = 'rams_laps:'.$year.'-'.$month.'-'.$day.'-'.$hour.'00';
+}
+
+$localfile = $localdir.'/'.$filename;
+$remotefile = $remotedir.'/'.$filename;
+print "Sending $localfile to $remotehost as $remotefile \n";
+
+chdir $localdir;
+if (! -f $filename) { 
+  die "Local file not present!\n";
+}
+
+# Build a shell script to do the FTP.  We could also 
+# use the Perl Net:FTP module if it was present on the system
+# which would probably be more elegant
+
+my $ftpscript = "ftp.lapsprep";
+open(FS,">$ftpscript");
+print FS "#!/bin/sh\n";
+print FS "ftp $remotehost << !\n";
+print FS "cd $remotedir\n";
+print FS "bin\n";
+print FS "put $filename\n";
+print FS "bye \n";
+print FS "!\n";
+print FS "exit\n";
+
+close(FS);
+chmod 0777, "$ftpscript";
+
+# Run the script
+system ("$ftpscript");
+
+# Delete the script
+
+chdir $mydir;
+exit;
+#------------------------------------------------------
+
+sub compute_time {
+use Time::Local;
+
+my ($date_in, $offset) = @_;
+
+# Parse out year, month, day, and hour
+
+my ($yyyy, $mm, $dd, $hh);
+if ($date_in =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)$/) {
+  $yyyy = $1;
+  $mm   = $2;
+  $dd   = $3;
+  $hh   = $4; }
+else {
+  print "Unrecognized date/time in wrfsi_utils::compute_time.\n";
+  exit; }
+
+# Convert to time coordinate in seconds
+
+my (@time);
+$time[2] = $hh;
+$time[3] = $dd;
+$time[4] = $mm - 1;
+$time[5] = $yyyy - 1900;
+my $i4time = timegm(@time);
+
+# Add offset and convert back to needed format
+
+$i4time = $i4time + 3600*$offset;
+@time = gmtime($i4time);
+$yyyy = $time[5] + 1900;
+$mm   = $time[4] + 1; $mm="0".$mm while (length($mm)<2);
+$dd   = $time[3];     $dd="0".$dd while (length($dd)<2);
+$hh   = $time[2];     $hh="0".$hh while (length($hh)<2);
+
+my $ans = "$yyyy$mm$dd$hh";
+
+return ($ans);
+
+}
+                                         
