@@ -938,6 +938,11 @@ c
         character  reptype(maxsta)*6, atype(maxsta)*6
         character  store_cldamt(maxsta,5)*4
 
+        if(i .le. 0 .or. i .gt. maxsta)then
+            write(6,*)' init_station index out of bounds ',i
+            stop
+        endif            
+
         dpchar(i) = 0
         wmoid(i) = 0
 
