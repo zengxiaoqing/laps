@@ -47,7 +47,7 @@ cdis
             call ingest_blppro(i4time,NX_L,NY_L,j_status)
 
         else
-            call ingest_blppro(i4time,j_status)
+            call ingest_blppro(i4time,NX_L,NY_L,j_status)
 !           write(6,*)' Not on the hour, no blp profiler ingest run'    
 
         endif
