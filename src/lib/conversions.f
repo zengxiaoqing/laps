@@ -61,6 +61,7 @@ cdis
         subroutine latlon_to_radar(lat_grid,lon_grid,height_grid
      1                  ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
+      include 'trigd.inc'
 
         implicit real*4 (a-z)
 
@@ -779,6 +780,7 @@ c       1                       ,hor_dist,curvature
      1                         t_radar,
      1                         r_radar,
      1                         azimuth)
+      include 'trigd.inc'
 
 
         include 'lapsparms.inc'
@@ -934,6 +936,7 @@ c       1                       ,hor_dist,curvature
 
         angle = -projrot_laps(longitude)
 
+
         call         rotate_vec(u_grid,
      1                  v_grid,
      1                  u_true,
@@ -944,20 +947,21 @@ c       1                       ,hor_dist,curvature
         end
 
 
-        subroutine rotate_vec(u1,v1,u2,v2,angle)
 
-        u2 =  u1 * cosd(angle) + v1 * sind(angle)
-        v2 = -u1 * sind(angle) + v1 * cosd(angle)
+      subroutine rotate_vec(u1,v1,u2,v2,angle)
+      include 'trigd.inc'
+      u2 =  u1 * cosd(angle) + v1 * sind(angle)
+      v2 = -u1 * sind(angle) + v1 * cosd(angle)
 
-        return
-        end
+      return
+      end
 
 
         subroutine   disp_to_uv(dir,
      1                  speed,
      1                  u,
      1                  v)
-
+        include 'trigd.inc'
         u  = - sind(dir) * speed
         v  = - cosd(dir) * speed
 

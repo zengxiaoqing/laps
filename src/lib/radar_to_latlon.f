@@ -35,6 +35,7 @@ cdis
      1                  ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
+      include 'trigd.inc'
         implicit real*4 (a-z)
 
         include 'lapsparms.inc'
@@ -80,6 +81,7 @@ cdis
      1                  ,azimuth,slant_range,elev
      1                  ,rlat_radar,rlon_radar,rheight_radar)
 
+      include 'trigd.inc'
         implicit real*4 (a-z)
 
         include 'lapsparms.inc'

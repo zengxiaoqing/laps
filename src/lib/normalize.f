@@ -70,8 +70,10 @@ C lun            I        I*4     Logical Unit # for logging output
 C i_dir          I        I*4     Direction of normalization (-1,0,+1)
 C phase_angle_d  O        R*4  A  Phase Angle (sparse array if iskip_bilin > 1)
 C Specular_ref_angle_d O  R*4  A  Distance from specular reflection pt to sun
+      include 'trigd.inc'
 C istatus        O        I*4     Standard status return.
 
+      include 'trigd.inc'
         integer         ni,nj
 C***Parameter list variables
         real*4          lat(ni,nj),lon(ni,nj)

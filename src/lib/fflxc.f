@@ -38,6 +38,7 @@ cdis
 !       Made even more general (Adjustable Dims)        1991
 !       Added new map projections for sigma calc        1997
 
+      include 'trigd.inc'
         REAL M
         DIMENSION FIELD(ni,nj),FLU(ni,nj),FLV(ni,nj),SIGMA(ni,nj)
         real UH(ni,nj),VH(ni,nj),FLXCNV(ni,nj),lat(ni,nj),lon(ni,nj)
@@ -134,6 +135,7 @@ C
 !       Equations from Principles of Meteorological Analysis, Walter Saucier
 !       Pages 32,33
 
+      include 'trigd.inc'
         real*4 n
         character*6 c6_maproj
 

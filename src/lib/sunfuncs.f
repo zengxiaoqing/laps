@@ -43,6 +43,7 @@ C Argument      I/O     Type                    Description
 C --------      ---     ----    -----------------------------------------------
 C RLAT           I      R*4     Latitude (degrees)
 C RLNG           I      R*4     Longitude (degrees)
+      include 'trigd.inc'
         character*9 asc9_time
 
         PI=3.14159265
@@ -83,6 +84,7 @@ C Argument      I/O     Type                    Description
 C --------      ---     ----    -----------------------------------------------
 C RLAT           I      R*4     Latitude (degrees)
 C RLNG           I      R*4     Longitude (degrees)
+      include 'trigd.inc'
         character*9 asc9_time
 
         PI=3.14159265
