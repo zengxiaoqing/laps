@@ -48,6 +48,12 @@ c                                      version of write_surface_obs).
 c                          05-01-98  Added soil moisture to 'store_5' & '_5ea'
 c                          09-04-98  Final adjustments for operational use.
 c
+c
+c               J. Edwards 09-16-98  moved all format definitions to 
+c                                    src/include/lso_formats.inc
+c                                    changed 909 definition to allow for 
+c                                    missing data
+c
 c*****************************************************************************
 c
 	real*4 store_1(maxsta,4), 
@@ -76,7 +82,6 @@ c
 	write(11,900) btime,		! time
      &               n_obs_g,		! # of obs in the laps grid
      &               n_obs_b		! # of obs in the box
- 900	format(1x,a24,2x,i6,2x,i6)
 c
 c.....	Write the station data.
 c
@@ -87,22 +92,18 @@ c
      &                   provider(k),           !data provider
      &                   (store_1(k,i),i=1,3),  !lat, lon, elev
      &                   nint(store_1(k,4))     !obs time
- 901	  format(1x,a20,2x,i8,2x,a11,2x,f8.2,2x,f8.2,2x,f8.1,2x,i8)
 c
 	  write(11,903)  reptype(k),            !station report type
      &                   autostntype(k),        !station type (manual/auto)
      &                   wx(k)                  !present weather
- 903	  format(5x,a10,2x,a10,2x,a30)
 c
 	  write(11,905) store_2(k,1), store_2ea(k,1),   !temp, temp expected accuracy
      &                  store_2(k,2), store_2ea(k,2),   !dew point, dew point exp. accuracy
      &                  store_2(k,3), store_2ea(k,3)    !Rel hum, rh expected accuracy
- 905	  format(5x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2,2x,f8.2,2x,f5.2)
 c
 	  write(11,907) store_3(k,1), store_3(k,2),     !wind dir, wind speed
      &                  store_3(k,3), store_3(k,4),     !wind gust dir, wind gust speed
      &                  store_3ea(k,1), store_3ea(k,2)  !dir expected accuracy, spd exp accuracy
- 907	  format(5x,4(f8.1,2x),2(f6.2,2x))
 c
 	  write(11,909) store_4(k,1),                   !altimeter
      &                  store_4(k,2),                   !station pressure
@@ -110,13 +111,13 @@ c
      &                  nint(store_4(k,4)),             !3-h press change character
      &                  store_4(k,5),                   !3-h pressure change
      &                  store_4ea(k,1), store_4ea(k,2)  !pressure exp accuracy, alt exp accuracy
- 909	  format(5x,f8.2,2x,f8.2,2x,f8.2,2x,i4,2x,f6.2,2x,f6.2,2x,f6.2)
+
+
 c
 	  write(11,911) store_5(k,1), store_5ea(k,1),   !visibility, vis exp accuracy
      &                  store_5(k,2), store_5ea(k,2),   !solar, solar exp accuracy
      &                  store_5(k,3), store_5ea(k,3),   !soil/water temp, soil/water temp exp accuracy
      &                  store_5(k,4), store_5ea(k,4)    !soil moisture, soil moist exp accuracy
- 911	  format(5x,f8.0,2x,f6.3,2x,f8.0,2x,f6.1,2x,4f8.2)
 c
 	  write(11,913)  store_6(k,1),                  !1-h precipitation
      &                   store_6(k,2),                  !3-h precipitation
@@ -124,13 +125,11 @@ c
      &                   store_6(k,4),                  !24-h precipitation
      &                   store_6(k,5),                  !snow depth
      &                   store_6ea(k,1), store_6ea(k,2) !precip and snow exp accuracy
- 913	  format(5x,4(f8.2,2x),f6.1,2x,f8.2,2x,f4.1)
 c
 	  kkk_s = int(store_7(k,1))
 	  write(11,915) kkk_s,                     !num cld layers (store_7(k,1))
      &                  store_7(k,2),              !24-h max temperature
      &                  store_7(k,3)               !24-h min temperature
- 915	  format(5x,i4,2x,f8.2,2x,f8.2)
 c
 c.....	Write the cloud data if we have any.
 c
@@ -139,14 +138,15 @@ c
   	      write(11,917) store_cldamt(k,ii), store_cldht(k,ii)   !layer cloud amount and height
 	    enddo !ii
 	  endif
- 917	  format(10x,a8,2x,f8.0)
 c
 	enddo !k
 c
 	endfile(11)
 	close(11)	
+
 c
 c..... End of data writing.  Let's go home...
 c
 	return
+	include 'lso_formats.inc'
 	end
