@@ -93,7 +93,8 @@
          3.3.9 ..................  BALANCE
          3.4 ..............  Model Initialization & Postprocessing
          3.4.1 ..................  LAPSPREP
-         3.4.2 ..................  LFMPOST
+         3.4.2 ..................  WFOPREP
+         3.4.3 ..................  LFMPOST
      4.0 ............  Porting code mods from LAPS users back to FSL
      5.0 ............  LAPS Output Variables and netCDF File Organization 
 
@@ -3504,10 +3505,10 @@ Analysis and Forecasting, Ft. Lauderdale, FL, Amer. Meteor. Soc.
 
 ------- 3.4  ----  Model Initialization & Postprocessing ---------------------
 
-   The main FSL contacts for information on how we use the analyses to 
-   initialize the forecasts are as follows: Brent Shaw for MM5/WRF, 
-   Paul Schultz for RAMS/SFM, and Adrian Marroquin for ETA. The models 
-   themselves are not included in this tar file.
+   The main FSL contact for information on how we use the analyses to 
+   initialize the forecasts is as follows: Paul Schultz for 
+   RAMS/SFM/MM5/WRF/Eta. The models themselves are not included in this tar 
+   file.
 
 ------ 3.4.1 --------------LAPSPREP------------------------------------------
 
@@ -3596,7 +3597,22 @@ Source directory: 'laps/src/lapsprep'
 
    Please contact the author for additional information
 
------- 3.4.2 -------------- LFMPOST ------------------------------------------
+------ 3.4.2 --------------WFOPREP------------------------------------------
+
+Process: wfoprep.exe - Processes AWIPS/WFO large-scale model forecast files 
+                       into formats that can be used as lateral boundary
+                       conditions to initialize a local forecast model 
+                       (e.g., MM5, RAMS, WRF)
+   
+     (author: Brent Shaw)
+
+     This an optional program that can be used in the AWIPS/WFO environment.
+
+Parameter namelist file: 'static/wfoprep.nl'
+
+Source directory: 'laps/src/wfoprep'
+
+------ 3.4.3 -------------- LFMPOST ------------------------------------------
 
 Process: lfmpost.exe - Post-processes MM5/WRF model forecast files into formats
                        that can be used to feed back into LAPS analysis or
