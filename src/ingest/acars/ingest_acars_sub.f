@@ -847,7 +847,7 @@ C
 C     Variable        NETCDF Long Name
 C      altitude     
 C
-        nf_status = NF_INQ_VARID(nf_fid,'indAltitude',nf_vid)
+        nf_status = NF_INQ_VARID(nf_fid,'flightLevel',nf_vid)
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'in var altitude'
