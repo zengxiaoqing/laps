@@ -399,7 +399,7 @@ c
 c
         ELSE
 
-
+           call s_len(monfile, len)
            open(15,file=monfile(1:len),
      &         form='unformatted',status='old')
            read(15) atime_mon, i4time_mon
@@ -432,22 +432,20 @@ c put the obs in the monster stack
 c
         call writemon(ta,tda,ua,va,pmsla,alta,nvar,maxstaa,m,
      &          monster,(it  )) 
-
-
-
-	go to 1234
-
-
-        if(it.ge.26) then
-           icyc=24
-           nn=32
-        else
-           go to 334
-        endif
-        if(it.ge.66) then
-           icyc=48
-           nn=64
-        endif
+c
+        icyc = 24
+        nn = 32
+c
+cc        if(it.ge.26) then
+cc           icyc=24
+cc           nn=32
+cc        else
+cc           go to 334
+cc        endif
+cc        if(it.ge.66) then
+cc           icyc=48
+cc           nn=64
+cc        endif
 c
 c     perform fourier analysis on the last 24 or 48 obs
 c
@@ -471,6 +469,10 @@ c
 c     
 c  input ob estimates as a departure from background ta
 c
+
+	go to 1234
+
+
         call perturb(yta,ta,yta,maxstaa,m,offset,on)      
         call perturb(ta,ta,dta,maxstaa,m,offset,on)      
         call perturb(ytda,tda,ytda,maxstaa,m,offset,on)      
