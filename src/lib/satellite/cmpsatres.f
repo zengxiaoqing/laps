@@ -43,8 +43,8 @@ c
 c     instr = 1  !imager=1, sounder = 2.
 c pix/line absolute coordinates
 c
-      RP= rpix/rp_div  +float(start_pix)-rp_div
-      RL= rline/rl_div +float(start_line)-rl_div
+      RP= rpix*rp_div +float(start_pix)-rp_div
+      RL= rline*rl_div+float(start_line)-rl_div
       elev1 = evln(instr,RL)
       scan1 = scpx(instr,RP)
       call lpoint(elev1,scan1,rlat8_1,rlon8_1,ierr)

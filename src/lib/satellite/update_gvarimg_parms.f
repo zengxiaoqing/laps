@@ -339,7 +339,6 @@ c
          cfname_sat=cpath(1:n)//cfname13
       else
          write(6,*)'No data in ',cpath(1:n)
-         istatus = 0
          goto 900
       endif
 c
@@ -348,11 +347,15 @@ c
       write(6,*)'calling get_attribute_wfo ',chtype(1:nn)
       call get_attribute_wfo(cfname_sat,rlat,rlon,dx,dy,nx,ny,lstatus)
       if(lstatus .lt. 0)then
-         write(6,*)'Error getting wfo attributes = ',chtype(1:nn)
+         write(6,*)'No attributes returned: get_attribute_wfo ',chtype
+     &(1:nn)
          goto 900
-      elseif(lstatus.gt.0)then
+
+c     elseif(lstatus.gt.0)then
 c        print*,'No attributes returned from get_attribute_wfo'
-         goto 900
+c        istatus=1
+c        goto 900
+
       endif
 
       dx=dx*1000.0

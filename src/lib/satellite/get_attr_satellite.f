@@ -25,7 +25,7 @@ C
       if(nf_status.ne.NF_NOERR) then
         print *, NF_STRERROR(nf_status)
         print *,'NF_OPEN ',filename(1:lenf)
-        istatus=1
+        istatus=-1
         goto 100
       endif
 C
