@@ -1661,9 +1661,9 @@ Outputs:
 	lty     3d grid         3D cloud & precip type (CTY,PTY) 
                                     threshold for cloud cover in CTY is 0.65.
 
-	lwm	2d grid		mean winds (sfc - 300mb layer)
-                                surface winds
+	lwm	2d grid		interpolated surface winds
 	lhe	2d grid		helicity (derived from 3-D winds)
+                                mean winds (sfc - 300mb layer)
 	liw	2d grid		log(LI*Omega) (partially derived from 3-D winds)
 	lmr	2d grid		2-D column max radar ref      
 	lf1	2d grid		2-D column max radar ref history (maximum 
@@ -1833,10 +1833,10 @@ Process deriv:  LCP  LCP  ccpc    21  Fractional Cloud Cover Pressure Coord
 
                 LWM  SU   u        1  Surface wind u
                      SV   v        1  Surface wind v
-                     MU   mu       1  Mean wind u 
-       		     MV   mv       1  Mean wind v
 
 		LHE  LHE  hel      1  Helicity
+                     MU   mu       1  Mean wind u 
+       		     MV   mv       1  Mean wind v
            	
            	LF1  H    mxrh     1  Max Radar Reflectivity History
 		LIW  LIW  liw      1  log(LI*omega)
