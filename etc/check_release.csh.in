@@ -36,6 +36,10 @@ setenv FILE $1/make_install.out
 grep -i Error $FILE
 grep '(E)' $FILE
 grep '(S)' $FILE
+grep -i undefined $FILE
+grep -i stop $FILE
+grep -i warning $FILE
+grep -i "No rule" $FILE
 ls -l $FILE
 
 #echo " "
