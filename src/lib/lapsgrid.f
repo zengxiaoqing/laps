@@ -891,17 +891,21 @@ c
       return
       end
 
-      subroutine get_fdda_model_source(fdda_model_source,max_models
+      subroutine get_fdda_model_source(fdda_model_source
      1,n_fdda_models,istatus)
 
       include 'lapsparms.cmn' ! FDDA_MODEL_SOURCE_CMN
-      character*(*) fdda_model_source(max_models)
+      character*(*) fdda_model_source(maxbgmodels)
       integer n_fdda_models,istatus
 
 !     This routine accesses the fdda_model_source variable from the
 !     .parms file via the common block. Note the variable name in the
 !     argument list is different in the calling routine
 
+      do i=1,maxbgmodels
+         fdda_model_source_cmn(i) = ' '
+      enddo
+      iflag_lapsparms_cmn=0
       call get_laps_config('nest7grid',istatus)
 
       if(istatus .ne. 1)then
@@ -910,7 +914,7 @@ c
       endif
 
       n_fdda_models = 0
-      do i=1,max_models
+      do i=1,maxbgmodels
          if(fdda_model_source_cmn(i).ne. ' ')then
             n_fdda_models=n_fdda_models+1
             fdda_model_source(n_fdda_models)=fdda_model_source_cmn(i)

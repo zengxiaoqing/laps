@@ -547,10 +547,11 @@ cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
 
         character*150 DIRECTORY
         character*(*) EXT
+        character*31  EXT_INT
 
         character*125 comment_3d(kmax),comment_2d
         character*10 units_3d(kmax),units_2d
-        character*3 var_3d(kmax),var_2d
+        character*3 var_3d(kmax),var_2d,ctemp
         integer*4 LVL_3d(kmax)
         character*4 LVL_COORD_3d(kmax)
 
@@ -558,10 +559,24 @@ cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
 
         logical ltest_vertical_grid
 
-        call get_directory(ext,directory,len_dir)
-
         call s_len(ext,len)
-        write(6,11)directory(1:len_dir),ext(1:len),var_2d
+
+        ctemp=ext(len-3:len-1)
+        if(len.gt.3)then
+           directory = ext
+           call s_len(directory,len_dir)
+           if(ext(len-3:len-1).eq.'lga')then
+              ext_int='lga'
+           else
+              ext_int='fua'
+           endif
+           len=3
+        else
+           call get_directory(ext,directory,len_dir)
+           ext_int=ext
+        endif
+
+        write(6,11)directory(1:len_dir),ext_int(1:len),var_2d
 11      format(' Reading 3d ',a,1x,a5,1x,a3)
 
         do k = 1,kmax
@@ -584,7 +599,7 @@ cdoc    Returns a 3-D fcst grid. Inputs include ext, initial and valid time.
 
         enddo ! k
 
-        CALL READ_LAPS(I4TIME,I4_VALID,DIRECTORY,EXT,imax,jmax,
+        CALL READ_LAPS(I4TIME,I4_VALID,DIRECTORY,EXT_INT,imax,jmax,
      1  kmax,kmax,VAR_3D,LVL_3D,LVL_COORD_3D,UNITS_3D,
      1                     COMMENT_3D,field_3d,ISTATUS)
 

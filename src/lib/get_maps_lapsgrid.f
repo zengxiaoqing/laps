@@ -57,65 +57,99 @@ cdis
 !       Feb 1999 John Smart    - Add subroutine get_modelfg_3d_sub which allows
 !                                specific model extension.
 !
+!       Jun 2000     "         - Add subroutine get_best_fcst so that this code
+!                                can be use elsewhere (eg., lga, dprep, laps_sfc, osse)
+!          "         "         - Incorporate namelist parameter fdda_model_source to
+!                                determine the subdirectory in which fdda model bckgnd
+!                                exist.  Remove 'ram' as fdda extension.
+
+        include 'bgdata.inc'
 
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
         character*3  var_2d
         character*9  a9_time
-        character*31 ext_a
+        character*31 ext_a(maxbgmodels)
+        character*31 subdir(maxbgmodels)
+        character*15 fdda_model_source(maxbgmodels)
 
 !       ****************** RAMS SECTION ***************************************
 
 !       RESTRICTIONS:
 
 !       1) No time interpolation is performed
-!       2) RAM/LGA file must be available valid at i4time/i4time_needed
+!       2) FDDA/LGA file must be available valid at i4time/i4time_needed
 
         i4time_needed = i4time
 
-        do isource = 1,2
+        call get_fdda_model_source(fdda_model_source,n_fdda_models
+     +,istatus)
+        if(istatus .ne. 1)then
+           print*,'Error getting fdda_model_source'
+           return
+        endif
 
-            if(isource .eq. 1)then
-                ext_a = 'ram'
-            else
-                ext_a = 'lga'
-            endif
+        if(n_fdda_models .eq. 0)then
+           n_fdda_models = 1
+           subdir(n_fdda_models)='lga'
+           ext_a(n_fdda_models) ='lga'
+        else
+           do i=1,n_fdda_models
+              subdir(i)=fdda_model_source(i)
+              ext_a(i) ='fua'
+           enddo
+           if(n_fdda_models.lt.maxbgmodels)then
+              n_fdda_models = n_fdda_models + 1
+              subdir(n_fdda_models)='lga'
+              ext_a(n_fdda_models) ='lga'
+           else
+              print*,'*** WARNING *** '
+              print*,'Cannot add lga to model background list in'
+     .,'get_modelfg_3d'
+           endif
+        endif
+           
 
-            call make_fnam_lp(i4time_needed,a9_time,istatus)
 
-            write(6,*)
-            write(6,*)' Searching for model background valid at: '
-     1                              ,a9_time,' ',ext_a(1:6),var_2d
 
-            call get_modelfg_3d_sub(i4time_needed,var_2d,ext_a
-     1                       ,imax,jmax,kmax,field_3d_laps,istatus)
+        do isource = 1,n_fdda_models
 
-            if(istatus.eq.1)then
-               print*,'file obtained in get_modelfg_3d_sub - return'
-               return
-            endif
+           call make_fnam_lp(i4time_needed,a9_time,istatus)
 
-         enddo
+           write(6,*)
+           write(6,*)' Searching for model background valid at: '
+     1                        ,a9_time,' ',ext_a(isource)(1:6),var_2d
 
-         return
-         end
+           call get_modelfg_3d_sub(i4time_needed,var_2d,subdir(isource),
+     1                      ext_a(isource),imax,jmax,kmax,field_3d_laps,
+     1                      istatus)
+
+           if(istatus.eq.1)then
+              print*,'file obtained in get_modelfg_3d_sub - return'
+              return
+           endif
+
+        enddo
+
+        return
+        end
 
 !***************** START NEW SECTION ******************************************
 ! Start subroutine
 
-        subroutine get_modelfg_3d_sub(i4time_needed,var_2d,ext_a
+        subroutine get_modelfg_3d_sub(i4time_needed,var_2d,subdir,ext_a
      1                         ,imax,jmax,kmax,field_3d_laps,istatus)
 !
 !
         real*4 field_3d_laps(imax,jmax,kmax)       ! Output array
 
         character*(*) var_2d
+        character*(*) subdir
         character*9 a9_time
         character*13 a_filename
 
         character*125 comment_2d
         character*10 units_2d
-
         character*31 ext,ext_a
         character*150  directory
         character*255 c_filespec
@@ -125,8 +159,15 @@ cdis
         character c_fnames(MAX_FILES)*180
 
 
-        call get_directory(ext_a,directory,len_dir)
-        c_filespec = directory(1:len_dir)//'*.'//ext_a(1:3)
+        call get_directory(ext_a,directory,lend)
+        if(ext_a.ne.'lga')then
+           call s_len(subdir,ld)
+           directory = directory(1:lend)//subdir(1:ld)//'/'
+           lend=lend+ld+1
+        endif
+        c_filespec=directory(1:lend)
+
+        c_filespec=c_filespec(1:lend)//'*.'//ext_a(1:3)
 
 !       Obtain list of analysis/forecast filenames
         call Get_file_names(c_filespec,
@@ -138,32 +179,14 @@ cdis
 !       Determine which file having the proper valid time has the
 !       most recent initialization time.
 
-        i_best_file = 0
-        i4_fcst_time_min = 9999999
-
-        do i=1,i_nbr_files_ret
-            call get_directory_length(c_fnames(i),lend)
-            call get_time_length(c_fnames(i),lenf)
-            a_filename = c_fnames(i)(lend+1:lenf)
-            call get_fcst_times(a_filename,i4_initial,i4_valid
-     1                             ,i4_fn)
-            if(i4_valid .eq. i4time_needed)then
-               i4_fcst_time = i4_valid - i4_initial
-
-               if(i4_fcst_time .lt. i4_fcst_time_min)then
-                  i4_fcst_time = i4_fcst_time_min
-                  i_best_file = i
-
-                  ext = ext_a
-
-               endif ! Smallest forecast time?
-            endif ! Correct valid time
-        enddo ! i
-
+        call get_best_fcst(max_files,i4time_needed,i_nbr_files_ret
+     1,c_fnames,i_best_file)
 
         if(i_best_file .gt. 0)then ! File for this ext exists with proper
-                                       ! valid time.
            i = i_best_file
+           call get_directory_length(c_fnames(i),lend)
+           call get_time_length(c_fnames(i),lenf)                               ! valid time.
+           ext = ext_a
            a_filename = c_fnames(i)(lend+1:lenf)
 
            write(6,*)' Found file for: ',c_fnames(i)(lend+1:lenf)
@@ -173,12 +196,22 @@ cdis
      1                        ,i4_fn)
 
            if(lenf - lend .eq. 9)then
-              call get_laps_3d(i4_fn,imax,jmax,kmax,ext,var_2d
-     1                ,units_2d,comment_2d,field_3d_laps,istatus)
+
+c             call get_laps_3d(i4_fn,imax,jmax,kmax,ext,var_2d
+c    1                ,units_2d,comment_2d,field_3d_laps,istatus)
+c
+c
+c new
+c
+              call get_3d_dir_time(directory,i4_fn
+     1                      ,EXT,var_2d,units_2d,comment_2d
+     1                      ,imax,jmax,kmax,field_3d_laps,istatus)
 
            elseif(lenf - lend .eq. 13)then
+c
+c new: changed variable name "ext" to "directory".
                call get_lapsdata_3d(i4_initial,i4_valid,imax
-     1                 ,jmax,kmax,ext,var_2d
+     1                 ,jmax,kmax,directory,var_2d
      1                 ,units_2d,comment_2d,field_3d_laps,istatus)
 
            else
@@ -262,3 +295,47 @@ cdis
         return
         end
 
+c --------------------------------------------------------------------------
+        subroutine get_best_fcst(maxfiles,i4time_needed
+     1,i_nbr_files,c_fnames,i_best_file)
+
+c
+c determine the best file that matches the i4time_needed input
+c J. Smart 6-20-00:  Pulled this section of software out of
+c                    get_modelfg_3d_sub for use elsewhere in LAPS.
+c
+        implicit  none
+
+        integer i4time_needed
+        integer i_best_file,i
+        integer i_nbr_files
+        integer i4_fcst_time_min
+        integer i4_valid,i4_fcst_time,i4_fn
+        integer i4_initial
+        integer lend,lenf
+        integer maxfiles
+
+        character*(*)  c_fnames(maxfiles)
+        
+        i_best_file = 0
+        i4_fcst_time_min = 9999999
+
+        do i=1,i_nbr_files
+            call get_directory_length(c_fnames(i),lend)
+            call get_time_length(c_fnames(i),lenf)
+            call get_fcst_times(c_fnames(i)(lend+1:lenf)
+     1                 ,i4_initial,i4_valid,i4_fn)
+            if(i4_valid .eq. i4time_needed)then
+               i4_fcst_time = i4_valid - i4_initial
+
+               if(i4_fcst_time .lt. i4_fcst_time_min)then
+
+                  i4_fcst_time = i4_fcst_time_min
+                  i_best_file = i
+
+               endif ! Smallest forecast time?
+            endif ! Correct valid time
+        enddo ! i
+
+        return
+        end

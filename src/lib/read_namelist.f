@@ -1,5 +1,8 @@
       subroutine config_satellite_lvd(istatus)
 
+c
+cdoc  Reads static/satellite_lvd.nl file.
+
       character nest7grid*150
       include 'satellite_dims_lvd.inc'
       include 'satellite_common_lvd.inc'
@@ -31,6 +34,8 @@ c
      +c_sndr_id,n_sndr_channels,path_to_sat_sounder,n_elems,
      +n_lines,channel_wavelength_u,imsng_sndr_pix,pct_req_lsr,
      +istatus)
+c
+cdoc  Reads static/sat_sounder.nl file.
 
       include 'lsr_dims.inc'
 
@@ -73,6 +78,8 @@ c-----------------------------------------------------------
 c
       subroutine get_balance_nl(lrunbal,gamo,delo,istatus)
 c
+cdoc  Reads static/balance.nl file.
+
       implicit none
 
       integer    istatus
@@ -109,6 +116,8 @@ c
       subroutine mosaic_radar_nl(c_radar_mosaic_type,n_radars,
      & c_radar_ext,i_window,imosaic_3d,istatus)
 c
+cdoc  Reads static/radar_mosaic.nl file
+
       implicit none
 
       include    'radar_mosaic_dim.inc'
@@ -151,8 +160,10 @@ c
       subroutine get_background_info(bgpaths,bgmodels
      +,oldest_forecast,max_forecast_delta,use_analysis,cmodel
      +,itime_inc)
-      implicit none
 
+cdoc reads static/background.nl
+
+      implicit none
       include 'bgdata.inc'
       character*150 nest7grid
       character*256 bgpaths(maxbgmodels)
@@ -182,3 +193,114 @@ c
       write(*,background_nl)
       stop
       end
+c
+c --- OSSE namelist reader ---
+c
+      subroutine get_osse_information(path_to_model,
+     1                                c_obs_types,
+     1                                n_sim_obs,
+     1                                istatus)
+c
+cdoc  Reads static/osse.nl file.
+
+      implicit none
+
+      include 'osse.inc'
+
+      integer        istatus
+      integer        len_dir
+      integer        i,n_sim_obs
+
+      character      nest7grid*150
+      character      path_to_model*150
+      character      c_obs_types(max_ob_types)*15
+
+      namelist /osse_nl/path_to_model,c_obs_types
+
+      istatus = 0
+
+      call get_directory('nest7grid',nest7grid,len_dir)
+      if(nest7grid(len_dir:len_dir).ne.'/') then
+        len_dir=len_dir+1
+        nest7grid(len_dir:len_dir)='/'
+      endif
+
+
+      do i = 1,max_ob_types
+         c_obs_types(i) = ' '
+      enddo
+
+      nest7grid = nest7grid(1:len_dir)//'osse.nl'
+      print*,'nest7grid = ',nest7grid(1:len_dir+7)
+
+      open(1,file=nest7grid,status='old',err=900)
+      read(1,osse_nl,err=901)
+      close(1)
+      do i = 1,max_ob_types
+         if(c_obs_types(i).ne.' ')then
+            n_sim_obs = n_sim_obs + 1
+         endif
+      enddo
+      print*,'n_sim_obs types from namelist= ',n_sim_obs
+      istatus = 1
+     
+      return
+       
+900   print*,'error opening file ',nest7grid
+      stop
+901   print*,'error reading osse.nl in ',nest7grid
+      write(*,osse_nl)
+      stop
+      end
+c
+c ---------------------------------------------------------------
+c
+       subroutine get_wind_parms(l_use_raob,l_use_cdw,l_use_radial_vel
+     1                          ,weight_bkg_const_wind
+     1                          ,rms_thresh_wind
+     1                          ,max_pr,max_pr_levels,i_3d
+     1                          ,istatus)
+
+       logical l_use_raob, l_use_cdw, l_use_radial_vel
+       namelist /wind_nl/ l_use_raob, l_use_cdw, l_use_radial_vel
+     1                   ,weight_bkg_const_wind
+     1                   ,rms_thresh_wind
+     1                   ,max_pr,max_pr_levels,i_3d
+ 
+       character*150 static_dir,filename
+ 
+       call get_directory('nest7grid',static_dir,len_dir)
+
+       filename = static_dir(1:len_dir)//'/wind.nl'
+ 
+       open(1,file=filename,status='old',err=900)
+       read(1,wind_nl,err=901)
+       close(1)
+
+       if(max_pr .le. 0)then
+           write(6,*)' ERROR: invalid or uninitialized value of '
+     1              ,'max_pr in wind.nl ',max_pr
+           istatus = 0
+           return
+       endif
+
+       if(max_pr_levels .le. 0)then
+           write(6,*)' ERROR: invalid or uninitialized value of '
+     1              ,'max_pr_levels in wind.nl ',max_pr_levels
+           istatus = 0
+           return
+       endif
+
+       istatus = 1
+       return
+
+  900  print*,'error opening file ',filename
+       istatus = 0
+       return
+
+  901  print*,'error reading wind_nl in ',filename
+       write(*,wind_nl)
+       istatus = 0
+       return
+
+       end
