@@ -88,6 +88,7 @@ SRC	= machine_dependent.F \
           hum.f \
           i4time_asc_gg.f \
           i4time_fname_lp.f \
+          ingest_routines.f \
           interp.f \
           interpolate_3dfield.f \
           laps_io.f \
