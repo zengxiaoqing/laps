@@ -625,17 +625,19 @@ c
         charsize = .0040 / zoom_eff
 
         if(iflag_cv .eq. 0)then ! Normal obs plot
-            if(dir .ge. 0.  .and. spd .ge. 0. .and.
-     1         dir .le. 360 .and. spd .le. 200.       )then
-                call barbs(spd,dir,ri,rj,du_b,rot
-     1                    ,-1e10,+1e10,-1e10,+1e10)
-                if(spd .ge. 1.0)then
+            if(iflag .ne. 3)then ! Not a 'tmg' plot
+                if(dir .ge. 0.  .and. spd .ge. 0. .and.
+     1             dir .le. 360 .and. spd .le. 200.       )then
+                    call barbs(spd,dir,ri,rj,du_b,rot
+     1                        ,-1e10,+1e10,-1e10,+1e10)
+                    if(spd .ge. 1.0)then
+                        call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
+                        call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)       
+                    endif
+                else
                     call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
                     call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
                 endif
-            else
-                call line(xsta,ysta+du2*0.5,xsta,ysta-du2*0.5)
-                call line(xsta+du2*0.5,ysta,xsta-du2*0.5,ysta)
             endif
 
 !           Plot Temperature       
