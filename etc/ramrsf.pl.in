@@ -113,7 +113,7 @@ for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){
 #    if($_=~ /true/){
 #    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/sendLAPS.pl $LAPSROOT $LAPS_DATA_ROOT";
 #    run_sys::run_sys($sys,1);
-#    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl";
+#    $sys = "$EXECUTABLE_NAME $LAPSROOT/etc/xferData.pl $LAPSROOT $LAPS_DATA_ROOT SFM";
 #    run_sys::run_sys($sys,1);
 #    }
 #  }
