@@ -99,6 +99,7 @@ SRC	= cio.c \
           gettmp3d.f \
           getuv3d.f \
           getw3d.f \
+          gridconv.f \
           ground_temp.f \
           hum.f \
           i4time_asc_gg.f \

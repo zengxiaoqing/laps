@@ -202,7 +202,7 @@ cdis
         endif
 
         call get_directory(ext,directory,len_dir)
-#ifdef hpux
+#if defined(hpux) && !defined(F90)
         open(lun,file=directory(1:len_dir)//filename13(i4time,ext(1:3))       
      1          ,status='unknown',ACCESS='APPEND',err=998)
 
