@@ -1008,6 +1008,151 @@ netcdf static {
             tmp:valid_range= 200.f, 350.f;
             tmp:LAPS_units="categorical";
 
+        //      albedo - January
+
+        float
+            a01(record,z,y,x);
+            a01:navigation_dim = "nav";
+            a01:record = "valtime, reftime";
+            a01:_FillValue = 1.e+37f;
+            a01:long_name="climatological albedo - January";
+            a01:units="unitless";
+            a01:valid_range= 0.f, 1.f;
+            a01:LAPS_units="fractional";
+
+        //      albedo - February
+
+        float
+            a02(record,z,y,x);
+            a02:navigation_dim = "nav";
+            a02:record = "valtime, reftime";
+            a02:_FillValue = 1.e+37f;
+            a02:long_name="climatological albedo - February";
+            a02:units="unitless";
+            a02:valid_range= 0.f, 1.f;
+            a02:LAPS_units="fractional";
+
+        //      albedo - March
+
+        float
+            a03(record,z,y,x);
+            a03:navigation_dim = "nav";
+            a03:record = "valtime, reftime";
+            a03:_FillValue = 1.e+37f;
+            a03:long_name="climatological albedo - March";
+            a03:units="unitless";
+            a03:valid_range= 0.f, 1.f;
+            a03:LAPS_units="fractional";
+
+        //      albedo - April
+
+        float
+            a04(record,z,y,x);
+            a04:navigation_dim = "nav";
+            a04:record = "valtime, reftime";
+            a04:_FillValue = 1.e+37f;
+            a04:long_name="climatological albedo - April";
+            a04:units="unitless";
+            a04:valid_range= 0.f, 1.f;
+            a04:LAPS_units="fractional";
+
+        //      albedo - May
+
+        float
+            a05(record,z,y,x);
+            a05:navigation_dim = "nav";
+            a05:record = "valtime, reftime";
+            a05:_FillValue = 1.e+37f;
+            a05:long_name="climatological albedo - May";
+            a05:units="unitless";
+            a05:valid_range= 0.f, 1.f;
+            a05:LAPS_units="fractional";
+
+        //      albedo - June
+
+        float
+            a06(record,z,y,x);
+            a06:navigation_dim = "nav";
+            a06:record = "valtime, reftime";
+            a06:_FillValue = 1.e+37f;
+            a06:long_name="climatological albedo - June";
+            a06:units="unitless";
+            a06:valid_range= 0.f, 1.f;
+            a06:LAPS_units="fractional";
+
+        //      albedo - July
+
+        float
+            a07(record,z,y,x);
+            a07:navigation_dim = "nav";
+            a07:record = "valtime, reftime";
+            a07:_FillValue = 1.e+37f;
+            a07:long_name="climatological albedo - July";
+            a07:units="unitless";
+            a07:valid_range= 0.f, 1.f;
+            a07:LAPS_units="fractional";
+
+        //      albedo - August
+
+        float
+            a08(record,z,y,x);
+            a08:navigation_dim = "nav";
+            a08:record = "valtime, reftime";
+            a08:_FillValue = 1.e+37f;
+            a08:long_name="climatological albedo - August";
+            a08:units="unitless";
+            a08:valid_range= 0.f, 1.f;
+            a08:LAPS_units="fractional";
+
+        //      albedo - September
+
+        float
+            a09(record,z,y,x);
+            a09:navigation_dim = "nav";
+            a09:record = "valtime, reftime";
+            a09:_FillValue = 1.e+37f;
+            a09:long_name="climatological albedo - September";
+            a09:units="unitless";
+            a09:valid_range= 0.f, 1.f;
+            a09:LAPS_units="fractional";
+
+        //      albedo - October
+
+        float
+            a10(record,z,y,x);
+            a10:navigation_dim = "nav";
+            a10:record = "valtime, reftime";
+            a10:_FillValue = 1.e+37f;
+            a10:long_name="climatological albedo - October";
+            a10:units="unitless";
+            a10:valid_range= 0.f, 1.f;
+            a10:LAPS_units="fractional";
+
+        //      albedo - November
+
+        float
+            a11(record,z,y,x);
+            a11:navigation_dim = "nav";
+            a11:record = "valtime, reftime";
+            a11:_FillValue = 1.e+37f;
+            a11:long_name="climatological albedo - November";
+            a11:units="unitless";
+            a11:valid_range= 0.f, 1.f;
+            a11:LAPS_units="fractional";
+
+        //      albedo - December
+
+        float
+            a12(record,z,y,x);
+            a12:navigation_dim = "nav";
+            a12:record = "valtime, reftime";
+            a12:_FillValue = 1.e+37f;
+            a12:long_name="climatological albedo - November";
+            a12:units="unitless";
+            a12:valid_range= 0.f, 1.f;
+            a12:LAPS_units="fractional";
+
+
         //	LAPS variables
 
         long
@@ -1102,6 +1247,18 @@ netcdf static {
             g11_comment(record,z,namelen),
             g12_comment(record,z,namelen),
             tmp_comment(record,z,namelen),
+            a01_comment(record,z,namelen),
+            a02_comment(record,z,namelen),
+            a03_comment(record,z,namelen),
+            a04_comment(record,z,namelen),
+            a05_comment(record,z,namelen),
+            a06_comment(record,z,namelen),
+            a07_comment(record,z,namelen),
+            a08_comment(record,z,namelen),
+            a09_comment(record,z,namelen),
+            a10_comment(record,z,namelen),
+            a11_comment(record,z,namelen),
+            a12_comment(record,z,namelen),
             asctime(namelen);
 
         //      validtime of the grid 
