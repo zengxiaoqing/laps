@@ -292,6 +292,10 @@
 
      The laps root directory will be set up one level below the tar file.
 
+     If you are having trouble running 'gunzip', the problem could be that
+     the 'laps-m-n-o.tar.gz' file was corrupted during the download. In that
+     case simply try downloading again.
+
                 ----   2.2.2  Running Configure ---
 
      Go to the laps root directory and run...
