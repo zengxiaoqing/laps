@@ -392,6 +392,16 @@ if( $opt_m ){
     if(-e "$LAPS_DATA_ROOT/static\_save/topography.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/topography.dat $LAPS_DATA_ROOT/static/");}
     if(-e "$LAPS_DATA_ROOT/static\_save/$staticfile"){system ("mv $LAPS_DATA_ROOT/static\_save/$staticfile $LAPS_DATA_ROOT/static/");}
     if(-e "$LAPS_DATA_ROOT/static\_save/drag_coef.dat"){system ("mv $LAPS_DATA_ROOT/static\_save/drag_coef.dat $LAPS_DATA_ROOT/static/");}
+
+   opendir(STATICDIR, "$LAPS_DATA_ROOT/static\_save");
+   @filelist = readdir STATICDIR;
+   closedir STATICDIR;
+   foreach (@filelist){
+     if( /ncgm/  ){
+         system("cp -pr $LAPS_DATA_ROOT/static\_save/$_ $LAPS_DATA_ROOT/static/.");
+     }
+   }
+
 }
 
 print "Checking for static file \n";
