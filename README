@@ -1839,7 +1839,7 @@ Input:
 	METAR/SYNOP data
 	LDAD mesonet data
         Buoy/ship (maritime) data
-        GPS surface data       
+        GPS and Profiler surface data (via LDAD)       
 
 Output:
          LSO	ascii	LAPS surface obs intermediate data file: METAR, Mesonet,
@@ -2177,6 +2177,10 @@ Outputs: (Intermediate output written to the 'pin' file. Feeds cloud.exe,
                                 ACARS/(wind, temp, mixing ratio - using 
                                                              pressure altitude)
 </pre>
+
+Source directory: The source code for this is in 'src/ingest/acars'.
+
+Parameter namelist file (for data paths): 'static/nest7grid.parms'
                                         
 Sample Input/Output: Should be available in the test data case
 
