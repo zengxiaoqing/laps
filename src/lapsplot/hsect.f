@@ -72,11 +72,8 @@ cdis
         include 'trigd.inc'
 
         real*4 lat(NX_L,NY_L),lon(NX_L,NY_L),topo(NX_L,NY_L)
-        real*4 rlaps_land_frac(NX_L,NY_L)
-        real*4 soil_type(NX_L,NY_L)
-        real*4 static_albedo(NX_L,NY_L)
-        real*4 static_slpe_ln(NX_L,NY_L)
-        real*4 static_slpe_lt(NX_L,NY_L)
+
+        real,  allocatable  :: static_grid(:,:)
 
         character*1 c_display, qtype, tunits, c_prodtype
         character*1 cansw
@@ -99,9 +96,6 @@ cdis
         integer*4 idum1_array(NX_L,NY_L)
 
         real*4 dum1_array(NX_L,NY_L)
-        real*4 dum2_array(NX_L,NY_L)
-        real*4 dum3_array(NX_L,NY_L)
-        real*4 dum4_array(NX_L,NY_L)
 
       ! Used for "Potential" Precip Type
         logical iflag_mvd,iflag_icing_index,iflag_cloud_type
@@ -132,15 +126,13 @@ cdis
         real*4 v_2d(NX_L,NY_L) ! WRT True North
         real*4 w_2d(NX_L,NY_L)
         real*4 liw(NX_L,NY_L)
-        real*4 helicity(NX_L,NY_L)
+!       real*4 helicity(NX_L,NY_L)
         real*4 vas(NX_L,NY_L)
         real*4 cint
         real*4 uv_2d(NX_L,NY_L,2)
 
         real*4 dir(NX_L,NY_L)
         real*4 spds(NX_L,NY_L)
-        real*4 umean(NX_L,NY_L) ! WRT True North
-        real*4 vmean(NX_L,NY_L) ! WRT True North
 
         real*4 sndr_po(19,NX_L,NY_L)
 
@@ -155,7 +147,7 @@ cdis
 !       For reading in radar data
         real*4 dummy_array(NX_L,NY_L)
         real*4 radar_array(NX_L,NY_L)
-        real*4 radar_array_adv(NX_L,NY_L)
+!       real*4 radar_array_adv(NX_L,NY_L)
 
         real*4 v_nyquist_in_a(MAX_RADARS)
         real*4 rlat_radar_a(MAX_RADARS), rlon_radar_a(MAX_RADARS) 
@@ -172,14 +164,13 @@ cdis
         real*4 field_3d(NX_L,NY_L,NZ_L)
         real*4 pres_3d(NX_L,NY_L,NZ_L)
 
-        real*4 lifted(NX_L,NY_L)
+!       real*4 lifted(NX_L,NY_L)
         real*4 height_2d(NX_L,NY_L)
         real*4 temp_2d(NX_L,NY_L)
         real*4 tw_sfc_k(NX_L,NY_L)
         real*4 td_2d(NX_L,NY_L)
         real*4 pres_2d(NX_L,NY_L)
         real*4 temp_3d(NX_L,NY_L,NZ_L)
-        real*4 temp_col_max(NX_L,NY_L)
         real*4 pressures_mb(NZ_L)
 
 !       real*4 slwc_int(NX_L,NY_L)
@@ -209,8 +200,7 @@ cdis
         integer*4 iarg
 
         real*4 cloud_cvr(NX_L,NY_L)
-        real*4 cloud_low(NX_L,NY_L)
-        real*4 cloud_2d(NX_L,NY_L)
+!       real*4 cloud_2d(NX_L,NY_L)
 
         character*255 c_filespec_ra
         character*255 c_filespec_src
@@ -309,39 +299,6 @@ c       include 'satellite_dims_lvd.inc'
             return
         endif
 
-        var_2d='LDF'
-        call read_static_grid(nx_l,ny_l,var_2d,rlaps_land_frac,istatus)       
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LAPS static-ldf'
-            return
-        endif
-
-        var_2d='USE'
-        call read_static_grid(nx_l,ny_l,var_2d,soil_type,istatus)       
-        if(istatus .ne. 1)then
-            write(6,*)' Error reading LAPS static-use'
-            return
-        endif
-
-        var_2d='ALB'
-        call read_static_grid(nx_l,ny_l,var_2d,static_albedo,istatus)       
-        if(istatus .ne. 1)then
-            write(6,*)' Warning: could not read LAPS static-albedo'
-!           return
-        endif
-        var_2d='SLN'
-        call read_static_grid(nx_l,ny_l,var_2d,static_slpe_ln,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Warning: could not read LAPS static-slope-lon'
-!           return
-        endif
-        var_2d='SLT'
-        call read_static_grid(nx_l,ny_l,var_2d,static_slpe_lt,istatus)
-        if(istatus .ne. 1)then
-            write(6,*)' Warning: could not read LAPS static-slope-lat'
-!           return
-        endif
-
 1200    write(6,11)
 11      format(//'  SELECT FIELD:  ',
      1      /'     [wd,wb,wr,wf,bw] Wind'
@@ -360,7 +317,7 @@ c       include 'satellite_dims_lvd.inc'
      1      /
      1      /'     TEMP: [t, tb,tr,to,bt] (LAPS,LGA,FUA,OBS,QBAL)'      
      1      ,',   [pt,pb] Theta, Blnc Theta'
-     1      /'     HGTS: [ht,hb,hr,hy,bh] (LAPS,LGA,FUA,Hydrstc,QBAL),'
+     1      /'     HGTS: [ht,hb,hr,bh] (LAPS,LGA,FUA,QBAL),'
      1      /'           [hh] Height of Const Temp Sfc'               )
 
         write(6,12)
@@ -982,14 +939,14 @@ c       include 'satellite_dims_lvd.inc'
                 call get_laps_2dgrid(i4time_3dw,laps_cycle_time
      1                              ,i4time_nearest,ext,var_2d
      1                              ,units_2d,comment_2d,NX_L,NY_L
-     1                              ,lifted,0,istatus)
+     1                              ,field_2d,0,istatus)
 
                 if(istatus .ne. 1)then
                     write(6,*)' Error reading Lifted Index data'
                     stop
                 endif
 
-                call cpt_liw(lifted,w_2d,NX_L,NY_L,liw) ! K-Pa/s
+                call cpt_liw(field_2d,w_2d,NX_L,NY_L,liw) ! K-Pa/s
 
             endif ! Pregenerated LI * omega field
 
@@ -1013,7 +970,7 @@ c       include 'satellite_dims_lvd.inc'
      1              ,c_display,lat,lon,jdot
      1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
-        elseif(c_type .eq. 'li')then ! Read in Li field from 3d grids
+        elseif(c_type .eq. 'li')then ! Read in Li 'field_2d' from 3d grids
             if(lapsplot_pregen)then
                 write(6,*)' Getting li from LST'
 !               Read in LI data
@@ -1021,12 +978,12 @@ c       include 'satellite_dims_lvd.inc'
                 ext = 'lst'
                 call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,lifted,0,istatus)
+     1                                          ,field_2d,0,istatus)
 
             else
                 call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                          ,lifted,0,istatus)
+     1                                          ,field_2d,0,istatus)
 
             endif
 
@@ -1037,7 +994,7 @@ c       include 'satellite_dims_lvd.inc'
 
             call make_fnam_lp(i4time_nearest,asc9_tim_n,istatus)
 
-            call plot_cont(lifted,1e-0,-20.,+40.,2.,asc9_tim_n,
+            call plot_cont(field_2d,1e-0,-20.,+40.,2.,asc9_tim_n,
      1          'LAPS    SFC Lifted Index     (K) ',i_overlay
      1          ,c_display,lat,lon,jdot,
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -1198,7 +1155,7 @@ c       include 'satellite_dims_lvd.inc'
 
             call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                  ,helicity,0,istatus)
+     1                                  ,field_2d,0,istatus)
 
             i4time_3dw = i4time_nearest
             call make_fnam_lp(I4time_3dw,asc9_tim_3dw,istatus)
@@ -1206,7 +1163,7 @@ c       include 'satellite_dims_lvd.inc'
             abs_max = 0
             do i = 1,NX_L
             do j = 1,NY_L
-                abs_max = max(abs_max,abs(helicity(i,j)))
+                abs_max = max(abs_max,abs(field_2d(i,j)))
             enddo ! j
             enddo ! i
 
@@ -1228,7 +1185,7 @@ c       include 'satellite_dims_lvd.inc'
                 cint = 5.
             endif
 
-            call plot_cont(helicity,scale,clow,chigh,cint,asc9_tim_3dw
+            call plot_cont(field_2d,scale,clow,chigh,cint,asc9_tim_3dw
      1                   ,c33_label
      1                   ,i_overlay,c_display,lat,lon,jdot       
      1                   ,NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -3390,47 +3347,6 @@ c                   cint = -1.
                 endif ! plot RH
             endif ! True
 
-        elseif(c_type .eq. 'hy')then
-            write(6,1513)
-            call input_level(lun,k_level,k_mb,pres_3d,NX_L,NY_L,NZ_L)       
-
-            iflag_temp = 1 ! Returns Ambient Temperature
-            call get_temp_3d(i4time_ref,i4time_nearest,iflag_temp
-     1                          ,NX_L,NY_L,NZ_L,temp_3d,istatus)
-
-!           Read in SFC pressure
-            i4time_tol = 0
-            var_2d = 'PS'
-            ext = 'lsx'
-            call get_laps_2dgrid(i4time_nearest,i4time_tol
-     1                          ,i4time_nearest,ext,var_2d
-     1                          ,units_2d,comment_2d,NX_L,NY_L
-     1                          ,pres_2d,0,istatus)
-            IF(istatus .ne. 1)THEN
-                write(6,*)' Error Reading Surface Pres Analyses'
-     1                  ,' - no hydrostatic heights calculated'
-                goto1200
-            endif
-
-            call get_heights_hydrostatic(temp_3d,pres_2d,topo,
-     1          dum1_array,dum2_array,dum3_array,dum4_array,
-     1                                  NX_L,NY_L,NZ_L,field_3d)
-
-            call mklabel33(k_mb,' LAPS Heights    dm',c33_label)
-
-            clow = 0.
-            chigh = 0.
-            cint = 1. ! 3.
-
-            i4time_heights = i4time_nearest
-
-            call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
-
-            call plot_cont(field_3d(1,1,k_level),1e1,clow,chigh,cint       
-     1          ,asc9_tim_t,c33_label,i_overlay,c_display
-     1          ,lat,lon,jdot
-     1          ,NX_L,NY_L,r_missing_data,laps_cycle_time)
-
         elseif(c_type .eq. 'hb' .or. c_type .eq. 'tb' .or.
      1         c_type .eq. 'hr' .or. c_type .eq. 'tr'     )then
             
@@ -4541,7 +4457,7 @@ c                   cint = -1.
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
      1                          ,i4time_nearest,ext,var_2d
      1                          ,units_2d,comment_2d,NX_L,NY_L
-     1                          ,cloud_2d,0,istatus)
+     1                          ,field_2d,0,istatus)
 
             IF(istatus .ne. 1 .and. istatus .ne. -1)THEN
                 write(6,*)' Error Reading ',ext,var_2d
@@ -4552,13 +4468,13 @@ c                   cint = -1.
             call make_fnam_lp(i4time_nearest,asc9_tim,istatus)
 
             if(c_type(3:3) .ne. 'i')then
-                call plot_cont(cloud_2d,1e0,
+                call plot_cont(field_2d,1e0,
      1               clow,chigh,cint,asc9_tim,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
             else
-                call ccpfil(cloud_2d,NX_L,NY_L,clow,chigh_img,'linear'
+                call ccpfil(field_2d,NX_L,NY_L,clow,chigh_img,'linear'
      1                     ,n_image)       
                 call set(.00,1.0,.00,1.0,.00,1.0,.00,1.0,1)
                 call setusv_dum(2hIN,7)
@@ -4651,9 +4567,15 @@ c                   cint = -1.
 
         elseif(c_type(1:2) .eq. 'gg')then
 
+           if(.not. allocated (static_grid))then
+              print*,'allocating static grid'
+              allocate (static_grid(NX_L,NY_L))
+           endif
+
            write(6,219)
 219        format(5x,'Select STATIC field:'
-     1/' [tn-i,lf,gr,so,al-i,sn-i,sl-i] Ter/LndFrac/Grid/Alb/slp ? ',$)
+     1/' [tn-i,lf,gr,lu,al-i,sn-i,sl-i]'
+     1/'  Ter/LndFrac/Grid/Use/Alb/Slp ? ',$)
            read(lun,*)cstatic
 
            if(cstatic(1:2).eq.'tn')then
@@ -4681,31 +4603,53 @@ c                   cint = -1.
      1                     NX_L,NY_L,laps_cycle_time)
 
            elseif(cstatic(1:2) .eq. 'lf')then
+              var_2d='LDF'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read LAPS static-slope-lat'
+              endif
+
               clow = .5
               chigh = .5
               cint = .5
               c33_label = '                                 '
               asc9_tim_t = '         '
-              call plot_cont(rlaps_land_frac,1e0,
+              call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
 
               i4time_topo = 0
 
-           elseif(cstatic(1:2) .eq. 'so')then
+           elseif(cstatic(1:2) .eq. 'lu')then
+              var_2d='USE'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static-landuse'
+                 return
+              endif
               clow = 0.
               chigh = 20.
               cint = 1.
-              c33_label = 'Soil Type                        '
+              c33_label = 'Land Use                        '
               asc9_tim_t = '         '
-              call plot_cont(soil_type,1e0,
+              call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               i4time_topo = 0
 
            elseif(cstatic(1:2) .eq. 'al')then
+              var_2d='ALB'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static-albedo'
+                 return
+              endif
+
               clow = 0.
               chigh = 1.0
               cint = .05
@@ -4714,11 +4658,11 @@ c                   cint = -1.
 
               if(cstatic .eq. 'ali')then
                 write(6,*)' calling solid fill plot'
-                call ccpfil(static_albedo,NX_L,NY_L,0.0,0.5,'linear'
+                call ccpfil(static_grid,NX_L,NY_L,0.0,0.5,'linear'
      1                     ,n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
-                call plot_cont(static_albedo,1e0,
+                call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -4726,6 +4670,14 @@ c                   cint = -1.
               i4time_topo = 0
 
            elseif(cstatic(1:2) .eq. 'sn')then
+
+              var_2d='SLN'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static-slope-lon'
+                 return
+              endif
 
               print*,'plotting longitude-component:terrain slope'
 
@@ -4737,13 +4689,13 @@ c                   cint = -1.
 
               if(cstatic .eq. 'sni')then
                 write(6,*)' calling solid fill plot'
-                call get_mxmn_2d(NX_L,NY_L,static_slpe_ln,rmx2d
+                call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
-                call ccpfil(static_slpe_ln,NX_L,NY_L,rmn2d,rmx2d
+                call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
-                call plot_cont(static_slpe_ln,1e0,
+                call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
@@ -4751,6 +4703,14 @@ c                   cint = -1.
               i4time_topo = 0
 
            elseif(cstatic(1:2) .eq. 'sl')then
+
+              var_2d='SLT'
+              call read_static_grid(nx_l,ny_l,var_2d,static_grid
+     1,istatus)
+              if(istatus .ne. 1)then
+                 print*,' Warning: could not read static-slope-lon'
+                 return
+              endif
 
               print*,'plotting latitude-component:terrain slope'
               clow = -1.
@@ -4761,18 +4721,20 @@ c                   cint = -1.
 
               if(cstatic .eq. 'sli')then
                 write(6,*)' calling solid fill plot'
-                call get_mxmn_2d(NX_L,NY_L,static_slpe_lt,rmx2d
+                call get_mxmn_2d(NX_L,NY_L,static_grid,rmx2d
      1                          ,rmn2d,imx,jmx,imn,jmn)
-                call ccpfil(static_slpe_lt,NX_L,NY_L,rmn2d,rmx2d
+                call ccpfil(static_grid,NX_L,NY_L,rmn2d,rmx2d
      1                     ,'linear',n_image)
                 call lapsplot_setup(NX_L,NY_L,lat,lon,jdot)
               else
-                call plot_cont(static_slpe_lt,1e0,
+                call plot_cont(static_grid,1e0,
      1               clow,chigh,cint,asc9_tim_t,c33_label,
      1               i_overlay,c_display,lat,lon,jdot,
      1               NX_L,NY_L,r_missing_data,laps_cycle_time)
               endif
               i4time_topo = 0
+
+              deallocate (static_grid)
 
            endif !cstatic
 
