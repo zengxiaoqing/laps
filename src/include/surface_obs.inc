@@ -53,7 +53,7 @@ c
 c.....      Size of "box" around LAPS grid to collect data for boundary
 c.....      analysis.  Around 1 deg lat/lon is good.
 c
-      parameter( box_size = 1.1 )
+c     parameter( box_size = 1.1 )
 
 
 
