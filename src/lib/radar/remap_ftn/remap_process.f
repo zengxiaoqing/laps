@@ -182,17 +182,22 @@ c
 c
 c     Beginning of executable code
 c
+      write(6,*)
+      write(6,805) i_first_scan,i_last_scan,i_tilt
+  805 format(' REMAP_PROCESS > ifirst,ilast,tilt',4i5)
+
       rlat_radar = rlat_radar_cmn
       rlon_radar = rlon_radar_cmn
       rheight_radar = rheight_radar_cmn
       c4_radarname = c4_radarname_cmn
 
-      i_num_finished_products = 0
+      if(rlat_radar .eq. 0.)then
+          write(6,*)' ERROR: no radar coords in remap_process'
+          i_status = 0
+          return
+      endif
 
-      write(6,*)
-      write(6,805) i_first_scan,i_last_scan,i_tilt
-  805 format(' REMAP_PROCESS > V960112  ifirst,ilast,tilt'
-     :                                           ,4i5)
+      i_num_finished_products = 0
 
       call get_r_missing_data(r_missing_data, i_status)
       if(i_status .ne. 1)then
