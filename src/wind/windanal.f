@@ -1377,7 +1377,6 @@ csms$ignore end
       end
 
 
-
       subroutine spread_vert(uobs_in,vobs_in,l_3d,iwrite,uobs_out
      1                      ,vobs_out,wt_p,weights,pres_3d,i,j
      1                      ,imax,jmax,kmax,istatus)
@@ -1396,8 +1395,6 @@ csms$ignore end
       real*4 weights(imax,jmax,kmax)                   ! Output (spread)
       real*4 pres_3d(imax,jmax,kmax)                   ! Input
 
-      real*4 PRESSURE_INTERVAL_L
-
       integer*4 vert_rad_pirep
       integer*4 vert_rad_sfc
       integer*4 vert_rad_cdw
@@ -1412,9 +1409,6 @@ csms$ignore end
       parameter (r0_vert_sfc   = 2500.)
       parameter (r0_vert_prof  = 2500.)
 
-      integer*4 vert_rad_pirep_s,vert_rad_cdw_s,vert_rad_sfc_s
-     1         ,vert_rad_prof_s
-
 c DSS TBD: Work-around for SMS bug
 csms$insert      imax = imax
 csms$ignore begin
@@ -1427,10 +1421,10 @@ csms$ignore begin
           vert_rad_cdw   = 0
           vert_rad_prof  = 0
 
-          vert_rad_pirep_s = 0
-          vert_rad_cdw_s   = 0
-          vert_rad_sfc_s   = 0
-          vert_rad_prof_s  = 0
+          pres_range_pirep = 0.
+          pres_range_cdw   = 0.
+          pres_range_sfc   = 0.
+          pres_range_prof  = 0.
 
       else
           call get_vert_rads   (vert_rad_pirep,
@@ -1440,15 +1434,10 @@ csms$ignore begin
      1                          istatus)
           if(istatus .ne. 1)return
 
-          call get_pressure_interval(PRESSURE_INTERVAL_L,istatus)
-          if(istatus .ne. 1)return
-
-          iscale = nint(5000. / PRESSURE_INTERVAL_L) ! Affects # of grid points
-                                                     ! looped in the vertical
-          vert_rad_pirep_s = vert_rad_pirep * iscale
-          vert_rad_cdw_s   = vert_rad_cdw   * iscale
-          vert_rad_sfc_s   = vert_rad_sfc   * iscale
-          vert_rad_prof_s  = vert_rad_prof  * iscale
+          pres_range_pirep = vert_rad_pirep * 5000. + 1.
+          pres_range_cdw   = vert_rad_cdw   * 5000. + 1.
+          pres_range_sfc   = vert_rad_sfc   * 5000. + 1.
+          pres_range_prof  = vert_rad_prof  * 5000. + 1.
 
       endif
 
@@ -1460,70 +1449,81 @@ csms$ignore begin
       enddo ! k
 
       do k = 1,kmax
+          if(l_3d)then
+              kklow = k
+              kkhigh = k
+          else
+              kklow = 1
+              kkhigh = kmax
+          endif
+
           if(weights(i,j,k) .eq. weight_pirep)then ! Spread this pirep vertically
-              do kk = max(1,k-vert_rad_pirep_s)
-     1               ,min(kmax,k+vert_rad_pirep_s)
+              do kk = kklow,kkhigh
                   if(l_3d)then
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
                       dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
                   endif
-                  if(weights(i,j,kk) .eq. r_missing_data)then
+
+                  if(weights(i,j,kk) .eq. r_missing_data   .and.
+     1               dist_pa         .le. pres_range_pirep       )then
                       weights(i,j,kk) = weight_pirep
      1                  * exp(-(dist_pa/r0_vert_pirep))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,101)i,j,k,kk
-     1                           ,uobs_out(i,j,kk)
-     1                           ,vobs_out(i,j,kk)
-     1                           ,weights(i,j,kk)
+     1                                            ,uobs_out(i,j,kk)
+     1                                            ,vobs_out(i,j,kk)
+     1                                            ,weights(i,j,kk)
 101                   format(' Prp',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
           endif
 
           if(weights(i,j,k) .eq. weight_cdw)then ! Spread this meso vertically
-              do kk = max(1,k-vert_rad_cdw_s)
-     1               ,min(kmax,k+vert_rad_cdw_s)
+              do kk = kklow,kkhigh
                   if(l_3d)then
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
                       dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
                   endif
-                  if(weights(i,j,kk) .eq. r_missing_data)then
+
+                  if(weights(i,j,kk) .eq. r_missing_data   .and.
+     1               dist_pa         .le. pres_range_cdw         )then
                       weights(i,j,kk) = weight_cdw
      1                          * exp(-(dist_pa/r0_vert_cdw))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,201)i,j,k,kk
-     1                           ,uobs_out(i,j,kk)
-     1                           ,vobs_out(i,j,kk)
-     1                           ,weights(i,j,kk)
+     1                                            ,uobs_out(i,j,kk)
+     1                                            ,vobs_out(i,j,kk)
+     1                                            ,weights(i,j,kk)
 201                   format(' Cdw',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
           endif
 
           if(weights(i,j,k) .eq. weight_sfc)then ! Spread this Sfc vertically
-              do kk = max(1,k-vert_rad_sfc_s)
-     1               ,min(kmax,k+vert_rad_sfc_s)
+              do kk = kklow,kkhigh
                   if(l_3d)then
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
                       dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
                   endif
-                  if(weights(i,j,kk) .eq. r_missing_data)then
+
+                  if(weights(i,j,kk) .eq. r_missing_data   .and.
+     1               dist_pa         .le. pres_range_sfc         )then
                       weights(i,j,kk) = weight_sfc
      1                          * exp(-(dist_pa/r0_vert_sfc))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,301)i,j,k,kk
-     1                           ,uobs_out(i,j,kk)
-     1                           ,vobs_out(i,j,kk)
-     1                           ,weights(i,j,kk)
+     1                                            ,uobs_out(i,j,kk)
+     1                                            ,vobs_out(i,j,kk)
+     1                                            ,weights(i,j,kk)
 301                   format(' Sfc',2i5,2i4,2f6.1,f8.5)
                   endif
               enddo
@@ -1534,52 +1534,54 @@ csms$ignore begin
 !             Spread on high side
               kp1 = min(kmax,k+1)
               if(weights(i,j,kp1) .eq. r_missing_data)then
-
-                do kk = kp1,min(kmax,k+vert_rad_prof_s)
+              do kk = kklow,kkhigh
                   if(l_3d)then
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
                       dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
                   endif
-                  if(weights(i,j,kk) .eq. r_missing_data)then
+
+                  if(weights(i,j,kk) .eq. r_missing_data   .and.
+     1               dist_pa         .le. pres_range_prof  .and.
+     1               kk              .gt. k                      )then
                       weights(i,j,kk) = weight_prof
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,401)i,j,k,kk
-     1                           ,uobs_out(i,j,kk)
-     1                           ,vobs_out(i,j,kk)
-     1                           ,weights(i,j,kk)
+     1                                            ,uobs_out(i,j,kk)       
+     1                                            ,vobs_out(i,j,kk)
+     1                                            ,weights(i,j,kk)
 401                   format(' Prf',2i5,2i4,2f6.1,f8.5)
                   endif
                 enddo ! kk
-
               endif
 
 !             Spread on low side
               km1 = max(1,k-1)
               if(weights(i,j,km1) .eq. r_missing_data)then
-
-                do kk = km1,max(1,k-vert_rad_prof_s),-1
+              do kk = kklow,kkhigh
                   if(l_3d)then
                       if(k .ne. kk)stop
                       dist_pa = 0.
                   else
                       dist_pa = abs(pres_3d(i,j,kk) - pres_3d(i,j,k))
                   endif
-                  if(weights(i,j,kk) .eq. r_missing_data)then
+
+                  if(weights(i,j,kk) .eq. r_missing_data   .and.
+     1               dist_pa         .le. pres_range_prof  .and.
+     1               kk              .lt. k                      )then
                       weights(i,j,kk) = weight_prof
      1                          * exp(-(dist_pa/r0_vert_prof))
                       uobs_out(i,j,kk) = uobs_in(i,j,k)
                       vobs_out(i,j,kk) = vobs_in(i,j,k)
                       if(iwrite .eq. 1)write(6,401)i,j,k,kk
-     1                           ,uobs_out(i,j,kk)
-     1                           ,vobs_out(i,j,kk)
-     1                           ,weights(i,j,kk)
+     1                                            ,uobs_out(i,j,kk)
+     1                                            ,vobs_out(i,j,kk)
+     1                                            ,weights(i,j,kk)
                   endif
                 enddo ! kk
-
               endif
           endif
       enddo ! k

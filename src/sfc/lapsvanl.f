@@ -495,7 +495,7 @@ c.....     Using laps sfc p and background model sfc p,
 c.....     move background temps from background model 
 c.....     terrain to laps terrain.  Use Poisson's eqn.
 c
-	   if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .true.)then 
+	   if(t_bk(i,j).ne.0. .and. back_t.eq.1 .and. .false.)then 
                                                            ! is this needed?
 	       t_bk_ltopo = 
      1         t_bk(i,j) * ((psfc(i,j)/sp_bk(i,j)) ** .286)
