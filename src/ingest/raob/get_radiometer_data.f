@@ -149,24 +149,25 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character temperatureDD( level, recNum)
-      character integratedVaporDD(recNum)
-      character relHumidityDD( level, recNum)
-      character*60 QCT(QCcheckNum)
       character*11 dataProvider(recNum)
-      character cloudBaseTempDD(recNum)
-      character*30 staticIds(maxStaticIds)
+      character vaporDensityDD( level, recNum)
+      character*51 stationName(recNum)
       character integratedLiquidDD(recNum)
       character liquidDensityDD( level, recNum)
-      character vaporDensityDD( level, recNum)
-      character*72 ICT(ICcheckNum)
       character*6 providerId(recNum)
-      character*51 stationName(recNum)
+      character cloudBaseTempDD(recNum)
+      character integratedVaporDD(recNum)
+      character*72 ICT(ICcheckNum)
+      character temperatureDD( level, recNum)
+      character*30 staticIds(maxStaticIds)
+      character relHumidityDD( level, recNum)
+      character*60 QCT(QCcheckNum)
 
 !     Declarations for 'write_snd' call
       real stalat(level),stalon(level)
       integer iwmostanum(level)
-      character c5_staid*5,a9time_ob*9,a9time_ob_a(level)*9,c8_obstype*8
+      character c5_staid*5,a9time_ob*9,a9time_ob_a(level)*9
+      character c8_obstype*8
       real height_m(level)
       real pressure_mb(level)
       real temp_c(level)
@@ -235,15 +236,23 @@ C
           call convert_array(levels(:,iob),height_m,level
      1                      ,'none',r_missing_data,istatus)
 
-          call add_miss(height_m,staelev,height_m,level,1)
+          call addcon_miss(height_m,staelev,height_m,level,1)
 
 !         Only station pressure is given
           pressure_mb = r_missing_data
-          call convert_array(pressure(iob),pressure_mb(1),level
+
+          call convert_array(pressure(iob),pressure_mb(1),1
      1                      ,'pa_to_mb',r_missing_data,istatus)
 
           call convert_array(temperature(:,iob),temp_c,level
      1                      ,'k_to_c',r_missing_data,istatus)
+
+          dewpoint_c = r_missing_data
+
+          dir_deg = r_missing_data
+
+          spd_mps = r_missing_data
+
 
 !         call 'write_snd' for a single sounding
           call get_nlevels_snd(pressure_mb,height_m,r_missing_data
@@ -257,7 +266,7 @@ C
      +                      ,iwmostanum                      ! I
      +                      ,stalat,stalon,staelev           ! I
      +                      ,c5_staid,a9time_ob_a,c8_obstype ! I
-     +                      ,nlvl                            ! I
+     +                      ,nlevels_snd                     ! I
      +                      ,height_m                        ! I
      +                      ,pressure_mb                     ! I
      +                      ,temp_c                          ! I
@@ -330,19 +339,19 @@ C
      +     temperature( level, recNum), temperatureSfc(recNum),
      +     vaporDensity( level, recNum)
       double precision observationTime(recNum)
-      character temperatureDD( level, recNum)
-      character integratedVaporDD(recNum)
-      character relHumidityDD( level, recNum)
-      character*60 QCT(QCcheckNum)
       character*11 dataProvider(recNum)
-      character cloudBaseTempDD(recNum)
-      character*30 staticIds(maxStaticIds)
+      character vaporDensityDD( level, recNum)
+      character*51 stationName(recNum)
       character integratedLiquidDD(recNum)
       character liquidDensityDD( level, recNum)
-      character vaporDensityDD( level, recNum)
-      character*72 ICT(ICcheckNum)
+      character integratedVaporDD(recNum)
+      character cloudBaseTempDD(recNum)
       character*6 providerId(recNum)
-      character*51 stationName(recNum)
+      character*72 ICT(ICcheckNum)
+      character temperatureDD( level, recNum)
+      character*30 staticIds(maxStaticIds)
+      character relHumidityDD( level, recNum)
+      character*60 QCT(QCcheckNum)
 
 
 C   Variables of type REAL
