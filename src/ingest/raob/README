@@ -81,7 +81,10 @@ main                                        ingest_sounding.f
                 sort_and_write                    "
         get_raob_data_af                    ingest_raob_sub_af.f 
         get_raob_data_cwb                   ingest_raob_sub_cwb.f
-        get_raob_data_rtamps                ingest_raob_sub_rtamps.f (under const)
+        get_rtamps_data                     get_rtamps_data.f 
+            read_rtamps_data                      "
+                read_rtamps_netcdf          read_rtamps_data.f
+                write_snd                   write_snd.f
     ingest_drpsnd                           ingest_drpsnd.f        
         avapsread_sub                       avapsread_sub.f
         get_drpsnd_data_cwb                 ingest_drpsnd_sub_cwb.f 
@@ -89,7 +92,11 @@ main                                        ingest_sounding.f
         get_satsnd_afwa                     ingest_satsnd_afwa.f
     tower_driver_sub                        tower_driver.f
         get_local_towerobs                  get_local_towerobs.f
-            read_local_tower                read_local_tower.f      (under const)
+            read_local_tower                read_local_tower.f 
         write_snd                           write_snd.f
+    get_radiometer_data                     get_radiometer_data.f   
+        read_radiometer_data                      "
+            read_radiometer_netcdf                "  
+            write_snd                       write_snd.f
 
 
