@@ -53,6 +53,7 @@ C  BEGIN SUBROUTINE
 
       print*,'call i4time_now_gg'
       i4time = i4time_now_gg()
+      print*,'i4time = ',i4time
       call cv_i4tim_asc_lp(i4time,asctime,status)
       if(status .ne. 1)then
          print*,'Error returned: cv_i4tim_asc_lp: ',i4time
