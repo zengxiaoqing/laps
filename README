@@ -248,16 +248,12 @@
 
                     ---  2.2.5  C Compiler ---
 
-     In general, an ANSI compliant C compiler (e.g. 'cc') should be used.
-     It is recommended that a GNU C compiler ('gcc') be used           
-     for some platforms. An alternative is that 'cc' can be used with
-     compiler flags added to 'cc' for ANSI "C" compatability (if needed).
-     This appears to be most relevant for an HP; an example follows:
-
-     1) add +z and -g for CCFLAGS and F77FLAGS
-     2) use ld -b instead of ar rc to create the library
-     3) replace gcc with cc +z -Aa -D_HPUX_SOURCE
-
+     In general, an ANSI compliant C compiler should be used. On some hardware
+     ANSI compliance requires a compiler flag, if you're not sure check the 
+     documentation for your compiler. Some platforms such as Solaris and HPUX 
+     do not come with an ANSI compliant C compiler by default.  If you have 
+     not purchased that additional product from the vendor, we recommend GNU C
+     available at 'ftp://prep.ai.mit.edu/pub/gnu'.
 
                   ---  2.2.6  FORTRAN Compiler ---
 
