@@ -448,7 +448,11 @@ csms$serial end
 
 !     Initialize fnorm array used in barnes_multivariate
       write(6,*)' Creating fnorm LUT'
-      r0_norm = 10. ! When the distance = r0_norm, the fnorm is effectively 1
+
+!     When the distance = r0_norm, the fnorm is effectively 1
+      call get_fnorm_max(imax,jmax                                    ! I
+     1                  ,r0_norm,r0_value_min_dum,fnorm_max_dum)      ! O
+
       r0_norm_sq = r0_norm**2
       exp_offset = 70.
       expm80 = exp(-80.)
