@@ -351,7 +351,7 @@ c       set up supmap for plot
         call MAPSET('PO',PLM1,PLM2,PLM3,PLM4)
 
         call MAPINT
-        if(IFRAME .eq. 1)call MAPLOT
+!       if(IFRAME .eq. 1)call MAPLOT
 
         IF(NERRO(IERR) .ne. 0)THEN
             call EPRIN

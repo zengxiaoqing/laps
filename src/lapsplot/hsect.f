@@ -67,7 +67,7 @@ cdis
         real*4 rlaps_land_frac(NX_L,NY_L)
 
         character*1 c_display
-        character*13 filename
+        character*13 filename,a13_time
         character*3 c3_site
         character*4 c4_string
         character*5 c5_string
@@ -1709,8 +1709,8 @@ cdis
                 cint = 5.
             endif
 
-            call plot_cont(temp_2d,1e0,clow,chigh,cint,asc9_tim_t,c33_la
-     1bel,
+            call plot_cont(temp_2d,1e0,clow,chigh,cint,
+     1  asc9_tim_t,c33_label,
      1  i_overlay,c_display,'nest7grid',lat,lon,jdot,
      1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
@@ -2544,25 +2544,32 @@ cdis
      1  NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'hb')then
-            write(6,1513)
-            read(lun,*)k_mb
-
-            k_level = nint(zcoord_of_pressure(float(k_mb*100)))
 
             var_2d = 'HT'
 
             call make_fnam_lp(i4time_ref,asc9_tim_t,istatus)
 
-            if(asc9_tim_t(8:9) .ne. '00')then
-                ext = 'lgf'
-            else
-                ext = 'lga'
-            endif
+            ext = 'lga'
+            call get_directory(ext,directory,len_dir)
 
-            call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,i4time_h
-     1eights,
-     1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
-     1                                     ,field_2d,k_mb,istatus)
+            write(6,*)' Enter yydddhhmmHHMM for lga file'
+            read(5,211)a13_time
+ 211        format(a13)
+            call get_fcst_times(a13_time,I4TIME,i4_valid,i4_fn)
+
+            write(6,1513)
+            read(lun,*)k_mb
+            k_level = nint(zcoord_of_pressure(float(k_mb*100)))
+            k_mb    = nint(pressure_of_level(k_level) / 100.)
+
+            CALL READ_LAPS(I4TIME,i4_valid,DIRECTORY,EXT,NX_L,NY_L,1,1,       
+     1          VAR_2d,k_mb,LVL_COORD_2d,UNITS_2d,COMMENT_2d,
+     1          field_2d,ISTATUS)
+
+!           call get_laps_2dgrid(i4time_ref,laps_cycle_time*100,
+!    1              i4time_heights,
+!    1              ext,var_2d,units_2d,comment_2d,NX_L,NY_L
+!    1                                     ,field_2d,k_mb,istatus)
 
             IF(istatus .ne. 1)THEN
                 write(6,*)' Error Reading Background Height Analysis'
@@ -2575,7 +2582,7 @@ cdis
             chigh = 0.
             cint = 1. ! 3.
 
-            call make_fnam_lp(i4time_heights,asc9_tim_t,istatus)
+            call make_fnam_lp(i4time,asc9_tim_t,istatus)
 
             call plot_cont(field_2d,1e1,clow,chigh,cint,
      1  asc9_tim_t,c33_label,i_overlay,c_display,'nest7grid'
@@ -4139,17 +4146,21 @@ cdis
 !            if(VERTICAL_GRID .eq. 'HEIGHT')then
 !                write(c33_label,101)k_level,c19_label
 !101             format('LAPS',I5,' km ',a19)
+
 !            elseif(VERTICAL_GRID .eq. 'PRESSURE')then
                 write(c33_label,102)
-     1      int(zcoord_of_level(K_Level)/100.),c19_label
+     1          nint(zcoord_of_level(K_Level)/100.),c19_label
 102             format('LAPS',I5,' hPa',a19)
+
 !            endif
         else if(k_level .eq. 0)then
             write(c33_label,103)c19_label
 103         format('LAPS  Surface',a19)
+
         else if(k_level .eq. -1)then
             write(c33_label,104)
 104         format('LAPS Steering Winds              ')
+
         endif
 
         return
