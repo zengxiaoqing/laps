@@ -40,7 +40,8 @@ cdis
 
 
         subroutine plot_station_locations(i4time,lat,lon,ni,nj,iflag
-     1                                   ,maxstns,c_field,zoom,atime
+     1                                   ,maxstns,c_field,zoom
+     1                                   ,namelist_parms,atime
      1                                   ,c33_label,i_overlay)
 
         include 'lapsplot.inc'
