@@ -15,11 +15,19 @@
 #define in_to_im          IN_TO_IM
 /* #define i4_to_byte        I4_TO_BYTE */
 #endif
+
 #ifdef FORTRANUNDERSCORE
 #define read_binary_field read_binary_field_
 #define in_to_im          in_to_im_
 /* #define i4_to_byte        i4_to_byte_ */
 #endif
+
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define read_binary_field read_binary_field__
+#define in_to_im          in_to_im__
+/* #define i4_to_byte        i4_to_byte__ */
+#endif
+
 #define swap2(x) ((((x)>>8)&255)|(((x)&255)<<8))
 
 

@@ -66,6 +66,10 @@ isecs, the wait will be for the absolute value of isecs.
 #define waiting_c waiting_c_
 #endif
 
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define waiting_c waiting_c__
+#endif
+
 #ifdef __STDC__
 void waiting_c ( int *isec)
 #else

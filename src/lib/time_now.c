@@ -62,6 +62,10 @@ c Date:     April 1, 1994
 #define time_now time_now_
 #endif
 
+#ifdef FORTRANDOUBLEUNDERSCORE
+#define time_now time_now__
+#endif
+
 #ifdef __STDC__
 void time_now (long *c_time)
 #else
