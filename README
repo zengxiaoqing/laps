@@ -135,35 +135,20 @@
 
             ----   2.1.5  Untarring the geography databases  ---
 
-     Next untar the 'laps_terrain.tar.gz' file in the 'data/static' directory
-     created by the make install step.  Alternatively untar this file in
-     some place outside the laps tree and create a symbolic link to
-     'data/static/model' - this prevents having to update these terrain files 
-     each time you update LAPS. 
+     Next untar the 'laps_terrain.tar.gz' file anywhere that is convenient
+     on your machine.
 
-     The terrain data files now come in a seperate compressed tar files 
-     from the rest of the LAPS distribution.  There are two databases,
-     one in file 'laps_terrain.tar.gz', the other in our 'world_topo_30s'
-     directory (see section 2.9). You can choose from either database; the 
-     files should be installed relative to the installed data/static 
-     directory.  Only one set of topo data is required no matter how many 
-     data installations you are supporting, however, it is required
-     that you make a link from each 'data/static' directory to the location 
-     of the terrain data set.  For example, if you install LAPS with 
-     --datadir=/usr/local/laps/data, a directory will be created called
-     '/usr/local/laps/data/static' .  If you untar the laps_terrain file in
-     that directory you will create a '/usr/local/laps/data/static/model'
-     directory with several subdirectories.  If at some point later you 
-     choose to create a new data structure in '/usr/local/laps/data2' you 
-     need only make a symbolic link to the existing terrain files from
-     the new static directory.  
+     The terrain data files come in compressed tar files separate
+     from the rest of the LAPS distribution.  There are two topography 
+     databases, one in file 'laps_terrain.tar.gz', the other in our 
+     'world_topo_30s' directory (see section 2.9). You can choose from either 
+     database. Only one copy of the topo data is required no matter how many 
+     data installations you are supporting. The paths to the three main
+     subdirectories (topo_30s, topo_10m, and land_10m) are defined as
+     runtime parameters within the 'nest7grid.parms' file (Sec 2.1.6). 
 
-     The land fraction database is required and is included in the 
-     'laps_terrain.tar.gz' file.
-
-     $ cd /usr/local/laps/data2/static
-     $ ln -s /usr/local/laps/data/static/model .
-
+     The land fraction database is required for the 'land_10m' subdirectory
+     and is included in the 'laps_terrain.tar.gz' file.
 
                 --- 2.1.6   Setting Runtime Parameters ---
 
@@ -184,18 +169,18 @@
 
                 ----   2.1.7  Running the Localization ---
 
-     Finally the script './etc/laps_localization.pl' will create the
-     static data files and look up tables specific to the domain(s) you
-     have defined in 'data/static/nest7grid.parms' and other runtime parameter
-     files. Shown below is an example of running the localization for a 
-     particular laps domain.
-
-     $./etc/laps_localization.pl --lapsroot=/usr/local/laps         
-                                 --dataroot=/data/fxa/laps/data
+     Finally you can create the static data files and look up tables specific 
+     to the domain(s) you have defined in 'data/static/nest7grid.parms' and 
+     other runtime parameter files. Other subdirectories under 'data' are 
+     also created if they're not already there. Shown below is an example of 
+     running the localization for a particular laps domain. 
 
      If you have multiple domains, this script can be run for each domain with
-     different values of 'lapsroot'. Any needed subdirectories under 'dataroot'
-     are automatically created if they are not already present.
+     different values of 'lapsroot'. You may need to create a subdirectory tree
+     under your new 'dataroot' directory, you can do this by running 'make' 
+     prior to running the localization.
+
+     $ make DATAROOT=/data/fxa/laps/data localize
 
       ----------------  2.2   UNIX System Requirements  ----------------
 
