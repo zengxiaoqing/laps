@@ -8,6 +8,7 @@ Subroutine Name                                File Name
 
 main                                           laps_sfc.f
     laps_sfc_sub                                    "
+        read_sfc_nl                            lib/read_namelist.f
         bkgwts                                 lib/laps_routines.f
         get_bkgwind_sfc                             "
         get_background_sfc                          "
