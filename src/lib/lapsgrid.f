@@ -1044,7 +1044,7 @@ c
 
       character*150 nest7grid
       character*200 path_to_sat_sounder(maxsndr)
-      character*5   c_sndr_id(maxsndr)
+      character*6   c_sndr_id(maxsndr)
 
       real*4 channel_wavelength_u(maxch,maxsndr)
 
