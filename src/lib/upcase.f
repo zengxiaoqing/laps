@@ -36,7 +36,7 @@ cdis
 
         character*(*)   input,
      1          output
-        character*500   string
+cc        character*500   string
 
         integer*4       nchar,
 !       1               lnblnk,
@@ -45,20 +45,20 @@ cdis
      1          chr,
      1          i
 
-        string=input
+cc        string=input
 
 !       nchar=lnblnk(string)
 
-        if(string(500:500) .ne. ' ')then
-            write(6,*)'String truncated to 500 characters.'
-        endif
+cc        if(string(500:500) .ne. ' ')then
+cc            write(6,*)'String truncated to 500 characters.'
+cc        endif
 
-        do i = 500,1,-1
-            if(string(i:i) .ne. ' ')then
-                nchar = i
-                go to 10
-            endif
-        enddo
+cc        do i = 500,1,-1
+cc            if(string(i:i) .ne. ' ')then
+cc                nchar = i
+cc                go to 10
+cc            endif
+cc        enddo
 
 10      continue
 
@@ -66,9 +66,9 @@ cdis
         do i=1,l
                 output(i:i)=' '
         enddo
-
+        call s_len(input,nchar)  
         do i=1,nchar
-                chr=ichar(string(i:i))
+                chr=ichar(input(i:i))
                 if (chr .ge. 97 .and. chr .le. 122) chr=chr-32
                 output(i:i)=char(chr)
         enddo
