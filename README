@@ -1030,11 +1030,11 @@
 <pre>
         1) silavwt_parm: 
 
-           Default value of 0. represents the use of silhouette terrain
-           which is the maximum elevation in the local area. Useful range is
-           between 0-1. A value of zero uses the average terrain instead of
-           the maximum. Note that a value of 1. may reduce the apparent effect
-           of filtering with 'toptwvl_parm'.
+           Default value of 0. This parameter allows the potential use of 
+           silhouette terrain which is the maximum elevation in the local area.
+           Useful range is anywhere between 0-1. A value of zero uses the 
+           average terrain instead of the maximum. Note that a value of 1 
+           may reduce the apparent effect of filtering with 'toptwvl_parm'.
            
         2) toptwvl_parm: 
 
