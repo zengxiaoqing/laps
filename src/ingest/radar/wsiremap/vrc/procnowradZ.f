@@ -73,6 +73,7 @@ c
       real*4 rdbz
       real*4 pixsum 
       real*4 result
+      real*4 bad_data_flag_dbz
 
       integer i,j,ii,jj
       integer istart,jstart
@@ -83,10 +84,11 @@ c
       integer istatus
       integer qcstatus
       integer fcount,icnt_out
-      integer bad_data_flag
+      integer bad_data_flag_cnt
 
       istatus = -1
-      bad_data_flag = 16
+      bad_data_flag_cnt = 16
+      bad_data_flag_dbz = 100
       qcstatus=0
       fcount=0
 
@@ -157,7 +159,7 @@ c
                   DO JJ=jstart,jend
                   DO II=istart,iend
                         
-                     if(image_data(II,JJ).le.bad_data_flag.and.
+                     if(image_data(II,JJ).lt.bad_data_flag_cnt.and.
      &                  image_data(II,JJ).ge.0)then
                         npix=npix+1
                         z_array(npix)=
@@ -237,7 +239,7 @@ c
 
          do j=1,nline
             do i=1,nelem
-               if(image_data(i,j).le.bad_data_flag.and.
+               if(image_data(i,j).lt.bad_data_flag_cnt.and.
      &              image_data(i,j).ge.0)then
                   wsi_dbz_data(i,j)=image_to_dbz(image_data(i,j))
                else
@@ -249,8 +251,8 @@ c
          DO J=1,JMAX
          DO I=1,IMAX
 
-c           if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
-c    &         r_llij_lut_rj(i,j).ne.r_missing_data)then
+            if(r_llij_lut_ri(i,j).ne.r_missing_data.or.
+     &         r_llij_lut_rj(i,j).ne.r_missing_data)then
 c
 c bilinear_interp_extrap checks on boundary conditions and
 c uses ref_base if out of bounds. NO; out-of-bounds now = r_missing_data
@@ -261,18 +263,18 @@ c
      &               nelem,nline,wsi_dbz_data,
      &               result,istatus)
 
-               if(result .ne. r_missing_data .and.
+               if(result .lt. bad_data_flag_dbz .and.
      &            result .gt. 0.0)then
 
                   laps_dbz(i,j) = result
 
-               else
-
-                  laps_dbz(i,j) = r_missing_data
-
                endif
 
-c           endif
+            else
+
+               laps_dbz(i,j) = r_missing_data
+
+            endif
 
          enddo
          enddo
