@@ -1,4 +1,4 @@
-      subroutine read_nogaps(path,fname,af,nx,ny,nz,
+      subroutine read_nogaps(bgmodel,path,fname,af,nx,ny,nz,
      .                       pr,ht,tp,sh,uw,vw,
      .                       gproj,istatus)
 
@@ -6,6 +6,7 @@ c
       implicit none
 c
       integer nx,ny,nz,i,j,k,l,it,istatus
+      integer bgmodel
 c
 c
       real*4 ht(nx,ny,nz),     !NOGAPS height (m)
@@ -34,22 +35,22 @@ c_______________________________________________________________________________
 c
 c *** Fill NOGAPS pressure levels.
 c
-c     prk( 1)=1000.
-c     prk( 2)= 925.
-c     prk( 3)= 850.
-c     prk( 4)= 700.
-c     prk( 5)= 500.
-c     prk( 6)= 400.
-c     prk( 7)= 300.
-c     prk( 8)= 250.
-c     prk( 9)= 200.
-c     prk(10)= 150.
-c     prk(11)= 100.
-c     prk(12)=  70.
-c     prk(13)=  50.
-c     prk(14)=  30.
-c     prk(15)=  20.
-c     prk(16)=  10.
+      prk( 1)=1000.
+      prk( 2)= 925.
+      prk( 3)= 850.
+      prk( 4)= 700.
+      prk( 5)= 500.
+      prk( 6)= 400.
+      prk( 7)= 300.
+      prk( 8)= 250.
+      prk( 9)= 200.
+      prk(10)= 150.
+      prk(11)= 100.
+      prk(12)=  70.
+      prk(13)=  50.
+      prk(14)=  30.
+      prk(15)=  20.
+      prk(16)=  10.
 c
 c *** Open nogaps file.
 c
@@ -64,19 +65,47 @@ c      l=index(path//' ',' ')-1
       rewind(16)
 
 c     the next line inserted by John Smart & Capt Bob Williams, 12/17/97
-      read(16) (prk(k),k=1,nz)
+c     removed again J.Smart 6/14/98
+c     read(16) (prk(k),k=1,nz)
 c     end of insert
 
-      read(16) (((ht(i,j,k),i=1,nx),j=1,ny),k=1,nz)
-      read(16) (((tp(i,j,k),i=1,nx),j=1,ny),k=1,nz)
-      read(16) (((sh(i,j,k),i=1,nx),j=1,ny),k=1,nz)  !Read in as dew point.
-      read(16) (((uw(i,j,k),i=1,nx),j=1,ny),k=1,nz)
-      read(16) (((vw(i,j,k),i=1,nx),j=1,ny),k=1,nz)
-      close(1)
+      print*,'Read T'
+      do k=1,nz
+      read(16) ((tp(i,j,k),i=1,nx),j=1,ny)
+      enddo
+
+      print*,'Read u'
+      do k=1,nz
+      read(16) ((uw(i,j,k),i=1,nx),j=1,ny)
+      enddo
+
+      print*,'Read v'
+      do k=1,nz
+      read(16) ((vw(i,j,k),i=1,nx),j=1,ny)
+      enddo
+
+      print*,'Read Td'
+      do k=1,nz-9
+      read(16) ((sh(i,j,k),i=1,nx),j=1,ny) !Read in as dew point.
+      enddo
+      do k=nz-8,nz
+      do j=1,ny
+      do i=1,nx
+         sh(i,j,k)=-99999.
+      enddo
+      enddo
+      enddo
+
+      print*,'Read ht'
+      do k=1,nz
+      read(16) ((ht(i,j,k),i=1,nx),j=1,ny)
+      enddo
+      close(16)
 c
 c *** Convert dew point to specific humidity.
 c *** Fill pressure array.
 c
+      print*,'Convert Td to q'
       do k=1,nz
       do j=1,ny
       do i=1,nx
@@ -102,10 +131,18 @@ c
       nz_ll=nz
       lat0=-90.0
       lon0=0.0
-      dlat=2.5
-      dlon=2.5
+      if(bgmodel.eq.3)then
+         dlat=2.5
+         dlon=2.5
+      elseif(bgmodel.eq.8)then
+         dlat=1.0
+         dlon=1.0
+      endif
 c
       istatus=1
+      print*
+      print*
+
       return
 c
 990   continue

@@ -117,7 +117,7 @@ c *** Fill pressure array and
 c *** Convert 3d rh to specific humidity.
 c
       print*,'convert rh to sh'
-      do k=1,nz-1
+      do k=1,nz
       do j=1,ny
       do i=1,nx
          pr(i,j,k)=prk(k)
@@ -187,27 +187,27 @@ c     real*4 dummy(nx,ny)
 
       print*,'Read T'
       do k=1,nz
-         read(lun,err=50) ((tp(i,j,k),i=1,nx),j=1,ny)
+         read(lun,err=50) ((tp(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read u'
       do k=1,nz
-         read(lun,err=50) ((uw(i,j,k),i=1,nx),j=1,ny)
+         read(lun,err=50) ((uw(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read v'
       do k=1,nz
-         read(lun,err=50) ((vw(i,j,k),i=1,nx),j=1,ny)
+         read(lun,err=50) ((vw(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read Height'
       do k=1,nz
-         read(lun,err=50) ((ht(i,j,k),i=1,nx),j=1,ny)
+         read(lun,err=50) ((ht(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c     read(lun,err=50) ((dummy(i,j),i=1,nx),j=1,ny)
       print*,'Read RH'
       do k=1,nz-10+1    ! -> prk(17)=300mb = last moisture level.
-         read(lun,err=50) ((sh(i,j,k),i=1,nx),j=1,ny)
+         read(lun,err=50) ((sh(i,j,k),i=1,nx),j=ny,1,-1)
       enddo
 c
 c As at AFWA, rh above level  (300mb)=10%
