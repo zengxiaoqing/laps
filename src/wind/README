@@ -24,9 +24,8 @@ program laps_wind                              main.f
             compare_wind                       comparisons.f
             qc_radar_obs                       qcradar.f
             insert_derived_radar_obs           windanal.f
-            make_derived_radar_obs                "
-            filter_radar_obs                      "
-            spread_vert                           "
+                make_derived_radar_obs            "
+                    filter_radar_obs              "
             get_inst_err                          "
             barnes_multivariate
                 barnes_multivariate_sub
