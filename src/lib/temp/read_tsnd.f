@@ -201,6 +201,14 @@ c                               not exactly match the LAPS analysis time.
 
                 read(12,*,err=340)ht_in,t_in,i_qc
 
+                if(l_string_contains(c8_obstype(i_tsnd),'RADIO'
+     1                                                 ,istatus))then        
+                    ht_agl = ht_in - elev_tsnd(i_tsnd)
+                    if(ht_agl .gt. 3000.)then
+                        i_qc = 0 ! Reject radiometer temps more than 3000m agl
+                    endif                    
+                endif
+
                 if(       i_qc .eq. 1
      1             .and.  ht_in .gt. 
      1                    elev_tsnd(i_tsnd) + surface_rass_buffer
