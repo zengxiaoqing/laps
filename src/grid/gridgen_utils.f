@@ -340,14 +340,14 @@ c
       character*(*)  comment(nf)
       character*2    cat
 
-      if(ngrids.eq.26)then
+      if(ngrids.eq.38)then
 
          var(1)    = 'LAT'
          var(2)    = 'LON'
          var(3)    = 'AVG'
          var(4)    = 'LDF'
          var(5)    = 'USE'
-         var(6)    = 'ALB'
+         var(6)    = 'ALB'  !possibly not used now.
          var(7)    = 'STD'
          var(8)    = 'SLN'
          var(9)    = 'SLT'
@@ -363,6 +363,14 @@ c
          enddo
 
          var(25)='TMP'
+         i=25
+         do j=1,12
+            write(cat,'(i2.2)')j
+            if(cat(1:1).eq.' ')cat(1:1)='0'
+            if(cat(2:2).eq.' ')cat(2:2)='0'
+            var(i+j)= 'A'//cat   ! monthly albedo
+         enddo
+
          var(ngrids)   = 'ZIN'
  
          comment(1) = 'Lat: From MODEL by J. Snook/ S. Albers 1-95\0'
@@ -370,7 +378,7 @@ c
          comment(3) = 'Average terrain elevation (m) \0'
          comment(4) = 'Land Fraction \0'
          comment(5) = 'Land Use dominant category (USGS 24 Category) \0'
-         comment(6) = 'Clear Sky Albedo - fixed at .04 over water\0'
+         comment(6) = 'Clear Sky Albedo - fixed at .08 over water\0'
          comment(7) = 'Standard Deviation of Elevation data (m)\0'
          comment(8) = 'Mean longitudinal terrain slope (m/m)\0'
          comment(9) = 'Mean latitudinal terrain slope (m/m)\0'
@@ -387,9 +395,18 @@ c
          enddo
 
          comment(25)='Mean Annual Soil Temp (deg K)'
-         comment(26)='\0'
+         i=25
+         do j=1,12
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)= 'climatological albedo: mon = '//cat
+         enddo
 
-      elseif(ngrids.eq.97)then
+
+         comment(ngrids)='\0'
+
+      elseif(ngrids.eq.109)then
 
          var(1)    = 'LAT'  ! non-staggered (Analysis-grid) lats
          var(2)    = 'LON'  ! non-staggered (Analysis-grid) lons
@@ -455,6 +472,14 @@ c
          enddo
 
          var(96)='TMP'
+
+         i=96
+         do j=1,12
+            write(cat,'(i2.2)')j
+            if(cat(1:1).eq.' ')cat(1:1)='0'
+            if(cat(2:2).eq.' ')cat(2:2)='0'
+            var(i+j)= 'A'//cat   ! monthly albedo
+         enddo
 
          var(ngrids)   = 'ZIN'
 
@@ -523,6 +548,13 @@ c
          enddo
 
          comment(96)='1 degree mean annual soiltemp (deg K)'
+         i=96
+         do j=1,12
+          write(cat,'(i2.2)')j
+          if(cat(1:1).eq.' ')cat(1:1)='0'
+          if(cat(2:2).eq.' ')cat(2:2)='0'
+          comment(i+j)= 'climatological albedo: mon = '//cat
+         enddo
 
          comment(ngrids)= '\0'
 
@@ -609,7 +641,7 @@ C       inquire(unit_no,exist=l1,opened=l2)
 C       read(unit_no,rec=1) idata
 
         call s_len(unit_name,len)
-        print*,'Allocate idata in read_dem_g'
+        print*,'allocate idata in read_dem_g'
         allocate (idata(nn4,nn1,nn2))
         call read_binary_field(idata,i1,i2,nn1*nn2*nn4,unit_name,len)
 
@@ -1014,17 +1046,20 @@ c
       integer       ldir
       character*(*) path_to_tiles
 
-      real, intent(out) :: temp(:)
+      real          temp(180)
 
+      istat=0
       call s_len(path_to_tiles,ldir)
       open(22,file=path_to_tiles(1:ldir)//'/LATMEANTEMP.DAT'
      &,form='formatted',status='old',iostat=istat)
       if(istat.ne.0)goto 3
       do i=1,180
-         read(22,222)temp(i)
+         read(22,222,err=4)temp(i)
       enddo
  
       close(22)
+
+      istat=1
 
       return
 
@@ -1033,8 +1068,10 @@ c          ,rmeantemp(135),rmeantemp(180)
 
 222   format(1x,f6.2)
 
-  3   print*,'Error: openning LATMEANTEMP file '
+  3   print*,'Error: opening LATMEANTEMP file '
       print*,'path_to_tiles: ',path_to_tiles(1:ldir+3),ldir
+      return
+  4   print*,'Error: reading LATMEANTEMP file '
 
       return
       end

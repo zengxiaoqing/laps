@@ -8,16 +8,16 @@ SRCROOT=../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  $(UTILLIB)
+LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a  $(UTILLIB) $(MODULESLIB)
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a $(DBUTILLIB) 
+DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a $(DBUTILLIB) $(DBMODULESLIB) 
 
-.SUFFIXES:
 .SUFFIXES: .o .c .f .a .F .i .exe
 
 EXE = gridgen_model.exe
 
-SRC   = gridgen_utils.f put_laps_static.f showgrid.f \
+SRC   = get_tile_list.f gridgen_utils.f put_laps_static.f \
+        proc_geodat.f showgrid.f \
         create_bcd_bkgnd.c setsup.c \
         getarealim.c \
         xy_to_ll.c ll_to_xy.c 
@@ -33,10 +33,10 @@ all: exe
 exe: $(ARCHIVE) $(EXE)
 
 $(EXE): $(ARCHIVE) $(MAIN)
-	$(FC) $(MAIN) $(FFLAGS) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+	$(FC) $(MAIN) $(FFLAGS) $(FMOD) $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@ 
 	rm -f *.o
 
-debug: $(SRC)
+debug: $(SRC) ;
 	$(RM) $(EXE) ;
 	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
 	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
@@ -45,15 +45,7 @@ install: exe
 	$(INSTALL) $(EXE) $(INSTALLROOT)/bin/$(EXE)
 
 clean:
-	rm -f $(EXE) $(LIB) *.o *~ *# *.i
+	rm -f $(EXE) $(LIB) *.o *~ *# *.i *.mod
 
 
 distclean: clean
-
-%.f : %.F
-	rm -f $*.f
-	$(CPP) $(CPPFLAGS) $< 
-	mv $*.i $*.f
-
-%.o : %.F
-

@@ -53,6 +53,8 @@ c For further information contact                                     *
 c Mr. John Smart NOAA/FSL, smart@fsl.noaa.gov (303-497-6590)          *
 c*********************************************************************
 
+        use horiz_interp
+
         integer istag
         integer n_staggers
         integer NX_L,NY_L
@@ -114,16 +116,6 @@ c*********************************************************************
         Real  ytn(nnyp,n_staggers)
         real  adum(nnxp,nnyp)
 
-c       real  landmask(nnxp,nnyp)
-c       real  topt_30(nnxp,nnyp)
-c       real  topt_30_s(nnxp,nnyp)
-c       real  topt_10(nnxp,nnyp)
-c       real  topt_10_s(nnxp,nnyp)
-c       real  topt_10_ln(nnxp,nnyp)
-c       real  topt_10_lt(nnxp,nnyp)
-c       real  topt_30_ln(nnxp,nnyp)
-c       real  topt_30_lt(nnxp,nnyp)
-
         real, allocatable ::  topt_10(:,:)
         real, allocatable ::  topt_10_s(:,:)
         real, allocatable ::  topt_10_ln(:,:)
@@ -138,7 +130,6 @@ c       real  topt_30_lt(nnxp,nnyp)
         real  topt_out_ln(nnxp,nnyp)
         real  topt_out_lt(nnxp,nnyp)
 
-c       real  static_albedo(nnxp,nnyp)
 c
 c  either 25 (nest7grid) or 39 + 3*maxdatacat (wrfsi)
 c
@@ -168,7 +159,7 @@ c
                                             !10m and 8.64m
         character*200 path_to_soiltemp_1deg
         character*200 path_to_luse_30s
-        character*200 path_to_albedo_tiles  !albedo = 0.144 deg res or 8.64m 
+        character*200 path_to_albedo        !albedo = 0.144 deg res or 8.64m 
 
         character*255 filename
         character*200 c_dataroot
@@ -180,10 +171,27 @@ c
         integer len,lf,lfn,ns
 
         real,  allocatable ::  rmapdata(:,:,:)
-
         real,  allocatable ::  data(:,:,:)     !primary output array storage unit.
 
-        real*4 result
+
+        interface
+          subroutine adjust_geog_data(nnxp,nnyp,ncat
+     &,istatgrn,istattmp,lat,topt_out,path_to_soiltemp
+     &,landmask,soiltemp_1deg,greenfrac,istatus)
+
+          integer nnxp,nnyp
+          integer istatus
+          integer istatgrn
+          integer istattmp
+
+          character*(*) path_to_soiltemp
+          real    lat(nnxp,nnyp)
+          real    landmask(nnxp,nnyp)
+          real    topt_out(nnxp,nnyp)
+          real    soiltemp_1deg(nnxp,nnyp)
+          real    greenfrac(nnxp,nnyp,12)
+          end subroutine
+        end interface
 
 C*********************************************************************
 
@@ -195,10 +203,12 @@ C*********************************************************************
 
         call s_len(c10_grid_fname,lf)
 
+c add 12 for albedo month 1 - 12.
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           ngrids=97   ! 2d grids (including %dist for landuse and two soiltype categories).
+           ngrids=97+12   ! 2d grids (including %dist for landuse
+                          ! and two soiltype categories, green frac and albedo).
         else
-           ngrids=26
+           ngrids=26+12
         endif
 
         allocate (data(nnxp,nnyp,ngrids))
@@ -251,21 +261,18 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
            return
         endif
 
-        print*,'Get path to landuse 30s'
         call get_path_to_landuse_30s(path_to_luse_30s,istatus)
         if(istatus .ne. 1)then
            write(6,*)'Error getting path_to_luse_30s'
            return
         endif
 
-        print*,'Get path to green frac'
         call get_path_to_green_frac(path_to_green_frac,istatus)
         if(istatus .ne. 1)then
            print*,'Error getting path_to_green_frac'
            return
         endif
 
-        print*,'Get path to soiltemp 1deg'
         call get_path_to_soiltemp_1deg(path_to_soiltemp_1deg
      &,istatus)
         if(istatus .ne. 1)then
@@ -273,29 +280,48 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
            return
         endif
 
+        call get_path_to_albedo(path_to_albedo,istatus)
+        if(istatus .ne. 1)then
+           print*, 'Error getting path_to_albedo'
+           return
+        endif
+
 
         call s_len(path_to_topt30s,len)
+        print*,'path to topt30s:        ',path_to_topt30s(1:len)
 	path_to_topt30s(len+1:len+2)='/U'
 
         call s_len(path_to_topt10m,len)
+        print*,'path to toptl0m:        ',path_to_topt10m(1:len)
 	path_to_topt10m(len+1:len+2)='/H'
 
         call s_len(path_to_pctl10m,len)
+        print*,'path to pctl_10m:       ',path_to_pctl10m(1:len)
 	path_to_pctl10m(len+1:len+2)='/L'
 
         call s_len(path_to_soiltype_top_30s,len)
+        print*,'path to soiltype_top:   '
+     .,path_to_soiltype_top_30s(1:len)
 	path_to_soiltype_top_30s(len+1:len+2)='/O'
+        print*,'path to soiltype_bot:   '
+     .,path_to_soiltype_bot_30s(1:len)
         path_to_soiltype_bot_30s(len+1:len+2)='/O'
 
         call s_len(path_to_luse_30s,len)
+        print*,'path to landuse 30s: ',path_to_luse_30s(1:len)
         path_to_luse_30s(len+1:len+2)='/V'
 
         call s_len(path_to_green_frac,len)
+        print*,'path to green frac:     ',path_to_green_frac(1:len)
         path_to_green_frac(len+1:len+2)='/G'
 
         call s_len(path_to_soiltemp_1deg,len)
+        print*,'path to soiltemp 1deg:  ',path_to_soiltemp_1deg(1:len)
         path_to_soiltemp_1deg(len+1:len+2)='/T'
 
+        call s_len(path_to_albedo,len)
+        print*,'path to albedo:         ',path_to_albedo(1:len)
+        path_to_albedo(len+1:len+2)='/A'
 
         call get_topo_parms(silavwt_parm,toptwvl_parm,istatus)
 	if (istatus .ne. 1) then
@@ -710,7 +736,7 @@ c ---------------------------------------------------------------
 
 c bottom layer dominant category and percent distribution soil type
 
-
+c
 c soiltype bottom layer ... 68 thru 83
 c
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
@@ -754,12 +780,13 @@ c -----------------------------------------------------------
          GEODAT3D=r_missing_data
         endif
 
+        ilndmsk=12
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
 
 c landmask for wrfsi
            data(:,:,11)=GEODAT2D
-           data(:,:,12) = 1.
-           where(data(:,:,11) .eq. 16.)data(:,:,12)=0.
+           data(:,:,ilndmsk) = 1.
+           where(data(:,:,11) .eq. 16.)data(:,:,ilndmsk)=0.
 
 c grids 15 thru 39 are percent distributions
            do j=1,24
@@ -768,8 +795,8 @@ c grids 15 thru 39 are percent distributions
         else
 c landmask for laps
            data(:,:,5)=GEODAT2D   !landuse for laps
-           data(:,:,12)=1.
-           where(data(:,:,5) .eq. 16.)data(:,:,12)=0.
+           data(:,:,ilndmsk)=1.
+           where(data(:,:,5) .eq. 16.)data(:,:,ilndmsk)=0.
         endif
 
 c ----------------------------------------------------------------
@@ -805,25 +832,25 @@ c ----------------------------------------------------------------
         endif
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           i=83
+           ing=83
         else
-           i=12
+           ing=12
         endif
         do j=1,12
-           data(:,:,i+j)=GEODAT3D(:,:,j)
+           data(:,:,ing+j)=GEODAT3D(:,:,j)
         enddo
 
 c ------------------------------------------------------------------
         print*
 c       print*,' Calling GEODAT: Processing 1 degree soiltemp data.'
 
-        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
-     +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,12),adum  !send in landmask to help 
-     +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
+c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,ilndmsk),adum  !send in landmask to help 
+c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
 
-c       call proc_geodat(nnxp,nnyp
-c    1,path_to_soiltemp_1deg,lats(1,1,ns),lons(1,1,ns)
-c    1,1,istatus_tmp)
+        call proc_geodat(nnxp,nnyp,1
+     1,path_to_soiltemp_1deg,lats(1,1,ns),lons(1,1,ns)
+     1,data(1,1,ilndmsk),GEODAT2D,istatus_tmp)
 
         if(istatus_tmp.ne.1)then
          print* 
@@ -850,44 +877,93 @@ c    1,1,istatus_tmp)
         endif 
 
         data(:,:,in1)=GEODAT2D
-
-c retrieve climatological albedo. Currently this is a fixed water albedo
-c that is a namelist value (nest7grid.parms - water_albedo_cmn)
-
-        call get_static_albedo(nnxp,nnyp,lats(1,1,ns),lons(1,1,ns)
-     +,data(1,1,12),GEODAT2D,istatus)
-
-        if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           data(:,:,47)=GEODAT2D
-        else
-           data(:,:,6)=GEODAT2D
-        endif
-
+c
 c Adjust geog data to conform to landuse data (the most
 c accurate for defining land-water boundaries).
 c Adjust soil temps to terrain elevations.
+c
+        if(.true.)then
+        print*,'Calling adjust_geog_data'
 
-        call adjust_geog_data(nnxp,nnyp,istatus_grn,istatus_tmp
-     &,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
-     &,data(1,1,12),data(1,1,in1),GEODAT3D,istatus)
+        call adjust_geog_data(nnxp,nnyp,12,istatus_grn
+     &,istatus_tmp,lats(1,1,ns),topt_out,path_to_soiltemp_1deg
+     &,data(1,1,ilndmsk),data(1,1,in1),GEODAT3D,istatus)
         if(istatus.ne.1)then
            print*,'Processing incomplete in adjust_geog_data'
            if(c10_grid_fname(1:lf).eq.'wrfsi')then
-              print*,'Error for wrfsi'
+              print*,'Error: wrfsi static not updated'
               return
            endif
         endif
+        endif
+c ------------------------------------------------------------------
+        print*
+c       print*,' Calling GEODAT: Processing albedo climo data.'
+
+c       CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+c    +,ytn(1,ns),deltax,deltay,GEODAT2D,adum,data(1,1,ilndmsk),adum  !send in landmask to help
+c    +,path_to_soiltemp_1deg,2.0,0.0,new_DEM,1,istatus_tmp)
+
+        call proc_geodat(nnxp,nnyp,12,path_to_albedo
+     +,lats(1,1,ns),lons(1,1,ns),data(1,1,ilndmsk)
+     +,GEODAT3D,istatus_alb)
+
+        print*,'Done in proc_geodat: albedo'
+
+        if(istatus_alb.ne.1)then
+         print*
+         print*,'Albedo climo data not processed completely'
+         if(c10_grid_fname(1:lf).eq.'wrfsi')then
+            print*,' File(s) missing for albedo data'
+            print*,' Error:   Static file not created'
+            print*
+            istatus=0
+            return
+         else
+            print*,' File(s) missing for albedo data'
+            print*,'           *** WARNING ***'
+            print*,' albedo data not added to static file'
+            print*
+         endif
+         GEODAT3D=r_missing_data
+        endif
+c
+c We can force water points to have albedo = 0.08.
+c Land points with missing albedo are given the mean domain
+c albedo.
+c We can be more sophisticated with this by
+c determining the albedo as a function of landuse category and
+c then assigning missing albedo with the same landuse albedo.
+c
+c       print*,'force albedo = 0.08 for water points'
+
+        do k=1,12
+           where(data(:,:,ilndmsk).eq.0.0)GEODAT3D(:,:,k)=0.08
+        enddo
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
-           i=83
+           i=96
         else
-           i=12
+           i=25
         endif
         do j=1,12
            data(:,:,i+j)=GEODAT3D(:,:,j)
         enddo
 
-        deallocate (GEODAT2D,GEODAT3D)
+c       call get_static_albedo(nnxp,nnyp,lats(1,1,ns),lons(1,1,ns)
+c    +,data(1,1,12),GEODAT2D,istatus)
+c       if(c10_grid_fname(1:lf).eq.'wrfsi')then
+c          data(:,:,47)=GEODAT2D
+c       else
+c          data(:,:,6)=GEODAT2D
+c       endif
+
+c Adjust geog data to conform to landuse data (the most
+c accurate for defining land-water boundaries).
+c Adjust soil temps to terrain elevations.
+
+        deallocate (GEODAT2D)
+        deallocate (GEODAT3D)
 
         allocate (var(ngrids), comment(ngrids))
 
@@ -950,7 +1026,6 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
            call move(topt_out_ln,data(1,1,8),nnxp,nnyp)            ! JS
            call move(topt_out_lt,data(1,1,9),nnxp,nnyp)            ! JS 
 
-           ngrids=26
            call get_gridgen_var(nf,ngrids,var,comment)
  
         endif
@@ -961,9 +1036,9 @@ c          call move(topt_stag_out,data(1,1,i+12),nnxp,nnyp) !51
 
         INQUIRE(FILE=cdl_dir(1:lcdl)//filename(1:lfn),EXIST=exist)
 
-        if(.not.exist) then
+        if(.not.exist)then
            print*,'Error: Could not find file '
-     +           ,cdl_dir(1:len)//filename(1:lfn)
+     +           ,cdl_dir(1:lcdl)//filename(1:lfn)
            print*,'c10_grid_fname: ',c10_grid_fname(1:lf)
            istatus = 0
            return
@@ -1187,6 +1262,9 @@ C
       if(ofn(len-1:len-1).eq.'V')then
          icnt = 0
          cdatatype='landuse'
+      elseif(ofn(len-1:len-1).eq.'A')then
+         icnt=0
+         cdatatype='albedo'
       elseif(ofn(len-1:len-1).eq.'O')then
          icnt = 0
          cdatatype='soiltype'
@@ -1370,8 +1448,9 @@ c
                       CALL READ_DEM(29,TITLE3(1:LB),no,no,1,4,
      .                              DATO(1,1,NOFR,1))
                       dem_data=.true.
-                    elseif( (ofn(len-1:len).eq.'G') )then      ! greenness fraction
-                      CALL READ_DEM_G(29,TITLE3(1:LB),no,no,mof,12
+                    elseif( (ofn(len-1:len).eq.'G').or.
+     .                      (ofn(len-1:len).eq.'A') )then      ! greenfrac/albedo
+                      CALL READ_DEM_G(29,TITLE3(1:LB),no,no,mof,lcat
      .                     ,nofr, 1,4, DATO)
                          dem_data=.true.
                     elseif( (ofn(len-1:len).eq.'T') )then      ! soiltemp
@@ -1666,8 +1745,8 @@ c           datr(ir,jr)=datq(ixr,iyr)
 
             XR=(XT(IR)-XQ1)/DELTAXQ+1.
             YR=(YT(JR)-YQ1)/DELTAYQ+1.
-            call bilinear_interp_extrap(xr,yr,niq,njq
-     1               ,datq,rval,istatus)
+c           call bilinear_interp_extrap(xr,yr,niq,njq
+c    1               ,datq,rval,istatus)
 
 c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
 
@@ -1959,9 +2038,9 @@ c quantitative data types
 c
 c ----------------------------------------------------------
 c
-      subroutine adjust_geog_data(nnxp,nnyp,istatgrn,istattmp
-     &,lat,topt_out,path_to_soiltemp,landmask,soiltemp_1deg
-     &,greenfrac,istatus)
+      subroutine adjust_geog_data(nnxp,nnyp,ncat
+     &,istatgrn,istattmp,lat,topt_out,path_to_soiltemp
+     &,landmask,soiltemp_1deg,greenfrac,istatus)
 c
 c This routine uses landmask to refine the course resolution
 c soil temp and green fraction data to conform to water-land
@@ -1979,8 +2058,8 @@ c
       integer istattmp
       integer ijsthresh
       integer l1,l2
+      integer lent
       integer ncat
-      parameter (ncat= 12)
 
       integer isc
       integer ic(ncat) 
@@ -1989,11 +2068,11 @@ c
 
       logical endsearch
 
-      real    lat(nnxp,nnyp)
-      real    landmask(nnxp,nnyp)
-      real    topt_out(nnxp,nnyp)
-      real    soiltemp_1deg(nnxp,nnyp)
-      real    greenfrac(nnxp,nnyp,12)
+      real,intent(inout)  ::    lat(nnxp,nnyp)
+      real,intent(inout)  ::    landmask(nnxp,nnyp)
+      real,intent(inout)  ::    topt_out(nnxp,nnyp)
+      real,intent(inout)  ::    soiltemp_1deg(nnxp,nnyp)
+      real,intent(inout)  ::    greenfrac(nnxp,nnyp,ncat)
 
       real,   allocatable ::    grnfrctmp     (:,:,:)
       real,   allocatable ::    soiltmp       (:,:)
@@ -2004,6 +2083,7 @@ c
       real    tatlmx,tatlmn
       real    rlatmx,rlatmn
       real    r_missing_data
+      real    rmngrn
       real    sumt
       real    sumg
       real    sum(ncat)
@@ -2028,6 +2108,9 @@ c use moist adiabatic laps rate (6.5 deg/km) to get new temp
       grnfrctmp=greenfrac
 
       where(grnfrctmp.eq.0.0)grnfrctmp=r_missing_data
+      rmngrn=minval(grnfrctmp(1:nnxp,1:nnyp,1:1))
+      print*,'minimum green fraction = ',rmngrn
+      where(soiltmp.eq.0.0)soiltmp=r_missing_data
 
 c determine average soiltemp and greenfrac in domain
       sumt=0.0
@@ -2042,18 +2125,15 @@ c determine average soiltemp and greenfrac in domain
          endif
 
 c greenfrac is assumed to be continuous globally; only use land points
-         do l=1,ncat
-            if(landmask(i,j) .ne. 0 .and.
-     &         grnfrctmp(i,j,l).lt.r_missing_data)then
-               sum(l)=grnfrctmp(i,j,l)+sum(l)
-               ic(l)=ic(l)+1
-
-c           elseif(grnfrctmp(i,j,l).eq.r_missing_data)then
-c              icmsng(l)=icmsng(l)+1
-
-            endif
-         enddo
-
+         if(rmngrn.lt.r_missing_data)then
+            do l=1,ncat
+               if(landmask(i,j) .ne. 0 .and.
+     &            grnfrctmp(i,j,l).lt.r_missing_data)then
+                  sum(l)=grnfrctmp(i,j,l)+sum(l)
+                  ic(l)=ic(l)+1
+               endif
+            enddo
+         endif
       enddo
       enddo
 
@@ -2063,15 +2143,17 @@ c              icmsng(l)=icmsng(l)+1
          sumt=0.0
          print*,'*** Using mean lat temps -> LATMEANTEMP ***'
          allocate (rmeanlattemp(180))
-         call  get_meanlattemp(path_to_soiltemp,rmeanlattemp,istatus)
+         call  get_directory_length(path_to_soiltemp,lent)
+         call  get_meanlattemp(path_to_soiltemp(1:lent-1)
+     &,rmeanlattemp,istatus)
          if(istatus.ne.1)then
             print*,'Error returned: get_meanlattemp'
             return
          endif
-         l1=nint(minval(lat(:,1)))
-         l2=nint(maxval(lat(:,nnyp)))
-         if(l1.lt.0)l1=90+abs(l1)
-         if(l2.lt.0)l2=90+abs(l2)
+         l1=90-nint(minval(lat(:,1)))+1
+         l2=90-nint(maxval(lat(:,nnyp)))+1
+         if(l1.gt.180)l1=180
+         if(l2.gt.180)l2=180
 
 !        avgtmp=(rmeanlattemp(l1)+rmeanlattemp(l2))/2.0
 !        where(soiltmp.eq.r_missing_data)soiltmp=avgtmp
@@ -2083,7 +2165,7 @@ c              icmsng(l)=icmsng(l)+1
          tslp=(rlatmx-rlatmn)/(tatlmx-tatlmn)
          do j=1,nnyp
          do i=1,nnxp
-            soiltemp_1deg(i,j)=tatlmn-(rlatmx-lat(i,j))/tslp
+            soiltemp_1deg(i,j)=tatlmn+(rlatmx-lat(i,j))/tslp
             sumt=soiltemp_1deg(i,j)+sumt
          enddo
          enddo
@@ -2159,7 +2241,8 @@ c search distance.
 
 ! greenness frac
 
-         if(grnfrctmp(i,j,1).eq.r_missing_data)then  !an inconsistency exists
+         if(grnfrctmp(i,j,1).eq.r_missing_data.and.
+     &                rmngrn.lt.r_missing_data)then  !an inconsistency exists
 
           endsearch = .false.
 
@@ -2205,9 +2288,7 @@ c search distance.
 
          else
 
-          do l=1,12
-           greenfrac(i,j,l)=grnfrctmp(i,j,l)
-          enddo
+          greenfrac(i,j,:)=grnfrctmp(i,j,:)
 
          endif
 
@@ -2218,7 +2299,8 @@ c search distance.
          endif
 
          do l=1,12
-            if(greenfrac(i,j,l).ne. 0.0)then
+            if(greenfrac(i,j,l).ne. 0.0 .and.
+     &         greenfrac(i,j,l).lt.r_missing_data)then
                greenfrac(i,j,l)=0.0
             endif
          enddo
@@ -2227,6 +2309,8 @@ c search distance.
 
        enddo
       enddo
+
+      deallocate (grnfrctmp,soiltmp)
 
 c if the above search failed to find nearby soil temp or greenness frac
 c then use average value
@@ -2250,8 +2334,6 @@ c then use average value
 
       enddo
       enddo
-
-      deallocate (grnfrctmp,soiltmp)
 
       istatus=1
 
