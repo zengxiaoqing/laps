@@ -158,12 +158,15 @@ cdis
 
             if(c_section .eq. 'hz')then
                 write(6,101)
- 101            format('    Zoom,Density (contours/sfc wind barbs)'       
-     1                ,23x,'     ? ',$)
-                read(lun,*)zoom,density
+ 101            format(
+     1       '    Zoom,Density (contours/sfc wind barbs), Contour width'       
+     1                ,15x,'     ? ',$)
+                read(lun,*)zoom,density,plot_parms%contour_line_width       
+!               plot_parms%contour_line_width = 1
             else
                 zoom = 1.0
                 density = 1.0
+                plot_parms%contour_line_width = 1
             endif
 
             if(MAX_RADARS .ge. 1)then
@@ -175,7 +178,7 @@ cdis
             call lapswind_plot(c_display,i4time_ref,lun,NX_L,NY_L,NZ_L,
      1                         MAX_RADARS,L_RADARS,r_missing_data,
      1                         laps_cycle_time,zoom,density,
-     1                         namelist_parms)
+     1                         plot_parms,namelist_parms)
             call frame
 
         elseif(c_section .eq. 'x' .or. c_section .eq. 'X'
@@ -185,11 +188,13 @@ cdis
 
             if(c_section .eq. 'xz')then
                 write(6,102)
- 102            format('    Density (contours)'       
-     1                ,33x,'     ? ',$)
-                read(lun,*)density
+ 102            format('    Density (contours), Contour Line Width'       
+     1                ,13x,'     ? ',$)
+                read(lun,*)density,plot_parms%contour_line_width
+!               plot_parms%contour_line_width = 1
             else
                 density = 1.0
+                plot_parms%contour_line_width = 1
             endif
 
             l_atms = .false.
@@ -201,7 +206,7 @@ cdis
             call xsect(c_display,i4time_ref,lun,l_atms
      1                ,standard_longitude,NX_L,NY_L,NZ_L,121,NZ_L,NXSECT       
      1                ,r_missing_data,laps_cycle_time,maxstns
-     1                ,density,namelist_parms)
+     1                ,density,plot_parms,namelist_parms)
 
         elseif(c_section .eq. 's' .or. c_section .eq. 'S')THEN
             call plot_sounding(i4time_ref,lun,NX_L,NY_L,NZ_L
