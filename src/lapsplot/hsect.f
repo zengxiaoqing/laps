@@ -4664,11 +4664,11 @@ c                   cint = -1.
             if(c_type(1:2) .eq. 'sc')then
                 var_2d = 'SC'
                 ext = 'lm2'
-                c33_label = 'Snow Cover        (TENTHS)       '
+                c33_label = 'Snow Cover Analysis     (TENTHS) '
             else
                 var_2d = 'CSC'
                 ext = 'lcv'
-                c33_label = 'SatObs Snow Cover (TENTHS)       '
+                c33_label = 'SatObs (CSC) Snow Cover (TENTHS) '
             endif
 
             call get_laps_2dgrid(i4time_ref,laps_cycle_time*100
@@ -4816,7 +4816,7 @@ c                   cint = -1.
             else ! 'cg'
                 write(6,*)' calling solid fill cloud plot'
                 
-                if(NX_L*NY_L .gt. 40000)then
+                if(NX_L*NY_L .gt. 50000)then
                     colortable = 'linear_reduced'
                 else
                     colortable = 'linear'
