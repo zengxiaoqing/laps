@@ -98,13 +98,11 @@ cdis
         character*9 asc_tim_9,asc_tim_9_beg,asc_tim_9_end
         integer i4time_file(MAX_FILES)
         real*4 frac(MAX_FILES)
-        character c_fnames(MAX_FILES)*80
-
-        character*255 c_filespec
 
         character*4  radar_name ! Local
 
         character*3 var_2d
+        character*3 ext_local
         character*31  ext, radarext_3d_accum
         character*10  units_2d
         character*125 comment_2d
@@ -132,38 +130,55 @@ cdis
         write(6,*)' Radar accumulation from ',asc_tim_9_beg,
      1                                 ' to ',asc_tim_9_end
 
-!       Get File Times
-        call get_filespec(radarext_3d_accum(1:3),2,c_filespec,istatus)
+!       Get File Times and fractional time periods
 
-        call Get_file_names(c_filespec,
-     1                      i_nbr_files_ret,
-     1                      c_fnames,
-     1                      max_files,
-     1                      i_status)
+        if(radarext_3d_accum(1:3) .eq. 'xxx')then ! automatically select type(s)
+            ext_local = 'vrc'
+            call get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
+     1                    ,i_nbr_files_ret                            ! I
+     1                    ,ext_local                                  ! I
+     1                    ,nscans_vrc                                 ! O
+     1                    ,i4time_file                                ! 0
+     1                    ,frac,frac_sum,istatus)                     ! O
 
-        min_diff = 1999999999
+            write(6,*)' ext_local / nscans = ',ext_local,' ',nscans_vrc       
 
-        if(i_nbr_files_ret .gt. 0)then
-            call get_directory_length(c_fnames(1),lenf)
-        else ! Error Condition
-            write(6,*)' WARNING: No Radar Data Available for'
-     1               ,' Snow/Precip Accumulation'
-            istatus = 0
-            return
+            ext_local = 'vrz'
+            call get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
+     1                    ,i_nbr_files_ret                            ! I
+     1                    ,ext_local                                  ! I
+     1                    ,nscans_vrz                                 ! O
+     1                    ,i4time_file                                ! 0
+     1                    ,frac,frac_sum,istatus)                     ! O
+
+            write(6,*)' ext_local / nscans = ',ext_local,' ',nscans_vrz       
+
+            if(nscans_vrc .gt. nscans_vrz)then
+                ext_local = 'vrc'
+            elseif(nscans_vrc .lt. nscans_vrz)then
+                ext_local = 'all'
+            else ! equal case
+                ext_local = 'vrc' ! or 'all'
+            endif
+
+            write(6,*)
+            write(6,*)' auto select: nscans_vrc/nscans_vrz/ext_local:'
+     1                              ,nscans_vrc,nscans_vrz,' ',ext_local       
+            write(6,*)
+
+        else
+            ext_local = radarext_3d_accum(1:3)
+
         endif
 
-10      do i=1,i_nbr_files_ret
-            asc_tim_9 = c_fnames(i)(lenf+1:lenf+9)
-            call i4time_fname_lp(asc_tim_9,I4time_file(i),istatus)
-            if(istatus .ne. 1)then
-                write(6,*)' Bad return from i4time_fname_lp,',
-     1            ' called from get_precip_accum: ',asc_tim_9
-                return
-            endif
-        enddo
+        call get_fracs(i4time_beg,i4time_end,max_radar_gap            ! I
+     1                ,i_nbr_files_ret                                ! I
+     1                ,ext_local                                      ! I
+     1                ,nscans                                         ! O
+     1                ,i4time_file                                    ! 0
+     1                ,frac,frac_sum,istatus)                         ! O
 
-        call get_fracs(i4time_beg,i4time_end,max_radar_gap
-     1               ,i_nbr_files_ret,i4time_file,frac,frac_sum,istatus)    
+        write(6,*)' ext_local / nscans = ',ext_local,' ',nscans
 
         if(istatus .ne. 1)then
             return
@@ -459,7 +474,7 @@ cdis
 
             call read_radar_3dref(i4time_radar,                 ! I
      1       .true.,r_missing_data,imax,jmax,kmax,              ! I
-     1       radarext_3d_accum,lat,lon,topo,
+     1       ext_local,lat,lon,topo,
      1       .true.,.false.,
      1       height_3d,
      1       grid_ra_ref,
@@ -639,9 +654,11 @@ cdis
         return
         end
 
-        subroutine get_fracs(i4time_beg,i4time_end,max_radar_gap
-     1          ,i_nbr_files_ret
-     1          ,i4time_file,frac,frac_sum,istatus)
+        subroutine get_fracs(i4time_beg,i4time_end,max_radar_gap        ! I
+     1                      ,i_nbr_files_ret                            ! I
+     1                      ,ext                                        ! I
+     1                      ,nscans                                     ! O
+     1                      ,i4time_file,frac,frac_sum,istatus)         ! O
 
 !       Steve Albers    1991    This routine calculates linear combination
 !                               coefficients for radar scans which can be used
@@ -651,16 +668,53 @@ cdis
         integer MAX_FILES
         parameter (MAX_FILES = 3000)
 
+        character*255 c_filespec
         character*9 asc_tim_9
+        character c_fnames(MAX_FILES)*80
+        character*3 ext
+
         real*4 frac(MAX_FILES)
         integer i4time_file(MAX_FILES)
 
+        call get_filespec(ext,2,c_filespec,istatus)
+
+        call Get_file_names(c_filespec,
+     1                      i_nbr_files_ret,
+     1                      c_fnames,
+     1                      max_files,
+     1                      i_status)
+
+        if(i_nbr_files_ret .gt. 0)then
+            call get_directory_length(c_fnames(1),lenf)
+        else ! Error Condition
+            write(6,*)' WARNING: No Radar Data Available for'
+     1               ,' Snow/Precip Accumulation ',ext
+            istatus = 0
+            return
+        endif
+
+        do i=1,i_nbr_files_ret
+            asc_tim_9 = c_fnames(i)(lenf+1:lenf+9)
+            call i4time_fname_lp(asc_tim_9,I4time_file(i),istatus)
+            if(istatus .ne. 1)then
+                write(6,*)' Bad return from i4time_fname_lp,',
+     1            ' called from get_precip_accum: ',asc_tim_9
+                return
+            endif
+        enddo
+
         i4_interval = i4time_end - i4time_beg
+        nscans = 0
 
         do i = 1,i_nbr_files_ret
 !           write(6,301)i4time_beg,i4time_file(i),i4time_end
 !301        format(1x,3i12)
             frac(i) = 0.
+
+            if(i4time_file(i) .ge. i4time_beg .and.
+     1         i4time_file(i) .lt. i4time_end       )then
+                nscans = nscans + 1
+            endif
         enddo
 
         do i = 1,i_nbr_files_ret-1
