@@ -1,0 +1,15 @@
+# Namelist for a surface analysis:
+313 217 7 6 			# Dimensions of the grid
+15 'dat/surface.dat'		# data file
+# Filter parameters for all variables:
+0.999 0.999 0.999 2 2 2
+0.999 0.999 0.999 2 2 2
+0.999 0.999 0.999 2 2 2
+0.999 0.999 0.999 2 2 2
+0.999 0.999 0.999 2 2 2
+0.999 0.999 0.999 2 2 2
+10
+4 3 3 3 3 2
+
+
+313 221 5 1 			# Dimensions of the grid
