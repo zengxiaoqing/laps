@@ -1,0 +1,111 @@
+#!@PERL@
+# @configure_input@
+
+use File::Copy;
+
+# routine to localize satellite usage
+
+#define current working directory
+print "\n";
+print "Starting routine to localize optran\n";
+print "\n";
+
+my $Path_to_exe = shift || die "No executable path specified\n";
+print " Path to exe is $Path_to_exe\n";
+print "\n";
+
+my $Path_to_static = shift || die "No static path specified\n";
+print " Path to static is $Path_to_static\n";
+print "\n";
+
+#set current working dirctory to static/optranlib
+chdir "$Path_to_static/optranlib";
+
+#remove old .dat files
+print "Removing $Path_to_static/optranlib/coef.dat\n";
+unlink("$Path_to_static/optranlib/coef.dat");
+
+print "Removing $Path_to_static/optranlib/Dry_Control_File.dat\n";
+unlink("$Path_to_static/optranlib/Dry_Control_File.dat");
+
+print "Removing $Path_to_static/optranlib/Wet_Control_File.dat\n";
+unlink("$Path_to_static/optranlib/Wet_Control_File.dat");
+
+print "Removing $Path_to_static/optranlib/Ozo_Control_File.dat\n";
+unlink("$Path_to_static/optranlib/Ozo_Control_File.dat");
+
+
+my @nc_switches;
+my $len;
+# get goes satellite number from moisture_switch.nl, store in GOES_NUMBER
+open (MSI, "$Path_to_static/moisture_switch.nl");
+while (<MSI>) {
+  if (/GOES_SWITCH/i) {
+    chomp;
+
+#   remove trailing comma from line
+    $len = length($_);
+    if (substr($_,$len-1,1) eq ",") {
+      chop;
+    }
+
+#   skip commented lines
+    if ((substr($_,0,1) eq "c") || (substr($_,0,1) eq "C")) {
+    } else {
+      push(@nc_switches,$_);
+    }
+  }
+}
+close(MSI);
+
+#hopefully there will be only one valid line for goes_switch
+$num_switches = @nc_switches;
+if ($num_switches > 1) {
+  print "Multiple number of 'goes_switch =' lines encountered: \n";
+  print "@nc_switches\n";
+  print "Using first switch encountered: $nc_switches[0]\n";
+}
+
+my $GOES_NUMBER;
+my $junk;
+($junk, $GOES_NUMBER) = split(/=/, $nc_switches[0]);
+$GOES_NUMBER = $GOES_NUMBER + 0;
+
+print "GOES_NUMBER found is: $GOES_NUMBER\n";
+
+print "Processing for $GOES_NUMBER\n";
+# process goes 8
+if ($GOES_NUMBER == 8) {
+
+  system("cat g08coef.dat GOES8_IMAGER_ASCII_COEFF.DAT > coef.dat");
+  print "$Path_to_static/optranlib/coef.dat has been generated.\n";
+
+  system("$Path_to_exe/binary_coeff.x");
+
+  system("cat g08_dry_control_file.dat GOES8_IMAGER_DRY_CONTROL_FILE.DAT > Dry_Control_File.dat");
+  print "$Path_to_static/optranlib/Dry_Control_File.dat has been generated.\n";
+  system("cat g08_wet_control_file.dat GOES8_IMAGER_WET_CONTROL_FILE.DAT > Wet_Control_File.dat");
+  print "$Path_to_static/optranlib/Wet_Control_File.dat has been generated.\n";
+  system("cat g08_ozo_control_file.dat GOES8_IMAGER_OZO_CONTROL_FILE.DAT > Ozo_Control_File.dat");
+  print "$Path_to_static/optranlib/Ozo_Control_File.dat has been generated.\n";
+
+# process goes 10
+} elsif ($GOES_NUMBER == 10) {
+
+  system("cat g10coef.dat GOES10_IMAGER_ASCII_COEFF.DAT > coef.dat");
+  print "$Path_to_static/optranlib/coef.dat has been generated.\n";
+
+  system("$Path_to_exe/binary_coeff.x");
+
+  system("cat g10_dry_control_file.dat GOES10_IMAGER_DRY_CONTROL_FILE.DAT > Dry_Control_File.dat");
+  print "$Path_to_static/optranlib/Dry_Control_File.dat has been generated.\n";
+  system("cat g10_wet_control_file.dat GOES10_IMAGER_WET_CONTROL_FILE.DAT > Wet_Control_File.dat");
+  print "$Path_to_static/optranlib/Wet_Control_File.dat has been generated.\n";
+  system("cat g10_ozo_control_file.dat GOES10_IMAGER_OZO_CONTROL_FILE.DAT > Ozo_Control_File.dat");
+  print "$Path_to_static/optranlib/Ozo_Control_File.dat has been generated.\n";
+
+} else {
+  print "Optran processing turned off...no .dat files created\n";
+}
+
+print "Optran localization completed successfully.\n";
