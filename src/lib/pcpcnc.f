@@ -96,8 +96,7 @@ cdis
 
         end
 
-        subroutine cpt_fall_velocity(ipcp_type,p,t,fall_velocity
-     1                              ,ni,nj,nk)
+        subroutine cpt_fall_velocity(ipcp_type,p,t,fall_velocity)
 
         if(ipcp_type .eq. 1)then ! Rain
             fall_velocity = 5.0
