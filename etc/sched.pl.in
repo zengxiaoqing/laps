@@ -93,17 +93,23 @@ my $c8_project = uc @c8_project[0];
 #
 
 my @LAPS_EXE;
+my @WHAT_GOT_IN;
+my $wgi_log;
+
+@WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
 if(defined $opt_s){ # "surface only"
     @LAPS_EXE = qw(lga.exe 
                   obs_driver.x sfc_qc.exe 
                   laps_sfc.x);
+    @WHAT_GOT_IN = qw(sfc);
 
 }elsif(defined $opt_K){ # Kalman only
     @LAPS_EXE = qw(obs_driver.x sfc_qc.exe);
 
 }elsif(defined $opt_M){ # Mesowave
     @LAPS_EXE = ("lga\.exe", "obs_driver\.x", "sfc_qc\.exe", $opt_M);
+    @WHAT_GOT_IN = qw(rcsv);
 
 }elsif($c8_project eq "AIRDROP"){
     @LAPS_EXE = qw(lga.exe
@@ -132,7 +138,6 @@ if(defined $opt_v){
    push(@LAPS_EXE,"gen_verif_prof.exe");
    push(@LAPS_EXE,"gen_verif_raob.exe");
 }
-my @WHAT_GOT_IN = qw(wind3d sfc temp hum3d cloud);
 
 require "$LAPSROOT/etc/fxa.pm";
 
@@ -328,7 +333,12 @@ foreach $exe (@LAPS_EXE){
         if($execount == $nexe){
             foreach $wgi_script (@WHAT_GOT_IN){
                 print $t." Running what-got-in script $wgi_script.pl\n";
-                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1";
+                if ($wgi_script eq "rcsv") {
+                    $wgi_log = "sfc";
+                }else{
+                    $wgi_log = $wgi_script;
+                }
+                $sys="$EXECUTABLE_NAME $LAPSROOT/etc/$wgi_script.pl $LAPS_LOG_PATH 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1";
                 &forksub($sys,$lockfile);
             }
         }
@@ -416,7 +426,12 @@ foreach $exe (@LAPS_EXE){
             }
 
             foreach $wgi_script (@WHAT_GOT_IN){
-                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_script.wgi.$yyjjjhhmm 2>&1\n";
+                if ($wgi_script eq "rcsv") {
+                    $wgi_log = "sfc";
+                }else{
+                    $wgi_log = $wgi_script;
+                }
+                print TFILE "@PERL@ $LAPSROOT/etc/$wgi_script.pl $LAPS_DATA_ROOT 1> $LAPS_LOG_PATH/$wgi_log.wgi.$yyjjjhhmm 2>&1\n";
             }
         }
 
