@@ -230,25 +230,32 @@
         endif
 
 !       Read in sfc data (pressure, temp, dewpoint)
-        ext = 'lsx'
+        if(c_prodtype .eq. 'A')then ! Read LSX
+            ext = 'lsx'
 
-        var_2d = 'PS'
-        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            var_2d = 'PS'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,pres_2d,0,istat_sfc)
-        if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto100
 
-        var_2d = 'T'
-        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            var_2d = 'T'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,t_2d,0,istat_sfc)
-        if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto100
 
-        var_2d = 'TD'
-        call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
+            var_2d = 'TD'
+            call get_laps_2dgrid(i4time_nearest,0,i4time_nearest
      1                      ,ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                      ,td_2d,0,istat_sfc)
-        if(istat_sfc .ne. 1)goto100
+            if(istat_sfc .ne. 1)goto100
+
+        else
+            istat_sfc = 0
+            go to 100
+
+        endif
 
 !       Convert sfc variables
         p_sfc_pa = pres_2d(isound,jsound)
