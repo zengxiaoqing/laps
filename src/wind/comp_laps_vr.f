@@ -53,7 +53,7 @@ cdis
 
         write(6,2)
 2       format(/'      Comparing Radial Velocities to LAPS'/
-     1  1x,'   i   j   k  radar  laps  diff   ')
+     1         6x,'   i   j   k   radar   laps  diff   ')
 
         do k = 1,nk
         height_grid = 0.
