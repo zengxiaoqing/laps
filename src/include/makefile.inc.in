@@ -28,7 +28,7 @@ CPPFLAGS = $(INC) @CPPFLAGS@
 @USECPP@
 # Define include paths.
 NETCDF=@NETCDF@
-INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include
+INC = -I$(SRCROOT)/src/include -I$(NETCDF)/include -I$(SRCROOT)/src/lib/modules
 
 AR  = @ARCHIVE@
 RANLIB   = @RANLIB@
@@ -51,8 +51,7 @@ DBMTHERMOLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/mthermo -ldebugmthermo
 UTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -lutil
 DBUTILLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/util -ldebugutil
 
-
-
-
+MODULESLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/modules -lmodules
+DBMODULESLIB=$(LIBPATHFLAG)$(SRCROOT)/src/lib/modules -ldebugmodules
 
 OTHERLIBS = $(LIBPATHFLAG)$(NETCDF)/lib -lnetcdf  @OTHERLIBS@
