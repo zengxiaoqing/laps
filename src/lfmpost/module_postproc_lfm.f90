@@ -135,6 +135,8 @@ MODULE postproc_lfm
   REAL, ALLOCATABLE, PUBLIC  :: snowcover          ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: lwout              ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: swout              ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: lwdown             ( : , : )
+  REAL, ALLOCATABLE, PUBLIC  :: swdown             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: shflux             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: lhflux             ( : , : )
   REAL, ALLOCATABLE, PUBLIC  :: pblhgt             ( : , : )
@@ -320,6 +322,8 @@ CONTAINS
     IF (.NOT.ALLOCATED(heatind) )      ALLOCATE ( heatind      ( nx , ny ) )
     IF (.NOT.ALLOCATED(lwout) )        ALLOCATE (lwout      ( nx , ny ) )
     IF (.NOT.ALLOCATED(swout) )        ALLOCATE (swout      ( nx , ny ) )
+    IF (.NOT.ALLOCATED(lwdown) )        ALLOCATE (lwdown      ( nx , ny ) )
+    IF (.NOT.ALLOCATED(swdown) )        ALLOCATE (swdown      ( nx , ny ) )
     IF (.NOT.ALLOCATED(shflux))        ALLOCATE (shflux  ( nx , ny ) )
     IF (.NOT.ALLOCATED(lhflux) )       ALLOCATE (lhflux      ( nx , ny ) )
     IF (.NOT.ALLOCATED(pblhgt) )       ALLOCATE (pblhgt      ( nx , ny ) )
@@ -775,6 +779,14 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
                     'D   ', status)
      IF (status .NE. 0) swout(:,:) = 1.e37
 
+     CALL get_mm5_2d(current_lun, 'LWDOWN   ', time_to_proc, lwdown, &
+                    'D   ', status)
+     IF (status .NE. 0) lwdown(:,:) = 1.e37
+
+     CALL get_mm5_2d(current_lun, 'SWDOWN   ', time_to_proc, swdown, &
+                    'D   ', status)
+     IF (status .NE. 0) swdown(:,:) = 1.e37
+
      CALL get_mm5_2d(current_lun, 'SHFLUX   ', time_to_proc, shflux, &
                     'D   ', status)
      IF (status .NE. 0) shflux(:,:) = 1.e37
@@ -807,10 +819,14 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      IF (status .NE. 0) ground_t(:,:) = 1.e37
    
    ELSEIF(mtype.EQ.'wrf') THEN
-     lwout(:,:) = 0.
-     swout(:,:) = 0.
+     lwout(:,:) = 1.e37
+     swout(:,:) = 1.e37
+     lwdown(:,:) = 1.e37
+     swdown(:,:) = 1.e37
      CALL get_wrfnc_2d(current_lun,'HFX','A',nx,ny,1,shflux,status)
      CALL get_wrfnc_2d(current_lun,'QFX','A',nx,ny,1,lhflux,status)
+     CALL get_wrfnc_2d(current_lun,'GSW','A',nx,ny,1,swdown,status)
+     CALL get_wrfnc_2d(current_lun,'GLW','A',nx,ny,1,lwdown,status) 
      CALL model_pblhgt(thetasig,thetasfc,psig,zsig,terdot,nx,ny,ksigh,pblhgt)
      made_pbl = .true.
      CALL get_wrfnc_2d(current_lun,'TSK','A',nx,ny,1,ground_t,status)
@@ -819,6 +835,8 @@ print '(A,4F6.1,F10.5)','SFCTEMPTEST:T1 Tsim Texp DZ DTDZ =',tsig(nx/2,ny/2,1),&
      DO smth = 0.5, -0.5, -1
         CALL SMOOTH(lwout,nx,ny,1,smth)
         CALL SMOOTH(swout,nx,ny,1,smth)
+        CALL SMOOTH(lwdown,nx,ny,1,smth)
+        CALL SMOOTH(swdown,nx,ny,1,smth)
         CALL SMOOTH(shflux,nx,ny,1,smth)
         CALL SMOOTH(lhflux,nx,ny,1,smth)
         IF (.NOT. made_pbl) CALL SMOOTH(pblhgt,nx,ny,1,smth)

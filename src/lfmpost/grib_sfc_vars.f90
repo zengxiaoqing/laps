@@ -3,7 +3,7 @@
      nx,ny,tsfc,tdsfc,rhsfc,usfc,vsfc, &
      wsfc,pmsl,psfc,totpcpwater,pcp_inc,pcp_tot,snow_inc, snow_tot,&
      thetasfc,thetaesfc,cape,cin,srhel,liftedind,terdot,lwout, &
-     swout,shflux,lhflux,pblhgt,ground_t, &
+     swout,lwdown, swdown, shflux,lhflux,pblhgt,ground_t, &
      clwmrsfc,icemrsfc,rainmrsfc,snowmrsfc,graupmrsfc, &
      cldamt,cldbase,cldtop, &
      visibility,ceiling,echo_tops,max_refl,refl_sfc, &
@@ -44,6 +44,8 @@
     REAL,INTENT(IN)             :: terdot(nx,ny)
     REAL,INTENT(IN)             :: lwout(nx,ny)
     REAL,INTENT(IN)             :: swout(nx,ny)
+    REAL,INTENT(IN)             :: lwdown(nx,ny)
+    REAL,INTENT(IN)             :: swdown(nx,ny)
     REAL,INTENT(IN)             :: shflux(nx,ny)
     REAL,INTENT(IN)             :: lhflux(nx,ny)
     REAL,INTENT(IN)             :: pblhgt(nx,ny)
@@ -1073,6 +1075,59 @@
       CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
       nbytes = nbytes + itot
       startbyte=nbytes+1
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Incoming shortwave radiation
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      DO j = 0,ny-1
+        DO i = 1,nx
+          fld(j*nx + i) = swdown(i,j+1)
+        ENDDO
+      ENDDO
+      print *, 'Gribbing SWDOWN Min/Max = ',minval(fld),maxval(fld)
+      itype = 0
+      param =  111
+      leveltype = 8
+      level1 = 0
+      level2 = 0
+      timerange = 0
+      timeperiod1 = fcsttime_now
+      timeperiod2 = 0
+      scalep10 =  0
+      CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                 scalep10,id)
+      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+      nbytes = nbytes + itot
+      startbyte=nbytes+1
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Incoming longwave radiation
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      DO j = 0,ny-1
+        DO i = 1,nx
+          fld(j*nx + i) = lwdown(i,j+1)
+        ENDDO
+      ENDDO
+      print *, 'Gribbing LWDOWN Min/Max = ',minval(fld),maxval(fld)
+      itype = 0
+      param =  112
+      leveltype = 8
+      level1 = 0
+      level2 = 0
+      timerange = 0
+      timeperiod1 = fcsttime_now
+      timeperiod2 = 0
+      scalep10 =  0
+      CALL make_id(table_version,center_id,subcenter_id,process_id, &
+                   param,leveltype,level1,level2,yyyyr,mmr,ddr, &
+                 hhr,minr,timeunit,timerange,timeperiod1,timeperiod2, &
+                 scalep10,id)
+      CALL write_grib(itype,fld,id,igds,funit,startbyte,itot,istatus)
+      nbytes = nbytes + itot
+      startbyte=nbytes+1
+
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !  Sensible Heat Flux

@@ -471,6 +471,16 @@ CONTAINS
     nlevels(varindex) = 1
     varindex = varindex + 1
 
+    ! Incoming LW Radiation
+    varname(varindex) = 'LWDOWN    '
+    nlevels(varindex) = 1
+    varindex = varindex + 1
+
+    ! Incoming SW Radiation
+    varname(varindex) = 'SWDOWN    '
+    nlevels(varindex) = 1
+    varindex = varindex + 1
+
     ! Sensible Heat Flux
     varname(varindex) = 'SHFLUX    '
     nlevels(varindex) = 1
@@ -528,7 +538,8 @@ CONTAINS
                   con_pcp_inc, con_pcp_tot, &
                   snow_inc,snow_tot,pcptype_sfc,thetasfc,thetaesfc, &
                   cape,cin,liftedind,srhel,refl_sfc,max_refl,echo_tops, &
-                  heatind,visibility,snowcover,lwout,swout,shflux,lhflux, &
+                  heatind,visibility,snowcover,lwout,swout,lwdown,swdown, &
+                  shflux,lhflux, &
                   pblhgt,upbl, vpbl, ground_t)     
 
   ! Subroutine to output the above variables into the already created
@@ -595,6 +606,8 @@ CONTAINS
     REAL                    :: snowcover(nx,ny)
     REAL                    :: lwout(nx,ny)
     REAL                    :: swout(nx,ny)
+    REAL                    :: lwdown(nx,ny)
+    REAL                    :: swdown(nx,ny) 
     REAL                    :: shflux(nx,ny)
     REAL                    :: lhflux(nx,ny)
     REAL                    :: pblhgt(nx,ny)
@@ -988,6 +1001,18 @@ CONTAINS
 
     CALL post2v5d(swout,nx,ny,1,data2d)
     PRINT '(2A)', 'V5DOUT: Writing swout as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data2d)
+    varindex = varindex + 1
+
+   CALL post2v5d(lwdown,nx,ny,1,data2d)
+    PRINT '(2A)', 'V5DOUT: Writing lwdown as varname: ',&
+              varname(varindex)
+    ret = v5dwrite(timestep,varindex,data2d)
+    varindex = varindex + 1
+
+    CALL post2v5d(swdown,nx,ny,1,data2d)
+    PRINT '(2A)', 'V5DOUT: Writing swsdown as varname: ',&
               varname(varindex)
     ret = v5dwrite(timestep,varindex,data2d)
     varindex = varindex + 1

@@ -238,6 +238,8 @@ PROGRAM lfmpost
     ALLOCATE ( heatind      ( nx , ny ) )
     ALLOCATE ( lwout        ( nx , ny ) )
     ALLOCATE ( swout        ( nx , ny ) )
+    ALLOCATE ( lwdown       ( nx , ny ) )
+    ALLOCATE ( swdown       ( nx , ny ) )
     ALLOCATE ( pblhgt       ( nx , ny ) )
     ALLOCATE ( shflux       ( nx , ny ) )
     ALLOCATE ( lhflux       ( nx , ny ) )
@@ -321,7 +323,8 @@ PROGRAM lfmpost
                             snow_inc,snow_tot,thetasfc,thetaesfc,cape,cin,&
                             cldamt,ceiling,echo_tops,max_refl,refl_sfc, &
                             pcptype_sfc,srhel,liftedind,heatind,visibility,&
-                            terdot,lwout,swout,shflux,lhflux,pblhgt,ground_t,&
+                            terdot,lwout,swout, &
+                            shflux,lhflux,pblhgt,ground_t,&
                             upbl, vpbl, vnt_index,ham_index,hah_index,fwi_index,&
                             prslvl*0.01,lfmprd_dir,laps_data_root,domain_num,&
                             laps_reftime,laps_valtime,nx,ny,kprs,realtime, &
@@ -361,7 +364,8 @@ PROGRAM lfmpost
               tsfc,tdsfc,rhsfc,usfc,vsfc, &
               wsfc,pmsl,psfc,totpcpwater,pcp_inc,pcp_tot,snow_inc, &
               snow_tot,thetasfc,thetaesfc,cape,cin,srhel, &
-              liftedind,terdot,lwout,swout,shflux,lhflux,pblhgt,ground_t, &
+              liftedind,terdot,lwout,swout,lwdown, swdown, &
+              shflux,lhflux,pblhgt,ground_t, &
               clwmrsfc,icemrsfc,rainmrsfc,snowmrsfc,graupmrsfc, &
               cldamt,cldbase,cldtop,visibility, &
               ceiling,echo_tops,max_refl,refl_sfc, &
@@ -417,7 +421,8 @@ PROGRAM lfmpost
                   con_pcp_inc, con_pcp_tot, &
                   snow_inc,snow_tot,pcptype_sfc,thetasfc,thetaesfc, &
                   cape,cin,liftedind,srhel,refl_sfc,max_refl,echo_tops, &
-                  heatind,visibility,snowcover,lwout,swout,shflux,lhflux, &
+                  heatind,visibility,snowcover,lwout,swout,lwdown, swdown, &
+                  shflux,lhflux, &
                   pblhgt, upbl, vpbl, ground_t)
       IF (t .EQ. num_times_to_proc) CALL v5dend
    
@@ -606,6 +611,8 @@ PROGRAM lfmpost
     DEALLOCATE ( heatind   )
     DEALLOCATE ( lwout )
     DEALLOCATE ( swout )
+    DEALLOCATE ( lwdown )
+    DEALLOCATE ( swdown )
     DEALLOCATE ( shflux )
     DEALLOCATE ( lhflux )
     DEALLOCATE ( pblhgt )
