@@ -307,9 +307,22 @@ c
 	gor = 9.808 / 287.04
 	fon = 5. / 9.
 	anof = 9. / 5.
-	call zero(z,imax,jmax)
 	pblht = 500.		! pbl height in meters
 	fill_val = 1.e37
+c
+	call zero(z,imax,jmax)
+	call zero(p_a,imax,jmax)
+	call zero(u_a,imax,jmax)
+	call zero(v_a,imax,jmax)
+	call zero(nu,imax,jmax)
+	call zero(nv,imax,jmax)
+	call zero(fu,imax,jmax)
+	call zero(fv,imax,jmax)
+	call zero(ddiv,imax,jmax)
+	call zero(vort,imax,jmax)
+	call zero(f,imax,jmax)
+	call zero(du,imax,jmax)
+	call zero(dv,imax,jmax)
 c
 c.....  calculate Coriolis term for each grid point
 c
@@ -977,7 +990,7 @@ c
 	call check_field_2d(p_a, imax,jmax,fill_val,istatus)
 	do j=1,jmax
 	do i=1,imax
-	  if(p_a(i,j).lt.800. .or. p_a(i,j).gt.1050.) then
+	  if(p_a(i,j).lt.80000. .or. p_a(i,j).gt.105000.) then
 	     istatus = 0
 	     print *,' Value out of range at ',i,j
 	     go to 1181
@@ -1028,7 +1041,7 @@ c
 	call check_field_2d(mslp, imax,jmax,fill_val,istatus)
 	do j=1,jmax
 	do i=1,imax
-	  if(mslp(i,j).lt.900. .or. mslp(i,j).gt.1100.) then
+	  if(mslp(i,j).lt.90000. .or. mslp(i,j).gt.110000.) then
 	     istatus = 0
 	     print *,' Value out of range at ',i,j
 	     go to 1182
