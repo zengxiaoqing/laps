@@ -271,7 +271,9 @@ c
             if(nlevels_obs_pr(i_pr) .gt. 0)then
 
               if(l_use_all_nontower_lvls .OR. 
-     1           obstype(i_pr)(1:5) .eq. 'TOWER')then ! remap all levels
+     1           obstype(i_pr)(1:5) .eq. 'TOWER' .OR.
+     1           obstype(i_pr)(1:5) .eq. 'SODAR'
+     1                                           )then ! remap all levels
 
                 write(6,311)i_pr,i_ob,j_ob,nlevels_obs_pr(i_pr)
      1                     ,obstype(i_pr),c5_name_a(i_pr)
@@ -348,9 +350,14 @@ c
 
 !               Calculate mean # of laps levels between sounding levels
                 if(n_good_lvl .gt. 1)then
-                    rklaps_mean = (rklaps_max - rklaps_min) 
-     1                           / float(n_good_lvl-1)
-                    write(6,*)' n_good_lvl,rklaps_mean',rklaps_mean
+                    rklaps_range = rklaps_max - rklaps_min
+                    rklaps_mean = rklaps_range / float(n_good_lvl-1)
+                    n_cross = int(rklaps_range)
+                    wt_factor = (min(rk_mean/0.5,1.0))
+                    write(6,*)
+     1                ' n_good_lvl,ncross,rk-range/mean,wt_factor'    
+     1                 ,n_good_lvl,ncross,rklaps_range,rklaps_mean
+     1                 ,wt_factor
 
 !                   Adjust the weights for this profile?
                 endif
