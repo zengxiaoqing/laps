@@ -2741,18 +2741,24 @@ Note:             uses data/static/balance.nl (namelist). Repository has lrunbal
 
 Process: dprep.exe - Does some analysis post processing for model 
                      initialization
-     (author: Paul Schultz [schultz@fsl.noaa.gov])
+     (authors: Paul Schultz, John Smart)
 
    This process takes LAPS analysis output to create the forecast model initial
    conditions. It also takes background model fields to generate the forecast
    model lateral boundary conditions.
 
+<pre>
 Inputs: 
       * lw3                 grid       LAPS 3-d wind analysis
       * lt1                 grid       LAPS 3-d temperature & height analyses
       * lq3                 grid       LAPS 3-d humidity analysis
       * lsx                 grids      LAPS 2-d surface analyses
-      * model backgrounds
+      * model backgrounds   grids
+
+Outputs: 
+        LPS                 grid       Initial Condition from LAPS analysis
+        E*  (e.g.)          grid       Lateral Boundary Conditions    
+</pre>
 
 Parameter file: 'static/dprep.nl'
 
