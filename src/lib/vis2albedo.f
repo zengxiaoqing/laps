@@ -37,8 +37,8 @@ c
      &                   cld_albedo=0.85,
      &                   rlnd_albedo=0.15)
 
-        Integer*4       imax,jmax
-        Integer*4       i4time
+        Integer         imax,jmax
+        Integer         i4time
 
         Real*4          r_norm_vis_cnts_in(imax,jmax)
         Real*4          lat(imax,jmax)
@@ -52,8 +52,8 @@ c
         Real*4          albedo_min,albedo_max
         Real*4          r_missing_data
         Real*4          jline, iline, jdiff, idiff
-        Integer*4       istatus, n_missing_albedo
-        Integer*4       i,j
+        Integer         istatus, n_missing_albedo
+        Integer         i,j
 
         Real*4 arg
         Character*(*)   csatid
@@ -74,14 +74,16 @@ c28      format(1x,' i   j   n vis cnts   solalt deg',/,40('-'))
               iline = float(i)/10.
               idiff = iline - int(iline)
 
-              call solalt(lat(i,j),lon(i,j),i4time,solar_alt_d)
+              if(r_norm_vis_cnts_in(i,j).ne.r_missing_data)then
+
+                 call solalt(lat(i,j),lon(i,j),i4time,solar_alt_d)
 
 c             if(idiff.eq.0.00 .and. jdiff.eq.0.00)then
 c                write(6,29)i,j,r_norm_vis_cnts_in(i,j),solar_alt_d
 c29               format(1x,2i3,2x,2f8.2)
 c             end if
 
-              if(         solar_alt_d .gt. 15. 
+                 if(         solar_alt_d .gt. 15. 
      1                            .AND.
      1          (solar_alt_d .gt. 23. .or. phase_angle_d(i,j) .gt. 20.)
      1                            .AND.
@@ -89,15 +91,15 @@ c             end if
      1                         .or. specular_ref_angle_d(i,j) .gt. 10.)       
      1                                                            )then       
 
-                 arg = (r_norm_vis_cnts_in(i,j)- rlnd_cnts) /
+                   arg = (r_norm_vis_cnts_in(i,j)- rlnd_cnts) /
      &                 (cld_cnts - rlnd_cnts)
          
-                 albedo = rlnd_albedo + arg *
+                   albedo = rlnd_albedo + arg *
      &                   (cld_albedo - rlnd_albedo)
-                 albedo_out(i,j) = min(max(albedo,-0.5),+1.5) ! Reasonable
+                   albedo_out(i,j)=min(max(albedo,-0.5),+1.5) ! Reasonable
 
 
-                 if(solar_alt_d .lt. 20.)then ! enabled for now
+                   if(solar_alt_d .lt. 20.)then ! enabled for now
 !                    Fudge the albedo at low solar elevation angles < 20 deg
                      frac = (20. - solar_alt_d) / 10.
                      term1 = .13 * frac
@@ -108,19 +110,27 @@ c             end if
                      cloud_frac_vis = (cloud_frac_vis + term1) * term2
                      albedo_out(i,j) = 
      1                           cloudfrac_to_albedo(cloud_frac_vis)
-                 endif
+                   endif
 c                                                               excesses
 c Accumulate extrema
 c
-                 albedo_min = min(albedo,albedo_min)
-                 albedo_max = max(albedo,albedo_max)
+                   albedo_min = min(albedo,albedo_min)
+                   albedo_max = max(albedo,albedo_max)
+   
+                 else              ! Albedo .eq. missing_data
 
-              else              ! Albedo .eq. missing_data
+                   albedo_out(i,j) = r_missing_data
+                   n_missing_albedo = n_missing_albedo + 1
+
+                 endif             ! QC based on geometry
+
+              else
 
                  albedo_out(i,j) = r_missing_data
                  n_missing_albedo = n_missing_albedo + 1
 
-              endif             ! QC based on geometry
+              endif                ! r_norm_vis_cnts_in = r_missing_data
+
            end do
          end do
 
