@@ -1,6 +1,6 @@
 
       subroutine compute_latlon(nnxp,nnyp,n_staggers
-     + ,deltax,xtn_ret,ytn_ret,lats,lons,istatus)
+     + ,deltax,xtn,ytn,lats,lons,istatus)
 
 
       implicit none
@@ -14,13 +14,9 @@
       real    stagger_ew,stagger_ns
       real    erad
 
-c these used internally
-      real    xtn(nnxp)
-      real    ytn(nnyp)
-
-c these arrays returned for geodat subroutine
-      real    xtn_ret(nnxp)
-      real    ytn_ret(nnyp)
+c these returned to gridgen
+      real    xtn(nnxp,n_staggers)
+      real    ytn(nnyp,n_staggers)
 
 c these are the anchor points (SW corner) of the grid
       real    xmn1,ymn1
@@ -54,75 +50,44 @@ c A-c staggers contained within these arrays.
          return
       endif
 
-c     call find_domain_name(c_dataroot,c10_grid_fname
-c    1,istatus)
-c     if(istatus .ne. 1)then
-c        write(6,*)' Error calling find_domain_name'
-c        return
-c     endif
-c     call s_len(c10_grid_fname,nc)
-
-
       do k=1,n_staggers
 
          if(k.eq.1)then
 
-c           Get X/Y for lower left corner
+c Get X/Y for lower left corner
             CALL POLAR_GP(mdlat,mdlon,XMN1,YMN1,DELTAX,DELTAY,
      +  NNXP,NNYP)
             stagger_ns=0
             stagger_ew=0
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
-     +,stagger_ns,xmn1,ymn1,xtn,ytn)
-c
-c Return to main the non-staggered x/y for terrain analysis.
-            
-c           if(c10_grid_fname(1:nc).eq.'nest7grid')then
-
-               do i=1,nnxp
-                  xtn_ret(i)=xtn(i)
-               enddo
-               do j=1,nnyp
-                  ytn_ret(j)=ytn(j)
-               enddo
-c           endif
-
+     +,stagger_ns,xmn1,ymn1,xtn(1,k),ytn(1,k))
+ 
          elseif(k.eq.2)then    !this is A-stagger (.5 E-W stagger) 
 
             stagger_ew=0.5*deltax
             stagger_ns=0
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
-     +,stagger_ns,xmn1,ymn1,xtn,ytn)
+     +,stagger_ns,xmn1,ymn1,xtn(1,k),ytn(1,k))
 
          elseif(k.eq.3)then !this is the B-stagger (.5 N-S stagger)
 
             call get_grid_center(mdlat,mdlon,istatus)
             call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
-     +,xtn,ytn)
+     +,xtn(1,k),ytn(1,k))
             stagger_ew=0
             stagger_ns=0.5*deltay 
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
-     +,stagger_ns,xmn1,ymn1,xtn,ytn) 
+     +,stagger_ns,xmn1,ymn1,xtn(1,k),ytn(1,k)) 
 
          elseif(k.eq.4)then !this is the C-stagger (.5 both N-S and E-W)
 
             call get_grid_center(mdlat,mdlon,istatus)
             call get_xytn(deltax,deltay,nnxp,nnyp,0,0,xmn1,ymn1
-     +,xtn,ytn)
+     +,xtn(1,k),ytn(1,k))
             stagger_ew=0.5*deltax
             stagger_ns=0.5*deltay
             call get_xytn(deltax,deltay,nnxp,nnyp,stagger_ew
-     +,stagger_ns,xmn1,ymn1,xtn,ytn)
-
-
-c           if(c10_grid_fname(1:nc).eq.'wrfsi')then
-c              do i=1,nnxp
-c                 xtn_ret(i)=xtn(i)
-c              enddo
-c              do j=1,nnyp
-c                 ytn_ret(j)=ytn(j)
-c              enddo
-c           endif
+     +,stagger_ns,xmn1,ymn1,xtn(1,k),ytn(1,k))
 
          endif
 C
@@ -132,7 +97,7 @@ C*  Convert it to lat/lon using the library routines.            *
          Do J = 1,nnyp
          Do I = 1,nnxp
 
-            call xy_to_latlon(xtn(i),ytn(j),erad ! ,90.,std_lon
+            call xy_to_latlon(xtn(i,k),ytn(j,k),erad ! ,90.,std_lon
      1                                     ,lats(I,J,k),lons(I,J,k))
 
 c             print *,'i,j,xtn,ytn,pla,lplo=',i,j,xtn,ytn,pla,plo
@@ -374,7 +339,7 @@ c
       character*(*)  var(nf)
       character*(*)  comment(nf)
 
-      if(ngrids.eq.10)then
+      if(ngrids.eq.12)then
 
          var(1)    = 'LAT'
          var(2)    = 'LON'
@@ -385,7 +350,9 @@ c
          var(7)    = 'STD'
          var(8)    = 'SLN'
          var(9)    = 'SLT'
-         var(10)   = 'ZIN'
+         var(10)   = 'STL'
+         var(11)   = 'SBL'
+         var(12)   = 'ZIN'
 
          comment(1) = 'Lat: From MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Lon: From MODEL by J. Snook/ S. Albers 1-95\0'
@@ -396,10 +363,13 @@ c
          comment(7) = 'Standard Deviation of Elevation data (m)\0'
          comment(8) = 'Mean longitudinal terrain slope (m/m)\0'
          comment(9) = 'Mean latitudinal terrain slope (m/m)\0'
-         comment(10)='\0'
+
+         comment(10)= 'Top layer (0-30cm) soiltype (dom category)\0'
+         comment(11)= 'Bottom layer (30-90cm) soiltype (dom cat)\0'
+         comment(12)='\0'
 
 
-      elseif(ngrids.eq.25)then
+      elseif(ngrids.eq.27)then
 
          var(1)    = 'LAT'  ! non-staggered (Analysis-grid) lats
          var(2)    = 'LON'  ! non-staggered (Analysis-grid) lons
@@ -422,12 +392,15 @@ c
          var(17)   = 'MFC'  ! Map factor c-stagger grid
          var(18)   = 'CPH'  ! Horizontal component of coriolis parameter
          var(19)   = 'CPV'  ! Vertical component of coriolis parameter
+
          var(20)   = 'ALB'  ! Static (climatological) albedo
          var(21)   = 'STD'  ! Standard Deviation of Elevation Data (m)
          var(22)   = 'SLN'  ! Terrain Slope; Longitudinal Component (m/m)
          var(23)   = 'SLT'  ! Terrain Slope; Latitudinal Component (m/m)
          var(24)   = 'AVC'  ! Topo (m) on c-stagger grid
-         var(25)   = 'ZIN'
+         var(25)   = 'STL'  ! top layer (0-30cm) soiltype
+         var(26)   = 'SBL'  ! bot layer (30-90cm) soiltype
+         var(27)   = 'ZIN'
 
          comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
          comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
@@ -450,13 +423,82 @@ c
          comment(17)= 'Map Factor c-stagger grid \0'
          comment(18)= 'Horizontal component coriolis parameter \0'
          comment(19)= 'Vertical component coriolis parameter \0'
+
          comment(20)= 'Static Albedo (%) valid only over water atm \0'
-         comment(21) = 'Standard Deviation of Elevation data (m)\0'
-         comment(22) = 'Mean longitudinal terrain slope (m/m)\0'
-         comment(23) = 'Mean latitudinal terrain slope (m/m)\0'
-         comment(24) = 'Average terrain elevation (c-stagger) (m)\0'
-         comment(25)= '\0'
+         comment(21)= 'Standard Deviation of Elevation data (m)\0'
+         comment(22)= 'Mean longitudinal terrain slope (m/m)\0'
+         comment(23)= 'Mean latitudinal terrain slope (m/m)\0'
+         comment(24)= 'Average terrain elevation (c-stagger) (m)\0'
+         comment(25)= 'Top layer (0-30cm) soiltype (dom cat)\0'
+         comment(26)= 'Bottom layer (30-90cm) soiltype (dom cat)\0'
+
+         comment(27)= '\0'
 
       endif
       return
       end
+
+c ********************************************************************
+
+	subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2
+     &,type,data)
+	implicit none
+	integer countx,county,unit_no,nn1,nn2
+	real data(nn1,nn2)
+	integer idata(nn1,nn2), len, i1, i2
+	logical l1,l2
+	character*(*) unit_name
+	character*(*) type
+
+C	open(unit_no,file=unit_name,status='old',access='direct',
+C	. recl=nn2*nn1*2)
+C	inquire(unit_no,exist=l1,opened=l2)
+C	read(unit_no,rec=1) idata
+
+	call s_len(unit_name,len)
+
+	call read_binary_field(idata,i1,i2,nn1*nn2,unit_name,len)
+
+	do county=1,nn2
+	do countx=1,nn1
+	  if (idata(countx,county).eq.-9999) idata(countx,county)=0
+	   data(countx,county)=float(idata(countx,nn2-county+1))
+c SG97 initial data (DEM format) starts in the lower-left corner;
+c SG97 this format is wrapped around to have upper-left corner as its start.
+c
+c JS00 some machines do not account for signed integers
+	   if(data(countx,county).ge.15535.0)
+     &data(countx,county)=data(countx,county)-65535
+
+	enddo
+	enddo
+
+ccc	 close(unit_no)
+	return
+	end
+
+C +------------------------------------------------------------------+
+	SUBROUTINE JCL
+	CHARACTER*(*) FILENM,FORMT
+
+C	-------------------------------------------------------
+	ENTRY JCLGET(IUNIT,FILENM,FORMT,IPRNT,istatus)
+C
+C	  This routine access an existing file with the file name of
+C	    FILENM and assigns it unit number IUNIT.
+C
+		IF(IPRNT.EQ.1) THEN
+	PRINT*,' Opening input unit ',IUNIT,' file name ',FILENM
+	PRINT*,'		format  ',FORMT
+	ENDIF
+
+	OPEN(IUNIT,STATUS='OLD',FILE=FILENM,FORM=FORMT,ERR=1)
+
+	istatus=1
+	RETURN
+
+ 1    istatus = 0
+	return
+
+	END
+

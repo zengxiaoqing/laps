@@ -71,11 +71,9 @@ C*********************************************************************
         integer ngrids
         integer n_staggers
 
-	Real mdlat,mdlon
-	Real xmn(nnxp),ymn(nnyp)
-	Real xtn(nnxp),ytn(nnyp)
-	Real lat(nnxp,nnyp),lon(nnxp,nnyp)
-        Real sw(2),nw(2),ne(2),se(2)               ! ,pla,plo
+	Real  mdlat,mdlon
+	Real  xmn(nnxp),ymn(nnyp)
+	Real  xtn(nnxp,n_staggers),ytn(nnyp,n_staggers)
         real  nboundary
         real  adum(nnxp,nnyp)
         real  topt_30(nnxp,nnyp)
@@ -92,10 +90,15 @@ C*********************************************************************
         real  topt_out_ln(nnxp,nnyp)
         real  topt_out_lt(nnxp,nnyp)
         real  topt_pctlfn(nnxp,nnyp)
-        real  soil(nnxp,nnyp)
         real  static_albedo(nnxp,nnyp)
+
+        integer maxdatacat
+        parameter (maxdatacat=30)
+
         real  landuse_30s(nnxp,nnyp)
-        real  landuse_30s_dist(nnxp,nnyp,5)
+        real  landuse_30s_pct(nnxp,nnyp,maxdatacat)
+        real  soiltype_dom(nnxp,nnyp,2)            !carries both top/bottom layer soiltypes
+        real  soiltype_pct(nnxp,nnyp,maxdatacat,2) !             "
 
         real lats(nnxp,nnyp,n_staggers)
         real lons(nnxp,nnyp,n_staggers)
@@ -110,7 +113,7 @@ c
 c  either 10 (nest7grid) or 25 (wrfsi)
 c
         integer*4    nf
-        parameter (nf = 25)
+        parameter (nf = 27)
         
         character*3   var(nf)
         character*125 comment(nf)
@@ -119,7 +122,8 @@ c
         character*200 path_to_topt30s
         character*200 path_to_topt10m
         character*200 path_to_pctl10m
-        character*200 path_to_soil2m
+        character*200 path_to_soiltype_top_30s
+        character*200 path_to_soiltype_bot_30s
         character*200 path_to_luse_30s
 
         character*255 filename
@@ -183,12 +187,21 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
             return
         endif
 
-        call get_path_to_soil_2m(path_to_soil2m,istatus)
+        call get_path_to_soiltype_top(path_to_soiltype_top_30s
+     +,istatus)
         if(istatus .ne. 1)then
-            write(6,*) 'Error getting path_to_soil2m'
+            write(6,*) 'Error getting path_to_soiltype_top_30s'
             return
         endif
 
+        call get_path_to_soiltype_bot(path_to_soiltype_bot_30s
+     +,istatus)
+        if(istatus .ne. 1)then
+            write(6,*) 'Error getting path_to_soiltype_bot_30s'
+            return
+        endif
+
+        print*,'Get path to landuse 30s'
         call get_path_to_landuse_30s(path_to_luse_30s,istatus)
         if(istatus .ne. 1)then
             write(6,*) 'Error getting path_to_luse_30s'
@@ -204,8 +217,9 @@ cc        ipctlfn=static_dir(1:len)// 'model/land_10m/L'
         call s_len(path_to_pctl10m,len)
 	path_to_pctl10m(len+1:len+2)='/L'
 
-        call s_len(path_to_soil2m,len)
-	path_to_soil2m(len+1:len+2)='/O'
+        call s_len(path_to_soiltype_top_30s,len)
+	path_to_soiltype_top_30s(len+1:len+2)='/O'
+        path_to_soiltype_bot_30s(len+1:len+2)='/O'
 
         call s_len(path_to_luse_30s,len)
         path_to_luse_30s(len+1:len+2)='/V'
@@ -340,28 +354,24 @@ c mass c-stagger (#4); staggered in both x and y.
 
         ns = 1
 
-c       if(c10_grid_fname(1:lf).eq.'wrfsi')ns=n_staggers
+        if(c10_grid_fname(1:lf).eq.'wrfsi')ns=n_staggers
 
-        do j=1,nnyp
-        do i=1,nnxp
-           lat(i,j)=lats(i,j,ns)
-           lon(i,j)=lons(i,j,ns)
-        enddo
-        enddo
+        print*,'ns [staggers array index] = ',ns
 
 C*****************************************************************
 
         write(6,*)
-        write(6,*)'Corner points...'
-        write(6,701,err=702)1,1,      lat(1,1),      lon(1,1)
-        write(6,701,err=702)nnxp,1,   lat(nnxp,1),   lon(nnxp,1)   
-        write(6,701,err=702)1,nnyp,   lat(1,nnyp),   lon(1,nnyp)   
-        write(6,701,err=702)nnxp,nnyp,lat(nnxp,nnyp),lon(nnxp,nnyp)   
+        write(6,*)'Corner points... non-staggered grid'
+        write(6,701,err=702)1,1,lats(1,1,1),      lons(1,1,1)
+        write(6,701,err=702)nnxp,1,lats(nnxp,1,1),lons(nnxp,1,1)   
+        write(6,701,err=702)1,nnyp,lats(1,nnyp,1),lons(1,nnyp,1)   
+        write(6,701,err=702)nnxp,nnyp,lats(nnxp,nnyp,1)
+     +,lons(nnxp,nnyp,1)   
  701    format(' lat/lon at ',i5,',',i5,' =',2f12.5)
  702    continue
 
-        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1
-     + ,istat_chk)  
+        call check_domain(lats(1,1,1),lons(1,1,1),nnxp,nnyp
+     +,grid_spacing_m,1,istat_chk)  
         if(istat_chk.ne.1)then
            print*,'Error returned from check_domain'
            istatus = istat_chk
@@ -371,8 +381,9 @@ C*****************************************************************
 ! We will end at this step given the showgrid or max/min lat lon
 ! options.
         if(mode.eq.2) then
-	   call showgrid(lat,lon,nnxp,nnyp,grid_spacing_m,
-     1	             c6_maproj,std_lat,std_lat2,std_lon,mdlat,mdlon)
+	   call showgrid(lats(1,1,1),lons(1,1,1),nnxp,nnyp
+     1,grid_spacing_m,c6_maproj,std_lat,std_lat2,std_lon
+     1,mdlat,mdlon)
            return
 
         elseif(mode.eq.3)then
@@ -400,53 +411,89 @@ c calculate topography
 c
        if(iplttopo.eq.1)then
 
-           if(.false.)then
-               write(6,*)
-               write(6,*)' Processing 2m soil type data....'
-               CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +  ,deltax,deltay,soil,adum,adum,adum,PATH_TO_SOIL2M,1.,0.       
-     +  ,new_DEM,istatus)
+          write(6,*)
+          write(6,*)' Processing 30s soil type top layer data....'
+          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
+     +,deltax,deltay,soiltype_dom(1,1,1),soiltype_pct(1,1,1,1),adum
+     +,adum,PATH_TO_SOILTYPE_TOP_30S,toptwvl,silavwt,new_DEM,maxdatacat
+     +,istatus)
 
-               if(istatus .ne. 1)then
-                   write(6,*)' Warning: '
-     1                      ,'File(s) missing for 2m soil type data'       
-                   write(6,*)' Static file not created.......ERROR'
-                   return
-               endif
-
+          if(istatus.ne.1)then
+           print*,' Soil type data not processed'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+             print*
+             print*,'----------------------------------------------'
+             print*,'          *** ERROR ***'
+             print*,'Static file not created... Error; no soil data'
+             print*,'----------------------------------------------'
+             print*
+             return
            else
-               call constant(soil,r_missing_data,nnxp,nnyp)
-
-           endif ! .false.
-
-           write(6,*)
-           write(6,*)' Processing 30s topo data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +,deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN,TOPT_30_LT
-     + ,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,istatus)
-
-           if (.not.new_DEM) then
-             write(6,*)
-             write(6,*)' Processing 10m topo data....'
-             CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +,deltax,deltay,TOPT_10,TOPT_10_S,TOPT_10_LN,TOPT_10_LT
-     + ,PATH_TO_TOPT10M,TOPTWVL,SILAVWT,new_DEM,istatus)
+             print*
+             print*,'----------------------------------------------'
+             print*,'            *** WARNING ***'
+             print*,'Soil top data not added to static file'
+             print*,'----------------------------------------------'
+             print*
            endif
+          endif
 
-           write(6,*)
-           write(6,*)' Processing 10m land data....'
-           CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +       ,deltax,deltay,TOPT_PCTLFN,adum,adum,adum
-     +        ,PATH_TO_PCTL10M,1.,0.
-     +         ,new_DEM,istatus)
+          write(6,*)
+          write(6,*)' Processing 30s soil type bottom layer data....'
+          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns),ytn(1,ns)
+     +,deltax,deltay,soiltype_dom(1,1,2),soiltype_pct(1,1,1,2),adum
+     +,adum,PATH_TO_SOILTYPE_BOT_30S,toptwvl,silavwt,new_DEM,maxdatacat
+     +,istatus)
 
-           if(istatus .ne. 1)then
-               write(6,*)' File(s) missing for 10m land data'
-               write(6,*)' Static file not created.......ERROR'
-               return
-           endif
+          if(istatus.ne.1)then
+           print*,' Soil type data not processed'
+           if(c10_grid_fname(1:lf).eq.'wrfsi')then
+             print*
+             print*,'----------------------------------------------'
+             print*,'          *** ERROR ***'
+             print*,' Static file not created. Error; no soil data'
+             print*,'----------------------------------------------'
+             print*
+             return
+            else
+             print*
+             print*,'----------------------------------------------'
+             print*,'            *** WARNING ***'
+             print*,' Soil bottom data not added to static file'
+             print*,'----------------------------------------------'
+             print*
+            endif
+          endif
 
-           if (.not.new_DEM) then ! Blend 30" and 10' topo data
+          write(6,*)
+          write(6,*)' Processing 30s topo data....'
+          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,TOPT_30,TOPT_30_S,TOPT_30_LN
+     +,TOPT_30_LT,PATH_TO_TOPT30S,TOPTWVL,SILAVWT,new_DEM,1
+     +,istatus)
+
+          if (.not.new_DEM) then
+            write(6,*)
+            write(6,*)' Processing 10m topo data....'
+            CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,TOPT_10,TOPT_10_S,TOPT_10_LN
+     +,TOPT_10_LT,PATH_TO_TOPT10M,TOPTWVL,SILAVWT,new_DEM,1
+     +,istatus)
+          endif
+
+          write(6,*)
+          write(6,*)' Processing 10m land fraction data....'
+          CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,TOPT_PCTLFN,adum,adum,adum
+     +,PATH_TO_PCTL10M,1.,0.,new_DEM,1,istatus)
+
+          if(istatus .ne. 1)then
+             write(6,*)' File(s) missing for 10m land data'
+             write(6,*)' Static file not created.......ERROR'
+             return
+          endif
+
+          if (.not.new_DEM) then ! Blend 30" and 10' topo data
              do i = 1,nnxp
              do j = 1,nnyp
 
@@ -456,8 +503,8 @@ c
                if(topt_30(i,j) .eq. 1e30 .or. topt_30(i,j) .eq. 0.
 !    1                              .or.
 !                  Are we in the Pittsburgh data hole?
-!    1            (lat(i,j) .gt. 39.7 .and. lat(i,j) .lt. 41.3 .and.
-!    1             lon(i,j) .gt.-79.3 .and. lon(i,j) .lt.-77.7)
+!    1            (lats(i,j,1) .gt. 39.7 .and. lats(i,j,1) .lt. 41.3 .and.
+!    1             lons(i,j,1) .gt.-79.3 .and. lons(i,j,1) .lt.-77.7)
      1                                                          )then 
 
 !                  Use 10 min data
@@ -470,27 +517,37 @@ c
                else ! Use 30s data, except ramp to 10m if near data boundary
 
 !                  Determine the northern boundary of the 30s data at this lon
-                   if    (lon(i,j).ge.-129..and.lon(i,j).le.-121.)then       
+                   if(lons(i,j,1).ge.-129..and.
+     +                lons(i,j,1).le.-121.)then       
                        nboundary = 51.
-                   elseif(lon(i,j).ge.-121..and.lon(i,j).le.-120.)then     
-                       nboundary = 51. - lon(i,j) - (-121.)
-                   elseif(lon(i,j).ge.-120..and.lon(i,j).le.-118.)then     
+                   elseif(lons(i,j,1).ge.-121..and.
+     +                    lons(i,j,1).le.-120.)then     
+                       nboundary = 51. - lons(i,j,1) - (-121.)
+                   elseif(lons(i,j,1).ge.-120..and.
+     +                    lons(i,j,1).le.-118.)then     
                        nboundary = 50.
-                   elseif(lon(i,j).ge.-118..and.lon(i,j).le.-117.)then     
-                       nboundary = 50. + lon(i,j) - (-118.)
-                   elseif(lon(i,j).ge.-117..and.lon(i,j).le. -89.)then     
+                   elseif(lons(i,j,1).ge.-118..and.
+     +                    lons(i,j,1).le.-117.)then     
+                       nboundary = 50. + lons(i,j,1) - (-118.)
+                   elseif(lons(i,j,1).ge.-117..and.
+     +                    lons(i,j,1).le. -89.)then     
                        nboundary = 51.
-                   elseif(lon(i,j).ge. -89..and.lon(i,j).le. -85.)then     
+                   elseif(lons(i,j,1).ge. -89..and.
+     +                    lons(i,j,1).le. -85.)then     
                        nboundary = 50.
-                   elseif(lon(i,j).ge. -85..and.lon(i,j).le. -83.)then     
+                   elseif(lons(i,j,1).ge. -85..and.
+     +                    lons(i,j,1).le. -83.)then     
                        nboundary = 49.
-                   elseif(lon(i,j).ge. -83..and.lon(i,j).le. -81.)then     
+                   elseif(lons(i,j,1).ge. -83..and.
+     +                    lons(i,j,1).le. -81.)then     
                        nboundary = 48.
-                   elseif(lon(i,j).ge. -81..and.lon(i,j).le. -73.)then     
+                   elseif(lons(i,j,1).ge. -81..and.
+     +                    lons(i,j,1).le. -73.)then     
                        nboundary = 46.
-                   elseif(lon(i,j).ge. -73..and.lon(i,j).le. -67.)then     
+                   elseif(lons(i,j,1).ge. -73..and.
+     +                    lons(i,j,1).le. -67.)then     
                        nboundary = 47.
-                   elseif(lon(i,j).ge. -67.                      )then     
+                   elseif(lons(i,j,1).ge. -67.)then     
                        nboundary = 46.
                    else
                        nboundary = 51.
@@ -500,15 +557,20 @@ c
                    alat2n = nboundary - 0.1
 
 !                  Determine the southern boundary of the 30s data at this lon
-                   if(lon(i,j) .le. -103.)then         !        lon < -103
+                   if(lons(i,j,1) .le. -108.)then         
+                       sboundary = 30. 
+                   elseif(lons(i,j,1) .le. -103.)then     
                        sboundary = 28. 
-                   elseif(lon(i,j).ge.-103. .and. lon(i,j).le.-102.)then       
-                       sboundary = 25. +  (-102. - lon(i,j)) * 3.
-                   elseif(lon(i,j).ge.-102. .and. lon(i,j).le. -99.)then       
+                   elseif(lons(i,j,1).ge.-103. .and.
+     +                    lons(i,j,1).le.-102.)then       
+                       sboundary = 25. +  (-102. - lons(i,j,1)) * 3.
+                   elseif(lons(i,j,1).ge.-102. .and.
+     +                    lons(i,j,1).le. -99.)then       
                        sboundary = 25.
-                   elseif(lon(i,j).ge.-99.  .and. lon(i,j).le. -98.)then       
-                       sboundary = 24. +  ( -98. - lon(i,j))
-                   elseif(lon(i,j).ge.-98.                         )then       
+                   elseif(lons(i,j,1).ge.-99.  .and.
+     +                    lons(i,j,1).le. -98.)then       
+                       sboundary = 24. +  ( -98. - lons(i,j,1))
+                   elseif(lons(i,j,1).ge.-98. )then       
                        sboundary = 24.
                    endif
 
@@ -517,20 +579,20 @@ c
 
 !                  Decide whether to use 30s or 10m data (or a blend)
 
-                   if  (  lat(i,j) .ge. alat2n)then    ! Use 10m data
+                   if  (  lats(i,j,1) .ge. alat2n)then    ! Use 10m data
                        topt_out(i,j) = topt_10(i,j)
                        topt_out_s(i,j)=topt_10_s(i,j)
                        topt_out_ln(i,j)=topt_10_ln(i,j)
                        topt_out_lt(i,j)=topt_10_lt(i,j)
                        icount_10 = icount_10 + 1
 
-                   elseif(lat(i,j) .ge. alat1n .and. 
-     1                    lat(i,j) .le. alat2n)then
+                   elseif(lats(i,j,1) .ge. alat1n .and. 
+     1                    lats(i,j,1) .le. alat2n)then
 
 !                      Between alat1n and alat2n,        Use weighted average
 
                        width = alat2n - alat1n
-                       frac10 = (lat(i,j) - alat1n) / width
+                       frac10 = (lats(i,j,1) - alat1n) / width
                        topt_out(i,j) = topt_10(i,j) * frac10 
      1                               + topt_30(i,j) * (1. - frac10)
                        topt_out_s(i,j) = topt_10_s(i,j) * frac10
@@ -545,28 +607,28 @@ c
                            write(6,*)
                            write(6,*)'In blending zone, nboundary = '
      1                                       ,nboundary,alat1n,alat2n       
-                           write(6,*)'lat/lon/frac =',lat(i,j),lon(i,j)
-     1                                               ,frac10
+                           write(6,*)'lat/lon/frac =',lats(i,j,1)
+     1                               ,lons(i,j,1) ,frac10
                            write(6,*)'topt_30      =',topt_30(i,j)
                            write(6,*)'topt_10      =',topt_10(i,j)
                            write(6,*)'topt_out     =',topt_out(i,j)
                        endif
 
-                   elseif(lat(i,j) .ge. alat1s .and. 
-     1                    lat(i,j) .le. alat1n)then
+                   elseif(lats(i,j,1) .ge. alat1s .and. 
+     1                    lats(i,j,1) .le. alat1n)then
                        topt_out(i,j) = topt_30(i,j)
                        topt_out_s(i,j)=topt_30_s(i,j)
                        topt_out_ln(i,j)=topt_30_ln(i,j)
                        topt_out_lt(i,j)=topt_30_lt(i,j)
                        icount_30 = icount_30 + 1       ! Use 30s data
 
-                   elseif(lat(i,j) .ge. alat2s .and. 
-     1                    lat(i,j) .le. alat1s)then
+                   elseif(lats(i,j,1) .ge. alat2s .and. 
+     1                    lats(i,j,1) .le. alat1s)then
 
 !                      Between alat1s and alat2s,        Use weighted average
 
                        width = alat1s - alat2s
-                       frac10 = (alat1s - lat(i,j)) / width
+                       frac10 = (alat1s - lats(i,j,1)) / width
                        topt_out(i,j) = topt_10(i,j) * frac10
      1                               + topt_30(i,j) * (1. - frac10)
                        topt_out_s(i,j) = topt_10_s(i,j) * frac10 
@@ -581,14 +643,14 @@ c
                            write(6,*)
                            write(6,*)'In blending zone, sboundary = '
      1                                       ,sboundary,alat1s,alat2s       
-                           write(6,*)'lat/lon/frac =',lat(i,j),lon(i,j)
-     1                                               ,frac10
+                           write(6,*)'lat/lon/frac =',lats(i,j,1)
+     1                               ,lons(i,j,1), frac10
                            write(6,*)'topt_30      =',topt_30(i,j)
                            write(6,*)'topt_10      =',topt_10(i,j)
                            write(6,*)'topt_out     =',topt_out(i,j)
                        endif
 
-                   elseif(lat(i,j) .le. alat2s)then    
+                   elseif(lats(i,j,1) .le. alat2s)then    
                        topt_out(i,j) = topt_10(i,j)    ! Use 10m data
                        topt_out_s(i,j)=topt_10_s(i,j)
                        topt_out_ln(i,j)=topt_10_ln(i,j)
@@ -597,7 +659,7 @@ c
 
                    else
                        write(6,*)' Software error in gridgen_model.f'
-                       write(6,*)' lat/lon = ',lat(i,j),lon(i,j)
+                       write(6,*)' lat/lon = ',lats(i,j,1),lons(i,j,1)
                        stop
 
                    endif ! Test to see if we blend the data
@@ -607,7 +669,7 @@ c
              enddo ! j
              enddo ! i
 
-           else ! new_DEM, go with 30s topo data
+          else ! new_DEM, go with 30s topo data
              do j=1,nnyp
              do i=1,nnxp
                topt_out(i,j)=topt_30(i,j)
@@ -618,7 +680,7 @@ c
              enddo
              icount_30=nnyp*nnxp
 
-           endif ! new_DEM
+          endif ! new_DEM
 
        endif ! iplttopo = 1
 
@@ -647,51 +709,6 @@ c from the non-staggered topo
        print *,'# of grid pts using 10 min data =  ',icount_10
        print *,'# of grid pts using blended data = ',icount_ramp
 C
-C*****************************************************************
-c now make plot
-c rbord is extra border width around grid to make plot look nice
-c
-	   rbord = 0.0
-	   sw(1) = lat(1,1) - rbord
-	   sw(2) = lon(1,1) - rbord
-	   nw(1) = lat(1,nnyp) + rbord
-	   nw(2) = lon(1,nnyp) - rbord
-	   ne(1) = lat(nnxp,nnyp) + rbord
-	   ne(2) = lon(nnxp,nnyp) + rbord
-	   se(1) = lat(nnxp,1) - rbord
-	   se(2) = lon(nnxp,1) + rbord
-
-!	   Call opngks
-!          Call Map(90.,std_lon,sw,nw,ne,se)
-!          print *,'ipltgrid=',ipltgrid
-!          if(ipltgrid.eq.1)then
-!          print *,'ipltgrid=',ipltgrid
-!          Call Grid(nnxp,nnyp,lat,lon)
-!          endif
-!          if(iplttopo.eq.1)then
-!            cinc=100.
-!            call conrec(topt_out,nnxp,nnxp,nnyp,
-!    +          0.,0.,cinc,-1,0,0)
-!           endif
-c           call getset(a1,a2,a3,a4,b1,b2,b3,b4,c)
-c           call set(a1,a2,a3,a4,b1,b2,b3,b4,c)
-c           print *,a1,a2,a3,a4
-c           print *,b1,b2,b3,b4
-c           print *,c
-c           call wtstr(0.2,0.2,'XXXXXXX=',20,0,-1)
-c            call pwritx(800,800,'SILAVWT=',8,20,0,-1)
-C
-
-!          if(.true.)then
-!            call frame
-!            cinc=5.
-!            call conrec(topt_pctlfn,nnxp,nnxp,nnyp,
-!    +          0.,0.,cinc,-1,0,0)
-!          endif
-
-!          Call frame
-!	   Call clsgks
-
         call s_len(static_dir,len)
         open(10,file=static_dir(1:len)//'latlon.dat'
      +         ,status='unknown',form='unformatted')
@@ -699,7 +716,7 @@ C
      +         ,status='unknown',form='unformatted')
         open(15,file=static_dir(1:len)//'corners.dat'
      +         ,status='unknown')
-        write(10)lat,lon
+        write(10)lats(1:nnxp,1:nnyp,1),lons(1:nnxp,1:nnyp,1)
         write(11)topt_out
 cc
 cc  Is this just a legacy of some bygone days?  
@@ -708,10 +725,10 @@ cc
 c        write(12,*)topt_30
 c        write(13,*)topt_10
 c        write(14,*)topt_out
-        write(15,*)lat(1,1),lon(1,1)
-        write(15,*)lat(1,nnyp),lon(1,nnyp)
-        write(15,*)lat(nnxp,1),lon(nnxp,1)
-        write(15,*)lat(nnxp,nnyp),lon(nnxp,nnyp)
+        write(15,*)lats(1,1,1),lons(1,1,1)
+        write(15,*)lats(1,nnyp,1),lons(1,nnyp,1)
+        write(15,*)lats(nnxp,1,1),lons(nnxp,1,1)
+        write(15,*)lats(nnxp,nnyp,1),lons(nnxp,nnyp,1)
 c        write(16,*)topt_pctlfn
         close(10)
         close(11)
@@ -736,29 +753,44 @@ c
 c  now lets use GEODAT to process the world 30s USGS landuse data
 c
         write(6,*)
-        write(6,*)' Processing 30s landuse data....'
-        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn,ytn
-     +,deltax,deltay,LANDUSE_30S,LANDUSE_30S_DIST,adum,adum
-     + ,PATH_TO_LUSE_30S,TOPTWVL,SILAVWT,new_DEM,istatus)
+        print*,' Processing 30s landuse data....'
+        if(ns.ne.1)print*,' Using C-stagger grid definition '
+        CALL GEODAT(nnxp,nnyp,erad,90.,std_lon,xtn(1,ns)
+     +,ytn(1,ns),deltax,deltay,LANDUSE_30S,LANDUSE_30S_PCT
+     +,adum,adum,PATH_TO_LUSE_30S,TOPTWVL,SILAVWT,new_DEM
+     +,24,istatus)
 
-        if(istatus.ne. 1)then
-           print*,'land use data not processed'
-           print*,'Static file not created.......ERROR'
-           return
+        if(istatus.ne.1)then
+         print*,'land use data not processed'
+         if(c10_grid_fname(1:lf).eq.'wrfsi')then
+          print*
+          print*,'-------------------------------------------------'
+          print*,'          *** ERROR ***'
+          print*,' Static file not created. Error; no landuse data'
+          print*,'-------------------------------------------------'
+          print*
+          return
+         else
+          print*
+          print*,'----------------------------------------------'
+          print*,'            *** WARNING ***'
+          print*,'   landuse data not added to static file'
+          print*,'----------------------------------------------'
+          print*
+         endif
         endif
-
 
 c
 c retrieve climatological albedo. Currently this is a fixed water albedo
 c that is a namelist value (nest7grid.parms - water_albedo_cmn)
 c
-        call get_static_albedo(nnxp,nnyp,lat,lon,topt_pctlfn
-     +,static_albedo,istatus)
+        call get_static_albedo(nnxp,nnyp,lats(1,1,1),lons(1,1,1)
+     +,topt_pctlfn,static_albedo,istatus)
 
         if(c10_grid_fname(1:lf).eq.'wrfsi')then
 
-           call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
-           call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
+           call move(lats(1,1,1),data(1,1,1),nnxp,nnyp)            ! KWD
+           call move(lons(1,1,1),data(1,1,2),nnxp,nnyp)            ! KWD
            call move(lats(1,1,2),data(1,1,3),nnxp,nnyp)    ! JS
            call move(lons(1,1,2),data(1,1,4),nnxp,nnyp)    ! JS
            call move(lats(1,1,3),data(1,1,5),nnxp,nnyp)    ! JS
@@ -769,10 +801,9 @@ c
            call move(topt_out,data(1,1,9),nnxp,nnyp)       ! KWD
            call move(topt_pctlfn,data(1,1,10),nnxp,nnyp)   ! KWD
            call move(landuse_30s,data(1,1,11),nnxp,nnyp)   ! JS
-c          call move(soil,data(1,1,11),nnxp,nnyp)          ! SA [JS - this now USGS 30s landuse]
 c
-           call get_projrot_grid(nnxp,nnyp,lat,lon
-     +,projrot_grid,istatus)
+           call get_projrot_grid(nnxp,nnyp,lats(1,1,ns)
+     +,lons(1,1,ns),projrot_grid,istatus)
            call move(projrot_grid(1,1,1),data(1,1,12)
      +,nnxp,nnyp)
            call move(projrot_grid(1,1,2),data(1,1,13)
@@ -794,7 +825,7 @@ c
      +,nnxp,nnyp)
 
 c           
-           call get_coriolis_components(nnxp,nnyp,lat
+           call get_coriolis_components(nnxp,nnyp,lats(1,1,ns)
      +,coriolis_parms)
            call move(coriolis_parms(1,1,1),data(1,1,18)
      +,nnxp,nnyp)
@@ -807,23 +838,28 @@ c
            call move(topt_out_lt,data(1,1,23),nnxp,nnyp)
            call move(topt_stag_out,data(1,1,24),nnxp,nnyp)
 
+           call move(soiltype_dom(1,1,1),data(1,1,25),nnxp,nnyp)  ! JS - soil type top layer dom cat
+           call move(soiltype_dom(1,1,2),data(1,1,26),nnxp,nnyp)  ! JS -     "     bottom   "
 
-           ngrids=25
+
+           ngrids=27
            call get_gridgen_var(nf,ngrids,var,comment)
 
         else
 
-           call move(lat,data(1,1,1),nnxp,nnyp)            ! KWD
-           call move(lon,data(1,1,2),nnxp,nnyp)            ! KWD
-           call move(topt_out,data(1,1,3),nnxp,nnyp)       ! KWD
-           call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)    ! KWD
-           call move(soil,data(1,1,5),nnxp,nnyp)           ! SA [JS - this now USGS 30s landuse]
-           call move(landuse_30s,data(1,1,5),nnxp,nnyp)    ! JS 2-22-01
-           call move(static_albedo,data(1,1,6),nnxp,nnyp)  ! JS
-           call move(topt_out_s,data(1,1,7),nnxp,nnyp)     ! JS
-           call move(topt_out_ln,data(1,1,8),nnxp,nnyp)    ! JS
-           call move(topt_out_lt,data(1,1,9),nnxp,nnyp)    ! JS 
-           ngrids=10
+           call move(lats(1,1,1),data(1,1,1),nnxp,nnyp)            ! KWD
+           call move(lons(1,1,1),data(1,1,2),nnxp,nnyp)            ! KWD
+           call move(topt_out,data(1,1,3),nnxp,nnyp)               ! KWD
+           call move(topt_pctlfn,data(1,1,4),nnxp,nnyp)            ! KWD
+           call move(soil,data(1,1,5),nnxp,nnyp)                   ! SA [JS - this now USGS 30s landuse]
+           call move(landuse_30s,data(1,1,5),nnxp,nnyp)            ! JS 2-22-01
+           call move(static_albedo,data(1,1,6),nnxp,nnyp)          ! JS
+           call move(topt_out_s,data(1,1,7),nnxp,nnyp)             ! JS
+           call move(topt_out_ln,data(1,1,8),nnxp,nnyp)            ! JS
+           call move(topt_out_lt,data(1,1,9),nnxp,nnyp)            ! JS 
+           call move(soiltype_dom(1,1,1),data(1,1,10),nnxp,nnyp)   ! JS 4-09-01 top layer soil type
+           call move(soiltype_dom(1,1,2),data(1,1,11),nnxp,nnyp)   !     "      bottom  "
+           ngrids=12
            call get_gridgen_var(nf,ngrids,var,comment)
  
         endif
@@ -842,7 +878,8 @@ c
            return
         endif
 
-        call check_domain(lat,lon,nnxp,nnyp,grid_spacing_m,1,istat_chk)
+        call check_domain(lats(1,1,1),lons(1,1,1)
+     +,nnxp,nnyp,grid_spacing_m,1,istat_chk)
 
         write(6,*)'deltax = ',deltax
 
@@ -861,28 +898,37 @@ c
 	End
 
       SUBROUTINE GEODAT(n2,n3,erad,rlat,wlon1,xt,yt,deltax,deltay
-     1 ,DATR,DATS,DATLN,DATLT,OFN,WVLN,SILWT,which_data
+     1 ,DATR,DATS,DATLN,DATLT,OFN,WVLN,SILWT,which_data,maxdatacat
      1 ,istat_files)
+
       include 'trigd.inc'
+
       implicit none
-      integer n2,n3,n23,lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
-     1  iblksizo,no,iodim,istat_files
-      parameter (n23=20000)
-      real vt3da(500)
-      real vctr1(n23),
-     1 vctr21(n23),erad,rlat,wlon1,deltax,deltay,wvln,silwt
+
+
+      integer n2,n3
+      integer lb,mof,np,niq,njq,nx,ny,isbego,iwbego,
+     1  iblksizo,no,iodim,istat_files,maxdatacat
+
+      real erad,rlat,wlon1,deltax,deltay,wvln,silwt
+
       real DATR(N2,N3)
-      real DATS(N2,N3)
+      real DATS(N2,N3,maxdatacat)
       real DATLN(N2,N3)
       real DATLT(N2,N3)
+
 c      PARAMETER(IODIM=59000)
 c SG97 iodim increased, to be able to read larger blocks of data
       PARAMETER(IODIM=5800000)
       real DATO(IODIM)
-      real xt(N2),YT(N3),deltallo,deltaxq,deltayq,
+
+      real xt(N2),YT(N3)
+      real deltallo,deltaxq,deltayq,
      1  deltaxp,deltayp
+
       real std_lon
       integer istatus
+
       CHARACTER*(*) OFN
       character*180 TITLE
       logical which_data
@@ -894,11 +940,12 @@ c ****************************
       LB=INDEX(OFN,' ')-1
       TITLE=OFN(1:LB)//'HEADER'
       LB=INDEX(TITLE,' ')-1
-      CALL JCLGET(29,TITLE(1:LB),'FORMATTED',1,istatus)
-      if(istatus .ne. 1)then
-          write(6,*)' Error in gridgen_model opening HEADER: check '
+
+      CALL JCLGET(29,TITLE(1:LB),'FORMATTED',1,istat_files)
+      if(istat_files .ne. 1)then
+          write(6,*)' Warning in gridgen_model opening HEADER: check '
      1             ,'geog paths and HEADER file'
-          stop
+          return
       endif
 
       READ(29,2)IBLKSIZO,NO,ISBEGO,IWBEGO
@@ -929,9 +976,9 @@ C
           stop 
       endif
       CALL SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,90.,std_lon,ERAD
-     +            ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +            ,ISBEGO,IWBEGO,DATO,VT3DA,DATR,DATS,DATLN,DATLT
-     +            ,VCTR1,VCTR21,OFN,WVLN,SILWT,which_data,istat_files)       
+     +,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO,ISBEGO
+     +,IWBEGO,DATO,DATR,DATS,DATLN,DATLT
+     +,OFN,WVLN,SILWT,which_data,maxdatacat,istat_files)       
       RETURN
       END
 
@@ -941,15 +988,24 @@ C     ******************************************************************
 C
       SUBROUTINE SFCOPQR(NO,MOF,NP,NIQ,NJQ,N2,N3,XT,YT,RLAT,WLON1,ERAD
      +          ,DELTALLO,DELTAXP,DELTAYP,DELTAXQ,DELTAYQ,IBLKSIZO
-     +          ,ISBEGO,IWBEGO,DATO,DATP,DATR,DATS,DATLN,DATLT,ISO,IWO
-     +          ,OFN,WVLN,SILWT,dem_data,istat_files)
+     +          ,ISBEGO,IWBEGO,DATO,DATR,DATS,DATLN,DATLT
+     +          ,OFN,WVLN,SILWT,dem_data,maxdatacat,istat_files)
 
       real dato(no,no,mof)
 
-      real DATP(NP,NP),DATQ(NIQ,NJQ),DATR(N2,N3),DATQS(NIQ,NJQ),
-     +     DATSM(NIQ,NJQ),DATSMX(NIQ,NJQ),
-     +     DATS(N2,N3),DATSLN(NIQ,NJQ),DATSLT(NIQ,NJQ),
-     +     DATLN(N2,N3),DATLT(N2,N3)
+      real,  allocatable ::  DATP(:,:)
+      real,  allocatable ::  DATQ(:,:)
+      real,  allocatable ::  DATQS(:,:,:)
+      real,  allocatable ::  DATSM(:,:)
+      real,  allocatable ::  DATSMX(:,:)
+      real,  allocatable ::  DATSLN(:,:)
+      real,  allocatable ::  DATSLT(:,:)
+
+      real DATLN(N2,N3)
+      real DATLT(N2,N3)
+
+      real DATS(N2,N3,maxdatacat)
+      real DATR(N2,N3)
 
       real ISO(MOF),IWO(MOF),XT(N2),YT(N3),rlat,wlon1,
      +     erad,deltallo,deltaxp,deltayp,deltaxq,deltayq,
@@ -964,15 +1020,19 @@ c     real xpmn,xpmx,ypmn,ypmx
       real xp1,xp2,yp1,yp2
       real xpcentr,ypcentr
 
-      integer nlucat
-      parameter (nlucat=24)
+      real  pctcat(maxdatacat)
 
       integer ixr,iyr
+      integer lent
 
-      CHARACTER*180 OFN,TITLE3,TITLE3_last_read,TITLE3_last_inquire
-      CHARACTER*3 TITLE1
-      CHARACTER*4 TITLE2
-      LOGICAL L1,L2,dem_data,l_string_contains,landuse
+      CHARACTER*180 OFN
+      CHARACTER*180 TITLE3,TITLE3_last_read,TITLE3_last_inquire
+      CHARACTER*3   TITLE1
+      CHARACTER*4   TITLE2
+      CHARACTER*10  cdatatype
+
+      LOGICAL L1,L2,dem_data,l_string_contains
+
       data icnt/0/
       save icnt
 C
@@ -996,11 +1056,26 @@ c      stop
       TITLE3_last_inquire = '/dev/null'
 
       len=index(ofn,' ')
-      landuse=.false.
       if(ofn(len-1:len-1).eq.'V')then
-         print*,'landuse = true '
-         landuse=.true.
+         print*,'processing landuse data '
+         cdatatype='landuse'
+      elseif(ofn(len-1:len-1).eq.'O')then
+         print*,' processing soiltype data'
+         cdatatype='soiltype'
+      elseif(ofn(len-1:len-1).eq.'U' .or.
+     &       ofn(len-1:len-1).eq.'H' .or.
+     &       ofn(len-1:len-1).eq.'L' )then
+         print*,'processing topography data'
+         cdatatype='topography'
       endif
+
+      print*,'SFCOPQR '
+
+      call s_len(cdatatype,lent)
+
+      allocate (DATP(NP,NP),DATQ(NIQ,NJQ),DATSM(NIQ,NJQ)
+     &,DATQS(NIQ,NJQ,maxdatacat),DATSMX(NIQ,NJQ),DATSLN(NIQ,NJQ)
+     &,DATSLT(NIQ,NJQ))
 
       DO 15 JQ=1,NJQ
          print *,'jq,njq,niq=',jq,njq,niq
@@ -1203,7 +1278,7 @@ C
      +                       +WIO2*(WJO1*DATO(IO2,JO1,JOFR)
      +                             +WJO2*DATO(IO2,JO2,JOFR))
 
-!                 if(.not.landuse)then
+                  if(cdatatype.eq.'topography')then
 
 !S & W-facing slopes > 0.
                    DELTA_LN(IP,JP)=
@@ -1214,23 +1289,7 @@ C
      .           ((DATO(IO1,JO2,JOFR)-DATO(IO1,JO1,JOFR))+
      .            (DATO(IO2,JO2,JOFR)-DATO(IO2,JO1,JOFR)))*.5
 
-!                 else
-!                  if(xp.lt.xpmn.and.yp.lt.ypmn)then
-!                   datq(iq,jq)=dato(IO1,JO1,nofr)
-!                   xpmn=xp
-!                   ypmn=yp
-!                  endif
-!                 endif
-
-c                if(xp.gt.xpmx)xpmx=xp
-c                if(xp.lt.xpmn)xpmn=xp
-c                if(yp.gt.ypmx)ypmx=yp
-c                if(yp.lt.ypmn)ypmn=yp
-
-c                if(ip.eq.1)xp1=xp
-c                if(ip.eq.np)xp2=xp
-c                if(jp.eq.1)yp1=yp
-c                if(jp.eq.np)yp2=yp
+                  endif
                    
 20               CONTINUE
 18             continue ! IP
@@ -1241,7 +1300,7 @@ c                if(jp.eq.np)yp2=yp
 
 !           Calculate average and silhouette terrain, then apply SILWT weight
 
-            if(.not.landuse)then
+            if(cdatatype(1:lent).eq.'topography')then
 
              SHA=0.
              RHA=0.
@@ -1271,8 +1330,8 @@ c                if(jp.eq.np)yp2=yp
  
              RHA=RHA/FLOAT(NP*NP)
              RMS=0.0
-             DO 24 IP=1,NP ! The reason for this second SHA loop is unclear
-c              SH=0.      ! It is now used for std dev of terrain
+             DO 24 IP=1,NP ! The reason for this second SHA loop is (unclear)
+c              SH=0.       ! for std dev of terrain
                DO 25 JP=1,NP
 c                 SH=max(SH,DATP(IP,JP))
                   RMS=RMS+((DATP(IP,JP)-RHA)*(DATP(IP,JP)-RHA))
@@ -1282,7 +1341,7 @@ c              SHA=SHA+SH/(2.*FLOAT(NP))
 
 24           continue ! IP
 
-             DATQS(IQ,JQ)=SQRT(RMS/FLOAT(NP*NP))
+             DATQS(IQ,JQ,1)=SQRT(RMS/FLOAT(NP*NP))
              DATQ(IQ,JQ)=SHA*SILWT+RHA*(1.-SILWT)
              DATSM(IQ,JQ)=RHA                           !mean value of points used for IQ,JQ
              DATSMX(IQ,JQ)=SHMAX                        !max value from points used for IQ,JQ
@@ -1291,49 +1350,13 @@ c              SHA=SHA+SH/(2.*FLOAT(NP))
 
 c            print *,'datq=',datq(iq,jq)
 
-            else   !then this is landuse (30s vegie) data
+            elseif(cdatatype(1:lent).eq.'landuse'.or.
+     &             cdatatype(1:lent).eq.'soiltype')then
 
-             call landuse_cat(np,datp,nlucat,domcat)
+             call compute_categories(cdatatype,np*np,datp
+     &               ,maxdatacat,domcat,pctcat)
              datq(iq,jq)=domcat 
-
-c
-c in this case we want the grid point of raw remapped data
-c closest to the expanded domain (datq)
-c             xpcentr=(xp2-xp1)*.5
-c             ypcentr=(yp2-yp1)*.5
-c             XP=XQ+(1.-0.5*FLOAT(NP+1))*DELTAXP+xpcentr
-c             YP=YQ+(1.-0.5*FLOAT(NP+1))*DELTAYP+ypcentr
-c             call xy_to_latlon(XP,YP,erad,GLATP,GLONP)
-c             RIO=(GLONP-FLOAT(IWOC))/DELTALLO+1.
-c             RJO=(GLATP-FLOAT(ISOC))/DELTALLO+1.
-!  Prevent Bounds Error (Steve Albers used for landuse also)
-c             if(RIO .lt. 1.0)then
-c               if(RIO .gt. 0.98)then
-c                  write(6,*)' Reset RIO for Machine Epsilon'
-c                  RIO = 1.0
-c               else
-c                  write(6,*)' ERROR: RIO out of bounds',RIO
-c                  stop
-c               endif
-c             endif
-c             if(RJO .lt. 1.0)then
-c               if(RJO .gt. 0.98)then
-c                  write(6,*)' Reset RJO for Machine Epsilon'
-c                  write(6,*)JQ,IQ,
-c    1                IP,JP,IO1,JO1,JOFR,RIO,RJO,GLATP,ISOC
-c                  RJO = 1.0
-c               else
-c                  write(6,*)' ERROR: RJO out of bounds',RJO
-c                  write(6,*)JQ,IQ,
-c    1                IP,JP,IO1,JO1,JOFR,RIO,RJO,GLATP,ISOC
-c                  stop
-c               endif
-c             endif
-c             IO1=nint(RIO)
-c             JO1=nint(RJO)
-c             datq(iq,jq)=dato(IO1,JO1,NOFR)
-c             call landuse_cat(np,datq,iq,jq,niq,njq,nlucat
-c    &,lucat)
+             datqs(iq,jq,:)=pctcat(:)
 
             endif
 16       continue ! IQ
@@ -1345,12 +1368,12 @@ c     stop
       XQ1=(1.-0.5*FLOAT(NIQ+1))*DELTAXQ+XCENTR
       YQ1=(1.-0.5*FLOAT(NJQ+1))*DELTAYQ+YCENTR
 
-      if(.not.landuse)then
+      if(cdatatype(1:lent).eq.'topography')then
         print*
         print*,'Before GDTOST2'
         print*,'--------------'
         print*,'datq(1,1)/(niq,njq)= ',datq(1,1),datq(niq,njq)
-        print*,'datqs(1,1)/(niq,njq)= ',datqs(1,1),datqs(niq,njq)
+        print*,'datqs(1,1,1)/(niq,njq)= ',datqs(1,1,1),datqs(niq,njq,1)
         print*,'datsln(1,1)/(niq,njq)= ',datsln(1,1),datsln(niq,njq)
         print*,'datslt(1,1)/(niq,njq)= ',datslt(1,1),datslt(niq,njq)
         print*,'Mean/Max topo at IQ,JQ (1,1)/(niq,njq): '
@@ -1368,7 +1391,7 @@ c     stop
             endif    
 
             CALL GDTOST2(DATQS,NIQ,NJQ,XR,YR,RVAL)
-            DATS(IR,JR)=max(0.,RVAL)
+            DATS(IR,JR,1)=max(0.,RVAL)
 
             CALL GDTOST2(DATSLN,NIQ,NJQ,XR,YR,RVAL)
             DATLN(IR,JR)=RVAL
@@ -1381,13 +1404,12 @@ c     stop
         print*,'After GDTOST2'
         print*,'-------------'
         print*,'datr(1,1)/(n2,n3)= ',datr(1,1),datr(N2,N3)
-        print*,'dats(1,1)/(n2,n3)= ',dats(1,1),dats(n2,n3)
+        print*,'dats(1,1,1)/(n2,n3)= ',dats(1,1,1),dats(n2,n3,1)
         print*,'datln(1,1)/(n2,n3)= ',datln(1,1),datln(n2,n3)
         print*,'datlt(1,1)/(n2,n3)= ',datlt(1,1),datlt(n2,n3)
  
-      elseif(landuse)then
-
-c       call landuse_cat(niq,njq,datq,nlucat)
+      elseif(cdatatype(1:lent).eq.'landuse'.or.
+     +       cdatatype(1:lent).eq.'soiltype')then
 
         DO 38 JR=1,N3
          DO 39 IR=1,N2
@@ -1397,13 +1419,19 @@ c       call landuse_cat(niq,njq,datq,nlucat)
             if(iyr.lt.1)iyr=1
             if(ixr.gt.n2)ixr=niq
             if(iyr.gt.n3)iyr=njq
-c dont use this for landuse
+
+c dont use this for landuse or soiltype?
 c           CALL GDTOST2(DATQ,NIQ,NJQ,XR,YR,RVAL)
-            datr(ir,jr)=datq(ixr,iyr)
+
+            datr(ir,jr)=  datq(ixr,iyr)     !dominant category
+            dats(ir,jr,:)=datqs(ixr,iyr,:)  !percent dist for ea category
+
  39      CONTINUE
  38     CONTINUE
 
       endif
+
+      deallocate (DATP,DATQ,DATQS,DATSM,DATSMX,DATSLN,DATSLT)
 
       RETURN
       END
@@ -1487,30 +1515,6 @@ C
 C
        END
 C +------------------------------------------------------------------+
-      SUBROUTINE JCL
-      CHARACTER*(*) FILENM,FORMT
-
-C     -------------------------------------------------------
-      ENTRY JCLGET(IUNIT,FILENM,FORMT,IPRNT,istatus)
-C
-C         This routine access an existing file with the file name of
-C           FILENM and assigns it unit number IUNIT.
-C
-      IF(IPRNT.EQ.1) THEN
-      PRINT*,' Opening input unit ',IUNIT,' file name ',FILENM
-      PRINT*,'         format  ',FORMT
-      ENDIF
-
-      OPEN(IUNIT,STATUS='OLD',FILE=FILENM,FORM=FORMT,ERR=1)
-
-      istatus=1
-      RETURN
-
- 1    istatus = 0
-      return
-
-      END
-c--------------------------------------------------------               
       subroutinevfirec(iunit,a,n,type)                                  
       character*1vc                                                     
       character*(*)type                                                 
@@ -1597,55 +1601,6 @@ c--------------------------------------------------------
                                                                         
       return                                                            
       end
-
-c ********************************************************************
-
-      subroutine read_dem(unit_no,unit_name,nn1,nn2,i1,i2
-     &,type,data)
-      implicit none
-      integer countx,county,unit_no,nn1,nn2
-      real data(nn1,nn2)
-      integer idata(nn1,nn2), len, i1, i2
-      logical l1,l2
-      character*(*) unit_name
-      character*(*) type
-
-C      open(unit_no,file=unit_name,status='old',access='direct',
-C     . recl=nn2*nn1*2)
-C      inquire(unit_no,exist=l1,opened=l2)
-C      read(unit_no,rec=1) idata
-
-      call s_len(unit_name,len) 
-
-      call read_binary_field(idata,i1,i2,nn1*nn2,unit_name,len)
-
-c     if(type.eq.'veg')then
-c      do county=1,nn2
-c        do countx=1,nn1
-c           data(countx,county)=float(idata(countx,county))
-c        enddo
-c      enddo
-c     else
-
-       do county=1,nn2
-        do countx=1,nn1
-          if (idata(countx,county).eq.-9999) idata(countx,county)=0
-           data(countx,county)=float(idata(countx,nn2-county+1))
-c SG97 initial data (DEM format) starts in the lower-left corner;
-c SG97 this format is wrapped around to have upper-left corner as its start.
-c
-c JS00 some machines do not account for signed integers
-           if(data(countx,county).ge.15535.0)
-     &data(countx,county)=data(countx,county)-65535
-
-        enddo
-       enddo
-
-c     endif
-ccc      close(unit_no)
-      return
-      end
-
 C +------------------------------------------------------------------+
       FUNCTION INTLSHFT(IWORD,NSHFT)
 C
@@ -1703,65 +1658,55 @@ c      COMMON/BIN/ITYPP,I0X,I1X,I2X,YOO
       RETURN
       END
 c
-c determine dominant land use category 1-05-01 JS
+c determine dominant category 1-05-01 JS
 c
-      subroutine landuse_cat(np,data,nlucat,domcat)
+      subroutine compute_categories(ctype,nnp,data,nlcat,domcat
+     +,pctcat)
 
       implicit none
 
-      integer np
+      character*(*) ctype
+
+      integer nnp
       integer i,j,k
-      integer nlucat
-      integer lucat(nlucat)
+      integer nlcat
       integer maxcat
-      real    data(np,np)
+      integer lcat(nlcat)
+      real    pctcat(nlcat)
+      real    data(nnp)
       real    domcat
 
-      do k=1,nlucat
-         lucat(k)=0
+      do k=1,nlcat
+         lcat(k)=0
+         pctcat(k)=0.
       enddo
-      do i=1,np
-      do j=1,np
-      do k=1,nlucat
-         if(nint(data(i,j)).eq.k)then
-            lucat(k)=lucat(k)+1
+      do i=1,nnp
+      do k=1,nlcat
+         if(nint(data(i)).eq.k)then
+            lcat(k)=lcat(k)+1
          endif
-      enddo
       enddo
       enddo
       maxcat=-1
-      do k=1,nlucat
-         if(lucat(k).gt.maxcat)then
-            maxcat=lucat(k)
+      do k=1,nlcat
+         pctcat(k)=lcat(k)/float(nnp)
+         if(lcat(k).gt.maxcat)then
+            maxcat=lcat(k)
             domcat=float(k)
          endif
       enddo
+      if(ctype.eq.'landuse')then
+         if(domcat.eq.16.and.pctcat(16).lt.0.5)then
+            maxcat=-1
+            do k=1,nlcat
+               if(k.ne.16)then
+                  if(lcat(k).gt.maxcat)then
+                     maxcat=lcat(k)
+                     domcat=float(k)
+                  endif
+               endif
+            enddo
+         endif
+      endif
       return
       end
-
-c
-c new subroutine on 1-05-01 JS
-c
-c     subroutine landuse_cat(niq,njq,data,nlucat
-c    &,lucat)
-
-c     implicit none
-
-c     integer i,j,k
-c     integer niq,njq
-c     integer nlucat
-c     integer lucat(niq,njq,nlucat)
-c     real    data(niq,njq)
-
-c     do i=1,niq
-c     do j=1,njq
-c     do k=1,nlucat
-c        if(data(i,j).eq.k)then
-c           lucat(iq,jq,k)=lucat(iq,jq,k)+1
-c        endif
-c     enddo
-c     enddo
-c     enddo
-
-c     return
-c     end
