@@ -84,13 +84,18 @@ C***************** Declarations **************************************
      1                                          ,grid_laps_wt(ni,nj,nk)
 
         character*(*) cgrid
+        logical l_parse
 
 C********************************************************************
 
         write(6,*)' Subroutine compare_wind...',cgrid
 
         write(6,*)
-        write(6,*)'  Comparing ',cgrid,' to SFC Obs (passing QC)'       
+        if(l_parse(cgrid,'FG'))then
+            write(6,*)'  Comparing ',cgrid,' to SFC Obs (prior to QC)'       
+        else
+            write(6,*)'  Comparing ',cgrid,' to SFC Obs (passing QC)'       
+        endif
         call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_sfc
      1        ,cgrid,'SFC ',r_missing_data,rms)
@@ -108,7 +113,11 @@ C********************************************************************
      1        ,cgrid,'PRP ',r_missing_data,rms)
 
         write(6,*)
-        write(6,*)'  Comparing ',cgrid,' to CDW Obs (passing QC)'       
+        if(l_parse(cgrid,'FG'))then
+            write(6,*)'  Comparing ',cgrid,' to CDW Obs (prior to QC)'       
+        else
+            write(6,*)'  Comparing ',cgrid,' to CDW Obs (passing QC)'       
+        endif
         call comp_grid_windobs(upass1,vpass1,ni,nj,nk
      1        ,grid_laps_u,grid_laps_v,grid_laps_wt,weight_cdw
      1        ,cgrid,'CDW ',r_missing_data,rms)
@@ -139,7 +148,7 @@ C********************************************************************
 
 
 
-        subroutine comparisons (
+        subroutine comparisons (               ! this is being phased out?
      1                upass1,vpass1,istat_radar_vel,max_radars,
      1                grid_ra_vel,rlat_radar,rlon_radar,rheight_radar,
      1                lat,lon,
