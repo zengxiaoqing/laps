@@ -29,9 +29,17 @@
        call get_laps_cycle_time(laps_cycle_time,istatus)
        if(istatus .ne. 1)stop
 
-       call get_systime(i4time_sys,a9_time,istatus)
-       if(istatus .ne. 1)stop
-       write(6,*)' systime = ',a9_time
+       call GETENV('LAPS_A9TIME',a9_time)
+       call s_len(a9_time,ilen)
+
+       if(ilen .eq. 9)then
+           write(6,*)' systime (from env) = ',a9_time
+           call i4time_fname_lp(a9_time,i4time_sys,istatus)
+       else
+           call get_systime(i4time_sys,a9_time,istatus)
+           if(istatus .ne. 1)go to 999
+           write(6,*)' systime = ',a9_time
+       endif
 
        call get_snd_parms(path_to_raw_raob,path_to_local_raob
      1                   ,path_to_raw_drpsnd
@@ -48,7 +56,8 @@
            c8_raob_format = c8_project
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
-           call ingest_raob(path_to_raw_raob,c8_raob_format,lun_out)
+           call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
+     1                     ,lun_out)
 
            if(c8_project .eq. 'CWB')then
                c8_raob_format = c8_project
@@ -70,12 +79,14 @@
            c8_raob_format = 'WFO'
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
-           call ingest_raob(path_to_raw_raob,c8_raob_format,lun_out)
+           call ingest_raob(path_to_raw_raob,c8_raob_format,i4time_sys
+     1                     ,lun_out)
 
            c8_raob_format = 'RSA'
            write(6,*)
            write(6,*)' Call ingest_raob, format=',c8_raob_format
-           call ingest_raob(path_to_local_raob,c8_raob_format,lun_out)
+           call ingest_raob(path_to_local_raob,c8_raob_format,i4time_sys
+     1                     ,lun_out)
 
            write(6,*)
            write(6,*)' Call tower_driver_sub'
@@ -179,15 +190,15 @@
       real*4 array_in(n),array_out(n)
 
       do i = 1,n
-          if(abs(array_in(n)) .ge. 1e10 .or. 
-     1           array_in(n)  .eq. r_missing_data )then
-              array_out(n) = r_missing_data
+          if(abs(array_in(i)) .ge. 1e10 .or. 
+     1           array_in(i)  .eq. r_missing_data )then
+              array_out(i) = r_missing_data
           elseif(string .eq. 'k_to_c')then
-              array_out(n) = k_to_c(array_in(n))
+              array_out(i) = k_to_c(array_in(i))
           elseif(string .eq. 'pa_to_mb')then
-              array_out(n) = array_in(n) / 100.
+              array_out(i) = array_in(i) / 100.
           elseif(string .eq. 'none')then
-              array_out(n) = array_in(n)
+              array_out(i) = array_in(i)
           else
               write(6,*)' Unknown operator in convert_array: ',string
               istatus = 0
@@ -202,7 +213,10 @@
 
 
       subroutine get_nlevels_snd(pressure_mb,height_m,r_missing_data
-     1                          ,nlevels_raw,nlevels_snd)      
+     1                          ,nlevels_raw,nlevels_snd) 
+
+      real*4 pressure_mb(nlevels_raw)     
+      real*4 height_m(nlevels_raw)     
 
       do i = 1,nlevels_raw
           if(abs(pressure_mb(i)) .le. 2000. .or.
