@@ -132,7 +132,7 @@ c      istat = index(laps_domain_file,' ')-1
 
       i=1
 
-      call get_background_info(150,bgpaths,bgmodels
+      call get_background_info(bgpaths,bgmodels
      +     ,oldest_forecast,max_forecast_delta,use_analysis) 
       lga_status = 0
 
