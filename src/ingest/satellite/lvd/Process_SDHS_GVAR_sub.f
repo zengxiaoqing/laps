@@ -138,15 +138,15 @@ C  Open the file that contains the GVAR header and pixel data.  The
 C  record length in the direct access read is set equal to the SIZE
 C**********************************************************************
 c
-      imagelen=nlfi*nefi    !/4
-
       nf=index(filename,' ')-1
       OPEN(UNIT=8, FILE=FILENAME, ERR=100, IOSTAT=IOSTATUS,
      & ACCESS='DIRECT', FORM='UNFORMATTED',RECL= SIZE)
 
       if(l_cell_afwa)then
+         imagelen=(nlfi*nefi)/4
          READ (8,REC=1,ERR=99)HEADER,IMAGEC
       else
+         imagelen=nlfi*nefi
          call read_binary_field(image_decell_1d,1,4,imagelen+
      +HEADER_SIZE*4,filename,nf)
       endif
@@ -172,7 +172,7 @@ c back as floating 10-bit info for the sector in domain.
 
       else ! afwa data not cellularized but bits need moving
 
-         m=HEADER_SIZE  !*4
+         m=HEADER_SIZE*4
          do j=1,nlfi
          do i=1,nefi
             m=m+1
