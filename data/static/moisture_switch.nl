@@ -7,6 +7,7 @@
  TIROS_SWITCH = 0,
  SAT_SKIP = 3,
  GVAP_SWITCH = 0,
+ SFC_MIX = 1,
  
  /
 c   This is a switch for the module  lq3.  If the value of the first record is 0,
