@@ -454,8 +454,9 @@ csms$>       rms_thresh , out>:default=ignore)  begin
               i = obs_point(i_ob)%i                       
               j = obs_point(i_ob)%j                       
               k = obs_point(i_ob)%k                       
-              u = obs_point(i_ob)%value(1)
-              v = obs_point(i_ob)%value(2)
+
+              u = obs_point(i_ob)%valuef(1)
+              v = obs_point(i_ob)%valuef(2)
 
               speed_bkg  = sqrt(u_laps_bkg(i,j,k)**2
      1                        + v_laps_bkg(i,j,k)**2)

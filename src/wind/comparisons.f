@@ -196,8 +196,8 @@ C********************************************************************
                   il = obs_barnes(iob)%i
                   jl = obs_barnes(iob)%j
                   k = obs_barnes(iob)%k
-                  diffu = obs_barnes(iob)%value(1) - u_3d(il,jl,k) 
-                  diffv = obs_barnes(iob)%value(2) - v_3d(il,jl,k) 
+                  diffu = obs_barnes(iob)%valuef(1) - u_3d(il,jl,k) 
+                  diffv = obs_barnes(iob)%valuef(2) - v_3d(il,jl,k) 
 
                   sumu = sumu + diffu
                   sumv = sumv + diffv
@@ -206,8 +206,8 @@ C********************************************************************
                   residualv = residualv + diffv ** 2
 
 !                 Calculate Speed Difference (Ob - Grid)
-                  call uv_to_disp(obs_barnes(iob)%value(1),
-     1                            obs_barnes(iob)%value(2),
+                  call uv_to_disp(obs_barnes(iob)%valuef(1),
+     1                            obs_barnes(iob)%valuef(2),
      1                            di_dum,
      1                            grid_laps_sp)
 
@@ -219,7 +219,8 @@ C********************************************************************
                   sumsp = sumsp + (grid_laps_sp - sp_3d)
                   if(nobs .le. 200 .OR. nobs .eq. (nobs/10)*10)then
                       write(6,101)il,jl,k
-     1                ,obs_barnes(iob)%value(1),obs_barnes(iob)%value(2)       
+     1                ,obs_barnes(iob)%valuef(1)
+     1                ,obs_barnes(iob)%valuef(2)       
      1                ,u_3d(il,jl,k),v_3d(il,jl,k)
      1                ,diffu,diffv
 101                   format(1x,3i4,3(2x,2f7.1))
