@@ -2699,10 +2699,12 @@ Process: qbalpe.exe - "Quasi-geostrophic balance between height and wind.
 
         LAPS quasi-geostrophic balance of height and wind with temp adjustment.
 <pre>
-Inputs: (from LT1, LW3 processes)
+Inputs: 
       * lw3          grid       LAPS 3-d wind analysis
       * lt1          grid       LAPS 3-d temperature analysis
       * lsx          grid       LAPS 2-d station pressure (PS field)
+        lga          grid       Model 3-d first guess grids
+        lco          grid       LAPS 3-d Cloud Omega
 
 Outputs:
         lt1          3d grid    in lapsprd/balance/lt1 (ht and t field)
