@@ -1075,29 +1075,6 @@ c     linear time interpolation to satisfy analysis time.
       end
 c
 c---------------------------------------------------------------------------
-
-      subroutine checknan_2d(x,ni,nj,nan_flag)
-c
-c     Routine to check a real 2-d array for NaN's.
-c
-      integer ni,nj
-      real*4 x(ni,nj)
-c
-      nan_flag = 1
-c
-      do j=1,nj
-      do i=1,ni
-         if( nan( x(i,j) ) .eq. 1) then
-            print *,' ** ERROR. Found a NaN at ', i, j
-            nan_flag = -1
-            return
-         endif
-      enddo !i
-      enddo !j
-c
-      return
-      end
-c
 c
       subroutine checknan_3d(x,ni,nj,nk,nan_flag)
 c
