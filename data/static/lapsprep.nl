@@ -1,6 +1,7 @@
 &lapsprep_nl
-  hotstart = .false.,
-  balance  = .false., 
+  hotstart = .true.,
+  balance  = .true., 
+  adjust_rh = .true., 
   output_format = 'mm5'
 /
   
