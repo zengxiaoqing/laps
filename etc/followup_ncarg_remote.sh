@@ -19,23 +19,35 @@ tar cvf - time/systime.dat \
           static/lapsplot.nl \
           static/nest7grid.parms \
           static/static.nest7grid \
+          static/ncarg/uscounty.dat \
+          static/ncarg/state_from_counties.dat \
+          static/ncarg/continent_minus_us.dat \
           lapsprd/pro/$a9time.pro \
           lapsprd/lso/$a9time.lso \
+          lapsprd/lso/$a9time.lso_qc \
           lapsprd/snd/$a9time.snd \
           lapsprd/cdw/$a9time.cdw \
           lapsprd/pin/$a9time.pin \
           lapsprd/sag/$a9time.sag \
           lapsprd/pig/$a9time.pig \
           lapsprd/prg/$a9time.prg \
+          lapsprd/lw3/$a9time.lw3 \
           lapsprd/lwm/$a9time.lwm \
           lapsprd/lsx/$a9time.lsx \
           lapsprd/tmg/$a9time.tmg \
           lapsprd/lt1/$a9time.lt1 \
           lapsprd/pbl/$a9time.pbl \
+          lapsprd/vrz/$a9time.vrz \
+          lapsprd/lps/$a9time.lps \
           lapsprd/lcb/$a9time.lcb \
           lapsprd/lcv/$a9time.lcv \
+          lapsprd/lh3/$a9time.lh3 \
           lapsprd/lh4/$a9time.lh4 \
+          lapsprd/lcp/$a9time.lcp \
+          lapsprd/lwc/$a9time.lwc \
           lapsprd/lct/$a9time.lct \
+          lapsprd/lco/$a9time.lco \
+          lapsprd/lty/$a9time.lty \
           lapsprd/lst/$a9time.lst \
           lapsprd/lmr/$a9time.lmr \
           lapsprd/lmt/$a9time.lmt \
@@ -44,6 +56,11 @@ tar cvf - time/systime.dat \
           lapsprd/lfr/$a9time.lfr \
           lapsprd/l1s/$a9time.l1s \
           lapsprd/lm2/$a9time.lm2 \
+          log/sfc.wgi.$a9time \
+          log/wind3d.wgi.$a9time \
+          log/temp.wgi.$a9time \
+          log/cloud.wgi.$a9time \
+          log/hum3d.wgi.$a9time \
             | ssh brain.fsl.noaa.gov "cd $REMOTE_DATA_ROOT; tar xpvf -"
 
 date
