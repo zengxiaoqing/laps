@@ -27,13 +27,18 @@
 
 c
 c 'n_radars_remap'   - Number of radars (and/or radar types) to loop through 
-c                      and process. For each radar, one radar time will be 
-c                      processed. This time represents the most recent time 
-c                      that we have new input data for. The cron should 
-c                      therefore run at least as often as the most frequently 
-c                      updated radar. Note that there is an upper limit of 10
-c                      to this parameter; this is also the number of array 
-c                      elements for each subsequent parameter.
+c                      and process. If this parameter is set to '-1' it        
+c                      automatically switches over to the value of 
+c                      'max_radars_cmn'. Using '-1' is potentially recommended 
+c                      only if one type of radar data is being used.
+c
+c                      Note that there is an upper limit of 10 to this 
+c                      parameter; 10 is also the number of array elements 
+c                      for each subsequent parameter.
+c
+c                      For each radar, up to 3 radar times will be processed. 
+c                      These are chosen among the times that we have new input 
+c                      data for.  
 c
 c 'path_to_radar_a'  - Full path to each directory containing a set of input
 c                      radar tilts/volumes. Max of 10 elements. 
