@@ -154,7 +154,7 @@ c**************new routine as adapted at FSL**************************
        real*4 rh_sfc(ni,nj)
        real*4 u_sfc(ni,nj)
        real*4 v_sfc(ni,nj)
-       real*4 p_sfc_pa(ni,nj)
+       real*4 p_sfc_pa(ni,nj)                                        ! I
        real*4 p_sfc_mb(ni,nj)
 
        real*4 haines_mid_2d(ni,nj)                                   ! O
@@ -238,11 +238,26 @@ c**************new routine as adapted at FSL**************************
      1                   ,pres_3d_pa,p_sfc_pa                             ! I
      1                   ,umean,vmean,istatus)                            ! O
 
+       write(6,*)' Compute VI from mean wind speed and PBL Depth'
+
 !      Multiply PBL depth by mean wind to obtain ventilation index
        do i = 1,ni
        do j = 1,nj
+           if(abs(umean(i,j)) .gt. 1000.)then
+               write(6,*)' ERROR, umean out of bounds',i,j,umean(i,j)
+               istatus = 0
+               return
+           endif
+
+           if(abs(vmean(i,j)) .gt. 1000.)then
+               write(6,*)' ERROR, vmean out of bounds',i,j,vmean(i,j)
+               istatus = 0
+               return
+           endif
+
            spmean = sqrt(umean(i,j)**2 + vmean(i,j)**2)
            vent_2d(i,j) = pbl_depth_m(i,j) * spmean
+
        enddo ! j
        enddo ! i
 
@@ -270,17 +285,25 @@ c**************new routine as adapted at FSL**************************
         real*4 usum(imax,jmax)                                    ! Local
         real*4 vsum(imax,jmax)                                    ! Local
         integer*4 klow(imax,jmax)                                 ! Local
+        integer*4 khigh(imax,jmax)                                ! Local
 
-        topo = 0.             ! Just for testing (also switch to pres_sfc_pa)?
+!       topo = 0.             ! Just for testing (also switch to pres_sfc_pa)?
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
 
+        umean = r_missing_data
+        vmean = r_missing_data
+
         do j = 1,jmax
           do i = 1,imax
-             khigh = rlevel_of_field(pbl_top_pa(i,j),pres_3d_pa
+             if(pbl_top_pa(i,j) .gt. p_sfc_pa(i,j))then
+                 write(6,*)' WARNING in pbl_mean_wind: Pbl Top > Sfc P'
+     1                    ,i,j,pbl_top_pa(i,j),p_sfc_pa(i,j)
+             endif
+
+             khigh(i,j) = rlevel_of_field(pbl_top_pa(i,j),pres_3d_pa
      1                              ,imax,jmax,kmax,i,j,istatus)
-!            khigh = nint(zcoord_of_pressure(pbl_top_pa(i,j)))
              if(istatus .ne. 1)then
                  write(6,*)' mean_wind: ERROR in rlevel_of_field'
                  return
@@ -288,8 +311,6 @@ c**************new routine as adapted at FSL**************************
 
              klow(i,j) = rlevel_of_field(p_sfc_pa(i,j),pres_3d_pa
      1                                  ,imax,jmax,kmax,i,j,istatus)
-!            klow(i,j) =
-!    1            max(nint(height_to_zcoord(topo(i,j),istatus)),1)
              if(istatus .ne. 1)then
                  write(6,*)' mean_wind: ERROR in rlevel_of_field'
                  return
@@ -301,9 +322,9 @@ c**************new routine as adapted at FSL**************************
           enddo ! j
         enddo ! i
 
-        do k = 1,khigh
-          do j = 1,jmax
-            do i = 1,imax
+        do j = 1,jmax
+          do i = 1,imax
+            do k = 1,khigh(i,j)
               if(uanl(i,j,k) .ne. r_missing_data .and.
      1           vanl(i,j,k) .ne. r_missing_data
      1                        .and. k .ge. klow(i,j))then
@@ -317,6 +338,10 @@ c**************new routine as adapted at FSL**************************
 
         do j = 1,jmax
           do i = 1,imax
+
+             if(sum(i,j) .eq. 0.)then
+                 write(6,*)' WARNING: sum = 0',i,j,klow(i,j),khigh(i,j)
+             endif
 
 !            Mean wind through the layer
              umean(i,j) = usum(i,j) / sum(i,j)
