@@ -41,9 +41,9 @@ lib:	$(LIB)
 $(LIB):	$(ARCHIVE)
 	$(RANLIB) $@
 
-debug: 	$(SRC)
-      	$(MAKE) lib LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
-     	CFLAGS='$(DBCFLAGS) -DDEBUG' FFLAGS='$(DBFLAGS)'
+debug: 	
+	$(MAKE) all LIB='$(DEBUGLIB)' ARCHIVE='$(DBARCHIVE)' \
+     	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
 
 install: 	lib
 
