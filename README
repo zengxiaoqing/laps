@@ -350,29 +350,26 @@
 
                ---  2.6  Test data case  ---
 
-     A tar file containing test data is available that contains a 5 hour
+     A tar file containing test data is available that contains a 1 hour
      run of laps data (intermediate files from the 'ingest' code plus outputs
-     from the 'analysis' code). The sched.pl was run each hour from 1000 
-     UTC through 1400 UTC for a particular date. A few files of "data history" 
-     are included as well from 0900 UTC. This is the contents of the 
-     'data/lapsprd' and 'data/log' directories from an FSL machine. 
-     The contents of the various directories are outlined below in this README 
-     file. The data was created with the latest software release. Our users 
-     can download this data at 
+     from the 'analysis' code). The sched.pl was run for a particular date. 
+     This is the contents of the 'data/lapsprd', 'data/time' and 'data/log' 
+     directories from an FSL machine. The contents of the various directories 
+     are outlined below in this README file. The data was created with the 
+     latest software release. Our users can download this data at 
      http://laps.fsl.noaa.gov/frd-bin/LAPS_SOFTWARE.cgi.
 
      If you want to test the 'analysis' code only, you might initiate
-     the 'sched.pl' to run for the test data at 1000 UTC (as indicated
-     by the './data/time/systime.dat') for the date
-     supplied, making sure any outputs from the 1000 UTC analyses are not 
-     present. Only the 'ingest' outputs from 1000 UTC and the analysis 'data 
-     history' output products from 0900 UTC should then be present. You may 
-     also want to commnet the ingest processes from the sched.pl for this 
-     test, since the ingest outputs are already present.
+     appopriate portions of the 'sched.pl' to run for the test data at 
+     the time found in 'data/time/systime.dat' supplied, making sure any 
+     outputs from this time are not present. Only the 'ingest' outputs from 
+     this time should then be present. You may also want to comment the ingest
+     processes from the sched.pl for this test, since the ingest outputs are 
+     already present.
 
      When running LAPS for archived data in this manner, the 
-     'data/time/systime.dat' should be updated manually by the user, instead of
-     by the 'etc/sched.pl' script (that uses wall clock time). To help
+     'data/time/systime.dat' should be updated manually by the user, instead 
+     of by the 'etc/sched.pl' script (that uses wall clock time). To help
      accomplish this, comment out the 'systime.exe' entry in the 
      'sched.pl'.  
 
