@@ -40,7 +40,7 @@
          3.1 ..............  Ingest Processes
          3.1.1 ..................  LGA Model
          3.1.2 ..................  LVD 
-         3.1.3 ..................  WIDEBAND RADAR REMAPPER
+         3.1.3 ..................  Polar Coordinate Radar Data (e.g. Wideband)
          3.1.4 ..................  WSI - NOWRAD RADAR PREPROCESSING (VRC)
          3.1.5 ..................  PROFILERS (PRO) Ingest
          3.1.6 ..................  VAD (PRO) Ingest
@@ -1010,7 +1010,7 @@ Output:
          LVD/"SATID"	grid	LAPS satellite data file
 			`	SATID currently can be either goes08 or goes09
 
------- 3.1.3 ----------------WIDEBAND RADAR REMAPPER---------------------------
+------ 3.1.3 ---------Polar Coordinate Radar Data (e.g. Wideband)-------------
 
 Process: remap_polar_netcdf.exe (Author Steve Albers - albers@fsl.noaa.gov)
 
@@ -1018,10 +1018,10 @@ Every volume scan
 Initiation: Completion of volume scan
 
 Inputs:
-	Wideband Radar Data (reflectivity and velocity in polar NetCDF 
-        format - one file per tilt). Note: narrowband data can be used if it is
-        converted to the required NetCDF format. A description of how we
-        obtain this raw data is at 
+	Wideband Radar Data (reflectivity and velocity in polar coordinates,
+        NetCDF format, one file per tilt). Note: narrowband data can be used 
+        if it is converted to the required NetCDF format. A description of how
+        we obtain this raw wideband data is at 
         'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_raw.html'.
 
 Outputs (LAPS intermediate files):
@@ -1032,19 +1032,19 @@ Outputs (LAPS intermediate files):
      etc. (for each radar)
 </pre>
 
-Source directory: The radar remapper utilizes wide-band data stored in NetCDF 
-                  files as input. Narrow band data can also be used as input
-                  if it can be reformatted to look like wide-band data.
-                  The source code for this is in 'src/ingest/radar/remap'.
-
-The outputs from this process are used by the LAPS wind analysis, and also
-potentially by cloud and precip accumulation analyses.
+The outputs from this process, on the Cartesian LAPS grid,  are used by the 
+LAPS wind analysis, and also potentially by cloud and precip accumulation 
+analyses. One output file is written per volume scan.
 
 When running the remapper, files such as v01, v02, vrc, etc. are produced 
 depending on which radar is being used and on the input parameters. 
 A further description of how the remapper software functions may be found on 
 the World Wide Web at 
 'http://laps.fsl.noaa.gov/frd/laps/albers/remapper_laps.html'.
+
+Source directory: The source code for this is in 'src/ingest/radar/remap'.
+
+Sample Output: May be available in the test data case.
 
 ------ 3.1.4 -------------------VRC--------------------------------------------
 <pre>
