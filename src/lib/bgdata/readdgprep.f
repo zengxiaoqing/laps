@@ -197,9 +197,10 @@ c
          do j=1,ny
          do i=1,nx
 
-            pr(i,j,k)=prk(k)
-            if(sh(i,j,k).gt.0.0 .and. sh(i,j,k).le.100.)then
-               sh(i,j,k)=make_ssh(prk(k)
+            pr(i,j,k)=prk(k)/100.
+            if(sh(i,j,k).gt.0.0 .and. nint(sh(i,j,k)).le.100.)then
+               if(sh(i,j,k).gt.100.)sh(i,j,k)=100.
+               sh(i,j,k)=make_ssh(prk(k)/100.
      .                        ,tp(i,j,k)-273.15
      .                        ,sh(i,j,k)/100.,t_ref)*0.001
 
@@ -223,6 +224,14 @@ c           sh(i,j,k)=sh(i,j,k)/(1.+sh(i,j,k))  !mr --> sh
             pcnt=float(icm)/float(nx*ny*nz)
             print*,'WARNING: suspect 3d rh data (#/%): ',icm,pcnt
      &,' Bogus Q used for these points'
+
+         if(bgmodel.eq.3)then
+            do j=1,ny
+            do i=1,nx
+               mslp(i,j)=mslp(i,j)/100.   !hpa
+            enddo
+            enddo
+         endif
 
          endif
 
@@ -325,7 +334,7 @@ c
          lat1=10.0
          lat2=40.0
          lon0_lc=+120.
-         sw(1)=15.897
+         sw(1)=15.879
          sw(2)=+112.545
          ne(1)=32.384
          ne(2)=+131.172 
