@@ -1062,14 +1062,16 @@ CONTAINS
     IMPLICIT NONE
     include 'v5df.h'
     CHARACTER(LEN=255) donefile
+    INTEGER :: flagunit
     ret = v5dclose()
     IF (ret .eq. 0) THEN
       PRINT '(A)', 'Problem closing the Vis5D data file!'
     ENDIF
     IF (realtime) THEN
        donefile = TRIM(v5dfile) // '.done'
-       OPEN(88,FILE=donefile,STATUS='unknown')
-       CLOSE (88)
+       CALL get_file_unit(flagunit)
+       OPEN(UNIT=flagunit,FILE=donefile,STATUS='unknown')
+       CLOSE (flagunit)
     ENDIF
       
   END SUBROUTINE v5dend

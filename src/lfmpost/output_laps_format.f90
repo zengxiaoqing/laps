@@ -171,7 +171,7 @@
     CHARACTER(LEN=256)              :: output_file
     CHARACTER(LEN=256)              :: donefile
     INTEGER                         :: fnlen,extlen
-   
+    INTEGER                         :: doneunit 
 
     WRITE(domnum_str, '(I2.2)') domnum
     extlen = 3
@@ -353,8 +353,9 @@
     PRINT *, 'Done writing 3d data.'
     IF ((realtime) .AND. (istatus .EQ. 1) .AND. (make_donefile)) THEN
       donefile = TRIM(output_file) // '.done'
-      OPEN(77,FILE=donefile,STATUS='UNKNOWN')
-      CLOSE(77)
+      CALL get_file_unit(doneunit)
+      OPEN(UNIT=doneunit,FILE=donefile,STATUS='UNKNOWN')
+      CLOSE(doneunit)
     ENDIF
     DEALLOCATE (laps_data)
     DEALLOCATE (varname)
@@ -621,8 +622,9 @@
     PRINT *, 'Done writing 2d data.'
     IF ( (realtime) .AND. (istatus .EQ. 1).AND.(make_donefile)) THEN
       donefile = TRIM(output_file) // '.done'
-      OPEN(77,FILE=donefile, STATUS='UNKNOWN')
-      CLOSE(77) 
+      CALL get_file_unit(doneunit)
+      OPEN(UNIT=doneunit,FILE=donefile, STATUS='UNKNOWN')
+      CLOSE(doneunit) 
     ENDIF
     DEALLOCATE (laps_data)
     DEALLOCATE (varname)

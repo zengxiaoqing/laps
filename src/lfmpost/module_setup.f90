@@ -312,18 +312,7 @@ CONTAINS
     ENDIF
 
     ! Get a unit number
-    nml_unit = -1
-    find_lun: DO unit = 7, 1023
-      INQUIRE (UNIT=unit, OPENED=used)
-      IF (.NOT.used) THEN
-         nml_unit = unit
-         EXIT find_lun
-      ENDIF
-    ENDDO find_lun
-    IF (nml_unit .LT.1) THEN
-      PRINT *, 'No open unit numbers for the namelist file.'
-      CALL ABORT
-    ENDIF
+    CALL get_file_unit(nml_unit)
     OPEN (UNIT=nml_unit, FILE=TRIM(namelist_file), FORM='FORMATTED', &
           STATUS='OLD',IOSTAT=status)
     IF (status.NE.0) THEN
@@ -741,7 +730,7 @@ CONTAINS
     USE map_utils
     IMPLICIT NONE
     INTEGER, INTENT(OUT)        :: status
-    INTEGER, PARAMETER       :: max_points = 100
+    INTEGER, PARAMETER       :: max_points = 1000
     TYPE(point_struct),ALLOCATABLE :: points_temp(:)
     TYPE(point_struct)       :: point
     CHARACTER(LEN=200)       :: pointfile
@@ -773,10 +762,7 @@ CONTAINS
       status = 1
     ELSE
       ! Get a logical unit number to use
-      find_lun: DO pointunit = 7,1023
-        INQUIRE(UNIT=pointunit, OPENED=lunused)
-        IF (.NOT.lunused) EXIT find_lun
-      ENDDO find_lun
+      CALL get_file_unit(pointunit)
       OPEN(FILE=pointfile, UNIT=pointunit, STATUS='OLD',FORM='FORMATTED', &
            ACCESS='SEQUENTIAL')
       ALLOCATE(points_temp(max_points))
@@ -824,10 +810,7 @@ CONTAINS
             outfile = TRIM(lfmprd_dir) // '/' // domnum_str // &
                       '/points/' // TRIM(point%id) // '_' // cyclestr //  &
                       '_fcst.txt'
-            find_out_lun: DO outunit = 10, 1023
-              INQUIRE(UNIT=outunit,OPENED=lunused)
-              IF (.NOT. lunused) EXIT find_out_lun
-            ENDDO find_out_lun     
+            CALL get_file_unit(outunit)
             point%output_unit = outunit
             num_points = num_points + 1
             points_temp(num_points) = point 
@@ -853,7 +836,7 @@ CONTAINS
             WRITE(outunit,'("****************************************", &
                            &"******************************************************")')
             WRITE(outunit, &
-     '("DATE       TIME  TMP DPT RH  WIND   CEI VIS  WEATHER  PRECP SNOW VENT   PBLHT PBLWND HM HH Fbg")')
+     '("DATE       TIME  TMP DPT RH  WIND   CEI VIS  WEATHER  PRECP SNOW VENT   MIXHT PBLWND HM HH Fbg")')
             WRITE(outunit, &
      '(A3,8x,A3,3x,A1,3x,A1,3x,"%",3x,"Dg@",A3,1x,"hft mile",10x,"in",4x,"in",3x,A5,2x,"FtAGL",1x,"Dg@",A3)') & 
          point_tz_label, point_tz_label,point_temp_units,&
@@ -973,18 +956,7 @@ CONTAINS
     ! four appropriate namelist sections.  
 
     ! Get a unit number
-    nml_unit = -1
-    find_lun: DO unit = 10,1023
-      INQUIRE (UNIT=unit, OPENED=used)
-      IF (.NOT.used) THEN
-         nml_unit = unit
-         EXIT find_lun
-      ENDIF
-    ENDDO find_lun
-    IF (nml_unit .LT.1) THEN
-      PRINT *, 'No open unit numbers for the namelist file.'
-      CALL ABORT
-    ENDIF
+    CALL get_file_unit(nml_unit)
     OPEN (UNIT=nml_unit, FILE=TRIM(wrfnl), FORM='FORMATTED', &
           STATUS='OLD',IOSTAT=status)
     IF (status.NE.0) THEN

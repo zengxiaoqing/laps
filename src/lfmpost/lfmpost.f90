@@ -120,6 +120,7 @@ PROGRAM lfmpost
   CHARACTER(LEN=4)            :: fcst_hhmm
   INTEGER                     :: istatus
   INTEGER                     :: startb
+  INTEGER                     :: flagunit
  
   CALL setup_lfmpost
  
@@ -151,7 +152,6 @@ PROGRAM lfmpost
           IF (.NOT.file_ready) THEN
              CALL io_wait(data_file,max_wait_sec) 
           ENDIF
-          OPEN(89,FILE=flagfile,STATUS='OLD')
         ENDIF
         CALL open_mm5v3(data_file,lun_data,status)     
       ELSE IF (t.EQ.1) THEN
@@ -392,8 +392,9 @@ PROGRAM lfmpost
  
       CALL close_grib_c(funit)
       gribdone = gribfile(1:gfile_len) // '.done'
-      OPEN(99,FILE=gribdone,STATUS='UNKNOWN')
-      CLOSE(99)
+      CALL get_file_unit(flagunit)
+      OPEN(UNIT=flagunit,FILE=gribdone,STATUS='UNKNOWN')
+      CLOSE(flagunit)
     ENDIF
     ! Make Vis5D output if requested in namelist
 
