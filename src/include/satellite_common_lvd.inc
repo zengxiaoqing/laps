@@ -1,4 +1,4 @@
-      character*200 path_to_raw_sat(maxchannel,maxtype,maxsat)
+      character path_to_raw_sat(maxchannel,maxtype,maxsat)*200
 
       integer iflag_lvd_common
       integer isats(maxsat)
