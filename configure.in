@@ -18,6 +18,9 @@ if test -n "$user_fflags"
 then
   FFLAGS="$user_fflags"
 fi
+if test -n "$user_fflags90"
+  FFLAGS90="$user_fflags90"
+fi
 
 if test -n "$user_optimize"
 then
@@ -84,6 +87,7 @@ LIBPATHFLAG=-L
 if test "$arch" = "hpux" 
 then
   FFLAGS="$FFLAGS +e +U77 +FPVZO -K" 
+  FFLAGS90="$FFLAGS90 +source=free +langlvl=90"
   OPTIMIZE="-O"
   LIBPATHFLAG=-Wl,-L
   echo "GCC = $GCC"
@@ -97,6 +101,7 @@ fi
 if test "$arch" = "rs6000" 
 then
   FFLAGS="$FFLAGS -qfixed"
+  FFLAGS90="$FFLAGS90 -qfree=f90"
   OPTIMIZE="-O3 -qstrict"
 fi
 if test "$arch" = "sun4" 
@@ -129,6 +134,7 @@ then
   then
 dnl module flags for solaris 
 	FFLAGS="$FFLAGS -fixed -M\$(SRCROOT)/src/lib"
+        FFLAGS90="$FFLAGS90 -free -M\$(SRCROOT)/src/lib"
 dnl
 dnl The solaris cc has a bug in the preprocessor
 dnl 
@@ -165,6 +171,7 @@ AC_SUBST(CPPFLAGS)
 AC_SUBST(PERL)
 AC_SUBST(CSH)
 AC_SUBST(FFLAGS)
+AC_SUBST(FFLAGS90)
 AC_SUBST(OPTIMIZE)
 AC_SUBST(OTHERLIBS)
 AC_SUBST(ARCHIVE)
