@@ -223,6 +223,12 @@ c     Process all wind profiles.  Interpolate heights to LAPS levels.
 c
       DO i_pr=1,n_profiles
 
+            if(i_pr .le. 10)then
+                idebug = 1
+            else
+                idebug = 0
+            endif
+
             rcycles_pr(i_pr) = float(i4time_sys - i4time_ob_pr(i_pr))       
      1                                      / float(ilaps_cycle_time)
 
@@ -405,15 +411,15 @@ c
      1                               MAX_PR,MAX_PR_LEVELS,         ! I
      1                               n_vel_grids,istatus)          ! I/O
 
-c                   write(6,411,err=412)ista,i_pr,level
-c       1                ,ob_pr_ht(i_pr,level)
-c       1                ,ob_pr_di(i_pr,level)
-c       1                ,ob_pr_sp(i_pr,level)
-c       1                ,ob_pr_u(i_pr,level)
-c       1                ,ob_pr_v(i_pr,level)
-c       1                ,u_diff
-c       1                ,v_diff
-411                 format(1x,i6,2i4,f8.1,8f7.1)
+                    if(idebug .eq. 1)write(6,411,err=412)ista,i_pr,level
+     1                              ,ob_pr_ht(i_pr,level)
+     1                              ,ob_pr_di(i_pr,level)
+     1                              ,ob_pr_sp(i_pr,level)
+     1                              ,ob_pr_u(i_pr,level)
+     1                              ,ob_pr_v(i_pr,level)
+     1                              ,u_diff
+     1                              ,v_diff
+411                 format(1x,i6,2i4,f8.1,6f7.1)
 
 412                 write(32,313,err=414)ri,rj,float(level)
      1                        ,ob_pr_di(i_pr,level),ob_pr_sp(i_pr,level)       
