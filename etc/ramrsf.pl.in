@@ -40,7 +40,7 @@ open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 select(STDERR); $| = 1;
 select(STDOUT); $| = 1;
 
-$ENV{PATH}.=":@NETCDFBIN@";
+$ENV{PATH}.=":@NETCDF@/bin";
 print "$0 running  for $fname\n";
 my $ftime;
 for($ftime=0;$ftime<=$flast;$ftime+=$ffreq){

@@ -31,7 +31,7 @@ my $LAPSROOT=shift || die "LAPS root directory required";
 require "$LAPSROOT/etc/fxa.pm";
 
 my $fxa_sys =  &Get_env'fxa; #'
-$ENV{PATH}.=":$LAPSROOT/model/bin:@NETCDFBIN@";
+$ENV{PATH}.=":$LAPSROOT/model/bin:@NETCDF@/bin";
 $ENV{LAPS_DATA_ROOT} = shift ;
 $ENV{LAPS_DATA_ROOT} = "$LAPSROOT/data" if ! $ENV{LAPS_DATA_ROOT};
 my $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
@@ -670,7 +670,7 @@ sub forksub{
 sub valid_bndys{
     my($rtime,$runlength,$dir,$ext) = @_;
     my(%vfiles)='';
-    my($fh,$fy,$fj,$fd,$fm);
+    my($fh,$fy,$fd,$fm);
     my(%inittime,$inittime,$newest);
     $newest = -1;
 

@@ -28,7 +28,7 @@ $LAPS_DATA_ROOT = $ENV{LAPS_DATA_ROOT};
 # Import names of LAPS bigfile depositories.
 $FXA_DATA = $ENV{"FXA_DATA"};
 $FXA_DATA_BACKUP = $ENV{"FXA_DATA_BACKUP"};
-$ENV{PATH}.=":@NETCDFBIN@";
+$ENV{PATH}.=":@NETCDF@/bin";
 
 # For local use.
 $XFR_HOME="$LAPSROOT/bin";
