@@ -590,13 +590,16 @@ c ********************************************************************
 
         subroutine read_dem_g(unit_no,unit_name,nn1,nn2,nn3,nn4
      &,nofr,i1,i2,data)
-        implicit none
-        integer countx,county,countz
-        integer unit_no,nn1,nn2,nn3,nn4,nofr
-        real data(nn1,nn2,nn3,nn4)
-        integer idata(nn4,nn1,nn2), len, i1, i2
 
-c       logical l1,l2
+        implicit none
+        integer  countx,county,countz
+        integer  unit_no,nn1,nn2,nn3,nn4,nofr
+        integer  len, i1, i2
+
+        real     data(nn1,nn2,nn3,nn4)
+        integer, allocatable ::  idata(:,:,:)
+
+c       logical  l1,l2
 
         character*(*) unit_name
 
@@ -606,30 +609,46 @@ C       inquire(unit_no,exist=l1,opened=l2)
 C       read(unit_no,rec=1) idata
 
         call s_len(unit_name,len)
-
+        print*,'Allocate idata in read_dem_g'
+        allocate (idata(nn4,nn1,nn2))
         call read_binary_field(idata,i1,i2,nn1*nn2*nn4,unit_name,len)
 
-        do county=1,nn2
-        do countx=1,nn1
-        do countz=1,nn4
-          if (idata(countz,countx,county).eq.-9999)
+        if(nn1.ne.1250 .and. nn2.ne.1250)then
+
+           do county=1,nn2
+           do countx=1,nn1
+           do countz=1,nn4
+
+              if(idata(countz,countx,county).eq.-9999)
      &idata(countz,countx,county)=0
 
-           data(countx,county,nofr,countz)=
+              data(countx,county,nofr,countz)=
      &float(idata(countz,countx,nn2-county+1))
 
 c SG97 initial data (DEM format) starts in the lower-left corner;
 c SG97 this format is wrapped around to have upper-left corner as its start.
-c
-c JS00 some machines do not account for signed integers - shouldnt matter here.
 
-c          if(data(countx,county,nn3,countz).ge.15535.0)
-c    &data(countx,county,countz)=data(countx,county,countz)-65535
 
-        enddo
-        enddo
-        enddo
+           enddo
+           enddo
+           enddo
 
+        else   !new greenfrac data starts at 90S
+
+           do county=1,nn2
+           do countx=1,nn1
+           do countz=1,nn4
+
+              data(countx,county,nofr,countz)=
+     &float(idata(countz,countx,county))
+
+           enddo
+           enddo
+           enddo
+
+        endif
+
+        deallocate(idata)
 ccc      close(unit_no)
         return
         end
@@ -708,3 +727,314 @@ C
 !                            
         RETURN                
         END
+c
+c--------------------------------------------------------------------
+c
+       SUBROUTINE POLAR_GP(LAT,LON,X,Y,DX,DY,NX,NY)
+C
+      include 'trigd.inc'
+       REAL*4 LAT,LON,X,Y,DX,DY,
+     1        ERAD,TLAT,TLON                                      ! ,PLAT,PLON,
+     1        XDIF,YDIF
+C
+       INTEGER*4 NX,NY
+C
+       RAD=3.141592654/180.
+
+       call get_earth_radius(erad,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling get_earth_radius'
+           stop
+       endif
+
+       TLAT=90.0
+       call get_standard_longitude(std_lon,istatus)
+       if(istatus .ne. 1)then
+           write(6,*)' Error calling laps routine'
+           stop 
+       endif
+       TLON=std_lon
+C
+C      CALL GETOPS(PLAT,PLON,LAT,LON,TLAT,TLON)
+C      CALL PSTOXY(XDIF,YDIF,PLAT,PLON,ERAD)
+
+C      call latlon_to_xy(LAT,LON,TLAT,TLON,ERAD,XDIF,YDIF)
+       call latlon_to_xy(LAT,LON,ERAD,XDIF,YDIF)
+
+C
+       X=XDIF+(1.-FLOAT(NX)/2.)*DX
+       Y=YDIF+(1.-FLOAT(NY)/2.)*DY
+C
+       RETURN
+C
+       END
+c
+c------------------------------------------------------------
+c
+      subroutine blend_topo(nnxp,nnyp,lats,lons
+     1,topt_10,topt_10_s,topt_10_ln,topt_10_lt
+     1,topt_30,topt_30_s,topt_30_ln,topt_30_lt
+     1,topt_out,topt_out_s,topt_out_ln,topt_out_lt)
+
+      implicit none
+      integer  nnxp,nnyp
+      integer  i,j
+      integer  icount_10
+      integer  icount_30
+      integer  icount_ramp
+
+      real     alat1n
+      real     alat2n
+      real     alat1s
+      real     alat2s
+      real     nboundary
+      real     sboundary
+      real     frac10
+      real     width
+
+      real     lats(nnxp,nnyp)
+      real     lons(nnxp,nnyp)
+      real     topt_out(nnxp,nnyp)
+      real     topt_out_s(nnxp,nnyp)
+      real     topt_out_ln(nnxp,nnyp)
+      real     topt_out_lt(nnxp,nnyp)
+      real     topt_10(nnxp,nnyp)
+      real     topt_10_s(nnxp,nnyp)
+      real     topt_10_ln(nnxp,nnyp)
+      real     topt_10_lt(nnxp,nnyp)
+      real     topt_30(nnxp,nnyp)
+      real     topt_30_s(nnxp,nnyp)
+      real     topt_30_ln(nnxp,nnyp)
+      real     topt_30_lt(nnxp,nnyp)
+
+
+      do i = 1,nnxp
+      do j = 1,nnyp
+
+! Select 30s or 10m topo data for this grid point (or a blend)
+
+!              Check whether 30s data is missing or zero
+         if(topt_30(i,j) .eq. 1e30 .or. topt_30(i,j) .eq. 0.
+!    1                              .or.
+!                  Are we in the Pittsburgh data hole?
+!    1            (lats(i,j) .gt. 39.7 .and. lats(i,j) .lt. 41.3 .and.
+!    1             lons(i,j) .gt.-79.3 .and. lons(i,j) .lt.-77.7)
+!
+     1                                                      )then 
+
+!                  Use 10 min data
+            topt_out(i,j) = topt_10(i,j)
+            topt_out_s(i,j)=topt_10_s(i,j)
+            topt_out_ln(i,j)=topt_10_ln(i,j)
+            topt_out_lt(i,j)=topt_10_lt(i,j)
+            icount_10 = icount_10 + 1
+
+         else ! Use 30s data, except ramp to 10m if near data boundary
+
+! Determine the northern boundary of the 30s data at this lon
+            if(lons(i,j).ge.-129..and.
+     +         lons(i,j).le.-121.)then       
+               nboundary = 51.
+            elseif(lons(i,j).ge.-121..and.
+     +             lons(i,j).le.-120.)then     
+                   nboundary = 51. - lons(i,j) - (-121.)
+            elseif(lons(i,j).ge.-120..and.
+     +             lons(i,j).le.-118.)then     
+                   nboundary = 50.
+            elseif(lons(i,j).ge.-118..and.
+     +             lons(i,j).le.-117.)then     
+                   nboundary = 50. + lons(i,j) - (-118.)
+            elseif(lons(i,j).ge.-117..and.
+     +             lons(i,j).le. -89.)then     
+                   nboundary = 51.
+            elseif(lons(i,j).ge. -89..and.
+     +             lons(i,j).le. -85.)then     
+                   nboundary = 50.
+            elseif(lons(i,j).ge. -85..and.
+     +             lons(i,j).le. -83.)then     
+                   nboundary = 49.
+            elseif(lons(i,j).ge. -83..and.
+     +             lons(i,j).le. -81.)then     
+                   nboundary = 48.
+            elseif(lons(i,j).ge. -81..and.
+     +             lons(i,j).le. -73.)then     
+                   nboundary = 46.
+            elseif(lons(i,j).ge. -73..and.
+     +             lons(i,j).le. -67.)then     
+                   nboundary = 47.
+            elseif(lons(i,j).ge. -67.)then     
+                   nboundary = 46.
+            else
+                   nboundary = 51.
+            endif
+
+            alat1n = nboundary - 0.3
+            alat2n = nboundary - 0.1
+
+! Determine the southern boundary of the 30s data at this lon
+            if    (lons(i,j) .le. -127.)then         
+                   sboundary = 49. 
+            elseif(lons(i,j) .le. -126.)then         
+                   sboundary = 48. 
+            elseif(lons(i,j) .le. -125.)then         
+                   sboundary = 40. 
+            elseif(lons(i,j) .le. -124.)then         
+                   sboundary = 37. 
+            elseif(lons(i,j) .le. -123.)then         
+                   sboundary = 36. 
+            elseif(lons(i,j) .le. -122.)then         
+                   sboundary = 35. 
+            elseif(lons(i,j) .le. -120.)then         
+                   sboundary = 33. 
+            elseif(lons(i,j) .le. -118.)then     
+                   sboundary = 32. 
+            elseif(lons(i,j) .le. -107.)then     
+                   sboundary = 30. 
+            elseif(lons(i,j) .le. -103.)then     
+                   sboundary = 28. 
+            elseif(lons(i,j).ge.-103. .and.
+     +             lons(i,j).le.-102.)then       
+                   sboundary = 25. +  (-102. - lons(i,j)) * 3.
+            elseif(lons(i,j).ge.-102. .and.
+     +             lons(i,j).le. -99.)then       
+                   sboundary = 25.
+            elseif(lons(i,j).ge.-99.  .and.
+     +             lons(i,j).le. -98.)then       
+                   sboundary = 24. +  ( -98. - lons(i,j))
+            elseif(lons(i,j).ge.-98. )then       
+                   sboundary = 24.
+            endif
+
+            alat1s = sboundary + 0.3
+            alat2s = sboundary + 0.1
+
+! Decide whether to use 30s or 10m data (or a blend)
+
+            if  (  lats(i,j) .ge. alat2n)then    ! Use 10m data
+                   topt_out(i,j) = topt_10(i,j)
+                   topt_out_s(i,j)=topt_10_s(i,j)
+                   topt_out_ln(i,j)=topt_10_ln(i,j)
+                   topt_out_lt(i,j)=topt_10_lt(i,j)
+                   icount_10 = icount_10 + 1
+
+            elseif(lats(i,j) .ge. alat1n .and. 
+     1             lats(i,j) .le. alat2n)then
+
+! Between alat1n and alat2n,        Use weighted average
+
+                   width = alat2n - alat1n
+                   frac10 = (lats(i,j) - alat1n) / width
+                   topt_out(i,j) = topt_10(i,j) * frac10 
+     1                           + topt_30(i,j) * (1. - frac10)
+                   topt_out_s(i,j) = topt_10_s(i,j) * frac10
+     1                             + topt_30_s(i,j) * (1. - frac10)
+                   topt_out_ln(i,j) = topt_10_ln(i,j) * frac10
+     1                              + topt_30_ln(i,j) * (1. - frac10)
+                   topt_out_lt(i,j) = topt_10_lt(i,j) * frac10
+     1                              + topt_30_lt(i,j) * (1. - frac10)
+                   icount_ramp = icount_ramp + 1
+
+                   if(icount_ramp .eq. (icount_ramp/5) * 5 )then       
+                      write(6,*)
+                      write(6,*)'In blending zone, nboundary = '
+     1                                       ,nboundary,alat1n,alat2n       
+                      write(6,*)'lat/lon/frac =',lats(i,j)
+     1                               ,lons(i,j) ,frac10
+                      write(6,*)'topt_30      =',topt_30(i,j)
+                      write(6,*)'topt_10      =',topt_10(i,j)
+                      write(6,*)'topt_out     =',topt_out(i,j)
+                   endif
+
+            elseif(lats(i,j) .ge. alat1s .and. 
+     1             lats(i,j) .le. alat1n)then
+                   topt_out(i,j) = topt_30(i,j)
+                   topt_out_s(i,j)=topt_30_s(i,j)
+                   topt_out_ln(i,j)=topt_30_ln(i,j)
+                   topt_out_lt(i,j)=topt_30_lt(i,j)
+                   icount_30 = icount_30 + 1       ! Use 30s data
+
+            elseif(lats(i,j) .ge. alat2s .and. 
+     1             lats(i,j) .le. alat1s)then
+
+! Between alat1s and alat2s,        Use weighted average
+
+                   width = alat1s - alat2s
+                   frac10 = (alat1s - lats(i,j)) / width
+                   topt_out(i,j) = topt_10(i,j) * frac10
+     1                           + topt_30(i,j) * (1. - frac10)
+                   topt_out_s(i,j) = topt_10_s(i,j) * frac10 
+     1                             + topt_30_s(i,j) * (1. - frac10)
+                   topt_out_ln(i,j) = topt_10_ln(i,j) * frac10
+     1                              + topt_30_ln(i,j) * (1. - frac10)
+                   topt_out_lt(i,j) = topt_10_lt(i,j) * frac10
+     1                              + topt_30_lt(i,j) * (1. - frac10)
+                   icount_ramp = icount_ramp + 1
+
+                   if(icount_ramp .eq. (icount_ramp/5) * 5 )then       
+                      write(6,*)
+                      write(6,*)'In blending zone, sboundary = '
+     1                                   ,sboundary,alat1s,alat2s       
+                      write(6,*)'lat/lon/frac =',lats(i,j)
+     1                           ,lons(i,j), frac10
+                      write(6,*)'topt_30      =',topt_30(i,j)
+                      write(6,*)'topt_10      =',topt_10(i,j)
+                      write(6,*)'topt_out     =',topt_out(i,j)
+                   endif
+
+            elseif(lats(i,j) .le. alat2s)then    
+                   topt_out(i,j) = topt_10(i,j)    ! Use 10m data
+                   topt_out_s(i,j)=topt_10_s(i,j)
+                   topt_out_ln(i,j)=topt_10_ln(i,j)
+                   topt_out_lt(i,j)=topt_10_lt(i,j)
+                   icount_10 = icount_10 + 1
+
+            else
+                   write(6,*)' Software error in gridgen_model.f'
+                   write(6,*)' lat/lon = ',lats(i,j),lons(i,j)
+                   stop
+
+            endif ! Test to see if we blend the data
+
+         endif ! 30s data check
+
+      enddo ! j
+      enddo ! i 
+
+      return
+      end
+c
+c ---------------------------------------------------------------
+c
+      subroutine get_meanlattemp(path_to_tiles,temp,istat)
+c
+      implicit      none
+
+      integer       istat
+      integer       n,i
+      integer       ldir
+      character*(*) path_to_tiles
+
+      real, intent(out) :: temp(:)
+
+      call s_len(path_to_tiles,ldir)
+      open(22,file=path_to_tiles(1:ldir)//'/LATMEANTEMP.DAT'
+     &,form='formatted',status='old',iostat=istat)
+      if(istat.ne.0)goto 3
+      do i=1,180
+         read(22,222)temp(i)
+      enddo
+ 
+      close(22)
+
+      return
+
+c     print*,'rmeantemp 1/2/3/4/5; ',rmeantemp(1),rmeantemp(45),rmeantemp(90)&
+c          ,rmeantemp(135),rmeantemp(180)
+
+222   format(1x,f6.2)
+
+  3   print*,'Error: openning LATMEANTEMP file '
+      print*,'path_to_tiles: ',path_to_tiles(1:ldir+3),ldir
+
+      return
+      end
