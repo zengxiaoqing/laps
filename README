@@ -297,9 +297,10 @@
      LAPS implementation is working. The LAPB Branch does not have any other 
      plotting or visualization packages available for distribution with LAPS 
      at this time. Many users have interfaced LAPS with their own display 
-     software (e.g. VIS5D, AVS, IDL, GEMPAK). Feel free to post questions about
-     these to the 'laps-users' bulletin board Web Page. NCAR graphics in no 
-     way is essential to the successful running of LAPS to create output grids.
+     software (e.g. VIS5D, AVS, IDL, NCL, GEMPAK). Feel free to post questions
+     about these to the 'laps-users' bulletin board Web Page. NCAR graphics in 
+     no way is essential to the successful running of LAPS to create output 
+     grids.
       
      Another note of interest is that LAPS is visualized as an integral part of
      the AWIPS system. If you have AWIPS, then LAPS should be running on it
