@@ -487,6 +487,7 @@ c
 c
 c ETA grib ingest currently disabled (J. Smart 9-4-98)
 c Also, NOGAPS 2.5 degree obsolete.
+c bgmodel 3 = FA (Taiwan). bgmodel 6 = NOGAPS1.0. bgmodel 8 = AVN 1.0 deg
 c
          elseif (bgmodel .eq. 3 .or.
      .           bgmodel .eq. 6 .or.
@@ -907,13 +908,7 @@ c
           print *,'Error writing interpolated data to LAPS database.'
       endif
 
-      if(bgmodel.eq.2.or.
-     +   bgmodel.eq.4.or.
-     +   bgmodel.eq.5.or.
-     +   bgmodel.eq.6.or.
-     +   bgmodel.eq.8.or.
-     +   bgmodel.eq.9) then
-
+      if(bgmodel.ne.7)then
 c
 c Write the 2d fields to lgb
 c

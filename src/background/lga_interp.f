@@ -56,7 +56,7 @@ c
      .       vwvi(nx,ny,nz_laps)  !v-wind (m/s)
 c
       real*4 prlaps(nz_laps),prilaps,fact1,fact2,fact3
-      real*4 datmsg
+      real*4 datmsg,datmsg1,datmsg2
       integer i,j,k,kk
 c_______________________________________________________________________________
 c
@@ -126,7 +126,12 @@ c
                      goto 10
                   elseif (prlaps(k) .lt. prbg(i,j,kk) .and. 
      .                    prlaps(k) .gt. prbg(i,j,kk+1)) then
-                     if (datmsg .lt. missingflag) then
+                     datmsg1 = max(htbg(i,j,kk),tpbg(i,j,kk),
+     +                    shbg(i,j,kk),uwbg(i,j,kk),vwbg(i,j,kk))
+                     datmsg2 = max(htbg(i,j,kk+1),tpbg(i,j,kk+1),
+     +                    shbg(i,j,kk+1),uwbg(i,j,kk+1),vwbg(i,j,kk+1))
+                     if (datmsg1 .lt. missingflag.and.
+     .                   datmsg2.lt.missingflag)then
                         fact1=alog(prlaps(k)/prbg(i,j,kk))/
      .                       alog(prbg(i,j,kk+1)/prbg(i,j,kk))
                         fact2=14.642857*alog(prbg(i,j,kk)*prilaps)
