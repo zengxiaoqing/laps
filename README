@@ -128,7 +128,6 @@
               src/include/laps_grid_def.h
               data/static/nest7grid.cdl
 
-
      One caution here is that you might want to check for any updates FSL has 
      made in these files.
 
@@ -370,7 +369,7 @@
 
 -------------- 2.9   CHANGING THE HORIZONTAL DOMAIN---------------------------
 
-   NUMBER OF GRID POINTS:
+                        NUMBER OF GRID POINTS
 
      Laps will soon allow you to change the horizontal domain at runtime, however
      at this release you are still required to edit a few files before compiling 
@@ -406,19 +405,19 @@
 
      NOTE: The file './data/static/nest7grid.cdl' is now automatically edited
            by ./etc/laps_localization.pl using the values found in 
-           './data/static/nest7grid.parms'
+           './data/static/nest7grid.parms'.
 
 
      4. Adjust the horizontal dimensions in 
                                    './data/static/nest7grid.parms'.
 
-   LOCATION OF DOMAIN (STATIC FILE, etc.):
+                LOCATION OF DOMAIN (STATIC FILE, etc.):
 
 
      The location of the horizontal domain can now be changed at run time. 
      Simply change the lat/lon values in 'data/static/nest7grid.parms'
-     and run the './etc/laps_localization.pl' script.  See the note below 
-     regarding changing the projection of laps.
+     and run the './etc/laps_localization.pl' script. This script in turn
+     runs 'gridgen_model.exe'.
 
         Steve Albers (albers@fsl.noaa.gov) can try to offer 
         help on this if you're stuck. The code currently works best if you 
@@ -445,52 +444,43 @@
         two datasets. If for some reason you need to change this strategy, you
         would want to modify 'gridgen_model.f'.
 
-        Prior to running laps_localization.pl, perform the following steps
-        (needed only if you are outside the default Colorado domain).
+        Prior to running laps_localization.pl, set the following parameters
+        in 'data/static/nest7grid.parms' (needed only if you are outside 
+        the default Colorado domain).
 
-        Step 1) Edit the file 'data/static/nest7grid.parms' to
-                modify the 'grid_spacing_m_cmn' parameter (only if you are not 
+        1) Modify the 'grid_spacing_m_cmn' parameter (only if you are not 
                 using the default 10000m for the grid spacing).
 
-        Step 2) Edit the file 'data/static/nest7grid.parms' to
-                modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
+        2) Modify the 'grid_cen_lat_cmn' and 'grid_cen_lon_cmn' parameters.
 
-        Step 3) Edit the file 'data/static/nest7grid.parms' to
-                modify the 'standard_longitude' parameter. This deals with 
-                the longitude which is straight up and down in the MAP 
-                projection (default is -105 deg). Note that LAPS is currently 
-                designed to operate with a Polar stereographic projection.
+        3) Make sure that the 'c6_maproj' parameter is set to 'plrstr'.
+                Polar stereographic is currently the only fully supported
+                map projection. See the note below regarding limited support
+                for other projections.
 
-        Step 4) Edit the file 'data/static/nest7grid.parms' to
-                modify the 'standard_latitude' parameter. This deals with 
+        4) Modify the 'standard_longitude' parameter. This defines the 
+                longitude which is straight up and down (parallel to the
+                y axis) in the map projection.
+
+        5) Modify the 'standard_latitude' parameter. This deals with 
                 with the latitude at which the grid resolution is exactly 
                 the nominal value (e.g. 10km). The default standard_latitude 
                 is 40 deg.
 
-        Step 5) Edit the file 'src/include/lapsparms.for', only if 
+        6) Make sure that the 'standard_latitude2' parameter is set to +90. 
+                This defines the pole latitude of the polar stereographic 
+                projection (Earth's North Pole). 
+
+        7) Edit the file 'data/static/nest7grid.parms', if 
                 you want to modify the 'silavwt_parm' and 'toptwvl_parm' 
                 parameters.  The default values are 1. and 4., respectively. 
                 These parameters control the terrain silhouette weighting and 
                 the terrain smoothing, respectively. The value "4." here 
-                implies 4 delta-x smoothing.  This step requires recompiling!
-
-        Step 6) Within the file 'laps/data/static/nest7grid.cdl',
-                navigation variables in the data section should be modified
-                for completeness, but will not affect the output if they are not
-                modified.  They are:
-
-                Dx  - the grid spacing in km in the x direction.
-                Dy  - the grid spacing in km in the y direction.
-                La1 - the first latitude of the grid.
-                Lo1 - the first longitude of the grid. If the longitude 
-                      is negative (as in the US) it should be entered as
-                      360 - longitude (ie. -105 long would be entered 
-                      as 360 - 105, or 255).
-                LoV - the standard longitude which is true north.  The same 
-                      rules for negative longitudes apply as in Lo1.
+                implies 4 delta-x smoothing.  
 
         When you run ./etc/laps_localization.pl, the NetCDF static 
-        file will be automatically generated (we hope). 
+        file 'static.nest7grid' will be automatically generated (we hope). 
+
         If you see the following error message: 
 
         FILE../static/model/topo_30s/U50N119W DOES NOT EXIST
@@ -499,13 +489,22 @@
         your domain runs outside the 30" data, but will still be covered by 
         the 10' worldwide data.
 
-        Note that this program works only for a polar stereographic projection.
-   There is a map projection parameter currently in 'nest7grid.parms'. This
-   has some expanded functionality to a tangent lambert projection. Thus
-   the LAPS analyses can be run with a tangent lambert projection if you can
-   supply your own substitute module to create the 'static.nest7grid' file.
+                          MAP PROJECTIONS
 
-      RESOLUTION OF DOMAIN: 
+        Note that this program works only for a polar stereographic projection,
+   where the projection pole is located at the earth's north pole.
+
+        The LAPS analyses can be additionally run with a tangent lambert 
+   projection, if you can supply your own substitute module (to 
+   gridgen_model.exe) that creates the 'static.nest7grid' file. 
+
+        There is a map projection parameter currently in 'nest7grid.parms'. 
+   This has expanded functionality for the tangent lambert projection (if set
+   to 'lambrt'). The 'standard_latitude2' parameter sets the second latitude
+   of the projection. Further map projection functionality is in the works, 
+   please stay tuned.
+
+                       RESOLUTION OF DOMAIN: 
 
      The default value is 10000m. This is one of the items used in 
    constructing the static file (see above). Resolutions less than about 
