@@ -1,11 +1,10 @@
 
       subroutine put_laps_static(grid_spacing,model,comment,data
-     1                          ,imax,jmax
+     1                          ,imax,jmax, mkmax
      1                          ,std_lat,std_lat2,std_lon      
      1                          ,c6_maproj,deltax,deltay)
  
       integer*4 mkmax
-      parameter (mkmax = 8)
 
       INTEGER*4	IMAX,		        !I4time of data
      1		JMAX,KMAX,	        !# cols, # rows, # fields
@@ -20,8 +19,8 @@ C
       CHARACTER*31	EXT		!File name ext (up to 31 chars)
       CHARACTER*3	VAR(mkmax)	!3 letter ID of each field
       CHARACTER*10	UNITS(mkmax)	!units of each field
-      CHARACTER*125	COMMENT(mkmax)	!Comments for each field
-      character*131     model
+      CHARACTER*(*)	COMMENT(mkmax)	!Comments for each field
+      character*(*)     model
       character*80      origin          !Run time parameter - c80_description
       character*9       laps_dom_file
       character*6       c6_maproj       !Map projection
@@ -49,8 +48,10 @@ C
           data(i,j,5) = (20.0 - ((psa - 100.0) * 0.02))
       enddo ! j
       enddo ! i
+      
+      
 
-c     write(6,*) var(1),' ', var(2),' ', var(3),' ', var(4)
+      write(6,*) dir_out(1:len),len
       call wrt_laps_static (dir_out(1:len),laps_dom_file,imax,jmax,
      1                      kmax,deltax,deltay,std_lon,std_lat,
      1                      std_lat2,origin,var,comment,
@@ -66,3 +67,4 @@ c     write(6,*) var(1),' ', var(2),' ', var(3),' ', var(4)
 
       return
       end
+

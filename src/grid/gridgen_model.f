@@ -80,11 +80,11 @@ c       Declarations for wrt_laps_static
         integer*4    ni,nj,nf
 c       parameter (ni = NX_L)
 c       parameter (nj = NY_L)
-        parameter (nf = 4)
+c
+c  only 4 used here but 8 needed in put_laps_static
+c
+        parameter (nf = 8)
         
-        character*3 var(nf) 
-        data var /'LAT','LON','AVG','LDF'/
-
         character*125 comment(nf)
         character*131 model
 
@@ -104,10 +104,14 @@ C*********************************************************************
             stop
         endif
 
-        model = 'MODEL 4 delta x smoothed filter'
+        model = 'MODEL 4 delta x smoothed filter\0'
 
-        comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95'
-        comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95'
+        comment(1) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+        comment(2) = 'Made from MODEL by J. Snook/ S. Albers 1-95\0'
+        comment(3) = '\0'
+        comment(4) = '\0'
+        comment(5) = '\0'
+
 
         icount_10 = 0
         icount_30 = 0
@@ -485,14 +489,18 @@ C
      +         ,status='unknown')
         write(10)lat,lon
         write(11)topt_out
-        write(12,*)topt_30
-        write(13,*)topt_10
-        write(14,*)topt_out
+cc
+cc  Is this just a legacy of some bygone days?  
+cc  I don't think 12,13,14,and 16 are used - jim
+cc
+c        write(12,*)topt_30
+c        write(13,*)topt_10
+c        write(14,*)topt_out
         write(15,*)lat(1,1),lon(1,1)
         write(15,*)lat(1,nnyp),lon(1,nnyp)
         write(15,*)lat(nnxp,1),lon(nnxp,1)
         write(15,*)lat(nnxp,nnyp),lon(nnxp,nnyp)
-        write(16,*)topt_pctlfn
+c        write(16,*)topt_pctlfn
         close(10)
         close(11)
         close(15)
@@ -532,8 +540,8 @@ c SG97  splot 'topography.dat'
         write(6,*)'check_domain:status = ',istat_chk
 
         call put_laps_static(grid_spacing_m,model,comment,data
-     1                      ,nnxp,nnyp,std_lat,std_lat2,std_lon
-     1                      ,c6_maproj,deltax,deltay)
+     1       ,nnxp,nnyp,nf,std_lat,std_lat2,std_lon
+     1       ,c6_maproj,deltax,deltay)
 
 
 	Stop
