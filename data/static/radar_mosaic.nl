@@ -1,6 +1,6 @@
  &radar_mosaic_nl
  c_radar_mosaic_type='vxx',
- n_radars=2,
+ n_radars=1,
  c_radar_ext='v01','v02','v04',
  i_window=2700,
  imosaic_3d=1,
@@ -17,6 +17,7 @@ c
 c      Pathways to data are automatically built in the program since it is lapsprd.
 c
 c  n_radars: corresponds to the number of vxx or rdr files
+c            if set to -1, then switch over to value of 'max_radars_cmn'
 c
 c  c_radar_ext: presently  'v01','v03','v04' (for vxx)  or '001','002' (for rdr)
 c      For the current setup in FSL rrv files are being remapped to LAPS
