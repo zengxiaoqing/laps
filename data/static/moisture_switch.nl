@@ -1,4 +1,4 @@
- &moisture_switch
+ &moisture_switch_nl
  RAOB_SWITCH = 0,
  RAOB_LOOKBACK = 3600,
  GOES_SWITCH = 0,
@@ -8,12 +8,14 @@
  SAT_SKIP = 2,
  GVAP_SWITCH = 1,
  TIME_DIFF = 70800, 
+ GPS_SWITCH = 0,
  SFC_MIX = 0,
  MOD_4DDA_1 = 0,
  MOD_4DDA_FACTOR = 0.02,
  T_REF = -132.0,
  PATH_TO_GVAP8 = '/public/data/sat/ssec/goes8/ascii/',
  PATH_TO_GVAP10 = '/public/data/sat/ssec/goes10/ascii/',
+ PATH_TO_GPS = '/home/lapb/birk/GPS/'
  
  /
 c   
