@@ -746,10 +746,6 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
 
               write(6,*)' Calling barnes with single radar obs added'       
 
-!             call get_inst_err(imax,jmax,kmax,r_missing_data         ! I
-!    1                         ,wt_p_radar,rms_thresh_norm            ! I
-!    1                         ,rms_inst,rms_thresh)                  ! O
-
 csms$serial end
 
               if(l_point_struct)then
@@ -859,10 +855,6 @@ csms$serial(<rms_thresh, out>:default=ignore)  begin
               write(6,401)icount_radar_total
  401          format(1x,' Analyzing with ',i5
      1                 ,' multi-doppler grid points')     
-
-!             call get_inst_err(imax,jmax,kmax,r_missing_data           ! I
-!    1                         ,wt_p_radar,rms_thresh_norm              ! I
-!    1                         ,rms_inst,rms_thresh)                    ! O
 
 csms$serial end
 
@@ -980,10 +972,6 @@ csms$>                                     :default=ignore)  begin
           I4_elapsed = ishow_timer()
 
           write(6,*)' Calling barnes with single+multi radar obs added'       
-
-!         call get_inst_err(imax,jmax,kmax,r_missing_data             ! I
-!    1                     ,wt_p_radar,rms_thresh_norm                ! I
-!    1                     ,rms_inst,rms_thresh)                      ! O
 
 csms$insert      call nnt_me(me)
 csms$insert      print *, 'got to 9 processor=',me
