@@ -590,11 +590,7 @@ cdis
                 endif
                 call mklabel33(k_level,c19_label,c33_label)
 
-                if(max(NX_L,NY_L) .gt. 50)then
-                    interval = 2
-                else
-                    interval = 1
-                endif
+                interval = (max(NX_L,NY_L) / 50) + 1
 
                 size = float(interval) * .14
 

@@ -767,7 +767,13 @@ c        IF((IOUT.AND.MASK).NE.0)GOTO 13        !EXIT LOOP
         GO TO 100                       !FELL OUT OF LOOP SO DONE
    13   MASK=MASK*2
 
-        GoTo(14,15,16,17,18,19,20)IBit
+        if(ibit .eq. 1)goto14
+        if(ibit .eq. 2)goto15
+        if(ibit .eq. 3)goto16
+        if(ibit .eq. 4)goto17
+        if(ibit .eq. 5)goto18
+        if(ibit .eq. 6)goto19
+        if(ibit .eq. 7)goto20
         GO TO 100                       !OUT OF RANGE -- RETURN
 
 c  14   IF((IOUT.AND.2).NE.0)THEN       ! STATES WITH CONTINENTS?
