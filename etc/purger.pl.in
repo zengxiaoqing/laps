@@ -58,6 +58,8 @@ if($opt_r){
 #
 # exceptions - overridden if $min_files==0
 #
+my $vxx_time = 0.08;
+
 if($min_files>0){
     $clean_dirs{lga} = (0.5<$hist_time)?0.5:$hist_time;
     $clean_dirs{lgb} = (0.5<$hist_time)?0.5:$hist_time;
@@ -72,10 +74,19 @@ if($min_files>0){
     $clean_dirs{lso} = 1.5;
     $clean_dirs{lwc} = 0.5;
 
-    $clean_dirs{v01} = (0.125<$hist_time)?0.125:$hist_time;
-    $clean_dirs{v02} = (0.125<$hist_time)?0.125:$hist_time;
-    $clean_dirs{v03} = (0.125<$hist_time)?0.125:$hist_time;
-    $clean_dirs{v04} = (0.125<$hist_time)?0.125:$hist_time;
+    $clean_dirs{v01} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v02} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v03} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v04} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v05} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v06} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v07} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v08} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v09} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v10} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v11} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+    $clean_dirs{v12} = ($vxx_time<$hist_time)?$vxx_time:$hist_time;
+
     $clean_dirs{'rdr/001/raw'} = 0.08;
 
     $clean_dirs{'lvd/goes08'} = (0.5<$hist_time)?0.5:$hist_time;;
