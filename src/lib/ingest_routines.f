@@ -2,7 +2,7 @@
       function l_closest_time_i(wmoid,a9time_ob,nobs
      1                        ,i,i4time_sys,istatus)      
 
-!     Determine if the ob time is the closest time for that station to systime
+cdoc  Determine if the ob time is the closest time for that station to systime
 
       logical l_closest_time_i
 
@@ -39,14 +39,15 @@
       subroutine convert_array(array_in,array_out,n,string
      1                        ,r_missing_data,istatus)       
 
-!     QC the observation array and convert units if needed
-!     If 'string' is 'none', then do just the QC without conversion
+cdoc  QC the observation array and convert units if needed
+cdoc  If 'string' is 'none', then do just the QC without conversion
 
       character*(*) string
 
       real*4 k_to_c
 
       real*4 array_in(n),array_out(n)
+      real*4 array_buf(n)
 
       do i = 1,n
           if(abs(array_in(i)) .ge. 1e10 .or. 
@@ -56,15 +57,26 @@
               array_out(i) = k_to_c(array_in(i))
           elseif(string .eq. 'pa_to_mb')then
               array_out(i) = array_in(i) / 100.
+          elseif(string .eq. 'reverse')then
+              array_out(i) = array_in(n+1-i)
           elseif(string .eq. 'none')then
               array_out(i) = array_in(i)
-          else
+          elseif(string .ne. 'reverse')then
               write(6,*)' Unknown operator in convert_array: ',string
               istatus = 0
               return
           endif
       enddo ! i
      
+      if(string .eq. 'reverse')then ! Reverse output array 
+          do i = 1,n
+              array_buf(i) = array_out(n+1-i)
+          enddo
+          do i = 1,n
+              array_out(i) = array_buf(i)
+          enddo
+      endif ! i
+
       istatus = 1
 
       return
@@ -73,8 +85,8 @@
       subroutine convert_array_i2r(array_in,array_out,n,string
      1                        ,r_missing_data,istatus)       
 
-!     QC the observation array and convert units if needed
-!     If 'string' is 'none', then do just the QC without conversion
+cdoc  QC the observation array and convert units if needed
+cdoc  If 'string' is 'none', then do just the QC without conversion
 
       character*(*) string
 
@@ -82,10 +94,11 @@
 
       integer*4 array_in(n)
       real*4 array_out(n)
+      real*4 array_buf(n)
 
       do i = 1,n
           if(abs(array_in(i)) .ge. 1000000 .or. 
-     1       abs(array_in(i)) .eq. 9999 )then
+     1           abs(array_in(i)) .eq. 9999 )then
               array_out(i) = r_missing_data
           elseif(string .eq. 'k_to_c')then
               array_out(i) = k_to_c(array_in(i))
@@ -93,15 +106,39 @@
               array_out(i) = array_in(i) / 100.
           elseif(string .eq. 'none')then
               array_out(i) = array_in(i)
-          else
+          elseif(string .ne. 'reverse')then
               write(6,*)' Unknown operator in convert_array: ',string
               istatus = 0
               return
           endif
       enddo ! i
+
+      if(string .eq. 'reverse')then ! Reverse output array 
+          do i = 1,n
+              array_buf(i) = array_out(n+1-i)
+          enddo
+          do i = 1,n
+              array_out(i) = array_buf(i)
+          enddo
+      endif ! i
      
       istatus = 1
 
       return
       end
 
+      subroutine apply_qc_rsa(iflag_rsa,variable,nobs)
+
+      integer iflag_rsa(nobs)
+      real*4 variable(nobs)
+
+      call get_r_missing_data(r_missing_data,istatus)
+
+      do iob = 1,nobs
+          if(iqc_rsa(iflag_rsa(iob)) .eq. -1)then
+              variable(iob) = r_missing_data
+          endif
+      enddo ! iob
+
+      return
+      end
