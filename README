@@ -671,10 +671,13 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      Depending on the data source, you may generally prefer one of three 
      choices:
 
-         1) Modify LAPS ingest code to accept your own raw data format, all
+         1) Modify LAPS ingest code to accept your own raw data format.
+            This often entails writing a subroutine that reads the data and
+            linking this routine into the existing ingest process. That
+            process then writes out the LAPS intermediate file. Note that 
+            generating an FSL style raw data file is not here needed - all
             that really counts is producing an intermediate data file. 
-            Generating an FSL style raw data file is not needed.
-
+ 
          2) Run a process independent of the LAPS ingest code that creates
             the intermedate data file. 
 
