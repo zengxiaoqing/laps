@@ -3,7 +3,7 @@
   balance  = .true., 
   output_format = 'mm5',
   snow_thresh = 1.1,
-  lwc2vapor_thresh = 1.1,
+  lwc2vapor_thresh = 1.0,
   make_sfc_uv = .false.,
 /
  
