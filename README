@@ -2800,12 +2800,13 @@ Parameter namelist file: 'static/surface_analysis.nl'
         The next steps in quality control are encountered in 'laps_sfc.x'.
 	This first checks the observations against climatologically
         reasonable ranges. Next, the observations (most fields except wind)
-        are checked to see which ones are outliers relative to the other 
-        observations. As a further check, the Temperatures and MSL pressures 
-        are checked to see if they deviate from the background field by more 
-        than a threshold amount. The output from these checks is in both 
-        'laps_sfc.log' and 'sfcqc.log'. The 'sfcqc.log' file contains the 
-        'rely' (positive=retain, negative=reject) values designated as follows:
+        are checked to see which ones are outliers (at 5 sigma) relative to 
+        the average observation value in the domain. As a further check, the 
+        Temperatures, Dewpoints and MSL pressures are checked to see if they 
+        deviate from the background field by more than a threshold absolute
+        amount. The output from these checks is in both 'laps_sfc.log' and 
+        'sfcqc.log'. The 'sfcqc.log' file contains the 'rely' (positive=retain,
+        negative=reject) values designated as follows:
 <pre>
                |  STANDARD DEVIATION CHECK (against other obs)
                |
