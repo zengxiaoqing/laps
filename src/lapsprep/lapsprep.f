@@ -101,12 +101,21 @@
  
     ! Check for command line argument containing LAPS valid time
     ! (in YYJJJHHMM format).  If not present, use the systime.dat
-    ! file to get current time.
-
+    ! file to get current time.  Note that on HPUX, argument #1
+    ! is the executable name and argument #2 is the first actual
+    ! argument, unlike other systems.  There is a corrected kludge
+    ! for that here.
     CALL GETARG(1,laps_file_time)
-    IF (laps_file_time .EQ. '         ') THEN
+    IF (laps_file_time .EQ. 'lapsprep.') THEN 
+      ! Must be an HP!
+      CALL GETARG(2,laps_file_time)
+      IF (laps_file_time .EQ. '         ') THEN
+        CALL get_systime(i4time,laps_file_time,istatus)
+      ENDIF
+    ELSE IF (laps_file_time .EQ. '         ') THEN  
      CALL get_systime(i4time, laps_file_time, istatus)
     ENDIF
+    PRINT *, 'LAPS_FILE_TIME = ', laps_file_time
     READ(laps_file_time, '(I2.2,I3.3,I2.2,I2.2)') valid_yyyy, valid_jjj, &
                                                    valid_hh, valid_min
     IF (valid_yyyy.LT.80) THEN
