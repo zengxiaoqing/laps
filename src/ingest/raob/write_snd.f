@@ -42,6 +42,11 @@
      1            ,stalat(isnd),stalon(isnd),staelev(isnd)
      1            ,c5_staid(isnd),a9time_ob(isnd),c8_obstype(isnd)
 
+        write(lun_out,511,err=990)
+     1             iwmostanum(isnd),nlvl(isnd)
+     1            ,stalat(isnd),stalon(isnd),staelev(isnd)
+     1            ,c5_staid(isnd),a9time_ob(isnd),c8_obstype(isnd)
+
   511   format(i12,i12,f11.4,f15.4,f15.0,1x,a5,3x,a9,1x,a8)
 
         do lvl = 1,nlvl(isnd)
