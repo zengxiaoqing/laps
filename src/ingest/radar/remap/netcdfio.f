@@ -374,8 +374,15 @@ c      Determine filename extension
 
        include 'remap_dims.inc'
        include 'netcdfio_radar_common.inc'
+
+       if( abs(elevationAngle) .le. 1e10 )then
+           get_fixed_angle = nint(elevationAngle * 100.)
+       else
+           write(6,*)' warning in get_fixed_angle, invalid value'
+           get_fixed_angle = -999 ! i_missing_data
+       endif
+
  
-       get_fixed_angle = nint(elevationAngle * 100.)
        return
        end
  
@@ -445,7 +452,7 @@ c      Determine filename extension
        else
            write(6,*)' warning in get_azi, azimuth = ',iray
      1                                   , radialAzim(iray)
-           get_azi = -99
+           get_azi = -999 ! i_missing_data
        endif
 
        return
