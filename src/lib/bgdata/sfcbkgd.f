@@ -19,13 +19,9 @@ c                       this field currently does not come with the
 c                       model grids at AFWA.
 c    "        02-01-99: Recompute tdsfc with new psfc and tsfc for
 c                       consistency.
+c    "        11-18-99: Put psfc,tsfc, and tdsfc comps into subroutine
 c
       IMPLICIT NONE
-
-      REAL       G
-      REAL       R
-      parameter (G         = 9.8,
-     &           R         = 287.04)
 
       INTEGER    I
       INTEGER    IMX
@@ -47,27 +43,17 @@ c
       REAL       rh2d        ( IMX , JMX )
       REAL       tdsfc       ( imx,  jmx )
       REAL       T           ( IMX , JMX , KX )
-      REAL       tbarv,dz,tvsfc,tvk,tbar
-      REAL       qsfc,xe,psfc1
       REAL       esat
-      REAL       r_log_p,t_sfc,p_sfc,td_sfc
       REAL       TER         ( IMX , JMX )
-      REAL       rterm
-      REAL       ssh2
-      REAL       make_rh
       REAL       make_td
+      REAL       make_rh
       REAL       make_ssh
-      REAL       dzp,dtdz
-      REAL*8     dpp,dp,pfrac
-c     REAL*8     plo,phi,pla
-      REAL       td1,td2
-      REAL       td_sfc_lapse
       REAL       t_ref,badflag
 c
 c if bgmodel = 6 or 8 then tdsfc is indeed td sfc
-c if bgmodel = 4      then tdsfc is rh
+c if bgmodel = 4      then tdsfc is rh (WFO - RUC)
 c if bgmodel = 9      then no surface fields input. Compute all from 3d
-c                     fields. q3d used.
+c                     fields. q3d used. (NOS - ETA)
 c otherwise tdsfc is input with q
 c 
       t_ref=-47.0
@@ -98,11 +84,6 @@ c
             if(height(i,j,k).gt.ter(i,j))then
                lfndz=.true.
 c
-c first guess psfc without moisture consideration
-c
-               tbar=(tsfc(i,j)+t(i,j,k))*0.5
-               dz=height(i,j,k)-ter(i,j)
-               p_sfc=p(k)*exp(G/(R*tbar)*dz)
 c
 c recompute psfc with moisture consideration. snook's orig code.
 c              it=tdsfc(i,j)*100.
@@ -112,63 +93,16 @@ c              qsfc=0.622*xe/(p_sfc-xe)
 c              qsfc=qsfc/(1.+qsfc)
 c --------------------------------------------------
 
-               if(bgmodel.eq.6.or.bgmodel.eq.8)then
-                  qsfc=ssh2(p_sfc,tsfc(i,j)-273.15
-     &                     ,tdsfc(i,j)-273.15,t_ref)*.001  !kg/kg
-               elseif(bgmodel.eq.4.or.bgmodel.eq.9)then
-                  qsfc=make_ssh(p_sfc,tsfc(i,j)-273.15
-     &                         ,tdsfc(i,j)/100.,t_ref)*.001  !kg/kg
-               else 
-                  qsfc=tdsfc(i,j)
-               endif
-
-               tvsfc=tsfc(i,j)*(1.+0.608*qsfc)
-               tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
-               tbarv=(tvsfc+tvk)*.5
-               p_sfc=(p(k)*exp(G/(R*tbarv)*dz))
-
                if(k.gt.1)then
-                  dzp=height(i,j,k)-height(i,j,k-1)
-                  dtdz=(t(i,j,k-1)-t(i,j,k))/dzp
-                  t_sfc=t(i,j,k)+dtdz*dz
-                  td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
-     &,t_ref)
-                  td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.
-     &,t_ref)
-                  td_sfc_lapse=td2+((td1-td2)/dzp)*dz
-                  td_sfc=td_sfc_lapse
-               else
-                  t_sfc=t(i,j,k)
-                  td_sfc=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
-     &,t_ref)
-               endif
-c 
-c recompute Td sfc using recomputed p and Tv
-c
-c              tdsfc(i,j)=make_td(p_sfc,tvsfc-273.15,qsfc*1000.,t_ref)
-c    &                    +273.15
-c
-c recompute sfc T with new sfc p. "devirtualize" and return dry T.
-c
-c                 r_log_p = log(p_sfc/p(k))
-c                 rterm   = (2.*G*dz)/(R*r_log_p)
-c                 tvsfc   = rterm - tvk
-c              t_sfc   = tvsfc/(1.+0.608*qsfc)
-c                 r_log_p = log(p(k)/p_sfc)
-c                 tbarv   = -(G*dz/R)/r_log_p
-c                 tvsfc = tbarv*2.-tvk
-c                 t_sfc   = tvsfc/(1.+0.608*qsfc)
 
-               tsfc(i,j)=t_sfc               
-               tdsfc(i,j)=td_sfc+273.15
-               psfc(i,j)=p_sfc*100.      !return p units = pascals
-c
-c for testing purposes, we can temporarily use the model background moisture
-c variable for laps Td bckgrnd and compare if necessary.
-c              if(bgmodel.ne.6.and.bgmodel.ne.8)then
-c                 tdsfc(i,j)=make_td(p_sfc,t_sfc-273.15,qsfc*1000.,t_ref)
-c    &                       +273.15
-c              endif
+                  call compute_sfc_bgfields(bgmodel,imx,jmx,kx,i,j,k
+     &,ter(i,j),height,t,p,q,t_ref,psfc(i,j),tsfc(i,j),tdsfc(i,j))
+
+               else
+                  tsfc(i,j)=t(i,j,k)
+                  tdsfc(i,j)=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.
+     &,t_ref)+273.15
+               endif
 
             endif
             if(k.eq.kx)lfndz=.true.
@@ -178,3 +112,77 @@ c              endif
       
       return
       end
+c
+c----------------------------------------------------------------------------
+c
+      subroutine compute_sfc_bgfields(bgm,nx,ny,nz,i,j,k,ter,height
+     &,t,p,q,t_ref,psfc,tsfc,tdsfc)
+c
+c J. Smart 11/18 put existing code in subroutine for other process use in laps
+c
+      implicit none
+
+      integer nx,ny,nz
+      integer i,j,k            !I, i,j,k coordinate of point for calculation
+      integer bgm              !I, model type {if = 0, then tdsfc input = qsfc}
+
+      real*4 p(nz)             !I, pressure of levels
+      real*4 ter               !I, Terrain height at i,j
+      real*4 t_ref             !I, reference temp for library moisture conv routines
+
+      real*4 height(nx,ny,nz)  !I, heights of pressure levels 3d
+      real*4 t(nx,ny,nz)       !I, temperatures 3d 
+      real*4 q(nx,ny,nz)       !I, specific humidity 3d
+      real*4 psfc              !O, output surface pressure, pa
+      real*4 tsfc              !I/O input model T, output recomputed T
+      real*4 tdsfc             !I/O input model Td, output  recomputed Td
+
+      real*4 qsfc              ! surface spec hum, Input as q or computed internally
+
+      real*4 tbar
+      real*4 td1,td2
+      real*4 G,R
+      real*4 ssh2,make_ssh,make_td
+      real*4 dz,dzp,dtdz
+      real*4 tvsfc,tvk,tbarv
+
+      parameter (G         = 9.8,
+     &           R         = 287.04)
+c
+c first guess psfc without moisture consideration
+c
+       tbar=(tsfc+t(i,j,k))*0.5
+       dz=height(i,j,k)-ter
+       psfc=p(k)*exp(G/(R*tbar)*dz)
+
+       if(bgm.eq.6.or.bgm.eq.8)then      !Td
+          qsfc=ssh2(psfc,tsfc-273.15
+     &                  ,tdsfc-273.15,t_ref)*.001  !kg/kg
+
+       elseif(bgm.eq.4.or.bgm.eq.9)then  !RH
+          qsfc=make_ssh(psfc,tsfc-273.15
+     &                      ,tdsfc/100.,t_ref)*.001  !kg/kg
+
+       else                              !q
+          qsfc=tdsfc
+       endif
+
+c pressure
+       tvsfc=tsfc*(1.+0.608*qsfc)
+       tvk=t(i,j,k)*(1.+0.608*q(i,j,k))
+       tbarv=(tvsfc+tvk)*.5
+       psfc=(p(k)*exp(G/(R*tbarv)*dz))*100.  !return units = pa
+
+
+       dzp=height(i,j,k)-height(i,j,k-1)
+c temp
+       dtdz=(t(i,j,k-1)-t(i,j,k))/dzp
+       tsfc=t(i,j,k)+dtdz*dz
+
+c dew point temp
+       td2=make_td(p(k),t(i,j,k)-273.15,q(i,j,k)*1000.,t_ref)
+       td1=make_td(p(k-1),t(i,j,k-1)-273.15,q(i,j,k-1)*1000.,t_ref)
+       tdsfc=td2+((td1-td2)/dzp)*dz+273.15
+c
+       return
+       end
