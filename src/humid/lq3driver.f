@@ -83,6 +83,11 @@ c        include 'parmtrs.inc'
 
 c     convert filename to i4time
 
+
+
+c        call GETENV('FILETIME',filename)
+
+
         call i4time_fname_lp (filename,i4time,istatus)
 
 

@@ -286,8 +286,9 @@ c       external rtsys_no_data, rtsys_abort_prod
         integer cloud_switch
         integer tiros_switch
         integer sounder_switch
+        integer sat_skip
         namelist /moisture_switch/ raob_switch,goes_switch, cloud_switch
-     1         ,tiros_switch, sounder_switch
+     1         ,tiros_switch, sounder_switch, sat_skip
 
         integer len
         character*200 cdomain
@@ -322,6 +323,14 @@ c *** check to see if we are set up to do this at all
 c     this mode check enables this routine to run without using
 c     sounding data even if it is present.
 
+c set namelist parameters to defaults (no satellite)
+        cloud_switch = 1
+        raob_switch = 0
+        goes_switch = 0
+        sounder_switch = 0
+        tiros_switch = 0
+        sat_skip = 0
+
         call get_directory('static',fname,len)
         open (23, file=fname(1:len)//'moisture_switch.nl',
      1        status = 'old', err = 24)
@@ -330,8 +339,6 @@ c     sounding data even if it is present.
 
 
         close (23)
-
-
 
 
         if (cloud_switch.eq.0) then
@@ -369,6 +376,12 @@ c     sounding data even if it is present.
 
       if (tiros_switch.ne.0 .and. goes_switch.ne.0) then
          write(6,*) 'USING BOTH TIROS AND GOES DATA IN THIS RUN'
+      endif
+
+      if (sat_skip .eq. 1) then
+          write(6,*) 'Use full resolution satellite'
+        else
+          write(6,*) 'Using partial satellite resolution ',sat_skip
       endif
 
 
@@ -721,6 +734,7 @@ c make call to goes moisture insertion
      1             lt1dat,      ! laps lt1 (3-d temps)
      1             goes_switch, ! goes switch and satellite number
      1             sounder_switch, ! sounder switch, 0=imager,1=sndr
+     1             sat_skip,    ! normally 1 for full resolution
      1             ii,jj,kk
      1             )
 

@@ -38,6 +38,7 @@ cdis
      1  t,                  ! lt1 (laps 3d temps)
      1  ngoes,              ! goes satellite number
      1  isnd,               ! sounder switch
+     1  sat_skip,           ! normally 1 for full resolution
      1  ii,jj,kk            ! grid dimensions
      1  )
 
@@ -132,6 +133,7 @@ c       parameter list variables
       real cloud(ii,jj,kk)
       integer ngoes
       integer isnd
+      integer sat_skip
 
 
 c internal variables
@@ -228,6 +230,13 @@ c  misc variables
         character*9 grid_name
 
         integer len
+
+c check sat_skip for zero, if zero skip routine
+
+         if (sat_skip.le.0) then
+          write (6,*) 'sat_skip parameter <= 0, skipping sat entirely'
+          return
+         endif
 
 c assign satellite number for func routine in powell
 
@@ -629,8 +638,16 @@ c   only for starters.
       do j = 1,jj
          do i = 1,ii
 
-            factor(i,j) = rmd
+            factor (i,j) = rmd
             factor2(i,j) = rmd
+
+         enddo ! i
+      enddo ! j
+
+
+
+      do j = 1,jj,sat_skip
+         do i = 1,ii,sat_skip
 
             if (i .eq. 1 .and. j.eq.1) then  !first time set
                      x(1) = 1.0
@@ -786,6 +803,7 @@ c  analyze top level adjustments.
        do j = 1,jj
           do i = 1,ii
              mask(i,j) = 0
+             data_anal(i,j) = 1.
              if (factor(i,j).ne.rmd ) then
                 pn = pn+1
                 points(1,pn) = factor(i,j)
@@ -852,6 +870,7 @@ c  analyze second level adjustments.
        do j = 1,jj
           do i = 1,ii
              mask(i,j) = 0
+             data_anal(i,j) = 1.
              if (factor2(i,j).ne.rmd ) then
                 pn = pn+1
                 points(1,pn) = factor2(i,j)
