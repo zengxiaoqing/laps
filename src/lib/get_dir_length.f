@@ -59,12 +59,16 @@ C
         strlen = len(c_fname)
 C
         i = strlen
-        do while ((i .gt. 0) .and. (c_fname(i:i) .ne. ']')
-     1                       .and. (c_fname(i:i) .ne. '/') )
+        do while (i .gt. 0)
+        if( (c_fname(i:i) .ne. ']')
+     1.and. (c_fname(i:i) .ne. '/') )then
            i = i-1
+        else
+           goto 100
+        endif
         enddo
 C
-        lenf = i
+100     lenf = i
 C
         return
         end
@@ -98,11 +102,15 @@ C
         strlen = len(c_fname)
 C
         i = strlen
-        do while ((i .gt. 0) .and. (c_fname(i:i) .ne. '.'))
+        do while (i .gt. 0)
+        if (c_fname(i:i) .ne. '.')then
            i = i-1
+        else
+           goto 100
+        endif
         enddo
 C
-        lenf = i - 1
+100     lenf = i - 1
 C
         return
         end
@@ -182,11 +190,15 @@ C
         call s_len(c_fname,strlen)
 C
         i = i_char_len
-        do while ((i .gt. 0) .and. (c_fname(i:i) .ne. '/'))
+        do while (i .gt. 0)
+        if(c_fname(i:i) .ne. '/')then
            i = i-1
+        else
+           goto 100
+        endif
         enddo
 C
-        lenf = strlen - i
+100     lenf = strlen - i
 C
         return
         end

@@ -78,8 +78,8 @@ c
           do i=1,i_files_qualifying
              c_fnames(i)=c_files_qualifying(i)
           enddo
-       else
-          write(6,*)'No filenames have been filtered'
+c      else
+c         write(6,*)'No filenames have been filtered'
        endif
 
        do i=1,i_files_qualifying
