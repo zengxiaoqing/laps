@@ -914,8 +914,9 @@ d) window_laps_rt.pl -t /data/fxa/laps_template -s /awips/laps -i /awips/laps -c
      the number of files and age of files to be kept. These can be overridden
      in three ways. 
 
-     1) The 'sched.pl' command line options '-r -m NN', where 
-        "NN" is the number of files to be kept can control the purger.
+     1) The 'sched.pl' command line options '-r -m N', where 
+        "N" is the number of files to be kept in each product directory by 
+        the purger
 
      2) Overrides can be read in from '/data/static/purger.dat'. You can see 
         the 'purger.pl' script to see how that information is used.
