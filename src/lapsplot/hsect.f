@@ -687,7 +687,7 @@ cdis
 
 !               Read in LI data
                 var_2d = 'LI'
-                ext = 'lsx'
+                ext = 'lst'
                 call get_laps_2dgrid(i4time_3dw,laps_cycle_time,i4time_n
      1earest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
@@ -718,17 +718,16 @@ cdis
             chigh = 50.
 
             call plot_cont(liw,1e0,0.0,50.0,-0.5,asc9_tim_3dw,
-     1   'LAPS sfc LI X 600mb omega  Pa-K/s',i_overlay,c_display
-     1          ,'nest7grid',lat,lon,jdot,
-     1  NX_L,NY_L,r_missing_data,laps_cycle_time)
+     1              'LAPS sfc LI X 600mb omega  Pa-K/s',i_overlay
+     1              ,c_display,'nest7grid',lat,lon,jdot
+     1              ,NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'li')then ! Read in Li field from 3d grids
             if(lapsplot_pregen)then
-                write(6,*)' No pregenerated li file present, getting li
-     1fm LSX'
+                write(6,*)' Getting li from LST'
 !               Read in LI data
                 var_2d = 'LI'
-                ext = 'lsx'
+                ext = 'lst'
                 call get_laps_2dgrid(i4time_ref,7200,i4time_nearest,
      1          ext,var_2d,units_2d,comment_2d,NX_L,NY_L
      1                                          ,lifted,0,istatus)
@@ -2447,7 +2446,7 @@ cdis
      1          NX_L,NY_L,r_missing_data,laps_cycle_time)
 
         elseif(c_type .eq. 'pe' .or. c_type .eq. 'ne')then
-          ext = 'lsx'
+          ext = 'lst'
 
           if(c_type .eq. 'pe')then
               var_2d = 'PBE'
@@ -2770,7 +2769,9 @@ cdis
 
             range = (rmax-rmin) / scale
 
-            if(range .gt. 20)then
+            if(range .gt. 40)then
+                cint = 6.
+            elseif(range .gt. 20)then
                 cint = 3.
             elseif(range .gt. 8)then
                 cint = 2.

@@ -349,7 +349,8 @@ C Green
 C Aqua
       CALL GSCR(1, 12, 0.0, 0.9, 1.0)
 C DeepSkyBlue
-      CALL GSCR(1, 13, 0.0, 0.75, 1.0)
+!     CALL GSCR(1, 13, 0.0, 0.75, 1.0)
+      CALL GSCR(1, 13, 0.0, 0.65, 0.9)
 C RoyalBlue
       CALL GSCR(1, 14, 0.25, 0.45, 0.95)
 C SlateBlue

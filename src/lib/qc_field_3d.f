@@ -1,9 +1,17 @@
 
+      subroutine qc_field_2d(var_2d,field_2d,ni,nj,istatus)
+      character*(*) var_2d
+      real field_2d(ni,nj)
+
+      call qc_field_3d(var_2d,field_2d,ni,nj,1,istatus)
+
+      return
+      end
 
       subroutine qc_field_3d(var_2d,field_3d,ni,nj,nk,istatus)
       implicit none
       integer ni,nj,nk, istatus, i, j, k
-      character(*) var_2d
+      character*(*) var_2d
       real field_3d(ni,nj,nk), lower_bound, upper_bound
       real r_missing_data
 
