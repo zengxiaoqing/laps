@@ -8,58 +8,55 @@ SRCROOT=../../..
 
 include $(SRCROOT)/src/include/makefile.inc
 
-LAPSLIBS = $(SRCROOT)/src/lib/liblaps.a \
-           $(SRCROOT)/src/lib/util/libutil.a \
-           $(SRCROOT)/src/lib/mthermo/libmthermo.a
+RM=rm -f
 
-DBLAPSLIBS = $(SRCROOT)/src/lib/libdebuglaps.a \
-             $(SRCROOT)/src/lib/util/libdebugutil.a \
-             $(SRCROOT)/src/lib/mthermo/libdebugmthermo.a
+.SUFFIXES: .o .f .a .exe
 
-.SUFFIXES:
-.SUFFIXES: .o .c .f .a .exe
+LIB = libverif.a
+DEBUGLIB = libdebugverif.a
+ARCHIVE = ar rv
+.f.o:
+		$(RM) $@
+		$(FC) -c $(FFLAGS) $(INC) $*.f
+		$(ARCHIVE) $(LIB) $(<:.f=.o)
 
-EXE = gen_verif_raob.exe \
-      gen_verif_prof.exe
 
-SRC = gen_verif_prof.f \
-    bkgd_wgi.f \
+EXE1= gen_verif_raob.exe
+EXE2= gen_verif_prof.exe
+
+SRC = bkgd_wgi.f \
     gen_verif_prof_sub.f \
     get_prof_pairs.f \
-    gen_verif_raob.f \
     gen_verif_raob_sub.f \
     get_raob_data_a.f \
     get_raob_pairs.f \
     raob_subs.f
-      
-LIB = lapsverif.a
 
-ARCHIVE = $(LIB)($(addsuffix .o, $(basename $(SRC))))
+MAIN1 = gen_verif_raob.f
+MAIN2 = gen_verif_prof.f
 
-all: exe
+OBJS=$(SRC:.f=.o)
 
-exe: $(ARCHIVE) $(EXE)
+all:	$(EXE1) $(EXE2)
 
-%.exe: %.c $(LIB)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $*.c $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE1):$(OBJS)
+	$(FC) -o $(EXE1) $(MAIN1) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
-%.exe: %.f $(LIB)
-	$(FC) $(FFLAGS) $*.f $(LIB) $(LAPSLIBS) $(OTHERLIBS) -o $@
+$(EXE2):$(OBJS)
+	$(FC) -o $(EXE2) $(MAIN2) -I$(SRCROOT)/src/include $(LIB) $(LAPSLIB) $(OTHERLIBS) $(MTHERMOLIB) $(UTILLIB);
 	rm -f *.o
 
 debug: $(SRC)
-	$(RM) $(EXE) ;
-	$(MAKE) LAPSLIBS='$(DBLAPSLIBS)' \
-	CFLAGS='$(DBCFLAGS)' FFLAGS='$(DBFLAGS)'
+	$(RM) $(EXE1) $(RM) $(EXE2) ;
+	$(MAKE) LAPSLIBS='$(DBLAPSLIB)' LIB='$(DEBUGLIB)' MTHERMOLIB='$(DBMTHERMOLIB)' UTILLIB='$(DBUTILLIB)' \
+	FFLAGS='$(DBFFLAGS)'
 
-install: exe
-	@for file in $(EXE);\
-	  do \
-	  $(INSTALL) $$file $(INSTALLROOT)/bin/$$file; \
-	done
+install: all
+	$(INSTALL) $(EXE1) $(INSTALLROOT)/bin/$(EXE1); \
+	$(INSTALL) $(EXE2) $(INSTALLROOT)/bin/$(EXE2);
 
 clean:
-	rm -f $(EXE)  *.o *~ *\# $(LIB)
+	rm -f $(EXE1) $(EXE2)  *.o *.a *~ *\#
 
 distclean: clean
