@@ -40,6 +40,7 @@ cdis
         subroutine get_vis(i4time,solar_alt,l_use_vis,lat          ! Input
      1                    ,i4_sat_window,i4_sat_window_offset      ! Input
      1                    ,cloud_frac_vis_a,vis_albedo,ihist_alb   ! Output
+     1                    ,comment                                 ! Output
      1                    ,ni,nj,nk,r_missing_data                 ! Input
      1                    ,istat_vis_a                             ! Output
      1                    ,istatus)                                ! Output
