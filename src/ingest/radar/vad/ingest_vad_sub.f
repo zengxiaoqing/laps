@@ -141,11 +141,17 @@ C
 
           c4_staname = 'K'//staname(ista)(1:3)
 
+          if(abs(staelev(ista)) .gt. 999999.)then
+              staelev_out = 999999.
+          else
+              staelev_out = staelev(ista)
+          endif
+
           write(6,401)id_num,numlevels(ista),
-     1                stalat(ista),stalon(ista),staelev(ista),
+     1                stalat(ista),stalon(ista),staelev_out,
      1                c4_staname,a9time_ob
           write(2,401)id_num,numlevels(ista),
-     1                stalat(ista),stalon(ista),staelev(ista),
+     1                stalat(ista),stalon(ista),staelev_out,
      1                c4_staname,a9time_ob
 401       format(i12,i12,f11.3,f15.3,f15.0,5x,a4,5x,a9)
 
