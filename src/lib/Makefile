@@ -127,6 +127,7 @@ SRC	= machine_dependent.F \
           read_surface_old.f \
           read_surface_sa.f \
           read_wrfsi_nl.f \
+          readlapscompressed.f \
           readlapsdata.f \
           readlapsheader.f \
           rfill.f \
