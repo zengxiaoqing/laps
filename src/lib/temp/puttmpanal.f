@@ -93,8 +93,6 @@ cdis
         parameter (cold_thresh = 170.)
 
         integer*4 max_snd_grid,max_obs
-        parameter (max_snd_grid = 15000)            ! Total number of profiles
-        parameter (max_obs = 100000)                ! # obs in data structure
 
         logical l_fill,l_adjust_heights,l_use_raob
 
@@ -106,7 +104,8 @@ cdis
         write(6,*)' Welcome to subroutine put_temp_anal'
 
         call get_temp_parms(l_use_raob,l_adjust_heights,weight_bkg_const
-     1                     ,rms_thresh,pres_mix_thresh,istatus)
+     1                     ,rms_thresh,pres_mix_thresh,max_snd_grid
+     1                     ,max_obs,istatus)
         if(istatus .ne. 1)then
             write(6,*)' Error: Bad status return from put_temp_anal'
             return
@@ -685,13 +684,13 @@ c       1                               j_diff_thmax,k_diff_thmax
 
        subroutine get_temp_parms(l_use_raob_t,l_adjust_heights
      1                 ,weight_bkg_const_temp,rms_thresh_temp
-     1                 ,pres_mix_thresh,istatus)       
+     1                 ,pres_mix_thresh,max_snd_grid,max_obs,istatus)       
 
        logical l_use_raob_t,l_adjust_heights
 
        namelist /temp_nl/ l_use_raob_t,l_adjust_heights
      1                   ,weight_bkg_const_temp,rms_thresh_temp
-     1                   ,pres_mix_thresh       
+     1                   ,pres_mix_thresh,max_snd_grid,max_obs       
  
        character*150 static_dir,filename
  

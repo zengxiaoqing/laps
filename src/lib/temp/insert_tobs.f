@@ -259,7 +259,8 @@ cdis
                         temp_obs(n_obs,i_ob_grid) = 
      1                  temp_3d(igrid_tsnd(i_tsnd),jgrid_tsnd(i_tsnd),k)       
      1                                            + bias_tsnd(i_tsnd,k)
-                        temp_obs(n_obs,i_wt) = 1.0 ! wt_tsnd(i_tsnd,k)
+                        temp_obs(n_obs,i_wt) = 
+     1                      1.0 / inst_err_tsnd(i_tsnd)**2
                         temp_obs(n_obs,i_bias) = bias_tsnd(i_tsnd,k)
                         temp_obs(n_obs,i_inst_err) = 
      1                      inst_err_tsnd(i_tsnd)     
