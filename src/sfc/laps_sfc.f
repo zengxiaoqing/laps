@@ -371,7 +371,7 @@ c
 320	format(1x,a6,' data valid time: ',a24,' Num obs: ',2i6)
 c
 
-        if(.false.)then
+        if(.true.)then
 	    call read_sfc_snd(i4time,atime_s,n_obs_g,n_obs_b, ! regular SND
      &       obstime,wmoid,stations,provider,wx_s,reptype,autostntype,
      &       lat_s,lon_s,elev_s,t_s,td_s,rh_s,dd_s,ff_s,ddg_s,ffg_s,
