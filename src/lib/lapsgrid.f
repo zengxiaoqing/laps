@@ -30,6 +30,68 @@ cdis
 cdis
 cdis
 
+        subroutine get_mother_domain(ni,nj,lat,lon,istatus)
+c
+cdoc    Reads in lat and lon fields for nested domains. Only WRFSI
+c
+c       2003 John Smart
+
+        integer ni,nj                 ! Input
+
+        real   lat(ni,nj)             ! Output
+        real   lon(ni,nj)             ! Output
+        real   topo(ni,nj)            ! Output
+        real   rlaps_land_frac(ni,nj) ! Output
+        real   grid_spacing_m
+
+        character*2   cpid
+        character*3   var
+        character*150 directory
+        character*150 cstatic_name
+        character*31  ext
+        character*10  units
+        character*125 comment
+
+        include 'grid_fname.cmn'
+
+        write(6,*)' Reading in lat/lon for nest = ',nest
+
+        ext = grid_fnam_common
+
+!       Get the location of the static grid directory
+        call get_directory(ext,directory,len_dir)
+
+        call s_len(grid_fnam_common,leng)
+        call get_parent_id(iparent_id,istatus)
+        write(cpid,'(i2.2)')iparent_id
+        cstatic_name=grid_fnam_common(1:leng)//'.d'//cpid
+        call get_r_missing_data(r_missing_data,istatus)
+        if(istatus .ne. 1)return
+
+        if(grid_fnam_common(1:leng).ne.'wrfsi')then
+           print*,'Error: get_domain_nest only works for wrfsi'
+           stop
+        endif
+        var = 'LAT'
+        call rd_laps_static(directory,cstatic_name,ni,nj,1,var
+     1,units,comment,lat,grid_spacing_m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading LAC field'
+            return
+        endif
+
+        var = 'LON'
+        call rd_laps_static(directory,cstatic_name,ni,nj,1,var
+     1,units,comment,lon,grid_spacing_m,istatus)
+        if(istatus .ne. 1)then
+            write(6,*)' Error reading LOC field'
+            return
+        endif
+
+        return
+        end
+
+c------------------------------------------------------------------------
         subroutine get_laps_domain(ni,nj,grid_fnam,lat,lon,topo,istatus)
 c
 cdoc    Reads in lat/lon/topo/landfrac fields
@@ -90,6 +152,7 @@ c       1994 Steve Albers
         real*4 topo(ni,nj)            ! Output
         real*4 rlaps_land_frac(ni,nj) ! Output
 
+        character*2   cnest
         character*3   var
         character*150 directory
         character*31  ext
@@ -105,8 +168,13 @@ c       1994 Steve Albers
 !       Get the location of the static grid directory
         call get_directory(ext,directory,len_dir)
 
-!       directory = ''
         call s_len(grid_fnam_common,leng)
+        if(grid_fnam_common(1:leng).eq.'wrfsi')then
+           write(cnest,'(i2.2)')nest
+           ext=grid_fnam_common(1:leng)//'.d'//cnest
+        else
+           ext=grid_fnam_common
+        endif
 
         call get_r_missing_data(r_missing_data,istatus)
         if(istatus .ne. 1)return
@@ -424,7 +492,8 @@ c use the "grid namelist" to load lapsparms.cmn with appropriate values.
      1  ,grid_spacing_m_cmn,grid_cen_lat_cmn,grid_cen_lon_cmn
      1  ,laps_cycle_time_cmn, min_to_wait_for_metars_cmn
      1  ,i2_missing_data_cmn, r_missing_data_cmn, MAX_RADARS_CMN
-     1  ,ref_base_cmn,ref_base_useable_cmn,maxstns_cmn,N_PIREP_CMN
+     1  ,ref_base_cmn,ref_base_useable_cmn,r_hybrid_first_gate_cmn
+     1  ,maxstns_cmn,N_PIREP_CMN
      1  ,vert_rad_meso_cmn,vert_rad_sao_cmn
      1  ,vert_rad_pirep_cmn,vert_rad_prof_cmn     
      1  ,silavwt_parm_cmn,toptwvl_parm_cmn
@@ -620,6 +689,37 @@ c     set the grid fname common block value
 
         return
         end
+c ---------------------------------------------------------------------
+      subroutine get_mother_dims(nx_mother,ny_mother,istatus)
+      include 'lapsparms.cmn' ! standard_longitude
+      include 'grid_fname.cmn'! grid_fnam_common
+      include 'wrf_horzgrid.cmn' ! entire hgridspec namelist section
+
+!     This routine accesses the standard_longitude variable from the
+!     .parms file via the common block. Note the variable name in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then 
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      if(parent_id(nest).ne.1)then
+         nx_mother=(domain_origin_uri(parent_id(nest))-
+     +           domain_origin_lli(parent_id(nest)))*
+     +           ratio_to_parent(parent_id(nest))+1
+         ny_mother=(domain_origin_urj(parent_id(nest))-
+     +           domain_origin_llj(parent_id(nest)))*
+     +           ratio_to_parent(parent_id(nest))+1
+      else
+         nx_mother=xdim
+         ny_mother=ydim
+      endif 
+
+      return
+      end
+
 c ---------------------------------------------------------------------
       subroutine get_standard_longitude(std_lon,istatus)
 
@@ -934,16 +1034,20 @@ c----------------------------------------------------------
       istatus = 1
       return
       end
+c---------------------------------------------------------------
+      subroutine get_domain_origin(lli_orig,llj_orig
+     +,uri_orig,urj_orig,istatus)
 
-      subroutine get_domain_origin_parent(i_orig,j_orig,istatus)
-
-      include 'lapsparms.cmn'              ! i_orig_cmn,j_orig_cmn
+      include 'lapsparms.cmn'              ! lli_orig_cmn,llj_orig_cmn,uri_orig_cmn,urj_orig_cmn
       include 'grid_fname.cmn'             ! grid_fnam_common
+
+      integer  lli_orig,llj_orig
+      integer  uri_orig,urj_orig
 
 !     character*80 grid_fnam
 
-!     This routine accesses the I&J_DOMAIN_ORIGIN_PARENT variables from the
-!     namelist file via the common block. Note the variable names in the
+!     This routine accesses the LL/UR I&J_DOMAIN_ORIGIN variables from the
+!     wrfsi.nl namelist file via the common block. Note the variable names in the
 !     argument list may be different in the calling routine
 
       call get_laps_config(grid_fnam_common,istatus)
@@ -952,8 +1056,60 @@ c----------------------------------------------------------
           return
       endif
 
-      i_orig=i_orig_cmn
-      j_orig=j_orig_cmn
+      lli_orig=lli_orig_cmn
+      llj_orig=llj_orig_cmn
+      uri_orig=uri_orig_cmn
+      urj_orig=urj_orig_cmn
+
+      istatus = 1
+      return
+      end
+c -------------------------------------------------------------
+c
+      subroutine get_ratio_to_parent(iratio,istatus)
+
+      include 'lapsparms.cmn'              ! ratio_to_parent_cmn
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+!     character*80 grid_fnam
+
+!     This routine accesses the LL/UR I&J_DOMAIN_ORIGIN_PARENT variables from the
+!     wrfsi.nl namelist file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      iratio=ratio_to_parent_cmn
+
+      istatus = 1
+      return
+      end
+c---------------------------------------------------------------
+c
+      subroutine get_parent_id(parent_id,istatus)
+
+      include 'lapsparms.cmn'              ! parent_id_cmn
+      include 'grid_fname.cmn'             ! grid_fnam_common
+
+      integer  parent_id
+
+!     character*80 grid_fnam
+
+!     This routine accesses the PARENT_ID variable from the
+!     wrfsi.nl namelist file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'
+          return
+      endif
+
+      parent_id=parent_id_cmn
 
       istatus = 1
       return
@@ -1209,6 +1365,27 @@ c----------------------------------------------------------
       endif
 
       ref_base_useable = ref_base_useable_cmn
+
+      istatus = 1
+      return
+      end
+
+      subroutine get_r_hybrid_first_gate(r_hybrid_first_gate, istatus)       
+
+      include 'lapsparms.cmn' ! r_hybrid_first_gate
+      include 'grid_fname.cmn'! grid_fnam_common
+
+!     This routine accesses the 'r_hybrid_first_gate' variable from the
+!     .parms file via the common block. Note the variable names in the
+!     argument list may be different in the calling routine
+
+      call get_laps_config(grid_fnam_common,istatus)
+      if(istatus .ne. 1)then
+          write(6,*)' ERROR, get_laps_config not successfully called'       
+          return
+      endif
+
+      r_hybrid_first_gate = r_hybrid_first_gate_cmn
 
       istatus = 1
       return
