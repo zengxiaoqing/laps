@@ -77,6 +77,7 @@ SRC	= cio.c \
           fflxc.f \
           filename13.f \
           filter_filenames.f \
+          fname_conversions.f \
           get_cloud_deriv.f \
           get_dir_length.f \
           get_directory.f \

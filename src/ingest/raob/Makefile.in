@@ -44,7 +44,7 @@ RANLIB   = @RANLIB@
 
 # Define all source code to be compiled 
 
-SRC=ingest_raob.f      ingest_raob_sub.f   ingest_raob_sub_af.f a8_to_a9.f
+SRC=ingest_raob.f      ingest_raob_sub.f   ingest_raob_sub_af.f 
 
 
 all: exe
