@@ -234,12 +234,12 @@ C
      1             ,a9time_syn,' ',a9time_raob
 
           if(stalat(isnd) .ge. r_nc_missing_data)then
-              write(6,*)' Missing first latitude',i
+              write(6,*)' Missing first latitude',isnd
               goto 999
           endif
 
           if(stalon(isnd) .ge. r_nc_missing_data)then
-              write(6,*)' Missing first longitude',i
+              write(6,*)' Missing first longitude',isnd
               goto 999
           endif
 

@@ -181,6 +181,8 @@
 
           c8_obstype = 'SATSND'
 
+          iwmostanum = 0
+
           write(6,511,err=990)
      1             iwmostanum,nlvls,stalat
      1            ,stalon,staelev,c5_staid,a9time_ob,c8_obstype
@@ -219,7 +221,7 @@
               if(i .le. 100)write(6,*)rheight(lvl),pressure(lvl)
      1              ,temp_c
      1              ,dewpoint_c
-     1              ,ilvl
+     1              ,lvl
 
               write(lun_out,*)rheight(lvl),pressure(lvl)
      1              ,temp_c
